@@ -20,6 +20,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Hentningen af stemmen blev beskadiget. Læser med telefonens stemme. Tryk for at prøve igen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Pakken med naturlige stemmer kan ikke bruges. Læser med telefonens stemme.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Kunne ikke hente naturlige stemmer. Læser med telefonens stemme. Tryk for at prøve igen.</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>Hentningen er stoppet. Læser med telefonens stemme. Tryk for at hente.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>Der er endnu ingen naturlig stemme til dit sprog. Læser med telefonens stemme.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Tilbage</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Gem</value></data>

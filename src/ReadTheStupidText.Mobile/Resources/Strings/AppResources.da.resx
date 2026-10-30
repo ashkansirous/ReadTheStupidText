@@ -115,6 +115,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Hentningen af stemmen blev beskadiget. Læser med telefonens stemme. Tryk for at prøve igen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Pakken med naturlige stemmer kan ikke bruges. Læser med telefonens stemme.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Kunne ikke hente naturlige stemmer. Læser med telefonens stemme. Tryk for at prøve igen.</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>Hentningen er stoppet. Læser med telefonens stemme. Tryk for at hente.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>Der er endnu ingen naturlig stemme til dit sprog. Læser med telefonens stemme.</value></data>
   <data name="VoicePicker_Heading" xml:space="preserve"><value>Vælg en stemme</value></data>
   <data name="VoicePicker_Subtitle" xml:space="preserve"><value>Naturlige stemmer hentes én gang · din tekst bliver på telefonen</value></data>
@@ -130,6 +132,7 @@
   <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Naturlige stemmer er endnu ikke tilgængelige på denne enhed, så telefonens stemme læser.</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>Vælg dit sprog. Vi henter en naturlig stemme til det; indtil den er klar, læser din telefons egen stemme.</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>Prøv at hente igen</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>Hent</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Fortsæt</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>Begynd at læse</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Stemme {0} (kvinde)</value></data>

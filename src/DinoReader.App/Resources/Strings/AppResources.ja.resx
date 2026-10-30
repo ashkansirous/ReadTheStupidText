@@ -18,6 +18,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>音声のダウンロードが破損しました。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然な音声パックを使用できません。スマートフォンの音声で読み上げます。</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>自然な音声をダウンロードできませんでした。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>ダウンロードを停止しました。スマートフォンの音声で読み上げます。タップしてダウンロードします。</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>お使いの言語の自然な音声はまだ利用できません。スマートフォンの音声で読み上げます。</value></data>
   <data name="Common_Back" xml:space="preserve"><value>戻る</value></data>
   <data name="Common_Save" xml:space="preserve"><value>保存</value></data>

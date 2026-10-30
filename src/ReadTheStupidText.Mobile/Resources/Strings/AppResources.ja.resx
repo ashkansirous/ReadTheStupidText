@@ -115,6 +115,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>音声のダウンロードが破損しました。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然な音声パックを使用できません。スマートフォンの音声で読み上げます。</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>自然な音声をダウンロードできませんでした。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>ダウンロードを停止しました。スマートフォンの音声で読み上げます。タップしてダウンロードします。</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>お使いの言語の自然な音声はまだ利用できません。スマートフォンの音声で読み上げます。</value></data>
   <data name="VoicePicker_Heading" xml:space="preserve"><value>音声を選択</value></data>
   <data name="VoicePicker_Subtitle" xml:space="preserve"><value>自然な音声は一度だけダウンロードされます · テキストはスマートフォンから出ません</value></data>
@@ -130,6 +132,7 @@
   <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>このデバイスでは自然な音声はまだ利用できないため、スマートフォンの音声で読み上げます。</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>言語を選択してください。その言語の自然な音声をダウンロードします。届くまでは、スマートフォン本来の音声で読み上げます。</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>ダウンロードを再試行</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>ダウンロード</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>続ける</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>読み上げを始める</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>声 {0}（女性）</value></data>

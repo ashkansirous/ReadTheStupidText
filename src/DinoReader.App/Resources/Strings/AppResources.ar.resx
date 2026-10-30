@@ -18,6 +18,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>تعرّض تنزيل الصوت للتلف. تتم القراءة بصوت الهاتف. اضغط لإعادة المحاولة.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>حزمة الأصوات الطبيعية غير صالحة للاستخدام. تتم القراءة بصوت الهاتف.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>تعذّر تنزيل الأصوات الطبيعية. تتم القراءة بصوت الهاتف. اضغط لإعادة المحاولة.</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>توقف التنزيل. تتم القراءة بصوت الهاتف. اضغط للتنزيل.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>لا يتوفر صوت طبيعي للغتك بعد. تتم القراءة بصوت الهاتف.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>رجوع</value></data>
   <data name="Common_Save" xml:space="preserve"><value>حفظ</value></data>

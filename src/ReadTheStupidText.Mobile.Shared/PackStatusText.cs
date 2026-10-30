@@ -22,6 +22,7 @@ public static class PackStatusText
         PackInstallState.HashMismatch => "The voice download was corrupted. Reading with the phone voice. Tap to retry.",
         PackInstallState.InvalidPack => "The natural voices pack is unusable. Reading with the phone voice.",
         PackInstallState.Failed => "Couldn't download natural voices. Reading with the phone voice. Tap to retry.",
+        PackInstallState.Stopped => "Download stopped. Reading with the phone voice. Tap to download.",
         PackInstallState.Unavailable => "A natural voice for your language isn't available yet. Reading with the phone voice.",
         _ => null,
     };

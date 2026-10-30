@@ -136,6 +136,7 @@ public static class AppResources
     public static string PackStatus_HashMismatch => Get();
     public static string PackStatus_InvalidPack => Get();
     public static string PackStatus_Failed => Get();
+    public static string PackStatus_Stopped => Get();
     public static string PackStatus_Unavailable => Get();
     public static string VoicePicker_Heading => Get();
     public static string VoicePicker_Subtitle => Get();
@@ -151,6 +152,7 @@ public static class AppResources
     public static string VoicePicker_ReasonNoNeuralEngine => Get();
     public static string Language_Intro => Get();
     public static string Language_Retry => Get();
+    public static string Language_Download => Get();
     public static string Notify_Title => Get();
     public static string Notify_Body => Get();
     public static string Notify_NotNow => Get();

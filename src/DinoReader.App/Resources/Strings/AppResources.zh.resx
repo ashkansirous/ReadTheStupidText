@@ -18,6 +18,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>语音下载已损坏。正在使用手机语音朗读。点按可重试。</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然语音包无法使用。正在使用手机语音朗读。</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>无法下载自然语音。正在使用手机语音朗读。点按可重试。</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>下载已停止。正在使用手机语音朗读。点按可下载。</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>您的语言暂无自然语音。正在使用手机语音朗读。</value></data>
   <data name="Common_Back" xml:space="preserve"><value>返回</value></data>
   <data name="Common_Save" xml:space="preserve"><value>保存</value></data>

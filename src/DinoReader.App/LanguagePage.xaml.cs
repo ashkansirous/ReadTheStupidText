@@ -47,10 +47,10 @@ public static class LanguageChoice
 	public static string Current(ISettingsStore settings) => settings.Language is { } stored ? UiLanguage.Resolve(stored) : Current();
 
 	/// <summary>Switches the voice, the screens' words and the translation language to <paramref name="code"/>.</summary>
-	public static void Apply(string code, SpokenLanguage spoken)
+	public static void Apply(string code, SpokenLanguage spoken, PackStartReason reason)
 	{
 		string language = ApplyScreens(code);
-		spoken.Use(language);
+		spoken.Use(language, reason);
 	}
 
 	/// <summary>Switches the words on the screens (and the translation language) to <paramref name="code"/>; the voice is left as it is.</summary>
@@ -268,7 +268,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 
 		_pending = code;
 		_changed = true;
-		LanguageChoice.Apply(code, _spoken);
+		LanguageChoice.Apply(code, _spoken, PackStartReason.User); // the grown-up's own tap
 		Rebuild();
 	}
 

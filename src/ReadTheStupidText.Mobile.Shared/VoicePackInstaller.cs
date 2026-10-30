@@ -5,6 +5,16 @@ using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Mobile.Shared;
 
+/// <summary>Slice 204: why a voice pack start was asked for. Required on every call, so no caller can forget to say.</summary>
+public enum PackStartReason
+{
+    /// <summary>The user's own Download/Retry tap or a choice they made: lifts a Cancel hold.</summary>
+    User,
+
+    /// <summary>App start, network or foreground resume, a language change: never restarts a download the user stopped.</summary>
+    Automatic,
+}
+
 /// <summary>What the UI shows about the first-run voice pack download.</summary>
 public enum PackInstallState
 {
@@ -17,6 +27,8 @@ public enum PackInstallState
     HashMismatch,
     InvalidPack,
     Failed,
+    /// <summary>Slice 204: the user stopped the download; it starts again only when they ask.</summary>
+    Stopped,
 }
 
 /// <summary>
@@ -28,6 +40,7 @@ public enum PackInstallState
 public sealed class VoicePackInstaller
 {
     private const string ResumeKey = "voice";
+    private const string HeldMarker = "VOICEPACK held-user-cancelled";
     private static readonly TimeSpan UpdateCatalogTimeout = TimeSpan.FromSeconds(15);
 
     private readonly IVoicePackService _packs;
@@ -38,22 +51,34 @@ public sealed class VoicePackInstaller
     private readonly IPackUpdateNetwork _network;
     private readonly IPackResume? _resume;
     private readonly VoiceCancelHold _hold;
-    private string? _resolvedPackId;
+    private string? _resolvedPackId; // the pack downloading now (a run's or a pack update's): the notification's Cancel matches on it
     private readonly object _gate = new();
     private CancellationTokenSource? _updateCancel;
-    private bool _freshInstall; // the last run downloaded its pack, so the update check would only refetch the catalog
 
     // One pack update at a time: a newer update waits for the one it cancelled to unwind, so two never
     // touch the same scratch or target folder.
     private readonly SemaphoreSlim _updateGate = new(1, 1);
     private string? _failedUpdateKey;
-    private bool _running;
-    private bool _userCancelled; // the user tapped Cancel on the notification during this run; reset at the start of each run, guarded by _gate
-    private bool _runReady; // this run ended with the voice installed and published Ready: a late Cancel never overwrites it; guarded by _gate
-    private string _runLanguage = SupertonicVoiceTable.EnglishCode;
-    private CancellationTokenSource? _runCancel;
-    private int _generation;
-    private TaskCompletionSource _settled = new();
+    private VoiceRun? _current; // the run in flight or unwinding, if any; guarded by _gate
+    private int _latestId;      // the id of the newest run ever created: the only id whose publishes are applied
+
+    // Slice 204: one object per run. Everything a run decides lives here, never in an installer-wide flag, so a
+    // newer run is never touched by an older one. Fields marked "gate" are read and written under _gate.
+    private sealed class VoiceRun(int id, string language)
+    {
+        public int Id { get; } = id;
+        public string Language = language;                // gate: the language of the pass in flight
+        public bool Cancelled;                            // gate: the user cancelled this run (never reset)
+        public bool Ready;                                // gate: this run installed the voice and published Ready: a late Cancel never undoes it
+        public bool Started;                              // gate: its first pass began (a run chained after a cancelled one waits)
+        public CancellationTokenSource? Cancel;           // gate: the pass in flight
+        public string? PackId;                            // the pack this run downloaded
+        public bool FreshInstall;                         // this run downloaded its pack, so the update check would only refetch the catalog
+        public TaskCompletionSource Done { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    }
+
+    // What the locked end step decided, reported and published after the lock is released.
+    private sealed record RunEnd(int Id, PackInstallState? Failure, bool Cancelled, bool Held, bool IsCurrent, bool Fresh, bool LanguageChosen, string? PackId, bool LanguageMoved);
 
     public VoicePackInstaller(IVoicePackService packs, IVoiceModelService model, ISpeechReader reader, ISettingsStore settings, IPlatformServices platform, IPackUpdateNetwork network, ILanguageChangeNotifier languages, IPackResume? resume = null, IVoiceCancelStore? cancelStore = null)
     {
@@ -82,33 +107,55 @@ public sealed class VoicePackInstaller
                 return;
             }
 
-            if (_running)
+            if (_current is { Started: true } run)
             {
-                _userCancelled = true;
-                HoldRunLanguage();
-                cancel = _runCancel;
+                CancelRun(run);
+                cancel = run.Cancel;
             }
-            else
+            else if (_current is null)
             {
                 cancel = _updateCancel; // a pack update downloading in the background honours Cancel too
                 updateCancelled = cancel is not null;
+            }
+            else
+            {
+                return; // a run chained after a cancelled one has not started: this Cancel was for the run it waits on
             }
         }
 
         CancelQuietly(cancel);
         if (updateCancelled)
         {
-            Publish(Volatile.Read(ref _generation), PackInstallState.Ready); // the old pack still reads
+            Publish(Volatile.Read(ref _latestId), PackInstallState.Ready); // the old pack still reads
         }
     }
 
-    // Slice 186: a stale run (the language changed under it) must not leave a hold; guarded by _gate.
-    private void HoldRunLanguage()
+    // Marks this run cancelled, and holds its language when that is still the chosen one (Slice 186: a stale run, the
+    // language changed under it, leaves no hold). A cancel targets one run: it is a no-op when that run already installed the
+    // voice, is already cancelled, or is no longer the current run, so a late cancel never re-sets a hold the user released.
+    // Guarded by _gate.
+    private void CancelRun(VoiceRun run)
     {
-        if (!_runReady && SameLanguage(_runLanguage, CurrentLanguage)) // a finished install is not undone by a late Cancel
+        if (run.Ready || run.Cancelled || !ReferenceEquals(_current, run))
         {
-            _hold.Hold(_runLanguage);
+            return;
         }
+
+        run.Cancelled = true;
+        if (SameLanguage(run.Language, CurrentLanguage))
+        {
+            _hold.Hold(run.Language);
+        }
+    }
+
+    /// <summary>Debug builds route the held marker here (the app wires it to the test-hook log); null in release and in unit tests.</summary>
+    public Action<string>? DebugMarker { get; set; }
+
+    private void LogHeld(string language)
+    {
+        string line = $"{HeldMarker} {language}";
+        System.Diagnostics.Debug.WriteLine(line);
+        DebugMarker?.Invoke(line);
     }
 
     /// <summary>Slice 186: the user cancelled the voice pack download for this language and has not got it since; other packs do not start by themselves.</summary>
@@ -121,10 +168,10 @@ public sealed class VoicePackInstaller
 
     public event EventHandler? Changed;
 
-    public bool CanRetry => State is PackInstallState.Offline or PackInstallState.HashMismatch or PackInstallState.Failed;
+    public bool CanRetry => State is PackInstallState.Offline or PackInstallState.HashMismatch or PackInstallState.Failed or PackInstallState.Stopped;
 
-    // One pass of the flow: its generation orders publishes, its token stops it.
-    private readonly record struct Run(int Generation, CancellationToken Token);
+    // One pass of the flow: its id orders publishes, its token stops it. Voice is null for a pack update.
+    private readonly record struct Run(int Generation, CancellationToken Token, VoiceRun? Voice = null);
 
     // A language change stops the in-flight run for the old language (its partial download is
     // kept for resuming, never installed) and starts one for the new language off the UI thread:
@@ -133,14 +180,14 @@ public sealed class VoicePackInstaller
     private void OnLanguageChanged()
     {
         CancellationTokenSource? stale = null;
-        bool running;
+        bool serving;
         lock (_gate)
         {
             _hold.ReleaseUnlessFor(CurrentLanguage); // inside the gate, so a Cancel's hold is never cleared half-way
-            running = _running;
-            if (running && !SameLanguage(_runLanguage, CurrentLanguage))
+            serving = _current is { Cancelled: false };
+            if (_current is { Started: true, Cancelled: false } run && !SameLanguage(run.Language, CurrentLanguage))
             {
-                stale = _runCancel;
+                stale = run.Cancel;
             }
         }
 
@@ -148,9 +195,10 @@ public sealed class VoicePackInstaller
 
         // A run in flight re-checks the language when it ends (RunUntilSettledAsync), so it serves
         // the change itself; a second start queued behind it could land after it and run again.
-        if (!running)
+        // A cancelled run does not serve it: the start chains after that run.
+        if (!serving)
         {
-            _ = Task.Run(StartAsync);
+            _ = Task.Run(() => StartAsync(PackStartReason.Automatic));
         }
     }
 
@@ -170,84 +218,122 @@ public sealed class VoicePackInstaller
     // and no language); only a missing pack needs the language to choose one. A call
     // while a run is in flight re-publishes the current state so the caller's UI keeps
     // showing the in-flight progress, and completes when that run settles.
-    public Task StartAsync()
+    //
+    // Slice 204: every caller states why it starts (no default, so a new caller cannot forget): User is a Download/Retry tap,
+    // Automatic is app start, network or foreground resume, a language change. All of it is decided in one locked step:
+    //   user                      -> release the hold first
+    //   live run                  -> join it (before the held check)
+    //   automatic + language held -> publish Stopped, report nothing, start nothing
+    //   cancelled run unwinding   -> a new run chained after it (never its stale task)
+    //   no run                    -> a new run
+    public Task StartAsync(PackStartReason reason)
     {
-        Task? inFlight = null;
-        TaskCompletionSource? settled = null;
+        bool automatic = reason == PackStartReason.Automatic;
+        bool installed = automatic && HasInstalledVoice(); // an installed pack is activated even for a held language
+        VoiceRun? next = null;
+        VoiceRun? previous = null;
+        Task? joined = null;
+        bool held = false;
+        int latest;
         lock (_gate)
         {
-            if (_running)
+            latest = _latestId;
+            if (!automatic)
             {
-                inFlight = _settled.Task;
+                _hold.Release(); // first, so the run the user cancelled ends without leaving a hold behind
+            }
+
+            if (_current is { Cancelled: false } live)
+            {
+                joined = live.Done.Task; // a live run is joined before the held check: a stale hold never stops it
+            }
+            else if (automatic && !installed && _hold.IsHeld(CurrentLanguage))
+            {
+                held = true;
             }
             else
             {
-                _running = true;
-                settled = _settled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                previous = _current;
+                next = _current = new VoiceRun(latest = ++_latestId, CurrentLanguage);
             }
         }
 
-        if (inFlight is not null)
+        if (held)
         {
-            Publish(Volatile.Read(ref _generation), State, Progress);
-            return inFlight;
+            LogHeld(CurrentLanguage);
+            Publish(latest, PackInstallState.Stopped);
+            return Task.CompletedTask;
         }
 
-        return RunToCompletionAsync(settled!);
+        if (next is null)
+        {
+            Publish(latest, State, Progress);
+            return joined!;
+        }
+
+        return RunToCompletionAsync(next, previous?.Done.Task);
     }
+
+    private bool HasInstalledVoice() =>
+        _platform.SupportsNeuralVoice && InstalledVoiceCatalog.Resolve(_packs.GetInstalledVoiceAndStorytellerPacks(), CurrentLanguage) is not null;
 
     // Any error ends in the Failed state, so a run started by a language change (nobody awaits it)
     // can never leave the spinner up. Waiters are released even if a Changed handler throws.
-    private async Task RunToCompletionAsync(TaskCompletionSource settled)
+    private async Task RunToCompletionAsync(VoiceRun run, Task? after)
     {
         try
         {
-            (PackInstallState? failure, int generation) = await RunUntilSettledAsync();
-
-            // Published after _running is cleared, so a Retry tapped the moment a failure shows
-            // is never swallowed; a newer run's generation makes this publish a no-op.
-            ReportEnd(failure);
-            if (failure is { } state)
+            if (after is not null)
             {
-                Publish(generation, state);
+                await after.ConfigureAwait(false); // chained after the cancelled run: never two runs on the same files
             }
-            else if (!Volatile.Read(ref _freshInstall))
+
+            RunEnd end = await RunUntilSettledAsync(run);
+            ReportAndPublish(end);
+            if (end.IsCurrent && end.LanguageMoved)
             {
-                StartUpdateInBackground(generation); // a pack just downloaded is already the newest catalog entry
+                _ = Task.Run(() => StartAsync(PackStartReason.Automatic)); // the old language's run was cancelled: the new language still starts
             }
         }
         finally
         {
-            settled.TrySetResult();
+            run.Done.TrySetResult();
         }
     }
 
-
     // Slice 182: every run reports its end once; the coordinator decides what is kept. Only Offline and Failed with a
-    // chosen language can restart; any other end (Ready, a run the user stopped) is reported as finished.
-    private void ReportEnd(PackInstallState? failure)
+    // chosen language can restart; any other end (Ready) is reported as finished and a run the user stopped as Cancelled.
+    // Runs after the end step released the lock, tagged with the run's id: a run that is no longer current (a newer one
+    // was started in the gap) reports and publishes nothing, so it cannot overwrite the newer run.
+    private void ReportAndPublish(RunEnd end)
     {
-        bool cancelled;
-        lock (_gate)
+        if (!end.IsCurrent)
         {
-            cancelled = _userCancelled && !_runReady; // a Cancel that arrives as the run finishes does not undo a finished install
-            _userCancelled = false;
-        }
-
-        if (cancelled)
-        {
-            _resume?.Report(ResumeKey, PackRunEnd.Cancelled, () => Task.FromResult(false));
-            Publish(Volatile.Read(ref _generation), PackInstallState.Idle);
             return;
         }
 
-        PackRunEnd end = failure switch
+        if (end.Cancelled)
         {
-            PackInstallState.Offline when _settings.Language is not null => PackRunEnd.Offline,
-            PackInstallState.Failed when _settings.Language is not null => PackRunEnd.Failed,
+            _resume?.Report(ResumeKey, PackRunEnd.Cancelled, () => Task.FromResult(false));
+            Publish(end.Id, end.Held ? PackInstallState.Stopped : PackInstallState.Idle);
+            return;
+        }
+
+        PackRunEnd kind = end.Failure switch
+        {
+            PackInstallState.Offline when end.LanguageChosen => PackRunEnd.Offline,
+            PackInstallState.Failed when end.LanguageChosen => PackRunEnd.Failed,
             _ => PackRunEnd.Finished,
         };
-        _resume?.Report(ResumeKey, end, ResumeAsync, Volatile.Read(ref _resolvedPackId));
+        _resume?.Report(ResumeKey, kind, ResumeAsync, end.PackId);
+        if (end.Failure is { } state)
+        {
+            Publish(end.Id, state);
+        }
+        else if (!end.Fresh)
+        {
+            StartUpdateInBackground(end.Id); // a pack just downloaded is already the newest catalog entry
+        }
     }
 
     // The restart the coordinator calls: false when a run is in flight (that run reports its own end).
@@ -255,13 +341,13 @@ public sealed class VoicePackInstaller
     {
         lock (_gate)
         {
-            if (_running)
+            if (_current is not null)
             {
                 return false;
             }
         }
 
-        await StartAsync().ConfigureAwait(false);
+        await StartAsync(PackStartReason.Automatic).ConfigureAwait(false);
         return true;
     }
 
@@ -270,60 +356,71 @@ public sealed class VoicePackInstaller
 
     private static bool SameLanguage(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
 
-    // A language chosen while a run is in flight (Slice 81) is served by the same call once the
-    // run for the old language stops, so no request is dropped. The flag is cleared in the same
+    // A language chosen while a run is in flight (Slice 81) is served by the same run once the pass
+    // for the old language stops, so no request is dropped. The decision to stop is taken in the same
     // lock as the final language check, so a change can never fall between the two; that holds
-    // for a run that threw as well.
-    private async Task<(PackInstallState? Failure, int Generation)> RunUntilSettledAsync()
+    // for a pass that threw as well.
+    private async Task<RunEnd> RunUntilSettledAsync(VoiceRun run)
     {
         while (true)
         {
             CancelQuietly(Interlocked.Exchange(ref _updateCancel, null)); // a new run supersedes a pack update
             var cancel = new CancellationTokenSource();
-            (Run run, string language) = BeginRun(cancel);
-            PackInstallState? failure = await RunGuardedAsync(run);
-            bool settled = EndRun(language, cancel);
+            string language = BeginPass(run, cancel);
+            PackInstallState? failure = await RunGuardedAsync(new Run(run.Id, cancel.Token, run));
+            RunEnd? end = EndPass(run, language, cancel, failure);
             cancel.Dispose();
-            if (settled)
+            if (end is not null)
             {
-                return (failure, run.Generation);
+                return end;
             }
         }
     }
 
-    private (Run Run, string Language) BeginRun(CancellationTokenSource cancel)
+    private string BeginPass(VoiceRun run, CancellationTokenSource cancel)
     {
         lock (_gate)
         {
-            _runCancel = cancel;
-            _userCancelled = false;
-            _runReady = false;
+            run.Cancel = cancel;
+            run.Started = true;
+            run.PackId = null;
             Volatile.Write(ref _resolvedPackId, null);
-            _runLanguage = CurrentLanguage;
-            return (new Run(++_generation, cancel.Token), _runLanguage);
+            run.Language = CurrentLanguage;
+            if (run.Cancelled)
+            {
+                cancel.Cancel(); // a Cancel landed between two passes
+            }
+
+            return run.Language;
         }
     }
 
-    // Always drops the source so a later cancel never reaches a disposed one; the run is over
-    // only when it was neither cancelled nor overtaken by a language change.
-    private bool EndRun(string language, CancellationTokenSource cancel)
+    // Null when another pass must follow (the language changed under this one). Otherwise the run's single locked end step:
+    // decide the end state, hold the language when the user cancelled it (and it is still current), and clear current if it
+    // is still this run. A Download tap right after finds no run and starts a new one; this run's id is no longer the newest then.
+    private RunEnd? EndPass(VoiceRun run, string language, CancellationTokenSource cancel, PackInstallState? failure)
     {
         lock (_gate)
         {
-            _runCancel = null;
-            if (_userCancelled)
+            run.Cancel = null;
+            if (!run.Cancelled && (cancel.IsCancellationRequested || !SameLanguage(language, CurrentLanguage)))
             {
-                _running = false;
-                return true; // final: no restart for a Cancel
+                return null;
             }
 
-            if (cancel.IsCancellationRequested || !SameLanguage(language, CurrentLanguage))
+            bool cancelled = run.Cancelled && !run.Ready;
+            bool isCurrent = ReferenceEquals(_current, run);
+            if (cancelled && isCurrent && SameLanguage(run.Language, CurrentLanguage))
             {
-                return false;
+                _hold.Hold(run.Language);
             }
 
-            _running = false;
-            return true;
+            if (isCurrent)
+            {
+                _current = null;
+            }
+
+            return new RunEnd(run.Id, failure, cancelled, _hold.IsHeld(CurrentLanguage), isCurrent, run.FreshInstall, _settings.Language is not null, run.PackId, cancelled && !SameLanguage(run.Language, CurrentLanguage));
         }
     }
 
@@ -337,8 +434,7 @@ public sealed class VoicePackInstaller
         {
             lock (_gate)
             {
-                _userCancelled = true;
-                HoldRunLanguage(); // the notification's Cancel reached a run whose pack id was not matched: still final, no error state
+                CancelRun(run.Voice!); // the notification's Cancel reached a run whose pack id was not matched: still final, no error state
             }
 
             return null;
@@ -353,7 +449,7 @@ public sealed class VoicePackInstaller
     /// <summary>Publishes the terminal Failed state for an error the caller caught outside a run.</summary>
     public void ReportFailed()
     {
-        Publish(Volatile.Read(ref _generation), PackInstallState.Failed);
+        Publish(Volatile.Read(ref _latestId), PackInstallState.Failed);
     }
 
     // Returns the failure state to publish, or null when nothing failed or the run was cancelled.
@@ -371,7 +467,6 @@ public sealed class VoicePackInstaller
 
     private async Task<PackInstallState?> RunCoreAsync(Run run)
     {
-        Volatile.Write(ref _freshInstall, false);
         // A platform with no neural engine never fetches the catalog or the pack; the
         // phone voice reads, which the Unavailable state already says.
         if (!_platform.SupportsNeuralVoice)
@@ -401,14 +496,13 @@ public sealed class VoicePackInstaller
             return resolveFailure;
         }
 
-        Volatile.Write(ref _resolvedPackId, pack.Id);
         PackDownloadResult downloaded = await DownloadPackAsync(pack, run);
         if (downloaded != PackDownloadResult.Ok)
         {
             return ToState(downloaded);
         }
 
-        Volatile.Write(ref _freshInstall, true);
+        run.Voice!.FreshInstall = true;
         await ActivateInstalledAsync(run, endsRun: true);
         return null;
     }
@@ -543,6 +637,11 @@ public sealed class VoicePackInstaller
     private async Task<PackDownloadResult> DownloadPackAsync(PackInfo pack, Run run)
     {
         Volatile.Write(ref _resolvedPackId, pack.Id); // also for an update download, so the notification's Cancel finds it
+        if (run.Voice is { } voice)
+        {
+            Volatile.Write(ref voice.PackId, pack.Id);
+        }
+
         Publish(run.Generation, PackInstallState.Downloading, 0);
         var progress = new InlineProgress(value => PublishProgress(run, value));
         return await _packs.DownloadAsync(pack.Id, progress, run.Token);
@@ -557,7 +656,7 @@ public sealed class VoicePackInstaller
         {
             lock (_gate)
             {
-                _runReady = true;
+                run.Voice!.Ready = true;
             }
         }
 
@@ -602,7 +701,7 @@ public sealed class VoicePackInstaller
 
     private void Apply(int generation, PackInstallState state, double progress)
     {
-        if (generation != Volatile.Read(ref _generation))
+        if (generation != Volatile.Read(ref _latestId))
         {
             return;
         }

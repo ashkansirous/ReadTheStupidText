@@ -115,6 +115,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Загрузка голоса повреждена. Читает голос телефона. Нажмите, чтобы повторить.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Пакет естественных голосов непригоден. Читает голос телефона.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Не удалось загрузить естественные голоса. Читает голос телефона. Нажмите, чтобы повторить.</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>Загрузка остановлена. Читает голос телефона. Нажмите, чтобы загрузить.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>Естественный голос для вашего языка пока недоступен. Читает голос телефона.</value></data>
   <data name="VoicePicker_Heading" xml:space="preserve"><value>Выберите голос</value></data>
   <data name="VoicePicker_Subtitle" xml:space="preserve"><value>Естественные голоса загружаются один раз · ваш текст остаётся на телефоне</value></data>
@@ -130,6 +132,7 @@
   <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Естественные голоса пока недоступны на этом устройстве, поэтому читает голос телефона.</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>Выберите язык. Мы загрузим для него естественный голос; пока он не загрузится, читает голос вашего телефона.</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>Повторить загрузку</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>Загрузить</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Продолжить</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>Начать чтение</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Голос {0} (женщина)</value></data>

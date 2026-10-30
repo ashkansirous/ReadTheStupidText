@@ -116,6 +116,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Der Download der Stimme war beschädigt. Es liest die Handy-Stimme. Tippe, um es noch einmal zu versuchen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Das Paket mit den natürlichen Stimmen ist unbrauchbar. Es liest die Handy-Stimme.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Die natürlichen Stimmen ließen sich nicht herunterladen. Es liest die Handy-Stimme. Tippe, um es noch einmal zu versuchen.</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>Download gestoppt. Es liest die Handy-Stimme. Tippe zum Herunterladen.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>Für deine Sprache gibt es noch keine natürliche Stimme. Es liest die Handy-Stimme.</value></data>
   <data name="VoicePicker_Heading" xml:space="preserve"><value>Stimme wählen</value></data>
   <data name="VoicePicker_Subtitle" xml:space="preserve"><value>Natürliche Stimmen werden nur einmal heruntergeladen · dein Text bleibt auf dem Handy</value></data>
@@ -131,6 +133,7 @@
   <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Natürliche Stimmen sind auf diesem Gerät noch nicht verfügbar, deshalb liest die Handy-Stimme.</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>Wähle deine Sprache. Wir laden eine natürliche Stimme dafür herunter; bis sie da ist, liest die Stimme deines Handys.</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>Download wiederholen</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>Herunterladen</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Weiter</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>Mit dem Lesen beginnen</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Stimme {0} (Frau)</value></data>

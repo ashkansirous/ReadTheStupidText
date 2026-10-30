@@ -15,7 +15,7 @@ public sealed class SpokenLanguage
 {
 	private readonly ISettingsStore _settings;
 	private readonly VoicePackInstaller _installer;
-	private readonly LatestWinsWorker<string> _worker;
+	private readonly LatestWinsWorker<WantedLanguage> _worker;
 	private readonly object _gate = new();
 	private CancellationTokenSource _stop = new();
 	private bool _cleared;
@@ -24,7 +24,7 @@ public sealed class SpokenLanguage
 	{
 		_settings = settings;
 		_installer = installer;
-		_worker = new LatestWinsWorker<string>(ServeAsync, ex => System.Diagnostics.Debug.WriteLine($"SpokenLanguage: {ex}"));
+		_worker = new LatestWinsWorker<WantedLanguage>(ServeAsync, ex => System.Diagnostics.Debug.WriteLine($"SpokenLanguage: {ex}"));
 	}
 
 	/// <summary>The language the voice speaks now (the stored setting, English when none).</summary>
@@ -34,8 +34,11 @@ public sealed class SpokenLanguage
 	public bool HasStored(string language) =>
 		string.Equals(_settings.Language, UiLanguage.Resolve(language), StringComparison.OrdinalIgnoreCase);
 
-	/// <summary>Uses <paramref name="language"/> for the voice, and starts that language's pack unless it is the one in use and ready.</summary>
-	public void Use(string language)
+	// A language to serve and why: a grown-up's own tap is User (it lifts a Cancel hold); anything else must pass Automatic (Slice 204).
+	private readonly record struct WantedLanguage(string Code, PackStartReason Reason);
+
+	/// <summary>Uses <paramref name="language"/> for the voice, and starts that language's pack unless it is the one in use and ready. <paramref name="reason"/> is User only for the grown-up's own language tap.</summary>
+	public void Use(string language, PackStartReason reason)
 	{
 		string code = UiLanguage.Resolve(language);
 		bool same = string.Equals(_settings.Language, code, StringComparison.OrdinalIgnoreCase);
@@ -49,7 +52,7 @@ public sealed class SpokenLanguage
 			_cleared = false;
 		}
 
-		_worker.Use(code);
+		_worker.Use(new WantedLanguage(code, reason));
 	}
 
 	/// <summary>Forgets the stored language (the first run's "Pick another"): a switch still queued or waiting on a download is dropped, never stored.</summary>
@@ -68,8 +71,9 @@ public sealed class SpokenLanguage
 	// One run per wanted language: store it (the installer starts a run for the change itself), then
 	// join that run: StartAsync completes when the run in flight settles, so the language is never
 	// reported served while its pack is still resolving. A Clear drops the run and stops waiting.
-	private async Task ServeAsync(string code)
+	private async Task ServeAsync(WantedLanguage wanted)
 	{
+		string code = wanted.Code;
 		CancellationToken stop = CurrentStop();
 		await WhileBusyAsync(stop);
 		if (!TryStore(code, stop))
@@ -77,7 +81,7 @@ public sealed class SpokenLanguage
 			return;
 		}
 
-		await WaitAsync(_installer.StartAsync(), stop);
+		await WaitAsync(_installer.StartAsync(wanted.Reason), stop);
 		await WhileBusyAsync(stop);
 	}
 

@@ -115,6 +115,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>La descarga de la voz se corrompió. Se lee con la voz del teléfono. Toca para reintentar.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>El paquete de voces naturales no se puede usar. Se lee con la voz del teléfono.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>No se pudieron descargar las voces naturales. Se lee con la voz del teléfono. Toca para reintentar.</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>Descarga detenida. Se lee con la voz del teléfono. Toca para descargar.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>Aún no hay una voz natural para tu idioma. Se lee con la voz del teléfono.</value></data>
   <data name="VoicePicker_Heading" xml:space="preserve"><value>Elige una voz</value></data>
   <data name="VoicePicker_Subtitle" xml:space="preserve"><value>Las voces naturales se descargan una sola vez · tu texto se queda en el teléfono</value></data>
@@ -130,6 +132,7 @@
   <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Las voces naturales aún no están disponibles en este dispositivo, así que lee la voz del teléfono.</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>Elige tu idioma. Descargaremos una voz natural para él; hasta que llegue, lee la voz de tu teléfono.</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>Reintentar descarga</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>Descargar</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Continuar</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>Empezar a leer</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Voz {0} (mujer)</value></data>
