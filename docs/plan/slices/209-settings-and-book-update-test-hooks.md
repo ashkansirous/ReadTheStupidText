@@ -28,6 +28,8 @@
 - [ ] A phone helper or `audio-timing.ps1` option that measures the Slice 181 apply (`stage-book-update`, force-stop, cold start, read `[BookUpdate]` apply time).
 - [ ] Maestro: one flow per hook on the emulator.
 
+- [ ] Runner checks (Slice 213, `tools/phone/checks/`): `language` (switch through each shipped UI language with `set-language`, read a line, assert the voice and the `HOOK set-language ok`; covers the night's sv/da/de/fa/nb/zh checks), `voice` (`set-voice`, voice name refresh as Slice 99), `translate` (`set-translate on`, read foreign text, assert the translated read; the Slice 139 race), and `book-update` (`stage-book-update`, cold start, apply time). Each added to the runner catalogue so a brief only names it.
+
 #### Verification
 
 - Fast: `TestHookCommand` parse tests.

@@ -76,6 +76,9 @@ Batch 35 (159, built, PR #473, so the batch is done; planned 2026-10-27, the use
 
 ## Outstanding work
 
+- **Needs the user (live change):** RTST versions up to rtst-v1.73.2 still download the broken Norwegian pack from `packs-9` and older and crash in Norsk; options in [Slice 201](docs/plan/slices/201-norwegian-pack-crash.md) (force update to 1.74.0 via `readthestupidtext/config.json`, or replace the old asset).
+- **User:** put the S21's screen lock back to a PIN (set to None for the 2026-10-29/30 unattended runs).
+
 
 **Store privacy declarations (legal; gates all usage counts, Decision 145).** No `telemetry.enabled` is set to `true` for an app until its rows are ticked. Claude drafts the answers and fills the forms in the user's signed-in Chrome; the user reviews and presses Submit/Publish.
 

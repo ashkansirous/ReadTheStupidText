@@ -15,6 +15,15 @@
 4. **`audio-timing.ps1` writes logs next to the repo** (`<repo parent>\.phone`), not in the shared worktrees folder (`Get-WorktreesRoot`) like the runner.
    - [ ] Use `Get-WorktreesRoot` for its output folder, like the runner.
 
+5. **The build command exists twice** (`Build-PhoneApk` in `audio-timing.ps1`, `Build-VariantApk` in `run-checks.ps1`; `audio-timing.ps1` cannot be dot-sourced). A change to one can silently miss the other.
+   - [ ] Move it into `common.ps1` and call it from both; a self-test that both produce the same command line for each variant.
+6. **The lease expiry moved between runs** (preflight printed 13:29/13:30 on the `-Prepare` runs and 12:55/12:56 on the timed runs, 2026-10-30). Not looked into: likely `-Prepare`'s 45-minute lease against the timed run's budget-sized one, but not proven.
+   - [ ] Confirm from the code which lease length each mode takes and print it with its reason; fix if a mode shortens or lengthens someone else's lease.
+7. **A corrupt lease file blocks the phone for 24 hours** (fails closed by design, `tools/phone/README.md`) and only a person deleting it frees the phone.
+   - [ ] `lease.ps1 -Show` and preflight name a corrupt lease, its age and when it frees; `lease.ps1 -Clear -Corrupt` removes only a corrupt file (never a valid one).
+8. **The `highlight` check prints very long uiautomator diff lines** into the run output.
+   - [ ] Print only the changed texts, cut to 120 characters, full dump to the log file.
+
 #### Verification
 
 - Fast: self-tests for items 2-4 in `pwsh` and Windows PowerShell 5.1.
