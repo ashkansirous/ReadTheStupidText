@@ -231,3 +231,11 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 190 | RTST phone: highlight one sentence at a time (Android and iOS; Windows unchanged) | built | #573 |  | [190-rtst-phone-sentence-highlight.md](../slices/190-rtst-phone-sentence-highlight.md) |
 | 196 | Dino: each book opens in the view that fits it (words in the pictures -> Picture only) | built | #575 |  | [196-dino-default-view-per-book.md](../slices/196-dino-default-view-per-book.md) |
 | 203 | Dino on the Microsoft Store: turn on automatic submissions and link it | built | #578 |  | [203-dino-microsoft-store-live.md](../slices/203-dino-microsoft-store-live.md) |
+| 187 | Translation downloads wait for the internet (Slice 182 frame R12, both apps, Android and iOS) | built | #576 |  | [187-translation-download-waits-for-internet.md](../slices/187-translation-download-waits-for-internet.md) |
+| 188 | Dino Settings behind the grown-up gate as a permanent VM check (Slice 172 follow-up) | built | #585 |  | [188-dino-settings-vm-check.md](../slices/188-dino-settings-vm-check.md) |
+| 191 | Dino: count restored and imported books (`own_book_added` kinds `restore`/`import`) | built | #581 |  | [191-dino-count-restored-and-imported-books.md](../slices/191-dino-count-restored-and-imported-books.md) |
+| 192 | Dino: the store credit line in every language, served by the store | built | #582 |  | [192-dino-store-credits-in-every-language.md](../slices/192-dino-store-credits-in-every-language.md) |
+| 197 | Dino: a "Download now" tap right after the mobile-data check is never dropped (Slice 115 gap) | built | #583 |  | [197-dino-download-now-tap-dropped.md](../slices/197-dino-download-now-tap-dropped.md) |
+| 198 | RTST phone: a Read tapped while early work is running reuses it (Slice 139 race) | closed, measured, no code | #584 |  | [198-rtst-phone-in-flight-early-start-race.md](../slices/198-rtst-phone-in-flight-early-start-race.md) |
+| 199 | Unit tests for the test-hook launch keys, BookMatch and the phone timing parser (Slice 175 gap) | built | #586 |  | [199-test-hook-unit-tests.md](../slices/199-test-hook-unit-tests.md) |
+| 200 | Check the live usage data after the store rollouts (Slices 133-179 live-row items) | built | #587 |  | [200-live-usage-data-checks.md](../slices/200-live-usage-data-checks.md) |

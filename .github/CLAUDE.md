@@ -108,6 +108,7 @@ diff) and uploads each book whose built version is higher, cover and package fir
 `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` (a missing token on `main` fails the job), has its own `concurrency` group and `dinostore` alone never
 cuts an app release (`CONTENT_ONLY_TARGETS` keeps it out of the major-bump check). One failing book no longer blocks the rest: the job fails at the end listing every failed book.
 A book is the folder `content/dino/<stem>/` (Slice 157): the `dinostore` and `dinoreader` targets watch it, and `dinoreader.yml` runs `BookBuilder check` after the tests. A book's `story.md` is Markdown, which the path filters ignore: `CONTENT_MARKDOWN` in `ship-targets.mjs` exempts it, and `dinoreader.yml` re-includes it after `!**/*.md` (a new Markdown file of content needs both).
+A book already live at the same version still gets only its `meta.json` re-uploaded when the built one differs from the bucket's, so listing-only data (credit lines) ships without a version bump. (Slice 192: docs/plan/slices/192-dino-store-credits-in-every-language.md)
 (Slice 158: docs/plan/slices/158-dino-publish-store-books.md)
 
 Dino Reader on iOS (Slice 67) is the `dinoios` target: `dinoreader-ios.yml` (a twin of `ios.yml`

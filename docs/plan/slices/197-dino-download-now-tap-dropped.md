@@ -2,7 +2,7 @@
 
 *Built (wave 2026-10-30), PR #583.* *Planned 2026-10-29.* Dino Reader (Android, iOS and the Windows head share the code). Gap left in Slice 115 (*Not yet verified*).
 
-**Touches:** `src/DinoReader.App/StorytellerDefault.cs`, `src/DinoReader.App/StorytellerViews.cs`, `src/DinoReader.App/Testing/DinoTestCommands.cs` (Debug hook only, if one is needed to force the mobile-data state), `.maestro/dino/**`, `tests/DinoReader.Tests/**`, `docs/plan/slices/197-dino-download-now-tap-dropped.md`.
+**Touches:** `src/DinoReader.App/StorytellerDefault.cs`, `src/DinoReader.App/StorytellerViews.cs`, `src/DinoReader.App/StorytellerConsent.cs`, `src/DinoReader.App/Testing/DinoTestCommands.cs` (Debug hook only, if one is needed to force the mobile-data state), `.maestro/dino/**`, `tests/DinoReader.Tests/**`, `docs/plan/slices/197-dino-download-now-tap-dropped.md`.
 
 #### Why
 
