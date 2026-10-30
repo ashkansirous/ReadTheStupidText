@@ -10,7 +10,7 @@ public class SentenceHighlightTests
     [Fact]
     public void Spans_PointAtEachSentenceOfTheSource()
     {
-        IReadOnlyList<SentenceSpan>? spans = SentenceSpans.Compute(Three, Three, 0);
+        IReadOnlyList<ChunkSentenceSpan>? spans = SentenceSpans.Compute(Three, Three, 0);
 
         Assert.NotNull(spans);
         Assert.Equal(3, spans!.Count);
@@ -26,7 +26,7 @@ public class SentenceHighlightTests
         int start = full.IndexOf("First", StringComparison.Ordinal);
         string chunk = "First sentence of the chunk. Second sentence of the chunk.";
 
-        IReadOnlyList<SentenceSpan>? spans = SentenceSpans.Compute(chunk, full, start);
+        IReadOnlyList<ChunkSentenceSpan>? spans = SentenceSpans.Compute(chunk, full, start);
 
         Assert.Equal(2, spans!.Count);
         Assert.Equal("First   sentence of the chunk.", full[spans[0].Start..spans[0].End]);
@@ -38,10 +38,10 @@ public class SentenceHighlightTests
     {
         const string text = "just some words with no full stop at all";
 
-        IReadOnlyList<SentenceSpan>? spans = SentenceSpans.Compute(text, text, 0);
+        IReadOnlyList<ChunkSentenceSpan>? spans = SentenceSpans.Compute(text, text, 0);
 
         Assert.Single(spans!);
-        Assert.Equal(new SentenceSpan(0, text.Length), spans![0]);
+        Assert.Equal(new ChunkSentenceSpan(0, text.Length), spans![0]);
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class SentenceHighlightTests
     {
         const string text = "این جمله اول برای آزمایش است. این هم جمله دوم برای آزمایش است.";
 
-        IReadOnlyList<SentenceSpan>? spans = SentenceSpans.Compute(text, text, 0);
+        IReadOnlyList<ChunkSentenceSpan>? spans = SentenceSpans.Compute(text, text, 0);
 
         Assert.Equal(2, spans!.Count);
         Assert.Equal("این جمله اول برای آزمایش است.", text[spans[0].Start..spans[0].End]);

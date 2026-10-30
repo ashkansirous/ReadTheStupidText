@@ -1,7 +1,7 @@
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>One sentence unit's range in the read's full text (Slice 190).</summary>
-public readonly record struct SentenceSpan(int Start, int End);
+public readonly record struct ChunkSentenceSpan(int Start, int End);
 
 /// <summary>
 /// Finds where each sentence unit of a chunk sits in the read's full text, for the phone's
@@ -15,18 +15,18 @@ public static class SentenceSpans
     /// characters in order from <paramref name="sourceStart"/> (chunking only normalizes whitespace).
     /// Null when the chunk is not such a rewrite of the text, so the caller keeps its chunk highlight.
     /// </summary>
-    public static IReadOnlyList<SentenceSpan>? Compute(string chunkText, string fullText, int sourceStart)
+    public static IReadOnlyList<ChunkSentenceSpan>? Compute(string chunkText, string fullText, int sourceStart)
     {
         if (sourceStart < 0 || sourceStart > fullText.Length)
         {
             return null;
         }
 
-        var spans = new List<SentenceSpan>();
+        var spans = new List<ChunkSentenceSpan>();
         int cursor = sourceStart;
         foreach (string unit in SentenceUnits.Split(chunkText))
         {
-            if (!TryLocate(unit, fullText, ref cursor, out SentenceSpan span))
+            if (!TryLocate(unit, fullText, ref cursor, out ChunkSentenceSpan span))
             {
                 return null;
             }
@@ -37,7 +37,7 @@ public static class SentenceSpans
         return spans;
     }
 
-    private static bool TryLocate(string unit, string fullText, ref int cursor, out SentenceSpan span)
+    private static bool TryLocate(string unit, string fullText, ref int cursor, out ChunkSentenceSpan span)
     {
         int start = -1;
         int end = cursor;
@@ -59,7 +59,7 @@ public static class SentenceSpans
             end = cursor;
         }
 
-        span = new SentenceSpan(start, end);
+        span = new ChunkSentenceSpan(start, end);
         return start >= 0;
     }
 }

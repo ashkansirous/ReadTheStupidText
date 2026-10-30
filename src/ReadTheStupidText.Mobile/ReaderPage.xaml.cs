@@ -729,7 +729,7 @@ public partial class ReaderPage : ContentPage
     private const float HighlightAlpha = 0.16f;
     private (int Start, int End)? _highlight;
     private readonly SentenceHighlightGate _sentenceGate = new();
-    private IReadOnlyList<SentenceSpan>? _sentenceSpans;
+    private IReadOnlyList<ChunkSentenceSpan>? _sentenceSpans;
     private void OnReaderChunkChanged(object? sender, ReadChunk chunk) =>
         MainThread.BeginInvokeOnMainThread(() => ShowHighlight(chunk));
 
@@ -765,7 +765,7 @@ public partial class ReaderPage : ContentPage
             return;
         }
 
-        SentenceSpan span = spans[change.SentenceIndex];
+        ChunkSentenceSpan span = spans[change.SentenceIndex];
         _highlight = (span.Start, span.End);
         RenderReading();
         ScrollToHighlight(text.Length);
