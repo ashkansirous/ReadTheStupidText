@@ -22,6 +22,7 @@ namespace ReadTheStupidText.Mobile;
 /// </summary>
 public sealed class OcrPackInstaller
 {
+    private const string HeldMarker = "OCRPACK held-voice-cancelled";
     private static readonly TimeSpan CatalogMaxAge = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan VoiceHeadStart = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan VoicePollInterval = TimeSpan.FromSeconds(2);
@@ -32,6 +33,7 @@ public sealed class OcrPackInstaller
     private readonly VoicePackInstaller _voice;
     private readonly IPackResume? _resume;
     private int _running;
+    private string? _heldLanguage; // Slice 186: the language whose scan pack is held back by a voice cancel; started once the voice pack is Ready
     private string? _cancelledLanguage; // the background install the user cancelled from the notification, reported once the guard is clear
     private (string Language, PackDownloadResult Result)? _stopped; // how the background install ended, reported once the guard is clear
     private readonly ConcurrentDictionary<string, DownloadFlight> _flights = new(StringComparer.OrdinalIgnoreCase); // one download per pack id, shared by the background run and a person waiting (Slice 87)
@@ -43,6 +45,7 @@ public sealed class OcrPackInstaller
         _settings = settings;
         _voice = voice;
         languages.LanguageChanged += (_, _) => _ = EnsureForCurrentLanguageAsync();
+        voice.Changed += (_, _) => StartIfHoldLifted();
         UseLocalizedDownloadNotification();
     }
 
@@ -60,6 +63,27 @@ public sealed class OcrPackInstaller
         Page page = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault()?.Page ?? throw new InvalidOperationException("No page to ask on.");
         return page.DisplayAlertAsync(AppResources.Notify_Title, AppResources.Notify_Body, AppResources.Notify_Continue, AppResources.Notify_NotNow);
     });
+
+    // Slice 186: a retried voice pack that reaches Ready lifts the hold; the held scan pack then follows.
+    private void StartIfHoldLifted()
+    {
+        string? held = Volatile.Read(ref _heldLanguage);
+        if (held is null || _voice.State != PackInstallState.Ready || _voice.IsUserCancelled(held))
+        {
+            return;
+        }
+
+        if (!string.Equals(_settings.Language, held, StringComparison.OrdinalIgnoreCase))
+        {
+            Interlocked.CompareExchange(ref _heldLanguage, null, held); // stale: the language moved on, its own run decides
+            return;
+        }
+
+        if (Interlocked.CompareExchange(ref _heldLanguage, null, held) == held)
+        {
+            _ = EnsureForCurrentLanguageAsync();
+        }
+    }
 
     public async Task EnsureForCurrentLanguageAsync() => await EnsureBackgroundAsync(null).ConfigureAwait(false);
 
@@ -108,6 +132,19 @@ public sealed class OcrPackInstaller
         try
         {
             await WaitForVoiceDownloadsAsync().ConfigureAwait(false);
+            if (!string.Equals(_settings.Language, language, StringComparison.OrdinalIgnoreCase))
+            {
+                return; // the language changed during the wait: the restart in the caller handles the new one
+            }
+
+            if (_voice.IsUserCancelled(language))
+            {
+                LogHeld(language); // Slice 186: the user cancelled the voice pack; no scan pack download by itself (opening Scan still offers it)
+                Volatile.Write(ref _heldLanguage, language);
+                _stopped = (language, PackDownloadResult.Ok); // reported Finished, so an older "ocr:<lang>" resume entry is forgotten
+                return;
+            }
+
             await InstallAsync(language).ConfigureAwait(false);
         }
         catch (PackCancelledByNotificationException)
@@ -120,6 +157,15 @@ public sealed class OcrPackInstaller
             System.Diagnostics.Debug.WriteLine($"OCR pack install for '{language}' failed: {ex.Message}");
             _stopped = (language, PackDownloadResult.Failed);
         }
+    }
+
+    private static void LogHeld(string language)
+    {
+        string line = $"{HeldMarker} {language}";
+        System.Diagnostics.Debug.WriteLine(line);
+#if DEBUG
+        Shared.Testing.TestHookLog.Write(line);
+#endif
     }
 
     // The voice pack is the one the user is waiting for, so OCR never competes with it for bandwidth.
