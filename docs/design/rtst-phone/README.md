@@ -148,3 +148,43 @@ Also read these files the selection imports:
 
 Implement: `Batch 39 Downloads.dc.html`
 ```
+
+## Batch 42 mock — `Batch 42 Updates and Paused Downloads.dc.html` (both apps)
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Batch 42 Updates and Paused Downloads.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Batch+42+Updates+and+Paused+Downloads.dc.html>).
+- **Copied:** 2026-10-30, verbatim from `DesignSync get_file`. Same images as Batch 39 (already here, same relative paths).
+- **Covers:** Batch 42, Slices 208 (paused downloads tell you; download texts name language and size) and 217
+  (RTST forced update on the phone and the Windows tray, ported from `../dino-reader/Dino Reader Batch 26-28.dc.html`
+  frames 61-62). N2-N3 extend N1 in Batch 39.
+
+| # | Screen | Line |
+|---|---|---|
+| — | **RTST phone · update · Slice 217** (group) | 23 |
+| R14 | Update needed | 27 |
+| R15 | Main page · update available | 46 |
+| — | **RTST Windows tray · update · Slice 217** (group) | 69 |
+| W3 | Control panel · update needed | 73 |
+| W4 | Control panel · update available | 98 |
+| — | **Paused downloads · Slice 208** (group) | 122 |
+| N2 | Android shade · downloading, then paused | 126 |
+| N3 | iOS Notification Center · quiet delivery | 155 |
+
+(Generated from the captions with a script.) To refresh: fetch the file again with `DesignSync get_file`, overwrite this copy, regenerate this table and re-run `design-to-plan`.
+
+Import prompt (verbatim):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Batch+42+Updates+and+Paused+Downloads.dc.html
+
+Focus on these files (the whole project is readable):
+- `Batch 42 Updates and Paused Downloads.dc.html`
+
+Also read these files the selection imports:
+- `assets/app-tile.png`
+- `design_handoff_tray_panel/assets/glyph.png`
+- `dino_reader_icons/ios/AppIcon-1024-light.png`
+
+Implement: `Batch 42 Updates and Paused Downloads.dc.html`
+```
