@@ -1,6 +1,6 @@
 ### Slice 198 — RTST phone: a Read tapped while early work is still running reuses it
 
-*Planned 2026-10-29.* Read The Stupid Text on Android and iOS (shared MAUI read path; Windows unchanged). Gap left in Slice 139 (*Not yet verified*).
+*In progress (wave 2026-10-30, wave 2), draft PR.* *Planned 2026-10-29.* Read The Stupid Text on Android and iOS (shared MAUI read path; Windows unchanged). Gap left in Slice 139 (*Not yet verified*).
 
 **Touches:** `src/ReadTheStupidText.Application/Reading/EarlyStartCoordinator.cs`, `src/ReadTheStupidText.Application/Reading/EarlyStartPlan.cs`, `src/ReadTheStupidText.Application/Reading/EarlyStartVoice.cs`, `src/ReadTheStupidText.Application/Reading/ReadAloudService.EarlyStart.cs`, `src/ReadTheStupidText.Mobile/ReaderPage.EarlyStart.cs`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `tests/ReadTheStupidText.Tests/EarlyStart*.cs`, `tools/phone/**` (a scripted race run), `docs/plan/slices/198-rtst-phone-in-flight-early-start-race.md`.
 
@@ -12,6 +12,12 @@ Early start (Slice 139) makes the first sentence ready before Read is tapped. Wh
 
 - First a scripted real-phone run of the race (`tools/phone`, wireless adb, the Slice 165 timing markers): untick Translate, tap Read 0.3 s later, five times; and Translate-and-read before the early voice lands. If first audio is within 1 s of the non-race case every time, record it and close the slice with no code change.
 - If it reproduces, the fix is in the coordinator: a Read that finds early work in flight for the same text, voice and translation joins it (bounded by the existing 10 s settle cap) instead of starting a second synthesis. A different text or voice still cancels and starts fresh.
+
+#### Claim notes (2026-10-30, grounded)
+
+- Single owner today: `EarlyStartCoordinator._run` (`EarlyStartCoordinator.cs:32`). `RestartDeferred` (:80-97) cancels the old run unless `KeepsChoice` (:113-116), which needs a tap to have committed it. A Read 0.3 s after unticking Translate reaches `ChooseRead` (:151); `SettleChosenAsync` (:168) awaits only committed tasks, so an in-flight run with `OriginalCommitted=false` is not joined: a cold start is possible (from code, not yet measured).
+- The "10 s settle cap" is not in this file; find it (`ReadAloudService.EarlyStart.cs` or `ReaderPage.EarlyStart.cs`) before relying on it.
+- Order: the phone measurement merges its numbers into this file first; code only if it reproduces.
 
 #### Work
 
