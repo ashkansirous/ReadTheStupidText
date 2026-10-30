@@ -52,4 +52,4 @@ Real S21, Android 15. The old piper-nb v1 pack was rejected (`RTST_PACK_TOKENS_R
 #### Not yet verified
 
 - Windows desktop (sherpa engine with the new pack) and iOS device not run.
-- The Maestro flow `.maestro/rtst/norsk-pack-reads.yaml` has never run (Maestro not installed).
+- The Maestro flow `.maestro/rtst/norsk-pack-reads.yaml` has never run. (Corrected 2026-10-30: Maestro 2.12.0 is installed in `<worktrees>/.tools/maestro`; the night agent looked on the PATH. Run it through `tools/emulator/run-flows.ps1`; planned in Slice 209's checks.)
