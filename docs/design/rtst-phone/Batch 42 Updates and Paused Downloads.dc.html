@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>html,body{margin:0;padding:0;background:#eceef4;}*{box-sizing:border-box;}a{color:#4A46D6;}a:hover{color:#3833b8;}</style>
+</helmet>
+<section style="padding:48px 56px 80px;font-family:'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif;color:#1f2027">
+ <div style="max-width:1200px">
+  <div style="font-size:12px;font-weight:700;letter-spacing:2px;color:#4A46D6;text-transform:uppercase">Read The Stupid Text + Dino Reader · Batch 42 (Slices 208, 217)</div>
+  <div style="font-size:32px;font-weight:600;margin-top:6px">Forced updates for RTST, and paused downloads</div>
+  <div style="font-size:15px;color:rgba(0,0,0,.6);margin-top:10px;line-height:1.55;max-width:980px;text-wrap:pretty">Read The Stupid Text gets Dino’s forced update on the phone and the Windows tray (Slice 217, ported from <a href="Dino%20Reader%20Batch%2026-28.dc.html">Batch 26-28</a> frames 61–62). A download that Android or iOS stops in the background now <b>tells you</b> and finishes when tapped. Every download text now names the <b>language and size</b> (Slice 208). Frames N2–N3 extend N1 in <a href="Batch%2039%20Downloads.dc.html">Batch 39</a>. Frame 96 there already shows the deferred Dino question.</div>
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:rgba(0,0,0,.45);text-transform:uppercase;margin-top:36px">RTST phone · update · Slice 217</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">R14 · Update needed</div>
+   <div data-screen-label="R14 RTST update needed" style="width:360px;height:760px;border-radius:26px;overflow:hidden;background:#f4f5f9;box-shadow:0 18px 50px rgba(20,30,60,.22);border:1px solid rgba(0,0,0,.10);display:flex;flex-direction:column">
+    <div style="height:30px;background:#5B57E8;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:11px;font-weight:600;flex-shrink:0"><span>9:41</span><span>100%</span></div>
+    <div style="background:linear-gradient(135deg,#5B57E8,#3B82F6);height:64px;flex-shrink:0;position:relative;overflow:hidden;display:flex;align-items:center;padding:0 18px;color:#fff"><img src="design_handoff_tray_panel/assets/glyph.png" style="position:absolute;right:40px;top:-18px;width:100px;height:100px;filter:brightness(0) invert(1);opacity:.12;transform:rotate(-8deg)"><span style="position:relative;font-size:17px;font-weight:600">Read The Stupid Text</span></div>
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;padding:90px 22px 22px;gap:16px;text-align:center">
+     <div style="position:relative;width:132px;height:132px;display:flex;align-items:center;justify-content:center">
+      <div style="position:absolute;inset:0;border-radius:50%;background:rgba(91,87,232,.10)"></div>
+      <img src="assets/app-tile.png" style="position:relative;width:96px;height:96px;border-radius:24px;display:block">
+      <div style="position:absolute;right:2px;bottom:2px;width:42px;height:42px;border-radius:50%;background:#5B57E8;border:4px solid #f4f5f9;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12"></path><path d="M6.5 10.5L12 16l5.5-5.5"></path><path d="M5 20h14"></path></svg></div>
+     </div>
+     <div style="font-size:24px;font-weight:600;line-height:1.25;margin-top:8px">Update needed</div>
+     <div style="font-size:15px;color:rgba(0,0,0,.62);line-height:1.45;max-width:280px;text-wrap:pretty">This version has a problem that’s been fixed. Get the new one to keep reading. Your settings and voices stay as they are.</div>
+     <div style="margin-top:auto;width:100%;height:60px;border-radius:16px;background:linear-gradient(135deg,#5B57E8,#3B82F6);color:#fff;font-size:17px;font-weight:600;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(91,87,232,.32)">Open Google Play</div>
+    </div>
+   </div>
+   <div style="width:360px;font-size:12.5px;color:rgba(0,0,0,.6);line-height:1.5;text-wrap:pretty">This shows when the installed version is below <code>android.minVersion</code> (or <code>ios.minVersion</code>). It replaces the whole app, with <b>no back, close or skip</b>, and Android’s back button closes the app. It works like Dino’s frame 61, but <b>without the gate</b>, because RTST’s users are grown-ups. The button opens the Play page (iOS: <b>“Open the App Store”</b>). A missing or bad config, an offline start with no saved config, or a Debug or unstamped build means no forced update. The copy is a draft.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">R15 · Main page · update available</div>
+   <div data-screen-label="R15 RTST update available" style="width:360px;height:760px;border-radius:26px;overflow:hidden;background:#f4f5f9;box-shadow:0 18px 50px rgba(20,30,60,.22);border:1px solid rgba(0,0,0,.10);display:flex;flex-direction:column">
+    <div style="height:30px;background:#5B57E8;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:11px;font-weight:600;flex-shrink:0"><span>9:41</span><span>100%</span></div>
+    <div style="background:linear-gradient(135deg,#5B57E8,#3B82F6);padding:8px 8px 8px 18px;color:#fff;flex-shrink:0;position:relative;overflow:hidden;display:flex;align-items:center;min-height:64px"><img src="design_handoff_tray_panel/assets/glyph.png" style="position:absolute;right:40px;top:-18px;width:100px;height:100px;filter:brightness(0) invert(1);opacity:.12;transform:rotate(-8deg)"><span style="position:relative;flex:1;font-size:17px;font-weight:600">Read The Stupid Text</span><div style="position:relative;width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"></path></svg></div></div>
+    <div style="flex:1;min-height:0;padding:14px 14px 12px;display:flex;flex-direction:column;gap:12px">
+     <div style="background:#fff;border:1px solid rgba(91,87,232,.28);border-radius:16px;padding:6px 4px 6px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A46D6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 4v12"></path><path d="M6.5 10.5L12 16l5.5-5.5"></path><path d="M5 20h14"></path></svg>
+      <span style="flex:1;font-size:15px;font-weight:600">A new version is ready</span>
+      <div style="height:44px;padding:0 14px;border-radius:12px;background:rgba(91,87,232,.10);color:#4A46D6;font-size:15px;font-weight:600;display:flex;align-items:center">Get it</div>
+      <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.5)"><svg width="14" height="14" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg></div>
+     </div>
+     <div style="flex:1;min-height:0;background:#fff;border:1px solid rgba(0,0,0,.11);border-radius:16px;padding:16px;font-size:19px;line-height:1.6;color:rgba(0,0,0,.4)">Type or paste text here</div>
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0">
+      <div style="height:92px;border-radius:16px;background:#fff;border:1px solid rgba(0,0,0,.11);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:15.5px;font-weight:600"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A46D6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 012-2h1.5l1.2-2h6.6l1.2 2H20a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V8z"></path><circle cx="13" cy="12.5" r="3.4"></circle></svg>Text from pictures</div>
+      <div style="height:92px;border-radius:16px;background:#fff;border:1px solid rgba(0,0,0,.11);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:15.5px;font-weight:600"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A46D6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5z"></path><path d="M14 3v5h5"></path></svg>Text from a file</div>
+     </div>
+     <div style="height:138px;background:#fff;border:1px solid rgba(0,0,0,.11);border-radius:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><div style="width:72px;height:72px;border-radius:50%;background:#c9cbd6"></div></div>
+    </div>
+   </div>
+   <div style="width:360px;font-size:12.5px;color:rgba(0,0,0,.6);line-height:1.5;text-wrap:pretty">This shows when the version is below <code>latestVersion</code> but not below <code>minVersion</code>. A <b>one-line card above the text box</b> pushes the box down, and nothing covers it. <b>Get it</b> opens the store page. <b>×</b> hides it until the next <code>latestVersion</code>, remembered per version, so it doesn’t come back every launch. It never shows while reading or on first run. Settings (R10) doesn’t get a row, unlike Dino’s frame 62, so the card is the only place it shows. The copy is a draft.</div>
+  </div>
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:rgba(0,0,0,.45);text-transform:uppercase;margin-top:48px">RTST Windows tray · update · Slice 217</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">W3 · Control panel · update needed</div>
+   <div data-screen-label="W3 Control panel update needed" style="width:380px;padding:18px;border-radius:10px;background:linear-gradient(150deg,#b9c6ef 0%,#cdd8f6 55%,#dfe6fb 100%)">
+    <div style="width:344px;border-radius:8px;background:rgba(251,251,253,.94);border:1px solid rgba(0,0,0,.10);box-shadow:0 18px 50px rgba(20,30,60,.30);padding:16px;display:flex;flex-direction:column;gap:14px">
+     <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px"><img src="assets/app-tile.png" style="width:24px;height:24px;border-radius:6px;display:block"><div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:600;color:rgba(0,0,0,.89);line-height:1.2">ReadTheStupidText</span><span style="font-size:11px;color:rgba(0,0,0,.56);line-height:1.3">Reading paused</span></div></div>
+      <div style="width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.56);background:rgba(0,0,0,.06)"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path></svg></div>
+     </div>
+     <div style="display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:8px;background:rgba(255,255,255,.6);border:1px solid rgba(0,0,0,.08)">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+       <div style="width:32px;height:32px;border-radius:50%;background:#3B6FE3;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12"></path><path d="M6.5 10.5L12 16l5.5-5.5"></path><path d="M5 20h14"></path></svg></div>
+       <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600;color:rgba(0,0,0,.89)">Update needed</span><span style="font-size:12.5px;color:rgba(0,0,0,.62);line-height:1.4;text-wrap:pretty">This version has a problem that’s been fixed. Reading starts again once you update.</span></div>
+      </div>
+      <div style="height:32px;border-radius:5px;background:#3B6FE3;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center">Open Microsoft Store</div>
+     </div>
+     <div style="display:flex;align-items:center;justify-content:center;gap:16px;opacity:.35">
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.08)"></div>
+      <div style="width:44px;height:44px;border-radius:50%;background:#9aa3bf"></div>
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.08)"></div>
+     </div>
+    </div>
+   </div>
+   <div style="width:380px;font-size:12.5px;color:rgba(0,0,0,.6);line-height:1.5;text-wrap:pretty">The check runs at start and once a day. Below <code>windows.minVersion</code>, the <b>panel opens by itself</b> on this notice, and the transport and toggles go <b>greyed and unclickable</b>. The hotkey and auto-read do nothing except reopen the panel here, so nothing reads aloud. The tray icon stays. Closing the panel is allowed, but it comes back on the next read try. The button opens the Store’s app page with <code>ms-windows-store://pdp/</code>. Only the changed parts are shown, and the toggles are left out. The copy is a draft.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">W4 · Control panel · update available</div>
+   <div data-screen-label="W4 Control panel update available" style="width:380px;padding:18px;border-radius:10px;background:linear-gradient(150deg,#b9c6ef 0%,#cdd8f6 55%,#dfe6fb 100%)">
+    <div style="width:344px;border-radius:8px;background:rgba(251,251,253,.94);border:1px solid rgba(0,0,0,.10);box-shadow:0 18px 50px rgba(20,30,60,.30);padding:16px;display:flex;flex-direction:column;gap:14px">
+     <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px"><img src="assets/app-tile.png" style="width:24px;height:24px;border-radius:6px;display:block"><div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:600;color:rgba(0,0,0,.89);line-height:1.2">ReadTheStupidText</span><span style="font-size:11px;color:rgba(0,0,0,.56);line-height:1.3">Ready</span></div></div>
+      <div style="width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.56);background:rgba(0,0,0,.06)"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path></svg></div>
+     </div>
+     <div style="display:flex;align-items:center;gap:10px;padding:6px 6px 6px 12px;border-radius:8px;background:rgba(59,111,227,.08);border:1px solid rgba(59,111,227,.22)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B6FE3" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 4v12"></path><path d="M6.5 10.5L12 16l5.5-5.5"></path><path d="M5 20h14"></path></svg>
+      <span style="flex:1;font-size:13px;color:rgba(0,0,0,.89)">A new version is ready</span>
+      <div style="height:28px;padding:0 12px;border-radius:5px;background:rgba(255,255,255,.72);border:1px solid rgba(0,0,0,.10);font-size:12.5px;color:rgba(0,0,0,.89);display:flex;align-items:center">Get it</div>
+      <div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.56)"><svg width="10" height="10" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path></svg></div>
+     </div>
+     <div style="display:flex;align-items:center;justify-content:center;gap:16px">
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.08)"></div>
+      <div style="width:44px;height:44px;border-radius:50%;background:#3B6FE3"></div>
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.08)"></div>
+     </div>
+    </div>
+   </div>
+   <div style="width:380px;font-size:12.5px;color:rgba(0,0,0,.6);line-height:1.5;text-wrap:pretty">Below <code>latestVersion</code>, a thin bar sits <b>under the header</b> the next time the user opens the panel. The panel <b>never opens by itself</b> for this, and no toast shows. Reading works as normal. <b>×</b> hides it for that version, the same as R15. On a Store install the Store usually updates by itself, so most users never see this. The copy is a draft.</div>
+  </div>
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:rgba(0,0,0,.45);text-transform:uppercase;margin-top:48px">Paused downloads · Slice 208</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">N2 · Android shade · downloading, then paused</div>
+   <div data-screen-label="N2 Android paused notification" style="width:360px;height:760px;border-radius:26px;overflow:hidden;background:#dfe2ee;box-shadow:0 18px 50px rgba(20,30,60,.22);border:1px solid rgba(0,0,0,.10);display:flex;flex-direction:column;color:#1f2027;font-family:'Google Sans','Roboto',system-ui,sans-serif">
+    <div style="height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:11px;font-weight:600;flex-shrink:0;color:rgba(0,0,0,.7)"><span>9:41</span><span>100%</span></div>
+    <div style="padding:14px 20px 18px;display:flex;flex-direction:column;gap:2px"><span style="font-size:34px;font-weight:400;line-height:1">9:41</span><span style="font-size:13px;color:rgba(0,0,0,.6)">Friday, 30 October</span></div>
+    <div style="padding:0 12px;display:flex;flex-direction:column;gap:6px">
+     <div style="font-size:12px;font-weight:600;color:rgba(0,0,0,.55);padding:6px 6px 2px">While downloading (N1, new text)</div>
+     <div style="background:#f6f7fb;border-radius:24px;padding:14px 16px 10px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(0,0,0,.6)"><img src="assets/app-tile.png" style="width:20px;height:20px;border-radius:50%;display:block"><span>Read The Stupid Text</span><span>·</span><span>now</span></div>
+      <div style="font-size:15px;font-weight:600">Downloading the French voice (124 MB)… 45%</div>
+      <div style="height:4px;border-radius:2px;background:rgba(0,0,0,.12);overflow:hidden"><div style="width:45%;height:100%;background:#5B57E8;border-radius:2px"></div></div>
+      <div style="display:flex"><div style="height:40px;padding:0 12px;margin-left:-12px;border-radius:20px;color:#4A46D6;font-size:14px;font-weight:600;display:flex;align-items:center">Cancel</div></div>
+     </div>
+     <div style="font-size:12px;font-weight:600;color:rgba(0,0,0,.55);padding:14px 6px 2px">After Android stops it</div>
+     <div style="background:#f6f7fb;border-radius:24px 24px 8px 8px;padding:14px 16px;display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(0,0,0,.6)"><img src="assets/app-tile.png" style="width:20px;height:20px;border-radius:50%;display:block"><span>Read The Stupid Text</span><span>·</span><span>now</span></div>
+      <div style="font-size:15px;font-weight:600">Download paused. Tap to finish.</div>
+      <div style="font-size:13.5px;color:rgba(0,0,0,.62)">French voice (124 MB) · 45% done</div>
+     </div>
+     <div style="background:#f6f7fb;border-radius:8px 8px 24px 24px;padding:14px 16px;display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(0,0,0,.6)"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:20px;height:20px;border-radius:50%;display:block"><span>Dino Reader</span><span>·</span><span>3 min</span></div>
+      <div style="font-size:15px;font-weight:600">Download paused. Tap to finish.</div>
+      <div style="font-size:13.5px;color:rgba(0,0,0,.62)">Svenska voice (124 MB) · 42% done</div>
+     </div>
+    </div>
+   </div>
+   <div style="width:360px;font-size:12.5px;color:rgba(0,0,0,.6);line-height:1.5;text-wrap:pretty">The top card is N1 with the new text, which names the <b>language and size</b> (Dino: “Getting the Svenska voice ready (124 MB) · 42%”). When Android 15 stops the service on its time limit, the ongoing card is replaced by a <b>normal notification</b> on the same pack channel. It can be swiped away, has <b>no buttons</b>, and keeps the downloaded share in the second line. Tapping it opens the app, and the foreground resume carries on from 45%, back to R8 or frame 87. It disappears by itself once the download resumes or finishes. Dino’s tap lands on the shelf, not behind the gate, and the download carries on there with no screen. The two apps’ cards are shown together only to compare. The copy is a draft.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">N3 · iOS Notification Center · quiet delivery</div>
+   <div data-screen-label="N3 iOS paused notification" style="width:360px;height:760px;border-radius:44px;overflow:hidden;background:linear-gradient(170deg,#3a3f63 0%,#262a47 55%,#181a30 100%);box-shadow:0 18px 50px rgba(20,30,60,.22);border:6px solid #111;display:flex;flex-direction:column;color:#fff;font-family:-apple-system,'SF Pro Text',system-ui,sans-serif">
+    <div style="height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:13px;font-weight:600;flex-shrink:0"><span>9:41</span><span>100%</span></div>
+    <div style="padding:30px 0 30px;display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:15px;opacity:.8">Friday 30 October</span><span style="font-size:80px;font-weight:600;line-height:1;letter-spacing:-1px">9:41</span></div>
+    <div style="padding:0 10px;display:flex;flex-direction:column;gap:8px">
+     <div style="font-size:15px;font-weight:600;padding:0 8px">Notification Center</div>
+     <div style="background:rgba(245,246,250,.82);color:#1f2027;border-radius:20px;padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+       <img src="assets/app-tile.png" style="width:36px;height:36px;border-radius:9px;display:block;flex-shrink:0">
+       <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+        <div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:600">Read The Stupid Text</span><span style="color:rgba(0,0,0,.5);font-size:12.5px">now</span></div>
+        <span style="font-size:14px;font-weight:600">Download paused. Tap to finish.</span>
+        <span style="font-size:14px;color:rgba(0,0,0,.7)">French voice (124 MB) · 45% done</span>
+       </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+       <div style="height:38px;border-radius:12px;background:rgba(0,0,0,.07);font-size:14px;font-weight:600;color:#1f6fe0;display:flex;align-items:center;justify-content:center">Keep…</div>
+       <div style="height:38px;border-radius:12px;background:rgba(0,0,0,.07);font-size:14px;font-weight:600;color:#1f6fe0;display:flex;align-items:center;justify-content:center">Turn Off…</div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div style="width:360px;font-size:12.5px;color:rgba(0,0,0,.6);line-height:1.5;text-wrap:pretty">This shows when iOS’s background session ends a download with a network error while the app is in the background. The text is the same as N2. Because it uses <b>provisional authorisation</b>, there’s <b>no permission prompt</b>. It arrives silently in Notification Center only, with no banner, sound or lock-screen alert. iOS adds its own <b>Keep… / Turn Off…</b> buttons the first time, and the app can’t change them. Tapping it opens the app, and the foreground resume finishes the download. If notifications are off, nothing is posted, and opening the app still resumes it. Dino posts the same notification with its own icon. The copy is a draft.</div>
+  </div>
+ </div>
+</section>
+</x-dc>
+</body>
+</html>

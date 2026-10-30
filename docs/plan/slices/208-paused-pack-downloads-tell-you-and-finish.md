@@ -20,6 +20,26 @@
   - Dino: when a pack download starts outside the grown-up area (the storyteller's first download), the notification-permission ask waits until a parent next opens Settings; the download still runs meanwhile. One "notification question asked" flag per app.
   - The download and paused notifications (and the ask sheet) name the pack's language and its size, e.g. "Downloading the Farsi voice (63 MB)".
 
+#### Design (Batch 42 Updates and Paused Downloads mock, frames N2 and N3, added 2026-10-30)
+
+Two frames in `docs/design/rtst-phone/Batch 42 Updates and Paused Downloads.dc.html` (N2 line 126, N3 line 155; notes under each frame). N2 also shows the new N1 text (extends N1 of `Batch 39 Downloads.dc.html`). Both are 360x760 phones. The mock agrees with the plan on the paused text, the pack channel, tap-to-open and removal on resume. It adds the points below. The two apps' cards sit together in one frame only to compare. The copy is a draft.
+
+- **Downloading card, new N1 text (N2, top card; Android).** Card `#f6f7fb`, radius 24. App line "Read The Stupid Text · now" (12px, 20px round icon). Title "Downloading the French voice (124 MB)… 45%" (15px, 600); 4px progress bar (`#5B57E8` on `rgba(0,0,0,.12)`); "Cancel" button (14px, 600, `#4A46D6`). Dino's text is "Getting the Svenska voice ready (124 MB) · 42%".
+- **Paused notification (N2; Android 15 after the dataSync timeout).** A normal notification on the same pack channel, swipe-away, no buttons. Title "Download paused. Tap to finish." (15px, 600). Second line "French voice (124 MB) · 45% done" (13.5px, `rgba(0,0,0,.62)`). Dino: the same, "Svenska voice (124 MB) · 42% done", with its own icon and "Dino Reader · 3 min". Tap opens the app and the foreground resume continues from 45% (to R8 on RTST, frame 87 on Dino). Gone when the download resumes or finishes. Dino's tap lands on the shelf, not behind the gate; the download carries on there with no screen.
+- **iOS twin (N3; Notification Center).** The same two lines ("Download paused. Tap to finish." and "French voice (124 MB) · 45% done"), 36px tile (radius 9), card `rgba(245,246,250,.82)` radius 20. Provisional authorisation: no prompt, delivered quietly to Notification Center only (no banner, sound or lock-screen alert). iOS adds its own "Keep..." and "Turn Off..." buttons the first time; the app cannot change them. Tap opens the app and the foreground resume finishes. Notifications off: nothing posted, resume still works. Dino posts the same with its own icon.
+
+**New strings (every locale each app ships):** the new download text with language and size for RTST and Dino, the paused title "Download paused. Tap to finish.", the second line "{language} voice ({size}) · {percent}% done". Language names are placeholders (RTST "French", Dino "Svenska").
+
+**Open point: percent in the paused text.** The plan (Decisions, first bullet) says the text is "Download paused. Tap to finish." with the pack's name and size; the mock adds "· 45% done". **Default:** show it when the bytes done are known at the timeout or the error; otherwise drop the percent part.
+
+**Open point: language name form.** The plan example is "Downloading the Farsi voice (63 MB)". The mock shows English names for RTST ("French") and Dino's endonym style ("Svenska voice"), and Dino's text "Getting the Svenska voice ready (124 MB) · 42%". **Default:** follow each app's own language-name helper as the mock shows (RTST English, Dino as Dino's `StoryLanguages` names them).
+
+**Open point: Dino tap target.** The plan says tapping "opens the app". The mock sends Dino to the shelf, not behind the grown-up gate. **Default:** shelf, and the resume runs without a screen.
+
+**Open point: scope.** Naming language and size in every download text is already planned in the 183 leftovers (Decisions, last bullet); the mock applies it to both apps' download notifications, not only the ask sheet. **Default:** keep as planned and cover the download, paused and ask texts.
+
+**Platform parity:** N2 is Android, N3 is its iOS twin; both apps on both.
+
 #### Work
 
 - [ ] Dino: defer the notification ask to the next grown-up Settings open when the download started elsewhere (flag per app).

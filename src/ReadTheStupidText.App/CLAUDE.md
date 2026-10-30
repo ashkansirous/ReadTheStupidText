@@ -5,7 +5,7 @@ neural reader are in `src/ReadTheStupidText.Infrastructure/CLAUDE.md`. (This fol
 a generic WinUI template and is separate from these rules.)
 The tray's Win32/UIA services (hotkey, selection monitor, clipboard listener, selection copier, foreground probe, startup task) live in `src/ReadTheStupidText.Windows.Tray`, referenced only by this project (Slice 128).
 
-The Batch 29 tray wait flyout and control-panel counts switch (Slices 140-141) are screens W1-W2 of `docs/design/rtst-phone/RTST Batch 29.dc.html` (index in that folder's README): read visual values from it, never guess them, never call `DesignSync` for them.
+The Batch 29 tray wait flyout and control-panel counts switch (Slices 140-141) are screens W1-W2 of `docs/design/rtst-phone/RTST Batch 29.dc.html`, and the Batch 42 update notices (Slice 217) are W3-W4 of `docs/design/rtst-phone/Batch 42 Updates and Paused Downloads.dc.html` (index in that folder's README): read visual values from it, never guess them, never call `DesignSync` for them.
 
 Keep `App.xaml.cs` thin: provider/DI wiring and window bootstrap only. Real
 logic lives in Application/Infrastructure; XAML views stay free of business
