@@ -30,6 +30,9 @@ public static class SilentOutputGuard
 
     private const double NormalPace = 1.0;
 
+    // A first take that passes under this many times the floor is a near miss, sent to the debug log only.
+    private const double NearMissFactor = 1.25;
+
     /// <summary>True when the take holds no speech, or far too little, for text that has something to say.</summary>
     public static bool IsSilent(SpokenTake take, string text, double pace = NormalPace) =>
         IsTooShort(VoicedMs(take), text, pace);
@@ -43,18 +46,20 @@ public static class SilentOutputGuard
     /// </summary>
     public static async Task<RescueResult> RescueAsync(
         string text, string voiceId, double pace, Func<Task<SpokenTake>> generate, Action<string> report,
-        CancellationToken token = default, Func<Task<SpokenTake?>>? fallback = null)
+        CancellationToken token = default, Func<Task<SpokenTake?>>? fallback = null, Action<string>? debug = null)
     {
         SpokenTake best = await generate();
         double bestMs = VoicedMs(best);
+        var allMs = new List<double> { bestMs };
         for (int attempt = 1; attempt <= ExtraTakes && IsTooShort(bestMs, text, pace); attempt++)
         {
             token.ThrowIfCancellationRequested();
             SpokenTake take = await generate();
             double takeMs = VoicedMs(take);
+            allMs.Add(takeMs);
             if (!IsTooShort(takeMs, text, pace))
             {
-                report($"silent voice output rescued by take {attempt + 1} (voice {voiceId}, {text.Length} chars)");
+                report($"silent voice output rescued by take {attempt + 1} (voice {voiceId}, {text.Length} chars, {Measured(allMs, text, pace)})");
                 return new RescueResult(take, false);
             }
 
@@ -64,10 +69,27 @@ public static class SilentOutputGuard
             }
         }
 
-        return IsTooShort(bestMs, text, pace)
-            ? await TrySiblingAsync(text, voiceId, pace, (best, bestMs), fallback, report, token)
-            : new RescueResult(best, false);
+        if (IsTooShort(bestMs, text, pace))
+        {
+            return await TrySiblingAsync(text, voiceId, pace, (best, bestMs, allMs), fallback, report, token);
+        }
+
+        ReportNearMiss(text, voiceId, pace, allMs, debug);
+        return new RescueResult(best, false);
     }
+
+    // A first take that passed with under 1.25 times the floor (Slice 210; debug log only, so it cannot flood the activity log): the device run reads these to choose a floor.
+    private static void ReportNearMiss(string text, string voiceId, double pace, List<double> takesMs, Action<string>? debug)
+    {
+        if (debug is not null && takesMs[0] < NeededMs(text, pace) * NearMissFactor)
+        {
+            debug($"voice output passed near the floor (voice {voiceId}, {text.Length} chars, {Measured(takesMs, text, pace)})");
+        }
+    }
+
+    // The measure behind a rescue line (Slice 210): voiced ms of each take and the floor it was held to. No text.
+    private static string Measured(List<double> takesMs, string text, double pace) =>
+        $"voiced ms {string.Join("/", takesMs.Select(m => (int)m))}, needed {(int)NeededMs(text, pace)}, pace {pace:0.00}";
 
     /// <summary>
     /// As <see cref="RescueAsync"/> for a whole unit. With <paramref name="splitPhrases"/> (a drop-prone voice) the unit
@@ -77,7 +99,8 @@ public static class SilentOutputGuard
     /// </summary>
     public static async Task<RescueResult> RescueUnitAsync(
         string text, string voiceId, double pace, bool splitPhrases, Func<string, Task<SpokenTake>> generate,
-        Action<string> report, CancellationToken token = default, Func<string, Task<SpokenTake?>>? fallback = null)
+        Action<string> report, CancellationToken token = default, Func<string, Task<SpokenTake?>>? fallback = null,
+        Action<string>? debug = null)
     {
         IReadOnlyList<Phrase> phrases = splitPhrases ? PhraseSplitter.Split(text) : [new Phrase(text, 0)];
         var takes = new List<SpokenTake>();
@@ -87,7 +110,7 @@ public static class SilentOutputGuard
             token.ThrowIfCancellationRequested();
             RescueResult one = await RescueAsync(
                 phrase.Text, voiceId, pace, () => generate(phrase.Text), report, token,
-                fallback is null ? null : () => fallback(phrase.Text));
+                fallback is null ? null : () => fallback(phrase.Text), debug);
             takes.Add(one.Take);
             gaveUp |= one.GaveUp;
         }
@@ -136,34 +159,38 @@ public static class SilentOutputGuard
     }
 
     private static async Task<RescueResult> TrySiblingAsync(
-        string text, string voiceId, double pace, (SpokenTake Take, double Ms) best, Func<Task<SpokenTake?>>? fallback,
+        string text, string voiceId, double pace, (SpokenTake Take, double Ms, List<double> TakesMs) best, Func<Task<SpokenTake?>>? fallback,
         Action<string> report, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
         SpokenTake? sibling = fallback is null ? null : await fallback();
         double siblingMs = sibling is null ? 0 : VoicedMs(sibling);
+        string measured = Measured(best.TakesMs, text, pace) + (sibling is null ? string.Empty : $", sibling {(int)siblingMs}");
         if (sibling is not null && !IsTooShort(siblingMs, text, pace))
         {
-            report($"silent voice output rescued by the sibling voice (voice {voiceId}, {text.Length} chars)");
+            report($"silent voice output rescued by the sibling voice (voice {voiceId}, {text.Length} chars, {measured})");
             return new RescueResult(sibling, false);
         }
 
-        report($"silent voice output after {ExtraTakes + 1} takes{(fallback is null ? string.Empty : " and the sibling voice")}; gave up (voice {voiceId}, {text.Length} chars)");
+        report($"silent voice output after {ExtraTakes + 1} takes{(fallback is null ? string.Empty : " and the sibling voice")}; gave up (voice {voiceId}, {text.Length} chars, {measured})");
         return new RescueResult(sibling is not null && siblingMs > best.Ms ? sibling : best.Take, true);
     }
 
-    private static bool IsTooShort(double voicedMs, string text, double pace)
+    private static bool IsTooShort(double voicedMs, string text, double pace) =>
+        voicedMs < NeededMs(text, pace);
+
+    /// <summary>The voiced milliseconds a take of <paramref name="text"/> must hold (0 when it has no letter or digit).</summary>
+    internal static double NeededMs(string text, double pace = NormalPace)
     {
         int letters = text.Count(char.IsLetterOrDigit);
         if (letters == 0)
         {
-            return false;
+            return 0;
         }
 
         // A clause fragment cut at a comma ("و،") is not a sound word: it gets the per-letter floor only.
         double floor = EndsAtComma(text) ? 0 : MinVoicedMs;
-        double needed = Math.Max(floor, letters * MinVoicedMsPerLetter) / Math.Max(pace, 0.1);
-        return voicedMs < needed;
+        return Math.Max(floor, letters * MinVoicedMsPerLetter) / Math.Max(pace, 0.1);
     }
 
     private static bool EndsAtComma(string text) => text.TrimEnd() is { Length: > 0 } t && ",،".Contains(t[^1]);

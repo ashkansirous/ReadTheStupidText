@@ -106,7 +106,8 @@ internal sealed class NeuralSentenceSource
             float pace = VoicedAudio.PaceOf(transform);
             rescue = await SilentOutputGuard.RescueUnitAsync(
                 sentence, voice.Id, pace, SiblingVoice.IsDropProne(voice), phrase => TakeAsync(engine, phrase, voice.SpeakerId, pace),
-                message => _log.Warning(message, activityId), token, phrase => SiblingTakeAsync(engine, phrase, voice, pace, activityId, token));
+                message => _log.Warning(message, activityId), token, phrase => SiblingTakeAsync(engine, phrase, voice, pace, activityId, token),
+                message => _log.Debug(message, activityId));
         }
         finally
         {
