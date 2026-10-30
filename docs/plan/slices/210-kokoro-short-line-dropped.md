@@ -1,6 +1,6 @@
 ### Slice 210 — A short Kokoro line is dropped ("gave up")
 
-*Planned 2026-10-30.* From the S21 night runs (docs/plan/notes/2026-10-29-s21-night-runs.md): a 5-character line in `kokoro:am_liam` was not read, with `gave up (voice kokoro:am_liam, 5 chars)`. Investigate first, then fix by what the evidence shows.
+*In progress (wave 2026-10-30), draft PR.* Planned 2026-10-30. From the S21 night runs (docs/plan/notes/2026-10-29-s21-night-runs.md): a 5-character line in `kokoro:am_liam` was not read, with `gave up (voice kokoro:am_liam, 5 chars)`. Investigate first, then fix by what the evidence shows.
 
 **Touches:** `src/ReadTheStupidText.Application/Reading/SilentOutputGuard.cs`, `src/ReadTheStupidText.Application/Reading/SiblingVoice.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs` (log line only), `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader.Synthesis.cs` (log line only), `src/ReadTheStupidText.Infrastructure/Reading/NeuralSentenceSource.cs` (log line only), `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/210-kokoro-short-line-dropped.md`
 
