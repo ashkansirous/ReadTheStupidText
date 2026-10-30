@@ -72,6 +72,6 @@ Each run is one object, `VoiceRun` (id, language, `Cancelled`, its task). The in
 - Force-stop and relaunch: `VOICEPACK held-user-cancelled fa`, no `PACKDL start` for 35 s. PASS.
 - Tap status line: resumed from offset 1110657 to `PACK_READY`, then `ocr-arabic` 3 s later. PASS.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-30)
 
 - `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`: every `VoicePackInstaller.StartAsync` call states a `PackStartReason`; only a person's tap is `User`, everything else is `Automatic`. The run lifecycle is the Run design in the slice file: change it there first. (Slice 204: docs/plan/slices/204-cancelled-voice-pack-stays-cancelled.md)

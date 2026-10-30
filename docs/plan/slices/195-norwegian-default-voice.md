@@ -75,7 +75,7 @@ The order lives in code, not in the pack: `NorwegianVoices.Ids` plus `InCodeOrde
 
 - S21 (arm64 .dbg, 2026-10-30): with no saved voice, switching RTST to Norsk downloaded piper-nb; the read hook logged `first unit (read, voice piper:nb-knv)`, then READ_START/READ_END; the picker lists voice 1 (knv) first, checked. Dino narrator on device not run.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-30)
 
 - The Norwegian voice order lives in code (`NorwegianVoices.Ids` and `InCodeOrder`, applied in `VoiceModelPaths.AvailableVoices`), not in the `piper-nb` pack order in `packs.yml`; reorder it there and no packs release is needed. (Slice 195: docs/plan/slices/195-norwegian-default-voice.md)
 
