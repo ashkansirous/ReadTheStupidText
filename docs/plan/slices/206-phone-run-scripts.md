@@ -85,7 +85,7 @@ These scripts make the fixes one command each.
 - Lease, preflight and tap passed. Preflight gave NO-GO on battery; it read lock None correctly from `KeyguardServiceDelegate secure=false` and `lock_settings` disabled. Tap went Settings > language picker > cancel > back.
 - Rerun after the fixes: setting level nb -> en confirmed; clear level with a 153 MB / 735-file archive restored the packs, the app stayed alive and the `no-usage` marker was present.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-30)
 
 - The `tools/CLAUDE.md` unattended-run bullet is already updated in this branch's diff (preflight, lease, reset-dev-app, tap). Nothing further to lift.
 

@@ -243,3 +243,4 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 194 | A VM script that retakes the control panel screenshot | built | #591 | | [194-control-panel-screenshot-script.md](../slices/194-control-panel-screenshot-script.md) |
 | 195 | Pick the default Norwegian voice by ear | built | #592 | | [195-norwegian-default-voice.md](../slices/195-norwegian-default-voice.md) |
 | 204 | A voice pack the user cancelled stays cancelled after a restart (follow-up to 186) | built | #588 | | [204-cancelled-voice-pack-stays-cancelled.md](../slices/204-cancelled-voice-pack-stays-cancelled.md) |
+| 206 | Phone scripts for unattended runs (preflight, lease, reset-dev-app, tap) | built | #594 | | [206-phone-run-scripts.md](../slices/206-phone-run-scripts.md) |
