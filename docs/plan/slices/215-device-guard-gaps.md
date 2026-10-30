@@ -54,9 +54,8 @@ Slices 207 and 212 left these open without a plan (user, 2026-10-30: "have you p
 8. **Say why the Downloading wait is safe.** A comment above each such wait: the flow's `clearState` removes the pack, so the download always starts; if a flow ever keeps the pack, wait for Downloading OR the ready state.
 9. **Prove the dialog step.** Make the dismissal assert-visible-then-tap (not optional) in a flow where the dialog is known to show (first pack download on a fresh install), and keep it optional elsewhere; if `button2` is the wrong id, the flow fails and says so.
 10. **Emulator crash cause.** When item 2's health check fires, `run-flows.ps1` saves `adb logcat -b crash -d` and `dumpsys meminfo` (host side: free RAM, the qemu process's working set) to the run's log folder, so the next death comes with evidence. Record what the 11:32 logs already show, if they still exist, in this file.
-` or mixed endings (2026-10-30: a fixer left doubled CRs in two flows, found only by reading them); fixture and test case.
 11. **One job, two shells.** `tools-selftests.yml` uses a `matrix: shell: [pwsh, powershell]` instead of two copies of the same eight steps (Slice 212 medium review, finding 5); add `test-activity.ps1` once.
-12. **Line endings.** `lint-flows.ps1` rejects a flow with `
+12. **Line endings.** `lint-flows.ps1` rejects a flow with `\r\r` (doubled CRs) or mixed endings (2026-10-30: a fixer left doubled CRs in two flows, found only by reading them); fixture and test case.
 
 ## Not in scope (decided)
 

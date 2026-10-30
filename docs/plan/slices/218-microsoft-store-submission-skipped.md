@@ -15,7 +15,7 @@
 - [ ] Find the cause: run `ship-targets.mjs` against the diff of each release run from rtst-v1.73.2 to rtst-v1.76.1 and see what `windowsstore` it gives; read how the base of that diff is chosen.
 - [ ] Fix so any release whose changes since the last **submitted** Windows version include Windows code submits (base the diff on the last Store-submitted tag, not the previous release).
 - [ ] A test for the case: a core release followed by an Infrastructure change and then another core release.
-- [ ] Then submit the current RTST Windows build once (`release.yml` `force_all`, standing practice for store releases) so Windows users get the fixes since 1.67.1.
+- [ ] Then submit the current RTST Windows build once (`release.yml` `force_all`, standing practice for store releases) so Windows users get the fixes since 1.67.1. User, 2026-10-30 (run-all-waves start): yes, submit tonight once the fix merges; the force_all run also rebuilds Android (Play internal) and iOS (internal TestFlight), which is fine. Watch it until the Store submission is accepted.
 
 #### Verification
 
