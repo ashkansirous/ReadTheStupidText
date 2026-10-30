@@ -23,13 +23,14 @@ Open slices only. Finished slices (161 rows) are in [slices-done](docs/plan/note
 | 205 | Dino Windows head: the Reading speed row and the page-turn VM check (Slice 188 follow-up) | planned | | | [205-dino-windows-reading-speed-and-page-turn-checks.md](docs/plan/slices/205-dino-windows-reading-speed-and-page-turn-checks.md) |
 | 208 | Paused pack downloads tell you ("Download paused. Tap to finish.") and half-finished packs finish or are deleted at launch (Slice 183 follow-up) | planned | | | [208-paused-pack-downloads-tell-you-and-finish.md](docs/plan/slices/208-paused-pack-downloads-tell-you-and-finish.md) |
 | 209 | Test hooks: set-language, set-voice, set-translate, and a staged Dino book update for the Slice 181 timing | planned | | | [209-settings-and-book-update-test-hooks.md](docs/plan/slices/209-settings-and-book-update-test-hooks.md) |
-| 210 | A short Kokoro line is dropped ("gave up"): log, reproduce, then fix by the evidence | planned | | | [210-kokoro-short-line-dropped.md](docs/plan/slices/210-kokoro-short-line-dropped.md) |
-| 211 | Play right after typing waits for language detection, so it translates and picks the voice like a later Play (Slice 139 follow-up) | planned | | | [211-play-before-detection-waits-for-it.md](docs/plan/slices/211-play-before-detection-waits-for-it.md) |
+| 210 | A short Kokoro line is dropped ("gave up"): log, reproduce, then fix by the evidence | built | #631 | | [210-kokoro-short-line-dropped.md](docs/plan/slices/210-kokoro-short-line-dropped.md) |
+| 211 | Play right after typing waits for language detection, so it translates and picks the voice like a later Play (Slice 139 follow-up) | built | #633 | | [211-play-before-detection-waits-for-it.md](docs/plan/slices/211-play-before-detection-waits-for-it.md) |
 | 214 | RTST phone: the first read after a cold start takes 7 s (S21 AOT; first synthesis 5.9 s): find warm-up vs length, then fix to under 2 s | planned | | | [214-rtst-phone-cold-first-audio.md](docs/plan/slices/214-rtst-phone-cold-first-audio.md) |
 | 216 | Phone tooling leftovers from the Slice 213 runs: a build swap re-downloaded the voice pack (repro first), audio-timing warm repeats labelled cold, build path-length guard, audio-timing log folder | planned | | | [216-phone-tooling-leftovers.md](docs/plan/slices/216-phone-tooling-leftovers.md) |
 | 217 | RTST forced update from the remote config (port of Dino Slice 132; Android, iOS, Windows tray) | planned | | | [217-rtst-forced-update.md](docs/plan/slices/217-rtst-forced-update.md) |
-| 218 | RTST Microsoft Store submission skipped Windows code changes (no Store build since before 1.74.0) | planned | | | [218-microsoft-store-submission-skipped.md](docs/plan/slices/218-microsoft-store-submission-skipped.md) |
-| 219 | Usage counts drop dev builds below version 1.0 (worker and client) | planned | | | [219-usage-drops-dev-versions.md](docs/plan/slices/219-usage-drops-dev-versions.md) |
+| 218 | RTST Microsoft Store submission skipped Windows code changes (no Store build since before 1.74.0) | built | #630 | | [218-microsoft-store-submission-skipped.md](docs/plan/slices/218-microsoft-store-submission-skipped.md) |
+| 219 | Usage counts drop dev builds below version 1.0 (worker and client) | built | #632 | | [219-usage-drops-dev-versions.md](docs/plan/slices/219-usage-drops-dev-versions.md) |
+| 220 | Kokoro returns silent audio for short lines on arm64 (S21), so "Ann." and "Help!" still drop (Slice 210 follow-up) | planned | | | [220-kokoro-silent-short-lines-arm64.md](docs/plan/slices/220-kokoro-silent-short-lines-arm64.md) |
 | 215 | Close the gaps left by Slices 207 and 212: status label id, emulator health check and restart, test the one-emulator limit, lint gaps | planned | | | [215-device-guard-gaps.md](docs/plan/slices/215-device-guard-gaps.md) |
 
 
@@ -79,6 +80,11 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 - Slice 213: the `notification-text` check has never been seen failing (not run with a broken pack).
 - Slice 202 merged on an incomplete second review pass (the forked review never finished); rerun `/code-review` medium on `ReaderPage` as merged. Slice 213's unreviewed half is Slice 216 item 9.
 - Slice 202: iOS device not run (same shared MAUI page fix); the `InitWait`-before-text order is kept only by a comment, with no test ([slice](docs/plan/slices/202-reader-language-change-crash.md)).
+- Slice 210 (PR #631): listening to the rescued lines (the user's ear); Spanish, Portuguese and Chinese Kokoro voices (`ef_dora`, `pf_dora` have no sibling); iOS compile only; 3 of 68 short lines still drop on the S21, moved to Slice 220 ([slice](docs/plan/slices/210-kokoro-short-line-dropped.md)).
+- Slice 211 (PR #633): S21 rerun of the Slice 139 race (tap ~0.4 s after typing, against the 1456 ms baseline); iOS TestFlight hand check; back-during-wait scripted check not run ([slice](docs/plan/slices/211-play-before-detection-waits-for-it.md)).
+- Slice 218 (PR #630): actionlint on the new `store-submit-mark` job; first `rtst-store-v<x.y.z>` marker tag after the force_all run; Partner Center showing the new version ([slice](docs/plan/slices/218-microsoft-store-submission-skipped.md)).
+- **User (Microsoft Store, Slice 218):** the `force_all` release run (the Store submission the user approved) was denied by the night's permission check. Run `release.yml` with `force_all`, then confirm the first `rtst-store-v` marker tag and Partner Center showing the new version. Why users stayed on 1.67.1 is still unproven (1.73.2 was committed to Partner Center).
+- Slice 219 (PR #632): after deploy, a read-only `rtst_usage` / `dino_usage` query shows no new `0.x` rows; a local Windows run adds no new row ([slice](docs/plan/slices/219-usage-drops-dev-versions.md)).
 - Untried: reading the iPhone 8's crash logs from this PC (e.g. libimobiledevice `idevicecrashreport` over USB); would let iOS crashes be checked without the user. Not tried yet.
 - S21 RTST dev install may still hold `files/packs/zz-supertonic-3.bak` (~124 MB) from the 2026-10-29 night; harmless, gone on the next `reset-dev-app.ps1 -Level clear`. Nobody has checked.
 

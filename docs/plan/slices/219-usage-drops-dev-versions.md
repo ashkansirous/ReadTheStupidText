@@ -29,7 +29,7 @@
 
 *From review:* high pass: findings 2 and 6 applied; 3, 4, 5 and 7 skipped as cleanups. Medium pass: finding 7 applied; finding 1 dismissed because all `0.x` tags predate `v1.0.0` (2026-09-02), before usage counting existed.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-30)
 
 In `worker/CLAUDE.md`: versions with major 0 are dropped as unstamped, on the worker (`worker/events.ts` `isUnstampedVersion`) and on the client (`UsageEligibility.cs`); keep the two rules equal. (Slice 219: docs/plan/slices/219-usage-drops-dev-versions.md)
 
