@@ -73,7 +73,7 @@ public partial class ReaderPage
         RenderPlayerForState();
     }
 
-    private bool PlayerDimmedByWait => _waitOverlay.IsVisible && _wait.Stage == WaitStage.PreparingVoice;
+    private bool PlayerDimmedByWait => _waitOverlay is { IsVisible: true } && _wait.Stage == WaitStage.PreparingVoice;
 
     // Slice 148: a read that had started waits for its next chunk. The same overlay says so ("Still getting the voice ready...") after 500 ms
     // and goes with the next sound; the preparing wait and the file import keep the overlay when they own it. The signal comes from any thread.
