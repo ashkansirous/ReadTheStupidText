@@ -81,6 +81,7 @@ Batch 35 (159, built, PR #473, so the batch is done; planned 2026-10-27, the use
 
 Built but not verified (details in each slice file):
 
+- Slice 206 (PR #594): `preflight.ps1` reading a PIN or pattern lock as NO-GO; `reset-dev-app.ps1 -Level reinstall`; Dino resets (`-App dino`); `tap.ps1` on Dino Reader; the lease used by two real sessions at once ([slice](docs/plan/slices/206-phone-run-scripts.md)).
 - Slice 204 (PR #588): Dino on device; iOS TestFlight; native read of the Stopped strings (machine drafts); the Maestro flow `.maestro/rtst/cancelled-voice-pack-stays-cancelled.yaml` end to end ([slice](docs/plan/slices/204-cancelled-voice-pack-stays-cancelled.md)).
 - Slice 194 (PR #591): the panel shot is not good enough for the site (guest offline, no voice pack, watermark); rerun on a guest with the English pack and network, crop the watermark, convert to WebP at 362x525 and replace `site/img/control-panel.webp` ([slice](docs/plan/slices/194-control-panel-screenshot-script.md)).
 - Slice 195 (PR #592): hearing the picks (default `nb-knv` is measured, not heard); iOS TestFlight run of the new order; Windows head ([slice](docs/plan/slices/195-norwegian-default-voice.md)).
