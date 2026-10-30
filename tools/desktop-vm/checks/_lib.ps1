@@ -7,6 +7,8 @@ Add-Type -AssemblyName System.Windows.Forms
 $script:AutomationElement = [System.Windows.Automation.AutomationElement]
 $script:TreeScope = [System.Windows.Automation.TreeScope]
 
+Add-Type -Namespace Win32 -Name Mouse -MemberDefinition '[DllImport("user32.dll")] public static extern void mouse_event(uint f, uint x, uint y, uint d, UIntPtr e);' -ErrorAction SilentlyContinue
+
 Add-Type -TypeDefinition @'
 using System; using System.Runtime.InteropServices;
 public static class NativeKeys {
@@ -96,7 +98,6 @@ function Invoke-Uia {
     if ($rect.IsEmpty) { throw "Element '$($Element.Current.Name)' has no pattern and no bounds." }
     [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point([int]($rect.X + $rect.Width / 2), [int]($rect.Y + $rect.Height / 2))
     Start-Sleep -Milliseconds 200
-    Add-Type -Namespace Win32 -Name Mouse -MemberDefinition '[DllImport("user32.dll")] public static extern void mouse_event(uint f, uint x, uint y, uint d, UIntPtr e);' -ErrorAction SilentlyContinue
     [Win32.Mouse]::mouse_event(2, 0, 0, 0, [UIntPtr]::Zero); [Win32.Mouse]::mouse_event(4, 0, 0, 0, [UIntPtr]::Zero)
 }
 
@@ -159,12 +160,56 @@ function Click-Screen {
     param([int] $X, [int] $Y)
     [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point($X, $Y)
     Start-Sleep -Milliseconds 300
-    Add-Type -Namespace Win32 -Name MouseClick -MemberDefinition '[DllImport("user32.dll")] public static extern void mouse_event(uint f, uint x, uint y, uint d, UIntPtr e);' -ErrorAction SilentlyContinue
-    [Win32.MouseClick]::mouse_event(2, 0, 0, 0, [UIntPtr]::Zero)
-    [Win32.MouseClick]::mouse_event(4, 0, 0, 0, [UIntPtr]::Zero)
+    [Win32.Mouse]::mouse_event(2, 0, 0, 0, [UIntPtr]::Zero)
+    [Win32.Mouse]::mouse_event(4, 0, 0, 0, [UIntPtr]::Zero)
 }
 
 function Find-UiaById {
     param([Parameter(Mandatory)] $Root, [Parameter(Mandatory)] [string] $Id)
     return $Root.FindFirst($script:TreeScope::Descendants, (New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::AutomationIdProperty, $Id)))
+}
+
+function Find-UiaExact {
+    # Finds a visible descendant whose Name is exactly $Name (case-sensitive), optionally of one control type such as 'Button'.
+    # The match runs inside UIA (a Name condition), so a poll does not walk the whole tree in PowerShell.
+    param([Parameter(Mandatory)] $Root, [Parameter(Mandatory)] [string] $Name, [string] $ControlType)
+    $cond = New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::NameProperty, $Name)
+    foreach ($e in $Root.FindAll($script:TreeScope::Descendants, $cond)) {
+        if ($e.Current.BoundingRectangle.IsEmpty) { continue }
+        if (-not $ControlType -or $e.Current.ControlType.ProgrammaticName -eq "ControlType.$ControlType") { return $e }
+    }
+    return $null
+}
+
+function Find-UiaVisibleById {
+    param([Parameter(Mandatory)] $Root, [Parameter(Mandatory)] [string] $Id)
+    $e = Find-UiaById $Root $Id
+    if ($e -and -not $e.Current.BoundingRectangle.IsEmpty) { return $e }
+    return $null
+}
+
+function Get-VisibleNames {
+    # "Type:Name" of the first $Max named, visible elements: the UI dump a failing check appends to its message.
+    param([Parameter(Mandatory)] $Root, [int] $Max = 40)
+    $all = $Root.FindAll($script:TreeScope::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
+    $names = foreach ($e in $all) {
+        if ($e.Current.Name -and -not $e.Current.BoundingRectangle.IsEmpty) { $e.Current.ControlType.ProgrammaticName.Substring(12) + ':' + $e.Current.Name }
+    }
+    return @($names | Select-Object -First $Max)
+}
+
+function Invoke-PressAndHold {
+    # Presses the left mouse button on the element's centre and holds it for $HoldMs (default 3500), nudging the pointer by
+    # one pixel every 250 ms so the app keeps seeing pointer moves. Used for Dino's real grown-up gate (hold 3 s, no bypass).
+    param([Parameter(Mandatory)] $Element, [int] $HoldMs = 3500)
+    $r = $Element.Current.BoundingRectangle
+    if ($r.IsEmpty) { throw "Invoke-PressAndHold: '$($Element.Current.Name)' has no bounds." }
+    $cx = [int]($r.X + $r.Width / 2); $cy = [int]($r.Y + $r.Height / 2)
+    [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point($cx, $cy)
+    Start-Sleep -Milliseconds 300
+    [Win32.Mouse]::mouse_event(2, 0, 0, 0, [UIntPtr]::Zero)
+    try {
+        $steps = [int][Math]::Ceiling($HoldMs / 250)
+        foreach ($i in 1..$steps) { Start-Sleep -Milliseconds 250; [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(($cx + ($i % 2)), $cy) }
+    } finally { [Win32.Mouse]::mouse_event(4, 0, 0, 0, [UIntPtr]::Zero) }
 }
