@@ -45,16 +45,16 @@ public sealed class StorytellerDefault
 	private static readonly TimeSpan CatalogMaxAge = TimeSpan.FromMinutes(10);
 	private static readonly IReadOnlyDictionary<string, IReadOnlyList<CastMember>> NoCasts = new Dictionary<string, IReadOnlyList<CastMember>>();
 	private static readonly TimeSpan CatalogRetryBackoff = TimeSpan.FromSeconds(3);
+	private static readonly TimeSpan LoadingStateDelay = TimeSpan.FromMilliseconds(500);
 
 	private readonly IVoicePackService _packs;
 	private readonly IStoryLibrary _library;
 	private readonly StoryVoicing _voicing;
 	private readonly object _gate = new();
-	private int _running;
-	private int _mobileDataRequested;
+	private readonly StorytellerConsent _consent = new(); // the "Download now" consent and the run guard under one lock (Slice 197)
+	private bool _endedWaitingForWifi; // set by the run that is ending, read only by the guard owner
 	private int _watchingNetwork;
 	private PackDownloadResult? _stoppedWith; // how the run that is ending stopped; reported only after the guard clears (Slice 182)
-	private int _downloadNowChosen; // "Download now" was tapped: a stopped download may restart over mobile data (Slice 182)
 	private readonly PackResumeWatcher _resume;
 	private volatile bool _awaitingNetwork;
 	private bool _downloadActive;
@@ -102,7 +102,7 @@ public sealed class StorytellerDefault
 	/// <summary>"Download now": the same download over mobile data, for this download only.</summary>
 	public Task DownloadNowAsync() => RunGuardedAsync(allowMobileData: true);
 
-	/// <summary>"Try again" after a failed download: the same start as at launch (Wi-Fi only, mobile data waits for "Download now").</summary>
+	/// <summary>"Try again" after a failed download: the same start as at launch (Wi-Fi only unless "Download now" was tapped for this download: that consent is kept across a failure retry of the same download).</summary>
 	public Task RetryAsync() => RunGuardedAsync(allowMobileData: false);
 
 	private async Task RunGuardedAsync(bool allowMobileData)
@@ -112,32 +112,98 @@ public sealed class StorytellerDefault
 			return;
 		}
 
-		if (Interlocked.Exchange(ref _running, 1) == 1)
+		// Slice 197: the tap records consent and takes the guard in one locked step; the run ending releases it in one locked step (StorytellerConsent).
+		bool owns = allowMobileData ? _consent.RecordConsentAndTryBegin() : _consent.TryBegin();
+		if (allowMobileData)
 		{
-			// A tap that arrives while the start is still looking at the catalog is not lost: the run picks it up.
-			if (allowMobileData)
-			{
-				Volatile.Write(ref _mobileDataRequested, 1);
-			}
+			WriteProof("download-now consent recorded");
+		}
 
+		if (!owns)
+		{
 			return;
 		}
 
-		if (allowMobileData)
+		bool cancelledFromNotification;
+		PackDownloadResult? stopped;
+		bool again = false;
+		bool rerun = false;
+		do
 		{
-			Volatile.Write(ref _downloadNowChosen, 1);
-		}
+			using var starting = new CancellationTokenSource();
+			if (rerun)
+			{
+				_ = ShowStartingAfterDelayAsync(starting.Token);
+			}
 
-		bool cancelledFromNotification = false;
+			cancelledFromNotification = await RunOnceCatchingAsync();
+			starting.Cancel();
+			stopped = _stoppedWith; // taken before the guard is released, so the next run cannot overwrite it
+			_stoppedWith = null;
+			again = EndRunReleasingOnFault();
+			rerun = true;
+		}
+		while (again);
+
+		if (cancelledFromNotification)
+		{
+			_resume.Report(ResumeKey, PackRunEnd.Cancelled, () => Task.FromResult(false));
+		}
+		else
+		{
+			ReportEnd(stopped);
+		}
+	}
+
+	// The check-and-release is one locked step in StorytellerConsent; if reading IsInstalled throws, the guard is still released so no later start is refused for good.
+	private bool EndRunReleasingOnFault()
+	{
+		bool installed;
 		try
 		{
-			await RunAsync(allowMobileData);
+			installed = IsInstalled();
+		}
+		catch
+		{
+			_consent.Abort();
+			throw;
+		}
+
+		return _consent.EndRun(_endedWaitingForWifi, installed);
+	}
+
+	// Slice 197: the rerun after a tap re-reads the catalog while the card still says "Waiting for Wi-Fi"; past 500 ms show the existing downloading line.
+	private async Task ShowStartingAfterDelayAsync(CancellationToken stillRunning)
+	{
+		try
+		{
+			await Task.Delay(LoadingStateDelay, stillRunning);
+		}
+		catch (OperationCanceledException)
+		{
+			return;
+		}
+
+		if (!stillRunning.IsCancellationRequested)
+		{
+			SetStatus(new StorytellerStatus(StorytellerPhase.Downloading, 0, Status.Megabytes));
+		}
+	}
+
+	// One pass of the run; returns true when Cancel on the notification ended it. Never throws.
+	private async Task<bool> RunOnceCatchingAsync()
+	{
+		_endedWaitingForWifi = false;
+		try
+		{
+			_endedWaitingForWifi = await RunAsync();
 		}
 		catch (PackCancelledByNotificationException)
 		{
 			// Slice 183: Cancel on the download notification is final; the partial file stays for a later start.
-			cancelledFromNotification = true;
+			_consent.Clear();
 			SetStatus(StorytellerStatus.None);
+			return true;
 		}
 		catch (Exception ex)
 		{
@@ -145,21 +211,16 @@ public sealed class StorytellerDefault
 			Debug.WriteLine($"Dino Reader storyteller default failed: {ex}");
 			SetStatus(FailureStatus(ex));
 		}
-		finally
-		{
-			Volatile.Write(ref _mobileDataRequested, 0);
-			PackDownloadResult? stopped = _stoppedWith;
-			_stoppedWith = null;
-			Interlocked.Exchange(ref _running, 0);
-			if (cancelledFromNotification)
-			{
-				_resume.Report(ResumeKey, PackRunEnd.Cancelled, () => Task.FromResult(false));
-			}
-			else
-			{
-				ReportEnd(stopped);
-			}
-		}
+
+		return false;
+	}
+
+	// Debug-only proof line on the channel the Maestro flows and run-flows.ps1 read (logcat RTST-TEST).
+	private static void WriteProof(string text)
+	{
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"{ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.HookPrefix} {text}");
+#endif
 	}
 
 	// A network error while nothing was downloading is the quiet offline case (the first connection starts the download); only a download that broke says "Try again".
@@ -180,14 +241,15 @@ public sealed class StorytellerDefault
 		return new StorytellerStatus(StorytellerPhase.Failed, 0, Status.Megabytes);
 	}
 
-	private async Task RunAsync(bool allowMobileData)
+	// Returns true when the run stopped at the Wi-Fi wait.
+	private async Task<bool> RunAsync()
 	{
 		_awaitingNetwork = false;
 		if (IsInstalled())
 		{
 			await RecastQuietlyAsync();
 			await UpdateInstalledAsync();
-			return;
+			return false;
 		}
 
 		PackCatalogResult catalog = await GetCatalogWithRetryAsync();
@@ -196,25 +258,26 @@ public sealed class StorytellerDefault
 			// Offline (or the catalog is down): nothing to say yet, and the first connection of this session starts the download.
 			WatchNetwork();
 			SetStatus(StorytellerStatus.None);
-			return;
+			return false;
 		}
 
 		PackInfo? listed = StorytellerOffer.ListedFor(catalog.Packs, KokoroVoiceTable.EnglishCode);
 		if (listed is null)
 		{
 			SetStatus(StorytellerStatus.None);
-			return;
+			return false;
 		}
 
 		int megabytes = StorytellerOffer.Megabytes(listed.SizeBytes);
-		if (!allowMobileData && Volatile.Read(ref _mobileDataRequested) == 0 && !WifiCapable())
+		if (!_consent.IsGiven && !WifiCapable())
 		{
 			WatchNetwork();
 			SetStatus(new StorytellerStatus(StorytellerPhase.WaitingForWifi, 0, megabytes));
-			return;
+			return true;
 		}
 
 		await DownloadAsync(megabytes);
+		return false;
 	}
 
 	// One more try after a short pause, so a blip while the network settles at launch does not leave the default undownloaded until the next network change.
@@ -243,7 +306,7 @@ public sealed class StorytellerDefault
 			return;
 		}
 
-		Volatile.Write(ref _downloadNowChosen, 0);
+		_consent.Clear();
 		SetStatus(StorytellerStatus.None);
 		Preferences.Default.Set(ReadyPendingKey, true);
 		await RecastQuietlyAsync();
@@ -261,7 +324,7 @@ public sealed class StorytellerDefault
 	// Slice 182: every run reports its end once (no stop means it finished); Offline or Failed starts again by itself when the network is back or the app returns (Wi-Fi/Ethernet unless "Download now").
 	private void ReportEnd(PackDownloadResult? result)
 	{
-		bool now = Volatile.Read(ref _downloadNowChosen) == 1;
+		bool now = _consent.IsGiven;
 		PackRunEnd end = result is { } stopped ? IPackResume.EndOf(stopped) : PackRunEnd.Finished;
 		_resume.Report(ResumeKey, end, () => ResumeAsync(now), PackConstants.StorytellerPackId, now);
 	}
@@ -269,7 +332,7 @@ public sealed class StorytellerDefault
 	// False while a run holds the guard; that run reports its own end.
 	private async Task<bool> ResumeAsync(bool downloadNow)
 	{
-		if (Volatile.Read(ref _running) == 1)
+		if (_consent.IsActive)
 		{
 			return false;
 		}
@@ -280,6 +343,7 @@ public sealed class StorytellerDefault
 
 	private void BeginDownload(int megabytes)
 	{
+		WriteProof("storyteller download started");
 		lock (_gate)
 		{
 			_lastReported = -1;
