@@ -106,6 +106,7 @@ public static class AppResources
 	public static string PackStatus_HashMismatch => Get();
 	public static string PackStatus_InvalidPack => Get();
 	public static string PackStatus_Failed => Get();
+	public static string PackStatus_Stopped => Get();
 	public static string PackStatus_Unavailable => Get();
 	public static string Common_Back => Get();
 	public static string Common_Save => Get();

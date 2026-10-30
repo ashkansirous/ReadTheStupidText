@@ -23,6 +23,9 @@ public sealed class SpeechStartup
 		_storyteller = storyteller;
 		_reader = reader;
 		_installer = installer;
+#if DEBUG
+		_installer.DebugMarker = ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write; // Slice 204: the held marker the scripted checks assert on
+#endif
 	}
 
 	public async Task RunAsync()
@@ -32,7 +35,7 @@ public sealed class SpeechStartup
 			_reader.SetSpeed(ReadingSpeedPreference.Load());
 			// The storyteller pack is Dino's default voice (Slice 115): fetched on Wi-Fi when missing, never throws. Started first so a slow or failing installer cannot hold it back.
 			_ = _storyteller.StartAsync();
-			await _installer.StartAsync();
+			await _installer.StartAsync(PackStartReason.Automatic); // Slice 204: a download the grown-up stopped stays stopped
 		}
 		catch (Exception ex)
 		{

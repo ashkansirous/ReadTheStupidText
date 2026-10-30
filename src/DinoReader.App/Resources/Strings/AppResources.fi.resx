@@ -20,6 +20,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Äänen lataus vioittui. Luetaan puhelimen äänellä. Yritä uudelleen napauttamalla.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Luonnollisten äänten pakettia ei voi käyttää. Luetaan puhelimen äänellä.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Luonnollisia ääniä ei voitu ladata. Luetaan puhelimen äänellä. Yritä uudelleen napauttamalla.</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>Lataus pysäytetty. Luetaan puhelimen äänellä. Lataa napauttamalla.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>Kielellesi ei ole vielä luonnollista ääntä. Luetaan puhelimen äänellä.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Takaisin</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Tallenna</value></data>

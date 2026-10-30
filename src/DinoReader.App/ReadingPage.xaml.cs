@@ -1141,7 +1141,7 @@ public partial class ReadingPage : ContentPage
 	{
 		if (_installer.CanRetry)
 		{
-			_ = _installer.StartAsync();
+			_ = _installer.StartAsync(PackStartReason.User);
 		}
 	}
 

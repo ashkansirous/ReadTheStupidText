@@ -720,7 +720,7 @@ public partial class ReaderPage : ContentPage
     {
         if (_installer.CanRetry)
         {
-            _ = _installer.StartAsync();
+            _ = _installer.StartAsync(PackStartReason.User);
         }
     }
 

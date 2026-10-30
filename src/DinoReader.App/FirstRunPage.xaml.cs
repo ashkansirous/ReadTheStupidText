@@ -208,7 +208,7 @@ public partial class FirstRunPage : ContentPage
 		// Slice 183: asked once, just before the first big download (choosing the language starts it).
 		await PackNotificationAsk.AskOnceAsync(() => DisplayAlertAsync(AppResources.Notify_Title, AppResources.Notify_Body, AppResources.Notify_Continue, AppResources.Notify_NotNow));
 		_chosen = _selected;
-		LanguageChoice.Apply(_chosen, _spoken);
+		LanguageChoice.Apply(_chosen, _spoken, PackStartReason.User); // the grown-up's own choice
 		ApplyTexts();
 		LanguagePanel.IsVisible = false;
 		DownloadPanel.IsVisible = true;
@@ -262,6 +262,7 @@ public partial class FirstRunPage : ContentPage
 		DownloadProblem.IsVisible = failed;
 		PhoneVoice.IsVisible = failed;
 		DownloadProblem.Text = failed ? LocalizedPackStatus.Compose(state, progress) : null;
+		DownloadProblem.TextColor = DinoTokens.Get(state == PackInstallState.Stopped ? DinoTokens.Body : DinoTokens.Danger); // Slice 204: a deliberate stop is not an error
 	}
 
 	private void ShowReady()
@@ -293,7 +294,7 @@ public partial class FirstRunPage : ContentPage
 		}
 	}
 
-	private void OnRetryTapped(object? sender, TappedEventArgs e) => _ = _installer.StartAsync();
+	private void OnRetryTapped(object? sender, TappedEventArgs e) => _ = _installer.StartAsync(PackStartReason.User);
 
 	// Offline or a failed download must not trap a fresh install: the phone voice reads until a pack is installed.
 	private void OnPhoneVoiceTapped(object? sender, TappedEventArgs e) => ShowReady();

@@ -10,6 +10,10 @@ namespace ReadTheStupidText.Mobile;
 /// </summary>
 public static class LocalizedPackStatus
 {
+    /// <summary>The label of the button that starts the voice download again: a deliberate stop reads Download, a failure Retry (Slice 204).</summary>
+    public static string RetryLabel(PackInstallState state) =>
+        state == PackInstallState.Stopped ? AppResources.Language_Download : AppResources.Language_Retry;
+
     /// <summary>The status line, or null when there is nothing to show.</summary>
     public static string? Compose(PackInstallState state, double progress) => state switch
     {
@@ -19,6 +23,7 @@ public static class LocalizedPackStatus
         PackInstallState.HashMismatch => AppResources.PackStatus_HashMismatch,
         PackInstallState.InvalidPack => AppResources.PackStatus_InvalidPack,
         PackInstallState.Failed => AppResources.PackStatus_Failed,
+        PackInstallState.Stopped => AppResources.PackStatus_Stopped,
         PackInstallState.Unavailable => AppResources.PackStatus_Unavailable,
         _ => null,
     };

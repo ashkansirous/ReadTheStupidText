@@ -1,0 +1,47 @@
+# Slice 204: a voice pack the user cancelled stays cancelled after a force-stop and relaunch; only a Download tap restarts it.
+# The marker proves the held branch ran on relaunch (a build without the hold never writes it, so the flow fails).
+# run-flows has no negative log check: after the run, read the log and confirm no `PACKDL start pack=piper-*` line follows the relaunch
+# for 30 s (the wait below), and that one follows the tap. The visible "Download stopped" text proves the Stopped state.
+# Android only. The notification's Cancel is fired by the Debug test hook `cancel-pack-downloads`.
+# expect-log: VOICEPACK held-user-cancelled fa
+appId: uk.sirous.readthestupidtext
+name: Cancelled voice pack stays cancelled
+---
+- launchApp:
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: SettingsButton
+    timeout: 20000
+- launchApp:
+    arguments:
+      cmd: cancel-pack-downloads
+- waitForAnimationToEnd:
+    timeout: 10000
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      text: "Download stopped.*"
+    timeout: 20000
+# Real 30 s wait with the app in front (Slice 204): nothing with this id ever shows, so this times out after 30000 ms and
+# optional: true lets the flow go on. A held pack must not start by itself, so it must not show Downloading meanwhile.
+- extendedWaitUntil:
+    visible:
+      id: HeldPackNeverShown
+    timeout: 30000
+    optional: true
+- assertNotVisible:
+    text: "Downloading natural voices.*"
+- assertVisible:
+    text: "Download stopped.*"
+# the user's tap starts it again
+- tapOn:
+    text: "Download stopped.*"
+- extendedWaitUntil:
+    visible:
+      text: "Downloading natural voices.*"
+    timeout: 20000

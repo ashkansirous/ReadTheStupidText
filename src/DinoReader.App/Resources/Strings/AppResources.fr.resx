@@ -18,6 +18,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Le téléchargement de la voix est corrompu. Lecture avec la voix du téléphone. Touchez pour réessayer.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Le pack de voix naturelles est inutilisable. Lecture avec la voix du téléphone.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Impossible de télécharger les voix naturelles. Lecture avec la voix du téléphone. Touchez pour réessayer.</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>Téléchargement arrêté. Lecture avec la voix du téléphone. Touchez pour télécharger.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>Une voix naturelle pour votre langue n'est pas encore disponible. Lecture avec la voix du téléphone.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Retour</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Enregistrer</value></data>
