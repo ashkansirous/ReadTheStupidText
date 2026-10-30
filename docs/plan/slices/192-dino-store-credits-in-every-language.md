@@ -1,6 +1,6 @@
 ### Slice 192 — Dino: the store credit line in every language, served by the store
 
-*Planned 2026-10-29.* Dino Reader (Android, iOS and the Windows head share the store page). Gap found in Slice 159.
+*In progress (wave 2026-10-30, wave 2), draft PR.* *Planned 2026-10-29.* Dino Reader (Android, iOS and the Windows head share the store page). Gap found in Slice 159.
 
 **Touches:** `content/dino/*/book.json`, `tools/DinoReader.BookBuilder/Books.cs`, `tools/DinoReader.BookBuilder/StoreBuilder.cs`, `tools/DinoReader.BookBuilder/BookHash.cs`, `worker/stories.ts`, `worker/stories.test.mjs` (or the Worker's existing stories tests), `src/DinoReader.Core/StoreCatalog.cs`, `src/DinoReader.App/StorePage.xaml.cs`, `tests/DinoReader.Tests/**`, `CLAUDE.md` (the `meta.json` field list), `docs/plan/slices/192-dino-store-credits-in-every-language.md`.
 
@@ -12,6 +12,11 @@ Every store card's credit line ("Retold traditional tale · free to share", "Ret
 
 - Translate it at the source and serve it, not a map in the app: "When we have everything, we do the work."
 - All 14 non-English languages, for every book.
+
+#### Claim notes (2026-10-30, grounded)
+
+- `creditsByLanguage` is new; copy the `Titles` pattern (`StoreCatalog.cs:8`, `worker/stories.ts` `parseTitles` ~:159; `credits` passes at ~:187/:236; builder writes it at `StoreBuilder.cs:95`).
+- Ships by itself on merge: Workers Builds deploys the Worker, and `release.yml`'s `publish-store` uploads each stamped book's `meta.json` (standing approval). The Worker reads R2 per request, so the order of the two does not matter.
 
 #### Work
 
