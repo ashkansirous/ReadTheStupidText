@@ -12,10 +12,13 @@ name: release
 # how a full (and, with the secrets set, signed) rebuild + release is triggered
 # by hand.
 #
-# Store submission: `store-submit` runs only for Windows-specific changes (the `windowsstore`
+# Store submission: `store-submit` runs when a Windows-specific change (the `windowsstore`
 # ship-targets output: App/Infrastructure/store-submit.yml/windows.yml, or force_all, a major bump or
-# no base tag). A core-only change (Domain/Application/Documents) still rebuilds the MSIX for the
-# GitHub release but does not start a Store submission.
+# no base tag) has not been submitted yet. A core-only change (Domain/Application/Documents) still
+# rebuilds the MSIX for the GitHub release but does not by itself start a Store submission. Slice 218:
+# the flag is measured from the last successful Store submission (marker tag `rtst-store-v<x.y.z>`, made by
+# `store-submit-mark`), not from the last release; so an unsubmitted Windows change is submitted by the
+# next release, even a core-only, Android-only or Dino-only one (which then also builds the MSIX). Docs-only merges cut no release, so they carry nothing.
 #
 # Rules carried over from build.yml (Batch 8, Decisions 52-58):
 #   * ZERO Actions artifacts. The account's Actions+Packages storage quota is
@@ -713,8 +716,8 @@ jobs:
         run: |
           node .github/scripts/publish-store-books.mjs --verify
 
-  # Microsoft Store submission (Decision 44) — only when Windows-specific paths changed
-  # (`windowsstore`), not for a core-only change.
+  # Microsoft Store submission (Decision 44) — when a Windows-specific change has not been submitted
+  # yet (`windowsstore`, measured from the last `rtst-store-v` marker, Slice 218); a core-only change alone does not start one.
   # A job in this run, not an `on: release` trigger: a GITHUB_TOKEN-created
   # release never starts another workflow run (GitHub's recursion guard).
   store-submit:
@@ -728,6 +731,32 @@ jobs:
       tag: rtst-v${{ needs.version.outputs.rtst_version }}
       product_id: ${{ vars.STORE_PRODUCT_ID }}
     secrets: inherit
+
+  # Slice 218: after a successful Store submission, mark the released commit with an `rtst-store-v<x.y.z>`
+  # tag. ship-targets measures `windowsstore` from the newest such tag, not from the last release, so a
+  # Windows change in a release whose submission was skipped, failed or cancelled is submitted by the
+  # next release. The first run on main has no marker tag and falls back to the release diff; the first
+  # successful submission (e.g. a force_all run) creates it.
+  store-submit-mark:
+    needs: [version, store-submit]
+    if: needs.store-submit.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the marker tag
+    steps:
+      - name: Tag the submitted release commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: rtst-v${{ needs.version.outputs.rtst_version }}
+          MARKER_TAG: rtst-store-v${{ needs.version.outputs.rtst_version }}
+        run: |
+          set -euo pipefail
+          # Idempotent: a re-run of this job (or of the whole run) finds its tag already there.
+          sha=$(gh api "repos/${{ github.repository }}/git/ref/tags/${RELEASE_TAG}" --jq .object.sha)
+          existing=$(gh api "repos/${{ github.repository }}/git/ref/tags/${MARKER_TAG}" --jq .object.sha 2>/dev/null || true)
+          if [ "$existing" = "$sha" ]; then echo "${MARKER_TAG} already marks ${sha}"; exit 0; fi
+          gh api "repos/${{ github.repository }}/git/refs" -f "ref=refs/tags/${MARKER_TAG}" -f "sha=${sha}"
+          echo "Marked ${MARKER_TAG} at ${sha}"
 
   # Dino Reader's Microsoft Store submission (Slice 67) - only when Dino Reader's MSIX were rebuilt AND
   # the Partner Center listing exists, i.e. the repository variable DINOREADER_STORE_APP_ID (its Store

@@ -44,6 +44,7 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 > (App/Infrastructure/`store-submit.yml`/`windows.yml` changes), not `windows`: a core-only change
 > rebuilds the MSIX for the release but is not submitted. `tests/ReadTheStupidText.Tests` is not a
 > core path (tests.yml still runs it on PRs). Force a submission with `release.yml` `force_all`.
+> The Store flag is measured from the newest `rtst-store-v<x.y.z>` tag (pushed by `release.yml`'s `store-submit-mark` job after a successful submission), not from the last release, so a Windows change in a release whose submission was skipped, failed or cancelled goes out with the next release. No marker tag yet: it follows the release diff (the first successful submission creates it). Unsubmitted Windows changes also switch `windows` on, so that release builds the MSIX (also on a core-only, Android-only or Dino-only release); docs-only merges cut no release, so they never carry the backlog. (Slice 218: docs/plan/slices/218-microsoft-store-submission-skipped.md)
 
 > **Merging a change to a core path builds every app.** The core paths in
 > `ship-targets.mjs` include `.github/workflows/release.yml`, `tests.yml`,
