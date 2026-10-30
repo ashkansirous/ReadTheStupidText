@@ -291,6 +291,11 @@
   <data name="Wait_ReadingPictures" xml:space="preserve"><value>Lecture des images…</value></data>
   <data name="Wait_PageOf" xml:space="preserve"><value>Page {0} sur {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Traduction…</value></data>
+  <data name="Wait_WaitingInternet" xml:space="preserve"><value>En attente d’Internet</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingWifi" xml:space="preserve"><value>En attente du Wi-Fi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_Retry" xml:space="preserve"><value>Réessayer</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0} est téléchargé à {1} %. Le téléchargement reprend tout seul dès que vous êtes de nouveau en ligne.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>Téléchargement : {0}. Le téléchargement reprend tout seul dès que vous êtes de nouveau en ligne.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>Enregistrement…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>Préparation du livre…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>Sauvegarde des livres…</value></data>

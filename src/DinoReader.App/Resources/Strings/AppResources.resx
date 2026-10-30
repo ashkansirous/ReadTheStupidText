@@ -292,6 +292,11 @@
   <data name="Wait_ReadingPictures" xml:space="preserve"><value>Reading the pictures…</value></data>
   <data name="Wait_PageOf" xml:space="preserve"><value>Page {0} of {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Translating…</value></data>
+  <data name="Wait_WaitingInternet" xml:space="preserve"><value>Waiting for the internet</value></data>
+  <data name="Wait_WaitingWifi" xml:space="preserve"><value>Waiting for Wi-Fi</value></data>
+  <data name="Wait_Retry" xml:space="preserve"><value>Retry</value></data>
+  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0} is {1}% downloaded. It carries on by itself when you’re back online.</value></data>
+  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>Downloading {0}. It carries on by itself when you’re back online.</value></data>
   <data name="Wait_Saving" xml:space="preserve"><value>Saving…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>Getting the book…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>Backing up the books…</value></data>

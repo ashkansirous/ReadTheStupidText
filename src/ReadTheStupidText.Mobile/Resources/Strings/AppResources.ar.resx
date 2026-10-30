@@ -72,6 +72,11 @@
   <data name="Review_Read" xml:space="preserve"><value>قراءة</value></data>
   <data name="Wait_DownloadingModel" xml:space="preserve"><value>جارٍ تنزيل {0}…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>جارٍ الترجمة…</value></data>
+  <data name="Wait_WaitingInternet" xml:space="preserve"><value>في انتظار الإنترنت</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingWifi" xml:space="preserve"><value>في انتظار Wi-Fi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_Retry" xml:space="preserve"><value>إعادة المحاولة</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingPercent" xml:space="preserve"><value>تم تنزيل {1}% من {0}. سيستمر تلقائيًا عند عودة الاتصال.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>جارٍ تنزيل {0}. سيستمر تلقائيًا عند عودة الاتصال.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_PreparingVoice" xml:space="preserve"><value>جارٍ تجهيز الصوت…</value></data>
   <data name="Wait_Stalled" xml:space="preserve"><value>ما زلنا نجهّز الصوت…</value></data>
   <data name="Wait_ReadingFile" xml:space="preserve"><value>جارٍ قراءة الملف…</value></data>

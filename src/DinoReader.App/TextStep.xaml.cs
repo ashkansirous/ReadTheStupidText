@@ -356,7 +356,7 @@ public partial class TextStep : ContentView
 		try
 		{
 			var prompt = new TranslationPackPrompt(_translator, session.Store);
-			await prompt.OfferAsync(session.Host, Draft.Original.Id, session.BeginWait, session.EndWait);
+			await prompt.OfferAsync(session.Host, Draft.Original.Id, session.BeginWait, session.EndWait, wait: session.Wait);
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{

@@ -291,6 +291,11 @@
   <data name="Wait_ReadingPictures" xml:space="preserve"><value>絵を読み取っています…</value></data>
   <data name="Wait_PageOf" xml:space="preserve"><value>{1}ページ中{0}ページ目</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>翻訳しています…</value></data>
+  <data name="Wait_WaitingInternet" xml:space="preserve"><value>インターネットを待っています</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingWifi" xml:space="preserve"><value>Wi-Fi待ち</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_Retry" xml:space="preserve"><value>再試行</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0}は{1}%ダウンロード済みです。オンラインに戻ると自動で再開します。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>{0}をダウンロード中。オンラインに戻ると自動で再開します。</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>保存しています…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>本を準備しています…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>本をバックアップしています…</value></data>

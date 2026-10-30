@@ -2,7 +2,7 @@
 
 *Built (wave 2026-10-30), PR #575.*
 
-**Touches:** `src/DinoReader.Core/Story.cs`, `src/DinoReader.App/PictureTextPages.cs`, `tools/DinoReader.BookBuilder/StarterBuilder.cs`, `src/DinoReader.Core/StoryJson.cs`, `tools/DinoReader.BookBuilder/Books.cs`, `tools/DinoReader.BookBuilder/StoreBuilder.cs`, `tools/DinoReader.BookBuilder/BookHash.cs`, `content/dino/good-enough/book.json`, the committed Good Enough starter package, `tests/DinoReader.Tests/**`, `src/DinoReader.Core/CLAUDE.md`, `.maestro/dino/default-view-per-book.yaml` (new), `src/DinoReader.App/ModeSwitch.cs`
+**Touches:** `src/DinoReader.Core/Story.cs`, `src/DinoReader.App/PictureTextPages.cs`, `tools/DinoReader.BookBuilder/StarterBuilder.cs`, `src/DinoReader.Core/StoryJson.cs`, `tools/DinoReader.BookBuilder/Books.cs`, `tools/DinoReader.BookBuilder/StoreBuilder.cs`, `tools/DinoReader.BookBuilder/BookHash.cs`, `content/dino/good-enough/book.json`, the committed Good Enough starter package, `tests/DinoReader.Tests/**`, `src/DinoReader.Core/CLAUDE.md`, `.maestro/dino/default-view-per-book.yaml` (new), `src/DinoReader.App/ModeSwitch.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`
 
 **Why.** Good Enough's pages 1-7 have the story words drawn into the pictures. That is on purpose: it shows parents they can use their own pictures with words in them. **Never redraw them.** But the book opens in Picture + text today, so kids see the words twice (in the picture and in the panel).
 
@@ -47,7 +47,7 @@ No other book has words drawn in its pictures (Elves and Shoemaker page 15's sho
 
 **Checks:** 1774 Dino tests, BookBuilder `check`, Dino Android + iOS compile. S21: flow `default-view-per-book.yaml` PASS on all steps; Good Enough page 9 text card in Picture only PASS; Three Little Pigs Picture only, no card PASS.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-30)
 
 - `src/DinoReader.App/CLAUDE.md`: segmented controls (`ModeSwitch.cs`) expose the selected state in the control's description ("<label>, Selected"), not only in a hint, because Android drops hints from content-desc. (Slice 196: docs/plan/slices/196-dino-default-view-per-book.md)
 

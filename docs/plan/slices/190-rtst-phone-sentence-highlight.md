@@ -39,7 +39,7 @@ The phone highlight covers a whole `SpeechTextChunker` chunk (up to 3 sentences;
 - Medium pass: 5 of 8 applied; skipped sub-ms drift, the UI-thread split and a tests note.
 - Checks: 1597 tests pass; Android and iOS compile; Windows App build passes. Emulator `.maestro/rtst/sentence-highlight.yaml` PASS (SENTENCE 0 0/0 1/0 2 in order, ~3.4 s apart, no ANR).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-30)
 
 - `src/ReadTheStupidText.Mobile/CLAUDE.md`: sentence highlight timing lives in Application `SentenceProgress`. Readers only Register/Select/Begin; never raise sentence events from the page. (Slice 190: docs/plan/slices/190-rtst-phone-sentence-highlight.md)
 

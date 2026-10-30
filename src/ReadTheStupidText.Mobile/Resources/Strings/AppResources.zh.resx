@@ -72,6 +72,11 @@
   <data name="Review_Read" xml:space="preserve"><value>朗读</value></data>
   <data name="Wait_DownloadingModel" xml:space="preserve"><value>正在下载{0}…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>正在翻译…</value></data>
+  <data name="Wait_WaitingInternet" xml:space="preserve"><value>正在等待网络</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingWifi" xml:space="preserve"><value>正在等待 Wi-Fi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_Retry" xml:space="preserve"><value>重试</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0}已下载{1}%。恢复联网后会自动继续。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>正在下载{0}。恢复联网后会自动继续。</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_PreparingVoice" xml:space="preserve"><value>正在准备语音…</value></data>
   <data name="Wait_Stalled" xml:space="preserve"><value>仍在准备语音…</value></data>
   <data name="Wait_ReadingFile" xml:space="preserve"><value>正在读取文件…</value></data>

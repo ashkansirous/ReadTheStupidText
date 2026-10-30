@@ -291,6 +291,11 @@
   <data name="Wait_ReadingPictures" xml:space="preserve"><value>Leyendo las imágenes…</value></data>
   <data name="Wait_PageOf" xml:space="preserve"><value>Página {0} de {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Traduciendo…</value></data>
+  <data name="Wait_WaitingInternet" xml:space="preserve"><value>Esperando a Internet</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingWifi" xml:space="preserve"><value>Esperando Wi-Fi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_Retry" xml:space="preserve"><value>Reintentar</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0} está descargado al {1} %. Continúa solo cuando vuelvas a estar conectado.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>Descargando {0}. Continúa solo cuando vuelvas a estar conectado.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>Guardando…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>Preparando el libro…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>Haciendo la copia de los libros…</value></data>
