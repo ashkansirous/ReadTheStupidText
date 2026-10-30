@@ -15,7 +15,6 @@ on:
       - 'src/ReadTheStupidText.Application/**'
       - 'src/ReadTheStupidText.Documents/**'
       - 'tests/ReadTheStupidText.Tests/**'
-      - 'tools/phone/**'
       - 'global.json'
       - 'Directory.Build.props'
       - 'GitVersion.yml'

@@ -28,6 +28,6 @@
 - `pwsh tools/phone/test-timing.ps1` passes.
 
 #### Built (2026-10-30)
-- New `TestHookLaunchKeys` (Mobile.Shared/Testing, compiles in every configuration; only the Debug-only dispatcher calls it) with 4 tests that run in CI's Release build; `BookMatch` moved to `src/DinoReader.Core/Testing/BookMatch.cs` (internal) with 11 tests; `tools/phone/test-timing.ps1` + fixture; both phone self-tests run in `tests.yml` (5-minute limit; `tools/phone/**` in its paths).
+- New `TestHookLaunchKeys` (Mobile.Shared/Testing, compiles in every configuration; only the Debug-only dispatcher calls it) with 4 tests that run in CI's Release build; `BookMatch` moved to `src/DinoReader.Core/Testing/BookMatch.cs` (internal) with 11 tests; `tools/phone/test-timing.ps1` + fixture; both phone self-tests run in `tests.yml` (5-minute limit; the paths filter is generated from ship-targets GROUPS, so `tools/phone` is not added there).
 - Reviews: high 3 of 5 applied (2 needed no change); medium 1 applied (timeout, exit codes), skipped the full-rebuild note (shared code changes rebuild both apps anyway).
 - Checks: RTST 1662 (Debug) / 1656 (Release), Dino 1789, both Android builds, both iOS compiles, both pwsh self-tests (a broken fixture exits 1).
