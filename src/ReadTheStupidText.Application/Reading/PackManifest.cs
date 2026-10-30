@@ -23,6 +23,35 @@ public sealed record PackManifest(
     public IReadOnlyList<string> MissingFiles(Func<string, bool> exists) =>
         Files.Where(f => !exists(f)).ToList();
 
+    /// <summary>
+    /// For a Piper pack (a VITS pack named in <see cref="PackConstants.PiperPackIds"/>), the model folders whose <c>tokens.txt</c> sherpa-onnx would abort on (Slice 201): a pack
+    /// that lists one is broken, so it is neither installed nor loaded. <paramref name="readTokens"/> gets the pack-relative
+    /// path and returns the file's raw bytes, or null when it is not there (the file-list check reports that one).
+    /// </summary>
+    public IReadOnlyList<string> BrokenTokenFolders(Func<string, byte[]?> readTokens)
+    {
+        if (Model != VoiceEngineKind.Vits || !PackConstants.PiperPackIds.Contains(Id))
+        {
+            return [];
+        }
+
+        IEnumerable<PackVoice> voices = Voices is { Count: > 0 } ? Voices : [new PackVoice(string.Empty, string.Empty, 0)];
+        IEnumerable<string> folders = voices
+            .Select(v => v.Model?.Replace('\\', '/').TrimEnd('/') ?? string.Empty)
+            .Distinct();
+        return folders
+            .Where(f => readTokens(f.Length == 0 ? VitsFiles.Tokens : $"{f}/{VitsFiles.Tokens}") is { } bytes && PiperTokens.ProblemInBytes(bytes) is not null)
+            .ToList();
+    }
+
+    /// <summary><see cref="BrokenTokenFolders"/> for the extracted pack in <paramref name="root"/>.</summary>
+    public IReadOnlyList<string> BrokenTokenFoldersIn(string root) =>
+        BrokenTokenFolders(path =>
+        {
+            string file = Path.Combine(root, path);
+            return File.Exists(file) ? File.ReadAllBytes(file) : null;
+        });
+
     public static PackManifest Parse(string json)
     {
         ManifestDto dto = Deserialize(json);
