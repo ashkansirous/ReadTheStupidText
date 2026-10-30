@@ -33,6 +33,8 @@
 - [ ] Debug markers above.
 - [ ] Unit tests: the policy (wanted, unwanted, a partial for a pack with a newer version than the partial, an empty partial).
 
+- [ ] Runner (Slice 213): set `ExpectPackNameInNotification = $true` in `tools/phone/checks/_lib.ps1` once the text names the language and size, so `notification-text` asserts it; add the `paused-notification` check script (lower the dataSync timeout, background the app, assert the paused notification and its tap-to-resume; reset the timeout in a finally), replacing the catalogue's "blocked until Slice 208" entry.
+
 #### Verification
 
 - S21: read the download notification text with `dumpsys notification --noredact` (never checked in the night runs): language name and size shown.

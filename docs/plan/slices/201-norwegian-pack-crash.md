@@ -49,6 +49,15 @@ Cause is likely, not yet proven by a fixed pack loading.
 
 Real S21, Android 15. The old piper-nb v1 pack was rejected (`RTST_PACK_TOKENS_REJECTED`) instead of crashing; v2 (packs-10) downloaded and read Norwegian with `piper:nb-knn`; relaunch in Norsk was fine; English and Farsi still read. Night note: [2026-10-29-s21-night-runs.md](../notes/2026-10-29-s21-night-runs.md).
 
+#### Real users (2026-10-30, found in the session audit)
+
+- Every RTST release up to **rtst-v1.73.2** pins a catalog (`packs-9` and older) that still serves the broken `piper-nb-1.zip`, so a user on those versions who picks Norsk crash-loops; store builds have offered Norsk since PR #300. Releases from **rtst-v1.74.0** pin `packs-10` and reject the bad pack. The store builds themselves were never checked on a device.
+- Fix options need the user (live change): force an update by setting `minVersion` 1.74.0 for each platform in `readthestupidtext/config.json` (also fixes users who already downloaded v1, since the new app rejects it and fetches v2), or replace the asset in the old packs releases (does not help users who already have v1 installed).
+
+#### Review minors left (2026-10-30)
+
+- Pass 1 left six minors (some duplicated code, files read twice); pass 2 left minors only. None changes behaviour.
+
 #### Not yet verified
 
 - Windows desktop (sherpa engine with the new pack) and iOS device not run.

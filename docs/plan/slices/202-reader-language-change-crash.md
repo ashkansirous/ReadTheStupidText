@@ -31,6 +31,10 @@ page is rebuilt for the new language and the restored text fires `OnEditorTextCh
 
 Real S21, Android 15: en -> fa -> sv -> en with text in the reader, the app stays up and reads; an empty reader is also fine. Night note: [2026-10-29-s21-night-runs.md](../notes/2026-10-29-s21-night-runs.md).
 
+#### Review minors left (2026-10-30)
+
+- The required order (`InitWait()` before the draft text is set) is kept only by a comment in `ReaderPage.xaml.cs`; nothing tests it. If it can be pulled into a pure step, add a unit test; otherwise a Maestro flow that changes language with text in the reader (Slice 209 `set-language`).
+
 #### Not yet verified
 
 - iOS device (shared MAUI page, same fix, not run).
