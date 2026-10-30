@@ -80,6 +80,53 @@ public sealed class StoryBackupTests : IDisposable
     }
 
     [Fact]
+    public async Task Restore_CallsOnAddedOncePerAddedStory_AndNotForSkippedOnes()
+    {
+        FileStoryLibrary source = Library("source");
+        await StoreAsync(source, Make("A"));
+        await StoreAsync(source, Make("B"));
+        byte[] backup = await BackupAsync(source);
+        FileStoryLibrary target = Library("target");
+        var added = new List<Story>();
+
+        await StoryBackupReader.RestoreAsync(new MemoryStream(backup), target, added.Add);
+        Assert.Equal(2, added.Count);
+
+        await StoryBackupReader.RestoreAsync(new MemoryStream(backup), target, added.Add);
+        Assert.Equal(2, added.Count);
+    }
+
+    [Fact]
+    public async Task Restore_ReportsAStoreBookWithItsSource_AndAnOwnBookWithout()
+    {
+        FileStoryLibrary source = Library("source");
+        string sourceId = Guid.NewGuid().ToString("N");
+        await StoreAsync(source, Make("Store", sourceId));
+        await StoreAsync(source, Make("Own"));
+        FileStoryLibrary target = Library("target");
+        var added = new List<Story>();
+
+        await StoryBackupReader.RestoreAsync(new MemoryStream(await BackupAsync(source)), target, added.Add);
+
+        Assert.Equal(sourceId, Assert.Single(added, s => s.Title == "Store").SourceId);
+        Assert.Null(Assert.Single(added, s => s.Title == "Own").SourceId);
+    }
+
+    [Fact]
+    public async Task Restore_KeepsGoing_WhenTheAddedCallbackThrows()
+    {
+        FileStoryLibrary source = Library("source");
+        await StoreAsync(source, Make("A"));
+        await StoreAsync(source, Make("B"));
+        FileStoryLibrary target = Library("target");
+
+        StoryRestoreResult result = await StoryBackupReader.RestoreAsync(new MemoryStream(await BackupAsync(source)), target, _ => throw new InvalidOperationException("boom"));
+
+        Assert.Equal(2, result.Added);
+        Assert.Equal(2, (await target.ListAsync()).Count);
+    }
+
+    [Fact]
     public async Task RestoringTwice_AddsNothing_AndLeavesAnExistingStoryAsItWas()
     {
         FileStoryLibrary source = Library("source");
