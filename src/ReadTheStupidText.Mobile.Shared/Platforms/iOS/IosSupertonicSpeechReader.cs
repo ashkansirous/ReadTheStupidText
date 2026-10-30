@@ -50,6 +50,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     private readonly ISystemLog _log;
     private readonly SentenceAudioSource _sentences;
     private readonly ReadTimingTracker _timing = new();
+    private readonly SentenceProgress _sentenceProgress = new();
     private readonly StallReporter _stall;
     private readonly NSObject _interruptionObserver;
 
@@ -117,6 +118,8 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     // Raised once each chunk has started playing, with its real source range (Slice 60).
     public event EventHandler<ReadChunk>? ChunkChanged;
 
+    public event EventHandler<SentenceChange>? SentenceChanged;
+
     // Raised while the read waits for the next chunk's audio (Slice 148); the UI shows its "still getting the voice ready" overlay.
     public event EventHandler<bool>? StallChanged
     {
@@ -145,6 +148,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         _model = model;
         _log = log ?? new IosSystemLog();
         string cacheRoot = FileSystem.Current.CacheDirectory;
+        _sentenceProgress.Changed += change => SentenceChanged?.Invoke(this, change);
         _sentences = new SentenceAudioSource(
             new SentenceAudioCache(new FileSentenceStore(Path.Combine(cacheRoot, SentenceFolderName))), _log);
         PurgeOrphanedChunkFiles(cacheRoot);
@@ -201,6 +205,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
             Volatile.Write(ref _firstAudioPending, 1);
 
             _chunks = chunks;
+            _sentenceProgress.Reset();
             _timing.Start(chunks.Count);
             RaiseTiming(TimeSpan.Zero);
 
@@ -420,6 +425,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         Volatile.Write(ref _positionTicks, 0);
         Volatile.Write(ref _durationTicks, 0);
         ProgressChanged?.Invoke(this, 0);
+        _sentenceProgress.Clear();
         _timing.Reset();
         RaiseTiming(TimeSpan.Zero);
     }

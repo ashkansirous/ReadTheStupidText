@@ -43,6 +43,14 @@ public interface ISpeechReader
         remove { }
     }
 
+    /// <summary>Raised on any thread when a later sentence of the playing chunk starts (Slice 190), for the phone's one-sentence highlight.
+    /// A reader that does not know its sentence starts (Windows, the phone's own voice) never raises it, which is the default.</summary>
+    event EventHandler<SentenceChange>? SentenceChanged
+    {
+        add { }
+        remove { }
+    }
+
     PlaybackState State { get; }
 
     /// <summary>

@@ -20,12 +20,13 @@ public sealed partial class IosSupertonicSpeechReader
     {
         long started = Stopwatch.GetTimestamp();
         IReadOnlyList<string> units = SentenceUnits.Split(chunk);
-        byte[] wav = await JoinSentencesAsync(engine, units, voice, transform, token);
+        (byte[] wav, SentenceTimeline? timeline) = await JoinSentencesAsync(engine, units, voice, transform, token);
         token.ThrowIfCancellationRequested();
         RecordChunkDuration(index, WavFile.TryGetDuration(wav) ?? TimeSpan.Zero);
         _log.Debug($"chunk {index} ({chunk.Length} chars, {units.Count} sentence(s)) ready in " +
             $"{Stopwatch.GetElapsedTime(started).TotalMilliseconds:F0} ms");
         string path = await WriteChunkFileAsync(wav);
+        _sentenceProgress.Register(path, timeline);
         files.Enqueue(path);
         return path;
     }
@@ -33,20 +34,21 @@ public sealed partial class IosSupertonicSpeechReader
     // Fetches every sentence's clip and joins them. A cached clip that will not join (corrupt, or
     // a different sample rate) is a miss, not a failed read: the chunk's cached clips are dropped
     // and synthesized afresh. A second failure is real and propagates.
-    private async Task<byte[]> JoinSentencesAsync(
+    private async Task<(byte[] Wav, SentenceTimeline? Timeline)> JoinSentencesAsync(
         IosBuiltEngine engine, IReadOnlyList<string> units, VoiceInfo voice, IVoicedAudioTransform? transform,
         CancellationToken token)
     {
         byte[][] clips = await GetClipsAsync(engine, units, voice, transform, token);
         try
         {
-            return JoinClips(clips, transform);
+            return (JoinClips(clips, transform), TimelineOf(clips, transform));
         }
         catch (InvalidDataException ex)
         {
             _log.Warning("cached sentence audio would not join; resynthesizing the chunk", error: ex);
             units.ToList().ForEach(u => _sentences.Invalidate(KeyFor(engine, u, voice, transform)));
-            return JoinClips(await GetClipsAsync(engine, units, voice, transform, token), transform);
+            clips = await GetClipsAsync(engine, units, voice, transform, token);
+            return (JoinClips(clips, transform), TimelineOf(clips, transform));
         }
     }
 
@@ -61,6 +63,9 @@ public sealed partial class IosSupertonicSpeechReader
 
     private static byte[] JoinClips(byte[][] clips, IVoicedAudioTransform? transform) =>
         clips.Length == 1 ? ValidClip(clips[0]) : WavFile.Concat(clips, VoicedAudio.GapOf(transform));
+
+    private static SentenceTimeline? TimelineOf(byte[][] clips, IVoicedAudioTransform? transform) =>
+        SentenceTimeline.FromClips(clips, VoicedAudio.GapOf(transform));
 
     private static byte[] ValidClip(byte[] clip) =>
         WavFile.IsComplete(clip, clip.LongLength) ? clip : throw new InvalidDataException("Not a WAV written by this app.");
@@ -166,7 +171,7 @@ public sealed partial class IosSupertonicSpeechReader
     // synthesis tasks, swallowing every outcome so none goes unobserved, then deletes every chunk
     // file the generation wrote. Deleting a file that is still playing is safe (the open handle
     // stays valid) and the player is released by whoever ended the read.
-    private static async Task DrainAsync(List<Task<string>> generations, ConcurrentQueue<string> files)
+    private async Task DrainAsync(List<Task<string>> generations, ConcurrentQueue<string> files)
     {
         foreach (Task<string> generation in generations)
         {
@@ -182,7 +187,7 @@ public sealed partial class IosSupertonicSpeechReader
 
         foreach (string path in files)
         {
-            TryDelete(path);
+            DropChunkFile(path);
         }
     }
 
@@ -252,7 +257,7 @@ public sealed partial class IosSupertonicSpeechReader
     {
         if (_previousChunkFile is { } path)
         {
-            TryDelete(path);
+            DropChunkFile(path);
             _previousChunkFile = null;
         }
     }
@@ -261,9 +266,16 @@ public sealed partial class IosSupertonicSpeechReader
     {
         if (_currentChunkFile is { } path)
         {
-            TryDelete(path);
+            DropChunkFile(path);
             _currentChunkFile = null;
         }
+    }
+
+    // Deletes a generated chunk file and forgets its sentence timeline.
+    private void DropChunkFile(string path)
+    {
+        _sentenceProgress.Discard(path);
+        TryDelete(path);
     }
 
     private static void TryDelete(string path)
