@@ -42,7 +42,7 @@ signed copy sits in `<VmRoot>\sign` and is deleted in a `finally`. Runs take a h
   non-interactive logon, so each check runs as a one-shot scheduled task). Each writes `{pass,message}`; `_lib.ps1` has
   the helpers (UIA lookups, tray icon, mouse and keys, log readers). Order matters: later checks use the running app.
   RTST: `rtst-launch`, `rtst-tray-icon`, `rtst-hotkey-read` (clipboard path), `rtst-selection-hotkey` (Notepad selection beats a clipboard decoy), `rtst-panel-speed`, `rtst-startup-task`.
-  Dino: `dino-launch`, `dino-open-book`, `dino-page-turn`. Add a check = add the file and its name to `$Apps` in the runner.
+  Dino: `dino-launch`, `dino-open-book`, `dino-page-turn`, `dino-settings` (Slice 189 flow: "For grown-ups" button, the real grown-up gate held 3.5 s with a mouse press via `Invoke-PressAndHold`, sum, grown-up mode, its gear, Settings with its groups, Back, Done to the kids' shelf; no test bypass). Add a check = add the file and its name to `$Apps` in the runner.
 
 ## Where things live
 
