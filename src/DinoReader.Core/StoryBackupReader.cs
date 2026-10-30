@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
 
@@ -22,9 +23,10 @@ public static class StoryBackupReader
     private const string MacMetadataFolder = "__MACOSX/";
     private const string TempPrefix = "dino-restore-";
 
-    public static Task<StoryRestoreResult> RestoreAsync(Stream backup, IStoryLibrary library) => RestoreAsync(backup, library, MaxBackupBytes);
+    /// <summary>Restores <paramref name="backup"/>; <paramref name="onAdded"/> is called once for each story the restore put on the shelf (Slice 191), so the app can count them.</summary>
+    public static Task<StoryRestoreResult> RestoreAsync(Stream backup, IStoryLibrary library, Action<Story>? onAdded = null) => RestoreAsync(backup, library, MaxBackupBytes, onAdded);
 
-    internal static async Task<StoryRestoreResult> RestoreAsync(Stream backup, IStoryLibrary library, long maxBytes)
+    internal static async Task<StoryRestoreResult> RestoreAsync(Stream backup, IStoryLibrary library, long maxBytes, Action<Story>? onAdded = null)
     {
         try
         {
@@ -37,7 +39,7 @@ public static class StoryBackupReader
             int tooLarge = 0;
             for (int i = 0; i < packages.Count && tooLarge == 0; i++)
             {
-                Outcome outcome = await RestoreOneAsync(packages[i], library, known, budget);
+                Outcome outcome = await RestoreOneAsync(packages[i], library, known, budget, onAdded);
                 counts[(int)outcome]++;
                 tooLarge = outcome == Outcome.TooLarge ? packages.Count - i : 0;
             }
@@ -101,11 +103,11 @@ public static class StoryBackupReader
     }
 
     // The shared byte budget running out ends the whole restore (TooLarge); any other failure costs only its own story.
-    private static async Task<Outcome> RestoreOneAsync(ZipArchiveEntry entry, IStoryLibrary library, HashSet<string> known, ByteBudget budget)
+    private static async Task<Outcome> RestoreOneAsync(ZipArchiveEntry entry, IStoryLibrary library, HashSet<string> known, ByteBudget budget, Action<Story>? onAdded)
     {
         try
         {
-            return entry.Length > MaxPackageBytes ? Outcome.Damaged : await ImportEntryAsync(entry, library, known, budget);
+            return entry.Length > MaxPackageBytes ? Outcome.Damaged : await ImportEntryAsync(entry, library, known, budget, onAdded);
         }
         catch (Exception ex) when (ex is StoryPackageException or StoryFormatException or InvalidDataException)
         {
@@ -113,7 +115,7 @@ public static class StoryBackupReader
         }
     }
 
-    private static async Task<Outcome> ImportEntryAsync(ZipArchiveEntry entry, IStoryLibrary library, HashSet<string> known, ByteBudget budget)
+    private static async Task<Outcome> ImportEntryAsync(ZipArchiveEntry entry, IStoryLibrary library, HashSet<string> known, ByteBudget budget, Action<Story>? onAdded)
     {
         await using FileStream package = TempFile();
         await CopyCappedAsync(entry, package, budget);
@@ -137,7 +139,21 @@ public static class StoryBackupReader
             known.Add(addedSource);
         }
 
+        NotifyAdded(onAdded, added);
         return Outcome.Added;
+    }
+
+    // A callback that throws must not abort the restore partway: the story is already on the shelf (Slice 191).
+    private static void NotifyAdded(Action<Story>? onAdded, Story added)
+    {
+        try
+        {
+            onAdded?.Invoke(added);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Dino Reader restore: the added-story callback failed: {ex.Message}");
+        }
     }
 
     // The library refuses an id whose file already exists: that is "already on the shelf" only if the story really reads back (null here);

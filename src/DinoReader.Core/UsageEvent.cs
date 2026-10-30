@@ -56,6 +56,9 @@ public static class UsageDetail
     public const string KindTxt = "txt";
     public const string KindMixed = "mixed";
 
+    /// <summary>A book that came back from a backup restore (Slice 191), one count per restored book.</summary>
+    public const string KindRestore = "restore";
+
     public const string PagesOne = "1";
     public const string PagesTwoToFive = "2-5";
     public const string PagesSixToTen = "6-10";
@@ -106,6 +109,13 @@ public static class UsageDetail
 
     /// <summary>The detail of an own-book count (Slice 178): how the book came in (a <c>Kind</c> value) and its page-count bucket, like <c>pdf:6-10</c>.</summary>
     public static string OwnBookAdded(string kind, int pageCount) => string.Concat(kind, WaitSeparator, PagesBucket(pageCount));
+
+    /// <summary>
+    /// The detail of the count for a book a backup restore put back (Slice 191), like <c>restore:2-5</c>, or null when the book is not the grown-up's own:
+    /// a restored starter or store book has a <see cref="Story.SourceId"/> and is not counted (the store download already was).
+    /// </summary>
+    public static string? RestoredBook(Story restored) =>
+        restored.SourceId is null ? OwnBookAdded(KindRestore, restored.Pages.Count) : null;
 
     /// <summary>How many pages of a book have a parent recording, as a bucket (never the exact count).</summary>
     public static string PagesBucket(int recordedPages) => recordedPages switch
