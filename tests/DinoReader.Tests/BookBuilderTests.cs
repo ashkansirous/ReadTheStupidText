@@ -157,12 +157,31 @@ public sealed class BookBuilderTests : IDisposable
         });
     }
 
+    private static Dictionary<string, string> AllCredits() =>
+        UiLanguage.Supported.Where(l => l != UiLanguage.English).ToDictionary(l => l, l => "Mine " + l);
+
+    [Fact]
+    public void ABookJson_WithoutAllFourteenCreditLanguages_FailsWithTheFileNamed()
+    {
+        BookFolder book = TinyBook("One.");
+        string path = Path.Combine(book.Dir, BookFolder.BookFile);
+        var partial = AllCredits();
+        partial.Remove("fa");
+        partial["xx"] = "Mine";
+        Books.WriteInfo(book.Dir, book.Info with { CreditsByLanguage = partial });
+
+        string message = Assert.Throws<InvalidOperationException>(() => Books.ReadInfo(book.Dir)).Message;
+        Assert.Contains(path, message);
+        Assert.Contains("missing: fa", message);
+        Assert.Contains("unknown: xx", message);
+    }
+
     private BookFolder TinyBook(string text)
     {
         string dir = Path.Combine(_root, "tiny");
         Directory.CreateDirectory(dir);
         File.WriteAllText(Path.Combine(dir, BookFolder.StoryFile), text);
-        var info = new BookInfo(BookKind.Store, "a02c0731b7ac475a896e9184f3575e7b", "Tiny", 1, 3, 6, "Me", "Mine", 0, "2026-10-27", 0, null, null, null, null, string.Empty);
+        var info = new BookInfo(BookKind.Store, "a02c0731b7ac475a896e9184f3575e7b", "Tiny", 1, 3, 6, "Me", "Mine", 0, "2026-10-27", 0, null, null, null, null, string.Empty, null, AllCredits());
         return new BookFolder("tiny", dir, info);
     }
 }

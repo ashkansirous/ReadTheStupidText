@@ -72,5 +72,21 @@
       ]
     }
   ],
-  "contentHash": "d4d39606d264cc49602ee91f8c75fa363b09eada3b4ae27bc6228f7f548447a6"
+  "contentHash": "d4d39606d264cc49602ee91f8c75fa363b09eada3b4ae27bc6228f7f548447a6",
+  "creditsByLanguage": {
+    "ar": "مُعاد سردها عن إيسوب · مجانية للمشاركة",
+    "da": "Genfortalt efter Æsop · frit at dele",
+    "de": "Nacherzählt nach Äsop · frei zum Teilen",
+    "es": "Recontado a partir de Esopo · libre para compartir",
+    "fa": "بازگویی از ازوپ · آزاد برای اشتراک‌گذاری",
+    "fi": "Uudelleen kerrottu Aisopoksen mukaan · vapaasti jaettavissa",
+    "fr": "Raconté à nouveau d'après Ésope · libre de partage",
+    "ja": "イソップ物語の語りなおし · 自由に共有できます",
+    "nb": "Gjenfortalt etter Aisopos · fri til å dele",
+    "nl": "Naverteld naar Aesopus · vrij te delen",
+    "pt": "Recontado a partir de Esopo · livre para compartilhar",
+    "ru": "Пересказ басни Эзопа · можно свободно делиться",
+    "sv": "Återberättad efter Aisopos · fri att dela",
+    "zh": "改编自伊索寓言 · 可自由分享"
+  }
 }
