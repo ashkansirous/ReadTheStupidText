@@ -1,6 +1,6 @@
 ### Slice 218 — RTST Microsoft Store submission skipped Windows code changes
 
-*Planned 2026-10-30.* Found while checking where RTST 1.74.0+ is available.
+*In progress (wave 2026-10-30), draft PR.* Planned 2026-10-30. Found while checking where RTST 1.74.0+ is available.
 
 **Touches:** `.github/scripts/ship-targets.mjs`, `.github/workflows/release.yml`, `.github/CLAUDE.md`, `tests/**` or `.github/scripts/*.test.*` (the ship-targets tests), `docs/plan/slices/218-microsoft-store-submission-skipped.md`
 
