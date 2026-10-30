@@ -9,6 +9,7 @@ appId: uk.sirous.dinoreader
 name: Download now right after the mobile-data check
 ---
 - launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow starts the storyteller download itself, so it needs the pack missing, and uses no own book.
     clearState: true
     arguments:
       cmd: skip-first-run

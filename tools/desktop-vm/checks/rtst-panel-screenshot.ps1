@@ -2,6 +2,7 @@
 # the panel opened from the tray, and only the panel window saved as PNG under <work dir>\results\control-panel.png.
 # Opt-in (not in the default RTST check list): .\Invoke-DesktopTest.ps1 -App rtst -Check rtst-panel-screenshot -CopyOut <host folder>;
 # the runner copies the PNG out before it restores the VM to clean (no -KeepRunning).
+# needs: voice-pack
 param([string] $ResultFile, [Parameter(Position = 0)] [string] $PackageName)
 . "$PSScriptRoot\_lib.ps1"
 function Assert-ScreenshotEnvironment {

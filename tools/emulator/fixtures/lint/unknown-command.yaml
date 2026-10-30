@@ -1,0 +1,5 @@
+appId: uk.sirous.dinoreader
+---
+- launchApp
+- openNotifications
+- tapOn: x

@@ -13,6 +13,10 @@
   remaining checks must fail (proof that a check can fail). Checks run in order and share the one running app.
   Slice 194 (opt-in): -Check <name> runs the app's first (launch) check, then only that check (a file in checks\, even one
   not in the default list); -CopyOut <host folder> copies the guest's results\*.png there before the VM is restored.
+  Slice 207 (preflight): a check script may carry a header line `# needs: network, voice-pack`. The guest's network (an HTTPS request to the site, 10 s)
+  is tested once the guest answers, before the package is copied, and only when a selected check declares `
+  network` (the VM is offline by design, so declare it only for a check that truly needs the internet); the app's voice pack folder, which exists only once the package is installed,
+  is tested right after the install and before the first check runs. Every declared probe runs before the decision; all missing items print in one `VM PREFLIGHT NO-GO: <items>` line and exits 3 without running any check. -SkipPreflight bypasses it.
 #>
 [CmdletBinding()]
 param(
@@ -22,7 +26,8 @@ param(
     [ValidateSet('None', 'KillApp')] [string] $Sabotage = 'None',
     [switch] $KeepRunning,
     [string] $Check,
-    [string] $CopyOut
+    [string] $CopyOut,
+    [switch] $SkipPreflight
 )
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot\_common.ps1"
@@ -37,8 +42,10 @@ if ($App -eq 'auto') {
     if ($touched.Count -eq 0) { Write-Host 'NO WINDOWS APP IS TOUCHED BY THIS CHANGE: no desktop test ran. That is a skip, not a test pass.'; exit 0 }
     $worst = 0
     foreach ($name in $touched) {
-        & $PSCommandPath -App $name -VmRoot $VmRoot -Sabotage $Sabotage -KeepRunning:$KeepRunning
-        if ($LASTEXITCODE -ne 0) { $worst = 1 }
+        & $PSCommandPath -App $name -VmRoot $VmRoot -Sabotage $Sabotage -KeepRunning:$KeepRunning -SkipPreflight:$SkipPreflight
+        # A real failed check (1) outranks a NO-GO (3) from another app, whatever the order, so a caller that reads 3 as "environment, ask" never misses a failure.
+        if ($LASTEXITCODE -eq $script:PreflightExitCode) { if ($worst -eq 0) { $worst = $script:PreflightExitCode } }
+        elseif ($LASTEXITCODE -ne 0) { $worst = 1 }
     }
     exit $worst
 }
@@ -112,6 +119,19 @@ function Copy-ResultFiles {
     if (-not $files.Count) { Write-Warning 'CopyOut: the checks left no PNG in the guest results folder.' }
 }
 
+function Assert-GuestPreflight {
+    # Slice 207: collects what the guest lacks among the needs the selected checks declare (see the header of their scripts); each probe runs only when some check declares it.
+    # -Only limits it to some needs: the network is tested before the install, the voice pack after it (its folder exists only once the package is installed).
+    # The missing items of an earlier call are kept, and -Final throws one NO-GO line listing all of them.
+    param($Session, [string[]] $Only = $script:KnownNeeds, [switch] $Final)
+    $needs = @($AppProfile.Checks | ForEach-Object { Get-CheckNeeds "$PSScriptRoot\checks\$_.ps1" } | Select-Object -Unique | Where-Object { $Only -contains $_ })
+    if ($SkipPreflight -or $needs.Count -eq 0) { Write-Host "Preflight ($($Only -join ', ')): $(if ($SkipPreflight) { 'skipped (-SkipPreflight)' } else { 'no check declares a need' })." }
+    else { $script:PreflightMissing += @(Get-PreflightMissing -Session $Session -Needs $needs -PackageName $AppProfile.Name -PackId $script:VoicePackIds[$App]) }
+    if (-not $Final) { return }
+    if ($script:PreflightMissing.Count -gt 0) { throw "$($script:PreflightNoGo): $($script:PreflightMissing -join ', ')" }
+    Write-Host 'Preflight: ok.'
+}
+
 function Write-Results {
     param([object[]] $Results)
     foreach ($r in $Results) {
@@ -124,6 +144,8 @@ function Write-Results {
 $msix = Find-Package
 $credential = Get-VmCredential
 $results = @()
+$noGo = $null
+$script:PreflightMissing = @()
 $session = $null
 # Register (and wait for a quiet-machine timing run) before taking the VM lock, so a long wait never holds every other VM run up.
 $activity = Start-Activity "vm-$App"
@@ -132,11 +154,13 @@ try {
     Write-Host "Restoring '$($script:CheckpointName)' and starting the VM..."
     Restore-CleanCheckpoint -Start -Quiet
     $session = New-VmSession -Credential $credential
+    Assert-GuestPreflight -Session $session -Only @('network')
     Copy-ToGuest -Session $session -Msix $msix
     Write-Host 'Installing the package in the VM...'
     Write-LicenseNote -License (Get-GuestLicense -Session $session)
     $version = Install-InGuest -Session $session -Name $AppProfile.Name
     Write-Host "Installed $($AppProfile.Name) $version in the VM from $msix"
+    Assert-GuestPreflight -Session $session -Only @('voice-pack') -Final
     foreach ($check in $AppProfile.Checks) {
         if ($Sabotage -eq 'KillApp' -and $check -ne $AppProfile.Checks[0]) {
             Invoke-Command -Session $session -ArgumentList $AppProfile.Exe -ScriptBlock { param($exe) Stop-Process -Name $exe -Force -ErrorAction SilentlyContinue }
@@ -149,9 +173,12 @@ try {
     if ($CopyOut) { Copy-ResultFiles -Session $session -HostDir $CopyOut }
 } catch {
     $failure = $_.Exception.Message
-    $hasShot = $failure -match 'screen: \S'
-    $shot = if ($hasShot) { $null } else { Save-VmScreenshot -Reason 'harness' }
-    $results += [pscustomobject]@{ check = 'harness'; pass = $false; message = $(if ($hasShot) { $failure } else { "$failure; screen: $(Get-ScreenText $shot)" }) }
+    if ($failure.StartsWith($script:PreflightNoGo)) { $noGo = $failure; Write-Host $noGo }
+    else {
+        $hasShot = $failure -match 'screen: \S'
+        $shot = if ($hasShot) { $null } else { Save-VmScreenshot -Reason 'harness' }
+        $results += [pscustomobject]@{ check = 'harness'; pass = $false; message = $(if ($hasShot) { $failure } else { "$failure; screen: $(Get-ScreenText $shot)" }) }
+    }
 } finally {
     if ($session) { Remove-PSSession $session -ErrorAction SilentlyContinue }
     if (-not $KeepRunning) {
@@ -161,6 +188,7 @@ try {
     Stop-Activity $activity
     Exit-VmLock
 }
+if ($noGo) { exit $script:PreflightExitCode }
 Write-Results -Results $results
 if ($results.Where({ -not $_.pass }).Count -gt 0) { exit 1 }
 exit 0

@@ -4,6 +4,7 @@ appId: uk.sirous.readthestupidtext
 name: Language page two-step Continue
 ---
 - launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books), on purpose: the flow tests the first-run language page and starts the voice pack itself.
     clearState: true
 - extendedWaitUntil:
     visible:

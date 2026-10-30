@@ -1,6 +1,6 @@
 # Slice 207: guards for emulator, VM and flow mistakes
 
-*In progress (wave 2026-10-30), draft PR.*
+*Built 2026-10-30. Verified on the emulator and the VM (see below); one flow failure on the emulator is not yet checked on main.*
 
 **Why:** the 2026-10-30 night wave lost device runs to mistakes a script could have caught. Slice 197's emulator check ran
 while Slice 191's was still on the same emulator, and its `clearState` wiped 191's own book (nothing stops two
@@ -51,14 +51,14 @@ step only)
    - the header has an `appId:` that is one of the two dev packages.
    `test-lint-flows.ps1` checks each rule against small fixtures under `tools/emulator/fixtures/lint/`, plus the real
    `.maestro` passing clean. `run-flows.ps1` runs the lint first and stops before any build when it fails.
-   `tests.yml`'s existing pwsh step runs `test-lint-flows.ps1` and the lease self-test (don't touch the paths filter).
+   The self-tests run by hand and from the slice's checks, not in CI: `tests.yml` stays untouched (changing it ships every app); wiring them into CI is a later slice.
 4. **VM preflight in `Invoke-DesktopTest.ps1`.** Before installing, in the guest: check the network (an HTTPS request
    to `https://readthestupidtext.sirous.uk/` with a 10 s timeout) and, for checks that declare it, the voice pack.
    Each check script may carry a header line `# needs: network, voice-pack`. If a needed item is missing, print
    `VM PREFLIGHT NO-GO: <items>` and exit 3 within the first minute, without running the check. `-SkipPreflight`
    bypasses it. Read where the Windows voice pack lives from Infrastructure (pack install folder under the package's
    LocalState) and check its folder for the app the check runs. Add the header to `rtst-panel-screenshot.ps1`
-   (network, voice-pack) and any other check that waits on a pack.
+   (voice-pack; the VM is offline by design, so `network` is for checks that truly need it) and any other check that waits on a pack.
 5. **`tools/test-targets.ps1 -Checks`**: from the same diff, print the fast-check commands to run: one
    `dotnet build` line per app it names (RTST Android, Dino Android, RTST Windows, Dino Windows, with the flags from
    root `CLAUDE.md`) and one `dotnet test` line per test project the diff reaches (Mobile.Shared, Application, Domain
@@ -77,4 +77,24 @@ step only)
 - `lint-flows.ps1` on `.maestro` is clean after the comments; on a copy with `openNotifications` it fails naming the line.
 - One emulator run: start `run-flows.ps1 -App rtst` twice on the same instance; the second prints `LEASE waiting` and
   starts only after the first ends.
-- One VM run of `rtst-panel-screenshot.ps1` with the guest offline prints `VM PREFLIGHT NO-GO: network` within a minute.
+- One VM run of `rtst-panel-screenshot.ps1` with no voice pack in the guest prints `VM PREFLIGHT NO-GO: voice-pack (supertonic-3)` within a minute (the guest is offline by design, so no network line).
+
+## Built
+
+- [x] Shared `tools/lease-common.ps1` (phone and emulator); emulator lease in `run-flows.ps1` and `audio-timing.ps1 -Emulator`; one emulator running flows by default (`RTST_ALLOW_TWO_EMULATORS=1` restores two).
+- [x] `lint-flows.ps1` plus self-test and fixtures; 16 `# clearState:` comments in the flows.
+- [x] VM preflight (`# needs:` headers, `VM PREFLIGHT NO-GO` exit 3, `-SkipPreflight`); `test-targets.ps1 -Checks`.
+
+*Changed while building:* `tests.yml` was deliberately not changed (it is a core path and would ship every app); the self-tests run by hand and from `run-flows.ps1`. The first VM run showed the VM is offline by design, so the screenshot check's header is `needs: voice-pack` only.
+
+*From review:* High: 9 findings applied (`run-flows.ps1` was missing the lease include, a blocker; voice-pack probe before install; lease timing; lint edge cases; `-App auto` exit codes; shared build inputs in `-Checks`). Medium: 6 applied (lease pid on renew, `pack.json` manifest check, lease renew during the activity wait, `Wait-ForLease` spin, `audio-timing.ps1` cleanup, Infrastructure/Documents reach both test projects); 3 low findings skipped.
+
+*Device results:* emulator: lint on 18 flows clean; a second `run-flows.ps1` printed `LEASE waiting on 'run-flows-15292'` and started after the first, no lease left behind. VM: a clean checkpoint gives `VM PREFLIGHT NO-GO: voice-pack (supertonic-3)` with exit 3 in about 60 s; `-SkipPreflight` runs the check.
+
+#### For CLAUDE.md
+
+Already in `tools/CLAUDE.md` in this slice's diff (one emulator running flows by default, leases, lint, VM preflight). Nothing for the root file.
+
+#### Not yet verified
+
+- `.maestro/rtst/cancelled-voice-pack-stays-cancelled.yaml` fails on the emulator (`Download stopped.*` not visible) in both runs. Unrelated to 207 (comment-only change there); not checked on main. Slice 204 was verified on the phone only.

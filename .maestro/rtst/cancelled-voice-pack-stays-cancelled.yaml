@@ -8,6 +8,7 @@ appId: uk.sirous.readthestupidtext
 name: Cancelled voice pack stays cancelled
 ---
 - launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow starts the voice pack download itself and needs the pack missing.
     clearState: true
     arguments:
       cmd: skip-first-run

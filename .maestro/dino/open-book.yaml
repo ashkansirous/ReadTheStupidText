@@ -6,6 +6,7 @@ appId: uk.sirous.dinoreader
 name: Open a book and turn a page
 ---
 - launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow opens a starter book and speaks nothing, so it needs no pack or own book.
     clearState: true
     arguments:
       cmd: skip-first-run

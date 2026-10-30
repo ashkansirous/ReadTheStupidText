@@ -19,6 +19,7 @@ Maestro (2.12) lives in `<worktrees folder>\.tools\maestro` or `$env:MAESTRO_HOM
 - Assert on logcat markers with header comments: `# expect-log: READ_START`. `run-flows.ps1` waits for each text in the `RTST-TEST` log (`adb logcat -s RTST-TEST`) after the flow.
 - `tapOn` gets `waitToSettleTimeoutMs: 300`: the voice-pack download animates the screen, and Maestro otherwise waits seconds for it to settle.
 - Wait for a page with `extendedWaitUntil` before tapping on it.
+- Every `clearState` has a comment line right above it that starts `# clearState:` and says what it wipes (settings, downloaded voice/OCR packs, own books) and why that is fine for this flow; it also wipes the voice pack. `tools/emulator/lint-flows.ps1` fails the run on a missing comment, on a command name that is not a Maestro command, on a bad escape such as `\+` in a double-quoted string, and on an `appId` that is not a dev package.
 
 ## Hooks (Debug builds only)
 

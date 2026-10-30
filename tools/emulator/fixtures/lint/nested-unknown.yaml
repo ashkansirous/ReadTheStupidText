@@ -1,0 +1,6 @@
+appId: uk.sirous.dinoreader
+---
+- runFlow:
+    commands:
+      - tapOn: x
+      - swipeAway: y

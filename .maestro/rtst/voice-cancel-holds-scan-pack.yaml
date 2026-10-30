@@ -6,6 +6,7 @@ appId: uk.sirous.readthestupidtext
 name: Voice cancel holds the scan pack
 ---
 - launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow starts the voice download itself and needs the packs missing.
     clearState: true
     arguments:
       cmd: skip-first-run

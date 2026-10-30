@@ -6,6 +6,7 @@ appId: uk.sirous.dinoreader
 name: Grown-ups button, gear, book sheet and back chain
 ---
 - launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow uses the starter shelf and the grown-up chain only, with no own book or voice pack.
     clearState: true
     arguments:
       cmd: skip-first-run

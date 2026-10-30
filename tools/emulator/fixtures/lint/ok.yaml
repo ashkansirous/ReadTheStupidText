@@ -1,0 +1,28 @@
+# Every rule's allowed form: nothing here may be reported.
+appId: uk.sirous.readthestupidtext
+name: Clean flow
+---
+- launchApp:
+    # clearState: wipes the app data (packs, own books); fine here because this is a fixture.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+- tapOn: "line one\tand\n\"quoted\" \ back é \x41"
+- tapOn: 'single \+ quotes are not checked'
+- tapOn: plain \+ text is not checked
+- inputText: "+49 170 # not a comment"   # a real comment with "a \+ in it"
+- evalScript: |
+    - openNotifications looks like a command but is script text
+- runFlow:
+    when:
+      visible: x
+    commands:
+      - tapOn: x
+      - repeat:
+          times: 2
+          commands:
+            - assertVisible: y
+- retry:
+    commands:
+    - back
+- toggleAirplaneMode

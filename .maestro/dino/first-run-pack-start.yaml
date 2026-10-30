@@ -4,6 +4,7 @@ appId: uk.sirous.dinoreader
 name: First run with voice pack start
 ---
 - launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books), on purpose: this flow is the fresh install and starts the voice pack download itself.
     clearState: true
 - extendedWaitUntil:
     visible:

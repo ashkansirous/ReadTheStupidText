@@ -121,7 +121,6 @@ function Stop-KeepAwake($Job) {
 
 # ---- Slice 206: unattended-run helpers (lease, dev-app allow-list, lock/df/UI-dump parsing). The parsers are pure so test-phone-lib.ps1 and test-tap.ps1 need no device.
 . (Join-Path $PSScriptRoot '..\emulator\activity.ps1')
-$script:ExitLeaseHeld = 4
 $script:ExitNodeNotFound = 3
 
 # The only packages the reset script may clear, force-stop or reinstall: the Debug dev installs. The store packages are never in this list.
@@ -140,119 +139,16 @@ function Get-DevPackage([string]$App) {
     return $package
 }
 
-# --- Phone lease: one session or agent holds the phone at a time. File <worktrees>\.phone\lease-<key>.json holding owner, taken and expires
-# (unix seconds, so ConvertFrom-Json in 5.1 and 7 read the same numbers). The key is the phone's own `getprop ro.serialno` (Get-PhoneLeaseKey), not the adb
-# serial, which differs between the mdns name and ip:port and changes with every Wireless debugging toggle. An expired lease is free; a corrupt or unreadable one is held (see Read-Lease). No lease at all is allowed. Read-modify-write runs under a named mutex, so two sessions cannot both take it.
-$script:LeaseDir = Join-Path (Get-WorktreesRoot) '.phone'
+# --- Phone lease: one session or agent holds the phone at a time. The lease helpers are shared with the emulator (tools/lease-common.ps1, Slice 207).
+# File <worktrees>\.phone\lease-<key>.json. The key is the phone's own `getprop ro.serialno` (Get-PhoneLeaseKey), not the adb
+# serial, which differs between the mdns name and ip:port and changes with every Wireless debugging toggle. No lease at all is allowed.
+. (Join-Path $PSScriptRoot '..\lease-common.ps1')
 $script:LeaseOwnerVariable = 'RTST_PHONE_OWNER'
-$script:DefaultLeaseMinutes = 120
-$script:MaxLeaseMinutes = 1440
-$script:LeaseLockSeconds = 10
-$script:LeaseReadAttempts = 3
-$script:UnreadableLeaseOwner = '(lease file unreadable)'
-$script:CorruptLeaseOwner = '(lease file corrupt: remove it by hand)'
-$script:RenewBelowMinutes = 15
-
-function Get-UnixNow { return [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() }
 
 function Get-PhoneLeaseKey([string]$AdbSerial) {
     $id = "$(Invoke-Adb $AdbSerial @('shell', 'getprop', 'ro.serialno'))".Trim()
     if ($id -notmatch '^[\w.-]{3,}$') { throw "Could not read the phone's ro.serialno (got '$id'): cannot key the phone lease." }
     return $id
-}
-
-function Get-LeasePath([string]$Key) {
-    return Join-Path $script:LeaseDir ('lease-{0}.json' -f ($Key -replace '[^\w.-]', '_'))
-}
-
-# Runs $LockedBody holding the machine-wide mutex for this phone; an abandoned mutex (its holder died) is taken over.
-function Invoke-WithLeaseLock([string]$Key, [scriptblock]$LockedBody) {
-    $mutex = New-Object Threading.Mutex($false, ('Global\rtst-phone-lease-' + ($Key -replace '[^\w.-]', '_')))
-    $got = $false
-    try {
-        try { $got = $mutex.WaitOne($script:LeaseLockSeconds * 1000) } catch [Threading.AbandonedMutexException] { $got = $true }
-        if (-not $got) { throw "Another session has held the phone lease lock for more than $($script:LeaseLockSeconds) s." }
-        & $LockedBody
-    } finally {
-        if ($got) { $mutex.ReleaseMutex() }
-        $mutex.Dispose()
-    }
-}
-
-# The live lease, or $null when there is none or it expired. A file that cannot be read after retries, or whose JSON is corrupt, is a held lease (fail closed):
-# a corrupt one is held until its file is older than the longest lease allowed (MaxLeaseMinutes), or until someone removes it by hand.
-function Read-Lease([string]$Key, [int64]$Now = 0) {
-    if ($Now -le 0) { $Now = Get-UnixNow }
-    $path = Get-LeasePath $Key
-    if (-not (Test-Path $path)) { return $null }
-    $text = $null
-    for ($try = 1; $try -le $script:LeaseReadAttempts -and $null -eq $text; $try++) {
-        try { $text = [IO.File]::ReadAllText($path) } catch [IO.IOException] { Start-Sleep -Milliseconds 100 } catch [UnauthorizedAccessException] { Start-Sleep -Milliseconds 100 }
-    }
-    if ($null -eq $text) { return [pscustomobject]@{ Owner = $script:UnreadableLeaseOwner; Taken = $Now; Expires = $Now + 60 } }
-    try { $lease = $text | ConvertFrom-Json -ErrorAction Stop } catch { return Resolve-CorruptLease $path $Now }
-    if (-not $lease.owner -or [int64]$lease.expires -le $Now) { return $null }
-    return [pscustomobject]@{ Owner = "$($lease.owner)"; Taken = [int64]$lease.taken; Expires = [int64]$lease.expires }
-}
-
-function Resolve-CorruptLease([string]$Path, [int64]$Now) {
-    $written = [DateTimeOffset]::new((Get-Item $Path).LastWriteTimeUtc).ToUnixTimeSeconds()
-    $until = $written + ($script:MaxLeaseMinutes * 60)
-    if ($until -le $Now) { return $null }
-    return [pscustomobject]@{ Owner = $script:CorruptLeaseOwner; Taken = $written; Expires = $until }
-}
-
-# Temp file, then rename, so a reader never sees half of it. Callers hold the lease lock.
-function Write-Lease([string]$Key, [string]$Owner, [int]$Minutes, [int64]$Now = 0) {
-    if ($Now -le 0) { $Now = Get-UnixNow }
-    $null = New-Item -ItemType Directory -Force $script:LeaseDir
-    $path = Get-LeasePath $Key
-    $temp = "$path.$PID.tmp"
-    @{ owner = $Owner; taken = $Now; expires = $Now + ($Minutes * 60) } | ConvertTo-Json | Set-Content $temp
-    Move-Item $temp $path -Force
-}
-
-function Format-LeaseHolder($Lease) {
-    $until = [DateTimeOffset]::FromUnixTimeSeconds($Lease.Expires).LocalDateTime.ToString('HH:mm')
-    return "'$($Lease.Owner)' (until $until)"
-}
-
-# $true and the lease is written (or renewed by the same owner); $false when another owner holds it. Read, decision and write are one guarded step,
-# and an expired lease is replaced under the same guard.
-function Request-Lease([string]$Key, [string]$Owner, [int]$Minutes, [int64]$Now = 0) {
-    if ($Minutes -lt 1 -or $Minutes -gt $script:MaxLeaseMinutes) { throw "Lease minutes must be 1 to $($script:MaxLeaseMinutes) (got $Minutes)." }
-    return (Invoke-WithLeaseLock $Key {
-        $held = Read-Lease $Key $Now
-        if ($held -and $held.Owner -ne $Owner) { return $false }
-        Write-Lease $Key $Owner $Minutes $Now
-        return $true
-    })
-}
-
-function Remove-Lease([string]$Key, [string]$Owner, [int64]$Now = 0) {
-    return (Invoke-WithLeaseLock $Key {
-        $held = Read-Lease $Key $Now
-        if ($held -and $held.Owner -ne $Owner) { return $false }
-        Remove-Item (Get-LeasePath $Key) -Force -ErrorAction SilentlyContinue
-        return $true
-    })
-}
-
-# True when the caller's own lease has less than RenewBelowMinutes left.
-function Test-LeaseNeedsRenewal($Lease, [string]$Owner, [int64]$Now) {
-    return [bool]($Lease -and $Lease.Owner -ceq $Owner -and ($Lease.Expires - $Now) -lt ($script:RenewBelowMinutes * 60))
-}
-
-# 'Renewed' when $Owner holds a live lease (its expiry moves to $Minutes from now), 'NotHeld' when nobody does, 'Other' when someone else does.
-function Update-Lease([string]$Key, [string]$Owner, [int]$Minutes, [int64]$Now = 0) {
-    if ($Now -le 0) { $Now = Get-UnixNow }
-    return (Invoke-WithLeaseLock $Key {
-        $held = Read-Lease $Key $Now
-        if (-not $held) { return 'NotHeld' }
-        if ($held.Owner -cne $Owner) { return 'Other' }
-        Write-Lease $Key $Owner $Minutes $Now
-        return 'Renewed'
-    })
 }
 
 # Exits 4 when a live lease belongs to someone other than $env:RTST_PHONE_OWNER; no lease means allowed (older scripts keep working).

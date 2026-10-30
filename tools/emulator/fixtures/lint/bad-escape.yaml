@@ -1,0 +1,4 @@
+appId: uk.sirous.dinoreader
+---
+- inputText: "+49 170"
+- inputText: "call \+49 now"

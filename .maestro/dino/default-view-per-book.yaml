@@ -7,6 +7,7 @@ appId: uk.sirous.dinoreader
 name: Default view per book
 ---
 - launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow opens only starter books, speaks nothing, and sets its own view choices from a clean state.
     clearState: true
     arguments:
       cmd: skip-first-run

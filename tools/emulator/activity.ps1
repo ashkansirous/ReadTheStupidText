@@ -65,12 +65,15 @@ function Write-ActivityFile([string]$Kind) {
 }
 
 # Measured limit (2026-10-28, i9-11950H, 32 GB): two emulators running flows plus the VM is too much (VM 0/3, one emulator flow failed);
-# one emulator + the VM, or two emulators without the VM, are fine. Returns why a new job of $Kind must wait now, or $null.
+# one emulator + the VM, or two emulators without the VM, are fine. Slice 207: the default is now one emulator running flows (plus the VM).
+# Returns why a new job of $Kind must wait now, or $null.
 function Get-ConcurrencyConflict([string]$Kind) {
     $live = @(Get-LiveActivities | Where-Object { $_.pid -ne $PID })
     $flows = @($live | Where-Object { $_.kind -like 'flows-*' })
     $vm = @($live | Where-Object { $_.kind -like 'vm-*' })
     if ($Kind -like 'vm-*' -and $flows.Count -ge 2) { return "two emulators are running flows ($(($flows | ForEach-Object { $_.kind }) -join ', ')); with the VM that is too much for this PC" }
+    # Slice 207: two emulators running flows at once overloaded the PC again, so one emulator runs flows at a time unless RTST_ALLOW_TWO_EMULATORS=1.
+    if ($Kind -like 'flows-*' -and $flows.Count -ge 1 -and $env:RTST_ALLOW_TWO_EMULATORS -ne '1') { return "another emulator is running flows ($(($flows | ForEach-Object { $_.kind }) -join ', ')); one emulator runs flows at a time (RTST_ALLOW_TWO_EMULATORS=1 allows two)" }
     if ($Kind -like 'flows-*' -and $vm.Count -gt 0 -and $flows.Count -ge 1) { return "the VM and another emulator's flows are running ($(($vm + $flows | ForEach-Object { $_.kind }) -join ', ')); a second emulator would overload this PC" }
     return $null
 }

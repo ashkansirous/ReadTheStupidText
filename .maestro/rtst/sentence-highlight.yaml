@@ -9,6 +9,7 @@ appId: uk.sirous.readthestupidtext
 name: Highlight moves one sentence at a time
 ---
 - launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books), so the read uses whatever voice a fresh install has; fine here because the flow checks only the highlight markers and needs no pack or own book.
     clearState: true
     arguments:
       cmd: skip-first-run

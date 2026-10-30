@@ -5,6 +5,7 @@ appId: uk.sirous.readthestupidtext
 name: Paste text and read it
 ---
 - launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books), so the read uses whatever voice a fresh install has; fine here because the flow has passed that way since Slice 162 and needs no pack or own book.
     clearState: true
     arguments:
       cmd: skip-first-run
