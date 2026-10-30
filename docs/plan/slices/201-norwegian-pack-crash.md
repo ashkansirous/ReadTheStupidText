@@ -35,3 +35,12 @@ Cause is likely, not yet proven by a fixed pack loading.
 
 - Fast checks green; packs workflow change passes actionlint.
 - Device (after review): S21 Norsk switch reads Norwegian with the new pack; with the old pack the app shows the failure state instead of dying.
+
+## Built (implementer, 2026-10-30; not yet reviewed or run on a device)
+
+- [x] sherpa rule confirmed in source (v1.13.3 `piper-phonemize-lexicon.cc` `ReadTokens`): one code point per token, `<token> <id>` (an id-only line is the space), no trailing junk, no duplicate token (`SHERPA_ONNX_EXIT(-1)`), `<BLNK>` skipped, and `_ ^ $` looked up unconditionally.
+- [x] Pack: the Norwegian build step in `packs.yml` drops multi-code-point keys from `tokens.txt`; a new step "Check every Piper tokens.txt" fails the packs job for any `piper-fa`/`piper-nb` voice with a bad line.
+- [x] App guard: `Domain/Reading/PiperTokens`, `PackManifest.BrokenTokenFolders(In)`; a bad pack fails `ValidatePayload` (InvalidPack, the existing failed/retry path), is not "installed" in `LoadInstalled` (so the saved language falls back like a missing pack), and the three engine builders (Windows, Android, iOS) throw `InvalidDataException` before the native load. Debug marker `RTST_PACK_TOKENS_REJECTED`.
+- [x] Tests: `PiperTokensTests` (good, two code points, missing/non-numeric id, blank line, BOM, duplicate, missing `_ ^ $`, manifest wiring).
+- [x] Scripted check written: `.maestro/rtst/norsk-pack-reads.yaml` (not run).
+- [ ] Owed: run `packs.yml` (new `norwegian_pack_version`, new `release_number`) and bump `PackConstants.CatalogUrl`; the device run.
