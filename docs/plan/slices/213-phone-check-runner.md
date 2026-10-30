@@ -37,7 +37,7 @@ The 2026-10-30 leftovers run took over 20 minutes and finished one check of four
 - Pack handling redesigned after two failed S21 rounds (wrong layout, stale `.partial` saved as a pack): `Test-PackInstalled`, `-Prepare`, aside copies of installed folders only.
 - `notification-text` moves the current pack aside, relaunches, requires `PACKDL start`, reads the dev app's newest progress notification, restores and verifies; `ExpectPackNameInNotification` flag for Slice 208. `book-end` counts only a live wake-lock block (by uid or WorkSource).
 
-- AOT trade-off (2026-10-30): an AOT build costs about 5-7 minutes and saves about 1.8 s per cold start (S21 fresh install: 8.8 s Debug JIT, 7.0 s AOT), so it never pays off for speed; it is built only so timing checks measure what store users get. Plain Debug serves every other check.
+- AOT trade-off (2026-10-30): an AOT build costs about 5-7 minutes. Its speed gain is unproven: the 8.8 s JIT (night build) and 7.0 s AOT fresh-install numbers were not taken under the same conditions, and one later JIT fresh install read 2.8 s (Slice 214; corrected 2026-10-30, it was first stated as a 1.8 s saving); it is built only so timing checks measure what store users get. Plain Debug serves every other check.
 
 #### From review
 

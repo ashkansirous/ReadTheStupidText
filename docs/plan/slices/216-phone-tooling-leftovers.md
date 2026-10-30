@@ -24,6 +24,11 @@
 8. **The `highlight` check prints very long uiautomator diff lines** into the run output.
    - [ ] Print only the changed texts, cut to 120 characters, full dump to the log file.
 
+9. **Half of PR #610 was never reviewed.** Both review passes ran before the parallel builds, the `-Prepare` pack restore, the notification-text redesign and the deadline plumbing were written; the second pass was also the reviewer's own read, because the forked review had not finished (feedback loop 2026-10-30).
+   - [ ] Run `/code-review` (high, then medium) on `tools/phone/` as merged, and fix what it finds.
+10. **A leftover aside pack archive after a failed restore is only reported, not restored.**
+   - [ ] On the next run, restore a leftover aside archive (verified copy) before anything else, or say plainly why it can't.
+
 #### Verification
 
 - Fast: self-tests for items 2-4 in `pwsh` and Windows PowerShell 5.1.

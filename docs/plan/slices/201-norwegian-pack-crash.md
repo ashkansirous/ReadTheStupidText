@@ -56,7 +56,13 @@ Real S21, Android 15. The old piper-nb v1 pack was rejected (`RTST_PACK_TOKENS_R
 
 #### Review minors left (2026-10-30)
 
-- Pass 1 left six minors (some duplicated code, files read twice); pass 2 left minors only. None changes behaviour.
+- Pass 1 left six minors (duplicated code, files read twice). Pass 2 (medium) left these; corrected 2026-10-30: some do change behaviour:
+  - A previously installed bad `piper-nb` silently reads as "not installed"; `RTST_PACK_TOKENS_REJECTED` is Debug-only, so release builds leave no trace (`MobileVoicePackService.cs:160`, `WindowsVoicePackService.cs:104`).
+  - `packs.yml:399` filter uses `str.splitlines()` (splits on U+2028 and others); the check step and C# split on `
+` only.
+  - `packs.yml:485` hard-codes the pack shape (`len(files) != 5`), so a new speaker fails the job.
+  - `RequirePiperTokens` is copied three times and gates on `Kind==Vits`, not `PiperPackIds`; `PiperPackIds` is a hard-coded allow-list.
+  - `LoadInstalled` parses each `tokens.txt` twice; `PiperTokens.cs:85` whitespace rules read from sherpa source, not proven.
 
 #### Not yet verified
 
