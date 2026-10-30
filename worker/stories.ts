@@ -79,6 +79,8 @@ export interface StoryMeta {
   readonly author: string | null;
   /** Slice 159: the title per language code ("fa": "..."), the store builder's copy of the book's bundled translations; null when the entry has none. */
   readonly titles: Readonly<Record<string, string>> | null;
+  /** Slice 192: the credit line per language code, the store builder's copy of the book's `creditsByLanguage`; null when the entry has none (the card then shows `credits`). */
+  readonly creditsByLanguage: Readonly<Record<string, string>> | null;
 }
 
 /** One complete story: its checked meta, the package version it offers, and whether a cover was uploaded. */
@@ -157,11 +159,20 @@ function boundedText(value: unknown, max: number): string | null {
 
 /** Slice 159: the language-to-title map, with bad codes and empty or over-long titles dropped and the count capped; null when nothing is left. */
 export function parseTitles(raw: unknown): Record<string, string> | null {
+  return parseLanguageTexts(raw, MAX_TITLE_LENGTH);
+}
+
+/** Slice 192: the language-to-credit-line map, checked like the titles but capped at the credit length (200); null when nothing is left. */
+export function parseCreditsByLanguage(raw: unknown): Record<string, string> | null {
+  return parseLanguageTexts(raw, MAX_CREDITS_LENGTH);
+}
+
+function parseLanguageTexts(raw: unknown, maxLength: number): Record<string, string> | null {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
   const kept: Record<string, string> = {};
   for (const [code, value] of Object.entries(raw)) {
     const language = code.trim().toLowerCase();
-    const title = boundedText(value, MAX_TITLE_LENGTH);
+    const title = boundedText(value, maxLength);
     if (LANGUAGE_CODE.test(language) && title !== null && Object.keys(kept).length < MAX_TITLE_LANGUAGES) kept[language] = title;
   }
   return Object.keys(kept).length > 0 ? kept : null;
@@ -189,6 +200,7 @@ export function parseMeta(parsed: unknown): StoryMeta | null {
     ageMax: ages.ageMax,
     author: boundedText(raw["author"], MAX_AUTHOR_LENGTH),
     titles: parseTitles(raw["titles"]),
+    creditsByLanguage: parseCreditsByLanguage(raw["creditsByLanguage"]),
   };
 }
 
@@ -217,6 +229,7 @@ export interface ListItem {
   readonly ageMax: number | null;
   readonly author: string | null;
   readonly titles: Readonly<Record<string, string>> | null;
+  readonly creditsByLanguage: Readonly<Record<string, string>> | null;
   readonly coverUrl: string | null;
   readonly downloadUrl: string;
 }
@@ -238,6 +251,7 @@ export function toListItem(entry: StoryEntry, pathPrefix: string): ListItem {
     ageMax: entry.meta.ageMax,
     author: entry.meta.author,
     titles: entry.meta.titles,
+    creditsByLanguage: entry.meta.creditsByLanguage,
     coverUrl: entry.hasCover ? `${base}${COVER_SEGMENT}${versioned}` : null,
     downloadUrl: `${base}${DOWNLOAD_SEGMENT}${versioned}`,
   };

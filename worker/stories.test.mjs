@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { parseMeta, parseTitles, toListItem } from "./stories.ts";
+import { parseCreditsByLanguage, parseMeta, parseTitles, toListItem } from "./stories.ts";
 
 const baseMeta = { schemaVersion: 1, title: "The Town Mouse", language: "en" };
 
@@ -39,4 +39,19 @@ test("titles reach the list item", () => {
   const meta = parseMeta({ ...baseMeta, titles: { fa: "موش شهری" } });
   const item = toListItem({ id: "7d0e5a4e-0000-4000-8000-000000000001", meta, version: 2, hasCover: true }, "/dino");
   assert.deepEqual(item.titles, { fa: "موش شهری" });
+});
+
+test("credit lines pass through trimmed, with bad codes, blanks and over-200 lines dropped", () => {
+  const credits = parseCreditsByLanguage({ DE: "  Nacherzählt · frei zum Teilen ", "": "y", fr: "   ", ja: "a".repeat(201), fa: "a".repeat(200) });
+  assert.deepEqual(credits, { de: "Nacherzählt · frei zum Teilen", fa: "a".repeat(200) });
+  assert.equal(parseCreditsByLanguage({ de: "" }), null);
+  assert.equal(parseCreditsByLanguage(["a"]), null);
+  assert.equal(parseCreditsByLanguage(undefined), null);
+});
+
+test("credit lines reach the list item, and a meta without them lists null", () => {
+  const entry = (meta) => ({ id: "7d0e5a4e-0000-4000-8000-000000000001", meta, version: 2, hasCover: false });
+  const withCredits = parseMeta({ ...baseMeta, credits: "Retold", creditsByLanguage: { fa: "بازگویی" } });
+  assert.deepEqual(toListItem(entry(withCredits), "").creditsByLanguage, { fa: "بازگویی" });
+  assert.equal(toListItem(entry(parseMeta(baseMeta)), "").creditsByLanguage, null);
 });

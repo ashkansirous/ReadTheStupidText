@@ -73,5 +73,21 @@
       ]
     }
   ],
-  "contentHash": "d66dff877ed8835eb890d0b5a42d7d7ce544d9d55ac9631d68fa68b038998d3e"
+  "contentHash": "d66dff877ed8835eb890d0b5a42d7d7ce544d9d55ac9631d68fa68b038998d3e",
+  "creditsByLanguage": {
+    "ar": "كتاب مصوّر من دينو ريدر · مجاني للمشاركة",
+    "da": "En billedbog fra Dino Reader · frit at dele",
+    "de": "Ein Dino-Reader-Bilderbuch · frei zum Teilen",
+    "es": "Un libro ilustrado de Dino Reader · libre para compartir",
+    "fa": "یک کتاب تصویری از دینو ریدر · آزاد برای اشتراک‌گذاری",
+    "fi": "Dino Readerin kuvakirja · vapaasti jaettavissa",
+    "fr": "Un livre illustré Dino Reader · libre de partage",
+    "ja": "ディノ・リーダーの絵本 · 自由に共有できます",
+    "nb": "En bildebok fra Dino Reader · fri til å dele",
+    "nl": "Een prentenboek van Dino Reader · vrij te delen",
+    "pt": "Um livro ilustrado do Dino Reader · livre para compartilhar",
+    "ru": "Книжка с картинками Dino Reader · можно свободно делиться",
+    "sv": "En bilderbok från Dino Reader · fri att dela",
+    "zh": "恐龙阅读器绘本 · 可自由分享"
+  }
 }

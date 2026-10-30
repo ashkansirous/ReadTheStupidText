@@ -61,5 +61,21 @@
       ]
     }
   ],
-  "contentHash": "e106a90cd283f7dcc7caab0410cb072b009ff9f7039168a0b740fa4710352088"
+  "contentHash": "e106a90cd283f7dcc7caab0410cb072b009ff9f7039168a0b740fa4710352088",
+  "creditsByLanguage": {
+    "ar": "مُعاد سردها عن الأخوين غريم · مجانية للمشاركة",
+    "da": "Genfortalt efter brødrene Grimm · frit at dele",
+    "de": "Nacherzählt nach den Brüdern Grimm · frei zum Teilen",
+    "es": "Recontado a partir de los hermanos Grimm · libre para compartir",
+    "fa": "بازگویی از برادران گریم · آزاد برای اشتراک‌گذاری",
+    "fi": "Uudelleen kerrottu Grimmin veljesten mukaan · vapaasti jaettavissa",
+    "fr": "Raconté à nouveau d'après les frères Grimm · libre de partage",
+    "ja": "グリム兄弟の語りなおし · 自由に共有できます",
+    "nb": "Gjenfortalt etter brødrene Grimm · fri til å dele",
+    "nl": "Naverteld naar de gebroeders Grimm · vrij te delen",
+    "pt": "Recontado a partir dos irmãos Grimm · livre para compartilhar",
+    "ru": "Пересказ сказки братьев Гримм · можно свободно делиться",
+    "sv": "Återberättad efter bröderna Grimm · fri att dela",
+    "zh": "改编自格林兄弟 · 可自由分享"
+  }
 }

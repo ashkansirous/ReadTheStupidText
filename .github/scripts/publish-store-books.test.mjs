@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { Outcome, liveFromApi, planStoreUploads, readBuilt, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
+import { Outcome, liveFromApi, metaDiffers, planStoreUploads, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
 
 const A = 'a'.repeat(32);
 const B = 'b'.repeat(32);
@@ -134,4 +134,55 @@ test('readBuilt ignores folders that are not story ids and throws when no book i
         assert.deepEqual(readBuilt(root).map((book) => book.id), [A]);
     });
     assert.throws(() => readBuilt(join(tmpdir(), 'no-such-store-folder-s158')), /No built store books/);
+});
+
+test('metaDiffers compares content, not key order or whitespace, and treats a missing live meta as different', () => {
+    assert.equal(metaDiffers('{"a":1,"b":{"x":2,"y":3}}', '{ "b": {"y":3,"x":2}, "a": 1 }'), false);
+    assert.equal(metaDiffers('{"a":1,"creditsByLanguage":{"fa":"x"}}', '{"a":1}'), true);
+    assert.equal(metaDiffers('{"a":1}', null), true);
+    assert.equal(metaDiffers('{"a":1}', 'not json'), true);
+});
+
+test('a same-version book with changed meta gets meta.json alone re-uploaded, never a package', () => {
+    withStore([{ id: A, version: 3 }, { id: B, version: 2 }], (root) => {
+        const plan = planStoreUploads([{ id: A, version: 3 }, { id: B, version: 2 }], [{ id: A, version: 3 }, { id: B, version: 2 }]);
+        const sent = [];
+        const liveMeta = (upload) => (upload.key.includes(A) ? '{"version":3}' : '{"version":2,"credits":"old"}');
+        const done = runMetaRefresh(plan, root, { put: (upload) => sent.push(upload.name), liveMeta });
+        assert.deepEqual(done, [B]);
+        assert.deepEqual(sent, ['meta.json']);
+    });
+});
+
+test('a bucket meta.json of a different (newer) version is never overwritten by the refresh', () => {
+    withStore([{ id: A, version: 1 }], (root) => {
+        const plan = planStoreUploads([{ id: A, version: 1 }], [{ id: A, version: 1 }]);
+        const sent = [];
+        assert.deepEqual(runMetaRefresh(plan, root, { put: (upload) => sent.push(upload.name), liveMeta: () => '{"version":2,"credits":"new"}' }), []);
+        assert.deepEqual(sent, []);
+    });
+});
+
+test('a book that is being uploaded or is behind live is not touched by the meta refresh', () => {
+    withStore([{ id: A, version: 4 }, { id: B, version: 1 }], (root) => {
+        const plan = planStoreUploads([{ id: A, version: 4 }, { id: B, version: 1 }], [{ id: A, version: 3 }, { id: B, version: 2 }]);
+        const sent = [];
+        assert.deepEqual(runMetaRefresh(plan, root, { put: (upload) => sent.push(upload.name), liveMeta: () => null }), []);
+        assert.deepEqual(sent, []);
+    });
+});
+
+test('a failed meta refresh is reported after the others ran', () => {
+    withStore([{ id: A, version: 3 }, { id: B, version: 3 }], (root) => {
+        const plan = planStoreUploads([{ id: A, version: 3 }, { id: B, version: 3 }], [{ id: A, version: 3 }, { id: B, version: 3 }]);
+        const sent = [];
+        const put = (upload) => { if (upload.key.includes(A)) throw new Error('boom'); sent.push(upload.key); };
+        assert.throws(() => runMetaRefresh(plan, root, { put, liveMeta: () => null }), (error) => /boom/.test(error.message) && error.done.length === 1);
+        assert.equal(sent.length, 1);
+    });
+});
+
+test('the summary names a refreshed meta.json', () => {
+    const plan = planStoreUploads([{ id: A, version: 3 }], [{ id: A, version: 3 }]);
+    assert.match(summaryText(plan, [], [A]), new RegExp(`refreshed meta.json of ${A}`));
 });
