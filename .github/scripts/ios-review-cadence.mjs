@@ -127,9 +127,37 @@ export function createAscClient({ token, fetchImpl = fetch }) {
     };
 }
 
+const NO_DETAIL = 'no detail';
+
+function isObject(value) {
+    return value !== null && typeof value === 'object';
+}
+
+function errorText(error) {
+    if (!isObject(error)) return '';
+    const text = error.detail ?? error.title ?? error.code;
+    return typeof text === 'string' ? text : '';
+}
+
+/** Apple's real reasons for a rejected submission item sit in meta.associatedErrors, keyed by resource path. */
+function describeAssociatedErrors(error) {
+    const associated = isObject(error.meta?.associatedErrors) ? error.meta.associatedErrors : {};
+    return Object.entries(associated).flatMap(([resource, list]) =>
+        (Array.isArray(list) ? list : []).filter(isObject).map((inner) => `${resource}: ${errorText(inner) || NO_DETAIL}`));
+}
+
+/** One line, so the log and the markdown step summary read alike: "text [resource: reason; resource: reason]". */
+function describeError(error) {
+    if (!isObject(error)) return '';
+    const reasons = describeAssociatedErrors(error);
+    const text = errorText(error);
+    if (reasons.length === 0) return text;
+    return `${text} [${reasons.join('; ')}]`.trim();
+}
+
 function describeErrors(json) {
-    const errors = json?.errors ?? [];
-    return errors.map((error) => error.detail ?? error.title ?? error.code).join('; ') || 'no detail';
+    const errors = Array.isArray(json?.errors) ? json.errors : [];
+    return errors.map(describeError).filter(Boolean).join('; ') || NO_DETAIL;
 }
 
 function failure(method, path, response) {

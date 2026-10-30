@@ -306,6 +306,99 @@ test('testflight: a 409 that is not a "not now" error fails with Apple text', as
     assert.match(result.message, /Beta app description is missing/);
 });
 
+test('a 409 lists every associated error with its resource', async () => {
+    const meta = {
+        associatedErrors: {
+            '/v1/appStoreVersions/v1': [
+                { code: 'ENTITY_ERROR.ATTRIBUTE.REQUIRED', title: 'Missing', detail: 'Copyright is required' },
+                { code: 'X.Y', title: 'Screenshots missing' },
+            ],
+            '/v1/apps/a1/appInfos': [{ code: 'ONLY_CODE' }],
+        },
+    };
+    const { asc } = fakeAsc({
+        'GET /v1/builds': buildsReply,
+        [`GET /v1/apps/${APPS.rtst.id}/betaGroups`]: groupsReply,
+        'GET /v1/betaAppReviewSubmissions': { json: { data: [] } },
+        'POST /v1/betaGroups/g1/relationships/builds': { status: 204 },
+        'POST /v1/betaAppReviewSubmissions': { status: 409, json: { errors: [{ detail: 'Cannot submit', meta }] } },
+    });
+    const result = await runApp(asc, Mode.TestFlight, 'rtst');
+    assert.equal(result.outcome, Outcome.Failed);
+    assert.match(result.message, /Cannot submit \[\/v1\/appStoreVersions\/v1: Copyright is required; \/v1\/appStoreVersions\/v1: Screenshots missing; \/v1\/apps\/a1\/appInfos: ONLY_CODE\]$/);
+});
+
+async function testFlightFailureMessage(errorBody) {
+    const { asc } = fakeAsc({
+        'GET /v1/builds': buildsReply,
+        [`GET /v1/apps/${APPS.rtst.id}/betaGroups`]: groupsReply,
+        'GET /v1/betaAppReviewSubmissions': { json: { data: [] } },
+        'POST /v1/betaGroups/g1/relationships/builds': { status: 204 },
+        'POST /v1/betaAppReviewSubmissions': { status: 409, json: errorBody },
+    });
+    const result = await runApp(asc, Mode.TestFlight, 'rtst');
+    assert.equal(result.outcome, Outcome.Failed);
+    return result.message;
+}
+
+test('malformed associatedErrors never throw or print undefined', async () => {
+    const shapes = [
+        { associatedErrors: null },
+        { associatedErrors: 'oops' },
+        { associatedErrors: 7 },
+        { associatedErrors: { '/v1/x': 'not a list' } },
+        { associatedErrors: { '/v1/x': { detail: 'object not list' } } },
+        { associatedErrors: { '/v1/x': [null, 5, 'str'] } },
+    ];
+    for (const meta of shapes) {
+        const message = await testFlightFailureMessage({ errors: [{ detail: 'Cannot submit', meta }] });
+        assert.equal(message, 'POST /v1/betaAppReviewSubmissions failed (409): Cannot submit', JSON.stringify(meta));
+    }
+});
+
+test('an associated entry without text says "no detail", skipping null entries', async () => {
+    const meta = { associatedErrors: { '/v1/x': [null, {}, { detail: { nested: 1 } }, { title: 'Real' }] } };
+    const message = await testFlightFailureMessage({ errors: [{ detail: 'Cannot submit', meta }] });
+    assert.match(message, /Cannot submit \[\/v1\/x: no detail; \/v1\/x: no detail; \/v1\/x: Real\]$/);
+    assert.ok(!message.includes('undefined'));
+    assert.ok(!message.includes('[object'));
+});
+
+test('a non-array or null-filled errors list still reports the status', async () => {
+    assert.match(await testFlightFailureMessage({ errors: 'upstream failure' }), /failed \(409\): no detail$/);
+    assert.match(await testFlightFailureMessage({ errors: [null, { detail: 'kept' }] }), /failed \(409\): kept$/);
+});
+
+test('appstore: a rejected submit lists the associated errors on one line', async () => {
+    const editable = { id: 'v1', attributes: { versionString: '1.0', appVersionState: 'PREPARE_FOR_SUBMISSION' }, relationships: {} };
+    const meta = { associatedErrors: { '/v1/appStoreVersions/v1': [{ detail: 'Copyright is required' }] } };
+    const { asc } = fakeAsc({
+        'GET /v1/builds': buildsReply,
+        [`GET /v1/apps/${APPS.rtst.id}/appStoreVersions`]: { json: { data: [editable] } },
+        'GET /v1/reviewSubmissions': { json: { data: [] } },
+        'PATCH /v1/appStoreVersions/v1/relationships/build': { status: 204 },
+        'PATCH /v1/appStoreVersions/v1': { json: {} },
+        'POST /v1/reviewSubmissions': { status: 201, json: { data: { id: 'rs1' } } },
+        'POST /v1/reviewSubmissionItems': { status: 201 },
+        'PATCH /v1/reviewSubmissions/rs1': { status: 409, json: { errors: [{ detail: 'Cannot submit', meta }] } },
+    });
+    const result = await runApp(asc, Mode.AppStore, 'rtst');
+    assert.equal(result.outcome, Outcome.Failed);
+    assert.match(result.message, /^PATCH \/v1\/reviewSubmissions\/rs1 failed \(409\): Cannot submit \[\/v1\/appStoreVersions\/v1: Copyright is required\]$/);
+});
+
+test('a 409 without meta keeps the plain text', async () => {
+    const { asc } = fakeAsc({
+        'GET /v1/builds': buildsReply,
+        [`GET /v1/apps/${APPS.rtst.id}/betaGroups`]: groupsReply,
+        'GET /v1/betaAppReviewSubmissions': { json: { data: [] } },
+        'POST /v1/betaGroups/g1/relationships/builds': { status: 204 },
+        'POST /v1/betaAppReviewSubmissions': { status: 409, json: { errors: [{ detail: 'plain' }, { title: 'second' }] } },
+    });
+    const result = await runApp(asc, Mode.TestFlight, 'rtst');
+    assert.match(result.message, /failed \(409\): plain; second$/);
+});
+
 test('GETs retry a transient failure and give up on a fatal one', async () => {
     retryPolicy.baseDelayMs = 0;
     let attempts = 0;
