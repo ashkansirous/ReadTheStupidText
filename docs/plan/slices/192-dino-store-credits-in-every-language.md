@@ -35,7 +35,7 @@ Every store card's credit line ("Retold traditional tale · free to share", "Ret
 
 *Checks:* Dino 1779 tests, BookBuilder `check`, worker 93 + `.github/scripts` 167 node tests, typecheck, Dino Android and iOS compile.
 
-#### For CLAUDE.md (index pass)
+#### For CLAUDE.md (lifted 2026-10-30)
 
 - Root `CLAUDE.md`, Dino store paragraph: add `creditsByLanguage` to the `meta.json` field list (language code to the credit line, all 14 non-English languages for every book, trimmed and capped at 200 like `credits` by `worker/stories.ts`; the store card shows the app language's, else `credits`; `book.json` needs it and `check` enforces it; it is NOT in `BookHash`, so editing it never bumps a version; Slice 192).
 - `.github/CLAUDE.md`, `publish-store` paragraph: a book already live at the same version still gets its `meta.json` (only that file) re-uploaded when the built one differs in content from the bucket's, so listing-only data (credit lines) ships without a version bump.
