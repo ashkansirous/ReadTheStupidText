@@ -200,7 +200,8 @@ const PRE_RELEASE_MAJOR = 0;
 const MIN_SAMPLE_RATE = 0.001;
 
 function isUnstampedVersion(version: string): boolean {
-  return UNSTAMPED_VERSIONS.includes(version) || Number.parseInt(version.split(".")[0], 10) === PRE_RELEASE_MAJOR;
+  const majorPart = version.split(".")[0] ?? "";
+  return UNSTAMPED_VERSIONS.includes(version) || Number.parseInt(majorPart, 10) === PRE_RELEASE_MAJOR;
 }
 const DAY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const ErrorCode = {
