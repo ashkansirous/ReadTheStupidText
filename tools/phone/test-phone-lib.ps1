@@ -110,6 +110,8 @@ Assert-Equal 'empty folder' 'None' (Resolve-PacksListing @() 0)
 Assert-Equal 'run-as refused' 'Error' (Resolve-PacksListing @('run-as: package not debuggable: uk.sirous.x') 1)
 Assert-Equal 'run-as no such file is still an error' 'Error' (Resolve-PacksListing @('run-as: couldn''t stat /data/user/0/x: No such file or directory') 1)
 Assert-Equal 'unknown failure' 'Error' (Resolve-PacksListing @('error: closed') 1)
+# Real S21 output of the pack probe for two packs that are not installed: the last `find` exits 1 but run-as worked.
+Assert-Equal 'probe of absent packs, exit 1' 'Packs' (Resolve-PacksListing @('ACTIVE piper-fa', 'ACTIVE piper-nb') 1)
 Assert-Equal 'tar file count ignores directories' 2 (Get-TarFileCount @('files/packs/', 'files/packs/a/', 'files/packs/a/m.onnx', 'files/packs/a/t.txt'))
 Assert-Equal 'empty tar listing' 0 (Get-TarFileCount @())
 
@@ -159,6 +161,28 @@ $files = @('other.xml', "${pkg}_preferences.xml")
 Assert-Equal 'file holding the key' "${pkg}_preferences.xml" (Select-PrefsFileByKey $files @{ 'other.xml' = '<map/>'; "${pkg}_preferences.xml" = $prefs } 'Language' $pkg)
 Assert-Equal 'fallback when no key' "${pkg}_preferences.xml" (Select-PrefsFileByKey $files @{} 'Language' $pkg)
 Assert-Equal 'no file' $null (Select-PrefsFileByKey @('other.xml') @{} 'Language' $pkg)
+
+# ---- voice pack layout (Slice 213 redesign): files/packs/<id>/active names the version folder; that folder must hold pack.json
+$idsAll = @('supertonic-3', 'kokoro-en')
+$installed = @('ACTIVE supertonic-3 v4', 'files/packs/supertonic-3/v4/pack.json', 'ACTIVE kokoro-en')
+Assert-Equal 'installed: active + pack.json in its folder' 'supertonic-3' (@(Resolve-InstalledPackIds $installed $idsAll) -join ',')
+Assert-Equal 'Test-PackInstalled true when installed' $true (Test-PackInstalled $installed $idsAll)
+Assert-Equal 'partial only: nothing installed' $false (Test-PackInstalled @('ACTIVE supertonic-3 ', 'ACTIVE kokoro-en ') $idsAll)
+Assert-Equal 'active without pack.json: not installed' $false (Test-PackInstalled @('ACTIVE supertonic-3 v4') @('supertonic-3'))
+Assert-Equal 'pack.json without active: not installed' $false (Test-PackInstalled @('ACTIVE supertonic-3', 'files/packs/supertonic-3/v4/pack.json') @('supertonic-3'))
+$twoVersions = @('ACTIVE supertonic-3 v4', 'files/packs/supertonic-3/v3/pack.json', 'files/packs/supertonic-3/v4/pack.json')
+Assert-Equal 'two versions: the active one has pack.json' $true (Test-PackInstalled $twoVersions @('supertonic-3'))
+Assert-Equal 'two versions: active points at a folder without it' $false (Test-PackInstalled @('ACTIVE supertonic-3 v5', 'files/packs/supertonic-3/v4/pack.json') @('supertonic-3'))
+Assert-Equal 'another pack''s pack.json does not count' $false (Test-PackInstalled @('ACTIVE supertonic-3 v4', 'files/packs/kokoro-en/v4/pack.json') @('supertonic-3'))
+Assert-Equal 'a run-as error line is not a pack' $false (Test-PackInstalled @('run-as: package not debuggable: x') @('supertonic-3'))
+$probe = New-PackProbeCommand 'uk.sirous.readthestupidtext.dbg' $idsAll
+Assert-Equal 'probe names the package and ids' $true ($probe -like "run-as uk.sirous.readthestupidtext.dbg sh -c 'for p in supertonic-3 kokoro-en;*")
+Assert-Equal 'probe reads the active file' $true ($probe -like '*cat files/packs/$p/active*')
+Assert-Equal 'probe finds pack.json' $true ($probe -like '*find files/packs/$p -maxdepth 2 -name pack.json*')
+Assert-Equal 'pack folders skip .zip.partial files' 'supertonic-3,kokoro-en' ((Get-PackFolderNames @('supertonic-3', 'supertonic-3-4.zip.partial', 'kokoro-en', 'x.zip')) -join ',')
+$tar = @('files/packs/supertonic-3/', 'files/packs/supertonic-3/active', 'files/packs/supertonic-3/v4/', 'files/packs/supertonic-3/v4/pack.json', 'files/packs/kokoro-en/active', 'files/packs/kokoro-en/v1/model.onnx')
+Assert-Equal 'archive packs: complete ones only' 'supertonic-3' ((Get-ArchivePackIds $tar) -join ',')
+Assert-Equal 'a .partial in an archive is no pack' 0 @(Get-ArchivePackIds @('files/packs/supertonic-3-4.zip.partial')).Count
 
 if ($failed) { Write-Host "$failed phone-lib checks failed (PowerShell $($PSVersionTable.PSVersion))."; exit 1 }
 Write-Host "All phone-lib checks pass (PowerShell $($PSVersionTable.PSVersion))."

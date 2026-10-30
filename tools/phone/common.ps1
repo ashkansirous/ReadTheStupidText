@@ -34,6 +34,7 @@ function Write-PairingAsk {
 
 # Every adb call has a time limit, so a dropped wireless link fails loudly instead of blocking a wait loop in silence.
 # install, pull and push move whole files, so they get the long limit.
+. (Join-Path $PSScriptRoot 'deadline.ps1')
 $script:AdbTimeoutSeconds = 30
 $script:AdbTransferTimeoutSeconds = 300
 # Kill(bool) (the process tree) exists only in .NET Core; Windows PowerShell 5.1 has Kill() alone. A kill that fails is said, never swallowed.
@@ -44,6 +45,7 @@ function Stop-HungProcess([Diagnostics.Process]$Process) {
 
 function Invoke-Adb([string]$Serial, [string[]]$Arguments, [int]$TimeoutSeconds = 0) {
     if ($TimeoutSeconds -le 0) { $TimeoutSeconds = if ($Arguments[0] -in 'install', 'pull', 'push') { $script:AdbTransferTimeoutSeconds } else { $script:AdbTimeoutSeconds } }
+    $TimeoutSeconds = Limit-SecondsToDeadline $TimeoutSeconds (Get-ActiveDeadline) (Get-Date)   # inside a run-checks check: never past the budget (Slice 213)
     $info = New-Object Diagnostics.ProcessStartInfo $script:Adb
     # Windows PowerShell 5.1 (.NET Framework) has no ArgumentList: there the arguments go in one quoted string.
     # An empty $Serial is a call that names no device (adb devices, adb mdns services).
@@ -55,6 +57,7 @@ function Invoke-Adb([string]$Serial, [string[]]$Arguments, [int]$TimeoutSeconds 
     $out = $proc.StandardOutput.ReadToEndAsync(); $err = $proc.StandardError.ReadToEndAsync()
     if (-not $proc.WaitForExit($TimeoutSeconds * 1000)) {
         Stop-HungProcess $proc
+        if (Test-PastDeadline (Get-ActiveDeadline) (Get-Date)) { throw (New-BudgetExceededMessage "waiting for 'adb $($full -join ' ')'") }
         throw "Phone not responding over adb: 'adb $($full -join ' ')' did not finish in $TimeoutSeconds s."
     }
     $proc.WaitForExit()
@@ -280,6 +283,8 @@ function Resolve-PacksListing([string[]]$Lines, [int]$ExitCode) {
     $text = (@($Lines) -join "`n")
     if ($text -match '(?i)run-as:|not debuggable|unknown package|inaccessible') { return 'Error' }
     if ($text -match '(?i)No such file or directory') { return 'None' }
+    # The pack probe (New-PackProbeCommand) ends in `find` on a pack that is not installed, which exits 1 although run-as worked: its ACTIVE lines prove the probe ran.
+    if ($text -match ('(?m)^\s*' + $script:PackListingMarker + '\s+\S')) { return 'Packs' }
     if ($ExitCode -ne 0) { return 'Error' }
     if ($text.Trim() -ne '') { return 'Packs' }
     return 'None'
@@ -324,4 +329,137 @@ function Get-ArchivesToPrune([string[]]$Names, [int]$Keep = 3) {
     $mine = @($Names | ForEach-Object { "$_".Trim() } | Where-Object { $_ -match '(^|/)packs-\d{8}-\d{6}\.tar$' } | Sort-Object -Descending)
     if ($mine.Count -le $Keep) { return @() }
     return @($mine | Select-Object -Skip $Keep)
+}
+
+# ---- voice packs on the phone (Slice 213, redesign)
+# The real layout (PackVersionFolders, MobileVoicePackService): files/packs/<id>/active holds the name of the live version folder (e.g. v4) and
+# files/packs/<id>/v4/pack.json is its manifest. A download in progress is files/packs/<id>-<version>.zip.partial, a file next to the pack folders (never a pack).
+$script:PackManifestFile = 'pack.json'
+$script:PacksDirectory = 'files/packs'
+$script:PackActiveFile = 'active'
+$script:PackListingMarker = 'ACTIVE'
+
+# The phone shell command whose output Resolve-InstalledPackIds reads: for each id an "ACTIVE <id> <contents of its active file>" line, then every pack.json up to two levels down.
+function New-PackProbeCommand([string]$Package, [string[]]$PackIds) {
+    $ids = $PackIds -join ' '
+    $dir = $script:PacksDirectory
+    return "run-as $Package sh -c 'for p in $ids; do echo $($script:PackListingMarker) `$p `$(cat $dir/`$p/$($script:PackActiveFile) 2>/dev/null); find $dir/`$p -maxdepth 2 -name $($script:PackManifestFile) 2>/dev/null; done'"
+}
+
+# The version folder named by the ACTIVE line of $Id, or $null when the line is missing or the active file is empty.
+function Get-ActivePackVersion([string[]]$Lines, [string]$Id) {
+    foreach ($line in $Lines) {
+        if ("$line" -match ('^' + $script:PackListingMarker + '\s+(\S+)\s+(\S+)$') -and $Matches[1] -ceq $Id) { return $Matches[2] }
+    }
+    return $null
+}
+
+# The ids among $PackIds that are installed, from the output of New-PackProbeCommand: `active` exists AND the version folder it names has pack.json.
+# A partial download, an active file with no pack.json in its folder, or a pack.json only in an old version folder is not installed.
+function Resolve-InstalledPackIds([string[]]$Listing, [string[]]$PackIds) {
+    $lines = @($Listing | ForEach-Object { "$_".Trim() } | Where-Object { $_ })
+    $found = @()
+    foreach ($id in $PackIds) {
+        $version = Get-ActivePackVersion $lines $id
+        if ($version -and ($lines -ccontains "$($script:PacksDirectory)/$id/$version/$($script:PackManifestFile)")) { $found += $id }
+    }
+    return @($found)
+}
+
+function Test-PackInstalled([string[]]$Listing, [string[]]$PackIds) { return (@(Resolve-InstalledPackIds $Listing $PackIds).Count -gt 0) }
+
+# Names in `ls files/packs` that are pack folders: a name with a dot is a .zip or .zip.partial file, never a pack.
+function Get-PackFolderNames([string[]]$LsLines) {
+    return @($LsLines | ForEach-Object { "$_".Trim() } | Where-Object { $_ -match '^[A-Za-z0-9][A-Za-z0-9_-]*$' })
+}
+
+# The pack ids a `tar -tf` listing holds completely (its active file and a pack.json): what an aside copy would restore.
+function Get-ArchivePackIds([string[]]$TarLines) {
+    $names = @($TarLines | ForEach-Object { "$_".Trim() })
+    $root = [regex]::Escape($script:PacksDirectory)
+    $manifest = [regex]::Escape($script:PackManifestFile)
+    $withActive = @()
+    foreach ($name in $names) { if ($name -match "^$root/([^/]+)/$($script:PackActiveFile)$") { $withActive += $Matches[1] } }
+    $complete = @()
+    foreach ($id in ($withActive | Select-Object -Unique)) {
+        if (@($names | Where-Object { $_ -match "^$root/$([regex]::Escape($id))/[^/]+/$manifest$" }).Count -gt 0) { $complete += $id }
+    }
+    return @($complete)
+}
+
+# The ids among $PackIds installed on the phone now. Throws when run-as itself fails: that is never "no packs".
+function Get-InstalledPackIds([string]$Phone, [string]$Package, [string[]]$PackIds) {
+    Assert-DevPackage $Package
+    $out = @(Invoke-Adb $Phone @('shell', (New-PackProbeCommand $Package $PackIds)))
+    $exit = $global:LASTEXITCODE
+    if ((Resolve-PacksListing $out $exit) -eq 'Error') { throw "run-as on $Package failed: cannot tell whether the voice packs are installed ($($out -join ' | '))." }
+    return @(Resolve-InstalledPackIds $out $PackIds)
+}
+
+# Every installed pack folder on the phone (not only the ones an app needs); @() when there are none.
+function Get-InstalledPackFolders([string]$Phone, [string]$Package) {
+    Assert-DevPackage $Package
+    $out = @(Invoke-Adb $Phone @('shell', "run-as $Package ls $($script:PacksDirectory)"))
+    $state = Resolve-PacksListing $out $global:LASTEXITCODE
+    if ($state -eq 'Error') { throw "run-as on $Package failed: cannot list the packs ($($out -join ' | '))." }
+    $folders = @(Get-PackFolderNames $out)
+    if ($state -eq 'None' -or $folders.Count -eq 0) { return @() }
+    return @(Get-InstalledPackIds $Phone $Package $folders)
+}
+
+# Keeps only the INSTALLED pack folders aside as one tar (never a .partial): written to a .part file (tar piped through cat because `> file` on /sdcard wrote 0 bytes on the S21),
+# checked (size > 0, `tar -tf` file count equal to the folders', every pack's active file and pack.json in it), renamed; the newest KeepAsideArchives kept.
+# Returns Path, Files, PackIds. Throws when nothing is installed or the copy cannot be verified.
+function Save-PacksAside([string]$Phone, [string]$Package, [string]$AsideRoot, [int]$TimeoutSeconds) {
+    Assert-DevPackage $Package
+    $ids = @(Get-InstalledPackFolders $Phone $Package)
+    if ($ids.Count -eq 0) { throw 'no installed pack to keep aside (only partial downloads or folders without a manifest)' }
+    $paths = ($ids | ForEach-Object { "$($script:PacksDirectory)/$_" }) -join ' '
+    $files = @(Invoke-Adb $Phone @('shell', "run-as $Package find $paths -type f"))
+    if ($global:LASTEXITCODE -ne 0) { throw "could not list the packs ($($files -join ' | '))" }
+    $expected = @($files | Where-Object { "$_".Trim() -ne '' }).Count
+    $dir = "$AsideRoot/$Package"
+    $archive = "$dir/packs-$(Get-Date -Format 'yyyyMMdd-HHmmss').tar"
+    $out = Invoke-Adb $Phone @('shell', "mkdir -p $dir && run-as $Package tar -cf - $paths | cat > $archive.part") $TimeoutSeconds
+    if ($global:LASTEXITCODE -ne 0) { Invoke-Adb $Phone @('shell', "rm -f $archive.part") | Out-Null; throw "tar of the packs failed ($($out -join ' | '))" }
+    $size = "$(Invoke-Adb $Phone @('shell', "stat -c %s $archive.part"))".Trim()
+    $listing = @(Invoke-Adb $Phone @('shell', "tar -tf $archive.part"))
+    $listed = Get-TarFileCount $listing
+    $archived = @(Get-ArchivePackIds $listing)
+    $complete = (@($ids | Where-Object { $archived -ccontains $_ }).Count -eq $ids.Count)
+    if ($size -notmatch '^\d+$' -or [long]$size -le 0 -or $listed -ne $expected -or -not $complete) {
+        Invoke-Adb $Phone @('shell', "rm -f $archive.part") | Out-Null
+        throw "the aside copy is not good (size '$size', $listed of $expected files, complete packs: $complete)"
+    }
+    Invoke-Adb $Phone @('shell', "mv $archive.part $archive") | Out-Null
+    foreach ($old in Get-ArchivesToPrune @(Invoke-Adb $Phone @('shell', "ls $dir")) $script:KeepAsideArchives) { Invoke-Adb $Phone @('shell', "rm -f $dir/$old") | Out-Null }
+    return [pscustomobject]@{ Path = $archive; Files = $expected; PackIds = $ids }
+}
+
+# Copies an aside archive back and proves it: every pack in it must pass the install check afterwards. Returns the ids restored; throws (the archive stays) otherwise.
+function Restore-PacksAside([string]$Phone, [string]$Package, [string]$Archive, [int]$TimeoutSeconds) {
+    Assert-DevPackage $Package
+    $ids = @(Get-ArchivePackIds @(Invoke-Adb $Phone @('shell', "tar -tf $Archive")))
+    if ($ids.Count -eq 0) { throw "the aside copy $Archive holds no complete pack (no active file with a pack.json)" }
+    $out = Invoke-Adb $Phone @('shell', "cat $Archive | run-as $Package tar -xf -") $TimeoutSeconds
+    $exit = $global:LASTEXITCODE
+    $installed = if ($exit -eq 0) { @(Get-InstalledPackIds $Phone $Package $ids) } else { @() }
+    if ($exit -ne 0 -or $installed.Count -ne $ids.Count) {
+        throw "putting the packs back failed (tar exit $exit, $($installed.Count) of $($ids.Count) packs pass the install check; $($out -join ' | ')). The copy is still at $Archive; nothing was deleted."
+    }
+    return @($installed)
+}
+
+# Slice 213: each phone build (one per variant) has its own --artifacts-path, so the Debug and the AOT build of one checkout can run at the same time
+# and neither touches src\*\obj or src\*\bin. dotnet puts the project's output under <dir>\bin\<Project>\debug_net10.0-android_<rid>\.
+$script:ArtifactsFolderName = '.artifacts'
+# The folder name is short on purpose: aapt2 fails past the Windows path limit (APT2264) and the ML Kit asset paths are already ~230 characters long.
+function Get-PhoneArtifactsPath([string]$RepoRoot, [string]$App, [string]$Platform) {
+    $name = $App + $(if ($Platform -match 'aot$') { '-aot' } else { '-jit' }) + $(if ($Platform -match 'x64') { '-x' } else { '' })
+    return Join-Path (Join-Path $RepoRoot $script:ArtifactsFolderName) $name
+}
+
+# The newest signed APK anywhere under the artifacts folder's bin folder, or $null.
+function Find-PhoneArtifactApk([string]$Artifacts, [string]$Filter) {
+    return Get-ChildItem (Join-Path $Artifacts 'bin') -Filter $Filter -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 }
