@@ -122,6 +122,16 @@ public partial class StorytellerCharacterTests
     }
 
     [Fact]
+    public void Norwegian_narrator_and_leads_use_the_picked_voices()
+    {
+        IReadOnlyList<StorytellerCharacter> roster = CharacterRoster.For("nb");
+        Assert.Equal("piper:nb-knv", roster.Single(c => c.Id == "granny").VoiceId);
+        Assert.Equal("piper:nb-kmn", roster.Single(c => c.Id == "mummy").VoiceId);
+        Assert.Equal("piper:nb-mmn", roster.Single(c => c.Id == "grandad").VoiceId);
+        Assert.Equal(roster.Count, roster.Select(c => (c.VoiceId, c.Flavour)).Distinct().Count());
+    }
+
+    [Fact]
     public void An_unknown_language_gets_the_english_roster()
     {
         Assert.Equal(CharacterRoster.For("en"), CharacterRoster.For("xx"));

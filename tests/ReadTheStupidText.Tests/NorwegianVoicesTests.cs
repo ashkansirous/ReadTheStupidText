@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Tests;
 
@@ -19,13 +20,13 @@ public class NorwegianVoicesTests
     }
 
     [Fact]
-    public void WorkflowVoicesAreTenKnownSpeakersWithConsecutiveSids()
+    public void WorkflowVoicesAreTenKnownSpeakersEachWithItsOwnSid()
     {
         string workflow = File.ReadAllText(FindWorkflow());
         var voices = Regex.Matches(workflow, @"""id"": ""(piper:nb-[a-z]+)"", ""name"": ""[^""]+"", ""sid"": (\d+)");
 
         Assert.Equal(10, voices.Count);
-        Assert.Equal(Enumerable.Range(0, 10), voices.Select(m => int.Parse(m.Groups[2].Value)));
+        Assert.Equal(Enumerable.Range(0, 10), voices.Select(m => int.Parse(m.Groups[2].Value)).Order());
         Assert.All(voices, m => Assert.NotNull(NorwegianVoices.IsFemale(m.Groups[1].Value)));
     }
 
@@ -52,12 +53,48 @@ public class NorwegianVoicesTests
     }
 
     [Fact]
-    public void WorkflowVoiceIdsEqualTheIdsInPackOrder()
+    public void WorkflowVoiceIdsAreTheSameSetAsTheIds()
     {
         string workflow = File.ReadAllText(FindWorkflow());
         var ids = Regex.Matches(workflow, @"""id"": ""(piper:nb-[a-z]+)""").Select(m => m.Groups[1].Value);
 
-        Assert.Equal(NorwegianVoices.Ids, ids);
+        Assert.Equal(NorwegianVoices.Ids.Order(), ids.Order());
+    }
+
+    [Fact]
+    public void DefaultIsKnvAndKeepsItsUpstreamSpeakerId()
+    {
+        Assert.Equal("piper:nb-knv", NorwegianVoices.DefaultId);
+        Assert.Equal(1, NorwegianVoices.Position("piper:nb-knv"));
+        Assert.Contains("{\"id\": \"piper:nb-knv\", \"name\": \"KNV\", \"sid\": 9", File.ReadAllText(FindWorkflow()));
+    }
+
+    [Fact]
+    public void PackListedInUpstreamOrderStillDefaultsToKnvAndListsInCodeOrder()
+    {
+        string[] upstream = ["knn", "kmn", "kon", "ksv", "mmn", "mnn", "mnv", "mon", "msv", "knv"];
+        var voices = upstream
+            .Select((code, sid) => new VoiceInfo(NorwegianVoices.IdPrefix + code, code, "nb", VoiceEngineKind.Vits, sid))
+            .ToList();
+        var paths = new VoiceModelPaths("root", VoiceEngineKind.Vits, "nb", voices);
+
+        Assert.Equal(NorwegianVoices.DefaultId, paths.ResolveVoice(null).Id);
+        // StoryVoicing.NarratorFor takes pool[0] and the picker lists the pack, both built from this list.
+        Assert.Equal(NorwegianVoices.DefaultId, paths.AvailableVoices[0].Id);
+        Assert.Equal(NorwegianVoices.Ids.Order(), paths.AvailableVoices.Select(v => v.Id).Order());
+        Assert.Equal(NorwegianVoices.Ids, paths.AvailableVoices.Select(v => v.Id));
+    }
+
+    [Fact]
+    public void AStoredPickThatIsStillInstalledIsKeptAndOnlyAMissingOneFallsBack()
+    {
+        var voices = new[] { "knn", "knv" }
+            .Select((code, sid) => new VoiceInfo(NorwegianVoices.IdPrefix + code, code, "nb", VoiceEngineKind.Vits, sid))
+            .ToList();
+        var paths = new VoiceModelPaths("root", VoiceEngineKind.Vits, "nb", voices);
+
+        Assert.Equal("piper:nb-knn", paths.ResolveVoice("piper:nb-knn").Id);
+        Assert.Equal(NorwegianVoices.DefaultId, paths.ResolveVoice("piper:nb-mmn").Id);
     }
 
     [Fact]

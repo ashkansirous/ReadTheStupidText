@@ -5,8 +5,8 @@ namespace DinoReader.Core;
 
 public static partial class CharacterRoster
 {
-    // The Norwegian pack's speaker codes by place: five women (K...) then five men (M...), in the order of the ten voice keys F1-F5, M1-M5.
-    private static readonly string[] NorwegianCodes = ["knn", "ksv", "kon", "kmn", "knv", "mmn", "mnn", "msv", "mon", "mnv"];
+    // The Norwegian pack's speaker codes by place: five women (K...) then five men (M...), in the order of the ten voice keys F1-F5, M1-M5 (Slice 195: F1 narrator knv, F2 woman lead kmn, M1 narrator and man lead mmn).
+    private static readonly string[] NorwegianCodes = ["knv", "kmn", "kon", "knn", "ksv", "mmn", "mnn", "msv", "mon", "mnv"];
 
     /// <summary>One place of the shared ten-voice layout: a voice key (F1-F5 women, M1-M5 men), a flavour and who plays it.</summary>
     private sealed record Slot(string Id, string VoiceKey, VoiceFlavour Flavour, CharacterKind Kind);

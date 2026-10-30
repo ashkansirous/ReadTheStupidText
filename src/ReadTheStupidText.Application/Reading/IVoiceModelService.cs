@@ -30,7 +30,7 @@ public sealed record VoiceModelPaths(
         ModelDir == voice.ModelDir ? this : this with { ModelDir = voice.ModelDir };
 
     /// <summary>The voices this model offers for <see cref="Language"/>.</summary>
-    public IReadOnlyList<VoiceInfo> AvailableVoices => Voices ?? SupertonicVoiceTable.Voices;
+    public IReadOnlyList<VoiceInfo> AvailableVoices => Voices is null ? SupertonicVoiceTable.Voices : NorwegianVoices.InCodeOrder(Voices);
 
     /// <summary>
     /// The voice <paramref name="voiceId"/> names, or this model's default voice (the Supertonic

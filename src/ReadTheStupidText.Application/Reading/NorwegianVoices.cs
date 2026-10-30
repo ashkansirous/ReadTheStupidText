@@ -1,3 +1,5 @@
+using ReadTheStupidText.Domain.Reading;
+
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
@@ -9,14 +11,28 @@ public static class NorwegianVoices
 {
     public const string IdPrefix = VoiceChoices.PiperIdPrefix + "nb-";
 
-    /// <summary>The pack's voice ids in pack order (the speaker id order); the first is the default.</summary>
+    /// <summary>The pack's voice ids in pack list order (not the speaker id order: Slice 195 put knv first); the first is the default.</summary>
     public static readonly IReadOnlyList<string> Ids =
     [
-        IdPrefix + "knn", IdPrefix + "ksv", IdPrefix + "mmn", IdPrefix + "kon", IdPrefix + "mnn",
-        IdPrefix + "msv", IdPrefix + "mon", IdPrefix + "mnv", IdPrefix + "kmn", IdPrefix + "knv",
+        IdPrefix + "knv", IdPrefix + "knn", IdPrefix + "ksv", IdPrefix + "mmn", IdPrefix + "kon",
+        IdPrefix + "mnn", IdPrefix + "msv", IdPrefix + "mon", IdPrefix + "mnv", IdPrefix + "kmn",
     ];
 
     public static string DefaultId => Ids[0];
+
+    /// <summary>
+    /// <paramref name="voices"/> in <see cref="Ids"/> order when they are the Norwegian pack's (the code order, not the pack file's: the default
+    /// is the first Id the installed pack has, and the picker and labels agree); any other list comes back untouched.
+    /// </summary>
+    public static IReadOnlyList<VoiceInfo> InCodeOrder(IReadOnlyList<VoiceInfo> voices)
+    {
+        if (!voices.Any(v => Position(v.Id) is not null))
+        {
+            return voices;
+        }
+
+        return [.. voices.OrderBy(v => Position(v.Id) ?? int.MaxValue)];
+    }
 
     private const char WomanCode = 'k';
     private const char ManCode = 'm';
