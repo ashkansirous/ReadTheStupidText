@@ -1,6 +1,6 @@
 ### Slice 216 — Phone tooling leftovers from the Slice 213 runs
 
-*Planned 2026-10-30.* Findings from the 2026-10-30 S21 runs that no slice owned. Tooling only, except item 1 if it turns out to be an app bug.
+*In progress (wave 2026-10-30), draft PR.* Findings from the 2026-10-30 S21 runs that no slice owned. Tooling only, except item 1 if it turns out to be an app bug.
 
 **Touches:** `tools/phone/audio-timing.ps1`, `tools/phone/run-checks.ps1`, `tools/phone/common.ps1`, `tools/emulator/build-cache.ps1`, `tools/phone/README.md`, `tools/CLAUDE.md`, `src/ReadTheStupidText.Mobile.Shared/**` (only if item 1 is an app bug), `docs/plan/slices/216-phone-tooling-leftovers.md`
 
