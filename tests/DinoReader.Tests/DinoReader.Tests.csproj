@@ -27,6 +27,7 @@
     <Compile Include="..\..\src\DinoReader.App\Resources\Strings\AppResources.cs" Link="Linked\AppResources.cs" />
     <Compile Include="..\..\src\DinoReader.App\OwnBookTranslation.cs" Link="Linked\OwnBookTranslation.cs" />
     <Compile Include="..\..\src\DinoReader.App\BusyGuard.cs" Link="Linked\BusyGuard.cs" />
+    <Compile Include="..\..\src\DinoReader.App\StorytellerConsent.cs" Link="Linked\StorytellerConsent.cs" />
   </ItemGroup>
 
   <ItemGroup>

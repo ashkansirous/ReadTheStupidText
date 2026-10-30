@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="DinoReader.Tests" />
+    <InternalsVisibleTo Include="DinoReader.App" />
   </ItemGroup>
 
 </Project>

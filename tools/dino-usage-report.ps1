@@ -45,11 +45,11 @@ if (-not $Token -and -not $DryRun -and (Test-Path $SecretsEnv)) {
 
 $Dataset = 'dino_usage'
 $Weighted = 'SUM(_sample_interval * double1)'
-# Slice 167: leave out rows already stored from test builds: version 1.0 / 1.0.0 / 0.0.0 (built on a desk) and Android x64 (only emulators are x64 Android).
+# Slice 167: leave out rows already stored from test builds: version 1.0 / 1.0.0 / 0.0.0 (built on a desk) and Android and iOS x64 and x86 (only emulators and simulators).
 # Analytics Engine cannot delete rows, so the report filters them. Builds from Slice 167 on send no test counts at all.
-# The x64 filter applies only to rows before the app gate shipped; after it, x64 Android is a real device (Chromebook, Intel tablet).
-$AppGateShipped = '2026-10-28 00:00:00'
-$Window = "timestamp > NOW() - INTERVAL '$Days' DAY AND blob6 NOT IN ('1.0','1.0.0','1.0.0.0','0.0.0','0.0.0.0') AND NOT (blob7 = 'android' AND blob13 = 'x64' AND timestamp < toDateTime('$AppGateShipped'))"
+# The filter applies only to rows before the Worker began dropping Android/iOS x64 and x86 events (worker/events.ts, Slice 179); the Worker drops them all after that, so no such row can arrive later.
+$WorkerDropsIntelPhonesFrom = '2026-10-29 00:00:00'
+$Window = "timestamp > NOW() - INTERVAL '$Days' DAY AND blob6 NOT IN ('1.0','1.0.0','1.0.0.0','0.0.0','0.0.0.0') AND NOT (blob7 IN ('android','ios') AND blob13 IN ('x64','x86') AND timestamp < toDateTime('$WorkerDropsIntelPhonesFrom'))"
 $Enough = "HAVING SUM(_sample_interval) >= $MinEvents"
 
 # Each question: a title and the SQL that answers it. Counts are estimates of the true totals (sampling-weighted).
@@ -76,6 +76,7 @@ SELECT blob4 AS source, $Weighted AS opened
 FROM $Dataset WHERE blob1 = 'book_opened' AND $Window
 GROUP BY source $Enough
 "@
+    # restore:<bucket> rows are books a backup restore put back (Slice 191).
     'Own books added by kind' = @"
 SELECT blob9 AS detail, $Weighted AS added
 FROM $Dataset WHERE blob1 = 'own_book_added' AND $Window
