@@ -9,7 +9,7 @@ of the slices in this thread. It'll be a separate work", so product work found h
 fixes were done during the loop.
 
 **Passes:** pass 1 found 8 items not properly tracked. Pass 2 found 2 new ones (plus the pass 1 items still on
-unmerged branches). Pass 3 was run after this note was written; its counts are in the PR body.
+unmerged branches). Pass 3 found 5 more (below, after the first table). Pass 4 was the last allowed pass; its result is in the user report.
 
 ## Findings and where they went
 
@@ -27,3 +27,14 @@ unmerged branches). Pass 3 was run after this note was written; its counts are i
 | 3695, 4107 | "The Dino page-turn check was already broken" was said as fact | Slice 205 states only what was seen (failed in every run on 2026-10-30). No change |
 | 6840, 7085, 7535 | Turns ended on "/compact first?", "do it now or track it?" and "say audit and I'll..." | The *Feedback loop* rule in `~/.claude/CLAUDE.md` (#83): in-scope, reversible work is done, not offered |
 | 7535, 7740 | Auto mode blocked merges of ClaudeSkills #83, #84 and #86 ("merge without review"); #85 went through | Not a settings rule; waits on the user's choice |
+
+## Pass 3
+
+| Entry | Finding | Where it went |
+| --- | --- | --- |
+| 1211, 1451 | Slice 196's `Reading_Mode_Selected` string is a machine draft in 14 languages; no native-read item | Slice 196 *Not yet verified* and its *Outstanding work* line |
+| (slice 212) | Slice 186's "Maestro flow end to end on an emulator" was still open though Slice 212's run passed `voice-cancel-holds-scan-pack` | Removed from Slice 186 and *Outstanding work*; the pass recorded in Slice 186 |
+| 4442 | RTST's English Microsoft Store listing is stale; only a German slice mentioned it | *Outstanding work* line (draft with `store-listing`; apply waits for the user) |
+| 2902 | The user was told "it wasn't a bug in the app" about Slice 191's missing book, but that is only likely | Corrected to the user; Slice 191's device re-check stays in *Outstanding work* |
+| ledger | The wave ledger's *Next* still said ClaudeSkills fixes were tracked as #79 | Ledger updated (#79 done via #82) |
+| 4987, 4998 | Turns ended on "Do you want me to build these?" and "Should I build that hook?" | Same class as before; the #83 rule covers it |

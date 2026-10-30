@@ -58,3 +58,4 @@ No other book has words drawn in its pictures (Elves and Shoemaker page 15's sho
 - Sideways (landscape) layout not checked.
 - Windows head not checked.
 - iOS TestFlight open of Good Enough not checked.
+- A native speaker's read of `Reading_Mode_Selected` in the 14 languages (machine drafts).

@@ -54,5 +54,6 @@ A user cancel of the voice pack for a language also holds the automatic scan-pac
 
 #### Not yet verified
 
-- The Maestro flow end to end on an emulator (the phone downloads in 3.7 s, faster than the flow's wait; emulators were overloaded).
 - iOS TestFlight: the notification Cancel holds the scan pack.
+
+- 2026-10-30: `voice-cancel-holds-scan-pack` passed end to end on the emulator in Slice 212's run (`OCRPACK held-voice-cancelled fa`).
