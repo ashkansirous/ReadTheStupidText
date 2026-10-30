@@ -387,7 +387,21 @@ jobs:
           )
           cp "$work/nvcc-int8.onnx" src-models/nb-nvcc/model.onnx
           if [ ! -s "$work/tokens.txt" ]; then echo "::error::add_meta_data.py did not write tokens.txt"; exit 1; fi
-          cp "$work/tokens.txt" src-models/nb-nvcc/tokens.txt
+          # Slice 201: the upstream phoneme_id_map has diphthong keys of two code points (aɪ, aʊ). sherpa-onnx's Piper
+          # reader (piper-phonemize-lexicon.cc ReadTokens) aborts the whole process on any token that is not exactly one
+          # code point. espeak-ng hands the reader phonemes one code point at a time, so such a key can never be looked
+          # up and dropping it is safe: every other line keeps its explicit id.
+          python3 - "$work/tokens.txt" src-models/nb-nvcc/tokens.txt <<'PY'
+          import sys
+          kept, dropped = [], []
+          for line in open(sys.argv[1], encoding="utf-8").read().splitlines():
+              if not line:
+                  continue
+              token = line.rsplit(" ", 1)[0]
+              (kept if len(token) == 1 else dropped).append(line)
+          print("dropped multi-code-point tokens:", dropped)
+          open(sys.argv[2], "w", encoding="utf-8", newline=chr(10)).write(chr(10).join(kept) + chr(10))
+          PY
 
       # The Norwegian pack: one model folder holding ten speakers (sid 0-9, the speaker_id_map of the
       # upstream .onnx.json), plus the espeak-ng data from the Persian archive. The data is GPL-3.0 and
@@ -453,6 +467,45 @@ jobs:
           if [ "$(stat -c %s "out/$NORWEGIAN_ID-$NORWEGIAN_VERSION.zip")" -gt "$NORWEGIAN_MAX_BYTES" ]; then
             echo "::error::The Norwegian pack zip is over 100 MB"; exit 1
           fi
+
+      # Slice 201: no Piper (VITS) tokens.txt in a pack may hold a line sherpa-onnx's reader aborts on. Same rules as
+      # Domain/Reading/PiperTokens.cs: each line is "<one code point> <integer id>" (a line of only an id is the space
+      # token), no duplicate tokens, and _ ^ $ present. Covers every Piper pack built above (piper-fa and piper-nb).
+      - name: Check every Piper tokens.txt (one code point per token)
+        run: |
+          set -euo pipefail
+          python3 - "out/$PERSIAN_ID" "out/$NORWEGIAN_ID" <<'PY'
+          import glob, os, re, sys
+          bad = []
+          files = [f for pack in sys.argv[1:] for f in glob.glob(os.path.join(pack, "voices", "*", "tokens.txt"))]
+          if len(files) != 5:
+              raise SystemExit("expected the 4 Persian voices and the Norwegian voice, found " + str(files))
+          for path in files:
+              seen = set()
+              # Raw bytes, strict UTF-8, BOM kept: sherpa-onnx reads the bytes, so a BOM joins the first token.
+              lines = open(path, "rb").read().decode("utf-8").split(chr(10))
+              if lines[-1] == "":
+                  lines.pop()
+              for number, line in enumerate(lines, 1):
+                  line = line.rstrip(chr(13) + " " + chr(9))
+                  head, sep, tail = line.rpartition(" ")
+                  token = " " if head.strip() == "" else head
+                  # sherpa skips a Coqui-style <BLNK> line and accepts a signed id (istream >> int32).
+                  if not re.fullmatch(r"[+-]?[0-9]+", tail):
+                      bad.append(path + ":" + str(number) + ": " + repr(line))
+                  elif token == "<BLNK>":
+                      continue
+                  elif len(token) != 1 or token in seen:
+                      bad.append(path + ":" + str(number) + ": " + repr(line))
+                  seen.add(token)
+              for needed in "_^$":
+                  if needed not in seen:
+                      bad.append(path + ": missing token " + needed)
+          if bad:
+              print(chr(10).join(bad))
+              raise SystemExit("tokens.txt has entries sherpa-onnx's Piper reader aborts on")
+          print("checked", len(files), "tokens.txt files")
+          PY
 
       # The Chinese pack: the upstream MeloTTS zh_en folder (file names are what
       # Domain/Reading/MeloFiles.cs expects), minus the unused int8 stub and README.

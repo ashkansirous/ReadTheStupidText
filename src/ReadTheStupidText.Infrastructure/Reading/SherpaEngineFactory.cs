@@ -40,6 +40,7 @@ internal static class SherpaEngineFactory
         config.Model.NumThreads = threads;
         config.Model.Provider = CpuProvider;
         RequireModelFiles(paths, config);
+        RequirePiperTokens(paths, config);
         return new OfflineTts(config);
     }
 
@@ -94,6 +95,22 @@ internal static class SherpaEngineFactory
             {
                 throw new FileNotFoundException($"Voice model file missing for {paths.Kind}: '{file}'.", file);
             }
+        }
+    }
+
+    // Slice 201: sherpa-onnx's Piper reader aborts the whole process (no managed exception) on a tokens.txt token of
+    // more than one code point, so a Piper pack is checked here, after the install check, before the native load.
+    private static void RequirePiperTokens(VoiceModelPaths paths, OfflineTtsConfig config)
+    {
+        if (paths.Kind != VoiceEngineKind.Vits)
+        {
+            return;
+        }
+
+        string? problem = PiperTokens.ProblemInFile(config.Model.Vits.Tokens);
+        if (problem is not null)
+        {
+            throw new InvalidDataException($"Piper tokens file '{config.Model.Vits.Tokens}' would crash the speech engine: {problem}.");
         }
     }
 
