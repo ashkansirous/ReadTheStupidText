@@ -246,3 +246,4 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 206 | Phone scripts for unattended runs (preflight, lease, reset-dev-app, tap) | built | #594 | | [206-phone-run-scripts.md](../slices/206-phone-run-scripts.md) |
 | 207 | Guards for emulator, VM and flow mistakes | built | #596 | | [207-device-test-guards.md](../slices/207-device-test-guards.md) |
 | 212 | Flow hooks reach the running app; tool self-tests in CI | built | #600 | | [212-flow-hooks-and-tools-ci.md](../slices/212-flow-hooks-and-tools-ci.md) |
+| 213 | One phone check runner (`tools/phone/run-checks.ps1`) with a fixed 10-minute budget, no hidden builds, named checks | built | #610 | | [213-phone-check-runner.md](../slices/213-phone-check-runner.md) |

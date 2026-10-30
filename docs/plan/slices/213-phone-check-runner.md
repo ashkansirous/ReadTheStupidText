@@ -47,7 +47,7 @@ The 2026-10-30 leftovers run took over 20 minutes and finished one check of four
 - Cold start AOT 3.1-4.2 s after force-stop (first synthesis about 2.9-4.0 s), 7.0 s after a fresh install.
 - Slice 190 highlight: PASS on a phone. Slice 126 book end: PASS (released 0 s after `READ_END`).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-30)
 
 - Phone briefs name checks from the runner (`tools/phone/run-checks.ps1 -App <app> -Checks <names>`); builds start in parallel on their own `--artifacts-path`; timings carry `aot`/`debug`; packs only via `-Prepare`. Already in `tools/CLAUDE.md`. (Slice 213: docs/plan/slices/213-phone-check-runner.md)
 
