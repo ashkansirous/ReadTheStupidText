@@ -37,12 +37,14 @@
 - High: findings 2, 3 and 6 applied. The Dino half of 8 was applied, then removed as wrong. 1, 4, 5, 7 and 9 skipped.
 - Medium (read the diff directly, no review fork): finding 3 applied; 1, 2 and 4 skipped.
 
+**Waiting on the user (2026-10-30):** the force_all release run (the Store submission the user approved) was denied by the night's permission check. Run `release.yml` with `force_all`, then confirm the first `rtst-store-v` marker tag and that Partner Center shows the new version. Why users stayed on 1.67.1 is still unproven (1.73.2 was committed to Partner Center).
+
 #### Verification
 
 - Fast: the ship-targets test.
 - CI: the next release with a Windows change runs `store-submit`; Partner Center shows the new version.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-30)
 
 - Already edited in `.github/CLAUDE.md` in this PR (Slice 218: docs/plan/slices/218-microsoft-store-submission-skipped.md).
 

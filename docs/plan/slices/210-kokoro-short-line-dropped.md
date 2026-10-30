@@ -62,7 +62,7 @@ Build key ff0bfda456c0 (Debug arm64, `uk.sirous.dinoreader.dbg`, a sibling for e
 
 *Outcome:* S21 drops went from 14/68 to 3/68 (`bm_daniel` "Ann.", `bf_alice` "Help!" and "Ann.": all takes and the sibling gave 0 ms). The criterion "no `gave up` on the S21" is **not met**. Two strikes on device in this area, so no more patching: follow-up Slice 220 (to be planned in the index pass) finds why Kokoro synthesis returns empty audio for short lines on arm64 (sherpa-onnx output length or zeros, padding, phonemizer) and fixes it by construction.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-30)
 
 - Kokoro on arm64 can return truly silent audio for short lines; `SilentOutputGuard.cs` rescues with `SiblingVoice.cs`, which must map every shipped Kokoro voice to a same-language, same-gender sibling (a test enforces it). Add a sibling there when adding a Kokoro voice; don't lower the threshold. Never log the line's text. (Slice 210: docs/plan/slices/210-kokoro-short-line-dropped.md)
 

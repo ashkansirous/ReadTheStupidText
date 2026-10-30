@@ -13,3 +13,5 @@ Rules for the device-test tooling (`tools/emulator`, `tools/phone`, `tools/deskt
 
 (Slice 185: docs/plan/slices/185-close-three-old-gaps.md)
 (Slice 180: docs/plan/slices/180-faster-device-tests.md)
+
+- RTST Debug launch hooks live in `src/ReadTheStupidText.Mobile/Testing/RtstTestCommands.cs` (module initializer, like `DinoTestCommands`). `translation-waits-for-internet` needs a clean install and first-run, because it has no clearState. (Slice 211: docs/plan/slices/211-play-before-detection-waits-for-it.md)

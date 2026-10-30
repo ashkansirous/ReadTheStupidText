@@ -45,7 +45,7 @@ When Play is tapped and detection has not run for the current text, **run detect
 
 *Device (emulator-5554, 2026-10-30):* `play-before-detection` failed twice (timing: detection settled before the tap), then passed with the hold hook (HOOK hold-detection ok, READ detect-now 369, READ detect-now translated). `translation-waits-for-internet` passed on a clean install; it failed once after `play-before-detection` had changed install state (that flow has no clearState). Tests: 1685 pass; Android build and iOS compile pass.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-30)
 
 - `tools/CLAUDE.md`: RTST Debug launch hooks live in `src/ReadTheStupidText.Mobile/Testing/RtstTestCommands.cs` (module initializer, like `DinoTestCommands`). `translation-waits-for-internet` needs a clean install and first-run, because it has no clearState. (Slice 211: docs/plan/slices/211-play-before-detection-waits-for-it.md)
 
