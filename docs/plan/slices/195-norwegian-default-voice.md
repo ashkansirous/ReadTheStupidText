@@ -71,8 +71,6 @@ The order lives in code, not in the pack: `NorwegianVoices.Ids` plus `InCodeOrde
 #### Verified
 
 - RTST 1665 and Dino 1804 tests pass; both Android builds; both iOS compiles.
-- Phone check: running (result to be filled in).
-
 - S21 (arm64 .dbg, 2026-10-30): with no saved voice, switching RTST to Norsk downloaded piper-nb; the read hook logged `first unit (read, voice piper:nb-knv)`, then READ_START/READ_END; the picker lists voice 1 (knv) first, checked. Dino narrator on device not run.
 
 #### For CLAUDE.md (lifted 2026-10-30)
@@ -84,3 +82,4 @@ The order lives in code, not in the pack: `NorwegianVoices.Ids` plus `InCodeOrde
 - Hearing the picks: the default `nb-knv` is measured, not heard; the user may change it on the listening page.
 - iOS TestFlight run of the new order.
 - Windows head.
+- Dino narrator on a device (the S21 run covered RTST only).
