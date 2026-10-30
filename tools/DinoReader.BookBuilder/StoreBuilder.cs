@@ -30,7 +30,7 @@ internal static class StoreBuilder
 
     /// <summary>The store entries of the four bundled starters (Decision 128), by package file name: the same ids as the bundled files, so a deleted starter can be downloaded again.</summary>
     public static IReadOnlyDictionary<string, StoreEntry> StarterEntries =>
-        Books.Starters.ToDictionary(b => b.FileName, b => new StoreEntry(b.Info.Title, b.Info.Id, b.Info.Colour, b.Info.Credits, b.Info.AgeMin, b.Info.AgeMax, b.Info.Author, b.Info.Added));
+        Books.Starters.ToDictionary(b => b.FileName, b => new StoreEntry(b.Info.Title, b.Info.Id, b.Info.Colour, b.Info.Credits, b.Info.AgeMin, b.Info.AgeMax, b.Info.Author, b.Info.Added, b.Info.CreditsByLanguage));
 
     /// <summary><c>content/dino/&lt;stem&gt;</c>: the checked-in <c>pictures/1..N.jpg</c> and <c>cover.jpg</c> of a book (Slice 119).</summary>
     public static string StoryArtFolder(string stem) => Books.Folder(stem).Dir;
@@ -97,6 +97,7 @@ internal static class StoreBuilder
             ["ageMax"] = spec.AgeMax,
             ["author"] = spec.Author,
             ["titles"] = TitlesOf(story),
+            ["creditsByLanguage"] = spec.CreditsByLanguage is null ? null! : new SortedDictionary<string, string>(spec.CreditsByLanguage.ToDictionary(c => c.Key, c => c.Value), StringComparer.Ordinal),
         }, MetaOptions);
 
     /// <summary>Slice 159: the book's title in every other language (<see cref="ShippedTitles"/>); the store shows the chosen language's.</summary>
@@ -112,11 +113,11 @@ internal static class StoreBuilder
 }
 
 /// <summary>The store metadata of a bundled starter that is also a store story (Decision 128).</summary>
-internal sealed record StoreEntry(string Title, string Id, int ColourIndex, string Credits, int AgeMin, int AgeMax, string Author, string Added)
+internal sealed record StoreEntry(string Title, string Id, int ColourIndex, string Credits, int AgeMin, int AgeMax, string Author, string Added, IReadOnlyDictionary<string, string>? CreditsByLanguage = null)
 {
     /// <summary>The spec the store builder writes it under: the story's own text and the starter's content version (<see cref="StarterBuilder.StarterVersions"/>).</summary>
     public StoreStorySpec ToSpec(Story story, int version) =>
-        new(Id, Title, string.Empty, story.Text, ColourIndex, Credits, AgeMin, AgeMax, Author, [], version, Added);
+        new(Id, Title, string.Empty, story.Text, ColourIndex, Credits, AgeMin, AgeMax, Author, [], version, Added, CreditsByLanguage);
 }
 
 /// <summary>

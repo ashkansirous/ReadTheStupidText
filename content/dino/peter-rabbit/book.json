@@ -74,5 +74,21 @@
     "Peter": "Rabbit",
     "Flopsy": "Rabbit"
   },
-  "contentHash": "e4e99e537315ce159894065b9bfa49b472bbf04193ebf02a6e40fc7f57554630"
+  "contentHash": "e4e99e537315ce159894065b9bfa49b472bbf04193ebf02a6e40fc7f57554630",
+  "creditsByLanguage": {
+    "ar": "بياتريكس بوتر، 1902 (مُعاد سردها)",
+    "da": "Beatrix Potter, 1902 (genfortalt)",
+    "de": "Beatrix Potter, 1902 (nacherzählt)",
+    "es": "Beatrix Potter, 1902 (recontado)",
+    "fa": "بیاتریکس پاتر، ۱۹۰۲ (بازگویی‌شده)",
+    "fi": "Beatrix Potter, 1902 (uudelleen kerrottu)",
+    "fr": "Beatrix Potter, 1902 (raconté à nouveau)",
+    "ja": "ビアトリクス・ポター、1902年（語りなおし）",
+    "nb": "Beatrix Potter, 1902 (gjenfortalt)",
+    "nl": "Beatrix Potter, 1902 (naverteld)",
+    "pt": "Beatrix Potter, 1902 (recontado)",
+    "ru": "Беатрис Поттер, 1902 (пересказ)",
+    "sv": "Beatrix Potter, 1902 (återberättad)",
+    "zh": "比阿特丽克斯·波特，1902年（改写）"
+  }
 }

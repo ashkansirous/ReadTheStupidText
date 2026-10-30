@@ -291,6 +291,11 @@
   <data name="Wait_ReadingPictures" xml:space="preserve"><value>正在识别图片…</value></data>
   <data name="Wait_PageOf" xml:space="preserve"><value>第 {0} 页，共 {1} 页</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>正在翻译…</value></data>
+  <data name="Wait_WaitingInternet" xml:space="preserve"><value>正在等待网络</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingWifi" xml:space="preserve"><value>正在等待 Wi-Fi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_Retry" xml:space="preserve"><value>重试</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0}已下载{1}%。恢复联网后会自动继续。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>正在下载{0}。恢复联网后会自动继续。</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>正在保存…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>正在准备这本书…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>正在备份书籍…</value></data>

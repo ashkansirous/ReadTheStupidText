@@ -33,11 +33,13 @@ internal sealed record AuthoredCharacter(string Name, string Voice, Gender Gende
 /// </summary>
 internal sealed record BookInfo(
     BookKind Kind, string Id, string Title, int Version, int AgeMin, int AgeMax, string Author, string Credits, int Colour, string Added, int Order,
-    string[]? Characters, AuthoredCharacter[]? Cast, Dictionary<string, AnimalKind>? Animals, string[]? NotAnimals, string ContentHash, bool? TextInPictures = null);
+    string[]? Characters, AuthoredCharacter[]? Cast, Dictionary<string, AnimalKind>? Animals, string[]? NotAnimals, string ContentHash, bool? TextInPictures = null,
+    Dictionary<string, string>? CreditsByLanguage = null);
 
 /// <summary>One free story in the Dino store (Slice 102): its fixed package id, the folder name its files are stored under, the
 /// credit line, the age range and the author the store card and filters use (Slice 112), the generated cover colour and the characters its speech tags must give a voice.</summary>
-internal sealed record StoreStorySpec(string Id, string Title, string Stem, string Text, int ColourIndex, string Credits, int AgeMin, int AgeMax, string Author, IReadOnlyList<string> Characters, int Version, string Added);
+internal sealed record StoreStorySpec(string Id, string Title, string Stem, string Text, int ColourIndex, string Credits, int AgeMin, int AgeMax, string Author, IReadOnlyList<string> Characters, int Version, string Added,
+    IReadOnlyDictionary<string, string>? CreditsByLanguage = null);
 
 /// <summary>One book's folder under <c>content/dino</c>: its files, its <c>book.json</c> and its text.</summary>
 internal sealed class BookFolder(string stem, string path, BookInfo info)
@@ -73,7 +75,7 @@ internal sealed class BookFolder(string stem, string path, BookInfo info)
     public string? Text => File.Exists(Path.Combine(Dir, StoryFile)) ? File.ReadAllText(Path.Combine(Dir, StoryFile)).ReplaceLineEndings("\n").TrimEnd('\n') : null;
 
     public StoreStorySpec ToSpec() =>
-        new(Info.Id, Info.Title, Stem, Text ?? string.Empty, Info.Colour, Info.Credits, Info.AgeMin, Info.AgeMax, Info.Author, Info.Characters ?? [], Info.Version, Info.Added);
+        new(Info.Id, Info.Title, Stem, Text ?? string.Empty, Info.Colour, Info.Credits, Info.AgeMin, Info.AgeMax, Info.Author, Info.Characters ?? [], Info.Version, Info.Added, Info.CreditsByLanguage);
 }
 
 /// <summary>Every book under <c>content/dino</c> (Slice 157), read once: the shared loader of the builder and of the tests that validate the books.</summary>
@@ -171,10 +173,25 @@ internal static class Books
             _ when info.AgeMin < 0 || info.AgeMax > MaxAge || info.AgeMin > info.AgeMax => $"ages must satisfy 0 <= ageMin <= ageMax <= {MaxAge}",
             _ when info.Colour < 0 => "colour must be 0 or more",
             _ when info.Author is null || info.Credits is null || info.ContentHash is null => "author, credits and contentHash must be strings",
+            _ when CreditsByLanguageProblem(info.CreditsByLanguage) is { } credits => credits,
             _ when !DateOnly.TryParseExact(info.Added, AddedFormat, out _) => $"added must be {AddedFormat}",
             _ when !File.Exists(Path.Combine(folder, BookFolder.StoryFile)) && !File.Exists(Path.Combine(folder, BookFolder.LinesFile)) => "needs story.md or lines.json",
             _ => null,
         };
+    }
+
+    /// <summary>Slice 192: <c>creditsByLanguage</c> must hold a non-blank credit line for every shipped non-English language and nothing else.</summary>
+    private static string? CreditsByLanguageProblem(Dictionary<string, string>? credits)
+    {
+        string[] expected = UiLanguage.Supported.Where(code => code != UiLanguage.English).ToArray();
+        if (credits is null || credits.Count == 0)
+        {
+            return "creditsByLanguage is missing";
+        }
+
+        string[] absent = expected.Where(code => !credits.TryGetValue(code, out string? text) || string.IsNullOrWhiteSpace(text)).ToArray();
+        string[] unknown = credits.Keys.Except(expected, StringComparer.Ordinal).ToArray();
+        return absent.Length + unknown.Length == 0 ? null : $"creditsByLanguage needs exactly the {expected.Length} non-English languages (missing: {string.Join(",", absent)}; unknown: {string.Join(",", unknown)})";
     }
 
     public static void WriteInfo(string folder, BookInfo info) =>

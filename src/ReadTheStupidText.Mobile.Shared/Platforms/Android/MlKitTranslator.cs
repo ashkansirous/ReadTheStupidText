@@ -95,6 +95,13 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
         progress?.Report(1);
     }
 
+    /// <inheritdoc />
+    public async Task DeletePackAsync(string language)
+    {
+        TranslateRemoteModel model = new TranslateRemoteModel.Builder(EngineLanguageCodes.ToEngine(language)).Build();
+        await RemoteModelManager.Instance.DeleteDownloadedModel(model);
+    }
+
     private sealed class CancelledDownload
     {
         public volatile bool Reclaimed;

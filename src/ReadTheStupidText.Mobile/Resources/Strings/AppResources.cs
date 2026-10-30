@@ -93,6 +93,11 @@ public static class AppResources
     public static string Review_Read => Get();
     public static string Wait_DownloadingModel => Get();
     public static string Wait_Translating => Get();
+    public static string Wait_WaitingInternet => Get();
+    public static string Wait_WaitingWifi => Get();
+    public static string Wait_Retry => Get();
+    public static string Wait_WaitingPercent => Get();
+    public static string Wait_WaitingNoPercent => Get();
     public static string Wait_PreparingVoice => Get();
     public static string Wait_Stalled => Get();
     public static string Wait_ReadingFile => Get();

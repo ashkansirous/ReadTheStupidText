@@ -301,6 +301,11 @@ public static class AppResources
 	public static string Wait_ReadingPictures => Get();
 	public static string Wait_PageOf => Get();
 	public static string Wait_Translating => Get();
+	public static string Wait_WaitingInternet => Get();
+	public static string Wait_WaitingWifi => Get();
+	public static string Wait_Retry => Get();
+	public static string Wait_WaitingPercent => Get();
+	public static string Wait_WaitingNoPercent => Get();
 	public static string Wait_Saving => Get();
 	public static string Wait_GettingBook => Get();
 	public static string Wait_BackingUp => Get();

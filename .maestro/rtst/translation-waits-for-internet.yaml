@@ -1,0 +1,50 @@
+# Slice 187: a translation model download with no internet waits (no error), carries on by itself when the network is back, and Cancel while waiting stops it.
+# No clearState (it would also wipe the voice pack, and the offline Read would then wait on supertonic-3 instead of ML Kit). Precondition: first run done with the voice pack installed (first-run.yaml, which runs first,
+# leaves that online); the delete hook waits for the pack if it is still installing, then removes only the Italian ML Kit model (typically absent on a phone; fr/es/de/fa/zh models stay), so the offline Read needs a download.
+# expect-log: PACKDL waiting pack=mlkit-it
+# The Translate row is already ticked by default (Italian is not the app language, English), so the flow does not tap it (that would untick it and Read would hit the no-voice alert). Needs AutomationId "ReviewTranslateRow" on ReviewPage.xaml's TranslateRow (a file outside Slice 187's Touches; owed).
+# expect-log: PACKDL resume reason=network pack=mlkit-it
+appId: uk.sirous.readthestupidtext
+name: Translation download waits for the internet
+---
+# Online here: the hook deletes only the Italian model.
+- launchApp:
+    arguments:
+      cmd: delete-translation-model
+      from: it
+# Offline from here, before the text is typed: the early download is skipped (not unmetered), so only the tap on Translate and read starts the ML Kit download and it waits.
+- toggleAirplaneMode
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 20000
+- tapOn:
+    id: EditLink
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: ReviewEditor
+    timeout: 10000
+- tapOn:
+    id: ReviewEditor
+    waitToSettleTimeoutMs: 300
+- inputText: "Ciao a tutti, questa sera leggeremo insieme una lunga storia molto interessante."
+- hideKeyboard
+- extendedWaitUntil:
+    visible:
+      id: ReviewTranslateRow
+    timeout: 10000
+- tapOn:
+    id: ReviewRead
+    waitToSettleTimeoutMs: 300
+# Offline: the waiting look with Retry, not an error.
+- extendedWaitUntil:
+    visible:
+      id: WaitRetry
+    timeout: 60000
+- toggleAirplaneMode
+# Back online: it carries on by itself and the reader opens with the translation.
+- extendedWaitUntil:
+    visible:
+      id: ReadingText
+    timeout: 180000

@@ -511,7 +511,13 @@ test("the RTST phone batch from x64 is dropped, a batch with no device object st
 });
 
 test("an own-book count takes a kind alone or kind:pages with the Slice 178 kinds", () => {
-  for (const detail of ["pdf", "typed", "docx:1", "txt:2-5", "mixed:6-10", "photo:11+", "scan:1"]) {
+  for (const detail of ["pdf", "typed", "docx:1", "txt:2-5", "mixed:6-10", "photo:11+", "scan:1", "restore", "restore:2-5"]) {
     assert.equal(parseEvent({ ...ownEvent, name: "own_book_added", detail })?.detail, detail);
+  }
+});
+
+test("an own-book restore count with free text or a bad bucket is refused", () => {
+  for (const detail of ["restore:", "restore:3", "restore:2-5:x", "restore:hello"]) {
+    assert.equal(parseEvent({ ...ownEvent, name: "own_book_added", detail }), null);
   }
 });

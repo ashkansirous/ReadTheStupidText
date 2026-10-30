@@ -72,6 +72,11 @@
   <data name="Review_Read" xml:space="preserve"><value>Lezen</value></data>
   <data name="Wait_DownloadingModel" xml:space="preserve"><value>{0} downloaden…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Vertalen…</value></data>
+  <data name="Wait_WaitingInternet" xml:space="preserve"><value>Wachten op internet</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingWifi" xml:space="preserve"><value>Wachten op wifi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_Retry" xml:space="preserve"><value>Opnieuw</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0} is voor {1}% gedownload. Het gaat vanzelf verder zodra je weer online bent.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>{0} downloaden. Het gaat vanzelf verder zodra je weer online bent.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_PreparingVoice" xml:space="preserve"><value>De stem voorbereiden…</value></data>
   <data name="Wait_Stalled" xml:space="preserve"><value>De stem wordt nog klaargemaakt…</value></data>
   <data name="Wait_ReadingFile" xml:space="preserve"><value>Het bestand lezen…</value></data>

@@ -441,7 +441,7 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 		}
 
 		var prompt = new TranslationPackPrompt(_translator, _library);
-		await prompt.OfferForLanguageAsync(Window?.Page ?? this, language, (stage, line) => _wait.BeginCancellable(stage, line), () => _wait.End());
+		await prompt.OfferForLanguageAsync(Window?.Page ?? this, language, (stage, line) => _wait.BeginCancellable(stage, line), () => _wait.End(), _wait);
 	}
 
 	private void ShowFull() => _full.IsVisible = _picker.Set.IsFull;

@@ -92,7 +92,7 @@
                 </Border>
 
                 <!-- Shown only when the text is in another language and this phone can translate it. -->
-                <Border x:Name="TranslateRow" IsVisible="False" Style="{StaticResource CardStyle}" MinimumHeightRequest="56" Padding="14,0">
+                <Border x:Name="TranslateRow" AutomationId="ReviewTranslateRow" IsVisible="False" Style="{StaticResource CardStyle}" MinimumHeightRequest="56" Padding="14,0">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTranslateRowTapped" />
                     </Border.GestureRecognizers>

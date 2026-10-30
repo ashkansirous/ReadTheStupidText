@@ -33,6 +33,9 @@
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\VoiceCancelHold.cs" Link="Mobile\VoiceCancelHold.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackDownloadHost.cs" Link="Mobile\PackDownloadHost.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackKeepAlivePolicy.cs" Link="Mobile\PackKeepAlivePolicy.cs" />
+    <!-- The translation download session has no MAUI types (Slice 187). -->
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Translation\TranslationModelDownloadSession.cs" Link="Mobile\TranslationModelDownloadSession.cs" />
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Translation\SingleModelCall.cs" Link="Mobile\SingleModelCall.cs" />
     <EmbeddedResource Include="..\..\src\ReadTheStupidText.Mobile\Resources\Strings\AppResources.resx" Link="Mobile\AppResources.resx" LogicalName="ReadTheStupidText.Mobile.Resources.Strings.AppResources.resources" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\IPlatformServices.cs" Link="Mobile\IPlatformServices.cs" />
   </ItemGroup>

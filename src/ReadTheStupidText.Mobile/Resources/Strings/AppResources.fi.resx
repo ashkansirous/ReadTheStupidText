@@ -72,6 +72,11 @@
   <data name="Review_Read" xml:space="preserve"><value>Lue</value></data>
   <data name="Wait_DownloadingModel" xml:space="preserve"><value>Ladataan kieltä {0}…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Käännetään…</value></data>
+  <data name="Wait_WaitingInternet" xml:space="preserve"><value>Odotetaan internetiä</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingWifi" xml:space="preserve"><value>Odotetaan Wi-Fi-yhteyttä</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_Retry" xml:space="preserve"><value>Yritä uudelleen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0} on ladattu {1} %. Lataus jatkuu itsestään, kun olet taas verkossa.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>Ladataan kieltä {0}. Lataus jatkuu itsestään, kun olet taas verkossa.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_PreparingVoice" xml:space="preserve"><value>Valmistellaan ääntä…</value></data>
   <data name="Wait_Stalled" xml:space="preserve"><value>Ääntä valmistellaan vielä…</value></data>
   <data name="Wait_ReadingFile" xml:space="preserve"><value>Luetaan tiedostoa…</value></data>
