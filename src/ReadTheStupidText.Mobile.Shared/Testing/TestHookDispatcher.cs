@@ -48,7 +48,7 @@ public sealed class TestHookDispatcher
 	/// the command name first, then the keys this dispatcher's own commands read, then the app's. A platform that filters launch arguments reads exactly these.
 	/// </summary>
 	public static IReadOnlyList<string> LaunchKeys =>
-		new[] { TestHookCommand.NameKey, LanguageKey, TextKey, SpeedKey, FromKey, ToKey }.Concat(AppLaunchKeys).Distinct().ToList();
+		TestHookLaunchKeys.Build(TestHookCommand.NameKey, [LanguageKey, TextKey, SpeedKey, FromKey, ToKey], AppLaunchKeys);
 
 	private readonly ISettingsStore _settings;
 	private readonly ISpeechReader _reader;
