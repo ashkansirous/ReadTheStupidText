@@ -161,6 +161,87 @@ public sealed class SilentOutputGuardTests
     }
 
     [Fact]
+    public void FiveLetterLineNeedsOneHundredFiftyMsAtNormalPace() =>
+        Assert.Equal(150, SilentOutputGuard.NeededMs("Hello"));
+
+    [Fact]
+    public async Task GaveUpLineNamesTheVoicedMsAndTheFloorButNotTheText()
+    {
+        var lines = new List<string>();
+        SpokenTake barelyShort = Tone(120, padMs: 100);
+        await SilentOutputGuard.RescueAsync("Hello", "kokoro:am_liam", 1.0, () => Task.FromResult(barelyShort), lines.Add);
+        string line = Assert.Single(lines);
+        Assert.Contains("gave up", line);
+        Assert.Matches(@"voiced ms 1(19|20)/1(19|20)/1(19|20),", line);
+        Assert.Contains("needed 150", line);
+        Assert.DoesNotContain("Hello", line);
+    }
+
+    // Spanish and Portuguese have a single woman each (Dora), so no same-gender stand-in exists for them.
+    private static readonly HashSet<string> OnlyWomanOfLanguage = ["kokoro:ef_dora", "kokoro:pf_dora"];
+
+    [Fact]
+    public void EveryShippedKokoroVoiceHasASiblingOfTheSameLanguageAndGender()
+    {
+        foreach (string language in KokoroVoiceTable.Languages)
+        {
+            IReadOnlyList<VoiceInfo> voices = KokoroVoiceTable.VoicesFor(language);
+            var pack = new VoiceModelPaths("x", VoiceEngineKind.Kokoro, language, voices);
+            foreach (VoiceInfo voice in voices.Where(v => !OnlyWomanOfLanguage.Contains(v.Id)))
+            {
+                VoiceInfo? sibling = SiblingVoice.Pick(pack, voice);
+                Assert.True(sibling is not null, voice.Id + " has no sibling");
+                Assert.NotEqual(voice.Id, sibling!.Id);
+                Assert.Equal(KokoroVoiceTable.IsFemale(voice.Id), KokoroVoiceTable.IsFemale(sibling.Id));
+            }
+        }
+    }
+
+    [Fact]
+    public async Task KokoroShortLineSilentThreeTimesIsRescuedBySiblingMan()
+    {
+        VoiceInfo liam = new("kokoro:am_liam", "Liam", "en", VoiceEngineKind.Kokoro, 15);
+        VoiceInfo michael = new("kokoro:am_michael", "Michael", "en", VoiceEngineKind.Kokoro, 16);
+        var pack = new VoiceModelPaths("x", VoiceEngineKind.Kokoro, "en", [liam, michael]);
+        Assert.Equal(michael, SiblingVoice.Pick(pack, liam));
+        VoiceInfo fable = new("kokoro:bm_fable", "Fable", "en", VoiceEngineKind.Kokoro, 25);
+        VoiceInfo daniel = new("kokoro:bm_daniel", "Daniel", "en", VoiceEngineKind.Kokoro, 24);
+        VoiceInfo puck = new("kokoro:am_puck", "Puck", "en", VoiceEngineKind.Kokoro, 18);
+        var all = pack with { Voices = [liam, michael, fable, daniel, puck] };
+        Assert.Equal(fable, SiblingVoice.Pick(all, michael));
+        Assert.Equal(daniel, SiblingVoice.Pick(all, puck));
+        var lines = new List<string>();
+        RescueResult result = await SilentOutputGuard.RescueAsync(
+            "Hello", liam.Id, 1.0, () => Task.FromResult(new SpokenTake([], Rate)), lines.Add,
+            fallback: () => Task.FromResult<SpokenTake?>(Tone(300)));
+        Assert.False(result.GaveUp);
+        Assert.Matches(@", sibling (29\d|300)\b", Assert.Single(lines));
+    }
+
+    [Fact]
+    public async Task FirstTakeThatPassesUnderOneAndAQuarterTimesTheFloorGoesToTheDebugLogOnly()
+    {
+        var lines = new List<string>();
+        var debug = new List<string>();
+        RescueResult result = await SilentOutputGuard.RescueAsync(
+            "Hello", "kokoro:am_liam", 1.0, () => Task.FromResult(Tone(170, padMs: 100)), lines.Add, debug: debug.Add);
+        Assert.False(result.GaveUp);
+        Assert.Empty(lines);
+        string line = Assert.Single(debug);
+        Assert.Contains("near the floor", line);
+        Assert.Contains("needed 150", line);
+        Assert.DoesNotContain("Hello", line);
+    }
+
+    [Fact]
+    public async Task FirstTakeWellOverTheFloorLogsNothing()
+    {
+        var lines = new List<string>();
+        await SilentOutputGuard.RescueAsync("Hello", "v", 1.0, () => Task.FromResult(Tone(400)), lines.Add);
+        Assert.Empty(lines);
+    }
+
+    [Fact]
     public void ShortCommaFragmentIsNotJudgedSilentByTheSoundWordFloor() =>
         Assert.False(SilentOutputGuard.IsSilent(Tone(40), "و،"));
 

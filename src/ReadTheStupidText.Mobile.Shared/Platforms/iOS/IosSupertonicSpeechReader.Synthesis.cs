@@ -97,7 +97,8 @@ public sealed partial class IosSupertonicSpeechReader
             token.ThrowIfCancellationRequested(); // superseded while queued: never start the native call
             rescue = await SilentOutputGuard.RescueUnitAsync(
                 sentence, voice.Id, pace, SiblingVoice.IsDropProne(voice), phrase => TakeAsync(engine, phrase, voice.SpeakerId, pace),
-                message => _log.Warning(message), token, phrase => SiblingTakeAsync(engine, phrase, voice, pace, token));
+                message => _log.Warning(message), token, phrase => SiblingTakeAsync(engine, phrase, voice, pace, token),
+                message => _log.Debug(message));
         }
         finally
         {
