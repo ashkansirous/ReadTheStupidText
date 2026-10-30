@@ -60,3 +60,5 @@ When Play is tapped and detection has not run for the current text, **run detect
 - S21: rerun of the Slice 139 race (tap about 0.4 s after typing); record the start time against the 1456 ms baseline.
 - iOS TestFlight hand check.
 - Back-during-wait scripted check (not run; uiautomator showed no resource-ids).
+- `translation-wait-cancel` flow: reported "not run" by the emulator run (added by the 2026-10-30-2100 round 1 feedback loop).
+- iOS compile of the final code: the only iOS compile ran before later changes, and CI builds iOS in Release, so the Debug-only `RtstTestCommands.cs` hold-detection hook has never been compiled for iOS.
