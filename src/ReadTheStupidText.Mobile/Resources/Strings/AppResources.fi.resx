@@ -115,6 +115,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Äänen lataus vioittui. Luetaan puhelimen äänellä. Yritä uudelleen napauttamalla.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Luonnollisten äänten pakettia ei voi käyttää. Luetaan puhelimen äänellä.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Luonnollisia ääniä ei voitu ladata. Luetaan puhelimen äänellä. Yritä uudelleen napauttamalla.</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>Lataus pysäytetty. Luetaan puhelimen äänellä. Lataa napauttamalla.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>Kielellesi ei ole vielä luonnollista ääntä. Luetaan puhelimen äänellä.</value></data>
   <data name="VoicePicker_Heading" xml:space="preserve"><value>Valitse ääni</value></data>
   <data name="VoicePicker_Subtitle" xml:space="preserve"><value>Luonnolliset äänet ladataan kerran · tekstisi pysyy puhelimessa</value></data>
@@ -130,6 +132,7 @@
   <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Luonnolliset äänet eivät ole vielä käytettävissä tässä laitteessa, joten puhelimen ääni lukee.</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>Valitse kielesi. Lataamme sille luonnollisen äänen; siihen asti lukee puhelimesi oma ääni.</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>Yritä latausta uudelleen</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>Lataa</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Jatka</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>Aloita lukeminen</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Ääni {0} (nainen)</value></data>

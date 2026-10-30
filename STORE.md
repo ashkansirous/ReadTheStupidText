@@ -311,6 +311,8 @@ Google Play, downloadnotitie (toevoegen aan de volledige beschrijving): De eerst
 
 #### German (`de`)
 
+The complete German listing (title, Play short description, App Store fields) is now `docs/store-listings/de.md`; Dino's is `docs/store-listings/dino/de.md` (Slice 193, drafts, not yet pasted). The short description below is 86 characters, over Play's 80: use the one in `de.md`.
+
 Slice 168. Written by Claude from `docs/store-listings/en.md`, like the other non-English texts: it needs a native read before submission and is **not pasted into any store yet** (the apps are not public).
 
 Search terms: 1. vorlesen, 2. text zu sprache, 3. tts, 4. text laut lesen, 5. markierten text lesen, 6. pdf vorlesen, 7. natürliche stimmen offline

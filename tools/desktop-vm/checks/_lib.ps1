@@ -213,3 +213,54 @@ function Invoke-PressAndHold {
         foreach ($i in 1..$steps) { Start-Sleep -Milliseconds 250; [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(($cx + ($i % 2)), $cy) }
     } finally { [Win32.Mouse]::mouse_event(4, 0, 0, 0, [UIntPtr]::Zero) }
 }
+
+function Initialize-NativeDisplay {
+    # Compiled on first use only, so checks that never change the resolution pay nothing; a compile error is thrown, not swallowed.
+    if ('NativeDisplay' -as [type]) { return }
+    Add-Type -TypeDefinition @'
+using System; using System.Runtime.InteropServices;
+public static class NativeDisplay {
+  [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+  public struct DEVMODE {
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmDeviceName;
+    public short dmSpecVersion, dmDriverVersion, dmSize, dmDriverExtra;
+    public int dmFields, dmPositionX, dmPositionY, dmDisplayOrientation, dmDisplayFixedOutput;
+    public short dmColor, dmDuplex, dmYResolution, dmTTOption, dmCollate;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmFormName;
+    public short dmLogPixels; public int dmBitsPerPel, dmPelsWidth, dmPelsHeight, dmDisplayFlags, dmDisplayFrequency;
+    public int dmICMMethod, dmICMIntent, dmMediaType, dmDitherType, dmReserved1, dmReserved2, dmPanningWidth, dmPanningHeight;
+  }
+  [DllImport("user32.dll", CharSet = CharSet.Ansi)] public static extern int EnumDisplaySettings(string dev, int mode, ref DEVMODE dm);
+  [DllImport("user32.dll", CharSet = CharSet.Ansi)] public static extern int ChangeDisplaySettings(ref DEVMODE dm, int flags);
+  public static int Set(int w, int h) {
+    DEVMODE dm = new DEVMODE(); dm.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE));
+    if (EnumDisplaySettings(null, -1, ref dm) == 0) return -100;
+    dm.dmPelsWidth = w; dm.dmPelsHeight = h; dm.dmFields = 0x80000 | 0x100000;
+    return ChangeDisplaySettings(ref dm, 0);
+  }
+}
+'@
+}
+
+function Set-ScreenResolution {
+    # Sets the primary display to $Width x $Height (the harness resets the guest to 1024x768); throws when Windows refuses it.
+    param([int] $Width = 1920, [int] $Height = 1080)
+    Initialize-NativeDisplay
+    $code = [NativeDisplay]::Set($Width, $Height)
+    if ($code -ne 0) { throw "Windows refused ${Width}x${Height} (ChangeDisplaySettings returned $code)." }
+    Start-Sleep -Seconds 2
+}
+
+function Save-WindowScreenshot {
+    # Saves only the given UIA window's rectangle as a PNG (the window must be fully on screen and not covered).
+    param([Parameter(Mandatory)] $Window, [Parameter(Mandatory)] [string] $Path)
+    Add-Type -AssemblyName System.Drawing
+    $r = $Window.Current.BoundingRectangle
+    if ($r.IsEmpty) { throw 'Save-WindowScreenshot: the window has no bounds.' }
+    $bmp = New-Object System.Drawing.Bitmap ([int]$r.Width), ([int]$r.Height)
+    $g = [System.Drawing.Graphics]::FromImage($bmp)
+    try {
+        $g.CopyFromScreen([int]$r.X, [int]$r.Y, 0, 0, $bmp.Size)
+        $bmp.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png)
+    } finally { $g.Dispose(); $bmp.Dispose() }
+}

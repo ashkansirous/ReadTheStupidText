@@ -115,6 +115,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Stemmenedlastingen ble skadet. Leser med telefonens stemme. Trykk for å prøve igjen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Pakken med naturlige stemmer kan ikke brukes. Leser med telefonens stemme.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Kunne ikke laste ned naturlige stemmer. Leser med telefonens stemme. Trykk for å prøve igjen.</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>Nedlastingen er stoppet. Leser med telefonens stemme. Trykk for å laste ned.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>Det finnes ingen naturlig stemme for språket ditt ennå. Leser med telefonens stemme.</value></data>
   <data name="VoicePicker_Heading" xml:space="preserve"><value>Velg en stemme</value></data>
   <data name="VoicePicker_Subtitle" xml:space="preserve"><value>Naturlige stemmer lastes ned én gang · teksten din blir på telefonen</value></data>
@@ -130,6 +132,7 @@
   <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Naturlige stemmer er ikke tilgjengelige på denne enheten ennå, så telefonstemmen leser.</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>Velg språk. Vi laster ned en naturlig stemme for det, og til den er klar leser telefonens egen stemme.</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>Prøv nedlastingen igjen</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>Last ned</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Fortsett</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>Begynn å lese</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Stemme {0} (kvinne)</value></data>

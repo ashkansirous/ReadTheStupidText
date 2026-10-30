@@ -26,6 +26,9 @@ public partial class App : Microsoft.Maui.Controls.Application
 		_installer = installer;
 		_ocrPacks = ocrPacks;
 		_installer.Changed += OnInstallerChanged;
+#if DEBUG
+		_installer.DebugMarker = Shared.Testing.TestHookLog.Write; // Slice 204: the held marker the scripted check asserts on
+#endif
 		_ = InitializeSpeechAsync();
 		// OCR pack (Slice 52): checked at every start, on its own; it waits for any voice download itself.
 		_ = _ocrPacks?.EnsureForCurrentLanguageAsync();
@@ -79,7 +82,7 @@ public partial class App : Microsoft.Maui.Controls.Application
 
 		_settings.Language = code;
 		UiCulture.Apply(UiCulture.Resolve(code, CultureInfo.CurrentUICulture));
-		_ = _installer.StartAsync();
+		_ = _installer.StartAsync(PackStartReason.User);
 		ShowMain();
 		return true;
 	}
@@ -96,6 +99,6 @@ public partial class App : Microsoft.Maui.Controls.Application
 			_reader.SetVoice(voiceId);
 		}
 
-		await _installer.StartAsync();
+		await _installer.StartAsync(PackStartReason.Automatic); // Slice 204: a download the user stopped stays stopped
 	}
 }

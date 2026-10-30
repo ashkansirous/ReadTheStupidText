@@ -115,6 +115,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>تعرّض تنزيل الصوت للتلف. تتم القراءة بصوت الهاتف. اضغط لإعادة المحاولة.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>حزمة الأصوات الطبيعية غير صالحة للاستخدام. تتم القراءة بصوت الهاتف.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>تعذّر تنزيل الأصوات الطبيعية. تتم القراءة بصوت الهاتف. اضغط لإعادة المحاولة.</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>توقف التنزيل. تتم القراءة بصوت الهاتف. اضغط للتنزيل.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>لا يتوفر صوت طبيعي للغتك بعد. تتم القراءة بصوت الهاتف.</value></data>
   <data name="VoicePicker_Heading" xml:space="preserve"><value>اختر صوتًا</value></data>
   <data name="VoicePicker_Subtitle" xml:space="preserve"><value>تُنزَّل الأصوات الطبيعية مرة واحدة · يبقى نصك على الهاتف</value></data>
@@ -130,6 +132,7 @@
   <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>الأصوات الطبيعية غير متاحة على هذا الجهاز بعد، لذلك يقرأ صوت الهاتف.</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>اختر لغتك. سنُنزّل صوتًا طبيعيًا لها؛ وإلى أن يصل، يقرأ صوت هاتفك.</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>إعادة محاولة التنزيل</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>تنزيل</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>متابعة</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>ابدأ القراءة</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>الصوت {0} (امرأة)</value></data>

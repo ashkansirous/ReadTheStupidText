@@ -11,6 +11,8 @@
   the VM lock, when no build with this key exists), never "the newest file", so a stale package is not tested by accident.
   Exit code 0 when every check passes, 1 otherwise. -Sabotage KillApp stops the app after its launch check, so the
   remaining checks must fail (proof that a check can fail). Checks run in order and share the one running app.
+  Slice 194 (opt-in): -Check <name> runs the app's first (launch) check, then only that check (a file in checks\, even one
+  not in the default list); -CopyOut <host folder> copies the guest's results\*.png there before the VM is restored.
 #>
 [CmdletBinding()]
 param(
@@ -18,7 +20,9 @@ param(
     [string] $Package,
     [string] $VmRoot = 'D:\ReadTheStupidText-worktrees\_desktop-vm',
     [ValidateSet('None', 'KillApp')] [string] $Sabotage = 'None',
-    [switch] $KeepRunning
+    [switch] $KeepRunning,
+    [string] $Check,
+    [string] $CopyOut
 )
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot\_common.ps1"
@@ -28,6 +32,7 @@ $script:ActiveVmRoot = $VmRoot
 # -App auto: one run per touched app, each through this same script, so a failing app does not hide the next one.
 if ($App -eq 'auto') {
     if ($Package) { throw '-Package names one MSIX; it cannot be combined with -App auto.' }
+    if ($Check -or $CopyOut) { throw '-Check and -CopyOut belong to one app; name it with -App rtst or -App dino, not -App auto.' }
     $touched = @(& "$PSScriptRoot\..\test-targets.ps1" -Platform windows -Raw)
     if ($touched.Count -eq 0) { Write-Host 'NO WINDOWS APP IS TOUCHED BY THIS CHANGE: no desktop test ran. That is a skip, not a test pass.'; exit 0 }
     $worst = 0
@@ -44,6 +49,11 @@ $Apps = @{
     dino = @{ Name = 'AshkanSirous.DinoReader'; Exe = 'DinoReader.App'; Checks = @('dino-launch', 'dino-open-book', 'dino-page-turn', 'dino-settings') }
 }
 $AppProfile = $Apps[$App]
+if ($Check) {
+    if ($Check -notmatch "^$App-[a-z0-9-]+$") { throw "-Check ${Check}: the name must start with '$App-' (a check of this app) and use only lower-case letters, digits and dashes." }
+    if (-not (Test-Path "$PSScriptRoot\checks\$Check.ps1")) { throw "-Check ${Check}: no such file in tools\desktop-vm\checks." }
+    $AppProfile.Checks = @($AppProfile.Checks[0]) + @($Check | Where-Object { $_ -ne $AppProfile.Checks[0] })
+}
 
 function Find-Package {
     if ($Package) { return (Resolve-Path $Package).Path }
@@ -93,6 +103,15 @@ function Install-InGuest {
     }
 }
 
+function Copy-ResultFiles {
+    # Slice 194: pulls the PNGs the checks left in the guest's results folder out to a host folder (before the reset to clean).
+    param($Session, [string] $HostDir)
+    New-Item -ItemType Directory -Force -Path $HostDir | Out-Null
+    $files = @(Invoke-Command -Session $Session -ArgumentList $script:GuestWorkDir -ScriptBlock { param($dir) Get-ChildItem "$dir\results" -Filter *.png -ErrorAction SilentlyContinue | ForEach-Object FullName })
+    foreach ($f in $files) { Copy-Item -FromSession $Session -Path $f -Destination $HostDir -Force; Write-Host "Copied $f to $HostDir" }
+    if (-not $files.Count) { Write-Warning 'CopyOut: the checks left no PNG in the guest results folder.' }
+}
+
 function Write-Results {
     param([object[]] $Results)
     foreach ($r in $Results) {
@@ -127,6 +146,7 @@ try {
         $message = if ($r.noResult) { "$($r.message); screen: $(Get-ScreenText (Save-VmScreenshot -Reason "check-$check"))" } else { $r.message }
         $results += [pscustomobject]@{ check = $check; pass = [bool]$r.pass; message = $message }
     }
+    if ($CopyOut) { Copy-ResultFiles -Session $session -HostDir $CopyOut }
 } catch {
     $failure = $_.Exception.Message
     $hasShot = $failure -match 'screen: \S'

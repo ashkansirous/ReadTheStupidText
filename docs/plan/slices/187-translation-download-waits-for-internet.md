@@ -71,7 +71,7 @@ Decisions (Claude, 2026-10-29; obvious from Slice 182's rules):
 
 Android shows no percentage; RTST has no progress on either platform; ML Kit cannot cancel on Android (the delete-when-done cleanup stays).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-30)
 
 In `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`: ML Kit model downloads go only through `TranslationModelDownloadSession`; never call `MlKitTranslator`'s download directly from a page. (Slice 187: docs/plan/slices/187-translation-download-waits-for-internet.md)
 

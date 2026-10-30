@@ -20,6 +20,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>De download van de stem is beschadigd. Voorlezen met de stem van de telefoon. Tik om het opnieuw te proberen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Het pakket met natuurlijke stemmen is onbruikbaar. Voorlezen met de stem van de telefoon.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Natuurlijke stemmen konden niet worden gedownload. Voorlezen met de stem van de telefoon. Tik om het opnieuw te proberen.</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>Download gestopt. Voorlezen met de stem van de telefoon. Tik om te downloaden.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>Er is nog geen natuurlijke stem voor jouw taal. Voorlezen met de stem van de telefoon.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Terug</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Opslaan</value></data>

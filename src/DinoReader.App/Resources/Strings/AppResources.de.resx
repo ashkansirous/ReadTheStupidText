@@ -21,6 +21,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Der Download der Stimme war beschädigt. Es liest die Handy-Stimme. Tippe, um es noch einmal zu versuchen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Das Paket mit den natürlichen Stimmen ist unbrauchbar. Es liest die Handy-Stimme.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Die natürlichen Stimmen ließen sich nicht herunterladen. Es liest die Handy-Stimme. Tippe, um es noch einmal zu versuchen.</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>Download gestoppt. Es liest die Handy-Stimme. Tippe zum Herunterladen.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>Für deine Sprache gibt es noch keine natürliche Stimme. Es liest die Handy-Stimme.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Zurück</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Speichern</value></data>

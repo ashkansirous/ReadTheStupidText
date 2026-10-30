@@ -100,7 +100,7 @@ public partial class LanguagePage : ContentPage
             ShowProgress();
             ApplyTexts();
             await PackNotificationAsk.AskOnceAsync(AskKeepDownloadingAsync); // Slice 183: asked once, before the first big download
-            _ = _installer.StartAsync();
+            _ = _installer.StartAsync(PackStartReason.User);
             ApplyTexts();
             return;
         }
@@ -123,7 +123,7 @@ public partial class LanguagePage : ContentPage
         TextFlow.ForUi(AppNameLabel, AppResources.App_Name);
         TextFlow.ForUi(IntroLabel, AppResources.Language_Intro);
         TextFlow.ForUi(CountsNoteLabel, AppResources.Language_CountsNote);
-        RetryButton.Text = AppResources.Language_Retry;
+        RetryButton.Text = LocalizedPackStatus.RetryLabel(_installer.State);
         TextFlow.ForUi(RetryButton);
         TextFlow.ForUi(ContinueButton);
         ContinueButton.Text = _started ? AppResources.Language_StartReading : AppResources.Language_Continue;
@@ -135,7 +135,7 @@ public partial class LanguagePage : ContentPage
 
     private void OnRetryClicked(object? sender, EventArgs e)
     {
-        _ = _installer.StartAsync();
+        _ = _installer.StartAsync(PackStartReason.User);
     }
 
     private void ShowProgress()
@@ -155,5 +155,6 @@ public partial class LanguagePage : ContentPage
         TextFlow.ForUi(StatusLabel, LocalizedPackStatus.Compose(_installer.State, _installer.Progress) ?? string.Empty);
         DownloadProgressBar.IsVisible = _installer.State == PackInstallState.Downloading;
         RetryButton.IsVisible = _installer.CanRetry;
+        RetryButton.Text = LocalizedPackStatus.RetryLabel(_installer.State);
     }
 }

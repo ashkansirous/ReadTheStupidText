@@ -208,12 +208,12 @@ public partial class VoicePickerPage : ContentPage
     {
         var retry = new Button
         {
-            Text = AppResources.Language_Retry,
+            Text = LocalizedPackStatus.RetryLabel(_installer.State),
             Margin = new Thickness(12, 0, 12, 10),
             HorizontalOptions = LayoutOptions.Start,
         };
         TextFlow.ForUi(retry);
-        retry.Clicked += (_, _) => _ = _installer.StartAsync();
+        retry.Clicked += (_, _) => _ = _installer.StartAsync(PackStartReason.User);
         return retry;
     }
 

@@ -18,6 +18,7 @@ public static class LocalizedPackStatus
 		PackInstallState.HashMismatch => AppResources.PackStatus_HashMismatch,
 		PackInstallState.InvalidPack => AppResources.PackStatus_InvalidPack,
 		PackInstallState.Failed => AppResources.PackStatus_Failed,
+		PackInstallState.Stopped => AppResources.PackStatus_Stopped,
 		PackInstallState.Unavailable => AppResources.PackStatus_Unavailable,
 		_ => null,
 	};

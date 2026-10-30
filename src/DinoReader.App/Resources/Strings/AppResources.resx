@@ -21,6 +21,7 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>The voice download was corrupted. Reading with the phone voice. Tap to retry.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>The natural voices pack is unusable. Reading with the phone voice.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Couldn't download natural voices. Reading with the phone voice. Tap to retry.</value></data>
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>Download stopped. Reading with the phone voice. Tap to download.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>A natural voice for your language isn't available yet. Reading with the phone voice.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Save</value></data>

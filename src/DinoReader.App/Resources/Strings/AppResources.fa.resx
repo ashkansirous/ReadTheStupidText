@@ -18,6 +18,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>دانلود صدا خراب شد. با صدای گوشی خوانده می‌شود. برای تلاش دوباره ضربه بزنید.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>بستهٔ صداهای طبیعی قابل استفاده نیست. با صدای گوشی خوانده می‌شود.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>صداهای طبیعی دانلود نشد. با صدای گوشی خوانده می‌شود. برای تلاش دوباره ضربه بزنید.</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>دانلود متوقف شد. با صدای گوشی خوانده می‌شود. برای دانلود ضربه بزنید.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>صدای طبیعی برای زبان شما هنوز در دسترس نیست. با صدای گوشی خوانده می‌شود.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>بازگشت</value></data>
   <data name="Common_Save" xml:space="preserve"><value>ذخیره</value></data>

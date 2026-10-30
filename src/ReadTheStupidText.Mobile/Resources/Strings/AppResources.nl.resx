@@ -115,6 +115,8 @@
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>De download van de stem is beschadigd. Voorlezen met de stem van de telefoon. Tik om het opnieuw te proberen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Het pakket met natuurlijke stemmen is onbruikbaar. Voorlezen met de stem van de telefoon.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Natuurlijke stemmen konden niet worden gedownload. Voorlezen met de stem van de telefoon. Tik om het opnieuw te proberen.</value></data>
+  <!-- Slice 204: machine draft, for native review -->
+  <data name="PackStatus_Stopped" xml:space="preserve"><value>Download gestopt. Voorlezen met de stem van de telefoon. Tik om te downloaden.</value></data>
   <data name="PackStatus_Unavailable" xml:space="preserve"><value>Er is nog geen natuurlijke stem voor jouw taal. Voorlezen met de stem van de telefoon.</value></data>
   <data name="VoicePicker_Heading" xml:space="preserve"><value>Kies een stem</value></data>
   <data name="VoicePicker_Subtitle" xml:space="preserve"><value>Natuurlijke stemmen worden één keer gedownload · je tekst blijft op de telefoon</value></data>
@@ -130,6 +132,7 @@
   <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Natuurlijke stemmen zijn op dit apparaat nog niet beschikbaar, dus de telefoonstem leest voor.</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>Kies je taal. We downloaden er een natuurlijke stem voor; tot die er is, leest de eigen stem van je telefoon voor.</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>Download opnieuw proberen</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>Downloaden</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Doorgaan</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>Beginnen met lezen</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Stem {0} (vrouw)</value></data>

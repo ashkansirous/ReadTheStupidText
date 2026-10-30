@@ -43,6 +43,7 @@ signed copy sits in `<VmRoot>\sign` and is deleted in a `finally`. Runs take a h
   the helpers (UIA lookups, tray icon, mouse and keys, log readers). Order matters: later checks use the running app.
   RTST: `rtst-launch`, `rtst-tray-icon`, `rtst-hotkey-read` (clipboard path), `rtst-selection-hotkey` (Notepad selection beats a clipboard decoy), `rtst-panel-speed`, `rtst-startup-task`.
   Dino: `dino-launch`, `dino-open-book`, `dino-page-turn`, `dino-settings` (Slice 189 flow: "For grown-ups" button, the real grown-up gate held 3.5 s with a mouse press via `Invoke-PressAndHold`, sum, grown-up mode, its gear, Settings with its groups, Back, Done to the kids' shelf; no test bypass). Add a check = add the file and its name to `$Apps` in the runner.
+  Opt-in `rtst-panel-screenshot` (Slice 194, not in the default list) retakes the landing-page control panel picture: it raises the guest to 1920x1080, reads sample text, opens the panel from the tray and saves only the panel window as `results\control-panel.png` in the guest work dir. Run `Invoke-DesktopTest.ps1 -App rtst -Check rtst-panel-screenshot -CopyOut <folder in the worktree>` (launch check first, then only this one; the PNG is copied out before the VM is restored); convert to WebP and replace `site/img/control-panel.webp`.
 
 ## Where things live
 
