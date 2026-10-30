@@ -4,6 +4,7 @@ appId: uk.sirous.readthestupidtext
 name: Speed change
 ---
 - launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow only changes the speed setting and reads nothing.
     clearState: true
     arguments:
       cmd: skip-first-run

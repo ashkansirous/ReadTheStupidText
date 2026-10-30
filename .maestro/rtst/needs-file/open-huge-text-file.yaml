@@ -9,6 +9,7 @@ tags:
   - needs-file
 ---
 - launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the pushed 36 MB file sits in /sdcard/Download, outside the app's data, and the flow needs no pack.
     clearState: true
     arguments:
       cmd: skip-first-run

@@ -379,7 +379,7 @@ if ($LogFile) {
 
 $phone = if ($Emulator) { if ($Serial) { $Serial } else { 'emulator-5554' } } else { Find-WirelessPhone $Serial }
 if (-not $phone) { Write-PairingAsk; exit 2 }
-if (-not $Emulator) { Assert-PhoneLease $phone }  # Slice 206: exits 4 when another session holds the real phone (lease.ps1); emulators are not leased
+if (-not $Emulator) { Assert-PhoneLease $phone }  # Slice 206: exits 4 when another session holds the real phone (lease.ps1)
 # Raw logs go to the shared worktrees folder, not into the repo.
 $script:OutDir = Join-Path (Split-Path $script:RepoRoot -Parent) '.phone'
 $null = New-Item -ItemType Directory -Force $script:OutDir
@@ -401,6 +401,24 @@ $held = $null
 if ($apk) { $held = Join-Path $script:OutDir "install-$App-$($script:PhonePlatform)-$PID-$([guid]::NewGuid().ToString('N').Substring(0, 8)).apk" }
 $quiet = $null
 $awake = $null
+# Renews the emulator lease; stops the run (exit 4) when another run took the emulator meanwhile. A phone run holds no emulator lease.
+function Assert-EmulatorLease {
+    if (-not $emulatorLeaseOwner) { return }
+    if (-not (Confirm-DeviceLease $phone $emulatorLeaseOwner $script:EmulatorLeaseMinutes 'emulator')) {
+        Write-Host "LEASE lost: another run took $phone during this timing run. Stopping, so the measurement is not shared."
+        exit $script:ExitLeaseHeld
+    }
+}
+# Slice 207: an emulator is leased too (the same lease as run-flows.ps1), so a timing run never shares it with a flows run. Taken after the build and the
+# -SkipInstall check, right before the try that releases it, and renewed before each timing read.
+$emulatorLeaseOwner = $null
+if ($Emulator) {
+    $leaseOwner = Get-DeviceLeaseOwner 'audio-timing'
+    try { $heldBy = Wait-ForLease $phone $leaseOwner $script:EmulatorLeaseMinutes 15 'emulator' }
+    catch { if ($held) { Remove-Item $held -Force -ErrorAction SilentlyContinue }; throw }  # the lease lock can time out: do not leak the APK copy
+    if ($heldBy) { Write-Host "LEASE held: $phone is used by $heldBy; waited 15 min. Not running."; if ($held) { Remove-Item $held -Force -ErrorAction SilentlyContinue }; exit $script:ExitLeaseHeld }
+    $emulatorLeaseOwner = $leaseOwner
+}
 try {
     if ($apk) {
         # The cached file can be pruned or replaced (-Rebuild, another build) while this run waits for the quiet machine, so install from a copy.
@@ -410,10 +428,12 @@ try {
     # Slice 180: a timing run needs a quiet machine: wait for builds, flows runs and VM runs to end, and hold new ones off until this run is done.
     Write-Host 'Waiting for a quiet machine (no builds, emulator flows or VM runs)...'
     $quiet = Enter-QuietMachine
+    Assert-EmulatorLease  # the wait for the quiet machine can be long
     $power = Write-PowerState $phone
     $awake = Start-KeepAwake $phone  # always on: harmless while charging, and it covers an unplug mid-run
     if ($needsInstall) { Write-Host "   installing $package..."; Install-PhoneApk $phone $apk }
     foreach ($rate in $Rates) {
+        Assert-EmulatorLease
         $read = Invoke-OneRead $phone $rate
         $events = @(ConvertFrom-TimingLog $read.Lines)
         Write-TimingTable "$App at $($rate)x" (Get-ReadTimings $events $read.Tap $rate $GapLimitMs ($App -eq 'dino')) $GapLimitMs
@@ -434,4 +454,5 @@ finally {
     if ($held) { Remove-Item $held -Force -ErrorAction SilentlyContinue }
     Invoke-Adb $phone @('shell', 'am', 'force-stop', $package) | Out-Null
     if ($quiet) { Exit-QuietMachine $quiet }
+    if ($emulatorLeaseOwner) { Remove-Lease $phone $emulatorLeaseOwner 0 'emulator' | Out-Null }
 }

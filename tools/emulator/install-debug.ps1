@@ -10,7 +10,9 @@
 param(
     [Parameter(Mandatory)][ValidateSet('rtst', 'dino')][string]$App,
     [ValidateSet(1, 2)][int]$Instance = 1,
-    [switch]$Rebuild
+    [switch]$Rebuild,
+    # Slice 207: build (or find) the APK and stop: no emulator boot, no install. run-flows.ps1 uses it so the build happens before it takes the emulator lease.
+    [switch]$BuildOnly
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
@@ -87,7 +89,7 @@ function Get-ApkForKey {
 $key = Get-BuildKey
 $buildDir = Get-BuildDir $App 'android' $key
 $apk = if ($Rebuild) { $null } else { Find-CachedBuild $buildDir $apkFilter }
-$boot = Start-EmulatorInBackground
+$boot = if ($BuildOnly) { $null } else { Start-EmulatorInBackground }
 $buildError = $null
 try {
     $sw = [Diagnostics.Stopwatch]::StartNew()
@@ -98,8 +100,9 @@ try {
     }
 } catch { $buildError = $_ }
 # A failed build is the error to see: the boot is still waited for (it must not be left half-started), but its outcome only matters after a good build.
-try { Wait-EmulatorInBackground $boot } catch { if (-not $buildError) { throw } else { Write-Warning "Emulator boot also failed: $($_.Exception.Message)" } }
+if ($boot) { try { Wait-EmulatorInBackground $boot } catch { if (-not $buildError) { throw } else { Write-Warning "Emulator boot also failed: $($_.Exception.Message)" } } }
 if ($buildError) { throw $buildError }
+if ($BuildOnly) { return }
 
 Remove-InstalledKey $App  # until the install succeeds, the device holds no known build
 & $script:Adb -s $script:Serial install --no-incremental -r $apk.FullName

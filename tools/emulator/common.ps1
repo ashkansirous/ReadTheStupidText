@@ -1,5 +1,6 @@
 # Shared helpers for the warm headless emulator scripts (Slice 161). Dot-sourced, not run.
 . (Join-Path $PSScriptRoot 'activity.ps1')
+. (Join-Path $PSScriptRoot '..\lease-common.ps1')  # Slice 207: the emulator lease helpers run-flows.ps1 needs
 # Slice 180: two emulator instances. Instance 1 is the original (AVD RTST_Test, port 5554); instance 2 is RTST_Test2 on port 5556.
 # (The chosen number lives in $script:EmuInstance, never $script:Instance: dot-sourced, that name is the caller's own -Instance parameter.)
 # A script calls Set-EmulatorInstance with its -Instance parameter right after dot-sourcing this file; everything below

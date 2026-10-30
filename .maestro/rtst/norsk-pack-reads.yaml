@@ -7,6 +7,7 @@ appId: uk.sirous.readthestupidtext
 name: Norwegian pack downloads and reads
 ---
 - launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books), on purpose: the flow downloads the Norsk pack from none and then reads with it.
     clearState: true
 - extendedWaitUntil:
     visible:

@@ -4,6 +4,7 @@ appId: uk.sirous.readthestupidtext
 name: First run and language
 ---
 - launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books), on purpose: the flow tests the first-run language page of a fresh install.
     clearState: true
 - extendedWaitUntil:
     visible:

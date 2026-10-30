@@ -8,18 +8,27 @@
   The debug app must already be installed (install-debug.ps1 -App rtst|dino); -Install does that first.
   Slice 180: -App auto runs only the apps the change touches (tools/test-targets.ps1) and prints the ones it skipped and why;
   -Instance 1|2 picks the emulator (default 1; start it with start-warm.ps1 -Instance n).
+  Slice 207: lint-flows.ps1 runs first and stops the run when it finds a problem. A lease on the emulator (tools/lease-common.ps1, owner from
+  $env:RTST_DEVICE_OWNER, else $env:RTST_PHONE_OWNER, else run-flows-<pid>) keeps two runs off one serial: the second prints `LEASE waiting on <owner>`
+  once a minute for up to -LeaseWaitMinutes (default 15), then exits 4 naming the holder.
 #>
 param(
     [Parameter(Mandatory)][ValidateSet('rtst', 'dino', 'auto')][string]$App,
     [ValidateSet(1, 2)][int]$Instance = 1,
     [string]$Flow,
     [switch]$Install,
-    [int]$LogTimeoutSeconds = 40
+    [int]$LogTimeoutSeconds = 40,
+    # Slice 207: how long to wait for another run on the same emulator to end before giving up (exit 4, naming the holder).
+    [int]$LeaseWaitMinutes = 15
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 . (Join-Path $PSScriptRoot 'build-cache.ps1')
 Set-EmulatorInstance $Instance
+
+# Slice 207: a flow with a wrong command name, a bad escape or an unexplained clearState fails here, before any build or device time is spent.
+& (Join-Path $PSScriptRoot 'lint-flows.ps1')
+if ($LASTEXITCODE -ne 0) { Write-Host 'The flow lint failed (see above): fix the flows first. Nothing was built or run.'; exit 1 }
 
 # -App auto: one run per touched app, each through this same script, so a failing app does not hide the next one.
 if ($App -eq 'auto') {
@@ -124,50 +133,94 @@ function Invoke-Flow([string]$Maestro, [System.IO.FileInfo]$File) {
     return [pscustomobject]@{ Name = $File.BaseName; Seconds = $sw.Elapsed.TotalSeconds; Problem = $problem }
 }
 
-$maestro = Find-Maestro
-$env:MAESTRO_CLI_NO_ANALYTICS = '1'
-# Maestro keeps its state and logs under the Java user.home: put them in the shared tools folder, not the user profile.
-$toolsDir = Split-Path (Split-Path (Split-Path $maestro -Parent) -Parent) -Parent
-$script:MaestroOut = Join-Path $toolsDir "maestro-out\i$Instance"
-# One Java user.home per emulator instance, so two flows runs at once never share Maestro's port forwarding or state.
-$script:MaestroHome = Join-Path $toolsDir "maestro-home\i$Instance"
-$null = New-Item -ItemType Directory -Force $script:MaestroOut, $script:MaestroHome
-Write-Host "Instance ${Instance}: Maestro home $($script:MaestroHome)"
-$env:MAESTRO_OPTS = "-Duser.home=$($script:MaestroHome)"
-$env:MAESTRO_CLI_NO_ANALYTICS_NOTIFICATION = '1'
-if ($Install) { & (Join-Path $PSScriptRoot 'install-debug.ps1') -App $App -Instance $Instance }
-else { & (Join-Path $PSScriptRoot 'start-warm.ps1') -Instance $Instance | Out-Null }
-
-# Without -Install the installed app must be the build for the current inputs; a stale one is replaced (from the cache when it exists).
-if (-not $Install) {
-    $currentKey = Get-BuildKey
-    if ((Get-InstalledKey $App) -ne $currentKey) {
-        Write-Host "The installed $App build is not the one for the current inputs (key $currentKey); installing it first."
-        & (Join-Path $PSScriptRoot 'install-debug.ps1') -App $App -Instance $Instance
+# Slice 207: the APK is built (or found in the cache) before the emulator lease is taken, so a cold build never holds the emulator or runs a waiter's wait out.
+# Nothing is built when the installed app already matches the current inputs and -Install is not asked for.
+function Build-BeforeLease {
+    $key = Get-BuildKey
+    $needed = $Install -or ((Get-InstalledKey $App) -ne $key)
+    if ($needed -and -not (Find-CachedBuild (Get-BuildDir $App 'android' $key) '*-Signed.apk')) {
+        & (Join-Path $PSScriptRoot 'install-debug.ps1') -App $App -Instance $Instance -BuildOnly
     }
 }
 
-$ErrorActionPreference = 'Continue'
-$installed = & $script:Adb -s $script:Serial shell pm list packages $packages[$App]
-$ErrorActionPreference = 'Stop'
-if (-not ("$installed" -match [regex]::Escape($packages[$App]))) { throw "$($packages[$App]) is not installed; run install-debug.ps1 -App $App (or pass -Install)." }
-
-$flowDir = Join-Path $script:RepoRoot ".maestro\$App"
-$files = Get-ChildItem $flowDir -Filter '*.yaml' | Where-Object { -not $Flow -or $_.BaseName -eq $Flow } | Sort-Object Name
-if (-not $files) { throw "No flows found in $flowDir$(if ($Flow) { " named $Flow" })." }
-
-$total = [Diagnostics.Stopwatch]::StartNew()
-$activity = Start-Activity "flows-$App-i$Instance"
-try {
-    Clear-AnrDialog 'before the flows'
-    $results = foreach ($file in $files) {
-        $r = Invoke-Flow $maestro $file
-        Write-Host ("{0,-5} {1} ({2:n1} s)" -f $(if ($r.Problem) { 'FAIL' } else { 'PASS' }), $r.Name, $r.Seconds)
-        if ($r.Problem) { Write-Host ($r.Problem -replace '(?m)^', '      ') }
-        $r
+# Renews the lease; stops the run (exit 4) when another run has taken the emulator since, because two runs on one serial is what the lease prevents.
+# Takes the activity slot, but in short waits with the lease renewed between them: the wait for a free slot can outlast the lease (30 min).
+function Start-FlowsActivity([string]$Kind, [string]$Owner) {
+    $deadline = (Get-Date).AddMinutes($script:ActivityWaitMinutes)
+    while ($true) {
+        try { return (Start-Activity $Kind $script:ActivityWaitSliceMinutes) }
+        catch {
+            if ((Get-Date) -ge $deadline -or "$($_.Exception.Message)" -notmatch '^Not starting ') { throw }
+            Assert-LeaseHeld $Owner 'while this run waited for a free slot'
+        }
     }
-    Clear-AnrDialog 'after the flows'
-} finally { Stop-Activity $activity }
-$failed = @($results | Where-Object { $_.Problem }).Count
-Write-Host ("{0}: {1} passed, {2} failed in {3:n1} s." -f $App, (@($results).Count - $failed), $failed, $total.Elapsed.TotalSeconds)
-if ($failed -gt 0) { exit 1 }
+}
+
+function Assert-LeaseHeld([string]$Owner, [string]$When) {
+    if (-not (Confirm-DeviceLease $script:Serial $Owner $script:EmulatorLeaseMinutes 'emulator')) {
+        Write-Host "LEASE lost: another run took $($script:Serial) $When. Stopping so two runs never share one emulator."
+        exit $script:ExitLeaseHeld
+    }
+}
+
+$script:ActivityWaitMinutes = 90
+$script:ActivityWaitSliceMinutes = 10
+Build-BeforeLease
+# One run on an emulator at a time. A second run waits for the first (a clearState in one would wipe the other's book); taken right before the install
+# and released in the finally below (only when this run took it: a waiter that gave up must not remove the holder's lease).
+$leaseOwner = Get-DeviceLeaseOwner 'run-flows'
+$leaseTaken = $false
+try {
+    $heldBy = Wait-ForLease $script:Serial $leaseOwner $script:EmulatorLeaseMinutes $LeaseWaitMinutes 'emulator'
+    if ($heldBy) { Write-Host "LEASE held: $($script:Serial) is used by $heldBy; waited $LeaseWaitMinutes min. Not running flows."; exit $script:ExitLeaseHeld }
+    $leaseTaken = $true
+    $maestro = Find-Maestro
+    $env:MAESTRO_CLI_NO_ANALYTICS = '1'
+    # Maestro keeps its state and logs under the Java user.home: put them in the shared tools folder, not the user profile.
+    $toolsDir = Split-Path (Split-Path (Split-Path $maestro -Parent) -Parent) -Parent
+    $script:MaestroOut = Join-Path $toolsDir "maestro-out\i$Instance"
+    # One Java user.home per emulator instance, so two flows runs at once never share Maestro's port forwarding or state.
+    $script:MaestroHome = Join-Path $toolsDir "maestro-home\i$Instance"
+    $null = New-Item -ItemType Directory -Force $script:MaestroOut, $script:MaestroHome
+    Write-Host "Instance ${Instance}: Maestro home $($script:MaestroHome)"
+    $env:MAESTRO_OPTS = "-Duser.home=$($script:MaestroHome)"
+    $env:MAESTRO_CLI_NO_ANALYTICS_NOTIFICATION = '1'
+    if ($Install) { & (Join-Path $PSScriptRoot 'install-debug.ps1') -App $App -Instance $Instance }
+    else { & (Join-Path $PSScriptRoot 'start-warm.ps1') -Instance $Instance | Out-Null }
+
+    # Without -Install the installed app must be the build for the current inputs; a stale one is replaced (from the cache when it exists).
+    if (-not $Install) {
+        $currentKey = Get-BuildKey
+        if ((Get-InstalledKey $App) -ne $currentKey) {
+            Write-Host "The installed $App build is not the one for the current inputs (key $currentKey); installing it first."
+            & (Join-Path $PSScriptRoot 'install-debug.ps1') -App $App -Instance $Instance
+        }
+    }
+
+    $ErrorActionPreference = 'Continue'
+    $installed = & $script:Adb -s $script:Serial shell pm list packages $packages[$App]
+    $ErrorActionPreference = 'Stop'
+    if (-not ("$installed" -match [regex]::Escape($packages[$App]))) { throw "$($packages[$App]) is not installed; run install-debug.ps1 -App $App (or pass -Install)." }
+
+    $flowDir = Join-Path $script:RepoRoot ".maestro\$App"
+    $files = Get-ChildItem $flowDir -Filter '*.yaml' | Where-Object { -not $Flow -or $_.BaseName -eq $Flow } | Sort-Object Name
+    if (-not $files) { throw "No flows found in $flowDir$(if ($Flow) { " named $Flow" })." }
+
+    $total = [Diagnostics.Stopwatch]::StartNew()
+    $activity = Start-FlowsActivity "flows-$App-i$Instance" $leaseOwner
+    try {
+        Assert-LeaseHeld $leaseOwner 'while this run waited for a free slot'  # the wait for the quiet machine can be long
+        Clear-AnrDialog 'before the flows'
+        $results = foreach ($file in $files) {
+            Assert-LeaseHeld $leaseOwner 'during the flows'  # renewed between flows
+            $r = Invoke-Flow $maestro $file
+            Write-Host ("{0,-5} {1} ({2:n1} s)" -f $(if ($r.Problem) { 'FAIL' } else { 'PASS' }), $r.Name, $r.Seconds)
+            if ($r.Problem) { Write-Host ($r.Problem -replace '(?m)^', '      ') }
+            $r
+        }
+        Clear-AnrDialog 'after the flows'
+    } finally { Stop-Activity $activity }
+    $failed = @($results | Where-Object { $_.Problem }).Count
+    Write-Host ("{0}: {1} passed, {2} failed in {3:n1} s." -f $App, (@($results).Count - $failed), $failed, $total.Elapsed.TotalSeconds)
+    if ($failed -gt 0) { exit 1 }
+} finally { if ($leaseTaken) { Remove-Lease $script:Serial $leaseOwner 0 'emulator' | Out-Null } }

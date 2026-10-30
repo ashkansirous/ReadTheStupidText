@@ -290,3 +290,64 @@ function Invoke-FreshGuest {
         return $null
     } finally { if ($session) { Remove-PSSession $session -ErrorAction SilentlyContinue } }
 }
+
+# ---- Slice 207: preflight. A check may carry a header line `# needs: network, voice-pack`; the runner tests those in the guest before the check runs.
+$script:PreflightExitCode = 3
+$script:PreflightNoGo = 'VM PREFLIGHT NO-GO'
+$script:NetworkProbeUrl = 'https://readthestupidtext.sirous.uk/'
+$script:NetworkProbeSeconds = 10
+$script:KnownNeeds = @('network', 'voice-pack')
+# Pack ids from Application/Reading/PackConstants.cs (SupertonicPackId, StorytellerPackId). The Windows app keeps a pack at
+# <package>\LocalCache\packs\<id> (Infrastructure/Reading/PackFolders.cs: ApplicationData.LocalCacheFolder + "packs").
+$script:VoicePackIds = @{ rtst = 'supertonic-3'; dino = 'kokoro-en' }
+$script:PackSubfolder = 'LocalCache\packs'
+
+function Get-CheckNeeds {
+    # The needs a check script declares in its first lines (`# needs: network, voice-pack`); an unknown word throws, so a typo never skips a guard.
+    param([Parameter(Mandatory)] [string] $Path)
+    $needs = @()
+    foreach ($line in (Get-Content $Path -TotalCount 12)) {
+        if ($line -notmatch '^#\s*needs:\s*(.+?)\s*$') { continue }
+        foreach ($word in ($Matches[1] -split '\s*,\s*')) {
+            if ($script:KnownNeeds -cnotcontains $word) { throw "$Path declares the unknown need '$word' (known: $($script:KnownNeeds -join ', '))." }
+            $needs += $word
+        }
+    }
+    return @($needs | Select-Object -Unique)
+}
+
+function Test-GuestNetwork {
+    # Any HTTP answer from the site counts as network (even an error status); a timeout or DNS failure does not.
+    param([Parameter(Mandatory)] $Session)
+    return [bool](Invoke-Command -Session $Session -ArgumentList $script:NetworkProbeUrl, $script:NetworkProbeSeconds -ScriptBlock {
+        param($url, $seconds)
+        try { Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec $seconds | Out-Null; return $true }
+        catch { return [bool]($_.Exception.Response) }
+    })
+}
+
+function Test-GuestVoicePack {
+    # True when an installed copy of the package has the pack complete by the app's own test: the manifest (pack.json) in LocalCache\packs\<id>
+    # or in its version subfolder (WindowsVoicePackService.LoadInstalled). A half-extracted pack has none.
+    param([Parameter(Mandatory)] $Session, [Parameter(Mandatory)] [string] $PackageName, [Parameter(Mandatory)] [string] $PackId)
+    return [bool](Invoke-Command -Session $Session -ArgumentList $PackageName, $PackId, $script:PackSubfolder, $script:PackManifestFile -ScriptBlock {
+        param($name, $pack, $sub, $manifest)
+        $packages = @(Get-ChildItem (Join-Path $env:LOCALAPPDATA 'Packages') -Directory -Filter "${name}_*" -ErrorAction SilentlyContinue)
+        foreach ($dir in $packages) {
+            $folder = Join-Path $dir.FullName "$sub\$pack"
+            if (-not (Test-Path $folder)) { continue }
+            if (Test-Path (Join-Path $folder $manifest)) { return $true }
+            if (Get-ChildItem $folder -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path (Join-Path $_.FullName $manifest) }) { return $true }
+        }
+        return $false
+    })
+}
+
+function Get-PreflightMissing {
+    # The needed items the guest lacks, as words for the NO-GO line (empty when all are there).
+    param([Parameter(Mandatory)] $Session, [string[]] $Needs, [Parameter(Mandatory)] [string] $PackageName, [Parameter(Mandatory)] [string] $PackId)
+    $missing = @()
+    if (($Needs -contains 'network') -and -not (Test-GuestNetwork -Session $Session)) { $missing += 'network' }
+    if (($Needs -contains 'voice-pack') -and -not (Test-GuestVoicePack -Session $Session -PackageName $PackageName -PackId $PackId)) { $missing += "voice-pack ($PackId)" }
+    return $missing
+}
