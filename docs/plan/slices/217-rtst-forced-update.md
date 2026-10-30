@@ -1,8 +1,8 @@
 ### Slice 217 — Read The Stupid Text: forced update from the remote config
 
-*Planned 2026-10-30.* Port of Dino Reader's forced update (Slice 132) to Read The Stupid Text, on Android, iOS and the Windows tray app.
+*In progress (wave 2026-10-30), draft PR.* Port of Dino Reader's forced update (Slice 132) to Read The Stupid Text, on Android, iOS and the Windows tray app.
 
-**Touches:** `src/ReadTheStupidText.Application/Usage/UsageConfig.cs` (or a new `Application/AppConfig/*` shared with Dino's `DinoReader.Core/AppConfig.cs`), `src/ReadTheStupidText.Mobile.Shared/Usage/RemoteConfigClient.cs`, `src/ReadTheStupidText.Mobile/App.xaml.cs`, `src/ReadTheStupidText.Mobile/UpdatePage*.cs` (new), `src/ReadTheStupidText.App/**` (tray: config client and the update prompt), `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*.resx`, `src/ReadTheStupidText.App/Strings/**`, `tests/ReadTheStupidText.Tests/**`, `.maestro/rtst/**`, `docs/plan/slices/217-rtst-forced-update.md`
+**Touches:** `src/ReadTheStupidText.Application/Usage/UsageConfig.cs` (or a new `Application/AppConfig/*` shared with Dino's `DinoReader.Core/AppConfig.cs`), `src/ReadTheStupidText.Mobile.Shared/Usage/RemoteConfigClient.cs`, `src/ReadTheStupidText.Mobile/App.xaml.cs`, `src/ReadTheStupidText.Mobile/UpdatePage*.cs` (new), `src/ReadTheStupidText.Mobile/ReaderPage.xaml`, `src/ReadTheStupidText.Mobile/ReaderPage*.cs` (R15 card; Slice 215 adds one AutomationId to ReaderPage.xaml, accepted overlap), `src/ReadTheStupidText.App/**` (tray: config client and the update prompt), `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*.resx`, `src/ReadTheStupidText.App/Strings/**`, `tests/ReadTheStupidText.Tests/**`, `.maestro/rtst/**`, `docs/plan/slices/217-rtst-forced-update.md`
 
 #### Why
 
