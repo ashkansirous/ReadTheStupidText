@@ -12,4 +12,4 @@
 
 #### Verification
 
-- `npm test` (worker) and `dotnet test` (`UsageEligibilityTests`) with the same case table; both reject and accept the same versions.
+- `node --test worker/*.test.mjs` (worker) and `dotnet test` (`UsageEligibilityTests`) with the same case table; both reject and accept the same versions.
