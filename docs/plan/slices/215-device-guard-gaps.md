@@ -5,7 +5,7 @@
 **Touches:** `src/ReadTheStupidText.Mobile/ReaderPage.xaml` (one `AutomationId`), `.maestro/**`,
 `tools/emulator/run-flows.ps1`, `tools/emulator/common.ps1`, `tools/emulator/activity.ps1`,
 `tools/emulator/lint-flows.ps1`, `tools/emulator/test-lint-flows.ps1`, `tools/emulator/test-activity.ps1` (new),
-`tools/emulator/fixtures/**`, `tools/emulator/README.md`, `tools/desktop-vm/Invoke-DesktopTest.ps1`,
+`tools/emulator/fixtures/**`, `tools/emulator/README.md`, `tools/desktop-vm/Invoke-DesktopTest.ps1`, `tools/desktop-vm/_common.ps1`, `site/img/control-panel.webp`,
 `.github/workflows/tools-selftests.yml`, `docs/plan/slices/215-device-guard-gaps.md`
 
 **Platforms:** the `AutomationId` is in shared MAUI XAML, so Android and iOS get it together; the rest is Windows-host tooling.
@@ -23,6 +23,7 @@ Slices 207 and 212 left these open without a plan (user, 2026-10-30: "have you p
    `launchApp: {...}` form is split on commas inside values; a `clearState` comment check gives false positives
    (comment above the enclosing item, quoted text); no fixture for an explicit `stopApp: true`.
 5. `Invoke-DesktopTest.ps1` reads the `# needs:` headers twice and prints the skip line twice.
+6. The Slice 194 control-panel shot was never retaken: the VM is offline by design and the clean checkpoint has no voice pack, so the panel shows "Preparing the voice" (and now the Slice 207 preflight says NO-GO).
 
 ## Design (settled; build exactly this)
 
@@ -43,8 +44,11 @@ Slices 207 and 212 left these open without a plan (user, 2026-10-30: "have you p
    against the line directly above the `clearState` key or its enclosing `- launchApp:` item, and ignore text in quotes;
    fixtures for each plus `stopApp: true` (flagged like a missing one, unless it has a restart comment).
 5. Read the `# needs:` headers once in `Invoke-DesktopTest.ps1`.
+6. **Voice pack into the VM.** `Invoke-DesktopTest.ps1 -WithPack <id>` copies a host copy of that pack (the packs release asset, cached under `<worktrees>/_builds/packs/`, downloaded once) into the guest app's `LocalCache\packs\<id>` after the install, before the preflight; the guest stays offline. Then run `rtst-panel-screenshot` with `-WithPack supertonic-3`, crop the build watermark, convert to WebP at 362x525 and replace `site/img/control-panel.webp` (closes the Slice 194 Outstanding line).
 
 ## Verification
+
+- VM: `rtst-panel-screenshot -WithPack supertonic-3` passes preflight and the shot shows the panel ready (no "Preparing the voice"); the site image is replaced.
 
 - Self-tests (lint, activity, lease, test-targets) pass in pwsh and PowerShell 5.1, the way CI runs them (`-command ". 'file'"`).
 - Emulator: the two Farsi flows and the Norsk flow pass with the id; killing `system_server`
