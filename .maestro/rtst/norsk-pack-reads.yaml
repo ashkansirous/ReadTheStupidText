@@ -13,6 +13,12 @@ name: Norwegian pack downloads and reads
     visible:
       id: LanguageList
     timeout: 20000
+# The language list is longer than the emulator screen; Norsk sits below the fold.
+- scrollUntilVisible:
+    element:
+      text: "Norsk"
+    direction: DOWN
+    timeout: 20000
 - tapOn:
     text: "Norsk"
     waitToSettleTimeoutMs: 300
@@ -22,7 +28,8 @@ name: Norwegian pack downloads and reads
 - extendedWaitUntil:
     visible:
       id: LanguageContinue
-      text: "Start reading"
+      # Picking Norsk switches the UI to Norwegian (Language_StartReading in AppResources.nb.resx).
+      text: "Start reading|Begynn å lese"
     timeout: 240000
 - tapOn:
     id: LanguageContinue
