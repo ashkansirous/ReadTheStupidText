@@ -24,6 +24,10 @@ public class UsageEligibilityTests
     [InlineData("1.0.0.0")]
     [InlineData("0.0.0")]
     [InlineData("0.0.0.0")]
+    [InlineData("0.1.1")]
+    [InlineData("0.67.1.2")]
+    [InlineData("00.5")]
+    [InlineData("000.1")]
     [InlineData("")]
     [InlineData(" 1.0 ")]
     public void UnstampedDoesNotCount(string version) =>
@@ -33,6 +37,9 @@ public class UsageEligibilityTests
     [InlineData("1.0.1")]
     [InlineData("1.71.1")]
     [InlineData("2.0")]
+    [InlineData("10.1.0")]
+    [InlineData("100.0.1")]
+    [InlineData("100.x")]
     public void StampedVersionCounts(string version) =>
         Assert.True(UsageEligibility.Counts(Real() with { DisplayVersion = version }));
 

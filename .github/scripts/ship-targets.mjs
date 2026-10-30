@@ -24,7 +24,11 @@
  *   - Markdown anywhere (IGNORED_PATTERNS, case-sensitive like GitHub's `paths`) -> nothing (ignored before matching), except a book's text (CONTENT_MARKDOWN: content/dino/<stem>/story.md)
  *   - docs and anything else                                      -> nothing
  * `windowsstore` is true only for the Windows group's own paths (a core-only change sets `windows`,
- * so the MSIX is rebuilt for the GitHub release, but is not submitted to the Store).
+ * so the MSIX is rebuilt for the GitHub release, but is not submitted to the Store). Slice 218: that flag
+ * is measured from the newest marker tag `rtst-store-v<x.y.z>` that release.yml pushes after a successful submission, not from the last release; so an unsubmitted
+ * Windows change is submitted by the next release even when that release is core-only, docs-only or
+ * Android-only, and a pending submission also turns `windows` on (the MSIX must be built). With no marker
+ * tag, or when the diff against it fails, the flag follows the release diff.
  * A major version bump builds every target (windowsstore included), and so does a missing base tag
  * or a force_all run.
  *
@@ -63,9 +67,19 @@ const DEFAULT_REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 /** Dino Reader's GitVersion config (the twin of the core GitVersion.yml): a path of every Dino target. */
 const DINO_VERSION_CONFIG = 'GitVersion.dino.yml';
 
-/** Each product's tag prefix (also its GitVersion tag-prefix) and the targets its release carries. */
+/**
+ * Marker tag release.yml pushes after a Microsoft Store submission succeeds (Slice 218); the literal in release.yml's
+ * `store-submit-mark` job must match. Not an `rtst-v` tag (so GitVersion and the release scan ignore
+ * it); the store flag is measured from the newest one.
+ */
+export const STORE_TAG_PREFIX = 'rtst-store-v';
+
+/**
+ * Each product's tag prefix (also its GitVersion tag-prefix) and the targets its release carries.
+ * `store` (RTST only): the marker-tag prefix, the flag measured from it and the flag a pending submission switches on.
+ */
 export const PRODUCTS = {
-    rtst: { prefix: 'rtst-v', targets: ['windows', 'windowsstore', 'android', 'ios'] },
+    rtst: { prefix: 'rtst-v', targets: ['windows', 'windowsstore', 'android', 'ios'], store: { prefix: STORE_TAG_PREFIX, flag: 'windowsstore', buildFlag: 'windows' } },
     dino: { prefix: 'dino-v', targets: ['dinoreader', 'dinoapp', 'dinoios', 'dinowin', 'dinostore'] },
 };
 
@@ -281,19 +295,19 @@ function gitRaw(args, cwd) {
 }
 
 /** The newest published tag of a product merged into HEAD (HEAD's own tag included). */
-export function previousReleaseTag(prefix) {
+export function previousReleaseTag(prefix, cwd) {
     try {
-        return newestAppTag(git(['tag', '--merged', 'HEAD', '--list', `${prefix}*`]).split('\n'), prefix);
+        return newestAppTag(git(['tag', '--merged', 'HEAD', '--list', `${prefix}*`], cwd).split('\n'), prefix);
     } catch {
         return null;
     }
 }
 
 /** Files changed since `base`; `--no-renames` lists both sides of a move. */
-export function changedFilesSince(base) {
+export function changedFilesSince(base, cwd) {
     if (!base) return null;
     try {
-        const output = git(['diff', '--no-renames', '--name-only', base, 'HEAD']);
+        const output = git(['diff', '--no-renames', '--name-only', base, 'HEAD'], cwd);
         return output ? output.split('\n') : [];
     } catch {
         return null;
@@ -306,10 +320,10 @@ const COMMIT_START = '\u0001';
 const MESSAGE_END = '\u0002';
 
 /** Commits in `base..HEAD` as `{ message, files }`. */
-export function commitsSince(base) {
+export function commitsSince(base, cwd) {
     if (!base) return [];
     try {
-        const raw = git(['log', '--no-renames', '--name-only', `--format=${COMMIT_START}%B${MESSAGE_END}`, `${base}..HEAD`]);
+        const raw = git(['log', '--no-renames', '--name-only', `--format=${COMMIT_START}%B${MESSAGE_END}`, `${base}..HEAD`], cwd);
         return parseCommits(raw);
     } catch {
         return [];
@@ -346,6 +360,18 @@ function writeOutputs(targets) {
 }
 
 /**
+ * Slice 218: the store flag is measured from the last tag a store submission succeeded for
+ * (`plan.storeChangedFiles`), not from the last release, so a change in a release whose
+ * submission was skipped, failed or cancelled is submitted by the next release. A pending RTST Store
+ * submission also needs the MSIX built and released, so it turns `windows` on.
+ */
+function applySinceLastStore(merged, plan, forceAll, { flag, buildFlag }) {
+    const sinceStore = shipTargets({ changedFiles: plan.storeChangedFiles, bump: plan.bump, forceAll });
+    merged[flag] = merged[flag] || sinceStore[flag];
+    if (buildFlag) merged[buildFlag] = merged[buildFlag] || merged[flag];
+}
+
+/**
  * Combines each product's own plan (`plans.rtst` / `plans.dino`, each `{ changedFiles, bump }`) into one
  * flag set: a product's flags come only from the changes since its own last tag.
  */
@@ -354,17 +380,30 @@ export function shipTargetsPerProduct({ plans, forceAll = false }) {
     for (const [name, product] of Object.entries(PRODUCTS)) {
         const all = shipTargets({ ...plans[name], forceAll });
         product.targets.forEach((target) => { merged[target] = all[target]; });
+        if (product.store && plans[name].storeChangedFiles) applySinceLastStore(merged, plans[name], forceAll, product.store);
     }
     return merged;
 }
 
-function planFor(name, versionEnv) {
+/** The files changed since the product's last store marker tag, or undefined (no marker, or the diff failed: the flag then follows the release diff). */
+function storeChangesFor(name, cwd) {
+    if (!PRODUCTS[name].store) return undefined;
+    const { prefix } = PRODUCTS[name].store;
+    const storeBase = previousReleaseTag(prefix, cwd);
+    if (!storeBase) return console.log(`ship-targets (${name}): no ${prefix}* tag yet, the store flag follows the release diff.`);
+    const files = changedFilesSince(storeBase, cwd);
+    if (files === null) return console.log(`ship-targets (${name}): cannot diff against ${storeBase}, the store flag follows the release diff.`);
+    console.log(`ship-targets (${name}): store changes since ${storeBase}`);
+    return files;
+}
+
+export function planFor(name, versionEnv, cwd) {
     const { prefix } = PRODUCTS[name];
     const targets = PRODUCTS[name].targets.filter((target) => !CONTENT_ONLY_TARGETS.includes(target));
-    const base = previousReleaseTag(prefix);
+    const base = previousReleaseTag(prefix, cwd);
     console.log(base ? `ship-targets (${name}): changes since ${base}` : `ship-targets (${name}): no earlier ${prefix}* tag, building everything.`);
-    const bump = productBump({ baseTag: base, version: process.env[versionEnv], prefix, commits: commitsSince(base), targets });
-    return { changedFiles: changedFilesSince(base), bump };
+    const bump = productBump({ baseTag: base, version: process.env[versionEnv], prefix, commits: commitsSince(base, cwd), targets });
+    return { changedFiles: changedFilesSince(base, cwd), bump, storeChangedFiles: storeChangesFor(name, cwd) };
 }
 
 /**

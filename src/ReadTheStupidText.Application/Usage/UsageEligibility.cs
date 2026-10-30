@@ -35,6 +35,8 @@ public static class UsageEligibility
     public const string NoUsageMarkerFile = "no-usage";
 
     private const string NoUsageOn = "1";
+    private const char VersionSeparator = '.';
+    private const int PreReleaseMajor = 0;
 
     private static readonly string[] UnstampedVersions = ["1.0", "1.0.0", "1.0.0.0", "0.0.0", "0.0.0.0"];
 
@@ -91,6 +93,12 @@ public static class UsageEligibility
     /// <summary>Whether this build and device count.</summary>
     public static bool Counts(UsageFacts facts) => Check(facts) == UsageSkipReason.None;
 
+    // Slice 219: a version below 1.0 (major part 0) is a dev build too, not only the exact project defaults.
     private static bool IsUnstamped(string? version) =>
-        string.IsNullOrWhiteSpace(version) || Array.IndexOf(UnstampedVersions, version.Trim()) >= 0;
+        string.IsNullOrWhiteSpace(version) || Array.IndexOf(UnstampedVersions, version.Trim()) >= 0 || IsPreRelease(version);
+
+    // Same rule as the worker: the first segment parsed as a number is 0 ("0.1", "00.5"), so "10.1" and "100.0" still count.
+    private static bool IsPreRelease(string version) =>
+        int.TryParse(version.Trim().Split(VersionSeparator)[0], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var major)
+        && major == PreReleaseMajor;
 }
