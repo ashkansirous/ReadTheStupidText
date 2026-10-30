@@ -1,6 +1,6 @@
 # Slice 212: hooks reach the running app, and the tool self-tests run in CI
 
-*Built 2026-10-30, not yet verified: see Not yet verified below.*
+*Built 2026-10-30. Verified on the emulator and in CI.*
 
 **Why:** `.maestro/rtst/cancelled-voice-pack-stays-cancelled.yaml` (Slice 204) has never passed on the emulator. Its
 `launchApp` with `arguments: {cmd: cancel-pack-downloads}` stops the running app and cold-starts a new one (maestro.log:
@@ -67,5 +67,5 @@ Already written in `tools/CLAUDE.md` and `.github/CLAUDE.md` in this slice's dif
 
 #### Not yet verified
 
-- The new `tools-selftests.yml` workflow's first run (this PR).
-- The first-run flows (rtst and dino) and `norsk-pack-reads` were not rerun (only a restart comment was added).
+- ~~The new `tools-selftests.yml` workflow's first run (this PR).~~ Green on PR #600 in both shells, after the self-tests got an explicit `exit 0`.
+- ~~The first-run flows (rtst and dino) and `norsk-pack-reads` were not rerun.~~ First-run flows pass; `norsk-pack-reads` was broken (no scroll, English text on a Norwegian screen), fixed and passing in PR #603.
