@@ -200,6 +200,25 @@ test("a count from an unstamped desk build (version 1.0) is dropped for both app
   assert.notEqual(parseRtstEvent({ ...readStarted, version: "1.0.1" }), null);
 });
 
+test("any version below 1.0 (major part 0) is dropped for both apps (Slice 219)", () => {
+  for (const version of ["0.1.1", "0.9", "0.0.1", "0.67.1.2"]) {
+    assert.equal(parseEvent({ ...shelfEvent, version }), null, version);
+    assert.equal(parseRtstEvent({ ...readStarted, version }), null, version);
+  }
+  assert.notEqual(parseEvent({ ...shelfEvent, version: "10.1.0" }), null);
+  assert.notEqual(parseRtstEvent({ ...readStarted, version: "10.0.1" }), null);
+  for (const version of ["00.5", "000.1", "000000.1.2"]) {
+    assert.equal(parseEvent({ ...shelfEvent, version }), null, version);
+    assert.equal(parseRtstEvent({ ...readStarted, version }), null, version);
+  }
+  assert.notEqual(parseEvent({ ...shelfEvent, version: "01.0.1" }), null);
+  assert.notEqual(parseRtstEvent({ ...readStarted, version: "999999.1" }), null);
+  for (const version of ["1234567.1", "-1.2", "0x1.2"]) {
+    assert.equal(parseEvent({ ...shelfEvent, version }), null, version);
+    assert.equal(parseRtstEvent({ ...readStarted, version }), null, version);
+  }
+});
+
 // ---- Read The Stupid Text's phone counts (Slice 137) ----------------------------------------------------------------
 
 const rtst = (name, fields) => ({ name, version: "1.4.0", platform: "android", day: "2026-10-26", sampleRate: 0.5, ...fields });
