@@ -1,12 +1,16 @@
 ### Slice 193 — German store listings for both apps
 
-*Planned 2026-10-29.* Store text only, no app code. Gap found in Slice 168 (both apps read German since then).
+*In progress (wave 2026-10-30, wave 4), draft PR.* *Planned 2026-10-29.* Store text only, no app code. Gap found in Slice 168 (both apps read German since then).
 
 **Touches:** `docs/store-listings/de.md` (new, Read The Stupid Text), `docs/store-listings/dino/de.md` (new, Dino), `STORE.md` (where listings are kept), `docs/plan/slices/193-german-store-listings.md`.
 
 #### Why
 
 Neither app has a German listing on Google Play or the App Store, and Read The Stupid Text has none on the Microsoft Store. Dino's Microsoft Store listing already has German (first submission, 2026-10-29).
+
+#### Claim notes (2026-10-30)
+
+- User, 2026-10-30: draft only tonight; nothing goes live until the user approves the German text.
 
 #### Agents
 
