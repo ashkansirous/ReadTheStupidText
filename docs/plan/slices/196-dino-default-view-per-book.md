@@ -1,6 +1,6 @@
 ### Slice 196 — Dino: each book opens in the view that fits it
 
-*Planned.*
+*In progress (wave 2026-10-30), draft PR.*
 
 **Touches:** `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryJson.cs`, `tools/DinoReader.BookBuilder/Books.cs`, `tools/DinoReader.BookBuilder/StoreBuilder.cs`, `tools/DinoReader.BookBuilder/BookHash.cs`, `content/dino/good-enough/book.json`, the committed Good Enough starter package, `tests/DinoReader.Tests/**`, `src/DinoReader.Core/CLAUDE.md`
 
