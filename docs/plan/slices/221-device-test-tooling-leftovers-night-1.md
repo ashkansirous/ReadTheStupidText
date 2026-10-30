@@ -2,7 +2,7 @@
 
 *parked: feedback loop, waits for the user.* Planned 2026-10-30 by the round 1 feedback loop ([note](../notes/2026-10-30-2100-feedback-loop-w1.md)). Parked so no later wave tonight builds it; the user moves it to `planned`.
 
-**Touches:** `src/DinoReader.App/Testing/**`, `tools/emulator/install-debug.ps1`, `tools/phone/run-checks.ps1`, `tools/phone/common.ps1`, `tools/CLAUDE.md`, `.github/workflows/release.yml` (item 4 only), `docs/plan/slices/221-device-test-tooling-leftovers-night-1.md`
+**Touches:** `src/DinoReader.App/Testing/**`, `tools/emulator/install-debug.ps1`, `tools/phone/run-checks.ps1`, `tools/phone/common.ps1`, `tools/phone/lease*.ps1`, `tools/CLAUDE.md`, `.github/workflows/release.yml` (item 4 only), `docs/plan/slices/221-device-test-tooling-leftovers-night-1.md`
 
 #### Work
 
@@ -16,6 +16,8 @@
    - [ ] Decide: give `workflow_dispatch` runs their own concurrency group (and check the two can't release the same version at once), or keep the tooling rule only.
 5. **Worker typecheck in fast checks** (Slice 219, entries 431-448): the builder's checks never ran `tsc` (no `node_modules`), so CI went red. The agents now install dependencies first (ClaudeSkills PR #95).
    - [x] `worker/CLAUDE.md` names `npm ci && npm run typecheck` as the worker's fast check (done in the round 1 feedback-loop PR).
+6. **The phone lease does not stop a second run by the same owner** (Slice 210 S21 run, digest entry 1202): a device-test agent started a second copy of the S21 run by mistake and had to kill it.
+   - [ ] `tools/phone` refuses to start while a run with the same lease owner is still alive (pid in the lease), unless `-Force`. Verify: start a run, start a second one, the second exits with a clear message.
 
 #### Verification
 

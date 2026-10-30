@@ -55,7 +55,8 @@ Why users stayed on 1.67.1 is still unproven (1.73.2 was committed to Partner Ce
 
 #### Not yet verified
 
-- actionlint on the new `store-submit-mark` job (CI runs it).
+*actionlint on the new `store-submit-mark` job passed on PR #630 (run 41130690864), checked 2026-10-30.*
+
 - The first `rtst-store-v<x.y.z>` marker tag is created after the force_all run.
 - Partner Center shows the new version, and why 1.67.1 stayed live after rtst-v1.73.2's "Submission commit success".
 - High review 4: what a Store backlog that keeps failing costs (an RTST MSIX build on every merge); check the release runs after the first failed submission, if one happens.

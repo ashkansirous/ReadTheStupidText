@@ -1,6 +1,6 @@
 ### Slice 222 — Microsoft Store marker: findings of the rerun Slice 218 medium review
 
-*parked: feedback loop, waits for the user.* Planned 2026-10-30 by the round 1 feedback loop ([note](../notes/2026-10-30-2100-feedback-loop-w1.md)). Slice 218 merged on an incomplete medium pass; the loop reran it on the merged diff (`050e076^1..050e076`) and it found the items below. None is proven yet: each is read from the code. The force_all run 41137137107 (in progress at 22:30 UTC) is the first real test of items 1-3. Check its `store-submit-mark` job first.
+*parked: feedback loop, waits for the user.* Planned 2026-10-30 by the round 1 feedback loop ([note](../notes/2026-10-30-2100-feedback-loop-w1.md)). Slice 218 merged on an incomplete medium pass; the loop reran it on the merged diff (`050e076^1..050e076`) and it found the items below. None is proven yet: each is read from the code, and the reviewer wrote that it did not verify 1-4 and 7 itself; it also said its fork partly read the wrong base (two out-of-diff findings were dropped), so recheck each against `050e076^1..050e076` before fixing. The force_all run 41137137107 (in progress at 22:30 UTC) is the first real test of items 1-3. Check its `store-submit-mark` job first.
 
 **Touches:** `.github/workflows/release.yml`, `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets.test.mjs`, `.github/CLAUDE.md`, `docs/plan/slices/222-store-marker-hardening.md`
 
