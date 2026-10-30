@@ -49,3 +49,4 @@ foreach ($line in $rtstTests, $dinoTests) {
 
 if ($failed) { Write-Host "$failed check(s) failed."; exit 1 }
 Write-Host "All test-targets -Checks checks pass (PowerShell $($PSVersionTable.PSVersion))."
+exit 0

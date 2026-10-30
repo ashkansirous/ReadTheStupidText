@@ -21,8 +21,9 @@ name: Grown-ups button, gear, book sheet and back chain
     id: GallerySettings
 - assertNotVisible:
     id: TileMore
-# A relaunch without clearState keeps the books; the hook enters grown-up mode once the shelf is up.
+# The hook goes to the running app (stopApp: false), so the books stay; the hook enters grown-up mode once the shelf is up.
 - launchApp:
+    stopApp: false
     arguments:
       cmd: enter-grown-up
 - extendedWaitUntil:

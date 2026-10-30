@@ -1,4 +1,4 @@
-# Slice 162: pick 1.5x in Settings; the state hook (a relaunch with cmd: state) then reports speed=1.5.
+# Slice 162: pick 1.5x in Settings; a restart then the state hook (cmd: state) reports speed=1.5, which proves the speed was saved.
 # expect-log: STATE language=en reader=Idle speed=1.5
 appId: uk.sirous.readthestupidtext
 name: Speed change
@@ -30,6 +30,7 @@ name: Speed change
     visible:
       id: PlayButton
     timeout: 10000
+# launchApp-restart: a cold start proves the 1.5x speed is saved, not just held in memory; nothing follows the hook.
 - launchApp:
     arguments:
       cmd: state

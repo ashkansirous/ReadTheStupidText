@@ -15,10 +15,11 @@ Maestro (2.12) lives in `<worktrees folder>\.tools\maestro` or `$env:MAESTRO_HOM
 ## Rules for a flow
 
 - Find elements by `AutomationId` (`id:`), never by text or position. A new screen gets `AutomationId`s on the controls a flow touches. On Android the id is the resource-id `<package>:id/<AutomationId>`.
-- Reach the screen under test with a **test hook**, not by tapping through first run. Put the hook in the `launchApp` `arguments` (`cmd: skip-first-run`, `lang: en`); a relaunch without `clearState` keeps the data, so `launchApp: {arguments: {cmd: state}}` reports state mid-flow.
+- Reach the screen under test with a **test hook**, not by tapping through first run. Put the hook in the `launchApp` `arguments` (`cmd: skip-first-run`, `lang: en`); a hook sent mid-flow to the running app is `launchApp: {stopApp: false, arguments: {cmd: state}}` (without `stopApp: false` Maestro restarts the app and the restart can swallow the hook); a deliberate restart needs a `# launchApp-restart: <why>` comment above it. `lint-flows.ps1` enforces this for every launchApp after the first.
 - Assert on logcat markers with header comments: `# expect-log: READ_START`. `run-flows.ps1` waits for each text in the `RTST-TEST` log (`adb logcat -s RTST-TEST`) after the flow.
 - `tapOn` gets `waitToSettleTimeoutMs: 300`: the voice-pack download animates the screen, and Maestro otherwise waits seconds for it to settle.
 - Wait for a page with `extendedWaitUntil` before tapping on it.
+- A flow that needs a network state says so in its header (above `---`) with `# needs: cellular-only` (Wi-Fi off, mobile data on); `run-flows.ps1` sets it before that flow and turns Wi-Fi back on after it, even when it fails. A comment alone does nothing. `lint-flows.ps1` rejects unknown `needs` values.
 - Every `clearState` has a comment line right above it that starts `# clearState:` and says what it wipes (settings, downloaded voice/OCR packs, own books) and why that is fine for this flow; it also wipes the voice pack. `tools/emulator/lint-flows.ps1` fails the run on a missing comment, on a command name that is not a Maestro command, on a bad escape such as `\+` in a double-quoted string, and on an `appId` that is not a dev package.
 
 ## Hooks (Debug builds only)

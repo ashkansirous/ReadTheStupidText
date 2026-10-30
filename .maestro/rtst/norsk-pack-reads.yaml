@@ -33,6 +33,7 @@ name: Norwegian pack downloads and reads
     timeout: 20000
 # The saved Language=nb must survive a relaunch (the crash loop of 2026-10-29) and read a Norwegian sentence.
 - launchApp:
+    # launchApp-restart: the saved Language=nb must survive a restart of the app (the crash loop of 2026-10-29).
     arguments:
       cmd: read
       text: "Hei, dette er en kort norsk setning som skal leses høyt."

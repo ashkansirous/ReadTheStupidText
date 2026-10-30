@@ -29,3 +29,4 @@ foreach ($case in $cases) {
 }
 if ($failed) { Write-Host "$failed of $($cases.Count) quoting cases failed (PowerShell $($PSVersionTable.PSVersion))."; exit 1 }
 Write-Host "All $($cases.Count) quoting cases round-trip (PowerShell $($PSVersionTable.PSVersion))."
+exit 0

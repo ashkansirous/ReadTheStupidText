@@ -2,6 +2,7 @@
 # The marker proves the held branch ran on relaunch (a build without the hold never writes it, so the flow fails).
 # run-flows has no negative log check: after the run, read the log and confirm no `PACKDL start pack=piper-*` line follows the relaunch
 # for 30 s (the wait below), and that one follows the tap. The visible "Download stopped" text proves the Stopped state.
+# The UI is Farsi (lang: fa) and the pack status label has no AutomationId, so its text is matched by the fa strings PackStatus_Downloading / PackStatus_Stopped.
 # Android only. The notification's Cancel is fired by the Debug test hook `cancel-pack-downloads`.
 # expect-log: VOICEPACK held-user-cancelled fa
 appId: uk.sirous.readthestupidtext
@@ -17,16 +18,35 @@ name: Cancelled voice pack stays cancelled
     visible:
       id: SettingsButton
     timeout: 20000
+# Slice 183: the "keep downloading when the phone is locked?" sheet covers the screen; answer Not now by its Android button id (button2 = the cancel button, any language).
+- extendedWaitUntil:
+    visible:
+      id: "android:id/button2"
+    timeout: 15000
+    optional: true
+- tapOn:
+    id: "android:id/button2"
+    optional: true
+# The download must be running before the cancel.
+- extendedWaitUntil:
+    visible:
+      text: "در حال دانلود صداهای طبیعی.*"
+    timeout: 60000
+# stopApp: false (Slice 212): the hook goes to the running app as a new intent; a restart would kill it before HOOKS installed.
 - launchApp:
+    stopApp: false
     arguments:
       cmd: cancel-pack-downloads
-- waitForAnimationToEnd:
-    timeout: 10000
+# The cancel was saved and Stopped published; only then is it safe to stop the app.
+- extendedWaitUntil:
+    visible:
+      text: "دانلود متوقف شد.*"
+    timeout: 30000
 - stopApp
 - launchApp
 - extendedWaitUntil:
     visible:
-      text: "Download stopped.*"
+      text: "دانلود متوقف شد.*"
     timeout: 20000
 # Real 30 s wait with the app in front (Slice 204): nothing with this id ever shows, so this times out after 30000 ms and
 # optional: true lets the flow go on. A held pack must not start by itself, so it must not show Downloading meanwhile.
@@ -36,13 +56,13 @@ name: Cancelled voice pack stays cancelled
     timeout: 30000
     optional: true
 - assertNotVisible:
-    text: "Downloading natural voices.*"
+    text: "در حال دانلود صداهای طبیعی.*"
 - assertVisible:
-    text: "Download stopped.*"
+    text: "دانلود متوقف شد.*"
 # the user's tap starts it again
 - tapOn:
-    text: "Download stopped.*"
+    text: "دانلود متوقف شد.*"
 - extendedWaitUntil:
     visible:
-      text: "Downloading natural voices.*"
+      text: "در حال دانلود صداهای طبیعی.*"
     timeout: 20000

@@ -1,5 +1,6 @@
 # Slice 186: Cancel on the voice download notification must not start the scan (OCR) pack by itself.
 # The marker proves the hold branch ran; run-flows has no negative log check, so "no download" and the restart case are covered by unit tests.
+# The UI is Farsi (lang: fa) and the pack status label has no AutomationId, so its text is matched by the fa strings PackStatus_Downloading / PackStatus_Stopped.
 # Android only. The notification's Cancel is fired by the Debug test hook `cancel-pack-downloads` (the service is not exported and Maestro has no shade command); it runs the same PackDownloadHost cancel path. On a build without the hold the marker never appears and the flow fails.
 # expect-log: OCRPACK held-voice-cancelled fa
 appId: uk.sirous.readthestupidtext
@@ -15,11 +16,29 @@ name: Voice cancel holds the scan pack
     visible:
       id: SettingsButton
     timeout: 20000
+# Slice 183: the "keep downloading when the phone is locked?" sheet covers the screen; answer Not now by its Android button id (button2 = the cancel button, any language).
+- extendedWaitUntil:
+    visible:
+      id: "android:id/button2"
+    timeout: 15000
+    optional: true
+- tapOn:
+    id: "android:id/button2"
+    optional: true
+# The download must be running before the cancel, and the cancel must have taken effect before the state hook.
+- extendedWaitUntil:
+    visible:
+      text: "در حال دانلود صداهای طبیعی.*"
+    timeout: 60000
 - launchApp:
+    stopApp: false
     arguments:
       cmd: cancel-pack-downloads
-- waitForAnimationToEnd:
-    timeout: 35000
+- extendedWaitUntil:
+    visible:
+      text: "دانلود متوقف شد.*"
+    timeout: 30000
+# launchApp-restart: the scan pack decides at app start whether the user-cancelled voice pack holds it, so a cold start is what writes the OCRPACK marker.
 - launchApp:
     arguments:
       cmd: state

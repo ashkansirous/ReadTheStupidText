@@ -85,3 +85,4 @@ try {
 
 if ($failed) { Write-Host "$failed check(s) failed."; exit 1 }
 Write-Host "All emulator-lease checks pass (PowerShell $($PSVersionTable.PSVersion))."
+exit 0

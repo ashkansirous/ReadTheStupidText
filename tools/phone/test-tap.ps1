@@ -109,3 +109,4 @@ try {
 
 if ($failed) { Write-Host "$failed tap checks failed (PowerShell $($PSVersionTable.PSVersion))."; exit 1 }
 Write-Host "All tap checks pass (PowerShell $($PSVersionTable.PSVersion))."
+exit 0
