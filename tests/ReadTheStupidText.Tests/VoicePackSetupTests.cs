@@ -521,6 +521,93 @@ public class VoicePackSetupTests
     }
 
     [Fact]
+    public async Task Cancel_on_the_notification_holds_the_scan_pack_for_that_language_until_the_voice_is_ready()
+    {
+        var settings = new FakeSettings { Language = "fa" };
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack]) };
+        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, new MemoryVoiceCancelStore());
+        Task<bool> cancelled = packs.BlockFirstDownload();
+
+        Task run = installer.StartAsync();
+        await packs.FirstDownloadStarted;
+        PackDownloadHost.RaiseCancelRequested(FarsiPack.Id);
+        await run;
+        await cancelled;
+
+        Assert.True(installer.IsUserCancelled("fa"));
+        Assert.False(installer.IsUserCancelled("en"));
+
+        await installer.StartAsync(); // the user's retry reaches Ready
+        Assert.False(installer.IsUserCancelled("fa"));
+    }
+
+    [Fact]
+    public async Task A_cancel_hold_survives_a_restart_through_the_installer_and_a_stale_run_leaves_none()
+    {
+        var store = new MemoryVoiceCancelStore();
+        var settings = new FakeSettings { Language = "fa" };
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack]) };
+        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, store);
+        Task<bool> cancelled = packs.BlockFirstDownload();
+
+        Task run = installer.StartAsync();
+        await packs.FirstDownloadStarted;
+        PackDownloadHost.RaiseCancelRequested(FarsiPack.Id);
+        await run;
+        await cancelled;
+
+        var restarted = new VoicePackInstaller(new FakePacks(), new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, store);
+        Assert.True(restarted.IsUserCancelled("fa"));
+
+        var staleStore = new MemoryVoiceCancelStore();
+        var stalePacks = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack]) };
+        var staleSettings = new FakeSettings { Language = "fa" };
+        var stale = new VoicePackInstaller(stalePacks, new FakeModel(), new NoopReader(), staleSettings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, staleStore);
+        Task<bool> staleCancelled = stalePacks.BlockFirstDownload();
+        Task staleRun = stale.StartAsync();
+        await stalePacks.FirstDownloadStarted;
+        staleSettings.Language = "en"; // the language moved on under the running download
+        PackDownloadHost.RaiseCancelRequested(FarsiPack.Id);
+        await staleCancelled;
+
+        Assert.Null(staleStore.Read());
+        _ = staleRun;
+    }
+
+    [Fact]
+    public async Task A_cancel_after_the_voice_is_Ready_leaves_no_hold()
+    {
+        var store = new MemoryVoiceCancelStore();
+        var settings = new FakeSettings { Language = "fa" };
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack]) };
+        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, store);
+
+        await installer.StartAsync();
+        PackDownloadHost.RaiseCancelRequested(FarsiPack.Id);
+
+        Assert.Equal(PackInstallState.Ready, installer.State);
+        Assert.Null(store.Read());
+    }
+
+    [Fact]
+    public async Task A_language_change_lifts_the_hold_and_an_offline_end_never_sets_it()
+    {
+        var settings = new FakeSettings { Language = "fa" };
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack]), DownloadResult = PackDownloadResult.Offline };
+        var notifier = new FakeNotifier();
+        var store = new MemoryVoiceCancelStore();
+        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), notifier, null, store);
+
+        await installer.StartAsync();
+        Assert.False(installer.IsUserCancelled("fa")); // Offline is not a user cancel
+
+        store.Write("fa");
+        settings.Language = "en";
+        notifier.Raise();
+        Assert.Null(store.Read());
+    }
+
+    [Fact]
     public async Task Rapid_language_flips_never_throw_and_settle_on_the_last_language()
     {
         var settings = new FakeSettings { Language = "fa" };

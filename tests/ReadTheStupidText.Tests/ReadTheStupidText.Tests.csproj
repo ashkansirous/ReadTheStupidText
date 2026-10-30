@@ -30,6 +30,7 @@
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Testing\TestHookCommand.cs" Link="Mobile\TestHookCommand.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Images\CropRect.cs" Link="Mobile\CropRect.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\VoicePackInstaller.cs" Link="Mobile\VoicePackInstaller.cs" />
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\VoiceCancelHold.cs" Link="Mobile\VoiceCancelHold.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackDownloadHost.cs" Link="Mobile\PackDownloadHost.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackKeepAlivePolicy.cs" Link="Mobile\PackKeepAlivePolicy.cs" />
     <!-- The translation download session has no MAUI types (Slice 187). -->

@@ -157,7 +157,9 @@ public sealed class MobileVoicePackService : IVoicePackService
         {
             PackManifest manifest = PackManifest.Parse(File.ReadAllText(manifestPath));
             bool complete = manifest.Id == packId
-                && manifest.MissingFiles(f => File.Exists(Path.Combine(folder, f))).Count == 0;
+                && manifest.MissingFiles(f => File.Exists(Path.Combine(folder, f))).Count == 0
+                && manifest.BrokenTokenFoldersIn(folder).Count == 0; // Slice 201: a pack sherpa would abort on is not installed
+            LogBrokenTokens(packId, manifest, folder);
             return complete ? new InstalledVoicePack(folder, manifest) : null;
         }
         catch (FormatException)
@@ -575,6 +577,15 @@ public sealed class MobileVoicePackService : IVoicePackService
         return nested ? folders[0] : scratch;
     }
 
+    // Debug-only marker (Slice 201): a device check can tell "pack rejected for its tokens.txt" from "pack missing".
+    private static void LogBrokenTokens(string packId, PackManifest manifest, string folder)
+    {
+        if (manifest.BrokenTokenFoldersIn(folder).Count > 0)
+        {
+            System.Diagnostics.Debug.WriteLine($"RTST_PACK_TOKENS_REJECTED pack={packId} version={manifest.Version}");
+        }
+    }
+
     private static void ValidatePayload(PackInfo pack, string payload)
     {
         string manifestPath = Path.Combine(payload, PackConstants.ManifestFileName);
@@ -582,6 +593,11 @@ public sealed class MobileVoicePackService : IVoicePackService
         if (manifest.Id != pack.Id || manifest.MissingFiles(f => File.Exists(Path.Combine(payload, f))).Count > 0)
         {
             throw new InvalidDataException("The downloaded pack does not match its manifest.");
+        }
+
+        if (manifest.BrokenTokenFoldersIn(payload).Count > 0)
+        {
+            throw new InvalidDataException("The downloaded pack has a tokens.txt the speech engine cannot read.");
         }
     }
 

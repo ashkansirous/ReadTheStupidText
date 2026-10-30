@@ -63,13 +63,18 @@ public sealed record PageRegion(NormalizedRect Box, IReadOnlyList<int> LineIndex
 /// <summary>One page: its text and, for a scanned or photographed page, the image file name inside the story folder
 /// and the recognised lines with their boxes (Slice 64), which picture mode boxes while a sentence is spoken. The text is
 /// composed from the lines of the included regions (Slice 79); null regions (an older story) include every line.</summary>
-public sealed record StoryPage(string Text, string? ImageFile = null, IReadOnlyList<PageLine>? Lines = null, IReadOnlyList<PageRegion>? Regions = null)
+public sealed record StoryPage(string Text, string? ImageFile = null, IReadOnlyList<PageLine>? Lines = null, IReadOnlyList<PageRegion>? Regions = null, bool? PicturePrintsWords = null)
 {
     /// <summary>The lines whose region is included: the ones the page text is made of.</summary>
     public IReadOnlyList<PageLine> IncludedLines => ImportedText.IncludedLines(Lines ?? [], Regions);
 
     /// <summary>Where each included line sits in <see cref="Lines"/>.</summary>
     public IReadOnlyList<int> IncludedLineIndexes => ImportedText.IncludedIndexes(Lines?.Count ?? 0, Regions);
+
+    /// <summary>Whether Picture only still shows this page's text card (Slice 196): only in a book whose pictures carry its words
+    /// (<paramref name="textInPictures"/>), for a page whose picture has no printed words (no lines), as a page with no picture does.
+    /// Every other book's Picture only is unchanged. A translated page drops its lines, so it carries <see cref="PicturePrintsWords"/> from its source page.</summary>
+    public bool ShowsTextCardInPictureOnly(bool textInPictures) => textInPictures && ImageFile is not null && !(PicturePrintsWords ?? Lines is { Count: > 0 });
 }
 
 /// <summary>A story on the device: its pages, its cover choice and the cast worked out at import. <see cref="NarratorVoiceId"/> is only what
@@ -94,7 +99,8 @@ public sealed record Story(
     bool ShowOriginalText = false,
     IReadOnlyDictionary<int, PageRecording>? Recordings = null,
     bool UseRecordings = false,
-    bool AnimalSoundsOn = true)
+    bool AnimalSoundsOn = true,
+    bool TextInPictures = false)
 {
     public const string PageSeparator = "\n\n";
 
@@ -160,9 +166,9 @@ public sealed record Story(
     /// <summary>Whether any page carries a picture (a scanned or photographed page).</summary>
     public bool HasPictures => Pages.Any(p => p.ImageFile is not null);
 
-    /// <summary>The mode the reading screen opens in (Slice 151): a book without pictures has only text; a book with pictures opens in
-    /// the child's saved choice, else picture and text.</summary>
-    public ReadingMode Mode => HasPictures ? PreferredMode ?? ReadingMode.PictureAndText : ReadingMode.Text;
+    /// <summary>The mode the reading screen opens in (Slice 151, 196): a book without pictures has only text; a book with pictures opens in
+    /// the child's saved choice, else picture only when the pictures carry the words (<see cref="TextInPictures"/>), else picture and text.</summary>
+    public ReadingMode Mode => HasPictures ? PreferredMode ?? (TextInPictures ? ReadingMode.PictureOnly : ReadingMode.PictureAndText) : ReadingMode.Text;
 
     public static string JoinPages(IEnumerable<StoryPage> pages) =>
         string.Join(PageSeparator, pages.Select(p => p.Text));

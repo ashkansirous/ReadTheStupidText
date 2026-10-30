@@ -1,0 +1,26 @@
+# Slice 186: Cancel on the voice download notification must not start the scan (OCR) pack by itself.
+# The marker proves the hold branch ran; run-flows has no negative log check, so "no download" and the restart case are covered by unit tests.
+# Android only. The notification's Cancel is fired by the Debug test hook `cancel-pack-downloads` (the service is not exported and Maestro has no shade command); it runs the same PackDownloadHost cancel path. On a build without the hold the marker never appears and the flow fails.
+# expect-log: OCRPACK held-voice-cancelled fa
+appId: uk.sirous.readthestupidtext
+name: Voice cancel holds the scan pack
+---
+- launchApp:
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: SettingsButton
+    timeout: 20000
+- launchApp:
+    arguments:
+      cmd: cancel-pack-downloads
+- waitForAnimationToEnd:
+    timeout: 35000
+- launchApp:
+    arguments:
+      cmd: state
+- waitForAnimationToEnd:
+    timeout: 8000

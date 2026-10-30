@@ -1,0 +1,65 @@
+# Slice 196: a book whose pictures carry its words (Good Enough) opens in Picture only, any other picture book in Picture + text, and a view the reader picks is kept.
+# The segment labels come from ModeSwitch (SemanticProperties description = label, hint "Selected" on the active one); the device stage confirms how Maestro sees the pair
+# on Android, and shows the first assertion failing against the old behaviour (Good Enough used to open in Picture + text).
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK open-book opened page=1
+appId: uk.sirous.dinoreader
+name: Default view per book
+---
+- launchApp:
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# Good Enough: Picture only is the active segment, Picture + text is not.
+- launchApp:
+    arguments:
+      cmd: open-book
+      id: good-enough
+      page: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 90000
+- assertVisible:
+    text: "Picture only.*Selected"
+- assertNotVisible:
+    text: 'Picture \+ text.*Selected'
+# Pick Picture + text, leave, reopen: the pick is kept.
+- tapOn:
+    text: 'Picture \+ text'
+    waitToSettleTimeoutMs: 300
+# The mode save is fire-and-forget; give it time to reach story.json before launchApp force-stops the app.
+- waitForAnimationToEnd:
+    timeout: 2000
+- extendedWaitUntil:
+    visible:
+      text: 'Picture \+ text.*Selected'
+    timeout: 5000
+- launchApp:
+    arguments:
+      cmd: open-book
+      id: good-enough
+      page: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 90000
+- assertVisible:
+    text: 'Picture \+ text.*Selected'
+# Another starter opens in Picture + text.
+- launchApp:
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 90000
+- assertVisible:
+    text: 'Picture \+ text.*Selected'

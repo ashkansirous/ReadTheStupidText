@@ -13,7 +13,7 @@ namespace DinoReader;
 
 /// <summary>The story's pages with their pictures and recognised lines, and how a picture's file name becomes a path
 /// (Slice 64). Picture mode draws the real pages from it; null for a story without pictures.</summary>
-public sealed record ScanSource(IReadOnlyList<StoryPage> Pages, Func<string?, string?> ResolveImage);
+public sealed record ScanSource(IReadOnlyList<StoryPage> Pages, Func<string?, string?> ResolveImage, bool TextInPictures);
 
 /// <summary>What the surface shows: the story text, its sentences and the font its language is set in.</summary>
 public sealed record ReadingContent(string Text, IReadOnlyList<SentenceSpan> Sentences, string Font, bool RightToLeft,
@@ -350,7 +350,7 @@ public sealed class ReadingSurface : Border
 		if (content.Scans is { } book && PictureTextBook.IsPictureTextBook(book.Pages))
 		{
 			return new PictureTextPages(content.Text, book.Pages, content.Sentences, book.ResolveImage, content.Font, theme,
-				content.RightToLeft, sentence => SentenceTapped?.Invoke(this, sentence), e => OnSwiped(this, e), _mode == ReadingMode.PictureAndText);
+				content.RightToLeft, sentence => SentenceTapped?.Invoke(this, sentence), e => OnSwiped(this, e), _mode == ReadingMode.PictureAndText, book.TextInPictures);
 		}
 
 		return content.Scans is { } scans

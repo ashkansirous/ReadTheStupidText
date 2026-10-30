@@ -17,6 +17,7 @@ public sealed class TestHookDispatcher
 	public const string SkipFirstRun = "skip-first-run";
 	public const string StopRead = "stop-read";
 	public const string State = "state";
+	public const string CancelPackDownloads = "cancel-pack-downloads";
 	public const string Read = "read";
 	public const string TextKey = "text";
 	public const string SpeedKey = "speed";
@@ -125,6 +126,7 @@ public sealed class TestHookDispatcher
 		{
 			StopRead => Stop(),
 			State => Report(),
+			CancelPackDownloads => CancelDownloads(),
 			Read => StartRead(command),
 			_ => AppCommands?.Invoke(command) ?? Unknown,
 		};
@@ -235,6 +237,18 @@ public sealed class TestHookDispatcher
 		{
 			TestHookLog.Write($"{TestHookLog.HookPrefix} {Read} fault {TestHookLog.FaultSummary(ex)}");
 		}
+	}
+
+	// Slice 186: the notification's Cancel (the service is not exported, so adb cannot tap it); Failed where the app has no such notification.
+	private static string CancelDownloads()
+	{
+		if (PackDownloadHost.CancelAllActive is not { } cancel)
+		{
+			return Failed;
+		}
+
+		cancel();
+		return Ok;
 	}
 
 	private string Report()

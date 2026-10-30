@@ -33,7 +33,7 @@ internal sealed record AuthoredCharacter(string Name, string Voice, Gender Gende
 /// </summary>
 internal sealed record BookInfo(
     BookKind Kind, string Id, string Title, int Version, int AgeMin, int AgeMax, string Author, string Credits, int Colour, string Added, int Order,
-    string[]? Characters, AuthoredCharacter[]? Cast, Dictionary<string, AnimalKind>? Animals, string[]? NotAnimals, string ContentHash);
+    string[]? Characters, AuthoredCharacter[]? Cast, Dictionary<string, AnimalKind>? Animals, string[]? NotAnimals, string ContentHash, bool? TextInPictures = null);
 
 /// <summary>One free story in the Dino store (Slice 102): its fixed package id, the folder name its files are stored under, the
 /// credit line, the age range and the author the store card and filters use (Slice 112), the generated cover colour and the characters its speech tags must give a voice.</summary>

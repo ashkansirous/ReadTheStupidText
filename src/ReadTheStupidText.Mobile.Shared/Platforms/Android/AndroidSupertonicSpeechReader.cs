@@ -75,6 +75,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     private readonly ISystemLog _log;
     private readonly SentenceAudioSource _sentences;
     private readonly ReadTimingTracker _timing = new();
+    private readonly SentenceProgress _sentenceProgress = new();
     private readonly StallReporter _stall;
 
     // One engine-level pool of native synthesis slots shared by reads and head-start prepares,
@@ -149,6 +150,8 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // the Windows reader does.
     public event EventHandler<ReadChunk>? ChunkChanged;
 
+    public event EventHandler<SentenceChange>? SentenceChanged;
+
     // Raised while the read waits for the next chunk's audio (Slice 148); the UI shows its "still getting the voice ready" overlay.
     public event EventHandler<bool>? StallChanged
     {
@@ -177,6 +180,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         _model = model;
         _log = log ?? new AndroidSystemLog();
         string cacheRoot = FileSystem.Current.CacheDirectory;
+        _sentenceProgress.Changed += change => SentenceChanged?.Invoke(this, change);
         _sentences = new SentenceAudioSource(
             new SentenceAudioCache(new FileSentenceStore(Path.Combine(cacheRoot, SentenceFolderName))), _log);
         PurgeOrphanedChunkFiles(cacheRoot);
@@ -233,6 +237,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             Volatile.Write(ref _firstAudioPending, 1);
 
             _chunks = chunks;
+            _sentenceProgress.Reset();
             _timing.Start(chunks.Count);
             RaiseTiming(TimeSpan.Zero);
 
@@ -426,6 +431,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         StopPolling();
         _chunkCount = 0;
         ProgressChanged?.Invoke(this, 0);
+        _sentenceProgress.Clear();
         _timing.Reset();
         RaiseTiming(TimeSpan.Zero);
         UpdateState(PlaybackState.Idle);
@@ -704,30 +710,33 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             LogFirstUnit("read", units, voice);
         }
 
-        byte[] wav = await JoinSentencesAsync(engine, units, voice, transform, slots, token);
+        (byte[] wav, SentenceTimeline? timeline) = await JoinSentencesAsync(engine, units, voice, transform, slots, token);
         RecordChunkDuration(index, WavFile.TryGetDuration(wav) ?? TimeSpan.Zero);
         _log.Debug($"chunk {index} ({chunk.Length} chars, {units.Count} sentence(s)) ready in " +
             $"{Stopwatch.GetElapsedTime(started).TotalMilliseconds:F0} ms");
-        return await WriteChunkFileAsync(wav);
+        string path = await WriteChunkFileAsync(wav);
+        _sentenceProgress.Register(path, timeline);
+        return path;
     }
 
     // Fetches every sentence's clip and joins them. A cached clip that will not join (corrupt,
     // or a different sample rate) is a miss, not a failed read: the chunk's cached clips are
     // dropped and synthesized afresh. A second failure is real and propagates.
-    private async Task<byte[]> JoinSentencesAsync(
+    private async Task<(byte[] Wav, SentenceTimeline? Timeline)> JoinSentencesAsync(
         BuiltEngine engine, IReadOnlyList<string> units, VoiceInfo voice, IVoicedAudioTransform? transform, SemaphoreSlim slots,
         CancellationToken token)
     {
         byte[][] clips = await GetClipsAsync(engine, units, voice, transform, slots, token);
         try
         {
-            return JoinClips(clips, transform);
+            return (JoinClips(clips, transform), TimelineOf(clips, transform));
         }
         catch (InvalidDataException ex)
         {
             _log.Warning("cached sentence audio would not join; resynthesizing the chunk", error: ex);
             units.ToList().ForEach(u => _sentences.Invalidate(KeyFor(engine, u, voice, transform)));
-            return JoinClips(await GetClipsAsync(engine, units, voice, transform, slots, token), transform);
+            clips = await GetClipsAsync(engine, units, voice, transform, slots, token);
+            return (JoinClips(clips, transform), TimelineOf(clips, transform));
         }
     }
 
@@ -742,6 +751,9 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
 
     private static byte[] JoinClips(byte[][] clips, IVoicedAudioTransform? transform) =>
         clips.Length == 1 ? ValidClip(clips[0]) : WavFile.Concat(clips, VoicedAudio.GapOf(transform));
+
+    private static SentenceTimeline? TimelineOf(byte[][] clips, IVoicedAudioTransform? transform) =>
+        SentenceTimeline.FromClips(clips, VoicedAudio.GapOf(transform));
 
     private static byte[] ValidClip(byte[] clip) =>
         WavFile.IsComplete(clip, clip.LongLength) ? clip : throw new InvalidDataException("Not a WAV written by this app.");
@@ -863,7 +875,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             (s, e) => HandlePlayerError(e, sequence, prepared, ended));
         if (!BeginPrepare(player, wavPath, token))
         {
-            TryDelete(wavPath);
+            DropChunkFile(wavPath);
             return false;
         }
 
@@ -894,6 +906,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         MarkPlayerNotReady();
         StopPolling();
         player.Reset();
+        _sentenceProgress.Select(wavPath);
         DeletePreviousChunkFile();
         _previousChunkFile = _currentChunkFile;
         _currentChunkFile = wavPath;
@@ -954,6 +967,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     {
         PlaybackState state;
         bool changed;
+        string? chunkFile;
         lock (_playerLock)
         {
             if (token.IsCancellationRequested || !IsCurrentChunk(sequence))
@@ -961,6 +975,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
                 return;
             }
 
+            chunkFile = _currentChunkFile;
             _playerReady = true;
             ApplyPlaybackRate(player);
             state = _state == PlaybackState.Paused ? PlaybackState.Paused : PlaybackState.Playing;
@@ -974,9 +989,11 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
 
         LogFirstAudio();
-        ChunkChanged?.Invoke(this, readChunk);
+        _sentenceProgress.Begin(readChunk.Index, chunkFile, () => ChunkChanged?.Invoke(this, readChunk));
         RaiseStateChanged(changed, state);
     }
+
+    private void RaiseSentence(TimeSpan position) => _sentenceProgress.Update(position);
 
     // The chunk played to its end: nothing left to poll or query until the next chunk is prepared.
     private void HandleChunkCompleted(int sequence, TaskCompletionSource<bool> ended)
@@ -1082,6 +1099,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         DeleteCurrentChunkFile();
         _chunkCount = 0;
         ProgressChanged?.Invoke(this, 0);
+        _sentenceProgress.Clear();
         _timing.Reset();
         RaiseTiming(TimeSpan.Zero);
         UpdateState(PlaybackState.Idle);
@@ -1232,6 +1250,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         config.Model.NumThreads = SynthesisThreads;
         config.Model.Provider = "cpu";
         RequireModelFiles(paths, config);
+        RequirePiperTokens(paths, config);
         return new OfflineTts(config);
     }
 
@@ -1263,6 +1282,22 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
                 System.Diagnostics.Debug.WriteLine(message);
                 throw new FileNotFoundException(message, file);
             }
+        }
+    }
+
+    // Slice 201: sherpa-onnx's Piper reader aborts the whole process (no managed exception) on a tokens.txt token of
+    // more than one code point, so a Piper pack is checked here, after the install check, before the native load.
+    private static void RequirePiperTokens(VoiceModelPaths paths, OfflineTtsConfig config)
+    {
+        if (paths.Kind != VoiceEngineKind.Vits)
+        {
+            return;
+        }
+
+        string? problem = PiperTokens.ProblemInFile(config.Model.Vits.Tokens);
+        if (problem is not null)
+        {
+            throw new InvalidDataException($"Piper tokens file '{config.Model.Vits.Tokens}' would crash the speech engine: {problem}.");
         }
     }
 
@@ -1506,6 +1541,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         double withinChunk = duration > 0 ? (double)position / duration : 0;
         double fraction = (chunkIndex + Math.Clamp(withinChunk, 0, 1)) / chunkCount;
         ProgressChanged?.Invoke(this, Math.Clamp(fraction, 0, 1));
+        RaiseSentence(TimeSpan.FromMilliseconds(position));
 
         if (Stopwatch.GetElapsedTime(_lastTimingRaiseTicks) >= TimingRaiseInterval)
         {
@@ -1578,7 +1614,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     {
         if (_previousChunkFile is { } path)
         {
-            TryDelete(path);
+            DropChunkFile(path);
             _previousChunkFile = null;
         }
     }
@@ -1587,9 +1623,16 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     {
         if (_currentChunkFile is { } path)
         {
-            TryDelete(path);
+            DropChunkFile(path);
             _currentChunkFile = null;
         }
+    }
+
+    // Deletes a generated chunk file and forgets its sentence timeline.
+    private void DropChunkFile(string path)
+    {
+        _sentenceProgress.Discard(path);
+        TryDelete(path);
     }
 
     private static void TryDelete(string path)

@@ -32,6 +32,7 @@ public sealed partial class IosSupertonicSpeechReader
     {
         ReleasePlayer();
         _unannouncedChunk = null;
+        _sentenceProgress.Select(wavPath);
         DeletePreviousChunkFile();
         _previousChunkFile = _currentChunkFile;
         _currentChunkFile = wavPath;
@@ -112,8 +113,10 @@ public sealed partial class IosSupertonicSpeechReader
     {
         _unannouncedChunk = null;
         LogFirstAudio();
-        ChunkChanged?.Invoke(this, readChunk);
+        _sentenceProgress.Begin(readChunk.Index, _currentChunkFile, () => ChunkChanged?.Invoke(this, readChunk));
     }
+
+    private void RaiseSentence(TimeSpan position) => _sentenceProgress.Update(position);
 
     private void LogFirstAudio()
     {
@@ -254,6 +257,7 @@ public sealed partial class IosSupertonicSpeechReader
         double withinChunk = duration > 0 ? (double)Volatile.Read(ref _positionTicks) / duration : 0;
         double fraction = (chunkIndex + Math.Clamp(withinChunk, 0, 1)) / chunkCount;
         ProgressChanged?.Invoke(this, Math.Clamp(fraction, 0, 1));
+        RaiseSentence(TimeSpan.FromTicks(Volatile.Read(ref _positionTicks)));
 
         if (Stopwatch.GetElapsedTime(_lastTimingRaiseTicks) >= TimingRaiseInterval)
         {
