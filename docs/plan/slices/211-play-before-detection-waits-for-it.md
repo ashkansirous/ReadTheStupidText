@@ -41,7 +41,13 @@ When Play is tapped and detection has not run for the current text, **run detect
 - `ReviewDecisions.NeedsDetectionAtRead` plus tests.
 - Debug-only `RtstTestCommands` (`src/ReadTheStupidText.Mobile/Testing/`, self-registering module initializer like `DinoTestCommands`) with a `hold-detection` launch hook (10-minute typing delay), used by `.maestro/rtst/play-before-detection.yaml`. Touches widened for it; no other live PR touched those files.
 
-*From review:* high pass: findings 1-6 applied, 7 skipped. Medium pass: 1, 2, 4 applied; 3, 5, 6, 7, 8 skipped.
+*From review:* high pass: findings 1-6 applied, 7 skipped. Medium pass: 1, 2, 4 applied; 3, 5, 6, 7, 8 skipped. The skipped ones (added by the 2026-10-30-2100 round 1 feedback loop, from the review files outside the repo):
+- High 7: this file's Work items were unticked and Verification said the Maestro flow checks the translated read, which it does not (docs).
+- Medium 3: the plain-read path ends the wait and `FinishAsync` starts its own "Preparing the voice" wait, so the overlay may flicker and its 500 ms timer restart.
+- Medium 5: after Cancel, `RescheduleAfterCancel` re-arms detection and discards prepared work, so Cancel then Play waits again.
+- Medium 6: three overlapping booleans; `_detectedNow` is test-only state not reset on the failure and Cancel paths.
+- Medium 7: `DetectSafelyAsync` repeats the try/catch of `DetectAfterDelayAsync` (style).
+- Medium 8: only the `NeedsDetectionAtRead` predicate is unit-tested; the `DetectNowAsync` state machine (cancel, superseded, leave, failure) has no test.
 
 *Device (emulator-5554, 2026-10-30):* `play-before-detection` failed twice (timing: detection settled before the tap), then passed with the hold hook (HOOK hold-detection ok, READ detect-now 369, READ detect-now translated). `translation-waits-for-internet` passed on a clean install; it failed once after `play-before-detection` had changed install state (that flow has no clearState). Tests: 1685 pass; Android build and iOS compile pass.
 

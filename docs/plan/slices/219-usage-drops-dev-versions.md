@@ -16,7 +16,7 @@
 - [x] Client: `UsageEligibility` treats a version below 1.0 as unstamped too (unit test), Android, iOS and Windows alike.
 - [x] Own-machine Windows rows (from Slice 200's live check, left for later there): RTST Windows `1.67.1` rows from our own runs are still counted, because Windows is not arch-dropped. Find what marks our own machine (the `no-usage` switch not set by every Windows harness, or a dev install), close that hole, and say in the report which stored rows are ours. Verify: a read-only query after a local Windows run shows no new row.
   - Finding (review, 2026-10-30): no code hole found. `WindowsUsage.Facts` counts only Store-signed, non-dev installs since Slice 179. The stored Windows `1.67.1` rows predate that gate and are likely ours, but this is not verified. Nothing to close in code; left open for a read-only query after deploy.
-- [ ] `query-analytics` caveat line for old Android rows with no arch (in the reports the agent writes, not code). The skill lives in `D:\ClaudeSkills`, outside this repo, so it is handed to the coordinator and not done in this PR.
+- [x] `query-analytics` caveat line for old Android rows with no arch (in the reports the agent writes, not code). Done in ClaudeSkills PR #95 (`skills/query-analytics/SKILL.md` section 4) by the 2026-10-30-2100 round 1 feedback loop.
 
 #### Verification
 
