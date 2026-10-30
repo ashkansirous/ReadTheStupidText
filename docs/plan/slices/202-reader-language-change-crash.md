@@ -33,6 +33,8 @@ Real S21, Android 15: en -> fa -> sv -> en with text in the reader, the app stay
 
 #### Review minors left (2026-10-30)
 
+- The second review pass (medium) returned the reviewer's own read before the forked `/code-review` finished, so this slice merged on an incomplete second pass (feedback loop 2026-10-30).
+
 - The required order (`InitWait()` before the draft text is set) is kept only by a comment in `ReaderPage.xaml.cs`; nothing tests it. If it can be pulled into a pure step, add a unit test; otherwise a Maestro flow that changes language with text in the reader (Slice 209 `set-language`).
 
 #### Not yet verified
