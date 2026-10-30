@@ -1,8 +1,8 @@
 ### Slice 186 — No scan pack download after the user cancels the voice pack
 
-*Planned 2026-10-29. Follow-up to Slice 183.*
+*In progress (wave 2026-10-30), draft PR.* *Planned 2026-10-29. Follow-up to Slice 183.*
 
-**Touches:** `src/ReadTheStupidText.Mobile/OcrPackInstaller.cs`, `src/ReadTheStupidText.Mobile.Shared/VoicePackInstaller.cs`, `src/ReadTheStupidText.Mobile/App.xaml.cs`, `tests/ReadTheStupidText.Tests/*`, `.maestro/rtst/*`, `docs/plan/slices/186-no-ocr-download-after-voice-cancel.md`.
+**Touches:** `src/ReadTheStupidText.Mobile/OcrPackInstaller.cs`, `src/ReadTheStupidText.Mobile.Shared/VoicePackInstaller.cs`, `src/ReadTheStupidText.Mobile/App.xaml.cs`, `src/ReadTheStupidText.Mobile/CapturePage.xaml.cs` (in-app Cancel only), `tests/ReadTheStupidText.Tests/*`, `.maestro/rtst/*`, `docs/plan/slices/186-no-ocr-download-after-voice-cancel.md`.
 
 #### Why
 
@@ -17,6 +17,10 @@ Grounded on `main` (2026-10-29):
 #### Decision (coordinator's call, obvious behaviour)
 
 A user cancel of the voice pack for a language also holds the automatic scan-pack start for that language. The hold lifts when the voice pack for that language becomes Ready (a user retry), when the user changes language, or when the user opens Scan (the existing on-demand `ScanPackFlow` still asks and downloads). The hold is saved, so an app restart does not start the scan pack either. Offline and Failed voice ends are not user cancels and keep today's behaviour.
+
+#### Claim notes (2026-10-30, grounded)
+
+- `_userCancelled` is set only by `OnNotificationCancel` (`VoicePackInstaller.cs:72-85`). The in-app Cancel is `CapturePage.xaml.cs:452` (`OnCancelDownloadTapped`): trace what it calls and route it through one public `VoicePackInstaller` cancel method, so both cancels set the same saved hold. The hold's single owner is `VoicePackInstaller`; `OcrPackInstaller` only reads it.
 
 #### Work
 
