@@ -1,6 +1,6 @@
 # Slice 215: close the gaps left by Slices 207 and 212
 
-*Planned 2026-10-30.* Follow-up to Slices 207 and 212. Tooling, plus one app id.
+*In progress (wave 2026-10-30), draft PR.* Follow-up to Slices 207 and 212. Tooling, plus one app id.
 
 **Touches:** `src/ReadTheStupidText.Mobile/ReaderPage.xaml` (one `AutomationId`), `.maestro/**`,
 `tools/emulator/run-flows.ps1`, `tools/emulator/common.ps1`, `tools/emulator/activity.ps1`,
