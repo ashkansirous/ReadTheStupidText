@@ -1,8 +1,8 @@
 ### Slice 190 — RTST phone: highlight one sentence at a time, not a whole chunk
 
-*Planned 2026-10-29.* Read The Stupid Text phone app only (Android and iOS). Windows keeps its chunk highlight (user, 2026-10-29). Gap found in Slice 99.
+*In progress (wave 2026-10-30), draft PR.* *Planned 2026-10-29.* Read The Stupid Text phone app only (Android and iOS). Windows keeps its chunk highlight (user, 2026-10-29). Gap found in Slice 99.
 
-**Touches:** `src/ReadTheStupidText.Mobile/ReaderPage.xaml.cs`, `src/ReadTheStupidText.Mobile/ReaderPage.*.cs` (only where the highlight is set), `src/ReadTheStupidText.Application/Reading/ReadTimingTracker.cs`, `src/ReadTheStupidText.Application/Reading/SpeechTextChunker.cs` (sentence spans inside a chunk, if not already exposed), `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader*.cs`, `tests/ReadTheStupidText.Tests/**`, `tools/flows/**` (the reader flow), `docs/plan/slices/190-rtst-phone-sentence-highlight.md`.
+**Touches:** `src/ReadTheStupidText.Mobile/ReaderPage.xaml.cs`, `src/ReadTheStupidText.Mobile/ReaderPage.*.cs` (only where the highlight is set), `src/ReadTheStupidText.Application/Reading/ReadTimingTracker.cs`, `src/ReadTheStupidText.Application/Reading/SpeechTextChunker.cs` (sentence spans inside a chunk, if not already exposed), `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader*.cs`, `tests/ReadTheStupidText.Tests/**`, `.maestro/rtst/**` (the reader flow; `tools/flows/` does not exist), `docs/plan/slices/190-rtst-phone-sentence-highlight.md`.
 
 #### Why
 
