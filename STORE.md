@@ -820,8 +820,10 @@ listing exists a release builds and publishes the MSIX and skips the submission.
 `AZURE_AD_TENANT_ID`, `AZURE_AD_APPLICATION_CLIENT_ID`, `AZURE_AD_APPLICATION_SECRET` and `SELLER_ID`
 secrets as Read The Stupid Text (they belong to the developer account). The very first submission of a
 brand-new listing (age rating, pricing, store listing text) is done once by hand in Partner Center; the
-CLI then pushes updates. The first submission is manual; after it, set the repository variable
-`DINOREADER_STORE_APP_ID=9N9VHRLCZXN5` to turn on `store-submit-dino`.
+CLI then pushes updates. The first submission was made by hand on 2026-10-29 (1.78.1.0) and the app went live on 2026-10-30;
+the repository variable `DINOREADER_STORE_APP_ID=9N9VHRLCZXN5` is set, so every Dino release now submits
+itself (Slice 203). Never start a Partner Center draft by hand while a release may run: the CLI publish
+discards a pending draft.
 
 ## Dino Book Reader: anonymous usage counts (Slice 133, Decisions 140-142)
 

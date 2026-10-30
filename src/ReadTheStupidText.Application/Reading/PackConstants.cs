@@ -9,7 +9,7 @@ namespace ReadTheStupidText.Application.Reading;
 public static class PackConstants
 {
     public const string CatalogUrl =
-        "https://github.com/ashkansirous/ReadTheStupidText/releases/download/packs-9/packs.json";
+        "https://github.com/ashkansirous/ReadTheStupidText/releases/download/packs-10/packs.json";
 
     public const string ManifestFileName = "pack.json";
 
@@ -21,6 +21,9 @@ public static class PackConstants
 
     /// <summary>The MeloTTS Chinese + English voice pack (Slice 51).</summary>
     public const string ChinesePackId = "melo-zh-en";
+
+    /// <summary>The packs whose VITS voices are Piper (espeak-based) and so get the tokens.txt check (Slice 201); other VITS packs do not.</summary>
+    public static readonly IReadOnlySet<string> PiperPackIds = new HashSet<string>(StringComparer.Ordinal) { PersianPackId, NorwegianPackId };
 
     /// <summary>The Piper Norwegian (nb) voice pack, ten nvcc speakers (Slice 104); carries the GPL espeak-ng data (Decision 108).</summary>
     public const string NorwegianPackId = "piper-nb";
