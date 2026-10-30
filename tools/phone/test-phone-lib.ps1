@@ -162,3 +162,4 @@ Assert-Equal 'no file' $null (Select-PrefsFileByKey @('other.xml') @{} 'Language
 
 if ($failed) { Write-Host "$failed phone-lib checks failed (PowerShell $($PSVersionTable.PSVersion))."; exit 1 }
 Write-Host "All phone-lib checks pass (PowerShell $($PSVersionTable.PSVersion))."
+exit 0

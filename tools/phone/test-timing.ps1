@@ -38,3 +38,4 @@ Assert-Equal 'no READ_END is incomplete' $false $partial.Complete
 
 if ($failed) { Write-Host "$failed timing checks failed (PowerShell $($PSVersionTable.PSVersion))."; exit 1 }
 Write-Host "All timing checks pass (PowerShell $($PSVersionTable.PSVersion))."
+exit 0
