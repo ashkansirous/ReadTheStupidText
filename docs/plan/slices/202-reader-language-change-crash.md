@@ -1,6 +1,6 @@
 # Slice 202: changing the app language with text in the reader crashes the app
 
-*Built (fast checks green; device check owed).*
+*Built 2026-10-30 (PR #577); S21 device check PASS; iOS device not run.*
 
 **Touches:** `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `tests/ReadTheStupidText.Tests/**`.
 
@@ -26,3 +26,11 @@ page is rebuilt for the new language and the restored text fires `OnEditorTextCh
 ## Verification
 
 - Fast checks green. Device (after review): on the S21, type text, switch language twice, the app stays up and reads.
+
+## S21 device result (2026-10-30)
+
+Real S21, Android 15: en -> fa -> sv -> en with text in the reader, the app stays up and reads; an empty reader is also fine. Night note: [2026-10-29-s21-night-runs.md](../notes/2026-10-29-s21-night-runs.md).
+
+#### Not yet verified
+
+- iOS device (shared MAUI page, same fix, not run).
