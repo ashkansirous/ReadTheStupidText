@@ -1,8 +1,8 @@
 ### Slice 211 — Play right after typing reads like a later Play would
 
-*Planned 2026-10-30.* From the S21 night runs (Slice 139 race check, docs/plan/notes/2026-10-29-s21-night-runs.md).
+*In progress (wave 2026-10-30), draft PR.* Planned 2026-10-30. From the S21 night runs (Slice 139 race check, docs/plan/notes/2026-10-29-s21-night-runs.md).
 
-**Touches:** `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Mobile/ReviewDecisions.cs`, `src/ReadTheStupidText.Mobile/ReaderPage.Wait.cs` (only if the wait overlay needs a new stage), `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*.resx` (only if a new wait line is needed), `tests/ReadTheStupidText.Tests/**`, `.maestro/rtst/**`, `docs/plan/slices/211-play-before-detection-waits-for-it.md`
+**Touches:** `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Application/Translation/ReviewDecisions.cs`, `src/ReadTheStupidText.Mobile/ReaderPage.Wait.cs` (only if the wait overlay needs a new stage), `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*.resx` (only if a new wait line is needed), `tests/ReadTheStupidText.Tests/**`, `.maestro/rtst/**`, `docs/plan/slices/211-play-before-detection-waits-for-it.md`
 
 #### Why
 
