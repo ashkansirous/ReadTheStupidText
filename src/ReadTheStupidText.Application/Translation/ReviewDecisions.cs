@@ -17,6 +17,14 @@ public static class ReviewDecisions
     public static bool TranslatesOnRead(bool optionShown, bool ticked) => optionShown && ticked;
 
     /// <summary>
+    /// Play before the language was looked at (Slice 211): detection runs at once instead of being skipped, so the same text
+    /// reads the same however fast Play is tapped. Not needed without a detector, without text, or once a pass has finished
+    /// for this text (a failed pass counts: it falls back to the plain read, as before).
+    /// </summary>
+    public static bool NeedsDetectionAtRead(bool hasDetector, bool detectionSettled, string? text) =>
+        hasDetector && !detectionSettled && !string.IsNullOrWhiteSpace(text);
+
+    /// <summary>
     /// The language the read text is spoken in, handed to the main page so its voice follows at once: the
     /// target when the text was translated, else what the detector found (null when it was unsure).
     /// </summary>

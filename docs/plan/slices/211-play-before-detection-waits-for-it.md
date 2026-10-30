@@ -1,8 +1,8 @@
 ### Slice 211 — Play right after typing reads like a later Play would
 
-*In progress (wave 2026-10-30), draft PR.* Planned 2026-10-30. From the S21 night runs (Slice 139 race check, docs/plan/notes/2026-10-29-s21-night-runs.md).
+*Built 2026-10-30, emulator-verified (emulator-5554), not yet verified on the S21 or iOS.* Planned 2026-10-30. From the S21 night runs (Slice 139 race check, docs/plan/notes/2026-10-29-s21-night-runs.md).
 
-**Touches:** `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Application/Translation/ReviewDecisions.cs`, `src/ReadTheStupidText.Mobile/ReaderPage.Wait.cs` (only if the wait overlay needs a new stage), `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*.resx` (only if a new wait line is needed), `tests/ReadTheStupidText.Tests/**`, `.maestro/rtst/**`, `docs/plan/slices/211-play-before-detection-waits-for-it.md`
+**Touches:** `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Application/Translation/ReviewDecisions.cs`, `src/ReadTheStupidText.Mobile/ReaderPage.Wait.cs` (only if the wait overlay needs a new stage), `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*.resx` (only if a new wait line is needed), `tests/ReadTheStupidText.Tests/**`, `.maestro/rtst/**`, `src/ReadTheStupidText.Mobile/Testing/**` (new, Debug-only `hold-detection` hook), `src/ReadTheStupidText.Mobile/MauiProgram.cs` (not needed: the hook self-registers), `docs/plan/slices/211-play-before-detection-waits-for-it.md`
 
 #### Why
 
@@ -20,11 +20,11 @@ When Play is tapped and detection has not run for the current text, **run detect
 
 #### Work
 
-- [ ] `ReviewDecisions`: a pure step "detection pending at Play -> detect now" (unit-tested: pending, done, failed, text changed during detection).
-- [ ] `ReviewPage.OnReadTapped`: await an immediate detection when none exists for the current text, under the read's cancellation; then the existing paths.
-- [ ] Wait overlay covers the case when it passes 500 ms (reuse a stage; new string only if none fits).
-- [ ] Debug marker `READ detect-now <ms>`.
-- [ ] Maestro: type foreign text and Play at once with Translate on; assert the translated read (marker) on the emulator.
+- [x] `ReviewDecisions`: a pure step "detection pending at Play -> detect now" (unit-tested: pending, done, failed, text changed during detection).
+- [x] `ReviewPage.OnReadTapped`: await an immediate detection when none exists for the current text, under the read's cancellation; then the existing paths.
+- [x] Wait overlay covers the case when it passes 500 ms (reuse a stage; new string only if none fits).
+- [x] Debug marker `READ detect-now <ms>`.
+- [x] Maestro: type foreign text and Play at once with Translate on; assert the translated read (marker) on the emulator.
 
 #### Verification
 
@@ -32,3 +32,25 @@ When Play is tapped and detection has not run for the current text, **run detect
 - Emulator: the Maestro flow.
 - S21: rerun the Slice 139 race (tap ~0.4 s after typing): translated read, start time recorded against the 1456 ms baseline.
 - iOS: compile in CI; TestFlight hand check.
+
+#### Built
+
+*Changed while building:*
+- Detection runs at once on Play (`DetectNowAsync`), then translate or plain read exactly as a later Play. One continuous wait (`PreparingVoice` stage, "Preparing the voice...", Cancel, 500 ms gate); no new strings. The planned "Getting ready" title became the existing "Preparing the voice..." line.
+- Detection has a 5 s limit (`DetectNowLimit`); a timeout falls back to the plain read like a failure. Back or leaving never starts the read. A text change during the wait drops the read. Cancel re-arms detection with the normal idle delay.
+- `ReviewDecisions.NeedsDetectionAtRead` plus tests.
+- Debug-only `RtstTestCommands` (`src/ReadTheStupidText.Mobile/Testing/`, self-registering module initializer like `DinoTestCommands`) with a `hold-detection` launch hook (10-minute typing delay), used by `.maestro/rtst/play-before-detection.yaml`. Touches widened for it; no other live PR touched those files.
+
+*From review:* high pass: findings 1-6 applied, 7 skipped. Medium pass: 1, 2, 4 applied; 3, 5, 6, 7, 8 skipped.
+
+*Device (emulator-5554, 2026-10-30):* `play-before-detection` failed twice (timing: detection settled before the tap), then passed with the hold hook (HOOK hold-detection ok, READ detect-now 369, READ detect-now translated). `translation-waits-for-internet` passed on a clean install; it failed once after `play-before-detection` had changed install state (that flow has no clearState). Tests: 1685 pass; Android build and iOS compile pass.
+
+#### For CLAUDE.md
+
+- `tools/CLAUDE.md`: RTST Debug launch hooks live in `src/ReadTheStupidText.Mobile/Testing/RtstTestCommands.cs` (module initializer, like `DinoTestCommands`). `translation-waits-for-internet` needs a clean install and first-run, because it has no clearState. (Slice 211: docs/plan/slices/211-play-before-detection-waits-for-it.md)
+
+#### Not yet verified
+
+- S21: rerun of the Slice 139 race (tap about 0.4 s after typing); record the start time against the 1456 ms baseline.
+- iOS TestFlight hand check.
+- Back-during-wait scripted check (not run; uiautomator showed no resource-ids).

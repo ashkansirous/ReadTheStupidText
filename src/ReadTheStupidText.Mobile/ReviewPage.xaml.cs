@@ -29,6 +29,8 @@ public partial class ReviewPage : ContentPage
     private const string DisabledBorder = "#1C000000";
     private const string UntickedBorder = "#59000000";
     private const string LightEditorText = "#1F2027";
+    private const string DetectNowMarker = "READ detect-now";
+    private const string TranslatedMarker = "READ detect-now translated"; // Slice 211: the read that detected at Play really translated
 
     private readonly ReviewHandOff _handOff;
     private readonly ISettingsStore _settings;
@@ -54,6 +56,9 @@ public partial class ReviewPage : ContentPage
     private string _failedBannerText = string.Empty;
     private bool _originalCut; // the original (Show original) was cut to the editor limit too
     private string? _detected;
+    private bool _detectionSettled; // a detection pass finished (or none is possible) for the text in the box
+    private bool _detectedNow; // this Play detected at once (Slice 211): only for the debug marker of the translated read
+    private bool _detectingNow; // Play started a detection of its own and waits for it (Slice 211)
     private bool _optionShown;
     private bool _ticked = true;
     private bool _translating;
@@ -63,6 +68,7 @@ public partial class ReviewPage : ContentPage
     private bool _settleLeft; // the page was left (Back) while it waited, as opposed to Cancel on the overlay
     private CancellationTokenSource? _settleCts;
     private static readonly TimeSpan EarlySettleLimit = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan DetectNowLimit = TimeSpan.FromSeconds(5); // Play's own detection: past this it reads plainly (Slice 211)
     private bool _settingText;
     private CancellationTokenSource? _detectCts;
     private CancellationTokenSource? _translateCts;
@@ -101,6 +107,12 @@ public partial class ReviewPage : ContentPage
     // Cancel on the overlay: while waiting for the voice it abandons the read and stays on the page, else it stops the translation.
     private void OnWaitCancelRequested()
     {
+        if (_detectingNow)
+        {
+            _detectCts?.Cancel(); // Play's own detection: stay on the page with the text as it is
+            return;
+        }
+
         if (_finishing)
         {
             _settleCts?.Cancel();
@@ -150,6 +162,7 @@ public partial class ReviewPage : ContentPage
     {
         base.OnNavigatedFrom(args);
         _detectCts?.Cancel();
+        _detectCts = null; // a cancelled Play wait must not re-arm detection on a page that was left
         _translateCts?.Cancel();
         AbortSettle();
         if (_handedOver)
@@ -241,7 +254,19 @@ public partial class ReviewPage : ContentPage
         _state = _state.Edited(e.NewTextValue ?? string.Empty);
         TextEditor.FlowDirection = TextFlow.ContentDirection(_state.Text);
         _detected = null;
-        ScheduleDetection(_state.Text, ReaderPage.DetectDebounce);
+        ScheduleDetection(_state.Text, TypingDetectDelay());
+    }
+
+    // Slice 211: a Debug launch can hold detection off (cmd hold-detection) so a flow's Play always comes before it.
+    private static TimeSpan TypingDetectDelay()
+    {
+#if DEBUG
+        if (Testing.RtstTestCommands.HoldDetection)
+        {
+            return TimeSpan.FromMinutes(10);
+        }
+#endif
+        return ReaderPage.DetectDebounce;
     }
 
     // ---- The text's language and the translate checkbox -------------------------------------
@@ -254,10 +279,12 @@ public partial class ReviewPage : ContentPage
         _early.Discard();
         _earlyVoice.Reset();
         _earlyDelay = delay > TimeSpan.Zero ? EarlyIdleAfterDetection : TimeSpan.Zero;
+        _detectionSettled = false;
         RefreshTranslateOption();
         if (_detector is null || string.IsNullOrWhiteSpace(text))
         {
             _detected = null;
+            _detectionSettled = true;
             StartEarlyWork();
             return;
         }
@@ -285,16 +312,19 @@ public partial class ReviewPage : ContentPage
     }
 
     // Applied on the main thread, and only if no newer text or translation has superseded this pass.
-    private Task ApplyDetectionAsync(string? detected, CancellationToken token) => MainThread.InvokeOnMainThreadAsync(() =>
+    // False when it was superseded and applied nothing.
+    private Task<bool> ApplyDetectionAsync(string? detected, CancellationToken token) => MainThread.InvokeOnMainThreadAsync(() =>
     {
         if (token.IsCancellationRequested || _translating)
         {
-            return;
+            return false;
         }
 
         _detected = detected;
+        _detectionSettled = true;
         RefreshTranslateOption();
         StartEarlyWork();
+        return true;
     });
 
     private void RefreshTranslateOption()
@@ -368,6 +398,7 @@ public partial class ReviewPage : ContentPage
         }
 
         _leaving = true;
+        _detectCts?.Cancel(); // Play's wait for the detection must not go on to read
         _translateCts?.Cancel();
         AbortSettle();
         await Shell.Current.GoToAsync(AppShell.BackRoute);
@@ -410,21 +441,121 @@ public partial class ReviewPage : ContentPage
 
     private async void OnReadTapped(object? sender, TappedEventArgs e)
     {
-        if (_translating || _leaving || _finishing || string.IsNullOrWhiteSpace(_state.Text))
+        if (_translating || _leaving || _finishing || _detectingNow || string.IsNullOrWhiteSpace(_state.Text))
         {
+            return;
+        }
+
+        string tappedText = _state.Text;
+        bool detectedNow = _detectedNow = ReviewDecisions.NeedsDetectionAtRead(_detector is not null, _detectionSettled, tappedText);
+        if (detectedNow && !await DetectNowAsync())
+        {
+            return; // Cancel, or the text changed meanwhile: the person taps again
+        }
+
+        if (detectedNow && (_leaving || _state.Text != tappedText))
+        {
+            _wait.End(); // left the page or edited while the detection finished: nothing may start
             return;
         }
 
         if (ReviewDecisions.TranslatesOnRead(_optionShown, _ticked))
         {
-            await TranslateAndFinishAsync();
+            await TranslateAndFinishAsync(); // the wait of the detection (if any) carries on as the translation's
             return;
         }
 
+        _wait.End(); // no-op unless Play's detection wait is still up
         _early.ChooseRead();
 
         // A text that reads as foreign again (option shown) is no longer the translation its Original came from.
         await FinishAsync(_state.Text, _optionShown ? null : _state.Original, ReviewDecisions.ReadLanguage(false, _detected, TargetCode()));
+    }
+
+    // Slice 211: Play before the idle delay ran detects at once and then decides as a later Play would. Under 500 ms nothing
+    // shows; longer shows the "preparing the voice" wait with Cancel (the language picks the voice). A failed detection reads
+    // plainly, as it always did. True leaves that wait running for the caller: the translation re-words it, a plain read ends it.
+    // False (wait ended) when Cancel was tapped or the text changed (the person's next tap decides).
+    private async Task<bool> DetectNowAsync()
+    {
+        string text = _state.Text;
+        _detectCts?.Cancel(); // the idle delay: its detection is done here instead
+        CancellationTokenSource cts = _detectCts = new CancellationTokenSource();
+        CancellationToken token = cts.Token;
+        _detectingNow = true;
+        bool succeeded = false;
+        _wait.Begin(WaitStage.PreparingVoice, AppResources.Wait_PreparingVoice, canCancel: true);
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        try
+        {
+            string? found = await DetectSafelyAsync(text, token);
+            token.ThrowIfCancellationRequested(); // new text cancels this token (ScheduleDetection), so no text check is needed
+            _earlyDelay = TimeSpan.Zero; // the person is waiting: no idle rest before the early work
+            if (!await ApplyDetectionAsync(found, token))
+            {
+                RescheduleAfterCancel(text, cts); // superseded or cancelled meanwhile: nothing was applied
+                return false;
+            }
+
+            LogDetectNow(clock.ElapsedMilliseconds);
+            succeeded = true;
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            RescheduleAfterCancel(text, cts);
+            return false;
+        }
+        finally
+        {
+            _detectingNow = false;
+            if (!succeeded)
+            {
+                _wait.End();
+            }
+        }
+    }
+
+    // Cancel on the overlay leaves the page looking at the text again, after its usual idle rest. Not when new text already
+    // scheduled its own pass (it replaced the token source) or the page is being left (nothing may start on an abandoned page).
+    private void RescheduleAfterCancel(string text, CancellationTokenSource cts)
+    {
+        if (ReferenceEquals(_detectCts, cts) && !_leaving && !_earlyStale)
+        {
+            ScheduleDetection(text, ReaderPage.DetectDebounce);
+        }
+    }
+
+    private async Task<string?> DetectSafelyAsync(string text, CancellationToken token)
+    {
+        using var limited = CancellationTokenSource.CreateLinkedTokenSource(token);
+        limited.CancelAfter(DetectNowLimit);
+        try
+        {
+            return TranslationFlow.SourceFromDetection(await _detector!.DetectAsync(TranslationFlow.DetectionSample(text), limited.Token));
+        }
+        catch (OperationCanceledException) when (!token.IsCancellationRequested)
+        {
+            return null; // timed out: read plainly, as a failed detection does
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            return null; // a failed detection only hides the checkbox
+        }
+    }
+
+    private static void LogDetectNow(long milliseconds) => LogMarker($"{DetectNowMarker} {milliseconds}");
+
+    private static void LogMarker(string line)
+    {
+        System.Diagnostics.Debug.WriteLine(line);
+#if DEBUG
+        Shared.Testing.TestHookLog.Write(line);
+#endif
     }
 
     private async Task TranslateAndFinishAsync()
@@ -444,6 +575,11 @@ public partial class ReviewPage : ContentPage
             if (!token.IsCancellationRequested)
             {
                 _state = _state.Translated(translated);
+                if (_detectedNow)
+                {
+                    LogMarker(TranslatedMarker);
+                }
+
                 _wait.End(); // the page is about to leave: no "Translating..." with a live Cancel meanwhile
                 await FinishAsync(translated, _state.Original, ReviewDecisions.ReadLanguage(true, source, target), before);
             }
