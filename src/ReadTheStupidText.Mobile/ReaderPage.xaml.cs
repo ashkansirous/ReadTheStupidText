@@ -128,6 +128,7 @@ public partial class ReaderPage : ContentPage
         _reader.ProgressChanged += OnReaderProgressChanged;
         _reader.TimingChanged += OnReaderTimingChanged;
         _reader.ChunkChanged += OnReaderChunkChanged;
+        _reader.SentenceChanged += OnSentenceChanged;
         _reader.StallChanged += OnReaderStallChanged;
         _installer.Changed += OnInstallerChanged;
         _model.ReadyChanged += OnInstallerChanged;
@@ -198,6 +199,7 @@ public partial class ReaderPage : ContentPage
         _reader.ProgressChanged -= OnReaderProgressChanged;
         _reader.TimingChanged -= OnReaderTimingChanged;
         _reader.ChunkChanged -= OnReaderChunkChanged;
+        _reader.SentenceChanged -= OnSentenceChanged;
         _reader.StallChanged -= OnReaderStallChanged;
         EndStallWait(); // nobody is left to hear the end of the stall: a late chunk would leave the overlay up over a playing read
         _installer.Changed -= OnInstallerChanged;
@@ -726,6 +728,8 @@ public partial class ReaderPage : ContentPage
 
     private const float HighlightAlpha = 0.16f;
     private (int Start, int End)? _highlight;
+    private readonly SentenceHighlightGate _sentenceGate = new();
+    private IReadOnlyList<ChunkSentenceSpan>? _sentenceSpans;
     private void OnReaderChunkChanged(object? sender, ReadChunk chunk) =>
         MainThread.BeginInvokeOnMainThread(() => ShowHighlight(chunk));
 
@@ -735,17 +739,45 @@ public partial class ReaderPage : ContentPage
         string text = TextEditor.Text ?? string.Empty;
         if (_lastSpokenText != text || !chunk.MatchesSource(text))
         {
+            _sentenceSpans = null;
+            _sentenceGate.Reset(-1);
             return;
         }
 
         int start = Math.Clamp(chunk.SourceStart, 0, text.Length);
         _highlight = (start, Math.Clamp(chunk.SourceEnd, start, text.Length));
+        _sentenceGate.Reset(chunk.Index);
+        _sentenceSpans = SentenceSpans.Compute(chunk.Text, text, start);
         RenderReading();
         ScrollToHighlight(text.Length);
     }
 
+    // Slice 190: a later sentence of the playing chunk starts. The chunk highlight narrows to one sentence only once the reader announces the chunk's first sentence; a reader that tracks none (the phone's own voice) never does, so its chunk highlight stays.
+    private void OnSentenceChanged(object? sender, SentenceChange change) =>
+        MainThread.BeginInvokeOnMainThread(() => ShowSentence(change));
+
+    private void ShowSentence(SentenceChange change)
+    {
+        string text = TextEditor.Text ?? string.Empty;
+        if (_lastSpokenText != text || !_sentenceGate.Accept(change)
+            || _sentenceSpans is not { } spans || change.SentenceIndex >= spans.Count)
+        {
+            return;
+        }
+
+        ChunkSentenceSpan span = spans[change.SentenceIndex];
+        _highlight = (span.Start, span.End);
+        RenderReading();
+        ScrollToHighlight(text.Length);
+#if DEBUG
+        ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"SENTENCE {change.ChunkIndex} {change.SentenceIndex}");
+#endif
+    }
+
     private void ClearHighlight()
     {
+        _sentenceSpans = null;
+        _sentenceGate.Reset(-1);
         if (_highlight is not null)
         {
             _highlight = null;

@@ -58,6 +58,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
         reader.ProgressChanged += (_, p) => ForwardProgress(reader, p);
         reader.TimingChanged += (_, t) => ForwardTiming(reader, t);
         reader.ChunkChanged += (_, c) => ForwardChunk(reader, c);
+        reader.SentenceChanged += (_, c) => ForwardSentence(reader, c);
         reader.StallChanged += (_, stalled) => ForwardStall(reader, stalled);
     }
 
@@ -66,6 +67,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
     public event EventHandler<double>? ProgressChanged;
     public event EventHandler<ReadTiming>? TimingChanged;
     public event EventHandler<ReadChunk>? ChunkChanged;
+    public event EventHandler<SentenceChange>? SentenceChanged;
 
     public event EventHandler<bool>? StallChanged;
 
@@ -326,6 +328,14 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
         if (ReferenceEquals(source, _active))
         {
             ChunkChanged?.Invoke(this, chunk);
+        }
+    }
+
+    private void ForwardSentence(ISpeechReader source, SentenceChange change)
+    {
+        if (ReferenceEquals(source, _active))
+        {
+            SentenceChanged?.Invoke(this, change);
         }
     }
 

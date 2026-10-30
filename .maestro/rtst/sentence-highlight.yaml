@@ -1,0 +1,38 @@
+# Slice 190: a chunk of three sentences highlights one sentence at a time. The Debug marker SENTENCE <chunk> <n>
+# is written when the highlight moves to sentence n of a chunk that is still playing, so sentence 1 of chunk 0
+# appearing before READ_END proves the highlight moved inside the chunk. Android emulator, English only
+# (Maestro's inputText does not type Farsi reliably; the Farsi/RTL spans are unit-tested).
+# expect-log: READ_START
+# expect-log: SENTENCE 0 1
+# expect-log: READ_END
+appId: uk.sirous.readthestupidtext
+name: Highlight moves one sentence at a time
+---
+- launchApp:
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 20000
+- tapOn:
+    id: EditLink
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: ReviewEditor
+    timeout: 10000
+- tapOn:
+    id: ReviewEditor
+    waitToSettleTimeoutMs: 300
+- inputText: "The first sentence is long enough to stand alone. The second sentence follows right after it. The third sentence closes this short paragraph."
+- hideKeyboard
+- tapOn:
+    id: ReviewRead
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: ReadingText
+    timeout: 15000
