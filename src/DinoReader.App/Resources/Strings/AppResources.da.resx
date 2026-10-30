@@ -290,6 +290,11 @@
   <data name="Wait_ReadingPictures" xml:space="preserve"><value>Læser billederne…</value></data>
   <data name="Wait_PageOf" xml:space="preserve"><value>Side {0} af {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Oversætter…</value></data>
+  <data name="Wait_WaitingInternet" xml:space="preserve"><value>Venter på internettet</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingWifi" xml:space="preserve"><value>Venter på Wi-Fi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_Retry" xml:space="preserve"><value>Prøv igen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0} er {1} % hentet. Det fortsætter af sig selv, når du er online igen.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>Henter {0}. Det fortsætter af sig selv, når du er online igen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>Gemmer…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>Henter bogen…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>Sikkerhedskopierer bøgerne…</value></data>

@@ -1,6 +1,7 @@
 #if DEBUG
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Translation;
 using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Mobile.Shared.Testing;
@@ -8,7 +9,7 @@ namespace ReadTheStupidText.Mobile.Shared.Testing;
 /// <summary>
 /// Runs a <see cref="TestHookCommand"/> against the app's state (Slice 162), so a flow never taps through first-run
 /// screens to reach what it tests. Both platforms' entry points (Android broadcast, iOS URL) call <see cref="Dispatch"/>.
-/// Commands: <c>skip-first-run [lang=en]</c>, <c>stop-read</c>, <c>state</c>, <c>read text=... [speed=1.5]</c> (Slice 165: reads a fixed text on the app's own reader, for the real-phone timing script).
+/// Commands: <c>skip-first-run [lang=en]</c>, <c>delete-translation-model from=.. [to=..]</c> (Slice 187), <c>stop-read</c>, <c>state</c>, <c>read text=... [speed=1.5]</c> (Slice 165: reads a fixed text on the app's own reader, for the real-phone timing script).
 /// An app adds its own commands through <see cref="AppCommands"/> (Slice 175: Dino's <c>open-book id=... [page=n] [play=1]</c>). Debug builds only.
 /// </summary>
 public sealed class TestHookDispatcher
@@ -19,6 +20,11 @@ public sealed class TestHookDispatcher
 	public const string Read = "read";
 	public const string TextKey = "text";
 	public const string SpeedKey = "speed";
+	public const string DeleteTranslationModel = "delete-translation-model";
+	public const string FromKey = "from";
+	public const string ToKey = "to";
+	public const int PackWaitSeconds = 300;
+	public const int PackIdleGraceSeconds = 10;
 	public const string DefaultLanguage = "en";
 	public const string LanguageKey = "lang";
 	public const string Ok = "ok";
@@ -41,18 +47,25 @@ public sealed class TestHookDispatcher
 	/// the command name first, then the keys this dispatcher's own commands read, then the app's. A platform that filters launch arguments reads exactly these.
 	/// </summary>
 	public static IReadOnlyList<string> LaunchKeys =>
-		new[] { TestHookCommand.NameKey, LanguageKey, TextKey, SpeedKey }.Concat(AppLaunchKeys).Distinct().ToList();
+		new[] { TestHookCommand.NameKey, LanguageKey, TextKey, SpeedKey, FromKey, ToKey }.Concat(AppLaunchKeys).Distinct().ToList();
 
 	private readonly ISettingsStore _settings;
 	private readonly ISpeechReader _reader;
 	private readonly Func<string, bool> _completeFirstRun;
+	private readonly Func<ITranslationPacks?>? _translationPacks;
+	private readonly VoicePackInstaller? _installer;
 	private bool _skipPending;
 
 	/// <param name="settings">The app's settings store.</param>
 	/// <param name="reader">The app's speech reader.</param>
 	/// <param name="completeFirstRun">The app's own first-run completion for a language code (culture, pack, root); false when it could not run.</param>
-	public TestHookDispatcher(ISettingsStore settings, ISpeechReader reader, Func<string, bool> completeFirstRun)
+	/// <param name="translationPacks">The app's translation engine, when it manages packs (ML Kit), looked up when first needed.</param>
+	/// <param name="installer">The voice-pack installer, so <c>delete-translation-model</c> waits for the voice pack first.</param>
+	public TestHookDispatcher(ISettingsStore settings, ISpeechReader reader, Func<string, bool> completeFirstRun,
+		Func<ITranslationPacks?>? translationPacks = null, VoicePackInstaller? installer = null)
 	{
+		_translationPacks = translationPacks;
+		_installer = installer;
 		_settings = settings;
 		_reader = reader;
 		_completeFirstRun = completeFirstRun;
@@ -102,6 +115,12 @@ public sealed class TestHookDispatcher
 			return;
 		}
 
+		if (command.Name == DeleteTranslationModel)
+		{
+			_ = DeleteModelsAndLog(command);
+			return;
+		}
+
 		string outcome = command.Name switch
 		{
 			StopRead => Stop(),
@@ -110,6 +129,62 @@ public sealed class TestHookDispatcher
 			_ => AppCommands?.Invoke(command) ?? Unknown,
 		};
 		TestHookLog.Write($"{TestHookLog.HookPrefix} {command.Name} {outcome}");
+	}
+
+	// delete-translation-model from=<lang> [to=<lang>] (Slice 187): waits (bounded) for the voice pack, then removes only those ML Kit models, so an offline
+	// Read reaches the translation download and not the voice pack. Logs ok, or failed with the reason.
+	private async Task DeleteModelsAndLog(TestHookCommand command)
+	{
+		string outcome;
+		try
+		{
+			await WaitForVoicePack();
+			outcome = await DeleteModels(command);
+		}
+		catch (Exception ex)
+		{
+			outcome = $"{Failed} {TestHookLog.FaultSummary(ex)}";
+		}
+
+		TestHookLog.Write($"{TestHookLog.HookPrefix} {command.Name} {outcome}");
+	}
+
+	private async Task<string> DeleteModels(TestHookCommand command)
+	{
+		ITranslationPacks? packs = _translationPacks?.Invoke();
+		string[] languages = [command.Get(FromKey, string.Empty), command.Get(ToKey, string.Empty)];
+		if (packs is null || languages.All(l => l.Length == 0))
+		{
+			return Failed;
+		}
+
+		foreach (string language in languages.Where(l => l.Length > 0).Distinct())
+		{
+			await packs.DeletePackAsync(language);
+		}
+
+		return Ok;
+	}
+
+	// Ready ends the wait; so does a stopped download state, and an installer that never started (Idle) after a short grace (pack already on the device).
+	private async Task WaitForVoicePack()
+	{
+		if (_installer is null)
+		{
+			return;
+		}
+
+		for (int waited = 0; waited < PackWaitSeconds * 1000; waited += WindowRetryMilliseconds)
+		{
+			bool inProgress = _installer.State is PackInstallState.Resolving or PackInstallState.Downloading
+				|| (_installer.State is PackInstallState.Idle && waited < PackIdleGraceSeconds * 1000);
+			if (!inProgress)
+			{
+				return;
+			}
+
+			await Task.Delay(WindowRetryMilliseconds);
+		}
 	}
 
 	// Runs the app's own first-run completion, so the culture, the voice pack and the root end up as after a real first run.

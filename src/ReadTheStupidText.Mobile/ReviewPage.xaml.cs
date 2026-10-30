@@ -6,6 +6,8 @@ using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Translation;
 using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Mobile.Resources.Strings;
+using ReadTheStupidText.Mobile.Shared.ModelDownload;
+using ReadTheStupidText.Mobile.Shared.Network;
 using ReadTheStupidText.Mobile.Shared.Usage;
 using ReadTheStupidText.Mobile.Shared.Waiting;
 using AndroidPlatform = Microsoft.Maui.Controls.PlatformConfiguration.Android;
@@ -64,14 +66,17 @@ public partial class ReviewPage : ContentPage
     private bool _settingText;
     private CancellationTokenSource? _detectCts;
     private CancellationTokenSource? _translateCts;
+    private readonly PackResumeWatcher _resume;
     private readonly WaitController _wait;
     private readonly WaitOverlay _overlay;
     private readonly WaitThemeFollower _overlayTheme;
     private Task? _inFlightCall; // the platform call a Cancel abandoned (or the one running now): a new translate waits for it
     private Task? _earlyCall; // the same for the early translation's calls, kept apart so neither flow overwrites the other's
+    private readonly SingleModelCall _modelCall = new(); // one platform model download in flight per page, whichever flow asks
+    private TranslationDownloadWait? _earlyDownloadView; // the early translation's download display, to show when the tap's wait begins
     private bool _earlyStale; // the page was left: its early work was stopped, and a return without a new request starts it over
 
-    public ReviewPage(ReviewHandOff handOff, ISettingsStore settings, RtstUsage usage, EarlyStartVoice earlyVoice, IPackUpdateNetwork network, ITranslator? translator = null, ILanguageDetector? detector = null)
+    public ReviewPage(ReviewHandOff handOff, ISettingsStore settings, RtstUsage usage, EarlyStartVoice earlyVoice, IPackUpdateNetwork network, PackResumeWatcher resume, ITranslator? translator = null, ILanguageDetector? detector = null)
     {
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
@@ -80,6 +85,7 @@ public partial class ReviewPage : ContentPage
         _usage = usage;
         _earlyVoice = earlyVoice;
         _network = network;
+        _resume = resume;
         _translator = translator;
         _detector = detector;
         _overlay = ReaderPage.CreateWaitOverlay();
@@ -526,6 +532,12 @@ public partial class ReviewPage : ContentPage
         return call.WaitAsync(token);
     }
 
+    private Task TrackedEarly(Task call, CancellationToken token)
+    {
+        _earlyCall = call;
+        return call.WaitAsync(token);
+    }
+
     private Task Tracked(Task call, CancellationToken token)
     {
         _inFlightCall = call;
@@ -692,6 +704,11 @@ public partial class ReviewPage : ContentPage
             return null;
         }
 
+        if (!ready && translator is IModelPreparer preparer)
+        {
+            await DownloadModelEarlyAsync(preparer, source, target, token);
+        }
+
         System.Diagnostics.Debug.WriteLine($"{EarlyStartVoice.LogTag} translate start ({source}->{target}, {span.Head.Length} chars)");
         string? translated = await TrackedEarly(TranslationFlow.TranslateAsync(translator, span.Head, source, target, token), token);
         System.Diagnostics.Debug.WriteLine($"{EarlyStartVoice.LogTag} translate done ({source}->{target}, ok={translated is not null}, cancelled={token.IsCancellationRequested})");
@@ -726,6 +743,7 @@ public partial class ReviewPage : ContentPage
         if (downloading)
         {
             _wait.Begin(WaitStage.DownloadingModel, AppResources.Format(AppResources.Wait_DownloadingModel, LanguageName(source)), canCancel: true, AppResources.Review_FirstTimeOnly);
+            _earlyDownloadView?.TakeOver(); // the early download may already be waiting for the internet: it now owns the wait and shows that look at once
         }
         else
         {
@@ -761,39 +779,81 @@ public partial class ReviewPage : ContentPage
     }
 
     // The wait for the ML Kit model on its own, when the translator can fetch it apart from translating; otherwise the download is part of the translate stage.
+    // The download runs in a session (Slice 187): with no internet it waits and carries on by itself instead of failing.
     private async Task FetchModelTimedAsync(ITranslator translator, string source, string target, CancellationToken token)
     {
         if (translator is IModelPreparer preparer)
         {
-            await TimedAsync(UsageStage.ModelDownload, source, target, early: false, async () =>
+            TranslationModelDownloadSession session = NewDownloadSession(preparer, source, target);
+            using (session)
             {
-                await Tracked(preparer.EnsureModelAsync(source, target, token), token);
-                return true;
-            });
+                // the time spent waiting for the internet is not download time: it would skew the production stage durations
+                await TimedAsync(UsageStage.ModelDownload, source, target, early: false, async () =>
+                {
+                    await RunDownloadSessionAsync(session, source, token);
+                    return true;
+                }, () => session.WaitedTotal);
+            }
         }
     }
 
+    private TranslationModelDownloadSession NewDownloadSession(IModelPreparer preparer, string source, string target)
+    {
+        string packKey = TranslationModelDownloadSession.PackKey(source, target);
+        return ConnectivityTranslationNetwork.NewSession(
+            packKey, (_, attemptToken) => _modelCall.RunAsync(packKey, () => preparer.EnsureModelAsync(source, target, attemptToken), attemptToken), _resume);
+    }
+
+    private async Task RunDownloadSessionAsync(TranslationModelDownloadSession session, string source, CancellationToken token)
+    {
+        using var view = new TranslationDownloadWait(_wait, session, DownloadTexts(source));
+        view.Show();
+        await session.RunAsync(token);
+    }
+
+    // The early translation's model download goes through a session too, so a tap meanwhile shows the waiting look (Slice 187).
+    private async Task DownloadModelEarlyAsync(IModelPreparer preparer, string source, string target, CancellationToken token)
+    {
+        using TranslationModelDownloadSession session = NewDownloadSession(preparer, source, target);
+        using var view = new TranslationDownloadWait(_wait, session, DownloadTexts(source), owner: false); // the tap's view takes the controller over
+        _earlyDownloadView = view;
+        try
+        {
+            await session.RunAsync(token);
+        }
+        finally
+        {
+            _earlyDownloadView = null;
+        }
+    }
+
+    private static TranslationDownloadTexts DownloadTexts(string source) => new(
+        LanguageName(source), AppResources.Format(AppResources.Wait_DownloadingModel, LanguageName(source)), AppResources.Review_FirstTimeOnly,
+        AppResources.Wait_WaitingInternet, AppResources.Wait_WaitingWifi, AppResources.Wait_WaitingPercent, AppResources.Wait_WaitingNoPercent, AppResources.Wait_Retry);
+
     // Times one wait and counts it with how it ended, then lets the result or the error through unchanged.
-    private async Task<T> TimedAsync<T>(string stage, string source, string target, bool early, Func<Task<T>> work)
+    private async Task<T> TimedAsync<T>(string stage, string source, string target, bool early, Func<Task<T>> work, Func<TimeSpan>? excluded = null)
     {
         var clock = System.Diagnostics.Stopwatch.StartNew();
         try
         {
             T result = await work();
-            CountTiming(stage, UsageOutcome.Done, clock.Elapsed, source, target, early);
+            CountTiming(stage, UsageOutcome.Done, clock.Elapsed - Excluded(excluded), source, target, early);
             return result;
         }
         catch (OperationCanceledException)
         {
-            CountTiming(stage, UsageOutcome.Cancelled, clock.Elapsed, source, target, early);
+            CountTiming(stage, UsageOutcome.Cancelled, clock.Elapsed - Excluded(excluded), source, target, early);
             throw;
         }
         catch (Exception)
         {
-            CountTiming(stage, UsageOutcome.Failed, clock.Elapsed, source, target, early);
+            CountTiming(stage, UsageOutcome.Failed, clock.Elapsed - Excluded(excluded), source, target, early);
             throw;
         }
     }
+
+    private static TimeSpan Excluded(Func<TimeSpan>? excluded) => excluded?.Invoke() ?? TimeSpan.Zero;
 
     private void CountTiming(string stage, string outcome, TimeSpan elapsed, string source, string target, bool early) =>
         _usage.Record(context => UsageEvents.Timing(context, stage, outcome, elapsed, source, target, early));

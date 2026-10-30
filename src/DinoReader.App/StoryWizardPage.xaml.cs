@@ -69,6 +69,9 @@ public sealed class WizardSession
 
 	private WaitController? _wait;
 
+	/// <summary>The page's wait controller, for a download that shows the waiting-for-internet look (Slice 187); null before it is attached.</summary>
+	public WaitController? Wait => _wait;
+
 	/// <summary>Cancelled when Cancel is tapped on the wait in progress; none when no wait runs.</summary>
 	public CancellationToken WaitToken => _wait?.Token ?? CancellationToken.None;
 

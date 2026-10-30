@@ -72,6 +72,11 @@
   <data name="Review_Read" xml:space="preserve"><value>Læs</value></data>
   <data name="Wait_DownloadingModel" xml:space="preserve"><value>Henter {0}…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Oversætter…</value></data>
+  <data name="Wait_WaitingInternet" xml:space="preserve"><value>Venter på internettet</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingWifi" xml:space="preserve"><value>Venter på Wi-Fi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_Retry" xml:space="preserve"><value>Prøv igen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0} er {1} % hentet. Det fortsætter af sig selv, når du er online igen.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>Henter {0}. Det fortsætter af sig selv, når du er online igen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_PreparingVoice" xml:space="preserve"><value>Gør stemmen klar…</value></data>
   <data name="Wait_Stalled" xml:space="preserve"><value>Gør stadig stemmen klar…</value></data>
   <data name="Wait_ReadingFile" xml:space="preserve"><value>Læser filen…</value></data>

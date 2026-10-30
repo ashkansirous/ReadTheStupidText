@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Translation;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.ModelDownload;
+using ReadTheStupidText.Mobile.Shared.Network;
 
 namespace DinoReader;
 
@@ -293,9 +295,11 @@ public sealed class StoryTranslator
 
 	/// <summary>
 	/// Downloads the given packs one by one; <paramref name="progress"/> gets 0..1 across them. One pack failing does not stop the others (a cancel does); the languages
-	/// whose pack could not be fetched are returned.
+	/// whose pack could not be fetched are returned. Each pack runs in a download session (Slice 187): with no internet it waits and carries on by itself;
+	/// <paramref name="observe"/>, when given, gets each pack's language and session and returns what stops the display of it.
 	/// </summary>
-	public async Task<IReadOnlyList<string>> DownloadPacksAsync(IReadOnlyList<string> languages, IProgress<double>? progress, CancellationToken cancellationToken)
+	public async Task<IReadOnlyList<string>> DownloadPacksAsync(
+		IReadOnlyList<string> languages, IProgress<double>? progress, CancellationToken cancellationToken, Func<string, TranslationModelDownloadSession, IDisposable?>? observe = null)
 	{
 		var failed = new List<string>();
 		await ReconcilePacksAsync();
@@ -304,7 +308,7 @@ public sealed class StoryTranslator
 		{
 			try
 			{
-				await packs.DownloadPackAsync(languages[i], null, cancellationToken);
+				await DownloadPackInSessionAsync(packs, languages[i], observe, cancellationToken);
 				_packStore.Set(languages[i], true);
 			}
 			catch (TranslationModelUnavailableException ex)
@@ -318,6 +322,17 @@ public sealed class StoryTranslator
 		}
 
 		return failed;
+	}
+
+	private async Task DownloadPackInSessionAsync(
+		ITranslationPacks packs, string language, Func<string, TranslationModelDownloadSession, IDisposable?>? observe, CancellationToken cancellationToken)
+	{
+		using TranslationModelDownloadSession session = ConnectivityTranslationNetwork.NewSession(
+			TranslationModelDownloadSession.PackKey(EngineLanguageCodes.ToEngine(language)),
+			(progress, attemptToken) => packs.DownloadPackAsync(language, progress, attemptToken),
+			_services.GetRequiredService<PackResumeWatcher>());
+		using IDisposable? view = observe?.Invoke(language, session);
+		await session.RunAsync(cancellationToken);
 	}
 
 	/// <summary>

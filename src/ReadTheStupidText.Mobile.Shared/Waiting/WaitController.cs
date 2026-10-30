@@ -18,17 +18,20 @@ public sealed class WaitController
     private readonly TimeProvider _clock;
     private string _line = string.Empty;
     private string? _detail;
+    private WaitLook? _look;
     private bool _canCancel;
     private CancellationTokenSource? _cancellation;
     private int _wait;
     private bool _cancelled;
     private WaitStage? _shownStage;
+    private bool _announcedWaiting;
 
     public WaitController(WaitOverlay overlay, TimeProvider? clock = null)
     {
         _overlay = overlay;
         _clock = clock ?? TimeProvider.System;
         _overlay.CancelTapped += (_, _) => OnCancelTapped();
+        _overlay.RetryTapped += (_, _) => RetryRequested?.Invoke();
     }
 
     /// <summary>
@@ -40,6 +43,9 @@ public sealed class WaitController
     /// <summary>The user tapped Cancel.</summary>
     public event Action? CancelRequested;
 
+    /// <summary>The user tapped Retry on the waiting-for-internet look (Slice 187).</summary>
+    public event Action? RetryRequested;
+
     /// <summary>Raised with true when a wait begins and false when it ends (the page can ignore touches meanwhile, even before the overlay shows).</summary>
     public event Action<bool>? ActiveChanged;
 
@@ -48,18 +54,22 @@ public sealed class WaitController
 
     public bool IsActive => _gate.IsActive;
 
+    /// <summary>Makes the overlay's Retry tappable again after a tap that did nothing.</summary>
+    public void RearmRetry() => _overlay.RearmRetry();
+
     public WaitStage Stage => _gate.Stage;
 
     /// <summary>The token of the wait begun with <see cref="BeginCancellable"/>, cancelled by Cancel; none when no such wait runs.</summary>
     public CancellationToken Token => _cancellation?.Token ?? CancellationToken.None;
 
     /// <summary>Starts (or, while a wait runs, re-words) a wait. The overlay shows once it has lasted 500 ms.</summary>
-    public void Begin(WaitStage stage, string line, bool canCancel, string? detail = null)
+    public void Begin(WaitStage stage, string line, bool canCancel, string? detail = null, WaitLook? look = null)
     {
         bool starting = !_gate.IsActive;
         _gate.Begin(stage, _clock.GetUtcNow());
         _line = line;
         _detail = detail;
+        _look = look;
         _canCancel = canCancel;
         if (starting)
         {
@@ -174,12 +184,19 @@ public sealed class WaitController
             return;
         }
 
-        bool announce = !_overlay.IsVisible;
-        _overlay.Show(_line, _detail, _canCancel);
+        bool firstShow = !_overlay.IsVisible;
+        bool waiting = _look is { Waiting: true };
+        bool announce = firstShow || waiting != _announcedWaiting; // also when the waiting look comes or goes: "Waiting for the internet" is said
+        _overlay.Show(_line, _detail, _canCancel, _look);
         if (announce)
         {
-            _shownStage ??= _gate.Stage;
+            _announcedWaiting = waiting;
             SemanticScreenReader.Announce(_line);
+        }
+
+        if (firstShow)
+        {
+            _shownStage ??= _gate.Stage;
             ShownChanged?.Invoke(true);
         }
     }
