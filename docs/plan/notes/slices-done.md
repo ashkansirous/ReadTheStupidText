@@ -224,7 +224,8 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 182 | A pack download that stopped "offline" resumes by itself when the network or the app comes back (both apps, all big packs, mobile-data rule kept) | built | #544 |  | [182-pack-download-resumes-by-itself.md](../slices/182-pack-download-resumes-by-itself.md) |
 | 184 | Windows: an English-to-Japanese translation pack | built | #562 |  | [184-windows-english-to-japanese-pack.md](../slices/184-windows-english-to-japanese-pack.md) |
 | 183 | Big pack downloads keep going when the phone is locked or the app is in the background (Android foreground service with a progress notification, iOS background URLSession; after 182) | built | #549 |  | [183-pack-downloads-keep-going-when-locked.md](../slices/183-pack-downloads-keep-going-when-locked.md) |
-| 189 | Dino: one "For grown-ups" button on the shelf, the gear inside grown-up mode, a ⋯ sheet per book, a reading card capped at 30% | built | #560 |  | [189-dino-grown-ups-button-and-book-sheet.md](../slices/189-dino-grown-ups-button-and-book-sheet.md) |
+| 189 | Dino: one "For grown-ups" button on the shelf, the gear inside grown-up mode, a ⋯ sheet per book, a reading card capped at 30% | built | #560 |  | [189-dino-grown-ups-button-and-book-sheet.md](../slices/189-dino-grown-ups-button-and-book-sheet.md) |
+
 | 201 | The Norwegian voice pack no longer crashes the app (piper-nb tokens fixed, packs-10; a bad pack is rejected, not loaded) | built | #571 |  | [slices\201-norwegian-pack-crash.md](../slices/slices\201-norwegian-pack-crash.md) |
 | 202 | Changing the app language with text in the reader no longer crashes the app | built | #577 |  | [slices\202-reader-language-change-crash.md](../slices/slices\202-reader-language-change-crash.md) |
 | 186 | RTST: no scan pack download after the user cancels the voice pack (follow-up to 183) | built | #574 |  | [186-no-ocr-download-after-voice-cancel.md](../slices/186-no-ocr-download-after-voice-cancel.md) |
@@ -239,3 +240,6 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 198 | RTST phone: a Read tapped while early work is running reuses it (Slice 139 race) | closed, measured, no code | #584 |  | [198-rtst-phone-in-flight-early-start-race.md](../slices/198-rtst-phone-in-flight-early-start-race.md) |
 | 199 | Unit tests for the test-hook launch keys, BookMatch and the phone timing parser (Slice 175 gap) | built | #586 |  | [199-test-hook-unit-tests.md](../slices/199-test-hook-unit-tests.md) |
 | 200 | Check the live usage data after the store rollouts (Slices 133-179 live-row items) | built | #587 |  | [200-live-usage-data-checks.md](../slices/200-live-usage-data-checks.md) |
+| 194 | A VM script that retakes the control panel screenshot | built | #591 | | [194-control-panel-screenshot-script.md](../slices/194-control-panel-screenshot-script.md) |
+| 195 | Pick the default Norwegian voice by ear | built | #592 | | [195-norwegian-default-voice.md](../slices/195-norwegian-default-voice.md) |
+| 204 | A voice pack the user cancelled stays cancelled after a restart (follow-up to 186) | built | #588 | | [204-cancelled-voice-pack-stays-cancelled.md](../slices/204-cancelled-voice-pack-stays-cancelled.md) |

@@ -14,15 +14,12 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (158 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (161 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 154 | Dino: vowel marks in Farsi and Arabic books (Farsi only: Arabic left as is; marks are a hidden "how to read" text, Decision 166) | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
-| 193 | German store listings for both apps | planned | | | [193-german-store-listings.md](docs/plan/slices/193-german-store-listings.md) |
-| 194 | A VM script that retakes the control panel screenshot | planned | | | [194-control-panel-screenshot-script.md](docs/plan/slices/194-control-panel-screenshot-script.md) |
-| 195 | Pick the default Norwegian voice by ear | planned | | | [195-norwegian-default-voice.md](docs/plan/slices/195-norwegian-default-voice.md) |
-| 204 | A voice pack the user cancelled stays cancelled after a restart (follow-up to 186) | planned | | | [204-cancelled-voice-pack-stays-cancelled.md](docs/plan/slices/204-cancelled-voice-pack-stays-cancelled.md) |
+| 193 | German store listings for both apps | drafted; apply waits for the user | | | [193-german-store-listings.md](docs/plan/slices/193-german-store-listings.md) |
 | 205 | Dino Windows head: the Reading speed row and the page-turn VM check (Slice 188 follow-up) | planned | | | [205-dino-windows-reading-speed-and-page-turn-checks.md](docs/plan/slices/205-dino-windows-reading-speed-and-page-turn-checks.md) |
 
 Batch 42 (197-200, planned 2026-10-29, the small fixes and live-data checks that had no slice): all four can run side by side and beside Batch 41 (Dino storyteller, RTST read path, test tooling, read-only analytics). 198 starts with a real-phone run and may close with no code. 200 changes nothing live.
@@ -84,6 +81,10 @@ Batch 35 (159, built, PR #473, so the batch is done; planned 2026-10-27, the use
 
 Built but not verified (details in each slice file):
 
+- Slice 204 (PR #588): Dino on device; iOS TestFlight; native read of the Stopped strings (machine drafts); the Maestro flow `.maestro/rtst/cancelled-voice-pack-stays-cancelled.yaml` end to end ([slice](docs/plan/slices/204-cancelled-voice-pack-stays-cancelled.md)).
+- Slice 194 (PR #591): the panel shot is not good enough for the site (guest offline, no voice pack, watermark); rerun on a guest with the English pack and network, crop the watermark, convert to WebP at 362x525 and replace `site/img/control-panel.webp` ([slice](docs/plan/slices/194-control-panel-screenshot-script.md)).
+- Slice 195 (PR #592): hearing the picks (default `nb-knv` is measured, not heard); iOS TestFlight run of the new order; Windows head ([slice](docs/plan/slices/195-norwegian-default-voice.md)).
+- Slice 193 (PR #589, drafts only): the user reads `docs/store-listings/de.md` and `dino/de.md` and approves, then the `store-listing` agent applies; Partner Center needs the user's Submit; the RTST Windows text needs the pack size ([slice](docs/plan/slices/193-german-store-listings.md)).
 - Slice 178 (PR #547): pdf, docx, photo and scan kinds on a device; iOS and Windows runs; `tools/dino-usage-report.ps1` against the live API after release; `analytics-query` notes for the new blob9 shape (Slice 166 file) after release ([slice](docs/plan/slices/178-dino-own-book-usage-detail.md)).
 - Slice 181 (PR #543): a recording carried over a swap; a store-downloaded book with edited text getting an update; a crash during the apply itself (kill mid-swap); iOS simulator and Windows VM runs; apply time on a real phone still owed (no hook stages a store update; 1.2-1.5 s on emulator Debug; [S21 night runs](docs/plan/notes/2026-10-29-s21-night-runs.md)) ([slice](docs/plan/slices/181-dino-books-update-from-store.md)).
 - Slice 182 (PR #544): OCR resume after the final fix round; "Waiting for Wi-Fi" on a real cellular-only phone; a real phone and the iOS runtime; Failed -> Retry done on the S21 2026-10-30 ([S21 night runs](docs/plan/notes/2026-10-29-s21-night-runs.md)) ([slice](docs/plan/slices/182-pack-download-resumes-by-itself.md)).
