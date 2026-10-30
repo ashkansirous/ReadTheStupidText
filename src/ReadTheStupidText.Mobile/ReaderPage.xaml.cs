@@ -71,6 +71,8 @@ public partial class ReaderPage : ContentPage
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
         ApplyScanAvailability(platform.SupportsTextScan);
+        // Before the first text is set: that fires TextChanged, which renders the player and reads the wait parts.
+        InitWait();
 
         _reader = reader;
         _settings = settings;
@@ -89,7 +91,6 @@ public partial class ReaderPage : ContentPage
         TextEditor.FlowDirection = TextFlow.ContentDirection(TextEditor.Text);
         draft.RegisterRebuildHook(PrepareForRebuild);
         ApplyStaticTexts();
-        InitWait();
         InitTranslation(detector);
         InitHeadStart();
         earlyVoice.Handler = VoiceEarlyAsync;
