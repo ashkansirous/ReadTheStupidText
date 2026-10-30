@@ -58,7 +58,14 @@ Build key ff0bfda456c0 (Debug arm64, `uk.sirous.dinoreader.dbg`, a sibling for e
 
 *Changed while building:* the cause is proven on the S21 (arm64): Kokoro returns truly silent output (voiced ms 0) for short lines; it is not a threshold false positive, and the emulator never shows it (85 reads clean). So the fix is the sibling map, not a Kokoro threshold. `SilentOutputGuard` now logs voiced ms, needed ms, pace and sibling on rescue and gave-up (never the text); a near-floor line (under 1.25x needed) goes to the debug log only. `NeededMs` is `internal`. `SiblingVoice` maps every shipped Kokoro voice to a same-language, same-gender sibling; `ef_dora` and `pf_dora` have none (the only woman in their language). A test checks that every shipped Kokoro voice has a sibling.
 
-*From review:* high pass: findings 4, 5, 6 applied; 1, 2, 3, 7, 8 skipped. Medium pass: 1, 2 applied; 3, 4, 5 skipped.
+*From review:* high pass: findings 4, 5, 6 applied; 1, 2, 3, 7, 8 skipped. Medium pass: 1, 2 applied; 3, 4, 5 skipped. The skipped ones (written out by the 2026-10-30-2100 round 1 feedback loop):
+- High 1: `am_puck` and `am_michael` mapped to `am_liam` (character change). Resolved by medium 2, applied: on main Puck -> Daniel and Michael -> Fable (`SiblingVoice.cs`).
+- High 2: only three Kokoro male voices get a sibling; the others get no rescue. Slice 220 owns the remaining drops.
+- High 3: the fix was chosen before the device evidence the slice asked for (process; the S21 run later measured it, 14/68 to 3/68).
+- High 7, medium 5: `TrySiblingAsync` carries a 3-element tuple only for the log line; the sibling suffix logic is written twice (style).
+- High 8: the Touches line lists log files the diff does not change (docs).
+- Medium 3: the near-miss check reads only the first take, so the floor data from rescued lines is biased.
+- Medium 4: the test regex on voiced ms depends on rounding and breaks on an unrelated tweak (brittle test).
 
 *Outcome:* S21 drops went from 14/68 to 3/68 (`bm_daniel` "Ann.", `bf_alice` "Help!" and "Ann.": all takes and the sibling gave 0 ms). The criterion "no `gave up` on the S21" is **not met**. Two strikes on device in this area, so no more patching: follow-up Slice 220 (to be planned in the index pass) finds why Kokoro synthesis returns empty audio for short lines on arm64 (sherpa-onnx output length or zeros, padding, phonemizer) and fixes it by construction.
 

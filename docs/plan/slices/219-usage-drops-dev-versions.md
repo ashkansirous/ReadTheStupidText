@@ -16,7 +16,7 @@
 - [x] Client: `UsageEligibility` treats a version below 1.0 as unstamped too (unit test), Android, iOS and Windows alike.
 - [x] Own-machine Windows rows (from Slice 200's live check, left for later there): RTST Windows `1.67.1` rows from our own runs are still counted, because Windows is not arch-dropped. Find what marks our own machine (the `no-usage` switch not set by every Windows harness, or a dev install), close that hole, and say in the report which stored rows are ours. Verify: a read-only query after a local Windows run shows no new row.
   - Finding (review, 2026-10-30): no code hole found. `WindowsUsage.Facts` counts only Store-signed, non-dev installs since Slice 179. The stored Windows `1.67.1` rows predate that gate and are likely ours, but this is not verified. Nothing to close in code; left open for a read-only query after deploy.
-- [ ] `query-analytics` caveat line for old Android rows with no arch (in the reports the agent writes, not code). The skill lives in `D:\ClaudeSkills`, outside this repo, so it is handed to the coordinator and not done in this PR.
+- [x] `query-analytics` caveat line for old Android rows with no arch (in the reports the agent writes, not code). Done in ClaudeSkills PR #95 (`skills/query-analytics/SKILL.md` section 4) by the 2026-10-30-2100 round 1 feedback loop.
 
 #### Verification
 
@@ -27,7 +27,13 @@
 
 *Tests:* worker `events.test.mjs` 95 pass (leading-zero, huge and invalid version cases); `UsageEligibilityTests` 1689 pass. No device run: pure rule plus worker.
 
-*From review:* high pass: findings 2 and 6 applied; 3, 4, 5 and 7 skipped as cleanups. Medium pass: finding 7 applied; finding 1 dismissed because all `0.x` tags predate `v1.0.0` (2026-09-02), before usage counting existed.
+*From review:* high pass: findings 2 and 6 applied; 3, 4, 5 and 7 skipped as cleanups. Medium pass: finding 7 applied; finding 1 dismissed because all `0.x` tags predate `v1.0.0` (2026-09-02), before usage counting existed. The skipped cleanups (written out by the 2026-10-30-2100 round 1 feedback loop; follow-up in [Slice 223](223-usage-version-rule-cleanup.md), parked):
+- High 3: `isUnstampedVersion` (worker) assumes `VERSION_PATTERN` already matched; a new caller would treat a malformed string as stamped.
+- High 4, medium 2: the pre-1.0 rule lives in four places (exact `0.0.0` lists plus the major-0 check, worker and client); the exact entries are now redundant.
+- High 5: `IsPreRelease(string)` relies on the caller's null check; reordered, a null `DisplayVersion` throws.
+- High 7: the new worker test covers only `parseEvent`/`parseRtstEvent`, not other event types on the shared `hasValidEnvelope` path with a 0.x version.
+- Medium 4: client `int.TryParse` and worker `parseInt` differ on overflow and leading junk.
+- Medium 3, 5: declaration order and inline names (style).
 
 #### For CLAUDE.md (lifted 2026-10-30)
 

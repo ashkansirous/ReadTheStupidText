@@ -5,7 +5,7 @@ Rules for the Cloudflare Worker `readthestupidtext` and the sites it serves. Mov
 **Landing site.** `readthestupidtext.sirous.uk` is the Cloudflare Worker `readthestupidtext`
 (`wrangler.jsonc`, `worker/index.ts`) serving `site/` (not `docs/`); GitHub Pages is off. Deploy with
 `npm run deploy` (refuses CRLF site files; `npm run typecheck` keeps `wrangler.jsonc` and
-`wrangler.workers-dev.jsonc` in sync) manually when needed. Workers Builds deploys `main` only (preview-branch builds are off); deploy
+`wrangler.workers-dev.jsonc` in sync) manually when needed. Fast check for any `worker/` change: `npm ci && npm run typecheck` (a fresh worktree has no `node_modules`, and without them `tsc` never runs; Slice 219 went red in CI that way). Workers Builds deploys `main` only (preview-branch builds are off); deploy
 command `npm run deploy`, watch paths `worker/*`, `site/*`, `wrangler*.jsonc`, `package*.json`. A Worker custom domain can't replace an existing DNS
 record: delete it first (wrangler has no DNS scope). Privacy policy edits touch both `PRIVACY.md` and
 `site/privacy.html`. Don't add `docs/CNAME` or a GitHub Actions deploy. See `docs/DEPLOYING.md`.
