@@ -64,6 +64,15 @@ public sealed class UsageCounter
 			return UsageEvent.For(name, story, fromCatalogue, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now, detail, language);
 		});
 
+	/// <summary>
+	/// Queues the count <paramref name="name"/> for every book in <paramref name="counted"/> (its story and detail) in one queue write (Slice 191). Each is
+	/// counted as the grown-up's own book (never a shelf book), so a restored book carries nothing of where it came from.
+	/// </summary>
+	public void RecordMany(string name, IReadOnlyList<(Story Story, string Detail)> counted) =>
+		_sender.EnqueueMany((sampleRate, now) => counted
+			.Select(c => UsageEvent.For(name, c.Story, false, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now, c.Detail))
+			.ToList());
+
 	/// <summary>Queues a count about no book (a voice change, a launch, a language change); <paramref name="language"/> is the one the count is about.</summary>
 	public void RecordGeneral(string name, string language, string detail = "") =>
 		_sender.Enqueue((sampleRate, now) =>

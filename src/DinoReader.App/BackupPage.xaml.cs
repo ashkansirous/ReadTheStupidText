@@ -30,16 +30,18 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 	private readonly IStoryLibrary _library;
 	private readonly ExternalActivityGuard _external;
 	private readonly GrownUpMode _mode;
+	private readonly UsageCounter _usage;
 	private readonly BusyGuard _busy = new();
 	private readonly WaitController _wait;
 	private int _count;
 
-	public BackupPage(IStoryLibrary library, ExternalActivityGuard external, GrownUpMode mode)
+	public BackupPage(IStoryLibrary library, ExternalActivityGuard external, GrownUpMode mode, UsageCounter usage)
 	{
 		InitializeComponent();
 		_library = library;
 		_external = external;
 		_mode = mode;
+		_usage = usage;
 		WaitOverlay overlay = DinoWait.OverPage();
 		Grid.SetRowSpan(overlay, BackupRoot.RowDefinitions.Count);
 		BackupRoot.Children.Add(overlay);
@@ -214,7 +216,25 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 	{
 		await CopyPickedAsync(picked, path);
 		await using FileStream file = File.OpenRead(path);
-		return await StoryBackupReader.RestoreAsync(file, _library);
+		var added = new List<Story>();
+		StoryRestoreResult result = await StoryBackupReader.RestoreAsync(file, _library, added.Add);
+		CountRestoredBooks(added);
+		return result;
+	}
+
+	// One count per restored own book (kind "restore" plus its page-count bucket, nothing the book holds), all queued in one write off the UI thread (Slice 191).
+	// A restored starter or store book has a source and is not counted. Counting never decides whether the restore worked.
+	private void CountRestoredBooks(List<Story> added)
+	{
+		List<(Story Story, string Detail)> counted = added
+			.Select(story => (Story: story, Detail: UsageDetail.RestoredBook(story)))
+			.Where(c => c.Detail is not null)
+			.Select(c => (c.Story, c.Detail!))
+			.ToList();
+		if (counted.Count > 0)
+		{
+			_ = Task.Run(() => _usage.RecordMany(UsageEventName.OwnBookAdded, counted));
+		}
 	}
 
 	private async Task RestoreFromAsync(FileResult picked, string path)
