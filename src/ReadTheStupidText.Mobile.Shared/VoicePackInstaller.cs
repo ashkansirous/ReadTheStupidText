@@ -37,6 +37,7 @@ public sealed class VoicePackInstaller
     private readonly IPlatformServices _platform;
     private readonly IPackUpdateNetwork _network;
     private readonly IPackResume? _resume;
+    private readonly VoiceCancelHold _hold;
     private string? _resolvedPackId;
     private readonly object _gate = new();
     private CancellationTokenSource? _updateCancel;
@@ -54,9 +55,10 @@ public sealed class VoicePackInstaller
     private int _generation;
     private TaskCompletionSource _settled = new();
 
-    public VoicePackInstaller(IVoicePackService packs, IVoiceModelService model, ISpeechReader reader, ISettingsStore settings, IPlatformServices platform, IPackUpdateNetwork network, ILanguageChangeNotifier languages, IPackResume? resume = null)
+    public VoicePackInstaller(IVoicePackService packs, IVoiceModelService model, ISpeechReader reader, ISettingsStore settings, IPlatformServices platform, IPackUpdateNetwork network, ILanguageChangeNotifier languages, IPackResume? resume = null, IVoiceCancelStore? cancelStore = null)
     {
         _resume = resume;
+        _hold = new VoiceCancelHold(cancelStore ?? new PreferencesVoiceCancelStore());
         _packs = packs;
         _model = model;
         _reader = reader;
@@ -83,6 +85,7 @@ public sealed class VoicePackInstaller
             if (_running)
             {
                 _userCancelled = true;
+                HoldRunLanguage();
                 cancel = _runCancel;
             }
             else
@@ -98,6 +101,18 @@ public sealed class VoicePackInstaller
             Publish(Volatile.Read(ref _generation), PackInstallState.Ready); // the old pack still reads
         }
     }
+
+    // Slice 186: a stale run (the language changed under it) must not leave a hold; guarded by _gate.
+    private void HoldRunLanguage()
+    {
+        if (!_runReady && SameLanguage(_runLanguage, CurrentLanguage)) // a finished install is not undone by a late Cancel
+        {
+            _hold.Hold(_runLanguage);
+        }
+    }
+
+    /// <summary>Slice 186: the user cancelled the voice pack download for this language and has not got it since; other packs do not start by themselves.</summary>
+    public bool IsUserCancelled(string language) => _hold.IsHeld(language);
 
     public PackInstallState State { get; private set; } = PackInstallState.Idle;
 
@@ -121,6 +136,7 @@ public sealed class VoicePackInstaller
         bool running;
         lock (_gate)
         {
+            _hold.ReleaseUnlessFor(CurrentLanguage); // inside the gate, so a Cancel's hold is never cleared half-way
             running = _running;
             if (running && !SameLanguage(_runLanguage, CurrentLanguage))
             {
@@ -321,7 +337,8 @@ public sealed class VoicePackInstaller
         {
             lock (_gate)
             {
-                _userCancelled = true; // the notification's Cancel reached a run whose pack id was not matched: still final, no error state
+                _userCancelled = true;
+                HoldRunLanguage(); // the notification's Cancel reached a run whose pack id was not matched: still final, no error state
             }
 
             return null;
@@ -366,7 +383,7 @@ public sealed class VoicePackInstaller
         // language family, so the Supertonic pack no longer stands for every language).
         if (InstalledVoiceCatalog.Resolve(_packs.GetInstalledVoiceAndStorytellerPacks(), CurrentLanguage) is not null)
         {
-            await ActivateInstalledAsync(run);
+            await ActivateInstalledAsync(run, endsRun: true);
             return null;
         }
 
@@ -392,8 +409,7 @@ public sealed class VoicePackInstaller
         }
 
         Volatile.Write(ref _freshInstall, true);
-        await ActivateInstalledAsync(run);
-        MarkRunReady();
+        await ActivateInstalledAsync(run, endsRun: true);
         return null;
     }
 
@@ -532,17 +548,19 @@ public sealed class VoicePackInstaller
         return await _packs.DownloadAsync(pack.Id, progress, run.Token);
     }
 
-    private void MarkRunReady()
-    {
-        lock (_gate)
-        {
-            _runReady = true;
-        }
-    }
-
-    private async Task ActivateInstalledAsync(Run run)
+    // endsRun: the main run ends Ready here, so a Cancel landing after this point is ignored (Slice 186); the hold
+    // itself is lifted by every Ready publish (Apply).
+    private async Task ActivateInstalledAsync(Run run, bool endsRun = false)
     {
         await _model.InitializeAsync();
+        if (endsRun)
+        {
+            lock (_gate)
+            {
+                _runReady = true;
+            }
+        }
+
         Publish(run.Generation, PackInstallState.Ready);
         await _reader.WarmUpAsync();
     }
@@ -587,6 +605,14 @@ public sealed class VoicePackInstaller
         if (generation != Volatile.Read(ref _generation))
         {
             return;
+        }
+
+        if (state == PackInstallState.Ready)
+        {
+            lock (_gate)
+            {
+                _hold.Release(); // the voice pack is there, so a scan pack held back for it may follow
+            }
         }
 
         State = state;

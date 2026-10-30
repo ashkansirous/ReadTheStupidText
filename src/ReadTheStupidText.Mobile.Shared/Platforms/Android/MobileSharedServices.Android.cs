@@ -14,6 +14,7 @@ public static partial class MobileSharedServices
 	{
 		services.AddSingleton<IPlatformServices, AndroidPlatformServices>();
 		PackDownloadHost.KeepAlive = new AndroidPackKeepAlive(); // Slice 183: big pack downloads keep going behind the lock screen
+		PackDownloadHost.CancelAllActive = AndroidPackKeepAlive.CancelAll; // Slice 186: the Debug test hook fires the notification's Cancel
 		RegisterScanAndOcr(services);
 		// Slice 95: ML Kit translation for both apps (a model is downloaded on first use; Windows and iOS register no engine).
 		services.AddSingleton<ITranslator, MlKitTranslator>();

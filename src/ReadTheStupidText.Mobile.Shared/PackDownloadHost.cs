@@ -52,6 +52,9 @@ public static class PackDownloadHost
     /// <summary>The name of the notification channel, shown in the system notification settings.</summary>
     public static Func<string> ChannelName { get; set; } = () => "Pack downloads";
 
+    /// <summary>Cancels every download in flight exactly as the notification's Cancel does (Slice 186: the Debug test hook's <c>cancel-pack-downloads</c>); null where there is no notification.</summary>
+    public static Action? CancelAllActive { get; set; }
+
     /// <summary>Raised with the pack id when the user taps Cancel on the notification. Owners of a run stop it as their in-app Cancel does.</summary>
     public static event Action<string>? CancelRequested;
 
