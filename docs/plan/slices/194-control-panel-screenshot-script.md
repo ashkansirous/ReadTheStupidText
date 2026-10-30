@@ -1,6 +1,6 @@
 ### Slice 194 — A VM script that retakes the control panel screenshot
 
-*Planned 2026-10-29.* Tooling plus one site image. Gap found in Slice 170 (the panel was redesigned; `site/img/control-panel.webp` still shows the old one).
+*In progress (wave 2026-10-30, wave 4), draft PR.* *Planned 2026-10-29.* Tooling plus one site image. Gap found in Slice 170 (the panel was redesigned; `site/img/control-panel.webp` still shows the old one).
 
 **Touches:** `tools/desktop-vm/checks/rtst-panel-screenshot.ps1` (new), `tools/desktop-vm/checks/_lib.ps1` (a window-only capture helper, if missing), `tools/desktop-vm/README.md`, `site/img/control-panel.webp`, `docs/plan/slices/194-control-panel-screenshot-script.md`.
 
