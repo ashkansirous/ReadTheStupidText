@@ -14,6 +14,7 @@
 
 - [ ] Worker: drop any version whose major part is 0 (and keep the exact list), both the Dino and RTST paths (`events.ts:276`, `:461`); tests in `events.test.mjs`.
 - [ ] Client: `UsageEligibility` treats a version below 1.0 as unstamped too (unit test), Android, iOS and Windows alike.
+- [ ] Own-machine Windows rows (from Slice 200's live check, left for later there): RTST Windows `1.67.1` rows from our own runs are still counted, because Windows is not arch-dropped. Find what marks our own machine (the `no-usage` switch not set by every Windows harness, or a dev install), close that hole, and say in the report which stored rows are ours. Verify: a read-only query after a local Windows run shows no new row.
 - [ ] `query-analytics` caveat line for old Android rows with no arch (in the reports the agent writes, not code).
 
 #### Verification
