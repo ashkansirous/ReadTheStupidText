@@ -91,7 +91,7 @@ step only)
 
 *Device results:* emulator: lint on 18 flows clean; a second `run-flows.ps1` printed `LEASE waiting on 'run-flows-15292'` and started after the first, no lease left behind. VM: a clean checkpoint gives `VM PREFLIGHT NO-GO: voice-pack (supertonic-3)` with exit 3 in about 60 s; `-SkipPreflight` runs the check.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-30)
 
 Already in `tools/CLAUDE.md` in this slice's diff (one emulator running flows by default, leases, lint, VM preflight). Nothing for the root file.
 
