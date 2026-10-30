@@ -30,8 +30,8 @@ const NO_DETAIL = "";
 // A wait count says nothing about a language (Slice 148): the app sends this "undetermined" code, the only one the Worker takes for it.
 const NO_LANGUAGE = "und";
 const STORE_FILTERS = ["none", "age", "author", "age+author"] as const;
-// Slice 178: file imports and mixed books; older apps send the plain first four, newer ones "<kind>:<page bucket>".
-const OWN_BOOK_KINDS = ["photo", "pdf", "scan", "typed", "docx", "txt", "mixed"] as const;
+// Slice 191 adds "restore" (one per book a backup restore put back). Slice 178: file imports and mixed books; older apps send the plain first four, newer ones "<kind>:<page bucket>".
+const OWN_BOOK_KINDS = ["photo", "pdf", "scan", "typed", "docx", "txt", "mixed", "restore"] as const;
 const PAGE_BUCKETS = ["1", "2-5", "6-10", "11+"] as const;
 // The app's supported reading languages (UiLanguage.Supported in DinoReader.Core); UsageEventTests fails when this list and the app's drift apart.
 const READING_LANGUAGES = ["en", "fa", "fr", "es", "pt", "zh", "ar", "ru", "ja", "da", "fi", "sv", "nb", "nl", "de"] as const;
