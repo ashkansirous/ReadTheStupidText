@@ -61,7 +61,7 @@ file is in no build group.
 
 **Emulator:** `cancelled-voice-pack-stays-cancelled` PASS (`VOICEPACK held-user-cancelled fa`), `voice-cancel-holds-scan-pack` PASS (`OCRPACK held-voice-cancelled fa`), and `speed`, `store-credits-language`, `open-book`, `download-now-tap` (Wi-Fi off, `wifi_on=1` after), `grown-ups-button`, `default-view-per-book` PASS. The emulator's system_server died once mid-run and was restarted (not app related).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-30)
 
 Already written in `tools/CLAUDE.md` and `.github/CLAUDE.md` in this slice's diff; nothing further to lift.
 
