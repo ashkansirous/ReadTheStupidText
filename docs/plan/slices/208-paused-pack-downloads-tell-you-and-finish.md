@@ -16,7 +16,14 @@
 - **Half-finished packs at launch:** on launch (after the existing current-language start), scan the pack folders for `.partial` files. A partial for a pack the current settings still want (current UI or reading language, a story language Dino has ticked, the translation pair in use) resumes with the existing Range-append path (`MobileVoicePackService.cs:430-453`) in the foreground. A partial for a pack nothing wants any more is deleted, freeing the space. Same rule on Android and iOS.
 - Debug marker for each path (`PACKDL paused-notified`, `PACKDL stale-partial resume|delete <pack>`), so a device run can prove which ran.
 
+- **Slice 183 leftovers folded in (same notification code), as its own defaults said** (`183-pack-downloads-keep-going-when-locked.md:26,64`):
+  - Dino: when a pack download starts outside the grown-up area (the storyteller's first download), the notification-permission ask waits until a parent next opens Settings; the download still runs meanwhile. One "notification question asked" flag per app.
+  - The download and paused notifications (and the ask sheet) name the pack's language and its size, e.g. "Downloading the Farsi voice (63 MB)".
+
 #### Work
+
+- [ ] Dino: defer the notification ask to the next grown-up Settings open when the download started elsewhere (flag per app).
+- [ ] Both apps: language name and size in the download, paused and ask texts (all locales, machine drafts marked).
 
 - [ ] Android: `OnTimeout` posts the paused notification (shared builder in `AndroidPackKeepAlive`, text from a new `PackDownloadHost.PausedNotificationText` hook set by each app), with a content intent that opens the app; it is cancelled on resume or completion.
 - [ ] RTST and Dino strings for the paused text in every locale each app ships (machine drafts marked for native review, as before).
@@ -27,6 +34,9 @@
 - [ ] Unit tests: the policy (wanted, unwanted, a partial for a pack with a newer version than the partial, an empty partial).
 
 #### Verification
+
+- S21: read the download notification text with `dumpsys notification --noredact` (never checked in the night runs): language name and size shown.
+- Emulator: Dino storyteller first download from the gallery: no ask sheet; open grown-up Settings: the sheet shows once.
 
 - Fast: the policy tests.
 - S21 (Android 15, `tools/phone/` scripts): set `data_sync_fgs_timeout_duration 30000`, start a big pack, send the app to the background, see the paused notification within ~35 s (`PACKDL paused-notified`), tap it (`tap.ps1` on the notification shade, or `am start` the content intent), download finishes; reset the timeout afterwards.
