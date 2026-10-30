@@ -39,6 +39,6 @@
 
 #### Not yet verified
 - Emulator run 2026-10-30 (inconclusive): wizard book, Backup save and the picker restore were driven end to end ("Putting the books back..." finished), but no `own_book_added`/usage-batch line showed in logcat at add or restore (Debug sending is off; the batch log may not reach logcat), and whether the own book came back was not seen.
-- Odd sighting on that run, not explained: after the grown-up gate the new own book was missing from the library (4 starters, Backup page "All 4 stories") with no delete. Re-check on a device before trusting the restore count; may be unrelated to this slice.
+- Odd sighting on that run, likely explained: another device check (Slice 197's flow, `launchApp: clearState: true`) ran on the same emulator at the same time and wiped the app data. after the grown-up gate the new own book was missing from the library (4 starters, Backup page "All 4 stories") with no delete. Re-check on a device before trusting the restore count; may be unrelated to this slice.
 
 - Emulator restore check not run: restore a backup holding 2 own books and expect two `own_book_added` ... `restore:` entries in the dry-run log (and none for a starter or store book). Scripted check not added (`tools/emulator` is outside this slice's Touches).
