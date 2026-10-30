@@ -1,0 +1,32 @@
+# Slice 211: Play tapped right after typing (before the language detection's idle delay) still detects at once and translates.
+# expect-log: READ detect-now
+# expect-log: READ detect-now translated
+# Needs the Italian ML Kit translation model on the emulator and a network (as translation-wait-cancel.yaml); the translate row is ticked by default.
+# cmd: hold-detection holds detection for the whole run (Slice 211). No clearState: the voice pack and model must stay; the delete hook is not used so a model fetched earlier is reused.
+appId: uk.sirous.readthestupidtext
+name: Play right after typing translates
+---
+- launchApp:
+    arguments:
+      cmd: hold-detection
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 20000
+- tapOn:
+    id: EditLink
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: ReviewEditor
+    waitToSettleTimeoutMs: 300
+- inputText: "Ciao a tutti, questa sera leggeremo insieme una lunga storia molto interessante."
+# No wait for the Translate row: Play goes at once, before the idle delay has run detection.
+- tapOn:
+    id: ReviewRead
+    waitToSettleTimeoutMs: 100
+# The hold-detection launch hook (Debug) keeps detection off after typing, so this tap always comes first and takes the detect-now path.
+# The page detects Italian, translates, and hands the English text to the main page.
+- extendedWaitUntil:
+    visible:
+      id: ReadingText
+    timeout: 60000

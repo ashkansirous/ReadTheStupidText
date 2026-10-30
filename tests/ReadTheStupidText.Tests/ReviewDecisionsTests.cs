@@ -24,6 +24,17 @@ public class ReviewDecisionsTests
         Assert.Equal(expected, ReviewDecisions.TranslatesOnRead(shown, ticked));
     }
 
+    [Theory]
+    [InlineData(true, false, "Hola a todos", true)] // pending at Play: detect now
+    [InlineData(true, true, "Hola a todos", false)] // done (or failed): decide as before
+    [InlineData(false, false, "Hola a todos", false)] // no detector
+    [InlineData(true, false, "  ", false)] // nothing to read
+    [InlineData(true, false, null, false)]
+    public void NeedsDetectionAtRead_only_while_a_pass_is_still_pending(bool hasDetector, bool settled, string? text, bool expected)
+    {
+        Assert.Equal(expected, ReviewDecisions.NeedsDetectionAtRead(hasDetector, settled, text));
+    }
+
     [Fact]
     public void ReadLanguage_is_the_target_when_translated_else_the_detected_one()
     {
