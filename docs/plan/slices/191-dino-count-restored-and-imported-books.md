@@ -1,6 +1,6 @@
 ### Slice 191 — Dino: count restored and imported books as added books
 
-*Planned 2026-10-29.* Dino Reader (Android, iOS and the Windows head share the code). Gap found in Slice 134.
+*In progress (wave 2026-10-30, wave 2), draft PR.* *Planned 2026-10-29.* Dino Reader (Android, iOS and the Windows head share the code). Gap found in Slice 134.
 
 **Touches:** `src/DinoReader.Core/UsageEvent.cs`, `src/DinoReader.App/BackupPage.xaml.cs`, the user-facing `.dino` import path in `src/DinoReader.App/` (find it; store and starter imports through `StoryPackageReader.ImportAsync` are not user adds and stay uncounted), `worker/events.ts`, `worker/events.test.mjs`, `tools/dino-usage-report.ps1`, `tests/DinoReader.Tests/**`, `STORE.md`, `PRIVACY.md`, `site/dino/privacy.html`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/191-dino-count-restored-and-imported-books.md`.
 
@@ -12,6 +12,11 @@
 
 - Count them, with two new own-book kinds, `restore` and `import`, so they never mix with books made in the app.
 - The event keeps its closed-list fields only: kind plus the page-count bucket (Slice 178), no title or id.
+
+#### Claim notes (2026-10-30, grounded)
+
+- No user-facing `.dino` import exists (the only pickers are `BackupPage.xaml.cs:172` restore and `PagesStep.xaml.cs:734` wizard files; `StoryPackageReader.ImportAsync` is used only by starters and the store). Drop the `import` kind and its item: count `restore` only.
+- Check `UsageDetail` for an existing kind first (Slice 178 touched own-book kinds) before adding `KindRestore`.
 
 #### Work
 
