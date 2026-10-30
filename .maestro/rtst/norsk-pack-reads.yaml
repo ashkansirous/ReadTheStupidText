@@ -1,0 +1,41 @@
+# Slice 201: picking Norsk downloads the piper-nb pack and the app must read Norwegian with it, not die in sherpa-onnx's
+# tokens.txt reader (an old pack must show the failed-download state instead). Needs the network (about 100 MB pack).
+# expect-log: PACK_READY
+# expect-log: READ_START
+# expect-log: READ_END
+appId: uk.sirous.readthestupidtext
+name: Norwegian pack downloads and reads
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: LanguageList
+    timeout: 20000
+- tapOn:
+    text: "Norsk"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: LanguageContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: LanguageContinue
+      text: "Start reading"
+    timeout: 240000
+- tapOn:
+    id: LanguageContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: PlayButton
+    timeout: 20000
+# The saved Language=nb must survive a relaunch (the crash loop of 2026-10-29) and read a Norwegian sentence.
+- launchApp:
+    arguments:
+      cmd: read
+      text: "Hei, dette er en kort norsk setning som skal leses høyt."
+- extendedWaitUntil:
+    visible:
+      id: PlayButton
+    timeout: 60000
