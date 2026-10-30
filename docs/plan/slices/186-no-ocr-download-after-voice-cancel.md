@@ -48,7 +48,7 @@ A user cancel of the voice pack for a language also holds the automatic scan-pac
 
 *Known behaviour:* after force-stop and relaunch the cancelled voice pack resumes by itself (existing resume behaviour, Slice 182), and the scan pack follows once it is Ready. Follow-up slice to plan: a user voice cancel should hold the voice resume too.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-30)
 
 - `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`: a notification Cancel of the voice pack saves `VoiceCancelHold` (owned by `VoicePackInstaller`); `OcrPackInstaller` must check it before installing and never start the scan pack for a held language. It lifts on any voice Ready and on a language change; never clear it elsewhere. Debug hook `cancel-pack-downloads` simulates the notification Cancel in scripted runs. (Slice 186: docs/plan/slices/186-no-ocr-download-after-voice-cancel.md)
 
