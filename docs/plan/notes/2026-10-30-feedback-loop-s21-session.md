@@ -11,7 +11,7 @@ Session read: `db0cdbf1` (the S21 night of 2026-10-29/30 and its follow-ups: pho
 | 1 | 31 | - | 4 | 4 | 1 | 1 |
 | 2 | 36 | - | 4 | 6 | 1 | 2 |
 | 3 | 34 | 7 | 3 | 6 | 1 | 1 |
-| 4 | see the final reply | | | | | |
+| 4 | 44 | - | 3 | 6 | 1 | 0 |
 
 ## Findings and where they went
 
@@ -43,3 +43,11 @@ Session read: `db0cdbf1` (the S21 night of 2026-10-29/30 and its follow-ups: pho
 - Review findings were fixed wholesale on Slices 206 and 213 without triage; the gate's step 3 already requires triage.
 - At least eight "check before you state" slips this session (for example offering a forced update RTST doesn't have). The rule exists; no script can check it.
 - Review findings skipped on purpose: #87 (denial detection relies on English phrases; agent results keep head and tail only), #88 (closed-PR exclusion capped at 300; a same-named branch in another clone), #89 (the long-paths text repeated in three places; no per-file detail when the post-sync Drive listing fails).
+
+## Pass 4 (the last allowed) and what it left
+
+- The "nobody uses Norwegian on old versions" fact behind the user's decision came from about 3 days of counts with exact `nb`/`no` codes, not 30 days: corrected in `plan.md` and Slice 217; told the user.
+- Night cold-start numbers (Dino AOT 624 ms, Kokoro 960 ms) came from `audio-timing.ps1`, which labels warm repeats as cold: Slice 216 item 11.
+- Planning from findings line by line lived only in project memory: now in the `to-plan` skill ([ClaudeSkills #91](https://github.com/ashkansirous/ClaudeSkills/pull/91)).
+- Still open, tracked in ClaudeSkills `plan.md` *Outstanding work* (#91): the Stop hook and the Drive verification never run for real, `home/CLAUDE.md` over budget, context7 in subagents, clipped agent results, agent reload after a change, PR-check waits.
+- For the user: their `settings.json` still allows `gh workflow run appstore-submit.yml` (added for the App Store run they didn't need); the two failed runs may have left empty draft review submissions in App Store Connect (not checked).

@@ -7,7 +7,7 @@
 #### Why
 
 - RTST has no way to make old builds update. Its phone app reads `/api/app-config` only for the telemetry switch (`UsageConfig.cs:12`, `RemoteConfigClient.cs:28`); the Windows tray app reads nothing. Only Dino has the forced update (`DinoReader.App/AppConfigClient.cs:47`, `UpdatePage.cs`, `DinoReader.Core/AppConfig.cs:109`).
-- Found 2026-10-30: every RTST release up to rtst-v1.73.2 still downloads the broken Norwegian pack from `packs-9` and older (Slice 201). Nobody uses Norwegian on those versions (30-day usage counts: no `nb` reading language), so the user decided to leave it for now; this slice is what will let us push users off a bad version next time.
+- Found 2026-10-30: every RTST release up to rtst-v1.73.2 still downloads the broken Norwegian pack from `packs-9` and older (Slice 201). Nobody uses Norwegian on those versions (usage counts: no `nb` reading language; corrected 2026-10-30: those counts covered only about 3 days and exact `nb`/`no` codes), so the user decided to leave it for now; this slice is what will let us push users off a bad version next time.
 - Real users are on old versions (30 days: Android mostly 1.57-1.71, iOS mostly 1.69, Windows 1.67.1; one event from 1.74+).
 
 #### Decisions (2026-10-30)
