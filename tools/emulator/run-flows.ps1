@@ -8,6 +8,8 @@
   The debug app must already be installed (install-debug.ps1 -App rtst|dino); -Install does that first.
   Slice 180: -App auto runs only the apps the change touches (tools/test-targets.ps1) and prints the ones it skipped and why;
   -Instance 1|2 picks the emulator (default 1; start it with start-warm.ps1 -Instance n).
+  Slice 212: before every flow the emulator is woken and its keyguard dismissed; a flow whose header says `# needs: cellular-only` runs with Wi-Fi off (mobile data
+  on) and Wi-Fi is switched back on after it, also when it fails.
   Slice 207: lint-flows.ps1 runs first and stops the run when it finds a problem. A lease on the emulator (tools/lease-common.ps1, owner from
   $env:RTST_DEVICE_OWNER, else $env:RTST_PHONE_OWNER, else run-flows-<pid>) keeps two runs off one serial: the second prints `LEASE waiting on <owner>`
   once a minute for up to -LeaseWaitMinutes (default 15), then exits 4 naming the holder.
@@ -112,7 +114,38 @@ function Clear-AnrDialog([string]$When) {
     if (Get-AnrDialogXml) { throw "An 'isn't responding' (ANR) dialog is on screen on $($script:Serial) $When and could not be dismissed; restart the emulator (stop.ps1 -Instance $Instance, then start-warm.ps1)." }
 }
 
+# Slice 212: the values a flow's `# needs:` header line may carry (lint-flows.ps1 rejects any other); a flow with one runs under that network state.
+function Get-FlowNeeds([string]$FlowFile) {
+    $line = Get-Content $FlowFile | Where-Object { $_ -match '^#\s*needs:\s*(.+)$' } | Select-Object -First 1
+    if (-not $line) { return @() }
+    return @(($line -replace '^#\s*needs:\s*', '') -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+}
+
+# Slice 212: after start-warm the emulator sits on the lock screen and the first flow would fail at its first assert; wake it and dismiss the keyguard before every flow.
+function Wake-Emulator {
+    & $script:Adb -s $script:Serial shell input keyevent KEYCODE_WAKEUP | Out-Null
+    & $script:Adb -s $script:Serial shell wm dismiss-keyguard | Out-Null
+}
+
+# Slice 212: `# needs: cellular-only` = Wi-Fi off and mobile data on, so the Wi-Fi-only download card shows "Download now" instead of starting the download.
+function Set-CellularOnly {
+    & $script:Adb -s $script:Serial shell svc wifi disable | Out-Null
+    $data = (& $script:Adb -s $script:Serial shell settings get global mobile_data | Out-String).Trim()
+    if ($data -ne '1') { & $script:Adb -s $script:Serial shell svc data enable | Out-Null }
+}
+
+function Restore-Wifi { & $script:Adb -s $script:Serial shell svc wifi enable | Out-Null }
+
 function Invoke-Flow([string]$Maestro, [System.IO.FileInfo]$File) {
+    $ErrorActionPreference = 'Continue'
+    $cellular = (Get-FlowNeeds $File.FullName) -contains 'cellular-only'
+    Wake-Emulator
+    if ($cellular) { Set-CellularOnly }
+    try { return Invoke-FlowBody $Maestro $File }
+    finally { if ($cellular) { Restore-Wifi } }  # a failed flow never leaves Wi-Fi off for the next one
+}
+
+function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File) {
     $ErrorActionPreference = 'Continue'
     & $script:Adb -s $script:Serial logcat -c
     $sw = [Diagnostics.Stopwatch]::StartNew()

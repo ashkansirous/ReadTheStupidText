@@ -16,6 +16,7 @@ name: Store credit line in German
       id: StoryTile
     timeout: 60000
 - launchApp:
+    stopApp: false
     arguments:
       cmd: enter-grown-up
       lang: de

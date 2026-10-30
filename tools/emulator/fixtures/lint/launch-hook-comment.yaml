@@ -1,0 +1,9 @@
+appId: uk.sirous.readthestupidtext
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+- launchApp:
+    stopApp: false # the hook goes to the running app
+    arguments:
+      cmd: state

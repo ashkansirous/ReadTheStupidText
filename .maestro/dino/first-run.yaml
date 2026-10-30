@@ -11,6 +11,7 @@ name: First run
       id: FirstRunLanguage
     timeout: 25000
 - launchApp:
+    # launchApp-restart: skip-first-run changes what the app reads at startup, so it needs a fresh start from the language page.
     arguments:
       cmd: skip-first-run
       lang: en

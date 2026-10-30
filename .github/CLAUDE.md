@@ -77,6 +77,8 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 
 > **iOS signing (Slice 48, lifted 2026-10-21):** `ios.yml` compiles unsigned on PRs; on main with the six iOS secrets it signs (`.github/scripts/ios-signing.sh`, identity by SHA-1), attaches the `.ipa` to the draft and `testflight-submit` uploads it after `release-publish`. Signing scripts must run on macOS bash 3.2. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
 
+> **Tool self-tests (Slice 212):** `tools-selftests.yml` runs the device-tooling self-tests (`tools/emulator`, `tools/phone`, `tools/test-test-targets.ps1`, flow lint) on `windows-latest`, `pull_request` only, for `tools/**`, `.maestro/**` and itself. It is in no `ship-targets.mjs` group (and must stay out: editing `tests.yml` ships every app); no `upload-artifact`.
+
 ## Windows packaging and Store
 
 `.github/workflows/windows.yml` (called by `release.yml`, Slice 5, Slice 70) packages the single-project

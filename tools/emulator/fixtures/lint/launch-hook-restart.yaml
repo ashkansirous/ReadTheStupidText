@@ -1,0 +1,9 @@
+appId: uk.sirous.readthestupidtext
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+- launchApp:
+    arguments:
+      cmd: cancel-pack-downloads
+- launchApp

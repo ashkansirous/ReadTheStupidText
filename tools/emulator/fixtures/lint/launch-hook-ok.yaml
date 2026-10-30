@@ -1,0 +1,22 @@
+# The allowed forms: the first launch, stopApp: false, a restart comment above, a restart comment inside, no cmd.
+appId: uk.sirous.readthestupidtext
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: state
+# launchApp-restart: the saved choice must survive a restart of the app.
+- launchApp:
+    arguments:
+      cmd: read
+- launchApp:
+    # launchApp-restart: a fresh start so the shelf is the first screen again.
+    arguments:
+      cmd: open-book
+- launchApp:
+    arguments:
+      lang: en
+- launchApp

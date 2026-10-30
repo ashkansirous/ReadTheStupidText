@@ -1,5 +1,5 @@
 # Slice 197 SMOKE CHECK (it cannot fail before the fix: the drop window is microseconds wide; the concurrent unit test in StorytellerConsentTests is the proof): a tap during the Wi-Fi card starts the download. A "Download now" tap that lands as the mobile-data check ends must not be dropped: the download starts anyway.
-# Precondition (run-flows.ps1 / device stage): the emulator has cellular only (`adb shell svc wifi disable`, mobile data on) so the card shows "Waiting for Wi-Fi".
+# needs: cellular-only
 # The card is shown (WaitingForWifi) while the run still holds the guard; the tap with no settle wait lands in that window, before the run releases it (the old drop window). The download-started marker proves the tap was not dropped.
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK enter-grown-up ok
@@ -19,6 +19,7 @@ name: Download now right after the mobile-data check
       id: StoryTile
     timeout: 60000
 - launchApp:
+    stopApp: false
     arguments:
       cmd: enter-grown-up
 - extendedWaitUntil:

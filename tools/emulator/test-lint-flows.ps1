@@ -40,9 +40,16 @@ Assert-Findings 'clearstate-bare.yaml' @((New-Expect 4 'clearState needs a comme
 Assert-Findings 'clearstate-vague.yaml' @(New-Expect 5 'clearState needs a comment')
 Assert-Findings 'header-comment.yaml' @()
 Assert-Findings 'clearstate-inline.yaml' @(New-Expect 5 'clearState needs a comment')
+Assert-Findings 'launch-hook-restart.yaml' @(New-Expect 6 'stopApp: false')
+Assert-Findings 'launch-hook-ok.yaml' @()
+Assert-Findings 'launch-hook-inline.yaml' @(New-Expect 4 'stopApp: false')
+Assert-Findings 'launch-hook-plain-first.yaml' @(New-Expect 4 'stopApp: false')
+Assert-Findings 'launch-hook-comment.yaml' @()
 Assert-Findings 'bad-appid.yaml' @(New-Expect 1 'is not a dev package')
 Assert-Findings 'no-separator.yaml' @(New-Expect 1 'no --- line')
 Assert-Findings 'no-appid.yaml' @(New-Expect 2 'the header has no appId')
+Assert-Findings 'needs-ok.yaml' @()
+Assert-Findings 'needs-unknown.yaml' @((New-Expect 1 "'# needs: wifi-only' is not a known value"), (New-Expect 2 "'# needs: offline' is not a known value"))
 
 # The real flows pass clean.
 $real = Invoke-Lint (Join-Path $PSScriptRoot '..\..\.maestro')

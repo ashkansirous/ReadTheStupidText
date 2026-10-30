@@ -1,6 +1,6 @@
 # Slice 212: hooks reach the running app, and the tool self-tests run in CI
 
-*In progress (wave 2026-10-30), draft PR.*
+*Built 2026-10-30, not yet verified: see Not yet verified below.*
 
 **Why:** `.maestro/rtst/cancelled-voice-pack-stays-cancelled.yaml` (Slice 204) has never passed on the emulator. Its
 `launchApp` with `arguments: {cmd: cancel-pack-downloads}` stops the running app and cold-starts a new one (maestro.log:
@@ -13,7 +13,7 @@ file is in no build group.
 
 **Touches:** `.maestro/**`, `tools/emulator/lint-flows.ps1`, `tools/emulator/test-lint-flows.ps1`,
 `tools/emulator/fixtures/**`, `tools/emulator/README.md`, `.maestro/README.md`, `.github/workflows/tools-selftests.yml`,
-`.github/CLAUDE.md`, `tools/CLAUDE.md`
+`.github/CLAUDE.md`, `tools/CLAUDE.md`, `tools/emulator/run-flows.ps1`
 
 **Platforms:** test tooling and CI only, no app code.
 
@@ -47,3 +47,25 @@ file is in no build group.
 - The new workflow runs green on this PR (it touches `tools/**`), and `ship-targets` reports no app targets for it.
 - Emulator: `cancelled-voice-pack-stays-cancelled.yaml` passes, with `HOOK cancel-pack-downloads ok` and
   `VOICEPACK held-user-cancelled fa` in the log.
+
+## Result
+
+**Changed while building:**
+
+- Hooks into a running app use `launchApp` with `stopApp: false` (Maestro docs: the default restarts the app). Deliberate restarts carry a `# launchApp-restart:` comment; `lint-flows.ps1` enforces it in plain, inline and block forms.
+- `tools-selftests.yml` is PR-only with two jobs (pwsh and Windows PowerShell 5.1), one step per script, and is not in the `ship-targets` groups.
+- Found on the emulator and fixed: the two `fa` flows asserted English text under a Farsi UI (now a `fa` regex; `PackStatusLabel` has no AutomationId); the Slice 183 locked-download dialog is dismissed via `android:id/button2`; the scan-pack `OCRPACK` marker is written at app start, so its `state` hook keeps a restart; doubled `\r\r\n` line endings from a fixer were removed.
+- `run-flows.ps1` now applies `# needs: cellular-only` (Wi-Fi off, restored in `finally`; lint rejects unknown needs) and wakes and dismisses the keyguard before each flow.
+
+**From review:** high pass, 7 applied (CI masked exit codes, lint forms, comment on `stopApp`, scan-pack race, speed restart kept, docs, 5.1 job), 2 skipped. Medium pass, no blockers; low items skipped.
+
+**Emulator:** `cancelled-voice-pack-stays-cancelled` PASS (`VOICEPACK held-user-cancelled fa`), `voice-cancel-holds-scan-pack` PASS (`OCRPACK held-voice-cancelled fa`), and `speed`, `store-credits-language`, `open-book`, `download-now-tap` (Wi-Fi off, `wifi_on=1` after), `grown-ups-button`, `default-view-per-book` PASS. The emulator's system_server died once mid-run and was restarted (not app related).
+
+#### For CLAUDE.md
+
+Already written in `tools/CLAUDE.md` and `.github/CLAUDE.md` in this slice's diff; nothing further to lift.
+
+#### Not yet verified
+
+- The new `tools-selftests.yml` workflow's first run (this PR).
+- The first-run flows (rtst and dino) and `norsk-pack-reads` were not rerun (only a restart comment was added).

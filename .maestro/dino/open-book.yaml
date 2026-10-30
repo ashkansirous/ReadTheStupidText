@@ -16,6 +16,7 @@ name: Open a book and turn a page
       id: StoryTile
     timeout: 60000
 - launchApp:
+    stopApp: false
     arguments:
       cmd: open-book
       id: three-little-pigs

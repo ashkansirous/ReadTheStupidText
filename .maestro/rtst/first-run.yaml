@@ -13,6 +13,7 @@ name: First run and language
 - assertVisible:
     id: LanguageContinue
 - launchApp:
+    # launchApp-restart: skip-first-run changes what the app reads at startup, so it needs a fresh start from the language page.
     arguments:
       cmd: skip-first-run
       lang: en

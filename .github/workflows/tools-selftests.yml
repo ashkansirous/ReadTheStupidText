@@ -1,0 +1,113 @@
+name: tools-selftests
+
+# Slice 212: the device-test tooling's own self-tests (no device, no Maestro). A separate workflow on purpose:
+# editing tests.yml would ship every app (it is a core path in ship-targets.mjs), and this file is in no build group.
+# Pull requests only: release.yml is the only workflow that runs on push to main. No upload-artifact.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/**'
+      - '.maestro/**'
+      - '.github/workflows/tools-selftests.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tools-selftests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  selftests-pwsh:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Flow lint self-test (pwsh)
+        shell: pwsh
+        run: ./tools/emulator/test-lint-flows.ps1
+
+      - name: Lint the Maestro flows (pwsh)
+        shell: pwsh
+        run: ./tools/emulator/lint-flows.ps1
+
+      - name: Emulator lease self-test (pwsh)
+        shell: pwsh
+        run: ./tools/emulator/test-lease.ps1
+
+      - name: test-targets self-test (pwsh)
+        shell: pwsh
+        run: ./tools/test-test-targets.ps1
+
+      - name: Phone library self-test (pwsh)
+        shell: pwsh
+        run: ./tools/phone/test-phone-lib.ps1
+
+      - name: Phone tap self-test (pwsh)
+        shell: pwsh
+        run: ./tools/phone/test-tap.ps1
+
+      - name: Phone quoting self-test (pwsh)
+        shell: pwsh
+        run: ./tools/phone/test-quoting.ps1
+
+      - name: Phone timing self-test (pwsh)
+        shell: pwsh
+        run: ./tools/phone/test-timing.ps1
+
+  selftests-powershell:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Flow lint self-test (powershell)
+        shell: powershell
+        run: ./tools/emulator/test-lint-flows.ps1
+
+      - name: Lint the Maestro flows (powershell)
+        shell: powershell
+        run: ./tools/emulator/lint-flows.ps1
+
+      - name: Emulator lease self-test (powershell)
+        shell: powershell
+        run: ./tools/emulator/test-lease.ps1
+
+      - name: test-targets self-test (powershell)
+        shell: powershell
+        run: ./tools/test-test-targets.ps1
+
+      - name: Phone library self-test (powershell)
+        shell: powershell
+        run: ./tools/phone/test-phone-lib.ps1
+
+      - name: Phone tap self-test (powershell)
+        shell: powershell
+        run: ./tools/phone/test-tap.ps1
+
+      - name: Phone quoting self-test (powershell)
+        shell: powershell
+        run: ./tools/phone/test-quoting.ps1
+
+      - name: Phone timing self-test (powershell)
+        shell: powershell
+        run: ./tools/phone/test-timing.ps1

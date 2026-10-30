@@ -7,8 +7,11 @@
      runFlow, repeat and retry. An unknown name (openNotifications) is an error.
    - in a double-quoted YAML string a backslash escape outside YAML's set is an error (`\+`). Single-quoted and plain strings are not checked.
    - a `clearState` line needs a comment on the line above that starts `# clearState:` and says what it wipes and why that is fine for this flow.
+   - a `launchApp` that carries `arguments` with a `cmd` and is not the flow's first `launchApp` must have `stopApp: false` (a hook sent to the
+     running app must not restart it, Slice 212), or a `# launchApp-restart:` comment above it or inside it saying why a restart is wanted.
+   - a header line `# needs: <value>[, <value>]` may only name a known value (cellular-only: run-flows.ps1 turns Wi-Fi off for that flow, Slice 212).
    - the header has an `appId:` that is one of the two dev packages.
-  Used by run-flows.ps1 (before any build). Its self-test, test-lint-flows.ps1, is run by hand and by the slice's checks, not by CI.
+  Used by run-flows.ps1 (before any build). Its self-test, test-lint-flows.ps1, runs in CI (tools-selftests.yml, Slice 212) and by hand.
 #>
 param(
     [string]$Path = (Join-Path $PSScriptRoot '..\..\.maestro')
@@ -24,10 +27,13 @@ $script:MaestroCommands = @(
     'setPermissions', 'startRecording', 'stopApp', 'stopRecording', 'swipe', 'takeScreenshot', 'tapOn', 'toggleAirplaneMode', 'toggleDarkMode',
     'travel', 'waitForAnimationToEnd'
 )
+$script:NeedsValues = @('cellular-only')
 $script:DevAppIds = @('uk.sirous.readthestupidtext', 'uk.sirous.dinoreader')
 # YAML's double-quoted escapes: 0 a b t n v f r e space " / \ N _ L P x u U (and a tab).
 $script:ValidEscapes = '0abtnvfre "/\N_LPxuU' + "`t"
 $script:ClearStateComment = '^#\s*clearState:\s*(.{20,})$'
+$script:RestartComment = '^#\s*launchApp-restart:\s*(.{20,})$'
+$script:LaunchCount = 0
 $script:Problems = New-Object Collections.Generic.List[string]
 
 function Add-Problem([string]$File, [int]$LineNumber, [string]$Message) {
@@ -72,6 +78,18 @@ function Test-Header([string]$File, [string[]]$Lines, [int]$Separator) {
     if ($script:DevAppIds -cnotcontains $id) { Add-Problem $File ($appLine + 1) "appId '$id' is not a dev package ($($script:DevAppIds -join ', '))" }
 }
 
+# Slice 212: every `# needs:` header comment must name only known values, so a typo never silently runs a flow on the wrong network.
+function Test-Needs([string]$File, [string[]]$Lines, [int]$Separator) {
+    for ($i = 0; $i -lt $Separator; $i++) {
+        if ($Lines[$i] -notmatch '^#\s*needs:\s*(.*?)\s*$') { continue }
+        $values = @($Matches[1] -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+        if ($values.Count -eq 0) { Add-Problem $File ($i + 1) "'# needs:' names no value (allowed: $($script:NeedsValues -join ', '))" }
+        foreach ($v in $values) {
+            if ($script:NeedsValues -cnotcontains $v) { Add-Problem $File ($i + 1) "'# needs: $v' is not a known value (allowed: $($script:NeedsValues -join ', '))" }
+        }
+    }
+}
+
 function Test-ClearState([string]$File, [string[]]$Lines, [int]$Index) {
     $above = if ($Index -gt 0) { $Lines[$Index - 1].Trim() } else { '' }
     if ($above -notmatch $script:ClearStateComment) {
@@ -103,6 +121,38 @@ function Test-CommandLine([string]$File, [string[]]$Lines, [int]$Index, [string]
     }
 }
 
+# The lines of the block under a `- launchApp:` line: everything indented deeper than the dash (blank lines included).
+function Get-LaunchBlock([string[]]$Lines, [int]$Index, [int]$Indent) {
+    $block = New-Object Collections.Generic.List[string]
+    for ($j = $Index + 1; $j -lt $Lines.Count; $j++) {
+        $line = $Lines[$j]
+        if ($line.Trim() -and ($line.Length - $line.TrimStart().Length) -le $Indent) { break }
+        $block.Add($line.Trim())
+    }
+    return $block
+}
+
+# The text a launchApp item carries after its dash, as the lines to judge: the block form's deeper lines, or the inline {...} form's body split on commas.
+function Get-LaunchLines([string[]]$Lines, [int]$Index, [int]$Indent, [string]$Rest) {
+    if ($Rest -match '^\{(.*)\}$') { return @($Matches[1] -split '[,{}]' | ForEach-Object { $_.Trim() }) }
+    if ($Rest) { return @() }
+    return @(Get-LaunchBlock $Lines $Index $Indent)
+}
+
+# Slice 212: a hook sent to the running app with launchApp restarts it (Maestro's stopApp defaults to true) and the restart can swallow the hook.
+# Every launchApp form (plain, block, inline) counts toward "the first launchApp".
+function Test-LaunchApp([string]$File, [string[]]$Lines, [int]$Index, [int]$Indent, [string]$Rest) {
+    $script:LaunchCount++
+    if ($script:LaunchCount -eq 1) { return }
+    $block = @(Get-LaunchLines $Lines $Index $Indent $Rest)
+    $codeLines = @($block | ForEach-Object { ($(Read-FlowLine $_).Code).Trim() })
+    if (-not ($codeLines -match '^arguments:') -or -not ($codeLines -match '^(arguments:\s*\{?\s*)?cmd:\s*\S')) { return }
+    if ($codeLines -match '^(arguments:.*[{,]\s*)?stopApp:\s*false\s*$') { return }
+    $above = if ($Index -gt 0) { $Lines[$Index - 1].Trim() } else { '' }
+    if ($above -match $script:RestartComment -or ($block -match $script:RestartComment)) { return }
+    Add-Problem $File ($Index + 1) 'a hook launchApp after the first one needs "stopApp: false" (it must not restart the running app), or a "# launchApp-restart:" comment saying why a restart is wanted'
+}
+
 function Test-FlowBody([string]$File, [string[]]$Lines, [int]$Separator) {
     $blocks = New-Object Collections.ArrayList
     $skipBelow = $null
@@ -118,17 +168,20 @@ function Test-FlowBody([string]$File, [string[]]$Lines, [int]$Separator) {
         Remove-ClosedBlocks $blocks $indent $code
         if ($code -match '^\s*commands:\s*$') { $null = $blocks.Add(@{ KeyIndent = $indent; ItemIndent = $null }); continue }
         if ($code -match ':\s*[|>][+-]?\d?\s*$') { $skipBelow = $indent }
+        if ($code -match '^\s*-\s+launchApp\s*(?::\s*(.*))?$') { Test-LaunchApp $File $Lines $i $indent ([string]$Matches[1]).Trim() }
         if ($code.TrimStart().StartsWith('-') -and (Test-IsCommandItem $indent $blocks)) { Test-CommandLine $File $Lines $i $code }
         if ($code -match '\bclearState\b' -and $code -notmatch '\bclearState\s*:\s*false\b') { Test-ClearState $File $Lines $i }  # also the inline form {clearState: true}
     }
 }
 
 function Test-FlowFile([System.IO.FileInfo]$File) {
+    $script:LaunchCount = 0
     $lines = @(Get-Content $File.FullName)
     $separator = -1
     for ($i = 0; $i -lt $lines.Count; $i++) { if ($lines[$i] -match '^---\s*$') { $separator = $i; break } }
     if ($separator -lt 0) { Add-Problem $File.FullName 1 'no --- line: the header (appId) must be separated from the commands by ---'; return }
     Test-Header $File.FullName $lines $separator
+    Test-Needs $File.FullName $lines $separator
     Test-FlowBody $File.FullName $lines $separator
 }
 
