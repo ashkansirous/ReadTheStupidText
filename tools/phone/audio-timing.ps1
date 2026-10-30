@@ -126,13 +126,7 @@ function Install-PhoneApk([string]$Phone, $Apk) {
 
 # Slice 179: counting off for every harness run, even a Release build (the marker the app reads, UsageEligibility.NoUsageMarkerFile). Written and
 # checked before every read, so -SkipInstall and a `pm clear` (which wipes the external files folder) never leave a run without it.
-function Set-NoUsageMarker([string]$Phone) {
-    $filesDir = "/sdcard/Android/data/$package/files"
-    $marker = "$filesDir/no-usage"
-    Invoke-Adb $Phone @('shell', "mkdir -p $filesDir && touch $marker") | Out-Null
-    $listed = "$(Invoke-Adb $Phone @('shell', "ls $marker"))"
-    if ($listed -notmatch 'no-usage' -or $listed -match 'No such file|denied') { throw "Could not write the no-usage marker $marker on the phone ($listed): a Release run would send production counts." }
-}
+function Set-NoUsageMarker([string]$Phone) { Set-DevNoUsageMarker $Phone $package }
 
 # With -SkipInstall the installed APK must still be the cached build for the current inputs (right ABI, AOT or not): it is pulled and compared with
 # the cached APK; $false when there is no cached build or the installed one differs.
@@ -385,6 +379,7 @@ if ($LogFile) {
 
 $phone = if ($Emulator) { if ($Serial) { $Serial } else { 'emulator-5554' } } else { Find-WirelessPhone $Serial }
 if (-not $phone) { Write-PairingAsk; exit 2 }
+if (-not $Emulator) { Assert-PhoneLease $phone }  # Slice 206: exits 4 when another session holds the real phone (lease.ps1); emulators are not leased
 # Raw logs go to the shared worktrees folder, not into the repo.
 $script:OutDir = Join-Path (Split-Path $script:RepoRoot -Parent) '.phone'
 $null = New-Item -ItemType Directory -Force $script:OutDir

@@ -7,10 +7,12 @@ $script:RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 # Wireless debugging shows up as `adb-<serial>-<suffix>._adb-tls-connect._tcp` or `<ip>:<port>`; emulators and USB serials never do.
 $script:WirelessPattern = '^(adb-.+_adb-tls-connect\._tcp|(?!127\.)\d{1,3}(\.\d{1,3}){3}:\d+)$'
 
+$script:MdnsTimeoutSeconds = 10
+$script:DevicesTimeoutSeconds = 15
 function Get-AdbDevices {
-    $ErrorActionPreference = 'Continue'
-    & $script:Adb mdns services 2>&1 | Out-Null
-    $lines = & $script:Adb devices 2>&1
+    # mdns only refreshes the wireless list: a hang there is said but not fatal. `adb devices` hanging is a dead adb server and fails loudly.
+    try { Invoke-Adb '' @('mdns', 'services') $script:MdnsTimeoutSeconds | Out-Null } catch { Write-Warning $_.Exception.Message }
+    $lines = Invoke-Adb '' @('devices') $script:DevicesTimeoutSeconds
     $lines | Where-Object { $_ -match '^(\S+)\s+(device|offline|unauthorized)\s*$' } |
         ForEach-Object { [pscustomobject]@{ Serial = $Matches[1]; State = $Matches[2] } }
 }
@@ -44,14 +46,16 @@ function Invoke-Adb([string]$Serial, [string[]]$Arguments, [int]$TimeoutSeconds 
     if ($TimeoutSeconds -le 0) { $TimeoutSeconds = if ($Arguments[0] -in 'install', 'pull', 'push') { $script:AdbTransferTimeoutSeconds } else { $script:AdbTimeoutSeconds } }
     $info = New-Object Diagnostics.ProcessStartInfo $script:Adb
     # Windows PowerShell 5.1 (.NET Framework) has no ArgumentList: there the arguments go in one quoted string.
-    if ($null -ne $info.ArgumentList) { foreach ($a in (@('-s', $Serial) + $Arguments)) { $info.ArgumentList.Add($a) } }
-    else { $info.Arguments = (@('-s', $Serial) + $Arguments | ForEach-Object { ConvertTo-WindowsArgument $_ }) -join ' ' }
+    # An empty $Serial is a call that names no device (adb devices, adb mdns services).
+    $full = if ($Serial) { @('-s', $Serial) + $Arguments } else { $Arguments }
+    if ($null -ne $info.ArgumentList) { foreach ($a in $full) { $info.ArgumentList.Add($a) } }
+    else { $info.Arguments = ($full | ForEach-Object { ConvertTo-WindowsArgument $_ }) -join ' ' }
     $info.RedirectStandardOutput = $true; $info.RedirectStandardError = $true; $info.UseShellExecute = $false; $info.CreateNoWindow = $true
     $proc = [Diagnostics.Process]::Start($info)
     $out = $proc.StandardOutput.ReadToEndAsync(); $err = $proc.StandardError.ReadToEndAsync()
     if (-not $proc.WaitForExit($TimeoutSeconds * 1000)) {
         Stop-HungProcess $proc
-        throw "Phone not responding over adb: 'adb -s $Serial $($Arguments -join ' ')' did not finish in $TimeoutSeconds s."
+        throw "Phone not responding over adb: 'adb $($full -join ' ')' did not finish in $TimeoutSeconds s."
     }
     $proc.WaitForExit()
     $global:LASTEXITCODE = $proc.ExitCode
@@ -79,6 +83,18 @@ function Get-PowerState([string]$Serial) {
     return [pscustomobject]@{ Powered = $powered; Wakefulness = $state }
 }
 
+# Bit of settings global stay_on_while_plugged_in that matches the charger in use (1 AC, 2 USB, 4 wireless); 0 when not charging.
+function Get-ChargerStayOnBit([string]$BatteryText) {
+    if ($BatteryText -match 'AC powered: true') { return 1 }
+    if ($BatteryText -match 'USB powered: true') { return 2 }
+    if ($BatteryText -match 'Wireless powered: true') { return 4 }
+    return 0
+}
+
+function Test-StayOnCovers([string]$Value, [int]$Bit) {
+    return ($Bit -gt 0 -and $Value -match '^\d+$' -and (([int]$Value -band $Bit) -ne 0))
+}
+
 function Write-PowerState([string]$Serial) {
     $power = Get-PowerState $Serial
     Write-Host ("   phone: {0}, {1}" -f $(if ($power.Powered) { 'on charger (AC/USB/wireless powered)' } else { 'ON BATTERY' }), $power.Wakefulness)
@@ -101,4 +117,315 @@ function Stop-KeepAwake($Job) {
     if (-not $Job) { return }
     Stop-Job $Job -ErrorAction SilentlyContinue
     Remove-Job $Job -Force -ErrorAction SilentlyContinue
+}
+
+# ---- Slice 206: unattended-run helpers (lease, dev-app allow-list, lock/df/UI-dump parsing). The parsers are pure so test-phone-lib.ps1 and test-tap.ps1 need no device.
+. (Join-Path $PSScriptRoot '..\emulator\activity.ps1')
+$script:ExitLeaseHeld = 4
+$script:ExitNodeNotFound = 3
+
+# The only packages the reset script may clear, force-stop or reinstall: the Debug dev installs. The store packages are never in this list.
+$script:DevApps = @{
+    rtst = @{ Package = 'uk.sirous.readthestupidtext.dbg'; Scheme = 'rtst-test' }
+    dino = @{ Package = 'uk.sirous.dinoreader.dbg'; Scheme = 'dino-test' }
+}
+function Assert-DevPackage([string]$Package) {
+    $allowed = @($script:DevApps.Values | ForEach-Object { $_.Package })
+    if ($allowed -cnotcontains $Package) { throw "Refusing to touch '$Package': only the Debug dev installs ($($allowed -join ', ')) may be reset." }
+}
+
+function Get-DevPackage([string]$App) {
+    $package = $script:DevApps[$App].Package
+    Assert-DevPackage $package
+    return $package
+}
+
+# --- Phone lease: one session or agent holds the phone at a time. File <worktrees>\.phone\lease-<key>.json holding owner, taken and expires
+# (unix seconds, so ConvertFrom-Json in 5.1 and 7 read the same numbers). The key is the phone's own `getprop ro.serialno` (Get-PhoneLeaseKey), not the adb
+# serial, which differs between the mdns name and ip:port and changes with every Wireless debugging toggle. An expired lease is free; a corrupt or unreadable one is held (see Read-Lease). No lease at all is allowed. Read-modify-write runs under a named mutex, so two sessions cannot both take it.
+$script:LeaseDir = Join-Path (Get-WorktreesRoot) '.phone'
+$script:LeaseOwnerVariable = 'RTST_PHONE_OWNER'
+$script:DefaultLeaseMinutes = 120
+$script:MaxLeaseMinutes = 1440
+$script:LeaseLockSeconds = 10
+$script:LeaseReadAttempts = 3
+$script:UnreadableLeaseOwner = '(lease file unreadable)'
+$script:CorruptLeaseOwner = '(lease file corrupt: remove it by hand)'
+$script:RenewBelowMinutes = 15
+
+function Get-UnixNow { return [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() }
+
+function Get-PhoneLeaseKey([string]$AdbSerial) {
+    $id = "$(Invoke-Adb $AdbSerial @('shell', 'getprop', 'ro.serialno'))".Trim()
+    if ($id -notmatch '^[\w.-]{3,}$') { throw "Could not read the phone's ro.serialno (got '$id'): cannot key the phone lease." }
+    return $id
+}
+
+function Get-LeasePath([string]$Key) {
+    return Join-Path $script:LeaseDir ('lease-{0}.json' -f ($Key -replace '[^\w.-]', '_'))
+}
+
+# Runs $LockedBody holding the machine-wide mutex for this phone; an abandoned mutex (its holder died) is taken over.
+function Invoke-WithLeaseLock([string]$Key, [scriptblock]$LockedBody) {
+    $mutex = New-Object Threading.Mutex($false, ('Global\rtst-phone-lease-' + ($Key -replace '[^\w.-]', '_')))
+    $got = $false
+    try {
+        try { $got = $mutex.WaitOne($script:LeaseLockSeconds * 1000) } catch [Threading.AbandonedMutexException] { $got = $true }
+        if (-not $got) { throw "Another session has held the phone lease lock for more than $($script:LeaseLockSeconds) s." }
+        & $LockedBody
+    } finally {
+        if ($got) { $mutex.ReleaseMutex() }
+        $mutex.Dispose()
+    }
+}
+
+# The live lease, or $null when there is none or it expired. A file that cannot be read after retries, or whose JSON is corrupt, is a held lease (fail closed):
+# a corrupt one is held until its file is older than the longest lease allowed (MaxLeaseMinutes), or until someone removes it by hand.
+function Read-Lease([string]$Key, [int64]$Now = 0) {
+    if ($Now -le 0) { $Now = Get-UnixNow }
+    $path = Get-LeasePath $Key
+    if (-not (Test-Path $path)) { return $null }
+    $text = $null
+    for ($try = 1; $try -le $script:LeaseReadAttempts -and $null -eq $text; $try++) {
+        try { $text = [IO.File]::ReadAllText($path) } catch [IO.IOException] { Start-Sleep -Milliseconds 100 } catch [UnauthorizedAccessException] { Start-Sleep -Milliseconds 100 }
+    }
+    if ($null -eq $text) { return [pscustomobject]@{ Owner = $script:UnreadableLeaseOwner; Taken = $Now; Expires = $Now + 60 } }
+    try { $lease = $text | ConvertFrom-Json -ErrorAction Stop } catch { return Resolve-CorruptLease $path $Now }
+    if (-not $lease.owner -or [int64]$lease.expires -le $Now) { return $null }
+    return [pscustomobject]@{ Owner = "$($lease.owner)"; Taken = [int64]$lease.taken; Expires = [int64]$lease.expires }
+}
+
+function Resolve-CorruptLease([string]$Path, [int64]$Now) {
+    $written = [DateTimeOffset]::new((Get-Item $Path).LastWriteTimeUtc).ToUnixTimeSeconds()
+    $until = $written + ($script:MaxLeaseMinutes * 60)
+    if ($until -le $Now) { return $null }
+    return [pscustomobject]@{ Owner = $script:CorruptLeaseOwner; Taken = $written; Expires = $until }
+}
+
+# Temp file, then rename, so a reader never sees half of it. Callers hold the lease lock.
+function Write-Lease([string]$Key, [string]$Owner, [int]$Minutes, [int64]$Now = 0) {
+    if ($Now -le 0) { $Now = Get-UnixNow }
+    $null = New-Item -ItemType Directory -Force $script:LeaseDir
+    $path = Get-LeasePath $Key
+    $temp = "$path.$PID.tmp"
+    @{ owner = $Owner; taken = $Now; expires = $Now + ($Minutes * 60) } | ConvertTo-Json | Set-Content $temp
+    Move-Item $temp $path -Force
+}
+
+function Format-LeaseHolder($Lease) {
+    $until = [DateTimeOffset]::FromUnixTimeSeconds($Lease.Expires).LocalDateTime.ToString('HH:mm')
+    return "'$($Lease.Owner)' (until $until)"
+}
+
+# $true and the lease is written (or renewed by the same owner); $false when another owner holds it. Read, decision and write are one guarded step,
+# and an expired lease is replaced under the same guard.
+function Request-Lease([string]$Key, [string]$Owner, [int]$Minutes, [int64]$Now = 0) {
+    if ($Minutes -lt 1 -or $Minutes -gt $script:MaxLeaseMinutes) { throw "Lease minutes must be 1 to $($script:MaxLeaseMinutes) (got $Minutes)." }
+    return (Invoke-WithLeaseLock $Key {
+        $held = Read-Lease $Key $Now
+        if ($held -and $held.Owner -ne $Owner) { return $false }
+        Write-Lease $Key $Owner $Minutes $Now
+        return $true
+    })
+}
+
+function Remove-Lease([string]$Key, [string]$Owner, [int64]$Now = 0) {
+    return (Invoke-WithLeaseLock $Key {
+        $held = Read-Lease $Key $Now
+        if ($held -and $held.Owner -ne $Owner) { return $false }
+        Remove-Item (Get-LeasePath $Key) -Force -ErrorAction SilentlyContinue
+        return $true
+    })
+}
+
+# True when the caller's own lease has less than RenewBelowMinutes left.
+function Test-LeaseNeedsRenewal($Lease, [string]$Owner, [int64]$Now) {
+    return [bool]($Lease -and $Lease.Owner -ceq $Owner -and ($Lease.Expires - $Now) -lt ($script:RenewBelowMinutes * 60))
+}
+
+# 'Renewed' when $Owner holds a live lease (its expiry moves to $Minutes from now), 'NotHeld' when nobody does, 'Other' when someone else does.
+function Update-Lease([string]$Key, [string]$Owner, [int]$Minutes, [int64]$Now = 0) {
+    if ($Now -le 0) { $Now = Get-UnixNow }
+    return (Invoke-WithLeaseLock $Key {
+        $held = Read-Lease $Key $Now
+        if (-not $held) { return 'NotHeld' }
+        if ($held.Owner -cne $Owner) { return 'Other' }
+        Write-Lease $Key $Owner $Minutes $Now
+        return 'Renewed'
+    })
+}
+
+# Exits 4 when a live lease belongs to someone other than $env:RTST_PHONE_OWNER; no lease means allowed (older scripts keep working).
+# The caller's own lease is renewed when under 15 minutes remain, so a long run does not lose the phone to another session half-way.
+function Assert-PhoneLease([string]$Serial) {
+    $key = Get-PhoneLeaseKey $Serial
+    $held = Read-Lease $key
+    $me = [Environment]::GetEnvironmentVariable($script:LeaseOwnerVariable)
+    if ($me -and (Test-LeaseNeedsRenewal $held $me (Get-UnixNow))) { Update-Lease $key $me $script:DefaultLeaseMinutes | Out-Null }
+    if (-not $held -or $held.Owner -ceq $me) { return }
+    Write-Host "Phone $key is leased by $(Format-LeaseHolder $held); this session's owner is '$me' (set `$env:$($script:LeaseOwnerVariable) to the lease owner, or wait). Not touching the phone."
+    exit $script:ExitLeaseHeld
+}
+
+# --- Screen lock. The reads are NOT confirmed on a device running Android 15 (the S21 was busy): the keyguard flags in `dumpsys window` and
+# `cmd lock_settings get-disabled` (a command of the lock_settings service, see `cmd lock_settings help`). Only an explicit "secure=false"
+# or "disabled" counts as open; anything else is Unknown, which preflight treats as NO-GO rather than guessing.
+$script:KeyguardSecurePattern = '(?i)(?:\bis)?keyguard\s*secure\b\W{0,3}(true|false)'
+$script:KeyguardDelegatePattern = '(?i)KeyguardServiceDelegate[^\r\n]*\bsecure=(true|false)'
+# A "true" anywhere is Secure (so contradictory reads are NO-GO too). Open needs a positive read: isKeyguardSecure=false (the window manager's own answer),
+# or lock_settings saying the lock screen is disabled. The KeyguardServiceDelegate copy is cached and can be stale after a PIN is set, so a false there
+# never makes Open on its own; it can only add a Secure.
+function Resolve-LockState([string]$WindowDump, [string]$LockSettingsDisabled) {
+    $direct = @([regex]::Matches($WindowDump, $script:KeyguardSecurePattern) | ForEach-Object { $_.Groups[1].Value.ToLowerInvariant() })
+    $cached = @([regex]::Matches($WindowDump, $script:KeyguardDelegatePattern) | ForEach-Object { $_.Groups[1].Value.ToLowerInvariant() })
+    if (($direct + $cached) -contains 'true') { return 'Secure' }
+    if ($direct -contains 'false') { return 'Open' }
+    if ($LockSettingsDisabled.Trim() -match '(?i)^true\b') { return 'Open' }
+    return 'Unknown'
+}
+
+# `df -k /data`: the last line is "<fs> <1K-blocks> <used> <available> <use%> <mount>"; returns the available KB, or -1 when it cannot be read.
+function ConvertFrom-DfAvailableKb([string[]]$Lines) {
+    $last = @($Lines | Where-Object { "$_".Trim() -ne '' }) | Select-Object -Last 1
+    $fields = "$last".Trim() -split '\s+'
+    if ($fields.Count -lt 4 -or $fields[3] -notmatch '^\d+$') { return -1 }
+    return [int64]$fields[3]
+}
+
+# --- uiautomator dump parsing. Each <node .../> becomes Text, Id, Desc, Clickable, Checked, Selected and the bounds rectangle.
+function Read-UiNodes([string]$Xml) {
+    foreach ($tag in [regex]::Matches($Xml, '<node\b[^>]*>')) {
+        $attrs = @{}
+        foreach ($a in [regex]::Matches($tag.Value, '([\w-]+)="([^"]*)"')) { $attrs[$a.Groups[1].Value] = [Net.WebUtility]::HtmlDecode($a.Groups[2].Value) }
+        $b = [regex]::Match("$($attrs['bounds'])", '\[(\d+),(\d+)\]\[(\d+),(\d+)\]')
+        if (-not $b.Success) { continue }
+        [pscustomobject]@{
+            Package = "$($attrs['package'])"; Text = "$($attrs['text'])"; Id = "$($attrs['resource-id'])"; Desc = "$($attrs['content-desc'])"; Clickable = ("$($attrs['clickable'])" -eq 'true')
+            Checked = ("$($attrs['checked'])" -eq 'true'); Selected = ("$($attrs['selected'])" -eq 'true')
+            Left = [int]$b.Groups[1].Value; Top = [int]$b.Groups[2].Value; Right = [int]$b.Groups[3].Value; Bottom = [int]$b.Groups[4].Value
+        }
+    }
+}
+
+# The nodes whose attribute ('Text', 'Id' or 'Desc') equals the value (case-sensitive) first; only when none does, those that contain it (case-insensitive).
+# Kind says which of the two it was: 'Exact', 'Contains' or 'None'.
+function Resolve-UiMatch($Nodes, [string]$Attribute, [string]$Value) {
+    $all = @($Nodes | Where-Object { $_.$Attribute })
+    $exact = @($all | Where-Object { $_.$Attribute -ceq $Value })
+    if ($exact.Count -gt 0) { return [pscustomobject]@{ Kind = 'Exact'; Nodes = $exact } }
+    $partial = @($all | Where-Object { $_.$Attribute.IndexOf($Value, [StringComparison]::OrdinalIgnoreCase) -ge 0 })
+    return [pscustomobject]@{ Kind = $(if ($partial.Count -gt 0) { 'Contains' } else { 'None' }); Nodes = $partial }
+}
+
+function Find-UiNodes($Nodes, [string]$Attribute, [string]$Value) {
+    return @((Resolve-UiMatch $Nodes $Attribute $Value).Nodes)
+}
+
+# The status bar and notification shade belong to Android, not to the app, and change by themselves (clock, notifications).
+$script:SystemUiPackage = 'com.android.systemui'
+function Select-AppNodes($Nodes) {
+    return @($Nodes | Where-Object { $_.Package -cne $script:SystemUiPackage })
+}
+
+# 'Match' when the app nodes on screen (SystemUI left out) include the expected package, 'Mismatch' when they are all someone else's (the store app, the
+# user's apps), 'Unknown' when the dump carries no package at all or nothing but SystemUI.
+function Resolve-ForegroundPackage($Nodes, [string]$Package) {
+    $packages = @(Select-AppNodes $Nodes | Where-Object { $_.Package } | ForEach-Object { $_.Package } | Select-Object -Unique)
+    if ($packages.Count -eq 0) { return 'Unknown' }
+    if ($packages -ccontains $Package) { return 'Match' }
+    return 'Mismatch'
+}
+
+function Get-NodeCentre($Node) {
+    return [pscustomobject]@{ X = [int](($Node.Left + $Node.Right) / 2); Y = [int](($Node.Top + $Node.Bottom) / 2) }
+}
+
+# `uiautomator dump` prints "UI hierarchy dumped to: <file>" on success; on a screen that never goes idle it prints an error and leaves the old file.
+function Test-UiDumpOk([string[]]$Output) {
+    return ((@($Output) -join "`n") -match 'dumped to')
+}
+
+# One string per node that has anything to show: text, description, id and the toggle state, so a switch or a radio row that flips counts as a change.
+function Get-ScreenSignature($Nodes) {
+    return @(Select-AppNodes $Nodes | Where-Object { $_.Text -or $_.Desc -or $_.Id } |
+        ForEach-Object { '{0}|{1}|{2}|c={3}|s={4}' -f $_.Text, $_.Desc, $_.Id, $_.Checked, $_.Selected } | Select-Object -Unique)
+}
+
+# What differs between two dumps: Added and Removed are signature strings; Changed is true when either is not empty.
+function Compare-Screens($Before, $After) {
+    $b = Get-ScreenSignature $Before; $a = Get-ScreenSignature $After
+    $added = @($a | Where-Object { $b -cnotcontains $_ }); $removed = @($b | Where-Object { $a -cnotcontains $_ })
+    return [pscustomobject]@{ Changed = ($added.Count + $removed.Count) -gt 0; Added = $added; Removed = $removed }
+}
+
+# logcat prints "--------- beginning of main" headers even when nothing was logged; they are not log lines.
+function Select-RealLogLines([string[]]$Lines) {
+    return @($Lines | Where-Object { "$_".Trim() -ne '' -and "$_" -notmatch '^\s*-{5,}' })
+}
+
+# The preferences file that holds $Key: the first of $Names (shared_prefs/*.xml) whose content in $Contents (name -> xml) stores the key, else
+# <package>_preferences.xml when it is listed, else $null.
+function Select-PrefsFileByKey([string[]]$Names, [hashtable]$Contents, [string]$Key, [string]$Package) {
+    $xmlNames = @($Names | ForEach-Object { "$_".Trim() } | Where-Object { $_.EndsWith('.xml') })
+    $hit = $xmlNames | Where-Object { $Contents.ContainsKey($_) -and $null -ne (Get-PrefValue $Contents[$_] $Key) } | Select-Object -First 1
+    if ($hit) { return $hit }
+    return $xmlNames | Where-Object { $_ -eq "${Package}_preferences.xml" } | Select-Object -First 1
+}
+
+# MAUI Preferences: <string name="KEY">value</string>; $null when the key is not stored.
+function Get-PrefValue([string]$Xml, [string]$Key) {
+    $m = [regex]::Match($Xml, '<string name="' + [regex]::Escape($Key) + '">([^<]*)</string>')
+    if ($m.Success) { return $m.Groups[1].Value }
+    return $null
+}
+
+# `run-as <pkg> ls files/packs` and its exit code: 'Packs' (a listing), 'None' (no folder or an empty one) or 'Error' (run-as refused or adb failed: never read as "no packs").
+function Resolve-PacksListing([string[]]$Lines, [int]$ExitCode) {
+    $text = (@($Lines) -join "`n")
+    if ($text -match '(?i)run-as:|not debuggable|unknown package|inaccessible') { return 'Error' }
+    if ($text -match '(?i)No such file or directory') { return 'None' }
+    if ($ExitCode -ne 0) { return 'Error' }
+    if ($text.Trim() -ne '') { return 'Packs' }
+    return 'None'
+}
+
+# Entries of `tar -tf` that are files (a directory entry ends with "/").
+function Get-TarFileCount([string[]]$Lines) {
+    return @($Lines | Where-Object { "$_".Trim() -ne '' -and "$_".Trim() -notmatch '/$' }).Count
+}
+
+# Slice 179: counting off for every harness run, even a Release build (the marker the app reads, UsageEligibility.NoUsageMarkerFile). `pm clear` wipes the
+# external files folder, so every script that clears writes it again.
+function Set-DevNoUsageMarker([string]$Phone, [string]$Package) {
+    $filesDir = "/sdcard/Android/data/$Package/files"
+    $marker = "$filesDir/no-usage"
+    Invoke-Adb $Phone @('shell', "mkdir -p $filesDir && touch $marker") | Out-Null
+    $listed = "$(Invoke-Adb $Phone @('shell', "ls $marker"))"
+    if ($listed -notmatch 'no-usage' -or $listed -match 'No such file|denied') { throw "Could not write the no-usage marker $marker on the phone ($listed): a Release run would send production counts." }
+}
+
+# Slice 183: the Debug marker that slows pack downloads. Kept across a clear only when it was there before.
+$script:ThrottleMarkerName = 'throttle-pack-downloads'
+# Only "No such file" means the marker is absent; any other answer (permission denied, an adb error) is not a yes or a no, so it throws.
+function Resolve-MarkerListing([string]$Output, [string]$Name) {
+    if ($Output -match 'No such file') { return $false }
+    if ($Output.Trim().EndsWith($Name)) { return $true }
+    throw "Could not tell whether the marker $Name exists (ls said: $Output)."
+}
+
+function Test-DevMarker([string]$Phone, [string]$Package, [string]$Name) {
+    return (Resolve-MarkerListing "$(Invoke-Adb $Phone @('shell', "ls /sdcard/Android/data/$Package/files/$Name"))" $Name)
+}
+
+function Set-DevMarker([string]$Phone, [string]$Package, [string]$Name) {
+    $filesDir = "/sdcard/Android/data/$Package/files"
+    Invoke-Adb $Phone @('shell', "mkdir -p $filesDir && touch $filesDir/$Name") | Out-Null
+}
+
+# Slice 206: the aside archives are named packs-<yyyyMMdd-HHmmss>.tar. The names to delete so only the newest $Keep stay; anything not named like that is never listed.
+$script:KeepAsideArchives = 3
+function Get-ArchivesToPrune([string[]]$Names, [int]$Keep = 3) {
+    $mine = @($Names | ForEach-Object { "$_".Trim() } | Where-Object { $_ -match '(^|/)packs-\d{8}-\d{6}\.tar$' } | Sort-Object -Descending)
+    if ($mine.Count -le $Keep) { return @() }
+    return @($mine | Select-Object -Skip $Keep)
 }
