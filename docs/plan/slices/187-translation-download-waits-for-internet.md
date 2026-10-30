@@ -1,8 +1,8 @@
 ### Slice 187 — Translation downloads wait for the internet (design frame R12)
 
-*Planned 2026-10-29.* Follow-up of Slice 182 (its design frame R12 was not built: Slice 182 covered our own pack downloads, and the phone's translation models come from ML Kit's own download).
+*In progress (wave 2026-10-30), draft PR.* *Planned 2026-10-29.* Follow-up of Slice 182 (its design frame R12 was not built: Slice 182 covered our own pack downloads, and the phone's translation models come from ML Kit's own download).
 
-**Touches:** `src/ReadTheStupidText.Application/Reading/WaitStage.cs`, `src/ReadTheStupidText.Application/Translation/*` (new: the pure wait/resume decision), `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/MlKitTranslator.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/MlKitTranslator.cs`, `src/ReadTheStupidText.Mobile.Shared/Network/PackResumeWatcher.cs`, `src/ReadTheStupidText.Mobile.Shared/Waiting/*`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Mobile/ReaderPage.Wait.cs`, `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*`, `src/DinoReader.App/TranslationPackPrompt.cs`, `src/DinoReader.App/StoryTranslator.cs`, `src/DinoReader.App/Resources/Strings/AppResources*`, `tests/ReadTheStupidText.Tests/*`, `.maestro/*`, `docs/plan/slices/187-translation-download-waits-for-internet.md`.
+**Touches:** `src/ReadTheStupidText.Application/Reading/WaitStage.cs`, `src/ReadTheStupidText.Application/Translation/*` (new: the pure wait/resume decision), `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/MlKitTranslator.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/MlKitTranslator.cs`, `src/ReadTheStupidText.Mobile.Shared/Network/PackResumeWatcher.cs`, `src/ReadTheStupidText.Mobile.Shared/Translation/*` (new: the download session), `src/ReadTheStupidText.Mobile.Shared/Waiting/*`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Mobile/ReaderPage.Wait.cs`, `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*`, `src/DinoReader.App/TranslationPackPrompt.cs`, `src/DinoReader.App/StoryTranslator.cs`, `src/DinoReader.App/Resources/Strings/AppResources*`, `tests/ReadTheStupidText.Tests/*`, `.maestro/*`, `docs/plan/slices/187-translation-download-waits-for-internet.md`.
 
 #### Why
 
@@ -22,6 +22,14 @@ Decisions (Claude, 2026-10-29; obvious from Slice 182's rules):
 - "Offline" is decided by MAUI `Connectivity` (no internet access) at the moment the download fails or stalls, not by ML Kit's error code.
 - Retry tries at once on any network. Cancel stops it; nothing restarts after Cancel.
 - Coming back online restarts the download automatically once per network change (reuse `PackResumeWatcher`, Slice 182), on Wi-Fi/Ethernet only unless the user had already said download on mobile data.
+
+#### State design (coordinator, 2026-10-30, before claim)
+
+- **One owner:** a shared `TranslationModelDownloadSession` (Mobile.Shared/Translation, one per requested language pair), created by the caller (RTST `ReviewPage`, Dino `TranslationPackPrompt` / `StoryTranslator`) and wrapping the per-platform `MlKitTranslator` download. Only the session moves between states; `MlKitTranslator` only reports the end of one attempt (done / failed) and its last progress. The overlay reads the session.
+- **States:** Downloading -> Done | WaitingForInternet | Failed | Cancelled. WaitingForInternet -> Downloading (network back, or Retry) | Cancelled. Done, Failed and Cancelled are final.
+- **Failed vs waiting:** an attempt that fails while `Connectivity` says no internet goes to WaitingForInternet; a failure with internet stays Failed (today's error message). Grounded: Android maps every failure to `TranslationModelUnavailableException` in the catch near `MlKitTranslator.cs:90`, not 74-78; iOS fail observer is `Platforms/iOS/MlKitTranslator.cs:116`.
+- **Interrupts:** app killed or the page left -> the session ends as Cancelled (nothing saved; the next translate starts a new session; Android's existing `DeleteWhenDoneAsync` cleanup stays). Back online -> one restart per network change via `PackResumeWatcher`, only on Wi-Fi/Ethernet unless the user already allowed mobile data. Retry -> restart now on any network. Cancel -> final; the session unsubscribes from the watcher first, so nothing restarts after Cancel.
+- There is no Retry button in `WaitOverlay`/`WaitController` yet: add it.
 
 #### Work
 
