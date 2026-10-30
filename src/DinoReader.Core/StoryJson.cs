@@ -69,6 +69,7 @@ public static class StoryJson
         SourceId = s.SourceId,
         Translations = ToTranslationFiles(s.Translations),
         LanguageCasts = ToLanguageCastFiles(s.LanguageCasts),
+        TextInPictures = s.TextInPictures ? true : null,
     };
 
     private static Story FromFile(StoryFile f)
@@ -86,7 +87,8 @@ public static class StoryJson
             f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId ?? string.Empty, ParseMode(f.PreferredMode, f.WordsOverPictures), f.Translate,
             f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null, CleanTranslations(f.Translations),
             CleanLanguageCasts(f.LanguageCasts, f.Language), f.ShowOriginal == true,
-            CleanRecordings(f.Recordings, f.Pages.Count, f.Language), f.UseRecordings == true, f.AnimalSounds != false);
+            CleanRecordings(f.Recordings, f.Pages.Count, f.Language), f.UseRecordings == true, f.AnimalSounds != false,
+            f.TextInPictures == true);
     }
 
     private static List<RecordingFile>? ToRecordingFiles(IReadOnlyDictionary<int, PageRecording>? recordings, int pageCount)
@@ -344,6 +346,9 @@ public static class StoryJson
         /// <summary>Read only, for files older than Slice 151: false meant the words were off, which now reads as the picture-only mode. Never written.</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? WordsOverPictures { get; set; }
+        /// <summary>Slice 196: the pictures carry the story's words, so the book opens in picture only. Absent means false.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? TextInPictures { get; set; }
         public List<PageFile> Pages { get; set; } = [];
         public List<CastFile> Cast { get; set; } = [];
         public bool Translate { get; set; }

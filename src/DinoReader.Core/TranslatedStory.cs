@@ -36,7 +36,7 @@ public static class TranslatedStoryBuilder
         {
             int pageEnd = pageStart + page.Text.Length;
             string text = PageText(source, sourceSentences, texts, pageStart, pageEnd, offset, spans, placed);
-            pages.Add(new StoryPage(text, page.ImageFile));
+            pages.Add(new StoryPage(text, page.ImageFile, PicturePrintsWords: page.Lines is { Count: > 0 }));
             offset += text.Length + Story.PageSeparator.Length;
             pageStart = pageEnd + Story.PageSeparator.Length;
         }

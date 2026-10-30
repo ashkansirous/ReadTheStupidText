@@ -12,7 +12,7 @@ namespace DinoReader;
 /// </summary>
 public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> storyPages, IReadOnlyList<SentenceSpan> sentences,
 	Func<string?, string?> resolveImage, string font, ReadingTheme theme, bool rightToLeft, Action<int> onSentence,
-	Action<SwipedEventArgs> onSwipe, bool wordsOver = true) : IPageRenderer
+	Action<SwipedEventArgs> onSwipe, bool wordsOver, bool textInPictures) : IPageRenderer
 {
 	private const float PanelAlpha = 0.92f;
 	private const double PanelFontSize = 21;
@@ -300,7 +300,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		if (slot.Image is not null)
 		{
 			var margin = new Thickness(UprightPictureSide, UprightPictureTop, UprightPictureSide, 0);
-			grid.Add(wordsOver ? CoverPicture(slot.Image, slot.Aspect, margin) : PictureCard(slot.Image, margin));
+			grid.Add(!IsPictureOnly(slot) ? CoverPicture(slot.Image, slot.Aspect, margin) : PictureCard(slot.Image, margin));
 		}
 
 		if (HasText(slot))
@@ -345,7 +345,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 
 	private View SidewaysPage(Slot slot)
 	{
-		if (!wordsOver)
+		if (IsPictureOnly(slot))
 		{
 			return SidewaysPictureOnly(slot);
 		}
@@ -405,7 +405,11 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 	}
 
 	// A page with no picture keeps its text card whatever the switch says: there is nothing else to show.
-	private bool HasText(Slot slot) => (wordsOver || slot.Image is null) && _layout.SentencesOnPage(slot.StoryPage).First >= 0;
+	// Likewise a page whose picture has no printed words: Picture only would leave it with no written text at all (Slice 196).
+	private bool HasText(Slot slot) => (!IsPictureOnly(slot) || slot.Image is null) && _layout.SentencesOnPage(slot.StoryPage).First >= 0;
+
+	private bool IsPictureOnly(Slot slot) =>
+		!wordsOver && !(slot.StoryPage >= 0 && slot.StoryPage < storyPages.Count && storyPages[slot.StoryPage].ShowsTextCardInPictureOnly(textInPictures));
 
 	private static Border PictureCard(string file, Thickness margin) => new()
 	{

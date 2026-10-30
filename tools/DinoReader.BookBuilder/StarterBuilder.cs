@@ -197,7 +197,8 @@ internal static class StarterBuilder
         return built;
     }
 
-    /// <summary>The story with every <c>content/dino/&lt;stem&gt;/translations/&lt;lang&gt;.json</c> (source piece text to translation) merged into <see cref="Story.Translations"/>.</summary>
+    /// <summary>The story with every <c>content/dino/&lt;stem&gt;/translations/&lt;lang&gt;.json</c> (source piece text to translation) merged into <see cref="Story.Translations"/>,
+    /// and the book's <c>textInPictures</c> flag (Slice 196) set: every built package passes through here, so the flag is applied in one place.</summary>
     public static Story WithTranslations(Story story, string stem)
     {
         string folder = TranslationsFolder(stem);
@@ -217,7 +218,7 @@ internal static class StarterBuilder
             }
         }
 
-        return story with { Translations = tables.Count == 0 ? null : tables };
+        return story with { Translations = tables.Count == 0 ? null : tables, TextInPictures = Books.Folder(stem).Info.TextInPictures == true };
     }
 
     /// <summary>The picture starter: pages from <c>lines.json</c> (lines joined by a newline, so the geometry rules apply; a page with only
