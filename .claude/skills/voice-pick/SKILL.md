@@ -15,8 +15,11 @@ changes app code. The caller applies the pick (usually through `implement-slice`
   outside the repo or in the ignored `tools/voice-listen/out/` folder.
 - Use the caller's lines; else two everyday sentences in the language plus one with a number and a name.
   The same lines for every candidate, the app's default pace, no flavour unless the question is about flavours.
-- Label each clip with the voice id the code uses (e.g. `piper:nb-knn`) and a plain hint (woman/man, from
+- Label each clip with the voice id the code uses (e.g. `piper:nb-knv`) and a plain hint (woman/man, from
   the pack's speaker table). Convert to MP3 or OGG at 64-96 kbps to keep the page small.
+- To make a pick the default, change the order in code, not in `packs.yml` (no packs release): Norwegian is
+  `NorwegianVoices.Ids` (first Id = default, picker order, "Voice N" label), plus the roster in
+  `CharacterRosterTenVoice.cs` for Dino. A stored pick that is still installed is kept, never remapped.
 - Skip a candidate whose clip is silent or cut (check length against the text, as `run.py` does) and say so.
 
 ## 2. Page
