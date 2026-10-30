@@ -1,0 +1,30 @@
+# POST-MERGE LIVE CHECK by design (Slice 192 Not yet verified): fails before the merge's publish-store has run.
+# Slice 192: the store card's credit line is in the app language (German here), not English. Needs the live store to serve creditsByLanguage (after the merge's publish-store).
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK enter-grown-up ok
+appId: uk.sirous.dinoreader
+name: Store credit line in German
+---
+- launchApp:
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: de
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    arguments:
+      cmd: enter-grown-up
+      lang: de
+- extendedWaitUntil:
+    visible:
+      id: GalleryStore
+    timeout: 30000
+- tapOn:
+    id: GalleryStore
+- extendedWaitUntil:
+    visible: ".*frei zum Teilen.*"
+    timeout: 30000
+- assertNotVisible: ".*free to share.*"

@@ -58,5 +58,21 @@
       ]
     }
   ],
-  "contentHash": "47de46ac423bb8a037c3fc34671f4ee0a24cee9601e1ceb047060f7f90233750"
+  "contentHash": "47de46ac423bb8a037c3fc34671f4ee0a24cee9601e1ceb047060f7f90233750",
+  "creditsByLanguage": {
+    "ar": "حكاية شعبية مُعاد سردها · مجانية للمشاركة",
+    "da": "Genfortalt folkeeventyr · frit at dele",
+    "de": "Nacherzähltes Volksmärchen · frei zum Teilen",
+    "es": "Cuento tradicional recontado · libre para compartir",
+    "fa": "قصهٔ سنتی بازگویی‌شده · آزاد برای اشتراک‌گذاری",
+    "fi": "Uudelleen kerrottu kansansatu · vapaasti jaettavissa",
+    "fr": "Conte traditionnel raconté à nouveau · libre de partage",
+    "ja": "昔話の語りなおし · 自由に共有できます",
+    "nb": "Gjenfortalt folkeeventyr · fri til å dele",
+    "nl": "Navertelde volksvertelling · vrij te delen",
+    "pt": "Conto tradicional recontado · livre para compartilhar",
+    "ru": "Пересказ народной сказки · можно свободно делиться",
+    "sv": "Återberättad folksaga · fri att dela",
+    "zh": "传统故事新编 · 可自由分享"
+  }
 }

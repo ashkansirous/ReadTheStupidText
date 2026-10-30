@@ -40,8 +40,8 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	/// <summary>The detail line, "Ages 5–8 · 14 pages · 7 min": the age range leads the length (each part is left out when the server gave none).</summary>
 	public string Detail => StoreText.Detail(Item);
 
-	/// <summary>The sub-line under the title: the credit line (<c>meta.json</c>'s <c>credits</c>), or the language in its own name when the story has none.</summary>
-	public string Credits => Item.Credits ?? StoreText.Language(Item);
+	/// <summary>The sub-line under the title: the credit line in the app language (Slice 192: <c>creditsByLanguage</c>, else <c>credits</c>), or the language in its own name when the story has none.</summary>
+	public string Credits => Item.CreditsIn(LanguageChoice.Current()) ?? StoreText.Language(Item);
 
 	public bool HasDetail => Detail.Length > 0;
 	public bool HasCredits => Credits.Length > 0;

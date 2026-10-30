@@ -291,6 +291,11 @@
   <data name="Wait_ReadingPictures" xml:space="preserve"><value>در حال خواندن تصاویر…</value></data>
   <data name="Wait_PageOf" xml:space="preserve"><value>صفحهٔ {0} از {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>در حال ترجمه…</value></data>
+  <data name="Wait_WaitingInternet" xml:space="preserve"><value>در انتظار اینترنت</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingWifi" xml:space="preserve"><value>در انتظار Wi-Fi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_Retry" xml:space="preserve"><value>تلاش دوباره</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{1}% از {0} دریافت شده است. وقتی دوباره آنلاین شوید خودش ادامه می‌یابد.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>در حال دریافت {0}. وقتی دوباره آنلاین شوید خودش ادامه می‌یابد.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>در حال ذخیره…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>در حال آماده‌سازی کتاب…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>در حال پشتیبان‌گیری از کتاب‌ها…</value></data>

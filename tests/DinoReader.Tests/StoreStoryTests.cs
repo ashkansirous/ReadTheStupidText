@@ -62,6 +62,32 @@ public sealed class StoreStoryTests : IDisposable
         }
     }
 
+    // Slice 192: the credit line is served in every other language too, for the store books and for the starters that are also store stories.
+    [Fact]
+    public void EveryStoreStory_WritesItsCreditLineInEveryOtherLanguage_IntoMetaJson()
+    {
+        string[] expected = UiLanguage.Supported.Where(l => l != UiLanguage.English).Order().ToArray();
+        foreach (StoreStorySpec spec in Books.Store)
+        {
+            using JsonDocument meta = JsonDocument.Parse(StoreBuilder.MetaJson(spec, StoreBuilder.Build(spec)));
+            JsonElement credits = meta.RootElement.GetProperty("creditsByLanguage");
+
+            Assert.Equal(expected, credits.EnumerateObject().Select(c => c.Name).Order().ToArray());
+            Assert.All(credits.EnumerateObject(), c => Assert.False(string.IsNullOrWhiteSpace(c.Value.GetString()), $"{spec.Title}: {c.Name}"));
+        }
+    }
+
+    [Fact]
+    public void EveryStarterStoreEntry_CarriesItsCreditLineInEveryOtherLanguage()
+    {
+        string[] expected = UiLanguage.Supported.Where(l => l != UiLanguage.English).Order().ToArray();
+        foreach (StoreEntry entry in StoreBuilder.StarterEntries.Values)
+        {
+            Assert.Equal(expected, entry.CreditsByLanguage!.Keys.Order().ToArray());
+            Assert.All(entry.CreditsByLanguage.Values, v => Assert.False(string.IsNullOrWhiteSpace(v), entry.Title));
+        }
+    }
+
     [Fact]
     public void EveryShippedBook_HasATitleInEveryOtherLanguage()
     {

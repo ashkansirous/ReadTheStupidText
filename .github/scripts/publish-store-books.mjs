@@ -13,6 +13,10 @@
  * `story-v<n>.dino` is never overwritten (its upload is skipped, the meta still goes up); a lower version than
  * live is never uploaded.
  *
+ * Slice 192: a book at the SAME version as live also gets its `meta.json` (only that file, never a package) uploaded when
+ * the built one differs in content from the one in the bucket, because store metadata (credit lines) is listing data, not
+ * book content, and must not cost every device a re-download through a version bump.
+ *
  * Usage: node publish-store-books.mjs [--dry-run] [--verify] [--root <store folder>] [--live-file <api json>]
  *   (no flag)   upload what is behind; fails when CLOUDFLARE_API_TOKEN is unset
  *   --dry-run   print the plan, upload nothing, need no token
@@ -59,6 +63,64 @@ export function planStoreUploads(built, live) {
         if (liveVersion === null || parsed > liveVersion) return { id, version: parsed, liveVersion, outcome: Outcome.Upload };
         return { id, version: parsed, liveVersion, outcome: parsed === liveVersion ? Outcome.UpToDate : Outcome.LiveNewer };
     });
+}
+
+/** Pure: the meta.json upload alone, for a book whose version is already live. */
+export function metaUpload({ id }, folder) {
+    return { name: META_FILE, key: `${KEY_PREFIX}/${id}/${META_FILE}`, path: join(folder, META_FILE), contentType: 'application/json' };
+}
+
+function canonical(value) {
+    if (Array.isArray(value)) return value.map(canonical);
+    if (value && typeof value === 'object') return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])]));
+    return value;
+}
+
+/** Pure: whether the built meta.json text differs in content (key order and whitespace ignored) from the live one; a missing or unreadable live meta counts as different. */
+export function metaDiffers(builtText, liveText) {
+    if (liveText === null || liveText === undefined) return true;
+    try {
+        return JSON.stringify(canonical(JSON.parse(builtText))) !== JSON.stringify(canonical(JSON.parse(liveText)));
+    } catch {
+        return true;
+    }
+}
+
+/** Pure: whether the bucket's meta.json text is absent or has exactly the built version (a newer or unreadable one must never be overwritten by an older run). */
+export function bucketVersionMatches(liveText, builtVersion) {
+    if (liveText === null || liveText === undefined) return true;
+    try {
+        return JSON.parse(liveText).version === builtVersion;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Re-uploads meta.json alone for each book whose built version equals the live one but whose built meta differs from the
+ * bucket's. `liveMeta(upload)` returns the bucket's meta.json text, or null when there is none. A failing book is skipped, the
+ * run then throws listing them (the error carries `done`). Returns the ids refreshed.
+ */
+export function runMetaRefresh(plan, root, { put, liveMeta }) {
+    const done = [];
+    const failures = [];
+    for (const book of plan.filter((item) => item.outcome === Outcome.UpToDate)) {
+        try {
+            const upload = metaUpload(book, join(root, book.id));
+            const live = liveMeta(upload);
+            if (!metaDiffers(readFileSync(upload.path, 'utf8'), live)) continue;
+            if (!bucketVersionMatches(live, book.version)) {
+                console.warn(`warning: ${book.id} bucket meta.json is not v${book.version}; not refreshing it`);
+                continue;
+            }
+            put(upload);
+            done.push(book.id);
+        } catch (error) {
+            failures.push(`${book.id}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+    if (failures.length > 0) throw Object.assign(new Error(`${failures.length} store meta.json refresh(es) failed: ${failures.join('; ')}`), { done });
+    return done;
 }
 
 /** Pure: the uploads for one book, in the order they must run: cover, package, meta.json last. */
@@ -135,11 +197,12 @@ function uploadBook(book, root, { put, packageExists, hasCover }) {
 }
 
 /** Pure: the step-summary markdown. */
-export function summaryText(plan, uploaded) {
+export function summaryText(plan, uploaded, metaRefreshed = []) {
     const lines = ['### Dino store books'];
     const count = (outcome) => plan.filter((item) => item.outcome === outcome).length;
     lines.push(`${plan.length} built: ${uploaded.length} uploaded, ${count(Outcome.UpToDate)} up to date, ${count(Outcome.LiveNewer)} live newer (skipped), ${count(Outcome.Invalid)} invalid.`);
     uploaded.forEach((book) => lines.push(`- uploaded ${book.id} v${book.version}`));
+    metaRefreshed.forEach((id) => lines.push(`- refreshed meta.json of ${id} (same version, changed listing data)`));
     plan.filter((item) => item.outcome === Outcome.LiveNewer).forEach((item) => lines.push(`- warning: ${item.id} built v${item.version} but live is v${item.liveVersion}; not uploaded`));
     plan.filter((item) => item.outcome === Outcome.Invalid).forEach((item) => lines.push(`- error: ${item.id} has no valid version in meta.json`));
     return lines.join('\n');
@@ -169,6 +232,18 @@ function putToBucket(upload) {
     const result = runWrangler(wranglerArgs(upload));
     if (result.error) throw result.error;
     if (result.status !== 0) throw new Error(`wrangler upload of ${upload.key} exited with status ${result.status}.`);
+}
+
+function metaInBucket(upload) {
+    const folder = mkdtempSync(join(tmpdir(), 'store-meta-'));
+    try {
+        const file = join(folder, 'live-meta.json');
+        const result = runWrangler(['r2', 'object', 'get', `${BUCKET_NAME}/${upload.key}`, '--remote', '--file', file], true);
+        if (result.error) throw result.error;
+        return publishedStateFrom({ status: result.status, output: `${result.stdout}${result.stderr}` }) ? readFileSync(file, 'utf8') : null;
+    } finally {
+        rmSync(folder, { recursive: true, force: true });
+    }
 }
 
 function packageInBucket(upload) {
@@ -219,15 +294,23 @@ async function main() {
         plan.forEach((item) => console.log(`${item.outcome}: ${item.id} built v${item.version}, live ${item.liveVersion ?? 'none'}`));
         return;
     }
-    let uploaded;
-    try {
-        uploaded = runUploads(plan, root, { put: putToBucket, packageExists: packageInBucket });
-    } catch (error) {
-        writeSummary(summaryText(plan, error.done ?? []));
-        throw error;
+    let uploaded = [];
+    let refreshed = [];
+    const errors = [];
+    for (const [step, assign] of [
+        [() => runUploads(plan, root, { put: putToBucket, packageExists: packageInBucket }), (done) => { uploaded = done; }],
+        [() => runMetaRefresh(plan, root, { put: putToBucket, liveMeta: metaInBucket }), (done) => { refreshed = done; }],
+    ]) {
+        try {
+            assign(step());
+        } catch (error) {
+            assign(error.done ?? []);
+            errors.push(error);
+        }
     }
-    writeSummary(summaryText(plan, uploaded));
-    if (plan.some((item) => item.outcome === Outcome.Invalid)) throw new Error('A built store book has no valid version in meta.json.');
+    writeSummary(summaryText(plan, uploaded, refreshed));
+    if (plan.some((item) => item.outcome === Outcome.Invalid)) errors.push(new Error('A built store book has no valid version in meta.json.'));
+    if (errors.length > 0) throw new Error(errors.map((error) => error.message).join(' | '));
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

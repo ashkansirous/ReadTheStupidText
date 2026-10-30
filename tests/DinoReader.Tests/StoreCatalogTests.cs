@@ -34,6 +34,30 @@ public class StoreCatalogTests
     }
 
     [Fact]
+    public void TheCreditLine_ShowsTheChosenLanguage_ElseTheEnglishCredits_ElseNull()
+    {
+        string map = "\"credits\":\"Retold from Aesop\",\"creditsByLanguage\":{\"fa\":\" بازگویی \",\"xx\":\"No\",\"de\":\"  \",\"ja\":7},\"minutes\"";
+        StoreItem item = Assert.Single(StoreCatalog.Parse($$"""{"stories":[{{Entry().Replace("\"minutes\"", map)}}]}"""));
+        StoreItem plain = Assert.Single(StoreCatalog.Parse($$"""{"stories":[{{Entry()}}]}"""));
+
+        Assert.Equal("بازگویی", item.CreditsIn("fa"));
+        Assert.Equal("بازگویی", item.CreditsIn("fa-IR"));
+        Assert.Equal("Retold from Aesop", item.CreditsIn("de"));
+        Assert.Equal("Retold from Aesop", item.CreditsIn("en"));
+        Assert.Null(plain.CreditsIn("fa"));
+    }
+
+    [Fact]
+    public void TheCreditsMap_IgnoresUnsupportedKeysBeforeTheCap()
+    {
+        string junk = string.Join(",", Enumerable.Range(0, 40).Select(i => $"\"zz{i}\":\"No\""));
+        string map = $"\"creditsByLanguage\":{{{junk},\"fa\":\"بازگویی\"}},\"minutes\"";
+        StoreItem item = Assert.Single(StoreCatalog.Parse($$"""{"stories":[{{Entry().Replace("\"minutes\"", map)}}]}"""));
+
+        Assert.Equal("بازگویی", item.CreditsIn("fa"));
+    }
+
+    [Fact]
     public void Parse_ReadsTheTitlesMap_DroppingBadLanguagesAndBlankTitles()
     {
         string json = $$"""{"stories":[{{Entry().Replace("\"minutes\"", "\"titles\":{\"fa\":\" خرس \",\"xx\":\"No\",\"de\":\"  \",\"ja\":7},\"minutes\"")}}]}""";

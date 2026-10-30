@@ -73,5 +73,21 @@
     "Duckling": "Duck",
     "Dilly": "Duck"
   },
-  "contentHash": "160c679401ca8280d124c8b57049ac37be1460dd90cd4d2ee31693ee8ac00d60"
+  "contentHash": "160c679401ca8280d124c8b57049ac37be1460dd90cd4d2ee31693ee8ac00d60",
+  "creditsByLanguage": {
+    "ar": "مُعاد سردها عن أندرسن · مجانية للمشاركة",
+    "da": "Genfortalt efter H.C. Andersen · frit at dele",
+    "de": "Nacherzählt nach Andersen · frei zum Teilen",
+    "es": "Recontado a partir de Andersen · libre para compartir",
+    "fa": "بازگویی از آندرسن · آزاد برای اشتراک‌گذاری",
+    "fi": "Uudelleen kerrottu Andersenin mukaan · vapaasti jaettavissa",
+    "fr": "Raconté à nouveau d'après Andersen · libre de partage",
+    "ja": "アンデルセンの語りなおし · 自由に共有できます",
+    "nb": "Gjenfortalt etter H.C. Andersen · fri til å dele",
+    "nl": "Naverteld naar Andersen · vrij te delen",
+    "pt": "Recontado a partir de Andersen · livre para compartilhar",
+    "ru": "Пересказ сказки Андерсена · можно свободно делиться",
+    "sv": "Återberättad efter Andersen · fri att dela",
+    "zh": "改编自安徒生 · 可自由分享"
+  }
 }

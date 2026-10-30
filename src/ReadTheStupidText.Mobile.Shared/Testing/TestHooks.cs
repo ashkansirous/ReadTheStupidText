@@ -24,7 +24,9 @@ public static partial class TestHooks
 	{
 		ISpeechReader reader = services.GetRequiredService<ISpeechReader>();
 		_markers = new TestMarkers(reader, services.GetRequiredService<VoicePackInstaller>());
-		_dispatcher = new TestHookDispatcher(services.GetRequiredService<ISettingsStore>(), reader, completeFirstRun);
+		_dispatcher = new TestHookDispatcher(services.GetRequiredService<ISettingsStore>(), reader, completeFirstRun,
+			() => services.GetService<ReadTheStupidText.Application.Translation.ITranslator>() as ITranslationPacks,
+			services.GetRequiredService<VoicePackInstaller>());
 		InstallPlatform(_dispatcher, urlScheme);
 		FlushPending(_dispatcher);
 	}

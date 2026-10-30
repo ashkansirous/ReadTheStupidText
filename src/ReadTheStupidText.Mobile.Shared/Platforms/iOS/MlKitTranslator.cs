@@ -44,6 +44,15 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
     /// <inheritdoc />
     public Task<bool> IsPackReadyAsync(string language) => IsEnginePackReadyAsync(EngineLanguageCodes.ToEngine(language));
 
+    /// <inheritdoc />
+    public Task DeletePackAsync(string language)
+    {
+        MLKTranslateRemoteModel model = MLKTranslateRemoteModel.TranslateRemoteModelWithLanguage(EngineLanguageCodes.ToEngine(language));
+        var done = new TaskCompletionSource();
+        MLKModelManager.ModelManager().DeleteDownloadedModel(model, error => { if (error is null) { done.TrySetResult(); } else { done.TrySetException(new InvalidOperationException(error.LocalizedDescription)); } });
+        return done.Task;
+    }
+
     private static Task<bool> IsEnginePackReadyAsync(string engineCode) => Task.Run(() => DownloadedLanguages().Contains(engineCode));
 
     /// <inheritdoc />
