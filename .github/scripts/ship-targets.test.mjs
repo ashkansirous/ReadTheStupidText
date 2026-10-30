@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { CONTENT_MARKDOWN, GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, localChangedFiles, matchesPattern, newestAppTag, parseCommits, parseLocalArgs, productBump, shipTargets, shipTargetsPerProduct } from './ship-targets.mjs';
+import { CONTENT_MARKDOWN, GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, changedFilesSince, localChangedFiles, matchesPattern, newestAppTag, parseCommits, parseLocalArgs, planFor, productBump, shipTargets, shipTargetsPerProduct } from './ship-targets.mjs';
 
 const M = 'src/ReadTheStupidText.Mobile';
 const S = 'src/ReadTheStupidText.Mobile.Shared';
@@ -440,4 +440,108 @@ test('local mode: a Dino-only UI change touches the Dino targets and not the RTS
     const dino = targetsOf(['src/DinoReader.App/Views/ReaderPage.xaml']);
     assert.deepEqual([dino.dinoapp, dino.dinowin, dino.android, dino.windows], [true, true, false, false]);
     assert.ok(Object.values(targetsOf(null)).every(Boolean));
+});
+
+test('Slice 218: a Windows change in a release the Store never got is submitted by the next core-only release', () => {
+    const infra = 'src/ReadTheStupidText.Infrastructure/Reading/SherpaEngineFactory.cs';
+    const core = 'src/ReadTheStupidText.Application/X.cs';
+    // Last Store submission was before the Infrastructure change; the last release (the base of `changedFiles`) is a core-only one after it.
+    const plans = plan([core], []);
+    plans.rtst.storeChangedFiles = [infra, core];
+    const next = shipTargetsPerProduct({ plans });
+    assert.deepEqual([next.windows, next.windowsstore], [true, true]);
+    // Without the Store base (the old behaviour) the same release is skipped.
+    assert.equal(shipTargetsPerProduct({ plans: plan([core], []) }).windowsstore, false);
+});
+
+test('Slice 218: nothing Windows-specific since the last Store submission submits nothing; a Store-only backlog still builds the MSIX', () => {
+    const core = 'src/ReadTheStupidText.Application/X.cs';
+    const plans = plan([core], []);
+    plans.rtst.storeChangedFiles = [core];
+    assert.equal(shipTargetsPerProduct({ plans }).windowsstore, false);
+    // The release diff is empty (e.g. docs only) but a Windows change is still unsubmitted: the release must build and carry the MSIX.
+    const backlog = plan([], []);
+    backlog.rtst.storeChangedFiles = ['src/ReadTheStupidText.App/App.xaml.cs'];
+    const flags = shipTargetsPerProduct({ plans: backlog });
+    assert.deepEqual([flags.windows, flags.windowsstore, flags.android], [true, true, false]);
+});
+
+test('Slice 218: the Store marker tag is not an rtst-v release tag', () => {
+    assert.equal(newestAppTag(['rtst-store-v1.80.0', 'rtst-v1.76.1'], PRODUCTS.rtst.prefix), 'rtst-v1.76.1');
+    assert.equal(newestAppTag(['rtst-store-v1.80.0', 'rtst-v1.76.1'], PRODUCTS.rtst.store.prefix), 'rtst-store-v1.80.0');
+});
+
+const INFRA = 'src/ReadTheStupidText.Infrastructure/Reading/SherpaEngineFactory.cs';
+const CORE = 'src/ReadTheStupidText.Application/X.cs';
+
+/** A throwaway repo; `commit(file, tag...)` adds a change under that path and tags it. */
+function withRepo(body) {
+    const dir = mkdtempSync(join(tmpdir(), 'ship-store-'));
+    const run = (...args) => execFileSync('git', args, { cwd: dir, stdio: 'ignore' });
+    let n = 0;
+    const commit = (file, ...tags) => {
+        mkdirSync(join(dir, file, '..'), { recursive: true });
+        writeFileSync(join(dir, file), String(n++));
+        run('add', '.');
+        run('commit', '-m', `c${n}`);
+        tags.forEach((tag) => run('tag', tag));
+    };
+    try {
+        run('init', '-b', 'main');
+        run('config', 'user.email', 't@example.com');
+        run('config', 'user.name', 't');
+        run('config', 'commit.gpgsign', 'false');
+        run('config', 'tag.gpgsign', 'false');
+        body(dir, commit);
+    } finally {
+        rmSync(dir, { recursive: true, force: true });
+    }
+}
+
+function flagsFor(dir) {
+    const plans = { rtst: planFor('rtst', 'RTST_VERSION_UNSET', dir), dino: planFor('dino', 'DINO_VERSION_UNSET', dir) };
+    return { plans, flags: shipTargetsPerProduct({ plans }) };
+}
+
+test('Slice 218 (git): core, then Windows with a failed Store submission, then core, submits the Windows change', () => {
+    withRepo((dir, commit) => {
+        commit('README.txt', 'rtst-v1.0.0', 'rtst-store-v1.0.0', 'dino-v1.0.0');
+        commit(CORE, 'rtst-v1.1.0');
+        commit(INFRA, 'rtst-v1.2.0'); // released, but no rtst-store-v1.2.0: the submission was skipped or failed
+        commit(CORE);
+        const { plans, flags } = flagsFor(dir);
+        assert.deepEqual(plans.rtst.changedFiles, [CORE]);
+        assert.deepEqual(plans.rtst.storeChangedFiles.sort(), [CORE, INFRA]);
+        assert.deepEqual([flags.windows, flags.windowsstore], [true, true]);
+    });
+});
+
+test('Slice 218 (git): with the marker at the newest release, a core-only release submits nothing', () => {
+    withRepo((dir, commit) => {
+        commit(INFRA, 'rtst-v1.0.0', 'rtst-store-v1.0.0', 'dino-v1.0.0');
+        commit(CORE);
+        const { flags } = flagsFor(dir);
+        assert.deepEqual([flags.windows, flags.windowsstore], [true, false]);
+    });
+});
+
+test('Slice 218 (git): no marker tag falls back to the release diff, never to shipping everything', () => {
+    withRepo((dir, commit) => {
+        commit(INFRA, 'rtst-v1.0.0', 'dino-v1.0.0');
+        commit(CORE);
+        const { plans, flags } = flagsFor(dir);
+        assert.equal(plans.rtst.storeChangedFiles, undefined);
+        assert.deepEqual([flags.windows, flags.windowsstore, flags.android], [true, false, true]);
+        assert.deepEqual([flags.dinoios, flags.dinostore], [true, false]);
+    });
+});
+
+test('Slice 218 (git): an unreadable store diff is null, which leaves the plan on the release diff', () => {
+    withRepo((dir, commit) => {
+        commit(CORE, 'rtst-v1.0.0', 'dino-v1.0.0');
+        assert.equal(changedFilesSince('rtst-store-v9.9.9', dir), null);
+        const plans = plan([CORE], []);
+        plans.rtst.storeChangedFiles = changedFilesSince('rtst-store-v9.9.9', dir) ?? undefined;
+        assert.equal(shipTargetsPerProduct({ plans }).windowsstore, false);
+    });
 });
