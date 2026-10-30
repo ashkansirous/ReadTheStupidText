@@ -1,8 +1,8 @@
-### Slice 212 — RTST phone: the first read after a cold start takes 7 s
+### Slice 214 — RTST phone: the first read after a cold start takes 7 s
 
 *Planned 2026-10-30.* From the S21 night runs and the 2026-10-30 leftovers run (docs/plan/notes/2026-10-29-s21-night-runs.md).
 
-**Touches:** `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader*.cs`, `src/ReadTheStupidText.Mobile.Shared/CompositeSpeechReader.cs`, `src/ReadTheStupidText.Application/Reading/SpeechTextChunker.cs` (only if the first piece is split), `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs` (only if a warm-up is started there), `src/ReadTheStupidText.Mobile/App.xaml.cs` (only if a warm-up is started at launch), `tests/ReadTheStupidText.Tests/**`, `tools/phone/**` (cold-start measurement), `docs/plan/slices/212-rtst-phone-cold-first-audio.md`
+**Touches:** `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader*.cs`, `src/ReadTheStupidText.Mobile.Shared/CompositeSpeechReader.cs`, `src/ReadTheStupidText.Application/Reading/SpeechTextChunker.cs` (only if the first piece is split), `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs` (only if a warm-up is started there), `src/ReadTheStupidText.Mobile/App.xaml.cs` (only if a warm-up is started at launch), `tests/ReadTheStupidText.Tests/**`, `tools/phone/**` (cold-start measurement), `docs/plan/slices/214-rtst-phone-cold-first-audio.md`
 
 #### Why (measured)
 
