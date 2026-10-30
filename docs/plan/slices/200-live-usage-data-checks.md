@@ -1,6 +1,6 @@
 ### Slice 200 — Check the live usage data after the store rollouts
 
-*Planned 2026-10-29.* Both apps, read-only against live data. No app code; tooling and docs only. Gaps left in Slices 133, 134, 137, 140, 166, 167, 178 and 179 (*Not yet verified*).
+*In progress (wave 2026-10-30, wave 3), draft PR.* *Planned 2026-10-29.* Both apps, read-only against live data. No app code; tooling and docs only. Gaps left in Slices 133, 134, 137, 140, 166, 167, 178 and 179 (*Not yet verified*).
 
 **Touches:** `tools/dino-usage-report.ps1`, `tools/rtst-usage-report.ps1`, `docs/plan/slices/166-usage-device-context.md` (the column notes), `docs/plan/slices/200-live-usage-data-checks.md`. Read-only use of `D:\secrets` (`CF_ANALYTICS_READ_TOKEN`).
 
