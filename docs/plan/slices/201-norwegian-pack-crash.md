@@ -1,6 +1,6 @@
 # Slice 201: the Norwegian voice pack crashes the app
 
-*In progress.*
+*Built 2026-10-30 (PR #571), verified on the S21 only; Windows desktop and iOS device not run.*
 
 **Touches:** `.github/workflows/packs.yml`, `src/ReadTheStupidText.Application/Reading/**`, `src/ReadTheStupidText.Domain/Reading/**`, `src/ReadTheStupidText.Mobile/**` (pack/engine loading), `src/ReadTheStupidText.Mobile.Shared/**` (engine loading), `src/ReadTheStupidText.Infrastructure/**` (Windows sherpa engine), `tests/ReadTheStupidText.Tests/**`, pack release constants.
 
@@ -43,4 +43,13 @@ Cause is likely, not yet proven by a fixed pack loading.
 - [x] App guard: `Domain/Reading/PiperTokens`, `PackManifest.BrokenTokenFolders(In)`; a bad pack fails `ValidatePayload` (InvalidPack, the existing failed/retry path), is not "installed" in `LoadInstalled` (so the saved language falls back like a missing pack), and the three engine builders (Windows, Android, iOS) throw `InvalidDataException` before the native load. Debug marker `RTST_PACK_TOKENS_REJECTED`.
 - [x] Tests: `PiperTokensTests` (good, two code points, missing/non-numeric id, blank line, BOM, duplicate, missing `_ ^ $`, manifest wiring).
 - [x] Scripted check written: `.maestro/rtst/norsk-pack-reads.yaml` (not run).
-- [ ] Owed: run `packs.yml` (new `norwegian_pack_version`, new `release_number`) and bump `PackConstants.CatalogUrl`; the device run.
+- [x] Done: packs-10 released with piper-nb v2; `PackConstants.CatalogUrl` points at it. (Original note: run `packs.yml` (new `norwegian_pack_version`, new `release_number`) and bump `PackConstants.CatalogUrl`; the device run. )
+
+## S21 device result (2026-10-30)
+
+Real S21, Android 15. The old piper-nb v1 pack was rejected (`RTST_PACK_TOKENS_REJECTED`) instead of crashing; v2 (packs-10) downloaded and read Norwegian with `piper:nb-knn`; relaunch in Norsk was fine; English and Farsi still read. Night note: [2026-10-29-s21-night-runs.md](../notes/2026-10-29-s21-night-runs.md).
+
+#### Not yet verified
+
+- Windows desktop (sherpa engine with the new pack) and iOS device not run.
+- The Maestro flow `.maestro/rtst/norsk-pack-reads.yaml` has never run (Maestro not installed).
