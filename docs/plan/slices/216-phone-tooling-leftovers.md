@@ -29,6 +29,9 @@
 10. **A leftover aside pack archive after a failed restore is only reported, not restored.**
    - [ ] On the next run, restore a leftover aside archive (verified copy) before anything else, or say plainly why it can't.
 
+11. **Night cold-start numbers may be warm.** Dino AOT 624 ms (97 ms synthesis) and Kokoro 960 ms vs Supertonic 6229 ms came from `audio-timing.ps1` (item 2). "Kokoro stays" and Slice 185's result rest on them.
+   - [ ] Rerun them with `run-checks.ps1 -Checks cold-start` (sentence cache cleared) and update Slices 185 and 214 with the real numbers.
+
 #### Verification
 
 - Fast: self-tests for items 2-4 in `pwsh` and Windows PowerShell 5.1.
