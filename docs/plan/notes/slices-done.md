@@ -247,3 +247,30 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 207 | Guards for emulator, VM and flow mistakes | built | #596 | | [207-device-test-guards.md](../slices/207-device-test-guards.md) |
 | 212 | Flow hooks reach the running app; tool self-tests in CI | built | #600 | | [212-flow-hooks-and-tools-ci.md](../slices/212-flow-hooks-and-tools-ci.md) |
 | 213 | One phone check runner (`tools/phone/run-checks.ps1`) with a fixed 10-minute budget, no hidden builds, named checks | built | #610 | | [213-phone-check-runner.md](../slices/213-phone-check-runner.md) |
+
+
+## Batch lane-order paragraphs moved from plan.md (2026-10-30)
+
+Batch 42 (197-200, planned 2026-10-29, the small fixes and live-data checks that had no slice): all four can run side by side and beside Batch 41 (Dino storyteller, RTST read path, test tooling, read-only analytics). 198 starts with a real-phone run and may close with no code. 200 changes nothing live.
+
+Batch 40 (187-188, planned 2026-10-29, the unowned follow-ups): 187 and 188 can run side by side (app code vs VM tooling), and beside 186 (no shared files). The small follow-up bugs (Slices 99, 113, 173) and the Slice 164 unit-test moves are fixed as `fix/`/`chore/` branches without new slices. Slice 139's in-flight race waits on a real-phone check before any work.
+
+Batch 39 (182-185, planned 2026-10-28, from the night's phone runs and the unowned gaps): 182 then 183 (both edit the pack downloader); 184 (Windows packs, CI) and 185 (emulator checks) can run beside them.
+
+Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
+
+Batch 26 (124-125, planned 2026-10-25, the Batch 25 mock and the animal-identity follow-up of Slice 117): 124 first (small; matches the words panel and switch card to the mock), then 125 (both edit `CastRows`/`CastPage` and the strings). 125 also merges after PR #336 (the pigs retell, `StarterBuilder`/`StarterTexts`). Decision 132. Slice 136 (the cast page drops the Animal line; Decision 132 changed) is built.
+
+Batch 27 (127-131, planned 2026-10-25, after Dino work kept resubmitting Read The Stupid Text to the Store): keep one repo, stop one product shipping the other. 127 (small CI fixes), 128, 129 and 130 (a version and release per product, PR #367) are built; 131 (PR #371) is built; it ran alone between waves because it touches usings everywhere. Decisions 133-137.
+
+Batch 28 (132-134, planned 2026-10-25, which books families like and how parents use the app): 132 (the remote config the counts are switched by, and the forced update) and 133 (first events, privacy texts and store forms) and 134 (the rest of the events and the report, PR #368) are built, so the batch is done. All three edit `worker/` and Dino's `MauiProgram`, so one at a time. Decisions 138-142.
+
+Batch 32 (155, planned 2026-10-26, Dino onboarding): Slice 155 (the first-run intro wizard, PR #432) is built, so the batch is done. Decision 160.
+
+Batch 36 (161-165, planned 2026-10-27, device tests too slow): 161 first (warm headless x86_64 emulator), then 162 (Maestro flows and hooks, needs 161), then 165 (phone audio/timing, reuses 162's hooks). 163 (Hyper-V VM; waits on the user turning on Hyper-V) and 164 (unit-test push-down, one sub-PR per item) can run beside them. Tooling only, no app behaviour change; Touches don't overlap the open Dino PRs. Decision 165.
+
+Batch 38 (175-177, planned 2026-10-28, gaps found when every unverified 163/165 item was checked on the VM and the phone): 175 and 176 can run side by side (tooling and Debug hooks vs the shared read path; both touch `Mobile.Shared` but different folders); 177 after 175 (needs its markers).
+
+Batch 34 (157-158; both built, 157 PR #475, 158 PR #472, so the batch is done; planned 2026-10-27, after all 15 store books fell behind `main`): 158 first (small, CI only: a `publish-store` job in `release.yml` uploads every book behind the live store, Decision 163); it can run beside other work. Then 157 moves book content to `content/dino/<book>/` with a console builder and repoints the job; 157 runs alone between waves, after the open per-book PRs merge, because it moves every book's files. Decisions 162-163.
+
+Batch 35 (159, built, PR #473, so the batch is done; planned 2026-10-27, the user found English all over Dino in Farsi): one slice in four parts: A (strings follow the stored language pick; fixes the intro wizard flipping to English after the store) ships first, then B (shipped titles on the shelf and store), C (own books translate on the phone, pack downloaded only when a parent asks) and D (guards). Decision 164.
