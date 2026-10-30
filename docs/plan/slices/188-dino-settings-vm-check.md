@@ -1,6 +1,6 @@
 ### Slice 188 — Dino Settings behind the grown-up gate as a permanent VM check
 
-*Planned 2026-10-29.* Follow-up of Slice 172 ("make `dino-settings.ps1` a permanent VM check").
+*In progress (wave 2026-10-30, wave 3), draft PR.* *Planned 2026-10-29.* Follow-up of Slice 172 ("make `dino-settings.ps1` a permanent VM check").
 
 **Touches:** `tools/desktop-vm/checks/dino-settings.ps1` (new), `tools/desktop-vm/checks/_lib.ps1`, `tools/desktop-vm/Invoke-DesktopTest.ps1`, `tools/desktop-vm/README.md`, `tools/desktop-vm/CLAUDE.md`, `docs/plan/slices/188-dino-settings-vm-check.md`.
 
