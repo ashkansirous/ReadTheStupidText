@@ -63,6 +63,8 @@ Slices 207 and 212 left these open without a plan (user, 2026-10-30: "have you p
 
 ## Verification
 
+- The fast checks for this slice come from `tools/test-targets.ps1 -Checks` (its first use on a real slice; Slice 207 built it): `run-checks` runs exactly what it prints, and the report says whether it named every touched app and test project.
+
 - VM: `rtst-panel-screenshot -WithPack supertonic-3` passes preflight and the shot shows the panel ready (no "Preparing the voice"); the site image is replaced.
 
 - Self-tests (lint, activity, lease, test-targets) pass in pwsh and PowerShell 5.1, the way CI runs them (`-command ". 'file'"`).

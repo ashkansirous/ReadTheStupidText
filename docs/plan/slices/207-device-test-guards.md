@@ -1,6 +1,6 @@
 # Slice 207: guards for emulator, VM and flow mistakes
 
-*Built 2026-10-30. Verified on the emulator and the VM (see below); one flow failure on the emulator is not yet checked on main.*
+*Built 2026-10-30. Verified on the emulator and the VM (see below).*
 
 **Why:** the 2026-10-30 night wave lost device runs to mistakes a script could have caught. Slice 197's emulator check ran
 while Slice 191's was still on the same emulator, and its `clearState` wiped 191's own book (nothing stops two
@@ -97,4 +97,5 @@ Already in `tools/CLAUDE.md` in this slice's diff (one emulator running flows by
 
 #### Not yet verified
 
-- `.maestro/rtst/cancelled-voice-pack-stays-cancelled.yaml` fails on the emulator (`Download stopped.*` not visible) in both runs. Unrelated to 207 (comment-only change there); not checked on main. Slice 204 was verified on the phone only.
+- ~~`.maestro/rtst/cancelled-voice-pack-stays-cancelled.yaml` fails on the emulator (`Download stopped.*` not visible) in both runs. Unrelated to 207 (comment-only change there); not checked on main. Slice 204 was verified on the phone only.
+~~ Closed 2026-10-30: the flow was broken (a hook sent by a restarting `launchApp`, English text on a Farsi screen); fixed and passing in Slice 212 (PR #600).
