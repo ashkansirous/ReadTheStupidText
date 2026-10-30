@@ -87,3 +87,6 @@ __pycache__/
 *.pyc
 venv/
 .venv/
+
+# Phone-runner builds (Slice 213: tools/phone/run-checks.ps1)
+.artifacts/

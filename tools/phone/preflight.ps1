@@ -4,7 +4,7 @@
 .DESCRIPTION
   Prints one line per check and ends with `PREFLIGHT GO` (exit 0) or `PREFLIGHT NO-GO: <reasons>` (exit 1). Not connected over wireless adb prints the pairing ask and exits 2.
   Checks: connected, charging, screen lock None or Swipe (a PIN, pattern or password is NO-GO: ask the user to set Screen lock to None or Swipe; a lock state that
-  cannot be read, or reads contradictory, is NO-GO too: GO needs a positive "no secure keyguard" read made in this run), stay-awake-while-charging (the bit of the charger in use must be set in stay_on_while_plugged_in: 1 AC, 2 USB, 4 wireless; with -Fix a missing bit is fixed by setting 7, it stays on), free space on /data (warn under 2 GB), the .dbg dev app(s)
+  cannot be read, or reads contradictory, is NO-GO too: GO needs a positive "no secure keyguard" read made in this run), stay-awake-while-charging (the bit of the charger in use must be set in stay_on_while_plugged_in: 1 AC, 2 USB, 4 wireless; with -Fix a missing bit is fixed by setting 7, it stays on), free space on /data (warn under 2 GB, NO-GO under 0.5 GB), the .dbg dev app(s)
   installed with their versionName (with -App both a missing app is a warning, and NO-GO only when neither is installed), and the phone lease (held by
   $env:RTST_PHONE_OWNER; free is a warning, because an unleased phone can be taken by another session mid-run: run lease.ps1 -Take). Read-only on the phone unless -Fix is given, which only
   sets stay_on_while_plugged_in. Every check runs inside a try/catch: a dropped link or a timeout is a FAIL with its
@@ -20,6 +20,7 @@ $ErrorActionPreference = 'Stop'
 
 $script:StayOnAll = 7  # bit mask of settings global stay_on_while_plugged_in: 1 AC, 2 USB, 4 wireless
 $script:LowSpaceKb = 2GB / 1KB
+$script:NoSpaceKb = 512MB / 1KB   # under this a pack download cannot work at all: FAIL (the runner stops on it)
 $script:Reasons = New-Object 'System.Collections.Generic.List[string]'
 
 function Write-Check([string]$Name, [string]$Status, [string]$Detail) {
@@ -62,6 +63,7 @@ function Test-FreeSpace([string]$Phone) {
     $availableKb = ConvertFrom-DfAvailableKb (Invoke-Adb $Phone @('shell', 'df', '-k', '/data'))
     if ($availableKb -lt 0) { Write-Check 'free space' 'WARN' 'could not read df -k /data'; return }
     $gb = [math]::Round($availableKb / 1MB, 1)
+    if ($availableKb -lt $script:NoSpaceKb) { Write-Check 'free space' 'FAIL' "$gb GB free on /data (under 0.5 GB: no room for a voice pack)"; return }
     if ($availableKb -lt $script:LowSpaceKb) { Write-Check 'free space' 'WARN' "$gb GB free on /data (under 2 GB: a voice pack download may fail)" }
     else { Write-Check 'free space' 'OK' "$gb GB free on /data" }
 }

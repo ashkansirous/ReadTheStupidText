@@ -78,14 +78,14 @@ $script:ApkFilter = '*-Signed.apk'
 # once the metadata file is in it. The caller holds the build locks.
 function Build-PhoneApk([string]$Dir, [string]$Key) {
     $project = Join-Path $script:RepoRoot $cfg.Project
-    $apkDir = Join-Path (Split-Path $project) "bin\Debug\net10.0-android\$($script:PhoneRid)"
-    Get-ChildItem $apkDir -Filter $script:ApkFilter -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force
+    $artifacts = Get-PhoneArtifactsPath $script:RepoRoot $App $script:PhonePlatform
+    Remove-Item $artifacts -Recurse -Force -ErrorAction SilentlyContinue
     $extra = @()
     if ($Aot) { $extra += '-p:RunAOTCompilation=true', '-p:AndroidEnableProfiledAot=false' }
-    dotnet build $project -f net10.0-android -c Debug "-p:RuntimeIdentifier=$($script:PhoneRid)" -p:EmbedAssembliesIntoApk=true `
+    dotnet build $project -f net10.0-android -c Debug --artifacts-path $artifacts -nodeReuse:false -p:UseSharedCompilation=false "-p:RuntimeIdentifier=$($script:PhoneRid)" -p:EmbedAssembliesIntoApk=true `
         -p:IncludeWindows=false -p:AndroidPackageFormat=apk "-p:ApplicationId=$package" @extra
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
-    $built = Get-ChildItem $apkDir -Filter $script:ApkFilter -Recurse | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    $built = Find-PhoneArtifactApk $artifacts $script:ApkFilter
     if (-not $built) { throw 'Signed APK not found.' }
     $temp = New-BuildTempDir $Dir
     try {
@@ -105,7 +105,7 @@ function Get-PhoneApk {
     if ($cached) { Write-Host "Reusing cached $App APK (key $key, $($script:PhonePlatform)): $($cached.FullName)"; return $cached }
     $activity = Start-Activity "build-$App-$($script:PhonePlatform)"
     try {
-        $locks = Enter-BuildLocks $App $script:PhonePlatform $key
+        $locks = Enter-BuildLocks $App $script:PhonePlatform $key $script:PhonePlatform
         try {
             $key = Get-BuildKey
             $dir = Get-BuildDir $App $script:PhonePlatform $key

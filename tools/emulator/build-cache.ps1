@@ -78,10 +78,12 @@ function Exit-BuildLock($Mutex) {
 }
 
 # The two locks a build takes, always in this order: one per build key (two agents with the same inputs build once; the second
-# finds the finished build) and one per checkout (two builds in one worktree share its obj folders, so they run one after the other).
-function Enter-BuildLocks([string]$App, [string]$Platform, [string]$Key) {
+# finds the finished build) and one per checkout (two builds in one worktree share its obj folders, so they run one after the other). A build with its own
+# --artifacts-path (the phone builds) shares nothing with the others: it passes a $TreeScope (its variant), so only a second build of the same variant waits.
+function Enter-BuildLocks([string]$App, [string]$Platform, [string]$Key, [string]$TreeScope = '') {
     $sha = [Security.Cryptography.SHA1]::Create()
     $tree = ([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($script:ToolsRepoRoot.Path.ToLowerInvariant()))) -replace '-', '').Substring(0, 12)
+    if ($TreeScope) { $tree = "$tree-$TreeScope" }
     $byKey = Enter-BuildLock "Global\RTST_Build_$App-$Platform-$Key" "$App $Platform (key $Key)"
     try { $byTree = Enter-BuildLock "Global\RTST_BuildTree_$tree" "another app in this checkout" }
     catch { Exit-BuildLock $byKey; throw }
