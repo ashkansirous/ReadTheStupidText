@@ -86,11 +86,18 @@ public sealed class UsageQueueSender<TEvent>(UsageQueueOptions<TEvent> options)
     /// function may answer null for a count that does not apply). Counting must never change what the user's action does: every failure
     /// here is logged and swallowed. Returns whether a count was queued.
     /// </summary>
-    public bool Enqueue(Func<double, DateTimeOffset, TEvent?> make)
+    public bool Enqueue(Func<double, DateTimeOffset, TEvent?> make) =>
+        EnqueueMany((sampleRate, now) => make(sampleRate, now) is { } count ? [count] : []) > 0;
+
+    /// <summary>
+    /// Queues every count <paramref name="make"/> builds in one queue write (Slice 191: a backup restore counts all its books at once), with the same
+    /// rules and swallowed failures as <see cref="Enqueue"/>. Returns how many were queued.
+    /// </summary>
+    public int EnqueueMany(Func<double, DateTimeOffset, IReadOnlyList<TEvent>> make)
     {
         try
         {
-            (bool queued, bool batchFull) = EnqueueCore(make);
+            (int queued, bool batchFull) = EnqueueCore(make);
             if (batchFull)
             {
                 _ = FlushAsync();
@@ -101,22 +108,29 @@ public sealed class UsageQueueSender<TEvent>(UsageQueueOptions<TEvent> options)
         catch (Exception ex)
         {
             Debug.WriteLine($"{options.LogName} could not queue a count: {ex.Message}");
-            return false;
+            return 0;
         }
     }
 
-    private (bool Queued, bool BatchFull) EnqueueCore(Func<double, DateTimeOffset, TEvent?> make)
+    private (int Queued, bool BatchFull) EnqueueCore(Func<double, DateTimeOffset, IReadOnlyList<TEvent>> make)
     {
         (bool enabled, double sampleRate) = options.Telemetry();
-        if (!Enabled || !enabled || _roll >= sampleRate || make(sampleRate, DateTimeOffset.UtcNow) is not { } count)
+        if (!Enabled || !enabled || _roll >= sampleRate)
         {
-            return (false, false);
+            return (0, false);
+        }
+
+        IReadOnlyList<TEvent> counts = make(sampleRate, DateTimeOffset.UtcNow);
+        if (counts.Count == 0)
+        {
+            return (0, false);
         }
 
         lock (_queueLock)
         {
             List<TEvent> queue = Queue();
-            queue.Add(count);
+            int before = queue.Count;
+            queue.AddRange(counts);
             if (queue.Count > MaxQueued)
             {
                 queue.RemoveRange(0, queue.Count - MaxQueued);
@@ -124,7 +138,7 @@ public sealed class UsageQueueSender<TEvent>(UsageQueueOptions<TEvent> options)
 
             Save(queue);
             // Only the count that first fills a batch starts a send: while a send keeps failing the queue stays full and must not spawn one per count.
-            return (true, queue.Count == options.MaxBatch);
+            return (counts.Count, before < options.MaxBatch && queue.Count >= options.MaxBatch);
         }
     }
 

@@ -76,6 +76,7 @@ SELECT blob4 AS source, $Weighted AS opened
 FROM $Dataset WHERE blob1 = 'book_opened' AND $Window
 GROUP BY source $Enough
 "@
+    # restore:<bucket> rows are books a backup restore put back (Slice 191).
     'Own books added by kind' = @"
 SELECT blob9 AS detail, $Weighted AS added
 FROM $Dataset WHERE blob1 = 'own_book_added' AND $Window

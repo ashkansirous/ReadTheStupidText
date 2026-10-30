@@ -265,6 +265,15 @@ public class UsageEventTests
         return dir?.FullName ?? throw new DirectoryNotFoundException("Repo root (ReadTheStupidText.slnx) not found.");
     }
 
+    [Fact]
+    public void RestoredBook_IsCountedAsRestoreWithItsPageBucket_OnlyWhenItHasNoSource()
+    {
+        Story own = StoryWith(null) with { Pages = [new StoryPage("a"), new StoryPage("b"), new StoryPage("c")] };
+
+        Assert.Equal("restore:2-5", UsageDetail.RestoredBook(own));
+        Assert.Null(UsageDetail.RestoredBook(own with { SourceId = PackageId }));
+    }
+
     [Theory]
     [InlineData("pdf", 1, "pdf:1")]
     [InlineData("docx", 5, "docx:2-5")]
@@ -272,6 +281,8 @@ public class UsageEventTests
     [InlineData("photo", 11, "photo:11+")]
     [InlineData("scan", 2, "scan:2-5")]
     [InlineData("typed", 3, "typed:2-5")]
+    [InlineData("restore", 4, "restore:2-5")]
+    [InlineData("restore", 1, "restore:1")]
     public void OwnBookAddedJoinsKindAndPageBucket(string kind, int pages, string expected)
     {
         Assert.Equal(expected, UsageDetail.OwnBookAdded(kind, pages));
