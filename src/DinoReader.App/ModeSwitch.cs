@@ -10,6 +10,8 @@ namespace DinoReader;
 /// </summary>
 public sealed class ModeSwitch : Border
 {
+	// Android's content-desc carries no hint, so the active segment says it is selected in its own description.
+	private const string DescriptionSeparator = ", ";
 	private const double CellWidth = 44;
 	private const double CellHeight = 40;
 	private const double CellCorner = 13;
@@ -109,8 +111,7 @@ public sealed class ModeSwitch : Border
 			Shadow = active ? new Shadow { Brush = Brush.Black, Opacity = ShadowOpacity, Radius = ShadowRadius, Offset = new Point(0, ShadowOffsetY) } : null,
 			Content = Glyph(icon, active ? ActiveIcon() : _theme.ControlIcon),
 		};
-		SemanticProperties.SetDescription(cell, label);
-		SemanticProperties.SetHint(cell, active ? ReadingText.ModeSelected : null);
+		SemanticProperties.SetDescription(cell, active ? $"{label}{DescriptionSeparator}{ReadingText.ModeSelected}" : label);
 		cell.GestureRecognizers.Add(Tap(mode));
 		return cell;
 	}
