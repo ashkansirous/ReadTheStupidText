@@ -27,6 +27,8 @@ Open slices only. Finished slices (161 rows) are in [slices-done](docs/plan/note
 | 211 | Play right after typing waits for language detection, so it translates and picks the voice like a later Play (Slice 139 follow-up) | planned | | | [211-play-before-detection-waits-for-it.md](docs/plan/slices/211-play-before-detection-waits-for-it.md) |
 | 214 | RTST phone: the first read after a cold start takes 7 s (S21 AOT; first synthesis 5.9 s): find warm-up vs length, then fix to under 2 s | planned | | | [214-rtst-phone-cold-first-audio.md](docs/plan/slices/214-rtst-phone-cold-first-audio.md) |
 | 216 | Phone tooling leftovers from the Slice 213 runs: a build swap re-downloaded the voice pack (repro first), audio-timing warm repeats labelled cold, build path-length guard, audio-timing log folder | planned | | | [216-phone-tooling-leftovers.md](docs/plan/slices/216-phone-tooling-leftovers.md) |
+| 217 | RTST forced update from the remote config (port of Dino Slice 132; Android, iOS, Windows tray) | planned | | | [217-rtst-forced-update.md](docs/plan/slices/217-rtst-forced-update.md) |
+| 218 | RTST Microsoft Store submission skipped Windows code changes (no Store build since before 1.74.0) | planned | | | [218-microsoft-store-submission-skipped.md](docs/plan/slices/218-microsoft-store-submission-skipped.md) |
 | 215 | Close the gaps left by Slices 207 and 212: status label id, emulator health check and restart, test the one-emulator limit, lint gaps | planned | | | [215-device-guard-gaps.md](docs/plan/slices/215-device-guard-gaps.md) |
 
 Batch 42 (197-200, planned 2026-10-29, the small fixes and live-data checks that had no slice): all four can run side by side and beside Batch 41 (Dino storyteller, RTST read path, test tooling, read-only analytics). 198 starts with a real-phone run and may close with no code. 200 changes nothing live.
@@ -76,7 +78,7 @@ Batch 35 (159, built, PR #473, so the batch is done; planned 2026-10-27, the use
 
 ## Outstanding work
 
-- **Needs the user (live change):** RTST versions up to rtst-v1.73.2 still download the broken Norwegian pack from `packs-9` and older and crash in Norsk; options in [Slice 201](docs/plan/slices/201-norwegian-pack-crash.md) (force update to 1.74.0 via `readthestupidtext/config.json`, or replace the old asset).
+- Decided 2026-10-30 (user): old RTST versions (up to rtst-v1.73.2) that still fetch the broken Norwegian pack are left as they are: nobody uses Norwegian on them (30-day counts). Slice 217 adds the forced update for next time ([Slice 201](docs/plan/slices/201-norwegian-pack-crash.md)).
 - **User:** put the S21's screen lock back to a PIN (set to None for the 2026-10-29/30 unattended runs).
 
 
