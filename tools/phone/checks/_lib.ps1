@@ -241,19 +241,25 @@ function Test-RecordNamesPack([string]$Raw, $Names) {
 # TODO(Slice 208): the app's download text does not name the pack yet. When Slice 208 adds the pack name to the notification, flip this to $true so the PASS rule also requires it.
 $script:ExpectPackNameInNotification = $false
 
-# The notification the download just posted: a record of the dev package posted at or after $SinceMs (phone epoch ms; a record with no post time in the dump counts, the dump
-# order decides) whose title or text has a percentage. Matched by package and post time, not by pack name, unless ExpectPackNameInNotification (Slice 208) is on.
+# The notification the download just posted: a record of the dev package posted at or after $SinceMs (phone epoch ms; a record with no post time in the dump never counts: it
+# could be left over from an earlier run) whose title or text has a percentage. Matched by package and post time, not by pack name, unless ExpectPackNameInNotification (Slice 208) is on.
 # The newest by post time wins (later in the dump wins a tie); $null when none.
 function Select-PostedProgressNotification($Records, [int64]$SinceMs, $PackNames = @(), [bool]$ExpectPackName = $script:ExpectPackNameInNotification) {
     $pool = @(@($Records) | Where-Object {
-        ($_.PostTime -eq 0 -or $_.PostTime -ge $SinceMs) -and ("$($_.Title) $($_.Text)" -match $script:PercentPattern)
+        $_.PostTime -gt 0 -and $_.PostTime -ge $SinceMs -and ("$($_.Title) $($_.Text)" -match $script:PercentPattern)
     })
     if ($ExpectPackName) { $pool = @($pool | Where-Object { Test-RecordNamesPack $_.Raw @($PackNames | Where-Object { $_ }) }) }
     return ($pool | Sort-Object -Property @{ Expression = 'PostTime'; Descending = $true }, @{ Expression = 'Order'; Descending = $true } | Select-Object -First 1)
 }
 
+# True when a record of the dev package shows a percentage but has no readable post time (the dump format lacks it).
+function Test-PostTimeMissing($Records) {
+    return [bool](@($Records) | Where-Object { $_.PostTime -le 0 -and ("$($_.Title) $($_.Text)" -match $script:PercentPattern) } | Select-Object -First 1)
+}
+
 # The PASS rule: a progress notification was shown. Detail quotes title and text verbatim.
-function Resolve-NotificationVerdict($Note) {
+function Resolve-NotificationVerdict($Note, [bool]$PostTimeUnknown = $false) {
+    if (-not $Note -and $PostTimeUnknown) { return [pscustomobject]@{ Passed = $false; Detail = 'the dump gives no post time for the dev app notifications, so a fresh one cannot be told from an old one (not an app bug: check the notification by hand, or the post-time pattern for this phone)' } }
     if (-not $Note) { return [pscustomobject]@{ Passed = $false; Detail = 'no download notification with a percentage was posted after the download started (notifications off for the dev app, or only other notifications of it appeared)' } }
     return [pscustomobject]@{ Passed = $true; Detail = "notification title '$($Note.Title)', text '$($Note.Text)'" }
 }
@@ -298,10 +304,34 @@ function Test-AppHoldsWake([string]$PowerDump, [string]$ServicesDump, [string]$U
 }
 
 # ---- budget and waits before the checks (Slice 213 review: the clock starts when the runner starts)
+# When the budget clock effectively started: the run start moved later by the time spent only waiting for a build (that time is not budget).
+function Get-BudgetStart([datetime]$RunStart, [double]$WaitedSeconds) { return $RunStart.AddSeconds($WaitedSeconds) }
+
+# A fresh budget clock (Slice 216 review): the run start and the waited seconds are one pair, so they restart together and can never disagree.
+function New-BudgetClock([datetime]$Now) {
+    return [pscustomobject]@{ RunStart = $Now; WaitedSeconds = [double]0 }
+}
+
+# Every wait before or during the checks (the phone lease, the quiet machine) measures from the one budget start, never from the raw run start.
+function Get-BudgetPreWaitMinutes([datetime]$RunStart, [double]$WaitedSeconds, [datetime]$Now, [int]$BudgetMinutes) {
+    return (Get-PreWaitMinutes (Get-BudgetStart $RunStart $WaitedSeconds) $Now $BudgetMinutes)
+}
+
+# Seconds of budget used at $Now: measured from the same budget start.
+function Get-BudgetElapsedSecondsAt([datetime]$RunStart, [double]$WaitedSeconds, [datetime]$Now) {
+    return ($Now - (Get-BudgetStart $RunStart $WaitedSeconds)).TotalSeconds
+}
+
 # Minutes a pre-check wait (the phone lease, the quiet machine) may take: the cap, or what is left of the budget when that is less. Never negative.
 function Get-PreWaitMinutes([datetime]$RunStart, [datetime]$Now, [int]$BudgetMinutes) {
     $leftMinutes = $BudgetMinutes - ($Now - $RunStart).TotalMinutes
     return [math]::Max([math]::Min($script:PreWaitCapMinutes, $leftMinutes), 0)
+}
+
+# The exit code for an error that stopped the device stage: a lost phone lease is exit 4 (as on the other paths), anything else is a runner error.
+function Get-StageErrorExitCode([string]$Message, [string]$LeaseLostReason) {
+    if ($Message -ceq $LeaseLostReason) { return $script:ExitLeaseHeldByOther }
+    return $script:ExitRunnerError
 }
 
 # One row per plan, in order: the row a check produced, else the plan's own skip row, else SKIP with $Reason. Used on every path that ends early, so the table always names every check.

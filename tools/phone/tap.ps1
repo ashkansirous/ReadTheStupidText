@@ -100,6 +100,16 @@ function Find-OnScreen([string]$Phone, [string]$Attribute, [string]$Value) {
     }
 }
 
+# The full, uncut change (every signature) appended to <worktrees>\.phone\tap-changes.log. A log that cannot be written is said, never fatal.
+function Write-ScreenChangeLog($Diff) {
+    try {
+        $dir = Join-Path (Get-WorktreesRoot) '.phone'
+        $null = New-Item -ItemType Directory -Force $dir
+        $entry = "{0:s} Added: {1}`r`n{0:s} Removed: {2}" -f (Get-Date), ($Diff.Added -join ' ; '), ($Diff.Removed -join ' ; ')
+        Add-Content (Join-Path $dir 'tap-changes.log') $entry
+    } catch { Write-Host "   (could not write tap-changes.log: $($_.Exception.Message))" }
+}
+
 # Waits until the screen differs from $Before (any app node added or removed, toggle state included), prints what changed and returns the last nodes seen.
 # The tap is already sent: a dump that fails here is retried (the dump only, never the tap) until the deadline; $null comes back when none could be read.
 function Write-ScreenChange([string]$Phone, $Before) {
@@ -110,8 +120,10 @@ function Write-ScreenChange([string]$Phone, $Before) {
         try { $afterNodes = Get-ScreenNodes $Phone } catch { Write-Host "   (dump after the tap failed, trying again: $($_.Exception.Message))"; continue }
         $diff = Compare-Screens $Before $afterNodes
         if ($diff.Changed) {
-            Write-Host "Screen changed. Added: $($diff.Added -join ' ; ')"
-            if ($diff.Removed.Count -gt 0) { Write-Host "Removed: $($diff.Removed -join ' ; ')" }
+            # Slice 216: the run output gets the changed texts only, cut to 120 characters; the full signatures go to tap-changes.log.
+            Write-Host ('Screen changed. ' + (Format-ScreenChangeLine 'Added' $diff.Added))
+            if ($diff.Removed.Count -gt 0) { Write-Host (Format-ScreenChangeLine 'Removed' $diff.Removed) }
+            Write-ScreenChangeLog $diff
             return $afterNodes
         }
     } while ((Get-Date) -lt $deadline)

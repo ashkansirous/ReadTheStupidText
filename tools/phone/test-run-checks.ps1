@@ -142,6 +142,23 @@ Assert-Equal 'a fresh run may wait the cap' 3 (Get-PreWaitMinutes $t0 $t0 10)
 Assert-Equal 'later, what is left of the budget' 2 (Get-PreWaitMinutes $t0 $t0.AddMinutes(8) 10)
 Assert-Equal 'nothing left: no wait' 0 (Get-PreWaitMinutes $t0 $t0.AddMinutes(12) 10)
 
+$tWait = $t0.AddSeconds(660)
+Assert-Equal 'review: a build wait moves the budget start (finding 2)' 3 (Get-PreWaitMinutes (Get-BudgetStart $t0 660) $tWait 10)
+Assert-Equal 'review: without the shift the wait would be 0 (finding 2)' 0 (Get-PreWaitMinutes $t0 $tWait 10)
+Assert-Equal 'review: the budget end moves by the waited seconds (finding 1)' $t0.AddMinutes(10).AddSeconds(660) (Get-BudgetStart $t0 660).AddMinutes(10)
+# one budget model (final medium review 1 and 6): a -Prepare build, a lease wait and a quiet wait all measure from the same start
+$prepClock = New-BudgetClock $t0.AddMinutes(20)   # the build took 20 minutes; -Prepare restarts the pair together
+$tLease = $t0.AddMinutes(21)
+Assert-Equal 'budget: a fresh clock has no waited seconds' 0 $prepClock.WaitedSeconds
+Assert-Equal 'budget: after a -Prepare build the lease wait gets the cap' 3 (Get-BudgetPreWaitMinutes $prepClock.RunStart $prepClock.WaitedSeconds $tLease 10)
+Assert-Equal 'budget: a quiet wait 9 minutes into the same clock has 1 minute left' 1 (Get-BudgetPreWaitMinutes $prepClock.RunStart $prepClock.WaitedSeconds $prepClock.RunStart.AddMinutes(9) 10)
+Assert-Equal 'budget: elapsed after the reset is only the time since it' 60 (Get-BudgetElapsedSecondsAt $prepClock.RunStart $prepClock.WaitedSeconds $tLease)
+# a build wait of 660 s (not -Prepare): the lease wait is not capped to 0 by the raw run start
+Assert-Equal 'budget: a lease wait after a long build wait is not 0' 3 (Get-BudgetPreWaitMinutes $t0 660 $tWait 10)
+Assert-Equal 'budget: elapsed excludes the waited seconds' 0 (Get-BudgetElapsedSecondsAt $t0 660 $tWait)
+Assert-Equal 'review: a lost lease is exit 4, not 7 (finding 5)' 4 (Get-StageErrorExitCode 'lost' 'lost')
+Assert-Equal 'review: another error is a runner error (finding 5)' 7 (Get-StageErrorExitCode 'adb dropped' 'lost')
+
 # ---- every early stop still names every check
 $twoPlans = @([pscustomobject]@{ Name = 'cold-start'; Status = 'Pending'; Reason = $null }, [pscustomobject]@{ Name = 'book-end'; Status = 'SKIP'; Reason = 'not for rtst (runs on: dino)' }, [pscustomobject]@{ Name = 'highlight'; Status = 'Pending'; Reason = $null })
 $done = @([pscustomobject]@{ Name = 'cold-start'; Status = 'PASS'; Detail = 'ok'; Seconds = 90 })
@@ -278,9 +295,14 @@ Assert-Equal 'a record posted before the start is not taken' $null (Select-Poste
 Assert-Equal 'with the pack name expected (Slice 208) an unnamed notification fails' $null (Select-PostedProgressNotification $recs 1000 @('supertonic-3') $true)
 Assert-Equal 'another package never matches' 'Downloading voices' (Select-PostedProgressNotification $recs 0 @() $false).Title
 Assert-Equal 'the Slice 208 rule is off for now' $false $script:ExpectPackNameInNotification
+$noTime = Get-NotificationRecords @('  NotificationRecord(0x9 : pkg=uk.sirous.readthestupidtext.dbg user=UserHandle{0} id=9 tag=null)', '        android.title=String (Old download 90%)') $pk
+Assert-Equal 'review: a record with no post time is not proof of a fresh download (finding 6)' $null (Select-PostedProgressNotification $noTime 1000 @() $false)
 Assert-Equal 'a notification passes' $true (Resolve-NotificationVerdict $sel).Passed
 Assert-Equal 'verdict quotes title and text' $true ((Resolve-NotificationVerdict $sel).Detail -like "*Downloading voices*12% of 300 MB*")
 Assert-Equal 'none fails' $false (Resolve-NotificationVerdict $null).Passed
+Assert-Equal 'review: no post time in the dump is flagged' $true (Test-PostTimeMissing $noTime)
+Assert-Equal 'review: records with a post time are not flagged' $false (Test-PostTimeMissing $recs)
+Assert-Equal 'review: the unknown post time is named, not "no notification"' $true ((Resolve-NotificationVerdict $null $true).Detail -like '*no post time*')
 
 # ---- book-end: wake locks of the app's uid, or a foreground service
 Assert-Equal 'uid from dumpsys package' '10234' (Get-PackageUid '    userId=10234')
