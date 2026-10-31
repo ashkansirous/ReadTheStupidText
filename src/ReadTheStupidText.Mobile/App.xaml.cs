@@ -38,6 +38,7 @@ public partial class App : Microsoft.Maui.Controls.Application
 		if (!UpdateRequired)
 		{
 			_ = _ocrPacks?.EnsureForCurrentLanguageAsync();
+			_ = _ocrPacks?.ResumeStalePartialsAsync(); // Slice 208: after the current-language start; half-finished packs the settings still want finish, the rest are deleted
 		}
 	}
 

@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using ReadTheStupidText.Application;
+using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 
 namespace ReadTheStupidText.Mobile.Shared;
@@ -50,6 +51,7 @@ public sealed class MobileVoicePackService : IVoicePackService
             timeout.CancelAfter(CatalogTimeout);
             string json = await Http.GetStringAsync(PackConstants.CatalogUrl, timeout.Token).ConfigureAwait(false);
             _catalog = PackCatalogParser.Parse(json);
+            PackDownloadHost.NoteCatalog(_catalog); // Slice 208: the notifications name a pack's language and size
             _catalogFetchedUtc = DateTime.UtcNow;
             return new PackCatalogResult(PackDownloadResult.Ok, _catalog);
         }
@@ -179,6 +181,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         using IDisposable gate = await PackDownloadGate.EnterAsync(packId, cancellationToken).ConfigureAwait(false); // one run per pack (Slice 173)
         if (LoadInstalled(packId) is { } installed && !UpgradeAvailable(installed))
         {
+            PackDownloadHost.ClearPaused(packId); // already there: a notice left from before has nothing to ask any more
             progress?.Report(1);
             return PackDownloadResult.Ok;
         }
@@ -194,26 +197,203 @@ public sealed class MobileVoicePackService : IVoicePackService
         using var cancelListener = new NotificationCancelListener(packId, notificationCancel);
         if (!PackResumeScope.IsAutomatic)
         {
-            _ = PackDownloadHost.AskNotification?.Invoke(); // never awaited: the download does not wait for the question; never asked for an automatic restart
+            _ = PackDownloadHost.AskNotification?.Invoke(packId); // never awaited: the download does not wait for the question; never asked for an automatic restart
         }
 
         using IPackKeepAliveScope? keepAlive = BeginKeepAlive(packId);
+        double? lastFraction = null;
         var scoped = new InlineProgress(value =>
         {
+            lastFraction = value;
             keepAlive?.Progress(value);
             progress?.Report(value);
         });
 
+        PackDownloadHost.ClearPaused(packId); // Slice 208: this run is the resume the "Download paused" notice asked for
         // Hash, extract and copy are heavy: keep all of it off the UI thread.
         try
         {
-            return await Task.Run(() => DownloadOffUiThreadAsync(packId, scoped, notificationCancel.Token), notificationCancel.Token).ConfigureAwait(false);
+            PackDownloadResult result = await Task.Run(() => DownloadOffUiThreadAsync(packId, scoped, notificationCancel.Token), notificationCancel.Token).ConfigureAwait(false);
+            SettlePausedNotice(packId, result, lastFraction);
+            return result;
         }
         catch (OperationCanceledException) when (notificationCancel.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
+            PackDownloadHost.ClearPaused(packId);
             throw new PackCancelledByNotificationException(packId); // the caller's token did not fire: it was the notification's Cancel
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            PackDownloadHost.ClearPaused(packId); // the person stopped it: nothing is paused
+            throw;
+        }
+        catch (Exception ex) when (IsResumableFailure(ex))
+        {
+            PackDownloadHost.Paused(packId, lastFraction); // a network stop or an HttpClient timeout; the platform decides whether a notice is due (background only)
+            throw;
+        }
+        catch (Exception)
+        {
+            PackDownloadHost.ClearPaused(packId); // nothing the person can finish by tapping: no notice
+            throw;
+        }
     }
+
+    private static bool IsResumableFailure(Exception ex) =>
+        ex is OperationCanceledException or HttpRequestException or System.Net.Sockets.SocketException or TimeoutException;
+
+    // Slice 208: the notice is decided where the run ends. Finished or a failure nothing can resume clears it; a stop that waiting or the network can
+    // end (Offline, Failed) posts it, and the platform posts only when the app is in the background (Android: after the time limit stopped the service).
+    private static void SettlePausedNotice(string packId, PackDownloadResult result, double? lastFraction)
+    {
+        if (PackResumePolicy.IsResumableResult(result))
+        {
+            PackDownloadHost.Paused(packId, lastFraction);
+            return;
+        }
+
+        PackDownloadHost.ClearPaused(packId);
+    }
+
+    /// <summary>
+    /// Launch scan for half-finished downloads (Slice 208). This service owns the pack files, so the scan asks it, under the gate that starts every
+    /// download, whether a pack is in flight or queued: such a pack is never touched. A partial nothing wants is deleted under that gate (a delete and a
+    /// start cannot interleave), after the wanted set is read again, together with the iOS resume sidecar; a partial that is not clearly the
+    /// catalog's version of a wanted pack is kept. Nothing is downloaded here: <see cref="StalePartialScan.Resumable"/> lists the wanted packs whose partial
+    /// the caller's normal start entry finishes (Wi-Fi rule, consent and the person's cancel apply there). Needs the catalog (none: every partial stays).
+    /// Never throws.
+    /// </summary>
+    /// <param name="languages">Asked again just before each delete: the languages the settings want right now.</param>
+    public async Task<StalePartialScan> ScanStalePartialsAsync(Func<IReadOnlyCollection<string>> languages, CancellationToken cancellationToken)
+    {
+        try
+        {
+            List<FoundPartial> partials = FindPartials();
+            if (partials.Count == 0)
+            {
+                return StalePartialScan.Empty;
+            }
+
+            PackCatalogResult catalog = await GetCatalogCachedAsync(StalePartialCatalogAge, cancellationToken).ConfigureAwait(false);
+            if (catalog.Status != PackDownloadResult.Ok)
+            {
+                return StalePartialScan.Empty;
+            }
+
+            IReadOnlyList<StalePartialDecision> decisions = DecideAll(partials, catalog.Packs, languages());
+            int deleted = await DeleteUnwantedAsync(decisions, catalog.Packs, languages, cancellationToken).ConfigureAwait(false);
+            string[] resumable = [.. decisions.Where(d => d.Action == StalePartialAction.Resume).Select(d => d.PackId)];
+            foreach (string packId in resumable)
+            {
+                PackDownloadHost.LogService(StalePartialResumeMarker, packId);
+            }
+
+            return new StalePartialScan(deleted, resumable);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Debug.WriteLine($"Stale partial scan failed: {ex.Message}");
+            return StalePartialScan.Empty;
+        }
+    }
+
+    private static readonly TimeSpan StalePartialCatalogAge = TimeSpan.FromHours(6);
+
+    private static IReadOnlyList<StalePartialDecision> DecideAll(IEnumerable<FoundPartial> found, IReadOnlyList<PackInfo> packs, IReadOnlyCollection<string> languages)
+    {
+        // The wanted packs are exactly the ones the app's own start picks for each language (VoicePackSelector, OcrPackSelector): one source of truth, so a
+        // pack the start would never resume is not "wanted" and a selected pack is never deleted. A translation pair, Dino's storyteller voice and a scan
+        // pack of a language not asked for here (a scanned page can be in any language) are not decided by the settings seen here: their partial is kept.
+        IReadOnlySet<string> wanted = languages
+            .SelectMany(l => new[] { VoicePackSelector.Select(packs, l), OcrPackSelector.Select(packs, l) })
+            .OfType<PackInfo>().Select(p => p.Id).ToHashSet();
+        IReadOnlySet<string> undetermined = packs
+            .Where(p => p.Kind is PackKind.Translation or PackKind.Storyteller || (p.Kind == PackKind.Ocr && !wanted.Contains(p.Id)))
+            .Select(p => p.Id).ToHashSet();
+        IReadOnlyDictionary<string, string> versions = packs.GroupBy(p => p.Id).ToDictionary(g => g.Key, g => g.First().Version);
+        return StalePartialPolicy.Decide(found, wanted, versions, undetermined);
+    }
+
+    private static List<FoundPartial> FindPartials()
+    {
+        var found = new List<FoundPartial>();
+        try
+        {
+            foreach (string file in Directory.EnumerateFiles(PacksRoot()).Where(f => f.EndsWith(PackNaming.PartialSuffix, StringComparison.Ordinal)))
+            {
+                found.Add(new FoundPartial(Path.GetFileName(file), new FileInfo(file).Length));
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Debug.WriteLine($"Could not list partial downloads: {ex.Message}");
+        }
+
+        return found;
+    }
+
+    private static async Task<int> DeleteUnwantedAsync(
+        IEnumerable<StalePartialDecision> decisions, IReadOnlyList<PackInfo> packs, Func<IReadOnlyCollection<string>> languages, CancellationToken cancellationToken)
+    {
+        int deleted = 0;
+        foreach (StalePartialDecision decision in decisions.Where(d => d.Action == StalePartialAction.Delete))
+        {
+            if (await TryDeleteIdleAsync(decision, packs, languages).ConfigureAwait(false))
+            {
+                deleted++;
+            }
+        }
+
+        return deleted;
+    }
+
+    // The pack is taken through the same per-pack gate every download enters: a pack in flight (or queued ahead of us) holds it, so we leave it alone, and once
+    // we hold it nothing can start this pack until the file is gone. Under the gate the file and the wanted set are read again.
+    private static async Task<bool> TryDeleteIdleAsync(
+        StalePartialDecision decision, IReadOnlyList<PackInfo> packs, Func<IReadOnlyCollection<string>> languages)
+    {
+        IDisposable? gate = PackDownloadGate.TryEnter(decision.PackId);
+        if (gate is null)
+        {
+            return false; // in flight or held by another caller: not ours to delete
+        }
+
+        using (gate)
+        {
+            return await DeleteHeldAsync(decision, packs, languages).ConfigureAwait(false);
+        }
+    }
+
+    private static async Task<bool> DeleteHeldAsync(StalePartialDecision decision, IReadOnlyList<PackInfo> packs, Func<IReadOnlyCollection<string>> languages)
+    {
+        string path = Path.Combine(PacksRoot(), decision.FileName);
+        try
+        {
+            if (!File.Exists(path) || await PackDownloadHost.HasLiveTransferAsync(path).ConfigureAwait(false))
+            {
+                return false; // gone already, or a background transfer (iOS) still writes it
+            }
+
+            var fresh = new FoundPartial(decision.FileName, new FileInfo(path).Length);
+            if (DecideAll([fresh], packs, languages()) is not [{ Action: StalePartialAction.Delete }])
+            {
+                return false; // the settings or the file changed since the scan began
+            }
+
+            File.Delete(path);
+            PackDownloadHost.DiscardTransferLeftovers(path);
+            PackDownloadHost.LogService(StalePartialDeleteMarker, decision.PackId);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Debug.WriteLine($"Could not delete the partial of '{decision.PackId}': {ex.Message}");
+            return false;
+        }
+    }
+
+    internal const string StalePartialResumeMarker = "stale-partial resume";
+    internal const string StalePartialDeleteMarker = "stale-partial delete";
 
     // Subscribes to the notification's Cancel for one pack; disposing it unsubscribes, whatever way the run ends.
     private sealed class NotificationCancelListener : IDisposable

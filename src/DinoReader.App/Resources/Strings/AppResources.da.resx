@@ -397,4 +397,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Tillad notifikationer for at holde stemmen ved med at downloade, mens telefonen er låst, eller du bruger andre apps. Du kan se fremgangen der.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Ikke nu</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Fortsæt</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>Gør {0}-stemmen klar ({1} MB) · {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Download sat på pause. Tryk for at gøre den færdig.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>{0}-stemmen ({1} MB)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-stemmen ({1} MB) · {2} % færdig</value></data>
 </root>

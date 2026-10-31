@@ -164,6 +164,10 @@ public static class AppResources
     public static string Notify_Body => Get();
     public static string Notify_NotNow => Get();
     public static string Notify_Continue => Get();
+    public static string PackNotify_Downloading => Get();
+    public static string PackNotify_PausedTitle => Get();
+    public static string PackNotify_Named => Get();
+    public static string PackNotify_PausedDetail => Get();
     public static string Language_Continue => Get();
     public static string Language_StartReading => Get();
 }

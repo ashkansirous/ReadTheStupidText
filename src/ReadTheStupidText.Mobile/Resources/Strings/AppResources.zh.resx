@@ -150,4 +150,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>允许通知,这样在手机锁屏或使用其他应用时,语音仍会继续下载。你可以在通知中查看进度。</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>暂不</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>继续</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>正在下载{0}语音（{1} MB）… {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>下载已暂停。点按即可完成。</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>{0}语音（{1} MB）</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}语音（{1} MB）· 已完成 {2}%</value></data>
 </root>

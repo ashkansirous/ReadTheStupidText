@@ -20,7 +20,7 @@ Assert-Equal 'order kept' 'cold-start,book-end,paused-notification,highlight' ((
 Assert-Equal 'cold-start runs on rtst' $script:StatusPending $plan[0].Status
 Assert-Equal 'book-end is Dino only' $script:StatusSkipped $plan[1].Status
 Assert-Equal 'book-end reason names the app' $true ($plan[1].Reason -like 'not for rtst*')
-Assert-Equal 'blocked check says why' $true ($plan[2].Reason -like '*Slice 208*')
+Assert-Equal 'paused-notification is built (Slice 208) and runs on rtst' $script:StatusPending $plan[2].Status
 $threw = $false
 try { Resolve-CheckSelection @('nope') 'rtst' $catalogue | Out-Null } catch { $threw = $_.Exception.Message -like "*Unknown check 'nope'*cold-start*" }
 Assert-Equal 'unknown check throws and lists the known ones' $true $threw
@@ -294,7 +294,12 @@ Assert-Equal 'text is read verbatim' '12% of 300 MB' $sel.Text
 Assert-Equal 'a record posted before the start is not taken' $null (Select-PostedProgressNotification $recs 2500 @('supertonic-3') $false)
 Assert-Equal 'with the pack name expected (Slice 208) an unnamed notification fails' $null (Select-PostedProgressNotification $recs 1000 @('supertonic-3') $true)
 Assert-Equal 'another package never matches' 'Downloading voices' (Select-PostedProgressNotification $recs 0 @() $false).Title
-Assert-Equal 'the Slice 208 rule is off for now' $false $script:ExpectPackNameInNotification
+Assert-Equal 'the Slice 208 rule is on: the download text names the language and the size' $true $script:ExpectPackNameInNotification
+$named = Get-NotificationRecords @(
+    '  NotificationRecord(0x5 : pkg=uk.sirous.readthestupidtext.dbg user=UserHandle{0} id=5 tag=null)', '    mUpdateTimeMs=4000', '        android.title=String (Downloading the English voice (63 MB)... 12%)') $pk
+Assert-Equal 'a notification naming the language and the size passes the Slice 208 rule' $true ($null -ne (Select-PostedProgressNotification $named 1000 @('English') $true))
+Assert-Equal 'a size without the language does not pass' $null (Select-PostedProgressNotification $named 1000 @('French') $true)
+Assert-Equal 'a language without the size does not pass' $null (Select-PostedProgressNotification (Get-NotificationRecords @('  NotificationRecord(0x6 : pkg=uk.sirous.readthestupidtext.dbg user=UserHandle{0} id=6 tag=null)', '    mUpdateTimeMs=4000', '        android.title=String (Downloading English voices 12%)') $pk) 1000 @('English') $true)
 $noTime = Get-NotificationRecords @('  NotificationRecord(0x9 : pkg=uk.sirous.readthestupidtext.dbg user=UserHandle{0} id=9 tag=null)', '        android.title=String (Old download 90%)') $pk
 Assert-Equal 'review: a record with no post time is not proof of a fresh download (finding 6)' $null (Select-PostedProgressNotification $noTime 1000 @() $false)
 Assert-Equal 'a notification passes' $true (Resolve-NotificationVerdict $sel).Passed

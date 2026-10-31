@@ -398,4 +398,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Разрешите уведомления, чтобы голос продолжал загружаться, пока телефон заблокирован или вы пользуетесь другими приложениями. Ход загрузки будет виден там.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Не сейчас</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Продолжить</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>Подготовка голоса: {0} ({1} МБ) · {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Загрузка приостановлена. Нажмите, чтобы завершить.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>Голос: {0} ({1} МБ)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>Голос: {0} ({1} МБ) · готово {2}%</value></data>
 </root>

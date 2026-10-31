@@ -49,19 +49,68 @@ public sealed class OcrPackInstaller
         UseLocalizedDownloadNotification();
     }
 
-    // Slice 183: this installer is created at every start, so it sets the (localized) text of the download notification once.
-    private static void UseLocalizedDownloadNotification()
+    /// <summary>
+    /// Slice 208: at launch, after the current-language start, the pack service deletes the half-downloaded packs nothing wants (it skips any pack in flight
+    /// or queued, and re-reads the language before each delete). A partial the settings still want is finished by this installer's normal start
+    /// (<see cref="EnsureForCurrentLanguageAsync"/>), so the person's cancel hold and the usual order behind the voice download apply. Without the real
+    /// pack service (tests) nothing happens. Never throws.
+    /// </summary>
+    public async Task ResumeStalePartialsAsync()
     {
-        PackDownloadHost.NotificationText = fraction => AppResources.Format(AppResources.PackStatus_Downloading, fraction.ToString("P0", System.Globalization.CultureInfo.CurrentUICulture));
+        if (_settings.Language is null || _packs is not MobileVoicePackService service)
+        {
+            return;
+        }
+
+        StalePartialScan scan = await Task.Run(() => service.ScanStalePartialsAsync(CurrentLanguages, CancellationToken.None)).ConfigureAwait(false);
+        if (scan.Resumable.Count > 0)
+        {
+            await EnsureForCurrentLanguageAsync().ConfigureAwait(false); // the guard makes this a no-op when the launch run is still going
+        }
+    }
+
+    private IReadOnlyCollection<string> CurrentLanguages() => _settings.Language is { } language ? [language] : [];
+
+    // Slice 183: this installer is created at every start, so it sets the (localized) text of the download notification once.
+    // Slice 208: the texts name the pack's language (in English, as the mock shows) and size, and the paused notice has its own.
+    private void UseLocalizedDownloadNotification()
+    {
+        var culture = System.Globalization.CultureInfo.CurrentUICulture;
+        PackDownloadHost.NotificationText = fraction => AppResources.Format(AppResources.PackStatus_Downloading, fraction.ToString("P0", culture));
+        PackDownloadHost.NamedNotificationText = (label, fraction) => AppResources.Format(AppResources.PackNotify_Downloading, label.Language, label.Megabytes, PackDownloadHost.PercentText(fraction, culture));
+        PackDownloadHost.PausedTitle = () => AppResources.PackNotify_PausedTitle;
+        PackDownloadHost.PausedNotificationText = (label, fraction) => PackDownloadHost.ComposePausedText(
+            label, fraction, AppResources.PackNotify_PausedDetail, AppResources.PackNotify_Named, culture);
+        PackDownloadHost.LanguageName = EnglishLanguageName;
+        PackDownloadHost.CurrentLanguage = () => _settings.Language;
         PackDownloadHost.CancelLabel = () => AppResources.Common_Cancel;
-        PackDownloadHost.AskNotification = () => PackNotificationAsk.AskOnceAsync(ShowNotificationSheetAsync); // a download that did not start from the first-run page (translation, scan)
+        PackDownloadHost.AskNotification = packId => PackNotificationAsk.AskOnceAsync(() => ShowNotificationSheetAsync(packId)); // a download that did not start from the first-run page (translation, scan)
+    }
+
+    // The English name of a language code ("Persian"), not the "(Iran)" regional tail; the code itself when the platform does not know it.
+    private static string EnglishLanguageName(string code)
+    {
+        try
+        {
+            string name = System.Globalization.CultureInfo.GetCultureInfo(code).EnglishName;
+            int region = name.IndexOf(" (", StringComparison.Ordinal);
+            return region > 0 ? name[..region] : name;
+        }
+        catch (System.Globalization.CultureNotFoundException)
+        {
+            return code;
+        }
     }
 
     // Throws when no page is up (an automatic resume in the background); the ask then skips and tries again at the next download.
-    private static Task<bool> ShowNotificationSheetAsync() => MainThread.InvokeOnMainThreadAsync(() =>
+    // Names the pack's language and size above the usual question when the catalog knows them.
+    private static Task<bool> ShowNotificationSheetAsync(string packId) => MainThread.InvokeOnMainThreadAsync(() =>
     {
         Page page = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault()?.Page ?? throw new InvalidOperationException("No page to ask on.");
-        return page.DisplayAlertAsync(AppResources.Notify_Title, AppResources.Notify_Body, AppResources.Notify_Continue, AppResources.Notify_NotNow);
+        string body = PackDownloadHost.LabelOf(packId) is { } label
+            ? AppResources.Format(AppResources.PackNotify_Named, label.Language, label.Megabytes) + "\n\n" + AppResources.Notify_Body
+            : AppResources.Notify_Body;
+        return page.DisplayAlertAsync(AppResources.Notify_Title, body, AppResources.Notify_Continue, AppResources.Notify_NotNow);
     });
 
     // Slice 186: a retried voice pack that reaches Ready lifts the hold; the held scan pack then follows.

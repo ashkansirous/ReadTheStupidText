@@ -21,6 +21,9 @@ public static class StoryLanguages
 	private const string PickKey = "dino.story.reading";
 	private const string NoPackKey = "dino.story.nopack";
 	private const string WantedKey = "dino.story.wanted";
+	private const string AskPendingKey = "dino.notify.ask.pending";
+	private const int AndroidWithRuntimeNotificationPermission = 33;
+	private const int PercentScale = 100;
 	private const char PairSeparator = ',';
 	private const char FlagSeparator = ':';
 
@@ -50,6 +53,65 @@ public static class StoryLanguages
 	/// <summary>Whether a book in <paramref name="language"/> was read with the phone's voice for want of a pack (see <see cref="NoteWanted"/>).</summary>
 	public static bool IsWanted(string language) =>
 		StoryLanguageSet.Split(Preferences.Default.Get(WantedKey, (string?)null)).Contains(UiLanguage.Resolve(language));
+
+	/// <summary>
+	/// A pack download started outside the grown-up area (the storyteller's first download from the gallery), so the notification question
+	/// waits until a parent next opens Settings (Slice 208); the download runs meanwhile. Remembers which pack it was, to name it in the question
+	/// when it is asked (in the language the app has then). Only one pending ask is kept, and the question itself is asked once per install
+	/// (<see cref="PackNotificationAsk"/>). Only Android 13+ ever asks, so nothing is kept elsewhere.
+	/// </summary>
+	public static async Task NoteNotificationAskPendingAsync(string packId)
+	{
+		if (await PackNotificationAsk.IsSettledAsync() || !OperatingSystem.IsAndroidVersionAtLeast(AndroidWithRuntimeNotificationPermission) || Preferences.Default.ContainsKey(AskPendingKey))
+		{
+			return;
+		}
+
+		Preferences.Default.Set(AskPendingKey, packId);
+		LogAsk(PackDownloadHost.AskDeferredAction, packId);
+	}
+
+	// Same sink and line shape as the other PACKDL markers (PackDownloadHost.LogService is internal to Mobile.Shared).
+	private static void LogAsk(string action, string detail)
+	{
+		string line = $"{PackDownloadLog.Prefix} service {action} pack={detail}";
+		Debug.WriteLine(line);
+		PackDownloadLog.Sink?.Invoke(line);
+	}
+
+	/// <summary>
+	/// Asks the pending notification question on the grown-up Settings page that just opened. The pending mark is removed only once the question was really
+	/// shown: when the ask skips (the app is not in the foreground yet, another ask runs) it stays for the next time Settings opens.
+	/// </summary>
+	public static async Task AskPendingNotificationAsync(Page page)
+	{
+		string? packId = Preferences.Default.Get(AskPendingKey, (string?)null);
+		if (packId is null)
+		{
+			return;
+		}
+
+		bool shown = false;
+		await PackNotificationAsk.AskOnceAsync(() =>
+		{
+			shown = true;
+			return page.DisplayAlertAsync(AppResources.Notify_Title, PendingBody(packId), AppResources.Notify_Continue, AppResources.Notify_NotNow);
+		});
+		if (shown)
+		{
+			LogAsk(PackDownloadHost.AskAtSettingsAction, packId);
+		}
+
+		if (shown || await PackNotificationAsk.IsSettledAsync())
+		{
+			Preferences.Default.Remove(AskPendingKey); // shown, or the question can never be shown again: a stale mark would only block later asks
+		}
+	}
+
+	private static string PendingBody(string packId) =>
+		PackDownloadHost.LabelOf(packId) is { } label
+			? AppResources.Format(AppResources.PackNotify_Named, label.Language, label.Megabytes) + "\n\n" + AppResources.Notify_Body
+			: AppResources.Notify_Body;
 
 	/// <summary>The app language and the saved side languages.</summary>
 	public static StoryLanguageSet Current() => StoryLanguageSet.Create(LanguageChoice.Current(), StoryLanguageSet.Split(Preferences.Default.Get(SidesKey, (string?)null)));
@@ -126,7 +188,20 @@ public sealed class StoryLanguagePacks
 		PackDownloadHost.CancelRequested += OnNotificationCancel;
 		PackDownloadHost.NotificationText = fraction => AppResources.Format(AppResources.StoryLanguages_Getting, (int)(fraction * 100)); // Slice 183: the notification shows the app's own status line
 		PackDownloadHost.CancelLabel = () => AppResources.Common_Cancel;
+		UseNamedNotifications();
 		StoryLanguages.SidesSaved += DropWaitingOutside; // a language that left the set (Settings, the app-language swap, the intro) no longer waits for Wi-Fi
+	}
+
+	// Slice 208: the download and paused notifications name the pack's language (Dino's own endonym, "Svenska") and size.
+	private static void UseNamedNotifications()
+	{
+		PackDownloadHost.NamedNotificationText = (label, fraction) => AppResources.Format(AppResources.PackNotify_Downloading, label.Language, label.Megabytes, PackDownloadHost.PercentText(fraction, AppResources.Culture));
+		PackDownloadHost.PausedTitle = () => AppResources.PackNotify_PausedTitle;
+		PackDownloadHost.PausedNotificationText = (label, fraction) => PackDownloadHost.ComposePausedText(
+			label, fraction, AppResources.PackNotify_PausedDetail, AppResources.PackNotify_Named, AppResources.Culture);
+		PackDownloadHost.LanguageName = LanguageNames.NativeName;
+		PackDownloadHost.CurrentLanguage = () => LanguageChoice.Current();
+		PackDownloadHost.AskNotification = packId => StoryLanguages.NoteNotificationAskPendingAsync(packId); // asked when a grown-up next opens Settings, never over the child's screens
 	}
 
 	// Slice 183: Cancel on the download notification stops the run of that pack's language exactly as the in-app Cancel does.
@@ -149,6 +224,35 @@ public sealed class StoryLanguagePacks
 		foreach (string code in codes)
 		{
 			Cancel(code);
+			UntickAfterFailure(code); // Slice 208: Cancel unticks, as the in-app Cancel does (mock 87); a ticked language is one the launch scan finishes, a cancelled one must stay cancelled
+		}
+	}
+
+	/// <summary>
+	/// Slice 208: at launch, finishes the languages whose half-finished pack the scan found (<paramref name="packIds"/>) and that are still ticked, through the normal
+	/// request: on mobile data they wait for Wi-Fi, and a language the grown-up cancelled is unticked (Cancel unticks), so it is not here. As an automatic restart: no
+	/// notification question. Never throws.
+	/// </summary>
+	public async Task ResumeWantedAsync(IReadOnlyCollection<string> packIds)
+	{
+		try
+		{
+			PackCatalogResult catalog = await TryCatalogAsync(CancellationToken.None);
+			if (catalog.Status != PackDownloadResult.Ok)
+			{
+				return;
+			}
+
+			string[] codes = [.. StoryLanguages.Current().All.Where(code => VoicePackSelector.Select(catalog.Packs, code) is { } pack && packIds.Contains(pack.Id))];
+			if (codes.Length > 0)
+			{
+				PackResumeScope.Enter();
+				await RequestAsync(null, codes);
+			}
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not finish its half-finished packs: {ex.Message}");
 		}
 	}
 
@@ -275,7 +379,8 @@ public sealed class StoryLanguagePacks
 		if (host is not null)
 		{
 			// Slice 183: the grown-up is asked once about notifications before the first big download; then the Wi-Fi question, then the download.
-			await PackNotificationAsk.AskOnceAsync(() => host.DisplayAlertAsync(AppResources.Notify_Title, AppResources.Notify_Body, AppResources.Notify_Continue, AppResources.Notify_NotNow));
+			// Slice 208: the sheet names each language and its size; the catalogue is only asked when the sheet is really shown.
+			await PackNotificationAsk.AskOnceAsync(async () => await host.DisplayAlertAsync(AppResources.Notify_Title, await NotifyBodyAsync(missing), AppResources.Notify_Continue, AppResources.Notify_NotNow));
 		}
 
 		if (!OnMobileDataOnly())
@@ -300,6 +405,12 @@ public sealed class StoryLanguagePacks
 		}
 
 		WaitForWifi(missing);
+	}
+
+	private async Task<string> NotifyBodyAsync(IReadOnlyList<string> codes)
+	{
+		PackCatalogResult catalog = await TryCatalogAsync(CancellationToken.None);
+		return string.Join(", ", codes.Select(code => Described(code, catalog))) + "\n\n" + AppResources.Notify_Body;
 	}
 
 	// Cellular is all there is (offline is not asked about: the download would only fail).

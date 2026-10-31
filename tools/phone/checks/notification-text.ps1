@@ -6,7 +6,7 @@
   1. A verified aside copy of the installed packs is made (Save-PacksAside). 2. The pack folder is MOVED (run-as mv, never deleted) to a sibling temp name. 3. The Debug throttle marker is written
   and the dev app launched in the foreground; `PACKDL start pack=<id>` must be logged within 60 s, else FAIL quoting the app's last RTST-TEST lines. 4. The newest notification of the dev
   package posted after that start with a percentage in its title or text is read (verbatim title and text in the result); PASS = such a notification was shown (matched by package and post
-  time, not by pack name: ExpectPackNameInNotification in _lib.ps1 is the Slice 208 hook). 5. In a finally block: cancel the download (cancel-pack-downloads hook), delete the .partial and the
+  time; since Slice 208 the text must also name the language (English) and the size, "(<n> MB)": ExpectPackNameInNotification in _lib.ps1). 5. In a finally block: cancel the download (cancel-pack-downloads hook), delete the .partial and the
   half-made pack folder, move the original pack back, verify it with Test-PackInstalled; if that fails the check FAILS (the aside copy is named in the detail).
 #>
 param(
@@ -24,6 +24,7 @@ $script:AsideRoot = '/sdcard/Download/rtst-packs-aside'
 $script:AsideTransferSeconds = 300
 $script:MovedSuffix = '.slice213-moved'
 $packId = @($script:RequiredPacks[$App])[0]
+$script:DownloadLanguageName = 'English'   # the app is launched with lang=en (Start-DevAppWithHook); Slice 208: the text must name the language and the size
 $packPath = "$($script:PacksDirectory)/$packId"
 $movedPath = "$packPath$($script:MovedSuffix)"
 
@@ -75,7 +76,7 @@ function Wait-PostedNotification([int64]$SinceMs) {
     do {
         Assert-WithinBudget 'waiting for the download notification'
         $records = Get-NotificationRecords @(Invoke-Adb $Phone @('shell', 'dumpsys notification --noredact')) $package
-        $note = Select-PostedProgressNotification $records $SinceMs @($packId)
+        $note = Select-PostedProgressNotification $records $SinceMs @($script:DownloadLanguageName)
         if ($note) { return $note }
         $script:PostTimeUnknown = Test-PostTimeMissing $records
         Start-Sleep -Seconds 2

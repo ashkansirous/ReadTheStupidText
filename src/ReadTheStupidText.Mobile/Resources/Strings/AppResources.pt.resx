@@ -150,4 +150,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Permita as notificações para que a voz continue a ser transferida enquanto o telemóvel está bloqueado ou usa outras aplicações. Verá o progresso aí.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Agora não</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Continuar</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>Baixando a voz {0} ({1} MB)… {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Download pausado. Toque para concluir.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>Voz {0} ({1} MB)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>Voz {0} ({1} MB) · {2}% concluído</value></data>
 </root>

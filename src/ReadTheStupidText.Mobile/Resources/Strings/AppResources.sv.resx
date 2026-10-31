@@ -150,4 +150,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Tillåt aviseringar så att rösten fortsätter laddas ned medan telefonen är låst eller du använder andra appar. Där ser du förloppet.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Inte nu</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Fortsätt</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>Laddar ned {0}-rösten ({1} MB)… {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Nedladdningen är pausad. Tryck för att slutföra.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>{0}-rösten ({1} MB)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-rösten ({1} MB) · {2} % klart</value></data>
 </root>

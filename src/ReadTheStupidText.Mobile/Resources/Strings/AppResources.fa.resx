@@ -150,4 +150,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>اعلان‌ها را مجاز کنید تا دانلود صدا هنگام قفل بودن گوشی یا استفاده از برنامه‌های دیگر ادامه یابد. پیشرفت را همان‌جا می‌بینید.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>حالا نه</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>ادامه</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>در حال دانلود صدای {0} ({1} مگابایت)… {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>دانلود متوقف شد. برای پایان دادن ضربه بزنید.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>صدای {0} ({1} مگابایت)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>صدای {0} ({1} مگابایت) · {2}% انجام شد</value></data>
 </root>
