@@ -84,6 +84,16 @@ function Get-PageTitle {
     return $null
 }
 
+function Test-ReadingSpeedRow {
+    # Slice 205: the row is a real Button named "Reading speed: <value>" (Invoke, keyboard, screen reader). Open its page, then Back.
+    $row = Wait-Until { Find-UiaByName -Root (Get-DinoWindow) -Name 'Reading speed: ' -ControlType 'Button' } 5 'FAIL no Reading speed row exposed as a Button'
+    $script:WidthProbe = 'WIDTHPROBE row=' + [int]$row.Current.BoundingRectangle.Width + ' window=' + [int](Get-DinoWindow).Current.BoundingRectangle.Width + ' rowrect=' + $row.Current.BoundingRectangle.ToString() + ' others=' + ((Get-VisibleNames (Get-DinoWindow)) -join ' / ')
+    Invoke-Uia $row
+    Wait-Until { (Get-PageTitle) -eq 'Reading speed' } 10 'FAIL the Reading speed row did not open its page' | Out-Null
+    Invoke-SettingsBack
+    Wait-Until { (Get-PageTitle) -eq 'Settings' } 10 'FAIL Back from Reading speed did not return to Settings' | Out-Null
+}
+
 function Test-BackToShelf {
     Wait-Until { (Get-PageTitle) -eq 'Settings' } 10 'FAIL Settings page title not showing' | Out-Null
     Invoke-SettingsBack
@@ -100,6 +110,7 @@ Invoke-Check -ResultFile $ResultFile -Body {
         Open-GateFromShelf;           $log += 'gate opened from the For grown-ups button'
         $answer = Pass-Gate;          $log += "gate passed (answer $answer), grown-up mode open"
         Open-Settings;                $log += 'gear -> Settings, groups Reading and This phone shown'
+        Test-ReadingSpeedRow;         $log += 'Reading speed row -> its page -> Back'; $log += $script:WidthProbe
         Test-BackToShelf;             $log += 'Back -> grown-up mode, Done -> kids'' shelf'
     } catch {
         $dump = Get-VisibleNames (Get-DinoWindow)
