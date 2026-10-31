@@ -25,10 +25,10 @@
   <data name="Update_Get" xml:space="preserve"><value>Обновить</value><comment>Machine draft: needs native review</comment></data>
   <data name="Update_Dismiss" xml:space="preserve"><value>Закрыть</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Помогите улучшить приложение</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Отправляет подсчёты вроде «прочитан текст на французском». Без имён, без идентификаторов, ничего из того, что вы читаете. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти).</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Отправляет подсчёты вроде «прочитан текст на французском». Без имён, без идентификаторов, ничего из того, что вы читаете. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти). Если приложение вылетит, оно также может отправить отчёт о сбое: ошибку и короткий технический журнал, но никогда ничего из того, что вы читали или набирали.</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>Вкл.</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Выкл.</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>Приложение считает, например, какие языки читают, без имён и идентификаторов. Это можно отключить в Настройках. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти).</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>Приложение считает, например, какие языки читают, без имён и идентификаторов. Это можно отключить в Настройках. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти). Если приложение вылетит, оно также может отправить отчёт о сбое: ошибку и короткий технический журнал, но никогда ничего из того, что вы читали или набирали.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Назад</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Предыдущее предложение</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Следующее предложение</value></data>

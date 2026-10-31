@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using ReadTheStupidText.Application.Activity;
+using ReadTheStupidText.Application.Crashes;
 using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Logging;
@@ -400,13 +401,13 @@ public sealed partial class ReadAloudService : IDisposable
         catch (DocumentTooLargeException ex)
         {
             _systemLog.Warning(
-                $"'{Path.GetFileName(filePath)}' has {ex.Actual} pages, exceeding the {ex.Limit}-page limit — skipping",
+                $"a {LogLineFormatter.FileKind(filePath)} file has {ex.Actual} pages, exceeding the {ex.Limit}-page limit — skipping",
                 null, ex);
             return;
         }
         catch (Exception ex)
         {
-            _systemLog.Error($"failed to extract text from '{Path.GetFileName(filePath)}'", null, ex);
+            _systemLog.Error($"failed to extract text from a {LogLineFormatter.FileKind(filePath)} file", null, ex); // Slice 227: the kind of file, never its name
             return;
         }
 

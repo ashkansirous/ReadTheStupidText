@@ -4,6 +4,7 @@ using ReadTheStupidText.Application.AppConfig;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Crashes;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -49,6 +50,7 @@ public partial class App : Microsoft.Maui.Controls.Application
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
 		var window = new Window(RootPage());
+		CrashReporter.AttachTo(window); // Slice 227: the run marker for the unclean-exit report
 		window.Resumed += (_, _) => InvalidatePhoneVoices();
 		window.Resumed += (_, _) => _ = AppUpdate.Shared.RefreshAsync();
 		var resume = _services.GetRequiredService<ReadTheStupidText.Mobile.Shared.Network.PackResumeWatcher>(); // Slice 182: created and started with the window, not when a page first asks for it

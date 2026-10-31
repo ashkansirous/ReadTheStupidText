@@ -77,10 +77,12 @@ public sealed record TelemetryConfig(bool Enabled, double SampleRate)
 
 /// <summary>
 /// The remote config the Worker serves at <c>/api/app-config</c> (Slice 132, Decision 138), checked again on the phone. Anything
-/// missing or malformed takes the safe default: no forced update, telemetry off. <see cref="Parse"/> never throws.
+/// missing or malformed takes the safe default: no forced update, telemetry off. <see cref="Parse"/> never throws. Since Slice 227 it also carries
+/// <c>crashReports.enabled</c> (<paramref name="CrashReportsEnabled"/>): crash reports go out only while it is a literal <c>true</c>.
 /// </summary>
-public sealed record AppConfig(PlatformVersions Android, PlatformVersions Ios, PlatformVersions Windows, TelemetryConfig Telemetry)
+public sealed record AppConfig(PlatformVersions Android, PlatformVersions Ios, PlatformVersions Windows, TelemetryConfig Telemetry, bool CrashReportsEnabled = false)
 {
+    private const string CrashReportsProperty = "crashReports";
     public const string NoVersion = "0.0.0";
 
     /// <summary>The newest <c>schemaVersion</c> this build understands.</summary>
@@ -120,7 +122,7 @@ public sealed record AppConfig(PlatformVersions Android, PlatformVersions Ios, P
             JsonElement root = document.RootElement;
             return root.ValueKind != JsonValueKind.Object
                 ? Default
-                : new AppConfig(PlatformOf(root, AndroidProperty), PlatformOf(root, IosProperty), PlatformOf(root, WindowsProperty), TelemetryOf(root));
+                : new AppConfig(PlatformOf(root, AndroidProperty), PlatformOf(root, IosProperty), PlatformOf(root, WindowsProperty), TelemetryOf(root), CrashReportsOf(root));
         }
         catch (JsonException)
         {
@@ -191,6 +193,10 @@ public sealed record AppConfig(PlatformVersions Android, PlatformVersions Ios, P
 
         return new TelemetryConfig(true, sample);
     }
+
+    private static bool CrashReportsOf(JsonElement root) =>
+        Child(root, CrashReportsProperty, out JsonElement crash)
+        && crash.TryGetProperty(EnabledProperty, out JsonElement enabled) && enabled.ValueKind == JsonValueKind.True;
 
     private static bool Child(JsonElement parent, string name, out JsonElement child) =>
         parent.TryGetProperty(name, out child) && child.ValueKind == JsonValueKind.Object;

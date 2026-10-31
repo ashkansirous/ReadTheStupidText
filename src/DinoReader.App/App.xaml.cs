@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Crashes;
 
 namespace DinoReader;
 
@@ -57,6 +58,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		window.Stopped += (_, _) => OnStopped(_navigation!, external);
 		window.Stopped += (_, _) => FlushUsage();
 		window.Stopped += (_, _) => _bookUpdateCancel.Cancel();
+		CrashReporter.AttachTo(window); // Slice 227: the run marker for the unclean-exit report
 		window.Resumed += (_, _) => OnResumed(_navigation!, external);
 		window.Resumed += (_, _) => _ = _config.RefreshAsync();
 		var resume = _services.GetRequiredService<ReadTheStupidText.Mobile.Shared.Network.PackResumeWatcher>(); // Slice 182: created and started with the window, not when a page first asks for it

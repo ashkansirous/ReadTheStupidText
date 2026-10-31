@@ -40,7 +40,8 @@
   leaves your device: everything the app does with it happens <strong>locally</strong>. The Windows,
   Android and iPhone apps send only small <strong>anonymous counts</strong>
   (no names, no identifiers, nothing you read) that you can switch off (in the control panel on Windows,
-  in Settings on the phones); see <em>Anonymous usage counts</em> below.</p>
+  in Settings on the phones); see <em>Anonymous usage counts</em> below. The Android and iPhone apps can also send a
+  <strong>crash report</strong> if the app crashes, on the same switch; see <em>Crash reports</em> below.</p>
 
   <h2>What the app processes, and where</h2>
   <ul>
@@ -163,6 +164,24 @@
   then deleted. As with any web request, the server sees your IP address while the request is handled; it is not
   stored with the counts and is not used for anything (only the country it maps to, as described above). The project can also switch counting off for everyone from
   the server. Counts are not shared with anyone else and are not used for advertising or tracking. Test and development builds, and the test devices store review tools use, send no counts.</p>
+
+  <h2>Crash reports (Android and iPhone)</h2>
+  <p>If the Android or iPhone app crashes or stops unexpectedly, it can send a <strong>crash report</strong> to this
+  project&rsquo;s own server (<code>readthestupidtext.sirous.uk</code>) the next time it starts. It follows the same switch
+  as the usage counts (<strong>Settings &gt; Help improve the app</strong>): when that is off, nothing is kept or sent, and
+  anything waiting is deleted. A report holds: the app and its version; the platform; whether the app came from the
+  store or from TestFlight; the kind of failure; the error&rsquo;s type, message and call stack (file paths are removed from
+  messages); the last few hundred lines of the app&rsquo;s technical log (32 KB at most), which hold technical events and
+  error details, never the text you read or typed, file names, names or scanned images; the time to the minute (UTC);
+  and the same coarse device ranges as the usage counts. The phone also passes on crashes and hangs that the system
+  itself records for the app (Apple&rsquo;s MetricKit on iPhone, Android&rsquo;s process exit reasons). No account, install,
+  device or advertising identifier is included, and the server gives each report a random name. The IP address is not
+  stored: the server only reads the country it maps to, and its rate limiter uses the address briefly to stop one
+  connection sending too many reports. Reports are kept in Cloudflare&rsquo;s R2 storage (Cloudflare is the processor),
+  read only by the project to find and fix bugs, kept only as long as that needs, and not shared with anyone else or
+  used for advertising or tracking. Test and development builds, emulators and the test devices store review tools use
+  send no reports; builds installed through TestFlight do. The project can switch crash reports off for everyone from
+  the server.</p>
 
   <h2>Third-party components</h2>
   <p>The app uses a small set of open-source, on-device components that never transmit data (the Supertonic voice model is downloaded as a language pack on all platforms rather than bundled):</p>

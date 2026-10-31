@@ -12,10 +12,13 @@ public sealed record TelemetrySettings(bool Enabled, double SampleRate)
 /// <summary>
 /// The part of <c>GET /api/app-config</c> the apps read (Slice 137, Decision 145): the telemetry switch and, since Slice 217, each platform's
 /// <c>minVersion</c> / <c>latestVersion</c> for the forced update. Anything missing or malformed means off and no update, so a typo can never
-/// switch counting on or lock anybody out. The Worker serves the same shape to Dino Reader.
+/// switch counting on or lock anybody out. The Worker serves the same shape to Dino Reader. Since Slice 227 it also carries <c>crashReports.enabled</c>
+/// (<paramref name="CrashReportsEnabled"/>): crash reports go out only while it is a literal <c>true</c>; missing, malformed or false means off.
 /// </summary>
-public sealed record UsageConfig(TelemetrySettings Telemetry, PlatformVersions Android, PlatformVersions Ios, PlatformVersions Windows)
+public sealed record UsageConfig(TelemetrySettings Telemetry, PlatformVersions Android, PlatformVersions Ios, PlatformVersions Windows, bool CrashReportsEnabled = false)
 {
+    private const string CrashReportsProperty = "crashReports";
+
     private const string AndroidProperty = "android";
     private const string IosProperty = "ios";
     private const string WindowsProperty = "windows";
@@ -94,7 +97,11 @@ public sealed record UsageConfig(TelemetrySettings Telemetry, PlatformVersions A
     }
 
     private static UsageConfig From(JsonElement root) =>
-        new(TelemetryOf(root), PlatformOf(root, AndroidProperty), PlatformOf(root, IosProperty), PlatformOf(root, WindowsProperty));
+        new(TelemetryOf(root), PlatformOf(root, AndroidProperty), PlatformOf(root, IosProperty), PlatformOf(root, WindowsProperty), CrashReportsOf(root));
+
+    private static bool CrashReportsOf(JsonElement root) =>
+        root.TryGetProperty(CrashReportsProperty, out JsonElement crash) && crash.ValueKind == JsonValueKind.Object
+        && crash.TryGetProperty(EnabledProperty, out JsonElement enabled) && enabled.ValueKind == JsonValueKind.True;
 
     private static PlatformVersions PlatformOf(JsonElement root, string name) =>
         root.TryGetProperty(name, out JsonElement platform) && platform.ValueKind == JsonValueKind.Object

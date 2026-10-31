@@ -1,3 +1,5 @@
+using ReadTheStupidText.Application.Crashes;
+
 namespace ReadTheStupidText.Application.Usage;
 
 /// <summary>Why a build or device does not count (Slice 167). <see cref="None"/> means it counts.</summary>
@@ -20,7 +22,8 @@ public enum UsageSkipReason
 /// <param name="IsTestLab">True on Android Firebase Test Lab (Play's pre-launch report).</param>
 /// <param name="IsTestInstall">True when one of our own test harnesses switched counting off (Slice 179, <see cref="UsageEligibility.NoUsageVariable"/>).</param>
 /// <param name="IsNonStoreInstall">True when the install did not come from the store: a Windows MSIX not signed by the Store, an iOS build from TestFlight or App Review (Slice 179).</param>
-public readonly record struct UsageFacts(bool IsDebug, string DisplayVersion, bool IsVirtual, bool IsTestLab, bool IsTestInstall = false, bool IsNonStoreInstall = false);
+/// <param name="Channel">Where the install came from (Slice 227): only crash reports read it (<see cref="CrashEligibility"/>); usage counts decide on <paramref name="IsNonStoreInstall"/> alone, as before.</param>
+public readonly record struct UsageFacts(bool IsDebug, string DisplayVersion, bool IsVirtual, bool IsTestLab, bool IsTestInstall = false, bool IsNonStoreInstall = false, InstallChannel Channel = InstallChannel.Store);
 
 /// <summary>
 /// Decides whether a build or device may send usage counts (Slice 167): test and development builds never do, so a store dashboard holds
@@ -62,6 +65,18 @@ public static class UsageEligibility
     /// <summary>The first rule that applies, in the order debug, unstamped, emulator, test lab, test install, non-store install; <see cref="UsageSkipReason.None"/> when none does.</summary>
     public static UsageSkipReason Check(UsageFacts facts)
     {
+        UsageSkipReason build = CheckBuild(facts);
+        if (build != UsageSkipReason.None)
+        {
+            return build;
+        }
+
+        return facts.IsNonStoreInstall ? UsageSkipReason.NonStoreInstall : UsageSkipReason.None;
+    }
+
+    /// <summary>The build and device rules both usage counts and crash reports share (Slice 227): debug, unstamped, emulator, test lab, test install. The install channel is each caller's own rule.</summary>
+    public static UsageSkipReason CheckBuild(UsageFacts facts)
+    {
         if (facts.IsDebug)
         {
             return UsageSkipReason.DebugBuild;
@@ -82,12 +97,7 @@ public static class UsageEligibility
             return UsageSkipReason.TestLab;
         }
 
-        if (facts.IsTestInstall)
-        {
-            return UsageSkipReason.TestInstall;
-        }
-
-        return facts.IsNonStoreInstall ? UsageSkipReason.NonStoreInstall : UsageSkipReason.None;
+        return facts.IsTestInstall ? UsageSkipReason.TestInstall : UsageSkipReason.None;
     }
 
     /// <summary>Whether this build and device count.</summary>

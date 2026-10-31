@@ -194,8 +194,17 @@ async function readObject(bucket: R2Bucket, key: string, range: Headers | null):
   }
 }
 
+/** Bucket folders the Worker never serves (Slice 227: crash reports are written by the Worker and read only with a token off-line). */
+const PRIVATE_KEY_PREFIXES = ["crashes/"] as const;
+
+/** True for an R2 key under a folder that no download or static route may ever serve. */
+export function isPrivateKey(key: string): boolean {
+  return PRIVATE_KEY_PREFIXES.some((prefix) => key.startsWith(prefix));
+}
+
 /** Streams one R2 object: a single Range honoured (206), anything else whole; conditional requests get one extra head. */
 export async function serveObject(request: Request, bucket: R2Bucket, file: ServedFile, cacheControl: string): Promise<Response> {
+  if (isPrivateKey(file.key)) return notFound();
   try {
     const isHead = request.method === "HEAD";
     const head = isHead || isConditional(request) ? await bucket.head(file.key) : null;

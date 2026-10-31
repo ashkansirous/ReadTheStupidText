@@ -2,7 +2,7 @@
 // `dinoreader/config.json`, with `wrangler r2 object put`; this answers
 //   GET /api/app-config    the checked config, read fresh from R2 on every request
 // Per platform (android, ios, windows) `minVersion` forces an update and `latestVersion` only shows a quiet
-// line; `telemetry` holds the usage-count switch and sample rate (Slices 133-134). A missing
+// line; `telemetry` holds the usage-count switch and sample rate (Slices 133-134); `crashReports.enabled` (Slice 227) switches crash reports on (default off). A missing
 // file, or any field in it that fails its check, falls back to the safe default (no forced update, telemetry
 // off), so a typo in the file can never lock anybody out; an unparseable file answers 503 so phones keep their
 // last good copy. Nothing about the caller is read or stored. Dino
@@ -42,12 +42,18 @@ export interface TelemetryConfig {
   readonly sampleRate: number;
 }
 
+/** The crash-report switch (Slice 227): reports are taken only while this is a literal `true`; default off. */
+export interface CrashReportsConfig {
+  readonly enabled: boolean;
+}
+
 export interface AppConfig {
   readonly schemaVersion: number;
   readonly android: PlatformVersions;
   readonly ios: PlatformVersions;
   readonly windows: PlatformVersions;
   readonly telemetry: TelemetryConfig;
+  readonly crashReports: CrashReportsConfig;
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -56,6 +62,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   ios: { minVersion: NO_VERSION, latestVersion: NO_VERSION },
   windows: { minVersion: NO_VERSION, latestVersion: NO_VERSION },
   telemetry: { enabled: false, sampleRate: 0 },
+  crashReports: { enabled: false },
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -79,6 +86,12 @@ function telemetryOf(value: unknown): TelemetryConfig {
   return raw["enabled"] === true && validRate ? { enabled: true, sampleRate: rate } : DEFAULT_CONFIG.telemetry;
 }
 
+function crashReportsOf(value: unknown): CrashReportsConfig {
+  const raw = isRecord(value) ? value : {};
+  // Switched on only by a literal true; anything else is off.
+  return raw["enabled"] === true ? { enabled: true } : DEFAULT_CONFIG.crashReports;
+}
+
 /** A checked config from parsed JSON; every missing or malformed part takes its default. */
 export function parseAppConfig(parsed: unknown): AppConfig {
   const raw = isRecord(parsed) ? parsed : {};
@@ -88,6 +101,7 @@ export function parseAppConfig(parsed: unknown): AppConfig {
     ios: platformOf(raw["ios"]),
     windows: platformOf(raw["windows"]),
     telemetry: telemetryOf(raw["telemetry"]),
+    crashReports: crashReportsOf(raw["crashReports"]),
   };
 }
 

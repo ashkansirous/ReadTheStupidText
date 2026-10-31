@@ -1,5 +1,9 @@
 using System.Runtime.InteropServices;
+using ReadTheStupidText.Application.Crashes;
 using ReadTheStupidText.Application.Usage;
+#if ANDROID
+using ReadTheStupidText.Mobile.Shared.Crashes;
+#endif
 
 namespace ReadTheStupidText.Mobile.Shared.Usage;
 
@@ -14,26 +18,31 @@ public static class UsageGate
 {
     private const string TestLabSetting = "firebase.test.lab";
     private const string TestLabOn = "true";
-    private const string IosSandboxReceipt = "sandboxReceipt";
 
+    private static readonly Lazy<UsageFacts?> CachedFacts = new(ReadFacts);
     private static readonly Lazy<UsageSkipReason> Cached = new(Decide);
 
     /// <summary>Why counts are not sent from here, or <see cref="UsageSkipReason.None"/> when they are.</summary>
     public static UsageSkipReason Reason => Cached.Value;
 
-    private static UsageSkipReason Decide()
+    /// <summary>The facts read once at start (Slice 227: crash reports decide on the same facts, with their own install-channel rule), or null when they could not be read.</summary>
+    public static UsageFacts? Facts => CachedFacts.Value;
+
+    private static UsageSkipReason Decide() =>
+        Facts is { } facts ? UsageEligibility.Check(facts) : UsageSkipReason.Unreadable;
+
+    private static UsageFacts? ReadFacts()
     {
         try
         {
-            var facts = new UsageFacts(IsDebug(), UsageEnvironment.InstalledVersion, IsVirtual() || IsRobotDevice(), IsTestLab(), IsTestInstall(), IsNonStoreInstall());
-            UsageSkipReason reason = UsageEligibility.Check(facts);
-            System.Diagnostics.Debug.WriteLine($"Usage gate: {reason} ({facts})");
-            return reason;
+            var facts = new UsageFacts(IsDebug(), UsageEnvironment.InstalledVersion, IsVirtual() || IsRobotDevice(), IsTestLab(), IsTestInstall(), IsNonStoreInstall(), SafeChannel());
+            System.Diagnostics.Debug.WriteLine($"Usage gate: {UsageEligibility.Check(facts)} ({facts})");
+            return facts;
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Usage eligibility unreadable, not counted: {ex.Message}");
-            return UsageSkipReason.Unreadable;
+            return null;
         }
     }
 
@@ -109,15 +118,46 @@ public static class UsageGate
 #endif
     }
 
-    // Slice 179: only store installs count. iOS: TestFlight and App Review builds carry a sandboxReceipt. Windows: the package must be Store-signed.
+    // Slice 179, unchanged: only store installs count. iOS: TestFlight and App Review builds carry a sandboxReceipt (a missing or other receipt name still counts).
+    // Windows: the package must be Store-signed. Android keeps counting every install.
     private static bool IsNonStoreInstall()
     {
 #if IOS
-        return Foundation.NSBundle.MainBundle.AppStoreReceiptUrl?.LastPathComponent == IosSandboxReceipt;
+        return InstallChannels.IsIosSandboxReceipt(Foundation.NSBundle.MainBundle.AppStoreReceiptUrl?.LastPathComponent);
 #elif WINDOWS
         return !ReadTheStupidText.Infrastructure.Usage.WindowsUsage.IsStoreInstall();
 #else
         return false;
+#endif
+    }
+
+    // Slice 227: a channel that cannot be read must never touch usage counts, which did not depend on it: it only means no crash reports (Dev sends nothing).
+    private static InstallChannel SafeChannel()
+    {
+        try
+        {
+            return ReadChannel();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Install channel unreadable, no crash reports: {ex.Message}");
+            return InstallChannel.Dev;
+        }
+    }
+
+    // Slice 227: where the install came from, for crash reports only. iOS reads the receipt's file name (StoreKit 2's AppTransaction is Swift-only and not bound in .NET): "receipt" is the App Store, anything else TestFlight. Android the installer package, Windows the package signature.
+    private static InstallChannel ReadChannel()
+    {
+#if IOS
+        string? receipt = Foundation.NSBundle.MainBundle.AppStoreReceiptUrl?.LastPathComponent;
+        System.Diagnostics.Debug.WriteLine($"Install receipt name: {receipt}");
+        return InstallChannels.FromIosReceipt(receipt);
+#elif ANDROID
+        return InstallChannels.FromAndroidInstaller(AndroidInstallSource.InstallerPackage());
+#elif WINDOWS
+        return ReadTheStupidText.Infrastructure.Usage.WindowsUsage.IsStoreInstall() ? InstallChannel.Store : InstallChannel.Dev;
+#else
+        return InstallChannel.Dev;
 #endif
     }
 }

@@ -238,13 +238,13 @@
   <data name="Version_NewReady" xml:space="preserve"><value>Доступна новая версия</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Версия</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Помогите улучшить Dino</value></data>
-  <data name="Usage_Helper" xml:space="preserve"><value>Отправляет только счётчики, например «книга из магазина дочитана». Никаких имён, идентификаторов и ничего из того, что вы набрали. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти).</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Отправляет только счётчики, например «книга из магазина дочитана». Никаких имён, идентификаторов и ничего из того, что вы набрали. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти). Если приложение вылетит, оно также может отправить отчёт о сбое: ошибку и короткий технический журнал, но никогда ничего из того, что вы читали или набирали.</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Скорость чтения</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Помедленнее — малышам легче</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · медленно</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Speed_Play" xml:space="preserve"><value>Послушать эту скорость</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino считает, какие книги читают, без имён и идентификаторов. Это можно отключить в настройках. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти).</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino считает, какие книги читают, без имён и идентификаторов. Это можно отключить в настройках. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти). Если приложение вылетит, оно также может отправить отчёт о сбое: ошибку и короткий технический журнал, но никогда ничего из того, что вы читали или набирали.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Ваш рассказчик ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} МБ</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>Не удалось загрузить голоса рассказчика</value></data>
