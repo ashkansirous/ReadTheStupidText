@@ -175,6 +175,35 @@
   <data name="Restart_Failed" xml:space="preserve">
     <value>زبان در راه‌اندازی بعدی برنامه اعمال می‌شود.</value>
   </data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve">
+    <value>به‌روزرسانی لازم است</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Update_Body" xml:space="preserve">
+    <value>این نسخه مشکلی داشت که برطرف شده است. پس از به‌روزرسانی، خواندن دوباره شروع می‌شود.</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Update_OpenStore" xml:space="preserve">
+    <value>باز کردن Microsoft Store</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Status_UpdatePaused" xml:space="preserve">
+    <value>خواندن متوقف شد</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Update_Available" xml:space="preserve">
+    <value>نسخهٔ جدید آماده است</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Update_Get" xml:space="preserve">
+    <value>دریافت</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Update_Dismiss" xml:space="preserve">
+    <value>بستن</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
   <data name="StatusText.Text" xml:space="preserve">
     <value>آماده</value>
   </data>

@@ -1,0 +1,47 @@
+# Slice 217: a config that asks for a newer version than any build replaces the whole app with the "Update needed" page (mock R14): no settings, no reader, one button to the store.
+# The config is the Debug test hook `update-test mode=forced` (a built-in test config for this platform): the flow never reads or changes the live config file, and Debug builds ignore the live one.
+# `mode=clear` takes the page away again and the app comes back as it opens. Android only here (the button text is the Play one); iOS runs the same page on a simulator later.
+# expect-log: UPDATE state=Required
+# expect-log: UPDATE_PAGE shown
+# expect-log: UPDATE state=None
+appId: uk.sirous.readthestupidtext
+name: Forced update page
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow only needs the reader up, and the update page reads nothing.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: SettingsButton
+    timeout: 20000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: update-test
+      mode: forced
+- extendedWaitUntil:
+    visible:
+      id: UpdateButton
+    timeout: 10000
+- assertVisible:
+    id: UpdateTitle
+- assertVisible:
+    id: UpdateBody
+- assertNotVisible:
+    id: SettingsButton
+- assertNotVisible:
+    id: PlayButton
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: update-test
+      mode: clear
+- extendedWaitUntil:
+    visible:
+      id: SettingsButton
+    timeout: 10000
+- assertNotVisible:
+    id: UpdateButton

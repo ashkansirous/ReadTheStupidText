@@ -57,6 +57,7 @@ public sealed partial class ReadAloudService : IDisposable
 
     private int _loneSelectSettleMs = SettleBaselineMs;
 
+    private readonly IReadGate? _readGate;
     private readonly ISpeechReader _reader;
     private readonly IClipboardReader _clipboard;
     private readonly IHotkeyService _hotkey;
@@ -141,8 +142,10 @@ public sealed partial class ReadAloudService : IDisposable
         ISystemLog systemLog,
         IHeadStart? headStart = null,
         ReadTranslator? translation = null,
-        IUsageRecorder? usage = null)
+        IUsageRecorder? usage = null,
+        IReadGate? readGate = null)
     {
+        _readGate = readGate;
         _reader = reader;
         _clipboard = clipboard;
         _hotkey = hotkey;
@@ -352,6 +355,11 @@ public sealed partial class ReadAloudService : IDisposable
     /// </summary>
     public Task PlayPauseOrReadAsync()
     {
+        if (RefusedByGate(automatic: false))
+        {
+            return Task.CompletedTask;
+        }
+
         // While the first audio is being synthesized Play is a no-op: a second tap
         // must not supersede the read that is about to start.
         if (IsGeneratingAudio)
@@ -379,6 +387,11 @@ public sealed partial class ReadAloudService : IDisposable
     /// </summary>
     public async Task ReadFileAsync(string filePath)
     {
+        if (RefusedByGate(automatic: false))
+        {
+            return;
+        }
+
         string text;
         try
         {
@@ -428,6 +441,11 @@ public sealed partial class ReadAloudService : IDisposable
 
     private async Task SkipAsync(Func<Task> skip)
     {
+        if (_readGate?.IsBlocked == true)
+        {
+            return;
+        }
+
         if (Interlocked.CompareExchange(ref _skipInFlight, 1, 0) != 0)
         {
             return;
@@ -499,8 +517,27 @@ public sealed partial class ReadAloudService : IDisposable
 
     // The hotkey copies the focused selection then reads it — the fallback for
     // non-UIA apps, working whether or not auto-read is enabled.
-    private async void OnHotkeyPressed(object? sender, EventArgs e) =>
+    private async void OnHotkeyPressed(object? sender, EventArgs e)
+    {
+        if (RefusedByGate(automatic: false))
+        {
+            return;
+        }
+
         await ReadCopiedSelectionAsync(ActivityTrigger.Hotkey);
+    }
+
+    // True (after telling the host) while the gate refuses reads; false when there is no gate.
+    private bool RefusedByGate(bool automatic)
+    {
+        if (_readGate?.IsBlocked != true)
+        {
+            return false;
+        }
+
+        _readGate.ReadRefused(automatic);
+        return true;
+    }
 
     // Copies the current selection to the clipboard and reads it (hotkey / manual).
     // The synthesized Ctrl+C itself changes the clipboard, so the resulting update
@@ -539,6 +576,11 @@ public sealed partial class ReadAloudService : IDisposable
             return;
         }
 
+        if (RefusedByGate(automatic: true))
+        {
+            return;
+        }
+
         BeginAutoRead(ActivityTrigger.AutoRead, _sanitizer.Sanitize(text));
     }
 
@@ -548,7 +590,7 @@ public sealed partial class ReadAloudService : IDisposable
     // (e.g. a copy-on-select duplicate of a UIA selection).
     private async void OnClipboardContentChanged(object? sender, EventArgs e)
     {
-        if (!AutoReadOnCopy || _copyingForRead)
+        if (!AutoReadOnCopy || _copyingForRead || RefusedByGate(automatic: true))
         {
             return;
         }

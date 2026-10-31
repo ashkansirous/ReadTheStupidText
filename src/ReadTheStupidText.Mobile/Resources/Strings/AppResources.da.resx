@@ -16,6 +16,14 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Tryk på en knap nedenfor for at tilføje noget at læse</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>Sproget for appens tekster</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Læsehastighed</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>Opdatering påkrævet</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>Denne version har et problem, som er rettet. Hent den nye for at fortsætte med at læse. Dine indstillinger og stemmer bevares.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>Åbn Google Play</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>Åbn App Store</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>En ny version er klar</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>Hent</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>Luk</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Hjælp med at forbedre appen</value></data>
   <data name="Settings_CountsCaption" xml:space="preserve"><value>Sender tællinger som “en fransk tekst blev læst”. Ingen navne, ingen id’er, intet af det, du læser. Det tilføjer også dit land og en grov enhedstype (telefon eller tablet, hukommelsesinterval).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>Til</value></data>

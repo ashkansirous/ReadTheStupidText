@@ -16,6 +16,14 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>برای افزودن چیزی برای خواندن، یکی از دکمه‌های زیر را بزنید</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>زبان متن‌های برنامه</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>سرعت خواندن</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>به‌روزرسانی لازم است</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>این نسخه مشکلی داشت که برطرف شده است. برای ادامهٔ خواندن، نسخهٔ جدید را بگیرید. تنظیمات و صداهای شما همان‌طور می‌مانند.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>باز کردن Google Play</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>باز کردن App Store</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>نسخهٔ جدید آماده است</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>دریافت</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>بستن</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>به بهتر شدن برنامه کمک کنید</value></data>
   <data name="Settings_CountsCaption" xml:space="preserve"><value>شمارش‌هایی مانند «یک متن فرانسوی خوانده شد» ارسال می‌کند. بدون نام، بدون شناسه، و بدون هیچ‌چیز از آنچه می‌خوانید. همچنین کشور شما و نوع تقریبی دستگاه (گوشی یا تبلت، محدودهٔ حافظه) را اضافه می‌کند.</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>روشن</value></data>
