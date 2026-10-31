@@ -168,7 +168,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 
 The lane-order paragraphs of finished batches, moved verbatim.
 
-Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
+Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](plan-batch-9-10-index.md).
 
 Batch 13 (76-80, planned 2026-10-22): 76 and 77 are independent and go first (Touches do not overlap); 78 after 77; 79 and 80 after 78 (both edit the wizard's files). Decisions 83-87.
 
@@ -226,8 +226,8 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 183 | Big pack downloads keep going when the phone is locked or the app is in the background (Android foreground service with a progress notification, iOS background URLSession; after 182) | built | #549 |  | [183-pack-downloads-keep-going-when-locked.md](../slices/183-pack-downloads-keep-going-when-locked.md) |
 | 189 | Dino: one "For grown-ups" button on the shelf, the gear inside grown-up mode, a ⋯ sheet per book, a reading card capped at 30% | built | #560 |  | [189-dino-grown-ups-button-and-book-sheet.md](../slices/189-dino-grown-ups-button-and-book-sheet.md) |
 
-| 201 | The Norwegian voice pack no longer crashes the app (piper-nb tokens fixed, packs-10; a bad pack is rejected, not loaded) | built | #571 |  | [slices\201-norwegian-pack-crash.md](../slices/slices\201-norwegian-pack-crash.md) |
-| 202 | Changing the app language with text in the reader no longer crashes the app | built | #577 |  | [slices\202-reader-language-change-crash.md](../slices/slices\202-reader-language-change-crash.md) |
+| 201 | The Norwegian voice pack no longer crashes the app (piper-nb tokens fixed, packs-10; a bad pack is rejected, not loaded) | built | #571 |  | [slices\201-norwegian-pack-crash.md](../slices/201-norwegian-pack-crash.md) |
+| 202 | Changing the app language with text in the reader no longer crashes the app | built | #577 |  | [slices\202-reader-language-change-crash.md](../slices/202-reader-language-change-crash.md) |
 | 186 | RTST: no scan pack download after the user cancels the voice pack (follow-up to 183) | built | #574 |  | [186-no-ocr-download-after-voice-cancel.md](../slices/186-no-ocr-download-after-voice-cancel.md) |
 | 190 | RTST phone: highlight one sentence at a time (Android and iOS; Windows unchanged) | built | #573 |  | [190-rtst-phone-sentence-highlight.md](../slices/190-rtst-phone-sentence-highlight.md) |
 | 196 | Dino: each book opens in the view that fits it (words in the pictures -> Picture only) | built | #575 |  | [196-dino-default-view-per-book.md](../slices/196-dino-default-view-per-book.md) |

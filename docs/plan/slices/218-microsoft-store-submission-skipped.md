@@ -1,6 +1,6 @@
 ### Slice 218 — RTST Microsoft Store submission skipped Windows code changes
 
-*Built 2026-10-30, merged (PR #630, 050e076); the force_all Store run is in progress, not yet verified.* Planned 2026-10-30. Found while checking where RTST 1.74.0+ is available.
+*Built 2026-10-30, merged (PR #630, 050e076); the force_all Store run (41137137107) submitted rtst-v1.77.0; Partner Center not yet verified.* Planned 2026-10-30. Found while checking where RTST 1.74.0+ is available.
 
 **Touches:** `.github/scripts/ship-targets.mjs`, `.github/workflows/release.yml`, `.github/CLAUDE.md`, `tests/**` or `.github/scripts/*.test.*` (the ship-targets tests), `docs/plan/slices/218-microsoft-store-submission-skipped.md`
 
@@ -15,7 +15,7 @@
 - [x] Find the cause: run `ship-targets.mjs` against the diff of each release run from rtst-v1.73.2 to rtst-v1.76.1 and see what `windowsstore` it gives; read how the base of that diff is chosen.
 - [x] Fix so any release whose changes since the last **submitted** Windows version include Windows code submits (base the diff on the last Store-submitted tag, not the previous release).
 - [x] A test for the case: a core release followed by an Infrastructure change and then another core release.
-- [ ] Then submit the current RTST Windows build once (`release.yml` `force_all`, standing practice for store releases) so Windows users get the fixes since 1.67.1. User, 2026-10-30 (run-all-waves start): yes, submit tonight once the fix merges; the force_all run also rebuilds Android (Play internal) and iOS (internal TestFlight), which is fine. Watch it until the Store submission is accepted.
+- [x] Then submit the current RTST Windows build once (`release.yml` `force_all`, standing practice for store releases) so Windows users get the fixes since 1.67.1. User, 2026-10-30 (run-all-waves start): yes, submit tonight once the fix merges; the force_all run also rebuilds Android (Play internal) and iOS (internal TestFlight), which is fine. Watch it until the Store submission is accepted.
 
 *Store run (checked with `gh`, 2026-10-30 22:30 UTC):* the user approved the `force_all` run at the start of the run (the night's parked note is superseded). The interactive session started it at 22:10 UTC ([run 41136299215](https://github.com/ashkansirous/ReadTheStupidText/actions/runs/41136299215)); it ended `cancelled` with no jobs, because the push of the index PR #634 merge at 22:12 started release run 41136558112 in the same concurrency group. A second `force_all` dispatch ([41137137107](https://github.com/ashkansirous/ReadTheStupidText/actions/runs/41137137107), 22:17 UTC) was `in_progress` at 22:30 UTC; a running run is not cancelled by later merges (`cancel-in-progress: false`, only a *pending* run is replaced). Remaining: confirm it reaches `store-submit`, the first `rtst-store-v` marker tag and Partner Center showing the new version. Not waiting on a user decision. (Night rule since then: a dispatch a later merge would cancel waits for the end of the night, ClaudeSkills `run-all-waves`.)
 
@@ -53,11 +53,13 @@ Why users stayed on 1.67.1 is still unproven (1.73.2 was committed to Partner Ce
 
 - Already edited in `.github/CLAUDE.md` in this PR (Slice 218: docs/plan/slices/218-microsoft-store-submission-skipped.md).
 
+*Store run done (checked with `gh`, 2026-10-31 housekeeping):* run 41137137107 finished; `store-submit / submit`, `store-submit-mark`, `play-submit` and `testflight-submit` all succeeded (the run as a whole shows `cancelled`, but those jobs completed). The marker tag `rtst-store-v1.77.0` exists. The Microsoft Store submission of rtst-v1.77.0 is done; still open: Partner Center showing 1.77.0 once certification finishes.
+
 #### Not yet verified
 
 *actionlint on the new `store-submit-mark` job passed on PR #630 (run 41130690864), checked 2026-10-30.*
 
-- The first `rtst-store-v<x.y.z>` marker tag is created after the force_all run.
+- ~~The first `rtst-store-v<x.y.z>` marker tag is created after the force_all run.~~ Done: `rtst-store-v1.77.0` (run 41137137107).
 - Partner Center shows the new version, and why 1.67.1 stayed live after rtst-v1.73.2's "Submission commit success".
 - High review 4: what a Store backlog that keeps failing costs (an RTST MSIX build on every merge); check the release runs after the first failed submission, if one happens.
 - High review 5: no double submission after a run cancelled between `store-submit` and `store-submit-mark`.
