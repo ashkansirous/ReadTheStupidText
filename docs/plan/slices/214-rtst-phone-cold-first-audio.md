@@ -52,7 +52,7 @@ First audio after a cold start under **2 s** on the S21 with an AOT build: met (
 #### From review
 
 - High (reviews/s214-high.md) and medium (reviews/s214-medium.md) passes done; fixes applied, including one shared `HeadUnits` for the prepared head and the read.
-- Medium finding skipped (1 of 8): keep the first piece long. Skipped because a short first piece is the point of the fix.
+- Medium finding skipped (1 of 8): finding 5, a clause end at 3 words or more ends the first piece even very early ("Well, I think, that ..." cuts at 4 words), giving a tiny first piece and a long second one (`SpeechTextChunker.cs:224`). Corrected 2026-10-31 by the feedback loop: the earlier line named a finding no review contained. Medium 8 (`-Text` unreachable through `run-checks.ps1`) is still open: Slice 225 item 10. High 3 (no chunk-1-ready timing check) is not applied; the piece-2 gap item under Not yet verified covers it.
 
 #### For CLAUDE.md (lifted 2026-10-31)
 
@@ -60,6 +60,6 @@ First audio after a cold start under **2 s** on the S21 with an AOT build: met (
 
 #### Not yet verified
 
-- Piece 2 timing against piece 1 at 1x and 2x (no runner check exists for the gap).
+- Piece 2 timing against piece 1 at 1x and 2x after the 8-word cut: run `tools/phone/audio-timing.ps1 -App rtst -Aot` on the S21 once it is back (it prints the gap after each chunk at rates 1 and 2 and flags one over 1300 ms). Corrected 2026-10-31 by the feedback loop: an earlier line said no check existed; the device-test agent had only looked in the `run-checks.ps1` catalogue.
 - A truly cold run after a fresh install or reboot.
 - iOS TestFlight first-audio timing, by hand.
