@@ -42,7 +42,7 @@ Two frames in `docs/design/rtst-phone/Batch 42 Updates and Paused Downloads.dc.h
 
 **Launch scan (review design, 2026-10-31):**
 - One owner: the pack service (`MobileVoicePackService`) owns pack files. The scan (`ScanStalePartialsAsync`) probes the same per-pack gate every download enters; a pack in flight or queued holds it and is never touched. A delete runs under that gate (a delete and a start cannot interleave), after the wanted languages are read again and the file is re-measured. The scan runs after the current-language start in both apps.
-- Nothing is downloaded by the scan. A wanted partial that is exactly the catalog's version is reported as resumable; the app's normal start entry finishes it (RTST: `OcrPackInstaller.EnsureForCurrentLanguageAsync`, behind the voice download, with the voice cancel hold; Wi-Fi/consent rules apply there). Dino has no stored cancel hold, so it deletes only and never restarts a partial by itself; the grown-up's next tick finishes it.
+- Nothing is downloaded by the scan. A wanted partial that is exactly the catalog's version is reported as resumable; the app's normal start entry finishes it (RTST: `OcrPackInstaller.EnsureForCurrentLanguageAsync`, behind the voice download, with the voice cancel hold; Wi-Fi/consent rules apply there). Dino has no stored cancel hold; at launch it resumes a wanted partial itself (`src/DinoReader.App/App.xaml.cs` `ResumeStalePartialsAsync` calls `StoryLanguagePacks.ResumeWantedAsync`). Corrected by the final feedback loop (pass 3b, B5): this line used to say Dino deletes only and never restarts a partial.
 - Keep (no delete, no resume): no catalog; a partial newer than the cached catalog; a wanted pack missing from the catalog; every translation and storyteller pack (their use cannot be read from the settings the scan sees).
 - iOS: a pack with a live background task (even one without a waiter) is skipped; a delete also removes the `.resume` sidecar.
 - Paused notice: posted where the run ends (`MobileVoicePackService`), only for Offline/Failed (or a thrown failure), and only while the app is in the background. Android also requires that the dataSync time limit stopped the service for that pack; iOS has no such gate (a terminal transport error after the retries). Cleared on success, cancel, an already-installed pack and the start of every new run.
@@ -92,7 +92,7 @@ Two frames in `docs/design/rtst-phone/Batch 42 Updates and Paused Downloads.dc.h
 
 #### Changed while building
 
-- Device bug, S21 offline 2026-10-31 ~13:57: `paused-notification` and `notification-text` failed to run. The check turned off Wi-Fi and data over the wireless adb link and lost the phone (left offline, timeout and compat flag set, packs moved aside). Rule: a check never cuts the link it is driven over. Reworked: a per-app block with `cmd netpolicy add restrict-background-blacklist <uid>`, a detached device-side restore after 240 s started before any change, and a guard that refuses whole-device network cuts on wireless serials (self-tested in `tools/phone/test-phone-lib.ps1`; see `tools/phone/README.md`). The per-app block is not yet run on a device.
+- Device bug, S21 offline 2026-10-31 ~13:57: `paused-notification` and `notification-text` failed to run. The check turned off Wi-Fi and data over the wireless adb link and lost the phone (left offline, timeout and compat flag set, packs moved aside). Rule: a check never cuts the link it is driven over. Reworked: a per-app block with `cmd netpolicy add restrict-background-blacklist <uid>`, a detached device-side restore after 240 s started before any change, and a guard that refuses whole-device network cuts on wireless serials (self-tested in `tools/phone/test-phone-lib.ps1`, but no check calls it yet, Slice 225 item 14; see `tools/phone/README.md`). The per-app block is not yet run on a device.
 - The "paused notice stays up while a download runs" behaviour the builder listed as known was fixed as a bug in review: iOS removes a late post, and the notice is posted from the background only.
 - The stale-partial Maestro flow header now names the emulator dev package `uk.sirous.readthestupidtext`.
 
@@ -104,11 +104,12 @@ Two frames in `docs/design/rtst-phone/Batch 42 Updates and Paused Downloads.dc.h
 
 #### For CLAUDE.md (lifted 2026-10-31)
 
-- Phone checks never cut the network link they are driven over: on a wireless adb serial block only the app (`cmd netpolicy add restrict-background-blacklist <uid>`), start a detached device-side restore first; `tools/phone/` refuses whole-device cuts on wireless serials. Put it in `tools/CLAUDE.md`. (Slice 208: docs/plan/slices/208-paused-pack-downloads-tell-you-and-finish.md)
+- Phone checks never cut the network link they are driven over: on a wireless adb serial block only the app (`cmd netpolicy add restrict-background-blacklist <uid>`), start a detached device-side restore first; `Assert-WholeDeviceNetworkCutAllowed` refuses whole-device cuts on wireless serials (corrected by the final feedback loop: no check calls it yet, Slice 225 item 14). Put it in `tools/CLAUDE.md`. (Slice 208: docs/plan/slices/208-paused-pack-downloads-tell-you-and-finish.md)
 
 #### Not yet verified
 
 - The whole S21 Verification list: paused notice within ~35 s and tap resumes; notification text (language and size); stale partial wanted resumes, unwanted deleted.
+- Dino's launch resume of a wanted partial (`ResumeStalePartialsAsync`) on a device: never run.
 - Whether the netpolicy per-app block stops a foreground-service download: prove on an emulator first (`run-checks.ps1` has no emulator path and the emulator has no `.dbg` dev install).
 - Dino storyteller first download shows no ask sheet and grown-up Settings shows it once (emulator, not reached).
 - iOS TestFlight hand check.
