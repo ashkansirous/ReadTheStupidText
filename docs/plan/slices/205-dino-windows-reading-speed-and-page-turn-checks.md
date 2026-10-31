@@ -1,6 +1,6 @@
 ### Slice 205 — Dino Windows head: the Reading speed row and the page-turn VM check
 
-*Built 2026-10-31, not merged; VM and Android emulator checked (see Not yet verified).* Planned 2026-10-30. Follow-up to Slice 188 (found on the Windows VM, 2026-10-30).
+*Built 2026-10-31, merged as PR #645 (6a997ce); VM and Android emulator checked (see Not yet verified).* Planned 2026-10-30. Follow-up to Slice 188 (found on the Windows VM, 2026-10-30).
 
 **Touches:** `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/ReadingPage.xaml.cs` (only the StoryText automation name, if that is the cause), `tools/desktop-vm/checks/dino-settings.ps1`, `tools/desktop-vm/checks/dino-page-turn.ps1`, `docs/plan/slices/205-dino-windows-reading-speed-and-page-turn-checks.md`, `src/DinoReader.App/PageRendering.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/TextPages.cs`
 
@@ -25,7 +25,7 @@
 
 *Verified 2026-10-31:* VM (headless Hyper-V), all 4 Dino checks passed 3 runs in a row before the row-width fix; after it, one run: dino-page-turn, dino-settings (row 996 wide in a 1040 window), dino-launch, dino-open-book all PASS. Android emulator: grown-ups-button, store-credits-language, default-view-per-book flows PASS on the new build.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-31)
 
 None.
 

@@ -1,6 +1,6 @@
 ### Slice 214 — RTST phone: the first read after a cold start takes 7 s
 
-*Built 2026-10-31, measured on the S21 (AOT); iOS timing and a truly cold run not yet verified.* Planned 2026-10-30. From the S21 night runs and the 2026-10-30 leftovers run (docs/plan/notes/2026-10-29-s21-night-runs.md).
+*Built 2026-10-31, merged as PR #647 (9024a2e); iOS timing and a truly cold run not yet verified.* Planned 2026-10-30. From the S21 night runs and the 2026-10-30 leftovers run (docs/plan/notes/2026-10-29-s21-night-runs.md).
 
 **Touches:** `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader*.cs`, `src/ReadTheStupidText.Mobile.Shared/CompositeSpeechReader.cs`, `src/ReadTheStupidText.Application/Reading/SpeechTextChunker.cs` (only if the first piece is split), `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs` (only if a warm-up is started there), `src/ReadTheStupidText.Mobile/App.xaml.cs` (only if a warm-up is started at launch), `tests/ReadTheStupidText.Tests/**`, `tools/phone/**` (cold-start measurement), `docs/plan/slices/214-rtst-phone-cold-first-audio.md`
 
@@ -54,7 +54,7 @@ First audio after a cold start under **2 s** on the S21 with an AOT build: met (
 - High (reviews/s214-high.md) and medium (reviews/s214-medium.md) passes done; fixes applied, including one shared `HeadUnits` for the prepared head and the read.
 - Medium finding skipped (1 of 8): keep the first piece long. Skipped because a short first piece is the point of the fix.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-31)
 
 - The first piece of an RTST text read is cut short (`FirstPieceMaxCost` in `SpeechTextChunker.cs`); the early-head preparation and the read must both use `SpeechChunkPlanner.HeadUnits`, or the read restarts on different units than were prepared. Windows and Dino segments keep the old policy. (Slice 214: docs/plan/slices/214-rtst-phone-cold-first-audio.md)
 
