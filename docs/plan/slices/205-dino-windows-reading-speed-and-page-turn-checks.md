@@ -33,4 +33,5 @@ None.
 
 - Android Settings row width vs screen: the uiautomator dump came back empty after a permission dialog, and no Maestro flow targets the Reading speed row.
 - Android and iOS: the Reading speed row (and every Settings row) opens with a tap and with TalkBack / VoiceOver; never run (the emulator flows did not touch the row). The "Verification" line above was the plan, not a result.
+- Android and iOS: the look and press state (ripple, highlight, hit area) of the full-row Button every Settings row now uses; the only look check ran before the span fix (high 3 was skipped as "visual").
 - TalkBack and VoiceOver may read each text line twice (the per-line description, medium 7): not checked; fix in Slice 226.
