@@ -13,6 +13,9 @@
   Slice 207: lint-flows.ps1 runs first and stops the run when it finds a problem. A lease on the emulator (tools/lease-common.ps1, owner from
   $env:RTST_DEVICE_OWNER, else $env:RTST_PHONE_OWNER, else run-flows-<pid>) keeps two runs off one serial: the second prints `LEASE waiting on <owner>`
   once a minute for up to -LeaseWaitMinutes (default 15), then exits 4 naming the holder.
+  Slice 215: before every flow, and after a failed one, `pm path android` must answer and sys.boot_completed must be 1. If not, it prints `EMULATOR UNHEALTHY: <what>`, saves
+  evidence (crash log, dumpsys meminfo, host free RAM and the qemu working set) under maestro-out\i<n>\unhealthy-*, restarts the emulator from a neutral folder and runs the flow once more.
+  The second unhealthy check of a run exits 5 naming it.
 #>
 param(
     [Parameter(Mandatory)][ValidateSet('rtst', 'dino', 'auto')][string]$App,
@@ -136,6 +139,50 @@ function Set-CellularOnly {
 
 function Restore-Wifi { & $script:Adb -s $script:Serial shell svc wifi enable | Out-Null }
 
+# Slice 215: restarts the emulator from a neutral folder (never from inside a worktree, so the emulator process never holds one open) and reinstalls
+# the app when the restart lost it. Returns after the boot; the caller re-checks the health.
+function Restart-Emulator {
+    $null = New-Item -ItemType Directory -Force $script:StateDir
+    Push-Location $script:StateDir
+    try {
+        Write-Host "EMULATOR RESTART: stopping and starting $($script:Serial) from $($script:StateDir)."
+        & (Join-Path $PSScriptRoot 'stop.ps1') -Instance $Instance | Out-Null
+        & (Join-Path $PSScriptRoot 'start-warm.ps1') -Instance $Instance | Out-Null
+    } finally { Pop-Location }
+    $installed = & $script:Adb -s $script:Serial shell pm list packages $packages[$App] 2>&1 | Out-String
+    $stale = (Get-InstalledKey $App) -ne (Get-BuildKey)  # a restart on a different baseline: the installed build is not the current one
+    if ($stale -or -not ($installed -match [regex]::Escape($packages[$App]))) { $null = & (Join-Path $PSScriptRoot 'install-debug.ps1') -App $App -Instance $Instance }
+}
+
+# Slice 215: the health check before a flow and after a failed one. Returns $true when the emulator is healthy now (after one restart when it was not).
+# The second consecutive unhealthy check (the count resets when a flow ends on a healthy emulator) stops it (exit 5) naming the problem: the emulator keeps dying, and a flow result on it means nothing.
+function Confirm-EmulatorHealthy([string]$When) {
+    $problem = Get-EmulatorHealthProblem
+    if (-not $problem) { return $true }
+    $script:UnhealthyCount++
+    Write-Host "EMULATOR UNHEALTHY ($When): $problem"
+    Save-EmulatorEvidence (Join-Path $script:MaestroOut ("unhealthy-{0}-{1}" -f (Get-Date -Format 'yyyyMMdd-HHmmss'), $script:UnhealthyCount))
+    if ($script:UnhealthyCount -ge 2) { Write-Host "EMULATOR UNHEALTHY twice in this run (last: $problem). Stopping: restart it by hand and look at the evidence folder under $($script:MaestroOut)."; exit $script:ExitEmulatorUnhealthy }
+    Restart-Emulator
+    $again = Get-EmulatorHealthProblem
+    if ($again) { $script:UnhealthyCount++; Write-Host "EMULATOR UNHEALTHY after the restart: $again. Stopping."; exit $script:ExitEmulatorUnhealthy }
+    Write-Host "Emulator healthy again after the restart; the flow runs once more."
+    return [bool]$false
+}
+
+# One flow with the health guard: checked before it; when that check restarted the emulator the flow still runs once. A failed flow is checked again, so an
+# emulator death is reported as that (and the flow rerun once on the restarted emulator), never as a flow failure.
+function Invoke-GuardedFlow([string]$Maestro, [System.IO.FileInfo]$File) {
+    $null = Confirm-EmulatorHealthy "before $($File.BaseName)"
+    $r = Invoke-Flow $Maestro $File
+    if (-not $r.Problem) { $script:UnhealthyCount = 0; return $r }  # a flow that passed: the emulator is fine, so only consecutive deaths count
+    if (Confirm-EmulatorHealthy "after the failed flow $($File.BaseName)") { $script:UnhealthyCount = 0; return $r }
+    Write-Host "The failure of $($File.BaseName) came with a dead emulator, so it says nothing about the app; running the flow again."
+    $rerun = Invoke-Flow $Maestro $File
+    if (-not (Get-EmulatorHealthProblem)) { $script:UnhealthyCount = 0 }  # the rerun ended on a healthy emulator: this death is over, so a later separate one is the first again
+    return $rerun
+}
+
 function Invoke-Flow([string]$Maestro, [System.IO.FileInfo]$File) {
     $ErrorActionPreference = 'Continue'
     $cellular = (Get-FlowNeeds $File.FullName) -contains 'cellular-only'
@@ -151,6 +198,7 @@ function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File) {
     $sw = [Diagnostics.Stopwatch]::StartNew()
     # Applied to the Maestro call only (a JVM reads JAVA_TOOL_OPTIONS whatever the launcher does with MAESTRO_OPTS); the Android build's Java must keep the real user.home.
     $env:JAVA_TOOL_OPTIONS = "-Duser.home=$($script:MaestroHome)"
+    # --no-reinstall-driver only skips a reinstall: Maestro still installs its driver when it is missing, which is how the first flow of a run (and the rerun after a restart) gets it.
     try { $output = & $Maestro --device $script:Serial test --no-reinstall-driver --debug-output $script:MaestroOut $File.FullName 2>&1 | Out-String }
     finally { Remove-Item Env:JAVA_TOOL_OPTIONS -ErrorAction SilentlyContinue }
     $exit = $LASTEXITCODE
@@ -196,6 +244,7 @@ function Assert-LeaseHeld([string]$Owner, [string]$When) {
     }
 }
 
+$script:UnhealthyCount = 0  # Slice 215: emulator deaths seen in this run; the second one stops it (exit 5)
 $script:ActivityWaitMinutes = 90
 $script:ActivityWaitSliceMinutes = 10
 Build-BeforeLease
@@ -221,6 +270,9 @@ try {
     if ($Install) { & (Join-Path $PSScriptRoot 'install-debug.ps1') -App $App -Instance $Instance }
     else { & (Join-Path $PSScriptRoot 'start-warm.ps1') -Instance $Instance | Out-Null }
 
+    # Slice 215: health first. A dead system_server must be reported and restarted here, not surface below as "not installed" (2026-10-31 kill test).
+    $null = Confirm-EmulatorHealthy 'before the install check'
+
     # Without -Install the installed app must be the build for the current inputs; a stale one is replaced (from the cache when it exists).
     if (-not $Install) {
         $currentKey = Get-BuildKey
@@ -233,7 +285,9 @@ try {
     $ErrorActionPreference = 'Continue'
     $installed = & $script:Adb -s $script:Serial shell pm list packages $packages[$App]
     $ErrorActionPreference = 'Stop'
-    if (-not ("$installed" -match [regex]::Escape($packages[$App]))) { throw "$($packages[$App]) is not installed; run install-debug.ps1 -App $App (or pass -Install)." }
+    $installProblem = Resolve-InstallProblem "$installed" $packages[$App]
+    if ($installProblem -and $installProblem -like 'EMULATOR UNHEALTHY*') { Write-Host $installProblem; $null = Confirm-EmulatorHealthy 'at the install check'; $installed = & $script:Adb -s $script:Serial shell pm list packages $packages[$App]; $installProblem = Resolve-InstallProblem "$installed" $packages[$App] }
+    if ($installProblem) { throw "$installProblem; run install-debug.ps1 -App $App (or pass -Install)." }
 
     $flowDir = Join-Path $script:RepoRoot ".maestro\$App"
     $files = Get-ChildItem $flowDir -Filter '*.yaml' | Where-Object { -not $Flow -or $_.BaseName -eq $Flow } | Sort-Object Name
@@ -246,7 +300,7 @@ try {
         Clear-AnrDialog 'before the flows'
         $results = foreach ($file in $files) {
             Assert-LeaseHeld $leaseOwner 'during the flows'  # renewed between flows
-            $r = Invoke-Flow $maestro $file
+            $r = Invoke-GuardedFlow $maestro $file
             Write-Host ("{0,-5} {1} ({2:n1} s)" -f $(if ($r.Problem) { 'FAIL' } else { 'PASS' }), $r.Name, $r.Seconds)
             if ($r.Problem) { Write-Host ($r.Problem -replace '(?m)^', '      ') }
             $r

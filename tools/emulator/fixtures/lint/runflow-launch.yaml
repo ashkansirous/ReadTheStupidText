@@ -1,0 +1,5 @@
+# Slice 215: a hook launched from a sub-flow is judged as if inlined (the finding is reported on the runFlow line).
+appId: uk.sirous.readthestupidtext
+---
+- launchApp
+- runFlow: sub/hook-sub.yaml

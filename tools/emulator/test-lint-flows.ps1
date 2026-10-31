@@ -51,6 +51,40 @@ Assert-Findings 'no-appid.yaml' @(New-Expect 2 'the header has no appId')
 Assert-Findings 'needs-ok.yaml' @()
 Assert-Findings 'needs-unknown.yaml' @((New-Expect 1 "'# needs: wifi-only' is not a known value"), (New-Expect 2 "'# needs: offline' is not a known value"))
 
+# Slice 215: runFlow files are followed, the inline launchApp form is tokenized, the clearState comment may sit above its item, stopApp: true is a restart.
+Assert-Findings 'runflow-launch.yaml' @(New-Expect 5 'stopApp: false')
+Assert-Findings 'runflow-inline.yaml' @(New-Expect 4 'stopApp: false')
+Assert-Findings 'runflow-block.yaml' @(New-Expect 4 'stopApp: false')
+Assert-Findings 'runflow-comment.yaml' @(New-Expect 5 'stopApp: false')
+Assert-Findings 'runflow-missing.yaml' @(New-Expect 11 'does not exist')
+Assert-Findings 'runflow-ok.yaml' @()
+Assert-Findings 'runflow-nested.yaml' @(New-Expect 8 'stopApp: false')
+Assert-Findings 'runflow-variable.yaml' @()
+Assert-Findings 'launch-inline-quoted.yaml' @(New-Expect 5 'stopApp: false')
+Assert-Findings 'clearstate-item-comment.yaml' @()
+Assert-Findings 'launch-hook-stopapp-true.yaml' @(New-Expect 4 'stopApp: false')
+Assert-Findings 'launch-hook-stopapp-true-comment.yaml' @()
+
+# Slice 215: line endings. Written at run time (git would normalize a checked-in fixture): doubled CRs and mixed endings are findings, a clean CRLF or LF file is not.
+$endings = Join-Path ([IO.Path]::GetTempPath()) ('rtst-lint-endings-' + [guid]::NewGuid().ToString('N'))
+try {
+    $null = New-Item -ItemType Directory -Force $endings
+    $head = 'appId: uk.sirous.readthestupidtext'
+    $cr = "`r"; $lf = "`n"
+    $files = @{
+        'crlf-ok.yaml' = $head + $cr + $lf + '---' + $cr + $lf + '- launchApp' + $cr + $lf
+        'lf-ok.yaml'   = $head + $lf + '---' + $lf + '- launchApp' + $lf
+        'doubled.yaml' = $head + $cr + $lf + '---' + $cr + $lf + '- launchApp' + $cr + $cr + $lf
+        'mixed.yaml'   = $head + $cr + $lf + '---' + $lf + '- launchApp' + $cr + $lf
+    }
+    foreach ($name in $files.Keys) { [IO.File]::WriteAllBytes((Join-Path $endings $name), [Text.Encoding]::ASCII.GetBytes($files[$name])) }
+    $fixtures = $endings
+    Assert-Findings 'crlf-ok.yaml' @()
+    Assert-Findings 'lf-ok.yaml' @()
+    Assert-Findings 'doubled.yaml' @(New-Expect 3 'doubled CR')
+    Assert-Findings 'mixed.yaml' @(New-Expect 2 'mixed line endings')
+} finally { Remove-Item $endings -Recurse -Force -ErrorAction SilentlyContinue }
+
 # The real flows pass clean.
 $real = Invoke-Lint (Join-Path $PSScriptRoot '..\..\.maestro')
 Assert-Equal 'the real .maestro exit code' 0 $real.Exit
