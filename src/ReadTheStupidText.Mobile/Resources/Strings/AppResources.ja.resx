@@ -16,6 +16,14 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>下のボタンをタップして、読み上げるものを追加します</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>アプリの表示言語</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>読み上げ速度</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>アップデートが必要です</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>このバージョンには問題がありましたが、修正されました。読み上げを続けるには新しいバージョンを入手してください。設定と音声はそのまま残ります。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>Google Play を開く</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>App Store を開く</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>新しいバージョンがあります</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>入手</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>閉じる</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>アプリの改善にご協力ください</value></data>
   <data name="Settings_CountsCaption" xml:space="preserve"><value>「フランス語のテキストが読まれた」のような回数を送ります。名前も ID も、読んだ内容も送りません。あわせて、お住まいの国と大まかな端末の種類（スマートフォンかタブレットか、メモリの範囲）も送ります。</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>オン</value></data>

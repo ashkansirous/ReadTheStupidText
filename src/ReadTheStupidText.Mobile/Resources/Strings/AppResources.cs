@@ -37,6 +37,13 @@ public static class AppResources
     public static string Reader_EmptyHint => Get();
     public static string Settings_LanguageCaption => Get();
     public static string Settings_ReadingSpeed => Get();
+    public static string Update_Title => Get();
+    public static string Update_Body => Get();
+    public static string Update_ButtonAndroid => Get();
+    public static string Update_ButtonIos => Get();
+    public static string Update_Available => Get();
+    public static string Update_Get => Get();
+    public static string Update_Dismiss => Get();
     public static string Settings_CountsTitle => Get();
     public static string Settings_CountsCaption => Get();
     public static string Settings_CountsOn => Get();

@@ -175,6 +175,35 @@
   <data name="Restart_Failed" xml:space="preserve">
     <value>ستُطبَّق اللغة عند تشغيل التطبيق في المرة القادمة.</value>
   </data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve">
+    <value>التحديث مطلوب</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Update_Body" xml:space="preserve">
+    <value>في هذا الإصدار مشكلة تم إصلاحها. تبدأ القراءة من جديد بعد التحديث.</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Update_OpenStore" xml:space="preserve">
+    <value>افتح Microsoft Store</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Status_UpdatePaused" xml:space="preserve">
+    <value>القراءة متوقفة مؤقتًا</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Update_Available" xml:space="preserve">
+    <value>إصدار جديد جاهز</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Update_Get" xml:space="preserve">
+    <value>احصل عليه</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Update_Dismiss" xml:space="preserve">
+    <value>إغلاق</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
   <data name="StatusText.Text" xml:space="preserve">
     <value>جاهز</value>
   </data>

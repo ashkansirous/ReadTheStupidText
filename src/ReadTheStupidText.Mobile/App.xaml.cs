@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
+using ReadTheStupidText.Application.AppConfig;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Mobile.Shared;
@@ -28,24 +29,67 @@ public partial class App : Microsoft.Maui.Controls.Application
 		_installer.Changed += OnInstallerChanged;
 #if DEBUG
 		_installer.DebugMarker = Shared.Testing.TestHookLog.Write; // Slice 204: the held marker the scripted check asserts on
+		UpdateTestHook.Install(); // Slice 217: chained after the commands registered before it
 #endif
+		AppUpdate.Shared.Changed += (_, _) => ShowUpdateIfRequired(); // raised on the main thread
+		_ = AppUpdate.Shared.RefreshAsync();
 		_ = InitializeSpeechAsync();
 		// OCR pack (Slice 52): checked at every start, on its own; it waits for any voice download itself.
-		_ = _ocrPacks?.EnsureForCurrentLanguageAsync();
+		if (!UpdateRequired)
+		{
+			_ = _ocrPacks?.EnsureForCurrentLanguageAsync();
+		}
 	}
+
+	// True while the "Update needed" page must hold the app: no pack download or read starts behind it (Slice 217).
+	private static bool UpdateRequired => AppUpdate.Shared.State == UpdateState.Required;
 
 	// First run (no language stored yet) opens the language page; afterwards the Reader.
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		Page root = _settings.Language is null
-			? _services.GetRequiredService<LanguagePage>()
-			: new AppShell();
-		var window = new Window(root);
+		var window = new Window(RootPage());
 		window.Resumed += (_, _) => InvalidatePhoneVoices();
+		window.Resumed += (_, _) => _ = AppUpdate.Shared.RefreshAsync();
 		var resume = _services.GetRequiredService<ReadTheStupidText.Mobile.Shared.Network.PackResumeWatcher>(); // Slice 182: created and started with the window, not when a page first asks for it
 		resume.Start();
 		window.Resumed += (_, _) => resume.NotifyForeground();
 		return window;
+	}
+
+	// A build below the config's minVersion opens on the "Update needed" page and nothing else (Slice 217); otherwise the first-run page or the Reader.
+	private Page? _pageBeforeUpdate;
+
+	private Page RootPage()
+	{
+		if (AppUpdate.Shared.State == UpdateState.Required)
+		{
+			return new UpdatePage();
+		}
+
+		return _settings.Language is null ? _services.GetRequiredService<LanguagePage>() : new AppShell();
+	}
+
+	// A fetched config can raise minVersion while the app is open: the update page then replaces everything, and a read in progress stops.
+	// When the requirement goes away again (only a Debug test config can do that) the app comes back as it opens.
+	private void ShowUpdateIfRequired()
+	{
+		if (Windows.FirstOrDefault() is not { } window)
+		{
+			return;
+		}
+
+		bool required = AppUpdate.Shared.State == UpdateState.Required;
+		if (required && window.Page is not UpdatePage)
+		{
+			_reader.Stop();
+			_pageBeforeUpdate = window.Page; // kept so a lifted requirement brings this very page back, not a second shell with doubled handlers
+			window.Page = new UpdatePage();
+		}
+		else if (!required && window.Page is UpdatePage)
+		{
+			window.Page = _pageBeforeUpdate ?? RootPage();
+			_pageBeforeUpdate = null;
+		}
 	}
 
 	// Voice data may have been installed in system settings while the app was away.
@@ -64,10 +108,18 @@ public partial class App : Microsoft.Maui.Controls.Application
 	/// <summary>Rebuilds the root in the current language: leaves the first-run page, or re-applies a language change.</summary>
 	public void ShowMain()
 	{
-		if (Windows.Count > 0)
+		if (Windows.Count == 0)
 		{
-			Windows[0].Page = new AppShell();
+			return;
 		}
+
+		if (Windows[0].Page is UpdatePage)
+		{
+			_pageBeforeUpdate = new AppShell(); // rebuilt in the new language, so lifting the requirement does not bring back the stale page
+			return;
+		}
+
+		Windows[0].Page = new AppShell();
 	}
 
 #if DEBUG
@@ -97,6 +149,11 @@ public partial class App : Microsoft.Maui.Controls.Application
 		if (_settings.VoiceId is { } voiceId)
 		{
 			_reader.SetVoice(voiceId);
+		}
+
+		if (UpdateRequired)
+		{
+			return; // the pack download waits until the app is updated (Slice 217)
 		}
 
 		await _installer.StartAsync(PackStartReason.Automatic); // Slice 204: a download the user stopped stays stopped

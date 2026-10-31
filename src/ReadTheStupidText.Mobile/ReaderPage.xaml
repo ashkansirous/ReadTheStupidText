@@ -18,6 +18,7 @@
         <x:String x:Key="IconChevronsLeft">M 11 5 L 4 12 l 7 7 M 19 5 l -7 7 l 7 7</x:String>
         <x:String x:Key="IconChevronsRight">M 13 5 l 7 7 l -7 7 M 5 5 l 7 7 l -7 7</x:String>
         <x:String x:Key="IconDownArrow">M 12 5 v 14 M 6 13 l 6 6 l 6 -6</x:String>
+        <x:String x:Key="IconClose">M 6 6 L 18 18 M 18 6 L 6 18</x:String>
         <x:String x:Key="IconPlay">M 5 3.4 c 0 -.6 .7 -1 1.2 -.6 l 5.4 4.1 c .4 .3 .4 1 0 1.3 l -5.4 4.1 c -.5 .4 -1.2 0 -1.2 -.6 Z</x:String>
         <SolidColorBrush x:Key="IconBrushLight" Color="#4A46D6" />
         <SolidColorBrush x:Key="IconBrushDark" Color="{StaticResource PrimaryDark}" />
@@ -87,8 +88,30 @@
         <Grid Grid.Row="1" Padding="14,14,14,12" SafeAreaEdges="Container" RowDefinitions="*,Auto,Auto" RowSpacing="12">
 
             <!-- The text being read: read-only, with the spoken sentence highlighted. Edit swaps in the editor. -->
-            <Grid Grid.Row="0" RowDefinitions="*,Auto">
-                <Border x:Name="TextCard" Grid.Row="0" Style="{StaticResource CardStyle}" Padding="16">
+            <Grid Grid.Row="0" RowDefinitions="Auto,*,Auto">
+                <!-- Update available (Slice 217, mock R15): a quiet one-line card above the text box; hidden while reading, on a closed version or when nothing newer exists. -->
+                <Border x:Name="UpdateCard" AutomationId="UpdateCard" Grid.Row="0" IsVisible="False" Style="{StaticResource CardStyle}" Stroke="#475B57E8"
+                        StrokeThickness="1" Padding="14,6,4,6" Margin="0,0,0,10">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
+                        <Path Grid.Column="0" Data="{StaticResource IconDownArrow}" Style="{StaticResource IconPath}" Stroke="{AppThemeBinding Light=#4A46D6, Dark=#9C98FF}" StrokeThickness="2" Scale="0.9167" />
+                        <Label x:Name="UpdateCardLabel" Grid.Column="1" FontSize="15" FontAttributes="Bold" VerticalOptions="Center"
+                               TextColor="{AppThemeBinding Light=#1f2027, Dark=#E6E6EA}" />
+                        <Border x:Name="UpdateGetButton" AutomationId="UpdateGetButton" Grid.Column="2" HeightRequest="44" Padding="14,0" StrokeShape="RoundRectangle 12"
+                                Stroke="Transparent" BackgroundColor="#1A5B57E8">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnUpdateGetTapped" />
+                            </Border.GestureRecognizers>
+                            <Label x:Name="UpdateGetLabel" FontSize="15" FontAttributes="Bold" VerticalOptions="Center" TextColor="{AppThemeBinding Light=#4A46D6, Dark=#9C98FF}" />
+                        </Border>
+                        <Grid x:Name="UpdateCloseButton" AutomationId="UpdateCloseButton" Grid.Column="3" WidthRequest="44" HeightRequest="44">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnUpdateCloseTapped" />
+                            </Grid.GestureRecognizers>
+                            <Path Data="{StaticResource IconClose}" Style="{StaticResource IconPath}" Stroke="{AppThemeBinding Light=#80000000, Dark=#99FFFFFF}" StrokeThickness="1.9" Scale="0.5833" />
+                        </Grid>
+                    </Grid>
+                </Border>
+                <Border x:Name="TextCard" Grid.Row="1" Style="{StaticResource CardStyle}" Padding="16">
                     <Grid x:Name="TextCardContent">
                         <ScrollView x:Name="ReadingScroll">
                             <ScrollView.Behaviors>
@@ -107,7 +130,7 @@
                         </VerticalStackLayout>
                     </Grid>
                 </Border>
-                <Grid x:Name="EditLink" AutomationId="EditLink" Grid.Row="1" HeightRequest="40" HorizontalOptions="End" ColumnDefinitions="Auto,Auto" ColumnSpacing="6">
+                <Grid x:Name="EditLink" AutomationId="EditLink" Grid.Row="2" HeightRequest="40" HorizontalOptions="End" ColumnDefinitions="Auto,Auto" ColumnSpacing="6">
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnEditTapped" />
                     </Grid.GestureRecognizers>

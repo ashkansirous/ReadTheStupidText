@@ -17,6 +17,14 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Tippe unten auf eine Taste, um etwas zum Vorlesen hinzuzufügen</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>Die Sprache der App-Texte</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Lesetempo</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>Update erforderlich</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>Diese Version hat ein Problem, das behoben wurde. Hol dir die neue Version, um weiterzulesen. Deine Einstellungen und Stimmen bleiben erhalten.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>Google Play öffnen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>App Store öffnen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>Eine neue Version ist da</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>Holen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>Schließen</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Hilf mit, die App zu verbessern</value></data>
   <data name="Settings_CountsCaption" xml:space="preserve"><value>Sendet Zählungen wie „ein französischer Text wurde gelesen“. Keine Namen, keine Kennungen, nichts von dem, was du liest. Dazu kommen dein Land und eine grobe Geräteart (Handy oder Tablet, Speichergröße).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>An</value></data>

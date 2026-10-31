@@ -33,6 +33,35 @@ public class ReadAloudServiceGeneratingTests
     }
 
     [Fact]
+    public async Task A_blocked_gate_refuses_a_file_read_and_a_play_click()
+    {
+        var gate = new FakeGate();
+        var harness = new Harness(gate: gate);
+
+        await harness.Service.ReadFileAsync("a.txt");
+        await harness.Service.PlayPauseOrReadAsync();
+
+        Assert.Empty(harness.Log.Entries);
+        Assert.Equal(new[] { false, false }, gate.Refusals);
+    }
+
+    [Fact]
+    public async Task A_blocked_gate_refuses_a_selection_and_a_skip_but_a_lifted_gate_reads()
+    {
+        var gate = new FakeGate();
+        var harness = new Harness(gate: gate);
+
+        harness.Monitor.RaiseChanged("selected text");
+        await harness.Service.SkipForwardAsync();
+        Assert.Empty(harness.Log.Entries);
+        Assert.Equal(new[] { true }, gate.Refusals);
+
+        gate.IsBlocked = false;
+        await harness.Service.ReadFileAsync("a.txt");
+        Assert.Single(harness.Log.Entries);
+    }
+
+    [Fact]
     public async Task CancelRead_stops_a_read_still_waiting_for_its_first_audio()
     {
         var harness = new Harness();
@@ -919,14 +948,23 @@ public class ReadAloudServiceGeneratingTests
 
         public string DocumentText { get; set; } = "some text to read";
 
-        public Harness(Func<TestSettings, ReadTranslator>? translation = null, IUsageRecorder? usage = null)
+        public Harness(Func<TestSettings, ReadTranslator>? translation = null, IUsageRecorder? usage = null, IReadGate? gate = null)
         {
             Reader = new FakeReader(this);
             Service = new ReadAloudService(
                 Reader, Clipboard, new FakeHotkey(), new FakeCopier(), Monitor,
                 new FakeClipboardMonitor(), new FakeForeground(), new FakeVoices(), new FakeModel(),
-                new FakeDocuments(this), Log, Settings, new FakeSanitizer(), new SilentLog(), HeadStart, translation?.Invoke(Settings), usage);
+                new FakeDocuments(this), Log, Settings, new FakeSanitizer(), new SilentLog(), HeadStart, translation?.Invoke(Settings), usage, gate);
         }
+    }
+
+    private sealed class FakeGate : IReadGate
+    {
+        public bool IsBlocked { get; set; } = true;
+
+        public List<bool> Refusals { get; } = new();
+
+        public void ReadRefused(bool automatic) => Refusals.Add(automatic);
     }
 
     // Runs each count's builder at once with a fixed context, so a test reads what would have been queued.

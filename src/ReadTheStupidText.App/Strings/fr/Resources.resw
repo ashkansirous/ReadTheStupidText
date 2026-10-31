@@ -175,6 +175,35 @@
   <data name="Restart_Failed" xml:space="preserve">
     <value>La langue sera appliquée au prochain lancement de l'application.</value>
   </data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve">
+    <value>Mise à jour requise</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Update_Body" xml:space="preserve">
+    <value>Cette version a un problème qui a été corrigé. La lecture reprendra dès que vous aurez mis à jour.</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Update_OpenStore" xml:space="preserve">
+    <value>Ouvrir le Microsoft Store</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Status_UpdatePaused" xml:space="preserve">
+    <value>Lecture en pause</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Update_Available" xml:space="preserve">
+    <value>Une nouvelle version est prête</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Update_Get" xml:space="preserve">
+    <value>L’obtenir</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
+  <data name="Update_Dismiss" xml:space="preserve">
+    <value>Fermer</value>
+    <comment>Machine draft: needs native review</comment>
+  </data>
   <data name="StatusText.Text" xml:space="preserve">
     <value>Prêt</value>
   </data>
