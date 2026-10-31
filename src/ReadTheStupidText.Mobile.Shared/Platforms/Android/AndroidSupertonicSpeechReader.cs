@@ -50,6 +50,9 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // The cache makes a two-sentence head cheap (prepared ahead), so Android allows it;
     // the shared chunker's default stays one short sentence for the reader without a cache.
     private static readonly SpeechTextChunker.HeadPolicy HeadPolicy = SpeechTextChunker.HeadPolicy.Cached;
+    // Slice 214: a text read (RTST) also cuts a long first sentence short. Preparing a head ahead and the read use this one policy, so
+    // the prepared units are the units the read starts with. Voiced segments (Dino) keep HeadPolicy, uncut.
+    private static readonly SpeechTextChunker.HeadPolicy ReadHeadPolicy = HeadPolicy.WithShortFirstPiece();
 
     // A head start prepares the opening of the text only: this many chunks (the two-sentence
     // head plus a few after it), not the whole file, so a long document costs no battery.
@@ -1410,20 +1413,17 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         string? voiceId = Volatile.Read(ref _voiceId);
         VoiceInfo voice = ResolveVoice(engine, voiceId);
         string prefix = text.Length > PrepareMaxChars ? text[..PrepareMaxChars] : text;
-        List<string> units = SpeechChunkPlanner.ForText(prefix, HeadPolicy)
-            .Take(PrepareMaxChunks)
-            .SelectMany(chunk => SentenceUnits.Split(chunk.Text))
-            .ToList();
+        IReadOnlyList<string> units = SpeechChunkPlanner.HeadUnits(prefix, ReadHeadPolicy, PrepareMaxChunks);
 
         LogFirstUnit("early", units, voice);
         await Task.WhenAll(units.Select(s => GetSentenceAsync(engine, s, voice, null, _slots, token)));
-        _hints.Remember(text, FirstChunkHints.ScopeOf(voiceId, model), HeadPolicy); // only now that the units are stored
+        _hints.Remember(text, FirstChunkHints.ScopeOf(voiceId, model), ReadHeadPolicy); // only now that the units are stored
     }
 
     // The head the early start prepared for this voice and pack, if the text starts with it; consumed by this read.
     private IReadOnlyList<SpeechChunkPlan> PlanText(string text, VoiceModelPaths? model) =>
         SpeechChunkPlanner.ForText(
-            text, HeadPolicy, firstChunkHint: _hints.Take(text, FirstChunkHints.ScopeOf(Volatile.Read(ref _voiceId), model)));
+            text, ReadHeadPolicy, firstChunkHint: _hints.Take(text, FirstChunkHints.ScopeOf(Volatile.Read(ref _voiceId), model)));
 
     public void CancelPrepare()
     {

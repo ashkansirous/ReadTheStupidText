@@ -2,7 +2,7 @@
 .SYNOPSIS
   Runs named checks on the real phone inside a fixed time budget and prints one summary table (Slice 213).
 .DESCRIPTION
-  run-checks.ps1 -App rtst|dino -Checks cold-start,highlight [-Budget 10] [-Runs 3] [-Reinstall] [-Serial s]
+  run-checks.ps1 -App rtst|dino -Checks cold-start,highlight [-Budget 10] [-Runs 3] [-Reinstall] [-FirstRead 1w|1s|2s|passage | -FirstText '<text>'] [-DropCaches] [-Serial s]
   run-checks.ps1 -Build -App rtst|dino [-Variant debug|aot]      (default debug) builds (or finds) the APK for the current inputs in the build cache, then exits.
   run-checks.ps1 -Prepare -App rtst|dino [-Variant debug|aot]    (builds the APK first when it is not cached) puts the voice pack on the dev app, OUTSIDE any budget (like -Build), then exits. A pack is installed when files/packs/<id>/active exists
                                                                  and the version folder it names has pack.json (Test-PackInstalled). Steps: take the lease, install the cached APK as a run does, deletes the stale
@@ -40,6 +40,9 @@ param(
     [switch]$Prepare,
     [int]$Runs = 3,
     [switch]$Reinstall,
+    [ValidateSet('1w', '1s', '2s', 'passage')][string]$FirstRead = 'passage',   # cold-start only: size of the first read (Slice 214)
+    [string]$FirstText,                                                           # cold-start only (RTST): free text for the first read instead of a -FirstRead preset
+    [switch]$DropCaches,                                                          # cold-start only: drop the phone's file cache each run (root only)
     [string]$Serial
 )
 $script:RunStart = Get-Date   # the budget clock: it runs from here, so every wait before the checks counts
@@ -398,7 +401,7 @@ function Get-BudgetEnd { return (Get-BudgetStart $script:RunStart $script:Waited
 # Runs one check script in this process; its deadline is the budget's end. A throw is a FAIL (or TIMEOUT when the budget ended it).
 function Invoke-OneCheck($Row, [string]$Phone, [datetime]$BudgetEnd, [string]$RunVariant) {
     $splat = @{ Phone = $Phone; App = $App }
-    if ($Row.Name -eq 'cold-start') { $splat.Runs = $Runs }
+    if ($Row.Name -eq 'cold-start') { $splat.Runs = $Runs; $splat.Preset = $FirstRead; if ($FirstText) { $splat.Text = $FirstText }; if ($DropCaches) { $splat.DropCaches = $true } }
     Set-CheckDeadline $BudgetEnd   # the stage keeps it set (children read it from the environment) until the cleanup is done
     $started = Get-Date; $output = $null; $failure = $null
     try { $output = @(& (Join-Path $PSScriptRoot "checks\$($Row.Name).ps1") @splat) } catch { $failure = $_.Exception.Message }
