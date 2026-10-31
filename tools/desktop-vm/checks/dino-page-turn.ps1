@@ -12,14 +12,42 @@ Invoke-Check -ResultFile $ResultFile -Body {
         $names = @(foreach ($label in $labels) { try { $label.Current.Name } catch { } })
         return (($names | Where-Object { $_ }) -join ' ')
     }
+    # Slice 205: the story label carries the page's text as its accessible description (a FormattedText label can have an empty UIA
+    # name). If it is still empty, the failure lists what the page does expose instead of guessing.
+    $dumpPage = { 'UI: ' + ((Get-VisibleNames (& $window) 60) -join ' / ') }
     Wait-Until { Find-UiaById (& $window) 'ReadingTransport' } 10 'not on the reading page (run the open-book check first)' | Out-Null
-    $before = & $pageText
-    if (-not $before) { throw 'FAIL: the reading page shows no story text (no element with AutomationId StoryText has a name)' }
-    for ($i = 1; $i -le 10; $i++) {
-        Invoke-Uia (Find-UiaByName -Root (& $window) -Name 'Next sentence')
-        Start-Sleep -Milliseconds 1200
-        $after = & $pageText
-        if ($after -and $after -ne $before) { return "page turned after $i taps: '$($before.Substring(0, [Math]::Min(30, $before.Length)))...' -> '$($after.Substring(0, [Math]::Min(30, $after.Length)))...'" }
+    # Text-in-picture books (the starter "Good Enough") open in Picture only, where no StoryText is shown. The mode is saved per book
+    # (story.json PreferredMode), so switch to "Picture + text" for the check and put the original mode back at the end.
+    $modeNames = 'Picture only', 'Picture + text', 'Text only'
+    $selectedMode = {
+        foreach ($m in $modeNames) {
+            $cell = Find-UiaByName -Root (& $window) -Name $m
+            if ($cell -and $cell.Current.Name -match 'Selected') { return $m }
+        }
+        return $null
     }
-    throw 'the story text never changed after 10 taps on Next sentence'
+    $setMode = {
+        param([string] $Mode)
+        if ((& $selectedMode) -eq $Mode) { return }
+        Invoke-Uia (Find-UiaByName -Root (& $window) -Name $Mode)
+        Wait-Until { (& $selectedMode) -eq $Mode } 10 "the '$Mode' mode never reported Selected" | Out-Null
+    }
+    $originalMode = & $selectedMode
+    & $setMode 'Picture + text'
+    $turnPage = {
+        $before = & $pageText
+        if (-not $before) { throw ('FAIL: the reading page shows no story text (no element with AutomationId StoryText has a name). ' + (& $dumpPage)) }
+        # The label's name is the page's text, so it changes only when the page turns, not on each highlighted sentence: allow a long page.
+        $maxTaps = 120
+        for ($i = 1; $i -le $maxTaps; $i++) {
+            Invoke-Uia (Find-UiaByName -Root (& $window) -Name 'Next sentence')
+            Start-Sleep -Milliseconds 1200
+            $after = & $pageText
+            if (-not $after) { throw "FAIL: after tap $i the StoryText label has no name (the page text is no longer exposed). $(& $dumpPage)" }
+            if ($after -ne $before) { return "page turned after $i taps: '$($before.Substring(0, [Math]::Min(30, $before.Length)))...' -> '$($after.Substring(0, [Math]::Min(30, $after.Length)))...'" }
+        }
+        throw "FAIL: the StoryText name still equals the first page's text after $maxTaps taps on Next sentence: the page never turned, or the label's name does not follow the page. $(& $dumpPage)"
+    }
+    try { return (& $turnPage) }
+    finally { if ($originalMode) { try { & $setMode $originalMode } catch { } } }
 }
