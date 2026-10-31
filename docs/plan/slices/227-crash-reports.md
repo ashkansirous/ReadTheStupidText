@@ -1,6 +1,6 @@
 ### Slice 227 — Crash and error reports from the phone apps (Dino Reader and RTST, Android and iOS)
 
-*Built 2026-10-31, not yet verified on iOS or after deploy.* Planned 2026-10-31. From a friend's iPhone crashing Dino Reader several times on 2026-10-31 and nothing in our data showing why.
+*Built 2026-10-31, merged as PR #654 (b8c420d); Worker deployed, not yet verified on iOS.* Planned 2026-10-31. From a friend's iPhone crashing Dino Reader several times on 2026-10-31 and nothing in our data showing why.
 
 **Touches:** `src/ReadTheStupidText.Application/Crashes/**` (new), `src/ReadTheStupidText.Application/Usage/UsageEligibility.cs`, `src/ReadTheStupidText.Mobile.Shared/Crashes/**` (new), `src/ReadTheStupidText.Mobile.Shared/Usage/UsageGate.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSystemLog.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSystemLog.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/MobileSharedServices.Android.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/MobileSharedServices.iOS.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/Crashes/**` (new), `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/Crashes/**` (new), `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/DinoLog.cs`, `src/DinoReader.App/Platforms/iOS/PrivacyInfo.xcprivacy`, `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `src/ReadTheStupidText.Mobile/App.xaml.cs`, `src/ReadTheStupidText.Mobile/Platforms/iOS/PrivacyInfo.xcprivacy`, `worker/crashes.ts` (new), `worker/crashes.test.mjs` (new), `worker/index.ts`, `worker/download-keys.mjs`, `worker/CLAUDE.md`, `wrangler.jsonc`, `wrangler.workers-dev.jsonc`, `tools/crashes/**` (new), `tests/ReadTheStupidText.Tests/Crashes/**` (new), `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`, `STORE.md`, `docs/plan/slices/227-crash-reports.md`
 
@@ -77,13 +77,12 @@ Settled here (planning): the reports follow the user's existing "anonymous usage
 
 #### Outstanding after merge (main thread)
 
-- Create the read-only R2 token `CF_R2_CRASHES_READ` (S3 key id and secret) in `D:\secrets`.
-- `wrangler r2 bucket lifecycle add readthestupidtext-downloads crash-reports-90d crashes/ --expire-days 90`.
-- Confirm the Worker deploy succeeded with the new `APP_CRASHES` and `CRASH_LIMITER` bindings.
-- User: App Store App Privacy "Crash Data" for both apps and Play Data safety "Crash logs".
-- Then set `crashReports.enabled` true in both R2 configs (item 8).
+- Done 2026-10-31: Worker deployed (Workers Builds success on b8c420d); live `POST https://dinoreader.sirous.uk/api/crash` answers 204 with crash reports off; `/crashes/x.json` answers 404; R2 lifecycle rule `crash-reports-90d` (prefix `crashes/`, expire 90 days) added.
+- Open: the read-only R2 token `CF_R2_CRASHES_READ` could not be created (no Cloudflare token in `D:\secrets` may create API tokens). Either the user creates an R2 read token in the Cloudflare dashboard, or `pull-crashes.mjs` is changed to read through the Cloudflare REST API with wrangler's own login (no new token).
+- User: App Store App Privacy "Crash Data" for both apps and Play Data safety "Crash logs". Then the main thread sets `crashReports.enabled` true in both remote configs (item 8).
+- Item 9 (symbolicate the 2026-10-28 TestFlight crash) open.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-31)
 
 - `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`: log calls never carry typed or read text, book titles or file names (only kinds, lengths, ids). (Slice 227: docs/plan/slices/227-crash-reports.md)
 - `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`: crash handlers install always and write only while the gate is open. (Slice 227: docs/plan/slices/227-crash-reports.md)
