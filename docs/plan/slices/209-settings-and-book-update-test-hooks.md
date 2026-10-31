@@ -1,6 +1,6 @@
 ### Slice 209 — Test hooks for language, voice, Translate and a staged Dino book update
 
-*Built 2026-10-31 (not merged); verified on the emulator and the S21 (2026-10-31), iOS hooks compile-checked only.* Planned 2026-10-30. From the S21 night runs (docs/plan/notes/2026-10-29-s21-night-runs.md) and Slice 206. Tooling: Debug builds only, no Release behaviour change.
+*Built 2026-10-31, merged as PR #644 (f2b8fec); verified on the emulator and the S21 (2026-10-31), iOS hooks compile-checked only.* Planned 2026-10-30. From the S21 night runs (docs/plan/notes/2026-10-29-s21-night-runs.md) and Slice 206. Tooling: Debug builds only, no Release behaviour change.
 
 **Touches:** `src/ReadTheStupidText.Mobile.Shared/Testing/TestHookDispatcher.cs`, `src/ReadTheStupidText.Mobile.Shared/Testing/TestHookCommand.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/Testing/TestHooks.Android.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/Testing/TestHooks.iOS.cs`, `src/ReadTheStupidText.Mobile/LanguageChooser.cs`, `src/ReadTheStupidText.Mobile/Testing/**` (new, if RTST needs app-level commands), `src/DinoReader.App/Testing/DinoTestCommands.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/StagedBookUpdates.cs`, `tests/ReadTheStupidText.Tests/**`, `.maestro/**`, `tools/phone/**`, `tools/CLAUDE.md`, `docs/plan/slices/209-settings-and-book-update-test-hooks.md`, `src/DinoReader.App/SpokenLanguage.cs`, `src/ReadTheStupidText.Application/Reading/ReadAloudService.cs (only if the hook needs an existing method made reachable)`, `src/ReadTheStupidText.Mobile/VoicePickerPage.xaml.cs (only to share the voice-set path)`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs` (set-translate hook entry only; added in the wave 2026-10-31, mobile Translate is the Review page tick, not a stored setting), `src/DinoReader.Core/BookUpdatePlan.cs` (force lowers the recorded version), `src/DinoReader.App/StarterStories.cs` (launch refresh must not undo a forced stage), `tests/DinoReader.Tests/BookUpdatePlanTests.cs` (added while building)
 
@@ -54,7 +54,7 @@
 - Emulator, Maestro: `set-language`, `set-voice`, `set-translate` (rtst) and `set-language`, `stage-book-update` (dino) all PASS.
 - S21 (2026-10-31): rtst language PASS (sv, da, de, fa, nb, zh, en), voice PASS (`supertonic:F1`), translate PASS (45 s); dino language PASS, book-update PASS, apply 940 ms with swap.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-31)
 
 - Settings (UI language, voice, Translate) and a Dino book update are switched by test hook (`set-language`, `set-voice`, `set-translate`, `stage-book-update`), not by `tap.ps1`; use the phone runner checks `language`, `voice`, `translate`, `book-update`. Dino `set-language` sends `voice=0` on an emulator (the voice start crashes its Debug x86_64 build). (tools/CLAUDE.md; Slice 209: docs/plan/slices/209-settings-and-book-update-test-hooks.md)
 

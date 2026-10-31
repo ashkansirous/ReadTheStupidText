@@ -20,10 +20,7 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | --- | --- | --- | --- | --- | --- |
 | 154 | Dino: vowel marks in Farsi and Arabic books (Farsi only: Arabic left as is; marks are a hidden "how to read" text, Decision 166) | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
 | 193 | German store listings for both apps | drafted; apply waits for the user | | | [193-german-store-listings.md](docs/plan/slices/193-german-store-listings.md) |
-| 205 | Dino Windows head: the Reading speed row and the page-turn VM check (Slice 188 follow-up) | planned | | | [205-dino-windows-reading-speed-and-page-turn-checks.md](docs/plan/slices/205-dino-windows-reading-speed-and-page-turn-checks.md) |
 | 208 | Paused pack downloads tell you ("Download paused. Tap to finish.") and half-finished packs finish or are deleted at launch (Slice 183 follow-up) | planned | | | [208-paused-pack-downloads-tell-you-and-finish.md](docs/plan/slices/208-paused-pack-downloads-tell-you-and-finish.md) |
-| 209 | Test hooks: set-language, set-voice, set-translate, and a staged Dino book update for the Slice 181 timing | planned | | | [209-settings-and-book-update-test-hooks.md](docs/plan/slices/209-settings-and-book-update-test-hooks.md) |
-| 214 | RTST phone: the first read after a cold start takes 7 s (S21 AOT; first synthesis 5.9 s): find warm-up vs length, then fix to under 2 s | planned | | | [214-rtst-phone-cold-first-audio.md](docs/plan/slices/214-rtst-phone-cold-first-audio.md) |
 | 220 | Kokoro returns silent audio for short lines on arm64 (S21), so "Ann." and "Help!" still drop (Slice 210 follow-up) | parked: S21 rejected the padding design (NaN output on arm64), needs a new design | #638 (draft) |  | [220-kokoro-silent-short-lines-arm64.md](docs/plan/slices/220-kokoro-silent-short-lines-arm64.md) |
 | 221 | Device-test tooling leftovers from the 2026-10-30-2100 night (Dino read hook voice, one Dino dev package id, phone build-only switch, dispatch vs push concurrency) | parked: feedback loop, waits for the user | | | [221-device-test-tooling-leftovers-night-1.md](docs/plan/slices/221-device-test-tooling-leftovers-night-1.md) |
 | 222 | Microsoft Store marker hardening (rerun Slice 218 medium review: mark job tag lookup, marker moves, Dino-only runs) | parked: feedback loop, waits for the user | | | [222-store-marker-hardening.md](docs/plan/slices/222-store-marker-hardening.md) |
@@ -83,6 +80,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 - Slice 218 (PR #630): Microsoft Store submission of rtst-v1.77.0 done (run 41137137107, marker tag `rtst-store-v1.77.0`); still open: Partner Center showing 1.77.0 once certification finishes ([slice](docs/plan/slices/218-microsoft-store-submission-skipped.md)).
 - Slice 218 merged on an incomplete medium review (it read the diff without the review fork); the round 1 feedback loop reran it on the merged diff ([note](docs/plan/notes/2026-10-30-2100-feedback-loop-w1.md)). Why users stayed on 1.67.1 is still unproven (1.73.2 was committed to Partner Center).
 - Slice 219 (PR #632): after deploy, a read-only `rtst_usage` / `dino_usage` query shows no new `0.x` rows; a local Windows run adds no new row ([slice](docs/plan/slices/219-usage-drops-dev-versions.md)).
+- **Waiting on the user:** S21 offline since 2026-10-31 ~13:57: a Slice 208 check turned off Wi-Fi and mobile data over wireless adb. Turn both on, then `adb shell device_config delete activity_manager data_sync_fgs_timeout_duration`, `adb shell am compat reset FGS_INTRODUCE_TIME_LIMITS uk.sirous.readthestupidtext.dbg`, `tools/phone/reset-dev-app.ps1 -Level auto` (restores the dev app's packs).
 - Untried: reading the iPhone 8's crash logs from this PC (e.g. libimobiledevice `idevicecrashreport` over USB); would let iOS crashes be checked without the user. Not tried yet.
 - S21 RTST dev install may still hold `files/packs/zz-supertonic-3.bak` (~124 MB) from the 2026-10-29 night; harmless, gone on the next `reset-dev-app.ps1 -Level clear`. Nobody has checked.
 
@@ -98,6 +96,9 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 Built but not verified (details in each slice file):
 
+- Slice 205 (PR #645): Android Settings row width vs screen (the uiautomator dump came back empty after a permission dialog; no Maestro flow targets the Reading speed row) ([slice](docs/plan/slices/205-dino-windows-reading-speed-and-page-turn-checks.md)).
+- Slice 214 (PR #647): piece 2 timing against piece 1 at 1x and 2x (no runner check for the gap); a truly cold run after a fresh install or reboot; iOS TestFlight first-audio timing by hand ([slice](docs/plan/slices/214-rtst-phone-cold-first-audio.md)).
+- Slice 209 (PR #644): the iOS URL-scheme hooks on a device (compile-checked only) ([slice](docs/plan/slices/209-settings-and-book-update-test-hooks.md)).
 - Slice 215 (PR #639): site image retake (VM sample read never leaves GeneratingAudio with the copied pack; `site/img/control-panel.webp` not replaced; watermark crop); `sentence-highlight` first-run failure after a fresh install; `test-activity.ps1 -DeviceKillCheck` script path not run ([slice](docs/plan/slices/215-device-guard-gaps.md)).
 - Slice 216 (PR #637): item 11 cold-start rerun and the numbers in Slices 185 and 214; path-length estimates unmeasured; `Get-PhoneStamp` not device-run ([slice](docs/plan/slices/216-phone-tooling-leftovers.md)).
 - Slice 217 (PR #640): Windows forced and soft update on the VM (`rtst-update-forced` / `rtst-update-soft`); store button tap on the phone; iOS compile in CI and TestFlight hand check ([slice](docs/plan/slices/217-rtst-forced-update.md)).
