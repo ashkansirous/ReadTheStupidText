@@ -20,9 +20,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  selftests-pwsh:
+  # Slice 215: one job, two shells (pwsh = PowerShell 7, powershell = Windows PowerShell 5.1), instead of two copies of the same steps.
+  selftests:
     runs-on: windows-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [pwsh, powershell]
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,80 +42,29 @@ jobs:
         with:
           node-version: 22
 
-      - name: Flow lint self-test (pwsh)
-        shell: pwsh
+      - name: Flow lint self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-lint-flows.ps1
 
-      - name: Lint the Maestro flows (pwsh)
-        shell: pwsh
+      - name: Lint the Maestro flows (${{ matrix.shell }})
         run: ./tools/emulator/lint-flows.ps1
 
-      - name: Emulator lease self-test (pwsh)
-        shell: pwsh
+      - name: Emulator lease self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-lease.ps1
 
-      - name: test-targets self-test (pwsh)
-        shell: pwsh
+      - name: Activity limit and emulator health self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-activity.ps1
+
+      - name: test-targets self-test (${{ matrix.shell }})
         run: ./tools/test-test-targets.ps1
 
-      - name: Phone library self-test (pwsh)
-        shell: pwsh
+      - name: Phone library self-test (${{ matrix.shell }})
         run: ./tools/phone/test-phone-lib.ps1
 
-      - name: Phone tap self-test (pwsh)
-        shell: pwsh
+      - name: Phone tap self-test (${{ matrix.shell }})
         run: ./tools/phone/test-tap.ps1
 
-      - name: Phone quoting self-test (pwsh)
-        shell: pwsh
+      - name: Phone quoting self-test (${{ matrix.shell }})
         run: ./tools/phone/test-quoting.ps1
 
-      - name: Phone timing self-test (pwsh)
-        shell: pwsh
-        run: ./tools/phone/test-timing.ps1
-
-  selftests-powershell:
-    runs-on: windows-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Flow lint self-test (powershell)
-        shell: powershell
-        run: ./tools/emulator/test-lint-flows.ps1
-
-      - name: Lint the Maestro flows (powershell)
-        shell: powershell
-        run: ./tools/emulator/lint-flows.ps1
-
-      - name: Emulator lease self-test (powershell)
-        shell: powershell
-        run: ./tools/emulator/test-lease.ps1
-
-      - name: test-targets self-test (powershell)
-        shell: powershell
-        run: ./tools/test-test-targets.ps1
-
-      - name: Phone library self-test (powershell)
-        shell: powershell
-        run: ./tools/phone/test-phone-lib.ps1
-
-      - name: Phone tap self-test (powershell)
-        shell: powershell
-        run: ./tools/phone/test-tap.ps1
-
-      - name: Phone quoting self-test (powershell)
-        shell: powershell
-        run: ./tools/phone/test-quoting.ps1
-
-      - name: Phone timing self-test (powershell)
-        shell: powershell
+      - name: Phone timing self-test (${{ matrix.shell }})
         run: ./tools/phone/test-timing.ps1
