@@ -17,7 +17,7 @@
 param(
     [Parameter(Mandatory)][ValidateSet('rtst', 'dino')][string]$App,
     [string]$Serial,
-    [double[]]$Rates = @(1.0, 2.0),
+    [string[]]$Rates = @("1", "2"),
     # Gap = how long past a chunk's audio length (at the rate) its successor starts. Fitted from the re-run baseline (see the slice file).
     [int]$GapLimitMs = 1300,
     # Dino only: the starter book and the page (1-based) the read starts on, through the open-book hook (Slice 175).
@@ -51,6 +51,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
+$Rates = @(ConvertTo-RateList $Rates)
 . (Join-Path $PSScriptRoot 'timing.ps1')
 . (Join-Path $PSScriptRoot '..\emulator\build-cache.ps1')
 
@@ -79,11 +80,10 @@ $script:ApkFilter = '*-Signed.apk'
 function Build-PhoneApk([string]$Dir, [string]$Key) {
     $project = Join-Path $script:RepoRoot $cfg.Project
     $artifacts = Get-PhoneArtifactsPath $script:RepoRoot $App $script:PhonePlatform
+    Assert-BuildPathLength $artifacts   # Slice 216: fail now, not minutes into the build (APT2264)
     Remove-Item $artifacts -Recurse -Force -ErrorAction SilentlyContinue
-    $extra = @()
-    if ($Aot) { $extra += '-p:RunAOTCompilation=true', '-p:AndroidEnableProfiledAot=false' }
-    dotnet build $project -f net10.0-android -c Debug --artifacts-path $artifacts -nodeReuse:false -p:UseSharedCompilation=false "-p:RuntimeIdentifier=$($script:PhoneRid)" -p:EmbedAssembliesIntoApk=true `
-        -p:IncludeWindows=false -p:AndroidPackageFormat=apk "-p:ApplicationId=$package" @extra
+    $buildArguments = Get-PhoneBuildArguments $project $artifacts $package $script:PhoneRid ([bool]$Aot)   # the one build command, shared with run-checks.ps1
+    dotnet build @buildArguments
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
     $built = Find-PhoneArtifactApk $artifacts $script:ApkFilter
     if (-not $built) { throw 'Signed APK not found.' }
@@ -353,6 +353,11 @@ function Invoke-WarmRead([string]$Phone, [double]$Rate) {
 function Invoke-OneRead([string]$Phone, [double]$Rate) {
     if ($FreshInstall) { Invoke-Adb $Phone @('shell', 'pm', 'clear', $package) | Out-Null }
     Set-NoUsageMarker $Phone
+    # Slice 216: a read reported as cold starts with an empty sentence cache (repeat runs read 240-578 ms from a warm one); the app is stopped first so it cannot write into it.
+    # A cache that cannot be emptied (run-as refused, or the app is slow to die) must not end the run: the read still happens, labelled "cache state unknown".
+    $cleared = $true
+    try { Stop-AppAndWait $Phone; Clear-SentenceCache $Phone $package; Write-Host '   sentence cache emptied (cold read)' }
+    catch { $cleared = $false; Write-Host "   WARNING: $($_.Exception.Message) The timings are labelled 'cache state unknown'." }
     Start-AppWithHook $Phone 'skip-first-run'
     Assert-AppStarted $Phone
     if (-not (Wait-Marker $Phone 'HOOK skip-first-run ok' 60 0 'waiting for the app to skip first run')) { throw 'The skip-first-run hook did not report ok.' }
@@ -364,7 +369,7 @@ function Invoke-OneRead([string]$Phone, [double]$Rate) {
     $log = Get-AppLog $Phone
     $file = Join-Path $script:OutDir ("{0}-{1}x-{2}.log" -f $App, $Rate, (Get-Date -Format 'HHmmss'))
     $log | Set-Content $file
-    return @{ Tap = $tap; Lines = $log; File = $file; Ended = $ended }
+    return @{ Tap = $tap; Lines = $log; File = $file; Ended = $ended; CacheCleared = $cleared }
 }
 
 if ($LogFile) {
@@ -380,8 +385,8 @@ if ($LogFile) {
 $phone = if ($Emulator) { if ($Serial) { $Serial } else { 'emulator-5554' } } else { Find-WirelessPhone $Serial }
 if (-not $phone) { Write-PairingAsk; exit 2 }
 if (-not $Emulator) { Assert-PhoneLease $phone }  # Slice 206: exits 4 when another session holds the real phone (lease.ps1)
-# Raw logs go to the shared worktrees folder, not into the repo.
-$script:OutDir = Join-Path (Split-Path $script:RepoRoot -Parent) '.phone'
+# Raw logs go to the shared worktrees folder (like run-checks.ps1), not into the repo and not next to it (Slice 216).
+$script:OutDir = Join-Path (Get-WorktreesRoot) '.phone'
 $null = New-Item -ItemType Directory -Force $script:OutDir
 # Slice 180 follow-up: the build (or the cache lookup) comes first and holds no quiet-machine lock, as in install-debug.ps1; only the install and the timing
 # run inside it. -SkipInstall never builds or installs: it checks that the installed APK is the cached build for the current inputs on this
@@ -436,10 +441,14 @@ try {
         Assert-EmulatorLease
         $read = Invoke-OneRead $phone $rate
         $events = @(ConvertFrom-TimingLog $read.Lines)
-        Write-TimingTable "$App at $($rate)x" (Get-ReadTimings $events $read.Tap $rate $GapLimitMs ($App -eq 'dino')) $GapLimitMs
+        $coldLabel = if ($read.CacheCleared) { 'COLD (sentence cache emptied)' } else { 'cache state unknown (could not empty the sentence cache)' }
+        Write-TimingTable "$App at $($rate)x $coldLabel" (Get-ReadTimings $events $read.Tap $rate $GapLimitMs ($App -eq 'dino')) $GapLimitMs
         Write-Host "   raw log: $($read.File)"
         if ($Warm -and -not $read.Ended) {
             Write-Host '   skipping the warm read: the cold read never ended, and a second read would overlap it.'
+        }
+        elseif ($Warm -and -not $read.CacheCleared) {
+            Write-Host '   skipping the warm read: the cold read was not proven cold (cache not emptied), so a warm-versus-cold comparison would be meaningless.'
         }
         elseif ($Warm) {
             $w = Invoke-WarmRead $phone $rate

@@ -77,6 +77,7 @@ function Wait-PostedNotification([int64]$SinceMs) {
         $records = Get-NotificationRecords @(Invoke-Adb $Phone @('shell', 'dumpsys notification --noredact')) $package
         $note = Select-PostedProgressNotification $records $SinceMs @($packId)
         if ($note) { return $note }
+        $script:PostTimeUnknown = Test-PostTimeMissing $records
         Start-Sleep -Seconds 2
     } while (((Get-Date) - $started).TotalSeconds -lt $NotificationTimeoutSeconds)
     return $null
@@ -90,23 +91,27 @@ function Invoke-DownloadNotificationCheck {
     $start = Wait-LogMatch $Phone $package $appPid $script:PackStartPattern $script:PackStartSeconds 0 "waiting for PACKDL start of $packId"
     if (-not $start) { return (New-CheckResult $false (Get-NoPackStartReason (Get-PidLog $Phone $appPid) @($packId))) }
     Write-Host "   download started: $($start.Line.Trim())"
-    $verdict = Resolve-NotificationVerdict (Wait-PostedNotification $since)
+    $script:PostTimeUnknown = $false
+    $verdict = Resolve-NotificationVerdict (Wait-PostedNotification $since) $script:PostTimeUnknown
     return (New-CheckResult $verdict.Passed $verdict.Detail)
 }
 
 $result = $null
 $restoreProblem = $null
+$budgetError = $false
 $moved = $false
 try {
     Move-PackAside
     $moved = $true
     $result = Invoke-DownloadNotificationCheck
 } catch {
+    $budgetError = $_.Exception.Message.StartsWith($script:BudgetExceededPrefix)
     $result = New-CheckResult $false "check could not run: $($_.Exception.Message)"
     if (-not $moved -and (Test-PhonePathExists $movedPath)) { $moved = $true }   # the move happened but something after it threw
 } finally {
     if ($moved) { $restoreProblem = Restore-MovedPack }
 }
+if ($budgetError -and -not $restoreProblem) { throw $result.Detail.Substring('check could not run: '.Length) }   # a timeout stays a TIMEOUT (the pack is restored first)
 $asidePath = if ($script:AsideCopy) { $script:AsideCopy.Path } else { '(none made)' }
 if ($restoreProblem) { return (New-CheckResult $false "RESTORE FAILED: $restoreProblem. The verified aside copy is $asidePath; run reset-dev-app.ps1 or -Prepare. (check itself: $($result.Detail))") }
 if ($moved) { Write-Host "   restore verified: $packId passes Test-PackInstalled" }

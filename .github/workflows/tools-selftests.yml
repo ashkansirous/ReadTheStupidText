@@ -68,3 +68,6 @@ jobs:
 
       - name: Phone timing self-test (${{ matrix.shell }})
         run: ./tools/phone/test-timing.ps1
+
+      - name: Phone leftovers self-test (${{ matrix.shell }})
+        run: ./tools/phone/test-phone-leftovers.ps1
