@@ -27,6 +27,7 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 224 | Phone runner: a dead builder pid reads as a stall, and a cache miss builds inside a timed run (`-NoBuild`) | parked: feedback loop, waits for the user | | | [224-phone-runner-build-cache-gaps.md](docs/plan/slices/224-phone-runner-build-cache-gaps.md) |
 | 225 | Device-test tooling leftovers from the 2026-10-31-1301 night (scripted S21 restore, device-wide change lint, emulator path for phone checks, run-flows two-package bug, per-checkout run status, a unit test for Slice 208's DecideAll) | parked: feedback loop, waits for the user | | | [225-device-tooling-leftovers-night-2026-10-31-1301.md](docs/plan/slices/225-device-tooling-leftovers-night-2026-10-31-1301.md) |
 | 226 | Dino Settings rows and page text: Slice 205 review findings left open (hidden row children, stale NavRow name, per-line description read twice on TalkBack/VoiceOver) | parked: feedback loop, waits for the user | | | [226-dino-settings-rows-review-leftovers.md](docs/plan/slices/226-dino-settings-rows-review-leftovers.md) |
+| 227 | Crash and error reports from the phone apps (Dino and RTST, Android and iOS): our own Worker endpoint, log tail, TestFlight tagged, Apple/Play pull tooling | planned | | | [227-crash-reports.md](docs/plan/slices/227-crash-reports.md) |
 
 
 
