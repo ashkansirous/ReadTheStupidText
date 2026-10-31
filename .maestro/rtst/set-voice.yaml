@@ -1,0 +1,34 @@
+# Slice 209: the set-voice hook takes the voice picker's tap path (VoicePickerPage.ApplyVoice). The phone voice is always a valid id, so the flow needs no voice pack;
+# Settings then shows the phone voice's name (Slice 99 refreshes the value when the page appears). A wrong id must fail loudly.
+# expect-log: HOOK set-voice ok system
+# expect-log: HOOK set-voice failed unknown no-such-voice
+appId: uk.sirous.readthestupidtext
+name: Pick a voice by hook
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the phone voice needs no pack and nothing is read.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: SettingsButton
+    timeout: 20000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-voice
+      id: no-such-voice
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-voice
+      id: system
+- tapOn:
+    id: SettingsButton
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: SpeedPresets
+    timeout: 10000

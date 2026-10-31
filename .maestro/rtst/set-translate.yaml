@@ -1,0 +1,52 @@
+# Slice 209: the set-translate hook sets the Review page's Translate tick for the text on screen, as a tap on the row would. Off and on, then Play with the tick on reads the translation.
+# Needs the Italian ML Kit model and a network (as play-before-detection.yaml). Detection runs normally here (no hold-detection), because the Translate row only exists once the text is detected as foreign.
+# A hook sent off the Review page answers "failed not-on-review" (the first one below, before the page is open); before the row shows it answers "failed unavailable" (never ticks a row the user cannot see).
+# expect-log: HOOK set-translate failed not-on-review
+# expect-log: HOOK set-translate ok off
+# expect-log: HOOK set-translate ok on
+# expect-log: READ translated
+# No clearState: the voice pack and the translation model must stay.
+appId: uk.sirous.readthestupidtext
+name: Set Translate by hook
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 20000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-translate
+      mode: "on"
+- tapOn:
+    id: EditLink
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: ReviewEditor
+    waitToSettleTimeoutMs: 300
+- inputText: "Ciao a tutti, questa sera leggeremo insieme una lunga storia molto interessante."
+- extendedWaitUntil:
+    visible:
+      id: ReviewTranslateRow
+    timeout: 20000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-translate
+      mode: "off"
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-translate
+      mode: "on"
+- tapOn:
+    id: ReviewRead
+    waitToSettleTimeoutMs: 100
+- extendedWaitUntil:
+    visible:
+      id: ReadingText
+    timeout: 60000

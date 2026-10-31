@@ -32,7 +32,7 @@ public static class LanguageChooser
         Apply(language, settings, beforeRebuild);
     }
 
-    private static void Apply(AppLanguage language, ISettingsStore settings, Action beforeRebuild)
+    internal static void Apply(AppLanguage language, ISettingsStore settings, Action beforeRebuild)
     {
         string code = AppLanguages.Code(language);
         settings.Language = code;

@@ -38,6 +38,10 @@ $script:Catalogue = [ordered]@{
     'highlight'           = @{ Apps = @('rtst'); EstimateSeconds = 120; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
     'notification-text'   = @{ Apps = @('rtst'); EstimateSeconds = 150; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
     'book-end'            = @{ Apps = @('dino'); EstimateSeconds = 420; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
+    'language'            = @{ Apps = @('rtst', 'dino'); EstimateSeconds = 180; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
+    'translate'           = @{ Apps = @('rtst'); EstimateSeconds = 150; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
+    'voice'               = @{ Apps = @('rtst'); EstimateSeconds = 90; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
+    'book-update'         = @{ Apps = @('dino'); EstimateSeconds = 240; NeedsPack = $false; Variant = 'debug'; Blocked = $null }
     'paused-notification' = @{ Apps = @('rtst'); EstimateSeconds = 120; NeedsPack = $false; Variant = 'debug'; Blocked = 'Slice 208 (the paused-playback notification) is not built yet' }
 }
 

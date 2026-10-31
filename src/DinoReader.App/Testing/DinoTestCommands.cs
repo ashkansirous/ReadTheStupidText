@@ -4,7 +4,9 @@ using System.Runtime.CompilerServices;
 using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
+using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Mobile.Shared.Testing;
 
 namespace DinoReader.Testing;
@@ -22,7 +24,14 @@ internal static class DinoTestCommands
 {
 	private const string Name = "open-book";
 	private const string EnterGrownUpName = "enter-grown-up";
-	private const string IdKey = "id";
+	private const string SetLanguageName = "set-language";
+	private const string StageBookUpdateName = "stage-book-update";
+	private const string StartedOutcome = "started";
+	private const string VoiceKey = "voice";
+	private const string VoiceOn = "1";
+	private const string ForceKey = "force";
+	private const int StoredWaitMilliseconds = 240000;
+	private const string IdKey = TestHookDispatcher.IdKey;
 	private const string PageKey = "page";
 	private const string PlayKey = "play";
 	private const string PlayOn = "1";
@@ -43,11 +52,22 @@ internal static class DinoTestCommands
 	internal static void Register()
 	{
 		TestHookDispatcher.AppCommands = Run;
-		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey];
+		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, VoiceKey, ForceKey];
 	}
 
 	private static string? Run(TestHookCommand command)
 	{
+		if (command.Name == SetLanguageName)
+		{
+			return SetLanguage(command);
+		}
+
+		if (command.Name == StageBookUpdateName)
+		{
+			_ = StageBookUpdateAsync(command.Get(IdKey, string.Empty), command.Flag(ForceKey));
+			return StartedOutcome;
+		}
+
 		if (command.Name == EnterGrownUpName)
 		{
 			_ = EnterGrownUpAsync();
@@ -62,6 +82,79 @@ internal static class DinoTestCommands
 		_ = OpenAsync(command);
 		return TestHookDispatcher.Ok;
 	}
+
+	// Slice 209: the Language page's pick path (LanguageChoice.Apply: screens' culture and stored UI language, then SpokenLanguage.Use for the voice pack as a grown-up's tap),
+	// then the root rebuilt in the new language as leaving that page does. A code that is not one of the fifteen fails loudly (UiLanguage.Resolve would fall back to English).
+	// The voice-pack start (SpokenLanguage.Use) runs only with voice=1: it is known to crash the Debug x86_64 emulator build (see CompleteFirstRun), so the default skips it and a real phone passes voice=1.
+	private static string SetLanguage(TestHookCommand command)
+	{
+		string code = command.Get(TestHookDispatcher.LanguageKey, string.Empty);
+		if (!UiLanguage.IsSupported(code))
+		{
+			return $"{TestHookDispatcher.Failed} {TestHookDispatcher.Unknown} {code}";
+		}
+
+		IServiceProvider services = IPlatformApplication.Current!.Services;
+		bool withVoice = command.Get(VoiceKey, string.Empty) == VoiceOn;
+		if (withVoice)
+		{
+			SpokenLanguage spoken = services.GetRequiredService<SpokenLanguage>();
+			LanguageChoice.Apply(code, spoken, PackStartReason.User);
+			_ = LogStoredWhenServedAsync(spoken, UiLanguage.Resolve(code));
+		}
+		else
+		{
+			services.GetRequiredService<ISettingsStore>().Language = LanguageChoice.ApplyScreens(code); // as CompleteFirstRun: the stored language is what the state hook reports
+		}
+
+		((DinoApp)Microsoft.Maui.Controls.Application.Current!).RebuildRoot();
+		return withVoice ? StartedOutcome : $"{TestHookDispatcher.Ok} {UiLanguage.Resolve(code)}";
+	}
+
+	// SpokenLanguage.Use stores the language on a worker only after the previous language's pack download has settled (ServeAsync waits for it), so on a phone that was still fetching the last
+	// language the stored setting (what the state hook reports) lags the tap. The hook therefore answers ok only once the language is stored, or failed after a bound.
+	private static async Task LogStoredWhenServedAsync(SpokenLanguage spoken, string language)
+	{
+		for (int waited = 0; waited < StoredWaitMilliseconds; waited += RetryMilliseconds)
+		{
+			if (spoken.HasStored(language))
+			{
+				Log($"{SetLanguageName} {TestHookDispatcher.Ok} {language}");
+				return;
+			}
+
+			await Task.Delay(RetryMilliseconds);
+		}
+
+		Log($"{SetLanguageName} {TestHookDispatcher.Failed} not stored within {StoredWaitMilliseconds / 1000} s");
+	}
+
+	// Slice 209: stages the store's newer version of the book for the next cold start (BookUpdater.StageNowAsync, the staging the 7-day check uses). Logs
+	// "HOOK stage-book-update ok <id> v<n>" or "failed <reason>"; the apply is then timed by the [BookUpdate] lines at the next start.
+	private static async Task StageBookUpdateAsync(string id, bool force)
+	{
+		try
+		{
+			if (id.Trim().Length == 0)
+			{
+				Log($"{StageBookUpdateName} failed no book");
+				return;
+			}
+
+			IServiceProvider services = IPlatformApplication.Current!.Services;
+			var updater = new BookUpdater(services.GetRequiredService<StoreClient>(), services.GetRequiredService<StarterStories>(), services.GetRequiredService<StagedBookUpdates>());
+			string storeId = await StoreIdOfAsync(services.GetRequiredService<IStoryLibrary>(), id.Trim());
+			Log($"{StageBookUpdateName} {await Task.Run(() => updater.StageNowAsync(storeId, CancellationToken.None, force))}");
+		}
+		catch (Exception ex)
+		{
+			Log($"{StageBookUpdateName} failed {TestHookLog.FaultSummary(ex)}");
+		}
+	}
+
+	// A slug, title or story id as the other hooks take (BookMatch) becomes the book's catalogue id, which is the store's id; an id the shelf does not know is passed on as typed.
+	private static async Task<string> StoreIdOfAsync(IStoryLibrary library, string id) =>
+		BookMatch.Find(await library.ListAsync(), id)?.SourceId ?? id;
 
 	// Waits for the gallery to be the window's root (a new window starts in kids' mode and would undo an earlier Enter), then enters grown-up mode on the UI thread.
 	// The one-time "Storyteller voices are ready" scrim would cover the gear and the book "..." buttons, so the hook marks it as seen before entering.

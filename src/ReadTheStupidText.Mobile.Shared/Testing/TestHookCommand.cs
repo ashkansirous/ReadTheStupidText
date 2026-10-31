@@ -51,6 +51,10 @@ public sealed record TestHookCommand(string Name, IReadOnlyDictionary<string, st
 	/// <summary>The argument's value, or <paramref name="fallback"/> when it was not given.</summary>
 	public string Get(string key, string fallback) => Args.TryGetValue(key, out string? value) ? value : fallback;
 
+	/// <summary>Slice 209: whether a switch argument is on (<c>true</c> or <c>1</c>, any case); not given or anything else is off.</summary>
+	public bool Flag(string key) =>
+		Get(key, string.Empty) is var value && (value == "1" || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase));
+
 	private static IEnumerable<KeyValuePair<string, string>> ParseQuery(string query)
 	{
 		foreach (string part in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
