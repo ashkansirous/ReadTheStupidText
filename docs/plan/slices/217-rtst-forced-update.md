@@ -70,6 +70,7 @@ Four frames in `docs/design/rtst-phone/Batch 42 Updates and Paused Downloads.dc.
 
 #### Review notes (high pass)
 
+- Coverage gap: the high pass only skimmed `UpdateTests.cs` and the two Maestro flows (wave-1 digest entry 189), and neither pass's findings file confirms reading them; the unit tests ran green and the flows passed on the emulator (see Verification). ([feedback loop note](../notes/2026-10-31-1000-feedback-loop-w1.md))
 - 1 (fixed): the tray app retries a failed first fetch after 1, 2 and 5 minutes until one works (`WindowsUpdate.RefreshWithRetryAsync`, `UpdateConfigService.HasFetched`), then daily.
 - 2 (fixed): `READTHESTUPIDTEXT_TEST_APP_CONFIG` is read in Debug builds only.
 - 3 (fixed): an update that becomes required mid-read cancels the read (`ReadAloudService.CancelRead`) on the tray app, as the phone does.

@@ -28,6 +28,7 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 221 | Device-test tooling leftovers from the 2026-10-30-2100 night (Dino read hook voice, one Dino dev package id, phone build-only switch, dispatch vs push concurrency) | parked: feedback loop, waits for the user | | | [221-device-test-tooling-leftovers-night-1.md](docs/plan/slices/221-device-test-tooling-leftovers-night-1.md) |
 | 222 | Microsoft Store marker hardening (rerun Slice 218 medium review: mark job tag lookup, marker moves, Dino-only runs) | parked: feedback loop, waits for the user | | | [222-store-marker-hardening.md](docs/plan/slices/222-store-marker-hardening.md) |
 | 223 | Usage counts: one pre-1.0 version rule, tested the same on worker and client (Slice 219 review cleanups) | parked: feedback loop, waits for the user | | | [223-usage-version-rule-cleanup.md](docs/plan/slices/223-usage-version-rule-cleanup.md) |
+| 224 | Phone runner: a dead builder pid reads as a stall, and a cache miss builds inside a timed run (`-NoBuild`) | parked: feedback loop, waits for the user | | | [224-phone-runner-build-cache-gaps.md](docs/plan/slices/224-phone-runner-build-cache-gaps.md) |
 
 
 
@@ -62,6 +63,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 - [2026-10-30 Feedback loop](docs/plan/notes/2026-10-30-feedback-loop.md): the first end-of-session feedback loop over the 2026-10-29/30 run-wave session; each finding and where it went.
 - [2026-10-30 Feedback loop, S21 session](docs/plan/notes/2026-10-30-feedback-loop-s21-session.md): the feedback loop over the S21 night and its follow-ups (phone tooling, check runner, App Store); each finding and where it went.
 - [2026-10-30 night, round 1 feedback loop](docs/plan/notes/2026-10-30-2100-feedback-loop-w1.md): the feedback loop over wave 1 and housekeeping 1 of the 2026-10-30-2100 run-all-waves night; each finding and where it went.
+- [2026-10-31 night, round 1 feedback loop](docs/plan/notes/2026-10-31-1000-feedback-loop-w1.md): the feedback loop over wave 1 and housekeeping 1 of the 2026-10-31-1000 run-all-waves night; each finding and where it went.
 - [Outstanding work, full text](docs/plan/notes/2026-10-30-outstanding-detail.md): the verbatim per-slice unverified items that plan.md's Outstanding work now shortens (2026-10-30).
 - [CLAUDE.md history](docs/plan/notes/claude-md-history.md): the Batch 6-10 narrative blockquotes moved out of `CLAUDE.md` (2026-10-20).
 
@@ -99,7 +101,7 @@ Built but not verified (details in each slice file):
 - Slice 215 (PR #639): site image retake (VM sample read never leaves GeneratingAudio with the copied pack; `site/img/control-panel.webp` not replaced; watermark crop); `sentence-highlight` first-run failure after a fresh install; `test-activity.ps1 -DeviceKillCheck` script path not run ([slice](docs/plan/slices/215-device-guard-gaps.md)).
 - Slice 216 (PR #637): item 11 cold-start rerun and the numbers in Slices 185 and 214; path-length estimates unmeasured; `Get-PhoneStamp` not device-run ([slice](docs/plan/slices/216-phone-tooling-leftovers.md)).
 - Slice 217 (PR #640): Windows forced and soft update on the VM (`rtst-update-forced` / `rtst-update-soft`); store button tap on the phone; iOS compile in CI and TestFlight hand check ([slice](docs/plan/slices/217-rtst-forced-update.md)).
-- **Waiting on the user, Slice 220 (draft #638, parked):** S21 rejected the padding design (NaN output on arm64); the slice needs a new design before it can go on ([slice](docs/plan/slices/220-kokoro-silent-short-lines-arm64.md)).
+- Slice 220 (draft #638, parked): the S21 run rejected the padding design (silent takes are full-length NaN samples on arm64). It needs a new design that starts by finding the NaN source; that is design work, not a user decision. The S21 record is in the slice file on main ([slice](docs/plan/slices/220-kokoro-silent-short-lines-arm64.md)).
 - Slice 206 (PR #594): `preflight.ps1` reading a PIN or pattern lock as NO-GO; `reset-dev-app.ps1 -Level reinstall`; Dino resets (`-App dino`); ... [full text](docs/plan/notes/2026-10-30-outstanding-detail.md#o001) ([slice](docs/plan/slices/206-phone-run-scripts.md))
 - Slice 204 (PR #588): Dino on device; iOS TestFlight; native read of the Stopped strings (machine drafts)([slice](docs/plan/slices/204-cancelled-voice-pack-stays-cancelled.md)).
 - Slice 194 (PR #591): the panel shot is not good enough for the site (guest offline, no voice pack, watermark); retake it with the voice pack copied ... [full text](docs/plan/notes/2026-10-30-outstanding-detail.md#o002) ([slice](docs/plan/slices/194-control-panel-screenshot-script.md))
