@@ -28,6 +28,9 @@ jobs:
       fail-fast: false
       matrix:
         shell: [pwsh, powershell]
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,37 +43,28 @@ jobs:
           node-version: 22
 
       - name: Flow lint self-test (${{ matrix.shell }})
-        shell: ${{ matrix.shell }}
         run: ./tools/emulator/test-lint-flows.ps1
 
       - name: Lint the Maestro flows (${{ matrix.shell }})
-        shell: ${{ matrix.shell }}
         run: ./tools/emulator/lint-flows.ps1
 
       - name: Emulator lease self-test (${{ matrix.shell }})
-        shell: ${{ matrix.shell }}
         run: ./tools/emulator/test-lease.ps1
 
       - name: Activity limit and emulator health self-test (${{ matrix.shell }})
-        shell: ${{ matrix.shell }}
         run: ./tools/emulator/test-activity.ps1
 
       - name: test-targets self-test (${{ matrix.shell }})
-        shell: ${{ matrix.shell }}
         run: ./tools/test-test-targets.ps1
 
       - name: Phone library self-test (${{ matrix.shell }})
-        shell: ${{ matrix.shell }}
         run: ./tools/phone/test-phone-lib.ps1
 
       - name: Phone tap self-test (${{ matrix.shell }})
-        shell: ${{ matrix.shell }}
         run: ./tools/phone/test-tap.ps1
 
       - name: Phone quoting self-test (${{ matrix.shell }})
-        shell: ${{ matrix.shell }}
         run: ./tools/phone/test-quoting.ps1
 
       - name: Phone timing self-test (${{ matrix.shell }})
-        shell: ${{ matrix.shell }}
         run: ./tools/phone/test-timing.ps1
