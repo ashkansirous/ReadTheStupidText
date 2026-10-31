@@ -257,6 +257,7 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 205 | Dino Windows head: the Reading speed row and the page-turn VM check (Slice 188 follow-up) | built | #645 |  | [205-dino-windows-reading-speed-and-page-turn-checks.md](../slices/205-dino-windows-reading-speed-and-page-turn-checks.md) |
 | 214 | RTST phone: the first read after a cold start takes 7 s (S21 AOT; first synthesis 5.9 s): find warm-up vs length, then fix to under 2 s | built | #647 |  | [214-rtst-phone-cold-first-audio.md](../slices/214-rtst-phone-cold-first-audio.md) |
 | 209 | Test hooks: set-language, set-voice, set-translate, and a staged Dino book update for the Slice 181 timing | built | #644 |  | [209-settings-and-book-update-test-hooks.md](../slices/209-settings-and-book-update-test-hooks.md) |
+| 208 | Paused pack downloads tell you ("Download paused. Tap to finish.") and half-finished packs finish or are deleted at launch (Slice 183 follow-up) | built | #646 | — | [208-paused-pack-downloads-tell-you-and-finish.md](../slices/208-paused-pack-downloads-tell-you-and-finish.md) |
 
 
 ## Batch lane-order paragraphs moved from plan.md (2026-10-30)

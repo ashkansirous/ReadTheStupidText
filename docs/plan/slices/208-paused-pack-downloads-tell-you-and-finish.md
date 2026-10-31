@@ -1,6 +1,6 @@
 ### Slice 208 — Paused pack downloads tell you, and half-finished ones finish
 
-*Built 2026-10-31, not merged; device checks mostly not yet run (see Not yet verified).* Planned 2026-10-30. Follow-up to Slice 183, from the S21 night runs (docs/plan/notes/2026-10-29-s21-night-runs.md).
+*Built 2026-10-31, merged as PR #646 (f34b42a); device checks mostly not yet run (see Not yet verified).* Planned 2026-10-30. Follow-up to Slice 183, from the S21 night runs (docs/plan/notes/2026-10-29-s21-night-runs.md).
 
 **Touches:** `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/PackDownloadService.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidPackKeepAlive.cs`, `src/ReadTheStupidText.Mobile.Shared/PackDownloadHost.cs`, `src/ReadTheStupidText.Mobile.Shared/Network/PackResumeWatcher.cs`, `src/ReadTheStupidText.Application/Reading/PackResumeCoordinator.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosBackgroundDownloader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/*Notification*.cs` (new), `src/ReadTheStupidText.Mobile/App.xaml.cs`, `src/ReadTheStupidText.Mobile/OcrPackInstaller.cs`, `src/ReadTheStupidText.Mobile.Shared/VoicePackInstaller.cs`, `src/ReadTheStupidText.Application/Translation/TranslationPackInstaller.cs`, `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/StoryLanguages.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `tests/ReadTheStupidText.Tests/**`, `.maestro/**`, `docs/plan/slices/208-paused-pack-downloads-tell-you-and-finish.md`, `src/ReadTheStupidText.Mobile.Shared/MobileVoicePackService.cs`, `src/ReadTheStupidText.Mobile.Shared/StalePartialPolicy.cs`, `tools/phone/**`
 
@@ -102,7 +102,7 @@ Two frames in `docs/design/rtst-phone/Batch 42 Updates and Paused Downloads.dc.h
 - Medium (reviews/s208-medium.md): applied 1, 2, 3, 4, 6, 8. Skipped 5: Android posts the paused notice only on the time-limit stop by design, since an OS kill cannot post. Skipped 7 and 9: style.
 - Checks: builds green including the iOS compile of both apps; both unit suites; `tools/phone` self-tests. Emulator: the stale-partial-launch flow passed on rerun (the first cold run after install deleted the partial but the marker was not seen within 40 s; not diagnosed).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-31)
 
 - Phone checks never cut the network link they are driven over: on a wireless adb serial block only the app (`cmd netpolicy add restrict-background-blacklist <uid>`), start a detached device-side restore first; `tools/phone/` refuses whole-device cuts on wireless serials. Put it in `tools/CLAUDE.md`. (Slice 208: docs/plan/slices/208-paused-pack-downloads-tell-you-and-finish.md)
 
