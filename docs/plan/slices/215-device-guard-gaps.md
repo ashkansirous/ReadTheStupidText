@@ -1,6 +1,6 @@
 # Slice 215: close the gaps left by Slices 207 and 212
 
-*Built (night run 2026-10-31), not merged. Both review passes done; emulator checks pass; the VM site-image retake is not done (see Not yet verified).* Follow-up to Slices 207 and 212. Tooling, plus one app id.
+*Built (night run 2026-10-31), merged as PR #639 (a28f339). Both review passes done; emulator checks pass; the VM site-image retake is not done (see Not yet verified).* Follow-up to Slices 207 and 212. Tooling, plus one app id.
 
 **Touches:** `src/ReadTheStupidText.Mobile/ReaderPage.xaml` (one `AutomationId`), `.maestro/**`,
 `tools/emulator/run-flows.ps1`, `tools/emulator/common.ps1`, `tools/emulator/activity.ps1`,
@@ -113,7 +113,7 @@ All 12 items are built except the VM run of item 6 and the site image replacemen
 - Medium finding 3 skipped: renaming the `tools-selftests.yml` matrix check names breaks nothing, since no ruleset requires the old check names.
 - Medium finding 8 skipped: the `.gitattributes` line pin is outside this slice's Touches.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-31)
 
 - `tools/CLAUDE.md`: `run-flows.ps1` checks emulator health (and restarts) before the install check, so a dead `system_server` is never reported as "not installed". `Invoke-DesktopTest.ps1 -WithPack <id>` copies a voice pack into the VM guest for checks that need one. (Slice 215: docs/plan/slices/215-device-guard-gaps.md)
 

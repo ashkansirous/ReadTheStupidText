@@ -42,7 +42,7 @@ aloud (Upload button / tray "Read file…", more file types landing in later sli
 and CI packaging. The app is **published and live on the Microsoft Store**
 ([install it here](https://apps.microsoft.com/detail/9NGT1BN1H92V)).
 The shipped MSIX bundles the .NET runtime (self-contained), so there's nothing to
-install first; see [`STORE.md`](STORE.md) for the Store/deployment details. The Windows app's UI is available in 9 languages. It can also translate what it reads into your language, fully offline (fr/es/pt/zh/ar/ru, plus to English from ja).
+install first; see [`STORE.md`](STORE.md) for the Store/deployment details. The Windows app's UI is available in 9 languages. It can also translate what it reads into your language, fully offline (fr/es/pt/zh/ar/ru, plus to English from ja). It asks you to update when your version is too old.
 
 ## Reading from the console & other apps (important)
 

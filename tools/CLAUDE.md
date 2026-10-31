@@ -17,3 +17,6 @@ Rules for the device-test tooling (`tools/emulator`, `tools/phone`, `tools/deskt
 (Slice 180: docs/plan/slices/180-faster-device-tests.md)
 
 - RTST Debug launch hooks live in `src/ReadTheStupidText.Mobile/Testing/RtstTestCommands.cs` (module initializer, like `DinoTestCommands`). `translation-waits-for-internet` needs a clean install and first-run, because it has no clearState. (Slice 211: docs/plan/slices/211-play-before-detection-waits-for-it.md)
+- `run-flows.ps1` checks emulator health (and restarts) before the install check, so a dead `system_server` is never reported as "not installed". `Invoke-DesktopTest.ps1 -WithPack <id>` copies a voice pack into the VM guest for checks that need one. (Slice 215: docs/plan/slices/215-device-guard-gaps.md)
+- Pass `audio-timing.ps1 -Rates` as one comma list (`-Rates 1,1.5`), which works in any shell; the script splits it itself. (Slice 216: docs/plan/slices/216-phone-tooling-leftovers.md)
+- run-checks has one budget clock (`Get-BudgetStart` / `New-BudgetClock`); lease wait, quiet wait and elapsed time all read it, so never add a second start time. (Slice 216: docs/plan/slices/216-phone-tooling-leftovers.md)

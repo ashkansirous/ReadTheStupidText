@@ -1,6 +1,6 @@
 ### Slice 216 — Phone tooling leftovers from the Slice 213 runs
 
-*Built 2026-10-31 (night run), not merged; S21 checks for items 1, 2 and notification-text passed, item 11 not yet re-run.* Findings from the 2026-10-30 S21 runs that no slice owned. Tooling only, except item 1 if it turns out to be an app bug.
+*Built 2026-10-31 (night run), merged as PR #637 (1a444ac); S21 checks for items 1, 2 and notification-text passed, item 11 not yet re-run.* Findings from the 2026-10-30 S21 runs that no slice owned. Tooling only, except item 1 if it turns out to be an app bug.
 
 **Touches:** `tools/phone/**`, `tools/lease-common.ps1` (corrupt-lease wording), `tools/CLAUDE.md`, `tools/emulator/build-cache.ps1` (widened by the coordinator, 2026-10-30; was: `tools/phone/audio-timing.ps1`, `tools/phone/run-checks.ps1`, `tools/phone/common.ps1`, `tools/emulator/build-cache.ps1`, `tools/phone/README.md`, `tools/CLAUDE.md`, `src/ReadTheStupidText.Mobile.Shared/**` (only if item 1 is an app bug), `docs/plan/slices/216-phone-tooling-leftovers.md`), plus `tools/lease-common.ps1` and `tools/CLAUDE.md` as named by the coordinator
 
@@ -78,7 +78,7 @@
 - `tools-selftests.yml` now runs `test-phone-leftovers.ps1`.
 - Seen twice: `run-checks` skips with "installed variant unknown" until `-Reinstall` on a fresh night.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-31)
 - `tools/CLAUDE.md`: pass `audio-timing.ps1 -Rates` as one comma list (`-Rates 1,1.5`), which works in any shell; the script splits it itself. (Slice 216: docs/plan/slices/216-phone-tooling-leftovers.md)
 - `tools/CLAUDE.md`: run-checks has one budget clock (`Get-BudgetStart` / `New-BudgetClock`); lease wait, quiet wait and elapsed time all read it, so never add a second start time. (Slice 216: docs/plan/slices/216-phone-tooling-leftovers.md)
 
