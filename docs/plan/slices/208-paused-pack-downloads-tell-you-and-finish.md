@@ -99,7 +99,7 @@ Two frames in `docs/design/rtst-phone/Batch 42 Updates and Paused Downloads.dc.h
 #### From review
 
 - High (reviews/s208-high.md): all 9 findings applied.
-- Medium (reviews/s208-medium.md): applied 1, 2, 3, 4, 6, 8. Skipped 5: Android posts the paused notice only on the time-limit stop by design, since an OS kill cannot post. Skipped 7 and 9: style.
+- Medium (reviews/s208-medium.md): applied 1, 2, 3, 4, 6, 8. Skipped 5: Android posts the paused notice only on the time-limit stop by design, since an OS kill cannot post. Skipped 7 and 9: style. The medium fix rewrote `MobileVoicePackService.DecideAll` (which half-finished packs are deleted at launch) to use `VoicePackSelector` and `OcrPackSelector`; the fixer said the new selection has no unit test (wave-1 digest entry 280). `StalePartialPolicyTests` cover only the pure policy. (Added 2026-10-31 by the feedback loop.)
 - Checks: builds green including the iOS compile of both apps; both unit suites; `tools/phone` self-tests. Emulator: the stale-partial-launch flow passed on rerun (the first cold run after install deleted the partial but the marker was not seen within 40 s; not diagnosed).
 
 #### For CLAUDE.md (lifted 2026-10-31)
@@ -113,3 +113,6 @@ Two frames in `docs/design/rtst-phone/Batch 42 Updates and Paused Downloads.dc.h
 - Dino storyteller first download shows no ask sheet and grown-up Settings shows it once (emulator, not reached).
 - iOS TestFlight hand check.
 - Stale-partial-launch first cold run after install: marker not seen within 40 s (not diagnosed).
+- `DecideAll`'s new selection has no unit test (a data-loss path): the test is Slice 225 item 9.
+- The medium fix's runtime changes, on the S21 list: the paused notice now shows after a time-limit stop and no longer for non-network exceptions; unselected same-language partials and stale pending-ask keys are removed at launch.
+- The reworked `paused-notification` check has never run on any device. Unproven: that Android 15 accepts `cmd netpolicy add restrict-background-blacklist <uid>` (the fixer could not confirm it), and that the detached device-side restore (`nohup sh -c 'sleep 240; ...'`) survives the adb link dropping and undoes the changes. The wave's final message said the phone "undoes the change itself after 4 minutes"; that is built, not shown on a device. (2026-10-31-1301 feedback loop, items 6 and 8)
