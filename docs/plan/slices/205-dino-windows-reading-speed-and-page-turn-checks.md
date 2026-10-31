@@ -1,8 +1,8 @@
 ### Slice 205 — Dino Windows head: the Reading speed row and the page-turn VM check
 
-*Planned 2026-10-30.* Follow-up to Slice 188 (found on the Windows VM, 2026-10-30).
+*In progress (wave 2026-10-31), draft PR.* Planned 2026-10-30. Follow-up to Slice 188 (found on the Windows VM, 2026-10-30).
 
-**Touches:** `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/ReadingPage.xaml.cs` (only the StoryText automation name, if that is the cause), `tools/desktop-vm/checks/dino-settings.ps1`, `tools/desktop-vm/checks/dino-page-turn.ps1`, `docs/plan/slices/205-dino-windows-reading-speed-and-page-turn-checks.md`.
+**Touches:** `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/ReadingPage.xaml.cs` (only the StoryText automation name, if that is the cause), `tools/desktop-vm/checks/dino-settings.ps1`, `tools/desktop-vm/checks/dino-page-turn.ps1`, `docs/plan/slices/205-dino-windows-reading-speed-and-page-turn-checks.md`, `src/DinoReader.App/PageRendering.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/Resources/Strings/*.resx`
 
 #### Why
 
