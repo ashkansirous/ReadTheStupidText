@@ -251,6 +251,9 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 211 | Play right after typing waits for language detection, so it translates and picks the voice like a later Play (Slice 139 follow-up) | built | #633 | | [211-play-before-detection-waits-for-it.md](../slices/211-play-before-detection-waits-for-it.md) |
 | 218 | RTST Microsoft Store submission skipped Windows code changes (no Store build since before 1.74.0) | built | #630 | | [218-microsoft-store-submission-skipped.md](../slices/218-microsoft-store-submission-skipped.md) |
 | 219 | Usage counts drop dev builds below version 1.0 (worker and client) | built | #632 | | [219-usage-drops-dev-versions.md](../slices/219-usage-drops-dev-versions.md) |
+| 216 | Phone tooling leftovers from the Slice 213 runs: a build swap re-downloaded the voice pack (repro first), audio-timing warm repeats labelled cold, build path-length guard, audio-timing log folder | built | #637 |  | [216-phone-tooling-leftovers.md](../slices/216-phone-tooling-leftovers.md) |
+| 217 | RTST forced update from the remote config (port of Dino Slice 132; Android, iOS, Windows tray) | built | #640 |  | [217-rtst-forced-update.md](../slices/217-rtst-forced-update.md) |
+| 215 | Close the gaps left by Slices 207 and 212: status label id, emulator health check and restart, test the one-emulator limit, lint gaps | built | #639 |  | [215-device-guard-gaps.md](../slices/215-device-guard-gaps.md) |
 
 
 ## Batch lane-order paragraphs moved from plan.md (2026-10-30)

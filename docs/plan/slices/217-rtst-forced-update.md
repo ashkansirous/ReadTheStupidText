@@ -1,6 +1,6 @@
 ### Slice 217 — Read The Stupid Text: forced update from the remote config
 
-*Built 2026-10-31 (night run), not merged; Windows forced/soft update, the store button tap on the phone and iOS not yet verified.* Port of Dino Reader's forced update (Slice 132) to Read The Stupid Text, on Android, iOS and the Windows tray app.
+*Built 2026-10-31 (night run), merged as PR #640 (f331d88); Windows forced/soft update, the store button tap on the phone and iOS not yet verified.* Port of Dino Reader's forced update (Slice 132) to Read The Stupid Text, on Android, iOS and the Windows tray app.
 
 **Touches:** `src/ReadTheStupidText.Application/Usage/UsageConfig.cs` (or a new `Application/AppConfig/*` shared with Dino's `DinoReader.Core/AppConfig.cs`), `src/ReadTheStupidText.Mobile.Shared/Usage/RemoteConfigClient.cs`, `src/ReadTheStupidText.Mobile/App.xaml.cs`, `src/ReadTheStupidText.Mobile/UpdatePage*.cs` (new), `src/ReadTheStupidText.Mobile/ReaderPage.xaml`, `src/ReadTheStupidText.Mobile/ReaderPage*.cs` (R15 card; Slice 215 adds one AutomationId to ReaderPage.xaml, accepted overlap), `src/ReadTheStupidText.App/**` (tray: config client and the update prompt), `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*.resx`, `src/ReadTheStupidText.App/Strings/**`, `tests/ReadTheStupidText.Tests/**`, `.maestro/rtst/**`, `docs/plan/slices/217-rtst-forced-update.md`
 
@@ -92,11 +92,11 @@ Four frames in `docs/design/rtst-phone/Batch 42 Updates and Paused Downloads.dc.
 - 8 (skipped): the mock greys the toggles out on purpose.
 - 9 (fixed): a failed first fetch is retried after 1, 2, 5, 10 and 20 minutes and then every 30 minutes until one works.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-31)
 
 - `src/ReadTheStupidText.App/CLAUDE.md`: while an update is required, reads are refused through `IReadGate` inside `ReadAloudService` (hotkey, selection, copy, Play, file, skip); don't add a check in the callers. `READTHESTUPIDTEXT_TEST_APP_CONFIG` (test config for the update check) is read in Debug builds only, so the Release VM package ignores it. (Slice 217: docs/plan/slices/217-rtst-forced-update.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-31)
 
 - Read The Stupid Text asks you to update when your version is too old.
 
