@@ -1,8 +1,10 @@
 ### Slice 227 — Crash and error reports from the phone apps (Dino Reader and RTST, Android and iOS)
 
-*Planned 2026-10-31.* From a friend's iPhone crashing Dino Reader several times on 2026-10-31 and nothing in our data showing why.
+*In progress (claimed 2026-10-31).* Planned 2026-10-31. From a friend's iPhone crashing Dino Reader several times on 2026-10-31 and nothing in our data showing why.
 
 **Touches:** `src/ReadTheStupidText.Application/Crashes/**` (new), `src/ReadTheStupidText.Application/Usage/UsageEligibility.cs`, `src/ReadTheStupidText.Mobile.Shared/Crashes/**` (new), `src/ReadTheStupidText.Mobile.Shared/Usage/UsageGate.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSystemLog.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSystemLog.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/MobileSharedServices.Android.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/MobileSharedServices.iOS.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/Crashes/**` (new), `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/Crashes/**` (new), `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/DinoLog.cs`, `src/DinoReader.App/Platforms/iOS/PrivacyInfo.xcprivacy`, `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `src/ReadTheStupidText.Mobile/App.xaml.cs`, `src/ReadTheStupidText.Mobile/Platforms/iOS/PrivacyInfo.xcprivacy`, `worker/crashes.ts` (new), `worker/crashes.test.mjs` (new), `worker/index.ts`, `worker/download-keys.mjs`, `worker/CLAUDE.md`, `wrangler.jsonc`, `wrangler.workers-dev.jsonc`, `tools/crashes/**` (new), `tests/ReadTheStupidText.Tests/Crashes/**` (new), `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`, `STORE.md`, `docs/plan/slices/227-crash-reports.md`
+
+**Migrations:** none
 
 #### Why
 
