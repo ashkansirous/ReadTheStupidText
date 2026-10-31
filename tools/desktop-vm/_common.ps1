@@ -351,3 +351,63 @@ function Get-PreflightMissing {
     if (($Needs -contains 'voice-pack') -and -not (Test-GuestVoicePack -Session $Session -PackageName $PackageName -PackId $PackId)) { $missing += "voice-pack ($PackId)" }
     return $missing
 }
+
+# ---- Slice 215: a voice pack copied into the offline guest (-WithPack). The VM has no internet by design and the clean checkpoint has no pack, so the app would show "Preparing the voice".
+$script:PackManifestFile = 'pack.json'  # the manifest name PackConstants.ManifestFileName; tools\phone\common.ps1 has its own copy
+$script:PackCatalogFile = 'src\ReadTheStupidText.Application\Reading\PackConstants.cs'
+
+function Get-PackCatalogUrl {
+    # The pinned packs.json URL, read from PackConstants.CatalogUrl so a bump of the pinned release is followed here.
+    $repo = Resolve-Path (Join-Path $PSScriptRoot '..\..')
+    $text = Get-Content (Join-Path $repo $script:PackCatalogFile) -Raw
+    $m = [regex]::Match($text, 'CatalogUrl\s*=\s*"(?<url>[^"]+)"')
+    if (-not $m.Success) { throw "Could not find CatalogUrl in $($script:PackCatalogFile)." }
+    return $m.Groups['url'].Value
+}
+
+function Get-HostPackZip {
+    # The pack's zip from the packs release, downloaded once to <worktrees>\_builds\packs and checked against the catalog's sha256 every time.
+    param([Parameter(Mandatory)] [string] $PackId)
+    $catalog = Invoke-RestMethod -Uri (Get-PackCatalogUrl) -UseBasicParsing
+    $pack = @($catalog | Where-Object { $_.id -eq $PackId }) | Select-Object -First 1
+    if (-not $pack) { throw "-WithPack ${PackId}: the pinned packs.json lists no such pack." }
+    $dir = Join-Path (Join-Path (Get-WorktreesRoot) '_builds') 'packs'
+    $null = New-Item -ItemType Directory -Force $dir
+    $zip = Join-Path $dir "$PackId-$($pack.version).zip"
+    if (-not (Test-Path $zip) -or (Get-FileHash $zip -Algorithm SHA256).Hash -ne $pack.sha256.ToUpperInvariant()) {
+        Write-Host "Downloading the $PackId pack ($([int]($pack.sizeBytes / 1MB)) MB) to $zip (once)..."
+        # The progress bar makes Invoke-WebRequest many times slower on a zip this size (Windows PowerShell 5.1, pwsh before 7.4).
+        $oldProgress = $ProgressPreference
+        $ProgressPreference = 'SilentlyContinue'
+        try { Invoke-WebRequest -Uri $pack.url -OutFile $zip -UseBasicParsing } finally { $ProgressPreference = $oldProgress }
+        if ((Get-FileHash $zip -Algorithm SHA256).Hash -ne $pack.sha256.ToUpperInvariant()) { Remove-Item $zip -Force; throw "-WithPack ${PackId}: the downloaded zip does not match the catalog's sha256." }
+    }
+    return $zip
+}
+
+function Copy-PackToGuest {
+    # Copies the zip into the guest and unpacks it as the unversioned pack layout (pack.json directly in LocalCache\packs\<id>, no `active` file),
+    # which the app reads as installed (PackVersionFolders.Resolve). Run after the install, before the preflight.
+    param([Parameter(Mandatory)] $Session, [Parameter(Mandatory)] [string] $PackageName, [Parameter(Mandatory)] [string] $PackId)
+    $zip = Get-HostPackZip -PackId $PackId
+    $guestZip = "$($script:GuestWorkDir)\pack-$PackId.zip"
+    Write-Host "Copying the $PackId pack into the VM (it stays offline)..."
+    Copy-Item -ToSession $Session -Path $zip -Destination $guestZip
+    Invoke-Command -Session $Session -ArgumentList $PackageName, $PackId, $script:PackSubfolder, $script:PackManifestFile, $guestZip -ScriptBlock {
+        param($name, $pack, $sub, $manifest, $zipPath)
+        $pkgDir = Get-ChildItem (Join-Path $env:LOCALAPPDATA 'Packages') -Directory -Filter "${name}_*" -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $pkgDir) { throw "no Packages\${name}_* folder in the guest: the package is not installed for this user" }
+        $target = Join-Path $pkgDir.FullName "$sub\$pack"
+        Remove-Item $target -Recurse -Force -ErrorAction SilentlyContinue
+        $scratch = "$target.extracting"
+        Remove-Item $scratch -Recurse -Force -ErrorAction SilentlyContinue
+        Expand-Archive -Path $zipPath -DestinationPath $scratch -Force
+        Remove-Item $zipPath -Force
+        # Same rule as the app's installer (LocatePayload): one top-level folder holding the manifest, or a flat zip.
+        $folders = @(Get-ChildItem $scratch -Directory)
+        $payload = if ($folders.Count -eq 1 -and (Test-Path (Join-Path $folders[0].FullName $manifest))) { $folders[0].FullName } else { $scratch }
+        if (-not (Test-Path (Join-Path $payload $manifest))) { Remove-Item $scratch -Recurse -Force; throw "the unpacked $pack has no $manifest at its top level or in its single top-level folder (the zip layout changed?)" }
+        Move-Item $payload $target
+        Remove-Item $scratch -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}

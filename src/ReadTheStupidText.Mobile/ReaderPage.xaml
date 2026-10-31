@@ -71,7 +71,7 @@
             <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
                 <Label Text="{x:Static res:AppResources.App_Name}" TextColor="White" FontSize="17" FontAttributes="Bold" />
                 <!-- Voice pack status (Slice 50): shown only while a pack downloads or needs a retry. -->
-                <Label x:Name="PackStatusLabel" TextColor="#C8FFFFFF" FontSize="11.5" IsVisible="False">
+                <Label x:Name="PackStatusLabel" AutomationId="PackStatusLabel" TextColor="#C8FFFFFF" FontSize="11.5" IsVisible="False">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnPackStatusTapped" />
                     </Label.GestureRecognizers>

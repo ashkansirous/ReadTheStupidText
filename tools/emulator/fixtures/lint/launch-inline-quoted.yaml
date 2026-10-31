@@ -1,0 +1,5 @@
+appId: uk.sirous.readthestupidtext
+---
+- launchApp
+- launchApp: {arguments: {cmd: state, text: "a, b}c"}, stopApp: false}
+- launchApp: {arguments: {cmd: state, text: "x, stopApp: false"}}

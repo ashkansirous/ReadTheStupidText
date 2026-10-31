@@ -4,6 +4,7 @@
   restore 'clean' again. Nothing is installed on, or shown by, the host.
 .EXAMPLE
   .\Invoke-DesktopTest.ps1 -App rtst
+  .\Invoke-DesktopTest.ps1 -App rtst -Check rtst-panel-screenshot -WithPack supertonic-3 -CopyOut D:\ReadTheStupidText-worktrees\_shots   # Slice 215: pack copied into the offline guest
   .\Invoke-DesktopTest.ps1 -App dino -Package D:\path\DinoReader.App_1.0.0.0_x64.msix
   .\Invoke-DesktopTest.ps1 -App auto      # only the apps the change touches (tools/test-targets.ps1), skipped ones are listed
 .NOTES
@@ -27,7 +28,9 @@ param(
     [switch] $KeepRunning,
     [string] $Check,
     [string] $CopyOut,
-    [switch] $SkipPreflight
+    [switch] $SkipPreflight,
+    # Slice 215: copy a host copy of this voice pack (the packs release asset, cached once under <worktrees>\_builds\packs) into the guest app's LocalCache\packs after the install.
+    [string] $WithPack
 )
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot\_common.ps1"
@@ -38,6 +41,7 @@ $script:ActiveVmRoot = $VmRoot
 if ($App -eq 'auto') {
     if ($Package) { throw '-Package names one MSIX; it cannot be combined with -App auto.' }
     if ($Check -or $CopyOut) { throw '-Check and -CopyOut belong to one app; name it with -App rtst or -App dino, not -App auto.' }
+    if ($WithPack) { throw '-WithPack belongs to one app (a pack id is per app); name it with -App rtst or -App dino, not -App auto.' }
     $touched = @(& "$PSScriptRoot\..\test-targets.ps1" -Platform windows -Raw)
     if ($touched.Count -eq 0) { Write-Host 'NO WINDOWS APP IS TOUCHED BY THIS CHANGE: no desktop test ran. That is a skip, not a test pass.'; exit 0 }
     $worst = 0
@@ -124,9 +128,12 @@ function Assert-GuestPreflight {
     # -Only limits it to some needs: the network is tested before the install, the voice pack after it (its folder exists only once the package is installed).
     # The missing items of an earlier call are kept, and -Final throws one NO-GO line listing all of them.
     param($Session, [string[]] $Only = $script:KnownNeeds, [switch] $Final)
-    $needs = @($AppProfile.Checks | ForEach-Object { Get-CheckNeeds "$PSScriptRoot\checks\$_.ps1" } | Select-Object -Unique | Where-Object { $Only -contains $_ })
-    if ($SkipPreflight -or $needs.Count -eq 0) { Write-Host "Preflight ($($Only -join ', ')): $(if ($SkipPreflight) { 'skipped (-SkipPreflight)' } else { 'no check declares a need' })." }
-    else { $script:PreflightMissing += @(Get-PreflightMissing -Session $Session -Needs $needs -PackageName $AppProfile.Name -PackId $script:VoicePackIds[$App]) }
+    # Slice 215: the checks' headers are read once per run (not once per call), and the skip line is printed once, by the first call.
+    if ($null -eq $script:SelectedNeeds) { $script:SelectedNeeds = @($AppProfile.Checks | ForEach-Object { Get-CheckNeeds "$PSScriptRoot\checks\$_.ps1" } | Select-Object -Unique) }
+    $needs = @($script:SelectedNeeds | Where-Object { $Only -contains $_ })
+    $skipped = $SkipPreflight -or $script:SelectedNeeds.Count -eq 0
+    if ($skipped -and -not $script:PreflightSkipSaid) { Write-Host "Preflight: $(if ($SkipPreflight) { 'skipped (-SkipPreflight)' } else { 'no check declares a need' })."; $script:PreflightSkipSaid = $true }
+    if (-not $skipped -and $needs.Count -gt 0) { $script:PreflightMissing += @(Get-PreflightMissing -Session $Session -Needs $needs -PackageName $AppProfile.Name -PackId $script:VoicePackIds[$App]) }
     if (-not $Final) { return }
     if ($script:PreflightMissing.Count -gt 0) { throw "$($script:PreflightNoGo): $($script:PreflightMissing -join ', ')" }
     Write-Host 'Preflight: ok.'
@@ -160,6 +167,7 @@ try {
     Write-LicenseNote -License (Get-GuestLicense -Session $session)
     $version = Install-InGuest -Session $session -Name $AppProfile.Name
     Write-Host "Installed $($AppProfile.Name) $version in the VM from $msix"
+    if ($WithPack) { Copy-PackToGuest -Session $session -PackageName $AppProfile.Name -PackId $WithPack }  # Slice 215: after the install, before the pack probe
     Assert-GuestPreflight -Session $session -Only @('voice-pack') -Final
     foreach ($check in $AppProfile.Checks) {
         if ($Sabotage -eq 'KillApp' -and $check -ne $AppProfile.Checks[0]) {
