@@ -37,6 +37,7 @@ $script:Catalogue = [ordered]@{
     'cold-start'          = @{ Apps = @('rtst', 'dino'); EstimateSeconds = 240; PerRunSeconds = 80; NeedsPack = $true; Variant = 'aot'; Blocked = $null }
     'highlight'           = @{ Apps = @('rtst'); EstimateSeconds = 120; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
     'notification-text'   = @{ Apps = @('rtst'); EstimateSeconds = 150; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
+    'short-lines'         = @{ Apps = @('dino'); EstimateSeconds = 200; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
     'book-end'            = @{ Apps = @('dino'); EstimateSeconds = 420; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
     'paused-notification' = @{ Apps = @('rtst'); EstimateSeconds = 120; NeedsPack = $false; Variant = 'debug'; Blocked = 'Slice 208 (the paused-playback notification) is not built yet' }
 }
@@ -589,4 +590,52 @@ function New-RunStatus([string]$App, [datetime]$Now, $Builds, $Plans, $Rows, [st
     $buildStates = [ordered]@{}
     foreach ($variant in @($script:VariantDebug, $script:VariantAot)) { $buildStates[$variant] = [ordered]@{ state = $Builds[$variant].State; failure = $Builds[$variant].Failure } }
     return [ordered]@{ app = $App; updatedUtc = (ConvertTo-DeadlineText $Now); installedVariant = $Installed; finished = $Finished; waiting = $Waiting; builds = $buildStates; checks = @($checks) }
+}
+
+# ---- short-lines (Slice 220): the guard's Debug probe line and the retry / rescue / gave-up lines of one read (no text in any of them).
+# `short line probe (voice kokoro:x, 4 chars): plain [samples 0, peak 0.000, voiced ms 0]; dots [samples 9600, peak 0.310, voiced ms 380]; commas [...]`
+function ConvertFrom-ShortLineLog([string[]]$Lines) {
+    $probe = $null; $gaveUp = $false; $rescue = $null; $retries = @()
+    foreach ($line in $Lines) {
+        if ($line -match 'short line probe \(voice [^,]+, (\d+) chars\): plain \[([^\]]*)\]; dots \[([^\]]*)\]; commas \[([^\]]*)\]') {
+            $probe = [pscustomobject]@{ Plain = (ConvertFrom-TakeFacts $Matches[2]); Dots = (ConvertFrom-TakeFacts $Matches[3]); Commas = (ConvertFrom-TakeFacts $Matches[4]) }
+        }
+        elseif ($line -match 'gave up \(voice') { $gaveUp = $true }
+        elseif ($line -match 'silent voice output rescued by (padded )?(take \d|the sibling voice)') { $rescue = ($Matches[1] + $Matches[2]).Trim() }
+        elseif ($line -match 'retry take (\d) \((plain|padded),') { $retries += "$($Matches[1]):$($Matches[2])" }
+    }
+    return [pscustomobject]@{ Probe = $probe; GaveUp = $gaveUp; Rescue = $rescue; Retries = $retries }
+}
+
+# `samples 9600, peak 0.310, voiced ms 380` -> Samples, Peak, VoicedMs; Silent is true when voiced ms is 0 (zero samples, or every sample under the voiced amplitude 0.01).
+function ConvertFrom-TakeFacts([string]$Text) {
+    if ($Text -notmatch 'samples (\d+), peak ([\d.]+), voiced ms (\d+)(?:, density ([\d.]+))?') { return $null }
+    $peak = [double]::Parse($Matches[2], [Globalization.CultureInfo]::InvariantCulture)
+    $density = if ($Matches[4]) { [double]::Parse($Matches[4], [Globalization.CultureInfo]::InvariantCulture) } else { $null }
+    return [pscustomobject]@{ Samples = [int]$Matches[1]; Peak = $peak; VoicedMs = [int]$Matches[3]; Density = $density; Silent = ([int]$Matches[3] -eq 0) }
+}
+
+function Format-TakeFacts($Facts) {
+    if (-not $Facts) { return 'n/a' }
+    $kind = if ($Facts.Samples -eq 0) { 'ZERO SAMPLES' } elseif ($Facts.Silent) { 'ALL-ZERO' } else { 'voiced' }
+    $density = if ($null -ne $Facts.Density) { ", density $($Facts.Density)" } else { '' }
+    return "$($Facts.Samples) smp, peak $($Facts.Peak), $($Facts.VoicedMs) ms$density ($kind)"
+}
+
+function Format-ShortLineRow($Row) {
+    $probe = if ($Row.Probe) { 'plain {0} | dots {1} | commas {2}' -f (Format-TakeFacts $Row.Probe.Plain), (Format-TakeFacts $Row.Probe.Dots), (Format-TakeFacts $Row.Probe.Commas) } else { 'no probe line' }
+    $guard = if ($Row.GaveUp) { 'GAVE UP' } elseif ($Row.Rescue) { "rescued by $($Row.Rescue)" } else { 'first take ok' }
+    return "$probe; $guard; retries $(@($Row.Retries) -join ',')"
+}
+
+# Per take kind: how many probes were silent (voiced ms 0), and how many of those had zero samples. Plain silent and padded voiced together confirm the padding fix.
+function Get-ShortLineSummary($Rows) {
+    $probes = @($Rows | Where-Object { $_.Probe } | ForEach-Object { $_.Probe })
+    if ($probes.Count -eq 0) { return 'no probes' }
+    $parts = foreach ($kind in 'Plain', 'Dots', 'Commas') {
+        $takes = @($probes | ForEach-Object { $_.$kind } | Where-Object { $_ })
+        $silent = @($takes | Where-Object { $_.Silent })
+        "$kind silent $($silent.Count)/$($takes.Count) (zero samples $(@($silent | Where-Object { $_.Samples -eq 0 }).Count))"
+    }
+    return ($parts -join '; ') + "; gave up $(@($Rows | Where-Object { $_.GaveUp }).Count)/$($Rows.Count)"
 }

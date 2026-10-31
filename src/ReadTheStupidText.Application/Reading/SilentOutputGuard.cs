@@ -46,7 +46,8 @@ public static class SilentOutputGuard
     /// </summary>
     public static async Task<RescueResult> RescueAsync(
         string text, string voiceId, double pace, Func<Task<SpokenTake>> generate, Action<string> report,
-        CancellationToken token = default, Func<Task<SpokenTake?>>? fallback = null, Action<string>? debug = null)
+        CancellationToken token = default, Func<Task<SpokenTake?>>? fallback = null, Action<string>? debug = null,
+        Func<Task<SpokenTake>>? paddedGenerate = null)
     {
         SpokenTake best = await generate();
         double bestMs = VoicedMs(best);
@@ -54,12 +55,15 @@ public static class SilentOutputGuard
         for (int attempt = 1; attempt <= ExtraTakes && IsTooShort(bestMs, text, pace); attempt++)
         {
             token.ThrowIfCancellationRequested();
-            SpokenTake take = await generate();
+            // Slice 220: the first retry stays plain (Slice 210 rescued most lines that way); only the later one is padded (see ShortLinePadding).
+            bool padded = paddedGenerate is not null && attempt > 1;
+            debug?.Invoke($"retry take {attempt + 1} ({(padded ? "padded" : "plain")}, voice {voiceId}, {text.Length} chars)");
+            SpokenTake take = await (padded ? paddedGenerate! : generate)();
             double takeMs = VoicedMs(take);
             allMs.Add(takeMs);
             if (!IsTooShort(takeMs, text, pace))
             {
-                report($"silent voice output rescued by take {attempt + 1} (voice {voiceId}, {text.Length} chars, {Measured(allMs, text, pace)})");
+                report($"silent voice output rescued by {(padded ? "padded " : string.Empty)}take {attempt + 1} (voice {voiceId}, {text.Length} chars, {Measured(allMs, text, pace)})");
                 return new RescueResult(take, false);
             }
 
@@ -100,7 +104,7 @@ public static class SilentOutputGuard
     public static async Task<RescueResult> RescueUnitAsync(
         string text, string voiceId, double pace, bool splitPhrases, Func<string, Task<SpokenTake>> generate,
         Action<string> report, CancellationToken token = default, Func<string, Task<SpokenTake?>>? fallback = null,
-        Action<string>? debug = null)
+        Action<string>? debug = null, bool probe = false)
     {
         IReadOnlyList<Phrase> phrases = splitPhrases ? PhraseSplitter.Split(text) : [new Phrase(text, 0)];
         var takes = new List<SpokenTake>();
@@ -108,14 +112,41 @@ public static class SilentOutputGuard
         foreach (Phrase phrase in phrases)
         {
             token.ThrowIfCancellationRequested();
+            bool pad = ShortLinePadding.AppliesTo(voiceId, phrase.Text);
+            if (pad && probe)
+            {
+                await ShortLinePadding.ProbeAsync(phrase.Text, voiceId, generate, debug, token);
+            }
+
             RescueResult one = await RescueAsync(
                 phrase.Text, voiceId, pace, () => generate(phrase.Text), report, token,
-                fallback is null ? null : () => fallback(phrase.Text), debug);
+                fallback is null ? null : () => SiblingTakeAsync(phrase.Text, pad, fallback), debug,
+                pad ? () => PaddedTakeAsync(phrase.Text, generate, debug) : null);
             takes.Add(one.Take);
             gaveUp |= one.GaveUp;
         }
 
         return new RescueResult(takes.Count == 1 ? takes[0] : Join(takes, phrases.Select(p => p.GapAfterMs).ToList()), gaveUp);
+    }
+
+    // The padded retry (Slice 220); its voiced density goes to the debug log (no text), so the phone run can choose a density threshold.
+    private static async Task<SpokenTake> PaddedTakeAsync(string text, Func<string, Task<SpokenTake>> generate, Action<string>? debug)
+    {
+        SpokenTake take = await ShortLinePadding.GenerateAsync(text, ShortLinePadding.DefaultStyle, generate);
+        debug?.Invoke($"padded take voiced density {ShortLinePadding.VoicedDensity(take):0.00} ({text.Length} chars)");
+        return take;
+    }
+
+    // The sibling voice has the same collapse on a short line, so it speaks the padded text too (Slice 220 review).
+    private static async Task<SpokenTake?> SiblingTakeAsync(string text, bool pad, Func<string, Task<SpokenTake?>> fallback)
+    {
+        if (!pad)
+        {
+            return await fallback(text);
+        }
+
+        SpokenTake? take = await fallback(ShortLinePadding.Pad(text, ShortLinePadding.DefaultStyle));
+        return take is null ? null : ShortLinePadding.Trim(take);
     }
 
     // The takes in one clip, a silence after each but the last. A take from another model (the sibling voice) can have
@@ -197,7 +228,7 @@ public static class SilentOutputGuard
 
     // Span between the first and last voiced sample, in ms: a click and a gap in the middle count as speech
     // only as far as they stretch, but a whole-clip near-zero trace stays at ~0.
-    private static double VoicedMs(SpokenTake take)
+    internal static double VoicedMs(SpokenTake take)
     {
         float[] s = take.Samples;
         int first = Array.FindIndex(s, v => Math.Abs(v) > VoicedAmplitude);
@@ -208,5 +239,136 @@ public static class SilentOutputGuard
 
         int last = Array.FindLastIndex(s, v => Math.Abs(v) > VoicedAmplitude);
         return (last - first + 1) * 1000.0 / take.SampleRate;
+    }
+}
+
+/// <summary>How a short line is padded before Kokoro speaks it (Slice 220).</summary>
+public enum ShortLinePadStyle
+{
+    /// <summary>"... text ..." : pause marks either side.</summary>
+    Dots,
+
+    /// <summary>", text," : a comma either side.</summary>
+    Commas,
+}
+
+/// <summary>
+/// Slice 220. On arm64 Kokoro returns truly silent output (voiced ms 0 on every take) for 4-6 character lines
+/// ("Ann.", "Help!"), about one read in five; the emulator never does (Slice 210). Hypothesis: a very short phoneme
+/// sequence makes the model's output length collapse to nothing on arm64. Padding the text with pause marks makes
+/// the sequence longer, and the sound is cut back to the voiced part afterwards. A retry of a silent short Kokoro line
+/// is spoken padded; the voiced-length floor of <see cref="SilentOutputGuard"/> is unchanged.
+/// </summary>
+public static class ShortLinePadding
+{
+    /// <summary>A line with at most this many letters or digits counts as short (not for Chinese, Japanese or Korean text, where a few characters are a whole sentence).</summary>
+    public const int MaxLetters = 8;
+
+    /// <summary>The style the padded retry uses. Dots is a guess made before any phone run (tools/phone/checks/short-lines.ps1 decides; docs/plan/slices/220-...md says so).</summary>
+    public const ShortLinePadStyle DefaultStyle = ShortLinePadStyle.Dots;
+
+    /// <summary>Name of the marker file the phone check creates in the app's temp folder (Android: its cache folder) to switch the probe on.</summary>
+    public const string ProbeMarkerFileName = "rtst-short-line-probe";
+
+    /// <summary>
+    /// True only while the marker file exists in the temp folder: the guard then logs the plain-versus-padded probe
+    /// (3 extra syntheses) for each short Kokoro line. Normal runs, Debug or not, never probe; the probe also needs a debug log sink.
+    /// </summary>
+    public static bool ProbeInThisBuild => File.Exists(Path.Combine(Path.GetTempPath(), ProbeMarkerFileName));
+
+    // Silence kept on each side of the voiced part when the padded take is cut back.
+    private const int TrimMarginMs = 60;
+
+    private const float VoicedAmplitude = 0.01f;
+
+    /// <summary>True for a short line of a Kokoro voice: the only voices that go silent on a short line.</summary>
+    public static bool AppliesTo(string voiceId, string text) =>
+        voiceId.StartsWith(VoiceChoices.KokoroIdPrefix, StringComparison.Ordinal)
+        && !text.Any(IsCjk)
+        && text.Count(char.IsLetterOrDigit) is > 0 and <= MaxLetters;
+
+    // Kana, CJK ideographs and Hangul: one character is a syllable or a word, so the letter count says nothing about length.
+    private static bool IsCjk(char c) => c is >= '぀' and <= 'ヿ' or >= '㐀' and <= '鿿' or >= '가' and <= '힯';
+
+    /// <summary>The text with pause marks either side. Empty or blank text comes back unchanged.</summary>
+    public static string Pad(string text, ShortLinePadStyle style)
+    {
+        string core = text.Trim();
+        if (core.Length == 0)
+        {
+            return text;
+        }
+
+        return style == ShortLinePadStyle.Commas ? $", {core}," : $"... {core} ...";
+    }
+
+    /// <summary>The take cut back to its voiced part plus a short margin; a take with no voiced sample is returned as it is. A lone click stays far below the guard's voiced floor; the share of voiced samples (<see cref="VoicedDensity"/>) is only logged, since no threshold is measured yet.</summary>
+    public static SpokenTake Trim(SpokenTake take)
+    {
+        float[] s = take.Samples;
+        int first = Array.FindIndex(s, v => Math.Abs(v) > VoicedAmplitude);
+        if (first < 0 || take.SampleRate <= 0)
+        {
+            return take;
+        }
+
+        int last = Array.FindLastIndex(s, v => Math.Abs(v) > VoicedAmplitude);
+        int margin = take.SampleRate * TrimMarginMs / 1000;
+        int from = Math.Max(0, first - margin);
+        int to = Math.Min(s.Length, last + 1 + margin);
+        return new SpokenTake(s[from..to], take.SampleRate);
+    }
+
+    /// <summary>The share of samples above the voiced amplitude inside the take's voiced span (0 when there is none). Speech is dense; a click in silence is not.</summary>
+    public static double VoicedDensity(SpokenTake take)
+    {
+        float[] s = take.Samples;
+        int first = Array.FindIndex(s, v => Math.Abs(v) > VoicedAmplitude);
+        if (first < 0)
+        {
+            return 0;
+        }
+
+        int last = Array.FindLastIndex(s, v => Math.Abs(v) > VoicedAmplitude);
+        int voiced = s.Skip(first).Take(last - first + 1).Count(v => Math.Abs(v) > VoicedAmplitude);
+        return (double)voiced / (last - first + 1);
+    }
+
+    /// <summary>One padded take of <paramref name="text"/>, cut back to its voiced part.</summary>
+    public static async Task<SpokenTake> GenerateAsync(string text, ShortLinePadStyle style, Func<string, Task<SpokenTake>> generate) =>
+        Trim(await generate(Pad(text, style)));
+
+    /// <summary>Sample count, peak amplitude and voiced span of a take: what the phone run records per line.</summary>
+    public static string Describe(SpokenTake take)
+    {
+        float peak = take.Samples.Length == 0 ? 0 : take.Samples.Max(Math.Abs);
+        double voiced = SilentOutputGuard.VoicedMs(take);
+        return $"samples {take.Samples.Length}, peak {peak:0.000}, voiced ms {(int)voiced}, density {VoicedDensity(take):0.00}";
+    }
+
+    /// <summary>
+    /// Debug builds only: one independent plain take and one take of each padded style, one log line, never the text.
+    /// The phone run reads these to see what Kokoro returns for the same line, plain and padded.
+    /// </summary>
+    internal static async Task ProbeAsync(string text, string voiceId, Func<string, Task<SpokenTake>> generate, Action<string>? debug, CancellationToken token = default)
+    {
+        if (debug is null)
+        {
+            return;
+        }
+
+        try
+        {
+            SpokenTake plain = await generate(text);
+            token.ThrowIfCancellationRequested();
+            SpokenTake dots = await GenerateAsync(text, ShortLinePadStyle.Dots, generate);
+            token.ThrowIfCancellationRequested();
+            SpokenTake commas = await GenerateAsync(text, ShortLinePadStyle.Commas, generate);
+            debug($"short line probe (voice {voiceId}, {text.Length} chars): plain [{Describe(plain)}]; dots [{Describe(dots)}]; commas [{Describe(commas)}]");
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            debug($"short line probe failed (voice {voiceId}): {e.GetType().Name}");
+        }
     }
 }

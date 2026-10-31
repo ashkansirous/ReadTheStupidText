@@ -33,7 +33,7 @@ Assert-Equal 'a fixed check keeps its estimate' 120 (@(Resolve-CheckSelection @(
 # ---- build cache name and the skip text
 Assert-Equal 'aot platform' 'android-dbg-arm64-aot' (Get-CachePlatform 'aot')
 Assert-Equal 'debug platform' 'android-dbg-arm64' (Get-CachePlatform 'debug')
-Assert-Equal 'every check declares its variant' 'aot,debug,debug,debug,debug' ((($catalogue.Keys | ForEach-Object { $catalogue[$_].Variant })) -join ',')
+Assert-Equal 'every check declares its variant' 'aot,debug,debug,debug,debug,debug' ((($catalogue.Keys | ForEach-Object { $catalogue[$_].Variant })) -join ',')
 Assert-Equal 'cold-start needs aot' 'aot' $plan[0].Variant
 Assert-Equal 'highlight takes any build' 'debug' (@(Resolve-CheckSelection @('highlight') 'rtst' $catalogue))[0].Variant
 
@@ -202,6 +202,22 @@ $listed = @('On screen (text | id | clickable):', '  Read | ReadButton | True', 
 Assert-Equal 'editor holds the typed text' $true (Test-EditorHoldsText $listed 'ReviewEditor' 'The first sentence. The second.')
 Assert-Equal 'an old draft in front is caught' $false (Test-EditorHoldsText $listed 'ReviewEditor' 'The first sentence.')
 Assert-Equal 'no editor on screen' $false (Test-EditorHoldsText @('  Read | ReadButton | True') 'ReviewEditor' 'x')
+
+# ---- short-lines (Slice 220): the probe line and the guard lines of one read
+$probeLog = @(
+    '10-30 12:00:00.100 I/x: retry take 2 (padded, voice kokoro:am_liam, 4 chars)',
+    '10-30 12:00:00.200 W/x: silent voice output rescued by padded take 2 (voice kokoro:am_liam, 4 chars, voiced ms 0/480, needed 90, pace 1.00)',
+    '10-30 12:00:00.300 D/x: short line probe (voice kokoro:am_liam, 4 chars): plain [samples 0, peak 0.000, voiced ms 0]; dots [samples 9600, peak 0.310, voiced ms 380]; commas [samples 24000, peak 0.001, voiced ms 0]')
+$facts = ConvertFrom-ShortLineLog $probeLog
+Assert-Equal 'plain take with zero samples is silent' $true ($facts.Probe.Plain.Silent -and $facts.Probe.Plain.Samples -eq 0)
+Assert-Equal 'padded take voiced ms read' 380 $facts.Probe.Dots.VoicedMs
+Assert-Equal 'all-zero commas take is silent but has samples' $true ($facts.Probe.Commas.Silent -and $facts.Probe.Commas.Samples -eq 24000)
+Assert-Equal 'density is read when present' 0.35 (ConvertFrom-TakeFacts 'samples 10, peak 0.3, voiced ms 5, density 0.35').Density
+Assert-Equal 'rescue by a padded take is named' 'padded take 2' $facts.Rescue
+Assert-Equal 'retry kind is kept' 'True' "$($facts.Retries -contains '2:padded')"
+Assert-Equal 'no give-up' $false $facts.GaveUp
+Assert-Equal 'a gave up line is seen' $true (ConvertFrom-ShortLineLog @('x: silent voice output after 3 takes; gave up (voice kokoro:am_liam, 4 chars, voiced ms 0/0/0)')).GaveUp
+Assert-Equal 'summary counts silent plain takes' $true ((Get-ShortLineSummary @([pscustomobject]@{ Probe = $facts.Probe; GaveUp = $false })) -like 'Plain silent 1/1 (zero samples 1); Dots silent 0/1*')
 
 # ---- a deadline caps an adb call; none leaves it alone
 $now = Get-Date

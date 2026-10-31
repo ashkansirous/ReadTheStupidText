@@ -788,7 +788,8 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             rescue = await SilentOutputGuard.RescueUnitAsync(
                 sentence, voice.Id, pace, SiblingVoice.IsDropProne(voice), phrase => TakeAsync(engine, phrase, voice.SpeakerId, pace),
                 message => _log.Warning(message), token, phrase => SiblingTakeAsync(engine, phrase, voice, pace, slots, token),
-                message => _log.Debug(message));
+                message => _log.Debug(message),
+                probe: ShortLinePadding.ProbeInThisBuild);
         }
         finally
         {
