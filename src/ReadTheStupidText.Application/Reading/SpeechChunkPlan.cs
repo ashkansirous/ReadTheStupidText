@@ -25,6 +25,20 @@ internal static class SpeechChunkPlanner
             .Select(c => new SpeechChunkPlan(c.Text, null, c.SourceStart, c.SourceEnd))
             .ToList();
 
+    /// <summary>The sentence-cache units of the first <paramref name="maxChunks"/> chunks of <paramref name="text"/>: what a phone reader prepares
+    /// ahead (Slice 139) and the units the read then asks the cache for first. Both use this one function with the same policy (Slice 214), so
+    /// the read always starts with exactly the units that were prepared.</summary>
+    public static IReadOnlyList<string> HeadUnits(string text, SpeechTextChunker.HeadPolicy head, int maxChunks)
+    {
+        IReadOnlyList<SpeechChunkPlan> chunks = ForText(text, head);
+        // The cut (Slice 214) turns the first chunk into up to three pieces; the budget is in uncut chunks, so those pieces count as one.
+        int extraPieces = chunks.Count - ForText(text, head with { ShortFirstPiece = false }).Count;
+        return chunks
+            .Take(maxChunks + Math.Max(0, extraPieces))
+            .SelectMany(chunk => SentenceUnits.Split(chunk.Text))
+            .ToList();
+    }
+
     public static IReadOnlyList<SpeechChunkPlan> ForSegments(
         IReadOnlyList<VoicedSegment> segments, SpeechTextChunker.HeadPolicy? head = null)
     {

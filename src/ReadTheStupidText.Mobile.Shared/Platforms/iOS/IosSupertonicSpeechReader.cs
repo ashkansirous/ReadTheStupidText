@@ -41,6 +41,9 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     // The cache makes a two-sentence head cheap (prepared ahead); the shared chunker's default
     // stays one short sentence for a reader without a cache.
     private static readonly SpeechTextChunker.HeadPolicy HeadPolicy = SpeechTextChunker.HeadPolicy.Cached;
+    // Slice 214: a text read (RTST) also cuts a long first sentence short. Preparing a head ahead and the read use this one policy, so
+    // the prepared units are the units the read starts with. Voiced segments (Dino) keep HeadPolicy, uncut.
+    private static readonly SpeechTextChunker.HeadPolicy ReadHeadPolicy = HeadPolicy.WithShortFirstPiece();
 
     private static readonly TimeSpan TimingRaiseInterval = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan SkipAmount = TimeSpan.FromSeconds(10);

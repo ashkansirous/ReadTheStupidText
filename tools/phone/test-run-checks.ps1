@@ -240,6 +240,17 @@ Assert-Equal 'first audio = first CHUNK minus the hook' 2100 $numbers.FirstAudio
 Assert-Equal 'engine ms' 480 $numbers.EngineMs
 Assert-Equal 'first synthesis ms' 400 $numbers.FirstSynthMs
 Assert-Equal 'no chunk yet: no first-audio number' $null (Get-ColdStartNumbers @() 1000.0).FirstAudioMs
+# ---- Slice 214: first-read presets
+Assert-Equal 'preset 1w is one word' 'Hello.' (Resolve-ColdStartText '1w' '').Text
+Assert-Equal 'preset 2s has two sentences' 2 @((Resolve-ColdStartText '2s' '').Text -split '(?<=\.)\s+').Count
+Assert-Equal 'preset 1s has one sentence' 1 @((Resolve-ColdStartText '1s' '').Text -split '(?<=\.)\s+').Count
+Assert-Equal 'no preset = the fixed passage (null text)' $null (Resolve-ColdStartText '' '').Text
+Assert-Equal 'free text wins over a preset' 'Hi there.' (Resolve-ColdStartText '2s' 'Hi there.').Text
+$threw = $false; try { Resolve-ColdStartText '9x' '' | Out-Null } catch { $threw = $true }
+Assert-Equal 'unknown preset throws' $true $threw
+Assert-Equal 'no audio event: no chunk 0 audio length' $null (Get-ColdStartNumbers @() 1000.0).FirstAudioLengthMs
+$audioEvents = @([pscustomobject]@{ Kind = 'audio'; Index = 1; Ms = 999; Time = 1000.5 }, [pscustomobject]@{ Kind = 'audio'; Index = 0; Ms = 2400; Time = 1000.6 })
+Assert-Equal 'chunk 0 audio length is reported' 2400 (Get-ColdStartNumbers $audioEvents 1000.0).FirstAudioLengthMs
 Assert-Equal 'median of three' 2 (Get-Median @(5, 1, 2))
 Assert-Equal 'median of four' 2.5 (Get-Median @(1, 2, 3, 4))
 
