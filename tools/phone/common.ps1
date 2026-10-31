@@ -557,6 +557,25 @@ function New-SentenceCacheClearCommand([string]$Package) {
     return "run-as $Package sh -c 'rm -rf $($script:SentenceCachePath); mkdir -p $($script:SentenceCachePath); ls $($script:SentenceCachePath) | wc -l'"
 }
 
+# Slice 214: evict the phone's file cache so the model files are read from flash (the fresh-install case). Needs root (`su` or `adb root`); a stock phone has none,
+# and then this returns $false and the run is only "force-stop cold". Without root the options are a reinstall (run-checks -Reinstall; packs stay, the new APK files are cold)
+# or a reboot (adb reboot, reconnect over wireless debugging, unlock once), which this script never does by itself.
+$script:DropCacheDoneMarker = 'RTST_DROP_RC='
+$script:DropCachesCommand = 'sync; echo 3 > /proc/sys/vm/drop_caches; echo RTST_DROP_RC=$?'
+function Clear-PageCache([string]$Phone) {
+    foreach ($wrap in @("su -c '$($script:DropCachesCommand)'", "su 0 sh -c '$($script:DropCachesCommand)'", $script:DropCachesCommand)) {
+        try {
+            $out = "$(Invoke-Adb $Phone @('shell', $wrap) 2>&1)"
+            # The phone's own shell prints the exit code of the write (RTST_DROP_RC=<n>): that is the answer, whatever language the error text is in and however adb passes the exit code on.
+            if ($out -match "$([regex]::Escape($script:DropCacheDoneMarker))0") { return $true }
+        } catch {
+            if (Test-PastDeadline (Get-ActiveDeadline) (Get-Date)) { throw }   # the run's budget ended while waiting (a root prompt can hang su): signal it, never swallow it
+            Write-Verbose "drop_caches variant failed: $($_.Exception.Message)"
+        }
+    }
+    return $false
+}
+
 function Clear-SentenceCache([string]$Phone, [string]$Package) {
     $out = @(Invoke-Adb $Phone @('shell', (New-SentenceCacheClearCommand $Package)))
     if ("$($out | Select-Object -Last 1)".Trim() -ne '0') { throw "Could not empty the sentence cache of $Package (run-as said: $($out -join ' | ')): the run would not be cold." }

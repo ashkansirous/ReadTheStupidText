@@ -19,11 +19,50 @@ internal static partial class SpeechTextChunker
     private const int SingleChunkMax = 200;
     private const int TargetChunkMax = 240;
 
+    // Slice 214: the first piece of a read is about 8 spoken words (about 2 s of audio). Cost counts one per spaced word and
+    // CjkCharCost per unspaced Chinese/Japanese character; a clause cut must leave at least FirstPieceMinClauseCost.
+    private const double FirstPieceMaxCost = 8;
+    private const double FirstPieceMinClauseCost = 3;
+    // The second piece is only what is left of the cut sentence, bounded so it is synthesised while piece 1 plays, even at 2x.
+    private const double SecondPieceMaxCost = 16;
+    private const double CjkCharCost = 0.5;
+    private const string ClauseMarks = ".!?,;:–—،؛؟۔、。，！：；？";
+    private const string ClosingMarks = "\"'”’)]»」』）";
+    private const char IdeographicSpace = '\u3000';
+    private const char KanaStart = '\u3040';
+    private const char KanaEnd = '\u30FF';
+    private const char CjkIdeographStart = '\u3400';
+    private const char CjkIdeographEnd = '\u9FFF';
+    private const char CjkCompatStart = '\uF900';
+    private const char CjkCompatEnd = '\uFAFF';
+    private const char FullwidthStart = '\uFF00';
+    private const char FullwidthEnd = '\uFF60';
+    private const char HalfwidthKatakanaStart = '\uFF66';
+    private const char HalfwidthKatakanaEnd = '\uFF9F';
+    // Scripts written without spaces between words (Thai, Lao, Burmese, Khmer): a cut falls between characters, so about four characters a word.
+    private const char BurmeseStart = '\u1000';
+    private const char BurmeseEnd = '\u109F';
+    private const char KhmerStart = '\u1780';
+    private const char KhmerEnd = '\u17FF';
+    private const char ThaiStart = '\u0E00';
+    private const char LaoEnd = '\u0EFF';
+    private const double SeaCharCost = 0.25;
+    private const char ThaiLeadingVowelStart = '\u0E40';
+    private const char ThaiLeadingVowelEnd = '\u0E44';
+    private const char LaoLeadingVowelStart = '\u0EC0';
+    private const char LaoLeadingVowelEnd = '\u0EC4';
+    private const char BurmeseVirama = '\u1039';
+    private const char KhmerCoeng = '\u17D2';
+    private static readonly HashSet<string> Abbreviations = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "mr.", "mrs.", "ms.", "dr.", "prof.", "st.", "e.g.", "i.e.", "etc.", "vs.",
+    };
+
     /// <summary>How long the first chunk may be: at most <see cref="MaxSentences"/> sentences
     /// and <see cref="MaxChars"/> characters. The first chunk is what the listener waits on, so
     /// the default stays short; a reader that has the sentence cache (Slice 47) is prepared
     /// ahead and passes <see cref="Cached"/>.</summary>
-    public readonly record struct HeadPolicy(int MaxSentences, int MaxChars)
+    public readonly record struct HeadPolicy(int MaxSentences, int MaxChars, bool ShortFirstPiece = false)
     {
         /// <summary>Two sentences, at most 120 characters (the reader without a cache): Decision 147 settles
         /// the earlier one-versus-two mismatch with Decision 66 at two.</summary>
@@ -32,6 +71,11 @@ internal static partial class SpeechTextChunker
         /// <summary>Two sentences, at most 200 characters: the head is split back into
         /// sentences for the cache, which is prepared ahead.</summary>
         public static HeadPolicy Cached { get; } = new(2, 200);
+
+        /// <summary>The same policy for the read itself (Slice 214): the first piece is also cut to about 8 spoken words, so a long
+        /// first sentence does not make the first synthesis slow. RTST text reads only (Dino keeps its policy); preparing a head ahead uses the same policy,
+        /// so the prepared units are the read's first units.</summary>
+        public HeadPolicy WithShortFirstPiece() => this with { ShortFirstPiece = true };
     }
 
     /// <summary>
@@ -84,7 +128,8 @@ internal static partial class SpeechTextChunker
     // is chunked on its own and is not biased (the listener no longer waits on it).
     private static IReadOnlyList<string> SplitAfterFirst(string first, string trimmed, HeadPolicy? head)
     {
-        var chunks = new List<string> { first };
+        // The hint is cut like any first chunk (Slice 214), through the same function the early start used to prepare it.
+        var chunks = new List<string>(head?.ShortFirstPiece == true ? ShortenFirstPiece(new[] { first }) : new[] { first });
         string rest = trimmed[first.Length..].Trim();
         if (rest.Length > 0)
         {
@@ -95,6 +140,12 @@ internal static partial class SpeechTextChunker
     }
 
     private static IReadOnlyList<string> SplitPlain(string trimmed, bool biasFirstChunk, HeadPolicy? head)
+    {
+        IReadOnlyList<string> chunks = SplitUnbiasedTail(trimmed, biasFirstChunk, head);
+        return biasFirstChunk && head?.ShortFirstPiece == true ? ShortenFirstPiece(chunks) : chunks;
+    }
+
+    private static IReadOnlyList<string> SplitUnbiasedTail(string trimmed, bool biasFirstChunk, HeadPolicy? head)
     {
         if (trimmed.Length <= SingleChunkMax)
         {
@@ -118,6 +169,126 @@ internal static partial class SpeechTextChunker
         }
 
         return chunks;
+    }
+
+    // Slice 214: first audio scales with the first piece's audio length (about 0.5 s + 0.26 s per audio second on the S21), so the
+    // first piece is cut to about FirstPieceMaxCost words (about 2 s of speech) when it is longer.
+    private static IReadOnlyList<string> ShortenFirstPiece(IReadOnlyList<string> chunks)
+    {
+        string first = chunks[0];
+        int cut = FirstPieceCut(first, FirstPieceMaxCost);
+        if (cut <= 0 || cut >= first.Length || first[cut..].Trim().Length == 0)
+        {
+            return chunks;
+        }
+
+        var result = new List<string>(chunks.Count + 2) { first[..cut].Trim() };
+        string rest = first[cut..].Trim();
+        int second = FirstPieceCut(rest, SecondPieceMaxCost);
+        if (second > 0 && second < rest.Length && rest[second..].Trim().Length > 0)
+        {
+            result.Add(rest[..second].Trim());
+            rest = rest[second..].Trim();
+        }
+
+        result.Add(rest);
+        result.AddRange(chunks.Skip(1));
+        return result;
+    }
+
+    /// <summary>Where the first piece of <paramref name="text"/> ends: the whole text (or -1) when it is within about
+    /// <paramref name="maxCost"/> spoken words; otherwise just after the last clause end (sentence end, comma, semicolon,
+    /// colon, dash) that leaves at least <see cref="FirstPieceMinClauseCost"/> words, else at the last word boundary within the cap.
+    /// Unspaced Chinese and Japanese cost <see cref="CjkCharCost"/> per character.</summary>
+    internal static int FirstPieceCut(string text, double maxCost = FirstPieceMaxCost)
+    {
+        double cost = 0;
+        int lastWord = -1;
+        int lastClause = -1;
+        for (int i = 0; i < text.Length; i++)
+        {
+            char c = text[i];
+            bool startsWord = !char.IsWhiteSpace(c) && (i == 0 || char.IsWhiteSpace(text[i - 1]));
+            double unitCost = IsSoutheastAsianScript(c) ? SeaCharCost : IsUnspacedScript(c) ? CjkCharCost : (startsWord ? 1 : 0);
+            if (cost + unitCost > maxCost && lastWord > 0)
+            {
+                return lastClause > 0 ? lastClause : lastWord;
+            }
+
+            cost += unitCost;
+            if (IsWordEnd(text, i))
+            {
+                lastWord = i + 1;
+            }
+
+            int clauseEnd = cost >= FirstPieceMinClauseCost ? ClauseEndAfter(text, i) : -1;
+            if (clauseEnd > 0)
+            {
+                lastClause = clauseEnd;
+            }
+        }
+
+        return -1;
+    }
+
+    private static bool IsSoutheastAsianScript(char c) =>
+        c is >= ThaiStart and <= LaoEnd or >= BurmeseStart and <= BurmeseEnd or >= KhmerStart and <= KhmerEnd;
+
+    private static bool IsUnspacedScript(char c) =>
+        c is >= KanaStart and <= KanaEnd or >= CjkIdeographStart and <= CjkIdeographEnd or >= CjkCompatStart and <= CjkCompatEnd
+            or >= HalfwidthKatakanaStart and <= HalfwidthKatakanaEnd
+        || IsSoutheastAsianScript(c)
+        || (c >= FullwidthStart && c <= FullwidthEnd && !ClauseMarks.Contains(c));
+
+    private static bool IsWordEnd(string text, int i) =>
+        !char.IsHighSurrogate(text[i]) && !char.IsWhiteSpace(text[i])
+        && (i + 1 == text.Length || char.IsWhiteSpace(text[i + 1]) || IsUnspacedScript(text[i + 1]) || IsUnspacedScript(text[i]))
+        && !CannotEndPiece(text, i);
+
+    // A cut never falls inside a syllable: before a combining mark (vowel signs, tone marks), after a leading vowel (Thai, Lao) or a stacking sign.
+    private static bool CannotEndPiece(string text, int i)
+    {
+        char c = text[i];
+        bool leading = c is >= ThaiLeadingVowelStart and <= ThaiLeadingVowelEnd or >= LaoLeadingVowelStart and <= LaoLeadingVowelEnd;
+        bool stacking = c is BurmeseVirama or KhmerCoeng;
+        bool markFollows = i + 1 < text.Length && char.GetUnicodeCategory(text[i + 1]) is
+            System.Globalization.UnicodeCategory.NonSpacingMark or System.Globalization.UnicodeCategory.SpacingCombiningMark;
+        return leading || stacking || markFollows;
+    }
+
+    // The offset just after a clause end at i (a clause mark, plus any closing quote or bracket after it), or -1. A mark must be
+    // followed by whitespace or the end (so "1,000" is no clause end) and a full stop after an abbreviation or initial is not one.
+    private static int ClauseEndAfter(string text, int i)
+    {
+        char c = text[i];
+        if (!ClauseMarks.Contains(c))
+        {
+            return -1;
+        }
+
+        int end = i + 1;
+        while (end < text.Length && ClosingMarks.Contains(text[end]))
+        {
+            end++;
+        }
+
+        bool cjkMark = c >= IdeographicSpace;
+        bool boundary = cjkMark || end == text.Length || char.IsWhiteSpace(text[end]);
+        return boundary && !(c == '.' && EndsAbbreviation(text, i)) ? end : -1;
+    }
+
+    // "Mr.", "e.g.", "U.S." or a single-letter initial such as "J.": the word that ends in the full stop at i.
+    private static bool EndsAbbreviation(string text, int i)
+    {
+        int start = i;
+        while (start > 0 && !char.IsWhiteSpace(text[start - 1]))
+        {
+            start--;
+        }
+
+        string word = text[start..(i + 1)].TrimStart('(', '[', '"', '\'', '“', '‘');
+        bool initial = word.Length == 2 && char.IsLetter(word[0]) && word[0] != 'I'; // "I." ends a sentence ("So do I.")
+        return initial || Abbreviations.Contains(word) || DottedLetters().IsMatch(word); // "U.S.", "a.m."; not "Wait..." or "file.txt." 
     }
 
     /// <summary>One chunk plus the span of the original (untrimmed) text it came
@@ -453,6 +624,9 @@ internal static partial class SpeechTextChunker
 
     [GeneratedRegex(@"\r?\n\s*\r?\n")]
     private static partial Regex ParagraphBreak();
+
+    [GeneratedRegex(@"^(\p{L}\.){2,}$")]
+    private static partial Regex DottedLetters();
 
     // CJK terminators split without a space, but closing quotes and brackets after one stay
     // with the sentence they end, and a run of terminators stays together.
