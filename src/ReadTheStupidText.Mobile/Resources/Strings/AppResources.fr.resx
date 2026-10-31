@@ -150,4 +150,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Autorisez les notifications pour que la voix continue de se télécharger quand le téléphone est verrouillé ou que vous utilisez d'autres applications. Vous y verrez la progression.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Pas maintenant</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Continuer</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>Téléchargement de la voix {0} ({1} Mo)… {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Téléchargement en pause. Touchez pour terminer.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>Voix {0} ({1} Mo)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>Voix {0} ({1} Mo) · {2} % terminé</value></data>
 </root>

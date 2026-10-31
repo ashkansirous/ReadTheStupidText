@@ -398,4 +398,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Permite las notificaciones para que la voz siga descargándose mientras el teléfono está bloqueado o usas otras aplicaciones. Verás el progreso ahí.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Ahora no</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Continuar</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>Preparando la voz {0} ({1} MB) · {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Descarga en pausa. Toca para terminar.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>Voz {0} ({1} MB)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>Voz {0} ({1} MB) · {2} % completado</value></data>
 </root>

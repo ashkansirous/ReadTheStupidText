@@ -150,4 +150,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>اسمح بالإشعارات لمتابعة تنزيل الصوت أثناء قفل الهاتف أو استخدام تطبيقات أخرى. ستشاهد التقدم هناك.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>ليس الآن</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>متابعة</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>جارٍ تنزيل صوت {0} ({1} ميغابايت)… {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>توقف التنزيل مؤقتًا. اضغط للإكمال.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>صوت {0} ({1} ميغابايت)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>صوت {0} ({1} ميغابايت) · اكتمل {2}%</value></data>
 </root>

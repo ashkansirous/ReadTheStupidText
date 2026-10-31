@@ -399,4 +399,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Allow notifications so the voice keeps downloading while the phone is locked. You will see the progress there.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Not now</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Continue</value></data>
+  <!-- Slice 208 -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>Getting the {0} voice ready ({1} MB) · {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Download paused. Tap to finish.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>{0} voice ({1} MB)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0} voice ({1} MB) · {2}% done</value></data>
 </root>

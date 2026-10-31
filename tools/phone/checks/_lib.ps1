@@ -42,7 +42,7 @@ $script:Catalogue = [ordered]@{
     'translate'           = @{ Apps = @('rtst'); EstimateSeconds = 150; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
     'voice'               = @{ Apps = @('rtst'); EstimateSeconds = 90; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
     'book-update'         = @{ Apps = @('dino'); EstimateSeconds = 240; NeedsPack = $false; Variant = 'debug'; Blocked = $null }
-    'paused-notification' = @{ Apps = @('rtst'); EstimateSeconds = 120; NeedsPack = $false; Variant = 'debug'; Blocked = 'Slice 208 (the paused-playback notification) is not built yet' }
+    'paused-notification' = @{ Apps = @('rtst'); EstimateSeconds = 240; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
 }
 
 # One row per requested check, in order, duplicates dropped: Status Pending (runs) or Skipped with the reason. An unknown name throws and lists the known ones.
@@ -260,8 +260,10 @@ function Test-RecordNamesPack([string]$Raw, $Names) {
     return $false
 }
 
-# TODO(Slice 208): the app's download text does not name the pack yet. When Slice 208 adds the pack name to the notification, flip this to $true so the PASS rule also requires it.
-$script:ExpectPackNameInNotification = $false
+# Slice 208: the download text names the pack's language and size ("Downloading the English voice (63 MB)... 12%"), so the PASS rule also requires it.
+# The names to look for are the language names the check passes in (not the pack id), and the size is "<n> MB".
+$script:ExpectPackNameInNotification = $true
+$script:SizePattern = '\(\d+ MB\)'
 
 # The notification the download just posted: a record of the dev package posted at or after $SinceMs (phone epoch ms; a record with no post time in the dump never counts: it
 # could be left over from an earlier run) whose title or text has a percentage. Matched by package and post time, not by pack name, unless ExpectPackNameInNotification (Slice 208) is on.
@@ -270,7 +272,7 @@ function Select-PostedProgressNotification($Records, [int64]$SinceMs, $PackNames
     $pool = @(@($Records) | Where-Object {
         $_.PostTime -gt 0 -and $_.PostTime -ge $SinceMs -and ("$($_.Title) $($_.Text)" -match $script:PercentPattern)
     })
-    if ($ExpectPackName) { $pool = @($pool | Where-Object { Test-RecordNamesPack $_.Raw @($PackNames | Where-Object { $_ }) }) }
+    if ($ExpectPackName) { $pool = @($pool | Where-Object { ($_.Raw -match $script:SizePattern) -and (Test-RecordNamesPack $_.Raw @($PackNames | Where-Object { $_ })) }) }
     return ($pool | Sort-Object -Property @{ Expression = 'PostTime'; Descending = $true }, @{ Expression = 'Order'; Descending = $true } | Select-Object -First 1)
 }
 

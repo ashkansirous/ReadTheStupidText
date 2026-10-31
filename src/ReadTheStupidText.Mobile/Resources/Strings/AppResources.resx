@@ -150,4 +150,9 @@
   <data name="Language_StartReading" xml:space="preserve"><value>Start reading</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Voice {0} (woman)</value></data>
   <data name="Voice_NbMan" xml:space="preserve"><value>Voice {0} (man)</value></data>
+  <!-- Slice 208 -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>Downloading the {0} voice ({1} MB)… {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Download paused. Tap to finish.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>{0} voice ({1} MB)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0} voice ({1} MB) · {2}% done</value></data>
 </root>

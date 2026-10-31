@@ -18,6 +18,16 @@ public static class PackDownloadGate
         return new Releaser(gate);
     }
 
+    /// <summary>
+    /// Takes the gate of <paramref name="packId"/> only if nobody holds it: null when a download is in flight (or another caller holds it, and so queued
+    /// callers sit behind it). Dispose the result to release. Used by the launch scan (Slice 208) so a delete and a start cannot interleave.
+    /// </summary>
+    public static IDisposable? TryEnter(string packId)
+    {
+        SemaphoreSlim gate = Gates.GetOrAdd(packId, _ => new SemaphoreSlim(1, 1));
+        return gate.Wait(0) ? new Releaser(gate) : null;
+    }
+
     private sealed class Releaser(SemaphoreSlim gate) : IDisposable
     {
         private int _released;

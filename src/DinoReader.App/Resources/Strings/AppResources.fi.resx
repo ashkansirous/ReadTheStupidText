@@ -397,4 +397,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Salli ilmoitukset, jotta ääni latautuu edelleen puhelimen ollessa lukittuna tai käyttäessäsi muita sovelluksia. Näet edistymisen siellä.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Ei nyt</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Jatka</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>Valmistellaan {0}-ääntä ({1} Mt) · {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Lataus keskeytetty. Viimeistele napauttamalla.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>{0}-ääni ({1} Mt)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-ääni ({1} Mt) · {2} % valmis</value></data>
 </root>

@@ -399,4 +399,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Erlaube Benachrichtigungen, damit die Stimme weiter heruntergeladen wird, während das Telefon gesperrt ist oder du andere Apps nutzt. Dort siehst du den Fortschritt.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Nicht jetzt</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Weiter</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>{0}-Stimme wird vorbereitet ({1} MB) · {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Download pausiert. Zum Fertigstellen tippen.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>{0}-Stimme ({1} MB)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-Stimme ({1} MB) · {2} % fertig</value></data>
 </root>

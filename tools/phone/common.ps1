@@ -615,3 +615,36 @@ function ConvertTo-RateList($Rates) {
         $rate
     }
 }
+
+# Slice 208 (S21 offline 2026-10-31 ~13:57): a check once ran `svc wifi disable` while the only adb link was wireless, so its finally block could never put wifi back.
+# Rule: a check never cuts the link it is driven over. Whole-device network cuts are refused on a wireless serial; checks cut one app's network instead.
+function Assert-WholeDeviceNetworkCutAllowed([string]$Serial) {
+    if ($Serial -match $script:WirelessPattern) { throw "refused: cutting the whole device's wifi/data over the wireless adb link '$Serial' would cut the link itself and strand the phone offline. Cut the dev app's network instead (Set-AppNetworkBlocked)." }
+}
+
+# The seconds a device-side restore waits before it heals a cut by itself (no adb needed).
+$script:DeviceRestoreSeconds = 240
+
+# The shell text that undoes an app network cut and a lowered dataSync timeout, run ON the phone by a detached `sh`. Pure: unit-tested.
+function Get-DeviceRestoreScript([string]$Package, [int]$Uid, [int]$Seconds) {
+    $undo = "cmd netpolicy remove restrict-background-blacklist $Uid; device_config delete activity_manager data_sync_fgs_timeout_duration; am compat reset FGS_INTRODUCE_TIME_LIMITS $Package"
+    return "sleep $Seconds; $undo"
+}
+
+# Starts the detached restore BEFORE any cut, so a lost link heals on its own. The check's finally block still restores over adb as the fast path.
+function Start-DeviceRestore([string]$Serial, [string]$Package, [int]$Uid, [int]$Seconds) {
+    $script = Get-DeviceRestoreScript $Package $Uid $Seconds
+    Invoke-Adb $Serial @('shell', "nohup sh -c '$script' >/dev/null 2>&1 &") | Out-Null
+}
+
+function Get-PackageUid([string]$Serial, [string]$Package) {
+    $line = "$(Invoke-Adb $Serial @('shell', 'pm', 'list', 'packages', '-U', $Package) | Where-Object { $_ -match "package:$([regex]::Escape($Package))\s+uid:(\d+)" } | Select-Object -First 1)"
+    if ($line -notmatch 'uid:(\d+)') { throw "Could not read the uid of $Package (pm list packages -U said '$line')." }
+    return [int]$Matches[1]
+}
+
+# Blocks (or frees) one app's background network through `cmd netpolicy ... restrict-background-blacklist <uid>`; wifi, mobile data and the adb link are untouched.
+function Set-AppNetworkBlocked([string]$Serial, [int]$Uid, [bool]$Blocked) {
+    $verb = if ($Blocked) { 'add' } else { 'remove' }
+    Invoke-Adb $Serial @('shell', 'cmd', 'netpolicy', $verb, 'restrict-background-blacklist', "$Uid") | Out-Null
+}

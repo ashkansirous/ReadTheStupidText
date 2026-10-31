@@ -10,10 +10,11 @@ namespace ReadTheStupidText.Mobile.Shared;
 /// promise to call StartForeground that a fast-ending download could break) and only for a cold start while the app is visible (a running service, even in its grace period, is simply joined); a start the
 /// system refuses only means no notification, and the download runs as before.
 /// </summary>
-internal sealed class AndroidPackKeepAlive : IPackKeepAlive
+internal sealed class AndroidPackKeepAlive : IPackKeepAlive, IPackPausedNotifier
 {
     private static readonly object Gate = new();
     private static readonly Dictionary<string, double> Active = new();
+    private static readonly HashSet<string> TimedOut = new(); // packs registered when the dataSync time limit stopped the service; a run of such a pack that then fails owes a "paused" notice
     private static PackDownloadService? _service;
     private static int _lastPercent = -1;
     private static int _graceGeneration;
@@ -24,6 +25,7 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive
         lock (Gate)
         {
             Active[packId] = 0;
+            TimedOut.Remove(packId); // a new run: an older time limit no longer says anything about it
             _graceGeneration++; // a pending grace stop no longer applies
             serviceRunning = _service is not null;
         }
@@ -73,7 +75,7 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive
         }
         catch (Exception ex)
         {
-            PackDownloadHost.LogService("visibility-unknown", ex.GetType().Name);
+            PackDownloadHost.LogService(PackDownloadHost.VisibilityUnknownAction, ex.GetType().Name);
             return false;
         }
     }
@@ -120,9 +122,11 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive
     internal static Notification BuildNotification(Context context)
     {
         double fraction;
+        string? primary;
         lock (Gate)
         {
             fraction = Active.Count == 0 ? 0 : Active.Values.Average();
+            primary = Active.Count == 1 ? Active.Keys.First() : null; // several packs at once: the plain status line, since one name would be wrong
         }
 
         int percent = (int)(fraction * 100);
@@ -133,11 +137,96 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive
 
         var builder = new Notification.Builder(context, PackDownloadService.ChannelId)
             .SetSmallIcon(global::Android.Resource.Drawable.StatSysDownload)!
-            .SetContentTitle(PackDownloadHost.NotificationText(fraction))!
+            .SetContentTitle(PackDownloadHost.DownloadingText(primary, fraction))!
             .SetProgress(100, percent, false)!
             .SetOngoing(true)!
             .SetOnlyAlertOnce(true)!
             .AddAction(cancelAction)!;
+        if (context.PackageManager?.GetLaunchIntentForPackage(context.PackageName!) is { } launch)
+        {
+            builder.SetContentIntent(PendingIntent.GetActivity(context, 0, launch, PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent));
+        }
+
+        return builder.Build()!;
+    }
+
+    /// <summary>
+    /// The dataSync time limit fired (Slice 208): the service and its ongoing notification go, but the downloads carry on in the process, so nothing is
+    /// posted yet. The packs registered now are remembered; one of them whose run then ends unfinished gets the notice (<see cref="Post"/>).
+    /// </summary>
+    internal static void NoteTimedOut()
+    {
+        lock (Gate)
+        {
+            TimedOut.UnionWith(Active.Keys);
+        }
+    }
+
+    // Stricter than AppIsVisible, which counts a foreground service as visible: this is the app's own screen being up.
+    private static bool AppIsOnScreen()
+    {
+        try
+        {
+            var info = new ActivityManager.RunningAppProcessInfo();
+            ActivityManager.GetMyMemoryState(info);
+            return info.Importance <= Importance.Foreground;
+        }
+        catch (Exception ex)
+        {
+            PackDownloadHost.LogService(PackDownloadHost.VisibilityUnknownAction, ex.GetType().Name);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A normal (not ongoing) notice on the pack channel, one per pack; tapping it opens the app, whose foreground resume finishes the download. Only for a
+    /// pack whose run ended unfinished after the time limit stopped the service, and only while the app is not on screen.
+    /// </summary>
+    public void Post(string packId, double? fraction)
+    {
+        bool afterTimeLimit;
+        lock (Gate)
+        {
+            afterTimeLimit = TimedOut.Remove(packId);
+        }
+
+        if (!afterTimeLimit)
+        {
+            return; // the service never hit its limit: a plain failure is the download's own story (its waiting line), not a system stop
+        }
+
+        if (AppIsOnScreen())
+        {
+            PackDownloadHost.LogService(PackDownloadHost.PausedSkippedAction, PackDownloadHost.OnScreenDetail);
+            return;
+        }
+
+        Context context = global::Android.App.Application.Context;
+        PackDownloadService.EnsureChannel(context);
+        var manager = (NotificationManager)context.GetSystemService(Context.NotificationService)!;
+        manager.Notify(packId, PackDownloadService.PausedNotificationId, BuildPaused(context, packId, fraction));
+    }
+
+    public void Clear(string packId)
+    {
+        lock (Gate)
+        {
+            TimedOut.Remove(packId);
+        }
+
+        Context context = global::Android.App.Application.Context;
+        var manager = (NotificationManager)context.GetSystemService(Context.NotificationService)!;
+        manager.Cancel(packId, PackDownloadService.PausedNotificationId);
+    }
+
+    private static Notification BuildPaused(Context context, string packId, double? fraction)
+    {
+        var builder = new Notification.Builder(context, PackDownloadService.ChannelId)
+            .SetSmallIcon(global::Android.Resource.Drawable.StatSysWarning)!
+            .SetContentTitle(PackDownloadHost.PausedTitle())!
+            .SetContentText(PackDownloadHost.PausedNotificationText(PackDownloadHost.LabelOf(packId), fraction))!
+            .SetOngoing(false)!
+            .SetAutoCancel(true)!;
         if (context.PackageManager?.GetLaunchIntentForPackage(context.PackageName!) is { } launch)
         {
             builder.SetContentIntent(PendingIntent.GetActivity(context, 0, launch, PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent));
