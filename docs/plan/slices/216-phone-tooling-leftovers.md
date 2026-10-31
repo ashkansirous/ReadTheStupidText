@@ -84,5 +84,6 @@
 
 #### Not yet verified
 - Item 11: the cold-start rerun and the numbers in Slices 185 and 214 (not edited from this branch).
+- Known gap from the first review fix (finding 2, aside-archive restore): a second process under the same lease owner could still race the restore; no stronger guard was added. Slice 221 item 6 (refuse a second run by the same owner) would close it. (Feedback loop: docs/plan/notes/2026-10-31-1000-feedback-loop-w1.md)
 - The path-length estimates (`DeepestMauiIntermediateChars`, `KnownMinimumIntermediateChars`) are still unmeasured.
 - The aside-archive phone-clock stamp (`Get-PhoneStamp`) was not device-run.
