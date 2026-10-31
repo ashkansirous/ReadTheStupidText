@@ -548,6 +548,8 @@
 
         <!-- ============ Body ============ -->
         <StackPanel Grid.Row="1" Padding="8,6,8,8">
+            <!-- Forced update (Slice 217, frames W3/W4): the "Update needed" card or the "A new version is ready" bar, built in ControlPanelWindow.Update.cs. -->
+            <StackPanel x:Name="UpdateNoticeHost" />
             <!-- Voice picker. Shows a preparing state until the neural model loads.
                  No leading icon tile (design: a mic glyph here would read as a
                  tappable button when it isn't one). -->

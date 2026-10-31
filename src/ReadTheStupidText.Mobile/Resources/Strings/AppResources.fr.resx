@@ -16,6 +16,14 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Touchez un bouton ci-dessous pour ajouter un texte à lire</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>La langue des textes de l’appli</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Vitesse de lecture</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>Mise à jour requise</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>Cette version a un problème qui a été corrigé. Installez la nouvelle pour continuer à lire. Vos réglages et vos voix sont conservés.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>Ouvrir Google Play</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>Ouvrir l’App Store</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>Une nouvelle version est prête</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>L’obtenir</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>Fermer</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Aider à améliorer l’appli</value></data>
   <data name="Settings_CountsCaption" xml:space="preserve"><value>Envoie des comptes comme « un texte français a été lu ». Aucun nom, aucun identifiant, rien de ce que vous lisez. Il ajoute aussi votre pays et un type d’appareil approximatif (téléphone ou tablette, plage de mémoire).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>Activé</value></data>

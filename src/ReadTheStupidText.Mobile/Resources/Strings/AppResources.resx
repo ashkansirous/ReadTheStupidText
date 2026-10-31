@@ -17,6 +17,14 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Tap a button below to add something to read</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>The language of the app’s words</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Reading speed</value></data>
+  <!-- Slice 217: forced update -->
+  <data name="Update_Title" xml:space="preserve"><value>Update needed</value></data>
+  <data name="Update_Body" xml:space="preserve"><value>This version has a problem that's been fixed. Get the new one to keep reading. Your settings and voices stay as they are.</value></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>Open Google Play</value></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>Open the App Store</value></data>
+  <data name="Update_Available" xml:space="preserve"><value>A new version is ready</value></data>
+  <data name="Update_Get" xml:space="preserve"><value>Get it</value></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>Close</value></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Help improve the app</value></data>
   <data name="Settings_CountsCaption" xml:space="preserve"><value>Sends counts like “a French text was read”. No names, no ids, nothing you read. It also adds your country and a rough device type (phone or tablet, memory range).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>On</value></data>

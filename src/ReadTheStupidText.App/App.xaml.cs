@@ -68,6 +68,9 @@ public partial class App : Application
         services.AddSingleton<IVoiceCatalog, PackVoiceCatalog>();
 
         services.AddSingleton<IClipboardReader, ClipboardReader>();
+        // While an update is required (Slice 217) ReadAloudService itself refuses every read through this gate and the panel reopens on the notice.
+        services.AddSingleton<WindowsUpdate>(_ => WindowsUpdate.Create());
+        services.AddSingleton<IReadGate>(sp => sp.GetRequiredService<WindowsUpdate>());
         services.AddSingleton<IHotkeyService, GlobalHotkeyService>();
         services.AddSingleton<ISelectionCopier, SelectionCopier>();
         services.AddSingleton<ISelectionMonitor, UiaSelectionMonitor>();
@@ -137,9 +140,11 @@ public partial class App : Application
             Services.GetRequiredService<ILogFolder>(),
             Services.GetRequiredService<ISettingsStore>(),
             Services.GetRequiredService<VoicePackSetup>(),
-            Services.GetRequiredService<ISystemLog>());
+            Services.GetRequiredService<ISystemLog>(),
+            Services.GetRequiredService<WindowsUpdate>());
         StartVoicePackSetup();
         StartUsageCounts();
+        Services.GetRequiredService<WindowsUpdate>().Start(); // Slice 217: the forced-update check, at start and once a day
     }
 
     // Counts the launch and sends what the last run left queued, off the UI thread; a last send runs as the process exits (Slice 140).

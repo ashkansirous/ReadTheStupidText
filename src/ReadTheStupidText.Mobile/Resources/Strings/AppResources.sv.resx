@@ -16,6 +16,14 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Tryck på en knapp nedan för att lägga till något att läsa</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>Språket för appens text</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Uppläsningshastighet</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>Uppdatering krävs</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>Den här versionen har ett problem som har åtgärdats. Hämta den nya för att fortsätta läsa. Dina inställningar och röster finns kvar.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>Öppna Google Play</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>Öppna App Store</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>En ny version är redo</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>Hämta</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>Stäng</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Hjälp till att förbättra appen</value></data>
   <data name="Settings_CountsCaption" xml:space="preserve"><value>Skickar räkningar som ”en fransk text lästes”. Inga namn, inga id:n, inget av det du läser. Det lägger också till ditt land och en grov enhetstyp (telefon eller surfplatta, minnesintervall).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>På</value></data>

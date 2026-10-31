@@ -16,6 +16,14 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Tik op een knop hieronder om iets toe te voegen om voor te lezen</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>De taal van de woorden in de app</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Leessnelheid</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>Update nodig</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>Deze versie heeft een probleem dat is opgelost. Download de nieuwe om te blijven lezen. Je instellingen en stemmen blijven behouden.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>Google Play openen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>App Store openen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>Er is een nieuwe versie</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>Ophalen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>Sluiten</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Help de app verbeteren</value></data>
   <data name="Settings_CountsCaption" xml:space="preserve"><value>Stuurt tellingen zoals “er is een Franse tekst gelezen”. Geen namen, geen id’s, niets van wat je leest. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>Aan</value></data>

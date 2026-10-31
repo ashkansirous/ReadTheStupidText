@@ -16,6 +16,14 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Нажмите кнопку ниже, чтобы добавить что-нибудь для чтения</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>Язык интерфейса приложения</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Скорость чтения</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>Нужно обновление</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>В этой версии была проблема, и она исправлена. Установите новую версию, чтобы продолжить чтение. Настройки и голоса сохранятся.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>Открыть Google Play</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>Открыть App Store</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>Готова новая версия</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>Обновить</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>Закрыть</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Помогите улучшить приложение</value></data>
   <data name="Settings_CountsCaption" xml:space="preserve"><value>Отправляет подсчёты вроде «прочитан текст на французском». Без имён, без идентификаторов, ничего из того, что вы читаете. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>Вкл.</value></data>

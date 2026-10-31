@@ -44,6 +44,7 @@ public sealed partial class MainWindow : Window
     private readonly ISettingsStore _settings;
     private readonly VoicePackSetup _packSetup;
     private readonly ISystemLog _systemLog;
+    private readonly WindowsUpdate _update;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
     private readonly Windows.UI.ViewManagement.UISettings _uiSettings = new();
 
@@ -82,7 +83,7 @@ public sealed partial class MainWindow : Window
     private ToggleMenuFlyoutItem? _customSpeedItem;
     private int _speedStartIndex;
 
-    public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey, IClipboardMonitor clipboardMonitor, IStartupService startup, IActivityLog activityLog, ILogFolder logFolder, ISettingsStore settings, VoicePackSetup packSetup, ISystemLog systemLog)
+    public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey, IClipboardMonitor clipboardMonitor, IStartupService startup, IActivityLog activityLog, ILogFolder logFolder, ISettingsStore settings, VoicePackSetup packSetup, ISystemLog systemLog, WindowsUpdate update)
     {
         _readAloud = readAloud;
         _hotkey = hotkey;
@@ -93,11 +94,18 @@ public sealed partial class MainWindow : Window
         _settings = settings;
         _packSetup = packSetup;
         _systemLog = systemLog;
+        _update = update;
 
         // The left-click control panel shares the same services as the tray menu,
         // so both surfaces read and write the same state; the settings store also
         // persists the panel's dragged position.
-        _controlPanel = new ControlPanelWindow(_readAloud, _startup, settings, packSetup);
+        _controlPanel = new ControlPanelWindow(_readAloud, _startup, settings, packSetup, update);
+
+        // A read refused because an update is required (Slice 217) reopens the panel on the update notice.
+        _update.ReadBlocked += (_, _) => _controlPanel.ShowForUpdate();
+
+        // An update that becomes required mid-read stops that read, since the panel's own controls are greyed (Slice 217).
+        _update.Changed += (_, _) => StopReadIfUpdateRequired();
 
         // Created eagerly (not lazily on first toggle), like the control panel:
         // it needs to keep tracking ReadTextChanged/ChunkChanged from launch so
@@ -113,7 +121,7 @@ public sealed partial class MainWindow : Window
         _setVoiceCommand = new RelayCommand(p => ApplyVoice((string)p!));
         _toggleControlPanelCommand = new RelayCommand(_ => _controlPanel.Toggle());
         _showActivityLogCommand = new RelayCommand(_ => ShowActivityLog());
-        _uploadFileCommand = new RelayCommand(_ => _ = UploadFileAsync());
+        _uploadFileCommand = new RelayCommand(_ => _ = UploadFileUnlessUpdateRequiredAsync());
         _showLanguageCommand = new RelayCommand(_ => ShowLanguageWindow());
         _toggleTranslateCommand = new RelayCommand(_ => _readAloud.TranslateEnabled = !_readAloud.TranslateEnabled);
         _quitCommand = new RelayCommand(_ => Quit());
@@ -162,7 +170,7 @@ public sealed partial class MainWindow : Window
 
         // The control panel's Upload button shares the tray menu's file picker,
         // so the host owns showing it too.
-        _controlPanel.UploadFileRequested += (_, _) => _ = UploadFileAsync();
+        _controlPanel.UploadFileRequested += (_, _) => _ = UploadFileUnlessUpdateRequiredAsync();
 
         // The control panel's 4th CONTROLS toggle shows/hides the reading text box,
         // and the text box's own ✕ hides it too — keep the toggle in sync either way.
@@ -273,6 +281,27 @@ public sealed partial class MainWindow : Window
         flyout.Items.Add(new MenuFlyoutItem { Text = QuitLabel, Command = _quitCommand });
 
         return flyout;
+    }
+
+    private void StopReadIfUpdateRequired()
+    {
+        if (_update.Required)
+        {
+            _readAloud.CancelRead();
+        }
+    }
+
+    // While an update is required (Slice 217) the tray's file entry only reopens the panel on the update notice
+    // (Play is refused inside ReadAloudService, which does the same); this also keeps the file picker from opening.
+    private async Task UploadFileUnlessUpdateRequiredAsync()
+    {
+        if (_update.Required)
+        {
+            _update.NotifyReadBlocked();
+            return;
+        }
+
+        await UploadFileAsync();
     }
 
     // Opens (or focuses) the live activity-log window. Single instance; recreated

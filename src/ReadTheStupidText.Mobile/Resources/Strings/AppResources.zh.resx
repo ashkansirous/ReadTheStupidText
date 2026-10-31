@@ -16,6 +16,14 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>点击下方按钮，添加要朗读的内容</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>应用显示的语言</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>朗读速度</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>需要更新</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>此版本存在一个已修复的问题。请获取新版本以继续朗读。你的设置和语音会保留。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>打开 Google Play</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>打开 App Store</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>新版本已就绪</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>获取</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>关闭</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>帮助改进应用</value></data>
   <data name="Settings_CountsCaption" xml:space="preserve"><value>发送类似“读了一段法语文本”的计数。不含名称、不含标识符，也不含你阅读的任何内容。还会附带你所在的国家和大致的设备类型（手机或平板、内存范围）。</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>开</value></data>

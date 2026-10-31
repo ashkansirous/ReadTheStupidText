@@ -1,8 +1,8 @@
 ### Slice 217 — Read The Stupid Text: forced update from the remote config
 
-*Planned 2026-10-30.* Port of Dino Reader's forced update (Slice 132) to Read The Stupid Text, on Android, iOS and the Windows tray app.
+*Built 2026-10-31 (night run), not merged; Windows forced/soft update, the store button tap on the phone and iOS not yet verified.* Port of Dino Reader's forced update (Slice 132) to Read The Stupid Text, on Android, iOS and the Windows tray app.
 
-**Touches:** `src/ReadTheStupidText.Application/Usage/UsageConfig.cs` (or a new `Application/AppConfig/*` shared with Dino's `DinoReader.Core/AppConfig.cs`), `src/ReadTheStupidText.Mobile.Shared/Usage/RemoteConfigClient.cs`, `src/ReadTheStupidText.Mobile/App.xaml.cs`, `src/ReadTheStupidText.Mobile/UpdatePage*.cs` (new), `src/ReadTheStupidText.App/**` (tray: config client and the update prompt), `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*.resx`, `src/ReadTheStupidText.App/Strings/**`, `tests/ReadTheStupidText.Tests/**`, `.maestro/rtst/**`, `docs/plan/slices/217-rtst-forced-update.md`
+**Touches:** `src/ReadTheStupidText.Application/Usage/UsageConfig.cs` (or a new `Application/AppConfig/*` shared with Dino's `DinoReader.Core/AppConfig.cs`), `src/ReadTheStupidText.Mobile.Shared/Usage/RemoteConfigClient.cs`, `src/ReadTheStupidText.Mobile/App.xaml.cs`, `src/ReadTheStupidText.Mobile/UpdatePage*.cs` (new), `src/ReadTheStupidText.Mobile/ReaderPage.xaml`, `src/ReadTheStupidText.Mobile/ReaderPage*.cs` (R15 card; Slice 215 adds one AutomationId to ReaderPage.xaml, accepted overlap), `src/ReadTheStupidText.App/**` (tray: config client and the update prompt), `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*.resx`, `src/ReadTheStupidText.App/Strings/**`, `tests/ReadTheStupidText.Tests/**`, `.maestro/rtst/**`, `docs/plan/slices/217-rtst-forced-update.md`
 
 #### Why
 
@@ -44,15 +44,64 @@ Four frames in `docs/design/rtst-phone/Batch 42 Updates and Paused Downloads.dc.
 
 #### Work
 
-- [ ] Shared pure config + compare (move from `DinoReader.Core/AppConfig.cs` to Application if it fits; unit tests for compare and parse).
-- [ ] Android and iOS: the client reads the platform keys; update page and note; store links.
-- [ ] Windows tray: client, notice in the control panel, store link.
-- [ ] Strings in every RTST locale (machine drafts marked).
-- [ ] Maestro flow on the emulator with a test config (Debug points at a test key, never the live file).
+- [x] Shared pure config + compare (move from `DinoReader.Core/AppConfig.cs` to Application if it fits; unit tests for compare and parse).
+- [x] Android and iOS: the client reads the platform keys; update page and note; store links.
+- [x] Windows tray: client, notice in the control panel, store link.
+- [x] Strings in every RTST locale (machine drafts marked).
+- [x] Maestro flow on the emulator with a test config (Debug points at a test key, never the live file).
+
+#### Changed while building
+
+- The five open points were taken as the defaults written above: no grown-up gate; R15 dismissal remembered per `latestVersion` with no Settings row; last good config saved on the device and used offline; Windows panel built as the mock shows; main page files added to Touches.
+- The read gate is `IReadGate` in Application, checked inside `ReadAloudService` (review, medium pass 2); `WindowsUpdate` is the gate on the tray app.
+
+#### Fast checks (2026-10-31)
+
+- RTST and Dino tests, App x64, Dino Windows and both Android builds pass; flow lint 21 flows, 0 findings.
 
 #### Verification
 
 - Fast: unit tests.
 - Emulator: forced and soft update with a test config.
+  - 2026-10-31, emulator-5554, build 833816e4426f: lint 21 flows, 0 findings. `forced-update.yaml` PASS (page, title, body, button shown; Settings and Play hidden; clear brings the app back). `update-available-card.yaml` PASS (card and Get it shown, cross hides it, same latestVersion stays hidden). Dark mode (`cmd uimode night yes`, soft test config, screenshot): card readable, light text, accent arrow, Get it and cross visible; checked by eye, no scripted assert. Not reached: store button tap target (only presence asserted).
 - Windows VM: tray notice with a test config.
+  - 2026-10-31, build 833816e4426f: not reached. The VM package is built `-p:Configuration=Release` (`tools/desktop-vm/Build-TestPackage.ps1:34`) and `WindowsUpdate.TestConfig()` reads `READTHESTUPIDTEXT_TEST_APP_CONFIG` only under `#if DEBUG` (`WindowsUpdate.cs:80`), so the variable is ignored; the VM is offline, so the live config cannot be fetched either. No `tools/desktop-vm/checks` file sets a config or reads the update card/bar. Needs: a Debug (or test-flag) MSIX build plus new checks that set the variable for the guest app and read the card, the activity log and the bar. VM not started, nothing to restore.
+- iOS: compile in CI; TestFlight hand check.
+
+#### Review notes (high pass)
+
+- 1 (fixed): the tray app retries a failed first fetch after 1, 2 and 5 minutes until one works (`WindowsUpdate.RefreshWithRetryAsync`, `UpdateConfigService.HasFetched`), then daily.
+- 2 (fixed): `READTHESTUPIDTEXT_TEST_APP_CONFIG` is read in Debug builds only.
+- 3 (fixed): an update that becomes required mid-read cancels the read (`ReadAloudService.CancelRead`) on the tray app, as the phone does.
+- 4 (skipped): the second `RemoteConfigClient` and duplicated cache key are duplication only.
+- 5 (not changed): Dino Reader's `AppConfigClient` also fetches `/api/app-config` with no usage-switch check, so the tray fetch regardless of "Help improve the app" matches Dino (plain GET, nothing about the user sent).
+- 6 (fixed): the update card's arrow, close cross and "Get it" text follow light/dark.
+- 7 (fixed a): the phone keeps the page it replaced and puts that same page back if the requirement is lifted, so no second shell. (b) not a bug: `RootPage()` reads the state when the window is created, and both run on the main thread, so an earlier fetch is never missed.
+- 8 (fixed): an automatic trigger (selection or copy) reopens a closed panel at most once per 10 minutes; hotkey and tray clicks still always reopen it.
+- 9 (fixed): `RequiredCard` and `AvailableBar` split into icon, column, row and button builders.
+
+#### Review notes (medium pass)
+
+- 1 (fixed): `WindowsUpdate` no longer assumes it was built on the UI thread; `Start()` (UI thread) fills in the dispatcher and a missing one runs the event inline instead of dropping it.
+- 2 (fixed): `ReadAloudService` itself refuses every read through the new `IReadGate` (hotkey, selection, copy, Play, file, skip); the three wrapper classes are gone and `WindowsUpdate` is the gate.
+- 3 (fixed): the panel redraws only the card or bar on a theme change or a dismissal, and sets the status line and greys the controls only when the required state flips.
+- 4 (skipped): second `RemoteConfigClient` for the same URL is duplication only.
+- 5 (fixed): no pack download (voice or OCR) starts at launch while the update page is up, and a language change behind the page rebuilds the page that comes back; the phone app has no share-intent read entry (`MainActivity` has none).
+- 6 (skipped): the card hiding only on Playing is cosmetic.
+- 7 (skipped): no failure path.
+- 8 (skipped): the mock greys the toggles out on purpose.
+- 9 (fixed): a failed first fetch is retried after 1, 2, 5, 10 and 20 minutes and then every 30 minutes until one works.
+
+#### For CLAUDE.md
+
+- `src/ReadTheStupidText.App/CLAUDE.md`: while an update is required, reads are refused through `IReadGate` inside `ReadAloudService` (hotkey, selection, copy, Play, file, skip); don't add a check in the callers. `READTHESTUPIDTEXT_TEST_APP_CONFIG` (test config for the update check) is read in Debug builds only, so the Release VM package ignores it. (Slice 217: docs/plan/slices/217-rtst-forced-update.md)
+
+#### For README.md
+
+- Read The Stupid Text asks you to update when your version is too old.
+
+#### Not yet verified
+
+- Windows forced and soft update on the VM: needs a Debug-hook MSIX or test-flag build plus `rtst-update-forced` / `rtst-update-soft` desktop-vm checks.
+- Store button tap on the phone (only its presence is asserted on the emulator).
 - iOS: compile in CI; TestFlight hand check.
