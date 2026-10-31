@@ -25,6 +25,11 @@ $threw = $false
 try { Resolve-CheckSelection @('nope') 'rtst' $catalogue | Out-Null } catch { $threw = $_.Exception.Message -like "*Unknown check 'nope'*cold-start*" }
 Assert-Equal 'unknown check throws and lists the known ones' $true $threw
 Assert-Equal 'dino runs book-end' $script:StatusPending (@(Resolve-CheckSelection @('book-end') 'dino' $catalogue))[0].Status
+# Slice 209: the hook checks are in the catalogue, each with its script file, and run on the apps they are for.
+foreach ($hookCheck in 'language', 'voice', 'translate', 'book-update') { Assert-Equal "check script exists: $hookCheck" $true (Test-Path (Join-Path $PSScriptRoot "checks\$hookCheck.ps1")) }
+Assert-Equal 'language runs on rtst' $script:StatusPending (@(Resolve-CheckSelection @('language') 'rtst' $catalogue))[0].Status
+Assert-Equal 'voice is RTST only' $script:StatusSkipped (@(Resolve-CheckSelection @('voice') 'dino' $catalogue))[0].Status
+Assert-Equal 'book-update is Dino only' $script:StatusSkipped (@(Resolve-CheckSelection @('book-update') 'rtst' $catalogue))[0].Status
 
 Assert-Equal 'cold-start estimate scales with -Runs (3)' 240 (@(Resolve-CheckSelection @('cold-start') 'rtst' $catalogue 3))[0].EstimateSeconds
 Assert-Equal 'cold-start estimate scales with -Runs (6)' 480 (@(Resolve-CheckSelection @('cold-start') 'rtst' $catalogue 6))[0].EstimateSeconds
@@ -33,7 +38,8 @@ Assert-Equal 'a fixed check keeps its estimate' 120 (@(Resolve-CheckSelection @(
 # ---- build cache name and the skip text
 Assert-Equal 'aot platform' 'android-dbg-arm64-aot' (Get-CachePlatform 'aot')
 Assert-Equal 'debug platform' 'android-dbg-arm64' (Get-CachePlatform 'debug')
-Assert-Equal 'every check declares its variant' 'aot,debug,debug,debug,debug' ((($catalogue.Keys | ForEach-Object { $catalogue[$_].Variant })) -join ',')
+Assert-Equal 'every check declares its variant (only cold-start is aot)' 'cold-start' ((@($catalogue.Keys | Where-Object { $catalogue[$_].Variant -eq 'aot' })) -join ',')
+Assert-Equal 'no check has a variant other than aot or debug' 0 @($catalogue.Keys | Where-Object { $catalogue[$_].Variant -notin 'aot', 'debug' }).Count
 Assert-Equal 'cold-start needs aot' 'aot' $plan[0].Variant
 Assert-Equal 'highlight takes any build' 'debug' (@(Resolve-CheckSelection @('highlight') 'rtst' $catalogue))[0].Variant
 

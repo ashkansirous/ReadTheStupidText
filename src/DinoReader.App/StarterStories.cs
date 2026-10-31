@@ -121,6 +121,36 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 	/// <summary>The content version recorded for a starter or store book (null when none was), for the background update check (Slice 181).</summary>
 	public static int? RecordedVersion(string packageId) => InstalledVersion(packageId);
 
+#if DEBUG
+	/// <summary>Slice 209 (Debug only, the <c>stage-book-update force=true</c> hook): records an older version for the book, so the update plan sees the store's current version as newer and the next start really swaps it in.</summary>
+	public static void RecordVersionForTest(string packageId, int version) => RecordVersion(packageId, version);
+
+	private const string ForcedApplyKeyPrefix = "dino.test.forceapply.";
+
+	/// <summary>Slice 209 (Debug only): puts the recorded version back to what it was (none: removes it), after a forced stage planned with a lowered one.</summary>
+	public static void RestoreVersionForTest(string packageId, int? version)
+	{
+		if (version is { } v)
+		{
+			RecordVersion(packageId, v);
+			return;
+		}
+
+		Preferences.Default.Remove(VersionKeyPrefix + packageId);
+	}
+
+	/// <summary>Slice 209 (Debug only): marks the staged package of this book as forced, so the next cold start's apply lowers the recorded version itself (after the starter refresh ran, which would otherwise swap the bundled copy in and make the staged one "up to date").</summary>
+	public static void MarkForcedApplyForTest(string packageId) => Preferences.Default.Set(ForcedApplyKeyPrefix + packageId, true);
+
+	/// <summary>Slice 209 (Debug only): true once per mark; the apply uses it to lower the recorded version to <see cref="BookUpdatePlan.ForcedRecordedVersion"/>.</summary>
+	public static bool ConsumeForcedApplyForTest(string packageId)
+	{
+		bool marked = Preferences.Default.Get(ForcedApplyKeyPrefix + packageId, false);
+		Preferences.Default.Remove(ForcedApplyKeyPrefix + packageId);
+		return marked;
+	}
+#endif
+
 	/// <summary>The hash of the page text the book arrived with (null when never recorded), Slice 181.</summary>
 	public static string? RecordedTextHash(string packageId) =>
 		Preferences.Default.ContainsKey(TextHashKeyPrefix + packageId) ? Preferences.Default.Get(TextHashKeyPrefix + packageId, string.Empty) : null;
