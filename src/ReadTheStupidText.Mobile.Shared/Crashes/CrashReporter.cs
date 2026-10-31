@@ -133,7 +133,11 @@ public static class CrashReporter
         try
         {
             bool allowed = RefreshAllowed();
+#if DEBUG
             Note($"gate re-read, allowed {allowed}, switch {SwitchOn()}, build {BuildEligible()}");
+#else
+            _ = allowed;
+#endif
         }
         catch (Exception ex)
         {
@@ -176,9 +180,22 @@ public static class CrashReporter
     private static void InstallHandlers()
     {
         AppDomain.CurrentDomain.UnhandledException += (_, e) => OnUnhandled(e.ExceptionObject as Exception);
-        TaskScheduler.UnobservedTaskException += (_, e) => RollingFileSystemLog.ToCurrent().Error("unobserved task exception", null, e.Exception);
+        TaskScheduler.UnobservedTaskException += (_, e) => LogUnobserved(e.Exception);
         // Only AppDomain.UnhandledException: it fires when nothing handled the exception. Android's AndroidEnvironment.UnhandledExceptionRaiser also fires for
         // exceptions a handler marks handled afterwards, which would write a report and clear the run marker for an app that is still running (review pass 2).
+    }
+
+    // An unobserved task exception goes into the log tail as an Error line; the handler runs on the finalizer thread, so it must never throw.
+    private static void LogUnobserved(Exception error)
+    {
+        try
+        {
+            RollingFileSystemLog.ToCurrent().Error("unobserved task exception", null, error);
+        }
+        catch (Exception)
+        {
+            // Losing one log line is better than an exception on the finalizer thread.
+        }
     }
 
     // The last-chance hook: build one small report (type, message, stack, time, kind; the log tail is added by the sender at the next launch from the log file on disk)
@@ -418,9 +435,16 @@ public static class CrashReporter
     // One line per branch, for a device check to read: Debug builds only (a marker line for the scripted flows too).
     private static void Note(string message)
     {
-        Debug.WriteLine($"{LogName}: {message}");
+        try
+        {
+            Debug.WriteLine($"{LogName}: {message}");
 #if DEBUG
-        Testing.TestHookLog.Write($"CRASH_REPORT {message}");
+            Testing.TestHookLog.Write($"CRASH_REPORT {message}");
 #endif
+        }
+        catch (Exception)
+        {
+            // A note is a trace for a device check; it must never throw out of the crash handler.
+        }
     }
 }
