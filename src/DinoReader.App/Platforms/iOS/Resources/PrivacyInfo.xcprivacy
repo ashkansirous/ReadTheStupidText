@@ -6,6 +6,8 @@ use the Preferences API. Slice 133: Dino sends anonymous product-interaction cou
 its own server: no identifier, not linked to the user, not used for tracking, purpose analytics; a grown-up can switch it off.
 Slice 166: each batch also carries coarse device facts (form factor, OS major version, CPU type, core and memory buckets: other diagnostic data)
 and the server records the approximate country of the connection (coarse location, never GPS, the IP is not stored); not linked, no tracking.
+Slice 227: crash data (an unhandled error's type, message and stack, and a short technical log with no text you read or typed) is sent to its
+own server when the app crashes: no identifier, not linked to the user, not used for tracking, purpose app functionality; it follows the same switch.
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -60,6 +62,18 @@ and the server records the approximate country of the connection (coarse locatio
             <key>NSPrivacyCollectedDataTypePurposes</key>
             <array>
                 <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+            </array>
+        </dict>
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeCrashData</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
             </array>
         </dict>
     </array>

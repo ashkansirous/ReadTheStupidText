@@ -15,6 +15,8 @@
 import { DINO_PATH_PREFIX, Product, assetPageFor, canonicalRedirect, handleDownload, isDownloadPath, isHiddenDinoPath, resolveSite, serveObject } from "./downloads";
 import type { ResolvedSite } from "./downloads";
 import { APP_CONFIG_KEY, RTST_APP_CONFIG_KEY, handleAppConfig, isAppConfigPath, parseAppConfig } from "./appconfig";
+import { handleCrash, isCrashPath } from "./crashes";
+import type { CrashesEnv } from "./crashes";
 import { handleEvents, handleRtstEvents, isEventsPath } from "./events";
 import type { EventsEnv, RtstEventsEnv } from "./events";
 import { handleStories, isStoryPath } from "./stories";
@@ -61,20 +63,35 @@ function serveAppConfig(request: Request, env: Env, site: ResolvedSite): Promise
 const TELEMETRY_CACHE_MS = 60_000;
 const telemetryCache = new Map<string, { readonly enabled: boolean; readonly at: number }>();
 
-async function readTelemetryFlag(env: Env, key: string): Promise<boolean> {
+// A switch of the config object, read through the same short cache (Slice 227 adds the crash-report switch next to the telemetry one).
+type ConfigSwitch = (config: ReturnType<typeof parseAppConfig>) => boolean;
+
+async function readConfigFlag(env: Env, key: string, pick: ConfigSwitch): Promise<boolean> {
   const object = await env.DOWNLOADS.get(key);
-  return object ? parseAppConfig(await object.json()).telemetry.enabled : false;
+  return object ? pick(parseAppConfig(await object.json())) : false;
+}
+
+function configCheck(env: Env, key: string, name: string, pick: ConfigSwitch): () => Promise<boolean> {
+  const cacheKey = `${key}#${name}`;
+  return async () => {
+    const now = Date.now();
+    const cached = telemetryCache.get(cacheKey);
+    if (cached !== undefined && now - cached.at < TELEMETRY_CACHE_MS) return cached.enabled;
+    const enabled = await readConfigFlag(env, key, pick);
+    telemetryCache.set(cacheKey, { enabled, at: now });
+    return enabled;
+  };
 }
 
 function telemetryCheck(env: Env, key: string): () => Promise<boolean> {
-  return async () => {
-    const now = Date.now();
-    const cached = telemetryCache.get(key);
-    if (cached !== undefined && now - cached.at < TELEMETRY_CACHE_MS) return cached.enabled;
-    const enabled = await readTelemetryFlag(env, key);
-    telemetryCache.set(key, { enabled, at: now });
-    return enabled;
-  };
+  return configCheck(env, key, "telemetry", (config) => config.telemetry.enabled);
+}
+
+// Slice 227: crash and error reports from the phone apps, their own switch (`crashReports.enabled`, default off), bucket folder and dataset (APP_CRASHES, dataset
+// app_crashes). The app is the product whose host the report arrived on.
+function serveCrash(request: Request, env: Env & CrashesEnv, site: ResolvedSite): Promise<Response> {
+  const check = configCheck(env, configKeyFor(site), "crashReports", (config) => config.crashReports.enabled);
+  return handleCrash(request, env, check, site.product === Product.DinoReader ? "dino" : "rtst");
 }
 
 // Slice 137: Read The Stupid Text's phone counts take the same road with their own config object and dataset (RTST_USAGE, dataset
@@ -93,6 +110,7 @@ async function serveAsset(request: Request, env: Env): Promise<Response> {
   if (isStoryPath(site.path)) return serveStories(request, url, env, site);
   if (isAppConfigPath(site.path)) return serveAppConfig(request, env, site);
   if (isEventsPath(site.path)) return serveEvents(request, env, site);
+  if (isCrashPath(site.path)) return serveCrash(request, env, site);
   if (isDownloadPath(site.path)) {
     return handleDownload(withPath(request, url, site.path), site.home);
   }

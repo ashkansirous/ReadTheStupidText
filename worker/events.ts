@@ -191,7 +191,8 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   voice_pack_download: { sources: [NO_BOOK], detail: detailIn(PACK_OUTCOMES) },
 };
 const LANGUAGE_PATTERN = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
-const VERSION_PATTERN = /^\d{1,6}(\.\d{1,6}){1,3}$/;
+/** The version pattern both phone endpoints check (Slice 227 shares it with `/api/crash`). */
+export const VERSION_PATTERN = /^\d{1,6}(\.\d{1,6}){1,3}$/;
 // Slice 167: the project default version of a build never stamped by CI, i.e. built on a desk. A backstop for the apps' own test-build gate:
 // such a count is dropped, not written, in both datasets.
 const UNSTAMPED_VERSIONS: readonly string[] = ["1.0", "1.0.0", "1.0.0.0", "0.0.0", "0.0.0.0"];
@@ -199,7 +200,8 @@ const UNSTAMPED_VERSIONS: readonly string[] = ["1.0", "1.0.0", "1.0.0.0", "0.0.0
 const PRE_RELEASE_MAJOR = 0;
 const MIN_SAMPLE_RATE = 0.001;
 
-function isUnstampedVersion(version: string): boolean {
+/** True for a build never stamped by CI or a pre-1.0 dev build; the Worker drops such a count or report. */
+export function isUnstampedVersion(version: string): boolean {
   const majorPart = version.split(".")[0] ?? "";
   return UNSTAMPED_VERSIONS.includes(version) || Number.parseInt(majorPart, 10) === PRE_RELEASE_MAJOR;
 }
@@ -234,15 +236,15 @@ export interface EventsEnv {
 /** True while the remote config has telemetry on; false when it is off or missing. Rejects when the config cannot be read (answered 503, so the app retries). */
 export type TelemetryCheck = () => Promise<boolean>;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function oneOf(list: readonly string[], value: unknown): value is string {
+export function oneOf(list: readonly string[], value: unknown): value is string {
   return typeof value === "string" && list.includes(value);
 }
 
-function matches(pattern: RegExp, value: unknown): value is string {
+export function matches(pattern: RegExp, value: unknown): value is string {
   return typeof value === "string" && pattern.test(value);
 }
 
@@ -302,15 +304,15 @@ export function toDataPoint(event: UsageEvent, context: BatchContext = NO_CONTEX
   };
 }
 
-function reply(status: number, code?: string): Response {
+export function reply(status: number, code?: string): Response {
   const headers: Record<string, string> = { "Cache-Control": NO_CACHE };
   if (code === undefined) return new Response(null, { status, headers });
   headers["Content-Type"] = JSON_CONTENT_TYPE;
   return new Response(JSON.stringify({ code }), { status, headers });
 }
 
-// Reads at most MAX_BODY_BYTES: the stream is cut off as soon as it passes the cap, so a chunked or lying request is never buffered whole.
-async function readCappedText(request: Request): Promise<string | "too-large"> {
+// Reads at most `maxBytes` (the events cap by default; Slice 227's crash reports allow more): the stream is cut off as soon as it passes the cap, so a chunked or lying request is never buffered whole.
+export async function readCappedText(request: Request, maxBytes: number = MAX_BODY_BYTES): Promise<string | "too-large"> {
   if (request.body === null) return "";
   const reader = request.body.getReader();
   const chunks: Uint8Array[] = [];
@@ -319,7 +321,7 @@ async function readCappedText(request: Request): Promise<string | "too-large"> {
     const { done, value } = await reader.read();
     if (done) break;
     total += value.byteLength;
-    if (total > MAX_BODY_BYTES) {
+    if (total > maxBytes) {
       await reader.cancel();
       return "too-large";
     }
@@ -349,7 +351,7 @@ export function isEventsPath(pathname: string): boolean {
 type PointMaker = (raw: unknown, context: BatchContext) => AnalyticsEngineDataPoint | null;
 
 // The connection's country as Cloudflare saw it (undefined in tests and local dev, where there is no `cf`); nothing else about the connection is read.
-function requestCountry(request: Request): unknown {
+export function requestCountry(request: Request): unknown {
   return (request as { cf?: { country?: unknown } }).cf?.country;
 }
 

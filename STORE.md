@@ -850,3 +850,22 @@ without a release. Store forms (the owner or Claude in the signed-in browser, af
 - Slice 166 adds blob10 country, blob11 OS major, blob12 form factor, blob13 CPU architecture, blob14 core bucket and blob15 RAM bucket (empty for builds that send no `device` object); the store-form additions are listed under "Slice 166 additions" in the RTST section above.
 - `tools/dino-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it is a noise filter and not an anonymity guarantee: say "no identifiers, counts only", never "cannot be traced".
 - Switch counting on with `telemetry` in `dinoreader/config.json` (`{"enabled": true, "sampleRate": 1}`); it is off until then.
+
+## Phone apps: crash reports (Slice 227)
+
+Both phone apps (Dino Reader and Read The Stupid Text, Android and iPhone) send a crash or error report to their own Worker (`POST dinoreader.sirous.uk/api/crash`,
+`POST readthestupidtext.sirous.uk/api/crash`, `worker/crashes.ts`) the next launch after a crash. Each report is kept as one JSON object in the downloads bucket under
+`crashes/<app>/<yyyy-mm-dd>/<random id>.json` and counted in the Analytics Engine dataset `app_crashes` (binding `APP_CRASHES`). A report holds: app, platform, version,
+install channel (`store` or `testflight`), kind (`managed`, `native`, `unclean_exit`, `anr`, `low_memory`, `hang`), exception type, message (1 KB, paths removed), stack (16 KB),
+the last 300 lines of the app's rolling log (32 KB; technical lines only, audited for typed or read text, book titles and file names), the UTC minute and the same coarse device buckets
+as the usage counts. No install, device, account or advertising id (the Worker names the object); the IP is never stored (it is only the rate limiter's key). It follows the existing
+"Help improve the app" / "Help make Dino better" switch and the remote config key `crashReports.enabled` (default off, missing = off), which is switched on **only after the store
+forms below are saved**. TestFlight installs send reports (the user's exception to the production-only rule, crash reports only); debug builds, unstamped versions, emulators,
+Firebase Test Lab, robots and the harnesses' off switch send nothing.
+
+Store forms (Slice 227 item 8; the owner or Claude in the signed-in browser, before `crashReports.enabled` is set to true):
+
+- **Google Play Data safety (both apps):** add **App info and performance > Crash logs**, collected, **not shared**, **processed ephemerally: no**, optional (the user can turn it off), purpose **App functionality** (and Analytics if the form insists on one); no personal info, no ids. Encrypted in transit: yes. Deletion request: not applicable.
+- **App Store privacy (both apps):** **Diagnostics > Crash Data**, **not linked to the user**, **not used for tracking**, purpose **App Functionality**. `PrivacyInfo.xcprivacy` of both apps declares the same (`NSPrivacyCollectedDataTypeCrashData`, linked false, tracking false, `NSPrivacyCollectedDataTypePurposeAppFunctionality`).
+- **Microsoft Store:** unchanged (no phone crash reports on Windows); the privacy URL stays `site/privacy.html` / `site/dino/privacy.html`, which now have a "Crash reports" section.
+- Reading them: `tools/crashes/` (`pull-crashes.mjs` for R2, `pull-apple.py` for App Store Connect and TestFlight, `pull-play.py` for the Play Developer Reporting API); see `worker/CLAUDE.md`.

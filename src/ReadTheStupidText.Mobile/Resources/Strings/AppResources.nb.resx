@@ -25,10 +25,10 @@
   <data name="Update_Get" xml:space="preserve"><value>Hent den</value><comment>Machine draft: needs native review</comment></data>
   <data name="Update_Dismiss" xml:space="preserve"><value>Lukk</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Hjelp til å forbedre appen</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Sender tellinger som «en fransk tekst ble lest». Ingen navn, ingen id-er, ingenting av det du leser. Det legger også til landet ditt og en grov enhetstype (telefon eller nettbrett, minneområde).</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Sender tellinger som «en fransk tekst ble lest». Ingen navn, ingen id-er, ingenting av det du leser. Det legger også til landet ditt og en grov enhetstype (telefon eller nettbrett, minneområde). Hvis appen krasjer, kan den også sende en krasjrapport: feilen og en kort teknisk logg, aldri noe du har lest eller skrevet.</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>På</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Av</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>Appen teller ting som hvilke språk som leses, uten navn eller id-er. Du kan slå dette av i Innstillinger. Det legger også til landet ditt og en grov enhetstype (telefon eller nettbrett, minneområde).</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>Appen teller ting som hvilke språk som leses, uten navn eller id-er. Du kan slå dette av i Innstillinger. Det legger også til landet ditt og en grov enhetstype (telefon eller nettbrett, minneområde). Hvis appen krasjer, kan den også sende en krasjrapport: feilen og en kort teknisk logg, aldri noe du har lest eller skrevet.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Tilbake</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Forrige setning</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Neste setning</value></data>

@@ -238,13 +238,13 @@
   <data name="Version_NewReady" xml:space="preserve"><value>Hay una versión nueva</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Versión</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Ayuda a mejorar Dino</value></data>
-  <data name="Usage_Helper" xml:space="preserve"><value>Envía recuentos como "se terminó un libro de la tienda". Sin nombres, sin identificadores, nada de lo que escribiste. También añade tu país y un tipo de dispositivo aproximado (teléfono o tableta, rango de memoria).</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Envía recuentos como "se terminó un libro de la tienda". Sin nombres, sin identificadores, nada de lo que escribiste. También añade tu país y un tipo de dispositivo aproximado (teléfono o tableta, rango de memoria). Si la app se cierra por un error, también puede enviar un informe de fallo: el error y un breve registro técnico, nunca nada de lo que leíste o escribiste.</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Velocidad de lectura</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Más despacio es más fácil para los pequeños</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · lento</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Speed_Play" xml:space="preserve"><value>Escuchar esta velocidad</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino cuenta qué libros se leen, sin nombres ni identificadores. Puedes desactivarlo en Ajustes. También añade tu país y un tipo de dispositivo aproximado (teléfono o tableta, rango de memoria).</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino cuenta qué libros se leen, sin nombres ni identificadores. Puedes desactivarlo en Ajustes. También añade tu país y un tipo de dispositivo aproximado (teléfono o tableta, rango de memoria). Si la app se cierra por un error, también puede enviar un informe de fallo: el error y un breve registro técnico, nunca nada de lo que leíste o escribiste.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Tu narrador ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>No se pudieron descargar las voces narradoras</value></data>

@@ -40,6 +40,15 @@ public sealed class RtstUsage
             events => UsageBatch.ToJson(events, DeviceProbe.Current), UsageBatch.ParseQueue, UsageBatch.QueueToJson));
     }
 
+    /// <summary>True while the remote config switches crash reports on (Slice 227; default off).</summary>
+    public bool CrashReportsEnabled => _config.Current.CrashReportsEnabled;
+
+    /// <summary>True once a real remote config is held (Slice 227: crash reports wait for it).</summary>
+    public bool ConfigKnown => _config.HasCopy;
+
+    /// <summary>Fetches the remote config (joins a fetch already running); the crash sender waits for it. Never throws.</summary>
+    public Task RefreshConfigAsync() => _config.RefreshAsync();
+
     /// <summary>Whether counts may be sent at all; turning it off also forgets what was waiting.</summary>
     public bool Enabled
     {

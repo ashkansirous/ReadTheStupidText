@@ -21,17 +21,27 @@
       "/api/app-config",
       // Slice 133: Dino Reader's anonymous usage counts (worker/events.ts).
       "/api/events",
+      // Slice 227: crash and error reports from the phone apps (worker/crashes.ts).
+      "/api/crash",
       // The Dino Reader site on *.workers.dev, under /dino/ (worker/downloads.ts resolveSite).
       "/dino", "/dino/", "/dino/index.html", "/dino/privacy", "/dino/privacy/", "/dino/privacy.html", "/dino/download", "/dino/download/*",
       "/dino/api/stories", "/dino/api/stories/*",
       "/dino/api/app-config",
-      "/dino/api/events"
+      "/dino/api/events",
+      "/dino/api/crash"
     ]
   },
   "r2_buckets": [{ "binding": "DOWNLOADS", "bucket_name": "readthestupidtext-downloads" }],
   "analytics_engine_datasets": [
     { "binding": "DINO_USAGE", "dataset": "dino_usage" },
-    { "binding": "RTST_USAGE", "dataset": "rtst_usage" }
+    { "binding": "RTST_USAGE", "dataset": "rtst_usage" },
+    // Slice 227: one point per crash report (worker/crashes.ts); the report itself is kept in R2 under crashes/.
+    { "binding": "APP_CRASHES", "dataset": "app_crashes" }
+  ],
+  // Slice 227: at most 10 crash reports per connection and minute in one location; the connection's IP is only the limiter's key and is never stored.
+  // The namespace_id is an integer unique within the account.
+  "ratelimits": [
+    { "name": "CRASH_LIMITER", "namespace_id": "2270", "simple": { "limit": 10, "period": 60 } }
   ],
   "observability": { "enabled": true }
 }
