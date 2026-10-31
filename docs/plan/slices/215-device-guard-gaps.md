@@ -1,6 +1,6 @@
 # Slice 215: close the gaps left by Slices 207 and 212
 
-*In progress (wave 2026-10-30), draft PR.* Follow-up to Slices 207 and 212. Tooling, plus one app id.
+*Built (night run 2026-10-31), not merged. Both review passes done; emulator checks pass; the VM site-image retake is not done (see Not yet verified).* Follow-up to Slices 207 and 212. Tooling, plus one app id.
 
 **Touches:** `src/ReadTheStupidText.Mobile/ReaderPage.xaml` (one `AutomationId`), `.maestro/**`,
 `tools/emulator/run-flows.ps1`, `tools/emulator/common.ps1`, `tools/emulator/activity.ps1`,
@@ -67,7 +67,59 @@ Slices 207 and 212 left these open without a plan (user, 2026-10-30: "have you p
 - The fast checks for this slice come from `tools/test-targets.ps1 -Checks` (its first use on a real slice; Slice 207 built it): `run-checks` runs exactly what it prints, and the report says whether it named every touched app and test project.
 
 - VM: `rtst-panel-screenshot -WithPack supertonic-3` passes preflight and the shot shows the panel ready (no "Preparing the voice"); the site image is replaced.
+  - **VM run 2026-10-31 (key ea0d0370b0e3):** preflight ok (pack copied, guest offline), rtst-launch and rtst-panel-screenshot PASS, but the shot (tmp/shots/control-panel.png) shows "Preparing the voice..." (read states Pending > GeneratingAudio), the Windows build watermark at the bottom, and no online state. Not ready: `site/img/control-panel.webp` NOT replaced. Likely the pack is present but the voice isn't loaded when the shot is taken (not proven); the check passes on the read state alone.
+  - **VM run 2 2026-10-31 (same key, the check now waits up to 180 s):** FAIL, "the read never left GeneratingAudio" (waited 180 s), no PNG copied out, `site/img/control-panel.webp` NOT replaced. The offline guest with the copied supertonic-3 pack does not finish generating audio; cause not proven (needs the guest app log).
 
 - Self-tests (lint, activity, lease, test-targets) pass in pwsh and PowerShell 5.1, the way CI runs them (`-command ". 'file'"`).
 - Emulator: the two Farsi flows and the Norsk flow pass with the id; killing `system_server`
   (`adb shell su 0 kill <pid>` on the emulator) before a flow makes run-flows print `EMULATOR UNHEALTHY`, restart and pass.
+  - **Emulator kill run 2026-10-31 (key ea0d0370b0e3):** killed `system_server` on emulator-5554, then `run-flows.ps1 -App rtst -Flow norsk-pack-reads`: printed `EMULATOR UNHEALTHY (before the install check): pm path android did not answer`, saved evidence, restarted (51.8 s), flow `norsk-pack-reads` PASS (84 s). Item verified.
+## Built (night run 2026-10-30, not yet reviewed or run on a device)
+
+All 12 items are built except the VM run of item 6 and the site image replacement, which need the VM and the coordinator.
+
+- 1: `AutomationId="PackStatusLabel"` on the label; the two Farsi flows match `id: PackStatusLabel` plus the fa state text. No English flow and not the Norsk flow waits on the status text (Norsk waits on `LanguageContinue`), so there was nothing to switch there. Rule noted in `.maestro/README.md`.
+- 2 and 10: `run-flows.ps1` checks health before every flow and after a failed one (`Get-EmulatorHealthProblem` in `common.ps1`), saves evidence under `maestro-out/i<n>/unhealthy-*`, restarts from the shared `.emulator` folder and reruns the flow once; the second unhealthy check exits 5. No logs of the 2026-10-30 11:32 death still exist (`maestro-out/i1` is empty), so nothing could be recorded from them.
+- 3: `test-activity.ps1` (limit, override, VM plus one emulator, health parser), in the workflow. `-DeviceKillCheck` is the scripted emulator check for the `system_server` kill; it has not been run.
+- 4 and 12: lint follows `runFlow` files, tokenizes the inline `launchApp`, accepts the `# clearState:` comment above the key or its item and ignores quoted text, treats `stopApp: true` as a restart, and rejects doubled CRs and mixed endings. Fixtures under `fixtures/lint`; the line-ending fixtures are written at test time because git would normalize checked-in ones.
+- 5: `Invoke-DesktopTest.ps1` reads the `# needs:` headers once and prints the skip line once.
+- 6 (tooling only): `Invoke-DesktopTest.ps1 -WithPack <id>` downloads the pack zip once to `<worktrees>/_builds/packs` (sha256 checked against the pinned `packs.json`, whose URL is read from `PackConstants.cs`), copies it into the guest and unpacks it as the unversioned layout in `LocalCache\packs\<id>`, after the install and before the preflight. Also defined the missing `$script:PackManifestFile` in `desktop-vm/_common.ps1` (the pack preflight read it but only `tools/phone/common.ps1` set it). **Still to do by the coordinator (VM, not run):** `tools\desktop-vm\Invoke-DesktopTest.ps1 -App rtst -Check rtst-panel-screenshot -WithPack supertonic-3 -CopyOut <folder>`, crop the build watermark, convert to WebP 362x525 and replace `site/img/control-panel.webp`.
+- 7: nothing to build (recorded above). 8: a comment above each Downloading wait in the two Farsi flows. 9: `cancelled-voice-pack-stays-cancelled` asserts the `android:id/button2` sheet and its dismissal; `voice-cancel-holds-scan-pack` keeps it optional.
+- 11: `tools-selftests.yml` is one `selftests` job with `matrix.shell: [pwsh, powershell]`; actionlint was not available here (NOT RUN).
+
+## Review notes (medium pass)
+
+- Fixed: unhealthy counter reset after a healthy rerun; bounded adb health probes (15 s); `button2` sheet wait kept optional; lint strips a trailing comment from `runFlow:` paths; `Restart-Emulator` reinstalls when the installed build key is stale. `PackStatusLabel` selectors rely on MAUI AutomationId reaching Maestro as resource-id (same as `SettingsButton`); not yet run on the emulator.
+- Checked, no change: `tools-selftests.yml` matrix check names; the repo's only ruleset ("Protect") requires deletion/non_fast_forward only and main has no branch protection, so no required check names.
+- Not fixed (outside Touches): `lint-flows.ps1` `Test-LineEndings` depends on autocrlf with no `.gitattributes` pin (`*.yaml text eol=...`); a `.gitattributes` line would pin it.
+
+## Emulator run 2026-10-31 (key ea0d0370b0e3, emulator-5554, uncommitted)
+
+- PASS `voice-cancel-holds-scan-pack` (Farsi, PackStatusLabel id), PASS `norsk-pack-reads`, PASS `cancelled-voice-pack-stays-cancelled` (with the optional Not now sheet).
+- FAIL `sentence-highlight` (first flow after a reinstall; "Missing log marker SENTENCE 0 1"); not a PackStatusLabel flow, not rerun, cause not investigated.
+- FAIL item 3 (kill check): after `su 0 kill <system_server pid>`, the next `run-flows.ps1 -App rtst -Flow voice-cancel-holds-scan-pack` threw "uk.sirous.readthestupidtext is not installed" (`cmd: Can't find service: package`) at run-flows.ps1:285. No `EMULATOR UNHEALTHY`, no restart: the install check (run-flows.ps1:~275-285) runs before the per-flow health check, so a dead system_server is reported as "not installed". Fix: run the health check (and restart) before the install/key check. Emulator left with package service down 1+ min after the kill.
+- Not reached: `test-activity.ps1 -DeviceKillCheck`; recovery of the flow after restart.
+
+## Changed while building (night run 2026-10-31)
+
+- Device fix for the kill-check failure above: `run-flows.ps1` now runs the emulator health check before the install check; a package-service failure counts as unhealthy (`Resolve-InstallProblem`, with a self-test). Re-run: after killing `system_server`, run-flows printed `EMULATOR UNHEALTHY`, restarted in 52 s and the flow passed.
+- `rtst-panel-screenshot` waits up to 180 s for the read to reach Reading/Read and fails with a clear message otherwise.
+- Emulator: Farsi flows, Norsk flow and `cancelled-voice-pack-stays-cancelled` PASS. `sentence-highlight` failed once as the first flow after a fresh install ("Missing log marker SENTENCE 0 1"); not this slice's change, not rerun.
+- VM: two runs, the sample read never leaves GeneratingAudio in the offline guest with the copied supertonic-3 pack (layout matches `PackVersionFolders`), so `site/img/control-panel.webp` was NOT replaced. Two strikes, patching stopped. Cause unproven; next step is to read the guest app log.
+
+## From review
+
+- High pass (`reviews\215-high.md`) and medium pass (`reviews\215-medium.md`) done and fixed as listed in the medium notes above.
+- Medium finding 3 skipped: renaming the `tools-selftests.yml` matrix check names breaks nothing, since no ruleset requires the old check names.
+- Medium finding 8 skipped: the `.gitattributes` line pin is outside this slice's Touches.
+
+#### For CLAUDE.md
+
+- `tools/CLAUDE.md`: `run-flows.ps1` checks emulator health (and restarts) before the install check, so a dead `system_server` is never reported as "not installed". `Invoke-DesktopTest.ps1 -WithPack <id>` copies a voice pack into the VM guest for checks that need one. (Slice 215: docs/plan/slices/215-device-guard-gaps.md)
+
+#### Not yet verified
+
+- Site image retake: the VM sample read never leaves GeneratingAudio with the copied pack; `site/img/control-panel.webp` not replaced. Read the guest app log first.
+- `sentence-highlight` first-run failure after a fresh install ("Missing log marker SENTENCE 0 1"), not rerun.
+- `test-activity.ps1 -DeviceKillCheck` script path not run (the kill was done by hand).
+- Watermark crop of the site image not done.

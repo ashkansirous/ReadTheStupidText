@@ -1,0 +1,9 @@
+appId: uk.sirous.readthestupidtext
+---
+- launchApp
+- runFlow:
+    when:
+      visible: Hello
+    commands:
+      - runFlow:
+          file: sub/hook-sub.yaml

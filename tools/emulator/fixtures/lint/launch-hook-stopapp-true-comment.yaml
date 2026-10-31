@@ -1,0 +1,8 @@
+appId: uk.sirous.readthestupidtext
+---
+- launchApp
+# launchApp-restart: the saved choice must survive a restart of the app.
+- launchApp:
+    stopApp: true
+    arguments:
+      cmd: state
