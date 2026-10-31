@@ -69,6 +69,26 @@ public sealed class BookUpdatePlanTests
         Assert.Equal(BookUpdateSkip.UpToDate, BookUpdatePlan.Decide(staged, [new InstalledBookRecord(Id, 3, "c2:A")], [Shelf(Id, "A")]).Single().Skip);
     }
 
+    [Theory]
+    [InlineData(13)]
+    [InlineData(1)]
+    public void AForcedEntry_PlansAsUpdateAtApply_WhenTheRecordedVersionIsLoweredThen(int storeVersion)
+    {
+        StoreBookVersion[] staged = [new StoreBookVersion(Id, storeVersion)];
+        ShelfBook[] shelf = [Shelf(Id, "A")];
+        int lowered = BookUpdatePlan.ForcedRecordedVersion(storeVersion);
+
+        Assert.Equal(BookUpdateSkip.UpToDate, BookUpdatePlan.Decide(staged, [new InstalledBookRecord(Id, storeVersion, "c2:A")], shelf).Single().Skip);
+        Assert.Equal(BookUpdateAction.Update, BookUpdatePlan.Decide(staged, [new InstalledBookRecord(Id, lowered, "c2:A")], shelf).Single().Action);
+    }
+
+    [Fact]
+    public void ALoweredRecordedVersionLeftInPlace_WouldLetTheLaunchRefreshSwapTheBundledCopyFirst()
+    {
+        // The bundled starter is at the store's version: a recorded version one lower is "older than bundled" at launch (before the apply), which is why the hook lowers it only at apply.
+        Assert.True(StarterUpdate.NeedsUpdate(BookUpdatePlan.ForcedRecordedVersion(13), 13));
+    }
+
     [Fact]
     public void ABookOffTheShelf_IsDeletedAndNotBroughtBack()
     {

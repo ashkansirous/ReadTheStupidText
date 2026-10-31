@@ -92,6 +92,13 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 			return;
 		}
 
+#if DEBUG
+		foreach (Entry forced in entries.Where(e => StarterStories.ConsumeForcedApplyForTest(e.Id)))
+		{
+			Debug.WriteLine($"{LogTag} {forced.Id}: forced apply, recorded version lowered to v{BookUpdatePlan.ForcedRecordedVersion(forced.Version)}");
+			StarterStories.RecordVersionForTest(forced.Id, BookUpdatePlan.ForcedRecordedVersion(forced.Version));
+		}
+#endif
 		IReadOnlyList<BookUpdateDecision> decisions = await PlanAsync(entries.Select(e => new StoreBookVersion(e.Id, e.Version)).ToList());
 		foreach (Entry entry in entries)
 		{

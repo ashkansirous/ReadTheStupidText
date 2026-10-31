@@ -25,6 +25,11 @@ $threw = $false
 try { Resolve-CheckSelection @('nope') 'rtst' $catalogue | Out-Null } catch { $threw = $_.Exception.Message -like "*Unknown check 'nope'*cold-start*" }
 Assert-Equal 'unknown check throws and lists the known ones' $true $threw
 Assert-Equal 'dino runs book-end' $script:StatusPending (@(Resolve-CheckSelection @('book-end') 'dino' $catalogue))[0].Status
+# Slice 209: the hook checks are in the catalogue, each with its script file, and run on the apps they are for.
+foreach ($hookCheck in 'language', 'voice', 'translate', 'book-update') { Assert-Equal "check script exists: $hookCheck" $true (Test-Path (Join-Path $PSScriptRoot "checks\$hookCheck.ps1")) }
+Assert-Equal 'language runs on rtst' $script:StatusPending (@(Resolve-CheckSelection @('language') 'rtst' $catalogue))[0].Status
+Assert-Equal 'voice is RTST only' $script:StatusSkipped (@(Resolve-CheckSelection @('voice') 'dino' $catalogue))[0].Status
+Assert-Equal 'book-update is Dino only' $script:StatusSkipped (@(Resolve-CheckSelection @('book-update') 'rtst' $catalogue))[0].Status
 
 Assert-Equal 'cold-start estimate scales with -Runs (3)' 240 (@(Resolve-CheckSelection @('cold-start') 'rtst' $catalogue 3))[0].EstimateSeconds
 Assert-Equal 'cold-start estimate scales with -Runs (6)' 480 (@(Resolve-CheckSelection @('cold-start') 'rtst' $catalogue 6))[0].EstimateSeconds
@@ -33,7 +38,8 @@ Assert-Equal 'a fixed check keeps its estimate' 120 (@(Resolve-CheckSelection @(
 # ---- build cache name and the skip text
 Assert-Equal 'aot platform' 'android-dbg-arm64-aot' (Get-CachePlatform 'aot')
 Assert-Equal 'debug platform' 'android-dbg-arm64' (Get-CachePlatform 'debug')
-Assert-Equal 'every check declares its variant' 'aot,debug,debug,debug,debug' ((($catalogue.Keys | ForEach-Object { $catalogue[$_].Variant })) -join ',')
+Assert-Equal 'every check declares its variant (only cold-start is aot)' 'cold-start' ((@($catalogue.Keys | Where-Object { $catalogue[$_].Variant -eq 'aot' })) -join ',')
+Assert-Equal 'no check has a variant other than aot or debug' 0 @($catalogue.Keys | Where-Object { $catalogue[$_].Variant -notin 'aot', 'debug' }).Count
 Assert-Equal 'cold-start needs aot' 'aot' $plan[0].Variant
 Assert-Equal 'highlight takes any build' 'debug' (@(Resolve-CheckSelection @('highlight') 'rtst' $catalogue))[0].Variant
 
@@ -234,6 +240,17 @@ Assert-Equal 'first audio = first CHUNK minus the hook' 2100 $numbers.FirstAudio
 Assert-Equal 'engine ms' 480 $numbers.EngineMs
 Assert-Equal 'first synthesis ms' 400 $numbers.FirstSynthMs
 Assert-Equal 'no chunk yet: no first-audio number' $null (Get-ColdStartNumbers @() 1000.0).FirstAudioMs
+# ---- Slice 214: first-read presets
+Assert-Equal 'preset 1w is one word' 'Hello.' (Resolve-ColdStartText '1w' '').Text
+Assert-Equal 'preset 2s has two sentences' 2 @((Resolve-ColdStartText '2s' '').Text -split '(?<=\.)\s+').Count
+Assert-Equal 'preset 1s has one sentence' 1 @((Resolve-ColdStartText '1s' '').Text -split '(?<=\.)\s+').Count
+Assert-Equal 'no preset = the fixed passage (null text)' $null (Resolve-ColdStartText '' '').Text
+Assert-Equal 'free text wins over a preset' 'Hi there.' (Resolve-ColdStartText '2s' 'Hi there.').Text
+$threw = $false; try { Resolve-ColdStartText '9x' '' | Out-Null } catch { $threw = $true }
+Assert-Equal 'unknown preset throws' $true $threw
+Assert-Equal 'no audio event: no chunk 0 audio length' $null (Get-ColdStartNumbers @() 1000.0).FirstAudioLengthMs
+$audioEvents = @([pscustomobject]@{ Kind = 'audio'; Index = 1; Ms = 999; Time = 1000.5 }, [pscustomobject]@{ Kind = 'audio'; Index = 0; Ms = 2400; Time = 1000.6 })
+Assert-Equal 'chunk 0 audio length is reported' 2400 (Get-ColdStartNumbers $audioEvents 1000.0).FirstAudioLengthMs
 Assert-Equal 'median of three' 2 (Get-Median @(5, 1, 2))
 Assert-Equal 'median of four' 2.5 (Get-Median @(1, 2, 3, 4))
 

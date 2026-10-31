@@ -38,6 +38,10 @@ $script:Catalogue = [ordered]@{
     'highlight'           = @{ Apps = @('rtst'); EstimateSeconds = 120; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
     'notification-text'   = @{ Apps = @('rtst'); EstimateSeconds = 150; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
     'book-end'            = @{ Apps = @('dino'); EstimateSeconds = 420; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
+    'language'            = @{ Apps = @('rtst', 'dino'); EstimateSeconds = 180; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
+    'translate'           = @{ Apps = @('rtst'); EstimateSeconds = 150; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
+    'voice'               = @{ Apps = @('rtst'); EstimateSeconds = 90; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
+    'book-update'         = @{ Apps = @('dino'); EstimateSeconds = 240; NeedsPack = $false; Variant = 'debug'; Blocked = $null }
     'paused-notification' = @{ Apps = @('rtst'); EstimateSeconds = 240; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
 }
 
@@ -156,15 +160,33 @@ function Format-PreflightLine($Verdict) {
     return "preflight: GO (warnings, carrying on: $($Verdict.Other -join '; '))"
 }
 
+# ---- cold-start first-read text (Slice 214): the three sizes of the first chunk. The reader cuts the head of a read into chunks of up to 2 sentences, so each preset is one first chunk.
+$script:ColdStartPresets = [ordered]@{
+    '1w' = 'Hello.'
+    '1s' = 'The little dinosaur walked down to the river every morning.'
+    '2s' = 'The little dinosaur walked down to the river every morning. She watched the water run over the smooth grey stones.'
+}
+$script:ColdStartPresetDefault = 'passage'   # no preset: the fixed passage (ReaderPassage), as before
+
+# A preset name (1w, 1s, 2s, passage) or free text -> [pscustomobject]@{ Label; Text } (Text $null = the fixed passage). -Text wins over -Preset.
+function Resolve-ColdStartText([string]$Preset, [string]$Text) {
+    if ($Text) { return [pscustomobject]@{ Label = 'custom'; Text = $Text } }
+    if (-not $Preset -or $Preset -eq $script:ColdStartPresetDefault) { return [pscustomobject]@{ Label = $script:ColdStartPresetDefault; Text = $null } }
+    if (-not $script:ColdStartPresets.Contains($Preset)) { throw "Unknown first-read preset '$Preset'. Known: $($script:ColdStartPresets.Keys -join ', '), $($script:ColdStartPresetDefault)." }
+    return [pscustomobject]@{ Label = $Preset; Text = $script:ColdStartPresets[$Preset] }
+}
+
 # ---- cold-start: the numbers of one fresh-process read, from the log lines of that process. $TapTime is the phone time of the `HOOK read start` line.
 function Get-ColdStartNumbers($Events, [double]$TapTime) {
     $chunk = $Events | Where-Object Kind -eq 'chunk' | Select-Object -First 1
     $engine = $Events | Where-Object Kind -eq 'engine' | Select-Object -First 1
     $synth = $Events | Where-Object { $_.Kind -eq 'synth-end' -and $_.Index -eq 0 } | Select-Object -First 1
+    $audio = $Events | Where-Object { $_.Kind -eq 'audio' -and $_.Index -eq 0 } | Select-Object -First 1
     return [pscustomobject]@{
         FirstAudioMs = if ($chunk) { [int](($chunk.Time - $TapTime) * 1000) } else { $null }
         EngineMs     = if ($engine -and $engine.Ms -ge 0) { $engine.Ms } else { $null }
         FirstSynthMs = if ($synth) { $synth.Ms } else { $null }
+        FirstAudioLengthMs = if ($audio) { $audio.Ms } else { $null }   # length of chunk 0's audio: the size of the first chunk, since the log never holds the text
     }
 }
 
@@ -476,7 +498,7 @@ $script:RequiredPacks = @{ rtst = @('supertonic-3'); dino = @('supertonic-3', 'k
 # ---- cold-start report
 function Format-ColdStartRuns($Runs) {
     $index = 0
-    $parts = foreach ($run in $Runs) { $index++; 'run {0}: first audio {1} ms (engine {2}, synthesis {3})' -f $index, $run.FirstAudioMs, $run.EngineMs, $run.FirstSynthMs }
+    $parts = foreach ($run in $Runs) { $index++; 'run {0}: first audio {1} ms (engine {2}, synthesis {3}, chunk 0 audio {4} ms)' -f $index, $run.FirstAudioMs, $run.EngineMs, $run.FirstSynthMs, $run.FirstAudioLengthMs }
     return ($parts -join '; ')
 }
 

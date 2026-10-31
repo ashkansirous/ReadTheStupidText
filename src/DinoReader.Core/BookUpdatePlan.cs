@@ -128,6 +128,9 @@ public static class BookUpdatePlan
             : Skipped(record.Id, BookUpdateSkip.Edited);
     }
 
+    /// <summary>The recorded version that makes the plan see <paramref name="storeVersion"/> as an update (Slice 209 test hook, forced staging of a copy that already matches the store).</summary>
+    public static int ForcedRecordedVersion(int storeVersion) => storeVersion - 1;
+
     private static BookUpdateDecision Skipped(string id, BookUpdateSkip why) => new(id, BookUpdateAction.Skip, why);
 }
 

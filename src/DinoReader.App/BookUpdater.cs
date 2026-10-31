@@ -50,6 +50,126 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		}
 	}
 
+#if DEBUG
+	/// <summary>
+	/// Slice 209 (Debug only, for the <c>stage-book-update</c> test hook): stages the store's newer version of one book now, whatever the 7-day schedule says, and saves no check time,
+	/// so the next cold start applies it and the <c>[BookUpdate]</c> apply lines time it. Returns <c>ok &lt;id&gt; v&lt;n&gt;</c>, or <c>failed &lt;reason&gt;</c> (offline, not in the store, edited,
+	/// up to date, not on the shelf, another run busy, download failed): never throws for those. With <paramref name="force"/>, a copy that is already up to date is staged anyway
+	/// (its recorded version is set one lower first) and the outcome ends with <c>forced</c>.
+	/// </summary>
+	public async Task<string> StageNowAsync(string id, CancellationToken cancel, bool force = false)
+	{
+		if (!await Run.WaitAsync(0, cancel))
+		{
+			return "failed busy";
+		}
+
+		try
+		{
+			string outcome = await StageNowGuardedAsync(id, force, cancel);
+			Debug.WriteLine($"{LogTag} stage-now {id}: {outcome}");
+			return outcome;
+		}
+		finally
+		{
+			Run.Release();
+		}
+	}
+
+	private async Task<string> StageNowGuardedAsync(string id, bool force, CancellationToken cancel)
+	{
+		await starters.InstallOnceAsync();
+		if (!starters.InstallComplete)
+		{
+			return "failed starters not installed";
+		}
+
+		StoreListing listing = await store.ListAsync(cancel);
+		if (listing.Status != StoreLoadStatus.Ok)
+		{
+			return "failed offline";
+		}
+
+		StoreItem? item = listing.Items.FirstOrDefault(i => string.Equals(i.Id, id, StringComparison.OrdinalIgnoreCase));
+		if (item is null)
+		{
+			return "failed not in the store";
+		}
+
+		IReadOnlyList<BookUpdateDecision>? decisions = await PlanOneBookAsync(item, listing.Items, cancel);
+		BookUpdateDecision? decision = decisions?.FirstOrDefault(d => string.Equals(d.Id, item.Id, StringComparison.OrdinalIgnoreCase));
+		bool forced = force && decision is { Skip: BookUpdateSkip.UpToDate };
+		if (forced)
+		{
+			decision = await ForceUpdateAsync(item, listing.Items, cancel);
+		}
+
+		if (decision is not { Action: BookUpdateAction.Update })
+		{
+			return $"failed {(decisions is null ? "network" : decision is null ? "not on the shelf" : decision.Skip?.ToString() ?? decision.Action.ToString())}";
+		}
+
+		if (!await StageOneAsync(item, cancel))
+		{
+			return "failed download";
+		}
+
+		// StageOneAsync also returns true for a package the store does not have (404): only a staged version counts as done.
+		return staged.StagedVersion(item.Id) is { } have && have >= item.Version ? $"ok {item.Id} v{item.Version}{(forced ? " forced" : string.Empty)}" : "failed package not in the store";
+	}
+
+	// force=true on a copy that already matches the store: its text hash is recorded when missing (from the version it has), then its recorded version is set one lower, so the plan sees the
+	// store's version as an update and the next start swaps it in as a real update would. Returns the new decision for the book (null when it is not on the shelf).
+	private async Task<BookUpdateDecision?> ForceUpdateAsync(StoreItem item, IReadOnlyList<StoreItem> items, CancellationToken cancel)
+	{
+		Debug.WriteLine($"{LogTag} {item.Id}: up to date, forced to stage v{item.Version} anyway");
+		if (StarterStories.RecordedTextHash(item.Id) is null && await RecordBaselineAsync(item.Id, cancel) != Baseline.Recorded)
+		{
+			return new BookUpdateDecision(item.Id, BookUpdateAction.Skip, BookUpdateSkip.NotInStore);
+		}
+
+		// The lowered version is only for this plan: left in place, the next launch's starter refresh (InstallOnceAsync, before the apply) would swap the bundled copy in, record
+		// the store's version and the apply would drop the staged package as up to date. The apply lowers it again itself (MarkForcedApplyForTest).
+		int? before = StarterStories.RecordedVersion(item.Id);
+		StarterStories.RecordVersionForTest(item.Id, BookUpdatePlan.ForcedRecordedVersion(item.Version));
+		IReadOnlyList<BookUpdateDecision> again;
+		try
+		{
+			again = await PlanAsync(items);
+		}
+		finally
+		{
+			StarterStories.RestoreVersionForTest(item.Id, before);
+		}
+
+		BookUpdateDecision? decision = again.FirstOrDefault(d => string.Equals(d.Id, item.Id, StringComparison.OrdinalIgnoreCase));
+		if (decision is { Action: BookUpdateAction.Update })
+		{
+			StarterStories.MarkForcedApplyForTest(item.Id);
+		}
+
+		return decision;
+	}
+
+	// Plans like the real check, but records a missing baseline for the one named book only, so the hook leaves the other shelf books' state as production would find it.
+	private async Task<IReadOnlyList<BookUpdateDecision>?> PlanOneBookAsync(StoreItem item, IReadOnlyList<StoreItem> items, CancellationToken cancel)
+	{
+		IReadOnlyList<BookUpdateDecision> decisions = await PlanAsync(items);
+		bool needsBaseline = decisions.Any(d => d.Action == BookUpdateAction.NeedsBaseline && string.Equals(d.Id, item.Id, StringComparison.OrdinalIgnoreCase));
+		if (!needsBaseline)
+		{
+			return decisions;
+		}
+
+		if (await RecordBaselineAsync(item.Id, cancel) == Baseline.NetworkFailure)
+		{
+			return null;
+		}
+
+		return await PlanAsync(items);
+	}
+#endif
+
 	private async Task RunGuardedAsync(CancellationToken cancel)
 	{
 		try
