@@ -43,7 +43,7 @@ Cause is likely, not yet proven by a fixed pack loading.
 - [x] App guard: `Domain/Reading/PiperTokens`, `PackManifest.BrokenTokenFolders(In)`; a bad pack fails `ValidatePayload` (InvalidPack, the existing failed/retry path), is not "installed" in `LoadInstalled` (so the saved language falls back like a missing pack), and the three engine builders (Windows, Android, iOS) throw `InvalidDataException` before the native load. Debug marker `RTST_PACK_TOKENS_REJECTED`.
 - [x] Tests: `PiperTokensTests` (good, two code points, missing/non-numeric id, blank line, BOM, duplicate, missing `_ ^ $`, manifest wiring).
 - [x] Scripted check written: `.maestro/rtst/norsk-pack-reads.yaml` (not run).
-- [x] Done: packs-10 released with piper-nb v2; `PackConstants.CatalogUrl` points at it. (Original note: run `packs.yml` (new `norwegian_pack_version`, new `release_number`) and bump `PackConstants.CatalogUrl`; the device run. )
+- [x] Done: packs-10 released with piper-nb v2; `PackConstants.CatalogUrl` points at it. (Original note: run `packs.yml` (new `norwegian_pack_version`, new `release_number`) and bump `PackConstants.CatalogUrl`; the device run.)
 
 ## S21 device result (2026-10-30)
 
