@@ -74,7 +74,8 @@ public sealed class IconView : ContentView
 	// Path data copied from the mock's inline SVGs (rects and circles rewritten as arcs).
 	private static readonly Dictionary<IconKind, string> Paths = new()
 	{
-		[IconKind.Lock] = "M7.5 11h9A2.5 2.5 0 0 1 19 13.5v5A2.5 2.5 0 0 1 16.5 21h-9A2.5 2.5 0 0 1 5 18.5v-5A2.5 2.5 0 0 1 7.5 11z M8 11V8a4 4 0 0 1 8 0v3",
+		// Slice 228: the padlock with a keyhole from the mock (docs/design/dino-reader/icons/grownups-lock.svg), the rect rewritten as arcs.
+		[IconKind.Lock] = "M7.5 10.5h9A2.5 2.5 0 0 1 19 13v5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 5 18v-5a2.5 2.5 0 0 1 2.5-2.5z M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5 M12 14.6v2",
 		[IconKind.Plus] = "M12 5v14M5 12h14",
 		[IconKind.Trash] = "M4 7h16 M9 7V4.5h6V7 M6.5 7l1 13h9l1-13",
 		[IconKind.Chevron] = "M4.5 2.5L8 6L4.5 9.5",

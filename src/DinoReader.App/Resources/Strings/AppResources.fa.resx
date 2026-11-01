@@ -114,6 +114,12 @@
   <data name="Intro_TryIt" xml:space="preserve"><value>امتحان کنید</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>رد کردن</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} از {1}</value></data>
+  <data name="Intro_PlacesTitle" xml:space="preserve"><value>دینو دو جا دارد</value></data>
+  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>قفسهٔ بچه‌ها</value></data>
+  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>فقط روی یک کتاب بزنید و گوش کنید.</value></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>پشت یک قفل، برای افزودن کتاب و صدا.</value></data>
+  <data name="Intro_ReadTitle" xml:space="preserve"><value>با هم یک قصه بخوانیم</value></data>
+  <data name="Intro_ReadLine" xml:space="preserve"><value>روی یک کتاب بزنید و پخش را بزنید. دینو با صدای بلند می‌خواند و هر جمله را روشن می‌کند.</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>کتاب‌های بیشتر بگیرید</value></data>
   <data name="Intro_StoreLine" xml:space="preserve"><value>فروشگاه داستان‌های بیشتری دارد که آمادهٔ دانلود هستند.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>با صدای خودتان بخوانید</value></data>
@@ -146,6 +152,12 @@
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>بزرگ‌ترها</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>افزودن و ویرایش کتاب‌ها</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>برای بزرگسالان</value></data>
+  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>بزرگ‌ترها</value></data>
+  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>گوشهٔ بزرگ‌ترها، قفل‌شده</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>گوشهٔ بزرگ‌ترها</value></data>
+  <data name="Gallery_CornerLine" xml:space="preserve"><value>این بخش را فقط بزرگ‌ترها می‌بینند. قفسهٔ کودک شما یک لمس فاصله دارد.</value></data>
+  <data name="Gallery_BackToShelf" xml:space="preserve"><value>بازگشت به قفسهٔ کودکم</value></data>
+  <data name="Book_ReadNow" xml:space="preserve"><value>اکنون بخوان</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>گزینه‌های «{0}»</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>از فروشگاه</value></data>
   <data name="Book_Starter" xml:space="preserve"><value>کتاب آغازین</value></data>

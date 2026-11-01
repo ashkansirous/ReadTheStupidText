@@ -114,6 +114,12 @@
   <data name="Intro_TryIt" xml:space="preserve"><value>試してみる</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>スキップ</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} / {1}</value></data>
+  <data name="Intro_PlacesTitle" xml:space="preserve"><value>ディノには2つの場所があります</value></data>
+  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>こどもの本棚</value></data>
+  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>本をタップして聞くだけ。</value></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>ロックの奥で、本や声を追加できます。</value></data>
+  <data name="Intro_ReadTitle" xml:space="preserve"><value>いっしょに読もう</value></data>
+  <data name="Intro_ReadLine" xml:space="preserve"><value>本をタップして再生。ディノが読み上げ、1文ずつ光ります。</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>本をもっと入手</value></data>
   <data name="Intro_StoreLine" xml:space="preserve"><value>ストアには、ダウンロードできる物語がまだあります。</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>あなたの声で読む</value></data>
@@ -146,6 +152,12 @@
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>おとな</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>本を追加・編集</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>おとな向け</value></data>
+  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>おとな向け</value></data>
+  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>おとなのコーナー（ロック中）</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>おとなのコーナー</value></data>
+  <data name="Gallery_CornerLine" xml:space="preserve"><value>ここはおとなだけが見られます。お子さまの本棚はワンタップで戻れます。</value></data>
+  <data name="Gallery_BackToShelf" xml:space="preserve"><value>お子さまの本棚にもどる</value></data>
+  <data name="Book_ReadNow" xml:space="preserve"><value>今すぐ読む</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>{0}のオプション</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>ストアから</value></data>
   <data name="Book_Starter" xml:space="preserve"><value>はじめの本</value></data>

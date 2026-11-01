@@ -317,7 +317,9 @@ test("Dino takes the intro counts about no book, with a closed detail (Slice 155
   assert.notEqual(parseEvent({ ...intro, name: "intro_step", detail: "add:skipped" }), null);
   assert.notEqual(parseEvent({ ...intro, name: "intro_ended", detail: "skipped_all" }), null);
   assert.notEqual(parseEvent({ ...intro, name: "intro_ended", detail: "finished" }), null);
-  for (const detail of ["", "read:tried", "store", "store:done", "store:tried:x", ":tried"]) {
+  assert.notEqual(parseEvent({ ...intro, name: "intro_step", detail: "places:tried" }), null);
+  assert.notEqual(parseEvent({ ...intro, name: "intro_step", detail: "read:skipped" }), null);
+  for (const detail of ["", "listen:tried", "store", "store:done", "store:tried:x", ":tried"]) {
     assert.equal(parseEvent({ ...intro, name: "intro_step", detail }), null, detail);
   }
   assert.equal(parseEvent({ ...intro, name: "intro_started", detail: "finished" }), null);

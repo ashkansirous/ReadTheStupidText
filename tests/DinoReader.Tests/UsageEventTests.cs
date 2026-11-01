@@ -180,9 +180,9 @@ public class UsageEventTests
     }
 
     [Fact]
-    public void The_intro_has_four_steps_in_order_and_a_saved_index_outside_them_means_it_is_not_running()
+    public void The_intro_has_six_steps_in_order_and_a_saved_index_outside_them_means_it_is_not_running()
     {
-        Assert.Equal(["store", "record", "add", "languages"], Enumerable.Range(0, IntroSteps.Count).Select(IntroSteps.NameAt));
+        Assert.Equal(["places", "read", "store", "record", "add", "languages"], Enumerable.Range(0, IntroSteps.Count).Select(IntroSteps.NameAt));
         Assert.False(IntroSteps.IsStep(-1));
         Assert.False(IntroSteps.IsStep(IntroSteps.Count));
         Assert.True(IntroSteps.IsStep(IntroSteps.Count - 1));
@@ -220,6 +220,18 @@ public class UsageEventTests
 
         Assert.Contains($"PACK_OUTCOMES = [\"{UsageDetail.PackDone}\", \"{UsageDetail.PackFailed}\", \"{UsageDetail.PackCancelled}\"]", source);
         Assert.Contains($"STORY_LANGUAGE_WHERE = [\"{UsageDetail.LanguagesFromIntro}\", \"{UsageDetail.LanguagesFromSettings}\"]", source);
+    }
+
+    [Theory]
+    [InlineData(0, 2)]
+    [InlineData(3, 5)]
+    [InlineData(-1, -1)]
+    [InlineData(4, -1)]
+    public void An_intro_saved_before_the_two_new_steps_resumes_two_steps_further_on(int saved, int expected)
+    {
+        Assert.Equal(expected, IntroSteps.FromLegacy(saved));
+        Assert.Equal("store", IntroSteps.NameAt(IntroSteps.FromLegacy(0)));
+        Assert.Equal("languages", IntroSteps.NameAt(IntroSteps.FromLegacy(3)));
     }
 
     [Fact]
@@ -315,5 +327,16 @@ public class UsageEventTests
         Assert.Equal(UsageDetail.KindPdf, kept.Origin);
         Assert.Equal(UsageDetail.KindPdf, OwnBookKind.Of([kept.Origin]));
         Assert.Null(PageDraft.ForText("typed").Origin);
+    }
+
+    [Theory]
+    [InlineData(UsageEventName.BookOpened, true, false)]
+    [InlineData(UsageEventName.BookFinished, true, false)]
+    [InlineData(UsageEventName.BookOpened, false, true)]
+    [InlineData(UsageEventName.BookFinished, false, true)]
+    [InlineData(UsageEventName.IntroStep, true, true)]
+    public void ADemoReadCountsNoBookOpenOrFinish(string eventName, bool demoRead, bool counts)
+    {
+        Assert.Equal(counts, DemoReadCounting.Counts(eventName, demoRead));
     }
 }

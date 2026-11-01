@@ -23,11 +23,12 @@ internal sealed class BookSheet : Grid
 	private const double RowCorner = 16;
 	private const double PillHeight = 48;
 	private const double PillStroke = 2;
-	private const double BackHeight = 50;
+	private const double ReadNowHeight = 60;
 	private const double ActionHeight = 48;
 	private const double ThumbWidth = 44;
 	private const double ThumbHeight = 58;
 	private const double ThumbCorner = 8;
+	private const double CloseSize = 48; // Android's 48 dp minimum touch target (the mock drew 36)
 	private const double GrabWidth = 40;
 	private const double GrabHeight = 5;
 	private static readonly Color GrabColour = Color.FromArgb("#e3dccd");
@@ -42,7 +43,7 @@ internal sealed class BookSheet : Grid
 	private readonly Label _editLabel = new();
 	private readonly Label _exportLabel = new();
 	private readonly Label _removeLabel = new();
-	private readonly Label _doneLabel = new();
+	private readonly Label _readNowLabel = new();
 	private readonly Label _hint = new() { FontSize = HintSize, LineHeight = 1.3, TextColor = DinoTokens.Get(DinoTokens.Body) };
 	private readonly ToggleSwitch _original = new();
 	private readonly Border _row = new();
@@ -50,7 +51,7 @@ internal sealed class BookSheet : Grid
 	private readonly ToggleSwitch _voice = new();
 	private readonly Border _voiceRow = new();
 	private readonly Border _removeRow = new();
-	private readonly Border _doneRow = new();
+	private readonly Border _readNowRow = new();
 	private readonly ScrollView _scroll = new();
 	private bool _loading;
 
@@ -69,6 +70,7 @@ internal sealed class BookSheet : Grid
 			Content = ScrolledRows(), // a short screen scrolls the rows instead of cutting them off
 		};
 		CastViews.AddTap(sheet, () => Task.CompletedTask);
+		// No Done row (Slice 228): a tap outside or the labelled close button in the header closes the sheet; a swipe down is not used, it fought the scrolling rows.
 		Children.Add(sheet);
 		_original.Toggled += (_, _) => OnToggled();
 		_voice.Toggled += (_, _) => OnVoiceToggled();
@@ -79,6 +81,9 @@ internal sealed class BookSheet : Grid
 
 	/// <summary>Raised with the new state of "Read with my voice".</summary>
 	public event Func<bool, Task>? VoiceChanged;
+
+	/// <summary>Raised for "Read now" (Slice 228); the sheet closes first and the page leaves grown-up mode to open the book.</summary>
+	public event Func<Task>? ReadRequested;
 
 	/// <summary>Raised when the grown-up asks for the cast screen; the sheet closes first.</summary>
 	public event Func<Task>? CastRequested;
@@ -130,12 +135,11 @@ internal sealed class BookSheet : Grid
 		_editLabel.Text = AppResources.Book_EditPages;
 		_exportLabel.Text = AppResources.Gallery_ExportStory;
 		_removeLabel.Text = AppResources.Book_Remove;
-		_doneLabel.Text = AppResources.Common_Done;
+		_readNowLabel.Text = AppResources.Book_ReadNow;
 		SemanticProperties.SetDescription(_editRow, _editLabel.Text);
 		SemanticProperties.SetDescription(_exportRow, _exportLabel.Text);
 		SemanticProperties.SetDescription(_removeRow, _removeLabel.Text);
-		SemanticProperties.SetDescription(_doneRow, _doneLabel.Text);
-	}
+		SemanticProperties.SetDescription(_readNowRow, _readNowLabel.Text);	}
 
 	// The cover's picture, or its colour when the book has none.
 	private void ShowThumb(Content content)
@@ -175,7 +179,37 @@ internal sealed class BookSheet : Grid
 	}
 
 	private VerticalStackLayout Rows() =>
-		new() { Spacing = 12, Children = { GrabHandle(), Header(), OriginalRow(), VoiceRow(), Pills(), QuietRow(_editRow, _editLabel, () => EditRequested, "BookSheetEdit"), QuietRow(_exportRow, _exportLabel, () => ExportRequested, "BookSheetExport"), RemoveRow(), BackButton() } };
+		new() { Spacing = 12, Children = { GrabHandle(), Header(), ReadNowRow(), OriginalRow(), VoiceRow(), Pills(), QuietRow(_editRow, _editLabel, () => EditRequested, "BookSheetEdit"), QuietRow(_exportRow, _exportLabel, () => ExportRequested, "BookSheetExport"), RemoveRow() } };
+
+	// Read now (Slice 228, mock Batch 43 frame 100): the first and biggest row, for every book. The sheet closes first, then the page leaves grown-up mode and opens the reader.
+	private Border ReadNowRow()
+	{
+		_readNowLabel.FontSize = 18;
+		_readNowLabel.FontAttributes = FontAttributes.Bold;
+		_readNowLabel.TextColor = Colors.White;
+		_readNowLabel.VerticalOptions = LayoutOptions.Center;
+		var content = new HorizontalStackLayout
+		{
+			Spacing = 10, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
+			Children = { new IconView { Kind = IconKind.Play, Color = Colors.White, Filled = true, Size = 20, VerticalOptions = LayoutOptions.Center }, _readNowLabel },
+		};
+		Border row = _readNowRow;
+		row.HeightRequest = ReadNowHeight;
+		row.StrokeThickness = 0;
+		row.BackgroundColor = DinoTokens.Get(DinoTokens.Coral);
+		row.StrokeShape = new RoundRectangle { CornerRadius = ReadNowHeight / 2 };
+		row.Content = content;
+		row.AutomationId = "BookSheetReadNow";
+		CastViews.AddTap(row, async () =>
+		{
+			Dismiss(); // not Hide: the page's Dismissed handler also rebuilds the tiles when a switch was saved in the sheet
+			if (ReadRequested is { } requested)
+			{
+				await requested();
+			}
+		});
+		return row;
+	}
 
 	private static BoxView GrabHandle() => new()
 	{
@@ -183,7 +217,7 @@ internal sealed class BookSheet : Grid
 	};
 
 	// The cover thumbnail with the book's name and where it came from (frame 85b).
-	private HorizontalStackLayout Header()
+	private Grid Header()
 	{
 		_thumb.WidthRequest = ThumbWidth;
 		_thumb.HeightRequest = ThumbHeight;
@@ -191,7 +225,30 @@ internal sealed class BookSheet : Grid
 		_thumb.StrokeShape = new RoundRectangle { CornerRadius = ThumbCorner };
 		SemanticProperties.SetHeadingLevel(_title, SemanticHeadingLevel.Level1);
 		var names = new VerticalStackLayout { Spacing = 2, VerticalOptions = LayoutOptions.Center, Children = { _title, _subtitle } };
-		return new HorizontalStackLayout { Spacing = 12, Children = { _thumb, names } };
+		var left = new HorizontalStackLayout { Spacing = 12, Children = { _thumb, names } };
+		var header = new Grid { ColumnSpacing = 8, ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
+		header.Add(left, 0);
+		header.Add(CloseButton(), 1);
+		return header;
+	}
+
+	// The accessible way to close the sheet (the scrim tap has no semantics): a small round button with a screen-reader label.
+	private Border CloseButton()
+	{
+		Border close = new()
+		{
+			WidthRequest = CloseSize,
+			HeightRequest = CloseSize,
+			VerticalOptions = LayoutOptions.Start,
+			StrokeThickness = 0,
+			BackgroundColor = DinoTokens.Get(DinoTokens.Sand),
+			StrokeShape = new RoundRectangle { CornerRadius = CloseSize / 2 },
+			Content = new IconView { Kind = IconKind.ChevronDown, Color = DinoTokens.Get(DinoTokens.Ink), Size = 18, StrokeWidth = 2.4, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center },
+			AutomationId = "BookSheetClose",
+		};
+		SemanticProperties.SetDescription(close, AppResources.Common_Close);
+		CastViews.AddTap(close, () => { Dismiss(); return Task.CompletedTask; });
+		return close;
 	}
 
 	// Edit pages and Export: quiet full-width rows under the pills; each closes the sheet before its screen opens.
@@ -361,23 +418,5 @@ internal sealed class BookSheet : Grid
 			}
 		});
 		return pill;
-	}
-
-	private Border BackButton()
-	{
-		_doneLabel.FontSize = 15.5;
-		_doneLabel.FontAttributes = FontAttributes.Bold;
-		_doneLabel.HorizontalOptions = LayoutOptions.Center;
-		_doneLabel.VerticalOptions = LayoutOptions.Center;
-		Border done = _doneRow;
-		done.HeightRequest = BackHeight;
-		done.StrokeThickness = 0;
-		done.BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
-		done.StrokeShape = new RoundRectangle { CornerRadius = BackHeight / 2 };
-		done.Content = _doneLabel;
-		done.AutomationId = "BookSheetDone";
-		SemanticProperties.SetDescription(done, AppResources.Common_Done);
-		CastViews.AddTap(done, () => { Dismiss(); return Task.CompletedTask; });
-		return done;
 	}
 }
