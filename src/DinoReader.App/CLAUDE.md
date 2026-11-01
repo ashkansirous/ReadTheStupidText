@@ -24,7 +24,9 @@ are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CL
 > 132, 133 and 136 `Dino Reader Batch 26-28.dc.html`, and for Slice 143 (the wait overlay)
 > `Dino Reader Batch 30.dc.html`, and for Slices 148 and 150-154 `Dino Reader Batch 31.dc.html`
 > (it supersedes frames 57-59), for Slice 155 (first-run intro) `Dino Reader Batch 32.dc.html`, and for
-> Slices 172-174 (gear, story languages, reading screen) `Dino Reader Batch 37.dc.html` (index in
+> Slices 172-174 (gear, story languages, reading screen) `Dino Reader Batch 37.dc.html`, for Slices 228-231
+> (grown-ups' corner, Done/Continue, Record) `Dino Reader Batch 43 Grown-ups Corner.dc.html`, and for Slice 232
+> (landscape, every screen) `Dino Reader Batch 44 Landscape.dc.html` (index in
 > that folder's README): read visual values (colours, sizes, copy, layout) from it,
 > never guess them, and never call `DesignSync` for them.
 
