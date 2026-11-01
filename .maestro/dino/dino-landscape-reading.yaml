@@ -1,0 +1,56 @@
+# Slice 232 part A: the reading screen rotates portrait -> landscape -> portrait on page 2 and keeps its page; its controls and surface stay on screen.
+# Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback if a device ignores it.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK open-book opened page=2
+# expect-log: [Landscape] reading laid out landscape=True page=1
+# page= here is the surface's 0-based CurrentPage (open-book's page=2 is 1-based, so 1); landscape is C# bool text (True).
+# The upright layout line is written only when the layout changes back (the first portrait open applies none), so it proves the second rotation.
+# expect-log: [Landscape] reading controls=upright layout=Upright
+appId: uk.sirous.dinoreader.dbg
+name: Reading screen keeps its page through a rotation
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow opens a starter book and speaks nothing, so it needs no pack or own book.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "2"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible:
+      id: ReadingTransport
+    timeout: 15000
+- assertVisible:
+    id: ReadingSurface
+- assertVisible:
+    id: ReadingBack
+- assertVisible:
+    id: ReadingModes
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: ReadingTransport
+    timeout: 15000
+- assertVisible:
+    id: ReadingSurface
+- tapOn:
+    id: ReadingBack
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryTitle
+    timeout: 15000
