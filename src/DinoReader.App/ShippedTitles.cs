@@ -267,6 +267,23 @@ public static class ShippedTitles
 			["sv"] = "X markerar skatten!",
 			["zh"] = "X 标记宝藏！",
 		},
+		["Freddy and the Slipper"] = new(StringComparer.Ordinal)
+		{
+			["ar"] = "فريدي والشبشب",
+			["da"] = "Freddy og tøflen",
+			["de"] = "Freddy und der Hausschuh",
+			["es"] = "Freddy y la pantufla",
+			["fa"] = "فردی و دمپایی روفرشی",
+			["fi"] = "Freddy ja tohveli",
+			["fr"] = "Freddy et la pantoufle",
+			["ja"] = "フレディとスリッパ",
+			["nb"] = "Freddy og tøffelen",
+			["nl"] = "Freddy en de pantoffel",
+			["pt"] = "Freddy e a pantufa",
+			["ru"] = "Фредди и тапочек",
+			["sv"] = "Freddy och tofflan",
+			["zh"] = "弗雷迪和拖鞋",
+		},
 	};
 
 	/// <summary>Every English title that has a table.</summary>

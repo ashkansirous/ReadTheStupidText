@@ -193,7 +193,12 @@ Record each pass in the art record table (page, attempt number, why earlier atte
   30 s for a `Gemini_Generated_Image_*` written in the last two minutes, saves it as JPEG quality 95, prints
   `WxH` (a WARNING line means it isn't 3:4) and moves it out of `Downloads`, so the next call can't pick it up
   again. No clipboard and no real click, so it works while the PC is locked and can't collide with a paste.
-- Fallback, only if no download arrives (Chrome dropped downloads silently on 2026-10-25): after `__grab`,
+- First fallback, if the button click writes no file (Freddy and the Slipper, 2026-11-01: after the first picture
+  every click stopped writing one): fetch the newest picture's blob in the page and save it with a temporary
+  `<a download>` link clicked from `javascript_tool`, then take it with `gemini-take-download.ps1 -Bytes <blob size>`.
+  This saved every later picture of that book; one picture's full-size download failed twice and only the 896x1200
+  version came (fine: the app uses 896x1200).
+- Second fallback, only if no download arrives at all (Chrome dropped downloads silently on 2026-10-25): after `__grab`,
   run `await window.__grab(1, { clipboard: true })` (the clipboard write is armed only with that flag), then one real
   `computer` click on the newest picture itself (its `find` ref) makes the grabber copy the blob to the
   clipboard; poll `window.__clipResult` until it is `WxH`, then
