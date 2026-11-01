@@ -1,6 +1,6 @@
 ### Slice 228 — Dino: make the kids' shelf and the grown-ups' corner obvious
 
-*Built (wave 2026-11-01), PR #673.* Planned 2026-11-01. From the user's user test on 2026-11-01 (findings 1, 2 and 7). **Design done: the user approved the Batch 43 mock (see User answers)** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code").
+*Built (wave 2026-11-01), merged as PR #673 (e3c9eb9).* Planned 2026-11-01. From the user's user test on 2026-11-01 (findings 1, 2 and 7). **Design done: the user approved the Batch 43 mock (see User answers)** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code").
 
 **Touches:** `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/GalleryText.cs`, `src/DinoReader.App/GrownUpMode.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.Core/BookSheetPlan.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/IntroWizardPage.Art.cs`, `src/DinoReader.App/IntroState.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/BookSheetPlanTests.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/SystemTheme.cs`, `src/DinoReader.App/ReadingTheme.cs`, `docs/design/dino-reader/**`, `src/DinoReader.Core/UsageEvent.cs`, `worker/events.ts`, `tests/DinoReader.Tests/UsageEventTests.cs`, `src/DinoReader.App/IconView.cs`, `.maestro/dino/**`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/StoryActions.cs`, `worker/events.test.mjs`, `docs/plan/slices/228-dino-grownups-corner-clarity.md`
 
@@ -102,7 +102,7 @@ Settled by the mock: the file is Batch 43, not "Batch 40"; the way-back button s
 - Fixed, finding 9: the sheet's close button is 48 dp (Android's minimum touch target; the mock drew 36).
 - Skipped: 1 (a one-shot spent when the page is not on top: not returning then is right, the grown-up did something); 2 (no modal opens over the reader in this flow); 3 (Dismiss refresh and `_mode.Leave` both run on the UI thread in order; no failure path shown); 4 and 5 (structure); 6 (recorded before); 7 (Idle means no download running; the reader shows its pack status and plays with what is installed); 8 (style).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-01)
 
 In `src/DinoReader.App/CLAUDE.md`:
 

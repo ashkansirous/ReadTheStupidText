@@ -1,6 +1,6 @@
 ### Slice 233 — "Download paused. Tap to finish." posts on the same events on Android and iOS (Slice 208 follow-up)
 
-*Built (wave 2026-11-01), PR #672.* Planned 2026-11-01. The user asked (2026-11-01) for the two platforms to work like each other instead of accepting Slice 208's difference.
+*Built (wave 2026-11-01), merged as PR #672 (b62197c).* Planned 2026-11-01. The user asked (2026-11-01) for the two platforms to work like each other instead of accepting Slice 208's difference.
 
 **Touches:** `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidPackKeepAlive.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/PackDownloadService.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosPackNotification.cs`, `src/ReadTheStupidText.Mobile.Shared/MobileVoicePackService.cs`, `src/ReadTheStupidText.Mobile.Shared/PackDownloadHost.cs`, `src/ReadTheStupidText.Mobile.Shared/PackDownloadThrottle.cs`, `src/ReadTheStupidText.Mobile.Shared/Testing/TestHookDispatcher.cs`, `tests/ReadTheStupidText.Tests/**`, `.maestro/**`, `tools/phone/**`, `docs/plan/slices/233-paused-notice-same-on-android-and-ios.md`
 
@@ -61,7 +61,7 @@ So a download that stops because the network went away while the app is in the b
 - `paused-notification` (time limit): PASS. 5% done, resumed, notice gone.
 - Earlier runs found: the netpolicy cut has no effect under a dataSync foreground service; the notice stayed up during an automatic restart (this led to the episode design); `pm clear` resets POST_NOTIFICATIONS (channel importance NONE).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-01)
 
 - `tools/CLAUDE.md`: `cmd netpolicy restrict-background-blacklist` does not cut an app that runs a dataSync foreground service; use a Debug hook (Slice 233: docs/plan/slices/233-paused-notice-same-on-android-and-ios.md).
 - `tools/CLAUDE.md`: `pm clear` (`reset-dev-app -Level clear`) revokes POST_NOTIFICATIONS; re-grant it (Slice 233: docs/plan/slices/233-paused-notice-same-on-android-and-ios.md).
