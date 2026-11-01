@@ -101,6 +101,24 @@ internal static class RecordViews
 		},
 	};
 
+	/// <summary>The AutomationId of the "recordings stay on this phone" line, for the scripted check.</summary>
+	internal const string StayNoteId = "RecordingsStayNote";
+
+	/// <summary>The line that says where recordings go (Slice 230, mock frames 106 and 129): they stay on this phone or tablet, Dino never uploads or backs them up, so the grown-up keeps a copy.</summary>
+	internal static string StayNoteText() => StayNoteFor(DeviceInfo.Idiom);
+
+	private static string StayNoteFor(DeviceIdiom idiom) =>
+		idiom == DeviceIdiom.Phone ? AppResources.Recordings_StayHere_Phone
+		: idiom == DeviceIdiom.Tablet ? AppResources.Recordings_StayHere_Tablet
+		: AppResources.Recordings_StayHere_Device;
+
+	/// <summary>The line as a small label, 12.5 px in the body colour, for the Record page and the intro's record step.</summary>
+	public static Label StayNote() => new()
+	{
+		AutomationId = StayNoteId, Text = StayNoteText(), FontSize = 12.5, LineHeight = 1.4,
+		TextColor = DinoTokens.Get(DinoTokens.Body), Margin = new Thickness(4, 0),
+	};
+
 	public static Border ScriptCard() => new()
 	{
 		StrokeThickness = 0,

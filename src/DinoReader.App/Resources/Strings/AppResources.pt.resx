@@ -82,7 +82,12 @@
   <data name="Backup_SaveBody_Other" xml:space="preserve"><value>Todas as {0} histórias em um só arquivo, com páginas, imagens e elencos ajustados. Salve no Drive ou em Arquivos, ou envie para você mesmo.</value></data>
   <data name="Backup_SaveButton" xml:space="preserve"><value>Salvar uma cópia</value></data>
   <data name="Backup_RestoreTitle" xml:space="preserve"><value>Restaurar de uma cópia</value></data>
-  <data name="Backup_RestoreBody" xml:space="preserve"><value>Adiciona as histórias que este celular não tem. As histórias que já estão aqui ficam exatamente como estão.</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Traz de volta histórias e gravações a partir de um arquivo. As histórias que já estão aqui mantêm as suas páginas e recuperam as gravações.</value></data>
+  <data name="Backup_SaveIncludes" xml:space="preserve"><value>Inclui também as suas gravações.</value></data>
+  <data name="Backup_Merged" xml:space="preserve"><value>Recuperaram as gravações</value></data>
+  <data name="Recordings_StayHere_Phone" xml:space="preserve"><value>As suas gravações ficam neste celular, só para a sua família. O Dino nunca as envia, então guarde você mesmo uma cópia: Configurações → Cópia de segurança.</value></data>
+  <data name="Recordings_StayHere_Tablet" xml:space="preserve"><value>As suas gravações ficam neste tablet, só para a sua família. O Dino nunca as envia, então guarde você mesmo uma cópia: Configurações → Cópia de segurança.</value></data>
+  <data name="Recordings_StayHere_Device" xml:space="preserve"><value>As suas gravações ficam neste computador, só para a sua família. O Dino nunca as envia, então guarde você mesmo uma cópia: Configurações → Cópia de segurança.</value></data>
   <data name="Backup_RestoreButton" xml:space="preserve"><value>Escolher um arquivo de cópia</value></data>
   <data name="Backup_Footer" xml:space="preserve"><value>O arquivo só vai para onde você o enviar. O Dino não guarda nenhuma cópia online.</value></data>
   <data name="Backup_Restored_One" xml:space="preserve"><value>{0} história restaurada</value></data>

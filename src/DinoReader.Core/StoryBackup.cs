@@ -10,9 +10,10 @@ public sealed class StoryBackupNewerException() : StoryBackupException("The back
 
 /// <summary>
 /// How a restore went: stories added, stories skipped because their id was already on the shelf, stories that could not be read, and
-/// stories left unrestored because the backup outgrew the restore's size budget (the restore stops there, keeping what it added).
+/// stories left unrestored because the backup outgrew the restore's size budget (the restore stops there, keeping what it added), and stories already on the shelf
+/// that got recordings back (<see cref="Merged"/>, Slice 230).
 /// </summary>
-public sealed record StoryRestoreResult(int Added, int Skipped, int Damaged, int TooLarge = 0);
+public sealed record StoryRestoreResult(int Added, int Skipped, int Damaged, int TooLarge = 0, int Merged = 0);
 
 /// <summary>
 /// The backup file (Slice 93, Decision 96): a zip holding <c>backup.json</c> (this manifest) and one <c>&lt;story id&gt;.dino</c>

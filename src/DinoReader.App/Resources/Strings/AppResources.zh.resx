@@ -82,7 +82,12 @@
   <data name="Backup_SaveBody_Other" xml:space="preserve"><value>全部 {0} 个故事存成一个文件，包含页面、图片和调整好的角色分配。可存到云端硬盘或文件，也可发给自己。</value></data>
   <data name="Backup_SaveButton" xml:space="preserve"><value>保存备份</value></data>
   <data name="Backup_RestoreTitle" xml:space="preserve"><value>从备份恢复</value></data>
-  <data name="Backup_RestoreBody" xml:space="preserve"><value>添加这部手机上没有的故事。已有的故事保持原样。</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>从文件中找回故事和录音。已有的故事保持原有页面，并找回录音。</value></data>
+  <data name="Backup_SaveIncludes" xml:space="preserve"><value>其中也包含你的录音。</value></data>
+  <data name="Backup_Merged" xml:space="preserve"><value>已找回录音</value></data>
+  <data name="Recordings_StayHere_Phone" xml:space="preserve"><value>你的录音只保存在这部手机上，只属于你的家人。Dino 绝不会上传，所以请自己留一份副本：设置 → 备份。</value></data>
+  <data name="Recordings_StayHere_Tablet" xml:space="preserve"><value>你的录音只保存在这台平板上，只属于你的家人。Dino 绝不会上传，所以请自己留一份副本：设置 → 备份。</value></data>
+  <data name="Recordings_StayHere_Device" xml:space="preserve"><value>你的录音只保存在这台电脑上，只属于你的家人。Dino 绝不会上传，所以请自己留一份副本：设置 → 备份。</value></data>
   <data name="Backup_RestoreButton" xml:space="preserve"><value>选择备份文件</value></data>
   <data name="Backup_Footer" xml:space="preserve"><value>文件只会发到你指定的地方。Dino 不会在网上保留副本。</value></data>
   <data name="Backup_Restored_One" xml:space="preserve"><value>已恢复 {0} 个故事</value></data>

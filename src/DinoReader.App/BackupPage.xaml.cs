@@ -42,6 +42,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		_external = external;
 		_mode = mode;
 		_usage = usage;
+		StayNote.Text = RecordViews.StayNoteText();
 		WaitOverlay overlay = DinoWait.OverPage();
 		Grid.SetRowSpan(overlay, BackupRoot.RowDefinitions.Count);
 		BackupRoot.Children.Add(overlay);
@@ -58,7 +59,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 	private async Task CountStoriesAsync()
 	{
 		_count = (await _library.ListAsync()).Count;
-		SaveBody.Text = _count == 1 ? AppResources.Backup_SaveBody_One : AppResources.Format(AppResources.Backup_SaveBody_Other, _count);
+		SaveBody.Text = (_count == 1 ? AppResources.Backup_SaveBody_One : AppResources.Format(AppResources.Backup_SaveBody_Other, _count)) + " " + AppResources.Backup_SaveIncludes;
 		SaveButton.IsEnabled = _count > 0;
 	}
 
@@ -257,11 +258,17 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 
 	private void ShowResult(StoryRestoreResult result)
 	{
-		ResultTitle.Text = result.Added == 1
-			? AppResources.Format(AppResources.Backup_Restored_One, result.Added)
-			: AppResources.Format(AppResources.Backup_Restored_Other, result.Added);
+		int restored = result.Added + result.Merged; // a book that got its recordings back counts as restored
+		ResultTitle.Text = restored == 1
+			? AppResources.Format(AppResources.Backup_Restored_One, restored)
+			: AppResources.Format(AppResources.Backup_Restored_Other, restored);
 		ResultRows.Children.Clear();
 		AddResultRow(AppResources.Backup_Added, result.Added, (Color)Resources["AddedDot"]);
+		if (result.Merged > 0)
+		{
+			AddResultRow(AppResources.Backup_Merged, result.Merged, (Color)Resources["AddedDot"]);
+		}
+
 		AddResultRow(AppResources.Backup_Skipped, result.Skipped, (Color)Resources["SkippedDot"]);
 		if (result.Damaged > 0)
 		{

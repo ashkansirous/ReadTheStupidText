@@ -82,7 +82,12 @@
   <data name="Backup_SaveBody_Other" xml:space="preserve"><value>كل القصص ({0}) في ملف واحد، مع صفحاتها وصورها وتوزيعات الأصوات بعد تعديلها. احفظه في Drive أو الملفات، أو أرسله إلى نفسك.</value></data>
   <data name="Backup_SaveButton" xml:space="preserve"><value>حفظ نسخة احتياطية</value></data>
   <data name="Backup_RestoreTitle" xml:space="preserve"><value>الاستعادة من نسخة احتياطية</value></data>
-  <data name="Backup_RestoreBody" xml:space="preserve"><value>يضيف القصص غير الموجودة على هذا الهاتف. تبقى القصص الموجودة هنا كما هي تمامًا.</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>يعيد القصص والتسجيلات من ملف. القصص الموجودة هنا تحتفظ بصفحاتها وتستعيد تسجيلاتها.</value></data>
+  <data name="Backup_SaveIncludes" xml:space="preserve"><value>تتضمن النسخة تسجيلاتك أيضًا.</value></data>
+  <data name="Backup_Merged" xml:space="preserve"><value>استعادت تسجيلاتها</value></data>
+  <data name="Recordings_StayHere_Phone" xml:space="preserve"><value>تبقى تسجيلاتك على هذا الهاتف، لعائلتك فقط. لا يرفعها Dino أبدًا، لذا احتفظ بنسخة بنفسك: الإعدادات ← نسخة احتياطية.</value></data>
+  <data name="Recordings_StayHere_Tablet" xml:space="preserve"><value>تبقى تسجيلاتك على هذا الجهاز اللوحي، لعائلتك فقط. لا يرفعها Dino أبدًا، لذا احتفظ بنسخة بنفسك: الإعدادات ← نسخة احتياطية.</value></data>
+  <data name="Recordings_StayHere_Device" xml:space="preserve"><value>تبقى تسجيلاتك على هذا الكمبيوتر، لعائلتك فقط. لا يرفعها Dino أبدًا، لذا احتفظ بنسخة بنفسك: الإعدادات ← نسخة احتياطية.</value></data>
   <data name="Backup_RestoreButton" xml:space="preserve"><value>اختيار ملف نسخة احتياطية</value></data>
   <data name="Backup_Footer" xml:space="preserve"><value>لا يذهب الملف إلا إلى حيث ترسله. لا يحتفظ Dino بأي نسخة على الإنترنت.</value></data>
   <data name="Backup_Restored_One" xml:space="preserve"><value>تمت استعادة {0} قصة</value></data>

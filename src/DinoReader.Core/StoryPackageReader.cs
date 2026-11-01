@@ -17,6 +17,8 @@ public static class StoryPackageReader
     public const long MaxTotalBytes = 200L * 1024 * 1024;
 
     private const string MacMetadataFolder = "__MACOSX/";
+    private const string StagedSuffix = ".tmp";
+    private const string BackupSuffix = ".bak";
 
     private static readonly char[] SeparatorChars = ['/', '\\', ':'];
     private static readonly HashSet<string> DeviceNames = new(["CON", "PRN", "AUX", "NUL"], StringComparer.OrdinalIgnoreCase);
@@ -45,6 +47,188 @@ public static class StoryPackageReader
         {
             throw new StoryPackageException(ex.Message, ex);
         }
+    }
+
+    /// <summary>Merges the recordings a backup's package carries into the story already on the shelf (Slice 230): every recorded page the phone lacks (the backup's wins on a page both have)
+    /// keeps its audio file, written first, each through a temp name and a move; only then is the story saved once with the merged map, so a kill in between leaves at most extra audio files and
+    /// never an entry that names a missing file. Returns the saved story, or null when the package brought nothing new.</summary>
+    internal static async Task<Story?> MergeRecordingsAsync(Stream package, IStoryLibrary library, Story phone, ByteBudget budget)
+    {
+        try
+        {
+            using var zip = new ZipArchive(package, ZipArchiveMode.Read, leaveOpen: true);
+            Dictionary<string, ZipArchiveEntry> entries = IndexEntries(zip);
+            Story backed = await ReadStoryAsync(entries);
+            List<int> pages = StoryRecordings.MergeablePages(phone, backed, name => entries.TryGetValue(name, out ZipArchiveEntry? e) && e.Length > 0)
+                .Where(page => IsNewHere(library, phone, backed, page, entries))
+                .ToList();
+            if (pages.Count == 0)
+            {
+                return null;
+            }
+
+            SweepLeftovers(library, phone.Id);
+            Story merged = StoryRecordings.WithMerged(phone, backed, pages);
+            await StageAndPlaceAsync(library, phone, pages, entries, budget, () => library.UpdateAsync(merged));
+            return merged;
+        }
+        catch (InvalidDataException ex)
+        {
+            throw new StoryPackageException("The package is not a valid zip file.", ex);
+        }
+        catch (StoryFormatException ex)
+        {
+            throw new StoryPackageException(ex.Message, ex);
+        }
+    }
+
+    // Every audio file is written to a temp name first. Each phone file it replaces is first moved to "<name>.bak", then the new one moves in, and only then is the story saved (commit).
+    // On any failure every .bak goes back, files that had no earlier file are deleted and the temps are removed, so the phone's audio and story stay exactly as they were.
+    private static async Task StageAndPlaceAsync(IStoryLibrary library, Story phone, List<int> pages, Dictionary<string, ZipArchiveEntry> entries, ByteBudget budget, Func<Task> commit)
+    {
+        var staged = new List<(string Temp, string Target)>();
+        var placed = new List<(string Target, string? Backup)>();
+        try
+        {
+            foreach (int page in pages)
+            {
+                await StageOneAsync(library, phone.Id, StoryRecordings.FileNameOf(page), entries, budget, staged);
+            }
+
+            foreach ((string temp, string target) in staged)
+            {
+                placed.Add((target, MoveAside(target)));
+                File.Move(temp, target, overwrite: true);
+            }
+
+            await commit();
+            placed.ForEach(p => TryDelete(p.Backup));
+        }
+        catch
+        {
+            RollBack(staged, placed);
+            throw;
+        }
+    }
+
+    // The temp is listed before it is written, so a failed copy is cleaned up too.
+    private static async Task StageOneAsync(IStoryLibrary library, string id, string name, Dictionary<string, ZipArchiveEntry> entries, ByteBudget budget, List<(string Temp, string Target)> staged)
+    {
+        string target = library.TryResolveFile(id, name) ?? throw new StoryPackageException("The story has no place for a recording.");
+        string temp = library.TryResolveFile(id, $"{name}.{Guid.NewGuid():N}{StagedSuffix}") ?? throw new StoryPackageException("The story has no place for a recording.");
+        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+        staged.Add((temp, target));
+        await CopyEntryAsync(entries[name], temp, budget);
+    }
+
+    // The phone's own file for the page, if any, becomes "<name>.bak"; returns the backup path (null when there was no file).
+    private static string? MoveAside(string target)
+    {
+        if (!File.Exists(target))
+        {
+            return null;
+        }
+
+        string backup = target + BackupSuffix;
+        File.Move(target, backup, overwrite: true);
+        return backup;
+    }
+
+    private static void RollBack(List<(string Temp, string Target)> staged, List<(string Target, string? Backup)> placed)
+    {
+        foreach ((string target, string? backup) in Enumerable.Reverse(placed))
+        {
+            RestoreOne(target, backup);
+        }
+
+        staged.ForEach(s => TryDelete(s.Temp));
+    }
+
+    private static void RestoreOne(string target, string? backup, bool deleteTarget = true)
+    {
+        try
+        {
+            if (backup is null)
+            {
+                if (deleteTarget)
+                {
+                    File.Delete(target);
+                }
+            }
+            else if (File.Exists(backup))
+            {
+                File.Move(backup, target, overwrite: true);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Left for the next merge into this story, which sweeps leftovers first.
+        }
+    }
+
+    // Leftovers of a merge that was killed: a .tmp is never read, so it is deleted; a .bak is the phone's own audio, put back when its file is missing (the new one never got in or was
+    // rolled back), otherwise the file in place is kept and the .bak deleted. Only the page-N recording names are touched, never the library's own files.
+    private static void SweepLeftovers(IStoryLibrary library, string id)
+    {
+        string folder = library.FolderOf(id);
+        if (!Directory.Exists(folder))
+        {
+            return;
+        }
+
+        foreach (string temp in Directory.GetFiles(folder, $"*{StagedSuffix}").Where(IsStagedRecording))
+        {
+            TryDelete(temp);
+        }
+
+        foreach (string backup in Directory.GetFiles(folder, $"*{BackupSuffix}").Where(b => StoryRecordings.IsRecordingFileName(Path.GetFileNameWithoutExtension(b))))
+        {
+            string target = backup[..^BackupSuffix.Length];
+            RestoreOne(target, File.Exists(target) ? null : backup, deleteTarget: false);
+            TryDelete(backup);
+        }
+    }
+
+    // "page-1.m4a.<guid>.tmp" -> "page-1.m4a"
+    private static bool IsStagedRecording(string path) =>
+        StoryRecordings.IsRecordingFileName(Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(path)));
+
+    private static void TryDelete(string? path)
+    {
+        try
+        {
+            if (path is not null)
+            {
+                File.Delete(path);
+            }
+        }
+        catch (IOException)
+        {
+            // A temp file that cannot be deleted now is harmless; it is never read.
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
+    }
+
+    // A backed-up recording is new to the phone when the phone has no entry for the page, a different one, or no audio file of the same size.
+    private static bool IsNewHere(IStoryLibrary library, Story phone, Story backed, int page, Dictionary<string, ZipArchiveEntry> entries)
+    {
+        if (StoryRecordings.Of(phone, page) != backed.Recordings![page])
+        {
+            return true;
+        }
+
+        string name = StoryRecordings.FileNameOf(page);
+        string? path = library.TryResolveFile(phone.Id, name);
+        return path is null || !File.Exists(path) || new FileInfo(path).Length != entries[name].Length;
+    }
+
+    private static async Task CopyEntryAsync(ZipArchiveEntry entry, string path, ByteBudget budget)
+    {
+        await using Stream source = new CappedStream(entry.Open(), MaxPictureBytes, budget);
+        await using FileStream target = File.Create(path);
+        await source.CopyToAsync(target);
     }
 
     /// <summary>The story a package carries, without storing anything (to compare a bundled starter with the copy in the library).</summary>
