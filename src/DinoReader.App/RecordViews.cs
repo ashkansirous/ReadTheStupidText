@@ -1,5 +1,6 @@
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
+using System.Diagnostics;
 using Microsoft.Maui.Controls.Shapes;
 
 namespace DinoReader;
@@ -20,12 +21,23 @@ internal static class RecordViews
 	private const double CardRadius = 16;
 	private const double PageRadius = 14;
 	private const double PlaySize = 44;
+	private const double PictureBand = 210;
+	private const double PictureShare = 0.4;
 
-	public static Border PageView(string? picturePath, string text, string language)
+	/// <summary>The AutomationId of the page's words label, for the scripted check.</summary>
+	internal const string PageWordsId = "RecordPageWords";
+
+	/// <summary>The page as the child sees it (Slice 231, mock frame 106): a picture band with the page's words on a white card under it; the words alone when there is no picture, the picture alone when there are no words.</summary>
+	public static Border PageView(string? picturePath, StoryPage page, string language)
 	{
-		View content = picturePath is not null
-			? new Image { Source = ImageSource.FromFile(picturePath), Aspect = Aspect.AspectFit, HorizontalOptions = LayoutOptions.Center }
-			: TextPage(text, language);
+		string words = PageWords(page);
+		Debug.WriteLine($"Dino Reader Record page layout: {(picturePath is null ? "words only" : words.Length == 0 ? "picture only" : "picture and words")} ({words.Length} characters)");
+		View content = (picturePath, words) switch
+		{
+			(null, _) => TextPage(words, language),
+			(not null, "") => PictureOnly(picturePath),
+			_ => PictureAndWords(picturePath, words, language),
+		};
 		return new Border
 		{
 			StrokeThickness = 0,
@@ -35,17 +47,54 @@ internal static class RecordViews
 		};
 	}
 
+	/// <summary>The words of a page: its <c>Text</c>, the same text the reading screen splits into sentences and reads, so the two cannot disagree.</summary>
+	internal static string PageWords(StoryPage page) => page.Text.Trim();
+
+	private static View PictureOnly(string picturePath) => new Image { Source = ImageSource.FromFile(picturePath), Aspect = Aspect.AspectFit, HorizontalOptions = LayoutOptions.Center };
+
+	// Frame 106: a picture band (cropped from the top, never taller than a share of the space) over the words card, which scrolls when the page is long.
+	private static View PictureAndWords(string picturePath, string words, string language)
+	{
+		double aspect = PageImageSize.Read(picturePath) is { Height: > 0 } size ? size.Width / size.Height : 0;
+		var image = new Image { Source = ImageSource.FromFile(picturePath), Aspect = Aspect.AspectFill };
+		var host = new AbsoluteLayout { Children = { image } };
+		AbsoluteLayout.SetLayoutFlags(image, Microsoft.Maui.Layouts.AbsoluteLayoutFlags.All);
+		AbsoluteLayout.SetLayoutBounds(image, new Rect(0, 0, 1, 1));
+		host.SizeChanged += (_, _) => CoverTop(host, image, aspect);
+		var band = new Border
+		{
+			HeightRequest = PictureBand, StrokeThickness = 0,
+			StrokeShape = new RoundRectangle { CornerRadius = PageRadius },
+			Content = host,
+		};
+		var grid = new Grid { RowSpacing = 10, RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star)] };
+		grid.SizeChanged += (_, _) => band.HeightRequest = Math.Min(PictureBand, grid.Height * PictureShare);
+		grid.Add(band, 0, 0);
+		grid.Add(TextPage(words, language), 0, 1);
+		return grid;
+	}
+
+	// The picture covers the band and keeps its top (the books' art leaves the bottom free for words); an unknown shape stays filled and cropped.
+	private static void CoverTop(AbsoluteLayout host, Image image, double aspect)
+	{
+		var frame = PictureTextBook.CoverFromTop(host.Width, host.Height, aspect);
+		AbsoluteLayout.SetLayoutFlags(image, Microsoft.Maui.Layouts.AbsoluteLayoutFlags.None);
+		AbsoluteLayout.SetLayoutBounds(image, new Rect(frame.X, frame.Y, frame.Width, frame.Height));
+		image.Aspect = aspect > 0 ? Aspect.Fill : Aspect.AspectFill;
+	}
+
 	// A page with no picture is shown as the child sees it, its words on a white card.
 	private static View TextPage(string text, string language) => new Border
 	{
 		StrokeThickness = 0,
 		BackgroundColor = Colors.White,
-		Padding = new Thickness(16),
+		Padding = new Thickness(16, 14),
 		StrokeShape = new RoundRectangle { CornerRadius = CardRadius },
 		Content = new ScrollView
 		{
 			Content = new Label
 			{
+				AutomationId = PageWordsId,
 				Text = text, FontFamily = DinoFonts.ReadingFor(language), FontSize = 20, LineHeight = 1.5,
 				FlowDirection = DinoFonts.IsRightToLeft(language) ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
 			},
