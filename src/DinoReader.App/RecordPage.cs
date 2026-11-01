@@ -141,7 +141,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		StoryPage page = story.Pages[_page];
 		string? picture = page.ImageFile is null ? null : _library.TryResolveFile(story.Id, page.ImageFile);
 		var body = new Grid { Padding = new Thickness(14, 0), RowSpacing = 12, RowDefinitions = [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)] };
-		body.Add(RecordViews.PageView(picture is not null && File.Exists(picture) ? picture : null, page.Text, story.Language), 0, 0);
+		body.Add(RecordViews.PageView(picture is not null && File.Exists(picture) ? picture : null, page, story.Language), 0, 0);
 		body.Add(StoryRecordings.Of(story, _page) is { } recording && !_recording
 			? RecordViews.RecordedCard(recording, _playing, TogglePlaybackAsync, RecordAgainAsync, DeleteAsync)
 			: RecordViews.ScriptCard(), 0, 1);
