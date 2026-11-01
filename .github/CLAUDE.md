@@ -103,6 +103,8 @@ msstore CLI) once the Partner Center secrets are set.
 
 A new translation pair in `packs.yml` needs its `TRANSLATION_PAIRS` entry, an 11-column table row (layout and per-pair licence) and a matching `TranslationPacks` leg; a test ties the three together, and `maxLength` must resolve (`max_position_embeddings` fallback) or the job fails. New packs reach users only after a `packs.yml` run and the `PackConstants` pin bump. (Slice 106: docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)
 
+A same-version pack rebuild is safe for installed phones (only `PackVersions.IsNewer` triggers a download), but only Kokoro can be carried over; the rest are rebuilt. Merge a `PackConstants.CatalogUrl` bump only after that packs release exists. (Slice 220: docs/plan/slices/220-kokoro-silent-short-lines-arm64.md)
+
 `packs.yml` can carry an unchanged pack over from an earlier release (`kokoro_carry_over_from` input) when an upstream archive is re-uploaded and its pin breaks. Never re-pin a changed upstream file under the same pack version. (Slice 168: docs/plan/slices/168-german-in-both-apps.md)
 
 ## Dino Reader pipeline

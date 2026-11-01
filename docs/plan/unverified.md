@@ -2,6 +2,18 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count.
 
+### Slice 229: Dino Done/Continue button on every grown-up page ([slice](slices/229-dino-subpage-done-button.md))
+
+- Page editor header over the crop stage (44 dp pill vs 38).
+- Intro-wizard Continue flow (no hook to start the intro at that step).
+- Farsi/Arabic: Done stays top right.
+- Windows head not built.
+- iOS VoiceOver, iPhone and iPad hand checks.
+
+### Slice 224: Phone runner build-cache gaps ([slice](slices/224-phone-runner-build-cache-gaps.md))
+
+- A real phone run of the runner with a dead-builder status file, and with `-NoBuild` on a warm cache (no device run this wave; host tooling only).
+
 ### Slice 237: Dino back cover (credits page) ([slice](slices/237-dino-back-cover-credits.md))
 
 - Landscape layout of the back cover.
@@ -31,11 +43,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Check-pass skip reasons 2, 3 and 7 (slice line 103) state code facts not read at triage (no modal over the reader; Dismiss refresh before `_mode.Leave`; Idle means no download): check each in the code.
 - The skip reason "the app reaches users days later through the stores" (Worker before app) was not checked against the release workflow: Dino merges reach internal tracks the same day, so `intro_step` events may be dropped for minutes after a merge.
 
-### Slice 220: Kokoro silent short lines on arm64, part 1 merged ([slice](slices/220-kokoro-silent-short-lines-arm64.md))
+### Slice 220: Kokoro silent short lines on arm64 ([slice](slices/220-kokoro-silent-short-lines-arm64.md))
 
 - iOS: compile only.
-- The 68-read Slice 210 set is still not run.
-- The Windows Dino head has no single-thread arm.
+- The Windows Dino head on kokoro-en 3.
+- The 68-read Slice 210 set.
+- A fresh install's rebuilt non-kokoro packs (rebuilt in packs-11 at the same versions, no device run).
 
 ### Slice 231: Dino Record page shows the page's words ([slice](slices/231-dino-record-page-shows-words.md))
 

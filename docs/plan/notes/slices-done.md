@@ -266,6 +266,9 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 228 | Dino user test: kids' shelf vs grown-ups' corner made obvious (labelled Grown-ups pill, sticky "Back to my child's shelf", "Read now" in the book sheet, one intro card) | built | #673 | | [228-dino-grownups-corner-clarity.md](../slices/228-dino-grownups-corner-clarity.md) |
 | 233 | "Download paused. Tap to finish." posts on the same events on Android and iOS (Slice 208 follow-up: Android also posts when the network drops in the background) | built | #672 | | [233-paused-notice-same-on-android-and-ios.md](../slices/233-paused-notice-same-on-android-and-ios.md) |
 | 237 | Dino: a silent back cover (credits page) at the end of every book, all 16 books, and a standing rule in create-dino-story | built | #688 | | [237-dino-back-cover-credits.md](../slices/237-dino-back-cover-credits.md) |
+| 220 | Kokoro returns silent audio for short lines on arm64 (S21), so "Ann." and "Help!" still drop (Slice 210 follow-up): NaN detection (part 1), kokoro-en model swap (part 2) | built | #638, #685 | | [220-kokoro-silent-short-lines-arm64.md](../slices/220-kokoro-silent-short-lines-arm64.md) |
+| 224 | Phone runner: a dead builder pid reads as a stall, and a cache miss builds inside a timed run (`-NoBuild`) | built | #682 | | [224-phone-runner-build-cache-gaps.md](../slices/224-phone-runner-build-cache-gaps.md) |
+| 229 | Dino user test: Done/Continue button top right on every grown-up page (Continue moves the intro wizard on) | built | #683 | | [229-dino-subpage-done-button.md](../slices/229-dino-subpage-done-button.md) |
 
 
 ## Batch lane-order paragraphs moved from plan.md (2026-10-30)
