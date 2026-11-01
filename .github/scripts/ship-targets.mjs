@@ -109,6 +109,7 @@ export const CORE_PATHS = [
     'src/ReadTheStupidText.Documents/',
     'global.json',
     'Directory.Build.props',
+    'src/SherpaOnnxVersion.props',
     'GitVersion.yml',
     '*.slnx',
     '.gitattributes',

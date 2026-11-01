@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-	<Import Project="SherpaIosVersion.props" />
+	<Import Project="..\SherpaOnnxVersion.props" />
 
 	<!-- The platform code both MAUI apps share (Slice 58, Decision 72): speech readers, OCR,
 	     the voice pack/model services, the settings store and the IPlatformServices seam.
@@ -79,31 +79,31 @@
 	<!-- Slice 52/55: PaddleOCR on onnxruntime (Ocr/). Only the MANAGED binding here: on Android
 	     the native libonnxruntime.so sherpa-onnx stages serves it (the full package's would
 	     collide), and the iOS app adds the full package for its static xcframework. The version
-	     must equal the bundled native one (sherpa-onnx 1.13.3 ships onnxruntime 1.24.3); bump
-	     both together and re-check the unzipped APK (CLAUDE.md native-dependency rule). -->
+	     must equal the bundled native one (sherpa-onnx 1.13.8 ships onnxruntime 1.28.2, which is not on
+	     NuGet, so OnnxRuntimeVersion is 1.28.0); bump both together and re-check the unzipped APK
+	     (CLAUDE.md native-dependency rule). Windows bundles the same onnxruntime (Slice 245), so one
+	     version serves every platform. -->
 	<ItemGroup>
-		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.24.3" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'windows'" />
-		<!-- Windows: sherpa-onnx 1.13.3 ships onnxruntime 1.24.4 there; match Infrastructure (Slice 75 bump). -->
-		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.24.4" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="$(OnnxRuntimeVersion)" />
 	</ItemGroup>
 
 	<!-- Slice 67: the iOS engine (Platforms/iOS) compiles here against the managed sherpa-onnx
 	     binding, so both apps get one copy. Only the MANAGED package: the native
 	     SherpaOnnxC.xcframework and the full Microsoft.ML.OnnxRuntime (static iOS binary) are
-	     linked by each app project, which is the one that needs them. The version is SherpaIosVersion
-	     (SherpaIosVersion.props), the same one the apps' native framework uses. The
+	     linked by each app project, which is the one that needs them. The version is SherpaOnnxVersion
+	     (SherpaOnnxVersion.props), the same one the apps' native framework uses. The
 	     package's nuspec depends on every runtime.* native package; none has an iOS asset. -->
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
-		<PackageReference Include="org.k2fsa.sherpa.onnx" Version="$(SherpaIosVersion)" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.android-arm64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.android-x64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-arm64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-x64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-arm64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-x64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-arm64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x86" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx" Version="$(SherpaOnnxVersion)" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.android-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.android-x64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-x64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-x64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x86" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
 	</ItemGroup>
 
 	<!-- Slice 160: ML Kit Translate on iOS (Platforms/iOS/MlKitTranslator.cs), the twin of the Android package above.

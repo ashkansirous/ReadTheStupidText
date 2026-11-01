@@ -20,6 +20,7 @@ on:
       - 'src/ReadTheStupidText.Documents/**'
       - 'global.json'
       - 'Directory.Build.props'
+      - 'src/SherpaOnnxVersion.props'
       - 'GitVersion.yml'
       - '*.slnx'
       - '.gitattributes'

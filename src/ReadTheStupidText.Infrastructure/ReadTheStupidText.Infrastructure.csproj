@@ -1,5 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="..\SherpaOnnxVersion.props" />
+
   <ItemGroup>
     <ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
     <ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
@@ -16,15 +18,15 @@
        Supertonic-3 voice model. The managed package transitively pulls the
        per-RID native runtimes; only the build RID's DLLs are copied to output. -->
   <ItemGroup>
-    <PackageReference Include="org.k2fsa.sherpa.onnx" Version="1.13.3" />
+    <PackageReference Include="org.k2fsa.sherpa.onnx" Version="$(SherpaOnnxVersion)" />
   </ItemGroup>
 
   <!-- Offline translation (Slice 75): Opus-MT (Marian) ONNX models run on onnxruntime. Only the
-       MANAGED binding here: the native onnxruntime.dll is the one sherpa-onnx ships (1.24.4, checked on the built onnxruntime.dll), so the
+       MANAGED binding here: the native onnxruntime.dll is the one sherpa-onnx ships (1.28.2 for sherpa-onnx 1.13.8, checked on the built onnxruntime.dll; not on NuGet, so the binding is OnnxRuntimeVersion 1.28.0), so the
        version must match the bundled native one, as in Mobile.Shared. Bump both together.
        Microsoft.ML.Tokenizers (MIT) reads the pack's SentencePiece model. -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.24.4" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="$(OnnxRuntimeVersion)" />
     <PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.1" />
   </ItemGroup>
 

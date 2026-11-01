@@ -57,6 +57,10 @@ and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. T
 - Solution file is `ReadTheStupidText.slnx` (the XML `slnx` format — not `.sln`).
 - Always confirm Windows App SDK / WinUI / `H.NotifyIcon` APIs and versions via
   **context7** before writing code against them — versions move fast.
+- **sherpa-onnx and onnxruntime are one version on Android, iOS and Windows**, written only in
+  `src/SherpaOnnxVersion.props`; never pin either anywhere else (`.github/scripts/check-sherpa-pins.mjs`
+  and `SherpaVersionPinTests` fail on a stray pin). 2.x stays out until a non-GPL phonemizer exists.
+  (Slice 245: docs/plan/slices/245-sherpa-onnx-one-version.md)
 
 ## Layered structure (one-direction dependencies)
 

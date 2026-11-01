@@ -20,6 +20,9 @@ on:
       - '.github/scripts/**'
       - '.github/workflows/**'
       - '.github/actionlint.yaml'
+      - 'src/**/*.props'
+      - 'src/**/*.csproj'
+      - 'tools/sound-words-test/requirements.txt'
       - '!**/*.md'
   workflow_dispatch:
 
@@ -46,6 +49,10 @@ jobs:
 
       - name: Test the release scripts
         run: node --test .github/scripts/*.test.mjs
+
+      # Slice 245: sherpa-onnx and onnxruntime are one version, written in src/SherpaOnnxVersion.props.
+      - name: Check every sherpa-onnx / onnxruntime pin
+        run: node .github/scripts/check-sherpa-pins.mjs
 
   actionlint:
     runs-on: ubuntu-latest

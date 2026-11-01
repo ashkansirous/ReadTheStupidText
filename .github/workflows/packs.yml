@@ -608,7 +608,7 @@ jobs:
         if: inputs.kokoro_carry_over_from == ''
         run: |
           set -euo pipefail
-          python -m pip install --quiet "sherpa-onnx==1.13.3"
+          python -m pip install --quiet "sherpa-onnx==1.13.8"
           python - "out/$KOKORO_ID" "out/$KOKORO_ID-$KOKORO_VERSION-sample.wav" <<'PY'
           import array, os, sys, wave
           import sherpa_onnx

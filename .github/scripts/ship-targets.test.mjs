@@ -38,6 +38,7 @@ const CASES = [
     ['solution file', ['ReadTheStupidText.slnx'], ALL3],
     ['global.json', ['global.json'], ALL3],
     ['Directory.Build.props', ['Directory.Build.props'], ALL3],
+    ['sherpa-onnx version props (Slice 245)', ['src/SherpaOnnxVersion.props'], ALL3],
     ['GitVersion.yml', ['GitVersion.yml'], ALL3],
     ['GitVersion.dino.yml', ['GitVersion.dino.yml'], { dinoreader: true, dinoapp: true, dinoios: true, dinowin: true }],
     ['.gitattributes', ['.gitattributes'], ALL3],
