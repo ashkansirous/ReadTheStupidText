@@ -1,8 +1,22 @@
 ### Slice 232 — Dino: a proper landscape design for every screen
 
-*Planned 2026-11-01.* From the user's user test on 2026-11-01 (finding 8: "the landscape mode sucks"). **Design done: Batch 44 mock, user answers recorded below** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code"). Start after Slices 228 and 229 merge, so the mock draws their new header, pill and buttons.
+*Part A built 2026-11-01, not merged; parts B-E planned (the slice stays open).* From the user's user test on 2026-11-01 (finding 8: "the landscape mode sucks"). **Design done: Batch 44 mock, user answers recorded below** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code"). Start after Slices 228 and 229 merge, so the mock draws their new header, pill and buttons.
 
 **Touches:** `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.Core/GalleryLayout.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.Core/ReadingLayoutRules.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastViews.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/IntroWizardPage.Art.cs`, `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/BackupPage.xaml`, `src/DinoReader.App/PageEditorPage.xaml`, `tests/DinoReader.Tests/**Layout*`, `src/DinoReader.Core/*Layout*.cs`, `src/DinoReader.App/GrownUpHeader.cs`, `src/DinoReader.App/ReadingTheme.cs`, `src/DinoReader.App/*Page*.cs` (Settings sub-pages), `docs/design/dino-reader/**`, `docs/plan/slices/232-dino-landscape-every-screen.md`
+
+**Touches, part A (this claim, 2026-11-01):** `src/DinoReader.Core/ReadingLayoutRules.cs`, `src/DinoReader.Core/LandscapeLayout.cs` (new), `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/ReadingTheme.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/TransportRow.cs` (both added mid-build: the picture crop and the control row live there), `tests/DinoReader.Tests/*Layout*Tests.cs`, `tools/emulator/rotate.ps1` (new), `.maestro/dino/dino-landscape-reading*.yaml` (new), `docs/plan/slices/232-dino-landscape-every-screen.md`
+
+#### Parts (coordinator, claim 2026-11-01)
+
+A premise check found the slice is about 14 screens on phone and tablet, too big for one build. It is split by screen group, in the mock's own order (reading screen first). Each later part is claimed in a later wave and reuses part A's Core functions and rotation helper.
+
+- **A (this claim):** the Core layout functions from the Design section (`IsLandscape`, phone vs tablet by a 600 dp short side, `ShelfLayout`, `SplitLayout`, the reading-controls rule), with unit tests, in a new `LandscapeLayout.cs` (or next to `ReadingLayoutRules`). Also the reading screen, frames 113, 114, 115, 127 (tablet) and 132 (Farsi), and rotation keeping the reading position.
+  - **Rotation in scripted checks:** a new `tools/emulator/rotate.ps1 -Serial <s> -To landscape|portrait` (adb `settings put system accelerometer_rotation 0` + `user_rotation 1|0`). It needs no app test hook, so `src/DinoReader.App/Testing/**` stays untouched (Slice 225 edits it this wave).
+  - **The flow:** a Maestro flow that rotates portrait, landscape, portrait on a reading page. If Maestro's own orientation command works, use it (check the Maestro docs through `library-docs` first).
+- **B:** shelf (kids' 110, tablet 125), grown-ups' corner (111, 126) and book sheet (112).
+- **C:** Record (116, 129), Cast (119) and page editor (120).
+- **D:** Settings and its sub-pages (118, 128), Store (117) and Backup (124).
+- **E:** intro wizard (121, 130), gate (122) and first run (123). Rotation must keep the wizard step and gate progress.
 
 #### Why
 
@@ -48,7 +62,8 @@ Settled by the mock: tablet versus phone is split at a 600 dp short side; the co
 #### Work
 
 - [x] **Design (Claude Code):** mock done (Batch 44, 2026-11-01: `docs/design/dino-reader/Dino Reader Batch 44 Landscape.dc.html`, frames 110-130 and 132; 131 night not built). User answers recorded above.
-- [ ] Build the reading screen first, then the rest, each with its layout rule tests.
+- [x] Part A: the reading screen (built 2026-11-01, see *Part A: built* below).
+- [ ] Build the rest (parts B-E), each with its layout rule tests.
 - [ ] Rotation keeps state (reading position, recording in progress, wizard step, gate progress).
 - [ ] Android and iOS built and checked together.
 
@@ -56,3 +71,44 @@ Settled by the mock: tablet versus phone is split at a 600 dp short side; the co
 
 - `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` (layout rules).
 - Scripted emulator flow per screen, rotating portrait → landscape → portrait, screenshot each, no clipped or overlapping controls; one tablet AVD. iOS: simulator or TestFlight on iPhone and iPad.
+
+#### Part A: built (2026-11-01)
+
+- `src/DinoReader.Core/LandscapeLayout.cs`: `IsLandscape`, `SizeOf` (600 dp short side), `ShelfLayout`, `PicturePaneWidth` (fitted to height, max 45%), `ListPaneWidth` (300/360), `ReadingControls` (rail under 480 dp tall), `ControlSizesFor`, `PinnedButton`, `TextCardLeft`, `SidewaysGap`. Unit tests in `LandscapeLayoutTests`; 1904 Dino tests pass.
+- Reading screen: sideways picture + text shows the picture whole (AspectFit, real pixel aspect via `PageImageSize`) at full height, capped at 45%; text card in the middle (22 px on a phone, 30 px when 480 dp tall or more). Phone controls sit in a right rail (68/52, gap 12; `TransportRow` gained a Rail mode). Tablet controls are an 84/64 row under the card, aligned by `LandscapeLayout.TextCardLeft` for the held page (aspect cached per picture). Picture-only is fitted and centred; the back/view/flag chip is top-left. One window-based decision drives sideways, rail/row and font (`ReadingSurface.SetControls`). Portrait unchanged. Rotation keeps the reading position (`ReadingSurface.Adopt`).
+- `tools/emulator/rotate.ps1` (`-To landscape|portrait`, saves/restores `accelerometer_rotation` under `<worktrees>/.emulator`). Flow `.maestro/dino/dino-landscape-reading.yaml` (Maestro `setOrientation`; expects `landscape=True page=1` and the upright line).
+- Touches widened mid-build: `PictureTextPages.cs`, `TransportRow.cs`.
+
+Changed while building (deviations from the mock):
+
+- Tablet frame 127's title above the card is not built (the title lives in the floating header).
+- Phone side margins are about 14 dp, not 34/26.
+- The picture-only chip sits in the margin left of the picture, not on it.
+- Farsi frame 132 needed no code (no mirroring).
+- The first emulator run's flow expected `page=2`/`true` (0-based page, C# `True`); the flow was fixed.
+
+From review (findings files in `D:/ReadTheStupidText-worktrees/reviews/`):
+
+- `s232-high.md`: applied 1-4 and 9. Skipped 5-8 (cleanups: dead `compact` branches, duplicate gap constant, unused `SidewaysHeight`, Rail/Compact flags).
+- `s232-medium.md`: applied 1-5 (5 answered: `Transport.xaml` already sets End on main). Skipped 6 (needs a device; the device run shows it), 7 (cleanup), 8 (killed-run only).
+- `s232-check-medium.md`: 1, 2, 6 and 7 replaced by the pure `TextCardLeft` function after two strikes on the same report path; 8 fixed by moving the temp file. Skipped 3, 4, 5.
+- `s232-check2-medium.md`: applied 1. Skipped 2-8.
+- `s232-check3-medium.md`: applied 1 (aspect cache). Skipped 2 (self-corrects on the next layout) and 3 (low).
+- `s232-check4-medium.md`: no findings.
+
+Emulator RTST_Test, 2026-11-01: `dino-landscape-reading` PASS, `open-book` PASS, `default-view-per-book` PASS. Screenshots: `D:/ReadTheStupidText-worktrees/reviews/s232-shots/final-picture-text.png` and `final-picture-only.png` (picture whole, right rail, text not clipped).
+
+Parts B-E unchanged (planned).
+
+#### For CLAUDE.md
+
+- Landscape reading-screen sizes and the rail-versus-row rule come from `src/DinoReader.Core/LandscapeLayout.cs` (one window-based decision via `ReadingSurface.SetControls`); do not recompute pane widths or the 480 dp rule in the pages. (Slice 232: docs/plan/slices/232-dino-landscape-every-screen.md)
+
+#### Not yet verified
+
+- Tablet landscape (no tablet AVD): the controls row under the card and its left edge.
+- iPhone and iPad landscape (iOS compile only).
+- VoiceOver / TalkBack order in landscape.
+- Picture-only chip placement against frame 114 (the user's eye).
+- A window 600-700 dp on the short side choosing rail versus row.
+- Windows head in a wide window.
