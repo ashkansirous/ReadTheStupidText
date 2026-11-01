@@ -1,6 +1,6 @@
 ### Slice 228 — Dino: make the kids' shelf and the grown-ups' corner obvious
 
-*Planned 2026-11-01.* From the user's user test on 2026-11-01 (findings 1, 2 and 7). **Design done: the user approved the Batch 43 mock (see User answers)** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code").
+*In progress (wave 2026-11-01), draft PR.* Planned 2026-11-01. From the user's user test on 2026-11-01 (findings 1, 2 and 7). **Design done: the user approved the Batch 43 mock (see User answers)** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code").
 
 **Touches:** `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/GalleryText.cs`, `src/DinoReader.App/GrownUpMode.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.Core/BookSheetPlan.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/IntroWizardPage.Art.cs`, `src/DinoReader.App/IntroState.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/BookSheetPlanTests.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/SystemTheme.cs`, `src/DinoReader.App/ReadingTheme.cs`, `docs/design/dino-reader/**`, `docs/plan/slices/228-dino-grownups-corner-clarity.md`
 
