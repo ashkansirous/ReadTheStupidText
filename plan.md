@@ -30,22 +30,7 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 234 | Dino: proper design for tablets held upright (shelf 3-4 columns, picture-above-text reading, tablet-sized cards; after 232) | parked: mock not drawn yet; waits for the user (skipped 2026-11-01) | | | [234-dino-tablet-portrait.md](docs/plan/slices/234-dino-tablet-portrait.md) |
 | 235 | Dino on Windows: a real desktop window (size and minimum, width-driven layout, keyboard, hover, tooltips, title bar; after 232) | parked: mock not drawn yet; waits for the user (skipped 2026-11-01) | | | [235-dino-windows-window.md](docs/plan/slices/235-dino-windows-window.md) |
 
-
-
-
-
-
-
-
-
-
 M3 starts with a listening page and waits on the user's listening verdicts. 154 starts with a listening test, then adds vowel marks book by book (it also waits on the user's listening verdicts; draft PR #435) after each book's Slice 146 rewrite and open illustration PR merge. The Three Little Pigs Farsi part is built (PR #470): the marks are hidden, so kids see plain Farsi and only the speech uses the marked text (this supersedes Decision 159's "marks shown on screen" in part); the other books and Arabic are still open. Decisions 155-159 (157 reverses 132).
-
-
-
-
-
-
 
 ### Notes
 
@@ -103,7 +88,6 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 - **Waiting on the user:** the primary checkout `D:\ReadTheStupidText` has an uncommitted, corrupted edit to `docs/plan/slices/215-device-guard-gaps.md` (main has the right text); discard it with `git -C D:\ReadTheStupidText checkout -- docs/plan/slices/215-device-guard-gaps.md`. Two untracked items sit there too, `Tray and feature panel design.zip` and `src/DinoReader.BookSample/` (keep, move or delete them, your call). Until all three are gone the primary is never fast-forwarded after a merge (the pull guard needs an empty `git status --porcelain`; it has been stale since 2026-10-30). Agents may not touch the primary checkout.
 - Untried: reading the iPhone 8's crash logs from this PC (e.g. libimobiledevice `idevicecrashreport` over USB); would let iOS crashes be checked without the user. Not tried yet.
 - S21 RTST dev install may still hold `files/packs/zz-supertonic-3.bak` (~124 MB) from the 2026-10-29 night; harmless, gone on the next `reset-dev-app.ps1 -Level clear`. Nobody has checked.
-
 
 **Store privacy declarations (legal; gates all usage counts, Decision 145).** No `telemetry.enabled` is set to `true` for an app until its rows are ticked. Claude drafts the answers and fills the forms in the user's signed-in Chrome; the user reviews and presses Submit/Publish.
 
