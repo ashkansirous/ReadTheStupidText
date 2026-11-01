@@ -2,6 +2,27 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count.
 
+### Slice 232 part A: Dino landscape reading screen ([slice](slices/232-dino-landscape-every-screen.md))
+
+- Tablet landscape (no tablet AVD): the controls row under the card and its left edge.
+- iPhone and iPad landscape (iOS compile only).
+- VoiceOver / TalkBack order in landscape.
+- Picture-only chip placement against frame 114 (the user's eye).
+- A window 600-700 dp on the short side choosing rail versus row.
+- Windows head in a wide window.
+
+### Slice 225: Device-test tooling leftovers, night 2026-10-31-1301 ([slice](slices/225-device-tooling-leftovers-night-2026-10-31-1301.md))
+
+- Paused-notification checks on the S21 (needs `run-checks.ps1 -Build -App rtst` first; cache miss).
+- `stay_on` restore when the user changed the value (self-tested only).
+- Heal `trap` and `kill -0` under Android sh.
+- `Clear-PageCache` on a rooted device.
+- `uiautomator dump /dev/tty` returned no XML on the emulator (2026-11-01): check whether run-flows' ANR dump is affected.
+- Item 16 in the Debug app: the `[BookUpdate] ... forced entry dropped, recorded version put back` and `forced-apply mark expired` lines.
+- Item 3 (run-checks emulator path) not built.
+- Item 6: failed-build cause unknown (the log is now kept as `.failed.log`).
+- Item 17: the first CI run of the PSScriptAnalyzer step.
+
 ### Slice 230: Dino: say plainly that recordings stay on the phone, and restore brings them back ([slice](slices/230-dino-recordings-copy-and-restore-merge.md))
 
 - Hearing the restored recording play ("Read with my voice").

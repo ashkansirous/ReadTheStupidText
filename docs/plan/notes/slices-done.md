@@ -270,6 +270,7 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 224 | Phone runner: a dead builder pid reads as a stall, and a cache miss builds inside a timed run (`-NoBuild`) | built | #682 | | [224-phone-runner-build-cache-gaps.md](../slices/224-phone-runner-build-cache-gaps.md) |
 | 229 | Dino user test: Done/Continue button top right on every grown-up page (Continue moves the intro wizard on) | built | #683 | | [229-dino-subpage-done-button.md](../slices/229-dino-subpage-done-button.md) |
 | 221 | Device-test tooling leftovers from the 2026-10-30-2100 night (Dino read hook voice, one Dino dev package id, phone build-only switch, dispatch vs push concurrency) | built | #694 | — | [221-device-test-tooling-leftovers-night-1.md](../slices/221-device-test-tooling-leftovers-night-1.md) |
+| 225 | Device-test tooling leftovers from the 2026-10-31-1301 night (scripted S21 restore, device-wide change lint, run-flows two-package bug, per-checkout run status, a unit test for Slice 208's DecideAll; item 3, the run-checks emulator path, stays open) | built | #696 | — | [225-device-tooling-leftovers-night-2026-10-31-1301.md](../slices/225-device-tooling-leftovers-night-2026-10-31-1301.md) |
 | 230 | Dino user test: recordings stay on the phone (warm copy), and restore merges recordings into a story already on the phone | built | #693 | — | [230-dino-recordings-copy-and-restore-merge.md](../slices/230-dino-recordings-copy-and-restore-merge.md) |
 
 
