@@ -12,14 +12,13 @@ namespace DinoReader;
 /// </summary>
 public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> storyPages, IReadOnlyList<SentenceSpan> sentences,
 	Func<string?, string?> resolveImage, string font, ReadingTheme theme, bool rightToLeft, Action<int> onSentence,
-	Action<SwipedEventArgs> onSwipe, bool wordsOver, bool textInPictures) : IPageRenderer
+	Action<SwipedEventArgs> onSwipe, bool wordsOver, bool textInPictures, bool sideways, ControlsPlacement controls) : IPageRenderer
 {
 	private const float PanelAlpha = 0.92f;
 	private const double PanelFontSize = 21;
-	private const double SidewaysFontSize = 23;
+	private const double SidewaysFontSize = 22; // Slice 232, mock Batch 44 frame 113
+	private const double SidewaysTabletFontSize = 30; // frame 127: a window 480 dp tall or more
 	private const int UprightLines = 5;
-	private const double SidewaysPictureShare = 2;
-	private const double SidewaysTextShare = 3;
 	private const double PanelLineHeight = 1.5;
 	private const double PictureCorner = 18;
 	private const double UprightPanelCorner = 16;
@@ -33,7 +32,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 	private const double FadeHeight = 10;
 	private const float FadeAlpha = 0.95f;
 	private const float FadeSolidUntil = 0.6f;
-	private const double SidewaysGap = 6;
+	private const double SidewaysGap = LandscapeLayout.SidewaysGap;
 	private const double UprightPictureTop = 6;
 	private const double UprightPictureSide = 14;
 
@@ -64,7 +63,8 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 
 	public double CornerRadius => ReadingMetrics.ScanCorner;
 
-	private bool Sideways => _card.Width > _card.Height;
+	// Slice 232: sideways and the controls placement both come from the window (LandscapeLayout, decided by ReadingPage), never from this card's shape.
+	private bool Sideways => sideways;
 
 	/// <summary>Pure layout (picture paths only), so it can run off the UI thread.</summary>
 	public void Compose(Size card)
@@ -359,16 +359,25 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 
 	private View SidewaysPage(Slot slot)
 	{
+		if (_card.Width <= 0 || _card.Height <= 0)
+		{
+			return new Grid(); // not measured yet: no pane sizes from a 0x0 card; the surface draws again with its real size
+		}
+
 		if (IsPictureOnly(slot))
 		{
 			return SidewaysPictureOnly(slot);
 		}
 
-		// Mock Batch 37 frame 92: the picture is the left 40%, cropped from the top, with the controls floating over its bottom; the text takes the other 60% at full height.
-		var grid = new Grid { ColumnDefinitions = [new ColumnDefinition(new GridLength(SidewaysPictureShare, GridUnitType.Star)), new ColumnDefinition(new GridLength(SidewaysTextShare, GridUnitType.Star))] };
+		// Slice 232, mock Batch 44 frames 113, 127 and 132: the picture is fitted whole at the full height (at most 45% of the width, LandscapeLayout.PicturePaneWidth),
+		// the text card takes the rest. The back / view / flag chip floats over the picture's corner; the controls are not drawn here (a rail or a row outside the surface).
+		var grid = new Grid();
 		if (slot.Image is not null)
 		{
-			grid.Add(CoverPicture(slot.Image, slot.Aspect, new Thickness(0, 0, SidewaysGap, 0)), 0);
+			// The same function ReadingPage uses to place the tablet controls row under the text card, so the two cannot disagree.
+			double pane = LandscapeLayout.TextCardLeft(_card.Width, _card.Height, slot.Aspect, false) - SidewaysGap;
+			grid.ColumnDefinitions = [new ColumnDefinition(new GridLength(pane)), new ColumnDefinition(GridLength.Star)];
+			grid.Add(PictureCard(slot.Image, default), 0);
 		}
 
 		if (HasText(slot))
@@ -376,46 +385,21 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 			Border card = TextPanel(SidewaysPanelCorner, new Thickness(18, 14), 1f, fade: false);
 			card.Margin = new Thickness(slot.Image is null ? 0 : SidewaysGap, 0, 0, 0);
 			grid.Add(card, slot.Image is null ? 0 : 1);
-			if (slot.Image is null)
-			{
-				Grid.SetColumnSpan(card, 2);
-			}
 		}
 
 		return grid;
 	}
 
-	// Picture only, held sideways: the old halves layout with the controls under the right half (a wide picture spans both above them).
+	// Picture only, held sideways (frame 114): the picture fitted whole and centred; the chip and the control rail use the margins it leaves.
 	private View SidewaysPictureOnly(Slot slot)
 	{
-		if (slot.Image is not null && IsWide(slot))
-		{
-			return WidePicture(slot.Image);
-		}
-
-		var grid = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)] };
+		var grid = new Grid();
 		if (slot.Image is not null)
 		{
-			grid.Add(PictureCard(slot.Image, new Thickness(SidewaysGap)), 0);
+			grid.Add(PictureCard(slot.Image, new Thickness(SidewaysGap)));
 		}
 
 		return grid;
-	}
-
-	// With the words off (Slice 122) a tall picture keeps its half at full height, as big as it can be there, and the other half keeps
-	// the transport row; a wide picture would shrink in one half, so it gets the whole page above the transport row.
-	// Wide means wider than one half of the page, where it would be width-bound and small; before layout, wider than square.
-	private bool IsWide(Slot slot)
-	{
-		double oneHalf = _card.Width > 0 && _card.Height > 0 ? _card.Width / 2 / _card.Height : 1;
-		return slot.Aspect > oneHalf;
-	}
-
-	private static Grid WidePicture(string file)
-	{
-		var holder = new Grid { Padding = new Thickness(0, 0, 0, TransportRow.SidewaysHeight) };
-		holder.Add(PictureCard(file, new Thickness(SidewaysGap)));
-		return holder;
 	}
 
 	// A page with no picture keeps its text card whatever the switch says: there is nothing else to show.
@@ -423,7 +407,11 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 	private bool HasText(Slot slot) => (!IsPictureOnly(slot) || slot.Image is null) && _layout.SentencesOnPage(slot.StoryPage).First >= 0;
 
 	private bool IsPictureOnly(Slot slot) =>
-		!wordsOver && !(slot.StoryPage >= 0 && slot.StoryPage < storyPages.Count && storyPages[slot.StoryPage].ShowsTextCardInPictureOnly(textInPictures));
+		IsPictureOnly(wordsOver, textInPictures, slot.StoryPage >= 0 && slot.StoryPage < storyPages.Count ? storyPages[slot.StoryPage] : null);
+
+	/// <summary>Whether a page shows only its picture: the words are not over it and it does not need its text card (shared with ReadingPage, which places the tablet controls by it).</summary>
+	public static bool IsPictureOnly(bool wordsOver, bool textInPictures, StoryPage? page) =>
+		!wordsOver && !(page?.ShowsTextCardInPictureOnly(textInPictures) ?? false);
 
 	private static Border PictureCard(string file, Thickness margin) => new()
 	{
@@ -459,7 +447,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		};
 	}
 
-	private double FontSize => Sideways ? SidewaysFontSize : PanelFontSize;
+	private double FontSize => !Sideways ? PanelFontSize : controls == ControlsPlacement.Row ? SidewaysTabletFontSize : SidewaysFontSize;
 
 	private string PitchKey => $"{font}:{FontSize}";
 
