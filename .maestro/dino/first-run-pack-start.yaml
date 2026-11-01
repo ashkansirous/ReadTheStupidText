@@ -1,6 +1,6 @@
 # Slice 185: a real Dino first run: pick the default language, tap Continue, which starts the voice pack (SpokenLanguage.Use).
 # The app must stay alive on the download panel (Slice 162 saw a Debug x86_64 SIGSEGV here).
-appId: uk.sirous.dinoreader
+appId: uk.sirous.dinoreader.dbg
 name: First run with voice pack start
 ---
 - launchApp:

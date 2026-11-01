@@ -1,6 +1,6 @@
 # Slice 162: a fresh install shows the first-run language page; the skip-first-run hook hands over to the gallery.
 # expect-log: HOOK skip-first-run ok
-appId: uk.sirous.dinoreader
+appId: uk.sirous.dinoreader.dbg
 name: First run
 ---
 - launchApp:

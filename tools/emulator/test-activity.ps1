@@ -87,6 +87,27 @@ function Test-HealthProblem {
 function Test-InstallProblem {
     Assert-Equal 'listed package: no problem' $null (Resolve-InstallProblem "package:uk.sirous.rtst`r`n" 'uk.sirous.rtst')
     Assert-Conflict 'package service gone is unhealthy' (Resolve-InstallProblem "cmd: Can't find service: package`r`n" 'uk.sirous.rtst') 'EMULATOR UNHEALTHY'
+    # Slice 221 item 2: the plain Dino store id is uninstalled on an emulator serial only, never on a real phone; the dev id is never a stale package.
+    $pmBoth = "package:uk.sirous.dinoreader`r`npackage:uk.sirous.dinoreader.dbg`r`n"
+    Assert-Equal 'emulator: the plain Dino id is removed' 'uk.sirous.dinoreader' (@(Get-StalePackagesToRemove 'dino' 'emulator-5554' $pmBoth) -join ',')
+    Assert-Equal 'second emulator: the plain Dino id is removed' 'uk.sirous.dinoreader' (@(Get-StalePackagesToRemove 'dino' 'emulator-5556' $pmBoth) -join ',')
+    Assert-Equal 'wireless phone: nothing removed' 0 @(Get-StalePackagesToRemove 'dino' '192.168.1.20:37000' $pmBoth).Count
+    Assert-Equal 'mdns phone serial: nothing removed' 0 @(Get-StalePackagesToRemove 'dino' 'adb-R5CT123-abc._adb-tls-connect._tcp' $pmBoth).Count
+    Assert-Equal 'usb-looking serial: nothing removed' 0 @(Get-StalePackagesToRemove 'dino' 'R58M1234ABC' $pmBoth).Count
+    Assert-Equal 'a serial that only contains emulator- is not an emulator' 0 @(Get-StalePackagesToRemove 'dino' 'my-emulator-5554' $pmBoth).Count
+    Assert-Equal 'emulator: only the dev id installed, nothing to remove' 0 @(Get-StalePackagesToRemove 'dino' 'emulator-5554' "package:uk.sirous.dinoreader.dbg`r`n").Count
+    Assert-Equal 'rtst never removes anything' 0 @(Get-StalePackagesToRemove 'rtst' 'emulator-5554' $pmBoth).Count
+    Assert-Equal 'both Dino packages are listed' 'uk.sirous.dinoreader,uk.sirous.dinoreader.dbg' ((Get-DinoPackagesListed $pmBoth) -join ',')
+    Assert-Equal 'other apps are not Dino packages' 0 @(Get-DinoPackagesListed "package:uk.sirous.readthestupidtext`r`npackage:uk.sirous.dinoreaderx.other`r`n").Count
+    Assert-Equal 'only the dev id: no problem' $null (Resolve-DinoPackageProblem "package:uk.sirous.dinoreader.dbg`r`n")
+    Assert-Equal 'two Dino packages is a problem' $true ([bool](Resolve-DinoPackageProblem $pmBoth))
+    Assert-Equal 'only the store id is a problem' $true ([bool](Resolve-DinoPackageProblem "package:uk.sirous.dinoreader`r`n"))
+    Assert-Equal 'no Dino package is a problem' $true ([bool](Resolve-DinoPackageProblem "package:com.android.settings`r`n"))
+    Assert-Equal 'a phone with the store id and the dev id: no problem (the store app stays)' $null (Resolve-DinoPackageProblem $pmBoth 'adb-ABC123._adb-tls-connect._tcp')
+    Assert-Equal 'a phone with only the store id is a problem (no dev install)' $true ([bool](Resolve-DinoPackageProblem "package:uk.sirous.dinoreader`r`n" '192.168.1.5:5555'))
+    Assert-Equal 'an emulator with both ids is still a problem' $true ([bool](Resolve-DinoPackageProblem $pmBoth 'emulator-5554'))
+    Assert-Equal 'emulator build platform: Dino has its own cache name' 'android-dbg' (Get-EmulatorBuildPlatform 'dino')
+    Assert-Equal 'emulator build platform: rtst unchanged' 'android' (Get-EmulatorBuildPlatform 'rtst')
     Assert-Conflict 'other package only is not installed' (Resolve-InstallProblem "package:uk.sirous.rtst.other`r`n" 'uk.sirous.rtst') 'is not installed'
     Assert-Conflict 'empty answer is not installed' (Resolve-InstallProblem '' 'uk.sirous.rtst') 'is not installed'
     $lines = Get-Content (Join-Path $PSScriptRoot 'run-flows.ps1')

@@ -117,6 +117,73 @@ foreach ($bad in '11', '0.4', '2.5', 'abc', '1,,x', '') {
     $refusedRate = $false; try { ConvertTo-RateList $bad | Out-Null } catch { $refusedRate = $true }
     Assert-Equal "rates: [$bad] refused" $true $refusedRate
 }
+# ---- Slice 221 item 6: a second run with the same lease owner and a live other pid is refused; a dead pid is free; -Force takes over
+$runDir = Join-Path ([IO.Path]::GetTempPath()) ('rtst-runmarker-test-' + [guid]::NewGuid().ToString('N'))
+$sleeper = $null
+try {
+    $runKey = 'run-marker-test'
+    $nightKey = Get-RunMarkerKey $runKey 'night'
+    $otherKey = Get-RunMarkerKey $runKey 'other'
+    Assert-Equal 'run marker: no file, no marker' $null (Read-RunMarker $nightKey $runDir)
+    $savedOwners = @{}
+    foreach ($name in 'RTST_DEVICE_OWNER', 'RTST_PHONE_OWNER') { $savedOwners[$name] = [Environment]::GetEnvironmentVariable($name); [Environment]::SetEnvironmentVariable($name, $null) }
+    try {
+        Assert-Equal 'run owner: the default is one name per phone, not per pid' 'run-checks-ABC123' (Get-RunChecksOwner 'ABC123')
+        [Environment]::SetEnvironmentVariable('RTST_PHONE_OWNER', 'phone-owner')
+        Assert-Equal 'run owner: the owner variable wins' 'phone-owner' (Get-RunChecksOwner 'ABC123')
+    }
+    finally { foreach ($name in $savedOwners.Keys) { [Environment]::SetEnvironmentVariable($name, $savedOwners[$name]) } }
+    Assert-Equal 'run marker: nothing blocks without a marker' $false (Test-RunMarkerBlocks $null 'night' $PID)
+    $sleeper = Start-Process -FilePath (Get-Process -Id $PID).Path -ArgumentList @('-NoProfile', '-Command', 'Start-Sleep -Seconds 120') -WindowStyle Hidden -PassThru
+    $live = [pscustomobject]@{ owner = 'night'; pid = $sleeper.Id; procStart = $sleeper.StartTime.ToFileTimeUtc() }
+    Assert-Equal 'run marker: same owner, live other pid blocks' $true (Test-RunMarkerBlocks $live 'night' $PID)
+    Assert-Equal 'run marker: another owner is not this rule (the lease decides)' $false (Test-RunMarkerBlocks $live 'other' $PID)
+    Assert-Equal 'run marker: own pid never blocks' $false (Test-RunMarkerBlocks ([pscustomobject]@{ owner = 'night'; pid = $PID; procStart = 0 }) 'night' $PID)
+    $reused = [pscustomobject]@{ owner = 'night'; pid = $sleeper.Id; procStart = ($sleeper.StartTime.ToFileTimeUtc() + 1) }
+    Assert-Equal 'run marker: a reused pid (other start time) is free' $false (Test-RunMarkerBlocks $reused 'night' $PID)
+
+    # the file path: the first run claims it, the second (written as another live pid) is refused, -Force takes over
+    $null = New-Item -ItemType Directory -Force $runDir
+    $markerPath = Get-RunMarkerPath $nightKey $runDir
+    @{ owner = 'night'; pid = $sleeper.Id; procStart = $sleeper.StartTime.ToFileTimeUtc() } | ConvertTo-Json | Set-Content $markerPath
+    $refusal = Request-RunMarker $runKey 'night' $false $runDir
+    Assert-Equal 'run marker: second run with the same owner is refused' $true ([bool]$refusal)
+    Assert-Equal 'run marker: the refusal names the owner, the pid and -Force' $true ($refusal -like "*'night'*pid $($sleeper.Id)*-Force*")
+    Assert-Equal 'run marker: the refused run left the first run marker' $sleeper.Id (Read-RunMarker $nightKey $runDir).pid
+    Assert-Equal 'run marker: another owner is not refused' $null (Request-RunMarker $runKey 'other' $false $runDir)
+    Assert-Equal 'run marker: another owner wrote its own file' $PID (Read-RunMarker $otherKey $runDir).pid
+    Assert-Equal 'run marker: another owner did not overwrite the first' $sleeper.Id (Read-RunMarker $nightKey $runDir).pid
+    Remove-RunMarker $runKey 'other' $runDir
+    @{ owner = 'night'; pid = $sleeper.Id; procStart = $sleeper.StartTime.ToFileTimeUtc() } | ConvertTo-Json | Set-Content $markerPath
+    Assert-Equal 'run marker: -Force starts anyway' $null (Request-RunMarker $runKey 'night' $true $runDir)
+    Assert-Equal 'run marker: -Force took the marker over' $PID (Read-RunMarker $nightKey $runDir).pid
+    Remove-RunMarker $runKey 'night' $runDir
+    Assert-Equal 'run marker: removed by its own run' $false (Test-Path $markerPath)
+
+    # a dead pid is free
+    $dead = Start-Process -FilePath (Get-Process -Id $PID).Path -ArgumentList @('-NoProfile', '-Command', 'exit 0') -WindowStyle Hidden -PassThru
+    $dead.WaitForExit()
+    @{ owner = 'night'; pid = $dead.Id; procStart = 0 } | ConvertTo-Json | Set-Content $markerPath
+    Assert-Equal 'run marker: a dead pid is free' $null (Request-RunMarker $runKey 'night' $false $runDir)
+    Assert-Equal 'run marker: the new run owns it' $PID (Read-RunMarker $nightKey $runDir).pid
+    Set-Content $markerPath '{ not json'
+    Assert-Equal 'run marker: a corrupt file is free' $null (Request-RunMarker $runKey 'night' $false $runDir)
+    # Remove-RunMarker leaves another run's marker alone
+    @{ owner = 'night'; pid = $sleeper.Id; procStart = $sleeper.StartTime.ToFileTimeUtc() } | ConvertTo-Json | Set-Content $markerPath
+    Remove-RunMarker $runKey 'night' $runDir
+    Assert-Equal 'run marker: a marker of another run is not removed' $true (Test-Path $markerPath)
+    # the runner wires it: a flag, the claim before the builds, the refusal exit code, the removal after the stage
+    $runner = Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw
+    Assert-Equal 'run-checks has -Force' $true ($runner -match '\[switch\]\$Force')
+    Assert-Equal 'run-checks claims before the builds start' $true ($runner.IndexOf('Request-RunMarker') -lt $runner.IndexOf('$script:BuildJobs = Start-VariantBuilds'))
+    Assert-Equal 'run-checks covers the builds with the finally' $true ($runner -match '(?s)try \{\s+\$script:BuildJobs = Start-VariantBuilds')
+    Assert-Equal 'run-checks removes the marker in a finally' $true ($runner -match 'finally \{ Remove-RunMarker')
+}
+finally {
+    if ($sleeper -and -not $sleeper.HasExited) { Stop-Process -Id $sleeper.Id -Force -ErrorAction SilentlyContinue }
+    Remove-Item $runDir -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 if ($failed) { Write-Host "$failed phone-leftovers checks failed (PowerShell $($PSVersionTable.PSVersion))."; exit 1 }
 Write-Host "All phone-leftovers checks pass (PowerShell $($PSVersionTable.PSVersion))."
 exit 0

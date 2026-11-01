@@ -48,7 +48,7 @@ if ($App -eq 'auto') {
     exit $worst
 }
 
-$packages = @{ rtst = 'uk.sirous.readthestupidtext'; dino = 'uk.sirous.dinoreader' }
+$packages = $script:EmulatorPackages
 $logTag = 'RTST-TEST'
 
 function Find-Maestro {
@@ -219,7 +219,7 @@ function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File) {
 function Build-BeforeLease {
     $key = Get-BuildKey
     $needed = $Install -or ((Get-InstalledKey $App) -ne $key)
-    if ($needed -and -not (Find-CachedBuild (Get-BuildDir $App 'android' $key) '*-Signed.apk')) {
+    if ($needed -and -not (Find-CachedBuild (Get-BuildDir $App (Get-EmulatorBuildPlatform $App) $key) '*-Signed.apk')) {
         & (Join-Path $PSScriptRoot 'install-debug.ps1') -App $App -Instance $Instance -BuildOnly
     }
 }

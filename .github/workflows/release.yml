@@ -103,8 +103,11 @@ permissions:
 # Release). GitHub keeps only ONE pending run per group and drops older pending
 # ones, which is safe only because `version` diffs against the last release tag, so
 # the surviving run still sees the dropped run's changes.
+# Slice 221 item 4: a workflow_dispatch run has its own group, so a later merge's push run cannot replace
+# it while it is pending (a force_all run was cancelled that way). Two groups no longer exclude each other,
+# so the first step of `version` makes a run wait for every older run of the other event type.
 concurrency:
-  group: release-${{ github.ref }}
+  group: ${{ github.event_name == 'workflow_dispatch' && format('release-dispatch-{0}', github.ref) || format('release-{0}', github.ref) }}
   cancel-in-progress: false
 
 jobs:
@@ -114,8 +117,10 @@ jobs:
   # (tags dino-v<x.y.z>); each product's version only moves when its own release is cut.
   version:
     runs-on: ubuntu-latest
+    timeout-minutes: 130   # the wait for an older run (up to 120 min) plus the version work
     permissions:
       contents: write   # push the baseline tags
+      actions: read     # gh run list, for the wait on older runs of the other event type
     outputs:
       rtst_version: ${{ steps.gitversion_rtst.outputs.majorMinorPatch }}
       rtst_version_code: ${{ steps.versioncode.outputs.rtst }}
@@ -137,6 +142,57 @@ jobs:
         run: |
           echo "::error::release.yml only runs on main (this is ${GITHUB_REF})."
           exit 1
+
+      # Slice 221 item 4. The version only moves when a tag is published, so a dispatch run and a push run in their
+      # separate groups would compute the same version and share one draft (whose "retarget, clear assets" branch
+      # would wipe the other run's assets). A run therefore waits while an OLDER run (smaller run number) of the
+      # OTHER event type is still active. Only older runs are waited for, so there is no cycle; runs of the same
+      # type are already serialised by their group. The "tag already published" skip decides what a later run ships.
+      - name: Wait for older release runs of the other event type
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          EVENT: ${{ github.event_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+          # A whole older run takes up to ~60 min (observed 2026-11-01), so 2x margin; one still active after that is stuck.
+          WAIT_LIMIT_MINUTES: 120
+          POLL_SECONDS: 60
+          MAX_LIST_ERRORS: 3
+        run: |
+          set -uo pipefail
+          deadline=$(( $(date +%s) + WAIT_LIMIT_MINUTES * 60 ))
+          errors=0
+          while true; do
+            if ! runs=$(gh run list --repo "$REPO" --workflow release.yml --branch "$BRANCH" --limit 50 --json number,status,event 2>&1); then
+              errors=$(( errors + 1 ))
+              if [ "$errors" -ge "$MAX_LIST_ERRORS" ]; then
+                echo "::error::gh run list failed ${errors} times in a row, so the older release runs cannot be checked; failing instead of racing them. Re-run this workflow. Last error: $runs"
+                exit 1
+              fi
+              echo "::warning::gh run list failed (${errors}/${MAX_LIST_ERRORS}), retrying: $runs"
+              if [ "$(date +%s)" -ge "$deadline" ]; then
+                echo "::error::Waited ${WAIT_LIMIT_MINUTES} min and gh run list still failing; giving up. Re-run this workflow."
+                exit 1
+              fi
+              sleep "$POLL_SECONDS"
+              continue
+            fi
+            errors=0
+            blocking=$(jq -r --argjson me "$RUN_NUMBER" --arg ev "$EVENT" '
+              [.[] | select(.event != $ev and .number < $me and (.status == "queued" or .status == "in_progress" or .status == "waiting" or .status == "pending" or .status == "requested"))
+                   | "#\(.number) (\(.event), \(.status))"] | join(", ")' <<<"$runs")
+            if [ -z "$blocking" ]; then
+              echo "No older release run of the other event type is active; going on."
+              exit 0
+            fi
+            if [ "$(date +%s)" -ge "$deadline" ]; then
+              echo "::error::Waited ${WAIT_LIMIT_MINUTES} min for older release runs of the other event type ($blocking); giving up. Re-running this workflow is safe (the tag-already-published skip decides what ships); do it once they finish."
+              exit 1
+            fi
+            echo "Waiting for older release runs of the other event type: $blocking"
+            sleep "$POLL_SECONDS"
+          done
 
       - name: Checkout (full history + tags — GitVersion and ship-targets need them)
         uses: actions/checkout@v4

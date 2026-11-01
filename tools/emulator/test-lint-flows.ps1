@@ -46,6 +46,7 @@ Assert-Findings 'launch-hook-inline.yaml' @(New-Expect 4 'stopApp: false')
 Assert-Findings 'launch-hook-plain-first.yaml' @(New-Expect 4 'stopApp: false')
 Assert-Findings 'launch-hook-comment.yaml' @()
 Assert-Findings 'bad-appid.yaml' @(New-Expect 1 'is not a dev package')
+Assert-Findings 'plain-dino-appid.yaml' @(New-Expect 1 'is not a dev package')  # Slice 221: the store id is never a flow target
 Assert-Findings 'no-separator.yaml' @(New-Expect 1 'no --- line')
 Assert-Findings 'no-appid.yaml' @(New-Expect 2 'the header has no appId')
 Assert-Findings 'needs-ok.yaml' @()

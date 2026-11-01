@@ -3,7 +3,7 @@
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK enter-grown-up ok
 # expect-log: [GrownUps] read-now leaves the corner
-appId: uk.sirous.dinoreader
+appId: uk.sirous.dinoreader.dbg
 name: Corner line, sticky way back and Read now
 ---
 - launchApp:

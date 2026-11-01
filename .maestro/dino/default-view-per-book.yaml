@@ -3,7 +3,7 @@
 # on Android, and shows the first assertion failing against the old behaviour (Good Enough used to open in Picture + text).
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK open-book opened page=1
-appId: uk.sirous.dinoreader
+appId: uk.sirous.dinoreader.dbg
 name: Default view per book
 ---
 - launchApp:

@@ -1,4 +1,4 @@
-appId: uk.sirous.dinoreader
+appId: uk.sirous.dinoreader.dbg
 ---
 - launchApp
 - openNotifications

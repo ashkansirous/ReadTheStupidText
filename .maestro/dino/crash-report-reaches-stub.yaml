@@ -8,7 +8,7 @@
 # expect-log: HOOK crash-test started
 # expect-log: CRASH_REPORT managed report saved
 # expect-log: CRASH_REPORT report sent (status 204)
-appId: uk.sirous.dinoreader
+appId: uk.sirous.dinoreader.dbg
 name: A crash is reported to the local stub at the next launch (Dino)
 ---
 - launchApp:

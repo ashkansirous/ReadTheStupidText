@@ -120,6 +120,51 @@ function Resolve-HealthProblem([string]$PmOutput, [string]$BootValue) {
     return $null
 }
 
+# Slice 221 item 2: one Dino dev package id on the emulator, the same one the phone scripts use (tools/phone/common.ps1). The csproj id stays the store id; the dev build overrides it
+# with -p:ApplicationId. The plain store id is removed from an EMULATOR only (emulator-<port>): on a real phone it would be the user's store install, which is never uninstalled.
+$script:DinoDevPackage = 'uk.sirous.dinoreader.dbg'
+$script:DinoStorePackage = 'uk.sirous.dinoreader'
+$script:EmulatorPackages = @{ rtst = 'uk.sirous.readthestupidtext'; dino = $script:DinoDevPackage }
+$script:EmulatorSerialPattern = '^emulator-\d+$'
+
+# The cache platform name of the emulator APK: Dino's carries the .dbg id, so an APK cached before the id change (plain id) is never installed.
+function Get-EmulatorBuildPlatform([string]$App) {
+    if ($App -eq 'dino') { return 'android-dbg' }
+    return 'android'
+}
+
+# Pure: the packages to uninstall before installing the dev build: the plain Dino store id when `pm list packages` shows it exactly AND the serial is an emulator; nothing on any other serial.
+function Get-StalePackagesToRemove([string]$App, [string]$Serial, [string]$PmListOutput) {
+    if ($App -ne 'dino' -or $Serial -cnotmatch $script:EmulatorSerialPattern) { return @() }
+    if ("$PmListOutput" -match ('(?m)^package:' + [regex]::Escape($script:DinoStorePackage) + '\s*$')) { return @($script:DinoStorePackage) }
+    return @()
+}
+
+# Pure: every Dino package `pm list packages` shows (the store id and the dev id both match the prefix, nothing else does).
+function Get-DinoPackagesListed([string]$PmListOutput) {
+    return @([regex]::Matches("$PmListOutput", '(?m)^package:(uk\.sirous\.dinoreader(?:\.dbg)?)\s*$') | ForEach-Object { $_.Groups[1].Value })
+}
+
+# Pure: $null when exactly the dev package is installed, else what is wrong (the check install-debug.ps1 runs after an install). On a serial that is not an emulator
+# the plain store id is the user's own app and is never removed (Get-StalePackagesToRemove), so it is ignored there: exactly one dev package is the whole check.
+function Resolve-DinoPackageProblem([string]$PmListOutput, [string]$Serial = '') {
+    $listed = @(Get-DinoPackagesListed $PmListOutput)
+    if ($Serial -and $Serial -cnotmatch $script:EmulatorSerialPattern) { $listed = @($listed | Where-Object { $_ -ceq $script:DinoDevPackage }) }
+    if ($listed.Count -eq 1 -and $listed[0] -ceq $script:DinoDevPackage) { return $null }
+    return "expected exactly $($script:DinoDevPackage) after the install, pm list packages shows: [$($listed -join ', ')]"
+}
+
+# Uninstalls the stale packages from the emulator (adb uninstall wipes only that package's data on the emulator). Says what it removed.
+function Remove-StaleDevPackages([string]$App) {
+    $pm = "$(& $script:Adb -s $script:Serial shell pm list packages 2>&1 | Out-String)"
+    foreach ($stale in @(Get-StalePackagesToRemove $App $script:Serial $pm)) {
+        Write-Host "Removing the stale $stale from $($script:Serial) (the Dino dev install is $($script:DinoDevPackage))."
+        $result = "$(& $script:Adb -s $script:Serial uninstall $stale 2>&1 | Out-String)".Trim()
+        if ($LASTEXITCODE -ne 0 -or $result -notmatch 'Success') { Write-Warning "Could not remove the stale $stale from $($script:Serial) ($result). The install goes on; the Dino package check after it will say if two dinoreader packages remain." }
+        else { Write-Host $result }
+    }
+}
+
 # Pure: the problem shown by the answer to `pm list packages <package>`, or $null when the package is listed. A package-service failure (no `package:` line and an
 # error from the service itself) is an unhealthy emulator, not a missing install: run-flows must restart it, not tell the user to reinstall.
 function Resolve-InstallProblem([string]$PmListOutput, [string]$PackageName) {

@@ -2,7 +2,7 @@
 # The gate (hold, then a sum) is tapped through by hand: the enter-grown-up hook stands in for a passed gate.
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK enter-grown-up ok
-appId: uk.sirous.dinoreader
+appId: uk.sirous.dinoreader.dbg
 name: Settings, Reading speed row opens its page
 ---
 - launchApp:

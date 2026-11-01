@@ -1,6 +1,6 @@
 # Scripted device flows (Slice 162)
 
-Maestro flows for the two MAUI apps: `rtst/` (Read The Stupid Text, `uk.sirous.readthestupidtext`) and `dino/` (Dino Reader, `uk.sirous.dinoreader`). One flow is one acceptance check; a failing flow prints the step that failed.
+Maestro flows for the two MAUI apps: `rtst/` (Read The Stupid Text, `uk.sirous.readthestupidtext`) and `dino/` (Dino Reader, the dev package `uk.sirous.dinoreader.dbg`; the store id `uk.sirous.dinoreader` is never a flow target). One flow is one acceptance check; a failing flow prints the step that failed.
 
 ```powershell
 tools\emulator\install-debug.ps1 -App rtst     # Debug x86_64 build (see the note on adb install below)

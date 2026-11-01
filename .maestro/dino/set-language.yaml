@@ -4,7 +4,7 @@
 # expect-log: HOOK set-language ok en
 # expect-log: HOOK set-language failed unknown xx
 # expect-log: STATE language=en
-appId: uk.sirous.dinoreader
+appId: uk.sirous.dinoreader.dbg
 name: Switch language by hook
 ---
 - launchApp:
