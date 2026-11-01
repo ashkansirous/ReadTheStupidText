@@ -5,15 +5,14 @@
 //
 //   node tools/crashes/pull-crashes.mjs [--app dino|rtst|both] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--top 15] [--tail 12] [--out DIR] [--kind managed,native] [--channel store,testflight]
 //
-// Defaults: both apps, the last 7 days (UTC), the 15 biggest groups, a 12-line log tail, reports saved under <temp>/rtst-crashes. Read-only: it lists and gets objects, never writes.
+// Defaults: both apps, the last 7 days (UTC), the 15 biggest groups, a 12-line log tail, reports saved under <temp>/rtst-crashes. Read-only means the script only lists and gets objects, never writes (the login it uses is the user's general wrangler login, not a read-only credential).
 //
-// Credentials (read-only R2 API token named CF_R2_CRASHES_READ; created by the owner, see worker/CLAUDE.md). An R2 token gives an S3 access key id and secret; both are read from
-// the environment or, if unset, from D:\secrets\readthestupidtext\secrets.env (override with SECRETS_ENV):
-//   CF_R2_CRASHES_READ_ACCESS_KEY_ID, CF_R2_CRASHES_READ_SECRET_ACCESS_KEY, and CLOUDFLARE_ACCOUNT_ID (defaults to the account that owns the Worker).
-// The credentials are never printed. Needs node 22+ and no packages: the S3 request signing (AWS Signature V4, region "auto") is done here.
+// Credentials (Slice 243): none to create. It uses wrangler's own login (`wrangler login`, already done on this PC): the OAuth token printed by `npx --no-install wrangler auth token`
+// is sent as a Bearer token to the Cloudflare REST API (R2 list objects + get object, the only two calls it makes). The token is never printed. CLOUDFLARE_ACCOUNT_ID overrides the account
+// that owns the Worker; a 401/403 usually means wrangler is logged in to another account. Needs node 22+, wrangler reachable through `npx --no-install` and no other packages.
 
-import { createHash, createHmac } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -21,12 +20,10 @@ import { pathToFileURL } from "node:url";
 const BUCKET = "readthestupidtext-downloads";
 const PREFIX = "crashes/";
 const DEFAULT_ACCOUNT_ID = "985d711340bd2cf7bf5d71f04a7e84c9";
-const DEFAULT_SECRETS_ENV = "D:\\secrets\\readthestupidtext\\secrets.env";
-const REGION = "auto";
-const SERVICE = "s3";
+const API_BASE = "https://api.cloudflare.com/client/v4";
+const LIST_PAGE_SIZE = 1000;
 const APPS = ["dino", "rtst"];
 const DAY_MS = 24 * 60 * 60 * 1000;
-const EMPTY_HASH = createHash("sha256").update("").digest("hex");
 
 function parseArgs(argv) {
   const args = { app: "both", top: 15, tail: 12 };
@@ -39,72 +36,134 @@ function parseArgs(argv) {
   return args;
 }
 
-function readSecretsFile() {
-  const path = process.env.SECRETS_ENV ?? DEFAULT_SECRETS_ENV;
-  if (!existsSync(path)) return {};
-  const values = {};
-  for (const line of readFileSync(path, "utf8").split(/\r?\n/)) {
-    const match = /^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/.exec(line);
-    if (match) values[match[1]] = match[2].replace(/^["']|["']$/g, "");
+const LOGIN_HINT = "run `npx wrangler login` (with the Cloudflare account that owns the Worker), or check that wrangler is installed";
+
+// The token in the JSON that `wrangler auth token --json` prints ({"type":"oauth","token":"..."}); banner lines may come before the JSON.
+export function parseTokenOutput(stdout) {
+  const start = stdout.indexOf("{");
+  if (start < 0) throw new Error(`wrangler printed no token: ${LOGIN_HINT}.`);
+  let parsed;
+  try {
+    parsed = JSON.parse(stdout.slice(start));
+  } catch {
+    throw new Error(`wrangler printed unreadable token output: ${LOGIN_HINT}.`);
   }
-  return values;
+  if (!parsed?.token) throw new Error(`wrangler printed no token: ${LOGIN_HINT}.`);
+  return parsed.token;
 }
 
-function credentials() {
-  const file = readSecretsFile();
-  const pick = (name) => process.env[name] ?? file[name];
-  const accessKeyId = pick("CF_R2_CRASHES_READ_ACCESS_KEY_ID");
-  const secretAccessKey = pick("CF_R2_CRASHES_READ_SECRET_ACCESS_KEY");
-  if (!accessKeyId || !secretAccessKey) {
-    throw new Error("Set CF_R2_CRASHES_READ_ACCESS_KEY_ID and CF_R2_CRASHES_READ_SECRET_ACCESS_KEY (the read-only R2 token CF_R2_CRASHES_READ) in the environment or in the secrets store.");
+// The token of wrangler's own login. stderr is ignored so no token text can reach an error message.
+function wranglerToken() {
+  let output;
+  try {
+    output = execSync("npx --no-install wrangler auth token --json", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+  } catch {
+    throw new Error(`wrangler could not give a token: ${LOGIN_HINT}.`);
   }
-  return { accessKeyId, secretAccessKey, accountId: pick("CLOUDFLARE_ACCOUNT_ID") ?? DEFAULT_ACCOUNT_ID };
+  return parseTokenOutput(output);
 }
 
-const sha256 = (text) => createHash("sha256").update(text).digest("hex");
-const hmac = (key, text) => createHmac("sha256", key).update(text).digest();
-const encode = (text) => encodeURIComponent(text).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
-
-// AWS Signature Version 4 for a GET with no body (R2's S3 API: region "auto").
-function signedRequest(creds, path, query) {
-  const host = `${creds.accountId}.r2.cloudflarestorage.com`;
-  const now = new Date();
-  const amzDate = now.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-  const date = amzDate.slice(0, 8);
-  const canonicalQuery = Object.keys(query).sort().map((k) => `${encode(k)}=${encode(query[k])}`).join("&");
-  const canonicalPath = path.split("/").map(encode).join("/");
-  const headers = { host, "x-amz-content-sha256": EMPTY_HASH, "x-amz-date": amzDate };
-  const signedHeaders = Object.keys(headers).sort().join(";");
-  const canonicalHeaders = Object.keys(headers).sort().map((k) => `${k}:${headers[k]}\n`).join("");
-  const canonical = ["GET", canonicalPath, canonicalQuery, canonicalHeaders, signedHeaders, EMPTY_HASH].join("\n");
-  const scope = `${date}/${REGION}/${SERVICE}/aws4_request`;
-  const toSign = ["AWS4-HMAC-SHA256", amzDate, scope, sha256(canonical)].join("\n");
-  const signingKey = hmac(hmac(hmac(hmac(`AWS4${creds.secretAccessKey}`, date), REGION), SERVICE), "aws4_request");
-  const signature = createHmac("sha256", signingKey).update(toSign).digest("hex");
-  headers.authorization = `AWS4-HMAC-SHA256 Credential=${creds.accessKeyId}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
-  return { url: `https://${host}${canonicalPath}${canonicalQuery ? `?${canonicalQuery}` : ""}`, headers };
+// The error text of a failed R2 call; a 401/403 almost always means the wrangler login is for another Cloudflare account.
+export function apiErrorMessage(status, urlWithoutQuery, bodyText) {
+  const hint = status === 401 || status === 403 ? ` Wrong account? ${LOGIN_HINT}; CLOUDFLARE_ACCOUNT_ID overrides the account id.` : "";
+  return `R2 ${status} for ${urlWithoutQuery} ${bodyText.slice(0, 200)}${hint}`;
 }
 
-async function s3Get(creds, path, query = {}) {
-  const { url, headers } = signedRequest(creds, path, query);
-  const response = await fetch(url, { headers });
-  if (!response.ok) throw new Error(`R2 ${response.status} for ${path} ${await response.text().then((t) => t.slice(0, 200))}`);
-  return response.text();
+const bucketUrl = (accountId) => `${API_BASE}/accounts/${accountId}/r2/buckets/${BUCKET}/objects`;
+
+export function listUrl(accountId, prefix, cursor) {
+  const query = new URLSearchParams({ prefix, per_page: String(LIST_PAGE_SIZE), ...(cursor ? { cursor } : {}) });
+  return `${bucketUrl(accountId)}?${query}`;
 }
 
-async function listKeys(creds, prefix) {
+// One page of the R2 "list objects" answer: its keys, and the cursor of the next page (undefined on the last page).
+export function parseListPage(body) {
+  if (!body?.success) throw new Error(`R2 list failed: ${JSON.stringify(body?.errors ?? body).slice(0, 200)}`);
+  const info = body.result_info ?? {};
+  return { keys: (body.result ?? []).map((object) => object.key), cursor: info.is_truncated ? info.cursor : undefined };
+}
+
+// Follows the cursor until the last page. fetchPage(cursor) returns a parsed page.
+export async function collectKeys(fetchPage) {
   const keys = [];
-  let token;
+  let cursor;
   do {
-    const query = { "list-type": "2", prefix, ...(token ? { "continuation-token": token } : {}) };
-    const xml = await s3Get(creds, `/${BUCKET}`, query);
-    for (const match of xml.matchAll(/<Key>([^<]+)<\/Key>/g)) keys.push(match[1]);
-    token = /<IsTruncated>true<\/IsTruncated>/.test(xml) ? /<NextContinuationToken>([^<]+)<\/NextContinuationToken>/.exec(xml)?.[1] : undefined;
-  } while (token);
+    const page = await fetchPage(cursor);
+    keys.push(...page.keys);
+    cursor = page.cursor;
+  } while (cursor);
   return keys;
 }
 
-function daysBetween(from, to) {
+// Only keys under crashes/<app>/<day>/ and ending .json are reports.
+export function isReportKey(key, app, day) {
+  return key.startsWith(`${PREFIX}${app}/${day}/`) && key.endsWith(".json");
+}
+
+async function apiGet(session, url) {
+  const response = await fetch(url, { headers: { authorization: `Bearer ${session.token}` } });
+  if (!response.ok) throw Object.assign(new Error(apiErrorMessage(response.status, url.split("?")[0], await response.text())), { status: response.status });
+  return response;
+}
+
+const RETRY_ATTEMPTS = 4;
+const RETRY_BASE_MS = 500;
+const HTTP_TOO_MANY = 429;
+const HTTP_SERVER_ERROR = 500;
+const HTTP_NOT_FOUND = 404;
+
+// 429 and 5xx are worth another try; the rest are not.
+export function isRetryable(status) {
+  return status === HTTP_TOO_MANY || status >= HTTP_SERVER_ERROR;
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Runs action(); a retryable HTTP failure is tried again with doubling backoff, up to RETRY_ATTEMPTS tries in all.
+export async function withRetry(action, wait = sleep) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await action();
+    } catch (error) {
+      if (!isRetryable(error.status) || attempt >= RETRY_ATTEMPTS) throw error;
+      await wait(RETRY_BASE_MS * 2 ** (attempt - 1));
+    }
+  }
+}
+
+// A file name for a report key that cannot leave the output folder: no separators, no "..", no drive letter colon.
+export function safeFileName(key) {
+  const name = key.replace(/[\\/:]+/g, "_").replace(/\.{2,}/g, "_").replace(/^\.+/, "_");
+  return name.length > 0 ? name : "_";
+}
+
+async function listKeys(session, prefix) {
+  const fetchPage = async (cursor) => parseListPage(await (await apiGet(session, listUrl(session.accountId, prefix, cursor))).json());
+  return collectKeys(fetchPage);
+}
+
+async function getReport(session, key) {
+  return JSON.parse(await (await apiGet(session, `${bucketUrl(session.accountId)}/${key}`)).text());
+}
+
+// A report that vanished between list and get (404, the 90-day lifecycle rule) or is not valid JSON is skipped with a warning naming its key.
+// A 429/5xx is retried; if it still fails the report is counted in session.notFetched (the run then exits non-zero). Any other error (401/403 ...) stops the run.
+async function getReportOrSkip(session, key) {
+  try {
+    return await withRetry(() => getReport(session, key));
+  } catch (error) {
+    if (isRetryable(error.status)) {
+      session.notFetched += 1;
+      console.warn(`NOT FETCHED ${key}: ${error.message}`);
+      return undefined;
+    }
+    if (error.status !== undefined && error.status !== HTTP_NOT_FOUND) throw error;
+    console.warn(`Skipped ${key}: ${error.message}`);
+    return undefined;
+  }
+}
+
+export function daysBetween(from, to) {
   const days = [];
   for (let t = Date.parse(`${from}T00:00:00Z`); t <= Date.parse(`${to}T00:00:00Z`); t += DAY_MS) days.push(new Date(t).toISOString().slice(0, 10));
   return days;
@@ -186,7 +245,7 @@ function printGroups(app, reports, top, tailLines) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const creds = credentials();
+  const session = { token: wranglerToken(), accountId: process.env.CLOUDFLARE_ACCOUNT_ID ?? DEFAULT_ACCOUNT_ID, notFetched: 0 };
   const today = new Date().toISOString().slice(0, 10);
   const to = args.to ?? today;
   const from = args.from ?? new Date(Date.parse(`${to}T00:00:00Z`) - 6 * DAY_MS).toISOString().slice(0, 10);
@@ -199,16 +258,21 @@ async function main() {
   for (const app of apps) {
     const reports = [];
     for (const day of daysBetween(from, to)) {
-      for (const key of await listKeys(creds, `${PREFIX}${app}/${day}/`)) {
-        const report = JSON.parse(await s3Get(creds, `/${BUCKET}/${key}`));
+      for (const key of (await listKeys(session, `${PREFIX}${app}/${day}/`)).filter((k) => isReportKey(k, app, day))) {
+        const report = await getReportOrSkip(session, key);
+        if (!report) continue;
         if ((kinds && !kinds.includes(report.kind)) || (channels && !channels.includes(report.channel))) continue;
         reports.push(report);
-        writeFileSync(join(out, key.replaceAll("/", "_")), JSON.stringify(report, null, 2));
+        writeFileSync(join(out, safeFileName(key)), JSON.stringify(report, null, 2));
       }
     }
     printGroups(app, reports, args.top, args.tail);
   }
   console.log(`\nReports ${from}..${to} saved in ${out}`);
+  if (session.notFetched > 0) {
+    console.error(`${session.notFetched} report(s) could not be fetched (rate limit or server error); the counts above are too low. Run again.`);
+    process.exitCode = 1;
+  }
 }
 
 // Run only as a script, so the grouping can be imported by the test.

@@ -1,6 +1,6 @@
 # Slice 243 — Crash reports: everything missing to explain a crash
 
-*Planned 2026-11-01.* From the user, after the 2026-11-01 iPhone test of Dino Reader: "the builds don't keep the files
+*In progress (2026-11-01): item 3 built.* Planned 2026-11-01. From the user, after the 2026-11-01 iPhone test of Dino Reader: "the builds don't keep the files
 that turn a crash into readable code lines - why?!", "we never created the key to read them - why?! I told you this is a
 priority", "add slices for adding anything missing from the crash report".
 
@@ -40,8 +40,8 @@ priority", "add slices for adding anything missing from the crash report".
   crash submission or a MetricKit `native` report, download the matching dSYM from the release by binary UUID and
   resolve each frame (llvm-symbolizer or an equivalent that reads DWARF on Windows; checked through `library-docs`).
   Prints method, file and line. A unit test with a fixture.
-- [ ] 3. **`pull-crashes.mjs` reads through wrangler's login** (the route proven on 2026-11-01), with no new token.
-  Drop the `CF_R2_CRASHES_READ` requirement from the script, `worker/CLAUDE.md` and Slice 227. Read-only: list + get.
+- [x] 3. **`pull-crashes.mjs` reads through wrangler's login** (the route proven on 2026-11-01), with no new token.
+  Drop the `CF_R2_CRASHES_READ` requirement from the script, `worker/CLAUDE.md` and Slice 227. The script only calls list + get; the login itself is the user's general wrangler login, not a read-only credential.
 - [ ] 4. **One command answers "did it crash?"**: `tools/crashes/report.(ps1|mjs) -App dino|rtst -Since <date>` runs
   the R2 pull, `pull-apple.py` and `pull-play.py`, pairs each `unclean_exit` with the Apple/Play crash closest in time
   for the same version, symbolicates, and prints one grouped summary.
