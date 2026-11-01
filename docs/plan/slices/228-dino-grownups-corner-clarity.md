@@ -30,22 +30,22 @@ Eight frames in `docs/design/dino-reader/Dino Reader Batch 43 Grown-ups Corner.d
 - **Book sheet (100).** Bottom sheet over a dimmed corner (`rgba(43,37,64,.5)`), white, top radius 28, padding 12 18 26, grab handle 40 x 5. Header row: 44 x 58 cover, title 19 px/600, source line ("From the Store") 13 px `#8a8399`. Then **Read now** first and biggest: 60 dp, radius 30, `#FF7A59`, 18 px/600, play icon. Then the "Read with my voice" card (`#F3EFE6`, radius 16, switch 52 x 32 `#5B57E8`, "3 of 16 pages recorded. Other pages use Dino's voices."), then Record and Cast outline pills (48 dp, 2 px `#c9c0f5`, text `#5B57E8`), then "Remove from the shelf" in `#C8402A`. Read now leaves grown-up mode and opens the reader in kids' mode, so Back lands on the kids' shelf. `BookSheetPlan` puts Read now at index 0 for every book kind (store, own, translated).
 - **Intro, new first card (101).** Step bar: current dot 22 x 8 `#5B57E8`, others 8 x 8 `#d9d2c4`; "1 of 6"; "Skip all" 15 px/600 `#5B57E8` at the right. Picture: two mini phones tilted -4 and +4 degrees (120 x 200, 4 px ink border, radius 18). Title "Dino has two places" 26 px/600. Two white cards (radius 16): "Kids' shelf" / "Just tap a book and listen." and (lock icon) "Grown-ups' corner" / "Behind a lock, for adding books and voices." Button "Next" (56 dp, coral). No Try it on this card.
 - **Intro, read step back (101b).** A read step that Batch 32 dropped returns as step 2: "Read a story together" / "Tap a book, then play. Dino reads it aloud and lights up each sentence." with "Try it" (opens The Tortoise and the Hare in the kids' reader, already playing; no Continue there, Back or the last page returns and moves on) and "Skip". Counters read "of 6".
-- **Dark (103).** Page `#1E1B2E`, header bar `#2A2640` (`NightCard`), text `#F3E9D2`, line `#cfc6e6`, Store `#A9A2FF` on `#1E1B2E`, way back `#C65A43` on `#FFE9D9`. Only existing `Night*` tokens. Needs the theme pin lifted (first open point).
+- **Dark (103): out of scope** (user, 2026-11-01: "keep the light for now", "Dark is out of scope for now"). The theme pin `UserAppTheme = Light` stays; frame 103 is not built.
 - **New strings (both locales, 13 languages).** "Grown-ups", "Grown-ups' corner", the corner line, "Back to my child's shelf", "Read now", "Dino has two places", "Kids' shelf", "Just tap a book and listen.", "Behind a lock, for adding books and voices.", "Read a story together", the read-step line, "Try it", the "N of 6" counter. ("Ready for my child" exists.)
 
-**Open point: dark mode needs the theme pin lifted.** The slice asks for light and dark. `App.xaml.cs:30` sets `UserAppTheme = AppTheme.Light`; only the reading screen follows night mode (`ReadingPage.xaml.cs:658`, `SystemTheme.cs`). Frame 103 ships only if the pin is lifted for grown-up pages (kids' shelf stays light). **Default:** keep the pin, ship light only, keep 103 and 109 as a later option. `App.xaml.cs`, `SystemTheme.cs` and `ReadingTheme.cs` are added to Touches in case the user lifts it.
+**Decided: light only** (user, 2026-11-01). Keep `App.xaml.cs:30` as it is; dark is out of scope.
 
-**Open point: intro step mapping.** The slice maps saved steps forward by one. The mock adds two steps (101 and 101b), so `IntroState` maps forward by two. **Default:** forward by two, and re-add the read step to the wizard's step list.
+**Decided: intro steps map forward by two** (101 and 101b), and the read step returns to the wizard's list.
 
-**Open point: the book sheet's Done.** The slice is silent; the mock drops the sheet's own Done (tap outside or swipe down closes it). `BookSheet.cs:378` builds one today. **Default:** drop it.
+**Decided: the book sheet drops its own Done** (tap outside or swipe down closes it; `BookSheet.cs:378` builds one today).
 
-**Open point: Add label.** Portrait says "Add a book"; the landscape rail (Batch 44, frame 111) says "Add". **Default:** "Add a book" in portrait, "Add" only where the rail is narrow.
+**Decided: one string, "Add a book",** everywhere, including the landscape rail (Batch 44, 111).
 
 Settled by the mock: the file is Batch 43, not "Batch 40"; the way-back button stays coral (indigo is used for Done in Slice 229).
 
 #### Work
 
-- [x] **Design (Claude Code):** mock done (Batch 43, 2026-11-01: `docs/design/dino-reader/Dino Reader Batch 43 Grown-ups Corner.dc.html`, frames 97-103 and 101b; dark 103 needs the theme pin lifted). Remaining: the user's approval and their answers to the mock's two review questions (dark, right to left); record them here. Original ask: HTML mock in `docs/design/dino-reader/` (new `Dino Reader Batch 40 user test.dc.html` or similar): kids' shelf, grown-ups' corner header and sticky button, book sheet with Read now, the intro "two places" card, the Grown-ups pill and its icon, light and dark, portrait (landscape comes in Slice 232). Publish it as a private page for the user; record their answer here.
+- [x] **Design (Claude Code):** mock done (Batch 43, 2026-11-01: `docs/design/dino-reader/Dino Reader Batch 43 Grown-ups Corner.dc.html`, frames 97-102 and 101b; 103 dark not built). User answers recorded above (light only; never mirror, Slice 96).
 - [ ] Grown-ups pill with label and the new icon (copied from `icons/`).
 - [ ] Grown-ups' corner header + one-line explanation; sticky coral "Back to my child's shelf" button.
 - [ ] `BookSheetPlan`: "Read now" row first; tapping it leaves grown-up mode and opens the reader. Unit test the row order.
