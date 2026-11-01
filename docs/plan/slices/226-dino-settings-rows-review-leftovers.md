@@ -1,6 +1,6 @@
 ### Slice 226 — Dino Settings rows and page text: Slice 205 review findings left open
 
-*parked: feedback loop, waits for the user.* Planned 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1301-feedback-loop-w1.md)). Slice 205's record said "fixes applied", but a finding-by-finding check against origin/main (2026-10-31) found these still open. Parked so no later wave tonight builds it; the user moves it to `planned`.
+*Planned.* Written 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1301-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01. Slice 205's record said "fixes applied", but a finding-by-finding check against origin/main (2026-10-31) found these still open.
 
 **Touches:** `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/TextPages.cs`, `src/DinoReader.App/PictureTextPages.cs`, `.maestro/dino/` (a new Settings-row flow), `docs/plan/slices/226-dino-settings-rows-review-leftovers.md`
 
