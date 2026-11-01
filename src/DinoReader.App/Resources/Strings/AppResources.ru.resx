@@ -416,4 +416,13 @@
   <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Загрузка приостановлена. Нажмите, чтобы завершить.</value></data>
   <data name="PackNotify_Named" xml:space="preserve"><value>Голос: {0} ({1} МБ)</value></data>
   <data name="PackNotify_PausedDetail" xml:space="preserve"><value>Голос: {0} ({1} МБ) · готово {2}%</value></data>
+  <data name="BackCover_StoryBy" xml:space="preserve"><value>Автор истории: {0}</value></data>
+  <data name="BackCover_OriginalStoryBy" xml:space="preserve"><value>Оригинальная история: {0}</value></data>
+  <data name="BackCover_Traditional" xml:space="preserve"><value>Народная сказка</value></data>
+  <data name="BackCover_RetoldBy" xml:space="preserve"><value>Пересказ для юных читателей: {0}</value></data>
+  <data name="BackCover_Illustration" xml:space="preserve"><value>Иллюстрации: {0}</value></data>
+  <data name="BackCover_Date" xml:space="preserve"><value>{0} {1}</value></data>
+  <data name="BackCover_Months" xml:space="preserve"><value>Январь|Февраль|Март|Апрель|Май|Июнь|Июль|Август|Сентябрь|Октябрь|Ноябрь|Декабрь</value></data>
+  <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
+  <data name="BackCover_And" xml:space="preserve"><value>{0} и {1}</value></data>
 </root>

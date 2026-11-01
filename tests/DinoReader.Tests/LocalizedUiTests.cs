@@ -34,6 +34,20 @@ public partial class LocalizedUiTests
     }
 
     [Fact]
+    public void Every_language_has_twelve_months_ten_digits_and_an_and_for_the_back_cover()
+    {
+        foreach (string file in new[] { NeutralFile }.Concat(LanguageFiles()))
+        {
+            Dictionary<string, string> strings = Load(file);
+
+            Assert.Equal(12, strings["BackCover_Months"].Split('|').Length);
+            Assert.Equal(10, strings["BackCover_Digits"].Length);
+            Assert.Equal(["{0}", "{1}"], Placeholders(strings["BackCover_And"]));
+            Assert.Equal(["{0}", "{1}"], Placeholders(strings["BackCover_Date"]));
+        }
+    }
+
+    [Fact]
     public void The_animal_sounds_strings_are_translated_in_every_language()
     {
         Dictionary<string, string> neutral = Load(NeutralFile);

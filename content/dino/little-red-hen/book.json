@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "6eff8d779a9542fcafa76ae58ba1e96b",
   "title": "The Little Red Hen",
-  "version": 9,
+  "version": 10,
   "ageMin": 3,
   "ageMax": 6,
   "author": "Traditional",
@@ -58,7 +58,7 @@
       ]
     }
   ],
-  "contentHash": "47de46ac423bb8a037c3fc34671f4ee0a24cee9601e1ceb047060f7f90233750",
+  "contentHash": "c466907be7224d2d7d044cd5833633038f342e72359638ee36d0b7bb0c66ad44",
   "creditsByLanguage": {
     "ar": "حكاية شعبية مُعاد سردها · مجانية للمشاركة",
     "da": "Genfortalt folkeeventyr · frit at dele",
@@ -74,5 +74,7 @@
     "ru": "Пересказ народной сказки · можно свободно делиться",
     "sv": "Återberättad folksaga · fri att dela",
     "zh": "传统故事新编 · 可自由分享"
-  }
+  },
+  "storyBy": "traditional",
+  "retold": true
 }

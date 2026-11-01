@@ -415,4 +415,13 @@
   <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Nedlastingen er satt på pause. Trykk for å fullføre.</value></data>
   <data name="PackNotify_Named" xml:space="preserve"><value>{0}-stemmen ({1} MB)</value></data>
   <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-stemmen ({1} MB) · {2} % ferdig</value></data>
+  <data name="BackCover_StoryBy" xml:space="preserve"><value>Historie av {0}</value></data>
+  <data name="BackCover_OriginalStoryBy" xml:space="preserve"><value>Opprinnelig historie av {0}</value></data>
+  <data name="BackCover_Traditional" xml:space="preserve"><value>Et tradisjonelt eventyr</value></data>
+  <data name="BackCover_RetoldBy" xml:space="preserve"><value>Gjenfortalt for unge lesere av {0}</value></data>
+  <data name="BackCover_Illustration" xml:space="preserve"><value>Illustrasjon: {0}</value></data>
+  <data name="BackCover_Date" xml:space="preserve"><value>{0} {1}</value></data>
+  <data name="BackCover_Months" xml:space="preserve"><value>januar|februar|mars|april|mai|juni|juli|august|september|oktober|november|desember</value></data>
+  <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
+  <data name="BackCover_And" xml:space="preserve"><value>{0} og {1}</value></data>
 </root>

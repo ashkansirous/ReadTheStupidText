@@ -30,6 +30,9 @@ Read first, in full: `.claude/skills/create-dino-story/SKILL.md` (rule 1 and the
 - **Plan.** Each picture-plan line matches its page's text, and neighbouring pages show different pictures.
 - **Voices (Slice 156).** Every character has an entry in the `cast` of the book's `content/dino/<stem>/book.json`; the suggested roster character fits it (age, gender, kind, how it should sound:
   a squawky seagull is not a warm mummy), no two characters of the book share one, and the traits are true to the text. List each misfit as a page-less "voices" finding.
+- **Back cover (Slice 237, full mode too).** `book.json` has `storyBy` (and `retold: true` for a retelling, never for the user's own book) and the credit is true: the original author is the real one
+  (check it, do not trust the writer), "traditional" only for a tale nobody owns, the user's own stories credit the user. The credits are never typed into `story.md`. When the app can be run,
+  the last page after the final story page shows the lines (story or original author, retold by, illustration, month) and nothing is spoken. List a wrong or missing credit as a page-less "back cover" finding.
 
 ## Pictures (full mode only)
 

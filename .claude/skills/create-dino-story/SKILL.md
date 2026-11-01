@@ -72,6 +72,10 @@ illustrators sharing the clipboard and Downloads), `gemini-keep-awake.ps1` (scre
   casts voices.
 - Read every page against rule 1 before anything else. Rewrite what fails.
 - Give every character a voice choice in the `cast` of the book's `book.json` (Slice 156; `dotnet run --project tools/DinoReader.BookBuilder -- dump-voices` prints a mechanical starting point): a suggested roster id, gender, age, what it is and voice qualities; record them in the art record.
+- **Back cover (Slice 237).** Every book ends on a silent credits page that is never read. The builder makes it from `book.json`: set `storyBy` (who wrote the story, names as written;
+  `"traditional"` for a tale nobody owns) and `retold: true` for every book that is not the user's own. Own books: `storyBy` is the user's name (plus a co-author) and no `retold`.
+  A classic needs its real original author, checked, never guessed (Potter, Aesop, Andersen, the Brothers Grimm...). The illustrator is Ashkan Sirous unless `illustration` says otherwise,
+  and the month is the book's `added` date. Nobody types the page into `story.md`; `check` fails a book without `storyBy`. It shows as the last page in every reading mode (an older app reads it aloud).
 - Translations: `dotnet run --project tools/DinoReader.BookBuilder -- dump-pieces <stem>` writes `translations/pieces.json`;
   translate into `content/dino/<stem>/translations/<lang>.json` (all 13 languages).
 - Never move a `---` once pictures exist: the build fails when picture and page counts differ.

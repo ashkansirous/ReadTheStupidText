@@ -17,7 +17,7 @@ public sealed record ScanSource(IReadOnlyList<StoryPage> Pages, Func<string?, st
 
 /// <summary>What the surface shows: the story text, its sentences and the font its language is set in.</summary>
 public sealed record ReadingContent(string Text, IReadOnlyList<SentenceSpan> Sentences, string Font, bool RightToLeft,
-	ScanSource? Scans = null);
+	ScanSource? Scans = null, BackCoverView? Back = null);
 
 /// <summary>
 /// The page card of the reading screen: one page at a time in picture or text mode, the spoken
@@ -40,6 +40,7 @@ public sealed class ReadingSurface : Border
 	private ReadingTheme? _theme;
 	private IPageRenderer? _renderer;
 	private int _page;
+	private bool _onBackCover;
 	private int _sentence = -1;
 	private int _lastSentence = -1; // the end of a soft-highlighted recorded page (Slice 111); -1 when one sentence is marked
 	private Size _laidOutFor;
@@ -128,6 +129,7 @@ public sealed class ReadingSurface : Border
 		_theme = theme;
 		_error.TextColor = theme.Ink;
 		_renderer = null;
+		_onBackCover = false;
 		_anchor = -1;
 		_anchorPosition = -1;
 		_position = -1;
@@ -207,6 +209,7 @@ public sealed class ReadingSurface : Border
 		}
 
 		_page = Math.Clamp(page, 0, _renderer.PageCount - 1);
+		_onBackCover = _renderer is BackCoverPages back && _page == back.BackPage;
 		_anchor = _renderer.FirstSentenceOf(_page);
 		_anchorPosition = _renderer.FirstPositionOf(_page);
 		BackgroundColor = _renderer.CardColour(_page);
@@ -290,6 +293,11 @@ public sealed class ReadingSurface : Border
 		}
 
 		IPageRenderer renderer = CreateRenderer(_content, _theme);
+		if (_content.Back is { } backCover)
+		{
+			renderer = new BackCoverPages(renderer, backCover, _content.Font, _content.RightToLeft); // Slice 237: one silent page after the last, in every mode
+		}
+
 		bool composed = await TryComposeAsync(renderer, card);
 		if (_dirty)
 		{
@@ -334,6 +342,11 @@ public sealed class ReadingSurface : Border
 		_error.IsVisible = false;
 		StrokeShape = new RoundRectangle { CornerRadius = renderer.CornerRadius };
 		int held = _anchor >= 0 ? renderer.PageOf(_anchor, _anchorPosition) : renderer.PageOf(_sentence, _position);
+		if (_onBackCover && renderer is BackCoverPages backCover)
+		{
+			held = backCover.BackPage; // a child looking at the back cover stays on it through a rotation or a new mode
+		}
+
 		ShowPage(Math.Max(0, held));
 		LaidOut?.Invoke(this, EventArgs.Empty);
 	}
@@ -417,7 +430,8 @@ public sealed class ReadingSurface : Border
 	// Swipe left turns to the next page for every book: the page layout never mirrors (Slice 96).
 	private void OnSwiped(object? sender, SwipedEventArgs e)
 	{
-		if (_renderer?.IsZoomed == true)
+		// The back cover is never zoomed: the inner renderer's zoom state must not turn a swipe off it into a pan.
+		if (_renderer?.IsZoomed == true && !_onBackCover)
 		{
 			return;
 		}

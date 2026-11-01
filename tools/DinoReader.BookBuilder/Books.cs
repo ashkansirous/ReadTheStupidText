@@ -34,7 +34,12 @@ internal sealed record AuthoredCharacter(string Name, string Voice, Gender Gende
 internal sealed record BookInfo(
     BookKind Kind, string Id, string Title, int Version, int AgeMin, int AgeMax, string Author, string Credits, int Colour, string Added, int Order,
     string[]? Characters, AuthoredCharacter[]? Cast, Dictionary<string, AnimalKind>? Animals, string[]? NotAnimals, string ContentHash, bool? TextInPictures = null,
-    Dictionary<string, string>? CreditsByLanguage = null);
+    Dictionary<string, string>? CreditsByLanguage = null, string? StoryBy = null, bool? Retold = null, string? Illustration = null)
+{
+    /// <summary>The book's silent back cover (Slice 237) from <c>storyBy</c>, <c>retold</c>, <c>illustration</c> and the month of <see cref="Added"/>; null when it cannot be made (<c>check</c> fails such a book).</summary>
+    [JsonIgnore]
+    public BackCover? BackCover => DinoReader.Core.BackCover.TryCreate(StoryBy, Retold == true, Illustration, Added);
+}
 
 /// <summary>One free story in the Dino store (Slice 102): its fixed package id, the folder name its files are stored under, the
 /// credit line, the age range and the author the store card and filters use (Slice 112), the generated cover colour and the characters its speech tags must give a voice.</summary>
@@ -95,7 +100,7 @@ internal static class Books
 
     private static readonly JsonSerializerOptions ReadOptions = new(JsonOptions) { UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow };
 
-    private static readonly string[] RequiredKeys = ["kind", "id", "title", "version", "ageMin", "ageMax", "author", "credits", "colour", "added", "order", "contentHash"];
+    private static readonly string[] RequiredKeys = ["kind", "id", "title", "version", "ageMin", "ageMax", "author", "credits", "colour", "added", "order", "contentHash", "storyBy"];
 
     private const int MaxAge = 18;
     private const string AddedFormat = "yyyy-MM-dd";
@@ -175,6 +180,9 @@ internal static class Books
             _ when info.Author is null || info.Credits is null || info.ContentHash is null => "author, credits and contentHash must be strings",
             _ when CreditsByLanguageProblem(info.CreditsByLanguage) is { } credits => credits,
             _ when !DateOnly.TryParseExact(info.Added, AddedFormat, out _) => $"added must be {AddedFormat}",
+            _ when string.IsNullOrWhiteSpace(info.StoryBy) => "storyBy is empty (the back cover needs who wrote the story; \"traditional\" for a tale nobody owns)",
+            _ when DinoReader.Core.BackCover.IsTraditional(info.StoryBy) && info.Retold != true => "a traditional tale must be retold: true",
+            _ when info.Retold == true && string.Equals(info.StoryBy.Trim(), DinoReader.Core.BackCover.Maker, StringComparison.OrdinalIgnoreCase) => "a retold book must credit the original author in storyBy, not the maker",
             _ when !File.Exists(Path.Combine(folder, BookFolder.StoryFile)) && !File.Exists(Path.Combine(folder, BookFolder.LinesFile)) => "needs story.md or lines.json",
             _ => null,
         };

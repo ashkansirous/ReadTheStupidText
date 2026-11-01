@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "67695905c10a46bd81aa498beab9609e",
   "title": "Goldilocks and the Three Bears",
-  "version": 10,
+  "version": 11,
   "ageMin": 3,
   "ageMax": 6,
   "author": "Traditional",
@@ -59,7 +59,7 @@
       ]
     }
   ],
-  "contentHash": "293041a9c1c2bc9d343f3354c0caa3d03362d382d136087eb2058a0e6b6e8e81",
+  "contentHash": "99d9d605ce60dda8d961c0bab7361a3c9af79f0a242717414d1843f332471b31",
   "creditsByLanguage": {
     "ar": "حكاية شعبية مُعاد سردها · مجانية للمشاركة",
     "da": "Genfortalt folkeeventyr · frit at dele",
@@ -75,5 +75,7 @@
     "ru": "Пересказ народной сказки · можно свободно делиться",
     "sv": "Återberättad folksaga · fri att dela",
     "zh": "传统故事新编 · 可自由分享"
-  }
+  },
+  "storyBy": "Robert Southey",
+  "retold": true
 }

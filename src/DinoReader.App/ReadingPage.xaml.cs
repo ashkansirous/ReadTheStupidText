@@ -516,7 +516,7 @@ public partial class ReadingPage : ContentPage
 	private void ShowContent(ReadingContent content, Story story)
 	{
 		SyncModeSwitch();
-		Surface.Show(content, _mode, _theme);
+		Surface.Show(content with { Back = BackCoverOf(story) }, _mode, _theme);
 		_surfaceShown = true;
 		if (_session.CurrentSentence >= 0)
 		{
@@ -525,6 +525,19 @@ public partial class ReadingPage : ContentPage
 
 		UpdateHeaderLayout(Width, Height);
 		RenderChrome();
+	}
+
+	// Slice 237: the silent back cover, worded in the language the text is shown in; the picture is the book's cover (null for a colour cover).
+	private BackCoverView? BackCoverOf(Story story)
+	{
+		if (story.BackCover is not { } cover)
+		{
+			return null;
+		}
+
+		string language = _translatedDisplay ? _session.ReadingLanguage : story.Language;
+		string? picture = story.CoverImageFile is { } file ? _library.TryResolveFile(story.Id, file) : null;
+		return new BackCoverView(BackCoverText.Lines(cover, language), Color.FromArgb(CoverPalette.ColourAt(story.CoverColourIndex)), picture);
 	}
 
 	// A page that plays a parent's recording has no sentence timings, so the whole page gets one soft highlight (Slice 111, mock frame 46).
@@ -1157,12 +1170,28 @@ public partial class ReadingPage : ContentPage
 		RenderChrome();
 	}
 
+	// Slice 237: a page with no sentence (the silent back cover, a text-in-picture page) starts the read at the next page that has one;
+	// with none ahead (the back cover) the book starts again from sentence 0, as a finished book does.
+	private int SentenceToPlayFromShownPage()
+	{
+		for (int page = _follower.ShownPage; page < Surface.PageCount; page++)
+		{
+			int first = Surface.FirstSentenceOnPage(page);
+			if (first >= 0)
+			{
+				return first;
+			}
+		}
+
+		return 0;
+	}
+
 	// Play from nothing reads from the top after a finished read, from the page the child swiped to,
 	// else from the sentence the highlight is on.
 	private async Task StartFromPlayAsync()
 	{
 		int sentence = _session.Finished ? 0
-			: _follower.IsWandering ? Surface.FirstSentenceOnPage(_follower.ShownPage)
+			: _follower.IsWandering ? SentenceToPlayFromShownPage()
 			: Math.Max(0, _session.CurrentSentence);
 		_follower.ResumeAt(Math.Max(0, Surface.PageOfSentence(sentence)));
 		await StartReadAtAsync(sentence);

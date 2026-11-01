@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "6f592017f08446eeae7adafa22318660",
   "title": "The Ugly Duckling",
-  "version": 9,
+  "version": 10,
   "ageMin": 5,
   "ageMax": 8,
   "author": "Hans Christian Andersen",
@@ -73,7 +73,7 @@
     "Duckling": "Duck",
     "Dilly": "Duck"
   },
-  "contentHash": "160c679401ca8280d124c8b57049ac37be1460dd90cd4d2ee31693ee8ac00d60",
+  "contentHash": "43bef97f54447145f5cf033e875da5a15952079c28e9864aa0c28f6aa979bed8",
   "creditsByLanguage": {
     "ar": "مُعاد سردها عن أندرسن · مجانية للمشاركة",
     "da": "Genfortalt efter H.C. Andersen · frit at dele",
@@ -89,5 +89,7 @@
     "ru": "Пересказ сказки Андерсена · можно свободно делиться",
     "sv": "Återberättad efter Andersen · fri att dela",
     "zh": "改编自安徒生 · 可自由分享"
-  }
+  },
+  "storyBy": "Hans Christian Andersen",
+  "retold": true
 }

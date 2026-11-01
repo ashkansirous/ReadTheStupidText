@@ -46,7 +46,7 @@ internal static class BookHash
         var options = new JsonSerializerOptions(Books.JsonOptions) { WriteIndented = false };
         return JsonSerializer.Serialize(new
         {
-            info.Id, info.Title, info.AgeMin, info.AgeMax, info.Author, info.Credits, info.Colour, info.Added, info.Cast, info.TextInPictures,
+            info.Id, info.Title, info.AgeMin, info.AgeMax, info.Author, info.Credits, info.Colour, info.Added, info.Cast, info.TextInPictures, info.StoryBy, info.Retold, info.Illustration,
             Animals = info.Animals?.OrderBy(a => a.Key, StringComparer.Ordinal).ToDictionary(a => a.Key, a => a.Value),
             NotAnimals = info.NotAnimals?.Order(StringComparer.Ordinal).ToArray(),
         }, options);

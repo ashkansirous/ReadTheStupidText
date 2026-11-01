@@ -1,6 +1,6 @@
 # Slice 237 — Dino: a silent back cover (credits page) at the end of every book
 
-*Planned 2026-11-01.* From the user, after "Freddy and the Slipper" shipped: "update the relevant skills to always
+*Built 2026-11-01, not merged. Android emulator back-cover flow passed; the checks under "Not yet verified" are open.* From the user, after "Freddy and the Slipper" shipped: "update the relevant skills to always
 generate a back cover page. It should write the credits, basically who wrote the original story, and for the ones
 that was not written by me, you should write edited and made suitable for young kids by Ashkan Sirous (use better
 wording) and then next line should be the year and month. Illustration: Ashkan Sirous. like September 2026. The back
@@ -48,19 +48,19 @@ shown but never read aloud.
 
 ## Work
 
-- [ ] **1. Smallest end to end, one book:** `StoryPage` gets a back-cover kind (no sentences, never voiced);
+- [x] **1. Smallest end to end, one book:** `StoryPage` gets a back-cover kind (no sentences, never voiced);
   the builder appends it from book.json; the reader shows it (Android and iOS share the MAUI code, Windows too);
   `ReadingSession`/segmentation skip it. Freddy and the Slipper first.
-- [ ] **2. Strings:** the labels and month names in all 14 languages (resx), the right-to-left layout for fa/ar.
-- [ ] **3. All 16 books:** `storyBy`/`retold` in every book.json (own books: Good Enough, X Marks the Treasure,
+- [x] **2. Strings:** the labels and month names in all 14 languages (resx), the right-to-left layout for fa/ar.
+- [x] **3. All 16 books:** `storyBy`/`retold` in every book.json (own books: Good Enough, X Marks the Treasure,
   Freddy; classics with their original authors: Beatrix Potter, Aesop, Andersen, Grimm and so on, traditional
   tales as "A traditional tale"). The writer checks each original author. Stamp every book (new version, so
   installed copies update), rebuild the starters.
-- [ ] **4. Builder and checks:** `check` fails for a book without `storyBy`; the store's `pageCount` and `minutes`
+- [x] **4. Builder and checks:** `check` fails for a book without `storyBy`; the store's `pageCount` and `minutes`
   leave the page out; the hash covers the new fields.
-- [ ] **5. Skills:** create-dino-story step 1-2 and the writer agent fill `storyBy`/`retold`; the reviewer checks the
+- [x] **5. Skills:** create-dino-story step 1-2 and the writer agent fill `storyBy`/`retold`; the reviewer checks the
   back cover in full mode; dino-storytelling mentions it.
-- [ ] **6. Tests:** builder (page appended, not counted), Core (never in the sentence list, never voiced), all
+- [x] **6. Tests:** builder (page appended, not counted), Core (never in the sentence list, never voiced), all
   books have `storyBy`.
 
 ## Verification
@@ -72,3 +72,33 @@ shown but never read aloud.
 - Windows head: Dino on Windows shows the back cover (only if the page code differs per platform).
 - Old app: install the current store build, download a stamped book, confirm it reads the credits aloud and
   nothing breaks.
+
+## Built
+
+Built 2026-11-01. All six work items are done. Android emulator 2026-11-01, back-cover flow: PASS (`BACKCOVER shown lines=4`, nothing spoken), portrait screenshot good.
+
+Changed from plan:
+- `storyBy` holds several names separated by `;`, joined with a localized "and" (`BackCover_And`), so the English "and" no longer shows in the other 13 languages.
+- The back cover is `Story.BackCover`, kept outside `Pages`. In story.json it is one extra last page with English text, so old apps read it aloud, and it is stripped on load.
+- Play on the back cover restarts from sentence 0.
+- The credit font is 20 pt and shrinks to a 13 pt minimum; the picture shrinks to fit.
+- Goldilocks is credited to Robert Southey and Red Riding Hood to Charles Perrault and the Brothers Grimm (not "traditional").
+- `check` fails a book without `storyBy`, and a retold book whose `storyBy` is Ashkan.
+
+From review:
+- review read: D:\ReadTheStupidText-worktrees\reviews\s237-high.md, findings 11/11. Applied 1-6, 9, 10, 11. Finding 7 (old installed apps read, translate and count the back cover) is the accepted trade-off of this slice. Finding 8 (`BackCoverEnglish` duplicates English labels and month names from the resx; `Lines()` repeats the traditional branch) was skipped; the brief gave no reason.
+- review read: D:\ReadTheStupidText-worktrees\reviews\s237-medium.md, findings 8/8. Applied 1, 2, 4, 6, 7. Skipped: 3 (`SplitBackCover` drops a back cover silently when `TryCreate` fails, and a non-last-page `backCover` is read as a normal page), 5 (`JoinNames` chains "A and B and C" for 3+ names, wrong in list-comma languages; no book has 3 names today), 8 (the date shown is the Added month, so older books show the store-add month; info only, by design). Reasons for 3 and 5 were not given in the brief.
+
+#### For CLAUDE.md
+
+- In `src/DinoReader.App/CLAUDE.md`: every `book.json` needs `storyBy` (and `retold` for classics). The back cover is never voiced or counted (not in `pageCount`, `minutes` or the sentence list). (Slice 237: docs/plan/slices/237-dino-back-cover-credits.md)
+
+#### Not yet verified
+
+- Landscape layout of the back cover.
+- Farsi/Arabic right-to-left back cover and Persian digits.
+- Picture-only and text-only reading modes on a device.
+- Old installed app reading the page aloud without breaking.
+- iOS and Windows on a device (compile only).
+- The ar/ru/ja/zh labels by a native speaker.
+- Credit-line wrapping in long languages on a narrow phone (estimated, not measured).

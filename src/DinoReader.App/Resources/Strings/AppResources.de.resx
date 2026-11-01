@@ -417,4 +417,13 @@
   <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Download pausiert. Zum Fertigstellen tippen.</value></data>
   <data name="PackNotify_Named" xml:space="preserve"><value>{0}-Stimme ({1} MB)</value></data>
   <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-Stimme ({1} MB) · {2} % fertig</value></data>
+  <data name="BackCover_StoryBy" xml:space="preserve"><value>Geschichte von {0}</value></data>
+  <data name="BackCover_OriginalStoryBy" xml:space="preserve"><value>Originalgeschichte von {0}</value></data>
+  <data name="BackCover_Traditional" xml:space="preserve"><value>Ein traditionelles Märchen</value></data>
+  <data name="BackCover_RetoldBy" xml:space="preserve"><value>Für junge Leser nacherzählt von {0}</value></data>
+  <data name="BackCover_Illustration" xml:space="preserve"><value>Illustration: {0}</value></data>
+  <data name="BackCover_Date" xml:space="preserve"><value>{0} {1}</value></data>
+  <data name="BackCover_Months" xml:space="preserve"><value>Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember</value></data>
+  <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
+  <data name="BackCover_And" xml:space="preserve"><value>{0} und {1}</value></data>
 </root>

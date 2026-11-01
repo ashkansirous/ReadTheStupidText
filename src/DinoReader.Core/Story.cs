@@ -100,7 +100,8 @@ public sealed record Story(
     IReadOnlyDictionary<int, PageRecording>? Recordings = null,
     bool UseRecordings = false,
     bool AnimalSoundsOn = true,
-    bool TextInPictures = false)
+    bool TextInPictures = false,
+    BackCover? BackCover = null)
 {
     public const string PageSeparator = "\n\n";
 

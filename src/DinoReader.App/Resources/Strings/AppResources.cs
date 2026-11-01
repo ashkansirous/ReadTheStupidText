@@ -428,4 +428,13 @@ public static class AppResources
 	public static string StoryLanguages_WifiWaiting => Get();
 	public static string StoryLanguages_FlagMap => Get();
 	public static string Gallery_UpdatingBooks => Get();
+	public static string BackCover_StoryBy => Get();
+	public static string BackCover_OriginalStoryBy => Get();
+	public static string BackCover_Traditional => Get();
+	public static string BackCover_RetoldBy => Get();
+	public static string BackCover_Illustration => Get();
+	public static string BackCover_Date => Get();
+	public static string BackCover_Months => Get();
+	public static string BackCover_Digits => Get();
+	public static string BackCover_And => Get();
 }

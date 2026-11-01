@@ -1,0 +1,46 @@
+# Slice 237: the page after a book's last story page is a silent back cover (credits). Open the last page of a starter, swipe once, and the credits show.
+# Nothing is played in this flow (no play=1), and the back cover has no sentences, so the device stage also confirms no read starts (no HOOK read start line).
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK open-book opened page=16
+# expect-log: PAGE 16
+# expect-log: BACKCOVER shown lines=4
+appId: uk.sirous.dinoreader
+name: Back cover after the last page
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow opens a starter book and speaks nothing, so it needs no pack or own book.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "16"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- assertNotVisible:
+    id: BackCover
+# Let the surface lay out and settle on page 16 before swiping.
+- waitForAnimationToEnd:
+    timeout: 5000
+- swipe:
+    direction: LEFT
+- extendedWaitUntil:
+    visible:
+      id: BackCover
+    timeout: 10000
+- assertVisible: "A traditional tale"
+- assertVisible: "Retold for young readers by Ashkan Sirous"
+- assertVisible: "Illustration: Ashkan Sirous"
+- assertVisible: "October 2026"
+- assertNotVisible:
+    id: StoryText

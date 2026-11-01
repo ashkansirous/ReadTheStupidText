@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "e2fb7f5de4ab4c4eb8bd2bb97c91accc",
   "title": "Jack and the Beanstalk",
-  "version": 9,
+  "version": 10,
   "ageMin": 5,
   "ageMax": 8,
   "author": "Traditional",
@@ -62,7 +62,7 @@
       ]
     }
   ],
-  "contentHash": "b84c28c3ab3f2b1db5bcfcee27f11a07cd1bdfc4f4ac5993ac03ee0e7d29632e",
+  "contentHash": "bda26da1cc83ae83b0b54156665917e43f3df1b1abf591000d7f6a465718bd60",
   "creditsByLanguage": {
     "ar": "حكاية شعبية مُعاد سردها · مجانية للمشاركة",
     "da": "Genfortalt folkeeventyr · frit at dele",
@@ -78,5 +78,7 @@
     "ru": "Пересказ народной сказки · можно свободно делиться",
     "sv": "Återberättad folksaga · fri att dela",
     "zh": "传统故事新编 · 可自由分享"
-  }
+  },
+  "storyBy": "traditional",
+  "retold": true
 }

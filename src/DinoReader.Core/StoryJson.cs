@@ -59,7 +59,8 @@ public static class StoryJson
         CoverPageIndex = s.CoverPageIndex,
         NarratorVoiceId = LegacyNarratorOf(s.Language),
         PreferredMode = s.PreferredMode is { } mode ? JsonSerializer.SerializeToElement(mode.ToString()) : null,
-        Pages = s.Pages.Select(p => new PageFile { Text = p.Text, ImageFile = p.ImageFile, Lines = ToLineFiles(p.Lines), Regions = ToRegionFiles(p.Regions) }).ToList(),
+        Pages = s.Pages.Select(p => new PageFile { Text = p.Text, ImageFile = p.ImageFile, Lines = ToLineFiles(p.Lines), Regions = ToRegionFiles(p.Regions) })
+            .Concat(BackCoverPage(s.BackCover)).ToList(),
         Cast = ToCastFiles(s.Cast),
         Translate = s.TranslateToMyLanguage,
         ShowOriginal = s.ShowOriginalText ? true : null,
@@ -80,15 +81,45 @@ public static class StoryJson
         }
 
         RequireFields(f);
+        (List<PageFile> storyPages, BackCover? backCover) = SplitBackCover(f.Pages);
         return new Story(
             f.Id, f.Title, f.Language, f.Created,
-            f.Pages.Select(p => ToPage(p)).ToList(),
+            storyPages.Select(p => ToPage(p)).ToList(),
             f.Cast.Select(ToMember).ToList(),
             f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId ?? string.Empty, ParseMode(f.PreferredMode, f.WordsOverPictures), f.Translate,
             f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null, CleanTranslations(f.Translations),
             CleanLanguageCasts(f.LanguageCasts, f.Language), f.ShowOriginal == true,
-            CleanRecordings(f.Recordings, f.Pages.Count, f.Language), f.UseRecordings == true, f.AnimalSounds != false,
-            f.TextInPictures == true);
+            CleanRecordings(f.Recordings, storyPages.Count, f.Language), f.UseRecordings == true, f.AnimalSounds != false,
+            f.TextInPictures == true, backCover);
+    }
+
+    // Slice 237: the back cover travels as one last page (its text the credits in English, for an older app that reads it like any page);
+    // here it is taken back out of the pages so nothing reads, counts or translates it. A damaged one is dropped with its page.
+    private static IEnumerable<PageFile> BackCoverPage(BackCover? cover)
+    {
+        if (cover is null)
+        {
+            return [];
+        }
+
+        var file = new BackCoverFile { StoryBy = cover.StoryBy, Retold = cover.Retold ? true : null, Illustration = cover.Illustration, Month = cover.MonthText };
+        return [new PageFile { Text = BackCoverEnglish.PageText(cover), BackCover = file }];
+    }
+
+    private static (List<PageFile> Pages, BackCover? Cover) SplitBackCover(List<PageFile> pages)
+    {
+        int lastIndex = pages.Count - 1;
+        if (lastIndex < 0 || pages[lastIndex]?.BackCover is not { } file)
+        {
+            return (pages, null);
+        }
+
+        if (lastIndex == 0)
+        {
+            throw new StoryFormatException("The story file has a back cover but no story pages.");
+        }
+
+        return (pages.Take(lastIndex).ToList(), BackCover.TryCreate(file.StoryBy, file.Retold == true, file.Illustration, file.Month));
     }
 
     private static List<RecordingFile>? ToRecordingFiles(IReadOnlyDictionary<int, PageRecording>? recordings, int pageCount)
@@ -385,6 +416,23 @@ public static class StoryJson
         public string? ImageFile { get; set; }
         public List<LineFile>? Lines { get; set; }
         public List<RegionFile>? Regions { get; set; }
+
+        /// <summary>Slice 237: set only on the last page, which is the back cover; an older app ignores it and reads the page's text.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public BackCoverFile? BackCover { get; set; }
+    }
+
+    private sealed class BackCoverFile
+    {
+        public string? StoryBy { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? Retold { get; set; }
+
+        public string? Illustration { get; set; }
+
+        /// <summary>The month, <c>yyyy-MM</c>.</summary>
+        public string? Month { get; set; }
     }
 
     private sealed class RegionFile

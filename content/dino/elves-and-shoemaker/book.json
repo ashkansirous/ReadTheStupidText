@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "34efea95400343ac998e9ed99158d370",
   "title": "The Elves and the Shoemaker",
-  "version": 9,
+  "version": 10,
   "ageMin": 4,
   "ageMax": 8,
   "author": "Brothers Grimm",
@@ -61,7 +61,7 @@
       ]
     }
   ],
-  "contentHash": "e106a90cd283f7dcc7caab0410cb072b009ff9f7039168a0b740fa4710352088",
+  "contentHash": "4a26ef9cef978aefd71811e9ae0ccecd2c4b5afce67b4ea45ddb37acc03521a4",
   "creditsByLanguage": {
     "ar": "مُعاد سردها عن الأخوين غريم · مجانية للمشاركة",
     "da": "Genfortalt efter brødrene Grimm · frit at dele",
@@ -77,5 +77,7 @@
     "ru": "Пересказ сказки братьев Гримм · можно свободно делиться",
     "sv": "Återberättad efter bröderna Grimm · fri att dela",
     "zh": "改编自格林兄弟 · 可自由分享"
-  }
+  },
+  "storyBy": "Brothers Grimm",
+  "retold": true
 }
