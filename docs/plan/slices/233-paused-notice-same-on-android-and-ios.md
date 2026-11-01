@@ -1,6 +1,6 @@
 ### Slice 233 — "Download paused. Tap to finish." posts on the same events on Android and iOS (Slice 208 follow-up)
 
-*Planned.* Planned 2026-11-01. The user asked (2026-11-01) for the two platforms to work like each other instead of accepting Slice 208's difference.
+*In progress (wave 2026-11-01), draft PR.* Planned 2026-11-01. The user asked (2026-11-01) for the two platforms to work like each other instead of accepting Slice 208's difference.
 
 **Touches:** `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidPackKeepAlive.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/PackDownloadService.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosPackNotification.cs`, `src/ReadTheStupidText.Mobile.Shared/MobileVoicePackService.cs`, `src/ReadTheStupidText.Mobile.Shared/PackDownloadHost.cs`, `tests/ReadTheStupidText.Tests/**`, `.maestro/**`, `tools/phone/**`, `docs/plan/slices/233-paused-notice-same-on-android-and-ios.md`
 
