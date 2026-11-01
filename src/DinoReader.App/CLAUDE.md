@@ -96,6 +96,7 @@ are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CL
 
 ## Back cover (Slice 237)
 
+- The user's own books (`retold` absent) are not free to share: their `credits`/`creditsByLanguage` never say so in any language; `StoreStoryTests` enforces it (user, 2026-11-01).
 - Every `book.json` needs `storyBy` (and `retold` for classics). The back cover is never voiced or counted: not in `pageCount`, `minutes` or the sentence list. (Slice 237: docs/plan/slices/237-dino-back-cover-credits.md)
 
 ## Back button and reading-screen layout (Slice 174, Decision 169)

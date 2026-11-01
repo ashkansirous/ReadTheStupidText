@@ -76,6 +76,25 @@ public sealed class StoreStoryTests : IDisposable
         }
     }
 
+    // The "free to share" wording in every language the store uses; only retold public-domain tales may carry it.
+    private static readonly string[] FreeToShareWords =
+    [
+        "free to share", "مجاني للمشاركة", "frit at dele", "frei zum Teilen", "libre para compartir", "آزاد برای اشتراک‌گذاری",
+        "vapaasti jaettavissa", "libre de partage", "自由に共有", "fri til å dele", "vrij te delen", "livre para compartilhar",
+        "свободно делиться", "fri att dela", "可自由分享",
+    ];
+
+    // The user's own books are not free to share (user, 2026-11-01): no credit line of a book that is not a retelling says so.
+    [Fact]
+    public void TheUsersOwnBooks_NeverSayFreeToShare_InAnyLanguage()
+    {
+        foreach (BookFolder book in Books.All.Where(b => b.Info.Retold != true))
+        {
+            IEnumerable<string> lines = (book.Info.CreditsByLanguage?.Values ?? Enumerable.Empty<string>()).Append(book.Info.Credits);
+            Assert.All(lines, line => Assert.DoesNotContain(FreeToShareWords, word => line.Contains(word, StringComparison.OrdinalIgnoreCase)));
+        }
+    }
+
     [Fact]
     public void EveryStarterStoreEntry_CarriesItsCreditLineInEveryOtherLanguage()
     {
