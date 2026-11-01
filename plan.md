@@ -32,6 +32,8 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 230 | Dino user test: recordings stay on the phone (warm copy), and restore merges recordings into a story already on the phone | planned | | | [230-dino-recordings-copy-and-restore-merge.md](docs/plan/slices/230-dino-recordings-copy-and-restore-merge.md) |
 | 231 | Dino user test: Record page hides the words on picture books (bug) | planned | | | [231-dino-record-page-shows-words.md](docs/plan/slices/231-dino-record-page-shows-words.md) |
 | 232 | Dino user test: proper landscape design for every screen, phone and tablet (after 228 and 229) | planned, needs design by Claude Code | | | [232-dino-landscape-every-screen.md](docs/plan/slices/232-dino-landscape-every-screen.md) |
+| 234 | Dino: proper design for tablets held upright (shelf 3-4 columns, picture-above-text reading, tablet-sized cards; after 232) | planned, needs design by Claude Code | | | [234-dino-tablet-portrait.md](docs/plan/slices/234-dino-tablet-portrait.md) |
+| 235 | Dino on Windows: a real desktop window (size and minimum, width-driven layout, keyboard, hover, tooltips, title bar; after 232) | planned, needs design by Claude Code | | | [235-dino-windows-window.md](docs/plan/slices/235-dino-windows-window.md) |
 | 233 | "Download paused. Tap to finish." posts on the same events on Android and iOS (Slice 208 follow-up: Android also posts when the network drops in the background) | planned | | | [233-paused-notice-same-on-android-and-ios.md](docs/plan/slices/233-paused-notice-same-on-android-and-ios.md) |
 
 
