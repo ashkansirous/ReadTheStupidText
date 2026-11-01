@@ -14,7 +14,7 @@
 - New shared hooks, parsed by `TestHookCommand` and added to the iOS launch-key list (`TestHookDispatcher.cs:51`, or iOS drops them):
   - `set-language lang=<code>`: runs the same sequence as the app's own picker, on the main thread. RTST: `LanguageChooser.Apply` (`LanguageChooser.cs:35-44`: settings, `UiCulture.Apply`, the page's before-rebuild, `App.ShowMain()`), so the Slice 202 path is exercised. Dino: its UI-language path (`SpokenLanguage.Use`, `SpokenLanguage.cs:105`). Logs `HOOK set-language ok <code>`.
   - `set-voice id=<voice id>` (RTST): the picker's path (`VoicePickerPage.xaml.cs:331` / `ReadAloudService.cs:458`), so the voice name refreshes as in Slice 99.
-  - `set-translate on|off [from=<code>]` (RTST): the toggle's path (`ReadAloudService.cs:287`).
+  - `set-translate on|off [from=<code>]` (RTST): the toggle's path (`ReadAloudService.cs:287`). *Corrected 2026-11-01 (feedback loop): that premise was wrong, `ReadAloudService` is Windows-only; mobile has no stored toggle, and the hook as built sets the Review page's Translate tick (`ReviewPage.xaml.cs`, see the built items below). The wrong premise cost a 16-19 minute builder round.*
   - `stage-book-update id=<story id>` (Dino): downloads the next store version of that book into `book-updates/<id>/v<n+1>.dino` (the same staging `StagedBookUpdates` uses) and logs `HOOK stage-book-update ok <id> v<n+1>`; the apply then runs at the next cold start and the `[BookUpdate]` log already times it. Fails loudly if the book is edited (edited books are skipped by design) or the store has no newer version.
 - A wrong value fails loudly (`HOOK set-language failed unknown <code>`), never silently.
 - Android and iOS get every hook in this slice (shared dispatcher; iOS through the URL scheme).

@@ -74,7 +74,7 @@ Settled here (planning): the reports follow the user's existing "anonymous usage
 - Android exit reasons (native, ANR, foreground low memory) on a device.
 - The Worker after deploy: `POST /api/crash` answers 204 with config off; an R2 object and an `app_crashes` row appear once on.
 - `dino_usage` iOS TestFlight leak closed (cause still unproven); the 27 leaked rows remain stored.
-- `pull-crashes.mjs`, `pull-apple.py` and `pull-play.py` not run against the real services.
+- `pull-crashes.mjs`, `pull-apple.py` and `pull-play.py` not run against the real services. `pull-play.py` cannot run yet: on 2026-11-01 the Play key reached Google but the Play Developer Reporting API is switched off in Cloud project 607390827721, and switching it on with that key was refused by the permission check (Waiting on the user in plan.md; recorded by the 2026-11-01 feedback loop).
 
 #### Outstanding after merge (main thread)
 

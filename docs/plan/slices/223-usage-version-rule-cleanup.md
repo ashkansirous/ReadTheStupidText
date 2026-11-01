@@ -30,4 +30,5 @@
 
 #### Not yet verified
 
-- None: no UI; covered by the shared case tables on both sides.
+- No UI; the rule itself is covered by the shared case tables on both sides.
+- Live (added by the round's feedback loop, 2026-11-01): `worker/events.ts` changed and Workers Builds deployed it, so a read-only `rtst_usage` / `dino_usage` query (through the `analytics-query` agent) should show event counts per real version unchanged in the days after the 2026-11-01 deploy, with no real version newly counted as unstamped.

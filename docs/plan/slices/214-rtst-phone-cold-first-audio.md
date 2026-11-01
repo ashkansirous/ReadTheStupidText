@@ -47,7 +47,7 @@ First audio after a cold start under **2 s** on the S21 with an AOT build: met (
 
 - The first attempt (cut at about 12 words) gave a median 2011 ms, chunk 0 audio 4110 ms; the cut went to about 8 words.
 - The warm-up was not built; the Length item alone met the target.
-- Text reads on Android and iOS only; Windows and Dino keep the old policy.
+- Text reads on Android and iOS only; Windows keeps the old policy. Dino's own reads keep it too, but its `SpeakAsync(text)` calls (the first-run hello line in `FirstRunPage.xaml.cs`, and `VoicePreview.cs` when the reader has no segment support) go through the same mobile reader and get the short first piece (corrected 2026-11-01; see the review notes below, not checked on a device).
 
 #### From review
 
@@ -63,3 +63,4 @@ First audio after a cold start under **2 s** on the S21 with an AOT build: met (
 - Piece 2 timing against piece 1 at 1x and 2x after the 8-word cut: run `tools/phone/audio-timing.ps1 -App rtst -Aot` on the S21 once it is back (it prints the gap after each chunk at rates 1 and 2 and flags one over 1300 ms). Corrected 2026-10-31 by the feedback loop: an earlier line said no check existed; the device-test agent had only looked in the `run-checks.ps1` catalogue.
 - A truly cold run after a fresh install or reboot.
 - iOS TestFlight first-audio timing, by hand.
+- Dino: the first-run hello line (and the voice preview on a reader without segment support) now gets the short first piece too; check on a phone that it still sounds whole (added by the 2026-11-01 feedback loop).

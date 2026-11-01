@@ -14,6 +14,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - TalkBack / VoiceOver hearing each reading page once.
 - iPhone / iPad / VoiceOver / TestFlight hand checks (the user's answer: they do these later).
 - A Switch-end row still toggling (no current caller) ([slice](slices/226-dino-settings-rows-review-leftovers.md)).
+- iOS: a settings row with the button text left null keeps its height and look, and `settings-reading-speed-row.yaml` on iOS needs an in-app back step instead of `- back` ([slice](slices/226-dino-settings-rows-review-leftovers.md)).
+- The row-button width fix on Android: re-read the Settings row button bounds in a `uiautomator` dump (seen only on the Windows VM), and confirm the `Grid.Add` span cause its comment states ([slice](slices/226-dino-settings-rows-review-leftovers.md)).
+
+### Slice 223: usage version rule ([slice](slices/223-usage-version-rule-cleanup.md))
+
+- Live: a read-only `rtst_usage` / `dino_usage` query shows event counts per real version unchanged after the 2026-11-01 Worker deploy, no real version newly counted as unstamped ([slice](slices/223-usage-version-rule-cleanup.md)).
 
 ### Slice 222: Microsoft Store marker hardening ([slice](slices/222-store-marker-hardening.md))
 
@@ -42,6 +48,8 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 214: rtst phone cold first audio ([slice](slices/214-rtst-phone-cold-first-audio.md))
 
 - Slice 214 (PR #647): piece 2 timing against piece 1 at 1x and 2x (run `tools/phone/audio-timing.ps1 -App rtst -Aot` on the S21; it flags gaps); a truly cold run after a fresh install or reboot; iOS TestFlight first-audio timing by hand ([slice](slices/214-rtst-phone-cold-first-audio.md)).
+
+- Dino: the first-run hello line (and the voice preview on a reader without segment support) now gets the short first piece; check on a phone that it still sounds whole ([slice](slices/214-rtst-phone-cold-first-audio.md)).
 
 ### Slice 213: phone check runner ([slice](slices/213-phone-check-runner.md))
 
