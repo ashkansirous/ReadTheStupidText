@@ -1,0 +1,95 @@
+# Dino store books (Slice 158, Decision 163; own workflow again since 2026-11-01, Slice 239 "Changed after merge").
+# Uploads the Dino store books that are behind the live store and delists the ones whose content folder is gone. It is
+# separate from release.yml so a story merge starts at once and never waits in release.yml's concurrency group behind an
+# app build (an iOS build can hold that group for an hour). Its own group queues uploads only behind each other.
+# release.yml ignores store-book folders (its push `paths`), re-including only the starters, which also build the app.
+# Mixed pushes (story + code) match both workflows. No Actions artifacts: the books stay on the runner.
+name: Dino store books
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content/dino/**'
+      - 'tools/DinoReader.BookBuilder/**'
+      - 'src/DinoReader.Core/**'
+      - 'src/DinoReader.App/ShippedTitles.cs'
+      - 'tools/upload-store-story.ps1'
+      - '.github/scripts/publish-store-books.mjs'
+      - '.github/scripts/r2-wrangler.mjs'
+      - '.github/scripts/dino-starters.json'
+      - '.github/workflows/dino-store.yml'
+  # A daily retry: the publish compares content hashes with the live store, so a run with nothing behind uploads nothing, and a failed or cancelled upload is caught here.
+  schedule:
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dino-store
+  cancel-in-progress: false
+
+jobs:
+  publish-store:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install wrangler
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      # Slice 239: no test suite runs for a store-only change, so the checks live in this job: the content folders against dino-starters.json (a new Starter must build the app),
+      # then `build --live` validates each store book before it builds it: an invalid book is skipped and named, the valid ones are still built and uploaded, and the job fails at the end.
+      - name: Check the content folders against the starter list
+        run: node .github/scripts/publish-store-books.mjs --check-content
+
+      # The live store's version, content hash and highest package of every story, so the build can version a changed book above everything in the bucket (no stamp needed).
+      - name: Read the live store state
+        run: node .github/scripts/publish-store-books.mjs --live-state "$RUNNER_TEMP/live-store.json"
+
+      # Exit 0 = all built, 2 = some invalid book skipped (the others built), anything else = a broken build: nothing is uploaded then.
+      - name: Build the store books
+        id: build
+        run: |
+          status=0
+          dotnet run --project tools/DinoReader.BookBuilder --configuration Release -- build --live "$RUNNER_TEMP/live-store.json" 2> >(tee "$RUNNER_TEMP/build-errors.txt" >&2) || status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+
+      # --delist on every run, so a delisting is never lost when a pending run is replaced: the script delists only pipeline-managed ids (live contentHash) with no content folder at all, refuses more than 3 or half the live list, and an invalid book is skipped, not delisted.
+      - name: Upload the books that are behind the live store, delist the ones whose content folder is gone
+        if: steps.build.outputs.status == '0' || steps.build.outputs.status == '2'
+        run: node .github/scripts/publish-store-books.mjs --delist
+
+      - name: Check that no built book is still behind
+        if: steps.build.outputs.status == '0' || steps.build.outputs.status == '2'
+        run: |
+          node .github/scripts/publish-store-books.mjs --verify
+
+      - name: Fail when a store book was skipped as invalid
+        if: always() && steps.build.outputs.status != '0'
+        env:
+          STATUS: ${{ steps.build.outputs.status }}
+        run: |
+          grep '^::error::store book' "$RUNNER_TEMP/build-errors.txt" || true
+          echo "::error::The store build exited ${STATUS:-without running}: a book was skipped as invalid (exit 2; see the ::error:: lines of the build step for its name) or the build broke."
+          exit 1
