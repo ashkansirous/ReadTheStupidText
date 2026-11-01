@@ -1,6 +1,6 @@
 ### Slice 238 — packs.yml version defaults match the live catalog
 
-*Parked: feedback loop, waits for the user.* Written 2026-11-01 by the round 3 feedback loop ([note](../notes/2026-11-01-0859-feedback-loop-w3.md)). Nothing here is built until the user moves it to `planned`.
+*Planned.* Written 2026-11-01 by the round 3 feedback loop ([note](../notes/2026-11-01-0859-feedback-loop-w3.md)). Parked until 2026-11-01 by the round 3 feedback loop: waits for the user; moved back to planned by the night's final feedback loop.
 
 **Touches:** `.github/workflows/packs.yml`, `.github/scripts/` (a new defaults check and its test), `.github/CLAUDE.md`, `docs/plan/slices/238-packs-workflow-defaults-match-catalog.md`
 

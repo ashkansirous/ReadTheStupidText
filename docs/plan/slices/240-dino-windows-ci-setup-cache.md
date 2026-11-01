@@ -1,6 +1,6 @@
 # Slice 240 — Dino Reader Windows CI: cache the SDK, workload and NuGet packages
 
-*In progress.* Planned 2026-11-01, from the user: "fix the caching problem for windows build and setup, specially installing maui and all the rest".
+*Built 2026-11-01, merged as PR #702 (4e94d766, 21:22 UTC) plus hotfix PR #704 (880ef8a4, 21:44 UTC); the cache hit on a run on `main` is not yet verified.* Planned 2026-11-01, from the user: "fix the caching problem for windows build and setup, specially installing maui and all the rest".
 
 **Touches:** `.github/workflows/dinoreader-windows.yml`, `.github/CLAUDE.md`, `docs/plan/slices/240-dino-windows-ci-setup-cache.md`
 
@@ -23,8 +23,15 @@ project, uncached.
 
 ## Verification (needs the PR's CI runs)
 
-- [ ] Run 1 (cache miss): record step times for "Set up .NET 10", "Install the .NET MAUI Windows workload", the publish step; confirm `dotnet workload list` shows maui-windows and the MSIX builds. Read the `packs\` listing: did iOS/Android/wasm packs get pulled; check the cache saved a dotnet root.
-- [ ] Run 2 (cache hit, rerun the same PR): the SDK and workload steps take seconds; the build and packaging pass.
-- [ ] Before: setup 240-300 s per job. After (hit): expected under 60 s including cache restore.
+- [x] Run 1 (cache miss, PR #702 run 41349281630): MSIX packaged on both architectures; workload install 19-21 s (was 198-250 s), .NET setup 20-23 s (the file-based workload install ran), and the cache was saved.
+- [x] Run 2 (cache hit, rerun of the same PR, run 41350317511): both jobs restored the cache in 7 s and validated it in 1 s, with no setup or workload install; the x64 job took about 3.4 min (was about 9).
+- [x] Before: setup 240-300 s per job. After (hit): restore 7 s plus validation 1 s.
 
-Not yet verified: whether the workload installs as files (not MSIs) into the setup-dotnet root on a hosted runner (read from the SDK source, not run); if it does not, the pack check after install (non-empty `packs\` with a Microsoft.Maui folder) fails before the save and the run errors loudly instead of caching a hollow root. Also not run: `gh cache delete` of a cache entry created on another ref (a PR run restoring main's entry) may be refused; that only warns and the save then fails harmlessly.
+Not yet verified: a cache hit for a run on `main` (no release run on `main` has succeeded since #702; PR #708's pull-request run 41354709874 missed the cache, because GitHub gives a branch only its own caches and main's, and main had saved none; release run 41356358486 built both Dino Windows architectures and saved main's caches at 22:32-22:35 (`gh cache list --ref refs/heads/main`), so the next run can show the hit). Also not run: `gh cache delete` of a cache entry created on another ref (a PR run restoring main's entry) may be refused; that only warns and the save then fails harmlessly. Also not yet verified: a release run on `main` with the Store MSIX build pinned to SDK 10.0.402 (was floating `10.0.x`) packages both architectures and uploads them to the draft release; only PR runs have used the pin (final feedback loop, 2026-11-01).
+
+## Skipped review findings
+
+- Medium review (`s240-medium.md`) 3, matrix race on the SDK key: on a cold cache both legs install and save the same key and one save fails, hidden by `continue-on-error`; accepted as harmless after the first run (PR #702: "accepted").
+- Medium 5, duplicate pins (`SDK_VERSION` and `WORKLOAD_SET` are two literals that must match): accepted; the install step already fails on a version mismatch.
+- Medium 6, NuGet cache saved only on an exact miss, so packages outside the hashed files are re-downloaded each run: accepted; watch the cache quota.
+- Hotfix high review (`s240b-high.md`) 2, `DOTNET_DIR_KEY` has no `matrix.platform`, so x64 and ARM64 share one SDK cache entry and a bad exact hit can make one leg delete the other's fresh entry: accepted (PR #704: "predates this change and is low risk"; unconfirmed in practice).
