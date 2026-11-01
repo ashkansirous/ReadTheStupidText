@@ -4,7 +4,7 @@
 # expect-log: HOOK open-book opened page=16
 # expect-log: PAGE 16
 # expect-log: BACKCOVER shown lines=4
-appId: uk.sirous.dinoreader
+appId: uk.sirous.dinoreader.dbg
 name: Back cover after the last page
 ---
 - launchApp:

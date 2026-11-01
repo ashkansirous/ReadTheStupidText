@@ -20,10 +20,11 @@ $ErrorActionPreference = 'Stop'
 Set-EmulatorInstance $Instance
 
 $apps = @{
-    rtst = @{ Project = 'src\ReadTheStupidText.Mobile\ReadTheStupidText.Mobile.csproj'; Package = 'uk.sirous.readthestupidtext' }
-    dino = @{ Project = 'src\DinoReader.App\DinoReader.App.csproj'; Package = 'uk.sirous.dinoreader' }
+    rtst = @{ Project = 'src\ReadTheStupidText.Mobile\ReadTheStupidText.Mobile.csproj'; Package = $script:EmulatorPackages.rtst }
+    dino = @{ Project = 'src\DinoReader.App\DinoReader.App.csproj'; Package = $script:DinoDevPackage }
 }
 $cfg = $apps[$App]
+$platform = Get-EmulatorBuildPlatform $App  # Dino: android-dbg, its own cache name (the APK carries the .dbg id)
 $project = Join-Path $script:RepoRoot $cfg.Project
 $apkFilter = '*-Signed.apk'
 
@@ -52,17 +53,17 @@ function Build-Apk([string]$Dir, [string]$Key) {
     # Remove old signed APKs first, so the one found afterwards is certainly from this build.
     Get-ChildItem $apkDir -Filter $apkFilter -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force
     dotnet build $project -f net10.0-android -c Debug -p:RuntimeIdentifier=android-x64 `
-        -p:EmbedAssembliesIntoApk=true -p:IncludeWindows=false -p:AndroidPackageFormat=apk
+        -p:EmbedAssembliesIntoApk=true -p:IncludeWindows=false -p:AndroidPackageFormat=apk "-p:ApplicationId=$($cfg.Package)"
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
     $built = Get-ChildItem $apkDir -Filter $apkFilter -Recurse | Sort-Object LastWriteTime -Descending | Select-Object -First 1
     if (-not $built) { throw 'Signed APK not found.' }
     $temp = New-BuildTempDir $Dir
     try {
         Copy-Item $built.FullName $temp
-        Save-BuildMeta $temp $App 'android' $Key
+        Save-BuildMeta $temp $App $platform $Key
         Publish-BuildDir $temp $Dir
     } finally { Remove-Item $temp -Recurse -Force -ErrorAction SilentlyContinue }
-    Remove-OldBuilds $App 'android'
+    Remove-OldBuilds $App $platform
 }
 
 # Builds the APK for this key unless another agent finished it while this one waited for the build locks. The activity is registered
@@ -72,10 +73,10 @@ function Build-Apk([string]$Dir, [string]$Key) {
 function Get-ApkForKey {
     $activity = Start-Activity "build-$App-android"
     try {
-        $locks = Enter-BuildLocks $App 'android' $script:key
+        $locks = Enter-BuildLocks $App $platform $script:key
         try {
             $script:key = Get-BuildKey
-            $script:buildDir = Get-BuildDir $App 'android' $script:key
+            $script:buildDir = Get-BuildDir $App $platform $script:key
             $cached = if ($Rebuild) { $null } else { Find-CachedBuild $script:buildDir $apkFilter }
             if ($cached) { Write-Host "Another agent built the $App APK for key $($script:key) meanwhile; reusing it."; return $cached }
             $priority = Set-BuildPriority  # BelowNormal: the build never starves flows or the VM (children inherit it)
@@ -87,7 +88,7 @@ function Get-ApkForKey {
 }
 
 $key = Get-BuildKey
-$buildDir = Get-BuildDir $App 'android' $key
+$buildDir = Get-BuildDir $App $platform $key
 $apk = if ($Rebuild) { $null } else { Find-CachedBuild $buildDir $apkFilter }
 $boot = if ($BuildOnly) { $null } else { Start-EmulatorInBackground }
 $buildError = $null
@@ -105,8 +106,14 @@ if ($buildError) { throw $buildError }
 if ($BuildOnly) { return }
 
 Remove-InstalledKey $App  # until the install succeeds, the device holds no known build
+Remove-StaleDevPackages $App  # Slice 221: the plain Dino store id goes from an emulator, never from a phone
 & $script:Adb -s $script:Serial install --no-incremental -r $apk.FullName
 if ($LASTEXITCODE -ne 0) { throw 'adb install failed.' }
+if ($App -eq 'dino') {
+    $dinoProblem = Resolve-DinoPackageProblem "$(& $script:Adb -s $script:Serial shell pm list packages 2>&1 | Out-String)" $script:Serial
+    if ($dinoProblem) { throw "Dino package check failed: $dinoProblem" }
+    Write-Host "Dino package check: exactly one dinoreader package ($($script:DinoDevPackage))."
+}
 Save-InstalledKey $App $key
 # Slice 179: counting off for every harness run, even a Release build. The app reads this marker in its external files folder (UsageEligibility.NoUsageMarkerFile).
 $ErrorActionPreference = 'Continue'

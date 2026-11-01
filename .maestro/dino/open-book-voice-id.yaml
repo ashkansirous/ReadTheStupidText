@@ -1,0 +1,64 @@
+# Slice 221 item 1: the open-book hook takes voiceId=<id> and sets that voice in the running app (the reader and the language narrator) before the read, so a scripted read needs no prefs edit.
+# Two different ids log two different voice lines; an id no installed pack or built-in table offers fails loudly and does not open the book. Nothing is spoken (no play=1), so no voice pack is needed.
+# Note: a voice listed by an installed pack also PERSISTS as that language's narrator on this dev install (the hook writes what a Settings pick writes); this flow ends with that narrator stored; the next flow that starts with clearState wipes it.
+# expect-log: HOOK open-book voice supertonic:F1
+# expect-log: HOOK open-book voice supertonic:F2
+# expect-log: HOOK open-book failed unknown voice not-a-voice
+appId: uk.sirous.dinoreader.dbg
+name: Pick the voice by hook
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow only opens a starter book with a voice id and speaks nothing, so it needs no pack or own book.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "1"
+      voiceId: "supertonic:F1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "1"
+      voiceId: "supertonic:F2"
+- waitForAnimationToEnd:
+    timeout: 3000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "1"
+      voiceId: "not-a-voice"
+- pressKey: back
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 15000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "1"
+      voiceId: "not-a-voice"
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: StoryTile
+- assertNotVisible:
+    id: ReadingSurface

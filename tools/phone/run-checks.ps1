@@ -16,7 +16,7 @@
   build's last 20 log lines; the runner never skips for a missing build and never falls back silently. The budget covers the checks, not the time spent only waiting for a build.
   <worktrees>.phone\run-status.json (each build, each check, installedVariant, updatedUtc) is rewritten at every step, every 30 s while waiting and by the checks' wait loops, so a stuck or failed build is
   visible from outside. Every timing and every table row carries its variant (aot/debug).
-  Order: take the phone lease (the same per-phone lease as lease.ps1, owner $env:RTST_DEVICE_OWNER, else $env:RTST_PHONE_OWNER, else run-checks-<pid>; it is
+  Order: take the phone lease (the same per-phone lease as lease.ps1, owner $env:RTST_DEVICE_OWNER, else $env:RTST_PHONE_OWNER, else run-checks-<phone key>; it is
   exported as RTST_PHONE_OWNER for the scripts it starts and released at the end unless the caller already held it; a lease the caller holds is only ever extended,
   never shortened) -> for each check, once its build is ready: install the cached APK when the phone has none or run-checks itself installed another build or variant (adb install -r, data stays; the phone keeps a
   marker of what run-checks installed; an app run-checks did not install is never replaced silently, every check is skipped unless -Reinstall) -> on the first install preflight
@@ -27,7 +27,7 @@
   check is SKIPPED `waited too long for <holder>`), the install and the preflight all count against it, the wait for a build does not. Preflight is GO only on its explicit `PREFLIGHT GO` line (a
   NO-GO whose only FAILs are non-fatal checks is a warning); anything else stops the run. A check starts only when its estimate fits what is left, and is stopped when the time is gone
   (TIMEOUT); every check not run is listed with its reason. Exit: 0 all passed, 1 a check failed or timed out, 2 no phone, 3 some checks skipped, 4 the phone is leased
-  by someone else, 5 preflight NO-GO, 6 the build failed, 7 the runner itself broke (install, setup, a dropped link), 8 -NoBuild and the build cache lacks a variant a check needs
+  by someone else or a run with your own owner name is still alive (-Force starts anyway, Slice 221), 5 preflight NO-GO, 6 the build failed, 7 the runner itself broke (install, setup, a dropped link), 8 -NoBuild and the build cache lacks a variant a check needs
   (prints `cache missed for <app> <variant>, key <k>: run -Build first`, the table with every check SKIP, and run-status.json; starts no process and takes no lease; also set by RTST_NO_BUILD=1). Every path prints the table, with each check's
   outcome or its SKIP reason; cold-start reports MEASURED (numbers, no pass criterion), never PASS. Wireless adb only. Self-test with no device: test-run-checks.ps1.
   Checks live in tools/phone/checks/<name>.ps1 (a check is added as a file there and a line in the catalogue in checks/_lib.ps1, not as a brief).
@@ -41,6 +41,7 @@ param(
     [switch]$Prepare,
     [int]$Runs = 3,
     [switch]$Reinstall,
+    [switch]$Force,                                                               # Slice 221: start although a run with the same lease owner is still alive
     [switch]$NoBuild,                                                             # Slice 224: on a cache miss exit at once (before the lease and any build); also RTST_NO_BUILD=1
     [ValidateSet('1w', '1s', '2s', 'passage')][string]$FirstRead = 'passage',   # cold-start only: size of the first read (Slice 214)
     [string]$FirstText,                                                           # cold-start only (RTST): free text for the first read instead of a -FirstRead preset
@@ -557,9 +558,9 @@ function Close-DeviceStage([string]$Phone, $State) {
 }
 
 # What the stage holds, so the cleanup can release it whatever happened; no adb in here (the lease key is read in Initialize-StageLease, inside the guarded part).
-function New-StageState {
+function New-StageState([string]$Owner = (Get-DeviceLeaseOwner 'run-checks')) {
     return [pscustomobject]@{
-        Key = $null; Owner = (Get-DeviceLeaseOwner 'run-checks'); Mine = $false; HoldsLease = $false; Quiet = $null; Awake = $null
+        Key = $null; Owner = $Owner; Mine = $false; HoldsLease = $false; Quiet = $null; Awake = $null
         PreviousOwner = $env:RTST_PHONE_OWNER; Rows = (New-Object System.Collections.ArrayList)
     }
 }
@@ -638,7 +639,7 @@ function Write-BuildsLeftRunning {
 
 # The whole device stage. An error anywhere (install, setup, a dropped adb link) still ends in the table, with exit 7, and the cleanup always runs.
 function Invoke-DeviceStage($Plans, [string]$Phone) {
-    $state = New-StageState
+    $state = New-StageState $script:RunOwner
     Set-CheckDeadline (Get-BudgetEnd)   # install, restore, preflight and tap/preflight children all stop at the end of the budget
     try { return (Invoke-GuardedStage $Plans $Phone $state) }
     catch { return (Stop-Stage $Plans $state "runner error: $($_.Exception.Message)" (Get-StageErrorExitCode $_.Exception.Message $script:LeaseLostReason)) }
@@ -676,5 +677,20 @@ if ($NoBuild -or $env:RTST_NO_BUILD -eq '1') {
 }
 $phone = Find-WirelessPhone $Serial
 if (-not $phone) { Write-PairingAsk; exit $script:ExitNoPhone }
-$script:BuildJobs = Start-VariantBuilds $plans ([bool]($NoBuild -or $env:RTST_NO_BUILD -eq '1'))
-exit (Invoke-DeviceStage $plans $phone)
+# Slice 221: a second run with the same lease owner while the first is alive is refused before any build or lease (exit 4), unless -Force. The default owner is stable per phone
+# (run-checks-<phone key>, Get-RunChecksOwner), so a second run started in another shell without an owner variable is refused too.
+# A phone that cannot be read, or a marker that cannot be written, is a runner error: the table and exit 7, as the same failure inside the stage.
+try {
+    $runKey = Get-PhoneLeaseKey $phone
+    $script:RunOwner = Get-RunChecksOwner $runKey
+    $runRefusal = Request-RunMarker $runKey $script:RunOwner $Force.IsPresent
+}
+catch { exit (Stop-Stage $plans (New-StageState) "runner error: $($_.Exception.Message)" $script:ExitRunnerError) }
+if ($runRefusal) { Write-Host $runRefusal; exit $script:ExitLeaseHeldByOther }
+# The marker is removed on every exit after the claim: the builds starting, the stage, a throw or an exit inside them.
+try {
+    $script:BuildJobs = Start-VariantBuilds $plans ([bool]($NoBuild -or $env:RTST_NO_BUILD -eq '1'))
+    $runCode = Invoke-DeviceStage $plans $phone
+}
+finally { Remove-RunMarker $runKey $script:RunOwner }
+exit $runCode

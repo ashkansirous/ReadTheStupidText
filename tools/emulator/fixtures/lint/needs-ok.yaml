@@ -1,4 +1,4 @@
 # needs: cellular-only
-appId: uk.sirous.dinoreader
+appId: uk.sirous.dinoreader.dbg
 ---
 - back

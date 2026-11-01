@@ -7,7 +7,7 @@
 # expect-log: HOOK backup-recordings deleted
 # expect-log: HOOK backup-recordings restored merged=1
 # expect-log: HOOK backup-recordings ok
-appId: uk.sirous.dinoreader
+appId: uk.sirous.dinoreader.dbg
 name: Restore brings a book's recordings back
 ---
 - launchApp:

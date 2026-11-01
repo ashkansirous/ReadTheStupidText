@@ -148,6 +148,16 @@ function Get-DevPackage([string]$App) {
 . (Join-Path $PSScriptRoot '..\lease-common.ps1')
 $script:LeaseOwnerVariable = 'RTST_PHONE_OWNER'
 
+# The lease owner of a run-checks run: the caller's owner variable, else one name per phone (run-checks-<phone key>), so two default runs on one phone share an owner
+# and the run marker refuses the second (Slice 221 item 6); a pid-based default would differ per shell and never match.
+function Get-RunChecksOwner([string]$PhoneKey) {
+    foreach ($name in $script:DeviceOwnerVariable, 'RTST_PHONE_OWNER') {
+        $value = [Environment]::GetEnvironmentVariable($name)
+        if ($value) { return $value }
+    }
+    return "run-checks-$PhoneKey"
+}
+
 function Get-PhoneLeaseKey([string]$AdbSerial) {
     $id = "$(Invoke-Adb $AdbSerial @('shell', 'getprop', 'ro.serialno'))".Trim()
     if ($id -notmatch '^[\w.-]{3,}$') { throw "Could not read the phone's ro.serialno (got '$id'): cannot key the phone lease." }
@@ -507,6 +517,55 @@ function Clear-AllCorruptLeases {
     })
 }
 
+# Slice 221 item 6: one timed run per phone owner at a time. The phone lease cannot say "a run of mine is alive" (lease.ps1 exits at once, so its own pid is useless, and the same owner may
+# renew its lease), so run-checks keeps a run marker next to the lease: <worktrees>\.phone\run-<key>.json with the owner, the run's pid and its start time. A second run with the same
+# owner and a live other pid is refused (exit 4) unless -Force; a dead pid, a reused pid or no file is free. Claim and check are one step under the lease lock.
+# One file per phone and owner, so two owners never overwrite each other's marker.
+function Get-RunMarkerKey([string]$PhoneKey, [string]$Owner) { return "$PhoneKey-$Owner" }
+
+function Get-RunMarkerPath([string]$Key, [string]$Dir = '') {
+    if (-not $Dir) { $Dir = Get-LeaseDir 'phone' }
+    return Join-Path $Dir ('run-{0}.json' -f ($Key -replace '[^\w.-]', '_'))
+}
+
+function Read-RunMarker([string]$Key, [string]$Dir = '') {
+    $path = Get-RunMarkerPath $Key $Dir
+    if (-not (Test-Path $path)) { return $null }
+    try { $marker = [IO.File]::ReadAllText($path) | ConvertFrom-Json -ErrorAction Stop } catch { return $null }
+    if (-not $marker.owner -or -not $marker.pid) { return $null }
+    return $marker
+}
+
+# True when $Marker is a live run of the same owner that is not this process.
+function Test-RunMarkerBlocks($Marker, [string]$Owner, [int]$MyPid) {
+    if (-not $Marker -or $Marker.owner -cne $Owner -or [int]$Marker.pid -eq $MyPid) { return $false }
+    return [bool](Test-ActivityProcessAlive $Marker)
+}
+
+# $null once this process owns the marker, else the refusal text. -Force takes the marker over from a live run.
+function Request-RunMarker([string]$PhoneKey, [string]$Owner, [bool]$Force = $false, [string]$Dir = '') {
+    $markerKey = Get-RunMarkerKey $PhoneKey $Owner
+    return (Invoke-WithLeaseLock ('run-' + $PhoneKey) {
+        $marker = Read-RunMarker $markerKey $Dir
+        if ((Test-RunMarkerBlocks $marker $Owner $PID) -and -not $Force) {
+            return "Another run with the owner '$Owner' is still running on phone $PhoneKey (pid $($marker.pid)). Not starting a second one; stop it, or pass -Force to start anyway."
+        }
+        $null = New-Item -ItemType Directory -Force (Split-Path (Get-RunMarkerPath $markerKey $Dir))
+        $record = @{ owner = $Owner; pid = $PID; procStart = (Get-Process -Id $PID).StartTime.ToFileTimeUtc() }
+        $record | ConvertTo-Json | Set-Content (Get-RunMarkerPath $markerKey $Dir)
+        return $null
+    } 'phone')
+}
+
+# Removes the marker only when this process wrote it (a -Force run that took it over keeps it for itself).
+function Remove-RunMarker([string]$PhoneKey, [string]$Owner, [string]$Dir = '') {
+    $markerKey = Get-RunMarkerKey $PhoneKey $Owner
+    Invoke-WithLeaseLock ('run-' + $PhoneKey) {
+        $marker = Read-RunMarker $markerKey $Dir
+        if ($marker -and [int]$marker.pid -eq $PID) { Remove-Item (Get-RunMarkerPath $markerKey $Dir) -Force -ErrorAction SilentlyContinue }
+    } 'phone'
+}
+
 # Item 6: one line that says how long a lease is written for and why (the budget plus its margin, or the caller's own longer lease, or the -Prepare allowance).
 function Format-LeaseLengthNote([string]$Mode, [int]$Minutes, [int]$WantedMinutes, [int]$OwnRemainingMinutes) {
     $why = if ($OwnRemainingMinutes -gt $WantedMinutes) { "your own lease still has $OwnRemainingMinutes min, never shortened" } else { "$Mode needs $WantedMinutes min: its budget plus the margin" }
@@ -567,7 +626,7 @@ function Clear-PageCache([string]$Phone) {
         try {
             $out = "$(Invoke-Adb $Phone @('shell', $wrap) 2>&1)"
             # The phone's own shell prints the exit code of the write (RTST_DROP_RC=<n>): that is the answer, whatever language the error text is in and however adb passes the exit code on.
-            if ($out -match "$([regex]::Escape($script:DropCacheDoneMarker))0") { return $true }
+            if ($out -match "$([regex]::Escape($script:DropCacheDoneMarker))0") { return $true }
         } catch {
             if (Test-PastDeadline (Get-ActiveDeadline) (Get-Date)) { throw }   # the run's budget ended while waiting (a root prompt can hang su): signal it, never swallow it
             Write-Verbose "drop_caches variant failed: $($_.Exception.Message)"

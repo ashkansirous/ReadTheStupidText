@@ -37,6 +37,7 @@ internal static partial class DinoTestCommands
 	private const string PlayOn = "1";
 	private const string PlayPageOnly = "page";
 	private const string SpeedKey = "speed";
+	private const string VoiceIdKey = "voiceId";
 	private const string SessionField = "_session";
 	private const int RetryMilliseconds = 250;
 	private const int StableChecks = 4;
@@ -52,7 +53,7 @@ internal static partial class DinoTestCommands
 	internal static void Register()
 	{
 		TestHookDispatcher.AppCommands = Run;
-		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, VoiceKey, ForceKey];
+		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, VoiceKey, ForceKey, VoiceIdKey];
 	}
 
 	private static string? Run(TestHookCommand command)
@@ -233,12 +234,61 @@ internal static partial class DinoTestCommands
 				return;
 			}
 
+			if (!TrySetVoice(command.Get(VoiceIdKey, string.Empty)))
+			{
+				return;
+			}
+
 			await OpenBookAsync(id, page, play);
 		}
 		catch (Exception ex)
 		{
 			Log($"{Name} fault {TestHookLog.FaultSummary(ex)}");
 		}
+	}
+
+	// Item 1 of Slice 221: voiceId=<id> makes the read use that voice, as a voice pick does: the reader's own voice (SetVoice, what a read takes at its start, in this process only) and, when an installed
+	// pack lists the voice, that language's narrator (StoryVoicing.SetNarrator, what a book's voiced segments take). The narrator PERSISTS (the same stored setting a Settings pick writes), by design:
+	// the hook exists so runs stop editing prefs by hand. A flow that must leave a dev install as it found it ends by setting the voice it started with. The id must be one an installed pack or the
+	// built-in Supertonic table offers. Logs "HOOK open-book voice <id>" (the line a check counts) or "failed unknown voice <id>"; no voiceId leaves the voice alone.
+	private static bool TrySetVoice(string voiceId)
+	{
+		if (voiceId.Length == 0)
+		{
+			return true;
+		}
+
+		IServiceProvider services = IPlatformApplication.Current!.Services;
+		var voicing = services.GetRequiredService<StoryVoicing>();
+		string? packLanguage = PackLanguageOfVoice(voicing, voiceId);
+		if (packLanguage is null && !ModelOffersVoice(services, voiceId))
+		{
+			Log($"{Name} failed {TestHookDispatcher.Unknown} voice {voiceId}");
+			return false;
+		}
+
+		services.GetRequiredService<ISpeechReader>().SetVoice(voiceId);
+		if (packLanguage is not null)
+		{
+			voicing.SetNarrator(packLanguage, voiceId);
+		}
+
+		Log($"{Name} voice {voiceId}");
+		return true;
+	}
+
+	// The language that itself lists the voice (the current one first, then the story languages), or null: a voice is never registered under a language that does not list it.
+	private static string? PackLanguageOfVoice(StoryVoicing voicing, string voiceId)
+	{
+		IEnumerable<string> languages = voicing.NarratorLanguages().Prepend(LanguageChoice.Current());
+		return languages.FirstOrDefault(l => voicing.VoicesFor(l).Any(v => v.Id == voiceId));
+	}
+
+	// True when the model in use, or the built-in English table, offers the voice (it can be spoken, but belongs to no language's narrator).
+	private static bool ModelOffersVoice(IServiceProvider services, string voiceId)
+	{
+		IReadOnlyList<VoiceInfo> modelVoices = services.GetRequiredService<IVoiceModelService>().Paths?.AvailableVoices ?? SupertonicVoiceTable.Voices;
+		return modelVoices.Any(v => v.Id == voiceId);
 	}
 
 	// The reader's own speed, as the read hook sets it (nothing is stored); no speed given leaves it alone.

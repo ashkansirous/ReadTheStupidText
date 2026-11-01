@@ -2,7 +2,7 @@
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK open-book opened page=2
 # expect-log: PAGE 2
-appId: uk.sirous.dinoreader
+appId: uk.sirous.dinoreader.dbg
 name: Open a book and turn a page
 ---
 - launchApp:

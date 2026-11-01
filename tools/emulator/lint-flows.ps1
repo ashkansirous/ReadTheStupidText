@@ -33,7 +33,7 @@ $script:MaestroCommands = @(
     'travel', 'waitForAnimationToEnd'
 )
 $script:NeedsValues = @('cellular-only')
-$script:DevAppIds = @('uk.sirous.readthestupidtext', 'uk.sirous.dinoreader')
+$script:DevAppIds = @('uk.sirous.readthestupidtext', 'uk.sirous.dinoreader.dbg')
 # YAML's double-quoted escapes: 0 a b t n v f r e space " / \ N _ L P x u U (and a tab).
 $script:ValidEscapes = '0abtnvfre "/\N_LPxuU' + "`t"
 $script:ClearStateComment = '^#\s*clearState:\s*(.{20,})$'

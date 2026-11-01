@@ -1,5 +1,5 @@
 # needs: wifi-only
 # needs: offline
-appId: uk.sirous.dinoreader
+appId: uk.sirous.dinoreader.dbg
 ---
 - back

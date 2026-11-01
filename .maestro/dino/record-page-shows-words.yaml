@@ -2,7 +2,7 @@
 # The gate is skipped by the enter-grown-up hook; the book sheet's Record pill is tapped by its text.
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK enter-grown-up ok
-appId: uk.sirous.dinoreader
+appId: uk.sirous.dinoreader.dbg
 name: Record page shows the words
 ---
 - launchApp:

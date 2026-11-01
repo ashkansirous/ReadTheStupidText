@@ -2,7 +2,7 @@
 # hook answers "failed UpToDate" (or "failed offline" with no network) after "started": the flow proves the command is wired and answers loudly. The apply timing on a phone with an
 # older copy is the book-update runner check (tools/phone/checks/book-update.ps1).
 # expect-log: HOOK stage-book-update started
-appId: uk.sirous.dinoreader
+appId: uk.sirous.dinoreader.dbg
 name: Stage a book update by hook
 ---
 - launchApp:
