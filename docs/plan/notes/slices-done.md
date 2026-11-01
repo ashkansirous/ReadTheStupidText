@@ -263,6 +263,8 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 223 | Usage counts: one pre-1.0 version rule, tested the same on worker and client (Slice 219 review cleanups) | built | #665 | [223-usage-version-rule-cleanup.md](docs/plan/slices/223-usage-version-rule-cleanup.md) | [223-usage-version-rule-cleanup.md](../slices/223-usage-version-rule-cleanup.md) |
 | 226 | Dino Settings rows and page text: Slice 205 review findings left open (hidden row children, stale NavRow name, per-line description read twice on TalkBack/VoiceOver) | built | #668 | [226-dino-settings-rows-review-leftovers.md](docs/plan/slices/226-dino-settings-rows-review-leftovers.md) | [226-dino-settings-rows-review-leftovers.md](../slices/226-dino-settings-rows-review-leftovers.md) |
 | 231 | Dino user test: Record page hides the words on picture books (bug) | built | #666 | [231-dino-record-page-shows-words.md](docs/plan/slices/231-dino-record-page-shows-words.md) | [231-dino-record-page-shows-words.md](../slices/231-dino-record-page-shows-words.md) |
+| 228 | Dino user test: kids' shelf vs grown-ups' corner made obvious (labelled Grown-ups pill, sticky "Back to my child's shelf", "Read now" in the book sheet, one intro card) | built | #673 | | [228-dino-grownups-corner-clarity.md](../slices/228-dino-grownups-corner-clarity.md) |
+| 233 | "Download paused. Tap to finish." posts on the same events on Android and iOS (Slice 208 follow-up: Android also posts when the network drops in the background) | built | #672 | | [233-paused-notice-same-on-android-and-ios.md](../slices/233-paused-notice-same-on-android-and-ios.md) |
 
 
 ## Batch lane-order paragraphs moved from plan.md (2026-10-30)

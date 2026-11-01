@@ -2,6 +2,28 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count.
 
+### Slice 233: paused notice same on Android and iOS ([slice](slices/233-paused-notice-same-on-android-and-ios.md))
+
+- iOS on a device: the VoiceOver, TestFlight, iPhone and iPad hand checks (the user's answer: they do these later). Only the iOS compile was checked.
+- The silent re-post on a repeated failed automatic resume: no scripted check asserts the alert/silent difference.
+- A real network loss: the device run used the Debug-only `drop-pack-network` hook, not a real loss.
+
+### Slice 228: Dino grown-ups' corner clarity ([slice](slices/228-dino-grownups-corner-clarity.md))
+
+- Windows head and VM: shared UI, not run.
+- iOS: compile only.
+- Corner tiles and title truncation on a small phone and on a tablet.
+- Read step with no starter book.
+- The translated strings are machine drafts.
+- The intro read's return being cancelled by Play/pause, skip or a page turn (the emulator recheck tapped the page surface, which is not one of those).
+- The 48 dp close button on a device (changed after the last emulator run; check pass only).
+
+### Slice 220: Kokoro silent short lines on arm64, part 1 merged ([slice](slices/220-kokoro-silent-short-lines-arm64.md))
+
+- iOS: compile only.
+- The 68-read Slice 210 set is still not run.
+- The Windows Dino head has no single-thread arm.
+
 ### Slice 231: Dino Record page shows the page's words ([slice](slices/231-dino-record-page-shows-words.md))
 
 - origin/main showing the picture only (the cause was read from code, not shown on a device).
