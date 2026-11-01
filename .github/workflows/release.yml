@@ -612,6 +612,7 @@ jobs:
       && (needs.release-draft-dino.result == 'success' || needs.release-draft-dino.result == 'skipped')
     permissions:
       contents: write   # gh release upload
+      actions: write    # gh cache delete of a broken SDK cache (Slice 240); a called workflow can't ask for more than this
     uses: ./.github/workflows/dinoreader-windows.yml
     with:
       version: ${{ needs.version.outputs.dino_version }}
