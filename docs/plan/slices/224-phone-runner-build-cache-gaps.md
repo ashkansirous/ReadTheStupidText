@@ -1,6 +1,6 @@
 ### Slice 224 — Phone runner: build-cache gaps from the 2026-10-31-1000 night, round 1
 
-*Built (wave 2026-11-01), PR #682.* Written 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1000-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01.
+*Built (wave 2026-11-01); merged as PR #682 (f8a5430).* Written 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1000-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01.
 
 **Touches:** `tools/phone/run-checks.ps1`, `tools/phone/checks/_lib.ps1`, `tools/phone/test-run-checks.ps1`, `tools/phone/checks/_device.ps1`, `tools/phone/lease.ps1` (widened at claim: catalogue header, `-NoBuild` exit before the lease), `tools/CLAUDE.md`, `docs/plan/slices/224-phone-runner-build-cache-gaps.md`
 
@@ -31,7 +31,7 @@
 
 - The verify line under each item, in `test-run-checks.ps1` (no phone needed).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-01)
 
 - `tools/CLAUDE.md`: `run-checks.ps1 -NoBuild` (or `RTST_NO_BUILD=1`) exits 8 on a cache miss before the lease and starts no build; use it in timed briefs. A `building`/`queued` status with a dead or reused pid is rewritten as ended. (Slice 224: docs/plan/slices/224-phone-runner-build-cache-gaps.md)
 

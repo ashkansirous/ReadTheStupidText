@@ -1,6 +1,6 @@
 ### Slice 229 — Dino: a Done/Continue button, top right, on every grown-up page
 
-*Built (wave 2026-11-01), PR #683.* Planned 2026-11-01. From the user's user test on 2026-11-01 (finding 3). **Design done: the user approved the Batch 43 mock (see User answers)** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code").
+*Built (wave 2026-11-01); merged as PR #683 (1c4bd76).* Planned 2026-11-01. From the user's user test on 2026-11-01 (finding 3). **Design done: the user approved the Batch 43 mock (see User answers)** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code").
 
 **Touches:** `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/PageEditorPage.xaml`, `src/DinoReader.App/PageEditorPage.xaml.cs`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/BackupPage.xaml`, `src/DinoReader.App/BackupPage.xaml.cs`, `src/DinoReader.App/ReadingSpeedPage.cs`, `src/DinoReader.App/*Page*.cs` (the other Settings sub-pages: language, narrator, animal sounds, about), `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/StoryActions.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/GrownUpHeader.cs`, `src/DinoReader.App/*Page*.xaml` (sub-page XAML: LanguagePage, NarratorLanguagesPage, StoryLanguagesPage, UpdatePage, PageTextPage; widened at claim), `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/App.xaml.cs`, `docs/design/dino-reader/**`, `.maestro/dino/settings-done-button.yaml`, `docs/plan/slices/229-dino-subpage-done-button.md`
 
@@ -112,14 +112,14 @@ Settled by the mock: Done is a filled indigo pill; Done on a sub-page goes up on
 - Scripted emulator flow: intro wizard, Get more books, Store shows Continue top right, tap it, wizard is on the next step; from the grown-ups' corner, Settings shows Done, tap it, back on the corner. iOS: same flow on simulator or TestFlight.
 - Arabic or Farsi: Done is still top right; nothing in the header moves.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-01)
 
 Place in `src/DinoReader.App/CLAUDE.md` (it already has uncommitted edits in this branch; the index pass checks they match).
 
 - Every grown-up page uses `GrownUpHeader.cs` (back, title, Done/Continue pill); never build a page's own header row. Light only, never mirrored, in Farsi and Arabic too. Set the Done `AutomationId` once, in the constructor (setting it twice crashed Settings on open). (Slice 229: docs/plan/slices/229-dino-subpage-done-button.md)
 - Done pops one level; Continue only when the intro wizard pushed the page. Back on `PageTextPage` discards and only Done saves; do not make Back save (it deleted a page on blank text). (Slice 229: docs/plan/slices/229-dino-subpage-done-button.md)
 
-#### For README.md
+#### For README.md (lifted 2026-11-01, nothing to lift)
 
 Nothing user-facing for the README.
 
