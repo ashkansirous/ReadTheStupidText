@@ -255,6 +255,8 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
                 _activeRead = null;
             }
         }
+
+        IosTtsEngine.ReleaseTwinsInBackground(read.Engine); // Slice 220: the twin lives only as long as the read that needed it
     }
 
     public Task SkipForward() => SkipByAsync(SkipAmount);
@@ -711,11 +713,18 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
 
     public void Stop()
     {
+        ActiveRead? stopped;
         lock (_gate)
         {
             _synthCts?.Cancel();
             _generation++;
+            stopped = _activeRead;
             _activeRead = null;
+        }
+
+        if (stopped is not null)
+        {
+            IosTtsEngine.ReleaseTwinsInBackground(stopped.Engine);
         }
 
         _pausedByInterruption = false;

@@ -1,3 +1,4 @@
+using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 using SherpaOnnx;
 
@@ -9,6 +10,17 @@ namespace ReadTheStupidText.Mobile.Shared;
 /// </summary>
 internal static class KokoroEngineConfig
 {
+    /// <summary>
+    /// What a Kokoro take with NaN samples gets (Slice 220). Off: the S21 run of 2026-11-01 gave NaN on single-thread takes as often as on
+    /// multi-thread ones (bm_daniel 7/9 vs 9/9, bf_alice 11/12 vs 9/12) and the single-thread retry rescued 0 of 8, so the thread count is
+    /// not the cause. A NaN take still counts as failed (plain retry) and its samples never reach the player. SingleThreadRetry stays as a
+    /// switch for the next experiment.
+    /// </summary>
+    public const KokoroNanRescue NanRescue = KokoroNanRescue.Off;
+
+    /// <summary>ONNX intra-op threads of the single-thread twin engine.</summary>
+    public const int SingleThreadCount = 1;
+
     /// <summary>
     /// One model with every voice in voices.bin (the speaker id picks one), the English lexicon, and the espeak-ng data that lives only in the pack.
     /// The engine is configured for one <paramref name="language"/> (Slice 118): <c>lang</c> picks the espeak-ng voice (empty for English), and Chinese

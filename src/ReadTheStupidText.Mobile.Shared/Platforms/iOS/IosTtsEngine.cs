@@ -15,6 +15,9 @@ internal sealed class IosRefCountedTts(OfflineTts tts)
     private readonly object _warmLock = new();
     private bool _synthesized;
     private int _active;
+    private readonly object _twinLock = new();
+    private readonly Dictionary<string, OfflineTts> _twins = new();
+    private readonly HashSet<string> _failedTwins = new();
 
     public OfflineTts Tts { get; } = tts;
 
@@ -73,11 +76,70 @@ internal sealed class IosRefCountedTts(OfflineTts tts)
         return true;
     }
 
+    /// <summary>
+    /// Slice 220: runs <paramref name="use"/> on the single-thread twin for <paramref name="key"/> (the model it was
+    /// built from), built once by <paramref name="build"/> on first use. It holds the twin lock, so a slow load never
+    /// blocks the warm-up or synthesis counters and the twin cannot be disposed mid-call. A build that failed is not
+    /// retried until <see cref="ReleaseTwins"/> (the end of the read).
+    /// </summary>
+    public T WithSingleThread<T>(string key, Func<OfflineTts> build, Func<OfflineTts, T> use)
+    {
+        lock (_twinLock)
+        {
+            if (!_twins.TryGetValue(key, out OfflineTts? twin))
+            {
+                twin = BuildTwinLocked(key, build);
+            }
+
+            return use(twin);
+        }
+    }
+
+    private OfflineTts BuildTwinLocked(string key, Func<OfflineTts> build)
+    {
+        if (_failedTwins.Contains(key))
+        {
+            throw new InvalidOperationException("The single-thread engine failed to load earlier in this read.");
+        }
+
+        try
+        {
+            return _twins[key] = build();
+        }
+        catch
+        {
+            _failedTwins.Add(key);
+            throw;
+        }
+    }
+
+    /// <summary>Slice 220: disposes the single-thread twins and forgets failed builds; called when a read ends, so two models are resident only during a read that needed the rescue.</summary>
+    public void ReleaseTwins()
+    {
+        lock (_twinLock)
+        {
+            foreach (OfflineTts twin in _twins.Values)
+            {
+                twin.Dispose();
+            }
+
+            _twins.Clear();
+            _failedTwins.Clear();
+        }
+    }
+
     public void Release()
     {
         if (Interlocked.Decrement(ref _references) == 0)
         {
-            Tts.Dispose();
+            try
+            {
+                ReleaseTwins();
+            }
+            finally
+            {
+                Tts.Dispose();
+            }
         }
     }
 }
@@ -124,18 +186,20 @@ internal static class IosTtsEngine
     public static IosBuiltEngine Create(IosBuiltEngine? previous, VoiceModelPaths paths) =>
         previous is not null && previous.Tts.TryAcquire()
             ? new IosBuiltEngine(previous.Tts, paths)
-            : new IosBuiltEngine(new IosRefCountedTts(Build(paths)), paths);
+            : new IosBuiltEngine(new IosRefCountedTts(Build(paths, SynthesisThreads)), paths);
 
     // Supertonic chooses its language per generation (Extra "lang"); the VITS-family models are
     // single-language and take only the speaker id. Both come from the model the read captured,
     // never from whatever is current now.
     public static OfflineTtsGeneratedAudio Generate(
-        IosBuiltEngine engine, string text, int speakerId, float pace = NormalSpeed)
+        IosBuiltEngine engine, string text, int speakerId, float pace = NormalSpeed, bool singleThread = false)
     {
         VoiceModelPaths model = engine.Model;
         if (model.Kind != VoiceEngineKind.Supertonic)
         {
-            return engine.Tts.Tts.Generate(text, pace, speakerId);
+            return singleThread
+                ? WithSingleThread(engine, twin => twin.Generate(text, pace, speakerId))
+                : engine.Tts.Tts.Generate(text, pace, speakerId);
         }
 
         var config = new OfflineTtsGenerationConfig { Sid = speakerId, Speed = pace };
@@ -144,13 +208,13 @@ internal static class IosTtsEngine
     }
 
     /// <summary>Slice 177: <see cref="Generate"/> for a read: waits for a warm-up in progress and marks the engine warm only once it has completed.</summary>
-    public static OfflineTtsGeneratedAudio GenerateTracked(IosBuiltEngine engine, string text, int speakerId, float pace)
+    public static OfflineTtsGeneratedAudio GenerateTracked(IosBuiltEngine engine, string text, int speakerId, float pace, bool singleThread = false)
     {
         engine.Tts.BeginSynthesis();
         bool completed = false;
         try
         {
-            OfflineTtsGeneratedAudio audio = Generate(engine, text, speakerId, pace);
+            OfflineTtsGeneratedAudio audio = Generate(engine, text, speakerId, pace, singleThread);
             completed = true;
             return audio;
         }
@@ -160,10 +224,59 @@ internal static class IosTtsEngine
         }
     }
 
+    // Slice 220: builds the twin off the caller's thread, holding its own reference on the engine, so a Stop (the token)
+    // ends the wait at once; the build itself finishes in the background and the twin is kept for the next NaN take.
+    public static Task PrepareSingleThreadAsync(IosBuiltEngine engine, CancellationToken token)
+    {
+        if (!engine.TryAcquire())
+        {
+            throw new ObjectDisposedException(nameof(IosTtsEngine));
+        }
+
+        return Task.Run(() =>
+        {
+            try
+            {
+                WithSingleThread(engine, _ => true);
+            }
+            finally
+            {
+                engine.Release();
+            }
+        }).WaitAsync(token);
+    }
+
+    // Slice 220: the Kokoro engine with one ONNX thread, built on the first call (a NaN take or a probe) from this engine's own model
+    // paths, and disposed when the read ends (or with its engine).
+    private static T WithSingleThread<T>(IosBuiltEngine engine, Func<OfflineTts, T> use) =>
+        engine.Tts.WithSingleThread(TwinKey(engine.Model), () => Build(engine.Model, KokoroEngineConfig.SingleThreadCount), use);
+
+    // What Build reads for a Kokoro model: two engines sharing a tts never share a twin unless these match.
+    private static string TwinKey(VoiceModelPaths model) => $"{model.RootDir}|{model.ModelFolder}|{model.Language}";
+
+    /// <summary>Slice 220: the read ended; disposes the engine's single-thread twins off the caller's thread (a take still running on one finishes first).</summary>
+    public static void ReleaseTwinsInBackground(IosBuiltEngine engine)
+    {
+        if (engine.TryAcquire())
+        {
+            Task.Run(() =>
+            {
+                try
+                {
+                    engine.Tts.ReleaseTwins();
+                }
+                finally
+                {
+                    engine.Release();
+                }
+            });
+        }
+    }
+
     // Returning 1 tells sherpa-onnx to keep generating (0 would stop early).
     private static int KeepGenerating(IntPtr samples, int count, float progress, IntPtr arg) => 1;
 
-    private static OfflineTts Build(VoiceModelPaths paths)
+    private static OfflineTts Build(VoiceModelPaths paths, int threads)
     {
         IosSherpaLibrary.EnsureResolver();
         var config = new OfflineTtsConfig();
@@ -185,7 +298,7 @@ internal static class IosTtsEngine
                 throw new NotSupportedException($"No engine for voice model kind {paths.Kind}.");
         }
 
-        config.Model.NumThreads = SynthesisThreads;
+        config.Model.NumThreads = threads;
         config.Model.Provider = CpuProvider;
         RequireModelFiles(paths, config);
         RequirePiperTokens(paths, config);
