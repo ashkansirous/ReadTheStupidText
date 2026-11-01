@@ -390,9 +390,9 @@ function storeChangesFor(name, cwd) {
     if (!PRODUCTS[name].store) return undefined;
     const { prefix } = PRODUCTS[name].store;
     const storeBase = previousReleaseTag(prefix, cwd);
-    if (!storeBase) return console.log(`ship-targets (${name}): no ${prefix}* tag yet, the store flag follows the release diff.`);
+    if (!storeBase) { console.log(`ship-targets (${name}): no ${prefix}* tag yet, the store flag follows the release diff.`); return undefined; }
     const files = changedFilesSince(storeBase, cwd);
-    if (files === null) return console.log(`ship-targets (${name}): cannot diff against ${storeBase}, the store flag follows the release diff.`);
+    if (files === null) { console.log(`ship-targets (${name}): cannot diff against ${storeBase}, the store flag follows the release diff.`); return undefined; }
     console.log(`ship-targets (${name}): store changes since ${storeBase}`);
     return files;
 }

@@ -545,3 +545,23 @@ test('Slice 218 (git): an unreadable store diff is null, which leaves the plan o
         assert.equal(shipTargetsPerProduct({ plans }).windowsstore, false);
     });
 });
+
+test('Slice 222: a Dino-only run with a pending Store change builds and submits the MSIX (the rtst version is always computed by GitVersion)', () => {
+    const dinoOnly = plan([], ['src/DinoReader.Core/Parser.cs']);
+    dinoOnly.rtst.storeChangedFiles = ['src/ReadTheStupidText.App/App.xaml.cs'];
+    const flags = shipTargetsPerProduct({ plans: dinoOnly });
+    assert.deepEqual([flags.windows, flags.windowsstore, flags.dinoapp], [true, true, true]);
+});
+
+test('Slice 222: the newest Store marker wins whatever order the tags come in, so a marker for an older release never moves the base back', () => {
+    const prefix = PRODUCTS.rtst.store.prefix;
+    assert.equal(newestAppTag(['rtst-store-v1.77.0', 'rtst-store-v1.79.0', 'rtst-store-v1.78.3'], prefix), 'rtst-store-v1.79.0');
+});
+
+test('Slice 222: the marker job never moves or adds an older marker', () => {
+    const job = readFileSync(`${WORKFLOWS_DIR}release.yml`, 'utf8').split('store-submit-mark:')[1].split('store-submit-dino:')[0];
+    assert.match(job, /existing" = "\$sha"/);
+    assert.match(job, /\[ -n "\$existing" \].*exit 0/);
+    assert.match(job, /not adding an older marker/);
+    assert.doesNotMatch(job, /--force|-X PATCH/);
+});
