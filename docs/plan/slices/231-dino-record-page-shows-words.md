@@ -13,6 +13,8 @@ A tester recording their voice could not see the text of the page. Likely cause,
 - Show **both**: a smaller picture with the words under it, readable size, in the book's language and direction. The picture helps the reader keep their place.
 - Use the page's full text; for scanned pages, the scanned lines.
 
+**User answers (2026-11-01):** iOS gets a compile check in the night run; the VoiceOver / TestFlight / iPhone / iPad hand checks go to this slice's *Not yet verified* for the user to do later.
+
 #### Design (Dino Reader Batch 43 and 44 mocks, frames 106, 116, 129, added 2026-11-01)
 
 The plan says "no design step"; the layout is drawn in three frames: 106 in `docs/design/dino-reader/Dino Reader Batch 43 Grown-ups Corner.dc.html` (file line 267, portrait), 116 and 129 in `docs/design/dino-reader/Dino Reader Batch 44 Landscape.dc.html` (file lines 201 and 350). The mock agrees with the plan.

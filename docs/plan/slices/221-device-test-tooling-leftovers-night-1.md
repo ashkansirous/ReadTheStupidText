@@ -13,6 +13,8 @@
 3. **Phone builds by hand** (Slice 210 S21 run): the agent copied build-cache steps by hand, although `tools/phone/run-checks.ps1 -Build -App rtst|dino [-Variant debug|aot]` already builds into the shared cache and exits. The brief named the emulator's `-BuildOnly`, and `tools/CLAUDE.md` does not point phone builds at `-Build`.
    - [ ] `tools/CLAUDE.md` (and the device-test brief template) name `run-checks.ps1 -Build` as the phone build-only step. Verify: a device-test run log shows it used.
 4. **A workflow_dispatch release can be replaced by a merge's push run** (entries 1000-1022): `release.yml` uses one concurrency group, `cancel-in-progress: false`, so a *pending* force_all run is replaced by the next pending push run. The force_all dispatch 41136299215 was cancelled with no jobs on 2026-10-30 (the #634 merge push queued after it). The night tooling now holds such runs to the end of the night (ClaudeSkills PR #95); this item is the repo-side choice, which waits for the user.
+
+**User answers (2026-11-01):** the user chose to give `workflow_dispatch` release runs their own concurrency group, so a later merge's push run cannot cancel them. The tooling rule may stay as well, but item 4 is now to be built.
    - [ ] Decide: give `workflow_dispatch` runs their own concurrency group (and check the two can't release the same version at once), or keep the tooling rule only.
 5. **Worker typecheck in fast checks** (Slice 219, entries 431-448): the builder's checks never ran `tsc` (no `node_modules`), so CI went red. The agents now install dependencies first (ClaudeSkills PR #95).
    - [x] `worker/CLAUDE.md` names `npm ci && npm run typecheck` as the worker's fast check (done in the round 1 feedback-loop PR).

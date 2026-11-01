@@ -16,6 +16,8 @@
 - **Restore merges recordings** into a story that is already on the phone: add every recorded page the phone lacks; where both have one for the same page, the backup's wins.
 - Backup page copy says the file includes your recordings.
 
+**User answers (2026-11-01):** the user accepted the defaults: one restore string everywhere, allowed to wrap in landscape, shown on Record, the wizard step and Backup. iOS gets a compile check in the night run; the VoiceOver / TestFlight / iPhone / iPad hand checks go to this slice's *Not yet verified* for the user to do later.
+
 #### Design (Dino Reader Batch 43 and 44 mocks, frames 106, 116, 124, 129, added 2026-11-01)
 
 The plan says "no design step"; the copy is drawn anyway, in four frames: 106 in `docs/design/dino-reader/Dino Reader Batch 43 Grown-ups Corner.dc.html` (file line 267, Record, portrait), and 116, 124, 129 in `docs/design/dino-reader/Dino Reader Batch 44 Landscape.dc.html` (file lines 201, 274, 350). The mock agrees with the plan.

@@ -15,6 +15,8 @@ Testers opened the Store from the intro wizard, added books, then did not know h
 - On pages with unsaved edits (page editor, cast), Done saves first, the same as Back does today, not a separate Save button. Check each page's Back behaviour while building; if one discards on Back, Done saves there and the slice notes it.
 - Android and iOS together; the Windows head gets the same button.
 
+**User answers (2026-11-01):** the user approved the Batch 43 mock (frames 104-108). Build to it. iOS gets a compile check in the night run; the VoiceOver / TestFlight / iPhone / iPad hand checks go to this slice's *Not yet verified* for the user to do later.
+
 #### Design (Dino Reader Batch 43 mock, frames 104-109, added 2026-11-01)
 
 Six frames in `docs/design/dino-reader/Dino Reader Batch 43 Grown-ups Corner.dc.html` (file lines 227-329; portrait phone, 360 x 760 dp). The mock agrees with the decisions above, with one placement detail (Done on a sub-page) and one question (right to left). The mock is a separate file from Slice 228's, not "the Slice 228 mock file".

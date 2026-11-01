@@ -19,6 +19,8 @@
 - **Grown-ups button = labelled pill** "Grown-ups" with a small lock or adult icon (word beats icon for adults; the gate keeps children out). The new icon is drawn in the mock and added to `docs/design/dino-reader/icons/` first (the folder rule: copy icons, never draw new ones in code).
 - Android and iOS together (shared MAUI code); the Windows head gets the same pages.
 
+**User answers (2026-11-01):** the user approved the Batch 43 mock (frames 104-108). Build to it. iOS gets a compile check in the night run; the VoiceOver / TestFlight / iPhone / iPad hand checks go to this slice's *Not yet verified* for the user to do later.
+
 #### Design (Dino Reader Batch 43 mock, frames 97-103 and 101b, added 2026-11-01)
 
 Eight frames in `docs/design/dino-reader/Dino Reader Batch 43 Grown-ups Corner.dc.html` (file lines 33-218; portrait phone frames, 360 x 760 dp). The mock agrees with the decisions above, with the points marked open below. Frames 97-101b are real screens; the two mini phones inside 101 are small illustrations drawn from 97 and 98.

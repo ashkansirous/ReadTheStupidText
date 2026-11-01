@@ -20,6 +20,8 @@ Nothing in Dino adapts to a tablet held upright. No `OnIdiom`, `DeviceInfo.Idiom
   - Record, Store, Cast, page editor, Backup: wider cards and columns from the same rules.
 - **Light only, never mirrored** in any language (user, 2026-11-01; Slice 96).
 
+**User answers (2026-11-01):** skip this slice tonight. It is parked until the user sees and approves its mock (Batch 45); status `parked: mock not drawn yet; waits for the user (skipped 2026-11-01)`.
+
 #### Work
 
 - [ ] **Design (Claude Code):** tablet-portrait mock (e.g. `Dino Reader Batch 45 Tablet.dc.html` in `docs/design/dino-reader/`), 804 × 1164 dp and a 10" Android size, for every screen above, on top of Batches 43 and 44. Rules as pure functions in Core where they can be. Publish as a private page; record the user's answer here.
