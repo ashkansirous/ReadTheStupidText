@@ -27,6 +27,11 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 224 | Phone runner: a dead builder pid reads as a stall, and a cache miss builds inside a timed run (`-NoBuild`) | planned | | | [224-phone-runner-build-cache-gaps.md](docs/plan/slices/224-phone-runner-build-cache-gaps.md) |
 | 225 | Device-test tooling leftovers from the 2026-10-31-1301 night (scripted S21 restore, device-wide change lint, emulator path for phone checks, run-flows two-package bug, per-checkout run status, a unit test for Slice 208's DecideAll) | planned | | | [225-device-tooling-leftovers-night-2026-10-31-1301.md](docs/plan/slices/225-device-tooling-leftovers-night-2026-10-31-1301.md) |
 | 226 | Dino Settings rows and page text: Slice 205 review findings left open (hidden row children, stale NavRow name, per-line description read twice on TalkBack/VoiceOver) | parked: feedback loop, waits for the user | | | [226-dino-settings-rows-review-leftovers.md](docs/plan/slices/226-dino-settings-rows-review-leftovers.md) |
+| 228 | Dino user test: kids' shelf vs grown-ups' corner made obvious (labelled Grown-ups pill, sticky "Back to my child's shelf", "Read now" in the book sheet, one intro card) | planned, needs design by Claude Code | | | [228-dino-grownups-corner-clarity.md](docs/plan/slices/228-dino-grownups-corner-clarity.md) |
+| 229 | Dino user test: Done/Continue button top right on every grown-up page (Continue moves the intro wizard on) | planned, needs design by Claude Code | | | [229-dino-subpage-done-button.md](docs/plan/slices/229-dino-subpage-done-button.md) |
+| 230 | Dino user test: recordings stay on the phone (warm copy), and restore merges recordings into a story already on the phone | planned | | | [230-dino-recordings-copy-and-restore-merge.md](docs/plan/slices/230-dino-recordings-copy-and-restore-merge.md) |
+| 231 | Dino user test: Record page hides the words on picture books (bug) | planned | | | [231-dino-record-page-shows-words.md](docs/plan/slices/231-dino-record-page-shows-words.md) |
+| 232 | Dino user test: proper landscape design for every screen, phone and tablet (after 228 and 229) | planned, needs design by Claude Code | | | [232-dino-landscape-every-screen.md](docs/plan/slices/232-dino-landscape-every-screen.md) |
 
 
 
