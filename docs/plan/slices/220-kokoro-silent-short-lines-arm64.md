@@ -1,6 +1,6 @@
 ### Slice 220 — Kokoro returns silent audio for short lines on arm64
 
-*In progress (wave 2026-11-01), draft PR (part 2: model swap; part 1 merged in PR #638 on 2026-11-01: NaN detection and safety).* Earlier note: parked by the 2026-10-31 night run, draft PR #638 not merged: the S21 run rejected the design. The pause-mark padding never rescued a short line (bm_daniel: plain silent 2 of 4, dots-padded 3 of 4, comma-padded 3 of 4, gave up 3 of 4), and the silent takes are full length with NaN samples, not empty or all-zero, so the "short phoneme sequence collapses" hypothesis is wrong. Next: find where Kokoro's NaN output on arm64 comes from (onnxruntime threads or kernels, sherpa-onnx version, the input that triggers it) before any fix; the padding should not ship. Kept on the branch for reuse: the marker-file probe (`cache/rtst-short-line-probe`, confirmed on the phone) and the `short-lines` phone check. Fix the check's summary too: it prints `n/a` for a NaN peak. A new design needs the coordinator or the user, not another patch. Follow-up to Slice 210 (docs/plan/slices/210-kokoro-short-line-dropped.md).
+*Built (wave 2026-11-01): part 1 PR #638, part 2 PR #685.* Earlier note (history): parked by the 2026-10-31 night run, draft PR #638 not merged: the S21 run rejected the design. The pause-mark padding never rescued a short line (bm_daniel: plain silent 2 of 4, dots-padded 3 of 4, comma-padded 3 of 4, gave up 3 of 4), and the silent takes are full length with NaN samples, not empty or all-zero, so the "short phoneme sequence collapses" hypothesis is wrong. Next: find where Kokoro's NaN output on arm64 comes from (onnxruntime threads or kernels, sherpa-onnx version, the input that triggers it) before any fix; the padding should not ship. Kept on the branch for reuse: the marker-file probe (`cache/rtst-short-line-probe`, confirmed on the phone) and the `short-lines` phone check. Fix the check's summary too: it prints `n/a` for a NaN peak. A new design needs the coordinator or the user, not another patch. Follow-up to Slice 210 (docs/plan/slices/210-kokoro-short-line-dropped.md).
 
 **Touches:** `.github/workflows/packs.yml`, `src/ReadTheStupidText.Application/Reading/PackConstants.cs`, `.github/CLAUDE.md`, `docs/voice-packs.md`, `docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md` (part 2, widened at claim), `src/ReadTheStupidText.Application/Reading/SilentOutputGuard.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader*.cs`, `src/ReadTheStupidText.Infrastructure/Reading/NeuralSentenceSource.cs`, `tests/ReadTheStupidText.Tests/**`, `tools/phone/**`, `docs/plan/slices/220-kokoro-silent-short-lines-arm64.md`
 
@@ -125,9 +125,9 @@ Lead (web research, not tested): k2-fsa/sherpa-onnx issue #4086 and PR #4087 (me
 
 #### Next design (wave to come)
 
-- [ ] Check whether the kokoro-en pack ships the int8 model (`packs.yml`).
-- [ ] Rebuild the pack from the re-exported int8 model in `tts-models` (or fp32 if the size allows), publish a new packs release (standing approval), and bump the pack version so phones update.
-- [ ] Verify: the `short-lines` S21 run on bm_daniel and bf_alice shows NaN 0 and gave up 0. No app code change is expected.
+- [x] Check whether the kokoro-en pack ships the int8 model (`packs.yml`).
+- [x] Rebuild the pack from the re-exported int8 model in `tts-models` (or fp32 if the size allows), publish a new packs release (standing approval), and bump the pack version so phones update.
+- [x] Verify: the `short-lines` S21 run on bm_daniel and bf_alice shows NaN 0 and gave up 0. No app code change is expected.
 
 #### Part 2 design (written by the wave coordinator, 2026-11-01)
 
@@ -136,18 +136,42 @@ Checked 2026-11-01: `packs.yml` pins `KOKORO_URL` = `kokoro-int8-multi-lang-v1_0
 - Pin the new sha256 in `packs.yml` (same URL, cap unchanged, comments updated to say why).
 - Dispatch `packs.yml` from this branch with `kokoro_pack_version` 3, `kokoro_carry_over_from` empty, and every other pack kept at its current version/bytes (read `docs/voice-packs.md` and the inputs for how), publishing `packs-11` (standing approval; nothing live changes until the app points at it).
 - Bump `PackConstants.CatalogUrl` to `packs-11`, so phones see kokoro-en 3 and download it. No other app code change.
-- Verify on the S21: the `short-lines` check (defaults: bm_daniel and bf_alice, the 4 Slice 210 lines x 3 repeats = 12 takes per voice, the size of the failing run of 2026-11-01) shows NaN 0 and gave up 0 on every take. NaN is random per take, so a small sample proves nothing. The check reads the active kokoro-en folder from the app's `active` file, logs it and fails unless it is `v3` (`-ExpectedPackVersion`): the update to 3 is offered, not forced, so a run on a phone still on v2 does not count. If NaN persists, the swap is rejected: do not merge the CatalogUrl bump; park.
+- Verify on the S21: the `short-lines` check (defaults: bm_daniel and bf_alice, the 4 Slice 210 lines x 3 reads = 24 reads) shows NaN 0 and gave up 0 on every take, and a probe line on every line's first read. The check clears the sentence cache before every read (see "Check redesign" below), so repeats count and the default is 3. NaN is random per take, so a small sample proves nothing. The check reads the active kokoro-en folder from the app's `active` file, logs it and fails unless it is `v3` or newer (`-ExpectedPackVersion`): the update to 3 is offered, not forced, so a run on a phone still on v2 does not count. If NaN persists, the swap is rejected: do not merge the CatalogUrl bump; park.
 - Merge order: this PR merges only after `packs-11` is published and the S21 check above passed. The `CatalogUrl` bump points at `packs-11`; merged earlier, release.yml would ship an app whose catalogue URL 404s and every pack download would fail.
 - Same-version rebuilds: only Kokoro can be carried over, so the other 34 packs are rebuilt at the version numbers of packs-10 and their zips will differ in bytes and sha256. This is harmless to installed phones: the apps offer a pack only when the catalogue version is newer (`PackVersions.IsNewer`: `PackVersions.cs:19`, `VoicePackInstaller.cs:622`, `MobileVoicePackService.cs:468`, `WindowsVoicePackService.cs:138`), and the sha256 is checked only against the catalogue entry of the zip being downloaded (`MobileVoicePackService.cs:552,571`), never against an installed pack. Fresh installs get the packs-11 rebuild, which has no device run of its own.
 - Docs: the int8 notes in `.github/CLAUDE.md` and Slice 114 updated (size, sha, why).
 
+Check redesign (2026-11-01, after two S21 runs with missing probe lines): `short-lines.ps1` now deletes `cache/sentences` (`run-as <pkg> rm -rf`, never `files/packs`) before every read, so every read, every repeat, is synthesised and must carry a probe line; `-Repeats` default is 3 (the 4 lines x 3 x 2 voices = 24 reads). The cache is `FileSystem.CacheDirectory/sentences` (`AndroidSupertonicSpeechReader.cs:45,185-188`), indexed in memory once per process but a vanished file is a miss (`SentenceAudioCache.cs:54-68`). The "AOT build has no probe" factor is not supported by the code: the dev AOT build is a Debug-configuration build (README: `-Aot` is an AOT-compiled Debug build; `read` hook and debug sink are `#if DEBUG`), so the check only refuses a non-debuggable install (`dumpsys package` flags). The pack guard accepts v3 or newer, and an adb/run-as failure reading the version is reported as that failure.
+
 Runner gap: `run-checks.ps1` has no `-Voices`; `short-lines.ps1` had to be run directly for a second voice (belongs with the Slice 224/225 tooling).
 
-#### Not yet verified (update 2026-11-01)
+#### Part 2 built (PR #685, wave 2026-11-01): the model swap fixed it
+
+- `packs.yml` pins the re-uploaded sherpa-onnx int8 archive (sha256 `72c347230107ef8a31098ec4d468a605244beef5f1ed00db97efa13518800653`, 132,353,410 bytes; STFT convs kept float32, sherpa-onnx PR #4087); `kokoro_pack_version` default is 3. `PackConstants.CatalogUrl` points at `packs-11`.
+- packs-11 published from this branch (run 41323377117): 35 packs, only kokoro-en changed (v3, 131,415,128 bytes). The other packs were rebuilt at the same versions (phones decide re-download by version only, `PackVersions.IsNewer`); fresh installs get the rebuilt bytes, which have no device run of their own.
+- `tools/phone/checks/short-lines.ps1`: clears `cache/sentences` before each read, refuses non-debuggable installs, guards the active kokoro-en pack version (at least v3), 3 repeats x 4 lines, a probe line required on every read.
+- S21 run 3 (2026-11-01 about 16:35), kokoro-en v3: bm_daniel 12 reads, bf_alice 12 reads; multi-thread NaN 0/72 takes, single-thread NaN 0/72, gave up 0/24, PASS. Log: `reviews/s220c-short-lines.txt`. Baseline on v2: bm_daniel NaN 9/9, bf_alice 9/12. Cause confirmed: the int8 export's STFT convs.
+- Changed while building: run 1 used an older dev APK (packs-10), reinstalled; repeats served from the sentence cache gave no probe line (runs 1 and 2), fixed by clearing the cache per read. Odd, not a failure: the single-thread arm gives identical samples across repeats.
+- The single-thread rescue stays Off; no further app code change.
+
+From review (findings files in `reviews/`, outside the repo):
+
+- `s220-p2-high.md` (8 findings, read 8/8): 1 (nothing pushed before dispatch; process, pushed before dispatching); 2 (merge-order line added to the slice); 3 (no change needed); 4, 6, 7, 8 applied; 5 (self-check ignores NaN) skipped, low.
+- `s220-p2-medium.md` (7 findings, read 7/7): 1 and 7 are the merge-order gate, done (publish and verify first); 2, 3, 4, 5, 6 low, skipped.
+- `s220-p2-medium-check.md` (6 findings, read 6/6): 3 and 4 applied; 1 and 2 covered by the check redesign (3 repeats, cache cleared per read); 5 skipped (low); 6 is the merge-order gate.
+- `s220-p2-medium-check2.md` (8 findings, read 8/8), all low, none applied (dev-tool script `short-lines.ps1`; the S21 PASS run hit no failure path): 1 local `Clear-SentenceCache` shadows the common.ps1 helper; 2 adb error read as "not debuggable"; 3 debuggable assert runs after the pack-version read; 4 `Set-ProbeMarker` output not verified, cleanup throw can mask the first error; 5 probe log read with no settle wait, a half-logged probe passes; 6 `-Repeats` and `-ExpectedPackVersion` not validated; 7 default 24 reads (48 with `-AllVoices`) can pass the 10-minute cap; 8 dead pack-version term in the final `$ok`.
+
+#### For CLAUDE.md
+
+- Kokoro pack: `.github/workflows/packs.yml` pins the kokoro int8 archive by sha256; kokoro-en 3 and later must be built from the float32-STFT re-upload (the older int8 export returns all-NaN audio for short lines on arm64). Pack version defaults must change with the model. (Slice 220: docs/plan/slices/220-kokoro-silent-short-lines-arm64.md)
+- Same-version pack rebuilds are safe for installed phones (only `PackVersions.IsNewer` triggers a download), but only Kokoro can be carried over; the rest are rebuilt. Merge a `PackConstants.CatalogUrl` bump only after that packs release exists. (Slice 220: docs/plan/slices/220-kokoro-silent-short-lines-arm64.md)
+
+#### Not yet verified
 
 - iOS: compile only.
-- The 68-read Slice 210 set is still not run.
-- The Windows Dino head has no single-thread arm.
+- The Windows Dino head on kokoro-en 3.
+- The 68-read Slice 210 set.
+- A fresh install's rebuilt non-kokoro packs (rebuilt in packs-11 at the same versions, no device run).
 
 #### Review notes (check pass on the final code, 2026-11-01)
 

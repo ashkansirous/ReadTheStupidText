@@ -7,7 +7,7 @@
   `short line probe` log lines (no text), one per arm: 3 plain takes on the normal multi-thread engine and 3 on a single-thread engine, each with samples, NaN count, peak over the finite
   samples and voiced ms. A take with NaN samples is a failed take: the guard logs `take has NaN samples`, and its retry runs on the single-thread engine (KokoroEngineConfig.NanRescue).
   The check prints one row per read (multi-thread and single-thread takes, guard lines) and a summary per arm (NaN takes) and per outcome (rescued by a single-thread retry, gave up), so one
-  phone run shows whether NaN comes with multiple threads only. Passes when every read ended, every read has a probe line and none gave up. Default is bm_daniel and bf_alice, 3 repeats of the 4 lines (12 takes per voice, the size of the failing S21 run of 2026-11-01); -AllVoices runs the four that failed. The active kokoro-en pack folder is read from the app's `active` file and logged; the check fails unless it is v<-ExpectedPackVersion> (default 3, the float32-STFT model).
+  phone run shows whether NaN comes with multiple threads only. Passes when every read ended, every read has a probe line and none gave up. Default is bm_daniel and bf_alice, 3 reads of each of the 4 lines. Before EVERY read the check deletes the app's sentence-audio cache (`run-as <pkg> rm -rf cache/sentences`; never the packs folder), because a cached line is played with no synthesis and so logs no probe line (the cache index is read from disk once per process, but a vanished file is a miss: SentenceAudioCache.TryGetAsync). It refuses to run unless the installed app is debuggable (Debug or Debug-AOT build; only those carry the probe and the `read` hook). -AllVoices runs the four that failed. The active kokoro-en pack folder is read from the app's `active` file and logged; the check fails unless it is v<-ExpectedPackVersion> (default 3, the float32-STFT model) or newer, and an adb/run-as failure reading it is reported as that failure.
   Hypothesis and what confirms it: docs/plan/slices/220-kokoro-silent-short-lines-arm64.md.
 #>
 param(
@@ -43,10 +43,31 @@ function Set-KokoroVoice([string]$VoiceKey) {
     if ("$($out | Select-Object -Last 1)".Trim() -ne "kokoro:$VoiceKey") { throw "Could not set $key to kokoro:$VoiceKey in the preferences of $package (output: $($out -join ' | ')). Pick a Kokoro voice in the app once so the key exists." }
 }
 
-# The active kokoro-en pack folder name (the `active` file in the pack's folder, e.g. v3); empty when unreadable.
+# The active kokoro-en pack folder name (the `active` file in the pack's folder, e.g. v3); empty when the pack is not installed. An adb/run-as failure throws (it is not "no pack").
 function Get-ActiveKokoroVersion {
-    $out = @(Invoke-Adb $Phone @('shell', "run-as $package sh -c 'cat $($script:PacksDirectory)/kokoro-en/active 2>/dev/null'"))
+    $out = @(Invoke-Adb $Phone @('shell', "run-as $package sh -c 'cat $($script:PacksDirectory)/kokoro-en/active'"))
+    $text = ($out | ForEach-Object { "$_" }) -join ' | '
+    if ($text -match 'No such file or directory') { return '' }
+    if ($text -match '(?i)run-as:|not debuggable|unknown package|inaccessible|error:|device .*not found|offline|unauthorized') { throw "Could not read the kokoro-en pack version of $package from the phone (adb said: $text)." }
     return "$($out | Select-Object -First 1)".Trim()
+}
+
+# True when the pack folder name (v3, v4, ...) is the expected version or newer.
+function Test-PackVersionAtLeast([string]$Active, [string]$Expected) {
+    return ($Active -match '^v(\d+)$') -and ([int]$Matches[1] -ge [int]$Expected)
+}
+
+# The sentence-audio cache is cache/sentences in the app's data folder (AndroidSupertonicSpeechReader SentenceFolderName, under FileSystem.CacheDirectory); a cached line is played with no synthesis, so no probe line. Never the packs folder (files/packs).
+$sentenceCachePath = 'cache/sentences'
+function Clear-SentenceCache {
+    $out = @(Invoke-Adb $Phone @('shell', "run-as $package sh -c 'rm -rf $sentenceCachePath; [ -e $sentenceCachePath ] && echo STILL_THERE || echo CLEARED'"))
+    if ("$($out | Select-Object -Last 1)".Trim() -ne 'CLEARED') { throw "Could not clear $sentenceCachePath of $package (output: $($out -join ' | '))." }
+}
+
+# The probe needs a Debug-flavoured build (its debug log sink and the `read` hook are #if DEBUG); the JIT and the AOT dev builds both are. A release build is not debuggable.
+function Assert-DebuggableBuild {
+    $out = @(Invoke-Adb $Phone @('shell', "dumpsys package $package"))
+    if (-not ($out | Where-Object { "$_" -match 'flags=\[.*\bDEBUGGABLE\b' })) { throw "$package on the phone is not a debuggable (Debug) build, so it carries no short line probe. Reinstall the Debug or Debug-AOT build." }
 }
 
 function Read-OneLine([string]$AppPid, [string]$Text) {
@@ -66,7 +87,9 @@ function Set-ProbeMarker([bool]$On) {
 $rows = @()
 $activeVersion = Get-ActiveKokoroVersion
 Write-Host "   active kokoro-en pack: '$activeVersion' (expected 'v$ExpectedPackVersion')"
-if ($activeVersion -ne "v$ExpectedPackVersion") { return (New-CheckResult $false "active kokoro-en pack is '$activeVersion', expected 'v$ExpectedPackVersion': update the pack on the phone first") }
+if (-not $activeVersion) { return (New-CheckResult $false "no active kokoro-en pack on the phone (expected v$ExpectedPackVersion or newer): install the pack first") }
+if (-not (Test-PackVersionAtLeast $activeVersion $ExpectedPackVersion)) { return (New-CheckResult $false "active kokoro-en pack is '$activeVersion', expected v$ExpectedPackVersion or newer: update the pack on the phone first") }
+Assert-DebuggableBuild
 Set-ProbeMarker $true
 try {
     foreach ($voice in $Voices) {
@@ -74,8 +97,9 @@ try {
         $appPid = Start-ReadyApp $Phone $App $package
         foreach ($line in $Lines) {
             for ($i = 1; $i -le $Repeats; $i++) {
+                Clear-SentenceCache
                 $one = Read-OneLine $appPid $line
-                $row = [pscustomobject]@{ Voice = $voice; Chars = $line.Length; Ended = $one.Ended; Probe = $one.Facts.Probe; GaveUp = $one.Facts.GaveUp; Rescue = $one.Facts.Rescue; Retries = $one.Facts.Retries }
+                $row = [pscustomobject]@{ Voice = $voice; Repeat = $i; Chars = $line.Length; Ended = $one.Ended; Probe = $one.Facts.Probe; GaveUp = $one.Facts.GaveUp; Rescue = $one.Facts.Rescue; Retries = $one.Facts.Retries }
                 $rows += $row
                 Write-Host ("   {0} {1} chars: {2}" -f $voice, $line.Length, (Format-ShortLineRow $row))
             }
@@ -91,5 +115,5 @@ if ($probes -eq 0) { return (New-CheckResult $false 'no short line probe log lin
 $gaveUp = @($rows | Where-Object { $_.GaveUp }).Count
 $notEnded = @($rows | Where-Object { -not $_.Ended }).Count
 $noProbe = @($rows | Where-Object { -not $_.Probe }).Count
-$ok = ($activeVersion -eq "v$ExpectedPackVersion") -and ($gaveUp -eq 0) -and ($notEnded -eq 0) -and ($noProbe -eq 0)
-return (New-CheckResult $ok "kokoro-en $activeVersion, $($rows.Count) reads, $gaveUp gave up, $notEnded never ended, $noProbe without a probe line. $summary")
+$ok = (Test-PackVersionAtLeast $activeVersion $ExpectedPackVersion) -and ($gaveUp -eq 0) -and ($notEnded -eq 0) -and ($noProbe -eq 0)
+return (New-CheckResult $ok "kokoro-en $activeVersion, $($rows.Count) reads, $gaveUp gave up, $notEnded never ended, $noProbe reads without a probe line. $summary")
