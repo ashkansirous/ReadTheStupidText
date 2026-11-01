@@ -142,7 +142,7 @@ the English ones are `KokoroVoiceTable` (ids `kokoro:<name>`, Heart is the narra
 Packs are assets of a dedicated GitHub release tagged `packs-<n>`, separate from the app's
 `v<x.y.z>` releases (Decision 62). Release assets don't count toward the Actions storage
 quota (Decision 52). The app reads the catalog from the **pinned** release named in
-`PackConstants.CatalogUrl` (currently `packs-9`), so publishing `packs-10` changes nothing
+`PackConstants.CatalogUrl` (currently `packs-11`), so publishing `packs-12` changes nothing
 until a new app version points at it. Every `packs-<n>` release carries every pack (voice, OCR and
 translation), because the app pins one catalogue: a run with a pack missing would leave the app
 pointing at a catalogue without it.

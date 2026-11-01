@@ -7,16 +7,17 @@
   `short line probe` log lines (no text), one per arm: 3 plain takes on the normal multi-thread engine and 3 on a single-thread engine, each with samples, NaN count, peak over the finite
   samples and voiced ms. A take with NaN samples is a failed take: the guard logs `take has NaN samples`, and its retry runs on the single-thread engine (KokoroEngineConfig.NanRescue).
   The check prints one row per read (multi-thread and single-thread takes, guard lines) and a summary per arm (NaN takes) and per outcome (rescued by a single-thread retry, gave up), so one
-  phone run shows whether NaN comes with multiple threads only. Passes when every read ended, every read has a probe line and none gave up. Default is one voice (about 200 s); -AllVoices runs the four that failed.
+  phone run shows whether NaN comes with multiple threads only. Passes when every read ended, every read has a probe line and none gave up. Default is bm_daniel and bf_alice, 3 repeats of the 4 lines (12 takes per voice, the size of the failing S21 run of 2026-11-01); -AllVoices runs the four that failed. The active kokoro-en pack folder is read from the app's `active` file and logged; the check fails unless it is v<-ExpectedPackVersion> (default 3, the float32-STFT model).
   Hypothesis and what confirms it: docs/plan/slices/220-kokoro-silent-short-lines-arm64.md.
 #>
 param(
     [Parameter(Mandatory)][string]$Phone,
     [Parameter(Mandatory)][ValidateSet('dino')][string]$App,
-    [string[]]$Voices = @('bm_daniel'),
+    [string[]]$Voices = @('bm_daniel', 'bf_alice'),
     [switch]$AllVoices,
     [string[]]$Lines = @('Yes.', 'Oh no!', 'Help!', 'Ann.'),
-    [int]$Repeats = 1,
+    [int]$Repeats = 3,
+    [string]$ExpectedPackVersion = '3',
     [int]$ReadTimeoutSeconds = 40
 )
 $ErrorActionPreference = 'Stop'
@@ -42,6 +43,12 @@ function Set-KokoroVoice([string]$VoiceKey) {
     if ("$($out | Select-Object -Last 1)".Trim() -ne "kokoro:$VoiceKey") { throw "Could not set $key to kokoro:$VoiceKey in the preferences of $package (output: $($out -join ' | ')). Pick a Kokoro voice in the app once so the key exists." }
 }
 
+# The active kokoro-en pack folder name (the `active` file in the pack's folder, e.g. v3); empty when unreadable.
+function Get-ActiveKokoroVersion {
+    $out = @(Invoke-Adb $Phone @('shell', "run-as $package sh -c 'cat $($script:PacksDirectory)/kokoro-en/active 2>/dev/null'"))
+    return "$($out | Select-Object -First 1)".Trim()
+}
+
 function Read-OneLine([string]$AppPid, [string]$Text) {
     $sent = Send-DevHook $Phone $App 'read' @{ text = $Text; speed = '1' }
     $end = Wait-LogMatch $Phone $package $AppPid 'READ_END\s*$' $ReadTimeoutSeconds $sent "waiting for READ_END of a $($Text.Length)-char line"
@@ -57,6 +64,9 @@ function Set-ProbeMarker([bool]$On) {
 }
 
 $rows = @()
+$activeVersion = Get-ActiveKokoroVersion
+Write-Host "   active kokoro-en pack: '$activeVersion' (expected 'v$ExpectedPackVersion')"
+if ($activeVersion -ne "v$ExpectedPackVersion") { return (New-CheckResult $false "active kokoro-en pack is '$activeVersion', expected 'v$ExpectedPackVersion': update the pack on the phone first") }
 Set-ProbeMarker $true
 try {
     foreach ($voice in $Voices) {
@@ -81,5 +91,5 @@ if ($probes -eq 0) { return (New-CheckResult $false 'no short line probe log lin
 $gaveUp = @($rows | Where-Object { $_.GaveUp }).Count
 $notEnded = @($rows | Where-Object { -not $_.Ended }).Count
 $noProbe = @($rows | Where-Object { -not $_.Probe }).Count
-$ok = ($gaveUp -eq 0) -and ($notEnded -eq 0) -and ($noProbe -eq 0)
-return (New-CheckResult $ok "$($rows.Count) reads, $gaveUp gave up, $notEnded never ended, $noProbe without a probe line. $summary")
+$ok = ($activeVersion -eq "v$ExpectedPackVersion") -and ($gaveUp -eq 0) -and ($notEnded -eq 0) -and ($noProbe -eq 0)
+return (New-CheckResult $ok "kokoro-en $activeVersion, $($rows.Count) reads, $gaveUp gave up, $notEnded never ended, $noProbe without a probe line. $summary")

@@ -73,9 +73,9 @@ on:
         default: '1'
         type: string
       kokoro_pack_version:
-        description: 'Version stamped into the Kokoro storyteller pack (Dino Reader: English, Spanish, Portuguese, Chinese; 2 is the first with es, pt and zh)'
+        description: 'Version stamped into the Kokoro storyteller pack (Dino Reader: English, Spanish, Portuguese, Chinese; 2 is the first with es, pt and zh; 3 is the first built from the float32-STFT archive)'
         required: true
-        default: '2'
+        default: '3'
         type: string
       kokoro_carry_over_from:
         description: 'Release tag (e.g. packs-7) to carry the unchanged Kokoro pack over from, byte for byte, instead of rebuilding it from the upstream archive; leave empty to build. Needs kokoro_pack_version to be that release''s version.'
@@ -132,6 +132,8 @@ env:
   CHINESE_LICENSE: MIT
   CHINESE_URL: https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-melo-tts-zh_en.tar.bz2
   CHINESE_SHA256: e58351ed7149f290a54534538badd4077cdbe6fddc964b24d0bee870415d1514
+  # Slice 220 part 2: the upstream archive was re-uploaded 2026-10-26 (sherpa-onnx PR #4087: STFT convs kept float32, fixes NaN/silent short lines on arm64);
+  # the pin was 4c3052ab... (pre-fix). Kokoro pack version 3 is the first built from it. fp32 (350 MB) is over the cap and not used.
   # Slice 114: Kokoro-82M v1.0 as sherpa-onnx's int8 multi-language archive (132 MB; model.int8.onnx 114 MB, voices.bin 28 MB,
   # 54 voices of which Dino lists the English, Spanish, Portuguese and Chinese ones, see KokoroVoiceTable.cs). Pinned by the archive's sha256 (the release digest).
   # The zip comes to about 126 MB (English only), over the 100 MB cap of the other packs, so this pack has its own cap (150 MB); the Chinese
@@ -141,7 +143,7 @@ env:
   KOKORO_LANGUAGES: 'en,es,pt,zh'
   KOKORO_LICENSE: 'Apache-2.0 (Kokoro-82M weights) AND GPL-3.0-or-later (espeak-ng data)'
   KOKORO_URL: https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-int8-multi-lang-v1_0.tar.bz2
-  KOKORO_SHA256: 4c3052abaa60943a341f193888cf6abd68787dae6ab8ae5c925a706caa247e4e
+  KOKORO_SHA256: 72c347230107ef8a31098ec4d468a605244beef5f1ed00db97efa13518800653
   KOKORO_MAX_BYTES: 157286400
   # PaddleOCR ONNX models (Apache-2.0), pinned to one revision of the monkt/paddleocr-onnx repo.
   # The sha256 values are the Git LFS object ids (the files' sha256) and the dictionaries' hashes.
