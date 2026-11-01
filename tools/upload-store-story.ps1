@@ -1,4 +1,4 @@
-# CI does this on every merge (Slice 158: release.yml `publish-store`, .github/scripts/publish-store-books.mjs); this script is the manual fallback.
+# CI does this after every store-book merge and daily (Slice 158: dino-store.yml `publish-store`, .github/scripts/publish-store-books.mjs); this script is the manual fallback.
 # Uploads one built store story (Slice 102) to the downloads bucket: `pwsh tools/upload-store-story.ps1 <story id> [-Root <store folder>]` (from any folder; Root defaults to the repo's artifacts/store).
 # Build the folder first with `dotnet run --project tools/DinoReader.BookBuilder -- build` (from content/dino/, Slice 157). The cover and every package go up first and meta.json
 # LAST, so a half-finished upload is never listed (worker/stories.ts offers a folder only when meta.json and a package are both there).
