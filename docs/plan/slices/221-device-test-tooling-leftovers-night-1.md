@@ -48,6 +48,7 @@ Checked on origin/main before the claim:
 
 - Touches: the claim named a `tools/emulator/flows/` folder that does not exist; widened mid-build to `.maestro/dino/**`, `.maestro/README.md` and `tools/emulator/common.ps1`.
 - Item 1 sets the voice through the reader and `StoryVoicing`, not `NeuralVoiceMemory`; item 6 uses a per-owner run marker, not a lease pid (both described under the items).
+- **Slice 225 item 22, `common.ps1` part (drop-cache marker):** main's `Clear-PageCache` pattern ends `...0<0x08>`, so it most likely never matched. Here it ends `...0`, which matches `RTST_DROP_RC=0` and no other exit code, so the check can now return true. The control-chars check found it at commit time. The coordinator removed the byte and first said the line "now matches origin/main"; that was wrong, because main has the byte too. 225 item 22 still owns the two `run-checks.ps1` comments (already clean on main) and the device check.
 
 #### From review
 
