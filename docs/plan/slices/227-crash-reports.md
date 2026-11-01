@@ -36,7 +36,7 @@ Settled here (planning): the reports follow the user's existing "anonymous usage
   - Android: `ActivityManager.GetHistoricalProcessExitReasons` (API 30+) sends each new `REASON_CRASH_NATIVE`, `REASON_ANR` and `REASON_LOW_MEMORY` since the last one seen, with its description and capped trace (a tombstone is capped to 9 KB before base64, so the stored text fits the stack cap). A low-memory kill is reported only when the process was in the foreground or visible; background kills are ignored.
 - [x] **5. RTST mobile.** The same `CrashCapture`/`RollingLogFile`/sender wiring in `src/ReadTheStupidText.Mobile` with app `rtst`, on Android and iOS.
 - [x] **6. Reading them: `tools/crashes/`.**
-  - `pull-crashes.mjs`: lists and downloads R2 crash objects for an app and date range, groups them by exception type and top frame, and prints counts plus the newest log tail per group. It reads with a read-only R2 token from `D:\secrets`, created and recorded with `manage-secrets`.
+  - `pull-crashes.mjs`: lists and downloads R2 crash objects for an app and date range, groups them by exception type and top frame, and prints counts plus the newest log tail per group. It reads through wrangler's own login (Slice 243 item 3, 2026-11-01; no token to create).
   - `pull-apple.py`: App Store Connect `diagnosticSignatures` + logs and TestFlight `betaFeedbackCrashSubmissions` + crash logs for both apps (from the 2026-10-31 scratch script).
   - Google Play: the Play Developer Reporting API (`vitals.errors` issues and reports) for both apps, if the existing Play service account has the reporting scope; if it does not, record that and stop.
   - A `worker/CLAUDE.md` rule and a line in the `analytics-query` brief so "did it crash?" goes to these scripts.
@@ -82,7 +82,7 @@ Settled here (planning): the reports follow the user's existing "anonymous usage
 #### Outstanding after merge (main thread)
 
 - Done 2026-10-31: Worker deployed (Workers Builds success on b8c420d); live `POST https://dinoreader.sirous.uk/api/crash` answers 204 with crash reports off; `/crashes/x.json` answers 404; R2 lifecycle rule `crash-reports-90d` (prefix `crashes/`, expire 90 days) added.
-- Open: the read-only R2 token `CF_R2_CRASHES_READ` could not be created (no Cloudflare token in `D:\secrets` may create API tokens). Either the user creates an R2 read token in the Cloudflare dashboard, or `pull-crashes.mjs` is changed to read through the Cloudflare REST API with wrangler's own login (no new token).
+- Resolved 2026-11-01 (Slice 243 item 3): no `CF_R2_CRASHES_READ` token is needed. `pull-crashes.mjs` reads through the Cloudflare REST API (R2 list objects and get object, the only calls it makes; the login is the user's general wrangler login, not a read-only credential) with the Bearer token of `wrangler auth token --json`, wrangler's own login; run for real, it listed the 3 Dino reports of 2026-11-01.
 - Done 2026-11-01: the Play Data safety change was sent and is live on both apps, the App Store forms are published, and `crashReports.enabled` is true in both remote configs (item 8).
 - Item 9 (symbolicate the 2026-10-28 TestFlight crash) open.
 
