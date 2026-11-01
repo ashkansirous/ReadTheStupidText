@@ -32,6 +32,11 @@
 
 This needs **one** more Dino app release (Android, iOS, Windows); after it, adding or editing a store book builds no app.
 
+**Timing (the user, 2026-11-01): ship it with the next Dino app change**, never as its own app release. Build and
+review it whenever, but merge it in the same release as the next change under `src/DinoReader.App` or
+`src/DinoReader.Core`. Until then, a new store book still adds its row to `ShippedTitles.cs`; edits to existing store
+books already build no app.
+
 ## Verification
 
 - Dino tests and BookBuilder `check`.
