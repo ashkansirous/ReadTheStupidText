@@ -63,3 +63,4 @@ Why users stayed on 1.67.1 is still unproven (1.73.2 was committed to Partner Ce
 - Partner Center shows the new version, and why 1.67.1 stayed live after rtst-v1.73.2's "Submission commit success".
 - High review 4: what a Store backlog that keeps failing costs (an RTST MSIX build on every merge); check the release runs after the first failed submission, if one happens.
 - High review 5: no double submission after a run cancelled between `store-submit` and `store-submit-mark`.
+- Dino Reader for Windows: read with `gh` by the round 4 feedback loop (2026-11-01, about 21:21). Release run 40992195327 (2026-10-30 02:31 UTC, a push run for PR #587) has `store-submit-dino / submit` green, so Dino was submitted that day. Whether the later `force_all` run 41137137107 also submitted Dino cannot be read (the API answers 404). Certification state was not checked; [Slice 242](242-round-4-leftovers-night-2026-11-01-0859.md) item 1 (parked) would read it.

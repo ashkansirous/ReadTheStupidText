@@ -63,8 +63,7 @@ Settled by the mock: tablet versus phone is split at a 600 dp short side; the co
 
 - [x] **Design (Claude Code):** mock done (Batch 44, 2026-11-01: `docs/design/dino-reader/Dino Reader Batch 44 Landscape.dc.html`, frames 110-130 and 132; 131 night not built). User answers recorded above.
 - [x] Part A: the reading screen (built 2026-11-01, see *Part A: built* below).
-- [ ] Build the rest (parts B-E), each with its layout rule tests.
-- [ ] Rotation keeps state (reading position, recording in progress, wizard step, gate progress).
+- [ ] Build the rest (parts B-E), each with its layout rule tests.- [ ] Rotation keeps state (reading position, recording in progress, wizard step, gate progress).
 - [ ] Android and iOS built and checked together.
 
 #### Verification
@@ -92,7 +91,7 @@ From review (findings files in `D:/ReadTheStupidText-worktrees/reviews/`):
 - `s232-high.md`: applied 1-4 and 9. Skipped 5-8 (cleanups: dead `compact` branches, duplicate gap constant, unused `SidewaysHeight`, Rail/Compact flags).
 - `s232-medium.md`: applied 1-5 (5 answered: `Transport.xaml` already sets End on main). Skipped 6 (needs a device; the device run shows it), 7 (cleanup), 8 (killed-run only).
 - `s232-check-medium.md`: 1, 2, 6 and 7 replaced by the pure `TextCardLeft` function after two strikes on the same report path; 8 fixed by moving the temp file. Skipped 3, 4, 5.
-- `s232-check2-medium.md`: applied 1. Skipped 2-8.
+- `s232-check2-medium.md`: applied 1. Skipped 2 (relayout reads the picture size each time; later cached by check3 1), 3 (stale size on rotation; self-corrects on the next layout pass), 4 (dead `SidewaysHeight` and duplicated sizes: cleanup), 5 (layout rules not yet used by any screen: they are for parts B-E), 6 (the 0x0-card guard's redraw: MAUI lays out again with the real size), 7 (`VerticalOptions` End on upright rows after the base-class change: portrait flows passed; see Not yet verified), 8 (a short split-screen tablet window gets the phone rail: the 480 dp rule is by design). Reasons recorded by the round 4 feedback loop from the wave's chat.
 - `s232-check3-medium.md`: applied 1 (aspect cache). Skipped 2 (self-corrects on the next layout) and 3 (low).
 - `s232-check4-medium.md`: no findings.
 
@@ -112,3 +111,5 @@ Parts B-E unchanged (planned).
 - Picture-only chip placement against frame 114 (the user's eye).
 - A window 600-700 dp on the short side choosing rail versus row.
 - Windows head in a wide window.
+- Portrait reading unchanged on iOS, Windows and tablets after `TransportRow`'s base class changed to `StackLayout` (shown only by two Android emulator flows).
+- Phone side margins (about 14 dp, mock 34/26) and tablet frame 127's title against the mock (the user's eye).
