@@ -1,12 +1,13 @@
 <#
 .SYNOPSIS
-  short-lines: what Kokoro returns on the phone for short lines, plain and padded (Slice 220, follow-up to Slice 210).
+  short-lines: what Kokoro returns on the phone for short lines, on the normal engine and on a single-thread engine (Slice 220, follow-up to Slice 210).
 .DESCRIPTION
   Dino only, Debug build, kokoro-en pack. For each voice: sets the remembered Kokoro voice in the dev app's preferences (the app is stopped first), relaunches, and reads each short line
-  (Slice 210 set: "Yes.", "Oh no!", "Help!", "Ann.") -Repeats times through the `read` hook, waiting for READ_END. In a Debug build the guard writes, for every short Kokoro line, one
-  `short line probe` log line (no text) with the samples, peak and voiced ms of an independent plain take and of a padded take of each style (dots, commas), and the retry and
-  rescue lines say whether a retry was padded. The check prints one row per read (voice, plain / dots / commas numbers, guard lines) and a summary per take kind, so one phone run
-  shows whether the plain take is empty (zero samples or all-zero samples), whether padding makes it voiced, and which style. Passes when every read ended, every read has a probe line and none gave up. Default is one voice (about 200 s); -AllVoices runs the four that failed in Slice 210 (about 580 s, longer than the run-checks budget allows beside other checks).
+  (Slice 210 set: "Yes.", "Oh no!", "Help!", "Ann.") -Repeats times through the `read` hook, waiting for READ_END. In a Debug build the guard writes, for every short Kokoro line, two
+  `short line probe` log lines (no text), one per arm: 3 plain takes on the normal multi-thread engine and 3 on a single-thread engine, each with samples, NaN count, peak over the finite
+  samples and voiced ms. A take with NaN samples is a failed take: the guard logs `take has NaN samples`, and its retry runs on the single-thread engine (KokoroEngineConfig.NanRescue).
+  The check prints one row per read (multi-thread and single-thread takes, guard lines) and a summary per arm (NaN takes) and per outcome (rescued by a single-thread retry, gave up), so one
+  phone run shows whether NaN comes with multiple threads only. Passes when every read ended, every read has a probe line and none gave up. Default is one voice (about 200 s); -AllVoices runs the four that failed.
   Hypothesis and what confirms it: docs/plan/slices/220-kokoro-silent-short-lines-arm64.md.
 #>
 param(
@@ -48,7 +49,7 @@ function Read-OneLine([string]$AppPid, [string]$Text) {
     return [pscustomobject]@{ Ended = [bool]$end; Facts = ConvertFrom-ShortLineLog $log }
 }
 
-# The probe (3 extra syntheses per short line) runs only while this marker file is in the app's cache folder (ShortLinePadding.ProbeMarkerFileName); removed again at the end.
+# The probe (6 extra syntheses per short line) runs only while this marker file is in the app's cache folder (ShortLineProbe.MarkerFileName); removed again at the end.
 $markerPath = 'cache/rtst-short-line-probe'
 function Set-ProbeMarker([bool]$On) {
     $cmd = if ($On) { "touch $markerPath" } else { "rm -f $markerPath" }

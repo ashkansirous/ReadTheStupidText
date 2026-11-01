@@ -646,50 +646,62 @@ function New-RunStatus([string]$App, [datetime]$Now, $Builds, $Plans, $Rows, [st
     return [ordered]@{ app = $App; updatedUtc = (ConvertTo-DeadlineText $Now); installedVariant = $Installed; finished = $Finished; waiting = $Waiting; builds = $buildStates; checks = @($checks) }
 }
 
-# ---- short-lines (Slice 220): the guard's Debug probe line and the retry / rescue / gave-up lines of one read (no text in any of them).
-# `short line probe (voice kokoro:x, 4 chars): plain [samples 0, peak 0.000, voiced ms 0]; dots [samples 9600, peak 0.310, voiced ms 380]; commas [...]`
+# ---- short-lines (Slice 220): the guard's Debug probe lines (one per arm) and the NaN / retry / rescue / gave-up lines of one read (no text in any of them).
+# `short line probe multi-thread (voice kokoro:x, 4 chars): [samples 9600, nan 9600, peak 0.000, voiced ms 0]; [...]; [...]` (and the same with `single-thread`)
 function ConvertFrom-ShortLineLog([string[]]$Lines) {
-    $probe = $null; $gaveUp = $false; $rescue = $null; $retries = @()
+    $multi = $null; $single = $null; $gaveUp = $false; $rescue = $null; $retries = @(); $nanTakes = 0
     foreach ($line in $Lines) {
-        if ($line -match 'short line probe \(voice [^,]+, (\d+) chars\): plain \[([^\]]*)\]; dots \[([^\]]*)\]; commas \[([^\]]*)\]') {
-            $probe = [pscustomobject]@{ Plain = (ConvertFrom-TakeFacts $Matches[2]); Dots = (ConvertFrom-TakeFacts $Matches[3]); Commas = (ConvertFrom-TakeFacts $Matches[4]) }
+        if ($line -match 'short line probe (multi-thread|single-thread) \(voice [^,]+, (\d+) chars\): (.*)$') {
+            $takes = @([regex]::Matches($Matches[3], '\[([^\]]*)\]') | ForEach-Object { ConvertFrom-TakeFacts $_.Groups[1].Value } | Where-Object { $_ })
+            if ($Matches[1] -ceq 'multi-thread') { $multi = $takes } else { $single = $takes }
         }
+        elseif ($line -match 'take has NaN samples \(voice') { $nanTakes++ }
         elseif ($line -match 'gave up \(voice') { $gaveUp = $true }
-        elseif ($line -match 'silent voice output rescued by (padded )?(take \d|the sibling voice)') { $rescue = ($Matches[1] + $Matches[2]).Trim() }
-        elseif ($line -match 'retry take (\d) \((plain|padded),') { $retries += "$($Matches[1]):$($Matches[2])" }
+        elseif ($line -match 'silent voice output rescued by (single-thread )?(take \d|the sibling voice)') { $rescue = ($Matches[1] + $Matches[2]).Trim() }
+        elseif ($line -match 'retry take (\d) \((plain|single-thread),') { $retries += "$($Matches[1]):$($Matches[2])" }
     }
-    return [pscustomobject]@{ Probe = $probe; GaveUp = $gaveUp; Rescue = $rescue; Retries = $retries }
+    $probe = if ($multi -or $single) { [pscustomobject]@{ Multi = @($multi); Single = @($single) } } else { $null }
+    return [pscustomobject]@{ Probe = $probe; GaveUp = $gaveUp; Rescue = $rescue; Retries = $retries; NanTakes = $nanTakes }
 }
 
-# `samples 9600, peak 0.310, voiced ms 380` -> Samples, Peak, VoicedMs; Silent is true when voiced ms is 0 (zero samples, or every sample under the voiced amplitude 0.01).
+# `samples 9600, nan 9600, peak 0.310, voiced ms 380` -> Samples, Nan, Peak, VoicedMs. A log without the nan count (the old format) gives Nan 0; a `peak NaN` gives Peak NaN and counts as NaN.
+# Silent is true when voiced ms is 0 (zero samples, every sample under the voiced amplitude 0.01, or all NaN); HasNan is true when any sample is NaN.
 function ConvertFrom-TakeFacts([string]$Text) {
-    if ($Text -notmatch 'samples (\d+), peak ([\d.]+), voiced ms (\d+)(?:, density ([\d.]+))?') { return $null }
-    $peak = [double]::Parse($Matches[2], [Globalization.CultureInfo]::InvariantCulture)
-    $density = if ($Matches[4]) { [double]::Parse($Matches[4], [Globalization.CultureInfo]::InvariantCulture) } else { $null }
-    return [pscustomobject]@{ Samples = [int]$Matches[1]; Peak = $peak; VoicedMs = [int]$Matches[3]; Density = $density; Silent = ([int]$Matches[3] -eq 0) }
+    if ($Text -notmatch 'samples (\d+), (?:nan (\d+), )?peak (NaN|[\d.]+), voiced ms (\d+)') { return $null }
+    $peakIsNan = $Matches[3] -ceq 'NaN'
+    $peak = if ($peakIsNan) { [double]::NaN } else { [double]::Parse($Matches[3], [Globalization.CultureInfo]::InvariantCulture) }
+    $nan = if ($Matches[2]) { [int]$Matches[2] } elseif ($peakIsNan) { [int]$Matches[1] } else { 0 }
+    return [pscustomobject]@{ Samples = [int]$Matches[1]; Nan = $nan; Peak = $peak; VoicedMs = [int]$Matches[4]; Silent = ([int]$Matches[4] -eq 0); HasNan = ($nan -gt 0) }
 }
 
 function Format-TakeFacts($Facts) {
-    if (-not $Facts) { return 'n/a' }
-    $kind = if ($Facts.Samples -eq 0) { 'ZERO SAMPLES' } elseif ($Facts.Silent) { 'ALL-ZERO' } else { 'voiced' }
-    $density = if ($null -ne $Facts.Density) { ", density $($Facts.Density)" } else { '' }
-    return "$($Facts.Samples) smp, peak $($Facts.Peak), $($Facts.VoicedMs) ms$density ($kind)"
+    $kind = if ($Facts.Samples -eq 0) { 'ZERO SAMPLES' } elseif ($Facts.HasNan) { 'NaN' } elseif ($Facts.Silent) { 'ALL-ZERO' } else { 'voiced' }
+    $peak = if ([double]::IsNaN($Facts.Peak)) { 'NaN' } else { $Facts.Peak }
+    return "$($Facts.Samples) smp, nan $($Facts.Nan), peak $peak, $($Facts.VoicedMs) ms ($kind)"
+}
+
+function Format-ShortLineArm($Takes) {
+    if (-not $Takes -or @($Takes).Count -eq 0) { return 'n/a' }
+    return (@($Takes | ForEach-Object { Format-TakeFacts $_ }) -join ' / ')
 }
 
 function Format-ShortLineRow($Row) {
-    $probe = if ($Row.Probe) { 'plain {0} | dots {1} | commas {2}' -f (Format-TakeFacts $Row.Probe.Plain), (Format-TakeFacts $Row.Probe.Dots), (Format-TakeFacts $Row.Probe.Commas) } else { 'no probe line' }
+    $probe = if ($Row.Probe) { 'multi-thread {0} | single-thread {1}' -f (Format-ShortLineArm $Row.Probe.Multi), (Format-ShortLineArm $Row.Probe.Single) } else { 'no probe line' }
     $guard = if ($Row.GaveUp) { 'GAVE UP' } elseif ($Row.Rescue) { "rescued by $($Row.Rescue)" } else { 'first take ok' }
     return "$probe; $guard; retries $(@($Row.Retries) -join ',')"
 }
 
-# Per take kind: how many probes were silent (voiced ms 0), and how many of those had zero samples. Plain silent and padded voiced together confirm the padding fix.
+# Per arm (multi-thread, single-thread): probe takes with NaN, silent, total. Per outcome: reads rescued by a single-thread retry, reads that gave up.
+# Multi-thread NaN above 0 with single-thread NaN at 0 confirms the thread cause; about equal rejects it.
 function Get-ShortLineSummary($Rows) {
     $probes = @($Rows | Where-Object { $_.Probe } | ForEach-Object { $_.Probe })
     if ($probes.Count -eq 0) { return 'no probes' }
-    $parts = foreach ($kind in 'Plain', 'Dots', 'Commas') {
-        $takes = @($probes | ForEach-Object { $_.$kind } | Where-Object { $_ })
-        $silent = @($takes | Where-Object { $_.Silent })
-        "$kind silent $($silent.Count)/$($takes.Count) (zero samples $(@($silent | Where-Object { $_.Samples -eq 0 }).Count))"
+    $parts = foreach ($arm in 'Multi', 'Single') {
+        $takes = @($probes | ForEach-Object { $_.$arm } | Where-Object { $_ })
+        $nan = @($takes | Where-Object { $_.HasNan }).Count
+        $silent = @($takes | Where-Object { $_.Silent }).Count
+        "$arm-thread NaN $nan/$($takes.Count) (silent $silent)"
     }
-    return ($parts -join '; ') + "; gave up $(@($Rows | Where-Object { $_.GaveUp }).Count)/$($Rows.Count)"
+    $rescued = @($Rows | Where-Object { $_.Rescue -like 'single-thread*' }).Count
+    return ($parts -join '; ') + "; rescued by single-thread retry $rescued/$($Rows.Count); gave up $(@($Rows | Where-Object { $_.GaveUp }).Count)/$($Rows.Count)"
 }

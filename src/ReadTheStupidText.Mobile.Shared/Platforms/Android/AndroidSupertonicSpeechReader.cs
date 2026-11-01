@@ -287,6 +287,28 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
                 _activeRead = null;
             }
         }
+
+        ReleaseTwinsInBackground(read.Engine);
+    }
+
+    // Slice 220: the single-thread twin lives only as long as the read that needed it. Off the caller's thread: a twin take
+    // already running cannot be interrupted, and the dispose waits for it.
+    private static void ReleaseTwinsInBackground(BuiltEngine engine)
+    {
+        if (engine.TryAcquire())
+        {
+            Task.Run(() =>
+            {
+                try
+                {
+                    engine.Tts.ReleaseTwins();
+                }
+                finally
+                {
+                    engine.Release();
+                }
+            });
+        }
     }
 
     public Task SkipForward() => SkipByAsync(SkipAmount);
@@ -792,7 +814,14 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
                 sentence, voice.Id, pace, SiblingVoice.IsDropProne(voice), phrase => TakeAsync(engine, phrase, voice.SpeakerId, pace),
                 message => _log.Warning(message), token, phrase => SiblingTakeAsync(engine, phrase, voice, pace, slots, token),
                 message => _log.Debug(message),
-                probe: ShortLinePadding.ProbeInThisBuild);
+                probe: ShortLineProbe.InThisBuild,
+                singleThread: engine.Model.Kind == VoiceEngineKind.Kokoro ? async phrase =>
+                {
+                    await PrepareSingleThreadAsync(engine, token);
+                    return await TakeAsync(engine, phrase, voice.SpeakerId, pace, singleThread: true);
+                }
+                : null,
+                nanRescue: KokoroEngineConfig.NanRescue);
         }
         finally
         {
@@ -815,9 +844,10 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             token);
 
     // One take of the voice, copied out so the native audio is released at once (Slice 149).
-    private static async Task<SpokenTake> TakeAsync(BuiltEngine engine, string text, int speakerId, float pace)
+    // singleThread (Slice 220, Kokoro only): the take runs on the engine's lazily built single-thread twin.
+    private static async Task<SpokenTake> TakeAsync(BuiltEngine engine, string text, int speakerId, float pace, bool singleThread = false)
     {
-        OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, text, speakerId, pace);
+        OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, text, speakerId, pace, singleThread);
         try
         {
             return new SpokenTake(audio.Samples, audio.SampleRate);
@@ -832,7 +862,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // own reference on the engine, released by the task itself when the call returns (success,
     // fault or abandonment alike, so the count stays balanced): a retired engine is disposed
     // only once it returns.
-    private static Task<OfflineTtsGeneratedAudio> GenerateGuardedAsync(BuiltEngine engine, string chunk, int speakerId, float pace)
+    private static Task<OfflineTtsGeneratedAudio> GenerateGuardedAsync(BuiltEngine engine, string chunk, int speakerId, float pace, bool singleThread = false)
     {
         if (!engine.TryAcquire())
         {
@@ -843,7 +873,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         {
             try
             {
-                return GenerateTracked(engine, chunk, speakerId, pace);
+                return GenerateTracked(engine, chunk, speakerId, pace, singleThread);
             }
             finally
             {
@@ -1085,11 +1115,18 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
 
     public void Stop()
     {
+        ActiveRead? stopped;
         lock (_gate)
         {
             _synthCts?.Cancel();
             _generation++;
+            stopped = _activeRead;
             _activeRead = null;
+        }
+
+        if (stopped is not null)
+        {
+            ReleaseTwinsInBackground(stopped.Engine);
         }
 
         _chunkEnded?.TrySetResult(false);
@@ -1136,12 +1173,14 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // models are single-language and take only the speaker id. Both come from the model
     // the read captured, never from whatever is current now.
     // The pace is 1 unless a voice transform changes it (Slice 113).
-    private static OfflineTtsGeneratedAudio GenerateAudio(BuiltEngine engine, string text, int speakerId, float pace = 1.0f)
+    private static OfflineTtsGeneratedAudio GenerateAudio(BuiltEngine engine, string text, int speakerId, float pace = 1.0f, bool singleThread = false)
     {
         VoiceModelPaths model = engine.Model;
         if (model.Kind != VoiceEngineKind.Supertonic)
         {
-            return engine.Tts.Tts.Generate(text, pace, speakerId);
+            return singleThread
+                ? WithSingleThread(engine, twin => twin.Generate(text, pace, speakerId))
+                : engine.Tts.Tts.Generate(text, pace, speakerId);
         }
 
         var config = new OfflineTtsGenerationConfig { Sid = speakerId, Speed = pace };
@@ -1150,13 +1189,13 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     }
 
     // Slice 177: a read's synthesis waits for a warm-up in progress and marks the engine warm only once it has completed.
-    private static OfflineTtsGeneratedAudio GenerateTracked(BuiltEngine engine, string text, int speakerId, float pace)
+    private static OfflineTtsGeneratedAudio GenerateTracked(BuiltEngine engine, string text, int speakerId, float pace, bool singleThread = false)
     {
         engine.Tts.BeginSynthesis();
         bool completed = false;
         try
         {
-            OfflineTtsGeneratedAudio audio = GenerateAudio(engine, text, speakerId, pace);
+            OfflineTtsGeneratedAudio audio = GenerateAudio(engine, text, speakerId, pace, singleThread);
             completed = true;
             return audio;
         }
@@ -1165,6 +1204,36 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             engine.Tts.EndSynthesis(completed);
         }
     }
+
+    // Slice 220: builds the twin off the caller's thread, holding its own reference on the engine, so a Stop (the token)
+    // ends the wait at once; the build itself finishes in the background and the twin is kept for the next NaN take.
+    private static Task PrepareSingleThreadAsync(BuiltEngine engine, CancellationToken token)
+    {
+        if (!engine.TryAcquire())
+        {
+            throw new ObjectDisposedException(nameof(AndroidSupertonicSpeechReader));
+        }
+
+        return Task.Run(() =>
+        {
+            try
+            {
+                WithSingleThread(engine, _ => true);
+            }
+            finally
+            {
+                engine.Release();
+            }
+        }).WaitAsync(token);
+    }
+
+    // Slice 220: the Kokoro engine with one ONNX thread, built on the first call (a NaN take or a probe) from this engine's own model
+    // paths, and disposed when the read ends (or with its engine).
+    private static T WithSingleThread<T>(BuiltEngine engine, Func<OfflineTts, T> use) =>
+        engine.Tts.WithSingleThread(TwinKey(engine.Model), () => BuildTts(engine.Model, KokoroEngineConfig.SingleThreadCount), use);
+
+    // What BuildTts reads for a Kokoro model: two engines sharing a RefCountedTts never share a twin unless these match.
+    private static string TwinKey(VoiceModelPaths model) => $"{model.RootDir}|{model.ModelFolder}|{model.Language}";
 
     // Returning 1 tells sherpa-onnx to keep generating (0 would stop early).
     private static int KeepGenerating(IntPtr samples, int count, float progress, IntPtr arg) => 1;
@@ -1229,9 +1298,9 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     private static BuiltEngine CreateEngine(BuiltEngine? previous, VoiceModelPaths paths) =>
         previous is not null && previous.Tts.TryAcquire()
             ? new BuiltEngine(previous.Tts, paths)
-            : new BuiltEngine(new RefCountedTts(BuildTts(paths)), paths);
+            : new BuiltEngine(new RefCountedTts(BuildTts(paths, SynthesisThreads)), paths);
 
-    private static OfflineTts BuildTts(VoiceModelPaths paths)
+    private static OfflineTts BuildTts(VoiceModelPaths paths, int threads)
     {
         var config = new OfflineTtsConfig();
         switch (paths.Kind)
@@ -1252,7 +1321,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
                 throw new NotSupportedException($"No engine for voice model kind {paths.Kind}.");
         }
 
-        config.Model.NumThreads = SynthesisThreads;
+        config.Model.NumThreads = threads;
         config.Model.Provider = "cpu";
         RequireModelFiles(paths, config);
         RequirePiperTokens(paths, config);
@@ -1706,6 +1775,9 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         private readonly object _warmLock = new();
         private bool _synthesized;
         private int _active;
+        private readonly object _twinLock = new();
+        private readonly Dictionary<string, OfflineTts> _twins = new();
+        private readonly HashSet<string> _failedTwins = new();
 
         public OfflineTts Tts { get; } = tts;
 
@@ -1764,11 +1836,70 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             return true;
         }
 
+        /// <summary>
+        /// Slice 220: runs <paramref name="use"/> on the single-thread twin for <paramref name="key"/> (the model it was
+        /// built from), built once by <paramref name="build"/> on first use. It holds the twin lock, so a slow load never
+        /// blocks the warm-up or synthesis counters and the twin cannot be disposed mid-call. A build that failed is not
+        /// retried until <see cref="ReleaseTwins"/> (the end of the read).
+        /// </summary>
+        public T WithSingleThread<T>(string key, Func<OfflineTts> build, Func<OfflineTts, T> use)
+        {
+            lock (_twinLock)
+            {
+                if (!_twins.TryGetValue(key, out OfflineTts? twin))
+                {
+                    twin = BuildTwinLocked(key, build);
+                }
+
+                return use(twin);
+            }
+        }
+
+        private OfflineTts BuildTwinLocked(string key, Func<OfflineTts> build)
+        {
+            if (_failedTwins.Contains(key))
+            {
+                throw new InvalidOperationException("The single-thread engine failed to load earlier in this read.");
+            }
+
+            try
+            {
+                return _twins[key] = build();
+            }
+            catch
+            {
+                _failedTwins.Add(key);
+                throw;
+            }
+        }
+
+        /// <summary>Slice 220: disposes the single-thread twins and forgets failed builds; called when a read ends, so two models are resident only during a read that needed the rescue.</summary>
+        public void ReleaseTwins()
+        {
+            lock (_twinLock)
+            {
+                foreach (OfflineTts twin in _twins.Values)
+                {
+                    twin.Dispose();
+                }
+
+                _twins.Clear();
+                _failedTwins.Clear();
+            }
+        }
+
         public void Release()
         {
             if (Interlocked.Decrement(ref _references) == 0)
             {
-                Tts.Dispose();
+                try
+                {
+                    ReleaseTwins();
+                }
+                finally
+                {
+                    Tts.Dispose();
+                }
             }
         }
     }
