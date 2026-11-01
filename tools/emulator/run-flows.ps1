@@ -206,7 +206,7 @@ function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File) {
     $exit = $LASTEXITCODE
     $problem = $null
     if ($exit -ne 0) {
-        $lines = $output -split "`r?`n" | Where-Object { $_.Trim() -and $_ -notmatch '[│╭╰]' }
+        $lines = $output -split "`r?`n" | Where-Object { $_.Trim() -and $_ -notmatch '[\u2502\u256D\u2570]' }
         $problem = "Maestro failed:`n" + (($lines | Select-Object -Last 10) -join "`n")
     }
     else {
