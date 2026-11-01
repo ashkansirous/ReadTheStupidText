@@ -7,6 +7,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - iOS on a device: the VoiceOver, TestFlight, iPhone and iPad hand checks (the user's answer: they do these later). Only the iOS compile was checked.
 - The silent re-post on a repeated failed automatic resume: no scripted check asserts the alert/silent difference.
 - A real network loss: the device run used the Debug-only `drop-pack-network` hook, not a real loss.
+- The medium-pass skip reasons (slice line 46) state code facts not read in the code at triage, e.g. "Android's Notify reports no failure": check each against the code.
 
 ### Slice 228: Dino grown-ups' corner clarity ([slice](slices/228-dino-grownups-corner-clarity.md))
 
@@ -17,6 +18,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - The translated strings are machine drafts.
 - The intro read's return being cancelled by Play/pause, skip or a page turn (the emulator recheck tapped the page surface, which is not one of those).
 - The 48 dp close button on a device (changed after the last emulator run; check pass only).
+- The skip reason "the app reaches users days later through the stores" (Worker before app) was not checked against the release workflow: Dino merges reach internal tracks the same day, so `intro_step` events may be dropped for minutes after a merge.
 
 ### Slice 220: Kokoro silent short lines on arm64, part 1 merged ([slice](slices/220-kokoro-silent-short-lines-arm64.md))
 
@@ -92,7 +94,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 208: paused pack downloads tell you and finish ([slice](slices/208-paused-pack-downloads-tell-you-and-finish.md))
 
-- Slice 208 (PR #646) not yet verified: the S21 Verification list (paused notice within ~35 s and tap resumes; notification text; stale partial resumes or is deleted), runnable now that the phone is back; netpolicy per-app block stopping a foreground-service download, to prove on an emulator first; Dino storyteller first download shows no ask sheet and grown-up Settings shows it once (emulator); iOS TestFlight hand check; stale-partial-launch first cold run marker not seen within 40 s (not diagnosed); the reworked check has never run, so Android 15 accepting the netpolicy block and the detached 240 s device-side restore are unproven; it was edited after both reviews, and a later read found it may never see a pause on unmetered Wi-Fi (Slice 225 item 15). [208-paused-pack-downloads-tell-you-and-finish.md](slices/208-paused-pack-downloads-tell-you-and-finish.md)
+- Slice 208 (PR #646) not yet verified: the S21 Verification list (paused notice within ~35 s and tap resumes; notification text; stale partial resumes or is deleted), runnable now that the phone is back; Dino storyteller first download shows no ask sheet and grown-up Settings shows it once (emulator); iOS TestFlight hand check; stale-partial-launch first cold run marker not seen within 40 s (not diagnosed); the reworked check has never run, so the detached 240 s device-side restore are unproven; it was edited after both reviews, and a later read found it may never see a pause on unmetered Wi-Fi (Slice 225 item 15). [208-paused-pack-downloads-tell-you-and-finish.md](slices/208-paused-pack-downloads-tell-you-and-finish.md)
 
 ### Slice 206: phone run scripts ([slice](slices/206-phone-run-scripts.md))
 

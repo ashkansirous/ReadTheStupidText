@@ -33,7 +33,7 @@ So a download that stops because the network went away while the app is in the b
 #### Verification
 
 - `dotnet test tests/ReadTheStupidText.Tests` (the policy table).
-- Android emulator (scripted): start a pack download, send the app to the background, cut the app's network with the per-app netpolicy block (never a whole-device cut over wireless adb), and see `PACKDL paused-notified` with reason network; restore, tap the notice, the download finishes. Same flow with the time limit still posts.
+- Android emulator (scripted): start a pack download, send the app to the background, drop its pack network with the Debug hook `drop-pack-network` (the per-app netpolicy block, planned first, did not cut the download on the S21; never a whole-device cut over wireless adb), and see `PACKDL paused-notified` with reason network; restore, tap the notice, the download finishes. Same flow with the time limit still posts.
 - iOS: TestFlight hand check, background the app during a download and turn Wi-Fi off (mobile data off): the notice appears in Notification Center.
 
 #### Review notes (medium pass)
@@ -50,6 +50,7 @@ So a download that stops because the network went away while the app is in the b
 - iOS on a device: the VoiceOver, TestFlight, iPhone and iPad hand checks (per the user's answer above). Only the iOS compile was checked.
 - The silent re-post on a repeated failed automatic resume: no scripted check asserts the alert/silent difference.
 - A real network loss: the device run used the Debug-only `drop-pack-network` hook, not a real loss.
+- The medium-pass skip reasons (line 46) state code facts that were not read in the code at triage, e.g. "Android's Notify reports no failure": check each against the code (round 2 feedback loop, 2026-11-01).
 
 #### Changed while building
 
@@ -59,11 +60,11 @@ So a download that stops because the network went away while the app is in the b
 
 - `paused-notification-network`: PASS. Notice "Download paused. Tap to finish." at 0% done; the tap resumed at offset 987771 and the notice went away.
 - `paused-notification` (time limit): PASS. 5% done, resumed, notice gone.
-- Earlier runs found: the netpolicy cut has no effect under a dataSync foreground service; the notice stayed up during an automatic restart (this led to the episode design); `pm clear` resets POST_NOTIFICATIONS (channel importance NONE).
+- Earlier runs found: the netpolicy cut had no effect while the dataSync foreground service ran (likely the foreground-service exemption; not proven); the notice stayed up during an automatic restart (this led to the episode design); `pm clear` resets POST_NOTIFICATIONS (channel importance NONE).
 
 #### For CLAUDE.md (lifted 2026-11-01)
 
-- `tools/CLAUDE.md`: `cmd netpolicy restrict-background-blacklist` does not cut an app that runs a dataSync foreground service; use a Debug hook (Slice 233: docs/plan/slices/233-paused-notice-same-on-android-and-ios.md).
+- `tools/CLAUDE.md`: `cmd netpolicy restrict-background-blacklist` did not cut the app while it ran a dataSync foreground service (likely the exemption; not proven); use a Debug hook (Slice 233: docs/plan/slices/233-paused-notice-same-on-android-and-ios.md).
 - `tools/CLAUDE.md`: `pm clear` (`reset-dev-app -Level clear`) revokes POST_NOTIFICATIONS; re-grant it (Slice 233: docs/plan/slices/233-paused-notice-same-on-android-and-ios.md).
 - `tools/CLAUDE.md`: `run-checks` needs `RTST_PHONE_OWNER` exported, or it waits on its own lease (Slice 233: docs/plan/slices/233-paused-notice-same-on-android-and-ios.md).
 
