@@ -2,6 +2,24 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count.
 
+### Slice 230: Dino: say plainly that recordings stay on the phone, and restore brings them back ([slice](slices/230-dino-recordings-copy-and-restore-merge.md))
+
+- Hearing the restored recording play ("Read with my voice").
+- iOS simulator or TestFlight: back up, restore, recordings come back.
+- VoiceOver on the new Record/Backup lines.
+- iPhone and iPad layouts of the new lines.
+- Windows head wording ("this computer").
+- The info icon (not drawn).
+- The failing-once check against the old APK (no old APK available), so the flow is not shown to fail before the change.
+
+### Slice 221: Device-test tooling leftovers from the 2026-10-30-2100 night, round 1 ([slice](slices/221-device-test-tooling-leftovers-night-1.md))
+
+- Item 6 on the real phone: two timed runs with the same owner, the second exits 4.
+- Item 4 on GitHub: a force_all dispatch followed by a merge still runs its jobs; the wait step's `jq`/`gh` output on a real run.
+- `run-flows.ps1` exits 137 after printing PASS (not investigated).
+- Item 3 seen in a device-test run log.
+- `adb uninstall` stderr under Windows PowerShell 5.1 with `ErrorActionPreference` Stop (`Remove-StaleDevPackages`, `tools/emulator/common.ps1:151`) could abort the install instead of warning.
+
 ### Slice 229: Dino Done/Continue button on every grown-up page ([slice](slices/229-dino-subpage-done-button.md))
 
 - Page editor header over the crop stage (44 dp pill vs 38).

@@ -27,3 +27,4 @@ Rules for the device-test tooling (`tools/emulator`, `tools/phone`, `tools/deskt
 - `cmd netpolicy restrict-background-blacklist` did not cut the app while it ran a dataSync foreground service (likely the foreground-service exemption; not proven); use a Debug hook (`drop-pack-network`) instead. (Slice 233: docs/plan/slices/233-paused-notice-same-on-android-and-ios.md)
 - `pm clear` (`reset-dev-app -Level clear`) revokes POST_NOTIFICATIONS; re-grant it before a notification check. (Slice 233: docs/plan/slices/233-paused-notice-same-on-android-and-ios.md)
 - `run-checks` needs `RTST_PHONE_OWNER` exported, or it waits on its own lease. (Slice 233: docs/plan/slices/233-paused-notice-same-on-android-and-ios.md)
+- Dino dev installs are `uk.sirous.dinoreader.dbg` on emulator and phone; the plain `uk.sirous.dinoreader` is the store app and is removed only on `emulator-N` serials. (Slice 221: docs/plan/slices/221-device-test-tooling-leftovers-night-1.md)
