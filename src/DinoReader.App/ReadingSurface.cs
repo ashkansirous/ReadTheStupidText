@@ -44,6 +44,9 @@ public sealed class ReadingSurface : Border
 	private int _sentence = -1;
 	private int _lastSentence = -1; // the end of a soft-highlighted recorded page (Slice 111); -1 when one sentence is marked
 	private Size _laidOutFor;
+
+	// The size the pages are laid out for (the card PictureTextPages.Compose gets): what the controls row must be placed from, so the row and the picture column agree.
+	public Size LaidOutFor => _laidOutFor;
 	private int _anchor = -1;
 	private int _anchorPosition = -1;
 	private int _position = -1;
@@ -53,6 +56,8 @@ public sealed class ReadingSurface : Border
 	private readonly Dictionary<(string Font, double Size), PlatformTextMeasurer> _measurers = [];
 	private double _textFontSize = ReadingMetrics.FontSize;
 	private double _textTopInset;
+	private ControlsPlacement _controls = ControlsPlacement.Row;
+	private bool _sideways;
 	private readonly Label _error = new()
 	{
 		Text = ReadingText.LayoutFailed,
@@ -107,6 +112,21 @@ public sealed class ReadingSurface : Border
 			_laidOutFor = default;
 			RestartResizeTimer();
 		}
+	}
+
+	/// <summary>Whether the window is held sideways and where ReadingPage puts the controls (both decided from the window size, Slice 232): the picture + text pages size their layout and type
+	/// from them, so type, layout and controls never disagree. Changing either lays the pages out again.</summary>
+	public void SetControls(bool sideways, ControlsPlacement controls)
+	{
+		if (controls == _controls && sideways == _sideways)
+		{
+			return;
+		}
+
+		_controls = controls;
+		_sideways = sideways;
+		_laidOutFor = default;
+		RestartResizeTimer();
 	}
 
 	/// <summary>Changes the mode and the text style together, so the pages are laid out once with the new style (not once per change).</summary>
@@ -363,7 +383,7 @@ public sealed class ReadingSurface : Border
 		if (content.Scans is { } book && PictureTextBook.IsPictureTextBook(book.Pages))
 		{
 			return new PictureTextPages(content.Text, book.Pages, content.Sentences, book.ResolveImage, content.Font, theme,
-				content.RightToLeft, sentence => SentenceTapped?.Invoke(this, sentence), e => OnSwiped(this, e), _mode == ReadingMode.PictureAndText, book.TextInPictures);
+				content.RightToLeft, sentence => SentenceTapped?.Invoke(this, sentence), e => OnSwiped(this, e), _mode == ReadingMode.PictureAndText, book.TextInPictures, _sideways, _controls);
 		}
 
 		return content.Scans is { } scans

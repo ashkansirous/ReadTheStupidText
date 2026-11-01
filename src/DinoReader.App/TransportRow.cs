@@ -6,7 +6,7 @@ namespace DinoReader;
 /// Previous sentence, play or pause, next sentence (Slice 174, mock Batch 37 frames 91-93): three flat circles of one family, the coral play button a little
 /// bigger than the tinted skip buttons, with no under-edge and no halo (a child who has wandered is told by the "reading page" pill instead).
 /// </summary>
-public sealed class TransportRow : HorizontalStackLayout
+public sealed class TransportRow : StackLayout
 {
 	private const double SkipSize = 64;
 	private const double SkipIconSize = 28;
@@ -20,6 +20,7 @@ public sealed class TransportRow : HorizontalStackLayout
 	private const double CompactPlaySize = 68;
 	private const double CompactPlayGlyphSize = 28;
 	private const double CompactGap = 20;
+	private const double RailGap = 12; // Slice 232 (mock Batch 44 frame 113): held sideways on a phone the three buttons stand in a column
 	public const double SidewaysHeight = CompactPlaySize + 4 + 12;
 
 	private readonly Border _previous = Circle(SkipSize);
@@ -29,9 +30,11 @@ public sealed class TransportRow : HorizontalStackLayout
 	private readonly IconView _previousIcon = SkipIcon(IconKind.SkipBack);
 	private readonly IconView _nextIcon = SkipIcon(IconKind.SkipForward);
 	private bool _compact;
+	private bool _rail;
 
 	public TransportRow()
 	{
+		Orientation = StackOrientation.Horizontal;
 		Spacing = Gap;
 		HorizontalOptions = LayoutOptions.Center;
 		Padding = new Thickness(0, 12, 0, 26);
@@ -62,10 +65,28 @@ public sealed class TransportRow : HorizontalStackLayout
 		}
 	}
 
+	/// <summary>Slice 232: the buttons stand in a column (the right-hand rail of a phone held sideways), centred in the height they are given. Use with <see cref="Compact"/>.</summary>
+	public bool Rail
+	{
+		get => _rail;
+		set
+		{
+			if (value == _rail)
+			{
+				return;
+			}
+
+			_rail = value;
+			Resize();
+		}
+	}
+
 	private void Resize()
 	{
-		Spacing = _compact ? CompactGap : Gap;
-		Padding = _compact ? new Thickness(0, 4, 0, 12) : new Thickness(0, 12, 0, 26);
+		Orientation = _rail ? StackOrientation.Vertical : StackOrientation.Horizontal;
+		VerticalOptions = _rail ? LayoutOptions.Center : LayoutOptions.End;
+		Spacing = _rail ? RailGap : _compact ? CompactGap : Gap;
+		Padding = _rail ? default : _compact ? new Thickness(0, 4, 0, 12) : new Thickness(0, 12, 0, 26);
 		Size(_previous, _compact ? CompactSkipSize : SkipSize);
 		Size(_next, _compact ? CompactSkipSize : SkipSize);
 		Size(_play, _compact ? CompactPlaySize : PlaySize);
