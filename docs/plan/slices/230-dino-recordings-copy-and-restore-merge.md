@@ -66,7 +66,7 @@ Not drawn: the intro's record step itself.
 - Copy: `Recordings_StayHere_Phone`, `_Tablet`, `_Device` (Desktop and other idioms say "this computer"), `Backup_SaveIncludes`, `Backup_Merged`, `Backup_RestoreBody` reworded; shown on the Record page, the intro record step and the Backup page. There are 15 resx files (base + 14 locales); the plan's "13" and the claim note's "16" were both wrong. Translations are machine-drafted.
 - Test hook `backup-recordings` in `Testing/DinoTestCommands.Backup.cs` (partial), flow `.maestro/dino/dino-backup-restore-recordings.yaml`.
 - Deviation from the mock: the info icon is not drawn (no `IconKind.Info`; `IconView.cs` is outside Touches).
-- Known limit: a kill after the files are moved but before `UpdateAsync` keeps the new audio with the old metadata (Seconds, Language) until the next restore.
+- Known limit: a kill after the files are moved but before `UpdateAsync` keeps the new audio with the old metadata (Seconds, Language) until the next restore. The next merge's `SweepLeftovers` (`StoryPackageReader.cs:171`) then deletes the phone's own `.bak` audio, because the new file is in place: the phone's take is gone, as the user's "backup wins per page" rule wanted, but its entry still carries the old take's Seconds and Language (check-pass finding 1; round 4 feedback loop).
 
 *From review* (`D:/ReadTheStupidText-worktrees/reviews/s230-high.md` and `s230-medium.md`, both read in full):
 
@@ -86,6 +86,7 @@ Not drawn: the intro's record step itself.
 - Medium 6 (orphan `.tmp` files): applied (swept at the next merge).
 - Medium 7 (third row shrinks the picture row): skipped; the mock draws the note inline.
 - Medium 8 (idiom chain, no switch default): skipped, style.
+- Check pass (`s230-check-medium.md`, nothing applied): 1 is the kill-mid-merge limit above (the sweep also deletes the phone's `.bak`); 2 disk-full on a new book counts as Damaged, not a failed restore (low); 3 a merged book does not refresh the shelf and a concurrent edit during restore is overwritten (low); 4 an IO error during rollback leaves `page-N.m4a.bak` until the next merge (low); 5 every present story is parsed even when the backup has no recordings (performance); 6 the result title counts merged books as "restored" (copy); 7 the note row on non-phone/tablet idioms may push controls off short screens (low).
 
 #### For CLAUDE.md (lifted 2026-11-01)
 
@@ -100,3 +101,4 @@ Not drawn: the intro's record step itself.
 - Windows head wording ("this computer").
 - The info icon (not drawn).
 - The failing-once check against the old APK (no old APK available), so the flow is not shown to fail before the change.
+- Native-speaker check of the new strings in the 14 machine-drafted locales (Farsi and Arabic right to left).

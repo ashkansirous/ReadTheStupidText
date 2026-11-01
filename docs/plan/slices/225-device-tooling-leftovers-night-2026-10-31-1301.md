@@ -129,4 +129,4 @@ Built 2026-11-01; device runs the same day are under *Device runs* above. Still 
 - Item 16 in the Debug app: the `[BookUpdate] ... forced entry dropped, recorded version put back` and `forced-apply mark expired` lines.
 - Item 3 (run-checks emulator path) not built.
 - Item 6: failed-build cause unknown (the log is now kept as `.failed.log`).
-- Item 17: the first CI run of the PSScriptAnalyzer step.
+- Item 21: a flow reading a TalkBack focus event (TalkBack turned on and off on the emulator; the focus event was not read).
