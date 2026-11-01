@@ -265,6 +265,7 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 231 | Dino user test: Record page hides the words on picture books (bug) | built | #666 | [231-dino-record-page-shows-words.md](docs/plan/slices/231-dino-record-page-shows-words.md) | [231-dino-record-page-shows-words.md](../slices/231-dino-record-page-shows-words.md) |
 | 228 | Dino user test: kids' shelf vs grown-ups' corner made obvious (labelled Grown-ups pill, sticky "Back to my child's shelf", "Read now" in the book sheet, one intro card) | built | #673 | | [228-dino-grownups-corner-clarity.md](../slices/228-dino-grownups-corner-clarity.md) |
 | 233 | "Download paused. Tap to finish." posts on the same events on Android and iOS (Slice 208 follow-up: Android also posts when the network drops in the background) | built | #672 | | [233-paused-notice-same-on-android-and-ios.md](../slices/233-paused-notice-same-on-android-and-ios.md) |
+| 237 | Dino: a silent back cover (credits page) at the end of every book, all 16 books, and a standing rule in create-dino-story | built | #688 | | [237-dino-back-cover-credits.md](../slices/237-dino-back-cover-credits.md) |
 
 
 ## Batch lane-order paragraphs moved from plan.md (2026-10-30)

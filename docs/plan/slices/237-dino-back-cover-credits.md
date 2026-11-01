@@ -1,6 +1,6 @@
 # Slice 237 — Dino: a silent back cover (credits page) at the end of every book
 
-*Built 2026-11-01, not merged. Android emulator back-cover flow passed; the checks under "Not yet verified" are open.* From the user, after "Freddy and the Slipper" shipped: "update the relevant skills to always
+*Built 2026-11-01, merged as PR #688 (0a206a23). Android emulator back-cover flow passed; the checks under "Not yet verified" are open.* From the user, after "Freddy and the Slipper" shipped: "update the relevant skills to always
 generate a back cover page. It should write the credits, basically who wrote the original story, and for the ones
 that was not written by me, you should write edited and made suitable for young kids by Ashkan Sirous (use better
 wording) and then next line should be the year and month. Illustration: Ashkan Sirous. like September 2026. The back
@@ -89,7 +89,7 @@ From review:
 - review read: D:\ReadTheStupidText-worktrees\reviews\s237-high.md, findings 11/11. Applied 1-6, 9, 10, 11. Finding 7 (old installed apps read, translate and count the back cover) is the accepted trade-off of this slice. Finding 8 (`BackCoverEnglish` duplicates English labels and month names from the resx; `Lines()` repeats the traditional branch) was skipped; the brief gave no reason.
 - review read: D:\ReadTheStupidText-worktrees\reviews\s237-medium.md, findings 8/8. Applied 1, 2, 4, 6, 7. Skipped: 3 (`SplitBackCover` drops a back cover silently when `TryCreate` fails, and a non-last-page `backCover` is read as a normal page), 5 (`JoinNames` chains "A and B and C" for 3+ names, wrong in list-comma languages; no book has 3 names today), 8 (the date shown is the Added month, so older books show the store-add month; info only, by design). Reasons for 3 and 5 were not given in the brief.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-01)
 
 - In `src/DinoReader.App/CLAUDE.md`: every `book.json` needs `storyBy` (and `retold` for classics). The back cover is never voiced or counted (not in `pageCount`, `minutes` or the sentence list). (Slice 237: docs/plan/slices/237-dino-back-cover-credits.md)
 

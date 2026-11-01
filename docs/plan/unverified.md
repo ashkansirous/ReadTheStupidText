@@ -2,6 +2,16 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count.
 
+### Slice 237: Dino back cover (credits page) ([slice](slices/237-dino-back-cover-credits.md))
+
+- Landscape layout of the back cover.
+- Farsi/Arabic right-to-left back cover and Persian digits.
+- Picture-only and text-only reading modes on a device.
+- Old installed app reading the page aloud without breaking.
+- iOS and Windows on a device (compile only).
+- The ar/ru/ja/zh labels by a native speaker.
+- Credit-line wrapping in long languages on a narrow phone (estimated, not measured).
+
 ### Slice 233: paused notice same on Android and iOS ([slice](slices/233-paused-notice-same-on-android-and-ios.md))
 
 - iOS on a device: the VoiceOver, TestFlight, iPhone and iPad hand checks (the user's answer: they do these later). Only the iOS compile was checked.
