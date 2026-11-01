@@ -61,3 +61,7 @@ so it should not take that much space. we can generate it on my machine. create 
 - Step 1: the listening page with every rendered service, and the user's answers written here.
 - Unit tests: hash matching, fallback to the device voice for an edited sentence, manifest parsing.
 - Android emulator and iOS: a store book plays pre-made clips with the highlight in step; an edited sentence falls back.
+
+## User answers before the night run (2026-11-01, evening)
+
+- Asked what the night should do with the paid listening test: "Build them all. I will provide the keys tomorrow". So tonight builds the render and generator code for every service in the Research list (one adapter per service, each reading its key from the secrets store and skipping cleanly when the key is missing), the piper-fa baseline render and the listening-page skeleton. No paid call runs tonight (there are no keys); the listening test and the pick wait for the keys.

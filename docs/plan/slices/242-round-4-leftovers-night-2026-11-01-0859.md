@@ -19,3 +19,7 @@
 #### Not yet verified
 
 (none yet; nothing built)
+
+## User answers before the night run (2026-11-01, evening)
+
+- Night sessions run in permission mode auto. Creating the tablet AVD (item 5) writes into the Android SDK outside the repo; if auto mode denies it, record the denied step here and park only item 5 and the checks that need the tablet.
