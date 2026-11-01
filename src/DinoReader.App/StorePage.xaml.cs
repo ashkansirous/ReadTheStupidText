@@ -431,7 +431,13 @@ public partial class StorePage : ContentPage, IGrownUpPage
 
 	private async void OnTryAgainClicked(object? sender, EventArgs e) => await _busy.RunAsync(LoadAsync);
 
-	private async void OnBackTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
+	/// <summary>Set by the intro wizard when it pushes this page: the header button then reads "Continue" (Slice 229). Back and Continue both pop; a download in progress keeps going.</summary>
+	public bool LaunchedFromIntro
+	{
+		set => Header.Continue = value;
+	}
+
+	private async void OnBackTapped(object? sender, EventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
 
 	private async void OnBackToStoriesClicked(object? sender, EventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
 }

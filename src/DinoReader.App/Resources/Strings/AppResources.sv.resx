@@ -26,6 +26,7 @@
   <data name="Common_Back" xml:space="preserve"><value>Tillbaka</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Spara</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Klar</value></data>
+  <data name="Common_Continue" xml:space="preserve"><value>Fortsätt</value></data>
   <data name="Close_Question" xml:space="preserve"><value>Stänga Dino Book Reader?</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>Stanna</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Stäng</value></data>

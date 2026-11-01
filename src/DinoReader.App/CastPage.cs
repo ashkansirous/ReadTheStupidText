@@ -23,7 +23,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private readonly IServiceProvider _services;
 	private readonly BusyGuard _busy = new();
 	private readonly VerticalStackLayout _body = new() { Padding = new Thickness(14, 0, 14, 14), Spacing = 10 };
-	private readonly Label _subtitle = new() { FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted) };
+	private readonly GrownUpHeader _header = new();
 	private readonly ContentView _languageChip = new() { Margin = new Thickness(14, 0, 14, 10) };
 	private readonly CastCharacterPicker _picker = new();
 	private readonly CastRowActions _actions;
@@ -66,7 +66,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	{
 		_story = story;
 		_persist = persist;
-		_subtitle.Text = story.Title;
+		_header.Subtitle = story.Title;
 	}
 
 	protected override async void OnAppearing()
@@ -154,27 +154,12 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		return _root;
 	}
 
-	private Grid BuildHeader()
+	private GrownUpHeader BuildHeader()
 	{
-		var back = new Border
-		{
-			WidthRequest = 44, HeightRequest = 44, StrokeThickness = 0, BackgroundColor = Colors.Transparent,
-			Content = new IconView { Kind = IconKind.Back, Color = DinoTokens.Get(DinoTokens.Ink), Size = 22, StrokeWidth = 2.6 },
-		};
-		SemanticProperties.SetDescription(back, CastText.Back);
-		CastViews.AddTap(back, () => _busy.RunAsync(() => Navigation.PopAsync()));
-		Label title = CastText.InOwnScriptAligned(new Label { Text = CastText.Title, FontSize = 20, FontAttributes = FontAttributes.Bold });
-		CastText.AlignWith(_subtitle, title);
-		SemanticProperties.SetHeadingLevel(title, SemanticHeadingLevel.Level1);
-		var header = new Grid
-		{
-			Padding = new Thickness(6, 8, 14, 8),
-			ColumnSpacing = 6,
-			ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)],
-		};
-		header.Add(back, 0);
-		header.Add(new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { title, _subtitle } }, 1);
-		return header;
+		_header.Title = CastText.Title;
+		_header.BackRequested += async (_, _) => await _busy.RunAsync(() => Navigation.PopAsync());
+		_header.DoneRequested += async (_, _) => await _busy.RunAsync(() => Navigation.PopAsync()); // every edit is saved as it is made, so Done and Back leave the same way
+		return _header;
 	}
 
 	// The housekeeping (a missing cast, a clash with the narrator) is only needed when the page opens or the narrator may have changed, not after each edit.

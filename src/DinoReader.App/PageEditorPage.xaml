@@ -12,19 +12,7 @@
     <!-- Rotate and crop one page (Slice 78): turn it in quarter turns and drag the corners of the frame to crop. No perspective
          correction (the document scanner already does that for scans). -->
     <Grid RowDefinitions="Auto,*,Auto">
-        <Grid x:Name="Header" ColumnDefinitions="Auto,*,Auto" Padding="8,10,16,10">
-            <Border WidthRequest="44" HeightRequest="44" BackgroundColor="Transparent" StrokeThickness="0"
-                    SemanticProperties.Description="{x:Static res:AppResources.Common_Back}">
-                <local:IconView Kind="Back" Color="{StaticResource Ink}" Size="22" StrokeWidth="2.6" />
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnBackTapped" />
-                </Border.GestureRecognizers>
-            </Border>
-            <Label Grid.Column="1" Text="{x:Static res:AppResources.Editor_Title}" FontSize="20" FontAttributes="Bold" VerticalOptions="Center"
-                   SemanticProperties.HeadingLevel="Level1" />
-            <Button Grid.Column="2" Text="{x:Static res:AppResources.Common_Done}" HeightRequest="38" CornerRadius="19" Padding="14,0" FontSize="13.5"
-                    BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnDoneClicked" />
-        </Grid>
+        <local:GrownUpHeader x:Name="Header" Title="{x:Static res:AppResources.Editor_Title}" BackRequested="OnBackTapped" DoneRequested="OnDoneClicked" />
 
         <Grid x:Name="Stage" Grid.Row="1" Margin="14,0" SizeChanged="OnStageSizeChanged">
             <Image x:Name="Preview" Aspect="AspectFit" />

@@ -24,6 +24,7 @@
   <data name="Common_Back" xml:space="preserve"><value>رجوع</value></data>
   <data name="Common_Save" xml:space="preserve"><value>حفظ</value></data>
   <data name="Common_Done" xml:space="preserve"><value>تم</value></data>
+  <data name="Common_Continue" xml:space="preserve"><value>متابعة</value></data>
   <data name="Close_Question" xml:space="preserve"><value>إغلاق Dino Book Reader؟</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>البقاء</value></data>
   <data name="Common_Close" xml:space="preserve"><value>إغلاق</value></data>
