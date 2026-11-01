@@ -599,3 +599,77 @@ Also read these files the selection imports:
 
 Implement: the selected files
 ```
+
+## Batch 45 mock — `Dino Reader Batch 45 Tablet Upright.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Batch 45 Tablet Upright.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+45+Tablet+Upright.dc.html>).
+- **Copied:** 2026-11-01, verbatim from `DesignSync get_file`. Its imports were already in this folder.
+- **Covers:** Slice 234 (tablet held upright, 804×1164 dp; 150 is a 10" Android at 800×1280) and Slice 237's
+  back cover (147-149): frames 133-150, drawn on top of Batch 44.
+
+| # | Screen (from `data-screen-label`) | Line |
+|---|---|---|
+| 133 | Shelf tablet portrait | 46 |
+| 134 | Reading tablet portrait | 57 |
+| 135 | Reading text only tablet portrait | 74 |
+| 137 | Gate tablet portrait | 90 |
+| 138 | First run tablet portrait | 104 |
+| 141 | Intro tablet portrait | 118 |
+| 139 | Corner tablet portrait | 138 |
+| 136 | Book sheet tablet portrait | 155 |
+| 140 | Settings tablet portrait | 171 |
+| 142 | Record tablet portrait | 190 |
+| 143 | Store tablet portrait | 202 |
+| 144 | Cast tablet portrait | 213 |
+| 145 | Page editor tablet portrait | 225 |
+| 146 | Backup tablet portrait | 231 |
+| 147 | Back cover tablet portrait | 249 |
+| 148 | Back cover phone landscape | 267 |
+| 149 | Back cover Farsi phone | 284 |
+| 150 | Reading Android 10 inch portrait | 302 |
+
+## Batch 46 mock — `Dino Reader Batch 46 Windows.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Batch 46 Windows.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+46+Windows.dc.html>).
+- **Copied:** 2026-11-01, verbatim from `DesignSync get_file`. Its imports were already in this folder.
+- **Covers:** Slice 235 (Dino on Windows as a real desktop window: size and minimum, title bar, keyboard,
+  hover, focus, wheel, tooltips; layouts reuse Batches 44 and 45 by window size): frames 151-160, 1 dp = 1 px.
+
+| # | Screen (from `data-screen-label`) | Line |
+|---|---|---|
+| 151 | Shelf Windows | 46 |
+| 152 | Reading Windows | 61 |
+| 153 | Reading Windows minimum | 90 |
+| 154 | Shelf Windows maximised | 110 |
+| 155 | Corner Windows | 130 |
+| 156 | Book sheet Windows | 152 |
+| 157 | Settings Windows | 174 |
+| 158a | Gate hold Windows | 196 |
+| 158b | Gate sum Windows | 203 |
+| 159 | States Windows | 221 |
+| 160 | Keyboard map Windows | 252 |
+
+Open both in a text editor (`support.js` is not copied). To refresh: fetch again with `DesignSync get_file`,
+overwrite the copy with a script, regenerate the table. Never call `DesignSync` to read visual values; read this copy.
+
+Import prompt for both (verbatim, 2026-11-01):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+46+Windows.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino Reader Batch 46 Windows.dc.html`
+- `Dino Reader Batch 45 Tablet Upright.dc.html`
+
+Also read these files the selection imports:
+- `assets/good-enough/cover.jpg`
+- `assets/three-little-pigs/5.jpg`
+- `assets/three-little-pigs/cover.jpg`
+- `assets/tortoise-and-hare/6.jpg`
+- `dino_reader_icons/ios/AppIcon-1024-light.png`
+
+Implement: the selected files
+```

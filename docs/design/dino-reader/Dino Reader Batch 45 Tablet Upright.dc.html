@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Andika:wght@400;700&family=Vazirmatn:wght@400;600&display=swap" rel="stylesheet">
+<style>html,body{margin:0;padding:0;background:#f3efe6;}*{box-sizing:border-box;}a{color:#5B57E8;}a:hover{color:#3f3bc4;}</style>
+</helmet>
+<section style="padding:48px 56px 80px;font-family:'Fredoka',system-ui,sans-serif;color:#2b2540">
+ <div style="max-width:1200px">
+  <div style="font-size:12px;font-weight:600;letter-spacing:2px;color:#5B57E8;text-transform:uppercase">Dino Reader · Batch 45 (Slice 234, plus Slice 237’s back cover) · 2026-11-01</div>
+  <div style="font-size:34px;font-weight:600;margin-top:6px">Tablets held upright, and the back cover</div>
+  <div style="font-size:15px;color:#5a5470;line-height:1.55;max-width:1000px;margin-top:10px;text-wrap:pretty">Drawn on top of <a href="Dino%20Reader%20Batch%2044%20Landscape.dc.html">Batch 44</a>. A tablet held upright (short side ≥ 600 dp, portrait) gets one rule per screen: <b>stack, don’t shrink</b>. Picture on top, work below, controls in a row at the foot; the phone’s boxes become centred cards sized for a tablet. Light only, never mirrored (Slice 96). Frames 133–150. Tablet frames are 804 × 1164 dp (iPad Air, 1×); 150 is a 10″ Android at 800 × 1280.</div>
+ </div>
+
+ <div style="display:flex;flex-wrap:wrap;gap:20px;margin-top:24px;align-items:stretch">
+  <div style="flex:1 1 440px;max-width:560px;padding:16px 18px;border-radius:16px;background:#FFF0EA;display:flex;flex-direction:column;gap:8px;font-size:13.5px;line-height:1.5;color:#3a3450">
+   <div style="font-size:12px;font-weight:700;letter-spacing:1.4px;color:#B4552F;text-transform:uppercase">For the review</div>
+   <div><b>1 · Four columns on an iPad Air?</b> At 804 dp, Batch 44’s ÷ 190 gives 3. I used a tablet divisor of 170 so it gives 4 (covers ~166 dp, still bigger than a phone’s). 3 on small 600–680 dp tablets.</div>
+   <div><b>2 · Reading picture height.</b> The picture panel takes 48% of the height and the art is fitted whole inside it (3:4 art leaves cream margins left and right). Or crop to fill the width?</div>
+   <div><b>3 · Back cover.</b> Built in Slice 237 without a mock. 147–149 draw it upright, in landscape and in Farsi; the build should be checked against them.</div>
+  </div>
+  <div style="flex:1 1 440px;max-width:600px;padding:16px 18px;border-radius:16px;background:#fff;display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.5;color:#3a3450">
+   <div style="font-size:12px;font-weight:700;letter-spacing:1.4px;color:#5B57E8;text-transform:uppercase">Layout rules for Core (extend Slice 232’s)</div>
+   <div><code>IsTabletPortrait(w,h)</code>: h ≥ w and w ≥ 600 dp.</div>
+   <div><code>ShelfLayout</code>: tablet portrait → columns = clamp(⌊(w − 80) ÷ 170⌋, 3, 6). Side padding 40 dp.</div>
+   <div><code>ReadingLayout.Stacked</code>: picture panel = 48% of h, art fitted whole; text below at 32 sp (36 in text only); controls row 64 / 84 / 64.</div>
+   <div><code>CardWidth</code>: sheets, gate and first run become centred cards: min(w − 80, 560 / 520 / 620).</div>
+   <div><code>SidePanes</code>: w ≥ 744 → corner rail (300) and Settings two panes, as 126 and 128.</div>
+   <div>Lists (Store, Cast) go to two columns; Backup to two cards side by side.</div>
+  </div>
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:#8a8399;text-transform:uppercase;margin-top:40px">Tablet upright · kids’ side</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">133 · Kids’ shelf · four columns</div>
+   <div data-screen-label="133 Shelf tablet portrait" style="width:820px;height:1180px;border-radius:40px;overflow:hidden;background:#FFF6E6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;padding:32px 40px 0">
+    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:52px;height:52px;border-radius:14px"><span style="flex:1;font-size:28px;font-weight:600">My stories</span><div style="height:52px;padding:0 18px 0 14px;border-radius:26px;background:rgba(43,37,64,.07);display:flex;align-items:center;gap:8px;color:#3a3450"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg><span style="font-size:17px;font-weight:600">Grown-ups</span></div></div>
+    <div style="flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,1fr);gap:28px 20px;align-content:start;margin-top:28px;overflow:hidden">
+     <sc-for list="{{ shelf16 }}" as="c" hint-placeholder-count="16"><div style="display:flex;flex-direction:column;gap:8px"><div style="aspect-ratio:3/4;border-radius:18px;overflow:hidden;box-shadow:0 5px 0 rgba(43,37,64,.08)"><img src="{{ c.src }}" style="width:100%;height:100%;object-fit:cover;display:block"></div><span style="font-size:17px;font-weight:600;line-height:1.25">{{ c.t }}</span></div></sc-for>
+    </div>
+   </div>
+   <div style="width:820px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Today’s fixed <code>Span="2"</code> makes two 340 dp covers. Four columns of ~166 dp covers fit three full rows and show the fourth peeking, so it reads as “scroll for more”. Titles wrap to two lines here (there is room). Header targets are 52 dp, as on tablet landscape.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">134 · Reading · Picture + text</div>
+   <div data-screen-label="134 Reading tablet portrait" style="width:820px;height:1180px;border-radius:40px;overflow:hidden;background:#FFF6E6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;padding:28px 40px 32px;gap:20px">
+    <div style="height:48%;flex-shrink:0;position:relative;border-radius:28px;background:#F0E8D8;display:flex;justify-content:center;overflow:hidden">
+     <img src="assets/tortoise-and-hare/6.jpg" style="height:100%;aspect-ratio:3/4;object-fit:cover;display:block">
+     <div style="position:absolute;left:12px;top:12px;display:flex;gap:6px;align-items:center;padding:4px;border-radius:28px;background:rgba(255,255,255,.92);box-shadow:0 2px 6px rgba(43,37,64,.18)"><div style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2b2540" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><div style="width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#5a5470"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5"></path></svg></div><div style="width:46px;height:46px;border-radius:14px;background:#ECE7FF;display:flex;align-items:center;justify-content:center;color:#5B57E8"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="10" rx="2.5"></rect><path d="M6 17h12"></path><path d="M6 20.5h8"></path></svg></div><div style="width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#5a5470"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 6h14"></path><path d="M5 10.5h14"></path><path d="M5 15h14"></path><path d="M5 19.5h9"></path></svg></div></div>
+    </div>
+    <div style="flex:1;min-height:0;background:#fff;border-radius:24px;padding:26px 32px;font-family:'Andika',system-ui,sans-serif;font-size:32px;line-height:1.55;text-wrap:pretty;box-shadow:0 4px 14px rgba(43,37,64,.08);overflow:hidden"><span style="color:#8a8399">The Hare ran so fast that he was soon far ahead. “I have lots of time,” he said, and he lay down under a tree. </span><span style="background:#FFE27A;border-radius:8px;box-shadow:0 0 0 4px #FFE27A">Soon he was fast asleep.</span><span> The Tortoise kept going, slow and steady.</span></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:40px;flex-shrink:0">
+     <div style="width:64px;height:64px;border-radius:50%;background:#ECE7FF;color:#5B57E8;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 4 12l7 7"></path><path d="M19 5l-7 7 7 7"></path></svg></div>
+     <div style="width:84px;height:84px;border-radius:50%;background:#FF7A59;display:flex;align-items:center;justify-content:center"><svg width="34" height="34" viewBox="0 0 16 16"><rect x="3.6" y="2.8" width="3" height="10.4" rx="1.3" fill="#fff"></rect><rect x="9.4" y="2.8" width="3" height="10.4" rx="1.3" fill="#fff"></rect></svg></div>
+     <div style="width:64px;height:64px;border-radius:50%;background:#ECE7FF;color:#5B57E8;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"></path><path d="M5 5l7 7-7 7"></path></svg></div>
+    </div>
+   </div>
+   <div style="width:820px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Today <code>ReadingLayoutRules.For</code> gives the phone’s <code>Upright</code> layout with a phone text size. Stacked: picture panel at 48% of the height, art fitted whole and centred, the chip on the panel’s top left; the text card below at 32 sp (phone: 22); the controls row at tablet sizes. The 30% card cap from Batch 25 doesn’t apply: the card never covers the picture.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">135 · Reading · Text only</div>
+   <div data-screen-label="135 Reading text only tablet portrait" style="width:820px;height:1180px;border-radius:40px;overflow:hidden;background:#FFF6E6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;padding:28px 40px 32px;gap:20px">
+    <div style="flex:1;min-height:0;position:relative;background:#fff;border-radius:28px;padding:96px 40px 28px;font-family:'Andika',system-ui,sans-serif;font-size:36px;line-height:1.6;text-wrap:pretty;box-shadow:0 4px 14px rgba(43,37,64,.08);overflow:hidden">
+     <div style="position:absolute;left:12px;top:12px;display:flex;gap:6px;align-items:center;padding:4px;border-radius:28px;background:#F3EFE6"><div style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2b2540" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><div style="width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#5a5470"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5"></path></svg></div><div style="width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#5a5470"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="10" rx="2.5"></rect><path d="M6 17h12"></path><path d="M6 20.5h8"></path></svg></div><div style="width:46px;height:46px;border-radius:14px;background:#fff;box-shadow:0 1px 4px rgba(43,37,64,.16);display:flex;align-items:center;justify-content:center;color:#5B57E8"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 6h14"></path><path d="M5 10.5h14"></path><path d="M5 15h14"></path><path d="M5 19.5h9"></path></svg></div></div>
+     <span style="color:#8a8399">Down the chimney slid the Wolf, splash! into a big tub of cold bath water. </span><span style="background:#FFE27A;border-radius:8px;box-shadow:0 0 0 4px #FFE27A">“Achoo!” he sneezed.</span><span> The three little pigs laughed and laughed, and the Wolf ran off into the woods and never came back again.</span>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:40px;flex-shrink:0">
+     <div style="width:64px;height:64px;border-radius:50%;background:#ECE7FF;color:#5B57E8;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 4 12l7 7"></path><path d="M19 5l-7 7 7 7"></path></svg></div>
+     <div style="width:84px;height:84px;border-radius:50%;background:#FF7A59;display:flex;align-items:center;justify-content:center"><svg width="34" height="34" viewBox="0 0 16 16"><rect x="3.6" y="2.8" width="3" height="10.4" rx="1.3" fill="#fff"></rect><rect x="9.4" y="2.8" width="3" height="10.4" rx="1.3" fill="#fff"></rect></svg></div>
+     <div style="width:64px;height:64px;border-radius:50%;background:#ECE7FF;color:#5B57E8;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"></path><path d="M5 5l7 7-7 7"></path></svg></div>
+    </div>
+   </div>
+   <div style="width:820px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">One tall card at 36 sp, the chip inside its top left as in 115. Play stays in the same place in all three views. Picture only (not drawn) fits the art whole in the full height above the same row.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">137 · Gate · a centred card</div>
+   <div data-screen-label="137 Gate tablet portrait" style="width:820px;height:1180px;border-radius:40px;overflow:hidden;background:#FFF6E6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;align-items:center;justify-content:center;padding:40px">
+    <div style="width:520px;background:#fff;border-radius:32px;padding:40px;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:0 8px 30px rgba(43,37,64,.1)">
+     <div style="width:72px;height:72px;border-radius:22px;background:#2b2540;display:flex;align-items:center;justify-content:center"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg></div>
+     <div style="font-size:17px;font-weight:600;color:#8a8399">For grown-ups</div>
+     <div style="font-size:44px;font-weight:600">What is 7 + 5?</div>
+     <div style="width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px"><sc-for list="{{ gateAnswers }}" as="a" hint-placeholder-count="6"><div style="height:80px;border-radius:22px;background:#F3EFE6;font-size:32px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ a }}</div></sc-for></div>
+     <div style="margin-top:12px;height:52px;padding:0 26px;border-radius:26px;background:#F3EFE6;font-size:17px;font-weight:600;display:flex;align-items:center">Back to the shelf</div>
+    </div>
+   </div>
+   <div style="width:820px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Today the box is capped at 260 dp and floats small. As a 520 dp card the answers grow to 80 dp. The hold step uses the same card with the ring (160 dp) where the answers are. First run (138) and the book sheet (136) share the card language.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">138 · First run · language</div>
+   <div data-screen-label="138 First run tablet portrait" style="width:820px;height:1180px;border-radius:40px;overflow:hidden;background:#FFF6E6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;align-items:center;justify-content:center;padding:40px">
+    <div style="width:620px;background:#fff;border-radius:32px;padding:40px;display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 30px rgba(43,37,64,.1)">
+     <img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:88px;height:88px;border-radius:24px">
+     <div style="font-size:34px;font-weight:600;line-height:1.2">Which language do you read in?</div>
+     <div style="font-size:17px;color:#5a5470">Dino downloads its voice next.</div>
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px"><sc-for list="{{ langs }}" as="l" hint-placeholder-count="14"><div style="height:56px;border-radius:16px;background:#F3EFE6;font-size:17px;font-weight:600;display:flex;align-items:center;padding:0 18px;box-shadow:{{ l.ring }}">{{ l.n }}</div></sc-for></div>
+     <div style="margin-top:8px;height:64px;border-radius:32px;background:#FF7A59;box-shadow:0 5px 0 #E2583A;color:#fff;font-size:19px;font-weight:600;display:flex;align-items:center;justify-content:center">Continue</div>
+    </div>
+   </div>
+   <div style="width:820px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">All 14 languages fit in two columns with no scroll. Today’s 290 dp box becomes a 620 dp card. The download and Ready pages keep the card and swap its content.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">141 · Intro · picture above the copy</div>
+   <div data-screen-label="141 Intro tablet portrait" style="width:820px;height:1180px;border-radius:40px;overflow:hidden;background:#FFF6E6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;padding:40px;gap:20px">
+    <div style="display:flex;align-items:center;gap:12px"><div style="display:flex;gap:7px"><div style="width:10px;height:10px;border-radius:50%;background:#5B57E8"></div><div style="width:26px;height:10px;border-radius:5px;background:#5B57E8"></div><div style="width:10px;height:10px;border-radius:50%;background:#d9d2c4"></div><div style="width:10px;height:10px;border-radius:50%;background:#d9d2c4"></div><div style="width:10px;height:10px;border-radius:50%;background:#d9d2c4"></div><div style="width:10px;height:10px;border-radius:50%;background:#d9d2c4"></div></div><span style="font-size:15px;font-weight:600;color:#8a8399">2 of 6</span><div style="flex:1"></div><span style="font-size:17px;font-weight:600;color:#5B57E8">Skip all</span></div>
+    <div style="height:520px;flex-shrink:0;border-radius:32px;background:#F0E8D8;position:relative;display:flex;align-items:center;justify-content:center">
+     <img src="assets/tortoise-and-hare/cover.jpg" style="width:250px;height:333px;object-fit:cover;border-radius:22px;box-shadow:0 12px 28px rgba(43,37,64,.24);transform:rotate(-4deg)">
+     <div style="position:absolute;right:150px;bottom:110px;width:84px;height:84px;border-radius:50%;background:#FF7A59;box-shadow:0 6px 0 #E2583A;display:flex;align-items:center;justify-content:center"><svg width="34" height="34" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l6.4 4.6c.4.3.4 1 0 1.3l-6.4 4.6c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg></div>
+    </div>
+    <div style="font-size:40px;font-weight:600;line-height:1.15;margin-top:8px">Read a story together</div>
+    <div style="font-size:19px;color:#5a5470;line-height:1.45;max-width:600px">Open The Tortoise and the Hare and press play. Dino reads; you turn the pages, or let it turn them.</div>
+    <div style="margin-top:auto;display:flex;gap:12px;align-items:center"><div style="height:56px;padding:0 24px;display:flex;align-items:center;font-size:17px;font-weight:600;color:#5a5470">Skip</div><div style="flex:1;height:64px;border-radius:32px;background:#FF7A59;box-shadow:0 5px 0 #E2583A;color:#fff;font-size:19px;font-weight:600;display:flex;align-items:center;justify-content:center">Try it</div></div>
+   </div>
+   <div style="width:820px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Step 101b. As Slice 232 says: the picture panel sits above the copy, buttons in one row at the foot. Other steps swap only the panel and copy. The copy is illustrative; keep 101b’s.</div>
+  </div>
+
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:#8a8399;text-transform:uppercase;margin-top:44px">Tablet upright · grown-ups’ side</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">139 · Grown-ups’ corner · rail</div>
+   <div data-screen-label="139 Corner tablet portrait" style="width:820px;height:1180px;border-radius:40px;overflow:hidden;background:#F3EFE6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex">
+    <div style="width:300px;flex-shrink:0;background:#2b2540;color:#fff;padding:36px 22px 36px 32px;display:flex;flex-direction:column;gap:16px">
+     <div style="display:flex;align-items:center;gap:10px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg><span style="flex:1;font-size:22px;font-weight:600;line-height:1.15">Grown-ups’ corner</span><div style="width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"></path></svg></div></div>
+     <div style="font-size:15px;color:#cfc6e6;line-height:1.45">Only grown-ups see this. Your child’s shelf is one tap away.</div>
+     <div style="height:56px;border-radius:18px;background:rgba(255,255,255,.1);font-size:16px;font-weight:600;display:flex;align-items:center;padding:0 18px;gap:10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF7A59" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add a book</div>
+     <div style="height:56px;border-radius:18px;background:#5B57E8;font-size:16px;font-weight:600;display:flex;align-items:center;padding:0 18px">Store</div>
+     <div style="margin-top:auto;height:60px;border-radius:30px;background:#FF7A59;box-shadow:0 5px 0 #E2583A;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;text-align:center;line-height:1.15;padding:0 14px"><svg width="18" height="18" viewBox="0 0 16 16" style="flex-shrink:0"><path d="M5 3.4c0-.6.7-1 1.2-.6l6.4 4.6c.4.3.4 1 0 1.3l-6.4 4.6c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg>Back to my child’s shelf</div>
+    </div>
+    <div style="flex:1;min-width:0;padding:36px 32px 0 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px 16px;align-content:start;overflow:hidden">
+     <sc-for list="{{ shelf15 }}" as="c" hint-placeholder-count="15"><div style="display:flex;flex-direction:column;gap:6px;position:relative"><div style="aspect-ratio:3/4;border-radius:14px;overflow:hidden"><img src="{{ c.src }}" style="width:100%;height:100%;object-fit:cover;display:block"></div><div style="position:absolute;right:6px;top:6px;width:34px;height:34px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(43,37,64,.2);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#2b2540"><circle cx="5.5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="18.5" cy="12" r="2"></circle></svg></div><span style="font-size:14px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+    </div>
+   </div>
+   <div style="width:820px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">126’s ink rail at 300 dp, as Slice 232 says for ≥ 744 dp. Store is solid indigo, as in Batch 43. Books in three columns beside it. Below 744 dp (small 7″ tablets) the phone’s header bar comes back.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">136 · Book sheet · a centred card</div>
+   <div data-screen-label="136 Book sheet tablet portrait" style="width:820px;height:1180px;border-radius:40px;overflow:hidden;background:#F3EFE6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);position:relative">
+    <div style="position:absolute;left:0;top:0;bottom:0;width:300px;background:#2b2540"></div>
+    <div style="position:absolute;inset:0;background:rgba(43,37,64,.5);display:flex;align-items:center;justify-content:center;padding:40px">
+     <div style="width:560px;background:#fff;border-radius:32px;padding:28px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;gap:20px;align-items:flex-end"><div style="width:170px;flex-shrink:0;aspect-ratio:3/4;border-radius:18px;overflow:hidden"><img src="assets/three-little-pigs/cover.jpg" style="width:100%;height:100%;object-fit:cover;display:block"></div><div style="display:flex;flex-direction:column;gap:4px;padding-bottom:6px"><span style="font-size:26px;font-weight:600;line-height:1.2">The Three Little Pigs</span><span style="font-size:15px;color:#8a8399">From the Store · 16 pages</span></div></div>
+      <div style="height:64px;border-radius:32px;background:#FF7A59;box-shadow:0 5px 0 #E2583A;color:#fff;font-size:19px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px"><svg width="20" height="20" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l6.4 4.6c.4.3.4 1 0 1.3l-6.4 4.6c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg>Read now</div>
+      <div style="background:#F3EFE6;border-radius:18px;padding:12px 16px;display:flex;align-items:center;gap:12px"><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:16px;font-weight:600">Read with my voice</span><span style="font-size:13.5px;color:#5a5470">3 of 16 pages recorded</span></div><div style="width:52px;height:32px;border-radius:16px;background:#5B57E8;position:relative"><div style="position:absolute;right:3px;top:3px;width:26px;height:26px;border-radius:50%;background:#fff"></div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px"><div style="height:52px;border-radius:26px;border:2px solid #c9c0f5;color:#5B57E8;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center">Record</div><div style="height:52px;border-radius:26px;border:2px solid #c9c0f5;color:#5B57E8;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center">Cast</div><div style="height:52px;border-radius:26px;color:#C8402A;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center">Remove</div></div>
+     </div>
+    </div>
+   </div>
+   <div style="width:820px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">A full-width bottom sheet on an 804 dp screen puts Read now 600 dp from the book you tapped. A 560 dp card in the middle, cover on top, keeps it within reach of both hands. Tapping outside closes it, as the sheet does.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">140 · Settings · two panes</div>
+   <div data-screen-label="140 Settings tablet portrait" style="width:820px;height:1180px;border-radius:40px;overflow:hidden;background:#F3EFE6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex">
+    <div style="width:300px;flex-shrink:0;padding:32px 16px 0 28px;display:flex;flex-direction:column;gap:12px;border-right:1px solid #e6dfd1">
+     <div style="display:flex;align-items:center;gap:6px"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><span style="font-size:24px;font-weight:600">Settings</span></div>
+     <div style="background:#fff;border-radius:18px;overflow:hidden"><sc-for list="{{ settingsAll }}" as="r" hint-placeholder-count="8"><div style="min-height:60px;padding:6px 14px;display:flex;flex-direction:column;justify-content:center;border-bottom:1px solid #efe9dd;background:{{ r.bg }}"><span style="font-size:16px;font-weight:{{ r.w }};color:{{ r.fg }}">{{ r.l }}</span><span style="font-size:13px;font-weight:600;color:#8a8399">{{ r.v }}</span></div></sc-for></div>
+    </div>
+    <div style="flex:1;min-width:0;padding:32px 32px 0 24px;display:flex;flex-direction:column;gap:16px">
+     <div style="display:flex;align-items:center;gap:8px;height:48px"><span style="flex:1;font-size:24px;font-weight:600">Reading speed</span><div style="height:48px;padding:0 24px;border-radius:24px;background:#5B57E8;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center">Done</div></div>
+     <div style="background:#fff;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:17px;font-weight:600">Reading speed</span><span style="font-size:14px;color:#5a5470">Slower is easier for little ones</span></div><span style="font-size:20px;font-weight:700;color:#5B57E8">0.8x</span><div style="width:52px;height:52px;border-radius:50%;background:#ECE7FF;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l5.4 4.1c.4.3.4 1 0 1.3l-5.4 4.1c-.5.4-1.2 0-1.2-.6z" fill="#5B57E8"></path></svg></div></div>
+      <div style="position:relative;height:44px;display:flex;align-items:center"><div style="position:absolute;left:0;right:0;height:10px;border-radius:5px;background:#ECE7FF"></div><div style="position:absolute;left:0;width:42.86%;height:10px;border-radius:5px;background:#5B57E8"></div><div style="position:absolute;left:calc(42.86% - 16px);width:32px;height:32px;border-radius:50%;background:#fff;border:3px solid #5B57E8;box-shadow:0 2px 6px rgba(43,37,64,.2)"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:#8a8399;margin-top:-6px"><span>0.5x · slow</span><span>1.2x</span></div>
+     </div>
+    </div>
+   </div>
+   <div style="width:820px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">118 / 128’s two panes at 300 dp + the rest. The list shows each row’s value under its name (the pane is narrower than 128’s), so nothing ellipses. Same behaviour: a row swaps the right pane, Done closes Settings.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">142 · Record · picture above the words</div>
+   <div data-screen-label="142 Record tablet portrait" style="width:820px;height:1180px;border-radius:40px;overflow:hidden;background:#F3EFE6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;padding:28px 40px 32px;gap:16px">
+    <div style="display:flex;align-items:center;gap:6px;margin-left:-10px"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:24px;font-weight:600">Record</span><span style="font-size:14px;color:#8a8399">The Three Little Pigs · page 5 of 16</span></div><div style="height:48px;padding:0 24px;border-radius:24px;background:#5B57E8;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center">Done</div></div>
+    <div style="height:400px;flex-shrink:0;border-radius:24px;background:#E6DFD1;display:flex;justify-content:center;overflow:hidden"><img src="assets/three-little-pigs/5.jpg" style="height:100%;aspect-ratio:3/4;object-fit:cover;display:block"></div>
+    <div style="flex:1;min-height:0;background:#fff;border-radius:20px;padding:24px 28px;font-family:'Andika',sans-serif;font-size:30px;line-height:1.55;text-wrap:pretty">Down the chimney slid the Wolf, splash! into a big tub of cold bath water. “Achoo!” he sneezed. The three little pigs laughed and laughed.</div>
+    <div style="font-size:14px;color:#5a5470;line-height:1.45">Your recordings stay on this tablet. Keep a copy: Settings → Backup.</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><div style="width:104px;height:104px;border-radius:50%;background:#E5484D;box-shadow:0 8px 0 #B9363A;display:flex;align-items:center;justify-content:center"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11a6.5 6.5 0 0013 0"></path><path d="M12 17.5V21"></path></svg></div><span style="font-size:15px;color:#5a5470">Tap and read aloud</span></div>
+   </div>
+   <div style="width:820px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Header with Done (Batch 43), the page’s picture, the words (Slice 231) at 30 sp, the recordings line (230) and the mic centred at the foot.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">143 · Store · two columns</div>
+   <div data-screen-label="143 Store tablet portrait" style="width:820px;height:1180px;border-radius:40px;overflow:hidden;background:#F3EFE6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;padding:28px 40px 0">
+    <div style="display:flex;align-items:center;gap:6px;margin-left:-10px;flex-shrink:0"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:24px;font-weight:600">Store</span><span style="font-size:14px;color:#8a8399">Picked and cast for Dino</span></div><div style="height:48px;padding:0 24px;border-radius:24px;background:#5B57E8;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center">Done</div></div>
+    <div style="flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-content:start;padding-top:20px;overflow:hidden">
+     <sc-for list="{{ store }}" as="s" hint-placeholder-count="8"><div style="background:#fff;border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:14px"><div style="width:90px;aspect-ratio:3/4;border-radius:12px;overflow:hidden;flex-shrink:0;background:{{ s.bg }}"><img src="{{ s.src }}" style="width:100%;height:100%;object-fit:cover;display:block"></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><span style="font-size:17px;font-weight:600;line-height:1.2">{{ s.t }}</span><span style="font-size:13.5px;color:#8a8399">{{ s.m }}</span></div></div><div style="height:48px;border-radius:24px;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;background:{{ s.btnBg }};color:{{ s.btnFg }}">{{ s.a }}</div></div></sc-for>
+    </div>
+   </div>
+   <div style="width:820px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Two columns of taller cards (90 dp covers) with the action as a full-width button, so it isn’t a 40 dp target at the far edge of a wide row.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">144 · Cast · two columns</div>
+   <div data-screen-label="144 Cast tablet portrait" style="width:820px;height:1180px;border-radius:40px;overflow:hidden;background:#F3EFE6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;padding:28px 40px 0">
+    <div style="display:flex;align-items:center;gap:6px;margin-left:-10px;flex-shrink:0"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:24px;font-weight:600">Who’s speaking</span><span style="font-size:14px;color:#8a8399">The Three Little Pigs</span></div><div style="height:48px;padding:0 24px;border-radius:24px;background:#5B57E8;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center">Done</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start;padding-top:20px">
+     <sc-for list="{{ cast }}" as="p" hint-placeholder-count="6"><div style="background:#fff;border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:12px"><div style="width:52px;height:52px;border-radius:50%;background:{{ p.c }};color:#fff;font-size:20px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{ p.i }}</div><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:16px;font-weight:600">{{ p.n }}</span><span style="font-size:14px;color:#5a5470">{{ p.v }}</span></div><div style="width:48px;height:48px;border-radius:50%;background:#ECE7FF;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l5.4 4.1c.4.3.4 1 0 1.3l-5.4 4.1c-.5.4-1.2 0-1.2-.6z" fill="#5B57E8"></path></svg></div></div></sc-for>
+    </div>
+   </div>
+   <div style="width:820px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">119’s two-column grid at tablet sizes. The picker sheet (53) opens as a centred card like 136.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">145 · Page editor and 146 · Backup</div>
+   <div style="display:flex;gap:24px">
+    <div data-screen-label="145 Page editor tablet portrait" style="width:820px;height:1180px;border-radius:40px;overflow:hidden;background:#F3EFE6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;padding:28px 40px 32px;gap:16px">
+     <div style="display:flex;align-items:center;gap:6px;margin-left:-10px"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:24px;font-weight:600">Edit pages</span><span style="font-size:14px;color:#8a8399">Our holiday · page 3 of 8</span></div><div style="height:48px;padding:0 24px;border-radius:24px;background:#5B57E8;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center">Done</div></div>
+     <div style="height:440px;flex-shrink:0;border-radius:24px;background:#E6DFD1;position:relative;display:flex;justify-content:center;overflow:hidden"><img src="assets/good-enough/3.jpg" style="height:100%;aspect-ratio:3/4;object-fit:cover;display:block"><div style="position:absolute;left:14px;bottom:14px;height:48px;padding:0 18px;border-radius:24px;background:#fff;font-size:15px;font-weight:600;display:flex;align-items:center">Change picture</div></div>
+     <div style="flex:1;min-height:0;background:#fff;border-radius:18px;border:2px solid #5B57E8;padding:18px 22px;font-family:'Andika',sans-serif;font-size:26px;line-height:1.5">On the last day we built a big sandcastle with a moat, and the sea came in and filled it up.<span style="display:inline-block;width:2px;height:28px;background:#5B57E8;vertical-align:-5px;margin-left:1px"></span></div>
+     <div style="display:flex;gap:12px;align-items:center"><div style="width:56px;height:56px;border-radius:28px;background:#ECE7FF;display:flex;align-items:center;justify-content:center;color:#5B57E8"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><div style="width:56px;height:56px;border-radius:28px;background:#ECE7FF;display:flex;align-items:center;justify-content:center;color:#5B57E8"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></div><div style="flex:1"></div><div style="height:56px;padding:0 14px;display:flex;align-items:center;font-size:16px;font-weight:600;color:#C8402A">Delete page</div></div>
+    </div>
+    <div data-screen-label="146 Backup tablet portrait" style="width:820px;height:1180px;border-radius:40px;overflow:hidden;background:#F3EFE6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;padding:28px 40px 32px;gap:20px">
+     <div style="display:flex;align-items:center;gap:6px;margin-left:-10px"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><span style="flex:1;font-size:24px;font-weight:600">Backup</span><div style="height:48px;padding:0 24px;border-radius:24px;background:#5B57E8;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center">Done</div></div>
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div style="background:#fff;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:10px;min-height:300px"><span style="font-size:20px;font-weight:600">Back up</span><span style="font-size:15px;color:#5a5470;line-height:1.5">Saves every book, picture and recording into one file you keep. Dino keeps no copy online.</span><div style="margin-top:auto;height:56px;border-radius:28px;background:#5B57E8;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center">Save a backup</div></div>
+      <div style="background:#fff;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:10px;min-height:300px"><span style="font-size:20px;font-weight:600">Restore</span><span style="font-size:15px;color:#5a5470;line-height:1.5">Brings books and recordings back from a file. Books already here keep their pages and get the recordings back.</span><div style="margin-top:auto;height:56px;border-radius:28px;border:2px solid #c9c0f5;color:#5B57E8;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center">Choose a file</div></div>
+     </div>
+    </div>
+   </div>
+   <div style="width:1664px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Page editor: picture on top with Change picture, the field below; with the keyboard up the picture collapses to a 120 dp strip so the field keeps five lines. Backup: 124’s two cards side by side at the top of the page, nothing stretched to full height.</div>
+  </div>
+
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:#8a8399;text-transform:uppercase;margin-top:44px">Back cover (Slice 237) · upright, landscape, Farsi</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">147 · Back cover · tablet upright</div>
+   <div data-screen-label="147 Back cover tablet portrait" style="width:820px;height:1180px;border-radius:40px;overflow:hidden;background:#E3EED3;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;padding:28px 40px 32px;gap:20px">
+    <div style="display:flex"><div style="display:flex;gap:6px;align-items:center;padding:4px;border-radius:28px;background:rgba(255,255,255,.92)"><div style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2b2540" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div></div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;text-align:center">
+     <img src="assets/tortoise-and-hare/cover.jpg" style="width:240px;aspect-ratio:3/4;object-fit:cover;border-radius:22px;box-shadow:0 12px 28px rgba(43,37,64,.2)">
+     <div style="font-size:28px;font-weight:600">The Tortoise and the Hare</div>
+     <div style="display:flex;flex-direction:column;gap:10px;font-size:22px;line-height:1.35;color:#3a3450"><span>Original story by Aesop</span><span>Retold for young readers by Ashkan Sirous</span><span>Illustration: Ashkan Sirous</span><span style="color:#5a5470">November 2026</span></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:40px;flex-shrink:0">
+     <div style="width:64px;height:64px;border-radius:50%;background:#fff;color:#5B57E8;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 4 12l7 7"></path><path d="M19 5l-7 7 7 7"></path></svg></div>
+     <div style="width:84px;height:84px;border-radius:50%;background:#FF7A59;display:flex;align-items:center;justify-content:center"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"></path><path d="M4 4v4.5h4.5"></path></svg></div>
+     <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.5);color:rgba(91,87,232,.35);display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"></path><path d="M5 5l7 7-7 7"></path></svg></div>
+    </div>
+   </div>
+   <div style="width:820px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">The book’s colour, the cover, the title, then the credit lines centred (20 sp in the build; 22 here on a tablet). No highlight, no view switch (there is no text to switch). Play becomes <b>Read again</b> (the restart arrow, since play restarts from sentence 0); next is dimmed. On a phone upright it is the same stack, smaller.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">148 · Back cover · phone landscape</div>
+   <div data-screen-label="148 Back cover phone landscape" style="width:772px;height:372px;border-radius:34px;overflow:hidden;background:#FBE3D2;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;padding:12px 26px 12px 34px;gap:14px">
+    <div style="display:flex;flex-direction:column"><div style="display:flex;gap:6px;align-items:center;padding:3px;border-radius:24px;background:rgba(255,255,255,.92)"><div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2b2540" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div></div></div>
+    <div style="flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:26px">
+     <img src="assets/three-little-pigs/cover.jpg" style="height:250px;aspect-ratio:3/4;object-fit:cover;border-radius:18px;box-shadow:0 10px 24px rgba(43,37,64,.2)">
+     <div style="display:flex;flex-direction:column;gap:8px;font-size:17px;line-height:1.35;color:#3a3450;max-width:300px"><span style="font-size:21px;font-weight:600;color:#2b2540">The Three Little Pigs</span><span>A traditional tale</span><span>Retold for young readers by Ashkan Sirous</span><span>Illustration: Ashkan Sirous</span><span style="color:#5a5470">November 2026</span></div>
+    </div>
+    <div style="width:68px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+     <div style="width:52px;height:52px;border-radius:50%;background:#fff;color:#5B57E8;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 4 12l7 7"></path><path d="M19 5l-7 7 7 7"></path></svg></div>
+     <div style="width:68px;height:68px;border-radius:50%;background:#FF7A59;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"></path><path d="M4 4v4.5h4.5"></path></svg></div>
+     <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.5);color:rgba(91,87,232,.35);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"></path><path d="M5 5l7 7-7 7"></path></svg></div>
+    </div>
+   </div>
+   <div style="width:772px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Stacking would shrink the cover to a stamp at 360 dp. In landscape the cover goes left and the lines right, left-aligned, in one middle column; the chip and the rail stay where 113 has them. Credit lines at 17 sp, inside the build’s 13–20 range.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">149 · Back cover · Farsi, phone</div>
+   <div data-screen-label="149 Back cover Farsi phone" style="width:402px;height:856px;border-radius:44px;overflow:hidden;background:#FBE3D2;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;padding:54px 22px 30px;gap:16px">
+    <div style="display:flex"><div style="display:flex;gap:6px;align-items:center;padding:3px;border-radius:24px;background:rgba(255,255,255,.92)"><div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2b2540" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><div style="width:34px;height:34px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 2px #fff"><svg width="100%" height="100%" viewBox="0 0 42 24" preserveAspectRatio="xMidYMid slice" style="display:block"><rect width="42" height="8" fill="#239F40"></rect><rect y="8" width="42" height="8" fill="#fff"></rect><rect y="16" width="42" height="8" fill="#DA0000"></rect></svg></div></div></div>
+    <div dir="rtl" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;font-family:'Vazirmatn',system-ui,sans-serif">
+     <img src="assets/three-little-pigs/cover.jpg" style="width:190px;aspect-ratio:3/4;object-fit:cover;border-radius:18px;box-shadow:0 10px 24px rgba(43,37,64,.2)">
+     <div style="font-size:23px;font-weight:600">سه بچه‌خوک</div>
+     <div style="display:flex;flex-direction:column;gap:10px;font-size:18px;line-height:1.6;color:#3a3450"><span>قصه‌ای قدیمی</span><span>بازنویسی برای کودکان: اشکان سیروس</span><span>تصویرگری: اشکان سیروس</span><span style="color:#5a5470">نوامبر ۲۰۲۶</span></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:28px">
+     <div style="width:56px;height:56px;border-radius:50%;background:#fff;color:#5B57E8;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 4 12l7 7"></path><path d="M19 5l-7 7 7 7"></path></svg></div>
+     <div style="width:76px;height:76px;border-radius:50%;background:#FF7A59;display:flex;align-items:center;justify-content:center"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"></path><path d="M4 4v4.5h4.5"></path></svg></div>
+     <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.5);color:rgba(91,87,232,.35);display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"></path><path d="M5 5l7 7-7 7"></path></svg></div>
+    </div>
+   </div>
+   <div style="width:402px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Only the credit lines run right to left, in Vazirmatn with Persian digits (۲۰۲۶); chip and controls don’t mirror (Slice 96). Names are not translated. The Farsi labels here are drafts for <code>farsi-review</code>.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">150 · Reading · 10″ Android upright (800 × 1280)</div>
+   <div data-screen-label="150 Reading Android 10 inch portrait" style="width:816px;height:1296px;border-radius:36px;overflow:hidden;background:#FFF6E6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;padding:28px 40px 32px;gap:20px">
+    <div style="height:48%;flex-shrink:0;position:relative;border-radius:28px;background:#F0E8D8;display:flex;justify-content:center;overflow:hidden">
+     <img src="assets/good-enough/2.jpg" style="height:100%;aspect-ratio:3/4;object-fit:cover;display:block">
+     <div style="position:absolute;left:12px;top:12px;display:flex;gap:6px;align-items:center;padding:4px;border-radius:28px;background:rgba(255,255,255,.92);box-shadow:0 2px 6px rgba(43,37,64,.18)"><div style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2b2540" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><div style="width:46px;height:46px;border-radius:14px"></div><div style="width:46px;height:46px;border-radius:14px;background:#ECE7FF"></div><div style="width:46px;height:46px;border-radius:14px"></div></div>
+    </div>
+    <div style="flex:1;min-height:0;background:#fff;border-radius:24px;padding:26px 32px;font-family:'Andika',system-ui,sans-serif;font-size:32px;line-height:1.55;text-wrap:pretty;box-shadow:0 4px 14px rgba(43,37,64,.08);overflow:hidden"><span style="color:#8a8399">Mo wanted to be the best at everything. </span><span style="background:#FFE27A;border-radius:8px;box-shadow:0 0 0 4px #FFE27A">But today, his tower fell down,</span><span> and that was okay.</span></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:40px;flex-shrink:0">
+     <div style="width:64px;height:64px;border-radius:50%;background:#ECE7FF"></div>
+     <div style="width:84px;height:84px;border-radius:50%;background:#FF7A59;display:flex;align-items:center;justify-content:center"><svg width="34" height="34" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l6.4 4.6c.4.3.4 1 0 1.3l-6.4 4.6c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg></div>
+     <div style="width:64px;height:64px;border-radius:50%;background:#ECE7FF"></div>
+    </div>
+   </div>
+   <div style="width:816px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">The same rules on the taller 16:10 Android: the 48% panel is taller, so the art fills more of it; the text card gains two lines. Nothing else changes, which is the point of the rule functions.</div>
+  </div>
+
+ </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const C = [
+      { src: 'assets/good-enough/cover.jpg', t: 'Good Enough' },
+      { src: 'assets/three-little-pigs/cover.jpg', t: 'The Three Little Pigs' },
+      { src: 'assets/gingerbread-man/cover.jpg', t: 'The Gingerbread Man' },
+      { src: 'assets/tortoise-and-hare/cover.jpg', t: 'The Tortoise and the Hare' },
+    ];
+    const rep = n => Array.from({ length: n }, (_, i) => C[i % C.length]);
+    const on = { bg: '#F7F5FF', w: 600, fg: '#5B57E8' };
+    const off = { bg: '#fff', w: 400, fg: '#2b2540' };
+    const rows = [
+      ['Language', 'English'], ['Story languages', 'EN, FA'], ['Narrator voice', 'Story Granny'],
+      ['Reading speed', '0.8x'], ['Animal sounds', 'On'], ['Backup', 'Last: yesterday'], ['Usage counts', 'On'], ['About & updates', 'Up to date'],
+    ];
+    const get = { a: 'Get', btnBg: '#5B57E8', btnFg: '#fff' };
+    const empty = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+    return {
+      shelf15: rep(15), shelf16: rep(16),
+      gateAnswers: ['10', '12', '13', '9', '11', '14'],
+      langs: ['English', 'Deutsch', 'Español', 'فارسی', 'Français', 'Nederlands', 'Norsk', 'Suomi', 'Svenska', 'Dansk', 'Português', 'العربية', 'Русский', '中文']
+        .map((n, i) => ({ n, ring: i === 0 ? 'inset 0 0 0 2.5px #5B57E8' : 'none' })),
+      store: [
+        { src: C[2].src, bg: '#eee', t: 'The Gingerbread Man', m: '12 pages · 6 min', a: 'On the shelf', btnBg: '#E8F5E9', btnFg: '#2E7D32' },
+        { src: C[3].src, bg: '#eee', t: 'The Tortoise and the Hare', m: '10 pages · 5 min', a: 'Downloading 62%', btnBg: '#ECE7FF', btnFg: '#3f3bc4' },
+        { src: empty, bg: '#FFC24D', t: 'The Lion and the Mouse', m: '8 pages · 4 min', ...get },
+        { src: empty, bg: '#7FD0FF', t: 'The Tale of Peter Rabbit', m: '15 pages · 8 min', ...get },
+        { src: empty, bg: '#FF7A9C', t: 'Goldilocks and the Three Bears', m: '12 pages · 6 min', ...get },
+        { src: empty, bg: '#8BD38A', t: 'The Three Billy Goats Gruff', m: '10 pages · 5 min', ...get },
+        { src: empty, bg: '#B8A6FF', t: 'Freddy and the Slipper', m: '14 pages · 7 min', ...get },
+        { src: empty, bg: '#FFB38A', t: 'Little Red Riding Hood', m: '12 pages · 6 min', ...get },
+      ],
+      settingsAll: rows.map(([l, v], i) => ({ l, v, ...(i === 3 ? on : off) })),
+      cast: [
+        { n: 'Narrator', v: 'Story Granny', c: '#5B57E8', i: 'N' },
+        { n: 'The Wolf', v: 'Big Bear · growly', c: '#8a8399', i: 'W' },
+        { n: 'First little pig', v: 'Pip · small', c: '#FF7A9C', i: '1' },
+        { n: 'Second little pig', v: 'Poppy · bright', c: '#FF9F5A', i: '2' },
+        { n: 'Third little pig', v: 'Percy · calm', c: '#4FC060', i: '3' },
+        { n: 'Mother pig', v: 'Bedtime Mum', c: '#B8A6FF', i: 'M' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

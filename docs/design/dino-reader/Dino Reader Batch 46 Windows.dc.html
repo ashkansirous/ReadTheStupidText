@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Andika:wght@400;700&display=swap" rel="stylesheet">
+<style>html,body{margin:0;padding:0;background:#e9e4da;}*{box-sizing:border-box;}a{color:#5B57E8;}a:hover{color:#3f3bc4;}</style>
+</helmet>
+<section style="padding:48px 56px 80px;font-family:'Fredoka',system-ui,sans-serif;color:#2b2540">
+ <div style="max-width:1200px">
+  <div style="font-size:12px;font-weight:600;letter-spacing:2px;color:#5B57E8;text-transform:uppercase">Dino Reader · Batch 46 (Slice 235) · 2026-11-01</div>
+  <div style="font-size:34px;font-weight:600;margin-top:6px">Dino on Windows: a real desktop window</div>
+  <div style="font-size:15px;color:#5a5470;line-height:1.55;max-width:1000px;margin-top:10px;text-wrap:pretty">Today the window opens at WinUI’s default size, shrinks to anything, and only answers touch. This batch gives it a size, a minimum, a title bar in Dino’s colours, and keyboard, hover, focus, wheel and tooltips on every page. The layouts are the phone and tablet ones from <a href="Dino%20Reader%20Batch%2044%20Landscape.dc.html">Batch 44</a> and <a href="Dino%20Reader%20Batch%2045%20Tablet%20Upright.dc.html">Batch 45</a>, picked by the window’s size: no Windows-only layouts. Light only, never mirrored. Frames 151–162, drawn at 1 dp = 1 px (100% scaling).</div>
+ </div>
+
+ <div style="display:flex;flex-wrap:wrap;gap:20px;margin-top:24px;align-items:stretch">
+  <div style="flex:1 1 440px;max-width:560px;padding:16px 18px;border-radius:16px;background:#FFF0EA;display:flex;flex-direction:column;gap:8px;font-size:13.5px;line-height:1.5;color:#3a3450">
+   <div style="font-size:12px;font-weight:700;letter-spacing:1.4px;color:#B4552F;text-transform:uppercase">For the review</div>
+   <div><b>1 · Minimum 800 × 560, not 720 × 540.</b> At 720 the reading card next to a whole picture is ~240 dp wide (about 18 letters a line at 22 sp). 800 × 560 keeps 113’s proportions (153). Opening size 1100 × 760 as planned.</div>
+   <div><b>2 · The gate sum by keyboard:</b> type the answer and press Enter (158), rather than number keys 1–6 for the six buttons, so a child mashing keys gets no easier guess than tapping.</div>
+   <div><b>3 · Title bar:</b> cream on kids’ pages, paper on grown-up pages, with Windows’ own caption buttons (the red close hover is Windows’, not ours).</div>
+  </div>
+  <div style="flex:1 1 440px;max-width:600px;padding:16px 18px;border-radius:16px;background:#fff;display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.5;color:#3a3450">
+   <div style="font-size:12px;font-weight:700;letter-spacing:1.4px;color:#5B57E8;text-transform:uppercase">Window → layout (Core, unit-tested)</div>
+   <div><code>WindowLayout(w, h)</code> on the content area (window minus the 32 px title bar):</div>
+   <div>• h &gt; w and w ≥ 600 → <b>tablet upright</b> (Batch 45).</div>
+   <div>• w ≥ h and w &lt; 960 → <b>phone landscape</b> rules (Batch 44, 110–124), except the shelf is a grid, not a sideways row.</div>
+   <div>• w ≥ 960 → <b>tablet landscape</b> (125–130). Above 1600 content is capped at 1600 and centred.</div>
+   <div>Opening 1100 × 760 → tablet landscape. Minimum 800 × 560 → phone landscape. Maximised 1920 × 1080 → tablet landscape, capped.</div>
+   <div>The window remembers size, place and maximised state; if the saved place is off every screen it opens centred on the main one.</div>
+  </div>
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:#8a8399;text-transform:uppercase;margin-top:40px">Opening size · 1100 × 760</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">151 · Kids’ shelf · hover on a book</div>
+   <div data-screen-label="151 Shelf Windows" style="width:1100px;height:760px;border-radius:8px;overflow:hidden;background:#FFF6E6;border:1px solid #c9c2b4;box-shadow:0 24px 60px rgba(43,37,64,.28);display:flex;flex-direction:column">
+    <div style="height:32px;flex-shrink:0;display:flex;align-items:center;background:#FFF6E6"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:16px;height:16px;border-radius:4px;margin:0 10px 0 14px"><span style="flex:1;font-size:12.5px;font-weight:500;color:#3a3450">Dino Reader</span><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:1px;background:#2b2540"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:10px;border:1px solid #2b2540"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#2b2540">✕</div></div>
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:16px 40px 0;position:relative">
+     <div style="display:flex;align-items:center;gap:12px;flex-shrink:0"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:48px;height:48px;border-radius:13px"><span style="flex:1;font-size:26px;font-weight:600">My stories</span><div style="height:48px;padding:0 18px 0 14px;border-radius:24px;background:rgba(43,37,64,.07);display:flex;align-items:center;gap:8px;color:#3a3450"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg><span style="font-size:16px;font-weight:600">Grown-ups</span></div></div>
+     <div style="flex:1;min-height:0;display:grid;grid-template-columns:repeat(5,1fr);gap:22px 20px;align-content:start;margin-top:20px;overflow:hidden">
+      <sc-for list="{{ shelfHover }}" as="c" hint-placeholder-count="10"><div style="display:flex;flex-direction:column;gap:8px;transform:{{ c.lift }}"><div style="aspect-ratio:3/4;border-radius:18px;overflow:hidden;box-shadow:{{ c.shadow }}"><img src="{{ c.src }}" style="width:100%;height:100%;object-fit:cover;display:block"></div><span style="font-size:16px;font-weight:600;line-height:1.25">{{ c.t }}</span></div></sc-for>
+     </div>
+     <div style="position:absolute;right:6px;top:84px;bottom:12px;width:6px;border-radius:3px;background:rgba(43,37,64,.06)"><div style="height:46%;border-radius:3px;background:rgba(43,37,64,.28)"></div></div>
+    </div>
+   </div>
+   <div style="width:1100px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Tablet landscape (125) at 1100 dp: five columns. <b>Hover</b> on a book lifts it 4 dp with a deeper shadow (the second cover); the pointer becomes a hand. The <b>wheel</b> scrolls the grid; a thin scroll bar shows only while the mouse is over the window. The title bar is cream to match the page, with the app icon and name; caption buttons are the system’s.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">152 · Reading · tooltip on next</div>
+   <div data-screen-label="152 Reading Windows" style="width:1100px;height:760px;border-radius:8px;overflow:hidden;background:#FFF6E6;border:1px solid #c9c2b4;box-shadow:0 24px 60px rgba(43,37,64,.28);display:flex;flex-direction:column">
+    <div style="height:32px;flex-shrink:0;display:flex;align-items:center;background:#FFF6E6"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:16px;height:16px;border-radius:4px;margin:0 10px 0 14px"><span style="flex:1;font-size:12.5px;font-weight:500;color:#3a3450">The Tortoise and the Hare · Dino Reader</span><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:1px;background:#2b2540"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:10px;border:1px solid #2b2540"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#2b2540">✕</div></div>
+    <div style="flex:1;min-height:0;display:flex;padding:16px 40px 24px;gap:24px">
+     <div style="height:100%;aspect-ratio:3/4;flex-shrink:0;position:relative;border-radius:22px;overflow:hidden"><img src="assets/tortoise-and-hare/6.jpg" style="width:100%;height:100%;object-fit:cover;display:block">
+      <div style="position:absolute;left:12px;top:12px;display:flex;gap:6px;align-items:center;padding:4px;border-radius:28px;background:rgba(255,255,255,.92);box-shadow:0 2px 6px rgba(43,37,64,.18)"><div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2b2540" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><div style="width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;color:#5a5470"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5"></path></svg></div><div style="width:42px;height:42px;border-radius:13px;background:#ECE7FF;display:flex;align-items:center;justify-content:center;color:#5B57E8"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="10" rx="2.5"></rect><path d="M6 17h12"></path><path d="M6 20.5h8"></path></svg></div><div style="width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;color:#5a5470"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 6h14"></path><path d="M5 10.5h14"></path><path d="M5 15h14"></path><path d="M5 19.5h9"></path></svg></div></div>
+     </div>
+     <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:18px">
+      <span style="font-size:22px;font-weight:600;padding:4px 4px 0">The Tortoise and the Hare</span>
+      <div style="flex:1;min-height:0;background:#fff;border-radius:22px;padding:24px 28px;font-family:'Andika',system-ui,sans-serif;font-size:28px;line-height:1.55;text-wrap:pretty;box-shadow:0 4px 14px rgba(43,37,64,.08);overflow:hidden"><span style="color:#8a8399">The Hare ran so fast that he was soon far ahead. “I have lots of time,” he said, and he lay down under a tree. </span><span style="background:#FFE27A;border-radius:8px;box-shadow:0 0 0 4px #FFE27A">Soon he was fast asleep.</span><span> The Tortoise kept going, slow and steady.</span></div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:32px;flex-shrink:0;position:relative">
+       <div style="width:60px;height:60px;border-radius:50%;background:#ECE7FF;color:#5B57E8;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 4 12l7 7"></path><path d="M19 5l-7 7 7 7"></path></svg></div>
+       <div style="width:80px;height:80px;border-radius:50%;background:#FF7A59;display:flex;align-items:center;justify-content:center"><svg width="32" height="32" viewBox="0 0 16 16"><rect x="3.6" y="2.8" width="3" height="10.4" rx="1.3" fill="#fff"></rect><rect x="9.4" y="2.8" width="3" height="10.4" rx="1.3" fill="#fff"></rect></svg></div>
+       <div style="width:60px;height:60px;border-radius:50%;background:#DCD5FF;color:#3f3bc4;display:flex;align-items:center;justify-content:center;position:relative"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"></path><path d="M5 5l7 7-7 7"></path></svg>
+        <div style="position:absolute;bottom:72px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#2b2540;color:#fff;font-size:13px;font-weight:500;padding:6px 10px;border-radius:8px;display:flex;gap:8px;align-items:center">Next page<span style="font-size:11.5px;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,.16)">→</span></div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div style="width:1100px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">127 at 1100 × 728. The title bar names the book. Hovering an icon-only button darkens its fill one step (<code>#ECE7FF → #DCD5FF</code>) and, after 500 ms, shows a <b>tooltip</b> with its key. Space plays or pauses, ← → turn pages, Esc goes back. The wheel over the text card scrolls it (the auto-scroll of 91 resumes on the next sentence).</div>
+  </div>
+
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:#8a8399;text-transform:uppercase;margin-top:44px">Minimum and maximised</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">153 · Reading · minimum 800 × 560</div>
+   <div data-screen-label="153 Reading Windows minimum" style="width:800px;height:560px;border-radius:8px;overflow:hidden;background:#FFF6E6;border:1px solid #c9c2b4;box-shadow:0 24px 60px rgba(43,37,64,.28);display:flex;flex-direction:column">
+    <div style="height:32px;flex-shrink:0;display:flex;align-items:center;background:#FFF6E6"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:16px;height:16px;border-radius:4px;margin:0 10px 0 14px"><span style="flex:1;font-size:12.5px;font-weight:500;color:#3a3450">The Three Little Pigs · Dino Reader</span><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:1px;background:#2b2540"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:10px;border:1px solid #2b2540"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#2b2540">✕</div></div>
+    <div style="flex:1;min-height:0;display:flex;padding:14px 20px 16px 24px;gap:14px">
+     <div style="height:100%;max-width:40%;aspect-ratio:3/4;flex-shrink:0;position:relative;border-radius:18px;overflow:hidden"><img src="assets/three-little-pigs/5.jpg" style="width:100%;height:100%;object-fit:cover;display:block">
+      <div style="position:absolute;left:8px;top:8px;display:flex;gap:4px;align-items:center;padding:3px;border-radius:24px;background:rgba(255,255,255,.92);box-shadow:0 2px 6px rgba(43,37,64,.18)"><div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2b2540" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><div style="width:36px;height:36px;border-radius:12px;color:#5a5470;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5"></path></svg></div><div style="width:36px;height:36px;border-radius:12px;background:#ECE7FF;color:#5B57E8;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="10" rx="2.5"></rect><path d="M6 17h12"></path><path d="M6 20.5h8"></path></svg></div><div style="width:36px;height:36px;border-radius:12px;color:#5a5470;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 6h14"></path><path d="M5 10.5h14"></path><path d="M5 15h14"></path><path d="M5 19.5h9"></path></svg></div></div>
+     </div>
+     <div style="flex:1;min-width:0;background:#fff;border-radius:20px;padding:18px 20px;font-family:'Andika',system-ui,sans-serif;font-size:22px;line-height:1.55;text-wrap:pretty;box-shadow:0 4px 14px rgba(43,37,64,.08);overflow:hidden"><span style="color:#8a8399">Down the chimney slid the Wolf, splash! into a big tub of cold bath water. </span><span style="background:#FFE27A;border-radius:8px;box-shadow:0 0 0 4px #FFE27A">“Achoo!”</span><span> he sneezed. The three little pigs laughed and laughed, and the Wolf ran off into the woods.</span></div>
+     <div style="width:68px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+      <div style="width:52px;height:52px;border-radius:50%;background:#ECE7FF;color:#5B57E8;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 4 12l7 7"></path><path d="M19 5l-7 7 7 7"></path></svg></div>
+      <div style="width:68px;height:68px;border-radius:50%;background:#FF7A59;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 16 16"><rect x="3.6" y="2.8" width="3" height="10.4" rx="1.3" fill="#fff"></rect><rect x="9.4" y="2.8" width="3" height="10.4" rx="1.3" fill="#fff"></rect></svg></div>
+      <div style="width:52px;height:52px;border-radius:50%;background:#ECE7FF;color:#5B57E8;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"></path><path d="M5 5l7 7-7 7"></path></svg></div>
+     </div>
+    </div>
+   </div>
+   <div style="width:800px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Content 800 × 528, under 960 wide → phone-landscape rules (113): picture capped at 40% of the width here, rail on the right, card at 22 sp with ~30 letters a line. Narrower than this the card would drop under 20 letters, so 800 is the floor. Shelf at this size: four columns, grid (not 110’s sideways row; a mouse wheel scrolls down).</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">154 · Shelf · maximised 1920 × 1080 (shown at 55%)</div>
+   <div style="width:1056px;height:594px;overflow:hidden;border-radius:4px;box-shadow:0 24px 60px rgba(43,37,64,.28)">
+    <div data-screen-label="154 Shelf Windows maximised" style="width:1920px;height:1080px;transform:scale(.55);transform-origin:0 0;background:#FFF6E6;display:flex;flex-direction:column">
+     <div style="height:32px;flex-shrink:0;display:flex;align-items:center;background:#FFF6E6"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:16px;height:16px;border-radius:4px;margin:0 10px 0 14px"><span style="flex:1;font-size:12.5px;font-weight:500;color:#3a3450">Dino Reader</span><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:1px;background:#2b2540"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:10px;border:1px solid #2b2540;box-shadow:2px -2px 0 -1px #FFF6E6,2px -2px 0 0 #2b2540"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#2b2540">✕</div></div>
+     <div style="flex:1;min-height:0;width:1600px;margin:0 auto;display:flex;flex-direction:column;padding-top:24px">
+      <div style="display:flex;align-items:center;gap:12px;flex-shrink:0"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:52px;height:52px;border-radius:14px"><span style="flex:1;font-size:28px;font-weight:600">My stories</span><div style="height:52px;padding:0 18px 0 14px;border-radius:26px;background:rgba(43,37,64,.07);display:flex;align-items:center;gap:8px;color:#3a3450"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg><span style="font-size:17px;font-weight:600">Grown-ups</span></div></div>
+      <div style="flex:1;min-height:0;display:grid;grid-template-columns:repeat(6,1fr);gap:28px 24px;align-content:start;margin-top:26px;overflow:hidden">
+       <sc-for list="{{ shelf12 }}" as="c" hint-placeholder-count="12"><div style="display:flex;flex-direction:column;gap:10px"><div style="aspect-ratio:3/4;border-radius:22px;overflow:hidden;box-shadow:0 5px 0 rgba(43,37,64,.08)"><img src="{{ c.src }}" style="width:100%;height:100%;object-fit:cover;display:block"></div><span style="font-size:19px;font-weight:600;line-height:1.25">{{ c.t }}</span></div></sc-for>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div style="width:1056px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Maximised: content capped at 1600 dp and centred, six columns (the rule’s maximum), covers ~245 dp. The cream runs edge to edge so the margins don’t read as empty bars. Reading maximised uses 127 inside the same 1600 cap, text at 32 sp.</div>
+  </div>
+
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:#8a8399;text-transform:uppercase;margin-top:44px">Grown-ups’ side and the gate · 1100 × 760</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">155 · Grown-ups’ corner · hover and tooltip</div>
+   <div data-screen-label="155 Corner Windows" style="width:1100px;height:760px;border-radius:8px;overflow:hidden;background:#F3EFE6;border:1px solid #c9c2b4;box-shadow:0 24px 60px rgba(43,37,64,.28);display:flex;flex-direction:column">
+    <div style="height:32px;flex-shrink:0;display:flex;align-items:center;background:#2b2540;color:#fff"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:16px;height:16px;border-radius:4px;margin:0 10px 0 14px"><span style="flex:1;font-size:12.5px;font-weight:500;color:#cfc6e6">Grown-ups’ corner · Dino Reader</span><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:1px;background:#fff"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:10px;border:1px solid #fff"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px">✕</div></div>
+    <div style="flex:1;min-height:0;display:flex">
+     <div style="width:320px;flex-shrink:0;background:#2b2540;color:#fff;padding:12px 22px 24px 32px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:10px;position:relative"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg><span style="flex:1;font-size:22px;font-weight:600">Grown-ups’ corner</span><div style="width:44px;height:44px;border-radius:13px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"></path></svg></div>
+       <div style="position:absolute;right:-30px;top:52px;white-space:nowrap;background:#fff;color:#2b2540;font-size:13px;font-weight:500;padding:6px 10px;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:2">Settings</div>
+      </div>
+      <div style="font-size:14.5px;color:#cfc6e6;line-height:1.45">Only grown-ups see this. Your child’s shelf is one click away.</div>
+      <div style="height:52px;border-radius:16px;background:rgba(255,255,255,.1);font-size:16px;font-weight:600;display:flex;align-items:center;padding:0 18px;gap:10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF7A59" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add a book</div>
+      <div style="height:52px;border-radius:16px;background:#5B57E8;font-size:16px;font-weight:600;display:flex;align-items:center;padding:0 18px">Store</div>
+      <div style="margin-top:auto;height:56px;border-radius:28px;background:#FF7A59;box-shadow:0 5px 0 #E2583A;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px"><svg width="18" height="18" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l6.4 4.6c.4.3.4 1 0 1.3l-6.4 4.6c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg>Back to my child’s shelf</div>
+     </div>
+     <div style="flex:1;min-width:0;padding:20px 40px 0 28px;display:grid;grid-template-columns:repeat(4,1fr);gap:18px;align-content:start;overflow:hidden">
+      <sc-for list="{{ cornerHover }}" as="c" hint-placeholder-count="8"><div style="display:flex;flex-direction:column;gap:6px;position:relative"><div style="aspect-ratio:3/4;border-radius:14px;overflow:hidden;box-shadow:{{ c.ring }}"><img src="{{ c.src }}" style="width:100%;height:100%;object-fit:cover;display:block"></div><div style="position:absolute;right:6px;top:6px;width:34px;height:34px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(43,37,64,.2);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#2b2540"><circle cx="5.5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="18.5" cy="12" r="2"></circle></svg></div><span style="font-size:14px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+     </div>
+    </div>
+   </div>
+   <div style="width:1100px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">126 at 1100 dp, four book columns. On grown-up pages the title bar takes the rail’s ink, so the corner reads as a different place from the window’s edge in. Gear hovered: fill steps up and its tooltip appears. A book hovered shows an indigo ring; right-click on a book opens the same book sheet as ⋯ (156). “Tap” in the copy becomes “click” on Windows.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">156 · Book sheet · keyboard focus on Read now</div>
+   <div data-screen-label="156 Book sheet Windows" style="width:1100px;height:760px;border-radius:8px;overflow:hidden;background:#F3EFE6;border:1px solid #c9c2b4;box-shadow:0 24px 60px rgba(43,37,64,.28);display:flex;flex-direction:column;position:relative">
+    <div style="height:32px;flex-shrink:0;display:flex;align-items:center;background:#2b2540;color:#fff"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:16px;height:16px;border-radius:4px;margin:0 10px 0 14px"><span style="flex:1;font-size:12.5px;font-weight:500;color:#cfc6e6">Grown-ups’ corner · Dino Reader</span><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:1px;background:#fff"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:10px;border:1px solid #fff"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px">✕</div></div>
+    <div style="flex:1;position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:320px;background:#2b2540"></div>
+     <div style="position:absolute;inset:0;background:rgba(43,37,64,.5);display:flex;align-items:center;justify-content:center">
+      <div style="width:600px;background:#fff;border-radius:28px;padding:20px;display:flex;gap:20px;position:relative">
+       <div style="position:absolute;right:14px;top:14px;width:40px;height:40px;border-radius:50%;background:#F3EFE6;display:flex;align-items:center;justify-content:center;font-size:15px;color:#5a5470">✕</div>
+       <div style="width:160px;flex-shrink:0;aspect-ratio:3/4;border-radius:16px;overflow:hidden;align-self:flex-start"><img src="assets/three-little-pigs/cover.jpg" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+       <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;flex-direction:column;padding-right:44px"><span style="font-size:21px;font-weight:600;line-height:1.2">The Three Little Pigs</span><span style="font-size:13.5px;color:#8a8399">From the Store</span></div>
+        <div style="height:56px;border-radius:28px;background:#FF7A59;box-shadow:0 0 0 3px #fff,0 0 0 6px #5B57E8;color:#fff;font-size:17px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="18" height="18" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l6.4 4.6c.4.3.4 1 0 1.3l-6.4 4.6c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg>Read now</div>
+        <div style="background:#F3EFE6;border-radius:16px;padding:10px 14px;display:flex;align-items:center;gap:10px"><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:15px;font-weight:600">Read with my voice</span><span style="font-size:12.5px;color:#5a5470">3 of 16 pages recorded</span></div><div style="width:48px;height:30px;border-radius:15px;background:#5B57E8;position:relative"><div style="position:absolute;right:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff"></div></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><div style="height:46px;border-radius:23px;border:2px solid #c9c0f5;color:#5B57E8;font-size:14.5px;font-weight:600;display:flex;align-items:center;justify-content:center">Record</div><div style="height:46px;border-radius:23px;border:2px solid #c9c0f5;color:#5B57E8;font-size:14.5px;font-weight:600;display:flex;align-items:center;justify-content:center">Cast</div><div style="height:46px;border-radius:23px;color:#C8402A;font-size:14.5px;font-weight:600;display:flex;align-items:center;justify-content:center">Remove</div></div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div style="width:1100px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">112’s centred card. Opening it puts keyboard focus on <b>Read now</b>; the focus ring is 3 dp indigo with a 3 dp white gap, on every focusable thing, shown only after a key press (mouse clicks don’t show it). Tab order: Read now → voice switch → Record → Cast → Remove → close. Esc or a click outside closes and returns focus to the book. A close button is added because a mouse user has no swipe-down.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">157 · Settings · Tab through the list</div>
+   <div data-screen-label="157 Settings Windows" style="width:1100px;height:760px;border-radius:8px;overflow:hidden;background:#F3EFE6;border:1px solid #c9c2b4;box-shadow:0 24px 60px rgba(43,37,64,.28);display:flex;flex-direction:column">
+    <div style="height:32px;flex-shrink:0;display:flex;align-items:center;background:#F3EFE6"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:16px;height:16px;border-radius:4px;margin:0 10px 0 14px"><span style="flex:1;font-size:12.5px;font-weight:500;color:#3a3450">Settings · Dino Reader</span><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:1px;background:#2b2540"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:10px;border:1px solid #2b2540"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;background:#C42B1C;color:#fff;font-size:14px">✕</div></div>
+    <div style="flex:1;min-height:0;display:flex">
+     <div style="width:360px;flex-shrink:0;padding:16px 20px 0 32px;display:flex;flex-direction:column;gap:12px;border-right:1px solid #e6dfd1">
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><span style="font-size:22px;font-weight:600">Settings</span></div>
+      <div style="background:#fff;border-radius:18px;padding:4px;display:flex;flex-direction:column;gap:2px"><sc-for list="{{ settingsFocus }}" as="r" hint-placeholder-count="8"><div style="min-height:50px;padding:0 14px;border-radius:14px;display:flex;align-items:center;gap:8px;background:{{ r.bg }};box-shadow:{{ r.ring }}"><span style="flex:1;font-size:15px;font-weight:{{ r.w }};color:{{ r.fg }}">{{ r.l }}</span><span style="font-size:14px;font-weight:600;color:#8a8399">{{ r.v }}</span></div></sc-for></div>
+     </div>
+     <div style="flex:1;min-width:0;padding:16px 40px 0 28px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:8px;height:44px"><span style="flex:1;font-size:22px;font-weight:600">Reading speed</span><div style="height:44px;padding:0 22px;border-radius:22px;background:#5B57E8;color:#fff;font-size:15px;font-weight:600;display:flex;align-items:center">Done</div></div>
+      <div style="background:#fff;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px;max-width:640px">
+       <div style="display:flex;align-items:center;gap:10px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:16px;font-weight:600">Reading speed</span><span style="font-size:13.5px;color:#5a5470">Slower is easier for little ones · ← → to change</span></div><span style="font-size:19px;font-weight:700;color:#5B57E8">0.8x</span></div>
+       <div style="position:relative;height:44px;display:flex;align-items:center"><div style="position:absolute;left:0;right:0;height:8px;border-radius:4px;background:#ECE7FF"></div><div style="position:absolute;left:0;width:42.86%;height:8px;border-radius:4px;background:#5B57E8"></div><div style="position:absolute;left:calc(42.86% - 15px);width:30px;height:30px;border-radius:50%;background:#fff;border:3px solid #5B57E8"></div></div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div style="width:1100px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Up and down arrows move through the rows (the focus ring, on Story languages here), Enter or → opens a row in the right pane, Tab moves into that pane. Every row is reachable, Slice 205’s gap included. Hovering a row tints it like the selected one, lighter. Also shown: the system close button’s red hover on the paper title bar.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">158 · Gate · hold, then the sum by keyboard</div>
+   <div style="display:flex;gap:24px">
+    <div data-screen-label="158a Gate hold Windows" style="width:700px;height:520px;border-radius:8px;overflow:hidden;background:#FFF6E6;border:1px solid #c9c2b4;box-shadow:0 24px 60px rgba(43,37,64,.28);display:flex;flex-direction:column">
+     <div style="height:32px;flex-shrink:0;display:flex;align-items:center;background:#FFF6E6"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:16px;height:16px;border-radius:4px;margin:0 10px 0 14px"><span style="flex:1;font-size:12.5px;font-weight:500;color:#3a3450">Dino Reader</span><div style="width:46px;height:32px"></div><div style="width:46px;height:32px"></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px">✕</div></div>
+     <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:48px;padding:0 48px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:10px"><div style="font-size:15px;font-weight:600;color:#8a8399">For grown-ups</div><div style="font-size:30px;font-weight:600;line-height:1.2">Hold the button for 3 seconds</div><div style="font-size:15px;color:#5a5470;line-height:1.45">With the mouse, or hold the <span style="display:inline-block;padding:0 8px;border-radius:6px;border:1.5px solid #c9c2b4;border-bottom-width:3px;font-size:13px;font-weight:600;background:#fff">Space</span> bar.</div><div style="margin-top:8px;align-self:flex-start;height:44px;padding:0 20px;border-radius:22px;background:#F3EFE6;font-size:15px;font-weight:600;display:flex;align-items:center">Back to the shelf</div></div>
+      <div style="width:180px;height:180px;border-radius:50%;background:conic-gradient(#5B57E8 0 62%,#ECE7FF 62% 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:148px;height:148px;border-radius:50%;background:#2b2540;display:flex;align-items:center;justify-content:center"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg></div></div>
+     </div>
+    </div>
+    <div data-screen-label="158b Gate sum Windows" style="width:700px;height:520px;border-radius:8px;overflow:hidden;background:#FFF6E6;border:1px solid #c9c2b4;box-shadow:0 24px 60px rgba(43,37,64,.28);display:flex;flex-direction:column">
+     <div style="height:32px;flex-shrink:0;display:flex;align-items:center;background:#FFF6E6"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:16px;height:16px;border-radius:4px;margin:0 10px 0 14px"><span style="flex:1;font-size:12.5px;font-weight:500;color:#3a3450">Dino Reader</span><div style="width:46px;height:32px"></div><div style="width:46px;height:32px"></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px">✕</div></div>
+     <div style="flex:1;display:flex;align-items:center;gap:40px;padding:0 48px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:10px"><div style="font-size:15px;font-weight:600;color:#8a8399">For grown-ups</div><div style="font-size:34px;font-weight:600">What is 7 + 5?</div><div style="display:flex;align-items:center;gap:10px;margin-top:4px"><div style="width:120px;height:56px;border-radius:16px;background:#fff;box-shadow:0 0 0 3px #FFF6E6,0 0 0 6px #5B57E8;font-size:28px;font-weight:600;display:flex;align-items:center;padding:0 16px">1<span style="display:inline-block;width:2px;height:28px;background:#5B57E8;margin-left:2px"></span></div><span style="font-size:14px;color:#5a5470">Type it, then <span style="display:inline-block;padding:0 8px;border-radius:6px;border:1.5px solid #c9c2b4;border-bottom-width:3px;font-size:13px;font-weight:600;background:#fff">Enter</span></span></div><div style="margin-top:8px;align-self:flex-start;height:44px;padding:0 20px;border-radius:22px;background:#F3EFE6;font-size:15px;font-weight:600;display:flex;align-items:center">Back to the shelf</div></div>
+      <div style="width:270px;flex-shrink:0;display:grid;grid-template-columns:repeat(3,1fr);gap:10px"><sc-for list="{{ gateAnswers }}" as="a" hint-placeholder-count="6"><div style="height:64px;border-radius:18px;background:#fff;box-shadow:0 3px 0 rgba(43,37,64,.08);font-size:26px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ a }}</div></sc-for></div>
+     </div>
+    </div>
+   </div>
+   <div style="width:1424px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Shown at 700 × 520 to save room; at any size it is 122’s split. Hold: a mouse press-and-hold or holding Space fills the ring; letting go empties it, as touch does today. Sum: the field has focus, number keys type, Enter checks; the six buttons still work with the mouse. A wrong answer clears the field and shows a new sum, as now.</div>
+  </div>
+
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:#8a8399;text-transform:uppercase;margin-top:44px">States and keys</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">159 · Hover, pressed and focus states</div>
+   <div data-screen-label="159 States Windows" style="width:760px;background:#fff;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:22px;box-shadow:0 10px 30px rgba(43,37,64,.12)">
+    <div style="display:grid;grid-template-columns:110px repeat(4,1fr);gap:14px;align-items:center;font-size:12.5px;color:#8a8399;font-weight:600">
+     <span></span><span>Rest</span><span>Hover</span><span>Pressed</span><span>Keyboard focus</span>
+     <span style="color:#3a3450">Book</span>
+     <div style="width:84px;aspect-ratio:3/4;border-radius:12px;overflow:hidden;box-shadow:0 4px 0 rgba(43,37,64,.08)"><img src="assets/good-enough/cover.jpg" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+     <div style="width:84px;aspect-ratio:3/4;border-radius:12px;overflow:hidden;transform:translateY(-4px);box-shadow:0 12px 22px rgba(43,37,64,.22)"><img src="assets/good-enough/cover.jpg" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+     <div style="width:84px;aspect-ratio:3/4;border-radius:12px;overflow:hidden;transform:scale(.97);box-shadow:0 2px 0 rgba(43,37,64,.08)"><img src="assets/good-enough/cover.jpg" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+     <div style="width:84px;aspect-ratio:3/4;border-radius:12px;overflow:hidden;box-shadow:0 0 0 3px #fff,0 0 0 6px #5B57E8"><img src="assets/good-enough/cover.jpg" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+     <span style="color:#3a3450">Main button</span>
+     <div style="height:48px;border-radius:24px;background:#FF7A59;box-shadow:0 4px 0 #E2583A;color:#fff;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center">Read now</div>
+     <div style="height:48px;border-radius:24px;background:#FF8E70;box-shadow:0 4px 0 #E2583A;color:#fff;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center">Read now</div>
+     <div style="height:48px;border-radius:24px;background:#E2583A;transform:translateY(3px);box-shadow:0 1px 0 #C8402A;color:#fff;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center">Read now</div>
+     <div style="height:48px;border-radius:24px;background:#FF7A59;box-shadow:0 0 0 3px #fff,0 0 0 6px #5B57E8;color:#fff;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center">Read now</div>
+     <span style="color:#3a3450">Icon button</span>
+     <div style="width:52px;height:52px;border-radius:50%;background:#ECE7FF;color:#5B57E8;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"></path><path d="M5 5l7 7-7 7"></path></svg></div>
+     <div style="width:52px;height:52px;border-radius:50%;background:#DCD5FF;color:#3f3bc4;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"></path><path d="M5 5l7 7-7 7"></path></svg></div>
+     <div style="width:52px;height:52px;border-radius:50%;background:#c9c0f5;color:#3f3bc4;display:flex;align-items:center;justify-content:center;transform:scale(.95)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"></path><path d="M5 5l7 7-7 7"></path></svg></div>
+     <div style="width:52px;height:52px;border-radius:50%;background:#ECE7FF;color:#5B57E8;box-shadow:0 0 0 3px #fff,0 0 0 6px #5B57E8;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"></path><path d="M5 5l7 7-7 7"></path></svg></div>
+     <span style="color:#3a3450">On ink</span>
+     <div style="width:48px;height:48px;border-radius:14px;background:#2b2540;box-shadow:inset 0 0 0 48px rgba(255,255,255,.12)"></div>
+     <div style="width:48px;height:48px;border-radius:14px;background:#2b2540;box-shadow:inset 0 0 0 48px rgba(255,255,255,.22)"></div>
+     <div style="width:48px;height:48px;border-radius:14px;background:#2b2540;box-shadow:inset 0 0 0 48px rgba(255,255,255,.3)"></div>
+     <div style="width:48px;height:48px;border-radius:14px;background:#2b2540;box-shadow:inset 0 0 0 48px rgba(255,255,255,.12),0 0 0 3px #2b2540,0 0 0 6px #FFC24D"></div>
+    </div>
+    <div style="display:flex;gap:16px;align-items:center;border-top:1px solid #efe9dd;padding-top:18px"><span style="width:110px;font-size:12.5px;font-weight:600;color:#3a3450">Tooltip</span><div style="background:#2b2540;color:#fff;font-size:13px;font-weight:500;padding:6px 10px;border-radius:8px;display:flex;gap:8px;align-items:center">Play / pause<span style="font-size:11.5px;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,.16)">Space</span></div><span style="font-size:12.5px;color:#5a5470;line-height:1.4;flex:1">Ink on paper, white on ink pages. 500 ms delay, key shown when there is one.</span></div>
+   </div>
+   <div style="width:760px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Colours are the existing ones: hover steps one shade (<code>#FF7A59 → #FF8E70</code>, <code>#ECE7FF → #DCD5FF</code>); pressed takes the shadow colour. The focus ring is indigo on paper pages and the shelf’s yellow (<code>#FFC24D</code>) on ink, so it always shows.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">160 · Keyboard map and tooltips</div>
+   <div data-screen-label="160 Keyboard map Windows" style="width:640px;background:#fff;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 30px rgba(43,37,64,.12)">
+    <sc-for list="{{ keys }}" as="k" hint-placeholder-count="9"><div style="display:flex;align-items:center;gap:14px;font-size:14px;line-height:1.35"><div style="width:150px;flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap"><span style="padding:2px 9px;border-radius:6px;border:1.5px solid #c9c2b4;border-bottom-width:3px;font-size:13px;font-weight:600;background:#faf8f3">{{ k.k }}</span></div><span style="width:120px;flex-shrink:0;font-weight:600;color:#3a3450">{{ k.where }}</span><span style="color:#5a5470">{{ k.what }}</span></div></sc-for>
+    <div style="border-top:1px solid #efe9dd;padding-top:14px;display:flex;flex-direction:column;gap:6px;font-size:13px;color:#5a5470;line-height:1.45">
+     <span style="font-weight:600;color:#3a3450">Tooltips (icon-only buttons, 13 languages)</span>
+     <span>Back · Picture only · Picture and words · Words only · Story language · Previous page · Play / pause · Next page · Read again · Book options · Settings · Close</span>
+    </div>
+   </div>
+   <div style="width:640px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Keys never mirror, in any language (Slice 96 holds for the keyboard too: → is always the next page). Space and arrows do nothing while a text field has focus (page editor, gate sum).</div>
+  </div>
+
+ </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const C = [
+      { src: 'assets/good-enough/cover.jpg', t: 'Good Enough' },
+      { src: 'assets/three-little-pigs/cover.jpg', t: 'The Three Little Pigs' },
+      { src: 'assets/gingerbread-man/cover.jpg', t: 'The Gingerbread Man' },
+      { src: 'assets/tortoise-and-hare/cover.jpg', t: 'The Tortoise and the Hare' },
+    ];
+    const rep = n => Array.from({ length: n }, (_, i) => C[i % C.length]);
+    const rows = [
+      ['Language', 'English'], ['Story languages', 'EN, FA'], ['Narrator voice', 'Story Granny'],
+      ['Reading speed', '0.8x'], ['Animal sounds', 'On'], ['Backup', ''], ['Usage counts', 'On'], ['About & updates', ''],
+    ];
+    return {
+      shelf12: rep(12),
+      shelfHover: rep(10).map((c, i) => ({ ...c,
+        lift: i === 1 ? 'translateY(-4px)' : 'none',
+        shadow: i === 1 ? '0 14px 26px rgba(43,37,64,.22)' : '0 5px 0 rgba(43,37,64,.08)' })),
+      cornerHover: rep(8).map((c, i) => ({ ...c, ring: i === 2 ? '0 0 0 3px #5B57E8' : 'none' })),
+      settingsFocus: rows.map(([l, v], i) => ({ l, v,
+        bg: i === 3 ? '#F7F5FF' : '#fff', w: i === 3 ? 600 : 400, fg: i === 3 ? '#5B57E8' : '#2b2540',
+        ring: i === 1 ? '0 0 0 3px #fff,0 0 0 6px #5B57E8' : 'none' })),
+      gateAnswers: ['10', '12', '13', '9', '11', '14'],
+      keys: [
+        { k: 'Space', where: 'Reading', what: 'Play or pause. On the back cover: read again.' },
+        { k: '← →', where: 'Reading', what: 'Previous or next page.' },
+        { k: 'Esc', where: 'Everywhere', what: 'Back, or close a sheet. On the shelf: nothing (it is home).' },
+        { k: 'Tab', where: 'Everywhere', what: 'Next button, in reading order; Shift+Tab goes back.' },
+        { k: 'Enter', where: 'Everywhere', what: 'Press the focused button or open the focused book.' },
+        { k: '↑ ↓', where: 'Lists', what: 'Move through Settings rows, the shelf grid and Store cards.' },
+        { k: 'Hold Space', where: 'Gate', what: 'Counts as holding the button for 3 seconds.' },
+        { k: '0–9 Enter', where: 'Gate', what: 'Type the sum’s answer and check it.' },
+        { k: 'Wheel', where: 'Shelf, lists', what: 'Scrolls down; over the reading card, scrolls the words.' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
