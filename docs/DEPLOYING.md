@@ -84,7 +84,7 @@ them and the Worker answers `/download` and
 `/download/*` with a 302 to `#platforms`. Release APKs are on the GitHub Release. Old `android/` and `dinoreader/android/` APKs and `manifests/android/*.json` remain in the bucket, but nothing serves them. `wrangler deploy`
 refuses a binding to a bucket that does not exist, so create it before the deploy that adds the
 binding: `npx wrangler r2 bucket create readthestupidtext-downloads` (needs `wrangler login`; leave
-public access off). The `publish-store` job in `release.yml` writes to it with the GitHub secrets
+public access off). The `publish-store` job in `dino-store.yml` writes to it with the GitHub secrets
 `CLOUDFLARE_API_TOKEN` (Account > Workers R2 Storage > Edit) and `CLOUDFLARE_ACCOUNT_ID`.
 Tests: `node --test .github/scripts/*.test.mjs` runs in `release-scripts.yml` and
 `node --test worker/*.test.mjs` in `site-checks.yml`.

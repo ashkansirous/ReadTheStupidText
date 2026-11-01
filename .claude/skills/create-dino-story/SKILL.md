@@ -244,7 +244,7 @@ Record each pass in the art record table (page, attempt number, why earlier atte
   `StarterUpdate.EarlierPageTextHashes` if the text changed), or installed copies never update; `check` fails otherwise and runs in CI. A store book is not stamped (Slice 239).
 - `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` green.
 - Code goes through the repo's two-pass review gate and a PR (global CLAUDE.md).
-- After merge, `release.yml`'s `publish-store` job uploads every book whose content hash differs from the live store's, as live + 1 (Slice 158, 239; `tools/upload-store-story.ps1 <id>` is the manual fallback: new `story-v<n>.dino`,
+- After merge, `dino-store.yml`'s `publish-store` job uploads every book whose content hash differs from the live store's, as live + 1 (Slice 158, 239; `tools/upload-store-story.ps1 <id>` is the manual fallback: new `story-v<n>.dino`,
   `meta.json` last; never overwrite a version).
 
 ## 8. Check in the app
