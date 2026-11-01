@@ -1,6 +1,6 @@
 # Not yet tried on a device
 
-Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count.
+Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
 ### Slice 245: sherpa-onnx one version ([slice](slices/245-sherpa-onnx-one-version.md))
 
@@ -9,6 +9,20 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Windows VM reads: the VM did not start (host had 6.9 GB free, gate is 8 GB, because the emulator ran at the same time).
 - iOS everything (needs the TestFlight build).
 - The same Farsi sukun sentence sounding the same on Android and iOS.
+
+### Slice 241: Faster, quieter device tests ([slice](slices/241-device-test-speed.md))
+
+- Item 1, crash fail-fast: a flow list with a launch crash prints one FAIL with the crash lines and NOTRUN (naming the crash) for the rest in under one flow's time.
+- Item 3, build during boot: a run after a source change prints `Cache miss: building ... while emulator-5554 boots` and its total is build time, not build plus boot.
+- `PACKDL progress` lines every ~5 s on a normal download (the runner shows only the first).
+- The iOS stall watcher on a device.
+- The `-Split` two-emulator path.
+
+### Slice 240: Dino Windows CI setup cache ([slice](slices/240-dino-windows-ci-setup-cache.md))
+
+- A cache hit on the next run after main saved its Dino Windows caches (22:32-22:35 on 2026-11-01, release run 41356358486); PR #708's pull-request run missed the cache before that.
+- `gh cache delete` of a cache entry created on another ref may be refused (only warns; not run).
+- A release run on `main` with the Store MSIX build pinned to SDK 10.0.402 (was floating `10.0.x`) packages both architectures and uploads them to the draft release (only PR runs have used the pin).
 
 ### Slice 239: Dino store book without an app build ([slice](slices/239-dino-store-book-without-app-build.md))
 

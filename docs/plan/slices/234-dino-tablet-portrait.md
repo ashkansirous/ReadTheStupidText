@@ -20,7 +20,7 @@ Nothing in Dino adapts to a tablet held upright. No `OnIdiom`, `DeviceInfo.Idiom
   - Record, Store, Cast, page editor, Backup: wider cards and columns from the same rules.
 - **Light only, never mirrored** in any language (user, 2026-11-01; Slice 96).
 
-**User answers (2026-11-01):** skip this slice tonight. It is parked until the user sees and approves its mock (Batch 45); status `parked: mock not drawn yet; waits for the user (skipped 2026-11-01)`.
+**User answers (2026-11-01):** skip this slice tonight. It is parked until the user sees and approves its mock (Batch 45); status `parked: mock not drawn yet; waits for the user (skipped 2026-11-01)`. Parked until 2026-11-01 by the user: skipped tonight, mock not drawn yet; moved back to planned by the night's final feedback loop (row status `planned (draw the mock first; building waits for the user's approval of the mock)`).
 
 #### Work
 

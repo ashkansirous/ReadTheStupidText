@@ -1,0 +1,13 @@
+### Slice 247 — Leftovers from the night's final feedback loop (slow emulator flows, the silent kokoro-en download, a one-off Mono SIGSEGV, Slice 240's cache hit on main)
+
+*Parked: feedback loop, waits for the user.* Written 2026-11-01 by the night's final feedback loop. The next night's final feedback loop moves it to `planned` (run-all-waves rule); nothing in it needs a user decision.
+
+**Touches:** `tools/emulator/`, `tools/phone/`, `docs/plan/slices/247-final-loop-leftovers-night-2026-11-01-0859.md`
+
+#### Work
+
+- [ ] **a. Emulator flows take 43-69 s each.** After Slice 241, 4.5 of the 5.3 minutes of an emulator run are flows. The user asked on 2026-11-01 "figure out why emulator took 12 minutes" (session 0779fbee, entry 6165; the per-flow times are from entry 7499). Find why one flow takes about a minute (`clearState`, wizard navigation, 60 s timeouts) and whether flows can share a launch without `clearState`. Verify: time each flow's phases in one run, name the largest, and show the same 5 flows finishing faster after the change with the same results.
+- [ ] **b. The 7-minute silent kokoro-en download on the S21 phone is unexplained.** The `.partial` stayed at 9,011,200 bytes with no `PACKDL` line (session 0779fbee, entry 6228). `packs-10` still holds `kokoro-en-2.zip`, so a stale APK pointing at a removed asset is unlikely. Next time it happens, read the `PACKDL progress`, `stall` and `retry` lines Slice 241 added before anything else. Verify: a download that stalls shows a `PACKDL stall` line within 90 s, or the cause is named from the log.
+- [ ] **c. A one-off Mono SIGSEGV in the last emulator flow** (Slice 241 record: `.NET TP Worker`, `mono_class_from_typeref_checked`, 6 s after a `clearState` cold start of `uk.sirous.dinoreader.dbg`; the rerun passed). Its crash log is copied into [the note](../notes/2026-11-01-emulator-mono-sigsegv.md) (top frame `libc strcasecmp`, during Mono assembly loading on a thread-pool thread). Check whether it repeats. Verify: the next 3 emulator runs either repeat it (then file a .NET Android issue with the log) or do not.
+- [ ] **e. Kill a running Maestro flow when the app crashes at launch** (Slice 241 item 1's unbuilt part: today a launch crash waits out the flow's timeouts). Verify: a flow whose app crashes at launch ends within 10 s with the crash reported.
+- [ ] **d. Slice 240's cache hit on a run on `main`.** Main saved its Dino Windows caches at 22:32-22:35 on 2026-11-01 (release run 41356358486). Verify: on the next run on `main` or the next PR's first run, `gh run view` shows the Dino Windows setup steps restoring the cache (about 7 s) with no workload install.

@@ -19,7 +19,7 @@ The Windows head (Slice 67) opens a default WinUI window: `new Window(navigation
 - **Gate:** keep the 3-second hold with the mouse, and holding the space bar also counts. The sum step works with the keyboard (number keys).
 - **Light only, never mirrored** in any language (user, 2026-11-01; Slice 96).
 
-**User answers (2026-11-01):** skip this slice tonight. It is parked until the user sees and approves its mock (Batch 46); status `parked: mock not drawn yet; waits for the user (skipped 2026-11-01)`.
+**User answers (2026-11-01):** skip this slice tonight. It is parked until the user sees and approves its mock (Batch 46); status `parked: mock not drawn yet; waits for the user (skipped 2026-11-01)`. Parked until 2026-11-01 by the user: skipped tonight, mock not drawn yet; moved back to planned by the night's final feedback loop (row status `planned (draw the mock first; building waits for the user's approval of the mock)`).
 
 #### Work
 
