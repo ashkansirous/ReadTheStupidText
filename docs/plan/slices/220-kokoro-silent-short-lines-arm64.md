@@ -1,8 +1,8 @@
 ### Slice 220 — Kokoro returns silent audio for short lines on arm64
 
-*Planned (part 1 merged in PR #638 on 2026-11-01: NaN detection and safety; next: the kokoro-en model swap above).* Earlier note: parked by the 2026-10-31 night run, draft PR #638 not merged: the S21 run rejected the design. The pause-mark padding never rescued a short line (bm_daniel: plain silent 2 of 4, dots-padded 3 of 4, comma-padded 3 of 4, gave up 3 of 4), and the silent takes are full length with NaN samples, not empty or all-zero, so the "short phoneme sequence collapses" hypothesis is wrong. Next: find where Kokoro's NaN output on arm64 comes from (onnxruntime threads or kernels, sherpa-onnx version, the input that triggers it) before any fix; the padding should not ship. Kept on the branch for reuse: the marker-file probe (`cache/rtst-short-line-probe`, confirmed on the phone) and the `short-lines` phone check. Fix the check's summary too: it prints `n/a` for a NaN peak. A new design needs the coordinator or the user, not another patch. Follow-up to Slice 210 (docs/plan/slices/210-kokoro-short-line-dropped.md).
+*In progress (wave 2026-11-01), draft PR (part 2: model swap).* Planned (part 1 merged in PR #638 on 2026-11-01: NaN detection and safety; next: the kokoro-en model swap above).* Earlier note: parked by the 2026-10-31 night run, draft PR #638 not merged: the S21 run rejected the design. The pause-mark padding never rescued a short line (bm_daniel: plain silent 2 of 4, dots-padded 3 of 4, comma-padded 3 of 4, gave up 3 of 4), and the silent takes are full length with NaN samples, not empty or all-zero, so the "short phoneme sequence collapses" hypothesis is wrong. Next: find where Kokoro's NaN output on arm64 comes from (onnxruntime threads or kernels, sherpa-onnx version, the input that triggers it) before any fix; the padding should not ship. Kept on the branch for reuse: the marker-file probe (`cache/rtst-short-line-probe`, confirmed on the phone) and the `short-lines` phone check. Fix the check's summary too: it prints `n/a` for a NaN peak. A new design needs the coordinator or the user, not another patch. Follow-up to Slice 210 (docs/plan/slices/210-kokoro-short-line-dropped.md).
 
-**Touches:** `src/ReadTheStupidText.Application/Reading/SilentOutputGuard.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader*.cs`, `src/ReadTheStupidText.Infrastructure/Reading/NeuralSentenceSource.cs`, `tests/ReadTheStupidText.Tests/**`, `tools/phone/**`, `docs/plan/slices/220-kokoro-silent-short-lines-arm64.md`
+**Touches:** `.github/workflows/packs.yml`, `src/ReadTheStupidText.Application/Reading/PackConstants.cs`, `.github/CLAUDE.md`, `docs/voice-packs.md`, `docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md` (part 2, widened at claim), `src/ReadTheStupidText.Application/Reading/SilentOutputGuard.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader*.cs`, `src/ReadTheStupidText.Infrastructure/Reading/NeuralSentenceSource.cs`, `tests/ReadTheStupidText.Tests/**`, `tools/phone/**`, `docs/plan/slices/220-kokoro-silent-short-lines-arm64.md`
 
 #### Why
 
@@ -128,6 +128,16 @@ Lead (web research, not tested): k2-fsa/sherpa-onnx issue #4086 and PR #4087 (me
 - [ ] Check whether the kokoro-en pack ships the int8 model (`packs.yml`).
 - [ ] Rebuild the pack from the re-exported int8 model in `tts-models` (or fp32 if the size allows), publish a new packs release (standing approval), and bump the pack version so phones update.
 - [ ] Verify: the `short-lines` S21 run on bm_daniel and bf_alice shows NaN 0 and gave up 0. No app code change is expected.
+
+#### Part 2 design (written by the wave coordinator, 2026-11-01)
+
+Checked 2026-11-01: `packs.yml` pins `KOKORO_URL` = `kokoro-int8-multi-lang-v1_0.tar.bz2` with `KOKORO_SHA256` 4c3052ab...; the upstream archive today (re-uploaded 2026-10-26 by sherpa-onnx PR #4087, STFT convs kept float32) is 132,353,410 bytes, sha256 `72c347230107ef8a31098ec4d468a605244beef5f1ed00db97efa13518800653`. So the live `kokoro-en-2` pack (packs-10, carried over) is the pre-fix int8 model. fp32 (349,886,476 bytes) is over the 150 MB cap and is not used.
+
+- Pin the new sha256 in `packs.yml` (same URL, cap unchanged, comments updated to say why).
+- Dispatch `packs.yml` from this branch with `kokoro_pack_version` 3, `kokoro_carry_over_from` empty, and every other pack kept at its current version/bytes (read `docs/voice-packs.md` and the inputs for how), publishing `packs-11` (standing approval; nothing live changes until the app points at it).
+- Bump `PackConstants.CatalogUrl` to `packs-11`, so phones see kokoro-en 3 and download it. No other app code change.
+- Verify on the S21: the `short-lines` check for bm_daniel and bf_alice shows NaN 0 and gave up 0 on kokoro-en 3. If NaN persists, the swap is rejected: do not merge the CatalogUrl bump; park.
+- Docs: the int8 notes in `.github/CLAUDE.md` and Slice 114 updated (size, sha, why).
 
 Runner gap: `run-checks.ps1` has no `-Voices`; `short-lines.ps1` had to be run directly for a second voice (belongs with the Slice 224/225 tooling).
 
