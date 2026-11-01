@@ -1,6 +1,6 @@
 ### Slice 225 — Device-test tooling leftovers from the 2026-10-31-1301 night, round 1
 
-*Built 2026-11-01, not merged; item 3 (run-checks emulator path) still open.* Written 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1301-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01.
+*Built 2026-11-01, merged as PR #696 (6138ac01); item 3 (run-checks emulator path) still open.* Written 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1301-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01.
 
 #### Coordinator's notes (claim, 2026-11-01)
 
@@ -109,7 +109,7 @@ review read: `D:/ReadTheStupidText-worktrees/reviews/` (outside the repo, delete
 - Emulator RTST_Test: item 4 PASS; item 19 PASS (path and name); item 21 PASS (TalkBack on and off, no dialog; the focus event was not read); item 12 PARTIAL: `uiautomator dump /dev/tty` over adb printed no XML here (a dump to a file works). That call already exists on main (`run-flows.ps1:93`), so this slice did not change it.
 - VM: item 24 PASS (dino-page-turn accessible name); item 20 skip line PASS; NO-GO path self-tested only; item 23: no build-server leftovers from `Build-TestPackage.ps1`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-01)
 
 - (tools/CLAUDE.md) `stay_on_while_plugged_in` is recorded at lease take and restored only if the phone still shows the value the tooling set. `restore-device-state.ps1` exit 5 means the netpolicy state could not be read ("RESTORE UNKNOWN"), not failure. Never pass `--disable-build-servers` to `dotnet test` (exit 5). (Slice 225: docs/plan/slices/225-device-tooling-leftovers-night-2026-10-31-1301.md)
 
