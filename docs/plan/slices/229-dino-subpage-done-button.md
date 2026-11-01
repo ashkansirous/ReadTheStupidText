@@ -81,10 +81,11 @@ Settled by the mock: Done is a filled indigo pill; Done on a sub-page goes up on
 1. Applied, later reverted: header Back saved while system Back discarded. Superseded by the revert above.
 2. Skipped (low): `DoneAsync` wrapper again (same as high 3).
 3. Applied: `ButtonVisible` was true until the wizard session existed, so Done could throw a NullReferenceException at `_session!.Cleanup()`.
-4. Skipped (low): shared `GrownUpDone` id on stacked pages (the Settings sub-page ids were already fixed under high 6). Checked on the emulator.
-5. Skipped (low): `BuildButton` rebuilds the label row on each Continue toggle; the Button text may be announced twice. Checked on the emulator.
-6. Skipped (low): ad-hoc `LaunchedFromIntro` setters (same as high 8). Checked on the emulator.
-7. Skipped (low): page editor header changed Grid to `GrownUpHeader` and the pill height 38 to 44; crop-stage layout not verified (listed in Not yet verified). Checked on the emulator.
+4. Skipped (low): shared `GrownUpDone` id on stacked pages (the Settings sub-page ids were already fixed under high 6).
+5. Skipped (low): `BuildButton` rebuilds the label row on each Continue toggle; the Button text may be announced twice.
+6. Skipped (low): ad-hoc `LaunchedFromIntro` setters (same as high 8).
+7. Skipped (low): page editor header changed Grid to `GrownUpHeader` and the pill height 38 to 44; crop-stage layout not verified (listed in Not yet verified).
+(Round 3 feedback loop: an earlier "Checked on the emulator" on findings 4-7 came from the coordinator's brief, written before the run; the emulator run did not check these, so it was removed.)
 
 `s229-medium-check.md` (7 findings):
 1. Resolved by the Back revert: Back saving deleted a blank text page without confirmation.
