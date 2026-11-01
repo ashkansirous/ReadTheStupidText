@@ -14,6 +14,8 @@
    - [ ] A test: a Dino-only diff with a pending Store change gives a consistent RTST version and release, or holds the Store change for the next RTST release.
 4. **No first marker** (`ship-targets.mjs:363`, medium; same as the high pass's skipped 1): until a marker exists, the old release-diff rule applies. Today only the force_all run seeds it.
    - [ ] After item 1, confirm the force_all run created `rtst-store-v<x.y.z>`; if not, seed it once by hand-run dispatch (the user's call while live state is involved).
+
+**User answers (2026-11-01):** item 4 is moot: the tags `rtst-store-v1.77.0` and `rtst-store-v1.79.0` exist on origin, so no hand-seeded dispatch is needed.
 5. Low: `storeChangesFor` returns `console.log(...)` (undefined) as its "no data" signal (`ship-targets.mjs:397`). Return an explicit value.
 
 Out of scope here: the review also flagged the duplicated pre-1.0 version rule in `worker/events.ts` and `UsageEligibility.cs` (Slice 219, outside this diff).

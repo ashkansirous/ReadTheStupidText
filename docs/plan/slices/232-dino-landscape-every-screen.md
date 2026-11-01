@@ -13,6 +13,8 @@ Nothing locks orientation (Android `MainActivity` has no `ScreenOrientation`; `I
 - A full landscape design for **every Dino screen**: shelf (kids' and grown-ups' corner), book sheet, reading screen (redo the current one), Record, Store, Settings and its sub-pages, Cast, page editor, intro wizard, gate, first run, Backup. **Phone and tablet**, Android and iOS.
 - **No mirroring and no dark** (user, 2026-11-01: "we don't mirror", "Dark is out of scope for now"). Every screen is drawn and built light, the same layout in every language.
 
+**User answers (2026-11-01):** the user accepted the default: build the undrawn variants (sub-pages, gate hold step, first-run, tablet frames) from the rules, with no extra frames unless review finds a gap. iOS gets a compile check in the night run; the VoiceOver / TestFlight / iPhone / iPad hand checks go to this slice's *Not yet verified* for the user to do later.
+
 #### Design (Dino Reader Batch 44 mock, frames 110-132, added 2026-11-01)
 
 Twenty-three frames in `docs/design/dino-reader/Dino Reader Batch 44 Landscape.dc.html` (README index has the line of each). Phone frames are 760 x 360 dp (drawn 772 x 372 with the bezel), tablet frames 1164 x 804 dp. The mock agrees with the plan, but covers fewer variants than the plan asks (see open points). Frames are real screens; the rule box at the top of the file is a text summary, not UI. It is drawn on top of Batch 43, so the pill, corner rail, Done and Continue are in.

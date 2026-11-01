@@ -20,6 +20,8 @@ So a download that stops because the network went away while the app is in the b
 - Android keeps the time-limit path as one of the resumable ends, not a special gate.
 - Process killed by the OS: not posted on either platform (unchanged); out of scope.
 
+**User answers (2026-11-01):** iOS gets a compile check in the night run; the VoiceOver / TestFlight / iPhone / iPad hand checks go to this slice's *Not yet verified* for the user to do later.
+
 #### Work
 
 - [ ] Shared: move the "post or not" decision into one pure, unit-tested function (`PausedNoticePolicy` or in `PackDownloadHost`): inputs are the run's end (resumable / not, cancelled by the person) and whether the app is in the foreground; output is post / clear / nothing.

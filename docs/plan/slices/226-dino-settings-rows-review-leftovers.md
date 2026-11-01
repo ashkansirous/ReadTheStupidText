@@ -28,3 +28,5 @@ Shared MAUI code: every item is built and checked on Android and iOS alike (and 
 #### Not yet verified
 
 - Everything: planned only.
+
+**User answers (2026-11-01):** iOS gets a compile check in the night run; the VoiceOver / TestFlight / iPhone / iPad hand checks go to this slice's *Not yet verified* for the user to do later.
