@@ -94,6 +94,10 @@ are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CL
 - Dino text card (Slice 171): line positions come from the label's real layout through `ITextLineSource` (Android `TextView.Layout`, iOS TextKit), read only after layout/SizeChanged and never inside `Mark`; no probe-text guesses. The card scrolls to the spoken sentence from that table. (Slice 171: docs/plan/slices/171-dino-text-card-shows-whole-page.md)
 - Dino Reader's Windows head is acceptance-tested in the headless Hyper-V test VM, never on the host desktop: `tools/desktop-vm/Invoke-DesktopTest.ps1 -App dino` installs the unsigned dev MSIX in the VM at its `clean` checkpoint and runs `tools/desktop-vm/checks/dino-*.ps1` (launch, open a starter book, turn a page). Give a new screen a stable `AutomationId` so a check can find it. (Slice 163: docs/plan/slices/163-desktop-tests-in-hyperv-vm.md)
 
+## Back cover (Slice 237)
+
+- Every `book.json` needs `storyBy` (and `retold` for classics). The back cover is never voiced or counted: not in `pageCount`, `minutes` or the sentence list. (Slice 237: docs/plan/slices/237-dino-back-cover-credits.md)
+
 ## Back button and reading-screen layout (Slice 174, Decision 169)
 
 - The kids' shelf is home. Android back there asks "Close Dino Book Reader?" (`CloseQuestionPage`: Stay is the default, a second back or a tap outside is Stay, only Close quits; no gate). Back steps one page at a time: a Settings sub-page -> Settings -> grown-up mode -> kids' shelf (Slice 189); grown-up mode's Done also goes to the kids' shelf. iOS and Windows unchanged. The reading page has no parents' button.
