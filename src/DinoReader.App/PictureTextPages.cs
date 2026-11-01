@@ -130,6 +130,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		View content = Sideways ? SidewaysPage(_slots[page]) : UprightPage(_slots[page]);
 		AbsoluteLayout.SetLayoutBounds(content, new Rect(0, 0, _card.Width, _card.Height));
 		layers.Boxes.Children.Add(content);
+		NameStoryText(_label);
 		Mark(layers, page, -1);
 	}
 
@@ -157,6 +158,19 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		_current = first;
 		ScrollToCurrent(animated: true);
 	}
+
+	// Slice 205: a label drawn from FormattedText spans can have an empty UI Automation name on Windows, so the page's plain text is
+	// also its accessible description (screen readers read the same words, and the VM page-turn check reads the name per page).
+	private void NameStoryText(Label? label)
+	{
+		if (label is not null)
+		{
+			SemanticProperties.SetDescription(label, AccessibleName(_pageText));
+		}
+	}
+
+	/// <summary>Slice 226: the page text as a screen reader should hear it: line breaks and runs of white space become single spaces.</summary>
+	internal static string AccessibleName(string pageText) => string.Join(' ', pageText.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
 
 	// Slice 171: the card keeps the spoken sentence in view. Where its first word sits comes from the label's own native layout (Android TextView.Layout, iOS TextKit),
 	// so wrapping, scripts and fallback fonts are the screen's own; the choice of line is Core's. A sentence longer than the card keeps its start in view. A card the child is
@@ -461,6 +475,8 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 			TextColor = _theme.Ink,
 			FlowDirection = rightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
 		};
+		// Slice 226: named where the label is made, so a label created without a redraw still has its page's words.
+		NameStoryText(_label);
 		var panel = new Border
 		{
 			BackgroundColor = _theme.TextCard.WithAlpha(alpha),

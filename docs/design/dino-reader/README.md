@@ -507,3 +507,95 @@ Also read these files the selection imports:
 
 Implement: `Dino Reader Batch 37.dc.html`
 ```
+
+## Batch 43 mock — `Dino Reader Batch 43 Grown-ups Corner.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Batch 43 Grown-ups Corner.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+43+Grown-ups+Corner.dc.html>).
+- **Copied:** 2026-11-01, verbatim from `DesignSync get_file`. Its imports were already in this folder
+  (`assets/...` covers and pages, `icons/ios/AppIcon-1024-light.png`).
+- **Covers:** Slices 228-229 (kids’ shelf vs grown-ups’ corner, Done/Continue top right), with Record frame 106 for Slices 230-231: frames 97-109, portrait.
+
+Open it in a text editor (`support.js` is not copied). Each screen is headed by a caption
+`N · Title` with its behaviour in the note underneath.
+
+| # | Screen | Line |
+|---|---|---|
+| 97 | Kids’ shelf · the Grown-ups pill | 33 |
+| 98 | Grown-ups’ corner | 50 |
+| 99 | Corner · first run, before the hand-over | 75 |
+| 100 | Book sheet · Read now first | 100 |
+| 101 | Intro · new first card · two places | 125 |
+| 102 | The Grown-ups icon and pill | 182 |
+| 103 | Grown-ups’ corner · dark (needs the theme pin lifted) | 198 |
+| 104 | Store · opened from the intro · Continue | 227 |
+| 105 | Settings · from the corner · Done | 242 |
+| 106 | Record · Done, the words shown, where recordings live | 267 |
+| 107 | Settings · Farsi · Done on the left | 285 |
+| 108 | Sub-page · from the intro · Continue | 303 |
+| 109 | Store · Continue · dark | 321 |
+
+To refresh: fetch the file again with `DesignSync get_file` and overwrite this copy, then
+regenerate this table. Never call `DesignSync` to read visual values; read this copy.
+
+## Batch 44 mock — `Dino Reader Batch 44 Landscape.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Batch 44 Landscape.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+44+Landscape.dc.html>).
+- **Copied:** 2026-11-01, verbatim from `DesignSync get_file`. Its imports were already in this folder
+  (`assets/...` covers and pages, `icons/ios/AppIcon-1024-light.png`).
+- **Covers:** Slice 232 (landscape for every screen, phone 760×360 dp and tablet 1164×804 dp): frames 110-132; 113 and 115 replace Batch 37 frames 92 and 93.
+
+Open it in a text editor (`support.js` is not copied). Each screen is headed by a caption
+`N · Title` with its behaviour in the note underneath.
+
+| # | Screen | Line |
+|---|---|---|
+| 110 | Kids’ shelf · one row of big covers | 45 |
+| 113 | Reading · Picture + text (replaces 92) | 58 |
+| 114 | Reading · Picture only | 80 |
+| 115 | Reading · Text only (replaces 93) | 94 |
+| 121 | Intro · two places | 110 |
+| 122 | Gate · the sum | 127 |
+| 123 | First run · language | 143 |
+| 111 | Grown-ups’ corner · the header becomes a rail | 166 |
+| 112 | Book sheet · a centred card | 182 |
+| 116 | Record · picture, words, mic | 201 |
+| 117 | Store · two columns | 218 |
+| 118 | Settings · two panes | 229 |
+| 119 | Cast · who’s speaking | 250 |
+| 120 | Page editor · own book | 261 |
+| 124 | Backup | 274 |
+| 125 | Kids’ shelf · tablet | 291 |
+| 126 | Grown-ups’ corner · tablet | 302 |
+| 127 | Reading · Picture + text · tablet | 319 |
+| 128 | Settings · tablet | 334 |
+| 129 | Record · tablet | 350 |
+| 130 | Intro step · tablet | 364 |
+| 131 | Reading · night | 387 |
+| 132 | Reading · Farsi | 401 |
+
+To refresh: fetch the file again with `DesignSync get_file` and overwrite this copy, then
+regenerate this table. Never call `DesignSync` to read visual values; read this copy.
+
+Import prompt for both (verbatim, 2026-11-01):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+43+Grown-ups+Corner.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino Reader Batch 43 Grown-ups Corner.dc.html`
+- `Dino Reader Batch 44 Landscape.dc.html`
+
+Also read these files the selection imports:
+- `assets/gingerbread-man/cover.jpg`
+- `assets/good-enough/cover.jpg`
+- `assets/three-little-pigs/5.jpg`
+- `assets/three-little-pigs/cover.jpg`
+- `assets/tortoise-and-hare/6.jpg`
+- `assets/tortoise-and-hare/cover.jpg`
+- `dino_reader_icons/ios/AppIcon-1024-light.png`
+
+Implement: the selected files
+```

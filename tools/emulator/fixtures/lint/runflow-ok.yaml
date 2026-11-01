@@ -1,0 +1,4 @@
+appId: uk.sirous.readthestupidtext
+---
+- launchApp
+- runFlow: sub/hook-ok-sub.yaml

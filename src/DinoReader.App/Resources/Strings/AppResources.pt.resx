@@ -238,13 +238,13 @@
   <data name="Version_NewReady" xml:space="preserve"><value>Há uma nova versão</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Versão</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Ajude a melhorar o Dino</value></data>
-  <data name="Usage_Helper" xml:space="preserve"><value>Envia contagens como "um livro da loja foi terminado". Sem nomes, sem identificadores, nada do que você digitou. Também inclui o país e um tipo de aparelho aproximado (telefone ou tablet, faixa de memória).</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Envia contagens como "um livro da loja foi terminado". Sem nomes, sem identificadores, nada do que você digitou. Também inclui o país e um tipo de aparelho aproximado (telefone ou tablet, faixa de memória). Se a app falhar, também pode enviar um relatório de falha: o erro e um breve registo técnico, nunca nada do que foi lido ou escrito.</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Velocidade de leitura</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Mais devagar é mais fácil para os pequenos</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · lento</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Speed_Play" xml:space="preserve"><value>Ouvir esta velocidade</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>O Dino conta quais livros são lidos, sem nomes nem identificadores. Você pode desativar isto em Configurações. Também inclui o país e um tipo de aparelho aproximado (telefone ou tablet, faixa de memória).</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>O Dino conta quais livros são lidos, sem nomes nem identificadores. Você pode desativar isto em Configurações. Também inclui o país e um tipo de aparelho aproximado (telefone ou tablet, faixa de memória). Se a app falhar, também pode enviar um relatório de falha: o erro e um breve registo técnico, nunca nada do que foi lido ou escrito.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Seu narrador ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>Não foi possível baixar as vozes de narrador</value></data>
@@ -398,4 +398,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Permita as notificações para que a voz continue a ser transferida enquanto o telemóvel está bloqueado ou usa outras aplicações. Verá o progresso aí.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Agora não</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Continuar</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>Preparando a voz {0} ({1} MB) · {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Download pausado. Toque para concluir.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>Voz {0} ({1} MB)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>Voz {0} ({1} MB) · {2}% concluído</value></data>
 </root>

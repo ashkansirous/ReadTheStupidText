@@ -238,13 +238,13 @@
   <data name="Version_NewReady" xml:space="preserve"><value>يتوفر إصدار جديد</value></data>
   <data name="Version_Title" xml:space="preserve"><value>الإصدار</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>ساعد في تحسين دينو</value></data>
-  <data name="Usage_Helper" xml:space="preserve"><value>يرسل أعدادًا مثل «تم إنهاء كتاب من المتجر». بلا أسماء ولا معرّفات ولا شيء كتبته. ويضيف أيضًا بلدك ونوع جهازك التقريبي (هاتف أو جهاز لوحي، ونطاق الذاكرة).</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>يرسل أعدادًا مثل «تم إنهاء كتاب من المتجر». بلا أسماء ولا معرّفات ولا شيء كتبته. ويضيف أيضًا بلدك ونوع جهازك التقريبي (هاتف أو جهاز لوحي، ونطاق الذاكرة). وإذا تعطّل التطبيق، فقد يرسل أيضًا تقرير تعطّل: الخطأ وسجلًّا تقنيًا قصيرًا، وليس أبدًا أي شيء قرأته أو كتبته.</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>سرعة القراءة</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>الأبطأ أسهل على الصغار</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0.5x · بطيء</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Speed_Play" xml:space="preserve"><value>استمع بهذه السرعة</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>يعدّ دينو الكتب التي تُقرأ، بلا أسماء ولا معرّفات. يمكنك إيقاف ذلك من الإعدادات. ويضيف أيضًا بلدك ونوع جهازك التقريبي (هاتف أو جهاز لوحي، ونطاق الذاكرة).</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>يعدّ دينو الكتب التي تُقرأ، بلا أسماء ولا معرّفات. يمكنك إيقاف ذلك من الإعدادات. ويضيف أيضًا بلدك ونوع جهازك التقريبي (هاتف أو جهاز لوحي، ونطاق الذاكرة). وإذا تعطّل التطبيق، فقد يرسل أيضًا تقرير تعطّل: الخطأ وسجلًّا تقنيًا قصيرًا، وليس أبدًا أي شيء قرأته أو كتبته.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>الراوي الخاص بك ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} ميغابايت</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>تعذّر تنزيل أصوات الراوي</value></data>
@@ -398,4 +398,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>اسمح بالإشعارات لمتابعة تنزيل الصوت أثناء قفل الهاتف أو استخدام تطبيقات أخرى. ستشاهد التقدم هناك.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>ليس الآن</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>متابعة</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>جارٍ تجهيز صوت {0} ({1} ميغابايت) · {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>توقف التنزيل مؤقتًا. اضغط للإكمال.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>صوت {0} ({1} ميغابايت)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>صوت {0} ({1} ميغابايت) · اكتمل {2}%</value></data>
 </root>

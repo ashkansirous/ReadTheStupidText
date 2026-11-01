@@ -36,25 +36,68 @@ public static class SettingsRows
 	/// <summary>One row: <paramref name="title"/> at the start, <paramref name="end"/> after it, a chevron when <paramref name="tapped"/> is given.</summary>
 	public static Grid Row(string title, View end, Func<Task>? tapped, BusyGuard busy)
 	{
-		var row = new Grid
-		{
-			MinimumHeightRequest = RowHeight,
-			Padding = new Thickness(RowPadding, 0),
-			ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Auto)],
-			ColumnSpacing = 8,
-		};
-		row.Add(new Label { Text = title, FontSize = RowFontSize, VerticalOptions = LayoutOptions.Center }, 0);
-		row.Add(end, 1);
+		Grid row = NewRowGrid(RowHeight);
+		row.Add(new Label { Text = title, FontSize = RowFontSize, VerticalOptions = LayoutOptions.Center }, FirstColumn);
+		row.Add(end, FirstColumn + 1);
 		if (tapped is not null)
 		{
-			row.Add(Chevron(), 2);
-			var tap = new TapGestureRecognizer();
-			tap.Tapped += async (_, _) => await busy.RunAsync(tapped);
-			row.GestureRecognizers.Add(tap);
+			row.Add(Chevron(), FirstColumn + 2);
+			Button button = AddRowButton(row, NameOf(title, (end as Label)?.Text), tapped, busy, endInteractive: !IsDecoration(end));
+			if (end is Label valueLabel)
+			{
+				FollowValue(button, title, valueLabel);
+			}
 		}
 
 		return row;
 	}
+
+	private static string NameOf(string title, string? value) => string.IsNullOrEmpty(value) ? title : CastText.Pair(title, value);
+
+	// The value changes after the row is built (the story language, a setting), so the button's accessible name follows it.
+	private static void FollowValue(Button button, string title, Label valueLabel)
+	{
+		valueLabel.PropertyChanged += (_, e) =>
+		{
+			if (e.PropertyName == Label.TextProperty.PropertyName)
+			{
+				SemanticProperties.SetDescription(button, NameOf(title, valueLabel.Text));
+			}
+		};
+	}
+
+	// Slice 226: what the row button's name already carries (labels, chevron, tag, spacer). Anything else is a control (Switch, Picker) and stays reachable.
+	private static bool IsDecoration(View view) => view is Label or IconView or Border or BoxView;
+
+	// Slice 205: the row's padding is two fixed columns, not Grid.Padding, so the button over the row covers the padding strips too.
+	private const int FirstColumn = 1;
+
+	/// <summary>
+	/// Slice 226: adds <paramref name="child"/> to the row's content columns: slot 0 is the title column, 1 the value, 2 the chevron. A caller must
+	/// use this and never a raw column index, because the first column is the row's left padding.
+	/// </summary>
+	public static void AddInRow(Grid row, View child, int slot)
+	{
+		ArgumentOutOfRangeException.ThrowIfNegative(slot);
+		ArgumentOutOfRangeException.ThrowIfGreaterThan(slot, ChevronSlot);
+		row.Add(child, FirstColumn + slot);
+	}
+
+	private const int ChevronSlot = 2;
+
+	private static Grid NewRowGrid(double minHeight) => new()
+	{
+		MinimumHeightRequest = minHeight,
+		ColumnDefinitions =
+		[
+			new ColumnDefinition(new GridLength(RowPadding)),
+			new ColumnDefinition(GridLength.Star),
+			new ColumnDefinition(GridLength.Auto),
+			new ColumnDefinition(GridLength.Auto),
+			new ColumnDefinition(new GridLength(RowPadding)),
+		],
+		ColumnSpacing = 8,
+	};
 
 	public static BoxView Divider() => new() { HeightRequest = 1, Color = DinoTokens.Get(DinoTokens.Hairline) };
 
@@ -71,32 +114,69 @@ public static class SettingsRows
 	/// A Settings list row (Slice 172, mock frame 80): a 15 px label, the current value (or a tag) in bold muted text, and a chevron.
 	/// <paramref name="value"/> is null for a row that shows none; <paramref name="tagText"/> shows a pill instead and is announced with the title.
 	/// </summary>
-	public static Grid NavRow(string title, string? value, Func<Task> tapped, BusyGuard busy, string? tagText = null)
+	public static Grid NavRow(string title, string? value, Func<Task> tapped, BusyGuard busy, string? tagText = null, string? automationId = null)
 	{
-		var row = new Grid
-		{
-			MinimumHeightRequest = NavRowHeight,
-			Padding = new Thickness(RowPadding, 0),
-			ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Auto)],
-			ColumnSpacing = 8,
-		};
-		row.Add(CastText.InOwnScript(new Label { Text = title, FontSize = NavTitleSize, VerticalOptions = LayoutOptions.Center }), 0);
+		Grid row = NewRowGrid(NavRowHeight);
+		row.Add(CastText.InOwnScript(new Label { Text = title, FontSize = NavTitleSize, VerticalOptions = LayoutOptions.Center }), FirstColumn);
 		if (tagText is not null)
 		{
-			row.Add(Tag(tagText), 1);
+			row.Add(Tag(tagText), FirstColumn + 1);
 		}
 		else if (value is not null)
 		{
-			row.Add(NavValue(value), 1);
+			row.Add(NavValue(value), FirstColumn + 1);
 		}
 
-		row.Add(Chevron(), 2);
-		string? announced = tagText ?? value;
-		SemanticProperties.SetDescription(row, announced is null ? title : CastText.Pair(title, announced));
-		var tap = new TapGestureRecognizer();
-		tap.Tapped += async (_, _) => await busy.RunAsync(tapped);
-		row.GestureRecognizers.Add(tap);
+		row.Add(Chevron(), FirstColumn + 2);
+		Button button = AddRowButton(row, NameOf(title, tagText ?? value), tapped, busy, endInteractive: false, automationId);
+		FollowNavValue(row, button, title);
 		return row;
+	}
+
+	// Slice 226: a NavRow's value (or the text inside its tag) can be changed in place; the button's name follows it as Row()'s does.
+	private static void FollowNavValue(Grid row, Button button, string title)
+	{
+		Label? valueLabel = row.Children.OfType<Label>().Skip(1).FirstOrDefault()
+			?? (row.Children.OfType<Border>().FirstOrDefault()?.Content as Label);
+		if (valueLabel is not null)
+		{
+			FollowValue(button, title, valueLabel);
+		}
+	}
+
+	/// <summary>
+	/// Slice 205: a transparent Button over the whole row, so it is a real control (UI Automation Invoke on Windows, focus and Enter or Space
+	/// from a keyboard, TalkBack and VoiceOver "button") named with the title and the current value. A Grid with only a tap gesture has none of
+	/// that. The row's own labels, chevron and tag are hidden from the accessibility tree so the name is read once; a control at the end
+	/// (Switch, Picker) stays reachable, and then the button covers only the padding and title columns so it cannot take the control's taps.
+	/// A test finds the row by <paramref name="automationId"/> (Maestro <c>id:</c>), not by text: the button has no text of its own, so the
+	/// platform hover and press states cannot draw the title a second time.
+	/// </summary>
+	private static Button AddRowButton(Grid row, string name, Func<Task> tapped, BusyGuard busy, bool endInteractive, string? automationId = null)
+	{
+		foreach (View child in row.Children.OfType<View>().Where(IsDecoration))
+		{
+			AutomationProperties.SetIsInAccessibleTree(child, false);
+		}
+
+		RowButtonChrome.EnsureRegistered();
+		var button = new RowButton
+		{
+			AutomationId = automationId,
+			BackgroundColor = Colors.Transparent,
+			BorderWidth = 0,
+			CornerRadius = 0,
+			Padding = 0,
+			MinimumHeightRequest = 0,
+			HorizontalOptions = LayoutOptions.Fill,
+			VerticalOptions = LayoutOptions.Fill,
+		};
+		SemanticProperties.SetDescription(button, name);
+		button.Clicked += async (_, _) => await busy.RunAsync(tapped);
+		// Grid.Add(view, column, row) writes the span as 1, so the span is set after adding.
+		row.Add(button, 0);
+		Grid.SetColumnSpan(button, endInteractive ? FirstColumn + 1 : row.ColumnDefinitions.Count);
+		return button;
 	}
 
 	private static Label NavValue(string text) => CastText.InOwnScript(new Label
@@ -172,6 +252,64 @@ public static class SettingsRows
 		}
 
 		return row;
+	}
+}
+
+/// <summary>The transparent full-row Button of a settings row; a type of its own so the platform chrome reset below touches no other Button.</summary>
+public sealed class RowButton : Button;
+
+/// <summary>
+/// Slice 205 review: strips the platform Button chrome off a <see cref="RowButton"/> (Android MaterialButton insets, minimum size and
+/// elevation; Windows padding, border, corner radius and minimum size) so it covers the whole row with no dead strips. The press
+/// ripple (Android) and the hover, pressed and focus visuals (Windows) are kept: they are the row's feedback.
+/// </summary>
+internal static class RowButtonChrome
+{
+	private static bool _registered;
+
+	public static void EnsureRegistered()
+	{
+		if (_registered)
+		{
+			return;
+		}
+
+		_registered = true;
+		Microsoft.Maui.Handlers.ButtonHandler.Mapper.AppendToMapping(nameof(RowButtonChrome), (handler, view) =>
+		{
+			if (view is RowButton)
+			{
+				Reset(handler);
+			}
+		});
+	}
+
+	private static void Reset(Microsoft.Maui.Handlers.IButtonHandler handler)
+	{
+#if ANDROID
+		if (handler.PlatformView is Google.Android.Material.Button.MaterialButton button)
+		{
+			button.SetPadding(0, 0, 0, 0);
+			button.InsetTop = 0;
+			button.InsetBottom = 0;
+			button.SetMinimumHeight(0);
+			button.SetMinimumWidth(0);
+			button.SetMinHeight(0);
+			button.SetMinWidth(0);
+			button.StateListAnimator = null;
+			button.Elevation = 0;
+			button.TranslationZ = 0;
+		}
+#elif WINDOWS
+		if (handler.PlatformView is Microsoft.UI.Xaml.Controls.Button button)
+		{
+			button.Padding = new Microsoft.UI.Xaml.Thickness(0);
+			button.BorderThickness = new Microsoft.UI.Xaml.Thickness(0);
+			button.CornerRadius = new Microsoft.UI.Xaml.CornerRadius(0);
+			button.MinHeight = 0;
+			button.MinWidth = 0;
+		}
+#endif
 	}
 }
 

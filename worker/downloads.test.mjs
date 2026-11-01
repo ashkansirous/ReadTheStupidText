@@ -16,6 +16,7 @@ import {
   isDownloadPath,
   isForwardableRange,
   isHiddenDinoPath,
+  isPrivateKey,
   parseRange,
   resolveSite,
   serveObject,
@@ -418,4 +419,17 @@ test("a story uploaded after the listing was cached is still served by cover and
   addStory(objects, ID_B, { versions: [3] });
   assert.equal((await storyApi(get(`/api/stories/${ID_B}/download`), bucket)).status, 200);
   assert.equal((await storyApi(get(`/api/stories/${ID_B}/cover`), bucket)).status, 200);
+});
+
+test("serveObject never streams anything under crashes/ (Slice 227), even for a key it is handed", async () => {
+  let reads = 0;
+  const bucket = { get: async () => (reads++, null), head: async () => (reads++, null) };
+  const file = { key: "crashes/dino/2026-10-31/x.json", contentType: "application/json", fileName: "x.json", disposition: "inline", unavailable: "story-unavailable" };
+  for (const method of ["GET", "HEAD"]) {
+    const response = await serveObject(new Request("https://dinoreader.sirous.uk/x", { method }), bucket, file, "no-store");
+    assert.equal(response.status, 404);
+  }
+  assert.equal(reads, 0);
+  assert.equal(isPrivateKey("crashes/rtst/a.json"), true);
+  assert.equal(isPrivateKey("dinoreader/stories/a/meta.json"), false);
 });

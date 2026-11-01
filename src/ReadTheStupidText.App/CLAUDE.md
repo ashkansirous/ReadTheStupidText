@@ -79,3 +79,7 @@ Three read paths (Slices 10, 12; docs/plan/slices/10-live-activity-log-auto-read
 - Windows early start lives in `ReadAloudService.EarlyStart.cs`: coordinator calls happen under `_earlyGate`, never await under it, and CTS cancels are deferred until outside the gate. (Slice 142: docs/plan/slices/142-rtst-windows-early-start.md)
 - Tray panel and flyout placement goes through `WindowPlacer` with `ResizeClient` (client-area sizing), never by sizing the outer window. (Slice 170: docs/plan/slices/170-tray-panel-controls-row-fits.md)
 - Desktop acceptance (tray, hotkey, panel, startup task) runs in the headless Hyper-V test VM, never on the host desktop: `tools/desktop-vm/Invoke-DesktopTest.ps1 -App rtst` restores the `clean` checkpoint, installs the unsigned dev MSIX in the VM, runs `tools/desktop-vm/checks/rtst-*.ps1` and restores `clean`. Never install the dev package on the host or drive its tray, hotkey or clipboard; the VM has no network adapter so nothing reaches analytics. Add a new tray/panel check as `checks/rtst-<name>.ps1` and list it in the script's `$Apps` table. (Slice 163: docs/plan/slices/163-desktop-tests-in-hyperv-vm.md)
+
+## Forced update (Slice 217)
+
+- While an update is required, reads are refused through `IReadGate` inside `ReadAloudService` (hotkey, selection, copy, Play, file, skip); don't add a check in the callers. `READTHESTUPIDTEXT_TEST_APP_CONFIG` (test config for the update check) is read in Debug builds only, so the Release VM package ignores it. (Slice 217: docs/plan/slices/217-rtst-forced-update.md)

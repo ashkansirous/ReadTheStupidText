@@ -1,0 +1,48 @@
+# Slice 227: a managed crash is written to a pending file in the crashing process and posted at the next launch, with its log tail, to a local stub.
+# Precondition (the host, before the run): `node tools/crashes/stub-server.mjs` is listening on port 8787; the emulator reaches it as http://10.0.2.2:8787.
+# The stub answers 204 only for the report the Debug hook throws (System.InvalidOperationException "Slice 227 crash test", kind managed, the hook's known line in the log tail),
+# and 400 for anything else, so the marker below proves that report arrived whole. Debug builds never report on their own: the `crash-stub` hook is what lets this one through.
+# Fails against a build without the pipeline: no `crash-test` command, so no HOOK ok line, no CRASH_REPORT marker.
+# Android only (the hooks arrive as intent extras and the stub is reached as 10.0.2.2).
+# expect-log: HOOK crash-stub ok
+# expect-log: HOOK crash-test started
+# expect-log: CRASH_REPORT managed report saved
+# expect-log: CRASH_REPORT report sent (status 204)
+appId: uk.sirous.readthestupidtext
+name: A crash is reported to the local stub at the next launch (RTST)
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books, pending crash reports); fine here: the flow reads nothing and needs an empty pending-report folder.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: SettingsButton
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: crash-stub
+      url: http://10.0.2.2:8787
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: crash-test
+      kind: managed
+# The hook throws on its own thread 300 ms later and the process ends; give it time to die before the restart.
+- waitForAnimationToEnd:
+    timeout: 3000
+# launchApp-restart: the crash ended the process, so this starts the app again; the report is posted about a second after the start.
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: SettingsButton
+    timeout: 60000
+# The sender waits a second in stub mode, then posts; give the post time to finish before the log markers are read.
+- waitForAnimationToEnd:
+    timeout: 5000

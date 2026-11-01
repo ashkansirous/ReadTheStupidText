@@ -16,11 +16,19 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Tik op een knop hieronder om iets toe te voegen om voor te lezen</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>De taal van de woorden in de app</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Leessnelheid</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>Update nodig</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>Deze versie heeft een probleem dat is opgelost. Download de nieuwe om te blijven lezen. Je instellingen en stemmen blijven behouden.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>Google Play openen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>App Store openen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>Er is een nieuwe versie</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>Ophalen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>Sluiten</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Help de app verbeteren</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Stuurt tellingen zoals “er is een Franse tekst gelezen”. Geen namen, geen id’s, niets van wat je leest. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik).</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Stuurt tellingen zoals “er is een Franse tekst gelezen”. Geen namen, geen id’s, niets van wat je leest. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik). Als de app crasht, kan hij ook een crashrapport sturen: de fout en een kort technisch logboek, nooit iets wat je hebt gelezen of getypt.</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>Aan</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Uit</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>De app telt dingen zoals welke talen worden gelezen, zonder namen of id’s. Je kunt dit uitzetten in Instellingen. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik).</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>De app telt dingen zoals welke talen worden gelezen, zonder namen of id’s. Je kunt dit uitzetten in Instellingen. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik). Als de app crasht, kan hij ook een crashrapport sturen: de fout en een kort technisch logboek, nooit iets wat je hebt gelezen of getypt.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Terug</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Vorige zin</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Volgende zin</value></data>
@@ -142,4 +150,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Sta meldingen toe zodat de stem blijft downloaden terwijl de telefoon vergrendeld is of je andere apps gebruikt. Je ziet de voortgang daar.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Niet nu</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Doorgaan</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>De {0}-stem wordt gedownload ({1} MB)… {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Download gepauzeerd. Tik om af te ronden.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>{0}-stem ({1} MB)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-stem ({1} MB) · {2}% klaar</value></data>
 </root>

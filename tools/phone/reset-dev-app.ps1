@@ -173,6 +173,9 @@ function Invoke-LevelClear([string]$Phone, [bool]$Reinstall) {
     Restore-Markers $Phone $throttle
     if ($aside) {
         try { Restore-Packs $Phone $aside } catch { $script:PacksNotRestored = $aside.Path; throw }
+    } else {
+        # No installed pack was there to keep aside: an older leftover archive goes back now, AFTER the clear, so nothing it restores is wiped again.
+        try { Restore-LeftoverAside $Phone } catch { Write-Host "   WARNING: could not look for a leftover aside archive: $($_.Exception.Message)" }
     }
     Start-DevApp $Phone $true
     return (Wait-AppAlive $Phone)
@@ -185,6 +188,29 @@ function Invoke-Level([string]$Phone, [string]$Name) {
         'clear' { return (Invoke-LevelClear $Phone $false) }
         'reinstall' { return (Invoke-LevelClear $Phone $true) }
     }
+}
+
+$script:AsideMaxAgeHours = 24
+# packs-yyyyMMdd-HHmmss.tar (Save-PacksAside, stamped with the phone's clock): recent when its stamp is within AsideMaxAgeHours of $PhoneNow (the phone's clock, Get-PhoneStamp parsed); an unreadable name counts as not recent.
+function Test-AsideArchiveRecent([string]$Archive, [datetime]$PhoneNow) {
+    if ($Archive -notmatch 'packs-(\d{8}-\d{6})\.tar$') { return $false }
+    $stamp = [datetime]::MinValue
+    if (-not [datetime]::TryParseExact($Matches[1], 'yyyyMMdd-HHmmss', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$stamp)) { return $false }
+    return ($PhoneNow - $stamp).TotalHours -le $script:AsideMaxAgeHours
+}
+
+# Slice 216: an aside archive left by an earlier failed restore goes back after a clear level's pm clear (never before it, so a later clear cannot wipe it again; only when the app has no installed pack: a pack that is there is never overwritten).
+# Restore-PacksAside verifies every pack with the install check afterwards. When it cannot, the reason is said and the run goes on; the archive stays.
+function Restore-LeftoverAside([string]$Phone) {
+    $archive = @(Invoke-Adb $Phone @('shell', "ls $($script:AsideRoot)/$package/packs-*.tar")) | ForEach-Object { "$_".Trim() } |
+        Where-Object { $_ -match '\.tar$' } | Sort-Object -Descending | Select-Object -First 1
+    if (-not $archive) { return }
+    $phoneNow = [datetime]::ParseExact((Get-PhoneStamp $Phone), 'yyyyMMdd-HHmmss', [Globalization.CultureInfo]::InvariantCulture)
+    if (-not (Test-AsideArchiveRecent $archive $phoneNow)) { Write-Host "   NOTE: aside archive $archive is older than $($script:AsideMaxAgeHours) h: not restored (a stale pack version)."; return }
+    if (@(Get-InstalledPackFolders $Phone $package).Count -gt 0) { Write-Host "   leftover aside archive $archive kept: the app already has installed packs, nothing to restore."; return }
+    Write-Host "   leftover aside archive $archive and no installed pack: restoring it before the reset"
+    try { Restore-Packs $Phone ([pscustomobject]@{ Path = $archive }) }
+    catch { Write-Host "   WARNING: could not restore the leftover archive ($($_.Exception.Message)); it stays at $archive." }
 }
 
 $phone = Find-WirelessPhone $Serial

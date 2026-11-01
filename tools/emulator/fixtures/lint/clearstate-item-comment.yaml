@@ -1,0 +1,9 @@
+# Slice 215: the comment may sit above the - launchApp: item, and the word in a string is not a command.
+appId: uk.sirous.readthestupidtext
+---
+# clearState: wipes the app data (packs, own books); fine for this fixture flow.
+- launchApp:
+    clearState: true
+- tapOn: "clearState is just a word here"
+- tapOn: 'clearState'
+- inputText: "clearState"   # a trailing comment

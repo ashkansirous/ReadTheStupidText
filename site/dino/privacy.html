@@ -37,7 +37,8 @@
   <p><strong>Dino Book Reader itself does not collect, store, transmit, or share any personal information.</strong>
   It has no accounts, no advertising, and no third-party analytics. It does send anonymous usage counts to this
   project&rsquo;s own server, with no name, no identifier of the child, the install or the device, and nothing a
-  child typed; a grown-up can turn this off in Settings (see &ldquo;Anonymous usage counts&rdquo; below). Everything
+  child typed; a grown-up can turn this off in Settings (see &ldquo;Anonymous usage counts&rdquo; below). If the app crashes it can also
+  send a crash report on the same switch (see &ldquo;Crash reports&rdquo; below). Everything
   else the app does happens <strong>on the device</strong>, apart from downloading voice packs and free stories. On Android, the Google
   ML Kit components the app uses send Google technical diagnostics data, described under
   &ldquo;Google ML Kit (Android)&rdquo; below. Your stories, photos, scans and recordings are never sent.</p>
@@ -106,6 +107,19 @@
   stored with Cloudflare (our processor) for about three months and read only as totals. The project can turn counting down or
   off from the server without an update. A grown-up can switch it off at any time under &ldquo;Help make Dino
   better&rdquo; in Settings (behind the grown-ups gate); when it is off, nothing is sent. Test and development builds, and the test devices store review tools use, send no counts.</p>
+  <p><strong>Crash reports (Android and iPhone).</strong> If the app crashes or stops unexpectedly, it can send a crash report to
+  this project&rsquo;s own server (dinoreader.sirous.uk) the next time it starts. It follows the same switch as the counts: a
+  grown-up can turn it off under &ldquo;Help make Dino better&rdquo; in Settings (behind the grown-ups gate), and then nothing is kept or
+  sent. A report holds: the app and its version; the platform; whether the app came from the store or from TestFlight; the
+  kind of failure; the error&rsquo;s type, message and call stack (file paths are removed from messages); the last few hundred lines of
+  the app&rsquo;s technical log (32 KB at most), which hold technical events and error details, never a story, a page, a recording,
+  anything a child typed, a book title, a file name or a picture; the time to the minute (UTC); and the same coarse device ranges as the
+  counts. The phone also passes on crashes and hangs that the system itself records for the app (Apple&rsquo;s MetricKit on iPhone,
+  Android&rsquo;s process exit reasons). It has no name, account, advertising, install or device identifier; the server gives each report a
+  random name and does not store the IP address (it only reads the approximate country, and its rate limiter uses the address briefly to
+  stop one connection sending too many reports). Reports are kept with Cloudflare (our processor), read only by the project to find and fix
+  bugs, and are not shared or used for advertising or tracking. Test and development builds and the test devices store review tools use send
+  none; builds installed through TestFlight do.</p>
   <p><strong>Translation models (Android).</strong> When a story is read translated and the book has
   no built-in translation for that language, the phone downloads Google&rsquo;s on-device translation
   model for the language, once. The story text is translated on the phone and is never sent anywhere.</p>

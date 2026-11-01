@@ -84,7 +84,25 @@ function Write-Lease([string]$Key, [string]$Owner, [int]$Minutes, [int64]$Now = 
     Move-Item $temp $path -Force
 }
 
-function Format-LeaseHolder($Lease) {
+# "3 h 10 min" / "12 min" for an age or a wait in seconds.
+function Format-LeaseSpan([int64]$Seconds) {
+    $minutes = [math]::Max([int64]0, [int64][math]::Floor($Seconds / 60))
+    if ($minutes -lt 60) { return "$minutes min" }
+    return ('{0} h {1} min' -f [math]::Floor($minutes / 60), ($minutes % 60))
+}
+
+# A corrupt lease (Read-Lease fail-closed record) says how old its file is and when it frees by itself: Taken is the file's write time, Expires that plus the longest lease (Slice 216).
+function Format-CorruptLeaseHolder($Lease, [int64]$Now, [string]$Kind = 'phone') {
+    $frees = [DateTimeOffset]::FromUnixTimeSeconds($Lease.Expires).LocalDateTime.ToString('HH:mm')
+    $remedy = if ($Kind -eq 'phone') { 'lease.ps1 -Clear -Corrupt removes it now' } else { "delete the lease-*.json that does not parse in $(Get-LeaseDir $Kind) by hand" }
+    return "a corrupt lease file (written $(Format-LeaseSpan ($Now - $Lease.Taken)) ago, frees itself at $frees; $remedy)"
+}
+
+function Format-LeaseHolder($Lease, [int64]$Now = 0, [string]$Kind = 'phone') {
+    if ($Lease.Owner -ceq $script:CorruptLeaseOwner) {
+        if ($Now -le 0) { $Now = Get-UnixNow }
+        return (Format-CorruptLeaseHolder $Lease $Now $Kind)
+    }
     $until = [DateTimeOffset]::FromUnixTimeSeconds($Lease.Expires).LocalDateTime.ToString('HH:mm')
     return "'$($Lease.Owner)' (until $until)"
 }
@@ -167,7 +185,7 @@ function Wait-ForLease([string]$Key, [string]$Owner, [int]$Minutes, [double]$Wai
         if (Request-Lease $Key $Owner $Minutes 0 $Kind) { return $null }
         $held = Read-Lease $Key 0 $Kind
         if (-not $held) { if ((Get-Date) -ge $deadline) { return '(lease unreadable)' }; Start-Sleep -Milliseconds 200; continue }  # released between the request and the read: try again shortly
-        $holder = Format-LeaseHolder $held
+        $holder = Format-LeaseHolder $held 0 $Kind
         if ((Get-Date) -ge $deadline) { return $holder }
         if ((Get-Date) -ge $nextNotice) { Write-Host "LEASE waiting on $holder"; $nextNotice = (Get-Date).AddSeconds($script:LeaseNoticeSeconds) }
         Start-Sleep -Seconds $PollSeconds

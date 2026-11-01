@@ -16,11 +16,19 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>下のボタンをタップして、読み上げるものを追加します</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>アプリの表示言語</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>読み上げ速度</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>アップデートが必要です</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>このバージョンには問題がありましたが、修正されました。読み上げを続けるには新しいバージョンを入手してください。設定と音声はそのまま残ります。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>Google Play を開く</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>App Store を開く</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>新しいバージョンがあります</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>入手</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>閉じる</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>アプリの改善にご協力ください</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>「フランス語のテキストが読まれた」のような回数を送ります。名前も ID も、読んだ内容も送りません。あわせて、お住まいの国と大まかな端末の種類（スマートフォンかタブレットか、メモリの範囲）も送ります。</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>「フランス語のテキストが読まれた」のような回数を送ります。名前も ID も、読んだ内容も送りません。あわせて、お住まいの国と大まかな端末の種類（スマートフォンかタブレットか、メモリの範囲）も送ります。アプリが異常終了したときは、クラッシュレポートも送ることがあります。内容はエラーと短い技術ログで、読んだ内容や入力した内容は含まれません。</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>オン</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>オフ</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>アプリは、どの言語が読まれたかなどを、名前や ID なしで数えます。設定でオフにできます。あわせて、お住まいの国と大まかな端末の種類（スマートフォンかタブレットか、メモリの範囲）も送ります。</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>アプリは、どの言語が読まれたかなどを、名前や ID なしで数えます。設定でオフにできます。あわせて、お住まいの国と大まかな端末の種類（スマートフォンかタブレットか、メモリの範囲）も送ります。アプリが異常終了したときは、クラッシュレポートも送ることがあります。内容はエラーと短い技術ログで、読んだ内容や入力した内容は含まれません。</value></data>
   <data name="Common_Back" xml:space="preserve"><value>戻る</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>前の文</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>次の文</value></data>
@@ -142,4 +150,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>通知を許可すると、スマートフォンがロックされている間や他のアプリを使っている間も音声のダウンロードが続きます。進み具合は通知で確認できます。</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>今はしない</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>続ける</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>{0}の音声をダウンロード中（{1} MB）… {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>ダウンロードを一時停止しました。タップして完了。</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>{0}の音声（{1} MB）</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}の音声（{1} MB）· {2}% 完了</value></data>
 </root>

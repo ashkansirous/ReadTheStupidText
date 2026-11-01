@@ -241,13 +241,13 @@
   <data name="Version_NewReady" xml:space="preserve"><value>Eine neue Version ist bereit</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Version</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Hilf mit, Dino besser zu machen</value></data>
-  <data name="Usage_Helper" xml:space="preserve"><value>Sendet Zählungen wie „ein Buch aus dem Laden wurde zu Ende gelesen“. Keine Namen, keine Kennungen, nichts von dem, was du getippt hast. Dazu kommen dein Land und eine grobe Geräteart (Handy oder Tablet, Speichergröße).</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Sendet Zählungen wie „ein Buch aus dem Laden wurde zu Ende gelesen“. Keine Namen, keine Kennungen, nichts von dem, was du getippt hast. Dazu kommen dein Land und eine grobe Geräteart (Handy oder Tablet, Speichergröße). Stürzt die App ab, kann sie auch einen Absturzbericht senden: den Fehler und ein kurzes technisches Protokoll, nie etwas, das du gelesen oder getippt hast.</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Lesetempo</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Langsamer ist für die Kleinen leichter</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · langsam</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Speed_Play" xml:space="preserve"><value>Dieses Tempo anhören</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino zählt, welche Bücher gelesen werden, ohne Namen oder Kennungen. Du kannst das in den Einstellungen ausschalten. Dazu kommen dein Land und eine grobe Geräteart (Handy oder Tablet, Speichergröße).</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino zählt, welche Bücher gelesen werden, ohne Namen oder Kennungen. Du kannst das in den Einstellungen ausschalten. Dazu kommen dein Land und eine grobe Geräteart (Handy oder Tablet, Speichergröße). Stürzt die App ab, kann sie auch einen Absturzbericht senden: den Fehler und ein kurzes technisches Protokoll, nie etwas, das du gelesen oder getippt hast.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Dein Erzähler ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>Die Erzählerstimmen ließen sich nicht holen</value></data>
@@ -399,4 +399,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Erlaube Benachrichtigungen, damit die Stimme weiter heruntergeladen wird, während das Telefon gesperrt ist oder du andere Apps nutzt. Dort siehst du den Fortschritt.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Nicht jetzt</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Weiter</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>{0}-Stimme wird vorbereitet ({1} MB) · {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Download pausiert. Zum Fertigstellen tippen.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>{0}-Stimme ({1} MB)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-Stimme ({1} MB) · {2} % fertig</value></data>
 </root>

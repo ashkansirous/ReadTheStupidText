@@ -16,11 +16,19 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Touchez un bouton ci-dessous pour ajouter un texte à lire</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>La langue des textes de l’appli</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Vitesse de lecture</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>Mise à jour requise</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>Cette version a un problème qui a été corrigé. Installez la nouvelle pour continuer à lire. Vos réglages et vos voix sont conservés.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>Ouvrir Google Play</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>Ouvrir l’App Store</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>Une nouvelle version est prête</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>L’obtenir</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>Fermer</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Aider à améliorer l’appli</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Envoie des comptes comme « un texte français a été lu ». Aucun nom, aucun identifiant, rien de ce que vous lisez. Il ajoute aussi votre pays et un type d’appareil approximatif (téléphone ou tablette, plage de mémoire).</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Envoie des comptes comme « un texte français a été lu ». Aucun nom, aucun identifiant, rien de ce que vous lisez. Il ajoute aussi votre pays et un type d’appareil approximatif (téléphone ou tablette, plage de mémoire). Si l’appli plante, elle peut aussi envoyer un rapport de plantage : l’erreur et un court journal technique, jamais rien de ce que vous avez lu ou saisi.</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>Activé</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Désactivé</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>L’appli compte des choses comme les langues lues, sans noms ni identifiants. Vous pouvez désactiver cela dans les Réglages. Il ajoute aussi votre pays et un type d’appareil approximatif (téléphone ou tablette, plage de mémoire).</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>L’appli compte des choses comme les langues lues, sans noms ni identifiants. Vous pouvez désactiver cela dans les Réglages. Il ajoute aussi votre pays et un type d’appareil approximatif (téléphone ou tablette, plage de mémoire). Si l’appli plante, elle peut aussi envoyer un rapport de plantage : l’erreur et un court journal technique, jamais rien de ce que vous avez lu ou saisi.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Retour</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Phrase précédente</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Phrase suivante</value></data>
@@ -142,4 +150,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Autorisez les notifications pour que la voix continue de se télécharger quand le téléphone est verrouillé ou que vous utilisez d'autres applications. Vous y verrez la progression.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Pas maintenant</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Continuer</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>Téléchargement de la voix {0} ({1} Mo)… {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Téléchargement en pause. Touchez pour terminer.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>Voix {0} ({1} Mo)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>Voix {0} ({1} Mo) · {2} % terminé</value></data>
 </root>

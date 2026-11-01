@@ -20,11 +20,16 @@ Assert-Equal 'order kept' 'cold-start,book-end,paused-notification,highlight' ((
 Assert-Equal 'cold-start runs on rtst' $script:StatusPending $plan[0].Status
 Assert-Equal 'book-end is Dino only' $script:StatusSkipped $plan[1].Status
 Assert-Equal 'book-end reason names the app' $true ($plan[1].Reason -like 'not for rtst*')
-Assert-Equal 'blocked check says why' $true ($plan[2].Reason -like '*Slice 208*')
+Assert-Equal 'paused-notification is built (Slice 208) and runs on rtst' $script:StatusPending $plan[2].Status
 $threw = $false
 try { Resolve-CheckSelection @('nope') 'rtst' $catalogue | Out-Null } catch { $threw = $_.Exception.Message -like "*Unknown check 'nope'*cold-start*" }
 Assert-Equal 'unknown check throws and lists the known ones' $true $threw
 Assert-Equal 'dino runs book-end' $script:StatusPending (@(Resolve-CheckSelection @('book-end') 'dino' $catalogue))[0].Status
+# Slice 209: the hook checks are in the catalogue, each with its script file, and run on the apps they are for.
+foreach ($hookCheck in 'language', 'voice', 'translate', 'book-update') { Assert-Equal "check script exists: $hookCheck" $true (Test-Path (Join-Path $PSScriptRoot "checks\$hookCheck.ps1")) }
+Assert-Equal 'language runs on rtst' $script:StatusPending (@(Resolve-CheckSelection @('language') 'rtst' $catalogue))[0].Status
+Assert-Equal 'voice is RTST only' $script:StatusSkipped (@(Resolve-CheckSelection @('voice') 'dino' $catalogue))[0].Status
+Assert-Equal 'book-update is Dino only' $script:StatusSkipped (@(Resolve-CheckSelection @('book-update') 'rtst' $catalogue))[0].Status
 
 Assert-Equal 'cold-start estimate scales with -Runs (3)' 240 (@(Resolve-CheckSelection @('cold-start') 'rtst' $catalogue 3))[0].EstimateSeconds
 Assert-Equal 'cold-start estimate scales with -Runs (6)' 480 (@(Resolve-CheckSelection @('cold-start') 'rtst' $catalogue 6))[0].EstimateSeconds
@@ -33,7 +38,8 @@ Assert-Equal 'a fixed check keeps its estimate' 120 (@(Resolve-CheckSelection @(
 # ---- build cache name and the skip text
 Assert-Equal 'aot platform' 'android-dbg-arm64-aot' (Get-CachePlatform 'aot')
 Assert-Equal 'debug platform' 'android-dbg-arm64' (Get-CachePlatform 'debug')
-Assert-Equal 'every check declares its variant' 'aot,debug,debug,debug,debug,debug' ((($catalogue.Keys | ForEach-Object { $catalogue[$_].Variant })) -join ',')
+Assert-Equal 'every check declares its variant (only cold-start is aot)' 'cold-start' ((@($catalogue.Keys | Where-Object { $catalogue[$_].Variant -eq 'aot' })) -join ',')
+Assert-Equal 'no check has a variant other than aot or debug' 0 @($catalogue.Keys | Where-Object { $catalogue[$_].Variant -notin 'aot', 'debug' }).Count
 Assert-Equal 'cold-start needs aot' 'aot' $plan[0].Variant
 Assert-Equal 'highlight takes any build' 'debug' (@(Resolve-CheckSelection @('highlight') 'rtst' $catalogue))[0].Variant
 
@@ -142,6 +148,23 @@ Assert-Equal 'a fresh run may wait the cap' 3 (Get-PreWaitMinutes $t0 $t0 10)
 Assert-Equal 'later, what is left of the budget' 2 (Get-PreWaitMinutes $t0 $t0.AddMinutes(8) 10)
 Assert-Equal 'nothing left: no wait' 0 (Get-PreWaitMinutes $t0 $t0.AddMinutes(12) 10)
 
+$tWait = $t0.AddSeconds(660)
+Assert-Equal 'review: a build wait moves the budget start (finding 2)' 3 (Get-PreWaitMinutes (Get-BudgetStart $t0 660) $tWait 10)
+Assert-Equal 'review: without the shift the wait would be 0 (finding 2)' 0 (Get-PreWaitMinutes $t0 $tWait 10)
+Assert-Equal 'review: the budget end moves by the waited seconds (finding 1)' $t0.AddMinutes(10).AddSeconds(660) (Get-BudgetStart $t0 660).AddMinutes(10)
+# one budget model (final medium review 1 and 6): a -Prepare build, a lease wait and a quiet wait all measure from the same start
+$prepClock = New-BudgetClock $t0.AddMinutes(20)   # the build took 20 minutes; -Prepare restarts the pair together
+$tLease = $t0.AddMinutes(21)
+Assert-Equal 'budget: a fresh clock has no waited seconds' 0 $prepClock.WaitedSeconds
+Assert-Equal 'budget: after a -Prepare build the lease wait gets the cap' 3 (Get-BudgetPreWaitMinutes $prepClock.RunStart $prepClock.WaitedSeconds $tLease 10)
+Assert-Equal 'budget: a quiet wait 9 minutes into the same clock has 1 minute left' 1 (Get-BudgetPreWaitMinutes $prepClock.RunStart $prepClock.WaitedSeconds $prepClock.RunStart.AddMinutes(9) 10)
+Assert-Equal 'budget: elapsed after the reset is only the time since it' 60 (Get-BudgetElapsedSecondsAt $prepClock.RunStart $prepClock.WaitedSeconds $tLease)
+# a build wait of 660 s (not -Prepare): the lease wait is not capped to 0 by the raw run start
+Assert-Equal 'budget: a lease wait after a long build wait is not 0' 3 (Get-BudgetPreWaitMinutes $t0 660 $tWait 10)
+Assert-Equal 'budget: elapsed excludes the waited seconds' 0 (Get-BudgetElapsedSecondsAt $t0 660 $tWait)
+Assert-Equal 'review: a lost lease is exit 4, not 7 (finding 5)' 4 (Get-StageErrorExitCode 'lost' 'lost')
+Assert-Equal 'review: another error is a runner error (finding 5)' 7 (Get-StageErrorExitCode 'adb dropped' 'lost')
+
 # ---- every early stop still names every check
 $twoPlans = @([pscustomobject]@{ Name = 'cold-start'; Status = 'Pending'; Reason = $null }, [pscustomobject]@{ Name = 'book-end'; Status = 'SKIP'; Reason = 'not for rtst (runs on: dino)' }, [pscustomobject]@{ Name = 'highlight'; Status = 'Pending'; Reason = $null })
 $done = @([pscustomobject]@{ Name = 'cold-start'; Status = 'PASS'; Detail = 'ok'; Seconds = 90 })
@@ -233,6 +256,17 @@ Assert-Equal 'first audio = first CHUNK minus the hook' 2100 $numbers.FirstAudio
 Assert-Equal 'engine ms' 480 $numbers.EngineMs
 Assert-Equal 'first synthesis ms' 400 $numbers.FirstSynthMs
 Assert-Equal 'no chunk yet: no first-audio number' $null (Get-ColdStartNumbers @() 1000.0).FirstAudioMs
+# ---- Slice 214: first-read presets
+Assert-Equal 'preset 1w is one word' 'Hello.' (Resolve-ColdStartText '1w' '').Text
+Assert-Equal 'preset 2s has two sentences' 2 @((Resolve-ColdStartText '2s' '').Text -split '(?<=\.)\s+').Count
+Assert-Equal 'preset 1s has one sentence' 1 @((Resolve-ColdStartText '1s' '').Text -split '(?<=\.)\s+').Count
+Assert-Equal 'no preset = the fixed passage (null text)' $null (Resolve-ColdStartText '' '').Text
+Assert-Equal 'free text wins over a preset' 'Hi there.' (Resolve-ColdStartText '2s' 'Hi there.').Text
+$threw = $false; try { Resolve-ColdStartText '9x' '' | Out-Null } catch { $threw = $true }
+Assert-Equal 'unknown preset throws' $true $threw
+Assert-Equal 'no audio event: no chunk 0 audio length' $null (Get-ColdStartNumbers @() 1000.0).FirstAudioLengthMs
+$audioEvents = @([pscustomobject]@{ Kind = 'audio'; Index = 1; Ms = 999; Time = 1000.5 }, [pscustomobject]@{ Kind = 'audio'; Index = 0; Ms = 2400; Time = 1000.6 })
+Assert-Equal 'chunk 0 audio length is reported' 2400 (Get-ColdStartNumbers $audioEvents 1000.0).FirstAudioLengthMs
 Assert-Equal 'median of three' 2 (Get-Median @(5, 1, 2))
 Assert-Equal 'median of four' 2.5 (Get-Median @(1, 2, 3, 4))
 
@@ -293,10 +327,20 @@ Assert-Equal 'text is read verbatim' '12% of 300 MB' $sel.Text
 Assert-Equal 'a record posted before the start is not taken' $null (Select-PostedProgressNotification $recs 2500 @('supertonic-3') $false)
 Assert-Equal 'with the pack name expected (Slice 208) an unnamed notification fails' $null (Select-PostedProgressNotification $recs 1000 @('supertonic-3') $true)
 Assert-Equal 'another package never matches' 'Downloading voices' (Select-PostedProgressNotification $recs 0 @() $false).Title
-Assert-Equal 'the Slice 208 rule is off for now' $false $script:ExpectPackNameInNotification
+Assert-Equal 'the Slice 208 rule is on: the download text names the language and the size' $true $script:ExpectPackNameInNotification
+$named = Get-NotificationRecords @(
+    '  NotificationRecord(0x5 : pkg=uk.sirous.readthestupidtext.dbg user=UserHandle{0} id=5 tag=null)', '    mUpdateTimeMs=4000', '        android.title=String (Downloading the English voice (63 MB)... 12%)') $pk
+Assert-Equal 'a notification naming the language and the size passes the Slice 208 rule' $true ($null -ne (Select-PostedProgressNotification $named 1000 @('English') $true))
+Assert-Equal 'a size without the language does not pass' $null (Select-PostedProgressNotification $named 1000 @('French') $true)
+Assert-Equal 'a language without the size does not pass' $null (Select-PostedProgressNotification (Get-NotificationRecords @('  NotificationRecord(0x6 : pkg=uk.sirous.readthestupidtext.dbg user=UserHandle{0} id=6 tag=null)', '    mUpdateTimeMs=4000', '        android.title=String (Downloading English voices 12%)') $pk) 1000 @('English') $true)
+$noTime = Get-NotificationRecords @('  NotificationRecord(0x9 : pkg=uk.sirous.readthestupidtext.dbg user=UserHandle{0} id=9 tag=null)', '        android.title=String (Old download 90%)') $pk
+Assert-Equal 'review: a record with no post time is not proof of a fresh download (finding 6)' $null (Select-PostedProgressNotification $noTime 1000 @() $false)
 Assert-Equal 'a notification passes' $true (Resolve-NotificationVerdict $sel).Passed
 Assert-Equal 'verdict quotes title and text' $true ((Resolve-NotificationVerdict $sel).Detail -like "*Downloading voices*12% of 300 MB*")
 Assert-Equal 'none fails' $false (Resolve-NotificationVerdict $null).Passed
+Assert-Equal 'review: no post time in the dump is flagged' $true (Test-PostTimeMissing $noTime)
+Assert-Equal 'review: records with a post time are not flagged' $false (Test-PostTimeMissing $recs)
+Assert-Equal 'review: the unknown post time is named, not "no notification"' $true ((Resolve-NotificationVerdict $null $true).Detail -like '*no post time*')
 
 # ---- book-end: wake locks of the app's uid, or a foreground service
 Assert-Equal 'uid from dumpsys package' '10234' (Get-PackageUid '    userId=10234')

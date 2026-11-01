@@ -2,6 +2,11 @@
 
 Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 
+> **This repo is public, so its Actions minutes are free.** October 2026 used about 12,500 macOS, 8,700 Windows
+> and 7,800 Linux minutes; private, that would count as roughly 150,000 against the account's 2,000 (about $907 a
+> month at GitHub's prices). Before it is ever made private, its builds need another home (a self-hosted runner).
+> (Billing read 2026-11-01; [note](../docs/plan/notes/2026-11-01-0859-feedback-loop-w1.md).)
+
 > **CI (Batch 8, Slice 70):** zero `upload-artifact` (the account's storage is 500 MB
 > shared across repos, billed as monthly GB-hours; one run's MSIX + AAB/APK is ~1 GB, and
 > deleting artifacts doesn't refund it): build jobs upload straight to a **draft GitHub
@@ -44,7 +49,7 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 > (App/Infrastructure/`store-submit.yml`/`windows.yml` changes), not `windows`: a core-only change
 > rebuilds the MSIX for the release but is not submitted. `tests/ReadTheStupidText.Tests` is not a
 > core path (tests.yml still runs it on PRs). Force a submission with `release.yml` `force_all`.
-> The Store flag is measured from the newest `rtst-store-v<x.y.z>` tag (pushed by `release.yml`'s `store-submit-mark` job after a successful submission), not from the last release, so a Windows change in a release whose submission was skipped, failed or cancelled goes out with the next release. No marker tag yet: it follows the release diff (the first successful submission creates it). Unsubmitted Windows changes also switch `windows` on, so that release builds the MSIX (also on a core-only, Android-only or Dino-only release); docs-only merges cut no release, so they never carry the backlog. (Slice 218: docs/plan/slices/218-microsoft-store-submission-skipped.md)
+> The Store flag is measured from the newest `rtst-store-v<x.y.z>` tag (pushed by `release.yml`'s `store-submit-mark` job after a successful submission), not from the last release, so a Windows change in a release whose submission was skipped, failed or cancelled goes out with the next release. No marker tag yet: it follows the release diff (the first successful submission creates it). Unsubmitted Windows changes also switch `windows` on, so that release builds the MSIX (also on a core-only, Android-only or Dino-only release); docs-only merges cut no release, so they never carry the backlog. A marker is never moved or re-seeded by hand, and a release older than the newest marker never adds one (a rerun of an old release leaves the store base where it is; `store-submit-mark` also treats an already-existing marker at the same commit as success). (Slice 222: docs/plan/slices/222-store-marker-hardening.md; Slice 218: docs/plan/slices/218-microsoft-store-submission-skipped.md)
 
 > **Merging a change to a core path builds every app.** The core paths in
 > `ship-targets.mjs` include `.github/workflows/release.yml`, `tests.yml`,

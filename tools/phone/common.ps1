@@ -407,6 +407,13 @@ function Get-InstalledPackFolders([string]$Phone, [string]$Package) {
     return @(Get-InstalledPackIds $Phone $Package $folders)
 }
 
+# The phone's own clock as a yyyyMMdd-HHmmss stamp (local time on the phone): archive names and their age check both use it, so a PC/phone clock or time-zone difference cannot matter.
+function Get-PhoneStamp([string]$Phone) {
+    $stamp = "$(Invoke-Adb $Phone @('shell', 'date', '+%Y%m%d-%H%M%S'))".Trim()
+    if ($stamp -notmatch '^\d{8}-\d{6}$') { throw "Could not read the phone's clock (date said '$stamp')." }
+    return $stamp
+}
+
 # Keeps only the INSTALLED pack folders aside as one tar (never a .partial): written to a .part file (tar piped through cat because `> file` on /sdcard wrote 0 bytes on the S21),
 # checked (size > 0, `tar -tf` file count equal to the folders', every pack's active file and pack.json in it), renamed; the newest KeepAsideArchives kept.
 # Returns Path, Files, PackIds. Throws when nothing is installed or the copy cannot be verified.
@@ -419,7 +426,7 @@ function Save-PacksAside([string]$Phone, [string]$Package, [string]$AsideRoot, [
     if ($global:LASTEXITCODE -ne 0) { throw "could not list the packs ($($files -join ' | '))" }
     $expected = @($files | Where-Object { "$_".Trim() -ne '' }).Count
     $dir = "$AsideRoot/$Package"
-    $archive = "$dir/packs-$(Get-Date -Format 'yyyyMMdd-HHmmss').tar"
+    $archive = "$dir/packs-$(Get-PhoneStamp $Phone).tar"
     $out = Invoke-Adb $Phone @('shell', "mkdir -p $dir && run-as $Package tar -cf - $paths | cat > $archive.part") $TimeoutSeconds
     if ($global:LASTEXITCODE -ne 0) { Invoke-Adb $Phone @('shell', "rm -f $archive.part") | Out-Null; throw "tar of the packs failed ($($out -join ' | '))" }
     $size = "$(Invoke-Adb $Phone @('shell', "stat -c %s $archive.part"))".Trim()
@@ -462,4 +469,182 @@ function Get-PhoneArtifactsPath([string]$RepoRoot, [string]$App, [string]$Platfo
 # The newest signed APK anywhere under the artifacts folder's bin folder, or $null.
 function Find-PhoneArtifactApk([string]$Artifacts, [string]$Filter) {
     return Get-ChildItem (Join-Path $Artifacts 'bin') -Filter $Filter -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+}
+
+# ---- Slice 216: leftovers from the Slice 213 runs
+
+# Item 7: a lease file that does not parse is held for up to 24 h (Read-Lease fails closed). The parse test is the same one Read-Lease uses, so the two cannot disagree.
+function Test-LeaseTextCorrupt([string]$Text) {
+    try { $null = $Text | ConvertFrom-Json -ErrorAction Stop; return $false } catch { return $true }
+}
+
+function Test-LeaseFileCorrupt([string]$Key) {
+    $path = Get-LeasePath $Key
+    if (-not (Test-Path $path)) { return $false }
+    try { $text = [IO.File]::ReadAllText($path) } catch { return $false }   # an unreadable file is not proven corrupt: never removed
+    return (Test-LeaseTextCorrupt $text)
+}
+
+# Removes the lease file only when it is corrupt, under the lease lock. 'Cleared', 'NotCorrupt' (a valid lease, expired or live, or none: left alone) or 'Unreadable'.
+function Clear-CorruptLease([string]$Key) {
+    return (Invoke-WithLeaseLock $Key {
+        $path = Get-LeasePath $Key
+        if (-not (Test-Path $path)) { return 'NotCorrupt' }
+        try { $text = [IO.File]::ReadAllText($path) } catch { return 'Unreadable' }
+        if (-not (Test-LeaseTextCorrupt $text)) { return 'NotCorrupt' }
+        Remove-Item $path -Force
+        return 'Cleared'
+    })
+}
+
+# Clears every corrupt phone lease file (no phone needed: the keys come from the file names). Returns @{ Key; Result } per lease file.
+function Clear-AllCorruptLeases {
+    $dir = Get-LeaseDir 'phone'
+    if (-not (Test-Path $dir)) { return @() }
+    return @(Get-ChildItem $dir -Filter 'lease-*.json' -File | ForEach-Object {
+        $key = $_.BaseName.Substring('lease-'.Length)
+        [pscustomobject]@{ Key = $key; Result = (Clear-CorruptLease $key) }
+    })
+}
+
+# Item 6: one line that says how long a lease is written for and why (the budget plus its margin, or the caller's own longer lease, or the -Prepare allowance).
+function Format-LeaseLengthNote([string]$Mode, [int]$Minutes, [int]$WantedMinutes, [int]$OwnRemainingMinutes) {
+    $why = if ($OwnRemainingMinutes -gt $WantedMinutes) { "your own lease still has $OwnRemainingMinutes min, never shortened" } else { "$Mode needs $WantedMinutes min: its budget plus the margin" }
+    return "   phone lease: $Minutes min ($why)"
+}
+
+# Item 3: the build fails early when its intermediate folders would pass the Windows path limit (APT2264 came minutes into a build). The deepest MAUI intermediate
+# below the artifacts folder is an ESTIMATE (the ML Kit asset paths are ~230 characters from the project folder): tune it when a build fails with APT2264 although this passed.
+$script:WindowsPathLimit = 260
+$script:DeepestMauiIntermediateChars = 150   # unmeasured estimate, set just below the 160 that FAILS so the warning is rare and means something: over it is only a WARNING
+$script:KnownMinimumIntermediateChars = 100  # a floor any MAUI intermediate path certainly has below the artifacts folder: over it the build cannot work (FAIL)
+# $null when fine, else @{ Level = 'Warn' | 'Fail'; Message }.
+function Test-BuildPathLength([string]$ArtifactsPath) {
+    $floor = $ArtifactsPath.Length + $script:KnownMinimumIntermediateChars
+    if ($floor -gt $script:WindowsPathLimit) {
+        return [pscustomobject]@{ Level = 'Fail'; Message = "path too long: even the shortest intermediate path would be about $floor characters (limit $($script:WindowsPathLimit)). Move the worktree or shorten '$ArtifactsPath' by $($floor - $script:WindowsPathLimit) characters." }
+    }
+    $estimate = $ArtifactsPath.Length + $script:DeepestMauiIntermediateChars
+    if ($estimate -le $script:WindowsPathLimit) { return $null }
+    return [pscustomobject]@{ Level = 'Warn'; Message = "path may be too long: the deepest intermediate path is estimated at $estimate characters (limit $($script:WindowsPathLimit); the estimate is unmeasured). If the build fails with APT2264, move the worktree or shorten '$ArtifactsPath'." }
+}
+
+function Assert-BuildPathLength([string]$ArtifactsPath) {
+    $problem = Test-BuildPathLength $ArtifactsPath
+    if (-not $problem) { return }
+    if ($problem.Level -eq 'Fail') { throw $problem.Message }
+    Write-Warning $problem.Message
+}
+
+# Item 5: the one phone build command (audio-timing.ps1 and run-checks.ps1 both call it, so a change cannot miss one). Unquoted arguments for `dotnet build`;
+# a caller that goes through Start-Process quotes the ones with spaces (ConvertTo-ProcessArguments).
+function Get-PhoneBuildArguments([string]$Project, [string]$Artifacts, [string]$Package, [string]$Rid, [bool]$Aot) {
+    $arguments = @($Project, '-f', 'net10.0-android', '-c', 'Debug', '--artifacts-path', $Artifacts, '-nodeReuse:false', '-p:UseSharedCompilation=false',
+        "-p:RuntimeIdentifier=$Rid", '-p:EmbedAssembliesIntoApk=true', '-p:IncludeWindows=false', '-p:AndroidPackageFormat=apk', "-p:ApplicationId=$Package")
+    if ($Aot) { $arguments += '-p:RunAOTCompilation=true', '-p:AndroidEnableProfiledAot=false' }
+    return $arguments
+}
+
+function ConvertTo-ProcessArguments([string[]]$Arguments) {
+    return @($Arguments | ForEach-Object { if ("$_" -match '\s') { "`"$_`"" } else { "$_" } })
+}
+
+# Item 2: an empty sentence audio cache is what makes a read cold (SentenceAudioCache writes <app data>/cache/sentences). Dev package only; the app must be stopped.
+# The one copy: audio-timing.ps1 and checks/cold-start.ps1 both use it.
+$script:SentenceCachePath = 'cache/sentences'   # FileSystem.CacheDirectory/sentences (AndroidSupertonicSpeechReader.SentenceFolderName), under the app's data dir
+function New-SentenceCacheClearCommand([string]$Package) {
+    Assert-DevPackage $Package
+    return "run-as $Package sh -c 'rm -rf $($script:SentenceCachePath); mkdir -p $($script:SentenceCachePath); ls $($script:SentenceCachePath) | wc -l'"
+}
+
+# Slice 214: evict the phone's file cache so the model files are read from flash (the fresh-install case). Needs root (`su` or `adb root`); a stock phone has none,
+# and then this returns $false and the run is only "force-stop cold". Without root the options are a reinstall (run-checks -Reinstall; packs stay, the new APK files are cold)
+# or a reboot (adb reboot, reconnect over wireless debugging, unlock once), which this script never does by itself.
+$script:DropCacheDoneMarker = 'RTST_DROP_RC='
+$script:DropCachesCommand = 'sync; echo 3 > /proc/sys/vm/drop_caches; echo RTST_DROP_RC=$?'
+function Clear-PageCache([string]$Phone) {
+    foreach ($wrap in @("su -c '$($script:DropCachesCommand)'", "su 0 sh -c '$($script:DropCachesCommand)'", $script:DropCachesCommand)) {
+        try {
+            $out = "$(Invoke-Adb $Phone @('shell', $wrap) 2>&1)"
+            # The phone's own shell prints the exit code of the write (RTST_DROP_RC=<n>): that is the answer, whatever language the error text is in and however adb passes the exit code on.
+            if ($out -match "$([regex]::Escape($script:DropCacheDoneMarker))0") { return $true }
+        } catch {
+            if (Test-PastDeadline (Get-ActiveDeadline) (Get-Date)) { throw }   # the run's budget ended while waiting (a root prompt can hang su): signal it, never swallow it
+            Write-Verbose "drop_caches variant failed: $($_.Exception.Message)"
+        }
+    }
+    return $false
+}
+
+function Clear-SentenceCache([string]$Phone, [string]$Package) {
+    $out = @(Invoke-Adb $Phone @('shell', (New-SentenceCacheClearCommand $Package)))
+    if ("$($out | Select-Object -Last 1)".Trim() -ne '0') { throw "Could not empty the sentence cache of $Package (run-as said: $($out -join ' | ')): the run would not be cold." }
+}
+
+# Item 8 (Slice 216): what tap.ps1 prints about a screen change: only the changed texts (a signature is text|desc|id|c=|s=; the first non-empty of the three), cut to $Max characters.
+# The full signatures go to tap-changes.log, not the run output.
+$script:ScreenChangeMaxChars = 120
+function Get-SignatureLabel([string]$Signature) {
+    $core = $Signature -replace '\|c=[^|]*\|s=[^|]*$', ''
+    $label = @($core -split '\|', 3 | Where-Object { $_ })[0]
+    if (-not $label) { $label = $core }
+    # A toggle shows as the same label added and removed: say its state, so the direction is readable.
+    $state = if ($Signature -match '\|c=True\|') { ' [checked]' } elseif ($Signature -match '\|s=True$') { ' [selected]' } else { '' }
+    return "$label$state"
+}
+
+function Format-ScreenChangeLine([string]$Heading, [string[]]$Signatures, [int]$Max = 0) {
+    if ($Max -le 0) { $Max = $script:ScreenChangeMaxChars }
+    $text = "${Heading}: " + ((@($Signatures) | ForEach-Object { Get-SignatureLabel $_ }) -join ' ; ')
+    if ($text.Length -le $Max) { return $text }
+    return $text.Substring(0, $Max - 3) + '...'
+}
+
+# Slice 216: -Rates is a string list ("1,1", "1,2" or 1,2): a [double[]] parameter turned "1,1" into 11. Split on commas, parse with the invariant culture, keep to the PlaybackRate range (0.5-2.0).
+$script:MinPlaybackRate = 0.5
+$script:MaxPlaybackRate = 2.0
+function ConvertTo-RateList($Rates) {
+    $parts = @(@($Rates) | ForEach-Object { "$_" -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    if ($parts.Count -eq 0) { throw '-Rates is empty; pass rates like 1,2 (0.5 to 2.0).' }
+    foreach ($part in $parts) {
+        $rate = 0.0
+        $parsed = [double]::TryParse($part, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$rate)
+        if (-not $parsed -or $rate -lt $script:MinPlaybackRate -or $rate -gt $script:MaxPlaybackRate) {
+            throw "-Rates value '$part' is not a rate between $($script:MinPlaybackRate) and $($script:MaxPlaybackRate)."
+        }
+        $rate
+    }
+}
+
+# Slice 208 (S21 offline 2026-10-31 ~13:57): a check once ran `svc wifi disable` while the only adb link was wireless, so its finally block could never put wifi back.
+# Rule: a check never cuts the link it is driven over. Whole-device network cuts are refused on a wireless serial; checks cut one app's network instead.
+function Assert-WholeDeviceNetworkCutAllowed([string]$Serial) {
+    if ($Serial -match $script:WirelessPattern) { throw "refused: cutting the whole device's wifi/data over the wireless adb link '$Serial' would cut the link itself and strand the phone offline. Cut the dev app's network instead (Set-AppNetworkBlocked)." }
+}
+
+# The seconds a device-side restore waits before it heals a cut by itself (no adb needed).
+$script:DeviceRestoreSeconds = 240
+
+# The shell text that undoes an app network cut and a lowered dataSync timeout, run ON the phone by a detached `sh`. Pure: unit-tested.
+function Get-DeviceRestoreScript([string]$Package, [int]$Uid, [int]$Seconds) {
+    $undo = "cmd netpolicy remove restrict-background-blacklist $Uid; device_config delete activity_manager data_sync_fgs_timeout_duration; am compat reset FGS_INTRODUCE_TIME_LIMITS $Package"
+    return "sleep $Seconds; $undo"
+}
+
+# Starts the detached restore BEFORE any cut, so a lost link heals on its own. The check's finally block still restores over adb as the fast path.
+function Start-DeviceRestore([string]$Serial, [string]$Package, [int]$Uid, [int]$Seconds) {
+    $script = Get-DeviceRestoreScript $Package $Uid $Seconds
+    Invoke-Adb $Serial @('shell', "nohup sh -c '$script' >/dev/null 2>&1 &") | Out-Null
+}
+
+function Get-PackageUid([string]$Serial, [string]$Package) {
+    $line = "$(Invoke-Adb $Serial @('shell', 'pm', 'list', 'packages', '-U', $Package) | Where-Object { $_ -match "package:$([regex]::Escape($Package))\s+uid:(\d+)" } | Select-Object -First 1)"
+    if ($line -notmatch 'uid:(\d+)') { throw "Could not read the uid of $Package (pm list packages -U said '$line')." }
+    return [int]$Matches[1]
+}
+
+# Blocks (or frees) one app's background network through `cmd netpolicy ... restrict-background-blacklist <uid>`; wifi, mobile data and the adb link are untouched.
+function Set-AppNetworkBlocked([string]$Serial, [int]$Uid, [bool]$Blocked) {
+    $verb = if ($Blocked) { 'add' } else { 'remove' }
+    Invoke-Adb $Serial @('shell', 'cmd', 'netpolicy', $verb, 'restrict-background-blacklist', "$Uid") | Out-Null
 }

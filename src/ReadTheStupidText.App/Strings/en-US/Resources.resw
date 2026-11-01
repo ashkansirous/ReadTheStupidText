@@ -175,6 +175,28 @@
   <data name="Restart_Failed" xml:space="preserve">
     <value>The language will apply the next time the app starts.</value>
   </data>
+  <!-- Slice 217: forced update -->
+  <data name="Update_Title" xml:space="preserve">
+    <value>Update needed</value>
+  </data>
+  <data name="Update_Body" xml:space="preserve">
+    <value>This version has a problem that's been fixed. Reading starts again once you update.</value>
+  </data>
+  <data name="Update_OpenStore" xml:space="preserve">
+    <value>Open Microsoft Store</value>
+  </data>
+  <data name="Status_UpdatePaused" xml:space="preserve">
+    <value>Reading paused</value>
+  </data>
+  <data name="Update_Available" xml:space="preserve">
+    <value>A new version is ready</value>
+  </data>
+  <data name="Update_Get" xml:space="preserve">
+    <value>Get it</value>
+  </data>
+  <data name="Update_Dismiss" xml:space="preserve">
+    <value>Close</value>
+  </data>
   <data name="StatusText.Text" xml:space="preserve">
     <value>Ready</value>
   </data>

@@ -1,0 +1,4 @@
+appId: uk.sirous.readthestupidtext
+---
+- launchApp
+- runFlow: {file: sub/hook-sub.yaml, when: {visible: x}}

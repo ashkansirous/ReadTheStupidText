@@ -13,7 +13,9 @@ data.** It has no accounts and no advertising, and what you read, scan or type
 never leaves your device: everything the app does with it happens **locally**.
 The Windows, Android and iPhone apps send only small **anonymous counts** (no
 names, no identifiers, nothing you read) that you can switch off (in the control
-panel on Windows, in Settings on the phones); see *Anonymous usage counts* below.
+panel on Windows, in Settings on the phones); see *Anonymous usage counts* below. The
+Android and iPhone apps can also send a **crash report** if the app crashes, on the same
+switch; see *Crash reports* below.
 
 ## What the app processes, and where
 
@@ -143,6 +145,24 @@ counts and is not used for anything (only the country it maps to, as described a
 from the server. Counts are not shared with anyone else and are not used for advertising or
 tracking. Test and development builds, and the test devices store review tools use, send no counts.
 
+## Crash reports (Android and iPhone)
+
+If the Android or iPhone app crashes or stops unexpectedly, it can send a **crash report** to this project's own
+server (`readthestupidtext.sirous.uk`) the next time it starts. It follows the same switch as the usage counts
+(**Settings > Help improve the app**): when that is off, nothing is kept or sent, and anything waiting is deleted. A
+report holds: the app and its version; the platform; whether the app came from the store or from TestFlight; the
+kind of failure; the error's type, message and call stack (file paths are removed from messages); the last few
+hundred lines of the app's technical log (32 KB at most), which hold technical events and error details, never the text
+you read or typed, file names, names or scanned images; the time to the minute (UTC); and the same coarse device
+ranges as the usage counts. The phone also passes on crashes and hangs that the system itself records for the app
+(Apple's MetricKit on iPhone, Android's process exit reasons). No account, install, device or advertising identifier is
+included, and the server gives each report a random name. The IP address is not stored: the server only reads the
+country it maps to, and its rate limiter uses the address briefly to stop one connection sending too many reports.
+Reports are kept in Cloudflare's R2 storage (Cloudflare is the processor), read only by the project to find and fix
+bugs, kept only as long as that needs, and not shared with anyone else or used for advertising or tracking. Test and
+development builds, emulators and the test devices store review tools use send no reports; builds installed through
+TestFlight do. The project can switch crash reports off for everyone from the server.
+
 ## Permissions
 
 **Windows** declares the `runFullTrust` capability, required so it can place a
@@ -199,7 +219,7 @@ language pack on every platform rather than bundled):
 ## Children's privacy
 
 The app collects no personal information from anyone, including children. The
-anonymous counts hold no name, identifier or text, and can be switched off in Settings.
+anonymous counts and crash reports hold no name, identifier or text you read or typed, and can be switched off in Settings.
 
 ## Changes to this policy
 

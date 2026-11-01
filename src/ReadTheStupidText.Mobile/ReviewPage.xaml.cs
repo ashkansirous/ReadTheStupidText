@@ -31,6 +31,7 @@ public partial class ReviewPage : ContentPage
     private const string LightEditorText = "#1F2027";
     private const string DetectNowMarker = "READ detect-now";
     private const string TranslatedMarker = "READ detect-now translated"; // Slice 211: the read that detected at Play really translated
+    private const string PlainTranslatedMarker = "READ translated"; // Slice 209: any read that really translated (the tick was set on a shown row)
 
     private readonly ReviewHandOff _handOff;
     private readonly ISettingsStore _settings;
@@ -358,17 +359,29 @@ public partial class ReviewPage : ContentPage
         }
     }
 
-    private void OnTranslateRowTapped(object? sender, TappedEventArgs e)
+    private void OnTranslateRowTapped(object? sender, TappedEventArgs e) => SetTick(!_ticked);
+
+    // The tick's one path: the row's tap and the Debug set-translate hook (Slice 209). False when a translation or hand-over is running and the tick cannot change.
+    private bool SetTick(bool ticked)
     {
         if (_translating || _finishing)
         {
-            return;
+            return false;
         }
 
-        _ticked = !_ticked;
+        _ticked = ticked;
         RenderTick();
         RenderReadButton();
+        return true;
     }
+
+#if DEBUG
+    /// <summary>Slice 209: the set-translate hook sets the Translate tick for the text on screen, as a tap on the row would.</summary>
+    internal bool TrySetTick(bool ticked) => SetTick(ticked);
+
+    /// <summary>True when the Translate row is shown (foreign text and a model), the only state in which a user can tick it.</summary>
+    internal bool TranslateAvailable => _optionShown;
+#endif
 
     private void RenderTick()
     {
@@ -575,6 +588,7 @@ public partial class ReviewPage : ContentPage
             if (!token.IsCancellationRequested)
             {
                 _state = _state.Translated(translated);
+                LogMarker(PlainTranslatedMarker);
                 if (_detectedNow)
                 {
                     LogMarker(TranslatedMarker);

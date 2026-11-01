@@ -16,11 +16,19 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Tryck på en knapp nedan för att lägga till något att läsa</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>Språket för appens text</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Uppläsningshastighet</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>Uppdatering krävs</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>Den här versionen har ett problem som har åtgärdats. Hämta den nya för att fortsätta läsa. Dina inställningar och röster finns kvar.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>Öppna Google Play</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>Öppna App Store</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>En ny version är redo</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>Hämta</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>Stäng</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Hjälp till att förbättra appen</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Skickar räkningar som ”en fransk text lästes”. Inga namn, inga id:n, inget av det du läser. Det lägger också till ditt land och en grov enhetstyp (telefon eller surfplatta, minnesintervall).</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Skickar räkningar som ”en fransk text lästes”. Inga namn, inga id:n, inget av det du läser. Det lägger också till ditt land och en grov enhetstyp (telefon eller surfplatta, minnesintervall). Om appen kraschar kan den också skicka en kraschrapport: felet och en kort teknisk logg, aldrig något du har läst eller skrivit.</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>På</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Av</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>Appen räknar saker som vilka språk som läses, utan namn eller id:n. Du kan stänga av detta i Inställningar. Det lägger också till ditt land och en grov enhetstyp (telefon eller surfplatta, minnesintervall).</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>Appen räknar saker som vilka språk som läses, utan namn eller id:n. Du kan stänga av detta i Inställningar. Det lägger också till ditt land och en grov enhetstyp (telefon eller surfplatta, minnesintervall). Om appen kraschar kan den också skicka en kraschrapport: felet och en kort teknisk logg, aldrig något du har läst eller skrivit.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Tillbaka</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Föregående mening</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Nästa mening</value></data>
@@ -142,4 +150,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Tillåt aviseringar så att rösten fortsätter laddas ned medan telefonen är låst eller du använder andra appar. Där ser du förloppet.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Inte nu</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Fortsätt</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>Laddar ned {0}-rösten ({1} MB)… {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Nedladdningen är pausad. Tryck för att slutföra.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>{0}-rösten ({1} MB)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-rösten ({1} MB) · {2} % klart</value></data>
 </root>

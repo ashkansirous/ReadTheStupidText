@@ -240,13 +240,13 @@
   <data name="Version_NewReady" xml:space="preserve"><value>En ny versjon er klar</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Versjon</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Hjelp oss å gjøre Dino bedre</value></data>
-  <data name="Usage_Helper" xml:space="preserve"><value>Sender tall som «en bok fra butikken ble lest ferdig». Ingen navn, ingen id-er, ingenting du har skrevet. Det legger også til landet ditt og en grov enhetstype (telefon eller nettbrett, minneområde).</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Sender tall som «en bok fra butikken ble lest ferdig». Ingen navn, ingen id-er, ingenting du har skrevet. Det legger også til landet ditt og en grov enhetstype (telefon eller nettbrett, minneområde). Hvis appen krasjer, kan den også sende en krasjrapport: feilen og en kort teknisk logg, aldri noe du har lest eller skrevet.</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Lesehastighet</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Saktere er lettere for de små</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · sakte</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Speed_Play" xml:space="preserve"><value>Hør denne hastigheten</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino teller hvilke bøker som blir lest, uten navn eller id-er. Du kan slå dette av i Innstillinger. Det legger også til landet ditt og en grov enhetstype (telefon eller nettbrett, minneområde).</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino teller hvilke bøker som blir lest, uten navn eller id-er. Du kan slå dette av i Innstillinger. Det legger også til landet ditt og en grov enhetstype (telefon eller nettbrett, minneområde). Hvis appen krasjer, kan den også sende en krasjrapport: feilen og en kort teknisk logg, aldri noe du har lest eller skrevet.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Din forteller ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>Kunne ikke hente fortellerstemmene</value></data>
@@ -397,4 +397,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Tillat varsler for at stemmen skal fortsette å lastes ned mens telefonen er låst eller du bruker andre apper. Du ser fremdriften der.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Ikke nå</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Fortsett</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>Gjør {0}-stemmen klar ({1} MB) · {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Nedlastingen er satt på pause. Trykk for å fullføre.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>{0}-stemmen ({1} MB)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-stemmen ({1} MB) · {2} % ferdig</value></data>
 </root>

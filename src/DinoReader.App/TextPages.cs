@@ -62,6 +62,8 @@ public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences
 
 	public int FirstSentenceOf(int page) => page >= 0 && page < _pages.Count ? _pages[page].FirstSentence : -1;
 
+	private static readonly bool NeedsLineDescription = DeviceInfo.Platform == DevicePlatform.WinUI;
+
 	public void DrawPage(PageLayers layers, int page)
 	{
 		layers.Boxes.Children.Clear();
@@ -81,6 +83,13 @@ public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences
 				ReadingMetrics.TextPadding, ReadingMetrics.TextPadding + topInset + i * _lineHeight,
 				_textWidth, _lineHeight));
 			label.FlowDirection = rightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+			// Slice 205: a FormattedText label can have an empty UI Automation name on Windows, so the line's plain text is its description.
+			// Slice 226: Windows only; TalkBack and VoiceOver read the label's own text, and a description would make them read each line twice.
+			if (NeedsLineDescription)
+			{
+				SemanticProperties.SetDescription(label, string.Join(" ", lines[i].Words.Select(w => w.Text)));
+			}
+
 			_labels.Add(label);
 			layers.Text.Children.Add(label);
 		}

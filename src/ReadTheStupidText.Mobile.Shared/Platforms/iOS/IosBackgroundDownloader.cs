@@ -15,9 +15,11 @@ namespace ReadTheStupidText.Mobile.Shared;
 /// then finds the body complete and only verifies it. A task that drops or is paused keeps its Apple resume data beside the
 /// partial file, so no fetched byte is lost. A download that cannot go on (no network, Wi-Fi gone while mobile data is not
 /// allowed) fails as an offline transport error, so Slice 182's waiting line and automatic resume work here too. iOS shows
-/// no permission question and no notification for this.
+/// no permission question for the download itself; when the run ends unfinished (a terminal transport error, after the service's retries) while the
+/// app is in the background, a quiet "Download paused" notice is posted by the host (Slice 208, <see cref="IosPackNotification"/>), which this class hands
+/// over as its <see cref="IPackPausedNotifier"/>.
 /// </summary>
-public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPackBodyFetcher
+public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPackBodyFetcher, IPackPausedNotifier
 {
     private const char DescriptionSeparator = '|';
     private const int PartialContent = 206;
@@ -42,8 +44,10 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
     private readonly ConcurrentDictionary<string, Waiter> _waiters = new(); // by partial file: one transfer per file
     private readonly ConcurrentDictionary<nuint, string> _failures = new();
 
-    private sealed class Waiter(TaskCompletionSource done, IProgress<double>? progress, long offset, long total, bool allowsCellular)
+    private sealed class Waiter(string packId, TaskCompletionSource done, IProgress<double>? progress, long offset, long total, bool allowsCellular)
     {
+        public string PackId { get; } = packId;
+
         public TaskCompletionSource Done { get; } = done;
 
         public IProgress<double>? Progress { get; } = progress;
@@ -73,6 +77,28 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
     }
 
     public static IosBackgroundDownloader Instance => Shared.Value;
+
+    private static readonly IosPackNotification Notice = new();
+
+    public void Post(string packId, double? fraction) => Notice.Post(packId, fraction);
+
+    public void Clear(string packId) => Notice.Clear(packId);
+
+    /// <summary>A task in the background session still writes this partial: one a waiter here runs, or one the system kept across a relaunch (no waiter yet).</summary>
+    public async Task<bool> HasLiveTransferAsync(string partial)
+    {
+        if (_waiters.ContainsKey(partial))
+        {
+            return true;
+        }
+
+        NSUrlSessionActiveTasks active = await _session.GetTasksAsync().ConfigureAwait(false);
+        return active.DownloadTasks.OfType<NSUrlSessionDownloadTask>().Any(t =>
+            Parse(t.TaskDescription).Partial == partial && t.State is NSUrlSessionTaskState.Running or NSUrlSessionTaskState.Suspended);
+    }
+
+    /// <summary>The scan deleted the partial: its Apple resume data goes with it, or a later task would continue onto a file that is gone.</summary>
+    public void DiscardLeftovers(string partial) => DeleteResumeData(partial);
 
     /// <summary>The app delegate's <c>HandleEventsForBackgroundUrl</c> hands the system's completion handler here.</summary>
     public static void HandleEventsForBackgroundUrl(Action completionHandler)
@@ -107,7 +133,8 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
         }
 
         var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var waiter = new Waiter(done, progress, start, pack.SizeBytes, PackResumeWatcher.CellularOnlyKnown());
+        var waiter = new Waiter(pack.Id, done, progress, start, pack.SizeBytes, PackResumeWatcher.CellularOnlyKnown());
+        _ = IosPackNotification.EnsureProvisionalAuthorizationAsync(); // Slice 208: asked once, the first time a pack download starts; provisional, so no prompt
         _waiters[partial] = waiter; // before any task is looked up or created, so no completion can be missed
         using var monitorCancel = new CancellationTokenSource();
         try

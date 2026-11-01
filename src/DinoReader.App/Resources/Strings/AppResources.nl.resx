@@ -240,13 +240,13 @@
   <data name="Version_NewReady" xml:space="preserve"><value>Er is een nieuwe versie</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Versie</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Help Dino beter te maken</value></data>
-  <data name="Usage_Helper" xml:space="preserve"><value>Verstuurt aantallen zoals "een boek uit de winkel is uitgelezen". Geen namen, geen id's, niets wat je hebt getypt. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik).</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Verstuurt aantallen zoals "een boek uit de winkel is uitgelezen". Geen namen, geen id's, niets wat je hebt getypt. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik). Als de app crasht, kan hij ook een crashrapport sturen: de fout en een kort technisch logboek, nooit iets wat je hebt gelezen of getypt.</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Leessnelheid</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Langzamer is makkelijker voor kleintjes</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · langzaam</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Speed_Play" xml:space="preserve"><value>Hoor deze snelheid</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino telt welke boeken worden gelezen, zonder namen of id's. Je kunt dit uitzetten in Instellingen. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik).</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino telt welke boeken worden gelezen, zonder namen of id's. Je kunt dit uitzetten in Instellingen. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik). Als de app crasht, kan hij ook een crashrapport sturen: de fout en een kort technisch logboek, nooit iets wat je hebt gelezen of getypt.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Jouw verteller ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>De verteller-stemmen konden niet worden opgehaald</value></data>
@@ -397,4 +397,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Sta meldingen toe zodat de stem blijft downloaden terwijl de telefoon vergrendeld is of je andere apps gebruikt. Je ziet de voortgang daar.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Niet nu</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Doorgaan</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>De {0}-stem wordt klaargemaakt ({1} MB) · {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Download gepauzeerd. Tik om af te ronden.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>{0}-stem ({1} MB)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-stem ({1} MB) · {2}% klaar</value></data>
 </root>

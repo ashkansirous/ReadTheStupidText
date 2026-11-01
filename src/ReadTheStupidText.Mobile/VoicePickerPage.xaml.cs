@@ -328,8 +328,7 @@ public partial class VoicePickerPage : ContentPage
     private void SelectVoice(VoiceInfo voice)
     {
         bool changed = _settings.VoiceId != voice.Id;
-        _settings.VoiceId = voice.Id;
-        _reader.SetVoice(voice.Id);
+        ApplyVoice(_settings, _reader, voice.Id);
         if (changed)
         {
             CountVoiceChange(voice);
@@ -340,6 +339,13 @@ public partial class VoicePickerPage : ContentPage
         {
             _ = _reader.SpeakAsync(VoiceLabel.For(voice));
         }
+    }
+
+    // The picker's store-and-apply step, shared with the Debug set-voice hook (Slice 209) so a scripted pick takes the same path as a tap.
+    internal static void ApplyVoice(ISettingsStore settings, ISpeechReader reader, string voiceId)
+    {
+        settings.VoiceId = voiceId;
+        reader.SetVoice(voiceId);
     }
 
     // An anonymous count of an actual change (Slice 137): the language it is for and which engine speaks it (the engine of the pack the voice

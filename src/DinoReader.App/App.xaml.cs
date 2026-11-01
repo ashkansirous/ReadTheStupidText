@@ -2,7 +2,10 @@ using System.Diagnostics;
 using System.Globalization;
 using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
+using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Crashes;
 
 namespace DinoReader;
 
@@ -18,6 +21,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 	private bool _launchCounted;
 	private readonly CancellationTokenSource _bookUpdateCancel = new();
 	private bool _bookUpdateStarted;
+	private bool _stalePartialsStarted;
 
 	public DinoApp(IServiceProvider services, SpeechStartup startup, AppConfigClient config)
 	{
@@ -30,8 +34,18 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		new TranslationPackStore().NoteInstall(FirstRunState.IsNeeded(services.GetRequiredService<ISettingsStore>())); // before anything can build StoryTranslator: a fresh install gets no pack guess
 		// Contract: AppConfigClient raises Changed only on the main thread, so this handler may touch UI directly.
 		_config.Changed += (_, _) => ShowUpdateIfRequired();
-		PageAppearing += (_, page) => SystemBarIcons.ForPage(page);
+		PageAppearing += (_, page) => OnPageAppearing(page);
 		_ = startup.RunAsync();
+	}
+
+	// Slice 208: a parent opening Settings gets the notification question a download outside the grown-up area postponed.
+	private static void OnPageAppearing(Page page)
+	{
+		SystemBarIcons.ForPage(page);
+		if (page is SettingsPage)
+		{
+			_ = StoryLanguages.AskPendingNotificationAsync(page);
+		}
 	}
 
 	protected override Window CreateWindow(IActivationState? activationState)
@@ -44,6 +58,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		window.Stopped += (_, _) => OnStopped(_navigation!, external);
 		window.Stopped += (_, _) => FlushUsage();
 		window.Stopped += (_, _) => _bookUpdateCancel.Cancel();
+		CrashReporter.AttachTo(window); // Slice 227: the run marker for the unclean-exit report
 		window.Resumed += (_, _) => OnResumed(_navigation!, external);
 		window.Resumed += (_, _) => _ = _config.RefreshAsync();
 		var resume = _services.GetRequiredService<ReadTheStupidText.Mobile.Shared.Network.PackResumeWatcher>(); // Slice 182: created and started with the window, not when a page first asks for it
@@ -65,6 +80,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		{
 			await _config.RefreshAsync();
 			_ = CheckBookUpdatesAsync();
+			_ = ResumeStalePartialsAsync();
 			if (_launchCounted)
 			{
 				return;
@@ -102,6 +118,34 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader could not check for book updates: {ex.Message}");
+		}
+	}
+
+	// Slice 208: once per launch, after the current-language start (SpeechStartup), in the foreground: the half-finished packs nothing wants are deleted and the ticked languages finish.
+	private async Task ResumeStalePartialsAsync()
+	{
+		if (_config.UpdateRequired || _stalePartialsStarted)
+		{
+			return;
+		}
+
+		_stalePartialsStarted = true;
+		try
+		{
+			if (_services.GetRequiredService<IVoicePackService>() is MobileVoicePackService packs)
+			{
+				// Deletes the half-finished packs nothing wants (a pack in flight is left alone, the languages are read again before each delete), then finishes the
+				// ticked languages' partials through the normal request (Wi-Fi rule applies; a cancelled language is unticked, so it is not among them).
+				StalePartialScan scan = await Task.Run(() => packs.ScanStalePartialsAsync(() => StoryLanguages.Current().All, CancellationToken.None));
+				if (scan.Resumable.Count > 0)
+				{
+					await _services.GetRequiredService<StoryLanguagePacks>().ResumeWantedAsync(scan.Resumable);
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not resume its half-finished packs: {ex.Message}");
 		}
 	}
 

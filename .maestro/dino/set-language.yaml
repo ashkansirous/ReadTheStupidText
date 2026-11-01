@@ -1,0 +1,49 @@
+# Slice 209: the set-language hook runs the Language page's pick path (LanguageChoice.Apply) and rebuilds the root, so a flow switches the screens' language without tapping.
+# The voice-pack start (voice=1) is skipped by default and here with voice=0 (SpokenLanguage.Use crashes the Debug x86_64 emulator build), so the flow needs no network. A code the app does not ship fails loudly.
+# expect-log: HOOK set-language ok fa
+# expect-log: HOOK set-language ok en
+# expect-log: HOOK set-language failed unknown xx
+# expect-log: STATE language=en
+appId: uk.sirous.dinoreader
+name: Switch language by hook
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow only switches the screens' language and reads nothing.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: xx
+      voice: "0"
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: fa
+      voice: "0"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 30000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: en
+      voice: "0"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 30000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: state

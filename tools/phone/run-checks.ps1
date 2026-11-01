@@ -2,7 +2,7 @@
 .SYNOPSIS
   Runs named checks on the real phone inside a fixed time budget and prints one summary table (Slice 213).
 .DESCRIPTION
-  run-checks.ps1 -App rtst|dino -Checks cold-start,highlight [-Budget 10] [-Runs 3] [-Reinstall] [-Serial s]
+  run-checks.ps1 -App rtst|dino -Checks cold-start,highlight [-Budget 10] [-Runs 3] [-Reinstall] [-FirstRead 1w|1s|2s|passage | -FirstText '<text>'] [-DropCaches] [-Serial s]
   run-checks.ps1 -Build -App rtst|dino [-Variant debug|aot]      (default debug) builds (or finds) the APK for the current inputs in the build cache, then exits.
   run-checks.ps1 -Prepare -App rtst|dino [-Variant debug|aot]    (builds the APK first when it is not cached) puts the voice pack on the dev app, OUTSIDE any budget (like -Build), then exits. A pack is installed when files/packs/<id>/active exists
                                                                  and the version folder it names has pack.json (Test-PackInstalled). Steps: take the lease, install the cached APK as a run does, deletes the stale
@@ -40,6 +40,9 @@ param(
     [switch]$Prepare,
     [int]$Runs = 3,
     [switch]$Reinstall,
+    [ValidateSet('1w', '1s', '2s', 'passage')][string]$FirstRead = 'passage',   # cold-start only: size of the first read (Slice 214)
+    [string]$FirstText,                                                           # cold-start only (RTST): free text for the first read instead of a -FirstRead preset
+    [switch]$DropCaches,                                                          # cold-start only: drop the phone's file cache each run (root only)
     [string]$Serial
 )
 $script:RunStart = Get-Date   # the budget clock: it runs from here, so every wait before the checks counts
@@ -127,9 +130,9 @@ function Build-VariantApk([string]$V, [string]$Dir, [string]$Key) {
     $project = Join-Path $script:RepoRoot $script:Projects[$App]
     $platform = Get-CachePlatform $V
     $artifacts = Get-PhoneArtifactsPath $script:RepoRoot $App $platform
+    Assert-BuildPathLength $artifacts   # Slice 216: fail now, not minutes into the build (APT2264)
     Remove-Item $artifacts -Recurse -Force -ErrorAction SilentlyContinue
-    $extra = @(); if ($V -eq $script:VariantAot) { $extra += '-p:RunAOTCompilation=true', '-p:AndroidEnableProfiledAot=false' }
-    $arguments = @("`"$project`"", '-f', 'net10.0-android', '-c', 'Debug', '--artifacts-path', "`"$artifacts`"", '-nodeReuse:false', '-p:UseSharedCompilation=false', "-p:RuntimeIdentifier=$($script:Rid)", '-p:EmbedAssembliesIntoApk=true', '-p:IncludeWindows=false', '-p:AndroidPackageFormat=apk', "-p:ApplicationId=$package") + $extra
+    $arguments = ConvertTo-ProcessArguments (Get-PhoneBuildArguments $project $artifacts $package $script:Rid ($V -eq $script:VariantAot))   # the one build command, shared with audio-timing.ps1
     $exitCode = Invoke-DotnetBuild $V $arguments
     if ($exitCode -ne 0) { throw "dotnet build exited $exitCode" }
     $built = Find-PhoneArtifactApk $artifacts $script:ApkFilter
@@ -218,9 +221,10 @@ function Get-LogWriteTime([string]$V) {
 function Get-BuildView($Record) {
     if ($Record.Final) { return $Record.Final }
     $v = $Record.Variant
+    $status = Read-BuildStatusFile $v   # before the cache: a build publishes its APK, then writes ok, so an ok status always finds the APK
     $cached = [bool](Find-VariantApk $v $script:RunKey)
     $exited = [bool]($Record.Process -and $Record.Process.HasExited)
-    $resolved = Resolve-BuildState (Read-BuildStatusFile $v) $exited (Get-LogWriteTime $v) (Get-Date) $cached
+    $resolved = Resolve-BuildState $status $exited (Get-LogWriteTime $v) (Get-Date) $cached
     $view = [pscustomobject]@{ State = $resolved.State; Failure = $null }
     if ($resolved.State -ceq $script:StateFailed) {
         $view.Failure = Format-BuildFailure $v $resolved.Reason (Get-BuildLogTail $v)
@@ -358,6 +362,13 @@ function Invoke-PrepareGuarded([string]$Phone, $State) {
     return (Invoke-PrepareSteps $Phone)
 }
 
+# Restarts the budget clock: run start and waited seconds together.
+function Reset-BudgetClock {
+    $clock = New-BudgetClock (Get-Date)
+    $script:RunStart = $clock.RunStart
+    $script:WaitedSeconds = $clock.WaitedSeconds
+}
+
 function Invoke-PrepareMode {
     $script:Budget = $script:PrepareLeaseMinutes   # only the lease and the install step read it; there is no check budget in this mode
     $script:CachedKey = Get-BuildKey
@@ -368,6 +379,7 @@ function Invoke-PrepareMode {
         if ($built -ne $script:ExitAllPassed) { Write-Host 'PREPARE STOPPED: the build failed'; return $built }
         $script:Apk = Find-VariantApk $Variant $script:CachedKey
     }
+    Reset-BudgetClock   # the build above is outside any budget: the lease wait and the install start their clock now (run start and waited seconds together)
     $phone = Find-WirelessPhone $Serial
     if (-not $phone) { Write-PairingAsk; return $script:ExitNoPhone }
     $state = New-StageState
@@ -383,13 +395,13 @@ function New-Row([string]$Name, [string]$Status, [string]$Detail, $Seconds = $nu
 }
 
 # The budget covers the checks, not the time spent only waiting for a build: that time is added to the end of the budget.
-function Get-BudgetElapsedSeconds { return ((Get-Date) - $script:RunStart).TotalSeconds - $script:WaitedSeconds }
-function Get-BudgetEnd { return $script:RunStart.AddMinutes($Budget).AddSeconds($script:WaitedSeconds) }
+function Get-BudgetElapsedSeconds { return (Get-BudgetElapsedSecondsAt $script:RunStart $script:WaitedSeconds (Get-Date)) }
+function Get-BudgetEnd { return (Get-BudgetStart $script:RunStart $script:WaitedSeconds).AddMinutes($Budget) }
 
 # Runs one check script in this process; its deadline is the budget's end. A throw is a FAIL (or TIMEOUT when the budget ended it).
 function Invoke-OneCheck($Row, [string]$Phone, [datetime]$BudgetEnd, [string]$RunVariant) {
     $splat = @{ Phone = $Phone; App = $App }
-    if ($Row.Name -eq 'cold-start') { $splat.Runs = $Runs }
+    if ($Row.Name -eq 'cold-start') { $splat.Runs = $Runs; $splat.Preset = $FirstRead; if ($FirstText) { $splat.Text = $FirstText }; if ($DropCaches) { $splat.DropCaches = $true } }
     Set-CheckDeadline $BudgetEnd   # the stage keeps it set (children read it from the environment) until the cleanup is done
     $started = Get-Date; $output = $null; $failure = $null
     try { $output = @(& (Join-Path $PSScriptRoot "checks\$($Row.Name).ps1") @splat) } catch { $failure = $_.Exception.Message }
@@ -412,6 +424,13 @@ function Get-OwnLeaseMinutes($State) {
     $expires = 0
     if ($held -and $held.Owner -ceq $State.Owner) { $expires = $held.Expires }
     return (Get-LeaseMinutes $expires (Get-UnixNow) ($Budget + $script:LeaseExtraMinutes))
+}
+
+# Minutes the caller's own lease still has (0 when none or not theirs); read before the lease is written, so the note can say a longer own lease was kept.
+function Get-OwnRemainingMinutes($State) {
+    $held = Read-Lease $State.Key
+    if (-not $held -or $held.Owner -cne $State.Owner) { return 0 }
+    return [int][math]::Ceiling(($held.Expires - (Get-UnixNow)) / 60.0)
 }
 
 function Confirm-OwnLease($State) {
@@ -473,6 +492,7 @@ function Wait-ForBuildsOnce($Step, $State) {
     }
     Start-Sleep -Seconds $script:WaitPollSeconds
     $script:WaitedSeconds += ((Get-Date) - $now).TotalSeconds
+    Set-CheckDeadline (Get-BudgetEnd)   # the waited time is not budget: install, preflight and the quiet wait must not run on the old deadline
 }
 
 # Each row is kept in the state as soon as it exists, so a later failure still prints it. Returns $null, or a stop (Reason, Code).
@@ -535,15 +555,17 @@ function Initialize-StageLease($State, [string]$Phone) {
 
 # $null once the lease is taken, else the holder; the wait is capped and counts against the budget.
 function Take-PhoneLease($State) {
-    $wait = Get-PreWaitMinutes $script:RunStart (Get-Date) $Budget
-    $heldBy = Wait-ForLease $State.Key $State.Owner (Get-OwnLeaseMinutes $State) $wait 'phone'
-    if (-not $heldBy) { $State.HoldsLease = $true }
+    $wait = Get-BudgetPreWaitMinutes $script:RunStart $script:WaitedSeconds (Get-Date) $Budget
+    $minutes = Get-OwnLeaseMinutes $State
+    $ownRemaining = Get-OwnRemainingMinutes $State   # before the write: afterwards it would be the new length
+    $heldBy = Wait-ForLease $State.Key $State.Owner $minutes $wait 'phone'
+    if (-not $heldBy) { $State.HoldsLease = $true; Write-Host (Format-LeaseLengthNote $(if ($Prepare) { '-Prepare' } else { 'a timed run' }) $minutes ($Budget + $script:LeaseExtraMinutes) $ownRemaining) }
     return $heldBy
 }
 
 # $null once the machine is quiet, else why not (the wait is capped and counts against the budget).
 function Enter-QuietWithinBudget($State) {
-    $wait = [int][math]::Ceiling((Get-PreWaitMinutes $script:RunStart (Get-Date) $Budget))
+    $wait = [int][math]::Ceiling((Get-BudgetPreWaitMinutes $script:RunStart $script:WaitedSeconds (Get-Date) $Budget))
     try { $State.Quiet = Enter-QuietMachine $wait }
     catch { return "other jobs on this machine (builds, emulator or VM runs): $($_.Exception.Message)" }
     return $null
@@ -602,7 +624,7 @@ function Invoke-DeviceStage($Plans, [string]$Phone) {
     $state = New-StageState
     Set-CheckDeadline (Get-BudgetEnd)   # install, restore, preflight and tap/preflight children all stop at the end of the budget
     try { return (Invoke-GuardedStage $Plans $Phone $state) }
-    catch { return (Stop-Stage $Plans $state "runner error: $($_.Exception.Message)" $script:ExitRunnerError) }
+    catch { return (Stop-Stage $Plans $state "runner error: $($_.Exception.Message)" (Get-StageErrorExitCode $_.Exception.Message $script:LeaseLostReason)) }
     finally {
         $script:RunFinished = $true
         Invoke-Cleanup 'write the final run status' { Publish-RunStatus $Plans $state $null $null }

@@ -16,11 +16,19 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>اضغط على زر في الأسفل لإضافة شيء للقراءة</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>لغة كلمات التطبيق</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>سرعة القراءة</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>التحديث مطلوب</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>في هذا الإصدار مشكلة تم إصلاحها. احصل على الإصدار الجديد لمتابعة القراءة. تبقى إعداداتك وأصواتك كما هي.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>افتح Google Play</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>افتح App Store</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>إصدار جديد جاهز</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>احصل عليه</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>إغلاق</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>ساعد في تحسين التطبيق</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>يرسل أعدادًا مثل «تمت قراءة نص فرنسي». لا أسماء ولا معرّفات ولا شيء مما تقرؤه. ويضيف أيضًا بلدك ونوع جهازك التقريبي (هاتف أو جهاز لوحي، ونطاق الذاكرة).</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>يرسل أعدادًا مثل «تمت قراءة نص فرنسي». لا أسماء ولا معرّفات ولا شيء مما تقرؤه. ويضيف أيضًا بلدك ونوع جهازك التقريبي (هاتف أو جهاز لوحي، ونطاق الذاكرة). وإذا تعطّل التطبيق، فقد يرسل أيضًا تقرير تعطّل: الخطأ وسجلًّا تقنيًا قصيرًا، وليس أبدًا أي شيء قرأته أو كتبته.</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>مفعّل</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>متوقف</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>يحسب التطبيق أشياء مثل اللغات التي تُقرأ، دون أسماء أو معرّفات. يمكنك إيقاف ذلك من الإعدادات. ويضيف أيضًا بلدك ونوع جهازك التقريبي (هاتف أو جهاز لوحي، ونطاق الذاكرة).</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>يحسب التطبيق أشياء مثل اللغات التي تُقرأ، دون أسماء أو معرّفات. يمكنك إيقاف ذلك من الإعدادات. ويضيف أيضًا بلدك ونوع جهازك التقريبي (هاتف أو جهاز لوحي، ونطاق الذاكرة). وإذا تعطّل التطبيق، فقد يرسل أيضًا تقرير تعطّل: الخطأ وسجلًّا تقنيًا قصيرًا، وليس أبدًا أي شيء قرأته أو كتبته.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>رجوع</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>الجملة السابقة</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>الجملة التالية</value></data>
@@ -142,4 +150,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>اسمح بالإشعارات لمتابعة تنزيل الصوت أثناء قفل الهاتف أو استخدام تطبيقات أخرى. ستشاهد التقدم هناك.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>ليس الآن</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>متابعة</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>جارٍ تنزيل صوت {0} ({1} ميغابايت)… {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>توقف التنزيل مؤقتًا. اضغط للإكمال.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>صوت {0} ({1} ميغابايت)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>صوت {0} ({1} ميغابايت) · اكتمل {2}%</value></data>
 </root>

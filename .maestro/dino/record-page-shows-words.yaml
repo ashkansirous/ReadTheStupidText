@@ -1,0 +1,48 @@
+# Slice 231: the Record screen shows the page's words under the picture (a starter picture book used to show the picture alone).
+# The gate is skipped by the enter-grown-up hook; the book sheet's Record pill is tapped by its text.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK enter-grown-up ok
+appId: uk.sirous.dinoreader
+name: Record page shows the words
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow reads only a starter book and records nothing.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+# The one-time "Storyteller voices are ready" note may cover the shelf (optional).
+- tapOn:
+    point: 50%,91%
+    optional: true
+- tapOn:
+    id: TileMore
+    index: 0
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: BookSheetRemove
+    timeout: 10000
+- tapOn:
+    text: Record
+    waitToSettleTimeoutMs: 300
+# The first page of the first starter: its picture band and, under it, its words. The label id is RecordViews.PageWordsId.
+- extendedWaitUntil:
+    visible:
+      id: RecordPageWords
+    timeout: 15000
+- assertVisible:
+    id: RecordPageWords
+    text: ".{20,}"

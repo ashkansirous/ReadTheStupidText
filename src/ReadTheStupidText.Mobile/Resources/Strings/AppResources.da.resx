@@ -16,11 +16,19 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Tryk på en knap nedenfor for at tilføje noget at læse</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>Sproget for appens tekster</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Læsehastighed</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>Opdatering påkrævet</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>Denne version har et problem, som er rettet. Hent den nye for at fortsætte med at læse. Dine indstillinger og stemmer bevares.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>Åbn Google Play</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>Åbn App Store</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>En ny version er klar</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>Hent</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>Luk</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Hjælp med at forbedre appen</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Sender tællinger som “en fransk tekst blev læst”. Ingen navne, ingen id’er, intet af det, du læser. Det tilføjer også dit land og en grov enhedstype (telefon eller tablet, hukommelsesinterval).</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Sender tællinger som “en fransk tekst blev læst”. Ingen navne, ingen id’er, intet af det, du læser. Det tilføjer også dit land og en grov enhedstype (telefon eller tablet, hukommelsesinterval). Hvis appen går ned, kan den også sende en nedbrudsrapport: fejlen og en kort teknisk log, aldrig noget, du har læst eller skrevet.</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>Til</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Fra</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>Appen tæller ting som, hvilke sprog der læses, uden navne eller id’er. Du kan slå det fra i Indstillinger. Det tilføjer også dit land og en grov enhedstype (telefon eller tablet, hukommelsesinterval).</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>Appen tæller ting som, hvilke sprog der læses, uden navne eller id’er. Du kan slå det fra i Indstillinger. Det tilføjer også dit land og en grov enhedstype (telefon eller tablet, hukommelsesinterval). Hvis appen går ned, kan den også sende en nedbrudsrapport: fejlen og en kort teknisk log, aldrig noget, du har læst eller skrevet.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Tilbage</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Forrige sætning</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Næste sætning</value></data>
@@ -142,4 +150,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Tillad notifikationer for at holde stemmen ved med at downloade, mens telefonen er låst, eller du bruger andre apps. Du kan se fremgangen der.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Ikke nu</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Fortsæt</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>Henter {0}-stemmen ({1} MB)… {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Download sat på pause. Tryk for at gøre den færdig.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>{0}-stemmen ({1} MB)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-stemmen ({1} MB) · {2} % færdig</value></data>
 </root>

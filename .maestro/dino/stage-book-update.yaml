@@ -1,0 +1,26 @@
+# Slice 209: the stage-book-update hook runs the same staging as the 7-day check for one book. On a fresh install the store has no newer version than the shelf's copy, so the
+# hook answers "failed UpToDate" (or "failed offline" with no network) after "started": the flow proves the command is wired and answers loudly. The apply timing on a phone with an
+# older copy is the book-update runner check (tools/phone/checks/book-update.ps1).
+# expect-log: HOOK stage-book-update started
+appId: uk.sirous.dinoreader
+name: Stage a book update by hook
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow only asks the staging hook and reads nothing.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: stage-book-update
+      id: three-little-pigs
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    id: StoryTile

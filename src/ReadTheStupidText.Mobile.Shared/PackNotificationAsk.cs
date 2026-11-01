@@ -17,6 +17,24 @@ public static class PackNotificationAsk
     private static int _asking;
 #endif
 
+    /// <summary>True once the question can never be shown again: it was answered (Not now is final) or the permission is already granted. Never throws.</summary>
+    public static async Task<bool> IsSettledAsync()
+    {
+#if ANDROID
+        try
+        {
+            return Preferences.Default.Get(AskedKey, false) || await Permissions.CheckStatusAsync<Permissions.PostNotifications>() == PermissionStatus.Granted;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Notification question state unknown: {ex.GetType().Name}: {ex.Message}");
+            return false;
+        }
+#else
+        return await Task.FromResult(true);
+#endif
+    }
+
     /// <param name="showSheet">Shows the app's sheet and returns true for Continue.</param>
     public static async Task AskOnceAsync(Func<Task<bool>> showSheet)
     {

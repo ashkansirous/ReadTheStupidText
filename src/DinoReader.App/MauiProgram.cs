@@ -4,8 +4,10 @@ using DinoReader.Core;
 using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Crashes;
 using ReadTheStupidText.Documents;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Crashes;
 #if DEBUG
 using ReadTheStupidText.Mobile.Shared.Testing;
 #endif
@@ -49,6 +51,8 @@ public static class MauiProgram
 
 	public static MauiApp CreateMauiApp()
 	{
+		// Slice 227: first of all, so even a crash during start-up leaves a pending report; it follows the grown-up's usage switch.
+		CrashReporter.Start(CrashApp.Dino, UsageCounter.EnabledKey);
 		// Before anything reads the culture (services, resources, the first page), including the UI thread's own.
 		UiCulture.Apply(UiCulture.Resolve(LanguageChoice.Preferred()));
 		TextFlowHandlers.Register();
@@ -99,11 +103,17 @@ public static class MauiProgram
 		StoryJson.LegacyNarratorOf = language => app.Services.GetRequiredService<StoryVoicing>().LegacyNarratorOf(language);
 		// Counts left from an earlier session go out now (Slice 133); the counter does nothing when counting is off.
 		_ = app.Services.GetRequiredService<UsageCounter>().FlushAsync();
+		BeginCrashReports(app.Services.GetRequiredService<AppConfigClient>());
 #if DEBUG
 		TestHooks.Install(app.Services, TestHookScheme, code => (Microsoft.Maui.Controls.Application.Current as DinoApp)?.CompleteFirstRun(code) ?? false);
+		CrashTestHook.Install(); // Slice 227: after the app's own Debug commands, so it chains onto them
 #endif
 		return app;
 	}
+
+	// Slice 227: pending crash reports are posted a little after start-up, once the remote config says crashReports.enabled (default off).
+	private static void BeginCrashReports(AppConfigClient config) =>
+		CrashReporter.BeginSending(new CrashSendOptions(StoreClient.BaseAddress, () => config.Current.CrashReportsEnabled, () => config.HasCopy, () => config.RefreshAsync()));
 
 	private static void AddDocumentExtractors(IServiceCollection services)
 	{

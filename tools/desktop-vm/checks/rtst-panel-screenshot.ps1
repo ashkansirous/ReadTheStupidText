@@ -40,6 +40,10 @@ Invoke-Check -ResultFile $ResultFile -Body {
     $point = Wait-Until { Find-TrayIconCenter } 15 'tray icon not visible, cannot click it'
     Click-Screen $point.X $point.Y
     $panel = Wait-Until { Get-AppWindows 'ReadTheStupidText.App' | Where-Object { Find-UiaById $_ 'SpeedPillToggle' } | Select-Object -First 1 } 10 'the control panel did not open after the tray click'
+    # Slice 215: the wait row says "Preparing the voice..." for as long as the read is in GeneratingAudio (WaitFlyoutController.Compose), so shoot only after the read moved on to speaking/finished.
+    $done = Wait-Until { $last = @((Get-RtstLogText $pkg) -split "`n" | Where-Object { $_ -match "`tHotkey`t" -and $_ -like "*$sample*" } | ForEach-Object { ($_ -split "`t")[3] }) | Select-Object -Last 1; if ($last -in 'Reading', 'Read', 'Failed') { $last } } 180 'the read never left GeneratingAudio, so the panel still shows Preparing the voice'
+    if ($done -eq 'Failed') { throw 'the read failed, the panel is not in the ready state' }
+    $states += " > $done"
     Start-Sleep -Seconds 2
     $dir = Split-Path $ResultFile
     $png = Join-Path $dir 'control-panel.png'

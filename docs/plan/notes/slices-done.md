@@ -168,7 +168,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 
 The lane-order paragraphs of finished batches, moved verbatim.
 
-Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
+Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](plan-batch-9-10-index.md).
 
 Batch 13 (76-80, planned 2026-10-22): 76 and 77 are independent and go first (Touches do not overlap); 78 after 77; 79 and 80 after 78 (both edit the wizard's files). Decisions 83-87.
 
@@ -226,8 +226,8 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 183 | Big pack downloads keep going when the phone is locked or the app is in the background (Android foreground service with a progress notification, iOS background URLSession; after 182) | built | #549 |  | [183-pack-downloads-keep-going-when-locked.md](../slices/183-pack-downloads-keep-going-when-locked.md) |
 | 189 | Dino: one "For grown-ups" button on the shelf, the gear inside grown-up mode, a ⋯ sheet per book, a reading card capped at 30% | built | #560 |  | [189-dino-grown-ups-button-and-book-sheet.md](../slices/189-dino-grown-ups-button-and-book-sheet.md) |
 
-| 201 | The Norwegian voice pack no longer crashes the app (piper-nb tokens fixed, packs-10; a bad pack is rejected, not loaded) | built | #571 |  | [slices\201-norwegian-pack-crash.md](../slices/slices\201-norwegian-pack-crash.md) |
-| 202 | Changing the app language with text in the reader no longer crashes the app | built | #577 |  | [slices\202-reader-language-change-crash.md](../slices/slices\202-reader-language-change-crash.md) |
+| 201 | The Norwegian voice pack no longer crashes the app (piper-nb tokens fixed, packs-10; a bad pack is rejected, not loaded) | built | #571 |  | [slices\201-norwegian-pack-crash.md](../slices/201-norwegian-pack-crash.md) |
+| 202 | Changing the app language with text in the reader no longer crashes the app | built | #577 |  | [slices\202-reader-language-change-crash.md](../slices/202-reader-language-change-crash.md) |
 | 186 | RTST: no scan pack download after the user cancels the voice pack (follow-up to 183) | built | #574 |  | [186-no-ocr-download-after-voice-cancel.md](../slices/186-no-ocr-download-after-voice-cancel.md) |
 | 190 | RTST phone: highlight one sentence at a time (Android and iOS; Windows unchanged) | built | #573 |  | [190-rtst-phone-sentence-highlight.md](../slices/190-rtst-phone-sentence-highlight.md) |
 | 196 | Dino: each book opens in the view that fits it (words in the pictures -> Picture only) | built | #575 |  | [196-dino-default-view-per-book.md](../slices/196-dino-default-view-per-book.md) |
@@ -251,6 +251,18 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 211 | Play right after typing waits for language detection, so it translates and picks the voice like a later Play (Slice 139 follow-up) | built | #633 | | [211-play-before-detection-waits-for-it.md](../slices/211-play-before-detection-waits-for-it.md) |
 | 218 | RTST Microsoft Store submission skipped Windows code changes (no Store build since before 1.74.0) | built | #630 | | [218-microsoft-store-submission-skipped.md](../slices/218-microsoft-store-submission-skipped.md) |
 | 219 | Usage counts drop dev builds below version 1.0 (worker and client) | built | #632 | | [219-usage-drops-dev-versions.md](../slices/219-usage-drops-dev-versions.md) |
+| 216 | Phone tooling leftovers from the Slice 213 runs: a build swap re-downloaded the voice pack (repro first), audio-timing warm repeats labelled cold, build path-length guard, audio-timing log folder | built | #637 |  | [216-phone-tooling-leftovers.md](../slices/216-phone-tooling-leftovers.md) |
+| 217 | RTST forced update from the remote config (port of Dino Slice 132; Android, iOS, Windows tray) | built | #640 |  | [217-rtst-forced-update.md](../slices/217-rtst-forced-update.md) |
+| 215 | Close the gaps left by Slices 207 and 212: status label id, emulator health check and restart, test the one-emulator limit, lint gaps | built | #639 |  | [215-device-guard-gaps.md](../slices/215-device-guard-gaps.md) |
+| 205 | Dino Windows head: the Reading speed row and the page-turn VM check (Slice 188 follow-up) | built | #645 |  | [205-dino-windows-reading-speed-and-page-turn-checks.md](../slices/205-dino-windows-reading-speed-and-page-turn-checks.md) |
+| 214 | RTST phone: the first read after a cold start takes 7 s (S21 AOT; first synthesis 5.9 s): find warm-up vs length, then fix to under 2 s | built | #647 |  | [214-rtst-phone-cold-first-audio.md](../slices/214-rtst-phone-cold-first-audio.md) |
+| 209 | Test hooks: set-language, set-voice, set-translate, and a staged Dino book update for the Slice 181 timing | built | #644 |  | [209-settings-and-book-update-test-hooks.md](../slices/209-settings-and-book-update-test-hooks.md) |
+| 208 | Paused pack downloads tell you ("Download paused. Tap to finish.") and half-finished packs finish or are deleted at launch (Slice 183 follow-up) | built | #646 | — | [208-paused-pack-downloads-tell-you-and-finish.md](../slices/208-paused-pack-downloads-tell-you-and-finish.md) |
+| 227 | Crash and error reports from the phone apps (Dino and RTST, Android and iOS): our own Worker endpoint, log tail, TestFlight tagged, Apple/Play pull tooling | built | #654 | | [227-crash-reports.md](../slices/227-crash-reports.md) |
+| 222 | Microsoft Store marker hardening (rerun Slice 218 medium review: mark job tag lookup, marker moves, Dino-only runs) | built | #667 | [222-store-marker-hardening.md](docs/plan/slices/222-store-marker-hardening.md) | [222-store-marker-hardening.md](../slices/222-store-marker-hardening.md) |
+| 223 | Usage counts: one pre-1.0 version rule, tested the same on worker and client (Slice 219 review cleanups) | built | #665 | [223-usage-version-rule-cleanup.md](docs/plan/slices/223-usage-version-rule-cleanup.md) | [223-usage-version-rule-cleanup.md](../slices/223-usage-version-rule-cleanup.md) |
+| 226 | Dino Settings rows and page text: Slice 205 review findings left open (hidden row children, stale NavRow name, per-line description read twice on TalkBack/VoiceOver) | built | #668 | [226-dino-settings-rows-review-leftovers.md](docs/plan/slices/226-dino-settings-rows-review-leftovers.md) | [226-dino-settings-rows-review-leftovers.md](../slices/226-dino-settings-rows-review-leftovers.md) |
+| 231 | Dino user test: Record page hides the words on picture books (bug) | built | #666 | [231-dino-record-page-shows-words.md](docs/plan/slices/231-dino-record-page-shows-words.md) | [231-dino-record-page-shows-words.md](../slices/231-dino-record-page-shows-words.md) |
 
 
 ## Batch lane-order paragraphs moved from plan.md (2026-10-30)

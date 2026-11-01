@@ -86,6 +86,7 @@ public sealed class SettingsPage : SettingsSubPage
 {
 	private const string CodeSeparator = ", ";
 	private const int SummaryLanguages = 2;
+	private const string ReadingSpeedRowId = "SettingsReadingSpeedRow";
 
 	private readonly IServiceProvider _services;
 	private readonly AppConfigClient _config;
@@ -142,7 +143,7 @@ public sealed class SettingsPage : SettingsSubPage
 		SettingsRows.NavRow(AppResources.Settings_NarratorVoice, NarratorSummary(), OpenAsync<NarratorLanguagesPage>, Busy);
 
 	private Grid SpeedRow() =>
-		SettingsRows.NavRow(AppResources.Speed_Title, AppResources.Format(AppResources.Speed_Value, ReadingSpeedPreference.Load().Value), OpenAsync<ReadingSpeedPage>, Busy);
+		SettingsRows.NavRow(AppResources.Speed_Title, AppResources.Format(AppResources.Speed_Value, ReadingSpeedPreference.Load().Value), OpenAsync<ReadingSpeedPage>, Busy, automationId: ReadingSpeedRowId);
 
 	private Grid AnimalRow() =>
 		SettingsRows.NavRow(AppResources.Settings_AnimalSounds_Title, OnOff(AnimalSoundsPreference.Load()), OpenAsync<AnimalSoundsPage>, Busy);

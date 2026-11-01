@@ -17,11 +17,19 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Tippe unten auf eine Taste, um etwas zum Vorlesen hinzuzufügen</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>Die Sprache der App-Texte</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Lesetempo</value></data>
+  <!-- Slice 217: forced update (machine draft, for native review) -->
+  <data name="Update_Title" xml:space="preserve"><value>Update erforderlich</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Body" xml:space="preserve"><value>Diese Version hat ein Problem, das behoben wurde. Hol dir die neue Version, um weiterzulesen. Deine Einstellungen und Stimmen bleiben erhalten.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonAndroid" xml:space="preserve"><value>Google Play öffnen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_ButtonIos" xml:space="preserve"><value>App Store öffnen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>Eine neue Version ist da</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Get" xml:space="preserve"><value>Holen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Update_Dismiss" xml:space="preserve"><value>Schließen</value><comment>Machine draft: needs native review</comment></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Hilf mit, die App zu verbessern</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Sendet Zählungen wie „ein französischer Text wurde gelesen“. Keine Namen, keine Kennungen, nichts von dem, was du liest. Dazu kommen dein Land und eine grobe Geräteart (Handy oder Tablet, Speichergröße).</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Sendet Zählungen wie „ein französischer Text wurde gelesen“. Keine Namen, keine Kennungen, nichts von dem, was du liest. Dazu kommen dein Land und eine grobe Geräteart (Handy oder Tablet, Speichergröße). Stürzt die App ab, kann sie auch einen Absturzbericht senden: den Fehler und ein kurzes technisches Protokoll, nie etwas, das du gelesen oder getippt hast.</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>An</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Aus</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>Die App zählt zum Beispiel, welche Sprachen gelesen werden, ohne Namen oder Kennungen. Du kannst das in den Einstellungen ausschalten. Dazu kommen dein Land und eine grobe Geräteart (Handy oder Tablet, Speichergröße).</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>Die App zählt zum Beispiel, welche Sprachen gelesen werden, ohne Namen oder Kennungen. Du kannst das in den Einstellungen ausschalten. Dazu kommen dein Land und eine grobe Geräteart (Handy oder Tablet, Speichergröße). Stürzt die App ab, kann sie auch einen Absturzbericht senden: den Fehler und ein kurzes technisches Protokoll, nie etwas, das du gelesen oder getippt hast.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Zurück</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Voriger Satz</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Nächster Satz</value></data>
@@ -143,4 +151,9 @@
   <data name="Notify_Body" xml:space="preserve"><value>Erlaube Benachrichtigungen, damit die Stimme weiter heruntergeladen wird, während das Telefon gesperrt ist oder du andere Apps nutzt. Dort siehst du den Fortschritt.</value></data>
   <data name="Notify_NotNow" xml:space="preserve"><value>Nicht jetzt</value></data>
   <data name="Notify_Continue" xml:space="preserve"><value>Weiter</value></data>
+  <!-- Slice 208: machine draft, for native review -->
+  <data name="PackNotify_Downloading" xml:space="preserve"><value>{0}-Stimme wird heruntergeladen ({1} MB) … {2}</value></data>
+  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Download pausiert. Zum Fertigstellen tippen.</value></data>
+  <data name="PackNotify_Named" xml:space="preserve"><value>{0}-Stimme ({1} MB)</value></data>
+  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-Stimme ({1} MB) · {2} % fertig</value></data>
 </root>

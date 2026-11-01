@@ -7,7 +7,6 @@ $script:ProgressSeconds = 15
 $script:ProcessCheckSeconds = 3
 $script:HookAnswerSeconds = 30
 $script:PackReadySeconds = 60
-$script:SentenceCacheDir = 'cache/sentences'   # FileSystem.CacheDirectory/sentences (AndroidSupertonicSpeechReader.SentenceFolderName), under the app's data dir
 $script:ReaderPassage = 'The little dinosaur walked down to the river every morning. She watched the water run over the smooth grey stones, and she counted the fish that swam past her feet. ' +
     'Then she climbed the tall hill behind the trees and looked at the whole green valley below her.'
 
@@ -101,13 +100,7 @@ function Start-ReadyApp([string]$Phone, [string]$App, [string]$Package) {
     return $appPid
 }
 
-# Empties the app's sentence audio cache so the next read synthesises every sentence again (a warm cache made repeat runs 240-578 ms). Verifies it is empty.
-function Clear-SentenceCache([string]$Phone, [string]$Package) {
-    Assert-DevPackage $Package
-    $out = @(Invoke-Adb $Phone @('shell', "run-as $Package sh -c 'rm -rf $($script:SentenceCacheDir); mkdir -p $($script:SentenceCacheDir); ls $($script:SentenceCacheDir) | wc -l'"))
-    $left = "$($out | Select-Object -Last 1)".Trim()
-    if ($left -ne '0') { throw "Could not empty the sentence cache of $Package (run-as said: $($out -join ' | ')): the run would not be cold." }
-}
+# Clear-SentenceCache (empties the app's sentence audio cache so the next read synthesises every sentence again) lives in ../common.ps1 (Slice 216), shared with audio-timing.ps1.
 
 # ---- -Prepare (Slice 213): download a missing voice pack with the app in the foreground, outside any budget
 # Deletes the stale <id>-<version>.zip.partial files of the needed packs, so the watch below never follows an old download.

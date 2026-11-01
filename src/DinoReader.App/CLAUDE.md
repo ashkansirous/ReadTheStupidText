@@ -24,7 +24,9 @@ are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CL
 > 132, 133 and 136 `Dino Reader Batch 26-28.dc.html`, and for Slice 143 (the wait overlay)
 > `Dino Reader Batch 30.dc.html`, and for Slices 148 and 150-154 `Dino Reader Batch 31.dc.html`
 > (it supersedes frames 57-59), for Slice 155 (first-run intro) `Dino Reader Batch 32.dc.html`, and for
-> Slices 172-174 (gear, story languages, reading screen) `Dino Reader Batch 37.dc.html` (index in
+> Slices 172-174 (gear, story languages, reading screen) `Dino Reader Batch 37.dc.html`, for Slices 228-231
+> (grown-ups' corner, Done/Continue, Record) `Dino Reader Batch 43 Grown-ups Corner.dc.html`, and for Slice 232
+> (landscape, every screen) `Dino Reader Batch 44 Landscape.dc.html` (index in
 > that folder's README): read visual values (colours, sizes, copy, layout) from it,
 > never guess them, and never call `DesignSync` for them.
 
@@ -106,3 +108,5 @@ are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CL
 - `own_book_added` blob9 is `kind:bucket` (kind `restore` = an own book a backup restore put back; restored starter/store books are not counted); split it client-side, never with SQL string functions. (Slice 178: docs/plan/slices/178-dino-own-book-usage-detail.md)
 - Dino book updates are staged in the background and applied only at the next cold start, before the shelf's first read (`StagedBookUpdates.ApplyOnceAsync`); never swap a book that may be open. Every install and swap records the text+picture hash. (Slice 181: docs/plan/slices/181-dino-books-update-from-store.md)
 - Segmented controls (`ModeSwitch.cs`) expose the selected state in the control's description ("<label>, Selected"), not only in a hint, because Android drops hints from content-desc. (Slice 196: docs/plan/slices/196-dino-default-view-per-book.md)
+- A full-row settings button (`SettingsRows.cs`) hides only its Label/IconView/Border/BoxView children and carries an AutomationId, not title text (title text draws twice on Windows hover/press); add children to a row only through `SettingsRows.AddInRow(row, child, slot)` (slot 0 = title column). (Slice 226: docs/plan/slices/226-dino-settings-rows-review-leftovers.md)
+- The per-line UIA description in `TextPages.cs` is Windows-head only (`DevicePlatform.WinUI`); name a picture+text page label through `PictureTextPages.AccessibleName`. (Slice 226: docs/plan/slices/226-dino-settings-rows-review-leftovers.md)

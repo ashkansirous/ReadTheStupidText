@@ -62,12 +62,10 @@ public sealed partial class IosSupertonicSpeechReader
         string? voiceId = Volatile.Read(ref _voiceId);
         VoiceInfo voice = ResolveVoice(engine, voiceId);
         string prefix = TrimToSentenceBoundary(text);
-        IEnumerable<string> sentences = SpeechChunkPlanner.ForText(prefix, HeadPolicy)
-            .Take(PrepareMaxChunks)
-            .SelectMany(chunk => SentenceUnits.Split(chunk.Text));
+        IReadOnlyList<string> sentences = SpeechChunkPlanner.HeadUnits(prefix, ReadHeadPolicy, PrepareMaxChunks);
 
         await Task.WhenAll(sentences.Select(s => GetSentenceAsync(engine, s, voice, null, token)));
-        _hints.Remember(text, FirstChunkHints.ScopeOf(voiceId, null), HeadPolicy); // only now that the units are stored
+        _hints.Remember(text, FirstChunkHints.ScopeOf(voiceId, null), ReadHeadPolicy); // only now that the units are stored
     }
 
     // The early start's prepared heads (Slice 139): this reader's own.
@@ -76,7 +74,7 @@ public sealed partial class IosSupertonicSpeechReader
     // The head the early start prepared for this voice, if the text starts with it; consumed by this read.
     private IReadOnlyList<SpeechChunkPlan> PlanText(string text) =>
         SpeechChunkPlanner.ForText(
-            text, HeadPolicy, firstChunkHint: _hints.Take(text, FirstChunkHints.ScopeOf(Volatile.Read(ref _voiceId), null)));
+            text, ReadHeadPolicy, firstChunkHint: _hints.Take(text, FirstChunkHints.ScopeOf(Volatile.Read(ref _voiceId), null)));
 
     // The first PrepareMaxChars characters, cut back to the last sentence end so a sentence is never
     // synthesized half-way (it would be cached under a key no read ever asks for). With no boundary

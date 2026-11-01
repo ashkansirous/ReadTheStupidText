@@ -39,7 +39,11 @@ $script:Catalogue = [ordered]@{
     'notification-text'   = @{ Apps = @('rtst'); EstimateSeconds = 150; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
     'short-lines'         = @{ Apps = @('dino'); EstimateSeconds = 200; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
     'book-end'            = @{ Apps = @('dino'); EstimateSeconds = 420; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
-    'paused-notification' = @{ Apps = @('rtst'); EstimateSeconds = 120; NeedsPack = $false; Variant = 'debug'; Blocked = 'Slice 208 (the paused-playback notification) is not built yet' }
+    'language'            = @{ Apps = @('rtst', 'dino'); EstimateSeconds = 180; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
+    'translate'           = @{ Apps = @('rtst'); EstimateSeconds = 150; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
+    'voice'               = @{ Apps = @('rtst'); EstimateSeconds = 90; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
+    'book-update'         = @{ Apps = @('dino'); EstimateSeconds = 240; NeedsPack = $false; Variant = 'debug'; Blocked = $null }
+    'paused-notification' = @{ Apps = @('rtst'); EstimateSeconds = 240; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
 }
 
 # One row per requested check, in order, duplicates dropped: Status Pending (runs) or Skipped with the reason. An unknown name throws and lists the known ones.
@@ -157,15 +161,33 @@ function Format-PreflightLine($Verdict) {
     return "preflight: GO (warnings, carrying on: $($Verdict.Other -join '; '))"
 }
 
+# ---- cold-start first-read text (Slice 214): the three sizes of the first chunk. The reader cuts the head of a read into chunks of up to 2 sentences, so each preset is one first chunk.
+$script:ColdStartPresets = [ordered]@{
+    '1w' = 'Hello.'
+    '1s' = 'The little dinosaur walked down to the river every morning.'
+    '2s' = 'The little dinosaur walked down to the river every morning. She watched the water run over the smooth grey stones.'
+}
+$script:ColdStartPresetDefault = 'passage'   # no preset: the fixed passage (ReaderPassage), as before
+
+# A preset name (1w, 1s, 2s, passage) or free text -> [pscustomobject]@{ Label; Text } (Text $null = the fixed passage). -Text wins over -Preset.
+function Resolve-ColdStartText([string]$Preset, [string]$Text) {
+    if ($Text) { return [pscustomobject]@{ Label = 'custom'; Text = $Text } }
+    if (-not $Preset -or $Preset -eq $script:ColdStartPresetDefault) { return [pscustomobject]@{ Label = $script:ColdStartPresetDefault; Text = $null } }
+    if (-not $script:ColdStartPresets.Contains($Preset)) { throw "Unknown first-read preset '$Preset'. Known: $($script:ColdStartPresets.Keys -join ', '), $($script:ColdStartPresetDefault)." }
+    return [pscustomobject]@{ Label = $Preset; Text = $script:ColdStartPresets[$Preset] }
+}
+
 # ---- cold-start: the numbers of one fresh-process read, from the log lines of that process. $TapTime is the phone time of the `HOOK read start` line.
 function Get-ColdStartNumbers($Events, [double]$TapTime) {
     $chunk = $Events | Where-Object Kind -eq 'chunk' | Select-Object -First 1
     $engine = $Events | Where-Object Kind -eq 'engine' | Select-Object -First 1
     $synth = $Events | Where-Object { $_.Kind -eq 'synth-end' -and $_.Index -eq 0 } | Select-Object -First 1
+    $audio = $Events | Where-Object { $_.Kind -eq 'audio' -and $_.Index -eq 0 } | Select-Object -First 1
     return [pscustomobject]@{
         FirstAudioMs = if ($chunk) { [int](($chunk.Time - $TapTime) * 1000) } else { $null }
         EngineMs     = if ($engine -and $engine.Ms -ge 0) { $engine.Ms } else { $null }
         FirstSynthMs = if ($synth) { $synth.Ms } else { $null }
+        FirstAudioLengthMs = if ($audio) { $audio.Ms } else { $null }   # length of chunk 0's audio: the size of the first chunk, since the log never holds the text
     }
 }
 
@@ -239,22 +261,30 @@ function Test-RecordNamesPack([string]$Raw, $Names) {
     return $false
 }
 
-# TODO(Slice 208): the app's download text does not name the pack yet. When Slice 208 adds the pack name to the notification, flip this to $true so the PASS rule also requires it.
-$script:ExpectPackNameInNotification = $false
+# Slice 208: the download text names the pack's language and size ("Downloading the English voice (63 MB)... 12%"), so the PASS rule also requires it.
+# The names to look for are the language names the check passes in (not the pack id), and the size is "<n> MB".
+$script:ExpectPackNameInNotification = $true
+$script:SizePattern = '\(\d+ MB\)'
 
-# The notification the download just posted: a record of the dev package posted at or after $SinceMs (phone epoch ms; a record with no post time in the dump counts, the dump
-# order decides) whose title or text has a percentage. Matched by package and post time, not by pack name, unless ExpectPackNameInNotification (Slice 208) is on.
+# The notification the download just posted: a record of the dev package posted at or after $SinceMs (phone epoch ms; a record with no post time in the dump never counts: it
+# could be left over from an earlier run) whose title or text has a percentage. Matched by package and post time, not by pack name, unless ExpectPackNameInNotification (Slice 208) is on.
 # The newest by post time wins (later in the dump wins a tie); $null when none.
 function Select-PostedProgressNotification($Records, [int64]$SinceMs, $PackNames = @(), [bool]$ExpectPackName = $script:ExpectPackNameInNotification) {
     $pool = @(@($Records) | Where-Object {
-        ($_.PostTime -eq 0 -or $_.PostTime -ge $SinceMs) -and ("$($_.Title) $($_.Text)" -match $script:PercentPattern)
+        $_.PostTime -gt 0 -and $_.PostTime -ge $SinceMs -and ("$($_.Title) $($_.Text)" -match $script:PercentPattern)
     })
-    if ($ExpectPackName) { $pool = @($pool | Where-Object { Test-RecordNamesPack $_.Raw @($PackNames | Where-Object { $_ }) }) }
+    if ($ExpectPackName) { $pool = @($pool | Where-Object { ($_.Raw -match $script:SizePattern) -and (Test-RecordNamesPack $_.Raw @($PackNames | Where-Object { $_ })) }) }
     return ($pool | Sort-Object -Property @{ Expression = 'PostTime'; Descending = $true }, @{ Expression = 'Order'; Descending = $true } | Select-Object -First 1)
 }
 
+# True when a record of the dev package shows a percentage but has no readable post time (the dump format lacks it).
+function Test-PostTimeMissing($Records) {
+    return [bool](@($Records) | Where-Object { $_.PostTime -le 0 -and ("$($_.Title) $($_.Text)" -match $script:PercentPattern) } | Select-Object -First 1)
+}
+
 # The PASS rule: a progress notification was shown. Detail quotes title and text verbatim.
-function Resolve-NotificationVerdict($Note) {
+function Resolve-NotificationVerdict($Note, [bool]$PostTimeUnknown = $false) {
+    if (-not $Note -and $PostTimeUnknown) { return [pscustomobject]@{ Passed = $false; Detail = 'the dump gives no post time for the dev app notifications, so a fresh one cannot be told from an old one (not an app bug: check the notification by hand, or the post-time pattern for this phone)' } }
     if (-not $Note) { return [pscustomobject]@{ Passed = $false; Detail = 'no download notification with a percentage was posted after the download started (notifications off for the dev app, or only other notifications of it appeared)' } }
     return [pscustomobject]@{ Passed = $true; Detail = "notification title '$($Note.Title)', text '$($Note.Text)'" }
 }
@@ -299,10 +329,34 @@ function Test-AppHoldsWake([string]$PowerDump, [string]$ServicesDump, [string]$U
 }
 
 # ---- budget and waits before the checks (Slice 213 review: the clock starts when the runner starts)
+# When the budget clock effectively started: the run start moved later by the time spent only waiting for a build (that time is not budget).
+function Get-BudgetStart([datetime]$RunStart, [double]$WaitedSeconds) { return $RunStart.AddSeconds($WaitedSeconds) }
+
+# A fresh budget clock (Slice 216 review): the run start and the waited seconds are one pair, so they restart together and can never disagree.
+function New-BudgetClock([datetime]$Now) {
+    return [pscustomobject]@{ RunStart = $Now; WaitedSeconds = [double]0 }
+}
+
+# Every wait before or during the checks (the phone lease, the quiet machine) measures from the one budget start, never from the raw run start.
+function Get-BudgetPreWaitMinutes([datetime]$RunStart, [double]$WaitedSeconds, [datetime]$Now, [int]$BudgetMinutes) {
+    return (Get-PreWaitMinutes (Get-BudgetStart $RunStart $WaitedSeconds) $Now $BudgetMinutes)
+}
+
+# Seconds of budget used at $Now: measured from the same budget start.
+function Get-BudgetElapsedSecondsAt([datetime]$RunStart, [double]$WaitedSeconds, [datetime]$Now) {
+    return ($Now - (Get-BudgetStart $RunStart $WaitedSeconds)).TotalSeconds
+}
+
 # Minutes a pre-check wait (the phone lease, the quiet machine) may take: the cap, or what is left of the budget when that is less. Never negative.
 function Get-PreWaitMinutes([datetime]$RunStart, [datetime]$Now, [int]$BudgetMinutes) {
     $leftMinutes = $BudgetMinutes - ($Now - $RunStart).TotalMinutes
     return [math]::Max([math]::Min($script:PreWaitCapMinutes, $leftMinutes), 0)
+}
+
+# The exit code for an error that stopped the device stage: a lost phone lease is exit 4 (as on the other paths), anything else is a runner error.
+function Get-StageErrorExitCode([string]$Message, [string]$LeaseLostReason) {
+    if ($Message -ceq $LeaseLostReason) { return $script:ExitLeaseHeldByOther }
+    return $script:ExitRunnerError
 }
 
 # One row per plan, in order: the row a check produced, else the plan's own skip row, else SKIP with $Reason. Used on every path that ends early, so the table always names every check.
@@ -445,7 +499,7 @@ $script:RequiredPacks = @{ rtst = @('supertonic-3'); dino = @('supertonic-3', 'k
 # ---- cold-start report
 function Format-ColdStartRuns($Runs) {
     $index = 0
-    $parts = foreach ($run in $Runs) { $index++; 'run {0}: first audio {1} ms (engine {2}, synthesis {3})' -f $index, $run.FirstAudioMs, $run.EngineMs, $run.FirstSynthMs }
+    $parts = foreach ($run in $Runs) { $index++; 'run {0}: first audio {1} ms (engine {2}, synthesis {3}, chunk 0 audio {4} ms)' -f $index, $run.FirstAudioMs, $run.EngineMs, $run.FirstSynthMs, $run.FirstAudioLengthMs }
     return ($parts -join '; ')
 }
 

@@ -24,6 +24,9 @@ public sealed class TestHookDispatcher
 	public const string DeleteTranslationModel = "delete-translation-model";
 	public const string FromKey = "from";
 	public const string ToKey = "to";
+
+	/// <summary>Slice 209: the argument of <c>set-voice id=..</c> and <c>stage-book-update id=..</c> (each app's own command), listed here so iOS reads it.</summary>
+	public const string IdKey = "id";
 	public const int PackWaitSeconds = 300;
 	public const int PackIdleGraceSeconds = 10;
 	public const string DefaultLanguage = "en";
@@ -48,7 +51,7 @@ public sealed class TestHookDispatcher
 	/// the command name first, then the keys this dispatcher's own commands read, then the app's. A platform that filters launch arguments reads exactly these.
 	/// </summary>
 	public static IReadOnlyList<string> LaunchKeys =>
-		TestHookLaunchKeys.Build(TestHookCommand.NameKey, [LanguageKey, TextKey, SpeedKey, FromKey, ToKey], AppLaunchKeys);
+		TestHookLaunchKeys.Build(TestHookCommand.NameKey, [LanguageKey, TextKey, SpeedKey, FromKey, ToKey, IdKey], AppLaunchKeys);
 
 	private readonly ISettingsStore _settings;
 	private readonly ISpeechReader _reader;

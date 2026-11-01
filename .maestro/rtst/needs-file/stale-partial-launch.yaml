@@ -1,0 +1,28 @@
+# Slice 208: at launch a half-finished pack nothing wants is deleted (marker PACKDL service stale-partial delete), so it does not sit in the packs folder for ever.
+# The marker proves the scan ran and took the delete branch (a build without the scan never writes it, so the flow fails). Android only; needs a network (the scan reads the pack catalog first).
+# Precondition (adb, before the flow; why it sits in needs-file, as the huge-text-file flow does: run-flows.ps1 runs only the *.yaml files directly in an app folder):
+#   1. Install the Debug build and open it once (so files/packs exists), then:  adb -s emulator-5554 shell "run-as uk.sirous.readthestupidtext sh -c 'head -c 100000 /dev/zero > files/packs/stale208-1.zip.partial'"
+#   2. Run:  maestro --device emulator-5554 test .maestro/rtst/needs-file/stale-partial-launch.yaml
+#   3. After the run the file must be gone:  adb -s emulator-5554 shell "run-as uk.sirous.readthestupidtext ls files/packs"  (no stale208-1.zip.partial).
+# The wanted branch (a partial of a pack the settings still want resumes: marker PACKDL service stale-partial resume) is checked on the phone, see Slice 208's Verification.
+# expect-log: stale-partial delete pack=stale208
+appId: uk.sirous.readthestupidtext
+name: Stale partial is deleted at launch
+---
+# No clearState: the planted partial (and the installed voice pack) must survive until the launch scan runs.
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: SettingsButton
+    timeout: 30000
+# The scan starts after the current-language start and reads the catalog first: give it time to log before the run ends.
+- extendedWaitUntil:
+    visible:
+      id: StalePartialNeverShown
+    timeout: 20000
+    optional: true
+- assertVisible:
+    id: SettingsButton

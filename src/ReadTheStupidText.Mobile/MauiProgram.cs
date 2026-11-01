@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ReadTheStupidText.Application.Crashes;
 using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
@@ -7,6 +8,7 @@ using ReadTheStupidText.Application.Translation;
 using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Documents;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Crashes;
 using ReadTheStupidText.Mobile.Shared.Usage;
 #if DEBUG
 using ReadTheStupidText.Mobile.Shared.Testing;
@@ -23,6 +25,8 @@ public static partial class MauiProgram
 
 	public static MauiApp CreateMauiApp()
 	{
+		// Slice 227: first of all, so even a crash during start-up leaves a pending report; it follows the Settings usage switch.
+		CrashReporter.Start(CrashApp.Rtst, RtstUsage.EnabledKey);
 		var builder = MauiApp.CreateBuilder();
 		builder
 			.UseMauiApp<App>()
@@ -57,8 +61,10 @@ public static partial class MauiProgram
 
 		MauiApp app = builder.Build();
 		StartUsageCounts(app.Services);
+		BeginCrashReports(app.Services.GetRequiredService<RtstUsage>());
 #if DEBUG
 		TestHooks.Install(app.Services, TestHookScheme, code => (Microsoft.Maui.Controls.Application.Current as App)?.CompleteFirstRun(code) ?? false);
+		CrashTestHook.Install(); // Slice 227: chains onto the app's Debug commands (UpdateTestHook chains after it)
 #endif
 		return app;
 	}
@@ -73,6 +79,10 @@ public static partial class MauiProgram
 		string language = AppLanguages.Code(AppLanguageSetting.Current(settings));
 		_ = usage.StartAsync(context => UsageEvents.AppOpened(context, language, UsageEnvironment.OsMajor));
 	}
+
+	// Slice 227: pending crash reports are posted a little after start-up, once the remote config says crashReports.enabled (default off).
+	private static void BeginCrashReports(RtstUsage usage) =>
+		CrashReporter.BeginSending(new CrashSendOptions(RtstUsage.BaseAddress, () => usage.CrashReportsEnabled, () => usage.ConfigKnown, usage.RefreshConfigAsync));
 
 	// Each platform's Platforms/<OS>/ folder implements this for the services only this app
 	// needs (the shared engines are registered by MobileSharedServices). The method is required,

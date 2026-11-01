@@ -1,0 +1,6 @@
+appId: uk.sirous.readthestupidtext
+---
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: state

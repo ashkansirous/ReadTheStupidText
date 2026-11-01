@@ -86,7 +86,7 @@ public sealed partial class ControlPanelWindow : Window
     /// the single text box window, so it handles showing/hiding it (Slice 37).</summary>
     public event EventHandler? ReadingTextBoxRequested;
 
-    public ControlPanelWindow(ReadAloudService readAloud, IStartupService startup, ISettingsStore settings, VoicePackSetup packSetup)
+    public ControlPanelWindow(ReadAloudService readAloud, IStartupService startup, ISettingsStore settings, VoicePackSetup packSetup, WindowsUpdate update)
     {
         _packSetup = packSetup;
         _readAloud = readAloud;
@@ -103,6 +103,7 @@ public sealed partial class ControlPanelWindow : Window
         InitLanguageAndTranslation();
         InitUsageSwitch();
         InitWaitRow();
+        InitUpdateNotice(update);
 
         RootGrid.Loaded += OnRootLoaded;
 
@@ -580,6 +581,11 @@ public sealed partial class ControlPanelWindow : Window
     // name the foreground app when known.
     private string DescribeStatus(PlaybackState state)
     {
+        if (UpdateRequired)
+        {
+            return UiStrings.Get("Status_UpdatePaused");
+        }
+
         var line = ReadStatusLine.For(
             state, _readAloud.CurrentReadTrigger == ActivityTrigger.Clipboard, _readAloud.CurrentReadWindow?.App);
         return line.Kind switch

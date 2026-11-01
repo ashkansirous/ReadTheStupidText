@@ -1,0 +1,5 @@
+# Slice 215: a trailing comment after the runFlow path is not part of the path.
+appId: uk.sirous.readthestupidtext
+---
+- launchApp
+- runFlow: sub/hook-sub.yaml  # why

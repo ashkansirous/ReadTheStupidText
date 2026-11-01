@@ -91,6 +91,7 @@ public partial class ReaderPage : ContentPage
         TextEditor.FlowDirection = TextFlow.ContentDirection(TextEditor.Text);
         draft.RegisterRebuildHook(PrepareForRebuild);
         ApplyStaticTexts();
+        InitUpdateCard();
         InitTranslation(detector);
         InitHeadStart();
         earlyVoice.Handler = VoiceEarlyAsync;
@@ -132,6 +133,7 @@ public partial class ReaderPage : ContentPage
         _reader.StallChanged += OnReaderStallChanged;
         _installer.Changed += OnInstallerChanged;
         _model.ReadyChanged += OnInstallerChanged;
+        AttachUpdateCard();
 
         // The read may have paused or ended while Settings was on top.
         ApplyPlaybackState(_reader.State);
@@ -195,6 +197,7 @@ public partial class ReaderPage : ContentPage
     public void DetachHandlers()
     {
         _waitTheme.Detach();
+        DetachUpdateCard();
         _reader.StateChanged -= OnReaderStateChanged;
         _reader.ProgressChanged -= OnReaderProgressChanged;
         _reader.TimingChanged -= OnReaderTimingChanged;
