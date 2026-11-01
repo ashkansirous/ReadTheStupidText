@@ -2,6 +2,23 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count.
 
+### Slice 231: Dino Record page shows the page's words ([slice](slices/231-dino-record-page-shows-words.md))
+
+- origin/main showing the picture only (the cause was read from code, not shown on a device).
+- A scanned book showing its lines on the Record page.
+- An RTL/Farsi book on the Record page.
+- iPhone, iPad, VoiceOver and TestFlight hand checks (the user's answer: they do these later) ([slice](slices/231-dino-record-page-shows-words.md)).
+
+### Slice 226: Dino Settings rows and page text ([slice](slices/226-dino-settings-rows-review-leftovers.md))
+
+- TalkBack / VoiceOver hearing each reading page once.
+- iPhone / iPad / VoiceOver / TestFlight hand checks (the user's answer: they do these later).
+- A Switch-end row still toggling (no current caller) ([slice](slices/226-dino-settings-rows-review-leftovers.md)).
+
+### Slice 222: Microsoft Store marker hardening ([slice](slices/222-store-marker-hardening.md))
+
+- The marker guards' behaviour on the next real store-submit run (the first on main after this merges) ([slice](slices/222-store-marker-hardening.md)).
+
 ### Slice 227: crash reports ([slice](slices/227-crash-reports.md))
 
 - Slice 227 not yet verified: iOS on a real TestFlight build (report tagged `testflight`, receipt name), MetricKit `native` report 24 h later, `crash-test kind=kill` gives one `unclean_exit`, Android exit reasons, an R2 object and `app_crashes` row once on, `dino_usage` TestFlight leak (27 rows stored), `pull-crashes.mjs`/`pull-apple.py`/`pull-play.py` against the real services ([slice](slices/227-crash-reports.md)).

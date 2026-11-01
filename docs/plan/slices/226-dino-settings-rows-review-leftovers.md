@@ -1,6 +1,6 @@
 ### Slice 226 — Dino Settings rows and page text: Slice 205 review findings left open
 
-*Built 2026-11-01 (wave 7, night 2026-11-01-0859), PR #668, not merged; device-checked on the Android emulator and the desktop VM, not on TalkBack or iOS.* Written 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1301-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01. Slice 205's record said "fixes applied", but a finding-by-finding check against origin/main (2026-10-31) found these still open.
+*Built 2026-11-01 (wave 7, night 2026-11-01-0859), merged as PR #668 (519b4e7); device-checked on the Android emulator and the desktop VM, not on TalkBack or iOS.* Written 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1301-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01. Slice 205's record said "fixes applied", but a finding-by-finding check against origin/main (2026-10-31) found these still open.
 
 **Touches:** `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/TextPages.cs`, `src/DinoReader.App/PictureTextPages.cs`, `.maestro/dino/` (a new Settings-row flow), `docs/plan/slices/226-dino-settings-rows-review-leftovers.md`
 
@@ -48,7 +48,7 @@ Shared MAUI code: every item is built and checked on Android and iOS alike (and 
 - iPhone / iPad / VoiceOver / TestFlight hand checks (the user's answer: they do these later).
 - A Switch-end row still toggling (no current caller).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-01)
 
 - `src/DinoReader.App/CLAUDE.md`: a full-row settings button (`SettingsRows.cs`) hides only its Label/IconView/Border/BoxView children and carries an AutomationId, not title text (title text draws twice on Windows hover/press); add children to a row only through `SettingsRows.AddInRow(row, child, slot)` (slot 0 = title column). (Slice 226: docs/plan/slices/226-dino-settings-rows-review-leftovers.md)
 - `src/DinoReader.App/CLAUDE.md`: the per-line UIA description in `TextPages.cs` is Windows-head only (`DevicePlatform.WinUI`); name a picture+text page label through `PictureTextPages.AccessibleName`. (Slice 226: docs/plan/slices/226-dino-settings-rows-review-leftovers.md)

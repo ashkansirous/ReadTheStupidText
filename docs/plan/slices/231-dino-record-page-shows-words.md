@@ -1,6 +1,6 @@
 ### Slice 231 — Dino: the Record page shows the page's words (bug)
 
-*Built 2026-11-01 (wave 7, night 2026-11-01-0859), PR #666, not merged; emulator flow passed, rest not yet verified.* From the user's user test on 2026-11-01 (finding 6). Bug fix, no design step; can go first.
+*Built 2026-11-01 (wave 7, night 2026-11-01-0859), merged as PR #666 (e93daaa); emulator flow passed, rest not yet verified.* From the user's user test on 2026-11-01 (finding 6). Bug fix, no design step; can go first.
 
 **Touches:** `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/RecordPage.cs`, `.maestro/dino/record-page-shows-words.yaml`, `docs/plan/slices/231-dino-record-page-shows-words.md`
 
@@ -63,7 +63,7 @@ Medium (`reviews/s231-medium.md`): all skipped.
 
 - Emulator-5554, flow `record-page-shows-words`: PASS (113.8 s). uiautomator dump on Good Enough page 1: picture band above `RecordPageWords` with the page text.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-01)
 
 None.
 
