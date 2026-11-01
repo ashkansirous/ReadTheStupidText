@@ -1,7 +1,8 @@
 # Freddy and the Slipper: new store book (2026-11-01)
 
-Ashkan's own rhyming story for 4-year-olds, from the Scope Inbox doc `dino-reader/2026-11-01-freddy-and-the-slipper.md`.
-Store book `content/dino/freddy-and-the-slipper/` (v1, 14 pages, 13 translations), made with `create-dino-story`:
+Rhyming story for 4-year-olds by Elham Shafiei Gol and Ashkan Sirous (user, 2026-11-01), from the Scope Inbox doc `dino-reader/2026-11-01-freddy-and-the-slipper.md`.
+The user approved the Farsi spelling of her name, the one in the Persian credit line. The other scripts (Arabic, which reuses the Persian letter, Russian, Japanese, Chinese) are unconfirmed transliterations.
+Store book `content/dino/freddy-and-the-slipper/` (v2 after the credits change, 14 pages, 13 translations), made with `create-dino-story`:
 writer, text review (two rounds), illustrator (Gemini 3.5 Flash-Lite), full review (three rounds, 9 pictures redrawn),
 code review high + medium (findings in `../ReadTheStupidText-worktrees/reviews/freddy-*.md`).
 Full record (text changes, cast, picture checks): `content/dino/freddy-and-the-slipper/art.md`.

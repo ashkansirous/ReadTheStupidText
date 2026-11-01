@@ -26,13 +26,29 @@ context free of screenshots, pictures and 13 translation files.
 2. **`dino-story-reviewer`** (Opus, high effort), **text** mode: safety, story quality for the age, one
    action per page, the picture plan. Failed pages go back to the writer, then review again, before any
    picture is drawn, since pictures cost Gemini quota.
-3. **`dino-story-illustrator`** (Sonnet, medium effort): steps 3-6. **Up to four at once across the machine, each on its own book** (the user's choice,
-   2026-10-26). What makes it work: every illustrator acts only on its own `tabId`; prompts go in with
+3. **`dino-story-illustrator`** (Sonnet, medium effort): steps 3-6. **Up to four at once across the machine, on separate books or on page groups of one book** (the user's choice,
+   2026-10-26; page groups 2026-11-01). What makes it work: every illustrator acts only on its own `tabId`; prompts go in with
    `javascript_tool` (`execCommand('insertText')`) and Send is a JS or `find`-ref click, never keyboard typing or
    Enter (keystrokes land in whichever tab has focus); `gemini-lock.ps1` is held only around the line-up paste and
    the save; each illustrator closes its own tab when done (reset tab groups left ~20 orphans). Four in parallel
    drew about 39 accepted pictures an hour against 15-25 for one. If Gemini answers 1095 or shows a CAPTCHA, report
    it; never reduce the number of illustrators without asking the user. It ends with `contact-sheet.jpg`, every picture on one sheet.
+   **One book is drawn by 3-4 illustrators at once whenever the machine has room** (the user, 2026-11-01: pages
+   hardly depend on each other; each chat only needs the line-up and its page descriptions). The cap of four
+   counts across the machine, so with two books in flight they share it (2 + 2). Three phases:
+   - **Setup, one illustrator (`setup` mode, SKILL.md step 3's character chat, step 2 in the agent file):** the character sheets and line-up, plus one **place sheet** per
+     setting used on several pages (kitchen, garden, bedroom...), drawn in the same chat right after the line-up, saved as
+     `characters/place-<slug>.jpg` and listed in `art.md` with the pages that use each. Place sheets keep the
+     same room or garden across parallel chats (Freddy and the Slipper drew three different gardens in three chats).
+   - **Pages, 3-4 illustrators (`pages` mode), each with its own page group** (cover + pages 1-3, 4-7, 8-11, 12-14 ...):
+     each pastes the line-up and the place sheet its pages use (two pictures: `Put` the line-up and paste, wait for the thumbnail,
+     then `Put` the place sheet and paste, all inside one lock hold), works in its own tab with the lock owner
+     `<stem>-<group>`, the group label a simple word without commas (`g1`..`g4`; the brief lists each group's pages), saves candidates to its own sub-folder of the working folder and writes its check rows to
+     `<working folder>/<group>/checks.md`, never to `art.md` (one writer per file). Pages that really depend on
+     another picture (the same pose continued, an object handed over) go in the same group.
+   - **Finish, one illustrator (`finish` mode):** first checks that every page and the cover has an accepted picture (from this run's groups, or the repo's existing ones for pages not redrawn) and stops naming any missing page, then merges every group's check rows into `art.md`, runs
+     `prepare-story-pictures.ps1`, the contact sheet and `stamp`, then the full review runs as usual. Redraws after
+     the review are split into groups the same way when there are more than three.
 4. **`dino-story-reviewer`**, **full** mode: every picture at full size against its page and the line-up,
    and characters, places and time of day consistent across the book. Failed pages go back to the
    illustrator (or the writer), then review again until `PASS`. The coordinator may glance at the contact
@@ -107,7 +123,7 @@ Prompt templates: [prompts.md](prompts.md).
 - In a fresh chat the first `ctrl+v` after clicking the prompt box often pastes nothing: click the box
   twice, then paste, and check the thumbnail appeared. Wait for the page to finish loading before any click.
 - The free-tier image limit is shared with every other session drawing in this Chrome profile, and so are
-  the clipboard and the `Downloads` folder. Check the open tabs first; another book's illustrator drawing in its own tab is normal (at most four): carry on, and use `gemini-lock.ps1` around the clipboard and download moments.
+  the clipboard and the `Downloads` folder. Check the open tabs first; another illustrator drawing in its own tab, on another book or another page group of this book, is normal (at most four): carry on, and use `gemini-lock.ps1` around the clipboard and download moments.
 - **Keep the display on while drawing** (2026-10-26): with the screen merely off (not locked) Chrome stops rendering, so Gemini
   never finishes loading, pastes do nothing and screenshots time out. The caller starts
   `pwsh gemini-keep-awake.ps1 -Hours <n>` in the background before any illustrator runs (a temporary Windows request, no
