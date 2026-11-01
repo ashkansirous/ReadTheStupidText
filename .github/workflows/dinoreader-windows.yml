@@ -147,7 +147,7 @@ jobs:
             ver="$("${DOTNET_ROOT}/dotnet.exe" --version 2>&1 | tr -d '\r')"
             list="$("${DOTNET_ROOT}/dotnet.exe" workload list 2>&1)"
             echo "restored sdk: ${ver}"
-            packs="$(ls "${DOTNET_ROOT}/packs" 2>/dev/null | grep -i '^Microsoft\.Maui' || true)"
+            packs="$(compgen -G "${DOTNET_ROOT}/packs/Microsoft.Maui*" || true)"
             if [ "$ver" = "$SDK_VERSION" ] && [[ "$list" == *maui-windows* ]] && [ -n "$packs" ]; then valid=true; fi
           else
             echo "No cached dotnet.exe."
