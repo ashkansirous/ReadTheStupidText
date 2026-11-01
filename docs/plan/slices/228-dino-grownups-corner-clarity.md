@@ -117,4 +117,5 @@ In `src/DinoReader.App/CLAUDE.md`:
 - The translated strings are machine drafts.
 - The intro read's return being cancelled by Play/pause, skip or a page turn (the emulator recheck tapped the page surface, which is not one of those, and the read returned at its end as designed).
 - The 48 dp close button on a device (changed after the last emulator run; check pass only).
+- Check-pass skip reasons 2, 3 and 7 (line 103) state code facts that were not read at triage: no modal opens over the reader in this flow; Dismiss refresh and `_mode.Leave` run in order on the UI thread; Idle means no download running (pass 4 read `IntroWizardPage.cs:446` and `VoicePackInstaller.cs:21`: plausible, not proven). Check each in the code (round 2 feedback loop, 2026-11-01).
 - The skip reason "the app reaches users days later through the stores" (Worker before app) was not checked against the release workflow: Dino merges reach internal tracks the same day, so `intro_step` events may be dropped for minutes after a merge (round 2 feedback loop, 2026-11-01).
