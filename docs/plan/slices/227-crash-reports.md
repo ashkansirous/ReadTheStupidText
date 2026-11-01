@@ -56,7 +56,7 @@ Settled here (planning): the reports follow the user's existing "anonymous usage
 
 #### Changed while building
 
-- Items 1-7 built; items 8 (store forms, then `crashReports.enabled` on) and 9 (symbolicate the 2026-10-28 TestFlight crash) are not done.
+- Items 1-7 built; item 8 done 2026-11-01 (forms published, `crashReports.enabled` on, except the Reporting API Enable click, see item 8); item 9 (symbolicate the 2026-10-28 TestFlight crash) is not done.
 - Device checks found two bugs in the first runs, both fixed: `CrashReporter` installed its handlers only when the gate was open at start (the Debug stub is set mid-run), so handlers now install always and write only while the gate is open; and a Debug build's channel is `dev`, for which the report builder makes nothing, so the stub now makes a Debug build report as `store`, and a skipped report logs a line. Production builds were not affected by either.
 
 #### From review
