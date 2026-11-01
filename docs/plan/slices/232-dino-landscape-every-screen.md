@@ -11,7 +11,7 @@ Nothing locks orientation (Android `MainActivity` has no `ScreenOrientation`; `I
 #### Decisions locked with the user (2026-11-01, RefineScope)
 
 - A full landscape design for **every Dino screen**: shelf (kids' and grown-ups' corner), book sheet, reading screen (redo the current one), Record, Store, Settings and its sub-pages, Cast, page editor, intro wizard, gate, first run, Backup. **Phone and tablet**, Android and iOS.
-- Open: the user has not yet said which landscape screen hurt most; ask at the design review. That screen is built first.
+- **No mirroring and no dark** (user, 2026-11-01: "we don't mirror", "Dark is out of scope for now"). Every screen is drawn and built light, the same layout in every language.
 
 #### Design (Dino Reader Batch 44 mock, frames 110-132, added 2026-11-01)
 
@@ -21,7 +21,7 @@ Twenty-three frames in `docs/design/dino-reader/Dino Reader Batch 44 Landscape.d
 - **Pure functions for Core (unit-tested).** `IsLandscape(w,h)`: w > h; phone vs tablet by the short side, under 600 dp is a phone. `ShelfLayout`: phone landscape is one sideways row, cover height = h - 120; otherwise a grid, columns = clamp(floor(w / 190), 2, 6). `SplitLayout`: left pane = picture fitted to full height, at most 45% of w; list panes 300 dp (phone) / 360 dp (tablet). `ReadingControls`: right rail when h < 480 dp, else a row under the text; play 68 / 84, previous and next 52 / 64. `PinnedButton`: in landscape a pinned bottom button moves to the bottom of the side rail. Rotation keeps the reading position, a recording in progress, wizard step and gate progress (state in view models, not layouts).
 - **Kids' shelf (110).** Phone: one row of covers 192 x 256 dp, scrolling sideways, last cover cut off to say "more"; header 44 dp with the pill top right; left inset clears the camera cut-out; titles one line, ellipsed. Tablet (125): downward grid, five columns at 1164 dp (four on a 10-inch Android, three in portrait), covers about 200 dp wide, header with 52 dp targets.
 - **Reading (113, 114, 115; 113 and 115 replace Batch 37 frames 92 and 93).** Picture + text: picture fitted whole at full height (no crop), capped at 45% of the width and centred in its column; controls leave the art for a right rail; text card in the middle at 22 px; the back / view-switch / flag chip is the only thing on the picture, top left. Picture only: picture fitted and centred, the chip on its own white at the left margin, the rail at the right. Text only: the card gets the freed 74 dp row, one more line at 26 px. Tablet (127): height is at least 480 dp, so controls are a row under the text (64 / 84), the title returns above the card, text 30 px.
-- **Reading, night (131) and Farsi (132).** 113 in the existing `Night*` tokens (`NightPage`, `NightCard`, `NightInk`, `NightBoxFill` + `NightBoxStroke`, `NightCoral`, `NightFill` + `NightBrand`); picture dimmed slightly (a proposal). Farsi: layout does not mirror (Slice 96); only the card text runs right to left; flag joins the chip; vowel marks hidden (Slice 154).
+- **Farsi (132).** The layout does not mirror (Slice 96); only the words read in their own direction; flag joins the chip; vowel marks hidden (Slice 154). **Night (131) is not built** (dark out of scope); the reading screen's existing bedtime colours are left as they are today.
 - **Intro (121, 130).** Every step: picture in a 300 dp panel on the left, step bar, title, copy and buttons on the right; the two cards side by side; Skip and the main button share one row at the bottom. Tablet: same split, text block capped at 460 dp, vertically centred, buttons at the foot; tablet portrait stacks the picture above the copy.
 - **Gate (122).** Question left, answers right at 64 dp; the hold step puts the ring where the answers were. Rotating keeps the step and the sum.
 - **First run (123).** Welcome left, the 14 languages in a three-column grid right (scrolls after two rows), Continue pinned under the grid; download and Ready pages keep the split.
@@ -33,11 +33,11 @@ Twenty-three frames in `docs/design/dino-reader/Dino Reader Batch 44 Landscape.d
 - **Cast (119), page editor (120), Backup (124).** Cast: rows in a two-column grid, each with its sample play button. Page editor: picture left, text field right with page arrows; with the keyboard up the picture collapses to a 64 dp thumbnail so the field keeps three lines; Done saves. Backup: two cards side by side (copy in Slice 230).
 - No new strings beyond Slices 228-230 (Backup card copy is Slice 230's).
 
-**Open point: which screen hurts most.** The plan says build the worst screen first and ask the user. The mock does not decide; it guesses reading (113), where today the controls sit on the art and the picture is cropped to 40%. **Default:** reading first.
+**Order: reading screen first** (113-115), as the mock suggests: today its controls sit on the picture and the picture is cut to 40%. Then the rest.
 
-**Open point: shelf scroll direction.** The mock has the phone kids' shelf scroll sideways in landscape (110); the plan did not say. **Default:** sideways on phones, grid on tablets, as drawn; the user is asked.
+**Decided: as drawn** (user, 2026-11-01, "do as the design did"): sideways row on phones, downward grid on tablets.
 
-**Open point: dark and right to left.** The plan asks for light, dark and right to left on every screen; the mock draws only the reading screen dark (131) and in Farsi (132), and defers the rest to Batch 43's answers. **Default:** follow the Batch 43 answers (light only, header-only mirror if approved); no further frames needed.
+**Decided: light only, never mirrored** (user, 2026-11-01). No further frames needed for either.
 
 **Open point: coverage gaps.** Not drawn: each Settings sub-page on its own (Reading speed, Narrator, Language, Animal sounds, About are only the right pane of 118), the gate hold step and first-run download page (described, not drawn), tablet frames for gate, first run, Cast, page editor, Backup and book sheet (described as "same card"/"same split"), tablet portrait frames. **Default:** build those from the rules above; add frames only if the review finds a gap.
 
@@ -45,8 +45,8 @@ Settled by the mock: tablet versus phone is split at a 600 dp short side; the co
 
 #### Work
 
-- [x] **Design (Claude Code):** mock done (Batch 44, 2026-11-01: `docs/design/dino-reader/Dino Reader Batch 44 Landscape.dc.html`, frames 110-132, phone and tablet, night and Farsi for the reading screen only). Remaining: the user's approval and their "worst screen" answer (the mock guesses reading, 113); record them here. Original ask: landscape mock for each screen above, phone and tablet sizes, light and dark, right-to-left. Layout rules written as pure functions in Core where they can be (like `ReadingLayoutRules`), so they are unit-tested. Publish as a private page; record the user's answers and their "worst screen" here.
-- [ ] Build the worst screen first, then the rest, each with its layout rule tests.
+- [x] **Design (Claude Code):** mock done (Batch 44, 2026-11-01: `docs/design/dino-reader/Dino Reader Batch 44 Landscape.dc.html`, frames 110-130 and 132; 131 night not built). User answers recorded above.
+- [ ] Build the reading screen first, then the rest, each with its layout rule tests.
 - [ ] Rotation keeps state (reading position, recording in progress, wizard step, gate progress).
 - [ ] Android and iOS built and checked together.
 

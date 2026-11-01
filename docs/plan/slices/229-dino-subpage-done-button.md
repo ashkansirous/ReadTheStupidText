@@ -25,19 +25,19 @@ Six frames in `docs/design/dino-reader/Dino Reader Batch 43 Grown-ups Corner.dc.
 - **Settings (105).** Done goes back to where Settings was opened from (the corner). On a sub-page (Reading speed, Narrator, ...) Done goes up one level to Settings, same as Back, so Done never skips pages.
 - **Deeper pages (108).** From the intro's Add step, deeper pages (Scan, page editor) show Done; only the page the wizard pushed shows Continue. Continue always means "back to the intro, next step".
 - **Record (106).** Done top right; a recording in progress is stopped and kept first, like Back. Continue when opened from the intro's record step.
-- **Right to left (107).** In Farsi and Arabic the header mirrors: back on the right pointing right, Done on the left; rows below do not mirror. Draft strings for a native read: title "تنظیمات", Done "تمام".
-- **Dark (109).** Page `#1E1B2E`, Continue `#A9A2FF` on `#1E1B2E` (7:1), cards `#2A2640`, "On the shelf" green lifted to `#7FD48A` (the one colour that is not already a `Night*` token). Same theme-pin caveat as Slice 228.
-- **Strings (both locales, 13 languages).** "Done", "Continue" (check which exist); Farsi/Arabic "تمام" is a draft.
+- **Never mirrored (107 is not built).** User, 2026-11-01: "never mirror, never! not even in farsi. not even in the header." Done stays top right and Back top left in every language, Farsi and Arabic too (Slice 96). Only the words themselves read in their own direction.
+- **Dark (109): out of scope** (user, 2026-11-01). Not built.
+- **Strings (both locales, 13 languages).** "Done", "Continue" (check which exist).
 
-**Open point: right to left.** Slice 229 says Done moves to the top left in Farsi and Arabic; Slice 96 says the layout never mirrors. The mock follows this slice (header only, 107) and asks the user. **Default:** mirror the header only, as drawn.
+**Decided: never mirror** (user, 2026-11-01). The earlier plan line "Done on the left in Farsi and Arabic" was my mistake, written without checking Slice 96.
 
-**Open point: dark.** As in Slice 228, 109 needs the theme pin lifted (`App.xaml.cs:30`). **Default:** keep the pin, light only.
+**Decided: light only** (user, 2026-11-01).
 
 Settled by the mock: Done is a filled indigo pill; Done on a sub-page goes up one level (the slice only said "back to where the page was opened from"). In landscape Settings (Slice 232, frame 118) Done closes Settings as a whole.
 
 #### Work
 
-- [x] **Design (Claude Code):** mock done (Batch 43, 2026-11-01: `docs/design/dino-reader/Dino Reader Batch 43 Grown-ups Corner.dc.html`, frames 104-109). Remaining: the user's approval and their answers to the right-to-left and dark questions. Original ask: in the Slice 228 mock file, the header with the top-right Done/Continue on Store, Record and Settings (light and dark, right-to-left for Arabic/Farsi: the button moves to the top left there).
+- [x] **Design (Claude Code):** mock done (Batch 43, 2026-11-01: `docs/design/dino-reader/Dino Reader Batch 43 Grown-ups Corner.dc.html`, frames 104-106 and 108; 107 right-to-left and 109 dark are not built). User answers recorded above.
 - [ ] One shared header control (or helper) with the button, so each page adds it in one line; the label comes from whether the wizard launched the page.
 - [ ] Add it to every `IGrownUpPage` and every Settings sub-page.
 - [ ] Wizard: Continue pops the page and advances, same path as Back today.
@@ -47,4 +47,4 @@ Settled by the mock: Done is a filled indigo pill; Done on a sub-page goes up on
 #### Verification
 
 - Scripted emulator flow: intro wizard, Get more books, Store shows Continue top right, tap it, wizard is on the next step; from the grown-ups' corner, Settings shows Done, tap it, back on the corner. iOS: same flow on simulator or TestFlight.
-- Arabic or Farsi: the button sits on the left.
+- Arabic or Farsi: Done is still top right; nothing in the header moves.
