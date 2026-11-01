@@ -477,7 +477,7 @@ function Resolve-InstallPlan($Marker, $InstalledUpdate, [string]$Platform, [stri
     if (-not $InstalledUpdate) { return (New-InstallPlan $script:ActionInstall 'not installed') }
     $known = $Marker -and $Marker.Updated -ceq $InstalledUpdate
     if (-not $known -and $Reinstall) { return (New-InstallPlan $script:ActionInstall 'installed build not placed; -Reinstall') }
-    if (-not $known) { return (New-InstallPlan $script:ActionSkip 'installed variant unknown (not installed by run-checks): run with -Reinstall once, knowingly, to put the cached build on') }
+    if (-not $known) { return (New-InstallPlan $script:ActionSkip 'installed variant unknown (the dev app on the phone was not installed by run-checks: a hand-picked APK or an old build can point at an old pack catalogue): STOP and run `run-checks.ps1 -Reinstall` (with -Prepare for the pack, or with the checks) before any hook, pack step or manual install; never adb install a cached APK by hand') }
     $installed = Get-VariantOfPlatform $Marker.Platform
     if ($installed -ceq $wanted -and $Marker.Key -ceq $Key -and $Reinstall) { return (New-InstallPlan $script:ActionInstall "installing the cached $wanted build again (-Reinstall; adb install -r keeps data)") }
     if ($installed -ceq $wanted -and $Marker.Key -ceq $Key) { return (New-InstallPlan $script:ActionKeep "already the cached $wanted build") }

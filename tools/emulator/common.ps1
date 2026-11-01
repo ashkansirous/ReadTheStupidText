@@ -1,5 +1,6 @@
 # Shared helpers for the warm headless emulator scripts (Slice 161). Dot-sourced, not run.
 . (Join-Path $PSScriptRoot 'activity.ps1')
+. (Join-Path $PSScriptRoot 'speed.ps1')  # Slice 241: snapshot boot, detached boot, crash lines, flow split
 . (Join-Path $PSScriptRoot '..\lease-common.ps1')  # Slice 207: the emulator lease helpers run-flows.ps1 needs
 # Slice 180: two emulator instances. Instance 1 is the original (AVD RTST_Test, port 5554); instance 2 is RTST_Test2 on port 5556.
 # (The chosen number lives in $script:EmuInstance, never $script:Instance: dot-sourced, that name is the caller's own -Instance parameter.)
@@ -198,6 +199,26 @@ function Find-FlowFiles([string]$FlowDir, [string]$Flow) {
 # Maestro installs and starts its driver again when the next flow needs it. $AdbCall takes the adb arguments (a self-test passes a recorder).
 $script:MaestroDriverPackage = 'dev.mobile.maestro'
 function Invoke-EmulatorAdbText([string[]]$AdbArgs) { return (& $script:Adb -s $script:Serial @AdbArgs 2>&1 | Out-String) }
+
+# Pure: run-flows' end-of-run line. Takes the results as an array (pass $list.ToArray()): `@($list).Count` on a List[object] throws "Argument types do not match" in pwsh 7.6.
+function Format-FlowsSummary([string]$App, [object[]]$Results, [double]$Seconds) {
+    $failed = @($Results | Where-Object { $_.Problem }).Count
+    $notRun = @($Results | Where-Object { $_.NotRun }).Count
+    $passed = $Results.Length - $failed - $notRun
+    return ('{0}: {1} passed, {2} failed, {3} not run (app crashed) in {4:n1} s.' -f $App, $passed, $failed, $notRun, $Seconds)
+}
+
+# Slice 241: the one line that names a crash, from Find-AppCrashLines output (the exception / signal / ANR line, else the first line).
+function Get-FirstCrashLine([object[]]$Crash) {
+    $all = @($Crash)
+    $key = @($all | Where-Object { $_ -match 'Process:|ANR in|am_anr|Fatal signal|FATAL|Exception' })
+    return ((@($key) + $all)[0]).Trim()
+}
+
+# Slice 241: `app crashed in <flow>: <first crash line>` for every flow that crashed, or nothing.
+function Format-CrashSummary([object[]]$Results) {
+    return @(@($Results) | Where-Object { @($_.Crash).Count -gt 0 } | ForEach-Object { 'app crashed in {0}: {1}' -f $_.Name, (Get-FirstCrashLine $_.Crash) })
+}
 
 function Get-UiDumpXml([scriptblock]$AdbCall = { param($a) Invoke-EmulatorAdbText $a }) {
     $null = & $AdbCall @('shell', 'am', 'force-stop', $script:MaestroDriverPackage)

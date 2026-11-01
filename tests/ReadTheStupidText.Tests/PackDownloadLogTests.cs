@@ -36,6 +36,14 @@ public sealed class PackDownloadLogTests
     }
 
     [Fact]
+    public void ProgressLineHasTheDocumentedFormat()
+    {
+        List<string> lines = Capture(() => PackDownloadLog.Progress("p-progress", 9011200));
+
+        Assert.Contains("PACKDL progress pack=p-progress bytes=9011200", lines);
+    }
+
+    [Fact]
     public void StallLineWithoutAPackOmitsIt()
     {
         List<string> lines = Capture(() => PackDownloadLog.Stall(PackDownloadLog.BodyPhase, 987654));

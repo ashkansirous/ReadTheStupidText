@@ -20,7 +20,8 @@ param(
     [Parameter(Mandatory)][string]$Phone,
     [Parameter(Mandatory)][ValidateSet('rtst', 'dino')][string]$App,
     [int]$PausedTimeoutSeconds = 150,
-    [switch]$NetworkOnly   # Slice 233: no dataSync time limit; the backgrounded app just loses its network (see paused-notification-network.ps1)
+    [switch]$NetworkOnly,   # Slice 233: no dataSync time limit; the backgrounded app just loses its network (see paused-notification-network.ps1)
+    [switch]$Stall   # Slice 241 item 7: not a paused notice at all: one body read hangs (hook stall-pack-network) and the stall guard must log it (see pack-stall.ps1)
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '..\common.ps1')
@@ -195,6 +196,31 @@ function Clear-DevDownloadHold {
     Write-Host "   notifications granted again after the clear"
 }
 
+# Slice 241 item 7: a download whose socket goes silent (the 2026-11-01 phone run: a .partial stuck at 9,011,200 bytes for 7 minutes with no PACKDL line). Same set-up as the paused checks (pack moved aside, throttled
+# download); once the body is moving (a PACKDL progress line) the Debug hook stall-pack-network hangs the next read like a dead socket. The 60 s stall guard must then write `PACKDL stall pack=<id> phase=body` within 90 s of the hook,
+# and the retry must follow (`PACKDL retry` or a new `PACKDL start`). No network setting is touched, so nothing needs the device-side restore.
+$script:StallWithinSeconds = 90
+$script:RetryWithinSeconds = 60
+$script:ProgressWithinSeconds = 30
+function Invoke-StallCheck {
+    Set-DevMarker $Phone $package $script:ThrottleMarkerName
+    $appPid = Start-DevAppWithHook $Phone $package 'skip-first-run'
+    $start = Wait-LogMatch $Phone $package $appPid $script:PackStartPattern $script:PackStartSeconds 0 "waiting for PACKDL start of $packId"
+    if (-not $start) { return (New-CheckResult $false (Get-NoPackStartReason (Get-PidLog $Phone $appPid) @($packId))) }
+    $progress = Wait-LogMatch $Phone $package $appPid 'PACKDL progress pack=\S+ bytes=\d+' $script:ProgressWithinSeconds 0 'waiting for a PACKDL progress line (the body is moving)'
+    if (-not $progress) { return (New-CheckResult $false "no 'PACKDL progress' line within $($script:ProgressWithinSeconds) s of the download start: the body is not moving or the progress log is missing. The app's last lines: $(Get-AppLogTail (Get-PidLog $Phone $appPid) 6)") }
+    Write-Host "   body moving: $($progress.Line.Trim()); hanging the next read with the stall-pack-network hook"
+    $armedAt = (Get-PhoneEpochMs) / 1000.0
+    $hook = Send-DevHook $Phone $App 'stall-pack-network'
+    Write-Host "   stall-pack-network: $hook"
+    $stall = Wait-LogMatch $Phone $package $appPid 'PACKDL stall pack=(\S+) phase=body bytes=(\d+)' $script:StallWithinSeconds $armedAt "waiting for PACKDL stall within $($script:StallWithinSeconds) s of the hook"
+    if (-not $stall) { return (New-CheckResult $false "no 'PACKDL stall ... phase=body' within $($script:StallWithinSeconds) s of the hung read: the stall guard did not fire or did not log. The app's last lines: $(Get-AppLogTail (Get-PidLog $Phone $appPid) 8)") }
+    Write-Host "   $($stall.Line.Trim())"
+    $retry = Wait-LogMatch $Phone $package $appPid 'PACKDL (retry|start) ' $script:RetryWithinSeconds ($stall.Time + 0.001) 'waiting for the retry after the stall'
+    if (-not $retry) { return (New-CheckResult $false "the stall was logged ($($stall.Line.Trim())) but no 'PACKDL retry' or new 'PACKDL start' followed within $($script:RetryWithinSeconds) s: the download did not go on") }
+    return (New-CheckResult $true "hung read ended as '$($stall.Line.Trim())' within $($script:StallWithinSeconds) s; then '$($retry.Line.Trim())'")
+}
+
 function Invoke-PausedCheck {
     if ($NetworkOnly) { Set-NetworkOnlySetup } else { Assert-TimeLimitPhone; Set-ShortTimeLimit }
     Set-DevMarker $Phone $package $script:ThrottleMarkerName
@@ -245,7 +271,7 @@ try {
     Clear-DevDownloadHold
     Move-PackAside
     $moved = $true
-    $result = Invoke-PausedCheck
+    $result = if ($Stall) { Invoke-StallCheck } else { Invoke-PausedCheck }
 } catch {
     $budgetError = $_.Exception.Message.StartsWith($script:BudgetExceededPrefix)
     $result = New-CheckResult $false "check could not run: $($_.Exception.Message)"

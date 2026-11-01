@@ -28,23 +28,9 @@ $platform = Get-EmulatorBuildPlatform $App  # Dino: android-dbg, its own cache n
 $project = Join-Path $script:RepoRoot $cfg.Project
 $apkFilter = '*-Signed.apk'
 
-# Boots the emulator in a second process so the boot (~45 s) overlaps the build.
-function Start-EmulatorInBackground {
-    $null = New-Item -ItemType Directory -Force $script:StateDir
-    $log = Join-Path $script:StateDir "boot-$($script:EmuInstance).log"
-    $pwsh = (Get-Process -Id $PID).Path
-    $startScript = Join-Path $PSScriptRoot 'start-warm.ps1'
-    return Start-Process -FilePath $pwsh -ArgumentList @('-NoProfile', '-File', "`"$startScript`"", '-Instance', $script:EmuInstance) `
-        -WindowStyle Hidden -PassThru -RedirectStandardOutput $log -RedirectStandardError "$log.err" | Add-Member -NotePropertyName Log -NotePropertyValue $log -PassThru
-}
-
-function Wait-EmulatorInBackground($Boot) {
-    if (-not $Boot.HasExited) { Write-Host "Waiting for $($script:Serial) to finish booting (up to ~4 min)..." }
-    $Boot.WaitForExit()
-    $null = $Boot.Handle  # keeps the process handle open so that ExitCode is read (it can be $null without it)
-    Get-Content $Boot.Log -ErrorAction SilentlyContinue | Write-Host
-    if ($null -ne $Boot.ExitCode -and $Boot.ExitCode -ne 0) { throw "start-warm.ps1 failed (exit $($Boot.ExitCode)): $(Get-Content "$($Boot.Log).err" -Raw -ErrorAction SilentlyContinue)" }
-}
+# Slice 241: the boot overlaps the build through the shared detached starter (speed.ps1): no handle of this script's caller is inherited.
+function Start-EmulatorInBackground { return (Start-EmulatorBootInBackground $script:EmuInstance) }
+function Wait-EmulatorInBackground($Boot) { Wait-EmulatorBoot $Boot }
 
 # Debug x86_64 build into the project's bin folder, then copied into a temp folder that is renamed into the cache folder once the
 # metadata file is in it (the metadata file is written last). The caller holds the build locks (Enter-BuildLocks).

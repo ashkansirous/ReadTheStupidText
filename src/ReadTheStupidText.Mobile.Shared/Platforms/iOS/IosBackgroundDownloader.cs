@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Globalization;
 using Foundation;
 using ReadTheStupidText.Application.Reading;
@@ -31,6 +32,11 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
     private const int ResumeHeaderBytes = sizeof(long) + 1;
 
     private static readonly TimeSpan MonitorInterval = TimeSpan.FromSeconds(5);
+
+    // A watcher tick later than this after the last one means the app was suspended (the timer did not run): the stall clock starts again.
+    private static readonly TimeSpan StallTickGap = TimeSpan.FromSeconds(15);
+
+    private static volatile bool _appActive; // false until the main thread has read the real state (ObserveAppActivity): only active time counts
     private static readonly Lazy<IosBackgroundDownloader> Shared = new(() => new IosBackgroundDownloader());
     private static readonly ConcurrentDictionary<string, object> PartialLocks = new();
     private static readonly object CompletionGate = new();
@@ -63,6 +69,18 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
         public volatile bool WaitingForConnectivity;
 
         public volatile bool Stuck; // the watcher ended this transfer as an offline failure
+
+        public volatile bool Stalled; // Slice 241: the watcher ended this transfer because no byte arrived for the stall timeout
+
+        public PackStallClock StallClock { get; } = new(PackStallWatch.StallTimeout, StallTickGap, Stopwatch.GetTimestamp()); // reset by every DidWriteData; counts only active, running ticks
+
+        public long BytesWritten; // bytes in the partial file (offset + this task's total)
+
+        public PackProgressLogGate ProgressGate { get; } = new(PackStallWatch.ProgressInterval);
+
+#if DEBUG
+        public volatile bool Muted; // the stall-pack-network test hook: this transfer's progress callbacks are ignored, as if no byte arrived
+#endif
     }
 
     private IosBackgroundDownloader()
@@ -74,6 +92,17 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
         config.SessionSendsLaunchEvents = true;
         config.AllowsCellularAccess = true; // the Wi-Fi rule is set on each request (see CreateTask)
         _session = NSUrlSession.FromConfiguration(config, this, null);
+        ObserveAppActivity();
+    }
+
+    // The stall clock counts only while the app is active (a suspended or backgrounded app gets its callbacks late, in a burst). UIApplication is read on the main thread (this
+    // runs from a Lazy that may be created on any thread, e.g. a session launch event in the background); a download started while backgrounded is counted once DidBecomeActive fires.
+    private static void ObserveAppActivity()
+    {
+        NSNotificationCenter.DefaultCenter.AddObserver(UIKit.UIApplication.DidBecomeActiveNotification, _ => _appActive = true);
+        NSNotificationCenter.DefaultCenter.AddObserver(UIKit.UIApplication.WillResignActiveNotification, _ => _appActive = false);
+        Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(
+            () => _appActive = UIKit.UIApplication.SharedApplication.ApplicationState == UIKit.UIApplicationState.Active);
     }
 
     public static IosBackgroundDownloader Instance => Shared.Value;
@@ -248,6 +277,17 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
         {
             while (await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
             {
+                if (task.Response is not null)
+                {
+                    waiter.StallClock.Arm(Stopwatch.GetTimestamp()); // the response began: from here a silent body is a stall (a slow connect is the request timeout's)
+                }
+
+                if (waiter.StallClock.Tick(Stopwatch.GetTimestamp(), _appActive && !IsStuck(waiter)))
+                {
+                    await EndStalledTransferAsync(waiter, task, partial).ConfigureAwait(false);
+                    return;
+                }
+
                 stuck = IsStuck(waiter) ? stuck + 1 : 0;
                 if (stuck >= StuckChecksBeforeOffline)
                 {
@@ -262,6 +302,16 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
         {
             // the transfer ended
         }
+    }
+
+    // Slice 241: the network looks fine but no byte arrived for the stall timeout (the Android path times a read out; a background session has none). The transfer is paused (resume data kept),
+    // a PACKDL stall line is written and the attempt ends as a retryable failure, so the service retries and a stuck download is never silent.
+    private static async Task EndStalledTransferAsync(Waiter waiter, NSUrlSessionDownloadTask task, string partial)
+    {
+        PackDownloadLog.Stall(PackDownloadLog.BodyPhase, Interlocked.Read(ref waiter.BytesWritten), waiter.PackId);
+        waiter.Stalled = true;
+        await PauseAsync(task, partial, waiter.Offset).ConfigureAwait(false);
+        waiter.Done.TrySetException(new TimeoutException("The pack download stalled and was abandoned."));
     }
 
     private static bool IsStuck(Waiter waiter) =>
@@ -291,6 +341,19 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
             if (WaiterOf(downloadTask) is { Total: > 0 } waiter)
             {
                 waiter.WaitingForConnectivity = false;
+#if DEBUG
+                if (waiter.Muted || (PackDownloadThrottle.TakeStallRequest() && (waiter.Muted = true)))
+                {
+                    return; // Slice 241 test hook: no byte seems to arrive, so the watcher's stall path runs for real
+                }
+#endif
+                waiter.StallClock.Reset(Stopwatch.GetTimestamp());
+                Interlocked.Exchange(ref waiter.BytesWritten, waiter.Offset + totalBytesWritten);
+                if (waiter.ProgressGate.ShouldLog(Stopwatch.GetTimestamp()))
+                {
+                    PackDownloadLog.Progress(waiter.PackId, waiter.Offset + totalBytesWritten);
+                }
+
                 waiter.Progress?.Report(Math.Min(1.0, (waiter.Offset + totalBytesWritten) / (double)waiter.Total));
             }
         }
@@ -375,6 +438,10 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
         if (error is null && failure is null)
         {
             waiter.Done.TrySetResult();
+        }
+        else if (cancelled && waiter.Stalled)
+        {
+            waiter.Done.TrySetException(new TimeoutException("The pack download stalled and was abandoned."));
         }
         else if (cancelled && waiter.Stuck)
         {

@@ -30,7 +30,7 @@ public sealed class MobileVoicePackService : IVoicePackService
     private const int FileBufferBytes = 81920;
 
     private static readonly TimeSpan CatalogTimeout = TimeSpan.FromSeconds(30);
-    private static readonly TimeSpan StallTimeout = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan StallTimeout = PackStallWatch.StallTimeout;
     private static readonly HttpClient Http = new();
 
     public event EventHandler? InstalledPacksChanged;
@@ -643,15 +643,32 @@ public sealed class MobileVoicePackService : IVoicePackService
         response.EnsureSuccessStatusCode();
         bool resumed = response.StatusCode == HttpStatusCode.PartialContent;
         long written = resumed ? offset : 0; // a 200 means the server ignored Range: restart
-        await using Stream body = await guarded.OpenBodyAsync(StallTimeout, cancellationToken, new DownloadTag(pack.Id, written)).ConfigureAwait(false);
+        Func<Stream, Stream>? wrapInner = null;
+#if DEBUG
+        wrapInner = PackDownloadThrottle.WrapForStallHook; // Slice 241: the stall-pack-network test hook hangs one read under the guard
+#endif
+        await using Stream body = await guarded.OpenBodyAsync(StallTimeout, cancellationToken, new DownloadTag(pack.Id, written), wrapInner).ConfigureAwait(false);
         await using var file = new FileStream(partial, resumed ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.None, FileBufferBytes, useAsync: true);
-        await CopyWithStallGuardAsync(body, file, pack.SizeBytes, written, progress, cancellationToken).ConfigureAwait(false);
+#if DEBUG
+        try
+        {
+            await CopyWithStallGuardAsync(body, file, pack, written, progress, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            PackDownloadThrottle.ClearStall(); // a stall request that found no read to hang must not survive this download
+        }
+#else
+        await CopyWithStallGuardAsync(body, file, pack, written, progress, cancellationToken).ConfigureAwait(false);
+#endif
     }
 
-    private static async Task CopyWithStallGuardAsync(Stream source, Stream destination, long totalBytes, long written, IProgress<double>? progress, CancellationToken cancellationToken)
+    private static async Task CopyWithStallGuardAsync(Stream source, Stream destination, PackInfo pack, long written, IProgress<double>? progress, CancellationToken cancellationToken)
     {
+        long totalBytes = pack.SizeBytes;
         byte[] buffer = new byte[CopyBufferBytes];
         int lastPercent = -1;
+        var progressGate = new PackProgressLogGate(PackStallWatch.ProgressInterval);
 #if DEBUG
         bool throttled = PackDownloadThrottle.IsOn();
         PackDownloadThrottle.ClearDrop();
@@ -675,6 +692,11 @@ public sealed class MobileVoicePackService : IVoicePackService
             }
 #endif
             written += read;
+            if (progressGate.ShouldLog(Stopwatch.GetTimestamp()))
+            {
+                PackDownloadLog.Progress(pack.Id, written); // Slice 241: a silent log beside a file that does not grow is the bug, not a quiet download
+            }
+
             lastPercent = ReportWhenPercentChanges(progress, written, totalBytes, lastPercent);
         }
     }
