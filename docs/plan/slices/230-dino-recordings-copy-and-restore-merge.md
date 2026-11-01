@@ -1,8 +1,8 @@
 ### Slice 230 — Dino: say plainly that recordings stay on the phone, and restore brings them back
 
-*In progress (wave 2026-11-01), draft PR.* From the user's user test on 2026-11-01 (findings 4 and 5). No design step (copy and logic).
+*Built 2026-11-01, not merged. Emulator-checked (emulator-5554), not yet tried on iOS or by ear (see Not yet verified).* From the user's user test on 2026-11-01 (findings 4 and 5). No design step (copy and logic).
 
-**Touches:** `src/DinoReader.Core/StoryPackageReader.cs`, `src/DinoReader.Core/StoryBackupReader.cs`, `src/DinoReader.Core/StoryBackup.cs`, `src/DinoReader.Core/StoryRecordings.cs`, `src/DinoReader.Core/IStoryLibrary.cs`, `src/DinoReader.App/FileStoryLibrary.cs` (wherever it lives), `src/DinoReader.App/BackupPage.xaml`, `src/DinoReader.App/BackupPage.xaml.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/Testing/DinoTestCommands.Backup.cs` (new), `src/DinoReader.App/Testing/DinoTestCommands.cs` (key registration only), `tools/emulator/flows/dino-backup-restore-recordings.yaml` (new), `tests/DinoReader.Tests/StoryBackupTests.cs`, `tests/DinoReader.Tests/StoryPackageTests.cs`, `tests/DinoReader.Tests/` (new test files), `docs/plan/slices/230-dino-recordings-copy-and-restore-merge.md` (widened at the claim, 2026-11-01, from a premise check)
+**Touches:** `src/DinoReader.Core/StoryPackageReader.cs`, `src/DinoReader.Core/StoryBackupReader.cs`, `src/DinoReader.Core/StoryBackup.cs`, `src/DinoReader.Core/StoryRecordings.cs`, `src/DinoReader.Core/IStoryLibrary.cs`, `src/DinoReader.App/FileStoryLibrary.cs` (wherever it lives), `src/DinoReader.App/BackupPage.xaml`, `src/DinoReader.App/BackupPage.xaml.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/Testing/DinoTestCommands.Backup.cs` (new), `src/DinoReader.App/Testing/DinoTestCommands.cs` (key registration only), `.maestro/dino/dino-backup-restore-recordings.yaml` (new; corrected mid-build from a nonexistent `tools/emulator/flows/`), `tests/DinoReader.Tests/StoryBackupTests.cs`, `tests/DinoReader.Tests/StoryPackageTests.cs`, `tests/DinoReader.Tests/` (new test files), `docs/plan/slices/230-dino-recordings-copy-and-restore-merge.md` (widened at the claim, 2026-11-01, from a premise check)
 
 #### Coordinator's design notes (claim, 2026-11-01)
 
@@ -48,12 +48,55 @@ Not drawn: the intro's record step itself.
 
 #### Work
 
-- [ ] Core: restore of an existing story id merges `Recordings` (copy missing audio files, backup wins on the same page), leaves pages, pictures and cast as they are on the phone. Unit tests: fresh restore, merge into a story with none, conflict on one page, a recording whose audio file is missing from the zip (dropped, as today).
-- [ ] Round-trip test in Core: write a backup with recordings, read it into an empty library, every recording entry points at an existing file.
-- [ ] Copy on Record page, wizard step and Backup page, 13 languages.
-- [ ] Android and iOS: device check of back up, delete the recordings, restore, the recorded voice plays (both platforms).
+- [x] Core: restore of an existing story id merges `Recordings` (copy missing audio files, backup wins on the same page), leaves pages, pictures and cast as they are on the phone. Unit tests: fresh restore, merge into a story with none, conflict on one page, a recording whose audio file is missing from the zip (dropped, as today).
+- [x] Round-trip test in Core: write a backup with recordings, read it into an empty library, every recording entry points at an existing file.
+- [x] Copy on Record page, wizard step and Backup page, 15 resx files (base + 14 locales).
+- [ ] Android and iOS: device check of back up, delete the recordings, restore, the recorded voice plays (both platforms). Android emulator: scripted flow passed (entry and file present); hearing it play and all of iOS are in Not yet verified.
 
 #### Verification
 
 - `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj`.
 - Scripted emulator flow: record one page, back up, delete the story's recordings, restore, "Read with my voice" plays the page. iOS: same on simulator or TestFlight.
+
+*Changed while building:*
+
+- Restore matches an on-shelf book by exact Id first, then `SourceId == source`, then `SourceId == packaged.Id`. Backup wins per page (user decision). A page whose text differs from the phone's is dropped (counted as Kept).
+- Audio is staged to temp names, each phone file is moved to `.bak`, `UpdateAsync` commits, then the `.bak` files are deleted (restored on failure). Leftover `.tmp`/`.bak` files are swept at the next merge. An IO error counts the book as Damaged and the restore continues.
+- New `Merged` outcome and `Backup_Merged` row ("N books got their recordings back"). `UseRecordings` is turned on when the phone had no recordings (same rule as `StoryRecordings.With` for a first recording).
+- Copy: `Recordings_StayHere_Phone`, `_Tablet`, `_Device` (Desktop and other idioms say "this computer"), `Backup_SaveIncludes`, `Backup_Merged`, `Backup_RestoreBody` reworded; shown on the Record page, the intro record step and the Backup page. There are 15 resx files (base + 14 locales); the plan's "13" and the claim note's "16" were both wrong. Translations are machine-drafted.
+- Test hook `backup-recordings` in `Testing/DinoTestCommands.Backup.cs` (partial), flow `.maestro/dino/dino-backup-restore-recordings.yaml`.
+- Deviation from the mock: the info icon is not drawn (no `IconKind.Info`; `IconView.cs` is outside Touches).
+- Known limit: a kill after the files are moved but before `UpdateAsync` keeps the new audio with the old metadata (Seconds, Language) until the next restore.
+
+*From review* (`D:/ReadTheStupidText-worktrees/reviews/s230-high.md` and `s230-medium.md`, both read in full):
+
+- High 1 (backup overwrites a newer phone recording): skipped, user decision (backup wins per page).
+- High 2 (partial audio overwrite on failure): applied (staging, `.bak` rollback).
+- High 3 (Windows head says "phone"): applied (`_Device` wording).
+- High 4 (`UseRecordings` stays off after merge): applied.
+- High 5 (equal-size corrupted take never repaired): skipped, low.
+- High 6 (`ListAsync` per package, O(n^2)): skipped, low.
+- High 7 (match order Id, SourceId): applied.
+- High 8 (hook does not cover existing page, mismatch or mid-merge failure): skipped, low; unit tests cover those.
+- Medium 1 (IO errors escape the restore): applied (counted as Damaged, restore continues).
+- Medium 2 (no rollback): applied (same fix as high 2).
+- Medium 3 (`ListAsync` per package plus temp copy): skipped, performance; the match order is already fixed by high 7.
+- Medium 4 (`UseRecordings` forced on though a grown-up may have turned it off): skipped, it would undo high 4 (restored recordings would be silent while the UI says they came back). The first-recording rule of `StoryRecordings.With` is kept; the cost is that a deliberately switched-off voice comes back on when the phone had no recordings.
+- Medium 5 (truncated entry replaces a good recording; usage count ignores Merged): skipped; the zip CRC catches truncation. The usage-count part was not changed.
+- Medium 6 (orphan `.tmp` files): applied (swept at the next merge).
+- Medium 7 (third row shrinks the picture row): skipped; the mock draws the note inline.
+- Medium 8 (idiom chain, no switch default): skipped, style.
+
+#### For CLAUDE.md
+
+- In `src/DinoReader.App/CLAUDE.md`: restore merges recordings into a book already on the phone; the audio files are staged, then committed by `UpdateAsync`, with `.bak` rollback (`StoryPackageReader.cs`). Keep that order if you touch the merge. (Slice 230: docs/plan/slices/230-dino-recordings-copy-and-restore-merge.md)
+
+#### Not yet verified
+
+- Hearing the restored recording play ("Read with my voice").
+- iOS simulator or TestFlight: back up, restore, recordings come back.
+- VoiceOver on the new Record/Backup lines.
+- iPhone and iPad layouts of the new lines.
+- Windows head wording ("this computer").
+- The info icon (not drawn).
+- The failing-once check against the old APK (no old APK available), so the flow is not shown to fail before the change.

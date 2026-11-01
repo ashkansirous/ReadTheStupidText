@@ -5,8 +5,8 @@ using System.Text;
 namespace DinoReader.Core;
 
 /// <summary>
-/// Restores a backup zip into a library (Slice 93, Decision 96). A story whose id, or whose source (a starter or store story the phone installed itself), is already on the shelf is skipped and left as it is;
-/// the others are imported with their backed-up id (so restoring twice adds nothing). A damaged package costs only its own story.
+/// Restores a backup zip into a library (Slice 93, Decision 96). A story whose id, or whose source (a starter or store story the phone installed itself), is already on the shelf keeps its pages, pictures and cast
+/// as they are, but gets back the recordings it lacks (Slice 230); one with nothing new to merge is skipped. The others are imported with their backed-up id (so restoring twice adds nothing). A damaged package costs only its own story.
 /// A newer backup schema, a missing manifest or too many entries refuse the whole file before anything is added.
 /// </summary>
 public static class StoryBackupReader
@@ -44,7 +44,7 @@ public static class StoryBackupReader
                 tooLarge = outcome == Outcome.TooLarge ? packages.Count - i : 0;
             }
 
-            return new StoryRestoreResult(counts[(int)Outcome.Added], counts[(int)Outcome.Skipped], counts[(int)Outcome.Damaged], tooLarge);
+            return new StoryRestoreResult(counts[(int)Outcome.Added], counts[(int)Outcome.Skipped], counts[(int)Outcome.Damaged], tooLarge, counts[(int)Outcome.Merged]);
         }
         catch (Exception ex) when (ex is InvalidDataException or StoryPackageException)
         {
@@ -55,6 +55,7 @@ public static class StoryBackupReader
     private enum Outcome
     {
         Added,
+        Merged,
         Skipped,
         Damaged,
         TooLarge,
@@ -109,7 +110,7 @@ public static class StoryBackupReader
         {
             return entry.Length > MaxPackageBytes ? Outcome.Damaged : await ImportEntryAsync(entry, library, known, budget, onAdded);
         }
-        catch (Exception ex) when (ex is StoryPackageException or StoryFormatException or InvalidDataException)
+        catch (Exception ex) when (ex is StoryPackageException or StoryFormatException or InvalidDataException or IOException or UnauthorizedAccessException)
         {
             return budget.Exhausted ? Outcome.TooLarge : Outcome.Damaged;
         }
@@ -123,7 +124,7 @@ public static class StoryBackupReader
         string? source = await PeekSourceAsync(package, packaged);
         if (known.Contains(packaged.Id) || (source is not null && known.Contains(source)))
         {
-            return Outcome.Skipped;
+            return await MergeIntoShelfAsync(package, library, packaged, source, budget);
         }
 
         package.Position = 0;
@@ -141,6 +142,34 @@ public static class StoryBackupReader
 
         NotifyAdded(onAdded, added);
         return Outcome.Added;
+    }
+
+    // The story is already on the shelf (by id, or as the same starter or store book): only its missing recordings are brought back (Slice 230).
+    private static async Task<Outcome> MergeIntoShelfAsync(Stream package, IStoryLibrary library, Story packaged, string? source, ByteBudget budget)
+    {
+        Story? phone = await OnShelfAsync(library, packaged, source);
+        if (phone is null)
+        {
+            return Outcome.Skipped;
+        }
+
+        package.Position = 0;
+        Debug.WriteLine($"Dino Reader restore: merging recordings into {phone.Id}");
+        return await StoryPackageReader.MergeRecordingsAsync(package, library, phone, budget) is null ? Outcome.Skipped : Outcome.Merged;
+    }
+
+    // The shelf's copy of the backed-up story: the same id, else (in order) the story whose id is the source, the one installed from the same source, the one installed from the packaged id.
+    private static async Task<Story?> OnShelfAsync(IStoryLibrary library, Story packaged, string? source)
+    {
+        if (await library.GetAsync(packaged.Id) is { } same)
+        {
+            return same;
+        }
+
+        IReadOnlyList<Story> shelf = await library.ListAsync();
+        return shelf.FirstOrDefault(s => s.Id == source)
+            ?? (source is null ? null : shelf.FirstOrDefault(s => s.SourceId == source))
+            ?? shelf.FirstOrDefault(s => s.SourceId == packaged.Id);
     }
 
     // A callback that throws must not abort the restore partway: the story is already on the shelf (Slice 191).

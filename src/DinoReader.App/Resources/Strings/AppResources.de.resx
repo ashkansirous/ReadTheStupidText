@@ -85,7 +85,12 @@
   <data name="Backup_SaveBody_Other" xml:space="preserve"><value>Alle {0} Geschichten in einer Datei, mit Seiten, Bildern und angepassten Besetzungen. Speichere sie in Drive oder Dateien oder schicke sie dir selbst.</value></data>
   <data name="Backup_SaveButton" xml:space="preserve"><value>Sicherung speichern</value></data>
   <data name="Backup_RestoreTitle" xml:space="preserve"><value>Aus einer Sicherung wiederherstellen</value></data>
-  <data name="Backup_RestoreBody" xml:space="preserve"><value>Fügt die Geschichten hinzu, die dieses Handy noch nicht hat. Geschichten, die schon da sind, bleiben genau, wie sie sind.</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Holt Geschichten und Aufnahmen aus einer Datei zurück. Geschichten, die schon da sind, behalten ihre Seiten und bekommen ihre Aufnahmen zurück.</value></data>
+  <data name="Backup_SaveIncludes" xml:space="preserve"><value>Sie enthält auch deine Aufnahmen.</value></data>
+  <data name="Backup_Merged" xml:space="preserve"><value>Aufnahmen zurückbekommen</value></data>
+  <data name="Recordings_StayHere_Phone" xml:space="preserve"><value>Deine Aufnahmen bleiben auf diesem Handy, nur für deine Familie. Dino lädt sie nie hoch, also bewahre selbst eine Kopie auf: Einstellungen → Sicherung.</value></data>
+  <data name="Recordings_StayHere_Tablet" xml:space="preserve"><value>Deine Aufnahmen bleiben auf diesem Tablet, nur für deine Familie. Dino lädt sie nie hoch, also bewahre selbst eine Kopie auf: Einstellungen → Sicherung.</value></data>
+  <data name="Recordings_StayHere_Device" xml:space="preserve"><value>Deine Aufnahmen bleiben auf diesem Computer, nur für deine Familie. Dino lädt sie nie hoch, also bewahre selbst eine Kopie auf: Einstellungen → Sicherung.</value></data>
   <data name="Backup_RestoreButton" xml:space="preserve"><value>Sicherungsdatei wählen</value></data>
   <data name="Backup_Footer" xml:space="preserve"><value>Die Datei geht nur dorthin, wohin du sie schickst. Dino behält keine Kopie im Internet.</value></data>
   <data name="Backup_Restored_One" xml:space="preserve"><value>{0} Geschichte wiederhergestellt</value></data>

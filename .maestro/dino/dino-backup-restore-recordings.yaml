@@ -1,0 +1,31 @@
+# Slice 230: a restore into a book that is still on the phone brings its recordings back. The microphone cannot be scripted, so the backup-recordings hook writes a known audio file as page 1's
+# recording of the first starter, backs the book up, deletes the recording and restores the file; the restore merges (the book is still on the shelf). The hook logs each step and checks
+# that page 1's recording entry exists and its file is present with the same size. Hearing the restored recording play is not scripted (Not yet verified).
+# expect-log: HOOK backup-recordings started
+# expect-log: HOOK backup-recordings written
+# expect-log: HOOK backup-recordings backed-up
+# expect-log: HOOK backup-recordings deleted
+# expect-log: HOOK backup-recordings restored merged=1
+# expect-log: HOOK backup-recordings ok
+appId: uk.sirous.dinoreader
+name: Restore brings a book's recordings back
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow only reads the starter books the app installs again and records no real voice.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: backup-recordings
+      id: three-little-pigs
+- waitForAnimationToEnd:
+    timeout: 8000
+- assertVisible:
+    id: StoryTile

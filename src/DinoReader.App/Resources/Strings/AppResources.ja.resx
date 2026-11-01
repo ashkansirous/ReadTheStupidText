@@ -82,7 +82,12 @@
   <data name="Backup_SaveBody_Other" xml:space="preserve"><value>{0}冊すべての物語を、ページ、絵、調整したキャストごと1つのファイルに。ドライブやファイルに保存するか、自分に送れます。</value></data>
   <data name="Backup_SaveButton" xml:space="preserve"><value>バックアップを保存</value></data>
   <data name="Backup_RestoreTitle" xml:space="preserve"><value>バックアップから復元</value></data>
-  <data name="Backup_RestoreBody" xml:space="preserve"><value>このスマホにない物語を追加します。すでにある物語はそのままです。</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>ファイルから物語と録音を元に戻します。すでにある物語はページそのままで、録音だけが戻ります。</value></data>
+  <data name="Backup_SaveIncludes" xml:space="preserve"><value>録音も入っています。</value></data>
+  <data name="Backup_Merged" xml:space="preserve"><value>録音が戻りました</value></data>
+  <data name="Recordings_StayHere_Phone" xml:space="preserve"><value>録音はこのスマホの中だけに残り、ご家族だけのものです。Dinoが録音をアップロードすることはありません。ご自身でコピーを保存してください：設定 → バックアップ。</value></data>
+  <data name="Recordings_StayHere_Tablet" xml:space="preserve"><value>録音はこのタブレットの中だけに残り、ご家族だけのものです。Dinoが録音をアップロードすることはありません。ご自身でコピーを保存してください：設定 → バックアップ。</value></data>
+  <data name="Recordings_StayHere_Device" xml:space="preserve"><value>録音はこのパソコンの中だけに残り、ご家族だけのものです。Dinoが録音をアップロードすることはありません。ご自身でコピーを保存してください：設定 → バックアップ。</value></data>
   <data name="Backup_RestoreButton" xml:space="preserve"><value>バックアップファイルを選ぶ</value></data>
   <data name="Backup_Footer" xml:space="preserve"><value>ファイルは送った先にだけ届きます。Dino がオンラインにコピーを残すことはありません。</value></data>
   <data name="Backup_Restored_One" xml:space="preserve"><value>{0}冊の物語を復元しました</value></data>
