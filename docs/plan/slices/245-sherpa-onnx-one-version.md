@@ -1,6 +1,6 @@
 # Slice 245 — sherpa-onnx: one version on every platform (1.13.8)
 
-*Built 2026-11-01, not merged; Android emulator Dino kokoro-en read and a host Python piper-fa read checked, the rest not yet verified (see below).* From the user: "the rule is that android and ios should work exactly the same, which means the
+*Built 2026-11-01, merged as PR #714 (b4f9aab8); Android emulator Dino kokoro-en read and a host Python piper-fa read checked, the rest not yet verified (see below).* From the user: "the rule is that android and ios should work exactly the same, which means the
 same fucking package versions as well", then "for the current platform, lets set it all to 1.13.8 for now".
 
 **Depends on:** none.
@@ -124,7 +124,7 @@ From review (read: `D:\ReadTheStupidText-worktrees\reviews\s245-high.md` 9/9, `s
 - The desktop VM has no audio device, so its read check proves only that a read started; no VM check reads with a Piper pack or exercises onnxruntime managed.
 - Never start the VM and the emulator together (memory).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-01; root rule already on main, VM memory gate already in tools/CLAUDE.md)
 
 - sherpa-onnx and onnxruntime versions are set only in `src/SherpaOnnxVersion.props`; never pin either elsewhere in build, workflow or requirements files. `.github/scripts/check-sherpa-pins.mjs` (CI and the C# suite) fails on a stray pin. A bump ships all six apps through `ship-targets.mjs` `CORE_PATHS`. (Slice 245: docs/plan/slices/245-sherpa-onnx-one-version.md)
 - The managed onnxruntime may lag the native one when NuGet has no matching patch (1.28.0 managed, 1.28.2 native); keep the minor equal. (Slice 245: docs/plan/slices/245-sherpa-onnx-one-version.md)
