@@ -1,6 +1,6 @@
 # Slice 244 — Dino: find and fix the crashes of 2026-10-31 and 2026-11-01
 
-*Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
+*In progress (2026-11-01).* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
 I can tell, when the story is playing and I click on back, it does not pause/stop the story", then "another slice to
 figuring out what can have cause the crashes today and yesterday and fixing them".
 
