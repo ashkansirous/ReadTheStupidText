@@ -2,6 +2,14 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count.
 
+### Slice 245: sherpa-onnx one version ([slice](slices/245-sherpa-onnx-one-version.md))
+
+- Dino `supertonic-3`, `piper-fa`, `piper-nb` and `melo` reads on a device; RTST Android Supertonic read.
+- Scan/OCR (PaddleOCR) and translation with managed onnxruntime 1.28.0 against native 1.28.2 on Android, iOS and Windows.
+- Windows VM reads: the VM did not start (host had 6.9 GB free, gate is 8 GB, because the emulator ran at the same time).
+- iOS everything (needs the TestFlight build).
+- The same Farsi sukun sentence sounding the same on Android and iOS.
+
 ### Slice 239: Dino store book without an app build ([slice](slices/239-dino-store-book-without-app-build.md))
 
 - A real story-only PR shows no PR checks and, after merge, runs only `dino-store.yml` (no `release.yml`).
