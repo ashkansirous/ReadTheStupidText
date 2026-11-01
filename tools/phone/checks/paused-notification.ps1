@@ -11,12 +11,15 @@
   7. the network is switched back on, and tap-to-finish: the notice's content intent is the app's launcher intent, so it is fired with `am start` of the launcher activity (not a physical tap on the shade: SystemUI is not driven here);
   the app must then be the resumed activity, the download must log `PACKDL start` again and the notice must be gone. In a finally block, ALWAYS: the app's network block is lifted, the timeout is reset (`device_config delete`, `am compat reset`), the download cancelled (cancel-pack-downloads hook), the
   .partial and the half-made pack folder deleted, the original pack moved back and verified with Test-PackInstalled; if that fails the check FAILS (the aside copy is named in the detail).
-  Wipes: only the dev app's pack folder for the pack under test (moved aside and restored, never cleared); no app data.
+  -NetworkOnly (Slice 233, any Android version): steps 1 and 4 change: no time limit is set or waited for; the app goes to the background and after $script:BackgroundSettleSeconds s the Debug hook `drop-pack-network` makes the running download's next read throw a dropped-connection HttpRequestException (the per-app netpolicy block cannot cut a running dataSync service: device finding, S21, 2026-11-01), so the real resumable-failure path runs; the marker must carry `reason=<offline|failed|transport>` and the notice must still appear.
+  Both variants first run reset-dev-app -Level clear to drop a `VOICEPACK held-user-cancelled` hold an earlier cleanup left (packs kept aside and put back; app data otherwise cleared).
+  Wipes: the dev app's app data (reset-dev-app -Level clear, installed packs kept aside and restored), then only the pack folder under test (moved aside and restored).
 #>
 param(
     [Parameter(Mandatory)][string]$Phone,
     [Parameter(Mandatory)][ValidateSet('rtst', 'dino')][string]$App,
-    [int]$PausedTimeoutSeconds = 150
+    [int]$PausedTimeoutSeconds = 150,
+    [switch]$NetworkOnly   # Slice 233: no dataSync time limit; the backgrounded app just loses its network (see paused-notification-network.ps1)
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '..\common.ps1')
@@ -32,7 +35,8 @@ $script:PausedTitle = 'Download paused. Tap to finish.'
 $script:TimeoutMarkerPattern = 'PACKDL service timeout'
 $script:TimeoutSeconds = 90
 $script:ResumeSeconds = 60
-$script:PausedMarkerPattern = 'PACKDL service paused-notified pack=(\S+)'
+$script:BackgroundSettleSeconds = 5
+$script:PausedMarkerPattern = 'PACKDL service paused-notified pack=(\S+)( reason=(offline|failed|transport))?'
 $script:DownloadLanguageName = 'English'   # launched with lang=en (Start-DevAppWithHook)
 $script:Launchable = $null
 $packId = @($script:RequiredPacks[$App])[0]
@@ -59,9 +63,14 @@ function Assert-TimeLimitPhone {
     if ($sdk -notmatch '^\d+$' -or [int]$sdk -lt 35) { throw "the dataSync time limit needs Android 15 (API 35); this phone reports API '$sdk'." }
 }
 
-function Set-ShortTimeLimit {
+# The app uid and the device-side heal, before anything is changed; both variants start here.
+function Start-AppHeal {
     $script:AppUid = Get-PackageUid $Phone $package
-    Start-DeviceRestore $Phone $package $script:AppUid $script:DeviceRestoreSeconds   # device-side heal first, before anything is changed
+    Start-DeviceRestore $Phone $package $script:AppUid $script:DeviceRestoreSeconds
+}
+
+function Set-ShortTimeLimit {
+    Start-AppHeal
     Invoke-Adb $Phone @('shell', 'device_config', 'put', 'activity_manager', 'data_sync_fgs_timeout_duration', "$($script:DataSyncTimeoutMs)") | Out-Null
     Invoke-Adb $Phone @('shell', 'am', 'compat', 'enable', 'FGS_INTRODUCE_TIME_LIMITS', $package) | Out-Null
 }
@@ -145,9 +154,36 @@ function Test-AppResumedAfterTap {
     return $false
 }
 
+# The network-only variant still needs the app uid and the device-side heal that Set-ShortTimeLimit makes, but no time limit.
+function Set-NetworkOnlySetup {
+    Start-AppHeal
+}
+
+# True once no activity of the dev app is the resumed one (the HOME key has finished moving it out of the foreground).
+function Wait-AppBackgrounded([int]$Seconds = 30) {
+    $deadline = (Get-Date).AddSeconds($Seconds)
+    do {
+        $resumed = @(Invoke-Adb $Phone @('shell', 'dumpsys activity activities') | Where-Object { "$_" -match 'topResumedActivity|mResumedActivity' })
+        if (-not ($resumed -match [regex]::Escape($package))) { return $true }
+        Start-Sleep -Seconds 1
+    } while ((Get-Date) -lt $deadline)
+    return $false
+}
+
+# Slice 233: an earlier cleanup (or the cancel hook) can leave the dev app in `VOICEPACK held-user-cancelled`, and then the download this check waits for never starts.
+# Every variant therefore clears that hold first: reset-dev-app -Level clear (the installed packs are kept aside and put back; -Level data does not exist).
+function Clear-DevDownloadHold {
+    Write-Host "   clearing any download hold left by an earlier check (reset-dev-app -Level clear)"
+    & (Join-Path (Join-Path $PSScriptRoot '..') 'reset-dev-app.ps1') -App $App -Level clear -Serial $Phone | Out-Host
+    if ($LASTEXITCODE -ne 0) { throw "reset-dev-app -Level clear did not bring $package back alive (exit $LASTEXITCODE), so a download hold could not be cleared" }
+    # pm clear also resets the runtime notification permission (S21 2026-11-01: the channel read importance=NONE after it), so grant it again.
+    $answer = (Invoke-Adb $Phone @('shell', 'pm', 'grant', $package, 'android.permission.POST_NOTIFICATIONS')) -join ' '
+    if ($global:LASTEXITCODE -ne 0) { throw "pm grant POST_NOTIFICATIONS failed after the clear: $answer" }
+    Write-Host "   notifications granted again after the clear"
+}
+
 function Invoke-PausedCheck {
-    Assert-TimeLimitPhone
-    Set-ShortTimeLimit
+    if ($NetworkOnly) { Set-NetworkOnlySetup } else { Assert-TimeLimitPhone; Set-ShortTimeLimit }
     Set-DevMarker $Phone $package $script:ThrottleMarkerName
     $since = Get-PhoneEpochMs
     $appPid = Start-DevAppWithHook $Phone $package 'skip-first-run'
@@ -155,18 +191,32 @@ function Invoke-PausedCheck {
     if (-not $start) { return (New-CheckResult $false (Get-NoPackStartReason (Get-PidLog $Phone $appPid) @($packId))) }
     Write-Host "   download started: $($start.Line.Trim()); sending the app to the background"
     Invoke-Adb $Phone @('shell', 'input', 'keyevent', 'KEYCODE_HOME') | Out-Null
-    $timeout = Wait-LogMatch $Phone $package $appPid $script:TimeoutMarkerPattern $script:TimeoutSeconds 0 "waiting for PACKDL service timeout ($($script:DataSyncTimeoutMs / 1000) s time limit)"
-    if (-not $timeout) { return (New-CheckResult $false "no 'PACKDL service timeout' within $($script:TimeoutSeconds) s of backgrounding the app (the time limit did not fire). The app's last lines: $(Get-AppLogTail (Get-PidLog $Phone $appPid) 6)") }
-    if (-not (Test-NoticeGone $since)) { return (New-CheckResult $false "a paused notice was posted at the time limit itself, before the run ended") }
-    Write-Host "   time limit fired; blocking the dev app's network (not the phone's) so the run ends unfinished"
-    Set-Network $false
-    $marker = Wait-LogMatch $Phone $package $appPid $script:PausedMarkerPattern $PausedTimeoutSeconds $timeout.Time "waiting for PACKDL paused-notified after the run failed"
+    if ($NetworkOnly) {
+        if (-not (Wait-AppBackgrounded)) { return (New-CheckResult $false "$package was still the resumed app 30 s after the HOME key, so the network cut would not be a background end") }
+        Start-Sleep -Seconds $script:BackgroundSettleSeconds
+        $timeout = [pscustomobject]@{ Time = $start.Time }
+        Write-Host "   no time limit in this variant; dropping the running download's connection with the drop-pack-network hook (a running dataSync service is exempt from the per-app network block)"
+    } else {
+        $timeout = Wait-LogMatch $Phone $package $appPid $script:TimeoutMarkerPattern $script:TimeoutSeconds 0 "waiting for PACKDL service timeout ($($script:DataSyncTimeoutMs / 1000) s time limit)"
+        if (-not $timeout) { return (New-CheckResult $false "no 'PACKDL service timeout' within $($script:TimeoutSeconds) s of backgrounding the app (the time limit did not fire). The app's last lines: $(Get-AppLogTail (Get-PidLog $Phone $appPid) 6)") }
+        if (-not (Test-NoticeGone $since)) { return (New-CheckResult $false "a paused notice was posted at the time limit itself, before the run ended") }
+        Write-Host "   time limit fired; blocking the dev app's network (not the phone's) so the run ends unfinished"
+    }
+    $cutAt = (Get-PhoneEpochMs) / 1000.0   # the marker must come from this run's network cut, never an earlier one
+    if ($NetworkOnly) {
+        $drop = Send-DevHook $Phone $App 'drop-pack-network'
+        Write-Host "   drop-pack-network: $drop"
+    } else {
+        Set-Network $false
+    }
+    $marker = Wait-LogMatch $Phone $package $appPid $script:PausedMarkerPattern $PausedTimeoutSeconds $cutAt "waiting for PACKDL paused-notified after the run failed"
     if (-not $marker) { return (New-CheckResult $false "no 'PACKDL service paused-notified' within $PausedTimeoutSeconds s of cutting the network (the run did not end unfinished, or the app was on screen). The app's last lines: $(Get-AppLogTail (Get-PidLog $Phone $appPid) 6)") }
     Write-Host "   $($marker.Line.Trim())"
+    if ($NetworkOnly -and $marker.Line -notmatch 'reason=(offline|failed|transport)') { return (New-CheckResult $false "the paused-notified marker carries no end reason (Slice 233): $($marker.Line.Trim())") }
     $note = Wait-PausedNotice $since
     if (-not $note) { return (New-CheckResult $false "the log said paused-notified but no notification titled '$($script:PausedTitle)' is in dumpsys notification (notifications off for the dev app?)") }
     if (-not (Test-PausedText $note)) { return (New-CheckResult $false "the paused notification does not name the language and the size: title '$($note.Title)', text '$($note.Text)'") }
-    Set-Network $true
+    if (-not $NetworkOnly) { Set-Network $true }
     if (-not (Test-AppResumedAfterTap)) { return (New-CheckResult $false "launching the notice's target did not bring $package to the foreground") }
     $restart = Wait-LogMatch $Phone $package $appPid $script:PackStartPattern $script:ResumeSeconds ($marker.Time + 0.001) "waiting for the download to start again"
     if (-not $restart) { return (New-CheckResult $false "the download did not log PACKDL start again within $($script:ResumeSeconds) s of the network coming back and the app opening") }
@@ -179,6 +229,7 @@ $restoreProblem = $null
 $budgetError = $false
 $moved = $false
 try {
+    Clear-DevDownloadHold
     Move-PackAside
     $moved = $true
     $result = Invoke-PausedCheck
@@ -187,8 +238,8 @@ try {
     $result = New-CheckResult $false "check could not run: $($_.Exception.Message)"
     if (-not $moved -and (Test-PhonePathExists $movedPath)) { $moved = $true }   # the move happened but something after it threw
 } finally {
-    Set-Network $true
-    Reset-TimeLimit
+    if (-not $NetworkOnly) { Set-Network $true }   # the network-only variant never blocks the app's network (Slice 233)
+    if (-not $NetworkOnly) { Reset-TimeLimit }   # the network-only variant never set the timeout or the compat flag: leave any the phone already had
     if ($moved) { $restoreProblem = Restore-MovedPack }
 }
 if ($budgetError -and -not $restoreProblem) { throw $result.Detail.Substring('check could not run: '.Length) }   # a timeout stays a TIMEOUT (the pack is restored first)

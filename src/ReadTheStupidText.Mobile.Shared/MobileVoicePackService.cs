@@ -209,7 +209,8 @@ public sealed class MobileVoicePackService : IVoicePackService
             progress?.Report(value);
         });
 
-        PackDownloadHost.ClearPaused(packId); // Slice 208: this run is the resume the "Download paused" notice asked for
+        PackDownloadHost.RunStarted(packId, byPerson: !PackResumeScope.IsAutomatic); // Slice 233: the notice goes at every run start; only a person's resume ends the pause episode, so a failed automatic retry posts again silently
+
         // Hash, extract and copy are heavy: keep all of it off the UI thread.
         try
         {
@@ -229,7 +230,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
         catch (Exception ex) when (IsResumableFailure(ex))
         {
-            PackDownloadHost.Paused(packId, lastFraction); // a network stop or an HttpClient timeout; the platform decides whether a notice is due (background only)
+            PackDownloadHost.Paused(packId, lastFraction, PackDownloadHost.PausedReasonTransport); // a network stop or an HttpClient timeout; the platform decides whether a notice is due (background only)
             throw;
         }
         catch (Exception)
@@ -243,12 +244,12 @@ public sealed class MobileVoicePackService : IVoicePackService
         ex is OperationCanceledException or HttpRequestException or System.Net.Sockets.SocketException or TimeoutException;
 
     // Slice 208: the notice is decided where the run ends. Finished or a failure nothing can resume clears it; a stop that waiting or the network can
-    // end (Offline, Failed) posts it, and the platform posts only when the app is in the background (Android: after the time limit stopped the service).
+    // end (Offline, Failed) posts it, and the platform posts only when the app is not in the foreground (PausedNoticePolicy, the same rule on both).
     private static void SettlePausedNotice(string packId, PackDownloadResult result, double? lastFraction)
     {
         if (PackResumePolicy.IsResumableResult(result))
         {
-            PackDownloadHost.Paused(packId, lastFraction);
+            PackDownloadHost.Paused(packId, lastFraction, result == PackDownloadResult.Offline ? PackDownloadHost.PausedReasonOffline : PackDownloadHost.PausedReasonFailed);
             return;
         }
 
@@ -668,9 +669,13 @@ public sealed class MobileVoicePackService : IVoicePackService
         int lastPercent = -1;
 #if DEBUG
         bool throttled = PackDownloadThrottle.IsOn();
+        PackDownloadThrottle.ClearDrop();
 #endif
         while (true)
         {
+#if DEBUG
+            PackDownloadThrottle.ThrowIfDropRequested();
+#endif
             int read = await source.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
             if (read == 0)
             {

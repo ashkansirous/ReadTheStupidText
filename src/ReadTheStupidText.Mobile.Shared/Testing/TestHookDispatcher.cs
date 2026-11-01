@@ -18,6 +18,7 @@ public sealed class TestHookDispatcher
 	public const string StopRead = "stop-read";
 	public const string State = "state";
 	public const string CancelPackDownloads = "cancel-pack-downloads";
+	public const string DropPackNetwork = "drop-pack-network";
 	public const string Read = "read";
 	public const string TextKey = "text";
 	public const string SpeedKey = "speed";
@@ -130,6 +131,7 @@ public sealed class TestHookDispatcher
 			StopRead => Stop(),
 			State => Report(),
 			CancelPackDownloads => CancelDownloads(),
+			DropPackNetwork => DropNetwork(),
 			Read => StartRead(command),
 			_ => AppCommands?.Invoke(command) ?? Unknown,
 		};
@@ -251,6 +253,13 @@ public sealed class TestHookDispatcher
 		}
 
 		cancel();
+		return Ok;
+	}
+
+	// Slice 233: the running pack download's next read throws a dropped-connection exception (see PackDownloadThrottle); a per-app network block does not stop a running dataSync service.
+	private static string DropNetwork()
+	{
+		PackDownloadThrottle.RequestDrop();
 		return Ok;
 	}
 

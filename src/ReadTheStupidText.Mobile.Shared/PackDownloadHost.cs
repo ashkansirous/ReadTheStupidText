@@ -18,10 +18,14 @@ public interface IPackKeepAlive
 /// <summary>Shows and removes the "Download paused. Tap to finish." notification (Slice 208); each platform brings its own (Android: a normal notification on the pack channel; iOS: a quiet local notification).</summary>
 public interface IPackPausedNotifier
 {
-    /// <summary>Posts the notice for a pack whose download the system stopped; <paramref name="fraction"/> is null when the bytes done are not known.</summary>
-    void Post(string packId, double? fraction);
+    /// <summary>
+    /// Posts the notice for a pack whose download the system stopped; <paramref name="fraction"/> is null when the bytes done are not known. Does nothing when the
+    /// app is in the foreground. Once it decided to post it asks <see cref="PackDownloadHost.ClaimAlert"/>: the first post of a pause episode alerts, a later
+    /// one (a failed automatic retry) posts silently. Logs the <see cref="PackDownloadHost.PausedNotifiedAction"/> marker with <paramref name="reason"/> only when it really posted.
+    /// </summary>
+    void Post(string packId, double? fraction, string reason);
 
-    /// <summary>Removes the pack's notice (the download resumed, finished or was cancelled); nothing happens when there is none.</summary>
+    /// <summary>Removes the pack's notice (a run started, or the download finished or was cancelled); nothing happens when there is none.</summary>
     void Clear(string packId);
 }
 
@@ -148,6 +152,11 @@ public static class PackDownloadHost
     public const string PausedFailedAction = "paused-failed";
     public const string PausedClearFailedAction = "paused-clear-failed";
     public const string PausedSkippedAction = "paused-skipped";
+    public const string PausedReasonKey = "reason=";
+    public const string PausedReasonUnknown = "unknown";
+    public const string PausedReasonOffline = "offline";
+    public const string PausedReasonFailed = "failed";
+    public const string PausedReasonTransport = "transport";
     public const string VisibilityUnknownAction = "visibility-unknown";
     public const string NotificationAuthFailedAction = "notification-auth-failed";
     public const string AskDeferredAction = "ask-deferred";
@@ -224,8 +233,27 @@ public static class PackDownloadHost
         return label is not null && NamedNotificationText is { } named ? named(label, fraction) : NotificationText(fraction);
     }
 
-    /// <summary>The system stopped this pack's download: logs the marker and shows the paused notice. Never throws.</summary>
-    public static void Paused(string packId, double? fraction)
+    private static readonly PausedEpisodes Episodes = new();
+
+    /// <summary>
+    /// Called by the platform notifier when it is about to post the paused notice: true when this post may alert (the first of the pause episode), false
+    /// when it must be silent because the person was already alerted for this episode (Slice 233).
+    /// </summary>
+    public static bool ClaimAlert(string packId) => Episodes.ClaimAlert(packId);
+
+    /// <summary>A run starts: removes the visible notice but keeps the episode, so a failed automatic retry posts again silently. A person's resume ends the episode (<paramref name="byPerson"/>).</summary>
+    public static void RunStarted(string packId, bool byPerson)
+    {
+        if (byPerson)
+        {
+            Episodes.End(packId);
+        }
+
+        ClearNotice(packId);
+    }
+
+    /// <summary>The download run ended unfinished (<paramref name="reason"/> names how, for the marker): logs it and asks the platform to show the paused notice. Never throws.</summary>
+    public static void Paused(string packId, double? fraction, string reason = PausedReasonUnknown)
     {
         try
         {
@@ -234,8 +262,7 @@ public static class PackDownloadHost
                 return;
             }
 
-            notifier.Post(packId, fraction);
-            LogService(PausedNotifiedAction, packId);
+            notifier.Post(packId, fraction, reason);
         }
         catch (Exception ex)
         {
@@ -243,8 +270,14 @@ public static class PackDownloadHost
         }
     }
 
-    /// <summary>The pack's download resumed, finished or was cancelled: removes its paused notice. Never throws.</summary>
+    /// <summary>The pause episode ended (finished, cancelled or failed for good): removes the paused notice and forgets that the person was alerted. Never throws.</summary>
     public static void ClearPaused(string packId)
+    {
+        Episodes.End(packId);
+        ClearNotice(packId);
+    }
+
+    private static void ClearNotice(string packId)
     {
         try
         {
@@ -257,9 +290,9 @@ public static class PackDownloadHost
     }
 
     // Same line format and sink as PackDownloadLog (which is shared with Windows and not edited here).
-    internal static void LogService(string action, string packId)
+    internal static void LogService(string action, string packId, string? reason = null)
     {
-        string line = $"{PackDownloadLog.Prefix} {ServiceEvent} {action} pack={packId}";
+        string line = $"{PackDownloadLog.Prefix} {ServiceEvent} {action} pack={packId}" + (reason is null ? "" : $" {PausedReasonKey}{reason}");
         System.Diagnostics.Debug.WriteLine(line);
         try
         {
@@ -268,6 +301,73 @@ public static class PackDownloadHost
         catch (Exception)
         {
             // A diagnostic sink must never break a download.
+        }
+    }
+}
+
+/// <summary>How a pack download run ended, for <see cref="PausedNoticePolicy"/> (Slice 233).</summary>
+public enum PausedNoticeEnd
+{
+    /// <summary>Unfinished, and waiting or the network can end it: network lost, the Android dataSync time limit, a transport error after the retries.</summary>
+    Resumable,
+    /// <summary>The person stopped it (in the app or with the notification's Cancel).</summary>
+    Cancelled,
+    /// <summary>A failure nothing the person can tap would fix.</summary>
+    NotResumable,
+    /// <summary>Finished, or the pack was already installed.</summary>
+    Finished,
+}
+
+/// <summary>What to do with the "Download paused. Tap to finish." notice.</summary>
+public enum PausedNoticeAction
+{
+    Nothing,
+    Post,
+    Clear,
+}
+
+/// <summary>
+/// The one rule for the paused notice on Android and iOS (Slice 233): a run that ends resumable while the app is not in the foreground posts it; a cancel, a
+/// non-resumable error and a finished pack clear it; a resumable end with the app in front does nothing (the foreground resume is already running). Each
+/// platform only answers "is the app in the foreground", so the two cannot drift apart again.
+/// </summary>
+public static class PausedNoticePolicy
+{
+    public static PausedNoticeAction Decide(PausedNoticeEnd end, bool appInForeground)
+    {
+        if (end != PausedNoticeEnd.Resumable)
+        {
+            return PausedNoticeAction.Clear;
+        }
+
+        return appInForeground ? PausedNoticeAction.Nothing : PausedNoticeAction.Post;
+    }
+}
+
+/// <summary>
+/// Which packs already alerted the person in their current pause episode (Slice 233). An episode starts at the first resumable end and lasts until the pack
+/// finishes, is cancelled, fails for good, or the person resumes it; automatic restarts and their failed retries stay inside it, so the person is alerted once.
+/// In memory only: a process kill forgets it, and the next resumable end alerts again.
+/// </summary>
+public sealed class PausedEpisodes
+{
+    private readonly HashSet<string> _alerted = [];
+
+    /// <summary>True the first time for a pack in an episode (alert); false afterwards (post silently).</summary>
+    public bool ClaimAlert(string packId)
+    {
+        lock (_alerted)
+        {
+            return _alerted.Add(packId);
+        }
+    }
+
+    /// <summary>Ends the pack's episode.</summary>
+    public void End(string packId)
+    {
+        lock (_alerted)
+        {
+            _alerted.Remove(packId);
         }
     }
 }

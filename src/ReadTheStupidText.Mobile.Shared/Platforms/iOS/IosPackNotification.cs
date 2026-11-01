@@ -39,9 +39,9 @@ internal sealed class IosPackNotification : IPackPausedNotifier
         }
     }
 
-    public void Post(string packId, double? fraction)
+    public void Post(string packId, double? fraction, string reason)
     {
-        _ = PostAsync(packId, fraction, Generations.GetValueOrDefault(packId));
+        _ = PostAsync(packId, fraction, reason, Generations.GetValueOrDefault(packId));
     }
 
     public void Clear(string packId)
@@ -72,12 +72,12 @@ internal sealed class IosPackNotification : IPackPausedNotifier
         center.RemovePendingNotificationRequests(ids);
     }
 
-    // Only while the app is in the background (not Active, not Inactive): otherwise the resume is already running and a notice would be noise.
-    private static async Task PostAsync(string packId, double? fraction, int generation)
+    // Only while the app is not Active (Inactive and Background both count as away, like Android's "not on screen"): otherwise the resume is already running and a notice would be noise.
+    private static async Task PostAsync(string packId, double? fraction, string reason, int generation)
     {
         try
         {
-            if (!await IsInBackgroundAsync().ConfigureAwait(false))
+            if (PausedNoticePolicy.Decide(PausedNoticeEnd.Resumable, await IsActiveAsync().ConfigureAwait(false)) != PausedNoticeAction.Post)
             {
                 PackDownloadHost.LogService(PackDownloadHost.PausedSkippedAction, PackDownloadHost.OnScreenDetail);
                 return;
@@ -94,11 +94,17 @@ internal sealed class IosPackNotification : IPackPausedNotifier
                 return; // the download resumed while the settings were read
             }
 
+            bool silent = !PackDownloadHost.ClaimAlert(packId); // a failed automatic retry of the same pause episode posts again, but passively (Slice 233)
             using var content = new UNMutableNotificationContent
             {
                 Title = PackDownloadHost.PausedTitle(),
                 Body = PackDownloadHost.PausedNotificationText(PackDownloadHost.LabelOf(packId), fraction),
             };
+            if (silent && OperatingSystem.IsIOSVersionAtLeast(15))
+            {
+                content.InterruptionLevel = UNNotificationInterruptionLevel.Passive; // no banner, no sound; below iOS 15 the re-post is as quiet as the provisional first one
+            }
+
             using UNNotificationRequest request = UNNotificationRequest.FromIdentifier(IdentifierPrefix + packId, content, null);
             await UNUserNotificationCenter.Current.AddNotificationRequestAsync(request).ConfigureAwait(false);
             lock (NoticeLock)
@@ -106,8 +112,11 @@ internal sealed class IosPackNotification : IPackPausedNotifier
                 if (Generations.GetValueOrDefault(packId) != generation)
                 {
                     RemoveNotice(packId); // the download resumed while this was being posted
+                    return;
                 }
             }
+
+            PackDownloadHost.LogService(PackDownloadHost.PausedNotifiedAction, packId, reason);
         }
         catch (Exception ex)
         {
@@ -115,7 +124,6 @@ internal sealed class IosPackNotification : IPackPausedNotifier
         }
     }
 
-    // Inactive (the app switcher, a call banner) is not "away": a short drop there is retried and the notice would be noise.
-    private static Task<bool> IsInBackgroundAsync() =>
-        MainThread.InvokeOnMainThreadAsync(() => UIApplication.SharedApplication.ApplicationState == UIApplicationState.Background);
+    private static Task<bool> IsActiveAsync() =>
+        MainThread.InvokeOnMainThreadAsync(() => UIApplication.SharedApplication.ApplicationState == UIApplicationState.Active);
 }

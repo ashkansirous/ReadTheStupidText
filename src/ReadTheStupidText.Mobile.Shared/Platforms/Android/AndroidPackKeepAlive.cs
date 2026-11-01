@@ -14,7 +14,6 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive, IPackPausedNotifier
 {
     private static readonly object Gate = new();
     private static readonly Dictionary<string, double> Active = new();
-    private static readonly HashSet<string> TimedOut = new(); // packs registered when the dataSync time limit stopped the service; a run of such a pack that then fails owes a "paused" notice
     private static PackDownloadService? _service;
     private static int _lastPercent = -1;
     private static int _graceGeneration;
@@ -25,7 +24,6 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive, IPackPausedNotifier
         lock (Gate)
         {
             Active[packId] = 0;
-            TimedOut.Remove(packId); // a new run: an older time limit no longer says anything about it
             _graceGeneration++; // a pending grace stop no longer applies
             serviceRunning = _service is not null;
         }
@@ -150,18 +148,6 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive, IPackPausedNotifier
         return builder.Build()!;
     }
 
-    /// <summary>
-    /// The dataSync time limit fired (Slice 208): the service and its ongoing notification go, but the downloads carry on in the process, so nothing is
-    /// posted yet. The packs registered now are remembered; one of them whose run then ends unfinished gets the notice (<see cref="Post"/>).
-    /// </summary>
-    internal static void NoteTimedOut()
-    {
-        lock (Gate)
-        {
-            TimedOut.UnionWith(Active.Keys);
-        }
-    }
-
     // Stricter than AppIsVisible, which counts a foreground service as visible: this is the app's own screen being up.
     private static bool AppIsOnScreen()
     {
@@ -179,23 +165,13 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive, IPackPausedNotifier
     }
 
     /// <summary>
-    /// A normal (not ongoing) notice on the pack channel, one per pack; tapping it opens the app, whose foreground resume finishes the download. Only for a
-    /// pack whose run ended unfinished after the time limit stopped the service, and only while the app is not on screen.
+    /// A normal (not ongoing) notice on the pack channel, one per pack; tapping it opens the app, whose foreground resume finishes the download. Posted for
+    /// any run that ended resumable (network lost, the dataSync time limit, a transport error), and only while the app is not on screen (Slice 233:
+    /// <see cref="PausedNoticePolicy"/>, the rule iOS uses too).
     /// </summary>
-    public void Post(string packId, double? fraction)
+    public void Post(string packId, double? fraction, string reason)
     {
-        bool afterTimeLimit;
-        lock (Gate)
-        {
-            afterTimeLimit = TimedOut.Remove(packId);
-        }
-
-        if (!afterTimeLimit)
-        {
-            return; // the service never hit its limit: a plain failure is the download's own story (its waiting line), not a system stop
-        }
-
-        if (AppIsOnScreen())
+        if (PausedNoticePolicy.Decide(PausedNoticeEnd.Resumable, AppIsOnScreen()) != PausedNoticeAction.Post)
         {
             PackDownloadHost.LogService(PackDownloadHost.PausedSkippedAction, PackDownloadHost.OnScreenDetail);
             return;
@@ -204,22 +180,19 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive, IPackPausedNotifier
         Context context = global::Android.App.Application.Context;
         PackDownloadService.EnsureChannel(context);
         var manager = (NotificationManager)context.GetSystemService(Context.NotificationService)!;
-        manager.Notify(packId, PackDownloadService.PausedNotificationId, BuildPaused(context, packId, fraction));
+        bool silent = !PackDownloadHost.ClaimAlert(packId); // a failed automatic retry of the same pause episode posts again, but quietly (Slice 233)
+        manager.Notify(packId, PackDownloadService.PausedNotificationId, BuildPaused(context, packId, fraction, silent));
+        PackDownloadHost.LogService(PackDownloadHost.PausedNotifiedAction, packId, reason);
     }
 
     public void Clear(string packId)
     {
-        lock (Gate)
-        {
-            TimedOut.Remove(packId);
-        }
-
         Context context = global::Android.App.Application.Context;
         var manager = (NotificationManager)context.GetSystemService(Context.NotificationService)!;
         manager.Cancel(packId, PackDownloadService.PausedNotificationId);
     }
 
-    private static Notification BuildPaused(Context context, string packId, double? fraction)
+    private static Notification BuildPaused(Context context, string packId, double? fraction, bool silent)
     {
         var builder = new Notification.Builder(context, PackDownloadService.ChannelId)
             .SetSmallIcon(global::Android.Resource.Drawable.StatSysWarning)!
@@ -227,6 +200,11 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive, IPackPausedNotifier
             .SetContentText(PackDownloadHost.PausedNotificationText(PackDownloadHost.LabelOf(packId), fraction))!
             .SetOngoing(false)!
             .SetAutoCancel(true)!;
+        if (silent)
+        {
+            builder.SetOnlyAlertOnce(true); // Notification.Builder has no SetSilent; the pack channel is Importance.Low (no sound) anyway, so this is the whole difference on Android
+        }
+
         if (context.PackageManager?.GetLaunchIntentForPackage(context.PackageName!) is { } launch)
         {
             builder.SetContentIntent(PendingIntent.GetActivity(context, 0, launch, PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent));

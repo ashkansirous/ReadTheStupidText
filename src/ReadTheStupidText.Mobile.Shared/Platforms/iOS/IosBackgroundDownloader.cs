@@ -80,7 +80,7 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
 
     private static readonly IosPackNotification Notice = new();
 
-    public void Post(string packId, double? fraction) => Notice.Post(packId, fraction);
+    public void Post(string packId, double? fraction, string reason) => Notice.Post(packId, fraction, reason);
 
     public void Clear(string packId) => Notice.Clear(packId);
 

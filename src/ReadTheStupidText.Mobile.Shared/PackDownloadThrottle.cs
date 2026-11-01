@@ -34,6 +34,24 @@ internal static class PackDownloadThrottle
 #endif
     }
 
+    private static volatile bool _dropRequested;
+
+    /// <summary>Slice 233: the <c>drop-pack-network</c> hook arms one dropped connection (a running dataSync service is exempt from the per-app network block, so adb cannot cut it).</summary>
+    internal static void RequestDrop() => _dropRequested = true;
+
+    /// <summary>A download copy starts with no leftover request from a hook sent while nothing ran.</summary>
+    internal static void ClearDrop() => _dropRequested = false;
+
+    /// <summary>Throws what a dropped connection throws, once, so the app's real failure path (classify, notice) runs.</summary>
+    internal static void ThrowIfDropRequested()
+    {
+        if (_dropRequested)
+        {
+            _dropRequested = false;
+            throw new HttpRequestException(HttpRequestError.ConnectionError, "Test hook drop-pack-network: connection dropped.");
+        }
+    }
+
     internal static Task PauseAsync(int bytes, CancellationToken cancellationToken) =>
         Task.Delay(TimeSpan.FromSeconds(bytes / BytesPerSecond), cancellationToken);
 }
