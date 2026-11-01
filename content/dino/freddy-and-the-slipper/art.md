@@ -1,6 +1,6 @@
 # Freddy and the Slipper: art record
 
-Store book (not a starter), by Ashkan Sirous, for about age 4. Source: the user's phone scope doc of 2026-11-01 ("Approved
+Store book (not a starter), by Elham Shafiei Gol and Ashkan Sirous, for about age 4. Source: the user's phone scope doc of 2026-11-01 ("Approved
 English text", 12 pages). Freddy the fox won't eat his dinner, his talking Tummy keeps him awake, he sneaks next door hoping
 for a leftover kebab, chomps a smelly brown slipper instead, eats cold potatoes, and the next night eats all his stew. The
 book teaches four shoe words (slipper, sandal, clog, flip-flop).
