@@ -37,11 +37,11 @@ Six frames in `docs/design/dino-reader/Dino Reader Batch 43 Grown-ups Corner.dc.
 
 **Decided: the Add/Edit wizard hides the header Done/Continue pill on the Pages and Cover steps** (chosen by the wave coordinator 2026-11-01). Nothing is saved there yet, so a pill that left would drop the parent's pictures, which is a bug. Back keeps today's behaviour. On the Text step the pill saves, like the bottom Save.
 
-**Decided: Back on the page-text editor (PageTextPage) keeps today's discard-on-back; only Done saves** (chosen by the wave coordinator 2026-11-01). Header Back, system Back and iOS swipe-back all leave without saving, as before this slice; the old Save button became the header Done. Reasons: save-on-back deleted a page silently when the text was blank, and discard-on-back is the pre-slice behaviour, kept until the user decides. The wizard's last-step header Back (leave and clean up the draft) was already like that on main (`OnLeaveTapped` -> `LeaveAsync`), so it is unchanged.
+**Decided: Back on the page-text editor (PageTextPage) keeps today's discard-on-back; only Done saves** (chosen by the wave coordinator 2026-11-01). Header Back, system Back and iOS swipe-back all leave without saving, as before this slice; the old Save button became the header Done. Reasons: save-on-back deleted a page silently when the text was blank, and discard-on-back is the pre-slice behaviour. **Confirmed by the user 2026-11-01: Back discards.** The wizard's last-step header Back (leave and clean up the draft) was already like that on main (`OnLeaveTapped` -> `LeaveAsync`), so it is unchanged.
 
-#### Waiting on the user
+#### User answers
 
-- PageText Back: keep discard-on-back (today) or save-on-back?
+- PageText Back: discard (user, 2026-11-01). Nothing to change; that is what shipped. This was an obvious choice and should not have been asked.
 
 Settled by the mock: Done is a filled indigo pill; Done on a sub-page goes up one level (the slice only said "back to where the page was opened from"). In landscape Settings (Slice 232, frame 118) Done closes Settings as a whole.
 
@@ -60,7 +60,7 @@ Settled by the mock: Done is a filled indigo pill; Done on a sub-page goes up on
 - On it: Settings and its sub-pages, Store, Language, Backup, page editor, Add/Edit wizard, Record, Cast, page text. Done pops one level; Continue (with chevron) when launched from the intro (Store, Record, Add).
 - Strings: 15 resx files carry `Common_Continue`, not 13.
 - Add/Edit wizard: pill hidden on the Pages and Cover steps, shown on Text where it saves (coordinator decision, above).
-- PageText: Back keeps discard-on-back, Done saves. A save-on-back version was built and reverted because it deleted a page silently on blank text. The Waiting on the user line stays open.
+- PageText: Back keeps discard-on-back, Done saves. A save-on-back version was built and reverted because it deleted a page silently on blank text. The user confirmed discard (2026-11-01).
 - Emulator found a crash opening Settings (the Done `AutomationId` was set twice); fixed by setting it once in the constructor.
 - New flow `.maestro/dino/settings-done-button.yaml`.
 
