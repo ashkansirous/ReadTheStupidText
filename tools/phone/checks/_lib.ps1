@@ -15,6 +15,7 @@ $script:ExitLeaseHeldByOther = 4
 $script:ExitPreflightNoGo = 5
 $script:ExitBuildFailed = 6
 $script:ExitRunnerError = 7   # the runner itself broke (install, setup, a dropped adb link): not a failed check
+$script:ExitCacheMissed = 8   # -NoBuild and the build cache has no APK for a variant a check needs (Slice 224)
 # Preflight lines that stop the run; every other FAIL (dev app missing, stay awake, lease) is a warning here, because the runner sets those right itself.
 # 'free space' is a FAIL only when there is no room at all (preflight.ps1); the runner never changes a phone setting except stay-awake (preflight.ps1 -Fix).
 $script:FatalPreflightChecks = @('connection', 'charging', 'screen lock', 'free space')
@@ -578,12 +579,83 @@ function Resolve-BuildState($Status, [bool]$ProcessExited, $LogWrite, [datetime]
     if (-not $Status) { if ($ProcessExited) { return (& $failed 'the build process exited without writing a status') }; return [pscustomobject]@{ State = $script:StateQueued; Reason = $null } }
     if ($Status.state -ceq $script:StateFailed) { return (& $failed "$($Status.error)") }
     if ($Status.state -ceq $script:StateOk) { return (& $failed 'the build said ok but the cache has no APK for the current inputs (the files changed during the build?)') }
-    if ($ProcessExited) { return (& $failed 'the build process exited without a result') }
+    if ($ProcessExited) { return (& $failed $(if ($Status.state -ceq $script:StateBuilding) { 'the builder exited without an APK' } else { 'the build process exited without a result' })) }
     if ($Status.state -ceq $script:StateBuilding) {
         $since = if ($LogWrite) { $LogWrite } else { ConvertFrom-StatusTime $Status.startedUtc }
         if ($since -and ($Now - $since).TotalMinutes -ge $script:BuildStallMinutes) { return (& $failed "stalled: the build log has not grown for $($script:BuildStallMinutes) minutes") }
     }
     return [pscustomobject]@{ State = "$($Status.state)"; Reason = $null }
+}
+
+# Slice 224: a `building` status whose recorded builder pid is gone (the build ended, e.g. run by another agent) reads as "build ended": the caller then checks the cache.
+# $PidAlive is given the pid and says whether that process still runs (a parameter, so the self-test needs no process).
+# $PidAlive gets the pid and the status's startedUtc (a datetime or $null): a process that began after the build started is a reused pid, not the builder.
+function Test-BuilderExited($Status, [bool]$ProcessExited, [scriptblock]$PidAlive) {
+    if ($ProcessExited) { return $true }
+    if (-not $Status -or ($Status.state -cne $script:StateBuilding -and $Status.state -cne $script:StateQueued) -or -not $Status.pid) { return $false }
+    return (-not (& $PidAlive ([int]$Status.pid) (ConvertFrom-StatusTime $Status.startedUtc)))
+}
+
+# True when a process that started at $ProcessStart can be the builder whose status says it started at $StartedUtc (the builder writes that a moment after it starts).
+function Test-StartedBefore($ProcessStart, $StartedUtc) {
+    if (-not $StartedUtc -or -not $ProcessStart) { return $true }   # an unreadable start time (another user's or elevated process) counts as the builder
+    return ($ProcessStart.ToUniversalTime() -le $StartedUtc.ToUniversalTime().AddSeconds($script:BuilderStartSlackSeconds))
+}
+$script:BuilderStartSlackSeconds = 120
+
+# Is the process with this id the builder? It exists and began no later than the status's startedUtc (a process that began after is a reused pid).
+function Test-BuilderProcessAlive([int]$ProcessId, $StartedUtc) {
+    $proc = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
+    return [bool]($proc -and (Test-StartedBefore $proc.StartTime $StartedUtc))
+}
+
+# Rewrites a status file as ended (see Get-EndedBuildStatus). Returns the error text, or $null when written.
+function Write-EndedBuildStatus([string]$Path, $Status, [bool]$Cached) {
+    try {
+        if (-not (Test-SameBuildStatus $Path $Status)) { return 'the status file belongs to a newer build now; left as it is' }
+        [IO.File]::WriteAllText($Path, ((Get-EndedBuildStatus $Status $Cached) | ConvertTo-Json)); return $null
+    } catch { return $_.Exception.Message }
+}
+
+# The file on disk is still the one that was read ($Status): same pid and startedUtc (a live build may have rewritten it since). A missing or unreadable file counts as the same.
+function Test-SameBuildStatus([string]$Path, $Status) {
+    if (-not (Test-Path $Path)) { return $true }
+    try { $now = Get-Content $Path -Raw | ConvertFrom-Json } catch { return $true }
+    $sameStart = (ConvertFrom-StatusTime $now.startedUtc) -eq (ConvertFrom-StatusTime $Status.startedUtc)   # a string or a DateTime, by shell
+    return ("$($now.pid)" -ceq "$($Status.pid)" -and [bool]$sameStart)
+}
+
+# The status file's text after a build ended without writing its own end: ok when the APK is cached, else failed.
+function Get-EndedBuildStatus($Status, [bool]$Cached) {
+    $ended = [ordered]@{}
+    foreach ($property in $Status.PSObject.Properties) { $ended[$property.Name] = $property.Value }
+    $ended.state = $(if ($Cached) { $script:StateOk } else { $script:StateFailed })
+    $ended.error = $(if ($Cached) { $null } else { 'builder exited without an APK' })
+    return $ended
+}
+
+# -NoBuild (switch or RTST_NO_BUILD=1): which variants a run would have to build. A check that needs AOT needs the AOT APK; a Debug one is served by either.
+function Get-NoBuildMiss($Plans, [bool]$HasDebug, [bool]$HasAot) {
+    $missing = @()
+    foreach ($plan in @($Plans | Where-Object { $_.Status -eq $script:StatusPending })) {
+        $served = if ($plan.Variant -ceq $script:VariantAot) { $HasAot } else { $HasDebug -or $HasAot }
+        $variant = if ($plan.Variant -ceq $script:VariantAot) { $script:VariantAot } else { $script:VariantDebug }
+        if (-not $served -and $missing -cnotcontains $variant) { $missing += $variant }
+    }
+    return $missing
+}
+
+function Format-NoBuildMiss([string]$App, [string[]]$Variants, [string]$Key) {
+    return "cache missed for $App $($Variants -join '+'), key ${Key}: run -Build first"
+}
+
+# The line above the table: the app and variant each check runs on, from the catalogue.
+function Format-RunHeader([string]$App, $Plans) {
+    $parts = @($Plans | Where-Object { $_.Status -ceq $script:StatusPending } | ForEach-Object { "$($_.Name) = $App $($_.Variant)" })
+    $skipped = @($Plans | Where-Object { $_.Status -ceq $script:StatusSkipped } | ForEach-Object { $_.Name })
+    $line = "runs on: $($parts -join ', ')"
+    if ($skipped.Count -gt 0) { $line += "; skipped: $($skipped -join ', ')" }
+    return $line
 }
 
 # What the build's failure says in a table row: the reason and the last lines of its log.
