@@ -44,7 +44,7 @@ Settled here (planning): the reports follow the user's existing "anonymous usage
 - [x] **8. Store forms, then switch on.** Play Data safety "Crash logs" (through the Play API where it allows, else the user), App Store App Privacy "Crash Data" for both apps (user, App Store Connect), and the Microsoft Store privacy URL (unchanged). Then set `crashReports.enabled: true` in both remote configs; that is the main thread's call, after the forms are saved.
   - 2026-11-01, done in the user's Chrome at their request: App Store App Privacy published for both apps (Crash Data, not linked, no tracking, App Functionality). Play Data safety saved for both apps (Crash logs: collected, not shared, not ephemeral, optional, Analytics, which is where Play's own wording puts crash diagnosis); the "Submit for review" click in Publishing overview was blocked by the permission check, so the user sent both.
   - 2026-11-01 ~11:45, switched on: Play Console Publishing overview for both apps shows "Last published on November 1, 2026" with no change waiting, so the Data safety change is live. The main thread set `"crashReports":{"enabled":true}` in both R2 config objects (`readthestupidtext-downloads/dinoreader/config.json` and `readthestupidtext/config.json`, other fields unchanged) with `wrangler r2 object put --remote`. Read back: `GET https://dinoreader.sirous.uk/api/app-config` and `https://readthestupidtext.sirous.uk/api/app-config` both return `"crashReports":{"enabled":true}`.
-  - Still open: the Play Developer Reporting API is off in Cloud project 607390827721 (`read-the-stupid-text`); enabling it with the Play key was refused by the permission check, so it waits on the user clicking Enable at https://console.cloud.google.com/apis/library/playdeveloperreporting.googleapis.com?project=read-the-stupid-text.
+  - The Play Developer Reporting API in Cloud project 607390827721 (`read-the-stupid-text`) is on: enabling it with the Play key had been refused by the permission check, and it was switched on afterwards (who and when were not recorded). A read-only `errorIssues:search` with the Play service-account key returned HTTP 200 and no issues for both apps at 15:37 UTC and again at 17:14 UTC on 2026-11-01 (round 3 feedback loop).
 - [ ] **9. The 2026-10-28 TestFlight crash.** Symbolicate it against build 1.73.1's dSYM (binary UUID `f672ab4737943faeaff6a739de0777ed`): SIGABRT, `-[__NSDictionaryM __setObject:forKey:]: object cannot be nil` during `UIView` layout, iPhone 12 on iOS 26.6.2. Find the managed frame, check whether a later build still has it, and fix it here or in its own slice.
 
 #### Verification
@@ -56,7 +56,7 @@ Settled here (planning): the reports follow the user's existing "anonymous usage
 
 #### Changed while building
 
-- Items 1-7 built; item 8 done 2026-11-01 (forms published, `crashReports.enabled` on, except the Reporting API Enable click, see item 8); item 9 (symbolicate the 2026-10-28 TestFlight crash) is not done.
+- Items 1-7 built; item 8 done 2026-11-01 (forms published, `crashReports.enabled` on, Reporting API on, see item 8); item 9 (symbolicate the 2026-10-28 TestFlight crash) is not done.
 - Device checks found two bugs in the first runs, both fixed: `CrashReporter` installed its handlers only when the gate was open at start (the Debug stub is set mid-run), so handlers now install always and write only while the gate is open; and a Debug build's channel is `dev`, for which the report builder makes nothing, so the stub now makes a Debug build report as `store`, and a skipped report logs a line. Production builds were not affected by either.
 
 #### From review
@@ -77,7 +77,7 @@ Settled here (planning): the reports follow the user's existing "anonymous usage
 - Which users can send a report at all: the code (PR #654) is in rtst-v1.80.0 and dino-v1.85.0 onward, not in rtst-v1.79.0 or dino-v1.84.0 (checked with `git merge-base --is-ancestor`, round 2 feedback loop). RTST's newest Microsoft Store submission marker is `rtst-store-v1.81.0` (2026-11-01, so it carries the code once certified); no `dino-store-v` marker exists. Read 2026-11-01 15:07 UTC: the Microsoft Store page shows no version, the Play page answers 404 (not public), Apple's public lookup finds no RTST app. "Crashes are sent from production builds" holds only once a store serves those versions.
 - The Worker after deploy: `POST /api/crash` answers 204 with config off; an R2 object and an `app_crashes` row appear once on.
 - `dino_usage` iOS TestFlight leak closed (cause still unproven); the 27 leaked rows remain stored.
-- `pull-crashes.mjs`, `pull-apple.py` and `pull-play.py` not run against the real services. `pull-play.py` cannot run yet: on 2026-11-01 the Play key reached Google but the Play Developer Reporting API is switched off in Cloud project 607390827721, and switching it on with that key was refused by the permission check (Waiting on the user in plan.md; recorded by the 2026-11-01 feedback loop).
+- `pull-crashes.mjs`, `pull-apple.py` and `pull-play.py` not run against the real services. `pull-play.py` can run now: the Play Developer Reporting API answers HTTP 200 for both apps (2026-11-01 17:14 UTC, read-only probe); its pip packages (`requests`, `pyjwt`, `cryptography`) were not installed on this PC as of the round 2 feedback loop.
 
 #### Outstanding after merge (main thread)
 
