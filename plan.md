@@ -105,7 +105,6 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 Built but not verified (details in each slice file):
 
-- Slice 205 (PR #645): review findings high 4, 5 (in part), 9 and medium 1, 3, 4, 6, 7, 8 were left open (now planned Slice 226) ([slice](docs/plan/slices/205-dino-windows-reading-speed-and-page-turn-checks.md)).
 - Slice 220 (draft #638, parked): the S21 run rejected the padding design (silent takes are full-length NaN samples on arm64). It needs a new design that starts by finding the NaN source; that is design work, not a user decision. Moved to planned by the user on 2026-11-01. The S21 record is in the slice file on main ([slice](docs/plan/slices/220-kokoro-silent-short-lines-arm64.md)).
 - Slice 194 (PR #591): the panel shot is not good enough for the site (guest offline, no voice pack, watermark); retake it with the voice pack copied ... [full text](docs/plan/notes/2026-10-30-outstanding-detail.md#o002) ([slice](docs/plan/slices/194-control-panel-screenshot-script.md))
 - Slice 193 (PR #589, drafts only): the user reads `docs/store-listings/de.md` and `dino/de.md` and approves, then the `store-listing` agent applies; ... [full text](docs/plan/notes/2026-10-30-outstanding-detail.md#o003) ([slice](docs/plan/slices/193-german-store-listings.md))
