@@ -44,6 +44,7 @@ $script:Catalogue = [ordered]@{
     'voice'               = @{ Apps = @('rtst'); EstimateSeconds = 90; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
     'book-update'         = @{ Apps = @('dino'); EstimateSeconds = 240; NeedsPack = $false; Variant = 'debug'; Blocked = $null }
     'paused-notification' = @{ Apps = @('rtst'); EstimateSeconds = 240; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
+    'paused-notification-network' = @{ Apps = @('rtst'); EstimateSeconds = 200; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
 }
 
 # One row per requested check, in order, duplicates dropped: Status Pending (runs) or Skipped with the reason. An unknown name throws and lists the known ones.

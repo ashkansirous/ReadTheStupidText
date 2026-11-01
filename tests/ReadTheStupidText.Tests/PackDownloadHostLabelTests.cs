@@ -97,7 +97,7 @@ public class PackDownloadHostLabelTests : IDisposable
 
         public bool Throw { get; set; }
 
-        public void Post(string packId, double? fraction)
+        public void Post(string packId, double? fraction, string reason)
         {
             Calls.Add($"post {packId} {fraction?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) ?? "-"}");
             ThrowIfAsked();

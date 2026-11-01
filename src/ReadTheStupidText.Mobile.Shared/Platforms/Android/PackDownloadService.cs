@@ -90,11 +90,10 @@ public sealed class PackDownloadService : Service
     }
 
     // Android 15 limits dataSync services to six hours a day; the downloads carry on as a plain background run (Slice 182's resume covers a kill).
-    // Slice 208: the ongoing notification goes with the service, a pack whose run then ends unfinished gets a "Download paused. Tap to finish." notice (AndroidPackKeepAlive.Post).
+    // Slice 208: the ongoing notification goes with the service, a run that then ends unfinished gets the same "Download paused. Tap to finish." notice as any other resumable end (Slice 233: AndroidPackKeepAlive.Post).
     public override void OnTimeout(int startId, ForegroundService fgsType)
     {
         PackDownloadHost.LogService("timeout", "all");
-        AndroidPackKeepAlive.NoteTimedOut();
         AndroidPackKeepAlive.ServiceStopped(this);
         StopSelf();
     }
