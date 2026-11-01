@@ -116,6 +116,12 @@
   <data name="Intro_TryIt" xml:space="preserve"><value>Prova</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>Hoppa över</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} av {1}</value></data>
+  <data name="Intro_PlacesTitle" xml:space="preserve"><value>Dino har två platser</value></data>
+  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>Barnens hylla</value></data>
+  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>Tryck på en bok och lyssna.</value></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Bakom ett lås, för att lägga till böcker och röster.</value></data>
+  <data name="Intro_ReadTitle" xml:space="preserve"><value>Läs en saga tillsammans</value></data>
+  <data name="Intro_ReadLine" xml:space="preserve"><value>Tryck på en bok och sedan på spela. Dino läser högt och lyser upp varje mening.</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>Hämta fler böcker</value></data>
   <data name="Intro_StoreLine" xml:space="preserve"><value>Butiken har fler sagor, redo att laddas ner.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Läs den med din röst</value></data>
@@ -148,6 +154,12 @@
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Vuxna</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Lägg till och redigera böcker</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>För vuxna</value></data>
+  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>Vuxna</value></data>
+  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>Vuxenhörnan, låst</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Vuxenhörnan</value></data>
+  <data name="Gallery_CornerLine" xml:space="preserve"><value>Bara vuxna ser det här. Barnets hylla är ett tryck bort.</value></data>
+  <data name="Gallery_BackToShelf" xml:space="preserve"><value>Tillbaka till barnets hylla</value></data>
+  <data name="Book_ReadNow" xml:space="preserve"><value>Läs nu</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Alternativ för {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Från butiken</value></data>
   <data name="Book_Starter" xml:space="preserve"><value>Startbok</value></data>

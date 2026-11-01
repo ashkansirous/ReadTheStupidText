@@ -8,10 +8,46 @@ public enum BookOrigin
     Store,
 }
 
+/// <summary>One row of a book's options sheet (Slice 228).</summary>
+public enum BookSheetRow
+{
+    ReadNow,
+    ShowOriginalText,
+    ReadWithMyVoice,
+    RecordAndCast,
+    EditPages,
+    Export,
+    Remove,
+}
+
 /// <summary>Which rows a book's options sheet (the "⋯" on its cover, Slice 189, mock Batch 37 frame 85b) shows. Show original text and Read with my voice
 /// depend on the book's state, Edit pages only on an own book, Export only with the developer switch, and a Store book's Remove says it can come back.</summary>
 public sealed record BookSheetPlan(bool ShowOriginalText, bool ShowVoice, bool ShowEditPages, bool ShowExport, bool CanReAddFromStore)
 {
+    /// <summary>The rows in the order the sheet shows them (Slice 228, mock Batch 43 frame 100): <see cref="BookSheetRow.ReadNow"/> is always first, then the book's switches and the Record and Cast pills, then the rows that depend on the book, and Remove last.</summary>
+    public IReadOnlyList<BookSheetRow> Rows
+    {
+        get
+        {
+            List<BookSheetRow> rows = [BookSheetRow.ReadNow];
+            AddIf(rows, ShowOriginalText, BookSheetRow.ShowOriginalText);
+            AddIf(rows, ShowVoice, BookSheetRow.ReadWithMyVoice);
+            rows.Add(BookSheetRow.RecordAndCast);
+            AddIf(rows, ShowEditPages, BookSheetRow.EditPages);
+            AddIf(rows, ShowExport, BookSheetRow.Export);
+            rows.Add(BookSheetRow.Remove);
+            return rows;
+        }
+    }
+
+    private static void AddIf(List<BookSheetRow> rows, bool condition, BookSheetRow row)
+    {
+        if (condition)
+        {
+            rows.Add(row);
+        }
+    }
+
     public static BookSheetPlan For(BookOrigin origin, bool translated, bool hasRecording, bool developerExport) =>
         new(translated, hasRecording, origin == BookOrigin.Own, developerExport, origin == BookOrigin.Store);
 

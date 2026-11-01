@@ -4,12 +4,13 @@ using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls.Shapes;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
 /// <summary>
-/// The first-run intro (Slice 155, Decision 160, Batch 32 mock frames 74-76): three steps of real actions (the store, recording a book,
+/// The first-run intro (Slice 155, Decision 160, Batch 32 mock frames 74-76; Slice 228, Batch 43 frames 101 and 101b: a first card naming the kids' shelf and the grown-ups' corner, then a read step that opens a real book): steps of real actions (the store, recording a book,
 /// adding an own book), each with a picture, one line, <b>Try it</b> (opens the real screen, no gate: the person installing is the grown-up)
 /// and <b>Skip</b>; coming back from the screen moves on to the next step. A fourth step (Slice 173, mock frame 86) asks which story languages the
 /// child's books should be in, with <b>Done</b> and <b>Skip</b>. <b>Skip all</b> ends it at once. A first-run intro ends on the
@@ -28,6 +29,9 @@ public sealed class IntroWizardPage : ContentPage
 	private const double CurrentDotWidth = 22;
 	private const double SkipHeight = 44;
 	private const double TextButtonSize = 15;
+	private const double PlaceCardCorner = 16;
+	private const double PlaceCardTitleSize = 16;
+	private const double PlaceCardLineSize = 14;
 
 	private readonly IStoryLibrary _library;
 	private readonly GrownUpMode _mode;
@@ -45,6 +49,7 @@ public sealed class IntroWizardPage : ContentPage
 	private bool _restoreKidsMode;
 	private bool _launchedStep;
 	private bool _canRecord;
+	private bool _hasStarter; // a starter book exists to open in the reader (the Read step); a separate question from whether Record can run
 	private bool _ended;
 
 	public IntroWizardPage(IStoryLibrary library, GrownUpMode mode, UsageCounter usage, IServiceProvider services)
@@ -85,12 +90,14 @@ public sealed class IntroWizardPage : ContentPage
 		try
 		{
 			_pictures = await IntroPictures.LoadAsync(_library);
-			_canRecord = await IntroPictures.ShortestStarterAsync(_library) is not null;
+			_hasStarter = await IntroPictures.ShortestStarterAsync(_library) is not null;
+			_canRecord = _hasStarter;
 		}
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader could not load the intro pictures: {ex}");
 			_pictures = IntroPictures.None;
+			_hasStarter = false;
 			_canRecord = false;
 		}
 		finally
@@ -119,6 +126,7 @@ public sealed class IntroWizardPage : ContentPage
 		if (_launchedStep)
 		{
 			_launchedStep = false;
+			_mode.Enter(); // the read step opened the book in the kids' reader; the wizard itself runs in grown-up mode
 			_ = _busy.RunWhenFreeAsync(AdvanceAsync);
 		}
 	}
@@ -172,16 +180,23 @@ public sealed class IntroWizardPage : ContentPage
 
 	private Grid BuildBody()
 	{
-		if (IntroSteps.NameAt(_step) == IntroSteps.Languages)
+		string? step = IntroSteps.NameAt(_step);
+		if (step == IntroSteps.Languages)
 		{
 			return BuildLanguagesBody();
 		}
 
-		bool windows = DeviceInfo.Platform == DevicePlatform.WinUI;
-		(string title, string line) = _step switch
+		if (step == IntroSteps.Places)
 		{
-			0 => (AppResources.Intro_StoreTitle, AppResources.Intro_StoreLine),
-			1 => (AppResources.Intro_RecordTitle, AppResources.Intro_RecordLine),
+			return BuildPlacesBody();
+		}
+
+		bool windows = DeviceInfo.Platform == DevicePlatform.WinUI;
+		(string title, string line) = step switch
+		{
+			IntroSteps.Read => (AppResources.Intro_ReadTitle, AppResources.Intro_ReadLine),
+			IntroSteps.Store => (AppResources.Intro_StoreTitle, AppResources.Intro_StoreLine),
+			IntroSteps.Record => (AppResources.Intro_RecordTitle, AppResources.Intro_RecordLine),
 			_ => windows ? (AppResources.Intro_AddTitleWindows, AppResources.Intro_AddLineWindows) : (AppResources.Intro_AddTitle, AppResources.Intro_AddLine),
 		};
 		var heading = new Label { Text = title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, Margin = new Thickness(0, 10, 0, 0) };
@@ -193,7 +208,7 @@ public sealed class IntroWizardPage : ContentPage
 			VerticalOptions = LayoutOptions.Center,
 			Children = { IntroArt.Build(IntroSteps.NameAt(_step)!, _pictures, windows), heading, body },
 		};
-		var tryIt = new CoralButton { Text = AppResources.Intro_TryIt, IsVisible = IntroSteps.NameAt(_step) != IntroSteps.Record || _canRecord };
+		var tryIt = new CoralButton { Text = AppResources.Intro_TryIt, IsVisible = TryItVisible(step) };
 		tryIt.Clicked += async (_, _) => await _busy.RunAsync(TryAsync);
 		var buttons = new VerticalStackLayout
 		{
@@ -204,6 +219,64 @@ public sealed class IntroWizardPage : ContentPage
 		grid.Add(text, 0, 0);
 		grid.Add(buttons, 0, 1);
 		return grid;
+	}
+
+	// Read needs a starter to open; Record needs whatever recording needs; the other steps always offer Try it.
+	private bool TryItVisible(string? step) => step switch
+	{
+		IntroSteps.Read => _hasStarter,
+		IntroSteps.Record => _canRecord,
+		_ => true,
+	};
+
+	// The first card (Batch 43 frame 101): the two places side by side, a picture and one Next button. No Try it and no Skip: Skip all is in the bar.
+	private Grid BuildPlacesBody()
+	{
+		var heading = new Label { Text = AppResources.Intro_PlacesTitle, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, Margin = new Thickness(0, 10, 0, 0) };
+		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level1);
+		var cards = new VerticalStackLayout
+		{
+			Spacing = 10,
+			Children =
+			{
+				PlaceCard(null, AppResources.Intro_PlacesKidsTitle, AppResources.Intro_PlacesKidsLine),
+				PlaceCard(IconKind.Lock, AppResources.Gallery_CornerTitle, AppResources.Intro_PlacesGrownLine),
+			},
+		};
+		var text = new VerticalStackLayout { Spacing = 14, VerticalOptions = LayoutOptions.Center, Children = { IntroArt.Build(IntroSteps.Places, _pictures, false), heading, cards } };
+		var next = new CoralButton { Text = AppResources.Wizard_Next, AutomationId = "IntroNext" };
+		next.Clicked += async (_, _) => await _busy.RunAsync(NextAsync);
+		var grid = new Grid { Padding = new Thickness(BodyPadding, 0, BodyPadding, 26), RowDefinitions = [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)] };
+		grid.Add(text, 0, 0);
+		grid.Add(next, 0, 1);
+		return grid;
+	}
+
+	private static Border PlaceCard(IconKind? icon, string title, string line)
+	{
+		var titleLabel = new Label { Text = title, FontSize = PlaceCardTitleSize, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center };
+		var head = new HorizontalStackLayout { Spacing = 6, Children = { titleLabel } };
+		if (icon is { } kind)
+		{
+			head.Children.Insert(0, new IconView { Kind = kind, Color = DinoTokens.Get(DinoTokens.Ink), Size = 18, StrokeWidth = 2.2, VerticalOptions = LayoutOptions.Center });
+		}
+
+		var body = new Label { Text = line, FontSize = PlaceCardLineSize, TextColor = DinoTokens.Get(DinoTokens.Body) };
+		return new Border
+		{
+			BackgroundColor = Colors.White,
+			StrokeThickness = 0,
+			Padding = new Thickness(16, 12),
+			StrokeShape = new RoundRectangle { CornerRadius = PlaceCardCorner },
+			Content = new VerticalStackLayout { Spacing = 2, Children = { head, body } },
+		};
+	}
+
+	// Next on the first card counts as having seen the step.
+	private Task NextAsync()
+	{
+		CountStep(tried: true);
+		return AdvanceAsync();
 	}
 
 	// The fourth step (mock 86): the app language is ticked and locked, up to two more can be ticked; Done saves them and starts their voices, Skip keeps the app language only.
@@ -278,11 +351,22 @@ public sealed class IntroWizardPage : ContentPage
 
 	private async Task TryAsync()
 	{
-		_mode.Enter();
+		if (IntroSteps.NameAt(_step) == IntroSteps.Read)
+		{
+			_mode.Leave(); // the book opens in the kids' reader
+		}
+		else
+		{
+			_mode.Enter();
+		}
+
 		if (await OpenStepScreenAsync())
 		{
 			CountStep(tried: true);
+			return;
 		}
+
+		_mode.Enter(); // nothing opened (no starter, a load error, a failed push), so OnAppearing will not restore grown-up mode: do it here
 	}
 
 	// A screen that cannot be opened is logged and the step stays as it is (nothing counted, no advance); Skip is still there.
@@ -330,12 +414,37 @@ public sealed class IntroWizardPage : ContentPage
 				return _services.GetRequiredService<StorePage>();
 			case IntroSteps.Record:
 				return await CreateRecordScreenAsync();
+			case IntroSteps.Read:
+				return await CreateReadScreenAsync();
 			default:
 				var wizard = _services.GetRequiredService<StoryWizardPage>();
 				await wizard.LoadAsync(null);
 				return wizard;
 		}
 	}
+
+	// The read step (Batch 43 frame 101b) opens the shortest starter (the Tortoise and the Hare on a fresh install) in the reader; Back from it moves the intro on.
+	private async Task<Page?> CreateReadScreenAsync()
+	{
+		Story? story = await IntroPictures.ShortestStarterAsync(_library);
+		if (story is null)
+		{
+			return null;
+		}
+
+		var reading = _services.GetRequiredService<ReadingPage>();
+		reading.Load(story);
+		reading.MarkDemoRead(); // the demo read counts nothing, voice ready or not
+		if (VoiceReadyToPlay())
+		{
+			reading.PlayForIntro(); // already playing when it opens (frame 101b); it returns here on its last page
+		}
+		// else the voice is still downloading or failed: the reader shows its own pack status and Back still moves the intro on, so no auto-play over a silent wait
+		return reading;
+	}
+
+	private bool VoiceReadyToPlay() =>
+		_services.GetRequiredService<VoicePackInstaller>().State is PackInstallState.Idle or PackInstallState.Ready;
 
 	private async Task<Page?> CreateRecordScreenAsync()
 	{
@@ -355,7 +464,8 @@ public sealed class IntroWizardPage : ContentPage
 	{
 		try
 		{
-			_canRecord = await IntroPictures.ShortestStarterAsync(_library) is not null;
+			_hasStarter = await IntroPictures.ShortestStarterAsync(_library) is not null;
+			_canRecord = _hasStarter;
 		}
 		catch (Exception ex)
 		{

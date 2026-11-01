@@ -116,6 +116,12 @@
   <data name="Intro_TryIt" xml:space="preserve"><value>Prøv det</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>Spring over</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} af {1}</value></data>
+  <data name="Intro_PlacesTitle" xml:space="preserve"><value>Dino har to steder</value></data>
+  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>Børnenes hylde</value></data>
+  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>Tryk på en bog og lyt.</value></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Bag en lås, til at tilføje bøger og stemmer.</value></data>
+  <data name="Intro_ReadTitle" xml:space="preserve"><value>Læs en historie sammen</value></data>
+  <data name="Intro_ReadLine" xml:space="preserve"><value>Tryk på en bog og derefter på afspil. Dino læser højt og fremhæver hver sætning.</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>Hent flere bøger</value></data>
   <data name="Intro_StoreLine" xml:space="preserve"><value>Butikken har flere historier, klar til download.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Læs den med din stemme</value></data>
@@ -148,6 +154,12 @@
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Voksne</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Tilføj og rediger bøger</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>For voksne</value></data>
+  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>Voksne</value></data>
+  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>Voksenhjørnet, låst</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Voksenhjørnet</value></data>
+  <data name="Gallery_CornerLine" xml:space="preserve"><value>Kun voksne kan se dette. Dit barns hylde er kun et tryk væk.</value></data>
+  <data name="Gallery_BackToShelf" xml:space="preserve"><value>Tilbage til mit barns hylde</value></data>
+  <data name="Book_ReadNow" xml:space="preserve"><value>Læs nu</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Valgmuligheder for {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Fra butikken</value></data>
   <data name="Book_Starter" xml:space="preserve"><value>Startbog</value></data>

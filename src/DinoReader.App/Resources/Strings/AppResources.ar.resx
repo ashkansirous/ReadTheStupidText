@@ -114,6 +114,12 @@
   <data name="Intro_TryIt" xml:space="preserve"><value>جرّبه</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>تخطي</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} من {1}</value></data>
+  <data name="Intro_PlacesTitle" xml:space="preserve"><value>لدى دينو مكانان</value></data>
+  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>رف الأطفال</value></data>
+  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>المس كتابًا واستمع.</value></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>خلف قفل، لإضافة الكتب والأصوات.</value></data>
+  <data name="Intro_ReadTitle" xml:space="preserve"><value>لنقرأ قصة معًا</value></data>
+  <data name="Intro_ReadLine" xml:space="preserve"><value>المس كتابًا ثم اضغط تشغيل. يقرأ دينو بصوت عالٍ ويضيء كل جملة.</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>احصل على المزيد من الكتب</value></data>
   <data name="Intro_StoreLine" xml:space="preserve"><value>في المتجر المزيد من القصص الجاهزة للتنزيل.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>اقرأها بصوتك</value></data>
@@ -146,6 +152,12 @@
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>الكبار</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>إضافة الكتب وتعديلها</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>للكبار</value></data>
+  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>للكبار</value></data>
+  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>ركن الكبار، مقفل</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>ركن الكبار</value></data>
+  <data name="Gallery_CornerLine" xml:space="preserve"><value>هذا للكبار فقط. رف طفلك على بُعد لمسة واحدة.</value></data>
+  <data name="Gallery_BackToShelf" xml:space="preserve"><value>العودة إلى رف طفلي</value></data>
+  <data name="Book_ReadNow" xml:space="preserve"><value>اقرأ الآن</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>خيارات «{0}»</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>من المتجر</value></data>
   <data name="Book_Starter" xml:space="preserve"><value>كتاب أساسي</value></data>

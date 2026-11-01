@@ -116,6 +116,12 @@
   <data name="Intro_TryIt" xml:space="preserve"><value>Proberen</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>Overslaan</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} van {1}</value></data>
+  <data name="Intro_PlacesTitle" xml:space="preserve"><value>Dino heeft twee plekken</value></data>
+  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>Kinderkast</value></data>
+  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>Tik op een boek en luister.</value></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Achter een slot, om boeken en stemmen toe te voegen.</value></data>
+  <data name="Intro_ReadTitle" xml:space="preserve"><value>Samen een verhaal lezen</value></data>
+  <data name="Intro_ReadLine" xml:space="preserve"><value>Tik op een boek en dan op afspelen. Dino leest voor en laat elke zin oplichten.</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>Haal meer boeken</value></data>
   <data name="Intro_StoreLine" xml:space="preserve"><value>De winkel heeft meer verhalen, klaar om te downloaden.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lees het met je eigen stem</value></data>
@@ -148,6 +154,12 @@
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Volwassenen</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Boeken toevoegen en bewerken</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Voor volwassenen</value></data>
+  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>Volwassenen</value></data>
+  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>Hoek voor volwassenen, vergrendeld</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Hoek voor volwassenen</value></data>
+  <data name="Gallery_CornerLine" xml:space="preserve"><value>Alleen volwassenen zien dit. De kast van je kind is één tik weg.</value></data>
+  <data name="Gallery_BackToShelf" xml:space="preserve"><value>Terug naar de kast van mijn kind</value></data>
+  <data name="Book_ReadNow" xml:space="preserve"><value>Nu lezen</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Opties voor {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Uit de winkel</value></data>
   <data name="Book_Starter" xml:space="preserve"><value>Startboek</value></data>

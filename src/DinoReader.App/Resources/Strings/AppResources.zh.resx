@@ -114,6 +114,12 @@
   <data name="Intro_TryIt" xml:space="preserve"><value>试一试</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>跳过</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>第 {0} 步，共 {1} 步</value></data>
+  <data name="Intro_PlacesTitle" xml:space="preserve"><value>Dino 有两个地方</value></data>
+  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>孩子的书架</value></data>
+  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>点一本书，听就行。</value></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>锁的后面，用来添加书和声音。</value></data>
+  <data name="Intro_ReadTitle" xml:space="preserve"><value>一起读个故事</value></data>
+  <data name="Intro_ReadLine" xml:space="preserve"><value>点一本书，然后播放。Dino 会朗读，并点亮每一句。</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>获取更多图书</value></data>
   <data name="Intro_StoreLine" xml:space="preserve"><value>商店里有更多故事，可随时下载。</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>用你的声音朗读</value></data>
@@ -146,6 +152,12 @@
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>家长</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>添加和编辑书籍</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>家长专区</value></data>
+  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>家长</value></data>
+  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>家长角，已锁定</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>家长角</value></data>
+  <data name="Gallery_CornerLine" xml:space="preserve"><value>只有家长能看到这里。孩子的书架只需轻点一下。</value></data>
+  <data name="Gallery_BackToShelf" xml:space="preserve"><value>返回孩子的书架</value></data>
+  <data name="Book_ReadNow" xml:space="preserve"><value>立即阅读</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>“{0}”的选项</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>来自商店</value></data>
   <data name="Book_Starter" xml:space="preserve"><value>入门书</value></data>

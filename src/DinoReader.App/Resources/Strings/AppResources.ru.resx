@@ -114,6 +114,12 @@
   <data name="Intro_TryIt" xml:space="preserve"><value>Попробовать</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>Пропустить</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} из {1}</value></data>
+  <data name="Intro_PlacesTitle" xml:space="preserve"><value>У Дино два места</value></data>
+  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>Полка для детей</value></data>
+  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>Просто нажмите на книгу и слушайте.</value></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>За замком — для добавления книг и голосов.</value></data>
+  <data name="Intro_ReadTitle" xml:space="preserve"><value>Прочитаем историю вместе</value></data>
+  <data name="Intro_ReadLine" xml:space="preserve"><value>Нажмите на книгу, затем на воспроизведение. Дино читает вслух и подсвечивает каждое предложение.</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>Больше книг</value></data>
   <data name="Intro_StoreLine" xml:space="preserve"><value>В магазине есть ещё истории, готовые к загрузке.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Читайте своим голосом</value></data>
@@ -146,6 +152,12 @@
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Взрослые</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Добавление и изменение книг</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Для взрослых</value></data>
+  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>Для взрослых</value></data>
+  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>Уголок для взрослых, закрыт</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Уголок для взрослых</value></data>
+  <data name="Gallery_CornerLine" xml:space="preserve"><value>Это видят только взрослые. Полка ребёнка — одним касанием.</value></data>
+  <data name="Gallery_BackToShelf" xml:space="preserve"><value>Назад к полке ребёнка</value></data>
+  <data name="Book_ReadNow" xml:space="preserve"><value>Читать сейчас</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Параметры: {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Из магазина</value></data>
   <data name="Book_Starter" xml:space="preserve"><value>Стартовая книга</value></data>

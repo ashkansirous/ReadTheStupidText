@@ -114,6 +114,12 @@
   <data name="Intro_TryIt" xml:space="preserve"><value>Essayer</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>Passer</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} sur {1}</value></data>
+  <data name="Intro_PlacesTitle" xml:space="preserve"><value>Dino a deux espaces</value></data>
+  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>Étagère des enfants</value></data>
+  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>Touchez un livre et écoutez.</value></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Derrière un verrou, pour ajouter des livres et des voix.</value></data>
+  <data name="Intro_ReadTitle" xml:space="preserve"><value>Lire une histoire ensemble</value></data>
+  <data name="Intro_ReadLine" xml:space="preserve"><value>Touchez un livre, puis lecture. Dino lit à voix haute et éclaire chaque phrase.</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>Obtenir plus de livres</value></data>
   <data name="Intro_StoreLine" xml:space="preserve"><value>La boutique propose d’autres histoires, prêtes à télécharger.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lisez-le avec votre voix</value></data>
@@ -146,6 +152,12 @@
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Adultes</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Ajouter et modifier des livres</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Pour les grands</value></data>
+  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>Adultes</value></data>
+  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>Espace adultes, verrouillé</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Espace adultes</value></data>
+  <data name="Gallery_CornerLine" xml:space="preserve"><value>Réservé aux adultes. L’étagère de votre enfant est à un tap.</value></data>
+  <data name="Gallery_BackToShelf" xml:space="preserve"><value>Retour à l’étagère de mon enfant</value></data>
+  <data name="Book_ReadNow" xml:space="preserve"><value>Lire maintenant</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Options pour {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Depuis la boutique</value></data>
   <data name="Book_Starter" xml:space="preserve"><value>Livre de départ</value></data>

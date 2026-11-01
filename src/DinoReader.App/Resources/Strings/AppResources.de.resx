@@ -117,6 +117,12 @@
   <data name="Intro_TryIt" xml:space="preserve"><value>Ausprobieren</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>Überspringen</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} von {1}</value></data>
+  <data name="Intro_PlacesTitle" xml:space="preserve"><value>Dino hat zwei Orte</value></data>
+  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>Kinderregal</value></data>
+  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>Einfach ein Buch antippen und zuhören.</value></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Hinter einem Schloss, zum Hinzufügen von Büchern und Stimmen.</value></data>
+  <data name="Intro_ReadTitle" xml:space="preserve"><value>Zusammen eine Geschichte lesen</value></data>
+  <data name="Intro_ReadLine" xml:space="preserve"><value>Tippe auf ein Buch und dann auf Abspielen. Dino liest laut vor und hebt jeden Satz hervor.</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>Mehr Bücher holen</value></data>
   <data name="Intro_StoreLine" xml:space="preserve"><value>Im Laden warten weitere Geschichten zum Herunterladen.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Mit deiner Stimme vorlesen</value></data>
@@ -149,6 +155,12 @@
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Erwachsene</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Bücher hinzufügen und bearbeiten</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Für Erwachsene</value></data>
+  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>Für Erwachsene</value></data>
+  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>Bereich für Erwachsene, gesperrt</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Bereich für Erwachsene</value></data>
+  <data name="Gallery_CornerLine" xml:space="preserve"><value>Das sehen nur Erwachsene. Das Regal deines Kindes ist nur einen Tipp entfernt.</value></data>
+  <data name="Gallery_BackToShelf" xml:space="preserve"><value>Zurück zum Regal meines Kindes</value></data>
+  <data name="Book_ReadNow" xml:space="preserve"><value>Jetzt lesen</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Optionen für {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Aus dem Laden</value></data>
   <data name="Book_Starter" xml:space="preserve"><value>Startbuch</value></data>

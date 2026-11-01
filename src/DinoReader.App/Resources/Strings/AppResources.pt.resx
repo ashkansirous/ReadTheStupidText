@@ -114,6 +114,12 @@
   <data name="Intro_TryIt" xml:space="preserve"><value>Experimentar</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>Pular</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} de {1}</value></data>
+  <data name="Intro_PlacesTitle" xml:space="preserve"><value>O Dino tem dois lugares</value></data>
+  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>Estante das crianças</value></data>
+  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>Toque num livro e ouça.</value></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Atrás de um cadeado, para adicionar livros e vozes.</value></data>
+  <data name="Intro_ReadTitle" xml:space="preserve"><value>Ler uma história juntos</value></data>
+  <data name="Intro_ReadLine" xml:space="preserve"><value>Toque num livro e depois em reproduzir. O Dino lê em voz alta e destaca cada frase.</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>Obter mais livros</value></data>
   <data name="Intro_StoreLine" xml:space="preserve"><value>A loja tem mais histórias, prontas para baixar.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Leia com a sua voz</value></data>
@@ -146,6 +152,12 @@
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Adultos</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Adicionar e editar livros</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Para adultos</value></data>
+  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>Adultos</value></data>
+  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>Espaço dos adultos, bloqueado</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Espaço dos adultos</value></data>
+  <data name="Gallery_CornerLine" xml:space="preserve"><value>Só os adultos veem isto. A estante da criança está a um toque.</value></data>
+  <data name="Gallery_BackToShelf" xml:space="preserve"><value>Voltar à estante da criança</value></data>
+  <data name="Book_ReadNow" xml:space="preserve"><value>Ler agora</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Opções de {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Da loja</value></data>
   <data name="Book_Starter" xml:space="preserve"><value>Livro inicial</value></data>

@@ -39,8 +39,8 @@ const VOICE_CHANGES = ["character_voice", "flavour", "narrator"] as const;
 /** The waits the phone apps' overlay can show (WaitStage in the app, Slice 148); both products count them, and a test keeps this list and the app's `UsageWaitStage` the same. */
 const WAIT_STAGES = ["preparing_voice", "stalled", "downloading_model", "translating", "reading_pictures", "saving", "getting_file"] as const;
 const WAIT_DETAIL_SEPARATOR = ":";
-// The first-run intro (Slice 155; Slice 173 added the story languages step): four steps (no read step), each tried or skipped; it starts from the first run or a replay and ends finished or skipped all.
-const INTRO_STEPS = ["store", "record", "add", "languages"] as const;
+// The first-run intro (Slice 155; Slice 173 added the story languages step; Slice 228 the two places and the read step): six steps, each tried or skipped; it starts from the first run or a replay and ends finished or skipped all.
+const INTRO_STEPS = ["places", "read", "store", "record", "add", "languages"] as const;
 const INTRO_ACTIONS = ["tried", "skipped"] as const;
 const INTRO_STARTS = ["first_run", "replay"] as const;
 const INTRO_ENDS = ["finished", "skipped_all"] as const;

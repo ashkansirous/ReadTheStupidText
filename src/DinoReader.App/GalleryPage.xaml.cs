@@ -16,6 +16,9 @@ public partial class GalleryPage : ContentPage
 	private const double LanguageButtonHeight = 48;
 	private const double LanguageMenuGap = 6;
 	private const string TileTitleHeightKey = "TileTitleHeight";
+	private const int ShelfSpan = 2;
+	private const int CornerSpan = 3;
+	private static readonly Color CornerGearFill = Color.FromArgb("#1FFFFFFF"); // white at 12%, the gear tile in the corner's ink bar
 
 	private readonly IStoryLibrary _library;
 	private readonly GrownUpGate _gate;
@@ -53,6 +56,7 @@ public partial class GalleryPage : ContentPage
 		ReadySheet.Closed = OnReadyClosed;
 		BookInfo.OriginalChanged += SaveShowOriginalAsync;
 		BookInfo.VoiceChanged += SaveUseVoiceAsync;
+		BookInfo.ReadRequested += ReadSheetBookAsync;
 		BookInfo.CastRequested += OpenSheetCastAsync;
 		BookInfo.RecordRequested += OpenSheetRecordAsync;
 		BookInfo.EditRequested += OpenSheetEditAsync;
@@ -67,7 +71,7 @@ public partial class GalleryPage : ContentPage
 	}
 
 	// Added beside the grown-ups button in code (the header is a three-column grid): the language button takes column 2, the gear its own column 3, and the
-	// grown-ups button and Done (never shown together) move to column 4, so no two controls ever share a cell.
+	// grown-ups pill moves to column 4, so no two controls ever share a cell.
 	private StoryLanguageButton AddLanguageButton()
 	{
 		var header = (Grid)GrownUpsButton.Parent;
@@ -75,7 +79,6 @@ public partial class GalleryPage : ContentPage
 		header.ColumnDefinitions.Insert(3, new ColumnDefinition(GridLength.Auto));
 		Grid.SetColumn(SettingsButton, 3);
 		Grid.SetColumn(GrownUpsButton, 4);
-		Grid.SetColumn(DoneButton, 4);
 		var button = new StoryLanguageButton(LanguageButtonHeight, OpenLanguageMenuAsync) { IsVisible = false, AutomationId = "GalleryLanguage" };
 		header.Add(button, 2, 0);
 		return button;
@@ -261,12 +264,13 @@ public partial class GalleryPage : ContentPage
 
 		_textLanguage = language;
 		AppIcon.SetValue(SemanticProperties.DescriptionProperty, AppResources.App_Name);
-		GrownUpsButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Gallery_GrownUpsButton);
-		GrownUpsButton.SetValue(ToolTipProperties.TextProperty, AppResources.Gallery_GrownUpsButton);
+		GrownUpsButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Gallery_GrownUpsButtonLocked);
+		GrownUpsButton.SetValue(ToolTipProperties.TextProperty, AppResources.Gallery_GrownUpsButtonLocked);
+		GrownUpsLabel.Text = AppResources.Gallery_GrownUpsPill;
+		CornerLine.Text = AppResources.Gallery_CornerLine;
 		GrownUpsButton.SetValue(SemanticProperties.HintProperty, AppResources.Gallery_OpensGateHint);
 		SettingsButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Settings_GearLabel);
 		SettingsButton.SetValue(ToolTipProperties.TextProperty, AppResources.Settings_GearLabel);
-		DoneButton.Text = AppResources.Common_Done;
 		AddBookLabel.Text = AppResources.Gallery_AddFromBooks;
 		AddBookButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Gallery_AddFromBooks);
 		StoreLabel.Text = AppResources.Store_Title;
@@ -325,16 +329,29 @@ public partial class GalleryPage : ContentPage
 		GrownUpsButton.IsVisible = !grownUp;
 		SettingsButton.IsVisible = grownUp;
 		ApplyLanguageButton();
-		DoneButton.IsVisible = grownUp && !handover;
-		HandoverButton.IsVisible = handover;
-		HandoverButton.Text = AppResources.Gallery_ReadyForChild;
+		HandoverButton.IsVisible = grownUp;
+		HandoverButton.Text = handover ? AppResources.Gallery_ReadyForChild : AppResources.Gallery_BackToShelf;
 		AppIcon.IsVisible = !grownUp;
-		TitleLabel.Text = grownUp ? AppResources.Gallery_GrownUpsTitle : AppResources.Gallery_Title;
-		ModeLabel.Text = AppResources.Gallery_GrownUpsSub;
-		ModeLabel.IsVisible = grownUp;
+		TitleLabel.Text = grownUp ? AppResources.Gallery_CornerTitle : AppResources.Gallery_Title;
 		GrownUpActions.IsVisible = grownUp;
+		ApplyCornerHeader(grownUp);
 		ApplyStorytellerChrome(grownUp);
 		BackgroundColor = DinoTokens.Get(grownUp ? DinoTokens.Sand : DinoTokens.Cream);
+	}
+
+	// Slice 228 (mock Batch 43 frames 97 and 98): the grown-ups' corner has an ink header bar with an amber lock, a white title and a gear in a translucent tile, and three tiles across;
+	// the kids' shelf has none of that, so the two places never look alike.
+	private void ApplyCornerHeader(bool grownUp)
+	{
+		HeaderBar.BackgroundColor = grownUp ? DinoTokens.Get(DinoTokens.Ink) : Colors.Transparent;
+		CornerLock.IsVisible = grownUp;
+		TitleLabel.TextColor = grownUp ? Colors.White : DinoTokens.Get(DinoTokens.Ink);
+		SettingsButton.BackgroundColor = grownUp ? CornerGearFill : DinoTokens.Get(DinoTokens.ControlFill);
+		GearPath.Stroke = new SolidColorBrush(grownUp ? Colors.White : DinoTokens.Get(DinoTokens.Body));
+		if (StoryList.ItemsLayout is GridItemsLayout grid)
+		{
+			grid.Span = grownUp ? CornerSpan : ShelfSpan;
+		}
 	}
 
 	// The pack service reports from a worker thread (Slice 115).
@@ -474,6 +491,25 @@ public partial class GalleryPage : ContentPage
 		await _sheetSaveLock.WaitAsync();
 		_sheetSaveLock.Release();
 		return _sheetStory;
+	}
+
+	// Read now (Slice 228): the sheet is already closed; the page leaves grown-up mode (ending a pending hand-over, as "Ready for my child" would) and opens the book, so Back from the reader lands on the kids' shelf.
+	private async Task ReadSheetBookAsync()
+	{
+		if (await SettledSheetStoryAsync() is { } story)
+		{
+			await RunGrownUpAsync(() => LeaveAndReadAsync(story));
+		}
+	}
+
+	private async Task LeaveAndReadAsync(Story story)
+	{
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[GrownUps] read-now leaves the corner and opens {story.Id}"); // the corner-read-now flow's expect-log marker (RTST-TEST tag)
+#endif
+		FirstRunState.HandoverPending = false;
+		_mode.Leave();
+		await _actions.ReadAsync(Navigation, story);
 	}
 
 	private async Task OpenSheetCastAsync()
@@ -687,9 +723,7 @@ public partial class GalleryPage : ContentPage
 		}
 	}
 
-	private void OnDoneClicked(object? sender, EventArgs e) => _mode.Leave();
-
-	// The first hand-over (Slice 93): from now on the header shows Done instead.
+	// The sticky coral button (Slice 228): "Ready for my child" during the first hand-over (Slice 93), "Back to my child's shelf" after it. Both leave grown-up mode.
 	private void OnHandoverClicked(object? sender, EventArgs e) => CompleteHandover();
 
 	// Leaves grown-up mode; Back during the first hand-over counts as "Ready for my child", so the flag never outlives the mode.
