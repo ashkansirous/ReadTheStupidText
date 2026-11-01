@@ -522,5 +522,78 @@ try {
     Assert-Equal 'the heartbeat keeps the rest of the file' 'cold-start' $after.checks[0].name
 } finally { $env:RTST_RUN_STATUS_FILE = $null; Remove-Item $beat -ErrorAction SilentlyContinue; Remove-Variable -Name RtstHeartbeatAt -Scope Global -ErrorAction SilentlyContinue }
 
+# ---- Slice 224: a dead builder pid, -NoBuild, the header
+$dead = [pscustomobject]@{ state = 'building'; startedUtc = (ConvertTo-DeadlineText $now.AddMinutes(-20)); error = $null; pid = 999999 }
+$goneBuilder = Test-BuilderExited $dead $false { param($id) $false }
+$liveBuilder = Test-BuilderExited $dead $false { param($id) $true }
+Assert-Equal 'a building status with a dead pid: builder exited' $true $goneBuilder
+Assert-Equal 'a building status with a live pid: still building' $false $liveBuilder
+Assert-Equal 'a finished status is not looked at for a pid' $false (Test-BuilderExited ([pscustomobject]@{ state = 'ok'; pid = 1 }) $false { param($id) $false })
+Assert-Equal 'dead pid + cached APK + old log: go, not stalled' 'ok' (Resolve-BuildState $dead $goneBuilder $now.AddMinutes(-9) $now $true).State
+$noApk = Resolve-BuildState $dead $goneBuilder $now.AddMinutes(-9) $now $false
+Assert-Equal 'dead pid + no APK: failed' 'failed' $noApk.State
+Assert-Equal 'dead pid + no APK says the builder exited' 'the builder exited without an APK' $noApk.Reason
+Assert-Equal 'rewritten status is ok when cached' 'ok' (Get-EndedBuildStatus $dead $true).state
+Assert-Equal 'rewritten status is failed when not cached' 'builder exited without an APK' (Get-EndedBuildStatus $dead $false).error
+Assert-Equal 'rewritten status keeps the other fields' 999999 (Get-EndedBuildStatus $dead $true).pid
+$bookEnd = @(Resolve-CheckSelection @('book-end') 'dino' $catalogue)
+Assert-Equal 'header names app and variant' 'runs on: book-end = dino debug' (Format-RunHeader 'dino' $bookEnd)
+Assert-Equal 'no-build: empty cache misses debug' 'debug' ((Get-NoBuildMiss $bookEnd $false $false) -join ',')
+Assert-Equal 'no-build: a cached AOT build serves a Debug check' 0 @(Get-NoBuildMiss $bookEnd $false $true).Count
+$coldPlan = @(Resolve-CheckSelection @('cold-start') 'rtst' $catalogue)
+Assert-Equal 'no-build: cold-start needs AOT, Debug does not serve it' 'aot' ((Get-NoBuildMiss $coldPlan $true $false) -join ',')
+Assert-Equal 'no-build: skipped checks need no build' 0 @(Get-NoBuildMiss @(Resolve-CheckSelection @('book-end') 'rtst' $catalogue) $false $false).Count
+Assert-Equal 'no-build line' 'cache missed for dino debug, key abc: run -Build first' (Format-NoBuildMiss 'dino' @('debug') 'abc')
+
+# the header lists pending checks only; a skipped one is named as skipped
+$mixed = @(Resolve-CheckSelection @('cold-start', 'short-lines') 'rtst' $catalogue)
+Assert-Equal 'header: a skipped check is not claimed as run' 'runs on: cold-start = rtst aot; skipped: short-lines' (Format-RunHeader 'rtst' $mixed)
+# a reused pid is not the builder: the process must have begun no later than the status's startedUtc
+$ownStart = (Get-Process -Id $PID).StartTime
+Assert-Equal 'builder pid: this process, started before the build began' $true (Test-BuilderProcessAlive $PID (Get-Date))
+Assert-Equal 'builder pid: a process that began after the build is a reused pid' $false (Test-BuilderProcessAlive $PID $ownStart.AddHours(-1))
+Assert-Equal 'builder pid: a pid with no process' $false (Test-BuilderProcessAlive 999999 (Get-Date))
+# the status rewrite, on a temp file: a building file with a dead pid becomes ok (cached) or failed
+$tmpStatus = Join-Path ([IO.Path]::GetTempPath()) ('rtst-build-' + [guid]::NewGuid().ToString('N') + '.json')
+try {
+    [IO.File]::WriteAllText($tmpStatus, ($dead | ConvertTo-Json))
+    Assert-Equal 'rewrite reports no error' $null (Write-EndedBuildStatus $tmpStatus $dead $false)
+    $rewritten = Get-Content $tmpStatus -Raw | ConvertFrom-Json
+    Assert-Equal 'rewritten file: failed' 'failed' $rewritten.state
+    Assert-Equal 'rewritten file: the reason' 'builder exited without an APK' $rewritten.error
+    Assert-Equal 'a rewritten file no longer reads as a builder to wait for' $false (Test-BuilderExited $rewritten $false { param($id, $at) $false })
+    $live = [pscustomobject]@{ state = 'building'; startedUtc = (ConvertTo-DeadlineText $now); error = $null; pid = 4242 }
+    [IO.File]::WriteAllText($tmpStatus, ($live | ConvertTo-Json))
+    Assert-Equal 'a newer build wrote the file since: not overwritten' $true ([bool](Write-EndedBuildStatus $tmpStatus $dead $true))
+    Assert-Equal 'the newer build status is kept' 'building' (Get-Content $tmpStatus -Raw | ConvertFrom-Json).state
+    [IO.File]::WriteAllText($tmpStatus, ($dead | ConvertTo-Json))
+    Write-EndedBuildStatus $tmpStatus $dead $true | Out-Null
+    Assert-Equal 'rewritten file: ok when cached' 'ok' (Get-Content $tmpStatus -Raw | ConvertFrom-Json).state
+    $queuedDead = [pscustomobject]@{ state = 'queued'; startedUtc = (ConvertTo-DeadlineText $now); pid = 999999 }
+    Assert-Equal 'a queued status with a dead pid: builder exited' $true (Test-BuilderExited $queuedDead $false { param($id, $at) $false })
+    Assert-Equal 'a process whose start time is unreadable counts as the builder' $true (Test-StartedBefore $null (Get-Date))
+} finally { Remove-Item $tmpStatus -ErrorAction SilentlyContinue }
+# the whole -NoBuild path, through the script: a cache miss prints the line, the table and run-status.json, exits 8 and starts no build (no lease, no adb). A warm cache for this checkout skips it.
+$runner = Join-Path $PSScriptRoot 'run-checks.ps1'
+$engine = (Get-Process -Id $PID).Path
+$statusFile = Join-Path ([IO.Path]::GetTempPath()) ('rtst-nobuild-' + [guid]::NewGuid().ToString('N') + '.json')
+$emptyCache = Join-Path ([IO.Path]::GetTempPath()) ('rtst-nobuild-cache-' + [guid]::NewGuid().ToString('N'))
+try {
+    $null = New-Item -ItemType Directory -Force $emptyCache
+    $env:RTST_RUN_STATUS_FILE = $statusFile
+    $env:RTST_BUILD_CACHE_LOOKUP_ROOT = $emptyCache   # an empty cache: the child can never find an APK, so it never reaches a lease or a phone
+    $output = @(& $engine -NoProfile -File $runner -App dino -Checks book-end -NoBuild 2>&1 | ForEach-Object { "$_" })
+    $code = $LASTEXITCODE
+    Assert-Equal 'no-build run: exit code is cache-missed' $script:ExitCacheMissed $code
+    Assert-Equal 'no-build run: the miss line' $true (@($output | Where-Object { $_ -like 'cache missed for dino *, key *: run -Build first' }).Count -eq 1)
+    Assert-Equal 'no-build run: the header comes first' $true ($output[0] -like 'runs on: book-end = dino debug*')
+    Assert-Equal 'no-build run: no build was started' 0 @($output | Where-Object { $_ -like 'building *' -or $_ -like 'starting builds*' }).Count
+    Assert-Equal 'no-build run: every check is SKIP in the table' $true (@($output | Where-Object { $_ -like '*book-end*SKIP*' }).Count -ge 1)
+    Assert-Equal 'no-build run: run-status.json says finished' $true ((Get-Content $statusFile -Raw | ConvertFrom-Json).finished)
+} finally {
+    $env:RTST_RUN_STATUS_FILE = $null; $env:RTST_BUILD_CACHE_LOOKUP_ROOT = $null
+    Remove-Item $statusFile -ErrorAction SilentlyContinue; Remove-Item $emptyCache -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 if ($failed) { Write-Host "$failed run-checks checks failed (PowerShell $($PSVersionTable.PSVersion))."; exit 1 }
 Write-Host "All run-checks checks pass (PowerShell $($PSVersionTable.PSVersion))."
