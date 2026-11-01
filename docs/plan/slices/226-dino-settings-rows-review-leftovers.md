@@ -38,7 +38,9 @@ Shared MAUI code: every item is built and checked on Android and iOS alike (and 
 *From review* (`reviews/s226-high.md`, `reviews/s226-medium.md`):
 
 - High: applied 1, 2, 3. Skipped 4 (page text has no markers), 5 (performance nit), 6 and 7 (no current caller), 8 (belongs to the device stage).
-- Medium: applied 5; 1 checked, no caller puts a control in a Border. Skipped 2, 3, 4, 6, 7, 8, 9.
+- Medium: applied 5; 1 checked, no caller puts a control in a Border. Skipped 2, 3, 4, 6, 7, 8, 9 (the coordinator's reasons: no current failure path, the harness runs no iOS flows, the device stage covers 7). In detail: 2 and 3 (a non-Label end view, the value label picked by child order) have no caller today; 4 (`RowButton` text left null) passed on the Windows VM, iOS untested; 6 (the flow's bare `- back` works on Android only, so its iOS claim is not real); 7 (per-line descriptions now Windows-only) is the TalkBack/VoiceOver item below; 8 (`AddInRow` and the chevron slot have no caller yet: unused API, kept as the one documented way to add a child); 9 (`AccessibleName` untested, it lives in MAUI-only code).
+- Check pass after the medium-5 fix (`reviews/s226-check-medium.md`, 7 findings): all repeats of the items above or by design, none applied (PR #668 body). Its item 4 (on a row ending in a Switch or Picker that also has a tap action, the chevron column sits outside the row button) has no caller today.
+- Recorded by the round's feedback loop (2026-11-01), because the `reviews/` files are local and get deleted.
 
 *Device results:* Android emulator flow passed (108.9 s). Settings dump: button `SettingsReadingSpeedRow`, content-desc "Reading speed: 0.8x". Reading page dump: text-only lines have no content-desc; a picture+text page label has content-desc equal to its words with newlines collapsed (on Android content-desc replaces the text for TalkBack, so it should read once; not heard with TalkBack). Desktop VM `Invoke-DesktopTest -App dino`: 4/4 pass including `dino-page-turn`; a throw-away assertion found no CR/LF in StoryText UIA names (not kept in the check).
 
@@ -47,6 +49,9 @@ Shared MAUI code: every item is built and checked on Android and iOS alike (and 
 - TalkBack / VoiceOver hearing each reading page once.
 - iPhone / iPad / VoiceOver / TestFlight hand checks (the user's answer: they do these later).
 - A Switch-end row still toggling (no current caller).
+- iOS: a settings row with the button text left null keeps its height and look (medium 4), and `settings-reading-speed-row.yaml` on iOS needs an in-app back step instead of `- back` (medium 6; the harness runs no iOS flows today).
+- Nothing guards item 5 any more: the VM agent's "no CR/LF in a StoryText UIA name" assertion passed and was thrown away, and item 5's unit test was not written (MAUI-only code). Keep the assertion in the `dino-page-turn` desktop check (Slice 225 item 24).
+- The row-button width fix: the comment at `src/DinoReader.App/SettingsRows.cs:174` ("Grid.Add(view, column, row) writes the span as 1") states as fact what the fixer called likely, not confirmed in the MAUI source (c42c62a9 entry 734). The fix was seen working on the Windows VM only; nobody re-read the Android row bounds after it. Confirm the cause, reword the comment if needed, and re-read the button bounds in an Android `uiautomator` dump (added by the 2026-11-01 feedback loop).
 
 #### For CLAUDE.md (lifted 2026-11-01)
 

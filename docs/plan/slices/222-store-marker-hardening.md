@@ -39,7 +39,7 @@ Out of scope here: the review also flagged the duplicated pre-1.0 version rule i
 - High 1 (no `--paginate` on matching-refs), 2 (API errors read as "not found"), 3 (concurrent create race), 7 (rule missing from `.github/CLAUDE.md`): applied.
 - High 4 (Dino-only test title/assertion wording), 5 (workflow-text test uses regexes), 6 (`sort -V` vs strict parser on non-`x.y.z` refs), 8 (`storeChangesFor` style, two statements on one line): skipped, test wording/style or non-GitVersion tags that this repo does not create.
 - Medium 1 (older rerun exits 0 with a warning and writes no marker): skipped, intended behaviour.
-- Medium 2 (`Not Found` matched as text in `2>&1` output): skipped, edge case; the text match was kept after the live check above.
+- Medium 2 (`Not Found` matched as text in `2>&1` output): skipped; the text match was kept after the live check above. (Corrected 2026-11-01 by the feedback loop: the earlier reason "edge case" was the doc agent's own wording, not the coordinator's. The remaining risk: a non-404 error whose text contains "Not Found", or a gh notice mixed into the sha, would be misread. High 2, applied, already treats only "Not Found"/HTTP 404 as absent.)
 - Medium 3 (prerelease-shaped marker tag ignored by the newest-wins guard): skipped, marker tags are always `x.y.z`.
 - Medium 4 (workflow-guard test is regex-based), 5 (Dino-only test mutates the plan by hand), 6 (duplicated log-and-return in `storeChangesFor`): skipped, style.
 

@@ -2,6 +2,11 @@
 
 Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 
+> **This repo is public, so its Actions minutes are free.** October 2026 used about 12,500 macOS, 8,700 Windows
+> and 7,800 Linux minutes; private, that would count as roughly 150,000 against the account's 2,000 (about $907 a
+> month at GitHub's prices). Before it is ever made private, its builds need another home (a self-hosted runner).
+> (Billing read 2026-11-01; [note](../docs/plan/notes/2026-11-01-0859-feedback-loop-w1.md).)
+
 > **CI (Batch 8, Slice 70):** zero `upload-artifact` (the account's storage is 500 MB
 > shared across repos, billed as monthly GB-hours; one run's MSIX + AAB/APK is ~1 GB, and
 > deleting artifacts doesn't refund it): build jobs upload straight to a **draft GitHub

@@ -49,8 +49,8 @@ Settled by the mock: the band is cropped, not fitted, in portrait; landscape fit
 
 High (`reviews/s231-high.md`): applied 1-4. Skipped:
 - 5 (PageWords has no unit test): the App project is not unit-testable and the pure logic's home, Core, is outside Touches.
-- 6 (flow taps plain text "Record", asserts only 20+ characters): skipped.
-- 7 (Debug.WriteLine on every Render): skipped.
+- 6 (flow taps plain text "Record", asserts only 20+ characters): skipped, with no reason recorded at the time. What it leaves (the 2026-11-01 feedback loop's reading, not the coordinator's): the flow proves words show on one starter page, not the picture band, a scanned book or a picture-only page, which stay in *Not yet verified*.
+- 7 (Debug.WriteLine on every Render): skipped, with no reason recorded at the time; it is debug-log noise only.
 
 Medium (`reviews/s231-medium.md`): all skipped.
 - 1 (scanned pages not handled): wrong, `Text` is the included lines.
