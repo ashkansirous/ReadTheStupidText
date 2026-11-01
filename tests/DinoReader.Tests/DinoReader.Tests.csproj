@@ -28,6 +28,8 @@
     <Compile Include="..\..\src\DinoReader.App\OwnBookTranslation.cs" Link="Linked\OwnBookTranslation.cs" />
     <Compile Include="..\..\src\DinoReader.App\BusyGuard.cs" Link="Linked\BusyGuard.cs" />
     <Compile Include="..\..\src\DinoReader.App\StorytellerConsent.cs" Link="Linked\StorytellerConsent.cs" />
+    <!-- The pure rules of the Debug-only forced book update (Slice 225 item 16). -->
+    <Compile Include="..\..\src\DinoReader.App\ForcedUpdateRules.cs" Link="Linked\ForcedUpdateRules.cs" />
   </ItemGroup>
 
   <ItemGroup>

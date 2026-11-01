@@ -1,3 +1,4 @@
+# check: Apps=rtst EstimateSeconds=120 NeedsPack=true Variant=debug
 <#
 .SYNOPSIS
   highlight: the reader highlights one sentence at a time while a chunk is still playing (Slice 190 marker, Slice 213).

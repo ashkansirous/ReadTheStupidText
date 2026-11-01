@@ -1,3 +1,4 @@
+# check: Apps=rtst,dino EstimateSeconds=240 PerRunSeconds=80 NeedsPack=true Variant=aot
 <#
 .SYNOPSIS
   cold-start: N fresh-process reads, each truly cold (Slice 213). Prints first audio, engine-ready and first-synthesis time per run, then the median.

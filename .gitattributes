@@ -2,6 +2,8 @@ src/ReadTheStupidText.App/VoiceModel/*.onnx filter=lfs diff=lfs merge=lfs -text
 src/ReadTheStupidText.App/VoiceModel/*.bin filter=lfs diff=lfs merge=lfs -text
 *.sh text eol=lf
 *.md text eol=lf
+# Slice 225 item 13: the Maestro flows are LF in the index and in every checkout, so lint-flows.ps1 Test-LineEndings does not depend on core.autocrlf (the flow lint reads the bytes on disk).
+*.yaml text eol=lf
 docs/plan/** text eol=lf
 # These three are detected as non-text today (git ls-files --eol says -text); keep them byte-for-byte until someone normalises them on purpose.
 docs/plan/notes/batch-intros-1-8.md -text

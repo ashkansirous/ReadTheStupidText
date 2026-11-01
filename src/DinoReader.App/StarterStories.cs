@@ -125,7 +125,9 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 	/// <summary>Slice 209 (Debug only, the <c>stage-book-update force=true</c> hook): records an older version for the book, so the update plan sees the store's current version as newer and the next start really swaps it in.</summary>
 	public static void RecordVersionForTest(string packageId, int version) => RecordVersion(packageId, version);
 
-	private const string ForcedApplyKeyPrefix = "dino.test.forceapply.";
+	// Slice 225 item 16: the mark holds when it was written (UTC ticks), not just "true", so a mark left by a stage that failed expires (ForcedUpdateRules.MarkLifetime) instead of
+	// forcing a later ordinary update of the same book. A new key: an older install's bool value under the old key is never read as ticks.
+	private const string ForcedApplyKeyPrefix = "dino.test.forceapplyat.";
 
 	/// <summary>Slice 209 (Debug only): puts the recorded version back to what it was (none: removes it), after a forced stage planned with a lowered one.</summary>
 	public static void RestoreVersionForTest(string packageId, int? version)
@@ -140,14 +142,20 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 	}
 
 	/// <summary>Slice 209 (Debug only): marks the staged package of this book as forced, so the next cold start's apply lowers the recorded version itself (after the starter refresh ran, which would otherwise swap the bundled copy in and make the staged one "up to date").</summary>
-	public static void MarkForcedApplyForTest(string packageId) => Preferences.Default.Set(ForcedApplyKeyPrefix + packageId, true);
+	public static void MarkForcedApplyForTest(string packageId) => Preferences.Default.Set(ForcedApplyKeyPrefix + packageId, DateTimeOffset.UtcNow.UtcTicks);
 
-	/// <summary>Slice 209 (Debug only): true once per mark; the apply uses it to lower the recorded version to <see cref="BookUpdatePlan.ForcedRecordedVersion"/>.</summary>
+	/// <summary>Slice 209 (Debug only): true once per mark, while the mark is still live (<see cref="ForcedUpdateRules.IsMarkLive"/>); the apply uses it to lower the recorded version to <see cref="BookUpdatePlan.ForcedRecordedVersion"/>.</summary>
 	public static bool ConsumeForcedApplyForTest(string packageId)
 	{
-		bool marked = Preferences.Default.Get(ForcedApplyKeyPrefix + packageId, false);
+		long markedAt = Preferences.Default.Get(ForcedApplyKeyPrefix + packageId, 0L);
 		Preferences.Default.Remove(ForcedApplyKeyPrefix + packageId);
-		return marked;
+		bool live = ForcedUpdateRules.IsMarkLive(markedAt, DateTimeOffset.UtcNow);
+		if (markedAt > 0 && !live)
+		{
+			Debug.WriteLine($"[BookUpdate] {packageId}: forced-apply mark expired, ignored (an earlier stage did not finish)");
+		}
+
+		return live;
 	}
 #endif
 

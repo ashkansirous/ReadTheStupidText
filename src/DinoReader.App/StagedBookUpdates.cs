@@ -17,6 +17,9 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 	private const string PartExtension = ".part";
 
 	private readonly object _lock = new();
+#if DEBUG
+	private readonly ForcedVersionTracker _forcedVersions = new(); // Debug-only forced updates (Slice 209)
+#endif
 	private Task? _applyTask;
 
 	private sealed record Entry(string Id, int Version, string Path);
@@ -96,6 +99,7 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 		foreach (Entry forced in entries.Where(e => StarterStories.ConsumeForcedApplyForTest(e.Id)))
 		{
 			Debug.WriteLine($"{LogTag} {forced.Id}: forced apply, recorded version lowered to v{BookUpdatePlan.ForcedRecordedVersion(forced.Version)}");
+			_forcedVersions.Lowered(forced.Id, StarterStories.RecordedVersion(forced.Id));   // Slice 225 item 16: remembered, so a dropped entry puts it back
 			StarterStories.RecordVersionForTest(forced.Id, BookUpdatePlan.ForcedRecordedVersion(forced.Version));
 		}
 #endif
@@ -117,6 +121,7 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 				StarterStories.RecordSeenVersion(entry.Id, entry.Version);
 			}
 
+			RestoreForcedVersion(entry.Id);
 			DeleteEntry(entry);
 			return;
 		}
@@ -125,9 +130,14 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 		{
 			bool swapped = await SwapAsync(entry);
 			Debug.WriteLine($"{LogTag} {entry.Id}: {(swapped ? $"swapped to v{entry.Version}" : "edited, left as it is")}");
-			if (!swapped)
+			if (swapped)
+			{
+				ForgetForcedVersion(entry.Id);
+			}
+			else
 			{
 				StarterStories.RecordSeenVersion(entry.Id, entry.Version);
+				RestoreForcedVersion(entry.Id);
 			}
 
 			DeleteEntry(entry);
@@ -135,6 +145,7 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 		catch (Exception ex) when (ex is StoryPackageException or InvalidDataException)
 		{
 			Debug.WriteLine($"{LogTag} {entry.Id}: bad staged package dropped: {ex.Message}");
+			RestoreForcedVersion(entry.Id);
 			DeleteEntry(entry);
 		}
 		catch (Exception ex) when (ex is IOException or InvalidOperationException or UnauthorizedAccessException)
@@ -145,8 +156,30 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 		{
 			// Never the stored book: only the staged copy goes, so a package that fails the same way every time cannot loop.
 			Debug.WriteLine($"{LogTag} {entry.Id}: unexpected failure, staged entry dropped: {ex}");
+			RestoreForcedVersion(entry.Id);
 			DeleteEntry(entry);
 		}
+	}
+
+	// Slice 225 item 16: a forced entry that is dropped must not leave the lowered recorded version behind (a later ordinary update would then look newer than it is).
+	// A swap records the store's version itself, so a swapped entry is only forgotten. Nothing was lowered (every normal run, any Release build): nothing happens.
+	private void RestoreForcedVersion(string id)
+	{
+#if DEBUG
+		if (_forcedVersions.TryTakeRestore(id, out int? original))
+		{
+			StarterStories.RestoreVersionForTest(id, original);
+			Debug.WriteLine($"{LogTag} {id}: forced entry dropped, recorded version put back to {(original is { } v ? $"v{v}" : "none")}");
+		}
+#endif
+	}
+
+	// A swapped book recorded the store's version itself: forget the note so a later forced run does not write the old original over it.
+	private void ForgetForcedVersion(string id)
+	{
+#if DEBUG
+		_forcedVersions.Forget(id);
+#endif
 	}
 
 	private async Task<bool> SwapAsync(Entry entry)

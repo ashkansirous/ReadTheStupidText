@@ -1,3 +1,4 @@
+# check: Apps=dino EstimateSeconds=200 NeedsPack=true Variant=debug
 <#
 .SYNOPSIS
   short-lines: what Kokoro returns on the phone for short lines, on the normal engine and on a single-thread engine (Slice 220, follow-up to Slice 210).

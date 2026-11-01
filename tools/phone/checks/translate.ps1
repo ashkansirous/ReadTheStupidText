@@ -1,3 +1,4 @@
+# check: Apps=rtst EstimateSeconds=150 NeedsPack=true Variant=debug
 <#
 .SYNOPSIS
   translate: the Review page's Translate tick set by the Debug `set-translate` hook, then a read that really translates (RTST, Slice 209, Slice 139 race).

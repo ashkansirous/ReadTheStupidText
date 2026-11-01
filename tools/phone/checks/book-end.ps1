@@ -1,3 +1,4 @@
+# check: Apps=dino EstimateSeconds=420 NeedsPack=true Variant=debug
 <#
 .SYNOPSIS
   book-end: Dino plays a starter book to its end, then the phone can doze (Slice 213).

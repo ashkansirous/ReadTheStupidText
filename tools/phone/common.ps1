@@ -598,7 +598,8 @@ function Assert-BuildPathLength([string]$ArtifactsPath) {
 # Item 5: the one phone build command (audio-timing.ps1 and run-checks.ps1 both call it, so a change cannot miss one). Unquoted arguments for `dotnet build`;
 # a caller that goes through Start-Process quotes the ones with spaces (ConvertTo-ProcessArguments).
 function Get-PhoneBuildArguments([string]$Project, [string]$Artifacts, [string]$Package, [string]$Rid, [bool]$Aot) {
-    $arguments = @($Project, '-f', 'net10.0-android', '-c', 'Debug', '--artifacts-path', $Artifacts, '-nodeReuse:false', '-p:UseSharedCompilation=false',
+    # Slice 225 item 23: --disable-build-servers (= -nodeReuse:false, UseSharedCompilation=false, UseRazorBuildServer=false) so no VBCSCompiler or MSBuild node outlives the build and holds the worktree.
+    $arguments = @($Project, '-f', 'net10.0-android', '-c', 'Debug', '--artifacts-path', $Artifacts, '--disable-build-servers', '-nodeReuse:false', '-p:UseSharedCompilation=false',
         "-p:RuntimeIdentifier=$Rid", '-p:EmbedAssembliesIntoApk=true', '-p:IncludeWindows=false', '-p:AndroidPackageFormat=apk', "-p:ApplicationId=$Package")
     if ($Aot) { $arguments += '-p:RunAOTCompilation=true', '-p:AndroidEnableProfiledAot=false' }
     return $arguments
@@ -621,12 +622,17 @@ function New-SentenceCacheClearCommand([string]$Package) {
 # or a reboot (adb reboot, reconnect over wireless debugging, unlock once), which this script never does by itself.
 $script:DropCacheDoneMarker = 'RTST_DROP_RC='
 $script:DropCachesCommand = 'sync; echo 3 > /proc/sys/vm/drop_caches; echo RTST_DROP_RC=$?'
+# Slice 225 item 22: true when the phone's output holds the marker with exit code 0. Pure, so the self-test proves the pattern (a raw 0x08 byte once replaced a word boundary here).
+function Test-DropCacheDone([string]$Output) {
+    return ("$Output" -match "$([regex]::Escape($script:DropCacheDoneMarker))0(?![0-9])")
+}
+
 function Clear-PageCache([string]$Phone) {
     foreach ($wrap in @("su -c '$($script:DropCachesCommand)'", "su 0 sh -c '$($script:DropCachesCommand)'", $script:DropCachesCommand)) {
         try {
             $out = "$(Invoke-Adb $Phone @('shell', $wrap) 2>&1)"
             # The phone's own shell prints the exit code of the write (RTST_DROP_RC=<n>): that is the answer, whatever language the error text is in and however adb passes the exit code on.
-            if ($out -match "$([regex]::Escape($script:DropCacheDoneMarker))0") { return $true }
+            if (Test-DropCacheDone $out) { return $true }
         } catch {
             if (Test-PastDeadline (Get-ActiveDeadline) (Get-Date)) { throw }   # the run's budget ended while waiting (a root prompt can hang su): signal it, never swallow it
             Write-Verbose "drop_caches variant failed: $($_.Exception.Message)"
@@ -676,22 +682,51 @@ function ConvertTo-RateList($Rates) {
 }
 
 # Slice 208 (S21 offline 2026-10-31 ~13:57): a check once ran `svc wifi disable` while the only adb link was wireless, so its finally block could never put wifi back.
-# Rule: a check never cuts the link it is driven over. Whole-device network cuts are refused on a wireless serial; checks cut one app's network instead.
-function Assert-WholeDeviceNetworkCutAllowed([string]$Serial) {
-    if ($Serial -match $script:WirelessPattern) { throw "refused: cutting the whole device's wifi/data over the wireless adb link '$Serial' would cut the link itself and strand the phone offline. Cut the dev app's network instead (Set-AppNetworkBlocked)." }
-}
+# Rule: a check never cuts the link it is driven over, so no check touches wifi, mobile data or airplane mode; it cuts one app's network instead (Set-AppNetworkBlocked).
+# Slice 225 item 14: no check made a whole-device cut, so the guard function that nothing called is gone; Test-CheckRestoresFirst (checks/_lib.ps1) is the enforced rule instead.
 
 # The seconds a device-side restore waits before it heals a cut by itself (no adb needed).
 $script:DeviceRestoreSeconds = 240
+# Slice 225 item 15: the detached restore writes its shell's pid here, so the run that started it can cancel it (a heal left to fire could undo a slower run's or a rerun's settings).
+$script:DeviceRestorePidDir = '/data/local/tmp'
+
+function Get-DeviceRestorePidFile([string]$Package) { return "$($script:DeviceRestorePidDir)/rtst-heal-$Package.pid" }
 
 # The shell text that undoes an app network cut and a lowered dataSync timeout, run ON the phone by a detached `sh`. Pure: unit-tested.
+# It does NOT move a pack back: a moved-aside pack is put back by the check's own finally block or by reset-dev-app.ps1.
 function Get-DeviceRestoreScript([string]$Package, [int]$Uid, [int]$Seconds) {
+    $pidFile = Get-DeviceRestorePidFile $Package
     $undo = "cmd netpolicy remove restrict-background-blacklist $Uid; device_config delete activity_manager data_sync_fgs_timeout_duration; am compat reset FGS_INTRODUCE_TIME_LIMITS $Package"
-    return "sleep $Seconds; $undo"
+    # Review (check 2, finding 7): once the sleep is over the heal ignores TERM (`trap :`), so a cancel that lands while the undo runs cannot leave the phone half-restored; a cancel before that kills the heal while it sleeps.
+    return "echo `$`$ > $pidFile; sleep $Seconds; trap : TERM HUP INT; $undo; rm -f $pidFile"
 }
 
-# Starts the detached restore BEFORE any cut, so a lost link heals on its own. The check's finally block still restores over adb as the fast path.
+# The shell text that stops a pending detached restore (its pid file names the `sh`). Pure: unit-tested.
+# Says: cancelled (killed while asleep; the pid file is still there), finished (the undo was already running, so it was waited for up to 30 s and ran whole), stuck (still alive after 30 s), stale or none.
+function Get-DeviceRestoreCancelCommand([string]$Package) {
+    $pidFile = Get-DeviceRestorePidFile $Package
+    # The pid is killed only when its command line holds the pid file's own path (the heal's `sh -c` text does): a file that outlived its shell (reboot) names an unrelated process by now, so it is removed and nothing is killed ("stale").
+    $wait = "i=0; while kill -0 `$p 2>/dev/null && [ `$i -lt 30 ]; do sleep 1; i=`$((i+1)); done"
+    $verdict = "if kill -0 `$p 2>/dev/null; then echo stuck; elif [ -f $pidFile ]; then echo cancelled; else echo finished; fi"
+    return "if [ -f $pidFile ]; then p=`$(cat $pidFile); if tr '\0' ' ' < /proc/`$p/cmdline 2>/dev/null | grep -qF $pidFile; then kill `$p 2>/dev/null; $wait; $verdict; else echo stale; fi; rm -f $pidFile; else echo none; fi"
+}
+
+# Stops a pending detached restore; returns $true when one was cancelled. Never throws (it runs in finally blocks).
+function Stop-DeviceRestore([string]$Serial, [string]$Package) {
+    try {
+        $said = "$(Invoke-Adb $Serial @('shell', (Get-DeviceRestoreCancelCommand $Package)))"
+        if ($said -match 'stale') { Write-Host "   WARNING: a stale heal pid file for $Package was removed; its pid belongs to another process, so nothing was killed." }
+        if ($said -match 'stuck') { Write-Host "   WARNING: the device-side restore for $Package was still running 30 s after the cancel; look at the phone's dataSync timeout and network block." }
+        if ($said -match 'finished') { Write-Host "   the device-side restore for $Package had already started and ran to the end (it was waited for, not killed)." }
+        return ($said -match 'cancelled')
+    }
+    catch { Write-Host "   WARNING: could not cancel the device-side restore: $($_.Exception.Message)"; return $false }
+}
+
+# Starts the detached restore BEFORE any cut, so a lost link heals on its own. The check's finally block restores over adb as the fast path and then cancels it (Stop-DeviceRestore).
+# A restore left by an earlier run of the same package is cancelled first, so it cannot fire in the middle of this one.
 function Start-DeviceRestore([string]$Serial, [string]$Package, [int]$Uid, [int]$Seconds) {
+    $null = Stop-DeviceRestore $Serial $Package
     $script = Get-DeviceRestoreScript $Package $Uid $Seconds
     Invoke-Adb $Serial @('shell', "nohup sh -c '$script' >/dev/null 2>&1 &") | Out-Null
 }
@@ -706,4 +741,194 @@ function Get-PackageUid([string]$Serial, [string]$Package) {
 function Set-AppNetworkBlocked([string]$Serial, [int]$Uid, [bool]$Blocked) {
     $verb = if ($Blocked) { 'add' } else { 'remove' }
     Invoke-Adb $Serial @('shell', 'cmd', 'netpolicy', $verb, 'restrict-background-blacklist', "$Uid") | Out-Null
+}
+
+# ---- Slice 225 item 1: the device-wide leftovers a check can leave on the phone, found and cleared by script (restore-device-state.ps1; preflight.ps1 -Fix calls it too).
+# Only the dev packages' own uids are ever taken off the background-network blacklist: another entry is the user's own data-saver choice for one of their apps.
+$script:DataSyncTimeoutKey = 'data_sync_fgs_timeout_duration'
+$script:CompatChange = 'FGS_INTRODUCE_TIME_LIMITS'
+$script:BlockLabelPattern = '(?i)(black|block|deny)\s*-?list'   # the label of `cmd netpolicy list restrict-background-blacklist`; the exact text is NOT confirmed on a device, so both spellings are read
+$script:BlockLabelExclude = '(?i)(white|allow)\s*-?list|status'  # a "restrict ... whitelist" or "restrict ... status" line is not the block list
+
+# device_config prints "null" for a key that is not set.
+function Test-DataSyncTimeoutLeftover([string]$Value) {
+    $text = "$Value".Trim()
+    return ($text -ne '' -and $text -ne 'null')
+}
+
+# Pure: 'Blocked', 'Clean' or 'Unknown'. The text is read line by line; the uid counts as blocked only as a whole token on a line whose label says blacklist/blocklist/denylist
+# (or "restrict", except a whitelist or status line). With no such label line at all the text says nothing about the block list: 'Unknown', neither clean nor blocked.
+function Get-UidBlockState([string]$Text, [int]$Uid) {
+    $blockLines = @(Get-BlockListLines $Text)
+    if ($blockLines.Count -eq 0) { return 'Unknown' }
+    foreach ($line in $blockLines) { if ($line -match "(?<![\w.])$Uid(?![\w.])") { return 'Blocked' } }
+    return 'Clean'
+}
+
+# Pure: the lines that belong to the block list. A label line starts a block; the uids may continue on the following lines, so the block runs until the next label (any "word...:" line) or a blank line.
+# Returns nothing when there is no block label line at all.
+function Get-BlockListLines([string]$Text) {
+    $inBlock = $false
+    foreach ($line in ("$Text" -split '\r?\n')) {
+        $isBlockLabel = ($line -match $script:BlockLabelPattern) -or (($line -match '(?i)restrict') -and ($line -notmatch $script:BlockLabelExclude))
+        if ($isBlockLabel) { $inBlock = $true; $line; continue }
+        if ($line.Trim() -eq '' -or $line -match '^\s*[A-Za-z][^:]*:') { $inBlock = $false; continue }
+        if ($inBlock) { $line }
+    }
+}
+
+# Pure: the clear commands one dev package needs, each { What; Arguments } (adb shell arguments). The compat override cannot be read back reliably, so its reset is always planned (it is idempotent).
+# An 'Unknown' block state still plans the removal (idempotent, this dev uid only) and says the state could not be read.
+function Get-DeviceRestorePlan([string]$Package, [int]$Uid, [string]$DataSyncValue, [string]$BlacklistText) {
+    $plan = @()
+    if (Test-DataSyncTimeoutLeftover $DataSyncValue) { $plan += [pscustomobject]@{ What = "dataSync timeout $("$DataSyncValue".Trim()) ms"; Arguments = @('shell', 'device_config', 'delete', 'activity_manager', $script:DataSyncTimeoutKey) } }
+    $plan += [pscustomobject]@{ What = "compat flag $($script:CompatChange) for $Package (always reset)"; Arguments = @('shell', 'am', 'compat', 'reset', $script:CompatChange, $Package) }
+    $state = Get-UidBlockState $BlacklistText $Uid
+    $remove = @('shell', 'cmd', 'netpolicy', 'remove', 'restrict-background-blacklist', "$Uid")
+    if ($state -eq 'Blocked') { $plan += [pscustomobject]@{ What = "background-network block on uid $Uid ($Package)"; Arguments = $remove } }
+    if ($state -eq 'Unknown') { $plan += [pscustomobject]@{ What = "background-network block on uid $Uid ($Package): the block list could not be read (no blacklist line in 'cmd netpolicy list')"; Arguments = $remove } }
+    return $plan
+}
+
+# Review 1: another session's live lease means its run may be using the very timeout or block that looks like a leftover, so clearing is refused (throws) unless -Force.
+function Assert-NoOtherPhoneLease([string]$Serial) {
+    $key = Get-PhoneLeaseKey $Serial
+    $held = Read-Lease $key
+    $me = [Environment]::GetEnvironmentVariable($script:LeaseOwnerVariable)
+    if (-not $held -or $held.Owner -ceq $me) { return }
+    throw "Phone $key is leased by $(Format-LeaseHolder $held); this session's owner is '$me'. Not clearing device leftovers while another session's lease is live (its run may be using them). Wait for the lease, or pass -Force."
+}
+
+# Reads, clears and reads again. Returns Leftovers (what was found), Remaining (what a second read still shows) and Unknown (a block list the read-back could not read). A dev package that is not installed is skipped.
+# Refuses (throws) while another owner's lease is live, unless -Force.
+function Clear-DeviceLeftovers([string]$Serial, [string[]]$Packages, [switch]$Force) {
+    if (-not $Force) { Assert-NoOtherPhoneLease $Serial }
+    $found = @(); $remaining = @(); $unknown = @()
+    foreach ($package in $Packages) {
+        Assert-DevPackage $package
+        try { $uid = Get-PackageUid $Serial $package } catch { continue }
+        $value = "$(Invoke-Adb $Serial @('shell', 'device_config', 'get', 'activity_manager', $script:DataSyncTimeoutKey))"
+        $black = (Invoke-Adb $Serial @('shell', 'cmd', 'netpolicy', 'list', 'restrict-background-blacklist')) -join "`n"
+        if ((Get-UidBlockState $black $uid) -eq 'Unknown') { Write-Host "   WARNING: 'cmd netpolicy list' has no blacklist line, so the block state of uid $uid is unknown. It said: $("$black".Trim())" }
+        foreach ($step in Get-DeviceRestorePlan $package $uid $value $black) {
+            if ($step.What -notlike 'compat flag*' -and $step.What -notlike '*could not be read*') { $found += $step.What }
+            Invoke-Adb $Serial $step.Arguments | Out-Null
+        }
+        $null = Stop-DeviceRestore $Serial $package
+        $after = "$(Invoke-Adb $Serial @('shell', 'device_config', 'get', 'activity_manager', $script:DataSyncTimeoutKey))"
+        $afterBlack = (Invoke-Adb $Serial @('shell', 'cmd', 'netpolicy', 'list', 'restrict-background-blacklist')) -join "`n"
+        foreach ($step in Get-DeviceRestorePlan $package $uid $after $afterBlack) {
+            if ($step.What -like 'compat flag*') { continue }
+            # A block list that could not be read is Unknown, not "still set": it is reported apart so a clean phone never reads as a failed restore.
+            if ($step.What -like '*could not be read*') { $unknown += $step.What } else { $remaining += $step.What }
+        }
+    }
+    return [pscustomobject]@{ Leftovers = @($found | Select-Object -Unique); Remaining = @($remaining | Select-Object -Unique); Unknown = @($unknown | Select-Object -Unique) }
+}
+
+# ---- Slice 225 item 11: the screen timeout the pre-flight found is put back when the phone lease is released.
+# Review 2/3 (rounds 3): the value is recorded only at the moment an owner TAKES the lease (lease.ps1 -Take, a timed run). The record is { phone, owner, pid, orig, set, savedUtc }:
+# orig is the phone's stay_on value at the take, set is the value this tooling then sets (7). ONE rule restores (Invoke-StayOnRestore, used by every release path, by a new take and by preflight -Fix):
+# orig is written back ONLY IF the phone's current value still equals set, so a value the user changed since is never undone; then the record is deleted.
+# A record is never handed to another owner. One whose pid is alive and is not ours, or whose owner still holds a live lease, is left alone; a dead one older than 24 h is deleted without restoring.
+# The restore never presses the power key: the phone's own timeout acts, so a phone in use is not blanked.
+$script:StayOnSetting = 'stay_on_while_plugged_in'
+$script:StayOnSetValue = '7'   # bit mask 1 AC + 2 USB + 4 wireless: what preflight.ps1 -Fix sets (it has its own constant for the same number)
+
+function Get-StayOnRecordPath([string]$PhoneKey, [string]$Dir = '') {
+    if (-not $Dir) { $Dir = Get-LeaseDir 'phone' }
+    return Join-Path $Dir ('stayon-{0}.json' -f ($PhoneKey -replace '[^\w.-]', '_'))
+}
+
+# A record older than this is never written back: the setting may have been changed on purpose since.
+$script:StayOnRecordMaxAge = [TimeSpan]::FromHours(24)
+
+# The record as written, or $null when there is none, it is unreadable or it holds no usable numbers. No age check here: Get-StayOnRecordAction decides.
+function Read-StayOnOriginal([string]$PhoneKey, [string]$Dir = '') {
+    $path = Get-StayOnRecordPath $PhoneKey $Dir
+    if (-not (Test-Path $path)) { return $null }
+    try { $record = [IO.File]::ReadAllText($path) | ConvertFrom-Json -ErrorAction Stop } catch { return $null }
+    if ("$($record.orig)" -notmatch '^\d+$' -or "$($record.set)" -notmatch '^\d+$') { return $null }
+    if ("$($record.phone)" -cne $PhoneKey) { return $null }
+    return $record
+}
+
+# Pure: the age of a record, or $null when its write time is missing or unreadable.
+function Get-StayOnRecordAge($Record, [DateTime]$NowUtc) {
+    $saved = [DateTime]::MinValue
+    if ($Record.savedUtc -is [DateTime]) { $saved = $Record.savedUtc }   # PowerShell 7's ConvertFrom-Json turns the ISO text into a date; 5.1 leaves the text
+    elseif (-not [DateTime]::TryParse("$($Record.savedUtc)", [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::RoundtripKind, [ref]$saved)) { return $null }
+    return ($NowUtc.ToUniversalTime() - $saved.ToUniversalTime())
+}
+
+# Pure: what to do with a record. 'Restore' (the restore rule, then delete), 'Delete' (stale and dead: delete, write nothing) or 'LeaveAlone' (a live process or a live lease of another owner may still need it).
+# $Owner is the caller's lease owner ('' for a caller that owns nothing, such as preflight.ps1 -Fix); $PidAlive says whether the record's pid is a running process; $OwnerLeaseLive whether the record's owner still holds the phone lease.
+function Get-StayOnRecordAction($Record, [string]$Owner, [int]$MyPid, [bool]$PidAlive, [bool]$OwnerLeaseLive, [DateTime]$NowUtc) {
+    $mine = ("$($Record.owner)" -ceq $Owner -and $Owner -ne '')
+    $age = Get-StayOnRecordAge $Record $NowUtc
+    $stale = ($null -eq $age -or $age -lt [TimeSpan]::Zero -or $age -gt $script:StayOnRecordMaxAge)
+    if (-not $mine) {
+        $running = ($PidAlive -and [int]$Record.pid -ne $MyPid)
+        if (($running -and -not $stale) -or $OwnerLeaseLive) { return 'LeaveAlone' }
+    }
+    if ($stale) { return 'Delete' }
+    return 'Restore'
+}
+
+function Test-ProcessAlive([int]$ProcessId) {
+    if ($ProcessId -le 0) { return $false }
+    return [bool](Get-Process -Id $ProcessId -ErrorAction SilentlyContinue)
+}
+
+# The one restore rule: orig is written back only if the phone's current value still equals set; the record is then deleted either way. Returns { Restored; Value; Action } or $null when there was no record.
+# Never hands a record to another owner: a record of someone else is only healed when it is dead (see Get-StayOnRecordAction).
+function Invoke-StayOnRestore([string]$Serial, [string]$PhoneKey, [string]$Owner, [string]$Dir = '', [DateTime]$NowUtc = [DateTime]::UtcNow) {
+    $record = Read-StayOnOriginal $PhoneKey $Dir
+    if (-not $record) { return $null }
+    $held = Read-Lease $PhoneKey
+    $leaseLive = [bool]($held -and "$($held.Owner)" -ceq "$($record.owner)")
+    $action = Get-StayOnRecordAction $record $Owner $PID (Test-ProcessAlive ([int]$record.pid)) $leaseLive $NowUtc
+    $result = [pscustomobject]@{ Restored = $false; Value = "$($record.orig)"; Action = $action }
+    if ($action -eq 'LeaveAlone') { return $result }
+    $path = Get-StayOnRecordPath $PhoneKey $Dir
+    if ($action -eq 'Restore') {
+        $current = "$(Invoke-Adb $Serial @('shell', 'settings', 'get', 'global', $script:StayOnSetting))".Trim()
+        if ($current -ceq "$($record.set)") {
+            Invoke-Adb $Serial @('shell', 'settings', 'put', 'global', $script:StayOnSetting, "$($record.orig)") | Out-Null
+            $result.Restored = $true
+        }
+    }
+    Remove-Item $path -Force -ErrorAction SilentlyContinue
+    return $result
+}
+
+# $true when this call wrote a new record. Never replaces or hands over an existing one: the caller heals a dead record first (Invoke-StayOnRestore), so what is left is a live one and is kept.
+# A value that is not a number ("null": never set) is recorded as 0.
+function Save-StayOnOriginal([string]$PhoneKey, [string]$Value, [string]$Dir = '', [DateTime]$NowUtc = [DateTime]::UtcNow, [string]$Owner = '', [int]$ProcessId = $PID) {
+    $path = Get-StayOnRecordPath $PhoneKey $Dir
+    if (Read-StayOnOriginal $PhoneKey $Dir) { return $false }
+    $number = if ("$Value".Trim() -match '^\d+$') { "$Value".Trim() } else { '0' }
+    $null = New-Item -ItemType Directory -Force (Split-Path $path)
+    @{ orig = $number; set = $script:StayOnSetValue; phone = $PhoneKey; owner = $Owner; pid = $ProcessId; savedUtc = $NowUtc.ToString('o') } | ConvertTo-Json | Set-Content $path
+    return $true
+}
+
+# Called right after an owner took (not renewed) the phone lease: first heals a dead run's record (so its 7 is never read as the original), then records the setting as it is now for that owner.
+function Save-StayOnForLease([string]$AdbSerial, [string]$PhoneKey, [string]$Owner) {
+    $null = Invoke-StayOnRestore $AdbSerial $PhoneKey $Owner
+    $value = "$(Invoke-Adb $AdbSerial @('shell', 'settings', 'get', 'global', $script:StayOnSetting))".Trim()
+    return (Save-StayOnOriginal $PhoneKey $value '' ([DateTime]::UtcNow) $Owner)
+}
+
+# The one way a lease holder lets the phone go (lease.ps1 -Release and every exit of a timed run): it puts the stay-on setting back, then releases.
+# Only the owner of a held lease does either; the restore never blocks the release (a dropped phone is said, not thrown). Returns $true when the lease was released.
+function Close-PhoneLease([string]$AdbSerial, [string]$PhoneKey, [string]$Owner) {
+    $held = Read-Lease $PhoneKey
+    if (-not ($held -and $held.Owner -ceq $Owner)) { return (Remove-Lease $PhoneKey $Owner) }
+    try {
+        $restored = Invoke-StayOnRestore $AdbSerial $PhoneKey $Owner
+        if ($restored -and $restored.Restored) { Write-Host "stay_on_while_plugged_in put back to $($restored.Value) (the screen is left to the phone's own timeout)." }
+        elseif ($restored) { Write-Host "stay_on_while_plugged_in left as it is (it no longer holds the value this tooling set, or the record is not this lease's)." }
+    } catch { Write-Host "WARNING: could not put the screen timeout back: $($_.Exception.Message)" }
+    return (Remove-Lease $PhoneKey $Owner)
 }

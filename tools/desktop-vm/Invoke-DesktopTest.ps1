@@ -30,7 +30,10 @@ param(
     [string] $CopyOut,
     [switch] $SkipPreflight,
     # Slice 215: copy a host copy of this voice pack (the packs release asset, cached once under <worktrees>\_builds\packs) into the guest app's LocalCache\packs after the install.
-    [string] $WithPack
+    [string] $WithPack,
+    # Slice 225 item 20: the VM start needs this much free physical memory (GB); below it the script stops at once with a plain message, before the build and before Start-VM.
+    # (Two starts failed late with 0x8007000E and 0x800705AA at about 6.9 GB free on 2026-10-31.)
+    [double] $MinFreeMemoryGB = 8
 )
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot\_common.ps1"
@@ -46,7 +49,7 @@ if ($App -eq 'auto') {
     if ($touched.Count -eq 0) { Write-Host 'NO WINDOWS APP IS TOUCHED BY THIS CHANGE: no desktop test ran. That is a skip, not a test pass.'; exit 0 }
     $worst = 0
     foreach ($name in $touched) {
-        & $PSCommandPath -App $name -VmRoot $VmRoot -Sabotage $Sabotage -KeepRunning:$KeepRunning -SkipPreflight:$SkipPreflight
+        & $PSCommandPath -App $name -VmRoot $VmRoot -Sabotage $Sabotage -KeepRunning:$KeepRunning -SkipPreflight:$SkipPreflight -MinFreeMemoryGB $MinFreeMemoryGB
         # A real failed check (1) outranks a NO-GO (3) from another app, whatever the order, so a caller that reads 3 as "environment, ask" never misses a failure.
         if ($LASTEXITCODE -eq $script:PreflightExitCode) { if ($worst -eq 0) { $worst = $script:PreflightExitCode } }
         elseif ($LASTEXITCODE -ne 0) { $worst = 1 }
@@ -147,7 +150,24 @@ function Write-Results {
     }
 }
 
+# Slice 225 item 20: pure, so the message is tested without a VM.
+function Get-MemoryProblem([double] $FreeGB, [double] $NeedGB) {
+    if ($FreeGB -ge $NeedGB) { return $null }
+    return "needs $NeedGB GB free memory to start the VM, has $FreeGB GB. Close something (a second emulator, a build) or wait, then run it again."
+}
+
+# Review 3: a VM left running (-KeepRunning) already holds its RAM, so the free-memory guard would stop a start that needs no new memory. Unreadable state counts as not running.
+function Test-VmRunning {
+    try { return ((Get-VM -Name $script:VmName -ErrorAction Stop).State -eq 'Running') } catch { return $false }
+}
+
+function Get-FreeMemoryGB { return [math]::Round((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB, 1) }   # FreePhysicalMemory is in KB
+
 # ---- main ----
+$memoryProblem = $null
+if (Test-VmRunning) { Write-Host 'Free-memory guard skipped: the test VM is already running (it already holds its memory).' }
+else { $memoryProblem = Get-MemoryProblem (Get-FreeMemoryGB) $MinFreeMemoryGB }
+if ($memoryProblem) { Write-Host "$($script:PreflightNoGo): $memoryProblem"; exit $script:PreflightExitCode }
 $msix = Find-Package
 $credential = Get-VmCredential
 $results = @()

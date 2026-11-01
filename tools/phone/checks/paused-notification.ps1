@@ -1,3 +1,4 @@
+# check: Apps=rtst EstimateSeconds=240 NeedsPack=true Variant=debug
 <#
 .SYNOPSIS
   paused-notification: when Android stops the download service on its time limit, the app posts "Download paused. Tap to finish." (Slice 208).
@@ -67,6 +68,7 @@ function Assert-TimeLimitPhone {
 function Start-AppHeal {
     $script:AppUid = Get-PackageUid $Phone $package
     Start-DeviceRestore $Phone $package $script:AppUid $script:DeviceRestoreSeconds
+    $script:HealStarted = $true
 }
 
 function Set-ShortTimeLimit {
@@ -75,18 +77,29 @@ function Set-ShortTimeLimit {
     Invoke-Adb $Phone @('shell', 'am', 'compat', 'enable', 'FGS_INTRODUCE_TIME_LIMITS', $package) | Out-Null
 }
 
-# Never throws: runs in the finally block.
+# Never throws: runs in the finally block. $true when both resets reached the phone.
 function Reset-TimeLimit {
     try {
         Invoke-Adb $Phone @('shell', 'device_config', 'delete', 'activity_manager', 'data_sync_fgs_timeout_duration') | Out-Null
         Invoke-Adb $Phone @('shell', 'am', 'compat', 'reset', 'FGS_INTRODUCE_TIME_LIMITS', $package) | Out-Null
-    } catch { Write-Host "   WARNING: could not reset the dataSync timeout: $($_.Exception.Message)" }
+        return $true
+    } catch { Write-Host "   WARNING: could not reset the dataSync timeout: $($_.Exception.Message)"; return $false }
 }
 
 # Only the dev app's network is cut (never wifi/data: the adb link is wireless, Slice 208 rule). The cut is made after the time limit fired so the run ends unfinished; always lifted in the finally block.
+# Slice 225 item 15: with no uid (Get-PackageUid threw before it was read) `netpolicy remove ... 0` must never run. Round 3: that is NOT a restore: it returns $false ("not restored (no uid)"),
+# so the device-side heal is not cancelled and a leftover block for the real uid from a dead run is still cleared by it. $true when the block is off.
 function Set-Network([bool]$On) {
-    try { Set-AppNetworkBlocked $Phone $script:AppUid (-not $On) }
-    catch { Write-Host "   WARNING: could not $(if ($On) { 'lift' } else { 'set' }) the app network block: $($_.Exception.Message)" }
+    if (-not $script:AppUid) { Write-Host '   network block not restored (no uid): none was read, so the device-side heal is left to run'; return $false }
+    try { Set-AppNetworkBlocked $Phone $script:AppUid (-not $On); return $true }
+    catch { Write-Host "   WARNING: could not $(if ($On) { 'lift' } else { 'set' }) the app network block: $($_.Exception.Message)"; return $false }
+}
+
+# The fast path restored everything over adb: the device-side heal is no longer needed and must not fire into a later run. If the fast path failed it is left to heal.
+function Stop-HealWhenRestored([bool]$NetworkRestored, [bool]$TimeLimitRestored) {
+    if (-not ($NetworkRestored -and $TimeLimitRestored)) { Write-Host '   the fast restore did not finish: the device-side restore is left to heal the phone'; return }
+    $cancelled = Stop-DeviceRestore $Phone $package
+    Write-Host "   device-side restore $(if ($cancelled) { 'cancelled (the fast restore finished)' } else { 'was not pending' })"
 }
 
 # Step 7 end: after the content intent the run restarts (PACKDL start again) and the notice is removed.
@@ -207,7 +220,7 @@ function Invoke-PausedCheck {
         $drop = Send-DevHook $Phone $App 'drop-pack-network'
         Write-Host "   drop-pack-network: $drop"
     } else {
-        Set-Network $false
+        $null = Set-Network $false
     }
     $marker = Wait-LogMatch $Phone $package $appPid $script:PausedMarkerPattern $PausedTimeoutSeconds $cutAt "waiting for PACKDL paused-notified after the run failed"
     if (-not $marker) { return (New-CheckResult $false "no 'PACKDL service paused-notified' within $PausedTimeoutSeconds s of cutting the network (the run did not end unfinished, or the app was on screen). The app's last lines: $(Get-AppLogTail (Get-PidLog $Phone $appPid) 6)") }
@@ -216,7 +229,7 @@ function Invoke-PausedCheck {
     $note = Wait-PausedNotice $since
     if (-not $note) { return (New-CheckResult $false "the log said paused-notified but no notification titled '$($script:PausedTitle)' is in dumpsys notification (notifications off for the dev app?)") }
     if (-not (Test-PausedText $note)) { return (New-CheckResult $false "the paused notification does not name the language and the size: title '$($note.Title)', text '$($note.Text)'") }
-    if (-not $NetworkOnly) { Set-Network $true }
+    if (-not $NetworkOnly) { $null = Set-Network $true }
     if (-not (Test-AppResumedAfterTap)) { return (New-CheckResult $false "launching the notice's target did not bring $package to the foreground") }
     $restart = Wait-LogMatch $Phone $package $appPid $script:PackStartPattern $script:ResumeSeconds ($marker.Time + 0.001) "waiting for the download to start again"
     if (-not $restart) { return (New-CheckResult $false "the download did not log PACKDL start again within $($script:ResumeSeconds) s of the network coming back and the app opening") }
@@ -238,8 +251,10 @@ try {
     $result = New-CheckResult $false "check could not run: $($_.Exception.Message)"
     if (-not $moved -and (Test-PhonePathExists $movedPath)) { $moved = $true }   # the move happened but something after it threw
 } finally {
-    if (-not $NetworkOnly) { Set-Network $true }   # the network-only variant never blocks the app's network (Slice 233)
-    if (-not $NetworkOnly) { Reset-TimeLimit }   # the network-only variant never set the timeout or the compat flag: leave any the phone already had
+    $networkRestored = $true; $timeLimitRestored = $true
+    if (-not $NetworkOnly) { $networkRestored = Set-Network $true }   # the network-only variant never blocks the app's network (Slice 233)
+    if (-not $NetworkOnly) { $timeLimitRestored = Reset-TimeLimit }   # the network-only variant never set the timeout or the compat flag: leave any the phone already had
+    if ($script:HealStarted) { Stop-HealWhenRestored $networkRestored $timeLimitRestored }
     if ($moved) { $restoreProblem = Restore-MovedPack }
 }
 if ($budgetError -and -not $restoreProblem) { throw $result.Detail.Substring('check could not run: '.Length) }   # a timeout stays a TIMEOUT (the pack is restored first)

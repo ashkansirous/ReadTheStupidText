@@ -35,6 +35,8 @@
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackDownloadHost.cs" Link="Mobile\PackDownloadHost.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackKeepAlivePolicy.cs" Link="Mobile\PackKeepAlivePolicy.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\StalePartialPolicy.cs" Link="Mobile\StalePartialPolicy.cs" />
+    <!-- The launch scan's wanted/undecided pack rule (Slice 208), pulled out of the service so DecideAll is tested (Slice 225). -->
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\StalePartialDecider.cs" Link="Mobile\StalePartialDecider.cs" />
     <!-- The translation download session has no MAUI types (Slice 187). -->
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Translation\TranslationModelDownloadSession.cs" Link="Mobile\TranslationModelDownloadSession.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Translation\SingleModelCall.cs" Link="Mobile\SingleModelCall.cs" />

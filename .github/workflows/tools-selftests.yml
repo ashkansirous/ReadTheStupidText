@@ -11,6 +11,7 @@ on:
       - 'tools/**'
       - '.maestro/**'
       - '.github/workflows/tools-selftests.yml'
+      - 'PSScriptAnalyzerSettings.psd1'
 
 permissions:
   contents: read
@@ -71,3 +72,37 @@ jobs:
 
       - name: Phone leftovers self-test (${{ matrix.shell }})
         run: ./tools/phone/test-phone-leftovers.ps1
+
+      - name: Desktop test memory guard self-test (${{ matrix.shell }})
+        run: ./tools/desktop-vm/test-memory-guard.ps1
+
+      # Slice 225 item 17: PowerShell lint. PSScriptAnalyzer is installed on demand; PSScriptAnalyzerSettings.psd1 holds the baseline (rules that fire by design are off).
+      # Any Error-level finding and any parse error (checked with the shell's own parser, so PowerShell 7-only syntax fails the Windows PowerShell 5.1 leg) fails the job, except the one baseline
+      # entry: that rule in that one file (the VM password helper reads a local secret). Warnings are annotated, not failing.
+      - name: PowerShell lint (${{ matrix.shell }})
+        run: |
+          if (-not (Get-Module -ListAvailable PSScriptAnalyzer)) {
+            Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+            Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -SkipPublisherCheck
+          }
+          $baseline = @(@{ Rule = 'PSAvoidUsingConvertToSecureStringWithPlainText'; Script = 'tools/desktop-vm/_common.ps1' })
+          $newErrors = 0
+          foreach ($file in Get-ChildItem tools -Recurse -Filter *.ps1) {
+            $relative = ((Resolve-Path -Relative $file.FullName) -replace '^\.[\\/]', '') -replace '\\', '/'
+            $parseErrors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$null, [ref]$parseErrors)
+            foreach ($parseError in $parseErrors) {
+              Write-Host "::error file=$relative,line=$($parseError.Extent.StartLineNumber)::ParseError: $($parseError.Message)"
+              $newErrors++
+            }
+            foreach ($finding in Invoke-ScriptAnalyzer -Path $file.FullName -Settings ./PSScriptAnalyzerSettings.psd1) {
+              if ($finding.Severity -eq 'ParseError') { continue }   # counted above
+              if ($finding.Severity -ne 'Error') { Write-Host "::warning file=$relative,line=$($finding.Line)::$($finding.RuleName): $($finding.Message)"; continue }
+              $known = @($baseline | Where-Object { $_.Rule -eq $finding.RuleName -and $_.Script -eq $relative }).Count -gt 0
+              if ($known) { Write-Host "baseline error kept: $($finding.RuleName) in $relative line $($finding.Line)"; continue }
+              Write-Host "::error file=$relative,line=$($finding.Line)::$($finding.RuleName): $($finding.Message)"
+              $newErrors++
+            }
+          }
+          if ($newErrors -gt 0) { Write-Host "$newErrors new PSScriptAnalyzer error(s)."; exit 1 }
+          Write-Host 'PSScriptAnalyzer: no new error-level finding.'

@@ -1,3 +1,4 @@
+# check: Apps=rtst,dino EstimateSeconds=180 NeedsPack=true Variant=debug
 <#
 .SYNOPSIS
   language: switch the app's UI language through the Debug `set-language` hook, language after language (Slice 209, Slice 213 runner).
