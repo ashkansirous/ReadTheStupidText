@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "18cab2f1fec84aad831ba12dccad5336",
   "title": "The Tale of Peter Rabbit",
-  "version": 10,
+  "version": 11,
   "ageMin": 3,
   "ageMax": 6,
   "author": "Beatrix Potter",
@@ -74,7 +74,7 @@
     "Peter": "Rabbit",
     "Flopsy": "Rabbit"
   },
-  "contentHash": "e4e99e537315ce159894065b9bfa49b472bbf04193ebf02a6e40fc7f57554630",
+  "contentHash": "d3f6c0f6fe8e1b56cf04b435ad16194f22e29c13e13da17e8d6d6878a4b0f4a7",
   "creditsByLanguage": {
     "ar": "بياتريكس بوتر، 1902 (مُعاد سردها)",
     "da": "Beatrix Potter, 1902 (genfortalt)",
@@ -90,5 +90,7 @@
     "ru": "Беатрис Поттер, 1902 (пересказ)",
     "sv": "Beatrix Potter, 1902 (återberättad)",
     "zh": "比阿特丽克斯·波特，1902年（改写）"
-  }
+  },
+  "storyBy": "Beatrix Potter",
+  "retold": true
 }

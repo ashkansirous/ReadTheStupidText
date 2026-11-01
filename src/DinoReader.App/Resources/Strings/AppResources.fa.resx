@@ -415,4 +415,13 @@
   <data name="PackNotify_PausedTitle" xml:space="preserve"><value>دانلود متوقف شد. برای پایان دادن ضربه بزنید.</value></data>
   <data name="PackNotify_Named" xml:space="preserve"><value>صدای {0} ({1} مگابایت)</value></data>
   <data name="PackNotify_PausedDetail" xml:space="preserve"><value>صدای {0} ({1} مگابایت) · {2}% انجام شد</value></data>
+  <data name="BackCover_StoryBy" xml:space="preserve"><value>داستان از {0}</value></data>
+  <data name="BackCover_OriginalStoryBy" xml:space="preserve"><value>داستان اصلی از {0}</value></data>
+  <data name="BackCover_Traditional" xml:space="preserve"><value>یک قصهٔ قدیمی</value></data>
+  <data name="BackCover_RetoldBy" xml:space="preserve"><value>بازنویسی برای کودکان توسط {0}</value></data>
+  <data name="BackCover_Illustration" xml:space="preserve"><value>تصویرگری: {0}</value></data>
+  <data name="BackCover_Date" xml:space="preserve"><value>{0} {1}</value></data>
+  <data name="BackCover_Months" xml:space="preserve"><value>ژانویه|فوریه|مارس|آوریل|مه|ژوئن|ژوئیه|اوت|سپتامبر|اکتبر|نوامبر|دسامبر</value></data>
+  <data name="BackCover_Digits" xml:space="preserve"><value>۰۱۲۳۴۵۶۷۸۹</value></data>
+  <data name="BackCover_And" xml:space="preserve"><value>{0} و {1}</value></data>
 </root>

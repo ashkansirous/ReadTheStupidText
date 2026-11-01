@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "af402c9974294fcb91a2c8a985c17558",
   "title": "Freddy and the Slipper",
-  "version": 2,
+  "version": 3,
   "ageMin": 3,
   "ageMax": 6,
   "author": "Elham Shafiei Gol & Ashkan Sirous",
@@ -55,7 +55,7 @@
     "Mummy",
     "Tummy"
   ],
-  "contentHash": "845484b3b3f2834036e3bdb1c341c8e8b3d5ab7b1ed41a9cead93e64e7aa78eb",
+  "contentHash": "353fc4dcdad0da370f8ebce5258dd4ddc569b217096278ac37a5a39b12fd681e",
   "creditsByLanguage": {
     "ar": "بقلم إلهام شفيعي گل وأشكان سيروس · مجاني للمشاركة",
     "da": "Af Elham Shafiei Gol og Ashkan Sirous · frit at dele",
@@ -71,5 +71,6 @@
     "ru": "Авторы: Эльхам Шафиеи Гол и Ашкан Сирус · можно свободно делиться",
     "sv": "Av Elham Shafiei Gol och Ashkan Sirous · fri att dela",
     "zh": "作者：埃尔哈姆·沙菲伊·戈尔、阿什坎·西鲁斯 · 可自由分享"
-  }
+  },
+  "storyBy": "Elham Shafiei Gol; Ashkan Sirous"
 }

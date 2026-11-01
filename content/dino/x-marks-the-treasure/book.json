@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "a02c0731b7ac475a896e9184f3575e7b",
   "title": "X Marks the Treasure!",
-  "version": 7,
+  "version": 8,
   "ageMin": 3,
   "ageMax": 6,
   "author": "Ashkan Sirous",
@@ -73,7 +73,7 @@
       ]
     }
   ],
-  "contentHash": "d66dff877ed8835eb890d0b5a42d7d7ce544d9d55ac9631d68fa68b038998d3e",
+  "contentHash": "832639b69c9ec1c4253b4453c605fd97b9ba6c9457f4e884e0822f1bfddd8f14",
   "creditsByLanguage": {
     "ar": "كتاب مصوّر من دينو ريدر · مجاني للمشاركة",
     "da": "En billedbog fra Dino Reader · frit at dele",
@@ -89,5 +89,6 @@
     "ru": "Книжка с картинками Dino Reader · можно свободно делиться",
     "sv": "En bilderbok från Dino Reader · fri att dela",
     "zh": "恐龙阅读器绘本 · 可自由分享"
-  }
+  },
+  "storyBy": "Ashkan Sirous"
 }

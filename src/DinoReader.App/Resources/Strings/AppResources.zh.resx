@@ -415,4 +415,13 @@
   <data name="PackNotify_PausedTitle" xml:space="preserve"><value>下载已暂停。点按即可完成。</value></data>
   <data name="PackNotify_Named" xml:space="preserve"><value>{0}语音（{1} MB）</value></data>
   <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}语音（{1} MB）· 已完成 {2}%</value></data>
+  <data name="BackCover_StoryBy" xml:space="preserve"><value>故事：{0}</value></data>
+  <data name="BackCover_OriginalStoryBy" xml:space="preserve"><value>原作：{0}</value></data>
+  <data name="BackCover_Traditional" xml:space="preserve"><value>传统故事</value></data>
+  <data name="BackCover_RetoldBy" xml:space="preserve"><value>为小读者改写：{0}</value></data>
+  <data name="BackCover_Illustration" xml:space="preserve"><value>插图：{0}</value></data>
+  <data name="BackCover_Date" xml:space="preserve"><value>{1}年{0}</value></data>
+  <data name="BackCover_Months" xml:space="preserve"><value>1月|2月|3月|4月|5月|6月|7月|8月|9月|10月|11月|12月</value></data>
+  <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
+  <data name="BackCover_And" xml:space="preserve"><value>{0}和{1}</value></data>
 </root>

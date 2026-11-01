@@ -415,4 +415,13 @@
   <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Descarga en pausa. Toca para terminar.</value></data>
   <data name="PackNotify_Named" xml:space="preserve"><value>Voz {0} ({1} MB)</value></data>
   <data name="PackNotify_PausedDetail" xml:space="preserve"><value>Voz {0} ({1} MB) · {2} % completado</value></data>
+  <data name="BackCover_StoryBy" xml:space="preserve"><value>Historia de {0}</value></data>
+  <data name="BackCover_OriginalStoryBy" xml:space="preserve"><value>Historia original de {0}</value></data>
+  <data name="BackCover_Traditional" xml:space="preserve"><value>Un cuento tradicional</value></data>
+  <data name="BackCover_RetoldBy" xml:space="preserve"><value>Adaptado para jóvenes lectores por {0}</value></data>
+  <data name="BackCover_Illustration" xml:space="preserve"><value>Ilustración: {0}</value></data>
+  <data name="BackCover_Date" xml:space="preserve"><value>{0} de {1}</value></data>
+  <data name="BackCover_Months" xml:space="preserve"><value>enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre</value></data>
+  <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
+  <data name="BackCover_And" xml:space="preserve"><value>{0} y {1}</value></data>
 </root>

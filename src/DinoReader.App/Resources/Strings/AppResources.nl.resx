@@ -414,4 +414,13 @@
   <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Download gepauzeerd. Tik om af te ronden.</value></data>
   <data name="PackNotify_Named" xml:space="preserve"><value>{0}-stem ({1} MB)</value></data>
   <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-stem ({1} MB) · {2}% klaar</value></data>
+  <data name="BackCover_StoryBy" xml:space="preserve"><value>Verhaal van {0}</value></data>
+  <data name="BackCover_OriginalStoryBy" xml:space="preserve"><value>Oorspronkelijk verhaal van {0}</value></data>
+  <data name="BackCover_Traditional" xml:space="preserve"><value>Een traditioneel verhaal</value></data>
+  <data name="BackCover_RetoldBy" xml:space="preserve"><value>Naverteld voor jonge lezers door {0}</value></data>
+  <data name="BackCover_Illustration" xml:space="preserve"><value>Illustratie: {0}</value></data>
+  <data name="BackCover_Date" xml:space="preserve"><value>{0} {1}</value></data>
+  <data name="BackCover_Months" xml:space="preserve"><value>januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december</value></data>
+  <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
+  <data name="BackCover_And" xml:space="preserve"><value>{0} en {1}</value></data>
 </root>

@@ -181,7 +181,7 @@ public sealed class BookBuilderTests : IDisposable
         string dir = Path.Combine(_root, "tiny");
         Directory.CreateDirectory(dir);
         File.WriteAllText(Path.Combine(dir, BookFolder.StoryFile), text);
-        var info = new BookInfo(BookKind.Store, "a02c0731b7ac475a896e9184f3575e7b", "Tiny", 1, 3, 6, "Me", "Mine", 0, "2026-10-27", 0, null, null, null, null, string.Empty, null, AllCredits());
+        var info = new BookInfo(BookKind.Store, "a02c0731b7ac475a896e9184f3575e7b", "Tiny", 1, 3, 6, "Me", "Mine", 0, "2026-10-27", 0, null, null, null, null, string.Empty, null, AllCredits(), "Me");
         return new BookFolder("tiny", dir, info);
     }
 }

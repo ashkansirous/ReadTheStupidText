@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "1ca50c6936cc44788b992726784e8132",
   "title": "The Lion and the Mouse",
-  "version": 9,
+  "version": 10,
   "ageMin": 4,
   "ageMax": 7,
   "author": "Aesop",
@@ -36,7 +36,7 @@
       ]
     }
   ],
-  "contentHash": "63911f1bcf8a97ad1d87739d3e93f2e344a1d19db997b62e9c70bb302eb2d210",
+  "contentHash": "b18f66927aafa25c7a47a4a5cec7b4df13a74e7664cc83ceb476e3c0d3fe1cc8",
   "creditsByLanguage": {
     "ar": "مُعاد سردها عن إيسوب · مجانية للمشاركة",
     "da": "Genfortalt efter Æsop · frit at dele",
@@ -52,5 +52,7 @@
     "ru": "Пересказ басни Эзопа · можно свободно делиться",
     "sv": "Återberättad efter Aisopos · fri att dela",
     "zh": "改编自伊索寓言 · 可自由分享"
-  }
+  },
+  "storyBy": "Aesop",
+  "retold": true
 }

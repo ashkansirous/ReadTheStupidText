@@ -218,7 +218,8 @@ internal static class StarterBuilder
             }
         }
 
-        return story with { Translations = tables.Count == 0 ? null : tables, TextInPictures = Books.Folder(stem).Info.TextInPictures == true };
+        BookInfo info = Books.Folder(stem).Info;
+        return story with { Translations = tables.Count == 0 ? null : tables, TextInPictures = info.TextInPictures == true, BackCover = info.BackCover };
     }
 
     /// <summary>The picture starter: pages from <c>lines.json</c> (lines joined by a newline, so the geometry rules apply; a page with only

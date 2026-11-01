@@ -39,6 +39,9 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
    name (Wolf, Papa Bear); a character whose name does not say it (Pip the pig, Little Billy the goat) goes in the `animals` of the book's `book.json` (name to kind),
    and one that is a person, or an animal that should be cast like one, in its `notAnimals`. Anything left over is stored as none.
    List each character with its animal in your report; a wrong one is silent or sounds wrong.
+   Back cover (Slice 237): set `storyBy` in the book's `book.json` (the original author's name, checked; `"traditional"` for a tale nobody owns; the user's own books: the user's name,
+   plus a co-author if there is one) and `retold: true` when the book retells someone else's story. The builder makes the silent credits page from them; never write it into `story.md`.
+   Say in your report who you credited and how you know.
    Voices (Slice 156, Decision 161): the book, not the app, chooses each character's voice. Give every character an entry in the `cast` of the book's `book.json`
    (matched by character name; `dotnet run --project tools/DinoReader.BookBuilder -- dump-voices` prints a mechanical starting point): a suggested roster id from `CharacterRoster` (read the English list in `CharacterRosterEnglish.cs`; the ids
    are the same in every language, and one the language lacks falls back to the closest traits), the gender, an age (`Baby`/`Child`/`Young`/`Adult`/`Old`), what it is when

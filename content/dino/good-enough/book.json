@@ -2,7 +2,7 @@
   "kind": "Starter",
   "id": "61bb25b8f132413c82a4208827c7563b",
   "title": "Good Enough",
-  "version": 6,
+  "version": 7,
   "ageMin": 5,
   "ageMax": 8,
   "author": "Ashkan Sirous",
@@ -22,7 +22,7 @@
       ]
     }
   ],
-  "contentHash": "27fc33d6f2af8ec8da19a29491d2c81f94bddd924778ab76d9ef3ab3341bccb8",
+  "contentHash": "91d05aea1746eef6b4d2e7631948cee6f7851b205b4b960ee23b13134e1d97ad",
   "textInPictures": true,
   "creditsByLanguage": {
     "ar": "كتاب مصوّر من دينو ريدر · مجاني للمشاركة",
@@ -39,5 +39,6 @@
     "ru": "Книжка с картинками Dino Reader · можно свободно делиться",
     "sv": "En bilderbok från Dino Reader · fri att dela",
     "zh": "恐龙阅读器绘本 · 可自由分享"
-  }
+  },
+  "storyBy": "Ashkan Sirous"
 }

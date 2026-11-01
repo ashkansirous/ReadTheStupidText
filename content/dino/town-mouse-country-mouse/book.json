@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "67dfb7db7c1c418c811cfed88876327f",
   "title": "The Town Mouse and the Country Mouse",
-  "version": 8,
+  "version": 9,
   "ageMin": 4,
   "ageMax": 7,
   "author": "Aesop",
@@ -36,7 +36,7 @@
       ]
     }
   ],
-  "contentHash": "b1114d9b4e919ed58457720d2870940d9b19592360c5c0cf207e77740956c453",
+  "contentHash": "605183e8a96cc0ce9f370499073f83e4e885be377971b1d6bf5776a08c656126",
   "creditsByLanguage": {
     "ar": "مُعاد سردها عن إيسوب · مجانية للمشاركة",
     "da": "Genfortalt efter Æsop · frit at dele",
@@ -52,5 +52,7 @@
     "ru": "Пересказ басни Эзопа · можно свободно делиться",
     "sv": "Återberättad efter Aisopos · fri att dela",
     "zh": "改编自伊索寓言 · 可自由分享"
-  }
+  },
+  "storyBy": "Aesop",
+  "retold": true
 }

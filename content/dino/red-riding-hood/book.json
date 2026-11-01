@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "1f0f0cb207b244368b7aef26028f4ac5",
   "title": "Little Red Riding Hood",
-  "version": 9,
+  "version": 10,
   "ageMin": 4,
   "ageMax": 7,
   "author": "Traditional",
@@ -73,7 +73,7 @@
       ]
     }
   ],
-  "contentHash": "870398160da97257d3cbba86c8456a7e08cafa0a48f1a622ff3a9c467809d81b",
+  "contentHash": "cfd7f7260b5de1251a17f790fd1febac8a3ec25a5592efef951e45382c310873",
   "creditsByLanguage": {
     "ar": "حكاية شعبية مُعاد سردها · مجانية للمشاركة",
     "da": "Genfortalt folkeeventyr · frit at dele",
@@ -89,5 +89,7 @@
     "ru": "Пересказ народной сказки · можно свободно делиться",
     "sv": "Återberättad folksaga · fri att dela",
     "zh": "传统故事新编 · 可自由分享"
-  }
+  },
+  "storyBy": "Charles Perrault; Brothers Grimm",
+  "retold": true
 }
