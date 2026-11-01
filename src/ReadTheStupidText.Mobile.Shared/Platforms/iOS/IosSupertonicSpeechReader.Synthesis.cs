@@ -98,7 +98,15 @@ public sealed partial class IosSupertonicSpeechReader
             rescue = await SilentOutputGuard.RescueUnitAsync(
                 sentence, voice.Id, pace, SiblingVoice.IsDropProne(voice), phrase => TakeAsync(engine, phrase, voice.SpeakerId, pace),
                 message => _log.Warning(message), token, phrase => SiblingTakeAsync(engine, phrase, voice, pace, token),
-                message => _log.Debug(message));
+                message => _log.Debug(message),
+                probe: ShortLineProbe.InThisBuild,
+                singleThread: engine.Model.Kind == VoiceEngineKind.Kokoro ? async phrase =>
+                {
+                    await IosTtsEngine.PrepareSingleThreadAsync(engine, token);
+                    return await TakeAsync(engine, phrase, voice.SpeakerId, pace, singleThread: true);
+                }
+                : null,
+                nanRescue: KokoroEngineConfig.NanRescue);
         }
         finally
         {
@@ -121,9 +129,10 @@ public sealed partial class IosSupertonicSpeechReader
             token);
 
     // One take of the voice, copied out so the native audio is released at once (Slice 149).
-    private static async Task<SpokenTake> TakeAsync(IosBuiltEngine engine, string text, int speakerId, float pace)
+    // singleThread (Slice 220, Kokoro only): the take runs on the engine's lazily built single-thread twin.
+    private static async Task<SpokenTake> TakeAsync(IosBuiltEngine engine, string text, int speakerId, float pace, bool singleThread = false)
     {
-        OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, text, speakerId, pace);
+        OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, text, speakerId, pace, singleThread);
         try
         {
             return new SpokenTake(audio.Samples, audio.SampleRate);
@@ -138,7 +147,7 @@ public sealed partial class IosSupertonicSpeechReader
     // reference on the engine, released by the task itself when the call returns (success, fault
     // or abandonment alike, so the count stays balanced): a retired engine is disposed only once
     // it returns.
-    private static Task<OfflineTtsGeneratedAudio> GenerateGuardedAsync(IosBuiltEngine engine, string chunk, int speakerId, float pace)
+    private static Task<OfflineTtsGeneratedAudio> GenerateGuardedAsync(IosBuiltEngine engine, string chunk, int speakerId, float pace, bool singleThread = false)
     {
         if (!engine.TryAcquire())
         {
@@ -149,7 +158,7 @@ public sealed partial class IosSupertonicSpeechReader
         {
             try
             {
-                return IosTtsEngine.GenerateTracked(engine, chunk, speakerId, pace);
+                return IosTtsEngine.GenerateTracked(engine, chunk, speakerId, pace, singleThread);
             }
             finally
             {

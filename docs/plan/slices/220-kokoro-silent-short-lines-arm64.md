@@ -1,6 +1,6 @@
 ### Slice 220 — Kokoro returns silent audio for short lines on arm64
 
-*Planned (moved from parked by the user on 2026-11-01; the wave that claims it writes the new design first, starting from the NaN source).* Parked by the 2026-10-31 night run, draft PR #638 not merged: the S21 run rejected the design. The pause-mark padding never rescued a short line (bm_daniel: plain silent 2 of 4, dots-padded 3 of 4, comma-padded 3 of 4, gave up 3 of 4), and the silent takes are full length with NaN samples, not empty or all-zero, so the "short phoneme sequence collapses" hypothesis is wrong. Next: find where Kokoro's NaN output on arm64 comes from (onnxruntime threads or kernels, sherpa-onnx version, the input that triggers it) before any fix; the padding should not ship. Kept on the branch for reuse: the marker-file probe (`cache/rtst-short-line-probe`, confirmed on the phone) and the `short-lines` phone check. Fix the check's summary too: it prints `n/a` for a NaN peak. A new design needs the coordinator or the user, not another patch. Follow-up to Slice 210 (docs/plan/slices/210-kokoro-short-line-dropped.md).
+*Planned (part 1 merged in PR #638 on 2026-11-01: NaN detection and safety; next: the kokoro-en model swap above).* Earlier note: parked by the 2026-10-31 night run, draft PR #638 not merged: the S21 run rejected the design. The pause-mark padding never rescued a short line (bm_daniel: plain silent 2 of 4, dots-padded 3 of 4, comma-padded 3 of 4, gave up 3 of 4), and the silent takes are full length with NaN samples, not empty or all-zero, so the "short phoneme sequence collapses" hypothesis is wrong. Next: find where Kokoro's NaN output on arm64 comes from (onnxruntime threads or kernels, sherpa-onnx version, the input that triggers it) before any fix; the padding should not ship. Kept on the branch for reuse: the marker-file probe (`cache/rtst-short-line-probe`, confirmed on the phone) and the `short-lines` phone check. Fix the check's summary too: it prints `n/a` for a NaN peak. A new design needs the coordinator or the user, not another patch. Follow-up to Slice 210 (docs/plan/slices/210-kokoro-short-line-dropped.md).
 
 **Touches:** `src/ReadTheStupidText.Application/Reading/SilentOutputGuard.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader*.cs`, `src/ReadTheStupidText.Infrastructure/Reading/NeuralSentenceSource.cs`, `tests/ReadTheStupidText.Tests/**`, `tools/phone/**`, `docs/plan/slices/220-kokoro-silent-short-lines-arm64.md`
 
@@ -35,6 +35,8 @@ Run `pwsh -NoProfile -File tools/phone/run-checks.ps1 -App dino -Checks short-li
 - Accepted cost: the probe delays the first audio of a short Kokoro line by 3 extra syntheses, but only while the marker file `rtst-short-line-probe` is in the app's temp (Android cache) folder; the `short-lines` check creates it and removes it at the end, normal runs never probe. The check defaults to one voice (about 200 s); `-AllVoices` runs the four that failed.
 - Probe stops between takes on cancel and a probe failure is logged instead of failing the read. The check fails when a read never ended or has no probe line.
 - Review (medium) skipped: ProbeInThisBuild as compile-time #if DEBUG (store builds compile Release libraries; the probe is now a runtime marker file anyway); VoicedSpan helper duplication in Trim (style); padding on the first attempt or earlier for sibling (design choice, no measured failure; the phone run decides).
+- Review (medium, wave 2) fixed: a give-up take has its non-finite samples zeroed before it is handed to the player; the single-thread twin is keyed by the model it was built from (root, folder, language), disposed when the read ends (Stop, or the last owner leaves), and a failed twin build is not retried for the rest of that read (the next NaN take takes the plain retry); `ShortLineProbe.AppliesTo` has boundary and CJK tests. Android and iOS alike.
+- Review (medium, wave 2) skipped: NaN-as-failed on every engine (the design: a NaN sample is never valid speech on any engine, and the phone run decides whether the cost shows); preparing the twin once per read (a no-op when the twin is already built: the call only takes the lock and finds it). Finding 5 (last vs best stats): not a bug, a passing take returns at once, so the loop only reaches the end when every take failed.
 
 #### Verification
 
@@ -57,7 +59,84 @@ Run `pwsh -NoProfile -File tools/phone/run-checks.ps1 -App dino -Checks short-li
 
 The `[x]` items above describe padding code that is only on draft #638 and should not ship. The open `Phone run ... set DefaultStyle` item is moot. Next, in this order:
 
-- [ ] Count NaN samples per take (`float.IsNaN`), Debug-logged with no text, so it is clear whether every silent take is NaN. Verify: a `short-lines` run prints a NaN count for each silent probe.
+- [x] Count NaN samples per take (`float.IsNaN`), Debug-logged with no text, so it is clear whether every silent take is NaN. Verify: a `short-lines` run prints a NaN count for each silent probe.
 - [ ] Find where the NaN comes from on arm64 (onnxruntime threads or kernels, the sherpa-onnx version, the input that triggers it) before any fix. Verify: a written cause with the run that shows it.
-- [ ] Then design the fix from that cause (for example, treat a NaN take as failed and retry on another session or thread), reusing `tools/phone/checks/short-lines.ps1` from #638.
-- [ ] `short-lines` summary prints `NaN` for a NaN peak, not `n/a`, so the ZERO SAMPLES / ALL-ZERO / NaN split shows. Verify: its parser test in `tools/phone/test-run-checks.ps1` with a NaN row.
+- [x] Then design the fix from that cause (for example, treat a NaN take as failed and retry on another session or thread), reusing `tools/phone/checks/short-lines.ps1` from #638.
+- [x] `short-lines` summary prints `NaN` for a NaN peak, not `n/a`, so the ZERO SAMPLES / ALL-ZERO / NaN split shows. Verify: its parser test in `tools/phone/test-run-checks.ps1` with a NaN row.
+
+#### Redesign (2026-11-01)
+
+
+Facts: on the S21 the silent short-line takes have full length and NaN samples, random per take (2026-10-31 run).
+Kokoro runs with NumThreads = clamp(cores/2, 2, 4), provider cpu (KokoroEngineConfig.Configure,
+AndroidSupertonicSpeechReader.cs ~1248-1255, IosTtsEngine.cs ~182-189); sherpa-onnx 1.13.3, onnxruntime 1.24.3.
+Random NaN output from a multi-threaded CPU run points first at a threaded arm64 kernel; not proven.
+
+## Design
+
+1. Drop the pause-mark padding from the branch (ShortLinePadding, padded retries, trim, density threshold,
+   ShortLinePaddingTests). Keep the marker-file probe and the `short-lines` phone check.
+2. One pure helper in Application/Reading (e.g. `TakeStats.From(float[] samples, int sampleRate)`): sample count,
+   NaN count, peak over finite samples, voiced ms. Unit-tested. SilentOutputGuard uses it: a take with any NaN
+   sample is a failed take (the existing Slice 210 plain retry then runs), and its Debug log line carries the
+   NaN count (never the text).
+3. Diagnosis probe (Debug and marker file only, as today): for each short Kokoro line, 3 plain takes on the normal
+   engine and 3 plain takes on a single-thread Kokoro engine (same config, NumThreads = 1), created lazily only in
+   probe mode and disposed with the reader. One `short line probe` log line per arm with samples, NaN count, peak,
+   voiced ms. Android and iOS both (iOS compile only).
+4. Rescue, behind a named constant `KokoroNanRescue` (enum: Off, SingleThreadRetry; default SingleThreadRetry):
+   when a Kokoro take has NaN samples, its next retry runs on a lazily created single-thread engine (created on the
+   first NaN take, kept while the Kokoro pack is the active engine, disposed with the main engine; never created
+   when no NaN take happens). Both platforms through the shared guard; the engine factory lives in each platform
+   reader. The coordinator sets the default from the phone run: if single-thread takes show NaN as often as
+   multi-thread ones, the default becomes Off and the slice records the next candidate (sherpa-onnx / onnxruntime
+   version change) instead.
+5. `short-lines.ps1`: print NaN (not n/a) for a NaN peak, a NaN count column, and a summary split by arm
+   (multi-thread vs single-thread) and outcome (rescued by single-thread retry, gave up). Parser test in
+   tools/phone/test-run-checks.ps1 with a NaN row.
+
+## What the phone run decides (coordinator runs it after both reviews)
+
+- Confirmed: multi-thread probe NaN takes > 0 and single-thread NaN takes 0 (or near) on the same lines; `gave up 0/N`.
+- Rejected: single-thread NaN about as often. Then KokoroNanRescue default Off, record it, next candidate is the
+  runtime version.
+- Not reproduced: no NaN over >= 24 multi-thread probes. Record, keep NaN-as-failed (harmless), no rescue claim.
+
+#### Redesign built (wave 2026-11-01, not yet run on a device)
+
+- Dropped: `ShortLinePadding` (pad, trim, density, padded retries, sibling padding), `ShortLinePaddingTests`. Kept: the marker-file probe (now `ShortLineProbe`) and the `short-lines` check.
+- `TakeStats.From` (samples, NaN count, finite peak, voiced ms) and `KokoroNanRescue` (Off, SingleThreadRetry) live in `SilentOutputGuard.cs`; the default is `KokoroEngineConfig.NanRescue = SingleThreadRetry`. A take with any NaN is a failed take; the retry after it runs on a lazily built single-thread Kokoro engine (`RefCountedTts.SingleThread`, Android and iOS), disposed with its engine. Giving up prefers a take without NaN.
+- Debug log lines (no text): `take has NaN samples (... nan N of M)`, `retry take N (plain|single-thread, ...)`, `rescued by single-thread take N`, and per short Kokoro line two `short line probe multi-thread|single-thread` lines of 3 takes each. Windows (no single-thread engine) probes the multi-thread arm only.
+- `short-lines.ps1`: NaN count column, `NaN` for a NaN peak, summary per arm and per outcome; parser tests in `tools/phone/test-run-checks.ps1` (pwsh and powershell).
+- Still open: the phone run that decides the default (see *What the phone run decides*); the cause item above stays open until it. iOS: compile only.
+
+#### Part 1 merged (PR #638, 2026-11-01)
+
+Built and merged: `TakeStats` (non-finite count, peak, voiced ms); a non-finite take counts as failed (plain retry); give-up takes are zeroed so NaN never reaches the player; the probe logs per arm; the `short-lines` summary prints NaN and splits per arm; the single-thread twin sits behind `KokoroNanRescue`, whose default is now Off (`KokoroEngineConfig.cs`).
+
+S21 run 2026-11-01 (debug 127010c518a7):
+
+- bm_daniel: multi-thread NaN 9/9, single-thread NaN 7/9; rescued 0/4, gave up 2/4.
+- bf_alice: multi-thread NaN 9/12, single-thread NaN 11/12; rescued 0/4, gave up 3/4.
+- NaN takes are full length and all-NaN.
+- Verdict: **Rejected** for the thread-count cause (second design rejected; padding was the first). The single-thread rescue stays Off.
+
+Lead (web research, not tested): k2-fsa/sherpa-onnx issue #4086 and PR #4087 (merged 2026-10-26). The int8 Kokoro model returns all-NaN for short texts, from unguarded STFT convs (0/0 at DC/Nyquist); fp32 is unaffected. The fix re-exports the int8 model with `/decoder/generator/Conv` and `Conv_1` kept float32, and the models were updated in the sherpa-onnx `tts-models` release. Android report #3754 (Pixel, int8) was closed as fixed by #4087.
+
+#### Next design (wave to come)
+
+- [ ] Check whether the kokoro-en pack ships the int8 model (`packs.yml`).
+- [ ] Rebuild the pack from the re-exported int8 model in `tts-models` (or fp32 if the size allows), publish a new packs release (standing approval), and bump the pack version so phones update.
+- [ ] Verify: the `short-lines` S21 run on bm_daniel and bf_alice shows NaN 0 and gave up 0. No app code change is expected.
+
+Runner gap: `run-checks.ps1` has no `-Voices`; `short-lines.ps1` had to be run directly for a second voice (belongs with the Slice 224/225 tooling).
+
+#### Not yet verified (update 2026-11-01)
+
+- iOS: compile only.
+- The 68-read Slice 210 set is still not run.
+- The Windows Dino head has no single-thread arm.
+
+#### Review notes (check pass on the final code, 2026-11-01)
+
+Findings file `reviews/s220-w2-medium-check.md`. None applied. 1: the slice stays open (planned) for the model swap. 2 and 3: the single-thread code stays as a switch and the probe's second arm; with `NanRescue` Off only the Debug probe (marker file) builds the twin. 4: one no-op task per read end, negligible. 5, 6, 7: low; a NaN take failing on any engine is the design. 8: the marker is only created by the phone check in the dev app. 9: tool output only, belongs with the Slice 224/225 tooling.
