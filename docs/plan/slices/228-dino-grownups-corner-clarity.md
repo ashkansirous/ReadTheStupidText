@@ -1,8 +1,8 @@
 ### Slice 228 — Dino: make the kids' shelf and the grown-ups' corner obvious
 
-*Planned 2026-11-01.* From the user's user test on 2026-11-01 (findings 1, 2 and 7). **Design done: the user approved the Batch 43 mock (see User answers)** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code").
+*Built (wave 2026-11-01), PR #673.* Planned 2026-11-01. From the user's user test on 2026-11-01 (findings 1, 2 and 7). **Design done: the user approved the Batch 43 mock (see User answers)** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code").
 
-**Touches:** `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/GalleryText.cs`, `src/DinoReader.App/GrownUpMode.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.Core/BookSheetPlan.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/IntroWizardPage.Art.cs`, `src/DinoReader.App/IntroState.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/BookSheetPlanTests.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/SystemTheme.cs`, `src/DinoReader.App/ReadingTheme.cs`, `docs/design/dino-reader/**`, `docs/plan/slices/228-dino-grownups-corner-clarity.md`
+**Touches:** `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/GalleryText.cs`, `src/DinoReader.App/GrownUpMode.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.Core/BookSheetPlan.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/IntroWizardPage.Art.cs`, `src/DinoReader.App/IntroState.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/BookSheetPlanTests.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/SystemTheme.cs`, `src/DinoReader.App/ReadingTheme.cs`, `docs/design/dino-reader/**`, `src/DinoReader.Core/UsageEvent.cs`, `worker/events.ts`, `tests/DinoReader.Tests/UsageEventTests.cs`, `src/DinoReader.App/IconView.cs`, `.maestro/dino/**`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/StoryActions.cs`, `worker/events.test.mjs`, `docs/plan/slices/228-dino-grownups-corner-clarity.md`
 
 #### Why (what the testers did)
 
@@ -48,15 +48,72 @@ Settled by the mock: the file is Batch 43, not "Batch 40"; the way-back button s
 #### Work
 
 - [x] **Design (Claude Code):** mock done (Batch 43, 2026-11-01: `docs/design/dino-reader/Dino Reader Batch 43 Grown-ups Corner.dc.html`, frames 97-102 and 101b; 103 dark not built). User answers recorded above (light only; never mirror, Slice 96).
-- [ ] Grown-ups pill with label and the new icon (copied from `icons/`).
-- [ ] Grown-ups' corner header + one-line explanation; sticky coral "Back to my child's shelf" button.
-- [ ] `BookSheetPlan`: "Read now" row first; tapping it leaves grown-up mode and opens the reader. Unit test the row order.
-- [ ] Intro wizard: new first card (two places); step counter and `IntroState` step numbers moved so a resumed wizard lands on the right step (old saved steps map forward by one).
-- [ ] Strings in all 13 languages.
-- [ ] Android and iOS: both built and checked in the same pass.
+- [x] Grown-ups pill with label and the new icon (copied from `icons/`).
+- [x] Grown-ups' corner header + one-line explanation; sticky coral "Back to my child's shelf" button.
+- [x] `BookSheetPlan`: "Read now" row first; tapping it leaves grown-up mode and opens the reader. Unit test the row order.
+- [x] Intro wizard: new first card (two places); step counter and `IntroState` step numbers moved so a resumed wizard lands on the right step (old saved steps map forward by one).
+- [x] Strings in all 13 languages (machine drafts).
+- [x] Android and iOS: both built (iOS compile only; Android run on the emulator).
 
 #### Verification
 
 - `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` (book sheet order, intro step mapping).
 - Scripted emulator flow: open gate, see corner header and sticky button, tap a book, tap Read now, reader opens in kids' mode. iOS: simulator or TestFlight build, same flow.
 - The user re-runs the user test: a new tester can say what the two modes are and gets from the corner to the shelf without help.
+
+*Changed while building:*
+
+- Labelled Grown-ups pill (AutomationId `GalleryGrownUps`) with the lock icon from the mock; `IconKind.Lock` was changed app-wide.
+- Corner: header bar, one line, Add/Store row and three tiles across. Sticky coral `GalleryDone` reads "Back to my child's shelf", or "Ready for my child" during hand-over.
+- Book sheet: "Read now" first row (`BookSheetReadNow`), close button `BookSheetClose`; the Done row and swipe-down are removed, a tap outside closes. `BookSheetPlan.Rows` is ordered with a `BookSheetRow` enum.
+- Intro has 6 steps: new "Dino has two places" first card, and the Read step is back with Try it, which plays the shortest starter and returns at its end. Skipped and untouched rules apply; no auto-play when the voice isn't ready. `IntroSteps.FromLegacy` maps saved older intros; `INTRO_STEPS` in `worker/events.ts` updated.
+- The demo read records no `BookOpened`/`BookFinished` (`DemoReadCounting.Counts`).
+- 6+6 new strings in the 15 resx files, machine-drafted.
+
+*Verified:* emulator flows `corner-read-now`, `grown-ups-button`, `record-page-shows-words` PASS (Dino debug 8a844b84ae24). By scripted taps: intro first card "1 of 6", the Read step plays and returns at "3 of 6", and the demo read adds no usage counts.
+
+#### Review notes (high pass)
+
+- Fixed: intro read leaves via RunWhenFreeAsync; grown-up mode restored when the Read step opens nothing; the intro demo read records no BookOpened/BookFinished (DemoReadCounting, unit-tested); labelled close button on the book sheet and the swipe-down removed; a separate _hasStarter flag for the Read step.
+- Finding 4 (voice or pack not ready): the reading page already shows its loading overlay after 500 ms with Cancel, and Cancel or Back pops to the intro, which then moves on; no new code.
+- Skipped, finding 7 (BookSheetPlan.Rows used only by tests): structure only, no user-visible drift today.
+- Skipped, finding 8 (unused Gallery_GrownUps strings, shelf-mode gear colours): cleanup.
+- Skipped, finding 9 (Worker must deploy before the app sends places:*/read:* intro steps): the Worker deploys on merge within minutes; the app reaches users days later through the stores.
+
+#### Review notes (medium pass)
+
+- Fixed: the intro read only auto-plays when the voice pack is ready (Idle or Ready); otherwise the reader opens without playing, shows its pack status, and Back still moves the intro on. The auto-leave is cancelled by any grown-up tap (Play, sentence, Previous, Next), so a later Finished never pops the page. The Maestro flow taps `BookSheetClose` instead of a fixed point.
+- Not a bug, finding 2 (corner tile titles wrap to 3 lines): the tile title style has MaxLines 2 with tail truncation and a fixed two-line height, so a narrower tile truncates and never wraps to a third line.
+- Skipped, finding 3 (mode restored only on appear): fix 2 of the high pass already restores the mode on failure; a kill mid-push is rare and the next launch starts in kids' mode.
+- Skipped, finding 4 (Worker must deploy before the app): the Worker deploys on merge within minutes; the app reaches users days later.
+- Skipped, finding 5 (brace formatting): style.
+- Skipped, finding 6 (unused Gallery_GrownUps strings): cleanup.
+
+#### Review notes (medium pass 2)
+
+- Fixed: the book sheet Read now row closes with Dismiss (the shelf rebuilds after a switch changed in the sheet); the demo read is marked where the intro opens the reader (`MarkDemoRead`), so it counts nothing even when the voice is not ready; the intro pop is a one-shot (consumed by the first Finished, cancelled by any touch or by the page being covered, re-checked as top of stack when it runs).
+- Skipped, finding 3 (brace formatting): style.
+- Skipped, finding 4 (corner title probe at 3 columns): the title style is MaxLines 2 with tail truncation; a device check covers the look.
+- Skipped, findings 5 and 6 (mode left before the push; hand-over cleared before a failed open): low, recorded before.
+- Skipped, finding 8 (Worker before app): the Worker deploys on merge, the app ships days later.
+
+#### Review notes (check pass 2, `reviews/s228-medium-check2.md`)
+
+- Fixed, finding 9: the sheet's close button is 48 dp (Android's minimum touch target; the mock drew 36).
+- Skipped: 1 (a one-shot spent when the page is not on top: not returning then is right, the grown-up did something); 2 (no modal opens over the reader in this flow); 3 (Dismiss refresh and `_mode.Leave` both run on the UI thread in order; no failure path shown); 4 and 5 (structure); 6 (recorded before); 7 (Idle means no download running; the reader shows its pack status and plays with what is installed); 8 (style).
+
+#### For CLAUDE.md
+
+In `src/DinoReader.App/CLAUDE.md`:
+
+- Maestro flow expect-log markers must be written with `TestHookLog.Write` (RTST-TEST tag), not `Debug.WriteLine`. Flows dismiss the "Storyteller voices are ready" note by its text, never by a point tap: the sticky `GalleryDone` sits at the bottom. (Slice 228: docs/plan/slices/228-dino-grownups-corner-clarity.md)
+
+#### Not yet verified
+
+- Windows head and VM: shared UI, not run.
+- iOS: compile only.
+- Corner tiles and title truncation on a small phone and on a tablet.
+- Read step with no starter book.
+- The translated strings are machine drafts.
+- The intro read's return being cancelled by Play/pause, skip or a page turn (the emulator recheck tapped the page surface, which is not one of those, and the read returned at its end as designed).
+- The 48 dp close button on a device (changed after the last emulator run; check pass only).

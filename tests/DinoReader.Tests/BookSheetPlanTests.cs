@@ -48,4 +48,26 @@ public class BookSheetPlanTests
     {
         Assert.Equal(expected, BookSheetPlan.OriginOf(fromCatalogue, starter));
     }
+
+    [Theory]
+    [InlineData(BookOrigin.Own)]
+    [InlineData(BookOrigin.Starter)]
+    [InlineData(BookOrigin.Store)]
+    public void ReadNowIsFirstForEveryBookKind(BookOrigin origin)
+    {
+        Assert.Equal(BookSheetRow.ReadNow, BookSheetPlan.For(origin, false, false, false).Rows[0]);
+        Assert.Equal(BookSheetRow.ReadNow, BookSheetPlan.For(origin, true, true, true).Rows[0]);
+    }
+
+    [Fact]
+    public void RowsFollowTheMockOrderAndOnlyShowWhatApplies()
+    {
+        BookSheetPlan all = BookSheetPlan.For(BookOrigin.Own, translated: true, hasRecording: true, developerExport: true);
+        BookSheetPlan bare = BookSheetPlan.For(BookOrigin.Store, translated: false, hasRecording: false, developerExport: false);
+
+        Assert.Equal(
+            [BookSheetRow.ReadNow, BookSheetRow.ShowOriginalText, BookSheetRow.ReadWithMyVoice, BookSheetRow.RecordAndCast, BookSheetRow.EditPages, BookSheetRow.Export, BookSheetRow.Remove],
+            all.Rows);
+        Assert.Equal([BookSheetRow.ReadNow, BookSheetRow.RecordAndCast, BookSheetRow.Remove], bare.Rows);
+    }
 }

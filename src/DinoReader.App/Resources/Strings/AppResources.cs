@@ -200,6 +200,12 @@ public static class AppResources
 	public static string Intro_TryIt => Get();
 	public static string Intro_Skip => Get();
 	public static string Intro_Counter => Get();
+	public static string Intro_PlacesTitle => Get();
+	public static string Intro_PlacesKidsTitle => Get();
+	public static string Intro_PlacesKidsLine => Get();
+	public static string Intro_PlacesGrownLine => Get();
+	public static string Intro_ReadTitle => Get();
+	public static string Intro_ReadLine => Get();
 	public static string Intro_StoreTitle => Get();
 	public static string Intro_StoreLine => Get();
 	public static string Intro_RecordTitle => Get();
@@ -232,6 +238,12 @@ public static class AppResources
 	public static string Gallery_GrownUpsTitle => Get();
 	public static string Gallery_GrownUpsSub => Get();
 	public static string Gallery_GrownUpsButton => Get();
+	public static string Gallery_GrownUpsPill => Get();
+	public static string Gallery_GrownUpsButtonLocked => Get();
+	public static string Gallery_CornerTitle => Get();
+	public static string Gallery_CornerLine => Get();
+	public static string Gallery_BackToShelf => Get();
+	public static string Book_ReadNow => Get();
 	public static string Gallery_BookOptions => Get();
 	public static string Book_FromStore => Get();
 	public static string Book_Starter => Get();

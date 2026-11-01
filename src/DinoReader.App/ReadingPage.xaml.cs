@@ -93,6 +93,69 @@ public partial class ReadingPage : ContentPage
 		ShowPackStatus();
 	}
 
+	private bool _introRead; // Slice 228: opened by the intro's read step, which plays at once and goes back to the intro when the book ends
+	private bool _demoRead; // Slice 228: never cleared, so the demo read counts no book open or finish even after the page started leaving
+	private bool _introPopQueued; // Slice 228: the one pop back to the intro; consumed by the first Finished, cancelled by any touch or by leaving the page
+
+	/// <summary>Slice 228: marks this page as the intro's demo read, whichever way it opens (even when the voice is not ready and nothing plays), so it counts no book open or finish. Call before the page shows.</summary>
+	public void MarkDemoRead() => _demoRead = true;
+
+	/// <summary>Slice 228 (mock Batch 43 frame 101b): the intro's read step. Starts the book playing as soon as the page shows, and pops back to the intro when the read reaches its end. Call after <see cref="Load"/>.</summary>
+	public void PlayForIntro()
+	{
+		_introRead = true;
+		MarkDemoRead();
+		_ = PlayWhenShownAsync();
+	}
+
+	// The grown-up took over (a tap, a skip) or the page is leaving: the intro read neither pops back now nor later.
+	private void CancelIntroRead()
+	{
+		_introRead = false;
+		_introPopQueued = false;
+	}
+
+	private async Task PlayWhenShownAsync()
+	{
+		try
+		{
+			await _appeared.Task;
+#if DEBUG
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[GrownUps] intro read starts playing");
+#endif
+			await StartFromPlayAsync();
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException)
+		{
+			Debug.WriteLine($"Dino Reader could not start the intro read: {ex}");
+		}
+	}
+
+	private void LeaveWhenIntroReadEnds()
+	{
+		if (!_introRead || !_session.Finished)
+		{
+			return;
+		}
+
+		_introRead = false; // one-shot: the first Finished consumes it, whether or not the page can pop now
+		if (_onStack)
+		{
+			_introPopQueued = true;
+#if DEBUG
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[GrownUps] intro read finished, back to the intro");
+#endif
+			_ = _busy.RunWhenFreeAsync(PopIntroReadAsync); // waits for a running Play/Back handler instead of being dropped
+		}
+	}
+
+	private Task PopIntroReadAsync()
+	{
+		bool stillOurs = _introPopQueued && _onStack && Navigation.NavigationStack.LastOrDefault() == this;
+		_introPopQueued = false;
+		return stillOurs ? Navigation.PopAsync() : Task.CompletedTask;
+	}
+
 	/// <summary>The id of the book this page was loaded for (null before Load); the debug test hook compares it.</summary>
 	public string? LoadedStoryId => _story?.Id;
 
@@ -631,6 +694,7 @@ public partial class ReadingPage : ContentPage
 	{
 		base.OnDisappearing();
 		_visible = false;
+		_introPopQueued = false; // a pop that has not run yet must not fire once the page is covered or leaving
 		Dispatcher.Dispatch(() =>
 		{
 			if (!Navigation.NavigationStack.Contains(this))
@@ -767,6 +831,7 @@ public partial class ReadingPage : ContentPage
 	private void OnSessionStateChanged(object? sender, EventArgs e)
 	{
 		CountFinish();
+		LeaveWhenIntroReadEnds();
 		RenderChrome();
 		ApplyScreenAwake();
 		ApplyWait();
@@ -882,7 +947,7 @@ public partial class ReadingPage : ContentPage
 		}
 
 		_openCounted = true;
-		_usage.Record(UsageEventName.BookOpened, story, language: ReadIn(story));
+		RecordBookCount(UsageEventName.BookOpened, story);
 	}
 
 	// Slice 173: a book counts in the language it was read in (the child's pick), not the book's own.
@@ -899,7 +964,16 @@ public partial class ReadingPage : ContentPage
 		_finishCounted = _session.Finished;
 		if (_finishCounted && _story is { } story)
 		{
-			_usage.Record(UsageEventName.BookFinished, story, language: ReadIn(story));
+			RecordBookCount(UsageEventName.BookFinished, story);
+		}
+	}
+
+	// Slice 228: the intro's demo read is not a real reading of the book, so it counts no open or finish (the one rule is DemoReadCounting).
+	private void RecordBookCount(string name, Story story)
+	{
+		if (DemoReadCounting.Counts(name, _demoRead))
+		{
+			_usage.Record(name, story, language: ReadIn(story));
 		}
 	}
 
@@ -1047,12 +1121,14 @@ public partial class ReadingPage : ContentPage
 
 	private void OnSentenceTapped(object? sender, int sentence)
 	{
+		CancelIntroRead(); // the grown-up took over: no auto-leave
 		_follower.ResumeAt(Surface.CurrentPage);
 		_ = StartReadAtAsync(sentence);
 	}
 
 	private async void OnPlayTapped(object? sender, EventArgs e)
 	{
+		CancelIntroRead();
 		switch (_session.State)
 		{
 			case SessionState.Loading:
@@ -1100,6 +1176,7 @@ public partial class ReadingPage : ContentPage
 	// moves the mark and starts no audio; a paused read is dropped so Play starts at the mark.
 	private async Task SkipAsync(int delta)
 	{
+		CancelIntroRead();
 		SessionState state = _session.State;
 		bool playing = state is SessionState.Playing or SessionState.Loading;
 		SkipPlan plan = SkipPlanner.Plan(SkipFrom(delta), delta, _sentences.Count, playing);

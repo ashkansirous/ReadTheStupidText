@@ -27,6 +27,14 @@ public static class UsageEventName
     public const string VoicePackDownload = "voice_pack_download";
 }
 
+/// <summary>Slice 228: the one rule for a demo read (the intro's read step), which is not a real reading of a book and so counts no book open or finish.</summary>
+public static class DemoReadCounting
+{
+    /// <summary>Whether the count <paramref name="eventName"/> may be recorded for a read that is (<paramref name="demoRead"/>) or is not a demo.</summary>
+    public static bool Counts(string eventName, bool demoRead) =>
+        !demoRead || (eventName != UsageEventName.BookOpened && eventName != UsageEventName.BookFinished);
+}
+
 /// <summary>Where a counted book came from: Dino's own shelf (a starter or a store story) or a grown-up's own book.</summary>
 public static class UsageSource
 {
@@ -147,15 +155,25 @@ public static class OwnBookKind
     }
 }
 
-/// <summary>The first-run intro's steps in order (Slice 155, Decision 160): the store, recording a book, adding an own book, and (Slice 173) the story languages. The index is what is saved, so a restart resumes at the same step.</summary>
+/// <summary>The first-run intro's steps in order (Slice 155, Decision 160): (Slice 228) the two places and a read step, then the store, recording a book, adding an own book, and (Slice 173) the story languages. The index is what is saved, so a restart resumes at the same step.</summary>
 public static class IntroSteps
 {
+    public const string Places = "places";
+    public const string Read = "read";
     public const string Store = "store";
     public const string Record = "record";
     public const string Add = "add";
     public const string Languages = "languages";
 
-    private static readonly string[] Order = [Store, Record, Add, Languages];
+    /// <summary>How many steps the intro had before Slice 228 put <see cref="Places"/> and <see cref="Read"/> in front.</summary>
+    private const int LegacyCount = 4;
+    private const int StepsAdded = 2;
+    private const int NotRunning = -1;
+
+    private static readonly string[] Order = [Places, Read, Store, Record, Add, Languages];
+
+    /// <summary>The step an intro saved before Slice 228 (4 steps) resumes at: the same step, two places further on; -1 when that saved value was not a step.</summary>
+    public static int FromLegacy(int legacyIndex) => legacyIndex >= 0 && legacyIndex < LegacyCount ? legacyIndex + StepsAdded : NotRunning;
 
     public static int Count => Order.Length;
 

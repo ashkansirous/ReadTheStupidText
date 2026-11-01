@@ -64,6 +64,11 @@ public static class IntroArt
 	private const double BadgeSize = 60;
 	private const double ShadowRadius = 20;
 	private const double BorderWidth = 5;
+	private const double PhoneWidth = 120;
+	private const double PhoneHeight = 200;
+	private const double PhoneBorder = 4;
+	private static readonly Color ReadTint = Color.FromArgb("#DCE3FF");
+	private static readonly Color ReadBadge = Color.FromArgb("#5B57E8");
 	private static readonly Color StoreTint = Color.FromArgb("#DFF5E3");
 	private static readonly Color RecordTint = Color.FromArgb("#FFE3D9");
 	private static readonly Color AddTint = Color.FromArgb("#FFF0C2");
@@ -73,10 +78,57 @@ public static class IntroArt
 
 	public static View Build(string step, IntroPictures pictures, bool windows) => step switch
 	{
+		IntroSteps.Places => Places(pictures),
+		IntroSteps.Read => Read(pictures),
 		IntroSteps.Store => Store(pictures),
 		IntroSteps.Record => Record(pictures),
 		_ => Add(pictures, windows),
 	};
+
+	// Batch 43 frame 101: two small phones tilted -4 and +4 degrees, the kids' shelf (cream, a cover) and the grown-ups' corner (sand, an ink bar with an amber lock).
+	private static AbsoluteLayout Places(IntroPictures pictures)
+	{
+		AbsoluteLayout art = Canvas(Side, PhoneHeight + 20);
+		Place(art, MiniPhone(DinoTokens.Get(DinoTokens.Cream), header: null, Picture(pictures.Covers[0], 10)), 6, 10, PhoneWidth, PhoneHeight, rotation: -4);
+		var bar = new Border { BackgroundColor = DinoTokens.Get(DinoTokens.Ink), StrokeThickness = 0, HeightRequest = 34, Content = new IconView { Kind = IconKind.Lock, Color = Color.FromArgb("#FFC043"), Size = 18, StrokeWidth = 2.2, HorizontalOptions = LayoutOptions.Start, Margin = new Thickness(10, 0), VerticalOptions = LayoutOptions.Center } };
+		Place(art, MiniPhone(DinoTokens.Get(DinoTokens.Sand), bar, null), Side - PhoneWidth - 6, 10, PhoneWidth, PhoneHeight, rotation: 4);
+		return art;
+	}
+
+	private static Border MiniPhone(Color fill, View? header, View? cover)
+	{
+		var content = new VerticalStackLayout { Spacing = 8 };
+		if (header is not null)
+		{
+			content.Children.Add(header);
+		}
+
+		if (cover is not null)
+		{
+			cover.HeightRequest = 90;
+			cover.Margin = new Thickness(14, 24, 14, 0);
+			content.Children.Add(cover);
+		}
+
+		return new Border
+		{
+			BackgroundColor = fill,
+			Stroke = DinoTokens.Get(DinoTokens.Ink),
+			StrokeThickness = PhoneBorder,
+			StrokeShape = new RoundRectangle { CornerRadius = 18 },
+			Content = content,
+		};
+	}
+
+	// Batch 43 frame 101b: a page of a starter book with a play badge.
+	private static AbsoluteLayout Read(IntroPictures pictures)
+	{
+		AbsoluteLayout art = Canvas(NarrowSide, Side);
+		Place(art, Ellipse(ReadTint), 10, 0, NarrowSide - 20, Side);
+		Place(art, Picture(pictures.RecordPage, 18), 25, 17, 170, 226);
+		Place(art, Badge(ReadBadge, IconKind.Play, 2.4), NarrowSide - 6 - BadgeSize, Side - 6 - BadgeSize, BadgeSize, BadgeSize);
+		return art;
+	}
 
 	private static AbsoluteLayout Store(IntroPictures pictures)
 	{
@@ -110,8 +162,9 @@ public static class IntroArt
 
 	private static AbsoluteLayout Canvas(double width, double height) => new() { WidthRequest = width, HeightRequest = height, HorizontalOptions = LayoutOptions.Center };
 
-	private static void Place(AbsoluteLayout art, View view, double x, double y, double width, double height)
+	private static void Place(AbsoluteLayout art, View view, double x, double y, double width, double height, double rotation = 0)
 	{
+		view.Rotation = rotation;
 		AbsoluteLayout.SetLayoutBounds(view, new Rect(x, y, width, height));
 		art.Children.Add(view);
 	}

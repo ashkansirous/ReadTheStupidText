@@ -116,6 +116,12 @@
   <data name="Intro_TryIt" xml:space="preserve"><value>Try it</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>Skip</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="Intro_PlacesTitle" xml:space="preserve"><value>Dino has two places</value></data>
+  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>Kids’ shelf</value></data>
+  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>Just tap a book and listen.</value></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Behind a lock, for adding books and voices.</value></data>
+  <data name="Intro_ReadTitle" xml:space="preserve"><value>Read a story together</value></data>
+  <data name="Intro_ReadLine" xml:space="preserve"><value>Tap a book, then play. Dino reads it aloud and lights up each sentence.</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>Get more books</value></data>
   <data name="Intro_StoreLine" xml:space="preserve"><value>The store has more stories, ready to download.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Read it in your voice</value></data>
@@ -148,6 +154,12 @@
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Grown-ups</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Add and edit books</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>For grown-ups</value></data>
+  <data name="Gallery_GrownUpsPill" xml:space="preserve"><value>Grown-ups</value></data>
+  <data name="Gallery_GrownUpsButtonLocked" xml:space="preserve"><value>Grown-ups’ corner, locked</value></data>
+  <data name="Gallery_CornerTitle" xml:space="preserve"><value>Grown-ups’ corner</value></data>
+  <data name="Gallery_CornerLine" xml:space="preserve"><value>Only grown-ups see this. Your child’s shelf is one tap away.</value></data>
+  <data name="Gallery_BackToShelf" xml:space="preserve"><value>Back to my child’s shelf</value></data>
+  <data name="Book_ReadNow" xml:space="preserve"><value>Read now</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Options for {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>From the Store</value></data>
   <data name="Book_Starter" xml:space="preserve"><value>Starter book</value></data>

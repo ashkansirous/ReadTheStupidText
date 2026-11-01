@@ -54,28 +54,33 @@
              fixed, so its height depends only on the font (not on the page or tile width) and the update cannot loop. -->
         <Label x:Name="TitleProbe" HorizontalOptions="Start" Style="{StaticResource TileTitleFont}" Text="&#160;&#10;&#160;" Opacity="0" InputTransparent="True"
                VerticalOptions="Start" AutomationProperties.IsInAccessibleTree="False" SizeChanged="OnTitleProbeSizeChanged" />
-        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="16,10,12,12">
+        <Grid x:Name="HeaderBar" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="16,10,12,12">
             <Border WidthRequest="40" HeightRequest="40" StrokeThickness="0">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="11" />
                 </Border.StrokeShape>
                 <Image x:Name="AppIcon" Source="dino_icon" Aspect="AspectFill" SemanticProperties.Description="{x:Static res:AppResources.App_Name}" />
             </Border>
+            <!-- Slice 228 (mock Batch 43 frame 98): the grown-ups' corner's header bar shows an amber lock where the shelf shows the app icon. -->
+            <local:IconView x:Name="CornerLock" Kind="Lock" Color="#FFC043" Size="28" StrokeWidth="2.2" WidthRequest="40" HeightRequest="40" IsVisible="False" InputTransparent="True" />
             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                <Label x:Name="TitleLabel" AutomationId="GalleryTitle" Text="{x:Static res:AppResources.Gallery_Title}" FontSize="22" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level1">
+                <Label x:Name="TitleLabel" AutomationId="GalleryTitle" Text="{x:Static res:AppResources.Gallery_Title}" FontSize="22" FontAttributes="Bold" LineBreakMode="TailTruncation" MaxLines="1" SemanticProperties.HeadingLevel="Level1">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTitleTapped" />
                     </Label.GestureRecognizers>
                 </Label>
-                <Label x:Name="ModeLabel" Text="{x:Static res:AppResources.Gallery_GrownUpsSub}" FontSize="12" TextColor="{StaticResource Muted}" IsVisible="False" />
             </VerticalStackLayout>
-            <!-- Slice 189 (mock 79): the book-and-plus button is the only grown-up way in, always visible in kids' mode; it runs the gate, then opens grown-up mode. -->
-            <Border Grid.Column="2" x:Name="GrownUpsButton" AutomationId="GalleryGrownUps" WidthRequest="48" HeightRequest="48" BackgroundColor="{StaticResource ControlFill}"
-                    StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Gallery_GrownUpsButton}" ToolTipProperties.Text="{x:Static res:AppResources.Gallery_GrownUpsButton}" SemanticProperties.Hint="{x:Static res:AppResources.Gallery_OpensGateHint}">
+            <!-- Slice 228 (mock Batch 43 frame 97): a labelled pill (lock + "Grown-ups") is the only grown-up way in, always visible in kids' mode; it runs the gate, then opens the grown-ups' corner.
+                 The title truncates before the pill does. -->
+            <Border Grid.Column="2" x:Name="GrownUpsButton" AutomationId="GalleryGrownUps" HeightRequest="48" BackgroundColor="#122b2540" Padding="11,0,14,0" MinimumWidthRequest="48"
+                    StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Gallery_GrownUpsButtonLocked}" ToolTipProperties.Text="{x:Static res:AppResources.Gallery_GrownUpsButtonLocked}" SemanticProperties.Hint="{x:Static res:AppResources.Gallery_OpensGateHint}">
                 <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="14" />
+                    <RoundRectangle CornerRadius="24" />
                 </Border.StrokeShape>
-                <local:IconView Kind="BookPlus" Color="{StaticResource Muted}" Size="26" StrokeWidth="2" HorizontalOptions="Center" VerticalOptions="Center" />
+                <HorizontalStackLayout Spacing="6" HorizontalOptions="Center" VerticalOptions="Center">
+                    <local:IconView Kind="Lock" Color="{StaticResource Ink}" Size="24" StrokeWidth="2.2" VerticalOptions="Center" />
+                    <Label x:Name="GrownUpsLabel" Text="{x:Static res:AppResources.Gallery_GrownUpsPill}" FontSize="15" FontAttributes="Bold" TextColor="#3a3450" LineBreakMode="NoWrap" VerticalOptions="Center" />
+                </HorizontalStackLayout>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnGrownUpsTapped" />
                 </Border.GestureRecognizers>
@@ -86,46 +91,48 @@
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="14" />
                 </Border.StrokeShape>
-                <Path Data="M15 12a3 3 0 1 0-6 0a3 3 0 1 0 6 0 M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                <Path x:Name="GearPath" Data="M15 12a3 3 0 1 0-6 0a3 3 0 1 0 6 0 M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
                       Stroke="{StaticResource Body}" StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform" WidthRequest="22" HeightRequest="22"
                       HorizontalOptions="Center" VerticalOptions="Center" InputTransparent="True" />
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnSettingsTapped" />
                 </Border.GestureRecognizers>
             </Border>
-            <Button Grid.Column="2" x:Name="DoneButton" AutomationId="GalleryDone" IsVisible="False" Text="{x:Static res:AppResources.Common_Done}" HeightRequest="44" CornerRadius="22"
-                    Padding="18,0" FontSize="14" BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnDoneClicked" />
         </Grid>
 
         <!-- Grown-up mode (mock 85, Slice 172): only "Add from your own books" and the Store, full width. The store is behind the gate (ready for paid books later). -->
         <VerticalStackLayout Grid.Row="1">
-        <VerticalStackLayout x:Name="GrownUpActions" Padding="14,4,14,14" Spacing="8" IsVisible="False">
-            <Border x:Name="AddBookButton" AutomationId="GalleryAddBook" HeightRequest="52" BackgroundColor="{StaticResource Coral}" StrokeThickness="0"
-                    SemanticProperties.Description="{x:Static res:AppResources.Gallery_AddFromBooks}">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="18" />
-                </Border.StrokeShape>
-                <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
-                    <local:IconView Kind="Plus" Color="White" Size="20" StrokeWidth="2.8" VerticalOptions="Center" />
-                    <Label x:Name="AddBookLabel" Text="{x:Static res:AppResources.Gallery_AddFromBooks}" FontSize="15" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
-                </HorizontalStackLayout>
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnAddTapped" />
-                </Border.GestureRecognizers>
-            </Border>
-            <Border x:Name="StoreButton" AutomationId="GalleryStore" HeightRequest="52" BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0"
-                    SemanticProperties.Description="{x:Static res:AppResources.Store_Title}">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="18" />
-                </Border.StrokeShape>
-                <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
-                    <local:IconView Kind="Book" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.2" VerticalOptions="Center" />
-                    <Label x:Name="StoreLabel" Text="{x:Static res:AppResources.Store_Title}" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" VerticalOptions="Center" />
-                </HorizontalStackLayout>
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnStoreTapped" />
-                </Border.GestureRecognizers>
-            </Border>
+        <VerticalStackLayout x:Name="GrownUpActions" Spacing="0" IsVisible="False">
+            <!-- Slice 228 (mock Batch 43 frame 98): the one line that names this place. -->
+            <Label x:Name="CornerLine" AutomationId="GalleryCornerLine" Text="{x:Static res:AppResources.Gallery_CornerLine}" FontSize="13.5" TextColor="#5a5470" Padding="18,12,18,10" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Padding="14,0,14,14">
+                <Border x:Name="AddBookButton" AutomationId="GalleryAddBook" HeightRequest="52" BackgroundColor="White" StrokeThickness="0"
+                        SemanticProperties.Description="{x:Static res:AppResources.Gallery_AddFromBooks}">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="18" />
+                    </Border.StrokeShape>
+                    <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
+                        <local:IconView Kind="Plus" Color="{StaticResource Ink}" Size="20" StrokeWidth="2.8" VerticalOptions="Center" />
+                        <Label x:Name="AddBookLabel" Text="{x:Static res:AppResources.Gallery_AddFromBooks}" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Ink}" LineBreakMode="TailTruncation" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnAddTapped" />
+                    </Border.GestureRecognizers>
+                </Border>
+                <Border Grid.Column="1" x:Name="StoreButton" AutomationId="GalleryStore" HeightRequest="52" BackgroundColor="{StaticResource Brand}" StrokeThickness="0"
+                        SemanticProperties.Description="{x:Static res:AppResources.Store_Title}">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="18" />
+                    </Border.StrokeShape>
+                    <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
+                        <local:IconView Kind="Book" Color="White" Size="20" StrokeWidth="2.2" VerticalOptions="Center" />
+                        <Label x:Name="StoreLabel" Text="{x:Static res:AppResources.Store_Title}" FontSize="15" FontAttributes="Bold" TextColor="White" LineBreakMode="TailTruncation" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnStoreTapped" />
+                    </Border.GestureRecognizers>
+                </Border>
+            </Grid>
         </VerticalStackLayout>
         <!-- Slice 115 (mock frame 50): the storyteller download's status line, grown-up mode only. -->
         <local:StorytellerStatusLine x:Name="StorytellerLine" />
@@ -137,8 +144,8 @@
             </CollectionView.ItemsLayout>
         </CollectionView>
 
-        <!-- First grown-up view only (mock 19): hands the phone to the child. Later visits use the Done button in the header. -->
-        <local:CoralButton Grid.Row="3" x:Name="HandoverButton" Margin="22,8,22,14" Icon="Book" IsVisible="False" Clicked="OnHandoverClicked" />
+        <!-- Slice 228 (mock Batch 43 frames 98 and 99): the sticky way back, pinned under the grid in grown-up mode. It reads "Back to my child's shelf", or "Ready for my child" during the first hand-over. -->
+        <local:CoralButton Grid.Row="3" x:Name="HandoverButton" AutomationId="GalleryDone" Margin="14,12,14,24" Icon="Play" IsVisible="False" Clicked="OnHandoverClicked" />
 
         <!-- Slice 115 (mock frame 51): the one-time "Storyteller voices are ready" sheet over the whole page. -->
         <local:StorytellerReadySheet Grid.RowSpan="4" x:Name="ReadySheet" />
