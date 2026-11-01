@@ -42,17 +42,10 @@ public static class SettingsRows
 		if (tapped is not null)
 		{
 			row.Add(Chevron(), FirstColumn + 2);
-			Button button = AddRowButton(row, NameOf(title, (end as Label)?.Text), tapped, busy);
+			Button button = AddRowButton(row, NameOf(title, (end as Label)?.Text), tapped, busy, endInteractive: !IsDecoration(end));
 			if (end is Label valueLabel)
 			{
-				// The value changes after the row is built (the story language), so the accessible name follows it.
-				valueLabel.PropertyChanged += (_, e) =>
-				{
-					if (e.PropertyName == Label.TextProperty.PropertyName)
-					{
-						SemanticProperties.SetDescription(button, NameOf(title, valueLabel.Text));
-					}
-				};
+				FollowValue(button, title, valueLabel);
 			}
 		}
 
@@ -61,8 +54,36 @@ public static class SettingsRows
 
 	private static string NameOf(string title, string? value) => string.IsNullOrEmpty(value) ? title : CastText.Pair(title, value);
 
+	// The value changes after the row is built (the story language, a setting), so the button's accessible name follows it.
+	private static void FollowValue(Button button, string title, Label valueLabel)
+	{
+		valueLabel.PropertyChanged += (_, e) =>
+		{
+			if (e.PropertyName == Label.TextProperty.PropertyName)
+			{
+				SemanticProperties.SetDescription(button, NameOf(title, valueLabel.Text));
+			}
+		};
+	}
+
+	// Slice 226: what the row button's name already carries (labels, chevron, tag, spacer). Anything else is a control (Switch, Picker) and stays reachable.
+	private static bool IsDecoration(View view) => view is Label or IconView or Border or BoxView;
+
 	// Slice 205: the row's padding is two fixed columns, not Grid.Padding, so the button over the row covers the padding strips too.
 	private const int FirstColumn = 1;
+
+	/// <summary>
+	/// Slice 226: adds <paramref name="child"/> to the row's content columns: slot 0 is the title column, 1 the value, 2 the chevron. A caller must
+	/// use this and never a raw column index, because the first column is the row's left padding.
+	/// </summary>
+	public static void AddInRow(Grid row, View child, int slot)
+	{
+		ArgumentOutOfRangeException.ThrowIfNegative(slot);
+		ArgumentOutOfRangeException.ThrowIfGreaterThan(slot, ChevronSlot);
+		row.Add(child, FirstColumn + slot);
+	}
+
+	private const int ChevronSlot = 2;
 
 	private static Grid NewRowGrid(double minHeight) => new()
 	{
@@ -93,7 +114,7 @@ public static class SettingsRows
 	/// A Settings list row (Slice 172, mock frame 80): a 15 px label, the current value (or a tag) in bold muted text, and a chevron.
 	/// <paramref name="value"/> is null for a row that shows none; <paramref name="tagText"/> shows a pill instead and is announced with the title.
 	/// </summary>
-	public static Grid NavRow(string title, string? value, Func<Task> tapped, BusyGuard busy, string? tagText = null)
+	public static Grid NavRow(string title, string? value, Func<Task> tapped, BusyGuard busy, string? tagText = null, string? automationId = null)
 	{
 		Grid row = NewRowGrid(NavRowHeight);
 		row.Add(CastText.InOwnScript(new Label { Text = title, FontSize = NavTitleSize, VerticalOptions = LayoutOptions.Center }), FirstColumn);
@@ -107,19 +128,33 @@ public static class SettingsRows
 		}
 
 		row.Add(Chevron(), FirstColumn + 2);
-		string? announced = tagText ?? value;
-		AddRowButton(row, NameOf(title, announced), tapped, busy);
+		Button button = AddRowButton(row, NameOf(title, tagText ?? value), tapped, busy, endInteractive: false, automationId);
+		FollowNavValue(row, button, title);
 		return row;
+	}
+
+	// Slice 226: a NavRow's value (or the text inside its tag) can be changed in place; the button's name follows it as Row()'s does.
+	private static void FollowNavValue(Grid row, Button button, string title)
+	{
+		Label? valueLabel = row.Children.OfType<Label>().Skip(1).FirstOrDefault()
+			?? (row.Children.OfType<Border>().FirstOrDefault()?.Content as Label);
+		if (valueLabel is not null)
+		{
+			FollowValue(button, title, valueLabel);
+		}
 	}
 
 	/// <summary>
 	/// Slice 205: a transparent Button over the whole row, so it is a real control (UI Automation Invoke on Windows, focus and Enter or Space
 	/// from a keyboard, TalkBack and VoiceOver "button") named with the title and the current value. A Grid with only a tap gesture has none of
-	/// that. The row's own labels are hidden from the accessibility tree so the name is read once.
+	/// that. The row's own labels, chevron and tag are hidden from the accessibility tree so the name is read once; a control at the end
+	/// (Switch, Picker) stays reachable, and then the button covers only the padding and title columns so it cannot take the control's taps.
+	/// A test finds the row by <paramref name="automationId"/> (Maestro <c>id:</c>), not by text: the button has no text of its own, so the
+	/// platform hover and press states cannot draw the title a second time.
 	/// </summary>
-	private static Button AddRowButton(Grid row, string name, Func<Task> tapped, BusyGuard busy)
+	private static Button AddRowButton(Grid row, string name, Func<Task> tapped, BusyGuard busy, bool endInteractive, string? automationId = null)
 	{
-		foreach (View child in row.Children.OfType<View>())
+		foreach (View child in row.Children.OfType<View>().Where(IsDecoration))
 		{
 			AutomationProperties.SetIsInAccessibleTree(child, false);
 		}
@@ -127,7 +162,7 @@ public static class SettingsRows
 		RowButtonChrome.EnsureRegistered();
 		var button = new RowButton
 		{
-			Text = string.Empty,
+			AutomationId = automationId,
 			BackgroundColor = Colors.Transparent,
 			BorderWidth = 0,
 			CornerRadius = 0,
@@ -140,7 +175,7 @@ public static class SettingsRows
 		button.Clicked += async (_, _) => await busy.RunAsync(tapped);
 		// Grid.Add(view, column, row) writes the span as 1, so the span is set after adding.
 		row.Add(button, 0);
-		Grid.SetColumnSpan(button, row.ColumnDefinitions.Count);
+		Grid.SetColumnSpan(button, endInteractive ? FirstColumn + 1 : row.ColumnDefinitions.Count);
 		return button;
 	}
 
