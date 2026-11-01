@@ -1,6 +1,20 @@
 ### Slice 225 — Device-test tooling leftovers from the 2026-10-31-1301 night, round 1
 
-*Planned.* Written 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1301-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01.
+*In progress (wave 2026-11-01), draft PR.* Written 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1301-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01.
+
+#### Coordinator's notes (claim, 2026-11-01)
+
+A premise check read origin/main after Slice 221 merged (PR #694).
+
+- **Touches widened:** `.maestro/**` (items 4, 19, 21), `tools/phone/reset-dev-app.ps1` (item 1), `tools/lease-common.ps1` (item 8), a new `PSScriptAnalyzerSettings.psd1` at the repo root (item 17), and `tools/emulator/rotate.ps1` read-only (Slice 232 adds it this wave). **`plan.md` is dropped from Touches:** a feature branch never edits it, and the index pass does that.
+- **Already done by Slice 221:**
+  - **Item 22:** the `common.ps1` drop-cache marker byte is removed. The pattern now ends `...0` and matches `RTST_DROP_RC=0`. The `run-checks.ps1` comments are already clean on main. What remains is the self-test from item 22's verify line: the marker check returns true on a log line that has the marker.
+  - **Item 3, in part:** Dino emulator installs use `uk.sirous.dinoreader.dbg` (`tools/emulator/common.ps1` `$DinoDevPackage`). What remains is the emulator path in `run-checks.ps1` and the RTST id question.
+- **Item 8:** reuse Slice 221's per-owner run-marker pattern (`Request-RunMarker`/`Remove-RunMarker` in `tools/phone/common.ps1`) for the emulator lease, rather than a second design.
+- **Item 10:** only the self-test is missing; the forwarding is on main (`run-checks.ps1:46`).
+- **Item 14:** first find which checks still cut the whole device's network. Slice 233 replaced the netpolicy cut with the `drop-pack-network` hook. Wire the guard into each that does; if none does, delete the unused guard and its test, and say so here.
+- **Item 15:** re-check points 2-4 against today's `paused-notification.ps1` (`:69` already calls `Start-DeviceRestore`). Tick what is superseded, with the line that shows it.
+- **Device items** (1, 11 and 21; 20 and 24 on the VM): the builder writes the scripts and self-tests but runs no device. The device run comes after both reviews. The S21 pre-flight passed tonight (`preflight.md`).
 
 **Touches:** `tools/phone/common.ps1`, `tools/phone/run-checks.ps1`, `tools/phone/preflight.ps1`, `tools/phone/restore-device-state.ps1` (new), `tools/phone/checks/_lib.ps1`, `tools/phone/checks/*.ps1`, `tools/phone/test-phone-lib.ps1`, `tools/phone/test-run-checks.ps1`, `tools/emulator/run-flows.ps1`, `tools/emulator/common.ps1`, `tools/emulator/lease.ps1`, `tools/CLAUDE.md`, `tools/phone/README.md`, `src/ReadTheStupidText.Mobile.Shared/MobileVoicePackService.cs`, `tests/ReadTheStupidText.Tests/` (a new DecideAll test file), `tools/phone/lease.ps1`, `tools/phone/checks/paused-notification.ps1`, `tools/emulator/lint-flows.ps1`, `tools/desktop-vm/Invoke-DesktopTest.ps1`, `.gitattributes`, `.github/workflows/tools-selftests.yml`, `src/DinoReader.App/StagedBookUpdates.cs`, `src/DinoReader.App/StarterStories.cs`, `tests/DinoReader.Tests/`, `plan.md`, `docs/plan/slices/225-device-tooling-leftovers-night-2026-10-31-1301.md`, `tools/emulator/install-debug.ps1`, `tools/desktop-vm/Build-TestPackage.ps1` (item 23), `tools/desktop-vm/checks/dino-page-turn.ps1` (item 24; both added by the 2026-11-01 feedback loop)
 
