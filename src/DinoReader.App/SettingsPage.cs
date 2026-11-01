@@ -12,12 +12,8 @@ namespace DinoReader;
 /// </summary>
 public abstract class SettingsSubPage : ContentPage, IGrownUpPage
 {
-	private const double HeaderSpacing = 6;
-	private const double BackSize = 44;
-	private const double BackIconSize = 22;
-	private const double TitleSize = 20;
-
-	private Label _heading = new();
+	private const string DoneIdPrefix = "GrownUpDone";
+	private GrownUpHeader _header = new();
 	private readonly Grid _root;
 
 	protected SettingsSubPage(string title)
@@ -46,33 +42,15 @@ public abstract class SettingsSubPage : ContentPage, IGrownUpPage
 	/// <summary>Changes the title after the page is built (a page whose title names a language chosen later).</summary>
 	protected void SetTitle(string title)
 	{
-		_heading.Text = title;
-		CastText.InOwnScriptAligned(_heading);
+		_header.Title = title;
 	}
 
-	private Grid Header(string title)
+	private GrownUpHeader Header(string title)
 	{
-		var back = new Border
-		{
-			WidthRequest = BackSize,
-			HeightRequest = BackSize,
-			StrokeThickness = 0,
-			BackgroundColor = Colors.Transparent,
-			Content = new IconView { Kind = IconKind.Back, Color = DinoTokens.Get(DinoTokens.Ink), Size = BackIconSize, StrokeWidth = 2.6 },
-		};
-		SemanticProperties.SetDescription(back, AppResources.Common_Back);
-		CastViews.AddTap(back, () => Busy.RunAsync(() => Navigation.PopAsync()));
-		Label heading = _heading = new Label { Text = title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center, AutomationId = "SettingsTitle" };
-		CastText.InOwnScriptAligned(heading);
-		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level1);
-		var header = new Grid
-		{
-			Padding = new Thickness(HeaderSpacing, 8, 14, 10),
-			ColumnSpacing = HeaderSpacing,
-			ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)],
-		};
-		header.Add(back, 0);
-		header.Add(heading, 1);
+		var header = _header = new GrownUpHeader(DoneIdPrefix + GetType().Name) { Title = title }; // each page in the stack has its own Done id (Slice 229)
+		header.TitleLabel.AutomationId = "SettingsTitle";
+		header.BackRequested += async (_, _) => await Busy.RunAsync(() => Navigation.PopAsync());
+		header.DoneRequested += async (_, _) => await Busy.RunAsync(() => Navigation.PopAsync()); // one level up, like Back: Done never skips a page (Slice 229)
 		return header;
 	}
 }

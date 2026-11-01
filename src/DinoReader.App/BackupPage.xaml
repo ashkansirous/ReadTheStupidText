@@ -17,17 +17,7 @@
     </ContentPage.Resources>
 
     <Grid x:Name="BackupRoot" RowDefinitions="Auto,*">
-        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" Padding="6,8,14,10">
-            <Border WidthRequest="44" HeightRequest="44" StrokeThickness="0" BackgroundColor="Transparent"
-                    SemanticProperties.Description="{x:Static res:AppResources.Common_Back}">
-                <local:IconView Kind="Back" Color="{StaticResource Ink}" Size="22" StrokeWidth="2.6" />
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnBackTapped" />
-                </Border.GestureRecognizers>
-            </Border>
-            <Label Grid.Column="1" Text="{x:Static res:AppResources.Backup_Title}" FontSize="20" FontAttributes="Bold" VerticalOptions="Center"
-                   SemanticProperties.HeadingLevel="Level1" />
-        </Grid>
+        <local:GrownUpHeader Title="{x:Static res:AppResources.Backup_Title}" BackRequested="OnBackTapped" DoneRequested="OnBackTapped" />
 
         <!-- Screen 24. -->
         <ScrollView Grid.Row="1" x:Name="MainPanel">

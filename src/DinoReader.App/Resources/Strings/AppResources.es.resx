@@ -24,6 +24,7 @@
   <data name="Common_Back" xml:space="preserve"><value>Atrás</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Guardar</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Hecho</value></data>
+  <data name="Common_Continue" xml:space="preserve"><value>Continuar</value></data>
   <data name="Close_Question" xml:space="preserve"><value>¿Cerrar Dino Book Reader?</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>Quedarse</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Cerrar</value></data>

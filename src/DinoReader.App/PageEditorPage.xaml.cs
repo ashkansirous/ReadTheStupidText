@@ -286,7 +286,7 @@ public partial class PageEditorPage : ContentPage, IGrownUpPage
 		CropSurface.Invalidate();
 	}
 
-	private async void OnBackTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(LeaveAsync);
+	private async void OnBackTapped(object? sender, EventArgs e) => await _busy.RunAsync(LeaveAsync);
 
 	private async Task LeaveAsync()
 	{

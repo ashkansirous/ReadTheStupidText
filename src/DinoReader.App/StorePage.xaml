@@ -77,19 +77,8 @@
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*">
-        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" Padding="6,8,14,10">
-            <Border WidthRequest="44" HeightRequest="44" StrokeThickness="0" BackgroundColor="Transparent"
-                    SemanticProperties.Description="{x:Static res:AppResources.Common_Back}">
-                <local:IconView Kind="Back" Color="{StaticResource Ink}" Size="22" StrokeWidth="2.6" />
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnBackTapped" />
-                </Border.GestureRecognizers>
-            </Border>
-            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                <Label Text="{x:Static res:AppResources.Store_Title}" FontSize="20" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level1" />
-                <Label Text="{x:Static res:AppResources.Store_Subtitle}" FontSize="12" TextColor="{StaticResource Muted}" />
-            </VerticalStackLayout>
-        </Grid>
+        <local:GrownUpHeader x:Name="Header" Title="{x:Static res:AppResources.Store_Title}" Subtitle="{x:Static res:AppResources.Store_Subtitle}"
+                             BackRequested="OnBackTapped" DoneRequested="OnBackTapped" />
 
         <ActivityIndicator Grid.Row="1" x:Name="LoadingView" IsRunning="True" Color="{StaticResource Brand}" HorizontalOptions="Center"
                            VerticalOptions="Center" />

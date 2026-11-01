@@ -303,7 +303,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	}
 
 	// A changed language rebuilds the root, so the shelf and Settings the grown-up returns to (and every page after them) speak the new language.
-	private async void OnBackTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(BackAsync);
+	private async void OnBackTapped(object? sender, EventArgs e) => await _busy.RunAsync(BackAsync);
 
 	// Counted once, when the grown-up leaves with a language different from the one the page opened with (not for every tap while browsing).
 	private void CountLanguageChange()
