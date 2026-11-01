@@ -18,17 +18,25 @@
   The second unhealthy check of a run exits 5 naming it.
   Slice 225: -Flow takes a flow name (`-Flow record-page-shows-words`); a path to the yaml is reduced to its name. It also finds a flow under .maestro/<app>/needs-file/ (run by name only; push its file first).
   The install check reads `pm list packages` one line per package; a stale Maestro driver is force-stopped before the ANR-dialog UI dump.
+  Slice 241: (1) when a failed flow shows the app crashed or hit an ANR (crash buffer / ActivityManager), the remaining flows are NOT RUN (reported with the crash lines) instead of each waiting out
+  its timeouts. (2) The emulator boots from its clean snapshot (start-warm.ps1; -ColdBoot skips it). (3) On a build cache miss the emulator boots while the APK builds. (4) One call runs every requested
+  flow (-Flow takes a comma list); with -Split (or RTST_SPLIT=1) and 4 or more flows the second half runs at the same time on emulator 2 (booted and installed then, stopped after). The split is opt-in
+  (default: one emulator, Slice 207's limit); emulator 2 gets 180 s to boot, then its flows run on emulator 1 instead.
 #>
 param(
     [Parameter(Mandatory)][ValidateSet('rtst', 'dino', 'auto')][string]$App,
     [ValidateSet(1, 2)][int]$Instance = 1,
-    [string]$Flow,
+    [string[]]$Flow,   # one flow name or path, or a comma list (Slice 241)
+    [switch]$Split,   # Slice 241: opt in to the second emulator for 4+ flows (default one emulator; RTST_SPLIT=1 does the same)
+    [switch]$ColdBoot,   # Slice 241: boot without the clean snapshot
     [switch]$Install,
     [int]$LogTimeoutSeconds = 40,
     # Slice 207: how long to wait for another run on the same emulator to end before giving up (exit 4, naming the holder).
     [int]$LeaseWaitMinutes = 15
 )
 $ErrorActionPreference = 'Stop'
+# A script error ends the run with exit 1 (after the finally blocks), so a run that errored never looks green to a caller that reads the exit code.
+trap { Write-Host "run-flows.ps1: $($_.Exception.Message)"; exit 1 }
 . (Join-Path $PSScriptRoot 'common.ps1')
 . (Join-Path $PSScriptRoot 'build-cache.ps1')
 Set-EmulatorInstance $Instance
@@ -43,8 +51,8 @@ if ($App -eq 'auto') {
     if ($touched.Count -eq 0) { Write-Host 'NO ANDROID APP IS TOUCHED BY THIS CHANGE: no flows ran. That is a skip, not a test pass.'; exit 0 }
     $worst = 0
     foreach ($name in $touched) {
-        $flowArgs = if ($Flow) { @('-Flow', (Get-FlowName $Flow)) } else { @() }
-        & $PSCommandPath -App $name -Instance $Instance -Install:$Install -LogTimeoutSeconds $LogTimeoutSeconds @flowArgs
+        $flowArgs = if ($Flow) { @('-Flow', ((Split-FlowList $Flow) -join ',')) } else { @() }
+        & $PSCommandPath -App $name -Instance $Instance -Install:$Install -Split:$Split -ColdBoot:$ColdBoot -LogTimeoutSeconds $LogTimeoutSeconds @flowArgs
         if ($LASTEXITCODE -ne 0) { $worst = 1 }
     }
     exit $worst
@@ -149,7 +157,7 @@ function Restart-Emulator {
     try {
         Write-Host "EMULATOR RESTART: stopping and starting $($script:Serial) from $($script:StateDir)."
         & (Join-Path $PSScriptRoot 'stop.ps1') -Instance $Instance | Out-Null
-        & (Join-Path $PSScriptRoot 'start-warm.ps1') -Instance $Instance | Out-Null
+        & (Join-Path $PSScriptRoot 'start-warm.ps1') -Instance $Instance -ColdBoot | Out-Null   # a dead system_server: not from a snapshot taken on the same image
     } finally { Pop-Location }
     $installed = & $script:Adb -s $script:Serial shell pm list packages $packages[$App] 2>&1 | Out-String
     $stale = (Get-InstalledKey $App) -ne (Get-BuildKey)  # a restart on a different baseline: the installed build is not the current one
@@ -196,7 +204,7 @@ function Invoke-Flow([string]$Maestro, [System.IO.FileInfo]$File) {
 
 function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File) {
     $ErrorActionPreference = 'Continue'
-    & $script:Adb -s $script:Serial logcat -c
+    & $script:Adb -s $script:Serial logcat -b all -c   # every buffer: the crash/events buffers must not carry an earlier flow's ANR into this flow's verdict
     $sw = [Diagnostics.Stopwatch]::StartNew()
     # Applied to the Maestro call only (a JVM reads JAVA_TOOL_OPTIONS whatever the launcher does with MAESTRO_OPTS); the Android build's Java must keep the real user.home.
     $env:JAVA_TOOL_OPTIONS = "-Duser.home=$($script:MaestroHome)"
@@ -213,17 +221,77 @@ function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File) {
         $missing = Wait-LogMarkers @(Get-ExpectedLogs $File.FullName)
         if ($missing.Count -gt 0) { $problem = "Missing log marker(s) under tag ${logTag}: " + ($missing -join '; ') }
     }
-    return [pscustomobject]@{ Name = $File.BaseName; Seconds = $sw.Elapsed.TotalSeconds; Problem = $problem }
+    # Slice 241 item 1: a failed flow is checked for an app crash / ANR, so the caller can stop instead of running the rest into the same dead app.
+    $crash = @()
+    if ($problem) { $crash = @(Get-FlowCrashLines $packages[$App]) }
+    if ($crash.Count -gt 0) { $problem += "`nAPP CRASH/ANR during the flow:`n" + (($crash | ForEach-Object { "  $_" }) -join "`n") }
+    return [pscustomobject]@{ Name = $File.BaseName; Seconds = $sw.Elapsed.TotalSeconds; Problem = $problem; Crash = $crash; NotRun = $null }
 }
 
 # Slice 207: the APK is built (or found in the cache) before the emulator lease is taken, so a cold build never holds the emulator or runs a waiter's wait out.
 # Nothing is built when the installed app already matches the current inputs and -Install is not asked for.
+# Slice 241 item 3: on a cache miss the emulator boots (detached, in the background) while the APK builds, and both are waited for before the install.
 function Build-BeforeLease {
     $key = Get-BuildKey
     $needed = $Install -or ((Get-InstalledKey $App) -ne $key)
     if ($needed -and -not (Find-CachedBuild (Get-BuildDir $App (Get-EmulatorBuildPlatform $App) $key) '*-Signed.apk')) {
-        & (Join-Path $PSScriptRoot 'install-debug.ps1') -App $App -Instance $Instance -BuildOnly
+        $boot = if (Test-EmulatorPresent) { $null } else { Start-EmulatorBootInBackground $Instance -ColdBoot:$ColdBoot }
+        if ($boot) { Write-Host "Cache miss: building the $App APK while $($script:Serial) boots." }
+        $built = $false
+        try { & (Join-Path $PSScriptRoot 'install-debug.ps1') -App $App -Instance $Instance -BuildOnly; $built = $true }
+        finally {
+            # A failed build shows its own error: the boot is not waited for and its failure never replaces the build's, but the boot this call started is stopped.
+            if ($boot -and $built) { Wait-EmulatorBoot $boot }
+            elseif ($boot) { Stop-BackgroundBoot $boot $Instance }
+        }
     }
+}
+
+function Find-RequestedFlows([string]$FlowDir) {
+    if (-not $Flow) { return @(Find-FlowFiles $FlowDir '') }
+    $found = @()
+    $missing = @()
+    foreach ($name in (Split-FlowList $Flow)) {
+        $hit = @(Find-FlowFiles $FlowDir $name)
+        if ($hit.Count -eq 0) { $missing += $name }
+        $found += $hit
+    }
+    if ($missing.Count -gt 0) { throw "No flow named $($missing -join ', ') in $FlowDir (-Flow takes flow names, e.g. record-page-shows-words, or paths). Nothing was run." }
+    return $found
+}
+
+# Slice 241: stops a detached emulator boot this run started (the start-warm wrapper first, so it cannot start the emulator after stop.ps1 ran, then the emulator).
+function Stop-BackgroundBoot($Boot, [int]$InstanceNumber) {
+    if (-not $Boot.HasExited) { & taskkill.exe /T /F /PID $Boot.Id 2>&1 | Out-Null }
+    & (Join-Path $PSScriptRoot 'stop.ps1') -Instance $InstanceNumber | Out-Null
+}
+
+# Slice 241 item 4: the second half of the flows on emulator 2, as a detached run-flows call (output to a file). Returns the process, or $null when nothing goes there.
+function Start-SecondHalf($Names, $Boot) {
+    if ($Names.Count -eq 0) { return $null }
+    if (-not $Boot) { $null = & (Join-Path $PSScriptRoot 'new-avd.ps1'); $Boot = Start-EmulatorBootInBackground 2 }
+    # Never start a flows run while the other emulator is still booting (Maestro: device not connected). The wait is bounded: a boot that hangs or fails sends these
+    # flows to emulator 1 (a $null return), and the caller releases emulator 2.
+    try { $booted = Wait-EmulatorBoot $Boot $script:SplitBootSeconds } catch { $booted = $false; Write-Host "SPLIT: emulator 2 failed to boot ($($_.Exception.Message))." }
+    if (-not $booted) {
+        Write-Host "SPLIT: emulator 2 was not ready in $($script:SplitBootSeconds) s; these flows run on this emulator instead: $($Names -join ', ')."
+        Stop-BackgroundBoot $Boot 2
+        return $null
+    }
+    $log = Join-Path $script:StateDir 'split-i2.log'
+    $arguments = "-NoProfile -File `"$PSCommandPath`" -App $App -Instance 2 -Flow `"$($Names -join ',')`" -LogTimeoutSeconds $LogTimeoutSeconds"
+    Write-Host "SPLIT: $($Names.Count) flow(s) run on emulator-5556 at the same time: $($Names -join ', ') (output $log)."
+    return Start-DetachedProcess (Get-Process -Id $PID).Path $arguments $log "$log.err"
+}
+
+function Wait-SecondHalf($Process) {
+    $Process.WaitForExit()
+    $null = $Process.Handle
+    $log = Join-Path $script:StateDir 'split-i2.log'
+    Write-Host '--- emulator 2 ---'
+    Get-Content $log -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "[i2] $_" }
+    Get-Content "$log.err" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "[i2 err] $_" }
+    return [int]$Process.ExitCode
 }
 
 # Renews the lease; stops the run (exit 4) when another run has taken the emulator since, because two runs on one serial is what the lease prevents.
@@ -269,8 +337,17 @@ try {
     Write-Host "Instance ${Instance}: Maestro home $($script:MaestroHome)"
     $env:MAESTRO_OPTS = "-Duser.home=$($script:MaestroHome)"
     $env:MAESTRO_CLI_NO_ANALYTICS_NOTIFICATION = '1'
+    # Slice 241 item 4: the flows are known now, so a split's second emulator boots while this one installs.
+    $flowDir = Join-Path $script:RepoRoot ".maestro\$App"
+    $files = @(Find-RequestedFlows $flowDir)   # Slice 225: -Flow also finds a flow under needs-file/ and accepts a path
+    if (-not $files) { throw "No flows found in $flowDir$(if ($Flow) { " named $((Split-FlowList $Flow) -join ', ')" }) (-Flow takes flow names, e.g. record-page-shows-words, or paths)." }
+    $splitAsked = ($Split.IsPresent -or $env:RTST_SPLIT -eq '1') -and $Instance -eq 1
+    $splitPlan = Split-FlowNames @($files | ForEach-Object { $_.BaseName }) $splitAsked
+    $boot2 = $null
+    $secondRun = $null
+    if ($splitPlan.Second.Count -gt 0) { $null = & (Join-Path $PSScriptRoot 'new-avd.ps1'); $boot2 = Start-EmulatorBootInBackground 2; $priorTwoEmulators = $env:RTST_ALLOW_TWO_EMULATORS; $env:RTST_ALLOW_TWO_EMULATORS = '1' }
     if ($Install) { & (Join-Path $PSScriptRoot 'install-debug.ps1') -App $App -Instance $Instance }
-    else { & (Join-Path $PSScriptRoot 'start-warm.ps1') -Instance $Instance | Out-Null }
+    else { & (Join-Path $PSScriptRoot 'start-warm.ps1') -Instance $Instance -ColdBoot:$ColdBoot | Out-Null }
 
     # Slice 215: health first. A dead system_server must be reported and restarted here, not surface below as "not installed" (2026-10-31 kill test).
     $null = Confirm-EmulatorHealthy 'before the install check'
@@ -291,25 +368,39 @@ try {
     if ($installProblem -and $installProblem -like 'EMULATOR UNHEALTHY*') { Write-Host $installProblem; $null = Confirm-EmulatorHealthy 'at the install check'; $installed = & $script:Adb -s $script:Serial shell pm list packages $packages[$App]; $installProblem = Resolve-InstallProblem (Join-PmLines $installed) $packages[$App] }
     if ($installProblem) { throw "$installProblem; run install-debug.ps1 -App $App (or pass -Install)." }
 
-    $flowDir = Join-Path $script:RepoRoot ".maestro\$App"
-    $files = @(Find-FlowFiles $flowDir $Flow)   # Slice 225: -Flow also finds a flow under needs-file/ and accepts a path
-    if (-not $files) { throw "No flows found in $flowDir$(if ($Flow) { " named $(Get-FlowName $Flow) (-Flow takes a flow name, e.g. record-page-shows-words, not a path)" })." }
-
     $total = [Diagnostics.Stopwatch]::StartNew()
     $activity = Start-FlowsActivity "flows-$App-i$Instance" $leaseOwner
     try {
         Assert-LeaseHeld $leaseOwner 'while this run waited for a free slot'  # the wait for the quiet machine can be long
         Clear-AnrDialog 'before the flows'
-        $results = foreach ($file in $files) {
+        $secondRun = Start-SecondHalf @($splitPlan.Second) $boot2
+        $myNames = @($splitPlan.First)
+        if (@($splitPlan.Second).Count -gt 0 -and -not $secondRun) { $myNames += @($splitPlan.Second) }   # emulator 2 did not come up: its flows run here
+        $results = New-Object System.Collections.Generic.List[object]
+        $crashedIn = $null
+        $crashLine = ''
+        foreach ($file in @($files | Where-Object { $myNames -contains $_.BaseName })) {
+            if ($crashedIn) {   # Slice 241 item 1: the app is dead; running on only waits out each flow's timeouts
+                Write-Host ("{0,-5} {1} (app crashed in {2}: {3})" -f 'NOTRUN', $file.BaseName, $crashedIn, $crashLine)
+                $results.Add([pscustomobject]@{ Name = $file.BaseName; Seconds = 0; Problem = $null; Crash = @(); NotRun = "app crashed in ${crashedIn}: $crashLine" })
+                continue
+            }
             Assert-LeaseHeld $leaseOwner 'during the flows'  # renewed between flows
             $r = Invoke-GuardedFlow $maestro $file
             Write-Host ("{0,-5} {1} ({2:n1} s)" -f $(if ($r.Problem) { 'FAIL' } else { 'PASS' }), $r.Name, $r.Seconds)
             if ($r.Problem) { Write-Host ($r.Problem -replace '(?m)^', '      ') }
-            $r
+            if (@($r.Crash).Count -gt 0) { $crashedIn = $r.Name; $crashLine = Get-FirstCrashLine $r.Crash; Write-Host "app crashed in $($r.Name): $crashLine"; Write-Host 'The remaining flows on this emulator are not run.' }
+            $results.Add($r)
         }
         Clear-AnrDialog 'after the flows'
     } finally { Stop-Activity $activity }
     $failed = @($results | Where-Object { $_.Problem }).Count
-    Write-Host ("{0}: {1} passed, {2} failed in {3:n1} s." -f $App, (@($results).Count - $failed), $failed, $total.Elapsed.TotalSeconds)
-    if ($failed -gt 0) { exit 1 }
-} finally { if ($leaseTaken) { Remove-Lease $script:Serial $leaseOwner 0 'emulator' | Out-Null } }
+    $notRun = @($results | Where-Object { $_.NotRun }).Count
+    Write-Host (Format-FlowsSummary $App $results.ToArray() $total.Elapsed.TotalSeconds)
+    foreach ($crashSummary in @(Format-CrashSummary $results.ToArray())) { Write-Host $crashSummary }
+    $secondExit = if ($secondRun) { Wait-SecondHalf $secondRun } else { 0 }
+    if ($failed -gt 0 -or $notRun -gt 0 -or $secondExit -ne 0) { exit 1 }
+} finally {
+    if ($leaseTaken) { Remove-Lease $script:Serial $leaseOwner 0 'emulator' | Out-Null }
+    if ($boot2) { if ($null -eq $priorTwoEmulators) { Remove-Item Env:RTST_ALLOW_TWO_EMULATORS -ErrorAction SilentlyContinue } else { $env:RTST_ALLOW_TWO_EMULATORS = $priorTwoEmulators }; & (Join-Path $PSScriptRoot 'stop.ps1') -Instance 2 | Out-Null }   # only a split boots emulator 2, so only a split stops it
+}

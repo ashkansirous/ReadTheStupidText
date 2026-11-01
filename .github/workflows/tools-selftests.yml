@@ -52,6 +52,12 @@ jobs:
       - name: Emulator lease self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-lease.ps1
 
+      - name: Device-test speed self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-speed.ps1
+
+      - name: Detached background start self-test (${{ matrix.shell }})
+        run: ./tools/test-detached-process.ps1
+
       - name: Activity limit and emulator health self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-activity.ps1
 
@@ -75,6 +81,9 @@ jobs:
 
       - name: Desktop test memory guard self-test (${{ matrix.shell }})
         run: ./tools/desktop-vm/test-memory-guard.ps1
+
+      - name: Switch-parameter assignment self-test (${{ matrix.shell }})
+        run: ./tools/test-switch-param-assign.ps1
 
       # Slice 225 item 17: PowerShell lint. PSScriptAnalyzer is installed on demand; PSScriptAnalyzerSettings.psd1 holds the baseline (rules that fire by design are off).
       # Any Error-level finding and any parse error (checked with the shell's own parser, so PowerShell 7-only syntax fails the Windows PowerShell 5.1 leg) fails the job, except the one baseline

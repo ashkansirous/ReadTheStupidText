@@ -119,10 +119,15 @@ public sealed class GuardedResponse(HttpResponseMessage message) : IDisposable
 
     public HttpResponseMessage Message { get; } = message;
 
-    /// <summary>The body as a stream whose reads give up after the stall timeout.</summary>
-    public async Task<Stream> OpenBodyAsync(TimeSpan stallTimeout, CancellationToken cancellationToken, DownloadTag? tag = null)
+    /// <summary>The body as a stream whose reads give up after the stall timeout. <paramref name="wrapInner"/> (a Debug test hook, Slice 241) wraps the raw body stream under the guard.</summary>
+    public async Task<Stream> OpenBodyAsync(TimeSpan stallTimeout, CancellationToken cancellationToken, DownloadTag? tag = null, Func<Stream, Stream>? wrapInner = null)
     {
         Stream inner = await Message.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        if (wrapInner is not null)
+        {
+            inner = wrapInner(inner);
+        }
+
         return new GuardedStream(inner, this, stallTimeout, tag);
     }
 
