@@ -77,7 +77,7 @@ New strings (all 14 locales): "Storyteller voices", "Warmer, livelier English vo
   impersonation, medical advice, automated legal decisions; machine-generated content disclosed) and the obligations (licence copy, restrictions passed on
   as an enforceable term, notices kept). Dino and RTST comply with the restrictions; the `supertonic-3` pack zip lacked the OpenRAIL-M text and a notice
   of the restrictions. **Fixed in this slice:** `packs.yml` now ships `LICENSE-OpenRAIL-M` and a `NOTICE` in the `supertonic-3` pack (`pack_version` 3); `STORE.md` updated.
-- **Pack.** `kokoro-en` is sherpa-onnx's `kokoro-int8-multi-lang-v1_0` (sha256 `4c3052ab...`, 132 MB archive): `model.int8.onnx` (114 MB) stored as `model.onnx`, `voices.bin`
+- **Pack.** `kokoro-en` is sherpa-onnx's `kokoro-int8-multi-lang-v1_0` (sha256 `4c3052ab...`, 132 MB archive; **superseded by Slice 220 part 2**: pack version 3 pins the 2026-10-26 re-upload, 132,353,410 bytes, sha256 `72c34723...`, STFT convs kept float32, because the first int8 build gave NaN/silent short lines on arm64): `model.int8.onnx` (114 MB) stored as `model.onnx`, `voices.bin`
   (53 voices, 28 MB), `tokens.txt`, `lexicon-us-en.txt`, the espeak-ng data, the Apache licence. Built locally to measure: **the zip is 125,582,024 bytes (about
   126 MB)**, over the 100 MB cap of the other packs, so `packs.yml` gives this pack its own cap, `KOKORO_MAX_BYTES` 157286400 (150 MB). The card names the size from
   the catalog entry, so the mock's "90 MB" placeholder is the real size once the pack is published (about "126 MB").
