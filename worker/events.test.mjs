@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { MAX_EVENTS_PER_REQUEST, handleEvents, handleRtstEvents, isEventsPath, parseEvent, parseRtstEvent, toDataPoint } from "./events.ts";
+import { isUnstampedVersion, MAX_EVENTS_PER_REQUEST, handleEvents, handleRtstEvents, isEventsPath, parseEvent, parseRtstEvent, toDataPoint } from "./events.ts";
 
 const BOOK = "0123456789abcdef0123456789abcdef";
 const shelfEvent = {
@@ -216,6 +216,25 @@ test("any version below 1.0 (major part 0) is dropped for both apps (Slice 219)"
   for (const version of ["1234567.1", "-1.2", "0x1.2"]) {
     assert.equal(parseEvent({ ...shelfEvent, version }), null, version);
     assert.equal(parseRtstEvent({ ...readStarted, version }), null, version);
+  }
+});
+
+// The same case table as UsageEligibilityTests (Slice 223): both sides must reject and accept the same versions.
+const UNSTAMPED_CASES = ["1.0", "1.0.0", "1.0.0.0", "0.0.0", "0.0.0.0", "0.1.1", "0.67.1.2", "00.5", "000.1", "000000.1.2", "1234567.1", "-1.2", "0x1.2", "1", "1.x", "100.x", "", " 1.0 ", " 2.0 ", "2.0\n", "٣.1", "１.0"];
+const STAMPED_CASES = ["1.0.1", "1.71.1", "2.0", "10.1.0", "100.0.1", "01.0.1", "999999.1"];
+
+test("isUnstampedVersion decides alone on the shared case table, malformed input included (Slice 223)", () => {
+  for (const version of UNSTAMPED_CASES) assert.equal(isUnstampedVersion(version), true, version);
+  for (const version of STAMPED_CASES) assert.equal(isUnstampedVersion(version), false, version);
+  for (const version of [undefined, null, 1.5, {}]) assert.equal(isUnstampedVersion(version), true, String(version));
+});
+
+test("every phone event name drops a 0.x or malformed version on the shared envelope (Slice 223)", () => {
+  const timing = rtst("timing", { stage: "first_audio", outcome: "done", durationBucket: "0.5-1" });
+  const waitShown = rtst("wait_shown", { waitStage: "stalled", durationBucket: "2-5" });
+  for (const event of [readStarted, timing, waitShown]) {
+    assert.notEqual(parseRtstEvent(event), null, `${event.name} control`);
+    for (const version of ["0.9.0", "0.0.0", "00.5", "1.x"]) assert.equal(parseRtstEvent({ ...event, version }), null, `${event.name} ${version}`);
   }
 });
 
