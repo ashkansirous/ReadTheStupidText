@@ -1,0 +1,27 @@
+<Project>
+
+	<!-- The one place the sherpa-onnx version, and the onnxruntime that comes with it, are written (Slice 245).
+	     Android, iOS and Windows read these two properties; no other file may pin either number.
+	     .github/scripts/check-sherpa-pins.mjs fails CI when a pin anywhere else in the repo differs.
+	     SherpaOnnxVersion: the NuGet org.k2fsa.sherpa.onnx packages, the iOS xcframework release, the Android
+	     x86_64 tarball, the pip sherpa-onnx in packs.yml and the sound-words test.
+	     OnnxRuntimeVersion: the Microsoft.ML.OnnxRuntime(.Managed) binding. sherpa-onnx 1.13.8 bundles
+	     onnxruntime 1.28.2 natively on Android and Windows (checked in the built libonnxruntime.so and
+	     onnxruntime.dll), but 1.28.2 is not on NuGet, so the managed binding is 1.28.0 (same 1.28 API level).
+	     Changing SherpaOnnxVersion also means the SHA-256 of the iOS xcframework (IosSherpaPackaging.props)
+	     and of the Android x86_64 tarball (AndroidSherpaPackaging.props), from the GitHub release asset digests. -->
+	<!-- Every entry point imports this file unconditionally. A project (or -p:) that sets either version before
+	     this import is a build error (SherpaVersionGuard): the first import remembers what was set before it
+	     (a global -p: property exists before any import, so it is caught too). Bumping means editing the two
+	     numbers below and nothing else in this file. -->
+	<PropertyGroup>
+		<_SherpaVersionsPreset Condition="'$(_SherpaVersionsPreset)' == ''">$(SherpaOnnxVersion)|$(OnnxRuntimeVersion)</_SherpaVersionsPreset>
+		<SherpaOnnxVersion>1.13.8</SherpaOnnxVersion>
+		<OnnxRuntimeVersion>1.28.0</OnnxRuntimeVersion>
+	</PropertyGroup>
+
+	<Target Name="SherpaVersionGuard" BeforeTargets="PrepareForBuild">
+		<Error Condition="'$(_SherpaVersionsPreset)' != '|'" Text="SherpaOnnxVersion/OnnxRuntimeVersion were set to '$(_SherpaVersionsPreset)' (a project or -p:) before importing SherpaOnnxVersion.props; they are written only there." />
+	</Target>
+
+</Project>

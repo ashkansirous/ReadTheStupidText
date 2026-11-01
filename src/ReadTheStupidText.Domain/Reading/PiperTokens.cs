@@ -5,7 +5,7 @@ namespace ReadTheStupidText.Domain.Reading;
 
 /// <summary>
 /// The rules sherpa-onnx's Piper reader applies to a pack's <c>tokens.txt</c> (Slice 201). Its
-/// <c>ReadTokens</c> (sherpa-onnx v1.13.3 piper-phonemize-lexicon.cc) calls <c>SHERPA_ONNX_EXIT(-1)</c> on
+/// <c>ReadTokens</c> (sherpa-onnx piper-phonemize-lexicon.cc, last read at v1.13.8) calls <c>SHERPA_ONNX_EXIT(-1)</c> on
 /// a token of more than one code point, on a duplicate token, and on trailing junk after the id, and
 /// looks up <c>_</c>, <c>^</c> and <c>$</c> unconditionally. It aborts the whole process natively, so
 /// the app checks the file first. A line is <c>&lt;one code point&gt; &lt;id&gt;</c>; a line holding only

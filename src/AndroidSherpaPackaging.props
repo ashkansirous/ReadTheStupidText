@@ -1,9 +1,7 @@
 <Project>
 
-	<PropertyGroup>
-		<!-- The one sherpa-onnx NuGet version for every package below and for the x86_64 tarball pin. -->
-		<SherpaOnnxVersion>1.13.3</SherpaOnnxVersion>
-	</PropertyGroup>
+	<!-- SherpaOnnxVersion (every package below and the x86_64 tarball pin) comes from SherpaOnnxVersion.props. -->
+	<Import Project="$(MSBuildThisFileDirectory)SherpaOnnxVersion.props" />
 
 	<!-- The Android sherpa-onnx native packaging, shared by every project that links the engine:
 	     ReadTheStupidText.Mobile.Shared (it compiles against sherpa) AND each app (Read The
@@ -64,8 +62,8 @@
 
 	<!-- x86_64 natives for the emulator (Slice 161): Debug + android-x64 app builds only, never Release. The
 	     release tarball is downloaded once into artifacts/ (gitignored), checked against a pinned SHA-256, and only the two
-	     x86_64 libraries are extracted. Never committed. libonnxruntime.so is the release's own 1.24.3,
-	     the version Microsoft.ML.OnnxRuntime.Managed is pinned to (Mobile CLAUDE.md).
+	     x86_64 libraries are extracted. Never committed. libonnxruntime.so is the release's own 1.28.2,
+	     the 1.28 line Microsoft.ML.OnnxRuntime.Managed is pinned to (OnnxRuntimeVersion, SherpaOnnxVersion.props).
 	     SherpaX64PinnedVersion and SherpaX64Sha256 describe the tarball of ONE release: when SherpaOnnxVersion
 	     (the NuGet version, top of this file) changes, the build fails until both are updated together. -->
 	<!-- One task does the whole fetch under a machine-wide named mutex, so parallel builds (RTST + Dino, a solution
@@ -142,8 +140,8 @@
 	     file is imported is still seen. -->
 	<Target Name="FetchSherpaX64Natives" BeforeTargets="BeforeBuild;_ResolveAssemblies" Condition="'$(Configuration)' == 'Debug' And '$(RuntimeIdentifier)' == 'android-x64' And '$(AndroidApplication)' == 'true'">
 		<PropertyGroup>
-			<SherpaX64PinnedVersion>1.13.3</SherpaX64PinnedVersion>
-			<SherpaX64Sha256>04ACACDB5EAA41D814E7792E7906168D147AF6023FAA9E9CAF38B2F321B4CF52</SherpaX64Sha256>
+			<SherpaX64PinnedVersion>1.13.8</SherpaX64PinnedVersion>
+			<SherpaX64Sha256>2FF63469A71CB6009AA2E3ED5F4A670F8ABDCBE4BB9FFD23776AFC792A6B4F44</SherpaX64Sha256>
 			<SherpaX64Dir>$(MSBuildThisFileDirectory)..\artifacts\sherpa-x64-$(SherpaOnnxVersion)\</SherpaX64Dir>
 		</PropertyGroup>
 		<Error Condition="'$(SherpaX64PinnedVersion)' != '$(SherpaOnnxVersion)'" Text="AndroidSherpaPackaging.props: SherpaOnnxVersion is $(SherpaOnnxVersion) but SherpaX64PinnedVersion/SherpaX64Sha256 are for $(SherpaX64PinnedVersion). Update the pinned version and its SHA-256 (from the GitHub release asset digest) together." />
