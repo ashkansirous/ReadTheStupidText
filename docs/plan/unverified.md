@@ -52,6 +52,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 227: crash reports ([slice](slices/227-crash-reports.md))
 
 - Slice 227 not yet verified: iOS on a real TestFlight build (report tagged `testflight`, receipt name), MetricKit `native` report 24 h later, `crash-test kind=kill` gives one `unclean_exit`, Android exit reasons, an R2 object and `app_crashes` row once on, `dino_usage` TestFlight leak (27 rows stored), `pull-crashes.mjs`/`pull-apple.py`/`pull-play.py` against the real services ([slice](slices/227-crash-reports.md)).
+- Slice 227: reports come only from rtst-v1.80.0 / dino-v1.85.0 onward; RTST's Microsoft Store submission rtst-store-v1.81.0 (2026-11-01) carries the code once certified; which version each store serves today could not be read from the public pages.
 
 ### Slice 219: usage drops dev versions ([slice](slices/219-usage-drops-dev-versions.md))
 
@@ -94,7 +95,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 208: paused pack downloads tell you and finish ([slice](slices/208-paused-pack-downloads-tell-you-and-finish.md))
 
-- Slice 208 (PR #646) not yet verified: the S21 Verification list (paused notice within ~35 s and tap resumes; notification text; stale partial resumes or is deleted), runnable now that the phone is back; Dino storyteller first download shows no ask sheet and grown-up Settings shows it once (emulator); iOS TestFlight hand check; stale-partial-launch first cold run marker not seen within 40 s (not diagnosed); the reworked check has never run, so the detached 240 s device-side restore are unproven; it was edited after both reviews, and a later read found it may never see a pause on unmetered Wi-Fi (Slice 225 item 15). [208-paused-pack-downloads-tell-you-and-finish.md](slices/208-paused-pack-downloads-tell-you-and-finish.md)
+- Slice 208 (PR #646) not yet verified: the S21 Verification list (paused notice within ~35 s and tap resumes; notification text; stale partial resumes or is deleted), runnable now that the phone is back; Dino storyteller first download shows no ask sheet and grown-up Settings shows it once (emulator); iOS TestFlight hand check; stale-partial-launch first cold run marker not seen within 40 s (not diagnosed); the `paused-notification` check itself was reworked by Slice 233 (Debug hook `drop-pack-network`, no netpolicy) and passed on the S21 on 2026-11-01, so its earlier netpolicy and detached-restore doubts no longer apply. [208-paused-pack-downloads-tell-you-and-finish.md](slices/208-paused-pack-downloads-tell-you-and-finish.md)
 
 ### Slice 206: phone run scripts ([slice](slices/206-phone-run-scripts.md))
 

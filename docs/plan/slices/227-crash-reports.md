@@ -74,6 +74,7 @@ Settled here (planning): the reports follow the user's existing "anonymous usage
 - MetricKit diagnostics: a `native` report about 24 h later, real device only.
 - `crash-test kind=kill` gives exactly one `unclean_exit` (no flow yet).
 - Android exit reasons (native, ANR, foreground low memory) on a device.
+- Which users can send a report at all: the code (PR #654) is in rtst-v1.80.0 and dino-v1.85.0 onward, not in rtst-v1.79.0 or dino-v1.84.0 (checked with `git merge-base --is-ancestor`, round 2 feedback loop). RTST's newest Microsoft Store submission marker is `rtst-store-v1.81.0` (2026-11-01, so it carries the code once certified); no `dino-store-v` marker exists. Read 2026-11-01 15:07 UTC: the Microsoft Store page shows no version, the Play page answers 404 (not public), Apple's public lookup finds no RTST app. "Crashes are sent from production builds" holds only once a store serves those versions.
 - The Worker after deploy: `POST /api/crash` answers 204 with config off; an R2 object and an `app_crashes` row appear once on.
 - `dino_usage` iOS TestFlight leak closed (cause still unproven); the 27 leaked rows remain stored.
 - `pull-crashes.mjs`, `pull-apple.py` and `pull-play.py` not run against the real services. `pull-play.py` cannot run yet: on 2026-11-01 the Play key reached Google but the Play Developer Reporting API is switched off in Cloud project 607390827721, and switching it on with that key was refused by the permission check (Waiting on the user in plan.md; recorded by the 2026-11-01 feedback loop).
