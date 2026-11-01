@@ -1,8 +1,23 @@
 ### Slice 230 — Dino: say plainly that recordings stay on the phone, and restore brings them back
 
-*Planned 2026-11-01.* From the user's user test on 2026-11-01 (findings 4 and 5). No design step (copy and logic).
+*In progress (wave 2026-11-01), draft PR.* From the user's user test on 2026-11-01 (findings 4 and 5). No design step (copy and logic).
 
-**Touches:** `src/DinoReader.Core/StoryPackageReader.cs`, `src/DinoReader.Core/StoryBackupReader.cs`, `src/DinoReader.Core/StoryBackup.cs`, `src/DinoReader.App/BackupPage.xaml`, `src/DinoReader.App/BackupPage.xaml.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/StoryBackupTests.cs`, `tests/DinoReader.Tests/StoryPackageTests.cs`, `docs/plan/slices/230-dino-recordings-copy-and-restore-merge.md`
+**Touches:** `src/DinoReader.Core/StoryPackageReader.cs`, `src/DinoReader.Core/StoryBackupReader.cs`, `src/DinoReader.Core/StoryBackup.cs`, `src/DinoReader.Core/StoryRecordings.cs`, `src/DinoReader.Core/IStoryLibrary.cs`, `src/DinoReader.App/FileStoryLibrary.cs` (wherever it lives), `src/DinoReader.App/BackupPage.xaml`, `src/DinoReader.App/BackupPage.xaml.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/Testing/DinoTestCommands.Backup.cs` (new), `src/DinoReader.App/Testing/DinoTestCommands.cs` (key registration only), `tools/emulator/flows/dino-backup-restore-recordings.yaml` (new), `tests/DinoReader.Tests/StoryBackupTests.cs`, `tests/DinoReader.Tests/StoryPackageTests.cs`, `tests/DinoReader.Tests/` (new test files), `docs/plan/slices/230-dino-recordings-copy-and-restore-merge.md` (widened at the claim, 2026-11-01, from a premise check)
+
+#### Coordinator's design notes (claim, 2026-11-01)
+
+Checked on origin/main before the claim:
+
+- **The skip.** It is in `StoryBackupReader.cs:125-127` (`known.Contains(packaged.Id) || known.Contains(source)` returns `Outcome.Skipped`) and in `ImportKeepingIdAsync` (:131-133), not in `StoryPackageReader`. `StoryPackageReader.cs:36` keeps recordings when `keepId` is set. Recordings are `Story.Recordings` (`IReadOnlyDictionary<int, PageRecording>?`, `Story.cs:100-101`). Their audio files sit in the story folder, named by `StoryRecordings.FileNameOf(page)` (`FileStoryLibrary.cs:169-176`). `StarterUpdate.cs:240-248` (`WithMovedRecordings`, `TryAdd`) is a merge pattern to reuse.
+- **Merge order (interrupt-safe).** Write every audio file from the backup into the existing story's folder first, each through a temp name and then a move. Only after that, save the story once with the merged `Recordings` map. A kill in between leaves at most extra audio files and no entry that points at a missing file.
+  - Pages, pictures, cast, `UseRecordings` and everything else on the phone stay as they are.
+  - A backup recording whose page number doesn't exist in the phone's story is dropped.
+- **Outcome.** Add a `Merged` restore outcome. Count it in `StoryRestoreResult`, add a `Backup_Merged` string, and show "N books got their recordings back" on the Backup page. A restore that finds nothing new to merge stays `Skipped`.
+- **Copy.** There are 16 resx files: the base plus 15 locales (ar, da, de, es, fa, fi, fr, ja, nb, nl, pt, ru, sv, zh). Every new or changed string goes into all 16; the "13 languages" above is stale. `Backup_RestoreBody` (:87, "Stories already here stay exactly as they are") becomes the mock's 124 restore text. The Record line has a phone and a tablet string, picked by `DeviceInfo.Idiom`.
+- **Device check.** The microphone can't be driven by a script, so add a Debug-only test hook in a new partial file `Testing/DinoTestCommands.Backup.cs`:
+  - It writes a short known audio file as page 1's recording of a starter book, backs up to a file, deletes the recordings and restores, logging each step.
+  - One new emulator flow drives it. The flow's `appId` must match whatever `tools/emulator` uses on main when this merges (Slice 221 moves Dino dev installs to `uk.sirous.dinoreader.dbg`).
+  - The check is: after the restore the page's recording entry exists and its file is present and non-empty. Hearing it play goes to *Not yet verified*.
 
 #### Why
 
