@@ -2,6 +2,7 @@
 
 Rules for the device-test tooling (`tools/emulator`, `tools/phone`, `tools/desktop-vm`; the VM scripts have their own file).
 
+- Keep every `.ps1` under `tools/` ASCII (write a non-ASCII character as an escape such as `[char]0x2500`): Windows PowerShell 5.1 reads a BOM-less file as ANSI, so a non-ASCII byte breaks its parse while `pwsh` passes. A builder's fast checks parse each changed `.ps1` with `powershell -NoProfile -Command "[System.Management.Automation.Language.Parser]::ParseFile(...)"` as well as `pwsh`, the same check as `tools-selftests.yml`. (2026-11-01, Slice 225: the 5.1 leg went red in CI only.)
 - Start device checks from `run-flows.ps1 -App auto` / `Invoke-DesktopTest.ps1 -App auto` (they test only the apps the diff touches); never drop an app it names.
 - Builds are cached by input hash in `<worktrees>/_builds` and run outside the device locks; the enforced limit is one emulator running flows plus the VM (`RTST_ALLOW_TWO_EMULATORS=1` allows two emulators, never with the VM).
 - Phone runs need the phone charging; for network it must be unlocked once with the `.dbg` app in the foreground.

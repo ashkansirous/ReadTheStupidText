@@ -63,6 +63,8 @@ Check pass (`reviews/s221-check-medium.md`, 2 low findings): none applied.
 - 1: skipped, the emulator run installed and ran the `.dbg` build, so the manifest id was right (the stale-obj worry did not happen).
 - 2: skipped as low and unproven: `Remove-StaleDevPackages` runs `adb ... 2>&1` under `$ErrorActionPreference='Stop'` (`tools/emulator/common.ps1:151`) and on Windows PowerShell 5.1 adb's stderr could abort the install instead of warning.
 
+Second check pass (`reviews/s221-check2-medium.md`, 2 low findings, recorded by the round 4 feedback loop): none applied. 1: Dino builds now cache under `android-dbg`, so old builds under `android` are never pruned (disk only). 2: `Get-RunMarkerPath` (`tools/phone/common.ps1:540`) turns unsafe characters into `_`, so owners differing only there (`night/1`, `night:1`) share one marker file; carried to Slice 242.
+
 #### For CLAUDE.md (lifted 2026-11-01)
 
 - `tools/CLAUDE.md`: Dino dev installs are `uk.sirous.dinoreader.dbg` on emulator and phone; the plain `uk.sirous.dinoreader` is the store app and is removed only on `emulator-N` serials. (Slice 221: docs/plan/slices/221-device-test-tooling-leftovers-night-1.md)
