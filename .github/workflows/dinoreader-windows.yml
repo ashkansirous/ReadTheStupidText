@@ -119,12 +119,14 @@ jobs:
       - name: Choose the job-local dotnet folder
         shell: bash
         run: |
-          echo "DOTNET_INSTALL_DIR=${RUNNER_TEMP}\dotnet" >> "$GITHUB_ENV"
-          echo "DOTNET_ROOT=${RUNNER_TEMP}\dotnet" >> "$GITHUB_ENV"
           # ImageOS (win25) is in the key, ImageVersion is not: on 2026-11-01 the x64 and ARM64 jobs
           # of one run got images 20261021 and 20261030, so a per-image key missed every other run.
           # The SDK root is self-contained; the validation step below catches a root that broke.
-          echo "DOTNET_DIR_KEY=dotnet-${RUNNER_OS}-${ImageOS:-noimageos}-sdk${SDK_VERSION}-wl${WORKLOAD_SET}-maui-windows-v1" >> "$GITHUB_ENV"
+          {
+            echo "DOTNET_INSTALL_DIR=${RUNNER_TEMP}\dotnet"
+            echo "DOTNET_ROOT=${RUNNER_TEMP}\dotnet"
+            echo "DOTNET_DIR_KEY=dotnet-${RUNNER_OS}-${ImageOS:-noimageos}-sdk${SDK_VERSION}-wl${WORKLOAD_SET}-maui-windows-v1"
+          } >> "$GITHUB_ENV"
 
       - name: Restore the cached .NET SDK and workloads
         id: dotnet-cache
