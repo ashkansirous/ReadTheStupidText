@@ -22,9 +22,9 @@ public sealed class BookBuilderTests : IDisposable
     [Fact]
     public void EveryContentFolder_IsABookWithAnIdAndTheFilesItNeeds()
     {
-        Assert.Equal(15, Books.All.Count);
+        Assert.Equal(16, Books.All.Count);
         Assert.Equal(4, Books.Starters.Count);
-        Assert.Equal(11, Books.StoreOnly.Count);
+        Assert.Equal(12, Books.StoreOnly.Count);
         Assert.All(Books.All, b => Assert.True(StoryIds.IsValid(b.Info.Id), b.Stem));
         Assert.All(Books.All, b => Assert.True(File.Exists(b.CoverPath) && File.Exists(b.CoverThumbPath), b.Stem));
         Assert.All(Books.All, b => Assert.True(b.Text is not null || File.Exists(b.LinesPath), b.Stem));

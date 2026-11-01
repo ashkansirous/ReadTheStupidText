@@ -1,0 +1,75 @@
+{
+  "kind": "Store",
+  "id": "af402c9974294fcb91a2c8a985c17558",
+  "title": "Freddy and the Slipper",
+  "version": 1,
+  "ageMin": 3,
+  "ageMax": 6,
+  "author": "Ashkan Sirous",
+  "credits": "A Dino Reader picture book · free to share",
+  "colour": 2,
+  "added": "2026-11-01",
+  "order": 11,
+  "characters": [
+    "Freddy",
+    "Mummy",
+    "Tummy"
+  ],
+  "cast": [
+    {
+      "name": "Freddy",
+      "voice": "puppy",
+      "gender": "Male",
+      "age": "Child",
+      "being": "Fox",
+      "qualities": [
+        "Bouncy",
+        "Bright"
+      ]
+    },
+    {
+      "name": "Mummy",
+      "voice": "mummy",
+      "gender": "Female",
+      "age": "Adult",
+      "being": "Fox",
+      "qualities": [
+        "Warm",
+        "Soft"
+      ]
+    },
+    {
+      "name": "Tummy",
+      "voice": "dragon",
+      "gender": "Male",
+      "age": "Adult",
+      "being": "Dragon",
+      "qualities": [
+        "Gruff",
+        "Booming"
+      ]
+    }
+  ],
+  "notAnimals": [
+    "Freddy",
+    "Mummy",
+    "Tummy"
+  ],
+  "contentHash": "f5576c16ef4f3819fb1cf0bdab9b55828f6a4b6a8ed1f8c7f8655834bc2f9380",
+  "creditsByLanguage": {
+    "ar": "كتاب مصوّر من دينو ريدر · مجاني للمشاركة",
+    "da": "En billedbog fra Dino Reader · frit at dele",
+    "de": "Ein Dino-Reader-Bilderbuch · frei zum Teilen",
+    "es": "Un libro ilustrado de Dino Reader · libre para compartir",
+    "fa": "یک کتاب تصویری از دینو ریدر · آزاد برای اشتراک‌گذاری",
+    "fi": "Dino Readerin kuvakirja · vapaasti jaettavissa",
+    "fr": "Un livre illustré Dino Reader · libre de partage",
+    "ja": "ディノ・リーダーの絵本 · 自由に共有できます",
+    "nb": "En bildebok fra Dino Reader · fri til å dele",
+    "nl": "Een prentenboek van Dino Reader · vrij te delen",
+    "pt": "Um livro ilustrado do Dino Reader · livre para compartilhar",
+    "ru": "Книжка с картинками Dino Reader · можно свободно делиться",
+    "sv": "En bilderbok från Dino Reader · fri att dela",
+    "zh": "恐龙阅读器绘本 · 可自由分享"
+  }
+}
