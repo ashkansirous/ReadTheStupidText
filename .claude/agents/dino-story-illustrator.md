@@ -71,7 +71,7 @@ the contact sheet live only in the working folder. Touch nothing else.
    redraw, and `cover.jpg` if the cover wasn't redrawn (they sit in `<target>/pictures/` and `<target>/cover.jpg`), into the working folder (preparing re-encodes every file once more at JPEG q85, which is fine), run
    `pwsh tools/prepare-story-pictures.ps1 <working folder> <target> <pageCount>`, then
    `pwsh .claude/skills/create-dino-story/contact-sheet.ps1 <working folder> <pageCount> <working folder>/contact-sheet.jpg`.
-7. (`finish` and `all` only.) If only pictures changed (no text change), raise the book's version with `dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` (it also stores the content hash
+7. (`finish` and `all` only.) If only pictures changed (no text change) in a STARTER (`"kind": "Starter"`; a store book needs no stamp, Slice 239), raise the book's version with `dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` (it also stores the content hash
    that `check` compares). No text hash is needed.
 
 Rules:

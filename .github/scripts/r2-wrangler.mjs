@@ -17,6 +17,11 @@ export function wranglerArgs(upload) {
     return ['r2', 'object', 'put', `${BUCKET_NAME}/${upload.key}`, '--file', upload.path, '--remote', '--content-type', upload.contentType];
 }
 
+/** The wrangler arguments that delete one object (after `wrangler`). */
+export function wranglerDeleteArgs(key) {
+    return ['r2', 'object', 'delete', `${BUCKET_NAME}/${key}`, '--remote'];
+}
+
 const ABSENT_KEY_MESSAGE = /nosuchkey|no such key|(key|object) does not exist|specified key|\b404\b|\b10007\b/i;
 const MISSING_BUCKET_MESSAGE = /nosuchbucket|no such bucket|bucket (does not exist|not found)|\b10006\b/i;
 

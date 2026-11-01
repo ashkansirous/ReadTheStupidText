@@ -32,6 +32,7 @@ internal static class BookHash
         files.AddRange(new[] { Path.Combine(book.Dir, BookFolder.StoryFile), book.LinesPath, book.CoverPath, book.CoverThumbPath }.Where(File.Exists));
         files.AddRange(StarterBuilder.PictureFilesIn(book.PicturesPath).OrderBy(Path.GetFileName, StringComparer.Ordinal));
         files.AddRange(FilesIn(book.TranslationsPath, ".json", BookFolder.PiecesFile));
+        files.AddRange(new[] { book.TitlesPath }.Where(File.Exists));
         return files;
     }
 

@@ -218,8 +218,27 @@ internal static class StarterBuilder
             }
         }
 
-        BookInfo info = Books.Folder(stem).Info;
-        return story with { Translations = tables.Count == 0 ? null : tables, TextInPictures = info.TextInPictures == true, BackCover = info.BackCover };
+        BookFolder book = Books.Folder(stem);
+        BookInfo info = book.Info;
+        return story with { Translations = tables.Count == 0 ? null : WithTitles(tables, story.Title, book.Titles), TextInPictures = info.TextInPictures == true, BackCover = info.BackCover };
+    }
+
+    /// <summary>Slice 239: the book's own titles (<c>titles.json</c>) go into each language's table under the English title, so the shelf and the reading screen find them
+    /// in the installed book first (<c>BundledTranslations.Lookup(story, language, story.Title)</c>) and a new book needs no row in the app's shipped-titles table.
+    /// A language the book has no table for is left alone (a table of only a title would count as a translation).</summary>
+    private static Dictionary<string, IReadOnlyDictionary<string, string>> WithTitles(Dictionary<string, IReadOnlyDictionary<string, string>> tables, string title, IReadOnlyDictionary<string, string>? titles)
+    {
+        if (titles is null)
+        {
+            return tables;
+        }
+
+        foreach (var (language, translated) in titles.Where(t => tables.ContainsKey(t.Key) && !string.IsNullOrWhiteSpace(t.Value)))
+        {
+            tables[language] = new Dictionary<string, string>(tables[language]) { [title] = translated };
+        }
+
+        return tables;
     }
 
     /// <summary>The picture starter: pages from <c>lines.json</c> (lines joined by a newline, so the geometry rules apply; a page with only

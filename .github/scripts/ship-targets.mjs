@@ -20,7 +20,9 @@
  *   - DinoReader.App/**, DinoReader.Core/**                       -> dinoapp (Slice 58/60; ships only with its own signing secrets)
  *   - DinoReader.Core / tests/DinoReader.Tests                    -> dinoreader (its tests; Core also rebuilds dinoapp)
  *   - store books (Slice 158, Slice 157): Core, content/dino/** (every book's text, voices, pictures and translations), the book builder, the upload scripts -> dinostore (publish-store only; never ships an app)
- *     and dinoreader (its suite runs `BookBuilder check`); a starter's rebuilt .dino sits under DinoReader.App/** and ships the app
+ *   - Slice 239: a change under content/dino/<store book>/** (a new, changed or deleted folder) maps to dinostore ONLY: no Dino suite, no app, no PR check workflow. Only a STARTER's
+ *     folder (a book bundled in the app, book.json "kind": "Starter"; listed in dino-starters.json, which a test keeps equal to the book.json kinds) also runs dinoreader (its suite
+ *     runs `BookBuilder check`); a starter's rebuilt .dino sits under DinoReader.App/** and ships the app
  *   - Markdown anywhere (IGNORED_PATTERNS, case-sensitive like GitHub's `paths`) -> nothing (ignored before matching), except a book's text (CONTENT_MARKDOWN: content/dino/<stem>/story.md)
  *   - docs and anything else                                      -> nothing
  * `windowsstore` is true only for the Windows group's own paths (a core-only change sets `windows`,
@@ -64,6 +66,11 @@ const LINE_BREAK = String.fromCharCode(10);
 const NUL = String.fromCharCode(0);
 /** The repo this script lives in (.github/scripts/..): local mode reads this tree, not the caller's current directory. */
 const DEFAULT_REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
+/**
+ * The stems of the books bundled in the app (book.json "kind": "Starter", Slice 239). Path filters cannot read book.json, so the list lives in a file the tests compare with
+ * every content/dino/<stem>/book.json: a folder that is not in it is a store book and never builds or tests an app.
+ */
+export const STARTER_STEMS = JSON.parse(readFileSync(fileURLToPath(new URL('./dino-starters.json', import.meta.url)), 'utf8'));
 /** Dino Reader's GitVersion config (the twin of the core GitVersion.yml): a path of every Dino target. */
 const DINO_VERSION_CONFIG = 'GitVersion.dino.yml';
 
@@ -90,6 +97,10 @@ const CONTENT_ONLY_TARGETS = ['dinostore'];
 export const IGNORED_PATTERNS = ['**/*.md'];
 /** Markdown that is content, not documentation (Slice 157): a book's text. Not ignored; the workflows re-include it after the Markdown negation. */
 export const CONTENT_MARKDOWN = ['content/dino/*/story.md'];
+/** The part of CONTENT_MARKDOWN that also starts the Dino suite (Slice 239): a starter's text. A store book's text starts only dinostore. */
+export const STARTER_CONTENT_MARKDOWN = STARTER_STEMS.map((stem) => `content/dino/${stem}/story.md`);
+/** A starter's content folders: what dinoreader.yml and the dinoreader group watch instead of all of content/dino/ (Slice 239). */
+export const STARTER_CONTENT_PATHS = STARTER_STEMS.map((stem) => `content/dino/${stem}/`);
 
 /** Changes that rebuild every app platform (Windows, Android, iOS and Dino Reader). */
 export const CORE_PATHS = [
@@ -206,7 +217,7 @@ export const GROUPS = {
         ],
     },
     dinoreader: {
-        include: [DINO_VERSION_CONFIG, 'src/DinoReader.Core/', 'tests/DinoReader.Tests/', 'content/dino/', 'tools/DinoReader.BookBuilder/', '.github/workflows/dinoreader.yml'],
+        include: [DINO_VERSION_CONFIG, 'src/DinoReader.Core/', 'tests/DinoReader.Tests/', ...STARTER_CONTENT_PATHS, 'tools/DinoReader.BookBuilder/', '.github/workflows/dinoreader.yml'],
     },
 };
 

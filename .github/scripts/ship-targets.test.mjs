@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { CONTENT_MARKDOWN, GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, changedFilesSince, localChangedFiles, matchesPattern, newestAppTag, parseCommits, parseLocalArgs, planFor, productBump, shipTargets, shipTargetsPerProduct } from './ship-targets.mjs';
+import { CONTENT_MARKDOWN, STARTER_CONTENT_MARKDOWN, STARTER_STEMS, GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, changedFilesSince, localChangedFiles, matchesPattern, newestAppTag, parseCommits, parseLocalArgs, planFor, productBump, shipTargets, shipTargetsPerProduct } from './ship-targets.mjs';
 
 const M = 'src/ReadTheStupidText.Mobile';
 const S = 'src/ReadTheStupidText.Mobile.Shared';
@@ -50,10 +50,16 @@ const CASES = [
     ['Dino Reader Windows workflow', ['.github/workflows/dinoreader-windows.yml'], { dinowin: true }],
     ['docs only', ['CLAUDE.md', 'docs/plan/decisions.md', 'plan.md'], {}],
     ['DinoReader only', ['src/DinoReader.Core/Parser.cs'], { dinoreader: true, dinoapp: true, dinoios: true, dinowin: true, dinostore: true }],
-    ['store book text', ['content/dino/x-marks-the-treasure/story.md'], { dinoreader: true, dinostore: true }],
-    ['store book data', ['content/dino/x-marks-the-treasure/book.json'], { dinoreader: true, dinostore: true }],
-    ['store book picture', ['content/dino/x-marks-the-treasure/pictures/1.jpg'], { dinoreader: true, dinostore: true }],
+    // Slice 239: a store book (any folder that is not a starter) runs only publish-store: no suite, no app, no PR check.
+    ['store book text', ['content/dino/x-marks-the-treasure/story.md'], { dinostore: true }],
+    ['store book data', ['content/dino/x-marks-the-treasure/book.json'], { dinostore: true }],
+    ['store book titles', ['content/dino/x-marks-the-treasure/titles.json'], { dinostore: true }],
+    ['store book picture', ['content/dino/x-marks-the-treasure/pictures/1.jpg'], { dinostore: true }],
+    ['a new store book folder', ['content/dino/brand-new-book/book.json', 'content/dino/brand-new-book/story.md', 'content/dino/brand-new-book/translations/fa.json'], { dinostore: true }],
+    ['a deleted store book folder', ['content/dino/freddy-and-the-slipper/book.json', 'content/dino/freddy-and-the-slipper/pictures/3.jpg', 'content/dino/freddy-and-the-slipper/story.md'], { dinostore: true }],
     ['starter translations', ['content/dino/three-little-pigs/translations/fa.json'], { dinoreader: true, dinostore: true }],
+    ['starter text', ['content/dino/three-little-pigs/story.md'], { dinoreader: true, dinostore: true }],
+    ['a starter change with its rebuilt package ships the apps', ['content/dino/three-little-pigs/story.md', 'src/DinoReader.App/Resources/Raw/starters/three-little-pigs.dino'], { dinoreader: true, dinostore: true, dinoapp: true, dinoios: true, dinowin: true }],
     ['book art record is documentation', ['content/dino/x-marks-the-treasure/art.md'], {}],
     ['book builder', ['tools/DinoReader.BookBuilder/Program.cs'], { dinoreader: true, dinostore: true }],
     ['store upload script', ['tools/upload-store-story.ps1'], { dinostore: true }],
@@ -128,6 +134,17 @@ test('an iOS-only change reports ios and nothing else (release.yml declines to s
 test('DinoReader.Core builds the Dino Reader app (Slice 60) but no RTST platform', () => {
     const t = targetsOf(['src/DinoReader.Core/a.cs']);
     assert.deepEqual([t.windows, t.android, t.ios, t.dinoapp], [false, false, false, true]);
+});
+
+test('Slice 239: dino-starters.json is exactly the books whose book.json kind is Starter', () => {
+    const root = fileURLToPath(new URL('../../content/dino/', import.meta.url));
+    const starters = readdirSync(root).filter((stem) => JSON.parse(readFileSync(join(root, stem, 'book.json'), 'utf8')).kind === 'Starter');
+    assert.deepEqual([...STARTER_STEMS].sort(), starters.sort());
+});
+
+test('Slice 239: a store-only change starts no suite, no app and no RTST target', () => {
+    const t = targetsOf(['content/dino/new-book/book.json', 'content/dino/new-book/story.md', 'content/dino/old-book/pictures/1.jpg']);
+    assert.deepEqual(t, { ...NONE, dinostore: true });
 });
 
 test('a store-book change publishes books but ships no app (Slice 158)', () => {
@@ -283,7 +300,7 @@ for (const [file, groups] of Object.entries(PR_TARGETS)) {
         const expected = derivedPaths(groups);
         expected.add(own); // a workflow always re-runs on its own edits
         IGNORED_PATTERNS.forEach((pattern) => expected.add(`!${pattern}`));
-        if (file === 'dinoreader.yml') CONTENT_MARKDOWN.forEach((pattern) => expected.add(pattern)); // a book's text is Markdown that must still run its suite
+        if (file === 'dinoreader.yml') STARTER_CONTENT_MARKDOWN.forEach((pattern) => expected.add(pattern)); // a starter's text is Markdown that must still run its suite (a store book's does not, Slice 239)
         assert.equal(new Set(actual).size, actual.length, `${file}: duplicate path entries`);
         assert.deepEqual([...new Set(actual)].sort(), [...expected].sort());
     });
@@ -306,7 +323,7 @@ test('a negated path follows its root glob and precedes the Platforms re-include
 
 test('every pull_request.paths list ends with the Markdown negation', () => {
     for (const file of [...Object.keys(PR_TARGETS), 'release-scripts.yml']) {
-        const paths = readPullRequestPaths(file).filter((path) => !CONTENT_MARKDOWN.includes(path)); // re-includes of content Markdown follow the negation
+        const paths = readPullRequestPaths(file).filter((path) => !STARTER_CONTENT_MARKDOWN.includes(path)); // re-includes of content Markdown follow the negation
         const tail = paths.slice(-IGNORED_PATTERNS.length);
         assert.deepEqual(tail, IGNORED_PATTERNS.map((pattern) => `!${pattern}`), `${file}: ignore negations must be last`);
     }

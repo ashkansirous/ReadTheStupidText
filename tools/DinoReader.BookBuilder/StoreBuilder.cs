@@ -83,7 +83,11 @@ internal static class StoreBuilder
 
     /// <summary>The <c>meta.json</c> the Worker checks (<c>worker/stories.ts</c> <c>parseMeta</c>): the page count and the reading time come from the text.</summary>
     public static string MetaJson(StoreStorySpec spec, Story story) =>
-        JsonSerializer.Serialize(new Dictionary<string, object>
+        JsonSerializer.Serialize(MetaOf(spec, story), MetaOptions);
+
+    private static Dictionary<string, object> MetaOf(StoreStorySpec spec, Story story)
+    {
+        var meta = new Dictionary<string, object>
         {
             ["schemaVersion"] = StoryPackageManifest.CurrentSchemaVersion,
             ["title"] = spec.Title,
@@ -96,13 +100,21 @@ internal static class StoreBuilder
             ["ageMin"] = spec.AgeMin,
             ["ageMax"] = spec.AgeMax,
             ["author"] = spec.Author,
-            ["titles"] = TitlesOf(story),
+            ["titles"] = TitlesOf(spec, story),
             ["creditsByLanguage"] = spec.CreditsByLanguage is null ? null! : new SortedDictionary<string, string>(spec.CreditsByLanguage.ToDictionary(c => c.Key, c => c.Value), StringComparer.Ordinal),
-        }, MetaOptions);
+        };
+        if (spec.ContentHash is not null)
+        {
+            meta["contentHash"] = spec.ContentHash; // Slice 239: publish-store compares it with the live store's
+        }
 
-    /// <summary>Slice 159: the book's title in every other language (<see cref="ShippedTitles"/>); the store shows the chosen language's.</summary>
-    public static SortedDictionary<string, string> TitlesOf(Story story) =>
-        new(ShippedTitles.AllFor(story.Title).ToDictionary(t => t.Key, t => t.Value), StringComparer.Ordinal);
+        return meta;
+    }
+
+    /// <summary>Slice 159: the book's title in every other language; the store shows the chosen language's. Slice 239: from the book's own <c>titles.json</c>, else the
+    /// shipped-titles table (the starters and the store books made before).</summary>
+    public static SortedDictionary<string, string> TitlesOf(StoreStorySpec spec, Story story) =>
+        new((spec.Titles ?? ShippedTitles.AllFor(story.Title)).ToDictionary(t => t.Key, t => t.Value), StringComparer.Ordinal);
 
     /// <summary>Reading time in whole minutes at a child's pace, never below one.</summary>
     public static int Minutes(string text)

@@ -3,23 +3,33 @@ using System.Security.Cryptography;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using DinoReader.Core;
+using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader.BookBuilder;
 
 /// <summary>The commands of the book builder (Slice 157): <c>build</c>, <c>check</c>, <c>stamp</c> and <c>dump-pieces</c>.</summary>
 internal static class BookCommands
 {
+    /// <summary>The exit code of <c>build --live</c> when it skipped an invalid store book but built the valid ones: the publish-store job still uploads those, then fails naming the bad book.</summary>
+    public const int SkippedBooksExitCode = 2;
+
     /// <summary>Writes <c>artifacts/store/&lt;id&gt;/{meta.json, cover.jpg, story-v&lt;n&gt;.dino}</c> for every store book (or the named ones), the same for the starters, and rewrites each
     /// committed starter whose content changed. Returns the exit code.</summary>
-    public static async Task<int> BuildAsync(IReadOnlyList<string> stems)
+    public static async Task<int> BuildAsync(IReadOnlyList<string> stems, string? livePath = null)
     {
         IReadOnlyList<BookFolder> chosen = Choose(stems);
+        IReadOnlyDictionary<string, LiveEntry>? live = livePath is null ? null : StoreVersioning.Read(livePath);
+        // publish-store runs no test suite: this is its gate (Slice 239). An invalid book is skipped and named, the valid ones still build.
+        IReadOnlyDictionary<string, IReadOnlyList<string>> invalid = livePath is null ? new Dictionary<string, IReadOnlyList<string>>() : StoreValidation.ProblemsByBook(chosen.Where(b => b.Info.Kind == BookKind.Store));
+        ReportInvalid(invalid);
+
         await StarterBuilder.InScratchAsync(async library =>
         {
-            foreach (BookFolder book in chosen.Where(b => b.Info.Kind == BookKind.Store))
+            foreach (BookFolder book in chosen.Where(b => b.Info.Kind == BookKind.Store && !invalid.ContainsKey(b.Stem)))
             {
-                await StoreBuilder.WriteStoryAsync(book.ToSpec(), library);
-                Console.WriteLine($"built {book.Stem} v{book.Info.Version}");
+                StoreStorySpec spec = StoreVersioning.Versioned(book, live);
+                await StoreBuilder.WriteStoryAsync(spec, library);
+                Console.WriteLine($"built {book.Stem} v{spec.Version}");
             }
 
             foreach (var (fileName, story) in await StarterBuilder.BuildAllAsync(library, name => chosen.Any(b => b.FileName == name)))
@@ -30,16 +40,18 @@ internal static class BookCommands
                 Console.WriteLine($"built {book.Stem} v{book.Info.Version}{(rewritten ? " (rewrote the committed starter)" : string.Empty)}");
             }
         });
-        return 0;
+        return invalid.Count == 0 ? 0 : SkippedBooksExitCode;
     }
 
-    /// <summary>Fails (exit code 1) when a book's content differs from its stored hash (raise its version with <c>stamp</c>), or a committed starter differs from what its folder builds.</summary>
+    /// <summary>Fails (exit code 1) when a starter's content differs from its stored hash (raise its version with <c>stamp</c>), a committed starter differs from what its folder builds, or a store
+    /// book does not build or lacks a title in a language. A store book needs no stamp (Slice 239).</summary>
     public static async Task<int> CheckAsync()
     {
         var problems = new List<string>();
         problems.AddRange(CheckHashes());
         problems.AddRange(CheckIds());
         problems.AddRange(CheckStoreBooksBuild());
+        problems.AddRange(CheckStoreTitles());
         problems.AddRange(await CheckStartersAsync());
         problems.ForEach(p => Console.Error.WriteLine(p));
         Console.WriteLine(problems.Count == 0 ? $"All {Books.All.Count} books are current." : $"{problems.Count} problem(s).");
@@ -52,6 +64,12 @@ internal static class BookCommands
     {
         foreach (BookFolder book in Choose(stems))
         {
+            if (book.Info.Kind == BookKind.Store)
+            {
+                Console.WriteLine($"{book.Stem}: a store book needs no stamp (publish-store versions it from its content hash)");
+                continue;
+            }
+
             string hash = BookHash.Of(book);
             if (hash == book.Info.ContentHash && !keepVersion)
             {
@@ -94,7 +112,7 @@ internal static class BookCommands
 
     private static IEnumerable<string> CheckHashes()
     {
-        foreach (BookFolder book in Books.All)
+        foreach (BookFolder book in Books.Starters)
         {
             if (BookHash.Of(book) != book.Info.ContentHash)
             {
@@ -107,8 +125,34 @@ internal static class BookCommands
         }
     }
 
-    private static IEnumerable<string> CheckIds() =>
+    private static void ReportInvalid(IReadOnlyDictionary<string, IReadOnlyList<string>> invalid)
+    {
+        foreach ((string stem, IReadOnlyList<string> problems) in invalid)
+        {
+            Console.Error.WriteLine($"::error::store book {stem} is invalid and was skipped (not built, not uploaded): {string.Join("; ", problems)}");
+        }
+    }
+
+    private static IEnumerable<string> CheckIds() => IdProblems();
+
+    internal static IEnumerable<string> IdProblems() =>
         Books.All.GroupBy(b => b.Info.Id).Where(g => g.Count() > 1).Select(g => $"the books {string.Join(", ", g.Select(b => b.Stem))} share the id {g.Key}");
+
+    /// <summary>The problem with a store book's <c>titles.json</c>: missing, or not a non-blank title for exactly every other language; null when it is fine.</summary>
+    public static string? TitlesProblem(string stem, IReadOnlyDictionary<string, string>? titles)
+    {
+        if (titles is null)
+        {
+            return $"{stem} has no titles.json (its title in every other language, so the app needs no row for it)";
+        }
+
+        string[] expected = UiLanguage.Supported.Where(code => code != UiLanguage.English).ToArray();
+        string[] bad = expected.Where(code => !titles.TryGetValue(code, out string? title) || string.IsNullOrWhiteSpace(title)).Concat(titles.Keys.Except(expected)).ToArray();
+        return bad.Length == 0 ? null : $"{stem}/titles.json needs a title for exactly the other languages (problem: {string.Join(",", bad)})";
+    }
+
+    private static IEnumerable<string> CheckStoreTitles() =>
+        Books.StoreOnly.Select(b => TitlesProblem(b.Stem, b.Titles)).OfType<string>();
 
     private static IEnumerable<string> CheckStoreBooksBuild()
     {

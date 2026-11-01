@@ -28,12 +28,13 @@ internal sealed record AuthoredCharacter(string Name, string Voice, Gender Gende
 /// <summary>
 /// <c>content/dino/&lt;stem&gt;/book.json</c> (Slice 157, Decision 162): everything about a book that is not its text and pictures. <see cref="Characters"/> are the names the
 /// book's speech tags must give a voice (a check, not shipped); <see cref="Cast"/> are the writer's voice choices (Slice 156), <see cref="Animals"/> the characters whose names do not
-/// say their animal (Slice 125), <see cref="NotAnimals"/> the ones that are people although the text suggests an animal. <see cref="ContentHash"/> is the hash of the book's
-/// content at <see cref="Version"/> (<see cref="BookHash"/>).
+/// say their animal (Slice 125), <see cref="NotAnimals"/> the ones that are people although the text suggests an animal. <see cref="ContentHash"/> is the hash of a starter's
+/// content at <see cref="Version"/> (<see cref="BookHash"/>); a store book has none (Slice 239: <c>publish-store</c> compares the hash with the live store, and
+/// <see cref="Version"/> is only the lowest version a store book may be uploaded as).
 /// </summary>
 internal sealed record BookInfo(
     BookKind Kind, string Id, string Title, int Version, int AgeMin, int AgeMax, string Author, string Credits, int Colour, string Added, int Order,
-    string[]? Characters, AuthoredCharacter[]? Cast, Dictionary<string, AnimalKind>? Animals, string[]? NotAnimals, string ContentHash, bool? TextInPictures = null,
+    string[]? Characters, AuthoredCharacter[]? Cast, Dictionary<string, AnimalKind>? Animals, string[]? NotAnimals, string? ContentHash, bool? TextInPictures = null,
     Dictionary<string, string>? CreditsByLanguage = null, string? StoryBy = null, bool? Retold = null, string? Illustration = null)
 {
     /// <summary>The book's silent back cover (Slice 237) from <c>storyBy</c>, <c>retold</c>, <c>illustration</c> and the month of <see cref="Added"/>; null when it cannot be made (<c>check</c> fails such a book).</summary>
@@ -44,7 +45,7 @@ internal sealed record BookInfo(
 /// <summary>One free story in the Dino store (Slice 102): its fixed package id, the folder name its files are stored under, the
 /// credit line, the age range and the author the store card and filters use (Slice 112), the generated cover colour and the characters its speech tags must give a voice.</summary>
 internal sealed record StoreStorySpec(string Id, string Title, string Stem, string Text, int ColourIndex, string Credits, int AgeMin, int AgeMax, string Author, IReadOnlyList<string> Characters, int Version, string Added,
-    IReadOnlyDictionary<string, string>? CreditsByLanguage = null);
+    IReadOnlyDictionary<string, string>? CreditsByLanguage = null, IReadOnlyDictionary<string, string>? Titles = null, string? ContentHash = null);
 
 /// <summary>One book's folder under <c>content/dino</c>: its files, its <c>book.json</c> and its text.</summary>
 internal sealed class BookFolder(string stem, string path, BookInfo info)
@@ -57,6 +58,7 @@ internal sealed class BookFolder(string stem, string path, BookInfo info)
     public const string PicturesDirectory = "pictures";
     public const string TranslationsDirectory = "translations";
     public const string PiecesFile = "pieces.json";
+    public const string TitlesFile = "titles.json";
 
     public string Stem { get; } = stem;
 
@@ -76,11 +78,17 @@ internal sealed class BookFolder(string stem, string path, BookInfo info)
 
     public string LinesPath => Path.Combine(Dir, LinesFile);
 
+    public string TitlesPath => Path.Combine(Dir, TitlesFile);
+
+    /// <summary>The book's title in every other language (<c>titles.json</c>, Slice 239), or null for a book that has none (the starters use <see cref="ShippedTitles"/>).</summary>
+    public IReadOnlyDictionary<string, string>? Titles =>
+        File.Exists(TitlesPath) ? JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(TitlesPath)) : null;
+
     /// <summary>The page text (pages separated by a line holding only "---"), or null for a picture book whose pages come from <c>lines.json</c> (Good Enough).</summary>
     public string? Text => File.Exists(Path.Combine(Dir, StoryFile)) ? File.ReadAllText(Path.Combine(Dir, StoryFile)).ReplaceLineEndings("\n").TrimEnd('\n') : null;
 
     public StoreStorySpec ToSpec() =>
-        new(Info.Id, Info.Title, Stem, Text ?? string.Empty, Info.Colour, Info.Credits, Info.AgeMin, Info.AgeMax, Info.Author, Info.Characters ?? [], Info.Version, Info.Added, Info.CreditsByLanguage);
+        new(Info.Id, Info.Title, Stem, Text ?? string.Empty, Info.Colour, Info.Credits, Info.AgeMin, Info.AgeMax, Info.Author, Info.Characters ?? [], Info.Version, Info.Added, Info.CreditsByLanguage, Titles);
 }
 
 /// <summary>Every book under <c>content/dino</c> (Slice 157), read once: the shared loader of the builder and of the tests that validate the books.</summary>
@@ -100,7 +108,7 @@ internal static class Books
 
     private static readonly JsonSerializerOptions ReadOptions = new(JsonOptions) { UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow };
 
-    private static readonly string[] RequiredKeys = ["kind", "id", "title", "version", "ageMin", "ageMax", "author", "credits", "colour", "added", "order", "contentHash", "storyBy"];
+    private static readonly string[] RequiredKeys = ["kind", "id", "title", "version", "ageMin", "ageMax", "author", "credits", "colour", "added", "order", "storyBy"];
 
     private const int MaxAge = 18;
     private const string AddedFormat = "yyyy-MM-dd";
@@ -177,7 +185,8 @@ internal static class Books
             _ when info.Version < 1 => "version must be 1 or more",
             _ when info.AgeMin < 0 || info.AgeMax > MaxAge || info.AgeMin > info.AgeMax => $"ages must satisfy 0 <= ageMin <= ageMax <= {MaxAge}",
             _ when info.Colour < 0 => "colour must be 0 or more",
-            _ when info.Author is null || info.Credits is null || info.ContentHash is null => "author, credits and contentHash must be strings",
+            _ when info.Author is null || info.Credits is null => "author and credits must be strings",
+            _ when info.Kind == BookKind.Starter && info.ContentHash is null => "a starter needs contentHash (run stamp)",
             _ when CreditsByLanguageProblem(info.CreditsByLanguage) is { } credits => credits,
             _ when !DateOnly.TryParseExact(info.Added, AddedFormat, out _) => $"added must be {AddedFormat}",
             _ when string.IsNullOrWhiteSpace(info.StoryBy) => "storyBy is empty (the back cover needs who wrote the story; \"traditional\" for a tale nobody owns)",

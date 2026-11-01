@@ -22,18 +22,114 @@ public sealed class BookBuilderTests : IDisposable
     [Fact]
     public void EveryContentFolder_IsABookWithAnIdAndTheFilesItNeeds()
     {
-        Assert.Equal(16, Books.All.Count);
-        Assert.Equal(4, Books.Starters.Count);
-        Assert.Equal(12, Books.StoreOnly.Count);
+        // Slice 239: no hard-coded book count, so adding or deleting a store book edits no test.
+        Assert.Equal(Books.All.Count, Books.Starters.Count + Books.StoreOnly.Count);
+        Assert.Equal(Books.All.Count, Books.All.Select(b => b.Info.Id).Distinct().Count());
         Assert.All(Books.All, b => Assert.True(StoryIds.IsValid(b.Info.Id), b.Stem));
         Assert.All(Books.All, b => Assert.True(File.Exists(b.CoverPath) && File.Exists(b.CoverThumbPath), b.Stem));
         Assert.All(Books.All, b => Assert.True(b.Text is not null || File.Exists(b.LinesPath), b.Stem));
     }
 
     [Fact]
-    public async Task Check_PassesOnTheCommittedBooks_SoNoContentChangedWithoutAVersionBump()
+    public async Task Check_PassesOnTheCommittedBooks_SoNoStarterChangedWithoutAVersionBump()
     {
         Assert.Equal(0, await BookCommands.CheckAsync());
+    }
+
+    // Slice 239: ship-targets.mjs decides starter vs store by this list (path filters cannot read book.json), so it must name exactly the starters.
+    [Fact]
+    public void TheStarterListOfThePipelines_NamesExactlyTheBooksOfKindStarter()
+    {
+        string file = Path.Combine(Books.RepoRoot(), ".github", "scripts", "dino-starters.json");
+        string[] listed = JsonSerializer.Deserialize<string[]>(File.ReadAllText(file))!;
+
+        Assert.Equal(Books.Starters.Select(b => b.Stem).Order(StringComparer.Ordinal), listed.Order(StringComparer.Ordinal));
+    }
+
+    [Theory]
+    [InlineData(1, "same", 5, "same", 5)]
+    [InlineData(1, "new", 5, "old", 6)]
+    [InlineData(9, "new", 5, "old", 9)]
+    [InlineData(1, "new", 5, null, 6)]
+    public void AStoreBook_IsVersionedFromItsHash_NeverBelowOrEqualToTheLiveVersionWhenChanged(int bookVersion, string hash, int liveVersion, string? liveHash, int expected)
+    {
+        Assert.Equal(expected, StoreVersioning.Decide(bookVersion, hash, new LiveEntry(liveVersion, liveHash)));
+    }
+
+    // A package left by a half-finished run (live meta still v4, story-v5.dino in the bucket), or by a delisted book, is never reused: the next version is above every package.
+    [Theory]
+    [InlineData(1, "new", 4, "old", 5, 6)]
+    [InlineData(1, "same", 4, "same", 5, 4)]
+    [InlineData(1, "new", 0, null, 3, 4)]
+    [InlineData(9, "new", 0, null, 3, 9)]
+    public void AStoreBook_IsNeverVersionedOntoAnExistingPackage(int bookVersion, string hash, int liveVersion, string? liveHash, int maxPackage, int expected)
+    {
+        Assert.Equal(expected, StoreVersioning.Decide(bookVersion, hash, new LiveEntry(liveVersion, liveHash, maxPackage)));
+    }
+
+    [Fact]
+    public void EveryBookOfTheRepo_PassesTheStoreValidationThatPublishStoreRuns()
+    {
+        Assert.Empty(StoreValidation.Problems(Books.StoreOnly));
+    }
+
+    [Fact]
+    public void TheValidationByBook_IsEmptyForTheRepoAndNamesNoValidBook()
+    {
+        Assert.Empty(StoreValidation.ProblemsByBook(Books.StoreOnly));
+    }
+
+    [Fact]
+    public void AStoreBook_WithoutCompleteTitles_FailsTheStoreValidation()
+    {
+        Assert.NotNull(BookCommands.TitlesProblem("x", null));
+        Assert.NotNull(BookCommands.TitlesProblem("x", new Dictionary<string, string> { ["fa"] = "t" }));
+    }
+
+    [Fact]
+    public void AStoreBook_ThatIsNotLive_KeepsItsBookJsonVersion()
+    {
+        Assert.Equal(3, StoreVersioning.Decide(3, "any", null));
+    }
+
+    [Fact]
+    public void AStoreBook_BuiltAgainstTheLiveStore_CarriesItsHashAndTheDecidedVersion()
+    {
+        BookFolder book = Books.Folder(TreasureStem);
+        string hash = BookHash.Of(book);
+        var live = new Dictionary<string, LiveEntry> { [book.Info.Id] = new(40, "older") };
+
+        StoreStorySpec changed = StoreVersioning.Versioned(book, live);
+        StoreStorySpec unchanged = StoreVersioning.Versioned(book, new Dictionary<string, LiveEntry> { [book.Info.Id] = new(40, hash) });
+
+        Assert.Equal((41, hash), (changed.Version, changed.ContentHash));
+        Assert.Equal(40, unchanged.Version);
+        using JsonDocument meta = JsonDocument.Parse(StoreBuilder.MetaJson(changed, StoreBuilder.Build(changed)));
+        Assert.Equal(hash, meta.RootElement.GetProperty("contentHash").GetString());
+    }
+
+    [Fact]
+    public void TheTitles_RideInEachLanguagesTable_SoTheInstalledBookCanShowThem()
+    {
+        BookFolder book = Books.Folder(TreasureStem);
+        Story story = StoreBuilder.Build(book.ToSpec());
+
+        foreach (var (language, title) in book.Titles!)
+        {
+            Assert.Equal(title, BundledTranslations.Lookup(story, language, story.Title));
+        }
+    }
+
+    [Fact]
+    public void ATitlesFile_MustHoldEveryOtherLanguage_AndNothingElse()
+    {
+        var all = UiLanguage.Supported.Where(l => l != UiLanguage.English).ToDictionary(l => l, l => "T " + l);
+
+        Assert.Null(BookCommands.TitlesProblem("x", all));
+        Assert.NotNull(BookCommands.TitlesProblem("x", null));
+        Assert.Contains("fa", BookCommands.TitlesProblem("x", all.Where(t => t.Key != "fa").ToDictionary())!);
+        Assert.Contains("xx", BookCommands.TitlesProblem("x", new Dictionary<string, string>(all) { ["xx"] = "T" })!);
+        Assert.Contains("de", BookCommands.TitlesProblem("x", new Dictionary<string, string>(all) { ["de"] = " " })!);
     }
 
     [Fact]
@@ -181,7 +277,7 @@ public sealed class BookBuilderTests : IDisposable
         string dir = Path.Combine(_root, "tiny");
         Directory.CreateDirectory(dir);
         File.WriteAllText(Path.Combine(dir, BookFolder.StoryFile), text);
-        var info = new BookInfo(BookKind.Store, "a02c0731b7ac475a896e9184f3575e7b", "Tiny", 1, 3, 6, "Me", "Mine", 0, "2026-10-27", 0, null, null, null, null, string.Empty, null, AllCredits(), "Me");
+        var info = new BookInfo(BookKind.Store, "a02c0731b7ac475a896e9184f3575e7b", "Tiny", 1, 3, 6, "Me", "Mine", 0, "2026-10-27", 0, null, null, null, null, null, null, AllCredits(), "Me");
         return new BookFolder("tiny", dir, info);
     }
 }
