@@ -226,6 +226,32 @@ Assert-Equal 'editor holds the typed text' $true (Test-EditorHoldsText $listed '
 Assert-Equal 'an old draft in front is caught' $false (Test-EditorHoldsText $listed 'ReviewEditor' 'The first sentence.')
 Assert-Equal 'no editor on screen' $false (Test-EditorHoldsText @('  Read | ReadButton | True') 'ReviewEditor' 'x')
 
+# ---- short-lines (Slice 220): the probe lines (one per arm) and the guard lines of one read, with NaN
+$probeLog = @(
+    '10-30 12:00:00.050 D/x: take has NaN samples (voice kokoro:am_liam, 4 chars, nan 26400 of 26400)',
+    '10-30 12:00:00.100 D/x: retry take 2 (single-thread, voice kokoro:am_liam, 4 chars)',
+    '10-30 12:00:00.200 W/x: silent voice output rescued by single-thread take 2 (voice kokoro:am_liam, 4 chars, voiced ms 0/480, needed 90, pace 1.00)',
+    '10-30 12:00:00.300 D/x: short line probe multi-thread (voice kokoro:am_liam, 4 chars): [samples 26400, nan 26400, peak 0.000, voiced ms 0]; [samples 24000, nan 0, peak 0.310, voiced ms 380]; [samples 0, nan 0, peak 0.000, voiced ms 0]',
+    '10-30 12:00:00.400 D/x: short line probe single-thread (voice kokoro:am_liam, 4 chars): [samples 24000, nan 0, peak 0.300, voiced ms 400]; [samples 24000, nan 0, peak 0.000, voiced ms 0]; [samples 24000, nan 0, peak 0.310, voiced ms 380]')
+$facts = ConvertFrom-ShortLineLog $probeLog
+Assert-Equal 'multi-thread arm has three takes' 3 @($facts.Probe.Multi).Count
+Assert-Equal 'single-thread arm has three takes' 3 @($facts.Probe.Single).Count
+Assert-Equal 'an all-NaN take is NaN and silent, with its count' $true ($facts.Probe.Multi[0].HasNan -and $facts.Probe.Multi[0].Silent -and $facts.Probe.Multi[0].Nan -eq 26400)
+Assert-Equal 'a voiced take has no NaN' $false $facts.Probe.Multi[1].HasNan
+Assert-Equal 'a take with zero samples is silent without NaN' $true ($facts.Probe.Multi[2].Silent -and -not $facts.Probe.Multi[2].HasNan)
+Assert-Equal 'voiced ms read' 380 $facts.Probe.Single[2].VoicedMs
+Assert-Equal 'the old peak NaN format counts as NaN' $true (ConvertFrom-TakeFacts 'samples 100, peak NaN, voiced ms 0').HasNan
+Assert-Equal 'a NaN peak is printed NaN, not n/a' $true ((Format-TakeFacts (ConvertFrom-TakeFacts 'samples 100, peak NaN, voiced ms 0')) -like '*peak NaN*(NaN)')
+Assert-Equal 'a take with a NaN count is labelled NaN' $true ((Format-TakeFacts $facts.Probe.Multi[0]) -like '*nan 26400*(NaN)')
+Assert-Equal 'rescue by a single-thread retry is named' 'single-thread take 2' $facts.Rescue
+Assert-Equal 'retry kind is kept' 'True' "$($facts.Retries -contains '2:single-thread')"
+Assert-Equal 'NaN takes are counted' 1 $facts.NanTakes
+Assert-Equal 'no give-up' $false $facts.GaveUp
+Assert-Equal 'a gave up line is seen' $true (ConvertFrom-ShortLineLog @('x: silent voice output after 3 takes; gave up (voice kokoro:am_liam, 4 chars, voiced ms 0/0/0)')).GaveUp
+Assert-Equal 'no probe lines give no probe' $null (ConvertFrom-ShortLineLog @('x: nothing')).Probe
+$gaveRow = [pscustomobject]@{ Probe = $facts.Probe; GaveUp = $true; Rescue = $null }
+Assert-Equal 'summary splits NaN by arm and counts outcomes' 'Multi-thread NaN 2/6 (silent 4); Single-thread NaN 0/6 (silent 2); rescued by single-thread retry 1/2; gave up 1/2' (Get-ShortLineSummary @([pscustomobject]@{ Probe = $facts.Probe; GaveUp = $false; Rescue = $facts.Rescue }, $gaveRow))
+
 # ---- a deadline caps an adb call; none leaves it alone
 $now = Get-Date
 Assert-Equal 'no deadline: the call keeps its limit' 30 (Limit-SecondsToDeadline 30 $null $now)
