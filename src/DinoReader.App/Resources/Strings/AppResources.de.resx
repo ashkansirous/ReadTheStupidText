@@ -27,6 +27,7 @@
   <data name="Common_Back" xml:space="preserve"><value>Zurück</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Speichern</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Fertig</value></data>
+  <data name="Common_Continue" xml:space="preserve"><value>Weiter</value></data>
   <data name="Close_Question" xml:space="preserve"><value>Dino Book Reader schließen?</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>Bleiben</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Schließen</value></data>

@@ -411,13 +411,16 @@ public sealed class IntroWizardPage : ContentPage
 		switch (IntroSteps.NameAt(_step))
 		{
 			case IntroSteps.Store:
-				return _services.GetRequiredService<StorePage>();
+				var store = _services.GetRequiredService<StorePage>();
+				store.LaunchedFromIntro = true; // its header button reads "Continue" and means "back to the intro, next step" (Slice 229)
+				return store;
 			case IntroSteps.Record:
 				return await CreateRecordScreenAsync();
 			case IntroSteps.Read:
 				return await CreateReadScreenAsync();
 			default:
 				var wizard = _services.GetRequiredService<StoryWizardPage>();
+				wizard.LaunchedFromIntro = true;
 				await wizard.LoadAsync(null);
 				return wizard;
 		}
@@ -455,6 +458,7 @@ public sealed class IntroWizardPage : ContentPage
 		}
 
 		var record = _services.GetRequiredService<RecordPage>();
+		record.LaunchedFromIntro = true;
 		await record.LoadAsync(story);
 		return record;
 	}

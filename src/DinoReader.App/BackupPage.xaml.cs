@@ -62,7 +62,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		SaveButton.IsEnabled = _count > 0;
 	}
 
-	private async void OnBackTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
+	private async void OnBackTapped(object? sender, EventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
 
 	private async void OnSeeStoriesClicked(object? sender, EventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
 

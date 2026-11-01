@@ -15,7 +15,7 @@ public sealed class PageTextPage : ContentPage, IGrownUpPage
 	private readonly Editor _editor;
 	private readonly RegionOverlay? _overlay;
 
-	// The page as this screen edits it: region choices live here until Save, so Back drops them with the typed text.
+	// The page as this screen edits it: region choices live here until Done saves them with (Back leaves without saving, as before) the typed text.
 	private PageDraft? _page;
 	private readonly List<int> _toggled = [];
 
@@ -66,7 +66,7 @@ public sealed class PageTextPage : ContentPage, IGrownUpPage
 	}
 
 	// The text is composed from the regions again, so what is typed in the editor is asked about first (Keep changes nothing).
-	// Nothing reaches the draft before Save, so Back cancels the toggle along with the typing.
+	// Nothing reaches the draft before Done saves.
 	private async Task ToggleRegionAsync(int region)
 	{
 		if (!await RegionPicker.MayReplaceAsync(this, _page!.WouldReplace(_editor.Text ?? string.Empty)))
@@ -80,29 +80,13 @@ public sealed class PageTextPage : ContentPage, IGrownUpPage
 		_overlay!.Show(_page.Ocr!.Regions!);
 	}
 
-	private Grid Header()
+	// Back (header, system, iOS swipe) leaves without saving, as before Slice 229; only Done saves (the old Save button).
+	private GrownUpHeader Header()
 	{
-		var back = new Border
-		{
-			WidthRequest = 44, HeightRequest = 44, StrokeThickness = 0, BackgroundColor = Colors.Transparent,
-			Content = new IconView { Kind = IconKind.Back, Color = DinoTokens.Get(DinoTokens.Ink), Size = 22, StrokeWidth = 2.6 },
-		};
-		SemanticProperties.SetDescription(back, AppResources.Common_Back);
-		var backTap = new TapGestureRecognizer();
-		backTap.Tapped += async (_, _) => await _busy.RunAsync(() => Navigation.PopAsync());
-		back.GestureRecognizers.Add(backTap);
-		var save = new Button
-		{
-			Text = AppResources.Common_Save, HeightRequest = 38, CornerRadius = 19, Padding = new Thickness(14, 0), FontSize = 13.5,
-			BackgroundColor = DinoTokens.Get(DinoTokens.Brand), TextColor = Colors.White,
-		};
-		save.Clicked += async (_, _) => await _busy.RunAsync(SaveAsync);
-		return new Grid
-		{
-			Padding = new Thickness(8, 10, 16, 10),
-			ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)],
-			Children = { back, save.Column(2) },
-		};
+		var header = new GrownUpHeader();
+		header.BackRequested += async (_, _) => await _busy.RunAsync(() => Navigation.PopAsync());
+		header.DoneRequested += async (_, _) => await _busy.RunAsync(SaveAsync);
+		return header;
 	}
 
 	private async Task SaveAsync()

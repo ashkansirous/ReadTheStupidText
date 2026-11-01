@@ -11,19 +11,8 @@
 
     <!-- Language (mock screen 26), opened from Settings (Slice 172): only the languages. The fifteen rows are built in code-behind. -->
     <Grid RowDefinitions="Auto,*">
-        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" Padding="6,8,14,10">
-            <Border WidthRequest="44" HeightRequest="44" StrokeThickness="0" BackgroundColor="Transparent"
-                    SemanticProperties.Description="{x:Static res:AppResources.Common_Back}">
-                <local:IconView Kind="Back" Color="{StaticResource Ink}" Size="22" StrokeWidth="2.6" />
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnBackTapped" />
-                </Border.GestureRecognizers>
-            </Border>
-            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                <Label Text="{x:Static res:AppResources.Language_Title}" FontSize="20" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level1" />
-                <Label Text="{x:Static res:AppResources.Language_PageSub}" FontSize="12" TextColor="{StaticResource Muted}" />
-            </VerticalStackLayout>
-        </Grid>
+        <local:GrownUpHeader Title="{x:Static res:AppResources.Language_Title}" Subtitle="{x:Static res:AppResources.Language_PageSub}"
+                             BackRequested="OnBackTapped" DoneRequested="OnBackTapped" />
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout x:Name="Cards" Padding="14,0,14,20" Spacing="14">

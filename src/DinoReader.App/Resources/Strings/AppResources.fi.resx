@@ -26,6 +26,7 @@
   <data name="Common_Back" xml:space="preserve"><value>Takaisin</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Tallenna</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Valmis</value></data>
+  <data name="Common_Continue" xml:space="preserve"><value>Jatka</value></data>
   <data name="Close_Question" xml:space="preserve"><value>Suljetaanko Dino Book Reader?</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>Jää</value></data>
   <data name="Common_Close" xml:space="preserve"><value>Sulje</value></data>

@@ -24,6 +24,7 @@
   <data name="Common_Back" xml:space="preserve"><value>戻る</value></data>
   <data name="Common_Save" xml:space="preserve"><value>保存</value></data>
   <data name="Common_Done" xml:space="preserve"><value>完了</value></data>
+  <data name="Common_Continue" xml:space="preserve"><value>続ける</value></data>
   <data name="Close_Question" xml:space="preserve"><value>Dino Book Reader を閉じますか？</value></data>
   <data name="Common_Stay" xml:space="preserve"><value>とどまる</value></data>
   <data name="Common_Close" xml:space="preserve"><value>閉じる</value></data>

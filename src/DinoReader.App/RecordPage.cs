@@ -20,6 +20,9 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 	private readonly IRecordingPlayer _player;
 	private readonly UsageCounter _usage;
 	private readonly BusyGuard _busy = new();
+
+	/// <summary>Set by the intro wizard when it pushes this page: the header button then reads "Continue" (Slice 229).</summary>
+	public bool LaunchedFromIntro { get; set; }
 	private readonly WaitOverlay _waitOverlay = DinoWait.OverPage();
 	private readonly WaitController _wait;
 	private Label _time = NewTimeLabel();
@@ -109,29 +112,16 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		_root.Add(Footer(story), 0, 2);
 	}
 
-	private Grid Header(Story story)
+	private GrownUpHeader Header(Story story)
 	{
-		var back = new Border
+		var header = new GrownUpHeader
 		{
-			WidthRequest = 44, HeightRequest = 44, StrokeThickness = 0, BackgroundColor = Colors.Transparent,
-			Content = new IconView { Kind = IconKind.Back, Color = DinoTokens.Get(DinoTokens.Ink), Size = 22, StrokeWidth = 2.6 },
+			Title = AppResources.Rec_Title,
+			Subtitle = AppResources.Format(AppResources.Rec_Subtitle, story.Title, _page + 1, story.Pages.Count),
+			Continue = LaunchedFromIntro,
 		};
-		SemanticProperties.SetDescription(back, AppResources.Common_Back);
-		CastViews.AddTap(back, () => _busy.RunAsync(() => Navigation.PopAsync()));
-		var title = new Label { Text = AppResources.Rec_Title, FontSize = 20, FontAttributes = FontAttributes.Bold };
-		SemanticProperties.SetHeadingLevel(title, SemanticHeadingLevel.Level1);
-		var subtitle = new Label
-		{
-			Text = AppResources.Format(AppResources.Rec_Subtitle, story.Title, _page + 1, story.Pages.Count), FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted),
-			LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1,
-		};
-		var header = new Grid
-		{
-			Padding = new Thickness(6, 8, 14, 10), ColumnSpacing = 6,
-			ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)],
-		};
-		header.Add(back, 0);
-		header.Add(new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { title, subtitle } }, 1);
+		header.BackRequested += async (_, _) => await _busy.RunAsync(() => Navigation.PopAsync());
+		header.DoneRequested += async (_, _) => await _busy.RunAsync(() => Navigation.PopAsync()); // leaving stops and keeps a recording in progress, as Back does
 		return header;
 	}
 

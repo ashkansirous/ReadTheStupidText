@@ -253,7 +253,7 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 			_session.LanguageChosen = true;
 		}
 
-		TitleLabel.Text = isNew ? AppResources.Story_Add : AppResources.Manage_EditStory;
+		Header.Title = isNew ? AppResources.Story_Add : AppResources.Manage_EditStory;
 		PagesView.Attach(_session, OnPagesEdited);
 		CoverView.Attach(_session);
 		TextView.Attach(_session);
@@ -344,11 +344,11 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 		}
 
 		StoryDraft? draft = _session.Draft;
+		Header.ButtonVisible = _step == TextStepIndex; // Pages and Cover have nothing to save yet, and a Done there would drop the pictures (Slice 229)
 		bool pages = _step == PagesStepIndex;
-		TitleLabel.Text = pages ? AppResources.Edit_Pages : _session.IsNew ? AppResources.Story_Add : AppResources.Manage_EditStory;
+		Header.Title = pages ? AppResources.Edit_Pages : _session.IsNew ? AppResources.Story_Add : AppResources.Manage_EditStory;
 		bool named = pages && draft is { PageDrafts.Count: > 0 } && !string.IsNullOrWhiteSpace(_session!.FileName);
-		SubtitleLabel.IsVisible = named;
-		SubtitleLabel.Text = named ? SubtitleOf(_session!.FileName!, draft!.PageDrafts.Count) : string.Empty;
+		Header.Subtitle = named ? SubtitleOf(_session!.FileName!, draft!.PageDrafts.Count) : string.Empty;
 	}
 
 	private static string SubtitleOf(string fileName, int pages) =>
@@ -414,7 +414,18 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 		}
 	}
 
-	private async void OnLeaveTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(LeaveAsync);
+	private async void OnLeaveTapped(object? sender, EventArgs e) => await _busy.RunAsync(LeaveAsync);
+
+	/// <summary>Set by the intro wizard when it pushes this page: the header button then reads "Continue" (Slice 229).</summary>
+	public bool LaunchedFromIntro
+	{
+		set => Header.Continue = value;
+	}
+
+	// The header's Done or Continue (Slice 229): shown on the last step only, where it saves the book as the bottom Save does.
+	private async void OnDoneTapped(object? sender, EventArgs e) => await _busy.RunAsync(DoneAsync);
+
+	private Task DoneAsync() => SaveAsync();
 
 	private async Task LeaveAsync()
 	{

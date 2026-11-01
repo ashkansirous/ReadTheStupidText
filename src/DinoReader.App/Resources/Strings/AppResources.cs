@@ -111,6 +111,7 @@ public static class AppResources
 	public static string Common_Back => Get();
 	public static string Common_Save => Get();
 	public static string Common_Done => Get();
+	public static string Common_Continue => Get();
 	public static string Close_Question => Get();
 	public static string Common_Stay => Get();
 	public static string Common_Close => Get();

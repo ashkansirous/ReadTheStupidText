@@ -9,7 +9,7 @@ public sealed class StoreStoryTests : IDisposable
 {
     private const int MinPages = 8;
     private const int MaxPages = 18; // the user's limit for a store book (2026-10-26, X Marks the Treasure!)
-    private const int StoryCount = 11;
+    private const int StoryCount = 12;
 
     private readonly string _root = Path.Combine(Path.GetTempPath(), "dino-store-test-" + Guid.NewGuid().ToString("N"));
 

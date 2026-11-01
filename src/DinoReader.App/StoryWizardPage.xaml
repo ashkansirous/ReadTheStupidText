@@ -12,19 +12,7 @@
     <!-- Add or edit a story in three steps (Slice 78): Pages, Cover, Text. One StoryDraft is shared by the steps;
          nothing is saved until the last step's Save. The step names carry their number from code. -->
     <Grid x:Name="WizardRoot" RowDefinitions="Auto,Auto,*,Auto">
-        <Grid x:Name="Header" ColumnDefinitions="Auto,*" Padding="8,10,16,6">
-            <Border WidthRequest="44" HeightRequest="44" BackgroundColor="Transparent" StrokeThickness="0"
-                    SemanticProperties.Description="{x:Static res:AppResources.Common_Back}">
-                <local:IconView Kind="Back" Color="{StaticResource Ink}" Size="22" StrokeWidth="2.6" />
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnLeaveTapped" />
-                </Border.GestureRecognizers>
-            </Border>
-            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                <Label x:Name="TitleLabel" FontSize="20" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level1" />
-                <Label x:Name="SubtitleLabel" FontSize="12" TextColor="{StaticResource Muted}" IsVisible="False" LineBreakMode="TailTruncation" />
-            </VerticalStackLayout>
-        </Grid>
+        <local:GrownUpHeader x:Name="Header" ButtonVisible="False" BackRequested="OnLeaveTapped" DoneRequested="OnDoneTapped" />
 
         <Grid x:Name="StepBar" Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="8" Padding="14,0,14,8" />
 
