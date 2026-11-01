@@ -1,6 +1,6 @@
 ### Slice 230 — Dino: say plainly that recordings stay on the phone, and restore brings them back
 
-*Built 2026-11-01, not merged. Emulator-checked (emulator-5554), not yet tried on iOS or by ear (see Not yet verified).* From the user's user test on 2026-11-01 (findings 4 and 5). No design step (copy and logic).
+*Built 2026-11-01, merged as PR #693 (b2503597). Emulator-checked (emulator-5554), not yet tried on iOS or by ear (see Not yet verified).* From the user's user test on 2026-11-01 (findings 4 and 5). No design step (copy and logic).
 
 **Touches:** `src/DinoReader.Core/StoryPackageReader.cs`, `src/DinoReader.Core/StoryBackupReader.cs`, `src/DinoReader.Core/StoryBackup.cs`, `src/DinoReader.Core/StoryRecordings.cs`, `src/DinoReader.Core/IStoryLibrary.cs`, `src/DinoReader.App/FileStoryLibrary.cs` (wherever it lives), `src/DinoReader.App/BackupPage.xaml`, `src/DinoReader.App/BackupPage.xaml.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/Testing/DinoTestCommands.Backup.cs` (new), `src/DinoReader.App/Testing/DinoTestCommands.cs` (key registration only), `.maestro/dino/dino-backup-restore-recordings.yaml` (new; corrected mid-build from a nonexistent `tools/emulator/flows/`), `tests/DinoReader.Tests/StoryBackupTests.cs`, `tests/DinoReader.Tests/StoryPackageTests.cs`, `tests/DinoReader.Tests/` (new test files), `docs/plan/slices/230-dino-recordings-copy-and-restore-merge.md` (widened at the claim, 2026-11-01, from a premise check)
 
@@ -87,7 +87,7 @@ Not drawn: the intro's record step itself.
 - Medium 7 (third row shrinks the picture row): skipped; the mock draws the note inline.
 - Medium 8 (idiom chain, no switch default): skipped, style.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-01)
 
 - In `src/DinoReader.App/CLAUDE.md`: restore merges recordings into a book already on the phone; the audio files are staged, then committed by `UpdateAsync`, with `.bak` rollback (`StoryPackageReader.cs`). Keep that order if you touch the merge. (Slice 230: docs/plan/slices/230-dino-recordings-copy-and-restore-merge.md)
 

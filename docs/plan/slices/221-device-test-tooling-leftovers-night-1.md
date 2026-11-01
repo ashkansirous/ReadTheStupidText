@@ -1,6 +1,6 @@
 ### Slice 221 — Device-test tooling leftovers from the 2026-10-30-2100 night, round 1
 
-*Built 2026-11-01, not merged; items 1, 2 and the lint run passed on emulator-5556, items 4 and 6 are not yet tried on GitHub / the real phone (see Not yet verified).* Written 2026-10-30 by the round 1 feedback loop ([note](../notes/2026-10-30-2100-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01.
+*Built 2026-11-01, merged as PR #694 (f9208c1c); items 1, 2 and the lint run passed on emulator-5556, items 4 and 6 are not yet tried on GitHub / the real phone (see Not yet verified).* Written 2026-10-30 by the round 1 feedback loop ([note](../notes/2026-10-30-2100-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01.
 
 **Touches:** `src/DinoReader.App/Testing/**`, `tools/emulator/install-debug.ps1`, `tools/emulator/run-flows.ps1`, `tools/emulator/lint-flows.ps1`, `.maestro/dino/**`, `.maestro/README.md`, `tools/emulator/common.ps1`, `tools/emulator/fixtures/lint/**`, `tools/phone/run-checks.ps1`, `tools/phone/common.ps1`, `tools/phone/lease.ps1`, `tools/phone/audio-timing.ps1`, `tools/phone/reset-dev-app.ps1`, `tools/phone/test-*.ps1`, `tools/phone/README.md`, `tools/CLAUDE.md`, `.github/workflows/release.yml` (item 4 only), `docs/plan/slices/221-device-test-tooling-leftovers-night-1.md` (widened at the claim, 2026-11-01, from a premise check; `.maestro/` and `tools/emulator/common.ps1` added mid-build: the claim named a `tools/emulator/flows/` folder that does not exist)
 
@@ -63,7 +63,7 @@ Check pass (`reviews/s221-check-medium.md`, 2 low findings): none applied.
 - 1: skipped, the emulator run installed and ran the `.dbg` build, so the manifest id was right (the stale-obj worry did not happen).
 - 2: skipped as low and unproven: `Remove-StaleDevPackages` runs `adb ... 2>&1` under `$ErrorActionPreference='Stop'` (`tools/emulator/common.ps1:151`) and on Windows PowerShell 5.1 adb's stderr could abort the install instead of warning.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-01)
 
 - `tools/CLAUDE.md`: Dino dev installs are `uk.sirous.dinoreader.dbg` on emulator and phone; the plain `uk.sirous.dinoreader` is the store app and is removed only on `emulator-N` serials. (Slice 221: docs/plan/slices/221-device-test-tooling-leftovers-night-1.md)
 - `.github/CLAUDE.md`: dispatch and push release runs have separate concurrency groups (`release-dispatch-<ref>`, `release-<ref>`), ordered by the `version` job's wait step; do not drop that step. (Slice 221: docs/plan/slices/221-device-test-tooling-leftovers-night-1.md)
