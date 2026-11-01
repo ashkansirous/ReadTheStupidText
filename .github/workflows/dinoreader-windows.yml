@@ -95,6 +95,7 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write   # gh release upload (release runs only)
+      actions: write    # gh cache delete of a broken SDK cache entry (Slice 240)
     strategy:
       fail-fast: false
       matrix:
@@ -103,18 +104,127 @@ jobs:
       PROJECT: src/DinoReader.App/DinoReader.App.csproj
       MANIFEST: src/DinoReader.App/Platforms/Windows/Package.appxmanifest
       VERSION: ${{ inputs.version || needs.version.outputs.version }}
+      SDK_VERSION: '10.0.402'
+      WORKLOAD_SET: '10.0.402'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Slice 240: the SDK and its MAUI workload are installed into a job-local folder and that whole
+      # folder is cached, so a hit skips the 300 MB SDK download and the ~200 s workload install.
+      # The SDK is installed by setup-dotnet into a custom DOTNET_INSTALL_DIR, which has no
+      # metadata\workloads\<band>\installertype\msi marker, so the CLI installs the workload as plain
+      # files under that root (dotnet/sdk WorkloadInstallType). SDK_VERSION and WORKLOAD_SET must
+      # match each other and both are in the cache key, so moving either misses and reinstalls.
+      - name: Choose the job-local dotnet folder
+        shell: bash
+        run: |
+          echo "DOTNET_INSTALL_DIR=${RUNNER_TEMP}\dotnet" >> "$GITHUB_ENV"
+          echo "DOTNET_ROOT=${RUNNER_TEMP}\dotnet" >> "$GITHUB_ENV"
+          # ImageVersion is set by the hosted runner images (actions/runner-images); a new image
+          # misses the cache, so a root built against an older image is never reused.
+          if [ -z "${ImageVersion:-}" ]; then echo "::warning::ImageVersion is not set; cache key has no image version"; fi
+          echo "DOTNET_DIR_KEY=dotnet-${RUNNER_OS}-${ImageOS:-noimageos}-${ImageVersion:-noimage}-sdk${SDK_VERSION}-wl${WORKLOAD_SET}-maui-windows-v1" >> "$GITHUB_ENV"
+
+      - name: Restore the cached .NET SDK and workloads
+        id: dotnet-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}\dotnet
+          key: ${{ env.DOTNET_DIR_KEY }}
+
+      # A restore is trusted only if it works: dotnet.exe exists, prints the pinned version, lists
+      # maui-windows (output captured first, so no pipefail/grep -q trap) and packs\ holds a
+      # Microsoft.Maui pack folder (a partial restore can keep metadata and lose the packs).
+      - name: Validate the restored .NET SDK
+        id: dotnet-valid
+        shell: bash
+        run: |
+          set -uo pipefail
+          valid=false
+          if [ -f "${DOTNET_ROOT}/dotnet.exe" ]; then
+            cd "$RUNNER_TEMP"
+            ver="$("${DOTNET_ROOT}/dotnet.exe" --version 2>&1 | tr -d '\r')"
+            list="$("${DOTNET_ROOT}/dotnet.exe" workload list 2>&1)"
+            echo "restored sdk: ${ver}"
+            packs="$(ls "${DOTNET_ROOT}/packs" 2>/dev/null | grep -i '^Microsoft\.Maui' || true)"
+            if [ "$ver" = "$SDK_VERSION" ] && [[ "$list" == *maui-windows* ]] && [ -n "$packs" ]; then valid=true; fi
+          else
+            echo "No cached dotnet.exe."
+          fi
+          echo "valid=${valid}" >> "$GITHUB_OUTPUT"
+          if [ "$valid" = true ]; then echo "${DOTNET_ROOT}" >> "$GITHUB_PATH"; fi
+
+      - name: Discard an unusable restored .NET folder
+        if: steps.dotnet-valid.outputs.valid != 'true'
+        shell: bash
+        run: rm -rf "${DOTNET_ROOT}"
+
       - name: Set up .NET 10
+        if: steps.dotnet-valid.outputs.valid != 'true'
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: ${{ env.SDK_VERSION }}
 
       # A UseMaui project needs the MAUI workload even for its Windows head.
       - name: Install the .NET MAUI Windows workload
-        run: dotnet workload install maui-windows
+        id: workload-install
+        if: steps.dotnet-valid.outputs.valid != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          dotnet workload install maui-windows --version "$WORKLOAD_SET"
+          ver="$(dotnet --version | tr -d '\r')"
+          list="$(dotnet workload list)"
+          echo "$list"
+          [ "$ver" = "$SDK_VERSION" ] || { echo "::error::dotnet --version is ${ver}, expected ${SDK_VERSION}"; exit 1; }
+          [[ "$list" == *maui-windows* ]] || { echo "::error::maui-windows missing after install"; exit 1; }
+          [ -f "${DOTNET_ROOT}/dotnet.exe" ] || { echo "::error::dotnet.exe not in ${DOTNET_ROOT}"; exit 1; }
+
+      # Shows in the run log whether iOS/Android/wasm packs were pulled (a Windows-only set is smaller).
+      # Fails before any save when the workload did not land as files under the cached root
+      # (packs\ empty or no Microsoft.Maui pack), so a hollow root is never cached.
+      - name: Check the installed workload packs
+        if: steps.dotnet-valid.outputs.valid != 'true'
+        shell: bash
+        run: |
+          set -uo pipefail
+          packs="$(ls "${DOTNET_ROOT}/packs" 2>/dev/null || true)"
+          echo "$packs"
+          if [ -z "$packs" ]; then echo "::error::${DOTNET_ROOT}/packs is missing or empty; the workload was not installed as files under the cached root"; exit 1; fi
+          if ! grep -qi '^Microsoft\.Maui' <<< "$packs"; then echo "::error::no Microsoft.Maui pack folder in ${DOTNET_ROOT}/packs"; exit 1; fi
+
+      # A cache entry cannot be overwritten, so after an exact hit that failed validation the broken
+      # entry is deleted first and the good root is saved under the same key. A delete failure
+      # (for example the entry belongs to another ref) only warns; the save then fails harmlessly.
+      - name: Delete the broken .NET SDK cache entry
+        if: steps.dotnet-cache.outputs.cache-hit == 'true' && steps.dotnet-valid.outputs.valid != 'true' && steps.workload-install.outcome == 'success'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh cache delete "$DOTNET_DIR_KEY" --repo ${{ github.repository }} || echo "::warning::could not delete the broken cache entry ${DOTNET_DIR_KEY}"
+
+      # Saved right after the install, before any build runs, so no compiler or MSBuild node can hold
+      # files in the folder.
+      - name: Save the .NET SDK and workloads
+        if: steps.workload-install.outcome == 'success'
+        uses: actions/cache/save@v4
+        continue-on-error: true
+        with:
+          path: ${{ runner.temp }}\dotnet
+          key: ${{ env.DOTNET_DIR_KEY }}
+
+      # Per architecture: the runtime packs differ for x64 and ARM64. Only the projects the Dino
+      # Windows build restores are hashed, so an unrelated project edit does not start a new entry.
+      - name: Restore NuGet packages cache
+        id: nuget-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ matrix.platform }}-dinowin-${{ hashFiles('src/DinoReader.App/*.csproj', 'src/DinoReader.Core/*.csproj', 'src/ReadTheStupidText.Domain/*.csproj', 'src/ReadTheStupidText.Application/*.csproj', 'src/ReadTheStupidText.Documents/*.csproj', 'src/ReadTheStupidText.Infrastructure/*.csproj', 'src/ReadTheStupidText.Mobile.Shared/*.csproj', 'src/ReadTheStupidText.Mobile.Shared/*.props', 'Directory.Build.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-${{ matrix.platform }}-dinowin-
 
       # Stamp the GitVersion-derived version into the manifest (x.y.z.0 — the Store requires
       # revision 0). Anchored to line start and the self-closing ' />' so it only touches the
@@ -141,6 +251,15 @@ jobs:
           -p:IncludeAndroid=false
           -p:Platform=${{ matrix.platform }}
           -p:AppxPackageSigningEnabled=false
+
+      # Saved only after a good publish and only on an exact miss (a hit would be refused anyway).
+      - name: Save NuGet packages cache
+        if: success() && steps.nuget-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        continue-on-error: true
+        with:
+          path: ~/.nuget/packages
+          key: ${{ steps.nuget-cache.outputs.cache-primary-key }}
 
       # Only the app package — NOT the Microsoft.WindowsAppRuntime dependency .msix under
       # Dependencies/ (same name for every arch; the Store/Windows resolves that runtime itself).
