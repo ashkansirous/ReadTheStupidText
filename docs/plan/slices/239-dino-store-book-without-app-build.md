@@ -1,45 +1,57 @@
-# Slice 239 — Dino: a new or changed store book never touches app code
+# Slice 239 — Dino: adding, changing or deleting a store story runs no pipeline but the upload
 
-*Planned 2026-11-01.* From the user, after the Freddy and back-cover releases each built the Dino iOS app:
-"why there is an ios build? I just changed the text and image of the stories in the store!"
+*Planned 2026-11-01, widened the same day.* From the user, after the Freddy and back-cover releases each built the
+Dino iOS app: "why there is an ios build? I just changed the text and image of the stories in the store!", then:
+"change the fucking code! Adding/updating/deleting a new story should never cause the build pipelines to run. No
+tests should be executed! no other shit like that either!"
 
 **Depends on:** none.
-**Touches:** `src/DinoReader.App/ShippedTitles.cs`, `src/DinoReader.App/StoryTranslator.cs`, `src/DinoReader.Core/Story*.cs`, `src/DinoReader.Core/StoryJson*.cs`, `tools/DinoReader.BookBuilder/**`, `tests/DinoReader.Tests/StoreStoryTests.cs`, `tests/DinoReader.Tests/BookBuilderTests.cs`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/agents/dino-story-writer.md`, `src/DinoReader.App/CLAUDE.md`
+**Touches:** `.github/workflows/**`, `.github/scripts/ship-targets.mjs`, `.github/scripts/*.test.*`, `.github/CLAUDE.md`, `src/DinoReader.App/ShippedTitles.cs`, `src/DinoReader.App/StoryTranslator.cs`, `src/DinoReader.Core/Story*.cs`, `src/DinoReader.Core/StoryJson*.cs`, `tools/DinoReader.BookBuilder/**`, `tools/upload-store-story.ps1`, `tests/DinoReader.Tests/**`, `content/dino/*/book.json`, `content/dino/*/titles.json`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/agents/dino-story-*.md`, `src/DinoReader.App/CLAUDE.md`, `worker/CLAUDE.md`
 
 ## Why (checked on origin/main, 2026-11-01)
 
-- A change only under `content/dino/<book>/` runs `publish-store` and the Dino tests and builds no app
-  (`.github/scripts/ship-targets.mjs`, groups `dinostore`/`dinoreader`).
-- But every new store book also had to add its title in 13 languages to `src/DinoReader.App/ShippedTitles.cs`, which
-  is app code, so the release built the Dino iOS, Android and Windows apps (Freddy, PR #680). The test
-  `EveryShippedBook_HasATitleInEveryOtherLanguage` (`tests/DinoReader.Tests/StoreStoryTests.cs:92`) forces that row.
-- The store list already shows translated titles from the listing's own `titles` (`ShippedTitles.ShownInStore`,
-  `Core/StoreCatalog.cs:12`). Only the shelf and the reading screen of a downloaded book read `ShippedTitles.ForBook`
-  (`StoryTranslator.cs:162`, `:175`), so they need the table today.
-- The back cover (Slice 237, PR #688) was real app code and needed one app release regardless.
+- A change only under `content/dino/<book>/` runs `publish-store` **and the Dino test suite** (`ship-targets.mjs`,
+  groups `dinostore`/`dinoreader`), and PR checks run on it.
+- Every new store book also had to add its title in 13 languages to `src/DinoReader.App/ShippedTitles.cs` (app code),
+  so the release built the Dino iOS, Android and Windows apps (Freddy, PR #680). The test
+  `EveryShippedBook_HasATitleInEveryOtherLanguage` (`tests/DinoReader.Tests/StoreStoryTests.cs:92`) forces that row,
+  and `BookBuilderTests`/`StoreStoryTests` hard-code the number of books, so a new book also edits tests.
+- The store list already shows translated titles from the listing's own `titles`. Only the shelf and reading screen
+  of a downloaded book read `ShippedTitles.ForBook` (`StoryTranslator.cs:162`, `:175`).
+- A book whose content changed but whose `version` was not stamped is caught today only by `check` in the tests.
+
+## Decisions (the user, 2026-11-01)
+
+- A store story add, update or delete runs **only** the store upload: no app build, no test suite, no PR test checks,
+  no code-review gate. (Supersedes the earlier "ship with the next app change" timing: build it now.)
+- Starter books are bundled in the app, so changing a starter still builds the app (stated to the user).
 
 ## Work
 
-- [ ] **1.** The book carries its own titles: the builder writes the per-language titles into the `.dino` package
-  (story.json, optional field, so old apps ignore it), taken from a `titles` block in the book's content folder.
-- [ ] **2.** The shelf and reading screen read the installed book's own titles first, then `ShippedTitles` (kept as
-  the fallback for books downloaded before this change and for the starters).
-- [ ] **3.** Move the store books' rows out of `ShippedTitles.cs` into each book's content folder; the test checks the
-  content folder instead of the app table for store books. Starters stay in the table (they ship with the app anyway).
-- [ ] **4.** Skill and writer agent: a new store book's titles go in its content folder, never in app code. A check
-  (BookBuilder `check` or a test) fails a store-book change that edits `src/` without saying why.
-- [ ] **5.** Restamp store books so installed copies get packages with titles.
+- [x] **1. Titles travel with the book.** Each store book's 13 titles live in its content folder; the builder writes
+  them into the package (optional story.json field, old apps ignore it) and into meta.json. The shelf and reading
+  screen read the book's own titles first, then `ShippedTitles` (fallback for older downloads and starters). Store
+  rows leave `ShippedTitles.cs`.
+- [x] **2. No test edits per book.** Tests derive book counts and the title list from `content/dino/`, never a
+  hard-coded number or the app table, so adding or deleting a book edits no test file.
+- [x] **3. No version stamping needed.** `publish-store` compares each book's content hash with the live store and
+  uploads a changed book as live version + 1 (never overwriting a version). `stamp`/`check` stop being required for
+  store books; the `check` step leaves the test suite.
+- [x] **4. Delete.** `publish-store` removes a store book from the listing when its content folder is gone (meta.json
+  first, packages kept for installed copies), and logs which ids it removed.
+- [x] **5. Pipelines.** `content/dino/<store-book>/**` triggers only the `dinostore` target: no `dinoreader` tests, no
+  app builds, no PR test workflows (path filters on every PR/push workflow, incl. `tests.yml`). Starter folders keep
+  triggering the app. Unit-test `ship-targets.mjs` for both cases.
+- [x] **6. Rules.** create-dino-story, the writer/illustrator/reviewer agents and `src/DinoReader.App/CLAUDE.md`: a
+  store book never edits `src/`, `tests/` or app files, and needs no stamp. The ClaudeSkills `merge-gate.mjs` treats
+  `content/dino/**` store-book files as content, so no review files are demanded (separate ClaudeSkills PR).
 
-This needs **one** more Dino app release (Android, iOS, Windows); after it, adding or editing a store book builds no app.
-
-**Timing (the user, 2026-11-01): ship it with the next Dino app change**, never as its own app release. Build and
-review it whenever, but merge it in the same release as the next change under `src/DinoReader.App` or
-`src/DinoReader.Core`. Until then, a new store book still adds its row to `ShippedTitles.cs`; edits to existing store
-books already build no app.
+**Built 2026-11-01 (deviations).** Item 1 needed no app code: `StoryTranslator.ShelfTitle`/`TitleAsync` already look a title up in the installed book's own language table first, so `titles.json` is merged into each language's table under the English title (works in already-installed apps, no app release). The 12 existing store books got a `titles.json` (from `ShippedTitles`); their old rows stay in `ShippedTitles.cs` as the fallback for copies installed before (removing them would blank those titles). Item 3: `check` still runs for the starters (hash + committed package) and for "every store book builds and has titles"; store books are no longer hash-checked or stamped. Known: re-adding a deleted store book needs a `book.json` version above its old live one.
 
 ## Verification
 
-- Dino tests and BookBuilder `check`.
-- Android emulator: download a store book in another app language, its translated title shows on the shelf and the
+- Dino tests and the `ship-targets.mjs` unit tests.
+- A content-only PR (one store book's text) shows no PR checks and, after merge, a release run with only
+  `publish-store`; the live store shows the new version.
+- Android emulator: a store book downloaded in another app language shows its translated title on the shelf and the
   reading screen.
-- A test PR touching only `content/dino/<store-book>/` shows `publish-store` running and no Dino app build.

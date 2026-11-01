@@ -79,8 +79,10 @@ name: release
 # store-submit / play-submit / testflight-submit and the -dino twins.
 # `publish-store` (Slice 158, `dinostore` target) uploads the Dino store books that are behind the live store; it
 # needs only `version` and the Dino suite and never cuts a release.
-# `dinoreader` and `site-checks` are standalone: in no job's needs, so an
-# outage there can never block a build or a release.
+# `dinoreader` and `site-checks` are advisory: no build or release job needs them, so an
+# outage there can never block a build or a release. (`site-checks` needs only `version`, for its path-filter output.)
+# Slice 239: a push that changes only Dino store-book content (content/dino/<store book>/**, new, changed or deleted) runs `version`
+# and `publish-store` and nothing else: ship-targets sets only `dinostore` (no `dinoreader` suite, no app build) and the site checks skip it.
 #
 # GitVersion derives each SemVer from that product's git tags (Decisions 17, 137): main defaults to a
 # patch bump; a semver bump token in a commit message overrides it for whichever product the run cuts.
@@ -135,6 +137,7 @@ jobs:
       dinoios: ${{ steps.targets.outputs.dinoios }}
       dinowin: ${{ steps.targets.outputs.dinowin }}
       dinostore: ${{ steps.targets.outputs.dinostore }}
+      site_checks: ${{ steps.site.outputs.site_checks }}
     steps:
       # workflow_dispatch can be started on any branch; only main may release.
       - name: Refuse to run off main
@@ -252,6 +255,15 @@ jobs:
           FORCE_ALL: ${{ inputs.force_all && 'true' || 'false' }}
         run: node .github/scripts/ship-targets.mjs
 
+      # Slice 239: a push that only changes Dino book content (content/dino/**) starts no test, so the Worker's site checks skip it.
+      - name: Decide whether the site checks run
+        id: site
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: node .github/scripts/site-checks-needed.mjs
+
   # RTST's pure-logic unit tests (Slice 128). Gates every Windows/Android/iOS build and so every release;
   # a Dino-only change skips them.
   test:
@@ -266,11 +278,12 @@ jobs:
     if: needs.version.outputs.dinoreader == 'true' || needs.version.outputs.dinoapp == 'true' || needs.version.outputs.dinoios == 'true' || needs.version.outputs.dinowin == 'true'
     uses: ./.github/workflows/dinoreader.yml
 
-  # Standalone, like dinoreader: the downloads Worker's checks are in no job's
-  # needs, so an outage can never block a release. (The release scripts' own
+  # Advisory, like dinoreader: no other job needs the downloads Worker's checks, so an
+  # outage can never block a release. It needs `version` only for the site_checks output. (The release scripts' own
   # tests run on PRs in release-scripts.yml.)
   site-checks:
-    if: github.ref == 'refs/heads/main'
+    needs: version
+    if: github.ref == 'refs/heads/main' && needs.version.outputs.site_checks == 'true'
     uses: ./.github/workflows/site-checks.yml
 
 
@@ -759,18 +772,55 @@ jobs:
         with:
           node-version: 22
 
-      - name: Build the store books
-        run: dotnet run --project tools/DinoReader.BookBuilder --configuration Release -- build
-
       - name: Install wrangler
         run: npm ci --ignore-scripts --no-audit --no-fund
 
-      - name: Upload the books that are behind the live store
-        run: node .github/scripts/publish-store-books.mjs
+      # Slice 239: no test suite runs for a store-only change, so the checks live in this job: the content folders against dino-starters.json (a new Starter must build the app),
+      # then `build --live` validates each store book before it builds it: an invalid book is skipped and named, the valid ones are still built and uploaded, and the job fails at the end.
+      - name: Check the content folders against the starter list
+        run: node .github/scripts/publish-store-books.mjs --check-content
+
+      # The live store's version, content hash and highest package of every story, so the build can version a changed book above everything in the bucket (no stamp needed).
+      - name: Read the live store state
+        run: node .github/scripts/publish-store-books.mjs --live-state "$RUNNER_TEMP/live-store.json"
+
+      # Exit 0 = all built, 2 = some invalid book skipped (the others built), anything else = a broken build: nothing is uploaded then.
+      - name: Build the store books
+        id: build
+        run: |
+          status=0
+          dotnet run --project tools/DinoReader.BookBuilder --configuration Release -- build --live "$RUNNER_TEMP/live-store.json" 2> >(tee "$RUNNER_TEMP/build-errors.txt" >&2) || status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+
+      # Delisting is destructive, so it runs only for a push that changed content/dino/ (or a manual run).
+      - name: Decide whether stories may be delisted
+        id: delist
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: node .github/scripts/content-changed.mjs
+
+      - name: Upload the books that are behind the live store, delist the ones whose content folder is gone
+        if: steps.build.outputs.status == '0' || steps.build.outputs.status == '2'
+        env:
+          DELIST: ${{ steps.delist.outputs.delist }}
+        run: |
+          if [ "$DELIST" = "true" ]; then node .github/scripts/publish-store-books.mjs --delist; else node .github/scripts/publish-store-books.mjs; fi
 
       - name: Check that no built book is still behind
+        if: steps.build.outputs.status == '0' || steps.build.outputs.status == '2'
         run: |
           node .github/scripts/publish-store-books.mjs --verify
+
+      - name: Fail when a store book was skipped as invalid
+        if: always() && steps.build.outputs.status != '0'
+        env:
+          STATUS: ${{ steps.build.outputs.status }}
+        run: |
+          grep '^::error::store book' "$RUNNER_TEMP/build-errors.txt" || true
+          echo "::error::The store build exited ${STATUS:-without running}: a book was skipped as invalid (exit 2; see the ::error:: lines of the build step for its name) or the build broke."
+          exit 1
 
   # Microsoft Store submission (Decision 44) — when a Windows-specific change has not been submitted
   # yet (`windowsstore`, measured from the last `rtst-store-v` marker, Slice 218); a core-only change alone does not start one.

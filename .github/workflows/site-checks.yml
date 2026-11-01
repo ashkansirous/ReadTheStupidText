@@ -11,6 +11,9 @@ name: site-checks
 on:
   pull_request:
     branches: [main]
+    # Slice 239: a change that is only Dino book content (a store story) starts no check; nothing here reads content/dino.
+    paths-ignore:
+      - 'content/dino/**'
   workflow_dispatch:
   workflow_call:
 

@@ -9,7 +9,6 @@ public sealed class StoreStoryTests : IDisposable
 {
     private const int MinPages = 8;
     private const int MaxPages = 18; // the user's limit for a store book (2026-10-26, X Marks the Treasure!)
-    private const int StoryCount = 12;
 
     private readonly string _root = Path.Combine(Path.GetTempPath(), "dino-store-test-" + Guid.NewGuid().ToString("N"));
 
@@ -24,9 +23,9 @@ public sealed class StoreStoryTests : IDisposable
     [Fact]
     public void TheStore_HasEveryStory_WithFixedUniqueIds()
     {
-        Assert.Equal(StoryCount, Books.Store.Count);
-        Assert.Equal(StoryCount, Books.Store.Select(s => s.Id).Distinct().Count());
-        Assert.Equal(StoryCount, Books.Store.Select(s => s.Stem).Distinct().Count());
+        int count = Books.Store.Count; // Slice 239: derived from content/dino, never a hard-coded number
+        Assert.Equal(count, Books.Store.Select(s => s.Id).Distinct().Count());
+        Assert.Equal(count, Books.Store.Select(s => s.Stem).Distinct().Count());
         Assert.All(Books.Store, s => Assert.True(StoryIds.IsValid(s.Id), s.Title));
         Assert.Empty(Books.Store.Select(s => s.Id).Intersect(StarterBuilder.Starters.Select(s => s.Id).Append(StarterBuilder.GoodEnoughId)));
     }
@@ -92,15 +91,19 @@ public sealed class StoreStoryTests : IDisposable
     public void EveryShippedBook_HasATitleInEveryOtherLanguage()
     {
         string[] others = UiLanguage.Supported.Where(l => l != UiLanguage.English).Order().ToArray();
-        IEnumerable<string> titles = Books.Store.Select(s => s.Title).Concat(StarterBuilder.Starters.Select(s => s.Title)).Append(StarterBuilder.GoodEnoughTitle);
 
-        foreach (string title in titles)
+        // Slice 239: a store book carries its own titles (titles.json), so it needs no row in the app's table; the starters (bundled) still use the table.
+        foreach (BookFolder book in Books.StoreOnly)
+        {
+            Assert.Equal(others, (book.Titles ?? throw new InvalidOperationException($"{book.Stem} has no titles.json")).Keys.Order().ToArray());
+            Assert.All(book.Titles.Values, v => Assert.False(string.IsNullOrWhiteSpace(v), book.Stem));
+        }
+
+        foreach (string title in StarterBuilder.Starters.Select(s => s.Title).Append(StarterBuilder.GoodEnoughTitle))
         {
             Assert.Equal(others, ShippedTitles.AllFor(title).Keys.Order().ToArray());
             Assert.All(ShippedTitles.AllFor(title).Values, v => Assert.False(string.IsNullOrWhiteSpace(v), title));
         }
-
-        Assert.Equal(titles.Count(), ShippedTitles.Titles.Count);
     }
 
     [Fact]

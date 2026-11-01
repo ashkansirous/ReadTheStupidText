@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { Outcome, liveFromApi, metaDiffers, planStoreUploads, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
+import { MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, contentBooks, starterDrift, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
 
 const A = 'a'.repeat(32);
 const B = 'b'.repeat(32);
@@ -34,15 +34,74 @@ test('uploads go cover, package, then meta.json last', () => {
 });
 
 test('liveFromApi reads the stories list and rejects anything else', () => {
-    assert.deepEqual(liveFromApi({ schemaVersion: 1, stories: [{ id: A, version: 3, title: 'x' }] }), [{ id: A, version: 3 }]);
+    assert.deepEqual(liveFromApi({ schemaVersion: 1, stories: [{ id: A, version: 3, title: 'x' }] }), [{ id: A, version: 3, title: 'x' }]);
     assert.throws(() => liveFromApi({}), /stories/);
+});
+
+const C = 'c'.repeat(32);
+
+test('Slice 239: the live state carries each live meta hash, null for a book published before the hash existed', () => {
+    const metas = { [A]: JSON.stringify({ version: 3, contentHash: 'abc' }), [B]: JSON.stringify({ version: 2 }) };
+    assert.deepEqual(liveStateOf([{ id: A, version: 3 }, { id: B, version: 2 }, { id: C, version: 1 }], (id) => metas[id] ?? null), {
+        [A]: { version: 3, contentHash: 'abc', maxPackage: 0 }, [B]: { version: 2, contentHash: null, maxPackage: 0 }, [C]: { version: 1, contentHash: null, maxPackage: 0 },
+    });
+    assert.equal(hashFromMeta('not json'), null);
+    assert.equal(hashFromMeta(JSON.stringify({ contentHash: '' })), null);
+});
+
+test('Slice 239: the live state carries the highest package in the bucket, probed from live + 1 (from 1 for a store book that is not live)', () => {
+    const D = 'd'.repeat(32);
+    const calls = [];
+    const state = liveStateOf([{ id: A, version: 4 }], () => null, (id, from) => { calls.push([id, from]); return id === A ? 5 : 2; }, [A, D]);
+    assert.deepEqual(calls, [[A, 5], [D, 1]]);
+    assert.deepEqual(state, { [A]: { version: 4, contentHash: null, maxPackage: 5 }, [D]: { version: 0, contentHash: null, maxPackage: 2 } });
+});
+
+test('Slice 239: package probing climbs past a gap smaller than the window and stops after a run of absent versions', () => {
+    assert.equal(highestPackage((v) => [5, 6, 8].includes(v), 5), 8);
+    assert.equal(highestPackage((v) => v === 9, 5), 0);
+    assert.equal(highestPackage(() => false, 1), 0);
+});
+
+test('Slice 239: a Starter folder missing from dino-starters.json, or listed but not a Starter, fails the content check', () => {
+    const books = contentBooks(['a', 'b', 'c'], (stem) => ({ id: stem, kind: stem === 'c' ? 'Store' : 'Starter' }));
+    assert.deepEqual(starterDrift(books, ['a', 'b']), []);
+    assert.match(starterDrift(books, ['a']).join(), /b is a Starter .* missing from .*dino-starters\.json/);
+    assert.match(starterDrift(books, ['a', 'b', 'c']).join(), /lists c but its book\.json kind is store/);
+    assert.match(starterDrift(books, ['a', 'b', 'gone']).join(), /lists gone but there is no content\/dino\/gone/);
+});
+
+test('Slice 239: a live story with no built folder is planned for delisting, never one that is built', () => {
+    const deletions = planDeletions([{ id: A, version: 1 }], [{ id: A, version: 1 }, { id: B, version: 4, title: 'Gone' }]);
+    assert.deepEqual(deletions.map((d) => d.id), [B]);
+});
+
+test('Slice 239: delisting removes meta.json only, logs first, and reports each id', () => {
+    const removed = [];
+    assert.deepEqual(runDeletions([{ id: B, version: 4, title: 'Gone' }], { remove: (key) => removed.push(key) }), [B]);
+    assert.deepEqual(removed, [delistKey(B)]);
+    assert.equal(delistKey(B), `dinoreader/stories/${B}/meta.json`);
+});
+
+test('Slice 239: a failed delisting is reported after the others ran', () => {
+    const removed = [];
+    assert.throws(() => runDeletions([{ id: A }, { id: B }], { remove: (key) => { if (key.includes(A)) throw new Error('boom'); removed.push(key); } }), (error) => error.done.length === 1 && /boom/.test(error.message));
+    assert.equal(removed.length, 1);
+});
+
+test('Slice 239: too many delistings at once (a broken checkout) is refused', () => {
+    const live = Array.from({ length: 10 }, (_, i) => ({ id: String(i).repeat(32) }));
+    assert.doesNotThrow(() => checkDeletionLimit([], live));
+    assert.doesNotThrow(() => checkDeletionLimit(live.slice(0, 1), live));
+    assert.throws(() => checkDeletionLimit(live.slice(0, MAX_DELETIONS + 1), live), /Refusing/);
+    assert.throws(() => checkDeletionLimit(live.slice(0, 2), live.slice(0, 3)), /Refusing/);
 });
 
 function storeFolder(books) {
     const root = mkdtempSync(join(tmpdir(), 'store-books-'));
-    for (const { id, version, withPackage = true, cover = true } of books) {
+    for (const { id, version, withPackage = true, cover = true, hash } of books) {
         mkdirSync(join(root, id));
-        writeFileSync(join(root, id, 'meta.json'), JSON.stringify({ version }));
+        writeFileSync(join(root, id, 'meta.json'), JSON.stringify(hash ? { version, contentHash: hash } : { version }));
         if (withPackage) writeFileSync(join(root, id, `story-v${version}.dino`), 'x');
         if (cover) writeFileSync(join(root, id, 'cover.jpg'), 'x');
     }
@@ -75,6 +134,36 @@ test('an existing package is never overwritten, but the meta still goes up', () 
         runUploads(plan, root, { put: (upload) => sent.push(upload.name), packageExists: () => true });
         assert.deepEqual(sent, ['cover.jpg', 'meta.json']);
     });
+});
+
+test('Slice 239: a hashed book never reuses a package version: it moves up until a free one, then package and meta go up under it', () => {
+    withStore([{ id: A, version: 6, hash: 'h' }], (root) => {
+        const sent = [];
+        const asked = [];
+        const plan = planStoreUploads(readBuilt(root), []);
+        const packageExists = ({ key }) => { asked.push(key); return key.endsWith('story-v6.dino') || key.endsWith('story-v7.dino'); };
+        const done = runUploads(plan, root, { put: (upload) => sent.push(upload.name), packageExists });
+        assert.deepEqual(done, [{ id: A, version: 8 }]);
+        assert.deepEqual(sent, ['cover.jpg', 'story-v8.dino', 'meta.json']);
+        assert.equal(asked.length, 3);
+        assert.equal(JSON.parse(readFileSync(join(root, A, 'meta.json'), 'utf8')).version, 8);
+        assert.ok(existsSync(join(root, A, 'story-v8.dino')) && !existsSync(join(root, A, 'story-v6.dino')));
+    });
+});
+
+test('Slice 239: a hashed book whose versions are all taken fails and sends nothing, not even the meta', () => {
+    withStore([{ id: A, version: 6, hash: 'h' }], (root) => {
+        const sent = [];
+        const plan = planStoreUploads(readBuilt(root), []);
+        assert.throws(() => runUploads(plan, root, { put: (upload) => sent.push(upload.name), packageExists: () => true }), new RegExp(`${MAX_VERSION_BUMPS} package versions`));
+        assert.deepEqual(sent, []);
+    });
+});
+
+test('Slice 239: a story is delisted only when this pipeline manages it (live hash) and no content folder has its id', () => {
+    const live = [{ id: A, version: 1 }, { id: B, version: 4 }, { id: C, version: 2 }];
+    const managed = (id) => id !== B;
+    assert.deepEqual(planDeletions([], live, { contentIds: new Set([A]), isManaged: managed }).map((d) => d.id), [C]);
 });
 
 test('a meta that names a missing package stops the run before anything is sent', () => {

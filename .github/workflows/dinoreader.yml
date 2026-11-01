@@ -7,6 +7,7 @@ name: dinoreader
 # (success or skipped) but is not in the needs of release-publish: a Dino-only push tests but
 # never versions or releases. Its PR paths are the union of every Dino target (a few, e.g.
 # Infrastructure, cannot change what the suite covers; that redundancy is accepted).
+# Slice 239: of content/dino/ only the STARTER books' folders (bundled in the app; .github/scripts/dino-starters.json) start it; a store book's folder starts no PR check at all.
 
 on:
   pull_request:
@@ -27,7 +28,10 @@ on:
       - '.github/scripts/ship-targets.mjs'
       - 'src/DinoReader.Core/**'
       - 'tests/DinoReader.Tests/**'
-      - 'content/dino/**'
+      - 'content/dino/gingerbread-man/**'
+      - 'content/dino/good-enough/**'
+      - 'content/dino/three-little-pigs/**'
+      - 'content/dino/tortoise-and-hare/**'
       - 'tools/DinoReader.BookBuilder/**'
       - 'src/DinoReader.App/**'
       - 'src/ReadTheStupidText.Mobile.Shared/**'
@@ -51,7 +55,10 @@ on:
       - '.github/workflows/dinoreader-windows.yml'
       - '.github/workflows/dinoreader.yml'
       - '!**/*.md'
-      - 'content/dino/*/story.md'
+      - 'content/dino/gingerbread-man/story.md'
+      - 'content/dino/good-enough/story.md'
+      - 'content/dino/three-little-pigs/story.md'
+      - 'content/dino/tortoise-and-hare/story.md'
   workflow_dispatch:
   workflow_call:
 

@@ -57,8 +57,11 @@ context free of screenshots, pictures and 13 translation files.
 The reviewer never reviews its own work and changes nothing. Its pass is required before a book ships;
 the illustrator's own step 5 check still runs on every candidate.
 
-Version bump: the writer bumps it when the text changes; the illustrator bumps it when only pictures change
-(`dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` raises `version` in the book's `book.json` and stores its content hash; CI's `check` fails when a book changed without it).
+Version bump (starters only; Slice 239): the writer bumps it when the text changes; the illustrator bumps it when only pictures change
+(`dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` raises `version` in the book's `book.json` and stores its content hash; CI's `check` fails when a starter changed without it).
+A **store book needs no stamp**: `publish-store` compares its content hash with the live store and uploads a changed book as live + 1. A store book is content only: it never edits `src/`, `tests/`
+or app files (its titles are `content/dino/<stem>/titles.json`, no row in `ShippedTitles.cs`; tests derive book counts from the folder), so its PR and merge run no test, no app build and no
+PR check, only the store upload. A starter (`"kind": "Starter"`, in `.github/scripts/dino-starters.json`) is bundled in the app and still builds it. Deleting a store book's folder delists it on the next merge (packages stay).
 
 Helpers in this folder: `gemini-grab.js` and `gemini-take-download.ps1` (step 6, save a picture),
 `gemini-clipboard.ps1` (paste the line-up; saving through it is only the fallback), `gemini-lock.ps1` (two
@@ -237,11 +240,11 @@ Record each pass in the art record table (page, attempt number, why earlier atte
 
 - `dotnet run --project tools/DinoReader.BookBuilder -- build <stem>` writes `artifacts/store/<id>/` and, for a starter, rewrites
   `src/DinoReader.App/Resources/Raw/starters/<stem>.dino` (only when its content changed, so the other starters stay untouched). Whenever a book's text or pictures change, run
-  `dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` (raises its version and stores the content hash; for a starter also add the old text's page hashes to
-  `StarterUpdate.EarlierPageTextHashes` if the text changed), or installed copies never update; `dotnet run --project tools/DinoReader.BookBuilder -- check` fails otherwise and runs in CI.
+  `dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` for a **starter** (raises its version and stores the content hash; also add the old text's page hashes to
+  `StarterUpdate.EarlierPageTextHashes` if the text changed), or installed copies never update; `check` fails otherwise and runs in CI. A store book is not stamped (Slice 239).
 - `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` green.
 - Code goes through the repo's two-pass review gate and a PR (global CLAUDE.md).
-- After merge, `release.yml`'s `publish-store` job uploads every book whose version is above the live one (Slice 158; `tools/upload-store-story.ps1 <id>` is the manual fallback: new `story-v<n>.dino`,
+- After merge, `release.yml`'s `publish-store` job uploads every book whose content hash differs from the live store's, as live + 1 (Slice 158, 239; `tools/upload-store-story.ps1 <id>` is the manual fallback: new `story-v<n>.dino`,
   `meta.json` last; never overwrite a version).
 
 ## 8. Check in the app
