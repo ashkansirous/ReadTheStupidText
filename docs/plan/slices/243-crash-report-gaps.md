@@ -1,6 +1,6 @@
 # Slice 243 — Crash reports: everything missing to explain a crash
 
-*In progress (2026-11-01): item 3 built.* Planned 2026-11-01. From the user, after the 2026-11-01 iPhone test of Dino Reader: "the builds don't keep the files
+*In progress (2026-11-01): item 3 built (PR #711); items 1, 2, 4 in PR (this branch); items 5-8 after Slice 244.* Planned 2026-11-01. From the user, after the 2026-11-01 iPhone test of Dino Reader: "the builds don't keep the files
 that turn a crash into readable code lines - why?!", "we never created the key to read them - why?! I told you this is a
 priority", "add slices for adding anything missing from the crash report".
 
