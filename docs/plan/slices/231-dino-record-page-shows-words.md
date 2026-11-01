@@ -1,8 +1,8 @@
 ### Slice 231 — Dino: the Record page shows the page's words (bug)
 
-*Planned 2026-11-01.* From the user's user test on 2026-11-01 (finding 6). Bug fix, no design step; can go first.
+*Built 2026-11-01 (wave 7, night 2026-11-01-0859), PR #666, not merged; emulator flow passed, rest not yet verified.* From the user's user test on 2026-11-01 (finding 6). Bug fix, no design step; can go first.
 
-**Touches:** `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/RecordPage.cs`, `docs/plan/slices/231-dino-record-page-shows-words.md`
+**Touches:** `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/RecordPage.cs`, `.maestro/dino/record-page-shows-words.yaml`, `docs/plan/slices/231-dino-record-page-shows-words.md`
 
 #### Why
 
@@ -28,11 +28,48 @@ Settled by the mock: the band is cropped, not fitted, in portrait; landscape fit
 
 #### Work
 
-- [ ] Confirm the cause on the emulator first (a store picture book on the Record page shows no words).
-- [ ] `RecordViews.PageView`: picture plus text card on every page that has text; text only when there is no picture; picture only when the page has no words.
-- [ ] Scanned pages: build the text from `Lines`.
-- [ ] Android and iOS built and checked together.
+- [x] Confirm the cause on the emulator first (a store picture book on the Record page shows no words). Cause confirmed from code only, not shown on a device (see Not yet verified).
+- [x] `RecordViews.PageView`: picture plus text card on every page that has text; text only when there is no picture; picture only when the page has no words.
+- [x] Scanned pages: build the text from `Lines`.
+- [x] Android and iOS built and checked together.
 
 #### Verification
 
 - Scripted emulator flow: open Record on a store picture book, the page's words are visible under the picture; on a scanned book, all lines show. iOS: same on simulator or TestFlight.
+
+#### Changed while building
+
+- Cause confirmed from code: `RecordViews.PageView` showed the words only when the page had no picture.
+- `PageView` now takes the `StoryPage`: a picture band (min(210 dp, 40% of height), cropped from the top via `PictureTextBook.CoverFromTop`) over the words card. No picture: words only. No words: picture only.
+- The words are `page.Text`, the same text the reader reads. For scanned pages it is built from the included lines (`PageReading.Text`), so the "scanned lines" decision holds and excluded regions never show.
+- Touches widened: new flow `.maestro/dino/record-page-shows-words.yaml`.
+- Landscape phone and tablet (frames 116 and 129) are not built here: left to Slice 232 (landscape every screen).
+
+#### From review
+
+High (`reviews/s231-high.md`): applied 1-4. Skipped:
+- 5 (PageWords has no unit test): the App project is not unit-testable and the pure logic's home, Core, is outside Touches.
+- 6 (flow taps plain text "Record", asserts only 20+ characters): skipped.
+- 7 (Debug.WriteLine on every Render): skipped.
+
+Medium (`reviews/s231-medium.md`): all skipped.
+- 1 (scanned pages not handled): wrong, `Text` is the included lines.
+- 2 (portrait-only layout): Slice 232.
+- 3 (band height only set from SizeChanged): the band recalculates on every size change.
+- 5 (books that print words in pictures now show both): contradicts the user's "show both".
+- 4, 6, 7 (log noise, duplicated cover helper, flow strength): style.
+
+#### Verification run
+
+- Emulator-5554, flow `record-page-shows-words`: PASS (113.8 s). uiautomator dump on Good Enough page 1: picture band above `RecordPageWords` with the page text.
+
+#### For CLAUDE.md
+
+None.
+
+#### Not yet verified
+
+- origin/main showing the picture only (the cause was read from code, not shown on a device).
+- A scanned book showing its lines on the Record page.
+- An RTL/Farsi book on the Record page.
+- iPhone, iPad, VoiceOver and TestFlight hand checks (the user's answer: they do these later).

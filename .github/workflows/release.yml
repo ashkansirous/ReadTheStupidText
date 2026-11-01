@@ -753,9 +753,26 @@ jobs:
           set -euo pipefail
           # Idempotent: a re-run of this job (or of the whole run) finds its tag already there.
           sha=$(gh api "repos/${{ github.repository }}/git/ref/tags/${RELEASE_TAG}" --jq .object.sha)
-          existing=$(gh api "repos/${{ github.repository }}/git/ref/tags/${MARKER_TAG}" --jq .object.sha 2>/dev/null || true)
+          # Only a 404 means "no such tag"; any other API failure (rate limit, 5xx, auth) fails the job.
+          marker_sha() {
+            local out
+            if out=$(gh api "repos/${{ github.repository }}/git/ref/tags/${MARKER_TAG}" --jq .object.sha 2>&1); then printf '%s' "$out"; return 0; fi
+            case "$out" in *"Not Found"*|*"HTTP 404"*) return 0 ;; esac
+            echo "$out" >&2; return 1
+          }
+          existing=$(marker_sha)
           if [ "$existing" = "$sha" ]; then echo "${MARKER_TAG} already marks ${sha}"; exit 0; fi
-          gh api "repos/${{ github.repository }}/git/refs" -f "ref=refs/tags/${MARKER_TAG}" -f "sha=${sha}"
+          # Slice 222: a marker only ever moves forward. One per version, never moved: a rerun of an old release finds its
+          # marker (or a newer one) already there and leaves it, so the store base never goes back to an older commit.
+          if [ -n "$existing" ]; then echo "::warning::${MARKER_TAG} already marks ${existing}, not ${sha}; leaving it where it is."; exit 0; fi
+          newest=$(gh api --paginate "repos/${{ github.repository }}/git/matching-refs/tags/rtst-store-v" --jq '.[].ref' | sed 's#^refs/tags/rtst-store-v##' | { grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || true; } | sort -V | tail -n 1)
+          if [ -n "$newest" ] && [ "$(printf '%s\n%s\n' "$newest" "${MARKER_TAG#rtst-store-v}" | sort -V | tail -n 1)" != "${MARKER_TAG#rtst-store-v}" ]; then
+            echo "::warning::rtst-store-v${newest} is newer than ${MARKER_TAG}; not adding an older marker."; exit 0
+          fi
+          if ! gh api "repos/${{ github.repository }}/git/refs" -f "ref=refs/tags/${MARKER_TAG}" -f "sha=${sha}"; then
+            # A concurrent run may have created it (422 "Reference already exists"): fine if it marks the same commit.
+            [ "$(marker_sha)" = "$sha" ] || { echo "::error::could not create ${MARKER_TAG}"; exit 1; }
+          fi
           echo "Marked ${MARKER_TAG} at ${sha}"
 
   # Dino Reader's Microsoft Store submission (Slice 67) - only when Dino Reader's MSIX were rebuilt AND

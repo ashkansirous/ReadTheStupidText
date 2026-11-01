@@ -195,13 +195,14 @@ const LANGUAGE_PATTERN = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
 export const VERSION_PATTERN = /^\d{1,6}(\.\d{1,6}){1,3}$/;
 // Slice 167: the project default version of a build never stamped by CI, i.e. built on a desk. A backstop for the apps' own test-build gate:
 // such a count is dropped, not written, in both datasets.
-const UNSTAMPED_VERSIONS: readonly string[] = ["1.0", "1.0.0", "1.0.0.0", "0.0.0", "0.0.0.0"];
-// Slice 219: any version whose major part is 0 is a pre-1.0 dev build, never a store release.
+const UNSTAMPED_VERSIONS: readonly string[] = ["1.0", "1.0.0", "1.0.0.0"];
+// Slice 219: any version whose major part is 0 (including 0.0.0 and 0.0.0.0) is a pre-1.0 dev build, never a store release.
 const PRE_RELEASE_MAJOR = 0;
 const MIN_SAMPLE_RATE = 0.001;
 
-/** True for a build never stamped by CI or a pre-1.0 dev build; the Worker drops such a count or report. */
-export function isUnstampedVersion(version: string): boolean {
+/** True for a build never stamped by CI or a pre-1.0 dev build, and for anything that is not a well-formed version (Slice 223); the Worker drops such a count or report. */
+export function isUnstampedVersion(version: unknown): boolean {
+  if (!matches(VERSION_PATTERN, version)) return true;
   const majorPart = version.split(".")[0] ?? "";
   return UNSTAMPED_VERSIONS.includes(version) || Number.parseInt(majorPart, 10) === PRE_RELEASE_MAJOR;
 }

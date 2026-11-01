@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using ReadTheStupidText.Application.Crashes;
 
 namespace ReadTheStupidText.Application.Usage;
@@ -41,7 +42,10 @@ public static class UsageEligibility
     private const char VersionSeparator = '.';
     private const int PreReleaseMajor = 0;
 
-    private static readonly string[] UnstampedVersions = ["1.0", "1.0.0", "1.0.0.0", "0.0.0", "0.0.0.0"];
+    // The worker's VERSION_PATTERN: 1 to 6 ASCII digits per part, 2 to 4 parts. [0-9] not \d (.NET \d matches Unicode digits) and \z not $ (.NET $ allows a final newline).
+    private static readonly Regex WellFormedVersion = new(@"^[0-9]{1,6}(\.[0-9]{1,6}){1,3}\z", RegexOptions.CultureInvariant | RegexOptions.NonBacktracking);
+
+    private static readonly string[] UnstampedVersions = ["1.0", "1.0.0", "1.0.0.0"];
 
     /// <summary>True when the value of <see cref="NoUsageVariable"/> switches counting off.</summary>
     public static bool IsNoUsageValue(string? value) => value?.Trim() == NoUsageOn;
@@ -103,12 +107,14 @@ public static class UsageEligibility
     /// <summary>Whether this build and device count.</summary>
     public static bool Counts(UsageFacts facts) => Check(facts) == UsageSkipReason.None;
 
-    // Slice 219: a version below 1.0 (major part 0) is a dev build too, not only the exact project defaults.
+    // Slice 219 and 223: the same rule as the worker (events.ts isUnstampedVersion). A version that is not well formed, the project defaults, and any major part 0
+    // (including 0.0.0 and 0.0.0.0) is a dev build; "10.1" and "100.0" still count.
     private static bool IsUnstamped(string? version) =>
-        string.IsNullOrWhiteSpace(version) || Array.IndexOf(UnstampedVersions, version.Trim()) >= 0 || IsPreRelease(version);
+        IsMalformedOrPreRelease(version) || Array.IndexOf(UnstampedVersions, version) >= 0;
 
-    // Same rule as the worker: the first segment parsed as a number is 0 ("0.1", "00.5"), so "10.1" and "100.0" still count.
-    private static bool IsPreRelease(string version) =>
-        int.TryParse(version.Trim().Split(VersionSeparator)[0], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var major)
-        && major == PreReleaseMajor;
+    // No trimming: the worker drops a padded version as malformed, so the client must too.
+    private static bool IsMalformedOrPreRelease(string? version) =>
+        string.IsNullOrEmpty(version)
+        || !WellFormedVersion.IsMatch(version)
+        || int.Parse(version.Split(VersionSeparator)[0], System.Globalization.CultureInfo.InvariantCulture) == PreReleaseMajor;
 }
