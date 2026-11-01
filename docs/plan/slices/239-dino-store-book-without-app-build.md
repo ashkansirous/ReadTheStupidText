@@ -1,6 +1,6 @@
 # Slice 239 — Dino: adding, changing or deleting a store story runs no pipeline but the upload
 
-*Planned 2026-11-01, widened the same day.* From the user, after the Freddy and back-cover releases each built the
+*Built 2026-11-01, merged as PR #700 (1882f2ee), follow-up PR #703 (own `dino-store.yml`, daily run). Planned 2026-11-01, widened the same day.* From the user, after the Freddy and back-cover releases each built the
 Dino iOS app: "why there is an ios build? I just changed the text and image of the stories in the store!", then:
 "change the fucking code! Adding/updating/deleting a new story should never cause the build pipelines to run. No
 tests should be executed! no other shit like that either!"
