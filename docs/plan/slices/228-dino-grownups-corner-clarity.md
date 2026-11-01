@@ -91,7 +91,7 @@ Settled by the mock: the file is Batch 43, not "Batch 40"; the way-back button s
 
 #### Review notes (medium pass 2)
 
-- Fixed: the book sheet Read now row closes with Dismiss (the shelf rebuilds after a switch changed in the sheet); the demo read is marked where the intro opens the reader (`MarkDemoRead`), so it counts nothing even when the voice is not ready; the intro pop is a one-shot (consumed by the first Finished, cancelled by any touch or by the page being covered, re-checked as top of stack when it runs).
+- Fixed: the book sheet Read now row closes with Dismiss (the shelf rebuilds after a switch changed in the sheet); the demo read is marked where the intro opens the reader (`MarkDemoRead`), so it counts nothing even when the voice is not ready; the intro pop is a one-shot (consumed by the first Finished, cancelled by a sentence tap, Play/pause or a skip (`CancelIntroRead` callers in `ReadingPage.xaml.cs`; corrected by the round 2 feedback loop: an earlier line said "any touch", and the field comment at `ReadingPage.xaml.cs:98` still does, to fix with the next code change there) or by the page being covered, re-checked as top of stack when it runs).
 - Skipped, finding 3 (brace formatting): style.
 - Skipped, finding 4 (corner title probe at 3 columns): the title style is MaxLines 2 with tail truncation; a device check covers the look.
 - Skipped, findings 5 and 6 (mode left before the push; hand-over cleared before a failed open): low, recorded before.

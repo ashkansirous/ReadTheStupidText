@@ -17,6 +17,7 @@
 - Windows tray: the check runs at start and once a day; a forced update opens the control panel on the update notice and pauses reading until updated.
 - Debug builds and unstamped versions never force an update (as Slice 167's rule for counts), so tests are not blocked.
 - **Do not set `minVersion` in the live file until store builds above it are live on that platform** (see Slice 218); setting it is a separate, user-approved step.
+- Live store state, read 2026-11-01 15:07 UTC (round 2 feedback loop, public pages only): the Microsoft Store page shows no version number (newest submission marker `rtst-store-v1.81.0`, 2026-11-01; certification not checked); the Play page answers 404 (RTST is not public on Play, internal track only); Apple's public lookup finds no RTST app (TestFlight only). So no platform has a public store build to set a `minVersion` against yet, except possibly Windows once 1.81.0 is certified.
 
 #### Design (Batch 42 Updates and Paused Downloads mock, frames R14, R15, W3, W4, added 2026-10-30)
 

@@ -49,6 +49,9 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 > (App/Infrastructure/`store-submit.yml`/`windows.yml` changes), not `windows`: a core-only change
 > rebuilds the MSIX for the release but is not submitted. `tests/ReadTheStupidText.Tests` is not a
 > core path (tests.yml still runs it on PRs). Force a submission with `release.yml` `force_all`.
+> `force_all` turns on **every** target of **both** products (`ship-targets.mjs`): it also submits Dino Reader
+> to the Microsoft Store, Play and TestFlight. When only one product's store submission is approved, say so
+> to the user before dispatching it (2026-10-30: an RTST-only approval ran `force_all`).
 > The Store flag is measured from the newest `rtst-store-v<x.y.z>` tag (pushed by `release.yml`'s `store-submit-mark` job after a successful submission), not from the last release, so a Windows change in a release whose submission was skipped, failed or cancelled goes out with the next release. No marker tag yet: it follows the release diff (the first successful submission creates it). Unsubmitted Windows changes also switch `windows` on, so that release builds the MSIX (also on a core-only, Android-only or Dino-only release); docs-only merges cut no release, so they never carry the backlog. A marker is never moved or re-seeded by hand, and a release older than the newest marker never adds one (a rerun of an old release leaves the store base where it is; `store-submit-mark` also treats an already-existing marker at the same commit as success). (Slice 222: docs/plan/slices/222-store-marker-hardening.md; Slice 218: docs/plan/slices/218-microsoft-store-submission-skipped.md)
 
 > **Merging a change to a core path builds every app.** The core paths in

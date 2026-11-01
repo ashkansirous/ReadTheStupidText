@@ -110,10 +110,10 @@ Two frames in `docs/design/rtst-phone/Batch 42 Updates and Paused Downloads.dc.h
 
 - The whole S21 Verification list: paused notice within ~35 s and tap resumes; notification text (language and size); stale partial wanted resumes, unwanted deleted.
 - Dino's launch resume of a wanted partial (`ResumeStalePartialsAsync`) on a device: never run.
-- Whether the netpolicy per-app block stops a foreground-service download: prove on an emulator first (`run-checks.ps1` has no emulator path and the emulator has no `.dbg` dev install).
+- Settled 2026-11-01 by Slice 233: the netpolicy per-app block did not stop the foreground-service download on the S21; the check now drops the network with the Debug hook `drop-pack-network`.
 - Dino storyteller first download shows no ask sheet and grown-up Settings shows it once (emulator, not reached).
 - iOS TestFlight hand check.
 - Stale-partial-launch first cold run after install: marker not seen within 40 s (not diagnosed).
 - `DecideAll`'s new selection has no unit test (a data-loss path): the test is Slice 225 item 9.
 - The medium fix's runtime changes, on the S21 list: the paused notice now shows after a time-limit stop and no longer for non-network exceptions; unselected same-language partials and stale pending-ask keys are removed at launch.
-- The reworked `paused-notification` check has never run on any device. Unproven: that Android 15 accepts `cmd netpolicy add restrict-background-blacklist <uid>` (the fixer could not confirm it), and that the detached device-side restore (`nohup sh -c 'sleep 240; ...'`) survives the adb link dropping and undoes the changes. The wave's final message said the phone "undoes the change itself after 4 minutes"; that is built, not shown on a device. (2026-10-31-1301 feedback loop, items 6 and 8)
+- Superseded 2026-11-01: Slice 233 reworked `paused-notification` again (no netpolicy, the `drop-pack-network` hook) and it passed on the S21 (run 6); the lines below describe the earlier version. Earlier text: the reworked `paused-notification` check has never run on any device. Unproven: that Android 15 accepts `cmd netpolicy add restrict-background-blacklist <uid>` (the fixer could not confirm it), and that the detached device-side restore (`nohup sh -c 'sleep 240; ...'`) survives the adb link dropping and undoes the changes. The wave's final message said the phone "undoes the change itself after 4 minutes"; that is built, not shown on a device. (2026-10-31-1301 feedback loop, items 6 and 8)
