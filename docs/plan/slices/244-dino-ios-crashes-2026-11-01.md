@@ -62,3 +62,8 @@ and works from the evidence below plus reproduction.
 - Scripted iOS simulator flow and Android emulator flow: read, Back mid-sentence, re-read, background, 3 times each,
   no crash; queue length stays bounded in the log.
 - After release: `tools/crashes` (or Slice 243's report) shows no new `NSDictionary` or `0xdead10cc` crash for a week.
+
+## User answers before the night run (2026-11-01, evening)
+
+- "Allow the CI runs": iOS simulator runs on a CI macOS runner may be dispatched tonight for this slice (a few runs, not a loop). The iPhone 8 run still waits for the user.
+- The S21 is always available for tests (user, same evening).
