@@ -2,7 +2,7 @@
 .SYNOPSIS
   Runs named checks on the real phone inside a fixed time budget and prints one summary table (Slice 213).
 .DESCRIPTION
-  run-checks.ps1 -App rtst|dino -Checks cold-start,highlight [-Budget 10] [-Runs 3] [-Reinstall] [-FirstRead 1w|1s|2s|passage | -FirstText '<text>'] [-DropCaches] [-Serial s]
+  run-checks.ps1 -App rtst|dino -Checks cold-start,highlight [-Budget 10] [-Runs 3] [-Reinstall] [-NoBuild] [-FirstRead 1w|1s|2s|passage | -FirstText '<text>'] [-DropCaches] [-Serial s]
   run-checks.ps1 -Build -App rtst|dino [-Variant debug|aot]      (default debug) builds (or finds) the APK for the current inputs in the build cache, then exits.
   run-checks.ps1 -Prepare -App rtst|dino [-Variant debug|aot]    (builds the APK first when it is not cached) puts the voice pack on the dev app, OUTSIDE any budget (like -Build), then exits. A pack is installed when files/packs/<id>/active exists
                                                                  and the version folder it names has pack.json (Test-PackInstalled). Steps: take the lease, install the cached APK as a run does, deletes the stale
@@ -10,11 +10,11 @@
                                                                  `PACKDL start` line within 60 s (else FAIL quoting the app's last 10 RTST-TEST lines), then wait until Test-PackInstalled is true (progress every 30 s; a .partial
                                                                  not growing for 2 minutes is a FAIL), then save a verified aside copy of the installed pack folders only (never a .partial; newest 3 kept). Exit 0 ready, 1 failed.
   Builds (Slice 213): at the start the runner starts BOTH builds in the background (run-checks.ps1 -Build as child processes; the plain Debug build and the AOT build), each skipped when
-  cached for the current build inputs. Each writes <worktrees>.phoneuild-<app>-<variant>.json (state queued/building/ok/failed, start time, heartbeat every 30 s, last log line, log path)
-  and a log next to it; a build whose log does not grow for 5 minutes is failed (stalled) and stopped. The two builds of one checkout run at the same time: each has its own `dotnet build --artifacts-path <worktree>\.artifacts\<app>-<variant>` (restore too), so they share no obj folder and touch nothing under src\*\obj or src\*in. Each check declares its build in the catalogue: cold-start needs 'aot' (every timing does) and WAITS for it (what it waits for is printed every 30 s); the others take
+  cached for the current build inputs. Each writes <worktrees>.phone\build-<app>-<variant>.json (state queued/building/ok/failed, start time, heartbeat every 30 s, last log line, log path)
+  and a log next to it; a build whose log does not grow for 5 minutes is failed (stalled) and stopped. The two builds of one checkout run at the same time: each has its own `dotnet build --artifacts-path <worktree>\.artifacts\<app>-<variant>` (restore too), so they share no obj folder and touch nothing under src\*\obj or src\*\bin. Each check declares its build in the catalogue: cold-start needs 'aot' (every timing does) and WAITS for it (what it waits for is printed every 30 s); the others take
   whichever build is ready first, AOT preferred when it is ready. A run swaps on the phone at most once, Debug -> AOT, never back. A failed or stalled build FAILs the checks that need it with the
   build's last 20 log lines; the runner never skips for a missing build and never falls back silently. The budget covers the checks, not the time spent only waiting for a build.
-  <worktrees>.phoneun-status.json (each build, each check, installedVariant, updatedUtc) is rewritten at every step, every 30 s while waiting and by the checks' wait loops, so a stuck or failed build is
+  <worktrees>.phone\run-status.json (each build, each check, installedVariant, updatedUtc) is rewritten at every step, every 30 s while waiting and by the checks' wait loops, so a stuck or failed build is
   visible from outside. Every timing and every table row carries its variant (aot/debug).
   Order: take the phone lease (the same per-phone lease as lease.ps1, owner $env:RTST_DEVICE_OWNER, else $env:RTST_PHONE_OWNER, else run-checks-<pid>; it is
   exported as RTST_PHONE_OWNER for the scripts it starts and released at the end unless the caller already held it; a lease the caller holds is only ever extended,
@@ -27,7 +27,8 @@
   check is SKIPPED `waited too long for <holder>`), the install and the preflight all count against it, the wait for a build does not. Preflight is GO only on its explicit `PREFLIGHT GO` line (a
   NO-GO whose only FAILs are non-fatal checks is a warning); anything else stops the run. A check starts only when its estimate fits what is left, and is stopped when the time is gone
   (TIMEOUT); every check not run is listed with its reason. Exit: 0 all passed, 1 a check failed or timed out, 2 no phone, 3 some checks skipped, 4 the phone is leased
-  by someone else, 5 preflight NO-GO, 6 the build failed, 7 the runner itself broke (install, setup, a dropped link). Every path prints the table, with each check's
+  by someone else, 5 preflight NO-GO, 6 the build failed, 7 the runner itself broke (install, setup, a dropped link), 8 -NoBuild and the build cache lacks a variant a check needs
+  (prints `cache missed for <app> <variant>, key <k>: run -Build first`, the table with every check SKIP, and run-status.json; starts no process and takes no lease; also set by RTST_NO_BUILD=1). Every path prints the table, with each check's
   outcome or its SKIP reason; cold-start reports MEASURED (numbers, no pass criterion), never PASS. Wireless adb only. Self-test with no device: test-run-checks.ps1.
   Checks live in tools/phone/checks/<name>.ps1 (a check is added as a file there and a line in the catalogue in checks/_lib.ps1, not as a brief).
 #>
@@ -40,6 +41,7 @@ param(
     [switch]$Prepare,
     [int]$Runs = 3,
     [switch]$Reinstall,
+    [switch]$NoBuild,                                                             # Slice 224: on a cache miss exit at once (before the lease and any build); also RTST_NO_BUILD=1
     [ValidateSet('1w', '1s', '2s', 'passage')][string]$FirstRead = 'passage',   # cold-start only: size of the first read (Slice 214)
     [string]$FirstText,                                                           # cold-start only (RTST): free text for the first read instead of a -FirstRead preset
     [switch]$DropCaches,                                                          # cold-start only: drop the phone's file cache each run (root only)
@@ -87,10 +89,16 @@ function Get-PhoneStatusDir {
 }
 function Get-BuildStatusPath([string]$V) { return Join-Path (Get-PhoneStatusDir) "build-$App-$V.json" }
 function Get-BuildLogPath([string]$V) { return Join-Path (Get-PhoneStatusDir) "build-$App-$V.log" }
-function Get-RunStatusPath { return Join-Path (Get-PhoneStatusDir) 'run-status.json' }
+function Get-RunStatusPath {
+    $override = [Environment]::GetEnvironmentVariable($script:RunStatusEnv)   # the self-test points it at a temp file
+    if ($override) { return $override }
+    return Join-Path (Get-PhoneStatusDir) 'run-status.json'
+}
 
 function Find-VariantApk([string]$V, [string]$Key) {
     $dir = Get-BuildDir $App (Get-CachePlatform $V) $Key
+    $testRoot = [Environment]::GetEnvironmentVariable('RTST_BUILD_CACHE_LOOKUP_ROOT')   # test seam: the self-test points the lookup at an empty folder so a -NoBuild child always misses
+    if ($testRoot) { $dir = Join-Path $testRoot (Split-Path $dir -Leaf) }
     return Find-CachedBuild $dir $script:ApkFilter
 }
 
@@ -176,7 +184,7 @@ function Invoke-BuildMode {
 
 # ---- the background builds of a run
 # Starts the Debug and the AOT build as child processes (run-checks.ps1 -Build), each skipped when its APK is already cached. Returns one record per variant.
-function Start-VariantBuilds($Plans) {
+function Start-VariantBuilds($Plans, [bool]$NoStart = $false) {
     $key = Get-BuildKey
     $script:RunKey = $key   # read once: the monitor looks at the cache every few seconds
     $engine = (Get-Process -Id $PID).Path
@@ -184,6 +192,7 @@ function Start-VariantBuilds($Plans) {
     foreach ($v in @($script:VariantDebug, $script:VariantAot)) {
         $record = [pscustomobject]@{ Variant = $v; Process = $null; Final = $null }
         if (Find-VariantApk $v $key) { $record.Final = [pscustomobject]@{ State = $script:StateOk; Failure = $null } }
+        elseif ($NoStart) { $record.Final = [pscustomobject]@{ State = $script:StateFailed; Failure = "the $v build is not cached and -NoBuild starts none" } }
         else {
             Remove-Item (Get-BuildStatusPath $v) -Force -ErrorAction SilentlyContinue
             $procLog = (Get-BuildLogPath $v) + $script:BuildProcessLogSuffix
@@ -193,7 +202,7 @@ function Start-VariantBuilds($Plans) {
         }
         $builds[$v] = $record
     }
-    Write-Host (Format-BuildsStartLine $builds $Plans)
+    Write-Host $(if ($NoStart) { 'starting builds: none (-NoBuild)' } else { Format-BuildsStartLine $builds $Plans })
     return $builds
 }
 
@@ -217,13 +226,21 @@ function Get-LogWriteTime([string]$V) {
     return ($times | Sort-Object -Descending | Select-Object -First 1)
 }
 
+# Slice 224: rewrites a `building` status file whose builder is gone, so nobody reads it as a live build.
+function Set-EndedBuildStatus([string]$V, $Status, [bool]$Cached) {
+    $problem = Write-EndedBuildStatus (Get-BuildStatusPath $V) $Status $Cached
+    if ($problem) { Write-Host "could not rewrite the build status: $problem" }
+}
+
 # A build that is ok or failed stays so; a stalled or failed one is stopped (the runner started it).
 function Get-BuildView($Record) {
     if ($Record.Final) { return $Record.Final }
     $v = $Record.Variant
     $status = Read-BuildStatusFile $v   # before the cache: a build publishes its APK, then writes ok, so an ok status always finds the APK
     $cached = [bool](Find-VariantApk $v $script:RunKey)
-    $exited = [bool]($Record.Process -and $Record.Process.HasExited)
+    $exited = Test-BuilderExited $status ([bool]($Record.Process -and $Record.Process.HasExited)) { param($id, $startedUtc) Test-BuilderProcessAlive $id $startedUtc }
+    if ($exited -and -not $cached) { $cached = [bool](Find-VariantApk $v $script:RunKey) }   # the builder may have published and exited since the first look
+    if ($exited -and $status -and ($status.state -ceq $script:StateBuilding -or $status.state -ceq $script:StateQueued)) { Write-Host "build ${v}: its builder (pid $($status.pid)) is gone; status rewritten ($(if ($cached) { 'cached' } else { 'no APK' }))"; Set-EndedBuildStatus $v $status $cached }
     $resolved = Resolve-BuildState $status $exited (Get-LogWriteTime $v) (Get-Date) $cached
     $view = [pscustomobject]@{ State = $resolved.State; Failure = $null }
     if ($resolved.State -ceq $script:StateFailed) {
@@ -632,6 +649,17 @@ function Invoke-DeviceStage($Plans, [string]$Phone) {
     }
 }
 
+# -NoBuild and a cache miss: the line, the table (every check SKIP) and run-status.json, then a code of its own. Before the lease and any process.
+function Stop-CacheMissed($Plans, [string]$Line) {
+    Write-Host $Line
+    $rows = @(Get-FinalRows $Plans @() "not run: $Line")
+    $views = @{}
+    foreach ($v in @($script:VariantDebug, $script:VariantAot)) { $views[$v] = [pscustomobject]@{ State = $(if (Find-VariantApk $v (Get-BuildKey)) { $script:StateOk } else { $script:StateFailed }); Failure = $(if (Find-VariantApk $v (Get-BuildKey)) { $null } else { 'not cached; -NoBuild' }) } }
+    Invoke-Cleanup 'write the run status' { [IO.File]::WriteAllText((Get-RunStatusPath), ((New-RunStatus $App (Get-Date) $views $Plans $rows $null $null $null $true) | ConvertTo-Json -Depth 6)) }
+    Write-Summary $rows
+    return $script:ExitCacheMissed
+}
+
 if ($Build) { exit (Invoke-BuildMode) }
 if ($Prepare) { exit (Invoke-PrepareMode) }
 if (-not $Checks) { throw 'Name the checks to run, e.g. -Checks cold-start,highlight. Known: ' + ($script:Catalogue.Keys -join ', ') }
@@ -640,7 +668,13 @@ if (@($plans | Where-Object { $_.Status -eq $script:StatusPending }).Count -eq 0
     Write-Summary @(Get-FinalRows $plans @() 'not run')
     exit (Get-RunExitCode @(Get-FinalRows $plans @() 'not run'))
 }
+Write-Host (Format-RunHeader $App $plans)
+if ($NoBuild -or $env:RTST_NO_BUILD -eq '1') {
+    $noBuildKey = Get-BuildKey
+    $missed = @(Get-NoBuildMiss $plans ([bool](Find-VariantApk $script:VariantDebug $noBuildKey)) ([bool](Find-VariantApk $script:VariantAot $noBuildKey)))
+    if ($missed.Count -gt 0) { exit (Stop-CacheMissed $plans (Format-NoBuildMiss $App $missed $noBuildKey)) }
+}
 $phone = Find-WirelessPhone $Serial
 if (-not $phone) { Write-PairingAsk; exit $script:ExitNoPhone }
-$script:BuildJobs = Start-VariantBuilds $plans
+$script:BuildJobs = Start-VariantBuilds $plans ([bool]($NoBuild -or $env:RTST_NO_BUILD -eq '1'))
 exit (Invoke-DeviceStage $plans $phone)
