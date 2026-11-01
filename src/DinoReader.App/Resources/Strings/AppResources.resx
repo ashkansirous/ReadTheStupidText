@@ -84,7 +84,12 @@
   <data name="Backup_SaveBody_Other" xml:space="preserve"><value>All {0} stories in one file, with their pages, pictures and fixed-up casts. Save it to Drive or Files, or send it to yourself.</value></data>
   <data name="Backup_SaveButton" xml:space="preserve"><value>Save a backup</value></data>
   <data name="Backup_RestoreTitle" xml:space="preserve"><value>Restore from a backup</value></data>
-  <data name="Backup_RestoreBody" xml:space="preserve"><value>Adds the stories this phone doesn’t have. Stories already here stay exactly as they are.</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Brings books and recordings back from a file. Books already here keep their pages and get the recordings back.</value></data>
+  <data name="Backup_SaveIncludes" xml:space="preserve"><value>It includes your recordings too.</value></data>
+  <data name="Backup_Merged" xml:space="preserve"><value>Got their recordings back</value></data>
+  <data name="Recordings_StayHere_Phone" xml:space="preserve"><value>Your recordings stay on this phone, just for your family. Dino never uploads them, so keep a copy yourself: Settings → Backup.</value></data>
+  <data name="Recordings_StayHere_Tablet" xml:space="preserve"><value>Your recordings stay on this tablet, just for your family. Dino never uploads them, so keep a copy yourself: Settings → Backup.</value></data>
+  <data name="Recordings_StayHere_Device" xml:space="preserve"><value>Your recordings stay on this computer, just for your family. Dino never uploads them, so keep a copy yourself: Settings → Backup.</value></data>
   <data name="Backup_RestoreButton" xml:space="preserve"><value>Choose a backup file</value></data>
   <data name="Backup_Footer" xml:space="preserve"><value>The file only goes where you send it. Dino keeps no copy online.</value></data>
   <data name="Backup_Restored_One" xml:space="preserve"><value>{0} story restored</value></data>

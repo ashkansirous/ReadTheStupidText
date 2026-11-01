@@ -117,5 +117,31 @@ public static class StoryRecordings
         return page;
     }
 
+    /// <summary>The pages of <paramref name="backed"/> (a story read from a backup) whose recording can be merged into <paramref name="phone"/> (Slice 230): the page is still
+    /// there with the same text (a reworded page would read the wrong words, as in <see cref="Kept"/>) and <paramref name="hasAudio"/> says the backup carries the page's file.
+    /// A page number the phone's story does not have is dropped.</summary>
+    public static IReadOnlyList<int> MergeablePages(Story phone, Story backed, Func<string, bool> hasAudio) =>
+        RecordedPages(backed)
+            .Where(p => p < phone.Pages.Count && string.Equals(phone.Pages[p].Text, backed.Pages[p].Text, StringComparison.Ordinal) && hasAudio(FileNameOf(p)))
+            .ToList();
+
+    /// <summary><paramref name="phone"/> with the backup's recording for each of <paramref name="pages"/> (the backup's wins on a page both have). Pages, pictures, cast and every other
+    /// field stay as they are. "Read with my voice" turns on when the phone had no recording yet (as <see cref="With"/> does for a first recording); otherwise the phone's choice stays.</summary>
+    public static Story WithMerged(Story phone, Story backed, IReadOnlyList<int> pages)
+    {
+        if (pages.Count == 0)
+        {
+            return phone;
+        }
+
+        var all = new Dictionary<int, PageRecording>(phone.Recordings ?? NoRecordings);
+        foreach (int page in pages)
+        {
+            all[page] = backed.Recordings![page];
+        }
+
+        return phone with { Recordings = all, UseRecordings = Count(phone) == 0 || phone.UseRecordings };
+    }
+
     private static readonly IReadOnlyDictionary<int, PageRecording> NoRecordings = new Dictionary<int, PageRecording>();
 }

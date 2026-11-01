@@ -84,7 +84,12 @@
   <data name="Backup_SaveBody_Other" xml:space="preserve"><value>Alle {0} verhalen in één bestand, met hun pagina’s, plaatjes en aangepaste rolverdelingen. Bewaar het in Drive of Bestanden, of stuur het naar jezelf.</value></data>
   <data name="Backup_SaveButton" xml:space="preserve"><value>Een back-up bewaren</value></data>
   <data name="Backup_RestoreTitle" xml:space="preserve"><value>Terugzetten vanuit een back-up</value></data>
-  <data name="Backup_RestoreBody" xml:space="preserve"><value>Voegt de verhalen toe die deze telefoon nog niet heeft. Verhalen die er al zijn, blijven precies zoals ze zijn.</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Haalt verhalen en opnames terug uit een bestand. Verhalen die er al zijn, houden hun pagina’s en krijgen hun opnames terug.</value></data>
+  <data name="Backup_SaveIncludes" xml:space="preserve"><value>Je opnames zitten er ook in.</value></data>
+  <data name="Backup_Merged" xml:space="preserve"><value>Opnames teruggekregen</value></data>
+  <data name="Recordings_StayHere_Phone" xml:space="preserve"><value>Je opnames blijven op deze telefoon, alleen voor je gezin. Dino uploadt ze nooit, dus bewaar zelf een kopie: Instellingen → Back-up.</value></data>
+  <data name="Recordings_StayHere_Tablet" xml:space="preserve"><value>Je opnames blijven op deze tablet, alleen voor je gezin. Dino uploadt ze nooit, dus bewaar zelf een kopie: Instellingen → Back-up.</value></data>
+  <data name="Recordings_StayHere_Device" xml:space="preserve"><value>Je opnames blijven op deze computer, alleen voor je gezin. Dino uploadt ze nooit, dus bewaar zelf een kopie: Instellingen → Back-up.</value></data>
   <data name="Backup_RestoreButton" xml:space="preserve"><value>Kies een back-upbestand</value></data>
   <data name="Backup_Footer" xml:space="preserve"><value>Het bestand gaat alleen waarheen jij het stuurt. Dino bewaart online geen kopie.</value></data>
   <data name="Backup_Restored_One" xml:space="preserve"><value>{0} verhaal teruggezet</value></data>

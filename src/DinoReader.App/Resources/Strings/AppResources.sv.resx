@@ -84,7 +84,12 @@
   <data name="Backup_SaveBody_Other" xml:space="preserve"><value>Alla {0} sagor i en fil, med sidor, bilder och justerade rollbesättningar. Spara den på Drive eller i Filer, eller skicka den till dig själv.</value></data>
   <data name="Backup_SaveButton" xml:space="preserve"><value>Spara en säkerhetskopia</value></data>
   <data name="Backup_RestoreTitle" xml:space="preserve"><value>Återställ från en säkerhetskopia</value></data>
-  <data name="Backup_RestoreBody" xml:space="preserve"><value>Lägger till de sagor som saknas på den här telefonen. Sagor som redan finns här förblir precis som de är.</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Hämtar tillbaka sagor och inspelningar från en fil. Sagor som redan finns här behåller sina sidor och får tillbaka sina inspelningar.</value></data>
+  <data name="Backup_SaveIncludes" xml:space="preserve"><value>Den innehåller också dina inspelningar.</value></data>
+  <data name="Backup_Merged" xml:space="preserve"><value>Fick tillbaka inspelningarna</value></data>
+  <data name="Recordings_StayHere_Phone" xml:space="preserve"><value>Dina inspelningar stannar på den här telefonen, bara för din familj. Dino laddar aldrig upp dem, så spara en kopia själv: Inställningar → Säkerhetskopia.</value></data>
+  <data name="Recordings_StayHere_Tablet" xml:space="preserve"><value>Dina inspelningar stannar på den här surfplattan, bara för din familj. Dino laddar aldrig upp dem, så spara en kopia själv: Inställningar → Säkerhetskopia.</value></data>
+  <data name="Recordings_StayHere_Device" xml:space="preserve"><value>Dina inspelningar stannar på den här datorn, bara för din familj. Dino laddar aldrig upp dem, så spara en kopia själv: Inställningar → Säkerhetskopia.</value></data>
   <data name="Backup_RestoreButton" xml:space="preserve"><value>Välj en säkerhetskopia</value></data>
   <data name="Backup_Footer" xml:space="preserve"><value>Filen går bara dit du skickar den. Dino sparar ingen kopia online.</value></data>
   <data name="Backup_Restored_One" xml:space="preserve"><value>{0} saga återställd</value></data>

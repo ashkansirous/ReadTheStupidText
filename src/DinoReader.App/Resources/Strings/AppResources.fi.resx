@@ -84,7 +84,12 @@
   <data name="Backup_SaveBody_Other" xml:space="preserve"><value>Kaikki {0} tarinaa yhdessä tiedostossa sivuineen, kuvineen ja korjattuine hahmoineen. Tallenna se Driveen tai Tiedostoihin tai lähetä itsellesi.</value></data>
   <data name="Backup_SaveButton" xml:space="preserve"><value>Tallenna varmuuskopio</value></data>
   <data name="Backup_RestoreTitle" xml:space="preserve"><value>Palauta varmuuskopiosta</value></data>
-  <data name="Backup_RestoreBody" xml:space="preserve"><value>Lisää tarinat, joita tässä puhelimessa ei ole. Täällä jo olevat tarinat pysyvät täsmälleen ennallaan.</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Palauttaa tarinat ja äänitteet tiedostosta. Täällä jo olevat tarinat pitävät sivunsa ja saavat äänitteensä takaisin.</value></data>
+  <data name="Backup_SaveIncludes" xml:space="preserve"><value>Siinä ovat mukana myös äänitteesi.</value></data>
+  <data name="Backup_Merged" xml:space="preserve"><value>Saivat äänitteensä takaisin</value></data>
+  <data name="Recordings_StayHere_Phone" xml:space="preserve"><value>Äänitteesi pysyvät tässä puhelimessa, vain perheesi käyttöön. Dino ei koskaan lähetä niitä verkkoon, joten säilytä itse kopio: Asetukset → Varmuuskopio.</value></data>
+  <data name="Recordings_StayHere_Tablet" xml:space="preserve"><value>Äänitteesi pysyvät tässä tabletissa, vain perheesi käyttöön. Dino ei koskaan lähetä niitä verkkoon, joten säilytä itse kopio: Asetukset → Varmuuskopio.</value></data>
+  <data name="Recordings_StayHere_Device" xml:space="preserve"><value>Äänitteesi pysyvät tässä tietokoneessa, vain perheesi käyttöön. Dino ei koskaan lähetä niitä verkkoon, joten säilytä itse kopio: Asetukset → Varmuuskopio.</value></data>
   <data name="Backup_RestoreButton" xml:space="preserve"><value>Valitse varmuuskopiotiedosto</value></data>
   <data name="Backup_Footer" xml:space="preserve"><value>Tiedosto menee vain sinne, minne sen lähetät. Dino ei säilytä kopiota verkossa.</value></data>
   <data name="Backup_Restored_One" xml:space="preserve"><value>{0} tarina palautettu</value></data>

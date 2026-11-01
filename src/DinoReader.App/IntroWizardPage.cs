@@ -208,6 +208,13 @@ public sealed class IntroWizardPage : ContentPage
 			VerticalOptions = LayoutOptions.Center,
 			Children = { IntroArt.Build(IntroSteps.NameAt(_step)!, _pictures, windows), heading, body },
 		};
+		if (step == IntroSteps.Record)
+		{
+			Label stayNote = RecordViews.StayNote(); // Slice 230: where recordings go, before the grown-up records anything
+			stayNote.HorizontalTextAlignment = TextAlignment.Center;
+			text.Children.Add(stayNote);
+		}
+
 		var tryIt = new CoralButton { Text = AppResources.Intro_TryIt, IsVisible = TryItVisible(step) };
 		tryIt.Clicked += async (_, _) => await _busy.RunAsync(TryAsync);
 		var buttons = new VerticalStackLayout

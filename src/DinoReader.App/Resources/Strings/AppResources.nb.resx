@@ -84,7 +84,12 @@
   <data name="Backup_SaveBody_Other" xml:space="preserve"><value>Alle {0} historiene i én fil, med sider, bilder og justerte rollebesetninger. Lagre den i Drive eller Filer, eller send den til deg selv.</value></data>
   <data name="Backup_SaveButton" xml:space="preserve"><value>Lagre en sikkerhetskopi</value></data>
   <data name="Backup_RestoreTitle" xml:space="preserve"><value>Gjenopprett fra en sikkerhetskopi</value></data>
-  <data name="Backup_RestoreBody" xml:space="preserve"><value>Legger til historiene som ikke finnes på denne telefonen. Historier som allerede er her, blir akkurat som de er.</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Henter historier og opptak tilbake fra en fil. Historier som allerede er her, beholder sidene sine og får opptakene tilbake.</value></data>
+  <data name="Backup_SaveIncludes" xml:space="preserve"><value>Den inneholder også opptakene dine.</value></data>
+  <data name="Backup_Merged" xml:space="preserve"><value>Fikk opptakene tilbake</value></data>
+  <data name="Recordings_StayHere_Phone" xml:space="preserve"><value>Opptakene dine blir på denne telefonen, bare for familien din. Dino laster dem aldri opp, så ta en kopi selv: Innstillinger → Sikkerhetskopi.</value></data>
+  <data name="Recordings_StayHere_Tablet" xml:space="preserve"><value>Opptakene dine blir på dette nettbrettet, bare for familien din. Dino laster dem aldri opp, så ta en kopi selv: Innstillinger → Sikkerhetskopi.</value></data>
+  <data name="Recordings_StayHere_Device" xml:space="preserve"><value>Opptakene dine blir på denne datamaskinen, bare for familien din. Dino laster dem aldri opp, så ta en kopi selv: Innstillinger → Sikkerhetskopi.</value></data>
   <data name="Backup_RestoreButton" xml:space="preserve"><value>Velg en sikkerhetskopifil</value></data>
   <data name="Backup_Footer" xml:space="preserve"><value>Filen går bare dit du sender den. Dino beholder ingen kopi på nett.</value></data>
   <data name="Backup_Restored_One" xml:space="preserve"><value>{0} historie gjenopprettet</value></data>

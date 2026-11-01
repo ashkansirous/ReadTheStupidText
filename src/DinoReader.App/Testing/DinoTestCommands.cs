@@ -20,7 +20,7 @@ namespace DinoReader.Testing;
 /// Slice 189: <c>enter-grown-up</c> puts the app in grown-up mode as a passed gate does (the gate's hold and sum are not scriptable), so a flow can
 /// start from the grown-up page; the gate itself is tapped through by hand. Outcome: <c>HOOK enter-grown-up ok</c>.
 /// </summary>
-internal static class DinoTestCommands
+internal static partial class DinoTestCommands
 {
 	private const string Name = "open-book";
 	private const string EnterGrownUpName = "enter-grown-up";
@@ -65,6 +65,12 @@ internal static class DinoTestCommands
 		if (command.Name == StageBookUpdateName)
 		{
 			_ = StageBookUpdateAsync(command.Get(IdKey, string.Empty), command.Flag(ForceKey));
+			return StartedOutcome;
+		}
+
+		if (command.Name == BackupRecordingsName)
+		{
+			_ = BackupRecordingsAsync(command.Get(IdKey, string.Empty));
 			return StartedOutcome;
 		}
 

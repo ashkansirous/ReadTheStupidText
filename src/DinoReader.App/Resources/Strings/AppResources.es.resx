@@ -82,7 +82,12 @@
   <data name="Backup_SaveBody_Other" xml:space="preserve"><value>Los {0} cuentos en un solo archivo, con sus páginas, imágenes y repartos ya ajustados. Guárdalo en Drive o Archivos, o envíatelo a ti mismo.</value></data>
   <data name="Backup_SaveButton" xml:space="preserve"><value>Guardar una copia</value></data>
   <data name="Backup_RestoreTitle" xml:space="preserve"><value>Restaurar desde una copia</value></data>
-  <data name="Backup_RestoreBody" xml:space="preserve"><value>Añade los cuentos que este teléfono no tiene. Los cuentos que ya están aquí se quedan tal cual.</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Recupera cuentos y grabaciones desde un archivo. Los cuentos que ya están aquí conservan sus páginas y recuperan sus grabaciones.</value></data>
+  <data name="Backup_SaveIncludes" xml:space="preserve"><value>Incluye también tus grabaciones.</value></data>
+  <data name="Backup_Merged" xml:space="preserve"><value>Recuperaron sus grabaciones</value></data>
+  <data name="Recordings_StayHere_Phone" xml:space="preserve"><value>Tus grabaciones se quedan en este teléfono, solo para tu familia. Dino nunca las sube, así que guarda tú una copia: Ajustes → Copia de seguridad.</value></data>
+  <data name="Recordings_StayHere_Tablet" xml:space="preserve"><value>Tus grabaciones se quedan en esta tableta, solo para tu familia. Dino nunca las sube, así que guarda tú una copia: Ajustes → Copia de seguridad.</value></data>
+  <data name="Recordings_StayHere_Device" xml:space="preserve"><value>Tus grabaciones se quedan en este ordenador, solo para tu familia. Dino nunca las sube, así que guarda tú una copia: Ajustes → Copia de seguridad.</value></data>
   <data name="Backup_RestoreButton" xml:space="preserve"><value>Elegir un archivo de copia</value></data>
   <data name="Backup_Footer" xml:space="preserve"><value>El archivo solo va adonde tú lo envíes. Dino no guarda ninguna copia en línea.</value></data>
   <data name="Backup_Restored_One" xml:space="preserve"><value>{0} cuento restaurado</value></data>

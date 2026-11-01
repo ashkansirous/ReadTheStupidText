@@ -82,7 +82,12 @@
   <data name="Backup_SaveBody_Other" xml:space="preserve"><value>Все истории ({0}) в одном файле: страницы, картинки и настроенные голоса героев. Сохраните его в «Диск» или «Файлы» либо отправьте себе.</value></data>
   <data name="Backup_SaveButton" xml:space="preserve"><value>Сохранить копию</value></data>
   <data name="Backup_RestoreTitle" xml:space="preserve"><value>Восстановить из копии</value></data>
-  <data name="Backup_RestoreBody" xml:space="preserve"><value>Добавляет истории, которых нет на этом телефоне. Истории, которые уже есть, остаются как есть.</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Возвращает истории и записи из файла. Истории, которые уже есть, сохраняют свои страницы и получают записи обратно.</value></data>
+  <data name="Backup_SaveIncludes" xml:space="preserve"><value>В неё входят и ваши записи.</value></data>
+  <data name="Backup_Merged" xml:space="preserve"><value>Записи возвращены</value></data>
+  <data name="Recordings_StayHere_Phone" xml:space="preserve"><value>Ваши записи остаются на этом телефоне, только для вашей семьи. Dino никогда их не загружает, поэтому сохраните копию сами: Настройки → Резервная копия.</value></data>
+  <data name="Recordings_StayHere_Tablet" xml:space="preserve"><value>Ваши записи остаются на этом планшете, только для вашей семьи. Dino никогда их не загружает, поэтому сохраните копию сами: Настройки → Резервная копия.</value></data>
+  <data name="Recordings_StayHere_Device" xml:space="preserve"><value>Ваши записи остаются на этом компьютере, только для вашей семьи. Dino никогда их не загружает, поэтому сохраните копию сами: Настройки → Резервная копия.</value></data>
   <data name="Backup_RestoreButton" xml:space="preserve"><value>Выбрать файл копии</value></data>
   <data name="Backup_Footer" xml:space="preserve"><value>Файл попадает только туда, куда вы его отправите. Dino не хранит копий в интернете.</value></data>
   <data name="Backup_Restored_One" xml:space="preserve"><value>Историй восстановлено: {0}</value></data>

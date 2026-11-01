@@ -82,7 +82,12 @@
   <data name="Backup_SaveBody_Other" xml:space="preserve"><value>هر {0} داستان در یک فایل، همراه با صفحه‌ها، تصویرها و گروه صداهای تنظیم‌شده. آن را در Drive یا Files ذخیره کنید یا برای خودتان بفرستید.</value></data>
   <data name="Backup_SaveButton" xml:space="preserve"><value>ذخیره پشتیبان</value></data>
   <data name="Backup_RestoreTitle" xml:space="preserve"><value>بازیابی از پشتیبان</value></data>
-  <data name="Backup_RestoreBody" xml:space="preserve"><value>داستان‌هایی را که این گوشی ندارد اضافه می‌کند. داستان‌های موجود دست‌نخورده می‌مانند.</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>داستان‌ها و ضبط‌ها را از یک فایل برمی‌گرداند. داستان‌هایی که از قبل اینجا هستند صفحه‌هایشان را نگه می‌دارند و ضبط‌هایشان را پس می‌گیرند.</value></data>
+  <data name="Backup_SaveIncludes" xml:space="preserve"><value>ضبط‌های شما هم در آن هست.</value></data>
+  <data name="Backup_Merged" xml:space="preserve"><value>ضبط‌هایشان برگشت</value></data>
+  <data name="Recordings_StayHere_Phone" xml:space="preserve"><value>ضبط‌های شما روی این گوشی می‌ماند، فقط برای خانواده‌تان. Dino هرگز آن‌ها را آپلود نمی‌کند، پس خودتان یک نسخه نگه دارید: تنظیمات ← پشتیبان.</value></data>
+  <data name="Recordings_StayHere_Tablet" xml:space="preserve"><value>ضبط‌های شما روی این تبلت می‌ماند، فقط برای خانواده‌تان. Dino هرگز آن‌ها را آپلود نمی‌کند، پس خودتان یک نسخه نگه دارید: تنظیمات ← پشتیبان.</value></data>
+  <data name="Recordings_StayHere_Device" xml:space="preserve"><value>ضبط‌های شما روی این رایانه می‌ماند، فقط برای خانواده‌تان. Dino هرگز آن‌ها را آپلود نمی‌کند، پس خودتان یک نسخه نگه دارید: تنظیمات ← پشتیبان.</value></data>
   <data name="Backup_RestoreButton" xml:space="preserve"><value>انتخاب فایل پشتیبان</value></data>
   <data name="Backup_Footer" xml:space="preserve"><value>فایل فقط به جایی می‌رود که بفرستید. Dino هیچ نسخه‌ای آنلاین نگه نمی‌دارد.</value></data>
   <data name="Backup_Restored_One" xml:space="preserve"><value>{0} داستان بازیابی شد</value></data>

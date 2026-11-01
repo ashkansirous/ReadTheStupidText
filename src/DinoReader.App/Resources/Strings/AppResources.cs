@@ -169,6 +169,11 @@ public static class AppResources
 	public static string Backup_SaveButton => Get();
 	public static string Backup_RestoreTitle => Get();
 	public static string Backup_RestoreBody => Get();
+	public static string Backup_SaveIncludes => Get();
+	public static string Backup_Merged => Get();
+	public static string Recordings_StayHere_Phone => Get();
+	public static string Recordings_StayHere_Tablet => Get();
+	public static string Recordings_StayHere_Device => Get();
 	public static string Backup_RestoreButton => Get();
 	public static string Backup_Footer => Get();
 	public static string Backup_Restored_One => Get();

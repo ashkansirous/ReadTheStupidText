@@ -84,7 +84,12 @@
   <data name="Backup_SaveBody_Other" xml:space="preserve"><value>Alle {0} historier i én fil, med sider, billeder og de rettede rollebesætninger. Gem den på Drev eller Filer, eller send den til dig selv.</value></data>
   <data name="Backup_SaveButton" xml:space="preserve"><value>Gem en sikkerhedskopi</value></data>
   <data name="Backup_RestoreTitle" xml:space="preserve"><value>Gendan fra en sikkerhedskopi</value></data>
-  <data name="Backup_RestoreBody" xml:space="preserve"><value>Tilføjer de historier, som denne telefon ikke har. Historier, der allerede er her, forbliver, som de er.</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Henter historier og optagelser tilbage fra en fil. Historier, der allerede er her, beholder deres sider og får optagelserne tilbage.</value></data>
+  <data name="Backup_SaveIncludes" xml:space="preserve"><value>Den indeholder også dine optagelser.</value></data>
+  <data name="Backup_Merged" xml:space="preserve"><value>Fik deres optagelser tilbage</value></data>
+  <data name="Recordings_StayHere_Phone" xml:space="preserve"><value>Dine optagelser bliver på denne telefon, kun til jeres familie. Dino uploader dem aldrig, så gem selv en kopi: Indstillinger → Sikkerhedskopi.</value></data>
+  <data name="Recordings_StayHere_Tablet" xml:space="preserve"><value>Dine optagelser bliver på denne tablet, kun til jeres familie. Dino uploader dem aldrig, så gem selv en kopi: Indstillinger → Sikkerhedskopi.</value></data>
+  <data name="Recordings_StayHere_Device" xml:space="preserve"><value>Dine optagelser bliver på denne computer, kun til jeres familie. Dino uploader dem aldrig, så gem selv en kopi: Indstillinger → Sikkerhedskopi.</value></data>
   <data name="Backup_RestoreButton" xml:space="preserve"><value>Vælg en sikkerhedskopi</value></data>
   <data name="Backup_Footer" xml:space="preserve"><value>Filen går kun derhen, hvor du sender den. Dino gemmer ingen kopi online.</value></data>
   <data name="Backup_Restored_One" xml:space="preserve"><value>{0} historie gendannet</value></data>

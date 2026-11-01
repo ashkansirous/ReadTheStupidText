@@ -47,6 +47,8 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <Label x:Name="StayNote" AutomationId="RecordingsStayNote" FontSize="12.5" LineHeight="1.4" TextColor="{StaticResource Body}" Margin="4,0" />
+
                 <HorizontalStackLayout Spacing="8" Padding="4,0">
                     <local:IconView Kind="Lock" Color="{StaticResource Muted}" Size="16" StrokeWidth="2" VerticalOptions="Start" Margin="0,1,0,0" />
                     <Label Text="{x:Static res:AppResources.Backup_Footer}" FontSize="12.5" LineHeight="1.4" TextColor="{StaticResource Body}" />
