@@ -1,6 +1,6 @@
 ### Slice 224 — Phone runner: build-cache gaps from the 2026-10-31-1000 night, round 1
 
-*parked: feedback loop, waits for the user.* Planned 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1000-feedback-loop-w1.md)). Parked so no later wave tonight builds it; the user moves it to `planned`.
+*Planned.* Written 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1000-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01.
 
 **Touches:** `tools/phone/run-checks.ps1`, `tools/phone/checks/_lib.ps1`, `tools/phone/test-run-checks.ps1`, `tools/CLAUDE.md`, `docs/plan/slices/224-phone-runner-build-cache-gaps.md`
 

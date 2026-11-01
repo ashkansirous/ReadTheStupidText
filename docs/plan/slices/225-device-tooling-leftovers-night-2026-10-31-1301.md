@@ -1,6 +1,6 @@
 ### Slice 225 — Device-test tooling leftovers from the 2026-10-31-1301 night, round 1
 
-*parked: feedback loop, waits for the user.* Planned 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1301-feedback-loop-w1.md)). Parked so no later wave tonight builds it; the user moves it to `planned`.
+*Planned.* Written 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1301-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01.
 
 **Touches:** `tools/phone/common.ps1`, `tools/phone/run-checks.ps1`, `tools/phone/preflight.ps1`, `tools/phone/restore-device-state.ps1` (new), `tools/phone/checks/_lib.ps1`, `tools/phone/checks/*.ps1`, `tools/phone/test-phone-lib.ps1`, `tools/phone/test-run-checks.ps1`, `tools/emulator/run-flows.ps1`, `tools/emulator/common.ps1`, `tools/emulator/lease.ps1`, `tools/CLAUDE.md`, `tools/phone/README.md`, `src/ReadTheStupidText.Mobile.Shared/MobileVoicePackService.cs`, `tests/ReadTheStupidText.Tests/` (a new DecideAll test file), `tools/phone/lease.ps1`, `tools/phone/checks/paused-notification.ps1`, `tools/emulator/lint-flows.ps1`, `tools/desktop-vm/Invoke-DesktopTest.ps1`, `.gitattributes`, `.github/workflows/tools-selftests.yml`, `src/DinoReader.App/StagedBookUpdates.cs`, `src/DinoReader.App/StarterStories.cs`, `tests/DinoReader.Tests/`, `plan.md`, `docs/plan/slices/225-device-tooling-leftovers-night-2026-10-31-1301.md`
 

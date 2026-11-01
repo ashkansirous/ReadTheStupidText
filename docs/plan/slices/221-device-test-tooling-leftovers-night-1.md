@@ -1,6 +1,6 @@
 ### Slice 221 — Device-test tooling leftovers from the 2026-10-30-2100 night, round 1
 
-*parked: feedback loop, waits for the user.* Planned 2026-10-30 by the round 1 feedback loop ([note](../notes/2026-10-30-2100-feedback-loop-w1.md)). Parked so no later wave tonight builds it; the user moves it to `planned`.
+*Planned.* Written 2026-10-30 by the round 1 feedback loop ([note](../notes/2026-10-30-2100-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01.
 
 **Touches:** `src/DinoReader.App/Testing/**`, `tools/emulator/install-debug.ps1`, `tools/phone/run-checks.ps1`, `tools/phone/common.ps1`, `tools/phone/lease*.ps1`, `tools/CLAUDE.md`, `.github/workflows/release.yml` (item 4 only), `docs/plan/slices/221-device-test-tooling-leftovers-night-1.md`
 
