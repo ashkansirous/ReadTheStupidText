@@ -2,6 +2,12 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count.
 
+### Slice 239: Dino store book without an app build ([slice](slices/239-dino-store-book-without-app-build.md))
+
+- A real story-only PR shows no PR checks and, after merge, runs only `dino-store.yml` (no `release.yml`).
+- Delisting a deleted book on a real run.
+- A translated title for a newly added store book on an installed app, with no app update.
+
 ### Slice 232 part A: Dino landscape reading screen ([slice](slices/232-dino-landscape-every-screen.md))
 
 - Tablet landscape (no tablet AVD): the controls row under the card and its left edge.
