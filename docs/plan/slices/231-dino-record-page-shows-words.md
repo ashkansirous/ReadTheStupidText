@@ -1,6 +1,6 @@
 ### Slice 231 — Dino: the Record page shows the page's words (bug)
 
-*Planned 2026-11-01.* From the user's user test on 2026-11-01 (finding 6). Bug fix, no design step; can go first.
+*In progress (wave 2026-11-01), draft PR.* From the user's user test on 2026-11-01 (finding 6). Bug fix, no design step; can go first.
 
 **Touches:** `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/RecordPage.cs`, `docs/plan/slices/231-dino-record-page-shows-words.md`
 
