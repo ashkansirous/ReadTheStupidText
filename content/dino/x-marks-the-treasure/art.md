@@ -1,7 +1,7 @@
 # X Marks the Treasure!: art record
 
 Store story (stem `x-marks-the-treasure`, version 5, added 2026-10-26), ages 3-6,
-author Ashkan Sirous, credit "A Dino Reader picture book · free to share". An original story, not a retelling.
+author Ashkan Sirous, credit "A Dino Reader picture book" (not free to share: the user's own book, 2026-11-01). An original story, not a retelling.
 
 **Version 5 (Slice 146 Waves A+B+C, 2026-10-27):** the English is reworded in spoken bedtime language (Decision 152: "Look!", "Ooh", "Hmm", "Land ahoy!", "Up with the sail!", "Everybody's hungry!", "Ooh, look!" on the chest) and every one of the 13 translations is redone in the same register. Page breaks, page count (17) and each page's one action are unchanged, so **every page and the cover keep their picture**. Farsi: spoken forms («کاپیتان کاترین», «فرمون کشتی», «ملوانا»), sound words as plain triples with no commas and no vowel marks («قاق قاق قاق», «ووش ووش ووش» for the sail, «قار و قور» three times, «هام هام هام», «شالاپ شالاپ شالاپ», «خش خش خش» for the digging; «پَت» and «به به» dropped because they need a mark). Arabic stays simple Modern Standard (no dialect) and carries no vowel marks yet (Slice 154 decides). Japanese is kana-heavy with no spaces; Portuguese is Brazilian; Spanish Latin American ("pancita", "jaló"). Not yet listened to by a native speaker in any language.
 
