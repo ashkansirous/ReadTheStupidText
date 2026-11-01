@@ -1,6 +1,6 @@
 ### Slice 193 — German store listings for both apps
 
-*Drafted 2026-10-30 (PR #589); apply waits for the user's approval of the German text.* *Planned 2026-10-29.* Store text only, no app code. Gap found in Slice 168 (both apps read German since then).
+*Drafted 2026-10-30 (PR #589); approved by the user 2026-11-01; App Store applied, Play and Partner Center open.* *Planned 2026-10-29.* Store text only, no app code. Gap found in Slice 168 (both apps read German since then).
 
 **Touches:** `docs/store-listings/de.md` (new, Read The Stupid Text), `docs/store-listings/dino/de.md` (new, Dino), `STORE.md` (where listings are kept), `docs/plan/slices/193-german-store-listings.md`.
 
@@ -11,6 +11,14 @@ Neither app has a German listing on Google Play or the App Store, and Read The S
 #### Claim notes (2026-10-30)
 
 - User, 2026-10-30: draft only tonight; nothing goes live until the user approves the German text.
+- **User, 2026-11-01: approved** ("193 should not be waiting for me. I approved"). Apply started the same day through the `store-listing` agent.
+
+#### Apply result (2026-11-01)
+
+- **App Store Connect, both apps: done.** de-DE added to app info (name, subtitle) and to the version in `PREPARE_FOR_SUBMISSION` (RTST 1.76.1, Dino 1.81.1: description, keywords, promotional text); read back matches the drafts. Dino's "auf dem Handy" became "auf dem iPhone oder iPad". Nothing submitted; the German goes to Apple with the next submission.
+- **Google Play, both apps: blocked.** `edits.listings.update` de-DE returned 200 but `edits.commit` returned 403 "The caller does not have permission" (twice on RTST, once on Dino); edits deleted, Play unchanged. The service account `auto-deploy-to-google-play@read-the-stupid-text.iam.gserviceaccount.com` needs "Manage store presence" for both apps in Play Console, *Users and permissions* (an owner's change). Then rerun the apply.
+- **Microsoft Partner Center, RTST: not done.** Its API secrets are GitHub Actions secrets only (not in `D:\secrets`); the only API path is `store-submit.yml`, which submits a package too. Not checked: whether that flow carries listing text.
+- Native German read of both texts still to do.
 
 #### Agents
 

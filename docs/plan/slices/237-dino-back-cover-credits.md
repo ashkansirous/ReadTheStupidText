@@ -89,6 +89,15 @@ From review:
 - review read: D:\ReadTheStupidText-worktrees\reviews\s237-high.md, findings 11/11. Applied 1-6, 9, 10, 11. Finding 7 (old installed apps read, translate and count the back cover) is the accepted trade-off of this slice. Finding 8 (`BackCoverEnglish` duplicates English labels and month names from the resx; `Lines()` repeats the traditional branch) was skipped; the brief gave no reason.
 - review read: D:\ReadTheStupidText-worktrees\reviews\s237-medium.md, findings 8/8. Applied 1, 2, 4, 6, 7. Skipped: 3 (`SplitBackCover` drops a back cover silently when `TryCreate` fails, and a non-last-page `backCover` is read as a normal page), 5 (`JoinNames` chains "A and B and C" for 3+ names, wrong in list-comma languages; no book has 3 names today), 8 (the date shown is the Added month, so older books show the store-add month; info only, by design). Reasons for 3 and 5 were not given in the brief.
 
+#### Design (Dino Reader Batch 45 mock, frames 147-149, added 2026-11-01)
+
+The back cover was built without a mock; frames 147 (tablet upright), 148 (phone landscape) and 149 (Farsi, phone) now exist in `docs/design/dino-reader/Dino Reader Batch 45 Tablet Upright.dc.html` (README index has the lines). The mock's own review box says the build should be checked against them. They illustrate the built screen; anything new waits for the user's approval of Batch 45. Differences from what was built:
+
+- **Credit size:** the mock uses 22 sp on a tablet upright and 17 sp in phone landscape; the build uses 20 pt shrinking to a 13 pt minimum (17 fits, 22 does not). Default: allow 22 when Slice 234 builds the tablet layout.
+- **Landscape (148):** cover on the left, credit lines on the right, left-aligned, in one middle column; chip and rail as in 113. Still unverified in the build ("Landscape layout" below). Default: build to the frame.
+- **Farsi (149):** only the credit lines run right to left, in Vazirmatn with Persian digits; chip and controls are not mirrored (Slice 96). The Farsi labels in the frame are drafts for farsi-review.
+- **Controls:** Play becomes "Read again" (restart arrow), next is dimmed, no highlight, no view switch. This slice's text says the page shows in every reading mode; the mock hides the switch on this page (no text to switch). Default: follow the mock.
+
 #### For CLAUDE.md (lifted 2026-11-01)
 
 - In `src/DinoReader.App/CLAUDE.md`: every `book.json` needs `storyBy` (and `retold` for classics). The back cover is never voiced or counted (not in `pageCount`, `minutes` or the sentence list). (Slice 237: docs/plan/slices/237-dino-back-cover-credits.md)
