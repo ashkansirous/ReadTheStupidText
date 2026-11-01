@@ -184,13 +184,12 @@ $tar = @('files/packs/supertonic-3/', 'files/packs/supertonic-3/active', 'files/
 Assert-Equal 'archive packs: complete ones only' 'supertonic-3' ((Get-ArchivePackIds $tar) -join ',')
 Assert-Equal 'a .partial in an archive is no pack' 0 @(Get-ArchivePackIds @('files/packs/supertonic-3-4.zip.partial')).Count
 
-# Slice 208: a whole-device network cut is refused over a wireless serial (the S21 went offline 2026-10-31 when a check cut the link it ran over).
-function Test-Throws([scriptblock]$Block) { try { & $Block; return $false } catch { return $true } }
-Assert-Equal 'refuses ip:port serial' $true (Test-Throws { Assert-WholeDeviceNetworkCutAllowed '192.168.1.20:37123' })
-Assert-Equal 'refuses mdns serial' $true (Test-Throws { Assert-WholeDeviceNetworkCutAllowed 'adb-R5CT123ABC-xYz12a._adb-tls-connect._tcp' })
-Assert-Equal 'allows an emulator' $false (Test-Throws { Assert-WholeDeviceNetworkCutAllowed 'emulator-5554' })
+# Slice 208: a check never cuts the wireless link it is driven over (the S21 went offline 2026-10-31 when a check cut it). Slice 225 item 14: no check made a whole-device cut, so the guard
+# function nobody called is gone, and test-run-checks.ps1 fails any check that touches wifi, data or airplane mode (Test-CheckRestoresFirst).
+Assert-Equal 'the unused whole-device guard is gone' $false ((Get-Content (Join-Path $PSScriptRoot 'common.ps1') -Raw) -match 'function Assert-WholeDeviceNetworkCutAllowed')
 $restore = Get-DeviceRestoreScript 'uk.sirous.rtst.dbg' 10234 240
-Assert-Equal 'restore waits first' $true ($restore.StartsWith('sleep 240; '))
+Assert-Equal 'restore writes its pid first, then waits' $true ($restore -like 'echo $$ > /data/local/tmp/rtst-heal-uk.sirous.rtst.dbg.pid; sleep 240; *')
+Assert-Equal 'restore removes its pid file when it has run' $true ($restore.EndsWith('; rm -f /data/local/tmp/rtst-heal-uk.sirous.rtst.dbg.pid'))
 Assert-Equal 'restore lifts the app block' $true ($restore -like '*netpolicy remove restrict-background-blacklist 10234*')
 Assert-Equal 'restore deletes the timeout' $true ($restore -like '*device_config delete activity_manager data_sync_fgs_timeout_duration*')
 Assert-Equal 'restore resets the compat flag' $true ($restore -like '*am compat reset FGS_INTRODUCE_TIME_LIMITS uk.sirous.rtst.dbg*')

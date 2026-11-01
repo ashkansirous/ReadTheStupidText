@@ -173,6 +173,83 @@ function Resolve-InstallProblem([string]$PmListOutput, [string]$PackageName) {
     return "$PackageName is not installed"
 }
 
+# Slice 225 item 4: `pm list packages <package>` prints one `package:` line per match (the store id and the .dbg id both match a prefix). Joined with a space the lines run together and the
+# per-line match above cannot see them, so the caller joins them with newlines.
+function Join-PmLines($PmLines) { return (@($PmLines) | ForEach-Object { "$_".TrimEnd() }) -join "`n" }
+
+# Slice 225 item 19: -Flow takes a flow name (record-page-shows-words); a path to the yaml (.maestro/dino/record-page-shows-words.yaml) is reduced to its name.
+function Get-FlowName([string]$Flow) {
+    if (-not $Flow) { return '' }
+    return [IO.Path]::GetFileNameWithoutExtension($Flow.Trim())
+}
+
+# Slice 225 item 4: the flows a run takes. Without -Flow: .maestro/<app>/*.yaml (flows under needs-file/ need a pushed file and are skipped). With -Flow <name>: the flow of that name in the app's folder,
+# else the one in needs-file/ (the caller has pushed its file by hand, so naming it is the request to run it).
+function Find-FlowFiles([string]$FlowDir, [string]$Flow) {
+    $name = Get-FlowName $Flow
+    $own = @(Get-ChildItem $FlowDir -Filter '*.yaml' -File -ErrorAction SilentlyContinue)
+    if (-not $name) { return @($own | Sort-Object Name) }
+    $hit = @($own | Where-Object { $_.BaseName -eq $name })
+    if ($hit.Count -eq 0) { $hit = @(Get-ChildItem (Join-Path $FlowDir 'needs-file') -Filter '*.yaml' -File -ErrorAction SilentlyContinue | Where-Object { $_.BaseName -eq $name }) }
+    return $hit
+}
+
+# Slice 225 item 12: a Maestro driver (dev.mobile.maestro) left running from an earlier flow made `uiautomator dump` print "Killed" on the emulator. It is force-stopped before every dump;
+# Maestro installs and starts its driver again when the next flow needs it. $AdbCall takes the adb arguments (a self-test passes a recorder).
+$script:MaestroDriverPackage = 'dev.mobile.maestro'
+function Invoke-EmulatorAdbText([string[]]$AdbArgs) { return (& $script:Adb -s $script:Serial @AdbArgs 2>&1 | Out-String) }
+
+function Get-UiDumpXml([scriptblock]$AdbCall = { param($a) Invoke-EmulatorAdbText $a }) {
+    $null = & $AdbCall @('shell', 'am', 'force-stop', $script:MaestroDriverPackage)
+    return (& $AdbCall @('shell', 'uiautomator', 'dump', '/dev/tty'))
+}
+
+# Slice 225 item 21: TalkBack on the emulator without the Settings UI, so no permission dialog appears (the dialog stopped the Slice 226/231 TalkBack checks). It writes the two secure settings
+# the Settings switch writes. Disable-EmulatorTalkBack restores what Enable-EmulatorTalkBack found. NOT confirmed on a device: that TalkBack (com.google.android.marvin.talkback) is on the AVD image,
+# and that it starts without its first-run tutorial; Test-EmulatorTalkBackOn is how the check proves it (accessibility_enabled = 1).
+$script:TalkBackService = 'com.google.android.marvin.talkback/com.google.android.marvin.talkback.TalkBackService'
+$script:AccessibilityServicesSetting = 'enabled_accessibility_services'
+$script:AccessibilityEnabledSetting = 'accessibility_enabled'
+
+# Pure: the adb arguments that turn TalkBack on, given the services already enabled (kept, colon-separated) and not duplicated.
+function Get-TalkBackEnableCommands([string]$CurrentServices) {
+    $current = @("$CurrentServices".Trim() -split ':' | Where-Object { $_ -and $_ -ne 'null' })
+    $services = (@($current | Where-Object { $_ -ne $script:TalkBackService }) + $script:TalkBackService) -join ':'
+    $servicesCommand = @('shell', 'settings', 'put', 'secure', $script:AccessibilityServicesSetting, $services)
+    $enabledCommand = @('shell', 'settings', 'put', 'secure', $script:AccessibilityEnabledSetting, '1')
+    return @($servicesCommand, $enabledCommand)
+}
+
+# Pure: the adb arguments that put the settings back as they were before (null = the setting did not exist).
+function Get-TalkBackDisableCommands([string]$PreviousServices, [string]$PreviousEnabled) {
+    $services = "$PreviousServices".Trim()
+    $enabled = "$PreviousEnabled".Trim()
+    $first = if ($services -and $services -ne 'null') { @('shell', 'settings', 'put', 'secure', $script:AccessibilityServicesSetting, $services) } else { @('shell', 'settings', 'delete', 'secure', $script:AccessibilityServicesSetting) }
+    $second = if ($enabled -and $enabled -ne 'null') { @('shell', 'settings', 'put', 'secure', $script:AccessibilityEnabledSetting, $enabled) } else { @('shell', 'settings', 'delete', 'secure', $script:AccessibilityEnabledSetting) }
+    return @($first, $second)
+}
+
+# Turns TalkBack on; returns what to give to Disable-EmulatorTalkBack. Throws when accessibility_enabled is not 1 afterwards.
+function Enable-EmulatorTalkBack([scriptblock]$AdbCall = { param($a) Invoke-EmulatorAdbText $a }) {
+    $previous = [pscustomobject]@{
+        Services = "$(& $AdbCall @('shell', 'settings', 'get', 'secure', $script:AccessibilityServicesSetting))".Trim()
+        Enabled = "$(& $AdbCall @('shell', 'settings', 'get', 'secure', $script:AccessibilityEnabledSetting))".Trim()
+    }
+    foreach ($command in Get-TalkBackEnableCommands $previous.Services) { $null = & $AdbCall $command }
+    if (-not (Test-EmulatorTalkBackOn $AdbCall)) { throw 'TalkBack did not switch on: settings get secure accessibility_enabled is not 1 (is TalkBack on this AVD image?).' }
+    return $previous
+}
+
+function Disable-EmulatorTalkBack($Previous, [scriptblock]$AdbCall = { param($a) Invoke-EmulatorAdbText $a }) {
+    foreach ($command in Get-TalkBackDisableCommands $Previous.Services $Previous.Enabled) { $null = & $AdbCall $command }
+}
+
+function Test-EmulatorTalkBackOn([scriptblock]$AdbCall = { param($a) Invoke-EmulatorAdbText $a }) {
+    $enabled = "$(& $AdbCall @('shell', 'settings', 'get', 'secure', $script:AccessibilityEnabledSetting))".Trim()
+    $services = "$(& $AdbCall @('shell', 'settings', 'get', 'secure', $script:AccessibilityServicesSetting))"
+    return ($enabled -eq '1' -and $services.Contains('talkback'))
+}
+
 # Slice 215: an adb call that gives up after $Seconds (a wedged adbd/qemu makes `adb shell` block forever). Returns the output, or $null on a timeout (the process is killed).
 function Invoke-AdbBounded([string[]]$AdbArgs, [int]$Seconds = 15) {
     $info = New-Object Diagnostics.ProcessStartInfo $script:Adb

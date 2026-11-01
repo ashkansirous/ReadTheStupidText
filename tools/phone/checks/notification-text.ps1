@@ -1,3 +1,4 @@
+# check: Apps=rtst EstimateSeconds=150 NeedsPack=true Variant=debug
 <#
 .SYNOPSIS
   notification-text: a throttled voice-pack download shows a progress notification (Slice 183 throttle, Slice 213).

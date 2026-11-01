@@ -10,6 +10,13 @@ Invoke-Check -ResultFile $ResultFile -Body {
         $cond = New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::AutomationIdProperty, 'StoryText')
         $labels = $root.FindAll($script:TreeScope::Descendants, $cond)
         $names = @(foreach ($label in $labels) { try { $label.Current.Name } catch { } })
+        # Slice 225 item 24 (Slice 226 item 5): a picture+text page's accessible name has no line break in it (PictureTextPages.AccessibleName joins the words with single spaces).
+        # The check fails on a build whose name keeps CR or LF, and passes on main. No CR or LF escape sequence is written here: a Write-tool slip once turned one into a raw CR byte.
+        $withBreak = @($names | Where-Object { $_ -and ($_.Contains([string][char]10) -or $_.Contains([string][char]13)) })
+        if ($withBreak.Count -gt 0) {
+            $shown = ($withBreak[0] -replace '\s+', '|')
+            throw "FAIL: $($withBreak.Count) StoryText UIA name(s) contain a CR or LF (the accessible name must be one line, PictureTextPages.AccessibleName): '$($shown.Substring(0, [Math]::Min(60, $shown.Length)))...'"
+        }
         return (($names | Where-Object { $_ }) -join ' ')
     }
     # Slice 205: the story label carries the page's text as its accessible description (a FormattedText label can have an empty UIA

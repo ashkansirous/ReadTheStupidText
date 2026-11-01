@@ -12,7 +12,7 @@ $xml = @'
 <node index="0" package="uk.sirous.readthestupidtext.dbg" text="" resource-id="" class="android.widget.FrameLayout" clickable="false" bounds="[0,0][1080,2400]">
 <node index="0" package="uk.sirous.readthestupidtext.dbg" text="Settings" resource-id="uk.sirous.readthestupidtext.dbg:id/title" class="android.widget.TextView" clickable="false" content-desc="" bounds="[40,100][400,180]" />
 <node index="1" package="uk.sirous.readthestupidtext.dbg" text="Norsk" resource-id="uk.sirous.readthestupidtext.dbg:id/lang_row" class="android.widget.TextView" clickable="true" content-desc="" bounds="[0,400][1080,520]" />
-<node index="2" package="uk.sirous.readthestupidtext.dbg" text="Norsk bokmål (more)" resource-id="" class="android.widget.TextView" clickable="true" content-desc="" bounds="[0,600][1080,720]" />
+<node index="2" package="uk.sirous.readthestupidtext.dbg" text="Norsk bokm&#229;l (more)" resource-id="" class="android.widget.TextView" clickable="true" content-desc="" bounds="[0,600][1080,720]" />
 <node index="3" package="uk.sirous.readthestupidtext.dbg" text="Tom &amp; Jerry &quot;club&quot;" resource-id="" class="android.widget.TextView" clickable="true" content-desc="Open club" bounds="[100,800][300,900]" />
 <node index="4" package="uk.sirous.readthestupidtext.dbg" text="norsk" resource-id="" class="android.widget.TextView" clickable="true" content-desc="" bounds="[0,1000][1080,1100]" />
 <node index="5" package="uk.sirous.readthestupidtext.dbg" text="" resource-id="" class="android.view.View" clickable="false" content-desc="Back" bounds="[0,0][100,100]" />

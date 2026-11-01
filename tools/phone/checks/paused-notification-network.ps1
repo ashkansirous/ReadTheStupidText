@@ -1,3 +1,4 @@
+# check: Apps=rtst EstimateSeconds=200 NeedsPack=true Variant=debug
 <#
 .SYNOPSIS
   paused-notification-network: "Download paused. Tap to finish." also posts when the backgrounded app only loses its network, with no dataSync time limit (Slice 233).

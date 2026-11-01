@@ -147,6 +147,88 @@ function Invoke-DeviceKillCheck {
     Assert-Equal 'the emulator recovers after the kill' $null (Get-EmulatorHealthProblem)
 }
 
+# Slice 225 item 4: `pm list packages <package>` prints one `package:` line per match; with the store id AND the .dbg id installed the old space-joined text was "not installed".
+function Test-InstallCheckSeesBothPackages {
+    $both = @('package:uk.sirous.readthestupidtext', 'package:uk.sirous.readthestupidtext.dbg')
+    Assert-Equal 'two package lines: the store id is installed' $null (Resolve-InstallProblem (Join-PmLines $both) 'uk.sirous.readthestupidtext')
+    Assert-Equal 'two package lines: the .dbg id is installed' $null (Resolve-InstallProblem (Join-PmLines $both) 'uk.sirous.readthestupidtext.dbg')
+    Assert-Conflict 'the old space-joined text could not match (the bug)' (Resolve-InstallProblem ($both -join ' ') 'uk.sirous.readthestupidtext') 'is not installed'
+    Assert-Equal 'carriage returns from adb do not break the match' $null (Resolve-InstallProblem (Join-PmLines @("package:uk.sirous.dinoreader.dbg`r", "package:uk.sirous.dinoreader`r")) 'uk.sirous.dinoreader')
+    Assert-Conflict 'one other package only is still not installed' (Resolve-InstallProblem (Join-PmLines @('package:uk.sirous.rtst.other')) 'uk.sirous.rtst') 'is not installed'
+    $source = Get-Content (Join-Path $PSScriptRoot 'run-flows.ps1') -Raw
+    Assert-Equal 'run-flows no longer passes the joined-with-a-space text' $false ($source -match 'Resolve-InstallProblem "\$installed"')
+}
+
+# Slice 225 items 4 and 19: -Flow takes a name or a path, and also finds a flow under needs-file/.
+function Test-FlowSelection {
+    $root = Join-Path ([IO.Path]::GetTempPath()) ('rtst-flows-test-' + [guid]::NewGuid().ToString('N'))
+    try {
+        $null = New-Item -ItemType Directory -Force (Join-Path $root 'needs-file')
+        foreach ($name in 'alpha.yaml', 'beta.yaml', 'needs-file\gamma.yaml') { Set-Content (Join-Path $root $name) 'appId: x' }
+        Assert-Equal 'a name is a name' 'alpha' (Get-FlowName 'alpha')
+        Assert-Equal 'a relative path is reduced to the name' 'alpha' (Get-FlowName '.maestro/dino/alpha.yaml')
+        Assert-Equal 'a Windows path is reduced to the name' 'alpha' (Get-FlowName '.maestro\dino\alpha.yaml')
+        Assert-Equal 'no flow means no name' '' (Get-FlowName '')
+        Assert-Equal 'no -Flow: the app folder only, needs-file skipped' 'alpha,beta' ((Find-FlowFiles $root '' | ForEach-Object { $_.BaseName }) -join ',')
+        Assert-Equal '-Flow <name> and -Flow <path> pick the same flow' (@(Find-FlowFiles $root 'beta')[0].FullName) (@(Find-FlowFiles $root ".maestro/dino/beta.yaml")[0].FullName)
+        Assert-Equal '-Flow finds a needs-file flow by name' 'gamma' (@(Find-FlowFiles $root 'gamma')[0].BaseName)
+        Assert-Equal '-Flow finds a needs-file flow by path' 'gamma' (@(Find-FlowFiles $root '.maestro/dino/needs-file/gamma.yaml')[0].BaseName)
+        Assert-Equal 'an unknown name finds nothing' 0 @(Find-FlowFiles $root 'nope').Count
+    } finally { Remove-Item $root -Recurse -Force -ErrorAction SilentlyContinue }
+}
+
+# Slice 225 item 12: a stale Maestro driver is force-stopped before the UI dump; the dump still happens.
+function Test-DumpStopsMaestroDriver {
+    $script:DumpCalls = New-Object System.Collections.Generic.List[string]
+    $fake = { param($a) $script:DumpCalls.Add($a -join ' '); 'dump-xml' }
+    $xml = Get-UiDumpXml $fake
+    Assert-Equal 'the dump answer comes back' 'dump-xml' $xml
+    Assert-Equal 'two adb calls' 2 $script:DumpCalls.Count
+    Assert-Equal 'the Maestro driver is force-stopped first' 'shell am force-stop dev.mobile.maestro' $script:DumpCalls[0]
+    Assert-Equal 'then the dump runs' 'shell uiautomator dump /dev/tty' $script:DumpCalls[1]
+    $source = Get-Content (Join-Path $PSScriptRoot 'run-flows.ps1') -Raw
+    Assert-Equal 'run-flows reads its ANR dump through Get-UiDumpXml' $true ($source -match 'Get-UiDumpXml')
+    Assert-Equal 'run-flows has no bare uiautomator dump of its own' $false ($source -match 'shell uiautomator dump')
+}
+
+# Slice 225 item 21: TalkBack is turned on and off with the secure settings, no Settings UI (so no permission dialog), and what was there before comes back.
+function Test-TalkBackSettings {
+    $service = 'com.google.android.marvin.talkback/com.google.android.marvin.talkback.TalkBackService'
+    $on = @(Get-TalkBackEnableCommands 'null')
+    Assert-Equal 'enable: two settings' 2 $on.Count
+    Assert-Equal 'enable: the service is listed' "shell settings put secure enabled_accessibility_services $service" ($on[0] -join ' ')
+    Assert-Equal 'enable: accessibility is switched on' 'shell settings put secure accessibility_enabled 1' ($on[1] -join ' ')
+    Assert-Equal 'enable: another service already on is kept' "other/Svc:$service" ((@(Get-TalkBackEnableCommands 'other/Svc')[0])[-1])
+    Assert-Equal 'enable: TalkBack is not listed twice' $service ((@(Get-TalkBackEnableCommands $service)[0])[-1])
+    $off = @(Get-TalkBackDisableCommands 'null' 'null')
+    Assert-Equal 'disable: nothing before means delete the service list' 'shell settings delete secure enabled_accessibility_services' ($off[0] -join ' ')
+    Assert-Equal 'disable: nothing before means delete the flag' 'shell settings delete secure accessibility_enabled' ($off[1] -join ' ')
+    $back = @(Get-TalkBackDisableCommands 'other/Svc' '1')
+    Assert-Equal 'disable: the earlier service list comes back' 'shell settings put secure enabled_accessibility_services other/Svc' ($back[0] -join ' ')
+    Assert-Equal 'disable: the earlier flag comes back' 'shell settings put secure accessibility_enabled 1' ($back[1] -join ' ')
+    # With a fake adb: after the enable commands the flag reads 1 and the helper reports it; when the flag stays 0 it throws.
+    $script:Secure = @{ enabled_accessibility_services = 'null'; accessibility_enabled = '0' }
+    $script:Stick = $true
+    $fake = {
+        param($a)
+        $line = $a -join ' '
+        if ($line -match '^shell settings get secure (\S+)$') { return $script:Secure[$Matches[1]] }
+        if ($line -match '^shell settings put secure (\S+) (.+)$') { if ($script:Stick) { $script:Secure[$Matches[1]] = $Matches[2] }; return '' }
+        if ($line -match '^shell settings delete secure (\S+)$') { $script:Secure[$Matches[1]] = 'null'; return '' }
+        return ''
+    }
+    $previous = Enable-EmulatorTalkBack $fake
+    Assert-Equal 'helper: accessibility_enabled is 1 after the enable' '1' $script:Secure['accessibility_enabled']
+    Assert-Equal 'helper: it reads as on' $true (Test-EmulatorTalkBackOn $fake)
+    Disable-EmulatorTalkBack $previous $fake
+    Assert-Equal 'helper: the flag is back to what it was (0)' '0' $script:Secure['accessibility_enabled']
+    Assert-Equal 'helper: the service list is back to what it was (none)' 'null' $script:Secure['enabled_accessibility_services']
+    Assert-Equal 'helper: it reads as off again' $false (Test-EmulatorTalkBackOn $fake)
+    $script:Stick = $false
+    $threw = $false; try { Enable-EmulatorTalkBack $fake | Out-Null } catch { $threw = $_.Exception.Message -like 'TalkBack did not switch on*' }
+    Assert-Equal 'helper: a flag that stays off is an error, not a silent pass' $true $threw
+}
+
 # Dot-sourced here, at script level (inside a function the functions would vanish with it). common.ps1 loads activity.ps1 and needs ANDROID_HOME only to
 # build paths, so a placeholder is enough in CI. Test-ConcurrencyLimit then points $script:ActivityDir at a temp folder.
 if (-not $env:ANDROID_HOME -and -not $env:ANDROID_SDK_ROOT) { $env:ANDROID_HOME = [IO.Path]::GetTempPath() }
@@ -155,6 +237,10 @@ if (-not $env:ANDROID_HOME -and -not $env:ANDROID_SDK_ROOT) { $env:ANDROID_HOME 
 Test-ConcurrencyLimit
 Test-HealthProblem
 Test-InstallProblem
+Test-InstallCheckSeesBothPackages
+Test-FlowSelection
+Test-DumpStopsMaestroDriver
+Test-TalkBackSettings
 Test-AdbBounded
 if ($DeviceKillCheck) { Invoke-DeviceKillCheck }
 

@@ -595,5 +595,76 @@ try {
     Remove-Item $statusFile -ErrorAction SilentlyContinue; Remove-Item $emptyCache -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# ---- Slice 225 item 7: the catalogue is read from a header line in each check file; it lists the same checks, with the same values, as the old hand-kept table
+$expected = [ordered]@{
+    'book-end'                    = @{ Apps = 'dino'; Estimate = 420; PerRun = $null; Pack = $true; Variant = 'debug' }
+    'book-update'                 = @{ Apps = 'dino'; Estimate = 240; PerRun = $null; Pack = $false; Variant = 'debug' }
+    'cold-start'                  = @{ Apps = 'rtst,dino'; Estimate = 240; PerRun = 80; Pack = $true; Variant = 'aot' }
+    'highlight'                   = @{ Apps = 'rtst'; Estimate = 120; PerRun = $null; Pack = $true; Variant = 'debug' }
+    'language'                    = @{ Apps = 'rtst,dino'; Estimate = 180; PerRun = $null; Pack = $true; Variant = 'debug' }
+    'notification-text'           = @{ Apps = 'rtst'; Estimate = 150; PerRun = $null; Pack = $true; Variant = 'debug' }
+    'paused-notification'         = @{ Apps = 'rtst'; Estimate = 240; PerRun = $null; Pack = $true; Variant = 'debug' }
+    'paused-notification-network' = @{ Apps = 'rtst'; Estimate = 200; PerRun = $null; Pack = $true; Variant = 'debug' }
+    'short-lines'                 = @{ Apps = 'dino'; Estimate = 200; PerRun = $null; Pack = $true; Variant = 'debug' }
+    'translate'                   = @{ Apps = 'rtst'; Estimate = 150; PerRun = $null; Pack = $true; Variant = 'debug' }
+    'voice'                       = @{ Apps = 'rtst'; Estimate = 90; PerRun = $null; Pack = $true; Variant = 'debug' }
+}
+Assert-Equal 'catalogue lists the same checks as before' (($expected.Keys | Sort-Object) -join ',') (($catalogue.Keys | Sort-Object) -join ',')
+foreach ($name in $expected.Keys) {
+    $want = $expected[$name]; $got = $catalogue[$name]
+    Assert-Equal "catalogue $name apps" $want.Apps ($got.Apps -join ',')
+    Assert-Equal "catalogue $name estimate" $want.Estimate $got.EstimateSeconds
+    Assert-Equal "catalogue $name per-run" $want.PerRun $got.PerRunSeconds
+    Assert-Equal "catalogue $name needs a pack" $want.Pack $got.NeedsPack
+    Assert-Equal "catalogue $name variant" $want.Variant $got.Variant
+    Assert-Equal "catalogue $name not blocked" $null $got.Blocked
+}
+$header = Read-CheckHeader 'demo' @('# check: Apps=dino EstimateSeconds=50 NeedsPack=false Variant=debug Blocked="no phone yet"', '<#')
+Assert-Equal 'header: a quoted Blocked keeps its spaces' 'no phone yet' $header.Blocked
+foreach ($bad in @(@('<#'), @('# check: Apps=rtst NeedsPack=true Variant=debug'), @('# check: Apps=rtst EstimateSeconds=5 NeedsPack=true Variant=debug Colour=red'), @('# check: Apps=rtst EstimateSeconds=5 Variant=debug'))) {
+    $threw = $false; try { Read-CheckHeader 'demo' $bad | Out-Null } catch { $threw = $true }
+    Assert-Equal "header without a valid line throws: $($bad -join ' / ')" $true $threw
+}
+$only = Get-CheckCatalogue (Join-Path $PSScriptRoot 'checks')
+Assert-Equal 'helper files (_lib, _device) are not checks' 0 @($only.Keys | Where-Object { $_ -like '_*' }).Count
+
+# ---- Slice 225 item 2: a check that changes device-wide state calls Start-DeviceRestore first; no check touches wifi, data or airplane mode
+$fixtureBad = "param()`nInvoke-Adb `$Phone @('shell', 'device_config', 'put', 'activity_manager', 'k', '1')`nStart-DeviceRestore `$Phone `$p 1 240`n"
+$fixtureGood = "param()`nStart-DeviceRestore `$Phone `$p 1 240`nInvoke-Adb `$Phone @('shell', 'device_config', 'put', 'activity_manager', 'k', '1')`n"
+$fixtureWifi = "param()`nStart-DeviceRestore `$Phone `$p 1 240`nInvoke-Adb `$Phone @('shell', 'svc', 'wifi', 'disable')`n"
+$fixtureComment = "<#`n.SYNOPSIS`n  sets device_config put and svc wifi in the help text only`n#>`n# settings put global x`nparam()`n"
+Assert-Equal 'a device-wide change without the restore fails' $true ([bool](Test-CheckRestoresFirst 'fixture' $fixtureBad))
+Assert-Equal 'the failure names the check' $true ((Test-CheckRestoresFirst 'fixture' $fixtureBad) -like 'fixture:*Start-DeviceRestore*')
+Assert-Equal 'the restore before the change passes' $null (Test-CheckRestoresFirst 'fixture' $fixtureGood)
+Assert-Equal 'svc wifi is refused even after the restore' $true ((Test-CheckRestoresFirst 'fixture' $fixtureWifi) -like '*whole device*')
+Assert-Equal 'help text and comments are not code' $null (Test-CheckRestoresFirst 'fixture' $fixtureComment)
+foreach ($file in Get-ChildItem (Join-Path $PSScriptRoot 'checks') -Filter '*.ps1' | Where-Object { $_.Name -notlike '_*' }) {
+    Assert-Equal "$($file.BaseName) restores before any device-wide change" $null (Test-CheckRestoresFirst $file.BaseName (Get-Content $file.FullName -Raw))
+}
+Assert-Equal 'paused-notification does change device-wide state (the rule is exercised on it)' $true ((Remove-PowerShellComments (Get-Content (Join-Path $PSScriptRoot 'checks\paused-notification.ps1') -Raw)) -match $script:DeviceWideChangePattern)
+
+# ---- Slice 225 item 10: -FirstText reaches cold-start as -Text; other checks get none of the run options
+$cold = Get-CheckArguments 'cold-start' 'ph' 'rtst' 3 'passage' 'hello there' $false
+Assert-Equal 'FirstText arrives as Text' 'hello there' $cold.Text
+Assert-Equal 'the preset and runs go along' 'passage/3' "$($cold.Preset)/$($cold.Runs)"
+Assert-Equal 'no FirstText: no Text' $false ((Get-CheckArguments 'cold-start' 'ph' 'rtst' 3 'passage' '' $false).ContainsKey('Text'))
+Assert-Equal 'DropCaches arrives' $true ((Get-CheckArguments 'cold-start' 'ph' 'rtst' 3 'passage' '' $true).DropCaches)
+Assert-Equal 'another check gets only Phone and App' 'App,Phone' (((Get-CheckArguments 'highlight' 'ph' 'rtst' 3 'passage' 'x' $true).Keys | Sort-Object) -join ',')
+$runnerText = Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw
+Assert-Equal 'the runner builds a check''s arguments with Get-CheckArguments' $true ($runnerText -match 'Get-CheckArguments \$Row\.Name')
+
+# ---- Slice 225 item 5: status files are named after the checkout, so two checkouts never read each other's
+$tagA = Get-CheckoutTag 'D:\ReadTheStupidText-worktrees\s209'
+$tagB = Get-CheckoutTag 'D:\ReadTheStupidText-worktrees\s214'
+Assert-Equal 'two checkouts have two tags' $true ($tagA -ne $tagB)
+Assert-Equal 'the same checkout always has the same tag' $tagA (Get-CheckoutTag 'D:\ReadTheStupidText-worktrees\s209\')
+Assert-Equal 'a tag starts with the folder name' $true ($tagA -like 's209-*')
+Assert-Equal 'same folder name, other parent: other tag' $true ((Get-CheckoutTag 'D:\a\s209') -ne (Get-CheckoutTag 'D:\b\s209'))
+Assert-Equal 'the run status file of each checkout differs' $true ((Get-StatusFileName 'run-status' 'D:\w\s209') -ne (Get-StatusFileName 'run-status' 'D:\w\s214'))
+Assert-Equal 'a build log is named after the checkout too' $true ((Get-StatusFileName 'build-dino-debug' 'D:\w\s209' 'log') -like 'build-dino-debug-s209-*.log')
+$status = New-RunStatus 'dino' (Get-Date) @{ debug = [pscustomobject]@{ State = 'ok'; Failure = $null }; aot = [pscustomobject]@{ State = 'ok'; Failure = $null } } @() @() $null $null $null $false 'D:\w\s209' 'abc123'
+Assert-Equal 'run status records the checkout' 'D:\w\s209' $status.checkout
+Assert-Equal 'run status records the run id' 'abc123' $status.runId
+
 if ($failed) { Write-Host "$failed run-checks checks failed (PowerShell $($PSVersionTable.PSVersion))."; exit 1 }
 Write-Host "All run-checks checks pass (PowerShell $($PSVersionTable.PSVersion))."

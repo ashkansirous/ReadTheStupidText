@@ -33,19 +33,76 @@ $script:PreflightFailPattern = '^\s*\[FAIL\]\s+([^:]+):\s*(.*)$'
 $script:MaxLeaseMinutesAllowed = 1440
 $script:PercentPattern = '\d+\s?%'
 
-# Name -> Apps it can run on, Variant ('aot' = needs the AOT build, e.g. every timing; 'debug' = any build will do, the Debug one when the AOT one is not ready), EstimateSeconds (what the budget is checked against; PerRunSeconds x -Runs when the check repeats), NeedsPack (a voice pack must be installed), Blocked (why it cannot run yet, else $null).
-$script:Catalogue = [ordered]@{
-    'cold-start'          = @{ Apps = @('rtst', 'dino'); EstimateSeconds = 240; PerRunSeconds = 80; NeedsPack = $true; Variant = 'aot'; Blocked = $null }
-    'highlight'           = @{ Apps = @('rtst'); EstimateSeconds = 120; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
-    'notification-text'   = @{ Apps = @('rtst'); EstimateSeconds = 150; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
-    'short-lines'         = @{ Apps = @('dino'); EstimateSeconds = 200; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
-    'book-end'            = @{ Apps = @('dino'); EstimateSeconds = 420; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
-    'language'            = @{ Apps = @('rtst', 'dino'); EstimateSeconds = 180; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
-    'translate'           = @{ Apps = @('rtst'); EstimateSeconds = 150; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
-    'voice'               = @{ Apps = @('rtst'); EstimateSeconds = 90; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
-    'book-update'         = @{ Apps = @('dino'); EstimateSeconds = 240; NeedsPack = $false; Variant = 'debug'; Blocked = $null }
-    'paused-notification' = @{ Apps = @('rtst'); EstimateSeconds = 240; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
-    'paused-notification-network' = @{ Apps = @('rtst'); EstimateSeconds = 200; NeedsPack = $true; Variant = 'debug'; Blocked = $null }
+# Slice 225 item 7: the catalogue is read from the checks, not listed here. Each checks/<name>.ps1 starts with ONE header line (before its help block):
+#   # check: Apps=rtst,dino EstimateSeconds=240 PerRunSeconds=80 NeedsPack=true Variant=aot [Blocked="why it cannot run yet"]
+# Apps = the apps it can run on; Variant = 'aot' (needs the AOT build, e.g. every timing) or 'debug' (any build will do, the Debug one when the AOT one is not ready); EstimateSeconds = what the budget
+# is checked against (PerRunSeconds x -Runs when the check repeats); NeedsPack = a voice pack must be installed; Blocked = why it cannot run yet (absent: runnable).
+# A new check touches only its own file. Files whose name starts with _ are helpers, not checks.
+$script:CheckHeaderPattern = '^#\s*check:\s*(.+)$'
+$script:CheckHeaderFields = @('Apps', 'EstimateSeconds', 'PerRunSeconds', 'NeedsPack', 'Variant', 'Blocked')
+$script:CheckHeaderScanLines = 5
+
+# Pure: the catalogue entry from the lines of one check file; throws, naming the check, on a missing or unknown field.
+function Read-CheckHeader([string]$Name, [string[]]$Lines) {
+    $line = @($Lines | Select-Object -First $script:CheckHeaderScanLines | Where-Object { $_ -match $script:CheckHeaderPattern }) | Select-Object -First 1
+    if (-not $line) { throw "Check '$Name' has no '# check: Apps=... Variant=... NeedsPack=... EstimateSeconds=...' header line in its first $($script:CheckHeaderScanLines) lines." }
+    $fields = @{}
+    foreach ($m in [regex]::Matches([regex]::Match($line, $script:CheckHeaderPattern).Groups[1].Value, '(\w+)=("[^"]*"|\S+)')) { $fields[$m.Groups[1].Value] = $m.Groups[2].Value.Trim('"') }
+    foreach ($key in $fields.Keys) { if ($script:CheckHeaderFields -cnotcontains $key) { throw "Check '$Name': unknown header field '$key' (known: $($script:CheckHeaderFields -join ', '))." } }
+    foreach ($key in 'Apps', 'NeedsPack', 'Variant') { if (-not $fields.ContainsKey($key)) { throw "Check '$Name': header field $key is missing." } }
+    if (-not $fields.ContainsKey('EstimateSeconds') -and -not $fields.ContainsKey('PerRunSeconds')) { throw "Check '$Name': header needs EstimateSeconds (or PerRunSeconds)." }
+    $entry = @{ Apps = @($fields['Apps'] -split ','); NeedsPack = ($fields['NeedsPack'] -ceq 'true'); Variant = $fields['Variant']; Blocked = $null }
+    if ($fields.ContainsKey('EstimateSeconds')) { $entry.EstimateSeconds = [int]$fields['EstimateSeconds'] }
+    if ($fields.ContainsKey('PerRunSeconds')) { $entry.PerRunSeconds = [int]$fields['PerRunSeconds'] }
+    if ($fields.ContainsKey('Blocked')) { $entry.Blocked = $fields['Blocked'] }
+    return $entry
+}
+
+function Get-CheckCatalogue([string]$ChecksDir) {
+    $catalogue = [ordered]@{}
+    foreach ($file in Get-ChildItem $ChecksDir -Filter '*.ps1' -File | Where-Object { $_.Name -notlike '_*' } | Sort-Object Name) {
+        $name = $file.BaseName
+        $catalogue[$name] = Read-CheckHeader $name @(Get-Content $file.FullName -TotalCount $script:CheckHeaderScanLines)
+    }
+    return $catalogue
+}
+
+# Name -> Apps, Variant, EstimateSeconds / PerRunSeconds, NeedsPack, Blocked: from the header line of each check file (above).
+$script:Catalogue = Get-CheckCatalogue $PSScriptRoot
+
+# Slice 225 item 10: the arguments run-checks passes to one check script. Only cold-start takes the run options (-Runs, -Preset, -Text from -FirstText, -DropCaches).
+function Get-CheckArguments([string]$Name, [string]$Phone, [string]$App, [int]$Runs, [string]$FirstRead, [string]$FirstText, [bool]$DropCaches) {
+    $splat = @{ Phone = $Phone; App = $App }
+    if ($Name -ceq 'cold-start') {
+        $splat.Runs = $Runs
+        $splat.Preset = $FirstRead
+        if ($FirstText) { $splat.Text = $FirstText }
+        if ($DropCaches) { $splat.DropCaches = $true }
+    }
+    return $splat
+}
+
+# Slice 225 item 2: a check that changes device-wide state (a setting the user sees without opening the app) must start the device-side restore first, so a lost link heals by itself.
+# Whole-device network changes (svc wifi/data, airplane mode) are never allowed in a check at all: the adb link is wireless.
+$script:DeviceWideChangePattern = '(?i)(\bsvc\W+(wifi|data)\b|airplane|device_config\W+put\b|compat\W+enable\b|settings\W+put\W+global\b|\bnetpolicy\b)'
+$script:WholeDeviceNetworkPattern = '(?i)(\bsvc\W+(wifi|data)\b|airplane)'
+$script:DeviceRestoreCall = 'Start-DeviceRestore'
+
+# Pure: the source with its comments removed (help blocks and # lines), so a description that names a command is not mistaken for a call.
+function Remove-PowerShellComments([string]$Source) {
+    $noBlocks = [regex]::Replace($Source, '(?s)<#.*?#>', '')
+    return (($noBlocks -split "`r?`n" | ForEach-Object { $_ -replace '^\s*#.*$', '' }) -join "`n")
+}
+
+# Pure: $null when the check is fine, else why not. $Source is the text of checks/<name>.ps1.
+function Test-CheckRestoresFirst([string]$Name, [string]$Source) {
+    $code = Remove-PowerShellComments $Source
+    $change = [regex]::Match($code, $script:DeviceWideChangePattern)
+    if (-not $change.Success) { return $null }
+    if ($change.Value -match $script:WholeDeviceNetworkPattern) { return "${Name}: '$($change.Value)' changes the whole device's network, which would cut the wireless adb link; cut the dev app's network instead (Set-AppNetworkBlocked)" }
+    $restore = $code.IndexOf($script:DeviceRestoreCall, [StringComparison]::Ordinal)
+    if ($restore -lt 0 -or $restore -gt $change.Index) { return "${Name}: changes device-wide state ('$($change.Value)') without calling $($script:DeviceRestoreCall) before it" }
+    return $null
 }
 
 # One row per requested check, in order, duplicates dropped: Status Pending (runs) or Skipped with the reason. An unknown name throws and lists the known ones.
@@ -707,7 +764,22 @@ function Format-BuildsStartLine($Builds, $Plans) {
     return "starting builds: $(@($parts) -join '; ')"
 }
 
-function New-RunStatus([string]$App, [datetime]$Now, $Builds, $Plans, $Rows, [string]$Running, [string]$Waiting, [string]$Installed, [bool]$Finished = $false) {
+# Slice 225 item 5: the status and build-log files of a run are named after the checkout (its folder name and a short hash of its full path), so one checkout's 10-minute check can never read
+# another checkout's stalled build as its own (s209's Debug build was read as s214's). The files also record the checkout path and the run id.
+$script:CheckoutTagHashChars = 6
+function Get-CheckoutTag([string]$RepoRoot) {
+    $full = "$RepoRoot".TrimEnd('\', '/')
+    $sha = [Security.Cryptography.SHA1]::Create()
+    try { $hash = ($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($full.ToLowerInvariant())) | ForEach-Object { $_.ToString('x2') }) -join '' } finally { $sha.Dispose() }
+    $leaf = (Split-Path $full -Leaf) -replace '[^\w.-]', '_'
+    return "$leaf-$($hash.Substring(0, $script:CheckoutTagHashChars))"
+}
+
+function Get-StatusFileName([string]$Prefix, [string]$RepoRoot, [string]$Extension = 'json') {
+    return "$Prefix-$(Get-CheckoutTag $RepoRoot).$Extension"
+}
+
+function New-RunStatus([string]$App, [datetime]$Now, $Builds, $Plans, $Rows, [string]$Running, [string]$Waiting, [string]$Installed, [bool]$Finished = $false, [string]$Checkout = '', [string]$RunId = '') {
     $checks = foreach ($plan in $Plans) {
         $row = @($Rows | Where-Object { $_.Name -ceq $plan.Name }) | Select-Object -First 1
         $state = if ($row) { $row.Status } elseif ($plan.Status -ceq $script:StatusSkipped) { $script:StatusSkipped } elseif ($plan.Name -ceq $Running) { 'running' } elseif ($Waiting -and $Waiting -like "*$($plan.Name)*") { 'waiting' } else { 'pending' }
@@ -716,7 +788,7 @@ function New-RunStatus([string]$App, [datetime]$Now, $Builds, $Plans, $Rows, [st
     }
     $buildStates = [ordered]@{}
     foreach ($variant in @($script:VariantDebug, $script:VariantAot)) { $buildStates[$variant] = [ordered]@{ state = $Builds[$variant].State; failure = $Builds[$variant].Failure } }
-    return [ordered]@{ app = $App; updatedUtc = (ConvertTo-DeadlineText $Now); installedVariant = $Installed; finished = $Finished; waiting = $Waiting; builds = $buildStates; checks = @($checks) }
+    return [ordered]@{ app = $App; checkout = $Checkout; runId = $RunId; updatedUtc = (ConvertTo-DeadlineText $Now); installedVariant = $Installed; finished = $Finished; waiting = $Waiting; builds = $buildStates; checks = @($checks) }
 }
 
 # ---- short-lines (Slice 220): the guard's Debug probe lines (one per arm) and the NaN / retry / rescue / gave-up lines of one read (no text in any of them).

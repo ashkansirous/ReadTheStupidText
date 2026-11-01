@@ -5,7 +5,8 @@
   -Take -Owner <name> [-Minutes 120]  writes the lease (renews it when the same owner holds it); exits 4 naming the holder and its expiry when another owner holds it.
   -Renew -Owner <name> [-Minutes 120] moves the expiry of the lease this owner holds to that many minutes from now; exits 4 when someone else holds it or nobody does.
                                       Scripts also renew the caller's own lease by themselves when under 15 minutes remain.
-  -Release -Owner <name>              removes the lease; exits 4 when another owner holds a live one. An expired lease is free.
+  -Release -Owner <name>              removes the lease; exits 4 when another owner holds a live one. An expired lease is free. Then (Slice 225) writes back the stay_on_while_plugged_in value
+                                      recorded when this owner took the lease (nothing recorded by this owner: nothing changed). The screen is left to the phone's own timeout.
   -Show                               prints who holds the phone, or that it is free. A corrupt lease file is named as such, with its age and when it frees itself (Slice 216).
   -Clear -Corrupt                     removes the lease file only when it is corrupt (does not parse); a valid lease, live or expired, is never touched. Exits 0 when the file was cleared or there was nothing to clear. With no phone connected it checks every phone lease file instead (no pairing needed).
   The lease is a file in <worktrees folder>\.phone\ (one per phone, keyed by `getprop ro.serialno`, not by the adb name), taken under a named mutex and written through a temp file and a rename. Scripts that touch the phone (audio-timing,
@@ -39,6 +40,7 @@ if ($Clear) {
     exit $(if ($unreadable.Count) { 1 } else { 0 })
 }
 if (-not $Serial) { Write-PairingAsk; exit 2 }
+$adbSerial = $Serial
 $Serial = Get-PhoneLeaseKey $Serial  # the phone's own serial number, the same whichever adb name it was found under
 $held = Read-Lease $Serial
 if ($Show) {
@@ -56,7 +58,13 @@ if ($Clear) {
     exit $(if ($result -eq 'Unreadable') { 1 } else { 0 })
 }
 if ($Take) {
+    $wasMine = [bool]($held -and $held.Owner -ceq $Owner)
     if (-not (Request-Lease $Serial $Owner $Minutes)) { Write-Host "Phone $Serial is already leased by $(Format-LeaseHolder (Read-Lease $Serial)). Not taking it."; exit $script:ExitLeaseHeld }
+    if (-not $wasMine) {
+        # Review 2: the screen timeout as it is at the moment this owner takes the phone; -Release puts it back.
+        try { if (Save-StayOnForLease $adbSerial $Serial $Owner) { Write-Host "Recorded $($script:StayOnSetting) for '$Owner'; -Release writes it back." } }
+        catch { Write-Host "WARNING: could not record the screen timeout: $($_.Exception.Message)" }
+    }
     Write-Host "Phone $Serial leased to '$Owner' for $Minutes min. Set `$env:$($script:LeaseOwnerVariable) = '$Owner' in the session that runs the phone scripts."
     exit 0
 }
@@ -70,6 +78,7 @@ if ($Renew) {
     Write-Host "Phone $Serial lease of '$Owner' renewed for $Minutes min."
     exit 0
 }
-if (-not (Remove-Lease $Serial $Owner)) { Write-Host "Phone $Serial is leased by $(Format-LeaseHolder (Read-Lease $Serial)), not by '$Owner'. Not releasing it."; exit $script:ExitLeaseHeld }
+# Slice 225 item 11: the holder gives the screen timeout back (the value recorded when the lease was taken, and only if the phone still holds the value this tooling set), then releases (Close-PhoneLease; a restore failure is said, never a failed release). The screen itself is left alone.
+if (-not (Close-PhoneLease $adbSerial $Serial $Owner)) { Write-Host "Phone $Serial is leased by $(Format-LeaseHolder (Read-Lease $Serial)), not by '$Owner'. Not releasing it."; exit $script:ExitLeaseHeld }
 Write-Host "Phone $Serial released by '$Owner'."
 exit 0

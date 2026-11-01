@@ -52,7 +52,8 @@ function Build-Apk([string]$Dir, [string]$Key) {
     $apkDir = Join-Path (Split-Path $project) 'bin\Debug\net10.0-android\android-x64'
     # Remove old signed APKs first, so the one found afterwards is certainly from this build.
     Get-ChildItem $apkDir -Filter $apkFilter -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force
-    dotnet build $project -f net10.0-android -c Debug -p:RuntimeIdentifier=android-x64 `
+    # Slice 225 item 23: --disable-build-servers, so no VBCSCompiler or MSBuild node outlives the build and holds the worktree.
+    dotnet build $project -f net10.0-android -c Debug --disable-build-servers -p:RuntimeIdentifier=android-x64 `
         -p:EmbedAssembliesIntoApk=true -p:IncludeWindows=false -p:AndroidPackageFormat=apk "-p:ApplicationId=$($cfg.Package)"
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
     $built = Get-ChildItem $apkDir -Filter $apkFilter -Recurse | Sort-Object LastWriteTime -Descending | Select-Object -First 1

@@ -1,3 +1,4 @@
+# check: Apps=rtst EstimateSeconds=90 NeedsPack=true Variant=debug
 <#
 .SYNOPSIS
   voice: pick a voice through the Debug `set-voice` hook (RTST, Slice 209, Slice 213 runner).

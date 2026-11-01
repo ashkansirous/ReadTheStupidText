@@ -281,7 +281,7 @@ public sealed class MobileVoicePackService : IVoicePackService
                 return StalePartialScan.Empty;
             }
 
-            IReadOnlyList<StalePartialDecision> decisions = DecideAll(partials, catalog.Packs, languages());
+            IReadOnlyList<StalePartialDecision> decisions = StalePartialDecider.DecideAll(partials, catalog.Packs, languages());
             int deleted = await DeleteUnwantedAsync(decisions, catalog.Packs, languages, cancellationToken).ConfigureAwait(false);
             string[] resumable = [.. decisions.Where(d => d.Action == StalePartialAction.Resume).Select(d => d.PackId)];
             foreach (string packId in resumable)
@@ -299,21 +299,6 @@ public sealed class MobileVoicePackService : IVoicePackService
     }
 
     private static readonly TimeSpan StalePartialCatalogAge = TimeSpan.FromHours(6);
-
-    private static IReadOnlyList<StalePartialDecision> DecideAll(IEnumerable<FoundPartial> found, IReadOnlyList<PackInfo> packs, IReadOnlyCollection<string> languages)
-    {
-        // The wanted packs are exactly the ones the app's own start picks for each language (VoicePackSelector, OcrPackSelector): one source of truth, so a
-        // pack the start would never resume is not "wanted" and a selected pack is never deleted. A translation pair, Dino's storyteller voice and a scan
-        // pack of a language not asked for here (a scanned page can be in any language) are not decided by the settings seen here: their partial is kept.
-        IReadOnlySet<string> wanted = languages
-            .SelectMany(l => new[] { VoicePackSelector.Select(packs, l), OcrPackSelector.Select(packs, l) })
-            .OfType<PackInfo>().Select(p => p.Id).ToHashSet();
-        IReadOnlySet<string> undetermined = packs
-            .Where(p => p.Kind is PackKind.Translation or PackKind.Storyteller || (p.Kind == PackKind.Ocr && !wanted.Contains(p.Id)))
-            .Select(p => p.Id).ToHashSet();
-        IReadOnlyDictionary<string, string> versions = packs.GroupBy(p => p.Id).ToDictionary(g => g.Key, g => g.First().Version);
-        return StalePartialPolicy.Decide(found, wanted, versions, undetermined);
-    }
 
     private static List<FoundPartial> FindPartials()
     {
@@ -376,7 +361,7 @@ public sealed class MobileVoicePackService : IVoicePackService
             }
 
             var fresh = new FoundPartial(decision.FileName, new FileInfo(path).Length);
-            if (DecideAll([fresh], packs, languages()) is not [{ Action: StalePartialAction.Delete }])
+            if (StalePartialDecider.DecideAll([fresh], packs, languages()) is not [{ Action: StalePartialAction.Delete }])
             {
                 return false; // the settings or the file changed since the scan began
             }

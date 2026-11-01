@@ -16,6 +16,8 @@
   Slice 215: before every flow, and after a failed one, `pm path android` must answer and sys.boot_completed must be 1. If not, it prints `EMULATOR UNHEALTHY: <what>`, saves
   evidence (crash log, dumpsys meminfo, host free RAM and the qemu working set) under maestro-out\i<n>\unhealthy-*, restarts the emulator from a neutral folder and runs the flow once more.
   The second unhealthy check of a run exits 5 naming it.
+  Slice 225: -Flow takes a flow name (`-Flow record-page-shows-words`); a path to the yaml is reduced to its name. It also finds a flow under .maestro/<app>/needs-file/ (run by name only; push its file first).
+  The install check reads `pm list packages` one line per package; a stale Maestro driver is force-stopped before the ANR-dialog UI dump.
 #>
 param(
     [Parameter(Mandatory)][ValidateSet('rtst', 'dino', 'auto')][string]$App,
@@ -41,7 +43,7 @@ if ($App -eq 'auto') {
     if ($touched.Count -eq 0) { Write-Host 'NO ANDROID APP IS TOUCHED BY THIS CHANGE: no flows ran. That is a skip, not a test pass.'; exit 0 }
     $worst = 0
     foreach ($name in $touched) {
-        $flowArgs = if ($Flow) { @('-Flow', $Flow) } else { @() }
+        $flowArgs = if ($Flow) { @('-Flow', (Get-FlowName $Flow)) } else { @() }
         & $PSCommandPath -App $name -Instance $Instance -Install:$Install -LogTimeoutSeconds $LogTimeoutSeconds @flowArgs
         if ($LASTEXITCODE -ne 0) { $worst = 1 }
     }
@@ -90,7 +92,7 @@ function Wait-LogMarkers([string[]]$Expected) {
 # Returns the dialog's title text when one is on screen, else $null.
 function Get-AnrDialogXml {
     $ErrorActionPreference = 'Continue'
-    $xml = & $script:Adb -s $script:Serial shell uiautomator dump /dev/tty 2>&1 | Out-String
+    $xml = Get-UiDumpXml   # Slice 225 item 12: force-stops a stale Maestro driver first (its "Killed" breaks the dump)
     if ($xml -match "isn't responding|aerr_wait|aerr_close") { return $xml }
     return $null
 }
@@ -204,7 +206,7 @@ function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File) {
     $exit = $LASTEXITCODE
     $problem = $null
     if ($exit -ne 0) {
-        $lines = $output -split "`r?`n" | Where-Object { $_.Trim() -and $_ -notmatch '[│╭╰]' }
+        $lines = $output -split "`r?`n" | Where-Object { $_.Trim() -and $_ -notmatch '[\u2502\u256D\u2570]' }
         $problem = "Maestro failed:`n" + (($lines | Select-Object -Last 10) -join "`n")
     }
     else {
@@ -285,13 +287,13 @@ try {
     $ErrorActionPreference = 'Continue'
     $installed = & $script:Adb -s $script:Serial shell pm list packages $packages[$App]
     $ErrorActionPreference = 'Stop'
-    $installProblem = Resolve-InstallProblem "$installed" $packages[$App]
-    if ($installProblem -and $installProblem -like 'EMULATOR UNHEALTHY*') { Write-Host $installProblem; $null = Confirm-EmulatorHealthy 'at the install check'; $installed = & $script:Adb -s $script:Serial shell pm list packages $packages[$App]; $installProblem = Resolve-InstallProblem "$installed" $packages[$App] }
+    $installProblem = Resolve-InstallProblem (Join-PmLines $installed) $packages[$App]   # Slice 225 item 4: one line per package, so two matching packages are both seen
+    if ($installProblem -and $installProblem -like 'EMULATOR UNHEALTHY*') { Write-Host $installProblem; $null = Confirm-EmulatorHealthy 'at the install check'; $installed = & $script:Adb -s $script:Serial shell pm list packages $packages[$App]; $installProblem = Resolve-InstallProblem (Join-PmLines $installed) $packages[$App] }
     if ($installProblem) { throw "$installProblem; run install-debug.ps1 -App $App (or pass -Install)." }
 
     $flowDir = Join-Path $script:RepoRoot ".maestro\$App"
-    $files = Get-ChildItem $flowDir -Filter '*.yaml' | Where-Object { -not $Flow -or $_.BaseName -eq $Flow } | Sort-Object Name
-    if (-not $files) { throw "No flows found in $flowDir$(if ($Flow) { " named $Flow" })." }
+    $files = @(Find-FlowFiles $flowDir $Flow)   # Slice 225: -Flow also finds a flow under needs-file/ and accepts a path
+    if (-not $files) { throw "No flows found in $flowDir$(if ($Flow) { " named $(Get-FlowName $Flow) (-Flow takes a flow name, e.g. record-page-shows-words, not a path)" })." }
 
     $total = [Diagnostics.Stopwatch]::StartNew()
     $activity = Start-FlowsActivity "flows-$App-i$Instance" $leaseOwner

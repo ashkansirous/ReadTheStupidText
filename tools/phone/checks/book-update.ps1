@@ -1,3 +1,4 @@
+# check: Apps=dino EstimateSeconds=240 NeedsPack=false Variant=debug
 <#
 .SYNOPSIS
   book-update: stage the store's newer version of a Dino book, cold-start, and time the apply (Slice 209 hook, Slice 181 apply, Slice 213 runner).

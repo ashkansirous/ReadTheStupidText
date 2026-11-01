@@ -14,7 +14,7 @@
   and a log next to it; a build whose log does not grow for 5 minutes is failed (stalled) and stopped. The two builds of one checkout run at the same time: each has its own `dotnet build --artifacts-path <worktree>\.artifacts\<app>-<variant>` (restore too), so they share no obj folder and touch nothing under src\*\obj or src\*\bin. Each check declares its build in the catalogue: cold-start needs 'aot' (every timing does) and WAITS for it (what it waits for is printed every 30 s); the others take
   whichever build is ready first, AOT preferred when it is ready. A run swaps on the phone at most once, Debug -> AOT, never back. A failed or stalled build FAILs the checks that need it with the
   build's last 20 log lines; the runner never skips for a missing build and never falls back silently. The budget covers the checks, not the time spent only waiting for a build.
-  <worktrees>.phone\run-status.json (each build, each check, installedVariant, updatedUtc) is rewritten at every step, every 30 s while waiting and by the checks' wait loops, so a stuck or failed build is
+  <worktrees>.phone\run-status-<checkout>.json (Slice 225: every status and build log file is named after the checkout, folder name plus a short hash of its path, and records the checkout path and run id; the run prints its path at the start) (each build, each check, installedVariant, updatedUtc) is rewritten at every step, every 30 s while waiting and by the checks' wait loops, so a stuck or failed build is
   visible from outside. Every timing and every table row carries its variant (aot/debug).
   Order: take the phone lease (the same per-phone lease as lease.ps1, owner $env:RTST_DEVICE_OWNER, else $env:RTST_PHONE_OWNER, else run-checks-<phone key>; it is
   exported as RTST_PHONE_OWNER for the scripts it starts and released at the end unless the caller already held it; a lease the caller holds is only ever extended,
@@ -30,7 +30,7 @@
   by someone else or a run with your own owner name is still alive (-Force starts anyway, Slice 221), 5 preflight NO-GO, 6 the build failed, 7 the runner itself broke (install, setup, a dropped link), 8 -NoBuild and the build cache lacks a variant a check needs
   (prints `cache missed for <app> <variant>, key <k>: run -Build first`, the table with every check SKIP, and run-status.json; starts no process and takes no lease; also set by RTST_NO_BUILD=1). Every path prints the table, with each check's
   outcome or its SKIP reason; cold-start reports MEASURED (numbers, no pass criterion), never PASS. Wireless adb only. Self-test with no device: test-run-checks.ps1.
-  Checks live in tools/phone/checks/<name>.ps1 (a check is added as a file there and a line in the catalogue in checks/_lib.ps1, not as a brief).
+  Checks live in tools/phone/checks/<name>.ps1 (a check is added as one file there, with a `# check:` header line on top that the catalogue is read from (Slice 225), not as a brief).
 #>
 param(
     [Parameter(Mandatory)][ValidateSet('rtst', 'dino')][string]$App,
@@ -49,6 +49,7 @@ param(
     [string]$Serial
 )
 $script:RunStart = Get-Date   # the budget clock: it runs from here, so every wait before the checks counts
+$script:RunId = [guid]::NewGuid().ToString('N').Substring(0, 8)   # Slice 225 item 5: written into run-status and printed at the start
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 . (Join-Path $PSScriptRoot 'checks\_lib.ps1')
@@ -88,12 +89,13 @@ function Get-PhoneStatusDir {
     $null = New-Item -ItemType Directory -Force $dir
     return $dir
 }
-function Get-BuildStatusPath([string]$V) { return Join-Path (Get-PhoneStatusDir) "build-$App-$V.json" }
-function Get-BuildLogPath([string]$V) { return Join-Path (Get-PhoneStatusDir) "build-$App-$V.log" }
+# Slice 225 item 5: every file is named after this checkout (Get-CheckoutTag), so a run reads only its own statuses; the files also hold the checkout path and the run id.
+function Get-BuildStatusPath([string]$V) { return Join-Path (Get-PhoneStatusDir) (Get-StatusFileName "build-$App-$V" $script:RepoRoot) }
+function Get-BuildLogPath([string]$V) { return Join-Path (Get-PhoneStatusDir) (Get-StatusFileName "build-$App-$V" $script:RepoRoot 'log') }
 function Get-RunStatusPath {
     $override = [Environment]::GetEnvironmentVariable($script:RunStatusEnv)   # the self-test points it at a temp file
     if ($override) { return $override }
-    return Join-Path (Get-PhoneStatusDir) 'run-status.json'
+    return Join-Path (Get-PhoneStatusDir) (Get-StatusFileName 'run-status' $script:RepoRoot)
 }
 
 function Find-VariantApk([string]$V, [string]$Key) {
@@ -113,13 +115,26 @@ function Get-LastLogLine([string]$V) {
     return $null
 }
 
+# Slice 225 item 6: a failed or stalled build's log is copied to <log>.failed.log, which the next (successful) build does not overwrite, so the cause can be read afterwards.
+# Never throws. Prints the path so the run output names it.
+function Save-FailedBuildLog([string]$V, [string]$Reason) {
+    try {
+        $log = Get-BuildLogPath $V
+        $kept = "$log.failed.log"
+        $lines = @("failed build kept $(ConvertTo-DeadlineText (Get-Date)) ($Reason)")
+        foreach ($path in @($log, "$log.err")) { if (Test-Path $path) { $lines += @("--- $path") + @(Get-Content $path -ErrorAction SilentlyContinue) } }
+        [IO.File]::WriteAllLines($kept, [string[]]$lines)
+        Write-Host "build ${V}: failed ($Reason); its log is kept at $kept"
+    } catch { Write-Host "build ${V}: could not keep the failed log: $($_.Exception.Message)" }
+}
+
 # The build's status file (this variant's): state queued/building/ok/failed, start time, heartbeat, last log line, log path. Written at each change and every 30 s while dotnet runs.
 function Write-BuildStatus([string]$V, [string]$State, [string]$ErrorText = $null) {
     $now = Get-Date
     if (-not $script:BuildStartedAt) { $script:BuildStartedAt = $now }
     if ($State -ceq $script:StateBuilding -and -not $script:BuildingStartedAt) { $script:BuildingStartedAt = $now }
     $started = if ($script:BuildingStartedAt) { $script:BuildingStartedAt } else { $script:BuildStartedAt }
-    $status = [ordered]@{ app = $App; variant = $V; state = $State; startedUtc = (ConvertTo-DeadlineText $started)
+    $status = [ordered]@{ app = $App; variant = $V; checkout = "$($script:RepoRoot)"; state = $State; startedUtc = (ConvertTo-DeadlineText $started)
         heartbeatUtc = (ConvertTo-DeadlineText $now); lastLine = (Get-LastLogLine $V); log = (Get-BuildLogPath $V); error = $ErrorText; pid = $PID }
     [IO.File]::WriteAllText((Get-BuildStatusPath $V), ($status | ConvertTo-Json))
 }
@@ -175,7 +190,7 @@ function Invoke-BuildMode {
         Write-BuildStatus $Variant $script:StateQueued
         $activity = Start-Activity "build-$App-$(Get-CachePlatform $Variant)"
         Build-UnderLocks $Variant $key
-    } catch { Write-BuildStatus $Variant $script:StateFailed $_.Exception.Message; Write-Host "BUILD FAILED: $($_.Exception.Message)"; return $script:ExitBuildFailed }
+    } catch { Write-BuildStatus $Variant $script:StateFailed $_.Exception.Message; Write-Host "BUILD FAILED: $($_.Exception.Message)"; Save-FailedBuildLog $Variant $_.Exception.Message; return $script:ExitBuildFailed }
     finally { if ($activity) { Stop-Activity $activity } }
     if (-not (Find-VariantApk $Variant (Get-BuildKey))) { Write-BuildStatus $Variant $script:StateFailed 'the cache has no APK for the current inputs'; Write-Host 'The build finished but the cache has no APK for the current inputs (the files changed during the build?).'; return $script:ExitBuildFailed }
     Write-BuildStatus $Variant $script:StateOk
@@ -246,6 +261,7 @@ function Get-BuildView($Record) {
     $view = [pscustomobject]@{ State = $resolved.State; Failure = $null }
     if ($resolved.State -ceq $script:StateFailed) {
         $view.Failure = Format-BuildFailure $v $resolved.Reason (Get-BuildLogTail $v)
+        Save-FailedBuildLog $v $resolved.Reason
         if ($Record.Process -and -not $Record.Process.HasExited) { & taskkill.exe /T /F /PID $Record.Process.Id | Out-Null }
     }
     if ($resolved.State -ceq $script:StateOk -or $resolved.State -ceq $script:StateFailed) { $Record.Final = $view }
@@ -369,7 +385,7 @@ function Invoke-PrepareSteps([string]$Phone) {
 
 function Invoke-PrepareGuarded([string]$Phone, $State) {
     Initialize-StageLease $State $Phone
-    $heldBy = Take-PhoneLease $State
+    $heldBy = Take-PhoneLease $State $Phone
     if ($heldBy) { Write-Host "PREPARE STOPPED: waited too long for $heldBy (the phone lease)"; return $script:ExitLeaseHeldByOther }
     $env:RTST_PHONE_OWNER = $State.Owner
     $State.Awake = Start-KeepAwake $Phone
@@ -418,8 +434,7 @@ function Get-BudgetEnd { return (Get-BudgetStart $script:RunStart $script:Waited
 
 # Runs one check script in this process; its deadline is the budget's end. A throw is a FAIL (or TIMEOUT when the budget ended it).
 function Invoke-OneCheck($Row, [string]$Phone, [datetime]$BudgetEnd, [string]$RunVariant) {
-    $splat = @{ Phone = $Phone; App = $App }
-    if ($Row.Name -eq 'cold-start') { $splat.Runs = $Runs; $splat.Preset = $FirstRead; if ($FirstText) { $splat.Text = $FirstText }; if ($DropCaches) { $splat.DropCaches = $true } }
+    $splat = Get-CheckArguments $Row.Name $Phone $App $Runs $FirstRead $FirstText $DropCaches.IsPresent   # Slice 225 item 10: pure, so the self-test sees -FirstText arrive as the check's -Text
     Set-CheckDeadline $BudgetEnd   # the stage keeps it set (children read it from the environment) until the cleanup is done
     $started = Get-Date; $output = $null; $failure = $null
     try { $output = @(& (Join-Path $PSScriptRoot "checks\$($Row.Name).ps1") @splat) } catch { $failure = $_.Exception.Message }
@@ -459,7 +474,7 @@ function Confirm-OwnLease($State) {
 # ---- run-status.json: what the coordinator reads from outside (each build, each check, the last update). Rewritten at every step, every 30 s while waiting, and by the checks' wait loops.
 function Publish-RunStatus($Plans, $State, [string]$Running, [string]$Waiting) {
     $views = Get-BuildViews $script:BuildJobs
-    $status = New-RunStatus $App (Get-Date) $views $Plans @($State.Rows) $Running $Waiting $script:InstalledVariant $script:RunFinished
+    $status = New-RunStatus $App (Get-Date) $views $Plans @($State.Rows) $Running $Waiting $script:InstalledVariant $script:RunFinished "$($script:RepoRoot)" $script:RunId
     [IO.File]::WriteAllText((Get-RunStatusPath), ($status | ConvertTo-Json -Depth 6))
     [Environment]::SetEnvironmentVariable($script:RunStatusEnv, (Get-RunStatusPath))
 }
@@ -554,7 +569,7 @@ function Close-DeviceStage([string]$Phone, $State) {
     Invoke-Cleanup 'force-stop the dev app' { if ($State.HoldsLease -and (Test-OwnsLease (Read-Lease $State.Key) $State.Owner)) { Invoke-Adb $Phone @('shell', 'am', 'force-stop', $package) | Out-Null } }
     Invoke-Cleanup 'release the quiet machine' { if ($State.Quiet) { Exit-QuietMachine $State.Quiet } }
     $env:RTST_PHONE_OWNER = $State.PreviousOwner
-    Invoke-Cleanup 'release the phone lease' { if ($State.HoldsLease -and -not $State.Mine) { Remove-Lease $State.Key $State.Owner | Out-Null } }
+    Invoke-Cleanup 'release the phone lease' { if ($State.HoldsLease -and -not $State.Mine) { Close-PhoneLease $Phone $State.Key $State.Owner | Out-Null } }
 }
 
 # What the stage holds, so the cleanup can release it whatever happened; no adb in here (the lease key is read in Initialize-StageLease, inside the guarded part).
@@ -572,11 +587,15 @@ function Initialize-StageLease($State, [string]$Phone) {
 }
 
 # $null once the lease is taken, else the holder; the wait is capped and counts against the budget.
-function Take-PhoneLease($State) {
+function Take-PhoneLease($State, [string]$Phone) {
     $wait = Get-BudgetPreWaitMinutes $script:RunStart $script:WaitedSeconds (Get-Date) $Budget
     $minutes = Get-OwnLeaseMinutes $State
     $ownRemaining = Get-OwnRemainingMinutes $State   # before the write: afterwards it would be the new length
     $heldBy = Wait-ForLease $State.Key $State.Owner $minutes $wait 'phone'
+    if (-not $heldBy -and -not $State.Mine) {
+        # Review 2: record the screen timeout only when this run itself takes the lease (a lease the caller already held is theirs to restore).
+        try { Save-StayOnForLease $Phone $State.Key $State.Owner | Out-Null } catch { Write-Host "WARNING: could not record the screen timeout: $($_.Exception.Message)" }
+    }
     if (-not $heldBy) { $State.HoldsLease = $true; Write-Host (Format-LeaseLengthNote $(if ($Prepare) { '-Prepare' } else { 'a timed run' }) $minutes ($Budget + $script:LeaseExtraMinutes) $ownRemaining) }
     return $heldBy
 }
@@ -619,7 +638,7 @@ function Get-InstallStopCode([string]$Reason) {
 
 function Invoke-GuardedStage($Plans, [string]$Phone, $State) {
     Initialize-StageLease $State $Phone
-    $heldBy = Take-PhoneLease $State
+    $heldBy = Take-PhoneLease $State $Phone
     if ($heldBy) { return (Stop-Stage $Plans $State "waited too long for $heldBy (the phone lease)" $script:ExitLeaseHeldByOther) }
     $env:RTST_PHONE_OWNER = $State.Owner
     if (-not (Confirm-OwnLease $State)) { return (Stop-Stage $Plans $State $script:LeaseLostReason $script:ExitLeaseHeldByOther) }
@@ -656,7 +675,7 @@ function Stop-CacheMissed($Plans, [string]$Line) {
     $rows = @(Get-FinalRows $Plans @() "not run: $Line")
     $views = @{}
     foreach ($v in @($script:VariantDebug, $script:VariantAot)) { $views[$v] = [pscustomobject]@{ State = $(if (Find-VariantApk $v (Get-BuildKey)) { $script:StateOk } else { $script:StateFailed }); Failure = $(if (Find-VariantApk $v (Get-BuildKey)) { $null } else { 'not cached; -NoBuild' }) } }
-    Invoke-Cleanup 'write the run status' { [IO.File]::WriteAllText((Get-RunStatusPath), ((New-RunStatus $App (Get-Date) $views $Plans $rows $null $null $null $true) | ConvertTo-Json -Depth 6)) }
+    Invoke-Cleanup 'write the run status' { [IO.File]::WriteAllText((Get-RunStatusPath), ((New-RunStatus $App (Get-Date) $views $Plans $rows $null $null $null $true "$($script:RepoRoot)" $script:RunId) | ConvertTo-Json -Depth 6)) }
     Write-Summary $rows
     return $script:ExitCacheMissed
 }
@@ -670,6 +689,7 @@ if (@($plans | Where-Object { $_.Status -eq $script:StatusPending }).Count -eq 0
     exit (Get-RunExitCode @(Get-FinalRows $plans @() 'not run'))
 }
 Write-Host (Format-RunHeader $App $plans)
+Write-Host "status files of this checkout ($($script:RepoRoot)), run $($script:RunId): $(Get-RunStatusPath)"   # Slice 225 item 5: another checkout's run has its own files
 if ($NoBuild -or $env:RTST_NO_BUILD -eq '1') {
     $noBuildKey = Get-BuildKey
     $missed = @(Get-NoBuildMiss $plans ([bool](Find-VariantApk $script:VariantDebug $noBuildKey)) ([bool](Find-VariantApk $script:VariantAot $noBuildKey)))
