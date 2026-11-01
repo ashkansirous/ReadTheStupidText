@@ -213,7 +213,8 @@ function Start-VariantBuilds($Plans, [bool]$NoStart = $false) {
             Remove-Item (Get-BuildStatusPath $v) -Force -ErrorAction SilentlyContinue
             $procLog = (Get-BuildLogPath $v) + $script:BuildProcessLogSuffix
             $arguments = @('-NoProfile', '-File', "`"$PSCommandPath`"", '-Build', '-App', $App, '-Variant', $v)
-            $record.Process = Start-Process $engine -ArgumentList $arguments -PassThru -WindowStyle Hidden -RedirectStandardOutput $procLog -RedirectStandardError "$procLog.err"
+            # Slice 241 item 5: detached (no inherited handles). Start-Process -Redirect... left the child holding the caller's own stdout pipe, so `run-checks ... 2>&1 | tail` waited ~8 min for the AOT build (2026-11-01).
+            $record.Process = Start-DetachedProcess $engine ($arguments -join ' ') $procLog "$procLog.err"
             Write-Host "building $App $v in the background for this run, about $($script:BuildMinutes) min if not cached by another agent (status $(Get-BuildStatusPath $v), log $(Get-BuildLogPath $v))"
         }
         $builds[$v] = $record

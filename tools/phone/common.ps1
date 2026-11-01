@@ -4,6 +4,7 @@ if (-not $script:SdkRoot) { throw 'ANDROID_HOME (or ANDROID_SDK_ROOT) is not set
 $script:Adb = Join-Path $script:SdkRoot 'platform-tools\adb.exe'
 $script:RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 . (Join-Path $PSScriptRoot 'quoting.ps1')
+. (Join-Path $PSScriptRoot '..\detached-process.ps1')  # Slice 241 item 5: background builds that hold none of the caller's handles
 # Wireless debugging shows up as `adb-<serial>-<suffix>._adb-tls-connect._tcp` or `<ip>:<port>`; emulators and USB serials never do.
 $script:WirelessPattern = '^(adb-.+_adb-tls-connect\._tcp|(?!127\.)\d{1,3}(\.\d{1,3}){3}:\d+)$'
 

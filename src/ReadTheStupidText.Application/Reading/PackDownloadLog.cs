@@ -20,6 +20,7 @@ public static class PackDownloadLog
     public const string RetryEvent = "retry";
     public const string DoneEvent = "done";
     public const string FailedEvent = "failed";
+    public const string ProgressEvent = "progress";
     public const string ResumeEvent = "resume";
     public const string WaitingEvent = "waiting";
     public const string RetryReason = "retry";
@@ -39,6 +40,9 @@ public static class PackDownloadLog
     public static void Start(string packId, long offset) => Write($"{StartEvent} pack={packId} offset={offset}");
 
     public static void Range(string packId, long offset) => Write($"{RangeEvent} pack={packId} offset={offset}");
+
+    /// <summary>Slice 241: the bytes in the partial file so far, at most every <see cref="PackStallWatch.ProgressInterval"/> while the body moves.</summary>
+    public static void Progress(string packId, long bytes) => Write($"{ProgressEvent} pack={packId} bytes={bytes}");
 
     public static void Stall(string phase, long bytes, string? packId = null) =>
         Write(packId is null ? $"{StallEvent} phase={phase} bytes={bytes}" : $"{StallEvent} pack={packId} phase={phase} bytes={bytes}");

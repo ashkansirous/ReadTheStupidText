@@ -583,3 +583,63 @@ test('Slice 222: the marker job never moves or adds an older marker', () => {
     assert.match(job, /not adding an older marker/);
     assert.doesNotMatch(job, /--force|-X PATCH/);
 });
+
+// ---- "Changed after merge" (Slice 239): the store upload is its own workflow, release.yml ignores store-book folders ----
+/** GitHub glob: `**` crosses folders (also a lone `**`), `*` stays inside one. (matchesPattern's `**` is for the narrower patterns of GROUPS.) */
+function globMatches(file, pattern) {
+    const body = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*\*/g, '@@').replace(/\*/g, '[^/]*').replace(/@@/g, '.*');
+    return new RegExp(`^${body}$`).test(file);
+}
+
+/** GitHub `paths` semantics for one file: the last matching pattern decides (a `!` pattern excludes), no match = no run. */
+function pushRuns(paths, file) {
+    let runs = false;
+    for (const pattern of paths) {
+        const negated = pattern.startsWith('!');
+        if (globMatches(file, negated ? pattern.slice(1) : pattern)) runs = !negated;
+    }
+    return runs;
+}
+
+function pushPathsOf(workflow) {
+    const lines = readFileSync(`${WORKFLOWS_DIR}${workflow}`, 'utf8').split(/\r?\n/);
+    const start = lines.findIndex((line) => line === '    paths:');
+    assert.ok(start >= 0, `${workflow}: no push paths`);
+    const out = [];
+    for (const line of lines.slice(start + 1)) {
+        const item = /^      - '(.+)'$/.exec(line);
+        if (!item) break;
+        out.push(item[1]);
+    }
+    return out;
+}
+
+test('release.yml ignores store-book folders but still runs for starters, code and mixed pushes', () => {
+    const paths = pushPathsOf('release.yml');
+    assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/story.md'), false);
+    assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/pictures/1.jpg'), false);
+    for (const stem of STARTER_STEMS) assert.equal(pushRuns(paths, `content/dino/${stem}/book.json`), true, stem);
+    for (const file of ['src/DinoReader.Core/Parser.cs', 'docs/plan/x.md', '.github/workflows/release.yml']) assert.equal(pushRuns(paths, file), true, file);
+    const mixed = ['content/dino/x-marks-the-treasure/story.md', 'src/DinoReader.Core/Parser.cs'];
+    assert.equal(mixed.some((file) => pushRuns(paths, file)), true);
+});
+
+test('dino-store.yml runs for every book folder and workflow_dispatch, and has its own concurrency group', () => {
+    const paths = pushPathsOf('dino-store.yml');
+    assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/story.md'), true);
+    for (const stem of STARTER_STEMS) assert.equal(pushRuns(paths, `content/dino/${stem}/book.json`), true, stem);
+    const text = readFileSync(`${WORKFLOWS_DIR}dino-store.yml`, 'utf8');
+    assert.match(text, /group: dino-store\r?\n\s+cancel-in-progress: false/);
+    assert.match(text, /workflow_dispatch:/);
+    assert.doesNotMatch(readFileSync(`${WORKFLOWS_DIR}release.yml`, 'utf8'), /publish-store-books/);
+    assert.match(text, /schedule:\r?\n\s+- cron: /);
+    assert.match(text, /publish-store-books\.mjs --delist\r?\n/);
+    assert.doesNotMatch(text, /content-changed/);
+});
+
+test('dino-store.yml push paths cover every path of the dinostore group (one source of truth) plus its own extras', () => {
+    const paths = pushPathsOf('dino-store.yml');
+    const probe = (entry) => (entry.endsWith('/') ? `${entry}sub/file.x` : entry);
+    for (const entry of GROUPS.dinostore.include) assert.equal(pushRuns(paths, probe(entry)), true, `dinostore path not covered by dino-store.yml: ${entry}`);
+    for (const extra of ['src/DinoReader.App/ShippedTitles.cs', '.github/scripts/dino-starters.json', '.github/workflows/dino-store.yml']) assert.equal(pushRuns(paths, extra), true, extra);
+});

@@ -1,6 +1,6 @@
 # Slice 239 — Dino: adding, changing or deleting a store story runs no pipeline but the upload
 
-*Planned 2026-11-01, widened the same day.* From the user, after the Freddy and back-cover releases each built the
+*Built 2026-11-01, merged as PR #700 (1882f2ee), follow-up PR #703 (own `dino-store.yml`, daily run). Planned 2026-11-01, widened the same day.* From the user, after the Freddy and back-cover releases each built the
 Dino iOS app: "why there is an ios build? I just changed the text and image of the stories in the store!", then:
 "change the fucking code! Adding/updating/deleting a new story should never cause the build pipelines to run. No
 tests should be executed! no other shit like that either!"
@@ -55,3 +55,9 @@ tests should be executed! no other shit like that either!"
   `publish-store`; the live store shows the new version.
 - Android emulator: a store book downloaded in another app language shows its translated title on the shelf and the
   reading screen.
+
+## Changed after merge (2026-11-01)
+
+- The store upload moved out of `release.yml` into `.github/workflows/dino-store.yml` (same steps, secrets and delist logic; own concurrency group `dino-store`). Reason: `publish-store` shared `release.yml`'s group and a story merge waited up to an hour behind another release's iOS build.
+- `release.yml` push `paths`: `**`, `!content/dino/**`, then the four starter folders. A store-only push starts no `release.yml` run; a starter push runs both (app build + store copy); a mixed push runs both. `ship-targets.mjs` still computes `dinostore` but release.yml no longer reads it.
+- `dino-store.yml` triggers: `content/dino/**`, `tools/DinoReader.BookBuilder/**`, the three upload scripts, itself, and `workflow_dispatch`. The Dino suite no longer gates the upload.

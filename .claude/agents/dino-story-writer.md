@@ -41,6 +41,8 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
    List each character with its animal in your report; a wrong one is silent or sounds wrong.
    Back cover (Slice 237): set `storyBy` in the book's `book.json` (the original author's name, checked; `"traditional"` for a tale nobody owns; the user's own books: the user's name,
    plus a co-author if there is one) and `retold: true` when the book retells someone else's story. The builder makes the silent credits page from them; never write it into `story.md`.
+   Store-card `credits` and `creditsByLanguage`: "free to share" (in any language) is only for retold public-domain tales; the user's own
+   books are not free to share and never carry it (user, 2026-11-01).
    Say in your report who you credited and how you know.
    Voices (Slice 156, Decision 161): the book, not the app, chooses each character's voice. Give every character an entry in the `cast` of the book's `book.json`
    (matched by character name; `dotnet run --project tools/DinoReader.BookBuilder -- dump-voices` prints a mechanical starting point): a suggested roster id from `CharacterRoster` (read the English list in `CharacterRosterEnglish.cs`; the ids

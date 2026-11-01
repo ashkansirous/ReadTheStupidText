@@ -229,6 +229,26 @@ function Test-TalkBackSettings {
     Assert-Equal 'helper: a flag that stays off is an error, not a silent pass' $true $threw
 }
 
+# Slice 241: the end-of-run summary of a real run (results held in a List[object], as run-flows keeps them) printed "Argument types do not match" in pwsh after the last PASS.
+function Test-FlowsSummary {
+    $results = New-Object System.Collections.Generic.List[object]
+    $results.Add([pscustomobject]@{ Name = 'a'; Seconds = 1; Problem = $null; Crash = @(); NotRun = $null })
+    $results.Add([pscustomobject]@{ Name = 'b'; Seconds = 1; Problem = 'boom'; Crash = @(); NotRun = $null })
+    $results.Add([pscustomobject]@{ Name = 'c'; Seconds = 0; Problem = $null; Crash = @(); NotRun = 'app crashed' })
+    Assert-Equal 'summary counts passed, failed and not run' 'dino: 1 passed, 1 failed, 1 not run (app crashed) in 2.5 s.' (Format-FlowsSummary 'dino' $results.ToArray() 2.5)
+    # The last flow of a run crashed (a native SIGSEGV): the result and the summary both name the flow and the crash line.
+    $last = New-Object System.Collections.Generic.List[object]
+    $last.Add([pscustomobject]@{ Name = 'ok'; Seconds = 1; Problem = $null; Crash = @(); NotRun = $null })
+    $last.Add([pscustomobject]@{ Name = 'record'; Seconds = 1; Problem = 'Maestro failed'; Crash = @('F libc    : Fatal signal 11 (SIGSEGV), code 1 in tid 9 (.NET TP Worker), pid 8 (uk.sirous.dinoreader.dbg)'); NotRun = $null })
+    $crashLines = @(Format-CrashSummary $last.ToArray())
+    Assert-Equal 'crash summary: one line for the crashed last flow' 1 $crashLines.Count
+    Assert-Equal 'crash summary: names the flow and the signal line' 'app crashed in record: F libc    : Fatal signal 11 (SIGSEGV), code 1 in tid 9 (.NET TP Worker), pid 8 (uk.sirous.dinoreader.dbg)' $crashLines[0]
+    Assert-Equal 'crash summary: nothing when no flow crashed' 0 @(Format-CrashSummary $results.ToArray()).Count
+    $source = Get-Content (Join-Path $PSScriptRoot 'run-flows.ps1') -Raw
+    Assert-Equal 'run-flows never takes @() of its List (pwsh 7.6 throws)' $false ($source -match '@\(\$results\)')
+    Assert-Equal 'run-flows exits non-zero on a script error' $true ($source -match '(?m)^trap \{[^}]*exit 1')
+}
+
 # Dot-sourced here, at script level (inside a function the functions would vanish with it). common.ps1 loads activity.ps1 and needs ANDROID_HOME only to
 # build paths, so a placeholder is enough in CI. Test-ConcurrencyLimit then points $script:ActivityDir at a temp folder.
 if (-not $env:ANDROID_HOME -and -not $env:ANDROID_SDK_ROOT) { $env:ANDROID_HOME = [IO.Path]::GetTempPath() }
@@ -242,6 +262,7 @@ Test-FlowSelection
 Test-DumpStopsMaestroDriver
 Test-TalkBackSettings
 Test-AdbBounded
+Test-FlowsSummary
 if ($DeviceKillCheck) { Invoke-DeviceKillCheck }
 
 if ($script:failed) { Write-Host "$($script:failed) check(s) failed."; exit 1 }

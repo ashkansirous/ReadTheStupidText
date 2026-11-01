@@ -26,7 +26,7 @@
  *   --check-content      (FIRST step) fails when a content folder's book.json kind is Starter but the folder is missing from dino-starters.json (a new starter must build the app), or the reverse.
  *   Package versions are never reused: right before uploading story-v<n>.dino of a hashed (pipeline-managed) book, the bucket is asked whether that exact object exists; if it does the built package
  *   is renamed to n+1 and meta.json rewritten (up to MAX_VERSION_BUMPS, then the book fails and no meta goes up). This makes the probe window's gap harmless. Only after that the package, then meta.json LAST.
- *   --delist             (only when the push changed something under content/dino/, or a manual run) a live story whose content folder is gone loses its listing, i.e. its meta.json only (packages stay for installed copies).
+ *   --delist             (dino-store.yml passes it on every run; the guards below make that safe) a live story whose content folder is gone loses its listing, i.e. its meta.json only (packages stay for installed copies).
  *                        Only stories this pipeline manages (the live meta.json carries a contentHash) and whose id has no content folder at all (an invalid book is skipped, not delisted) are delisted.
  *                        The ids are logged first (the dry-run line), then deleted; more than MAX_DELETIONS ids, or half the live list, is refused (a broken checkout, not a deletion).
  *

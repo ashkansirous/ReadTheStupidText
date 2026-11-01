@@ -19,7 +19,7 @@
  *   - the rest of Mobile.Shared/** (platform code both apps use)  -> android + ios + dinoapp
  *   - DinoReader.App/**, DinoReader.Core/**                       -> dinoapp (Slice 58/60; ships only with its own signing secrets)
  *   - DinoReader.Core / tests/DinoReader.Tests                    -> dinoreader (its tests; Core also rebuilds dinoapp)
- *   - store books (Slice 158, Slice 157): Core, content/dino/** (every book's text, voices, pictures and translations), the book builder, the upload scripts -> dinostore (publish-store only; never ships an app)
+ *   - store books (Slice 158, Slice 157): Core, content/dino/** (every book's text, voices, pictures and translations), the book builder, the upload scripts -> dinostore (dino-store.yml only; never ships an app)
  *   - Slice 239: a change under content/dino/<store book>/** (a new, changed or deleted folder) maps to dinostore ONLY: no Dino suite, no app, no PR check workflow. Only a STARTER's
  *     folder (a book bundled in the app, book.json "kind": "Starter"; listed in dino-starters.json, which a test keeps equal to the book.json kinds) also runs dinoreader (its suite
  *     runs `BookBuilder check`); a starter's rebuilt .dino sits under DinoReader.App/** and ships the app
@@ -206,7 +206,7 @@ export const GROUPS = {
     // Mobile.Shared's platform-neutral root: used by RTST on both OSes and by Dino Reader.
     sharedroot: { include: [SHARED], exclude: [`${SHARED}Platforms/`] },
     // Free store books (Slice 158, Decision 163): the texts, voices, pictures, translations, builders, the .dino format
-    // and the upload scripts. Starts release.yml's publish-store job; never cuts an app release by itself.
+    // and the upload scripts. dino-store.yml's push paths must cover this list (a node test checks it); never cuts an app release by itself.
     dinostore: {
         include: [
             'src/DinoReader.Core/',

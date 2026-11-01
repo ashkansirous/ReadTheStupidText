@@ -2,6 +2,12 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count.
 
+### Slice 239: Dino store book without an app build ([slice](slices/239-dino-store-book-without-app-build.md))
+
+- A real story-only PR shows no PR checks and, after merge, runs only `dino-store.yml` (no `release.yml`).
+- Delisting a deleted book on a real run.
+- A translated title for a newly added store book on an installed app, with no app update.
+
 ### Slice 232 part A: Dino landscape reading screen ([slice](slices/232-dino-landscape-every-screen.md))
 
 - Tablet landscape (no tablet AVD): the controls row under the card and its left edge.
@@ -10,6 +16,8 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Picture-only chip placement against frame 114 (the user's eye).
 - A window 600-700 dp on the short side choosing rail versus row.
 - Windows head in a wide window.
+- Portrait reading unchanged on iOS, Windows and tablets after `TransportRow`'s base class changed to `StackLayout` (shown only by two Android emulator flows).
+- Phone side margins (about 14 dp, mock 34/26) and tablet frame 127's title against the mock (the user's eye).
 
 ### Slice 225: Device-test tooling leftovers, night 2026-10-31-1301 ([slice](slices/225-device-tooling-leftovers-night-2026-10-31-1301.md))
 
@@ -21,7 +29,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Item 16 in the Debug app: the `[BookUpdate] ... forced entry dropped, recorded version put back` and `forced-apply mark expired` lines.
 - Item 3 (run-checks emulator path) not built.
 - Item 6: failed-build cause unknown (the log is now kept as `.failed.log`).
-- Item 17: the first CI run of the PSScriptAnalyzer step.
+- Item 21: a flow reading a TalkBack focus event (TalkBack on and off passed; the focus event was not read).
 
 ### Slice 230: Dino: say plainly that recordings stay on the phone, and restore brings them back ([slice](slices/230-dino-recordings-copy-and-restore-merge.md))
 
@@ -32,6 +40,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Windows head wording ("this computer").
 - The info icon (not drawn).
 - The failing-once check against the old APK (no old APK available), so the flow is not shown to fail before the change.
+- Native-speaker check of the new strings in the 14 machine-drafted locales (Farsi and Arabic right to left).
 
 ### Slice 221: Device-test tooling leftovers from the 2026-10-30-2100 night, round 1 ([slice](slices/221-device-test-tooling-leftovers-night-1.md))
 

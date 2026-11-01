@@ -19,6 +19,7 @@ public sealed class TestHookDispatcher
 	public const string State = "state";
 	public const string CancelPackDownloads = "cancel-pack-downloads";
 	public const string DropPackNetwork = "drop-pack-network";
+	public const string StallPackNetwork = "stall-pack-network";
 	public const string Read = "read";
 	public const string TextKey = "text";
 	public const string SpeedKey = "speed";
@@ -132,6 +133,7 @@ public sealed class TestHookDispatcher
 			State => Report(),
 			CancelPackDownloads => CancelDownloads(),
 			DropPackNetwork => DropNetwork(),
+			StallPackNetwork => StallNetwork(),
 			Read => StartRead(command),
 			_ => AppCommands?.Invoke(command) ?? Unknown,
 		};
@@ -260,6 +262,13 @@ public sealed class TestHookDispatcher
 	private static string DropNetwork()
 	{
 		PackDownloadThrottle.RequestDrop();
+		return Ok;
+	}
+
+	// Slice 241: the running pack download's next body read hangs like a dead socket; the 60 s stall guard must log `PACKDL stall` and the retry must go on (see PackDownloadThrottle).
+	private static string StallNetwork()
+	{
+		PackDownloadThrottle.RequestStall();
 		return Ok;
 	}
 

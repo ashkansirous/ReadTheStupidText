@@ -201,6 +201,10 @@ Assert-Equal 'the swap says which variant it goes over' $true ($swap.Reason -lik
 Assert-Equal 'the phone variant is read from the marker' 'debug' (Get-VariantOfPlatform $plain)
 Assert-Equal 'installed by someone else since (update time moved): skip' 'Skip' (Resolve-InstallPlan $marker '2026-10-30_11:00:00' $aot 'abc123' $false).Action
 Assert-Equal 'no marker on an installed app: skip' 'Skip' (Resolve-InstallPlan $null '2026-10-30_11:00:00' $aot 'abc123' $false).Action
+# Slice 241 item 6: the refusal tells the agent to stop and run -Reinstall, and never to adb install by hand
+$unknownReason = (Resolve-InstallPlan $null '2026-10-30_11:00:00' $aot 'abc123' $false).Reason
+Assert-Equal 'unknown install: the message says STOP and -Reinstall' $true ($unknownReason -match 'STOP' -and $unknownReason -match 'run-checks.ps1 -Reinstall' -and $unknownReason -match 'never adb install')
+Assert-Equal 'unknown install with -Reinstall: installs' 'Install' (Resolve-InstallPlan $null '2026-10-30_11:00:00' $aot 'abc123' $true).Action
 Assert-Equal 'no marker, -Reinstall: install' 'Install' (Resolve-InstallPlan $null '2026-10-30_11:00:00' $aot 'abc123' $true).Action
 
 # ---- logcat is read incrementally
@@ -603,6 +607,7 @@ $expected = [ordered]@{
     'highlight'                   = @{ Apps = 'rtst'; Estimate = 120; PerRun = $null; Pack = $true; Variant = 'debug' }
     'language'                    = @{ Apps = 'rtst,dino'; Estimate = 180; PerRun = $null; Pack = $true; Variant = 'debug' }
     'notification-text'           = @{ Apps = 'rtst'; Estimate = 150; PerRun = $null; Pack = $true; Variant = 'debug' }
+    'pack-stall'                  = @{ Apps = 'rtst'; Estimate = 200; PerRun = $null; Pack = $true; Variant = 'debug' }
     'paused-notification'         = @{ Apps = 'rtst'; Estimate = 240; PerRun = $null; Pack = $true; Variant = 'debug' }
     'paused-notification-network' = @{ Apps = 'rtst'; Estimate = 200; PerRun = $null; Pack = $true; Variant = 'debug' }
     'short-lines'                 = @{ Apps = 'dino'; Estimate = 200; PerRun = $null; Pack = $true; Variant = 'debug' }

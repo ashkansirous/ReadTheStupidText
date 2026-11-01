@@ -77,12 +77,12 @@ name: release
 # release-publish-rtst / release-publish-dino (only if every affected build of that product succeeded;
 # the tag is created here, so a failed run leaves no tag) ->
 # store-submit / play-submit / testflight-submit and the -dino twins.
-# `publish-store` (Slice 158, `dinostore` target) uploads the Dino store books that are behind the live store; it
-# needs only `version` and the Dino suite and never cuts a release.
+# The Dino store upload (Slice 158) lives in `dino-store.yml`, not here, so a story merge never queues behind this
+# workflow's concurrency group (Slice 239, "Changed after merge").
 # `dinoreader` and `site-checks` are advisory: no build or release job needs them, so an
 # outage there can never block a build or a release. (`site-checks` needs only `version`, for its path-filter output.)
-# Slice 239: a push that changes only Dino store-book content (content/dino/<store book>/**, new, changed or deleted) runs `version`
-# and `publish-store` and nothing else: ship-targets sets only `dinostore` (no `dinoreader` suite, no app build) and the site checks skip it.
+# Slice 239: a push that changes only Dino store-book content (a non-starter folder under content/dino/) starts no run of this
+# workflow: the push `paths` below ignore it, and `dino-store.yml` uploads it. A starter's folder still runs it (the app bundles it).
 #
 # GitVersion derives each SemVer from that product's git tags (Decisions 17, 137): main defaults to a
 # patch bump; a semver bump token in a commit message overrides it for whichever product the run cuts.
@@ -90,6 +90,15 @@ name: release
 on:
   push:
     branches: [main]
+    # Later patterns override earlier ones: everything, minus every Dino book folder, plus the starters' folders (a starter is
+    # bundled in the app and must still build it). Keep the starters equal to dino-starters.json (a node test checks it).
+    paths:
+      - '**'
+      - '!content/dino/**'
+      - 'content/dino/gingerbread-man/**'
+      - 'content/dino/good-enough/**'
+      - 'content/dino/three-little-pigs/**'
+      - 'content/dino/tortoise-and-hare/**'
   workflow_dispatch:
     inputs:
       force_all:
@@ -136,7 +145,6 @@ jobs:
       dinoapp: ${{ steps.targets.outputs.dinoapp }}
       dinoios: ${{ steps.targets.outputs.dinoios }}
       dinowin: ${{ steps.targets.outputs.dinowin }}
-      dinostore: ${{ steps.targets.outputs.dinostore }}
       site_checks: ${{ steps.site.outputs.site_checks }}
     steps:
       # workflow_dispatch can be started on any branch; only main may release.
@@ -612,6 +620,7 @@ jobs:
       && (needs.release-draft-dino.result == 'success' || needs.release-draft-dino.result == 'skipped')
     permissions:
       contents: write   # gh release upload
+      actions: write    # gh cache delete of a broken SDK cache (Slice 240); a called workflow can't ask for more than this
     uses: ./.github/workflows/dinoreader-windows.yml
     with:
       version: ${{ needs.version.outputs.dino_version }}
@@ -735,92 +744,6 @@ jobs:
           fi
           gh release edit "dino-v${VERSION}" --repo "$REPO" --draft=false --latest=false
           echo "released=true" >> "$GITHUB_OUTPUT"
-
-  # Free Dino store books (Slice 158, Decision 163): every run on main compares with the live list and uploads the books whose
-  # built version is higher than the live one (compared with the live list on every run, so a cancelled run is
-  # caught by the next). `dinostore` alone never cuts an app release. The version job must have succeeded and the suite must
-  # not have failed (skipped is accepted only because the dinoreader path filter skipped it). Its own
-  # concurrency group keeps two runs from uploading at once; no Actions artifacts (the books stay on the runner).
-  publish-store:
-    needs: [version, dinoreader]
-    if: >-
-      !cancelled()
-      && github.ref == 'refs/heads/main'
-      && needs.version.result == 'success'
-      && (needs.dinoreader.result == 'success' || needs.dinoreader.result == 'skipped')
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    concurrency:
-      group: dino-store-publish
-      cancel-in-progress: false
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up .NET 10
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install wrangler
-        run: npm ci --ignore-scripts --no-audit --no-fund
-
-      # Slice 239: no test suite runs for a store-only change, so the checks live in this job: the content folders against dino-starters.json (a new Starter must build the app),
-      # then `build --live` validates each store book before it builds it: an invalid book is skipped and named, the valid ones are still built and uploaded, and the job fails at the end.
-      - name: Check the content folders against the starter list
-        run: node .github/scripts/publish-store-books.mjs --check-content
-
-      # The live store's version, content hash and highest package of every story, so the build can version a changed book above everything in the bucket (no stamp needed).
-      - name: Read the live store state
-        run: node .github/scripts/publish-store-books.mjs --live-state "$RUNNER_TEMP/live-store.json"
-
-      # Exit 0 = all built, 2 = some invalid book skipped (the others built), anything else = a broken build: nothing is uploaded then.
-      - name: Build the store books
-        id: build
-        run: |
-          status=0
-          dotnet run --project tools/DinoReader.BookBuilder --configuration Release -- build --live "$RUNNER_TEMP/live-store.json" 2> >(tee "$RUNNER_TEMP/build-errors.txt" >&2) || status=$?
-          echo "status=$status" >> "$GITHUB_OUTPUT"
-
-      # Delisting is destructive, so it runs only for a push that changed content/dino/ (or a manual run).
-      - name: Decide whether stories may be delisted
-        id: delist
-        env:
-          EVENT: ${{ github.event_name }}
-          BEFORE: ${{ github.event.before }}
-          SHA: ${{ github.sha }}
-        run: node .github/scripts/content-changed.mjs
-
-      - name: Upload the books that are behind the live store, delist the ones whose content folder is gone
-        if: steps.build.outputs.status == '0' || steps.build.outputs.status == '2'
-        env:
-          DELIST: ${{ steps.delist.outputs.delist }}
-        run: |
-          if [ "$DELIST" = "true" ]; then node .github/scripts/publish-store-books.mjs --delist; else node .github/scripts/publish-store-books.mjs; fi
-
-      - name: Check that no built book is still behind
-        if: steps.build.outputs.status == '0' || steps.build.outputs.status == '2'
-        run: |
-          node .github/scripts/publish-store-books.mjs --verify
-
-      - name: Fail when a store book was skipped as invalid
-        if: always() && steps.build.outputs.status != '0'
-        env:
-          STATUS: ${{ steps.build.outputs.status }}
-        run: |
-          grep '^::error::store book' "$RUNNER_TEMP/build-errors.txt" || true
-          echo "::error::The store build exited ${STATUS:-without running}: a book was skipped as invalid (exit 2; see the ::error:: lines of the build step for its name) or the build broke."
-          exit 1
 
   # Microsoft Store submission (Decision 44) — when a Windows-specific change has not been submitted
   # yet (`windowsstore`, measured from the last `rtst-store-v` marker, Slice 218); a core-only change alone does not start one.
