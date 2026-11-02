@@ -1,0 +1,48 @@
+# Slice 232 part E: the grown-up gate held sideways splits (the question left, the hold ring or answers right at 64 dp), and rotating keeps the step. Uses Maestro's setOrientation;
+# tools/emulator/rotate.ps1 is the adb fallback if a device ignores it. The 3 s hold itself is not driven (grown-ups-button.yaml covers the chain); this checks the hold step's layout both ways.
+# expect-log: HOOK skip-first-run ok
+# The layout line is written only when the shape changes: split sideways on the hold step, stacked upright, split again.
+# expect-log: [Landscape] gate split=True step=hold
+# expect-log: [Landscape] gate split=False step=hold
+appId: uk.sirous.dinoreader.dbg
+name: Gate in landscape splits the question and the hold ring, rotating keeps the step
+# Runs after the flow pass or fail, so a failure never leaves the next flow sideways.
+onFlowComplete:
+  - setOrientation: PORTRAIT
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow only opens the gate from the starter shelf and backs out.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- setOrientation: LANDSCAPE_LEFT
+- tapOn:
+    id: GalleryGrownUps
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: Press and hold for 3 seconds.
+    timeout: 15000
+- assertVisible: For grown-ups
+- assertVisible: Back to the story
+# Upright: the same hold step in the bottom sheet.
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible: Press and hold for 3 seconds.
+    timeout: 15000
+- assertVisible: For grown-ups
+# Sideways again: still the hold step.
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible: Press and hold for 3 seconds.
+    timeout: 15000
+# Back to the story closes the gate and leaves the kids' shelf.
+- tapOn: "Back to the story"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 15000

@@ -12,22 +12,27 @@
     <!-- Grown-up gate (mock screens 6, 6b, 7): a white bottom sheet over a dimmed page. Step 1 is
          a 3 second hold (a plain button when a screen reader is on); step 2 is the sum. -->
     <Grid BackgroundColor="{StaticResource Scrim}" SafeAreaEdges="None">
-        <Border VerticalOptions="End" BackgroundColor="White" StrokeThickness="0" Padding="22,24,22,28" SafeAreaEdges="Container">
+        <Border x:Name="Sheet" VerticalOptions="End" BackgroundColor="White" StrokeThickness="0" Padding="22,24,22,28" SafeAreaEdges="Container">
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="28,28,0,0" />
             </Border.StrokeShape>
-            <VerticalStackLayout Spacing="12" HorizontalOptions="Fill">
-                <HorizontalStackLayout Spacing="6" HorizontalOptions="Center">
+            <!-- Slice 232 part E (mock Batch 44 frame 122): one grid for both orientations. Upright: bars, text, action, back in one column. Held sideways: the text and Back on the
+                 left, the action (hold ring or number pad) on the right. The Hold and Sum texts share a cell, as do the ring and the pad, and one of each shows, so rotating
+                 only re-places views and never touches the step or the sum. -->
+            <Grid x:Name="SheetGrid" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="12">
+                <HorizontalStackLayout x:Name="StepBars" Grid.Row="0" Spacing="6" HorizontalOptions="Center">
                     <BoxView x:Name="StepBarOne" WidthRequest="26" HeightRequest="5" CornerRadius="3" Color="{StaticResource Brand}" />
                     <BoxView x:Name="StepBarTwo" WidthRequest="26" HeightRequest="5" CornerRadius="3" Color="#e6e0d4" />
                 </HorizontalStackLayout>
 
-                <VerticalStackLayout x:Name="HoldStep" Spacing="12" HorizontalOptions="Fill">
-                    <Label Text="{x:Static res:AppResources.Gallery_ForGrownUps}" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center"
+                <VerticalStackLayout x:Name="HoldText" Grid.Row="1" Spacing="12" HorizontalOptions="Fill">
+                    <Label x:Name="HoldTitle" Text="{x:Static res:AppResources.Gallery_ForGrownUps}" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center"
                            SemanticProperties.HeadingLevel="Level1" />
                     <Label x:Name="HoldBody" Text="{x:Static res:AppResources.Gate_HoldBody}" FontSize="14.5" LineHeight="1.4"
                            TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" MaximumWidthRequest="260" />
+                </VerticalStackLayout>
 
+                <VerticalStackLayout x:Name="HoldAction" Grid.Row="2" Spacing="12" HorizontalOptions="Fill">
                     <Grid x:Name="HoldRingHost" WidthRequest="120" HeightRequest="120" Margin="0,4,0,0" HorizontalOptions="Center">
                         <Border WidthRequest="86" HeightRequest="86" BackgroundColor="{StaticResource Brand}" StrokeThickness="0"
                                 InputTransparent="True">
@@ -48,8 +53,8 @@
                             Clicked="OnContinueClicked" />
                 </VerticalStackLayout>
 
-                <VerticalStackLayout x:Name="SumStep" Spacing="12" IsVisible="False" HorizontalOptions="Fill">
-                    <Label Text="{x:Static res:AppResources.Gate_WhatIs}" FontSize="15" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
+                <VerticalStackLayout x:Name="SumText" Grid.Row="1" Spacing="12" IsVisible="False" HorizontalOptions="Fill">
+                    <Label x:Name="SumQuestion" Text="{x:Static res:AppResources.Gate_WhatIs}" FontSize="15" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
                     <HorizontalStackLayout x:Name="SumRow" FlowDirection="LeftToRight" HorizontalOptions="Center" Spacing="8">
                         <Label x:Name="SumLabel" FontSize="40" FontAttributes="Bold" VerticalOptions="End" />
                         <VerticalStackLayout VerticalOptions="End">
@@ -58,13 +63,13 @@
                             <BoxView HeightRequest="4" Color="{StaticResource Brand}" />
                         </VerticalStackLayout>
                     </HorizontalStackLayout>
-                    <Grid x:Name="KeyPad" FlowDirection="LeftToRight" ColumnDefinitions="*,*,*" ColumnSpacing="8" RowSpacing="8" Margin="0,4,0,0" />
                 </VerticalStackLayout>
+                <Grid x:Name="KeyPad" Grid.Row="2" FlowDirection="LeftToRight" ColumnDefinitions="*,*,*" ColumnSpacing="8" RowSpacing="8" Margin="0,4,0,0" IsVisible="False" />
 
-                <Button x:Name="BackButton" Text="{x:Static res:AppResources.Gate_BackToStory}" HeightRequest="48" CornerRadius="24" FontSize="15"
+                <Button x:Name="BackButton" Grid.Row="3" Text="{x:Static res:AppResources.Gate_BackToStory}" HeightRequest="48" CornerRadius="24" FontSize="15"
                         FontAttributes="Bold" Padding="26,0" HorizontalOptions="Center"
                         BackgroundColor="{StaticResource Sand}" TextColor="{StaticResource Ink}" Clicked="OnBackClicked" />
-            </VerticalStackLayout>
+            </Grid>
         </Border>
     </Grid>
 </ContentPage>

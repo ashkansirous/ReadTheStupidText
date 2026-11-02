@@ -15,8 +15,9 @@
     <Grid>
         <!-- Screen 16: language. -->
         <Grid x:Name="LanguagePanel" AutomationId="FirstRunLanguage" RowDefinitions="*,Auto" Padding="22,0,22,22">
-            <ScrollView>
-                <VerticalStackLayout Spacing="14" Padding="0,28,0,16">
+            <!-- Slice 232 part E (mock Batch 44 frame 123): held sideways the welcome stays left and the language grid moves into its own scroll on the right, Continue pinned under it. -->
+            <ScrollView x:Name="WelcomeScroll">
+                <VerticalStackLayout x:Name="LanguageStack" Spacing="14" Padding="0,28,0,16">
                     <Border WidthRequest="92" HeightRequest="92" StrokeThickness="0" HorizontalOptions="Center">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="24" />
@@ -30,12 +31,14 @@
                     <Grid x:Name="LanguageGrid" ColumnSpacing="8" RowSpacing="8" Margin="0,8,0,0" />
                 </VerticalStackLayout>
             </ScrollView>
-            <local:CoralButton Grid.Row="1" Text="{x:Static res:AppResources.FirstRun_Continue}" Clicked="OnContinueClicked" />
+            <ScrollView x:Name="GridScroll" Grid.Column="1" IsVisible="False" Padding="0,12,0,12" />
+            <local:CoralButton x:Name="ContinueButton" Grid.Row="1" Text="{x:Static res:AppResources.FirstRun_Continue}" Clicked="OnContinueClicked" />
         </Grid>
 
         <!-- Screen 17: the voice downloads. -->
         <Grid x:Name="DownloadPanel" AutomationId="FirstRunDownload" RowDefinitions="*,Auto" Padding="22,0,22,22" IsVisible="False">
-            <VerticalStackLayout Spacing="14" Padding="0,56,0,0">
+            <ScrollView x:Name="DownloadScroll">
+            <VerticalStackLayout x:Name="DownloadStack" Spacing="14" Padding="0,56,0,0">
                 <Label x:Name="DownloadTitle" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center" SemanticProperties.HeadingLevel="Level1" />
                 <Label x:Name="DownloadSub" FontSize="14" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
                 <ProgressBar x:Name="Bar" ProgressColor="{StaticResource Brand}" HeightRequest="8" Margin="0,18,0,0" />
@@ -56,6 +59,7 @@
                 <Label x:Name="ShelfTitle" FontSize="13.5" FontAttributes="Bold" TextColor="{StaticResource Body}" Margin="0,22,0,0" />
                 <HorizontalStackLayout x:Name="Shelf" Spacing="12" />
             </VerticalStackLayout>
+            </ScrollView>
             <Label Grid.Row="1" x:Name="PickAnother" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center"
                    Padding="0,12">
                 <Label.GestureRecognizers>
@@ -65,9 +69,9 @@
         </Grid>
 
         <!-- Screen 18: ready. -->
-        <Grid x:Name="ReadyPanel" AutomationId="FirstRunReady" RowDefinitions="*,Auto,Auto" Padding="22,0,22,22" IsVisible="False">
-            <ScrollView Grid.Row="0">
-            <VerticalStackLayout Spacing="14" Padding="0,56,0,0">
+        <Grid x:Name="ReadyPanel" AutomationId="FirstRunReady" RowDefinitions="*,Auto" Padding="22,0,22,22" IsVisible="False">
+            <ScrollView x:Name="ReadyScroll" Grid.Row="0">
+            <VerticalStackLayout x:Name="ReadyStack" Spacing="14" Padding="0,56,0,0">
                     <Border WidthRequest="92" HeightRequest="92" StrokeThickness="0" HorizontalOptions="Center">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="24" />
@@ -95,14 +99,16 @@
                     </Border>
                 </VerticalStackLayout>
             </ScrollView>
+            <VerticalStackLayout x:Name="ReadyActions" Grid.Row="1">
             <!-- Slice 133 (mock frame 63): the one line about anonymous counts, set in code after the pick. -->
-            <Label Grid.Row="1" x:Name="ReadyUsage" FontSize="12.5" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center"
+            <Label x:Name="ReadyUsage" FontSize="12.5" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center"
                    HorizontalOptions="Center" MaximumWidthRequest="290" Margin="0,0,0,14" />
             <!-- Slice 155 (mock frame 73): the intro starts here, or the grown-up skips straight to the hand-over. -->
-            <VerticalStackLayout Grid.Row="2" Spacing="4">
+            <VerticalStackLayout Spacing="4">
                 <local:CoralButton x:Name="SetUpButton" Clicked="OnSeeWhatClicked" />
                 <Button x:Name="SkipIntroLabel" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" BackgroundColor="Transparent" Padding="12,0" MinimumHeightRequest="44" BorderWidth="0"
                         Clicked="OnSkipIntroTapped" />
+            </VerticalStackLayout>
             </VerticalStackLayout>
         </Grid>
     </Grid>
