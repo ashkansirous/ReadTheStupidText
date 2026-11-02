@@ -1,8 +1,20 @@
 ### Slice 234 — Dino: a proper design for tablets held upright
 
-*Planned 2026-11-01.* The user asked for "better design on tablet". **Mock drawn 2026-11-01 (Batch 45), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges: it reuses 232's phone-vs-tablet rules (`IsLandscape`, the 600 dp short-side split, `ShelfLayout`, `SplitLayout`).
+*Part A built 2026-11-02 (draft PR #736); parts B-C planned; slice stays open.* *Planned 2026-11-01.* The user asked for "better design on tablet". **Mock drawn 2026-11-01 (Batch 45), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges: it reuses 232's phone-vs-tablet rules (`IsLandscape`, the 600 dp short-side split, `ShelfLayout`, `SplitLayout`).
 
 **Touches:** `src/DinoReader.Core/GalleryLayout.cs`, `src/DinoReader.Core/ReadingLayoutRules.cs`, `src/DinoReader.Core/*Layout*.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/BackupPage.xaml`, `src/DinoReader.App/PageEditorPage.xaml`, `src/DinoReader.App/GrownUpHeader.cs`, `tests/DinoReader.Tests/**Layout*`, `docs/design/dino-reader/**`, `docs/plan/slices/234-dino-tablet-portrait.md`
+
+#### Parts (coordinator, claim 2026-11-02)
+
+A premise check (2026-11-02, after Slice 232 merged) found about 14 screens, too big for one build, and that some tablet-upright behaviour already exists from 232: the corner rail at 744 dp (`LandscapeLayout.CornerLayout`, rail 360 dp), Settings two panes at 744 dp (`SettingsLayout.TwoPanes`), the intro stacking picture above copy with copy capped at 460 (`OnboardingLayout.Intro`). Split in the mock's order:
+
+- **A (this claim):** Core `IsTabletPortrait` and the tablet-upright shelf rule; the shelf (133) and the reading screen stacked (134, 135, 150, and picture only as described).
+- **B:** centred cards: gate (137), first run (138), book sheet (136), intro (141); corner rail at 300 dp with Store solid (139) and Settings rows showing their value (140).
+- **C:** Record (142), Store and Cast (143, 144), page editor (145), Backup (146).
+
+**Touches, part A (claim 2026-11-02, night 2026-11-01-2355 wave 4):** `src/DinoReader.Core/LandscapeLayout.cs` (`IsTabletPortrait`, the shelf rule), `src/DinoReader.Core/ReadingLayoutRules.cs`, `src/DinoReader.Core/GalleryLayout.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/ReadingTheme.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/TransportRow.cs`, `tests/DinoReader.Tests/*Layout*Tests.cs`, `tests/DinoReader.Tests/ReadingLayoutRules*Tests.cs`, `.maestro/dino/dino-tablet-upright-shelf*.yaml`, `.maestro/dino/dino-tablet-upright-reading*.yaml` (new), `docs/plan/slices/234-dino-tablet-portrait.md`. Read-only: `src/DinoReader.Core/SettingsLayout.cs`, `src/DinoReader.Core/OnboardingLayout.cs`, `src/DinoReader.Core/BookSheetPlan.cs`, `tools/emulator/**`.
+
+**Part A design note (coordinator, claim):** same pattern as Slice 232: each page overrides `OnSizeAllocated`, stores the size, makes one pure Core call per layout pass, and never rebuilds views on a size change. Rules, each a pure unit-tested function: `LandscapeLayout.IsTabletPortrait(w,h)` = h >= w and w >= 600 dp. Shelf: when tablet upright, columns = clamp(floor((w - 80) / 170), 3, 6), side padding 40 dp, titles up to two lines, header targets 52 dp; phone upright (2 columns) and every landscape rule (190 divisor, sideways row) unchanged. Reading: a new `Stacked` shape from `ReadingLayoutRules.For` when tablet upright: picture panel 48% of the height, art fitted whole and centred (no crop), chip at the panel's top left; text card below at 32 sp; controls row 64 / 84 / 64 dp under the card; the 30% card cap does not apply. Text only: one tall card at 36 sp, chip inside its top left, Play in the same place. Picture only: art fitted in the full height above the same row. Phone upright and all landscape reading unchanged. Rotation keeps the reading position and the shelf state (the existing 232 mechanisms; a shape flip re-places views, never rebuilds). Device: RTST_Tablet (800 x 1280 dp, frame 150) upright; the 804 x 1164 frames are checked by the unit rules.
 
 #### Why (read from code on origin/main, 2026-11-01; not run on a tablet)
 
@@ -55,3 +67,43 @@ Settled by the mock, left open in the plan: reading panel 48% of the height, tex
 
 - `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` (layout rules).
 - Scripted flow on a tablet AVD in portrait, every screen, screenshot each: no clipped or tiny controls, shelf shows 3-4 columns. iOS: iPad simulator or TestFlight on an iPad.
+
+#### Part A: built (2026-11-02)
+
+Part A covers the tablet-upright shelf and the reading page. The Work items above stay unticked because parts B-C are open.
+
+- **Core:** `LandscapeLayout.IsTabletPortrait` (h >= w and w >= 600). Tablet-upright shelf columns are clamp(floor((w-80)/170), 3, 6) with 40 dp side padding (`ShelfShape.TabletUpright`, `SidePadding`). `ReadingLayout.Stacked` comes from `ReadingLayoutRules.For` on a tablet held upright for picture+text books and for text mode; `StackedFits` falls back to Upright on a too-short window (no real window hits it). The picture panel is 48% of (surface + 104 dp controls band); the card keeps 120 dp. Text is 32 sp (36 sp for text only).
+- **App:** shelf header has 52 dp targets (language button included) and a 28 title. Stacked reading is a beige picture panel (art fitted whole) over a white scrolling card, with a `TransportRow.Wide` row of 64/84/64 dp and `ReadingTheme.PicturePanel`. Grown-up mode keeps Slice 232's corner rail (tabletUpright is False there by design, GalleryPage.xaml.cs:395-398).
+- **Choices:** picture mode of books that are not picture+text keeps the upright layout. Text-only uses TextPages' card (no 28 dp corner or shadow; TextPages is outside Touches, part B/C may add it). No book title in Stacked (mock frames 134/135 show none).
+- **Tests:** 2101 pass; Android build, iOS compile and lint-flows pass.
+- **From review** (all three files read in full; the review files live outside the repo). The coordinator's brief gave one reason for high findings 3-8 together (low, polish or intended); no per-finding reason beyond that was recorded.
+  - `s234a-review-high.md` (8 findings, all low):
+    - 1 empty white text card on a page with no picture and no text (PictureTextPages.cs:178): skipped (low).
+    - 2 language button stays 48 dp beside 52 dp header targets (GalleryPage.xaml.cs:498): applied.
+    - 3 OnModeChanged calls SetMode before UpdateHeaderLayout (ReadingPage.xaml.cs:1178): skipped (low).
+    - 4 stacked text sizes in three places (ReadingPage.xaml.cs:639): skipped (polish).
+    - 5 TextStyleFor private, Stacked row untested (ReadingPage.xaml.cs:636): skipped (low).
+    - 6 PicturePanel hard-codes "#F0E8D8" instead of a DinoTokens entry (ReadingTheme.cs:43): skipped (polish).
+    - 7 new one-line methods against the no-one-liner convention (ReadingLayoutRules.cs:557): skipped (polish; the review called it optional).
+    - 8 no book title left in Stacked (ReadingPage.xaml.cs:731): skipped, intended: mock frames 134/135 show none and a test pins it.
+  - `s234a-review-medium.md` (6 findings, all low or low-medium):
+    - 1 IsTabletPortrait is width-only, so a narrow Windows-head window gets the tablet layout: skipped (the mock's rule, same as Slice 235's WindowLayout).
+    - 2 StackedPictureHeight returns 0 on a small surface (ReadingLayoutRules.cs:99-103): applied.
+    - 3 ApplyHeaderShape rewrites phone sizes on every shape change, may override rail/corner sizing: skipped (not reproducible: grown-up mode never uses tablet sizes).
+    - 4 language button width/corner radius may stay at 48 dp: skipped (unconfirmed).
+    - 5 TransportRow.Wide ordering against Compact/_rail: skipped (Stacked never sets Compact or the rail).
+    - 6 no test for the StackedPictureHeight zero case or the width==height boundary: applied.
+  - `s234a-review-check-medium.md` (3 findings, all low, no blockers), all skipped:
+    - 1 StackedFits uses a 104 dp band, the real Wide row may be about 122 dp: skipped (the guard is never reached by a real window); the short-window case stays untested.
+    - 2 picture-only pages in Stacked have no panel treatment: skipped (the picture-only panel is not drawn in the mock).
+    - 3 gear resets to 44 dp in the grown-up corner on a tablet upright: skipped (the corner gear is part B).
+- **Device (RTST_Tablet, build 87e00636951d, cold boot after a System UI ANR on the warm snapshot):** dino-tablet-upright-shelf, dino-tablet-upright-reading and dino-landscape-reading-tablet PASS. dino-landscape-store FAIL: the flow expects the phone's `store columns=2`, the tablet logs 3 by design (SettingsLayout.StoreColumns), and this diff touches no Store file, so it is a phone-only flow. Upright shelf shot: 4 columns, nothing clipped (`D:/ReadTheStupidText-worktrees/reviews/s234a-shots/shelf-with-anr-dialog.png`).
+
+#### Not yet verified
+
+- Stacked reading page against frames 134, 135 and 150 by eye (no screenshot taken).
+- Shelf spacing and header against frame 133.
+- dino-landscape-store is phone-only: mark it as such or give it a tablet variant (tooling follow-up).
+- iPad (compile only).
+- TalkBack order.
+- Picture only, upright.

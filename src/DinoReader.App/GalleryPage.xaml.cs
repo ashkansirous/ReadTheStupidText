@@ -20,6 +20,11 @@ public partial class GalleryPage : ContentPage
 	private const string TileTitleLinesKey = "TileTitleLines";
 	private const double SidewaysItemSpacing = 14;
 	private const double GridItemSpacing = 12;
+	private const double TabletColumnSpacing = 20; // Slice 234, mock Batch 45 frame 133: 20 across, 28 down
+	private const double TabletRowSpacing = 28;
+	private const double TabletTitleSize = 28;
+	private const double TabletIconSize = 52;
+	private static readonly Thickness TabletHeaderPadding = new(LandscapeLayout.TabletPortraitShelfSidePadding, 32, LandscapeLayout.TabletPortraitShelfSidePadding, 0);
 	private static readonly Color RailLine = Color.FromArgb("#cfc6e6"); // the corner line on the ink rail
 	private static readonly Color RailButtonFill = Color.FromArgb("#1AFFFFFF"); // white at 10%, Add and Store on the ink rail
 	private static readonly Color CornerGearFill = Color.FromArgb("#1FFFFFFF"); // white at 12%, the gear tile in the corner's ink bar
@@ -390,7 +395,8 @@ public partial class GalleryPage : ContentPage
 		bool rail = grownUp && corner.Rail;
 		bool sideways = !grownUp && shelf.Sideways;
 		int columns = grownUp ? corner.Columns : shelf.Columns;
-		string key = $"{sideways}|{rail}|{corner.RailWidth}|{corner.FullRowButtons}|{columns}|{shelf.CoverHeight}|{grownUp}";
+		bool tabletShelf = !grownUp && shelf.TabletUpright;
+		string key = $"{sideways}|{rail}|{corner.RailWidth}|{corner.FullRowButtons}|{columns}|{shelf.CoverHeight}|{grownUp}|{tabletShelf}";
 		if (key == _shapeKey)
 		{
 			return;
@@ -404,10 +410,10 @@ public partial class GalleryPage : ContentPage
 		}
 
 		ApplyRail(rail, corner);
-		ApplyHeaderShape(rail, sideways, corner);
-		ApplyShelfList(sideways, shelf, columns, rail);
+		ApplyHeaderShape(rail, sideways, corner, tabletShelf);
+		ApplyShelfList(sideways, shelf, columns, rail, tabletShelf);
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] shelf layout={(sideways ? "sideways" : rail ? "rail" : "grid")} columns={columns} grownUp={grownUp} railWidth={corner.RailWidth}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] shelf layout={(sideways ? "sideways" : rail ? "rail" : "grid")} columns={columns} grownUp={grownUp} railWidth={corner.RailWidth} tabletUpright={tabletShelf}");
 #endif
 	}
 
@@ -477,18 +483,33 @@ public partial class GalleryPage : ContentPage
 	}
 
 	// The header: a compact bar in the kids' sideways shelf, the rail's top in the corner (the title may take two lines there), else the portrait bar.
-	private void ApplyHeaderShape(bool rail, bool sideways, CornerShape corner)
+	// A tablet held upright (Slice 234, frame 133): 40 dp sides, a 52 dp icon and "Grown-ups" target, the title at 28.
+	private void ApplyHeaderShape(bool rail, bool sideways, CornerShape corner, bool tabletShelf)
 	{
 		double inset = corner.FullRowButtons ? TabletRailInset : LandscapeLayout.SidewaysInset;
 		HeaderBar.Padding = rail ? new Thickness(inset, corner.FullRowButtons ? 28 : 14, 14, 10)
+			: tabletShelf ? TabletHeaderPadding
 			: sideways ? new Thickness(LandscapeLayout.SidewaysInset, 6, 12, 4) : new Thickness(16, 10, 12, 12);
-		TitleLabel.FontSize = rail ? (corner.FullRowButtons ? 24 : 19) : 22;
+		TitleLabel.FontSize = rail ? (corner.FullRowButtons ? 24 : 19) : tabletShelf ? TabletTitleSize : 22;
 		TitleLabel.MaxLines = rail ? 2 : 1;
+		double icon = tabletShelf ? TabletIconSize : PhoneIconSize;
+		AppIconFrame.WidthRequest = icon;
+		AppIconFrame.HeightRequest = icon;
+		GrownUpsButton.HeightRequest = tabletShelf ? LandscapeLayout.TabletHeaderTarget : PhoneGrownUpsHeight;
+		SettingsButton.HeightRequest = tabletShelf ? LandscapeLayout.TabletHeaderTarget : PhoneGearSize;
+		SettingsButton.WidthRequest = SettingsButton.HeightRequest;
+		_languageButton.HeightRequest = tabletShelf ? LandscapeLayout.TabletHeaderTarget : LanguageButtonHeight;
 	}
 
+	private const double PhoneIconSize = 40;
+	private const double PhoneGrownUpsHeight = 48;
+	private const double PhoneGearSize = 44;
+
 	// A phone held sideways: one row of covers that scrolls sideways, the last one cut off to say "more"; else a grid of this many columns. The first book on screen stays on screen.
-	private void ApplyShelfList(bool sideways, ShelfShape shelf, int columns, bool rail)
+	private void ApplyShelfList(bool sideways, ShelfShape shelf, int columns, bool rail, bool tabletShelf)
 	{
+		double horizontalGap = tabletShelf ? TabletColumnSpacing : GridItemSpacing;
+		double verticalGap = tabletShelf ? TabletRowSpacing : GridItemSpacing;
 		bool wasSideways = StoryList.ItemsLayout is LinearItemsLayout;
 		_swapPhase = ScrollSwapPhase.SwapStarted;
 		_swapGeneration++;
@@ -498,16 +519,19 @@ public partial class GalleryPage : ContentPage
 		}
 		else if (wasSideways || StoryList.ItemsLayout is not GridItemsLayout)
 		{
-			StoryList.ItemsLayout = new GridItemsLayout(columns, ItemsLayoutOrientation.Vertical) { HorizontalItemSpacing = GridItemSpacing, VerticalItemSpacing = GridItemSpacing };
+			StoryList.ItemsLayout = new GridItemsLayout(columns, ItemsLayoutOrientation.Vertical) { HorizontalItemSpacing = horizontalGap, VerticalItemSpacing = verticalGap };
 		}
 		else
 		{
-			((GridItemsLayout)StoryList.ItemsLayout).Span = columns;
+			var grid = (GridItemsLayout)StoryList.ItemsLayout;
+			grid.Span = columns;
+			grid.HorizontalItemSpacing = horizontalGap;
+			grid.VerticalItemSpacing = verticalGap;
 		}
 
 		Resources[TileWidthKey] = sideways ? LandscapeLayout.CoverWidth(shelf.CoverHeight) : -1.0;
 		Resources[TileTitleLinesKey] = sideways ? 1 : 2;
-		StoryList.Margin = rail ? new Thickness(16, 14, 26, 0) : sideways ? new Thickness(LandscapeLayout.SidewaysInset, 0, 0, 0) : new Thickness(14, 0);
+		StoryList.Margin = rail ? new Thickness(16, 14, 26, 0) : sideways ? new Thickness(LandscapeLayout.SidewaysInset, 0, 0, 0) : new Thickness(tabletShelf ? shelf.SidePadding : LandscapeLayout.PhoneShelfSidePadding, 0);
 		if (wasSideways != sideways)
 		{
 			ReattachItems();

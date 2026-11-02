@@ -31,6 +31,8 @@ public sealed class TransportRow : StackLayout
 	private readonly IconView _nextIcon = SkipIcon(IconKind.SkipForward);
 	private bool _compact;
 	private bool _rail;
+	private bool _wide;
+	private const double WideGap = 40;
 
 	public TransportRow()
 	{
@@ -81,11 +83,27 @@ public sealed class TransportRow : StackLayout
 		}
 	}
 
+	/// <summary>Slice 234 (mock Batch 45 frames 134, 135): on a tablet held upright the three buttons keep their 64 / 84 / 64 sizes and stand 40 apart.</summary>
+	public bool Wide
+	{
+		get => _wide;
+		set
+		{
+			if (value == _wide)
+			{
+				return;
+			}
+
+			_wide = value;
+			Resize();
+		}
+	}
+
 	private void Resize()
 	{
 		Orientation = _rail ? StackOrientation.Vertical : StackOrientation.Horizontal;
 		VerticalOptions = _rail ? LayoutOptions.Center : LayoutOptions.End;
-		Spacing = _rail ? RailGap : _compact ? CompactGap : Gap;
+		Spacing = _rail ? RailGap : _compact ? CompactGap : _wide ? WideGap : Gap;
 		Padding = _rail ? default : _compact ? new Thickness(0, 4, 0, 12) : new Thickness(0, 12, 0, 26);
 		Size(_previous, _compact ? CompactSkipSize : SkipSize);
 		Size(_next, _compact ? CompactSkipSize : SkipSize);

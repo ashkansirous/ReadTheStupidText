@@ -61,7 +61,7 @@
         <Label x:Name="TitleProbe" Grid.ColumnSpan="2" HorizontalOptions="Start" Style="{StaticResource TileTitleFont}" Text="&#160;&#10;&#160;" Opacity="0" InputTransparent="True"
                VerticalOptions="Start" AutomationProperties.IsInAccessibleTree="False" SizeChanged="OnTitleProbeSizeChanged" />
         <Grid x:Name="HeaderBar" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="16,10,12,12">
-            <Border WidthRequest="40" HeightRequest="40" StrokeThickness="0">
+            <Border x:Name="AppIconFrame" WidthRequest="40" HeightRequest="40" StrokeThickness="0">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="11" />
                 </Border.StrokeShape>

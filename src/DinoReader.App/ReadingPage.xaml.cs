@@ -578,7 +578,7 @@ public partial class ReadingPage : ContentPage
 	private void UpdateHeaderLayout(double width, double height)
 	{
 		ReadingLayout kind = LayoutFor(width, height);
-		bool rail = kind != ReadingLayout.Upright && LandscapeLayout.ReadingControls(height) == ControlsPlacement.Rail;
+		bool rail = kind is not (ReadingLayout.Upright or ReadingLayout.Stacked) && LandscapeLayout.ReadingControls(height) == ControlsPlacement.Rail;
 		DeviceSize size = LandscapeLayout.SizeOf(width, height); // the surface margins depend on the size class too (a window resized across 600 dp)
 		if (kind != _layoutKind || rail != _railApplied || size != _sizeApplied)
 		{
@@ -595,10 +595,13 @@ public partial class ReadingPage : ContentPage
 
 	private void OnRootSizeChanged(object? sender, EventArgs e) => FitOverlayTransport();
 
-	private bool Sideways => _layoutKind != ReadingLayout.Upright;
+	private bool Stacked => _layoutKind == ReadingLayout.Stacked;
 
-	// Slice 232 (mock Batch 44): the back button, view switch and flag are a chip over the picture (or in the card's corner), in every sideways view.
-	private bool FloatingHeader => Sideways;
+	// Held sideways: the three landscape shapes (Slice 234 added Stacked, a tablet held upright, which is neither upright-phone nor sideways).
+	private bool Sideways => _layoutKind is not (ReadingLayout.Upright or ReadingLayout.Stacked);
+
+	// Slice 232 (mock Batch 44): the back button, view switch and flag are a chip over the picture (or in the card's corner), in every sideways view; Slice 234: and in the stacked view (frames 134, 135).
+	private bool FloatingHeader => Sideways || Stacked;
 
 	// Under 480 dp tall (a phone held sideways) the controls stand in a rail at the right; taller (a tablet) they are a row under the text.
 	private bool ControlsInRail => _railApplied;
@@ -607,26 +610,35 @@ public partial class ReadingPage : ContentPage
 	private void ApplyTransportLayout()
 	{
 		bool rail = _railApplied;
-		Surface.SetControls(Sideways, rail ? ControlsPlacement.Rail : ControlsPlacement.Row);
+		Surface.SetControls(Sideways, rail ? ControlsPlacement.Rail : ControlsPlacement.Row, Stacked);
 		Root.ColumnDefinitions = rail ? [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] : [];
 		Grid.SetColumnSpan(Header, 1);
 		Grid.SetColumnSpan(SurfaceHost, 1);
-		Grid.SetRow(SurfaceHost, Sideways ? 0 : 1);
-		Grid.SetRowSpan(SurfaceHost, !Sideways ? 1 : 2); // sideways: over the floating header's row too, but above the status line and the dots (rows 2 and 3)
+		Grid.SetRow(SurfaceHost, FloatingHeader ? 0 : 1);
+		Grid.SetRowSpan(SurfaceHost, !FloatingHeader ? 1 : 2); // sideways or stacked: over the floating header's row too, but above the status line and the dots (rows 2 and 3)
 		Grid.SetRow(Transport, rail ? 0 : 4);
 		Grid.SetRowSpan(Transport, rail ? 5 : 1);
 		Grid.SetColumn(Transport, rail ? 1 : 0);
 		Transport.Compact = rail;
 		Transport.Rail = rail;
-		ReadingLayoutRules.SurfaceInsets inset = SideInsets();
-		SurfaceHost.Margin = !Sideways ? SurfaceMargin : new Thickness(inset.Left, inset.Top, inset.Right, inset.Bottom);
-		bool textRow = _layoutKind == ReadingLayout.TextRow;
-		Surface.SetTextStyle(textRow ? SidewaysTextSize : ReadingMetrics.FontSize, textRow ? SidewaysTextTopInset : 0);
+		ReadingLayoutRules.SurfaceInsets inset = Stacked ? ReadingLayoutRules.StackedSurface : SideInsets();
+		SurfaceHost.Margin = !FloatingHeader ? SurfaceMargin : new Thickness(inset.Left, inset.Top, inset.Right, inset.Bottom);
+		(double size, double topInset) = TextStyleFor(_layoutKind, Surface.Mode);
+		Surface.SetTextStyle(size, topInset);
+		Transport.Wide = Stacked;
 		FitOverlayTransport();
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] reading controls={(rail ? "rail" : Sideways ? "row" : "upright")} layout={_layoutKind}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] reading controls={(rail ? "rail" : FloatingHeader ? "row" : "upright")} layout={_layoutKind}");
 #endif
 	}
+
+	// The text size and the room above the first line for a layout in a mode: text held sideways 26 (mock 93), text stacked 36 (mock 135, room for the chip), else the phone's size.
+	private static (double Size, double TopInset) TextStyleFor(ReadingLayout kind, ReadingMode mode) => kind switch
+	{
+		ReadingLayout.TextRow => (SidewaysTextSize, SidewaysTextTopInset),
+		ReadingLayout.Stacked when mode == ReadingMode.Text => (ReadingLayoutRules.StackedTextSizeFor(mode), ReadingLayoutRules.StackedTextOnlyTopInset),
+		_ => (ReadingMetrics.FontSize, 0),
+	};
 
 	// Held sideways on a tablet the row sits under the text card, not under the picture; the rail keeps the screen's right inset.
 	private void FitOverlayTransport()
@@ -716,7 +728,7 @@ public partial class ReadingPage : ContentPage
 	{
 		bool floating = FloatingHeader;
 		bool compact = false;
-		bool noTitle = Sideways;
+		bool noTitle = FloatingHeader;
 		Grid.SetRow(TitleLabel, compact ? 0 : 1);
 		Grid.SetColumn(TitleLabel, compact ? 1 : 0);
 		Grid.SetColumnSpan(TitleLabel, compact ? 1 : 3);
@@ -730,9 +742,21 @@ public partial class ReadingPage : ContentPage
 		Header.RowSpacing = compact || noTitle ? 0 : FullHeaderRowSpacing;
 		Header.HorizontalOptions = floating ? LayoutOptions.Start : LayoutOptions.Fill;
 		Header.VerticalOptions = floating ? LayoutOptions.Start : LayoutOptions.Fill;
-		Header.Margin = _layoutKind == ReadingLayout.TextRow ? CardHeaderMargin : Sideways ? new Thickness(SideInsets().Left, ReadingLayoutRules.SidewaysTop, 0, 0) : default;
+		Header.Margin = HeaderMargin();
 		ApplyHeaderHeading(noTitle);
 		ApplyBackChip();
+	}
+
+	// The chip's place: stacked, 12 dp in from the top left of the picture panel or the text card (frames 134, 135); text held sideways, the card's corner; sideways with a picture, the picture's corner.
+	private Thickness HeaderMargin()
+	{
+		if (Stacked)
+		{
+			ReadingLayoutRules.SurfaceInsets chip = ReadingLayoutRules.StackedChip;
+			return new Thickness(chip.Left, chip.Top, 0, 0);
+		}
+
+		return _layoutKind == ReadingLayout.TextRow ? CardHeaderMargin : Sideways ? new Thickness(SideInsets().Left, ReadingLayoutRules.SidewaysTop, 0, 0) : default;
 	}
 
 	// With no visible title the header itself is the screen's level-1 heading, so a screen reader still hears which book this is.
@@ -1121,7 +1145,7 @@ public partial class ReadingPage : ContentPage
 		RenderChrome();
 #if DEBUG
 		// Slice 232: a rotation re-lays the surface out; this line proves which page was held and which way up the screen was.
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] reading laid out landscape={LandscapeLayout.IsLandscape(Width, Height)} page={Surface.CurrentPage}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] reading laid out landscape={LandscapeLayout.IsLandscape(Width, Height)} page={Surface.CurrentPage} layout={_layoutKind}");
 #endif
 	}
 
@@ -1151,8 +1175,8 @@ public partial class ReadingPage : ContentPage
 	private void OnModeChanged(object? sender, ReadingMode mode)
 	{
 		_mode = mode;
-		bool textRow = LayoutFor(Width, Height, mode) == ReadingLayout.TextRow;
-		Surface.SetMode(mode, textRow ? SidewaysTextSize : ReadingMetrics.FontSize, textRow ? SidewaysTextTopInset : 0);
+		(double size, double topInset) = TextStyleFor(LayoutFor(Width, Height, mode), mode);
+		Surface.SetMode(mode, size, topInset);
 		UpdateHeaderLayout(Width, Height);
 		_ = SaveModeAsync(mode);
 	}
