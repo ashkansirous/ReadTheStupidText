@@ -227,23 +227,70 @@ function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File) {
     # Applied to the Maestro call only (a JVM reads JAVA_TOOL_OPTIONS whatever the launcher does with MAESTRO_OPTS); the Android build's Java must keep the real user.home.
     $env:JAVA_TOOL_OPTIONS = "-Duser.home=$($script:MaestroHome)"
     # --no-reinstall-driver only skips a reinstall: Maestro still installs its driver when it is missing, which is how the first flow of a run (and the rerun after a restart) gets it.
-    try { $output = & $Maestro --device $script:Serial test --no-reinstall-driver --debug-output $script:MaestroOut $File.FullName 2>&1 | Out-String }
+    $startedAt = Get-Date
+    try { $run = Invoke-MaestroWatched $Maestro $File }
     finally { Remove-Item Env:JAVA_TOOL_OPTIONS -ErrorAction SilentlyContinue }
-    $exit = $LASTEXITCODE
+    $exit = $run.ExitCode
+    $phasesLine = Get-FlowPhasesLine $File.BaseName $startedAt $sw.Elapsed.TotalSeconds
     $problem = $null
-    if ($exit -ne 0) {
-        $lines = $output -split "`r?`n" | Where-Object { $_.Trim() -and $_ -notmatch '[\u2502\u256D\u2570]' }
-        $problem = "Maestro failed:`n" + (($lines | Select-Object -Last 10) -join "`n")
-    }
+    if ($exit -ne 0) { $problem = Format-MaestroFailure $run.Stderr $run.Stdout }
     else {
         $missing = Wait-LogMarkers @(Get-ExpectedLogs $File.FullName)
         if ($missing.Count -gt 0) { $problem = "Missing log marker(s) under tag ${logTag}: " + ($missing -join '; ') }
     }
     # Slice 241 item 1: a failed flow is checked for an app crash / ANR, so the caller can stop instead of running the rest into the same dead app.
     $crash = @()
-    if ($problem) { $crash = @(Get-FlowCrashLines $packages[$App]) }
+    $crashLog = ''
+    if ($problem) {
+        $logs = Get-FlowCrashLogs
+        $crashLog = if ($logs.Crash.Trim()) { $logs.Crash } else { $run.CrashLog }   # a failed adb read after the kill must not hide the crash the watch saw
+        $crash = @(Find-AppCrashLines $crashLog $logs.Anr $packages[$App])
+    }
+    if ($run.Killed) { $problem += "`nMaestro was killed by the crash watch as soon as the app crashed (Slice 247)." }
     if ($crash.Count -gt 0) { $problem += "`nAPP CRASH/ANR during the flow:`n" + (($crash | ForEach-Object { "  $_" }) -join "`n") }
-    return [pscustomobject]@{ Name = $File.BaseName; Seconds = $sw.Elapsed.TotalSeconds; Problem = $problem; Crash = $crash; NotRun = $null }
+    return [pscustomobject]@{ Name = $File.BaseName; Seconds = $sw.Elapsed.TotalSeconds; Problem = $problem; Crash = $crash; CrashLog = $crashLog; NotRun = $null; Phases = $phasesLine; Retried = $null; FirstRunSeconds = 0.0 }
+}
+
+# Slice 247 item e: Maestro runs as a child process; every 2 s the crash buffer is read for this app, and a crash kills the whole Maestro tree (maestro.bat, cmd, java), so a launch
+# crash ends the flow within seconds instead of after its 30-60 s timeouts. Output goes to files (read back after), the exit code of a killed run is -1.
+function Invoke-MaestroWatched([string]$Maestro, [System.IO.FileInfo]$File) {
+    $outFile = Join-Path $script:StateDir "maestro-i$Instance.out"
+    $errFile = Join-Path $script:StateDir "maestro-i$Instance.err"
+    $null = New-Item -ItemType Directory -Force $script:StateDir
+    $argLine = "--device $($script:Serial) test --no-reinstall-driver --debug-output `"$($script:MaestroOut)`" `"$($File.FullName)`""
+    $p = Start-Process -FilePath $Maestro -ArgumentList $argLine -NoNewWindow -PassThru -RedirectStandardOutput $outFile -RedirectStandardError $errFile
+    $null = $p.Handle
+    $seen = @{ CrashLog = '' }
+    $probe = New-AppCrashProbe $script:Serial $packages[$App] $seen
+    $killed = Wait-ProcessWithCrashWatch $p $probe $script:CrashWatchPollSeconds
+    $p.WaitForExit()
+    # The two streams stay apart: the "Maestro failed:" text quotes the last lines of each, labelled, so neither stream's failure line is pushed out by the other's noise.
+    $stdout = "$(Get-Content $outFile -Raw -ErrorAction SilentlyContinue)"
+    $stderr = "$(Get-Content $errFile -Raw -ErrorAction SilentlyContinue)"
+    $code = if ($killed) { -1 } else { [int]$p.ExitCode }
+    return [pscustomobject]@{ Stdout = $stdout; Stderr = $stderr; ExitCode = $code; Killed = $killed; CrashLog = $seen.CrashLog }
+}
+
+# Slice 247 item a: the PHASES line of the flow just run (from Maestro's commands.json), printed after the PASS/FAIL line; $null when Maestro wrote none.
+function Get-FlowPhasesLine([string]$FlowName, [datetime]$Since, [double]$TotalSeconds) {
+    $file = Find-FlowCommandsFile $script:MaestroOut $Since
+    if (-not $file) { return $null }
+    return (Format-FlowPhases $FlowName (Get-FlowPhaseTimes (Get-Content $file -Raw)) $TotalSeconds)
+}
+
+# Slice 247 item c: a flow whose app died with a Mono SIGSEGV within 20 s of its start runs once more (the first run is reported as crash-retried); any other crash, or a second one, fails as before.
+function Invoke-FlowCrashRetry([string]$Maestro, [System.IO.FileInfo]$File) {
+    $first = Invoke-GuardedFlow $Maestro $File
+    if (-not $first.Problem -or @($first.Crash).Count -eq 0) { return $first }
+    if (-not (Test-RetryableMonoCrash $first.CrashLog $packages[$App] $script:MonoRetryMaxUptimeSeconds)) { Write-Host "WATCH no retry for $($File.BaseName): not a Mono SIGSEGV within $($script:MonoRetryMaxUptimeSeconds) s of the start."; return $first }
+    $line = Format-CrashRetryLine $File.BaseName (Get-FirstCrashLine $first.Crash)
+    Write-Host $line
+    if ($first.Phases) { Write-Host $first.Phases }
+    $second = Invoke-GuardedFlow $Maestro $File
+    $second.Retried = $line
+    $second.FirstRunSeconds = $first.Seconds
+    $second.Seconds += $first.Seconds   # the row's time is both runs, so a flow that crashes on every cold start does not look quick
+    return $second
 }
 
 # Slice 207: the APK is built (or found in the cache) before the emulator lease is taken, so a cold build never holds the emulator or runs a waiter's wait out.
@@ -406,8 +453,9 @@ try {
                 continue
             }
             Assert-LeaseHeld $leaseOwner 'during the flows'  # renewed between flows
-            $r = Invoke-GuardedFlow $maestro $file
-            Write-Host ("{0,-5} {1} ({2:n1} s)" -f $(if ($r.Problem) { 'FAIL' } else { 'PASS' }), $r.Name, $r.Seconds)
+            $r = Invoke-FlowCrashRetry $maestro $file
+            Write-Host ("{0,-5} {1} ({2:n1} s){3}" -f $(if ($r.Problem) { 'FAIL' } else { 'PASS' }), $r.Name, $r.Seconds, $(if ($r.Retried) { ' [crash-retried]' } else { '' }))
+            if ($r.Phases) { Write-Host $r.Phases }
             if ($r.Problem) { Write-Host ($r.Problem -replace '(?m)^', '      ') }
             if (@($r.Crash).Count -gt 0) { $crashedIn = $r.Name; $crashLine = Get-FirstCrashLine $r.Crash; Write-Host "app crashed in $($r.Name): $crashLine"; Write-Host 'The remaining flows on this emulator are not run.' }
             $results.Add($r)
@@ -418,6 +466,7 @@ try {
     $notRun = @($results | Where-Object { $_.NotRun }).Count
     Write-Host (Format-FlowsSummary $App $results.ToArray() $total.Elapsed.TotalSeconds)
     foreach ($crashSummary in @(Format-CrashSummary $results.ToArray())) { Write-Host $crashSummary }
+    foreach ($retrySummary in @(Format-RetrySummary $results.ToArray())) { Write-Host $retrySummary }
     $secondExit = if ($secondRun) { Wait-SecondHalf $secondRun } else { 0 }
     if ($failed -gt 0 -or $notRun -gt 0 -or $secondExit -ne 0) { exit 1 }
 } finally {
