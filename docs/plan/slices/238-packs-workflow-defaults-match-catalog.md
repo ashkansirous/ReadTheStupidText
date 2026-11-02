@@ -1,6 +1,6 @@
 ### Slice 238 — packs.yml version defaults match the live catalog
 
-*Built 2026-11-02, not merged; the new check has not run in CI yet.* Written 2026-11-01 by the round 3 feedback loop ([note](../notes/2026-11-01-0859-feedback-loop-w3.md)). Parked until 2026-11-01 by the round 3 feedback loop: waits for the user; moved back to planned by the night's final feedback loop.
+*Built 2026-11-02, merged as PR #723 (05283704); the new check has not run in CI yet.* Written 2026-11-01 by the round 3 feedback loop ([note](../notes/2026-11-01-0859-feedback-loop-w3.md)). Parked until 2026-11-01 by the round 3 feedback loop: waits for the user; moved back to planned by the night's final feedback loop.
 
 **Touches:** `.github/workflows/packs.yml`, `.github/scripts/` (a new defaults check and its test), the one workflow that runs it (`.github/workflows/release-scripts.yml`, its `test` job; widened at claim, 2026-11-01 night; `tests.yml` not used because editing it ships every app; `src/ReadTheStupidText.Application/Reading/PackConstants.cs` is read by the check and added to that workflow's paths, not edited), `.github/CLAUDE.md`, `docs/plan/slices/238-packs-workflow-defaults-match-catalog.md`
 
@@ -39,7 +39,7 @@
 - Check-medium 2-6 (one-way check, retry on permanent errors, regex strictness, cwd paths, hard-coded prefixes): skipped, low.
 - Check-medium 7 (Touches line missing PackConstants.cs): fixed.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-02)
 
 - (`.github/CLAUDE.md`, already added in this slice) A pack version bump changes the matching `packs.yml` `*_pack_version` default in the same PR; `check-packs-defaults.mjs` in `release-scripts.yml` fails a default lower than the `packs.json` of the release `PackConstants.CatalogUrl` pins. (Slice 238: docs/plan/slices/238-packs-workflow-defaults-match-catalog.md)
 
