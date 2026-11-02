@@ -1,6 +1,6 @@
 ### Slice 236 — Phone runner gaps from night 2026-11-01-0859, round 2
 
-*Planned.* Written 2026-11-01 by the round 2 feedback loop ([note](../notes/2026-11-01-0859-feedback-loop-w2.md)). It sits next to Slices 224 and 225 (same files); merge it into one of them, or sequence it after them, when it is planned. Parked until 2026-11-01 by the round 2 feedback loop: waits for the user; moved back to planned by the night's final feedback loop.
+*In progress (wave 2026-11-01), draft PR.* Written 2026-11-01 by the round 2 feedback loop ([note](../notes/2026-11-01-0859-feedback-loop-w2.md)). It sits next to Slices 224 and 225 (same files); merge it into one of them, or sequence it after them, when it is planned. Parked until 2026-11-01 by the round 2 feedback loop: waits for the user; moved back to planned by the night's final feedback loop.
 
 **Touches:** `tools/phone/run-checks.ps1`, `tools/phone/checks/_lib.ps1`, `tools/phone/reset-dev-app.ps1`, `tools/phone/preflight.ps1`, `tools/phone/checks/paused-notification.ps1`, `tools/phone/test-run-checks.ps1`, `tools/CLAUDE.md`, `docs/plan/slices/236-phone-runner-gaps-night-2026-11-01-0859.md`
 
