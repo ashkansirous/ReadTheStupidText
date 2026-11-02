@@ -24,17 +24,19 @@
                     <RoundRectangle CornerRadius="18" />
                 </Border.StrokeShape>
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                    <Border WidthRequest="66" HeightRequest="88" BackgroundColor="{StaticResource CoverPlaceholder}" StrokeThickness="0" VerticalOptions="Center">
+                    <Border WidthRequest="{Binding Layout.CoverWidth}" HeightRequest="{Binding Layout.CoverHeight}" BackgroundColor="{StaticResource CoverPlaceholder}" StrokeThickness="0" VerticalOptions="Center">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="10" />
                         </Border.StrokeShape>
                         <Image Source="{Binding Cover}" Aspect="AspectFill" />
                     </Border>
-                    <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
+                    <!-- Slice 232 part D: upright, the sub-line (credits) is its own line under the title; in slim cards (sideways) it joins the title row. -->
+                    <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="0" VerticalOptions="Center">
                         <Label Text="{Binding Title}" FontSize="15.5" FontAttributes="Bold" LineHeight="1.25" FontFamily="{Binding TitleFont}" />
-                        <Label Text="{Binding Credits}" IsVisible="{Binding HasCredits}" FontSize="12" LineHeight="1.3" TextColor="{StaticResource Muted}" />
-                        <Label Text="{Binding Detail}" IsVisible="{Binding HasDetail}" FontSize="12.5" LineHeight="1.3" TextColor="{StaticResource Body}" />
-                    </VerticalStackLayout>
+                        <Label Text="{Binding Credits}" IsVisible="{Binding HasCredits}" Grid.Row="{Binding Layout.CreditsRow}" Grid.Column="{Binding Layout.CreditsColumn}"
+                               Grid.ColumnSpan="{Binding Layout.CreditsColumnSpan}" Margin="{Binding Layout.CreditsMargin}" MaximumWidthRequest="{Binding Layout.CreditsMaxWidth}" LineBreakMode="{Binding Layout.CreditsLineBreak}" VerticalOptions="Center" FontSize="12" LineHeight="1.3" TextColor="{StaticResource Muted}" />
+                        <Label Text="{Binding Detail}" IsVisible="{Binding HasDetail}" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,3,0,0" FontSize="12.5" LineHeight="1.3" TextColor="{StaticResource Body}" />
+                    </Grid>
 
                     <!-- Get: the brand pill. -->
                     <Border Grid.Column="2" IsVisible="{Binding IsGet}" HeightRequest="44" Padding="14,0" BackgroundColor="{StaticResource Brand}"
@@ -107,7 +109,8 @@
                    HorizontalTextAlignment="Center" Margin="30,30" IsVisible="False" />
             <CollectionView Grid.Row="2" x:Name="StoryList" SelectionMode="None" ItemTemplate="{StaticResource StoreRowTemplate}" Margin="14,0">
                 <CollectionView.ItemsLayout>
-                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+                    <!-- One column upright; the page raises the span to 2 or 3 sideways (Slice 232 part D). -->
+                    <GridItemsLayout Orientation="Vertical" Span="1" VerticalItemSpacing="10" HorizontalItemSpacing="10" />
                 </CollectionView.ItemsLayout>
             </CollectionView>
             <HorizontalStackLayout Grid.Row="3" Spacing="8" Padding="18,10,18,14">

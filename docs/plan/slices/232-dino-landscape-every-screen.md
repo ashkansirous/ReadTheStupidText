@@ -10,7 +10,7 @@
 
 **Part B design note (coordinator, claim):** the corner has no page of its own: it is `GalleryPage` in grown-up mode (`GrownUpHeader.cs`, `GrownUpMode.cs`). Every size comes from one pure call per layout pass on the window size: `LandscapeLayout.ShelfLayout` (sideways row on phone landscape, grid otherwise), `LandscapeLayout.ListPaneWidth`/`PinnedButton` for the corner rail; the page never recomputes widths or the 600 dp split. Rotation changes only layout, never the shelf's state (grown-up mode, scroll target book, open sheet). Book sheet in landscape: one centred card 580 dp (cover left, actions right), the same on tablets; its size is a pure function in `BookSheetPlan` with a unit test.
 
-*Part C built 2026-11-02 (not merged yet); parts D-E planned; slice stays open.*
+*Part D built 2026-11-02 (not merged yet); part E planned; slice stays open.*
 
 **Touches, part C (claim 2026-11-02):** `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastViews.cs`, `src/DinoReader.App/CastRows.cs`, `src/DinoReader.App/PageTextPage.cs` (widened at build, 2026-11-02: frame 120's text editor is `PageTextPage`, not `PageEditorPage`, which is the rotate/crop screen and stays untouched), `src/DinoReader.Core/LandscapeLayout.cs`, `src/DinoReader.Core/RecordLayout.cs` (new), `tests/DinoReader.Tests/RecordLayoutTests.cs` (new), `src/DinoReader.Core/EditorLayout.cs` and `src/DinoReader.Core/RecordLayout.cs` (new, only if a rule does not fit `LandscapeLayout`), `tests/DinoReader.Tests/LandscapeLayoutTests.cs`, `tests/DinoReader.Tests/*Layout*Tests.cs`, `tests/DinoReader.Tests/CastScreenTests.cs`, `.maestro/dino/dino-landscape-record*.yaml`, `.maestro/dino/dino-landscape-cast*.yaml`, `.maestro/dino/dino-landscape-editor*.yaml` (new), `docs/plan/slices/232-dino-landscape-every-screen.md`. Read-only: `RegionOverlay.cs`, `TileOverlay.xaml(.cs)`, `CastFlavourMenu.cs`, `tools/emulator/rotate.ps1`.
 
@@ -80,7 +80,8 @@ Settled by the mock: tablet versus phone is split at a 600 dp short side; the co
 - [x] **Design (Claude Code):** mock done (Batch 44, 2026-11-01: `docs/design/dino-reader/Dino Reader Batch 44 Landscape.dc.html`, frames 110-130 and 132; 131 night not built). User answers recorded above.
 - [x] Part A: the reading screen (built 2026-11-01, see *Part A: built* below).
 - [x] Part B: shelf, grown-ups' corner and book sheet (built 2026-11-02, see *Part B: built* below).
-- [ ] Build the rest (parts C-E), each with its layout rule tests.
+- [x] Part D: Settings, Store and Backup (built 2026-11-02, see *Part D: built*)
+- [ ] Build the rest (part E left), each with its layout rule tests.
 - [ ] Rotation keeps state (reading position, recording in progress, wizard step, gate progress).
 - [ ] Android and iOS built and checked together.
 
@@ -164,6 +165,37 @@ From review (findings files in `D:/ReadTheStupidText-worktrees/reviews/`):
 
 Reviewed findings read: 10/10, 10/10, 6/6, 7/7.
 
+#### Part D: built (2026-11-02)
+
+- Core: new `SettingsLayout.cs` in `src/DinoReader.Core` (`TwoPanes`: landscape, or tablet upright at 744 dp or more; `PaneWidth` capped at 640 on tablets; Store columns 1/2/3; Backup side by side; `SlimCreditsMaxWidth` 84) with `SettingsLayoutTests`. `LandscapeLayout.cs` was only read.
+- Settings: `SettingsPage` owns `SelectedSection` (first open is Reading speed, since Language pushes). In two panes Reading speed, Animal sounds, Usage counts and About are hosted in the right pane via `SettingsSubPage.HostIn` (the same view builder as the pushed page). Language, Story languages, Narrator voice and Backup push in both orientations (not `SettingsSubPage`s, or Navigation/alert-heavy). A size change never navigates or rebuilds; `SyncHosted` is the one place for a hosted page appearing or disappearing; `SettingsRows.SettingChanged` refreshes only the row value text. `GrownUpHeader.BackVisible` added (Touches widened). Every AutomationId is set once at construction; sub-page titles are `SettingsTitle<TypeName>`; `tools/desktop-vm/checks/dino-settings.ps1` updated to that id (Touches widened).
+- Store: `GridItemsLayout` span 1/2/3; slim cards with 52 dp covers and the sub-line in the title row; rotation changes the span and one shared `StoreCardLayout` only.
+- Backup: two cards side by side sideways, stacked upright.
+- Pushed sub-pages: a centred 640 dp column.
+- Device run 2026-11-02, emulator, build 8e7613cf1b50: `dino-landscape-settings` PASS (phone), `settings-reading-speed-row` PASS, `settings-done-button` PASS (rerun in portrait), `dino-landscape-store` PASS (store columns 2 / 1), `dino-landscape-backup` PASS (sideBySide True / False). Tablet: settings panes=2 sideways; the settings flow's last step fails on RTST_Tablet by design (upright 800 dp keeps two panes, so `GrownUpDoneSettingsPage` is hidden), so that flow is phone-only. One run hit a "System UI isn't responding" dialog on the tablet emulator. Evidence: `D:/ReadTheStupidText-worktrees/reviews/s232d-device/` (run2-run4). iOS compile not run.
+- Seen on main too: run 2 hit the known Mono SIGSEGV on a `.NET TP Worker` after a clearState cold start (`docs/plan/notes/2026-11-01-emulator-mono-sigsegv.md`, Slice 247 c); two of five cold starts showed no shelf, so it is no longer a one-off.
+
+Changed while building:
+
+- Deviation from the mock: the mock says first open shows the first row; it shows Reading speed (Language pushes).
+- Bugs found on device: run 1 crashed opening Settings (AutomationId set twice in `HostIn`), fixed by setting ids once at construction; the Backup flow scrolled the screen centre (the right pane), now swipes in the list column; flows rotate back to portrait in `onFlowComplete`.
+
+From review (findings files in `D:/ReadTheStupidText-worktrees/reviews/`):
+
+- `s232d-review-high.md`: applied 1 (two elements with id `SettingsTitle` in two panes), 2 (hosted page not told it is gone if Settings is dropped), 3 (right pane sized to content), 4 (slim card credits column), 5 (`PaneWidth` used only by tests), 6 (`SetNavValue` repeats the label lookup), 9 (`SettingChanged` reloads preferences every slider tick). Skipped 7 (the sideways inset guard copied three times: a refactor) and 8 (`StoreCardLayout.SetColumns` allocations).
+- `s232d-review-medium.md`: applied 1 (640 dp Body cap pinned to the start), 2 (Rebuild runs twice on first show), 3 (hosted lifecycle spread over several flags; one `SyncHosted`). 4 (the page's Done hidden in two panes) was checked: the flows use the pane ids. Skipped 5 (Store early return compares a cached value), 6 (nine PropertyChanged events per rotation), 7 (empty Backup row 1 keeps spacing): none has a failure path today.
+- `s232d-review-check-medium.md`: all 3 skipped: 1 (sideways inset on the whole root eats the list column; the cut-out inset belongs on the leftmost column), 2 (hosted page stays parented after leaving two panes; unconfirmed), 3 (flows tap `GrownUpDoneSettingsPage` sideways; the flows use pane ids).
+- `s232d-review-check2-medium.md`: 1 applied (`dino-settings.ps1` Get-PageTitle looked for `SettingsTitle`, now sub-page ids).
+- `s232d-review-check3-medium.md`: no findings.
+- `s232d-review-check4-medium.md`: no findings.
+
+Reviewed findings read: 9/9, 7/7, 3/3, 1/1, 0/0, 0/0.
+
+#### For CLAUDE.md, part D (not yet lifted)
+
+- Settings, Store and Backup sizes and the two-pane decision come from `SettingsLayout` in `src/DinoReader.Core`; pages compute no widths. Hosted Settings sub-pages go through `SettingsSubPage.HostIn`; `SyncHosted` is the only place a hosted page appears or disappears, and a size change never navigates or rebuilds. (Slice 232: docs/plan/slices/232-dino-landscape-every-screen.md)
+- Set every AutomationId once at construction, never in a method that can run twice on the same view (`HostIn` did and crashed Settings). Sub-page titles are `SettingsTitle<TypeName>`; `tools/desktop-vm/checks/dino-settings.ps1` uses that id. (Slice 232: docs/plan/slices/232-dino-landscape-every-screen.md)
+
 #### For CLAUDE.md (lifted 2026-11-01)
 
 - Landscape reading-screen sizes and the rail-versus-row rule come from `src/DinoReader.Core/LandscapeLayout.cs` (one window-based decision via `ReadingSurface.SetControls`); do not recompute pane widths or the 480 dp rule in the pages. (Slice 232: docs/plan/slices/232-dino-landscape-every-screen.md)
@@ -185,6 +217,12 @@ Verified 2026-11-01 ~23:45 on emulator-5554 (Dino Debug, origin/main 5d86be52), 
 - Part B: VoiceOver / TalkBack order in the rail.
 - Part C: screenshots of each landscape state against frames 116, 119, 120, 129 (the flows take none; the user's eye).
 - Part C: tablet frames (129) on the RTST_Tablet emulator (Slice 242 adds it).
+- Part D: screenshots against frames 117, 118, 124, 128 by eye.
+- Part D: tablet Store with 3 columns, and tablet Backup.
+- Part D: VM `tools/desktop-vm/checks/dino-settings.ps1` with the new id (not run; the Windows head shares this code).
+- Part D: iOS (compile not run).
+- Part D: TalkBack order in two panes.
+- Part D: the hosted pane's right edge inset on a notch phone.
 - Part C: the editor thumbnail with a real keyboard on a scanned page (the flow reaches only a typed page).
 - Part C: a tablet with the keyboard up counts as a phone (short side under 600) and shows the thumbnail.
 - Part C: iOS compile and iPhone/iPad.

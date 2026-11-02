@@ -18,7 +18,7 @@ public enum StoreRowState
 }
 
 /// <summary>What one store row binds to (mock screen 21): the entry's labels and its Get / progress / Downloaded state.</summary>
-public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChanged
+public sealed class StoreRow(StoreItem item, bool onShelf, StoreCardLayout layout) : INotifyPropertyChanged
 {
 	private const double PillWidth = 88;
 	private const int PercentScale = 100;
@@ -30,6 +30,9 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	public event PropertyChangedEventHandler? PropertyChanged;
 
 	public StoreItem Item { get; } = item;
+
+	/// <summary>The sizes every card shares for the window's shape (Slice 232 part D): one object, so a rotation changes every card at once without rebuilding them.</summary>
+	public StoreCardLayout Layout { get; } = layout;
 
 	/// <summary>The title in the app language (Slice 159): the listing's <c>titles</c>, else the shipped-titles table, else the listing's own title.</summary>
 	public string Title => ShippedTitles.ShownInStore(Item, LanguageChoice.Current());
@@ -99,6 +102,54 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	}
 }
 
+/// <summary>
+/// What a store card's size and arrangement depend on (Slice 232 part D, mock Batch 44 frame 117): the cover size and where the sub-line sits. Upright, the sub-line is its own line
+/// under the title; in slim cards (two or three columns) it joins the title row. Every row binds to the one instance the page owns.
+/// </summary>
+public sealed class StoreCardLayout : INotifyPropertyChanged
+{
+	private const int TitleRow = 0;
+	private const int SubLineRow = 1;
+	private const int TitleColumn = 0;
+	private const int SubLineColumn = 1;
+	private const int FullSpan = 2;
+	private const int OneColumn = 1;
+	private const double SlimCreditsGap = 8;
+	private const double CreditsTop = 3;
+
+	private int _columns = SettingsLayout.UprightStoreColumns;
+
+	public event PropertyChangedEventHandler? PropertyChanged;
+
+	public int Columns => _columns;
+
+	public double CoverWidth => SettingsLayout.StoreCover(_columns).Width;
+
+	public double CoverHeight => SettingsLayout.StoreCover(_columns).Height;
+
+	public int CreditsRow => SettingsLayout.SlimStoreCards(_columns) ? TitleRow : SubLineRow;
+
+	public int CreditsColumn => SettingsLayout.SlimStoreCards(_columns) ? SubLineColumn : TitleColumn;
+
+	public int CreditsColumnSpan => SettingsLayout.SlimStoreCards(_columns) ? OneColumn : FullSpan;
+
+	/// <summary>Slim cards cap the credit line and set it 8 dp off the title; upright it is its own full-width line with no gap.</summary>
+	public double CreditsMaxWidth => SettingsLayout.SlimStoreCards(_columns) ? SettingsLayout.SlimCreditsMaxWidth : double.PositiveInfinity;
+
+	public LineBreakMode CreditsLineBreak => SettingsLayout.SlimStoreCards(_columns) ? LineBreakMode.TailTruncation : LineBreakMode.WordWrap;
+
+	public Thickness CreditsMargin => SettingsLayout.SlimStoreCards(_columns) ? new Thickness(SlimCreditsGap, CreditsTop, 0, 0) : new Thickness(0, CreditsTop, 0, 0);
+
+	public void SetColumns(int columns)
+	{
+		_columns = columns;
+		foreach (string name in new[] { nameof(Columns), nameof(CoverWidth), nameof(CoverHeight), nameof(CreditsRow), nameof(CreditsColumn), nameof(CreditsColumnSpan), nameof(CreditsMaxWidth), nameof(CreditsLineBreak), nameof(CreditsMargin) })
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+		}
+	}
+}
+
 /// <summary>The store's copy that is composed from numbers or names, in the UI language.</summary>
 public static class StoreText
 {
@@ -159,6 +210,8 @@ public partial class StorePage : ContentPage, IGrownUpPage
 	private readonly Dictionary<StoreAgeBand, (Border Chip, Label Label)> _chips = [];
 	private CancellationTokenSource _lifetime = new();
 	private bool _loaded;
+	private readonly StoreCardLayout _cardLayout = new();
+	private Size _windowSize;
 
 	public StorePage(StoreClient client, GrownUpMode mode, UsageCounter usage)
 	{
@@ -198,6 +251,33 @@ public partial class StorePage : ContentPage, IGrownUpPage
 		_lifetime.Cancel();
 	}
 
+	// Slice 232 part D (mock Batch 44 frame 117): held sideways the cards are two columns (three on a tablet) of slimmer cards. Rotating changes the grid's span and the shared card sizes
+	// only: the rows, the filter, the open download and the scroll position are the page's own and are never rebuilt.
+	protected override void OnSizeAllocated(double width, double height)
+	{
+		base.OnSizeAllocated(width, height);
+		if (width <= 0 || height <= 0 || (width == _windowSize.Width && height == _windowSize.Height))
+		{
+			return;
+		}
+
+		_windowSize = new Size(width, height);
+		double inset = LandscapeLayout.IsLandscape(width, height) ? LandscapeLayout.SidewaysInset : 0;
+		Header.Margin = new Thickness(inset, 0, 0, 0);
+		ListPanel.Margin = new Thickness(inset, 0, 0, 0);
+		int columns = SettingsLayout.StoreColumns(width, height);
+		if (columns == _cardLayout.Columns)
+		{
+			return;
+		}
+
+		_cardLayout.SetColumns(columns);
+		((GridItemsLayout)StoryList.ItemsLayout).Span = columns;
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] store columns={columns} rows={_rows.Count}");
+#endif
+	}
+
 	/// <summary>Loads and shows the list; false when the page was left first, so the next appearance loads again. Runs from async void
 	/// handlers, so any other failure ends on the calm offline screen instead of crashing the app.</summary>
 	private async Task<bool> LoadAsync()
@@ -232,7 +312,7 @@ public partial class StorePage : ContentPage, IGrownUpPage
 	{
 		HashSet<string> onShelf = await _client.InstalledIdsAsync();
 		_allRows.Clear();
-		_allRows.AddRange(items.Select(item => new StoreRow(item, onShelf.Contains(item.Id))));
+		_allRows.AddRange(items.Select(item => new StoreRow(item, onShelf.Contains(item.Id), _cardLayout)));
 		if (_author is not null && !AuthorsInBand().Any(a => StoreFilter.SameAuthor(a, _author)))
 		{
 			_author = null;

@@ -34,6 +34,9 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 	private readonly BusyGuard _busy = new();
 	private readonly WaitController _wait;
 	private int _count;
+	private const double CardGap = 14;
+	private Size _windowSize;
+	private bool _sideBySide;
 
 	public BackupPage(IStoryLibrary library, ExternalActivityGuard external, GrownUpMode mode, UsageCounter usage)
 	{
@@ -47,6 +50,44 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		Grid.SetRowSpan(overlay, BackupRoot.RowDefinitions.Count);
 		BackupRoot.Children.Add(overlay);
 		_wait = new WaitController(overlay);
+	}
+
+	// Slice 232 part D (mock Batch 44 frame 124): held sideways the save and restore cards sit side by side, upright they stack; rotating only moves them in the grid,
+	// so a restore under way or its result panel is never touched. A sideways page keeps clear of the camera cut-out at its start.
+	protected override void OnSizeAllocated(double width, double height)
+	{
+		base.OnSizeAllocated(width, height);
+		if (width <= 0 || height <= 0 || (width == _windowSize.Width && height == _windowSize.Height))
+		{
+			return;
+		}
+
+		_windowSize = new Size(width, height);
+		double inset = LandscapeLayout.IsLandscape(width, height) ? LandscapeLayout.SidewaysInset : 0;
+		Header.Margin = new Thickness(inset, 0, 0, 0);
+		MainPanel.Margin = new Thickness(inset, 0, 0, 0);
+		ResultPanel.Margin = new Thickness(inset, 0, 0, 0);
+		bool sideBySide = SettingsLayout.BackupSideBySide(width, height);
+		if (sideBySide != _sideBySide)
+		{
+			_sideBySide = sideBySide;
+			PlaceCards(sideBySide);
+		}
+	}
+
+	private void PlaceCards(bool sideBySide)
+	{
+		int span = sideBySide ? 1 : 2;
+		CardsGrid.RowSpacing = sideBySide ? 0 : CardGap;
+		Grid.SetRow(SaveCard, 0);
+		Grid.SetColumn(SaveCard, 0);
+		Grid.SetColumnSpan(SaveCard, span);
+		Grid.SetRow(RestoreCard, sideBySide ? 0 : 1);
+		Grid.SetColumn(RestoreCard, sideBySide ? 1 : 0);
+		Grid.SetColumnSpan(RestoreCard, span);
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] backup sideBySide={sideBySide}");
+#endif
 	}
 
 	protected override async void OnAppearing()

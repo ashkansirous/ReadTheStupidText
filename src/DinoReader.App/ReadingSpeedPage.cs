@@ -52,7 +52,7 @@ public sealed class ReadingSpeedPage : SettingsSubPage
 		{
 			Debug.WriteLine($"Dino Reader speed sample failed: {ex}");
 			// Not awaited: the alert would keep the spinner up until it is dismissed.
-			_ = DisplayAlertAsync(CastText.Title, CastText.PreviewFailedBody, CastText.Ok);
+			_ = AlertAsync(CastText.Title, CastText.PreviewFailedBody, CastText.Ok);
 		}
 	}
 }

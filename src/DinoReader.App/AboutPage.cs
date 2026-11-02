@@ -43,7 +43,7 @@ public sealed class AboutPage : SettingsSubPage
 			Body.Children.Remove(_card);
 		}
 
-		View introRow = SettingsRows.IntroReplayRow(Navigation, _services, Busy);
+		View introRow = SettingsRows.IntroReplayRow(Nav, _services, Busy);
 		_card = VersionCard.Build(_config, Busy, introRow);
 		Body.Children.Add(_card);
 	}
