@@ -1,6 +1,6 @@
 # Slice 244 — Dino: find and fix the crashes of 2026-10-31 and 2026-11-01
 
-*Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
+*In progress (wave 2026-11-01), draft PR.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
 I can tell, when the story is playing and I click on back, it does not pause/stop the story", then "another slice to
 figuring out what can have cause the crashes today and yesterday and fixing them".
 
@@ -12,6 +12,21 @@ and works from the evidence below plus reproduction.
 `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader*.cs`,
 `src/ReadTheStupidText.Mobile.Shared/Crashes/**`, `src/ReadTheStupidText.Application/**/SpeechTextChunker.cs`,
 `tests/DinoReader.Tests/**`, `tests/ReadTheStupidText.Tests/**`, `src/DinoReader.App/CLAUDE.md`
+
+**Touches, widened at claim (premise check, 2026-11-01 night):** also `src/DinoReader.App/Platforms/iOS/IosTextMeasurer.cs` and `IosTextLineSource.cs` (named; covered by `Platforms/iOS/**`), `src/ReadTheStupidText.Mobile.Shared/**/MobileVoicePackService.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosBackgroundDownloader.cs`, `.maestro/dino/**` (an Android emulator flow), `docs/plan/slices/244-dino-ios-crashes-2026-11-01.md`.
+
+## Claim notes (coordinator, night 2026-11-01-2355)
+
+Premise check on origin/main corrected the slice:
+- **No MAUI handlers are customised.** The only text-attribute code is `Platforms/iOS/IosTextMeasurer.cs:18,24` (`UIStringAttributes`) and `IosTextLineSource.cs:47-56` (paragraph style, `AddAttribute`), both Dino and iOS only. Item 2 guards those two.
+- **Android is already bounded, iOS is not.** iOS `IosSupertonicSpeechReader.cs:444-452` (`StartGenerations`) starts one task per chunk for the whole text, awaited in order at `:376-380`. Android keeps `GenerationWindow = 8` (`AndroidSupertonicSpeechReader.cs:62`, chained `:476-482`) but still creates every task object up front.
+- **No CI workflow runs an iOS simulator flow** (`dinoreader-ios.yml` is compile and bundle check only), and the crashes were on an iPhone 8 under 3 GB RAM, which a simulator does not reproduce. Decision (coordinator): tonight builds no new simulator-flow workflow; iOS gets the existing compile check (`dinoreader-ios.yml`, the user allowed a few CI runs) and the reproduction on the iPhone 8 / simulator goes to *Not yet verified*. The Android emulator runs the Back / re-read / background flow.
+
+**Design (bounded generation, one owner):** the reader owns one generation window per read (a small class shared in shape by both platforms; its pure part, which chunk indexes to start next given the playing index and the window size, is unit-tested). It starts chunk `i` only when `i < playing + window`; window 8, or 3 when the device has under 3 GB physical memory (iOS `NSProcessInfo.PhysicalMemory`, Android `ActivityManager.MemoryInfo.TotalMem`). States: idle, reading (window filling as playback advances), stopped. Interrupts: Stop / Detach / Back cancel the read's one `CancellationTokenSource`; started generations see it and finish without playing, unstarted ones are never created; a new read gets a new CTS and window. Background: reading continues as today (no change). Killed: nothing persisted. Change Android to create tasks lazily the same way so both behave alike.
+
+**Design (attributes):** every value put into a `UIStringAttributes` / attributed-string attribute comes from one helper that falls back to `UIFont.SystemFontOfSize(size)` when the named font is null and never adds a null value; unit-test the pure fallback choice.
+
+**Design (`0xdead10cc`):** find each file handle kept open across suspension (rolling log writer, run marker, pack download streams). A log or marker write opens, writes and closes; a pack download stream that must stay open is wrapped in `UIApplication.BeginBackgroundTask` and closed in the expiry handler. Same review on Android (no kill there, parity of the code path only).
 
 ## Evidence (read 2026-11-01; raw files were in that session's scratchpad)
 
