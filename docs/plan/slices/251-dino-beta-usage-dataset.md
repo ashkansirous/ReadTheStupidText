@@ -2,7 +2,7 @@
 
 *Planned (2026-11-02). After [Slice 250](250-dino-playback-events-and-session-id.md).*
 
-**Touches:** `src/ReadTheStupidText.Mobile.Shared/Usage/UsageGate.cs`, `src/ReadTheStupidText.Mobile.Shared/Usage/UsageQueueSender.cs`, `src/ReadTheStupidText.Application/Usage/UsageBatch.cs`, `worker/events.ts`, `worker/test/**`, `wrangler.jsonc`, `worker/CLAUDE.md`, `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/251-dino-beta-usage-dataset.md`
+**Touches:** `src/ReadTheStupidText.Mobile.Shared/Usage/UsageGate.cs`, `src/ReadTheStupidText.Mobile.Shared/Usage/UsageQueueSender.cs`, `src/ReadTheStupidText.Application/Usage/UsageBatch.cs`, `worker/events.ts`, `worker/*.test.mjs`, `wrangler.jsonc`, `worker/CLAUDE.md`, `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/251-dino-beta-usage-dataset.md`
 
 **Why.** The user tested Dino iOS 1.94.0 from TestFlight on 2026-11-02 and the usage data held nothing of it: TestFlight and App Review installs send no usage (`UsageGate.cs:121-126`, Slice 179). The user, 2026-11-02: "any data that is in my analytics database is mine and I can look at it". Production counts must still hold only real store users (`~/.claude/CLAUDE.md`, *Analytics count only real production users*), so beta rows go to a separate dataset instead of being dropped.
 

@@ -2,7 +2,7 @@
 
 *Planned (2026-11-02).*
 
-**Touches:** `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/ReportProblem*.cs` (new), `src/DinoReader.App/Resources/Strings/AppResources*.resx` (own block), `src/ReadTheStupidText.Mobile.Shared/Crashes/**`, `src/ReadTheStupidText.Application/Crashes/CrashReport.cs`, `worker/crashes.ts`, `worker/test/**`, `tools/crashes/pull-crashes.mjs`, `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`, `STORE.md`, `.maestro/dino/**`, `docs/plan/slices/249-dino-report-a-problem.md`
+**Touches:** `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/ReportProblem*.cs` (new), `src/DinoReader.App/Resources/Strings/AppResources*.resx` (own block), `src/ReadTheStupidText.Mobile.Shared/Crashes/**`, `src/ReadTheStupidText.Application/Crashes/CrashReport.cs`, `worker/crashes.ts`, `worker/*.test.mjs`, `tools/crashes/pull-crashes.mjs`, `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`, `STORE.md`, `.maestro/dino/**`, `docs/plan/slices/249-dino-report-a-problem.md`
 
 **Why.** The user, 2026-11-02, after the Slice 248 bug: "what would we need if we want to be able to understand this problems based on the data when a user reports it?" A user's report today leads to no data: usage rows have no id and say nothing about playback, and TestFlight sends no usage at all (`UsageGate.cs:121-126`). The user approved this order (2026-11-02, "Im fine with your suggestions. lets plan them"): this slice first, then [Slice 250](250-dino-playback-events-and-session-id.md) (playback events and a session id), then [Slice 251](251-dino-beta-usage-dataset.md) (TestFlight rows in their own dataset).
 
