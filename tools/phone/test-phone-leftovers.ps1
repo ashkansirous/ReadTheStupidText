@@ -352,11 +352,34 @@ try {
     Close-PhoneLease 'ph' $leaseKey 'run-a' 6>$null | Out-Null
     Assert-Equal 'round 3: release leaves a value the user changed since' 0 @($script:AdbCalls | Where-Object { $_ -like '*settings put*' }).Count
     Reset-Fake
+    # Slice 236 review round 4: a 'hand' record (preflight.ps1 -Fix) never goes stale and only its own owner ('hand', preflight.ps1 -Restore) puts it back
+    $handRec = [pscustomobject]@{ owner = 'hand'; pid = 1; savedUtc = $now.ToString('o') }
+    Assert-Equal 'review 4: a lease owner leaves a hand record alone' 'LeaveAlone' (Get-StayOnRecordAction $handRec 'run-h' 999 $false $false $now)
+    Assert-Equal 'review 4: a caller with no owner leaves a hand record alone' 'LeaveAlone' (Get-StayOnRecordAction $handRec '' 999 $false $false $now)
+    Assert-Equal 'review 4: the hand owner restores it' 'Restore' (Get-StayOnRecordAction $handRec 'hand' 999 $false $false $now)
+    Assert-Equal 'review 4: a hand record never goes stale (left alone)' 'LeaveAlone' (Get-StayOnRecordAction $handRec 'run-h' 999 $false $false $now.AddDays(30))
+    Assert-Equal 'review 4: a hand record never goes stale (restored by hand)' 'Restore' (Get-StayOnRecordAction $handRec 'hand' 999 $false $false $now.AddDays(30))
+    Reset-Fake
+    $handKey = 'KEY-HAND'
+    Save-StayOnOriginal $handKey '0' '' ([DateTime]::UtcNow) 'hand' $deadPid | Out-Null
+    $script:FakeStayOn = '7'
+    Request-Lease $handKey 'run-h' 60 | Out-Null
+    $script:AdbCalls.Clear()
+    Assert-Equal 'review 4: a take keeps the preflight -Fix record' $false (Save-StayOnForLease 'ph' $handKey 'run-h')
+    Assert-Equal 'review 4: the preflight record is not healed at the take' 0 @($script:AdbCalls | Where-Object { $_ -like '*settings put*' }).Count
+    Close-PhoneLease 'ph' $handKey 'run-h' 6>$null | Out-Null
+    Assert-Equal 'review 4: a lease release does not restore a hand record' 0 @($script:AdbCalls | Where-Object { $_ -like '*settings put*' }).Count
+    Assert-Equal 'review 4: the hand record survives the release' '0' "$((Read-StayOnOriginal $handKey).orig)"
+    $handDone = Invoke-StayOnRestore 'ph' $handKey 'hand'
+    Assert-Equal 'review 4: preflight -Restore puts the hand record back' $true ($handDone.Restored -and ($script:AdbCalls -contains 'shell settings put global stay_on_while_plugged_in 0'))
+    Assert-Equal 'review 4: the hand record is used up' $null (Read-StayOnOriginal $handKey)
+    Reset-Fake
     Assert-Equal 'round 3: preflight -Fix heals through the same function' $true ((Get-Content (Join-Path $PSScriptRoot 'preflight.ps1') -Raw) -match '(?s)if \(\$Fix\).*Invoke-StayOnRestore')
     $leaseScript = Get-Content (Join-Path $PSScriptRoot 'lease.ps1') -Raw
     Assert-Equal 'item 11: lease.ps1 -Release goes through Close-PhoneLease' $true ($leaseScript -match 'Close-PhoneLease')
     Assert-Equal 'review 2: the timed run releases through Close-PhoneLease, not Remove-Lease' $true (((Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw) -match 'Close-PhoneLease') -and ((Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw) -notmatch 'Remove-Lease'))
-    Assert-Equal 'review 2: a plain preflight never records the setting' $false ((Get-Content (Join-Path $PSScriptRoot 'preflight.ps1') -Raw) -match 'Save-StayOn')
+    $preflightText = Get-Content (Join-Path $PSScriptRoot 'preflight.ps1') -Raw
+    Assert-Equal 'review 2 / Slice 236 item 6: Save-StayOn only inside the -Fix branch of preflight' $true ($preflightText -match '(?s)if \(-not \$Fix\) \{ Write-Check ''stay awake''[^\r\n]*return \}\r?\n(?:\s*#[^\r\n]*\r?\n)?\s*\$recorded = Save-StayOnOriginal' -and ([regex]::Matches($preflightText, 'Save-StayOn')).Count -eq 1)
     Assert-Equal 'review 2: lease.ps1 -Take records it only when it is a new take' $true ($leaseScript -match '(?s)\$wasMine.*if \(-not \$wasMine\).*Save-StayOnForLease')
     Assert-Equal 'review 2: the timed run records it only when it takes the lease itself' $true ((Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw) -match 'if \(-not \$heldBy -and -not \$State\.Mine\)[^}]*Save-StayOnForLease')
     Assert-Equal 'review 2: no power key press is left in the release code' $false ((Get-Content (Join-Path $PSScriptRoot 'common.ps1') -Raw) -match 'PowerKeyEvent')

@@ -11,7 +11,8 @@
                    write the no-usage marker (and the throttle marker if it was there) again, copy the packs back and say "packs restored" only after each pack passes the install check (Test-PackInstalled), relaunch with the
                    skip-first-run hook, confirm alive. The archive is kept (its path is printed); only the newest 3 archives per package are kept, older ones are deleted after each new one verifies. If putting the packs back fails the ladder stops (STOPPED line) and the copy is left for a hand restore.
   -Level reinstall as clear, but installs (adb install -r, never an uninstall) the APK from the shared build cache (audio-timing.ps1 builds and caches it) between the two.
-  -Level auto      setting, then clear, then reinstall; stops at the first level where the app comes up alive and prints which one worked.
+  -Level auto      setting, then clear, then reinstall; stops at the first level where the app comes up alive and prints which one worked. Slice 236 item 3: when the app is alive after `setting` but its log
+                   saved preferences hold `VoiceCancelHeldLanguage` (or its log since the launch has `VOICEPACK held-user-cancelled`; a cancelled pack download's hold, which only `clear` removes), auto goes on to `clear` instead of stopping (RTST and Dino alike).
   Exit 0 alive, 1 not alive after the last level run, 4 the phone is leased by someone else.
   Android sources: `run-as <package>` runs a command as the app for a debuggable build; `pm clear`; `cmd package resolve-activity --brief`.
 #>
@@ -22,6 +23,7 @@ param(
     [int]$AliveSeconds = 60
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'checks\_lib.ps1')   # Slice 236 item 3: Get-DownloadHoldLines (pure). Before common.ps1 on purpose: both define Get-PackageUid and common.ps1's adb version must win here.
 . (Join-Path $PSScriptRoot 'common.ps1')
 . (Join-Path $PSScriptRoot '..\emulator\build-cache.ps1')
 
@@ -213,6 +215,32 @@ function Restore-LeftoverAside([string]$Phone) {
     catch { Write-Host "   WARNING: could not restore the leftover archive ($($_.Exception.Message)); it stays at $archive." }
 }
 
+# Slice 236 item 3: a `VOICEPACK held-user-cancelled` hold (a pack download the user cancelled) survives every level but pm clear, and it stops the automatic download a check waits for.
+# The hold is saved in the app's shared preferences (key VoiceCancelHeldLanguage, RTST and Dino alike), so it is read from there: the app logs the hold line only when it tries an automatic start, which may not have happened yet.
+# The log of the pid that just came up is read too. Evidence lines, or none.
+function Get-HoldLinesSinceLaunch([string]$Phone) {
+    $evidence = @()
+    $names = @(Invoke-Adb $Phone @('shell', "run-as $package ls shared_prefs")) | ForEach-Object { "$_".Trim() } | Where-Object { $_.EndsWith('.xml') }
+    foreach ($name in $names) {
+        $held = Get-HeldLanguageFromPrefs ((Invoke-Adb $Phone @('shell', "run-as $package cat shared_prefs/$name")) -join "`n")
+        if ($held) { $evidence += "VoiceCancelHeldLanguage=$held (shared_prefs/$name)" }
+    }
+    $appPid = Get-AppPid $Phone
+    if ($appPid) { $evidence += @(Get-DownloadHoldLines @(Invoke-Adb $Phone @('shell', "logcat -d -T '$($script:LogSince)' --pid=$appPid"))) }
+    return $evidence
+}
+
+# $true when an alive level must still be escalated to `clear` because the app reports the hold. Only -Level auto escalates (an explicit level does what it says); never past clear.
+function Test-HoldNeedsClear([string]$Phone, [string]$LevelName) {
+    if ($Level -ne 'auto' -or $LevelName -ne 'setting') { return $false }
+    # Slice 236 review: a failed read (non-debuggable build, no shared_prefs, run-as refused) is "no hold known", never an abort that skips the verdict.
+    try { $hold = @(Get-HoldLinesSinceLaunch $Phone) }
+    catch { Write-Host "   download hold: could not be read ($($_.Exception.Message)); the level's result stands"; return $false }
+    if ($hold.Count -eq 0) { Write-Host '   download hold: none reported by the app since the launch'; return $false }
+    Write-Host "   download hold found ($($hold[0].Trim())): the app is alive but would not start a pack download; escalating to level 'clear' (installed packs are kept aside and put back)"
+    return $true
+}
+
 $phone = Find-WirelessPhone $Serial
 if (-not $phone) { Write-PairingAsk; exit 2 }
 Assert-PhoneLease $phone
@@ -221,6 +249,7 @@ foreach ($name in $(if ($Level -eq 'auto') { 'setting', 'clear', 'reinstall' } e
     # below; auto goes on to the next level. A failed aside stops each clear level before its pm clear.
     $alive = $false
     try { $alive = Invoke-Level $phone $name } catch { Write-Host "   level '$name' failed: $($_.Exception.Message)" }
+    if ($alive -and (Test-HoldNeedsClear $phone $name)) { $script:AliveWithHold = $true; continue }
     if ($alive) { Write-Host "RESET OK at level '$name'"; exit 0 }
     if ($script:PacksNotRestored) {
         # A later clear would see no packs and call that the baseline; stop and leave the complete copy for a hand restore.
@@ -228,5 +257,7 @@ foreach ($name in $(if ($Level -eq 'auto') { 'setting', 'clear', 'reinstall' } e
         break
     }
 }
+if ($script:PacksNotRestored) { exit 1 }   # the STOPPED line above is the cause; no other verdict is added on top of it
+if ($script:AliveWithHold) { Write-Host "RESET PARTIAL: the app was alive at level 'setting' with a download hold, and no later level came up alive (see the lines above); the app may now be dead."; exit 1 }
 Write-Host 'RESET FAILED: the app is still not alive after the last level.'
 exit 1

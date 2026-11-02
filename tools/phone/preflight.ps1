@@ -14,6 +14,7 @@
 param(
     [string]$Serial,
     [switch]$Fix,
+    [switch]$Restore,   # Slice 236 item 6: writes stay_on_while_plugged_in back to the value -Fix (or a lease take) recorded, then exits; no checks run
     [ValidateSet('rtst', 'dino', 'both')][string]$App = 'both'
 )
 $ErrorActionPreference = 'Stop'
@@ -63,6 +64,9 @@ function Test-StayAwake([string]$Phone) {
     if ($bit -eq 0) { Write-Check 'stay awake' 'WARN' "not on a charger, so stay_on_while_plugged_in ($value) cannot apply"; return }
     if (Test-StayOnCovers $value $bit) { Write-Check 'stay awake' 'OK' "stay_on_while_plugged_in = $value (covers this charger, bit $bit)"; return }
     if (-not $Fix) { Write-Check 'stay awake' 'FAIL' "stay_on_while_plugged_in = '$value' does not cover this charger (bit $bit): the screen can sleep. Run preflight.ps1 -Fix to set it to $($script:StayOnAll)"; return }
+    # Slice 236 item 6: the old value goes into the night folder (<worktrees>\.phone\stayon-<phone>.json) before it is changed; a record that already exists (a lease take wrote it) is kept. preflight.ps1 -Restore writes it back.
+    $recorded = Save-StayOnOriginal (Get-PhoneLeaseKey $Phone) $value '' ([DateTime]::UtcNow) $script:StayOnHandOwner
+    Write-Host "   $(if ($recorded) { "recorded $($script:StayOnSetting) = '$value' for -Restore (it never expires; only -Restore puts it back)" } else { 'a stay-on record already exists (kept); -Restore writes it back' })"
     Invoke-Adb $Phone @('shell', 'settings', 'put', 'global', 'stay_on_while_plugged_in', $script:StayOnAll) | Out-Null
     Write-Check 'stay awake' 'OK' "was '$value', set stay_on_while_plugged_in to $($script:StayOnAll) (-Fix; it stays on, turn it off in Developer options if unwanted)"
 }
@@ -115,9 +119,20 @@ function Test-Lease([string]$Phone) {
     else { Write-Check 'phone lease' 'FAIL' "held by $(Format-LeaseHolder $held), not by this session ('$me')" }
 }
 
+# Slice 236 item 6: the same restore rule every release path uses (written back only if the phone still holds the value the tooling set). Exit 0 restored or nothing recorded, 1 left alone or the value changed since.
+function Invoke-RestoreMode([string]$Phone) {
+    $result = Invoke-StayOnRestore $Phone (Get-PhoneLeaseKey $Phone) $script:StayOnHandOwner
+    if (-not $result) { Write-Host "no $($script:StayOnSetting) record: nothing to restore"; return 0 }
+    if ($result.Restored) { Write-Host "RESTORED: $($script:StayOnSetting) put back to $($result.Value)"; return 0 }
+    if ($result.Action -eq 'LeaveAlone') { Write-Host "NOT RESTORED (LeaveAlone): the record belongs to a live run or a held lease; it is left for that run to put back"; return 1 }
+    Write-Host "NOT RESTORED ($($result.Action)): the phone no longer holds the value this tooling set ($($script:StayOnSetValue)) or the record was stale, so the user's own change is kept and the record is deleted"
+    return 1
+}
+
 $phone = $null
 try { $phone = Find-WirelessPhone $Serial } catch { Write-Host "adb failed: $($_.Exception.Message)"; Write-Host "PREFLIGHT NO-GO: adb: $($_.Exception.Message)"; exit 1 }
 if (-not $phone) { Write-PairingAsk; exit 2 }
+if ($Restore) { exit (Invoke-RestoreMode $phone) }
 Write-Host "Preflight for $phone"
 Write-Check 'connection' 'OK' 'wireless adb'
 Invoke-Check 'charging' { Test-Charging $phone }

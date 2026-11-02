@@ -1,0 +1,90 @@
+# Slice 232 part B: the kids' shelf is one sideways row of covers on a phone held sideways, the grown-ups' corner gets an ink side rail (300 dp, three columns on the test emulator), and the book sheet is a centred card;
+# rotating back keeps grown-up mode and the open sheet. Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback if a device ignores it.
+# The gate is not tapped: the enter-grown-up hook stands in for a passed gate (grown-ups-button.yaml covers the gate chain).
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK enter-grown-up ok
+# The shelf lines are written only when the layout changes: sideways row held sideways on the kids' shelf, then the rail (300 dp on a phone) with however many columns the AVD gives (run-flows matches whole tokens, so each token is its own expect-log and the column count is left out; railWidth is C# double text, 300).
+# expect-log: layout=sideways
+# expect-log: layout=rail
+# expect-log: railWidth=300
+# expect-log: [Landscape] book sheet card=True width=580
+# Back upright: the sheet is a bottom sheet again, and the corner is the grid with no rail.
+# expect-log: [Landscape] book sheet card=False
+# expect-log: layout=grid
+appId: uk.sirous.dinoreader.dbg
+name: Shelf, corner and book sheet in landscape keep their state through a rotation
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow uses the starter shelf only and reads nothing aloud, so it needs no pack or own book.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# Kids' shelf, held sideways: the covers are still there and the grown-ups pill stays on screen.
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 15000
+# A cover title, not only the tile node: the covers must really draw right after the rotation (they once stayed blank until the page was left and re-entered).
+- extendedWaitUntil:
+    visible: ".*Three Little Pigs.*"
+    timeout: 15000
+- assertVisible:
+    id: GalleryGrownUps
+# Into the corner while still sideways: the rail carries the one line and the way back.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+- assertVisible:
+    id: GalleryCornerLine
+- assertVisible:
+    id: GalleryAddBook
+- assertVisible:
+    id: GalleryStore
+- assertVisible:
+    id: StoryTile
+# The one-time "Storyteller voices are ready" note can cover the corner once the background pack download ends: dismiss it by its OK, only when it is on screen.
+- runFlow:
+    when:
+      visible: Storyteller voices are ready
+    commands:
+      - tapOn: "OK"
+# A book's sheet opens as a centred card, Read now still first.
+- tapOn:
+    id: TileMore
+    index: 0
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: BookSheetReadNow
+    timeout: 10000
+- assertVisible:
+    id: BookSheetClose
+# Rotate upright with the sheet open: the same sheet is still open (as a bottom sheet), grown-up mode is kept.
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: BookSheetReadNow
+    timeout: 15000
+- tapOn:
+    id: BookSheetClose
+    waitToSettleTimeoutMs: 300
+- assertVisible:
+    id: GalleryDone
+- extendedWaitUntil:
+    visible: ".*Three Little Pigs.*"
+    timeout: 15000
+- assertVisible:
+    id: GalleryCornerLine
+- assertNotVisible:
+    id: GalleryGrownUps

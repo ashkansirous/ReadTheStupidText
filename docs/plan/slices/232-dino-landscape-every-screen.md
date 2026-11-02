@@ -1,10 +1,14 @@
 ### Slice 232 — Dino: a proper landscape design for every screen
 
-*Part A merged as PR #695 (0ccee639); parts B-E planned (the slice stays open).* From the user's user test on 2026-11-01 (finding 8: "the landscape mode sucks"). **Design done: Batch 44 mock, user answers recorded below** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code"). Start after Slices 228 and 229 merge, so the mock draws their new header, pill and buttons.
+*Part B built 2026-11-02, not merged (see *Part B: built* below); parts C-E planned (the slice stays open).* *Part A merged as PR #695 (0ccee639); parts C-E planned (the slice stays open).* From the user's user test on 2026-11-01 (finding 8: "the landscape mode sucks"). **Design done: Batch 44 mock, user answers recorded below** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code"). Start after Slices 228 and 229 merge, so the mock draws their new header, pill and buttons.
 
 **Touches:** `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.Core/GalleryLayout.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.Core/ReadingLayoutRules.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastViews.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/IntroWizardPage.Art.cs`, `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/BackupPage.xaml`, `src/DinoReader.App/PageEditorPage.xaml`, `tests/DinoReader.Tests/**Layout*`, `src/DinoReader.Core/*Layout*.cs`, `src/DinoReader.App/GrownUpHeader.cs`, `src/DinoReader.App/ReadingTheme.cs`, `src/DinoReader.App/*Page*.cs` (Settings sub-pages), `docs/design/dino-reader/**`, `docs/plan/slices/232-dino-landscape-every-screen.md`
 
 **Touches, part A (this claim, 2026-11-01):** `src/DinoReader.Core/ReadingLayoutRules.cs`, `src/DinoReader.Core/LandscapeLayout.cs` (new), `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/ReadingTheme.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/TransportRow.cs` (both added mid-build: the picture crop and the control row live there), `tests/DinoReader.Tests/*Layout*Tests.cs`, `tools/emulator/rotate.ps1` (new), `.maestro/dino/dino-landscape-reading*.yaml` (new), `docs/plan/slices/232-dino-landscape-every-screen.md`
+
+**Touches, part B (claim 2026-11-01, night 2026-11-01-2355):** `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/GrownUpHeader.cs`, `src/DinoReader.App/GrownUpMode.cs` (only if the rail needs its state), `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.Core/GalleryLayout.cs`, `src/DinoReader.Core/BookSheetPlan.cs`, `src/DinoReader.Core/LandscapeLayout.cs`, `tests/DinoReader.Tests/LandscapeLayoutTests.cs`, `tests/DinoReader.Tests/BookSheetPlanTests.cs`, `tests/DinoReader.Tests/GalleryLayout*Tests.cs`, `src/DinoReader.Core/ScrollAnchorRules.cs` and `tests/DinoReader.Tests/ScrollAnchorRulesTests.cs` (new, added at the medium fix round: the rotation anchor's pure rules), `.maestro/dino/dino-landscape-shelf*.yaml` (new), `docs/plan/slices/232-dino-landscape-every-screen.md`. `tools/emulator/rotate.ps1` is reused, not edited; rotation in flows is Maestro `setOrientation` as in part A (rotate.ps1 is the adb fallback).
+
+**Part B design note (coordinator, claim):** the corner has no page of its own: it is `GalleryPage` in grown-up mode (`GrownUpHeader.cs`, `GrownUpMode.cs`). Every size comes from one pure call per layout pass on the window size: `LandscapeLayout.ShelfLayout` (sideways row on phone landscape, grid otherwise), `LandscapeLayout.ListPaneWidth`/`PinnedButton` for the corner rail; the page never recomputes widths or the 600 dp split. Rotation changes only layout, never the shelf's state (grown-up mode, scroll target book, open sheet). Book sheet in landscape: one centred card 580 dp (cover left, actions right), the same on tablets; its size is a pure function in `BookSheetPlan` with a unit test.
 
 #### Parts (coordinator, claim 2026-11-01)
 
@@ -63,7 +67,9 @@ Settled by the mock: tablet versus phone is split at a 600 dp short side; the co
 
 - [x] **Design (Claude Code):** mock done (Batch 44, 2026-11-01: `docs/design/dino-reader/Dino Reader Batch 44 Landscape.dc.html`, frames 110-130 and 132; 131 night not built). User answers recorded above.
 - [x] Part A: the reading screen (built 2026-11-01, see *Part A: built* below).
-- [ ] Build the rest (parts B-E), each with its layout rule tests.- [ ] Rotation keeps state (reading position, recording in progress, wizard step, gate progress).
+- [x] Part B: shelf, grown-ups' corner and book sheet (built 2026-11-02, see *Part B: built* below).
+- [ ] Build the rest (parts C-E), each with its layout rule tests.
+- [ ] Rotation keeps state (reading position, recording in progress, wizard step, gate progress).
 - [ ] Android and iOS built and checked together.
 
 #### Verification
@@ -99,12 +105,48 @@ Emulator RTST_Test, 2026-11-01: `dino-landscape-reading` PASS, `open-book` PASS,
 
 Parts B-E unchanged (planned).
 
+#### Part B: built (2026-11-02, not merged)
+
+- Core: `LandscapeLayout.CornerLayout` / `CoverWidth` / `CornerColumnsFor` (rail = `ListPaneWidth`, 300 dp phone / 360 dp tablet; 2-5 columns of at least 100 dp from the width left; the rail also applies on a tablet in portrait from 744 dp). `BookSheetPlan.ShapeFor` (580 dp centred card in landscape, bottom sheet upright). `ScrollAnchorRules` (rotation anchor is a book id; swap generation; pure, tested).
+- Kids' shelf: a sideways row on phone landscape (cover height = window height - 120), a grid otherwise. The list rebinds its `ItemsSource` when the layout kind flips (likely cause of the blank shelf after rotating on Android: the list kept its old layout; fixed, covers drawn 2 s after rotating on the emulator rerun).
+- Grown-ups' corner: ink rail with header, line, Add and Store, a scrolling middle, and the way-back button pinned at the foot. Book sheet: a card in landscape, Remove on its own last row. Portrait Add/Store tiles are unchanged from main (52 dp, truncation); the two-line wrap applies only in the rail.
+- Flow `.maestro/dino/dino-landscape-shelf.yaml` (`setOrientation`; whole-token log markers; waits for a book title after each rotation).
+- Checks: `dotnet test tests/DinoReader.Tests` 1965 pass; Android build; iOS compile; flow lint 0.
+- Emulator (1080x2400, 420 dp, about 914x411 dp sideways), 2026-11-02: first run `dino-landscape-reading` PASS, `open-book` PASS; the shelf flow failed on a hard-coded `columns=3` (flow bug) and showed a blank shelf 4 s after rotating (app bug, fixed); corner rail, sheet card and portrait shots good; the same book and open sheet were kept across rotation. Rerun on build 6f6bdc3797c8: `dino-landscape-shelf` PASS. Screenshots: `D:/ReadTheStupidText-worktrees/reviews/s232b-shots/`.
+
+Changed while building (deviations from the mock):
+
+- The card keeps its 48 dp close button.
+- Tablet-portrait rail 340 dp became 360 dp (`ListPaneWidth`), so the design note's 300/360 now matches the code (the first build used 270/340).
+- A 10-inch tablet in portrait gets 4 kids' columns where the mock text says 3.
+- Phone rail text sizes were read from the mock.
+
+From review (findings files in `D:/ReadTheStupidText-worktrees/reviews/`):
+
+- `s232b-high.md`: applied 1, 2, 4, 5, 8, 9. Skipped 3 (full re-arrange on every size change: cleanup), 6 (title height kept at two lines in the sideways row: cosmetic), 7 (inline layout numbers: cleanup), 10 (cut-out inset added on top of `SafeAreaEdges`: needs a notched device).
+- `s232b-medium.md`: applied 1, 3, 5, and 4 through the book-id anchor design (`ScrollAnchorRules`) after a second strike on the same area. Skipped 2 (low: re-arranging the sheet on a size change resets its scroll).
+- `s232b-check-medium.md`: all skipped. Anchor edge cases 1-3 (400 ms swap timeout, a drag swallowed as the swap's own, mode toggle keeping an anchor) are left to the device run after a third pass on the area. 4 (rotating with the sheet open rebuilds the rows and can drop an in-flight Remove confirmation) is low, a follow-up. 5-10 low.
+- `s232b-check2-medium.md`: skipped 1 and 2 (device-only scroll timing; the rerun showed the covers draw).
+
+Reviewed findings read: 10/10, 5/5, 10/10, 2/2.
+
 #### For CLAUDE.md (lifted 2026-11-01)
 
 - Landscape reading-screen sizes and the rail-versus-row rule come from `src/DinoReader.Core/LandscapeLayout.cs` (one window-based decision via `ReadingSurface.SetControls`); do not recompute pane widths or the 480 dp rule in the pages. (Slice 232: docs/plan/slices/232-dino-landscape-every-screen.md)
 
+#### For CLAUDE.md, part B (2026-11-02, not yet lifted)
+
+- Shelf, corner and book-sheet sizes come from `LandscapeLayout` / `BookSheetPlan` in `src/DinoReader.Core`; `GalleryPage` computes no widths. (Slice 232: docs/plan/slices/232-dino-landscape-every-screen.md)
+- A `CollectionView` whose `ItemsLayout` kind changes must rebind its `ItemsSource` (`src/DinoReader.App/CLAUDE.md`); otherwise Android keeps the old layout and shows a blank shelf after rotating. (Slice 232: docs/plan/slices/232-dino-landscape-every-screen.md)
+
 #### Not yet verified
 
+- Part B: the same book stays in view after rotating a shelf with more than 4 books (the emulator shelf has 4, all on screen).
+- Part B: tablet landscape and portrait (no tablet AVD); iPhone and iPad (iOS compile only).
+- Part B: notch inset doubling with `SafeAreaEdges` (high 10).
+- Part B: a 360 dp-tall phone, the card and Remove fit.
+- Part B: rotating with the sheet open during a Remove confirmation.
+- Part B: VoiceOver / TalkBack order in the rail.
 - Tablet landscape (no tablet AVD): the controls row under the card and its left edge.
 - iPhone and iPad landscape (iOS compile only).
 - VoiceOver / TalkBack order in landscape.

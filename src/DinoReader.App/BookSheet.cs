@@ -19,6 +19,12 @@ internal sealed class BookSheet : Grid
 	public sealed record Content(string Title, string OriginText, string? CoverImagePath, Color CoverFill, BookSheetPlan Plan, bool ShowOriginal, string OriginalHint, VoiceOffer? Voice);
 
 	private const double SheetCorner = 28;
+	private const double CardCorner = 26;
+	private const double CardCoverCorner = 14;
+	private const double CardPadding = 16;
+	private const double CardRowSpacing = 9;
+	private const double CardReadNowHeight = 52;
+	private const double CardActionHeight = 44;
 	private const double RowHeight = 64;
 	private const double RowCorner = 16;
 	private const double PillHeight = 48;
@@ -53,6 +59,17 @@ internal sealed class BookSheet : Grid
 	private readonly Border _removeRow = new();
 	private readonly Border _readNowRow = new();
 	private readonly ScrollView _scroll = new();
+	private readonly Border _sheet = new();
+	private readonly VerticalStackLayout _sheetRows = new() { Spacing = 12 };
+	private readonly VerticalStackLayout _cardRows = new() { Spacing = CardRowSpacing };
+	private readonly Grid _pills = new() { ColumnSpacing = 8 };
+	private readonly Grid _card = new() { ColumnSpacing = CardPadding };
+	private readonly Border _cover = new(); // the card's big cover; the sheet's header has the small thumbnail
+	private View _grab = null!;
+	private Grid _header = null!;
+	private Border _recordPill = null!;
+	private Border _castPill = null!;
+	private BookSheetShape _shape = BookSheetShape.BottomSheet;
 	private bool _loading;
 
 	public BookSheet()
@@ -60,20 +77,125 @@ internal sealed class BookSheet : Grid
 		IsVisible = false;
 		BackgroundColor = DinoTokens.Get(DinoTokens.SheetScrim);
 		CastViews.AddTap(this, () => { Dismiss(); return Task.CompletedTask; });
-		var sheet = new Border
-		{
-			VerticalOptions = LayoutOptions.End,
-			BackgroundColor = Colors.White,
-			StrokeThickness = 0,
-			Padding = new Thickness(18, 12, 18, 26),
-			StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(SheetCorner, SheetCorner, 0, 0) },
-			Content = ScrolledRows(), // a short screen scrolls the rows instead of cutting them off
-		};
-		CastViews.AddTap(sheet, () => Task.CompletedTask);
+		_sheet.BackgroundColor = Colors.White;
+		_sheet.StrokeThickness = 0;
+		_sheet.Content = _scroll; // a short screen scrolls the rows instead of cutting them off
+		BuildParts();
+		Arrange(BookSheetShape.BottomSheet);
+		CastViews.AddTap(_sheet, () => Task.CompletedTask);
 		// No Done row (Slice 228): a tap outside or the labelled close button in the header closes the sheet; a swipe down is not used, it fought the scrolling rows.
-		Children.Add(sheet);
+		Children.Add(_sheet);
 		_original.Toggled += (_, _) => OnToggled();
 		_voice.Toggled += (_, _) => OnVoiceToggled();
+		SizeChanged += (_, _) => FitToWindow(Width, Height);
+	}
+
+	// Each row is built once and re-parented by Arrange, so a rotation never doubles a tap handler.
+	private void BuildParts()
+	{
+		_grab = GrabHandle();
+		_header = Header();
+		_recordPill = RecordPill();
+		_castPill = CastPill();
+		ReadNowRow();
+		OriginalRow();
+		VoiceRow();
+		QuietRow(_editRow, _editLabel, () => EditRequested, "BookSheetEdit");
+		QuietRow(_exportRow, _exportLabel, () => ExportRequested, "BookSheetExport");
+		RemoveRow();
+		_cover.StrokeThickness = 0;
+		_cover.WidthRequest = BookSheetPlan.CardCoverWidth;
+		_cover.HeightRequest = BookSheetPlan.CardCoverWidth / LandscapeLayout.DefaultPictureAspect;
+		_cover.VerticalOptions = LayoutOptions.Start;
+		_cover.StrokeShape = new RoundRectangle { CornerRadius = CardCoverCorner };
+	}
+
+	// Slice 232 part B (mock Batch 44 frame 112): held sideways a bottom sheet would cover a 360 dp screen, so the sheet is one centred card (cover left, actions right); upright it is the bottom sheet.
+	private void FitToWindow(double width, double height)
+	{
+		BookSheetShape shape = BookSheetPlan.ShapeFor(width, height);
+		if (shape != _shape)
+		{
+			Arrange(shape);
+#if DEBUG
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] book sheet card={shape.Card} width={shape.CardWidth}");
+#endif
+		}
+	}
+
+	private void Arrange(BookSheetShape shape)
+	{
+		_scroll.Content = null;
+		_sheetRows.Children.Clear();
+		_cardRows.Children.Clear();
+		_card.Children.Clear();
+		_pills.Children.Clear();
+		if (shape.Card)
+		{
+			ArrangeCard(shape);
+		}
+		else
+		{
+			ArrangeSheet();
+		}
+
+		_shape = shape;
+	}
+
+	private void ArrangeSheet()
+	{
+		SizeRows(readNow: ReadNowHeight, pill: PillHeight, readNowFont: 18);
+		_pills.ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)];
+		_pills.Add(_recordPill, 0);
+		_pills.Add(_castPill, 1);
+		_thumb.IsVisible = true;
+		foreach (View row in new View[] { _grab, _header, _readNowRow, _row, _voiceRow, _pills, _editRow, _exportRow, _removeRow })
+		{
+			_sheetRows.Children.Add(row);
+		}
+
+		_sheet.VerticalOptions = LayoutOptions.End;
+		_sheet.HorizontalOptions = LayoutOptions.Fill;
+		_sheet.WidthRequest = -1;
+		_sheet.MaximumHeightRequest = double.PositiveInfinity;
+		_sheet.Padding = new Thickness(18, 12, 18, 26);
+		_sheet.StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(SheetCorner, SheetCorner, 0, 0) };
+		_scroll.Content = _sheetRows;
+	}
+
+	private void ArrangeCard(BookSheetShape shape)
+	{
+		SizeRows(readNow: CardReadNowHeight, pill: CardActionHeight, readNowFont: 17);
+		_pills.ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)];
+		_pills.Add(_recordPill, 0);
+		_pills.Add(_castPill, 1);
+		_thumb.IsVisible = false; // the big cover takes its place
+		foreach (View row in new View[] { _header, _readNowRow, _row, _voiceRow, _pills, _editRow, _exportRow, _removeRow })
+		{
+			_cardRows.Children.Add(row);
+		}
+
+		_card.ColumnDefinitions = [new ColumnDefinition(new GridLength(BookSheetPlan.CardCoverWidth)), new ColumnDefinition(GridLength.Star)];
+		_card.Add(_cover, 0);
+		_card.Add(_cardRows, 1);
+		_sheet.VerticalOptions = LayoutOptions.Center;
+		_sheet.HorizontalOptions = LayoutOptions.Center;
+		_sheet.WidthRequest = shape.CardWidth;
+		_sheet.MaximumHeightRequest = shape.CardMaxHeight;
+		_sheet.Padding = new Thickness(CardPadding);
+		_sheet.StrokeShape = new RoundRectangle { CornerRadius = CardCorner };
+		_scroll.Content = _card;
+	}
+
+	// The heights that differ between the sheet and the card; Remove is the last row on both the card and the sheet.
+	private void SizeRows(double readNow, double pill, double readNowFont)
+	{
+		_readNowRow.HeightRequest = readNow;
+		((Microsoft.Maui.Controls.Shapes.RoundRectangle)_readNowRow.StrokeShape!).CornerRadius = readNow / 2;
+		_readNowLabel.FontSize = readNowFont;
+		_recordPill.HeightRequest = pill;
+		_castPill.HeightRequest = pill;
+		_removeRow.HeightRequest = pill;
 	}
 
 	/// <summary>Raised with the new state of "Show original text".</summary>
@@ -103,12 +225,6 @@ internal sealed class BookSheet : Grid
 	/// <summary>Raised when the grown-up closes the sheet to go on with the story (Back, a tap on the dimmed page or the system back button), not when it closes for the cast screen.</summary>
 	public event Action? Dismissed;
 
-	private ScrollView ScrolledRows()
-	{
-		_scroll.Content = Rows();
-		return _scroll;
-	}
-
 	public void Show(Content content)
 	{
 		_ = _scroll.ScrollToAsync(0, 0, false); // the next book's sheet opens at its header
@@ -126,7 +242,16 @@ internal sealed class BookSheet : Grid
 		_loading = false;
 		_voiceHint.Text = content.Voice is null ? string.Empty : ReadingText.UseMyVoiceHint(content.Voice.Recorded, content.Voice.Pages);
 		ApplyTexts();
+		FitToParent(); // a hidden sheet gets no SizeChanged, so a rotation while it was closed is applied before it shows
 		IsVisible = true;
+	}
+
+	private void FitToParent()
+	{
+		if (Parent is VisualElement { Width: > 0, Height: > 0 } page)
+		{
+			FitToWindow(page.Width, page.Height);
+		}
 	}
 
 	// The labels are set on every show, so a changed app language reaches this cached sheet.
@@ -144,8 +269,11 @@ internal sealed class BookSheet : Grid
 	// The cover's picture, or its colour when the book has none.
 	private void ShowThumb(Content content)
 	{
-		_thumb.BackgroundColor = content.CoverFill;
-		_thumb.Content = content.CoverImagePath is { } path ? new Image { Source = ImageSource.FromFile(path), Aspect = Aspect.AspectFill } : null;
+		foreach (Border cover in new[] { _thumb, _cover })
+		{
+			cover.BackgroundColor = content.CoverFill;
+			cover.Content = content.CoverImagePath is { } path ? new Image { Source = ImageSource.FromFile(path), Aspect = Aspect.AspectFill } : null;
+		}
 	}
 
 	public void Hide() => IsVisible = false;
@@ -177,9 +305,6 @@ internal sealed class BookSheet : Grid
 			_ = changed(_voice.IsOn);
 		}
 	}
-
-	private VerticalStackLayout Rows() =>
-		new() { Spacing = 12, Children = { GrabHandle(), Header(), ReadNowRow(), OriginalRow(), VoiceRow(), Pills(), QuietRow(_editRow, _editLabel, () => EditRequested, "BookSheetEdit"), QuietRow(_exportRow, _exportLabel, () => ExportRequested, "BookSheetExport"), RemoveRow() } };
 
 	// Read now (Slice 228, mock Batch 43 frame 100): the first and biggest row, for every book. The sheet closes first, then the page leaves grown-up mode and opens the reader.
 	private Border ReadNowRow()
@@ -284,6 +409,8 @@ internal sealed class BookSheet : Grid
 		_removeLabel.FontAttributes = FontAttributes.Bold;
 		_removeLabel.TextColor = RemoveInk;
 		_removeLabel.VerticalOptions = LayoutOptions.Center;
+		_removeLabel.MaxLines = 1;
+		_removeLabel.LineBreakMode = LineBreakMode.TailTruncation;
 		var content = new HorizontalStackLayout
 		{
 			Spacing = 8, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
@@ -332,15 +459,7 @@ internal sealed class BookSheet : Grid
 		return _voiceRow;
 	}
 
-	// The Record and Cast pills side by side (frame 43); both leave the reading page for their own screen.
-	private Grid Pills()
-	{
-		var grid = new Grid { ColumnSpacing = 8, ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)] };
-		grid.Add(RecordPill(), 0);
-		grid.Add(CastPill(), 1);
-		return grid;
-	}
-
+	// The Record and Cast pills side by side (frame 43; on the landscape card too, with Remove on its own last row); both leave the reading page for their own screen.
 	private Border RecordPill()
 	{
 		var content = new HorizontalStackLayout

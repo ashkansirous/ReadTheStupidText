@@ -24,6 +24,9 @@ public enum PinnedPlacement
 /// <summary>The shelf: one row of covers that scrolls sideways (phone held sideways) or a grid with this many columns.</summary>
 public readonly record struct ShelfShape(bool Sideways, double CoverHeight, int Columns);
 
+/// <summary>The grown-ups' corner: a side rail (width in dp, 0 without one) with this many columns of books; Add and Store are full rows on a tablet's rail, a pair of buttons on a phone's.</summary>
+public readonly record struct CornerShape(bool Rail, double RailWidth, int Columns, bool FullRowButtons);
+
 /// <summary>Diameters of the three reading buttons, in dp.</summary>
 public readonly record struct ControlSizes(double Play, double Skip);
 
@@ -99,4 +102,43 @@ public static class LandscapeLayout
     /// <summary>In landscape a page's pinned bottom button moves to the bottom of its side rail.</summary>
     public static PinnedPlacement PinnedButton(double width, double height) =>
         IsLandscape(width, height) ? PinnedPlacement.SideRailBottom : PinnedPlacement.BottomBar;
+
+    /// <summary>The cover width that goes with a cover height: covers are 3 wide for 4 tall.</summary>
+    public static double CoverWidth(double coverHeight) => Math.Max(0, coverHeight) * DefaultPictureAspect;
+
+    /// <summary>
+    /// The grown-ups' corner (mock frames 111, 126): an ink side rail when the window is held sideways, or is a tablet wide enough (744 dp) for the rail plus three columns in portrait;
+    /// a phone in portrait keeps the header bar and three columns. The rail is <see cref="ListPaneWidth"/> (300 on a phone, 360 on a tablet); the books take the width left over,
+    /// as many columns of at least <see cref="CornerColumnWidth"/> as fit (2 to 5).
+    /// </summary>
+    public static CornerShape CornerLayout(double width, double height)
+    {
+        bool tablet = SizeOf(width, height) == DeviceSize.Tablet;
+        bool landscape = IsLandscape(width, height);
+        if (!landscape && !(tablet && width >= TabletPortraitRailMinWidth))
+        {
+            return new CornerShape(false, 0, PortraitCornerColumns, false);
+        }
+
+        double rail = ListPaneWidth(width, height);
+        return new CornerShape(true, rail, CornerColumnsFor(width - rail), tablet);
+    }
+
+    /// <summary>How many columns of books fit in the width left of the rail (after the list's side margins and the gaps), 2 to 5.</summary>
+    public static int CornerColumnsFor(double widthLeft)
+    {
+        double room = Math.Max(0, widthLeft - CornerBooksMargin) + CornerColumnGap;
+        return (int)Math.Clamp(Math.Floor(room / (CornerColumnWidth + CornerColumnGap)), MinCornerColumns, MaxCornerColumns);
+    }
+
+    /// <summary>Room the sideways row keeps clear at its start for a camera cut-out, in dp.</summary>
+    public const double SidewaysInset = 34;
+
+    public const double TabletPortraitRailMinWidth = 744;
+    public const int PortraitCornerColumns = 3;
+    public const double CornerColumnWidth = 100;
+    public const double CornerColumnGap = 12;
+    public const double CornerBooksMargin = 42;
+    public const int MinCornerColumns = 2;
+    public const int MaxCornerColumns = 5;
 }

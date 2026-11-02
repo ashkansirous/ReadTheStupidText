@@ -22,6 +22,7 @@ on:
       - '.github/actionlint.yaml'
       - 'src/**/*.props'
       - 'src/**/*.csproj'
+      - 'src/ReadTheStupidText.Application/Reading/PackConstants.cs'
       - 'tools/sound-words-test/requirements.txt'
       - '!**/*.md'
   workflow_dispatch:
@@ -53,6 +54,11 @@ jobs:
       # Slice 245: sherpa-onnx and onnxruntime are one version, written in src/SherpaOnnxVersion.props.
       - name: Check every sherpa-onnx / onnxruntime pin
         run: node .github/scripts/check-sherpa-pins.mjs
+
+      # Slice 238: no packs.yml version default may be lower than the pinned catalog's (fetches the
+      # packs.json of the release PackConstants.CatalogUrl names, a public asset; the test is offline).
+      - name: Check packs.yml version defaults against the pinned catalog
+        run: node .github/scripts/check-packs-defaults.mjs
 
   actionlint:
     runs-on: ubuntu-latest

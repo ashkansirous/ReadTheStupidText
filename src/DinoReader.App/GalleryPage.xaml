@@ -14,13 +14,16 @@
     <ContentPage.Resources>
         <!-- Fallback until the probe below has measured two real lines; replaced at runtime (GalleryPage.xaml.cs). -->
         <x:Double x:Key="TileTitleHeight">36</x:Double>
+        <!-- Slice 232 part B (mock Batch 44 frame 110): a phone held sideways shows one sideways row of covers; the page sets the tile width (-1 = fill the grid cell) and one title line then (GalleryPage.xaml.cs, ApplyShape). -->
+        <x:Double x:Key="TileWidth">-1</x:Double>
+        <x:Int32 x:Key="TileTitleLines">2</x:Int32>
         <!-- Shared by the story and Add templates so their stacks cannot drift apart. -->
         <x:Double x:Key="TileSpacing">7</x:Double>
         <Style x:Key="TileTitleFont" TargetType="Label">
             <Setter Property="FontSize" Value="14" />
             <Setter Property="FontAttributes" Value="Bold" />
             <Setter Property="LineHeight" Value="1.25" />
-            <Setter Property="MaxLines" Value="2" />
+            <Setter Property="MaxLines" Value="{DynamicResource TileTitleLines}" />
             <Setter Property="LineBreakMode" Value="TailTruncation" />
         </Style>
         <!-- Every tile (and the Add spacer) gets the same two-line title height, scaled with the font, so rows always match. -->
@@ -29,7 +32,7 @@
         </Style>
 
         <DataTemplate x:Key="StoryTemplate" x:DataType="local:StoryTile">
-            <VerticalStackLayout Spacing="{StaticResource TileSpacing}" HorizontalOptions="Fill">
+            <VerticalStackLayout Spacing="{StaticResource TileSpacing}" HorizontalOptions="Fill" WidthRequest="{DynamicResource TileWidth}">
                 <Grid>
                     <local:StoryCover AutomationId="StoryTile">
                         <local:StoryCover.GestureRecognizers>
@@ -49,12 +52,15 @@
         <local:GalleryTemplateSelector x:Key="Selector" StoryTemplate="{StaticResource StoryTemplate}" />
     </ContentPage.Resources>
 
-    <Grid x:Name="GalleryRoot" RowDefinitions="Auto,Auto,*,Auto">
+    <!-- Slice 232 part B (mock Batch 44 frames 111, 126): two columns, the first only a side rail. Upright (and in the kids' shelf) it is 0 wide and everything spans both columns;
+         in the grown-ups' corner held sideways the header, the buttons and the way back sit in the rail and the books fill the second column (GalleryPage.xaml.cs, ApplyShape). -->
+    <Grid x:Name="GalleryRoot" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="0,*">
+        <BoxView x:Name="RailBackdrop" Grid.RowSpan="4" Color="{StaticResource Ink}" IsVisible="False" InputTransparent="True" />
         <!-- Invisible two-line sample in the tile title font: its measured height sizes every tile title. Its lines are
              fixed, so its height depends only on the font (not on the page or tile width) and the update cannot loop. -->
-        <Label x:Name="TitleProbe" HorizontalOptions="Start" Style="{StaticResource TileTitleFont}" Text="&#160;&#10;&#160;" Opacity="0" InputTransparent="True"
+        <Label x:Name="TitleProbe" Grid.ColumnSpan="2" HorizontalOptions="Start" Style="{StaticResource TileTitleFont}" Text="&#160;&#10;&#160;" Opacity="0" InputTransparent="True"
                VerticalOptions="Start" AutomationProperties.IsInAccessibleTree="False" SizeChanged="OnTitleProbeSizeChanged" />
-        <Grid x:Name="HeaderBar" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="16,10,12,12">
+        <Grid x:Name="HeaderBar" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="16,10,12,12">
             <Border WidthRequest="40" HeightRequest="40" StrokeThickness="0">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="11" />
@@ -101,20 +107,22 @@
         </Grid>
 
         <!-- Grown-up mode (mock 85, Slice 172): only "Add from your own books" and the Store, full width. The store is behind the gate (ready for paid books later). -->
-        <VerticalStackLayout Grid.Row="1">
+        <!-- Slice 232 part B: in the corner's rail this scrolls (it moves to the star row) so a short phone never pushes the way back off the screen. -->
+        <ScrollView x:Name="ActionsScroll" Grid.Row="1" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Never">
+        <VerticalStackLayout x:Name="ActionsHost">
         <VerticalStackLayout x:Name="GrownUpActions" Spacing="0" IsVisible="False">
             <!-- Slice 228 (mock Batch 43 frame 98): the one line that names this place. -->
             <Label x:Name="CornerLine" AutomationId="GalleryCornerLine" Text="{x:Static res:AppResources.Gallery_CornerLine}" FontSize="13.5" TextColor="#5a5470" Padding="18,12,18,10" />
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Padding="14,0,14,14">
+            <Grid x:Name="ActionPair" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8" Padding="14,0,14,14">
                 <Border x:Name="AddBookButton" AutomationId="GalleryAddBook" HeightRequest="52" BackgroundColor="White" StrokeThickness="0"
                         SemanticProperties.Description="{x:Static res:AppResources.Gallery_AddFromBooks}">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="18" />
                     </Border.StrokeShape>
-                    <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
-                        <local:IconView Kind="Plus" Color="{StaticResource Ink}" Size="20" StrokeWidth="2.8" VerticalOptions="Center" />
-                        <Label x:Name="AddBookLabel" Text="{x:Static res:AppResources.Gallery_AddFromBooks}" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Ink}" LineBreakMode="TailTruncation" VerticalOptions="Center" />
-                    </HorizontalStackLayout>
+                    <Grid x:Name="AddBookContent" ColumnDefinitions="Auto,*" ColumnSpacing="8" HorizontalOptions="Center" VerticalOptions="Center">
+                        <local:IconView x:Name="AddBookIcon" Kind="Plus" Color="{StaticResource Ink}" Size="20" StrokeWidth="2.8" VerticalOptions="Center" />
+                        <Label x:Name="AddBookLabel" Text="{x:Static res:AppResources.Gallery_AddFromBooks}" FontSize="15" Grid.Column="1" FontAttributes="Bold" TextColor="{StaticResource Ink}" LineBreakMode="TailTruncation" VerticalOptions="Center" />
+                    </Grid>
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnAddTapped" />
                     </Border.GestureRecognizers>
@@ -124,10 +132,10 @@
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="18" />
                     </Border.StrokeShape>
-                    <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Grid x:Name="StoreContent" ColumnDefinitions="Auto,*" ColumnSpacing="8" HorizontalOptions="Center" VerticalOptions="Center">
                         <local:IconView Kind="Book" Color="White" Size="20" StrokeWidth="2.2" VerticalOptions="Center" />
-                        <Label x:Name="StoreLabel" Text="{x:Static res:AppResources.Store_Title}" FontSize="15" FontAttributes="Bold" TextColor="White" LineBreakMode="TailTruncation" VerticalOptions="Center" />
-                    </HorizontalStackLayout>
+                        <Label x:Name="StoreLabel" Text="{x:Static res:AppResources.Store_Title}" FontSize="15" Grid.Column="1" FontAttributes="Bold" TextColor="White" LineBreakMode="TailTruncation" VerticalOptions="Center" />
+                    </Grid>
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnStoreTapped" />
                     </Border.GestureRecognizers>
@@ -137,18 +145,19 @@
         <!-- Slice 115 (mock frame 50): the storyteller download's status line, grown-up mode only. -->
         <local:StorytellerStatusLine x:Name="StorytellerLine" />
         </VerticalStackLayout>
+        </ScrollView>
 
-        <CollectionView Grid.Row="2" x:Name="StoryList" AutomationId="GalleryStories" SelectionMode="None" Margin="14,0" ItemTemplate="{StaticResource Selector}">
+        <CollectionView Grid.Row="2" Grid.ColumnSpan="2" x:Name="StoryList" AutomationId="GalleryStories" SelectionMode="None" Margin="14,0" ItemTemplate="{StaticResource Selector}">
             <CollectionView.ItemsLayout>
                 <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="12" VerticalItemSpacing="12" />
             </CollectionView.ItemsLayout>
         </CollectionView>
 
         <!-- Slice 228 (mock Batch 43 frames 98 and 99): the sticky way back, pinned under the grid in grown-up mode. It reads "Back to my child's shelf", or "Ready for my child" during the first hand-over. -->
-        <local:CoralButton Grid.Row="3" x:Name="HandoverButton" AutomationId="GalleryDone" Margin="14,12,14,24" Icon="Play" IsVisible="False" Clicked="OnHandoverClicked" />
+        <local:CoralButton Grid.Row="3" Grid.ColumnSpan="2" x:Name="HandoverButton" AutomationId="GalleryDone" Margin="14,12,14,24" Icon="Play" IsVisible="False" Clicked="OnHandoverClicked" />
 
         <!-- Slice 115 (mock frame 51): the one-time "Storyteller voices are ready" sheet over the whole page. -->
-        <local:StorytellerReadySheet Grid.RowSpan="4" x:Name="ReadySheet" />
-        <local:BookSheet Grid.RowSpan="4" x:Name="BookInfo" />
+        <local:StorytellerReadySheet Grid.RowSpan="4" Grid.ColumnSpan="2" x:Name="ReadySheet" />
+        <local:BookSheet Grid.RowSpan="4" Grid.ColumnSpan="2" x:Name="BookInfo" />
     </Grid>
 </ContentPage>
