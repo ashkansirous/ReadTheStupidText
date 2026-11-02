@@ -1,0 +1,110 @@
+# Slice 232 part C (mock Batch 44 frames 116, 129): the Record screen is three columns on a phone held sideways (picture, words, rail with Done on top and the microphone in the middle) and stacks again upright;
+# a recording that is running keeps running through both rotations (the clock and the stop square come back in place). Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback.
+# The gate is not tapped: the enter-grown-up hook stands in for a passed gate (grown-ups-button.yaml covers the gate chain). The microphone permission is granted at launch.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK enter-grown-up ok
+# The layout line is written only when the shape changes: sideways before recording (the first line, from the upright open), then upright while recording, then sideways again while recording.
+# (run-flows matches whole tokens, so the three tokens of each line are listed separately: Three with recording=False, Stacked with recording=True, Three with recording=True.)
+# expect-log: [Landscape] record layout=Three recording=False page=0
+# expect-log: [Landscape] record layout=Stacked recording=True page=0
+# expect-log: [Landscape] record layout=Three recording=True page=0
+appId: uk.sirous.dinoreader.dbg
+name: Record screen keeps a running recording through a rotation
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow records one page of a starter book into the wiped data and reads nothing aloud.
+    clearState: true
+    permissions:
+      all: allow
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+# The one-time "Storyteller voices are ready" note may cover the shelf: dismiss it by its OK, only when it is on screen.
+- runFlow:
+    when:
+      visible: Storyteller voices are ready
+    commands:
+      - tapOn: "OK"
+- tapOn:
+    id: TileMore
+    index: 0
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: BookSheetRemove
+    timeout: 10000
+- tapOn:
+    text: Record
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordPageWords
+    timeout: 15000
+# Held sideways: the words, the rail's Done and the microphone are all on screen at once.
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible:
+      id: RecordRailDone
+    timeout: 15000
+- assertVisible:
+    id: RecordPageWords
+- assertVisible:
+    id: RecordingsStayNote
+- assertVisible:
+    id: RecordButton
+# Start recording in the rail, then turn upright with the recording running: the stop square and the clock are still there.
+- tapOn:
+    id: RecordButton
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordStopButton
+    timeout: 15000
+- assertVisible:
+    id: RecordClock
+# The stop square and the clock carry their ids only on the sideways layout, so upright the flow waits for the "Stop" caption instead (and the log line above says Stacked).
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible: Stop
+    timeout: 15000
+- assertNotVisible:
+    id: RecordStopButton
+- assertNotVisible:
+    id: RecordClock
+- assertNotVisible:
+    id: RecordRailDone
+# Sideways again, still recording.
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible:
+      id: RecordRailDone
+    timeout: 15000
+- assertVisible:
+    id: RecordStopButton
+- assertVisible:
+    id: RecordClock
+# Stop in the rail: the page now has its recording card (Your recording).
+- tapOn:
+    id: RecordStopButton
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: Your recording
+    timeout: 20000
+- assertNotVisible:
+    id: RecordStopButton
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible: Your recording
+    timeout: 15000

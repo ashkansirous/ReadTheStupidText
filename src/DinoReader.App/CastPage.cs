@@ -38,6 +38,8 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private readonly WaitOverlay _waitOverlay = DinoWait.OverPage();
 	private readonly WaitController _wait;
 	private IReadOnlyList<CastRow> _shownRows = [];
+	private Size _windowSize;
+	private int _shownColumns = 1;
 	private CancellationTokenSource _pageCancel = new(); // exists before OnAppearing so an early tap is still cancelled on leaving
 	private CancellationTokenSource? _previewCancel;
 
@@ -198,6 +200,8 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	{
 		CastSheet sheet = Sheet();
 		_shownRows = sheet.Rows;
+		_shownColumns = LandscapeLayout.CastColumns(_windowSize.Width, _windowSize.Height);
+		ApplyInsets(_shownColumns > 1);
 		_body.Children.Clear();
 		_languageChip.Content = CastViews.LanguageChip(CastText.VoicesFor(_castLanguage));
 		if (sheet.VoicesAreShort)
@@ -205,8 +209,63 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 			_body.Children.Add(CastRows.SharedNote(sheet.VoiceCount));
 		}
 
+		if (_shownColumns > 1)
+		{
+			_body.Children.Add(CastViews.CardGrid(SidewaysCards(sheet), _shownColumns));
+			return;
+		}
+
 		_body.Children.Add(NarratorCard());
 		_body.Children.Add(CharacterCard(sheet));
+	}
+
+	// Slice 232 part C (mock Batch 44 frame 119): held sideways the rows are a grid of two columns, each its own card with its sample play button; rotating only calls Render again, the story, the cast and the open picker sheet are fields of the page.
+	protected override void OnSizeAllocated(double width, double height)
+	{
+		base.OnSizeAllocated(width, height);
+		if (width <= 0 || height <= 0 || (width == _windowSize.Width && height == _windowSize.Height))
+		{
+			return;
+		}
+
+		_windowSize = new Size(width, height);
+		if (_resolved is not null && LandscapeLayout.CastColumns(width, height) != _shownColumns)
+		{
+			Render();
+#if DEBUG
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] cast columns={_shownColumns} rows={_shownRows.Count}");
+#endif
+		}
+	}
+
+	// A sideways page keeps clear of the camera cut-out at its start, as the other sideways screens do.
+	private void ApplyInsets(bool sideways)
+	{
+		double inset = sideways ? LandscapeLayout.SidewaysInset : 0;
+		_header.Margin = new Thickness(inset, 0, 0, 0);
+		_languageChip.Margin = new Thickness(14 + inset, 0, 14, 10);
+		_body.Padding = new Thickness(14 + inset, 0, 14, 14);
+	}
+
+	private List<View> SidewaysCards(CastSheet sheet)
+	{
+		var cards = new List<View> { Carded(CastRows.Narrator(_voicing.NarratorOf(_castLanguage), _castLanguage, () => _busy.RunAsync(OpenNarratorPageAsync))) };
+		IReadOnlyList<StorytellerCharacter> speakers = CastCharacters.BookableSpeakers(_voicing.RosterFor(_castLanguage), _voicing.NarratorOf(_castLanguage));
+		for (int i = 0; i < sheet.Rows.Count; i++)
+		{
+			CastRow row = sheet.Rows[i];
+			cards.Add(Carded(CastRows.Character(row, i, _actions, _castLanguage, CastEditor.OffersBookVoice(row.Member, row.Flavour, speakers))));
+		}
+
+		cards.Add(Carded(CastRows.Unknown(sheet.UnknownLines)));
+		return cards;
+	}
+
+	private static Border Carded(View content)
+	{
+		Border card = CastViews.Card();
+		card.Content = content;
+		return card;
 	}
 
 	private View NarratorCard()

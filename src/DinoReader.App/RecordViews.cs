@@ -9,6 +9,8 @@ namespace DinoReader;
 internal static class RecordViews
 {
 	private const double RoundButton = 104;
+	private const double MicShare = 40.0 / 104;
+	private const double RailButtonHeight = 40;
 	private const double RecordEdgeDrop = 8;
 	private const double RecordRing = 8;
 	private const double StopSquare = 34;
@@ -23,6 +25,15 @@ internal static class RecordViews
 	private const double PlaySize = 44;
 	private const double PictureBand = 210;
 	private const double PictureShare = 0.4;
+
+	/// <summary>
+	/// AutomationIds of the big button (its microphone and its stop square), the running clock and the rail's Done, for the scripted check. They are set only on the sideways views
+	/// (Slice 232 part C), so a flow that looks for them fails on the upright layout.
+	/// </summary>
+	internal const string RecordButtonId = "RecordButton";
+	internal const string StopButtonId = "RecordStopButton";
+	internal const string ClockId = "RecordClock";
+	internal const string RailDoneId = "RecordRailDone";
 
 	/// <summary>The AutomationId of the page's words label, for the scripted check.</summary>
 	internal const string PageWordsId = "RecordPageWords";
@@ -49,6 +60,15 @@ internal static class RecordViews
 
 	/// <summary>The words of a page: its <c>Text</c>, the same text the reading screen splits into sentences and reads, so the two cannot disagree.</summary>
 	internal static string PageWords(StoryPage page) => page.Text.Trim();
+
+	/// <summary>The page's picture fitted whole in its own column, rounded (Slice 232 part C, mock frames 116 and 129).</summary>
+	internal static View PictureColumn(string picturePath) => new Border
+	{
+		StrokeThickness = 0,
+		BackgroundColor = Colors.Transparent,
+		StrokeShape = new RoundRectangle { CornerRadius = PageRadius },
+		Content = PictureOnly(picturePath),
+	};
 
 	private static View PictureOnly(string picturePath) => new Image { Source = ImageSource.FromFile(picturePath), Aspect = Aspect.AspectFit, HorizontalOptions = LayoutOptions.Center };
 
@@ -84,7 +104,8 @@ internal static class RecordViews
 	}
 
 	// A page with no picture is shown as the child sees it, its words on a white card.
-	private static View TextPage(string text, string language) => new Border
+	// Held sideways (Slice 232 part C) the same card takes the shape's own words size (RecordLayout.WordsSize).
+	internal static View TextPage(string text, string language, double fontSize = RecordLayout.UprightWordsSize) => new Border
 	{
 		StrokeThickness = 0,
 		BackgroundColor = Colors.White,
@@ -95,7 +116,7 @@ internal static class RecordViews
 			Content = new Label
 			{
 				AutomationId = PageWordsId,
-				Text = text, FontFamily = DinoFonts.ReadingFor(language), FontSize = 20, LineHeight = 1.5,
+				Text = text, FontFamily = DinoFonts.ReadingFor(language), FontSize = fontSize, LineHeight = 1.5,
 				FlowDirection = DinoFonts.IsRightToLeft(language) ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
 			},
 		},
@@ -206,9 +227,13 @@ internal static class RecordViews
 	}
 
 	/// <summary>The big red button (frame 44): a microphone to start, a white square to stop, with its caption underneath.</summary>
-	public static VerticalStackLayout RecordButton(bool recording, Func<Task> tapped)
+	public static VerticalStackLayout RecordButton(bool recording, Func<Task> tapped, double size = RoundButton, bool sideways = false)
 	{
-		var front = Circle(RoundButton, DinoTokens.Get(DinoTokens.Danger));
+		var front = Circle(size, DinoTokens.Get(DinoTokens.Danger));
+		if (sideways)
+		{
+			front.AutomationId = recording ? StopButtonId : RecordButtonId;
+		}
 		front.Content = recording
 			? new Border
 			{
@@ -216,7 +241,7 @@ internal static class RecordViews
 				HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
 				StrokeShape = new RoundRectangle { CornerRadius = StopCorner },
 			}
-			: new IconView { Kind = IconKind.Mic, Color = Colors.White, Size = 40, StrokeWidth = 2.4, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
+			: new IconView { Kind = IconKind.Mic, Color = Colors.White, Size = size * MicShare, StrokeWidth = 2.4, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
 		string caption = recording ? AppResources.Rec_Stop : AppResources.Rec_Start;
 		SemanticProperties.SetDescription(front, caption);
 		CastViews.AddTap(front, tapped);
@@ -224,26 +249,26 @@ internal static class RecordViews
 		{
 			Spacing = 10,
 			HorizontalOptions = LayoutOptions.Center,
-			Children = { LayeredButton(front, recording), new Label { Text = caption, FontSize = 13, TextColor = DinoTokens.Get(DinoTokens.Body), HorizontalOptions = LayoutOptions.Center } },
+			Children = { LayeredButton(front, recording, size), new Label { Text = caption, FontSize = 13, TextColor = DinoTokens.Get(DinoTokens.Body), HorizontalOptions = LayoutOptions.Center } },
 		};
 	}
 
 	// The button's lower edge (and, while recording, the ring around it) as in the mock: shadow 0 8px 0 and an 8px ring.
-	private static AbsoluteLayout LayeredButton(Border front, bool ring)
+	private static AbsoluteLayout LayeredButton(Border front, bool ring, double size)
 	{
-		var layout = new AbsoluteLayout { WidthRequest = RoundButton, HeightRequest = RoundButton + RecordEdgeDrop };
+		var layout = new AbsoluteLayout { WidthRequest = size, HeightRequest = size + RecordEdgeDrop };
 		if (ring)
 		{
-			Border halo = Circle(RoundButton + 2 * RecordRing, DinoTokens.Get(DinoTokens.RecordHalo));
+			Border halo = Circle(size + 2 * RecordRing, DinoTokens.Get(DinoTokens.RecordHalo));
 			halo.InputTransparent = true;
-			AbsoluteLayout.SetLayoutBounds(halo, new Rect(-RecordRing, -RecordRing, RoundButton + 2 * RecordRing, RoundButton + 2 * RecordRing));
+			AbsoluteLayout.SetLayoutBounds(halo, new Rect(-RecordRing, -RecordRing, size + 2 * RecordRing, size + 2 * RecordRing));
 			layout.Add(halo);
 		}
 
-		Border edge = Circle(RoundButton, DinoTokens.Get(DinoTokens.RecordEdge));
+		Border edge = Circle(size, DinoTokens.Get(DinoTokens.RecordEdge));
 		edge.InputTransparent = true;
-		AbsoluteLayout.SetLayoutBounds(edge, new Rect(0, RecordEdgeDrop, RoundButton, RoundButton));
-		AbsoluteLayout.SetLayoutBounds(front, new Rect(0, 0, RoundButton, RoundButton));
+		AbsoluteLayout.SetLayoutBounds(edge, new Rect(0, RecordEdgeDrop, size, size));
+		AbsoluteLayout.SetLayoutBounds(front, new Rect(0, 0, size, size));
 		layout.Add(edge);
 		layout.Add(front);
 		return layout;
@@ -308,6 +333,44 @@ internal static class RecordViews
 		SemanticProperties.SetDescription(front, text);
 		CastViews.AddTap(front, next);
 		return new Grid { Children = { edge, front }, HeightRequest = NavSize + 5 };
+	}
+
+	/// <summary>The Done (or Continue, from the intro) pill at the top of the phone's rail (frame 116); it leaves the screen the way the header's button does.</summary>
+	public static Border RailDone(bool isContinue, Func<Task> done)
+	{
+		string text = isContinue ? AppResources.Common_Continue : AppResources.Common_Done;
+		var pill = new Border
+		{
+			AutomationId = RailDoneId, HeightRequest = RailButtonHeight, Padding = new Thickness(18, 0), StrokeThickness = 0,
+			BackgroundColor = DinoTokens.Get(DinoTokens.Brand), HorizontalOptions = LayoutOptions.End,
+			StrokeShape = new RoundRectangle { CornerRadius = RailButtonHeight / 2 },
+			Content = new Label { Text = text, FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = Colors.White, VerticalOptions = LayoutOptions.Center },
+		};
+		SemanticProperties.SetDescription(pill, text);
+		CastViews.AddTap(pill, done);
+		return pill;
+	}
+
+	/// <summary>The phone rail's page arrows: previous and next, two small circles side by side at the foot of the rail (on the last page next leaves the screen, as "Done" does upright).</summary>
+	public static HorizontalStackLayout RailNav(bool hasPrevious, bool isLast, Func<Task> previous, Func<Task> next)
+	{
+		var back = RailArrow(IconKind.Back, AppResources.Rec_Previous, hasPrevious ? 1 : 0.4);
+		CastViews.AddTap(back, () => hasPrevious ? previous() : Task.CompletedTask);
+		var forward = isLast ? RailArrow(IconKind.Check, AppResources.Common_Done, 1) : RailArrow(IconKind.Chevron, AppResources.Rec_Next, 1);
+		CastViews.AddTap(forward, next);
+		return new HorizontalStackLayout { Spacing = 8, HorizontalOptions = LayoutOptions.Center, Children = { back, forward } };
+	}
+
+	private static Border RailArrow(IconKind kind, string description, double opacity)
+	{
+		var arrow = new Border
+		{
+			WidthRequest = RailButtonHeight, HeightRequest = RailButtonHeight, StrokeThickness = 0, BackgroundColor = DinoTokens.Get(DinoTokens.BrandTint),
+			Opacity = opacity, StrokeShape = new RoundRectangle { CornerRadius = RailButtonHeight / 2 },
+			Content = new IconView { Kind = kind, Size = 18, StrokeWidth = 2.6, Color = DinoTokens.Get(DinoTokens.Brand) },
+		};
+		SemanticProperties.SetDescription(arrow, description);
+		return arrow;
 	}
 
 	private static Border Circle(double size, Color fill) => new()

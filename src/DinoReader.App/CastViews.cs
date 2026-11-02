@@ -7,6 +7,7 @@ namespace DinoReader;
 internal static class CastViews
 {
 	private const double ChipHeight = 32;
+	private const double GridGap = 10;
 
 	public static Border Card() => new()
 	{
@@ -14,6 +15,28 @@ internal static class CastViews
 		StrokeThickness = 0,
 		StrokeShape = new RoundRectangle { CornerRadius = 18 },
 	};
+
+	/// <summary>The cast rows held sideways (Slice 232 part C): <paramref name="cards"/> laid left to right, top to bottom in <paramref name="columns"/> equal columns.</summary>
+	public static Grid CardGrid(IReadOnlyList<View> cards, int columns)
+	{
+		var grid = new Grid { ColumnSpacing = GridGap, RowSpacing = GridGap };
+		for (int c = 0; c < columns; c++)
+		{
+			grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+		}
+
+		for (int i = 0; i < cards.Count; i++)
+		{
+			if (i % columns == 0)
+			{
+				grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+			}
+
+			grid.Add(cards[i], i % columns, i / columns);
+		}
+
+		return grid;
+	}
 
 	public static BoxView Divider() => new() { HeightRequest = 1, Color = DinoTokens.Get(DinoTokens.Hairline) };
 
