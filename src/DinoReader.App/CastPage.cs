@@ -40,6 +40,8 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private IReadOnlyList<CastRow> _shownRows = [];
 	private Size _windowSize;
 	private int _shownColumns = 1;
+	private bool _tabletShown;
+	private const double PhoneSideMargin = 14;
 	private CancellationTokenSource _pageCancel = new(); // exists before OnAppearing so an early tap is still cancelled on leaving
 	private CancellationTokenSource? _previewCancel;
 
@@ -200,8 +202,14 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	{
 		CastSheet sheet = Sheet();
 		_shownRows = sheet.Rows;
-		_shownColumns = LandscapeLayout.CastColumns(_windowSize.Width, _windowSize.Height);
-		ApplyInsets(_shownColumns > 1);
+		_shownColumns = TabletPageLayout.CastColumns(_windowSize.Width, _windowSize.Height);
+		ApplyInsets(LandscapeLayout.IsLandscape(_windowSize.Width, _windowSize.Height), TabletPageLayout.Applies(_windowSize.Width, _windowSize.Height));
+#if DEBUG
+		if (_tabletShown)
+		{
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[TabletUpright] cast columns={_shownColumns} picker={TabletPageLayout.PickerWidth(_windowSize.Width, _windowSize.Height)}");
+		}
+#endif
 		_body.Children.Clear();
 		_languageChip.Content = CastViews.LanguageChip(CastText.VoicesFor(_castLanguage));
 		if (sheet.VoicesAreShort)
@@ -229,7 +237,9 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		}
 
 		_windowSize = new Size(width, height);
-		if (_resolved is not null && LandscapeLayout.CastColumns(width, height) != _shownColumns)
+		ApplyPickerCard(width, height);
+		bool tablet = TabletPageLayout.Applies(width, height);
+		if (_resolved is not null && (TabletPageLayout.CastColumns(width, height) != _shownColumns || tablet != _tabletShown))
 		{
 			Render();
 #if DEBUG
@@ -238,14 +248,19 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		}
 	}
 
-	// A sideways page keeps clear of the camera cut-out at its start, as the other sideways screens do.
-	private void ApplyInsets(bool sideways)
+	// A sideways page keeps clear of the camera cut-out at its start, as the other sideways screens do; a tablet held upright keeps 40 dp at its sides (Slice 234 part C, frame 144).
+	private void ApplyInsets(bool sideways, bool tablet)
 	{
+		_tabletShown = tablet;
 		double inset = sideways ? LandscapeLayout.SidewaysInset : 0;
+		double side = tablet ? TabletPageLayout.PageSideMargin : PhoneSideMargin;
 		_header.Margin = new Thickness(inset, 0, 0, 0);
-		_languageChip.Margin = new Thickness(14 + inset, 0, 14, 10);
-		_body.Padding = new Thickness(14 + inset, 0, 14, 14);
+		_languageChip.Margin = new Thickness(side + inset, 0, side, 10);
+		_body.Padding = new Thickness(side + inset, 0, side, 14);
 	}
+
+	// Frame 144: on a tablet held upright the picker opens as a centred card, min(width - 80, 560) wide, instead of a bottom sheet; the picker owns its sheet and does the restyling.
+	private void ApplyPickerCard(double width, double height) => _picker.SetCardWidth(TabletPageLayout.PickerWidth(width, height), height);
 
 	private List<View> SidewaysCards(CastSheet sheet)
 	{

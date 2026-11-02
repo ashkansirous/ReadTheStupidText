@@ -39,14 +39,16 @@ internal static class RecordViews
 	internal const string PageWordsId = "RecordPageWords";
 
 	/// <summary>The page as the child sees it (Slice 231, mock frame 106): a picture band with the page's words on a white card under it; the words alone when there is no picture, the picture alone when there are no words.</summary>
-	public static Border PageView(string? picturePath, StoryPage page, string language)
+	public static Border PageView(string? picturePath, StoryPage page, string language, double? tabletPictureHeight = null)
 	{
 		string words = PageWords(page);
 		Debug.WriteLine($"Dino Reader Record page layout: {(picturePath is null ? "words only" : words.Length == 0 ? "picture only" : "picture and words")} ({words.Length} characters)");
+		double wordsSize = tabletPictureHeight is not null ? TabletPageLayout.RecordWordsSize : RecordLayout.UprightWordsSize;
 		View content = (picturePath, words) switch
 		{
-			(null, _) => TextPage(words, language),
+			(null, _) => TextPage(words, language, wordsSize),
 			(not null, "") => PictureOnly(picturePath),
+			_ when tabletPictureHeight is { } height => TabletPictureAndWords(picturePath, words, language, height),
 			_ => PictureAndWords(picturePath, words, language),
 		};
 		return new Border
@@ -91,6 +93,22 @@ internal static class RecordViews
 		grid.SizeChanged += (_, _) => band.HeightRequest = Math.Min(PictureBand, grid.Height * PictureShare);
 		grid.Add(band, 0, 0);
 		grid.Add(TextPage(words, language), 0, 1);
+		return grid;
+	}
+
+	// Slice 234 part C (mock Batch 45 frame 142): on a tablet held upright the picture is fitted whole in a 400 dp panel (cream margins for 3:4 art) over the words card at 30 sp.
+	// The panel's height is given by the page from the window (TabletPageLayout.RecordPicture), never measured from the panel itself.
+	private static View TabletPictureAndWords(string picturePath, string words, string language, double pictureHeight)
+	{
+		var panel = new Border
+		{
+			HeightRequest = pictureHeight, StrokeThickness = 0, BackgroundColor = ReadingTheme.For(false).PicturePanel,
+			StrokeShape = new RoundRectangle { CornerRadius = TabletPageLayout.PanelRadius },
+			Content = PictureOnly(picturePath),
+		};
+		var grid = new Grid { RowSpacing = 16, RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star)] };
+		grid.Add(panel, 0, 0);
+		grid.Add(TextPage(words, language, TabletPageLayout.RecordWordsSize), 0, 1);
 		return grid;
 	}
 

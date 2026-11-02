@@ -1,6 +1,6 @@
 ### Slice 234 — Dino: a proper design for tablets held upright
 
-*In progress (wave 2026-11-02), parts B and C draft PRs; part A built 2026-11-02, merged as PR #736 (b54e32ff).* *Planned 2026-11-01.* The user asked for "better design on tablet". **Mock drawn 2026-11-01 (Batch 45), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges: it reuses 232's phone-vs-tablet rules (`IsLandscape`, the 600 dp short-side split, `ShelfLayout`, `SplitLayout`).
+*In progress (wave 2026-11-02): parts A and B merged (#736, #739), part C built 2026-11-02, PR #738.* *Planned 2026-11-01.* The user asked for "better design on tablet". **Mock drawn 2026-11-01 (Batch 45), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges: it reuses 232's phone-vs-tablet rules (`IsLandscape`, the 600 dp short-side split, `ShelfLayout`, `SplitLayout`).
 
 **Touches:** `src/DinoReader.Core/GalleryLayout.cs`, `src/DinoReader.Core/ReadingLayoutRules.cs`, `src/DinoReader.Core/*Layout*.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/BackupPage.xaml`, `src/DinoReader.App/PageEditorPage.xaml`, `src/DinoReader.App/GrownUpHeader.cs`, `tests/DinoReader.Tests/**Layout*`, `docs/design/dino-reader/**`, `docs/plan/slices/234-dino-tablet-portrait.md`
 
@@ -161,3 +161,43 @@ Part B covers the cards (gate, first run, book sheet, intro), the grown-up corne
 - iPad (compile only).
 - TalkBack order.
 - Picture only, upright.
+
+#### Part C claim (2026-11-02, night 2026-11-01-2355 wave 5, in progress, draft PR)
+
+**Touches, part C:** `src/DinoReader.Core/TabletPageLayout.cs` (new), `src/DinoReader.Core/RecordLayout.cs`, `src/DinoReader.Core/EditorLayout.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/PageEditorPage.xaml`, `src/DinoReader.App/PageEditorPage.xaml.cs`, `src/DinoReader.App/PageTextPage.cs`, `src/DinoReader.App/BackupPage.xaml`, `src/DinoReader.App/BackupPage.xaml.cs`, `tests/DinoReader.Tests/TabletPageLayoutTests.cs` (new), `tests/DinoReader.Tests/RecordLayout*Tests.cs`, `tests/DinoReader.Tests/EditorLayout*Tests.cs`, `.maestro/dino/dino-tablet-upright-pages*.yaml` (new), `.maestro/dino/dino-landscape-store*.yaml` (tablet variant), `docs/plan/slices/234-dino-tablet-portrait.md`. Read-only: `src/DinoReader.Core/LandscapeLayout.cs`, `src/DinoReader.Core/SettingsLayout.cs`, `src/DinoReader.Core/BookSheetPlan.cs` (part B owns them, running in parallel), `tools/emulator/**`.
+
+**Part C design note (coordinator, claim):** same pattern as part A (store the size in `OnSizeAllocated`, one pure Core call per layout pass, never rebuild views on a size change). New Core `TabletPageLayout`: each rule takes (w, h); when `LandscapeLayout.IsTabletPortrait(w,h)` it returns the tablet-upright value, otherwise it returns the existing rule's value unchanged (`SettingsLayout.StoreColumns`, `LandscapeLayout.CastColumns`, `SettingsLayout.BackupSideBySide`), so pages call only `TabletPageLayout` and phone and landscape stay as they are (tests pin that). Store (143): two columns, covers 90 dp, full-width action button. Cast (144): two columns; the cast picker opens as a centred card of width min(w - 80, 560) (the book sheet's width, frame 136; part B owns `BookSheetPlan`, so keep a named constant in `TabletPageLayout` with a comment naming the sheet rule, to fold into one after both merge). Record (142): Done header, page picture, words at 30 sp, recordings line, mic centred at the foot. Page editor (145): picture on top with Change picture, field below; keyboard up collapses the picture to a 120 dp strip so the field keeps five lines. Backup (146): the two cards side by side at the top, not stretched. Device: RTST_Tablet upright; the Store flow gets a tablet variant (part A found `dino-landscape-store` phone-only).
+
+#### Part C: built (2026-11-02)
+
+*Built 2026-11-02, not yet seen by eye on a tablet. Tests 2141 pass; Android build, iOS compile and flow lint pass.*
+
+- [x] Core `TabletPageLayout` (`src/DinoReader.Core/TabletPageLayout.cs`): each rule returns the tablet-upright value only when `IsTabletPortrait`, else the existing rule's value. Store 2 columns with 90x120 covers and the action under the card; Cast 2 columns; cast picker card min(w-80, 560) (commented to fold into `BookSheetPlan`'s card rule after both merge); Backup side by side; Record 30 sp words and 40 dp margins; `PictureHeight(mock, bodyHeight, focused)` = 120 dp strip when the field has focus, else min(mock, 50% of body); body = window minus `RecordFixedRows` 360 / `EditorFixedRows` 272 (estimates, not measured); `PanelRadius` 24.
+- [x] App: `RecordPage` sets the picture height only in `OnSizeAllocated` and re-renders on a change (state kept: `Render` rebuilds from fields). Page editor picture is fitted whole in a cream panel (`ReadingTheme.PicturePanel`) with `RegionOverlay.FitTo`, so every region shows and can be tapped; tapping the picture while the field has focus unfocuses it and restores the full picture. Phone and landscape keep origin/main's bare `ScrollView` tree. `CastFlavourMenu.SetCardWidth` (centred card, re-fitted on every size change, fixed height min(640, h-80)). Store: whole-shape change check. Backup: 40 dp margins.
+
+*Changed while building:*
+- No "Change picture" button (frame 145 shows one): `PageTextPage` has no such feature or string.
+- The editor picture band exists only for scanned pages with regions.
+- A downloading store pill stays 88 dp.
+- `dino-landscape-store.yaml` stays phone-only; new `dino-landscape-store-tablet.yaml` covers the tablet (closes part A's follow-up).
+- Store and Backup are full-window pages, not inside Settings' two panes.
+- Outside Touches: `src/DinoReader.App/CastFlavourMenu.cs` (allowed by the coordinator; no parallel slice edits it), and `RegionOverlay` if it lives in its own file.
+
+*From review:* (files in `D:/ReadTheStupidText-worktrees/reviews/`)
+- `s234c-review-high.md`: 1 (fixed 400/440 dp picture not capped by free height) applied; 2 (editor picture cropped, not fitted whole) applied; 3 (cast picker restyled from outside) applied; 4 (editor margin 14 dp vs 40) applied; 5 (Backup result card padding) applied; 6 (Backup padding constants repeat XAML) skipped, polish; 7 (phone 14 dp margin declared in four pages) skipped, polish; 8 (header not inset with content) skipped, unconfirmed without a device; 9 (Store compares only columns and action) applied.
+- `s234c-review-medium.md`: 1 (Record panel 400 dp circular cap) applied; 2 (EditorPicture capped against whole window) applied; 3 (focus collapses picture, regions untappable while typing) applied; 4 (Border wrapping the ScrollView for every window) applied; 5 (picker card height and rotation) applied; 6 (Store card second row during rotation) skipped, low; 7 (PhoneSideMargin duplicated) skipped, low; 8 (panel radius and cream colour copied) applied; 9 (`PickerWidth` duplicates `BookSheetPlan`) skipped, fold after both merge; 10 (Backup padding constants) skipped, low. Findings 1 and 2 were the second round on picture height, so the coordinator wrote one design: one pure call from the page's own size.
+- `s234c-review-check-medium.md`: none applied. 1 (tap on the strip may fire on a region tap) is the intended tap-to-restore; 2-9 are low or need a device.
+
+#### For CLAUDE.md
+
+- Tablet-upright page rules go through `TabletPageLayout` in `src/DinoReader.Core/TabletPageLayout.cs`: pages call only it, and it returns the old value off a tablet held upright. Picture heights come from one pure call on the page's own size, set only in `OnSizeAllocated`, never from a measured child (Slice 234: docs/plan/slices/234-dino-tablet-portrait.md)
+
+#### Not yet verified
+
+- Record, Cast with the picker, the editor (keyboard down and up), Store and Backup against frames 142-146 by eye (no screenshots; no script reaches those screens with a screenshot step).
+- `RecordFixedRows` / `EditorFixedRows` on a real tablet.
+- Cast picker on a short window or with the keyboard.
+- iPad (compile only).
+- TalkBack order.
+
+*Device (RTST_Tablet, build 862373c2d45c, `hide_error_dialogs` on):* `dino-tablet-upright-pages`, `dino-tablet-upright-pages-editor` and `dino-landscape-store-tablet` PASS (`D:/ReadTheStupidText-worktrees/reviews/s234c-run2.log`). The first run was lost to a System UI ANR dialog (`s234c-run1.log`).

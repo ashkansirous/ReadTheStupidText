@@ -117,37 +117,66 @@ public sealed class StoreCardLayout : INotifyPropertyChanged
 	private const double SlimCreditsGap = 8;
 	private const double CreditsTop = 3;
 
-	private int _columns = SettingsLayout.UprightStoreColumns;
+	private const int ActionColumnBeside = 2;
+	private const int ActionColumnBelow = 0;
+	private const int ActionSpanBelow = 3;
+	private const double ActionRowGap = 12;
+	private const double BesideActionHeight = 44;
+
+	private StoreCardShape _shape = TabletPageLayout.StoreCard(0, 0);
 
 	public event PropertyChangedEventHandler? PropertyChanged;
 
-	public int Columns => _columns;
+	public int Columns => _shape.Columns;
 
-	public double CoverWidth => SettingsLayout.StoreCover(_columns).Width;
+	public double CoverWidth => _shape.Cover.Width;
 
-	public double CoverHeight => SettingsLayout.StoreCover(_columns).Height;
+	public double CoverHeight => _shape.Cover.Height;
 
-	public int CreditsRow => SettingsLayout.SlimStoreCards(_columns) ? TitleRow : SubLineRow;
+	public int CreditsRow => _shape.Slim ? TitleRow : SubLineRow;
 
-	public int CreditsColumn => SettingsLayout.SlimStoreCards(_columns) ? SubLineColumn : TitleColumn;
+	public int CreditsColumn => _shape.Slim ? SubLineColumn : TitleColumn;
 
-	public int CreditsColumnSpan => SettingsLayout.SlimStoreCards(_columns) ? OneColumn : FullSpan;
+	public int CreditsColumnSpan => _shape.Slim ? OneColumn : FullSpan;
 
 	/// <summary>Slim cards cap the credit line and set it 8 dp off the title; upright it is its own full-width line with no gap.</summary>
-	public double CreditsMaxWidth => SettingsLayout.SlimStoreCards(_columns) ? SettingsLayout.SlimCreditsMaxWidth : double.PositiveInfinity;
+	public double CreditsMaxWidth => _shape.Slim ? SettingsLayout.SlimCreditsMaxWidth : double.PositiveInfinity;
 
-	public LineBreakMode CreditsLineBreak => SettingsLayout.SlimStoreCards(_columns) ? LineBreakMode.TailTruncation : LineBreakMode.WordWrap;
+	public LineBreakMode CreditsLineBreak => _shape.Slim ? LineBreakMode.TailTruncation : LineBreakMode.WordWrap;
 
-	public Thickness CreditsMargin => SettingsLayout.SlimStoreCards(_columns) ? new Thickness(SlimCreditsGap, CreditsTop, 0, 0) : new Thickness(0, CreditsTop, 0, 0);
+	public Thickness CreditsMargin => _shape.Slim ? new Thickness(SlimCreditsGap, CreditsTop, 0, 0) : new Thickness(0, CreditsTop, 0, 0);
 
-	public void SetColumns(int columns)
+	// Slice 234 part C (mock Batch 45 frame 143): on a tablet held upright the Get / downloading / downloaded part is a full-width 48 dp button under the card, not a pill at its far edge.
+	public int ActionRow => _shape.ActionBelow ? 1 : 0;
+
+	public int ActionColumn => _shape.ActionBelow ? ActionColumnBelow : ActionColumnBeside;
+
+	public int ActionColumnSpan => _shape.ActionBelow ? ActionSpanBelow : OneColumn;
+
+	public double ActionRowSpacing => _shape.ActionBelow ? ActionRowGap : 0;
+
+	public double ActionHeight => _shape.ActionBelow ? TabletPageLayout.StoreActionHeight : BesideActionHeight;
+
+	/// <summary>The downloading pill keeps its 88 dp and stands centred under a tablet's card.</summary>
+	public LayoutOptions DownloadingAlign => _shape.ActionBelow ? LayoutOptions.Center : LayoutOptions.Fill;
+
+	/// <summary>The Get button and the downloaded line centre their content in the full-width button.</summary>
+	public LayoutOptions ActionContentAlign => _shape.ActionBelow ? LayoutOptions.Center : LayoutOptions.Fill;
+
+	public void SetShape(StoreCardShape shape)
 	{
-		_columns = columns;
-		foreach (string name in new[] { nameof(Columns), nameof(CoverWidth), nameof(CoverHeight), nameof(CreditsRow), nameof(CreditsColumn), nameof(CreditsColumnSpan), nameof(CreditsMaxWidth), nameof(CreditsLineBreak), nameof(CreditsMargin) })
+		_shape = shape;
+		foreach (string name in ChangedProperties)
 		{
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 		}
 	}
+
+	private static readonly string[] ChangedProperties =
+	[
+		nameof(Columns), nameof(CoverWidth), nameof(CoverHeight), nameof(CreditsRow), nameof(CreditsColumn), nameof(CreditsColumnSpan), nameof(CreditsMaxWidth), nameof(CreditsLineBreak), nameof(CreditsMargin),
+		nameof(ActionRow), nameof(ActionColumn), nameof(ActionColumnSpan), nameof(ActionRowSpacing), nameof(ActionHeight), nameof(DownloadingAlign), nameof(ActionContentAlign),
+	];
 }
 
 /// <summary>The store's copy that is composed from numbers or names, in the UI language.</summary>
@@ -196,6 +225,8 @@ public partial class StorePage : ContentPage, IGrownUpPage
 	private readonly GrownUpMode _mode;
 	private readonly UsageCounter _usage;
 	private const int CoverParallelism = 4;
+	private const double PhoneSideMargin = 14;
+	private StoreCardShape? _shownShape;
 	private const double ChipHeight = 40;
 	private const double ChipFontSize = 14;
 	private const double ChipPaddingX = 16;
@@ -264,17 +295,24 @@ public partial class StorePage : ContentPage, IGrownUpPage
 		_windowSize = new Size(width, height);
 		double inset = LandscapeLayout.IsLandscape(width, height) ? LandscapeLayout.SidewaysInset : 0;
 		Header.Margin = new Thickness(inset, 0, 0, 0);
-		ListPanel.Margin = new Thickness(inset, 0, 0, 0);
-		int columns = SettingsLayout.StoreColumns(width, height);
-		if (columns == _cardLayout.Columns)
+		StoreCardShape shape = TabletPageLayout.StoreCard(width, height);
+		bool tablet = TabletPageLayout.Applies(width, height);
+		double extra = tablet ? TabletPageLayout.PageSideMargin - PhoneSideMargin : 0; // the list's own 14 dp margins grow to 40
+		ListPanel.Margin = new Thickness(inset + extra, 0, extra, 0);
+		if (shape == _shownShape)
 		{
 			return;
 		}
 
-		_cardLayout.SetColumns(columns);
-		((GridItemsLayout)StoryList.ItemsLayout).Span = columns;
+		_shownShape = shape;
+		_cardLayout.SetShape(shape);
+		((GridItemsLayout)StoryList.ItemsLayout).Span = shape.Columns;
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] store columns={columns} rows={_rows.Count}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] store columns={shape.Columns} rows={_rows.Count}");
+		if (tablet)
+		{
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[TabletUpright] store columns={shape.Columns} actionBelow={shape.ActionBelow} cover={shape.Cover.Width}");
+		}
 #endif
 	}
 
