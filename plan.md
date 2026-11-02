@@ -61,7 +61,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 257 checks across 129 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- **Not yet tried on a device:** 258 checks across 130 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
 - Dino store book "Freddy and the Slipper" (PR #680, 2026-11-01; credits now Elham Shafiei Gol and Ashkan Sirous, PR #687): Farsi pronunciation review (`farsi-review`) and a listen on a phone still to do; the user kept Tummy's voice, "Tummy squeaked", the night outing and two awkward lines for now ([note](docs/plan/notes/2026-11-01-freddy-and-the-slipper.md)).
 - Slice 239: a renamed store package is downloaded twice on a fresh install (low; the fix needs app code). `dino-store.yml` paths omit `src/ReadTheStupidText.Application` (LineReflow), so an Application-only change waits for the daily run (low) ([slice](docs/plan/slices/239-dino-store-book-without-app-build.md)).
 - Flaky test `TranslationModelDownloadSessionTests.Progress_is_reported_while_downloading` failed once on PR #672 CI (run 41310271450); likely a `Progress<T>` callback arriving after `RunAsync` ends (not proven). Look at it before it fails another PR.
