@@ -1,0 +1,17 @@
+11-01 21:46:26.238 F/libc    ( 4593): Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x100000005 in tid 4612 (.NET TP Worker), pid 4593 (.dinoreader.dbg)
+Build fingerprint: 'google/sdk_gphone64_x86_64/emu64xa:16/BE2A.250530.026.F3/13894323:userdebug/dev-keys'
+ABI: 'x86_64'
+Process uptime: 6s
+Cmdline: uk.sirous.dinoreader.dbg
+pid: 4593, tid: 4612, name: .NET TP Worker  >>> uk.sirous.dinoreader.dbg <<<
+signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0000000100000005
+backtrace (25 frames; libmonosgen-2.0.so BuildId 5da5c145fc7fa7ce8afbbdad2d3fa1638294a919):
+  #00 libc.so (strcasecmp+26)
+  #01-#03 libmonosgen-2.0.so (no symbol)
+  #04 libmonosgen-2.0.so (mono_assembly_request_byname+493)
+  #05 libmonosgen-2.0.so (mono_assembly_load_reference+555)
+  #06 libmonosgen-2.0.so (mono_class_from_typeref_checked+506)
+  #07 libmonosgen-2.0.so (mono_class_get_checked+183)
+  #09 libmonosgen-2.0.so (mono_class_get_checked+76)
+  #11 libmonosgen-2.0.so (mono_class_from_typeref_checked+401)
+  #21 libmonosgen-2.0.so (mono_runtime_invoke_checked+134)

@@ -531,6 +531,13 @@ function Get-AppLogTail([string[]]$Lines, [int]$Count) {
     return @($marked | Select-Object -Last $Count)
 }
 
+# Slice 247 item b: the last PACKDL progress / stall / retry / failed lines (the lines Slice 241 added), joined with " | ", so a stalled download names what the app said about it. "no PACKDL line" when there is none.
+function Get-PackdlTail([string[]]$Lines, [int]$Count = 4) {
+    $hits = @($Lines | Where-Object { "$_" -match 'PACKDL (progress|stall|retry|failed)\b' } | ForEach-Object { "$_".Trim() } | Select-Object -Last $Count)
+    if ($hits.Count -eq 0) { return 'no PACKDL progress/stall/retry/failed line' }
+    return ($hits -join ' | ')
+}
+
 # The reason when the app never logged PACKDL start: quotes the app's last lines so the cause is visible.
 function Get-NoPackStartReason([string[]]$Lines, [string[]]$PackIds) {
     $tail = @(Get-AppLogTail $Lines $script:AppLogTailLines)

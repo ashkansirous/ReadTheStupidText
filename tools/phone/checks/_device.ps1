@@ -135,7 +135,7 @@ function Update-PackGrowth([string]$Phone, [string]$Package, $Watch) {
     $bytes = Get-PartialBytesOnPhone $Phone $Package
     if ($bytes -gt $Watch.Bytes) { $Watch.Bytes = $bytes; $Watch.LastGrowth = Get-Date }
     if ($Watch.Started -and (Test-PackStalled $Watch.LastGrowth (Get-Date) $script:PackStallSeconds)) {
-        return (New-PackWaitResult 'Failed' "pack download stalled: the .partial file did not grow for $($script:PackStallSeconds) s ($(Format-PackProgress $Watch.Bytes))")
+        return (New-PackWaitResult 'Failed' "pack download stalled: the .partial file did not grow for $($script:PackStallSeconds) s ($(Format-PackProgress $Watch.Bytes)); app: $(Get-PackdlTail $Watch.Log)")
     }
     return $null
 }
