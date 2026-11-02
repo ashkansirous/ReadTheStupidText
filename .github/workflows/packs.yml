@@ -65,7 +65,7 @@ on:
       norwegian_pack_version:
         description: 'Version stamped into the Norwegian (Piper) pack'
         required: true
-        default: '1'
+        default: '2'
         type: string
       melo_pack_version:
         description: 'Version stamped into the Chinese (MeloTTS) pack'

@@ -107,6 +107,8 @@ A new translation pair in `packs.yml` needs its `TRANSLATION_PAIRS` entry, an 11
 
 A same-version pack rebuild is safe for installed phones (only `PackVersions.IsNewer` triggers a download), but only Kokoro can be carried over; the rest are rebuilt. Merge a `PackConstants.CatalogUrl` bump only after that packs release exists. (Slice 220: docs/plan/slices/220-kokoro-silent-short-lines-arm64.md)
 
+A pack version bump changes the matching `*_pack_version` default in `packs.yml` in the same PR; `check-packs-defaults.mjs` (run by `release-scripts.yml`) fails a default lower than the pinned `PackConstants.CatalogUrl` catalog's version. (Slice 238: docs/plan/slices/238-packs-workflow-defaults-match-catalog.md)
+
 `packs.yml` can carry an unchanged pack over from an earlier release (`kokoro_carry_over_from` input) when an upstream archive is re-uploaded and its pin breaks. Never re-pin a changed upstream file under the same pack version. (Slice 168: docs/plan/slices/168-german-in-both-apps.md)
 
 ## Dino Reader pipeline
