@@ -30,6 +30,7 @@ public sealed class GrownUpHeader : Grid
 	private readonly Border _button = new() { HeightRequest = ButtonHeight, StrokeThickness = 0, VerticalOptions = LayoutOptions.Center };
 	private readonly Button _hit = new() { BackgroundColor = Colors.Transparent, TextColor = Colors.Transparent, BorderWidth = 0, Padding = 0 };
 	private readonly Grid _face = new();
+	private readonly Border _back;
 	private bool _continue;
 
 	/// <summary>XAML needs a parameterless constructor; the id is the shared default.</summary>
@@ -50,7 +51,7 @@ public sealed class GrownUpHeader : Grid
 		_subtitle.TextColor = DinoTokens.Get(DinoTokens.Muted);
 		_button.StrokeShape = new RoundRectangle { CornerRadius = ButtonHeight / 2 };
 		_button.BackgroundColor = DinoTokens.Get(DinoTokens.Brand);
-		this.Add(BuildBack(), 0);
+		this.Add(_back = BuildBack(), 0);
 		this.Add(new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { _title, _subtitle } }, 1);
 		this.Add(_button, 2);
 		_face.Children.Add(_hit);
@@ -89,6 +90,13 @@ public sealed class GrownUpHeader : Grid
 			_subtitle.IsVisible = !string.IsNullOrEmpty(value);
 			CastText.AlignWith(_subtitle, _title);
 		}
+	}
+
+	/// <summary>False hides the Back button (a page shown in Settings' right pane, whose list header already has one, Slice 232 part D).</summary>
+	public bool BackVisible
+	{
+		get => _back.IsVisible;
+		set => _back.IsVisible = value;
 	}
 
 	/// <summary>False hides the Done/Continue button (the Add wizard's steps with nothing to save yet); Back stays.</summary>

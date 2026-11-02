@@ -78,8 +78,9 @@ function Invoke-SettingsBack {
 }
 
 function Get-PageTitle {
-    # Every Settings page shows its title in the Label with AutomationId SettingsTitle ("Settings").
-    $t = Find-UiaVisibleById (Get-DinoWindow) 'SettingsTitle'
+    # The Settings list titles itself with AutomationId SettingsTitle; each sub-page uses SettingsTitle<TypeName> (e.g. SettingsTitleReadingSpeedPage).
+    param([string]$Id = 'SettingsTitle')
+    $t = Find-UiaVisibleById (Get-DinoWindow) $Id
     if ($t) { return $t.Current.Name }
     return $null
 }
@@ -89,7 +90,7 @@ function Test-ReadingSpeedRow {
     $row = Wait-Until { Find-UiaByName -Root (Get-DinoWindow) -Name 'Reading speed: ' -ControlType 'Button' } 5 'FAIL no Reading speed row exposed as a Button'
     $script:WidthProbe = 'WIDTHPROBE row=' + [int]$row.Current.BoundingRectangle.Width + ' window=' + [int](Get-DinoWindow).Current.BoundingRectangle.Width + ' rowrect=' + $row.Current.BoundingRectangle.ToString() + ' others=' + ((Get-VisibleNames (Get-DinoWindow)) -join ' / ')
     Invoke-Uia $row
-    Wait-Until { (Get-PageTitle) -eq 'Reading speed' } 10 'FAIL the Reading speed row did not open its page' | Out-Null
+    Wait-Until { (Get-PageTitle 'SettingsTitleReadingSpeedPage') -eq 'Reading speed' } 10 'FAIL the Reading speed row did not open its page' | Out-Null
     Invoke-SettingsBack
     Wait-Until { (Get-PageTitle) -eq 'Settings' } 10 'FAIL Back from Reading speed did not return to Settings' | Out-Null
 }

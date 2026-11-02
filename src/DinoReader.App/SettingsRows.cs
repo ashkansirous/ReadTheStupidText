@@ -14,6 +14,25 @@ public static class SettingsRows
 	private const double RowFontSize = 14.5;
 	private const double ChevronSize = 14;
 
+	/// <summary>Raised after a settings card writes a setting (speed, animal sounds, usage counts), so the Settings list beside an open page updates its row value at once (Slice 232 part D).</summary>
+	public static event Action<SettingsSection, string>? SettingChanged;
+
+	/// <summary>Tells the Settings list which row changed and its new value text, so the list reloads nothing.</summary>
+	internal static void RaiseSettingChanged(SettingsSection section, string value) => SettingChanged?.Invoke(section, value);
+
+	/// <summary>The "On" or "Off" a Settings row shows for a switch.</summary>
+	internal static string OnOff(bool on) => on ? AppResources.Settings_On : AppResources.Settings_Off;
+
+	/// <summary>Changes the value text of a <see cref="NavRow"/> in place (its button's name follows it); the row is not rebuilt.</summary>
+	public static void SetNavValue(Grid row, string value)
+	{
+		Label? valueLabel = NavValueLabel(row);
+		if (valueLabel is not null)
+		{
+			valueLabel.Text = value;
+		}
+	}
+
 	public static Label ValueLabel(string text) => new()
 	{
 		Text = text,
@@ -136,13 +155,16 @@ public static class SettingsRows
 	// Slice 226: a NavRow's value (or the text inside its tag) can be changed in place; the button's name follows it as Row()'s does.
 	private static void FollowNavValue(Grid row, Button button, string title)
 	{
-		Label? valueLabel = row.Children.OfType<Label>().Skip(1).FirstOrDefault()
-			?? (row.Children.OfType<Border>().FirstOrDefault()?.Content as Label);
+		Label? valueLabel = NavValueLabel(row);
 		if (valueLabel is not null)
 		{
 			FollowValue(button, title, valueLabel);
 		}
 	}
+
+	// The label that shows a NavRow's value: the second label, or the text inside the tag when the row carries one.
+	private static Label? NavValueLabel(Grid row) =>
+		row.Children.OfType<Label>().Skip(1).FirstOrDefault() ?? (row.Children.OfType<Border>().FirstOrDefault()?.Content as Label);
 
 	/// <summary>
 	/// Slice 205: a transparent Button over the whole row, so it is a real control (UI Automation Invoke on Windows, focus and Enter or Space
@@ -351,6 +373,7 @@ public static class AnimalSoundsCard
 		try
 		{
 			AnimalSoundsPreference.Save(on);
+			SettingsRows.RaiseSettingChanged(SettingsSection.AnimalSounds, SettingsRows.OnOff(on));
 		}
 		catch (Exception)
 		{
@@ -402,7 +425,11 @@ public static class UsageCountsCard
 	public static Border Build(UsageCounter counter)
 	{
 		var toggle = new ToggleSwitch { IsOn = counter.Enabled, AccessibleName = AppResources.Usage_Title, VerticalOptions = LayoutOptions.Center };
-		toggle.Toggled += (_, _) => counter.Enabled = toggle.IsOn;
+		toggle.Toggled += (_, _) =>
+		{
+			counter.Enabled = toggle.IsOn;
+			SettingsRows.RaiseSettingChanged(SettingsSection.UsageCounts, SettingsRows.OnOff(toggle.IsOn));
+		};
 		var text = new VerticalStackLayout
 		{
 			Spacing = 2,
@@ -580,6 +607,7 @@ public static class ReadingSpeedCard
 	{
 		PlaybackRate rate = ReadingSpeed.Clamp(slider.Value);
 		ReadingSpeedPreference.Save(rate);
+		SettingsRows.RaiseSettingChanged(SettingsSection.ReadingSpeed, AppResources.Format(AppResources.Speed_Value, rate.Value));
 		reader.SetSpeed(rate);
 	}
 
