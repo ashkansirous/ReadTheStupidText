@@ -2,6 +2,14 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 234: Dino tablet held upright, part A ([slice](slices/234-dino-tablet-portrait.md))
+
+- Stacked reading page against frames 134, 135 and 150 by eye (no screenshot taken).
+- Shelf spacing and header against frame 133.
+- iPad (compile only).
+- TalkBack order.
+- Picture only, upright.
+
 ### Slice 246: Dino store books read with pre-made audio ([slice](slices/246-dino-store-books-premade-audio.md))
 
 - Every vendor request shape is unproven until the first keyed run (Gemini model id, ElevenLabs voice id placeholder, Narakeet voice-name casing, CAMB `fa-ir`).

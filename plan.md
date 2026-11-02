@@ -20,7 +20,7 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | --- | --- | --- | --- | --- | --- |
 | 154 | Dino: vowel marks in Farsi and Arabic books (Farsi only: Arabic left as is; marks are a hidden "how to read" text, Decision 166) | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
 | 193 | German store listings for both apps | approved 2026-11-01; App Store done, Play blocked (service account lacks "Manage store presence"), Partner Center open | | | [193-german-store-listings.md](docs/plan/slices/193-german-store-listings.md) |
-| 234 | Dino: proper design for tablets held upright (shelf 3-4 columns, picture-above-text reading, tablet-sized cards; after 232) | planned (mock done by the user, Batch 45, 2026-11-01) | | | [234-dino-tablet-portrait.md](docs/plan/slices/234-dino-tablet-portrait.md) |
+| 234 | Dino: proper design for tablets held upright (shelf 3-4 columns, picture-above-text reading, tablet-sized cards; after 232) | planned (part A #736 merged; parts B-C open) | #736 | | [234-dino-tablet-portrait.md](docs/plan/slices/234-dino-tablet-portrait.md) |
 | 235 | Dino on Windows: a real desktop window (size and minimum, width-driven layout, keyboard, hover, tooltips, title bar; after 232) | planned (mock done by the user, Batch 46, 2026-11-01) | | | [235-dino-windows-window.md](docs/plan/slices/235-dino-windows-window.md) |
 | 239 | Dino: adding, changing or deleting a store story runs only the store upload (no app build, no tests, no review gate) | in progress (user, 2026-11-01: build now) | | | [239-dino-store-book-without-app-build.md](docs/plan/slices/239-dino-store-book-without-app-build.md) |
 | 243 | Crash reports: keep iOS dSYMs and symbolicate, read R2 with wrangler's login, navigation/Back/lifecycle/memory log lines, one "did it crash?" command | in progress (item 3 built, PR #711) | #711 (item 3) | | [243-crash-report-gaps.md](docs/plan/slices/243-crash-report-gaps.md) |
@@ -59,7 +59,8 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 239 checks across 127 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- **Not yet tried on a device:** 244 checks across 128 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- Tooling: `.maestro/dino/dino-landscape-store.yaml` expects the phone's `store columns=2` and fails on RTST_Tablet (logs 3 by design, `SettingsLayout.StoreColumns`); mark it phone-only or add a tablet variant (Slice 234 part A run, 2026-11-02) ([slice](docs/plan/slices/234-dino-tablet-portrait.md)).
 - Dino store book "Freddy and the Slipper" (PR #680, 2026-11-01; credits now Elham Shafiei Gol and Ashkan Sirous, PR #687): Farsi pronunciation review (`farsi-review`) and a listen on a phone still to do; the user kept Tummy's voice, "Tummy squeaked", the night outing and two awkward lines for now ([note](docs/plan/notes/2026-11-01-freddy-and-the-slipper.md)).
 - Slice 239: a renamed store package is downloaded twice on a fresh install (low; the fix needs app code). `dino-store.yml` paths omit `src/ReadTheStupidText.Application` (LineReflow), so an Application-only change waits for the daily run (low) ([slice](docs/plan/slices/239-dino-store-book-without-app-build.md)).
 - Flaky test `TranslationModelDownloadSessionTests.Progress_is_reported_while_downloading` failed once on PR #672 CI (run 41310271450); likely a `Progress<T>` callback arriving after `RunAsync` ends (not proven). Look at it before it fails another PR.
