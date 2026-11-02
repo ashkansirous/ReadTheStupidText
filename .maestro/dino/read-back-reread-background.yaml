@@ -1,0 +1,79 @@
+# Slice 244 (written, not yet run on a device): read a starter book, press Back mid-sentence (audio and synthesis must stop), read it again, send the app to the background while it reads and bring it back.
+# Android emulator parity for the iPhone crashes of 2026-10-28 and 2026-11-01. Three rounds, so a leak of generations or players would show.
+# expect-log: HOOK skip-first-run ok
+# expect-log: READ_START
+# expect-log: GEN_WINDOW
+# expect-log: READ_STOPPED
+# expect-log: cancelling
+# expect-log: READ_END
+appId: uk.sirous.dinoreader.dbg
+name: Read, Back mid-sentence, re-read, background
+---
+- launchApp:
+    # No clearState: GEN_WINDOW and READ_STOPPED are written only once the neural voice pack is installed (the phone voice before that writes neither), and clearing the app's data would remove the pack. The device stage installs the pack first (first-run-pack-start.yaml); this flow keeps it.
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- repeat:
+    times: 3
+    commands:
+      - launchApp:
+          stopApp: false
+          arguments:
+            cmd: open-book
+            id: three-little-pigs
+            page: "1"
+      - extendedWaitUntil:
+          visible:
+            id: ReadingTransport
+          timeout: 30000
+      # Play carries the description "Play" (TransportRow); the read starts and the first window is generated.
+      - tapOn:
+          text: "Play"
+          waitToSettleTimeoutMs: 300
+      - extendedWaitUntil:
+          visible: "Pause"
+          timeout: 90000
+      # Back mid-sentence: the page leaves the stack, so the session stops audio and synthesis (READ_STOPPED).
+      - tapOn:
+          id: ReadingBack
+          waitToSettleTimeoutMs: 300
+      - extendedWaitUntil:
+          visible:
+            id: GalleryTitle
+          timeout: 15000
+      # Read again from the same book, then put the app in the background while it reads and bring it back.
+      - launchApp:
+          stopApp: false
+          arguments:
+            cmd: open-book
+            id: three-little-pigs
+            page: "1"
+      - extendedWaitUntil:
+          visible:
+            id: ReadingTransport
+          timeout: 30000
+      - tapOn:
+          text: "Play"
+          waitToSettleTimeoutMs: 300
+      - extendedWaitUntil:
+          visible: "Pause"
+          timeout: 90000
+      - pressKey: home
+      - launchApp:
+          stopApp: false
+      - extendedWaitUntil:
+          visible:
+            id: ReadingTransport
+          timeout: 30000
+      - tapOn:
+          id: ReadingBack
+          waitToSettleTimeoutMs: 300
+      - extendedWaitUntil:
+          visible:
+            id: GalleryTitle
+          timeout: 15000
