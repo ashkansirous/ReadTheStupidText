@@ -4,13 +4,16 @@ namespace DinoReader.Core;
 /// The intro wizard's arrangement: <see cref="Split"/> puts the picture panel (<see cref="PicturePanel"/> dp wide) left of the copy, with Skip and the main button in one row at the foot;
 /// <see cref="TextMaxWidth"/> caps the copy block (infinite on a phone).
 /// </summary>
-public readonly record struct IntroShape(bool Split, double PicturePanel, double TextMaxWidth, bool ButtonsInRow);
+/// <remarks>A tablet held upright (Slice 234 part B, mock Batch 45 frame 141) stacks: <see cref="PanelHeight"/> is the height of the picture panel above the copy (0 elsewhere), with the buttons in one row at the foot.</remarks>
+public readonly record struct IntroShape(bool Split, double PicturePanel, double TextMaxWidth, bool ButtonsInRow, double PanelHeight = 0);
 
 /// <summary>The grown-up gate's arrangement: <see cref="Split"/> puts the question left and the answers (or the hold ring) right.</summary>
-public readonly record struct GateShape(bool Split);
+/// <remarks>A tablet held upright (frame 137) gets a centred <see cref="Card"/> of <see cref="CardWidth"/> dp with <see cref="KeyHeight"/> dp answers and a <see cref="RingSize"/> dp hold ring; elsewhere those are the phone's 52 and 120.</remarks>
+public readonly record struct GateShape(bool Split, bool Card = false, double CardWidth = 0, double KeyHeight = OnboardingLayout.UprightKeyHeight, double RingSize = OnboardingLayout.PhoneHoldRing, double CardMaxHeight = 0);
 
 /// <summary>The first-run pages' arrangement: <see cref="Split"/> puts the welcome left and the language grid right (Continue pinned under it), with <see cref="LanguageColumns"/> columns.</summary>
-public readonly record struct FirstRunShape(bool Split, int LanguageColumns);
+/// <remarks>A tablet held upright (frame 138) gets a centred <see cref="Card"/> of <see cref="CardWidth"/> dp that holds all three pages.</remarks>
+public readonly record struct FirstRunShape(bool Split, int LanguageColumns, bool Card = false, double CardWidth = 0, double CardMaxHeight = 0);
 
 /// <summary>One cell of a grid, counted from 0.</summary>
 public readonly record struct GridCell(int Row, int Column);
@@ -34,6 +37,9 @@ public static class OnboardingLayout
     public const double UprightKeyHeight = 52;
 
     public const double SidewaysKeyHeight = 64;
+
+    /// <summary>The hold ring on a phone, in dp.</summary>
+    public const double PhoneHoldRing = 120;
     public const double MinSidewaysKeyHeight = 40;
 
     /// <summary>The number pad has four rows.</summary>
@@ -43,17 +49,35 @@ public static class OnboardingLayout
     public static IntroShape Intro(double width, double height)
     {
         bool landscape = LandscapeLayout.IsLandscape(width, height);
+        if (LandscapeLayout.IsTabletPortrait(width, height))
+        {
+            return new IntroShape(false, 0, TabletCardLayout.IntroTextMaxWidth, true, TabletCardLayout.IntroPanelHeight(height));
+        }
+
         double cap = LandscapeLayout.SizeOf(width, height) == DeviceSize.Tablet ? TabletTextMaxWidth : double.PositiveInfinity;
         return new IntroShape(landscape, landscape ? LandscapeLayout.ListPaneWidth(width, height) : 0, cap, landscape);
     }
 
-    /// <summary>Held sideways the gate splits (question left, answers right, the hold ring where the answers were); upright it is the bottom sheet with 52 dp keys. Sideways the layout itself shares the height between the four key rows, each key 40..64 dp.</summary>
-    public static GateShape Gate(double width, double height) => new(LandscapeLayout.IsLandscape(width, height));
+    /// <summary>Held sideways the gate splits (question left, answers right, the hold ring where the answers were); upright it is the bottom sheet with 52 dp keys, and a tablet held upright gets a centred card with 80 dp keys. Sideways the layout itself shares the height between the four key rows, each key 40..64 dp.</summary>
+    public static GateShape Gate(double width, double height)
+    {
+        if (LandscapeLayout.IsTabletPortrait(width, height))
+        {
+            return new GateShape(false, true, TabletCardLayout.CardWidth(width, TabletCardKind.Gate), TabletCardLayout.GateKeyHeight, TabletCardLayout.GateHoldRing, TabletCardLayout.CardMaxHeight(height));
+        }
 
-    /// <summary>First run: three language columns and the split held sideways; two columns and the single column upright.</summary>
+        return new GateShape(LandscapeLayout.IsLandscape(width, height));
+    }
+
+    /// <summary>First run: three language columns and the split held sideways; two columns and the single column upright, on a card on a tablet held upright.</summary>
     public static FirstRunShape FirstRun(double width, double height)
     {
         bool landscape = LandscapeLayout.IsLandscape(width, height);
+        if (LandscapeLayout.IsTabletPortrait(width, height))
+        {
+            return new FirstRunShape(false, UprightLanguageColumns, true, TabletCardLayout.CardWidth(width, TabletCardKind.FirstRun), TabletCardLayout.CardMaxHeight(height));
+        }
+
         return new FirstRunShape(landscape, landscape ? SidewaysLanguageColumns : UprightLanguageColumns);
     }
 

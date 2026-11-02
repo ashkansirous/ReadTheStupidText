@@ -52,6 +52,9 @@ public static class SettingsLayout
         return LandscapeLayout.SizeOf(width, height) == DeviceSize.Tablet && width >= TabletPortraitTwoPaneMinWidth;
     }
 
+    /// <summary>On a tablet held upright the 300 dp list shows each row's value under its name, so nothing is cut short (mock Batch 45 frame 140); elsewhere the value sits at the row's end.</summary>
+    public static bool ValueUnderName(double width, double height) => TwoPanes(width, height) && LandscapeLayout.IsTabletPortrait(width, height);
+
     /// <summary>The right pane's widest size: 640 dp on a tablet, no cap (it takes what the list leaves) on a phone.</summary>
     public static double PaneMaxWidth(double width, double height) =>
         LandscapeLayout.SizeOf(width, height) == DeviceSize.Tablet ? MaxContentWidth : double.PositiveInfinity;
@@ -64,7 +67,7 @@ public static class SettingsLayout
             return 0;
         }
 
-        double room = Math.Max(0, width - LandscapeLayout.ListPaneWidth(width, height));
+        double room = Math.Max(0, width - LandscapeLayout.SideListWidth(width, height));
         return Math.Min(room, PaneMaxWidth(width, height));
     }
 

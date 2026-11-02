@@ -14,6 +14,17 @@ public partial class GatePage : ContentPage
 {
 	private const int KeyRows = OnboardingLayout.KeyRows;
 	private const double SplitAnswersWidth = 330;
+	private const double UnsetWidth = -1; // VisualElement.WidthRequest's "no request"
+	private const double CardPadding = 40;
+	private const double CardCorner = 32;
+	private const double HoldRingTopMargin = 4;
+	private const double CardKeyFontSize = 30;
+	private const double PhoneKeyFontSize = 22;
+	private const double CardSumFontSize = 44;
+	private const double PhoneSumFontSize = 40;
+	private const double HoldCaptionHeight = 20;
+	private const double CardBackHeight = 52;
+	private const double PhoneBackHeight = 48;
 	private const string BackspaceKey = GateKeypad.BackspaceKey;
 	private const string OkKey = GateKeypad.OkKey;
 	private static readonly TimeSpan TickInterval = TimeSpan.FromMilliseconds(33);
@@ -28,6 +39,7 @@ public partial class GatePage : ContentPage
 	private bool _closing;
 	private Size _windowSize;
 	private GateShape? _shape;
+	private ScrollView? _cardScroll;
 
 	public GatePage(bool screenReaderOn)
 	{
@@ -71,6 +83,8 @@ public partial class GatePage : ContentPage
 
 	private void PlaceSheet(GateShape shape)
 	{
+		Sheet.HorizontalOptions = LayoutOptions.Fill;
+		Sheet.WidthRequest = UnsetWidth;
 		if (shape.Split)
 		{
 			PlaceSplit();
@@ -80,14 +94,106 @@ public partial class GatePage : ContentPage
 			PlaceStacked();
 		}
 
-		GridLength keyRow = shape.Split ? GridLength.Star : new GridLength(OnboardingLayout.UprightKeyHeight);
+		if (shape.Card)
+		{
+			PlaceCard(shape);
+		}
+
+		GridLength keyRow = shape.Split ? GridLength.Star : new GridLength(shape.KeyHeight);
 		foreach (RowDefinition row in KeyPad.RowDefinitions)
 		{
 			row.Height = keyRow;
 		}
+
+		SizeForCard(shape);
+		HostSheetGrid(shape);
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] gate split={shape.Split} step={(SumText.IsVisible ? "sum" : "hold")}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] gate split={shape.Split} step={(SumText.IsVisible ? "sum" : "hold")} card={shape.Card} cardWidth={shape.CardWidth} key={shape.KeyHeight} ring={shape.RingSize}");
 #endif
+	}
+
+	// A tablet held upright (Slice 234 part B, mock Batch 45 frame 137): the sheet becomes a centred white card, 520 dp wide at most, floating over the dimmed page.
+	private void PlaceCard(GateShape shape)
+	{
+		Sheet.VerticalOptions = LayoutOptions.Center;
+		Sheet.HorizontalOptions = LayoutOptions.Center;
+		Sheet.WidthRequest = shape.CardWidth;
+		Sheet.Padding = new Thickness(CardPadding);
+		Sheet.StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(CardCorner) };
+	}
+
+	// The card never grows past the window less its margins and scrolls inside (a short window, a square split screen); the other shapes hold the grid directly,
+	// because their star-sized rows need a bounded height. Only the grid's parent changes, so the step, the sum and the typed answer stay.
+	// The hold ring, its caption and Back stay outside the scroll (a hold inside a ScrollView is taken as a drag and resets); only the title, text and number pad scroll,
+	// and the ScrollView is always vertical, capped to the room the card has left (TabletCardLayout does the arithmetic).
+	private void HostSheetGrid(GateShape shape)
+	{
+		Sheet.MaximumHeightRequest = shape.Card ? shape.CardMaxHeight : double.PositiveInfinity;
+		if (shape.Card && _cardScroll is null)
+		{
+			EnterCardHosting();
+		}
+		else if (!shape.Card && _cardScroll is not null)
+		{
+			LeaveCardHosting();
+		}
+
+		UpdateCardScroll();
+	}
+
+	private void EnterCardHosting()
+	{
+		HoldAction.Children.Remove(RingBox);
+		SheetGrid.Children.Remove(BackButton);
+		Sheet.Content = null;
+		_cardScroll = new ScrollView { Content = SheetGrid, Orientation = ScrollOrientation.Vertical };
+		Sheet.Content = new VerticalStackLayout { Spacing = SheetGrid.RowSpacing, Children = { _cardScroll, RingBox, BackButton } };
+	}
+
+	private void LeaveCardHosting()
+	{
+		if (Sheet.Content is VerticalStackLayout column)
+		{
+			column.Children.Clear();
+		}
+
+		_cardScroll!.Content = null;
+		_cardScroll = null;
+		HoldAction.Children.Insert(0, RingBox);
+		SheetGrid.Children.Add(BackButton);
+		Sheet.Content = SheetGrid;
+	}
+
+	private void UpdateCardScroll()
+	{
+		if (_cardScroll is null || _shape is not { Card: true } shape)
+		{
+			return;
+		}
+
+		bool ringShown = RingBox.IsVisible && HoldAction.IsVisible;
+		double below = TabletCardLayout.GateFixedBelow(ringShown, shape.RingSize, HoldRingTopMargin, HoldCaptionHeight, CardBackHeight, SheetGrid.RowSpacing);
+		double room = TabletCardLayout.ScrollAreaHeight(shape.CardMaxHeight, 2 * CardPadding, below);
+		_cardScroll.MaximumHeightRequest = room;
+	}
+
+	// The answers (and so the sum's type) are bigger on the card; the hold ring is the same drawn ring, scaled, with room made for it. Back on the phone's sizes elsewhere.
+	private void SizeForCard(GateShape shape)
+	{
+		double scale = shape.RingSize / OnboardingLayout.PhoneHoldRing;
+		double extra = (shape.RingSize - OnboardingLayout.PhoneHoldRing) / 2;
+		HoldRingHost.Scale = scale;
+		HoldRingHost.Margin = new Thickness(0, HoldRingTopMargin + extra, 0, extra);
+		double keyMax = shape.Card ? shape.KeyHeight : OnboardingLayout.SidewaysKeyHeight;
+		foreach (Button key in KeyPad.Children.OfType<Button>())
+		{
+			key.MaximumHeightRequest = keyMax;
+			key.FontSize = shape.Card ? CardKeyFontSize : PhoneKeyFontSize;
+		}
+
+		SumLabel.FontSize = shape.Card ? CardSumFontSize : PhoneSumFontSize;
+		AnswerLabel.FontSize = SumLabel.FontSize;
+		BackButton.HeightRequest = shape.Card ? CardBackHeight : PhoneBackHeight;
 	}
 
 	private void PlaceStacked()
@@ -159,6 +265,7 @@ public partial class GatePage : ContentPage
 
 	private void ShowHoldAlternative(bool screenReaderOn)
 	{
+		RingBox.IsVisible = !screenReaderOn;
 		HoldRingHost.IsVisible = !screenReaderOn;
 		HoldHint.IsVisible = !screenReaderOn;
 		ContinueButton.IsVisible = screenReaderOn;
@@ -203,9 +310,11 @@ public partial class GatePage : ContentPage
 	{
 		HoldText.IsVisible = false;
 		HoldAction.IsVisible = false;
+		RingBox.IsVisible = false;
 		SumText.IsVisible = true;
 		KeyPad.IsVisible = true;
 		StepBarTwo.Color = DinoTokens.Get(DinoTokens.Brand);
+		UpdateCardScroll();
 	}
 
 	private void BuildKeyPad()
