@@ -1,10 +1,10 @@
 ### Slice 242 — Leftovers from night 2026-11-01-0859 round 4 (run markers, emulator no-build, a raw separator byte, a tablet AVD, 232's mock deviations, a workflow permission check)
 
-*Planned.* Written 2026-11-01 by the round 4 feedback loop ([note](../notes/2026-11-01-0859-feedback-loop-w4.md)). Parked until 2026-11-01 by the round 4 feedback loop: waits for the user; moved back to planned by the night's final feedback loop.
+*Built 2026-11-02: every item done or dropped (item 1 dropped by the user; 2-5 and 7 PR #727, 6 PR #731 (6038884b)); merged.* Written 2026-11-01 by the round 4 feedback loop ([note](../notes/2026-11-01-0859-feedback-loop-w4.md)). Parked until 2026-11-01 by the round 4 feedback loop: waits for the user; moved back to planned by the night's final feedback loop.
 
-*Built 2026-11-02 (night 2026-11-01-2355 wave 2): items 2, 3, 4, 5 and 7, emulator-checked on RTST_Tablet; not merged. Item 6 is not in this claim: it edits Slice 232's reading-screen files (`ReadingPage.xaml.cs`, `PictureTextPages.cs`, `LandscapeLayout.cs`) while 232 part C is open, so it stays open for a later wave.*
+*Built 2026-11-02 (night 2026-11-01-2355 wave 2): items 2, 3, 4, 5 and 7, emulator-checked on RTST_Tablet; merged as PR #727 (cd38133e). Item 6 is not in this claim: it edits Slice 232's reading-screen files (`ReadingPage.xaml.cs`, `PictureTextPages.cs`, `LandscapeLayout.cs`) while 232 part C is open, so it stays open for a later wave.*
 
-*Item 6 built 2026-11-02 (night 2026-11-01-2355 wave 3), emulator-checked on RTST_Tablet and the phone; not merged.*
+*Item 6 built 2026-11-02 (night 2026-11-01-2355 wave 3), emulator-checked on RTST_Tablet and the phone; merged as PR #731 (6038884b).*
 
 **Touches, item 6 claim (2026-11-02, wave 3):** `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/ReadingSurface.cs` (only if the title or margins need it), `src/DinoReader.Core/ReadingLayoutRules.cs`, `tests/DinoReader.Tests/ReadingLayoutRulesTests.cs` (new), `.maestro/dino/dino-landscape-reading*.yaml`, `docs/plan/slices/242-round-4-leftovers-night-2026-11-01-0859.md`. Read-only: `src/DinoReader.Core/LandscapeLayout.cs` (Slice 232 part D runs alongside; any new margin or title rule goes in `ReadingLayoutRules.cs`), `docs/design/dino-reader/Dino Reader Batch 44 Landscape.dc.html` frames 113-115 and 127.
 
