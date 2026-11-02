@@ -1,0 +1,17 @@
+### Slice 251 — Dino usage from TestFlight goes to its own beta dataset, never to the production counts
+
+*Planned (2026-11-02). After [Slice 250](250-dino-playback-events-and-session-id.md).*
+
+**Touches:** `src/ReadTheStupidText.Mobile.Shared/Usage/UsageGate.cs`, `src/ReadTheStupidText.Mobile.Shared/Usage/UsageQueueSender.cs`, `src/ReadTheStupidText.Application/Usage/UsageBatch.cs`, `worker/events.ts`, `worker/*.test.mjs`, `wrangler.jsonc`, `worker/CLAUDE.md`, `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/251-dino-beta-usage-dataset.md`
+
+**Why.** The user tested Dino iOS 1.94.0 from TestFlight on 2026-11-02 and the usage data held nothing of it: TestFlight and App Review installs send no usage (`UsageGate.cs:121-126`, Slice 179). The user, 2026-11-02: "any data that is in my analytics database is mine and I can look at it". Production counts must still hold only real store users (`~/.claude/CLAUDE.md`, *Analytics count only real production users*), so beta rows go to a separate dataset instead of being dropped.
+
+#### Work
+
+- [ ] **1. The beta channel (iOS).** `UsageGate` returns a channel instead of yes/no: `production` (App Store receipt), `beta` (TestFlight `sandboxReceipt`), or none (Debug, unstamped version, simulator, App Review if it can be told apart from TestFlight, else it counts as beta). Every other block (Debug, emulators, robots, Test Lab, the harnesses' `READTHESTUPIDTEXT_NO_USAGE=1`) stays a block.
+- [ ] **2. Android.** Find out whether an install from a Play testing track (internal, closed) can be told from production on the device; if it can, it is `beta` too. If it cannot, write down what Android testing installs do today (whether they reach `dino_usage` now) and stop there; no guess is shipped. (Not checked in planning.)
+- [ ] **3. Wire and Worker.** The batch carries the channel (`UsageBatch.cs`, optional, absent means production for old builds). `wrangler.jsonc` gets a `DINO_USAGE_BETA` binding (dataset `dino_usage_beta`); `worker/events.ts` writes beta batches there with the same rules and columns, production ones to `dino_usage` as today.
+- [ ] **4. Text.** `PRIVACY.md` and both `site/` pages: test builds send the same usage counts to a separate beta store. `worker/CLAUDE.md`: the beta dataset rule (never mixed into production reports; the `analytics-query` agent names the dataset it reads).
+- [ ] **5. Check.** Unit tests of the channel choice for each receipt name and block. Worker tests: a beta batch lands only in the beta binding, a production one only in production. On the next TestFlight build: the user plays a book and `dino_usage_beta` shows the rows (Not yet verified until then).
+
+**Not in this slice.** RTST (same gate; a later slice if wanted). The Windows head (Store-signed only counts today; unchanged).
