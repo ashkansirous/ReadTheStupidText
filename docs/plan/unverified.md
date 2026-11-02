@@ -11,6 +11,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 - `run-flows.ps1 -Install -NoBuild` may still build (check pass, low finding 1: the explicit `-Install` path lacks the no-build exit).
 - `dino-landscape-reading` does not assert the `[Landscape] reading controls=row` line; the row branch was read from logcat by hand.
+- Item 6: the 34/26 dp phone insets (no log or tree value; screenshots only).
+- Item 6: the tablet screenshot against frame 127, by eye only.
+- Item 6: the phone flow does not assert the tablet title stays hidden.
 
 ### Slice 244: Dino iOS crashes ([slice](slices/244-dino-ios-crashes-2026-11-01.md))
 
@@ -62,8 +65,14 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Delisting a deleted book on a real run.
 - A translated title for a newly added store book on an installed app, with no app update.
 
-### Slice 232 parts A-C: Dino landscape reading screen, shelf, Record, Cast and page text editor ([slice](slices/232-dino-landscape-every-screen.md))
+### Slice 232 parts A-D: Dino landscape reading screen, shelf, Record, Cast and page text editor ([slice](slices/232-dino-landscape-every-screen.md))
 
+- Part D: screenshots against frames 117, 118, 124, 128 by eye.
+- Part D: tablet Store with 3 columns, and tablet Backup.
+- Part D: VM `tools/desktop-vm/checks/dino-settings.ps1` with the new id (not run; the Windows head shares this code).
+- Part D: iOS (compile not run).
+- Part D: TalkBack order in two panes.
+- Part D: the hosted pane's right edge inset on a notch phone.
 - Part B: the same book stays in view after rotating a shelf with more than 4 books (the emulator shelf has 4, all on screen).
 - Part B: tablet landscape and portrait (no tablet AVD); iPhone and iPad (iOS compile only).
 - Part B: notch inset doubling with `SafeAreaEdges` (high 10).
