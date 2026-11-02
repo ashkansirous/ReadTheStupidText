@@ -1,6 +1,6 @@
 ### Slice 247 — Leftovers from the night's final feedback loop (slow emulator flows, the silent kokoro-en download, a one-off Mono SIGSEGV, Slice 240's cache hit on main)
 
-*Parked: feedback loop, waits for the user.* Written 2026-11-01 by the night's final feedback loop. The next night's final feedback loop moves it to `planned` (run-all-waves rule); nothing in it needs a user decision.
+*Planned (the user, 2026-11-02 ~07:50: "plan 247"; was parked by the feedback loop).* Written 2026-11-01 by the night's final feedback loop. The next night's final feedback loop moves it to `planned` (run-all-waves rule); nothing in it needs a user decision.
 
 **Touches:** `tools/emulator/`, `tools/phone/`, `docs/plan/slices/247-final-loop-leftovers-night-2026-11-01-0859.md`
 
@@ -11,3 +11,7 @@
 - [ ] **c. A one-off Mono SIGSEGV in the last emulator flow** (Slice 241 record: `.NET TP Worker`, `mono_class_from_typeref_checked`, 6 s after a `clearState` cold start of `uk.sirous.dinoreader.dbg`; the rerun passed). Its crash log is copied into [the note](../notes/2026-11-01-emulator-mono-sigsegv.md) (top frame `libc strcasecmp`, during Mono assembly loading on a thread-pool thread). Check whether it repeats. Verify: the next 3 emulator runs either repeat it (then file a .NET Android issue with the log) or do not.
 - [ ] **e. Kill a running Maestro flow when the app crashes at launch** (Slice 241 item 1's unbuilt part: today a launch crash waits out the flow's timeouts). Verify: a flow whose app crashes at launch ends within 10 s with the crash reported.
 - [ ] **d. Slice 240's cache hit on a run on `main`.** Main saved its Dino Windows caches at 22:32-22:35 on 2026-11-01 (release run 41356358486). Verify: on the next run on `main` or the next PR's first run, `gh run view` shows the Dino Windows setup steps restoring the cache (about 7 s) with no workload install.
+
+#### Notes (2026-11-02)
+
+- Item c repeated on night 2026-11-01-2355 (waves 3 and 4: Mono SIGSEGV after `clearState` cold starts, two of five cold starts in 232D run 2), so it is no longer a one-off. Filing the .NET Android issue publishes the crash log on a public GitHub repo, so it waits for the user's yes; build the rest (including a workaround or retry for the crash) without it.
