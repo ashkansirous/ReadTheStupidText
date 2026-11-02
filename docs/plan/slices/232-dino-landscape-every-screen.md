@@ -10,7 +10,7 @@
 
 **Part B design note (coordinator, claim):** the corner has no page of its own: it is `GalleryPage` in grown-up mode (`GrownUpHeader.cs`, `GrownUpMode.cs`). Every size comes from one pure call per layout pass on the window size: `LandscapeLayout.ShelfLayout` (sideways row on phone landscape, grid otherwise), `LandscapeLayout.ListPaneWidth`/`PinnedButton` for the corner rail; the page never recomputes widths or the 600 dp split. Rotation changes only layout, never the shelf's state (grown-up mode, scroll target book, open sheet). Book sheet in landscape: one centred card 580 dp (cover left, actions right), the same on tablets; its size is a pure function in `BookSheetPlan` with a unit test.
 
-*Part D built 2026-11-02 (merged as PR #732, 4f0180d6); part E planned; slice stays open.*
+*Part D built 2026-11-02 (merged as PR #732, 4f0180d6). Part E built 2026-11-02 (draft PR #734, not merged); all parts are merged once #734 merges. The slice stays open only for the Android + iOS item (iOS compile only, no iPhone/iPad run).*
 
 **Touches, part C (claim 2026-11-02):** `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastViews.cs`, `src/DinoReader.App/CastRows.cs`, `src/DinoReader.App/PageTextPage.cs` (widened at build, 2026-11-02: frame 120's text editor is `PageTextPage`, not `PageEditorPage`, which is the rotate/crop screen and stays untouched), `src/DinoReader.Core/LandscapeLayout.cs`, `src/DinoReader.Core/RecordLayout.cs` (new), `tests/DinoReader.Tests/RecordLayoutTests.cs` (new), `src/DinoReader.Core/EditorLayout.cs` and `src/DinoReader.Core/RecordLayout.cs` (new, only if a rule does not fit `LandscapeLayout`), `tests/DinoReader.Tests/LandscapeLayoutTests.cs`, `tests/DinoReader.Tests/*Layout*Tests.cs`, `tests/DinoReader.Tests/CastScreenTests.cs`, `.maestro/dino/dino-landscape-record*.yaml`, `.maestro/dino/dino-landscape-cast*.yaml`, `.maestro/dino/dino-landscape-editor*.yaml` (new), `docs/plan/slices/232-dino-landscape-every-screen.md`. Read-only: `RegionOverlay.cs`, `TileOverlay.xaml(.cs)`, `CastFlavourMenu.cs`, `tools/emulator/rotate.ps1`.
 
@@ -85,8 +85,8 @@ Settled by the mock: tablet versus phone is split at a 600 dp short side; the co
 - [x] Part A: the reading screen (built 2026-11-01, see *Part A: built* below).
 - [x] Part B: shelf, grown-ups' corner and book sheet (built 2026-11-02, see *Part B: built* below).
 - [x] Part D: Settings, Store and Backup (built 2026-11-02, see *Part D: built*)
-- [ ] Build the rest (part E left), each with its layout rule tests.
-- [ ] Rotation keeps state (reading position, recording in progress, wizard step, gate progress).
+- [x] Build the rest (part E: intro, gate, first run, built 2026-11-02, see *Part E: built*), each with its layout rule tests.
+- [x] Rotation keeps state (reading position, recording in progress, wizard step, gate progress).
 - [ ] Android and iOS built and checked together.
 
 #### Verification
@@ -195,6 +195,23 @@ From review (findings files in `D:/ReadTheStupidText-worktrees/reviews/`):
 
 Reviewed findings read: 9/9, 7/7, 3/3, 1/1, 0/0, 0/0.
 
+#### Part E: built (2026-11-02)
+
+- Core: new `OnboardingLayout.cs` in `src/DinoReader.Core` with `OnboardingLayoutTests`: intro split in landscape (picture panel 300 dp phone / 360 dp tablet, tablet copy capped at 460); gate split in landscape (key rows are star rows, min 40 and max 64 dp sideways, 52 dp upright); first-run language columns 3 landscape / 2 upright (`CellOf`, `RowsFor`). 2059 tests pass. Android build and iOS compile pass (iOS recipe: restore with `-p:IncludeIos=true -p:IncludeWindows=false -p:IncludeAndroid=false`, then build `-f net10.0-ios --no-restore`).
+- Pages only place already-built views on a size change; the wizard step, the gate step and sum, and the first-run pick are never rebuilt. Each language button has a fixed id `FirstRunLanguage-<code>` set once; a pick is logged as `selected=<code>` on the Debug `[Landscape] firstrun` line.
+- Cut-out: one mechanism, `SafeAreaEdges` Container (the Gate's Sheet border, the FirstRun and Intro pages); the manual sideways insets were dropped.
+- Choices: the gate keeps its number pad (the mock drew 6 answer choices; the gate's input is not a layout change). The download page only scrolls (no split); the Ready page splits. The gate back label stays the app's "Back to the story" (the mock said "Back to the shelf"). The intro flow reaches the wizard via Settings > About > Show the intro again.
+- Two strikes on gate key height (high 1, then medium 3 + 4): redesigned by the coordinator as star rows with no measuring.
+- Device run, emulator RTST_Test, build 15582a7163bc: `dino-landscape-intro`, `dino-landscape-gate`, `dino-landscape-firstrun` and `grown-ups-button` PASS. `first-run` FAIL: no StoryTile after skip-first-run; the rerun hit SIGSEGV with the known signature (strcasecmp / mono_assembly_request_byname, `docs/plan/notes/2026-11-01-emulator-mono-sigsegv.md`, Slice 247 c). Not proven unrelated: no main-build rerun was done. Logcat: `D:/ReadTheStupidText-worktrees/reviews/s232e-shots/logcat.txt`.
+
+From review (findings files in `D:/ReadTheStupidText-worktrees/reviews/`):
+
+- `s232e-review-high.md`: applied 1 (keypad clipped on short windows), 2 (firstrun flow never asserted the pick), 7 (sideways padding on top of the Container inset; the same fix on Intro and FirstRun). Skipped 3 (gate sum step not rotated: the hold is not scriptable), 4 (repeated panel setup in FirstRunPage), 5 (third copy of a set row/column helper), 6 (unused `DownloadScroll`): cleanup.
+- `s232e-review-medium.md`: applied 1 (`ShowSelection` reassigned AutomationId), 3 (key-height budget used `Sheet.Height` before it was Fill), 4 (pad spanned rows with spacing outside the budget), 5 (`_place` not reset in `Render`). Skipped 2 (no-op `_bar.Padding` in `ApplyShape`), 6 (no-op `PlacePanels` padding), 7 (panel and scroll child swapping on rotation: speculative).
+- `s232e-review-check-medium.md`: applied 1 (gate flow expect-log asserted `keyHeight` the page did not log). Skipped 2 (no-op `_bar.Padding`) and 5 (keypad row heights owned twice): cleanup. Skipped 3 (keys sit at the top of tall star rows and may look uneven) and 4 (long language names clipping in 3 columns): left to the screenshot check.
+
+Reviewed findings read: 7/7, 7/7, 5/5.
+
 #### For CLAUDE.md, part D (lifted 2026-11-02)
 
 - Settings, Store and Backup sizes and the two-pane decision come from `SettingsLayout` in `src/DinoReader.Core`; pages compute no widths. Hosted Settings sub-pages go through `SettingsSubPage.HostIn`; `SyncHosted` is the only place a hosted page appears or disappears, and a size change never navigates or rebuilds. (Slice 232: docs/plan/slices/232-dino-landscape-every-screen.md)
@@ -227,6 +244,12 @@ Verified 2026-11-01 ~23:45 on emulator-5554 (Dino Debug, origin/main 5d86be52), 
 - Part D: iOS (compile not run).
 - Part D: TalkBack order in two panes.
 - Part D: the hosted pane's right edge inset on a notch phone.
+- Part E: screenshots against frames 121, 122, 123, 130 (the flows take none), including check 3 (gate keys uneven in tall rows) and check 4 (long language names in 3 columns).
+- Part E: `first-run.yaml` on this build against main (the SIGSEGV; not proven unrelated).
+- Part E: the gate sum step sideways (the hold is not scriptable).
+- Part E: tablet intro, gate and first run.
+- Part E: iPhone and iPad (iOS compile only).
+- Part E: TalkBack order.
 - Part C: the editor thumbnail with a real keyboard on a scanned page (the flow reaches only a typed page).
 - Part C: a tablet with the keyboard up counts as a phone (short side under 600) and shows the thumbnail.
 - Part C: iOS compile and iPhone/iPad.

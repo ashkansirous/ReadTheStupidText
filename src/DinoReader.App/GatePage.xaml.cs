@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
+using Microsoft.Maui.Controls.Shapes;
 
 namespace DinoReader;
 
@@ -11,7 +12,8 @@ namespace DinoReader;
 /// </summary>
 public partial class GatePage : ContentPage
 {
-	private const int KeyRows = 4;
+	private const int KeyRows = OnboardingLayout.KeyRows;
+	private const double SplitAnswersWidth = 330;
 	private const string BackspaceKey = GateKeypad.BackspaceKey;
 	private const string OkKey = GateKeypad.OkKey;
 	private static readonly TimeSpan TickInterval = TimeSpan.FromMilliseconds(33);
@@ -24,6 +26,8 @@ public partial class GatePage : ContentPage
 	private readonly IDispatcherTimer _timer;
 	private string _answer = string.Empty;
 	private bool _closing;
+	private Size _windowSize;
+	private GateShape? _shape;
 
 	public GatePage(bool screenReaderOn)
 	{
@@ -38,6 +42,105 @@ public partial class GatePage : ContentPage
 		ShowHoldAlternative(screenReaderOn);
 		BuildKeyPad();
 		ShowSum();
+	}
+
+	// Slice 232 part E (mock Batch 44 frame 122): held sideways the gate splits (question left, answers or the hold ring right, 64 dp keys); upright it is the bottom sheet.
+	// Rotating only re-places the views in SheetGrid: the step shown, the sum and the typed answer live in fields and views that a size change never touches.
+	protected override void OnSizeAllocated(double width, double height)
+	{
+		base.OnSizeAllocated(width, height);
+		if (width <= 0 || height <= 0 || (width == _windowSize.Width && height == _windowSize.Height))
+		{
+			return;
+		}
+
+		_windowSize = new Size(width, height);
+		ApplyShape();
+	}
+
+	// Only the split flag matters: sideways the four key rows are star-sized and the keys fill them (40..64 dp), so the layout shares the height itself.
+	private void ApplyShape()
+	{
+		GateShape shape = OnboardingLayout.Gate(_windowSize.Width, _windowSize.Height);
+		if (shape != _shape)
+		{
+			_shape = shape;
+			PlaceSheet(shape);
+		}
+	}
+
+	private void PlaceSheet(GateShape shape)
+	{
+		if (shape.Split)
+		{
+			PlaceSplit();
+		}
+		else
+		{
+			PlaceStacked();
+		}
+
+		GridLength keyRow = shape.Split ? GridLength.Star : new GridLength(OnboardingLayout.UprightKeyHeight);
+		foreach (RowDefinition row in KeyPad.RowDefinitions)
+		{
+			row.Height = keyRow;
+		}
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] gate split={shape.Split} step={(SumText.IsVisible ? "sum" : "hold")}");
+#endif
+	}
+
+	private void PlaceStacked()
+	{
+		Sheet.VerticalOptions = LayoutOptions.End;
+		Sheet.BackgroundColor = Colors.White;
+		Sheet.Padding = new Thickness(22, 24, 22, 28);
+		Sheet.StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(28, 28, 0, 0) };
+		SheetGrid.ColumnDefinitions = [];
+		SheetGrid.RowDefinitions = [.. Enumerable.Range(0, KeyRows).Select(_ => new RowDefinition(GridLength.Auto))];
+		SheetGrid.VerticalOptions = LayoutOptions.Fill;
+		Place(StepBars, 0, 0, 1, 1);
+		Place(HoldText, 1, 0, 1, 1);
+		Place(SumText, 1, 0, 1, 1);
+		Place(HoldAction, 2, 0, 1, 1);
+		Place(KeyPad, 2, 0, 1, 1);
+		Place(BackButton, 3, 0, 1, 1);
+		BackButton.HorizontalOptions = LayoutOptions.Center;
+		StepBars.HorizontalOptions = LayoutOptions.Center;
+		HoldAction.VerticalOptions = LayoutOptions.Start;
+		KeyPad.VerticalOptions = LayoutOptions.Start;
+	}
+
+	private void PlaceSplit()
+	{
+		Sheet.VerticalOptions = LayoutOptions.Fill;
+		Sheet.BackgroundColor = DinoTokens.Get(DinoTokens.Cream);
+		// No cut-out inset of our own here: Sheet's SafeAreaEdges="Container" already keeps clear of a notch.
+		Sheet.Padding = new Thickness(26, 16, 26, 16);
+		Sheet.StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(0) };
+		SheetGrid.ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(new GridLength(SplitAnswersWidth))];
+		SheetGrid.ColumnSpacing = 24;
+		// The third row takes the height left over, so the right column (spanning all four rows) is as tall as the sheet and the star-sized key rows share it.
+		SheetGrid.RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)];
+		SheetGrid.VerticalOptions = LayoutOptions.Fill;
+		Place(StepBars, 0, 0, 1, 1);
+		Place(HoldText, 1, 0, 1, 1);
+		Place(SumText, 1, 0, 1, 1);
+		Place(BackButton, 3, 0, 1, 1);
+		Place(HoldAction, 0, 1, 4, 1);
+		Place(KeyPad, 0, 1, 4, 1);
+		StepBars.HorizontalOptions = LayoutOptions.Start;
+		BackButton.HorizontalOptions = LayoutOptions.Start;
+		HoldAction.VerticalOptions = LayoutOptions.Center;
+		KeyPad.VerticalOptions = LayoutOptions.Fill;
+	}
+
+	private static void Place(View view, int row, int column, int rowSpan, int columnSpan)
+	{
+		Grid.SetRow(view, row);
+		Grid.SetColumn(view, column);
+		Grid.SetRowSpan(view, rowSpan);
+		Grid.SetColumnSpan(view, columnSpan);
 	}
 
 	public Task<bool> Result => _result.Task;
@@ -98,8 +201,10 @@ public partial class GatePage : ContentPage
 
 	private void ShowSumStep()
 	{
-		HoldStep.IsVisible = false;
-		SumStep.IsVisible = true;
+		HoldText.IsVisible = false;
+		HoldAction.IsVisible = false;
+		SumText.IsVisible = true;
+		KeyPad.IsVisible = true;
 		StepBarTwo.Color = DinoTokens.Get(DinoTokens.Brand);
 	}
 
@@ -107,7 +212,7 @@ public partial class GatePage : ContentPage
 	{
 		for (int row = 0; row < KeyRows; row++)
 		{
-			KeyPad.AddRowDefinition(new RowDefinition(new GridLength(52)));
+			KeyPad.AddRowDefinition(new RowDefinition(new GridLength(OnboardingLayout.UprightKeyHeight)));
 		}
 
 		string[] keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", BackspaceKey, "0", OkKey];
@@ -126,6 +231,9 @@ public partial class GatePage : ContentPage
 			FontSize = 22,
 			CornerRadius = 14,
 			Padding = 0,
+			VerticalOptions = LayoutOptions.Fill,
+			MinimumHeightRequest = OnboardingLayout.MinSidewaysKeyHeight,
+			MaximumHeightRequest = OnboardingLayout.SidewaysKeyHeight,
 			BackgroundColor = DinoTokens.Get(isOk ? DinoTokens.Brand : DinoTokens.Sand),
 			TextColor = isOk ? Colors.White : DinoTokens.Get(DinoTokens.Ink),
 		};

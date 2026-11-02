@@ -51,6 +51,10 @@ public sealed class IntroWizardPage : ContentPage
 	private bool _canRecord;
 	private bool _hasStarter; // a starter book exists to open in the reader (the Read step); a separate question from whether Record can run
 	private bool _ended;
+	private Size _windowSize;
+	private IntroShape _shape = OnboardingLayout.Intro(0, 0);
+	private Grid? _bar; // the step bar of the step shown, kept so a size change can move its start clear of the camera cut-out
+	private Action<IntroShape>? _place; // places the views of the step shown for a shape; set by whichever builder made the body, so a size change never rebuilds a step
 
 	public IntroWizardPage(IStoryLibrary library, GrownUpMode mode, UsageCounter usage, IServiceProvider services)
 	{
@@ -141,8 +145,43 @@ public sealed class IntroWizardPage : ContentPage
 	private void Render()
 	{
 		_root.Children.Clear();
-		_root.Add(BuildBar(), 0, 0);
+		_place = null;
+		_bar = BuildBar();
+		_root.Add(_bar, 0, 0);
 		_root.Add(BuildBody(), 0, 1);
+		ApplyShape();
+	}
+
+	// Slice 232 part E (mock Batch 44 frames 121, 130): held sideways every step splits (picture panel left, copy right, Skip and the main button in one row); the
+	// step, the replay flag and the language picks are fields of this page, so a size change only re-places the views the step build already made.
+	protected override void OnSizeAllocated(double width, double height)
+	{
+		base.OnSizeAllocated(width, height);
+		if (width <= 0 || height <= 0 || (width == _windowSize.Width && height == _windowSize.Height))
+		{
+			return;
+		}
+
+		_windowSize = new Size(width, height);
+		IntroShape shape = OnboardingLayout.Intro(width, height);
+		if (shape != _shape)
+		{
+			_shape = shape;
+			ApplyShape();
+		}
+	}
+
+	private void ApplyShape()
+	{
+		if (_bar is not null)
+		{
+			_bar.Padding = new Thickness(BodyPadding, 6, 10, 0);
+		}
+
+		_place?.Invoke(_shape);
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] intro split={_shape.Split} step={IntroSteps.NameAt(_step)}");
+#endif
 	}
 
 	private Grid BuildBar()
@@ -202,30 +241,81 @@ public sealed class IntroWizardPage : ContentPage
 		var heading = new Label { Text = title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, Margin = new Thickness(0, 10, 0, 0) };
 		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level1);
 		var body = new Label { Text = line, FontSize = LineSize, LineHeight = 1.35, TextColor = DinoTokens.Get(DinoTokens.Body), HorizontalTextAlignment = TextAlignment.Center, MaximumWidthRequest = LineMaxWidth };
-		var text = new VerticalStackLayout
-		{
-			Spacing = 14,
-			VerticalOptions = LayoutOptions.Center,
-			Children = { IntroArt.Build(IntroSteps.NameAt(_step)!, _pictures, windows), heading, body },
-		};
+		var copy = new VerticalStackLayout { Spacing = 14, Children = { heading, body } };
 		if (step == IntroSteps.Record)
 		{
 			Label stayNote = RecordViews.StayNote(); // Slice 230: where recordings go, before the grown-up records anything
 			stayNote.HorizontalTextAlignment = TextAlignment.Center;
-			text.Children.Add(stayNote);
+			copy.Children.Add(stayNote);
 		}
 
 		var tryIt = new CoralButton { Text = AppResources.Intro_TryIt, IsVisible = TryItVisible(step) };
 		tryIt.Clicked += async (_, _) => await _busy.RunAsync(TryAsync);
-		var buttons = new VerticalStackLayout
+		return BuildSplitBody(IntroArt.Build(IntroSteps.NameAt(_step)!, _pictures, windows), copy, tryIt, TextButton(AppResources.Intro_Skip, () => _busy.RunAsync(SkipAsync), SkipHeight, DinoTokens.Body));
+	}
+
+	// The body of a step with a picture (all but the languages step): one grid whose cells are re-placed per shape, the same views upright and sideways.
+	// Rows: spacer, picture, copy, spacer, buttons (the two spacers centre the picture and copy upright; sideways the picture spans the left panel and the copy the right).
+	private Grid BuildSplitBody(View art, View copy, View main, View? skip)
+	{
+		var buttons = new Grid { RowSpacing = 4, ColumnSpacing = 8 };
+		buttons.Add(main);
+		if (skip is not null)
 		{
-			Spacing = 4,
-			Children = { tryIt, TextButton(AppResources.Intro_Skip, () => _busy.RunAsync(SkipAsync), SkipHeight, DinoTokens.Body) },
-		};
-		var grid = new Grid { Padding = new Thickness(BodyPadding, 0, BodyPadding, 26), RowDefinitions = [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)] };
-		grid.Add(text, 0, 0);
-		grid.Add(buttons, 0, 1);
+			buttons.Add(skip);
+		}
+
+		var grid = new Grid { Padding = new Thickness(BodyPadding, 0, BodyPadding, 26), RowSpacing = 0, ColumnSpacing = 10 };
+		grid.RowDefinitions = [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)];
+		grid.Add(art);
+		grid.Add(copy);
+		grid.Add(buttons);
+		_place = shape => PlaceSplitBody(grid, art, copy, buttons, main, skip, shape);
 		return grid;
+	}
+
+	private static void PlaceSplitBody(Grid grid, View art, View copy, Grid buttons, View main, View? skip, IntroShape shape)
+	{
+		grid.Padding = new Thickness(BodyPadding, 0, BodyPadding, 26);
+		grid.ColumnDefinitions = shape.Split ? [new ColumnDefinition(new GridLength(shape.PicturePanel)), new ColumnDefinition(GridLength.Star)] : [];
+		int column = shape.Split ? 1 : 0;
+		SetCell(art, shape.Split ? 0 : 1, 0, shape.Split ? 5 : 1);
+		SetCell(copy, shape.Split ? 1 : 2, column, shape.Split ? 2 : 1);
+		SetCell(buttons, 4, column, 1);
+		art.VerticalOptions = LayoutOptions.Center;
+		art.HorizontalOptions = LayoutOptions.Center;
+		copy.VerticalOptions = LayoutOptions.Center;
+		copy.HorizontalOptions = LayoutOptions.Center;
+		copy.Margin = new Thickness(0, shape.Split ? 0 : 14, 0, 0);
+		copy.MaximumWidthRequest = shape.TextMaxWidth;
+		PlaceButtons(buttons, main, skip, shape.ButtonsInRow);
+	}
+
+	// Skip and the main button share one row sideways (Skip left); upright the main button sits over Skip.
+	private static void PlaceButtons(Grid buttons, View main, View? skip, bool inRow)
+	{
+		buttons.ColumnDefinitions = inRow && skip is not null ? [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)] : [];
+		buttons.RowDefinitions = [];
+		if (skip is null || !inRow)
+		{
+			SetCell(main, 0, 0, 1);
+			if (skip is not null)
+			{
+				SetCell(skip, 1, 0, 1);
+			}
+
+			return;
+		}
+
+		SetCell(skip, 0, 0, 1);
+		SetCell(main, 0, 1, 1);
+	}
+
+	private static void SetCell(View view, int row, int column, int rowSpan)
+	{
+		Grid.SetRow(view, row);
+		Grid.SetColumn(view, column);
+		Grid.SetRowSpan(view, rowSpan);
 	}
 
 	// Read needs a starter to open; Record needs whatever recording needs; the other steps always offer Try it.
@@ -241,22 +331,22 @@ public sealed class IntroWizardPage : ContentPage
 	{
 		var heading = new Label { Text = AppResources.Intro_PlacesTitle, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, Margin = new Thickness(0, 10, 0, 0) };
 		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level1);
-		var cards = new VerticalStackLayout
-		{
-			Spacing = 10,
-			Children =
-			{
-				PlaceCard(null, AppResources.Intro_PlacesKidsTitle, AppResources.Intro_PlacesKidsLine),
-				PlaceCard(IconKind.Lock, AppResources.Gallery_CornerTitle, AppResources.Intro_PlacesGrownLine),
-			},
-		};
-		var text = new VerticalStackLayout { Spacing = 14, VerticalOptions = LayoutOptions.Center, Children = { IntroArt.Build(IntroSteps.Places, _pictures, false), heading, cards } };
+		Border kids = PlaceCard(null, AppResources.Intro_PlacesKidsTitle, AppResources.Intro_PlacesKidsLine);
+		Border grown = PlaceCard(IconKind.Lock, AppResources.Gallery_CornerTitle, AppResources.Intro_PlacesGrownLine);
+		var cards = new Grid { RowSpacing = 10, ColumnSpacing = 10, Children = { kids, grown } }; // one above the other upright, side by side sideways (frame 121)
+		var copy = new VerticalStackLayout { Spacing = 14, Children = { heading, cards } };
 		var next = new CoralButton { Text = AppResources.Wizard_Next, AutomationId = "IntroNext" };
 		next.Clicked += async (_, _) => await _busy.RunAsync(NextAsync);
-		var grid = new Grid { Padding = new Thickness(BodyPadding, 0, BodyPadding, 26), RowDefinitions = [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)] };
-		grid.Add(text, 0, 0);
-		grid.Add(next, 0, 1);
-		return grid;
+		Grid body = BuildSplitBody(IntroArt.Build(IntroSteps.Places, _pictures, false), copy, next, null);
+		Action<IntroShape> placeBody = _place!;
+		_place = shape =>
+		{
+			placeBody(shape);
+			cards.ColumnDefinitions = shape.Split ? [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)] : [];
+			SetCell(kids, 0, 0, 1);
+			SetCell(grown, shape.Split ? 0 : 1, shape.Split ? 1 : 0, 1);
+		};
+		return body;
 	}
 
 	private static Border PlaceCard(IconKind? icon, string title, string line)
@@ -305,13 +395,31 @@ public sealed class IntroWizardPage : ContentPage
 		done.Clicked += async (_, _) => await _busy.RunAsync(DoneLanguagesAsync);
 		StoryLanguageSet saved = StoryLanguages.Current();
 		string skip = saved.Sides.Count == 0 ? AppResources.Format(AppResources.StoryLanguages_SkipOnly, LanguageNames.NativeName(saved.Main)) : AppResources.Intro_Skip; // Skip changes nothing, so it only says "only X" when X is all there is
-		var buttons = new VerticalStackLayout { Spacing = 4, Children = { done, TextButton(skip, () => _busy.RunAsync(SkipAsync), SkipHeight, DinoTokens.Body) } };
+		Button skipButton = TextButton(skip, () => _busy.RunAsync(SkipAsync), SkipHeight, DinoTokens.Body);
+		var buttons = new Grid { RowSpacing = 4, ColumnSpacing = 8 };
+		buttons.Add(done);
+		buttons.Add(skipButton);
 		var top = new VerticalStackLayout { Spacing = 12, Children = { heading, line } };
-		var grid = new Grid { Padding = new Thickness(BodyPadding, 0, BodyPadding, 26), RowSpacing = 12, RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)] };
-		grid.Add(top, 0, 0);
-		grid.Add(new ScrollView { Content = _languagePicker }, 0, 1);
-		grid.Add(buttons, 0, 2);
+		var picker = new ScrollView { Content = _languagePicker };
+		var grid = new Grid { Padding = new Thickness(BodyPadding, 0, BodyPadding, 26), RowSpacing = 12, ColumnSpacing = 18, RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)] };
+		grid.Add(top);
+		grid.Add(picker);
+		grid.Add(buttons);
+		_place = shape => PlaceLanguagesBody(grid, top, picker, buttons, done, skipButton, shape);
 		return grid;
+	}
+
+	// Sideways the heading and line sit in the left panel, the picker and the Skip / Done row on the right; the picker object is kept across the move.
+	private static void PlaceLanguagesBody(Grid grid, View top, View picker, Grid buttons, View done, View skip, IntroShape shape)
+	{
+		grid.Padding = new Thickness(BodyPadding, 0, BodyPadding, 26);
+		grid.ColumnDefinitions = shape.Split ? [new ColumnDefinition(new GridLength(shape.PicturePanel)), new ColumnDefinition(GridLength.Star)] : [];
+		int column = shape.Split ? 1 : 0;
+		SetCell(top, 0, 0, shape.Split ? 3 : 1);
+		top.VerticalOptions = shape.Split ? LayoutOptions.Center : LayoutOptions.Start;
+		SetCell(picker, shape.Split ? 0 : 1, column, shape.Split ? 2 : 1);
+		SetCell(buttons, 2, column, 1);
+		PlaceButtons(buttons, done, skip, shape.ButtonsInRow);
 	}
 
 	// A side saved when the step opened but gone from the saved set now was unticked behind the picker's back (a failed download): the picker shows it unticked, and Done must not tick it again.

@@ -113,8 +113,13 @@ public partial class FirstRunPage : ContentPage
 	private readonly BusyGuard _busy = new();
 	private readonly Dictionary<string, Border> _buttons = [];
 	private string _selected;
+	// Every language button has its own fixed id, set once where it is made; the pick shows by colour and check only.
+	private const string LanguageIdPrefix = "FirstRunLanguage-";
+
 	private string _chosen = UiLanguage.English;
 	private bool _shelfLoaded;
+	private Size _windowSize;
+	private FirstRunShape? _shape;
 
 	public FirstRunPage(ISettingsStore settings, SpokenLanguage spoken, VoicePackInstaller installer, IVoicePackService packs, ISpeechReader reader,
 		StarterStories starters, IStoryLibrary library, GrownUpMode mode, UsageCounter usage, IServiceProvider services)
@@ -135,28 +140,108 @@ public partial class FirstRunPage : ContentPage
 
 	private void BuildLanguageButtons()
 	{
-		LanguageGrid.ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)];
-		int index = 0;
 		foreach ((string code, string name) in LanguageNames.All)
 		{
 			Border button = BuildLanguageButton(code, name);
 			_buttons[code] = button;
-			if (index % 2 == 0)
-			{
-				LanguageGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-			}
-
-			LanguageGrid.Add(button, index % 2, index / 2);
-			index++;
+			LanguageGrid.Children.Add(button);
 		}
 
+		PlaceLanguageButtons(OnboardingLayout.UprightLanguageColumns);
 		ShowSelection();
+	}
+
+	// The same buttons are re-placed in 2 or 3 columns (the pick, kept in _selected and the buttons' colours, is never rebuilt).
+	private void PlaceLanguageButtons(int columns)
+	{
+		LanguageGrid.ColumnDefinitions = [.. Enumerable.Range(0, columns).Select(_ => new ColumnDefinition(GridLength.Star))];
+		LanguageGrid.RowDefinitions = [.. Enumerable.Range(0, OnboardingLayout.RowsFor(_buttons.Count, columns)).Select(_ => new RowDefinition(GridLength.Auto))];
+		int index = 0;
+		foreach ((string code, _) in LanguageNames.All)
+		{
+			GridCell cell = OnboardingLayout.CellOf(index++, columns);
+			Grid.SetRow(_buttons[code], cell.Row);
+			Grid.SetColumn(_buttons[code], cell.Column);
+		}
+	}
+
+	// Slice 232 part E (mock Batch 44 frames 123, 130): held sideways the language page splits (welcome left, a 3-column grid right with Continue under it) and the
+	// download and ready pages lose their tall top padding and keep clear of the camera cut-out; rotating only re-places views, so the pick and the page shown stay.
+	protected override void OnSizeAllocated(double width, double height)
+	{
+		base.OnSizeAllocated(width, height);
+		if (width <= 0 || height <= 0 || (width == _windowSize.Width && height == _windowSize.Height))
+		{
+			return;
+		}
+
+		_windowSize = new Size(width, height);
+		FirstRunShape shape = OnboardingLayout.FirstRun(width, height);
+		if (shape != _shape)
+		{
+			_shape = shape;
+			PlacePanels(shape);
+		}
+	}
+
+	private void PlacePanels(FirstRunShape shape)
+	{
+		Thickness padding = new(22, 0, 22, 22);
+		LanguagePanel.Padding = padding;
+		DownloadPanel.Padding = padding;
+		ReadyPanel.Padding = padding;
+		LanguageStack.Padding = new Thickness(0, shape.Split ? 12 : 28, 0, 16);
+		DownloadStack.Padding = new Thickness(0, shape.Split ? 12 : 56, 0, 0);
+		ReadyStack.Padding = new Thickness(0, shape.Split ? 12 : 56, 0, 0);
+		PlaceLanguagePanel(shape);
+		PlaceReadyPanel(shape);
+		PlaceLanguageButtons(shape.LanguageColumns);
+		LogLayout();
+	}
+
+	// Debug-only marker the landscape flow reads: the layout, the page shown and the picked language (selected=<code>).
+	private void LogLayout()
+	{
+#if DEBUG
+		if (_shape is { } shape)
+		{
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] firstrun split={shape.Split} columns={shape.LanguageColumns} page={(LanguagePanel.IsVisible ? "language" : DownloadPanel.IsVisible ? "download" : "ready")} selected={_selected}");
+		}
+#endif
+	}
+
+	private void PlaceLanguagePanel(FirstRunShape shape)
+	{
+		LanguagePanel.ColumnDefinitions = shape.Split ? [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)] : [];
+		LanguagePanel.ColumnSpacing = 18;
+		Grid.SetRowSpan(WelcomeScroll, shape.Split ? 2 : 1);
+		Grid.SetColumn(ContinueButton, shape.Split ? 1 : 0);
+		GridScroll.IsVisible = shape.Split;
+		GridScroll.Content = null;
+		LanguageStack.Children.Remove(LanguageGrid);
+		if (shape.Split)
+		{
+			GridScroll.Content = LanguageGrid;
+		}
+		else
+		{
+			LanguageStack.Children.Add(LanguageGrid);
+		}
+	}
+
+	private void PlaceReadyPanel(FirstRunShape shape)
+	{
+		ReadyPanel.ColumnDefinitions = shape.Split ? [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)] : [];
+		ReadyPanel.ColumnSpacing = 18;
+		Grid.SetColumn(ReadyActions, shape.Split ? 1 : 0);
+		Grid.SetRow(ReadyActions, shape.Split ? 0 : 1);
+		ReadyActions.VerticalOptions = shape.Split ? LayoutOptions.Center : LayoutOptions.End;
 	}
 
 	private Border BuildLanguageButton(string code, string name)
 	{
 		bool rtl = DinoFonts.IsRightToLeft(code);
-		var button = new Border { HeightRequest = 52, StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = 16 }, Padding = new Thickness(14, 0) };
+		var button = new Border { AutomationId = LanguageIdPrefix + code, HeightRequest = 52, StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = 16 }, Padding = new Thickness(14, 0) };
 		var row = new HorizontalStackLayout { Spacing = 8, VerticalOptions = LayoutOptions.Center };
 		row.Children.Add(new Label
 		{
@@ -174,6 +259,7 @@ public partial class FirstRunPage : ContentPage
 		{
 			_selected = code;
 			ShowSelection();
+			LogLayout();
 		};
 		button.GestureRecognizers.Add(tap);
 		return button;
