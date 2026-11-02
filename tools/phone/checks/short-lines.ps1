@@ -100,7 +100,7 @@ try {
             for ($i = 1; $i -le $Repeats; $i++) {
                 Clear-SentenceCache
                 $one = Read-OneLine $appPid $line
-                $row = [pscustomobject]@{ Voice = $voice; Repeat = $i; Chars = $line.Length; Ended = $one.Ended; Probe = $one.Facts.Probe; GaveUp = $one.Facts.GaveUp; Rescue = $one.Facts.Rescue; Retries = $one.Facts.Retries }
+                $row = [pscustomobject]@{ Voice = $voice; Repeat = $i; Chars = $line.Length; Ended = $one.Ended; Probe = $one.Facts.Probe; GaveUp = $one.Facts.GaveUp; Rescue = $one.Facts.Rescue; Retries = $one.Facts.Retries; NanTakes = $one.Facts.NanTakes }
                 $rows += $row
                 Write-Host ("   {0} {1} chars: {2}" -f $voice, $line.Length, (Format-ShortLineRow $row))
             }

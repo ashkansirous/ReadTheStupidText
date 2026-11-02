@@ -832,8 +832,11 @@ function Clear-DeviceLeftovers([string]$Serial, [string[]]$Packages, [switch]$Fo
 # orig is the phone's stay_on value at the take, set is the value this tooling then sets (7). ONE rule restores (Invoke-StayOnRestore, used by every release path, by a new take and by preflight -Fix):
 # orig is written back ONLY IF the phone's current value still equals set, so a value the user changed since is never undone; then the record is deleted.
 # A record is never handed to another owner. One whose pid is alive and is not ours, or whose owner still holds a live lease, is left alone; a dead one older than 24 h is deleted without restoring.
+# Owners: a lease take records the lease owner; a hand-run preflight.ps1 -Fix records 'hand'. A record is restored only by its owner (a release by that lease's owner, preflight.ps1 -Restore for 'hand');
+# a 'hand' record never goes stale and a lease take or release leaves it alone; a dead run's lease record is healed by the next take. All of it is decided in Get-StayOnRecordAction.
 # The restore never presses the power key: the phone's own timeout acts, so a phone in use is not blanked.
 $script:StayOnSetting = 'stay_on_while_plugged_in'
+$script:StayOnHandOwner = 'hand'   # the owner of a record a hand-run preflight.ps1 -Fix wrote; only preflight.ps1 -Restore (the same owner) puts it back
 $script:StayOnSetValue = '7'   # bit mask 1 AC + 2 USB + 4 wireless: what preflight.ps1 -Fix sets (it has its own constant for the same number)
 
 function Get-StayOnRecordPath([string]$PhoneKey, [string]$Dir = '') {
@@ -865,6 +868,8 @@ function Get-StayOnRecordAge($Record, [DateTime]$NowUtc) {
 # Pure: what to do with a record. 'Restore' (the restore rule, then delete), 'Delete' (stale and dead: delete, write nothing) or 'LeaveAlone' (a live process or a live lease of another owner may still need it).
 # $Owner is the caller's lease owner ('' for a caller that owns nothing, such as preflight.ps1 -Fix); $PidAlive says whether the record's pid is a running process; $OwnerLeaseLive whether the record's owner still holds the phone lease.
 function Get-StayOnRecordAction($Record, [string]$Owner, [int]$MyPid, [bool]$PidAlive, [bool]$OwnerLeaseLive, [DateTime]$NowUtc) {
+    # Review round 3 design: a 'hand' record (preflight.ps1 -Fix, the user's own value) never goes stale and is restored only by a caller that is 'hand' (preflight.ps1 -Restore).
+    if ("$($Record.owner)" -ceq $script:StayOnHandOwner) { return $(if ($Owner -ceq $script:StayOnHandOwner) { 'Restore' } else { 'LeaveAlone' }) }
     $mine = ("$($Record.owner)" -ceq $Owner -and $Owner -ne '')
     $age = Get-StayOnRecordAge $Record $NowUtc
     $stale = ($null -eq $age -or $age -lt [TimeSpan]::Zero -or $age -gt $script:StayOnRecordMaxAge)
@@ -916,6 +921,7 @@ function Save-StayOnOriginal([string]$PhoneKey, [string]$Value, [string]$Dir = '
 
 # Called right after an owner took (not renewed) the phone lease: first heals a dead run's record (so its 7 is never read as the original), then records the setting as it is now for that owner.
 function Save-StayOnForLease([string]$AdbSerial, [string]$PhoneKey, [string]$Owner) {
+    # A 'hand' record (preflight.ps1 -Fix) is left alone by the restore below, so Save-StayOnOriginal then finds a record and keeps it.
     $null = Invoke-StayOnRestore $AdbSerial $PhoneKey $Owner
     $value = "$(Invoke-Adb $AdbSerial @('shell', 'settings', 'get', 'global', $script:StayOnSetting))".Trim()
     return (Save-StayOnOriginal $PhoneKey $value '' ([DateTime]::UtcNow) $Owner)
