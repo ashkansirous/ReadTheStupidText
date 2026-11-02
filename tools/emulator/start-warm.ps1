@@ -13,7 +13,7 @@
   A machine-wide mutex serialises concurrent callers; state lives in <worktrees>\.emulator\.
 #>
 param(
-    [ValidateSet('1', '2', 'any')][string]$Instance = '1',
+    [ValidateSet('1', '2', '3', 'tablet', 'any')][string]$Instance = '1',   # Slice 242: 3 or 'tablet' is RTST_Tablet (never chosen by 'any')
     [string]$Gpu = 'swiftshader_indirect',
     [int]$MemoryMb = 4096,
     [int]$TimeoutSeconds = 240,
@@ -24,7 +24,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
-Set-EmulatorInstance $(if ($Instance -eq 'any') { 1 } else { [int]$Instance })
+Set-EmulatorInstance $(if ($Instance -eq 'any') { 1 } else { Resolve-EmulatorInstance $Instance })
 
 function Use-RunningEmulator {
     $avd = Get-RunningAvdName

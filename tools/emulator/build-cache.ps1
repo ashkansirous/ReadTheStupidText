@@ -50,6 +50,19 @@ function Get-BuildDir([string]$App, [string]$Platform, [string]$Key) {
     return Join-Path (Join-Path (Get-WorktreesRoot) '_builds') "$App-$Platform-$Key"
 }
 
+# Slice 242 item 3: -NoBuild (switch or RTST_NO_BUILD=1) on install-debug.ps1 and run-flows.ps1: a timed run never spends its minutes building. On a cache miss the script
+# prints the line below and exits with this code. RTST_BUILD_CACHE_LOOKUP_ROOT is the self-test seam (same name as the phone runner's): the lookup then reads that folder.
+$script:EmulatorExitCacheMissed = 6
+
+function Test-NoBuildRequested([bool]$NoBuildSwitch) { return ($NoBuildSwitch -or $env:RTST_NO_BUILD -eq '1') }
+
+function Format-EmulatorNoBuildMiss([string]$App, [string]$Key) { return "cache missed for $App, key ${Key}: run install-debug.ps1 -BuildOnly first" }
+
+function Get-NoBuildLookupDir([string]$Dir) {
+    if (-not $env:RTST_BUILD_CACHE_LOOKUP_ROOT) { return $Dir }
+    return Join-Path $env:RTST_BUILD_CACHE_LOOKUP_ROOT (Split-Path $Dir -Leaf)
+}
+
 # The finished artifact of a cached build (the metadata file is written last, so a half-copied folder never matches), or $null.
 function Find-CachedBuild([string]$Dir, [string]$Filter) {
     if (-not (Test-Path (Join-Path $Dir $script:BuildMetaFile))) { return $null }
