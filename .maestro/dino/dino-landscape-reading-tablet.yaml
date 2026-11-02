@@ -1,0 +1,46 @@
+# Slice 242 item 6 (mock Batch 44 frame 127): held sideways on a TABLET (RTST_Tablet, short side 600 dp or more) the reading screen shows the book title above the text card.
+# Phones (controls in a rail) keep it hidden, so run this flow on the tablet emulator only.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK open-book opened page=2
+# expect-log: [Landscape] reading controls=row layout=PictureOverlay
+# expect-log: [Landscape] reading tablet title=shown
+# Assumes the starter book three-little-pigs is a picture + text book with a picture on page 2 (the layout line above proves it; if it says another layout, pick another starter).
+appId: uk.sirous.dinoreader.dbg
+name: Reading screen shows the book title on a tablet held sideways
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow opens a starter book and speaks nothing, so it needs no pack or own book.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "2"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible:
+      id: ReadingTabletTitle
+    timeout: 15000
+- assertVisible:
+    id: ReadingTransport
+- assertVisible:
+    id: ReadingBack
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: ReadingTransport
+    timeout: 15000
+- assertNotVisible:
+    id: ReadingTabletTitle

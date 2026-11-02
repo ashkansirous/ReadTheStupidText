@@ -33,6 +33,9 @@
         <Grid x:Name="SurfaceHost" Grid.Row="1" Margin="14,6,14,0">
             <local:ReadingSurface x:Name="Surface" AutomationId="ReadingSurface" PageSwiped="OnPageSwiped" SentenceTapped="OnSentenceTapped"
                                   LaidOut="OnLaidOut" />
+            <!-- Slice 242 item 6 (mock 127): the tablet's title above the text card; shown and placed in code (ApplySideTitle), hidden everywhere else. -->
+            <Label x:Name="SideTitle" AutomationId="ReadingTabletTitle" IsVisible="False" InputTransparent="True" HorizontalOptions="Fill" VerticalOptions="Start"
+                   MinimumHeightRequest="36" Padding="4,6,0,0" FontSize="24" FontAttributes="Bold" LineBreakMode="TailTruncation" MaxLines="1" />
             <Border x:Name="WanderPill" IsVisible="False" HorizontalOptions="Center" VerticalOptions="Start" Margin="0,18,0,0"
                     Padding="14,8" StrokeThickness="0" InputTransparent="True">
                 <Border.StrokeShape>

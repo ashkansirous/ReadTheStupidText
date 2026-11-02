@@ -58,6 +58,7 @@ public sealed class ReadingSurface : Border
 	private double _textTopInset;
 	private ControlsPlacement _controls = ControlsPlacement.Row;
 	private bool _sideways;
+	private double _cardTop; // dp the text card is lowered under the tablet title (ReadingPage decides it, with the title's visibility)
 	private readonly Label _error = new()
 	{
 		Text = ReadingText.LayoutFailed,
@@ -125,6 +126,19 @@ public sealed class ReadingSurface : Border
 
 		_controls = controls;
 		_sideways = sideways;
+		_laidOutFor = default;
+		RestartResizeTimer();
+	}
+
+	/// <summary>How far the text card is lowered under the tablet title (0 when the title is hidden): the one value ReadingPage computes per layout pass; a change lays the pages out again.</summary>
+	public void SetCardTop(double cardTop)
+	{
+		if (Math.Abs(cardTop - _cardTop) < 0.5)
+		{
+			return;
+		}
+
+		_cardTop = cardTop;
 		_laidOutFor = default;
 		RestartResizeTimer();
 	}
@@ -383,7 +397,7 @@ public sealed class ReadingSurface : Border
 		if (content.Scans is { } book && PictureTextBook.IsPictureTextBook(book.Pages))
 		{
 			return new PictureTextPages(content.Text, book.Pages, content.Sentences, book.ResolveImage, content.Font, theme,
-				content.RightToLeft, sentence => SentenceTapped?.Invoke(this, sentence), e => OnSwiped(this, e), _mode == ReadingMode.PictureAndText, book.TextInPictures, _sideways, _controls);
+				content.RightToLeft, sentence => SentenceTapped?.Invoke(this, sentence), e => OnSwiped(this, e), _mode == ReadingMode.PictureAndText, book.TextInPictures, _sideways, _controls, _cardTop);
 		}
 
 		return content.Scans is { } scans

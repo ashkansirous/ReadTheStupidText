@@ -22,14 +22,11 @@ public partial class ReadingPage : ContentPage
 	private const double FullTitleSize = 20;
 	private const double BackChipSize = 44;
 	private const float ChipAlpha = 0.92f;
-	private static readonly Thickness OverlayHeaderMargin = new(14, 6, 0, 0);
 	private static readonly Thickness CardHeaderMargin = new(22, 14, 0, 0); // Text only held sideways: the header sits in the card's top corner
 	private const double SidewaysTextSize = 26; // mock frame 93
 	private const double SidewaysTextTopInset = 40; // room under the corner header before the first line
 	private static readonly Thickness RailMargin = new(0, 0, 26, 0); // Slice 232: the phone's right-hand rail keeps the screen's right inset
 	private static readonly Thickness SurfaceMargin = new(14, 6, 14, 0);
-	private static readonly Thickness SideSurfaceMargin = new(14, 6, 14, 8);
-	private static readonly Thickness RailSurfaceMargin = new(14, 6, 0, 8);
 	private const double WaitCornerRadius = 18; // the picture box's corner (frame 64)
 	private const double TransportWhileWaiting = 0.4; // the player row is dimmed while the wait overlay shows (frame 64)
 
@@ -59,6 +56,7 @@ public partial class ReadingPage : ContentPage
 	private Window? _watchedWindow;
 	private const double FullHeaderRowSpacing = 2;
 	private ReadingLayout _layoutKind;
+	private DeviceSize _sizeApplied; // the device size class the margins were last applied for
 	private bool _railApplied; // the controls placement the layout was last applied for (height-dependent, so it can change while the kind stays)
 	private IReadOnlyList<StoryPage> _shownPages = [];
 	private bool _surfaceShown;
@@ -161,6 +159,7 @@ public partial class ReadingPage : ContentPage
 		_story = story;
 		_session.SetReadingLanguage(StoryLanguages.Current().Main); // the app language until the book says it can be read in the child's pick (OpenWithLanguagesAsync)
 		TitleLabel.Text = story.Title;
+		SideTitle.Text = story.Title;
 		_sentences = StorySentences.Build(story.Text, LanguageRules.For(story.Language), story.BreakMap());
 		_session.Open(story, _sentences, SaveCastAsync);
 		_theme = CurrentTheme();
@@ -501,12 +500,15 @@ public partial class ReadingPage : ContentPage
 	private void ApplyTitle(string title, string language)
 	{
 		TitleLabel.Text = title;
+		SideTitle.Text = title;
 		if (!TitleLabel.IsVisible)
 		{
 			SemanticProperties.SetDescription(Header, title);
 		}
 
 		TitleLabel.FlowDirection = DinoFonts.IsRightToLeft(language) ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+		SideTitle.FlowDirection = TitleLabel.FlowDirection;
+		FitOverlayTransport(); // the tablet title and the card's lowering follow the new title at once
 	}
 
 	private void ShowContent(ReadingContent content, Story story)
@@ -561,6 +563,7 @@ public partial class ReadingPage : ContentPage
 	protected override void OnSizeAllocated(double width, double height)
 	{
 		base.OnSizeAllocated(width, height);
+		_layoutSize = new Size(width, height);
 		UpdateHeaderLayout(width, height);
 		FitOverlayTransport();
 	}
@@ -576,10 +579,12 @@ public partial class ReadingPage : ContentPage
 	{
 		ReadingLayout kind = LayoutFor(width, height);
 		bool rail = kind != ReadingLayout.Upright && LandscapeLayout.ReadingControls(height) == ControlsPlacement.Rail;
-		if (kind != _layoutKind || rail != _railApplied)
+		DeviceSize size = LandscapeLayout.SizeOf(width, height); // the surface margins depend on the size class too (a window resized across 600 dp)
+		if (kind != _layoutKind || rail != _railApplied || size != _sizeApplied)
 		{
 			_layoutKind = kind;
 			_railApplied = rail;
+			_sizeApplied = size;
 			Root.SizeChanged -= OnRootSizeChanged;
 			Root.SizeChanged += OnRootSizeChanged;
 			ApplyHeaderLayout();
@@ -613,7 +618,8 @@ public partial class ReadingPage : ContentPage
 		Grid.SetColumn(Transport, rail ? 1 : 0);
 		Transport.Compact = rail;
 		Transport.Rail = rail;
-		SurfaceHost.Margin = !Sideways ? SurfaceMargin : rail ? RailSurfaceMargin : SideSurfaceMargin;
+		ReadingLayoutRules.SurfaceInsets inset = SideInsets();
+		SurfaceHost.Margin = !Sideways ? SurfaceMargin : new Thickness(inset.Left, inset.Top, inset.Right, inset.Bottom);
 		bool textRow = _layoutKind == ReadingLayout.TextRow;
 		Surface.SetTextStyle(textRow ? SidewaysTextSize : ReadingMetrics.FontSize, textRow ? SidewaysTextTopInset : 0);
 		FitOverlayTransport();
@@ -625,6 +631,8 @@ public partial class ReadingPage : ContentPage
 	// Held sideways on a tablet the row sits under the text card, not under the picture; the rail keeps the screen's right inset.
 	private void FitOverlayTransport()
 	{
+		double cardLeft = Sideways ? HeldTextCardLeft() : 0;
+		ApplySideTitle(cardLeft);
 		if (ControlsInRail)
 		{
 			Transport.Margin = RailMargin;
@@ -632,11 +640,44 @@ public partial class ReadingPage : ContentPage
 		}
 
 		bool underText = Sideways && _layoutKind == ReadingLayout.PictureOverlay;
-		Thickness margin = underText ? new Thickness(SideSurfaceMargin.Left + HeldTextCardLeft(), 0, 0, 0) : default;
+		Thickness margin = underText ? new Thickness(SideInsets().Left + cardLeft, 0, 0, 0) : default;
 		if (Transport.Margin != margin)
 		{
 			Transport.Margin = margin;
 		}
+	}
+
+	// The size of the last layout pass (the one UpdateHeaderLayout used), so the insets never read a Width/Height that moved on since.
+	private Size _layoutSize;
+
+	private ReadingLayoutRules.SurfaceInsets SideInsets() =>
+		ReadingLayoutRules.SidewaysSurface(_layoutSize.Width, _layoutSize.Height, ControlsInRail ? ControlsPlacement.Rail : ControlsPlacement.Row);
+
+	// Mock frame 127: on a tablet (controls a row) the book title stands above the text card, in the column beside the picture; PictureTextPages lowers the card by the same title block.
+	private void ApplySideTitle(double cardLeft)
+	{
+		ControlsPlacement controls = ControlsInRail ? ControlsPlacement.Rail : ControlsPlacement.Row;
+		bool drawsCard = Surface.FirstSentenceOnPage(Surface.CurrentPage) >= 0;
+		bool hasTitle = !string.IsNullOrWhiteSpace(SideTitle.Text);
+		bool show = ReadingLayoutRules.ShowsTabletTitle(_layoutKind, controls, cardLeft > 0, drawsCard, hasTitle);
+		SideTitle.TextColor = _theme.Ink;
+		SideTitle.Margin = new Thickness(cardLeft, 0, 0, 0);
+		if (SideTitle.IsVisible != show)
+		{
+			SideTitle.IsVisible = show;
+#if DEBUG
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] reading tablet title={(show ? "shown" : "hidden")}");
+#endif
+		}
+
+		Surface.SetCardTop(CardTopFor(show)); // the one value: it and the title's visibility come from the same `show`
+	}
+
+	// The title is one line with a tail ellipsis whose height follows the font (system font scale); the card is lowered by that same measured line.
+	private double CardTopFor(bool titleShown)
+	{
+		double measured = titleShown ? SideTitle.Measure(Math.Max(1, SurfaceHost.Width - SideTitle.Margin.Left), double.PositiveInfinity).Height : 0;
+		return ReadingLayoutRules.CardTop(titleShown, ReadingLayoutRules.TitleLine(measured));
 	}
 
 	// The text card's left edge on the page held, worked out here (outside any measure pass) by the same LandscapeLayout function the page's own columns use,
@@ -689,7 +730,7 @@ public partial class ReadingPage : ContentPage
 		Header.RowSpacing = compact || noTitle ? 0 : FullHeaderRowSpacing;
 		Header.HorizontalOptions = floating ? LayoutOptions.Start : LayoutOptions.Fill;
 		Header.VerticalOptions = floating ? LayoutOptions.Start : LayoutOptions.Fill;
-		Header.Margin = _layoutKind == ReadingLayout.TextRow ? CardHeaderMargin : Sideways ? OverlayHeaderMargin : default;
+		Header.Margin = _layoutKind == ReadingLayout.TextRow ? CardHeaderMargin : Sideways ? new Thickness(SideInsets().Left, ReadingLayoutRules.SidewaysTop, 0, 0) : default;
 		ApplyHeaderHeading(noTitle);
 		ApplyBackChip();
 	}
@@ -788,6 +829,7 @@ public partial class ReadingPage : ContentPage
 		}
 
 		TitleLabel.TextColor = _theme.Ink;
+		SideTitle.TextColor = _theme.Ink;
 		BackIcon.Color = _theme.BackIcon;
 		ApplyBackChip();
 		WanderPill.BackgroundColor = _theme.PillFill;
