@@ -24,6 +24,7 @@ Read first, in full: `.claude/skills/create-dino-story/SKILL.md` (rule 1 and the
   ending. Nothing is left unexplained. Characters act for reasons. It is worth reading twice.
 - **One action per page**, 10-18 pages, 15-60 words a page, identical refrains, every speaker named the same.
 - **Words.** Short sentences, no word a 5-year-old wouldn't know without a reason, no awkward phrasing aloud.
+  Fail any ALL-CAPS word in the story text: a voice may spell it letter by letter.
 - **Register, every language (Decision 152).** Fail any literary, old or written-only form (Farsi
   «بگذار»، «بیایم»، «می‌باشد» where a parent says «بذار»، «بیام»، «هست»), and any sound word that is a
   single short word instead of a repeated one (dino-storytelling section 3).
