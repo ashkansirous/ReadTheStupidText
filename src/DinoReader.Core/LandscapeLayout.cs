@@ -131,6 +131,9 @@ public static class LandscapeLayout
         return (int)Math.Clamp(Math.Floor(room / (CornerColumnWidth + CornerColumnGap)), MinCornerColumns, MaxCornerColumns);
     }
 
+    /// <summary>The Cast screen's rows: two columns held sideways (mock frame 119), one column upright.</summary>
+    public static int CastColumns(double width, double height) => IsLandscape(width, height) ? 2 : 1;
+
     /// <summary>Room the sideways row keeps clear at its start for a camera cut-out, in dp.</summary>
     public const double SidewaysInset = 34;
 

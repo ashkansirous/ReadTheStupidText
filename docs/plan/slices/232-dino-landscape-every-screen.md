@@ -10,11 +10,13 @@
 
 **Part B design note (coordinator, claim):** the corner has no page of its own: it is `GalleryPage` in grown-up mode (`GrownUpHeader.cs`, `GrownUpMode.cs`). Every size comes from one pure call per layout pass on the window size: `LandscapeLayout.ShelfLayout` (sideways row on phone landscape, grid otherwise), `LandscapeLayout.ListPaneWidth`/`PinnedButton` for the corner rail; the page never recomputes widths or the 600 dp split. Rotation changes only layout, never the shelf's state (grown-up mode, scroll target book, open sheet). Book sheet in landscape: one centred card 580 dp (cover left, actions right), the same on tablets; its size is a pure function in `BookSheetPlan` with a unit test.
 
-*Part C: In progress (wave 2026-11-02, night 2026-11-01-2355 wave 2), draft PR.*
+*Part C built 2026-11-02 (not merged yet); parts D-E planned; slice stays open.*
 
-**Touches, part C (claim 2026-11-02):** `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastViews.cs`, `src/DinoReader.App/CastRows.cs`, `src/DinoReader.App/PageEditorPage.xaml`, `src/DinoReader.App/PageEditorPage.xaml.cs`, `src/DinoReader.Core/LandscapeLayout.cs`, `src/DinoReader.Core/EditorLayout.cs` and `src/DinoReader.Core/RecordLayout.cs` (new, only if a rule does not fit `LandscapeLayout`), `tests/DinoReader.Tests/LandscapeLayoutTests.cs`, `tests/DinoReader.Tests/*Layout*Tests.cs`, `tests/DinoReader.Tests/CastScreenTests.cs`, `.maestro/dino/dino-landscape-record*.yaml`, `.maestro/dino/dino-landscape-cast*.yaml`, `.maestro/dino/dino-landscape-editor*.yaml` (new), `docs/plan/slices/232-dino-landscape-every-screen.md`. Read-only: `RegionOverlay.cs`, `TileOverlay.xaml(.cs)`, `CastFlavourMenu.cs`, `tools/emulator/rotate.ps1`.
+**Touches, part C (claim 2026-11-02):** `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastViews.cs`, `src/DinoReader.App/CastRows.cs`, `src/DinoReader.App/PageTextPage.cs` (widened at build, 2026-11-02: frame 120's text editor is `PageTextPage`, not `PageEditorPage`, which is the rotate/crop screen and stays untouched), `src/DinoReader.Core/LandscapeLayout.cs`, `src/DinoReader.Core/RecordLayout.cs` (new), `tests/DinoReader.Tests/RecordLayoutTests.cs` (new), `src/DinoReader.Core/EditorLayout.cs` and `src/DinoReader.Core/RecordLayout.cs` (new, only if a rule does not fit `LandscapeLayout`), `tests/DinoReader.Tests/LandscapeLayoutTests.cs`, `tests/DinoReader.Tests/*Layout*Tests.cs`, `tests/DinoReader.Tests/CastScreenTests.cs`, `.maestro/dino/dino-landscape-record*.yaml`, `.maestro/dino/dino-landscape-cast*.yaml`, `.maestro/dino/dino-landscape-editor*.yaml` (new), `docs/plan/slices/232-dino-landscape-every-screen.md`. Read-only: `RegionOverlay.cs`, `TileOverlay.xaml(.cs)`, `CastFlavourMenu.cs`, `tools/emulator/rotate.ps1`.
 
 **Part C design note (coordinator, claim):** same pattern as parts A and B: each page overrides `OnSizeAllocated`, stores the window size, and makes one pure Core call per layout pass (`LandscapeLayout.IsLandscape`, `SizeOf`, `PicturePaneWidth`, `ListPaneWidth`, `PinnedButton`; there is no `SplitLayout`, it is `PicturePaneWidth` + `ListPaneWidth`); the page never recomputes widths or the 600 dp split. Any new size rule (Record phone 3 columns vs tablet 2, Cast grid columns, editor thumbnail 64 dp when the keyboard is up) is one pure, unit-tested function in Core. **State survives rotation by construction:** Android's `MainActivity` handles `Orientation|ScreenSize` itself (no recreate), so a rotation only fires a size change; a layout pass re-parents or resizes existing views and never rebuilds them from scratch, never touches `_recording`, the audio session, the editor's text field or its unsaved text. A recording in progress keeps going through a rotation (frame 129 shows it mid-recording); the stop square stays in place. Record (116, 129): phone three columns (picture fitted whole, words with the recordings line, rail with Done on top and the mic in the middle, header in the words column); tablet two columns (page left; header, words, line, big button stacked). Cast (119): rows in a two-column grid, each keeps its sample play button. Page editor (120): picture left, text field right with page arrows; keyboard up collapses the picture to a 64 dp thumbnail so the field keeps three lines; Done saves. Portrait layouts unchanged.
+
+Frame 120's page arrows, Change picture and Delete page not built: new editor features beyond landscape layout (coordinator, 2026-11-02); follow-up if wanted.
 
 #### Parts (coordinator, claim 2026-11-01)
 
@@ -136,6 +138,28 @@ From review (findings files in `D:/ReadTheStupidText-worktrees/reviews/`):
 
 Reviewed findings read: 10/10, 5/5, 10/10, 2/2.
 
+#### Part C: built (2026-11-02)
+
+- Record (frames 116, 129): `RecordLayout.cs` in `src/DinoReader.Core` (phone 3 columns, tablet 2, `MinMiddleWidth` 240 dp). A rotation never touches the recording: the clock runs from a start-timestamp field. The sideways rail hides previous/next while recording, like the portrait footer; on the last page, next is the Done check.
+- Cast (frame 119): `LandscapeLayout.CastColumns`, a two-column card grid, each row keeping its sample play button.
+- Page text editor (frame 120): the screen is `PageTextPage.cs`, not `PageEditorPage` (the crop screen, untouched; Touches widened at build). `EditorLayout.For(w, h, hasPicture, editorFocused)`: the thumbnail appears exactly when a sideways phone has the editor focused. The root grid's children are added once and shape changes only move them (third review round on this area, so a coordinator design, not a patch).
+- Flows: `.maestro/dino/dino-landscape-record.yaml`, `dino-landscape-cast.yaml`, `dino-landscape-editor.yaml`.
+- Device run 2026-11-02, emulator-5554, cached build b4c2499809db: `dino-landscape-record` PASS, `dino-landscape-cast` PASS, `dino-landscape-editor` PASS, `record-page-shows-words` (portrait) PASS; no crash. iOS compile not run.
+
+Changed while building:
+
+- Frame 120's page arrows, Change picture and Delete page are not built: new editor features beyond landscape layout (follow-up if wanted).
+- The editor is `PageTextPage`, not `PageEditorPage`.
+
+From review (findings files in `D:/ReadTheStupidText-worktrees/reviews/`):
+
+- `s232c-review-high.md`: applied 1-8 and 10. Skipped 9 (CastPage sideways cards duplicate NarratorCard / CharacterCard: a refactor).
+- `s232c-review-medium.md`: applied 1, 3, 4, 5. Already matched portrait, no change: 6, 10. Skipped 2, 7, 8 (style). Skipped 9 (AutomationId only on sideways views: undoes high 10 on purpose).
+- `s232c-review-check-medium.md`: applied 1, 2. Skipped 3-6 (low: save-while-rotating double rebuild; Cast rotation across the column threshold loses a playing sample's state; a missing picture file cached as missing; keyboard shrinking height can flip a tablet to the phone layout).
+- `s232c-review-check2-medium.md`: all 7 low, skipped (layout jump on focus; left column sized 3:4 not the picture's aspect; sliver picture column in narrow windows; stale picture cache if the file is replaced; AutomationIds only sideways, intended; squeezed words row at 360 dp tall; Unknown-speaker card always in the grid).
+
+Reviewed findings read: 10/10, 10/10, 6/6, 7/7.
+
 #### For CLAUDE.md (lifted 2026-11-01)
 
 - Landscape reading-screen sizes and the rail-versus-row rule come from `src/DinoReader.Core/LandscapeLayout.cs` (one window-based decision via `ReadingSurface.SetControls`); do not recompute pane widths or the 480 dp rule in the pages. (Slice 232: docs/plan/slices/232-dino-landscape-every-screen.md)
@@ -155,6 +179,12 @@ Verified 2026-11-01 ~23:45 on emulator-5554 (Dino Debug, origin/main 5d86be52), 
 - Part B: a 360 dp-tall phone, the card and Remove fit.
 - Part B: rotating with the sheet open during a Remove confirmation.
 - Part B: VoiceOver / TalkBack order in the rail.
+- Part C: screenshots of each landscape state against frames 116, 119, 120, 129 (the flows take none; the user's eye).
+- Part C: tablet frames (129) on the RTST_Tablet emulator (Slice 242 adds it).
+- Part C: the editor thumbnail with a real keyboard on a scanned page (the flow reaches only a typed page).
+- Part C: a tablet with the keyboard up counts as a phone (short side under 600) and shows the thumbnail.
+- Part C: iOS compile and iPhone/iPad.
+- Part C: skipped lows: Cast rotation stops a playing sample, layout jump on focus, 3:4 picture column.
 - Tablet landscape (no tablet AVD): the controls row under the card and its left edge.
 - iPhone and iPad landscape (iOS compile only).
 - VoiceOver / TalkBack order in landscape.

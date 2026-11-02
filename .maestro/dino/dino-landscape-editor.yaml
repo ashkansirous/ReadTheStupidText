@@ -1,0 +1,60 @@
+# Slice 232 part C (mock Batch 44 frame 120): the page text editor keeps the text typed so far through a rotation (the same editor view moves between layouts; the picture column and the 64 dp thumbnail only show for a scanned page with regions, which this flow does not have).
+# Reaches the editor through Add a book > "Type or paste"; if the Add wizard's first screen differs on the device, adjust the taps before "Type or paste" (the device stage tunes it). Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback.
+# The gate is not tapped: the enter-grown-up hook stands in for a passed gate (grown-ups-button.yaml covers the gate chain).
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK enter-grown-up ok
+appId: uk.sirous.dinoreader.dbg
+name: Page text editor keeps unsaved text through a rotation
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow types one unsaved page and leaves without saving it.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+# The one-time "Storyteller voices are ready" note may cover the corner: dismiss it by its OK, only when it is on screen.
+- runFlow:
+    when:
+      visible: Storyteller voices are ready
+    commands:
+      - tapOn: "OK"
+- tapOn:
+    id: GalleryAddBook
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: "Type or paste"
+    timeout: 20000
+- tapOn:
+    text: "Type or paste"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GrownUpDone
+    timeout: 15000
+- tapOn:
+    point: "50%,60%"
+    waitToSettleTimeoutMs: 300
+- inputText: "The sea came in and filled the moat."
+- hideKeyboard
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible: ".*filled the moat.*"
+    timeout: 15000
+- assertVisible:
+    id: GrownUpDone
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible: ".*filled the moat.*"
+    timeout: 15000
