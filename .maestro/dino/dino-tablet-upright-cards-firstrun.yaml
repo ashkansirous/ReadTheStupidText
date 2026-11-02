@@ -1,0 +1,43 @@
+# Slice 234 part B (mock Batch 45 frame 138): on a tablet held upright (run on RTST_Tablet, 800 x 1280 dp) the first-run language page is a centred white card, min(800 - 80, 620) = 620 dp wide,
+# with the 14 languages in two columns and no scroll; rotating sideways gives Slice 232's split, and rotating back brings the card back with the pick kept.
+# Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback if a device ignores it. Nothing is downloaded: the flow never taps Continue. Tablet emulator only: a phone never logs card=True.
+# The layout line is written only when the shape changes (and at each pick): the card upright, the split sideways, the card again with the pick kept.
+# expect-log: [Landscape] firstrun split=False columns=2 page=language selected=en card=True cardWidth=620
+# expect-log: [Landscape] firstrun split=True columns=3 page=language selected=de card=False cardWidth=0
+# expect-log: [Landscape] firstrun split=False columns=2 page=language selected=de card=True cardWidth=620
+appId: uk.sirous.dinoreader.dbg
+name: First run on a tablet held upright is a centred card with two language columns
+# Runs after the flow pass or fail, so a failure never leaves the next flow sideways.
+onFlowComplete:
+  - setOrientation: PORTRAIT
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books), on purpose: the flow needs the fresh install's first-run language page.
+    clearState: true
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+# All the languages are on screen at once (no scroll): the first, a middle one and the last of the list.
+- assertVisible: English
+- assertVisible: Deutsch
+- assertVisible:
+    id: FirstRunLanguage-fa
+- assertVisible: Continue
+- tapOn:
+    text: "Deutsch"
+    waitToSettleTimeoutMs: 300
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible: Hello! Which language do we read in?
+    timeout: 15000
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 15000
+- assertVisible: Deutsch
+- assertVisible: Continue
+- assertNotVisible:
+    id: FirstRunDownload

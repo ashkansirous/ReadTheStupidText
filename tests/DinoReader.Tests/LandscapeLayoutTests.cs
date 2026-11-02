@@ -127,7 +127,9 @@ public class LandscapeLayoutTests
     [InlineData(640, 360, true, 300, 2, false)]
     [InlineData(568, 320, true, 300, 2, false)]
     [InlineData(1164, 804, true, 360, 5, true)]
-    [InlineData(744, 1164, true, 360, 3, true)]
+    [InlineData(744, 1164, true, 300, 3, true)]
+    [InlineData(804, 1164, true, 300, 3, true)]
+    [InlineData(800, 1280, true, 300, 3, true)]
     [InlineData(700, 1100, false, 0, 3, false)]
     public void The_corner_gets_an_ink_rail_held_sideways_or_on_a_wide_tablet(double w, double h, bool rail, double railWidth, int columns, bool fullRows)
     {
@@ -157,6 +159,24 @@ public class LandscapeLayoutTests
         double each = (w - corner.RailWidth - LandscapeLayout.CornerBooksMargin - (corner.Columns - 1) * LandscapeLayout.CornerColumnGap) / corner.Columns;
         Assert.True(each >= LandscapeLayout.CornerColumnWidth || corner.Columns == LandscapeLayout.MinCornerColumns);
     }
+
+    [Theory]
+    [InlineData(804, 1164, true)]
+    [InlineData(744, 1164, true)]
+    [InlineData(1164, 804, false)]
+    [InlineData(743.9, 1164, false)]
+    [InlineData(360, 760, false)]
+    public void Only_a_tablet_held_upright_gets_the_tablet_corner_with_a_solid_store_button(double w, double h, bool tabletUpright) =>
+        Assert.Equal(tabletUpright, LandscapeLayout.CornerLayout(w, h).TabletUpright);
+
+    [Theory]
+    [InlineData(804, 1164, 300)]
+    [InlineData(600, 600, 300)]
+    [InlineData(1164, 804, 360)]
+    [InlineData(760, 360, 300)]
+    [InlineData(360, 760, 300)]
+    public void The_side_list_is_300_on_a_tablet_held_upright_and_keeps_the_list_pane_elsewhere(double w, double h, double expected) =>
+        Assert.Equal(expected, LandscapeLayout.SideListWidth(w, h));
 
     [Fact]
     public void A_phone_held_upright_never_gets_the_rail_however_wide_the_screen_is() =>

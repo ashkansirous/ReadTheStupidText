@@ -33,6 +33,8 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout x:Name="HoldAction" Grid.Row="2" Spacing="12" HorizontalOptions="Fill">
+                    <!-- Slice 234 part B: the ring and its caption are one box, so the tablet card can lift it out of the scrolling part (a hold is never inside a ScrollView). -->
+                    <VerticalStackLayout x:Name="RingBox" Spacing="12">
                     <Grid x:Name="HoldRingHost" WidthRequest="120" HeightRequest="120" Margin="0,4,0,0" HorizontalOptions="Center">
                         <Border WidthRequest="86" HeightRequest="86" BackgroundColor="{StaticResource Brand}" StrokeThickness="0"
                                 InputTransparent="True">
@@ -47,6 +49,7 @@
                     </Grid>
                     <Label x:Name="HoldHint" Text="{x:Static res:AppResources.Gate_KeepHolding}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource Muted}"
                            HorizontalTextAlignment="Center" Opacity="0" />
+                    </VerticalStackLayout>
 
                     <Button x:Name="ContinueButton" Text="{x:Static res:AppResources.Gate_Continue}" IsVisible="False" HeightRequest="56"
                             CornerRadius="28" FontSize="16" BackgroundColor="{StaticResource Brand}" TextColor="White"

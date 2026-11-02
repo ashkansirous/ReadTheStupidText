@@ -103,6 +103,56 @@ Part A covers the tablet-upright shelf and the reading page. The Work items abov
     - 3 gear resets to 44 dp in the grown-up corner on a tablet upright: skipped (the corner gear is part B).
 - **Device (RTST_Tablet, build 87e00636951d, cold boot after a System UI ANR on the warm snapshot):** dino-tablet-upright-shelf, dino-tablet-upright-reading and dino-landscape-reading-tablet PASS. dino-landscape-store FAIL: the flow expects the phone's `store columns=2`, the tablet logs 3 by design (SettingsLayout.StoreColumns), and this diff touches no Store file, so it is a phone-only flow. Upright shelf shot: 4 columns, nothing clipped (`D:/ReadTheStupidText-worktrees/reviews/s234a-shots/shelf-with-anr-dialog.png`).
 
+#### Part B: built (2026-11-02)
+
+Part B covers the cards (gate, first run, book sheet, intro), the grown-up corner and Settings on a tablet held upright. Phone and landscape values are unchanged.
+
+- **Core:** new `TabletCardLayout`: `CardWidth` = min(w-80, max) with max 520 for the gate, 620 for first run, 560 for the book sheet (taken from the drawn frames, which differ from the mock text's 560/520/620); `CardMaxHeight` = h - 80; `ScrollAreaHeight`, `GateFixedBelow`. `LandscapeLayout.SideListWidth` is 300 on an upright tablet (`ListPaneWidth` unchanged elsewhere); the corner gets a `TabletUpright` flag and 3 columns. `SettingsLayout.ValueUnderName`. `OnboardingLayout` and `BookSheetPlan` gained card fields.
+- **App:** the gate is a centred 520 card with 80 dp keys and a 160 dp ring; the hold ring and Back sit outside the card's ScrollView (always vertical), so a scroll cannot cancel a hold. First run is one 620 card with the 15 languages in two columns. The book sheet is a 560 card with the cover on top. The intro has a cream panel above the copy and its buttons in one row. In the corner, Store is solid indigo and the gear 48 dp. Settings has a 300 list with the value under the name (`SettingsRows.StackNavValue`, tag rows too).
+- **Choices:** `GrownUpHeader` keeps 44 dp Back/Done (mock 48). Below 744 the phone corner header stays. No chevrons while stacked. Sideways keeps 360.
+- **Tests:** 2158 pass; Android build, iOS compile and flow lint pass.
+- **From review** (all four files read in full; the files live in `D:/ReadTheStupidText-worktrees/reviews/`, outside the repo):
+  - `s234b-review-high.md` (9 findings):
+    - 1 gate card has no height cap or scroll on a square window (GatePage.xaml.cs:105): applied.
+    - 2 StyleCopy restyles only the first two labels (IntroWizardPage.cs:253): applied.
+    - 3 hard-coded #F0E8D8 duplicates ReadingTheme.PicturePanel (IntroWizardPage.cs:39): applied.
+    - 4 card constants repeated across four pages (TabletCardLayout.cs:16): skipped (polish).
+    - 5 upright tablet fixed at 3 columns (LandscapeLayout.cs:142): skipped, intended three columns.
+    - 6 StackNavValue skips tag rows (SettingsRows.cs:47): applied.
+    - 7 StackNavValue forces text alignment, ignoring FlowDirection (SettingsRows.cs:59): skipped, the layout never mirrored Slice 96.
+    - 8 dead `_shape?.KeyHeight` lookup in BuildKeyPad (GatePage.xaml.cs:349): skipped (nit).
+    - 9 first-run card has no height cap or edge margin (FirstRunPage.xaml.cs:188): applied.
+  - `s234b-review-medium.md` (11 findings):
+    - 1 first-run card fills its cap instead of sizing to content (FirstRunPage.xaml.cs:213): applied.
+    - 2 StyleCopy finds heading and line by position (IntroWizardPage.cs:311): skipped (low).
+    - 3 StackNavValue picks children by position, StackTag duplicates code (SettingsRows.cs:40): skipped (low).
+    - 4 stacked rows cannot grow for a wrapping value (SettingsRows.cs:56): applied.
+    - 5 SheetGrid in a ScrollView may measure infinite height (GatePage.xaml.cs:134): applied.
+    - 6 hold ring inside the ScrollView loses the hold on a drift or drag (GatePage.xaml.cs:131/242): applied (ring and Back moved outside the scroll).
+    - 7 book sheet header left out of `_cardRows` (BookSheet.cs:106): skipped (low).
+    - 8 BookSheetMaxHeight pass-through and repeated card constants (TabletCardLayout.cs:62): skipped (low).
+    - 9 language button hard-coded height 52 (FirstRunPage.xaml.cs:268): applied.
+    - 10 two sources for the key max height 64 (GatePage.xaml.cs:149): skipped (low).
+    - 11 intro panel colour stays light in dark mode (IntroWizardPage.cs:416): skipped (light only).
+  - `s234b-review-check-medium.md` (1 finding): the ScrollView started with Orientation Neither and could never scroll (GatePage.xaml.cs:182/133): applied, it is always vertical.
+  - `s234b-review-check2-medium.md` (2 findings, no blocker, both low):
+    - 1 `GateFixedBelow` is about 12 dp short of the real fixed height (TabletCardLayout.cs:75): skipped (low).
+    - 2 reparenting the ring and Back mid-hold on a card/non-card switch (GatePage.xaml.cs:143-165): skipped (low).
+- **Device (RTST_Tablet, build 6edc9b530403, `hide_error_dialogs` on):** dino-tablet-upright-cards-gate, -firstrun, -corner and -intro PASS (`D:/ReadTheStupidText-worktrees/reviews/s234b-run2.log`). The first run was lost to a System UI ANR dialog (`s234b-run1.log`).
+
+#### Not yet verified (part B)
+
+- Cards, corner and Settings against frames 136-141 by eye (the flows take no screenshots).
+- dino-tablet-upright-shelf and dino-landscape-reading-tablet regression not rerun after part B.
+- A drifting finger on the gate hold.
+- A short tablet window (cards cap and scroll).
+- iPad (compile only).
+- TalkBack order.
+
+#### For tools/CLAUDE.md (lift later)
+
+- Tablet AVD runs set `settings put global hide_error_dialogs 1` and send CLOSE_SYSTEM_DIALOGS before the flows, and set it back after. A System UI ANR on RTST_Tablet lost two runs on 2026-11-02 (Slice 234 part B: docs/plan/slices/234-dino-tablet-portrait.md).
+
 #### Not yet verified
 
 - Stacked reading page against frames 134, 135 and 150 by eye (no screenshot taken).
