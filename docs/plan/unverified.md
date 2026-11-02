@@ -35,7 +35,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 241: Faster, quieter device tests ([slice](slices/241-device-test-speed.md))
 
 - Item 1, crash fail-fast: a flow list with a launch crash prints one FAIL with the crash lines and NOTRUN (naming the crash) for the rest in under one flow's time.
-- Item 3, build during boot: a run after a source change prints `Cache miss: building ... while emulator-5554 boots` and its total is build time, not build plus boot.
+- Item 3, timing: a cache-miss run's total is build time, not build plus boot (the `Cache miss` line itself passed on 2026-11-01; the time was not recorded).
 - `PACKDL progress` lines every ~5 s on a normal download (the runner shows only the first).
 - The iOS stall watcher on a device.
 - The `-Split` two-emulator path.

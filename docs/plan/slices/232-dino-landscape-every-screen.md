@@ -141,6 +141,8 @@ Reviewed findings read: 10/10, 5/5, 10/10, 2/2.
 
 #### Not yet verified
 
+Verified 2026-11-01 ~23:45 on emulator-5554 (Dino Debug, origin/main 5d86be52), before night 2026-11-01-2355: part A's portrait reading is unchanged after the `TransportRow` change on Android (dino-landscape-reading: portrait to landscape to portrait keeps the page) PASS. The iOS, Windows and tablet parts stay below.
+
 - Part B: the same book stays in view after rotating a shelf with more than 4 books (the emulator shelf has 4, all on screen).
 - Part B: tablet landscape and portrait (no tablet AVD); iPhone and iPad (iOS compile only).
 - Part B: notch inset doubling with `SafeAreaEdges` (high 10).

@@ -69,6 +69,8 @@ None.
 
 #### Not yet verified
 
+Verified 2026-11-01 ~23:45 on emulator-5554 (Dino Debug, origin/main 5d86be52), before night 2026-11-01-2355: a starter book shows its lines on Record (record-page-shows-words) PASS again. Scanned and RTL books were not run and stay below.
+
 - origin/main showing the picture only (the cause was read from code, not shown on a device).
 - A scanned book showing its lines on the Record page.
 - An RTL/Farsi book on the Record page.
