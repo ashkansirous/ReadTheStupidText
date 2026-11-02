@@ -65,8 +65,14 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Delisting a deleted book on a real run.
 - A translated title for a newly added store book on an installed app, with no app update.
 
-### Slice 232 parts A-D: Dino landscape reading screen, shelf, Record, Cast and page text editor ([slice](slices/232-dino-landscape-every-screen.md))
+### Slice 232 parts A-E: Dino landscape reading screen, shelf, Record, Cast, page text editor, intro, gate and first run ([slice](slices/232-dino-landscape-every-screen.md))
 
+- Part E: screenshots against frames 121, 122, 123, 130 (the flows take none), including check 3 (gate keys uneven in tall rows) and check 4 (long language names in 3 columns).
+- Part E: `first-run.yaml` on this build against main (the SIGSEGV; not proven unrelated).
+- Part E: the gate sum step sideways (the hold is not scriptable).
+- Part E: tablet intro, gate and first run.
+- Part E: iPhone and iPad (iOS compile only).
+- Part E: TalkBack order.
 - Part D: screenshots against frames 117, 118, 124, 128 by eye.
 - Part D: tablet Store with 3 columns, and tablet Backup.
 - Part D: VM `tools/desktop-vm/checks/dino-settings.ps1` with the new id (not run; the Windows head shares this code).
