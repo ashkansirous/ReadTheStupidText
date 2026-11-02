@@ -187,6 +187,20 @@
   <data name="Gate_BackToStory" xml:space="preserve"><value>Tillbaka till sagan</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>Hur mycket är</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>Radera</value></data>
+  <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Med musen, eller håll ned mellanslag.</value></data>
+  <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>Skriv det och tryck på Enter</value></data>
+  <data name="Key_Space" xml:space="preserve"><value>Mellanslag</value></data>
+  <data name="Key_Left" xml:space="preserve"><value>Vänsterpil</value></data>
+  <data name="Key_Right" xml:space="preserve"><value>Högerpil</value></data>
+  <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Reading_ReadAgain" xml:space="preserve"><value>Läs igen</value></data>
+  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Bara vuxna ser det här. Barnets hylla är ett klick bort.</value></data>
+  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Ingen anslutning. Läser med telefonens röst. Klicka för att försöka ladda ned rösten igen.</value></data>
+  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>Väntar på internet. Det fortsätter av sig självt när du är online igen. Klicka för att försöka nu.</value></data>
+  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>Väntar på Wi-Fi. Det fortsätter av sig självt på Wi-Fi. Klicka för att ladda ned nu.</value></data>
+  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>Nedladdningen av rösten blev skadad. Läser med telefonens röst. Klicka för att försöka igen.</value></data>
+  <data name="PackStatus_FailedClick" xml:space="preserve"><value>Det gick inte att ladda ned naturliga röster. Läser med telefonens röst. Klicka för att försöka igen.</value></data>
+  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Nedladdningen är stoppad. Läser med telefonens röst. Klicka för att ladda ned.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Hur mycket är {0} plus {1}?</value></data>
   <data name="Story_Add" xml:space="preserve"><value>Lägg till en saga</value></data>
   <data name="Story_Title" xml:space="preserve"><value>Titel</value></data>

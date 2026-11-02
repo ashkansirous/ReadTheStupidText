@@ -185,6 +185,20 @@
   <data name="Gate_BackToStory" xml:space="preserve"><value>Retour à l’histoire</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>Combien font</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>Effacer</value></data>
+  <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>À la souris, ou maintenez la barre d’espace.</value></data>
+  <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>Tapez-la, puis appuyez sur Entrée</value></data>
+  <data name="Key_Space" xml:space="preserve"><value>Barre d’espace</value></data>
+  <data name="Key_Left" xml:space="preserve"><value>Flèche gauche</value></data>
+  <data name="Key_Right" xml:space="preserve"><value>Flèche droite</value></data>
+  <data name="Key_Esc" xml:space="preserve"><value>Échap</value></data>
+  <data name="Reading_ReadAgain" xml:space="preserve"><value>Relire</value></data>
+  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Réservé aux adultes. L’étagère de votre enfant est à un clic.</value></data>
+  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Pas de connexion. Lecture avec la voix du téléphone. Cliquez pour réessayer le téléchargement de la voix.</value></data>
+  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>En attente d’Internet. Le téléchargement reprend tout seul dès que vous êtes de nouveau en ligne. Cliquez pour réessayer maintenant.</value></data>
+  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>En attente du Wi-Fi. Le téléchargement reprend tout seul en Wi-Fi. Cliquez pour télécharger maintenant.</value></data>
+  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>Le téléchargement de la voix est corrompu. Lecture avec la voix du téléphone. Cliquez pour réessayer.</value></data>
+  <data name="PackStatus_FailedClick" xml:space="preserve"><value>Impossible de télécharger les voix naturelles. Lecture avec la voix du téléphone. Cliquez pour réessayer.</value></data>
+  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Téléchargement arrêté. Lecture avec la voix du téléphone. Cliquez pour télécharger.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Combien font {0} plus {1} ?</value></data>
   <data name="Story_Add" xml:space="preserve"><value>Ajouter une histoire</value></data>
   <data name="Story_Title" xml:space="preserve"><value>Titre</value></data>

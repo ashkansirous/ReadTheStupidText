@@ -185,6 +185,20 @@
   <data name="Gate_BackToStory" xml:space="preserve"><value>返回故事</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>计算</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>删除</value></data>
+  <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>用鼠标，或按住空格键。</value></data>
+  <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>输入答案，然后按 Enter</value></data>
+  <data name="Key_Space" xml:space="preserve"><value>空格键</value></data>
+  <data name="Key_Left" xml:space="preserve"><value>左箭头</value></data>
+  <data name="Key_Right" xml:space="preserve"><value>右箭头</value></data>
+  <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Reading_ReadAgain" xml:space="preserve"><value>再读一遍</value></data>
+  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>只有家长能看到这里。孩子的书架只需点击一下。</value></data>
+  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>没有网络连接。正在使用手机语音朗读。点击可重试下载语音。</value></data>
+  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>正在等待网络。恢复联网后会自动继续。点击可立即重试。</value></data>
+  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>正在等待 Wi-Fi。连上 Wi-Fi 后会自动继续。点击可立即下载。</value></data>
+  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>语音下载已损坏。正在使用手机语音朗读。点击可重试。</value></data>
+  <data name="PackStatus_FailedClick" xml:space="preserve"><value>无法下载自然语音。正在使用手机语音朗读。点击可重试。</value></data>
+  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>下载已停止。正在使用手机语音朗读。点击可下载。</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>{0} 加 {1} 等于多少？</value></data>
   <data name="Story_Add" xml:space="preserve"><value>添加故事</value></data>
   <data name="Story_Title" xml:space="preserve"><value>标题</value></data>

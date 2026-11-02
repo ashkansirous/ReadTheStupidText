@@ -185,6 +185,20 @@
   <data name="Gate_BackToStory" xml:space="preserve"><value>العودة إلى القصة</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>ما ناتج</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>مسح</value></data>
+  <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>بالفأرة، أو اضغط مع الاستمرار على مفتاح المسافة.</value></data>
+  <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>اكتبه ثم اضغط Enter</value></data>
+  <data name="Key_Space" xml:space="preserve"><value>مفتاح المسافة</value></data>
+  <data name="Key_Left" xml:space="preserve"><value>السهم الأيسر</value></data>
+  <data name="Key_Right" xml:space="preserve"><value>السهم الأيمن</value></data>
+  <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Reading_ReadAgain" xml:space="preserve"><value>اقرأ مرة أخرى</value></data>
+  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>هذا للكبار فقط. رف طفلك على بُعد نقرة واحدة.</value></data>
+  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>لا يوجد اتصال. تتم القراءة بصوت الهاتف. انقر لإعادة محاولة تنزيل الصوت.</value></data>
+  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>في انتظار الإنترنت. سيستمر تلقائيًا عند عودة الاتصال. انقر للمحاولة الآن.</value></data>
+  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>في انتظار Wi-Fi. سيستمر تلقائيًا عبر Wi-Fi. انقر للتنزيل الآن.</value></data>
+  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>تعرّض تنزيل الصوت للتلف. تتم القراءة بصوت الهاتف. انقر لإعادة المحاولة.</value></data>
+  <data name="PackStatus_FailedClick" xml:space="preserve"><value>تعذّر تنزيل الأصوات الطبيعية. تتم القراءة بصوت الهاتف. انقر لإعادة المحاولة.</value></data>
+  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>توقف التنزيل. تتم القراءة بصوت الهاتف. انقر للتنزيل.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>كم يساوي {0} زائد {1}؟</value></data>
   <data name="Story_Add" xml:space="preserve"><value>إضافة قصة</value></data>
   <data name="Story_Title" xml:space="preserve"><value>العنوان</value></data>

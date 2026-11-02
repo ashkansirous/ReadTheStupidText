@@ -22,6 +22,9 @@ internal sealed class DinoWindowFrame
 	private const int SaveDelayMs = 500;
 	private const int EffectiveDpi = 0; // MDT_EFFECTIVE_DPI
 
+	/// <summary>The window's frame once it has been applied; null before that, or when applying it failed (the default frame stays).</summary>
+	internal static DinoWindowFrame? Current { get; private set; }
+
 	private readonly AppWindow _appWindow;
 	private readonly DispatcherQueueTimer _saveTimer;
 	private RectInt32 _restored;
@@ -48,7 +51,7 @@ internal sealed class DinoWindowFrame
 			WindowTrace.Write($"attach hook {hook} fired, native window {(native ? "found" : "missing")}, already applied {applied}");
 			if (!applied && sender is Microsoft.Maui.Controls.Window { Handler.PlatformView: MauiWinUIWindow nativeWindow })
 			{
-				applied = TryApply(nativeWindow); // stays false after a failure, so the other hook can retry
+				applied = TryApply(nativeWindow, window); // stays false after a failure, so the other hook can retry
 			}
 		}
 
@@ -57,7 +60,7 @@ internal sealed class DinoWindowFrame
 		window.HandlerChanged += (sender, _) => OnReady(sender, nameof(Microsoft.Maui.Controls.Window.HandlerChanged));
 	}
 
-	private static bool TryApply(MauiWinUIWindow native)
+	private static bool TryApply(MauiWinUIWindow native, Microsoft.Maui.Controls.Window window)
 	{
 		try
 		{
@@ -69,7 +72,10 @@ internal sealed class DinoWindowFrame
 				return false;
 			}
 
-			new DinoWindowFrame(appWindow, native.DispatcherQueue).Apply(native);
+			var frame = new DinoWindowFrame(appWindow, native.DispatcherQueue);
+			frame.Apply(native);
+			Current = frame;
+			DinoKeyboard.Attach(native, window);
 			return true;
 		}
 		catch (Exception ex)
@@ -86,7 +92,7 @@ internal sealed class DinoWindowFrame
 		List<DisplayArea> displays = DisplaysPrimaryFirst();
 		double scale = ScaleOfDisplay(TargetDisplay(saved, displays), ScaleOf(native));
 		ApplyMinimum(scale);
-		ApplyTitleBar();
+		ApplyTone(TitleBarTone.Cream);
 		WindowOpening opening = Opening(saved, displays, scale);
 		_restored = ToRect(opening.Bounds);
 		_maximised = opening.Maximised;
@@ -134,8 +140,9 @@ internal sealed class DinoWindowFrame
 		}
 	}
 
-	// The standard 32 px title bar with the app icon and name, in the kids' cream; per-page colours come in part B.
-	private void ApplyTitleBar()
+	// The standard 32 px title bar with the app icon and name, in the page's colour: cream on kids' pages, paper on grown-up pages, ink in the corner (part B, mock frame 155).
+	// Called on the UI thread whenever a page appears (DinoTitleBar).
+	internal void ApplyTone(TitleBarTone tone)
 	{
 		if (!AppWindowTitleBar.IsCustomizationSupported())
 		{
@@ -143,15 +150,22 @@ internal sealed class DinoWindowFrame
 			return;
 		}
 
-		global::Windows.UI.Color cream = DinoTokens.Get(DinoTokens.Cream).ToWindowsColor();
-		global::Windows.UI.Color ink = DinoTokens.Get(DinoTokens.Ink).ToWindowsColor();
+		string fillToken = tone switch
+		{
+			TitleBarTone.Paper => DinoTokens.Sand,
+			TitleBarTone.Ink => DinoTokens.Ink,
+			_ => DinoTokens.Cream,
+		};
+		global::Windows.UI.Color fill = DinoTokens.Get(fillToken).ToWindowsColor();
+		global::Windows.UI.Color text = (tone == TitleBarTone.Ink ? Colors.White : DinoTokens.Get(DinoTokens.Ink)).ToWindowsColor();
 		AppWindowTitleBar bar = _appWindow.TitleBar;
-		bar.BackgroundColor = cream;
-		bar.InactiveBackgroundColor = cream;
-		bar.ForegroundColor = ink;
-		bar.ButtonBackgroundColor = cream;
-		bar.ButtonInactiveBackgroundColor = cream;
-		bar.ButtonForegroundColor = ink;
+		bar.BackgroundColor = fill;
+		bar.InactiveBackgroundColor = fill;
+		bar.ForegroundColor = text;
+		bar.ButtonBackgroundColor = fill;
+		bar.ButtonInactiveBackgroundColor = fill;
+		bar.ButtonForegroundColor = text;
+		WindowTrace.Write($"Dino window: title bar tone {tone}");
 	}
 
 	// DisplayArea.FindAll() throws InvalidCastException when enumerated (foreach or LINQ), microsoft/microsoft-ui-xaml issue #6454

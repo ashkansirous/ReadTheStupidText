@@ -187,6 +187,20 @@
   <data name="Gate_BackToStory" xml:space="preserve"><value>Terug naar het verhaal</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>Hoeveel is</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>Wissen</value></data>
+  <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Met de muis, of houd de spatiebalk ingedrukt.</value></data>
+  <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>Typ het en druk op Enter</value></data>
+  <data name="Key_Space" xml:space="preserve"><value>Spatiebalk</value></data>
+  <data name="Key_Left" xml:space="preserve"><value>Pijl-links</value></data>
+  <data name="Key_Right" xml:space="preserve"><value>Pijl-rechts</value></data>
+  <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Reading_ReadAgain" xml:space="preserve"><value>Opnieuw lezen</value></data>
+  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Alleen volwassenen zien dit. De kast van je kind is één klik weg.</value></data>
+  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Geen verbinding. Voorlezen met de stem van de telefoon. Klik om de download van de stem opnieuw te proberen.</value></data>
+  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>Wachten op internet. Het gaat vanzelf verder zodra je weer online bent. Klik om het nu te proberen.</value></data>
+  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>Wachten op wifi. Het gaat vanzelf verder via wifi. Klik om nu te downloaden.</value></data>
+  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>De download van de stem is beschadigd. Voorlezen met de stem van de telefoon. Klik om het opnieuw te proberen.</value></data>
+  <data name="PackStatus_FailedClick" xml:space="preserve"><value>Natuurlijke stemmen konden niet worden gedownload. Voorlezen met de stem van de telefoon. Klik om het opnieuw te proberen.</value></data>
+  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Download gestopt. Voorlezen met de stem van de telefoon. Klik om te downloaden.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Hoeveel is {0} plus {1}?</value></data>
   <data name="Story_Add" xml:space="preserve"><value>Een verhaal toevoegen</value></data>
   <data name="Story_Title" xml:space="preserve"><value>Titel</value></data>

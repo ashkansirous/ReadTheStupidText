@@ -1,3 +1,4 @@
+using DinoReader.Core;
 using Microsoft.Maui.Controls.Shapes;
 
 namespace DinoReader;
@@ -49,6 +50,9 @@ public sealed class TransportRow : StackLayout
 		Wire(_previous, () => PreviousTapped?.Invoke(this, EventArgs.Empty), ReadingText.PreviousSentence);
 		Wire(_next, () => NextTapped?.Invoke(this, EventArgs.Empty), ReadingText.NextSentence);
 		Wire(_play, () => PlayTapped?.Invoke(this, EventArgs.Empty), ReadingText.Play);
+		DesktopTips.Set(_previous, ReadingText.PreviousSentence, DinoKey.Left); // Slice 235 part B: Windows tooltips name the key
+		DesktopTips.Set(_next, ReadingText.NextSentence, DinoKey.Right);
+		DesktopTips.Set(_play, ReadingText.Play, DinoKey.Space);
 	}
 
 	/// <summary>The smaller row used when the page is held sideways.</summary>
@@ -126,7 +130,7 @@ public sealed class TransportRow : StackLayout
 
 	public event EventHandler? NextTapped;
 
-	public void Apply(SessionState state, ReadingTheme theme)
+	public void Apply(SessionState state, ReadingTheme theme, bool onBackCover = false)
 	{
 		_previous.BackgroundColor = theme.SkipFill;
 		_next.BackgroundColor = theme.SkipFill;
@@ -137,6 +141,7 @@ public sealed class TransportRow : StackLayout
 		_glyph.Kind = state == SessionState.Playing ? IconKind.Pause : IconKind.Play;
 		_play.Opacity = state == SessionState.Loading ? 0.7 : 1;
 		SemanticProperties.SetDescription(_play, Describe(state));
+		DesktopTips.Set(_play, onBackCover && state != SessionState.Loading ? ReadingText.ReadAgain : Describe(state), DinoKey.Space); // Space on the back cover reads the book again
 	}
 
 	private static string Describe(SessionState state) => state switch

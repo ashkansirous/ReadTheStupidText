@@ -75,16 +75,34 @@ function Get-RtstLogText {
 }
 
 function Find-UiaByName {
-    # Finds a descendant by (partial, case-insensitive) Name; optional control type name such as 'Button'.
+    # Finds a descendant by Name (case-insensitive): an exact match wins, else the first partial match; optional control type name such as 'Button'.
+    # ToolTip popups and everything inside one are skipped: a button's tooltip carries its name too ("Next sentence (Right arrow)", with a child Text of the same name) and comes first in the tree.
     param($Root = $script:AutomationElement::RootElement, [Parameter(Mandatory)] [string] $Name, [string] $ControlType)
+    $partial = $null
     $all = $Root.FindAll($script:TreeScope::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
     foreach ($e in $all) {
-        $n = $e.Current.Name
-        if ($n -and $n.IndexOf($Name, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
-            if (-not $ControlType -or $e.Current.ControlType.ProgrammaticName -eq "ControlType.$ControlType") { return $e }
-        }
+        # An element that vanished mid-read (a tooltip closing, ElementNotAvailableException or any COM error) is skipped, never a throw.
+        try {
+            $n = $e.Current.Name
+            if (-not $n -or $n.IndexOf($Name, [StringComparison]::OrdinalIgnoreCase) -lt 0) { continue }
+            if ($ControlType -and $e.Current.ControlType.ProgrammaticName -ne "ControlType.$ControlType") { continue }
+            if (Test-InsideToolTip $e) { continue }
+            if ($n.Equals($Name, [StringComparison]::OrdinalIgnoreCase)) { return $e }
+            if (-not $partial) { $partial = $e }
+        } catch { continue }
     }
-    return $null
+    return $partial
+}
+
+function Test-InsideToolTip {
+    # True for a ToolTip element or one whose UIA parent is a ToolTip (its text child).
+    # An element that vanished while being read counts as a tooltip (skipped by the caller), never a throw.
+    param($Element)
+    try {
+        if ($Element.Current.ControlType.ProgrammaticName -eq 'ControlType.ToolTip') { return $true }
+        $parent = [System.Windows.Automation.TreeWalker]::RawViewWalker.GetParent($Element)
+        return ($null -ne $parent) -and $parent.Current.ControlType.ProgrammaticName -eq 'ControlType.ToolTip'
+    } catch { return $true }
 }
 
 function Invoke-Uia {

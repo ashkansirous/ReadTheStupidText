@@ -26,7 +26,22 @@ public static class AppResources
 	public static void UseCulture(CultureInfo culture) => _culture = culture;
 
 	/// <summary>The string for <paramref name="key"/> in the app culture, falling back to English.</summary>
-	public static string Get([CallerMemberName] string key = "") => For(key, _culture);
+	public static string Get([CallerMemberName] string key = "") => For(UseClickWording && ClickWorded.Contains(key) ? key + ClickSuffix : key, _culture);
+
+	/// <summary>
+	/// True on the Windows head (set once at start-up, Slice 235 part B): a few hints say "Tap" on a phone and "Click" at a desktop window. Each has a second string named
+	/// <c>&lt;key&gt;Click</c>, written out in every language, which the plain property returns when this is on. False everywhere else, so phones and tablets read what they always did.
+	/// </summary>
+	public static bool UseClickWording { get; set; }
+
+	private const string ClickSuffix = "Click";
+
+	// The strings that say "Tap" and have a "...Click" twin; <see cref="Get"/> swaps to the twin when <see cref="UseClickWording"/> is on.
+	private static readonly HashSet<string> ClickWorded =
+	[
+		nameof(Gallery_CornerLine), nameof(PackStatus_Offline), nameof(PackStatus_Waiting), nameof(PackStatus_WaitingWifi),
+		nameof(PackStatus_HashMismatch), nameof(PackStatus_Failed), nameof(PackStatus_Stopped),
+	];
 
 	/// <summary>The string for <paramref name="key"/> in <paramref name="culture"/> (a story's language, say), falling back to English.</summary>
 	public static string For(string key, CultureInfo culture) => Manager.GetString(key, culture) ?? key;
@@ -97,16 +112,22 @@ public static class AppResources
 	public static string PackStatus_Resolving => Get();
 	public static string PackStatus_Downloading => Get();
 	public static string PackStatus_Offline => Get();
+	public static string PackStatus_OfflineClick => Get();
 	public static string PackStatus_Waiting => Get();
+	public static string PackStatus_WaitingClick => Get();
 	public static string PackStatus_WaitingWifi => Get();
+	public static string PackStatus_WaitingWifiClick => Get();
 	public static string StoryLanguages_Waiting => Get();
 	public static string StoryLanguages_WaitingWifi => Get();
 	public static string StoryLanguages_WaitingNote => Get();
 	public static string StoryLanguages_Retry => Get();
 	public static string PackStatus_HashMismatch => Get();
+	public static string PackStatus_HashMismatchClick => Get();
 	public static string PackStatus_InvalidPack => Get();
 	public static string PackStatus_Failed => Get();
+	public static string PackStatus_FailedClick => Get();
 	public static string PackStatus_Stopped => Get();
+	public static string PackStatus_StoppedClick => Get();
 	public static string PackStatus_Unavailable => Get();
 	public static string Common_Back => Get();
 	public static string Common_Save => Get();
@@ -248,6 +269,7 @@ public static class AppResources
 	public static string Gallery_GrownUpsButtonLocked => Get();
 	public static string Gallery_CornerTitle => Get();
 	public static string Gallery_CornerLine => Get();
+	public static string Gallery_CornerLineClick => Get();
 	public static string Gallery_BackToShelf => Get();
 	public static string Book_ReadNow => Get();
 	public static string Gallery_BookOptions => Get();
@@ -271,6 +293,13 @@ public static class AppResources
 	public static string Gate_BackToStory => Get();
 	public static string Gate_WhatIs => Get();
 	public static string Gate_Backspace => Get();
+	public static string Gate_HoldCaptionWindows => Get();
+	public static string Gate_TypeEnterWindows => Get();
+	public static string Key_Space => Get();
+	public static string Key_Left => Get();
+	public static string Key_Right => Get();
+	public static string Key_Esc => Get();
+	public static string Reading_ReadAgain => Get();
 	public static string Gate_SumQuestion => Get();
 	public static string Story_Add => Get();
 	public static string Story_Title => Get();

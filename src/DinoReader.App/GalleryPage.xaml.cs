@@ -11,7 +11,7 @@ using ReadTheStupidText.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
-public partial class GalleryPage : ContentPage
+public partial class GalleryPage : ContentPage, IDinoKeyTarget
 {
 	private const double LanguageButtonHeight = 48;
 	private const double LanguageMenuGap = 6;
@@ -348,6 +348,9 @@ public partial class GalleryPage : ContentPage
 		ApplyCornerHeader(grownUp);
 		ApplyStorytellerChrome(grownUp);
 		BackgroundColor = DinoTokens.Get(grownUp ? DinoTokens.Sand : DinoTokens.Cream);
+#if WINDOWS
+		DinoTitleBar.Refresh(this); // Slice 235 part B: entering or leaving the corner changes the title bar colour at once
+#endif
 	}
 
 	// Slice 228 (mock Batch 43 frames 97 and 98): the grown-ups' corner has an ink header bar with an amber lock, a white title and a gear in a translucent tile, and three tiles across;
@@ -661,6 +664,28 @@ public partial class GalleryPage : ContentPage
 	}
 
 	private static StoryTile? TileOf(object? sender) => (sender as BindableObject)?.BindingContext as StoryTile;
+
+	/// <summary>True while the shelf shows the grown-ups' corner; the Windows title bar goes ink then (Slice 235 part B).</summary>
+	internal bool InCorner => _mode.IsGrownUp;
+
+	// Slice 235 part B: the shelf answers the Windows window's keyboard. Esc closes the book's options sheet while it is open and does nothing on the shelf itself.
+	DinoScreen IDinoKeyTarget.Screen => BookInfo.IsVisible ? DinoScreen.Sheet : DinoScreen.Shelf;
+
+	bool IDinoKeyTarget.Handle(DinoKeyAction action, DinoKey key)
+	{
+		if (action == DinoKeyAction.SheetActivate)
+		{
+			return BookInfo.IsVisible && BookInfo.ActivateFocused();
+		}
+
+		if (action != DinoKeyAction.CloseSheet || !BookInfo.IsVisible)
+		{
+			return false;
+		}
+
+		BookInfo.Dismiss();
+		return true;
+	}
 
 	private async void OnStoryTapped(object? sender, TappedEventArgs e)
 	{
