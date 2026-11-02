@@ -2,6 +2,11 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 253: Final-loop leftovers, night 2026-11-01-2355 ([slice](slices/253-final-loop-leftovers-night-2026-11-01-2355.md))
+
+- Freddy and the Slipper: the Arabic, Russian, Japanese and Chinese spellings of Elham's name, by a native speaker (until now only in `docs/plan/notes/2026-11-01-freddy-and-the-slipper.md`).
+- The parallel illustration workflow (`dino-story-illustrator` modes setup / pages / finish, 3-4 at once, PR #687) has never been run: the first book drawn that way proves one lock, one stamp and matching place sheets.
+
 ### Slice 248: Dino iOS: leaving a book stops its read, and a new book never drives the old one's voice ([slice](slices/248-dino-stop-read-on-leave-ios.md))
 
 - iOS (TestFlight build after the merge): play a book, tap Back: the voice stops. Open another book: its button shows Play; Play reads that book. Swipe back from a playing book: the voice stops.
@@ -31,6 +36,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 - Part C: Record, Cast with the picker, the editor (keyboard down and up), Store and Backup against frames 142-146 by eye (no screenshots; no script reaches those screens with a screenshot step).
 - Part C: `RecordFixedRows` / `EditorFixedRows` on a real tablet.
+- Part A (from the final feedback loop, 2026-11-02): after the store flow rotated back to upright, the shelf logged `layout=rail ... tabletUpright=False` (234A emulator run). Likely moot after part B's `TabletUpright` flag; check the shelf log line on an upright tablet after a rotate-back.
 - Part C: Cast picker on a short window or with the keyboard.
 - Part B: cards, corner and Settings against frames 136-141 by eye (the flows take no screenshots).
 - Part B: dino-tablet-upright-shelf and dino-landscape-reading-tablet regression not rerun after part B.
@@ -115,8 +121,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Part E: TalkBack order.
 - Part D: screenshots against frames 117, 118, 124, 128 by eye.
 - Part D: tablet Store with 3 columns, and tablet Backup.
-- Part D: VM `tools/desktop-vm/checks/dino-settings.ps1` with the new id (not run; the Windows head shares this code).
-- Part D: iOS (compile not run).
 - Part D: TalkBack order in two panes.
 - Part D: the hosted pane's right edge inset on a notch phone.
 - Part B: the same book stays in view after rotating a shelf with more than 4 books (the emulator shelf has 4, all on screen).

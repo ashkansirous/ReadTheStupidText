@@ -56,6 +56,9 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
    spoken, kid-friendly register of dino-storytelling section 3 (never literary: Farsi «بذار بیام تو», not
    «بگذار بیایم تو»), with that language's own sound words, repeated so a voice reads them long enough.
    Don't touch pieces whose English didn't change.
+   No ALL-CAPS words in any language's story text (EMPTY, YUCKY): the voices may spell them letter by
+   letter. Show loudness with lowercase, repetition and punctuation ("empty, empty, empty!"). (Freddy
+   review, night 2026-11-01-2355.)
    A store book also gets `content/dino/<stem>/titles.json`: its title in every other language (`{ "ar": "...", "da": "..." }`, the codes of the translation files, none blank). Never add a row to
    `src/DinoReader.App/ShippedTitles.cs` for a store book, and never edit `src/`, `tests/` or any app file for one (Slice 239): a store book is content only, so its merge runs only the store upload.
 5. Changing an existing starter's text (a store book needs no stamp): raise its version with `dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` (it also stores the content hash that CI's `check` compares; if only pictures change the illustrator stamps it), and for a starter add the shipped text's page hash to
