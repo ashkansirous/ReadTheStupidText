@@ -1,6 +1,6 @@
 ### Slice 248 — Dino iOS: leaving a book stops its read, and a new book never drives the old one's voice
 
-*In progress (2026-11-02).* A bug the user reported on iOS dino-v1.94.0 (2026-11-02): "I played a story, then came back, it still continued playing. it should have stopped. then I opened another book, and clicked on pause. It paused the voice. I clicked on play again and it resumed the book1 instead of starting on book2. I tried with book 3, the same condition continued."
+*Built and merged as PR #746 (2026-11-02); iOS check not yet verified.* A bug the user reported on iOS dino-v1.94.0 (2026-11-02): "I played a story, then came back, it still continued playing. it should have stopped. then I opened another book, and clicked on pause. It paused the voice. I clicked on play again and it resumed the book1 instead of starting on book2. I tried with book 3, the same condition continued."
 
 **Touches:** `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSession.cs` (only if needed), `tests/DinoReader.Tests/**` (only if a pure helper is extracted), `.maestro/dino/**` (one new or extended flow), `docs/plan/slices/248-dino-stop-read-on-leave-ios.md`
 
