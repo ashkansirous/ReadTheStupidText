@@ -150,9 +150,10 @@ function Get-PackageSigsegvBlock([string]$CrashLog, [string]$Package) {
 # The crash probe of the watch: a closure over its own locals ($script: is empty inside a closure), reading the crash buffer of one device. $Seen.CrashLog keeps the text that showed
 # the crash, so the flow's verdict and the retry rule use what the watch saw even when a later adb read fails. $Reader takes the serial and returns the buffer text (a test passes its own).
 function New-AppCrashProbe([string]$Serial, [string]$Package, [hashtable]$Seen, [scriptblock]$Reader = { param($s) Invoke-AdbBounded @('-s', $s, 'logcat', '-b', 'crash', '-d') }) {
+    $isCrashed = ${function:Test-AppCrashed}   # a closure cannot see script-scope functions, so the function itself is captured
     return {
         $text = "$(& $Reader $Serial)"
-        $crashed = Test-AppCrashed $text '' $Package
+        $crashed = & $isCrashed $text '' $Package
         if ($crashed) { $Seen.CrashLog = $text }
         return $crashed
     }.GetNewClosure()

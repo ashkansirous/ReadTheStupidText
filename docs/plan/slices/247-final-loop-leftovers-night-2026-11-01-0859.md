@@ -30,6 +30,8 @@
 
 **Check pass 2** (`reviews/s247-check2-medium.md`): confirmed the ASCII fix; no new code changed. Its 8 findings are mostly earlier ones restated; none applied. Follow-up, not built: 1 (the wait after the crash kill has no time limit; if `taskkill /T /F` ever failed, the run would hang until the night watchdog) and 4 (a crash-retried flow drops the first run's crash log). Both go to the next slice that touches `run-flows.ps1`.
 
+**CI caught a bug the local runs missed** (PR #744, run 41415472016, `test-speed.ps1` in both shells): `New-AppCrashProbe` returned a `GetNewClosure()` scriptblock that could not see the script-scope `Test-AppCrashed`, so every probe threw and `Invoke-CrashProbeSafely` read that as "no crash". This is why the first emulator run's crash kill did nothing. Fixed by capturing `${function:Test-AppCrashed}` into the closure; reproduced and passed the CI way (`pwsh`/`powershell -NoProfile -Command ./tools/emulator/test-speed.ps1`). The earlier "all pass" reports came from runs that did not use the CI form. **Check pass 3** (`reviews/s247-check3-medium.md`): fix confirmed, no other closure has the problem; its 7 minor findings not applied (finding 1's "a flow can run up to 4 times" points at the existing `-App auto` loop, `run-flows.ps1:68`, not the single crash retry). Emulator rerun then showed the crash kill working (below).
+
 #### Scripted device checks for the coordinator (emulator, one run, `run-flows.ps1`)
 
 1. **Per-phase timing (a).** `run-flows.ps1 -App dino -Flow <the 5 slowest flows> > <worktree>\tmp\run.log 2>&1`. Each flow prints a `PHASES` line under its PASS/FAIL line. Pass: 5 PHASES lines, each with a `largest:` and a `slowest:`. It fails (no line) on the old script. Record the largest phase per flow here.
@@ -43,7 +45,7 @@
 #### Verification (emulator run 2026-11-02, Dino build 497a9441cbb9, `-NoBuild`, 10-minute cap)
 
 - **Check 1 (PHASES), passed:** 5 PHASES lines, each with `largest:` and `slowest:`. first-run FAIL 55.6 s (Wait 35.9 s; assertCondition 24.4 s FAILED; wizard assert, not investigated), first-run-pack-start PASS 39.2 s (largest Wait 21.1 s), open-book-voice-id PASS 47.4 s (Wait 22.9 s), read-back-reread-background PASS 103.8 s (largest Action 82.2 s, a `repeat`), dino-backup-restore-recordings PASS 33.7 s (Wait 18.2 s). Log: tmp/run.log.
-- **Check 2 (crash kill), not verified:** `am crash` was sent too early (about 25 s after the install line, before Maestro had the app running); no crash happened, both flows PASSED. Needs a rerun that crashes once the app pid exists.
+- **Check 2 (crash kill), passed (rerun 2026-11-02, read-back-reread-background, `-NoBuild`):** the app pid (3894) appeared 08:55:05; `am crash` sent 08:55:17 (12 s later); logcat FATAL EXCEPTION 08:55:16.88. The run ended `dino: 0 passed, 1 failed, 0 not run (app crashed) in 21.7 s` and was back at the prompt well before 08:55:42 (flow start about 08:54:57, so the end was about 2-3 s after the crash, inside 10 s); output has `WATCH crash: ... killing the Maestro process tree (pid 34372)` and the crash summary; no java/maestro process left. Log: tmp/run2.log.
 - **Check 3 (Mono SIGSEGV retry), not verified:** no SIGSEGV or CRASH-RETRIED line appeared in either run.
 - **first-run flow FAILED** on an `assertCondition` (24.4 s) with no `WATCH crash` line. This diff changes no app code and no flow; the cause was not investigated.
 
@@ -57,7 +59,6 @@ Item a's follow-up is not done: shorten the waits the PHASES lines name (Wait is
 
 #### Not yet verified
 
-- Crash kill within 10 s on a device: the `am crash` came before the app started, so no crash happened (check 2).
 - Mono SIGSEGV retry on a real tombstone: the fixture is copied from the note, and no SIGSEGV occurred in the 2026-11-02 runs.
 - Cause of the `first-run` flow failure (assertCondition, 24.4 s) on the 2026-11-02 emulator run.
 - Item a's change: the waits are not shortened yet, so "same 5 flows finish faster" is unproven.
