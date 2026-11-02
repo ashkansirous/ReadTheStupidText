@@ -89,6 +89,7 @@ jobs:
           configFilePath: GitVersion.dino.yml
 
   build:
+    timeout-minutes: 90   # a stuck release build ends after 90 min (user, 2026-11-02)
     needs: version
     # `version` is skipped when the caller supplied one; !cancelled() keeps that
     # skip from cascading, and a failed `version` still stops the build.
