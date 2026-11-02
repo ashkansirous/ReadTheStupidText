@@ -526,11 +526,25 @@ function Get-RunMarkerKey([string]$PhoneKey, [string]$Owner) { return "$PhoneKey
 
 function Get-RunMarkerPath([string]$Key, [string]$Dir = '') {
     if (-not $Dir) { $Dir = Get-LeaseDir 'phone' }
+    return Join-Path $Dir ('run-{0}-{1}.json' -f ($Key -replace '[^\w.-]', '_'), (Get-RunMarkerHash $Key))
+}
+
+# Slice 242 item 2: owners that differ only in a character replaced by '_' ('night/1', 'night:1') must not share a file, so the name ends in a short hash of the raw key.
+function Get-RunMarkerHash([string]$Key) {
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try { $bytes = $sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($Key)) } finally { $sha.Dispose() }
+    return (-join ($bytes[0..3] | ForEach-Object { $_.ToString('x2') }))
+}
+
+# The name before the hash was added (run-<key>.json). A run started by the old version holds this file; the same-owner guard reads it too until it is gone.
+function Get-LegacyRunMarkerPath([string]$Key, [string]$Dir = '') {
+    if (-not $Dir) { $Dir = Get-LeaseDir 'phone' }
     return Join-Path $Dir ('run-{0}.json' -f ($Key -replace '[^\w.-]', '_'))
 }
 
 function Read-RunMarker([string]$Key, [string]$Dir = '') {
     $path = Get-RunMarkerPath $Key $Dir
+    if (-not (Test-Path $path)) { $path = Get-LegacyRunMarkerPath $Key $Dir }
     if (-not (Test-Path $path)) { return $null }
     try { $marker = [IO.File]::ReadAllText($path) | ConvertFrom-Json -ErrorAction Stop } catch { return $null }
     if (-not $marker.owner -or -not $marker.pid) { return $null }
@@ -554,6 +568,7 @@ function Request-RunMarker([string]$PhoneKey, [string]$Owner, [bool]$Force = $fa
         $null = New-Item -ItemType Directory -Force (Split-Path (Get-RunMarkerPath $markerKey $Dir))
         $record = @{ owner = $Owner; pid = $PID; procStart = (Get-Process -Id $PID).StartTime.ToFileTimeUtc() }
         $record | ConvertTo-Json | Set-Content (Get-RunMarkerPath $markerKey $Dir)
+        Remove-Item (Get-LegacyRunMarkerPath $markerKey $Dir) -Force -ErrorAction SilentlyContinue   # the old-named file is replaced by the new one
         return $null
     } 'phone')
 }
@@ -563,7 +578,7 @@ function Remove-RunMarker([string]$PhoneKey, [string]$Owner, [string]$Dir = '') 
     $markerKey = Get-RunMarkerKey $PhoneKey $Owner
     Invoke-WithLeaseLock ('run-' + $PhoneKey) {
         $marker = Read-RunMarker $markerKey $Dir
-        if ($marker -and [int]$marker.pid -eq $PID) { Remove-Item (Get-RunMarkerPath $markerKey $Dir) -Force -ErrorAction SilentlyContinue }
+        if ($marker -and [int]$marker.pid -eq $PID) { Remove-Item (Get-RunMarkerPath $markerKey $Dir) -Force -ErrorAction SilentlyContinue; Remove-Item (Get-LegacyRunMarkerPath $markerKey $Dir) -Force -ErrorAction SilentlyContinue }   # Read-RunMarker may have read the old-named file: it goes too
     } 'phone'
 }
 

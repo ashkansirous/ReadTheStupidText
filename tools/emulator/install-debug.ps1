@@ -4,20 +4,23 @@
 .DESCRIPTION
   Slice 180: the APK is built once per build key (the build inputs as they are on disk, see build-cache.ps1) into
   <worktrees folder>\_builds\<app>-android-<key>\ and reused by every later run, agent and worktree with the same key;
-  -Rebuild forces a build. The emulator boots while the build runs. -Instance 1|2 picks the emulator (see start-warm.ps1).
+  -Rebuild forces a build. The emulator boots while the build runs. -Instance 1|2|3|tablet picks the emulator (see start-warm.ps1; 3 or tablet is RTST_Tablet).
+  Slice 242: -NoBuild (or RTST_NO_BUILD=1) starts no build: a cache miss prints the "cache missed" line and exits 6; -Rebuild with -NoBuild is refused (exit 6).
   The build holds no emulator lock: the device is only needed for the install and the run that follows.
 #>
 param(
     [Parameter(Mandatory)][ValidateSet('rtst', 'dino')][string]$App,
-    [ValidateSet(1, 2)][int]$Instance = 1,
+    [ValidateSet('1', '2', '3', 'tablet')][string]$Instance = '1',   # Slice 242: 3 or 'tablet' is RTST_Tablet
     [switch]$Rebuild,
     # Slice 207: build (or find) the APK and stop: no emulator boot, no install. run-flows.ps1 uses it so the build happens before it takes the emulator lease.
-    [switch]$BuildOnly
+    [switch]$BuildOnly,
+    # Slice 242: start no build; on a cache miss print `cache missed for <app>, key <k>: run install-debug.ps1 -BuildOnly first` and exit 6 (also RTST_NO_BUILD=1).
+    [switch]$NoBuild
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 . (Join-Path $PSScriptRoot 'build-cache.ps1')
-Set-EmulatorInstance $Instance
+Set-EmulatorInstance (Resolve-EmulatorInstance $Instance)
 
 $apps = @{
     rtst = @{ Project = 'src\ReadTheStupidText.Mobile\ReadTheStupidText.Mobile.csproj'; Package = $script:EmulatorPackages.rtst }
@@ -76,7 +79,15 @@ function Get-ApkForKey {
 
 $key = Get-BuildKey
 $buildDir = Get-BuildDir $App $platform $key
+if ($Rebuild -and (Test-NoBuildRequested $NoBuild)) {
+    Write-Host '-Rebuild and -NoBuild contradict each other (a rebuild is a build): nothing was built.'
+    exit $script:EmulatorExitCacheMissed
+}
 $apk = if ($Rebuild) { $null } else { Find-CachedBuild $buildDir $apkFilter }
+if ((Test-NoBuildRequested $NoBuild) -and -not (Find-CachedBuild (Get-NoBuildLookupDir $buildDir) $apkFilter)) {
+    Write-Host (Format-EmulatorNoBuildMiss $App $key)
+    exit $script:EmulatorExitCacheMissed
+}
 $boot = if ($BuildOnly) { $null } else { Start-EmulatorInBackground }
 $buildError = $null
 try {
