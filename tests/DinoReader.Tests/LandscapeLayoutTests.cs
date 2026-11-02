@@ -112,4 +112,53 @@ public class LandscapeLayoutTests
     [Fact]
     public void A_picture_only_page_has_no_text_card_offset() =>
         Assert.Equal(0, LandscapeLayout.TextCardLeft(760, 400, 0.75, true));
+
+    [Fact]
+    public void A_cover_is_three_wide_for_four_tall()
+    {
+        Assert.Equal(180, LandscapeLayout.CoverWidth(240), 6);
+        Assert.Equal(0, LandscapeLayout.CoverWidth(-5));
+    }
+
+    [Theory]
+    [InlineData(360, 760, false, 0, 3, false)]
+    [InlineData(700, 500, true, 300, 3, false)]
+    [InlineData(760, 360, true, 300, 3, false)]
+    [InlineData(640, 360, true, 300, 2, false)]
+    [InlineData(568, 320, true, 300, 2, false)]
+    [InlineData(1164, 804, true, 360, 5, true)]
+    [InlineData(744, 1164, true, 360, 3, true)]
+    [InlineData(700, 1100, false, 0, 3, false)]
+    public void The_corner_gets_an_ink_rail_held_sideways_or_on_a_wide_tablet(double w, double h, bool rail, double railWidth, int columns, bool fullRows)
+    {
+        CornerShape corner = LandscapeLayout.CornerLayout(w, h);
+        Assert.Equal(rail, corner.Rail);
+        Assert.Equal(railWidth, corner.RailWidth);
+        Assert.Equal(columns, corner.Columns);
+        Assert.Equal(fullRows, corner.FullRowButtons);
+    }
+
+    [Theory]
+    [InlineData(300, 2)]
+    [InlineData(0, 2)]
+    [InlineData(400, 3)]
+    [InlineData(804, 5)]
+    public void The_corner_fits_as_many_book_columns_as_the_width_left_allows(double widthLeft, int columns) =>
+        Assert.Equal(columns, LandscapeLayout.CornerColumnsFor(widthLeft));
+
+    [Theory]
+    [InlineData(640, 360)]
+    [InlineData(568, 320)]
+    [InlineData(760, 360)]
+    [InlineData(1164, 804)]
+    public void Every_corner_column_keeps_at_least_its_minimum_width_unless_it_is_the_two_column_floor(double w, double h)
+    {
+        CornerShape corner = LandscapeLayout.CornerLayout(w, h);
+        double each = (w - corner.RailWidth - LandscapeLayout.CornerBooksMargin - (corner.Columns - 1) * LandscapeLayout.CornerColumnGap) / corner.Columns;
+        Assert.True(each >= LandscapeLayout.CornerColumnWidth || corner.Columns == LandscapeLayout.MinCornerColumns);
+    }
+
+    [Fact]
+    public void A_phone_held_upright_never_gets_the_rail_however_wide_the_screen_is() =>
+        Assert.False(LandscapeLayout.CornerLayout(590, 1000).Rail);
 }
