@@ -6,8 +6,20 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 - iOS (TestFlight build after the merge): play a book, tap Back: the voice stops. Open another book: its button shows Play; Play reads that book. Swipe back from a playing book: the voice stops.
 
-### Slice 235: Dino on Windows, part A ([slice](slices/235-dino-windows-window.md))
+### Slice 247: Leftovers from the night's final feedback loop ([slice](slices/247-final-loop-leftovers-night-2026-11-01-0859.md))
 
+- Mono SIGSEGV retry on a real tombstone: the fixture is copied from the note, and no SIGSEGV occurred in the 2026-11-02 runs.
+- Cause of the `first-run` flow failure (assertCondition, 24.4 s) on the 2026-11-02 emulator run.
+- Item a's change: the waits are not shortened yet, so "same 5 flows finish faster" is unproven.
+- Item b: the S21 kokoro-en stall cause, until a real stall prints the PACKDL tail.
+
+### Slice 235: Dino on Windows, parts A and B ([slice](slices/235-dino-windows-window.md))
+
+- Part B on a real PC and by eye: whether `PreviewKeyDown` gets keys when nothing has focus yet (the check focuses the window first), the Space hold with real key repeats, title bar colours and height, tooltips on a hovering mouse.
+- Why Right takes about 2 s after a read starts on the VM (speech start busy on the UI thread?), and whether a real PC has the same delay.
+- Esc on the language page / cast picker through the new back path; held Esc on Settings/Language/Cast/Record pops exactly one page; the gate hold ending on Alt-Tab; title bar colour after the intro and the gate close.
+- Typing the sum on AZERTY / AltGr layouts (on-screen pad and numpad only); Tab then Enter on "Back to story".
+- The title bar back to cream after Esc from the book is shown by the check's pass but not read from the trace.
 - Opening at 1100 x 760 on a screen larger than 1024 x 768 (the VM clamps it).
 - A maximised window closed and reopened stays maximised (high finding 6).
 - 150% scaling and the unit of `PreferredMinimumWidth/Height`.

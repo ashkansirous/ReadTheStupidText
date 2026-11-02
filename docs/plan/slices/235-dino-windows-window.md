@@ -1,6 +1,6 @@
 ### Slice 235 — Dino on Windows: a real desktop window (size, keyboard, mouse)
 
-*Part B built 2026-11-02 (night 2026-11-01-2355 wave 6), PR #745, all six Dino VM checks pass; part C (WindowLayout wiring into pages, hover, wheel, focus-ring styling and focus return, Settings arrow keys, right-click, shelf column counts, speed hint string) still planned.* *Part A built 2026-11-02 (window and pure rules; five Dino VM checks pass), merged as PR #740 (0d135658).* *Planned 2026-11-01.* The user asked for "better design on windows". **Mock drawn 2026-11-01 (Batch 46), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges (a wide window uses its layouts) and alongside or after Slice 234 (a mid-size window uses the tablet rules).
+*Part B built 2026-11-02 (night 2026-11-01-2355 wave 6), merged as PR #745 (d8ba0b6a), all six Dino VM checks pass; part C (WindowLayout wiring into pages, hover, wheel, focus-ring styling and focus return, Settings arrow keys, right-click, shelf column counts, speed hint string) still planned.* *Part A built 2026-11-02 (window and pure rules; five Dino VM checks pass), merged as PR #740 (0d135658).* *Planned 2026-11-01.* The user asked for "better design on windows". **Mock drawn 2026-11-01 (Batch 46), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges (a wide window uses its layouts) and alongside or after Slice 234 (a mid-size window uses the tablet rules).
 
 **Touches:** `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/Platforms/Windows/**`, `src/DinoReader.Core/*Layout*.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/GrownUpHeader.cs`, `src/DinoReader.App/*Page*.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `tools/desktop-vm/**`, `docs/design/dino-reader/**`, `docs/plan/slices/235-dino-windows-window.md`
 
@@ -164,12 +164,12 @@ From review (files in `D:/ReadTheStupidText-worktrees/reviews/`, deleted later):
 - The VM screen is 1024 x 768, so window-size checks clamp their expectations to its work area.
 - The Release VM build shows no `Debug.WriteLine`, so a Windows-head check needs a file trace it can read back (`window-trace.log`). (Slice 235: docs/plan/slices/235-dino-windows-window.md)
 
-#### For tools/desktop-vm/CLAUDE.md (part B)
+#### For tools/desktop-vm/CLAUDE.md (part B) (lifted 2026-11-02)
 
 - `Find-UiaByName` prefers an exact name and skips tooltips and their children: WinUI tooltips sit in the UIA tree ahead of the control, so a partial match taps the popup.
 - A keyboard check polls `window-trace.log` for each key's line instead of sleeping a fixed time (Right took 2.2-2.6 s after Space on the VM), and sends arrow keys as extended keys. (Slice 235: docs/plan/slices/235-dino-windows-window.md)
 
-#### For src/DinoReader.App/CLAUDE.md (part B)
+#### For src/DinoReader.App/CLAUDE.md (part B) (lifted 2026-11-02)
 
 - Windows keys go through one hook (`Platforms/Windows/DinoKeyboard.cs`), then Core `DinoKeyMap`, then the top page's `IDinoKeyTarget`; pages handle no keys directly.
 - Tooltips and the "click" wording come only from `DesktopTips` (Windows only). (Slice 235: docs/plan/slices/235-dino-windows-window.md)
