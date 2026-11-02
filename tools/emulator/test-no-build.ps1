@@ -58,3 +58,4 @@ try {
 
 if ($script:failed -gt 0) { Write-Host "$($script:failed) check(s) failed."; exit 1 }
 Write-Host "All no-build and tablet checks pass (PowerShell $($PSVersionTable.PSVersion))."
+exit 0
