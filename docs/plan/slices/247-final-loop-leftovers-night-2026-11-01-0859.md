@@ -1,8 +1,10 @@
 ### Slice 247 — Leftovers from the night's final feedback loop (slow emulator flows, the silent kokoro-en download, a one-off Mono SIGSEGV, Slice 240's cache hit on main)
 
-*Planned (the user, 2026-11-02 ~07:50: "plan 247"; was parked by the feedback loop).* Written 2026-11-01 by the night's final feedback loop. The next night's final feedback loop moves it to `planned` (run-all-waves rule); nothing in it needs a user decision.
+*In progress (wave 2026-11-02), draft PR.* *Planned (the user, 2026-11-02 ~07:50: "plan 247"; was parked by the feedback loop).* Written 2026-11-01 by the night's final feedback loop. The next night's final feedback loop moves it to `planned` (run-all-waves rule); nothing in it needs a user decision.
 
-**Touches:** `tools/emulator/`, `tools/phone/`, `docs/plan/slices/247-final-loop-leftovers-night-2026-11-01-0859.md`
+**Touches:** `tools/emulator/`, `tools/phone/`, `.maestro/**` (only if item a changes a flow's `clearState` or timeouts), `docs/plan/slices/247-final-loop-leftovers-night-2026-11-01-0859.md`
+
+**Claim note (coordinator, 2026-11-02, night 2026-11-01-2355 wave 6).** Premise check on origin/main: flows run from `tools/emulator/run-flows.ps1` (`Invoke-FlowBody`, about line 224: `maestro --device <serial> test ...` with no timeout of its own); `clearState` and per-step timeouts live in the `.maestro/<app>/*.yaml` flows; crash lines are read only after a flow fails (`Get-FlowCrashLines`, `run-flows.ps1:242`; `Find-AppCrashLines`, `speed.ps1:92`; `common.ps1:223-231`). Design for c and e, one owner: `run-flows.ps1` runs Maestro as a child process and, while it runs, watches logcat for the app package's process death or a `FATAL`/`SIGSEGV` crash line (the same matchers as `Get-FirstCrashLine`). On a crash it kills the Maestro process tree within 10 s and records the crash summary (item e). If the crash came within 20 s of a cold start (the flow's launch) and is a Mono `SIGSEGV`, it reruns that flow once and reports both runs, the first as `crash-retried` (item c); any other crash, or a second crash, fails the flow as today. No upstream report (user, 2026-11-02). Item a: measure first (one emulator run with per-phase times), change only what the numbers show. Item b: tooling only if the log lines Slice 241 added are missing; else it stays a watch item. Item d: read the newest `dinoreader-windows.yml` run on `main` with `gh run view`; no file change.
 
 #### Work
 
