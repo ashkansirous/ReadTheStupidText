@@ -48,8 +48,19 @@ public class SettingsLayoutTests
     [Fact]
     public void A_tablet_upright_at_744_dp_has_a_pane_that_fits_beside_the_list()
     {
-        Assert.Equal(384, SettingsLayout.PaneWidth(744, 1133)); // 744 - 360
+        Assert.Equal(444, SettingsLayout.PaneWidth(744, 1133)); // 744 - 300 (Slice 234 part B)
+        Assert.Equal(504, SettingsLayout.PaneWidth(804, 1164)); // 804 - 300
     }
+
+    [Theory]
+    [InlineData(804, 1164, true)]
+    [InlineData(744, 1164, true)]
+    [InlineData(743.9, 1164, false)]
+    [InlineData(1164, 804, false)]
+    [InlineData(760, 360, false)]
+    [InlineData(360, 760, false)]
+    public void Each_row_shows_its_value_under_its_name_only_in_two_panes_on_a_tablet_held_upright(double w, double h, bool expected) =>
+        Assert.Equal(expected, SettingsLayout.ValueUnderName(w, h));
 
     [Theory]
     [InlineData(760, 360, true)]

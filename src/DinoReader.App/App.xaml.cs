@@ -54,6 +54,9 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		_services.GetRequiredService<GrownUpMode>().Leave();
 		var navigation = _navigation = BuildNavigation(RootPage());
 		var window = new Window(navigation);
+#if WINDOWS
+		DinoWindowFrame.Attach(window); // Slice 235: size, minimum, remembered place and title bar of the desktop window
+#endif
 		var external = _services.GetRequiredService<ExternalActivityGuard>();
 		window.Stopped += (_, _) => OnStopped(_navigation!, external);
 		window.Stopped += (_, _) => FlushUsage();

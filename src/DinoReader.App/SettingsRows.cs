@@ -33,6 +33,87 @@ public static class SettingsRows
 		}
 	}
 
+	/// <summary>
+	/// Slice 234 part B (mock Batch 45 frame 140): puts a <see cref="NavRow"/>'s value under its name, left aligned, with no chevron (the 300 dp list of a tablet held upright), or back at the row's end.
+	/// Moves the row's own views and sets sizes; nothing is rebuilt, so the row's button, tap and accessible name stay. A row with no value, or a tag instead, is left as it is.
+	/// </summary>
+	public static void StackNavValue(Grid row, bool stacked)
+	{
+		Label? value = row.Children.OfType<Label>().Skip(1).FirstOrDefault();
+		Label? title = row.Children.OfType<Label>().FirstOrDefault();
+		if (title is null)
+		{
+			return;
+		}
+
+		if (value is null)
+		{
+			StackTag(row, title, stacked);
+			return;
+		}
+
+		row.RowDefinitions = StackedRows(stacked);
+		row.MinimumHeightRequest = stacked ? StackedRowHeight : NavRowHeight;
+		Grid.SetRow(title, stacked ? StackedTitleRow : 0);
+		Grid.SetRowSpan(title, 1);
+		title.VerticalOptions = stacked ? LayoutOptions.End : LayoutOptions.Center;
+		Grid.SetRow(value, stacked ? StackedValueRow : 0);
+		Grid.SetColumn(value, stacked ? FirstColumn : FirstColumn + 1);
+		value.VerticalOptions = stacked ? LayoutOptions.Start : LayoutOptions.Center;
+		value.HorizontalTextAlignment = stacked ? TextAlignment.Start : TextAlignment.End;
+		value.FontSize = stacked ? StackedValueSize : NavValueSize;
+		value.MaximumWidthRequest = stacked ? double.PositiveInfinity : NavValueMaxWidth;
+		foreach (IconView chevron in row.Children.OfType<IconView>())
+		{
+			chevron.IsVisible = !stacked;
+		}
+
+		foreach (Button button in row.Children.OfType<Button>())
+		{
+			Grid.SetRowSpan(button, stacked ? StackedRowCount : 1);
+		}
+	}
+
+	// A row that carries a pill ("New version") instead of a value: the pill goes under the name the same way, so it stays out of the narrow list's name.
+	private static void StackTag(Grid row, Label title, bool stacked)
+	{
+		Border? tag = row.Children.OfType<Border>().FirstOrDefault();
+		if (tag is null)
+		{
+			return;
+		}
+
+		row.RowDefinitions = StackedRows(stacked);
+		row.MinimumHeightRequest = stacked ? StackedRowHeight : NavRowHeight;
+		Grid.SetRow(title, stacked ? StackedTitleRow : 0);
+		title.VerticalOptions = stacked ? LayoutOptions.End : LayoutOptions.Center;
+		Grid.SetRow(tag, stacked ? StackedValueRow : 0);
+		Grid.SetColumn(tag, stacked ? FirstColumn : FirstColumn + 1);
+		tag.HorizontalOptions = stacked ? LayoutOptions.Start : LayoutOptions.Fill;
+		tag.VerticalOptions = stacked ? LayoutOptions.Start : LayoutOptions.Center;
+		foreach (IconView chevron in row.Children.OfType<IconView>())
+		{
+			chevron.IsVisible = !stacked;
+		}
+
+		foreach (Button button in row.Children.OfType<Button>())
+		{
+			Grid.SetRowSpan(button, stacked ? StackedRowCount : 1);
+		}
+	}
+
+	private const double StackedRowHeight = 60;
+	private const int StackedTitleRow = 1;
+	private const int StackedValueRow = 2;
+	private const int StackedRowCount = 4;
+
+	// Stacked: a star row above and below the name and value, which are Auto rows. The stars share a short row's spare height (the pair stays centred in the 60 dp minimum)
+	// and shrink to nothing when a long value wraps, so the row grows with its text instead of clipping it.
+	private static RowDefinitionCollection StackedRows(bool stacked) => stacked
+		? [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star)]
+		: [];
+	private const double StackedValueSize = 13;
+
 	public static Label ValueLabel(string text) => new()
 	{
 		Text = text,

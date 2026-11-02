@@ -91,6 +91,8 @@ function Test-ReadingSpeedRow {
     $script:WidthProbe = 'WIDTHPROBE row=' + [int]$row.Current.BoundingRectangle.Width + ' window=' + [int](Get-DinoWindow).Current.BoundingRectangle.Width + ' rowrect=' + $row.Current.BoundingRectangle.ToString() + ' others=' + ((Get-VisibleNames (Get-DinoWindow)) -join ' / ')
     Invoke-Uia $row
     Wait-Until { (Get-PageTitle 'SettingsTitleReadingSpeedPage') -eq 'Reading speed' } 10 'FAIL the Reading speed row did not open its page' | Out-Null
+    # Landscape windows (the 1100x760 default) show two panes: the page opens beside the list, and Back would leave Settings.
+    if (Get-PageTitle) { $script:TwoPanes = $true; return }
     Invoke-SettingsBack
     Wait-Until { (Get-PageTitle) -eq 'Settings' } 10 'FAIL Back from Reading speed did not return to Settings' | Out-Null
 }
@@ -100,8 +102,17 @@ function Test-BackToShelf {
     Invoke-SettingsBack
     Wait-Until { -not (Find-UiaVisibleById (Get-DinoWindow) 'SettingsTitle') } 10 'FAIL Settings is still showing after Back' | Out-Null
     Wait-VisibleId 'GalleryDone' 10 'FAIL Back from Settings did not return to grown-up mode' | Out-Null
-    Invoke-Uia (Find-UiaVisibleById (Get-DinoWindow) 'GalleryDone')
-    Wait-VisibleId 'GalleryGrownUps' 10 'FAIL Done did not return to the kids'' shelf' | Out-Null
+    # GalleryDone is a Border with a tap, so Invoke-Uia clicks the centre of its bounds with the mouse. The sticky button sits at
+    # the window's bottom edge, which can lie under the VM's taskbar or off its 1024 x 768 screen: report the bounds on failure.
+    $done = Find-UiaVisibleById (Get-DinoWindow) 'GalleryDone'
+    $rect = $done.Current.BoundingRectangle
+    Invoke-Uia $done
+    $shelf = $null
+    try { $shelf = Wait-VisibleId 'GalleryGrownUps' 5 'shelf not back' } catch { $shelf = $null }
+    if (-not $shelf) {
+        Invoke-Uia (Find-UiaVisibleById (Get-DinoWindow) 'GalleryDone')   # one more click, as the gate step does
+        Wait-VisibleId 'GalleryGrownUps' 10 "FAIL Done did not return to the kids' shelf (Done bounds $([int]$rect.X),$([int]$rect.Y) $([int]$rect.Width) x $([int]$rect.Height))" | Out-Null
+    }
     if (Find-UiaVisibleById (Get-DinoWindow) 'GallerySettings') { throw 'FAIL the gear is still visible on the kids'' shelf' }
 }
 
@@ -111,7 +122,10 @@ Invoke-Check -ResultFile $ResultFile -Body {
         Open-GateFromShelf;           $log += 'gate opened from the For grown-ups button'
         $answer = Pass-Gate;          $log += "gate passed (answer $answer), grown-up mode open"
         Open-Settings;                $log += 'gear -> Settings, groups Reading and This phone shown'
-        Test-ReadingSpeedRow;         $log += 'Reading speed row -> its page -> Back'; $log += $script:WidthProbe
+        Test-ReadingSpeedRow
+        if ($script:TwoPanes) { $log += 'Reading speed row -> its page in the right pane (two panes, no Back step)' }
+        else { $log += 'Reading speed row -> its page -> Back' }
+        $log += $script:WidthProbe
         Test-BackToShelf;             $log += 'Back -> grown-up mode, Done -> kids'' shelf'
     } catch {
         $dump = Get-VisibleNames (Get-DinoWindow)

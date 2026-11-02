@@ -1,8 +1,16 @@
 ### Slice 235 — Dino on Windows: a real desktop window (size, keyboard, mouse)
 
-*Planned 2026-11-01.* The user asked for "better design on windows". **Mock drawn 2026-11-01 (Batch 46), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges (a wide window uses its layouts) and alongside or after Slice 234 (a mid-size window uses the tablet rules).
+*Part A built 2026-11-02 (window and pure rules; five Dino VM checks pass), not merged; part B still planned.* *Planned 2026-11-01.* The user asked for "better design on windows". **Mock drawn 2026-11-01 (Batch 46), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges (a wide window uses its layouts) and alongside or after Slice 234 (a mid-size window uses the tablet rules).
 
 **Touches:** `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/Platforms/Windows/**`, `src/DinoReader.Core/*Layout*.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/GrownUpHeader.cs`, `src/DinoReader.App/*Page*.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `tools/desktop-vm/**`, `docs/design/dino-reader/**`, `docs/plan/slices/235-dino-windows-window.md`
+
+#### Parts (coordinator, claim 2026-11-02, night 2026-11-01-2355 wave 5)
+
+Slice 234 parts B and C edit most page files tonight, so this slice is split. **A (this claim):** the window itself and the pure width rule, nothing in the pages. **B (later, after Slice 234 is built):** wire `WindowLayout` into the pages, keyboard map, Tab order and focus ring, hover states, wheel, tooltips, per-page title-bar colours, the gate's Space hold and typed sum, the sheet's close button and "click" copy, strings in all 13 languages.
+
+**Touches, part A:** `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/Platforms/Windows/**`, `src/DinoReader.Core/WindowLayout.cs` (new), `src/DinoReader.Core/WindowPlacement.cs` (new), `tests/DinoReader.Tests/WindowLayoutTests.cs` (new), `tests/DinoReader.Tests/WindowPlacementTests.cs` (new), `tools/desktop-vm/**` (only a new Dino window check, if the harness needs one), `docs/plan/slices/235-dino-windows-window.md`. Read-only: every page file and every other `src/DinoReader.Core/*Layout*.cs` (Slice 234 parts B and C run in parallel).
+
+**Part A design note (coordinator, claim):** Windows head only; Android and iOS get nothing but the unused pure rules. Defaults from the open points: minimum 800 x 560, the mock's `WindowLayout`. (1) Pure Core `WindowLayout.For(w, h)` on the content area (window minus the 32 px title bar) returns a closed enum: tablet upright (h > w and w >= 600), phone landscape with a grid shelf (w >= h and w < 960), tablet landscape (w >= 960), phone portrait (narrower than 600 and taller than wide); plus `ContentWidth(w)` = min(w, 1600) for centring. Unit-test the mock's cases (1100 x 760, the minimum, 1920 x 1080 maximised, the boundaries). Not called by any page yet. (2) Pure Core `WindowPlacement`: a saved rect (x, y, w, h, maximised) plus the displays' work areas gives the rect to open; no saved value gives 1100 x 760 centred on the main display; a saved rect off every display gives the saved size (clamped to the minimum and the main display) centred on the main one. Unit-tested. (3) Windows head (`Platforms/Windows`, wired from `App.xaml.cs`'s `CreateWindow` under a Windows-only guard): open with that rect, enforce the 800 x 560 minimum (the WinUI `AppWindow`/`OverlappedPresenter` way; query context7 first), save size, place and maximised state to `Preferences` under named-constant keys when the window closes or moves/resizes (debounced, never on every pixel), restore maximised state. Title bar: 32 px, app icon and name, cream (the kids' page colour) for now; per-page colours come in part B. Device: the Hyper-V VM (`tools/desktop-vm`, `-App auto`): open, check the size and minimum, resize, close and reopen to see the size and place kept.
 
 #### Why (read from code on origin/main, 2026-11-01; not run in the VM)
 
@@ -48,7 +56,7 @@ Eleven frames (158 has parts a and b) in `docs/design/dino-reader/Dino Reader Ba
 #### Work
 
 - [x] **Design, added by the user in Claude Design 2026-11-01 (counts as approved):** Windows mock (`Dino Reader Batch 46 Windows.dc.html` in `docs/design/dino-reader/`): the window at its opening size, at minimum size and maximised, for shelf, reading, corner, Settings, gate and a sheet; hover and focus states; the title bar; a keyboard map.
-- [ ] Window size, minimum and remembered position (Windows head only, `Platforms/Windows`).
+- [x] Window size, minimum and remembered position (Windows head only, `Platforms/Windows`). Part A, built 2026-11-02.
 - [ ] Width-driven layout picks the phone, tablet or landscape rule; unit-test the width → layout mapping in Core.
 - [ ] Keyboard shortcuts and Tab order on every page; space-bar hold on the gate.
 - [ ] Hover states, wheel scrolling, tooltips on every icon button, title-bar colours.
@@ -60,3 +68,36 @@ This is a desktop head, so the Android/iOS parity rule does not apply; phones an
 
 - `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` (width → layout mapping).
 - Scripted run in the Hyper-V VM (`tools/desktop-vm`): open the window, check its size and minimum, resize narrow → wide and screenshot each layout, read a book with space and arrows only, pass the gate with the space bar, Tab through Settings.
+
+#### Part A: built (2026-11-02)
+
+- **Core (pure, unit-tested, not wired into any page; that is part B):** `WindowLayout` (`WindowShape` enum, `For(w, h)`, `ContentWidth` capped at 1600, minimum 800 x 560, default 1100 x 760, 32 px title bar). `WindowPlacement` (`SavedWindow` text round-trip in invariant culture; `Resolve`: no saved value gives the default centred, a saved rect is clamped onto the display holding most of its title bar, a rect off every display is centred on the main one, values beyond +-100000 are rejected). `WindowMinimum.Enforce`.
+- **Windows head:** `Platforms/Windows/DinoWindowFrame.cs`, attached from `App.xaml.cs` under `#if WINDOWS` on `Window.Created`, with `HandlerChanged` as fallback, applied once on success. Opens at the resolved rect. The 800 x 560 minimum is scaled by the target display's DPI (the unit of `PreferredMinimum*` is undocumented) and also enforced by construction on `Changed`, because a UI Automation resize went below the presenter minimum on the VM. Saves size, place and maximised (the last non-minimised state) to Preferences key `dino.window.placement`, debounced 500 ms and on closing. Cream title bar (Windows' own bar recoloured; per-page colours are part B). `WindowTrace.cs` appends to `window-trace.log` in the app data folder, trimmed to 200 lines once per run, and the VM check reads it back on failure.
+- **Checks:** new `tools/desktop-vm/checks/dino-window.ps1` (expectations clamped to the VM's 1024 x 768 work area); `dino-settings.ps1` now handles Settings' two panes on a landscape window and retries the Done click.
+- Tests: 2146 pass; Windows head and Android builds pass.
+
+Changed while building:
+
+- **Bug found only by the VM:** iterating `DisplayArea.FindAll()` threw `InvalidCastException` (microsoft-ui-xaml #6454), so the frame never applied. Fixed with an index loop plus a `Primary` / `GetFromWindowId` fallback. It was found only after adding the Release trace; the first two VM runs could not tell whether the frame ran (the Release VM build shows no `Debug.WriteLine`).
+- VM runs (`s235a-dino-vm-run*.log`): runs 1-2 failed the window minimum (frame not applied); run 4's trace showed the cast exception; run 5 applied the frame but the check expected 1100 x 760 on a 1024 x 768 screen; run 6 passed all five Dino checks (package ad4b9ca41578): the minimum held 800 x 560 after asking for 400 x 300, and the window reopened at 944 x 650 at 60,40 as closed.
+
+From review (files in `D:/ReadTheStupidText-worktrees/reviews/`, deleted later):
+
+- `s235a-high.md` (10 findings): applied 1-5 and 7-9. 6 (maximise runs before first activation; may flash or be re-shown normal) left to the VM, not run. 10 (check gaps: maximised round trip, 150% scaling, minimised close, off-screen saved place) not fixed; listed under Not yet verified.
+- `s235a-review-medium.md` (7): applied 1-3. Skipped 4 (needs the VM; a maximised window's restored bounds). Skipped 5 (a resize within 500 ms of a kill is lost; acceptable). Skipped 6 (an exactly square window is phone landscape by the mock's rule). Skipped 7 (nit: rebuild of the work-area list).
+- `s235a-review-check-medium.md` (5): applied 1 (trace write cost), 2 (`applied` set only after success), 5. Skipped 3 (unconfirmed, not reproduced; VM run 5 shows no sign). Skipped 4 (low; one visible jump after a DPI change).
+- `s235a-review-check2-medium.md` (5): none applied. 2 cannot happen (the VM starts clean every run). 1, 3, 4, 5 skipped as low (minimum scale refreshed only on a position change; check units at non-100% scale; half-framed window if `Apply` throws; trim lost on a transient IO failure).
+
+#### Not yet verified
+
+- Opening at 1100 x 760 on a screen larger than 1024 x 768 (the VM clamps it).
+- A maximised window closed and reopened stays maximised (high finding 6).
+- 150% scaling and the unit of `PreferredMinimumWidth/Height`.
+- Two monitors, and an unplugged display (saved place on a missing monitor).
+- Title bar height and colour by eye.
+- A window clamped to a small screen and saved as maximised reopens maximised (seen on the VM; whether that is by design is not decided).
+
+#### For tools/desktop-vm/CLAUDE.md (lift later)
+
+- The VM screen is 1024 x 768, so window-size checks clamp their expectations to its work area.
+- The Release VM build shows no `Debug.WriteLine`, so a Windows-head check needs a file trace it can read back (`window-trace.log`). (Slice 235: docs/plan/slices/235-dino-windows-window.md)

@@ -73,9 +73,26 @@ public class BookSheetPlanTests
 
     [Theory]
     [InlineData(360, 760)]
-    [InlineData(804, 1164)]
-    public void HeldUprightTheSheetIsABottomSheet(double w, double h) =>
+    [InlineData(599, 1000)]
+    public void HeldUprightOnAPhoneTheSheetIsABottomSheet(double w, double h) =>
         Assert.False(BookSheetPlan.ShapeFor(w, h).Card);
+
+    [Theory]
+    [InlineData(804, 1164, 560, 1084)]
+    [InlineData(800, 1280, 560, 1200)]
+    [InlineData(600, 960, 520, 880)]
+    public void HeldUprightOnATabletTheSheetIsACentredCardWithTheCoverOnTop(double w, double h, double cardWidth, double maxHeight)
+    {
+        BookSheetShape shape = BookSheetPlan.ShapeFor(w, h);
+        Assert.True(shape.Card);
+        Assert.True(shape.CoverOnTop);
+        Assert.Equal(cardWidth, shape.CardWidth);
+        Assert.Equal(maxHeight, shape.CardMaxHeight);
+    }
+
+    [Fact]
+    public void HeldSidewaysTheCardKeepsTheCoverOnTheLeft() =>
+        Assert.False(BookSheetPlan.ShapeFor(1164, 804).CoverOnTop);
 
     [Theory]
     [InlineData(760, 360, 580, 328)]
