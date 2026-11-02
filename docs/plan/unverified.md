@@ -2,6 +2,16 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 246: Dino store books read with pre-made audio ([slice](slices/246-dino-store-books-premade-audio.md))
+
+- Every vendor request shape is unproven until the first keyed run (Gemini model id, ElevenLabs voice id placeholder, Narakeet voice-name casing, CAMB `fa-ir`).
+- The piper-fa baseline render, on a PC that has the `piper-fa` pack and `sherpa_onnx` installed.
+
+### Slice 242: Round 4 leftovers, night 2026-11-01-0859 ([slice](slices/242-round-4-leftovers-night-2026-11-01-0859.md))
+
+- `run-flows.ps1 -Install -NoBuild` may still build (check pass, low finding 1: the explicit `-Install` path lacks the no-build exit).
+- `dino-landscape-reading` does not assert the `[Landscape] reading controls=row` line; the row branch was read from logcat by hand.
+
 ### Slice 244: Dino iOS crashes ([slice](slices/244-dino-ios-crashes-2026-11-01.md))
 
 - The iPhone 8 run (the user's): read Farsi Three Little Pigs, Back mid-sentence, re-read, background, 3 times.
@@ -52,7 +62,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Delisting a deleted book on a real run.
 - A translated title for a newly added store book on an installed app, with no app update.
 
-### Slice 232 parts A and B: Dino landscape reading screen and shelf ([slice](slices/232-dino-landscape-every-screen.md))
+### Slice 232 parts A-C: Dino landscape reading screen, shelf, Record, Cast and page text editor ([slice](slices/232-dino-landscape-every-screen.md))
 
 - Part B: the same book stays in view after rotating a shelf with more than 4 books (the emulator shelf has 4, all on screen).
 - Part B: tablet landscape and portrait (no tablet AVD); iPhone and iPad (iOS compile only).
@@ -60,6 +70,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Part B: a 360 dp-tall phone, the card and Remove fit.
 - Part B: rotating with the sheet open during a Remove confirmation.
 - Part B: VoiceOver / TalkBack order in the rail.
+- Part C: screenshots of each landscape state against frames 116, 119, 120, 129 (the flows take none; the user's eye).
+- Part C: tablet frames (129) on the RTST_Tablet emulator (Slice 242 adds it).
+- Part C: the editor thumbnail with a real keyboard on a scanned page (the flow reaches only a typed page).
+- Part C: a tablet with the keyboard up counts as a phone (short side under 600) and shows the thumbnail.
+- Part C: iOS compile and iPhone/iPad.
+- Part C: skipped lows: Cast rotation stops a playing sample, layout jump on focus, 3:4 picture column.
 - Tablet landscape (no tablet AVD): the controls row under the card and its left edge.
 - iPhone and iPad landscape (iOS compile only).
 - VoiceOver / TalkBack order in landscape.

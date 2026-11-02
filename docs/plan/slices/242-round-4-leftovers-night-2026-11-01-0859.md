@@ -59,7 +59,7 @@ Check pass (`s242-review-check-medium.md`, 8 findings, all low/info; the brief s
 - 7 skipped: the U+001F key delimiter in `TextStep.xaml.cs` is not strictly injective.
 - 8 skipped: exit 6 for one skipped app is masked by a failure from another.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-02)
 
 The builder already added the rules in the diff (`tools/CLAUDE.md`, `.github/CLAUDE.md`); lift them at index time if they belong in another file.
 
