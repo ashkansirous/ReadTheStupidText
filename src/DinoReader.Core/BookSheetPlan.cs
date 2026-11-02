@@ -67,6 +67,11 @@ public sealed record BookSheetPlan(bool ShowOriginalText, bool ShowVoice, bool S
     /// <summary>Held sideways, a bottom sheet would cover the whole screen, so the sheet is one centred card (cover left, actions right), the same on tablets; held upright it is the bottom sheet.</summary>
     public static BookSheetShape ShapeFor(double width, double height)
     {
+        if (LandscapeLayout.IsTabletPortrait(width, height))
+        {
+            return new BookSheetShape(true, TabletCardLayout.CardWidth(width, TabletCardKind.BookSheet), TabletCardLayout.BookSheetMaxHeight(height), true);
+        }
+
         if (!LandscapeLayout.IsLandscape(width, height))
         {
             return BookSheetShape.BottomSheet;
@@ -77,8 +82,8 @@ public sealed record BookSheetPlan(bool ShowOriginalText, bool ShowVoice, bool S
     }
 }
 
-/// <summary>How the book sheet is laid out: a bottom sheet, or a centred card of this width and at most this height (it scrolls inside).</summary>
-public readonly record struct BookSheetShape(bool Card, double CardWidth, double CardMaxHeight)
+/// <summary>How the book sheet is laid out: a bottom sheet, or a centred card of this width and at most this height (it scrolls inside). A tablet held upright (Slice 234 part B, frame 136) puts the cover on top of the card.</summary>
+public readonly record struct BookSheetShape(bool Card, double CardWidth, double CardMaxHeight, bool CoverOnTop = false)
 {
     public static readonly BookSheetShape BottomSheet = new(false, 0, 0);
 }

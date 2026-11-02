@@ -396,7 +396,7 @@ public partial class GalleryPage : ContentPage
 		bool sideways = !grownUp && shelf.Sideways;
 		int columns = grownUp ? corner.Columns : shelf.Columns;
 		bool tabletShelf = !grownUp && shelf.TabletUpright;
-		string key = $"{sideways}|{rail}|{corner.RailWidth}|{corner.FullRowButtons}|{columns}|{shelf.CoverHeight}|{grownUp}|{tabletShelf}";
+		string key = $"{sideways}|{rail}|{corner.RailWidth}|{corner.FullRowButtons}|{columns}|{shelf.CoverHeight}|{grownUp}|{tabletShelf}|{corner.TabletUpright}";
 		if (key == _shapeKey)
 		{
 			return;
@@ -413,7 +413,7 @@ public partial class GalleryPage : ContentPage
 		ApplyHeaderShape(rail, sideways, corner, tabletShelf);
 		ApplyShelfList(sideways, shelf, columns, rail, tabletShelf);
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] shelf layout={(sideways ? "sideways" : rail ? "rail" : "grid")} columns={columns} grownUp={grownUp} railWidth={corner.RailWidth} tabletUpright={tabletShelf}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] shelf layout={(sideways ? "sideways" : rail ? "rail" : "grid")} columns={columns} grownUp={grownUp} railWidth={corner.RailWidth} tabletUpright={tabletShelf} tabletCorner={rail && corner.TabletUpright}");
 #endif
 	}
 
@@ -450,7 +450,8 @@ public partial class GalleryPage : ContentPage
 		ApplyButtonHeights(rail, height);
 		StorytellerLine.Padding = rail ? new Thickness(inset, 0, 14, 10) : new Thickness(18, 0, 18, 12);
 		AddBookButton.BackgroundColor = rail ? RailButtonFill : Colors.White;
-		StoreButton.BackgroundColor = rail ? RailButtonFill : DinoTokens.Get(DinoTokens.Brand);
+		// Slice 234 part B (mock Batch 45 frame 139): on a tablet held upright Store is solid indigo in the rail, as in the portrait bar.
+		StoreButton.BackgroundColor = rail && !corner.TabletUpright ? RailButtonFill : DinoTokens.Get(DinoTokens.Brand);
 		AddBookLabel.TextColor = rail ? Colors.White : DinoTokens.Get(DinoTokens.Ink);
 		AddBookIcon.Color = rail ? DinoTokens.Get(DinoTokens.Coral) : DinoTokens.Get(DinoTokens.Ink);
 		AddBookLabel.FontSize = rail && !rows ? 14 : 15;
@@ -496,7 +497,7 @@ public partial class GalleryPage : ContentPage
 		AppIconFrame.WidthRequest = icon;
 		AppIconFrame.HeightRequest = icon;
 		GrownUpsButton.HeightRequest = tabletShelf ? LandscapeLayout.TabletHeaderTarget : PhoneGrownUpsHeight;
-		SettingsButton.HeightRequest = tabletShelf ? LandscapeLayout.TabletHeaderTarget : PhoneGearSize;
+		SettingsButton.HeightRequest = tabletShelf ? LandscapeLayout.TabletHeaderTarget : rail && corner.TabletUpright ? TabletCornerGearSize : PhoneGearSize;
 		SettingsButton.WidthRequest = SettingsButton.HeightRequest;
 		_languageButton.HeightRequest = tabletShelf ? LandscapeLayout.TabletHeaderTarget : LanguageButtonHeight;
 	}
@@ -504,6 +505,7 @@ public partial class GalleryPage : ContentPage
 	private const double PhoneIconSize = 40;
 	private const double PhoneGrownUpsHeight = 48;
 	private const double PhoneGearSize = 44;
+	private const double TabletCornerGearSize = 48; // the gear tile in the tablet-upright corner rail (mock Batch 45 frame 139)
 
 	// A phone held sideways: one row of covers that scrolls sideways, the last one cut off to say "more"; else a grid of this many columns. The first book on screen stays on screen.
 	private void ApplyShelfList(bool sideways, ShelfShape shelf, int columns, bool rail, bool tabletShelf)

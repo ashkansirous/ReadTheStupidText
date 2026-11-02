@@ -26,7 +26,8 @@ public enum PinnedPlacement
 public readonly record struct ShelfShape(bool Sideways, double CoverHeight, int Columns, bool TabletUpright = false, double SidePadding = LandscapeLayout.PhoneShelfSidePadding);
 
 /// <summary>The grown-ups' corner: a side rail (width in dp, 0 without one) with this many columns of books; Add and Store are full rows on a tablet's rail, a pair of buttons on a phone's.</summary>
-public readonly record struct CornerShape(bool Rail, double RailWidth, int Columns, bool FullRowButtons);
+/// <remarks>A tablet held upright (Slice 234 part B, mock Batch 45 frame 139) also gets <see cref="TabletUpright"/>: a 300 dp rail, Store solid indigo and exactly three columns of books.</remarks>
+public readonly record struct CornerShape(bool Rail, double RailWidth, int Columns, bool FullRowButtons, bool TabletUpright = false);
 
 /// <summary>Diameters of the three reading buttons, in dp.</summary>
 public readonly record struct ControlSizes(double Play, double Skip);
@@ -139,9 +140,21 @@ public static class LandscapeLayout
             return new CornerShape(false, 0, PortraitCornerColumns, false);
         }
 
+        if (!landscape)
+        {
+            return new CornerShape(true, TabletPortraitRailWidth, TabletPortraitCornerColumns, true, true);
+        }
+
         double rail = ListPaneWidth(width, height);
         return new CornerShape(true, rail, CornerColumnsFor(width - rail), tablet);
     }
+
+    /// <summary>
+    /// The width of the side list (the corner's rail, Settings' list) on this window: 300 dp on a tablet held upright (mock Batch 45 frames 139, 140),
+    /// else <see cref="ListPaneWidth"/> (300 on a phone, 360 on a tablet held sideways).
+    /// </summary>
+    public static double SideListWidth(double width, double height) =>
+        IsTabletPortrait(width, height) ? TabletPortraitRailWidth : ListPaneWidth(width, height);
 
     /// <summary>How many columns of books fit in the width left of the rail (after the list's side margins and the gaps), 2 to 5.</summary>
     public static int CornerColumnsFor(double widthLeft)
@@ -157,6 +170,8 @@ public static class LandscapeLayout
     public const double SidewaysInset = 34;
 
     public const double TabletPortraitRailMinWidth = 744;
+    public const double TabletPortraitRailWidth = 300;
+    public const int TabletPortraitCornerColumns = 3;
     public const int PortraitCornerColumns = 3;
     public const double CornerColumnWidth = 100;
     public const double CornerColumnGap = 12;

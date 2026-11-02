@@ -1,0 +1,85 @@
+# Slice 234 part B (mock Batch 45 frame 141): on a tablet held upright (run on RTST_Tablet, 800 x 1280 dp) the intro stacks a picture panel (min(45% of the height, 520) = 520 dp) above the copy,
+# with Skip and the main button in one row at the foot; rotating sideways gives Slice 232's split and back keeps the step. The gate is not tapped: the enter-grown-up hook stands in for a passed gate.
+# The wizard is opened as a replay from Settings > About ("Show the intro again"), so no first run or voice download is needed. Tablet emulator only: a phone never logs panel=520.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK enter-grown-up ok
+# The layout line is written whenever the shape changes or a step is built: the first card with the panel, the split sideways, the panel again, then the second step.
+# expect-log: [Landscape] intro split=False step=places panel=520
+# expect-log: [Landscape] intro split=True step=places panel=0
+# expect-log: [Landscape] intro split=False step=read panel=520
+appId: uk.sirous.dinoreader.dbg
+name: Intro on a tablet held upright stacks a picture panel above the copy
+# Runs after the flow pass or fail, so a failure never leaves the next flow sideways.
+onFlowComplete:
+  - setOrientation: PORTRAIT
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow needs only the starter shelf and the replayed intro, no own book or voice pack.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+# The one-time "Storyteller voices are ready" note can cover grown-up mode once the background pack download ends: dismiss it only when it is on screen.
+- runFlow:
+    when:
+      visible: Storyteller voices are ready
+    commands:
+      - tapOn: "OK"
+- tapOn:
+    id: GallerySettings
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: SettingsTitle
+    timeout: 10000
+# Two panes upright: "About & updates" is a row of the list; its page opens on the right.
+- tapOn:
+    text: "About & updates"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: "Show the intro again"
+    timeout: 10000
+- tapOn:
+    text: "Show the intro again"
+    waitToSettleTimeoutMs: 300
+# First card, upright: the picture panel above the copy and its Next button.
+- extendedWaitUntil:
+    visible: Dino has two places
+    timeout: 20000
+- assertVisible:
+    id: IntroNext
+# Sideways: the split, the same step (nothing restarted).
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible: Dino has two places
+    timeout: 15000
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible: Dino has two places
+    timeout: 15000
+# Next moves to the second step, which has Skip beside its main button in one row.
+- tapOn:
+    id: IntroNext
+- extendedWaitUntil:
+    visible: Skip
+    timeout: 15000
+- assertNotVisible: Dino has two places
+# Skip all ends the replay back on Settings.
+- tapOn: "Skip all"
+- extendedWaitUntil:
+    visible:
+      id: SettingsTitle
+    timeout: 15000

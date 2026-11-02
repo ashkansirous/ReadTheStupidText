@@ -40,8 +40,13 @@ internal sealed class BookSheet : Grid
 	private static readonly Color GrabColour = Color.FromArgb("#e3dccd");
 	private static readonly Color RemoveInk = Color.FromArgb("#C8402A");
 	private const double HintSize = 12.5;
+	private const double PhoneTitleSize = 19;
+	private const double TabletTitleSize = 26;
+	private const double TabletReadNowFont = 19;
+	private const double TabletCardCorner = 32;
+	private const double TabletCardGap = 16;
 
-	private readonly Label _title = new() { FontSize = 19, FontAttributes = FontAttributes.Bold, LineHeight = 1.2, MaxLines = 2, LineBreakMode = LineBreakMode.TailTruncation };
+	private readonly Label _title = new() { FontSize = PhoneTitleSize, FontAttributes = FontAttributes.Bold, LineHeight = 1.2, MaxLines = 2, LineBreakMode = LineBreakMode.TailTruncation };
 	private readonly Label _subtitle = new() { FontSize = 13, TextColor = DinoTokens.Get(DinoTokens.Muted) };
 	private readonly Border _thumb = new();
 	private readonly Border _editRow = new();
@@ -118,7 +123,7 @@ internal sealed class BookSheet : Grid
 		{
 			Arrange(shape);
 #if DEBUG
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] book sheet card={shape.Card} width={shape.CardWidth}");
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] book sheet card={shape.Card} width={shape.CardWidth} coverOnTop={shape.CoverOnTop}");
 #endif
 		}
 	}
@@ -149,6 +154,8 @@ internal sealed class BookSheet : Grid
 		_pills.Add(_recordPill, 0);
 		_pills.Add(_castPill, 1);
 		_thumb.IsVisible = true;
+		_title.FontSize = PhoneTitleSize;
+		_header.VerticalOptions = LayoutOptions.Fill;
 		foreach (View row in new View[] { _grab, _header, _readNowRow, _row, _voiceRow, _pills, _editRow, _exportRow, _removeRow })
 		{
 			_sheetRows.Children.Add(row);
@@ -165,26 +172,77 @@ internal sealed class BookSheet : Grid
 
 	private void ArrangeCard(BookSheetShape shape)
 	{
-		SizeRows(readNow: CardReadNowHeight, pill: CardActionHeight, readNowFont: 17);
+		bool coverOnTop = shape.CoverOnTop;
+		if (coverOnTop)
+		{
+			SizeRows(readNow: TabletCardLayout.BookSheetReadNowHeight, pill: TabletCardLayout.BookSheetActionHeight, readNowFont: TabletReadNowFont);
+		}
+		else
+		{
+			SizeRows(readNow: CardReadNowHeight, pill: CardActionHeight, readNowFont: 17);
+		}
+
 		_pills.ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)];
 		_pills.Add(_recordPill, 0);
 		_pills.Add(_castPill, 1);
 		_thumb.IsVisible = false; // the big cover takes its place
-		foreach (View row in new View[] { _header, _readNowRow, _row, _voiceRow, _pills, _editRow, _exportRow, _removeRow })
+		if (!coverOnTop)
+		{
+			_cardRows.Children.Add(_header);
+		}
+
+		foreach (View row in new View[] { _readNowRow, _row, _voiceRow, _pills, _editRow, _exportRow, _removeRow })
 		{
 			_cardRows.Children.Add(row);
 		}
 
-		_card.ColumnDefinitions = [new ColumnDefinition(new GridLength(BookSheetPlan.CardCoverWidth)), new ColumnDefinition(GridLength.Star)];
-		_card.Add(_cover, 0);
-		_card.Add(_cardRows, 1);
+		if (coverOnTop)
+		{
+			ArrangeCoverOnTop();
+		}
+		else
+		{
+			ArrangeCoverLeft();
+		}
+
 		_sheet.VerticalOptions = LayoutOptions.Center;
 		_sheet.HorizontalOptions = LayoutOptions.Center;
 		_sheet.WidthRequest = shape.CardWidth;
 		_sheet.MaximumHeightRequest = shape.CardMaxHeight;
-		_sheet.Padding = new Thickness(CardPadding);
-		_sheet.StrokeShape = new RoundRectangle { CornerRadius = CardCorner };
+		_sheet.Padding = new Thickness(coverOnTop ? TabletCardLayout.BookSheetPadding : CardPadding);
+		_sheet.StrokeShape = new RoundRectangle { CornerRadius = coverOnTop ? TabletCardCorner : CardCorner };
 		_scroll.Content = _card;
+	}
+
+	// Held sideways (Slice 232): the cover on the card's left, the header and the actions in one column beside it.
+	private void ArrangeCoverLeft()
+	{
+		_title.FontSize = PhoneTitleSize;
+		_cover.WidthRequest = BookSheetPlan.CardCoverWidth;
+		_cover.HeightRequest = BookSheetPlan.CardCoverWidth / LandscapeLayout.DefaultPictureAspect;
+		_card.RowDefinitions = [];
+		_card.RowSpacing = 0;
+		_header.VerticalOptions = LayoutOptions.Fill;
+		_card.ColumnDefinitions = [new ColumnDefinition(new GridLength(BookSheetPlan.CardCoverWidth)), new ColumnDefinition(GridLength.Star)];
+		_card.Add(_cover, 0);
+		_card.Add(_cardRows, 1);
+		Grid.SetColumnSpan(_cardRows, 1);
+	}
+
+	// A tablet held upright (Slice 234 part B, mock Batch 45 frame 136): the cover on top at the left with the book's name beside it, the actions in a column under both.
+	private void ArrangeCoverOnTop()
+	{
+		_title.FontSize = TabletTitleSize;
+		_cover.WidthRequest = TabletCardLayout.BookSheetCoverWidth;
+		_cover.HeightRequest = TabletCardLayout.BookSheetCoverWidth / LandscapeLayout.DefaultPictureAspect;
+		_card.RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto)];
+		_card.RowSpacing = TabletCardGap;
+		_header.VerticalOptions = LayoutOptions.End;
+		_card.ColumnDefinitions = [new ColumnDefinition(new GridLength(TabletCardLayout.BookSheetCoverWidth)), new ColumnDefinition(GridLength.Star)];
+		_card.Add(_cover, 0, 0);
+		_card.Add(_header, 1, 0);
+		_card.Add(_cardRows, 0, 1);
+		Grid.SetColumnSpan(_cardRows, 2);
 	}
 
 	// The heights that differ between the sheet and the card; Remove is the last row on both the card and the sheet.

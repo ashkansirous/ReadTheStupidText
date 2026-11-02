@@ -1,6 +1,6 @@
 ### Slice 234 — Dino: a proper design for tablets held upright
 
-*Part A built 2026-11-02, merged as PR #736 (b54e32ff); parts B-C planned; slice stays open.* *Planned 2026-11-01.* The user asked for "better design on tablet". **Mock drawn 2026-11-01 (Batch 45), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges: it reuses 232's phone-vs-tablet rules (`IsLandscape`, the 600 dp short-side split, `ShelfLayout`, `SplitLayout`).
+*In progress (wave 2026-11-02), parts B and C draft PRs; part A built 2026-11-02, merged as PR #736 (b54e32ff).* *Planned 2026-11-01.* The user asked for "better design on tablet". **Mock drawn 2026-11-01 (Batch 45), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges: it reuses 232's phone-vs-tablet rules (`IsLandscape`, the 600 dp short-side split, `ShelfLayout`, `SplitLayout`).
 
 **Touches:** `src/DinoReader.Core/GalleryLayout.cs`, `src/DinoReader.Core/ReadingLayoutRules.cs`, `src/DinoReader.Core/*Layout*.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/BackupPage.xaml`, `src/DinoReader.App/PageEditorPage.xaml`, `src/DinoReader.App/GrownUpHeader.cs`, `tests/DinoReader.Tests/**Layout*`, `docs/design/dino-reader/**`, `docs/plan/slices/234-dino-tablet-portrait.md`
 
@@ -15,6 +15,10 @@ A premise check (2026-11-02, after Slice 232 merged) found about 14 screens, too
 **Touches, part A (claim 2026-11-02, night 2026-11-01-2355 wave 4):** `src/DinoReader.Core/LandscapeLayout.cs` (`IsTabletPortrait`, the shelf rule), `src/DinoReader.Core/ReadingLayoutRules.cs`, `src/DinoReader.Core/GalleryLayout.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/ReadingTheme.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/TransportRow.cs`, `tests/DinoReader.Tests/*Layout*Tests.cs`, `tests/DinoReader.Tests/ReadingLayoutRules*Tests.cs`, `.maestro/dino/dino-tablet-upright-shelf*.yaml`, `.maestro/dino/dino-tablet-upright-reading*.yaml` (new), `docs/plan/slices/234-dino-tablet-portrait.md`. Read-only: `src/DinoReader.Core/SettingsLayout.cs`, `src/DinoReader.Core/OnboardingLayout.cs`, `src/DinoReader.Core/BookSheetPlan.cs`, `tools/emulator/**`.
 
 **Part A design note (coordinator, claim):** same pattern as Slice 232: each page overrides `OnSizeAllocated`, stores the size, makes one pure Core call per layout pass, and never rebuilds views on a size change. Rules, each a pure unit-tested function: `LandscapeLayout.IsTabletPortrait(w,h)` = h >= w and w >= 600 dp. Shelf: when tablet upright, columns = clamp(floor((w - 80) / 170), 3, 6), side padding 40 dp, titles up to two lines, header targets 52 dp; phone upright (2 columns) and every landscape rule (190 divisor, sideways row) unchanged. Reading: a new `Stacked` shape from `ReadingLayoutRules.For` when tablet upright: picture panel 48% of the height, art fitted whole and centred (no crop), chip at the panel's top left; text card below at 32 sp; controls row 64 / 84 / 64 dp under the card; the 30% card cap does not apply. Text only: one tall card at 36 sp, chip inside its top left, Play in the same place. Picture only: art fitted in the full height above the same row. Phone upright and all landscape reading unchanged. Rotation keeps the reading position and the shelf state (the existing 232 mechanisms; a shape flip re-places views, never rebuilds). Device: RTST_Tablet (800 x 1280 dp, frame 150) upright; the 804 x 1164 frames are checked by the unit rules.
+
+**Touches, part B (claim 2026-11-02, night 2026-11-01-2355 wave 5):** `src/DinoReader.Core/LandscapeLayout.cs`, `src/DinoReader.Core/SettingsLayout.cs`, `src/DinoReader.Core/OnboardingLayout.cs`, `src/DinoReader.Core/BookSheetPlan.cs`, `src/DinoReader.Core/TabletCardLayout.cs` (new), `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/IntroWizardPage.Art.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/GrownUpHeader.cs`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/SettingsRows.cs`, `tests/DinoReader.Tests/TabletCardLayoutTests.cs` (new), `tests/DinoReader.Tests/LandscapeLayout*Tests.cs`, `tests/DinoReader.Tests/SettingsLayout*Tests.cs`, `tests/DinoReader.Tests/OnboardingLayout*Tests.cs`, `tests/DinoReader.Tests/BookSheetPlan*Tests.cs`, `.maestro/dino/dino-tablet-upright-cards*.yaml` (new), `docs/plan/slices/234-dino-tablet-portrait.md`. Read-only: `tools/emulator/**`, every part C file.
+
+**Part B design note (coordinator, claim):** same pattern as parts A and 232 (store the size in `OnSizeAllocated`, one pure Core call per layout pass, never rebuild views on a size change). Everything here applies only when `LandscapeLayout.IsTabletPortrait(w,h)`; phone upright and every landscape layout stay as they are (tests pin that). New Core `TabletCardLayout.CardWidth(w, kind)` = min(w - 80, max) for the gate, first run and book sheet; take each max from the drawn frames 137, 138, 136 (the mock text says 560 / 520 / 620 but also "a 560 dp card" for the sheet: the frame's drawn width wins; write which you took in the slice file). Gate: answers 80 dp, hold ring 160 dp. First run: all 14 languages in two columns, no scroll. Book sheet: cover on top, tap outside closes. Intro (141): step 101b panel above the copy, buttons in one row at the foot, other steps swap only panel and copy, keep 101b's copy. Corner (139): at w >= 744 tablet upright the rail is 300 dp (change only the tablet-upright corner and Settings list widths through a new named rule; `ListPaneWidth`'s other callers keep their values unless the mock frame shows otherwise), Store solid indigo in the rail, books in three columns; below 744 the phone header bar stays. Settings (140): two panes, 300 dp list plus detail, each row shows its value under its name (values already exist via `SettingsRows.SetNavValue`; match the frame's look), a row swaps the right pane, Done closes. Part C runs in parallel and owns Record, Store, Cast, editor, Backup: do not edit their files, and do not change `SettingsLayout.StoreColumns`, `SettingsLayout.BackupSideBySide` or `LandscapeLayout.CastColumns`.
 
 #### Why (read from code on origin/main, 2026-11-01; not run on a tablet)
 
@@ -98,6 +102,56 @@ Part A covers the tablet-upright shelf and the reading page. The Work items abov
     - 2 picture-only pages in Stacked have no panel treatment: skipped (the picture-only panel is not drawn in the mock).
     - 3 gear resets to 44 dp in the grown-up corner on a tablet upright: skipped (the corner gear is part B).
 - **Device (RTST_Tablet, build 87e00636951d, cold boot after a System UI ANR on the warm snapshot):** dino-tablet-upright-shelf, dino-tablet-upright-reading and dino-landscape-reading-tablet PASS. dino-landscape-store FAIL: the flow expects the phone's `store columns=2`, the tablet logs 3 by design (SettingsLayout.StoreColumns), and this diff touches no Store file, so it is a phone-only flow. Upright shelf shot: 4 columns, nothing clipped (`D:/ReadTheStupidText-worktrees/reviews/s234a-shots/shelf-with-anr-dialog.png`).
+
+#### Part B: built (2026-11-02)
+
+Part B covers the cards (gate, first run, book sheet, intro), the grown-up corner and Settings on a tablet held upright. Phone and landscape values are unchanged.
+
+- **Core:** new `TabletCardLayout`: `CardWidth` = min(w-80, max) with max 520 for the gate, 620 for first run, 560 for the book sheet (taken from the drawn frames, which differ from the mock text's 560/520/620); `CardMaxHeight` = h - 80; `ScrollAreaHeight`, `GateFixedBelow`. `LandscapeLayout.SideListWidth` is 300 on an upright tablet (`ListPaneWidth` unchanged elsewhere); the corner gets a `TabletUpright` flag and 3 columns. `SettingsLayout.ValueUnderName`. `OnboardingLayout` and `BookSheetPlan` gained card fields.
+- **App:** the gate is a centred 520 card with 80 dp keys and a 160 dp ring; the hold ring and Back sit outside the card's ScrollView (always vertical), so a scroll cannot cancel a hold. First run is one 620 card with the 15 languages in two columns. The book sheet is a 560 card with the cover on top. The intro has a cream panel above the copy and its buttons in one row. In the corner, Store is solid indigo and the gear 48 dp. Settings has a 300 list with the value under the name (`SettingsRows.StackNavValue`, tag rows too).
+- **Choices:** `GrownUpHeader` keeps 44 dp Back/Done (mock 48). Below 744 the phone corner header stays. No chevrons while stacked. Sideways keeps 360.
+- **Tests:** 2158 pass; Android build, iOS compile and flow lint pass.
+- **From review** (all four files read in full; the files live in `D:/ReadTheStupidText-worktrees/reviews/`, outside the repo):
+  - `s234b-review-high.md` (9 findings):
+    - 1 gate card has no height cap or scroll on a square window (GatePage.xaml.cs:105): applied.
+    - 2 StyleCopy restyles only the first two labels (IntroWizardPage.cs:253): applied.
+    - 3 hard-coded #F0E8D8 duplicates ReadingTheme.PicturePanel (IntroWizardPage.cs:39): applied.
+    - 4 card constants repeated across four pages (TabletCardLayout.cs:16): skipped (polish).
+    - 5 upright tablet fixed at 3 columns (LandscapeLayout.cs:142): skipped, intended three columns.
+    - 6 StackNavValue skips tag rows (SettingsRows.cs:47): applied.
+    - 7 StackNavValue forces text alignment, ignoring FlowDirection (SettingsRows.cs:59): skipped, the layout never mirrored Slice 96.
+    - 8 dead `_shape?.KeyHeight` lookup in BuildKeyPad (GatePage.xaml.cs:349): skipped (nit).
+    - 9 first-run card has no height cap or edge margin (FirstRunPage.xaml.cs:188): applied.
+  - `s234b-review-medium.md` (11 findings):
+    - 1 first-run card fills its cap instead of sizing to content (FirstRunPage.xaml.cs:213): applied.
+    - 2 StyleCopy finds heading and line by position (IntroWizardPage.cs:311): skipped (low).
+    - 3 StackNavValue picks children by position, StackTag duplicates code (SettingsRows.cs:40): skipped (low).
+    - 4 stacked rows cannot grow for a wrapping value (SettingsRows.cs:56): applied.
+    - 5 SheetGrid in a ScrollView may measure infinite height (GatePage.xaml.cs:134): applied.
+    - 6 hold ring inside the ScrollView loses the hold on a drift or drag (GatePage.xaml.cs:131/242): applied (ring and Back moved outside the scroll).
+    - 7 book sheet header left out of `_cardRows` (BookSheet.cs:106): skipped (low).
+    - 8 BookSheetMaxHeight pass-through and repeated card constants (TabletCardLayout.cs:62): skipped (low).
+    - 9 language button hard-coded height 52 (FirstRunPage.xaml.cs:268): applied.
+    - 10 two sources for the key max height 64 (GatePage.xaml.cs:149): skipped (low).
+    - 11 intro panel colour stays light in dark mode (IntroWizardPage.cs:416): skipped (light only).
+  - `s234b-review-check-medium.md` (1 finding): the ScrollView started with Orientation Neither and could never scroll (GatePage.xaml.cs:182/133): applied, it is always vertical.
+  - `s234b-review-check2-medium.md` (2 findings, no blocker, both low):
+    - 1 `GateFixedBelow` is about 12 dp short of the real fixed height (TabletCardLayout.cs:75): skipped (low).
+    - 2 reparenting the ring and Back mid-hold on a card/non-card switch (GatePage.xaml.cs:143-165): skipped (low).
+- **Device (RTST_Tablet, build 6edc9b530403, `hide_error_dialogs` on):** dino-tablet-upright-cards-gate, -firstrun, -corner and -intro PASS (`D:/ReadTheStupidText-worktrees/reviews/s234b-run2.log`). The first run was lost to a System UI ANR dialog (`s234b-run1.log`).
+
+#### Not yet verified (part B)
+
+- Cards, corner and Settings against frames 136-141 by eye (the flows take no screenshots).
+- dino-tablet-upright-shelf and dino-landscape-reading-tablet regression not rerun after part B.
+- A drifting finger on the gate hold.
+- A short tablet window (cards cap and scroll).
+- iPad (compile only).
+- TalkBack order.
+
+#### For tools/CLAUDE.md (lift later)
+
+- Tablet AVD runs set `settings put global hide_error_dialogs 1` and send CLOSE_SYSTEM_DIALOGS before the flows, and set it back after. A System UI ANR on RTST_Tablet lost two runs on 2026-11-02 (Slice 234 part B: docs/plan/slices/234-dino-tablet-portrait.md).
 
 #### Not yet verified
 

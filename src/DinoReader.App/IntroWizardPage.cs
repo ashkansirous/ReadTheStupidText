@@ -32,6 +32,10 @@ public sealed class IntroWizardPage : ContentPage
 	private const double PlaceCardCorner = 16;
 	private const double PlaceCardTitleSize = 16;
 	private const double PlaceCardLineSize = 14;
+	private const double TabletTitleSize = 40;
+	private const double TabletLineSize = 19;
+	private const double TabletBodyPadding = 40;
+	private const double TabletPanelCorner = 32;
 
 	private readonly IStoryLibrary _library;
 	private readonly GrownUpMode _mode;
@@ -180,7 +184,7 @@ public sealed class IntroWizardPage : ContentPage
 
 		_place?.Invoke(_shape);
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] intro split={_shape.Split} step={IntroSteps.NameAt(_step)}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] intro split={_shape.Split} step={IntroSteps.NameAt(_step)} panel={_shape.PanelHeight}");
 #endif
 	}
 
@@ -267,28 +271,67 @@ public sealed class IntroWizardPage : ContentPage
 
 		var grid = new Grid { Padding = new Thickness(BodyPadding, 0, BodyPadding, 26), RowSpacing = 0, ColumnSpacing = 10 };
 		grid.RowDefinitions = [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)];
+		// The cream panel behind the picture exists only on a tablet held upright (Slice 234 part B, frame 141); it is added first so the picture draws over it.
+		var panel = new Border { StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = TabletPanelCorner }, BackgroundColor = ReadingTheme.For(false).PicturePanel, IsVisible = false, InputTransparent = true };
+		grid.Add(panel);
 		grid.Add(art);
 		grid.Add(copy);
 		grid.Add(buttons);
-		_place = shape => PlaceSplitBody(grid, art, copy, buttons, main, skip, shape);
+		_place = shape => PlaceSplitBody(grid, new SplitViews(panel, art, copy, buttons, main, skip), shape);
 		return grid;
 	}
 
-	private static void PlaceSplitBody(Grid grid, View art, View copy, Grid buttons, View main, View? skip, IntroShape shape)
+	private sealed record SplitViews(Border Panel, View Art, View Copy, Grid Buttons, View Main, View? Skip);
+
+	private static void PlaceSplitBody(Grid grid, SplitViews views, IntroShape shape)
 	{
-		grid.Padding = new Thickness(BodyPadding, 0, BodyPadding, 26);
+		(Border panel, View art, View copy, Grid buttons, View main, View? skip) = (views.Panel, views.Art, views.Copy, views.Buttons, views.Main, views.Skip);
+		bool stacked = shape.PanelHeight > 0;
+		grid.Padding = stacked ? new Thickness(TabletBodyPadding, 0, TabletBodyPadding, TabletBodyPadding) : new Thickness(BodyPadding, 0, BodyPadding, 26);
 		grid.ColumnDefinitions = shape.Split ? [new ColumnDefinition(new GridLength(shape.PicturePanel)), new ColumnDefinition(GridLength.Star)] : [];
+		grid.RowDefinitions[0].Height = stacked ? new GridLength(0) : GridLength.Star; // stacked, the picture panel starts at the top and the buttons sit at the foot
 		int column = shape.Split ? 1 : 0;
 		SetCell(art, shape.Split ? 0 : 1, 0, shape.Split ? 5 : 1);
+		SetCell(panel, 1, 0, 1);
 		SetCell(copy, shape.Split ? 1 : 2, column, shape.Split ? 2 : 1);
 		SetCell(buttons, 4, column, 1);
+		panel.IsVisible = stacked;
+		panel.HeightRequest = stacked ? shape.PanelHeight : -1;
 		art.VerticalOptions = LayoutOptions.Center;
 		art.HorizontalOptions = LayoutOptions.Center;
-		copy.VerticalOptions = LayoutOptions.Center;
-		copy.HorizontalOptions = LayoutOptions.Center;
-		copy.Margin = new Thickness(0, shape.Split ? 0 : 14, 0, 0);
+		copy.VerticalOptions = stacked ? LayoutOptions.Start : LayoutOptions.Center;
+		copy.HorizontalOptions = stacked ? LayoutOptions.Start : LayoutOptions.Center;
+		copy.Margin = new Thickness(0, shape.Split ? 0 : stacked ? 20 : 14, 0, 0);
 		copy.MaximumWidthRequest = shape.TextMaxWidth;
+		StyleCopy(copy, stacked, shape.TextMaxWidth, LineMaxWidth);
 		PlaceButtons(buttons, main, skip, shape.ButtonsInRow);
+	}
+
+	// The tablet's copy is left aligned with a bigger heading and line (frame 141); the heading and the line are the first two labels of a step's copy.
+	private static void StyleCopy(View copy, bool stacked, double textMaxWidth, double plainLineMaxWidth)
+	{
+		if (copy is not VerticalStackLayout stack)
+		{
+			return;
+		}
+
+		Label[] labels = [.. stack.Children.OfType<Label>()];
+		TextAlignment align = stacked ? TextAlignment.Start : TextAlignment.Center;
+		foreach (Label label in labels)
+		{
+			label.HorizontalTextAlignment = align; // every text label of the copy, including the Record step's stay note
+		}
+
+		if (labels.Length > 0)
+		{
+			labels[0].FontSize = stacked ? TabletTitleSize : TitleSize;
+		}
+
+		if (labels.Length > 1)
+		{
+			labels[1].FontSize = stacked ? TabletLineSize : LineSize;
+			labels[1].MaximumWidthRequest = stacked ? textMaxWidth : plainLineMaxWidth;
+		}
 	}
 
 	// Skip and the main button share one row sideways (Skip left); upright the main button sits over Skip.
@@ -417,6 +460,7 @@ public sealed class IntroWizardPage : ContentPage
 		int column = shape.Split ? 1 : 0;
 		SetCell(top, 0, 0, shape.Split ? 3 : 1);
 		top.VerticalOptions = shape.Split ? LayoutOptions.Center : LayoutOptions.Start;
+		StyleCopy(top, shape.PanelHeight > 0, shape.TextMaxWidth, double.PositiveInfinity);
 		SetCell(picker, shape.Split ? 0 : 1, column, shape.Split ? 2 : 1);
 		SetCell(buttons, 2, column, 1);
 		PlaceButtons(buttons, done, skip, shape.ButtonsInRow);

@@ -152,6 +152,8 @@ public sealed class SettingsPage : SettingsSubPage
 	private SettingsSubPage? _shown; // the hosted page last told it appeared (see SyncHosted)
 	private readonly Dictionary<SettingsSection, Grid> _sectionRows = [];
 	private bool _twoPanes;
+	private bool _valueUnderName;
+	private IReadOnlyList<Grid> _navRows = [];
 	private bool _appeared;
 	private Size _windowSize;
 
@@ -233,7 +235,9 @@ public sealed class SettingsPage : SettingsSubPage
 
 		_windowSize = new Size(width, height);
 		bool two = SettingsLayout.TwoPanes(width, height);
-		_split.ColumnDefinitions[0].Width = new GridLength(LandscapeLayout.ListPaneWidth(width, height));
+		_split.ColumnDefinitions[0].Width = new GridLength(LandscapeLayout.SideListWidth(width, height));
+		_valueUnderName = SettingsLayout.ValueUnderName(width, height);
+		ApplyRowValues();
 		double paneWidth = SettingsLayout.PaneWidth(width, height); // the width the tests check is the width drawn
 		_pane.WidthRequest = paneWidth > 0 ? paneWidth : UnsetWidth;
 		if (two != _twoPanes)
@@ -264,7 +268,7 @@ public sealed class SettingsPage : SettingsSubPage
 		SyncHosted();
 		Retint(); // the list is built on appearing and on real content changes only: a size change just retints the rows already there
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] settings panes={(two ? 2 : 1)} selected={_selected}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] settings panes={(two ? 2 : 1)} selected={_selected} valueUnder={_valueUnderName}");
 #endif
 	}
 
@@ -343,10 +347,23 @@ public sealed class SettingsPage : SettingsSubPage
 	private void Rebuild()
 	{
 		Body.Children.Clear();
+		Grid[] reading = [LanguageRow(), StoryLanguagesRow(), NarratorRow(), SpeedRow(), AnimalRow()];
+		Grid[] phone = [BackupRow(), UsageRow(), AboutRow()];
+		_navRows = [.. reading, .. phone];
 		Body.Children.Add(SettingsRows.GroupHeading(AppResources.Settings_GroupReading));
-		Body.Children.Add(SettingsRows.RowsCard([LanguageRow(), StoryLanguagesRow(), NarratorRow(), SpeedRow(), AnimalRow()]));
+		Body.Children.Add(SettingsRows.RowsCard(reading));
 		Body.Children.Add(SettingsRows.GroupHeading(AppResources.Settings_GroupPhone));
-		Body.Children.Add(SettingsRows.RowsCard([BackupRow(), UsageRow(), AboutRow()]));
+		Body.Children.Add(SettingsRows.RowsCard(phone));
+		ApplyRowValues();
+	}
+
+	// Slice 234 part B (mock Batch 45 frame 140): in the 300 dp list of a tablet held upright each row shows its value under its name. Only the rows' sizes and cells change.
+	private void ApplyRowValues()
+	{
+		foreach (Grid row in _navRows)
+		{
+			SettingsRows.StackNavValue(row, _valueUnderName);
+		}
 	}
 
 	private Grid LanguageRow() =>

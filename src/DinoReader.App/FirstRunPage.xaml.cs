@@ -100,6 +100,12 @@ public partial class FirstRunPage : ContentPage
 	private static readonly int ShelfCovers = Math.Min(StarterStories.Count, 4);
 	private const double CoverWidth = 56;
 	private const int PercentScale = 100;
+	private const double UnsetWidth = -1; // VisualElement.WidthRequest's "no request"
+	private const double CardPadding = 40;
+	private const double CardCorner = 32;
+	private const double CardStackTop = 0;
+	private const double CardLanguageButtonHeight = 56;
+	private const double PhoneLanguageButtonHeight = 52;
 
 	private readonly SpokenLanguage _spoken;
 	private readonly VoicePackInstaller _installer;
@@ -186,17 +192,66 @@ public partial class FirstRunPage : ContentPage
 
 	private void PlacePanels(FirstRunShape shape)
 	{
-		Thickness padding = new(22, 0, 22, 22);
+		Thickness padding = shape.Card ? new Thickness(CardPadding) : new Thickness(22, 0, 22, 22);
 		LanguagePanel.Padding = padding;
 		DownloadPanel.Padding = padding;
 		ReadyPanel.Padding = padding;
-		LanguageStack.Padding = new Thickness(0, shape.Split ? 12 : 28, 0, 16);
-		DownloadStack.Padding = new Thickness(0, shape.Split ? 12 : 56, 0, 0);
-		ReadyStack.Padding = new Thickness(0, shape.Split ? 12 : 56, 0, 0);
+		double topPadding = shape.Card ? CardStackTop : shape.Split ? 12 : 28;
+		LanguageStack.Padding = new Thickness(0, topPadding, 0, 16);
+		DownloadStack.Padding = new Thickness(0, shape.Card ? CardStackTop : shape.Split ? 12 : 56, 0, 0);
+		ReadyStack.Padding = new Thickness(0, shape.Card ? CardStackTop : shape.Split ? 12 : 56, 0, 0);
+		PlaceCardFrame(shape);
 		PlaceLanguagePanel(shape);
 		PlaceReadyPanel(shape);
 		PlaceLanguageButtons(shape.LanguageColumns);
 		LogLayout();
+	}
+
+	// A tablet held upright (Slice 234 part B, mock Batch 45 frame 138): the three pages share one centred white card, 620 dp wide at most, with taller language buttons.
+	// Elsewhere the frame is transparent, fills the page and the buttons are the phone's 52 dp. Only sizes and options change; no page is rebuilt.
+	private void PlaceCardFrame(FirstRunShape shape)
+	{
+		CardFrame.HorizontalOptions = shape.Card ? LayoutOptions.Center : LayoutOptions.Fill;
+		CardFrame.VerticalOptions = shape.Card ? LayoutOptions.Center : LayoutOptions.Fill;
+		CardFrame.WidthRequest = shape.Card ? shape.CardWidth : UnsetWidth;
+		CardFrame.MaximumHeightRequest = shape.Card ? shape.CardMaxHeight : double.PositiveInfinity;
+		CardFrame.BackgroundColor = shape.Card ? Colors.White : Colors.Transparent;
+		CardFrame.StrokeShape = new RoundRectangle { CornerRadius = shape.Card ? CardCorner : 0 };
+		foreach (Border button in _buttons.Values)
+		{
+			button.HeightRequest = LanguageButtonHeight(shape);
+		}
+
+		SizeCardToContent(shape);
+	}
+
+	private static double LanguageButtonHeight(FirstRunShape shape) => shape.Card ? CardLanguageButtonHeight : PhoneLanguageButtonHeight;
+
+	// A star row would fill the whole card cap and leave a tall empty card around a short page. On the card the page's top row is Auto instead, so the card is as tall as its
+	// content, and the page's scroll gets the cap less the card's padding and the action under it (it scrolls only when its content is taller than that).
+	private void SizeCardToContent(FirstRunShape shape)
+	{
+		foreach ((Grid panel, ScrollView scroll, View below) in CardPages())
+		{
+			panel.RowDefinitions[0].Height = shape.Card ? GridLength.Auto : GridLength.Star;
+			scroll.MaximumHeightRequest = shape.Card ? TabletCardLayout.ScrollAreaHeight(shape.CardMaxHeight, 2 * CardPadding, below.Height) : double.PositiveInfinity;
+			below.SizeChanged -= OnCardActionSized;
+			if (shape.Card)
+			{
+				below.SizeChanged += OnCardActionSized;
+			}
+		}
+	}
+
+	private (Grid Panel, ScrollView Scroll, View Below)[] CardPages() =>
+		[(LanguagePanel, WelcomeScroll, ContinueButton), (DownloadPanel, DownloadScroll, PickAnother), (ReadyPanel, ReadyScroll, ReadyActions)];
+
+	private void OnCardActionSized(object? sender, EventArgs e)
+	{
+		if (_shape is { Card: true } shape)
+		{
+			SizeCardToContent(shape);
+		}
 	}
 
 	// Debug-only marker the landscape flow reads: the layout, the page shown and the picked language (selected=<code>).
@@ -205,7 +260,7 @@ public partial class FirstRunPage : ContentPage
 #if DEBUG
 		if (_shape is { } shape)
 		{
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] firstrun split={shape.Split} columns={shape.LanguageColumns} page={(LanguagePanel.IsVisible ? "language" : DownloadPanel.IsVisible ? "download" : "ready")} selected={_selected}");
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] firstrun split={shape.Split} columns={shape.LanguageColumns} page={(LanguagePanel.IsVisible ? "language" : DownloadPanel.IsVisible ? "download" : "ready")} selected={_selected} card={shape.Card} cardWidth={shape.CardWidth}");
 		}
 #endif
 	}
@@ -241,7 +296,7 @@ public partial class FirstRunPage : ContentPage
 	private Border BuildLanguageButton(string code, string name)
 	{
 		bool rtl = DinoFonts.IsRightToLeft(code);
-		var button = new Border { AutomationId = LanguageIdPrefix + code, HeightRequest = 52, StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = 16 }, Padding = new Thickness(14, 0) };
+		var button = new Border { AutomationId = LanguageIdPrefix + code, HeightRequest = _shape is { } shape ? LanguageButtonHeight(shape) : PhoneLanguageButtonHeight, StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = 16 }, Padding = new Thickness(14, 0) };
 		var row = new HorizontalStackLayout { Spacing = 8, VerticalOptions = LayoutOptions.Center };
 		row.Children.Add(new Label
 		{
