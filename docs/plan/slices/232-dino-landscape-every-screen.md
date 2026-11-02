@@ -1,6 +1,6 @@
 ### Slice 232 — Dino: a proper landscape design for every screen
 
-*Part B built 2026-11-02, not merged (see *Part B: built* below); parts C-E planned (the slice stays open).* *Part A merged as PR #695 (0ccee639); parts C-E planned (the slice stays open).* From the user's user test on 2026-11-01 (finding 8: "the landscape mode sucks"). **Design done: Batch 44 mock, user answers recorded below** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code"). Start after Slices 228 and 229 merge, so the mock draws their new header, pill and buttons.
+*Part B merged as PR #724 (e260a3ba) (see *Part B: built* below); parts C-E planned (the slice stays open).* *Part A merged as PR #695 (0ccee639); parts C-E planned (the slice stays open).* From the user's user test on 2026-11-01 (finding 8: "the landscape mode sucks"). **Design done: Batch 44 mock, user answers recorded below** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code"). Start after Slices 228 and 229 merge, so the mock draws their new header, pill and buttons.
 
 **Touches:** `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.Core/GalleryLayout.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.Core/ReadingLayoutRules.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastViews.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/IntroWizardPage.Art.cs`, `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/BackupPage.xaml`, `src/DinoReader.App/PageEditorPage.xaml`, `tests/DinoReader.Tests/**Layout*`, `src/DinoReader.Core/*Layout*.cs`, `src/DinoReader.App/GrownUpHeader.cs`, `src/DinoReader.App/ReadingTheme.cs`, `src/DinoReader.App/*Page*.cs` (Settings sub-pages), `docs/design/dino-reader/**`, `docs/plan/slices/232-dino-landscape-every-screen.md`
 
@@ -105,7 +105,7 @@ Emulator RTST_Test, 2026-11-01: `dino-landscape-reading` PASS, `open-book` PASS,
 
 Parts B-E unchanged (planned).
 
-#### Part B: built (2026-11-02, not merged)
+#### Part B: built (2026-11-02)
 
 - Core: `LandscapeLayout.CornerLayout` / `CoverWidth` / `CornerColumnsFor` (rail = `ListPaneWidth`, 300 dp phone / 360 dp tablet; 2-5 columns of at least 100 dp from the width left; the rail also applies on a tablet in portrait from 744 dp). `BookSheetPlan.ShapeFor` (580 dp centred card in landscape, bottom sheet upright). `ScrollAnchorRules` (rotation anchor is a book id; swap generation; pure, tested).
 - Kids' shelf: a sideways row on phone landscape (cover height = window height - 120), a grid otherwise. The list rebinds its `ItemsSource` when the layout kind flips (likely cause of the blank shelf after rotating on Android: the list kept its old layout; fixed, covers drawn 2 s after rotating on the emulator rerun).
@@ -134,7 +134,7 @@ Reviewed findings read: 10/10, 5/5, 10/10, 2/2.
 
 - Landscape reading-screen sizes and the rail-versus-row rule come from `src/DinoReader.Core/LandscapeLayout.cs` (one window-based decision via `ReadingSurface.SetControls`); do not recompute pane widths or the 480 dp rule in the pages. (Slice 232: docs/plan/slices/232-dino-landscape-every-screen.md)
 
-#### For CLAUDE.md, part B (2026-11-02, not yet lifted)
+#### For CLAUDE.md, part B (lifted 2026-11-02)
 
 - Shelf, corner and book-sheet sizes come from `LandscapeLayout` / `BookSheetPlan` in `src/DinoReader.Core`; `GalleryPage` computes no widths. (Slice 232: docs/plan/slices/232-dino-landscape-every-screen.md)
 - A `CollectionView` whose `ItemsLayout` kind changes must rebind its `ItemsSource` (`src/DinoReader.App/CLAUDE.md`); otherwise Android keeps the old layout and shows a blank shelf after rotating. (Slice 232: docs/plan/slices/232-dino-landscape-every-screen.md)

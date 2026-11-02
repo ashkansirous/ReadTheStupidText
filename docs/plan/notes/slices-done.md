@@ -276,6 +276,8 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 230 | Dino user test: recordings stay on the phone (warm copy), and restore merges recordings into a story already on the phone | built | #693 | — | [230-dino-recordings-copy-and-restore-merge.md](../slices/230-dino-recordings-copy-and-restore-merge.md) |
 | 240 | Dino Reader Windows CI: cache the SDK, workload and NuGet packages | built | #702, #704 | | [240-dino-windows-ci-setup-cache.md](../slices/240-dino-windows-ci-setup-cache.md) |
 | 241 | Faster, quieter device tests (emulator snapshot boot, build during boot, crash fail-fast, detached builds, iOS pack stall watcher) | built | #708 | | [241-device-test-speed.md](../slices/241-device-test-speed.md) |
+| 236 | Phone runner gaps from night 2026-11-01-0859 round 2 (`-Voices`, pin a run's variant, reset leaves a pack hold, lease owner default, aside copies, stay-awake restore, an unexplained compat kill; item 8 stays with Slice 242) | built | #721 | | [236-phone-runner-gaps-night-2026-11-01-0859.md](../slices/236-phone-runner-gaps-night-2026-11-01-0859.md) |
+| 238 | packs.yml version defaults match the live catalog (Norwegian defaults to 1, packs-11 ships 2) | built | #723 | | [238-packs-workflow-defaults-match-catalog.md](../slices/238-packs-workflow-defaults-match-catalog.md) |
 
 
 ## Batch lane-order paragraphs moved from plan.md (2026-10-30)

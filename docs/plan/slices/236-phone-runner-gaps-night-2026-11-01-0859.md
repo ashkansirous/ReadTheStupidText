@@ -1,6 +1,6 @@
 ### Slice 236 — Phone runner gaps from night 2026-11-01-0859, round 2
 
-*Built 2026-11-02, not merged. Items 1-7 and 9 built; item 8 stays with Slice 242. Fast self-tests pass; partly run on the S21 (see Built and Not yet verified).* Written 2026-11-01 by the round 2 feedback loop ([note](../notes/2026-11-01-0859-feedback-loop-w2.md)). It sits next to Slices 224 and 225 (same files).
+*Built 2026-11-02, merged as PR #721 (13e20e80). Items 1-7 and 9 built; item 8 stays with Slice 242. Fast self-tests pass; partly run on the S21 (see Built and Not yet verified).* Written 2026-11-01 by the round 2 feedback loop ([note](../notes/2026-11-01-0859-feedback-loop-w2.md)). It sits next to Slices 224 and 225 (same files).
 
 **Touches:** `tools/phone/run-checks.ps1`, `tools/phone/checks/_lib.ps1`, `tools/phone/reset-dev-app.ps1`, `tools/phone/preflight.ps1`, `tools/phone/checks/paused-notification.ps1`, `tools/phone/test-run-checks.ps1`, `tools/phone/test-phone-leftovers.ps1` and `tools/phone/checks/short-lines.ps1` (widened mid-build 2026-11-02: the leftovers assert on `Save-StayOn`, and the one-token `NanTakes` row field), `tools/CLAUDE.md`, `docs/plan/slices/236-phone-runner-gaps-night-2026-11-01-0859.md`
 
@@ -97,7 +97,7 @@ Files in `D:/ReadTheStupidText-worktrees/reviews/` (outside the repo).
 - 8: low (source-text assertion on `preflight.ps1`).
 - 9: low (repeated literals).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-02)
 
 - `tools/phone/`: a stay-awake change is restored by exactly one owner, decided in `Get-StayOnRecordAction` (`common.ps1`). A `hand` record from `preflight.ps1 -Fix` is restored only by `preflight.ps1 -Restore`; a lease's record by that lease's release; a dead run's by the next take. Do not add another restorer. (Slice 236: docs/plan/slices/236-phone-runner-gaps-night-2026-11-01-0859.md)
 - `run-checks.ps1 -Variant debug|aot` on a run pins it (no swap, no background build of the other variant); a check that needs the other variant FAILs. Do not pass `-Variant` to a run that includes checks for the other build. (Slice 236: docs/plan/slices/236-phone-runner-gaps-night-2026-11-01-0859.md)

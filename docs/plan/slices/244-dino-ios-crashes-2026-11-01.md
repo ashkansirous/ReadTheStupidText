@@ -1,6 +1,6 @@
 # Slice 244 — Dino: find and fix the crashes of 2026-10-31 and 2026-11-01
 
-*Items 2-5 built 2026-11-02, not merged. Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
+*Items 2-5 built 2026-11-02, merged as PR #722 (6d3a0e5d). Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
 I can tell, when the story is playing and I click on back, it does not pause/stop the story", then "another slice to
 figuring out what can have cause the crashes today and yesterday and fixing them".
 
@@ -122,7 +122,7 @@ Files are outside the repo (`D:/ReadTheStupidText-worktrees/reviews/`); all read
 - `s244-check3-medium.md` (9): none applied, all low; cancellation is handled as a normal stop on both platforms.
 - `s244-check4-medium.md`: no new findings (7 repeats).
 
-## For CLAUDE.md
+## For CLAUDE.md (lifted 2026-11-02)
 
 - Never dispose a `UIFont` obtained from MAUI's `IFontManager`: it is a shared cached instance (`src/DinoReader.App/Platforms/iOS/IosTextMeasurer.cs`). (Slice 244: docs/plan/slices/244-dino-ios-crashes-2026-11-01.md)
 - Speech generation on both readers runs through `GenerationWindowPlan` (`src/ReadTheStupidText.Application/Reading/SpeechTextChunker.cs`); change the window logic there, not per reader. (Slice 244: docs/plan/slices/244-dino-ios-crashes-2026-11-01.md)

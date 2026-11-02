@@ -2,6 +2,28 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 244: Dino iOS crashes ([slice](slices/244-dino-ios-crashes-2026-11-01.md))
+
+- The iPhone 8 run (the user's): read Farsi Three Little Pigs, Back mid-sentence, re-read, background, 3 times.
+- iOS simulator flow (no CI workflow runs one).
+- No new NSDictionary or `0xdead10cc` crash for a week after release (`tools/crashes`).
+- The window size on a real phone.
+- The 3-window on a sub-3 GB device.
+- The iOS twin of the Maestro flow.
+
+### Slice 238: packs.yml defaults match the catalog ([slice](slices/238-packs-workflow-defaults-match-catalog.md))
+
+- The check's first run in CI on the PR.
+- What a lower version does on phones: Slice 220's record says a re-download is decided by `PackVersions.IsNewer` only, so a phone holding piper-nb 2 would most likely keep it and a fresh install would get 1; not checked on a device.
+
+### Slice 236: phone runner gaps, night 2026-11-01-0859 ([slice](slices/236-phone-runner-gaps-night-2026-11-01-0859.md))
+
+- Item 3 on a device: cancel a pack download, `reset-dev-app.ps1 -Level auto`, the pack starts again.
+- Item 6 with no lease held: `preflight.ps1 -Fix` then `-Restore` back to 0.
+- A mid-run `CHANGED:` stop with no record.
+- The `dumpsys platform_compat` override-line wording (`Get-CompatOverrideLines` matching).
+- The 30 s device-side restore cancel timeout warning ("did not finish in 30 s").
+
 ### Slice 245: sherpa-onnx one version ([slice](slices/245-sherpa-onnx-one-version.md))
 
 - Dino `supertonic-3`, `piper-fa`, `piper-nb` and `melo` reads on a device; RTST Android Supertonic read.
@@ -30,8 +52,14 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Delisting a deleted book on a real run.
 - A translated title for a newly added store book on an installed app, with no app update.
 
-### Slice 232 part A: Dino landscape reading screen ([slice](slices/232-dino-landscape-every-screen.md))
+### Slice 232 parts A and B: Dino landscape reading screen and shelf ([slice](slices/232-dino-landscape-every-screen.md))
 
+- Part B: the same book stays in view after rotating a shelf with more than 4 books (the emulator shelf has 4, all on screen).
+- Part B: tablet landscape and portrait (no tablet AVD); iPhone and iPad (iOS compile only).
+- Part B: notch inset doubling with `SafeAreaEdges` (high 10).
+- Part B: a 360 dp-tall phone, the card and Remove fit.
+- Part B: rotating with the sheet open during a Remove confirmation.
+- Part B: VoiceOver / TalkBack order in the rail.
 - Tablet landscape (no tablet AVD): the controls row under the card and its left edge.
 - iPhone and iPad landscape (iOS compile only).
 - VoiceOver / TalkBack order in landscape.
