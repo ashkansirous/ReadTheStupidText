@@ -1,6 +1,6 @@
 ### Slice 247 — Leftovers from the night's final feedback loop (slow emulator flows, the silent kokoro-en download, a one-off Mono SIGSEGV, Slice 240's cache hit on main)
 
-*Built 2026-11-02 (night 2026-11-01-2355 wave 6), PR #744, not merged. Items a (timing only), b (PACKDL tail), c, d and e are built; the parts not proven on a device are under Not yet verified.* Planned by the user, 2026-11-02 ~07:50 ("plan 247"; was parked by the feedback loop). Written 2026-11-01 by the night's final feedback loop; nothing in it needs a user decision.
+*Built 2026-11-02 (night 2026-11-01-2355 wave 6), merged as PR #744 (8a89afdd). Items a (timing only), b (PACKDL tail), c, d and e are built; the parts not proven on a device are under Not yet verified.* Planned by the user, 2026-11-02 ~07:50 ("plan 247"; was parked by the feedback loop). Written 2026-11-01 by the night's final feedback loop; nothing in it needs a user decision.
 
 **Touches:** `tools/emulator/`, `tools/phone/`, `.maestro/**` (only if item a changes a flow's `clearState` or timeouts), `docs/plan/slices/247-final-loop-leftovers-night-2026-11-01-0859.md`
 
@@ -53,7 +53,7 @@
 
 Item a's follow-up is not done: shorten the waits the PHASES lines name (Wait is the largest phase in 4 of 5 flows; read-back-reread-background's single `repeat` action, 82 s, is the slowest step), then show the same 5 flows finishing faster with the same results.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-02)
 
 - `tools/CLAUDE.md`: `tools/emulator/run-flows.ps1` kills Maestro within about 10 s of an app crash (`WATCH crash`) and retries a flow once when a Mono SIGSEGV hits within 20 s of a cold start (reported `crash-retried`); each flow prints a `PHASES` line. (Slice 247: docs/plan/slices/247-final-loop-leftovers-night-2026-11-01-0859.md)
 
