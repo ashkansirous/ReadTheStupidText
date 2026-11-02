@@ -12,7 +12,7 @@ namespace DinoReader;
 /// </summary>
 public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> storyPages, IReadOnlyList<SentenceSpan> sentences,
 	Func<string?, string?> resolveImage, string font, ReadingTheme theme, bool rightToLeft, Action<int> onSentence,
-	Action<SwipedEventArgs> onSwipe, bool wordsOver, bool textInPictures, bool sideways, ControlsPlacement controls) : IPageRenderer
+	Action<SwipedEventArgs> onSwipe, bool wordsOver, bool textInPictures, bool sideways, ControlsPlacement controls, double cardTop) : IPageRenderer
 {
 	private const float PanelAlpha = 0.92f;
 	private const double PanelFontSize = 21;
@@ -383,7 +383,8 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		if (HasText(slot))
 		{
 			Border card = TextPanel(SidewaysPanelCorner, new Thickness(18, 14), 1f, fade: false);
-			card.Margin = new Thickness(slot.Image is null ? 0 : SidewaysGap, 0, 0, 0);
+			// Frame 127: when ReadingPage shows the book title above the card (ReadingPage.SideTitle) it hands down the one lowering to use (cardTop, 0 when hidden); nothing is decided again here.
+			card.Margin = new Thickness(slot.Image is null ? 0 : SidewaysGap, cardTop, 0, 0);
 			grid.Add(card, slot.Image is null ? 0 : 1);
 		}
 
