@@ -65,6 +65,7 @@ concurrency:
 
 jobs:
   build:
+    timeout-minutes: 90   # a stuck release build ends after 90 min (user, 2026-11-02); normal is 50-60
     runs-on: macos-26
     permissions:
       contents: write   # gh release upload (release runs only)
