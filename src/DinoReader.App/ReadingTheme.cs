@@ -39,6 +39,9 @@ public sealed record ReadingTheme(
     public Color PageCard(int pageIndex) =>
         IsBedtime ? DinoTokens.Get(DinoTokens.NightCard) : Color.FromArgb(PagePalette.ColourAt(pageIndex));
 
+    /// <summary>Slice 234 (mock Batch 45 frame 134): the panel behind a picture fitted whole on a tablet held upright, warm beige by day, the dim fill at night.</summary>
+    public Color PicturePanel => IsBedtime ? DinoTokens.Get(DinoTokens.NightFill) : Color.FromArgb("#F0E8D8");
+
     private static ReadingTheme Daytime()
     {
         Color Get(string key) => DinoTokens.Get(key);

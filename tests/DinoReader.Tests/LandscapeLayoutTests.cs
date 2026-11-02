@@ -161,4 +161,53 @@ public class LandscapeLayoutTests
     [Fact]
     public void A_phone_held_upright_never_gets_the_rail_however_wide_the_screen_is() =>
         Assert.False(LandscapeLayout.CornerLayout(590, 1000).Rail);
+
+    [Theory]
+    [InlineData(804, 1164, true)]
+    [InlineData(800, 1280, true)]
+    [InlineData(600, 600, true)]
+    [InlineData(600, 1000, true)]
+    [InlineData(599.9, 1000, false)]
+    [InlineData(1164, 804, false)]
+    [InlineData(360, 760, false)]
+    [InlineData(0, 0, false)]
+    public void A_tablet_portrait_is_at_least_as_tall_as_wide_and_600_dp_wide(double w, double h, bool expected) =>
+        Assert.Equal(expected, LandscapeLayout.IsTabletPortrait(w, h));
+
+    [Theory]
+    [InlineData(804, 4)]
+    [InlineData(800, 4)]
+    [InlineData(600, 3)]
+    [InlineData(680, 3)]
+    [InlineData(750, 3)]
+    [InlineData(760, 4)]
+    [InlineData(1100, 6)]
+    [InlineData(2000, 6)]
+    public void Tablet_portrait_shelf_columns_are_the_width_less_80_over_170_from_3_to_6(double w, int columns)
+    {
+        ShelfShape shelf = LandscapeLayout.ShelfLayout(w, w * 1.4);
+        Assert.False(shelf.Sideways);
+        Assert.True(shelf.TabletUpright);
+        Assert.Equal(columns, shelf.Columns);
+        Assert.Equal(40, shelf.SidePadding);
+    }
+
+    [Fact]
+    public void A_phone_upright_and_a_tablet_held_sideways_keep_their_old_shelf_rules()
+    {
+        ShelfShape phone = LandscapeLayout.ShelfLayout(360, 760);
+        ShelfShape sideways = LandscapeLayout.ShelfLayout(1164, 804);
+        Assert.False(phone.TabletUpright);
+        Assert.Equal(2, phone.Columns);
+        Assert.Equal(14, phone.SidePadding);
+        Assert.False(sideways.TabletUpright);
+        Assert.Equal(6, sideways.Columns);
+    }
+
+    [Fact]
+    public void A_square_600_dp_window_counts_as_tablet_portrait_with_three_columns()
+    {
+        Assert.Equal(3, LandscapeLayout.ShelfLayout(600, 600).Columns);
+        Assert.Equal(52, LandscapeLayout.TabletHeaderTarget);
+    }
 }

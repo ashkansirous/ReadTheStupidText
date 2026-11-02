@@ -8,6 +8,9 @@ public enum ReadingLayout
     PictureSide,
     PictureOverlay,
     TextRow,
+
+    /// <summary>A tablet held upright (Slice 234, mock Batch 45 frames 134, 135, 150): the picture panel on top, the text card below, the controls row under both.</summary>
+    Stacked,
 }
 
 /// <summary>Which shape the reading screen takes, and which mode a book can offer (Slice 164 follow-up).</summary>
@@ -15,6 +18,16 @@ public static class ReadingLayoutRules
 {
     public static ReadingLayout For(double width, double height, ReadingMode mode, bool isPictureTextBook)
     {
+        if (LandscapeLayout.IsTabletPortrait(width, height))
+        {
+            if (!StackedFits(height))
+            {
+                return ReadingLayout.Upright;
+            }
+
+            return mode == ReadingMode.Text || isPictureTextBook ? ReadingLayout.Stacked : ReadingLayout.Upright;
+        }
+
         if (width <= 0 || width <= height)
         {
             return ReadingLayout.Upright;
@@ -66,6 +79,41 @@ public static class ReadingLayoutRules
 
         return new SurfaceInsets(PhoneSidewaysLeft, SidewaysTop, rail ? 0 : PhoneSidewaysRight, SidewaysBottom);
     }
+
+    /// <summary>Slice 234, mock Batch 45 frames 134 and 135: the picture panel is 48% of the height, the text 32 sp (36 sp in text only), the surface keeps 40 dp at each side.</summary>
+    public const double StackedPictureShare = 0.48;
+    public const double StackedTextSize = 32;
+    public const double StackedTextOnlySize = 36;
+    public const double StackedTextOnlyTopInset = 84;
+    public const double StackedSide = 40;
+    public const double StackedTop = 6;
+    public const double StackedGap = 20;
+    public const double StackedChipInset = 12;
+    public const double StackedMinCard = 120;
+
+    /// <summary>The controls row and the gap above it (play button 84 + 20), which the frame's 48% counts as part of the height.</summary>
+    public const double StackedControlsBand = 104;
+
+    /// <summary>The stacked surface's margins: 40 dp at each side, no bottom (the controls row sits right under it).</summary>
+    public static SurfaceInsets StackedSurface => new(StackedSide, StackedTop, StackedSide, 0);
+
+    /// <summary>The floating chip's margin: 12 dp in from the panel's (or the card's) top left corner, inside the surface margins.</summary>
+    public static SurfaceInsets StackedChip => new(StackedSide + StackedChipInset, StackedTop + StackedChipInset, 0, 0);
+
+    /// <summary>Whether a window this tall has room for the stacked shape: the surface (the window less the top margin and the controls band) must hold the gap and the 120 dp card with a picture panel above them.
+    /// Otherwise the screen falls back to upright rather than draw a picture panel 0 high.</summary>
+    public static bool StackedFits(double windowHeight) =>
+        windowHeight - StackedTop - StackedControlsBand - StackedGap - StackedMinCard > 0;
+
+    /// <summary>The picture panel's height: 48% of the surface plus the controls band, never leaving the text card under 120 dp (a short window).</summary>
+    public static double StackedPictureHeight(double surfaceHeight)
+    {
+        double wanted = StackedPictureShare * (surfaceHeight + StackedControlsBand);
+        return Math.Max(0, Math.Min(wanted, surfaceHeight - StackedGap - StackedMinCard));
+    }
+
+    /// <summary>The text size when stacked: 36 sp in text only, 32 sp beside a picture.</summary>
+    public static double StackedTextSizeFor(ReadingMode mode) => mode == ReadingMode.Text ? StackedTextOnlySize : StackedTextSize;
 
     /// <summary>Frame 127: the title returns above the card when the controls are a row (room for it) and the page has a picture beside the card.
     /// The one decision for both the title and the card's lowering (the page renderer and ReadingPage both ask it): a text card must be drawn on the page as well, or the title would stand alone.</summary>

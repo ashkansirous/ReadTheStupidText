@@ -22,7 +22,8 @@ public enum PinnedPlacement
 }
 
 /// <summary>The shelf: one row of covers that scrolls sideways (phone held sideways) or a grid with this many columns.</summary>
-public readonly record struct ShelfShape(bool Sideways, double CoverHeight, int Columns);
+/// <remarks>A tablet held upright (Slice 234, mock Batch 45 frame 133) also gets <see cref="TabletUpright"/>, the 40 dp side padding and 52 dp header targets; every other shape keeps the phone's 14 dp and 48 dp.</remarks>
+public readonly record struct ShelfShape(bool Sideways, double CoverHeight, int Columns, bool TabletUpright = false, double SidePadding = LandscapeLayout.PhoneShelfSidePadding);
 
 /// <summary>The grown-ups' corner: a side rail (width in dp, 0 without one) with this many columns of books; Add and Store are full rows on a tablet's rail, a pair of buttons on a phone's.</summary>
 public readonly record struct CornerShape(bool Rail, double RailWidth, int Columns, bool FullRowButtons);
@@ -57,7 +58,16 @@ public static class LandscapeLayout
     public static readonly ControlSizes RailControls = new(68, 52);
     public static readonly ControlSizes RowControls = new(84, 64);
 
+    /// <summary>Slice 234 (mock Batch 45): a tablet held upright is taller than wide (or square) and at least 600 dp wide.</summary>
+    public const double TabletPortraitShelfColumnWidth = 170;
+    public const double TabletPortraitShelfSidePadding = 40;
+    public const double PhoneShelfSidePadding = 14;
+    public const int MinTabletPortraitShelfColumns = 3;
+    public const double TabletHeaderTarget = 52;
+
     public static bool IsLandscape(double width, double height) => width > height;
+
+    public static bool IsTabletPortrait(double width, double height) => height >= width && width >= TabletShortSide;
 
     public static DeviceSize SizeOf(double width, double height) =>
         Math.Min(width, height) < TabletShortSide ? DeviceSize.Phone : DeviceSize.Tablet;
@@ -70,9 +80,18 @@ public static class LandscapeLayout
             return new ShelfShape(true, Math.Max(0, height - ShelfHeaderAndTitles), 0);
         }
 
+        if (IsTabletPortrait(width, height))
+        {
+            return new ShelfShape(false, 0, TabletPortraitShelfColumns(width), true, TabletPortraitShelfSidePadding);
+        }
+
         int columns = (int)Math.Clamp(Math.Floor(Math.Max(0, width) / ShelfColumnWidth), MinShelfColumns, MaxShelfColumns);
         return new ShelfShape(false, 0, columns);
     }
+
+    /// <summary>Mock Batch 45 frame 133: columns = clamp(floor((width - 80) / 170), 3, 6), so an iPad Air (804) gets 4 and a small 600 dp tablet 3.</summary>
+    public static int TabletPortraitShelfColumns(double width) =>
+        (int)Math.Clamp(Math.Floor(Math.Max(0, width - 2 * TabletPortraitShelfSidePadding) / TabletPortraitShelfColumnWidth), MinTabletPortraitShelfColumns, MaxShelfColumns);
 
     /// <summary>The picture's pane: the picture fitted to the full height (width = height x its width-to-height ratio), never over 45% of the window. A ratio of 0 or less means unknown and uses 3:4.</summary>
     public static double PicturePaneWidth(double width, double height, double pictureAspect)

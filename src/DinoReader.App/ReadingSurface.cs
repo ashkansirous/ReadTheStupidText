@@ -58,6 +58,7 @@ public sealed class ReadingSurface : Border
 	private double _textTopInset;
 	private ControlsPlacement _controls = ControlsPlacement.Row;
 	private bool _sideways;
+	private bool _stacked;
 	private double _cardTop; // dp the text card is lowered under the tablet title (ReadingPage decides it, with the title's visibility)
 	private readonly Label _error = new()
 	{
@@ -117,15 +118,16 @@ public sealed class ReadingSurface : Border
 
 	/// <summary>Whether the window is held sideways and where ReadingPage puts the controls (both decided from the window size, Slice 232): the picture + text pages size their layout and type
 	/// from them, so type, layout and controls never disagree. Changing either lays the pages out again.</summary>
-	public void SetControls(bool sideways, ControlsPlacement controls)
+	public void SetControls(bool sideways, ControlsPlacement controls, bool stacked = false)
 	{
-		if (controls == _controls && sideways == _sideways)
+		if (controls == _controls && sideways == _sideways && stacked == _stacked)
 		{
 			return;
 		}
 
 		_controls = controls;
 		_sideways = sideways;
+		_stacked = stacked; // Slice 234: a tablet held upright draws the picture panel above the text card
 		_laidOutFor = default;
 		RestartResizeTimer();
 	}
@@ -397,7 +399,7 @@ public sealed class ReadingSurface : Border
 		if (content.Scans is { } book && PictureTextBook.IsPictureTextBook(book.Pages))
 		{
 			return new PictureTextPages(content.Text, book.Pages, content.Sentences, book.ResolveImage, content.Font, theme,
-				content.RightToLeft, sentence => SentenceTapped?.Invoke(this, sentence), e => OnSwiped(this, e), _mode == ReadingMode.PictureAndText, book.TextInPictures, _sideways, _controls, _cardTop);
+				content.RightToLeft, sentence => SentenceTapped?.Invoke(this, sentence), e => OnSwiped(this, e), _mode == ReadingMode.PictureAndText, book.TextInPictures, _sideways, _controls, _cardTop, _stacked);
 		}
 
 		return content.Scans is { } scans

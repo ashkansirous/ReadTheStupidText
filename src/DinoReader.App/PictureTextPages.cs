@@ -12,8 +12,12 @@ namespace DinoReader;
 /// </summary>
 public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> storyPages, IReadOnlyList<SentenceSpan> sentences,
 	Func<string?, string?> resolveImage, string font, ReadingTheme theme, bool rightToLeft, Action<int> onSentence,
-	Action<SwipedEventArgs> onSwipe, bool wordsOver, bool textInPictures, bool sideways, ControlsPlacement controls, double cardTop) : IPageRenderer
+	Action<SwipedEventArgs> onSwipe, bool wordsOver, bool textInPictures, bool sideways, ControlsPlacement controls, double cardTop, bool stacked = false) : IPageRenderer
 {
+	private const double StackedFontSize = ReadingLayoutRules.StackedTextSize; // Slice 234, mock Batch 45 frame 134
+	private const double StackedPanelCorner = 28;
+	private const double StackedCardCorner = 24;
+	private static readonly Thickness StackedCardPadding = new(32, 26);
 	private const float PanelAlpha = 0.92f;
 	private const double PanelFontSize = 21;
 	private const double SidewaysFontSize = 22; // Slice 232, mock Batch 44 frame 113
@@ -65,6 +69,9 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 
 	// Slice 232: sideways and the controls placement both come from the window (LandscapeLayout, decided by ReadingPage), never from this card's shape.
 	private bool Sideways => sideways;
+
+	// Slice 234: a tablet held upright (ReadingLayoutRules.For gives Stacked); never together with Sideways.
+	private bool Stacked => stacked && !sideways;
 
 	/// <summary>Pure layout (picture paths only), so it can run off the UI thread.</summary>
 	public void Compose(Size card)
@@ -127,7 +134,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		}
 
 		_pageText = text[_layout.PageStart(_slots[page].StoryPage).._layout.PageEnd(_slots[page].StoryPage)];
-		View content = Sideways ? SidewaysPage(_slots[page]) : UprightPage(_slots[page]);
+		View content = Stacked ? StackedPage(_slots[page]) : Sideways ? SidewaysPage(_slots[page]) : UprightPage(_slots[page]);
 		AbsoluteLayout.SetLayoutBounds(content, new Rect(0, 0, _card.Width, _card.Height));
 		layers.Boxes.Children.Add(content);
 		NameStoryText(_label);
@@ -357,6 +364,61 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 			: PictureTextBook.CardHeightFor(UprightLines, _lines, pitch, UprightPanelPadding.Top);
 	}
 
+	// Mock Batch 45 frames 134 and 150: the picture panel (48% of the height, art fitted whole and centred on a beige panel) above the white text card, which takes the rest and scrolls.
+	// Picture only: the art fitted whole in the full height. A page with no picture: the text card fills the page. The chip and the controls row are outside the surface.
+	private View StackedPage(Slot slot)
+	{
+		if (_card.Width <= 0 || _card.Height <= 0)
+		{
+			return new Grid(); // not measured yet: no panel sizes from a 0x0 card; the surface draws again with its real size
+		}
+
+		if (IsPictureOnly(slot))
+		{
+			return StackedPictureOnly(slot);
+		}
+
+		var grid = new Grid();
+		if (slot.Image is not null && HasText(slot))
+		{
+			grid.RowDefinitions = [new RowDefinition(new GridLength(ReadingLayoutRules.StackedPictureHeight(_card.Height))), new RowDefinition(GridLength.Star)];
+			grid.Add(StackedPicturePanel(slot.Image), 0, 0);
+			grid.Add(StackedTextCard(ReadingLayoutRules.StackedGap, StackedCardPadding), 0, 1);
+			return grid;
+		}
+
+		grid.Add(slot.Image is not null ? StackedPicturePanel(slot.Image) : StackedTextCard(0, new Thickness(StackedCardPadding.Left, ReadingLayoutRules.StackedTextOnlyTopInset, StackedCardPadding.Right, StackedCardPadding.Bottom)));
+		return grid;
+	}
+
+	private View StackedPictureOnly(Slot slot)
+	{
+		var grid = new Grid();
+		if (slot.Image is not null)
+		{
+			grid.Add(PictureCard(slot.Image, default));
+		}
+
+		return grid;
+	}
+
+	private Border StackedPicturePanel(string file) => new()
+	{
+		BackgroundColor = _theme.PicturePanel,
+		StrokeThickness = 0,
+		StrokeShape = new RoundRectangle { CornerRadius = StackedPanelCorner },
+		InputTransparent = true,
+		Content = new Image { Source = ImageSource.FromFile(file), Aspect = Aspect.AspectFit, InputTransparent = true },
+	};
+
+	private Border StackedTextCard(double top, Thickness padding)
+	{
+		Border card = TextPanel(StackedCardCorner, padding, 1f, fade: false);
+		card.Margin = new Thickness(0, top, 0, 0);
+		card.Shadow = new Shadow { Brush = new SolidColorBrush(Color.FromRgb(43, 37, 64)), Opacity = 0.08f, Radius = 7, Offset = new Point(0, 4) };
+		return card;
+	}
+
 	private View SidewaysPage(Slot slot)
 	{
 		if (_card.Width <= 0 || _card.Height <= 0)
@@ -448,7 +510,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		};
 	}
 
-	private double FontSize => !Sideways ? PanelFontSize : controls == ControlsPlacement.Row ? SidewaysTabletFontSize : SidewaysFontSize;
+	private double FontSize => Stacked ? StackedFontSize : !Sideways ? PanelFontSize : controls == ControlsPlacement.Row ? SidewaysTabletFontSize : SidewaysFontSize;
 
 	private string PitchKey => $"{font}:{FontSize}";
 

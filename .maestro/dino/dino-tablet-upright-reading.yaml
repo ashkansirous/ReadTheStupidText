@@ -1,0 +1,76 @@
+# Slice 234 part A (mock Batch 45 frames 134 and 150): on a tablet held upright (run on RTST_Tablet, 800 x 1280 dp) the reading screen is stacked: the picture panel on top, the text card below, the controls row under both.
+# The flow opens page 2 of the starter three-little-pigs (a picture + text book), swipes to page 3, rotates to landscape and back, and the page it was on is kept.
+# Tablet emulator only: a phone never logs layout=Stacked. Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback if a device ignores it.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK open-book opened page=2
+# The stacked layout is applied once the first portrait layout pass runs (the controls are a row, never a rail).
+# expect-log: [Landscape] reading controls=row layout=Stacked
+# Landscape on a tablet is Slice 232's picture + text shape.
+# expect-log: [Landscape] reading controls=row layout=PictureOverlay
+# expect-log: [Landscape] reading laid out landscape=True page=2 layout=PictureOverlay
+# page= is the surface's 0-based CurrentPage: open-book's page=2 is 1, the swipe makes it 2. Only the layout pass after the round trip can log page=2 with Stacked, so this proves the page was kept.
+# expect-log: [Landscape] reading laid out landscape=False page=2 layout=Stacked
+appId: uk.sirous.dinoreader.dbg
+name: Reading screen stacks on a tablet held upright and keeps its page through a rotation
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow opens a starter book and speaks nothing, so it needs no pack or own book.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "2"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- assertVisible:
+    id: ReadingTransport
+- assertVisible:
+    id: ReadingBack
+- assertVisible:
+    id: ReadingModes
+# Stacked: the book title is not drawn above the card (the tablet title belongs to the sideways shape).
+- assertNotVisible:
+    id: ReadingTabletTitle
+- waitForAnimationToEnd:
+    timeout: 5000
+- swipe:
+    direction: LEFT
+- waitForAnimationToEnd:
+    timeout: 5000
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible:
+      id: ReadingTabletTitle
+    timeout: 15000
+- assertVisible:
+    id: ReadingTransport
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: ReadingTransport
+    timeout: 15000
+- assertVisible:
+    id: ReadingSurface
+- assertVisible:
+    id: ReadingBack
+- assertNotVisible:
+    id: ReadingTabletTitle
+- tapOn:
+    id: ReadingBack
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryTitle
+    timeout: 15000
