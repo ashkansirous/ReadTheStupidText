@@ -23,7 +23,7 @@
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="18" />
                 </Border.StrokeShape>
-                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="{Binding Layout.ActionRowSpacing}">
                     <Border WidthRequest="{Binding Layout.CoverWidth}" HeightRequest="{Binding Layout.CoverHeight}" BackgroundColor="{StaticResource CoverPlaceholder}" StrokeThickness="0" VerticalOptions="Center">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="10" />
@@ -39,12 +39,13 @@
                     </Grid>
 
                     <!-- Get: the brand pill. -->
-                    <Border Grid.Column="2" IsVisible="{Binding IsGet}" HeightRequest="44" Padding="14,0" BackgroundColor="{StaticResource Brand}"
+                    <Border Grid.Row="{Binding Layout.ActionRow}" Grid.Column="{Binding Layout.ActionColumn}" Grid.ColumnSpan="{Binding Layout.ActionColumnSpan}"
+                            IsVisible="{Binding IsGet}" HeightRequest="{Binding Layout.ActionHeight}" Padding="14,0" BackgroundColor="{StaticResource Brand}"
                             StrokeThickness="0" VerticalOptions="Center" SemanticProperties.Description="{Binding GetHint}">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="22" />
                         </Border.StrokeShape>
-                        <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                        <HorizontalStackLayout Spacing="6" VerticalOptions="Center" HorizontalOptions="{Binding Layout.ActionContentAlign}">
                             <shapes:Path Data="{StaticResource DownloadGlyph}" Stroke="White" StrokeThickness="2.6" StrokeLineCap="Round"
                                          StrokeLineJoin="Round" Aspect="Uniform" WidthRequest="16" HeightRequest="16" VerticalOptions="Center" />
                             <Label Text="{Binding GetLabel}" FontSize="14" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
@@ -55,7 +56,8 @@
                     </Border>
 
                     <!-- Downloading: an 88 px pill whose fill grows left to right under the percentage. -->
-                    <Border Grid.Column="2" IsVisible="{Binding IsDownloading}" WidthRequest="88" HeightRequest="44" BackgroundColor="{StaticResource BrandTint}"
+                    <Border Grid.Row="{Binding Layout.ActionRow}" Grid.Column="{Binding Layout.ActionColumn}" Grid.ColumnSpan="{Binding Layout.ActionColumnSpan}"
+                            IsVisible="{Binding IsDownloading}" WidthRequest="88" HeightRequest="{Binding Layout.ActionHeight}" HorizontalOptions="{Binding Layout.DownloadingAlign}" BackgroundColor="{StaticResource BrandTint}"
                             StrokeThickness="0" VerticalOptions="Center" SemanticProperties.Description="{Binding ProgressHint}">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="22" />
@@ -68,7 +70,8 @@
                     </Border>
 
                     <!-- Downloaded: no fill, a green check. -->
-                    <HorizontalStackLayout Grid.Column="2" IsVisible="{Binding IsDownloaded}" Spacing="5" Padding="10,0" HeightRequest="44" VerticalOptions="Center">
+                    <HorizontalStackLayout Grid.Row="{Binding Layout.ActionRow}" Grid.Column="{Binding Layout.ActionColumn}" Grid.ColumnSpan="{Binding Layout.ActionColumnSpan}"
+                                           IsVisible="{Binding IsDownloaded}" Spacing="5" Padding="10,0" HeightRequest="{Binding Layout.ActionHeight}" VerticalOptions="Center" HorizontalOptions="{Binding Layout.ActionContentAlign}">
                         <local:IconView Kind="Check" Color="{StaticResource StoreGreen}" Size="16" StrokeWidth="3" VerticalOptions="Center" />
                         <Label Text="{x:Static res:AppResources.Store_Downloaded}" FontSize="13.5" FontAttributes="Bold" TextColor="{StaticResource StoreGreen}"
                                VerticalOptions="Center" />

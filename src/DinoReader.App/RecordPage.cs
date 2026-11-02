@@ -16,11 +16,14 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 	private static readonly TimeSpan ClockTick = TimeSpan.FromMilliseconds(250);
 	private const double RecordGap = RecordLayout.ColumnGap;
 	private const double TabletSideMargin = 40;
+	private const double PhoneSideMargin = 14;
 	private const double TabletVerticalMargin = 24;
 	private const double RailClockSize = 12;
 
 	private Size _windowSize;
 	private RecordShape _shown;
+	private bool _tabletShown; // the stacked layout is drawn for a tablet held upright (Slice 234 part C)
+	private double _tabletPicture; // the picture panel height drawn for it, from the window (TabletPageLayout.RecordPicture), never from the panel
 
 	private readonly IStoryLibrary _library;
 	private readonly IMicRecorder _recorder;
@@ -138,7 +141,8 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		}
 
 		RecordShape shape = ShapeFor(story);
-		if (shape == _shown)
+		bool tablet = TabletPageLayout.Applies(_windowSize.Width, _windowSize.Height);
+		if (shape == _shown && tablet == _tabletShown && (!tablet || TabletPageLayout.RecordPicture(_windowSize.Height) == _tabletPicture))
 		{
 			return;
 		}
@@ -213,6 +217,14 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 
 		_root.Children.Clear();
 		_shown = ShapeFor(story);
+		_tabletShown = TabletPageLayout.Applies(_windowSize.Width, _windowSize.Height);
+		_tabletPicture = TabletPageLayout.RecordPicture(_windowSize.Height);
+#if DEBUG
+		if (_tabletShown && _shown.Columns == RecordColumns.Stacked)
+		{
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[TabletUpright] record words={TabletPageLayout.RecordWordsSize} page={_page}");
+		}
+#endif
 		if (_shown.Columns == RecordColumns.Stacked)
 		{
 			RenderStacked(story);
@@ -334,8 +346,9 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 	{
 		StoryPage page = story.Pages[_page];
 		string? picture = page.ImageFile is null ? null : _library.TryResolveFile(story.Id, page.ImageFile);
-		var body = new Grid { Padding = new Thickness(14, 0), RowSpacing = 12, RowDefinitions = [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto)] };
-		body.Add(RecordViews.PageView(picture is not null && File.Exists(picture) ? picture : null, page, story.Language), 0, 0);
+		double side = _tabletShown ? TabletPageLayout.PageSideMargin : PhoneSideMargin;
+		var body = new Grid { Padding = new Thickness(side, 0), RowSpacing = 12, RowDefinitions = [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto)] };
+		body.Add(RecordViews.PageView(picture is not null && File.Exists(picture) ? picture : null, page, story.Language, _tabletShown ? _tabletPicture : null), 0, 0);
 		body.Add(RecordViews.StayNote(), 0, 1);
 		body.Add(StoryRecordings.Of(story, _page) is { } recording && !_recording
 			? RecordViews.RecordedCard(recording, _playing, TogglePlaybackAsync, RecordAgainAsync, DeleteAsync)
@@ -345,7 +358,8 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 
 	private VerticalStackLayout Footer(Story story, bool sideways = false)
 	{
-		var footer = new VerticalStackLayout { Spacing = 10, Padding = new Thickness(14, 12, 14, 22) };
+		double side = _tabletShown && !sideways ? TabletPageLayout.PageSideMargin : PhoneSideMargin;
+		var footer = new VerticalStackLayout { Spacing = 10, Padding = new Thickness(side, 12, side, 22) };
 		if (_recording)
 		{
 			_time = NewTimeLabel(sideways);

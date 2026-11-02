@@ -64,6 +64,13 @@ public sealed class RegionOverlay : ContentView
 		}
 	}
 
+	/// <summary>Fits the whole page picture into <paramref name="height"/> (centred, width = height x aspect), so every region is on screen; null goes back to the column's width.</summary>
+	public void FitTo(double? height)
+	{
+		WidthRequest = height is { } h ? h * _aspect : -1;
+		HorizontalOptions = height is null ? LayoutOptions.Fill : LayoutOptions.Center;
+	}
+
 	private void FitHeight()
 	{
 		if (Width > 0)

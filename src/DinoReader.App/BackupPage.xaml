@@ -21,7 +21,7 @@
 
         <!-- Screen 24. -->
         <ScrollView Grid.Row="1" x:Name="MainPanel">
-            <VerticalStackLayout Padding="14,0,14,20" Spacing="14">
+            <VerticalStackLayout x:Name="MainStack" Padding="14,0,14,20" Spacing="14">
               <!-- Slice 232 part D (mock frame 124): the two cards stack upright and sit side by side held sideways; the page only moves them in the grid, never rebuilds them. -->
               <Grid x:Name="CardsGrid" RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" RowSpacing="14" ColumnSpacing="14">
                 <Border x:Name="SaveCard" Grid.ColumnSpan="2" BackgroundColor="White" StrokeThickness="0" Padding="18">

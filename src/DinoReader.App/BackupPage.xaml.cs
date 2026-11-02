@@ -35,6 +35,8 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 	private readonly WaitController _wait;
 	private int _count;
 	private const double CardGap = 14;
+	private const double PhoneSideMargin = 14;
+	private const double StackBottomPadding = 20;
 	private Size _windowSize;
 	private bool _sideBySide;
 
@@ -67,12 +69,27 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		Header.Margin = new Thickness(inset, 0, 0, 0);
 		MainPanel.Margin = new Thickness(inset, 0, 0, 0);
 		ResultPanel.Margin = new Thickness(inset, 0, 0, 0);
-		bool sideBySide = SettingsLayout.BackupSideBySide(width, height);
+		ApplyTabletMargins(width, height);
+		bool sideBySide = TabletPageLayout.BackupSideBySide(width, height);
 		if (sideBySide != _sideBySide)
 		{
 			_sideBySide = sideBySide;
 			PlaceCards(sideBySide);
 		}
+	}
+
+	// Slice 234 part C (mock Batch 45 frame 146): a tablet held upright keeps 40 dp at the sides and the cards sit side by side at the top.
+	private void ApplyTabletMargins(double width, double height)
+	{
+		double side = TabletPageLayout.Applies(width, height) ? TabletPageLayout.PageSideMargin : PhoneSideMargin;
+		MainStack.Padding = new Thickness(side, 0, side, StackBottomPadding);
+		ResultPanel.Padding = new Thickness(side, 0);
+#if DEBUG
+		if (TabletPageLayout.Applies(width, height))
+		{
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[TabletUpright] backup sideBySide={TabletPageLayout.BackupSideBySide(width, height)}");
+		}
+#endif
 	}
 
 	private void PlaceCards(bool sideBySide)

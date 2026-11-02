@@ -1,5 +1,6 @@
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
+using Microsoft.Maui.Controls.Shapes;
 
 namespace DinoReader;
 
@@ -30,7 +31,7 @@ public sealed class PageTextPage : ContentPage, IGrownUpPage
 		{
 			Text = index == NewPage ? string.Empty : draft.PageDrafts[index].Text,
 			FontFamily = DinoFonts.Reading,
-			FontSize = 18,
+			FontSize = PhoneEditorFontSize,
 			AutoSize = EditorAutoSizeOption.Disabled,
 			BackgroundColor = Colors.White,
 		};
@@ -101,6 +102,72 @@ public sealed class PageTextPage : ContentPage, IGrownUpPage
 			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] editor picture={shape.Picture} chars={_editor.Text?.Length ?? 0}");
 #endif
 		}
+
+		ApplyTabletPictureBand(width, height);
+	}
+
+	// Slice 234 part C (mock Batch 45 frame 145): a tablet held upright gives the picture a 440 dp band, a 120 dp strip while the field has focus (keyboard up), and the field 26 sp.
+	// Only sizes change, so the editor, its text and the region choices are untouched; every other window keeps the phone's sizes.
+	private void ApplyTabletPictureBand(double width, double height)
+	{
+		bool tablet = TabletPageLayout.Applies(width, height);
+		if (!tablet && !_tabletStyled)
+		{
+			return; // a phone or sideways window: nothing here is ever written, so the tree and its sizes stay origin/main's
+		}
+
+		// The picture height is set only here, from the window (the page, never the panel's own SizeChanged).
+		EditorPictureBand? band = TabletPageLayout.EditorPicture(width, height, _overlay is not null, _editorFocused);
+		if (_overlay is not null)
+		{
+			_picture.HeightRequest = band?.Height ?? -1; // a page without a picture keeps its 0-high placeholder
+			StylePanel(tablet);
+			_overlay.FitTo(band is { } b ? TabletPageLayout.EditorArtHeight(b) : null);
+		}
+
+		_helper?.SetValue(IsVisibleProperty, _shape.Picture != EditorPicture.Thumbnail && band?.Strip != true);
+		_editor.FontSize = tablet ? TabletEditorFontSize : PhoneEditorFontSize;
+		ApplySideMargins(tablet ? TabletPageLayout.PageSideMargin : PhoneSideMargin);
+		_tabletStyled = tablet;
+#if DEBUG
+		if (tablet)
+		{
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[TabletUpright] editor picture={band?.Height ?? 0} strip={band?.Strip == true}");
+		}
+#endif
+	}
+
+	// Frame 145: the picture sits whole in a cream rounded panel on a tablet held upright; elsewhere the panel is invisible (no fill, square, no padding).
+	private void StylePanel(bool tablet)
+	{
+		if (_picture is not ScrollView panel)
+		{
+			return;
+		}
+
+		panel.BackgroundColor = tablet ? ReadingTheme.For(false).PicturePanel : null;
+		panel.Padding = tablet ? new Thickness(TabletPageLayout.EditorPanelPadding) : new Thickness(0);
+		_tabletStyled = tablet;
+		if (tablet)
+		{
+			HookPanel(panel);
+			ClipPanel();
+		}
+		else
+		{
+			panel.Clip = null;
+		}
+	}
+
+	// The field and (stacked) the picture sit this far from the window's sides: 14 on a phone, 40 on a tablet held upright like the other grown-ups' pages.
+	private void ApplySideMargins(double side)
+	{
+		_body.Margin = new Thickness(side, 0, side, BodyBottomMargin);
+		_pictureMargin = new Thickness(side, 0, side, PictureBottomMargin);
+		if (_shape.Picture is EditorPicture.Above)
+		{
+			_picture.Margin = _pictureMargin;
+		}
 	}
 
 	private void ApplyShape(EditorShape shape)
@@ -148,8 +215,14 @@ public sealed class PageTextPage : ContentPage, IGrownUpPage
 		Grid.SetRowSpan(view, rowSpan);
 	}
 
+	private const double PhoneEditorFontSize = 18;
+	private const double TabletEditorFontSize = 26;
 	private const double SideInset = LandscapeLayout.SidewaysInset;
 	private const double PictureBottomMargin = 10;
+	private const double PhoneSideMargin = 14;
+	private const double BodyBottomMargin = 14;
+	private bool _panelHooked;
+	private bool _tabletStyled; // the tablet panel / sizes were written, so leaving the tablet shape must write the phone's back
 	private Thickness _pictureMargin;
 
 	// The page picture with its regions outlined (Slice 79), for a scanned page with regions worth choosing between.
@@ -171,9 +244,42 @@ public sealed class PageTextPage : ContentPage, IGrownUpPage
 		}
 
 		_helper = RegionPicker.Helper();
-		_pictureMargin = new Thickness(14, 0, 14, PictureBottomMargin);
-		// The one picture view, created once: it scrolls when the picture and helper are taller than the column.
-		return new ScrollView { VerticalOptions = LayoutOptions.Start, Content = new VerticalStackLayout { Spacing = 6, Children = { _overlay, _helper } } };
+		_pictureMargin = new Thickness(PhoneSideMargin, 0, PhoneSideMargin, PictureBottomMargin);
+		// The one picture view, created once: it scrolls when the picture and helper are taller than the column. Exactly the view origin/main builds: no wrapper, so a phone's or a sideways
+		// window's tree is unchanged; the tablet panel is this view's own background, padding and clip (StylePanel), written only on a tablet held upright.
+		var scroll = new ScrollView { VerticalOptions = LayoutOptions.Start, Content = new VerticalStackLayout { Spacing = 6, Children = { _overlay, _helper } } };
+		return scroll;
+	}
+
+	// Tapping the 120 dp strip while the field has focus puts the keyboard away and brings the full picture back, so regions can be picked (the tap on a region itself is the overlay's own).
+	private void ReleaseFocusFromStrip()
+	{
+		if (_editorFocused && _tabletStyled)
+		{
+			_editor.Unfocus();
+			SetEditorFocused(false);
+		}
+	}
+
+	// Added once, the first time a tablet held upright styles the panel; a phone's view never gets them.
+	private void HookPanel(ScrollView panel)
+	{
+		if (_panelHooked)
+		{
+			return;
+		}
+
+		_panelHooked = true;
+		panel.SizeChanged += (_, _) => ClipPanel();
+		panel.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(ReleaseFocusFromStrip) });
+	}
+
+	private void ClipPanel()
+	{
+		if (_picture is VisualElement panel && _tabletStyled && panel.Width > 0 && panel.Height > 0)
+		{
+			panel.Clip = new RoundRectangleGeometry(new CornerRadius(TabletPageLayout.PanelRadius), new Rect(0, 0, panel.Width, panel.Height));
+		}
 	}
 
 	// The text is composed from the regions again, so what is typed in the editor is asked about first (Keep changes nothing).

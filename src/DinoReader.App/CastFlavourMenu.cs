@@ -12,6 +12,7 @@ namespace DinoReader;
 internal sealed class CastCharacterPicker : Grid
 {
 	private const double SheetMaxHeight = 640;
+	private const double CardVerticalMargin = 80;
 	private const double SheetRadius = 28;
 	private const double FilterHeight = 38;
 	private const double RowHeight = 60;
@@ -24,6 +25,8 @@ internal sealed class CastCharacterPicker : Grid
 	private readonly Label _title = new() { FontSize = 20, FontAttributes = FontAttributes.Bold };
 	private readonly Label _subtitle = new() { FontSize = 13, TextColor = DinoTokens.Get(DinoTokens.Muted) };
 	private readonly Grid _filter = new() { ColumnSpacing = 0 };
+	private readonly Border _sheet;
+	private bool _card;
 	private TaskCompletionSource<StorytellerCharacter?>? _pending;
 	private IReadOnlyList<StorytellerCharacter> _choices = [];
 	private StorytellerCharacter? _current;
@@ -36,7 +39,28 @@ internal sealed class CastCharacterPicker : Grid
 		IsVisible = false;
 		BackgroundColor = DinoTokens.Get(DinoTokens.SheetScrim);
 		CastViews.AddTap(this, () => { Close(null); return Task.CompletedTask; });
-		Children.Add(BuildSheet());
+		_sheet = BuildSheet();
+		Children.Add(_sheet);
+	}
+
+	/// <summary>Slice 234 part C (frame 144): a positive width turns the bottom sheet into a centred card that wide (all four corners rounded); 0 or less is the phone's bottom sheet.</summary>
+	public void SetCardWidth(double width, double windowHeight)
+	{
+		bool card = width > 0;
+		double height = card ? Math.Min(SheetMaxHeight, Math.Max(0, windowHeight - CardVerticalMargin)) : -1;
+		if (card == _card && (!card || (_sheet.WidthRequest == width && _sheet.HeightRequest == height)))
+		{
+			return;
+		}
+
+		// Re-fitted on every size change, rotation included: the card's width and a fixed height that fits the window, so its height never depends on how its list happens to measure.
+		_card = card;
+		_sheet.WidthRequest = card ? width : -1;
+		_sheet.HeightRequest = height;
+		_sheet.MaximumHeightRequest = card ? height : SheetMaxHeight;
+		_sheet.HorizontalOptions = card ? LayoutOptions.Center : LayoutOptions.Fill;
+		_sheet.VerticalOptions = card ? LayoutOptions.Center : LayoutOptions.End;
+		_sheet.StrokeShape = new RoundRectangle { CornerRadius = card ? new CornerRadius(SheetRadius) : new CornerRadius(SheetRadius, SheetRadius, 0, 0) };
 	}
 
 	/// <summary>Shows the sheet and returns the character picked, or null when it was dismissed. <paramref name="start"/> is the story character's gender
