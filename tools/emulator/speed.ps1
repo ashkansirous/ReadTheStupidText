@@ -103,11 +103,158 @@ function Find-AppCrashLines([string]$CrashLog, [string]$AnrLog, [string]$Package
     return @($lines | Where-Object { $_ -and $_.Trim() } | Select-Object -First 8)
 }
 
+# Slice 247: the raw crash-buffer and ANR text of the flow (logcat is cleared at the flow's start), for the watch, the retry decision and the report.
+function Get-FlowCrashLogs {
+    $ErrorActionPreference = 'Continue'
+    $crash = Invoke-AdbBounded @('-s', $script:Serial, 'logcat', '-b', 'crash', '-d')
+    $anr = Invoke-AdbBounded @('-s', $script:Serial, 'logcat', '-b', 'system,events', '-d', '-s', 'ActivityManager:E', 'am_anr:I')
+    return [pscustomobject]@{ Crash = "$crash"; Anr = "$anr" }
+}
+
 function Get-FlowCrashLines([string]$Package) {
     $ErrorActionPreference = 'Continue'
     $crash = Invoke-AdbBounded @('-s', $script:Serial, 'logcat', '-b', 'crash', '-d')
     $anr = Invoke-AdbBounded @('-s', $script:Serial, 'logcat', '-b', 'system,events', '-d', '-s', 'ActivityManager:E', 'am_anr:I')
     return @(Find-AppCrashLines "$crash" "$anr" $Package)
+}
+
+# ---- Slice 247 items e + c: the in-run crash watch and the one retry of a Mono SIGSEGV at launch
+$script:CrashWatchPollSeconds = 2      # the watch looks at the crash buffer this often, so the Maestro tree is killed well inside 10 s of the crash
+$script:MonoRetryMaxUptimeSeconds = 20 # a Mono SIGSEGV this soon after the process started is a bad cold start, retried once
+
+# Pure: the raw crash-buffer and ANR text of a flow, as the watch and the failure report read them.
+function Test-AppCrashed([string]$CrashLog, [string]$AnrLog, [string]$Package) {
+    return (@(Find-AppCrashLines $CrashLog $AnrLog $Package).Count -gt 0)
+}
+
+# Pure: "Process uptime: 6s" of the tombstone header after the app's Fatal signal line, or $null when the log has none.
+function Get-CrashProcessUptime([string]$CrashLog, [string]$Package) {
+    $block = Get-PackageSigsegvBlock $CrashLog $Package
+    if (-not $block) { return $null }
+    $m = [regex]::Match($block, 'Process uptime:\s*(\d+)s')
+    if (-not $m.Success) { return $null }
+    return [int]$m.Groups[1].Value
+}
+
+# Pure: the text of the first native SIGSEGV block (from its "Fatal signal 11 (SIGSEGV)" line to the next such line) that names this package. The signal line shows a truncated
+# process name (".dinoreader.dbg"), so the package is read from the ">>> <package> <<<" or "Cmdline: <package>" line of the block. $null when there is none.
+function Get-PackageSigsegvBlock([string]$CrashLog, [string]$Package) {
+    $pkg = [regex]::Escape($Package)
+    $found = $null
+    foreach ($block in @("$CrashLog" -split '(?=Fatal signal 11 \(SIGSEGV\))' | Where-Object { $_ -match '^Fatal signal 11 \(SIGSEGV\)' })) {
+        if ($block -match ">>> $pkg <<<" -or $block -match "Cmdline:\s*$pkg\b" -or $block -match "pid \d+ \($pkg\)") { $found = $block }   # the last one: the crash that ended the flow, not an earlier one of a relaunch
+    }
+    return $found
+}
+
+# The crash probe of the watch: a closure over its own locals ($script: is empty inside a closure), reading the crash buffer of one device. $Seen.CrashLog keeps the text that showed
+# the crash, so the flow's verdict and the retry rule use what the watch saw even when a later adb read fails. $Reader takes the serial and returns the buffer text (a test passes its own).
+function New-AppCrashProbe([string]$Serial, [string]$Package, [hashtable]$Seen, [scriptblock]$Reader = { param($s) Invoke-AdbBounded @('-s', $s, 'logcat', '-b', 'crash', '-d') }) {
+    $isCrashed = ${function:Test-AppCrashed}   # a closure cannot see script-scope functions, so the function itself is captured
+    return {
+        $text = "$(& $Reader $Serial)"
+        $crashed = & $isCrashed $text '' $Package
+        if ($crashed) { $Seen.CrashLog = $text }
+        return $crashed
+    }.GetNewClosure()
+}
+
+# Pure: true for a Mono native SIGSEGV (libmonosgen in the backtrace or the .NET thread-pool thread) of this package within MaxUptime seconds of the process start. Any other crash is not retried.
+function Test-RetryableMonoCrash([string]$CrashLog, [string]$Package, [int]$MaxUptime = 20) {
+    $block = Get-PackageSigsegvBlock $CrashLog $Package
+    if (-not $block) { return $false }
+    if ($block -notmatch 'libmonosgen|\.NET TP Worker') { return $false }
+    $uptime = Get-CrashProcessUptime $CrashLog $Package
+    return ($null -ne $uptime -and $uptime -le $MaxUptime)
+}
+
+# Pure: one summary line per flow that was crash-retried (even when the second run passed), with the first run's time, so the retry stays visible at the end of the run.
+function Format-RetrySummary([object[]]$Results) {
+    return @(@($Results) | Where-Object { $_.PSObject.Properties['Retried'] -and $_.Retried } | ForEach-Object { 'crash-retried {0} (first run {1:n1} s, counted in the row): {2}' -f $_.Name, $_.FirstRunSeconds, $_.Retried })
+}
+
+# Pure: the line printed when a flow's first run crashed at launch and was run again.
+function Format-CrashRetryLine([string]$FlowName, [string]$CrashLine) {
+    return ('CRASH-RETRIED {0}: the app died with a Mono SIGSEGV within {1} s of its start; the flow ran once more. First run: {2}' -f $FlowName, $script:MonoRetryMaxUptimeSeconds, $CrashLine)
+}
+
+# Kills a process and every child (Maestro is maestro.bat -> cmd -> java), then reports whether it is gone.
+function Stop-ProcessTree([int]$ProcessId) {
+    & taskkill.exe /T /F /PID $ProcessId 2>&1 | Out-Null
+}
+
+# Pure: the "Maestro failed:" text, the last 5 lines of stderr and of stdout, each labelled (box-drawing progress lines left out), so neither stream's failure line is lost.
+function Format-MaestroFailure([string]$Stderr, [string]$Stdout) {
+    # Box-drawing characters built from code points so this file stays pure ASCII (Windows PowerShell 5.1 reads a BOM-less file as ANSI).
+    $boxChars = '[' + [char]0x2502 + [char]0x256D + [char]0x2570 + ']'
+    $parts = foreach ($stream in @(@('stderr', $Stderr), @('stdout', $Stdout))) {
+        $lines = "$($stream[1])" -split "`r?`n" | Where-Object { $_.Trim() -and $_ -notmatch $boxChars }
+        "--- $($stream[0]) (last lines) ---`n" + ((@($lines) | Select-Object -Last 5) -join "`n")
+    }
+    return "Maestro failed:`n" + ($parts -join "`n")
+}
+
+# A probe that throws (adb failed) counts as "no crash this poll": the watch goes on and the Maestro tree is still waited for and killed at the end, never left running.
+function Invoke-CrashProbeSafely([scriptblock]$CrashProbe) {
+    try { return [bool](& $CrashProbe) }
+    catch { Write-Host "WATCH probe error ignored: $($_.Exception.Message)"; return $false }
+}
+
+# Waits for a started process; every poll interval it asks $CrashProbe (returns $true once the app crashed). On a crash the tree is killed and $true returned.
+# Debug line per branch: WATCH crash / WATCH done, so a device run can tell a killed Maestro from one that ended by itself.
+function Wait-ProcessWithCrashWatch($Process, [scriptblock]$CrashProbe, [int]$PollSeconds = 2) {
+    while (-not $Process.WaitForExit($PollSeconds * 1000)) {
+        if (Invoke-CrashProbeSafely $CrashProbe) {
+            Write-Host "WATCH crash: the app crashed while Maestro ran; killing the Maestro process tree (pid $($Process.Id))."
+            Stop-ProcessTree $Process.Id
+            $null = $Process.WaitForExit(5000)
+            return $true
+        }
+    }
+    return $false
+}
+
+# ---- Slice 247 item a: per-phase times of one flow from Maestro's commands.json
+$script:LaunchCommands = @('launchAppCommand', 'clearStateCommand', 'stopAppCommand', 'killAppCommand', 'clearKeychainCommand')
+$script:WaitCommands = @('assertConditionCommand', 'assertTrueCommand', 'waitForAnimationToEndCommand', 'assertNoDefectsWithAiCommand')
+
+# Pure: depth-0 commands of commands.json classified as launch (launchApp/clearState/stopApp), wait (assertCondition = extendedWaitUntil, assertVisible) or action (everything else:
+# taps, input, swipes, runFlow). Maestro cannot tell a first-run wizard from the body, so the wizard shows as the slowest wait/action. Returns Launch/Wait/Action seconds,
+# Largest (the biggest phase name) and Slowest (the one command that took longest: "<command> <seconds> s <status>").
+function Get-FlowPhaseTimes([string]$CommandsJson) {
+    $phases = [ordered]@{ Launch = 0.0; Wait = 0.0; Action = 0.0 }
+    $slowest = $null
+    try { $parsed = ConvertFrom-Json "$CommandsJson" -ErrorAction Stop } catch { $parsed = $null }   # a file cut short by the crash watch's kill: a diagnostic line never breaks the report
+    $commands = @($parsed | ForEach-Object { $_ })   # Windows PowerShell 5.1 returns a JSON array as one object; the pipe unrolls it
+    foreach ($c in $commands) {
+        if (-not $c.command -or -not $c.metadata) { continue }
+        $name = @($c.command.PSObject.Properties.Name)[0]
+        if ($name -eq 'defineVariablesCommand' -or $name -eq 'applyConfigurationCommand') { continue }
+        if ([int]$c.metadata.depth -ne 0) { continue }
+        $seconds = [double]$c.metadata.duration / 1000.0
+        $phase = if ($script:LaunchCommands -contains $name) { 'Launch' } elseif ($script:WaitCommands -contains $name) { 'Wait' } else { 'Action' }
+        $phases[$phase] += $seconds
+        if (-not $slowest -or $seconds -gt $slowest.Seconds) { $slowest = [pscustomobject]@{ Name = ($name -replace 'Command$', ''); Seconds = $seconds; Status = "$($c.metadata.status)" } }
+    }
+    $largest = ($phases.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1)
+    return [pscustomobject]@{
+        Launch = $phases['Launch']; Wait = $phases['Wait']; Action = $phases['Action']
+        Largest = if ($largest -and $largest.Value -gt 0) { $largest.Key } else { 'none' }
+        Slowest = if ($slowest) { ('{0} {1:n1} s {2}' -f $slowest.Name, $slowest.Seconds, $slowest.Status) } else { 'none' }
+    }
+}
+
+# Pure: `PHASES <flow>: launch 4.8 s, wait 30.4 s, action 0.0 s, other 3.1 s (Maestro start-up, log waits); largest: wait; slowest: assertCondition 25.2 s FAILED`.
+function Format-FlowPhases([string]$FlowName, $Phases, [double]$TotalSeconds) {
+    $other = [Math]::Max(0.0, $TotalSeconds - $Phases.Launch - $Phases.Wait - $Phases.Action)
+    return ('PHASES {0}: launch {1:n1} s, wait {2:n1} s, action {3:n1} s, other {4:n1} s (Maestro start-up, driver, log markers); largest: {5}; slowest: {6}' -f $FlowName, $Phases.Launch, $Phases.Wait, $Phases.Action, $other, $Phases.Largest, $Phases.Slowest)
+}
+
+# The newest commands*.json Maestro wrote under the debug-output folder since $Since, or $null.
+function Find-FlowCommandsFile([string]$MaestroOut, [datetime]$Since) {
+    $hit = Get-ChildItem $MaestroOut -Recurse -Filter 'commands*.json' -File -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -ge $Since } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if ($hit) { return $hit.FullName }
+    return $null
 }
 
 # ---- item 4: which flows go to the second emulator

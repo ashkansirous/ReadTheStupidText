@@ -90,5 +90,68 @@ Assert-Equal 'flow list: empty' 0 @(Split-FlowList '').Count
 # item 5 helper: the cmd line keeps inner quotes
 Assert-Equal 'cmd line' '/d /s /c ""C:\a b\pwsh.exe" -File "x y.ps1" >"o.log" 2>"e.log""' (ConvertTo-CmdLine 'C:\a b\pwsh.exe' '-File "x y.ps1"' 'o.log' 'e.log')
 
+# Slice 247 items e + c: the crash watch decision and the Mono SIGSEGV retry rule (fixture: the 2026-11-01 crash, docs/plan/notes/2026-11-01-emulator-mono-sigsegv.md)
+$dinoPkg = 'uk.sirous.dinoreader.dbg'
+$mono = Get-Content (Join-Path $PSScriptRoot 'fixtures\mono-sigsegv-crash.txt') -Raw
+Assert-Equal 'watch: the fixture is a crash of the Dino app' $true (Test-AppCrashed $mono '' $dinoPkg)
+Assert-Equal 'watch: another package is not a crash' $false (Test-AppCrashed $mono '' $pkg)
+Assert-Equal 'watch: empty buffer is not a crash' $false (Test-AppCrashed '' '' $dinoPkg)
+Assert-Equal 'watch: a Java crash counts' $true (Test-AppCrashed $crashLog '' $pkg)
+Assert-Equal 'retry: uptime read from the fixture' 6 (Get-CrashProcessUptime $mono $dinoPkg)
+Assert-Equal 'retry: Mono SIGSEGV at 6 s is retryable' $true (Test-RetryableMonoCrash $mono $dinoPkg 20)
+Assert-Equal 'retry: same crash at 6 s with a 5 s limit is not' $false (Test-RetryableMonoCrash $mono $dinoPkg 5)
+Assert-Equal 'retry: late Mono SIGSEGV (uptime 45 s) is not' $false (Test-RetryableMonoCrash ($mono -replace 'Process uptime: 6s', 'Process uptime: 45s') $dinoPkg 20)
+Assert-Equal 'retry: no uptime line is not' $false (Test-RetryableMonoCrash ($mono -replace 'Process uptime: 6s', '') $dinoPkg 20)
+Assert-Equal 'retry: a Java crash is not' $false (Test-RetryableMonoCrash $crashLog $pkg 20)
+Assert-Equal 'retry: a native crash with no Mono frame is not' $false (Test-RetryableMonoCrash ($mono -replace 'libmonosgen|\.NET TP Worker', 'libother') $dinoPkg 20)
+Assert-Equal 'retry: another package is not' $false (Test-RetryableMonoCrash $mono $pkg 20)
+$lateThenEarly = ($mono -replace 'Process uptime: 6s', 'Process uptime: 45s') + "`n" + $mono
+Assert-Equal 'retry: two blocks, the last (6 s) decides' $true (Test-RetryableMonoCrash $lateThenEarly $dinoPkg 20)
+Assert-Equal 'retry: two blocks, the last one late is not retryable' $false (Test-RetryableMonoCrash ($mono + "`n" + ($mono -replace 'Process uptime: 6s', 'Process uptime: 45s')) $dinoPkg 20)
+# the real probe wiring (a closure): the serial reaches the reader, and the crash text is kept for the verdict
+$seenProbe = @{ CrashLog = '' }
+$serialsRead = New-Object System.Collections.ArrayList
+$probe = New-AppCrashProbe 'emulator-5554' $dinoPkg $seenProbe ({ param($s) [void]$serialsRead.Add($s); $mono }.GetNewClosure())
+Assert-Equal 'probe: sees the crash of the fixture' $true ([bool](& $probe))
+Assert-Equal 'probe: reads the device it was given' 'emulator-5554' $serialsRead[0]
+Assert-Equal 'probe: keeps the crash text' $true ($seenProbe.CrashLog -like '*libmonosgen*')
+$quietProbe = New-AppCrashProbe 'emulator-5554' $dinoPkg @{ CrashLog = '' } ({ param($s) '' })
+Assert-Equal 'probe: an empty buffer is no crash' $false ([bool](& $quietProbe))
+Assert-Equal 'phases: a truncated commands.json gives empty phases, no error' 'none' (Get-FlowPhaseTimes '[ {"command":{"launchAppC').Largest
+$failureText = Format-MaestroFailure "Exception: device offline`nat java.base" "step 1`nstep 2 FAILED"
+Assert-Equal 'failure: quotes stderr, labelled' $true ($failureText -like '*--- stderr*Exception: device offline*')
+Assert-Equal 'failure: quotes stdout after it, labelled' $true ($failureText -like '*--- stdout*step 2 FAILED')
+Assert-Equal 'probe: an error counts as no crash' $false (Invoke-CrashProbeSafely { throw 'adb failed' })
+Assert-Equal 'retry summary: names the retried flow' 1 @(Format-RetrySummary @([pscustomobject]@{ Name = 'a'; Retried = 'CRASH-RETRIED a: x'; FirstRunSeconds = 4.0 }, [pscustomobject]@{ Name = 'b'; Retried = $null; FirstRunSeconds = 0.0 })).Count
+Assert-Equal 'retry: line names the flow' $true ((Format-CrashRetryLine 'my-flow' 'Fatal signal 11') -like 'CRASH-RETRIED my-flow:*')
+
+# the watch kills a process that outlives a crash within the poll time (a real child process: a 30 s sleep is killed after about 2 s)
+$sleeper = Start-Process -FilePath ((Get-Process -Id $PID).Path) -ArgumentList '-NoProfile -Command Start-Sleep -Seconds 30' -PassThru -WindowStyle Hidden
+$watchTimer = [Diagnostics.Stopwatch]::StartNew()
+$killedByWatch = Wait-ProcessWithCrashWatch $sleeper { $true } 1
+Assert-Equal 'watch: a crash kills the process' $true $killedByWatch
+Assert-Equal 'watch: the kill is quick (under 10 s)' $true ($watchTimer.Elapsed.TotalSeconds -lt 10)
+Assert-Equal 'watch: the process is gone' $true ($sleeper.HasExited)
+$quick = Start-Process -FilePath ((Get-Process -Id $PID).Path) -ArgumentList '-NoProfile -Command exit 0' -PassThru -WindowStyle Hidden
+Assert-Equal 'watch: a process that ends by itself is not reported as killed' $false (Wait-ProcessWithCrashWatch $quick { $false } 1)
+
+# item a: phases from a Maestro commands.json (shape read from a real run: command/metadata with duration in ms and depth)
+$commandsJson = @'
+[ {"command":{"defineVariablesCommand":{"env":{}}},"metadata":{"status":"COMPLETED","timestamp":1,"duration":8,"depth":0}},
+  {"command":{"launchAppCommand":{"appId":"x","clearState":true}},"metadata":{"status":"COMPLETED","timestamp":2,"duration":2611,"depth":0}},
+  {"command":{"assertConditionCommand":{}},"metadata":{"status":"COMPLETED","timestamp":3,"duration":5218,"depth":0}},
+  {"command":{"tapOnElementCommand":{}},"metadata":{"status":"COMPLETED","timestamp":4,"duration":400,"depth":0}},
+  {"command":{"tapOnElementCommand":{}},"metadata":{"status":"COMPLETED","timestamp":5,"duration":9000,"depth":1}},
+  {"command":{"assertConditionCommand":{}},"metadata":{"status":"FAILED","timestamp":6,"duration":25182,"depth":0}} ]
+'@
+$ph = Get-FlowPhaseTimes $commandsJson
+Assert-Equal 'phases: launch' '2.611' ([string]$ph.Launch)
+Assert-Equal 'phases: wait' '30.4' ([string]$ph.Wait)
+Assert-Equal 'phases: action (depth 1 ignored)' '0.4' ([string]$ph.Action)
+Assert-Equal 'phases: largest' 'Wait' $ph.Largest
+Assert-Equal 'phases: slowest' 'assertCondition 25.2 s FAILED' $ph.Slowest
+Assert-Equal 'phases: empty json' 'none' (Get-FlowPhaseTimes '').Largest
+Assert-Equal 'phases: line' $true ((Format-FlowPhases 'f' $ph 40.0) -like 'PHASES f: launch 2.6 s, wait 30.4 s, action 0.4 s, other 6.6 s*largest: Wait*')
+
 if ($script:failed -gt 0) { Write-Host "$($script:failed) check(s) failed."; exit 1 }
 Write-Host 'test-speed: all passed.'

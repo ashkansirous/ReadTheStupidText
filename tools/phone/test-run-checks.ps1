@@ -393,6 +393,8 @@ Assert-Equal 'an invisible package fails' $true ((Resolve-InstallProof 0 'Succes
 $packIds = @('supertonic-3')
 Assert-Equal 'a done line for the pack' 'Done' (Resolve-PackDownloadLog @('1.0 1 1 I RTST-TEST: PACKDL done pack=supertonic-3 bytes=5 seconds=9') $packIds).State
 Assert-Equal 'a failed line for the pack' 'Failed' (Resolve-PackDownloadLog @('1.0 1 1 I RTST-TEST: PACKDL failed pack=supertonic-3 attempts=3 result=Offline') $packIds).State
+Assert-Equal 'packdl tail: none' 'no PACKDL progress/stall/retry/failed line' (Get-PackdlTail @('PACKDL start pack=a offset=0', 'other'))
+Assert-Equal 'packdl tail: last two kept, start ignored' 'PACKDL stall pack=a phase=body bytes=9 | PACKDL retry pack=a attempt=2' (Get-PackdlTail @('PACKDL start pack=a', 'PACKDL progress pack=a bytes=5', 'PACKDL stall pack=a phase=body bytes=9', 'PACKDL retry pack=a attempt=2') 2)
 Assert-Equal 'another pack is ignored' 'Idle' (Resolve-PackDownloadLog @('PACKDL failed pack=piper-fa attempts=3 result=Offline') $packIds).State
 Assert-Equal 'a start line is Started' 'Started' (Resolve-PackDownloadLog @('PACKDL start pack=supertonic-3 offset=0') $packIds).State
 Assert-Equal 'failed outranks started' 'Failed' (Resolve-PackDownloadLog @('PACKDL start pack=supertonic-3 offset=0', 'PACKDL failed pack=supertonic-3 attempts=3 result=Offline') $packIds).State

@@ -281,6 +281,7 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 242 | Leftovers from night 2026-11-01-0859 round 4 (run-marker collision, emulator no-build, a raw separator byte, a tablet AVD, 232's mock deviations, a workflow permission check) | built | #727, #731 | | [242-round-4-leftovers-night-2026-11-01-0859.md](../slices/242-round-4-leftovers-night-2026-11-01-0859.md) |
 | 232 | Dino user test: proper landscape design for every screen, phone and tablet (after 228 and 229) | built | #695, #724, #728, #732, #734 | | [232-dino-landscape-every-screen.md](../slices/232-dino-landscape-every-screen.md) |
 | 234 | Dino: proper design for tablets held upright (shelf 3-4 columns, picture-above-text reading, tablet-sized cards; after 232) | built | #736, #739, #738 | | [234-dino-tablet-portrait.md](../slices/234-dino-tablet-portrait.md) |
+| 248 | Dino iOS: leaving a book stops its read, and a new book never drives the old one's voice | built | #746 | | [248-dino-stop-read-on-leave-ios.md](../slices/248-dino-stop-read-on-leave-ios.md) |
 
 
 ## Batch lane-order paragraphs moved from plan.md (2026-10-30)

@@ -1,0 +1,62 @@
+# Slice 248: leaving a book with the Back chip stops its read, and the next book opens idle (Play, not Pause) and reads its own text.
+# Needs the installed voice pack on the device (the device stage installs it first); the flow waits for the Pause control, i.e. for the read to be Playing, before it leaves.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK open-book opened page=1
+# expect-log: [Reading] left the page, read stopped
+# expect-log: [Reading] read starts story=good-enough
+appId: uk.sirous.dinoreader.dbg
+name: Leaving a book stops the read, the next book starts idle
+---
+- launchApp:
+    # No clearState (as in the Slice 244 flow): clearing the app's data would remove the neural voice pack, and skip-first-run skips the page that installs it. The device stage installs the pack first (first-run-pack-start.yaml); this flow keeps it.
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+# The Play button describes itself as Pause while the read is Playing.
+- extendedWaitUntil:
+    visible: Pause
+    timeout: 90000
+- tapOn:
+    id: ReadingBack
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryTitle
+    timeout: 15000
+# The reader is Idle once the book is left (logs STATE ... reader=Idle).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: state
+# Second book: nothing inherited, so its control offers Play.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: good-enough
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- extendedWaitUntil:
+    visible: Play
+    timeout: 10000
+- assertNotVisible: Pause
+- tapOn: Play
+- extendedWaitUntil:
+    visible: Pause
+    timeout: 90000
