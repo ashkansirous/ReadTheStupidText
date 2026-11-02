@@ -21,7 +21,8 @@ public sealed class IosTextMeasurer : ITextMeasurer, IDisposable
 	public IosTextMeasurer(string fontFamily, double fontSize)
 	{
 		var fonts = IPlatformApplication.Current!.Services.GetRequiredService<IFontManager>();
-		_attributes = new UIStringAttributes { Font = fonts.GetFont(Microsoft.Maui.Font.OfSize(fontFamily, fontSize)) };
+		// Slice 244: a font the manager cannot supply becomes the system font, never a nil in the attributes.
+		_attributes = IosAttributes.WithFont(fonts.GetFont(Microsoft.Maui.Font.OfSize(fontFamily, fontSize)), fontSize);
 	}
 
 	public double Width(string text)
@@ -29,7 +30,7 @@ public sealed class IosTextMeasurer : ITextMeasurer, IDisposable
 		lock (_gate)
 		{
 			// A layout still running when the owner lets go measures nothing; its result is discarded.
-			if (_disposed)
+			if (_disposed || string.IsNullOrEmpty(text))
 			{
 				return 0;
 			}
@@ -48,8 +49,8 @@ public sealed class IosTextMeasurer : ITextMeasurer, IDisposable
 				return;
 			}
 
+			// Never dispose _attributes.Font: it comes from MAUI's IFontManager, a shared cached instance other users still hold.
 			_disposed = true;
-			_attributes.Font?.Dispose();
 		}
 	}
 }

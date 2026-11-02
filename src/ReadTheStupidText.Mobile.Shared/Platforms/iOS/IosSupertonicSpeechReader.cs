@@ -61,6 +61,12 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     // so their combined concurrency never exceeds MaxSynthesisConcurrency.
     private readonly SemaphoreSlim _slots = new(MaxSynthesisConcurrency);
 
+    // Chunks in flight at once (Slice 244): 8, or 3 on a phone with under 3 GB of memory.
+    private readonly int _generationWindow = GenerationWindowPlan.WindowFor((long)NSProcessInfo.ProcessInfo.PhysicalMemory);
+
+    // Generations past their gate and not yet finished; Stop() logs it so a flow can see Back cancel them.
+    private int _generationsInFlight;
+
     private readonly object _gate = new();
 
     // The built engines (at most two, keyed by model folder and pack version), each with the model it
@@ -435,8 +441,11 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         RaiseTiming(TimeSpan.Zero);
     }
 
-    // Kicks off synthesis of every remaining chunk; the first runs straight away and the rest
-    // wait for it, so the chunk the listener waits on is never starved.
+    // Kicks off synthesis of the remaining chunks; the first runs straight away and the rest wait for it, so
+    // the chunk the listener waits on is never starved. At most the window of chunks is in flight (Slice 244,
+    // same rule as the Android reader): chunk k also waits for chunk k - window to finish, so a long book is
+    // not loaded whole. Generation runs ahead of playback, so every duration is known early; a skip or voice
+    // swap starts a new run, whose window begins at the new position.
     private List<Task<string>> StartGenerations(
         IosBuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int startIndex, string? voiceId,
         ConcurrentQueue<string> files, CancellationToken token)
@@ -445,12 +454,16 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         Task<string>? firstChunk = null;
         for (int index = startIndex; index < chunks.Count; index++)
         {
+            int? behind = GenerationWindowPlan.WaitsFor(index - startIndex, _generationWindow);
             Task<string> chunkTask = GenerateOnVoiceEngineAsync(
-                firstChunk, engine, chunks[index], index, voiceId, files, token);
+                behind is { } b ? generations[b] : firstChunk, engine, chunks[index], index, voiceId, files, token);
             firstChunk ??= chunkTask;
             generations.Add(chunkTask);
         }
 
+#if DEBUG
+        Testing.TestHookLog.Write($"GEN_WINDOW playing={startIndex} started={startIndex}..{chunks.Count - 1} window={_generationWindow}");
+#endif
         return generations;
     }
 
@@ -474,15 +487,20 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
             }
         }
 
-        IosBuiltEngine? extra = await LoadExtraEngineAsync(engine, chunk, voiceId);
+        // A cancelled read starts no new work: no engine load, no generation.
+        token.ThrowIfCancellationRequested();
+        Interlocked.Increment(ref _generationsInFlight);
+        IosBuiltEngine? extra = null;
         try
         {
+            extra = await LoadExtraEngineAsync(engine, chunk, voiceId);
             IosBuiltEngine chunkEngine = extra ?? engine;
             VoiceInfo voice = ResolveVoice(chunkEngine, chunk.VoiceId, voiceId);
             return await GenerateChunkAsync(chunkEngine, chunk.Text, index, voice, chunk.Transform, files, token);
         }
         finally
         {
+            Interlocked.Decrement(ref _generationsInFlight);
             extra?.Release();
         }
     }
@@ -714,6 +732,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     public void Stop()
     {
         ActiveRead? stopped;
+        int inFlightAtStop = Volatile.Read(ref _generationsInFlight);
         lock (_gate)
         {
             _synthCts?.Cancel();
@@ -739,6 +758,12 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         });
         ResetProgress();
         UpdateState(PlaybackState.Idle);
+#if DEBUG
+        if (stopped is not null)
+        {
+            Testing.TestHookLog.Write($"READ_STOPPED synthesis cancelled, player released, inFlight={inFlightAtStop} cancelling");
+        }
+#endif
     }
 
     private (int generation, CancellationToken token) BeginGeneration()

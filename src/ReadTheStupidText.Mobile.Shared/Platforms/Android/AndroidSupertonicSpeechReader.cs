@@ -58,9 +58,6 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // head plus a few after it), not the whole file, so a long document costs no battery.
     private const int PrepareMaxChunks = 4;
 
-    // How many chunks may be generating at once during a read (see StartGenerations).
-    private const int GenerationWindow = 8;
-
     // Only this much of the text is even chunked for a head start: planning the whole of a
     // large document just to keep its first few chunks would burn CPU for nothing.
     private const int PrepareMaxChars = 2000;
@@ -84,6 +81,34 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // One engine-level pool of native synthesis slots shared by reads and head-start prepares,
     // so their combined concurrency never exceeds MaxSynthesisConcurrency.
     private readonly SemaphoreSlim _slots = new(MaxSynthesisConcurrency);
+
+    // Chunks in flight at once during a read (Slice 244, see StartGenerations): 8, or 3 on a phone with under
+    // 3 GB of memory. A failed memory probe (0) takes the full window.
+    private readonly int _generationWindow = GenerationWindowPlan.WindowFor(PhysicalMemoryBytes());
+
+    // Generations past their gate and not yet finished; Stop() logs it so a flow can see Back cancel them.
+    private int _generationsInFlight;
+
+    private static long PhysicalMemoryBytes()
+    {
+        try
+        {
+            var manager = (global::Android.App.ActivityManager?)Microsoft.Maui.ApplicationModel.Platform.AppContext.GetSystemService(global::Android.Content.Context.ActivityService);
+            if (manager is null)
+            {
+                return 0;
+            }
+
+            using var info = new global::Android.App.ActivityManager.MemoryInfo();
+            manager.GetMemoryInfo(info);
+            return info.TotalMem;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Memory probe failed, using the full generation window: {ex.Message}");
+            return 0;
+        }
+    }
 
     private readonly object _gate = new();
 
@@ -463,9 +488,11 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     }
 
     // Kicks off synthesis of the remaining chunks; the first runs straight away and the rest wait for it, so
-    // the chunk the listener waits on is never starved. At most GenerationWindow chunks are in flight: chunk
-    // k also waits for chunk k - GenerationWindow to finish, so a long text of cached clips cannot hold
-    // thousands of chunks in memory at once (a 300k-character read was killed by lmkd, Slice 148).
+    // the chunk the listener waits on is never starved. At most the window of chunks is in flight: chunk k
+    // also waits for chunk k - window to finish (GenerationWindowPlan.WaitsFor), so a long text of cached
+    // clips cannot hold thousands of chunks in memory at once (a 300k-character read was killed by lmkd,
+    // Slice 148). Generation runs ahead of playback, so every duration is known early; a skip or voice swap
+    // starts a new run, whose window begins at the new position.
     private List<Task<string>> StartGenerations(
         BuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int startIndex, string? voiceId,
         CancellationToken token)
@@ -475,13 +502,16 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         Task<string>? firstChunk = null;
         for (int index = startIndex; index < chunks.Count; index++)
         {
-            int behind = index - startIndex - GenerationWindow;
+            int? behind = GenerationWindowPlan.WaitsFor(index - startIndex, _generationWindow);
             Task<string> chunkTask = GenerateOnVoiceEngineAsync(
-                behind >= 0 ? generations[behind] : firstChunk, engine, chunks[index], index, voiceId, slots, token);
+                behind is { } b ? generations[b] : firstChunk, engine, chunks[index], index, voiceId, slots, token);
             firstChunk ??= chunkTask;
             generations.Add(chunkTask);
         }
 
+#if DEBUG
+        Testing.TestHookLog.Write($"GEN_WINDOW playing={startIndex} started={startIndex}..{chunks.Count - 1} window={_generationWindow}");
+#endif
         return generations;
     }
 
@@ -505,15 +535,20 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             }
         }
 
-        BuiltEngine? extra = await LoadExtraEngineAsync(engine, chunk, voiceId);
+        // A cancelled read starts no new work: no engine load, no generation.
+        token.ThrowIfCancellationRequested();
+        Interlocked.Increment(ref _generationsInFlight);
+        BuiltEngine? extra = null;
         try
         {
+            extra = await LoadExtraEngineAsync(engine, chunk, voiceId);
             BuiltEngine chunkEngine = extra ?? engine;
             VoiceInfo voice = ResolveVoice(chunkEngine, chunk.VoiceId, voiceId);
             return await GenerateChunkAsync(chunkEngine, chunk.Text, index, voice, chunk.Transform, slots, token);
         }
         finally
         {
+            Interlocked.Decrement(ref _generationsInFlight);
             extra?.Release();
         }
     }
@@ -1116,6 +1151,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     public void Stop()
     {
         ActiveRead? stopped;
+        int inFlightAtStop = Volatile.Read(ref _generationsInFlight);
         lock (_gate)
         {
             _synthCts?.Cancel();
@@ -1145,6 +1181,12 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         _timing.Reset();
         RaiseTiming(TimeSpan.Zero);
         UpdateState(PlaybackState.Idle);
+#if DEBUG
+        if (stopped is not null)
+        {
+            Testing.TestHookLog.Write($"READ_STOPPED synthesis cancelled, player reset, inFlight={inFlightAtStop} cancelling");
+        }
+#endif
     }
 
     public void SetSpeed(PlaybackRate speed)

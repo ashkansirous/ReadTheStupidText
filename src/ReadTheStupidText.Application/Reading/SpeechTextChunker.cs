@@ -633,3 +633,40 @@ internal static partial class SpeechTextChunker
     [GeneratedRegex(@"(?<=[\u3002\uFF01\uFF1F][\u300D\u300F\uFF09\u3011\u3009\u300B\u201D\u2019""')\]]*)(?![\u3002\uFF01\uFF1F\u300D\u300F\uFF09\u3011\u3009\u300B\u201D\u2019""')\]])|(?<=[.!?\u061F\u06D4])\s+|\r?\n")]
     private static partial Regex SentenceBreak();
 }
+
+/// <summary>
+/// The pure choices of the bounded synthesis window (Slice 244): chunk <c>k</c> of a run starts only once chunk
+/// <c>k - window</c> has finished, so at most the window of generations run at once (an iPhone 8 with under 3 GB died
+/// with ~110 sentences queued; finished clips waiting for playback are not bounded by this). Both phone readers (iOS and Android) use the same two rules.
+/// </summary>
+internal static class GenerationWindowPlan
+{
+    /// <summary>Chunks in flight at once on a normal phone.</summary>
+    public const int DefaultWindow = 8;
+
+    /// <summary>Chunks in flight at once on a phone with little memory.</summary>
+    public const int SmallMemoryWindow = 3;
+
+    /// <summary>Physical memory below which the small window applies (3 GB).</summary>
+    public const long SmallMemoryBytes = 3L * 1024 * 1024 * 1024;
+
+    /// <summary>
+    /// The window for a phone with <paramref name="physicalMemoryBytes"/> of memory; 0 or less (the probe failed,
+    /// memory unknown) takes the full window, the same as before the window was sized.
+    /// </summary>
+    public static int WindowFor(long physicalMemoryBytes) =>
+        physicalMemoryBytes > 0 && physicalMemoryBytes < SmallMemoryBytes ? SmallMemoryWindow : DefaultWindow;
+
+    /// <summary>
+    /// The offset (from the run's first chunk) of the chunk that chunk <paramref name="offset"/> must wait to finish
+    /// before it starts, or null when it may start at once. At most <paramref name="window"/> chunks are in flight
+    /// at a time (the same count as Android's earlier <c>GenerationWindow</c>: chunk k waits for chunk k - window),
+    /// and generation keeps running ahead of playback, so every chunk's duration is known early and a skip can
+    /// land anywhere. A skip or voice swap starts a new run, so its window begins at the new position.
+    /// </summary>
+    public static int? WaitsFor(int offset, int window)
+    {
+        int behind = offset - Math.Max(1, window);
+        return behind >= 0 ? behind : null;
+    }
+}
