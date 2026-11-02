@@ -200,6 +200,9 @@ public partial class ReadingPage : ContentPage
 	private async Task StartReadAtAsync(int sentence)
 	{
 		await _languageReady;
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] read starts story={DinoReader.Core.BookMatch.Slug(_story?.Title ?? string.Empty)}");
+#endif
 		await _session.StartAtAsync(sentence);
 	}
 
@@ -782,6 +785,7 @@ public partial class ReadingPage : ContentPage
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
+		StopInheritedReadOnFirstAppearing();
 		_appeared.TrySetResult();
 		_visible = true;
 		_onStack = true;
@@ -800,6 +804,22 @@ public partial class ReadingPage : ContentPage
 		}
 	}
 
+	// Slice 248: every book's session drives the one shared reader, so a book that is opening stops whatever the reader still
+	// holds (an earlier book's read). Only the first appearing: coming back from the gate must not stop this book's own read.
+	// It runs before _appeared is set, so the intro read (PlayWhenShownAsync) starts after the stop.
+	private void StopInheritedReadOnFirstAppearing()
+	{
+		if (_appeared.Task.IsCompleted)
+		{
+			return;
+		}
+
+		_session.Stop();
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Reading] opened idle, inherited read stopped");
+#endif
+	}
+
 	// Disappearing also fires for a locked screen, another app or the gate over this page; the read
 	// carries on then (it is audio). Only a page that has left the navigation stack stops it. The
 	// check runs one tick later so it doesn't depend on whether the pop has already removed the page.
@@ -808,20 +828,39 @@ public partial class ReadingPage : ContentPage
 		base.OnDisappearing();
 		_visible = false;
 		_introPopQueued = false; // a pop that has not run yet must not fire once the page is covered or leaving
-		Dispatcher.Dispatch(() =>
+		Dispatcher.Dispatch(LeavePageIfOffStack);
+	}
+
+	// Slice 248: on iOS a PopAsync raises OnDisappearing before the page leaves the stack, so the check above still sees it there.
+	// OnNavigatedFrom comes after the removal on both platforms; whichever of the two sees the page off the stack first cleans up.
+	protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
+	{
+		base.OnNavigatedFrom(args);
+		LeavePageIfOffStack();
+	}
+
+	private void LeavePageIfOffStack()
+	{
+		if (_onStack && !Navigation.NavigationStack.Contains(this))
 		{
-			if (!Navigation.NavigationStack.Contains(this))
-			{
-				_onStack = false;
-				EndOwnedWait();
-				ApplyScreenAwake();
-				CancelDisplay();
-				Unsubscribe();
-				_session.Detach();
-				_session.Stop();
-				_ = _usage.FlushAsync();
-			}
-		});
+			LeavePage();
+		}
+	}
+
+	// Runs once per visit: _onStack is set only by OnAppearing and cleared here.
+	private void LeavePage()
+	{
+		_onStack = false;
+		EndOwnedWait();
+		ApplyScreenAwake();
+		CancelDisplay();
+		Unsubscribe();
+		_session.Detach();
+		_session.Stop();
+		_ = _usage.FlushAsync();
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Reading] left the page, read stopped");
+#endif
 	}
 
 	private void Unsubscribe()
@@ -1344,7 +1383,22 @@ public partial class ReadingPage : ContentPage
 		return _session.RecordedRangeOf(current) is { } range ? (delta > 0 ? range.Last : range.First) : current;
 	}
 
-	private async void OnBackTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
+	// Slice 248: after the pop has finished the page is off the stack; clean up here too in case no lifecycle event saw it leave (idempotent through _onStack).
+	private async void OnBackTapped(object? sender, TappedEventArgs e)
+	{
+		try
+		{
+			await _busy.RunAsync(() => Navigation.PopAsync());
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException)
+		{
+			Debug.WriteLine($"Dino Reader could not leave the page on Back: {ex}"); // async void: a throw here would crash the app
+		}
+		finally
+		{
+			LeavePageIfOffStack();
+		}
+	}
 
 	private async void OnReadFailed(object? sender, EventArgs e) =>
 		await DisplayAlertAsync(ReadingText.CouldntRead, ReadingText.ReadFailed, ReadingText.Ok);
