@@ -1,6 +1,6 @@
 ### Slice 234 — Dino: a proper design for tablets held upright
 
-*In progress (wave 2026-11-02): parts A and B merged (#736, #739), part C built 2026-11-02, PR #738.* *Planned 2026-11-01.* The user asked for "better design on tablet". **Mock drawn 2026-11-01 (Batch 45), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges: it reuses 232's phone-vs-tablet rules (`IsLandscape`, the 600 dp short-side split, `ShelfLayout`, `SplitLayout`).
+*Built 2026-11-02; merged as PR #736 (part A), #739 (part B, 3301257c) and #738 (part C, 3ffb7f66); not yet seen by eye on a tablet (see Not yet verified).* *Planned 2026-11-01.* The user asked for "better design on tablet". **Mock drawn 2026-11-01 (Batch 45), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges: it reuses 232's phone-vs-tablet rules (`IsLandscape`, the 600 dp short-side split, `ShelfLayout`, `SplitLayout`).
 
 **Touches:** `src/DinoReader.Core/GalleryLayout.cs`, `src/DinoReader.Core/ReadingLayoutRules.cs`, `src/DinoReader.Core/*Layout*.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/BackupPage.xaml`, `src/DinoReader.App/PageEditorPage.xaml`, `src/DinoReader.App/GrownUpHeader.cs`, `tests/DinoReader.Tests/**Layout*`, `docs/design/dino-reader/**`, `docs/plan/slices/234-dino-tablet-portrait.md`
 
@@ -63,9 +63,9 @@ Settled by the mock, left open in the plan: reading panel 48% of the height, tex
 #### Work
 
 - [x] **Design, added by the user in Claude Design 2026-11-01 (counts as approved):** tablet-portrait mock (`Dino Reader Batch 45 Tablet Upright.dc.html` in `docs/design/dino-reader/`), 804 × 1164 dp and a 10" Android size, for every screen above, on top of Batches 43 and 44. Rules as pure functions in Core where they can be.
-- [ ] Core layout rules extended for tablet portrait, with unit tests (shelf columns, reading layout shape and text size, card widths).
-- [ ] Each screen built from the rules; rotation keeps state.
-- [ ] Android and iOS built and checked together.
+- [x] Core layout rules extended for tablet portrait, with unit tests (shelf columns, reading layout shape and text size, card widths). Parts A-C.
+- [x] Each screen built from the rules; rotation keeps state. Parts A-C.
+- [x] Android and iOS built and checked together (Android flows on RTST_Tablet; iOS compile only, iPad not run).
 
 #### Verification
 
@@ -149,7 +149,7 @@ Part B covers the cards (gate, first run, book sheet, intro), the grown-up corne
 - iPad (compile only).
 - TalkBack order.
 
-#### For tools/CLAUDE.md (lift later)
+#### For tools/CLAUDE.md (lifted 2026-11-02)
 
 - Tablet AVD runs set `settings put global hide_error_dialogs 1` and send CLOSE_SYSTEM_DIALOGS before the flows, and set it back after. A System UI ANR on RTST_Tablet lost two runs on 2026-11-02 (Slice 234 part B: docs/plan/slices/234-dino-tablet-portrait.md).
 
@@ -188,7 +188,7 @@ Part B covers the cards (gate, first run, book sheet, intro), the grown-up corne
 - `s234c-review-medium.md`: 1 (Record panel 400 dp circular cap) applied; 2 (EditorPicture capped against whole window) applied; 3 (focus collapses picture, regions untappable while typing) applied; 4 (Border wrapping the ScrollView for every window) applied; 5 (picker card height and rotation) applied; 6 (Store card second row during rotation) skipped, low; 7 (PhoneSideMargin duplicated) skipped, low; 8 (panel radius and cream colour copied) applied; 9 (`PickerWidth` duplicates `BookSheetPlan`) skipped, fold after both merge; 10 (Backup padding constants) skipped, low. Findings 1 and 2 were the second round on picture height, so the coordinator wrote one design: one pure call from the page's own size.
 - `s234c-review-check-medium.md`: none applied. 1 (tap on the strip may fire on a region tap) is the intended tap-to-restore; 2-9 are low or need a device.
 
-#### For CLAUDE.md
+#### For src/DinoReader.App/CLAUDE.md (lifted 2026-11-02)
 
 - Tablet-upright page rules go through `TabletPageLayout` in `src/DinoReader.Core/TabletPageLayout.cs`: pages call only it, and it returns the old value off a tablet held upright. Picture heights come from one pure call on the page's own size, set only in `OnSizeAllocated`, never from a measured child (Slice 234: docs/plan/slices/234-dino-tablet-portrait.md)
 

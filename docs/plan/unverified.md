@@ -2,13 +2,29 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
-### Slice 234: Dino tablet held upright, part A ([slice](slices/234-dino-tablet-portrait.md))
+### Slice 235: Dino on Windows, part A ([slice](slices/235-dino-windows-window.md))
 
-- Stacked reading page against frames 134, 135 and 150 by eye (no screenshot taken).
-- Shelf spacing and header against frame 133.
-- iPad (compile only).
-- TalkBack order.
-- Picture only, upright.
+- Opening at 1100 x 760 on a screen larger than 1024 x 768 (the VM clamps it).
+- A maximised window closed and reopened stays maximised (high finding 6).
+- 150% scaling and the unit of `PreferredMinimumWidth/Height`.
+- Two monitors, and an unplugged display (saved place on a missing monitor).
+- Title bar height and colour by eye.
+- A window clamped to a small screen and saved as maximised reopens maximised (seen on the VM; whether that is by design is not decided).
+
+### Slice 234: Dino tablet held upright, parts A-C ([slice](slices/234-dino-tablet-portrait.md))
+
+- Part C: Record, Cast with the picker, the editor (keyboard down and up), Store and Backup against frames 142-146 by eye (no screenshots; no script reaches those screens with a screenshot step).
+- Part C: `RecordFixedRows` / `EditorFixedRows` on a real tablet.
+- Part C: Cast picker on a short window or with the keyboard.
+- Part B: cards, corner and Settings against frames 136-141 by eye (the flows take no screenshots).
+- Part B: dino-tablet-upright-shelf and dino-landscape-reading-tablet regression not rerun after part B.
+- Part B: a drifting finger on the gate hold.
+- Part B: a short tablet window (cards cap and scroll).
+- Part A: stacked reading page against frames 134, 135 and 150 by eye (no screenshot taken).
+- Part A: shelf spacing and header against frame 133.
+- Part A: picture only, upright.
+- iPad (compile only), parts A-C.
+- TalkBack order, parts A-C.
 
 ### Slice 246: Dino store books read with pre-made audio ([slice](slices/246-dino-store-books-premade-audio.md))
 

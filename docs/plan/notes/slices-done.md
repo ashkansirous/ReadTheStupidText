@@ -280,6 +280,7 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 238 | packs.yml version defaults match the live catalog (Norwegian defaults to 1, packs-11 ships 2) | built | #723 | | [238-packs-workflow-defaults-match-catalog.md](../slices/238-packs-workflow-defaults-match-catalog.md) |
 | 242 | Leftovers from night 2026-11-01-0859 round 4 (run-marker collision, emulator no-build, a raw separator byte, a tablet AVD, 232's mock deviations, a workflow permission check) | built | #727, #731 | | [242-round-4-leftovers-night-2026-11-01-0859.md](../slices/242-round-4-leftovers-night-2026-11-01-0859.md) |
 | 232 | Dino user test: proper landscape design for every screen, phone and tablet (after 228 and 229) | built | #695, #724, #728, #732, #734 | | [232-dino-landscape-every-screen.md](../slices/232-dino-landscape-every-screen.md) |
+| 234 | Dino: proper design for tablets held upright (shelf 3-4 columns, picture-above-text reading, tablet-sized cards; after 232) | built | #736, #739, #738 | | [234-dino-tablet-portrait.md](../slices/234-dino-tablet-portrait.md) |
 
 
 ## Batch lane-order paragraphs moved from plan.md (2026-10-30)

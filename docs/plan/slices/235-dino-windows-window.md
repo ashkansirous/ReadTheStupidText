@@ -1,6 +1,6 @@
 ### Slice 235 — Dino on Windows: a real desktop window (size, keyboard, mouse)
 
-*Part A built 2026-11-02 (window and pure rules; five Dino VM checks pass), not merged; part B still planned.* *Planned 2026-11-01.* The user asked for "better design on windows". **Mock drawn 2026-11-01 (Batch 46), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges (a wide window uses its layouts) and alongside or after Slice 234 (a mid-size window uses the tablet rules).
+*Part A built 2026-11-02 (window and pure rules; five Dino VM checks pass), merged as PR #740 (0d135658); part B still planned.* *Planned 2026-11-01.* The user asked for "better design on windows". **Mock drawn 2026-11-01 (Batch 46), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges (a wide window uses its layouts) and alongside or after Slice 234 (a mid-size window uses the tablet rules).
 
 **Touches:** `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/Platforms/Windows/**`, `src/DinoReader.Core/*Layout*.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/GrownUpHeader.cs`, `src/DinoReader.App/*Page*.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `tools/desktop-vm/**`, `docs/design/dino-reader/**`, `docs/plan/slices/235-dino-windows-window.md`
 
@@ -97,7 +97,7 @@ From review (files in `D:/ReadTheStupidText-worktrees/reviews/`, deleted later):
 - Title bar height and colour by eye.
 - A window clamped to a small screen and saved as maximised reopens maximised (seen on the VM; whether that is by design is not decided).
 
-#### For tools/desktop-vm/CLAUDE.md (lift later)
+#### For tools/desktop-vm/CLAUDE.md (lifted 2026-11-02)
 
 - The VM screen is 1024 x 768, so window-size checks clamp their expectations to its work area.
 - The Release VM build shows no `Debug.WriteLine`, so a Windows-head check needs a file trace it can read back (`window-trace.log`). (Slice 235: docs/plan/slices/235-dino-windows-window.md)
