@@ -133,6 +133,10 @@ try {
         Assert-Equal 'run owner: the owner variable wins' 'phone-owner' (Get-RunChecksOwner 'ABC123')
     }
     finally { foreach ($name in $savedOwners.Keys) { [Environment]::SetEnvironmentVariable($name, $savedOwners[$name]) } }
+    $slashPath = Get-RunMarkerPath (Get-RunMarkerKey $runKey 'night/1') $runDir
+    $colonPath = Get-RunMarkerPath (Get-RunMarkerKey $runKey 'night:1') $runDir
+    Assert-Equal 'run marker: owners differing only in an unsafe character get two files' $true ($slashPath -ne $colonPath)
+    Assert-Equal 'run marker: the same key is the same file' $slashPath (Get-RunMarkerPath (Get-RunMarkerKey $runKey 'night/1') $runDir)
     Assert-Equal 'run marker: nothing blocks without a marker' $false (Test-RunMarkerBlocks $null 'night' $PID)
     $sleeper = Start-Process -FilePath (Get-Process -Id $PID).Path -ArgumentList @('-NoProfile', '-Command', 'Start-Sleep -Seconds 120') -WindowStyle Hidden -PassThru
     $live = [pscustomobject]@{ owner = 'night'; pid = $sleeper.Id; procStart = $sleeper.StartTime.ToFileTimeUtc() }
@@ -159,6 +163,18 @@ try {
     Assert-Equal 'run marker: -Force took the marker over' $PID (Read-RunMarker $nightKey $runDir).pid
     Remove-RunMarker $runKey 'night' $runDir
     Assert-Equal 'run marker: removed by its own run' $false (Test-Path $markerPath)
+
+    # a marker with the old (un-hashed) name, written by a run of the previous version, still guards the owner; a new claim replaces it
+    $legacyPath = Get-LegacyRunMarkerPath $nightKey $runDir
+    @{ owner = 'night'; pid = $sleeper.Id; procStart = $sleeper.StartTime.ToFileTimeUtc() } | ConvertTo-Json | Set-Content $legacyPath
+    Assert-Equal 'run marker: the legacy file is read' $sleeper.Id (Read-RunMarker $nightKey $runDir).pid
+    $legacyRefusal = Request-RunMarker $runKey 'night' $false $runDir
+    Assert-Equal 'run marker: a live legacy marker of the same owner refuses a new run' $true ([bool]$legacyRefusal)
+    Assert-Equal 'run marker: the refused run wrote no new-name file' $false (Test-Path $markerPath)
+    Assert-Equal 'run marker: -Force over a legacy marker starts' $null (Request-RunMarker $runKey 'night' $true $runDir)
+    Assert-Equal 'run marker: the legacy file is gone after the claim' $false (Test-Path $legacyPath)
+    Assert-Equal 'run marker: the claim is under the new name' $PID (Read-RunMarker $nightKey $runDir).pid
+    Remove-RunMarker $runKey 'night' $runDir
 
     # a dead pid is free
     $dead = Start-Process -FilePath (Get-Process -Id $PID).Path -ArgumentList @('-NoProfile', '-Command', 'exit 0') -WindowStyle Hidden -PassThru

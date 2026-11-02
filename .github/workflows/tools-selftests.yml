@@ -55,6 +55,9 @@ jobs:
       - name: Device-test speed self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-speed.ps1
 
+      - name: Emulator -NoBuild and tablet instance self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-no-build.ps1
+
       - name: Detached background start self-test (${{ matrix.shell }})
         run: ./tools/test-detached-process.ps1
 

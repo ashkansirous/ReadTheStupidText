@@ -12,7 +12,7 @@
 #>
 param(
     [switch]$DeviceKillCheck,
-    [ValidateSet(1, 2)][int]$Instance = 1
+    [ValidateSet('1', '2', '3', 'tablet')][string]$Instance = '1'   # Slice 242: the same values as every other emulator script
 )
 $ErrorActionPreference = 'Stop'
 $script:failed = 0
@@ -253,6 +253,7 @@ function Test-FlowsSummary {
 # build paths, so a placeholder is enough in CI. Test-ConcurrencyLimit then points $script:ActivityDir at a temp folder.
 if (-not $env:ANDROID_HOME -and -not $env:ANDROID_SDK_ROOT) { $env:ANDROID_HOME = [IO.Path]::GetTempPath() }
 . (Join-Path $PSScriptRoot 'common.ps1')
+$Instance = Resolve-EmulatorInstance $Instance   # 'tablet' -> 3
 
 Test-ConcurrencyLimit
 Test-HealthProblem

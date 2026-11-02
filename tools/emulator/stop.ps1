@@ -5,11 +5,11 @@
   -Instance 2 stops the second emulator (state2.json); the default is instance 1 (Slice 180).
 #>
 param(
-    [ValidateSet(1, 2)][int]$Instance = 1
+    [ValidateSet('1', '2', '3', 'tablet')][string]$Instance = '1'   # Slice 242: 3 or 'tablet' is RTST_Tablet
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
-Set-EmulatorInstance $Instance
+Set-EmulatorInstance (Resolve-EmulatorInstance $Instance)
 
 function Stop-RecordedEmulator($state) {
     $ErrorActionPreference = 'Continue'  # adb writes to stderr once the emulator is already gone

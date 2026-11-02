@@ -60,6 +60,10 @@ jobs:
       - name: Check packs.yml version defaults against the pinned catalog
         run: node .github/scripts/check-packs-defaults.mjs
 
+      # Slice 242: a called workflow's job permissions never exceed its caller job's (PR #702 / hotfix #704: startup_failure).
+      - name: Check called workflows' permissions against their callers
+        run: node .github/scripts/check-called-workflow-permissions.mjs
+
   actionlint:
     runs-on: ubuntu-latest
     steps:

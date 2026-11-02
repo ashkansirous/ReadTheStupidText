@@ -26,13 +26,24 @@ function Get-SharedEmulatorDir {
 }
 $script:StateDir = Get-SharedEmulatorDir
 
+# Slice 242 item 5: instance 3 is the tablet AVD RTST_Tablet (port 5558; create it with new-avd.ps1 -Tablet). It is never picked by `-Instance any` (that stays 1..InstanceCount).
+$script:TabletInstance = 3
+$script:TabletAvdName = 'RTST_Tablet'
+$script:TabletAlias = 'tablet'
+
+# '1', '2', '3' or 'tablet' (what -Instance accepts) -> the instance number.
+function Resolve-EmulatorInstance([string]$Instance) {
+    if ($Instance -eq $script:TabletAlias) { return $script:TabletInstance }
+    return [int]$Instance
+}
+
 function Set-EmulatorInstance([int]$Instance) {
-    if ($Instance -lt 1 -or $Instance -gt $script:InstanceCount) { throw "Instance must be 1 to $($script:InstanceCount), not $Instance." }
+    if ($Instance -lt 1 -or $Instance -gt $script:TabletInstance) { throw "Instance must be 1 to $($script:InstanceCount), or $($script:TabletInstance) ('$($script:TabletAlias)'), not $Instance." }
     $script:EmuInstance = $Instance
     $script:Port = $script:InstanceBasePort + 2 * ($Instance - 1)
     $script:Serial = "emulator-$($script:Port)"
     $suffix = if ($Instance -eq 1) { '' } else { "$Instance" }
-    $script:AvdName = "RTST_Test$suffix"
+    $script:AvdName = if ($Instance -eq $script:TabletInstance) { $script:TabletAvdName } else { "RTST_Test$suffix" }
     $script:StateFile = Join-Path $script:StateDir "state$suffix.json"
     $script:MutexName = "Global\RTST_WarmEmulator$suffix"
 }

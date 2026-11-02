@@ -71,7 +71,7 @@ public partial class TextStep : ContentView
 	}
 
 	// What the cast analysis depends on; when it has not changed since the last analysis, the cast is shown as it is.
-	private string AnalysisKey() => string.Join('', Draft.Language, Story.JoinPages(Draft.Pages));
+	private string AnalysisKey() => string.Join('\u001f', Draft.Language, Story.JoinPages(Draft.Pages));
 
 	private bool AnalysisIsCurrent() => Draft.Cast.Count > 0 && _analysedKey == AnalysisKey();
 

@@ -2,7 +2,7 @@
 
 *Planned.* Written 2026-11-01 by the round 4 feedback loop ([note](../notes/2026-11-01-0859-feedback-loop-w4.md)). Parked until 2026-11-01 by the round 4 feedback loop: waits for the user; moved back to planned by the night's final feedback loop.
 
-*In progress (wave 2026-11-02, night 2026-11-01-2355 wave 2), draft PR: items 2, 3, 4, 5 and 7. Item 6 is not in this claim: it edits Slice 232's reading-screen files (`ReadingPage.xaml.cs`, `PictureTextPages.cs`, `LandscapeLayout.cs`) while 232 part C is open, so it stays open for a later wave.*
+*Built 2026-11-02 (night 2026-11-01-2355 wave 2): items 2, 3, 4, 5 and 7, emulator-checked on RTST_Tablet; not merged. Item 6 is not in this claim: it edits Slice 232's reading-screen files (`ReadingPage.xaml.cs`, `PictureTextPages.cs`, `LandscapeLayout.cs`) while 232 part C is open, so it stays open for a later wave.*
 
 **Touches, this claim (2026-11-02):** `tools/phone/common.ps1`, `tools/phone/test-*.ps1` (item 2 self-test), `tools/emulator/**` (items 3 and 5: `install-debug.ps1`, `run-flows.ps1`, `new-avd.ps1`, `start-warm.ps1`, `common.ps1`, self-tests), `tools/CLAUDE.md`, `src/DinoReader.App/TextStep.xaml.cs` (item 4, the one character only), `.github/scripts/check-called-workflow-permissions.mjs` and its `.test.mjs` (new, item 7), `.github/workflows/release-scripts.yml` and `.github/workflows/tools-selftests.yml` (path filters only, if needed), `.github/CLAUDE.md`, `docs/plan/slices/242-round-4-leftovers-night-2026-11-01-0859.md`. Read-only: `.github/workflows/*.yml` (item 7's test reads them).
 
@@ -13,18 +13,60 @@
 #### Work
 
 - **1. Dropped (user, 2026-11-01 21:48):** a read-only Store submission-status workflow existed only to answer whether the 2026-10-30 run submitted Dino for Windows and whether it passed certification. The user: "why do you need me on this and why do you fucking care?! it was 2 days ago and a lot has been merged since!" Not built.
-- [ ] **2. Run-marker owners can collide.** `Get-RunMarkerPath` (`tools/phone/common.ps1:540`) replaces unsafe characters with `_`, so owners differing only there (`night/1`, `night:1`) share one marker file and the second claim overwrites the first run's marker (Slice 221 second check pass, finding 2). Fix: add a short hash of the raw owner to the file name. Verify: a self-test with the two owners gets two files.
-- [ ] **3. A timed emulator run never builds.** Wave 4's emulator agent for Slice 225 spent about 5 of its 10 minutes building the Dino Debug APK (wave 4 digest entry 1983), because the coordinator had not built first. The phone runner already stops on a cache miss with `-NoBuild`; `install-debug.ps1` and `run-flows.ps1` have no such switch. Add `-NoBuild` (and `RTST_NO_BUILD=1`) there: on a cache miss print `cache missed for <app>, key <k>: run install-debug.ps1 -BuildOnly first` and exit with its own code. Verify: a self-test with an empty cache exits at once with that line. Before building, compare with Slice 241 (merged as PR #708 on 2026-11-01: on a cache miss it builds while the emulator boots); if 241 makes the build cost small, drop this item.
-- [ ] **4. A raw separator byte in source.** `src/DinoReader.App/TextStep.xaml.cs:74` joins the analysis key with a raw 0x1f byte in a char literal. It is deliberate (a unit separator), but it is the only hit of `control-chars.mjs --all` on the repo and hides real hits. Write it as `'\u001f'`. Verify: `control-chars.mjs --all` on the repo exits 0; Dino tests pass.
+- [x] **2. Run-marker owners can collide.** `Get-RunMarkerPath` (`tools/phone/common.ps1:540`) replaces unsafe characters with `_`, so owners differing only there (`night/1`, `night:1`) share one marker file and the second claim overwrites the first run's marker (Slice 221 second check pass, finding 2). Fix: add a short hash of the raw owner to the file name. Verify: a self-test with the two owners gets two files.
+- [x] **3. A timed emulator run never builds.** Wave 4's emulator agent for Slice 225 spent about 5 of its 10 minutes building the Dino Debug APK (wave 4 digest entry 1983), because the coordinator had not built first. The phone runner already stops on a cache miss with `-NoBuild`; `install-debug.ps1` and `run-flows.ps1` have no such switch. Add `-NoBuild` (and `RTST_NO_BUILD=1`) there: on a cache miss print `cache missed for <app>, key <k>: run install-debug.ps1 -BuildOnly first` and exit with its own code. Verify: a self-test with an empty cache exits at once with that line. Before building, compare with Slice 241 (merged as PR #708 on 2026-11-01: on a cache miss it builds while the emulator boots); if 241 makes the build cost small, drop this item.
+- [x] **4. A raw separator byte in source.** `src/DinoReader.App/TextStep.xaml.cs:74` joins the analysis key with a raw 0x1f byte in a char literal. It is deliberate (a unit separator), but it is the only hit of `control-chars.mjs --all` on the repo and hides real hits. Write it as `'\u001f'`. Verify: `control-chars.mjs --all` on the repo exits 0; Dino tests pass.
 
-- [ ] **5. A tablet AVD.** Slices 232 (parts B-E), 234 and 171 need "a tablet AVD", but only `RTST_Test` and `RTST_Test2` exist (wave 4 digest entry 1723). Add a tablet AVD (short side at least 600 dp) to the emulator setup script, and add `-Instance tablet` to `run-flows.ps1`. Verify: `dino-landscape-reading` runs on it and takes the row branch.
+- [x] **5. A tablet AVD.** Slices 232 (parts B-E), 234 and 171 need "a tablet AVD", but only `RTST_Test` and `RTST_Test2` exist (wave 4 digest entry 1723). Add a tablet AVD (short side at least 600 dp) to the emulator setup script, and add `-Instance tablet` to `run-flows.ps1`. Verify: `dino-landscape-reading` runs on it and takes the row branch.
 
 - [ ] **6. Slice 232 part A's deviations from the approved mock** : tablet frame 127's title above the card, phone side margins 34/26 dp (now about 14), and the picture-only chip on the picture per frame 114. The user approved that mock, so build to match it; no further question (decided by the night's final feedback loop, 2026-11-01). Verify: screenshots against frames 113-115 and 127.
-- [ ] **7. A called workflow's job permissions checked against its caller.** PR #702 shipped a `dinoreader-windows.yml` job asking `actions: write` while `release.yml`'s `build-dinowin` granted only `contents: write`. Every release on main then ended `startup_failure` until hotfix #704 (two runs, 41351722978 and 41353452971). actionlint did not catch it, and #704 added only a prose rule to `.github/CLAUDE.md`. Add a script test under `.github/scripts/` that, for each `uses: ./.github/workflows/*.yml` job, fails when a called job asks for a permission the caller does not grant. Verify: the test fails on #702's version and passes on main.
+- [x] **7. A called workflow's job permissions checked against its caller.** PR #702 shipped a `dinoreader-windows.yml` job asking `actions: write` while `release.yml`'s `build-dinowin` granted only `contents: write`. Every release on main then ended `startup_failure` until hotfix #704 (two runs, 41351722978 and 41353452971). actionlint did not catch it, and #704 added only a prose rule to `.github/CLAUDE.md`. Add a script test under `.github/scripts/` that, for each `uses: ./.github/workflows/*.yml` job, fails when a called job asks for a permission the caller does not grant. Verify: the test fails on #702's version and passes on main.
+
+**Changed while building:** item 5's AVD is `RTST_Tablet` (`new-avd.ps1 -Tablet`), selected with `-Instance tablet` in `run-flows.ps1`. Item 3 added `tools/emulator/test-no-build.ps1` (self-test) and a `build-cache.ps1` helper. Item 7 is `.github/scripts/check-called-workflow-permissions.mjs` with its `.test.mjs`; `release-scripts.yml` and `tools-selftests.yml` got path filters. Rules added by the builder are in the diff (`tools/CLAUDE.md`, `.github/CLAUDE.md`).
+
+**Device run (2026-11-02, emulator):** `RTST_Tablet` cold boot 131 s, `wm size` 1600x2560, density 320. `dino-landscape-reading` on `-Instance tablet -NoBuild` PASS; logcat showed `[Landscape] reading controls=row` (the tablet row branch). `test-no-build.ps1` PASS. Evidence: `D:/ReadTheStupidText-worktrees/reviews/s242-device/` (outside the repo).
+
+**From review:**
+High pass (`s242-review-high.md`, 10 findings; 1-9 applied per the fixer, 10 skipped):
+- 1 applied: `run-flows.ps1 -App auto` collapsed child exit 6 (cache missed) to 1.
+- 2 applied: `-NoBuild` was not passed to the nested `install-debug.ps1` calls.
+- 3 applied: the `install-debug.ps1` `-NoBuild` guard ignored `-Rebuild`.
+- 4 applied: `new-avd.ps1` tablet screen only rewrote existing `hw.lcd.*` lines, so a missing key left the AVD phone-sized.
+- 5 applied: the run-marker file name changed with no handling of old `run-<key>.json` files.
+- 6 applied: the called workflow's top-level `permissions:` counted even when every job overrides it.
+- 7 applied: the hand-rolled permissions parser silently skipped other YAML shapes.
+- 8 applied: the test built a path from `URL.pathname` instead of `fileURLToPath`.
+- 9 applied: docs not updated for `-Instance tablet|3`, `-NoBuild` and exit 6.
+- 10 skipped: the `RTST_BUILD_CACHE_LOOKUP_ROOT` test seam sits in the production miss path and shares a name with the phone runner's.
+
+Medium pass (`s242-review-medium.md`, 8 findings; 1, 2, 3, 5, 8 applied, 4, 6, 7 skipped):
+- 1 applied: nested `install-debug.ps1` exit 6 was ignored in `Restart-Emulator` and the stale-build install.
+- 2 applied: `RTST_NO_BUILD` leaked into the calling session (the review asked for a restore in a `finally`).
+- 3 applied: `Remove-RunMarker` did not delete the legacy-named marker.
+- 4 skipped: the `-NoBuild` miss check and `$apk` use different lookup folders when the test seam is set (same seam as high 10).
+- 5 applied: `test-activity.ps1` still accepted only `-Instance 1|2`.
+- 6 skipped: `$Instance` string parameter reassigned an int; works by coercion.
+- 7 skipped: the YAML reader treats any " #" as a comment and skips a caller with no permissions anywhere (the #702/#704 case with explicit permissions is covered).
+- 8 applied: tablet AVD kept the source skin and booted phone-sized (`new-avd.ps1`; the device run showed 1600x2560).
+
+Check pass (`s242-review-check-medium.md`, 8 findings, all low/info; the brief says all skipped, the file gives no fix status):
+- 1 skipped: an explicit `-Install` call in `run-flows.ps1` is not followed by `Exit-OnNoBuildMiss`.
+- 2 skipped: the shared `RTST_BUILD_CACHE_LOOKUP_ROOT` variable.
+- 3 skipped: a legacy run marker still collides for owners differing only by unsafe characters during the transition.
+- 4 skipped: callers with no permissions are skipped (false pass); a called `read-all` under an explicit-map caller is flagged (false fail).
+- 5 skipped: the tablet AVD keeps the phone `hw.device.*` keys (boot size verified on device, see above).
+- 6 skipped: `-Instance tablet` with `-Split` is only blocked implicitly.
+- 7 skipped: the U+001F key delimiter in `TextStep.xaml.cs` is not strictly injective.
+- 8 skipped: exit 6 for one skipped app is masked by a failure from another.
+
+#### For CLAUDE.md
+
+The builder already added the rules in the diff (`tools/CLAUDE.md`, `.github/CLAUDE.md`); lift them at index time if they belong in another file.
 
 #### Not yet verified
 
-(none yet; nothing built)
+- `run-flows.ps1 -Install -NoBuild` may still build (check pass, low finding 1: the explicit `-Install` path lacks the no-build exit).
+- `dino-landscape-reading` does not assert the `[Landscape] reading controls=row` line; the row branch was read from logcat by hand.
 
 ## User answers before the night run (2026-11-01, evening)
 

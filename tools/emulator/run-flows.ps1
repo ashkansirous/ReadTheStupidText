@@ -7,7 +7,8 @@
   RTST-TEST logcat lines (the Debug-only markers) within -LogTimeoutSeconds. Failures print the last lines of Maestro's output.
   The debug app must already be installed (install-debug.ps1 -App rtst|dino); -Install does that first.
   Slice 180: -App auto runs only the apps the change touches (tools/test-targets.ps1) and prints the ones it skipped and why;
-  -Instance 1|2 picks the emulator (default 1; start it with start-warm.ps1 -Instance n).
+  -Instance 1|2|3|tablet picks the emulator (default 1; start it with start-warm.ps1 -Instance n; 3 or tablet is the tablet AVD RTST_Tablet).
+  Slice 242: -NoBuild (or RTST_NO_BUILD=1) starts no build anywhere in the run: a cache miss prints the "cache missed" line and exits 6 (with -App auto: 6 unless a run really failed, then 1).
   Slice 212: before every flow the emulator is woken and its keyguard dismissed; a flow whose header says `# needs: cellular-only` runs with Wi-Fi off (mobile data
   on) and Wi-Fi is switched back on after it, also when it fails.
   Slice 207: lint-flows.ps1 runs first and stops the run when it finds a problem. A lease on the emulator (tools/lease-common.ps1, owner from
@@ -25,7 +26,8 @@
 #>
 param(
     [Parameter(Mandatory)][ValidateSet('rtst', 'dino', 'auto')][string]$App,
-    [ValidateSet(1, 2)][int]$Instance = 1,
+    [ValidateSet('1', '2', '3', 'tablet')][string]$Instance = '1',   # Slice 242: 3 or 'tablet' is the tablet AVD RTST_Tablet (new-avd.ps1 -Tablet)
+    [switch]$NoBuild,   # Slice 242: start no build; on a cache miss print `cache missed for <app>, key <k>: run install-debug.ps1 -BuildOnly first` and exit 6 (also RTST_NO_BUILD=1)
     [string[]]$Flow,   # one flow name or path, or a comma list (Slice 241)
     [switch]$Split,   # Slice 241: opt in to the second emulator for 4+ flows (default one emulator; RTST_SPLIT=1 does the same)
     [switch]$ColdBoot,   # Slice 241: boot without the clean snapshot
@@ -39,11 +41,18 @@ $ErrorActionPreference = 'Stop'
 trap { Write-Host "run-flows.ps1: $($_.Exception.Message)"; exit 1 }
 . (Join-Path $PSScriptRoot 'common.ps1')
 . (Join-Path $PSScriptRoot 'build-cache.ps1')
+$Instance = Resolve-EmulatorInstance $Instance   # 'tablet' -> '3'
 Set-EmulatorInstance $Instance
 
 # Slice 207: a flow with a wrong command name, a bad escape or an unexplained clearState fails here, before any build or device time is spent.
 & (Join-Path $PSScriptRoot 'lint-flows.ps1')
 if ($LASTEXITCODE -ne 0) { Write-Host 'The flow lint failed (see above): fix the flows first. Nothing was built or run.'; exit 1 }
+
+# Slice 242: the switch must reach every nested install-debug.ps1 call (restart, stale-build install) and every child run: the variable carries it.
+$priorNoBuild = $env:RTST_NO_BUILD
+if ($NoBuild.IsPresent) { $env:RTST_NO_BUILD = '1' }
+# The variable is restored when the script ends (also on exit), so it never leaks into the calling session. The block below is not re-indented, to keep the diff small.
+try {
 
 # -App auto: one run per touched app, each through this same script, so a failing app does not hide the next one.
 if ($App -eq 'auto') {
@@ -52,8 +61,9 @@ if ($App -eq 'auto') {
     $worst = 0
     foreach ($name in $touched) {
         $flowArgs = if ($Flow) { @('-Flow', ((Split-FlowList $Flow) -join ',')) } else { @() }
-        & $PSCommandPath -App $name -Instance $Instance -Install:$Install -Split:$Split -ColdBoot:$ColdBoot -LogTimeoutSeconds $LogTimeoutSeconds @flowArgs
-        if ($LASTEXITCODE -ne 0) { $worst = 1 }
+        & $PSCommandPath -App $name -Instance $Instance -Install:$Install -NoBuild:$NoBuild -Split:$Split -ColdBoot:$ColdBoot -LogTimeoutSeconds $LogTimeoutSeconds @flowArgs
+        if ($LASTEXITCODE -eq $script:EmulatorExitCacheMissed -and $worst -eq 0) { $worst = $script:EmulatorExitCacheMissed }   # "build first" stays distinct from a failure...
+        elseif ($LASTEXITCODE -ne 0) { $worst = 1 }   # ...but a real failure of any app wins
     }
     exit $worst
 }
@@ -161,7 +171,15 @@ function Restart-Emulator {
     } finally { Pop-Location }
     $installed = & $script:Adb -s $script:Serial shell pm list packages $packages[$App] 2>&1 | Out-String
     $stale = (Get-InstalledKey $App) -ne (Get-BuildKey)  # a restart on a different baseline: the installed build is not the current one
-    if ($stale -or -not ($installed -match [regex]::Escape($packages[$App]))) { $null = & (Join-Path $PSScriptRoot 'install-debug.ps1') -App $App -Instance $Instance }
+    if ($stale -or -not ($installed -match [regex]::Escape($packages[$App]))) {
+        $null = & (Join-Path $PSScriptRoot 'install-debug.ps1') -App $App -Instance $Instance
+        Exit-OnNoBuildMiss
+    }
+}
+
+# Slice 242: with -NoBuild a nested install-debug.ps1 that missed the cache exits 6; the run stops with that code instead of carrying on with a stale or missing app.
+function Exit-OnNoBuildMiss {
+    if ($LASTEXITCODE -eq $script:EmulatorExitCacheMissed) { exit $script:EmulatorExitCacheMissed }
 }
 
 # Slice 215: the health check before a flow and after a failed one. Returns $true when the emulator is healthy now (after one restart when it was not).
@@ -234,7 +252,8 @@ function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File) {
 function Build-BeforeLease {
     $key = Get-BuildKey
     $needed = $Install -or ((Get-InstalledKey $App) -ne $key)
-    if ($needed -and -not (Find-CachedBuild (Get-BuildDir $App (Get-EmulatorBuildPlatform $App) $key) '*-Signed.apk')) {
+    if ($needed -and -not (Find-CachedBuild (Get-NoBuildLookupDir (Get-BuildDir $App (Get-EmulatorBuildPlatform $App) $key)) '*-Signed.apk')) {
+        if (Test-NoBuildRequested $NoBuild) { Write-Host (Format-EmulatorNoBuildMiss $App $key); exit $script:EmulatorExitCacheMissed }
         $boot = if (Test-EmulatorPresent) { $null } else { Start-EmulatorBootInBackground $Instance -ColdBoot:$ColdBoot }
         if ($boot) { Write-Host "Cache miss: building the $App APK while $($script:Serial) boots." }
         $built = $false
@@ -358,6 +377,7 @@ try {
         if ((Get-InstalledKey $App) -ne $currentKey) {
             Write-Host "The installed $App build is not the one for the current inputs (key $currentKey); installing it first."
             & (Join-Path $PSScriptRoot 'install-debug.ps1') -App $App -Instance $Instance
+            Exit-OnNoBuildMiss
         }
     }
 
@@ -403,4 +423,7 @@ try {
 } finally {
     if ($leaseTaken) { Remove-Lease $script:Serial $leaseOwner 0 'emulator' | Out-Null }
     if ($boot2) { if ($null -eq $priorTwoEmulators) { Remove-Item Env:RTST_ALLOW_TWO_EMULATORS -ErrorAction SilentlyContinue } else { $env:RTST_ALLOW_TWO_EMULATORS = $priorTwoEmulators }; & (Join-Path $PSScriptRoot 'stop.ps1') -Instance 2 | Out-Null }   # only a split boots emulator 2, so only a split stops it
+}
+} finally {
+    if ($null -eq $priorNoBuild) { Remove-Item Env:RTST_NO_BUILD -ErrorAction SilentlyContinue } else { $env:RTST_NO_BUILD = $priorNoBuild }
 }
