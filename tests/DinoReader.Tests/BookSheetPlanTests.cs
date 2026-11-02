@@ -70,4 +70,25 @@ public class BookSheetPlanTests
             all.Rows);
         Assert.Equal([BookSheetRow.ReadNow, BookSheetRow.RecordAndCast, BookSheetRow.Remove], bare.Rows);
     }
+
+    [Theory]
+    [InlineData(360, 760)]
+    [InlineData(804, 1164)]
+    public void HeldUprightTheSheetIsABottomSheet(double w, double h) =>
+        Assert.False(BookSheetPlan.ShapeFor(w, h).Card);
+
+    [Theory]
+    [InlineData(760, 360, 580, 328)]
+    [InlineData(1164, 804, 580, 772)]
+    public void HeldSidewaysTheSheetIsOneCentredCardOn580dp(double w, double h, double cardWidth, double maxHeight)
+    {
+        BookSheetShape shape = BookSheetPlan.ShapeFor(w, h);
+        Assert.True(shape.Card);
+        Assert.Equal(cardWidth, shape.CardWidth);
+        Assert.Equal(maxHeight, shape.CardMaxHeight);
+    }
+
+    [Fact]
+    public void ANarrowWindowShrinksTheCardToFit() =>
+        Assert.Equal(468, BookSheetPlan.ShapeFor(500, 300).CardWidth);
 }

@@ -16,8 +16,12 @@ public partial class GalleryPage : ContentPage
 	private const double LanguageButtonHeight = 48;
 	private const double LanguageMenuGap = 6;
 	private const string TileTitleHeightKey = "TileTitleHeight";
-	private const int ShelfSpan = 2;
-	private const int CornerSpan = 3;
+	private const string TileWidthKey = "TileWidth";
+	private const string TileTitleLinesKey = "TileTitleLines";
+	private const double SidewaysItemSpacing = 14;
+	private const double GridItemSpacing = 12;
+	private static readonly Color RailLine = Color.FromArgb("#cfc6e6"); // the corner line on the ink rail
+	private static readonly Color RailButtonFill = Color.FromArgb("#1AFFFFFF"); // white at 10%, Add and Store on the ink rail
 	private static readonly Color CornerGearFill = Color.FromArgb("#1FFFFFFF"); // white at 12%, the gear tile in the corner's ink bar
 
 	private readonly IStoryLibrary _library;
@@ -48,6 +52,7 @@ public partial class GalleryPage : ContentPage
 		_starters = starters;
 		_services = services;
 		StoryList.ItemsSource = _items;
+		StoryList.Scrolled += (_, e) => RememberFirstBook(e.FirstVisibleItemIndex);
 		_storyteller = services.GetRequiredService<StorytellerDefault>();
 		_preview = new VoicePreview(services.GetRequiredService<ISpeechReader>());
 		StorytellerLine.DownloadNow = _storyteller.DownloadNowAsync;
@@ -66,6 +71,7 @@ public partial class GalleryPage : ContentPage
 		_languageButton = AddLanguageButton();
 		WaitOverlay overlay = DinoWait.OverPage();
 		Grid.SetRowSpan(overlay, GalleryRoot.RowDefinitions.Count);
+		Grid.SetColumnSpan(overlay, GalleryRoot.ColumnDefinitions.Count);
 		GalleryRoot.Children.Add(overlay);
 		_wait = new WaitController(overlay);
 	}
@@ -348,9 +354,217 @@ public partial class GalleryPage : ContentPage
 		TitleLabel.TextColor = grownUp ? Colors.White : DinoTokens.Get(DinoTokens.Ink);
 		SettingsButton.BackgroundColor = grownUp ? CornerGearFill : DinoTokens.Get(DinoTokens.ControlFill);
 		GearPath.Stroke = new SolidColorBrush(grownUp ? Colors.White : DinoTokens.Get(DinoTokens.Body));
-		if (StoryList.ItemsLayout is GridItemsLayout grid)
+		ApplyShape();
+	}
+
+	private Size _windowSize;
+	private string? _shapeKey; // what the last layout pass built, so a pass that changes nothing does nothing
+	private string? _anchorBookId; // the first book on screen (its id, not an index), kept across a rotation; null means the first book
+	private ScrollSwapPhase _swapPhase; // the list raises Scrolled itself when its layout is replaced and for the ScrollTo that follows; those events are not the user scrolling
+	private int _swapGeneration; // bumped by every layout swap, so a swap's timeout never ends a newer swap
+	private static readonly TimeSpan SwapTimeout = TimeSpan.FromMilliseconds(400);
+	private bool _shapeGrownUp;
+
+	protected override void OnSizeAllocated(double width, double height)
+	{
+		base.OnSizeAllocated(width, height);
+		if (width > 0 && height > 0 && (width != _windowSize.Width || height != _windowSize.Height))
 		{
-			grid.Span = grownUp ? CornerSpan : ShelfSpan;
+			_windowSize = new Size(width, height);
+			ApplyShape();
+		}
+	}
+
+	// Slice 232 part B (mock Batch 44 frames 110, 111, 125, 126): every size comes from one pure call on the window size (LandscapeLayout.ShelfLayout / CornerLayout); this page only applies it.
+	// Rotation changes the layout only: grown-up mode, the open sheet and the first book on screen are kept.
+	private void ApplyShape()
+	{
+		if (_windowSize.Width <= 0)
+		{
+			return;
+		}
+
+		bool grownUp = _mode.IsGrownUp;
+		CornerShape corner = LandscapeLayout.CornerLayout(_windowSize.Width, _windowSize.Height);
+		ShelfShape shelf = LandscapeLayout.ShelfLayout(_windowSize.Width, _windowSize.Height);
+		bool rail = grownUp && corner.Rail;
+		bool sideways = !grownUp && shelf.Sideways;
+		int columns = grownUp ? corner.Columns : shelf.Columns;
+		string key = $"{sideways}|{rail}|{corner.RailWidth}|{corner.FullRowButtons}|{columns}|{shelf.CoverHeight}|{grownUp}";
+		if (key == _shapeKey)
+		{
+			return;
+		}
+
+		_shapeKey = key;
+		if (grownUp != _shapeGrownUp)
+		{
+			_anchorBookId = null; // the other mode lists other tiles: its first book is not this one's
+			_shapeGrownUp = grownUp;
+		}
+
+		ApplyRail(rail, corner);
+		ApplyHeaderShape(rail, sideways, corner);
+		ApplyShelfList(sideways, shelf, columns, rail);
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] shelf layout={(sideways ? "sideways" : rail ? "rail" : "grid")} columns={columns} grownUp={grownUp} railWidth={corner.RailWidth}");
+#endif
+	}
+
+	// The grown-ups' corner's ink rail holds the header, the line, Add and Store and the way back; the books take the second column. Anywhere else the rail column is 0 wide and everything spans both.
+	private void ApplyRail(bool rail, CornerShape corner)
+	{
+		GalleryRoot.ColumnDefinitions[0].Width = new GridLength(rail ? corner.RailWidth : 0);
+		RailBackdrop.IsVisible = rail;
+		int span = rail ? 1 : 2;
+		Grid.SetColumnSpan(HeaderBar, span);
+		Grid.SetColumnSpan(ActionsScroll, span);
+		Grid.SetRow(ActionsScroll, rail ? 2 : 1); // the rail's middle takes the star row, so it scrolls and the way back stays at the foot
+		Grid.SetColumnSpan(HandoverButton, span);
+		Grid.SetColumn(StoryList, rail ? 1 : 0);
+		Grid.SetColumnSpan(StoryList, span);
+		Grid.SetRow(StoryList, rail ? 0 : 2);
+		Grid.SetRowSpan(StoryList, rail ? GalleryRoot.RowDefinitions.Count : 1);
+		double inset = corner.FullRowButtons ? TabletRailInset : LandscapeLayout.SidewaysInset;
+		HandoverButton.Margin = rail ? new Thickness(inset, 12, 14, 16) : new Thickness(14, 12, 14, 24);
+		ApplyRailButtons(rail, corner, inset);
+	}
+
+	private const double TabletRailInset = 40;
+
+	// Add and Store: white and violet bars in the portrait bar; on the rail translucent tiles, a pair on a phone and two full rows on a tablet.
+	private void ApplyRailButtons(bool rail, CornerShape corner, double inset)
+	{
+		bool rows = rail && corner.FullRowButtons;
+		CornerLine.TextColor = rail ? RailLine : Color.FromArgb("#5a5470");
+		CornerLine.FontSize = rail ? 12.5 : 13.5;
+		CornerLine.Padding = rail ? new Thickness(inset, 0, 14, 10) : new Thickness(18, 12, 18, 10);
+		ActionPair.Padding = rail ? new Thickness(inset, 0, 14, 10) : new Thickness(14, 0, 14, 14);
+		double height = rows ? 56 : rail ? 44 : 52;
+		ApplyButtonHeights(rail, height);
+		StorytellerLine.Padding = rail ? new Thickness(inset, 0, 14, 10) : new Thickness(18, 0, 18, 12);
+		AddBookButton.BackgroundColor = rail ? RailButtonFill : Colors.White;
+		StoreButton.BackgroundColor = rail ? RailButtonFill : DinoTokens.Get(DinoTokens.Brand);
+		AddBookLabel.TextColor = rail ? Colors.White : DinoTokens.Get(DinoTokens.Ink);
+		AddBookIcon.Color = rail ? DinoTokens.Get(DinoTokens.Coral) : DinoTokens.Get(DinoTokens.Ink);
+		AddBookLabel.FontSize = rail && !rows ? 14 : 15;
+		StoreLabel.FontSize = AddBookLabel.FontSize;
+		LayoutOptions content = rows ? LayoutOptions.Start : LayoutOptions.Center;
+		AddBookContent.HorizontalOptions = content;
+		StoreContent.HorizontalOptions = content;
+		AddBookButton.Padding = rows ? new Thickness(18, 0) : new Thickness(0);
+		StoreButton.Padding = AddBookButton.Padding;
+		Grid.SetColumnSpan(AddBookButton, rows ? 2 : 1);
+		Grid.SetColumnSpan(StoreButton, rows ? 2 : 1);
+		Grid.SetColumn(StoreButton, rows ? 0 : 1);
+		Grid.SetRow(StoreButton, rows ? 1 : 0);
+	}
+
+	// Portrait keeps the fixed 52 dp tiles with a truncated label; only on the rail does a label wrap to two lines and make its tile taller.
+	private void ApplyButtonHeights(bool rail, double height)
+	{
+		foreach (Border button in new[] { AddBookButton, StoreButton })
+		{
+			button.HeightRequest = rail ? -1 : height;
+			button.MinimumHeightRequest = rail ? height : -1;
+		}
+
+		foreach (Label label in new[] { AddBookLabel, StoreLabel })
+		{
+			label.LineBreakMode = rail ? LineBreakMode.WordWrap : LineBreakMode.TailTruncation;
+			label.MaxLines = rail ? 2 : -1;
+		}
+	}
+
+	// The header: a compact bar in the kids' sideways shelf, the rail's top in the corner (the title may take two lines there), else the portrait bar.
+	private void ApplyHeaderShape(bool rail, bool sideways, CornerShape corner)
+	{
+		double inset = corner.FullRowButtons ? TabletRailInset : LandscapeLayout.SidewaysInset;
+		HeaderBar.Padding = rail ? new Thickness(inset, corner.FullRowButtons ? 28 : 14, 14, 10)
+			: sideways ? new Thickness(LandscapeLayout.SidewaysInset, 6, 12, 4) : new Thickness(16, 10, 12, 12);
+		TitleLabel.FontSize = rail ? (corner.FullRowButtons ? 24 : 19) : 22;
+		TitleLabel.MaxLines = rail ? 2 : 1;
+	}
+
+	// A phone held sideways: one row of covers that scrolls sideways, the last one cut off to say "more"; else a grid of this many columns. The first book on screen stays on screen.
+	private void ApplyShelfList(bool sideways, ShelfShape shelf, int columns, bool rail)
+	{
+		bool wasSideways = StoryList.ItemsLayout is LinearItemsLayout;
+		_swapPhase = ScrollSwapPhase.SwapStarted;
+		_swapGeneration++;
+		if (sideways)
+		{
+			StoryList.ItemsLayout = wasSideways ? StoryList.ItemsLayout : new LinearItemsLayout(ItemsLayoutOrientation.Horizontal) { ItemSpacing = SidewaysItemSpacing };
+		}
+		else if (wasSideways || StoryList.ItemsLayout is not GridItemsLayout)
+		{
+			StoryList.ItemsLayout = new GridItemsLayout(columns, ItemsLayoutOrientation.Vertical) { HorizontalItemSpacing = GridItemSpacing, VerticalItemSpacing = GridItemSpacing };
+		}
+		else
+		{
+			((GridItemsLayout)StoryList.ItemsLayout).Span = columns;
+		}
+
+		Resources[TileWidthKey] = sideways ? LandscapeLayout.CoverWidth(shelf.CoverHeight) : -1.0;
+		Resources[TileTitleLinesKey] = sideways ? 1 : 2;
+		StoryList.Margin = rail ? new Thickness(16, 14, 26, 0) : sideways ? new Thickness(LandscapeLayout.SidewaysInset, 0, 0, 0) : new Thickness(14, 0);
+		if (wasSideways != sideways)
+		{
+			ReattachItems();
+		}
+
+		KeepFirstBookOnScreen();
+	}
+
+	// Replacing ItemsLayout alone left the list blank on Android after a rotation (the RecyclerView kept its old layout manager's state; likely, not proven from MAUI source): a fresh bind draws the covers on both platforms.
+	private void ReattachItems()
+	{
+		StoryList.ItemsSource = null;
+		StoryList.ItemsSource = _items;
+	}
+
+	private string BookIdAt(int index) => index >= 0 && index < _items.Count && _items[index] is StoryTile tile ? tile.Story.Id : string.Empty;
+
+	// A Scrolled event moves the anchor only when no swap is pending; the first one after the post-swap ScrollTo ends the swap (ScrollAnchorRules).
+	private void RememberFirstBook(int index)
+	{
+		if (ScrollAnchorRules.ShouldUpdateAnchor(_swapPhase) && BookIdAt(index) is { Length: > 0 } id)
+		{
+			_anchorBookId = id;
+		}
+
+		_swapPhase = ScrollAnchorRules.AfterScrolled(_swapPhase);
+	}
+
+	// After a layout swap: scroll to the anchor book (found by id), then wait for that ScrollTo's own Scrolled event; a short timeout ends the swap if none comes (the list was already there).
+	private void KeepFirstBookOnScreen()
+	{
+		if (_items.Count == 0)
+		{
+			_swapPhase = ScrollSwapPhase.Idle;
+			return;
+		}
+
+		int generation = _swapGeneration;
+		Dispatcher.Dispatch(() =>
+		{
+			if (generation != _swapGeneration)
+			{
+				return; // a newer swap took over
+			}
+
+			List<string> ids = Enumerable.Range(0, _items.Count).Select(BookIdAt).ToList();
+			StoryList.ScrollTo(ScrollAnchorRules.IndexOfAnchor(ids, _anchorBookId), position: ScrollToPosition.Start, animate: false);
+			_swapPhase = ScrollAnchorRules.AfterScrollToIssued(_swapPhase);
+			Dispatcher.DispatchDelayed(SwapTimeout, () => EndSwapAfterTimeout(generation));
+		});
+	}
+
+	private void EndSwapAfterTimeout(int generation)
+	{
+		if (generation == _swapGeneration)
+		{
+			_swapPhase = ScrollSwapPhase.Idle;
 		}
 	}
 
