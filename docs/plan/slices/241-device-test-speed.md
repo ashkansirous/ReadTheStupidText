@@ -39,7 +39,8 @@
   - Both emulator device runs hit the build cache (key 2d65b8f49103), so item 3 (build during boot on a cache miss) did not run. The only crash was the last-flow SIGSEGV below, which could not trigger item 1's fail-fast (no flow followed it).
 - Not yet verified (device):
   - [ ] Item 1, crash fail-fast: a flow list with a launch crash prints one FAIL with the crash lines and NOTRUN (naming the crash) for the rest in under one flow's time.
-  - [ ] Item 3, build during boot: a run after a source change prints `Cache miss: building ... while emulator-5554 boots` and its total is build time, not build plus boot.
+  - [x] Item 3, build during boot: a run after a source change prints `Cache miss: building ... while emulator-5554 boots`. PASS on emulator-5554 (Dino Debug, origin/main 5d86be52), 2026-11-01 ~23:45, by the device-test run before night 2026-11-01-2355 (`reviews/unverified-emu-2026-11-01.md`): the cache-miss line printed.
+  - [ ] Item 3, timing: the cache-miss run's total is build time, not build plus boot (not recorded by that run).
   - [ ] `PACKDL progress` lines every ~5 s on a normal download (the runner shows only the first).
   - [ ] The iOS stall watcher on a device.
   - [ ] The `-Split` two-emulator path.

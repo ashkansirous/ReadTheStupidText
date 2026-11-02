@@ -104,6 +104,8 @@ The back cover was built without a mock; frames 147 (tablet upright), 148 (phone
 
 #### Not yet verified
 
+Verified 2026-11-01 ~23:45 on emulator-5554 (Dino Debug, origin/main 5d86be52), before night 2026-11-01-2355: the back cover in portrait (back-cover flow) PASS again. Landscape, Farsi digits, picture-only and text-only were not run and stay below.
+
 - Landscape layout of the back cover.
 - Farsi/Arabic right-to-left back cover and Persian digits.
 - Picture-only and text-only reading modes on a device.
