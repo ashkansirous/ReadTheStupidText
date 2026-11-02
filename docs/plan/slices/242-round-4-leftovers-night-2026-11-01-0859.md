@@ -4,7 +4,7 @@
 
 *Built 2026-11-02 (night 2026-11-01-2355 wave 2): items 2, 3, 4, 5 and 7, emulator-checked on RTST_Tablet; not merged. Item 6 is not in this claim: it edits Slice 232's reading-screen files (`ReadingPage.xaml.cs`, `PictureTextPages.cs`, `LandscapeLayout.cs`) while 232 part C is open, so it stays open for a later wave.*
 
-*Item 6 in progress (wave 2026-11-02, night 2026-11-01-2355 wave 3), draft PR.*
+*Item 6 built 2026-11-02 (night 2026-11-01-2355 wave 3), emulator-checked on RTST_Tablet and the phone; not merged.*
 
 **Touches, item 6 claim (2026-11-02, wave 3):** `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/ReadingSurface.cs` (only if the title or margins need it), `src/DinoReader.Core/ReadingLayoutRules.cs`, `tests/DinoReader.Tests/ReadingLayoutRulesTests.cs` (new), `.maestro/dino/dino-landscape-reading*.yaml`, `docs/plan/slices/242-round-4-leftovers-night-2026-11-01-0859.md`. Read-only: `src/DinoReader.Core/LandscapeLayout.cs` (Slice 232 part D runs alongside; any new margin or title rule goes in `ReadingLayoutRules.cs`), `docs/design/dino-reader/Dino Reader Batch 44 Landscape.dc.html` frames 113-115 and 127.
 
@@ -25,10 +25,19 @@
 
 - [x] **5. A tablet AVD.** Slices 232 (parts B-E), 234 and 171 need "a tablet AVD", but only `RTST_Test` and `RTST_Test2` exist (wave 4 digest entry 1723). Add a tablet AVD (short side at least 600 dp) to the emulator setup script, and add `-Instance tablet` to `run-flows.ps1`. Verify: `dino-landscape-reading` runs on it and takes the row branch.
 
-- [ ] **6. Slice 232 part A's deviations from the approved mock** : tablet frame 127's title above the card, phone side margins 34/26 dp (now about 14), and the picture-only chip on the picture per frame 114. The user approved that mock, so build to match it; no further question (decided by the night's final feedback loop, 2026-11-01). Verify: screenshots against frames 113-115 and 127.
+- [x] **6. Slice 232 part A's deviations from the approved mock** : tablet frame 127's title above the card, phone side margins 34/26 dp (now about 14), and the picture-only chip on the picture per frame 114. The user approved that mock, so build to match it; no further question (decided by the night's final feedback loop, 2026-11-01). Verify: screenshots against frames 113-115 and 127.
 - [x] **7. A called workflow's job permissions checked against its caller.** PR #702 shipped a `dinoreader-windows.yml` job asking `actions: write` while `release.yml`'s `build-dinowin` granted only `contents: write`. Every release on main then ended `startup_failure` until hotfix #704 (two runs, 41351722978 and 41353452971). actionlint did not catch it, and #704 added only a prose rule to `.github/CLAUDE.md`. Add a script test under `.github/scripts/` that, for each `uses: ./.github/workflows/*.yml` job, fails when a called job asks for a permission the caller does not grant. Verify: the test fails on #702's version and passes on main.
 
 **Changed while building:** item 5's AVD is `RTST_Tablet` (`new-avd.ps1 -Tablet`), selected with `-Instance tablet` in `run-flows.ps1`. Item 3 added `tools/emulator/test-no-build.ps1` (self-test) and a `build-cache.ps1` helper. Item 7 is `.github/scripts/check-called-workflow-permissions.mjs` with its `.test.mjs`; `release-scripts.yml` and `tools-selftests.yml` got path filters. Rules added by the builder are in the diff (`tools/CLAUDE.md`, `.github/CLAUDE.md`).
+
+**Item 6 changed while building (2026-11-02):** `ReadingLayoutRules` (`src/DinoReader.Core/ReadingLayoutRules.cs`) gained `SidewaysSurface` (phone 34 dp left / 26 dp right, tablet 14), `ShowsTabletTitle` (row controls + picture beside a drawn text card + non-empty title), `CardTop` and `TitleLine`; `ReadingLayoutRulesTests` is new. `ReadingPage` has a `SideTitle` label (AutomationId `ReadingTabletTitle`) in `ReadingPage.xaml`: the claim's Touches widened at build, since the label needs the XAML. One show value per layout pass sets its visibility and the card offset (`Surface.SetCardTop`); it takes the theme colour, re-applies on a size-class change and uses the size passed to layout. The picture-only chip: no change (frame 114 draws it on its own white at the left margin, as part A built). Known: during a swipe a neighbour page shares the held page's card offset. New flow `.maestro/dino/dino-landscape-reading-tablet.yaml` (RTST_Tablet only).
+
+**Item 6 device run (2026-11-02, emulator):** tablet flow PASS on the third run (runs 1 and 2 failed on a "System UI isn't responding" dialog, with two emulators up and a pack downloading); phone `dino-landscape-reading` PASS; no fatal. Evidence: `D:/ReadTheStupidText-worktrees/reviews/s242i6-device/` (outside the repo).
+
+**Item 6 from review** (files in `D:/ReadTheStupidText-worktrees/reviews/`):
+- High (`s242i6-review-high.md`, 7 findings): 1-5 applied; 6 skipped (per-pass property sets in `ApplySideTitle`); 7 skipped (the Tablet+Rail branch is unreachable).
+- Medium (`s242i6-review-medium.md`, 7 findings): 1, 2, 5, 7 applied; 3 skipped (extra measure); 4 skipped (style: unused `TabletTitleSize`, literals duplicated in XAML); 6 skipped (RTL: books are never mirrored).
+- Check (`s242i6-review-check-medium.md`, 2 low findings, both skipped): 1 `OnSizeAllocated` always follows a resize and re-applies; 2 the mock ties the title's return to the row placement, so a phone tall enough for the row shows it too.
 
 **Device run (2026-11-02, emulator):** `RTST_Tablet` cold boot 131 s, `wm size` 1600x2560, density 320. `dino-landscape-reading` on `-Instance tablet -NoBuild` PASS; logcat showed `[Landscape] reading controls=row` (the tablet row branch). `test-no-build.ps1` PASS. Evidence: `D:/ReadTheStupidText-worktrees/reviews/s242-device/` (outside the repo).
 
@@ -73,6 +82,9 @@ The builder already added the rules in the diff (`tools/CLAUDE.md`, `.github/CLA
 
 - `run-flows.ps1 -Install -NoBuild` may still build (check pass, low finding 1: the explicit `-Install` path lacks the no-build exit).
 - `dino-landscape-reading` does not assert the `[Landscape] reading controls=row` line; the row branch was read from logcat by hand.
+- Item 6: the 34/26 dp phone insets (no log or tree value; screenshots only).
+- Item 6: the tablet screenshot against frame 127, by eye only.
+- Item 6: the phone flow does not assert the tablet title stays hidden.
 
 ## User answers before the night run (2026-11-01, evening)
 
