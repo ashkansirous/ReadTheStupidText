@@ -3,6 +3,9 @@
   Runs named checks on the real phone inside a fixed time budget and prints one summary table (Slice 213).
 .DESCRIPTION
   run-checks.ps1 -App rtst|dino -Checks cold-start,highlight [-Budget 10] [-Runs 3] [-Reinstall] [-NoBuild] [-FirstRead 1w|1s|2s|passage | -FirstText '<text>'] [-DropCaches] [-Serial s]
+  run-checks.ps1 -App dino -Checks short-lines -Voices bm_daniel,bf_emma   (Slice 236 item 1: the voice list reaches checks that take one; short-lines prints the guard's NaN takes)
+  run-checks.ps1 -App rtst -Checks highlight -Variant debug|aot             (Slice 236 item 2: pins a RUN to one build: that variant only is installed, never swapped, and no background build of the other is started; a check that needs the other variant FAILs and says so)
+  Before each check the runner re-reads the read-only pre-flight facts (charger, stay_on_while_plugged_in, wakefulness), names any change, sets stay-awake to 7 again and wakes the screen, and stops (exit 5) when the phone left the charger (Slice 236 item 9); the install step prints versionCode, lastUpdateTime and the build key against the cached build's.
   run-checks.ps1 -Build -App rtst|dino [-Variant debug|aot]      (default debug) builds (or finds) the APK for the current inputs in the build cache, then exits.
   run-checks.ps1 -Prepare -App rtst|dino [-Variant debug|aot]    (builds the APK first when it is not cached) puts the voice pack on the dev app, OUTSIDE any budget (like -Build), then exits. A pack is installed when files/packs/<id>/active exists
                                                                  and the version folder it names has pack.json (Test-PackInstalled). Steps: take the lease, install the cached APK as a run does, deletes the stale
@@ -36,7 +39,8 @@ param(
     [Parameter(Mandatory)][ValidateSet('rtst', 'dino')][string]$App,
     [string[]]$Checks,
     [ValidateRange(1, 120)][int]$Budget = 10,
-    [ValidateSet('aot', 'debug')][string]$Variant = 'debug',   # only for -Build and -Prepare; a run takes each check's own variant
+    [ValidateSet('aot', 'debug')][string]$Variant = 'debug',   # -Build and -Prepare: the variant to build; a run: pins it (Slice 236 item 2), else each check's own variant is taken
+    [string[]]$Voices,                                                            # Slice 236 item 1: voice ids for the checks that take a list (short-lines), e.g. -Voices bm_daniel,bf_emma
     [switch]$Build,
     [switch]$Prepare,
     [int]$Runs = 3,
@@ -48,6 +52,7 @@ param(
     [switch]$DropCaches,                                                          # cold-start only: drop the phone's file cache each run (root only)
     [string]$Serial
 )
+$script:PinVariant = if ($PSBoundParameters.ContainsKey('Variant') -and -not $Build -and -not $Prepare) { $Variant } else { $null }   # Slice 236 item 2: read before Use-Variant overwrites $Variant
 $script:RunStart = Get-Date   # the budget clock: it runs from here, so every wait before the checks counts
 $script:RunId = [guid]::NewGuid().ToString('N').Substring(0, 8)   # Slice 225 item 5: written into run-status and printed at the start
 $ErrorActionPreference = 'Stop'
@@ -61,6 +66,7 @@ $script:Projects = @{ rtst = 'src\ReadTheStupidText.Mobile\ReadTheStupidText.Mob
 $script:ApkFilter = '*-Signed.apk'
 $script:Rid = 'android-arm64'
 $script:Platform = Get-CachePlatform $Variant
+$script:VoiceList = @($Voices | ForEach-Object { $_ -split ',' } | Where-Object { $_ })   # one comma list works in any shell
 $script:WaitedSeconds = 0          # time spent only waiting for a build: not part of the budget
 $script:InstalledVariant = $null  # the variant this run has put on the phone (at most one swap: debug -> aot)
 $script:PreflightDone = $false
@@ -205,9 +211,15 @@ function Start-VariantBuilds($Plans, [bool]$NoStart = $false) {
     $script:RunKey = $key   # read once: the monitor looks at the cache every few seconds
     $engine = (Get-Process -Id $PID).Path
     $builds = @{}
+    $toBuild = @(Get-VariantsToBuild $script:PinVariant)
     foreach ($v in @($script:VariantDebug, $script:VariantAot)) {
         $record = [pscustomobject]@{ Variant = $v; Process = $null; Final = $null }
-        if (Find-VariantApk $v $key) { $record.Final = [pscustomobject]@{ State = $script:StateOk; Failure = $null } }
+        if ($toBuild -cnotcontains $v) {
+            # Slice 236 item 2: the other variant of a pinned run is neither built nor installed; its record only keeps the status file readable.
+            $record.Final = [pscustomobject]@{ State = $script:StateFailed; Failure = "not built: this run is pinned to $($script:PinVariant) (-Variant)" }
+            Write-Host "pinned to $($script:PinVariant) (-Variant): the $v build is not started and nothing swaps to it"
+        }
+        elseif (Find-VariantApk $v $key) { $record.Final = [pscustomobject]@{ State = $script:StateOk; Failure = $null } }
         elseif ($NoStart) { $record.Final = [pscustomobject]@{ State = $script:StateFailed; Failure = "the $v build is not cached and -NoBuild starts none" } }
         else {
             Remove-Item (Get-BuildStatusPath $v) -Force -ErrorAction SilentlyContinue
@@ -278,9 +290,10 @@ function Get-BuildViews($Builds) {
 # ---- phone: install, preflight, setup
 # The phone's view of the dev app: Update (its lastUpdateTime, $null when not installed) and Marker (what run-checks wrote after its own install, if still true).
 function Get-InstalledState([string]$Phone) {
-    $update = Get-PackageLastUpdate ((Invoke-Adb $Phone @('shell', 'dumpsys', 'package', $package)) -join "`n")
+    $dump = (Invoke-Adb $Phone @('shell', 'dumpsys', 'package', $package)) -join "`n"
+    $update = Get-PackageLastUpdate $dump
     $markerText = (Invoke-Adb $Phone @('shell', "cat $($script:InstallMarkerPath) 2>/dev/null")) -join ' '
-    return [pscustomobject]@{ Update = $update; Marker = (ConvertFrom-InstallMarker $markerText) }
+    return [pscustomobject]@{ Update = $update; Marker = (ConvertFrom-InstallMarker $markerText); VersionCode = (Get-PackageVersionCode $dump) }
 }
 
 # adb install -r (data and packs stay), then the marker that says which variant and build this is.
@@ -306,6 +319,34 @@ function Invoke-Preflight([string]$Phone) {
     $verdict = Resolve-PreflightVerdict $lines $exitCode
     Write-Host (Format-PreflightLine $verdict)
     return $verdict
+}
+
+# Slice 236 item 9: the read-only part of preflight.ps1 again before each check (the 2026-11-01 S21 dozed on AC mid-run while the 08:56 pre-flight had read stay-awake 7). A changed setting is named;
+# stay_on_while_plugged_in is the one setting the runner may set again (as preflight -Fix does). A phone that left the charger stops the run. $null when ready, else a stop (Reason, Code).
+# Review: one transient read (a charger blip, a slow dumpsys) must not end a run or overwrite a setting, so a stop or a stay-on change is read once more after a short wait before it counts.
+function Read-PhoneReadiness([string]$Phone) {
+    $battery = "$(Invoke-Adb $Phone @('shell', 'dumpsys battery'))"
+    $wake = "$(Invoke-Adb $Phone @('shell', 'dumpsys power | grep mWakefulness='))"
+    $wakefulness = if ($wake -match 'mWakefulness=(\w+)') { $Matches[1] } else { 'unknown' }
+    $stayOn = "$(Invoke-Adb $Phone @('shell', 'settings', 'get', 'global', 'stay_on_while_plugged_in'))".Trim()
+    $ready = Resolve-PhoneReadiness $stayOn (Get-ChargerStayOnBit $battery) $wakefulness
+    Write-Host "   phone re-read before the check: stay_on_while_plugged_in '$stayOn', $wakefulness$(if ($ready.Stop) { ', ' + $ready.Stop } else { ', ok' })"
+    $ready | Add-Member -NotePropertyName StayOnRead -NotePropertyValue $stayOn -PassThru
+}
+
+# While any stay-on record exists (preflight.ps1 -Fix or the lease take wrote it) the original is saved, so the runner may set stay-awake back to 7; otherwise the change is someone else's and the run stops naming it.
+function Confirm-PhoneReady([string]$Phone) {
+    $ready = Read-PhoneReadiness $Phone
+    if ($ready.Stop -or $ready.SetStayOn) { Start-Sleep -Seconds 2; $ready = Read-PhoneReadiness $Phone }
+    foreach ($note in $ready.Notes) { Write-Host "   CHANGED: $note" }
+    if ($ready.Stop) { return [pscustomobject]@{ Reason = "phone not ready: $($ready.Stop)"; Code = $script:ExitPreflightNoGo } }
+    if ($ready.SetStayOn) {
+        $record = Read-StayOnOriginal (Get-PhoneLeaseKey $Phone)
+        if (-not $record) { return [pscustomobject]@{ Reason = "phone not ready: stay_on_while_plugged_in changed to '$($ready.StayOnRead)' and no preflight -Fix record says this run set it, so it is not overwritten (set it yourself or run preflight.ps1 -Fix)"; Code = $script:ExitPreflightNoGo } }
+        Invoke-Adb $Phone @('shell', 'settings', 'put', 'global', 'stay_on_while_plugged_in', "$($record.set)") | Out-Null
+    }
+    if ($ready.Wake) { Invoke-Adb $Phone @('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP') | Out-Null }
+    return $null
 }
 
 function Get-StageSecondsLeft { return $Budget * 60 - (Get-BudgetElapsedSeconds) }
@@ -435,7 +476,7 @@ function Get-BudgetEnd { return (Get-BudgetStart $script:RunStart $script:Waited
 
 # Runs one check script in this process; its deadline is the budget's end. A throw is a FAIL (or TIMEOUT when the budget ended it).
 function Invoke-OneCheck($Row, [string]$Phone, [datetime]$BudgetEnd, [string]$RunVariant) {
-    $splat = Get-CheckArguments $Row.Name $Phone $App $Runs $FirstRead $FirstText $DropCaches.IsPresent   # Slice 225 item 10: pure, so the self-test sees -FirstText arrive as the check's -Text
+    $splat = Get-CheckArguments $Row.Name $Phone $App $Runs $FirstRead $FirstText $DropCaches.IsPresent $script:VoiceList   # Slice 225 item 10: pure, so the self-test sees -FirstText arrive as the check's -Text
     Set-CheckDeadline $BudgetEnd   # the stage keeps it set (children read it from the environment) until the cleanup is done
     $started = Get-Date; $output = $null; $failure = $null
     try { $output = @(& (Join-Path $PSScriptRoot "checks\$($Row.Name).ps1") @splat) } catch { $failure = $_.Exception.Message }
@@ -509,6 +550,8 @@ function Invoke-PlannedCheck($Step, [string]$Phone, $State) {
     if (-not (Confirm-OwnLease $State)) { [void]$State.Rows.Add((New-Row $plan.Name $script:StatusSkipped $script:LeaseLostReason)); return $null }
     $stop = Switch-ToVariant $Step.Variant $Phone $State
     if ($stop) { return $stop }
+    $notReady = Confirm-PhoneReady $Phone
+    if ($notReady) { return $notReady }
     $busy = Enter-QuietForTiming $plan $State
     if ($busy) { [void]$State.Rows.Add((New-Row $plan.Name $script:StatusSkipped "waited too long for $busy")); return $null }
     Set-CheckDeadline (Get-BudgetEnd)
@@ -535,7 +578,7 @@ function Invoke-Checks($Plans, [string]$Phone, $State) {
     $pending = New-Object System.Collections.ArrayList
     foreach ($plan in $Plans) { if ($plan.Status -ne $script:StatusSkipped) { [void]$pending.Add($plan) } }
     while ($pending.Count -gt 0) {
-        $step = Get-NextStep @($pending) (Get-BuildViews $script:BuildJobs) $script:InstalledVariant
+        $step = Get-NextStep @($pending) (Get-BuildViews $script:BuildJobs) $script:InstalledVariant $script:PinVariant
         Publish-RunStatus $Plans $State $(if ($step.Action -ceq $script:ActionRun) { $step.Plan.Name }) $(if ($step.Action -ceq $script:ActionWait) { $step.Detail })
         if ($step.Action -ceq $script:ActionWait) { Wait-ForBuildsOnce $step $State; continue }
         [void]$pending.Remove($step.Plan)
@@ -623,6 +666,7 @@ function Resolve-DeviceInstall([string]$Phone, $State) {
     $installed = Get-InstalledState $Phone
     $plan = Resolve-InstallPlan $installed.Marker $installed.Update $script:Platform $script:CachedKey $Reinstall.IsPresent
     Write-Host "   $package ($($script:Variant)): $($plan.Reason)"
+    Write-Host "   $(Format-InstallCompare $installed.VersionCode $installed.Update $installed.Marker $script:CachedKey)"   # Slice 236 item 9: what the phone has against the cached build, before any check runs
     if ($plan.Action -eq $script:ActionSkip) { return $plan.Reason }
     if ($plan.Action -eq $script:ActionKeep) { return $null }
     if (-not (Confirm-OwnLease $State)) { return $script:LeaseLostReason }
@@ -693,7 +737,7 @@ Write-Host (Format-RunHeader $App $plans)
 Write-Host "status files of this checkout ($($script:RepoRoot)), run $($script:RunId): $(Get-RunStatusPath)"   # Slice 225 item 5: another checkout's run has its own files
 if ($NoBuild -or $env:RTST_NO_BUILD -eq '1') {
     $noBuildKey = Get-BuildKey
-    $missed = @(Get-NoBuildMiss $plans ([bool](Find-VariantApk $script:VariantDebug $noBuildKey)) ([bool](Find-VariantApk $script:VariantAot $noBuildKey)))
+    $missed = @(Get-NoBuildMiss $plans ([bool](Find-VariantApk $script:VariantDebug $noBuildKey)) ([bool](Find-VariantApk $script:VariantAot $noBuildKey)) $script:PinVariant)
     if ($missed.Count -gt 0) { exit (Stop-CacheMissed $plans (Format-NoBuildMiss $App $missed $noBuildKey)) }
 }
 $phone = Find-WirelessPhone $Serial

@@ -72,17 +72,45 @@ function Start-AppHeal {
     $script:HealStarted = $true
 }
 
+# Slice 236 item 7: the package's compat state at the start, as the phone says it (best effort, never throws; the exact dumpsys wording is not confirmed on a device). A leftover override of an earlier variant is the
+# suspect for the S21's "Compatibility: Killing package ... PlatformCompat overrides" 0.7 s after a launch (2026-11-01, not proven), so the log shows what was there before this check set anything.
+function Write-CompatState([string]$When) {
+    try {
+        $dump = @(Invoke-Adb $Phone @('shell', 'dumpsys platform_compat'))
+        $lines = @($dump | Where-Object { "$_" -match [regex]::Escape($package) -or "$_" -match 'FGS_INTRODUCE_TIME_LIMITS' } | Select-Object -First 6 | ForEach-Object { "$_".Trim() })
+        Write-Host "   compat state $When : $(if ($lines.Count -gt 0) { $lines -join ' | ' } else { 'no line names this package or FGS_INTRODUCE_TIME_LIMITS' })"
+    } catch { Write-Host "   compat state $When : could not be read ($($_.Exception.Message))" }
+}
+
+# What this run raised (set BEFORE the command is sent, so a half-sent command still counts). The reset also acts on what it finds on the phone, so an override an earlier killed run left is cleared too.
+$script:TimeoutSet = $false
+$script:CompatSet = $false
+
 function Set-ShortTimeLimit {
     Start-AppHeal
+    Write-CompatState 'before this check changes anything'
+    $script:TimeoutSet = $true
     Invoke-Adb $Phone @('shell', 'device_config', 'put', 'activity_manager', 'data_sync_fgs_timeout_duration', "$($script:DataSyncTimeoutMs)") | Out-Null
+    $script:CompatSet = $true
     Invoke-Adb $Phone @('shell', 'am', 'compat', 'enable', 'FGS_INTRODUCE_TIME_LIMITS', $package) | Out-Null
 }
 
-# Never throws: runs in the finally block. $true when both resets reached the phone.
+# Never throws: runs in the finally block. $true when everything this check set was reset (both resets reached the phone). Resets only what is present: the timeout when device_config holds a value (or this run set it), the compat flag when the dump shows an override for the package (or this run enabled it). Nothing present = no `am compat reset`, which would kill the app (Slice 236 item 7). An override left by a killed earlier run is present, so it is cleared. Only the time-limit variant calls it.
 function Reset-TimeLimit {
     try {
-        Invoke-Adb $Phone @('shell', 'device_config', 'delete', 'activity_manager', 'data_sync_fgs_timeout_duration') | Out-Null
-        Invoke-Adb $Phone @('shell', 'am', 'compat', 'reset', 'FGS_INTRODUCE_TIME_LIMITS', $package) | Out-Null
+        # Slice 236 review: a failed diagnostic read never skips the delete/reset. An unreadable state counts as present (both calls are safe to repeat).
+        $timeoutValue = ''; $overrides = @(); $timeoutUnknown = $false; $compatUnknown = $false
+        try { $timeoutValue = "$(Invoke-Adb $Phone @('shell', 'device_config', 'get', 'activity_manager', 'data_sync_fgs_timeout_duration'))".Trim() }
+        catch { $timeoutUnknown = $true; Write-Host "   WARNING: could not read the dataSync timeout ($($_.Exception.Message)); deleting it anyway" }
+        try { $overrides = @(Get-CompatOverrideLines @(Invoke-Adb $Phone @('shell', 'dumpsys platform_compat')) $package) }
+        catch { $compatUnknown = $true; Write-Host "   WARNING: could not read the compat state ($($_.Exception.Message)); resetting it anyway" }
+        $timeoutPresent = $script:TimeoutSet -or $timeoutUnknown -or (Test-DeviceConfigValueSet $timeoutValue)
+        $compatPresent = $script:CompatSet -or $compatUnknown -or $overrides.Count -gt 0
+        Write-Host "   found: timeout '$timeoutValue' (set by this run: $($script:TimeoutSet)), compat override lines $($overrides.Count) (enabled by this run: $($script:CompatSet))"
+        if ($timeoutPresent) { Invoke-Adb $Phone @('shell', 'device_config', 'delete', 'activity_manager', 'data_sync_fgs_timeout_duration') | Out-Null }
+        if ($compatPresent) { Invoke-Adb $Phone @('shell', 'am', 'compat', 'reset', 'FGS_INTRODUCE_TIME_LIMITS', $package) | Out-Null }
+        Write-Host "   reset: timeout $(if ($timeoutPresent) { 'deleted' } else { 'none present, no call' }), compat flag $(if ($compatPresent) { 'reset' } else { 'none present, no call (a reset would kill the app)' })"
+        Write-CompatState 'after the reset'
         return $true
     } catch { Write-Host "   WARNING: could not reset the dataSync timeout: $($_.Exception.Message)"; return $false }
 }
@@ -171,6 +199,7 @@ function Test-AppResumedAfterTap {
 # The network-only variant still needs the app uid and the device-side heal that Set-ShortTimeLimit makes, but no time limit.
 function Set-NetworkOnlySetup {
     Start-AppHeal
+    Write-CompatState 'at the start of the network-only variant (it sets none)'
 }
 
 # True once no activity of the dev app is the resumed one (the HOME key has finished moving it out of the foreground).

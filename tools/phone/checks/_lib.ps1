@@ -70,9 +70,13 @@ function Get-CheckCatalogue([string]$ChecksDir) {
 # Name -> Apps, Variant, EstimateSeconds / PerRunSeconds, NeedsPack, Blocked: from the header line of each check file (above).
 $script:Catalogue = Get-CheckCatalogue $PSScriptRoot
 
+$script:VoiceListChecks = @('short-lines')   # checks whose script takes -Voices (Slice 236 item 1)
+
 # Slice 225 item 10: the arguments run-checks passes to one check script. Only cold-start takes the run options (-Runs, -Preset, -Text from -FirstText, -DropCaches).
-function Get-CheckArguments([string]$Name, [string]$Phone, [string]$App, [int]$Runs, [string]$FirstRead, [string]$FirstText, [bool]$DropCaches) {
+function Get-CheckArguments([string]$Name, [string]$Phone, [string]$App, [int]$Runs, [string]$FirstRead, [string]$FirstText, [bool]$DropCaches, [string[]]$Voices = @()) {
     $splat = @{ Phone = $Phone; App = $App }
+    # Slice 236 item 1: -Voices reaches only the checks that take a voice list (their script has a -Voices parameter).
+    if ($Voices.Count -gt 0 -and $script:VoiceListChecks -ccontains $Name) { $splat.Voices = $Voices }
     if ($Name -ceq 'cold-start') {
         $splat.Runs = $Runs
         $splat.Preset = $FirstRead
@@ -692,11 +696,13 @@ function Get-EndedBuildStatus($Status, [bool]$Cached) {
 }
 
 # -NoBuild (switch or RTST_NO_BUILD=1): which variants a run would have to build. A check that needs AOT needs the AOT APK; a Debug one is served by either.
-function Get-NoBuildMiss($Plans, [bool]$HasDebug, [bool]$HasAot) {
+function Get-NoBuildMiss($Plans, [bool]$HasDebug, [bool]$HasAot, $Pin = $null) {
     $missing = @()
     foreach ($plan in @($Plans | Where-Object { $_.Status -eq $script:StatusPending })) {
         $served = if ($plan.Variant -ceq $script:VariantAot) { $HasAot } else { $HasDebug -or $HasAot }
+        if ($Pin) { $served = $(if ($Pin -ceq $script:VariantAot) { $HasAot } else { $HasDebug }) }   # a pinned run uses that variant only (Slice 236 item 2)
         $variant = if ($plan.Variant -ceq $script:VariantAot) { $script:VariantAot } else { $script:VariantDebug }
+        if ($Pin) { $variant = $Pin }
         if (-not $served -and $missing -cnotcontains $variant) { $missing += $variant }
     }
     return $missing
@@ -724,9 +730,10 @@ function Format-BuildFailure([string]$Variant, [string]$Reason, [string[]]$LogTa
 
 # One plan against the builds: Run (with the variant to run on), Wait (with what for) or Fail (with why). $Builds maps 'debug'/'aot' to {State; Failure}.
 # $Installed is the variant on the phone now, or $null. A check that needs AOT never falls back to Debug; one that does not keeps what is installed (no swap back).
-function Resolve-PlanStep($Plan, $Builds, $Installed) {
+function Resolve-PlanStep($Plan, $Builds, $Installed, $Pin = $null) {
     $aot = $Builds[$script:VariantAot]; $debug = $Builds[$script:VariantDebug]
     $step = { param($action, $variant, $detail) [pscustomobject]@{ Plan = $Plan; Action = $action; Variant = $variant; Detail = $detail } }
+    if ($Pin) { return (Resolve-PinnedStep $Plan $Builds[$Pin] $Pin $step) }
     if ($Plan.Variant -ceq $script:VariantAot) {
         if ($aot.State -ceq $script:StateOk) { return (& $step $script:ActionRun $script:VariantAot $null) }
         if ($aot.State -ceq $script:StateFailed) { return (& $step $script:ActionFail $script:VariantAot $aot.Failure) }
@@ -740,9 +747,23 @@ function Resolve-PlanStep($Plan, $Builds, $Installed) {
     return (& $step $script:ActionWait $null "waiting for the debug or aot build ($($debug.State)/$($aot.State)) for $($Plan.Name)")
 }
 
+# Slice 236 item 2: a run pinned to one variant (-Variant on a run) installs that build only, never swaps and starts no build of the other variant. A check that needs the other variant fails and says why.
+function Resolve-PinnedStep($Plan, $Build, [string]$Pin, [scriptblock]$Step) {
+    if ($Plan.Variant -ceq $script:VariantAot -and $Pin -cne $script:VariantAot) { return (& $Step $script:ActionFail $Pin "$($Plan.Name) needs the aot build but this run is pinned to $Pin (-Variant $Pin); run it without -Variant or with -Variant aot") }
+    if ($Build.State -ceq $script:StateOk) { return (& $Step $script:ActionRun $Pin $null) }
+    if ($Build.State -ceq $script:StateFailed) { return (& $Step $script:ActionFail $Pin $Build.Failure) }
+    return (& $Step $script:ActionWait $null "waiting for the pinned $Pin build ($($Build.State)) for $($Plan.Name)")
+}
+
+# The variants a run starts builds for: both normally, only the pinned one when the run is pinned (no background build of the other variant).
+function Get-VariantsToBuild($Pin = $null) {
+    if ($Pin) { return @($Pin) }
+    return @($script:VariantDebug, $script:VariantAot)
+}
+
 # The next thing to do: a failure first (it costs no time and shows at once), then the first check that can run, else Wait with everything it waits for.
-function Get-NextStep($Pending, $Builds, $Installed) {
-    $steps = @($Pending | ForEach-Object { Resolve-PlanStep $_ $Builds $Installed })
+function Get-NextStep($Pending, $Builds, $Installed, $Pin = $null) {
+    $steps = @($Pending | ForEach-Object { Resolve-PlanStep $_ $Builds $Installed $Pin })
     $first = { param($action) $steps | Where-Object { $_.Action -ceq $action } | Select-Object -First 1 }
     $fail = & $first $script:ActionFail
     if ($fail) { return $fail }
@@ -833,7 +854,8 @@ function Format-ShortLineArm($Takes) {
 function Format-ShortLineRow($Row) {
     $probe = if ($Row.Probe) { 'multi-thread {0} | single-thread {1}' -f (Format-ShortLineArm $Row.Probe.Multi), (Format-ShortLineArm $Row.Probe.Single) } else { 'no probe line' }
     $guard = if ($Row.GaveUp) { 'GAVE UP' } elseif ($Row.Rescue) { "rescued by $($Row.Rescue)" } else { 'first take ok' }
-    return "$probe; $guard; retries $(@($Row.Retries) -join ',')"
+    $nanTakes = if ($Row.PSObject.Properties['NanTakes']) { [int]$Row.NanTakes } else { 0 }   # Slice 236 item 1: the guard's own `take has NaN samples` count, printed with every read
+    return "$probe; $guard; retries $(@($Row.Retries) -join ','); guard NaN takes $nanTakes"
 }
 
 # Per arm (multi-thread, single-thread): probe takes with NaN, silent, total. Per outcome: reads rescued by a single-thread retry, reads that gave up.
@@ -848,5 +870,59 @@ function Get-ShortLineSummary($Rows) {
         "$arm-thread NaN $nan/$($takes.Count) (silent $silent)"
     }
     $rescued = @($Rows | Where-Object { $_.Rescue -like 'single-thread*' }).Count
-    return ($parts -join '; ') + "; rescued by single-thread retry $rescued/$($Rows.Count); gave up $(@($Rows | Where-Object { $_.GaveUp }).Count)/$($Rows.Count)"
+    $guardNan = [int](@($Rows | ForEach-Object { if ($_.PSObject.Properties['NanTakes']) { [int]$_.NanTakes } else { 0 } }) | Measure-Object -Sum).Sum
+    return ($parts -join '; ') + "; rescued by single-thread retry $rescued/$($Rows.Count); gave up $(@($Rows | Where-Object { $_.GaveUp }).Count)/$($Rows.Count); guard NaN takes $guardNan"
+}
+
+# ---- Slice 236 item 9: what the runner re-reads before each check (the read-only part of preflight.ps1), and the dev APK it compares with the cached build.
+# Pure: $StayOn is `settings get global stay_on_while_plugged_in` (text), $Bit the charger's bit (0 = not charging), $Wakefulness the mWakefulness word.
+# Returns Stop (why the run cannot go on, else $null), SetStayOn (the runner may set 7 again, the one setting it changes), Wake (send the wake key) and Notes (what changed, named).
+function Resolve-PhoneReadiness([string]$StayOn, [int]$Bit, [string]$Wakefulness, [string]$ExpectedStayOn = '7') {
+    $notes = @(); $stop = $null; $set = $false; $wake = $false
+    if ($Bit -eq 0) { $stop = "the phone is on battery ($Wakefulness): plug it in" }
+    else {
+        $covers = ($StayOn -match '^\d+$') -and (([int]$StayOn -band $Bit) -ne 0)
+        if (-not $covers) { $set = $true; $notes += "stay_on_while_plugged_in is '$StayOn' now (the pre-flight left it at $ExpectedStayOn): setting it to $ExpectedStayOn again" }
+        if ($Wakefulness -cne 'Awake') { $wake = $true; $notes += "the phone reads mWakefulness=$Wakefulness while charging: sending the wake key" }
+    }
+    return [pscustomobject]@{ Stop = $stop; SetStayOn = $set; Wake = $wake; Notes = $notes }
+}
+
+# `versionCode=NNN` of `dumpsys package`, or $null.
+function Get-PackageVersionCode([string]$PackageDump) {
+    if ("$PackageDump" -match 'versionCode=(\d+)') { return [int64]$Matches[1] }
+    return $null
+}
+
+# The one line that shows what the phone has against what the run would install: versionCode and lastUpdateTime of the installed dev app, and the build key the marker says, against the cached key.
+function Format-InstallCompare($VersionCode, $InstalledUpdate, $Marker, [string]$CachedKey) {
+    $code = if ($null -ne $VersionCode) { "versionCode $VersionCode" } else { 'versionCode unknown' }
+    $placed = if ($Marker) { "run-checks placed key $($Marker.Key)" } else { 'no run-checks marker' }
+    $same = if ($Marker -and $Marker.Key -ceq $CachedKey) { 'same as' } else { 'differs from' }
+    return "installed $code, lastUpdateTime $InstalledUpdate, $placed, which $same the cached build key $CachedKey"
+}
+
+# Slice 236 item 3: the app logs `VOICEPACK held-user-cancelled <lang>` when it refuses an automatic pack download because the user cancelled one. Pure: the matching log lines.
+$script:DownloadHoldPattern = 'VOICEPACK held-user-cancelled'
+function Get-DownloadHoldLines([string[]]$Lines) {
+    return @($Lines | Where-Object { "$_" -match $script:DownloadHoldPattern })
+}
+
+# The hold itself is saved in the app's shared preferences (PreferencesVoiceCancelStore, key VoiceCancelHeldLanguage), so it can be read without waiting for the app to try an automatic start (the log line is only written then). Pure: the held language in a preferences XML, or $null.
+function Get-HeldLanguageFromPrefs([string]$Xml) {
+    $m = [regex]::Match($Xml, '<string name="VoiceCancelHeldLanguage">([^<]+)</string>')
+    if ($m.Success) { return $m.Groups[1].Value }
+    return $null
+}
+
+# Slice 236 item 7: `am compat reset` on a package with no override still makes system_server kill the package ("Compatibility: Killing package ... PlatformCompat overrides"), so the reset runs only when there is something to reset. Pure.
+# `device_config get` prints "null" (or nothing) for a key that is not set.
+function Test-DeviceConfigValueSet([string]$Value) {
+    $text = "$Value".Trim()
+    return ($text -ne '' -and $text -ne 'null')
+}
+
+# The `dumpsys platform_compat` lines that show an FGS_INTRODUCE_TIME_LIMITS override for the package (a line naming both). The dumpsys wording is not confirmed on a device.
+function Get-CompatOverrideLines([string[]]$Dump, [string]$Package) {
+    return @($Dump | Where-Object { "$_" -match [regex]::Escape($Package) -and "$_" -match 'FGS_INTRODUCE_TIME_LIMITS' } | ForEach-Object { "$_".Trim() })
 }

@@ -254,7 +254,11 @@ Assert-Equal 'no give-up' $false $facts.GaveUp
 Assert-Equal 'a gave up line is seen' $true (ConvertFrom-ShortLineLog @('x: silent voice output after 3 takes; gave up (voice kokoro:am_liam, 4 chars, voiced ms 0/0/0)')).GaveUp
 Assert-Equal 'no probe lines give no probe' $null (ConvertFrom-ShortLineLog @('x: nothing')).Probe
 $gaveRow = [pscustomobject]@{ Probe = $facts.Probe; GaveUp = $true; Rescue = $null }
-Assert-Equal 'summary splits NaN by arm and counts outcomes' 'Multi-thread NaN 2/6 (silent 4); Single-thread NaN 0/6 (silent 2); rescued by single-thread retry 1/2; gave up 1/2' (Get-ShortLineSummary @([pscustomobject]@{ Probe = $facts.Probe; GaveUp = $false; Rescue = $facts.Rescue }, $gaveRow))
+Assert-Equal 'summary splits NaN by arm and counts outcomes' 'Multi-thread NaN 2/6 (silent 4); Single-thread NaN 0/6 (silent 2); rescued by single-thread retry 1/2; gave up 1/2; guard NaN takes 0' (Get-ShortLineSummary @([pscustomobject]@{ Probe = $facts.Probe; GaveUp = $false; Rescue = $facts.Rescue }, $gaveRow))
+# Slice 236 item 1: the guard's NaN take count is printed per read and summed in the summary
+$nanRow = [pscustomobject]@{ Probe = $facts.Probe; GaveUp = $false; Rescue = $facts.Rescue; Retries = @('2:single-thread'); NanTakes = $facts.NanTakes }
+Assert-Equal 'a read prints the guard NaN takes' $true ((Format-ShortLineRow $nanRow) -like '*guard NaN takes 1')
+Assert-Equal 'the summary sums the guard NaN takes' $true ((Get-ShortLineSummary @($nanRow, $nanRow)) -like '*guard NaN takes 2')
 
 # ---- a deadline caps an adb call; none leaves it alone
 $now = Get-Date
@@ -670,6 +674,89 @@ Assert-Equal 'a build log is named after the checkout too' $true ((Get-StatusFil
 $status = New-RunStatus 'dino' (Get-Date) @{ debug = [pscustomobject]@{ State = 'ok'; Failure = $null }; aot = [pscustomobject]@{ State = 'ok'; Failure = $null } } @() @() $null $null $null $false 'D:\w\s209' 'abc123'
 Assert-Equal 'run status records the checkout' 'D:\w\s209' $status.checkout
 Assert-Equal 'run status records the run id' 'abc123' $status.runId
+
+# ---- Slice 236 item 1: -Voices reaches the checks that take a voice list, and no other
+$withVoices = Get-CheckArguments 'short-lines' 'ph' 'dino' 3 'passage' '' $false @('bm_daniel', 'bf_emma')
+Assert-Equal 'short-lines gets the voices' 'bm_daniel,bf_emma' ($withVoices.Voices -join ',')
+Assert-Equal 'no -Voices: short-lines keeps its own default' $false ((Get-CheckArguments 'short-lines' 'ph' 'dino' 3 'passage' '' $false).ContainsKey('Voices'))
+Assert-Equal 'a check without a voice list gets none' $false ((Get-CheckArguments 'highlight' 'ph' 'rtst' 3 'passage' '' $false @('bm_daniel')).ContainsKey('Voices'))
+Assert-Equal 'the voice-list checks all declare a -Voices parameter' 0 @($script:VoiceListChecks | Where-Object { (Get-Content (Join-Path $PSScriptRoot "checks\$_.ps1") -Raw) -notmatch '\[string\[\]\]\$Voices' }).Count
+Assert-Equal 'the runner passes the voice list on' $true ($runnerText -match '\$DropCaches\.IsPresent \$script:VoiceList')
+
+# ---- Slice 236 item 2: a run pinned to debug installs debug and starts no build of the other variant, even with both cached
+$bothCached = @{ debug = [pscustomobject]@{ State = 'ok'; Failure = $null }; aot = [pscustomobject]@{ State = 'ok'; Failure = $null } }
+$highlightPlan = @(Resolve-CheckSelection @('highlight') 'rtst' $catalogue)[0]
+$coldPlan = @(Resolve-CheckSelection @('cold-start') 'rtst' $catalogue)[0]
+Assert-Equal 'unpinned with both cached: the aot build is preferred (the old swap)' 'aot' (Get-NextStep @($highlightPlan) $bothCached $null).Variant
+Assert-Equal 'pinned to debug with both cached: debug is installed' 'debug' (Get-NextStep @($highlightPlan) $bothCached $null 'debug').Variant
+Assert-Equal 'pinned to debug: a build that is still running is waited for, not swapped' 'Wait' (Get-NextStep @($highlightPlan) @{ debug = [pscustomobject]@{ State = 'building'; Failure = $null }; aot = [pscustomobject]@{ State = 'ok'; Failure = $null } } $null 'debug').Action
+Assert-Equal 'pinned to debug: a check that needs aot fails and says why' $true ((Get-NextStep @($coldPlan) $bothCached $null 'debug').Detail -like '*pinned to debug*')
+Assert-Equal 'pinned to aot with both cached: aot' 'aot' (Get-NextStep @($highlightPlan) $bothCached $null 'aot').Variant
+Assert-Equal 'a pinned run builds only the pinned variant' 'debug' ((Get-VariantsToBuild 'debug') -join ',')
+Assert-Equal 'an unpinned run builds both' 'debug,aot' ((Get-VariantsToBuild) -join ',')
+Assert-Equal 'pinned and -NoBuild: the other variant being missing is no miss' 0 @(Get-NoBuildMiss @($highlightPlan) $true $false 'debug').Count
+Assert-Equal 'pinned and -NoBuild: the pinned variant missing is named' 'aot' (@(Get-NoBuildMiss @($highlightPlan) $true $false 'aot') -join ',')
+
+# ---- Slice 236 item 4: with no owner variable the run owner is the per-phone default, and that owner takes and releases one lease without waiting (child process, temp lease folder, no adb)
+$ownerProbe = Join-Path ([IO.Path]::GetTempPath()) ('rtst-owner-probe-' + [guid]::NewGuid().ToString('N'))
+$ownerScript = @'
+param([string]$Common, [string]$Dir)
+. $Common
+$script:LeaseDir = $Dir
+foreach ($name in 'RTST_DEVICE_OWNER', 'RTST_PHONE_OWNER') { [Environment]::SetEnvironmentVariable($name, $null) }
+$key = 'selftest236'
+$owner = Get-RunChecksOwner $key
+$watch = [Diagnostics.Stopwatch]::StartNew()
+$waited = Wait-ForLease $key $owner 5 0.05 'phone'
+$held = Read-Lease $key
+$again = Wait-ForLease $key $owner 5 0.05 'phone'
+$released = Remove-Lease $key $owner
+"owner=$owner;took=$($null -eq $waited);holder=$($held.Owner);retook=$($null -eq $again);released=$released;free=$($null -eq (Read-Lease $key));fast=$($watch.Elapsed.TotalSeconds -lt 5)"
+'@
+try {
+    $null = New-Item -ItemType Directory -Force $ownerProbe
+    $probeFile = Join-Path $ownerProbe 'probe.ps1'
+    [IO.File]::WriteAllText($probeFile, $ownerScript)
+    $engine = (Get-Process -Id $PID).Path
+    $answer = (& $engine -NoProfile -File $probeFile -Common (Join-Path $PSScriptRoot 'common.ps1') -Dir $ownerProbe 2>&1 | Select-Object -Last 1)
+    Assert-Equal 'no owner variable: one lease taken by the default owner, kept on a second take, released, and no wait' 'owner=run-checks-selftest236;took=True;holder=run-checks-selftest236;retook=True;released=True;free=True;fast=True' "$answer"
+}
+finally { Remove-Item $ownerProbe -Recurse -Force -ErrorAction SilentlyContinue }
+
+# ---- Slice 236 item 9: the re-read before each check names a change, sets stay-awake again, wakes the screen and stops a phone that left the charger
+$okRead = Resolve-PhoneReadiness '7' 1 'Awake'
+Assert-Equal 'covered stay-awake and awake: nothing to do' $true ($null -eq $okRead.Stop -and -not $okRead.SetStayOn -and -not $okRead.Wake -and $okRead.Notes.Count -eq 0)
+$zero = Resolve-PhoneReadiness '0' 1 'Awake'
+Assert-Equal 'stay-awake 0 on AC is set again and named' $true ($zero.SetStayOn -and ($zero.Notes -join '') -like "*'0' now*")
+$dozing = Resolve-PhoneReadiness '7' 1 'Dozing'
+Assert-Equal 'dozing on AC is woken and named' $true ($dozing.Wake -and ($dozing.Notes -join '') -like '*mWakefulness=Dozing*')
+Assert-Equal 'a USB-only mask does not cover AC' $true (Resolve-PhoneReadiness '2' 1 'Awake').SetStayOn
+Assert-Equal 'off the charger stops the run' $true ([bool](Resolve-PhoneReadiness '7' 0 'Awake').Stop)
+Assert-Equal 'a stay-awake value that is not a number is set again' $true (Resolve-PhoneReadiness 'null' 1 'Awake').SetStayOn
+$dumpOld = "Packages:`n  Package [uk.sirous.dinoreader.dbg] (abc):`n    versionCode=41 minSdk=26 targetSdk=35`n    lastUpdateTime=2026-11-01 14:02:11"
+Assert-Equal 'versionCode is read from dumpsys package' 41 (Get-PackageVersionCode $dumpOld)
+Assert-Equal 'no versionCode gives null' $null (Get-PackageVersionCode 'nothing')
+$compareOld = Format-InstallCompare 41 '2026-11-01_14:02:11' (ConvertFrom-InstallMarker 'android-dbg-arm64 oldkey 2026-11-01_14:02:11') 'newkey'
+Assert-Equal 'an older build is shown as differing from the cached key' $true ($compareOld -like '*versionCode 41*placed key oldkey*differs from the cached build key newkey')
+Assert-Equal 'an older build is planned for reinstall before any check' 'Install' (Resolve-InstallPlan (ConvertFrom-InstallMarker 'android-dbg-arm64 oldkey 2026-11-01_14:02:11') '2026-11-01_14:02:11' 'android-dbg-arm64' 'newkey' $false).Action
+Assert-Equal 'the runner re-reads the phone before each check' $true ($runnerText -match '(?s)function Invoke-PlannedCheck.*Confirm-PhoneReady')
+Assert-Equal 'a stop or a stay-on change is read once more before it counts' $true ($runnerText -match '(?s)function Confirm-PhoneReady.*?if \(\$ready\.Stop -or \$ready\.SetStayOn\) \{ Start-Sleep[^\r\n]*Read-PhoneReadiness')
+Assert-Equal 'stay-awake is set again only when a stay-on record says the tooling set it' $true ($runnerText -match '(?s)function Confirm-PhoneReady.*?Read-StayOnOriginal.*?if \(-not \$record\) \{ return.*?settings.*?put')
+
+# ---- Slice 236 item 3: the download hold line is recognised in an app log
+Assert-Equal 'a held-user-cancelled line is found' 1 @(Get-DownloadHoldLines @('11-01 10:00:00.000 I RTST-TEST: VOICEPACK held-user-cancelled fa', 'other line')).Count
+Assert-Equal 'no hold line, no hold' 0 @(Get-DownloadHoldLines @('PACKDL start pack=kokoro-en')).Count
+Assert-Equal 'a held language is read from the saved preferences' 'fa' (Get-HeldLanguageFromPrefs '<map><string name="VoiceCancelHeldLanguage">fa</string></map>')
+Assert-Equal 'no saved hold gives null' $null (Get-HeldLanguageFromPrefs '<map><string name="Language">en</string></map>')
+# Slice 236 item 7: the compat reset runs only when something is there to reset
+Assert-Equal 'device_config null is not set' $false (Test-DeviceConfigValueSet 'null')
+Assert-Equal 'device_config empty is not set' $false (Test-DeviceConfigValueSet '')
+Assert-Equal 'device_config 60000 is set' $true (Test-DeviceConfigValueSet '60000')
+Assert-Equal 'a leftover override line is found' 1 @(Get-CompatOverrideLines @('  uk.sirous.x.dbg: FGS_INTRODUCE_TIME_LIMITS enabled', 'other') 'uk.sirous.x.dbg').Count
+Assert-Equal 'no override line, nothing to reset' 0 @(Get-CompatOverrideLines @('  uk.sirous.y.dbg: FGS_INTRODUCE_TIME_LIMITS enabled', 'unrelated') 'uk.sirous.x.dbg').Count
+$pausedText = Get-Content (Join-Path $PSScriptRoot 'checks\paused-notification.ps1') -Raw
+Assert-Equal 'the compat reset call is guarded by what was found' $true ($pausedText -match 'if \(\$compatPresent\) \{ Invoke-Adb[^\r\n]*''reset''')
+Assert-Equal 'the timeout delete is guarded by what was found' $true ($pausedText -match 'if \(\$timeoutPresent\) \{ Invoke-Adb[^\r\n]*''delete''')
 
 if ($failed) { Write-Host "$failed run-checks checks failed (PowerShell $($PSVersionTable.PSVersion))."; exit 1 }
 Write-Host "All run-checks checks pass (PowerShell $($PSVersionTable.PSVersion))."
