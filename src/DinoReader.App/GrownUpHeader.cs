@@ -133,6 +133,7 @@ public sealed class GrownUpHeader : Grid
 			Content = new IconView { Kind = IconKind.Back, Color = DinoTokens.Get(DinoTokens.Ink), Size = BackIconSize, StrokeWidth = 2.6 },
 		};
 		SemanticProperties.SetDescription(back, AppResources.Common_Back);
+		DesktopTips.Set(back, AppResources.Common_Back); // no key in brackets: Esc does not go back on the grown-up pages yet (Slice 235 part C)
 		var tap = new TapGestureRecognizer();
 		tap.Tapped += (_, _) => BackRequested?.Invoke(this, EventArgs.Empty);
 		back.GestureRecognizers.Add(tap);

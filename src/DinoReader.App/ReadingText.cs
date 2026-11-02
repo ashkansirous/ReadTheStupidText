@@ -13,6 +13,7 @@ public static class ReadingText
 	public static string Back => AppResources.Common_Back;
 	public static string Play => AppResources.Reading_Play;
 	public static string Pause => AppResources.Reading_Pause;
+	public static string ReadAgain => AppResources.Reading_ReadAgain;
 	public static string PreviousSentence => AppResources.Reading_Previous;
 	public static string NextSentence => AppResources.Reading_Next;
 	public static string Loading => AppResources.Reading_Loading;

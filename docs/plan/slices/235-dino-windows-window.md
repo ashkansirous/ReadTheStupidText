@@ -1,6 +1,6 @@
 ### Slice 235 — Dino on Windows: a real desktop window (size, keyboard, mouse)
 
-*In progress (wave 2026-11-02), draft PR: part B.* *Part A built 2026-11-02 (window and pure rules; five Dino VM checks pass), merged as PR #740 (0d135658).* *Planned 2026-11-01.* The user asked for "better design on windows". **Mock drawn 2026-11-01 (Batch 46), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges (a wide window uses its layouts) and alongside or after Slice 234 (a mid-size window uses the tablet rules).
+*Part B built 2026-11-02 (night 2026-11-01-2355 wave 6), PR #745, all six Dino VM checks pass; part C (WindowLayout wiring into pages, hover, wheel, focus-ring styling and focus return, Settings arrow keys, right-click, shelf column counts, speed hint string) still planned.* *Part A built 2026-11-02 (window and pure rules; five Dino VM checks pass), merged as PR #740 (0d135658).* *Planned 2026-11-01.* The user asked for "better design on windows". **Mock drawn 2026-11-01 (Batch 46), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges (a wide window uses its layouts) and alongside or after Slice 234 (a mid-size window uses the tablet rules).
 
 **Touches:** `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/Platforms/Windows/**`, `src/DinoReader.Core/*Layout*.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/GrownUpHeader.cs`, `src/DinoReader.App/*Page*.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `tools/desktop-vm/**`, `docs/design/dino-reader/**`, `docs/plan/slices/235-dino-windows-window.md`
 
@@ -19,7 +19,7 @@ Part B as first written (wire `WindowLayout` into every page, plus all input wor
 - **B (this claim): keyboard, gate, tooltips, title-bar colours, strings.** Windows head only.
 - **C (later, stays planned):** `WindowLayout` wired into the pages (a shape seam in Core), hover states, wheel and scroll-bar behaviour, the visible focus ring styling (159), Settings up/down/Enter/right-arrow pane navigation (157), right-click on a book, the shelf's column counts.
 
-**Touches, part B:** `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/Platforms/Windows/**`, `src/DinoReader.Core/DinoKeyMap.cs` (new), `src/DinoReader.Core/TitleBarTone.cs` (new), `src/DinoReader.App/DinoKeyTarget.cs` (new), `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/GrownUpHeader.cs`, `src/DinoReader.App/*Page*.cs`, `src/DinoReader.App/*Page.xaml.cs`, `src/DinoReader.App/StoryLanguageButton.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `tools/desktop-vm/**`, `docs/plan/slices/235-dino-windows-window.md`. Read-only: every `src/DinoReader.Core/*Layout*.cs`.
+**Touches, part B:** `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/Platforms/Windows/**`, `src/DinoReader.Core/DinoKeyMap.cs` (new), `src/DinoReader.Core/TitleBarTone.cs` (new), `src/DinoReader.Core/BackInFlight.cs` (new, added at medium review), `src/DinoReader.App/DinoKeyTarget.cs` (new), `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/GrownUpHeader.cs`, `src/DinoReader.App/*Page*.cs`, `src/DinoReader.App/*Page.xaml.cs`, `src/DinoReader.App/StoryLanguageButton.cs`, `src/DinoReader.App/TransportRow.cs`, `src/DinoReader.App/ModeSwitch.cs`, `src/DinoReader.App/TileOverlay.xaml`, `src/DinoReader.App/TileOverlay.xaml.cs` (last four added at build, 2026-11-02: icon-button tooltips; no other open PR touches them), `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `tools/desktop-vm/**`, `docs/plan/slices/235-dino-windows-window.md`. Read-only: every `src/DinoReader.Core/*Layout*.cs`.
 
 **Part B design note (coordinator, claim):**
 
@@ -109,16 +109,68 @@ From review (files in `D:/ReadTheStupidText-worktrees/reviews/`, deleted later):
 - `s235a-review-check-medium.md` (5): applied 1 (trace write cost), 2 (`applied` set only after success), 5. Skipped 3 (unconfirmed, not reproduced; VM run 5 shows no sign). Skipped 4 (low; one visible jump after a DPI change).
 - `s235a-review-check2-medium.md` (5): none applied. 2 cannot happen (the VM starts clean every run). 1, 3, 4, 5 skipped as low (minimum scale refreshed only on a position change; check units at non-100% scale; half-framed window if `Apply` throws; trim lost on a transient IO failure).
 
+#### Part B: built (2026-11-02, night 2026-11-01-2355 wave 6)
+
+PR #745. All six Dino VM checks pass (run 5, package `c0458ed2efe2`).
+
+- **Core (pure, unit-tested):** `DinoKeyMap.Resolve` (+ `DinoKey`, `DinoScreen`, `DinoKeyAction`, `DigitOf`), `TitleBarTones` (+ `TitleBarTone`, `TitleBarPage`, `WindowTitle`), `BackInFlight` (one Esc-back slot; added at medium review).
+- **App (shared, no platform types):** `DinoKeyTarget.cs` holds `IDinoKeyTarget` (`Screen`, `Handle(action, key)`), `DinoKeyTargets` (finds the top page, modal first, routes a key, owns the `BackInFlight` slot) and `DesktopTips` (tooltips with the key in brackets, a no-op off Windows). Implemented by `GatePage` (Space hold start/end, digits, Backspace, Enter, Esc closes), `ReadingPage` (Space, Left, Right, Esc; Space on the silent back cover reads from the top, tooltip "Read again") and `GalleryPage` (Esc closes the book sheet; nothing on the shelf). Esc and the Back button share `ReadingPage.LeaveBookAsync`. Tooltips also on the transport previous/play/next buttons (play follows Play/Pause), the three mode cells (no key) and the "Book options" dots (`TransportRow.cs`, `ModeSwitch.cs`, `TileOverlay.xaml(.cs)`, added to Touches at build).
+- **Windows head:** `DinoKeyboard.cs` (PreviewKeyDown/Up on the window content; a press is one action, used until its key-up; ignores Ctrl/Alt combos and Shift on digits; text field focus detected through `FocusManager`; writes `Dino keyboard: <Key> used|not used (<page>, <screen>)` to the trace), `DinoTitleBar.cs` (tone per page kind, modals included via `Window.ModalPushed/ModalPopped`; the reading screen's window title), `DinoWindowFrame.ApplyTone` replaces the fixed cream.
+- **Strings (14 language files):** gate captions, `Key_*` names, `Reading_ReadAgain`, and seven "...Click" twins (corner line, six pack-status hints) that `AppResources.Get` returns when `UseClickWording` is on (set only by the Windows head).
+- **Checks:** new `tools/desktop-vm/checks/dino-keyboard.ps1` (registered in `Invoke-DesktopTest.ps1` before `dino-window`). It holds Space 1.2 s (the sum must not appear), then 3.6 s with repeats (it must), types a wrong sum then Enter (gate stays), then the right one (grown-up mode), checks the ink title bar tone, opens a book sheet and closes it with Esc, opens it again and presses Enter on Read now (the book opens, window title contains " - "), presses Space, Right and Left on the reading page, Esc back to the kids' shelf, cream tone again, and Esc on Settings. After each key it polls `window-trace.log` (up to 10 s) for that key's "used" line; Left and Right are sent as extended keys. Debug-only log lines: `[Keyboard] gate hold started/ended by the Space bar`, `[Keyboard] reading <action>`.
+- **Work boxes (none ticked fully):** *Keyboard shortcuts and Tab order*: done are the key map, the gate Space hold, the reading keys, Esc everywhere, the sheet's Enter/Space and the gate's tab stops; left for part C are Tab order and focus-ring styling on every page, Settings arrow keys and focus return after the sheet closes. *Hover/tooltips/title bar*: tooltips on every icon button and title-bar colours are done; hover states, wheel scrolling and right-click are part C. *Strings*: the tooltip, gate, key-name and click strings are in all languages; the speed hint string is part C.
+
+Behaviour chosen: Esc on the gate closes it (like its Back button). Esc on a page that is not a key target (Settings and the other grown-up pages) calls `SendBackButtonPressed()` first and pops only when nothing handled it (`DinoKeyTargets.PopOne`); the shelf does nothing. The grown-up header's back tooltip shows no key. On the open book sheet Enter or Space opens Read now unless a button, switch or checkbox inside the sheet has keyboard focus (`DinoKeyAction.SheetActivate`, `BookSheet.ActivateFocused`). On Windows the gate's pad keys are not tab stops and a pad click unfocuses, so Enter and Backspace act on the sum unless Back to story or Continue has focus. The "3 seconds" hold instruction stays on every platform; on Windows a Space-bar caption is added.
+
+Changed while building:
+
+- Designs taken by construction after repeat findings: Esc is one press, one action (used until key-up) plus the Core `BackInFlight` slot; gate pad keys are not tab stops; the title-bar tone follows the top page, modals included; sheet Enter/Space open Read now unless a sheet button has focus; Esc and Back share `ReadingPage.LeaveBookAsync`.
+- `Find-UiaByName` (`tools/desktop-vm/checks/_lib.ps1`): my first harness fix skipped only the ToolTip element, not its child `Text` of the same name (VM run 2). It now skips a ToolTip and anything whose UIA parent is one, prefers an exact name over a partial one, and ignores an element that vanished mid-read. The tooltip hit was the cause of the `dino-page-turn` failure in runs 1-2 (the taps hit the popup).
+- Sheet Enter: "Read now" is a tapped Border WinUI cannot focus, so the first design (focus the row, activate while it has focus) never held; replaced by the rule above.
+- My "Esc dropped while busy" guess was wrong: Read now leaves the corner by design (`GalleryPage.LeaveAndReadAsync` calls `_mode.Leave()`), so Esc popped to the kids' shelf and the check expected the corner. The check was fixed, not the app.
+- `dino-keyboard` waited 500 ms per key, but Right took 2.2-2.6 s after Space on the VM; the check now polls the trace. Run 3 gave no cause, so the only app change was one trace line per mapped key.
+
+VM runs (logs `D:/ReadTheStupidText-worktrees/reviews/s235b-dino-vm-run*.log`, deleted later):
+
+- Run 1 (`1e5092bff5fd`): `dino-keyboard` failed at the sheet Enter; `dino-page-turn` failed (tooltip hit). Run 2 (`4a96ac0cabef`): sheet Enter worked; `dino-page-turn` failed again (tooltip child); `dino-keyboard` failed at Esc on the reading page (wrong expected page, above).
+- Run 3 (`bf0e4023e8df`): 5 of 6; `dino-keyboard` failed at Right (the 500 ms wait). Run 4 (`c0458ed2efe2`): the new trace showed Right used 2.6 s after Space; the check was changed to poll.
+- Run 5 (`c0458ed2efe2`, cached package): all 6 Dino checks PASS (launch, open-book, page-turn, settings, keyboard, window), about 3 min. Key waits: gate Space 2644 ms, reading Space 448, Right 2166, Left 443. The delay follows the first key after a read starts.
+
+From review (files in `D:/ReadTheStupidText-worktrees/reviews/`, deleted later):
+
+- `s235b-high.md` (8): applied 1 (Esc via `SendBackButtonPressed`, held Esc swallowed), 2 (gate hold ends on deactivation or focus loss), 3 (Ctrl/Alt/Shift-digit not mapped), 4 (Esc works while the book loads), 5 (Read again stops a running read first). Skipped 6 (a tile is an immutable record; tooltip and screen-reader text refresh on the same binding change), 7 (focus return after the sheet closes: part C), 8 (the per-key trace write stays; the VM check reads it).
+- `s235b-medium.md` (10): applied 1 and 3 (a press is one action; `BackInFlight`), 4 and 5 (`DinoTitleBar.Watch`, modal push/pop), 8 (`StartKeyHold` false once closing). Not a bug: 9 (Read again follows the Play path; `ReadingSession.StartAtAsync` stops a running read). Skipped 2 (one window for the app's life; its "any held key" half is fixed with 1), 6 (as high 6), 7 (the test guards the set), 10 (focus return: part C).
+- `s235b-check-medium.md` (10): applied 4 (gate Enter/Backspace act on the sum only when no button has focus) and 6 (back-cover tooltip "Read again"). Skipped 1 (the 1 s back slot is the guard against double pops; a second Esc within 1 s on a self-handling page is acceptable), 2 (the Windows build compiles it, so it is public), 3, 5 (on-screen pad and numpad still work on AZERTY), 7, 8, 9, 10 (low).
+- `s235b-check2-medium.md` (3): applied 1 (by construction: pad keys not tab stops, a pad click unfocuses) and 2 ("3 seconds" instruction kept). 3: no bug found.
+- `s235b-check3-medium.md`: no findings. `s235b-check4-medium.md` (5): none applied; 1, 2, 4, 5 low; 3 (`ActivateFocused` runs `ReadNowAsync` with `_ =`, so an exception goes unobserved but cannot crash the app) is a part C follow-up.
+- `s235b-check5-medium.md` (8): applied 3 (key actions do nothing while `LeaveBookAsync` holds the busy guard) and 6 (`Find-UiaByName` skips a vanished element). Skipped 1, 2, 7, 8 (low); 4, 5 (callers re-read: none relied on a partial match beating an exact one).
+- `s235b-check6-medium.md`, `s235b-check7-medium.md`: no new findings.
+
 #### Not yet verified
 
+- Part B on a real PC and by eye: whether `PreviewKeyDown` gets keys when nothing has focus yet (the check focuses the window first), the Space hold with real key repeats, title bar colours and height, tooltips on a hovering mouse.
+- Why Right takes about 2 s after a read starts on the VM (speech start busy on the UI thread?), and whether a real PC has the same delay.
+- Esc on the language page / cast picker through the new back path; held Esc on Settings/Language/Cast/Record pops exactly one page; the gate hold ending on Alt-Tab; title bar colour after the intro and the gate close.
+- Typing the sum on AZERTY / AltGr layouts (on-screen pad and numpad only); Tab then Enter on "Back to story".
+- The title bar back to cream after Esc from the book is shown by the check's pass but not read from the trace.
 - Opening at 1100 x 760 on a screen larger than 1024 x 768 (the VM clamps it).
-- A maximised window closed and reopened stays maximised (high finding 6).
+- A maximised window closed and reopened stays maximised (part A high finding 6).
 - 150% scaling and the unit of `PreferredMinimumWidth/Height`.
 - Two monitors, and an unplugged display (saved place on a missing monitor).
-- Title bar height and colour by eye.
 - A window clamped to a small screen and saved as maximised reopens maximised (seen on the VM; whether that is by design is not decided).
 
 #### For tools/desktop-vm/CLAUDE.md (lifted 2026-11-02)
 
 - The VM screen is 1024 x 768, so window-size checks clamp their expectations to its work area.
 - The Release VM build shows no `Debug.WriteLine`, so a Windows-head check needs a file trace it can read back (`window-trace.log`). (Slice 235: docs/plan/slices/235-dino-windows-window.md)
+
+#### For tools/desktop-vm/CLAUDE.md (part B)
+
+- `Find-UiaByName` prefers an exact name and skips tooltips and their children: WinUI tooltips sit in the UIA tree ahead of the control, so a partial match taps the popup.
+- A keyboard check polls `window-trace.log` for each key's line instead of sleeping a fixed time (Right took 2.2-2.6 s after Space on the VM), and sends arrow keys as extended keys. (Slice 235: docs/plan/slices/235-dino-windows-window.md)
+
+#### For src/DinoReader.App/CLAUDE.md (part B)
+
+- Windows keys go through one hook (`Platforms/Windows/DinoKeyboard.cs`), then Core `DinoKeyMap`, then the top page's `IDinoKeyTarget`; pages handle no keys directly.
+- Tooltips and the "click" wording come only from `DesktopTips` (Windows only). (Slice 235: docs/plan/slices/235-dino-windows-window.md)
+

@@ -185,6 +185,20 @@
   <data name="Gate_BackToStory" xml:space="preserve"><value>Назад к истории</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>Сколько будет</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>Стереть</value></data>
+  <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Мышью или удерживайте клавишу «Пробел».</value></data>
+  <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>Введите ответ и нажмите Enter</value></data>
+  <data name="Key_Space" xml:space="preserve"><value>Пробел</value></data>
+  <data name="Key_Left" xml:space="preserve"><value>Стрелка влево</value></data>
+  <data name="Key_Right" xml:space="preserve"><value>Стрелка вправо</value></data>
+  <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Reading_ReadAgain" xml:space="preserve"><value>Прочитать ещё раз</value></data>
+  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Это видят только взрослые. Полка ребёнка — одним щелчком.</value></data>
+  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Нет соединения. Читает голос телефона. Щёлкните, чтобы повторить загрузку голоса.</value></data>
+  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>Ждём интернет. Загрузка продолжится сама, когда вы снова будете онлайн. Щёлкните, чтобы попробовать сейчас.</value></data>
+  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>Ждём Wi-Fi. Загрузка продолжится сама по Wi-Fi. Щёлкните, чтобы скачать сейчас.</value></data>
+  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>Загрузка голоса повреждена. Читает голос телефона. Щёлкните, чтобы повторить.</value></data>
+  <data name="PackStatus_FailedClick" xml:space="preserve"><value>Не удалось загрузить естественные голоса. Читает голос телефона. Щёлкните, чтобы повторить.</value></data>
+  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Загрузка остановлена. Читает голос телефона. Щёлкните, чтобы загрузить.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Сколько будет {0} плюс {1}?</value></data>
   <data name="Story_Add" xml:space="preserve"><value>Добавить историю</value></data>
   <data name="Story_Title" xml:space="preserve"><value>Название</value></data>

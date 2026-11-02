@@ -188,6 +188,20 @@
   <data name="Gate_BackToStory" xml:space="preserve"><value>Zurück zur Geschichte</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>Was ist</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>Löschen</value></data>
+  <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Mit der Maus oder die Leertaste gedrückt halten.</value></data>
+  <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>Eintippen, dann Enter drücken</value></data>
+  <data name="Key_Space" xml:space="preserve"><value>Leertaste</value></data>
+  <data name="Key_Left" xml:space="preserve"><value>Pfeil links</value></data>
+  <data name="Key_Right" xml:space="preserve"><value>Pfeil rechts</value></data>
+  <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Reading_ReadAgain" xml:space="preserve"><value>Noch einmal lesen</value></data>
+  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Das sehen nur Erwachsene. Das Regal deines Kindes ist nur einen Klick entfernt.</value></data>
+  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Keine Verbindung. Es liest die Handy-Stimme. Klicke, um den Download der Stimme zu wiederholen.</value></data>
+  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>Warte auf das Internet. Der Download geht von selbst weiter, sobald du wieder online bist. Klicke, um es jetzt zu versuchen.</value></data>
+  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>Warte auf WLAN. Der Download geht von selbst weiter, sobald WLAN da ist. Klicke, um jetzt zu laden.</value></data>
+  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>Der Download der Stimme war beschädigt. Es liest die Handy-Stimme. Klicke, um es noch einmal zu versuchen.</value></data>
+  <data name="PackStatus_FailedClick" xml:space="preserve"><value>Die natürlichen Stimmen ließen sich nicht herunterladen. Es liest die Handy-Stimme. Klicke, um es noch einmal zu versuchen.</value></data>
+  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Download gestoppt. Es liest die Handy-Stimme. Klicke zum Herunterladen.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Was ist {0} plus {1}?</value></data>
   <data name="Story_Add" xml:space="preserve"><value>Geschichte hinzufügen</value></data>
   <data name="Story_Title" xml:space="preserve"><value>Titel</value></data>

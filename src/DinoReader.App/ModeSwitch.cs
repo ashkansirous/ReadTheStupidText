@@ -112,6 +112,7 @@ public sealed class ModeSwitch : Border
 			Content = Glyph(icon, active ? ActiveIcon() : _theme.ControlIcon),
 		};
 		SemanticProperties.SetDescription(cell, active ? $"{label}{DescriptionSeparator}{ReadingText.ModeSelected}" : label);
+		DesktopTips.Set(cell, label); // Slice 235 part B: a Windows tooltip, no key (the modes have none)
 		cell.GestureRecognizers.Add(Tap(mode));
 		return cell;
 	}

@@ -187,6 +187,20 @@
   <data name="Gate_BackToStory" xml:space="preserve"><value>Tilbake til historien</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>Hva er</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>Slett</value></data>
+  <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Med musen, eller hold inne mellomromstasten.</value></data>
+  <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>Skriv det, og trykk Enter</value></data>
+  <data name="Key_Space" xml:space="preserve"><value>Mellomromstast</value></data>
+  <data name="Key_Left" xml:space="preserve"><value>Venstrepil</value></data>
+  <data name="Key_Right" xml:space="preserve"><value>Høyrepil</value></data>
+  <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Reading_ReadAgain" xml:space="preserve"><value>Les igjen</value></data>
+  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Bare voksne ser dette. Barnets hylle er ett klikk unna.</value></data>
+  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Ingen tilkobling. Leser med telefonens stemme. Klikk for å prøve stemmenedlastingen på nytt.</value></data>
+  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>Venter på internett. Det fortsetter av seg selv når du er på nett igjen. Klikk for å prøve nå.</value></data>
+  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>Venter på Wi-Fi. Det fortsetter av seg selv på Wi-Fi. Klikk for å laste ned nå.</value></data>
+  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>Stemmenedlastingen ble skadet. Leser med telefonens stemme. Klikk for å prøve igjen.</value></data>
+  <data name="PackStatus_FailedClick" xml:space="preserve"><value>Kunne ikke laste ned naturlige stemmer. Leser med telefonens stemme. Klikk for å prøve igjen.</value></data>
+  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Nedlastingen er stoppet. Leser med telefonens stemme. Klikk for å laste ned.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Hva er {0} pluss {1}?</value></data>
   <data name="Story_Add" xml:space="preserve"><value>Legg til en historie</value></data>
   <data name="Story_Title" xml:space="preserve"><value>Tittel</value></data>

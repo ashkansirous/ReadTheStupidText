@@ -8,6 +8,9 @@ public sealed class BusyGuard
 
 	private bool _busy;
 
+	/// <summary>True while an action is running.</summary>
+	public bool IsBusy => _busy;
+
 	public async Task RunAsync(Func<Task> work)
 	{
 		if (_busy)

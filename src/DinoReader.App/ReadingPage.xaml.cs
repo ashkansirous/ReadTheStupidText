@@ -14,7 +14,7 @@ namespace DinoReader;
 /// a tap on a sentence reading from there. <see cref="ReadingSession"/> does the reading; the
 /// <see cref="PageFollower"/> decides which page is shown.
 /// </summary>
-public partial class ReadingPage : ContentPage
+public partial class ReadingPage : ContentPage, IDinoKeyTarget
 {
 	private const double LanguageButtonHeight = 46;
 	private const double MenuGap = 6;
@@ -60,6 +60,7 @@ public partial class ReadingPage : ContentPage
 	private bool _railApplied; // the controls placement the layout was last applied for (height-dependent, so it can change while the kind stays)
 	private IReadOnlyList<StoryPage> _shownPages = [];
 	private bool _surfaceShown;
+	private bool _hasBackCover; // the book shows the silent back cover as its last page (Slice 237)
 	private bool _translatedDisplay; // the page shows the translation (Slice 110): its offsets are not the story's, so the spoken position is not used
 	private int _displayVersion;
 	private CancellationTokenSource? _displayCancellation; // the screen's translation: stopped when a newer one starts or the page goes away
@@ -72,6 +73,7 @@ public partial class ReadingPage : ContentPage
 		VoicePackInstaller installer, IVoiceModelService model, UsageCounter usage)
 	{
 		InitializeComponent();
+		DesktopTips.Set(BackButton, AppResources.Common_Back, DinoKey.Escape); // Slice 235 part B: the tooltip names the key (a no-op off Windows)
 		_usage = usage;
 		_session = session;
 		_library = library;
@@ -509,12 +511,95 @@ public partial class ReadingPage : ContentPage
 		TitleLabel.FlowDirection = DinoFonts.IsRightToLeft(language) ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 		SideTitle.FlowDirection = TitleLabel.FlowDirection;
 		FitOverlayTransport(); // the tablet title and the card's lowering follow the new title at once
+#if WINDOWS
+		DinoTitleBar.Refresh(this); // Slice 235 part B: the window title names the book
+#endif
 	}
+
+	/// <summary>The title on screen (the translated one when the book is shown translated); the Windows window title names the book with it.</summary>
+	internal string? BookTitle => TitleLabel.Text;
+
+	// Slice 235 part B (mock Batch 46 frame 160): the reading screen answers the Windows window's keyboard. The back cover is the silent last page, where Space reads the book again.
+	DinoScreen IDinoKeyTarget.Screen => _hasBackCover && Surface.PageCount > 0 && Surface.CurrentPage == Surface.PageCount - 1 ? DinoScreen.ReadingBackCover : DinoScreen.Reading;
+
+	bool IDinoKeyTarget.Handle(DinoKeyAction action, DinoKey key)
+	{
+		if (!_onStack || !_visible)
+		{
+			return false;
+		}
+
+		// Esc goes back even while the book is still loading or failed to load; only the playback keys wait for the pages to be on screen.
+		if (!_surfaceShown && action != DinoKeyAction.Back)
+		{
+			return false;
+		}
+
+		// While the page is leaving (LeaveBookAsync holds the guard) every key does nothing: no new read may start on the page being popped.
+		if (_busy.IsBusy)
+		{
+			return true;
+		}
+
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Keyboard] reading {action}");
+#endif
+		switch (action)
+		{
+			case DinoKeyAction.PlayPause:
+				OnPlayTapped(this, EventArgs.Empty);
+				return true;
+			case DinoKeyAction.ReadAgain:
+				ReadAgainFromKey();
+				return true;
+			case DinoKeyAction.PreviousPage:
+				OnPreviousTapped(this, EventArgs.Empty);
+				return true;
+			case DinoKeyAction.NextPage:
+				OnNextTapped(this, EventArgs.Empty);
+				return true;
+			case DinoKeyAction.Back:
+				return BackFromKey();
+			default:
+				return false;
+		}
+	}
+
+	// The back cover has no sentence, so Play would only start over by accident of the finished flag; the key says what it means: from the top, on the first page.
+	// Like the Play handler (async void, so an exception surfaces there too instead of dying in a dropped task); a read still running is stopped first, never run beside the new one.
+	private async void ReadAgainFromKey()
+	{
+		CancelIntroRead();
+		if (_session.State is SessionState.Loading or SessionState.Playing or SessionState.Paused)
+		{
+			_session.Stop();
+		}
+
+		_follower.ResumeAt(Math.Max(0, Surface.PageOfSentence(0)));
+		await StartReadAtAsync(0);
+	}
+
+	// Esc does what the Back button does, except that it first closes an open story-language list, as the phone's back button does.
+	private bool BackFromKey()
+	{
+		if (StoryLanguageMenu.DismissOpen(Root))
+		{
+			return true;
+		}
+
+		_ = LeaveBookAsync();
+		return true;
+	}
+
+	// The one way out of the book: the on-screen Back button and the Esc key both call it, so they can never behave differently.
+	private Task LeaveBookAsync() => _busy.RunAsync(() => Navigation.PopAsync());
 
 	private void ShowContent(ReadingContent content, Story story)
 	{
 		SyncModeSwitch();
-		Surface.Show(content with { Back = BackCoverOf(story) }, _mode, _theme);
+		BackCoverView? backCover = BackCoverOf(story);
+		_hasBackCover = backCover is not null;
+		Surface.Show(content with { Back = backCover }, _mode, _theme);
 		_surfaceShown = true;
 		if (_session.CurrentSentence >= 0)
 		{
@@ -1167,7 +1252,7 @@ public partial class ReadingPage : ContentPage
 	{
 		SessionState state = _session.State;
 		bool wandering = _follower.IsWandering && state != SessionState.Idle;
-		Transport.Apply(state, _theme);
+		Transport.Apply(state, _theme, ((IDinoKeyTarget)this).Screen == DinoScreen.ReadingBackCover);
 		WanderPill.IsVisible = wandering;
 		PillLabel.Text = ReadingText.ReadingPage(_follower.ReadingPage + 1);
 	}
@@ -1344,7 +1429,7 @@ public partial class ReadingPage : ContentPage
 		return _session.RecordedRangeOf(current) is { } range ? (delta > 0 ? range.Last : range.First) : current;
 	}
 
-	private async void OnBackTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
+	private async void OnBackTapped(object? sender, TappedEventArgs e) => await LeaveBookAsync();
 
 	private async void OnReadFailed(object? sender, EventArgs e) =>
 		await DisplayAlertAsync(ReadingText.CouldntRead, ReadingText.ReadFailed, ReadingText.Ok);

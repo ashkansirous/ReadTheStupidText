@@ -185,6 +185,20 @@
   <data name="Gate_BackToStory" xml:space="preserve"><value>بازگشت به داستان</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>حاصل</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>حذف</value></data>
+  <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>با ماوس، یا کلید فاصله را نگه دارید.</value></data>
+  <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>آن را تایپ کنید، سپس Enter را بزنید</value></data>
+  <data name="Key_Space" xml:space="preserve"><value>کلید فاصله</value></data>
+  <data name="Key_Left" xml:space="preserve"><value>کلید جهت چپ</value></data>
+  <data name="Key_Right" xml:space="preserve"><value>کلید جهت راست</value></data>
+  <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Reading_ReadAgain" xml:space="preserve"><value>دوباره بخوان</value></data>
+  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>این بخش را فقط بزرگ‌ترها می‌بینند. قفسهٔ کودک شما یک کلیک فاصله دارد.</value></data>
+  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>اتصالی وجود ندارد. با صدای گوشی خوانده می‌شود. برای تلاش دوباره دانلود صدا کلیک کنید.</value></data>
+  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>در انتظار اینترنت. وقتی دوباره آنلاین شوید خودش ادامه می‌یابد. برای تلاش اکنون کلیک کنید.</value></data>
+  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>در انتظار Wi-Fi. با Wi-Fi خودش ادامه می‌یابد. برای دانلود اکنون کلیک کنید.</value></data>
+  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>دانلود صدا خراب شد. با صدای گوشی خوانده می‌شود. برای تلاش دوباره کلیک کنید.</value></data>
+  <data name="PackStatus_FailedClick" xml:space="preserve"><value>صداهای طبیعی دانلود نشد. با صدای گوشی خوانده می‌شود. برای تلاش دوباره کلیک کنید.</value></data>
+  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>دانلود متوقف شد. با صدای گوشی خوانده می‌شود. برای دانلود کلیک کنید.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>{0} بعلاوهٔ {1} چند می‌شود؟</value></data>
   <data name="Story_Add" xml:space="preserve"><value>افزودن داستان</value></data>
   <data name="Story_Title" xml:space="preserve"><value>عنوان</value></data>

@@ -16,7 +16,7 @@
                 <TapGestureRecognizer Tapped="OnBackdropTapped" />
             </Grid.GestureRecognizers>
         </Grid>
-        <Grid HorizontalOptions="End" VerticalOptions="Start" WidthRequest="48" HeightRequest="48" AutomationId="TileMore"
+        <Grid x:Name="MoreButton" HorizontalOptions="End" VerticalOptions="Start" WidthRequest="48" HeightRequest="48" AutomationId="TileMore"
               SemanticProperties.Description="{Binding MoreHint}">
             <Border WidthRequest="36" HeightRequest="36" BackgroundColor="White" StrokeThickness="0">
                 <Border.StrokeShape>

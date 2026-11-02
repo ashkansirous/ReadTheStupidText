@@ -185,6 +185,20 @@
   <data name="Gate_BackToStory" xml:space="preserve"><value>Volver al cuento</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>¿Cuánto es</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>Borrar</value></data>
+  <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Con el ratón, o mantén pulsada la barra espaciadora.</value></data>
+  <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>Escríbelo y pulsa Intro</value></data>
+  <data name="Key_Space" xml:space="preserve"><value>Barra espaciadora</value></data>
+  <data name="Key_Left" xml:space="preserve"><value>Flecha izquierda</value></data>
+  <data name="Key_Right" xml:space="preserve"><value>Flecha derecha</value></data>
+  <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Reading_ReadAgain" xml:space="preserve"><value>Leer otra vez</value></data>
+  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Solo los adultos ven esto. La estantería de tu hijo está a un clic.</value></data>
+  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Sin conexión. Se lee con la voz del teléfono. Haz clic para reintentar la descarga de la voz.</value></data>
+  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>Esperando a Internet. Continúa solo cuando vuelvas a estar conectado. Haz clic para intentarlo ahora.</value></data>
+  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>Esperando Wi-Fi. Continúa solo con Wi-Fi. Haz clic para descargar ahora.</value></data>
+  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>La descarga de la voz se corrompió. Se lee con la voz del teléfono. Haz clic para reintentar.</value></data>
+  <data name="PackStatus_FailedClick" xml:space="preserve"><value>No se pudieron descargar las voces naturales. Se lee con la voz del teléfono. Haz clic para reintentar.</value></data>
+  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Descarga detenida. Se lee con la voz del teléfono. Haz clic para descargar.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>¿Cuánto es {0} más {1}?</value></data>
   <data name="Story_Add" xml:space="preserve"><value>Añadir un cuento</value></data>
   <data name="Story_Title" xml:space="preserve"><value>Título</value></data>

@@ -71,6 +71,7 @@ internal sealed class BookSheet : Grid
 	private readonly Grid _card = new() { ColumnSpacing = CardPadding };
 	private readonly Border _cover = new(); // the card's big cover; the sheet's header has the small thumbnail
 	private View _grab = null!;
+	private Border _closeButton = null!;
 	private Grid _header = null!;
 	private Border _recordPill = null!;
 	private Border _castPill = null!;
@@ -302,6 +303,23 @@ internal sealed class BookSheet : Grid
 		ApplyTexts();
 		FitToParent(); // a hidden sheet gets no SizeChanged, so a rotation while it was closed is applied before it shows
 		IsVisible = true;
+		FocusReadNow();
+	}
+
+	// Slice 235 part B (mock Batch 46 frame 156): a keyboard user lands on "Read now" when the sheet opens. The row is a tapped Border, which WinUI does not focus by itself, so it is made a tab stop
+	// first; the focus goes in once the shown sheet has a native view. Windows only: nothing happens elsewhere.
+	private void FocusReadNow()
+	{
+#if WINDOWS
+		Dispatcher.Dispatch(() =>
+		{
+			if (IsVisible && _readNowRow.Handler?.PlatformView is Microsoft.UI.Xaml.UIElement element)
+			{
+				element.IsTabStop = true;
+				element.Focus(Microsoft.UI.Xaml.FocusState.Keyboard);
+			}
+		});
+#endif
 	}
 
 	private void FitToParent()
@@ -322,7 +340,9 @@ internal sealed class BookSheet : Grid
 		SemanticProperties.SetDescription(_editRow, _editLabel.Text);
 		SemanticProperties.SetDescription(_exportRow, _exportLabel.Text);
 		SemanticProperties.SetDescription(_removeRow, _removeLabel.Text);
-		SemanticProperties.SetDescription(_readNowRow, _readNowLabel.Text);	}
+		SemanticProperties.SetDescription(_readNowRow, _readNowLabel.Text);
+		DesktopTips.Set(_closeButton, AppResources.Common_Close, DinoKey.Escape);
+	}
 
 	// The cover's picture, or its colour when the book has none.
 	private void ShowThumb(Content content)
@@ -383,16 +403,58 @@ internal sealed class BookSheet : Grid
 		row.StrokeShape = new RoundRectangle { CornerRadius = ReadNowHeight / 2 };
 		row.Content = content;
 		row.AutomationId = "BookSheetReadNow";
-		CastViews.AddTap(row, async () =>
-		{
-			Dismiss(); // not Hide: the page's Dismissed handler also rebuilds the tiles when a switch was saved in the sheet
-			if (ReadRequested is { } requested)
-			{
-				await requested();
-			}
-		});
+		CastViews.AddTap(row, ReadNowAsync);
 		return row;
 	}
+
+	private async Task ReadNowAsync()
+	{
+		Dismiss(); // not Hide: the page's Dismissed handler also rebuilds the tiles when a switch was saved in the sheet
+		if (ReadRequested is { } requested)
+		{
+			await requested();
+		}
+	}
+
+	/// <summary>
+	/// Slice 235 part B: Enter or Space on the open sheet reads the book, as a tap on "Read now" does, unless one of the sheet's real controls (a switch or a button: voice switch, Record, Cast,
+	/// Remove, close) has the keyboard focus; the key then goes on to that control. Read now is a tapped Border that WinUI cannot focus, so it never has to hold the focus. False off Windows.
+	/// </summary>
+	public bool ActivateFocused()
+	{
+#if WINDOWS
+		if (IsVisible && _readNowRow.Handler?.PlatformView is Microsoft.UI.Xaml.UIElement element && !SheetControlHasFocus(element.XamlRoot))
+		{
+			WindowTrace.Write("Dino keyboard: the sheet's Enter or Space activated Read now");
+			_ = ReadNowAsync();
+			return true;
+		}
+#endif
+		return false;
+	}
+
+#if WINDOWS
+	// True when the focused element is a button or switch inside this sheet (not the shelf behind it).
+	private bool SheetControlHasFocus(Microsoft.UI.Xaml.XamlRoot? root)
+	{
+		object? focused = root is null ? null : Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root);
+		if (focused is not (Microsoft.UI.Xaml.Controls.Primitives.ButtonBase or Microsoft.UI.Xaml.Controls.ToggleSwitch or Microsoft.UI.Xaml.Controls.CheckBox)
+			|| Handler?.PlatformView is not Microsoft.UI.Xaml.DependencyObject sheet)
+		{
+			return false;
+		}
+
+		for (var node = focused as Microsoft.UI.Xaml.DependencyObject; node is not null; node = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(node))
+		{
+			if (node == sheet)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+#endif
 
 	private static BoxView GrabHandle() => new()
 	{
@@ -430,6 +492,7 @@ internal sealed class BookSheet : Grid
 			AutomationId = "BookSheetClose",
 		};
 		SemanticProperties.SetDescription(close, AppResources.Common_Close);
+		_closeButton = close;
 		CastViews.AddTap(close, () => { Dismiss(); return Task.CompletedTask; });
 		return close;
 	}

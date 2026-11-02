@@ -10,7 +10,7 @@ namespace DinoReader;
 /// when a screen reader is on). Step 2: answer a sum on a number pad; a wrong answer rolls a new
 /// sum. <see cref="Result"/> completes true on a right answer and false on any way out.
 /// </summary>
-public partial class GatePage : ContentPage
+public partial class GatePage : ContentPage, IDinoKeyTarget
 {
 	private const int KeyRows = OnboardingLayout.KeyRows;
 	private const double SplitAnswersWidth = 330;
@@ -37,6 +37,7 @@ public partial class GatePage : ContentPage
 	private readonly IDispatcherTimer _timer;
 	private string _answer = string.Empty;
 	private bool _closing;
+	private bool _keyHolding; // Slice 235 part B: the hold was started by the Space bar, so only letting go of it ends it
 	private Size _windowSize;
 	private GateShape? _shape;
 	private ScrollView? _cardScroll;
@@ -54,6 +55,33 @@ public partial class GatePage : ContentPage
 		ShowHoldAlternative(screenReaderOn);
 		BuildKeyPad();
 		ShowSum();
+		AddDesktopCaptions();
+	}
+
+	// Slice 235 part B (mock Batch 46 frames 158a and 158b): at a desktop window the hold step says the Space bar works too and the sum step says to type it, then Enter.
+	// The on-screen pad stays, and typed digits feed the same answer as a pad press, so a second text field would only show the answer twice.
+	private void AddDesktopCaptions()
+	{
+		if (!DesktopTips.IsWindows)
+		{
+			return;
+		}
+
+		HoldText.Children.Add(new Label
+		{
+			Text = AppResources.Gate_HoldCaptionWindows,
+			IsVisible = HoldBody.IsVisible, // hidden with the hold instruction when a screen reader replaces the ring
+			FontSize = 13,
+			TextColor = DinoTokens.Get(DinoTokens.Muted),
+			HorizontalTextAlignment = TextAlignment.Center,
+		});
+		SumText.Children.Add(new Label
+		{
+			Text = AppResources.Gate_TypeEnterWindows,
+			FontSize = 13,
+			TextColor = DinoTokens.Get(DinoTokens.Muted),
+			HorizontalTextAlignment = TextAlignment.Center,
+		});
 	}
 
 	// Slice 232 part E (mock Batch 44 frame 122): held sideways the gate splits (question left, answers or the hold ring right, 64 dp keys); upright it is the bottom sheet.
@@ -272,7 +300,9 @@ public partial class GatePage : ContentPage
 		HoldBody.IsVisible = !screenReaderOn;
 	}
 
-	private void OnHoldStart(object? sender, TouchEventArgs e)
+	private void OnHoldStart(object? sender, TouchEventArgs e) => StartHold();
+
+	private void StartHold()
 	{
 		_hold.Start(_clock.Elapsed);
 		HoldHint.Opacity = 1;
@@ -281,10 +311,88 @@ public partial class GatePage : ContentPage
 
 	private void OnHoldEnd(object? sender, TouchEventArgs e) => ResetHold();
 
+	DinoScreen IDinoKeyTarget.Screen => DinoScreen.Gate;
+
+	// Slice 235 part B: the Windows window's keys. Each returns false when it does not apply right now (the sum step is not showing, the screen-reader button replaced the ring),
+	// so the key goes on to the focused control as it did before.
+	bool IDinoKeyTarget.Handle(DinoKeyAction action, DinoKey key)
+	{
+		switch (action)
+		{
+			case DinoKeyAction.GateHoldStart:
+				return StartKeyHold();
+			case DinoKeyAction.GateHoldEnd:
+				return EndKeyHold();
+			case DinoKeyAction.GateDigit:
+				return DinoKeyMap.DigitOf(key) is { } digit && PressSumKey(digit.ToString());
+			case DinoKeyAction.GateErase:
+				return !AnyButtonFocused() && PressSumKey(BackspaceKey);
+			case DinoKeyAction.GateSubmit:
+				return !AnyButtonFocused() && PressSumKey(OkKey); // Enter on a focused button (Tab got there) activates that button instead
+			case DinoKeyAction.Back:
+				_ = CloseAsync(false);
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	// True while the keyboard focus sits on Back to story or Continue: Enter and Backspace then belong to that button.
+	// The pad keys are never keyboard tab stops on Windows (see MakeKey), so focus can only be on these two or nowhere, and a mouse click on a pad key never leaves the sum keys dead.
+	private bool AnyButtonFocused() => BackButton.IsFocused || ContinueButton.IsFocused;
+
+	// Types a key on the sum step the way a pad press does (digits add, backspace removes one, Enter checks); false while the hold step shows.
+	private bool PressSumKey(string key)
+	{
+		if (!SumText.IsVisible || _closing)
+		{
+			return false;
+		}
+
+		OnKey(key);
+		return true;
+	}
+
+	// A key repeat on a held Space arrives as more starts: only the first one starts the ring, and none can restart it.
+	private bool StartKeyHold()
+	{
+		if (_closing || !HoldRingHost.IsVisible || !HoldAction.IsVisible)
+		{
+			return false;
+		}
+
+		if (!_keyHolding)
+		{
+			_keyHolding = true;
+			StartHold();
+#if DEBUG
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Keyboard] gate hold started by the Space bar");
+#endif
+		}
+
+		return true;
+	}
+
+	private bool EndKeyHold()
+	{
+		if (!_keyHolding)
+		{
+			return false;
+		}
+
+		_keyHolding = false;
+		ResetHold();
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Keyboard] gate hold ended by letting go of the Space bar");
+#endif
+		return true;
+	}
+
 	private void OnHoldCancel(object? sender, EventArgs e) => ResetHold();
 
 	private void ResetHold()
 	{
+		_keyHolding = false; // any end of the hold (let go, page covered, window deactivated) also ends a Space hold, so no later key-up is needed
 		_timer.Stop();
 		_hold.Cancel();
 		_ring.Progress = 0;
@@ -347,8 +455,28 @@ public partial class GatePage : ContentPage
 			TextColor = isOk ? Colors.White : DinoTokens.Get(DinoTokens.Ink),
 		};
 		SemanticProperties.SetDescription(button, key == BackspaceKey ? AppResources.Gate_Backspace : isOk ? AppResources.Common_Ok : key);
-		button.Clicked += (_, _) => OnKey(key);
+#if WINDOWS
+		// Slice 235 part B: the keyboard types the digits, so Tab skips the pad; it stays a mouse and touch target. MAUI has no IsTabStop, so this is the native WinUI control's.
+		button.HandlerChanged += (_, _) =>
+		{
+			if (button.Handler?.PlatformView is Microsoft.UI.Xaml.Controls.Control native)
+			{
+				native.IsTabStop = false;
+			}
+		};
+#endif
+		button.Clicked += (_, _) => PressPadKey(button, key);
 		return button;
+	}
+
+	private void PressPadKey(Button button, string key)
+	{
+		if (DesktopTips.IsWindows)
+		{
+			button.Unfocus(); // a mouse click must not leave focus on the pad key
+		}
+
+		OnKey(key);
 	}
 
 	private void OnKey(string key)

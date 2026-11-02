@@ -187,6 +187,20 @@
   <data name="Gate_BackToStory" xml:space="preserve"><value>Tilbage til historien</value></data>
   <data name="Gate_WhatIs" xml:space="preserve"><value>Hvad er</value></data>
   <data name="Gate_Backspace" xml:space="preserve"><value>Slet</value></data>
+  <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Med musen, eller hold mellemrumstasten nede.</value></data>
+  <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>Skriv det, og tryk på Enter</value></data>
+  <data name="Key_Space" xml:space="preserve"><value>Mellemrumstast</value></data>
+  <data name="Key_Left" xml:space="preserve"><value>Venstrepil</value></data>
+  <data name="Key_Right" xml:space="preserve"><value>Højrepil</value></data>
+  <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Reading_ReadAgain" xml:space="preserve"><value>Læs igen</value></data>
+  <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Kun voksne kan se dette. Dit barns hylde er kun et klik væk.</value></data>
+  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Ingen forbindelse. Læser med telefonens stemme. Klik for at prøve at hente stemmen igen.</value></data>
+  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>Venter på internettet. Det fortsætter af sig selv, når du er online igen. Klik for at prøve nu.</value></data>
+  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>Venter på Wi-Fi. Det fortsætter af sig selv på Wi-Fi. Klik for at hente nu.</value></data>
+  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>Hentningen af stemmen blev beskadiget. Læser med telefonens stemme. Klik for at prøve igen.</value></data>
+  <data name="PackStatus_FailedClick" xml:space="preserve"><value>Kunne ikke hente naturlige stemmer. Læser med telefonens stemme. Klik for at prøve igen.</value></data>
+  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Hentningen er stoppet. Læser med telefonens stemme. Klik for at hente.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Hvad er {0} plus {1}?</value></data>
   <data name="Story_Add" xml:space="preserve"><value>Tilføj en historie</value></data>
   <data name="Story_Title" xml:space="preserve"><value>Titel</value></data>

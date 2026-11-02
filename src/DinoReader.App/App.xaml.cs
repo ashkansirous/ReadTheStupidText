@@ -28,6 +28,9 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		InitializeComponent();
 		// The kids' palette is light; night colours belong to ReadingTheme on the reading screen only.
 		UserAppTheme = AppTheme.Light;
+#if WINDOWS
+		DinoReader.Resources.Strings.AppResources.UseClickWording = true; // Slice 235 part B: a desktop window says "click", not "tap"
+#endif
 		ApplyRightToLeftFonts();
 		_services = services;
 		_config = config;
@@ -42,6 +45,9 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 	private static void OnPageAppearing(Page page)
 	{
 		SystemBarIcons.ForPage(page);
+#if WINDOWS
+		DinoTitleBar.ForPage(page); // Slice 235 part B: the title bar takes the page's colour
+#endif
 		if (page is SettingsPage)
 		{
 			_ = StoryLanguages.AskPendingNotificationAsync(page);
@@ -56,6 +62,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		var window = new Window(navigation);
 #if WINDOWS
 		DinoWindowFrame.Attach(window); // Slice 235: size, minimum, remembered place and title bar of the desktop window
+		DinoTitleBar.Watch(window); // Slice 235 part B: the title bar follows the top-most page, a modal opening or closing included
 #endif
 		var external = _services.GetRequiredService<ExternalActivityGuard>();
 		window.Stopped += (_, _) => OnStopped(_navigation!, external);
