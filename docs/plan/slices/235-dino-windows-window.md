@@ -174,3 +174,6 @@ From review (files in `D:/ReadTheStupidText-worktrees/reviews/`, deleted later):
 - Windows keys go through one hook (`Platforms/Windows/DinoKeyboard.cs`), then Core `DinoKeyMap`, then the top page's `IDinoKeyTarget`; pages handle no keys directly.
 - Tooltips and the "click" wording come only from `DesktopTips` (Windows only). (Slice 235: docs/plan/slices/235-dino-windows-window.md)
 
+
+Part B VM run 6 (after merging main): PASS 6/6 (dino-launch, open-book, page-turn, settings, keyboard, window) on b7a29744, package fa3f0e388903; log reviews/s235b-dino-vm-run6.log.
+Part B emulator run (after merging main): PASS 3/3 (leave-book-stops-read, read-back-reread-background, open-book-voice-id) on b7a29744, build fa3f0e388903, 220 s; log reviews/s235b-emulator-run.log.
