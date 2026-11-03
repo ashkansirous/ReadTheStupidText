@@ -118,7 +118,7 @@ public sealed class StoryTranslator
 
 	/// <summary>The pieces with their text translated; a missing language model leaves the story as it was.</summary>
 	public async Task<Outcome> TranslateAsync(
-		Story story, IReadOnlyList<SplitSegment> pieces, string reading, CancellationToken cancellationToken, bool forSpeech = false)
+		Story story, IReadOnlyList<SplitSegment> pieces, IReadOnlyList<SentenceSpan> sentences, string reading, CancellationToken cancellationToken, bool forSpeech = false)
 	{
 		string source = UiLanguage.Resolve(story.Language);
 		string target = UiLanguage.Resolve(reading);
@@ -135,7 +135,9 @@ public sealed class StoryTranslator
 			PieceTranslator? fallback = live ? engine : null;
 			PieceTranslator table = forSpeech ? BundledTranslations.ComposeSpoken(story, target, fallback) : BundledTranslations.Compose(story, target, fallback);
 			var translated = await StoryTranslation.TranslateAsync(pieces, table, cancellationToken);
-			return new Outcome(translated, true);
+			// Persian and Arabic say who speaks first (Slice 254); every other language keeps the order it was translated in.
+			// The sentences are the ones the voice analysed, so the plan and the spoken grouping can never disagree.
+			return new Outcome(SpeakerFirst.Regroups(target, story.Language, translated: true) ? SpeakerFirst.Regroup(translated, target, story.Text, sentences) : translated, true);
 		}
 		catch (TranslationModelUnavailableException ex)
 		{

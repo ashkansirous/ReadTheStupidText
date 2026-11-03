@@ -132,7 +132,7 @@ public static class TranslatedStoryBuilder
     {
         var groups = new List<string>[sentences.Count];
         var covered = new bool[sentences.Count];
-        foreach ((SplitSegment first, string text) in Runs(translated))
+        foreach ((SplitSegment first, string text) in Runs(translated, source))
         {
             int sentence = StorySentences.IndexAt(sentences, first.Segment.SourceStart);
             if (sentence >= 0)
@@ -166,7 +166,7 @@ public static class TranslatedStoryBuilder
 
     // One run for each piece the story was cut into: a long translation cut for speech shares its piece's source range and reads as one run.
     // A quote is marked where it opens and where it closes, so one that runs over several sentences is a single quote; one the source left open stays open.
-    private static List<(SplitSegment First, string Text)> Runs(IReadOnlyList<SplitSegment> translated)
+    private static List<(SplitSegment First, string Text)> Runs(IReadOnlyList<SplitSegment> translated, string source)
     {
         var pieces = new List<(SplitSegment First, string Text)>();
         int i = 0;
@@ -180,23 +180,38 @@ public static class TranslatedStoryBuilder
 
             string run = string.Join(Space, translated.Skip(i).Take(j - i + 1).Select(p => p.Segment.Text));
             SplitSegment? next = j + 1 < translated.Count ? translated[j + 1] : null;
-            pieces.Add((translated[i], Marked(translated[i], next, run)));
+            SplitSegment? previous = i > 0 ? translated[i - 1] : null;
+            pieces.Add((translated[i], Marked(translated[i], previous, next, run, source)));
             i = j + 1;
         }
 
         return pieces;
     }
 
-    private static string Marked(SplitSegment piece, SplitSegment? next, string run)
+    private static string Marked(SplitSegment piece, SplitSegment? previous, SplitSegment? next, string run, string source)
     {
         if (piece.Segment.Kind != SegmentKind.Quote)
         {
             return run;
         }
 
-        string opening = ContinuesQuote(piece) ? string.Empty : OpeningQuote.ToString();
-        bool closes = piece.Segment.IsClosed && (next is null || !ContinuesQuote(next));
+        string opening = ContinuesQuote(piece) || JoinsQuote(previous, piece, source) ? string.Empty : OpeningQuote.ToString();
+        bool closes = piece.Segment.IsClosed && (next is null || !(ContinuesQuote(next) || JoinsQuote(piece, next, source)));
         return opening + run + (closes ? ClosingQuote : string.Empty);
+    }
+
+    // Two quotes of one speaker that a speaker-first read (Slice 254) put side by side, though the source had words between them, read as one quote.
+    private static bool JoinsQuote(SplitSegment? before, SplitSegment piece, string source)
+    {
+        if (before is null || before.Segment.Kind != SegmentKind.Quote || piece.Segment.Kind != SegmentKind.Quote
+            || before.Segment.CharacterId is null || before.Segment.CharacterId != piece.Segment.CharacterId)
+        {
+            return false;
+        }
+
+        int from = Math.Min(before.Segment.SourceEnd, source.Length);
+        int to = Math.Clamp(piece.Segment.SourceStart, from, source.Length);
+        return source[from..to].Any(char.IsLetterOrDigit);
     }
 
     // A quote's piece after the first starts on its text, with no opening mark of its own in its source range.

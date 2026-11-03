@@ -91,8 +91,6 @@ public class AnimalSoundTests
     public void SaysIt_does_not_find_a_short_sound_inside_an_ordinary_japanese_or_chinese_word(string text, AnimalKind kind, string language, bool says) =>
         Assert.Equal(says, AnimalSounds.SaysIt(text, kind, language));
 
-    private static IReadOnlyList<SentenceSpan> SpansOf(params (int Start, int End)[] spans) => spans.Select(s => new SentenceSpan(s.Start, s.End)).ToList();
-
     [Fact]
     public void A_translated_line_gets_its_sound_once_after_its_last_piece()
     {
@@ -101,16 +99,16 @@ public class AnimalSoundTests
         pieces.Add(pieces[0] with { Segment = pieces[0].Segment with { Text = "Everyone is here." } });
         pieces.Add(Narration("Then it was quiet.", 60));
         var plan = new Dictionary<int, AnimalKind> { [40] = AnimalKind.Sheep };
-        IReadOnlyList<AnimalSounds.Placement> placed = AnimalSounds.Placements(pieces, plan, SpansOf((0, 40), (60, 78)));
+        IReadOnlyList<AnimalSounds.Placement> placed = AnimalSounds.Placements(pieces, plan);
         AnimalSounds.Placement only = Assert.Single(placed);
         Assert.Equal(1, only.After);
         Assert.Equal(1, only.Quote);
     }
 
     [Fact]
-    public void The_sound_waits_for_the_dialogue_tag_of_the_quotes_sentence()
+    public void The_sound_sits_right_after_the_quote_never_after_its_dialogue_tag()
     {
-        // "Good morning!" said Daddy Sheep.  The farm woke up.
+        // "Good morning!" said Daddy Sheep.  The farm woke up.   ->  quote, sound, tag (never quote, tag, sound)
         var pieces = new List<SplitSegment>
         {
             Quote("Good morning!", 0) with { Segment = Quote("Good morning!", 0).Segment with { SourceEnd = 15 } },
@@ -118,9 +116,56 @@ public class AnimalSoundTests
             Narration("The farm woke up.", 35),
         };
         var plan = new Dictionary<int, AnimalKind> { [15] = AnimalKind.Sheep };
-        AnimalSounds.Placement placed = Assert.Single(AnimalSounds.Placements(pieces, plan, SpansOf((0, 33), (35, 52))));
-        Assert.Equal(1, placed.After);
+        AnimalSounds.Placement placed = Assert.Single(AnimalSounds.Placements(pieces, plan));
+        Assert.Equal(0, placed.After);
         Assert.Equal(0, placed.Quote);
+    }
+
+    [Fact]
+    public void A_tag_before_the_quote_leaves_the_sound_after_the_quote()
+    {
+        // Daddy Sheep said, "Good morning!"   ->  tag, quote, sound
+        var pieces = new List<SplitSegment> { Narration("Daddy Sheep said,", 0), Quote("Good morning!", 18) };
+        var plan = new Dictionary<int, AnimalKind> { [pieces[1].Segment.SourceEnd] = AnimalKind.Sheep };
+        Assert.Equal(1, Assert.Single(AnimalSounds.Placements(pieces, plan)).After);
+    }
+
+    [Fact]
+    public void In_a_quote_tag_quote_line_the_sound_of_the_second_quote_comes_after_it_and_the_first_stays_before_the_tag()
+    {
+        // "Good morning," said Daddy Sheep, "everyone."
+        var pieces = new List<SplitSegment> { Quote("Good morning,", 0), Narration("said Daddy Sheep,", 16), Quote("everyone.", 34) };
+        var second = new Dictionary<int, AnimalKind> { [pieces[2].Segment.SourceEnd] = AnimalKind.Sheep };
+        var first = new Dictionary<int, AnimalKind> { [pieces[0].Segment.SourceEnd] = AnimalKind.Sheep };
+        Assert.Equal(2, Assert.Single(AnimalSounds.Placements(pieces, second)).After);
+        Assert.Equal(0, Assert.Single(AnimalSounds.Placements(pieces, first)).After);
+    }
+
+    [Fact]
+    public void A_speaker_first_line_gets_one_sound_after_the_whole_quote_even_when_both_halves_were_planned()
+    {
+        // tag, quote, quote (Persian, Arabic): the sound never lands between the two halves of the speaker's words.
+        var pieces = new List<SplitSegment> { Narration("Daddy Sheep said:", 16), Quote("Good morning,", 0), Quote("everyone.", 34) };
+        var plan = new Dictionary<int, AnimalKind>
+        {
+            [pieces[1].Segment.SourceEnd] = AnimalKind.Sheep,
+            [pieces[2].Segment.SourceEnd] = AnimalKind.Sheep,
+        };
+        AnimalSounds.Placement placed = Assert.Single(AnimalSounds.Placements(pieces, plan));
+        Assert.Equal((2, 2), (placed.After, placed.Quote));
+    }
+
+    [Fact]
+    public void In_a_quote_tag_quote_line_with_both_halves_planned_each_half_keeps_its_own_sound()
+    {
+        // "Good morning," said Daddy Sheep, "everyone."  (source order, tag between): two runs, two keys, two sounds, none skipped.
+        var pieces = new List<SplitSegment> { Quote("Good morning,", 0), Narration("said Daddy Sheep,", 16), Quote("everyone.", 34) };
+        var plan = new Dictionary<int, AnimalKind>
+        {
+            [pieces[0].Segment.SourceEnd] = AnimalKind.Sheep,
+            [pieces[2].Segment.SourceEnd] = AnimalKind.Sheep,
+        };
+        Assert.Equal([0, 2], AnimalSounds.Placements(pieces, plan).Select(p => p.After).ToArray());
     }
 
     [Fact]
@@ -128,7 +173,7 @@ public class AnimalSoundTests
     {
         var pieces = new List<SplitSegment> { Quote("Good morning!", 0), Narration("The farm woke up.", 20) };
         var plan = new Dictionary<int, AnimalKind> { [13] = AnimalKind.Sheep };
-        AnimalSounds.Placement placed = Assert.Single(AnimalSounds.Placements(pieces, plan, SpansOf((0, 13), (20, 37))));
+        AnimalSounds.Placement placed = Assert.Single(AnimalSounds.Placements(pieces, plan));
         Assert.Equal(0, placed.After);
     }
 

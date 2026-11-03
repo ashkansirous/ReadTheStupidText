@@ -8,6 +8,7 @@ public sealed class SentenceDumpTests
 {
     private const string PigsStem = "three-little-pigs";
     private const string Farsi = "fa";
+    private const string Pim = "Pim";
 
     private static SentenceListing PigsInFarsi() => SentenceDump.Build(PigsStem, StoreBuilder.Build(Books.SpecOf(PigsStem)), Farsi);
 
@@ -67,6 +68,32 @@ public sealed class SentenceDumpTests
         Assert.All(sentences.Where(s => s.Speaker is null), s => Assert.True(s.Narrator));
         Assert.Contains(sentences, s => s.Speaker == "Wolf");
         Assert.Contains(sentences, s => s.Narrator);
+    }
+
+    [Fact]
+    public void Farsi_ReadsTheTagBeforeTheWholeSplitQuote_AndTheSourceTextsFollowTheNewOrder()
+    {
+        IReadOnlyList<SpokenSentence> sentences = PigsInFarsi().Sentences;
+        int tag = sentences.ToList().FindIndex(s => s.Source == "said Pim." && s.Text.EndsWith(':'));
+
+        Assert.True(tag >= 0, "a moved tag ends with a colon");
+        Assert.Equal("A strong house takes time,", sentences[tag + 1].Source);
+        Assert.Equal("I'll play when it's done.", sentences[tag + 2].Source);
+        Assert.Equal(Pim, sentences[tag + 1].Speaker);
+        Assert.Equal(sentences[tag + 1].Speaker, sentences[tag + 2].Speaker);
+        Assert.True(sentences[tag].Narrator);
+        Assert.Equal(sentences.Select(s => s.Sentence).Order(), sentences.Select(s => s.Sentence));
+    }
+
+    [Fact]
+    public void English_KeepsTheStoryOrder_AndAWolfSoundSitsRightAfterHisQuote_NotAfterTheTag()
+    {
+        IReadOnlyList<SpokenSentence> sentences = SentenceDump.Build(PigsStem, StoreBuilder.Build(Books.SpecOf(PigsStem)), "en").Sentences;
+        int sound = sentences.ToList().FindIndex(s => s.Sound && s.Speaker == "Wolf");
+
+        Assert.True(sound > 0);
+        Assert.Equal("Wolf", sentences[sound - 1].Speaker);
+        Assert.False(sentences[sound - 1].Narrator);
     }
 
     [Fact]

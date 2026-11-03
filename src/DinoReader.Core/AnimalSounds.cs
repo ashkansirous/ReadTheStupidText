@@ -254,40 +254,37 @@ public static partial class AnimalSounds
 
     /// <summary>
     /// The sounds of <paramref name="plan"/> placed in the pieces actually spoken (the story's own, or its translation, which cuts one piece into several that
-    /// share their story positions): the sound comes after the whole line, so after the last of those pieces and after the dialogue tag
-    /// that finishes the quote's sentence ("Hello!" said Daddy Sheep. Baa!), never inside a translated sentence.
+    /// share their story positions): the sound sits next to its animal's own words (Slice 254), right after the last piece of the quote and never after a dialogue tag
+    /// that follows it: sound quote tag, quote sound tag, tag sound quote, tag quote sound, never quote tag sound. Quote pieces of the same speaker that follow each other
+    /// (a long quote cut in two, or a speaker-first line, <see cref="SpeakerFirst"/>) are one quote, so the sound waits for the last of them.
     /// </summary>
-    public static IReadOnlyList<Placement> Placements(
-        IReadOnlyList<SplitSegment> pieces, IReadOnlyDictionary<int, AnimalKind> plan, IReadOnlyList<SentenceSpan> sentences)
+    public static IReadOnlyList<Placement> Placements(IReadOnlyList<SplitSegment> pieces, IReadOnlyDictionary<int, AnimalKind> plan)
     {
         var placements = new List<Placement>();
+        var placed = new HashSet<int>();
         for (int i = 0; plan.Count > 0 && i < pieces.Count; i++)
         {
             Segment piece = pieces[i].Segment;
-            bool lastOfLine = piece.Kind == SegmentKind.Quote && (i + 1 == pieces.Count || !SharesEnd(pieces[i + 1].Segment, piece));
-            if (lastOfLine && plan.TryGetValue(piece.SourceEnd, out AnimalKind kind))
+            if (piece.Kind != SegmentKind.Quote || !plan.TryGetValue(piece.SourceEnd, out AnimalKind kind))
             {
-                placements.Add(new Placement(AfterTag(pieces, i, sentences), i, kind));
+                continue;
+            }
+
+            int last = QuoteEnd(pieces, i);
+            if (placed.Add(last))
+            {
+                placements.Add(new Placement(last, last, kind));
             }
         }
 
         return placements;
     }
 
-    private static bool SharesEnd(Segment next, Segment piece) =>
-        next.Kind == SegmentKind.Quote && next.CharacterId == piece.CharacterId && next.SourceEnd == piece.SourceEnd;
-
-    // The narration pieces that finish the quote's own sentence are its dialogue tag; the sound waits for them.
-    private static int AfterTag(IReadOnlyList<SplitSegment> pieces, int quote, IReadOnlyList<SentenceSpan> sentences)
+    // The last of the quote pieces of one speaker that run on from <first> with nothing between.
+    private static int QuoteEnd(IReadOnlyList<SplitSegment> pieces, int first)
     {
-        int sentence = StorySentences.IndexAt(sentences, pieces[quote].Segment.SourceEnd - 1);
-        if (sentence < 0)
-        {
-            return quote;
-        }
-
-        int last = quote;
-        while (last + 1 < pieces.Count && pieces[last + 1].Segment.Kind == SegmentKind.Narration && pieces[last + 1].Segment.SourceStart < sentences[sentence].End)
+        int last = first;
+        while (last + 1 < pieces.Count && IsSameLine(pieces[last + 1].Segment, pieces[first].Segment.CharacterId ?? string.Empty))
         {
             last++;
         }

@@ -75,7 +75,7 @@ public sealed class StoryVoicing
 			return await Task.Run(() => VoicedInOwnLanguage(story, prepared), cancellationToken);
 		}
 
-		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, reading, cancellationToken, forSpeech: true);
+		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, prepared.Analysis.Sentences.Value, reading, cancellationToken, forSpeech: true);
 		if (!outcome.Translated)
 		{
 			// The story is read as written, in its own language and voices, so the spoken pack goes back to its language too.
@@ -98,7 +98,7 @@ public sealed class StoryVoicing
 
 		Prepared prepared = await Task.Run(() => PrepareShared(story, _translator.UsesBundledTable(story, reading)), cancellationToken);
 		// The engine's pieces are shared with a read that speaks them at the same time (StoryTranslator), so each is translated once.
-		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, reading, cancellationToken);
+		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, prepared.Analysis.Sentences.Value, reading, cancellationToken);
 		return outcome.Translated ? TranslatedStoryBuilder.Build(story.Pages, sentences, outcome.Pieces, StoryRecordings.PagesShownInOwnLanguage(story)) : null;
 	}
 
@@ -119,7 +119,7 @@ public sealed class StoryVoicing
 
 	// Animal characters say their sound after every 2nd or 3rd line of their own (Slice 117, Decision 123): one extra short segment in the character's voice,
 	// spoken only (it has no text on the page). The lines are counted over the whole book in the story's language, so a read from the middle sounds like a read from the start.
-	// The sound comes after the whole line, dialogue tag included, and after the last piece of a translated line.
+	// The sound sits right after the line's last quote piece, never after a dialogue tag that follows it (Slice 254), and after the last piece of a translated line.
 	private IReadOnlyList<VoicedSegment> WithAnimalSounds(
 		Story story, Prepared prepared, VoiceCast cast, IReadOnlyList<SplitSegment> pieces, string spokenLanguage)
 	{
@@ -141,10 +141,11 @@ public sealed class StoryVoicing
 	{
 		// The grown-up's one app-wide switch (Slice 152); read at every read, never cached with the plan.
 		IReadOnlyDictionary<int, AnimalKind> plan = AnimalSounds.Audible(AnimalPlan(story, prepared, spokenLanguage), AnimalSoundsPreference.Load());
-		return plan.Count == 0 ? [] : AnimalSounds.Placements(pieces, plan, prepared.Analysis.Sentences.Value);
+		return plan.Count == 0 ? [] : AnimalSounds.Placements(pieces, plan);
 	}
 
-	// The plan counts the story's own lines; a read that is the whole book already has exactly those pieces. Kept for the same story instance and analysis.
+	// The plan counts the story's own lines, in the order the read speaks them (speaker first puts the two quotes of a quote-tag-quote line side by side, so they count as one line);
+	// a read that is the whole book already has exactly those pieces. Kept for the same story instance and analysis.
 	private IReadOnlyDictionary<int, AnimalKind> AnimalPlan(Story story, Prepared prepared, string spokenLanguage)
 	{
 		if (_lastPlan is { } last && ReferenceEquals(last.Story, story) && ReferenceEquals(last.Analysis, prepared.Analysis) && last.Language == spokenLanguage)
@@ -156,16 +157,21 @@ public sealed class StoryVoicing
 		IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.WithSound(AnimalsOf(story, resolved.Characters, spokenLanguage), story.Language);
 		IReadOnlyDictionary<int, AnimalKind> plan = animals.Count == 0
 			? new Dictionary<int, AnimalKind>()
-			: AnimalSounds.Plan(WholeBookPieces(story, prepared, resolved), animals, story.Language);
+			: AnimalSounds.Plan(SpokenOrder(story, prepared, WholeBookPieces(story, prepared, resolved), spokenLanguage), animals, story.Language);
 		_lastPlan = new SharedPlan(story, prepared.Analysis, spokenLanguage, plan);
 		return plan;
 	}
 
+	// Only a translated read is regrouped: a failed or skipped translation is spoken in the story's own language (VoicedInOwnLanguage), which keeps its order.
+	private static IReadOnlyList<SplitSegment> SpokenOrder(Story story, Prepared prepared, IReadOnlyList<SplitSegment> pieces, string spokenLanguage) =>
+		SpeakerFirst.Regroups(spokenLanguage, story.Language, translated: spokenLanguage != UiLanguage.Resolve(story.Language))
+			? SpeakerFirst.SourceOrder(pieces, spokenLanguage, story.Text, prepared.Analysis.Sentences.Value)
+			: pieces;
+
 	private static IReadOnlyList<SplitSegment> WholeBookPieces(Story story, Prepared prepared, AttributionResult resolved) =>
 		prepared.WholeBook ? prepared.Pieces : StoryPieces.Split(story, resolved, prepared.Analysis.Sentences.Value, 0);
 
-	// The sound segment, a zero-width one at the last character of the line (its dialogue tag included, so the order of positions holds and the highlight
-	// stays on that sentence); none when the spoken line already says it.
+	// The sound segment, a zero-width one at the last character of the line's last quote piece (its dialogue tag is not included, Slice 254); none when the spoken line already says it.
 	private static VoicedSegment? AnimalSoundAfter(IReadOnlyList<SplitSegment> pieces, AnimalSounds.Placement placement, VoiceCast cast, string spokenLanguage)
 	{
 		Segment quote = pieces[placement.Quote].Segment;
