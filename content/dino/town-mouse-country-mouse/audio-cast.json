@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "narrator": {
+    "voice": "Hali",
+    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+  },
+  "characters": {
+    "Town Mouse": {
+      "voice": "Cleo",
+      "style": "a young, bright, bouncy girl's voice for young children, standard Tehrani accent",
+      "direction": "lively, chatty and quick, used to the busy town"
+    },
+    "Country Mouse": {
+      "voice": "Achird",
+      "style": "a young, soft, warm boy's voice for young children, standard Tehrani accent",
+      "direction": "gentle, calm and friendly"
+    }
+  },
+  "lines": [
+    {
+      "speaker": "Town Mouse",
+      "source": "It's so quiet here!",
+      "direction": "restless and wriggly, a little bored"
+    },
+    {
+      "speaker": "Country Mouse",
+      "source": "What's that noise?",
+      "occurrence": 1,
+      "direction": "startled and a little nervous"
+    },
+    {
+      "speaker": "Country Mouse",
+      "source": "What's that noise?",
+      "occurrence": 2,
+      "direction": "startled, a little nervous, paws over his ears"
+    },
+    {
+      "speaker": "Country Mouse",
+      "source": "Town is a bit too busy for me!",
+      "direction": "giggling"
+    },
+    {
+      "speaker": "Town Mouse",
+      "source": "Bye-bye! Come back soon!",
+      "direction": "calling out happily as she waves goodbye"
+    },
+    {
+      "speaker": "Country Mouse",
+      "source": "Home, sweet home,",
+      "direction": "sleepy and content, soft and slow"
+    },
+    {
+      "speaker": "Town Mouse",
+      "source": "Home, sweet home,",
+      "direction": "sleepy and content, soft and slow"
+    }
+  ]
+}

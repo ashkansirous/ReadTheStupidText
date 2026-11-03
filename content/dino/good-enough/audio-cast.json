@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "narrator": {
+    "voice": "Hali",
+    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+  },
+  "characters": {
+    "Hazelnut": {
+      "voice": "Autonoe",
+      "style": "a young, bright, warm voice for young children, standard Tehrani accent",
+      "direction": "warm and happy, a good friend"
+    }
+  }
+}

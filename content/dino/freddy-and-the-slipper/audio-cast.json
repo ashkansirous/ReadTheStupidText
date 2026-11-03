@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "narrator": {
+    "voice": "Hali",
+    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+  },
+  "characters": {
+    "Freddy": {
+      "voice": "Puck",
+      "style": "a young, bouncy, bright child's voice, a little fox boy, for young children, standard Tehrani accent",
+      "direction": "bouncy and bright"
+    },
+    "Mummy": {
+      "voice": "Sulafat",
+      "style": "a warm, soft, kind mother's voice for young children, standard Tehrani accent",
+      "direction": "warm and loving"
+    },
+    "Tummy": {
+      "voice": "Fenrir",
+      "style": "a deep, rumbly, booming funny voice, a hungry tummy, silly and never scary for young children, standard Tehrani accent",
+      "direction": "rumbly, hungry and funny"
+    }
+  },
+  "lines": [
+    {
+      "speaker": "Tummy",
+      "source": "Psst! Freddy! I'm empty!",
+      "direction": "a loud, rumbly whisper"
+    },
+    {
+      "speaker": "Tummy",
+      "source": "I want to eat!",
+      "direction": "crying out, hungry and whiny"
+    },
+    {
+      "speaker": "Freddy",
+      "source": "Shh, Tummy!",
+      "direction": "hushed whisper"
+    },
+    {
+      "speaker": "Freddy",
+      "source": "Go to sleep, please!",
+      "direction": "whispering, pleading"
+    },
+    {
+      "speaker": "Tummy",
+      "source": "Chicken! A burger! Kebabs!",
+      "direction": "greedy, rumbly and drooling"
+    },
+    {
+      "speaker": "Tummy",
+      "source": "Feed me, please!",
+      "direction": "begging"
+    },
+    {
+      "speaker": "Freddy",
+      "source": "I know!",
+      "direction": "whispering, excited by an idea"
+    },
+    {
+      "speaker": "Freddy",
+      "source": "The neighbours next door\ngrilled kebabs today!",
+      "direction": "whispering, excited"
+    },
+    {
+      "speaker": "Freddy",
+      "source": "Maybe there's one more!",
+      "direction": "whispering, excited"
+    },
+    {
+      "speaker": "Tummy",
+      "source": "Kebab!",
+      "direction": "cheering"
+    },
+    {
+      "speaker": "Tummy",
+      "source": "Hooray!",
+      "direction": "cheering"
+    },
+    {
+      "speaker": "Tummy",
+      "source": "Hurry up!",
+      "direction": "grumbling impatiently"
+    },
+    {
+      "speaker": "Freddy",
+      "source": "Ewww! Yuck!",
+      "direction": "yelling, disgusted, spitting it out"
+    },
+    {
+      "speaker": "Freddy",
+      "source": "and smells like old feet!",
+      "direction": "disgusted"
+    },
+    {
+      "speaker": "Tummy",
+      "source": "Bleurgh!",
+      "direction": "disgusted and gagging, funny"
+    },
+    {
+      "speaker": "Tummy",
+      "source": "Don't send that down here!",
+      "direction": "shouting, alarmed"
+    },
+    {
+      "speaker": "Tummy",
+      "source": "Oh dear!",
+      "direction": "worried"
+    },
+    {
+      "speaker": "Freddy",
+      "source": "Oh no, oh no, no!",
+      "direction": "upset, wailing a little"
+    },
+    {
+      "speaker": "Tummy",
+      "source": "Rumble-grumble,",
+      "direction": "moaning, rumbly"
+    },
+    {
+      "speaker": "Tummy",
+      "source": "Oh, this is so bad!",
+      "direction": "moaning sadly"
+    },
+    {
+      "speaker": "Tummy",
+      "source": "Cold, plain potatoes?",
+      "direction": "grumbling, disappointed"
+    },
+    {
+      "speaker": "Tummy",
+      "source": "Boo-hoo!",
+      "direction": "pretend crying, funny"
+    },
+    {
+      "speaker": "Freddy",
+      "source": "I know,",
+      "direction": "sighing"
+    },
+    {
+      "speaker": "Freddy",
+      "source": "but they'll have to do.",
+      "direction": "sighing, a little sad"
+    },
+    {
+      "speaker": "Freddy",
+      "source": "That's what you get when you turn dinner down!",
+      "direction": "frowning, learning a lesson"
+    },
+    {
+      "speaker": "Tummy",
+      "source": "Yum-yum!",
+      "direction": "singing happily"
+    },
+    {
+      "speaker": "Tummy",
+      "source": "That's what tummies are for!",
+      "direction": "happy and full"
+    }
+  ]
+}

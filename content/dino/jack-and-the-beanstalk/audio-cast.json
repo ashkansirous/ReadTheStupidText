@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "narrator": {
+    "voice": "Hali",
+    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+  },
+  "characters": {
+    "Jack": {
+      "voice": "Puck",
+      "style": "a young, bright, upbeat little boy's voice for young children, standard Tehrani accent",
+      "direction": "bright, eager and kind"
+    },
+    "Mother": {
+      "voice": "Vindemiatrix",
+      "style": "a warm, soft, gentle mum's voice for young children, standard Tehrani accent",
+      "direction": "warm and caring"
+    },
+    "Giant": {
+      "voice": "Elio",
+      "style": "a deep, big, jolly grown-up voice, a friendly storybook giant, never scary for young children, standard Tehrani accent",
+      "direction": "big, jolly and friendly"
+    },
+    "Peddler": {
+      "voice": "Gacrux",
+      "style": "a cheerful, twinkly old lady's voice, a funny little peddler, for young children, standard Tehrani accent",
+      "direction": "funny, bouncy and mysterious"
+    }
+  },
+  "lines": [
+    {
+      "speaker": "Peddler",
+      "source": "Five magic beans!",
+      "direction": "excited, a big reveal"
+    },
+    {
+      "speaker": "Mother",
+      "source": "Only five beans?",
+      "direction": "surprised, starting to laugh"
+    },
+    {
+      "speaker": "Jack",
+      "source": "Wow, look at that!",
+      "direction": "amazed and excited"
+    },
+    {
+      "speaker": "Jack",
+      "source": "Hello, little hen,",
+      "direction": "soft and gentle, talking to a little hen"
+    },
+    {
+      "speaker": "Mother",
+      "source": "Hold on with both hands, one step at a time,",
+      "direction": "careful and caring"
+    },
+    {
+      "speaker": "Jack",
+      "source": "Hold on with both hands, one step at a time, Mum,",
+      "occurrence": 1,
+      "direction": "careful and caring"
+    },
+    {
+      "speaker": "Giant",
+      "source": "Fee, fi, fo, fum! Hello, hello, everyone!",
+      "occurrence": 1,
+      "direction": "singing very loudly and happily, booming"
+    },
+    {
+      "speaker": "Giant",
+      "source": "Goldie!",
+      "direction": "overjoyed"
+    },
+    {
+      "speaker": "Giant",
+      "source": "My Goldie!",
+      "direction": "overjoyed"
+    },
+    {
+      "speaker": "Giant",
+      "source": "Thank you, thank you!",
+      "direction": "overjoyed and very loud"
+    },
+    {
+      "speaker": "Giant",
+      "source": "Oops, sorry!",
+      "direction": "sorry and a little embarrassed"
+    },
+    {
+      "speaker": "Giant",
+      "source": "Everything about me is too big and too loud.",
+      "direction": "a little sad, with a big sigh"
+    },
+    {
+      "speaker": "Giant",
+      "source": "When I say hello, the birds fly away, and nobody ever comes to play.",
+      "direction": "a little sad and lonely"
+    },
+    {
+      "speaker": "Jack",
+      "source": "Put a finger on your lips, like this, and sing as softly as a mouse.",
+      "direction": "softly, half whispering, showing how"
+    },
+    {
+      "speaker": "Giant",
+      "source": "Fee, fi, fo, fum! Hello, hello, everyone!",
+      "occurrence": 2,
+      "direction": "whispering softly"
+    },
+    {
+      "speaker": "Jack",
+      "source": "Hold on with both hands, one step at a time, Mum,",
+      "occurrence": 2,
+      "direction": "careful and caring"
+    },
+    {
+      "speaker": "Giant",
+      "source": "Bye-bye, my friends!",
+      "direction": "whispering softly"
+    },
+    {
+      "speaker": "Peddler",
+      "source": "I told you they were magic beans,",
+      "direction": "pleased with herself, with a wink"
+    },
+    {
+      "speaker": "Giant",
+      "source": "Fee, fi, fo, fum! Goodnight, goodnight, everyone!",
+      "direction": "singing very softly, like a lullaby"
+    },
+    {
+      "speaker": "Jack",
+      "source": "Night-night, Giant,",
+      "direction": "whispering, sleepy"
+    }
+  ]
+}

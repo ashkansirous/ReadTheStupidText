@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "narrator": {
+    "voice": "Hali",
+    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+  },
+  "characters": {
+    "Little Billy": {
+      "voice": "Cleo",
+      "style": "a tiny, squeaky, bright child's voice for young children, standard Tehrani accent",
+      "direction": "small, polite and a little shy"
+    },
+    "Middle Billy": {
+      "voice": "Puck",
+      "style": "a young, bright, upbeat voice of a bigger boy for young children, standard Tehrani accent",
+      "direction": "bright and a little bolder"
+    },
+    "Big Billy": {
+      "voice": "Orus",
+      "style": "a big, deep, warm grown-up voice, gentle and kind, for young children, standard Tehrani accent",
+      "direction": "calm, kind and steady"
+    },
+    "Troll": {
+      "voice": "Algenib",
+      "style": "a gruff, gravelly grown-up voice, storybook troll, grumpy but never scary for young children, standard Tehrani accent",
+      "direction": "grumpy and grumbly"
+    }
+  },
+  "lines": [
+    {
+      "speaker": "Little Billy",
+      "source": "It's only me, Little Billy Goat Gruff,",
+      "direction": "in a teeny-tiny voice, a little nervous"
+    },
+    {
+      "speaker": "Little Billy",
+      "source": "Oh, please let me cross,",
+      "direction": "pleading, small and polite"
+    },
+    {
+      "speaker": "Middle Billy",
+      "source": "Oh, please let me cross,",
+      "direction": "pleading politely"
+    },
+    {
+      "speaker": "Big Billy",
+      "source": "It's me, Big Billy Goat Gruff,",
+      "direction": "in a big, deep, calm voice"
+    },
+    {
+      "speaker": "Big Billy",
+      "source": "Are you okay?",
+      "direction": "concerned and caring"
+    },
+    {
+      "speaker": "Troll",
+      "source": "Ho, ho, ho! That tickles!",
+      "direction": "giggling, happy and surprised"
+    },
+    {
+      "speaker": "Troll",
+      "source": "Nobody ever asks me to come along,",
+      "direction": "sad and lonely, quiet"
+    },
+    {
+      "speaker": "Troll",
+      "source": "Thank you, Billy Goats,",
+      "direction": "happy and grateful"
+    },
+    {
+      "speaker": "Troll",
+      "source": "This is the best day ever!",
+      "direction": "overjoyed, with a big happy smile"
+    },
+    {
+      "speaker": "Troll",
+      "source": "Come back tomorrow!",
+      "direction": "happy and friendly, waving goodnight"
+    }
+  ]
+}

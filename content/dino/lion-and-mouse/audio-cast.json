@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "narrator": {
+    "voice": "Hali",
+    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+  },
+  "characters": {
+    "Lion": {
+      "voice": "Algenib",
+      "style": "a big, warm, rumbly grown-up voice, a kind storybook lion king, never scary for young children, standard Tehrani accent",
+      "direction": "big, warm and a little proud"
+    },
+    "Mouse": {
+      "voice": "Leda",
+      "style": "a young, tiny, bright and squeaky voice for young children, standard Tehrani accent",
+      "direction": "quick, brave and kind"
+    }
+  },
+  "lines": [
+    {
+      "speaker": "Lion",
+      "source": "Hey! Who woke me up?",
+      "direction": "grumpy, just woken up, loud but not scary"
+    },
+    {
+      "speaker": "Lion",
+      "source": "I'm the king of all the animals!",
+      "direction": "proud and puffed up"
+    },
+    {
+      "speaker": "Lion",
+      "source": "You gave me such a fright!",
+      "direction": "startled and a bit grumpy"
+    },
+    {
+      "speaker": "Mouse",
+      "source": "Please, please let me go, Mister Lion,",
+      "direction": "scared and pleading"
+    },
+    {
+      "speaker": "Lion",
+      "source": "Ha, ha, ha!",
+      "direction": "laughing heartily, tummy wobbling"
+    },
+    {
+      "speaker": "Lion",
+      "source": "You want to help me?",
+      "direction": "amused, chuckling"
+    },
+    {
+      "speaker": "Lion",
+      "source": "You're way too small to help a lion!",
+      "direction": "amused, teasing gently"
+    },
+    {
+      "speaker": "Lion",
+      "source": "Run along home, little Mouse,",
+      "direction": "kind and gentle"
+    },
+    {
+      "speaker": "Lion",
+      "source": "Grr, grr, grr!",
+      "direction": "grumpy and frustrated, all tangled up, funny not scary"
+    },
+    {
+      "speaker": "Lion",
+      "source": "This is no fun at all!",
+      "direction": "grumpy and sulky"
+    },
+    {
+      "speaker": "Mouse",
+      "source": "That's the kind Lion!",
+      "direction": "alert, recognising the roar"
+    },
+    {
+      "speaker": "Mouse",
+      "source": "He sounds stuck!",
+      "direction": "worried"
+    },
+    {
+      "speaker": "Mouse",
+      "source": "Don't worry, Mister Lion,",
+      "direction": "calling out, brave"
+    },
+    {
+      "speaker": "Mouse",
+      "source": "I'm coming!",
+      "direction": "calling out while running, a little breathless"
+    },
+    {
+      "speaker": "Lion",
+      "source": "You came!",
+      "direction": "surprised and relieved"
+    },
+    {
+      "speaker": "Lion",
+      "source": "But you're so small.",
+      "direction": "doubtful"
+    },
+    {
+      "speaker": "Lion",
+      "source": "How can you help me?",
+      "direction": "doubtful"
+    },
+    {
+      "speaker": "Mouse",
+      "source": "Just you wait and see,",
+      "direction": "confident and a little cheeky"
+    },
+    {
+      "speaker": "Mouse",
+      "source": "Hip, hip, hooray!",
+      "direction": "cheering, overjoyed"
+    },
+    {
+      "speaker": "Lion",
+      "source": "Thank you, little friend,",
+      "direction": "grateful and warm"
+    },
+    {
+      "speaker": "Lion",
+      "source": "I'm sorry I laughed at you.",
+      "direction": "sorry and humble"
+    },
+    {
+      "speaker": "Mouse",
+      "source": "Kind friends help each other,",
+      "direction": "smiling and warm"
+    },
+    {
+      "speaker": "Lion",
+      "source": "Night-night, little friend,",
+      "direction": "sleepy and soft"
+    },
+    {
+      "speaker": "Mouse",
+      "source": "Night-night, big friend,",
+      "direction": "sleepy and soft"
+    }
+  ]
+}

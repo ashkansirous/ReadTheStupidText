@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "narrator": {
+    "voice": "Hali",
+    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+  },
+  "characters": {
+    "Mother Duck": {
+      "voice": "Sulafat",
+      "style": "a warm, soft, loving mother's voice, gentle for young children, standard Tehrani accent",
+      "direction": "loving, calm and kind"
+    },
+    "Duckling": {
+      "voice": "Achird",
+      "style": "a young, soft, warm boy's voice for young children, standard Tehrani accent",
+      "direction": "gentle, shy and curious"
+    },
+    "Dilly": {
+      "voice": "Cleo",
+      "style": "a young, bright, bouncy little girl's voice for young children, standard Tehrani accent",
+      "direction": "giggly and bubbly"
+    },
+    "Hen": {
+      "voice": "Laomedeia",
+      "style": "a bright, upbeat, friendly grown-up woman's voice for young children, standard Tehrani accent",
+      "direction": "cheerful, kind and a little bustling"
+    },
+    "Swan": {
+      "voice": "Iapetus",
+      "style": "a warm, clear, kind grown-up man's voice for young children, standard Tehrani accent",
+      "direction": "kind and welcoming, gently proud"
+    }
+  },
+  "lines": [
+    {
+      "speaker": "Mother Duck",
+      "source": "Oh my, what a great big baby!",
+      "direction": "surprised and delighted"
+    },
+    {
+      "speaker": "Dilly",
+      "source": "Your neck's so long, and your feet are so big!",
+      "direction": "giggling, cheeky teasing, never mean"
+    },
+    {
+      "speaker": "Dilly",
+      "source": "You don't look like a duck at all!",
+      "direction": "giggling, cheeky teasing, never mean"
+    },
+    {
+      "speaker": "Mother Duck",
+      "source": "Dilly, that wasn't very kind,",
+      "direction": "gently firm, not angry"
+    },
+    {
+      "speaker": "Dilly",
+      "source": "Sorry, big brother,",
+      "direction": "sorry and a little ashamed, quiet"
+    },
+    {
+      "speaker": "Duckling",
+      "source": "But if I don't look like a duck, what kind of bird am I?",
+      "direction": "a little sad and wondering"
+    },
+    {
+      "speaker": "Duckling",
+      "source": "Am I a swan like you?",
+      "occurrence": 1,
+      "direction": "calling up to the sky, hopeful"
+    },
+    {
+      "speaker": "Mother Duck",
+      "source": "Big or small, I love you all,",
+      "occurrence": 3,
+      "direction": "whispering softly, sleepy and cosy"
+    },
+    {
+      "speaker": "Duckling",
+      "source": "Wow! Is that really me?",
+      "direction": "amazed and full of wonder"
+    },
+    {
+      "speaker": "Duckling",
+      "source": "Am I a swan like you?",
+      "occurrence": 2,
+      "direction": "shy and hopeful"
+    }
+  ]
+}
