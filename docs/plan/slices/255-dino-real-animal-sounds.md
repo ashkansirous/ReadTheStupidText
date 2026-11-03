@@ -58,8 +58,22 @@ Page: https://claude.ai/artifact/151qSfw1SiXsJ2zRykH6JJ. Candidates, trimmed cli
 Not accepted; the user asked for more ("I think we need more animal sound picks"): cow, owl, sheep, pig ("find shorter
 one and without surrounding noise"), mouse, rabbit ("find without surrounding noise"), dog, wolf (other), lion (none
 right), bear (one candidate, none right). Round 2 page, 2-5 new CC0 candidates each, quiet single calls about 1 s:
-https://claude.ai/artifact/GsiKvyUm6o8cC3x3DwkwKK (published 2026-11-03, waiting on the user; rabbit has only 2, the
-lion and bear clips need a kid-friendliness listen).
+https://claude.ai/artifact/GsiKvyUm6o8cC3x3DwkwKK (published 2026-11-03; clips and `round2/candidates.json` in
+`D:/ReadTheStupidText-worktrees/s255-sounds/round2/`).
+
+## Decisions (the user, listening round 2, 2026-11-03 21:02 UTC)
+
+- cow: round 2 option 1, "Moo 3 - Moo Moo the Cow" by manofham, https://freesound.org/people/manofham/sounds/700380/ (CC0)
+- owl: round 2 option 4, "owl_hooting_000102_0145S3 002-070 000-002 068-074.wav" by Gerent, https://freesound.org/people/Gerent/sounds/558396/ (CC0)
+- sheep: round 2 option 1, "bah bala oveja/baa bleat sheep.WAV" by SergioJbs, https://freesound.org/people/SergioJbs/sounds/669872/ (CC0)
+- pig: round 2 option 1, "oink.wav" by krzpia, https://freesound.org/people/krzpia/sounds/510974/ (CC0)
+- mouse: round 2 option 1, "Mouse Squeaks.wav" by shyguy014, https://freesound.org/people/shyguy014/sounds/463789/ (CC0)
+- dog: round 2 option 5, "Ladrido [Bark]" by SmirnoffLulo, https://freesound.org/people/SmirnoffLulo/sounds/585873/ (CC0; a puppy)
+- bear, lion, rabbit, wolf: none picked, note on each: "no sound for this animal". Read as: these four get no
+  recording and no sound is played for them (not the voiced sound word either, which the slice replaces). A3 must
+  decide what the reader does at such a sound slot (skip it silently); ask the user only if skipping reads wrong.
+
+All 19 animals are now settled (15 recordings, 4 with no sound), so A1's picking is done.
 
 ## Work
 
