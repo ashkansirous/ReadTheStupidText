@@ -201,7 +201,7 @@ overall OK: **yes**. No lines flagged.
 
 **Part D — generation runs**
 - [x] D1. Farsi, one book (Three Little Pigs): render, listening page for the user, fix what they hear. *Done 2026-11-03 (PRs #763, #766).*
-- [ ] D2. Farsi, the other 15 books on the free key (as many days as the limit needs). *14 rendered 2026-11-03 in batch mode (all 0 left); Good Enough blocked: `dump-sentences good-enough` fails ("1 pages but 10 pictures"). Clips outside git in `D:/ReadTheStupidText-worktrees/s246-audio/books-<book>/` (Town Mouse in `books/`). Voices listening page: https://claude.ai/artifact/9AZaLgD9Vvt1LjfpAaEwnG, waiting on the user. Casts merged in #767.*
+- [ ] D2. Farsi, the other 15 books on the free key (as many days as the limit needs). *14 rendered 2026-11-03 in batch mode (all 0 left); Good Enough blocked: `dump-sentences good-enough` fails ("1 pages but 10 pictures"). Clips outside git in `D:/ReadTheStupidText-worktrees/s246-audio/books-<book>/` (Town Mouse in `books/`). Voices listening page: https://claude.ai/artifact/9AZaLgD9Vvt1LjfpAaEwnG; **the user kept all 73 speakers' voices in the 14 books, no notes (2026-11-03 22:19 UTC)**, so those 14 books' Farsi casts are final. Casts merged in #767. Left for D2: Good Enough (after its dump is fixed).*
 
 ### Decisions and findings, 2026-11-03 evening (Gemini limits and batch mode)
 
