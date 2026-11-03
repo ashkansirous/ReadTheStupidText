@@ -24,6 +24,8 @@
 - [ ] **6. Reading it back.** The `analytics-query` agent's column map gains `session` and `seq`; add a short "one session in order" query to `worker/CLAUDE.md` or the query skill's notes.
 - [ ] **7. Check.** Unit tests: one id per process, a new one on a new `UsageSession`, sequence increments, sampling per session, every `read_stopped` call site passes its reason. Worker tests: the new names and reasons are accepted, unknown ones dropped, a malformed session id dropped from the row. Emulator flow (Android) with the local test worker: play a book, Back, open another, Play; the worker test log shows `read_started`, `book_left`, `read_stopped left_book`, `book_opened`, `read_started` in sequence under one session id. The harnesses' off switch still keeps every real run out of production.
 
+**User, 2026-11-03:** The night may merge this slice; its Worker change goes live on merge through Workers Builds (production deploy approved). (This does not approve the store privacy form steps.)
+
 **Not in this slice.** RTST events and session ids. Any id that survives a restart.
 
 **Verification.** Unit, worker and emulator checks above. iOS: the TestFlight build sends no usage (until [Slice 251](251-dino-beta-usage-dataset.md)), so the iOS check is the store build's first rows showing session ids and the new events (Not yet verified until then).
