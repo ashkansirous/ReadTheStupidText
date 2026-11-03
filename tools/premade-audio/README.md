@@ -30,6 +30,23 @@ sentence index (`{"direction", "speaker", "source"}`: the line's speaker and Eng
 or by text hash (SHA-256 of the NFC text; a hash follows the text if lines move). The delivery sent to Gemini is `<style>; <direction>`
 (`speech_metadata.style`). A speaker with no entry fails the run before any request. Format and rules: `audio_cast.py`.
 
+### `say`: a Gemini-only pronunciation fix per line (A6)
+
+An index entry takes `say` next to (or instead of) `direction`: the text Gemini reads for that line in place of the book text, e.g. one word with a vowel mark.
+`{"17": {"say": "...", "speaker": null, "source": "One evening, a big grey Wolf came walking down the road."}}`. `speaker` is the dump's speaker (`null` for the narrator) and
+`source` its English text, so a moved line fails the run before any request, exactly like a direction. The clip name follows the spoken text (the manifest `variant` stays the service and settings tag), so
+changing a `say` re-renders that line only, and lines with the same `say`, voice and delivery share one clip. The manifest entry keeps the book `text` and `hash` (the app
+matches clips by them) and records the `say`. The book text and the on-device voice are untouched.
+
+Listening test for 2-3 spellings of one line (sends one request per candidate, counted in the budget like any other; writes no manifest entry):
+
+```bash
+python tools/premade-audio/generate.py --sentences tmp/pigs-fa.json --out artifacts/premade-audio --variants 17 --say "<spelling 1>" --say "<spelling 2>" --free
+```
+
+The files land in `<out>/<book>/<language>/variants/<index>/1.m4a`, `2.m4a`, ... in the line's own voice and delivery (its `say` is ignored); a rerun replaces them (each only when its new clip is saved; after a complete run, files numbered beyond the candidates are removed).
+Put the chosen spelling into `audio-cast.json` as that line's `say` and run a normal render.
+
 ## Manifest (version 3)
 
 `manifest.json` = `{"version": 3, "book", "language", "entries": [{"index", "sentence", "hash", "voice", "direction", "variant", "clip", "text"}]}`.

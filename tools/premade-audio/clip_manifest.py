@@ -69,6 +69,8 @@ class Manifest:
         self.entries[sentence["index"]] = {
             "index": sentence["index"], "sentence": sentence.get("sentence"), "hash": text_hash(sentence["text"]), "voice": delivery.voice,
             "direction": delivery.direction, "variant": variant, "clip": clip, "text": sentence["text"]}
+        if delivery.say:
+            self.entries[sentence["index"]]["say"] = delivery.say  # the text Gemini read instead of `text` (Slice 246 A6); the clip name is keyed by it
 
     def drop_stale(self, current):
         """Forgets every entry that does not match the current dump: `current` maps a sentence index to its (delivery, variant, clip stem). An entry whose text, voice or

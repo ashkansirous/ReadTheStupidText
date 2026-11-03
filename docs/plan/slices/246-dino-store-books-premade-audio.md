@@ -123,6 +123,18 @@ Page: https://claude.ai/artifact/MkAx2edzi4WAiCWMJKfL9h (Three Little Pigs parag
 - Licence: the Gemini API terms for shipping generated audio in a paid app are read and written here (A5) before any
   clip ships (part B), not before rendering.
 
+## Decisions (the user, listening D1, Three Little Pigs fa, 2026-11-03)
+
+Page: https://claude.ai/artifact/5oh43T7JWpijaprFi62wHD. Rating **5/5**; "Good enough for all 16 Farsi books?" **yes**;
+every voice OK (Hali narrator; Cleo, Puck, Achird as Pip, Pop, Pim; Elio as the wolf). Note: "other than a couple of
+small problems all good. It was wonderfull". Flagged lines:
+- 16 (Pim, «خرخر!», voice): "if it is the sound a pig makes, it is wrong. Also, it should not be read by ai. for the
+  animal noises, lets use the real pig oink oink and real cow saying mo" → Slice 255 (real recordings).
+- 17 (narrator, word): "گنده‌ی is read gondeye not gandeye" → A6.
+- 22 (narrator, «گرگ گفت.», voice): "It says Gorg goft.... not Gorge goft! which makes the audiance think the wolf just
+  want to say something." → Slice 254 (the tag moves before the wolf's words in Farsi), re-listen after the re-render.
+- 69 (narrator, «شالاپ! شالاپ! شالاپ!», voice): "shaalaap shaalaap shaalaap! it reads it as shalaap shalaap shalaap" → A6.
+
 ## Work (re-planned 2026-11-03)
 
 **Part A — generator (`tools/premade-audio`, runs on the user's PC)**
@@ -153,6 +165,10 @@ Page: https://claude.ai/artifact/MkAx2edzi4WAiCWMJKfL9h (Three Little Pigs parag
   - Restrictions: no models that compete with the Services, no reverse engineering/replicating the Services, no clinical or medical-advice use (none apply to storybook audio).
   - Data: on the unpaid tier Google uses submitted content and responses to improve products and "human reviewers may read" them ("Do not submit sensitive, confidential, or personal information to the Unpaid Services"); the paid tier does not. Book text is public story text, so the free key is fine. Paid Services are required for API clients offered to users in the EEA; we offer no API client, only pre-made audio.
   - Summary line: output is ours to ship commercially; Google claims no ownership; no attribution or AI-voice label is required by the terms for pre-made clips, but nothing here settles any store-policy or EU-law AI-label question (check before part B ships). Primary source read through a page summariser, not the raw page: re-read the quoted clauses before relying on them.
+- [ ] A6. (code done and tested offline: `say` in `audio-cast.json`, `generate.py --variants`; the listening part is still open) **Gemini-only pronunciation fix per line** (from the D1 answers): `audio-cast.json` takes a per-line `say` (the text
+  Gemini reads, e.g. one word with a vowel mark), guarded by speaker + English source like the directions; the clip is
+  keyed by the `say` text; the book text and the on-device voice are untouched. Try 2-3 spellings for each flagged word
+  (a few pence) on a listening page, keep the user's pick.
 
 **Part B — package and store**
 - [ ] B1. Decide inside `.dino` vs a separate download by measured size (one Farsi book's clips), write the decision here.
