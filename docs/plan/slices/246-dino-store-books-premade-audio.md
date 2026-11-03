@@ -29,6 +29,10 @@ so it should not take that much space. we can generate it on my machine. create 
 **Depends on:** A first (B and D read its manifest); C can start alongside A once A's manifest shape (A2) is merged.
 **Touches, part A (generator):** `tools/premade-audio/**`, `content/dino/*/audio-cast.json` (new, one per book), `tools/DinoReader.BookBuilder/**` (a sentences-as-JSON command only).
 *Part A in progress 2026-11-03 (branch `feat/s246-a-gemini-generator`).*
+*Changed while building (part A, 2026-11-03):* `tools/premade-audio` is now Gemini only: `generate.py` (CLI + `Generator`), `audio_cast.py`, `pacing.py`, `encode.py` (ffmpeg `aac` to `.m4a`, silence trimmed), `clip_manifest.py` v3; BookBuilder `dump-sentences <stem> --lang <code>` prints the app's pieces as JSON (`SentenceDump.cs`, tests in `SentenceDumpTests.cs`); `content/dino/three-little-pigs/audio-cast.json` (Hali narrates; Cleo, Puck, Achird, Elio for Pip, Pop, Pim, Wolf, chosen from descriptors, not heard yet). No live call made. A clip is per app piece (a quote and its "said Pip" tag are two pieces of one highlighted sentence), so the dump carries both `index` and `sentence`.
+
+*Part A built 2026-11-03, after review:* the dump also lists the app's animal-sound segments (87 entries for Pigs in Farsi, not 78); per-line directions are guarded by speaker and English source text; stale manifest entries are dropped; exit codes per cause; a lock per out folder; `--max-requests` defaults to 200; a daily 429 ends the run at once; silent clips stop a run after 3 in a row or 5 in total. 51 Python tests, 2,276 Dino tests. Billing (user, 2026-11-03): £4 prepaid ($5), auto-reload off, **monthly spend cap £5** (the user's choice; may stop the full library halfway through a month, not checked whether credit-paid usage counts toward it). First live run (Pigs, Farsi) started 18:10 with `--rpm 10`.
+*From review:* `D:/ReadTheStupidText-worktrees/reviews/s246a-review-high.md` (14; 11 applied, 6/8/9 skipped as style or proven in AI Studio), `s246a-review-medium.md` (9; 1-6 applied, 7-9 skipped low), `s246a-review-check-medium.md` (4 new; 1, 2, 4 applied, 3 low skipped), `s246a-review-check2-medium.md` (no findings). Skipped and still open: re-render of every clip when the request format changes (medium 7); `pending_count` double-counts duplicate stems (check 3); non-atomic WAV write and `.bak` overwrite (older gaps).
 **Touches, part B (package and store):** `tools/DinoReader.BookBuilder/**`, `tools/upload-store-story.ps1`, `worker/**`, `worker/CLAUDE.md`, `STORE.md`.
 **Touches, part C (app playback):** `src/DinoReader.Core/PremadeAudio*.cs` (new), `src/DinoReader.App/Reading*.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/Platforms/**`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`.
 **Touches, part D (generation runs):** generated audio outside git (store uploads only), this slice file.
@@ -130,16 +134,25 @@ Page: https://claude.ai/artifact/MkAx2edzi4WAiCWMJKfL9h (Three Little Pigs parag
   TTS model: **3 RPM, 10K TPM, 10 requests per day** (2.5-pro-tts: none). At one sentence per request that is months for
   Farsi, so the route needs the user's choice: a $5 prepay (the minimum; then the £15.04 GCP credit is used first,
   auto-reload off, spend cap set) or page-sized free requests cut at pauses. Billing account unchanged (0 projects linked).
-- [ ] A1. Remove the ElevenLabs, Azure, OpenAI, Narakeet and CAMB adapters and their tests; keep the Gemini adapter and
-  prove its request shape with one keyed sentence (the first live call; fix what it shows).
-- [ ] A2. Per-book run: every sentence of one book in one language, plain text, narrator vs character from the app's own
+- [x] A1. Remove the ElevenLabs, Azure, OpenAI, Narakeet and CAMB adapters and their tests; keep the Gemini adapter and
+  prove its request shape with one keyed sentence (the first live call; fix what it shows). *Done 2026-11-03: adapters, `render_all.py`, `book_text.py`
+  (the BookBuilder dump replaced it) and the old tests removed; the live shape was already proven by A0, so no further call was made.*
+- [x] A2. Per-book run: every sentence of one book in one language, plain text, narrator vs character from the app's own
   segmenter output (same sentence split as `StorySentences`, so clip N is highlight N), the voice and direction from
   `audio-cast.json`; manifest v3 (book, language, sentence index, text hash, voice, direction, clip). Resumable and
   cached by text hash.
-- [ ] A3. Rate-limit aware: honours the free tier's per-minute and per-day limits, stops cleanly at the day's limit and
+- [x] A3. Rate-limit aware: honours the free tier's per-minute and per-day limits, stops cleanly at the day's limit and
   resumes the next day where it left off; a 402/403 never retries; a daily budget flag for the paid route.
-- [ ] A4. Encode WAV to AAC `.m4a`; drop leading and trailing silence so sentence clips join without gaps.
-- [ ] A5. Write the Gemini API output licence terms (commercial use, attribution, AI-voice disclosure) into this file.
+- [x] A4. Encode WAV to AAC `.m4a`; drop leading and trailing silence so sentence clips join without gaps.
+- [x] A5. Write the Gemini API output licence terms (commercial use, attribution, AI-voice disclosure) into this file.
+  *Read 2026-11-03* at https://aistudio.google.com/docs/terms (ai.google.dev/gemini-api/terms redirects there; effective date March 23, 2026, no version number).
+  - Ownership: "Google won't claim ownership over that content." Google "may generate the same or similar content for others"; "You're responsible for your use of generated content, and for the use of that content by anyone you share it with."
+  - Commercial use: the terms are for "professional or business purposes, not for consumer use" (the API client is ours, the audio ships inside our app); no ban on shipping generated output in a paid product was found.
+  - Attribution: the terms say compliance with applicable law "may require the provision of" attribution "to your users when returned as part of an API call" (no fixed wording given; our clips are not returned live to users, they are pre-made).
+  - AI disclosure / watermark: the page does not mention SynthID, watermarking or an AI-voice disclosure rule. (Not covered by the terms: any store or law requirement to say the voices are AI; decide that in part B.)
+  - Restrictions: no models that compete with the Services, no reverse engineering/replicating the Services, no clinical or medical-advice use (none apply to storybook audio).
+  - Data: on the unpaid tier Google uses submitted content and responses to improve products and "human reviewers may read" them ("Do not submit sensitive, confidential, or personal information to the Unpaid Services"); the paid tier does not. Book text is public story text, so the free key is fine. Paid Services are required for API clients offered to users in the EEA; we offer no API client, only pre-made audio.
+  - Summary line: output is ours to ship commercially; Google claims no ownership; no attribution or AI-voice label is required by the terms for pre-made clips, but nothing here settles any store-policy or EU-law AI-label question (check before part B ships). Primary source read through a page summariser, not the raw page: re-read the quoted clauses before relying on them.
 
 **Part B — package and store**
 - [ ] B1. Decide inside `.dino` vs a separate download by measured size (one Farsi book's clips), write the decision here.

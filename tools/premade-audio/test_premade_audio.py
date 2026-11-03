@@ -1,443 +1,530 @@
-"""Offline tests (Slice 246): no network, no paid call. Run: python -I -m pytest tools/premade-audio  (or python -I -m unittest discover -s tools/premade-audio)."""
+"""Offline tests for the Gemini clip generator (Slice 246 A1-A4). No network: a fake transport stands in for the vendor.
+
+    python -I -W error -m unittest discover -s tools/premade-audio
+"""
 import base64
 import contextlib
 import io
 import json
 import os
 import pathlib
+import struct
+import subprocess
 import tempfile
 import unittest
+import unittest.mock
 import urllib.error
 import wave
 
 import adapter_base
-import adapter_gemini
-import adapter_openai
-import book_text
+import audio_cast
 import clip_manifest
-import render_all
-from adapter_azure import Azure
-from adapter_base import STATUS_OK, STATUS_SKIPPED, Adapter, Audio, Request, Result
-from adapter_camb import Camb
-from adapter_elevenlabs import ElevenLabs
-from adapter_gemini import Gemini
-from adapter_narakeet import Narakeet
-from adapter_openai import OpenAi
+import encode
+import generate
+import pacing
+from adapter_base import HttpError
+from adapter_gemini import Gemini, wav_bytes
+from clip_manifest import Manifest, text_hash
 
-NO_SECRETS = {"PREMADE_AUDIO_SECRETS": os.path.join(tempfile.gettempdir(), "premade-audio-no-such-file.env")}
-BOOK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "content", "dino", "three-little-pigs")
-
-
-def forbid_network(request):
-    raise AssertionError("network call attempted")
+REPO = pathlib.Path(__file__).resolve().parents[2]
+KEY = {"GEMINI_API_KEY": "test-key"}
+NARRATOR = {"voice": "Hali", "style": "warm storyteller"}
+CAST_DATA = {"version": 1, "narrator": NARRATOR,
+             "characters": {"Wolf": {"voice": "Elio", "style": "deep", "direction": "sly"}, "Pip": {"voice": "Cleo", "style": "bouncy"}},
+             "directions": {"3": {"direction": "huffing", "speaker": "Wolf", "source": "y"}}}
 
 
-def with_keys(**keys):
-    return {**NO_SECRETS, **keys}
+def tone_wav(seconds=0.5, silence=0.3):
+    """A WAV: `silence` s of silence, `seconds` of a 440 Hz-ish square tone, `silence` s of silence (24 kHz mono 16-bit)."""
+    rate = 24000
+    quiet = b"\x00\x00" * int(rate * silence)
+    tone = b"".join(struct.pack("<h", 8000 if (i // 27) % 2 else -8000) for i in range(int(rate * seconds)))
+    out = io.BytesIO()
+    with wave.open(out, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(quiet + tone + quiet)
+    return out.getvalue()
 
 
-class SpeakTableTests(unittest.TestCase):
-    def test_speak_key_is_prefixed_and_lowercase(self):
-        self.assertEqual("speak:fa", book_text.speak_key("FA"))
-
-    def test_speak_table_wins_then_displayed_then_none(self):
-        tables = {"speak:fa": {"a": "A-spoken"}, "fa": {"a": "A-shown", "b": "B-shown"}}
-        self.assertEqual("A-spoken", book_text.lookup_spoken(tables, "fa", "a"))
-        self.assertEqual("B-shown", book_text.lookup_spoken(tables, "fa", "b"))
-        self.assertIsNone(book_text.lookup_spoken(tables, "fa", "c"))
-
-    def test_paragraph_pick_and_speak_applied_on_the_real_book(self):
-        pieces, text = book_text.listening_paragraph(BOOK, "fa", 0)
-        self.assertEqual(["Once upon a time, three little pigs left home to build houses of their very own.", "Their names were Pip, Pop and Pim."], pieces)
-        speak = book_text.load_json(os.path.join(BOOK, "translations", "fa.speak.json"))
-        self.assertEqual(" ".join(speak[p] for p in pieces), text)
-        self.assertIn("ْ", text)  # the vowel marks of the speak table (sukun) are present
-
-    def test_pieces_in_ignores_quotes_and_keeps_order(self):
-        found = book_text.pieces_in('"Yay!" said Pip. He ran.', ["Yay!", "said Pip.", "He ran.", "Other."])
-        self.assertEqual(["Yay!", "said Pip.", "He ran."], found)
-
-    def test_paragraphs_split_pages_and_blank_lines(self):
-        self.assertEqual(["a", "b", "c"], book_text.paragraphs("a\n\nb\n---\nc"))
+def gemini_body(wav=None):
+    data = base64.b64encode(wav or tone_wav()).decode()
+    return json.dumps({"steps": [{"type": "model_output", "content": [{"type": "audio", "data": data}]}]}).encode()
 
 
-class AdapterTests(unittest.TestCase):
-    def test_missing_key_is_skipped_and_sends_nothing(self):
-        with tempfile.TemporaryDirectory() as d:
-            for cls in (ElevenLabs, Gemini, Azure, OpenAi, Narakeet, Camb):
-                a = cls(environ=NO_SECRETS, transport=forbid_network)
-                r = a.render("text", a.voices[0], os.path.join(d, "x"))
-                self.assertEqual(STATUS_SKIPPED, r.status, cls.__name__)
-                self.assertIn("skipped: no key", r.detail)
-                self.assertIn(a.key_env, r.detail)
-            self.assertEqual([], os.listdir(d))
+class FakeTransport:
+    """Answers each call from `answers` (a list of bytes or exceptions; the last repeats) and records the requests."""
 
-    def test_azure_needs_region_too(self):
-        a = Azure(environ=with_keys(AZURE_SPEECH_KEY="k"), transport=forbid_network)
-        self.assertEqual(["AZURE_SPEECH_REGION"], a.missing())
+    def __init__(self, answers=None):
+        self.answers = answers or [gemini_body()]
+        self.requests = []
 
-    def test_request_shapes(self):
-        e = ElevenLabs(environ=NO_SECRETS).build_request("سلام", "VID", "k")
-        self.assertTrue(e.url.startswith("https://api.elevenlabs.io/v1/text-to-speech/VID?output_format="))
-        self.assertEqual("k", e.headers["xi-api-key"])
-        self.assertEqual({"eleven_v3", "fa"}, {json.loads(e.body)["model_id"], json.loads(e.body)["language_code"]})
-        o = json.loads(OpenAi(environ=NO_SECRETS).build_request("x", "coral", "k").body)
-        self.assertEqual(("gpt-4o-mini-tts", "coral"), (o["model"], o["voice"]))
-        n = Narakeet(environ=NO_SECRETS).build_request("x", "reza", "k")
-        self.assertTrue(n.url.endswith("/text-to-speech/mp3?voice=reza"))
-        c = json.loads(Camb(environ=NO_SECRETS).build_request("سلام دنیا", "147320", "k").body)
-        self.assertEqual(("fa-ir", 147320), (c["language"], c["voice_id"]))
-        g = json.loads(Gemini(environ=NO_SECRETS).build_request("x", "Kore", "k").body)
-        self.assertEqual([{"voice": "Kore"}], g["generation_config"]["speech_config"])
-
-    def test_azure_ssml_and_url_use_region(self):
-        a = Azure(environ=with_keys(AZURE_SPEECH_KEY="k", AZURE_SPEECH_REGION="westeurope"))
-        r = a.build_request("a < b", "fa-IR-DilaraNeural", "k")
-        self.assertEqual("https://westeurope.tts.speech.microsoft.com/cognitiveservices/v1", r.url)
-        self.assertIn("name='fa-IR-DilaraNeural'>a &lt; b</voice>", r.body.decode("utf8"))
-
-    def test_gemini_takes_last_audio_part(self):
-        body = json.dumps({"steps": [{"content": [{"type": "audio", "data": base64.b64encode(b"RIFFone").decode()}]},
-                                     {"content": [{"type": "text"}, {"type": "audio", "data": base64.b64encode(b"RIFFtwo").decode()}]}]}).encode()
-        audio = Gemini(environ=NO_SECRETS).parse_response(body, "application/json")
-        self.assertEqual((b"RIFFtwo", "wav"), (audio.data, audio.extension))
-
-    def test_render_with_key_writes_file_through_fake_transport(self):
-        sent = []
-
-        def fake(request):
-            sent.append(request)
-            return b"MP3", "audio/mpeg"
-        with tempfile.TemporaryDirectory() as d:
-            r = OpenAi(environ=with_keys(OPENAI_API_KEY="k"), transport=fake).render("x", "coral", os.path.join(d, "o"))
-            self.assertEqual(STATUS_OK, r.status)
-            self.assertEqual(b"MP3", pathlib.Path(r.path).read_bytes())
-            self.assertEqual(1, len(sent))
-
-    def test_vendor_failure_is_an_error_result(self):
-        def boom(request):
-            raise OSError("down")
-        with tempfile.TemporaryDirectory() as d:
-            r = OpenAi(environ=with_keys(OPENAI_API_KEY="k"), transport=boom).render("x", "coral", os.path.join(d, "o"))
-            self.assertEqual("error", r.status)
-
-    def test_key_comes_from_secrets_file(self):
-        with tempfile.TemporaryDirectory() as d:
-            path = os.path.join(d, "s.env")
-            with open(path, "w", encoding="utf8") as f:
-                f.write("# c\nOPENAI_API_KEY=\"abc\"\n")
-            self.assertEqual("abc", OpenAi(environ={"PREMADE_AUDIO_SECRETS": path}).key())
+    def __call__(self, request):
+        self.requests.append(request)
+        answer = self.answers[min(len(self.requests) - 1, len(self.answers) - 1)]
+        if isinstance(answer, Exception):
+            raise answer
+        return answer, "application/json"
 
 
-class FakeAdapter(Adapter):
-    name = "fake"
-    voices = ("v",)
-
+class Clock:
     def __init__(self):
-        super().__init__()
-        self.calls = []
+        self.now = 1000.0
+        self.slept = []
 
-    def missing(self):
-        return []
+    def __call__(self):
+        return self.now
 
-    def render(self, text, voice, out_path):
-        self.calls.append(text)
-        path = out_path + ".mp3"
-        with open(path, "wb") as f:
-            f.write(b"x")
-        return Result(self.name, voice, STATUS_OK, "", path)
+    def sleep(self, seconds):
+        self.slept.append(seconds)
+        self.now += seconds
 
 
-class ManifestTests(unittest.TestCase):
-    def test_hash_is_stable_and_nfc_normalised(self):
-        self.assertEqual(clip_manifest.text_hash("é"), clip_manifest.text_hash("é"))
-        self.assertNotEqual(clip_manifest.text_hash("a"), clip_manifest.text_hash("b"))
-
-    def test_manifest_shape_and_cache_rerenders_only_changed_sentence(self):
-        with tempfile.TemporaryDirectory() as d:
-            fake = FakeAdapter()
-            clip_manifest.render_sentences(["one", "two"], "v", fake, d)
-            data = json.loads(pathlib.Path(d, "manifest.json").read_text(encoding="utf8"))
-            self.assertEqual(2, data["version"])
-            self.assertEqual({"hash", "voice", "variant", "clip", "text"}, set(data["entries"][0]))
-            self.assertEqual(["one", "two"], [e["text"] for e in data["entries"]])
-            _, hits = clip_manifest.render_sentences(["one", "two edited"], "v", fake, d)
-            self.assertEqual(1, hits)
-            self.assertEqual(["one", "two", "two edited"], fake.calls)
-
-    def test_missing_clip_file_is_rerendered_and_other_voice_is_separate(self):
-        with tempfile.TemporaryDirectory() as d:
-            fake = FakeAdapter()
-            clip_manifest.render_sentences(["one"], "v", fake, d)
-            clip = clip_manifest.Manifest(d).cached("one", "v", clip_manifest.variant_of(fake, "v"))["clip"]
-            os.remove(os.path.join(d, clip))
-            clip_manifest.render_sentences(["one"], "v", fake, d)
-            clip_manifest.render_sentences(["one"], "w", fake, d)
-            self.assertEqual(3, len(fake.calls))
+def sentence(index, text, speaker=None):
+    return {"index": index, "sentence": index, "text": text, "source": text, "speaker": speaker, "narrator": speaker is None}
 
 
-class ManifestKeyTests(unittest.TestCase):
-    def test_other_service_or_settings_never_reuse_or_overwrite_a_clip(self):
-        with tempfile.TemporaryDirectory() as d:
-            first, second = FakeAdapter(), FakeAdapter()
-            second.name = "other"
-            clip_manifest.render_sentences(["one"], "v", first, d)
-            clip_manifest.render_sentences(["one"], "v", second, d)
-            self.assertEqual(["one"], first.calls)
-            self.assertEqual(["one"], second.calls)
-            self.assertEqual(2, len({e["clip"] for e in clip_manifest.Manifest(d).entries.values()}))
-
-    def test_settings_tag_follows_model_and_style(self):
-        a = OpenAi(environ=NO_SECRETS)
-        before = a.settings_tag("coral")
-        self.assertEqual(before, OpenAi(environ=NO_SECRETS).settings_tag("coral"))
-        self.assertNotEqual(before, a.settings_tag("sage"))
-        original = adapter_openai.INSTRUCTIONS
-        try:
-            adapter_openai.INSTRUCTIONS = original + " slower"
-            self.assertNotEqual(before, a.settings_tag("coral"))
-        finally:
-            adapter_openai.INSTRUCTIONS = original
-        for cls in (ElevenLabs, Gemini, Azure, Narakeet, Camb):
-            self.assertTrue(cls(environ=NO_SECRETS).settings_tag(cls.voices[0]), cls.__name__)
-
-    def test_voice_is_sanitised_in_the_clip_file_name(self):
-        with tempfile.TemporaryDirectory() as d:
-            fake = FakeAdapter()
-            clip_manifest.render_sentences(["one"], "a/b:c", fake, d)
-            clip = clip_manifest.Manifest(d).entries.popitem()[1]["clip"]
-            self.assertNotIn("/", clip)
-            self.assertNotIn(":", clip)
-            self.assertEqual([clip, "manifest.json"], sorted(os.listdir(d), key=lambda n: n == "manifest.json"))
+def http_error(code, retry_header=None, body="{}", daily=False):
+    return HttpError(code, f"HTTP {code} X: {body}", adapter_base.retry_after_of(retry_header, body), daily)
 
 
-class StopOnFatalTests(unittest.TestCase):
-    def failing(self, status, detail):
-        fake = FakeAdapter()
-        fake.render = lambda text, voice, out: fake.calls.append(text) or Result("fake", voice, status, detail)
-        return fake
+class Base(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.tmp = self._tmp.name
+        self.clock = Clock()
 
-    def test_missing_key_makes_one_call_for_many_sentences(self):
-        with tempfile.TemporaryDirectory() as d:
-            fake = self.failing("skipped", "skipped: no key")
-            results, _ = clip_manifest.render_sentences(["a", "b", "c", "d"], "v", fake, d)
-            self.assertEqual(1, len(results))
-
-    def test_unauthorised_stops_but_a_transient_error_gets_three_tries(self):
-        with tempfile.TemporaryDirectory() as d:
-            fake = self.failing("error", "RuntimeError: HTTP 401 Unauthorized: bad key")
-            clip_manifest.render_sentences(["a", "b", "c", "d"], "v", fake, d)
-            self.assertEqual(["a"], fake.calls)
-            fake = self.failing("error", "OSError: timed out")
-            clip_manifest.render_sentences(["a", "b", "c", "d", "e"], "v", fake, d)
-            self.assertEqual(["a", "b", "c"], fake.calls)
+    def make(self, transport=None, rpm=0, rpd=0, max_requests=0, fmt=generate.FORMAT_WAV, ffmpeg=None, cast=None):
+        self.transport = transport or FakeTransport()
+        adapter = Gemini(environ=KEY, transport=self.transport)
+        log = pacing.UsageLog(os.path.join(self.tmp, "usage.json"), clock=self.clock)
+        pacer = pacing.Pacer(log, rpm, rpd, max_requests, clock=self.clock, sleep=self.clock.sleep)
+        folder = os.path.join(self.tmp, "book", "fa")
+        return generate.Generator(adapter, cast or audio_cast.AudioCast(CAST_DATA), folder, pacer, "book", "fa", fmt, ffmpeg, log=lambda *_: None)
 
 
-class TransportTests(unittest.TestCase):
-    def test_http_error_message_carries_the_vendor_body(self):
-        error = urllib.error.HTTPError("https://x", 422, "Unprocessable", {}, io.BytesIO(b'{"detail":"locale fa-ir not allowed"}'))
-        self.addCleanup(error.close)
-        message = adapter_base.http_error_message(error)
-        self.assertIn("HTTP 422", message)
-        self.assertIn("locale fa-ir not allowed", message)
+class GeminiTests(unittest.TestCase):
+    def test_request_has_style_voice_and_plain_text(self):
+        request = Gemini(environ=KEY).build_request("سلام", "Hali", "k", "warm")
+        body = json.loads(request.body)
+        part = body["input"][0]["content"][0]
+        self.assertEqual("سلام", part["text"])
+        self.assertEqual([{"type": "speech_metadata", "style": "warm"}], part["annotations"])
+        self.assertEqual([{"voice": "Hali"}], body["generation_config"]["speech_config"])
+        self.assertEqual("k", request.headers["x-goog-api-key"])
 
-    def test_http_send_sends_a_user_agent_and_raises_with_the_body(self):
-        error = urllib.error.HTTPError("https://x", 401, "Unauthorized", {}, io.BytesIO(b"bad key"))
-        self.addCleanup(error.close)
-        seen = []
+    def test_no_style_means_no_annotation(self):
+        part = json.loads(Gemini(environ=KEY).build_request("a", "Hali", "k").body)["input"][0]["content"][0]
+        self.assertNotIn("annotations", part)
 
-        def fake_open(req, timeout):
-            seen.append(req)
-            raise error
-        original = adapter_base.urllib.request.urlopen
-        adapter_base.urllib.request.urlopen = fake_open
-        try:
-            with self.assertRaises(RuntimeError) as caught:
-                adapter_base.http_send(Request("https://x", {"X-A": "1"}, b"{}"))
-        finally:
-            adapter_base.urllib.request.urlopen = original
-        self.assertIn("bad key", str(caught.exception))
-        self.assertEqual(adapter_base.USER_AGENT, seen[0].get_header("User-agent"))
+    def test_tag_follows_voice_and_style(self):
+        g = Gemini(environ=KEY)
+        self.assertEqual(g.settings_tag("Hali", "a"), g.settings_tag("Hali", "a"))
+        self.assertNotEqual(g.settings_tag("Hali", "a"), g.settings_tag("Hali", "b"))
+        self.assertNotEqual(g.settings_tag("Hali", "a"), g.settings_tag("Cleo", "a"))
 
+    def test_raw_pcm_is_wrapped_and_riff_kept(self):
+        self.assertEqual(b"RIFF", wav_bytes(b"\x00\x01" * 100)[:4])
+        riff = tone_wav()
+        self.assertEqual(riff, wav_bytes(riff))
 
-class ReviewFixTests(unittest.TestCase):
-    def test_camb_short_text_is_unsupported_not_an_error(self):
-        result = Camb(with_keys(CAMB_API_KEY="k"), forbid_network).render("Oh", "147320", os.path.join(tempfile.gettempdir(), "x"))
-        self.assertEqual(adapter_base.STATUS_UNSUPPORTED, result.status)
+    def test_missing_key_is_skipped_and_sends_nothing(self):
+        transport = FakeTransport()
+        with tempfile.TemporaryDirectory() as tmp:
+            result = Gemini(environ={adapter_base.SECRETS_FILE_ENV: os.path.join(tmp, "none.env")}, transport=transport).render("a", "Hali", os.path.join(tmp, "x"))
+        self.assertEqual(adapter_base.STATUS_SKIPPED, result.status)
+        self.assertEqual([], transport.requests)
 
-    def test_unsupported_sentences_do_not_stop_the_batch(self):
-        class Fake:
-            name = "fake"
-            calls = []
+    def test_http_error_carries_code_and_retry_after(self):
+        error = urllib.error.HTTPError("u", 429, "Too Many", {"Retry-After": "17"}, io.BytesIO(b'{"error": "slow"}'))
+        converted = adapter_base.http_error(error)
+        self.assertEqual((429, 17.0), (converted.code, converted.retry_after))
+        body_only = urllib.error.HTTPError("u", 429, "Too Many", {}, io.BytesIO(b'{"details":[{"retryDelay": "12s"}]}'))
+        self.assertEqual(12.0, adapter_base.http_error(body_only).retry_after)
+        error.close()
+        body_only.close()
 
-            def settings_tag(self, voice):
-                return "t"
-
-            def render(self, text, voice, out_path):
-                self.calls.append(text)
-                return Result("fake", voice, adapter_base.STATUS_UNSUPPORTED, "unsupported: x")
-        with tempfile.TemporaryDirectory() as d:
-            fake = Fake()
-            clip_manifest.render_sentences(["a", "b", "c", "d", "e"], "v", fake, d)
-            self.assertEqual(["a", "b", "c", "d", "e"], fake.calls)
-
-    def test_manifest_save_is_atomic_and_leaves_no_temp_file(self):
-        with tempfile.TemporaryDirectory() as d:
-            m = clip_manifest.Manifest(d)
-            m.add("hi", "v", "s-1", "c.mp3")
-            m.save()
-            self.assertEqual(["manifest.json"], os.listdir(d))
-            self.assertEqual(1, len(clip_manifest.Manifest(d).entries))
-
-    def test_settings_tag_changes_with_a_header(self):
-        class A(Adapter):
-            fmt = "a"
-
-            def build_request(self, text, voice, key):
-                return Request("https://x", {"fmt": self.fmt}, b"{}")
-        one = A().settings_tag("v")
-        a = A()
-        a.fmt = "b"
-        self.assertNotEqual(one, a.settings_tag("v"))
-
-    def test_empty_speak_entry_leaves_no_double_space(self):
-        with tempfile.TemporaryDirectory() as d:
-            os.makedirs(os.path.join(d, "translations"))
-            with open(os.path.join(d, "story.md"), "w", encoding="utf8") as f:
-                f.write("One. Two. Three.")
-            with open(os.path.join(d, "translations", "pieces.json"), "w", encoding="utf8") as f:
-                json.dump(["One.", "Two.", "Three."], f)
-            with open(os.path.join(d, "translations", "fa.speak.json"), "w", encoding="utf8") as f:
-                json.dump({"One.": "a", "Two.": "", "Three.": "c"}, f)
-            _, text = book_text.listening_paragraph(d, "fa", 0)
-            self.assertEqual("a c", text)
+    def test_error_page_with_status_200_is_an_error_and_saves_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            transport = FakeTransport([b'{"steps": []}'])
+            result = Gemini(environ=KEY, transport=transport).render("a", "Hali", os.path.join(tmp, "x"))
+            self.assertEqual(adapter_base.STATUS_ERROR, result.status)
+            self.assertEqual([], os.listdir(tmp))
 
 
-class SecretsPathTests(unittest.TestCase):
-    def test_default_is_the_repo_secrets_folder_and_is_named_when_skipped(self):
-        self.assertEqual("D:/secrets/readthestupidtext/secrets.env", adapter_base.DEFAULT_SECRETS_FILE)
-        self.assertEqual(adapter_base.DEFAULT_SECRETS_FILE, adapter_base.secrets_path({}))
-        result = OpenAi(environ=NO_SECRETS).render("x", "coral", "unused")
-        self.assertIn(NO_SECRETS["PREMADE_AUDIO_SECRETS"], result.detail)
+class CastTests(unittest.TestCase):
+    def test_narrator_character_and_direction_precedence(self):
+        cast = audio_cast.AudioCast(CAST_DATA)
+        narration = cast.delivery(sentence(0, "x"))
+        self.assertEqual(("Hali", "warm storyteller"), (narration.voice, narration.prompt))
+        self.assertEqual("deep; sly", cast.delivery(sentence(1, "y", "Wolf")).prompt)
+        self.assertEqual("deep; huffing", cast.delivery(sentence(3, "y", "Wolf")).prompt)  # index direction beats the character's
+        by_hash = dict(CAST_DATA, directions=dict(CAST_DATA["directions"], **{text_hash("y"): "whispering"}))
+        self.assertEqual("deep; whispering", audio_cast.AudioCast(by_hash).delivery(sentence(3, "y", "Wolf")).prompt)  # hash beats index
 
-    def test_environment_wins_over_the_file(self):
-        with tempfile.TemporaryDirectory() as d:
-            path = os.path.join(d, "s.env")
-            with open(path, "w", encoding="utf8") as f:
-                f.write("OPENAI_API_KEY=file\n")
-            self.assertEqual("env", OpenAi(environ={"PREMADE_AUDIO_SECRETS": path, "OPENAI_API_KEY": "env"}).key())
+    def test_unknown_speaker_and_bad_keys_fail_before_any_request(self):
+        with self.assertRaises(audio_cast.CastError):
+            audio_cast.AudioCast(CAST_DATA).check([sentence(0, "x", "Troll")])
+        with self.assertRaises(audio_cast.CastError):
+            audio_cast.AudioCast(dict(CAST_DATA, directions={"abc": "x"}))
+        with self.assertRaises(audio_cast.CastError):
+            audio_cast.AudioCast(dict(CAST_DATA, narrator={"voice": "Hali"}))
 
+    def test_an_index_direction_that_no_longer_matches_the_dump_fails_before_any_request(self):
+        cast = audio_cast.AudioCast(CAST_DATA)
+        cast.check([sentence(3, "y", "Wolf")])
+        for moved in (sentence(3, "other", "Wolf"), sentence(3, "y", "Pip"), sentence(4, "y", "Wolf")):
+            with self.assertRaises(audio_cast.CastError):
+                cast.check([moved])
+        with self.assertRaises(audio_cast.CastError):
+            audio_cast.AudioCast(dict(CAST_DATA, directions={"3": "huffing"}))  # a bare string cannot guard an index
 
-class GeminiWavTests(unittest.TestCase):
-    def test_raw_pcm_is_wrapped_and_riff_is_kept(self):
-        pcm = b"\x01\x00" * 100
-        wrapped = adapter_gemini.wav_bytes(pcm)
-        with wave.open(io.BytesIO(wrapped)) as w:
-            self.assertEqual((1, 2, 24000, 100), (w.getnchannels(), w.getsampwidth(), w.getframerate(), w.getnframes()))
-        self.assertEqual(wrapped, adapter_gemini.wav_bytes(wrapped))
+    def test_the_real_pigs_directions_match_the_dumped_book_when_a_dump_exists(self):
+        dump = REPO / "tmp" / "pigs-fa.json"
+        if not dump.is_file():
+            self.skipTest("no tmp/pigs-fa.json (dotnet run BookBuilder dump-sentences)")
+        cast = audio_cast.load(str(REPO / "content" / "dino" / "three-little-pigs" / "audio-cast.json"))
+        cast.check(json.loads(dump.read_text(encoding="utf8"))["sentences"])
 
-    def test_parse_response_wraps_raw_pcm(self):
-        body = json.dumps({"steps": [{"content": [{"type": "audio", "data": base64.b64encode(b"\x00\x00" * 4).decode()}]}]}).encode()
-        self.assertEqual(b"RIFF", Gemini(environ=NO_SECRETS).parse_response(body, "").data[:4])
-
-
-class NarakeetLimitTests(unittest.TestCase):
-    def test_long_text_is_unsupported_not_an_error(self):
-        with tempfile.TemporaryDirectory() as d:
-            a = Narakeet(environ=with_keys(NARAKEET_API_KEY="k"), transport=forbid_network)
-            r = a.render("ب" * 600, "reza", os.path.join(d, "o"))
-            self.assertEqual("unsupported", r.status)
-            self.assertIn("1024", r.detail)
-            self.assertFalse(clip_manifest.is_fatal(r))
-
-
-class LanguageKeyTests(unittest.TestCase):
-    def test_language_is_normalised_like_bundled_translations_key(self):
-        for given in ("fa-IR", "FA", " fa ", "fa_IR"):
-            self.assertEqual("fa", book_text.language_key(given), given)
-        self.assertEqual("nb", book_text.language_key("no"))
-        self.assertEqual("nb", book_text.language_key("nn-NO"))
-        self.assertEqual("en", book_text.language_key(""))
-        self.assertEqual("xx-yy", book_text.language_key(" XX-yy "))  # unsupported: kept trimmed and lower-cased
-        self.assertEqual("speak:fa", book_text.speak_key("fa-IR"))
-
-    def test_fa_ir_loads_the_real_farsi_tables(self):
-        _, text = book_text.listening_paragraph(BOOK, "fa-IR", 0)
-        _, plain = book_text.listening_paragraph(BOOK, "fa", 0)
-        self.assertEqual(plain, text)
-
-    def test_empty_speak_entry_is_returned_as_is_and_text_is_not_replaced(self):
-        tables = {"speak:fa": {"a": ""}, "fa": {"a": "shown"}}
-        self.assertEqual("", book_text.lookup_spoken(tables, "fa-IR", "a"))
+    def test_the_real_pigs_cast_is_valid_and_covers_every_speaker(self):
+        cast = audio_cast.load(str(REPO / "content" / "dino" / "three-little-pigs" / "audio-cast.json"))
+        for i, speaker in enumerate((None, "Pip", "Pop", "Pim", "Wolf")):
+            cast.delivery(sentence(i, "t", speaker))
+        self.assertEqual("Hali", cast.narrator["voice"])
 
 
-class EveryParagraphTests(unittest.TestCase):
-    def test_every_paragraph_of_the_real_book_is_fully_covered_by_pieces(self):
-        with open(os.path.join(BOOK, "story.md"), encoding="utf8") as f:
-            all_paragraphs = book_text.paragraphs(f.read())
-        pieces = book_text.load_json(os.path.join(BOOK, "translations", "pieces.json"))
-        for i, paragraph in enumerate(all_paragraphs):
-            found = book_text.pieces_in(paragraph, pieces)
-            plain = paragraph.translate({ord(c): " " for c in book_text.QUOTES})
-            self.assertEqual(plain.split(), " ".join(found).split(), f"paragraph {i}")
+class ManifestTests(Base):
+    def test_round_trip_prunes_indexes_past_the_end(self):
+        folder = os.path.join(self.tmp, "m")
+        manifest = Manifest(folder, "book", "fa")
+        delivery = audio_cast.Delivery("Hali", "s", "")
+        manifest.set(sentence(0, "a"), delivery, "v", "a.wav")
+        manifest.set(sentence(5, "b"), delivery, "v", "b.wav")
+        manifest.save({0})
+        data = json.loads(pathlib.Path(folder, "manifest.json").read_text(encoding="utf8"))
+        self.assertEqual((3, "book", "fa", [0]), (data["version"], data["book"], data["language"], [e["index"] for e in data["entries"]]))
+        self.assertEqual(text_hash("a"), data["entries"][0]["hash"])
+        self.assertEqual({0}, set(Manifest(folder, "book", "fa").entries))
 
-    def test_quoted_pigs_paragraphs_match_without_gluing_words(self):
-        with open(os.path.join(BOOK, "story.md"), encoding="utf8") as f:
-            quoted = [p for p in book_text.paragraphs(f.read()) if any(q in p for q in book_text.QUOTES)]
-        pieces = book_text.load_json(os.path.join(BOOK, "translations", "pieces.json"))
-        self.assertTrue(quoted)
-        for paragraph in quoted:
-            joined = " ".join(book_text.pieces_in(paragraph, pieces))
-            self.assertEqual(paragraph.translate({ord(c): " " for c in book_text.QUOTES}).split(), joined.split(), paragraph[:40])
+    def test_a_dry_run_never_renames_an_unreadable_manifest(self):
+        folder = os.path.join(self.tmp, "m")
+        os.makedirs(folder)
+        pathlib.Path(folder, "manifest.json").write_text('{"version": 2, "entries": []}', encoding="utf8")
+        with contextlib.redirect_stderr(io.StringIO()):
+            manifest = Manifest(folder, "book", "fa", readonly=True)
+        self.assertEqual({}, manifest.entries)
+        self.assertEqual(["manifest.json"], os.listdir(folder))
 
-    def test_quote_without_space_does_not_glue_words(self):
-        self.assertEqual(["Yay!", "said Pip."], book_text.pieces_in('"Yay!"said Pip.', ["Yay!", "said Pip.", "Yay!said Pip."]))
+    def test_an_entry_whose_clip_file_is_gone_is_dropped(self):
+        texts = GeneratorTests.TEXTS
+        self.make().run(texts)
+        clips = [n for n in os.listdir(os.path.join(self.tmp, "book", "fa")) if n.endswith(".wav")]
+        os.remove(os.path.join(self.tmp, "book", "fa", clips[0]))
+        self.make(FakeTransport([http_error(401)])).run(texts)  # ends at the first request; the surviving entries are those with a file
+        data = json.loads(pathlib.Path(self.tmp, "book", "fa", "manifest.json").read_text(encoding="utf8"))
+        self.assertEqual(2, len(data["entries"]))
 
+    def test_old_version_is_kept_as_bak_and_starts_empty(self):
+        folder = os.path.join(self.tmp, "m")
+        os.makedirs(folder)
+        pathlib.Path(folder, "manifest.json").write_text('{"version": 2, "entries": []}', encoding="utf8")
+        with contextlib.redirect_stderr(io.StringIO()):
+            manifest = Manifest(folder, "book", "fa")
+        self.assertEqual({}, manifest.entries)
+        self.assertTrue(os.path.isfile(os.path.join(folder, "manifest.json.bak")))
 
-class AudioValidationTests(unittest.TestCase):
-    def render(self, body, content_type="audio/mpeg"):
-        with tempfile.TemporaryDirectory() as d:
-            r = OpenAi(environ=with_keys(OPENAI_API_KEY="k"), transport=lambda request: (body, content_type)).render("x", "coral", os.path.join(d, "o"))
-            return r, os.listdir(d)
-
-    def test_empty_and_error_page_bodies_are_errors_and_nothing_is_saved(self):
-        for body in (b"", b"<html>Bad gateway</html>", b' {"error": "quota"}'):
-            r, files = self.render(body)
-            self.assertEqual(("error", []), (r.status, files), body)
-
-    def test_unreadable_manifest_is_kept_as_bak_and_starts_empty(self):
-        with tempfile.TemporaryDirectory() as d:
-            for content in ("{not json", '{"entries": [{"hash": "h"}]}'):
-                pathlib.Path(d, "manifest.json").write_text(content, encoding="utf8")
-                with contextlib.redirect_stderr(io.StringIO()) as err:
-                    self.assertEqual({}, clip_manifest.Manifest(d).entries)
-                self.assertIn("WARNING", err.getvalue())
-                self.assertEqual(content, pathlib.Path(d, "manifest.json.bak").read_text(encoding="utf8"))
-                self.assertFalse(os.path.exists(os.path.join(d, "manifest.json")))
-
-    def test_repeated_piece_does_not_drop_the_rest(self):
-        pieces = ["Yay!", "said Pip.", "said Pop."]
-        self.assertEqual(["Yay!", "said Pip."], book_text.pieces_in('"Yay!" said Pip.', pieces))
-        self.assertEqual(["Yay!", "said Pop.", "Yay!"], book_text.pieces_in('"Yay!" said Pop. "Yay!"', pieces))
-
-    def test_unmatched_text_raises_instead_of_dropping(self):
-        with self.assertRaises(ValueError):
-            book_text.pieces_in("Known. Unknown.", ["Known."])
+    def test_text_hash_is_nfc_normalised(self):
+        self.assertEqual(text_hash("é"), text_hash("é"))
 
 
-class RenderAllTests(unittest.TestCase):
-    def test_all_skipped_without_keys_and_page_lists_every_service(self):
-        adapters = [cls(environ=NO_SECRETS, transport=forbid_network) for cls in render_all.ADAPTERS]
-        with tempfile.TemporaryDirectory() as d:
-            results = render_all.render_all("متن", d, "", adapters)
-            self.assertTrue(all(r.status == STATUS_SKIPPED for r in results))
-            self.assertIn("piper-fa pack not on disk", results[0].detail)
-            self.assertEqual(1 + sum(len(a.voices) for a in adapters), len(results))
-            render_all.write_outputs("متن", results, d)
-            page = pathlib.Path(d, "index.html").read_text(encoding="utf8")
-            for a in adapters:
-                self.assertIn(a.name, page)
-            self.assertIn("skipped: no key", page)
+class GeneratorTests(Base):
+    TEXTS = [sentence(0, "یک"), sentence(1, "دو", "Pip"), sentence(2, "سه")]
+
+    def test_renders_each_sentence_once_then_the_cache_serves_the_rerun(self):
+        summary = self.make().run(self.TEXTS)
+        self.assertEqual((3, 0, ""), (summary.rendered, summary.cached, summary.stopped))
+        again = self.make().run(self.TEXTS)
+        self.assertEqual((0, 3, 0), (again.rendered, again.cached, len(self.transport.requests)))
+
+    def test_an_edited_sentence_renders_alone(self):
+        self.make().run(self.TEXTS)
+        edited = [self.TEXTS[0], sentence(1, "دو، ویرایش‌شده", "Pip"), self.TEXTS[2]]
+        summary = self.make().run(edited)
+        self.assertEqual((1, 2, 1), (summary.rendered, summary.cached, len(self.transport.requests)))
+
+    def test_a_changed_direction_renders_only_that_line(self):
+        self.make().run(self.TEXTS)
+        changed = audio_cast.AudioCast(dict(CAST_DATA, directions={"1": {"direction": "whispering", "speaker": "Pip", "source": "دو"}}))
+        summary = self.make(cast=changed).run(self.TEXTS)
+        self.assertEqual((1, 2), (summary.rendered, summary.cached))
+        self.assertIn("whispering", json.loads(self.transport.requests[0].body)["input"][0]["content"][0]["annotations"][0]["style"])
+
+    def test_max_requests_ends_cleanly_and_the_next_run_resumes(self):
+        first = self.make(max_requests=2).run(self.TEXTS)
+        self.assertEqual((2, "--max-requests budget reached (2)"), (first.rendered, first.stopped))
+        rest = self.make().run(self.TEXTS)
+        self.assertEqual((1, 2), (rest.rendered, rest.cached))
+
+    def test_the_day_limit_stops_and_survives_a_new_run(self):
+        first = self.make(rpd=2).run(self.TEXTS)
+        self.assertEqual(2, first.rendered)
+        self.assertIn(pacing.REASON_DAY_LIMIT, first.stopped)
+        blocked = self.make(rpd=2).run(self.TEXTS)
+        self.assertEqual((0, 2, 0), (blocked.rendered, blocked.cached, len(self.transport.requests)))
+        self.assertIn(pacing.REASON_DAY_LIMIT, blocked.stopped)
+        self.clock.now += pacing.SECONDS_PER_DAY + 1
+        self.assertEqual(1, self.make(rpd=2).run(self.TEXTS).rendered)
+
+    def test_no_balance_or_forbidden_ends_the_run_with_one_call(self):
+        for code in (402, 403, 401):
+            generator = self.make(FakeTransport([http_error(code)]))
+            summary = generator.run(self.TEXTS)
+            self.assertEqual((0, 1), (summary.rendered, len(self.transport.requests)), code)
+            self.assertIn(f"HTTP {code}", summary.stopped)
+
+    def test_first_429_waits_the_retry_after_once_then_continues(self):
+        transport = FakeTransport([http_error(429, "30"), gemini_body()])
+        summary = self.make(transport).run(self.TEXTS)
+        self.assertEqual((3, ""), (summary.rendered, summary.stopped))
+        self.assertEqual([30.0], self.clock.slept)
+
+    def test_second_429_ends_the_run(self):
+        transport = FakeTransport([gemini_body(), http_error(429, "5"), http_error(429, "5")])
+        summary = self.make(transport).run(self.TEXTS)
+        self.assertEqual(1, summary.rendered)
+        self.assertIn("429", summary.stopped)
+        self.assertEqual([5.0], self.clock.slept)
+
+    def test_a_per_day_429_ends_the_run_at_once_with_no_wait_and_no_retry(self):
+        summary = self.make(FakeTransport([http_error(429, "30", daily=True)])).run(self.TEXTS)
+        self.assertEqual(([], 0, 1), (self.clock.slept, summary.rendered, len(self.transport.requests)))
+        self.assertEqual(generate.EXIT_RATE_LIMITED, summary.exit_code)
+
+    def test_the_http_error_reads_a_per_day_quota_from_the_body(self):
+        body = b'{"error": {"details": [{"violations": [{"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"}]}]}}'
+        with urllib.error.HTTPError("u", 429, "Too Many", {}, io.BytesIO(body)) as day_error:
+            per_day = adapter_base.http_error(day_error)
+        with urllib.error.HTTPError("u", 429, "Too Many", {}, io.BytesIO(b'{"quotaId": "RequestsPerMinute"}')) as minute_error:
+            per_minute = adapter_base.http_error(minute_error)
+        self.assertEqual((True, False), (per_day.daily_limit, per_minute.daily_limit))
+
+    def test_a_429_with_a_huge_wait_ends_without_waiting(self):
+        summary = self.make(FakeTransport([http_error(429, "7200")])).run(self.TEXTS)
+        self.assertEqual(([], 0), (self.clock.slept, summary.rendered))
+        self.assertIn("429", summary.stopped)
+
+    def test_three_errors_in_a_row_end_the_run_but_one_is_survived(self):
+        boom = RuntimeError("boom")
+        self.assertEqual(2, self.make(FakeTransport([boom, gemini_body()])).run(self.TEXTS).rendered)
+        fresh = [sentence(i + 10, f"تازه {i}") for i in range(4)]
+        summary = self.make(FakeTransport([boom])).run(fresh)
+        self.assertEqual((0, 3), (summary.rendered, len(self.transport.requests)))
+        self.assertIn("3 errors in a row", summary.stopped)
+
+    def test_requests_per_minute_spaces_the_calls(self):
+        self.make(rpm=3).run(self.TEXTS)
+        self.assertEqual([20.0, 20.0], [round(s, 3) for s in self.clock.slept])
+
+    def test_free_preset_values(self):
+        args = generate.parse_args(["--sentences", "x", "--free"])
+        self.assertEqual((3, 10), generate.limits(args))
+        self.assertEqual((7, 0), generate.limits(generate.parse_args(["--sentences", "x", "--rpm", "7"])))
+
+    def test_manifest_lists_every_sentence_with_its_voice_and_clip(self):
+        self.make().run(self.TEXTS)
+        data = json.loads(pathlib.Path(self.tmp, "book", "fa", "manifest.json").read_text(encoding="utf8"))
+        self.assertEqual([0, 1, 2], [e["index"] for e in data["entries"]])
+        self.assertEqual(["Hali", "Cleo", "Hali"], [e["voice"] for e in data["entries"]])
+        self.assertTrue(all(os.path.isfile(os.path.join(self.tmp, "book", "fa", e["clip"])) for e in data["entries"]))
+
+
+@unittest.skipUnless(encode.find_ffmpeg(), "ffmpeg is not installed")
+class EncodeTests(Base):
+    def duration(self, path):
+        probe = subprocess.run([encode.find_ffmpeg(), "-hide_banner", "-i", path], capture_output=True, text=True, check=False).stderr
+        stamp = probe.split("Duration: ")[1].split(",")[0]
+        hours, minutes, seconds = stamp.split(":")
+        return int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+
+    def test_m4a_is_aac_and_silence_is_trimmed(self):
+        wav = os.path.join(self.tmp, "a.wav")
+        pathlib.Path(wav).write_bytes(tone_wav(0.5, 0.3))
+        out = os.path.join(self.tmp, "a.m4a")
+        encode.to_m4a(encode.find_ffmpeg(), wav, out)
+        self.assertEqual(b"ftyp", pathlib.Path(out).read_bytes()[4:8])
+        self.assertLess(self.duration(out), 0.8)  # 1.1 s in, about 0.5 s of tone plus the two 0.05 s pads
+        self.assertGreater(self.duration(out), 0.45)
+
+    def test_a_silent_clip_is_an_error_and_the_sentence_is_requested_again(self):
+        wav = os.path.join(self.tmp, "s.wav")
+        pathlib.Path(wav).write_bytes(tone_wav(0.0, 0.5))
+        with self.assertRaises(encode.SilentClipError):
+            encode.to_m4a(encode.find_ffmpeg(), wav, os.path.join(self.tmp, "s.m4a"))
+        self.assertEqual([], [n for n in os.listdir(self.tmp) if n.endswith(".m4a")])
+        silent = FakeTransport([gemini_body(tone_wav(0.0, 0.5)), gemini_body()])
+        generator = self.make(silent, fmt=generate.FORMAT_M4A, ffmpeg=encode.find_ffmpeg())
+        summary = generator.run(self.TEXTS[:1])
+        self.assertEqual((0, 1), (summary.rendered, len(summary.errors)))
+        self.assertEqual(1, self.make(silent, fmt=generate.FORMAT_M4A, ffmpeg=encode.find_ffmpeg()).run(self.TEXTS[:1]).rendered)
+
+    def test_a_short_sound_word_clip_passes_and_silent_clips_never_end_the_run(self):
+        sound = dict(sentence(1, "اینک!", "Pip"), sound=True)
+        speech = sentence(1, "اینک!", "Pip")
+        ffmpeg = encode.find_ffmpeg()
+        with unittest.mock.patch.object(encode, "duration_seconds", return_value=0.05):  # shorter than speech may be, longer than nothing
+            self.assertEqual(1, self.make(FakeTransport(), fmt=generate.FORMAT_M4A, ffmpeg=ffmpeg).run([sound]).rendered)
+            self.setUp()
+            self.assertEqual(0, self.make(FakeTransport(), fmt=generate.FORMAT_M4A, ffmpeg=ffmpeg).run([speech]).rendered)
+        self.setUp()
+        quiet, loud = gemini_body(tone_wav(0.0, 0.5)), gemini_body()
+        texts = [sentence(i, f"خط {i}") for i in range(6)]
+        summary = self.make(FakeTransport([quiet, quiet, loud, quiet, quiet, loud]), fmt=generate.FORMAT_M4A, ffmpeg=ffmpeg).run(texts)
+        self.assertEqual((2, 4, ""), (summary.rendered, len(summary.errors), summary.stopped))
+
+    def test_silent_clips_end_the_run_after_three_in_a_row_or_five_in_all(self):
+        ffmpeg = encode.find_ffmpeg()
+        quiet, loud = gemini_body(tone_wav(0.0, 0.5)), gemini_body()
+        texts = [sentence(i, f"خط {i}") for i in range(8)]
+        summary = self.make(FakeTransport([quiet] * 8), fmt=generate.FORMAT_M4A, ffmpeg=ffmpeg).run(texts)
+        self.assertEqual((0, 3, generate.EXIT_ERRORS), (summary.rendered, len(summary.errors), summary.exit_code))
+        self.assertIn("silent clips in a row", summary.stopped)
+        self.setUp()
+        summary = self.make(FakeTransport([quiet, quiet, loud, quiet, quiet, loud, quiet, loud]), fmt=generate.FORMAT_M4A, ffmpeg=ffmpeg).run(texts)
+        self.assertEqual((2, 5, generate.EXIT_ERRORS), (summary.rendered, len(summary.errors), summary.exit_code))
+        self.assertIn("in this run", summary.stopped)
+
+    def test_a_locked_silent_wav_does_not_crash_the_run(self):
+        quiet = gemini_body(tone_wav(0.0, 0.5))
+        real_remove = os.remove
+
+        def locked_remove(path):
+            if path.endswith(".wav"):
+                raise PermissionError("locked")
+            real_remove(path)
+
+        with unittest.mock.patch.object(os, "remove", side_effect=locked_remove):
+            summary = self.make(FakeTransport([quiet]), fmt=generate.FORMAT_M4A, ffmpeg=encode.find_ffmpeg()).run(self.TEXTS[:1])
+        self.assertEqual((0, 1), (summary.rendered, len(summary.errors)))
+
+    def test_generator_encodes_and_removes_the_wav(self):
+        summary = self.make(fmt=generate.FORMAT_M4A, ffmpeg=encode.find_ffmpeg()).run(self.TEXTS[:1])
+        self.assertEqual(1, summary.rendered)
+        self.assertEqual([".json", ".m4a"], sorted(os.path.splitext(n)[1] for n in os.listdir(os.path.join(self.tmp, "book", "fa"))))
+
+    TEXTS = GeneratorTests.TEXTS
+
+
+class MainTests(Base):
+    def files(self):
+        sentences = os.path.join(self.tmp, "s.json")
+        cast = os.path.join(self.tmp, "cast.json")
+        pathlib.Path(sentences).write_text(json.dumps({"book": "b", "language": "fa", "sentences": GeneratorTests.TEXTS}, ensure_ascii=False), encoding="utf8")
+        pathlib.Path(cast).write_text(json.dumps(dict(CAST_DATA, directions={})), encoding="utf8")
+        return sentences, cast
+
+    def test_dry_run_counts_pending_sentences_and_sends_nothing(self):
+        sentences, cast = self.files()
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = generate.main(["--sentences", sentences, "--cast", cast, "--out", self.tmp, "--format", "wav", "--dry-run", "--free"])
+        self.assertEqual(0, code)
+        self.assertIn("3 sentences, 3 need a request", out.getvalue())
+        self.assertIn("3/min, 10/day", out.getvalue())
+
+    def test_a_speaker_without_a_voice_fails_before_any_request(self):
+        sentences, cast = self.files()
+        pathlib.Path(sentences).write_text(json.dumps({"book": "b", "language": "fa", "sentences": [sentence(0, "x", "Troll")]}), encoding="utf8")
+        with self.assertRaises(audio_cast.CastError):
+            generate.main(["--sentences", sentences, "--cast", cast, "--out", self.tmp, "--format", "wav", "--dry-run"])
+
+    def test_missing_ffmpeg_is_a_clear_exit_not_a_crash(self):
+        sentences, cast = self.files()
+        with unittest.mock.patch.dict(os.environ, {encode.FFMPEG_ENV: "", "PATH": ""}):
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                code = generate.main(["--sentences", sentences, "--cast", cast, "--out", self.tmp])
+        self.assertEqual(generate.EXIT_NO_FFMPEG, code)
+        self.assertIn("--format wav", err.getvalue())
+
+    def test_dry_run_needs_no_ffmpeg(self):
+        sentences, cast = self.files()
+        with unittest.mock.patch.dict(os.environ, {encode.FFMPEG_ENV: "", "PATH": ""}), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, generate.main(["--sentences", sentences, "--cast", cast, "--out", self.tmp, "--dry-run"]))
+
+    def test_a_second_run_on_the_same_folder_is_refused(self):
+        sentences, cast = self.files()
+        with pacing.RunLock(self.tmp), contextlib.redirect_stderr(io.StringIO()):
+            code = generate.main(["--sentences", sentences, "--cast", cast, "--out", self.tmp, "--format", "wav"])
+        self.assertEqual(generate.EXIT_LOCKED, code)
+        with pacing.RunLock(self.tmp):  # released when the first run ended
+            pass
+
+    def test_a_run_has_a_default_request_cap(self):
+        sentences, _ = self.files()
+        self.assertEqual(pacing.DEFAULT_MAX_REQUESTS, generate.parse_args(["--sentences", sentences]).max_requests)
+        self.assertEqual(0, generate.parse_args(["--sentences", sentences, "--max-requests", "0"]).max_requests)
+
+
+class RobustnessTests(Base):
+    TEXTS = GeneratorTests.TEXTS
+
+    def test_a_stale_entry_for_edited_text_is_dropped_even_when_the_run_stops_before_it(self):
+        self.make().run(self.TEXTS)
+        edited = [sentence(0, "یک، ویرایش‌شده"), self.TEXTS[1], self.TEXTS[2]]
+        self.make(FakeTransport([http_error(401)])).run(edited)  # ends at the first sentence, before reaching the rest
+        data = json.loads(pathlib.Path(self.tmp, "book", "fa", "manifest.json").read_text(encoding="utf8"))
+        self.assertEqual([1, 2], [e["index"] for e in data["entries"]])
+
+    def test_stale_entries_are_saved_at_once_not_only_at_the_end(self):
+        self.make().run(self.TEXTS)
+        edited = [sentence(0, "یک، ویرایش‌شده"), self.TEXTS[1], self.TEXTS[2]]
+        generator = self.make()
+        with unittest.mock.patch.object(generator, "step", side_effect=KeyboardInterrupt), self.assertRaises(KeyboardInterrupt):
+            generator.run(edited)  # killed before the first sentence is handled
+        data = json.loads(pathlib.Path(self.tmp, "book", "fa", "manifest.json").read_text(encoding="utf8"))
+        self.assertEqual([1, 2], [e["index"] for e in data["entries"]])
+
+    def test_exit_codes_tell_the_causes_apart(self):
+        missing = Gemini(environ={adapter_base.SECRETS_FILE_ENV: os.path.join(self.tmp, "none.env")}, transport=FakeTransport())
+        generator = self.make()
+        generator.adapter = missing
+        summary = generator.run(self.TEXTS)
+        self.assertEqual(generate.EXIT_NO_KEY, summary.exit_code)
+        self.assertEqual(generate.EXIT_AUTH, self.make(FakeTransport([http_error(403)])).run(self.TEXTS).exit_code)
+        self.assertEqual(generate.EXIT_RATE_LIMITED, self.make(FakeTransport([http_error(429, "7200")])).run(self.TEXTS).exit_code)
+        self.assertEqual(generate.EXIT_OK, self.make(max_requests=1).run(self.TEXTS).exit_code)
+
+    def test_an_encode_failure_keeps_the_wav_and_the_rerun_encodes_it_without_a_request(self):
+        with unittest.mock.patch.object(encode, "to_m4a", side_effect=encode.EncodeError("no aac")):
+            first = self.make(fmt=generate.FORMAT_M4A, ffmpeg="ffmpeg").run(self.TEXTS[:1])
+        self.assertEqual((generate.EXIT_ENCODE, 1), (first.exit_code, len(self.transport.requests)))
+
+        def fake_encode(_ffmpeg, _wav, out, _min_seconds):
+            pathlib.Path(out).write_bytes(b"m4a")
+
+        with unittest.mock.patch.object(encode, "to_m4a", side_effect=fake_encode):
+            second = self.make(fmt=generate.FORMAT_M4A, ffmpeg="ffmpeg").run(self.TEXTS[:1])
+        self.assertEqual((1, 0), (second.rendered, len(self.transport.requests)))
+
+    def test_a_hung_ffmpeg_is_an_encode_failure_not_a_crash(self):
+        with unittest.mock.patch.object(encode, "to_m4a", side_effect=subprocess.TimeoutExpired("ffmpeg", 1)):
+            summary = self.make(fmt=generate.FORMAT_M4A, ffmpeg="ffmpeg").run(self.TEXTS[:1])
+        self.assertEqual(generate.EXIT_ENCODE, summary.exit_code)
+        self.assertTrue(os.path.isfile(os.path.join(self.tmp, "book", "fa", "manifest.json")))
+
+    def test_the_first_request_of_a_run_waits_for_the_previous_runs_last(self):
+        self.make(rpm=3, max_requests=1).run(self.TEXTS)
+        self.clock.slept.clear()
+        self.clock.now += 5
+        self.make(rpm=3, max_requests=1).run(self.TEXTS)
+        self.assertEqual([15.0], [round(s, 3) for s in self.clock.slept])
+
+    def test_a_429_that_used_the_last_request_does_not_wait_for_a_retry_it_cannot_send(self):
+        summary = self.make(FakeTransport([http_error(429, "30")]), max_requests=1).run(self.TEXTS)
+        self.assertEqual(([], 0), (self.clock.slept, summary.rendered))
+        self.assertEqual(generate.EXIT_OK, summary.exit_code)
 
 
 if __name__ == "__main__":
