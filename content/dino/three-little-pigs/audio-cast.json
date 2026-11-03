@@ -26,56 +26,59 @@
       "direction": "sly and sweet-talking"
     }
   },
-  "directions": {
-    "23": {
-      "direction": "defiant, trying to sound brave",
+  "lines": [
+    {
       "speaker": "Pip",
-      "source": "No, no, no! Not by the hair of my chinny chin chin!"
+      "source": "No, no, no! Not by the hair of my chinny chin chin!",
+      "direction": "defiant, trying to sound brave"
     },
-    "26": {
-      "direction": "growly and threatening, huffing and puffing",
+    {
       "speaker": "Wolf",
-      "source": "Then I'll huff, and I'll puff, and I'll blow your house in!"
+      "source": "Then I'll huff, and I'll puff, and I'll blow your house in!",
+      "occurrence": 1,
+      "direction": "growly and threatening, huffing and puffing"
     },
-    "35": {
-      "direction": "defiant, trying to sound brave",
+    {
       "speaker": "Pop",
-      "source": "No, no, no! Not by the hair of my chinny chin chin!"
+      "source": "No, no, no! Not by the hair of my chinny chin chin!",
+      "direction": "defiant, trying to sound brave"
     },
-    "38": {
-      "direction": "growly and threatening, huffing and puffing",
+    {
       "speaker": "Wolf",
-      "source": "Then I'll huff, and I'll puff, and I'll blow your house in!"
+      "source": "Then I'll huff, and I'll puff, and I'll blow your house in!",
+      "occurrence": 2,
+      "direction": "growly and threatening, huffing and puffing"
     },
-    "51": {
-      "direction": "defiant and sure of himself",
+    {
       "speaker": "Pim",
-      "source": "No, no, no! Not by the hair of my chinny chin chin!"
+      "source": "No, no, no! Not by the hair of my chinny chin chin!",
+      "direction": "defiant and sure of himself"
     },
-    "53": {
-      "direction": "growly and angry, huffing and puffing",
+    {
       "speaker": "Wolf",
-      "source": "Then I'll huff, and I'll puff, and I'll blow your house in!"
+      "source": "Then I'll huff, and I'll puff, and I'll blow your house in!",
+      "occurrence": 3,
+      "direction": "growly and angry, huffing and puffing"
     },
-    "59": {
-      "direction": "sneaky and pleased with himself",
+    {
       "speaker": "Wolf",
-      "source": "I'll climb up on the roof and come down the chimney!"
+      "source": "I'll climb up on the roof and come down the chimney!",
+      "direction": "sneaky and pleased with himself"
     },
-    "62": {
-      "direction": "scared and gasping",
+    {
       "speaker": "Pop",
-      "source": "Uh-oh! He's going to come down the chimney!"
+      "source": "Uh-oh! He's going to come down the chimney!",
+      "direction": "scared and gasping"
     },
-    "72": {
-      "direction": "sneezing, funny",
-      "speaker": "Pop",
-      "source": "Achoo! Achoo! Achoo!"
+    {
+      "speaker": "Wolf",
+      "source": "Achoo! Achoo! Achoo!",
+      "direction": "sneezing, funny"
     },
-    "77": {
-      "direction": "sorry and a little ashamed",
+    {
       "speaker": "Pip",
-      "source": "I'm sorry I was in such a hurry,"
+      "source": "I'm sorry I was in such a hurry,",
+      "direction": "sorry and a little ashamed"
     }
-  }
+  ]
 }

@@ -1,0 +1,771 @@
+{
+  "book": "three-little-pigs",
+  "language": "fa",
+  "sentences": [
+    {
+      "index": 0,
+      "sentence": 0,
+      "text": "یکی بود یکی نبود، سه تا خوک کوچولو از خونه‌شون رفتن که هر کدوم واسه خودش یه خونه بسازه.",
+      "source": "Once upon a time, three little pigs left home to build houses of their very own.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 1,
+      "sentence": 1,
+      "text": "اسمشون پیپ و پاپ و پیم بود.",
+      "source": "Their names were Pip, Pop and Pim.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 2,
+      "sentence": 2,
+      "text": "واسه مامانشون دست تکون دادن، خداحافظی کردن و راه افتادن.",
+      "source": "They waved bye-bye to their mummy, and off they went down the road.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 3,
+      "sentence": 3,
+      "text": "پیپ خیلی عجله داشت.",
+      "source": "Pip was in a big hurry.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 4,
+      "sentence": 4,
+      "text": "خونه‌شو با کاه ساخت.",
+      "source": "He built his house out of straw.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 5,
+      "sentence": 5,
+      "text": "پیپ گفت:",
+      "source": "said Pip.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 6,
+      "sentence": 5,
+      "text": "آخ جون! حالا می‌تونم کل روز بازی کنم!",
+      "source": "Yay! Now I can play all day!",
+      "speaker": "Pip",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 7,
+      "sentence": 6,
+      "text": "پاپ هم دلش می‌خواست بازی کنه.",
+      "source": "Pop wanted to play too.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 8,
+      "sentence": 7,
+      "text": "خونه‌شو با چوبای نازک ساخت.",
+      "source": "He built his house out of sticks.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 9,
+      "sentence": 8,
+      "text": "پاپ گفت:",
+      "source": "said Pop.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 10,
+      "sentence": 8,
+      "text": "آخ جون! حالا می‌تونم کل روز بازی کنم!",
+      "source": "Yay! Now I can play all day!",
+      "speaker": "Pop",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 11,
+      "sentence": 9,
+      "text": "پیم آروم آروم و با دقت کار کرد.",
+      "source": "Pim worked slowly and carefully.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 12,
+      "sentence": 10,
+      "text": "خونه‌شو دونه دونه با آجر ساخت.",
+      "source": "He built his house out of bricks, one by one.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 13,
+      "sentence": 11,
+      "text": "پیم گفت:",
+      "source": "said Pim.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 14,
+      "sentence": 11,
+      "text": "ساختن خونه‌ی محکم وقت می‌خواد.",
+      "source": "A strong house takes time,",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 15,
+      "sentence": 12,
+      "text": "هر وقت خونه‌م تموم شد، بازی می‌کنم.",
+      "source": "I'll play when it's done.",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 16,
+      "sentence": 13,
+      "text": "یه روز غروب، یه گرگ گنده‌ی خاکستری داشت از جاده میومد.",
+      "source": "One evening, a big grey Wolf came walking down the road.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 17,
+      "sentence": 14,
+      "text": "تا خونه‌ی کاهی رو دید، نیشش باز شد.",
+      "source": "He grinned when he saw the straw house.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 18,
+      "sentence": 15,
+      "text": "در خونه رو زد.",
+      "source": "He knocked on the door.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 19,
+      "sentence": 16,
+      "text": "تق تق تق!",
+      "source": "Knock, knock, knock!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 20,
+      "sentence": 17,
+      "text": "گرگ گفت:",
+      "source": "said Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 21,
+      "sentence": 17,
+      "text": "خوک کوچولو! خوک کوچولو! بذار بیام تو!",
+      "source": "Little pig, little pig, let me come in!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 22,
+      "sentence": 18,
+      "text": "پیپ گفت:",
+      "source": "said Pip.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 23,
+      "sentence": 18,
+      "text": "نه نه نه! به موهای چونه‌ی کوچولوم قسم، نمی‌ذارم!",
+      "source": "No, no, no! Not by the hair of my chinny chin chin!",
+      "speaker": "Pip",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 24,
+      "sentence": 18,
+      "text": "خرخر!",
+      "source": "خرخر!",
+      "speaker": "Pip",
+      "narrator": false,
+      "sound": true
+    },
+    {
+      "index": 25,
+      "sentence": 19,
+      "text": "گرگ گفت:",
+      "source": "said Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 26,
+      "sentence": 19,
+      "text": "پس فوت می‌کنم و فوت می‌کنم و خونه‌تو می‌فرستم هوا!",
+      "source": "Then I'll huff, and I'll puff, and I'll blow your house in!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 27,
+      "sentence": 19,
+      "text": "اووو!",
+      "source": "اووو!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": true
+    },
+    {
+      "index": 28,
+      "sentence": 20,
+      "text": "فوت کرد و فوت کرد، و خونه‌ی کاهی رفت رو هوا!",
+      "source": "He huffed and he puffed, and the straw house blew away!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 29,
+      "sentence": 21,
+      "text": "پیپ تند تند دوید و رفت خونه‌ی چوبی پاپ.",
+      "source": "Pip ran as fast as he could to Pop's stick house.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 30,
+      "sentence": 22,
+      "text": "گرگ دنبالش رفت و در خونه‌ی چوبی رو زد.",
+      "source": "The Wolf followed him and knocked on the stick door.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 31,
+      "sentence": 23,
+      "text": "تق تق تق!",
+      "source": "Knock, knock, knock!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 32,
+      "sentence": 24,
+      "text": "گرگ گفت:",
+      "source": "said Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 33,
+      "sentence": 24,
+      "text": "خوک کوچولو! خوک کوچولو! بذار بیام تو!",
+      "source": "Little pig, little pig, let me come in!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 34,
+      "sentence": 25,
+      "text": "پاپ گفت:",
+      "source": "said Pop.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 35,
+      "sentence": 25,
+      "text": "نه نه نه! به موهای چونه‌ی کوچولوم قسم، نمی‌ذارم!",
+      "source": "No, no, no! Not by the hair of my chinny chin chin!",
+      "speaker": "Pop",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 36,
+      "sentence": 25,
+      "text": "خرخر!",
+      "source": "خرخر!",
+      "speaker": "Pop",
+      "narrator": false,
+      "sound": true
+    },
+    {
+      "index": 37,
+      "sentence": 26,
+      "text": "گرگ گفت:",
+      "source": "said Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 38,
+      "sentence": 26,
+      "text": "پس فوت می‌کنم و فوت می‌کنم و خونه‌تو می‌فرستم هوا!",
+      "source": "Then I'll huff, and I'll puff, and I'll blow your house in!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 39,
+      "sentence": 27,
+      "text": "فوت کرد و فوت کرد، و خونه‌ی چوبی ریخت رو هم!",
+      "source": "He huffed and he puffed, and the stick house fell down in a big heap!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 40,
+      "sentence": 28,
+      "text": "پیپ و پاپ با پاهای کوچولوشون تند تند دویدن بیرون!",
+      "source": "Out ran Pip and Pop, as fast as their little legs could go.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 41,
+      "sentence": 29,
+      "text": "پیپ و پاپ یه‌نفس دویدن تا رسیدن به خونه‌ی آجری پیم.",
+      "source": "Pip and Pop ran all the way to Pim's brick house.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 42,
+      "sentence": 30,
+      "text": "پیم درو چارتاق باز کرد.",
+      "source": "Pim opened the door wide.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 43,
+      "sentence": 31,
+      "text": "پیم گفت:",
+      "source": "said Pim.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 44,
+      "sentence": 31,
+      "text": "زود بیاین تو!",
+      "source": "Quick, come in!",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 45,
+      "sentence": 31,
+      "text": "خرخر!",
+      "source": "خرخر!",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": true
+    },
+    {
+      "index": 46,
+      "sentence": 32,
+      "text": "گرگ با قدمای محکم اومد دم در خونه‌ی آجری.",
+      "source": "The Wolf marched up to the brick house.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 47,
+      "sentence": 33,
+      "text": "تق تق تق!",
+      "source": "Knock, knock, knock!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 48,
+      "sentence": 34,
+      "text": "گرگ گفت:",
+      "source": "said Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 49,
+      "sentence": 34,
+      "text": "خوک کوچولو! خوک کوچولو! بذار بیام تو!",
+      "source": "Little pig, little pig, let me come in!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 50,
+      "sentence": 34,
+      "text": "اووو!",
+      "source": "اووو!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": true
+    },
+    {
+      "index": 51,
+      "sentence": 35,
+      "text": "پیم گفت:",
+      "source": "said Pim.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 52,
+      "sentence": 35,
+      "text": "نه نه نه! به موهای چونه‌ی کوچولوم قسم، نمی‌ذارم!",
+      "source": "No, no, no! Not by the hair of my chinny chin chin!",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 53,
+      "sentence": 36,
+      "text": "گرگ گفت:",
+      "source": "said Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 54,
+      "sentence": 36,
+      "text": "پس فوت می‌کنم و فوت می‌کنم و خونه‌تو می‌فرستم هوا!",
+      "source": "Then I'll huff, and I'll puff, and I'll blow your house in!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 55,
+      "sentence": 37,
+      "text": "فوت کرد و فوت کرد، باز فوت کرد و فوت کرد، ولی خونه‌ی آجری اصلاً تکون نخورد!",
+      "source": "He huffed and he puffed, and he huffed and he puffed, but the brick house didn't move one tiny bit!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 56,
+      "sentence": 38,
+      "text": "اون تو، سه تا خوک کوچولو یواشکی از پنجره سرک کشیدن.",
+      "source": "Inside, the three little pigs peeked out of the window.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 57,
+      "sentence": 39,
+      "text": "گرگ حسابی اخماش رفت تو هم.",
+      "source": "The Wolf was very cross.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 58,
+      "sentence": 40,
+      "text": "دست به سینه وایساد و به دودکش نگاه کرد.",
+      "source": "He folded his arms and looked up at the chimney.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 59,
+      "sentence": 41,
+      "text": "گرگ گفت:",
+      "source": "said Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 60,
+      "sentence": 41,
+      "text": "می‌رم رو پشت‌بوم و از دودکش میام پایین!",
+      "source": "I'll climb up on the roof and come down the chimney!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 61,
+      "sentence": 41,
+      "text": "اووو!",
+      "source": "اووو!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": true
+    },
+    {
+      "index": 62,
+      "sentence": 42,
+      "text": "پاپ گفت:",
+      "source": "said Pop.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 63,
+      "sentence": 42,
+      "text": "وای وای وای! می‌خواد از دودکش بیاد پایین!",
+      "source": "Uh-oh! He's going to come down the chimney!",
+      "speaker": "Pop",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 64,
+      "sentence": 43,
+      "text": "پیم گفت:",
+      "source": "said Pim.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 65,
+      "sentence": 43,
+      "text": "نگران نباشین!",
+      "source": "Don't worry,",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 66,
+      "sentence": 44,
+      "text": "من یه وان گنده پر از آب سرد و کف‌کفی گذاشتم زیر دودکش.",
+      "source": "I've put a big tub of cold, bubbly bath water right under the chimney.",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 67,
+      "sentence": 45,
+      "text": "گرگ رفت رو پشت‌بوم و از دودکش لیز خورد اومد پایین.",
+      "source": "The Wolf climbed up on the roof and slid down the chimney.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 68,
+      "sentence": 46,
+      "text": "شالاپ! شالاپ! شالاپ!",
+      "source": "Splash, splash, splash!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 69,
+      "sentence": 47,
+      "text": "افتاد درست توی وان سرد و کف‌کفی.",
+      "source": "He landed right in the cold, bubbly tub.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 70,
+      "sentence": 48,
+      "text": "حبابا رفتن تو دماغش!",
+      "source": "Bubbles went up his nose.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 71,
+      "sentence": 49,
+      "text": "گرگ عطسه کرد:",
+      "source": "sneezed Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 72,
+      "sentence": 49,
+      "text": "آپچی! آپچی! آپچی!",
+      "source": "Achoo! Achoo! Achoo!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 73,
+      "sentence": 50,
+      "text": "گرگ خیس خیس و کف‌کفی از وان اومد بیرون.",
+      "source": "Soggy and soapy, the Wolf climbed out.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 74,
+      "sentence": 51,
+      "text": "چیک! چیک! چیک!",
+      "source": "Drip, drip, drip!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 75,
+      "sentence": 52,
+      "text": "یه‌راست دوید تا خونه‌ش، و دیگه هیچ‌وقت خونه‌ی هیچ‌کسو با فوت خراب نکرد.",
+      "source": "He ran all the way home, and he never blew down a house again.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 76,
+      "sentence": 53,
+      "text": "پیپ گفت:",
+      "source": "said Pip.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 77,
+      "sentence": 53,
+      "text": "ببخشید که اون‌قدر عجله کردم.",
+      "source": "I'm sorry I was in such a hurry,",
+      "speaker": "Pip",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 78,
+      "sentence": 54,
+      "text": "پاپ گفت:",
+      "source": "said Pop.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 79,
+      "sentence": 54,
+      "text": "دفعه‌ی بعد با هم یه خونه‌ی محکم می‌سازیم.",
+      "source": "Next time, we'll build a strong house together,",
+      "speaker": "Pop",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 80,
+      "sentence": 55,
+      "text": "پیم با یه لبخند گنده گفت:",
+      "source": "said Pim with a big smile.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 81,
+      "sentence": 55,
+      "text": "پس بیاین از فردا شروع کنیم!",
+      "source": "Let's start tomorrow!",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 82,
+      "sentence": 56,
+      "text": "ولی الان بیاین همه با هم بازی کنیم!",
+      "source": "But right now, let's all play!",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 83,
+      "sentence": 56,
+      "text": "خرخر!",
+      "source": "خرخر!",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": true
+    },
+    {
+      "index": 84,
+      "sentence": 57,
+      "text": "و سه تا خوک کوچولو تا همیشه توی خونه‌ی آجری به خوبی و خوشی زندگی کردن.",
+      "source": "And the three little pigs lived happily in the brick house for ever and ever.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    }
+  ]
+}

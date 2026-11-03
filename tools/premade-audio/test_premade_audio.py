@@ -31,7 +31,13 @@ KEY = {"GEMINI_API_KEY": "test-key"}
 NARRATOR = {"voice": "Hali", "style": "warm storyteller"}
 CAST_DATA = {"version": 1, "narrator": NARRATOR,
              "characters": {"Wolf": {"voice": "Elio", "style": "deep", "direction": "sly"}, "Pip": {"voice": "Cleo", "style": "bouncy"}},
-             "directions": {"3": {"direction": "huffing", "speaker": "Wolf", "source": "y"}}}
+             "lines": [{"direction": "huffing", "speaker": "Wolf", "source": "y"}]}
+
+
+def checked(cast, sentences, language="fa"):
+    """The cast bound to a dump, as generate.main does before any request."""
+    cast.check(sentences, language)
+    return cast
 
 
 def tone_wav(seconds=0.5, silence=0.3):
@@ -102,7 +108,7 @@ class Base(unittest.TestCase):
         log = pacing.UsageLog(os.path.join(self.tmp, "usage.json"), clock=self.clock)
         pacer = pacing.Pacer(log, rpm, rpd, max_requests, clock=self.clock, sleep=self.clock.sleep)
         folder = os.path.join(self.tmp, "book", "fa")
-        return generate.Generator(adapter, cast or audio_cast.AudioCast(CAST_DATA), folder, pacer, "book", "fa", fmt, ffmpeg, log=lambda *_: None)
+        return generate.Generator(adapter, cast or audio_cast.AudioCast(dict(CAST_DATA, lines=[])), folder, pacer, "book", "fa", fmt, ffmpeg, log=lambda *_: None)
 
 
 class GeminiTests(unittest.TestCase):
@@ -156,40 +162,117 @@ class GeminiTests(unittest.TestCase):
 
 class CastTests(unittest.TestCase):
     def test_narrator_character_and_direction_precedence(self):
-        cast = audio_cast.AudioCast(CAST_DATA)
+        dump = [sentence(1, "z", "Wolf"), sentence(3, "y", "Wolf")]
+        cast = checked(audio_cast.AudioCast(CAST_DATA), dump)
         narration = cast.delivery(sentence(0, "x"))
         self.assertEqual(("Hali", "warm storyteller"), (narration.voice, narration.prompt))
-        self.assertEqual("deep; sly", cast.delivery(sentence(1, "y", "Wolf")).prompt)
-        self.assertEqual("deep; huffing", cast.delivery(sentence(3, "y", "Wolf")).prompt)  # index direction beats the character's
-        by_hash = dict(CAST_DATA, directions=dict(CAST_DATA["directions"], **{text_hash("y"): "whispering"}))
-        self.assertEqual("deep; whispering", audio_cast.AudioCast(by_hash).delivery(sentence(3, "y", "Wolf")).prompt)  # hash beats index
+        self.assertEqual("deep; sly", cast.delivery(dump[0]).prompt)
+        self.assertEqual("deep; huffing", cast.delivery(dump[1]).prompt)  # the line's direction beats the character's
+        by_hash = dict(CAST_DATA, directions={text_hash("y"): "whispering"})
+        with self.assertRaises(audio_cast.CastError):
+            checked(audio_cast.AudioCast(by_hash), dump)  # hash and line entry on one piece: no silent winner
+        only_hash = dict(by_hash, lines=[])
+        self.assertEqual("deep; whispering", checked(audio_cast.AudioCast(only_hash), dump).delivery(dump[1]).prompt)
 
     def test_unknown_speaker_and_bad_keys_fail_before_any_request(self):
         with self.assertRaises(audio_cast.CastError):
-            audio_cast.AudioCast(CAST_DATA).check([sentence(0, "x", "Troll")])
-        with self.assertRaises(audio_cast.CastError):
-            audio_cast.AudioCast(dict(CAST_DATA, directions={"abc": "x"}))
+            audio_cast.AudioCast(CAST_DATA).check([sentence(0, "x", "Troll")], "fa")
+        for bad_directions in ({"abc": "x"}, {"3": "huffing"}):  # an index key is no longer a thing
+            with self.assertRaises(audio_cast.CastError):
+                audio_cast.AudioCast(dict(CAST_DATA, directions=bad_directions))
         with self.assertRaises(audio_cast.CastError):
             audio_cast.AudioCast(dict(CAST_DATA, narrator={"voice": "Hali"}))
 
-    def test_an_index_direction_that_no_longer_matches_the_dump_fails_before_any_request(self):
+    def test_a_line_entry_that_matches_no_piece_fails_before_any_request(self):
         cast = audio_cast.AudioCast(CAST_DATA)
-        cast.check([sentence(3, "y", "Wolf")])
-        for moved in (sentence(3, "other", "Wolf"), sentence(3, "y", "Pip"), sentence(4, "y", "Wolf")):
+        checked(cast, [sentence(3, "y", "Wolf")])
+        for moved in ([sentence(3, "other", "Wolf")], [sentence(3, "y", "Pip")], []):
             with self.assertRaises(audio_cast.CastError):
-                cast.check([moved])
-        with self.assertRaises(audio_cast.CastError):
-            audio_cast.AudioCast(dict(CAST_DATA, directions={"3": "huffing"}))  # a bare string cannot guard an index
+                cast.check(moved, "fa")
 
-    def test_the_real_pigs_directions_match_the_dumped_book_when_a_dump_exists(self):
-        dump = REPO / "tmp" / "pigs-fa.json"
-        if not dump.is_file():
-            self.skipTest("no tmp/pigs-fa.json (dotnet run BookBuilder dump-sentences)")
-        cast = audio_cast.load(str(REPO / "content" / "dino" / "three-little-pigs" / "audio-cast.json"))
-        cast.check(json.loads(dump.read_text(encoding="utf8"))["sentences"])
+    def test_a_line_entry_follows_its_line_to_any_position(self):
+        cast = audio_cast.AudioCast(CAST_DATA)
+        for index in (3, 9):
+            self.assertEqual("deep; huffing", checked(cast, [sentence(index, "y", "Wolf")]).delivery(sentence(index, "y", "Wolf")).prompt)
+
+    def test_occurrence_picks_the_nth_repeat_and_is_required_for_repeats(self):
+        repeats = [sentence(0, "y", "Wolf"), sentence(1, "y", "Wolf"), sentence(2, "y", "Wolf")]
+        entry = {"direction": "huffing", "speaker": "Wolf", "source": "y"}
+        with self.assertRaises(audio_cast.CastError):
+            checked(audio_cast.AudioCast(dict(CAST_DATA, lines=[entry])), repeats)  # three matches, no occurrence
+        cast = checked(audio_cast.AudioCast(dict(CAST_DATA, lines=[dict(entry, occurrence=2)])), repeats)
+        self.assertEqual(["deep; sly", "deep; huffing", "deep; sly"], [cast.delivery(s).prompt for s in repeats])
+        with self.assertRaises(audio_cast.CastError):
+            checked(audio_cast.AudioCast(dict(CAST_DATA, lines=[dict(entry, occurrence=4)])), repeats)
+        with self.assertRaises(audio_cast.CastError):
+            audio_cast.AudioCast(dict(CAST_DATA, lines=[dict(entry, occurrence=0)]))
+
+    def test_one_field_of_a_piece_cannot_be_set_twice(self):
+        entry = {"direction": "huffing", "speaker": "Wolf", "source": "y"}
+        with self.assertRaises(audio_cast.CastError):
+            checked(audio_cast.AudioCast(dict(CAST_DATA, lines=[entry, dict(entry, direction="other")])), [sentence(3, "y", "Wolf")])
+
+    def test_a_say_applies_only_to_its_language_and_needs_one(self):
+        entry = {"say": "سِه", "lang": "fa", "speaker": None, "source": "x"}
+        with self.assertRaises(audio_cast.CastError):
+            audio_cast.AudioCast(dict(CAST_DATA, lines=[{"say": "s", "speaker": None, "source": "x"}]))
+        cast = audio_cast.AudioCast(dict(CAST_DATA, lines=[entry]))
+        self.assertEqual("سِه", checked(cast, [sentence(0, "x")], "fa").delivery(sentence(0, "x")).say)
+        self.assertEqual("", checked(cast, [sentence(0, "x")], "nb").delivery(sentence(0, "x")).say)  # not applied to another language
+        with self.assertRaises(audio_cast.CastError):
+            checked(cast, [sentence(0, "other")], "nb")  # but still matched, so a stale entry fails in every language
+
+    def test_a_line_with_direction_and_say_keeps_its_direction_in_other_languages(self):
+        entry = {"speaker": None, "source": "x", "direction": "d", "say": "y", "lang": "fa"}
+        cast = audio_cast.AudioCast(dict(CAST_DATA, lines=[entry]))
+        self.assertEqual("warm storyteller; d", checked(cast, [sentence(0, "x")], "nb").delivery(sentence(0, "x")).prompt)
+        self.assertEqual("warm storyteller; d", checked(cast, [sentence(0, "x")], "fa").delivery(sentence(0, "x")).prompt)
+        self.assertEqual("y", cast.delivery(sentence(0, "x")).say)
+
+    def test_delivery_before_check_and_a_malformed_language_fail_loudly(self):
+        cast = audio_cast.AudioCast(CAST_DATA)
+        with self.assertRaises(audio_cast.CastError):
+            cast.delivery(sentence(3, "y", "Wolf"))
+        for bad in (None, "FA", "fa-IR", ""):
+            with self.assertRaises(audio_cast.CastError):
+                cast.check([sentence(3, "y", "Wolf")], bad)
+        with self.assertRaises(audio_cast.CastError):
+            audio_cast.AudioCast(dict(CAST_DATA, lines=[{"say": "s", "lang": "FA", "speaker": None, "source": "x"}]))
+
+    def test_a_line_entry_cannot_target_an_animal_sound(self):
+        sound = dict(sentence(4, "Oink!", "Pip"), source="Oink!", sound=True)
+        cast = audio_cast.AudioCast(dict(CAST_DATA, lines=[{"speaker": "Pip", "source": "Oink!", "direction": "squeal"}]))
+        with self.assertRaises(audio_cast.CastError):
+            checked(cast, [sound])
+
+    def test_a_spoken_line_sharing_speaker_and_source_with_a_sound_is_selectable(self):
+        sound = dict(sentence(4, "Achoo!", "Wolf"), sound=True)
+        spoken = sentence(5, "Achoo!", "Wolf")
+        entry = {"speaker": "Wolf", "source": "Achoo!", "direction": "sneezing"}
+        cast = checked(audio_cast.AudioCast(dict(CAST_DATA, lines=[entry])), [sound, spoken])
+        self.assertEqual("deep; sneezing", cast.delivery(spoken).prompt)
+        self.assertEqual("deep; sly", cast.delivery(sound).prompt)
+        more = [sound, spoken, sentence(6, "Achoo!", "Wolf")]  # occurrence counts spoken lines only
+        picked = checked(audio_cast.AudioCast(dict(CAST_DATA, lines=[dict(entry, occurrence=2)])), more)
+        self.assertEqual("deep; sneezing", picked.delivery(more[2]).prompt)
+        self.assertEqual("deep; sly", picked.delivery(spoken).prompt)
+
+    def test_the_real_pigs_directions_land_on_the_same_speaker_in_every_dumped_language(self):
+        dumps = [pathlib.Path(__file__).parent / "testdata" / f"pigs-{lang}.json" for lang in ("en", "fa")]  # dump-sentences three-little-pigs --lang en|fa, checked in
+        seen = []
+        for path in dumps:
+            dump = json.loads(path.read_text(encoding="utf8"))
+            cast = audio_cast.load(str(REPO / "content" / "dino" / "three-little-pigs" / "audio-cast.json"))
+            cast.check(dump["sentences"], dump["language"])
+            by_index = {s["index"]: s for s in dump["sentences"]}
+            seen.append([(by_index[i]["speaker"], by_index[i]["source"], b["direction"]) for i, b in sorted(cast.bound.items())])
+        self.assertEqual(seen[0], seen[1])
+        self.assertEqual(len(audio_cast.load(str(REPO / "content" / "dino" / "three-little-pigs" / "audio-cast.json")).lines), len(seen[0]))
 
     def test_the_real_pigs_cast_is_valid_and_covers_every_speaker(self):
         cast = audio_cast.load(str(REPO / "content" / "dino" / "three-little-pigs" / "audio-cast.json"))
+        dump = json.loads((pathlib.Path(__file__).parent / "testdata" / "pigs-en.json").read_text(encoding="utf8"))
+        checked(cast, dump["sentences"], "en")
         for i, speaker in enumerate((None, "Pip", "Pop", "Pim", "Wolf")):
             cast.delivery(sentence(i, "t", speaker))
         self.assertEqual("Hali", cast.narrator["voice"])
@@ -256,7 +339,7 @@ class GeneratorTests(Base):
 
     def test_a_changed_direction_renders_only_that_line(self):
         self.make().run(self.TEXTS)
-        changed = audio_cast.AudioCast(dict(CAST_DATA, directions={"1": {"direction": "whispering", "speaker": "Pip", "source": "دو"}}))
+        changed = checked(audio_cast.AudioCast(dict(CAST_DATA, lines=[{"direction": "whispering", "speaker": "Pip", "source": "دو"}])), self.TEXTS)
         summary = self.make(cast=changed).run(self.TEXTS)
         self.assertEqual((1, 2), (summary.rendered, summary.cached))
         self.assertIn("whispering", json.loads(self.transport.requests[0].body)["input"][0]["content"][0]["annotations"][0]["style"])
@@ -264,8 +347,8 @@ class GeneratorTests(Base):
     @staticmethod
     def say_cast(says):
         """A cast whose narrator lines 0 and 2 carry the given `say` (index -> text)."""
-        entries = {str(i): {"say": say, "speaker": None, "source": GeneratorTests.TEXTS[i]["source"]} for i, say in says.items()}
-        return audio_cast.AudioCast(dict(CAST_DATA, directions=entries))
+        entries = [{"say": say, "lang": "fa", "speaker": None, "source": GeneratorTests.TEXTS[i]["source"]} for i, say in says.items()]
+        return checked(audio_cast.AudioCast(dict(CAST_DATA, lines=entries)), GeneratorTests.TEXTS)
 
     def sent_texts(self):
         return [json.loads(r.body)["input"][0]["content"][0]["text"] for r in self.transport.requests]
@@ -291,8 +374,8 @@ class GeneratorTests(Base):
 
     def test_lines_with_the_same_say_voice_and_style_share_one_clip(self):
         twice = [sentence(0, "الف"), sentence(1, "ب")]
-        cast = audio_cast.AudioCast(dict(CAST_DATA, directions={
-            "0": {"say": "همان", "speaker": None, "source": "الف"}, "1": {"say": "همان", "speaker": None, "source": "ب"}}))
+        cast = checked(audio_cast.AudioCast(dict(CAST_DATA, lines=[
+            {"say": "همان", "lang": "fa", "speaker": None, "source": "الف"}, {"say": "همان", "lang": "fa", "speaker": None, "source": "ب"}])), twice)
         generator = self.make(cast=cast)
         summary = generator.run(twice)
         self.assertEqual((1, 1, 1), (summary.rendered, summary.cached, len(self.transport.requests)))
@@ -300,9 +383,10 @@ class GeneratorTests(Base):
 
     def test_a_say_whose_line_moved_fails_before_any_request(self):
         cast = self.say_cast({2: "سِه"})
-        for moved in (sentence(2, "other"), sentence(2, "سه", "Pip"), sentence(3, "سه")):
+        for moved in (sentence(2, "other"), sentence(2, "سه", "Pip")):
             with self.assertRaises(audio_cast.CastError):
-                cast.check([moved])
+                cast.check([moved], "fa")
+        cast.check([sentence(7, "سه")], "fa")  # a different position is fine
 
     def test_variants_write_one_file_each_and_leave_the_manifest_alone(self):
         generator = self.make(cast=self.say_cast({2: "سِه"}))
@@ -486,7 +570,7 @@ class MainTests(Base):
         sentences = os.path.join(self.tmp, "s.json")
         cast = os.path.join(self.tmp, "cast.json")
         pathlib.Path(sentences).write_text(json.dumps({"book": "b", "language": "fa", "sentences": GeneratorTests.TEXTS}, ensure_ascii=False), encoding="utf8")
-        pathlib.Path(cast).write_text(json.dumps(dict(CAST_DATA, directions={})), encoding="utf8")
+        pathlib.Path(cast).write_text(json.dumps(dict(CAST_DATA, lines=[])), encoding="utf8")
         return sentences, cast
 
     def test_dry_run_counts_pending_sentences_and_sends_nothing(self):
@@ -528,7 +612,7 @@ class MainTests(Base):
 
     def test_a_say_guard_mismatch_fails_before_any_request_and_variants_need_both_options(self):
         sentences, cast = self.files()
-        bad = dict(CAST_DATA, directions={"2": {"say": "سِه", "speaker": None, "source": "not the source"}})
+        bad = dict(CAST_DATA, lines=[{"say": "سِه", "lang": "fa", "speaker": None, "source": "not the source"}])
         pathlib.Path(cast).write_text(json.dumps(bad, ensure_ascii=False), encoding="utf8")
         with unittest.mock.patch.object(generate, "Gemini", side_effect=AssertionError("no request may be prepared")):
             with self.assertRaises(audio_cast.CastError):
@@ -549,8 +633,8 @@ class MainTests(Base):
         sentences, _ = self.files()
         args = generate.parse_args(["--sentences", sentences, "--variants", "1", "--say", decomposed])
         self.assertEqual([composed], args.say)
-        entry = {"say": decomposed, "speaker": None, "source": "x"}
-        cast = audio_cast.AudioCast(dict(CAST_DATA, directions={"2": entry}))
+        entry = {"say": decomposed, "lang": "fa", "speaker": None, "source": "x"}
+        cast = checked(audio_cast.AudioCast(dict(CAST_DATA, lines=[entry])), [sentence(2, "x")])
         self.assertEqual(composed, cast.say_for({"index": 2}))
 
     def test_a_run_has_a_default_request_cap(self):

@@ -169,6 +169,7 @@ small problems all good. It was wonderfull". Flagged lines:
   Gemini reads, e.g. one word with a vowel mark), guarded by speaker + English source like the directions; the clip is
   keyed by the `say` text; the book text and the on-device voice are untouched. Try 2-3 spellings for each flagged word
   (a few pence) on a listening page, keep the user's pick.
+- [x] A7. Per-line `direction`/`say` entries in `audio-cast.json` (`lines`) are keyed by the English `source` + `speaker` (+ 1-based `occurrence` for repeats), never by dump index, so one cast serves every language; a `say` carries its `lang`; every entry must match a dump piece or the run fails before any request (the stopgap `audio-cast.fa.json` is gone).
 
 **Part B — package and store**
 - [ ] B1. Decide inside `.dino` vs a separate download by measured size (one Farsi book's clips), write the decision here.
