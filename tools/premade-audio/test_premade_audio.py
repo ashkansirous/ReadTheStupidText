@@ -8,6 +8,7 @@ import io
 import json
 import os
 import pathlib
+import shutil
 import struct
 import subprocess
 import tempfile
@@ -18,6 +19,7 @@ import wave
 
 import adapter_base
 import audio_cast
+import batch
 import clip_manifest
 import encode
 import generate
@@ -711,6 +713,412 @@ class RobustnessTests(Base):
         summary = self.make(FakeTransport([http_error(429, "30")]), max_requests=1).run(self.TEXTS)
         self.assertEqual(([], 0), (self.clock.slept, summary.rendered))
         self.assertEqual(generate.EXIT_OK, summary.exit_code)
+
+
+def batch_result(key, wav=None, error=None):
+    if error:
+        return {"metadata": {"key": key}, "error": {"code": 13, "message": error}}
+    data = base64.b64encode(wav or tone_wav()).decode()
+    return {"metadata": {"key": key}, "response": {"candidates": [{"content": {"parts": [{"inlineData": {"mimeType": "audio/wav", "data": data}}]}}]}}
+
+
+class FakeBatchTransport:
+    """The Batch API: a POST stores the submitted keys and answers a name; a GET answers `states` in turn (the last repeats), a final one carrying a result per key
+    (those in `failing` as errors, those in `missing` left out)."""
+
+    def __init__(self, states=("BATCH_STATE_RUNNING", "BATCH_STATE_SUCCEEDED"), failing=(), missing=(), submit_error=None, null_metadata=()):
+        self.states = list(states)
+        self.failing = set(failing)
+        self.missing = set(missing)
+        self.null_metadata = set(null_metadata)
+        self.submit_error = submit_error
+        self.get_error = None
+        self.lose_next_response = False  # the next POST is created on the server but its answer never arrives
+        self.posts = []
+        self.keys = {}
+        self.display_names = {}
+        self.gets = 0
+
+    def __call__(self, request):
+        if request.method == "POST":
+            return self.post(request)
+        return self.get(request)
+
+    def post(self, request):
+        if self.submit_error:
+            raise self.submit_error
+        body = json.loads(request.body)
+        items = body["batch"]["input_config"]["requests"]["requests"]
+        name = f"batches/job{len(self.posts)}"
+        self.posts.append(body)
+        self.keys[name] = [item["metadata"]["key"] for item in items]
+        self.display_names[name] = body["batch"]["display_name"]
+        if self.lose_next_response:
+            self.lose_next_response = False
+            raise TimeoutError("response lost")
+        return json.dumps({"name": name}).encode(), "application/json"
+
+    def get(self, request):
+        name = request.url.split("/v1beta/", 1)[1]
+        if name.startswith("batches?"):
+            listing = [{"name": n, "metadata": {"displayName": d}} for n, d in self.display_names.items()]
+            return json.dumps({"operations": listing}).encode(), "application/json"
+        if self.get_error:
+            raise self.get_error
+        state = self.states[min(self.gets, len(self.states) - 1)]
+        self.gets += 1
+        job = {"name": name, "metadata": {"state": state}}
+        if state.endswith("SUCCEEDED"):
+            results = [batch_result(k, error="boom" if k in self.failing else None) for k in self.keys[name] if k not in self.missing]
+            for result in results:
+                if result["metadata"]["key"] in self.null_metadata:
+                    result["metadata"] = None
+            job["response"] = {"inlinedResponses": {"inlinedResponses": results}}
+        return json.dumps(job).encode(), "application/json"
+
+
+class BatchTests(Base):
+    TEXTS = GeneratorTests.TEXTS
+
+    def runner(self, transport=None, chunk=200, max_requests=0, wait_minutes=60.0, max_bytes=batch.MAX_CHUNK_BYTES, cast=None):
+        self.batch_transport = transport or FakeBatchTransport()
+        generator = self.make(transport=self.batch_transport, cast=cast)
+        path = os.path.join(generator.folder, batch.STATE_NAME)
+        return batch.BatchRunner(generator, path, chunk, max_requests, 20.0, wait_minutes, clock=self.clock, sleep=self.clock.sleep, max_bytes=max_bytes)
+
+    def test_request_body_shape(self):
+        runner = self.runner()
+        runner.run(self.TEXTS)
+        body = self.batch_transport.posts[0]
+        items = body["batch"]["input_config"]["requests"]["requests"]
+        self.assertEqual(3, len(items))
+        request = items[1]["request"]
+        self.assertEqual("Cleo", request["generationConfig"]["speechConfig"]["voiceConfig"]["prebuiltVoiceConfig"]["voiceName"])
+        self.assertEqual(["AUDIO"], request["generationConfig"]["responseModalities"])
+        part = request["contents"][0]["parts"][0]
+        self.assertEqual(("user", "دو", "bouncy"), (request["contents"][0]["role"], part["text"], part["speech_metadata"]["style"]))
+        self.assertEqual(items[1]["metadata"]["key"], clip_manifest.clip_stem("دو", "Cleo", runner.generator.identity(self.TEXTS[1])[1]))
+
+    def test_manifest_and_clip_names_match_the_unary_path(self):
+        unary = self.make()
+        unary.run(self.TEXTS)
+        entries, files = unary.manifest.entries, sorted(os.listdir(unary.folder))
+        shutil.rmtree(unary.folder)
+        runner = self.runner()
+        summary = runner.run(self.TEXTS)
+        self.assertEqual((3, 0, 0), (summary.rendered, summary.cached, summary.exit_code))
+        self.assertEqual(entries, runner.generator.manifest.entries)
+        self.assertEqual(files, sorted(os.listdir(runner.generator.folder)))
+
+    def test_say_and_direction_are_used_as_in_the_unary_path(self):
+        cast = GeneratorTests.say_cast({2: "سِه"})
+        runner = self.runner(cast=cast)
+        runner.run(self.TEXTS)
+        items = self.batch_transport.posts[0]["batch"]["input_config"]["requests"]["requests"]
+        self.assertEqual("سِه", items[2]["request"]["contents"][0]["parts"][0]["text"])
+        self.assertEqual("سِه", runner.generator.manifest.entries[2]["say"])
+
+    def test_only_cache_misses_are_submitted(self):
+        self.make().run(self.TEXTS[:2])
+        runner = self.runner()
+        summary = runner.run(self.TEXTS)
+        items = self.batch_transport.posts[0]["batch"]["input_config"]["requests"]["requests"]
+        self.assertEqual((1, 2, 1), (summary.rendered, summary.cached, len(items)))
+
+    def test_nothing_missing_submits_nothing(self):
+        self.make().run(self.TEXTS)
+        runner = self.runner()
+        summary = runner.run(self.TEXTS)
+        self.assertEqual((0, 3, 0), (summary.rendered, summary.cached, len(self.batch_transport.posts)))
+
+    def test_chunking_by_request_count(self):
+        runner = self.runner(chunk=2)
+        summary = runner.run(self.TEXTS)
+        self.assertEqual([2, 1], [len(p["batch"]["input_config"]["requests"]["requests"]) for p in self.batch_transport.posts])
+        self.assertEqual(3, summary.rendered)
+
+    def test_chunking_by_size(self):
+        entries = [(f"k{i}", batch.batch_request("x" * 100, "Hali", "s")) for i in range(5)]
+        size = batch.entry_bytes(entries[0])
+        self.assertEqual([2, 2, 1], [len(c) for c in batch.chunk_entries(entries, 200, size * 2 + 1)])
+        self.assertEqual([1] * 5, [len(c) for c in batch.chunk_entries(entries, 200, 10)])
+
+    def test_max_requests_caps_the_misses_submitted(self):
+        runner = self.runner(max_requests=2)
+        summary = runner.run(self.TEXTS)
+        self.assertEqual((2, 2), (summary.rendered, len(self.batch_transport.posts[0]["batch"]["input_config"]["requests"]["requests"])))
+
+    def test_state_file_is_written_before_polling_and_cleared_after(self):
+        runner = self.runner()
+        seen = []
+        original = runner.fetch
+        runner.fetch = lambda name: (seen.append(runner.load_state()), original(name))[1]
+        runner.run(self.TEXTS)
+        self.assertEqual([{"name": "batches/job0", "keys": seen[0][0]["keys"]}], seen[0])
+        self.assertEqual(3, len(seen[0][0]["keys"]))
+        self.assertFalse(os.path.exists(runner.state_path))
+
+    def test_timeout_keeps_the_state_and_a_rerun_polls_without_submitting(self):
+        runner = self.runner(FakeBatchTransport(states=["BATCH_STATE_RUNNING"]), wait_minutes=1)
+        summary = runner.run(self.TEXTS)
+        self.assertEqual((batch.EXIT_BATCH_PENDING, 0), (summary.exit_code, summary.rendered))
+        self.assertIn("resume", summary.stopped)
+        self.assertTrue(os.path.isfile(runner.state_path))
+        transport = self.batch_transport
+        transport.states = ["BATCH_STATE_SUCCEEDED"]
+        again = self.runner(transport)
+        result = again.run(self.TEXTS)
+        self.assertEqual((3, 1, 0), (result.rendered, len(transport.posts), result.exit_code))
+        self.assertFalse(os.path.exists(again.state_path))
+
+    def test_partial_errors_save_the_good_clips_and_leave_the_rest_as_misses(self):
+        stems = [clip_manifest.clip_stem(t["text"], d.voice, v) for t in self.TEXTS for d, v, _ in [self.make().identity(t)]]
+        runner = self.runner(FakeBatchTransport(failing=[stems[1]], missing=[stems[2]]))
+        summary = runner.run(self.TEXTS)
+        self.assertEqual((1, batch.EXIT_BATCH_FAILED, 2), (summary.rendered, summary.exit_code, len(summary.errors)))
+        self.assertIn(stems[1], summary.errors[0])
+        self.assertEqual([0], sorted(runner.generator.manifest.entries))
+        state = runner.read_state()
+        self.assertEqual(([], {stems[1]: 1, stems[2]: 1}), (state["batches"], state["failures"]))
+        retry = self.runner()
+        self.assertEqual(2, retry.run(self.TEXTS).rendered)
+
+    def test_a_failed_job_clears_its_state_and_exits_non_zero(self):
+        runner = self.runner(FakeBatchTransport(states=["BATCH_STATE_FAILED"]))
+        summary = runner.run(self.TEXTS)
+        self.assertEqual((batch.EXIT_BATCH_FAILED, 0), (summary.exit_code, summary.rendered))
+        self.assertFalse(os.path.exists(runner.state_path))
+
+    def test_expired_and_job_state_prefix_are_final(self):
+        for state in ("JOB_STATE_EXPIRED", "BATCH_STATE_CANCELLED"):
+            summary = self.runner(FakeBatchTransport(states=[state])).run(self.TEXTS)
+            self.assertEqual(batch.EXIT_BATCH_FAILED, summary.exit_code)
+
+    def test_job_state_succeeded_prefix_is_accepted(self):
+        summary = self.runner(FakeBatchTransport(states=["JOB_STATE_SUCCEEDED"])).run(self.TEXTS)
+        self.assertEqual(3, summary.rendered)
+
+    def test_flat_inlined_responses_and_dest_are_read(self):
+        entry = batch_result("k")
+        self.assertEqual([entry], batch.job_entries({"response": {"inlinedResponses": [entry]}}))
+        self.assertEqual([entry], batch.job_entries({"dest": {"inlinedResponses": {"inlinedResponses": [entry]}}}))
+
+    def test_submit_refusal_exits_cleanly_without_retry(self):
+        for code in (400, 401, 403):
+            runner = self.runner(FakeBatchTransport(submit_error=http_error(code)))
+            summary = runner.run(self.TEXTS)
+            expected = batch.EXIT_BATCH_REFUSED if code == 400 else batch.EXIT_BATCH_AUTH
+            self.assertEqual((expected, 0, 0), (summary.exit_code, summary.rendered, self.batch_transport.gets))
+            self.assertIn(f"HTTP {code}", summary.stopped)
+        self.assertNotEqual(batch.EXIT_BATCH_REFUSED, batch.EXIT_BATCH_AUTH)
+
+    def test_a_later_chunk_refused_keeps_the_first_chunks_state(self):
+        runner = self.runner(chunk=2)
+        transport = self.batch_transport
+        original = transport.post
+        transport.post = lambda request: original(request) if not transport.posts else (_ for _ in ()).throw(http_error(400))
+        summary = runner.run(self.TEXTS)
+        self.assertEqual(batch.EXIT_BATCH_REFUSED, summary.exit_code)
+        self.assertEqual(1, len(runner.load_state()))
+
+    def test_missing_key_exits_before_any_request(self):
+        sentences = os.path.join(self.tmp, "s.json")
+        cast = os.path.join(self.tmp, "cast.json")
+        pathlib.Path(sentences).write_text(json.dumps({"book": "b", "language": "fa", "sentences": self.TEXTS}, ensure_ascii=False), encoding="utf8")
+        pathlib.Path(cast).write_text(json.dumps(dict(CAST_DATA, lines=[])), encoding="utf8")
+        env = {"PREMADE_AUDIO_SECRETS": os.path.join(self.tmp, "none.env"), "GEMINI_API_KEY": ""}
+        with unittest.mock.patch.dict(os.environ, env), contextlib.redirect_stderr(io.StringIO()), contextlib.redirect_stdout(io.StringIO()):
+            code = generate.main(["--sentences", sentences, "--cast", cast, "--out", self.tmp, "--format", "wav", "--batch"])
+        self.assertEqual(generate.EXIT_NO_KEY, code)
+
+    def test_dry_run_with_batch_reports_the_jobs(self):
+        sentences = os.path.join(self.tmp, "s.json")
+        cast = os.path.join(self.tmp, "cast.json")
+        pathlib.Path(sentences).write_text(json.dumps({"book": "b", "language": "fa", "sentences": self.TEXTS}, ensure_ascii=False), encoding="utf8")
+        pathlib.Path(cast).write_text(json.dumps(dict(CAST_DATA, lines=[])), encoding="utf8")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = generate.main(["--sentences", sentences, "--cast", cast, "--out", self.tmp, "--format", "wav", "--dry-run", "--batch", "--batch-chunk", "2"])
+        self.assertEqual(0, code)
+        self.assertIn("3 need a batch request in 2 job(s)", out.getvalue())
+
+    def test_a_resumed_batch_whose_keys_left_the_sentence_set_does_not_crash(self):
+        first = self.runner(FakeBatchTransport(states=["BATCH_STATE_RUNNING"]), wait_minutes=1)
+        first.run(self.TEXTS)
+        transport = self.batch_transport
+        transport.states = ["BATCH_STATE_SUCCEEDED"]
+        again = self.runner(transport)
+        summary = again.run(self.TEXTS[:2])  # the third sentence was edited out after the submit
+        self.assertEqual((2, 0, 1), (summary.rendered, summary.exit_code, len(transport.posts)))
+        self.assertFalse(os.path.exists(again.state_path))
+        self.assertEqual([0, 1], sorted(again.generator.manifest.entries))
+
+    def test_a_job_that_is_gone_clears_its_state_and_its_keys_become_misses(self):
+        first = self.runner(FakeBatchTransport(states=["BATCH_STATE_RUNNING"]), wait_minutes=1)
+        first.run(self.TEXTS)
+        transport = self.batch_transport
+        for code in (404, 410):
+            transport.get_error = http_error(code)
+            gone = self.runner(transport, wait_minutes=1).run(self.TEXTS)
+            self.assertEqual((batch.EXIT_BATCH_FAILED, 0, 1), (gone.exit_code, gone.rendered, len(transport.posts)))
+            self.assertIn("job gone", gone.errors[0])
+            self.assertFalse(os.path.exists(os.path.join(self.tmp, "book", "fa", batch.STATE_NAME)))
+            transport.get_error = None
+            transport.states = ["BATCH_STATE_RUNNING"]
+            self.runner(transport, wait_minutes=1).run(self.TEXTS)  # a fresh submit of the freed keys, left pending for the next round
+            transport.posts.pop()
+        transport.states = ["BATCH_STATE_SUCCEEDED"]
+        self.assertEqual(3, self.runner(transport).run(self.TEXTS).rendered)
+
+    def test_a_lost_submit_response_is_found_again_by_display_name_not_resubmitted(self):
+        transport = FakeBatchTransport(states=["BATCH_STATE_SUCCEEDED"])
+        transport.lose_next_response = True
+        first = self.runner(transport)
+        summary = first.run(self.TEXTS)
+        self.assertEqual((batch.EXIT_BATCH_FAILED, 0, 1), (summary.exit_code, summary.rendered, len(transport.posts)))
+        state = first.read_state()
+        self.assertEqual(([], 3), (state["batches"], len(state["intent"]["keys"])))
+        name = transport.posts[0]["batch"]["display_name"]
+        self.assertTrue(name.startswith("rtst-book-fa-1-") and len(name) > len("rtst-book-fa-1-"))
+        again = self.runner(transport).run(self.TEXTS)
+        self.assertEqual((3, 0, 1), (again.rendered, again.exit_code, len(transport.posts)))
+
+    def test_a_lost_submit_that_never_reached_the_vendor_is_submitted_again(self):
+        transport = FakeBatchTransport(states=["BATCH_STATE_SUCCEEDED"], submit_error=TimeoutError("down"))
+        first = self.runner(transport)
+        self.assertEqual(batch.EXIT_BATCH_FAILED, first.run(self.TEXTS).exit_code)
+        self.assertIsNotNone(first.read_state()["intent"])
+        transport.submit_error = None
+        again = self.runner(transport).run(self.TEXTS)
+        self.assertEqual((3, 1), (again.rendered, len(transport.posts)))
+        self.assertIsNone(self.runner(transport).read_state()["intent"])
+
+    def test_an_unreadable_batch_list_blocks_a_resubmit(self):
+        transport = FakeBatchTransport(submit_error=TimeoutError("down"))
+        self.runner(transport).run(self.TEXTS)
+        transport.submit_error = None
+        original = transport.get
+        transport.get = lambda request: (_ for _ in ()).throw(OSError("offline")) if "batches?" in request.url else original(request)
+        summary = self.runner(transport).run(self.TEXTS)
+        self.assertEqual((batch.EXIT_BATCH_FAILED, 0), (summary.exit_code, len(transport.posts)))
+
+    def test_an_unparseable_state_file_stops_the_run_and_submits_nothing(self):
+        for content in ("{not json", '{"batches": 5}', "[]"):
+            runner = self.runner()
+            os.makedirs(runner.generator.folder, exist_ok=True)
+            pathlib.Path(runner.state_path).write_text(content, encoding="utf8")
+            summary = runner.run(self.TEXTS)
+            self.assertEqual((batch.EXIT_BATCH_FAILED, 0, 0), (summary.exit_code, summary.rendered, len(self.batch_transport.posts)))
+            self.assertIn(batch.STATE_NAME, summary.stopped)
+            self.assertEqual(content, pathlib.Path(runner.state_path).read_text(encoding="utf8"))
+            os.remove(runner.state_path)
+
+    def test_an_unexpected_batch_list_shape_blocks_a_resubmit(self):
+        for listing in ({"batches": []}, {"operations": "x"}, {"operations": [{"displayName": "n"}]}, [], {"operations": [{"name": "batches/x", "metadata": None}]}):
+            transport = FakeBatchTransport(submit_error=TimeoutError("down"))
+            self.runner(transport).run(self.TEXTS)
+            transport.submit_error = None
+            original = transport.get
+            transport.get = lambda request, listing=listing, original=original: (json.dumps(listing).encode(), "application/json") if "batches?" in request.url else original(request)
+            summary = self.runner(transport).run(self.TEXTS)
+            self.assertEqual((batch.EXIT_BATCH_FAILED, 0), (summary.exit_code, len(transport.posts)), listing)
+            os.remove(os.path.join(self.tmp, "book", "fa", batch.STATE_NAME))
+
+    def test_the_batch_list_is_paged_by_next_page_token(self):
+        runner = self.runner()
+        pages = {"": {"operations": [{"name": "batches/a", "metadata": {"displayName": "other"}}], "nextPageToken": "t2"},
+                 "t2": {"operations": [{"name": "batches/b", "metadata": {"displayName": "wanted"}}]}}
+
+        def call(method, url, body=None):
+            return pages["t2" if "pageToken=t2" in url else ""]
+
+        runner.call = call
+        self.assertEqual("batches/b", runner.find_by_display_name("wanted"))
+        self.assertEqual("", runner.find_by_display_name("absent"))
+
+    def test_a_key_that_keeps_failing_inside_succeeded_jobs_is_not_billed_a_third_time(self):
+        transport = FakeBatchTransport(states=["BATCH_STATE_SUCCEEDED"])
+        stems = [clip_manifest.clip_stem(t["text"], d.voice, v) for t in self.TEXTS for d, v, _ in [self.make().identity(t)]]
+        transport.failing = {stems[1]}
+        first = self.runner(transport).run(self.TEXTS)
+        self.assertEqual((2, 1, 1), (first.rendered, len(transport.posts), len(first.errors)))
+        second = self.runner(transport).run(self.TEXTS)
+        self.assertEqual((0, 2, batch.EXIT_BATCH_FAILED), (second.rendered, len(transport.posts), second.exit_code))
+        third = self.runner(transport).run(self.TEXTS)
+        self.assertEqual((0, 2), (third.rendered, len(transport.posts)))
+        self.assertIn(stems[1], third.errors[0])
+        self.assertIn("not requested again", third.errors[0])
+        os.remove(os.path.join(self.tmp, "book", "fa", batch.STATE_NAME))
+        transport.failing = set()
+        self.assertEqual(1, self.runner(transport).run(self.TEXTS).rendered)
+
+    def test_batch_does_not_import_generate_so_a_script_run_has_one_summary_class(self):
+        self.assertFalse(hasattr(batch, "generate"))
+        self.assertIs(batch.Summary, generate.Summary)
+        self.assertIs(self.runner().run([]).__class__, generate.Summary)
+
+    def test_sentences_sharing_a_clip_count_like_the_unary_path(self):
+        shared = [sentence(0, "یک"), sentence(1, "یک"), sentence(2, "دو")]
+        unary = self.make().run(shared)
+        shutil.rmtree(os.path.join(self.tmp, "book"))
+        summary = self.runner().run(shared)
+        self.assertEqual((unary.rendered, unary.cached), (summary.rendered, summary.cached))
+        self.assertEqual("2 rendered, 1 already had a clip, 0 left", summary.line(3))
+
+    def test_a_dry_run_with_batch_honours_max_requests_pending_batches_and_a_zero_chunk(self):
+        sentences = os.path.join(self.tmp, "s.json")
+        cast = os.path.join(self.tmp, "cast.json")
+        pathlib.Path(sentences).write_text(json.dumps({"book": "book", "language": "fa", "sentences": self.TEXTS}, ensure_ascii=False), encoding="utf8")
+        pathlib.Path(cast).write_text(json.dumps(dict(CAST_DATA, lines=[])), encoding="utf8")
+
+        def dry(*extra):
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                generate.main(["--sentences", sentences, "--cast", cast, "--out", self.tmp, "--format", "wav", "--dry-run", "--batch", *extra])
+            return out.getvalue()
+
+        self.assertIn("2 need a batch request in 2 job(s) of up to 1", dry("--max-requests", "2", "--batch-chunk", "0"))
+        self.runner(FakeBatchTransport(states=["BATCH_STATE_RUNNING"], ), max_requests=0, wait_minutes=1).run(self.TEXTS[:2])
+        self.assertIn("1 need a batch request in 1 job(s) of up to 200; 2 already in pending batches", dry())
+        self.assertIn("0 need a batch request in 0 job(s)", dry("--max-requests", "2"))
+
+    def test_a_null_metadata_result_does_not_crash_and_stays_a_miss(self):
+        stems = [clip_manifest.clip_stem(t["text"], d.voice, v) for t in self.TEXTS for d, v, _ in [self.make().identity(t)]]
+        runner = self.runner(FakeBatchTransport(states=["BATCH_STATE_SUCCEEDED"], null_metadata=[stems[1]]))
+        summary = runner.run(self.TEXTS)
+        self.assertEqual((2, batch.EXIT_BATCH_FAILED), (summary.rendered, summary.exit_code))
+        self.assertIn(stems[1], summary.errors[0])
+        self.assertEqual(([], {stems[1]: 1}), (runner.read_state()["batches"], runner.read_state()["failures"]))
+
+    def test_silent_clips_are_not_paid_for_again_on_a_rerun(self):
+        runner = self.runner(FakeBatchTransport(states=["BATCH_STATE_SUCCEEDED"]))
+        silent_for = {self.TEXTS[1]["text"]}
+
+        def finish(path, sentence, stem, summary):
+            if sentence["text"] in silent_for:
+                summary.errors.append(f"sentence {sentence['index']}: silent")
+                os.remove(path)
+                return generate.OUTCOME_SILENT
+            return adapter_base.STATUS_OK
+
+        runner.generator.finish_clip = finish
+        first = runner.run(self.TEXTS)
+        self.assertEqual((2, 1), (first.rendered, len(self.batch_transport.posts)))
+        self.assertEqual(1, len(runner.read_state()["silent"]))
+        again = self.runner(self.batch_transport)
+        second = again.run(self.TEXTS)
+        self.assertEqual((1, batch.EXIT_BATCH_FAILED), (len(self.batch_transport.posts), second.exit_code))
+        self.assertIn("not requested again", second.errors[0])
+        os.remove(again.state_path)
+        self.assertEqual(1, self.runner(self.batch_transport).run(self.TEXTS).rendered)
+
+    def test_the_key_is_sent_in_a_header_and_never_in_the_url_or_body(self):
+        requests = []
+        inner = FakeBatchTransport()
+        runner = self.runner(inner)
+        runner.generator.adapter.transport = lambda request: (requests.append(request), inner(request))[1]
+        runner.run(self.TEXTS)
+        self.assertTrue(all(r.headers["x-goog-api-key"] == "test-key" and b"test-key" not in (r.body or b"") and "test-key" not in r.url for r in requests))
 
 
 if __name__ == "__main__":

@@ -17,55 +17,29 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 import audio_cast  # noqa: E402
+import batch  # noqa: E402
 import encode  # noqa: E402
 import pacing  # noqa: E402
 from adapter_base import HTTP_RATE_LIMITED, STATUS_OK, STATUS_SKIPPED, is_fatal  # noqa: E402
 from adapter_gemini import Gemini  # noqa: E402
 from clip_manifest import Manifest, clip_stem  # noqa: E402
+from run_common import (EXIT_AUTH, EXIT_ENCODE, EXIT_ERRORS, EXIT_LOCKED, EXIT_NO_FFMPEG, EXIT_NO_KEY, EXIT_OK, EXIT_RATE_LIMITED, FORMAT_WAV,  # noqa: E402,F401
+                        MAX_CONSECUTIVE_SILENT, MAX_SILENT_PER_RUN, OUTCOME_SILENT, Summary)
 
 REPO_ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 DEFAULT_OUT = os.path.join(REPO_ROOT, "artifacts", "premade-audio")
 CAST_NAME = "audio-cast.json"
 FORMAT_M4A = "m4a"
-FORMAT_WAV = "wav"
 VARIANTS_FOLDER = "variants"
 VARIANT_TEMP_PREFIX = "new-"  # a candidate is rendered under this name and moved over <n> only on success
 MAX_CONSECUTIVE_ERRORS = 3
-OUTCOME_SILENT = "silent-clip"  # a clip that failed the silence check: recorded, the run goes on until the silent caps below
-MAX_CONSECUTIVE_SILENT = 3
-MAX_SILENT_PER_RUN = 5
 MAX_RETRY_WAIT_SECONDS = 300.0
 DEFAULT_RETRY_WAIT_SECONDS = 60.0
-EXIT_OK = 0
-EXIT_ERRORS = 1  # sentences failed and nothing was rendered, or three errors in a row
-EXIT_NO_FFMPEG = 2
-EXIT_NO_KEY = 3
-EXIT_AUTH = 4  # 401 / 402 / 403: a bad key, no balance or no access
-EXIT_ENCODE = 5  # ffmpeg failed or hung (the vendor WAV is kept and encoded on the next run, with no new request)
-EXIT_RATE_LIMITED = 6  # a second 429, or one with a wait that is too long
-EXIT_LOCKED = 7  # another run is using the output folder
 
 
 def spoken_text(sentence, delivery):
     """What Gemini is asked to read: the cast's `say` for this line, else the book text."""
     return delivery.say or sentence["text"]
-
-
-class Summary:
-    def __init__(self):
-        self.rendered = 0
-        self.cached = 0
-        self.stopped = ""
-        self.exit_code = EXIT_OK
-        self.errors = []
-
-    def stop(self, reason, exit_code):
-        self.stopped = reason
-        self.exit_code = exit_code
-
-    def line(self, total):
-        text = f"{self.rendered} rendered, {self.cached} already had a clip, {total - self.rendered - self.cached} left"
-        return text + (f"; stopped: {self.stopped}" if self.stopped else "")
 
 
 class Generator:
@@ -268,6 +242,10 @@ def parse_args(argv):
                    help=f"most requests to send in this run (default {pacing.DEFAULT_MAX_REQUESTS}; 0 = no limit)")
     p.add_argument("--format", choices=(FORMAT_M4A, FORMAT_WAV), default=FORMAT_M4A, help="m4a needs ffmpeg; wav keeps the raw vendor clips")
     p.add_argument("--dry-run", action="store_true", help="check the cast and list what would be rendered; sends nothing")
+    p.add_argument("--batch", action="store_true", help="render the missing clips as Gemini Batch API jobs (not counted against the 100/day cap); resumable, see README")
+    p.add_argument("--batch-chunk", type=int, default=batch.DEFAULT_CHUNK_REQUESTS, metavar="N", help=f"most requests per batch job (default {batch.DEFAULT_CHUNK_REQUESTS})")
+    p.add_argument("--poll-seconds", type=float, default=batch.DEFAULT_POLL_SECONDS, help=f"seconds between batch polls (default {batch.DEFAULT_POLL_SECONDS:g})")
+    p.add_argument("--wait-minutes", type=float, default=batch.DEFAULT_WAIT_MINUTES, help=f"most minutes to wait for batches (default {batch.DEFAULT_WAIT_MINUTES:g}); then exit {batch.EXIT_BATCH_PENDING}, state kept")
     p.add_argument("--variants", type=int, metavar="INDEX", help="listening test: render the --say candidates for this sentence index to <out>/<book>/<language>/variants/<INDEX>/<n>.m4a; "
                    "the manifest is not touched")
     p.add_argument("--say", action="append", default=[], metavar="TEXT", help="a candidate spoken text for --variants (repeat for each)")
@@ -277,6 +255,8 @@ def parse_args(argv):
         p.error("--say TEXT must not be empty or whitespace only")
     if (args.variants is None) != (not args.say):
         p.error("--variants INDEX and at least one --say TEXT go together")
+    if args.batch and args.variants is not None:
+        p.error("--batch and --variants do not go together")
     return args
 
 
@@ -290,6 +270,23 @@ def pending_count(generator, sentences):
     """Sentences that need a request: no clip, and no kept vendor WAV waiting to be encoded (that one costs nothing)."""
     stems = [generator.identity(s)[2] for s in sentences]
     return sum(0 if generator.has_clip(stem) or generator.has_wav(stem) else 1 for stem in set(stems))  # sentences sharing a stem share one clip file
+
+
+def batch_dry_run_line(args, generator, sentences):
+    """What the real --batch run would submit: the misses not already in a pending batch (batch-state.json), within --max-requests, in chunks the runner would use."""
+    chunk = max(1, args.batch_chunk)
+    runner = batch.BatchRunner(generator, os.path.join(generator.folder, batch.STATE_NAME), chunk, args.max_requests)
+    try:
+        state = runner.read_state()
+    except batch.BatchStopped as stop:
+        return f"stopped: {stop}"
+    covered = {key for pending in state["batches"] for key in pending["keys"]} | set((state["intent"] or {}).get("keys", []))
+    stems = {generator.identity(s)[2] for s in sentences}
+    misses = sorted(stem for stem in stems if not generator.has_clip(stem) and not generator.has_wav(stem))
+    need = len(runner.fresh_stems(misses, covered, state["silent"], state["failures"]))
+    in_flight = len(covered & set(misses))
+    return (f"{len(sentences)} sentences, {need} need a batch request in {-(-need // chunk)} job(s) of up to {chunk}"
+            + (f"; {in_flight} already in pending batches" if in_flight else ""))
 
 
 def main(argv=None):
@@ -323,19 +320,34 @@ def run_variants(args, generator, sentences):
     return summary.exit_code or (EXIT_OK if summary.rendered == len(args.say) else EXIT_ERRORS)
 
 
+def run_batch(args, generator, sentences):
+    """--batch: the cache misses go to the Batch API (batch.py); no pacing or usage log, batch jobs are outside the per-minute and per-day caps."""
+    if generator.adapter.missing():
+        print("skipped: no key (" + ", ".join(generator.adapter.missing()) + ")", file=sys.stderr)
+        summary = Summary()
+        summary.stop("no key", EXIT_NO_KEY)
+        return summary
+    state_path = os.path.join(generator.folder, batch.STATE_NAME)
+    runner = batch.BatchRunner(generator, state_path, args.batch_chunk, args.max_requests, args.poll_seconds, args.wait_minutes)
+    return runner.run(sentences)
+
+
 def run_locked(args, book, language, sentences, cast, ffmpeg):
     rpm, rpd = limits(args)
     log = pacing.UsageLog(pacing.usage_path(args.out))
     pacer = pacing.Pacer(log, rpm, rpd, args.max_requests)
     generator = Generator(Gemini(), cast, os.path.join(args.out, book, language), pacer, book, language, args.format, ffmpeg,
                           readonly=args.dry_run or args.variants is not None)
+    if args.dry_run and args.batch:
+        print(f"{book} [{language}]: {batch_dry_run_line(args, generator, sentences)}")
+        return EXIT_OK
     if args.dry_run:
         print(f"{book} [{language}]: {len(sentences)} sentences, {pending_count(generator, sentences)} need a request (limits: {rpm}/min, {rpd or 'no'}/day, "
               f"{args.max_requests or 'no'} this run, {log.count()} sent in the last 24 h)")
         return EXIT_OK
     if args.variants is not None:
         return run_variants(args, generator, sentences)
-    summary = generator.run(sentences)
+    summary = run_batch(args, generator, sentences) if args.batch else generator.run(sentences)
     print(f"{book} [{language}]: {summary.line(len(sentences))}")
     return summary.exit_code or (EXIT_ERRORS if summary.errors and not summary.rendered else EXIT_OK)
 

@@ -72,6 +72,21 @@ Requests are spaced to the per-minute limit; the daily count is a rolling 24 hou
 carries on where the day stopped and prints when the next slot opens. The run ends cleanly (exit 0, reason printed) at the budget, the daily limit, a 401/402/403, or a second 429;
 the first 429 waits the vendor's retry-after once (header, else the body's `retryDelay`, default 60 s; over 300 s ends the run) and retries that sentence. Three errors in a row end it too.
 
+## Batch mode (`--batch`)
+
+The paid tier caps `gemini-3.8-flash-tts` at 100 requests a day and 10 a minute (AI Studio Rate Limit page, 2026-11-03), which is a few sentences short of a book-language per day.
+Batch jobs are not counted against that cap (proven 2026-11-03: a batch submitted after the day's 100 were used succeeded), so a whole book-language renders in a few jobs.
+
+```
+python tools/premade-audio/generate.py --sentences tmp/pigs-fa.json --out artifacts/premade-audio --batch [--batch-chunk 200] [--poll-seconds 20] [--wait-minutes 60]
+```
+
+- Same inputs and outputs as the per-sentence run: same clip names, cache (text, voice, delivery), manifest v3 entries and m4a encode, so a batch clip and a per-sentence clip of the same piece are interchangeable. Only cache misses are sent. `--max-requests N` caps how many misses go into this run's batches (default 200); `--rpm`/`--rpd` do not apply.
+- Misses are split into several jobs at `--batch-chunk` requests (default 200) or about 15 MB of inline requests (the vendor limit is 20 MB).
+- **Resume:** each submitted job name and the clip keys it covers are written to `<out>/<book>/<language>/batch-state.json` before polling. Waiting more than `--wait-minutes` (default 60) ends the run with exit 8 and the state kept; rerun the same command and it polls the pending job instead of submitting again (a job lives 48 h; Google's target is 24 h, observed about 2 minutes for 20 requests). A finished job's clips are saved, then its state entry is removed. Before each submit an "intent" (a unique display name `rtst-<book>-<lang>-<n>-<id>` and its keys) is written to the state file; if the answer is lost, a rerun finds the job by that name in `GET v1beta/batches` instead of submitting twice. A job the vendor no longer knows (404/410) is dropped and its clips become misses. A clip that comes back silent is listed in the state file and not requested again until `batch-state.json` is deleted.
+- **Errors:** a request that failed (or came back without audio, or silent) is reported by key, the good clips are kept, and the failed ones stay misses for the next run; exit 1. A FAILED/EXPIRED/CANCELLED job clears its state, is reported, exit 1. A 400/401/403 on submit or poll exits 4 with the message and no retry (jobs already submitted stay in the state file).
+- `--dry-run --batch` prints how many requests and jobs it would send. It cannot be combined with `--variants`.
+
 ## Encoding
 
 `ffmpeg` (on PATH or `$FFMPEG`), native `aac` encoder, mono 48 kb/s, `-movflags +faststart`, leading and trailing silence cut at -50 dB with a 0.05 s pad kept

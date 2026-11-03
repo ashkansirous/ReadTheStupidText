@@ -200,8 +200,17 @@ overall OK: **yes**. No lines flagged.
   highlight behave the same on both paths. Android and iOS tasks both, plus the Windows head.
 
 **Part D — generation runs**
-- [ ] D1. Farsi, one book (Three Little Pigs): render, listening page for the user, fix what they hear.
-- [ ] D2. Farsi, the other 15 books on the free key (as many days as the limit needs).
+- [x] D1. Farsi, one book (Three Little Pigs): render, listening page for the user, fix what they hear. *Done 2026-11-03 (PRs #763, #766).*
+- [ ] D2. Farsi, the other 15 books on the free key (as many days as the limit needs). *14 rendered 2026-11-03 in batch mode (all 0 left); Good Enough blocked: `dump-sentences good-enough` fails ("1 pages but 10 pictures"). Clips outside git in `D:/ReadTheStupidText-worktrees/s246-audio/books-<book>/` (Town Mouse in `books/`). Voices listening page: https://claude.ai/artifact/9AZaLgD9Vvt1LjfpAaEwnG, waiting on the user. Casts merged in #767.*
+
+### Decisions and findings, 2026-11-03 evening (Gemini limits and batch mode)
+
+- **Paid Tier 1 limits** (the user's screenshot of the AI Studio rate-limit page, 2026-11-03): every TTS model has 10 requests per minute and 100 per day (2.5 Pro TTS: 50 per day); gemini-3.8-flash-tts reached 104/100 that day. The plan's assumption that the paid tier lifts the per-sentence limit was never checked before the run (A0 read only the free limits); it was wrong.
+- **Other models** (one Farsi sentence each, 2026-11-03): only gemini-3.8-flash-tts and gemini-3.8-flash-lite-tts accept the extended voices (Hali); gemini-3.1-flash-tts-preview and the 2.5 models offer only the 30 standard voices, and 3.1 refuses `speech_metadata` ("Speech metadata is not supported for this model").
+- **The user: "dont want light. I checked 2 phrases, the normal one is better."** Lite is out; gemini-3.8-flash-tts stays.
+- **Batch API works and is not counted against the 100 a day:** a 2-request batch on gemini-3.8-flash-tts succeeded after that day's 100 were used; a 20-request Lite batch came back in 2 min 9 s; 14 books (1,138 requests in 14 batches, 13 at once) all succeeded within minutes. Batch is half the normal price (docs). Batch limits for the 3.8 TTS models are not listed in the docs (enqueued tokens are per model); not hit so far.
+- **Batch mode** (`generate.py --batch`, `batch.py`): one batch per book-language, resumable state file, fail-closed lookup of a lost submit by display name (live listing shape `operations[].metadata.displayName`), a 2-attempt cap per failing key.
+- **Found while casting** (not fixed here): in Lion and the Mouse the Mouse's line "I didn't mean to wake you up. If you're kind to me today, I'll be kind to you one day, too!" is attributed to the Lion by the app's own segmenter (en index 14, fa 13), so both the device voice and the Gemini clip use the Lion's voice; the frog's "Ribbit!" lines in Tortoise and the Hare are spoken lines, not sound pieces.
 - [ ] D3. The other 14 languages, in the order the user picks; switch to the capped credit only with the user's yes.
 - [ ] D4. Upload each finished book-language (store and app must match: the store-upload rule).
 
