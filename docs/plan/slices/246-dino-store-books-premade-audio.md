@@ -201,9 +201,16 @@ overall OK: **yes**. No lines flagged.
   roughly 30-40 MB per book, about ten times the book, and a reader uses one language. So: one audio pack per book and
   language (the clips plus the generator's manifest v3) uploaded beside the book in `dinoreader/stories/<id>/` (name such
   as `audio-<lang>-v<n>`; exact name and the listing field that says which languages have audio are B2's to settle after
-  reading `worker/stories.ts` and the app's store download code). The app (C) downloads a language's pack once, when a store
-  book is opened in that language, with the usual loading state, matches clips by sentence text hash and falls back to the
-  device voice for any miss. Old app builds never request a pack, so uploading packs changes nothing for current users and
+  reading `worker/stories.ts` and the app's store download code). The app (C) downloads the packs together with the book:
+  **the user, 2026-11-03: "when a user that has 3 book languages decides to download a book, that book would be downloaded
+  for those 3 languages at the download time"**, so downloading a store book also fetches its audio pack for every one of
+  the user's book languages that has one, in the same download with the same progress and Cancel (no audio download at
+  open time). A language added later, or a pack published after the book was downloaded, is fetched the same way the next
+  time the book's update check runs (or the first time the book opens in that language, if the check does not cover it;
+  coordinator's call, record which). The app matches clips by sentence text hash and falls back to the device voice for
+  any miss.
+  *The user, 2026-11-03: "I dont want them in the .dino file. It makes no sense. then you would need to put 15 language
+  audios inside a file. It should be separate audio package per book-language".* Old app builds never request a pack, so uploading packs changes nothing for current users and
   D4 may upload as soon as B2 is merged.
 - [ ] B2. BookBuilder / `upload-store-story.ps1` carry the clips and manifest; the worker serves them; a book without
   clips for a language works as today.

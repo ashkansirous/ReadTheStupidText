@@ -12,7 +12,7 @@
 
 - [ ] **1. Timeouts.** `timeout-minutes` on every signed iOS build job (RTST and Dino), about 1.5x the normal time (75 for Dino on today's numbers; measure RTST's). A hung job then fails in time and frees the group.
 - [ ] **2. Re-run only the hung job.** `.github/CLAUDE.md`: when an iOS job times out, re-run only the failed jobs (`gh run rerun <id> --failed`), and note that a `pending` release run with no jobs waits on the `in_progress` run in the same group.
-- [ ] **3. Measure the signed build.** One `main` run with the build step's timing (binlog or `-v:n` summary) to name what takes the 50 minutes (AOT/LLVM, linking, the MAUI workload, signing). Then decide with the user whether TestFlight builds may drop any of it. No change is shipped on a guess.
+- [ ] **3. Measure the signed build.** One `main` run with the build step's timing (binlog or `-v:n` summary) to name what takes the 50 minutes (AOT/LLVM, linking, the MAUI workload, signing). Then decide with the user whether TestFlight builds may drop any of it. No change is shipped on a guess. *The user, 2026-11-03: "Measure only, I decide": the run measures and writes down what each step costs and what skipping it would change, and ships no build change for item 3.*
 - [ ] **4. Retry the .ipa upload.** Release run 41375909759 (03:07Z 2026-11-02) failed at "Upload .ipa to the draft release" with "error connecting to api.github.com" after a 47-minute build (found by the final loop's pass 2; no wave report mentioned it). Retry that step a few times with a back-off so a network blip doesn't throw away the build.
 - [ ] **5. Check.** A run with a forced short timeout fails the job and the next pending run starts (`gh run list --workflow release.yml`).
 
