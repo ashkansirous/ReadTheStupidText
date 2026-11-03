@@ -296,7 +296,7 @@ def main(argv=None):
     args = parse_args(argv)
     book, language, sentences = load_sentences(args.sentences)
     cast = audio_cast.load(args.cast or os.path.join(REPO_ROOT, "content", "dino", book, CAST_NAME))
-    cast.check(sentences)
+    cast.check(sentences, language)
     ffmpeg = encode.find_ffmpeg() if args.format == FORMAT_M4A else None
     if args.dry_run:
         return run_locked(args, book, language, sentences, cast, ffmpeg)  # sends nothing, so it needs neither ffmpeg nor the folder lock

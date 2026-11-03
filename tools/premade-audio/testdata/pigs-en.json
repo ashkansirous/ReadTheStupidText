@@ -1,0 +1,780 @@
+{
+  "book": "three-little-pigs",
+  "language": "en",
+  "sentences": [
+    {
+      "index": 0,
+      "sentence": 0,
+      "text": "Once upon a time, three little pigs left home to build houses of their very own.",
+      "source": "Once upon a time, three little pigs left home to build houses of their very own.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 1,
+      "sentence": 1,
+      "text": "Their names were Pip, Pop and Pim.",
+      "source": "Their names were Pip, Pop and Pim.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 2,
+      "sentence": 2,
+      "text": "They waved bye-bye to their mummy, and off they went down the road.",
+      "source": "They waved bye-bye to their mummy, and off they went down the road.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 3,
+      "sentence": 3,
+      "text": "Pip was in a big hurry.",
+      "source": "Pip was in a big hurry.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 4,
+      "sentence": 4,
+      "text": "He built his house out of straw.",
+      "source": "He built his house out of straw.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 5,
+      "sentence": 5,
+      "text": "Yay! Now I can play all day!",
+      "source": "Yay! Now I can play all day!",
+      "speaker": "Pip",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 6,
+      "sentence": 5,
+      "text": "said Pip.",
+      "source": "said Pip.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 7,
+      "sentence": 6,
+      "text": "Pop wanted to play too.",
+      "source": "Pop wanted to play too.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 8,
+      "sentence": 7,
+      "text": "He built his house out of sticks.",
+      "source": "He built his house out of sticks.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 9,
+      "sentence": 8,
+      "text": "Yay! Now I can play all day!",
+      "source": "Yay! Now I can play all day!",
+      "speaker": "Pop",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 10,
+      "sentence": 8,
+      "text": "said Pop.",
+      "source": "said Pop.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 11,
+      "sentence": 9,
+      "text": "Pim worked slowly and carefully.",
+      "source": "Pim worked slowly and carefully.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 12,
+      "sentence": 10,
+      "text": "He built his house out of bricks, one by one.",
+      "source": "He built his house out of bricks, one by one.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 13,
+      "sentence": 11,
+      "text": "A strong house takes time,",
+      "source": "A strong house takes time,",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 14,
+      "sentence": 11,
+      "text": "said Pim.",
+      "source": "said Pim.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 15,
+      "sentence": 12,
+      "text": "I'll play when it's done.",
+      "source": "I'll play when it's done.",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 16,
+      "sentence": 12,
+      "text": "Oink!",
+      "source": "Oink!",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": true
+    },
+    {
+      "index": 17,
+      "sentence": 13,
+      "text": "One evening, a big grey Wolf came walking down the road.",
+      "source": "One evening, a big grey Wolf came walking down the road.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 18,
+      "sentence": 14,
+      "text": "He grinned when he saw the straw house.",
+      "source": "He grinned when he saw the straw house.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 19,
+      "sentence": 15,
+      "text": "He knocked on the door.",
+      "source": "He knocked on the door.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 20,
+      "sentence": 16,
+      "text": "Knock, knock, knock!",
+      "source": "Knock, knock, knock!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 21,
+      "sentence": 17,
+      "text": "Little pig, little pig, let me come in!",
+      "source": "Little pig, little pig, let me come in!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 22,
+      "sentence": 17,
+      "text": "said Wolf.",
+      "source": "said Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 23,
+      "sentence": 18,
+      "text": "No, no, no! Not by the hair of my chinny chin chin!",
+      "source": "No, no, no! Not by the hair of my chinny chin chin!",
+      "speaker": "Pip",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 24,
+      "sentence": 18,
+      "text": "Oink!",
+      "source": "Oink!",
+      "speaker": "Pip",
+      "narrator": false,
+      "sound": true
+    },
+    {
+      "index": 25,
+      "sentence": 18,
+      "text": "said Pip.",
+      "source": "said Pip.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 26,
+      "sentence": 19,
+      "text": "Then I'll huff, and I'll puff, and I'll blow your house in!",
+      "source": "Then I'll huff, and I'll puff, and I'll blow your house in!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 27,
+      "sentence": 19,
+      "text": "Aooo!",
+      "source": "Aooo!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": true
+    },
+    {
+      "index": 28,
+      "sentence": 19,
+      "text": "said Wolf.",
+      "source": "said Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 29,
+      "sentence": 20,
+      "text": "He huffed and he puffed, and the straw house blew away!",
+      "source": "He huffed and he puffed, and the straw house blew away!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 30,
+      "sentence": 21,
+      "text": "Pip ran as fast as he could to Pop's stick house.",
+      "source": "Pip ran as fast as he could to Pop's stick house.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 31,
+      "sentence": 22,
+      "text": "The Wolf followed him and knocked on the stick door.",
+      "source": "The Wolf followed him and knocked on the stick door.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 32,
+      "sentence": 23,
+      "text": "Knock, knock, knock!",
+      "source": "Knock, knock, knock!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 33,
+      "sentence": 24,
+      "text": "Little pig, little pig, let me come in!",
+      "source": "Little pig, little pig, let me come in!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 34,
+      "sentence": 24,
+      "text": "said Wolf.",
+      "source": "said Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 35,
+      "sentence": 25,
+      "text": "No, no, no! Not by the hair of my chinny chin chin!",
+      "source": "No, no, no! Not by the hair of my chinny chin chin!",
+      "speaker": "Pop",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 36,
+      "sentence": 25,
+      "text": "Oink!",
+      "source": "Oink!",
+      "speaker": "Pop",
+      "narrator": false,
+      "sound": true
+    },
+    {
+      "index": 37,
+      "sentence": 25,
+      "text": "said Pop.",
+      "source": "said Pop.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 38,
+      "sentence": 26,
+      "text": "Then I'll huff, and I'll puff, and I'll blow your house in!",
+      "source": "Then I'll huff, and I'll puff, and I'll blow your house in!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 39,
+      "sentence": 26,
+      "text": "said Wolf.",
+      "source": "said Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 40,
+      "sentence": 27,
+      "text": "He huffed and he puffed, and the stick house fell down in a big heap!",
+      "source": "He huffed and he puffed, and the stick house fell down in a big heap!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 41,
+      "sentence": 28,
+      "text": "Out ran Pip and Pop, as fast as their little legs could go.",
+      "source": "Out ran Pip and Pop, as fast as their little legs could go.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 42,
+      "sentence": 29,
+      "text": "Pip and Pop ran all the way to Pim's brick house.",
+      "source": "Pip and Pop ran all the way to Pim's brick house.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 43,
+      "sentence": 30,
+      "text": "Pim opened the door wide.",
+      "source": "Pim opened the door wide.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 44,
+      "sentence": 31,
+      "text": "Quick, come in!",
+      "source": "Quick, come in!",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 45,
+      "sentence": 31,
+      "text": "said Pim.",
+      "source": "said Pim.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 46,
+      "sentence": 32,
+      "text": "The Wolf marched up to the brick house.",
+      "source": "The Wolf marched up to the brick house.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 47,
+      "sentence": 33,
+      "text": "Knock, knock, knock!",
+      "source": "Knock, knock, knock!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 48,
+      "sentence": 34,
+      "text": "Little pig, little pig, let me come in!",
+      "source": "Little pig, little pig, let me come in!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 49,
+      "sentence": 34,
+      "text": "Aooo!",
+      "source": "Aooo!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": true
+    },
+    {
+      "index": 50,
+      "sentence": 34,
+      "text": "said Wolf.",
+      "source": "said Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 51,
+      "sentence": 35,
+      "text": "No, no, no! Not by the hair of my chinny chin chin!",
+      "source": "No, no, no! Not by the hair of my chinny chin chin!",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 52,
+      "sentence": 35,
+      "text": "said Pim.",
+      "source": "said Pim.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 53,
+      "sentence": 36,
+      "text": "Then I'll huff, and I'll puff, and I'll blow your house in!",
+      "source": "Then I'll huff, and I'll puff, and I'll blow your house in!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 54,
+      "sentence": 36,
+      "text": "said Wolf.",
+      "source": "said Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 55,
+      "sentence": 37,
+      "text": "He huffed and he puffed, and he huffed and he puffed, but the brick house didn't move one tiny bit!",
+      "source": "He huffed and he puffed, and he huffed and he puffed, but the brick house didn't move one tiny bit!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 56,
+      "sentence": 38,
+      "text": "Inside, the three little pigs peeked out of the window.",
+      "source": "Inside, the three little pigs peeked out of the window.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 57,
+      "sentence": 39,
+      "text": "The Wolf was very cross.",
+      "source": "The Wolf was very cross.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 58,
+      "sentence": 40,
+      "text": "He folded his arms and looked up at the chimney.",
+      "source": "He folded his arms and looked up at the chimney.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 59,
+      "sentence": 41,
+      "text": "I'll climb up on the roof and come down the chimney!",
+      "source": "I'll climb up on the roof and come down the chimney!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 60,
+      "sentence": 41,
+      "text": "Aooo!",
+      "source": "Aooo!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": true
+    },
+    {
+      "index": 61,
+      "sentence": 41,
+      "text": "said Wolf.",
+      "source": "said Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 62,
+      "sentence": 42,
+      "text": "Uh-oh! He's going to come down the chimney!",
+      "source": "Uh-oh! He's going to come down the chimney!",
+      "speaker": "Pop",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 63,
+      "sentence": 42,
+      "text": "said Pop.",
+      "source": "said Pop.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 64,
+      "sentence": 43,
+      "text": "Don't worry,",
+      "source": "Don't worry,",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 65,
+      "sentence": 43,
+      "text": "Oink!",
+      "source": "Oink!",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": true
+    },
+    {
+      "index": 66,
+      "sentence": 43,
+      "text": "said Pim.",
+      "source": "said Pim.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 67,
+      "sentence": 44,
+      "text": "I've put a big tub of cold, bubbly bath water right under the chimney.",
+      "source": "I've put a big tub of cold, bubbly bath water right under the chimney.",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 68,
+      "sentence": 45,
+      "text": "The Wolf climbed up on the roof and slid down the chimney.",
+      "source": "The Wolf climbed up on the roof and slid down the chimney.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 69,
+      "sentence": 46,
+      "text": "Splash, splash, splash!",
+      "source": "Splash, splash, splash!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 70,
+      "sentence": 47,
+      "text": "He landed right in the cold, bubbly tub.",
+      "source": "He landed right in the cold, bubbly tub.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 71,
+      "sentence": 48,
+      "text": "Bubbles went up his nose.",
+      "source": "Bubbles went up his nose.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 72,
+      "sentence": 49,
+      "text": "Achoo! Achoo! Achoo!",
+      "source": "Achoo! Achoo! Achoo!",
+      "speaker": "Wolf",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 73,
+      "sentence": 49,
+      "text": "sneezed Wolf.",
+      "source": "sneezed Wolf.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 74,
+      "sentence": 50,
+      "text": "Soggy and soapy, the Wolf climbed out.",
+      "source": "Soggy and soapy, the Wolf climbed out.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 75,
+      "sentence": 51,
+      "text": "Drip, drip, drip!",
+      "source": "Drip, drip, drip!",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 76,
+      "sentence": 52,
+      "text": "He ran all the way home, and he never blew down a house again.",
+      "source": "He ran all the way home, and he never blew down a house again.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 77,
+      "sentence": 53,
+      "text": "I'm sorry I was in such a hurry,",
+      "source": "I'm sorry I was in such a hurry,",
+      "speaker": "Pip",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 78,
+      "sentence": 53,
+      "text": "said Pip.",
+      "source": "said Pip.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 79,
+      "sentence": 54,
+      "text": "Next time, we'll build a strong house together,",
+      "source": "Next time, we'll build a strong house together,",
+      "speaker": "Pop",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 80,
+      "sentence": 54,
+      "text": "said Pop.",
+      "source": "said Pop.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 81,
+      "sentence": 55,
+      "text": "Let's start tomorrow!",
+      "source": "Let's start tomorrow!",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 82,
+      "sentence": 55,
+      "text": "Oink!",
+      "source": "Oink!",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": true
+    },
+    {
+      "index": 83,
+      "sentence": 55,
+      "text": "said Pim with a big smile.",
+      "source": "said Pim with a big smile.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    },
+    {
+      "index": 84,
+      "sentence": 56,
+      "text": "But right now, let's all play!",
+      "source": "But right now, let's all play!",
+      "speaker": "Pim",
+      "narrator": false,
+      "sound": false
+    },
+    {
+      "index": 85,
+      "sentence": 57,
+      "text": "And the three little pigs lived happily in the brick house for ever and ever.",
+      "source": "And the three little pigs lived happily in the brick house for ever and ever.",
+      "speaker": null,
+      "narrator": true,
+      "sound": false
+    }
+  ]
+}

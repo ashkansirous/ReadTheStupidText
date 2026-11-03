@@ -50,8 +50,8 @@
 - [x] A3. Highlight and pagination still follow each piece (tests on the piece ranges); the reading screen unchanged
   otherwise. Android, iOS and the Windows head share this Core code; the emulator run checks Android, and an iOS
   compile (`-p:IncludeIos=true -p:IncludeWindows=false -p:IncludeAndroid=false`) checks iOS builds.
-- [ ] A4. BookBuilder `dump-sentences` gives the new order (test); re-dump Pigs fa, re-key `audio-cast.json`, re-render
-  the changed lines, update the D1 listening page. *Code part done (dump test); re-key, re-render and listening page are the coordinator's.*
+- [x] A4. BookBuilder `dump-sentences` gives the new order (test); re-dump Pigs fa, re-key `audio-cast.json`, re-render
+  the changed lines, update the D1 listening page. *Done: re-keyed via the Slice 246 A7 source-keyed cast (speaker + English source, not index); Pigs fa re-rendered (7 requests, 78 clips reused, 85 entries). `audio-cast.json` also corrects the Achoo line's speaker from Pop to Wolf (A5: `"Achoo!" sneezed Wolf.`). The D1 listening page is the coordinator's.*
 - [x] A5. Attributor fix: sound-making verbs (sneezed, coughed, growled, barked, oinked, ...) added to the English speech verbs, so `"Achoo!" sneezed Wolf.` (Pigs) is Wolf's, not Pop's; tests added.
 
 **Changed while building:** the regroup runs in `StoryTranslator` (App) right after `StoryTranslation.TranslateAsync`, not inside it, because the language and the story's sentences are only known there; a quote's pieces are regrouped across sentences (the Pigs' "A strong house takes time," said Pim, "I'll play..." is two sentences), but a tag never jumps in front of a quote piece of an earlier sentence, and `AnimalSounds.Placements` lost its `sentences` argument (the sound now sits straight after the quote, the last piece of a same-speaker run).

@@ -21,20 +21,22 @@ python -I -W error -m unittest discover -s tools/premade-audio
 
 The text is the displayed translation (`fa.json`), plain: the `fa.speak.json` "how to read" table is for the on-device voice only (user, 2026-11-03). Pieces with no
 letter or digit are left out. The animal sounds the app adds after some lines (pigs, wolf; `"sound": true` in the dump, `StoryVoicing.WithAnimalSounds`) are listed in the app's order with their own index and clip,
-and the highlight `sentence` is the one holding the segment's `SourceStart`, as in the app. Index keys in `audio-cast.json` count those sounds. Clips go to `<out>/<book>/<language>/<hash>-<voice>-<variant>.m4a` with `manifest.json`.
+and the highlight `sentence` is the one holding the segment's `SourceStart`, as in the app. Clips go to `<out>/<book>/<language>/<hash>-<voice>-<variant>.m4a` with `manifest.json`.
 
 ## Cast: `content/dino/<book>/audio-cast.json`
 
-Narrator voice and style, a voice and style per speaker name (as in the dump), an optional `direction` per character, and optional `directions` for single lines by
-sentence index (`{"direction", "speaker", "source"}`: the line's speaker and English source text, checked against the dump, so a moved line fails the run before any request)
-or by text hash (SHA-256 of the NFC text; a hash follows the text if lines move). The delivery sent to Gemini is `<style>; <direction>`
-(`speech_metadata.style`). A speaker with no entry fails the run before any request. Format and rules: `audio_cast.py`.
+Narrator voice and style, a voice and style per speaker name (as in the dump), an optional `direction` per character, optional `directions` by text hash (SHA-256 of the NFC
+text; a hash follows the text if lines move) and optional `lines` for single lines: `{"speaker", "source", "occurrence"?, "direction"?, "say"?, "lang"?}`. A line is found by
+the dump piece's `speaker` (`null` for the narrator) and English `source`, which are the same in every language, never by index (each language's dump orders its pieces
+differently), so one cast serves every language. `occurrence` (1-based, in dump order) is needed only when that speaker says that source more than once. An entry that matches no
+piece, matches several without an `occurrence`, or sets a field of one piece twice fails the run before any request. `direction` applies in every language. The delivery sent to Gemini is `<style>; <direction>`
+(`speech_metadata.style`). A speaker with no entry fails the run before any request. An entry cannot target an animal-sound piece (`"sound": true`): its source is localized and the count differs by language, so only narration and spoken lines can be keyed. `check(sentences, language)` must run before any delivery (the language is a lower-case code such as `fa`). Format and rules: `audio_cast.py`. Fixture dumps for the Pigs binding test: `tools/premade-audio/testdata/` (regenerate with `dump-sentences three-little-pigs --lang en|fa --out ...`).
 
 ### `say`: a Gemini-only pronunciation fix per line (A6)
 
-An index entry takes `say` next to (or instead of) `direction`: the text Gemini reads for that line in place of the book text, e.g. one word with a vowel mark.
-`{"17": {"say": "...", "speaker": null, "source": "One evening, a big grey Wolf came walking down the road."}}`. `speaker` is the dump's speaker (`null` for the narrator) and
-`source` its English text, so a moved line fails the run before any request, exactly like a direction. The clip name follows the spoken text (the manifest `variant` stays the service and settings tag), so
+A line entry takes `say` next to (or instead of) `direction`: the text Gemini reads for that line in place of the book text, e.g. one word with a vowel mark.
+`{"say": "...", "lang": "fa", "speaker": null, "source": "One evening, a big grey Wolf came walking down the road."}`. A `say` is language-specific, so it needs `lang` and applies
+only to that language's run (other languages still match it against the dump so a stale entry fails, but do not apply it; its direction, if any, applies everywhere). The clip name follows the spoken text (the manifest `variant` stays the service and settings tag), so
 changing a `say` re-renders that line only, and lines with the same `say`, voice and delivery share one clip. The manifest entry keeps the book `text` and `hash` (the app
 matches clips by them) and records the `say`. The book text and the on-device voice are untouched.
 
