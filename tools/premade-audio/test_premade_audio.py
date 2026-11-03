@@ -265,7 +265,7 @@ class CastTests(unittest.TestCase):
             cast = audio_cast.load(str(REPO / "content" / "dino" / "three-little-pigs" / "audio-cast.json"))
             cast.check(dump["sentences"], dump["language"])
             by_index = {s["index"]: s for s in dump["sentences"]}
-            seen.append([(by_index[i]["speaker"], by_index[i]["source"], b["direction"]) for i, b in sorted(cast.bound.items())])
+            seen.append([(by_index[i]["speaker"], by_index[i]["source"], b.get("direction")) for i, b in sorted(cast.bound.items())])
         self.assertEqual(seen[0], seen[1])
         self.assertEqual(len(audio_cast.load(str(REPO / "content" / "dino" / "three-little-pigs" / "audio-cast.json")).lines), len(seen[0]))
 
@@ -276,6 +276,14 @@ class CastTests(unittest.TestCase):
         for i, speaker in enumerate((None, "Pip", "Pop", "Pim", "Wolf")):
             cast.delivery(sentence(i, "t", speaker))
         self.assertEqual("Hali", cast.narrator["voice"])
+
+    def test_the_real_pigs_farsi_spelling_fixes_land_on_their_lines(self):
+        cast = audio_cast.load(str(REPO / "content" / "dino" / "three-little-pigs" / "audio-cast.json"))
+        dump = json.loads((pathlib.Path(__file__).parent / "testdata" / "pigs-fa.json").read_text(encoding="utf8"))
+        checked(cast, dump["sentences"], "fa")
+        by_index = {s["index"]: s for s in dump["sentences"]}
+        self.assertIn("گُنده‌ی", cast.say_for(by_index[16]))
+        self.assertEqual("شالاپ، شالاپ، شالاپ!", cast.say_for(by_index[68]))
 
 
 class ManifestTests(Base):
