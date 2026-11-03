@@ -24,3 +24,7 @@ audio cannot be rendered.
 ## Verification
 
 - BookBuilder tests for the picture-book dump; the dry run; the batch render ending with 0 left.
+
+## Decisions (user, 2026-11-03)
+
+- Hazelnut's Farsi voice: **Leda** (listened against Autonoe, Laomedeia, Zephyr; page https://claude.ai/artifact/51c1ZpE8eDU5ESkr6BTKVf). Written into `content/dino/good-enough/audio-cast.json`. Item 3's listening page is done.
