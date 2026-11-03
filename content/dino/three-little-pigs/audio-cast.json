@@ -91,6 +91,18 @@
       "source": "Splash, splash, splash!",
       "lang": "fa",
       "say": "شالاپ، شالاپ، شالاپ!"
+    },
+    {
+      "speaker": "Pim",
+      "source": "I've put a big tub of cold, bubbly bath water right under the chimney.",
+      "lang": "fa",
+      "say": "من یه وان گُنده پر از آب سرد و کف‌کفی گذاشتم زیر دودکش."
+    },
+    {
+      "speaker": null,
+      "source": "said Pim with a big smile.",
+      "lang": "fa",
+      "say": "پیم با یه لبخند گُنده گفت:"
     }
   ]
 }

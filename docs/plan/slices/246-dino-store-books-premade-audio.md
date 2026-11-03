@@ -143,8 +143,12 @@ before the user answered. Line numbers on the page are the old dump's (17 and 69
 - "One evening, a big grey Wolf came walking down the road." (old 17): option 1, `say` «یه روز غروب، یه گرگ گُنده‌ی خاکستری داشت از جاده میومد.»
 - "Splash, splash, splash!" (old 69): option 3, `say` «شالاپ، شالاپ، شالاپ!» (the book text has «!» after each word; the
   picked spelling uses commas, which changes the rhythm, and is what the user chose by ear).
-Both are in `content/dino/three-little-pigs/audio-cast.json` and rendered (2 requests). Not changed: گنده in Pim's
-"big tub" line and in "said Pim with a big smile" (the user did not flag them; check on the next listen).
+Both are in `content/dino/three-little-pigs/audio-cast.json` and rendered (2 requests).
+
+The other two گنده lines (page https://claude.ai/artifact/MsDdy7erGGjAemhcRg4nLA, 2026-11-03 21:07 UTC; option 1 was the
+clip then in the book): Pim's "I've put a big tub of cold, bubbly bath water right under the chimney." option 2, `say`
+«من یه وان گُنده پر از آب سرد و کف‌کفی گذاشتم زیر دودکش.»; the narrator's "said Pim with a big smile." option 2, `say`
+«پیم با یه لبخند گُنده گفت:». Both in the cast and rendered (2 requests), so all three گنده lines now carry the ُ mark.
 
 Pigs Farsi v2 page (https://claude.ai/artifact/GKVR5pS3QgdKXPi8ZjsNHa): «X گفت:» before the line sounds right: **yes**;
 overall OK: **yes**. No lines flagged.
