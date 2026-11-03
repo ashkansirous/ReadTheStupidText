@@ -40,6 +40,27 @@ reading it".
 - The user picks each recording on a listening page (2-3 CC0 candidates per animal).
 - Android, iOS and the Windows head alike (shared Core + App code; each platform's player checked in A3).
 
+## Decisions (the user, listening round 1, 2026-11-03 20:41 UTC)
+
+Page: https://claude.ai/artifact/151qSfw1SiXsJ2zRykH6JJ. Candidates, trimmed clips and `picks.json` live outside git in
+`D:/ReadTheStupidText-worktrees/s255-sounds/` until A2 copies the picked files into the app. Kept:
+
+- cat: round 1 option 1, "cat meow" by tuberatanka, https://freesound.org/people/tuberatanka/sounds/110011/ (CC0)
+- bee: round 1 option 2, "Insects - Bee; Honeybee, Buzz, Close Perspective" by TheKingOfGeeks360, https://freesound.org/people/TheKingOfGeeks360/sounds/846433/ (CC0)
+- bird: round 1 option 1, "BIRDSong_Blackcap, Recording 9 _JW Audio" by JW_Audio, https://freesound.org/people/JW_Audio/sounds/827197/ (CC0)
+- duck: round 1 option 1, "single quack from a duck" by Mikes-MultiMedia, https://freesound.org/people/Mikes-MultiMedia/sounds/418509/ (CC0)
+- frog: round 1 option 1, "Frog.ogg" by egomassive, https://freesound.org/people/egomassive/sounds/536759/ (CC0)
+- goat: round 1 option 3, "goat.mp3" by saha213131, https://freesound.org/people/saha213131/sounds/683259/ (CC0)
+- hen: round 1 option 2, "chicken sound - clucking.wav" by chanyatenn, https://freesound.org/people/chanyatenn/sounds/424076/ (CC0)
+- horse: round 1 option 2, "horse neigh shortened.wav" by shadoWisp, https://freesound.org/people/shadoWisp/sounds/269571/ (CC0)
+- rooster: round 1 option 3, "Rooster Crow 1" by BenjaminNelan, https://freesound.org/people/BenjaminNelan/sounds/435508/ (CC0)
+
+Not accepted; the user asked for more ("I think we need more animal sound picks"): cow, owl, sheep, pig ("find shorter
+one and without surrounding noise"), mouse, rabbit ("find without surrounding noise"), dog, wolf (other), lion (none
+right), bear (one candidate, none right). Round 2 page, 2-5 new CC0 candidates each, quiet single calls about 1 s:
+https://claude.ai/artifact/GsiKvyUm6o8cC3x3DwkwKK (published 2026-11-03, waiting on the user; rabbit has only 2, the
+lion and bear clips need a kid-friendliness listen).
+
 ## Work
 
 - [ ] A1. `tools/animal-sounds`: find 2-3 Freesound CC0 candidates per animal (Sonniss where Freesound has none), record
