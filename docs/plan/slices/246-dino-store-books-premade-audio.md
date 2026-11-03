@@ -56,6 +56,13 @@ so it should not take that much space. we can generate it on my machine. create 
 - Pre-made audio for store books if it sounds better; generated on the user's machine.
 - First a listening page: one paragraph of one story through each service.
 
+## Decisions (the user, 2026-11-03, listening round 1, free routes)
+
+Page: https://claude.ai/artifact/MkAx2edzi4WAiCWMJKfL9h (Three Little Pigs paragraph 0).
+- Gemini 3.8 Flash TTS, voice Hali (female), via AI Studio, style prompt "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent": rating 5, accent Tehrani yes, warmth 5, no wrong words.
+- piper-fa mana (app today): rating 2, accent Tehrani no, warmth 2, no wrong words noted.
+- Overall: worth trying more? Gemini only. Note: "we can do it without paying. why pay?" (no paid services; Elio, Finn, Cleo are the next voices to hear).
+
 ## Work
 
 - [ ] 1. *(partly: code ready 2026-11-02, the listening test waits for the user's keys)* **Listening test.** One Farsi paragraph of the Three Little Pigs (its spoken text with the book's `speak:fa`
