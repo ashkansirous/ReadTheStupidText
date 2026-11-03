@@ -91,18 +91,18 @@ Page: https://claude.ai/artifact/MkAx2edzi4WAiCWMJKfL9h (Three Little Pigs parag
 
 ## Part A design (coordinator, 2026-11-03)
 
-- **Requests are page-sized, clips are sentence-sized.** The free tier allows 10 requests a day, so the first render of a
-  book sends one request per *chunk*: consecutive sentences of one page that use at most two voices (Gemini's
-  multi-speaker mode; check its current limit and request shape in the docs first), at most ~8 sentences. The returned
-  audio is cut into one clip per sentence at the pauses: the N-1 longest silences for N sentences, each piece's length
-  checked against its text length; a chunk whose cut doesn't fit is re-rendered as single-sentence requests later.
+- **One request per sentence, one clip per sentence.** The user chose the $5 prepay (2026-11-03: "ok, do $5 prepay"), so
+  the paid tier's limits apply and no page-sized requests or cutting at pauses are needed (that idea, for the 10-a-day
+  free tier, is dropped). The project gets a spend cap at or under the £15.04 credit and auto-reload stays off.
 - **Edits re-render one sentence.** The manifest is keyed by each sentence's text hash (plus voice and direction); an
   edited sentence misses the cache and gets one single-sentence request; unchanged sentences keep their clips.
 - **The app's sentence split, not a copy.** A BookBuilder command prints each book's sentences for a language (index,
   text, speaker) as JSON from the same `StorySentences`/segmenter code the app uses; the Python generator reads that,
   so clip N is always highlight N.
-- **Daily budget:** stops at the free tier's 10 requests a day (and 3 a minute), saves state, and resumes the next run;
-  a 402/403/429-per-day answer ends the run cleanly, never retries.
+- **Limits and budget:** reads the requests-per-minute and per-day limits from flags (defaults: the paid Tier 1 values
+  read off the Rate Limit page once billing is on; the free 3/min, 10/day with `--free`), paces itself, saves state after
+  every clip and resumes. A `--max-requests` budget per run. 402 (no balance) or 403 ends the run cleanly; 429 waits for
+  the retry-after once, then ends.
 - **First run: Three Little Pigs in Farsi** (D1), narrator Hali; character voices from the defaults below, shown to the
   user before the rest of Farsi.
 
