@@ -98,6 +98,11 @@ Page: https://claude.ai/artifact/MkAx2edzi4WAiCWMJKfL9h (Three Little Pigs parag
 - [ ] A0. *(main thread, needs Chrome)* Create a Gemini API key in an AI Studio project **not linked to billing**, save it
   as `GEMINI_API_KEY` with `manage-secrets`, read the free-tier limits for `gemini-3.8-flash-tts` off the Rate Limit
   page and write them here.
+  *Done 2026-11-03:* key "Default Gemini API Key" in project "Default Gemini Project" (Free tier), saved as
+  `GEMINI_API_KEY`; one live sentence OK through `adapter_gemini.py` (Interactions API, voice Hali). Free limits for every
+  TTS model: **3 RPM, 10K TPM, 10 requests per day** (2.5-pro-tts: none). At one sentence per request that is months for
+  Farsi, so the route needs the user's choice: a $5 prepay (the minimum; then the £15.04 GCP credit is used first,
+  auto-reload off, spend cap set) or page-sized free requests cut at pauses. Billing account unchanged (0 projects linked).
 - [ ] A1. Remove the ElevenLabs, Azure, OpenAI, Narakeet and CAMB adapters and their tests; keep the Gemini adapter and
   prove its request shape with one keyed sentence (the first live call; fix what it shows).
 - [ ] A2. Per-book run: every sentence of one book in one language, plain text, narrator vs character from the app's own
