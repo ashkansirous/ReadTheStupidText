@@ -188,6 +188,11 @@ overall OK: **yes**. No lines flagged.
   keyed by the `say` text; the book text and the on-device voice are untouched. Try 2-3 spellings for each flagged word
   (a few pence) on a listening page, keep the user's pick.
 - [x] A7. Per-line `direction`/`say` entries in `audio-cast.json` (`lines`) are keyed by the English `source` + `speaker` (+ 1-based `occurrence` for repeats), never by dump index, so one cast serves every language; a `say` carries its `lang`; every entry must match a dump piece or the run fails before any request (the stopgap `audio-cast.fa.json` is gone).
+- [ ] A8. Per-language delivery: every cast's `style` ends with ", standard Tehrani accent", which is right only for Farsi (both
+  cast reviews of 2026-11-03 flagged it). Before D3, move the accent out of `style` into a per-language accent line (fa:
+  "standard Tehrani accent"; every other language a neutral standard accent for that language, or none), applied by
+  `audio_cast.py` when the delivery is built, with a test; existing Farsi clips keep their cache keys (the Farsi delivery
+  text must come out byte-identical, so nothing already recorded is paid for again).
 
 **Part B — package and store**
 - [ ] B1. Decide inside `.dino` vs a separate download by measured size (one Farsi book's clips), write the decision here.
@@ -212,6 +217,10 @@ overall OK: **yes**. No lines flagged.
 - **Batch mode** (`generate.py --batch`, `batch.py`): one batch per book-language, resumable state file, fail-closed lookup of a lost submit by display name (live listing shape `operations[].metadata.displayName`), a 2-attempt cap per failing key.
 - **Found while casting** (not fixed here): in Lion and the Mouse the Mouse's line "I didn't mean to wake you up. If you're kind to me today, I'll be kind to you one day, too!" is attributed to the Lion by the app's own segmenter (en index 14, fa 13), so both the device voice and the Gemini clip use the Lion's voice; the frog's "Ribbit!" lines in Tortoise and the Hare are spoken lines, not sound pieces.
 - [ ] D3. The other 14 languages, in the order the user picks; switch to the capped credit only with the user's yes.
+  *Approved by the user 2026-11-03 ("Yes, all 14"): record every other language for the 15 books in Gemini batches
+  (`generate.py --batch`, about 15,000 sentences, estimated about £5 at the batch half price), after A8. Output next to the
+  Farsi clips (`D:/ReadTheStupidText-worktrees/s246-audio/books-<book>/<book>/<lang>/`). No listening page is required per
+  language; flag any book-language whose run ends with failures.*
 - [ ] D4. Upload each finished book-language (store and app must match: the store-upload rule).
 
 ## Verification (re-planned)
