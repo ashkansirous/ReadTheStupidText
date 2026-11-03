@@ -11,6 +11,7 @@ from adapter_base import Adapter, Audio, Request
 
 URL = "https://generativelanguage.googleapis.com/v1beta/interactions"
 MODEL = "gemini-3.8-flash-tts"
+BATCH_BASE = "https://generativelanguage.googleapis.com/v1beta"  # Batch API (batch.py): models/<model>:batchGenerateContent, then GET <batch name>
 AUDIO_TYPE = "audio"
 RIFF_MAGIC = b"RIFF"
 RIFF_MAGIC_LENGTH = len(RIFF_MAGIC)
