@@ -51,14 +51,14 @@ internal static class SentenceDump
         AttributionResult resolved = StoryCast.Resolve(new SpeakerAttributor(rules).Attribute(story.Text, new StorySegmenter(rules).Split(story.Text, breaks)), story.Cast);
         IReadOnlyList<SplitSegment> source = StoryPieces.Split(story, resolved, spans, 0);
         string key = BundledTranslations.Key(language);
-        IReadOnlyList<SplitSegment> spoken = source.Select(p => p with { Segment = p.Segment with { Text = BundledTranslations.Lookup(story, key, p.Segment.Text) ?? p.Segment.Text } }).ToList();
-        IReadOnlyDictionary<int, AnimalSounds.Placement> sounds = SoundPlacements(story, resolved, source, spoken, spans, UiLanguage.Resolve(language));
+        (IReadOnlyList<SplitSegment> spoken, IReadOnlyList<SplitSegment> sources) = SpeakerFirstOrder(story, source, spans, key);
+        IReadOnlyDictionary<int, AnimalSounds.Placement> sounds = SoundPlacements(story, resolved, sources, spoken, UiLanguage.Resolve(language));
         var sentences = new List<SpokenSentence>();
         for (int i = 0; i < spoken.Count; i++)
         {
             if (spoken[i].Segment.Text.Any(char.IsLetterOrDigit))
             {
-                sentences.Add(Spoken(story, spoken[i], source[i].Segment.Text, spans, sentences.Count));
+                sentences.Add(Spoken(story, spoken[i], sources[i].Segment.Text, spans, sentences.Count));
             }
 
             if (sounds.TryGetValue(i, out AnimalSounds.Placement? placement) && SoundAfter(story, spoken, placement, spans, UiLanguage.Resolve(language), sentences.Count) is { } sound)
@@ -70,15 +70,27 @@ internal static class SentenceDump
         return new SentenceListing(book, key, sentences);
     }
 
+    // The pieces as the app speaks them: the displayed translation of each, regrouped speaker first in Persian and Arabic by the same code the app runs after translating (Slice 254).
+    // The source texts follow the new order unchanged, so each spoken piece still names the story piece it translates.
+    private static (IReadOnlyList<SplitSegment> Spoken, IReadOnlyList<SplitSegment> Sources) SpeakerFirstOrder(
+        Story story, IReadOnlyList<SplitSegment> source, IReadOnlyList<SentenceSpan> spans, string key)
+    {
+        IReadOnlyList<SplitSegment> translated = source.Select(p => p with { Segment = p.Segment with { Text = BundledTranslations.Lookup(story, key, p.Segment.Text) ?? p.Segment.Text } }).ToList();
+        // The app's own decision (SpeakerFirst.Regroups): offline it translates through the book's table only when the table covers every piece (StoryTranslator.Applies).
+        bool usesTable = BundledTranslations.Has(story, key) && BundledTranslations.IsComplete(story, key);
+        IReadOnlyList<SpeakerFirst.Move> order = SpeakerFirst.Plan(source, SpeakerFirst.Regroups(key, story.Language, usesTable) ? key : UiLanguage.English, story.Text, spans);
+        return (SpeakerFirst.Apply(translated, order, withColon: true, story.Text), SpeakerFirst.Apply(source, order, withColon: false));
+    }
+
     // The app's animal sounds (StoryVoicing.WithAnimalSounds, Slice 117): the plan counts the story's own lines, the placements go over the pieces as spoken. The cast's animals
     // come from AnimalSounds.Resolve (the book's stored settings, then the name, then the text), which is what AnimalSounds.OfCast gives for a cast nobody has recast on a device;
     // the grown-up's "Animal sounds" setting is taken as on (its default).
     private static IReadOnlyDictionary<int, AnimalSounds.Placement> SoundPlacements(
-        Story story, AttributionResult resolved, IReadOnlyList<SplitSegment> source, IReadOnlyList<SplitSegment> spoken, IReadOnlyList<SentenceSpan> spans, string spokenLanguage)
+        Story story, AttributionResult resolved, IReadOnlyList<SplitSegment> source, IReadOnlyList<SplitSegment> spoken, string spokenLanguage)
     {
         IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.WithSound(AnimalSounds.Resolve(resolved.Characters, story.Language, story.CastIn(spokenLanguage), story.Text), story.Language);
         IReadOnlyDictionary<int, AnimalKind> plan = AnimalSounds.Plan(source, animals, story.Language);
-        return AnimalSounds.Placements(spoken, plan, spans).ToDictionary(p => p.After);
+        return AnimalSounds.Placements(spoken, plan).ToDictionary(p => p.After);
     }
 
     // The sound segment the app inserts after the line: the character's voice, the sound word of the spoken language, on the sentence of the line's last character;

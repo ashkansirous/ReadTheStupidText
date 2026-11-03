@@ -163,6 +163,22 @@ public class SpeakerAttributorTests
     }
 
     [Fact]
+    public void Sneezed_tag_after_a_quote_gives_the_quote_to_the_sneezer()
+    {
+        const string text = "\"Hi,\" said Pop. Bubbles went up his nose. \"Achoo! Achoo! Achoo!\" sneezed Wolf.";
+
+        Assert.Equal(new string?[] { "Pop", "Wolf" }, Speakers(Run(text)));
+    }
+
+    [Fact]
+    public void Barked_tag_before_a_quote_gives_the_quote_to_the_barker()
+    {
+        const string text = "\"Hi,\" said Pop. Rex barked, \"Woof! Woof!\"";
+
+        Assert.Equal(new string?[] { "Pop", "Rex" }, Speakers(Run(text)));
+    }
+
+    [Fact]
     public void Name_followed_by_a_non_speech_verb_is_not_the_tag() =>
         Assert.Equal(new string?[] { "Lucy" }, Speakers(Run("Lucy whispered, \"Be quiet.\" Peter nodded.")));
 }
