@@ -1,6 +1,6 @@
 # Slice 254 — Dino: speaker first in Farsi and Arabic, and animal sounds next to the animal's own words
 
-*Planned 2026-11-03.* Dino Reader only. From the user, listening to the first Gemini book (Three Little Pigs, Farsi):
+*In progress 2026-11-03.* Dino Reader only. From the user, listening to the first Gemini book (Three Little Pigs, Farsi):
 
 - "we have a problem with farsi translation. In english, you say xxxx wolf said yyyy. All xxxx and yyyy are clearly for
   the wolf. In farsi, we only say Wolf said then we say xxxx and yyyy continuesly."
