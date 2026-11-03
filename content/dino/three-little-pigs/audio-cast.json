@@ -79,6 +79,18 @@
       "speaker": "Pip",
       "source": "I'm sorry I was in such a hurry,",
       "direction": "sorry and a little ashamed"
+    },
+    {
+      "speaker": null,
+      "source": "One evening, a big grey Wolf came walking down the road.",
+      "lang": "fa",
+      "say": "یه روز غروب، یه گرگ گُنده‌ی خاکستری داشت از جاده میومد."
+    },
+    {
+      "speaker": null,
+      "source": "Splash, splash, splash!",
+      "lang": "fa",
+      "say": "شالاپ، شالاپ، شالاپ!"
     }
   ]
 }

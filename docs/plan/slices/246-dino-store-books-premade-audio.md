@@ -135,6 +135,20 @@ small problems all good. It was wonderfull". Flagged lines:
   want to say something." → Slice 254 (the tag moves before the wolf's words in Farsi), re-listen after the re-render.
 - 69 (narrator, «شالاپ! شالاپ! شالاپ!», voice): "shaalaap shaalaap shaalaap! it reads it as shalaap shalaap shalaap" → A6.
 
+## Decisions (the user, spelling page and Pigs v2 re-listen, 2026-11-03 20:33-20:35 UTC)
+
+Spelling page: https://claude.ai/artifact/Vj3oSgh8LGBTkwW8sNcnoc. Its first version asked line 17 the wrong way round (as if
+the user wanted "gandeye") and offered no "gondeye" spelling; it was republished at about 20:25 with three گُنده spellings
+before the user answered. Line numbers on the page are the old dump's (17 and 69); after Slice 254 they are 16 and 68.
+- "One evening, a big grey Wolf came walking down the road." (old 17): option 1, `say` «یه روز غروب، یه گرگ گُنده‌ی خاکستری داشت از جاده میومد.»
+- "Splash, splash, splash!" (old 69): option 3, `say` «شالاپ، شالاپ، شالاپ!» (the book text has «!» after each word; the
+  picked spelling uses commas, which changes the rhythm, and is what the user chose by ear).
+Both are in `content/dino/three-little-pigs/audio-cast.json` and rendered (2 requests). Not changed: گنده in Pim's
+"big tub" line and in "said Pim with a big smile" (the user did not flag them; check on the next listen).
+
+Pigs Farsi v2 page (https://claude.ai/artifact/GKVR5pS3QgdKXPi8ZjsNHa): «X گفت:» before the line sounds right: **yes**;
+overall OK: **yes**. No lines flagged.
+
 ## Work (re-planned 2026-11-03)
 
 **Part A — generator (`tools/premade-audio`, runs on the user's PC)**
@@ -165,7 +179,7 @@ small problems all good. It was wonderfull". Flagged lines:
   - Restrictions: no models that compete with the Services, no reverse engineering/replicating the Services, no clinical or medical-advice use (none apply to storybook audio).
   - Data: on the unpaid tier Google uses submitted content and responses to improve products and "human reviewers may read" them ("Do not submit sensitive, confidential, or personal information to the Unpaid Services"); the paid tier does not. Book text is public story text, so the free key is fine. Paid Services are required for API clients offered to users in the EEA; we offer no API client, only pre-made audio.
   - Summary line: output is ours to ship commercially; Google claims no ownership; no attribution or AI-voice label is required by the terms for pre-made clips, but nothing here settles any store-policy or EU-law AI-label question (check before part B ships). Primary source read through a page summariser, not the raw page: re-read the quoted clauses before relying on them.
-- [ ] A6. (code done and tested offline: `say` in `audio-cast.json`, `generate.py --variants`; the listening part is still open) **Gemini-only pronunciation fix per line** (from the D1 answers): `audio-cast.json` takes a per-line `say` (the text
+- [x] A6. (done 2026-11-03: the user's spelling picks are the Pigs `say` entries, see the decisions above) **Gemini-only pronunciation fix per line** (from the D1 answers): `audio-cast.json` takes a per-line `say` (the text
   Gemini reads, e.g. one word with a vowel mark), guarded by speaker + English source like the directions; the clip is
   keyed by the `say` text; the book text and the on-device voice are untouched. Try 2-3 spellings for each flagged word
   (a few pence) on a listening page, keep the user's pick.
@@ -237,3 +251,4 @@ small problems all good. It was wonderfull". Flagged lines:
 
 - Every vendor request shape is unproven until the first keyed run (Gemini model id, ElevenLabs voice id placeholder, Narakeet voice-name casing, CAMB `fa-ir`).
 - The piper-fa baseline render, on a PC that has the `piper-fa` pack and `sherpa_onnx` installed.
+- Pigs Farsi: the two `say` lines (گُنده‌ی, «شالاپ، شالاپ، شالاپ!») were re-rendered in the full book on 2026-11-03 but nobody has listened to them in the book; the user heard only the spelling-page variants.
