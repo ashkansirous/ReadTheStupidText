@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "narrator": {
+    "voice": "Hali",
+    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+  },
+  "characters": {
+    "Goldilocks": {
+      "voice": "Cleo",
+      "style": "a young, bright, bouncy little girl's voice for young children, standard Tehrani accent",
+      "direction": "curious, cheerful and bouncy"
+    },
+    "Papa Bear": {
+      "voice": "Orus",
+      "style": "a big, deep, booming but warm father bear's voice, never scary for young children, standard Tehrani accent",
+      "direction": "big, slow and kind"
+    },
+    "Mama Bear": {
+      "voice": "Sulafat",
+      "style": "a warm, soft, motherly grown-up voice for young children, standard Tehrani accent",
+      "direction": "warm and gentle"
+    },
+    "Baby Bear": {
+      "voice": "Achird",
+      "style": "a young, soft, friendly little boy's voice for young children, standard Tehrani accent",
+      "direction": "sweet and bouncy"
+    }
+  },
+  "lines": [
+    {
+      "speaker": "Papa Bear",
+      "source": "Quick, under this big tree!",
+      "direction": "hurried, calling out in the rain"
+    },
+    {
+      "speaker": "Goldilocks",
+      "source": "Hello? Is anybody home?",
+      "direction": "calling out, curious and a little unsure"
+    },
+    {
+      "speaker": "Goldilocks",
+      "source": "Oh, this porridge is too hot!",
+      "direction": "puffing and blowing, the porridge is too hot"
+    },
+    {
+      "speaker": "Goldilocks",
+      "source": "Oh, this porridge is too cold!",
+      "direction": "shivery and a little disappointed"
+    },
+    {
+      "speaker": "Goldilocks",
+      "source": "Mmm, this porridge is just right!",
+      "direction": "delighted, yummy"
+    },
+    {
+      "speaker": "Goldilocks",
+      "source": "This chair is too hard!",
+      "direction": "uncomfortable and a little grumbly"
+    },
+    {
+      "speaker": "Goldilocks",
+      "source": "This chair is too soft!",
+      "direction": "sinking in, a little giggly"
+    },
+    {
+      "speaker": "Papa Bear",
+      "source": "Somebody's been eating my porridge!",
+      "direction": "surprised and a bit grumpy, booming but not scary"
+    },
+    {
+      "speaker": "Mama Bear",
+      "source": "Somebody's been eating my porridge!",
+      "direction": "surprised"
+    },
+    {
+      "speaker": "Baby Bear",
+      "source": "Somebody's been eating my porridge, and it's all gone!",
+      "direction": "upset and nearly crying, but not too sad"
+    },
+    {
+      "speaker": "Papa Bear",
+      "source": "Somebody's been sitting in my chair!",
+      "direction": "surprised and a bit grumpy, booming but not scary"
+    },
+    {
+      "speaker": "Mama Bear",
+      "source": "Somebody's been sitting in my chair!",
+      "direction": "surprised"
+    },
+    {
+      "speaker": "Baby Bear",
+      "source": "Somebody's been sitting in my chair, and its leg came off!",
+      "direction": "upset, wailing a little"
+    },
+    {
+      "speaker": "Papa Bear",
+      "source": "Somebody's been sleeping in my bed!",
+      "direction": "surprised and a bit grumpy, booming but not scary"
+    },
+    {
+      "speaker": "Mama Bear",
+      "source": "Somebody's been sleeping in my bed!",
+      "direction": "surprised"
+    },
+    {
+      "speaker": "Baby Bear",
+      "source": "Somebody's sleeping in my bed, and here she is!",
+      "direction": "surprised and excited, pointing"
+    },
+    {
+      "speaker": "Goldilocks",
+      "source": "Oh!",
+      "direction": "startled, waking up with a little gasp"
+    },
+    {
+      "speaker": "Goldilocks",
+      "source": "I'm so, so sorry,",
+      "direction": "sorry and a little ashamed"
+    },
+    {
+      "speaker": "Goldilocks",
+      "source": "I got caught in the rain, and your door was open.",
+      "direction": "honest and a little shy, explaining"
+    },
+    {
+      "speaker": "Goldilocks",
+      "source": "I ate your porridge, and I broke your chair.",
+      "direction": "honest and a little shy, explaining"
+    },
+    {
+      "speaker": "Goldilocks",
+      "source": "I should've asked first.",
+      "direction": "sorry, quietly"
+    },
+    {
+      "speaker": "Mama Bear",
+      "source": "But next time, never ever go into a house you don't know.",
+      "direction": "gentle but serious"
+    },
+    {
+      "speaker": "Baby Bear",
+      "source": "And next time, I'll shut the door!",
+      "direction": "cheeky and proud, making everyone laugh"
+    },
+    {
+      "speaker": "Papa Bear",
+      "source": "Mmm, this porridge is just right!",
+      "direction": "happy and contented, yummy"
+    },
+    {
+      "speaker": "Baby Bear",
+      "source": "This chair is just right!",
+      "direction": "proud and happy"
+    },
+    {
+      "speaker": "Goldilocks",
+      "source": "Next time, I'll stay with my mum, and I'll never ever go into a house I don't know.",
+      "direction": "sincere, making a promise"
+    }
+  ]
+}

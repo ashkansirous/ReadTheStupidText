@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "narrator": {
+    "voice": "Hali",
+    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+  },
+  "characters": {
+    "Hare": {
+      "voice": "Fenrir",
+      "style": "a young, excitable, bouncy voice for young children, standard Tehrani accent",
+      "direction": "boastful and full of beans, a cheeky show-off"
+    },
+    "Tortoise": {
+      "voice": "Vindemiatrix",
+      "style": "a gentle, warm grown-up voice, slow and calm, for young children, standard Tehrani accent",
+      "direction": "slow, calm and steady"
+    },
+    "Owl": {
+      "voice": "Sadaltager",
+      "style": "a warm, wise old voice, a little sleepy, for young children, standard Tehrani accent",
+      "direction": "wise and slow"
+    },
+    "Squirrel": {
+      "voice": "Cleo",
+      "style": "a young, bright, bouncy voice for young children, standard Tehrani accent",
+      "direction": "excited and cheering"
+    },
+    "Hedgehog": {
+      "voice": "Puck",
+      "style": "a young, upbeat, warm voice for young children, standard Tehrani accent",
+      "direction": "excited and cheering"
+    },
+    "Frog": {
+      "voice": "Laomedeia",
+      "style": "a young, upbeat, squeaky little frog's voice for young children, standard Tehrani accent",
+      "direction": "bouncy and cheering"
+    }
+  },
+  "lines": [
+    {
+      "speaker": "Hare",
+      "source": "A race? With me?",
+      "direction": "laughing, surprised"
+    },
+    {
+      "speaker": "Owl",
+      "source": "Ready... steady... GO!",
+      "direction": "slow build-up, then a loud call on the last word"
+    },
+    {
+      "speaker": "Hare",
+      "source": "I've got time for a little nap.",
+      "direction": "yawning and lazy"
+    },
+    {
+      "speaker": "Tortoise",
+      "source": "Wake up, Hare!",
+      "direction": "calling out kindly"
+    },
+    {
+      "speaker": "Hare",
+      "source": "Uh-oh! The race!",
+      "direction": "waking with a jump, panicked"
+    },
+    {
+      "speaker": "Owl",
+      "source": "The Tortoise wins!",
+      "direction": "announcing proudly"
+    },
+    {
+      "speaker": "Hare",
+      "source": "I'm sorry I was such a show-off.",
+      "direction": "sorry and a little ashamed"
+    },
+    {
+      "speaker": "Hare",
+      "source": "Slow and steady, step by step,",
+      "direction": "calm and thoughtful, trying it out"
+    }
+  ]
+}

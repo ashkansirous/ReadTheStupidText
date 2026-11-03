@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "narrator": {
+    "voice": "Hali",
+    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+  },
+  "characters": {
+    "Hen": {
+      "voice": "Sulafat",
+      "style": "a warm, bright grown-up mother hen's voice for young children, standard Tehrani accent",
+      "direction": "busy, cheerful and kind"
+    },
+    "Dog": {
+      "voice": "Puck",
+      "style": "a young, bouncy, upbeat voice for young children, standard Tehrani accent",
+      "direction": "lazy and sleepy, can't be bothered"
+    },
+    "Cat": {
+      "voice": "Leda",
+      "style": "a young, soft, youthful voice for young children, standard Tehrani accent",
+      "direction": "lazy and dreamy, can't be bothered"
+    },
+    "Duck": {
+      "voice": "Fenrir",
+      "style": "a young, squeaky, excitable voice, a silly storybook duck for young children, standard Tehrani accent",
+      "direction": "silly and squawky, can't be bothered"
+    }
+  },
+  "lines": [
+    {
+      "speaker": "Dog",
+      "source": "I will!",
+      "occurrence": 1,
+      "direction": "suddenly wide awake, eager and hungry"
+    },
+    {
+      "speaker": "Cat",
+      "source": "I will!",
+      "occurrence": 1,
+      "direction": "suddenly eager and hungry"
+    },
+    {
+      "speaker": "Duck",
+      "source": "I will!",
+      "occurrence": 1,
+      "direction": "suddenly eager and excited, hungry"
+    },
+    {
+      "speaker": "Dog",
+      "source": "You did all the work by yourself,",
+      "direction": "sorry and a little ashamed"
+    },
+    {
+      "speaker": "Cat",
+      "source": "And we didn't help you at all,",
+      "direction": "sorry and a little ashamed"
+    },
+    {
+      "speaker": "Duck",
+      "source": "We're sorry, Hen,",
+      "direction": "sorry, quiet and sincere"
+    },
+    {
+      "speaker": "Duck",
+      "source": "Next time we'll help.",
+      "direction": "sincere and hopeful"
+    },
+    {
+      "speaker": "Duck",
+      "source": "We promise!",
+      "direction": "earnest, a big promise"
+    },
+    {
+      "speaker": "Dog",
+      "source": "I will!",
+      "occurrence": 2,
+      "direction": "happy and eager to help"
+    },
+    {
+      "speaker": "Cat",
+      "source": "I will!",
+      "occurrence": 2,
+      "direction": "happy and eager to help"
+    },
+    {
+      "speaker": "Duck",
+      "source": "I will!",
+      "occurrence": 2,
+      "direction": "happy and eager to help"
+    },
+    {
+      "speaker": "Duck",
+      "source": "Washing-up is fun when we do it together!",
+      "direction": "happy and giggly, glad to be helping"
+    }
+  ]
+}

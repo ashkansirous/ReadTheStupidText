@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "narrator": {
+    "voice": "Hali",
+    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+  },
+  "characters": {
+    "Granny": {
+      "voice": "Sulafat",
+      "style": "a warm, soft, older woman's voice, a loving granny, for young children, standard Tehrani accent",
+      "direction": "warm and loving"
+    },
+    "Grandpa": {
+      "voice": "Umbriel",
+      "style": "a warm, deep, older man's voice, a jolly grandpa, for young children, standard Tehrani accent",
+      "direction": "warm and jolly"
+    },
+    "Gingerbread Man": {
+      "voice": "Puck",
+      "style": "a young, bouncy, bright child's voice for young children, standard Tehrani accent",
+      "direction": "bouncy, cheeky and full of fun"
+    },
+    "Cow": {
+      "voice": "Achernar",
+      "style": "a soft, warm, gentle grown-up voice, a friendly cow, for young children, standard Tehrani accent",
+      "direction": "gentle and friendly"
+    },
+    "Horse": {
+      "voice": "Laomedeia",
+      "style": "a bright, upbeat, bouncy grown-up voice, a friendly horse, for young children, standard Tehrani accent",
+      "direction": "lively and friendly"
+    },
+    "Fox": {
+      "voice": "Achird",
+      "style": "a warm, friendly grown-up voice, a kind storybook fox, for young children, standard Tehrani accent",
+      "direction": "kind, warm and reassuring"
+    }
+  },
+  "lines": [
+    {
+      "speaker": "Granny",
+      "source": "Oh my, oh my, oh my!",
+      "direction": "amazed, she can't believe her eyes"
+    },
+    {
+      "speaker": "Granny",
+      "source": "Stop, stop!",
+      "direction": "calling out, laughing"
+    },
+    {
+      "speaker": "Grandpa",
+      "source": "Wait for us, little one!",
+      "direction": "calling out, puffing and laughing"
+    },
+    {
+      "speaker": "Gingerbread Man",
+      "source": "Run, run, as fast as you can! You can't catch me, I'm the Gingerbread Man!",
+      "occurrence": 1,
+      "direction": "sing-song and cheeky, running"
+    },
+    {
+      "speaker": "Gingerbread Man",
+      "source": "Run, run, as fast as you can! You can't catch me, I'm the Gingerbread Man!",
+      "occurrence": 2,
+      "direction": "sing-song and cheeky, running"
+    },
+    {
+      "speaker": "Gingerbread Man",
+      "source": "Run, run, as fast as you can! You can't catch me, I'm the Gingerbread Man!",
+      "occurrence": 3,
+      "direction": "sing-song and cheeky, running"
+    },
+    {
+      "speaker": "Gingerbread Man",
+      "source": "Uh-oh,",
+      "direction": "worried"
+    },
+    {
+      "speaker": "Gingerbread Man",
+      "source": "How will I get across?",
+      "direction": "worried and unsure"
+    },
+    {
+      "speaker": "Gingerbread Man",
+      "source": "Whee, whee, whee! This is so much fun!",
+      "direction": "delighted, giggling"
+    },
+    {
+      "speaker": "Gingerbread Man",
+      "source": "I ran away from everyone who wanted to play with me,",
+      "direction": "thoughtful and a little sad"
+    },
+    {
+      "speaker": "Gingerbread Man",
+      "source": "Now I'm far away, and I miss them.",
+      "direction": "sad and quiet"
+    },
+    {
+      "speaker": "Gingerbread Man",
+      "source": "Will you be my friend, Fox?",
+      "direction": "shy and hopeful"
+    },
+    {
+      "speaker": "Gingerbread Man",
+      "source": "Run, run, as fast as you can! You can catch me, I'm the Gingerbread Man!",
+      "direction": "sing-song and joyful, running home"
+    },
+    {
+      "speaker": "Gingerbread Man",
+      "source": "I'm sorry I ran away,",
+      "direction": "sorry and a little ashamed"
+    },
+    {
+      "speaker": "Gingerbread Man",
+      "source": "Night-night, everybody,",
+      "direction": "sleepy, with a big yawn"
+    }
+  ]
+}

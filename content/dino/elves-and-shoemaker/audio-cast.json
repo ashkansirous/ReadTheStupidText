@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "narrator": {
+    "voice": "Hali",
+    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+  },
+  "characters": {
+    "Hans": {
+      "voice": "Umbriel",
+      "style": "a warm, kind, older man's voice, a gentle grandfather-like shoemaker, for young children, standard Tehrani accent",
+      "direction": "warm and kind"
+    },
+    "Greta": {
+      "voice": "Sulafat",
+      "style": "a warm, soft, older woman's voice, gentle and kind, for young children, standard Tehrani accent",
+      "direction": "warm and loving"
+    },
+    "Nib": {
+      "voice": "Cleo",
+      "style": "a tiny, bright, bouncy little elf girl's voice for young children, standard Tehrani accent",
+      "direction": "cheerful and bouncy"
+    },
+    "Nob": {
+      "voice": "Puck",
+      "style": "a tiny, upbeat, bouncy little elf boy's voice for young children, standard Tehrani accent",
+      "direction": "cheerful and a little cheeky"
+    }
+  },
+  "lines": [
+    {
+      "speaker": "Hans",
+      "source": "We'll sew them in the morning,",
+      "direction": "sleepy, with a great big yawn"
+    },
+    {
+      "speaker": "Hans",
+      "source": "Greta, come and look!",
+      "direction": "excited and amazed, calling upstairs"
+    },
+    {
+      "speaker": "Hans",
+      "source": "Who made these?",
+      "direction": "amazed and puzzled"
+    },
+    {
+      "speaker": "Greta",
+      "source": "Oh, wow! What beautiful shoes!",
+      "direction": "delighted and amazed"
+    },
+    {
+      "speaker": "Nib",
+      "source": "Tap, tap, tap!",
+      "direction": "singing it happily, in rhythm"
+    },
+    {
+      "speaker": "Nob",
+      "source": "Stitch, stitch, stitch!",
+      "direction": "singing it happily, in rhythm"
+    },
+    {
+      "speaker": "Nib",
+      "source": "Look, Nob! Presents!",
+      "direction": "excited, gasping with joy"
+    },
+    {
+      "speaker": "Nob",
+      "source": "Are they for us?",
+      "direction": "hopeful and amazed"
+    }
+  ]
+}

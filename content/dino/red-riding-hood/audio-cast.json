@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "narrator": {
+    "voice": "Hali",
+    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+  },
+  "characters": {
+    "Red Riding Hood": {
+      "voice": "Cleo",
+      "style": "a young, bright, bouncy child's voice for young children, standard Tehrani accent",
+      "direction": "cheerful and sing-song"
+    },
+    "Mum": {
+      "voice": "Sulafat",
+      "style": "a warm, soft grown-up mother's voice for young children, standard Tehrani accent",
+      "direction": "loving and caring"
+    },
+    "Wolf": {
+      "voice": "Achird",
+      "style": "a young, friendly storybook wolf's voice, never scary for young children, standard Tehrani accent",
+      "direction": "a little lonely, friendly and hopeful"
+    },
+    "Grandma": {
+      "voice": "Gacrux",
+      "style": "a warm, soft, mature grandmother's voice for young children, standard Tehrani accent",
+      "direction": "kind and welcoming"
+    },
+    "Woodcutter": {
+      "voice": "Orus",
+      "style": "a big, booming, kind grown-up man's voice for young children, standard Tehrani accent",
+      "direction": "warm and cheerful"
+    }
+  },
+  "lines": [
+    {
+      "speaker": "Wolf",
+      "source": "I'm so hungry, and I've got nobody to play with.",
+      "direction": "sad and lonely"
+    },
+    {
+      "speaker": "Red Riding Hood",
+      "source": "No, thank you,",
+      "direction": "polite but firm"
+    },
+    {
+      "speaker": "Red Riding Hood",
+      "source": "I stay on the path, all the way to Grandma's!",
+      "occurrence": 2,
+      "direction": "polite but firm, sure of herself"
+    },
+    {
+      "speaker": "Wolf",
+      "source": "Oh, okay,",
+      "direction": "disappointed, a small sigh"
+    },
+    {
+      "speaker": "Wolf",
+      "source": "I'm lost, and I'm hungry, and I haven't got a single friend,",
+      "direction": "sad and sniffly"
+    },
+    {
+      "speaker": "Grandma",
+      "source": "Who's there?",
+      "direction": "calling out through the door"
+    },
+    {
+      "speaker": "Wolf",
+      "source": "Mmm! Yum, yum, yum!",
+      "direction": "delighted, munching happily"
+    },
+    {
+      "speaker": "Wolf",
+      "source": "All the better to see you with!",
+      "direction": "playful and jolly"
+    },
+    {
+      "speaker": "Wolf",
+      "source": "All the better to hear you with!",
+      "direction": "playful and jolly"
+    },
+    {
+      "speaker": "Wolf",
+      "source": "I've got friends now!",
+      "direction": "happy and proud"
+    },
+    {
+      "speaker": "Red Riding Hood",
+      "source": "I stayed on the path, and I told a grown-up,",
+      "direction": "proud"
+    }
+  ]
+}
