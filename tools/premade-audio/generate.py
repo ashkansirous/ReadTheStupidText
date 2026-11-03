@@ -2,6 +2,7 @@
 
     dotnet run --project tools/DinoReader.BookBuilder -- dump-sentences three-little-pigs --lang fa --out tmp/pigs-fa.json
     python tools/premade-audio/generate.py --sentences tmp/pigs-fa.json --out artifacts/premade-audio [--free] [--max-requests N] [--dry-run]
+python tools/premade-audio/generate.py --sentences tmp/pigs-fa.json --out artifacts/premade-audio --variants 17 --say "<spelling 1>" --say "<spelling 2>"   (A6 listening test)
 
 Clips land in <out>/<book>/<language>/ with manifest.json (version 3); a rerun renders only sentences without a clip (a changed text, voice, style or direction
 makes a new one), saves after every clip, and ends cleanly at the request budget, the daily limit, a 402/403 or a second 429. The key is GEMINI_API_KEY.
@@ -27,6 +28,8 @@ DEFAULT_OUT = os.path.join(REPO_ROOT, "artifacts", "premade-audio")
 CAST_NAME = "audio-cast.json"
 FORMAT_M4A = "m4a"
 FORMAT_WAV = "wav"
+VARIANTS_FOLDER = "variants"
+VARIANT_TEMP_PREFIX = "new-"  # a candidate is rendered under this name and moved over <n> only on success
 MAX_CONSECUTIVE_ERRORS = 3
 OUTCOME_SILENT = "silent-clip"  # a clip that failed the silence check: recorded, the run goes on until the silent caps below
 MAX_CONSECUTIVE_SILENT = 3
@@ -41,6 +44,11 @@ EXIT_AUTH = 4  # 401 / 402 / 403: a bad key, no balance or no access
 EXIT_ENCODE = 5  # ffmpeg failed or hung (the vendor WAV is kept and encoded on the next run, with no new request)
 EXIT_RATE_LIMITED = 6  # a second 429, or one with a wait that is too long
 EXIT_LOCKED = 7  # another run is using the output folder
+
+
+def spoken_text(sentence, delivery):
+    """What Gemini is asked to read: the cast's `say` for this line, else the book text."""
+    return delivery.say or sentence["text"]
 
 
 class Summary:
@@ -92,7 +100,7 @@ class Generator:
         """(delivery, variant, clip stem) of one sentence: everything that decides which clip file it uses."""
         delivery = self.cast.delivery(sentence)
         variant = f"{self.adapter.name}-{self.adapter.settings_tag(delivery.voice, delivery.prompt)}"
-        return delivery, variant, clip_stem(sentence["text"], delivery.voice, variant)
+        return delivery, variant, clip_stem(spoken_text(sentence, delivery), delivery.voice, variant)
 
     def step(self, sentence, keep, summary):
         """Handles one sentence; False when the run must end (summary.stopped says why)."""
@@ -148,7 +156,7 @@ class Generator:
             summary.stopped = reason
             return reason
         self.pacer.wait_turn()
-        result = self.adapter.render(sentence["text"], delivery.voice, os.path.join(self.folder, stem), delivery.prompt)
+        result = self.adapter.render(spoken_text(sentence, delivery), delivery.voice, os.path.join(self.folder, stem), delivery.prompt)
         if result.status != STATUS_SKIPPED:
             self.pacer.sent_one()
         if result.code == HTTP_RATE_LIMITED:
@@ -206,6 +214,42 @@ class Generator:
             self.log(f"could not remove {wav_path}: {error}")
 
 
+def render_variants(generator, sentence, says):
+    """Listening test (A6): renders each candidate `say` for one line to <generator.folder>/<n>.m4a (n from 1) in the line's voice and delivery. The manifest is never
+    read or written, existing files are replaced, and every request counts against the same budget as a normal run. Returns a Summary (rendered = files written)."""
+    os.makedirs(generator.folder, exist_ok=True)
+    summary = Summary()
+    line = generator.cast.delivery(sentence)
+    delivery = audio_cast.Delivery(line.voice, line.style, line.direction)  # without the line's own `say`: the candidate is what is read
+    for n, say in enumerate(says, start=1):
+        outcome = generator.render_one(dict(sentence, text=say), delivery, f"{VARIANT_TEMP_PREFIX}{n}", summary)
+        if outcome == STATUS_OK:
+            keep_variant(generator, n)
+            summary.rendered += 1
+            generator.log(f"variant {n}: {os.path.join(generator.folder, str(n) + '.' + generator.fmt)}")
+        elif outcome not in ("", OUTCOME_SILENT):
+            break  # the run must end (budget, daily limit, fatal): summary.stopped says why
+        else:
+            generator.log(f"variant {n} not saved: {summary.errors[-1] if summary.errors else 'no detail'}")
+    if summary.rendered == len(says):
+        remove_stale_variants(generator, len(says))
+    return summary
+
+
+def keep_variant(generator, n):
+    """Replaces <n>.<fmt> with the clip just rendered under its temporary name, so a failed request never costs the old file."""
+    temp = os.path.join(generator.folder, f"{VARIANT_TEMP_PREFIX}{n}.{generator.fmt}")
+    os.replace(temp, os.path.join(generator.folder, f"{n}.{generator.fmt}"))
+
+
+def remove_stale_variants(generator, keep_count):
+    """After a complete run, deletes numbered files beyond the candidates just rendered, so the folder holds only the latest run."""
+    for name in os.listdir(generator.folder):
+        stem, _, extension = name.rpartition(".")
+        if stem.isdigit() and int(stem) > keep_count and extension in (generator.fmt, FORMAT_WAV):
+            os.remove(os.path.join(generator.folder, name))
+
+
 def load_sentences(path):
     with open(path, encoding="utf8") as f:
         data = json.load(f)
@@ -224,7 +268,16 @@ def parse_args(argv):
                    help=f"most requests to send in this run (default {pacing.DEFAULT_MAX_REQUESTS}; 0 = no limit)")
     p.add_argument("--format", choices=(FORMAT_M4A, FORMAT_WAV), default=FORMAT_M4A, help="m4a needs ffmpeg; wav keeps the raw vendor clips")
     p.add_argument("--dry-run", action="store_true", help="check the cast and list what would be rendered; sends nothing")
-    return p.parse_args(argv)
+    p.add_argument("--variants", type=int, metavar="INDEX", help="listening test: render the --say candidates for this sentence index to <out>/<book>/<language>/variants/<INDEX>/<n>.m4a; "
+                   "the manifest is not touched")
+    p.add_argument("--say", action="append", default=[], metavar="TEXT", help="a candidate spoken text for --variants (repeat for each)")
+    args = p.parse_args(argv)
+    args.say = [audio_cast.normalize_say(s) for s in args.say]
+    if not all(args.say):
+        p.error("--say TEXT must not be empty or whitespace only")
+    if (args.variants is None) != (not args.say):
+        p.error("--variants INDEX and at least one --say TEXT go together")
+    return args
 
 
 def limits(args):
@@ -258,16 +311,30 @@ def main(argv=None):
         return EXIT_LOCKED
 
 
+def run_variants(args, generator, sentences):
+    sentence = next((s for s in sentences if s["index"] == args.variants), None)
+    if sentence is None:
+        print(f"the book has no sentence {args.variants}", file=sys.stderr)
+        return EXIT_ERRORS
+    generator.folder = os.path.join(generator.folder, VARIANTS_FOLDER, str(args.variants))
+    summary = render_variants(generator, sentence, args.say)
+    print(f"{generator.manifest.book} [{generator.manifest.language}] sentence {args.variants}: {summary.rendered} of {len(args.say)} variants in {generator.folder}"
+          + (f"; stopped: {summary.stopped}" if summary.stopped else ""))
+    return summary.exit_code or (EXIT_OK if summary.rendered == len(args.say) else EXIT_ERRORS)
+
+
 def run_locked(args, book, language, sentences, cast, ffmpeg):
     rpm, rpd = limits(args)
     log = pacing.UsageLog(pacing.usage_path(args.out))
     pacer = pacing.Pacer(log, rpm, rpd, args.max_requests)
     generator = Generator(Gemini(), cast, os.path.join(args.out, book, language), pacer, book, language, args.format, ffmpeg,
-                          readonly=args.dry_run)
+                          readonly=args.dry_run or args.variants is not None)
     if args.dry_run:
         print(f"{book} [{language}]: {len(sentences)} sentences, {pending_count(generator, sentences)} need a request (limits: {rpm}/min, {rpd or 'no'}/day, "
               f"{args.max_requests or 'no'} this run, {log.count()} sent in the last 24 h)")
         return EXIT_OK
+    if args.variants is not None:
+        return run_variants(args, generator, sentences)
     summary = generator.run(sentences)
     print(f"{book} [{language}]: {summary.line(len(sentences))}")
     return summary.exit_code or (EXIT_ERRORS if summary.errors and not summary.rendered else EXIT_OK)

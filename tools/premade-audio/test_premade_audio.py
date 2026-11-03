@@ -261,6 +261,71 @@ class GeneratorTests(Base):
         self.assertEqual((1, 2), (summary.rendered, summary.cached))
         self.assertIn("whispering", json.loads(self.transport.requests[0].body)["input"][0]["content"][0]["annotations"][0]["style"])
 
+    @staticmethod
+    def say_cast(says):
+        """A cast whose narrator lines 0 and 2 carry the given `say` (index -> text)."""
+        entries = {str(i): {"say": say, "speaker": None, "source": GeneratorTests.TEXTS[i]["source"]} for i, say in says.items()}
+        return audio_cast.AudioCast(dict(CAST_DATA, directions=entries))
+
+    def sent_texts(self):
+        return [json.loads(r.body)["input"][0]["content"][0]["text"] for r in self.transport.requests]
+
+    def test_say_replaces_the_request_text_and_the_manifest_keeps_the_book_text(self):
+        generator = self.make(cast=self.say_cast({2: "سِه"}))
+        generator.run(self.TEXTS)
+        self.assertEqual(["یک", "دو", "سِه"], self.sent_texts())
+        entry = generator.manifest.entries[2]
+        self.assertEqual(("سه", text_hash("سه"), "سِه"), (entry["text"], entry["hash"], entry["say"]))
+        self.assertNotIn("say", generator.manifest.entries[0])
+
+    def test_a_changed_say_renders_only_that_line(self):
+        self.make(cast=self.say_cast({2: "سِه"})).run(self.TEXTS)
+        summary = self.make(cast=self.say_cast({2: "سیه"})).run(self.TEXTS)
+        self.assertEqual((1, 2, ["سیه"]), (summary.rendered, summary.cached, self.sent_texts()))
+
+    def test_adding_a_say_re_renders_that_line_and_removing_it_returns_to_the_cached_clip(self):
+        self.make().run(self.TEXTS)
+        self.assertEqual(1, self.make(cast=self.say_cast({0: "یِک"})).run(self.TEXTS).rendered)
+        back = self.make().run(self.TEXTS)
+        self.assertEqual((0, 3), (back.rendered, back.cached))
+
+    def test_lines_with_the_same_say_voice_and_style_share_one_clip(self):
+        twice = [sentence(0, "الف"), sentence(1, "ب")]
+        cast = audio_cast.AudioCast(dict(CAST_DATA, directions={
+            "0": {"say": "همان", "speaker": None, "source": "الف"}, "1": {"say": "همان", "speaker": None, "source": "ب"}}))
+        generator = self.make(cast=cast)
+        summary = generator.run(twice)
+        self.assertEqual((1, 1, 1), (summary.rendered, summary.cached, len(self.transport.requests)))
+        self.assertEqual(generator.manifest.entries[0]["clip"], generator.manifest.entries[1]["clip"])
+
+    def test_a_say_whose_line_moved_fails_before_any_request(self):
+        cast = self.say_cast({2: "سِه"})
+        for moved in (sentence(2, "other"), sentence(2, "سه", "Pip"), sentence(3, "سه")):
+            with self.assertRaises(audio_cast.CastError):
+                cast.check([moved])
+
+    def test_variants_write_one_file_each_and_leave_the_manifest_alone(self):
+        generator = self.make(cast=self.say_cast({2: "سِه"}))
+        generator.run(self.TEXTS)
+        manifest_path = pathlib.Path(generator.folder, "manifest.json")
+        before = manifest_path.read_bytes()
+        args = unittest.mock.Mock(variants=2, say=["سه‌ی", "سُه"])
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = generate.run_variants(args, generator, self.TEXTS)
+        folder = pathlib.Path(self.tmp, "book", "fa", "variants", "2")
+        self.assertEqual((0, ["1.wav", "2.wav"]), (code, sorted(p.name for p in folder.iterdir())))
+        self.assertEqual(["یک", "دو", "سِه", "سه‌ی", "سُه"], self.sent_texts())  # the line's own say is not sent for a candidate
+        self.assertEqual(before, manifest_path.read_bytes())
+        self.assertEqual(["سِه"], [e["say"] for e in generator.manifest.entries.values() if "say" in e])
+
+    def test_variants_count_against_the_request_budget(self):
+        generator = self.make(max_requests=1)
+        args = unittest.mock.Mock(variants=0, say=["a", "b", "c"])
+        with contextlib.redirect_stdout(io.StringIO()):
+            generate.run_variants(args, generator, self.TEXTS)
+        self.assertEqual(1, len(self.transport.requests))
+        self.assertEqual(["1.wav"], sorted(p.name for p in pathlib.Path(self.tmp, "book", "fa", "variants", "0").iterdir()))
+
     def test_max_requests_ends_cleanly_and_the_next_run_resumes(self):
         first = self.make(max_requests=2).run(self.TEXTS)
         self.assertEqual((2, "--max-requests budget reached (2)"), (first.rendered, first.stopped))
@@ -460,6 +525,33 @@ class MainTests(Base):
         self.assertEqual(generate.EXIT_LOCKED, code)
         with pacing.RunLock(self.tmp):  # released when the first run ended
             pass
+
+    def test_a_say_guard_mismatch_fails_before_any_request_and_variants_need_both_options(self):
+        sentences, cast = self.files()
+        bad = dict(CAST_DATA, directions={"2": {"say": "سِه", "speaker": None, "source": "not the source"}})
+        pathlib.Path(cast).write_text(json.dumps(bad, ensure_ascii=False), encoding="utf8")
+        with unittest.mock.patch.object(generate, "Gemini", side_effect=AssertionError("no request may be prepared")):
+            with self.assertRaises(audio_cast.CastError):
+                generate.main(["--sentences", sentences, "--cast", cast, "--out", self.tmp, "--format", "wav"])
+        for lone in (["--variants", "1"], ["--say", "x"]):
+            with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
+                generate.parse_args(["--sentences", sentences] + lone)
+        self.assertEqual(["x"], generate.parse_args(["--sentences", sentences, "--variants", "1", "--say", "x"]).say)
+
+    def test_an_empty_or_blank_say_option_is_rejected_before_any_request(self):
+        sentences, _ = self.files()
+        for blank in ("", "   "):
+            with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
+                generate.parse_args(["--sentences", sentences, "--variants", "1", "--say", "ok", "--say", blank])
+
+    def test_a_say_is_nfc_normalised_in_the_option_and_the_cast(self):
+        decomposed, composed = "é", "é"
+        sentences, _ = self.files()
+        args = generate.parse_args(["--sentences", sentences, "--variants", "1", "--say", decomposed])
+        self.assertEqual([composed], args.say)
+        entry = {"say": decomposed, "speaker": None, "source": "x"}
+        cast = audio_cast.AudioCast(dict(CAST_DATA, directions={"2": entry}))
+        self.assertEqual(composed, cast.say_for({"index": 2}))
 
     def test_a_run_has_a_default_request_cap(self):
         sentences, _ = self.files()
