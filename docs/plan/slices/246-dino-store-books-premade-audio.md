@@ -24,11 +24,13 @@ so it should not take that much space. we can generate it on my machine. create 
 
 **Tonight's design (coordinator, claim):** Python, like `tools/sound-words-test` and `tools/voice-listen` (reuse `engines.py` for the piper-fa baseline; check the mana voice id there). One adapter module per service in the Research list that has an API: ElevenLabs v3, Gemini TTS (fa-IR preview), Azure (fa-IR Dilara, Farid), OpenAI gpt-4o-mini-tts, Narakeet, CAMB.AI MARS8 (Morphic and Async have no API, so none). Each adapter has one interface (`render(text, voice, out_path)`), reads its key from `D:/secrets` (env var names written in the README; the user adds them with `manage-secrets`), and when the key is missing returns a `skipped: no key` result instead of failing; no paid call runs tonight and no test calls a network. Every vendor request shape comes from current docs (context7 / `library-docs` / `web-research`), cited in the README. A text step builds the listening paragraph: one Farsi paragraph of the Three Little Pigs with the book's `speak:fa` table applied, the same way the app does (`BundledTranslations.SpeakKey`). `render_all` renders the paragraph through every adapter (skipping keyless ones) plus the piper-fa mana baseline (which needs only the downloaded `piper-fa` pack; if the pack is not on disk, say so and skip), and writes a listening-page skeleton (one entry per service, audio or "skipped: no key") that the `voice-pick` agent can publish once keys exist. The per-sentence generator (step 3) gets its manifest shape (sentence text hash, voice, clip path) and the text-hash cache, with unit tests; no app, worker or BookBuilder change tonight (steps 4-5 wait for the pick). Tests: `python -I -m pytest tools/premade-audio` (or `unittest`), offline.
 
-**Depends on:** none for step 1 (the listening test). The build steps wait for the user's pick.
-**Touches:** `tools/premade-audio/**` (new), `tools/DinoReader.BookBuilder/**`, `tools/upload-store-story.ps1`,
-`src/DinoReader.Core/**`, `src/DinoReader.App/Reading*.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`,
-`src/DinoReader.App/StoryVoicing.cs`, `worker/**`, `content/dino/**`, `tests/DinoReader.Tests/**`,
-`src/DinoReader.App/CLAUDE.md`, `worker/CLAUDE.md`, `STORE.md`, `.claude/skills/create-dino-story/SKILL.md`
+*Re-planned 2026-11-03 (the user: "stick to gemini", "agree. lets plan it"):* Gemini only, plain book text, Farsi first on a free key, then the other languages on the user's GCP credit. The new work list is under **Work (re-planned 2026-11-03)**; it replaces the old one, which stays below for the record. Split into parts A-D with separate Touches so A and C can run in one wave.
+
+**Depends on:** A first (B and D read its manifest); C can start alongside A once A's manifest shape (A2) is merged.
+**Touches, part A (generator):** `tools/premade-audio/**`, `content/dino/*/audio-cast.json` (new, one per book).
+**Touches, part B (package and store):** `tools/DinoReader.BookBuilder/**`, `tools/upload-store-story.ps1`, `worker/**`, `worker/CLAUDE.md`, `STORE.md`.
+**Touches, part C (app playback):** `src/DinoReader.Core/PremadeAudio*.cs` (new), `src/DinoReader.App/Reading*.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/Platforms/**`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`.
+**Touches, part D (generation runs):** generated audio outside git (store uploads only), this slice file.
 
 ## Why
 
@@ -63,7 +65,75 @@ Page: https://claude.ai/artifact/MkAx2edzi4WAiCWMJKfL9h (Three Little Pigs parag
 - piper-fa mana (app today): rating 2, accent Tehrani no, warmth 2, no wrong words noted.
 - Overall: worth trying more? Gemini only. Note: "we can do it without paying. why pay?" (no paid services; Elio, Finn, Cleo are the next voices to hear).
 
-## Work
+## Decisions (the user, 2026-11-03, after round 1)
+
+- **Gemini only.** "stick to gemini". The other vendor adapters leave scope (A1 removes them).
+- **No paid services; free first.** "we can do it without paying. why pay?" The Gemini API free tier first; the user's
+  billing account "AlphaAgent" (Paid tier 1, £15.04 eligible GCP credits, 0 projects linked on 2026-11-03) only if the free
+  limits are too tight, and then only with a monthly spend cap at or under the credit set first.
+- **Plain text for Gemini.** The user asked why we still render with vowel marks: Gemini reads the book's plain text (the
+  `fa.json` lookup without `fa.speak.json`). Vowel marks and the "how to read" tables stay for the on-device voice only.
+  If a listening round shows Gemini misreading a word, that word gets a Gemini-only fix, never the whole marked text.
+- **Order:** Farsi first for every store book (16 on main, ~1,200 sentences), on the free key; then the other 14 languages
+  (~16,800 sentences) on the free key or the capped credit, whichever the free limit allows. Estimate given to the user:
+  about 16 hours of audio in total, about £10 at the 2026 price (it doubles from 2027-01-01).
+- **Per-sentence clips** (so the reading highlight follows), not per page.
+
+## Recommended defaults (not yet confirmed by the user; change any before part A starts)
+
+- Narrator voice: the user's top pick from listening round 2 (Hali rated 5/5 in round 1).
+- Characters: each book's cast gets Gemini voices matched to its existing cast (children young and bouncy, per the Dino
+  voice rule), written into `content/dino/<book>/audio-cast.json` and shown to the user on a listening page per book
+  before the full render (`voice-pick`).
+- Emotion: one short direction per dialogue line (e.g. "the wolf, sly and sweet-talking"), written by the
+  `dino-story-writer` agent into `audio-cast.json`; narration uses the one storyteller prompt.
+- Format: AAC in `.m4a` (plays on Android, iOS and Windows without a codec pack), checked against each platform's player
+  docs in C1 before coding.
+- Licence: the Gemini API terms for shipping generated audio in a paid app are read and written here (A5) before any
+  clip ships (part B), not before rendering.
+
+## Work (re-planned 2026-11-03)
+
+**Part A — generator (`tools/premade-audio`, runs on the user's PC)**
+- [ ] A0. *(main thread, needs Chrome)* Create a Gemini API key in an AI Studio project **not linked to billing**, save it
+  as `GEMINI_API_KEY` with `manage-secrets`, read the free-tier limits for `gemini-3.8-flash-tts` off the Rate Limit
+  page and write them here.
+- [ ] A1. Remove the ElevenLabs, Azure, OpenAI, Narakeet and CAMB adapters and their tests; keep the Gemini adapter and
+  prove its request shape with one keyed sentence (the first live call; fix what it shows).
+- [ ] A2. Per-book run: every sentence of one book in one language, plain text, narrator vs character from the app's own
+  segmenter output (same sentence split as `StorySentences`, so clip N is highlight N), the voice and direction from
+  `audio-cast.json`; manifest v3 (book, language, sentence index, text hash, voice, direction, clip). Resumable and
+  cached by text hash.
+- [ ] A3. Rate-limit aware: honours the free tier's per-minute and per-day limits, stops cleanly at the day's limit and
+  resumes the next day where it left off; a 402/403 never retries; a daily budget flag for the paid route.
+- [ ] A4. Encode WAV to AAC `.m4a`; drop leading and trailing silence so sentence clips join without gaps.
+- [ ] A5. Write the Gemini API output licence terms (commercial use, attribution, AI-voice disclosure) into this file.
+
+**Part B — package and store**
+- [ ] B1. Decide inside `.dino` vs a separate download by measured size (one Farsi book's clips), write the decision here.
+- [ ] B2. BookBuilder / `upload-store-story.ps1` carry the clips and manifest; the worker serves them; a book without
+  clips for a language works as today.
+
+**Part C — app playback (Android, iOS, Windows head alike)**
+- [ ] C1. `PremadeAudio` in `DinoReader.Core`: parse the manifest, match a sentence by text hash, else fall back.
+- [ ] C2. Reading plays the clip when the hash matches, else the on-device voice as today; speed, pause, Back and the
+  highlight behave the same on both paths. Android and iOS tasks both, plus the Windows head.
+
+**Part D — generation runs**
+- [ ] D1. Farsi, one book (Three Little Pigs): render, listening page for the user, fix what they hear.
+- [ ] D2. Farsi, the other 15 books on the free key (as many days as the limit needs).
+- [ ] D3. The other 14 languages, in the order the user picks; switch to the capped credit only with the user's yes.
+- [ ] D4. Upload each finished book-language (store and app must match: the store-upload rule).
+
+## Verification (re-planned)
+
+- A: offline unit tests (`python -I -W error -m unittest discover -s tools/premade-audio`) for sentence alignment with
+  the app's split, manifest v3, cache hits, the daily-limit stop and resume; one live keyed sentence (A1).
+- C: `tests/DinoReader.Tests` for hash match and fallback; Android emulator and iOS: a store book plays clips with the
+  highlight in step, an edited sentence falls back to the device voice.
+- D: the user's listening answers for D1 written here.
+
+## Work (old list, kept for the record; replaced by the re-planned list above)
 
 - [ ] 1. *(partly: code ready 2026-11-02, the listening test waits for the user's keys)* **Listening test.** One Farsi paragraph of the Three Little Pigs (its spoken text with the book's `speak:fa`
   table applied), rendered by every service we have an account for, plus our `piper-fa` mana as the baseline; a private
@@ -93,7 +163,9 @@ Page: https://claude.ai/artifact/MkAx2edzi4WAiCWMJKfL9h (Three Little Pigs parag
 
 ## Waiting on the user
 
-- The vendor keys (env var names are in `tools/premade-audio/README.md`), added with `manage-secrets`. Blocks the listening test (work item 1).
+- ~~The vendor keys~~ (superseded 2026-11-03: Gemini only, key created in A0 from the user's signed-in AI Studio).
+- Listening round 2 answers (more Gemini voices, plain text, emotions) pick the narrator voice for A2.
+- Confirm or change the *Recommended defaults* above.
 
 #### For CLAUDE.md
 
