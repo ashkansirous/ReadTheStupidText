@@ -4,6 +4,7 @@ using DinoReader.BookBuilder;
 const string OutFlag = "--out";
 const string KeepVersionFlag = "--keep-version";
 const string LiveFlag = "--live";
+const string LangFlag = "--lang";
 const string Usage = """
     usage: DinoReader.BookBuilder <command> [<stem>...]
       build [<stem>...] [--out <folder>] [--live <file>]   write artifacts/store/<id>/ for each book and rewrite committed starters whose content changed;
@@ -14,6 +15,7 @@ const string Usage = """
       dump-pieces [<stem>...]              write translations/pieces.json (the texts a book needs translated)
       dump-voices [--out <file>]           cast every book mechanically, as cast entries for the writers
       voice-listen --out <file>            write the English roster and the Ugly Duckling cast for tools/voice-listen
+      dump-sentences <stem> --lang <code> [--out <file>]   print every piece the app reads aloud for a store book in a language (index, highlight sentence, spoken text, speaker, narrator) as JSON, for tools/premade-audio
     """;
 
 string[] arguments = args;
@@ -21,7 +23,8 @@ string command = arguments.FirstOrDefault() ?? string.Empty;
 string? Option(string name) => Array.IndexOf(arguments, name) is var at and >= 0 && at + 1 < arguments.Length ? arguments[at + 1] : null;
 string? outPath = Option(OutFlag);
 string? livePath = Option(LiveFlag);
-List<string> stems = arguments.Skip(1).Where(a => !a.StartsWith("--") && a != outPath && a != livePath).ToList();
+string? language = Option(LangFlag);
+List<string> stems = arguments.Skip(1).Where(a => !a.StartsWith("--") && a != outPath && a != livePath && a != language).ToList();
 
 try
 {
@@ -45,6 +48,8 @@ try
             return await VoiceDump.RunAsync(outPath);
         case "voice-listen":
             return outPath is null ? Fail("voice-listen needs --out <file>") : VoiceListenExport.Run(outPath);
+        case "dump-sentences":
+            return SentenceDump.Run(stems.FirstOrDefault(), language, outPath);
         default:
             return Fail(Usage);
     }
