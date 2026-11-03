@@ -27,7 +27,8 @@ so it should not take that much space. we can generate it on my machine. create 
 *Re-planned 2026-11-03 (the user: "stick to gemini", "agree. lets plan it"):* Gemini only, plain book text, Farsi first on a free key, then the other languages on the user's GCP credit. The new work list is under **Work (re-planned 2026-11-03)**; it replaces the old one, which stays below for the record. Split into parts A-D with separate Touches so A and C can run in one wave.
 
 **Depends on:** A first (B and D read its manifest); C can start alongside A once A's manifest shape (A2) is merged.
-**Touches, part A (generator):** `tools/premade-audio/**`, `content/dino/*/audio-cast.json` (new, one per book).
+**Touches, part A (generator):** `tools/premade-audio/**`, `content/dino/*/audio-cast.json` (new, one per book), `tools/DinoReader.BookBuilder/**` (a sentences-as-JSON command only).
+*Part A in progress 2026-11-03 (branch `feat/s246-a-gemini-generator`).*
 **Touches, part B (package and store):** `tools/DinoReader.BookBuilder/**`, `tools/upload-store-story.ps1`, `worker/**`, `worker/CLAUDE.md`, `STORE.md`.
 **Touches, part C (app playback):** `src/DinoReader.Core/PremadeAudio*.cs` (new), `src/DinoReader.App/Reading*.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/Platforms/**`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`.
 **Touches, part D (generation runs):** generated audio outside git (store uploads only), this slice file.
@@ -78,6 +79,32 @@ Page: https://claude.ai/artifact/MkAx2edzi4WAiCWMJKfL9h (Three Little Pigs parag
   (~16,800 sentences) on the free key or the capped credit, whichever the free limit allows. Estimate given to the user:
   about 16 hours of audio in total, about £10 at the 2026 price (it doubles from 2027-01-01).
 - **Per-sentence clips** (so the reading highlight follows), not per page.
+
+## Decisions (the user, 2026-11-03, evening)
+
+- Slice 154 (Farsi vowel marks) dropped: "Gemini is good and I dont need to do anything manually."
+- **Farsi first on the free plan, then decide on paying:** "I think £15 should be more than enough for most of the work.
+  lets do the farsi voices before deciding."
+- **Each sentence saved as its own clip:** "save the voices separately. I might want to change the text of the books here
+  and there and for that, we should just generate a new voice for the changed text." So a changed sentence re-renders
+  alone (one request), nothing else.
+
+## Part A design (coordinator, 2026-11-03)
+
+- **Requests are page-sized, clips are sentence-sized.** The free tier allows 10 requests a day, so the first render of a
+  book sends one request per *chunk*: consecutive sentences of one page that use at most two voices (Gemini's
+  multi-speaker mode; check its current limit and request shape in the docs first), at most ~8 sentences. The returned
+  audio is cut into one clip per sentence at the pauses: the N-1 longest silences for N sentences, each piece's length
+  checked against its text length; a chunk whose cut doesn't fit is re-rendered as single-sentence requests later.
+- **Edits re-render one sentence.** The manifest is keyed by each sentence's text hash (plus voice and direction); an
+  edited sentence misses the cache and gets one single-sentence request; unchanged sentences keep their clips.
+- **The app's sentence split, not a copy.** A BookBuilder command prints each book's sentences for a language (index,
+  text, speaker) as JSON from the same `StorySentences`/segmenter code the app uses; the Python generator reads that,
+  so clip N is always highlight N.
+- **Daily budget:** stops at the free tier's 10 requests a day (and 3 a minute), saves state, and resumes the next run;
+  a 402/403/429-per-day answer ends the run cleanly, never retries.
+- **First run: Three Little Pigs in Farsi** (D1), narrator Hali; character voices from the defaults below, shown to the
+  user before the rest of Farsi.
 
 ## Recommended defaults (not yet confirmed by the user; change any before part A starts)
 
