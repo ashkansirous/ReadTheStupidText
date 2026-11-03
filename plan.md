@@ -18,7 +18,6 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
-| 154 | Dino: vowel marks in Farsi and Arabic books (Farsi only: Arabic left as is; marks are a hidden "how to read" text, Decision 166) | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
 | 193 | German store listings for both apps | approved 2026-11-01; App Store done, Play blocked (service account lacks "Manage store presence"), Partner Center open | | | [193-german-store-listings.md](docs/plan/slices/193-german-store-listings.md) |
 | 235 | Dino on Windows: a real desktop window (size and minimum, width-driven layout, keyboard, hover, tooltips, title bar; after 232) | planned (parts A #740 and B #745 merged; part C open: WindowLayout wired into pages, hover, wheel, focus ring and focus return, Settings arrow keys, right-click, shelf columns, speed hint) | #740, #745 | | [235-dino-windows-window.md](docs/plan/slices/235-dino-windows-window.md) |
 | 239 | Dino: adding, changing or deleting a store story runs only the store upload (no app build, no tests, no review gate) | in progress (user, 2026-11-01: build now) | | | [239-dino-store-book-without-app-build.md](docs/plan/slices/239-dino-store-book-without-app-build.md) |
@@ -31,7 +30,7 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 252 | Release CI: a hung signed iOS build can't hold the release queue for hours; measure and speed up the signed iOS build | parked: feedback loop, waits for the user | | | [252-release-ios-build-timeout-and-speed.md](docs/plan/slices/252-release-ios-build-timeout-and-speed.md) |
 | 253 | Final-loop leftovers, night 2026-11-01-2355: ANR dialog in the tools, screenshots in Dino flows, VM check dry run, AutomationId test, 247 self-test difference, faster slow emulator flows | parked: feedback loop, waits for the user | | | [253-final-loop-leftovers-night-2026-11-01-2355.md](docs/plan/slices/253-final-loop-leftovers-night-2026-11-01-2355.md) |
 
-M3 starts with a listening page and waits on the user's listening verdicts. 154 starts with a listening test, then adds vowel marks book by book (it also waits on the user's listening verdicts; draft PR #435) after each book's Slice 146 rewrite and open illustration PR merge. The Three Little Pigs Farsi part is built (PR #470): the marks are hidden, so kids see plain Farsi and only the speech uses the marked text (this supersedes Decision 159's "marks shown on screen" in part); the other books and Arabic are still open. Decisions 155-159 (157 reverses 132).
+M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
 ### Notes
 
@@ -64,7 +63,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 ## Outstanding work
 
 - **Not yet tried on a device:** 268 checks across 132 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
-- Dino store book "Freddy and the Slipper" (PR #680, 2026-11-01; credits now Elham Shafiei Gol and Ashkan Sirous, PR #687): Farsi pronunciation review (`farsi-review`) and a listen on a phone still to do; the user kept Tummy's voice, "Tummy squeaked", the night outing and two awkward lines for now ([note](docs/plan/notes/2026-11-01-freddy-and-the-slipper.md)).
+- Dino store book "Freddy and the Slipper" (PR #680, 2026-11-01; credits now Elham Shafiei Gol and Ashkan Sirous, PR #687): a listen on a phone still to do (the Farsi pronunciation review was dropped with Slice 154, 2026-11-03); the user kept Tummy's voice, "Tummy squeaked", the night outing and two awkward lines for now ([note](docs/plan/notes/2026-11-01-freddy-and-the-slipper.md)).
 - Slice 247 follow-ups, not built ([slice](docs/plan/slices/247-final-loop-leftovers-night-2026-11-01-0859.md)): the wait after the crash kill in `tools/emulator/run-flows.ps1` has no time limit (if `taskkill /T /F` failed, the run would hang until the night watchdog); a crash-retried flow drops the first run's crash log; item a's next step is to shorten the waits the `PHASES` lines name (Wait is the largest phase in 4 of 5 flows; `read-back-reread-background`'s single `repeat` action, 82 s, is the slowest step) and show the same 5 flows finishing faster.
 - Slice 239: a renamed store package is downloaded twice on a fresh install (low; the fix needs app code). `dino-store.yml` paths omit `src/ReadTheStupidText.Application` (LineReflow), so an Application-only change waits for the daily run (low) ([slice](docs/plan/slices/239-dino-store-book-without-app-build.md)).
 - Flaky test `TranslationModelDownloadSessionTests.Progress_is_reported_while_downloading` failed once on PR #672 CI (run 41310271450); likely a `Progress<T>` callback arriving after `RunAsync` ends (not proven). Look at it before it fails another PR.
@@ -116,13 +115,11 @@ Built but not verified (details in each slice file):
 - Slice 200 (live data checks): re-run the report after more real traffic (under 10 events per group everywhere on 2026-10-30); no rows yet for voice ... [full text](docs/plan/notes/2026-10-30-outstanding-detail.md#o013) ([slice](docs/plan/slices/200-live-usage-data-checks.md))
 - `src/DinoReader.App/CLAUDE.md` is 41 KB (budget ~20 KB; promised split never planned): run `archive-docs` on it between waves, when no other branch edits it.
 - RTST Microsoft Store English listing is stale (neutral English text from before the voice packs; found in Slice 193's live read, which covers ... [full text](docs/plan/notes/2026-10-30-outstanding-detail.md#o014) ([slice](docs/plan/slices/193-german-store-listings.md))
-- PR #435 (Slice 154, Dino Farsi and Arabic vowel marks, open): Slice 192 bumped all 15 store books after it branched (Three Little Pigs is v13 on ... [full text](docs/plan/notes/2026-10-30-outstanding-detail.md#o015)
 - User steps, Slice 183: native review of the new strings (13 machine drafts per app). The Play foreground-service declaration is filed for both apps (2026-10-29, demo videos PR #561).
 - 182 design frame R12 (wait screen for translation downloads) is planned as Slice 187.
 - Testing gap: Dino has no Debug hook to force a pack failure; testers corrupt the `.partial` file by hand. Worth adding with Slice 187.
 - Slice 164 (PR #491): pure moves, unit-tested, no device run needed. Follow-up done (PR #557: SpeedPreset, EmptyPlayer, Dino LanguagePick, ... [full text](docs/plan/notes/2026-10-30-outstanding-detail.md#o027) ([slice](docs/plan/slices/164-more-logic-in-unit-tests.md))
 - Slice 168 (packs-8): existing Supertonic users re-download ~145 MB (`pack_version` 4) ([slice](docs/plan/slices/168-german-in-both-apps.md))
-- Slice 154 (Three Little Pigs Farsi part, PR #470; its review tooling data now lives under `content/dino/three-little-pigs/translations`, Slice ... [full text](docs/plan/notes/2026-10-30-outstanding-detail.md#o045) ([slice](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md))
 - Slice 157 (book content out of the tests, PR #475): first main run of `publish-store` with the new builder; `ShippedTitles` edits do not reach live ... [full text](docs/plan/notes/2026-10-30-outstanding-detail.md#o046) ([slice](docs/plan/slices/157-dino-book-content-out-of-tests.md))
 - Slice 158: `actionlint` on `release.yml` (runs in CI). The first `main` run (run 40500814826) uploaded all 15 books and `--verify` passed, so that item is done ([slice](docs/plan/slices/158-dino-publish-store-books.md)).
 - Done 2026-10-24: packs-5 (packs run 40081509906; fixes #295 Python 3.12, #296 `no_dict` guard) carries Supertonic v2 with da/fi/sv/nl, piper-nb and ... [full text](docs/plan/notes/2026-10-30-outstanding-detail.md#o050)
