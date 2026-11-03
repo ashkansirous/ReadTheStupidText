@@ -212,6 +212,10 @@ overall OK: **yes**. No lines flagged.
   *The user, 2026-11-03: "I dont want them in the .dino file. It makes no sense. then you would need to put 15 language
   audios inside a file. It should be separate audio package per book-language".* Old app builds never request a pack, so uploading packs changes nothing for current users and
   D4 may upload as soon as B2 is merged.
+  *User, 2026-11-03: "Uploading the audio packs to R2 and the Worker change (B2, D4) are approved for tonight; old app
+  builds never ask for a pack."*
+  *Coordinator decision for part C, 2026-11-03: how a pack published after the book was downloaded gets fetched (update
+  check vs first open in that language) is left to the implementer; write the choice here when C is built.*
 - [ ] B2. BookBuilder / `upload-store-story.ps1` carry the clips and manifest; the worker serves them; a book without
   clips for a language works as today.
 
@@ -237,6 +241,8 @@ overall OK: **yes**. No lines flagged.
   (`generate.py --batch`, about 15,000 sentences, estimated about £5 at the batch half price), after A8. Output next to the
   Farsi clips (`D:/ReadTheStupidText-worktrees/s246-audio/books-<book>/<book>/<lang>/`). No listening page is required per
   language; flag any book-language whose run ends with failures.*
+  *User, 2026-11-03: "Render the other 14 languages in alphabetical order (by language code as listed in the app, e.g.
+  ar, de, es, ... whichever list the slice uses)."*
 - [ ] D4. Upload each finished book-language (store and app must match: the store-upload rule).
 
 ## Verification (re-planned)

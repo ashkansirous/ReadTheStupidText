@@ -18,6 +18,8 @@
 - [ ] **6. Privacy text.** `PRIVACY.md` and both `site/` privacy pages (`worker/CLAUDE.md:10-11`) describe the user-sent report: what it holds, that it is sent only when a grown-up presses Send, and how long it is kept (the crash reports' retention). `STORE.md`: check the Play Data safety and App Store privacy answers against it (crash logs and diagnostics are already declared, `STORE.md:868`, `PrivacyInfo.xcprivacy`); change them only if the new report adds a category. A console change is the user's step, written in Outstanding work.
 - [ ] **7. Check.** Unit tests: code alphabet and format, the report's kind and fields, the worker accepting `user_report` and rejecting an unknown kind. Emulator flow: open the grown-ups' corner through the gate hook, Report a problem, Send; assert the code shown matches the logged one (DEBUG marker) and that the worker test endpoint received it (the harnesses' off switch must not drop this one: the flow sets the endpoint to the local test worker, never production).
 
+**User, 2026-11-03:** The night may merge this slice; its Worker change goes live on merge through Workers Builds (production deploy approved). (This does not approve the store privacy form steps.)
+
 **Not in this slice.** The Windows head (crash reporting is off there; the row is hidden on Windows). RTST mobile (same pipeline; a later slice if wanted). A free-text description field (typed text never goes into reports, `worker/CLAUDE.md:14`).
 
 **Verification.** Unit and worker tests green; the emulator flow passes on Android; on the TestFlight build the user sends a report and `pull-crashes.mjs --code <code>` shows it with its log tail (Not yet verified until then).

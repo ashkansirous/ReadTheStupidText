@@ -14,4 +14,6 @@
 - [ ] **4. Text.** `PRIVACY.md` and both `site/` pages: test builds send the same usage counts to a separate beta store. `worker/CLAUDE.md`: the beta dataset rule (never mixed into production reports; the `analytics-query` agent names the dataset it reads).
 - [ ] **5. Check.** Unit tests of the channel choice for each receipt name and block. Worker tests: a beta batch lands only in the beta binding, a production one only in production. On the next TestFlight build: the user plays a book and `dino_usage_beta` shows the rows (Not yet verified until then).
 
+**User, 2026-11-03:** The night may merge this slice; its Worker change goes live on merge through Workers Builds (production deploy approved). For 251 that includes the new DINO_USAGE_BETA Analytics Engine binding. (This does not approve the store privacy form steps.)
+
 **Not in this slice.** RTST (same gate; a later slice if wanted). The Windows head (Store-signed only counts today; unchanged).
