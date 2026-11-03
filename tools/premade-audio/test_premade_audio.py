@@ -284,6 +284,8 @@ class CastTests(unittest.TestCase):
         by_index = {s["index"]: s for s in dump["sentences"]}
         self.assertIn("گُنده‌ی", cast.say_for(by_index[16]))
         self.assertEqual("شالاپ، شالاپ، شالاپ!", cast.say_for(by_index[68]))
+        self.assertEqual("من یه وان گُنده پر از آب سرد و کف‌کفی گذاشتم زیر دودکش.", cast.say_for(by_index[66]))
+        self.assertEqual("پیم با یه لبخند گُنده گفت:", cast.say_for(by_index[80]))
 
 
 class ManifestTests(Base):
