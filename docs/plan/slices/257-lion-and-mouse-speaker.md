@@ -6,8 +6,20 @@ I'll be kind to you one day, too!" (the part after "said Mouse.", in the paragra
 to the Lion by the app's own speaker attribution, in both English (dump index 14) and Farsi (13). So the on-device voice
 reads it in the Lion's voice today, and the Gemini clip rendered on 2026-11-03 uses the Lion's voice (Algenib).
 
+*In progress (wave 2026-11-03), draft PR.*
+
 **Touches:** `src/DinoReader.Core/SpeakerAttributor.cs`, `src/DinoReader.Core/AttributionRun.cs`,
-`src/DinoReader.Core/SpeakerTagParser.cs`, `tests/DinoReader.Tests/**`.
+`src/DinoReader.Core/SpeakerTagParser.cs`, `src/DinoReader.Core/SentenceBoundaries.cs`, `src/DinoReader.Core/*Rules.cs`,
+`tests/DinoReader.Tests/SpeakerAttributor*Tests.cs`, `docs/plan/slices/257-lion-and-mouse-speaker.md`.
+
+**Claim note (coordinator, night 2026-11-03-2349 wave 1):** likely cause, read from code, not yet run: after `said Mouse.` the
+narration ends a sentence, so `TagBefore` is null (`SentenceBoundaries.UnfinishedLast`), and `FromTag` then takes `TagAfter` from
+the next narration "The Lion laughed ... said Lion." (`AttributionRun.cs:49-59`, `laughed` is a speech verb in `EnglishRules.cs`).
+The builder proves the cause with the failing test first. Fix direction: a quote that directly follows a finished tag sentence
+in the same paragraph ("..." said Mouse. "...") continues that speaker before any tag after it is tried; it must hold in Farsi
+too (fa index 13). Every other book's attribution is compared before and after with the BookBuilder dump; each change is
+listed here. Item 2's re-render needs the Gemini key and the s246-audio folder; if either is missing, item 2 goes to *Not yet
+verified*.
 
 ## Work
 
