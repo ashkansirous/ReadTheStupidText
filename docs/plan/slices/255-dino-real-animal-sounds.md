@@ -77,8 +77,11 @@ All 19 animals are now settled (15 recordings, 4 with no sound), so A1's picking
 
 ## Work
 
-- [ ] A1. `tools/animal-sounds`: find 2-3 Freesound CC0 candidates per animal (Sonniss where Freesound has none), record
+- [x] A1. `tools/animal-sounds`: find 2-3 Freesound CC0 candidates per animal (Sonniss where Freesound has none), record
   each sound's URL, author and licence line; trim and loudness-match; a listening page for the user's picks.
+  *Done 2026-11-03 (two rounds, picks in the decisions above; files outside git in
+  `D:/ReadTheStupidText-worktrees/s255-sounds/` and `round2/`, with `picks.json` and `candidates.json`; the scripts were
+  ad hoc, not in `tools/`). A2 copies the 15 picked `.m4a` files in; bear, lion, rabbit and wolf get no sound.*
 - [ ] A2. The picked files under `Resources/Raw/animal-sounds/`, a `NOTICE`/credits line per file in `STORE.md` even
   though CC0 needs none.
 - [ ] A3. App: the sound slot plays the bundled file instead of speaking the word (Android, iOS, Windows head); speed,

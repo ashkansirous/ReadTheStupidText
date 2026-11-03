@@ -2,6 +2,8 @@
 
 *Parked 2026-11-02 by the final feedback loop of night 2026-11-01-2355 (note: `docs/plan/notes/2026-11-01-2355-feedback-loop.md`): `parked: feedback loop, waits for the user`. Repo code found by the loop is never built unreviewed; the user un-parks it.*
 
+*Planned again 2026-11-03: the user un-parked it ("Yes, un-park both") before a run-all-waves run.*
+
 **Touches:** `tools/emulator/start-warm.ps1`, `tools/emulator/run-flows.ps1`, `tools/CLAUDE.md`, `.maestro/dino/*.yaml`, `tools/desktop-vm/checks/*.ps1`, `tests/DinoReader.Tests/**`, `docs/plan/slices/253-final-loop-leftovers-night-2026-11-01-2355.md`
 
 #### Work
