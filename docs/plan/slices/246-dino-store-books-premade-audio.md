@@ -195,7 +195,16 @@ overall OK: **yes**. No lines flagged.
   text must come out byte-identical, so nothing already recorded is paid for again).
 
 **Part B — package and store**
-- [ ] B1. Decide inside `.dino` vs a separate download by measured size (one Farsi book's clips), write the decision here.
+- [x] B1. Decide inside `.dino` vs a separate download by measured size (one Farsi book's clips), write the decision here.
+  *Decided 2026-11-03: a separate download per book and language.* Measured: the Farsi clips are 1.8-3.1 MB per book
+  (35 MB for 15 books, 64-107 clips each, AAC `.m4a`), while a book folder is about 3.8-4.1 MB; all 15 languages would add
+  roughly 30-40 MB per book, about ten times the book, and a reader uses one language. So: one audio pack per book and
+  language (the clips plus the generator's manifest v3) uploaded beside the book in `dinoreader/stories/<id>/` (name such
+  as `audio-<lang>-v<n>`; exact name and the listing field that says which languages have audio are B2's to settle after
+  reading `worker/stories.ts` and the app's store download code). The app (C) downloads a language's pack once, when a store
+  book is opened in that language, with the usual loading state, matches clips by sentence text hash and falls back to the
+  device voice for any miss. Old app builds never request a pack, so uploading packs changes nothing for current users and
+  D4 may upload as soon as B2 is merged.
 - [ ] B2. BookBuilder / `upload-store-story.ps1` carry the clips and manifest; the worker serves them; a book without
   clips for a language works as today.
 
