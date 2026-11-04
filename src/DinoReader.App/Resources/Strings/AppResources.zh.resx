@@ -241,8 +241,6 @@
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>这本书</value></data>
-  <data name="Book_ShowOriginal" xml:space="preserve"><value>显示原文</value></data>
-  <data name="Book_ShowOriginalHint" xml:space="preserve"><value>显示{0}文字。声音仍然用{1}朗读。</value></data>
   <data name="Book_Back" xml:space="preserve"><value>回到故事</value></data>
   <!-- /Slice 110 -->
   <!-- Slice 111 -->

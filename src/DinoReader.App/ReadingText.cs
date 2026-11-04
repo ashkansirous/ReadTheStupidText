@@ -23,7 +23,6 @@ public static class ReadingText
 	public static string LayoutFailed => AppResources.Reading_LayoutFailed;
 	// Slice 110: the "This book" sheet.
 	public static string BookTitle => AppResources.Book_Title;
-	public static string ShowOriginal => AppResources.Book_ShowOriginal;
 	public static string BackToStory => AppResources.Book_Back;
 	public static string CastButton => AppResources.Gallery_CastButton;
 	// Slice 111: parents read in their own voice.
@@ -31,8 +30,6 @@ public static class ReadingText
 	public static string UseMyVoice => AppResources.Rec_UseVoice;
 
 	public static string UseMyVoiceHint(int recorded, int pages) => AppResources.Format(AppResources.Rec_UseVoiceHint, recorded, pages);
-
-	public static string ShowOriginalHint(string original, string spoken) => AppResources.Format(AppResources.Book_ShowOriginalHint, original, spoken);
 
 	public static string ReadingPage(int page) => AppResources.Format(AppResources.Reading_PageN, page);
 }

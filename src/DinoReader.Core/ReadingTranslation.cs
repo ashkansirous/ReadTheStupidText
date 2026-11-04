@@ -10,7 +10,7 @@ public static class ReadingTranslation
 {
     /// <summary>
     /// Whether the child can read <paramref name="story"/> in <paramref name="language"/> now with nothing to download: it is the book's own language, or (with the
-    /// switch on and no "Show original text") the book's table for it covers every piece, or the engine covers the pair and the record holds every pack in
+    /// switch on) the book's table for it covers every piece, or the engine covers the pair and the record holds every pack in
     /// <paramref name="packLanguages"/> (the pieces a table lacks are then translated by the engine).
     /// </summary>
     public static bool CanRead(Story story, string language, bool hasEngine, IReadOnlyCollection<string> engineLanguages, IEnumerable<string> packLanguages, TranslationPackRecord record)
@@ -22,7 +22,7 @@ public static class ReadingTranslation
             return true;
         }
 
-        if (story.ShowOriginalText || !story.TranslateToMyLanguage)
+        if (!story.TranslateToMyLanguage)
         {
             return false;
         }

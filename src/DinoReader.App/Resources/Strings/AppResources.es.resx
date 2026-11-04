@@ -241,8 +241,6 @@
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>Este libro</value></data>
-  <data name="Book_ShowOriginal" xml:space="preserve"><value>Mostrar el texto original</value></data>
-  <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Muestra las palabras en {0}. La voz sigue leyendo en {1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>Volver al cuento</value></data>
   <!-- /Slice 110 -->
   <!-- Slice 111 -->

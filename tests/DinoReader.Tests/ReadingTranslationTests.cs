@@ -8,9 +8,9 @@ public class ReadingTranslationTests
     private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> Farsi =
         new Dictionary<string, IReadOnlyDictionary<string, string>> { ["fa"] = new Dictionary<string, string> { ["Hello there."] = "salam." } };
 
-    private static Story StoryWith(IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? translations, bool translate = true, bool showOriginal = false) =>
+    private static Story StoryWith(IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? translations, bool translate = true) =>
         new("0123456789abcdef0123456789abcdef", "T", "en", DateTimeOffset.UnixEpoch, [new StoryPage("Hello there.")], [], CoverStyle.Colour, 0, "v",
-            TranslateToMyLanguage: translate, ShowOriginalText: showOriginal, Translations: translations);
+            TranslateToMyLanguage: translate, Translations: translations);
 
     private static bool CanRead(Story story, string language, bool hasEngine, params string[] recorded) =>
         ReadingTranslation.CanRead(story, language, hasEngine, MlKitLanguages.All, OwnBookTranslation.PackLanguages(story.Language, language), new TranslationPackRecord(recorded));
@@ -47,9 +47,8 @@ public class ReadingTranslationTests
     }
 
     [Fact]
-    public void Show_original_text_and_a_switched_off_book_never_translate()
+    public void A_switched_off_book_never_translates()
     {
-        Assert.False(CanRead(StoryWith(Farsi, showOriginal: true), "fa", hasEngine: true, "en", "fa"));
         Assert.False(CanRead(StoryWith(Farsi, translate: false), "fa", hasEngine: true, "en", "fa"));
     }
 

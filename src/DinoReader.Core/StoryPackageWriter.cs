@@ -22,7 +22,7 @@ public static class StoryPackageWriter
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
         var manifest = new StoryPackageManifest(StoryPackageManifest.CurrentSchemaVersion, packageId, story.Title, story.Language, version);
         await AddTextAsync(zip, StoryPackageManifest.ManifestFileName, manifest.ToJson());
-        await AddTextAsync(zip, StoryPackageManifest.StoryFileName, StoryJson.Serialize(story with { SourceId = null, ShowOriginalText = false }));
+        await AddTextAsync(zip, StoryPackageManifest.StoryFileName, StoryJson.Serialize(story with { SourceId = null }));
         foreach (string name in story.PictureFiles().Concat(StoryRecordings.Files(story)))
         {
             await AddPictureAsync(zip, library.TryResolveFile(story.Id, name), name);
