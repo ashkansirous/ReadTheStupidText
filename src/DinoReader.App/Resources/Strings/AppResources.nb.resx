@@ -16,6 +16,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Venter på internett · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Venter på Wi-Fi · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Fortsetter av seg selv når du er på nett igjen.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>Henter lyd på {0} til bøkene dine</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} har ingen lyd på {1} ennå. Dinos lesestemme leser den.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} og {2} til har ingen lyd på {1} ennå. Dinos lesestemme leser dem.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Venter på internett…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Venter på Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Gjør klart…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>Noe {0}-lyd kunne ikke hentes ennå. Dino prøver igjen senere.</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Prøv igjen</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Stemmenedlastingen ble skadet. Leser med telefonens stemme. Trykk for å prøve igjen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Pakken med naturlige stemmer kan ikke brukes. Leser med telefonens stemme.</value></data>

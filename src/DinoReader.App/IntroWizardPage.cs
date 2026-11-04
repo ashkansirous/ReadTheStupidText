@@ -477,7 +477,8 @@ public sealed class IntroWizardPage : ContentPage
 		StoryLanguageSet before = StoryLanguages.Current();
 		StoryLanguageSet set = WithoutLostSides(_languagePicker?.Set ?? before, before);
 		StoryLanguages.SaveSides(set);
-		await _services.GetRequiredService<StoryLanguagePacks>().RequestAsync(this, set.Sides, _wait); // on mobile data the grown-up is asked first
+		VoiceRequestOutcome outcome = await _services.GetRequiredService<StoryLanguagePacks>().RequestAsync(this, set.Sides, _wait); // on mobile data the grown-up is asked first
+		StartShelfAudio(set.Sides.Except(before.Sides), outcome); // Slice 262: Done leaves and the audio of the shelf books carries on in the background (Settings shows the card)
 		if (!set.Sides.SequenceEqual(before.Sides))
 		{
 			StoryLanguageCounts.RecordSet(_usage, set, UsageDetail.LanguagesFromIntro, set.Sides.Except(before.Sides)); // only languages new to this phone count as added
@@ -485,6 +486,20 @@ public sealed class IntroWizardPage : ContentPage
 
 		CountStep(tried: set.Sides.Count > 0); // nothing ticked is a Skip in effect
 		await AdvanceAsync();
+	}
+
+	private void StartShelfAudio(IEnumerable<string> added, VoiceRequestOutcome outcome)
+	{
+		if (!ShelfAudioNetwork.ShouldStartRun(outcome))
+		{
+			return; // the grown-up cancelled the voice request: nothing starts
+		}
+
+		ShelfAudioPacks shelf = _services.GetRequiredService<ShelfAudioPacks>();
+		foreach (string language in added)
+		{
+			shelf.Start(language, ShelfAudioNetwork.AllowsMobileData(outcome));
+		}
 	}
 
 	/// <summary>A plain text button (frames 73-76): brand-coloured unless <paramref name="colourKey"/> says otherwise.</summary>

@@ -368,12 +368,12 @@ public sealed class StoryLanguagePacks
 	/// The sizes come from the catalogue, fetched behind <paramref name="wait"/> (shown after 500 ms, with Cancel, which drops the whole request) and given up after a
 	/// timeout, when the names are shown without sizes.
 	/// </summary>
-	public async Task RequestAsync(Page? host, IEnumerable<string> languages, WaitController? wait = null)
+	public async Task<VoiceRequestOutcome> RequestAsync(Page? host, IEnumerable<string> languages, WaitController? wait = null)
 	{
 		List<string> missing = [.. languages.Select(UiLanguage.Resolve).Distinct().Where(code => StateOf(code) == LanguageVoiceState.NotInstalled)];
 		if (missing.Count == 0)
 		{
-			return;
+			return VoiceRequestOutcome.NothingAsked;
 		}
 
 		if (host is not null)
@@ -386,13 +386,13 @@ public sealed class StoryLanguagePacks
 		if (!OnMobileDataOnly())
 		{
 			missing.ForEach(Start);
-			return;
+			return VoiceRequestOutcome.Started;
 		}
 
 		string? described = await DescribeAsync(missing, wait);
 		if (described is null)
 		{
-			return; // Cancel on the wait: nothing starts, nothing waits
+			return VoiceRequestOutcome.Cancelled; // Cancel on the wait: nothing starts, nothing waits
 		}
 
 		bool now = host is not null && await host.DisplayAlertAsync(
@@ -401,10 +401,11 @@ public sealed class StoryLanguagePacks
 		if (now)
 		{
 			missing.ForEach(code => Start(code, downloadNow: true));
-			return;
+			return VoiceRequestOutcome.DownloadNow;
 		}
 
 		WaitForWifi(missing);
+		return VoiceRequestOutcome.WaitForWifi;
 	}
 
 	private async Task<string> NotifyBodyAsync(IReadOnlyList<string> codes)

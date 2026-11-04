@@ -14,6 +14,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Ждём интернет · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Ждём Wi-Fi · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Продолжится сама, когда вы снова будете онлайн.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>Загружаем озвучку ({0}) для твоих книг</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>У книги «{0}» пока нет озвучки ({1}). Её прочитает голос чтеца Дино.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>У книги «{0}» и ещё {2} пока нет озвучки ({1}). Их прочитает голос чтеца Дино.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Ждём интернет…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Ждём Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Готовимся…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>Часть озвучки ({0}) пока не удалось загрузить. Дино попробует ещё раз позже.</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Повторить</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Загрузка голоса повреждена. Читает голос телефона. Нажмите, чтобы повторить.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Пакет естественных голосов непригоден. Читает голос телефона.</value></data>

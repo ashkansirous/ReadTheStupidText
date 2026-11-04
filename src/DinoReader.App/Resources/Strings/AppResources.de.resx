@@ -17,6 +17,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Warte auf das Internet · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Warte auf WLAN · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Geht von selbst weiter, sobald du wieder online bist.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>Hole {0}-Audio für deine Bücher</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} hat noch kein {1}-Audio. Dinos Lesestimme liest es vor.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} und {2} weitere haben noch kein {1}-Audio. Dinos Lesestimme liest sie vor.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Warte auf das Internet…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Warte auf WLAN…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Wird vorbereitet…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>Ein Teil des {0}-Audios konnte noch nicht geladen werden. Dino versucht es später erneut.</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Erneut versuchen</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Der Download der Stimme war beschädigt. Es liest die Handy-Stimme. Tippe, um es noch einmal zu versuchen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Das Paket mit den natürlichen Stimmen ist unbrauchbar. Es liest die Handy-Stimme.</value></data>

@@ -14,6 +14,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>في انتظار الإنترنت · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>في انتظار Wi-Fi · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>يستمر تلقائيًا عند عودة الاتصال.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>جارٍ تحضير الصوت بلغة {0} لكتبك</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} ليس له صوت بلغة {1} بعد. سيقرؤه صوت القراءة الخاص بدينو.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} و{2} كتب أخرى ليس لها صوت بلغة {1} بعد. سيقرؤها صوت القراءة الخاص بدينو.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>في انتظار الإنترنت…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>في انتظار شبكة Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>جارٍ التحضير…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>تعذّر تنزيل بعض الصوت بلغة {0} حتى الآن. سيحاول دينو مرة أخرى لاحقًا.</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>إعادة المحاولة</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>تعرّض تنزيل الصوت للتلف. تتم القراءة بصوت الهاتف. اضغط لإعادة المحاولة.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>حزمة الأصوات الطبيعية غير صالحة للاستخدام. تتم القراءة بصوت الهاتف.</value></data>

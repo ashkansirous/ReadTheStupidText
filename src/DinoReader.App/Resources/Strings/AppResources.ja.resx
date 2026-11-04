@@ -14,6 +14,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>インターネットを待っています · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Wi-Fiを待っています · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>オンラインに戻ると自動で再開します。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>本の{0}音声を取得中</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>「{0}」にはまだ{1}の音声がありません。ディノの読み上げ音声で読みます。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>「{0}」ほか{2}冊にはまだ{1}の音声がありません。ディノの読み上げ音声で読みます。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>インターネットを待っています…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Wi-Fiを待っています…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>準備しています…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>{0}の音声の一部をまだ取得できていません。ディノは後でもう一度試します。</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>再試行</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>音声のダウンロードが破損しました。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然な音声パックを使用できません。スマートフォンの音声で読み上げます。</value></data>

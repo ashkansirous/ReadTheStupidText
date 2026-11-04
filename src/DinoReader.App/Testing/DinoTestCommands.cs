@@ -95,6 +95,11 @@ internal static partial class DinoTestCommands
 			return SetTestStore(command.Get(ModeKey, string.Empty));
 		}
 
+		if (command.Name == ShelfAudioName)
+		{
+			return StartShelfAudio(command.Get(TestHookDispatcher.LanguageKey, string.Empty));
+		}
+
 		if (command.Name == BackupRecordingsName)
 		{
 			_ = BackupRecordingsAsync(command.Get(IdKey, string.Empty));
