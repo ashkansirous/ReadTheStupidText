@@ -1,6 +1,6 @@
 # Slice 265 — Dino: pre-made audio clips in Git LFS; book changes only publish to the store
 
-*Built 2026-11-04, merged as PR #810 (61b9d48d). The clips ship in 8 content-only PRs (chore/s265-clips-1..8), in progress. The clips are not in this PR (see Changed while building); first real runs of `dino-store.yml` and `packs.yml` not yet seen.* *Planned 2026-11-04.* Tooling and CI, no app change. After Slice 261 (the starters leave the app, so no book folder needs an app build any more).
+*Built 2026-11-04, merged as PR #810 (61b9d48d). The clips shipped in 8 content-only PRs #815-#822 (chore/s265-clips-1..8; last merge 4e1480a3), so they are in. The clips are not in this PR (see Changed while building); first real runs of `dino-store.yml` and `packs.yml` not yet seen.* *Planned 2026-11-04.* Tooling and CI, no app change. After Slice 261 (the starters leave the app, so no book folder needs an app build any more).
 
 **Touches:** `.gitattributes`, `.lfsconfig` (new), `content/dino/*/audio/**` (new, LFS), `tools/premade-audio/**`, `tools/DinoReader.BookBuilder/**`, `tools/upload-store-story.ps1`, `.github/workflows/dino-store.yml`, `.github/workflows/release.yml`, `.github/workflows/dinoreader.yml`, `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets.test.mjs`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/scripts/dino-starters.json`, `.github/CLAUDE.md`, `tools/premade-audio/README.md`, `docs/plan/slices/265-dino-audio-clips-in-git-lfs.md`.
 
@@ -28,7 +28,7 @@ The pre-made audio's single-sentence clips (about 510 MB, 16 books x 15 language
 - Built alongside Slice 261 (PR #808, in review), which owns `tools/DinoReader.BookBuilder/StarterBuilder.cs`, the starter command in `tools/DinoReader.BookBuilder/Program.cs` and `src/DinoReader.App/Resources/Raw/starters/` (moved to Debug-only `testbooks/`). This slice does not edit those two files; their starter code goes in a follow-up once both merge, if any is left. Every other part of BookBuilder stays in Touches.
 - CI order: removing the starter handling in `ship-targets.mjs` / `release.yml` / `dinoreader.yml` is safe before 261 merges only if a change under `content/dino/<starter>/` still gets the store upload; the builder checks `ship-targets.test.mjs` for the four starter books after the change.
 - The four former starter books' packs were uploaded live in night 2026-11-04-1441 wave 1 (`/api/stories` lists 15 audio languages each), so that work item is already done; the builder only confirms it.
-- The clips come from `D:/ReadTheStupidText-worktrees/s246-audio/` (978 MB with packs). That folder stays until the LFS commit is pushed and read back (`git lfs ls-files` on a fresh clone of the branch).
+- The clips come from `D:/ReadTheStupidText-worktrees/s246-audio/` (978 MB with packs). That folder stayed until the LFS commit was pushed and read back (`git lfs ls-files` on a fresh clone of the branch). Read back 2026-11-04: a fresh worktree of 4e1480a3 lists 18,257 LFS files, all pointers, none downloaded; the folder is safe to delete.
 
 ## Verification
 
@@ -75,5 +75,4 @@ Verified locally: a fresh worktree downloads no clips; the audio loop run on rea
 
 - `dino-store.yml`'s first real run on main.
 - `packs.yml`'s first run with `lfs: false`.
-- A fresh clone after the clip PRs shows the clips as not fetched.
 - `dino-starters.json` and `BookBuilderTests` still reference starters (follow-up after 261).
