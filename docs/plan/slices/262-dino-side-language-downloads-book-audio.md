@@ -1,6 +1,6 @@
 # Slice 262 — Dino: adding a second language downloads the shelf books' audio in it
 
-*In progress (wave 2026-11-04), draft PR.* *Planned 2026-11-04.* Dino Reader only; Android and iOS alike. After Slice 261 (both edit `StoreClient.cs`).
+*Built 2026-11-04 (wave 2026-11-04), PR #813, not merged; Android emulator runs only, iOS not run (see Not yet verified).* *Planned 2026-11-04.* Dino Reader only; Android and iOS alike. After Slice 261 (both edit `StoreClient.cs`).
 
 **Touches:** `src/DinoReader.App/StoryLanguages.cs`, `src/DinoReader.App/StoryLanguagesPage.cs`, `src/DinoReader.App/StoryLanguagePacks*.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/AudioPackStore.cs`, `src/DinoReader.App/ShelfAudioPacks*.cs` (new), `src/DinoReader.Core/ShelfAudioPlan*.cs` (new), `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/side-language-audio.yaml` (new), `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/IntroWizardPage*.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/Testing/DinoTestCommands*.cs`, `src/DinoReader.App/Testing/TestStore*.cs`, `src/DinoReader.App/CLAUDE.md` (added at claim from a code check: runner registration and launch resume, the intro languages step, the weekly check's pack sync, and a Debug test store that serves an audio pack), `docs/plan/slices/262-dino-side-language-downloads-book-audio.md`.
 
@@ -11,10 +11,33 @@
 
 ## Work
 
-- [ ] Core: `ShelfAudioPlan` (which shelf books lack a pack in a language, from the installed packs and the store listing), with unit tests.
-- [ ] App: on a side-language add, fetch those packs through `StoreClient`/`AudioPackStore` (the one writer), one at a time, resumable; progress note text in all 15 languages.
-- [ ] Removing a side language leaves the packs (no surprise deletes); the 7-day update check keeps fetching packs for listed languages as today.
-- [ ] Android task: emulator flow adds a side language and sees a book's pack arrive. iOS task: same code compiles; nothing Android-only.
+- [x] Core: `ShelfAudioPlan` (which shelf books lack a pack in a language, from the installed packs and the store listing), with unit tests.
+- [x] App: on a side-language add, fetch those packs through `StoreClient`/`AudioPackStore` (the one writer), one at a time, resumable; progress note text in all 15 languages.
+- [x] Removing a side language leaves the packs (no surprise deletes); the 7-day update check keeps fetching packs for listed languages as today.
+- [x] Android task: emulator flow adds a side language and sees a book's pack arrive. iOS task: same code compiles (no `#if ANDROID/IOS` or platform file was added); not run on iOS.
+
+Changed while building:
+
+- Core: `ShelfAudioPlan` (+ `ShelfAudioBackoff`), `ShelfAudioStart.Decide`, `ShelfAudioNetwork`. App: `ShelfAudioPacks` singleton (`ShelfAudioPacks.cs`), one run per language by construction (design: reviews/s262-runner-design.md, written after two failed patch rounds, see below), in-row `ShelfAudioPacksCard` (frame 169) under the voice bar. `StoryLanguagePacks.RequestAsync` now returns `VoiceRequestOutcome`; `StoreClient.InstallPackAsync` added. Debug test store serves a fixture pack; `shelf-audio` test hook; flow `.maestro/dino/side-language-audio.yaml`.
+- **Runner covers all app languages (main + story languages), not only added ones**, so books already on the shelf get packs in the main language at launch too. Decision taken as obvious, consistent with the user's rule in Slice 267's file. `StoreClient.WantedPacks` (adds the book's own language) and `BookUpdater` are left to Slice 267. A book with no pack in its own language gets no "no audio yet" note (else every English book would show one).
+- Start points: Story languages page and intro languages step after the voice step; app launch and return to the foreground resume missing packs (throttled to 5 minutes). Cancel marks the language per language. Mobile data only after "Download now": the permission (`AllowMobileData`) is decided at run start and kept on the run.
+- Known behaviours (kept on purpose): the page's intro line is the existing one, not the mock's; books still downloading at the intro's Done are picked up by the next launch resume; a pack failing 3 times is counted failed for that run; Cancel holds until the language is removed and re-added, or a Settings add restarts it; the weekly `BookUpdater` check may still fetch for a cancelled language (Slice 267 owns it).
+
+From review (findings files in D:/ReadTheStupidText-worktrees/reviews/, outside the repo):
+
+- s262-high.md, findings 1-11: applied, as one restructure (the runner redesign) rather than patches. Skipped: 12 (a visible Start meeting an already-running quiet run returns silently) and 13 (style space in `&&ShelfAudioPacksCard`; whole-picker rebuild on every state change), neither fixed as such in this pass.
+- s262-medium.md, findings 2-9 applied (3 and 8 as one design: network permission decided at run start). Skipped: 1 (the weekly `BookUpdater.SyncPacksAsync` still installs the same packs after Cancel), unchanged by design, Slice 267 owns `BookUpdater`.
+- s262-check.md, findings 1-9: answered by the runner design (two strikes: patching the first runner kept finding races).
+- s262-check2.md (runner rework, 1060c3a8..824b9f74): 1, 2, 4 applied. Skipped: 3 (after a failed or cancelled voice the run still fetches pre-made audio; it plays without the voice) and 5 (a quiet run skipped while the voice downloads waits for the next throttled resume).
+- s262-check3.md: 1 applied (the run token is never disposed, so Stop's Cancel cannot throw).
+- s262-check4.md: 1, 2, 9 applied. Skipped: 4 (a quiet run showing a card: showing its progress is honest). 3, 5-8 were low and not applied.
+- s262-check5.md: no findings. s262-check6.md: no findings (flow log marker matches the whole token).
+
+Device (Android emulator; results in reviews/s262-emu*/):
+
+- Run 1 (s262-emu/): the runner fetched the pack, but the card never drew because the test hook added the language behind the open page (test-only gap). `premade-audio-plays`, `first-books-picker`, `open-book` passed.
+- Run 2 (s262-emu2/): every UI step of `side-language-audio` passed (card, Cancel mid-download, cancel, second start, no-audio line). Only a log marker failed (whole-token match), fixed in ec361e1f and confirmed by check 6.
+- Run 3 (s262-emu3/, ec361e1f): side-language-audio PASS in 75.8 s, no retry.
 
 #### Design (Dino Reader Batch 47 Onboarding mock, frame 169, added 2026-11-04)
 
@@ -44,3 +67,14 @@ Code check on main after Slice 261 (68bdba69): adding a side language today runs
 ## Verification
 
 - `dotnet test tests/DinoReader.Tests`; emulator flow `side-language-audio.yaml` (add a language, a shelf book gets its pack, the book reads it with pre-made audio).
+
+#### For CLAUDE.md
+
+- Already written on this branch in `src/DinoReader.App/CLAUDE.md` (runner registration, launch resume, intro languages step, Debug test store pack). Lift nothing more; the index pass only adds the lifted date. (Slice 262: docs/plan/slices/262-dino-side-language-downloads-book-audio.md)
+
+#### Not yet verified
+
+- iOS run of the shelf-audio card and runner (compiles in CI only).
+- Kill-and-resume and offline mid-download on a device.
+- The mobile-data rule ("Download now" only) on a real phone.
+- The intro languages step path on a device.
