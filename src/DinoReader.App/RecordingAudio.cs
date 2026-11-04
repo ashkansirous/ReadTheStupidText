@@ -23,6 +23,9 @@ public interface IRecordingPlayer
 {
 	void Play(string path, Action ended, Action failed);
 
+	/// <summary>Plays at <paramref name="rate"/> times the normal speed (Slice 246 C2: a pre-made clip follows the reading speed); the pitch is kept. The rate is for this play only.</summary>
+	void Play(string path, Action ended, Action failed, double rate);
+
 	void Pause();
 
 	void Resume();
@@ -82,10 +85,14 @@ internal sealed partial class MicRecorder : IMicRecorder
 /// <summary>The shared half of the page player; the platform half owns the native player.</summary>
 internal sealed partial class RecordingPlayer : IRecordingPlayer
 {
-	public void Play(string path, Action ended, Action failed)
+	public const double NormalRate = 1.0;
+
+	public void Play(string path, Action ended, Action failed) => Play(path, ended, failed, NormalRate);
+
+	public void Play(string path, Action ended, Action failed, double rate)
 	{
 		Stop();
-		PlatformPlay(path, ended, failed);
+		PlatformPlay(path, ended, failed, rate);
 	}
 
 	public void Pause() => PlatformPause();
@@ -94,7 +101,7 @@ internal sealed partial class RecordingPlayer : IRecordingPlayer
 
 	public void Stop() => PlatformStop();
 
-	private partial void PlatformPlay(string path, Action ended, Action failed);
+	private partial void PlatformPlay(string path, Action ended, Action failed, double rate);
 
 	private partial void PlatformPause();
 

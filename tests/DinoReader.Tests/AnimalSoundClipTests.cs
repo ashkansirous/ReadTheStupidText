@@ -233,7 +233,8 @@ public class AnimalSoundClipTests
     {
         string session = File.ReadAllText(Path.Combine(StarterBuilder.RepoRoot(), "src", "DinoReader.App", "ReadingSession.cs"));
 
-        Assert.Contains("AnimalClipRuns.Plan(segments)", session);
+        Assert.Contains("PremadeAudioPlan.Plan(segments)", session); // Slice 246 C2: the plan cuts pre-made clips out and hands the rest to AnimalClipRuns.Plan
+        Assert.Contains("AnimalClipRuns.Plan(run", File.ReadAllText(Path.Combine(StarterBuilder.RepoRoot(), "src", "DinoReader.Core", "PremadeAudio.cs")));
         Assert.Contains("PlayClip(read, clip);", session);
         Assert.Contains("[Reading] animal clip {clip} plays", session);
     }

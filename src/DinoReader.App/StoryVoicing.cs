@@ -18,6 +18,7 @@ namespace DinoReader;
 public sealed class StoryVoicing
 {
 	private readonly IVoicePackService _packs;
+	private readonly AudioPackStore _audioPacks; // the pre-made audio of store books (Slice 246 C2)
 	private readonly NarratorChoice _narrators;
 	private readonly StoryTranslator _translator;
 	private readonly ConcurrentDictionary<string, IReadOnlyList<VoiceOption>> _pools = new();
@@ -48,9 +49,10 @@ public sealed class StoryVoicing
 
 	private volatile SharedPlan? _lastPlan;
 
-	public StoryVoicing(IVoicePackService packs, IVoiceModelService model, StoryTranslator translator, VoicePackInstaller installer, NarratorChoice narrators)
+	public StoryVoicing(IVoicePackService packs, IVoiceModelService model, StoryTranslator translator, VoicePackInstaller installer, NarratorChoice narrators, AudioPackStore audioPacks)
 	{
 		_packs = packs;
+		_audioPacks = audioPacks;
 		CastText.RosterSource = RosterFor;
 		_narrators = narrators;
 		_translator = translator;
@@ -72,7 +74,7 @@ public sealed class StoryVoicing
 		Prepared prepared = await Task.Run(() => fromPosition == 0 ? PrepareShared(story, wholePieces) : Prepare(story, fromPosition, wholePieces), cancellationToken);
 		if (!_translator.Applies(story, reading))
 		{
-			return await Task.Run(() => VoicedInOwnLanguage(story, prepared), cancellationToken);
+			return await VoicedOwnWithPremadeAsync(story, prepared, fromPosition, wholePieces, reading, cancellationToken);
 		}
 
 		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, prepared.Analysis.Sentences.Value, reading, cancellationToken, forSpeech: true);
@@ -80,10 +82,96 @@ public sealed class StoryVoicing
 		{
 			// The story is read as written, in its own language and voices, so the spoken pack goes back to its language too.
 			translationSkipped?.Invoke();
-			return await Task.Run(() => VoicedInOwnLanguage(story, prepared), cancellationToken);
+			return await VoicedOwnWithPremadeAsync(story, prepared, fromPosition, wholePieces, reading, cancellationToken);
 		}
 
-		return await Task.Run(() => VoicedTranslated(story, prepared, outcome.Pieces, reading), cancellationToken);
+		PremadeSource? premade = await PremadeSourceAsync(story, prepared, fromPosition, wholePieces, outcome, reading, cancellationToken);
+		return await Task.Run(() => VoicedTranslated(story, prepared, outcome.Pieces, reading, premade), cancellationToken);
+	}
+
+	// The story read in its own language (the reading language is the story's, or translation was skipped): its pre-made audio for the story's language is used too (Slice 246 C2).
+	private async Task<IReadOnlyList<VoicedSegment>> VoicedOwnWithPremadeAsync(
+		Story story, Prepared prepared, int fromPosition, bool wholePieces, string reading, CancellationToken cancellationToken)
+	{
+		PremadeSource? premade = await PremadeSourceAsync(story, prepared, fromPosition, wholePieces, null, reading, cancellationToken);
+		return await Task.Run(() => VoicedInOwnLanguage(story, prepared, premade), cancellationToken);
+	}
+
+	/// <summary>
+	/// The installed pre-made audio of a store book for the language it is read in, with the plain (displayed) text of each piece (Slice 246 C2). A piece's clip is the pack's entry at the piece's
+	/// position among the pieces with a letter or digit (<see cref="Offset"/> when the read starts mid-book), confirmed by the hash of the plain text; null when there is none.
+	/// </summary>
+	private sealed record PremadeSource(InstalledPack Pack, IReadOnlyList<SplitSegment> PlainPieces, int Offset)
+	{
+		public string? PathOf(int piece)
+		{
+			string text = PlainPieces[piece].Segment.Text;
+			if (!IsSpoken(text))
+			{
+				return null;
+			}
+
+			return Pack.PathOf(Offset + PlainPieces.Take(piece).Count(p => IsSpoken(p.Segment.Text)), text);
+		}
+
+		public static int SpokenCount(IReadOnlyList<SplitSegment> pieces) => pieces.Count(p => IsSpoken(p.Segment.Text));
+
+		private static bool IsSpoken(string text) => text.Any(char.IsLetterOrDigit);
+	}
+
+	// The clips are keyed by the plain text, but the pieces a translated read speaks carry the speak: table's marks, so the plain pieces are translated again (a table lookup); an own-language read
+	// speaks the plain pieces as they are. Only a store book (it has a source id) can have a pack; a translated read needs its own complete table. A mismatch in the piece count means no clips.
+	private async Task<PremadeSource?> PremadeSourceAsync(
+		Story story, Prepared prepared, int fromPosition, bool wholePieces, StoryTranslator.Outcome? spoken, string reading, CancellationToken cancellationToken)
+	{
+		bool translated = spoken is not null;
+		if (story.SourceId is not { } bookId || (translated && !_translator.UsesBundledTable(story, reading)))
+		{
+			return null;
+		}
+
+		string language = BundledTranslations.Key(translated ? _translator.SpokenLanguage(story, reading) : story.Language);
+		InstalledPack? pack = _audioPacks.Open(bookId, language);
+		if (pack is null)
+		{
+			return null;
+		}
+
+		IReadOnlyList<SplitSegment>? plain = await PlainPiecesAsync(story, prepared, reading, translated, cancellationToken);
+		if (plain is null || (spoken is not null && plain.Count != spoken.Pieces.Count))
+		{
+			AudioPackLog.Write($"{bookId}/{language}: the plain and spoken pieces do not line up, device voice for the whole read");
+			return null;
+		}
+
+		int offset = fromPosition == 0 ? 0 : await ClipOffsetAsync(story, plain, wholePieces, reading, translated, cancellationToken);
+		return offset < 0 ? null : new PremadeSource(pack, plain, offset);
+	}
+
+	private async Task<IReadOnlyList<SplitSegment>?> PlainPiecesAsync(Story story, Prepared prepared, string reading, bool translated, CancellationToken cancellationToken)
+	{
+		if (!translated)
+		{
+			return prepared.Pieces;
+		}
+
+		StoryTranslator.Outcome plain = await _translator.TranslateAsync(story, prepared.Pieces, prepared.Analysis.Sentences.Value, reading, cancellationToken);
+		return plain.Translated ? plain.Pieces : null;
+	}
+
+	// A read from the middle starts at some piece of the book: its clips are the pack's entries after the spoken pieces before it. Negative when the whole book's pieces cannot be worked out.
+	private async Task<int> ClipOffsetAsync(Story story, IReadOnlyList<SplitSegment> partial, bool wholePieces, string reading, bool translated, CancellationToken cancellationToken)
+	{
+		Prepared whole = await Task.Run(() => PrepareShared(story, wholePieces), cancellationToken);
+		IReadOnlyList<SplitSegment>? all = await PlainPiecesAsync(story, whole, reading, translated, cancellationToken);
+		return all is null ? -1 : PremadeSource.SpokenCount(all) - PremadeSource.SpokenCount(partial);
+	}
+
+	// A piece whose plain text has a clip in the pack is marked with its file; the read plays it instead of speaking it. The coverage is logged once per read (Debug builds reach the test-hook log).
+	private static VoicedSegment WithPremade(VoicedSegment voiced, PremadeSource? premade, int piece)
+	{
+		string? path = premade?.PathOf(piece);
+		return path is null ? voiced : PremadeClipMarker.Mark(voiced, path);
 	}
 
 	/// <summary>The story's text in the language it is read in, for the reading screen (Slice 110, Decision 112); null when the screen shows the story as it is:
@@ -104,34 +192,39 @@ public sealed class StoryVoicing
 
 	// A translated read is cast from the spoken language's own cast (Slice 108), narrated by that language's narrator.
 	// The pack scans behind the voices run here, on the worker thread that calls it.
-	private IReadOnlyList<VoicedSegment> VoicedTranslated(Story story, Prepared prepared, IReadOnlyList<SplitSegment> pieces, string reading)
+	private IReadOnlyList<VoicedSegment> VoicedTranslated(Story story, Prepared prepared, IReadOnlyList<SplitSegment> pieces, string reading, PremadeSource? premade)
 	{
 		string spoken = _translator.SpokenLanguage(story, reading);
 		VoiceCast cast = CastIn(story, prepared, spoken);
-		return WithAnimalSounds(story, prepared, cast, pieces, spoken);
+		return WithAnimalSounds(story, prepared, cast, pieces, spoken, premade);
 	}
 
-	private IReadOnlyList<VoicedSegment> VoicedInOwnLanguage(Story story, Prepared prepared)
+	private IReadOnlyList<VoicedSegment> VoicedInOwnLanguage(Story story, Prepared prepared, PremadeSource? premade = null)
 	{
 		VoiceCast cast = CastIn(story, prepared, story.Language);
-		return WithAnimalSounds(story, prepared, cast, prepared.Pieces, story.Language);
+		return WithAnimalSounds(story, prepared, cast, prepared.Pieces, story.Language, premade);
 	}
 
 	// Animal characters say their sound after every 2nd or 3rd line of their own (Slice 117, Decision 123): one extra short segment in the character's voice,
 	// spoken only (it has no text on the page). The lines are counted over the whole book in the story's language, so a read from the middle sounds like a read from the start.
 	// The sound sits right after the line's last quote piece, never after a dialogue tag that follows it (Slice 254), and after the last piece of a translated line.
 	private IReadOnlyList<VoicedSegment> WithAnimalSounds(
-		Story story, Prepared prepared, VoiceCast cast, IReadOnlyList<SplitSegment> pieces, string spokenLanguage)
+		Story story, Prepared prepared, VoiceCast cast, IReadOnlyList<SplitSegment> pieces, string spokenLanguage, PremadeSource? premade)
 	{
 		IReadOnlyDictionary<int, AnimalSounds.Placement> sounds = AnimalSoundPlacements(story, prepared, pieces, spokenLanguage).ToDictionary(p => p.After);
 		var voiced = new List<VoicedSegment>(pieces.Count + sounds.Count);
 		for (int i = 0; i < pieces.Count; i++)
 		{
-			voiced.Add(ToVoicedSegment(pieces[i], cast));
+			voiced.Add(WithPremade(ToVoicedSegment(pieces[i], cast), premade, i));
 			if (sounds.TryGetValue(i, out AnimalSounds.Placement? placement) && AnimalSoundAfter(pieces, placement, cast, spokenLanguage) is { } sound)
 			{
 				voiced.Add(sound);
 			}
+		}
+
+		if (premade is not null)
+		{
+			AudioPackLog.Write($"{story.SourceId}/{premade.Pack.Audio.Language} v{premade.Pack.Version}: {voiced.Count(s => PremadeClipMarker.PathOf(s) is not null)} of {pieces.Count} pieces have a clip");
 		}
 
 		return voiced;

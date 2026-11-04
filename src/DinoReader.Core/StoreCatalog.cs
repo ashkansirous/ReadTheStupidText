@@ -6,8 +6,12 @@ namespace DinoReader.Core;
 public sealed record StoreItem(
     string Id, string Title, string Language, int SchemaVersion, int Version, int? PageCount, int? Minutes, string? CoverUrl, string DownloadUrl, string? Credits = null,
     int? AgeMin = null, int? AgeMax = null, string? Author = null, IReadOnlyDictionary<string, string>? Titles = null,
-    IReadOnlyDictionary<string, string>? CreditsByLanguage = null)
+    IReadOnlyDictionary<string, string>? CreditsByLanguage = null, IReadOnlyDictionary<string, AudioPackInfo>? Audio = null)
 {
+    /// <summary>The pre-made audio pack the listing offers for <paramref name="language"/> (the book-translation key, e.g. <c>fa</c>), or null (Slice 246 C2).</summary>
+    public AudioPackInfo? AudioIn(string language) =>
+        Audio is not null && Audio.TryGetValue(BundledTranslations.Key(language), out AudioPackInfo? pack) ? pack : null;
+
     /// <summary>The title in <paramref name="language"/> from the listing's <c>titles</c> (Slice 159), or null when the listing has none for it.</summary>
     public string? TitleIn(string language) =>
         Titles is not null && Titles.TryGetValue(UiLanguage.Resolve(language), out string? title) ? title : null;
@@ -19,6 +23,9 @@ public sealed record StoreItem(
     /// <summary>False for a story packed in a newer format than this app reads: such a story is hidden, not greyed out.</summary>
     public bool IsReadable => SchemaVersion <= StoryPackageManifest.CurrentSchemaVersion;
 }
+
+/// <summary>One audio pack the listing offers (Slice 246 B2): its version, the zip's size in bytes when the listing knows it, and the download address.</summary>
+public sealed record AudioPackInfo(int Version, long? Bytes, string Url);
 
 /// <summary>Reads the store's list response (Slice 92).</summary>
 public static class StoreCatalog
@@ -73,8 +80,41 @@ public static class StoreCatalog
         (int? ageMin, int? ageMax) = AgeRangeOf(dto);
         return valid
             ? new StoreItem(dto.Id!, dto.Title!, dto.Language!, dto.SchemaVersion, dto.Version, dto.PageCount, dto.Minutes, dto.CoverUrl, dto.DownloadUrl!, CreditsOf(dto.Credits),
-                ageMin, ageMax, AuthorOf(dto.Author), TitlesOf(dto.Titles), TextMapOf(dto.CreditsByLanguage, MaxCreditsLength))
+                ageMin, ageMax, AuthorOf(dto.Author), TitlesOf(dto.Titles), TextMapOf(dto.CreditsByLanguage, MaxCreditsLength), AudioOf(dto.Audio))
             : null;
+    }
+
+    // Slice 246 B2/C2: language code to {version, bytes, url}. A wrong-typed pack, a version below 1, an unsupported language or a blank address drops only that pack; bytes that are not a whole
+    // positive number are unknown (null), which skips the size check but not the download.
+    private static IReadOnlyDictionary<string, AudioPackInfo>? AudioOf(JsonElement? audio)
+    {
+        if (audio is not { ValueKind: JsonValueKind.Object } map)
+        {
+            return null;
+        }
+
+        var kept = new Dictionary<string, AudioPackInfo>(StringComparer.Ordinal);
+        foreach (JsonProperty property in map.EnumerateObject().Take(MaxTitleLanguages))
+        {
+            if (UiLanguage.IsSupported(property.Name) && PackOf(property.Value) is { } pack)
+            {
+                kept[BundledTranslations.Key(property.Name)] = pack;
+            }
+        }
+
+        return kept.Count > 0 ? kept : null;
+    }
+
+    private static AudioPackInfo? PackOf(JsonElement pack)
+    {
+        if (pack.ValueKind != JsonValueKind.Object || !pack.TryGetProperty("url", out JsonElement url) || url.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(url.GetString()))
+        {
+            return null;
+        }
+
+        int? version = IntegerOf(pack.TryGetProperty("version", out JsonElement found) ? found : null);
+        long? bytes = pack.TryGetProperty("bytes", out JsonElement size) && size.ValueKind == JsonValueKind.Number && size.TryGetInt64(out long length) && length > 0 ? length : null;
+        return version is >= 1 ? new AudioPackInfo(version.Value, bytes, url.GetString()!.Trim()) : null;
     }
 
     // The optional credit line: blank, or longer than the Worker allows, means none.
@@ -131,6 +171,8 @@ public static class StoreCatalog
         public JsonElement? Titles { get; set; }
 
         public JsonElement? CreditsByLanguage { get; set; }
+
+        public JsonElement? Audio { get; set; }
 
         public string? Id { get; set; }
 

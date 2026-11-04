@@ -68,7 +68,7 @@ internal sealed partial class RecordingPlayer
 {
 	private AVAudioPlayer? _player;
 
-	private partial void PlatformPlay(string path, Action ended, Action failed)
+	private partial void PlatformPlay(string path, Action ended, Action failed, double rate)
 	{
 		IosAudioSession.Activate(this);
 		AVAudioPlayer? player = AVAudioPlayer.FromUrl(NSUrl.FromFilename(path), out NSError? error);
@@ -103,6 +103,14 @@ internal sealed partial class RecordingPlayer
 			}
 		};
 		_player = player;
+		if (Math.Abs(rate - NormalRate) >= 0.001)
+		{
+			// AVAudioPlayer plays at another speed (0.5-2.0, pitch kept) only when EnableRate is set before it is prepared; the rate then sticks across Pause and Play.
+			player.EnableRate = true;
+			player.PrepareToPlay();
+			player.Rate = (float)rate;
+		}
+
 		player.Play();
 	}
 

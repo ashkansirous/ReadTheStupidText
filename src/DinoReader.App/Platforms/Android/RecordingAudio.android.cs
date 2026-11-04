@@ -62,8 +62,9 @@ internal sealed partial class MicRecorder
 internal sealed partial class RecordingPlayer
 {
 	private MediaPlayer? _player;
+	private double _rate = NormalRate;
 
-	private partial void PlatformPlay(string path, Action ended, Action failed)
+	private partial void PlatformPlay(string path, Action ended, Action failed, double rate)
 	{
 		var player = new MediaPlayer();
 		try
@@ -89,6 +90,8 @@ internal sealed partial class RecordingPlayer
 				}
 			};
 			_player = player;
+			_rate = rate;
+			ApplyRate(player, rate); // on a prepared player this already starts it, at this speed, so no clip begins at 1.0x; Start then changes nothing
 			player.Start();
 		}
 		catch
@@ -100,6 +103,25 @@ internal sealed partial class RecordingPlayer
 		}
 	}
 
+	// PlaybackParams.SetSpeed (API 23+, minSdk is 28) keeps the pitch. It is set after Start, so a player that is already running takes it and a paused one is never started by it.
+	// A rate the platform refuses leaves the clip at normal speed.
+	private static void ApplyRate(MediaPlayer player, double rate)
+	{
+		if (Math.Abs(rate - NormalRate) < 0.001)
+		{
+			return;
+		}
+
+		try
+		{
+			player.PlaybackParams = new PlaybackParams().SetSpeed((float)rate)!;
+		}
+		catch (Exception ex) when (ex is Java.Lang.IllegalArgumentException or Java.Lang.IllegalStateException)
+		{
+			System.Diagnostics.Debug.WriteLine($"Dino Reader could not set the clip speed {rate}: {ex.Message}");
+		}
+	}
+
 	private partial void PlatformPause()
 	{
 		if (_player is { IsPlaying: true } player)
@@ -108,7 +130,14 @@ internal sealed partial class RecordingPlayer
 		}
 	}
 
-	private partial void PlatformResume() => _player?.Start();
+	private partial void PlatformResume()
+	{
+		if (_player is { } player)
+		{
+			player.Start();
+			ApplyRate(player, _rate); // a resumed player is given its speed again, so a pause never drops it
+		}
+	}
 
 	private partial void PlatformStop() => ReleaseCurrent();
 

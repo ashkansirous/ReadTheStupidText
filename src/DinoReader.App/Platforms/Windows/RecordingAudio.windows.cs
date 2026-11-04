@@ -58,7 +58,7 @@ internal sealed partial class RecordingPlayer
 {
 	private MediaPlayer? _player;
 
-	private partial void PlatformPlay(string path, Action ended, Action failed)
+	private partial void PlatformPlay(string path, Action ended, Action failed, double rate)
 	{
 		var player = new MediaPlayer { Source = MediaSource.CreateFromUri(new Uri(path)) };
 		player.MediaEnded += (_, _) =>
@@ -76,6 +76,7 @@ internal sealed partial class RecordingPlayer
 			}
 		};
 		_player = player;
+		player.PlaybackSession.PlaybackRate = rate; // MediaPlayer's own rate property is the deprecated spelling of the session's; the pitch is kept by default
 		player.Play();
 	}
 

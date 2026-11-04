@@ -1,0 +1,63 @@
+# Slice 246 C2: a store book read with an installed pre-made audio pack plays the pack's clip for a piece whose text has one, instead of the device voice.
+# The install-audio-pack hook (Debug only) builds a small fixture pack for the starter book (every translated Farsi piece maps to one short bundled recording) and installs it through the
+# real pack store, so the size check, unzip, completeness check and rename all run; no network is used. The flow fails when the "[AudioPack] premade clip plays" line is missing:
+# run-flows.ps1 checks every expect-log line after the flow (the wait below is only a delay for the read to reach the first piece).
+# To see it fail against the old behaviour: on a build without the clip path the pack is never looked up, so "[AudioPack] premade clip plays" never appears (and the book has no
+# "pieces have a clip" coverage line either).
+# Keeps the app's data (no clearState), like animal-clip-plays; the fixture pack stays installed for the dev install and is replaced by the real pack on the next real download or update check.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK install-audio-pack ok
+# expect-log: pieces have a clip
+# expect-log: [AudioPack] premade clip plays
+# expect-log: HOOK read start
+appId: uk.sirous.dinoreader.dbg
+name: A store book with an audio pack plays the pack's clips
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: install-audio-pack
+      id: three-little-pigs
+      lang: fa
+# The install runs in the background (a few small files): give it a moment before the read looks the pack up.
+- extendedWaitUntil:
+    visible:
+      id: PackInstallNeverShown
+    timeout: 6000
+    optional: true
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+# The Play button describes itself as Pause while the read is Playing; a clip counts as playing.
+- extendedWaitUntil:
+    visible: "Pause|توقف"
+    timeout: 90000
+# Keep reading a while: the first clip plays at once, then the read goes on with the next piece.
+- extendedWaitUntil:
+    visible:
+      id: PremadeAudioNeverShown
+    timeout: 15000
+    optional: true
+- assertVisible:
+    id: ReadingSurface
+# Put the screens back in English, so later flows that wait on English labels (Pause) still match.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: en
