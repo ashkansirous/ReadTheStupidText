@@ -1,6 +1,6 @@
 # Slice 255 — Dino: real animal recordings instead of voiced sound words
 
-*Planned 2026-11-03.* Dino Reader only. From the user: "the animal noises should not be read by the ai voices. I prefer
+*In progress (wave 2026-11-04), draft PR.* (Planned 2026-11-03.) Dino Reader only. From the user: "the animal noises should not be read by the ai voices. I prefer
 to use real animal voices. can we get them form somewhere instead? like sheep and cow and pig and alike instead of
 reading it".
 
@@ -8,7 +8,7 @@ reading it".
 **Touches:** `src/DinoReader.Core/AnimalSounds*.cs`, `src/DinoReader.App/Reading*.cs`, `src/DinoReader.App/StoryVoicing.cs`,
 `src/DinoReader.App/Resources/Raw/animal-sounds/**` (new), `src/DinoReader.App/Platforms/**`, `tests/DinoReader.Tests/**`,
 `tools/DinoReader.BookBuilder/SentenceDump.cs`, `tools/premade-audio/generate.py`, `tools/animal-sounds/**` (new),
-`src/DinoReader.App/CLAUDE.md`, `src/DinoReader.Core/CLAUDE.md`, `STORE.md`.
+`src/DinoReader.App/CLAUDE.md`, `src/DinoReader.Core/CLAUDE.md`, `STORE.md`, `src/DinoReader.App/DinoReader.App.csproj` (Raw assets), `src/ReadTheStupidText.Mobile.Shared/**` (audio player, if A3 plays through it), `docs/plan/slices/255-dino-real-animal-sounds.md`.
 
 ## Why
 
