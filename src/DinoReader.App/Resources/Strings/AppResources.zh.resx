@@ -56,6 +56,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>为小恐龙精选并分好角色</value></data>
   <data name="Store_Get" xml:space="preserve"><value>获取</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>已下载</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>火爆</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>热门</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>推荐</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>新书</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} 页 · {1} 分钟</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>免费，无需账号。不会发送任何关于您或孩子的信息。</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>您已离线</value></data>

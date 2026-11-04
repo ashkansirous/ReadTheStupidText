@@ -58,6 +58,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>Uitgezocht en ingesproken voor Dino</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Ophalen</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Opgehaald</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>Hot</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>Populair</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>Aanbevolen</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>Nieuw</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} pagina’s · {1} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratis en zonder account. Er wordt niets over jou of je kind verstuurd.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Je bent offline</value></data>

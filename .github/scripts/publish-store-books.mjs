@@ -174,6 +174,23 @@ export function hashFromMeta(metaText) {
     }
 }
 
+/** Pure: the `bytes` (positive integer) in a live meta.json text, or null (Slice 260: the size of the package that is live). */
+export function bytesFromMeta(metaText) {
+    if (metaText === null || metaText === undefined) return null;
+    try {
+        const bytes = JSON.parse(metaText).bytes;
+        return Number.isInteger(bytes) && bytes > 0 ? bytes : null;
+    } catch {
+        return null;
+    }
+}
+
+/** Pure: `{ bytes }` for the live state when the live meta carries one, else `{}` (BookBuilder then lists the size of what it built). */
+function bytesEntry(metaText) {
+    const bytes = bytesFromMeta(metaText);
+    return bytes === null ? {} : { bytes };
+}
+
 /** Pure: the highest package version that exists, probing `exists(version)` upward from `from` until `window` versions in a row are absent; 0 when none. */
 export function highestPackage(exists, from, window = PROBE_WINDOW) {
     let highest = 0;
@@ -193,7 +210,7 @@ export function highestPackage(exists, from, window = PROBE_WINDOW) {
  * `liveMeta(id)` returns that story's meta.json text or null; `maxPackage(id, from)` the highest story-v<n>.dino in the bucket at or above `from`.
  */
 export function liveStateOf(live, liveMeta, maxPackage = () => 0, extraIds = []) {
-    const entries = live.map(({ id, version }) => [id, { version, contentHash: hashFromMeta(liveMeta(id)), maxPackage: maxPackage(id, version + 1) }]);
+    const entries = live.map(({ id, version }) => [id, { version, contentHash: hashFromMeta(liveMeta(id)), maxPackage: maxPackage(id, version + 1), ...bytesEntry(liveMeta(id)) }]);
     const liveIds = new Set(live.map((story) => story.id));
     const extra = extraIds.filter((id) => !liveIds.has(id)).map((id) => [id, { version: 0, contentHash: null, maxPackage: maxPackage(id, 1) }]);
     return Object.fromEntries([...entries, ...extra]);

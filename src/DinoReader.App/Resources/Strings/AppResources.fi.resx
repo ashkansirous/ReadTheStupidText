@@ -58,6 +58,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>Valittu ja äänetty Dinolle</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Hae</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Ladattu</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>Hitti</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>Suosittu</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>Suositeltu</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>Uusi</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} sivua · {1} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Ilmaiseksi ja ilman tiliä. Mitään sinusta tai lapsestasi ei lähetetä.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Olet offline-tilassa</value></data>

@@ -58,6 +58,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>Picked and cast for Dino</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Get</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Downloaded</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>Hot</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>Popular</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>Recommended</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>New</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} pages · {1} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Free, with no account. Nothing about you or your child is sent.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>You’re offline</value></data>

@@ -59,6 +59,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>Für Dino ausgesucht und besetzt</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Holen</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Geladen</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>Angesagt</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>Beliebt</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>Empfohlen</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>Neu</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} Seiten · {1} Min.</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Kostenlos und ohne Konto. Es wird nichts über dich oder dein Kind gesendet.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Du bist offline</value></data>

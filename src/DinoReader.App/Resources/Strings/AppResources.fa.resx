@@ -56,6 +56,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>انتخاب‌شده و نقش‌بندی‌شده برای دینو</value></data>
   <data name="Store_Get" xml:space="preserve"><value>دریافت</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>دریافت شد</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>داغ</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>محبوب</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>پیشنهادی</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>تازه</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} صفحه · {1} دقیقه</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>رایگان و بدون حساب کاربری. هیچ اطلاعاتی از شما یا فرزندتان فرستاده نمی‌شود.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>آفلاین هستید</value></data>
