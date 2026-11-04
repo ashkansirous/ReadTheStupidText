@@ -1,8 +1,8 @@
 # Slice 262 — Dino: adding a second language downloads the shelf books' audio in it
 
-*Planned 2026-11-04.* Dino Reader only; Android and iOS alike. After Slice 261 (both edit `StoreClient.cs`).
+*In progress (wave 2026-11-04), draft PR.* *Planned 2026-11-04.* Dino Reader only; Android and iOS alike. After Slice 261 (both edit `StoreClient.cs`).
 
-**Touches:** `src/DinoReader.App/StoryLanguages.cs`, `src/DinoReader.App/StoryLanguagesPage.cs`, `src/DinoReader.App/StoryLanguagePacks*.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/AudioPackStore.cs`, `src/DinoReader.App/ShelfAudioPacks*.cs` (new), `src/DinoReader.Core/ShelfAudioPlan*.cs` (new), `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/side-language-audio.yaml` (new), `docs/plan/slices/262-dino-side-language-downloads-book-audio.md`.
+**Touches:** `src/DinoReader.App/StoryLanguages.cs`, `src/DinoReader.App/StoryLanguagesPage.cs`, `src/DinoReader.App/StoryLanguagePacks*.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/AudioPackStore.cs`, `src/DinoReader.App/ShelfAudioPacks*.cs` (new), `src/DinoReader.Core/ShelfAudioPlan*.cs` (new), `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/side-language-audio.yaml` (new), `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/IntroWizardPage*.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/Testing/DinoTestCommands*.cs`, `src/DinoReader.App/Testing/TestStore*.cs`, `src/DinoReader.App/CLAUDE.md` (added at claim from a code check: runner registration and launch resume, the intro languages step, the weekly check's pack sync, and a Debug test store that serves an audio pack), `docs/plan/slices/262-dino-side-language-downloads-book-audio.md`.
 
 ## Decisions (user, 2026-11-04, RefineScope)
 
@@ -29,6 +29,17 @@ Source: `docs/design/dino-reader/Dino Reader Batch 47 Onboarding.dc.html`, 1 fra
 **Open point: progress placement.** Slice says "a progress note ... with Cancel (`WaitController`, any wait over 500 ms)"; the mock draws an in-row card with no wait overlay, so the parent can leave. **Default:** in-row card as drawn, plus `WaitController` only for the reading-voice step as today.
 **Open point: "has no audio yet" line.** Not in the slice (it only says such a book reads with the reading voice). **Default:** add the line, one per run, naming only the first book plus the count if several.
 **Mock decides (slice silent):** the count "2 of 4" excludes books that need no pack; the book in progress is named.
+
+## Design note (coordinator, claim 2026-11-04, night 2026-11-04-1441 wave 2)
+
+Code check on main after Slice 261 (68bdba69): adding a side language today runs only the reading-voice download and the translation offer (`StoryLanguagesPage.OnDownloadRequested`, `IntroWizardPage.DoneLanguagesAsync`); `AudioPackStore` is the only writer of `audio-packs/` and installs atomically (`.part`, `.tmp`, then `Directory.Move`), `InstalledVersion(book, lang)` says what is in; `StoreClient.WantedPacks` + `AudioPackStore.InstallPacksAsync` already fetch packs, but only at book download and in the weekly `BookUpdater` check.
+
+1. **One owner: a `ShelfAudioPacks` app singleton** (registered in `MauiProgram.cs`), the only thing that runs this fetch. It holds no queue file: each run asks the pure Core `ShelfAudioPlan` for the work, from the shelf's store books, the store listing (`StoreItem.AudioIn(lang)`) and `AudioPackStore.InstalledVersion`, so the plan is always what is still missing. Packs go in one at a time through `AudioPackStore` (never a second writer).
+2. **States:** Idle, Running(language, done, total, current book), WaitingForInternet (and WaitingForWifi when the existing Wi-Fi-only rule applies, as `StoryLanguagePacks` does), Cancelled(language). The page's in-row card (frame 169) and the intro languages step only show this state; leaving the page does not stop the run.
+3. **Start:** after the reading-voice step of a side-language add (Story languages page and intro languages step), and on app launch or return to the foreground when a listed side language still has missing packs that the store has and the language is not marked cancelled.
+4. **Interrupts.** Killed: the half-written pack is discarded by `AudioPackStore`'s atomic install; the next launch recomputes the plan and goes on. Offline: the run waits ("Waiting for the internet…", as Batch 39) and goes on when the connection returns (`Connectivity.ConnectivityChanged`). Cancel: stops the rest, keeps the language and the packs already in, and marks the language cancelled in Preferences so launch does not restart it; removing the language clears the mark, and re-adding it starts again. The weekly `BookUpdater` pack sync is unchanged (it may still fetch for a cancelled language, as today). A pack the store doesn't have is skipped, with the one quiet line per run.
+5. **Remove a side language:** packs stay (no surprise deletes); a running fetch for it stops.
+6. **Test:** the Debug test store lists `AudioIn` for a test book and serves a fixture pack zip, so `side-language-audio.yaml` adds a language and sees the pack arrive without the live store. Android emulator flow; iOS compiles in CI; nothing Android-only.
 
 ## Verification
 
