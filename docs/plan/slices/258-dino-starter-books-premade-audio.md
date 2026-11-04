@@ -1,6 +1,6 @@
 # Slice 258 — Dino: pre-made audio for the four starter books
 
-*Built 2026-11-04 (wave 2026-11-04), PR #792, not merged. Upload of the pack zips is a post-merge step; the device flow `premade-audio-starter` is not yet verified.* Follow-up to Slice 246 (parts A-D merged as #729, #768, #787, #790). Dino Reader only, Android and iOS alike (and the Windows head, which shares the code).
+*Built 2026-11-04, merged as PR #792 (16f33ae8). Packs uploaded live and `premade-audio-starter` passed on the emulator (night 2026-11-04-1441, wave 1); iOS and Windows head runs not yet done.* Follow-up to Slice 246 (parts A-D merged as #729, #768, #787, #790). Dino Reader only, Android and iOS alike (and the Windows head, which shares the code).
 
 **Touches:** `tools/DinoReader.BookBuilder/**`, `src/DinoReader.App/StarterStories.cs`, `src/DinoReader.App/AudioPack*.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/BookUpdater.cs`, `content/dino/{gingerbread-man,good-enough,three-little-pigs,tortoise-and-hare}/audio-cast.json`, `tests/DinoReader.Tests/**`, `tools/upload-store-story.ps1`, `.github/scripts/publish-store-books.mjs`, `.maestro/dino/premade-audio-*.yaml`, `src/DinoReader.App/Testing/DinoTestCommands.cs`, `src/DinoReader.App/Reading*.cs`, `src/DinoReader.App/StoryVoicing.cs` (comments only), `STORE.md`, `worker/CLAUDE.md` (doc lines only), `docs/plan/slices/258-dino-starter-books-premade-audio.md`. Widened at claim (2026-11-04) after a code check; the Worker code is not touched.
 
@@ -33,7 +33,7 @@ How the packs reach the app. Write the pick and the reason here before building:
 - [x] 1. Decide the delivery (above) and write it here. Option 1.
 - [x] 2. `build-audio` accepts the four starter books; their `audio-cast.json` files exist and match the recorded clips.
 - [x] 3. Build the packs from the recorded clips for all 15 languages: 60 packs v1 (4 starters x 15 languages), in `D:/ReadTheStupidText-worktrees/s246-audio/packs/<book>/<id>/`.
-- [ ] 4. Delivery per the decision, Android and iOS (and the Windows head) the same. The `audioPacks` records are in the four `audio-cast.json` files; the zips are uploaded by `tools/upload-store-story.ps1` right after the merge (post-merge step, not yet done).
+- [x] 4. Delivery per the decision, Android and iOS (and the Windows head) the same. The `audioPacks` records are in the four `audio-cast.json` files; the 60 zips were uploaded live with `tools/upload-store-story.ps1` after the merge (2026-11-04, night 2026-11-04-1441 wave 1).
 - [x] 5. A starter book reads with the pre-made clip when the text hash matches, else the on-device voice (the part C rule). No starter exclusion existed in the app playback path.
 - [x] 6. Unit tests; a device flow `.maestro/dino/premade-audio-starter.yaml` modeled on `premade-audio-plays`.
 
@@ -57,11 +57,14 @@ From review (files `D:/ReadTheStupidText-worktrees/reviews/s258-high.md`, `s258-
 
 **Parked 2026-11-04 (night 2026-11-03-2349, wave 4):** PR #792 passed both reviews, a check pass and every CI check (green, mergeable), but `gh pr merge 792 --merge` was denied by the auto-mode classifier ("CI Bypass") in the headless session, so it is not merged and the 60 pack zips are not uploaded. Next: merge #792 (the merge needs an allow for `gh pr merge` in the night sessions), then run `pwsh tools/upload-store-story.ps1 <id>` for each starter after `BookBuilder build` copies the packs into `artifacts/store/<id>/`, then run `premade-audio-starter` on the emulator.
 
+**Post-merge (night 2026-11-04-1441, wave 1):** the 60 starter packs were uploaded live with `tools/upload-store-story.ps1`; live `/api/stories` lists 15 audio languages for each of the four starters, and each `fa?v=1` pack answers 200. `BookBuilder build` wrote meta.json with the audio field but did not copy the zips into `artifacts/store/<id>/`; they were copied by hand from `D:/ReadTheStupidText-worktrees/s246-audio/packs/` (follow-up: Slice 265 moves pack upload into the store job). Emulator (cache 9f62c6983293): `premade-audio-starter` PASS (53 s), `premade-audio-plays` PASS; logs in `D:/ReadTheStupidText-worktrees/reviews/s258-starter-run/`. The first run's Maestro driver died; the rerun after `-ColdBoot` passed.
+
 Follow-up: make BookBuilder `check` flag a pack whose clip hashes no longer match the text.
 
 ## Not yet verified
 
-- `premade-audio-starter` PASS after the pack upload. Emulator run (cache 9f62c6983293): `premade-audio-plays` PASS, `usage-playback-events` PASS, `premade-audio-starter` FAIL as expected before upload (`HOOK fetch-audio-pack failed no listed pack for 966400017c494fb5b045786f53852c9e in language 'fa'`).
+(Passed 2026-11-04, night 2026-11-04-1441 wave 1, emulator: `premade-audio-starter` and `premade-audio-plays`; all 60 starter packs uploaded live.)
+
 - iOS run (compile only so far).
 - Windows head run.
 

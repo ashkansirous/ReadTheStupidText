@@ -98,8 +98,11 @@ def is_final(job):
 
 
 def job_succeeded(job):
+    """SUCCEEDED, or a job that reports no final state but is done with results and no error (a bare done=true with nothing in it is not a success)."""
     name = state_name(job)
-    return name == STATE_SUCCEEDED or (name not in FINAL_STATES and not job.get("error"))
+    if name in FINAL_STATES:
+        return name == STATE_SUCCEEDED
+    return not job.get("error") and bool(job_entries(job))
 
 
 def entry_audio(entry):
@@ -137,6 +140,15 @@ def listing_items(listing):
 
 def listed_display_name(item):
     return item[LISTING_META_KEY].get(LISTING_NAME_KEY) or ""
+
+
+def checked_batch(entry, name_key="name"):
+    """A state-file batch (or intent) entry, or ValueError when it is not {name_key: str, "keys": [str, ...]}: a hand-edited file must stop the run, not crash it later."""
+    if not isinstance(entry, dict) or not isinstance(entry.get(name_key), str):
+        raise ValueError(f"an entry is not an object with a text {name_key!r}")
+    if not isinstance(entry.get("keys"), list) or not all(isinstance(key, str) for key in entry["keys"]):
+        raise ValueError(f"the entry {entry[name_key]!r} has no list of text keys")
+    return entry
 
 
 class BatchStopped(Exception):
@@ -212,7 +224,11 @@ class BatchRunner:
             with open(self.state_path, encoding="utf8") as f:
                 data = json.load(f)
             failures = {str(k): int(v) for k, v in (data.get("failures") or {}).items()}
-            return {"batches": list(data["batches"]), "intent": data.get("intent"), "silent": list(data.get("silent") or []), "failures": failures}
+            batches = [checked_batch(entry) for entry in data["batches"]]
+            intent = data.get("intent")
+            if intent is not None:
+                checked_batch(intent, name_key="display_name")
+            return {"batches": batches, "intent": intent, "silent": [str(s) for s in (data.get("silent") or [])], "failures": failures}
         except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
             raise BatchStopped(f"{self.state_path} exists but cannot be read ({type(error).__name__}: {error}); it may hold batches already paid for, "
                                f"so nothing is submitted. Fix or move the file, then rerun", EXIT_BATCH_FAILED) from error
@@ -301,7 +317,8 @@ class BatchRunner:
         skip = set(silent) | self.exhausted(failures)
         fresh = [stem for stem in misses if stem not in covered and stem not in skip]
         if self.max_requests:
-            fresh = fresh[:max(0, self.max_requests - len(covered))]
+            in_flight = len(set(covered) & set(misses))  # only pending keys that still need a clip use up the cap, not stale ones
+            fresh = fresh[:max(0, self.max_requests - in_flight)]
         return fresh
 
     def resolve_intent(self, pending):
@@ -333,10 +350,11 @@ class BatchRunner:
         fresh = self.fresh_stems(misses, covered, self.silent, self.failures)
         held = [stem for stem in misses if stem in self.silent and stem not in covered]
         if held:
-            summary.errors.append(f"{len(held)} clip(s) came back silent in an earlier run and are not requested again (delete {STATE_NAME} to retry them)")
+            summary.notes.append(f"{len(held)} clip(s) came back silent in an earlier run and are not requested again (delete {STATE_NAME} to retry them)")
         gave_up = sorted(stem for stem in self.exhausted(self.failures) if stem in wanted and stem not in covered)
+        summary.held.update(held, gave_up)
         if gave_up:
-            summary.errors.append(f"{len(gave_up)} clip(s) failed in {MAX_KEY_ATTEMPTS} batch results and are not requested again (delete {STATE_NAME} to retry): {', '.join(gave_up)}")
+            summary.notes.append(f"{len(gave_up)} clip(s) failed in {MAX_KEY_ATTEMPTS} batch results and are not requested again (delete {STATE_NAME} to retry): {', '.join(gave_up)}")
         if pending:
             self.log(f"{len(pending)} batch(es) from an earlier run are pending; polling them")
         pending += self.submit_all(fresh, groups, pending)
@@ -363,7 +381,9 @@ class BatchRunner:
                 self.intent = None if refused else self.intent  # a 400/401/403 created nothing; any other error may have
                 self.save_state(pending + added)
                 code = EXIT_BATCH_FAILED if not refused else EXIT_BATCH_REFUSED if error.code == HTTP_BAD_REQUEST else EXIT_BATCH_AUTH
-                raise BatchStopped(f"batch submit refused, not retrying: {error}", code) from error
+                if refused:
+                    raise BatchStopped(f"batch submit refused, not retrying: {error}", code) from error
+                raise BatchStopped(f"batch submit {display_name} failed ({error}); it may have been created, so {RESUME_HINT}", code) from error
             except (OSError, ValueError, KeyError) as error:
                 raise BatchStopped(f"batch submit {display_name} got no usable answer ({type(error).__name__}: {error}); it may have been created, "
                                    f"so the next run looks for it in the account's batches before submitting again", EXIT_BATCH_FAILED) from error
@@ -407,8 +427,9 @@ class BatchRunner:
             self.log(f"{batch['name']}: {state_name(job) or 'running'}")
             return False
         if not job_succeeded(job):
-            summary.errors.append(f"{batch['name']}: job {state_name(job)}")
-            self.log(f"{batch['name']} ended {state_name(job)}; its {len(batch['keys'])} requests stay misses")
+            ended = state_name(job) or "done with no state and no results"
+            summary.errors.append(f"{batch['name']}: job {ended}")
+            self.log(f"{batch['name']} ended {ended}; its {len(batch['keys'])} requests stay misses")
             return True
         self.save_results(batch, job, groups, keep, summary)
         return True
@@ -422,13 +443,16 @@ class BatchRunner:
                 self.log(f"result for an unknown key {key!r} ignored")
                 continue
             wanted.discard(key)
+            if self.generator.has_clip(key):
+                self.log(f"result for {key} skipped: its clip already exists (an earlier run saved it)")
+                continue
             try:
                 wavs[key] = entry_audio(entry)
             except ValueError as error:
                 self.note_failure(key)
                 summary.errors.append(f"{key}: {error}")
                 self.log(f"failed key {key}: {error}; it stays a miss (attempt {self.failures[key]} of {MAX_KEY_ATTEMPTS})")
-        for key in sorted(wanted):
+        for key in sorted(k for k in wanted if not self.generator.has_clip(k)):
             self.note_failure(key)
             summary.errors.append(f"{key}: no result returned")
             self.log(f"failed key {key}: no result returned; it stays a miss (attempt {self.failures[key]} of {MAX_KEY_ATTEMPTS})")

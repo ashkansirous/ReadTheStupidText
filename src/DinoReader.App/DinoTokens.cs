@@ -60,6 +60,13 @@ public static class DinoTokens
 	public const string DisabledNote = "DisabledNote";
 	public const string OnBrand = "OnBrand";
 	public const string StorytellerOn = "StorytellerOn";
+	public const string TagHotFill = "TagHotFill";
+	public const string TagHotInk = "TagHotInk";
+	public const string TagPopularInk = "TagPopularInk";
+	public const string TagRecommendedFill = "TagRecommendedFill";
+	public const string TagRecommendedInk = "TagRecommendedInk";
+	public const string TagNewFill = "TagNewFill";
+	public const string TagNewInk = "TagNewInk";
 
 	public static Color Get(string key) => (Color)Microsoft.Maui.Controls.Application.Current!.Resources[key];
 }

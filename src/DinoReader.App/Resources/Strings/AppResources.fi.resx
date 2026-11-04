@@ -16,6 +16,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Odotetaan internetiä · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Odotetaan Wi-Fiä · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Jatkuu itsestään, kun olet taas verkossa.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>Haetaan {0}-ääni kirjoillesi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>Kirjalla {0} ei ole vielä kieltä {1} olevaa ääntä. Dinon lukuääni lukee sen.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>Kirjalla {0} ja {2} muulla ei ole vielä kieltä {1} olevaa ääntä. Dinon lukuääni lukee ne.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Odotetaan internetiä…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Odotetaan Wi-Fiä…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Valmistellaan…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>Osaa {0}-äänistä ei voitu vielä hakea. Dino yrittää myöhemmin uudelleen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Yritä uudelleen</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Äänen lataus vioittui. Luetaan puhelimen äänellä. Yritä uudelleen napauttamalla.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Luonnollisten äänten pakettia ei voi käyttää. Luetaan puhelimen äänellä.</value></data>
@@ -58,6 +65,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>Valittu ja äänetty Dinolle</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Hae</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Ladattu</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>Hitti</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>Suosittu</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>Suositeltu</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>Uusi</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} sivua · {1} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Ilmaiseksi ja ilman tiliä. Mitään sinusta tai lapsestasi ei lähetetä.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Olet offline-tilassa</value></data>
@@ -109,11 +120,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>Valmistellaan Dinon ääntä</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>{0} ääntä · tämä tehdään vain kerran</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>Ladataan…</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>Odottaa hyllyssä</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Valitse toinen kieli</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Valmista luettavaksi!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Jokainen hahmo saa oman äänensä. Hyllyssä on {0} tarinaa.</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Jokainen hahmo saa oman äänensä. Hyllyssä on yksi tarina.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Jokainen hahmo saa oman äänensä. Kirjasi ovat hyllyssä.</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>Valitse ensimmäiset kirjasi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>Valitse vähintään kaksi. Lisää saat kaupasta milloin tahansa.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>Valitse 2 kirjaa aloittaaksesi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>Valitse vielä 1</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>{0} valittu · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>{0} valittu</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>Haetaan kirjojasi…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>Kirja {0}/{1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Yhdistä internetiin valitaksesi ensimmäiset kirjasi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino tarvitsee kaksi kirjaa ennen kuin aloitat. Kytke Wi-Fi tai mobiilidata päälle ja yritä uudelleen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Kuule, kun Dino sanoo hei</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hei! Olen Dino. Luetaan yhdessä tarina.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Katso, mitä Dino osaa</value></data>
@@ -128,8 +147,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Lukon takana, kirjojen ja äänten lisäämiseen.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>Lue tarina yhdessä</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>Napauta kirjaa ja paina toista. Dino lukee ääneen ja korostaa jokaisen lauseen.</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>Hae lisää kirjoja</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>Kaupassa on lisää tarinoita, valmiina ladattaviksi.</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino avasi kirjan. ”Olipa kerran…”</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lue se omalla äänelläsi</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Äänitä itsesi lukemassa tarinaa sivu sivulta. Lapsesi voi kuunnella sen milloin tahansa.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Lisää oma kirjasi</value></data>

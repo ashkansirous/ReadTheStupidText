@@ -27,13 +27,17 @@ public sealed class StoryLanguagePicker : ContentView
 	private static readonly Color LockedGrey = Color.FromArgb("#C9C3D6");
 
 	private readonly StoryLanguagePacks? _packs;
+	private readonly ShelfAudioPacks? _shelf;
 	private readonly Dictionary<string, (ProgressBar Bar, Label Status)> _live = [];
 	private readonly Dictionary<string, LanguageVoiceState> _shown = [];
+	private readonly Dictionary<string, VerticalStackLayout> _shelfHosts = [];
+	private readonly Dictionary<string, View> _shelfCards = [];
 
-	public StoryLanguagePicker(StoryLanguageSet initial, StoryLanguagePacks? packs)
+	public StoryLanguagePicker(StoryLanguageSet initial, StoryLanguagePacks? packs, ShelfAudioPacks? shelf = null)
 	{
 		Set = initial;
 		_packs = packs;
+		_shelf = shelf;
 		Rebuild();
 	}
 
@@ -85,6 +89,8 @@ public sealed class StoryLanguagePicker : ContentView
 
 		_live.Clear();
 		_shown.Clear();
+		_shelfHosts.Clear();
+		_shelfCards.Clear();
 		var rows = new VerticalStackLayout();
 		foreach ((string code, _) in LanguageNames.All.OrderBy(l => l.Code == Set.Main ? 0 : 1))
 		{
@@ -179,9 +185,52 @@ public sealed class StoryLanguagePicker : ContentView
 			{
 				AddWaiting(stack, code);
 			}
+
+			AddShelfCard(stack, code); // Slice 262 (frame 169): the voice bar shows first, the shelf books' audio card (with Cancel) under it in the same row
 		}
 
 		return stack;
+	}
+
+	private void AddShelfCard(VerticalStackLayout stack, string code)
+	{
+		if (_shelf is null)
+		{
+			return;
+		}
+
+		_shelfHosts[code] = stack;
+		if (ShelfAudioPacksCard.For(code, _shelf.StateOf(code), () => CancelShelfAudio(code)) is { } card)
+		{
+			_shelfCards[code] = card;
+			stack.Children.Add(card);
+		}
+	}
+
+	/// <summary>Draws again only the shelf audio cards (a book is done, a wait begins): the rest of the picker, its voice bars and any open prompt stay as they are.</summary>
+	public void UpdateShelfCards()
+	{
+		if (!MainThread.IsMainThread)
+		{
+			MainThread.BeginInvokeOnMainThread(UpdateShelfCards); // the card dictionaries are touched on the main thread only
+			return;
+		}
+
+		foreach ((string code, VerticalStackLayout stack) in _shelfHosts.ToArray())
+		{
+			if (_shelfCards.Remove(code, out View? old))
+			{
+				stack.Children.Remove(old);
+			}
+
+			AddShelfCard(stack, code);
+		}
+	}
+
+	private Task CancelShelfAudio(string code)
+	{
+		_shelf?.Cancel(code); // keeps the language and the packs already in
+		return Task.CompletedTask;
 	}
 
 	private void AddProgress(VerticalStackLayout stack, string code)
@@ -332,6 +381,7 @@ public sealed class StoryLanguagePicker : ContentView
 public sealed class StoryLanguagesPage : SettingsSubPage
 {
 	private readonly StoryLanguagePacks _packs;
+	private readonly ShelfAudioPacks _shelf;
 	private readonly UsageCounter _usage;
 	private readonly IStoryLibrary _library;
 	private readonly StoryTranslator _translator;
@@ -342,16 +392,17 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 	private readonly List<string> _added = [];
 	private StoryLanguageSet _opened = StoryLanguages.Current();
 
-	public StoryLanguagesPage(StoryLanguagePacks packs, UsageCounter usage, IStoryLibrary library, StoryTranslator translator)
+	public StoryLanguagesPage(StoryLanguagePacks packs, ShelfAudioPacks shelf, UsageCounter usage, IStoryLibrary library, StoryTranslator translator)
 		: base(AppResources.StoryLanguages_SettingsTitle)
 	{
 		_packs = packs;
+		_shelf = shelf;
 		_usage = usage;
 		_library = library;
 		_translator = translator;
 		_wait = new WaitController(_waitOverlay);
 		AddOverlay(_waitOverlay);
-		_picker = new StoryLanguagePicker(_opened, packs);
+		_picker = new StoryLanguagePicker(_opened, packs, shelf);
 		_picker.Toggled += OnToggled;
 		_picker.DownloadRequested += OnDownloadRequested;
 		_full = new Label { Text = AppResources.StoryLanguages_Full, FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Muted), Margin = new Thickness(4, 0), LineHeight = 1.2 };
@@ -366,6 +417,7 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 		base.OnAppearing();
 		SetTitle(AppResources.StoryLanguages_SettingsTitle);
 		_packs.Changed += OnPacksChanged;
+		_shelf.Changed += OnShelfChanged;
 		_opened = StoryLanguages.Current();
 		_picker.Rebuild();
 		_ = _translator.ReconcilePacksAsync(); // a grown-up screen: adds the packs an older install already has to the record (loads ML Kit)
@@ -375,6 +427,7 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 	{
 		base.OnDisappearing();
 		_packs.Changed -= OnPacksChanged;
+		_shelf.Changed -= OnShelfChanged;
 		CountChange();
 	}
 
@@ -386,6 +439,9 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 			ShowFull(); // a background failure may have unticked a language
 		}
 	}
+
+	// A shelf audio step has no bar to move in place: only the rows' cards are drawn again (a book is done at most every few seconds), never the whole picker.
+	private void OnShelfChanged(object? sender, EventArgs e) => _picker.UpdateShelfCards();
 
 	private void OnToggled(string language, bool ticked)
 	{
@@ -402,9 +458,10 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 	// translation into the language are then offered its translation pack (the child's reader never offers a download).
 	private async void OnDownloadRequested(string language)
 	{
+		VoiceRequestOutcome outcome;
 		try
 		{
-			await _packs.RequestAsync(Window?.Page ?? this, [language], _wait);
+			outcome = await _packs.RequestAsync(Window?.Page ?? this, [language], _wait);
 		}
 		catch (OperationCanceledException)
 		{
@@ -417,6 +474,8 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 			_packs.GiveUp(language);
 			return;
 		}
+
+		_shelf.Start(language, outcome); // Slice 262: the shelf books' audio in the language, after the voice (it waits for the voice itself); a cancelled request starts nothing
 
 		await OfferOwnBooksSafelyAsync(language);
 	}

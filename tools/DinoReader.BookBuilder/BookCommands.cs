@@ -35,7 +35,8 @@ internal static class BookCommands
             foreach (var (fileName, story) in await StarterBuilder.BuildAllAsync(library, name => chosen.Any(b => b.FileName == name)))
             {
                 BookFolder book = chosen.Single(b => b.FileName == fileName);
-                await StoreBuilder.WritePackageAsync(story, StoreBuilder.StarterEntries[fileName].ToSpec(story, book.Info.Version), library, book.CoverThumbPath);
+                StoreStorySpec starterSpec = StoreBuilder.StarterEntries[fileName].ToSpec(story, book.Info.Version) with { LiveBytes = LiveBytesOf(book, live) }; // Slice 260: a starter at the live version keeps the live size, like a store book
+                await StoreBuilder.WritePackageAsync(story, starterSpec, library, book.CoverThumbPath);
                 bool rewritten = await WriteCommittedStarterAsync(story, fileName, library, book.Info.Version);
                 Console.WriteLine($"built {book.Stem} v{book.Info.Version}{(rewritten ? " (rewrote the committed starter)" : string.Empty)}");
             }
@@ -43,11 +44,14 @@ internal static class BookCommands
         return invalid.Count == 0 ? 0 : SkippedBooksExitCode;
     }
 
+    private static long? LiveBytesOf(BookFolder book, IReadOnlyDictionary<string, LiveEntry>? live) =>
+        live is not null && live.TryGetValue(book.Info.Id, out LiveEntry? entry) && entry.Version == book.Info.Version ? entry.Bytes : null;
+
     /// <summary>Slice 246 B2: packs the clips folder of one store book or starter language (see <see cref="AudioPacks"/>) beside the book's store folder and prints the version it was built as.</summary>
-    public static int BuildAudio(string stem, string language, string clipsFolder)
+    public static int BuildAudio(string stem, string language, string? clipsFolder)
     {
         BookFolder book = Books.Folder(stem); // store books and the four bundled starters (Slice 258): both are served by the store route under their id
-        AudioPackRecord record = AudioPacks.Build(book, language, clipsFolder, StoreBuilder.StoreFolder());
+        AudioPackRecord record = AudioPacks.Build(book, language, clipsFolder ?? AudioPacks.ClipsFolderOf(book, language), StoreBuilder.StoreFolder());
         Console.WriteLine($"built {stem} audio {language} v{record.Version} ({record.Bytes} bytes)");
         return 0;
     }

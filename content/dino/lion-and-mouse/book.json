@@ -10,6 +10,10 @@
   "colour": 1,
   "added": "2026-10-24",
   "order": 0,
+  "tags": [
+    "Hot",
+    "New"
+  ],
   "characters": [
     "Lion",
     "Mouse"

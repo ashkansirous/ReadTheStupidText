@@ -1,4 +1,4 @@
-# Leaves grown-up mode and opens the first visible starter book from the shelf into the reading page.
+# Leaves grown-up mode and opens the first visible book on the shelf (one of the two picked in dino-launch) from the shelf into the reading page.
 param([string] $ResultFile, [Parameter(Position = 0)] [string] $PackageName)
 . "$PSScriptRoot\_lib.ps1"
 Invoke-Check -ResultFile $ResultFile -Body {
@@ -14,5 +14,5 @@ Invoke-Check -ResultFile $ResultFile -Body {
     $title = Find-UiaById (& $window) 'ReadingBack'
     $heading = (& $window).FindAll($script:TreeScope::Descendants, [System.Windows.Automation.Condition]::TrueCondition) |
         Where-Object { $_.Current.ControlType.ProgrammaticName -eq 'ControlType.Text' -and $_.Current.BoundingRectangle.Y -gt 40 -and $_.Current.BoundingRectangle.Y -lt 90 -and $_.Current.Name } | Select-Object -First 1
-    "starter book open on the reading page ($($heading.Current.Name))"
+    "shelf book open on the reading page ($($heading.Current.Name))"
 }

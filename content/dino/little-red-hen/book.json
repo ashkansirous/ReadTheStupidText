@@ -10,6 +10,9 @@
   "colour": 3,
   "added": "2026-10-24",
   "order": 4,
+  "tags": [
+    "New"
+  ],
   "characters": [
     "Hen",
     "Dog",

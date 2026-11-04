@@ -14,6 +14,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>في انتظار الإنترنت · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>في انتظار Wi-Fi · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>يستمر تلقائيًا عند عودة الاتصال.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>جارٍ تحضير الصوت بلغة {0} لكتبك</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} ليس له صوت بلغة {1} بعد. سيقرؤه صوت القراءة الخاص بدينو.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} و{2} كتب أخرى ليس لها صوت بلغة {1} بعد. سيقرؤها صوت القراءة الخاص بدينو.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>في انتظار الإنترنت…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>في انتظار شبكة Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>جارٍ التحضير…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>تعذّر تنزيل بعض الصوت بلغة {0} حتى الآن. سيحاول دينو مرة أخرى لاحقًا.</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>إعادة المحاولة</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>تعرّض تنزيل الصوت للتلف. تتم القراءة بصوت الهاتف. اضغط لإعادة المحاولة.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>حزمة الأصوات الطبيعية غير صالحة للاستخدام. تتم القراءة بصوت الهاتف.</value></data>
@@ -56,6 +63,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>مختارة وموزّعة الأدوار من أجل دينو</value></data>
   <data name="Store_Get" xml:space="preserve"><value>تنزيل</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>تم التنزيل</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>رائج</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>شائع</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>موصى به</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>جديد</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} صفحات · {1} دقيقة</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>مجانية وبلا حساب. لا يُرسَل أي شيء عنك أو عن طفلك.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>أنت غير متصل بالإنترنت</value></data>
@@ -107,11 +118,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>جارٍ تجهيز صوت Dino</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>الصوت: {0} · يحدث هذا مرة واحدة فقط</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>جارٍ التنزيل…</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>بانتظارك على الرف</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>اختيار لغة أخرى</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>جاهز للقراءة!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>لكل شخصية صوتها الخاص. عدد القصص على الرف: {0}.</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>لكل شخصية صوتها الخاص. هناك قصة واحدة على الرف.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>لكل شخصية صوتها الخاص. كتبك على الرف.</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>اختر كتبك الأولى</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>اختر كتابين على الأقل. يمكنك الحصول على المزيد من المتجر في أي وقت.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>اختر كتابين للبدء</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>اختر كتابًا آخر</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>تم اختيار {0} · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>تم اختيار {0}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>جارٍ إحضار كتبك…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>الكتاب {0} من {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>اتصل بالإنترنت لاختيار كتبك الأولى</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>يحتاج دينو إلى كتابين قبل أن تبدأ. شغّل الواي فاي أو بيانات الجوال ثم حاول مرة أخرى.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>اسمع Dino يقول مرحبًا</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>مرحبًا! أنا Dino. لنقرأ قصة معًا.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>اكتشف ما يستطيع دينو فعله</value></data>
@@ -126,8 +145,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>خلف قفل، لإضافة الكتب والأصوات.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>لنقرأ قصة معًا</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>المس كتابًا ثم اضغط تشغيل. يقرأ دينو بصوت عالٍ ويضيء كل جملة.</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>احصل على المزيد من الكتب</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>في المتجر المزيد من القصص الجاهزة للتنزيل.</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>فتح دينو الكتاب. «كان يا ما كان…»</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>اقرأها بصوتك</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>سجّل نفسك وأنت تقرأ قصة، صفحة بصفحة. يمكن لطفلك تشغيلها في أي وقت.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>أضف كتابك الخاص</value></data>

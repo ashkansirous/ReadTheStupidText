@@ -17,7 +17,7 @@ const string Usage = """
       dump-voices [--out <file>]           cast every book mechanically, as cast entries for the writers
       voice-listen --out <file>            write the English roster and the Ugly Duckling cast for tools/voice-listen
       dump-sentences <stem> --lang <code> [--out <file>]   print every piece the app reads aloud for a store book or a bundled starter in a language (index, highlight sentence, spoken text, speaker, narrator) as JSON, for tools/premade-audio
-      build-audio <stem> --lang <code> --clips <folder> [--out <folder>]   pack a generator clips folder (manifest.json v3 + its clips) into artifacts/store/<id>/audio-<code>-v<n>.zip and record
+      build-audio <stem> --lang <code> [--clips <folder>] [--out <folder>]   pack the clips folder (default content/dino/<stem>/audio/<code>, Git LFS: git lfs pull --include it first; manifest.json v3 + its clips) into artifacts/store/<id>/audio-<code>-v<n>.zip and record
                                            the pack in the book's audio-cast.json (audioPacks); the version rises only when the content hash changes; the next build lists it in meta.json
     """;
 
@@ -56,7 +56,7 @@ try
             return SentenceDump.Run(stems.FirstOrDefault(), language, outPath);
         case "build-audio":
             StoreBuilder.OutputFolder = outPath;
-            return stems.Count != 1 || language is null || clipsPath is null ? Fail("build-audio needs one book, --lang <code> and --clips <folder>") : BookCommands.BuildAudio(stems[0], language, clipsPath);
+            return stems.Count != 1 || language is null ? Fail("build-audio needs one book and --lang <code>") : BookCommands.BuildAudio(stems[0], language, clipsPath);
         default:
             return Fail(Usage);
     }

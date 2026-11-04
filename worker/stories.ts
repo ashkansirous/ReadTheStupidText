@@ -63,6 +63,10 @@ const MAX_AUDIO_LANGUAGES = 40;
 const MAX_AUDIO_BYTES = 2_000_000_000;
 const POSITIVE_INTEGER = /^[1-9]\d{0,8}$/;
 
+/** Slice 260: the closed set of store tags, in the order a card shows them. Parsing is case-sensitive. */
+export const STORE_TAGS = ["Hot", "Popular", "Recommended", "New"] as const;
+export type StoreTag = (typeof STORE_TAGS)[number];
+
 const ErrorCode = {
   Unavailable: "stories-unavailable",
   NotFound: "not-found",
@@ -91,6 +95,10 @@ export interface StoryMeta {
   readonly creditsByLanguage: Readonly<Record<string, string>> | null;
   /** Slice 246 B2: the audio pack each book language has (pack version and zip size), the store builder's copy of the book's pack record; null when the book has none. Old apps ignore it. */
   readonly audio: Readonly<Record<string, AudioPackInfo>> | null;
+  /** Slice 260: the store tags the user set in the book's `book.json`, only the four known names, deduplicated, in list order (Hot, Popular, Recommended, New); empty when none. */
+  readonly tags: readonly StoreTag[];
+  /** Slice 260: the size of the `story-v<n>.dino` package in bytes; null when absent or not a positive integer. */
+  readonly bytes: number | null;
 }
 
 /** One audio pack of a book language: `audio-<lang>-v<version>.zip`; `bytes` (null when unknown) lets the app show a size. */
@@ -232,6 +240,12 @@ function parseLanguageTexts(raw: unknown, maxLength: number): Record<string, str
   return Object.keys(kept).length > 0 ? kept : null;
 }
 
+/** Slice 260: the known tag names of a `tags` array, deduplicated and in list order; a wrong-typed value, an unknown or wrong-case name is dropped. */
+export function parseTags(raw: unknown): StoreTag[] {
+  if (!Array.isArray(raw)) return [];
+  return STORE_TAGS.filter((tag) => raw.includes(tag));
+}
+
 /** A checked meta, or null when a required field is missing or malformed (the story is then not offered). */
 export function parseMeta(parsed: unknown): StoryMeta | null {
   if (typeof parsed !== "object" || parsed === null) return null;
@@ -256,6 +270,8 @@ export function parseMeta(parsed: unknown): StoryMeta | null {
     titles: parseTitles(raw["titles"]),
     creditsByLanguage: parseCreditsByLanguage(raw["creditsByLanguage"]),
     audio: parseAudio(raw["audio"]),
+    tags: parseTags(raw["tags"]),
+    bytes: positiveIntegerOrNull(raw["bytes"]),
   };
 }
 
@@ -265,8 +281,10 @@ export function offeredVersion(meta: StoryMeta, uploaded: readonly number[]): nu
   return uploaded.length === 0 ? null : Math.max(...uploaded);
 }
 
-/** Newest first by `added`, then by title and id so equal dates stay in one order. */
+/** Slice 260: tagged books first, then newest first by `added`, then by title and id so equal dates stay in one order. */
 export function compareEntries(a: StoryEntry, b: StoryEntry): number {
+  const byTagged = Number(b.meta.tags.length > 0) - Number(a.meta.tags.length > 0);
+  if (byTagged !== 0) return byTagged;
   const byDate = (b.meta.added ?? "").localeCompare(a.meta.added ?? "");
   return byDate !== 0 ? byDate : a.meta.title.localeCompare(b.meta.title) || a.id.localeCompare(b.id);
 }
@@ -287,6 +305,9 @@ export interface ListItem {
   readonly creditsByLanguage: Readonly<Record<string, string>> | null;
   /** Slice 246 B2: the packs on offer per language (version, size, link); null when the book has none. */
   readonly audio: Readonly<Record<string, AudioPackInfo & { readonly url: string }>> | null;
+  /** Slice 260: the store tags in list order (empty when none) and the package size in bytes (null when unknown). */
+  readonly tags: readonly StoreTag[];
+  readonly bytes: number | null;
   readonly coverUrl: string | null;
   readonly downloadUrl: string;
 }
@@ -316,6 +337,8 @@ export function toListItem(entry: StoryEntry, pathPrefix: string): ListItem {
     titles: entry.meta.titles,
     creditsByLanguage: entry.meta.creditsByLanguage,
     audio: audioItems(entry, base),
+    tags: entry.meta.tags,
+    bytes: entry.meta.bytes,
     coverUrl: entry.hasCover ? `${base}${COVER_SEGMENT}${versioned}` : null,
     downloadUrl: `${base}${DOWNLOAD_SEGMENT}${versioned}`,
   };

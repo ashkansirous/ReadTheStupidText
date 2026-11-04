@@ -14,6 +14,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>インターネットを待っています · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Wi-Fiを待っています · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>オンラインに戻ると自動で再開します。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>本の{0}音声を取得中</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>「{0}」にはまだ{1}の音声がありません。ディノの読み上げ音声で読みます。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>「{0}」ほか{2}冊にはまだ{1}の音声がありません。ディノの読み上げ音声で読みます。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>インターネットを待っています…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Wi-Fiを待っています…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>準備しています…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>{0}の音声の一部をまだ取得できていません。ディノは後でもう一度試します。</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>再試行</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>音声のダウンロードが破損しました。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然な音声パックを使用できません。スマートフォンの音声で読み上げます。</value></data>
@@ -56,6 +63,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>ディノのために えらんで やくを きめました</value></data>
   <data name="Store_Get" xml:space="preserve"><value>もらう</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>ダウンロードずみ</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>話題</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>人気</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>おすすめ</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>新着</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0}ページ · {1}分</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>むりょうで、アカウントもいりません。あなたやお子さんの情報は送られません。</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>オフラインです</value></data>
@@ -107,11 +118,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>Dino の声を準備中</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>声：{0} · 最初の1回だけです</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>ダウンロード中…</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>本棚で待っています</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>別の言語を選ぶ</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>読む準備ができました！</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>どのキャラクターにもそれぞれの声があります。本棚には{0}冊の物語があります。</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>どのキャラクターにもそれぞれの声があります。本棚には1冊の物語があります。</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>どのキャラクターにもそれぞれの声があります。本は本棚に入っています。</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>はじめの本をえらぼう</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>2冊以上えらんでください。ほかの本は、いつでもストアで手に入ります。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>2冊えらんではじめよう</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>あと1冊えらんでね</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>{0}冊えらびました · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>{0}冊えらびました</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>本をよういしています…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>{0}冊目 / 全{1}冊</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>インターネットにつないで、はじめの本をえらびましょう</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>はじめる前に、Dinoには2冊の本が必要です。Wi-Fiかモバイルデータをオンにして、もういちどためしてください。</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Dino のあいさつを聞く</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>こんにちは！ぼくは Dino。いっしょに物語を読もう。</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Dinoでできること</value></data>
@@ -126,8 +145,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>ロックの奥で、本や声を追加できます。</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>いっしょに読もう</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>本をタップして再生。ディノが読み上げ、1文ずつ光ります。</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>本をもっと入手</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>ストアには、ダウンロードできる物語がまだあります。</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>ディノが本を開きました。「むかしむかし…」</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>あなたの声で読む</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>物語を1ページずつ読んで録音しましょう。お子さまはいつでも再生できます。</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>自分の本を追加</value></data>

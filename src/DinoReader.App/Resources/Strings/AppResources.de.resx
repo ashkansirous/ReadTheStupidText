@@ -17,6 +17,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Warte auf das Internet · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Warte auf WLAN · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Geht von selbst weiter, sobald du wieder online bist.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>Hole {0}-Audio für deine Bücher</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} hat noch kein {1}-Audio. Dinos Lesestimme liest es vor.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} und {2} weitere haben noch kein {1}-Audio. Dinos Lesestimme liest sie vor.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Warte auf das Internet…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Warte auf WLAN…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Wird vorbereitet…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>Ein Teil des {0}-Audios konnte noch nicht geladen werden. Dino versucht es später erneut.</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Erneut versuchen</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Der Download der Stimme war beschädigt. Es liest die Handy-Stimme. Tippe, um es noch einmal zu versuchen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Das Paket mit den natürlichen Stimmen ist unbrauchbar. Es liest die Handy-Stimme.</value></data>
@@ -59,6 +66,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>Für Dino ausgesucht und besetzt</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Holen</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Geladen</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>Angesagt</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>Beliebt</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>Empfohlen</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>Neu</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} Seiten · {1} Min.</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Kostenlos und ohne Konto. Es wird nichts über dich oder dein Kind gesendet.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Du bist offline</value></data>
@@ -110,11 +121,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>Dinos Stimme wird vorbereitet</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>{0} Stimmen · das passiert nur einmal</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>Wird heruntergeladen …</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>Wartet im Regal</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Andere Sprache wählen</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Bereit zum Lesen!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Jede Figur bekommt ihre eigene Stimme. {0} Geschichten stehen im Regal.</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Jede Figur bekommt ihre eigene Stimme. Eine Geschichte steht im Regal.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Jede Figur bekommt ihre eigene Stimme. Deine Bücher stehen im Regal.</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>Wähle deine ersten Bücher</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>Wähle mindestens zwei. Weitere gibt es jederzeit im Store.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>Wähle 2 Bücher zum Start</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>Wähle 1 weiteres</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>{0} gewählt · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>{0} gewählt</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>Deine Bücher werden geholt …</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>Buch {0} von {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Verbinde dich mit dem Internet, um deine ersten Bücher zu wählen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino braucht zwei Bücher, bevor es losgeht. Schalte WLAN oder mobile Daten ein und versuche es noch einmal.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Hör, wie Dino Hallo sagt</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hallo! Ich bin Dino. Lass uns zusammen eine Geschichte lesen.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Sieh, was Dino kann</value></data>
@@ -129,8 +148,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Hinter einem Schloss, zum Hinzufügen von Büchern und Stimmen.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>Zusammen eine Geschichte lesen</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>Tippe auf ein Buch und dann auf Abspielen. Dino liest laut vor und hebt jeden Satz hervor.</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>Mehr Bücher holen</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>Im Laden warten weitere Geschichten zum Herunterladen.</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino hat das Buch aufgeschlagen. „Es war einmal…“</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Mit deiner Stimme vorlesen</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Lies eine Geschichte selbst vor, Seite für Seite. Dein Kind kann sie jederzeit abspielen.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Eigenes Buch hinzufügen</value></data>

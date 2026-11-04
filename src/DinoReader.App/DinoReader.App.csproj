@@ -91,8 +91,10 @@
 		<MauiImage Include="Resources\Images\dino_icon.png" BaseSize="40,40" />
 		<!-- Slice 143: the app icon at the wait overlay's 84 size (dino_icon is a 40 base and would blur). -->
 		<MauiImage Include="Resources\Images\dino_wait.png" BaseSize="84,84" />
-		<!-- The bundled starter stories (Slice 91): .dino packages opened with FileSystem.OpenAppPackageFileAsync("<name>.dino"); flat names, because the Windows package drops the folder. -->
-		<MauiAsset Include="Resources\Raw\starters\*.dino" LogicalName="%(Filename)%(Extension)" />
+		<!-- Slice 261: no book is bundled in the app any more (a fresh install picks its first books from the store). The four former starter packages are test books that only a Debug build carries
+		     (Testing/TestBooks, the import-test-book hook and the test store); a Release build has no testbooks asset. Flat names, because the Windows package drops the folder.
+		     The Windows VM test package (Release, no Debug hooks) is built with -p:DinoTestBooks=true: that carries the assets too and makes the test store the default list (tools/desktop-vm). The Store and CI builds never set it. -->
+		<MauiAsset Condition="'$(Configuration)' == 'Debug' Or '$(DinoTestBooks)' == 'true'" Include="Resources\Raw\testbooks\*.dino" LogicalName="%(Filename)%(Extension)" />
 		<!-- Slice 255: the animals' real recordings (CC0, credits in STORE.md), flat names for the same reason: animal-pig.m4a, opened by ReadingClips.cs. -->
 		<MauiAsset Include="Resources\Raw\animal-sounds\*.m4a" LogicalName="animal-%(Filename)%(Extension)" />
 	</ItemGroup>
@@ -101,6 +103,15 @@
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 	</ItemGroup>
+
+	<!-- Slice 261: DINO_TEST_BOOKS compiles the test books and the test store in (Debug, or a Release package built with -p:DinoTestBooks=true for the Windows VM checks); DINO_TEST_STORE_ON also makes
+	     the test store the default list, because that package has no Debug hooks to switch it on. A Store or CI build sets neither. -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug' Or '$(DinoTestBooks)' == 'true'">
+		<DefineConstants>$(DefineConstants);DINO_TEST_BOOKS</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(DinoTestBooks)' == 'true'">
+		<DefineConstants>$(DefineConstants);DINO_TEST_STORE_ON</DefineConstants>
+	</PropertyGroup>
 
 	<!-- Slice 132: Play's in-app update (the forced "Please update" page uses its immediate flow). -->
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">

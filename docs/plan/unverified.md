@@ -2,6 +2,47 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 262: Dino: adding a second language downloads the shelf books' audio in it ([slice](slices/262-dino-side-language-downloads-book-audio.md))
+- iOS run of the shelf-audio card and runner (compiles in CI only).
+- Kill-and-resume and offline mid-download on a device.
+- The mobile-data rule ("Download now" only) on a real phone.
+- The intro languages step path on a device.
+
+### Slice 266: Waves: stop wasting the minutes between fix attempts ([slice](slices/266-wave-fix-attempt-speed.md))
+- Item 5: a timed Windows fix attempt on a real slice (target under 6 minutes, against the measured 11.5-12.4).
+- A VM run reusing a package a fixer built in a fix round.
+
+### Slice 265: Dino: pre-made audio clips in Git LFS; book changes only publish to the store ([slice](slices/265-dino-audio-clips-in-git-lfs.md))
+- `dino-store.yml`'s first real run on main.
+- `packs.yml`'s first run with `lfs: false`.
+- `dino-starters.json` and `BookBuilderTests` still reference starters (follow-up after 261).
+
+### Slice 261: Dino: no starter books in the app; a first-run book picker ([slice](slices/261-dino-no-starters-first-run-book-picker.md))
+- Upgrade from the current release APK keeps the four books (the release signature differs from Debug).
+- iOS simulator run of the picker and first run.
+- The one-off Mono SIGSEGV on first-books-cancel (not reproduced in two later runs with the crash buffer captured).
+- The roughly 45 older flows were not all rerun (open-book, back-cover, premade-audio-plays, store-tags and grown-ups-button passed).
+- The covers row on the download wait and the intro caption were not checked by eye.
+
+### Slice 260: Dino: tags on store books (Hot, Popular, Recommended, New) ([slice](slices/260-dino-store-tags.md))
+- Tablet store flow `dino-landscape-store-tablet` on the tablet AVD (it failed on the phone AVD).
+- iOS run (compile only so far).
+- Badge look at 130-200% system font size and the slim (sideways) store card with a tagged book (extra badge row vs title and cover centre).
+- The 15 locale labels (`Store_Tag_*`) need a native read.
+- Badge text after an app-language switch with the store page open (review high 3, not confirmed).
+
+### Slice 259: Leftovers from night 2026-11-03-2349 ([slice](slices/259-night-2026-11-03-2349-leftovers.md))
+- Item 1: the mid-book wait on a slow real phone (overlay when above 500 ms); the emulator measured 540 ms to first sound with no overlay.
+- Item 1: why no overlay at 540 ms (about 40 ms over the 500 ms rule).
+- Item 4: the WER copy on a real crash (the scripted kill left `events.txt` and the trace tail only).
+- Item 4: `tools-selftests.yml`'s new crash-evidence step has not had its first CI run.
+- Follow-up, not done: document the new `exit_code_for` exit rule in `tools/premade-audio/README.md`.
+- Item 5: the keychain-lifetime cause is read from the log, not reproduced; confirmed only by the next signed Dino build passing after the `ios-signing.sh` change.
+
+### Slice 258: Dino: pre-made audio for the four starter books ([slice](slices/258-dino-starter-books-premade-audio.md))
+- iOS run (compile only so far).
+- Windows head run.
+
 ### Slice 250: Dino usage: playback events and a session id new on every cold start ([slice](slices/250-dino-playback-events-and-session-id.md))
 
 - `seq` on a device (the Debug line has no `seq`; unit-tested only).

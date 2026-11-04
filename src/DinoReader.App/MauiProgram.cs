@@ -92,6 +92,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<AppConfigClient>();
 		builder.Services.AddSingleton<UsageCounter>();
 		builder.Services.AddSingleton<StoryLanguagePacks>();
+		builder.Services.AddSingleton<ShelfAudioPacks>(); // Slice 262: the one owner of the side languages' pre-made audio for the shelf books
 		AddDocumentExtractors(builder.Services);
 		AddPages(builder.Services);
 
@@ -149,6 +150,7 @@ public static class MauiProgram
 		services.AddTransient<UsageCountsPage>();
 		services.AddTransient<AboutPage>();
 		services.AddTransient<FirstRunPage>();
+		services.AddTransient<FirstBooksPage>();
 		services.AddTransient<IntroWizardPage>();
 		services.AddSingleton<GrownUpMode>();
 		services.AddTransient<StoryWizardPage>();

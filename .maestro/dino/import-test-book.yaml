@@ -1,0 +1,36 @@
+# Slice 261: no book ships in the app; a flow that needs one puts a test book on the shelf with the Debug import-test-book hook (the four former starters, Debug-only assets, through the store
+# client's own download), then opens it. Fails against a build that has neither the hook nor a book: HOOK open-book failed no book.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK import-test-book ok three-little-pigs
+# expect-log: HOOK open-book opened page=1
+appId: uk.sirous.dinoreader.dbg
+name: Import a test book and open it
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow imports a test book and speaks nothing, so it needs no pack or own book.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: GalleryTitle
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: import-test-book
+      id: three-little-pigs
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000

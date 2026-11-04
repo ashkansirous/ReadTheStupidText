@@ -71,6 +71,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		CrashReporter.AttachTo(window); // Slice 227: the run marker for the unclean-exit report
 		window.Resumed += (_, _) => OnResumed(_navigation!, external);
 		window.Resumed += (_, _) => _ = _config.RefreshAsync();
+		window.Resumed += (_, _) => ResumeShelfAudio(force: false);
 		var resume = _services.GetRequiredService<ReadTheStupidText.Mobile.Shared.Network.PackResumeWatcher>(); // Slice 182: created and started with the window, not when a page first asks for it
 		resume.Start();
 		window.Resumed += (_, _) => resume.NotifyForeground();
@@ -91,6 +92,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 			await _config.RefreshAsync();
 			_ = CheckBookUpdatesAsync();
 			_ = ResumeStalePartialsAsync();
+			ResumeShelfAudio(force: true);
 			if (_launchCounted)
 			{
 				return;
@@ -128,6 +130,24 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader could not check for book updates: {ex.Message}");
+		}
+	}
+
+	// Slice 262: at launch and when the app returns, a side language that still lacks packs the store has carries on (a cancelled one does not); a forced-update screen skips it.
+	private void ResumeShelfAudio(bool force)
+	{
+		if (_config.UpdateRequired)
+		{
+			return;
+		}
+
+		try
+		{
+			_services.GetRequiredService<ShelfAudioPacks>().Resume(force);
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not resume the shelf audio: {ex.Message}");
 		}
 	}
 
@@ -213,7 +233,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 #if DEBUG
 	/// <summary>
 	/// Debug test hook (Slice 162): finishes first run for <paramref name="code"/> like the first-run page (screen language, voice language, no
-	/// intro, a fresh gallery root); false when there is no window. Differences, on purpose: it stays in kids' mode with no hand-over
+	/// intro, a fresh gallery root) and, since Slice 261, puts the four test books on the shelf (the app bundles none); false when there is no window. Differences, on purpose: it stays in kids' mode with no hand-over
 	/// (flows tap the shelf's tiles), and it does not start the voice pack (SpokenLanguage.Use crashes the Debug x86_64 emulator build, see the slice file).
 	/// </summary>
 	public bool CompleteFirstRun(string code)
@@ -226,6 +246,8 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 
 		_services.GetRequiredService<ISettingsStore>().Language = LanguageChoice.ApplyScreens(code);
 		IntroState.Clear();
+		FirstBooksGate.Pending = false;
+		Testing.TestBooks.StartAll(_services.GetRequiredService<StoreClient>()); // Slice 261: no book ships in the app, so a flow that skips the first run gets the four test books; the gallery waits for them
 		RebuildRoot();
 		return true;
 	}
@@ -240,9 +262,40 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 			return _services.GetRequiredService<UpdatePage>();
 		}
 
-		return FirstRunState.IsNeeded(_services.GetRequiredService<ISettingsStore>())
-			? _services.GetRequiredService<FirstRunPage>()
-			: _services.GetRequiredService<GalleryPage>();
+		if (FirstRunState.IsNeeded(_services.GetRequiredService<ISettingsStore>()))
+		{
+			return _services.GetRequiredService<FirstRunPage>();
+		}
+
+		return FirstBooksGate.Pending ? BooksPageAfterRestart() : _services.GetRequiredService<GalleryPage>();
+	}
+
+	// Slice 261: the language was stored but the books were not chosen (the app was killed on the picker or while its books downloaded): the picker opens again, with the books that landed ticked,
+	// and carries on to the voice download when the shelf holds two. It is the root, so it has no language page to go back to.
+	private FirstBooksPage BooksPageAfterRestart()
+	{
+		var page = _services.GetRequiredService<FirstBooksPage>();
+		page.Completed = () =>
+		{
+			ResumeFirstRunAfterBooks();
+			return Task.CompletedTask;
+		};
+		return page;
+	}
+
+	/// <summary>Replaces the restarted picker with the first-run voice download page in the stored language (Slice 261); the fresh root speaks the language just applied.</summary>
+	private void ResumeFirstRunAfterBooks()
+	{
+		UiCulture.Apply(LanguageChoice.Preferred());
+		ApplyRightToLeftFonts();
+		if (Windows.FirstOrDefault() is not { } window)
+		{
+			return;
+		}
+
+		var page = _services.GetRequiredService<FirstRunPage>();
+		page.ResumeAfterBooks();
+		window.Page = _navigation = BuildNavigation(page);
 	}
 
 	// A fetched config can raise minVersion while the app is open: the update page then replaces everything, grown-up mode included.

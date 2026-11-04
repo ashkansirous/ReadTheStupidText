@@ -19,6 +19,12 @@ $ErrorActionPreference = 'Stop'
 
 $repoRoot = $script:ToolsRepoRoot
 $msixFilter = if ($App -eq 'rtst') { 'ReadTheStupidText.App_*.msix' } else { 'DinoReader.App_*.msix' }
+# Slice 266: its own --artifacts-path (restore included), so an Android build of the same checkout shares no obj folder with it and the two never wait on each other.
+$buildScope = Get-TestBuildScope 'win' $App
+$buildArtifacts = Get-TestBuildArtifactsPath $buildScope
+# Slice 266: the Windows build is deeper than the old src\obj one; no depth is measured for it, so this only warns (never stops the build).
+$pathProblem = Test-BuildPathLength $buildArtifacts
+if ($pathProblem) { Write-Warning $pathProblem.Message }
 
 function Find-MsBuild {
     $onPath = Get-Command msbuild -ErrorAction SilentlyContinue
@@ -33,7 +39,7 @@ function Build-RtstMsix([string]$Dir) {
     $msbuild = Find-MsBuild
     # Slice 225 item 23: msbuild.exe has no --disable-build-servers (a dotnet CLI option): its twin is -nodeReuse:false plus no shared compiler.
     & $msbuild (Join-Path $repoRoot 'src\ReadTheStupidText.App\ReadTheStupidText.App.csproj') -restore -nodeReuse:false -p:UseSharedCompilation=false -p:Configuration=Release -p:Platform=x64 `
-        -p:RuntimeIdentifier=win-x64 -p:GenerateAppxPackageOnBuild=true "-p:AppxPackageDir=$Dir\\" `
+        "-p:ArtifactsPath=$buildArtifacts" -p:UseArtifactsOutput=true -p:RuntimeIdentifier=win-x64 -p:GenerateAppxPackageOnBuild=true "-p:AppxPackageDir=$Dir\\" `
         -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxBundle=Never -p:AppxPackageSigningEnabled=false
     if ($LASTEXITCODE -ne 0) { throw 'msbuild failed.' }
 }
@@ -42,8 +48,8 @@ function Build-RtstMsix([string]$Dir) {
 function Build-DinoMsix([string]$Dir) {
     $packages = Join-Path $repoRoot 'src\DinoReader.App\AppPackages'
     Remove-Item $packages -Recurse -Force -ErrorAction SilentlyContinue
-    dotnet publish (Join-Path $repoRoot 'src\DinoReader.App') -f net10.0-windows10.0.19041.0 -c Release --disable-build-servers -p:IncludeAndroid=false `
-        -p:Platform=x64 -p:AppxPackageSigningEnabled=false
+    dotnet publish (Join-Path $repoRoot 'src\DinoReader.App') -f net10.0-windows10.0.19041.0 -c Release --artifacts-path $buildArtifacts --disable-build-servers -p:IncludeAndroid=false `
+        -p:Platform=x64 -p:AppxPackageSigningEnabled=false -p:DinoTestBooks=true
     if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }
     if (-not (Test-Path $packages)) { throw "dotnet publish wrote no AppPackages folder under src\DinoReader.App." }
     Copy-Item "$packages\*" $Dir -Recurse -Force
@@ -67,7 +73,7 @@ function Build-Msix([string]$Dir, [string]$Key) {
 function Get-MsixForKey {
     $activity = Start-Activity "build-$App-windows"
     try {
-        $locks = Enter-BuildLocks $App 'windows' $script:key
+        $locks = Enter-BuildLocks $App 'windows' $script:key $buildScope
         try {
             $script:key = Get-BuildKey
             $script:buildDir = Get-BuildDir $App 'windows' $script:key
