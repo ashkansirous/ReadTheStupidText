@@ -28,6 +28,12 @@ public static class UsageGate
     /// <summary>The facts read once at start (Slice 227: crash reports decide on the same facts, with their own install-channel rule), or null when they could not be read.</summary>
     public static UsageFacts? Facts => CachedFacts.Value;
 
+    /// <summary>
+    /// Slice 251: the dataset this install's counts belong to. <see cref="UsageGate.Reason"/> is unchanged; only an app that sends <see cref="UsageChannel.Beta"/> (Dino Reader,
+    /// through <see cref="UsageQueueOptions{TEvent}.SendsBeta"/>) reads this. Unreadable facts are <see cref="UsageChannel.None"/>.
+    /// </summary>
+    public static UsageChannel Channel => Facts is { } facts ? UsageEligibility.ChannelOf(facts) : UsageChannel.None;
+
     private static UsageSkipReason Decide() =>
         Facts is { } facts ? UsageEligibility.Check(facts) : UsageSkipReason.Unreadable;
 

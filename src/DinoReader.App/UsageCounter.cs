@@ -30,7 +30,8 @@ public sealed class UsageCounter
 			StoreClient.BaseAddress, EnabledKey, QueueKey, LogName, UsageBatch.MaxEvents,
 			() => (config.Current.Telemetry.Enabled, config.Current.Telemetry.SampleRate),
 			() => config.HasCopy,
-			events => UsageBatch.ToJson(events, DeviceProbe.Current), UsageBatch.ParseQueue, UsageBatch.QueueToJson));
+			events => UsageBatch.ToJson(events, DeviceProbe.Current), UsageBatch.ParseQueue, UsageBatch.QueueToJson,
+			SendsBeta: true)); // Slice 251: TestFlight batches go out posted to the Worker's separate beta route (dino_usage_beta)
 		WaitController.Finished -= RecordWait; // guarded: a second counter must not stay subscribed twice
 		WaitController.Finished += RecordWait;
 	}
