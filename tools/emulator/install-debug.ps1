@@ -30,6 +30,8 @@ $cfg = $apps[$App]
 $platform = Get-EmulatorBuildPlatform $App  # Dino: android-dbg, its own cache name (the APK carries the .dbg id)
 $project = Join-Path $script:RepoRoot $cfg.Project
 $apkFilter = '*-Signed.apk'
+$buildScope = Get-TestBuildScope 'emu' $App   # Slice 266: the lock scope and the --artifacts-path folder name
+$script:buildArtifacts = Get-TestBuildArtifactsPath $buildScope
 
 # Slice 241: the boot overlaps the build through the shared detached starter (speed.ps1): no handle of this script's caller is inherited.
 function Start-EmulatorInBackground { return (Start-EmulatorBootInBackground $script:EmuInstance) }
@@ -38,11 +40,16 @@ function Wait-EmulatorInBackground($Boot) { Wait-EmulatorBoot $Boot }
 # Debug x86_64 build into the project's bin folder, then copied into a temp folder that is renamed into the cache folder once the
 # metadata file is in it (the metadata file is written last). The caller holds the build locks (Enter-BuildLocks).
 function Build-Apk([string]$Dir, [string]$Key) {
-    $apkDir = Join-Path (Split-Path $project) 'bin\Debug\net10.0-android\android-x64'
+    # Slice 266: its own --artifacts-path (output under <artifacts>\bin), so a Windows build of the same checkout shares no obj folder with it.
+    $apkDir = Join-Path $script:buildArtifacts 'bin'
+    # Slice 266: this layout is deeper than the old src\obj one; a long worktree folder name fails here with a clear message, not minutes in with APT2264.
+    # Only the Dino build has a measured depth (hard stop); the RTST build keeps the old estimate and only warns.
+    if ($App -eq 'dino') { Assert-BuildPathLength $script:buildArtifacts $script:MeasuredDinoEmulatorIntermediateChars }
+    else { Assert-BuildPathLength $script:buildArtifacts }
     # Remove old signed APKs first, so the one found afterwards is certainly from this build.
     Get-ChildItem $apkDir -Filter $apkFilter -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force
     # Slice 225 item 23: --disable-build-servers, so no VBCSCompiler or MSBuild node outlives the build and holds the worktree.
-    dotnet build $project -f net10.0-android -c Debug --disable-build-servers -p:RuntimeIdentifier=android-x64 `
+    dotnet build $project -f net10.0-android -c Debug --artifacts-path $script:buildArtifacts --disable-build-servers -p:RuntimeIdentifier=android-x64 `
         -p:EmbedAssembliesIntoApk=true -p:IncludeWindows=false -p:AndroidPackageFormat=apk "-p:ApplicationId=$($cfg.Package)"
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
     $built = Get-ChildItem $apkDir -Filter $apkFilter -Recurse | Sort-Object LastWriteTime -Descending | Select-Object -First 1
@@ -63,7 +70,7 @@ function Build-Apk([string]$Dir, [string]$Key) {
 function Get-ApkForKey {
     $activity = Start-Activity "build-$App-android"
     try {
-        $locks = Enter-BuildLocks $App $platform $script:key
+        $locks = Enter-BuildLocks $App $platform $script:key $buildScope
         try {
             $script:key = Get-BuildKey
             $script:buildDir = Get-BuildDir $App $platform $script:key
