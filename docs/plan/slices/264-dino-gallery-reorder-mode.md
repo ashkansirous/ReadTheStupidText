@@ -1,6 +1,6 @@
 # Slice 264 — Dino: grown-ups reorder the shelf (iPhone-style reorder mode)
 
-*Planned 2026-11-04.* Dino Reader; Android and iOS alike; the Windows head gets the same mode with the mouse.
+*Planned 2026-11-04. Parked (night 2026-11-04-1441 wave 1): Windows LayoutCycleException when reorder opens, WIP on draft #799.* Dino Reader; Android and iOS alike; the Windows head gets the same mode with the mouse.
 
 **Touches:** `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ShelfReorder*.cs` (new), `src/DinoReader.Core/BookSheetPlan.cs`, `src/DinoReader.Core/FileStoryLibrary.cs`, `src/DinoReader.Core/ShelfOrder*.cs` (new), `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/shelf-reorder.yaml` (new), `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/264-dino-gallery-reorder-mode.md`.
 
@@ -40,6 +40,10 @@ Source: `docs/design/dino-reader/Dino Reader Batch 47 Onboarding.dc.html`, 5 fra
 **Open point: keyboard reorder.** Space/arrow keys, Esc and Enter are not in the slice. **Default:** build them on Windows only; add a pointer-free path to Reorder for TalkBack/VoiceOver (the ⋯ sheet row already is one).
 **Open point: the 1 s press on Android/iOS.** Slice and mock agree (1 s); mock adds nothing for the phone beyond the sheet row. **Default:** as the slice.
 **Mock decides (slice silent):** hint line; nothing opens on tap in reorder mode; Cancel also lands in the corner.
+
+## Parked (night 2026-11-04-1441 wave 1)
+
+Windows head crashes when reorder mode opens (three VM rounds; the third design fix did not cure it). Draft PR #799, WIP pushed on feat/s264-shelf-reorder. The WinUI hook names it: `Microsoft.UI.Xaml.LayoutCycleException: Layout cycle detected` about 50 ms after `page open end`, no stack (logs: D:/ReadTheStupidText-worktrees/reviews/s264-vm-diag3/ and s264-vm-diag4/). Tried: no MAUI Shadow on the lift (diag2, still crashed); Relayout only on a width change and surface height from content only (diag4, still crashed). Android works (1 s press, drag, Done, Cancel all pass on the emulator). Next: find the element in the cycle (bisect by turning off wiggle, lift Border, lit spot and the header pill one at a time on the VM), then fix. Also open from check pass 4 (reviews/s264-check4.md): default shelf order of same-time books is not deterministic (add ThenBy Id in FileStoryLibrary.cs:49), _lastLayoutWidth not reset in Open (tiles at 0,0 on a second open), async void OnPointerPressed without try/catch. Emulator run 5 (reviews/s264-emu5/): the 1 s press no longer enters reorder (it opens the book sheet; regression from the hold-cancel-on-tap change after run 4, where the press passed); the flow passes every step but its expect-log markers need a trailing comma/colon (run-flows.ps1:94 matches whole tokens); default order was the same on two fresh launches.
 
 ## Verification
 
