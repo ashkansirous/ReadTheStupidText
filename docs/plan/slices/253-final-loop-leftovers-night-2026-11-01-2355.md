@@ -4,7 +4,7 @@
 
 *Planned again 2026-11-03: the user un-parked it ("Yes, un-park both") before a run-all-waves run.*
 
-*Built 2026-11-04, PR #784, not merged. Items 3, 4, 5 built; item 2 built and device-passed; item 1 built, forced-ANR check on the tablet owed; item 6 written, timing not run.*
+*Built 2026-11-04, merged as PR #784 (13ffe4b). Items 3, 4, 5 built; item 2 built and device-passed; item 1 built, forced-ANR check on the tablet owed; item 6 written, timing not run.*
 
 **Touches:** `tools/emulator/start-warm.ps1`, `tools/emulator/run-flows.ps1`, `tools/CLAUDE.md`, `.maestro/dino/*.yaml`, `tools/desktop-vm/**` (item 3 dry run in the build stage), `tools/emulator/**`, `.github/workflows/tools-selftests.yml` (new self-test steps), `tests/DinoReader.Tests/**`, `docs/plan/slices/253-final-loop-leftovers-night-2026-11-01-2355.md`
 
@@ -69,7 +69,7 @@ From review (files in `D:/ReadTheStupidText-worktrees/reviews/`):
 
 `s253-check-medium.md` (8 findings, all low or medium, none applied): 1 PNG location, now proven by the device run; 2 size check one line shape; 3 UIA lookup flagged only on one line; 4 defaulted parameters accepted as local; 5 one-tab indent assumed; 6 pre-existing `hide_error_dialogs=1` deleted; 7 killed second-half run leaves 5556 at 1 until the next run; 8 Close-SystemDialogs closes any system surface.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-04)
 
 - Keep what the builder wrote in `tools/CLAUDE.md` (dialog guard, all flows in one call, `-Command` versus `-File` self-test difference). (Slice 253: docs/plan/slices/253-final-loop-leftovers-night-2026-11-01-2355.md)
 - `src/DinoReader.App/CLAUDE.md`, on the AutomationId rule (line 124): add "checked by `AutomationIdAssignmentTests`" (`tests/DinoReader.Tests/AutomationIdAssignmentTests.cs`). (Slice 253: docs/plan/slices/253-final-loop-leftovers-night-2026-11-01-2355.md)
