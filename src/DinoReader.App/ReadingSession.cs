@@ -48,6 +48,26 @@ public sealed class ReadingSession
 	private readonly HashSet<string> _recastChecked = []; // books whose cast was checked against the narrator this session (Slice 144)
 	private readonly HashSet<int> _unplayable = []; // pages whose recording failed to play this session: read in the generated voice
 	private (int ReadId, int Sentence)? _continueRead; // a generated read cut short before a recorded page: where the read goes on once it ends
+	// The read as a list of steps (speak a run / play an animal's recording, Slice 255): one read id, the step being taken and whether the next one waits for Resume.
+	private sealed class StepRead(int readId, IReadOnlyList<AnimalClipRuns.ReadStep> steps, string spoken, CancellationToken cancellation)
+	{
+		public int ReadId { get; } = readId;
+
+		public IReadOnlyList<AnimalClipRuns.ReadStep> Steps { get; } = steps;
+
+		public string Spoken { get; } = spoken;
+
+		public CancellationToken Cancellation { get; } = cancellation;
+
+		public int Index { get; set; }
+	}
+
+	private StepRead? _stepRead;
+	private bool _pendingAdvance; // a step ended while the user had paused: Resume takes the next one
+	// Completed carries no id, so a speech step's end is accepted only for the run that was seen Playing (AnimalClipRuns.AcceptCompleted): _run counts the speech steps
+	// started (and Stop/StartAt), _playingRun is the run last seen Playing, and OnCompleted stamps _run when the signal is raised.
+	private int _run;
+	private int _playingRun;
 	private Func<Story, Task>? _saveCast;
 	private IReadOnlyList<SentenceSpan> _sentences = [];
 	private int _readSequence;
@@ -58,7 +78,6 @@ public sealed class ReadingSession
 	// stopped, fails or completes. Chunk events carry no id, so they are tagged with this when raised
 	// and dropped if the read they belong to is no longer the active one.
 	private int _activeReadId;
-	private int _playingReadId;
 	private int _readOrigin;
 
 	// Cancelled when the read is stopped or superseded, so a translation still running for it is abandoned.
@@ -263,6 +282,12 @@ public sealed class ReadingSession
 
 	public void Resume()
 	{
+		if (_pendingAdvance)
+		{
+			ResumePendingAdvance();
+			return;
+		}
+
 		if (_recorded == RecordedPlay.Paused)
 		{
 			_player.Resume();
@@ -283,7 +308,7 @@ public sealed class ReadingSession
 		StopRecording();
 		_reader.Stop();
 		_activeReadId = 0;
-		_playingReadId = 0;
+		NextRun();
 		Stalled = false;
 		ClearPending();
 	}
@@ -303,7 +328,7 @@ public sealed class ReadingSession
 		MoveTo(sentence);
 		int id = ++_readSequence;
 		_pendingReadId = id;
-		_playingReadId = 0;
+		NextRun();
 		Volatile.Write(ref _activeReadId, id);
 		if (TryPlayRecording(story, sentence, id))
 		{
@@ -317,6 +342,8 @@ public sealed class ReadingSession
 	private void StopRecording()
 	{
 		_continueRead = null;
+		_stepRead = null;
+		_pendingAdvance = false;
 		if (_recorded != RecordedPlay.None)
 		{
 			_player.Stop();
@@ -347,7 +374,6 @@ public sealed class ReadingSession
 		}
 
 		_recorded = RecordedPlay.Playing;
-		_playingReadId = id;
 		ClearPending();
 		return true;
 	}
@@ -365,7 +391,6 @@ public sealed class ReadingSession
 		if (next >= _sentences.Count)
 		{
 			_activeReadId = 0;
-			_playingReadId = 0;
 			Finished = true;
 			StateChanged?.Invoke(this, EventArgs.Empty);
 			return;
@@ -442,8 +467,210 @@ public sealed class ReadingSession
 		}
 
 		_readOrigin = segments.Count > 0 ? segments[0].SourceStart : fromPosition;
-		await SpeakAsync(segments, untranslated ? UiLanguage.Resolve(story.Language) : _voicing.ReadingLanguage(story, reading)); // a translation that was skipped leaves the story's own voices
+		await AnimalClipFiles.EnsureAsync(AnimalClipRuns.KindsIn(segments));
+		cancellation.ThrowIfCancellationRequested(); // a Stop, Back or another sentence during the copy: this read never speaks or plays a clip
+		if (id != _pendingReadId)
+		{
+			return false;
+		}
+
+		await SpeakRunsAsync(segments, untranslated ? UiLanguage.Resolve(story.Language) : _voicing.ReadingLanguage(story, reading), id, cancellation); // a translation that was skipped leaves the story's own voices
 		return true;
+	}
+
+	// The animals' recordings (Slice 255): the speech engine is only ever given the segments up to the next animal-sound slot. When that run has been spoken (ApplyCompleted)
+	// the animal's recording plays, and when it ends the segments after the slot go on, so the engine never voices a sound word and Pause, Resume, Back and Stop work as for a recorded page.
+	private async Task SpeakRunsAsync(IReadOnlyList<VoicedSegment> segments, string spoken, int id, CancellationToken cancellation)
+	{
+		cancellation.ThrowIfCancellationRequested();
+		var read = new StepRead(id, AnimalClipRuns.Plan(segments), spoken, cancellation);
+		_stepRead = read;
+		_pendingAdvance = false;
+		await StartStepAsync(read);
+	}
+
+	// Every end signal of a step (the run was spoken, the clip ended or failed, the clip file is missing) comes here with the read's id. A stale or cancelled read is dropped,
+	// a paused one waits for Resume, and otherwise the next step starts; past the last step the read ends.
+	private void AdvanceStep(int readId)
+	{
+		StepRead? read = _stepRead;
+		bool stale = read is null || read.ReadId != readId || readId != _activeReadId;
+		AnimalClipRuns.Advance decision = AnimalClipRuns.Decide(stale, read is null || read.Cancellation.IsCancellationRequested, IsPaused);
+		if (decision == AnimalClipRuns.Advance.Ignore)
+		{
+			return;
+		}
+
+		if (decision == AnimalClipRuns.Advance.Defer)
+		{
+			_pendingAdvance = true;
+			return;
+		}
+
+		_pendingAdvance = false;
+		_recorded = RecordedPlay.None; // a clip that was playing is over
+		read!.Index++;
+		if (read.Index >= read.Steps.Count)
+		{
+			_stepRead = null;
+			EndRead(readId);
+			return;
+		}
+
+		_ = RunStepAsync(read);
+	}
+
+	private bool IsPaused => _recorded == RecordedPlay.Paused || _reader.State == PlaybackState.Paused;
+
+	// Resume after a step ended while paused: the pause is over and the step that was waiting starts.
+	private void ResumePendingAdvance()
+	{
+		_pendingAdvance = false;
+		NextRun(); // the Stop below raises a Completed that belongs to the run that had ended
+		if (_reader.State == PlaybackState.Paused)
+		{
+			_reader.Stop(); // its run had already ended
+		}
+
+		if (_recorded != RecordedPlay.None)
+		{
+			_player.Stop(); // a paused clip must not stay loaded
+		}
+
+		_recorded = RecordedPlay.None;
+		if (_stepRead is { } read)
+		{
+			AdvanceStep(read.ReadId);
+		}
+	}
+
+	// A step that follows the first one: started from an end signal, so it owns its own failure handling and first-audio wait.
+	private async Task RunStepAsync(StepRead read)
+	{
+		int id = read.ReadId;
+		try
+		{
+			await StartStepAsync(read);
+			await WaitForFirstAudioAsync(id);
+		}
+		catch (OperationCanceledException)
+		{
+			ClearPendingIfCurrent(id);
+		}
+		catch (Exception)
+		{
+			FailRead(id);
+		}
+	}
+
+	private async Task StartStepAsync(StepRead read)
+	{
+		read.Cancellation.ThrowIfCancellationRequested();
+		AnimalClipRuns.ReadStep step = read.Steps[read.Index];
+		if (step.Clip is { } clip)
+		{
+			PlayClip(read, clip);
+			return;
+		}
+
+		if (read.Index > 0)
+		{
+			_pendingReadId = read.ReadId; // the run after a recording loads like the first one
+			StateChanged?.Invoke(this, EventArgs.Empty);
+		}
+
+		NextRun();
+		if (step.Run.Count > 0)
+		{
+			_readOrigin = step.Run[0].SourceStart;
+		}
+
+		await SpeakAsync(step.Run, read.Spoken);
+	}
+
+	// A new speech run (or a stop): any Completed raised before this point belongs to an earlier run and must not advance this one.
+	private void NextRun() => Interlocked.Increment(ref _run);
+
+	// Plays the animal's recording. A clip that is missing or will not play is skipped silently, never read as the sound word, and the read goes straight on (posted, so it
+	// never runs inside the step that is starting).
+	private void PlayClip(StepRead read, AnimalKind clip)
+	{
+		int index = read.Index;
+		string? path = AnimalClipFiles.PathOf(clip);
+		if (path is null)
+		{
+#if DEBUG
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] animal clip {clip} has no file, slot skipped");
+#endif
+			SkipClip(read, index);
+			return;
+		}
+
+		try
+		{
+			_player.Play(path, () => MainThread.BeginInvokeOnMainThread(() => ApplyClipEnded(read, index, clip, failed: false)),
+				() => MainThread.BeginInvokeOnMainThread(() => ApplyClipEnded(read, index, clip, failed: true)));
+		}
+		catch (Exception ex)
+		{
+#if DEBUG
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] animal clip {clip} could not play ({ex.GetType().Name}), slot skipped");
+#endif
+			AnimalClipFiles.Discard(clip);
+			SkipClip(read, index);
+			return;
+		}
+
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] animal clip {clip} plays");
+#endif
+		_recorded = RecordedPlay.Playing;
+		ClearPending();
+	}
+
+	private void SkipClip(StepRead read, int index)
+	{
+		ClearPending();
+		MainThread.BeginInvokeOnMainThread(() => AdvanceIfCurrent(read, index));
+	}
+
+	// A clip that fails to play is deleted from the cache, so the next read copies a fresh one; the slot is skipped silently like a clip that ends.
+	private void ApplyClipEnded(StepRead read, int index, AnimalKind clip, bool failed)
+	{
+		if (read != _stepRead || read.Index != index || _recorded == RecordedPlay.None)
+		{
+			return; // stopped or replaced meanwhile, or this step's end was already taken
+		}
+
+		if (failed)
+		{
+			AnimalClipFiles.Discard(clip);
+		}
+
+		AdvanceStep(read.ReadId);
+	}
+
+	private void AdvanceIfCurrent(StepRead read, int index)
+	{
+		if (read == _stepRead && read.Index == index)
+		{
+			AdvanceStep(read.ReadId);
+		}
+	}
+
+	// The read has spoken everything: it goes on where a recorded page begins, or the story is finished.
+	private void EndRead(int id)
+	{
+		_activeReadId = 0;
+		if (_continueRead is { } cut && cut.ReadId == id)
+		{
+			_continueRead = null;
+			_ = StartAtAsync(cut.Sentence);
+			return;
+		}
+
+		Finished = true;
+		StateChanged?.Invoke(this, EventArgs.Empty); // the page counts a finished book from this
 	}
 
 	// The voices of the segments belong to the pack of the language they are spoken in. That is the stored voice language for most reads (the plain read, head start
@@ -604,7 +831,7 @@ public sealed class ReadingSession
 			&& _pendingReadId != 0 && _pendingReadId == _returnedReadId;
 		if (state == PlaybackState.Playing)
 		{
-			_playingReadId = _activeReadId;
+			_playingRun = _run;
 		}
 
 		if (state == PlaybackState.Playing || idleAfterReturn)
@@ -638,30 +865,21 @@ public sealed class ReadingSession
 	private void OnCompleted(object? sender, EventArgs e)
 	{
 		int id = Volatile.Read(ref _activeReadId);
-		MainThread.BeginInvokeOnMainThread(() => ApplyCompleted(id));
+		int run = Volatile.Read(ref _run);
+		MainThread.BeginInvokeOnMainThread(() => ApplyCompleted(id, run));
 	}
 
-	// Only the active read can finish the story, and only once its own audio has played: a stopped or
-	// replaced read's late Completed (the event carries no id) arrives while the new read is still
-	// loading, so it is ignored and neither sets Finished nor clears the new read's id.
-	private void ApplyCompleted(int id)
+	// Only the active read's current run can end a step, and only once that run was seen Playing (as on origin/main): a stopped or replaced run's late Completed
+	// (the event carries no id) is stamped with an older run, or arrives before the new run plays, and is ignored. A duplicate is ignored too.
+	private void ApplyCompleted(int id, int stampedRun)
 	{
-		if (id == 0 || id != _activeReadId || id != _playingReadId || _recorded != RecordedPlay.None)
+		if (_recorded != RecordedPlay.None || !AnimalClipRuns.AcceptCompleted(id, _activeReadId, stampedRun, _run, _playingRun))
 		{
-			return; // a recording plays now: this is the stopped generated read's late Completed
-		}
-
-		_activeReadId = 0;
-		_playingReadId = 0;
-		if (_continueRead is { } cut && cut.ReadId == id)
-		{
-			_continueRead = null;
-			_ = StartAtAsync(cut.Sentence);
 			return;
 		}
 
-		Finished = true;
-		StateChanged?.Invoke(this, EventArgs.Empty); // the page counts a finished book from this
+		_playingRun = 0; // this run's end is taken
+		AdvanceStep(id); // the run has been spoken: the next step starts, or the read ends
 	}
 
 	private void OnChunkChanged(object? sender, ReadChunk chunk)

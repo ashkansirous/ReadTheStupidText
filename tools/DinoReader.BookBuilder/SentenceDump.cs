@@ -5,7 +5,7 @@ using ReadTheStupidText.Application.Reading;
 
 namespace DinoReader.BookBuilder;
 
-/// <summary>One piece the app reads aloud, or one animal sound it inserts after a line (<c>Sound</c>): its position, the highlighted sentence it sits in, the text as spoken, who says it (Slice 246 A2).</summary>
+/// <summary>One piece the app reads aloud: its position, the highlighted sentence it sits in, the text as spoken, who says it (Slice 246 A2). <c>Sound</c> is never set by the dump now (Slice 255).</summary>
 internal sealed record SpokenSentence(int Index, int Sentence, string Text, string Source, string? Speaker, bool Narrator, bool Sound = false);
 
 /// <summary>The sentences of one book in one reading language.</summary>
@@ -16,7 +16,7 @@ internal sealed record SentenceListing(string Book, string Language, IReadOnlyLi
 /// reads with (<see cref="StoryPieces.Of"/>, <see cref="StorySentences"/>, <see cref="BundledTranslations.Lookup"/>), so clip N of the pre-made audio is piece N of the read and
 /// the clip's <c>Sentence</c> is the highlight. The text is the displayed translation (plain: the <c>speak:&lt;lang&gt;</c> table is for the on-device voice only); a piece with no
 /// letter or digit says nothing and is left out; a piece the language has no translation for is spoken as the source text, as the app does with no engine. The animal sounds the app adds after some lines of animal characters
-/// (pigs, wolf; <c>StoryVoicing.WithAnimalSounds</c>, planned by <see cref="AnimalSounds.Plan"/>) are listed in the app's order with <c>Sound</c> true, so every segment the app speaks has an index and a clip.
+/// are not listed: the app plays a bundled real recording for them (Slice 255), so no clip is rendered for them.
 /// </summary>
 internal static class SentenceDump
 {
@@ -85,18 +85,12 @@ internal static class SentenceDump
         IReadOnlyList<SplitSegment> source = StoryPieces.Split(story, resolved, spans, 0);
         string key = BundledTranslations.Key(language);
         (IReadOnlyList<SplitSegment> spoken, IReadOnlyList<SplitSegment> sources) = SpeakerFirstOrder(story, source, spans, key);
-        IReadOnlyDictionary<int, AnimalSounds.Placement> sounds = SoundPlacements(story, resolved, sources, spoken, UiLanguage.Resolve(language));
-        var sentences = new List<SpokenSentence>();
+        var sentences = new List<SpokenSentence>(); // no animal sounds: the app plays a bundled recording for them (Slice 255), so there is nothing to render
         for (int i = 0; i < spoken.Count; i++)
         {
             if (spoken[i].Segment.Text.Any(char.IsLetterOrDigit))
             {
                 sentences.Add(Spoken(story, spoken[i], sources[i].Segment.Text, spans, sentences.Count));
-            }
-
-            if (sounds.TryGetValue(i, out AnimalSounds.Placement? placement) && SoundAfter(story, spoken, placement, spans, UiLanguage.Resolve(language), sentences.Count) is { } sound)
-            {
-                sentences.Add(sound);
             }
         }
 
@@ -113,44 +107,6 @@ internal static class SentenceDump
         bool usesTable = BundledTranslations.Has(story, key) && BundledTranslations.IsComplete(story, key);
         IReadOnlyList<SpeakerFirst.Move> order = SpeakerFirst.Plan(source, SpeakerFirst.Regroups(key, story.Language, usesTable) ? key : UiLanguage.English, story.Text, spans);
         return (SpeakerFirst.Apply(translated, order, withColon: true, story.Text), SpeakerFirst.Apply(source, order, withColon: false));
-    }
-
-    // The app's animal sounds (StoryVoicing.WithAnimalSounds, Slice 117): the plan counts the story's own lines, the placements go over the pieces as spoken. The cast's animals
-    // come from AnimalSounds.Resolve (the book's stored settings, then the name, then the text), which is what AnimalSounds.OfCast gives for a cast nobody has recast on a device;
-    // the grown-up's "Animal sounds" setting is taken as on (its default).
-    private static IReadOnlyDictionary<int, AnimalSounds.Placement> SoundPlacements(
-        Story story, AttributionResult resolved, IReadOnlyList<SplitSegment> source, IReadOnlyList<SplitSegment> spoken, string spokenLanguage)
-    {
-        IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.WithSound(AnimalSounds.Resolve(resolved.Characters, story.Language, story.CastIn(spokenLanguage), story.Text), story.Language);
-        IReadOnlyDictionary<int, AnimalKind> plan = AnimalSounds.Plan(source, animals, story.Language);
-        return AnimalSounds.Placements(spoken, plan).ToDictionary(p => p.After);
-    }
-
-    // The sound segment the app inserts after the line: the character's voice, the sound word of the spoken language, on the sentence of the line's last character;
-    // none when the spoken line already says it.
-    private static SpokenSentence? SoundAfter(Story story, IReadOnlyList<SplitSegment> spoken, AnimalSounds.Placement placement, IReadOnlyList<SentenceSpan> spans, string spokenLanguage, int index)
-    {
-        Segment quote = spoken[placement.Quote].Segment;
-        string? sound = AnimalSounds.SoundOf(placement.Kind, spokenLanguage);
-        if (sound is null || AnimalSounds.SaysIt(LineText(spoken, placement.Quote), placement.Kind, spokenLanguage))
-        {
-            return null;
-        }
-
-        int at = Math.Max(quote.SourceStart, spoken[placement.After].Segment.SourceEnd - 1);
-        return new SpokenSentence(index, StorySentences.IndexAt(spans, at), sound, sound, SpeakerName(story, quote.CharacterId), Narrator: false, Sound: true);
-    }
-
-    // The spoken text of the line the piece at <last> ends: the consecutive quote pieces of the same character before it (StoryVoicing.LineText).
-    private static string LineText(IReadOnlyList<SplitSegment> pieces, int last)
-    {
-        int first = last;
-        while (first > 0 && pieces[first - 1].Segment.Kind == SegmentKind.Quote && pieces[first - 1].Segment.CharacterId == pieces[last].Segment.CharacterId)
-        {
-            first--;
-        }
-
-        return string.Join(' ', pieces.Skip(first).Take(last - first + 1).Select(p => p.Segment.Text));
     }
 
     private static string? SpeakerName(Story story, string? id) =>

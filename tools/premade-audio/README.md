@@ -20,8 +20,8 @@ python -I -W error -m unittest discover -s tools/premade-audio
 ```
 
 The text is the displayed translation (`fa.json`), plain: the `fa.speak.json` "how to read" table is for the on-device voice only (user, 2026-11-03). Pieces with no
-letter or digit are left out. The animal sounds the app adds after some lines (pigs, wolf; `"sound": true` in the dump, `StoryVoicing.WithAnimalSounds`) are listed in the app's order with their own index and clip,
-and the highlight `sentence` is the one holding the segment's `SourceStart`, as in the app. Clips go to `<out>/<book>/<language>/<hash>-<voice>-<variant>.m4a` with `manifest.json`.
+letter or digit are left out. The animals' sounds are real recordings the app plays at its own slots (Slice 255), so the dump and the clips leave them out: nothing is spoken or generated for them.
+The highlight `sentence` is the one holding the segment's `SourceStart`, as in the app. Clips go to `<out>/<book>/<language>/<hash>-<voice>-<variant>.m4a` with `manifest.json`.
 
 ## Cast: `content/dino/<book>/audio-cast.json`
 
@@ -30,7 +30,7 @@ text; a hash follows the text if lines move) and optional `lines` for single lin
 the dump piece's `speaker` (`null` for the narrator) and English `source`, which are the same in every language, never by index (each language's dump orders its pieces
 differently), so one cast serves every language. `occurrence` (1-based, in dump order) is needed only when that speaker says that source more than once. An entry that matches no
 piece, matches several without an `occurrence`, or sets a field of one piece twice fails the run before any request. `direction` applies in every language. The delivery sent to Gemini is `<style>; <direction>`
-(`speech_metadata.style`). A speaker with no entry fails the run before any request. An entry cannot target an animal-sound piece (`"sound": true`): its source is localized and the count differs by language, so only narration and spoken lines can be keyed. `check(sentences, language)` must run before any delivery (the language is a lower-case code such as `fa`). Format and rules: `audio_cast.py`. Fixture dumps for the Pigs binding test: `tools/premade-audio/testdata/` (regenerate with `dump-sentences three-little-pigs --lang en|fa --out ...`).
+(`speech_metadata.style`). A speaker with no entry fails the run before any request. `check(sentences, language)` must run before any delivery (the language is a lower-case code such as `fa`). Format and rules: `audio_cast.py`. Fixture dumps for the Pigs binding test: `tools/premade-audio/testdata/` (regenerate with `dump-sentences three-little-pigs --lang en|fa --out ...`).
 
 ### `say`: a Gemini-only pronunciation fix per line (A6)
 

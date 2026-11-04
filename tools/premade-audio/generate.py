@@ -227,7 +227,8 @@ def remove_stale_variants(generator, keep_count):
 def load_sentences(path):
     with open(path, encoding="utf8") as f:
         data = json.load(f)
-    return data["book"], data["language"], data["sentences"]
+    # Slice 255: an animal sound is a bundled real recording in the app, never a rendered clip. The dump no longer lists them; an older dump still might.
+    return data["book"], data["language"], [s for s in data["sentences"] if not s.get("sound")]
 
 
 def parse_args(argv):
