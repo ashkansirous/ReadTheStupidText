@@ -19,6 +19,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - A TestFlight build of Dino sends rows that land in `dino_usage_beta` and none in `dino_usage` (needs a real TestFlight install; no device run was made).
 - The Workers Builds deploy after the merge carries the `DINO_USAGE_BETA` binding.
 
+### Slice 254: Dino: speaker first in Farsi and Arabic, and animal sounds next to the animal's own words ([slice](slices/254-dino-speaker-first-and-sound-placement.md))
+
+- On a device: Three Little Pigs in Farsi reads «پیم گفت:» then the whole quote and «گرگ گفت:» before the wolf's words; English: the wolf's sound before "said Wolf", "Achoo!" in the wolf's voice.
+
 ### Slice 253: Final-loop leftovers, night 2026-11-01-2355 ([slice](slices/253-final-loop-leftovers-night-2026-11-01-2355.md))
 
 - Freddy and the Slipper: the Arabic, Russian, Japanese and Chinese spellings of Elham's name, by a native speaker (until now only in `docs/plan/notes/2026-11-01-freddy-and-the-slipper.md`).
