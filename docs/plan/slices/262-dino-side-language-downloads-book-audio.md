@@ -1,6 +1,6 @@
 # Slice 262 — Dino: adding a second language downloads the shelf books' audio in it
 
-*Built 2026-11-04 (wave 2026-11-04), PR #813, not merged; Android emulator runs only, iOS not run (see Not yet verified).* *Planned 2026-11-04.* Dino Reader only; Android and iOS alike. After Slice 261 (both edit `StoreClient.cs`).
+*Built 2026-11-04 (wave 2026-11-04), merged as PR #813 (197e467c); Android emulator runs only, iOS not run (see Not yet verified).* *Planned 2026-11-04.* Dino Reader only; Android and iOS alike. After Slice 261 (both edit `StoreClient.cs`).
 
 **Touches:** `src/DinoReader.App/StoryLanguages.cs`, `src/DinoReader.App/StoryLanguagesPage.cs`, `src/DinoReader.App/StoryLanguagePacks*.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/AudioPackStore.cs`, `src/DinoReader.App/ShelfAudioPacks*.cs` (new), `src/DinoReader.Core/ShelfAudioPlan*.cs` (new), `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/side-language-audio.yaml` (new), `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/IntroWizardPage*.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/Testing/DinoTestCommands*.cs`, `src/DinoReader.App/Testing/TestStore*.cs`, `src/DinoReader.App/CLAUDE.md` (added at claim from a code check: runner registration and launch resume, the intro languages step, the weekly check's pack sync, and a Debug test store that serves an audio pack), `docs/plan/slices/262-dino-side-language-downloads-book-audio.md`.
 
@@ -68,7 +68,7 @@ Code check on main after Slice 261 (68bdba69): adding a side language today runs
 
 - `dotnet test tests/DinoReader.Tests`; emulator flow `side-language-audio.yaml` (add a language, a shelf book gets its pack, the book reads it with pre-made audio).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-04)
 
 - Already written on this branch in `src/DinoReader.App/CLAUDE.md` (runner registration, launch resume, intro languages step, Debug test store pack). Lift nothing more; the index pass only adds the lifted date. (Slice 262: docs/plan/slices/262-dino-side-language-downloads-book-audio.md)
 
