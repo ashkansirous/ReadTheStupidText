@@ -80,7 +80,7 @@ jobs:
             git lfs install --local
             mkdir -p artifacts/store
             # One book at a time into its own staging folder: its zips are copied to artifacts/store only when every pair of the book built, so a book with a failed pair uploads none of its new packs.
-            for stem in $(cut -d' ' -f1 "$RUNNER_TEMP/audio-behind.txt" | sort -u); do
+            while IFS= read -r stem; do
               stage="$RUNNER_TEMP/audio-stage/$stem"
               book_ok=1
               # git and dotnet get </dev/null so neither can read the list from the loop's stdin and silently skip the pairs after it.
@@ -99,7 +99,7 @@ jobs:
               if [ "$book_ok" = 1 ] && [ -d "$stage" ]; then
                 cp -r "$stage/." artifacts/store/
               fi
-            done
+            done < <(cut -d' ' -f1 "$RUNNER_TEMP/audio-behind.txt" | sort -u)
           fi
           echo "failed=${failed# }" >> "$GITHUB_OUTPUT"
           # No retry loop. A failed book is left out here (publish-store-books.mjs prunes its unbuilt packs from meta.json), every other book still builds and uploads, and the always() step below fails the job at the end.
