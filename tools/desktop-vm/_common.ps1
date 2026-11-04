@@ -385,6 +385,73 @@ function Get-HostPackZip {
     return $zip
 }
 
+# Slice 259 item 4: what the guest knows about a dead app. Runs in the guest (Invoke-Command) or on the host in the self-test (test-crash-evidence.ps1).
+# Writes into $out: events.txt (Application-log errors since $since that name the exe, or say there were none), wer\ (Windows Error Reporting reports of the exe
+# since $since, copied), trace-tail-<file>.txt (last lines of LocalState\window-trace.log and every TempState\logs\*.log of the package).
+$script:CrashEvidenceTailLines = 200
+$script:CrashEvidenceTimeoutSeconds = 60  # each guest call of Copy-CrashEvidence; the step runs inside the VM lock
+$script:CrashEvidenceBlock = {
+    param([string] $out, [string] $exe, [string] $pkgName, [datetime] $since, [int] $tail)
+    New-Item -ItemType Directory -Force -Path $out | Out-Null
+    $events = @(Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = $since; Level = 1, 2 } -ErrorAction SilentlyContinue |
+        Where-Object { $_.Message -like "*$exe*" -or $_.ProviderName -eq 'Windows Error Reporting' })
+    $text = if ($events.Count -eq 0) { "No Application-log errors naming $exe since $since." } else { ($events | ForEach-Object { "$($_.TimeCreated.ToString('o')) [$($_.ProviderName)] $($_.Message)`r`n" }) -join "`r`n" }
+    Set-Content -Path (Join-Path $out 'events.txt') -Value $text -Encoding UTF8
+    $werRoots = @((Join-Path $env:ProgramData 'Microsoft\Windows\WER\ReportArchive'), (Join-Path $env:ProgramData 'Microsoft\Windows\WER\ReportQueue'))
+    $werOut = Join-Path $out 'wer'
+    foreach ($root in $werRoots) {
+        Get-ChildItem $root -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*$exe*" -and $_.LastWriteTime -ge $since } |
+            ForEach-Object {
+                # One folder per report (the archive and the queue can hold the same name: the later copy gets a suffix), so the layout does not depend on how many reports match.
+                New-Item -ItemType Directory -Force -Path $werOut | Out-Null
+                $target = Join-Path $werOut $_.Name
+                if (Test-Path $target) { $target = Join-Path $werOut "$($_.Name)-$(Split-Path $root -Leaf)" }
+                Copy-Item $_.FullName -Destination $target -Recurse -Force
+            }
+    }
+    $pkgDir = Get-ChildItem (Join-Path $env:LOCALAPPDATA 'Packages') -Directory -Filter "${pkgName}_*" -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $pkgDir) { Set-Content -Path (Join-Path $out 'trace-tail-none.txt') -Value "No Packages\${pkgName}_* folder for this user." -Encoding UTF8; return }
+    $logs = @(Get-Item (Join-Path $pkgDir.FullName 'LocalState\window-trace.log') -ErrorAction SilentlyContinue) + @(Get-ChildItem (Join-Path $pkgDir.FullName 'TempState\logs') -Filter *.log -ErrorAction SilentlyContinue)
+    foreach ($log in $logs) { Get-Content $log.FullName -Tail $tail -ErrorAction SilentlyContinue | Set-Content -Path (Join-Path $out "trace-tail-$($log.Name).txt") -Encoding UTF8 }
+}
+
+function Copy-FromSessionBounded {
+    # Copy-Item -FromSession on its own runspace (the live session object is passed, not a copy) so a hung guest ends in a timeout instead of holding the caller.
+    param([Parameter(Mandatory)] $Session, [Parameter(Mandatory)] [string] $Path, [Parameter(Mandatory)] [string] $Destination, [Parameter(Mandatory)] [int] $TimeoutSeconds)
+    $ps = [powershell]::Create()
+    [void]$ps.AddScript({ param($s, $p, $d) Copy-Item -FromSession $s -Path $p -Destination $d -Recurse -Force -ErrorAction Stop }).AddArgument($Session).AddArgument($Path).AddArgument($Destination)
+    $handle = $ps.BeginInvoke()
+    if (-not $handle.AsyncWaitHandle.WaitOne($TimeoutSeconds * 1000)) {
+        # Abandoned: the guest is not answering, the VM is restored next. Stop the copy and dispose its runspace if it stops in a few seconds, so it no longer holds the shared session;
+        # a copy that will not stop is left to the restore (disposing it now would block on the dead guest).
+        $stop = $ps.BeginStop($null, $null)
+        if ($stop.AsyncWaitHandle.WaitOne(5000)) { $ps.Dispose() }
+        throw "copying from the guest did not finish within $TimeoutSeconds s"
+    }
+    $failure = $null
+    try { $ps.EndInvoke($handle) | Out-Null; if ($ps.HadErrors) { $failure = $ps.Streams.Error[0].Exception.Message } }
+    catch { $failure = $_.Exception.Message }
+    finally { $ps.Dispose() }
+    if ($failure) { throw $failure }
+}
+
+function Copy-CrashEvidence {
+    # Called when a check fails or the harness throws (the app may have died): copies the guest's evidence into a host folder before the VM is restored.
+    param([Parameter(Mandatory)] $Session, [Parameter(Mandatory)] [string] $HostDir, [Parameter(Mandatory)] [string] $ExeName, [Parameter(Mandatory)] [string] $PackageName, [Parameter(Mandatory)] [datetime] $Since)
+    $guestDir = "$($script:GuestWorkDir)\crash-evidence"
+    try {
+        # Runs inside the VM lock with a guest that may be dead or hung: both guest calls are bounded, so the lock and the reset to clean are always reached.
+        if ($Session.State -ne 'Opened') { throw "the guest session is $($Session.State)" }
+        $job = Invoke-Command -Session $Session -ScriptBlock $script:CrashEvidenceBlock -ArgumentList $guestDir, $ExeName, $PackageName, $Since, $script:CrashEvidenceTailLines -AsJob
+        if (-not (Wait-Job $job -Timeout $script:CrashEvidenceTimeoutSeconds)) { Stop-Job $job; Remove-Job $job -Force; throw "the guest did not answer within $($script:CrashEvidenceTimeoutSeconds) s" }
+        Receive-Job $job -ErrorAction Stop | Out-Null
+        Remove-Job $job -Force
+        New-Item -ItemType Directory -Force -Path $HostDir | Out-Null
+        Copy-FromSessionBounded -Session $Session -Path "$guestDir\*" -Destination $HostDir -TimeoutSeconds $script:CrashEvidenceTimeoutSeconds
+        Write-Host "CRASH EVIDENCE: copied the guest's event log errors, WER reports and app trace tail to $HostDir"
+    } catch { Write-Warning "Crash evidence could not be collected: $($_.Exception.Message)" }
+}
+
 function Copy-PackToGuest {
     # Copies the zip into the guest and unpacks it as the unversioned pack layout (pack.json directly in LocalCache\packs\<id>, no `active` file),
     # which the app reads as installed (PackVersionFolders.Resolve). Run after the install, before the preflight.

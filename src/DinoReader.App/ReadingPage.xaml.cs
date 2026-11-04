@@ -1117,6 +1117,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 			_waitOverlay.Clip = new Microsoft.Maui.Controls.Shapes.RoundRectangleGeometry(WaitCornerRadius, new Rect(0, 0, _waitOverlay.Width, _waitOverlay.Height));
 		var wait = new WaitController(_waitOverlay);
 		wait.CancelRequested += OnWaitCancelled;
+		wait.ShownChanged += shown => ReadStartTrace.Write(shown ? $"wait overlay shown ({wait.Stage})" : "wait overlay hidden"); // Slice 259 item 1: Debug trace, proves the 500 ms rule on a device
 		return wait;
 	}
 

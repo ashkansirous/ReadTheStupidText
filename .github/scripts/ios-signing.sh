@@ -20,7 +20,9 @@ install_certificate() {
   password="$(openssl rand -hex 16)"
   echo "$IOS_DIST_CERT_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/dist.p12"
   security create-keychain -p "$password" "$KEYCHAIN"
-  security set-keychain-settings -lut 3600 "$KEYCHAIN"
+  # Lock after 6 h, longer than any build job's 90 min limit: with 3600 the keychain locked while the Dino build was still compiling and the first codesign
+  # then waited for a password nobody could type until the job timed out (run 41744435929, Slice 259 item 5).
+  security set-keychain-settings -lut 21600 "$KEYCHAIN"
   security unlock-keychain -p "$password" "$KEYCHAIN"
   security import "$RUNNER_TEMP/dist.p12" -P "$IOS_DIST_CERT_P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
   security set-key-partition-list -S apple-tool:,apple: -k "$password" "$KEYCHAIN" > /dev/null

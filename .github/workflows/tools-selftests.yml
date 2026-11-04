@@ -91,6 +91,9 @@ jobs:
       - name: Phone leftovers self-test (${{ matrix.shell }})
         run: ./tools/phone/test-phone-leftovers.ps1
 
+      - name: Desktop crash-evidence self-test (${{ matrix.shell }})
+        run: ./tools/desktop-vm/test-crash-evidence.ps1
+
       - name: Desktop test memory guard self-test (${{ matrix.shell }})
         run: ./tools/desktop-vm/test-memory-guard.ps1
 

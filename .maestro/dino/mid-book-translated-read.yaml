@@ -1,0 +1,63 @@
+# Slice 259 item 1: how long a read that starts mid-book takes to its first sound on a translated book with an installed audio pack, and that the page shows its loading state only when the
+# wait passes 500 ms. A mid-book read of a translated book works out the whole book's pieces again to find its clips (StoryVoicing.ClipOffsetAsync); this flow is the measurement.
+# The install-audio-pack hook (Debug only) builds the small fixture pack for the starter book (as premade-audio-plays does), the open-book hook then starts a read at page 8, and the Debug
+# trace writes these lines to the test-hook log (read them after the run: adb logcat -d, or the run-flows output):
+#   [ReadStart] whole book worked out for the clip offset in N ms (P pieces, translated=True)
+#   [ReadStart] voiced after N ms: S segments, mid-book
+#   [ReadStart] first sound after N ms (premade clip), mid-book
+#   [ReadStart] wait overlay shown (Translating)   <- present only when the wait passed 500 ms (the shared WaitController); absent when first sound is under 500 ms
+# The flow fails when the measured path did not run: "mid-book" and the clip-offset line appear only for a read that starts past the first sentence on a translated book with a pack.
+# To see it fail against the old behaviour: on a build without the trace none of the [ReadStart] lines is written, so the expect-log lines are missing.
+# Keeps the app's data (no clearState), like premade-audio-plays; the fixture pack stays installed for the dev install.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK install-audio-pack ok
+# expect-log: HOOK read start
+# expect-log: [ReadStart] whole book worked out for the clip offset in
+# expect-log: [ReadStart] first sound after
+# expect-log: mid-book
+appId: uk.sirous.dinoreader.dbg
+name: A mid-book read on a translated book is measured and shows its wait only past 500 ms
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: install-audio-pack
+      id: three-little-pigs
+      lang: fa
+# The install runs in the background (a few small files): give it a moment before the read looks the pack up.
+- extendedWaitUntil:
+    visible:
+      id: PackInstallNeverShown
+    timeout: 6000
+    optional: true
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "8"
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+# The Play button describes itself as Pause while the read is Playing; a clip counts as playing.
+- extendedWaitUntil:
+    visible: "Pause|توقف"
+    timeout: 90000
+- assertVisible:
+    id: ReadingSurface
+# Put the screens back in English, so later flows that wait on English labels (Pause) still match.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: en

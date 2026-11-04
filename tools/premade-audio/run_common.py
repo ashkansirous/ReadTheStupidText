@@ -24,6 +24,8 @@ class Summary:
         self.stopped = ""
         self.exit_code = EXIT_OK
         self.errors = []
+        self.held = set()  # stems held back by an earlier run (silent, or failed in several batch results): the only missing clips a rerun may exit 0 with
+        self.notes = []  # things to tell the user that are not failures (clips held back by an earlier run): they do not change the exit code
 
     def stop(self, reason, exit_code):
         self.stopped = reason

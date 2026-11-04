@@ -273,10 +273,10 @@ def pending_count(generator, sentences):
     return sum(0 if generator.has_clip(stem) or generator.has_wav(stem) else 1 for stem in set(stems))  # sentences sharing a stem share one clip file
 
 
-def batch_dry_run_line(args, generator, sentences):
-    """What the real --batch run would submit: the misses not already in a pending batch (batch-state.json), within --max-requests, in chunks the runner would use."""
+def batch_dry_run_line(args, generator, sentences, max_bytes=batch.MAX_CHUNK_BYTES):
+    """What the real --batch run would submit: the misses not already in a pending batch (batch-state.json), within --max-requests, in the jobs the runner would cut (by count and by size)."""
     chunk = max(1, args.batch_chunk)
-    runner = batch.BatchRunner(generator, os.path.join(generator.folder, batch.STATE_NAME), chunk, args.max_requests)
+    runner = batch.BatchRunner(generator, os.path.join(generator.folder, batch.STATE_NAME), chunk, args.max_requests, max_bytes=max_bytes)
     try:
         state = runner.read_state()
     except batch.BatchStopped as stop:
@@ -284,9 +284,11 @@ def batch_dry_run_line(args, generator, sentences):
     covered = {key for pending in state["batches"] for key in pending["keys"]} | set((state["intent"] or {}).get("keys", []))
     stems = {generator.identity(s)[2] for s in sentences}
     misses = sorted(stem for stem in stems if not generator.has_clip(stem) and not generator.has_wav(stem))
-    need = len(runner.fresh_stems(misses, covered, state["silent"], state["failures"]))
+    fresh = runner.fresh_stems(misses, covered, state["silent"], state["failures"])
+    need = len(fresh)
+    jobs = len(batch.chunk_entries(runner.entries_for(fresh, runner.groups(sentences)), chunk, max_bytes))
     in_flight = len(covered & set(misses))
-    return (f"{len(sentences)} sentences, {need} need a batch request in {-(-need // chunk)} job(s) of up to {chunk}"
+    return (f"{len(sentences)} sentences, {need} need a batch request in {jobs} job(s) of up to {chunk}"
             + (f"; {in_flight} already in pending batches" if in_flight else ""))
 
 
@@ -350,7 +352,22 @@ def run_locked(args, book, language, sentences, cast, ffmpeg):
         return run_variants(args, generator, sentences)
     summary = run_batch(args, generator, sentences) if args.batch else generator.run(sentences)
     print(f"{book} [{language}]: {summary.line(len(sentences))}")
-    return summary.exit_code or (EXIT_ERRORS if summary.errors and not summary.rendered else EXIT_OK)
+    for note in summary.notes:
+        print(f"note: {note}")
+    return exit_code_for(generator, sentences, summary)
+
+
+def missing_clips(generator, sentences, summary):
+    """The stems of the book that have no clip and are not on the held-back list (clips an earlier run held back: silent, or failed in several batch results)."""
+    stems = {generator.identity(s)[2] for s in sentences}
+    return sorted(stem for stem in stems if not generator.has_clip(stem) and not generator.has_wav(stem) and stem not in summary.held)
+
+
+def exit_code_for(generator, sentences, summary):
+    """One rule: a stop's own code wins; otherwise 0 only when the run had no errors and every expected clip exists or is held back, else 1."""
+    if summary.exit_code:
+        return summary.exit_code
+    return EXIT_ERRORS if summary.errors or missing_clips(generator, sentences, summary) else EXIT_OK
 
 
 if __name__ == "__main__":
