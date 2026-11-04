@@ -51,6 +51,9 @@
 - `s249-check2-medium.md`: 7 findings, all low, none applied (day key trusted within 24 h; crash-shaped POST while off parsed with no rate limit; Try again racing a queue flush; `CreatedAtFor` static; `--code` call count; `user_report` points share `APP_CRASHES` with crashes unless filtered by kind; Copy label reset ignores page leave).
 - `s249-check3-medium.md` (final check pass after the Windows Release build fix in `AppTrace.cs`): no findings in the changed code; its fork re-raised ten earlier items, none applied. One is kept as a known gap (below, *Not yet verified*): a report queued while the remote crash switch is off can be cleared at the next start although the page said it was kept (`CrashReporter.UserReport.cs:135`); a fourth fix round in this area was not started on a medium finding with a rare trigger (remote switch off).
 
+- `s249-check4-medium.md` (merge with origin/main, `ReadingSession.cs` conflict with Slice 255): main's step machine unchanged, trace lines re-applied; R1 low (the Started line also fires on internal restarts) not applied.
+- `s249-check5-medium.md` (CI flake fix: seven `VoicePackSetupTests` installers get their own `MemoryVoiceCancelStore`, so they no longer race `VoiceCancelHoldTests` on the shared Preferences stub key; cause likely, not reproduced): clean. Its fork's slice-wide items were not applied; decisions kept: a user report is sent when a grown-up presses Send even with usage counts off (it is the crash pipeline, behind the crash gate, not usage); a `report-<code>.json` can be overwritten only by a sender that knows the 8-character random code (same caps and rate limit as crashes).
+
 #### Waiting on the user
 
 Store privacy forms (this is the user's step): Play Data safety add **Diagnostics**; App Store privacy add **Other Diagnostic Data**, and then Dino `PrivacyInfo.xcprivacy` gets `NSPrivacyCollectedDataTypeOtherDiagnosticData`.
