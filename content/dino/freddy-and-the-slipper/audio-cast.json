@@ -2,22 +2,22 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Freddy": {
       "voice": "Puck",
-      "style": "a young, bouncy, bright child's voice, a little fox boy, for young children, standard Tehrani accent",
+      "style": "a young, bouncy, bright child's voice, a little fox boy, for young children",
       "direction": "bouncy and bright"
     },
     "Mummy": {
       "voice": "Sulafat",
-      "style": "a warm, soft, kind mother's voice for young children, standard Tehrani accent",
+      "style": "a warm, soft, kind mother's voice for young children",
       "direction": "warm and loving"
     },
     "Tummy": {
       "voice": "Fenrir",
-      "style": "a deep, rumbly, booming funny voice, a hungry tummy, silly and never scary for young children, standard Tehrani accent",
+      "style": "a deep, rumbly, booming funny voice, a hungry tummy, silly and never scary for young children",
       "direction": "rumbly, hungry and funny"
     }
   },
@@ -157,5 +157,12 @@
       "source": "That's what tummies are for!",
       "direction": "happy and full"
     }
-  ]
+  ],
+  "audioPacks": {
+    "fa": {
+      "version": 1,
+      "hash": "40248fbbdeefa7c69efaf594ef88883dd3e8d4fbc03b87ecaa640c7207e37d18",
+      "bytes": 2089668
+    }
+  }
 }

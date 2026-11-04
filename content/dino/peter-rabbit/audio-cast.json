@@ -2,32 +2,32 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Mrs. Rabbit": {
       "voice": "Sulafat",
-      "style": "a warm, soft grown-up mother's voice for young children, standard Tehrani accent",
+      "style": "a warm, soft grown-up mother's voice for young children",
       "direction": "loving and gentle"
     },
     "Peter": {
       "voice": "Puck",
-      "style": "a young, bright, bouncy child's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, bouncy child's voice for young children",
       "direction": "cheeky, bouncy and curious"
     },
     "Mr. McGregor": {
       "voice": "Algenib",
-      "style": "a gravelly old gardener's voice, grumpy but kind underneath, never scary for young children, standard Tehrani accent",
+      "style": "a gravelly old gardener's voice, grumpy but kind underneath, never scary for young children",
       "direction": "grumbly and gruff, a bit funny"
     },
     "Robin": {
       "voice": "Sadachbia",
-      "style": "a young, lively, chirpy little bird's voice for young children, standard Tehrani accent",
+      "style": "a young, lively, chirpy little bird's voice for young children",
       "direction": "cheerful and helpful"
     },
     "Flopsy": {
       "voice": "Cleo",
-      "style": "a young, bright, warm child's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, warm child's voice for young children",
       "direction": "sweet and kind"
     }
   },
@@ -109,5 +109,12 @@
       "source": "Night-night, my little bunnies,",
       "direction": "soft and sleepy, almost a whisper"
     }
-  ]
+  ],
+  "audioPacks": {
+    "fa": {
+      "version": 1,
+      "hash": "4ea59779b07eea0959c0b4096259736af652933e0cba85d7b5bf6cec7f067d66",
+      "bytes": 2480970
+    }
+  }
 }

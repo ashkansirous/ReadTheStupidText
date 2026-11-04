@@ -2,37 +2,37 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Hare": {
       "voice": "Fenrir",
-      "style": "a young, excitable, bouncy voice for young children, standard Tehrani accent",
+      "style": "a young, excitable, bouncy voice for young children",
       "direction": "boastful and full of beans, a cheeky show-off"
     },
     "Tortoise": {
       "voice": "Vindemiatrix",
-      "style": "a gentle, warm grown-up voice, slow and calm, for young children, standard Tehrani accent",
+      "style": "a gentle, warm grown-up voice, slow and calm, for young children",
       "direction": "slow, calm and steady"
     },
     "Owl": {
       "voice": "Sadaltager",
-      "style": "a warm, wise old voice, a little sleepy, for young children, standard Tehrani accent",
+      "style": "a warm, wise old voice, a little sleepy, for young children",
       "direction": "wise and slow"
     },
     "Squirrel": {
       "voice": "Cleo",
-      "style": "a young, bright, bouncy voice for young children, standard Tehrani accent",
+      "style": "a young, bright, bouncy voice for young children",
       "direction": "excited and cheering"
     },
     "Hedgehog": {
       "voice": "Puck",
-      "style": "a young, upbeat, warm voice for young children, standard Tehrani accent",
+      "style": "a young, upbeat, warm voice for young children",
       "direction": "excited and cheering"
     },
     "Frog": {
       "voice": "Laomedeia",
-      "style": "a young, upbeat, squeaky little frog's voice for young children, standard Tehrani accent",
+      "style": "a young, upbeat, squeaky little frog's voice for young children",
       "direction": "bouncy and cheering"
     }
   },

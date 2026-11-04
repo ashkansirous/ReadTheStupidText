@@ -43,6 +43,20 @@ internal static class BookCommands
         return invalid.Count == 0 ? 0 : SkippedBooksExitCode;
     }
 
+    /// <summary>Slice 246 B2: packs the clips folder of one store book language (see <see cref="AudioPacks"/>) beside the book's store folder and prints the version it was built as.</summary>
+    public static int BuildAudio(string stem, string language, string clipsFolder)
+    {
+        BookFolder book = Books.Folder(stem);
+        if (book.Info.Kind != BookKind.Store)
+        {
+            throw new InvalidOperationException($"{stem} is not a store book; only store books have audio packs.");
+        }
+
+        AudioPackRecord record = AudioPacks.Build(book, language, clipsFolder, StoreBuilder.StoreFolder());
+        Console.WriteLine($"built {stem} audio {language} v{record.Version} ({record.Bytes} bytes)");
+        return 0;
+    }
+
     /// <summary>Fails (exit code 1) when a starter's content differs from its stored hash (raise its version with <c>stamp</c>), a committed starter differs from what its folder builds, or a store
     /// book does not build or lacks a title in a language. A store book needs no stamp (Slice 239).</summary>
     public static async Task<int> CheckAsync()

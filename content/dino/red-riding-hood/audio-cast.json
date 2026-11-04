@@ -2,32 +2,32 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Red Riding Hood": {
       "voice": "Cleo",
-      "style": "a young, bright, bouncy child's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, bouncy child's voice for young children",
       "direction": "cheerful and sing-song"
     },
     "Mum": {
       "voice": "Sulafat",
-      "style": "a warm, soft grown-up mother's voice for young children, standard Tehrani accent",
+      "style": "a warm, soft grown-up mother's voice for young children",
       "direction": "loving and caring"
     },
     "Wolf": {
       "voice": "Achird",
-      "style": "a young, friendly storybook wolf's voice, never scary for young children, standard Tehrani accent",
+      "style": "a young, friendly storybook wolf's voice, never scary for young children",
       "direction": "a little lonely, friendly and hopeful"
     },
     "Grandma": {
       "voice": "Gacrux",
-      "style": "a warm, soft, mature grandmother's voice for young children, standard Tehrani accent",
+      "style": "a warm, soft, mature grandmother's voice for young children",
       "direction": "kind and welcoming"
     },
     "Woodcutter": {
       "voice": "Orus",
-      "style": "a big, booming, kind grown-up man's voice for young children, standard Tehrani accent",
+      "style": "a big, booming, kind grown-up man's voice for young children",
       "direction": "warm and cheerful"
     }
   },
@@ -88,5 +88,12 @@
       "source": "I stayed on the path, and I told a grown-up,",
       "direction": "proud"
     }
-  ]
+  ],
+  "audioPacks": {
+    "fa": {
+      "version": 1,
+      "hash": "e1198ce0d3c7e794e402972d753a323402554176e809cdbde9b8e681024379f8",
+      "bytes": 2141011
+    }
+  }
 }

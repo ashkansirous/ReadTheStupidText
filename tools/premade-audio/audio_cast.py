@@ -18,7 +18,8 @@ pieces differently: Farsi puts tags first and moves animal sounds). `check` fail
 `occurrence`, names an occurrence past the last, or sets one field of a piece twice. A `direction` entry applies to every language; a `say` entry only to the language in
 its `lang` (other languages still match it against the dump, so a stale entry fails, but do not apply it). An entry may not target an animal-sound piece (`"sound": true` in the dump):
 its source is localized and the count differs by language, so only spoken lines and narration can be keyed. A direction for one line beats the character's own. A hash key follows the spoken text when sentences move.
-The delivery sent to the voice is `<style>; <direction>` (or just the style).
+The delivery sent to the voice is `<style>; <direction>` (or just the style). The style holds no accent: `ACCENTS` adds the language's accent line (`<style>, <accent>`,
+Slice 246 A8; only `fa` has one) once `check` knows the language. `audioPacks` (language to {version, hash, bytes}) is written by `BookBuilder build-audio` (Slice 246 B2) and ignored here.
 
 A `say` (Slice 246 A6) is the text Gemini reads for that line instead of the book text (a pronunciation fix, e.g. one word with a vowel mark). The book text, the manifest
 `hash` and the on-device voice are untouched; the clip is keyed by the spoken text.
@@ -32,6 +33,10 @@ from clip_manifest import text_hash
 CAST_VERSION = 1
 HASH_KEY = re.compile(r"^[0-9a-f]{64}$")
 STYLE_JOINER = "; "
+ACCENT_JOINER = ", "
+# Per-language accent line (Slice 246 A8), appended to the style when the delivery is built. Farsi's text is what every cast's style used to end with, so
+# its delivery (and every Farsi clip cache key) is unchanged. A language without an entry gets no accent line.
+ACCENTS = {"fa": "standard Tehrani accent"}
 LINE_TEXT_FIELDS = ("direction", "say")  # optional, at least one
 LANGUAGE_CODE = re.compile(r"^[a-z]{2,3}$")  # the dump's language, as BookBuilder writes it (fa, nb, en); "FA" or "fa-IR" would silently skip a say
 
@@ -83,6 +88,7 @@ class AudioCast:
         self.lines = data.get("lines") or []
         for position, entry in enumerate(self.lines):
             self.check_line_entry(position, entry)
+        self.language = None  # set by check(); decides the accent line
         self.bound = None  # dump piece index -> {"direction": ..., "say": ...}; None until check() binds the entries to a dump
 
     def check_hash_direction(self, key, value):
@@ -129,12 +135,19 @@ class AudioCast:
         if entry is None:
             raise CastError(f"{self.path}: no character entry for speaker {sentence['speaker']!r} (sentence {sentence['index']})")
         direction = self.direction_for(sentence) or entry.get("direction") or ""
-        return Delivery(entry["voice"], entry["style"], direction, self.say_for(sentence))
+        return Delivery(entry["voice"], self.styled(entry["style"]), direction, self.say_for(sentence))
+
+    def styled(self, style):
+        if self.language is None:
+            raise CastError(f"{self.path}: check(sentences, language) must run before delivery(), or the language's accent line is silently dropped")
+        accent = ACCENTS.get(self.language)
+        return f"{style}{ACCENT_JOINER}{accent}" if accent else style
 
     def check(self, sentences, language):
         """Fails before any request when a speaker has no voice, or a line entry matches no piece, is ambiguous, targets a sound or sets one field of a piece twice. Binds the entries to this dump."""
         if not isinstance(language, str) or not LANGUAGE_CODE.match(language):
             raise CastError(f"{self.path}: language {language!r} must be a lower-case code such as fa")
+        self.language = language
         self.bound = {}
         for sentence in sentences:
             self.delivery(sentence)

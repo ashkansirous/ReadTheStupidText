@@ -2,27 +2,27 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Little Billy": {
       "voice": "Cleo",
-      "style": "a tiny, squeaky, bright child's voice for young children, standard Tehrani accent",
+      "style": "a tiny, squeaky, bright child's voice for young children",
       "direction": "small, polite and a little shy"
     },
     "Middle Billy": {
       "voice": "Puck",
-      "style": "a young, bright, upbeat voice of a bigger boy for young children, standard Tehrani accent",
+      "style": "a young, bright, upbeat voice of a bigger boy for young children",
       "direction": "bright and a little bolder"
     },
     "Big Billy": {
       "voice": "Orus",
-      "style": "a big, deep, warm grown-up voice, gentle and kind, for young children, standard Tehrani accent",
+      "style": "a big, deep, warm grown-up voice, gentle and kind, for young children",
       "direction": "calm, kind and steady"
     },
     "Troll": {
       "voice": "Algenib",
-      "style": "a gruff, gravelly grown-up voice, storybook troll, grumpy but never scary for young children, standard Tehrani accent",
+      "style": "a gruff, gravelly grown-up voice, storybook troll, grumpy but never scary for young children",
       "direction": "grumpy and grumbly"
     }
   },
@@ -77,5 +77,12 @@
       "source": "Come back tomorrow!",
       "direction": "happy and friendly, waving goodnight"
     }
-  ]
+  ],
+  "audioPacks": {
+    "fa": {
+      "version": 1,
+      "hash": "bd024b4592ea92791db4ea72e47e4f22f65c32742e883f23b7164d6741876bd9",
+      "bytes": 2096982
+    }
+  }
 }
