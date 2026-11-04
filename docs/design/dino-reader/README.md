@@ -673,3 +673,55 @@ Also read these files the selection imports:
 
 Implement: the selected files
 ```
+
+## Batch 47 mock — `Dino Reader Batch 47 Onboarding.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Batch 47 Onboarding.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+47+Onboarding.dc.html>).
+- **Copied:** 2026-11-04, verbatim from `DesignSync get_file` (the `content` field, saved by a script). Its imports
+  were already in this folder (`assets/*/cover.jpg`, `assets/good-enough/1.jpg`; the app icon is `icons/ios/AppIcon-1024-light.png`,
+  which the mock names `dino_reader_icons/ios/`).
+- **Covers:** Slices 260-264 (store tags, the first-run book picker with no starter books, story languages fetching
+  book audio, the AI page reader download, the shelf reorder mode): frames 161-176. Slice 265 (Git LFS) has no screens.
+
+| # | Screen (from `data-screen-label`) | Line |
+|---|---|---|
+| 161 | Store tags | 36 |
+| 162 | Tag badges | 52 |
+| 163 | First books empty | 75 |
+| 164 | First books picked | 98 |
+| 165 | First books download | 121 |
+| 166 | First books offline | 144 |
+| 167 | Ready to read | 163 |
+| 168 | Intro read 2 of 5 | 182 |
+| 169 | Story languages audio | 211 |
+| 170 | AI reader download | 241 |
+| 171 | AI reader offline | 264 |
+| 172 | Book sheet Reorder | 289 |
+| 173 | Reorder wiggle | 314 |
+| 174 | Reorder drag | 327 |
+| 175 | Corner new order | 341 |
+| 176 | Reorder Windows | 368 |
+
+Open it in a text editor (`support.js` is not copied). To refresh: fetch again with `DesignSync get_file`,
+overwrite the copy with a script, regenerate the table. Never call `DesignSync` to read visual values; read this copy.
+
+Import prompt (verbatim, 2026-11-04):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+47+Onboarding.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino Reader Batch 47 Onboarding.dc.html`
+
+Also read these files the selection imports:
+- `assets/gingerbread-man/cover.jpg`
+- `assets/good-enough/1.jpg`
+- `assets/good-enough/cover.jpg`
+- `assets/three-little-pigs/cover.jpg`
+- `assets/tortoise-and-hare/cover.jpg`
+- `dino_reader_icons/ios/AppIcon-1024-light.png`
+
+Implement: `Dino Reader Batch 47 Onboarding.dc.html`
+```
