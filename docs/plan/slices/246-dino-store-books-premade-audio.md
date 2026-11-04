@@ -37,6 +37,9 @@ so it should not take that much space. we can generate it on my machine. create 
 **Touches, part C (app playback):** `src/DinoReader.Core/PremadeAudio*.cs` (new), `src/DinoReader.App/Reading*.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/Platforms/**`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`.
 **Touches, part D (generation runs):** generated audio outside git (store uploads only), this slice file.
 
+*In progress (wave 2026-11-04), draft PR: A8, B2, then the runs D2 (Good Enough fa; its dump was fixed by Slice 256, #782, and Leda is its approved voice), D3 and D4. Part C is not in this claim (it waits for Slice 250, which edits the same reading code).*
+**Touches:** `tools/premade-audio/**`, `content/dino/*/audio-cast.json`, `tools/DinoReader.BookBuilder/**`, `tests/DinoReader.Tests/**` (BookBuilder tests only, new files), `tools/upload-store-story.ps1`, `worker/stories.ts`, `worker/stories*.test.mjs`, `worker/CLAUDE.md`, `STORE.md`, `docs/plan/slices/246-dino-store-books-premade-audio.md`
+
 ## Why
 
 - On-device voices are what we have today (`piper-fa` mana/ganji/gyro). No offline Persian voice found states a Tehrani
