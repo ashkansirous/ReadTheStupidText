@@ -243,7 +243,8 @@ public sealed class ShelfAudioPacks
 		finally
 		{
 			End(run);
-			run.Cts.Dispose(); // after the last use of its token; Retire never cancels a run that has ended
+			// The run's Cts is never disposed: it has no timer or wait handle to release, so the GC frees it, and a Cancel that
+			// arrives after the run ended then stays harmless (no ObjectDisposedException).
 			run.Completion.TrySetResult();
 		}
 	}
@@ -267,7 +268,7 @@ public sealed class ShelfAudioPacks
 			}
 		}
 
-		run.Cts.Cancel(); // outside the lock; the caller disposes the source only after this returns
+		run.Cts.Cancel(); // outside the lock; safe on a finished run (the source is never disposed)
 		if (published) // a quiet run that never showed anything leaves the earlier visible state (its "no audio" and "failed" lines) alone
 		{
 			RaiseChanged();
@@ -533,7 +534,7 @@ public sealed class ShelfAudioPacks
 
 		public CancellationTokenSource Cts { get; } = new();
 
-		public CancellationToken Token { get; } // set in the constructor: the source is disposed after Completion, and the token stays usable
+		public CancellationToken Token { get; } // set in the constructor
 
 		public ShelfAudioState State { get; set; } = new(ShelfAudioPhase.Preparing);
 
