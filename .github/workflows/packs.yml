@@ -179,10 +179,17 @@ jobs:
       OCR_VERSION: ${{ inputs.ocr_pack_version }}
       TRANSLATION_VERSION: ${{ inputs.translation_pack_version }}
     steps:
-      - name: Checkout (with LFS — the voice model is LFS-tracked)
+      # Slice 265: no `lfs: true` here. Its fetch may not honour .lfsconfig's fetchexclude, and the Dino audio clips (~510 MB) must never download for a packs release,
+      # so the voice model is pulled alone and the clip folders are excluded explicitly.
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          lfs: true
+          lfs: false
+
+      - name: Fetch the LFS voice model (never the Dino audio clips)
+        run: |
+          git lfs install --local
+          git lfs pull --include "src/ReadTheStupidText.App/VoiceModel/**" --exclude "content/dino/**/audio/**"
 
       # The quantiser pins below (onnxruntime 1.23.2, matching the apps) have no wheels for the
       # runner image's newer default Python, so pin one they support.

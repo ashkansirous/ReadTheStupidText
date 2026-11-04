@@ -1,0 +1,4 @@
+# Slice 265: a normal checkout or clone downloads no Dino audio clips (they are LFS objects, about 510 MB).
+# Fetch one book's with: git lfs pull --include "content/dino/<book>/audio/**" --exclude ""
+[lfs]
+	fetchexclude = content/dino/*/audio/**

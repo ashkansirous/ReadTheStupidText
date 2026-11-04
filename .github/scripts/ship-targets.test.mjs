@@ -6,8 +6,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { CONTENT_MARKDOWN, STARTER_CONTENT_MARKDOWN, STARTER_STEMS, GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, changedFilesSince, localChangedFiles, matchesPattern, newestAppTag, parseCommits, parseLocalArgs, planFor, productBump, shipTargets, shipTargetsPerProduct } from './ship-targets.mjs';
+import { CONTENT_MARKDOWN, GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, changedFilesSince, localChangedFiles, matchesPattern, newestAppTag, parseCommits, parseLocalArgs, planFor, productBump, shipTargets, shipTargetsPerProduct } from './ship-targets.mjs';
 
+// Slice 265: the four books once bundled in the app (dino-starters.json stays only for BookBuilder's kind check); they are store-only content like every other book.
+const FORMER_STARTERS = JSON.parse(readFileSync(fileURLToPath(new URL('./dino-starters.json', import.meta.url)), 'utf8'));
 const M = 'src/ReadTheStupidText.Mobile';
 const S = 'src/ReadTheStupidText.Mobile.Shared';
 const NONE = { windows: false, windowsstore: false, android: false, ios: false, dinoreader: false, dinoapp: false, dinoios: false, dinowin: false, dinostore: false };
@@ -58,9 +60,13 @@ const CASES = [
     ['store book picture', ['content/dino/x-marks-the-treasure/pictures/1.jpg'], { dinostore: true }],
     ['a new store book folder', ['content/dino/brand-new-book/book.json', 'content/dino/brand-new-book/story.md', 'content/dino/brand-new-book/translations/fa.json'], { dinostore: true }],
     ['a deleted store book folder', ['content/dino/freddy-and-the-slipper/book.json', 'content/dino/freddy-and-the-slipper/pictures/3.jpg', 'content/dino/freddy-and-the-slipper/story.md'], { dinostore: true }],
-    ['starter translations', ['content/dino/three-little-pigs/translations/fa.json'], { dinoreader: true, dinostore: true }],
-    ['starter text', ['content/dino/three-little-pigs/story.md'], { dinoreader: true, dinostore: true }],
-    ['a starter change with its rebuilt package ships the apps', ['content/dino/three-little-pigs/story.md', 'src/DinoReader.App/Resources/Raw/starters/three-little-pigs.dino'], { dinoreader: true, dinostore: true, dinoapp: true, dinoios: true, dinowin: true }],
+    // Slice 265: the four former starters are store-only content too; an audio clip, a manifest or a cast change starts no app build and no test workflow.
+    ['former starter translations', ['content/dino/three-little-pigs/translations/fa.json'], { dinostore: true }],
+    ['former starter text', ['content/dino/three-little-pigs/story.md'], { dinostore: true }],
+    ['an audio clip only', ['content/dino/three-little-pigs/audio/fa/0a1b2c3d4e5f6071-Hali-gemini-tts-6de2d2f6.m4a'], { dinostore: true }],
+    ['an audio manifest only', ['content/dino/x-marks-the-treasure/audio/ja/manifest.json'], { dinostore: true }],
+    ['audio clips of several books and languages', ['content/dino/good-enough/audio/fa/a.m4a', 'content/dino/tortoise-and-hare/audio/de/b.m4a', 'content/dino/tortoise-and-hare/audio-cast.json'], { dinostore: true }],
+    ['a former starter change with its rebuilt package ships the apps', ['content/dino/three-little-pigs/story.md', 'src/DinoReader.App/Resources/Raw/starters/three-little-pigs.dino'], { dinostore: true, dinoapp: true, dinoios: true, dinowin: true }],
     ['book art record is documentation', ['content/dino/x-marks-the-treasure/art.md'], {}],
     ['book builder', ['tools/DinoReader.BookBuilder/Program.cs'], { dinoreader: true, dinostore: true }],
     ['store upload script', ['tools/upload-store-story.ps1'], { dinostore: true }],
@@ -140,7 +146,7 @@ test('DinoReader.Core builds the Dino Reader app (Slice 60) but no RTST platform
 test('Slice 239: dino-starters.json is exactly the books whose book.json kind is Starter', () => {
     const root = fileURLToPath(new URL('../../content/dino/', import.meta.url));
     const starters = readdirSync(root).filter((stem) => JSON.parse(readFileSync(join(root, stem, 'book.json'), 'utf8')).kind === 'Starter');
-    assert.deepEqual([...STARTER_STEMS].sort(), starters.sort());
+    assert.deepEqual([...FORMER_STARTERS].sort(), starters.sort());
 });
 
 test('Slice 239: a store-only change starts no suite, no app and no RTST target', () => {
@@ -301,7 +307,6 @@ for (const [file, groups] of Object.entries(PR_TARGETS)) {
         const expected = derivedPaths(groups);
         expected.add(own); // a workflow always re-runs on its own edits
         IGNORED_PATTERNS.forEach((pattern) => expected.add(`!${pattern}`));
-        if (file === 'dinoreader.yml') STARTER_CONTENT_MARKDOWN.forEach((pattern) => expected.add(pattern)); // a starter's text is Markdown that must still run its suite (a store book's does not, Slice 239)
         assert.equal(new Set(actual).size, actual.length, `${file}: duplicate path entries`);
         assert.deepEqual([...new Set(actual)].sort(), [...expected].sort());
     });
@@ -324,7 +329,7 @@ test('a negated path follows its root glob and precedes the Platforms re-include
 
 test('every pull_request.paths list ends with the Markdown negation', () => {
     for (const file of [...Object.keys(PR_TARGETS), 'release-scripts.yml']) {
-        const paths = readPullRequestPaths(file).filter((path) => !STARTER_CONTENT_MARKDOWN.includes(path)); // re-includes of content Markdown follow the negation
+        const paths = readPullRequestPaths(file);
         const tail = paths.slice(-IGNORED_PATTERNS.length);
         assert.deepEqual(tail, IGNORED_PATTERNS.map((pattern) => `!${pattern}`), `${file}: ignore negations must be last`);
     }
@@ -614,11 +619,13 @@ function pushPathsOf(workflow) {
     return out;
 }
 
-test('release.yml ignores store-book folders but still runs for starters, code and mixed pushes', () => {
+test('release.yml ignores every book folder, audio clips included, but still runs for code and mixed pushes (Slice 265)', () => {
     const paths = pushPathsOf('release.yml');
     assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/story.md'), false);
     assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/pictures/1.jpg'), false);
-    for (const stem of STARTER_STEMS) assert.equal(pushRuns(paths, `content/dino/${stem}/book.json`), true, stem);
+    for (const stem of FORMER_STARTERS) assert.equal(pushRuns(paths, `content/dino/${stem}/book.json`), false, stem);
+    assert.equal(pushRuns(paths, 'content/dino/three-little-pigs/audio/fa/manifest.json'), false);
+    assert.equal(pushRuns(paths, 'content/dino/three-little-pigs/audio/fa/0a1b2c3d4e5f6071-Hali-gemini-tts-6de2d2f6.m4a'), false);
     for (const file of ['src/DinoReader.Core/Parser.cs', 'docs/plan/x.md', '.github/workflows/release.yml']) assert.equal(pushRuns(paths, file), true, file);
     const mixed = ['content/dino/x-marks-the-treasure/story.md', 'src/DinoReader.Core/Parser.cs'];
     assert.equal(mixed.some((file) => pushRuns(paths, file)), true);
@@ -627,7 +634,8 @@ test('release.yml ignores store-book folders but still runs for starters, code a
 test('dino-store.yml runs for every book folder and workflow_dispatch, and has its own concurrency group', () => {
     const paths = pushPathsOf('dino-store.yml');
     assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/story.md'), true);
-    for (const stem of STARTER_STEMS) assert.equal(pushRuns(paths, `content/dino/${stem}/book.json`), true, stem);
+    for (const stem of FORMER_STARTERS) assert.equal(pushRuns(paths, `content/dino/${stem}/book.json`), true, stem);
+    assert.equal(pushRuns(paths, 'content/dino/three-little-pigs/audio/fa/0a1b2c3d4e5f6071-Hali-gemini-tts-6de2d2f6.m4a'), true);
     const text = readFileSync(`${WORKFLOWS_DIR}dino-store.yml`, 'utf8');
     assert.match(text, /group: dino-store\r?\n\s+cancel-in-progress: false/);
     assert.match(text, /workflow_dispatch:/);
@@ -641,5 +649,5 @@ test('dino-store.yml push paths cover every path of the dinostore group (one sou
     const paths = pushPathsOf('dino-store.yml');
     const probe = (entry) => (entry.endsWith('/') ? `${entry}sub/file.x` : entry);
     for (const entry of GROUPS.dinostore.include) assert.equal(pushRuns(paths, probe(entry)), true, `dinostore path not covered by dino-store.yml: ${entry}`);
-    for (const extra of ['src/DinoReader.App/ShippedTitles.cs', '.github/scripts/dino-starters.json', '.github/workflows/dino-store.yml']) assert.equal(pushRuns(paths, extra), true, extra);
+    for (const extra of ['src/DinoReader.App/ShippedTitles.cs', '.github/workflows/dino-store.yml']) assert.equal(pushRuns(paths, extra), true, extra);
 });

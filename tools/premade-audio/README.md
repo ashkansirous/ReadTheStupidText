@@ -16,14 +16,29 @@ The sentences come from the app's own code through the BookBuilder, so clip N is
 # 1. the sentences the app reads aloud (store or starter book, one language): index, highlight sentence, spoken text, source text, speaker, narrator flag
 dotnet run --project tools/DinoReader.BookBuilder -- dump-sentences three-little-pigs --lang fa --out tmp/pigs-fa.json
 # 2. one clip per sentence (add --dry-run first to see how many requests it needs; sends nothing)
-python tools/premade-audio/generate.py --sentences tmp/pigs-fa.json --out artifacts/premade-audio --free --max-requests 10
+python tools/premade-audio/generate.py --sentences tmp/pigs-fa.json --free --max-requests 10
 # offline tests
 python -I -W error -m unittest discover -s tools/premade-audio
 ```
 
 The text is the displayed translation (`fa.json`), plain: the `fa.speak.json` "how to read" table is for the on-device voice only (user, 2026-11-03). Pieces with no
 letter or digit are left out. The animals' sounds are real recordings the app plays at its own slots (Slice 255), so the dump and the clips leave them out: nothing is spoken or generated for them.
-The highlight `sentence` is the one holding the segment's `SourceStart`, as in the app. Clips go to `<out>/<book>/<language>/<hash>-<voice>-<variant>.m4a` with `manifest.json`.
+The highlight `sentence` is the one holding the segment's `SourceStart`, as in the app. Clips go to `content/dino/<book>/audio/<language>/<hash>-<voice>-<variant>.m4a` with `manifest.json` (see *Where the clips live*); `--out <root>` writes to `<root>/<book>/<language>/` instead (a scratch run).
+
+## Where the clips live: Git LFS (Slice 265)
+
+The clip cache is committed under each book's folder, `content/dino/<book>/audio/<language>/` (clips and `manifest.json`), as Git LFS objects (`.gitattributes`). A normal checkout or clone
+downloads none of them: `.lfsconfig` sets `lfs.fetchexclude` for `content/dino/*/audio/**`, so the files are small pointer files and the night run's many worktrees stay small. The packs (zips) are not in git;
+they are rebuilt from the clips and live in R2.
+
+```bash
+git lfs pull --include "content/dino/<book>/audio/**" --exclude ""   # one book (add /<language>/ to take one language); --exclude "" overrides .lfsconfig
+```
+
+Fetch a book's clips before rendering or packing it: the generator treats a pointer file as an existing clip (so it would skip it) and `build-audio` refuses one. `git lfs ls-files` shows which clips are
+downloaded (`*`) and which are pointers (`-`). After a render, commit the changed clips (`git add content/dino/<book>/audio`; the filter stores them in LFS) and the book's `audio-cast.json` (its `audioPacks`
+record, updated by `build-audio`). `dino-store.yml` does the rest on merge: it fetches only the books whose pack the live store lacks, builds those packs and uploads them with the book. The working files
+(`batch-state.json`, `variants/`, kept `.wav`, `manifest.json.bak`) are git-ignored; the lock and `usage.json` stay in `artifacts/premade-audio`.
 
 ## Cast: `content/dino/<book>/audio-cast.json`
 
@@ -45,7 +60,7 @@ matches clips by them) and records the `say`. The book text and the on-device vo
 Listening test for 2-3 spellings of one line (sends one request per candidate, counted in the budget like any other; writes no manifest entry):
 
 ```bash
-python tools/premade-audio/generate.py --sentences tmp/pigs-fa.json --out artifacts/premade-audio --variants 17 --say "<spelling 1>" --say "<spelling 2>" --free
+python tools/premade-audio/generate.py --sentences tmp/pigs-fa.json --variants 17 --say "<spelling 1>" --say "<spelling 2>" --free
 ```
 
 The files land in `<out>/<book>/<language>/variants/<index>/1.m4a`, `2.m4a`, ... in the line's own voice and delivery (its `say` is ignored); a rerun replaces them (each only when its new clip is saved; after a complete run, files numbered beyond the candidates are removed).
@@ -66,11 +81,11 @@ else is reused. Saved after every clip; a rerun resumes. A manifest of another v
 | `--rpm N`, `--rpd N` | override; `--rpm 0` no pacing, `--rpd 0` no daily cap. Without `--free` the default is 10/min and no daily cap: a **placeholder**, read the paid values off the Rate Limit page once billing is on |
 | `--max-requests N` | most requests in this run (default 200, so a typo cannot run a long book unbounded on a paid key; 0 = no limit) |
 
-One run per output folder: `<out>/.run.lock` is an OS lock (dropped if the process dies); a second run exits 7. Exit codes: 0 done or stopped at a budget/daily limit, 1 sentences failed
+One run per output folder: `<out>/.run.lock` (`artifacts/premade-audio/.run.lock` without `--out`) is an OS lock (dropped if the process dies); a second run exits 7. Exit codes: 0 done or stopped at a budget/daily limit, 1 sentences failed
 (or three errors in a row), 2 no ffmpeg, 3 no key, 4 401/402/403, 5 encode failure (the paid WAV is kept and encoded on the next run with no new request), 6 a second 429, 7 folder locked.
 A clip that trims to under 0.1 s (silent) counts as an error and is requested again on a rerun. Manifest entries that no longer match the dump (text, voice or variant) are dropped at the start of a run.
 
-Requests are spaced to the per-minute limit; the daily count is a rolling 24 hours kept in `<out>/usage.json` (never looser than the vendor's calendar reset), so a later run
+Requests are spaced to the per-minute limit; the daily count is a rolling 24 hours kept in `<out>/usage.json` (`artifacts/premade-audio/` without `--out`) (never looser than the vendor's calendar reset), so a later run
 carries on where the day stopped and prints when the next slot opens. The run ends cleanly (exit 0, reason printed) at the budget, the daily limit, a 401/402/403, or a second 429;
 the first 429 waits the vendor's retry-after once (header, else the body's `retryDelay`, default 60 s; over 300 s ends the run) and retries that sentence. Three errors in a row end it too.
 
@@ -80,7 +95,7 @@ The paid tier caps `gemini-3.8-flash-tts` at 100 requests a day and 10 a minute 
 Batch jobs are not counted against that cap (proven 2026-11-03: a batch submitted after the day's 100 were used succeeded), so a whole book-language renders in a few jobs.
 
 ```
-python tools/premade-audio/generate.py --sentences tmp/pigs-fa.json --out artifacts/premade-audio --batch [--batch-chunk 200] [--poll-seconds 20] [--wait-minutes 60]
+python tools/premade-audio/generate.py --sentences tmp/pigs-fa.json --batch [--batch-chunk 200] [--poll-seconds 20] [--wait-minutes 60]
 ```
 
 - Same inputs and outputs as the per-sentence run: same clip names, cache (text, voice, delivery), manifest v3 entries and m4a encode, so a batch clip and a per-sentence clip of the same piece are interchangeable. Only cache misses are sent. `--max-requests N` caps how many misses go into this run's batches (default 200); `--rpm`/`--rpd` do not apply.
