@@ -6,8 +6,15 @@ namespace DinoReader.Core;
 public sealed record StoreItem(
     string Id, string Title, string Language, int SchemaVersion, int Version, int? PageCount, int? Minutes, string? CoverUrl, string DownloadUrl, string? Credits = null,
     int? AgeMin = null, int? AgeMax = null, string? Author = null, IReadOnlyDictionary<string, string>? Titles = null,
-    IReadOnlyDictionary<string, string>? CreditsByLanguage = null, IReadOnlyDictionary<string, AudioPackInfo>? Audio = null)
+    IReadOnlyDictionary<string, string>? CreditsByLanguage = null, IReadOnlyDictionary<string, AudioPackInfo>? Audio = null,
+    IReadOnlyList<StoreTag>? Tags = null, long? Bytes = null)
 {
+    /// <summary>The store tags the listing carries (Slice 260), in list order; none from an older Worker.</summary>
+    public IReadOnlyList<StoreTag> TagList => Tags ?? [];
+
+    /// <summary>The badges a card shows: at most two tags, in list order (Slice 260).</summary>
+    public IReadOnlyList<StoreTag> Badges => StoreTags.Badges(TagList);
+
     /// <summary>The pre-made audio pack the listing offers for <paramref name="language"/> (the book-translation key, e.g. <c>fa</c>), or null (Slice 246 C2).</summary>
     public AudioPackInfo? AudioIn(string language) =>
         Audio is not null && Audio.TryGetValue(BundledTranslations.Key(language), out AudioPackInfo? pack) ? pack : null;
@@ -53,7 +60,7 @@ public static class StoreCatalog
             return [];
         }
 
-        return stories.EnumerateArray().Select(ItemOf).OfType<StoreItem>().ToList();
+        return StoreTags.TaggedFirst(stories.EnumerateArray().Select(ItemOf).OfType<StoreItem>(), item => item.TagList);
     }
 
     /// <summary>The entries this app can read, in list order.</summary>
@@ -80,7 +87,8 @@ public static class StoreCatalog
         (int? ageMin, int? ageMax) = AgeRangeOf(dto);
         return valid
             ? new StoreItem(dto.Id!, dto.Title!, dto.Language!, dto.SchemaVersion, dto.Version, dto.PageCount, dto.Minutes, dto.CoverUrl, dto.DownloadUrl!, CreditsOf(dto.Credits),
-                ageMin, ageMax, AuthorOf(dto.Author), TitlesOf(dto.Titles), TextMapOf(dto.CreditsByLanguage, MaxCreditsLength), AudioOf(dto.Audio))
+                ageMin, ageMax, AuthorOf(dto.Author), TitlesOf(dto.Titles), TextMapOf(dto.CreditsByLanguage, MaxCreditsLength), AudioOf(dto.Audio),
+                StoreTags.FromJson(dto.Tags), BytesOf(dto.Bytes))
             : null;
     }
 
@@ -116,6 +124,10 @@ public static class StoreCatalog
         long? bytes = pack.TryGetProperty("bytes", out JsonElement size) && size.ValueKind == JsonValueKind.Number && size.TryGetInt64(out long length) && length > 0 ? length : null;
         return version is >= 1 ? new AudioPackInfo(version.Value, bytes, url.GetString()!.Trim()) : null;
     }
+
+    // Slice 260: the package size; anything but a whole positive number is unknown (null), as in the Worker.
+    private static long? BytesOf(JsonElement? size) =>
+        size is { ValueKind: JsonValueKind.Number } number && number.TryGetInt64(out long length) && length > 0 ? length : null;
 
     // The optional credit line: blank, or longer than the Worker allows, means none.
     private static string? CreditsOf(string? credits) =>
@@ -173,6 +185,10 @@ public static class StoreCatalog
         public JsonElement? CreditsByLanguage { get; set; }
 
         public JsonElement? Audio { get; set; }
+
+        public JsonElement? Tags { get; set; }
+
+        public JsonElement? Bytes { get; set; }
 
         public string? Id { get; set; }
 

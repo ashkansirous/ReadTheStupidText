@@ -56,6 +56,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>مختارة وموزّعة الأدوار من أجل دينو</value></data>
   <data name="Store_Get" xml:space="preserve"><value>تنزيل</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>تم التنزيل</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>رائج</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>شائع</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>موصى به</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>جديد</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} صفحات · {1} دقيقة</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>مجانية وبلا حساب. لا يُرسَل أي شيء عنك أو عن طفلك.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>أنت غير متصل بالإنترنت</value></data>

@@ -56,6 +56,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>Подобраны и распределены по ролям для Дино</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Скачать</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Скачано</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>Хит</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>Популярное</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>Рекомендуем</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>Новинка</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} стр. · {1} мин</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Бесплатно и без аккаунта. Ничего о вас или вашем ребёнке не отправляется.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Нет подключения</value></data>

@@ -109,6 +109,19 @@ public sealed class BookBuilderTests : IDisposable
     }
 
     [Fact]
+    public void AStoreBook_AtTheLiveVersion_KeepsTheLiveSize_AChangedOneDoesNot()
+    {
+        BookFolder book = Books.Folder(TreasureStem);
+        string hash = BookHash.Of(book);
+
+        StoreStorySpec unchanged = StoreVersioning.Versioned(book, new Dictionary<string, LiveEntry> { [book.Info.Id] = new(40, hash, 0, 1234) });
+        StoreStorySpec changed = StoreVersioning.Versioned(book, new Dictionary<string, LiveEntry> { [book.Info.Id] = new(40, "older", 0, 1234) });
+
+        Assert.Equal(1234, unchanged.LiveBytes);
+        Assert.Null(changed.LiveBytes);
+    }
+
+    [Fact]
     public void TheTitles_RideInEachLanguagesTable_SoTheInstalledBookCanShowThem()
     {
         BookFolder book = Books.Folder(TreasureStem);
@@ -270,6 +283,55 @@ public sealed class BookBuilderTests : IDisposable
         Assert.Contains(path, message);
         Assert.Contains("missing: fa", message);
         Assert.Contains("unknown: xx", message);
+    }
+
+    // Slice 260: tags are the user's hand-set list in book.json; an unknown or wrong-case name fails check, naming the file.
+    [Theory]
+    [InlineData("Sale")]
+    [InlineData("hot")]
+    public void ABookJson_WithAnUnknownTag_FailsWithTheFileNamed(string tag)
+    {
+        BookFolder book = TinyBook("One.");
+        Books.WriteInfo(book.Dir, book.Info with { Tags = ["New", tag] });
+
+        string message = Assert.Throws<InvalidOperationException>(() => Books.ReadInfo(book.Dir)).Message;
+        Assert.Contains(Path.Combine(book.Dir, BookFolder.BookFile), message);
+        Assert.Contains($"unknown name(s) {tag}", message);
+    }
+
+    [Fact]
+    public void ABookJson_WithTheFourKnownTags_ReadsBack_AndARepeatFails()
+    {
+        BookFolder book = TinyBook("One.");
+        Books.WriteInfo(book.Dir, book.Info with { Tags = ["Hot", "Popular", "Recommended", "New"] });
+        Assert.Equal(["Hot", "Popular", "Recommended", "New"], Books.ReadInfo(book.Dir).Tags);
+
+        Books.WriteInfo(book.Dir, book.Info with { Tags = ["Hot", "Hot"] });
+        Assert.Contains("repeats Hot", Assert.Throws<InvalidOperationException>(() => Books.ReadInfo(book.Dir)).Message);
+    }
+
+    [Fact]
+    public void ChangingTags_NeverChangesTheHash_SoItNeverBumpsTheVersion()
+    {
+        BookFolder book = TinyBook("One.");
+        string hash = BookHash.Of(book);
+
+        Assert.Equal(hash, BookHash.Of(new BookFolder(book.Stem, book.Dir, book.Info with { Tags = ["Hot", "New"] })));
+    }
+
+    [Fact]
+    public void MetaJson_CarriesTagsInListOrder_AndTheGivenPackageBytes_AndNeitherWhenAbsent()
+    {
+        StoreStorySpec spec = Books.StoreOnly[0].ToSpec();
+        Story story = StoreBuilder.Build(spec);
+
+        using JsonDocument tagged = JsonDocument.Parse(StoreBuilder.MetaJson(spec with { Tags = ["New", "Hot"] }, story, 9_000_000));
+        Assert.Equal(["Hot", "New"], tagged.RootElement.GetProperty("tags").EnumerateArray().Select(t => t.GetString()));
+        Assert.Equal(9_000_000, tagged.RootElement.GetProperty("bytes").GetInt64());
+
+        using JsonDocument plain = JsonDocument.Parse(StoreBuilder.MetaJson(spec with { Tags = null }, story));
+        Assert.False(plain.RootElement.TryGetProperty("tags", out _));
+        Assert.False(plain.RootElement.TryGetProperty("bytes", out _));
     }
 
     private BookFolder TinyBook(string text)

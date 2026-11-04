@@ -176,6 +176,10 @@ public static class AppResources
 	public static string Store_Subtitle => Get();
 	public static string Store_Get => Get();
 	public static string Store_Downloaded => Get();
+	public static string Store_Tag_Hot => Get();
+	public static string Store_Tag_Popular => Get();
+	public static string Store_Tag_Recommended => Get();
+	public static string Store_Tag_New => Get();
 	public static string Store_Length => Get();
 	public static string Store_Footer => Get();
 	public static string Store_OfflineTitle => Get();

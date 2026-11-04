@@ -1,8 +1,8 @@
 # Slice 260 — Dino: tags on store books (Hot, Popular, Recommended, New)
 
-*In progress (wave 2026-11-04), draft PR.* *Planned 2026-11-04.* Dino Reader only; Android and iOS alike (the Windows head shares the pages). First of the onboarding group (260-265); 261's first-run book picker shows these tags.
+*Built 2026-11-04 (night 2026-11-04-1441, wave 1), PR #798, not merged. Planned 2026-11-04.* Dino Reader only; Android and iOS alike (the Windows head shares the pages). First of the onboarding group (260-265); 261's first-run book picker shows these tags.
 
-**Touches:** `content/dino/*/book.json`, `tools/DinoReader.BookBuilder/**`, `worker/stories.ts`, `worker/stories.test.mjs`, `src/DinoReader.Core/StoreCatalog.cs`, `src/DinoReader.Core/StoreTag*.cs` (new), `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/StoreTagBadge.cs` (new), `src/DinoReader.App/DinoTokens.cs`, `src/DinoReader.App/App.xaml`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/store-tags.yaml` (new), `src/DinoReader.App/Resources/Strings/AppResources.cs` (typed accessors, hand-edited; added at claim), `src/DinoReader.App/Testing/DinoTestCommands.cs` (only if the flow needs a hook; added at claim), `docs/plan/slices/260-dino-store-tags.md`.
+**Touches:** `content/dino/*/book.json`, `tools/DinoReader.BookBuilder/**`, `worker/stories.ts`, `worker/stories.test.mjs`, `src/DinoReader.Core/StoreCatalog.cs`, `src/DinoReader.Core/StoreTag*.cs` (new), `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/StoreTagBadge.cs` (new), `src/DinoReader.App/DinoTokens.cs`, `src/DinoReader.App/App.xaml`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/store-tags.yaml` (new), `src/DinoReader.App/Resources/Strings/AppResources.cs` (typed accessors, hand-edited; added at claim), `src/DinoReader.App/Testing/DinoTestCommands.cs` (only if the flow needs a hook; added at claim), `docs/plan/slices/260-dino-store-tags.md`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs` (added at review).
 
 **Claim design note (coordinator, 2026-11-04, wave 1 of night 2026-11-04-1441):** a code check found no per-book size anywhere on main (`bytes` exists only for audio packs: `StoreCatalog.cs:28`, `worker/stories.ts:96-99`). The user's design-review answer asks for it, so this slice adds it: BookBuilder writes `bytes` (the size of the `story-v<n>.dino` package it writes) into `meta.json`; the Worker's `StoryMeta`/`ListItem` pass it through (absent or not a positive integer: dropped); `StoreCatalog`/`StoreItem` read it as `long?` (null when an older Worker sends none). Like `tags`, it is not part of `BookHash`. No UI shows it in this slice; Slice 261's picker reads it. `StoreTag` is a closed enum; parsing is case-sensitive on the four names, unknown names dropped in the app and Worker, rejected by BookBuilder `check`. Ordering: books with at least one tag first, then today's order inside each group (stable).
 
@@ -16,13 +16,13 @@
 
 ## Work
 
-- [ ] Core: `StoreTag` enum (closed set) and the rule "tagged first, then the existing order", with unit tests.
-- [ ] `book.json`: optional `tags` array; BookBuilder validates it against the four names (an unknown name fails `check`), copies it into `meta.json`. Not part of `BookHash`, so changing a tag never bumps a book's version (same as `credits`, Slice 192).
-- [ ] Worker: `StoryMeta` and `ListItem` carry `tags`, unknown values dropped, sorted as above; `stories.test.mjs` covers it.
-- [ ] App: `StoreCatalog` DTO and `StoreItem` read `tags`; `StorePage` rows show the badges (`StoreTagBadge`, colours from `DinoTokens`); an older Worker with no `tags` shows no badges.
-- [ ] Strings: four labels in all 15 resx files, in the store's own block.
-- [ ] Set first tags on a few store books (the user can change them in `book.json` any time; a tag change publishes through `dino-store.yml` only, Slice 239).
-- [ ] Android task: store row badges on the emulator. iOS task: the same page compiles and shows badges (shared code; iOS compile in CI).
+- [x] Core: `StoreTag` enum (closed set) and the rule "tagged first, then the existing order", with unit tests (`StoreTag.cs`, `StoreTagTests.cs`).
+- [x] `book.json`: optional `tags` array; BookBuilder validates it against the four names (an unknown or wrong-case name, or a repeat, fails `check`), copies it into `meta.json`, with `bytes` (the size of `story-v<n>.dino`). Neither is part of `BookHash`, so changing a tag never bumps a book's version (same as `credits`, Slice 192).
+- [x] Worker: `StoryMeta` and `ListItem` carry `tags` (unknown dropped, list order) and `bytes` (positive integer or null), tagged first; `stories.test.mjs` covers it.
+- [x] App: `StoreCatalog` DTO and `StoreItem` read `tags` and `bytes` (`long?`); `StorePage` rows show the badges (`StoreTagRow`/`StoreTagBadge`, colours from `DinoTokens`); an older Worker with no `tags` shows no badges. The list is also ordered tagged-first on the phone.
+- [x] Strings: four labels (`Store_Tag_*`) in all 15 resx files, in the store's own block.
+- [x] Set first tags on a few store books (not the four starters): Lion and Mouse Hot + New, Peter Rabbit Popular, Goldilocks Recommended, The Little Red Hen New. The user can change them in `book.json` any time; a tag change publishes through `dino-store.yml` only, Slice 239.
+- [x] Android task: store row badges (built; flow `.maestro/dino/store-tags.yaml` written, not run: it is a post-merge live check, it needs `publish-store` to have put the tags in the live list). iOS task: the same page compiles (`net10.0-ios` built on Windows); iOS compile also in CI.
 
 #### Design (Dino Reader Batch 47 Onboarding mock, frames 161-162, added 2026-11-04)
 
@@ -44,3 +44,31 @@ Source: `docs/design/dino-reader/Dino Reader Batch 47 Onboarding.dc.html`, 2 fra
 
 - `dotnet test tests/DinoReader.Tests`, `node --test worker/*.test.mjs`, BookBuilder `check`.
 - Emulator flow `store-tags.yaml`: the store lists a tagged book first with its badge, in English and one more language.
+- Emulator run (cache cb7c21502c2a), log `D:/ReadTheStupidText-worktrees/reviews/s260-run/flows.log`: `store-credits-language` PASS; `dino-landscape-store` PASS (badge row empty with the current Worker); `store-tags` EXPECTED-FAIL before merge (no live tags yet); `dino-landscape-store-tablet` FAIL because it ran on the phone AVD (wrong AVD, not this slice).
+
+Changed while building:
+
+- Per-book `bytes` was added to the plan (claim design note): BookBuilder writes the package size into `meta.json`; `publish-store-books.mjs` keeps the live size in its live-state, so a rebuild at the live version lists the live size. Books live before this ships list the rebuilt size until their next version bump.
+
+From review (files `D:/ReadTheStupidText-worktrees/reviews/s260-high.md`, `s260-medium.md`, `s260-check.md`, all findings read):
+
+- High 1 (`bytes` from a package that is not uploaded at the live version): applied (live size kept in live-state). 2 (fixed pill height clips at large font): applied. 5 (slim card layout with the extra badge row): applied. 6 (docs missing Not-yet-verified block): applied (below).
+- High 3 (badge text stays in the old language after a language switch): not confirmed, no change; needs a device look.
+- High 4 (`StoreRow.Badges` allocates per access, rows rebuild badge views): skipped, rebuild cost judged not worth a cache.
+- High 7 (`store-tags.yaml` depends on live production data): skipped, it is a post-merge live check by design.
+- Medium 1 (starter entries carry no LiveBytes): applied. 6 (`compareEntries` shared comparator): no change needed, its only caller is `worker/stories.ts:393`.
+- Medium 2 (first publish after merge has no live `bytes`), 3 (language change, same as high 3), 4 (slim card layout, same as high 5), 5 (large font, long labels), 7 (flow matches the text "Hot"): skipped.
+- Check 1-5 (first-publish size, `liveMeta` read twice, `DinoTokens.Get` needs `Application.Current`, tagged-first rule duplicated in Worker and app, no test for removing all tags): all low, none applied.
+
+## Not yet verified
+
+- Emulator flow `.maestro/dino/store-tags.yaml` after merge and `publish-store`: it needs the tags in the live list first; Lion and Mouse must show their Hot badge on screen without scrolling.
+- Tablet store flow `dino-landscape-store-tablet` on the tablet AVD (it failed on the phone AVD).
+- iOS run (compile only so far).
+- Badge look at 130-200% system font size and the slim (sideways) store card with a tagged book (extra badge row vs title and cover centre).
+- The 15 locale labels (`Store_Tag_*`) need a native read.
+- Badge text after an app-language switch with the store page open (review high 3, not confirmed).
+
+#### For CLAUDE.md
+
+- Store tags are a closed enum (`StoreTag`, four names, case-sensitive) set by hand in each book's `book.json`, and are not part of `BookHash`, so a tag change never bumps a version. "Tagged first" is applied in both `worker/stories.ts` (`compareEntries`) and `StoreCatalog.cs`: keep the two the same. (Slice 260: docs/plan/slices/260-dino-store-tags.md) Place in `src/DinoReader.App/CLAUDE.md` or `src/DinoReader.Core/CLAUDE.md`.

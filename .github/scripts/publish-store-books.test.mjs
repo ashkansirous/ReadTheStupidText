@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, contentBooks, starterDrift, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
+import { bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, contentBooks, starterDrift, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
 
 const A = 'a'.repeat(32);
 const B = 'b'.repeat(32);
@@ -47,6 +47,14 @@ test('Slice 239: the live state carries each live meta hash, null for a book pub
     });
     assert.equal(hashFromMeta('not json'), null);
     assert.equal(hashFromMeta(JSON.stringify({ contentHash: '' })), null);
+});
+
+test('Slice 260: the live state carries the live meta bytes (the live package size) when there is one, and no key otherwise', () => {
+    const metas = { [A]: JSON.stringify({ version: 3, contentHash: 'abc', bytes: 4096 }), [B]: JSON.stringify({ version: 2, contentHash: 'x', bytes: 'big' }) };
+    const state = liveStateOf([{ id: A, version: 3 }, { id: B, version: 2 }], (id) => metas[id] ?? null);
+    assert.equal(state[A].bytes, 4096);
+    assert.equal('bytes' in state[B], false);
+    assert.equal(bytesFromMeta(JSON.stringify({ bytes: 0 })), null);
 });
 
 test('Slice 239: the live state carries the highest package in the bucket, probed from live + 1 (from 1 for a store book that is not live)', () => {

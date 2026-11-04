@@ -56,6 +56,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>ディノのために えらんで やくを きめました</value></data>
   <data name="Store_Get" xml:space="preserve"><value>もらう</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>ダウンロードずみ</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>話題</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>人気</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>おすすめ</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>新着</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0}ページ · {1}分</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>むりょうで、アカウントもいりません。あなたやお子さんの情報は送られません。</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>オフラインです</value></data>

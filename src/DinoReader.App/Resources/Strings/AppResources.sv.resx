@@ -58,6 +58,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>Utvalda och rollsatta för Dino</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Hämta</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Hämtad</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>Het</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>Populär</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>Rekommenderad</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>Ny</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} sidor · {1} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratis och utan konto. Inget om dig eller ditt barn skickas.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Du är offline</value></data>

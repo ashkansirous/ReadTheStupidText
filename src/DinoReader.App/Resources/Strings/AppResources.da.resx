@@ -58,6 +58,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>Udvalgt og rollebesat til Dino</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Hent</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Hentet</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>Hot</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>Populær</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>Anbefalet</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>Ny</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} sider · {1} min.</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratis og uden konto. Der sendes intet om dig eller dit barn.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Du er offline</value></data>
