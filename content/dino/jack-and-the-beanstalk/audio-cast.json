@@ -2,27 +2,27 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Jack": {
       "voice": "Puck",
-      "style": "a young, bright, upbeat little boy's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, upbeat little boy's voice for young children",
       "direction": "bright, eager and kind"
     },
     "Mother": {
       "voice": "Vindemiatrix",
-      "style": "a warm, soft, gentle mum's voice for young children, standard Tehrani accent",
+      "style": "a warm, soft, gentle mum's voice for young children",
       "direction": "warm and caring"
     },
     "Giant": {
       "voice": "Elio",
-      "style": "a deep, big, jolly grown-up voice, a friendly storybook giant, never scary for young children, standard Tehrani accent",
+      "style": "a deep, big, jolly grown-up voice, a friendly storybook giant, never scary for young children",
       "direction": "big, jolly and friendly"
     },
     "Peddler": {
       "voice": "Gacrux",
-      "style": "a cheerful, twinkly old lady's voice, a funny little peddler, for young children, standard Tehrani accent",
+      "style": "a cheerful, twinkly old lady's voice, a funny little peddler, for young children",
       "direction": "funny, bouncy and mysterious"
     }
   },
@@ -131,5 +131,12 @@
       "source": "Night-night, Giant,",
       "direction": "whispering, sleepy"
     }
-  ]
+  ],
+  "audioPacks": {
+    "fa": {
+      "version": 1,
+      "hash": "76919acc4709073919ca4bb253bac34f9a88f851a6a8865b9e6eb2ca6bff84bc",
+      "bytes": 3031441
+    }
+  }
 }

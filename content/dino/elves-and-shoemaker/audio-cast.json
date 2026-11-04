@@ -2,27 +2,27 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Hans": {
       "voice": "Umbriel",
-      "style": "a warm, kind, older man's voice, a gentle grandfather-like shoemaker, for young children, standard Tehrani accent",
+      "style": "a warm, kind, older man's voice, a gentle grandfather-like shoemaker, for young children",
       "direction": "warm and kind"
     },
     "Greta": {
       "voice": "Sulafat",
-      "style": "a warm, soft, older woman's voice, gentle and kind, for young children, standard Tehrani accent",
+      "style": "a warm, soft, older woman's voice, gentle and kind, for young children",
       "direction": "warm and loving"
     },
     "Nib": {
       "voice": "Cleo",
-      "style": "a tiny, bright, bouncy little elf girl's voice for young children, standard Tehrani accent",
+      "style": "a tiny, bright, bouncy little elf girl's voice for young children",
       "direction": "cheerful and bouncy"
     },
     "Nob": {
       "voice": "Puck",
-      "style": "a tiny, upbeat, bouncy little elf boy's voice for young children, standard Tehrani accent",
+      "style": "a tiny, upbeat, bouncy little elf boy's voice for young children",
       "direction": "cheerful and a little cheeky"
     }
   },
@@ -67,5 +67,12 @@
       "source": "Are they for us?",
       "direction": "hopeful and amazed"
     }
-  ]
+  ],
+  "audioPacks": {
+    "fa": {
+      "version": 1,
+      "hash": "ef18563f3ac4006758d8c84cc7f24d4d5f25835fad2eeaad3a99e144c2bcd039",
+      "bytes": 2323411
+    }
+  }
 }

@@ -2,27 +2,27 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Goldilocks": {
       "voice": "Cleo",
-      "style": "a young, bright, bouncy little girl's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, bouncy little girl's voice for young children",
       "direction": "curious, cheerful and bouncy"
     },
     "Papa Bear": {
       "voice": "Orus",
-      "style": "a big, deep, booming but warm father bear's voice, never scary for young children, standard Tehrani accent",
+      "style": "a big, deep, booming but warm father bear's voice, never scary for young children",
       "direction": "big, slow and kind"
     },
     "Mama Bear": {
       "voice": "Sulafat",
-      "style": "a warm, soft, motherly grown-up voice for young children, standard Tehrani accent",
+      "style": "a warm, soft, motherly grown-up voice for young children",
       "direction": "warm and gentle"
     },
     "Baby Bear": {
       "voice": "Achird",
-      "style": "a young, soft, friendly little boy's voice for young children, standard Tehrani accent",
+      "style": "a young, soft, friendly little boy's voice for young children",
       "direction": "sweet and bouncy"
     }
   },
@@ -157,5 +157,12 @@
       "source": "Next time, I'll stay with my mum, and I'll never ever go into a house I don't know.",
       "direction": "sincere, making a promise"
     }
-  ]
+  ],
+  "audioPacks": {
+    "fa": {
+      "version": 1,
+      "hash": "b3feda9952a46a405b795a43348d734bee710e6a65ed81fef301deac68e3d8b3",
+      "bytes": 2444391
+    }
+  }
 }

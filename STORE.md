@@ -516,6 +516,15 @@ and loudness-matched into a short AAC `.m4a`; licence pages read 2026-11-03. Bea
 | `mouse.m4a` | "Mouse Squeaks.wav" by shyguy014, https://freesound.org/people/shyguy014/sounds/463789/ |
 | `dog.m4a` | "Ladrido [Bark]" by SmirnoffLulo, https://freesound.org/people/SmirnoffLulo/sounds/585873/ |
 
+### Dino Book Reader: audio packs of a store book (Slice 246 B2)
+
+A store book may have premade narration, one **audio pack per book and language**: the zip `audio-<lang>-v<n>.zip` (`manifest.json` version 3 plus the clips it names, flat, stored) in the book's own R2 folder
+`dinoreader/stories/<id>/`, never inside the `.dino`. `dotnet run --project tools/DinoReader.BookBuilder -- build-audio <stem> --lang <code> --clips <generator folder> [--out <folder>]` makes it into
+`artifacts/store/<id>/` and records `{version, hash, bytes}` under `audioPacks` in the book's `audio-cast.json`; the version rises only when the content hash changes (clips are outside git, so the record is the
+baseline). `build` then lists the packs in `meta.json` as `"audio": {"<lang>": {"version": n, "bytes": b}}`, and `tools/upload-store-story.ps1` uploads the zips before `meta.json`. The pack is served at
+`GET /api/stories/<id>/audio/<lang>?v=<n>` (only the listed language and version; anything else is a 404) and `/api/stories` lists the packs on offer per story (`audio`, with `url`). A book without a pack, and every
+app build that never asks for one, behaves as before. (docs/plan/slices/246-dino-store-books-premade-audio.md)
+
 ## Versioning (GitVersion → tag → release)
 
 Versioning is fully automatic and lives **entirely inside `release.yml`** — one

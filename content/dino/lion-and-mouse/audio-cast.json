@@ -2,17 +2,17 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Lion": {
       "voice": "Algenib",
-      "style": "a big, warm, rumbly grown-up voice, a kind storybook lion king, never scary for young children, standard Tehrani accent",
+      "style": "a big, warm, rumbly grown-up voice, a kind storybook lion king, never scary for young children",
       "direction": "big, warm and a little proud"
     },
     "Mouse": {
       "voice": "Leda",
-      "style": "a young, tiny, bright and squeaky voice for young children, standard Tehrani accent",
+      "style": "a young, tiny, bright and squeaky voice for young children",
       "direction": "quick, brave and kind"
     }
   },
@@ -137,5 +137,12 @@
       "source": "Night-night, big friend,",
       "direction": "sleepy and soft"
     }
-  ]
+  ],
+  "audioPacks": {
+    "fa": {
+      "version": 1,
+      "hash": "297d1888cb0f46d1932da03080367aef320665f20b6fad319a8fad70276fa08b",
+      "bytes": 1740984
+    }
+  }
 }

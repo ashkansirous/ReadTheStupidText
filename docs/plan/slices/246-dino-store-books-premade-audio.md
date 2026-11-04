@@ -191,7 +191,7 @@ overall OK: **yes**. No lines flagged.
   keyed by the `say` text; the book text and the on-device voice are untouched. Try 2-3 spellings for each flagged word
   (a few pence) on a listening page, keep the user's pick.
 - [x] A7. Per-line `direction`/`say` entries in `audio-cast.json` (`lines`) are keyed by the English `source` + `speaker` (+ 1-based `occurrence` for repeats), never by dump index, so one cast serves every language; a `say` carries its `lang`; every entry must match a dump piece or the run fails before any request (the stopgap `audio-cast.fa.json` is gone).
-- [ ] A8. Per-language delivery: every cast's `style` ends with ", standard Tehrani accent", which is right only for Farsi (both
+- [x] A8. *Built 2026-11-04: `audio_cast.ACCENTS` (`fa` = "standard Tehrani accent"; every other language none) is appended as `<style>, <accent>` by `AudioCast.delivery` once `check(sentences, language)` has set the language; the accent is gone from all 16 casts; `AccentTests` pins every cast's Farsi style against `tools/premade-audio/testdata/farsi-delivery-styles.json` (the styles as they were before), so no Farsi clip cache key changes.* Per-language delivery: every cast's `style` ends with ", standard Tehrani accent", which is right only for Farsi (both
   cast reviews of 2026-11-03 flagged it). Before D3, move the accent out of `style` into a per-language accent line (fa:
   "standard Tehrani accent"; every other language a neutral standard accent for that language, or none), applied by
   `audio_cast.py` when the delivery is built, with a test; existing Farsi clips keep their cache keys (the Farsi delivery
@@ -219,17 +219,26 @@ overall OK: **yes**. No lines flagged.
   builds never ask for a pack."*
   *Coordinator decision for part C, 2026-11-03: how a pack published after the book was downloaded gets fetched (update
   check vs first open in that language) is left to the implementer; write the choice here when C is built.*
-- [ ] B2. BookBuilder / `upload-store-story.ps1` carry the clips and manifest; the worker serves them; a book without
+- [x] B2. BookBuilder / `upload-store-story.ps1` carry the clips and manifest; the worker serves them; a book without
   clips for a language works as today.
+  *Built 2026-11-04. Names and route:* pack = `audio-<lang>-v<n>.zip` (manifest.json v3 + the clips it names, flat, stored, deterministic) in `dinoreader/stories/<id>/`;
+  `meta.json` gains optional `"audio": {"<lang>": {"version": n, "bytes": b}}` (the worker ignores bad entries; old workers/apps ignore the field: the app's `StoreCatalog` reads with default options, no strict schema);
+  `/api/stories` list items gain `audio: {"<lang>": {version, bytes, url}}` (null when none; only packs whose zip is in the folder); route `GET /api/stories/<id>/audio/<lang>?v=<n>`
+  (404 unless meta lists that language at exactly that version and the zip exists; `?v=` required; immutable, cached a day). Command:
+  `BookBuilder build-audio <stem> --lang <code> --clips <generator folder> [--out <folder>]` writes the zip to `artifacts/store/<id>/`; the pack's `{version, hash, bytes}` is kept in the book's
+  `audio-cast.json` under `audioPacks` (clips are outside git, so the record is the baseline: version +1 only when the content hash changes), and `build` copies it into `meta.json`, so
+  publish-store's meta refresh keeps the field. `upload-store-story.ps1` sends the zips before `meta.json`. Packs are not uploaded by CI (`publish-store-books.mjs` is untouched): D4 uploads them by hand.
+  Tests: `worker/stories-audio.test.mjs`, `tests/DinoReader.Tests/AudioPackTests.cs`. Open for C: the app reads `audio` from the list; which update-check path fetches a late pack is C's choice.
 
 **Part C — app playback (Android, iOS, Windows head alike)**
+- Open question for C: how the four starter books (gingerbread-man, good-enough, tortoise-and-hare, three-little-pigs) get their audio. They are bundled in the app, so `build-audio` and the store route do not cover them: bundle their packs in the app or serve them beside the store books. Their Farsi clips are rendered but unpacked.
 - [ ] C1. `PremadeAudio` in `DinoReader.Core`: parse the manifest, match a sentence by text hash, else fall back.
 - [ ] C2. Reading plays the clip when the hash matches, else the on-device voice as today; speed, pause, Back and the
   highlight behave the same on both paths. Android and iOS tasks both, plus the Windows head.
 
 **Part D — generation runs**
 - [x] D1. Farsi, one book (Three Little Pigs): render, listening page for the user, fix what they hear. *Done 2026-11-03 (PRs #763, #766).*
-- [ ] D2. Farsi, the other 15 books on the free key (as many days as the limit needs). *14 rendered 2026-11-03 in batch mode (all 0 left); Good Enough blocked: `dump-sentences good-enough` fails ("1 pages but 10 pictures"). Clips outside git in `D:/ReadTheStupidText-worktrees/s246-audio/books-<book>/` (Town Mouse in `books/`). Voices listening page: https://claude.ai/artifact/9AZaLgD9Vvt1LjfpAaEwnG; **the user kept all 73 speakers' voices in the 14 books, no notes (2026-11-03 22:19 UTC)**, so those 14 books' Farsi casts are final. Casts merged in #767. Left for D2: Good Enough (after its dump is fixed).*
+- [x] D2. Farsi, the other 15 books on the free key (as many days as the limit needs). *Done 2026-11-04: Good Enough fa rendered, 19 clips (17 Hali, 2 Leda), 1 batch, no failures, in `D:/ReadTheStupidText-worktrees/s246-audio/books-good-enough/good-enough/fa` (its dump was fixed by Slice 256, #782). 14 rendered 2026-11-03 in batch mode (all 0 left). Clips outside git in `D:/ReadTheStupidText-worktrees/s246-audio/books-<book>/` (Town Mouse in `books/`). Voices listening page: https://claude.ai/artifact/9AZaLgD9Vvt1LjfpAaEwnG; **the user kept all 73 speakers' voices in the 14 books, no notes (2026-11-03 22:19 UTC)**, so those 14 books' Farsi casts are final. Casts merged in #767.*
 
 ### Decisions and findings, 2026-11-03 evening (Gemini limits and batch mode)
 
@@ -247,6 +256,7 @@ overall OK: **yes**. No lines flagged.
   *User, 2026-11-03: "Render the other 14 languages in alphabetical order (by language code as listed in the app, e.g.
   ar, de, es, ... whichever list the slice uses)."*
 - [ ] D4. Upload each finished book-language (store and app must match: the store-upload rule).
+  *Prep done 2026-11-04: Farsi packs v1 built for the 12 store books (1.7-3.0 MB each, about 28 MB) into `D:/ReadTheStupidText-worktrees/s246-audio/packs/<book>/<storeId>/`; their `audioPacks.fa` records are in this PR. Order (coordinator, from high finding 2): CI's `publish-store-books.mjs` rebuilds meta from the committed `audioPacks` record, so the record merges first and the upload runs after this PR merges. Not packed: gingerbread-man, good-enough, tortoise-and-hare, three-little-pigs. They are starter books (bundled in the app, `BookKind.Starter`) and `build-audio` packs store books only; see the part C question below.*
 
 ## Verification (re-planned)
 
@@ -284,6 +294,32 @@ overall OK: **yes**. No lines flagged.
 
 - Asked what the night should do with the paid listening test: "Build them all. I will provide the keys tomorrow". So tonight builds the render and generator code for every service in the Research list (one adapter per service, each reading its key from the secrets store and skipping cleanly when the key is missing), the piper-fa baseline render and the listening-page skeleton. No paid call runs tonight (there are no keys); the listening test and the pick wait for the keys.
 
+## From review (A8, B2, D2 PR)
+
+Findings files (all read, outside the repo): `D:/ReadTheStupidText-worktrees/reviews/s246b-review-high.md`, `s246b-review-medium.md`, `s246b-review-check-medium.md`. Applied/skipped per the coordinator's brief.
+High pass (9):
+- H1 upload overwrites an existing `audio-<lang>-v<n>.zip` (upload-store-story.ps1): applied.
+- H2 CI's meta-only refresh drops `audio` when the record is not committed: skipped as process; handled by the D4 order (record merges first, then upload).
+- H3 `--lang` not validated in `build-audio`: applied (validated against `UiLanguage.Supported`).
+- H4 `delivery()` before `check()` silently loses the accent: applied (`styled()` raises before `check()`).
+- H5 `audioPacks` stored in the hand-authored cast file (sidecar suggested): skipped, design.
+- H6 upload sends every `audio-*-v*.zip` including superseded: applied (uploads only the listed version).
+- H7 reused version re-records `bytes`: skipped, low.
+- H8 test asserts "accent" absent from the whole cast text: skipped, low.
+- H9 `MetaOf` drops `audio` silently on an unknown stem: skipped, low.
+Medium pass (8):
+- M1 nothing orders the zip upload before the meta refresh: skipped; the Worker offers only zips present in the bucket.
+- M2 `PackFiles` accepts a clip named `manifest.json` / case-duplicates: applied (clip names checked).
+- M3 `SaveRecord` reformats the whole cast file: skipped; failing loud is wanted.
+- M4 malformed `audioPacks` value aborts the store build: skipped; failing loud is wanted.
+- M5 `delivery()` depends on state set by `check()`: skipped (no reason recorded in the brief; H4's raise covers the silent case).
+- M6 `parseAudio` cap of 40 and case mismatch: applied.
+- M7 `upload-store-story.ps1` reads meta late / `.audio` on a meta without it: applied.
+- M8 test clears the shared `ACCENTS`: skipped (no reason recorded in the brief).
+Check pass (1):
+- C1 full upload throws when meta lists a zip missing from the folder: skipped, low; failing the upload is wanted (meta must not list unuploaded packs).
+- Checks: python 107, worker 148, DinoReader.Tests 2380. No device run (tooling and Worker only, no app change).
+
 ## Waiting on the user
 
 - ~~The vendor keys~~ (superseded 2026-11-03: Gemini only, key created in A0 from the user's signed-in AI Studio).
@@ -298,4 +334,7 @@ overall OK: **yes**. No lines flagged.
 
 - Every vendor request shape is unproven until the first keyed run (Gemini model id, ElevenLabs voice id placeholder, Narakeet voice-name casing, CAMB `fa-ir`).
 - The piper-fa baseline render, on a PC that has the `piper-fa` pack and `sherpa_onnx` installed.
+- `build-audio` was run on real folders only by the pack run; the zips were not opened.
+- The live route `GET /api/stories/<id>/audio/<lang>?v=<n>` after the Worker deploys.
+- Part C's playback (not built).
 - Pigs Farsi: the two `say` lines (گُنده‌ی, «شالاپ، شالاپ، شالاپ!») were re-rendered in the full book on 2026-11-03 but nobody has listened to them in the book; the user heard only the spelling-page variants.

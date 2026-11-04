@@ -2,32 +2,32 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Seagull": {
       "voice": "Laomedeia",
-      "style": "a bright, upbeat, squawky grown-up bird's voice, funny and friendly for young children, standard Tehrani accent",
+      "style": "a bright, upbeat, squawky grown-up bird's voice, funny and friendly for young children",
       "direction": "bouncy, excitable and chatty"
     },
     "Kathryn": {
       "voice": "Kore",
-      "style": "a bold, bright, cheerful grown-up woman's voice, a kind pirate captain for young children, standard Tehrani accent",
+      "style": "a bold, bright, cheerful grown-up woman's voice, a kind pirate captain for young children",
       "direction": "bold, cheerful and full of adventure"
     },
     "Izzy": {
       "voice": "Cleo",
-      "style": "a young, bright, bouncy girl's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, bouncy girl's voice for young children",
       "direction": "sing-song, like a cheerful pirate chant"
     },
     "Billy": {
       "voice": "Puck",
-      "style": "a young, bright, upbeat boy's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, upbeat boy's voice for young children",
       "direction": "bouncy and warm"
     },
     "Pancake Polly": {
       "voice": "Sulafat",
-      "style": "a warm, bubbly grown-up woman's voice, a jolly pirate cook for young children, standard Tehrani accent",
+      "style": "a warm, bubbly grown-up woman's voice, a jolly pirate cook for young children",
       "direction": "warm, jolly and bouncy"
     }
   },
@@ -112,5 +112,12 @@
       "source": "Squawk, squawk, squawk,",
       "direction": "soft, sleepy and snuggly, very quiet"
     }
-  ]
+  ],
+  "audioPacks": {
+    "fa": {
+      "version": 1,
+      "hash": "03d07c61daa9f0ccd324569082dc0729cb1db0cdd9914cf9082c3eebfccaaee5",
+      "bytes": 2550059
+    }
+  }
 }

@@ -2,17 +2,17 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Town Mouse": {
       "voice": "Cleo",
-      "style": "a young, bright, bouncy girl's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, bouncy girl's voice for young children",
       "direction": "lively, chatty and quick, used to the busy town"
     },
     "Country Mouse": {
       "voice": "Achird",
-      "style": "a young, soft, warm boy's voice for young children, standard Tehrani accent",
+      "style": "a young, soft, warm boy's voice for young children",
       "direction": "gentle, calm and friendly"
     }
   },
@@ -54,5 +54,12 @@
       "source": "Home, sweet home,",
       "direction": "sleepy and content, soft and slow"
     }
-  ]
+  ],
+  "audioPacks": {
+    "fa": {
+      "version": 1,
+      "hash": "6a66d5c354e53f7b0d9d68d1722623ebf2df3ac0ae6f5c663e8d9d86c3818f08",
+      "bytes": 2226045
+    }
+  }
 }
