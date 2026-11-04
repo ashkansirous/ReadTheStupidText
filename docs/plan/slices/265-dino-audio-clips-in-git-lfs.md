@@ -1,6 +1,6 @@
 # Slice 265 — Dino: pre-made audio clips in Git LFS; book changes only publish to the store
 
-*Built 2026-11-04, PR #810, not merged: merges after Slice 261. The clips are not in this PR (see Changed while building); first real runs of `dino-store.yml` and `packs.yml` not yet seen.* *Planned 2026-11-04.* Tooling and CI, no app change. After Slice 261 (the starters leave the app, so no book folder needs an app build any more).
+*Built 2026-11-04, merged as PR #810 (61b9d48d). The clips ship in 8 content-only PRs (chore/s265-clips-1..8), in progress. The clips are not in this PR (see Changed while building); first real runs of `dino-store.yml` and `packs.yml` not yet seen.* *Planned 2026-11-04.* Tooling and CI, no app change. After Slice 261 (the starters leave the app, so no book folder needs an app build any more).
 
 **Touches:** `.gitattributes`, `.lfsconfig` (new), `content/dino/*/audio/**` (new, LFS), `tools/premade-audio/**`, `tools/DinoReader.BookBuilder/**`, `tools/upload-store-story.ps1`, `.github/workflows/dino-store.yml`, `.github/workflows/release.yml`, `.github/workflows/dinoreader.yml`, `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets.test.mjs`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/scripts/dino-starters.json`, `.github/CLAUDE.md`, `tools/premade-audio/README.md`, `docs/plan/slices/265-dino-audio-clips-in-git-lfs.md`.
 
@@ -65,7 +65,7 @@ Findings files: `D:/ReadTheStupidText-worktrees/reviews/s265-high.md`, `s265-med
 
 Verified locally: a fresh worktree downloads no clips; the audio loop run on real clips for billy-goats-gruff en/da built both zips; a bad language failed the book with nothing copied. 249 script tests, 120 premade-audio tests, actionlint clean.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-04)
 
 - `.github/CLAUDE.md`: a change under `content/dino/**`, audio included, starts only `dino-store.yml`, never an app build or test run; this holds only once the starters are out of the app (Slice 261). (Slice 265: docs/plan/slices/265-dino-audio-clips-in-git-lfs.md)
 - `.github/CLAUDE.md`: `content/dino/*/audio/**` is in Git LFS and `.lfsconfig` excludes it from normal fetches; a checkout that needs clips runs `git lfs pull --include`, and one that does not uses `lfs: false` (never `lfs: true`). (Slice 265: docs/plan/slices/265-dino-audio-clips-in-git-lfs.md)

@@ -2,6 +2,23 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 266: Waves: stop wasting the minutes between fix attempts ([slice](slices/266-wave-fix-attempt-speed.md))
+- Item 5: a timed Windows fix attempt on a real slice (target under 6 minutes, against the measured 11.5-12.4).
+- A VM run reusing a package a fixer built in a fix round.
+
+### Slice 265: Dino: pre-made audio clips in Git LFS; book changes only publish to the store ([slice](slices/265-dino-audio-clips-in-git-lfs.md))
+- `dino-store.yml`'s first real run on main.
+- `packs.yml`'s first run with `lfs: false`.
+- A fresh clone after the clip PRs shows the clips as not fetched.
+- `dino-starters.json` and `BookBuilderTests` still reference starters (follow-up after 261).
+
+### Slice 261: Dino: no starter books in the app; a first-run book picker ([slice](slices/261-dino-no-starters-first-run-book-picker.md))
+- Upgrade from the current release APK keeps the four books (the release signature differs from Debug).
+- iOS simulator run of the picker and first run.
+- The one-off Mono SIGSEGV on first-books-cancel (not reproduced in two later runs with the crash buffer captured).
+- The roughly 45 older flows were not all rerun (open-book, back-cover, premade-audio-plays, store-tags and grown-ups-button passed).
+- The covers row on the download wait and the intro caption were not checked by eye.
+
 ### Slice 260: Dino: tags on store books (Hot, Popular, Recommended, New) ([slice](slices/260-dino-store-tags.md))
 - Tablet store flow `dino-landscape-store-tablet` on the tablet AVD (it failed on the phone AVD).
 - iOS run (compile only so far).
