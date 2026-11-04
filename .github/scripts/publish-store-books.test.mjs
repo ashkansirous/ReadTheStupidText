@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { audioPackIsLive, pruneUnbuiltAudio, audioPacksBehind,audioUploadsFor, bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, contentBooks, starterDrift, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
+import { audioPackIsLive, pruneUnbuiltAudio, audioPacksBehind, validPackVersions, audioUploadsFor, bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, contentBooks, starterDrift, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
 
 const A = 'a'.repeat(32);
 const B = 'b'.repeat(32);
@@ -164,6 +164,15 @@ test('Slice 265: pruneUnbuiltAudio drops packs that are neither live nor built h
     assert.equal(none.removed.length, 3);
     assert.equal('audio' in JSON.parse(none.text), false);
     assert.equal(pruneUnbuiltAudio('{"version":1}', '/s/a', {}, () => false).text, '{"version":1}');
+});
+
+test('Slice 265: pruneUnbuiltAudio keeps a pack when the live version is higher', () => {
+    const meta = JSON.stringify({ version: 3, audio: { fa: { version: 2 } } });
+    assert.deepEqual(pruneUnbuiltAudio(meta, '/s/a', { fa: { version: 3 } }, () => false).removed, []);
+});
+
+test('Slice 265: validPackVersions drops missing or malformed versions', () => {
+    assert.deepEqual(validPackVersions({ fa: { version: 2 }, de: {}, no: { version: 'x' }, sv: { version: 0 } }), { fa: 2 });
 });
 
 test('Slice 265: an audio pack already in the bucket is not overwritten', () => {

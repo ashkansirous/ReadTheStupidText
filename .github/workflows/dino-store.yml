@@ -68,7 +68,7 @@ jobs:
 
       # Slice 265: the clips are Git LFS objects (.lfsconfig keeps them out of a normal checkout). Only the audio packs the live store lacks are built: `--audio-behind` lists
       # `<book> <language>` pairs, each pair's clips are fetched alone (`--exclude ""` overrides the .lfsconfig exclusion) and packed before `build` so meta.json lists the pack.
-      # The zips go up before the cover, package and meta.json (publish-store-books.mjs). A pack that fails to build skips only that language; the job fails at the end naming it.
+      # The zips go up before the cover, package and meta.json (publish-store-books.mjs). A book with a pack that fails to build uploads none of its new packs (staged per book); the other books go on and the job fails at the end naming the pair.
       - name: Build the audio packs the live store lacks
         id: audio
         run: |
@@ -77,18 +77,32 @@ jobs:
           failed=""
           if [ -s "$RUNNER_TEMP/audio-behind.txt" ]; then
             dotnet build tools/DinoReader.BookBuilder --configuration Release
-            # git and dotnet get </dev/null so neither can read the list from the loop's stdin and silently skip the pairs after it.
-            while read -r stem language; do
-              if git lfs pull --include "content/dino/${stem}/audio/${language}/**" --exclude "" </dev/null \
-                && dotnet run --no-build --project tools/DinoReader.BookBuilder --configuration Release -- build-audio "$stem" --lang "$language" </dev/null; then
-                echo "audio pack built: $stem $language"
-              else
-                echo "::error::The audio pack of $stem [$language] could not be built."
-                failed="$failed $stem/$language"
+            git lfs install --local
+            mkdir -p artifacts/store
+            # One book at a time into its own staging folder: its zips are copied to artifacts/store only when every pair of the book built, so a book with a failed pair uploads none of its new packs.
+            for stem in $(cut -d' ' -f1 "$RUNNER_TEMP/audio-behind.txt" | sort -u); do
+              stage="$RUNNER_TEMP/audio-stage/$stem"
+              book_ok=1
+              # git and dotnet get </dev/null so neither can read the list from the loop's stdin and silently skip the pairs after it.
+              while read -r pair_stem language; do
+                [ "$pair_stem" = "$stem" ] || continue
+                if git lfs pull --include "content/dino/${stem}/audio/${language}/**" --exclude "" </dev/null \
+                  && dotnet run --no-build --project tools/DinoReader.BookBuilder --configuration Release -- build-audio "$stem" --lang "$language" --out "$stage" </dev/null; then
+                  echo "audio pack built: $stem $language"
+                else
+                  echo "::error::The audio pack of $stem [$language] could not be built."
+                  failed="$failed $stem/$language"
+                  book_ok=0
+                  break
+                fi
+              done < "$RUNNER_TEMP/audio-behind.txt"
+              if [ "$book_ok" = 1 ] && [ -d "$stage" ]; then
+                cp -r "$stage/." artifacts/store/
               fi
-            done < "$RUNNER_TEMP/audio-behind.txt"
+            done
           fi
           echo "failed=${failed# }" >> "$GITHUB_OUTPUT"
+          # No retry loop. A failed book is left out here (publish-store-books.mjs prunes its unbuilt packs from meta.json), every other book still builds and uploads, and the always() step below fails the job at the end.
 
       # Exit 0 = all built, 2 = some invalid book skipped (the others built), anything else = a broken build: nothing is uploaded then.
       - name: Build the store books
@@ -113,7 +127,7 @@ jobs:
         env:
           FAILED: ${{ steps.audio.outputs.failed }}
         run: |
-          echo "::error::These audio packs could not be built (their book still published without them): ${FAILED}"
+          echo "::error::These audio packs could not be built (that book uploaded none of its new packs; the other books were built and uploaded): ${FAILED}"
           exit 1
 
       - name: Fail when a store book was skipped as invalid

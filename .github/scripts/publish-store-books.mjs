@@ -212,7 +212,7 @@ export function pruneUnbuiltAudio(metaText, folder, liveAudio, fileExists = exis
     const kept = {};
     const removed = [];
     for (const [language, info] of Object.entries(meta.audio)) {
-        const live = Number(liveAudio?.[language]?.version) === Number(info?.version);
+        const live = Number(liveAudio?.[language]?.version) >= Number(info?.version); // a higher live version is fine (audioPacksBehind builds nothing then)
         if (live || fileExists(join(folder, `audio-${language}-v${info?.version}.zip`))) kept[language] = info;
         else removed.push(language);
     }
@@ -230,6 +230,16 @@ function pruneBuiltMetas(root, built, live) {
         if (removed.length === 0) continue;
         console.warn(`warning: ${id} meta.json lists audio pack(s) ${removed.join(', ')} that are neither live nor built in this run; not listing them`);
         writeFileSync(path, text);
+    }
+}
+
+/** Warns about audio zips built for a book whose outcome sends nothing (live newer or invalid), so a pack built for nothing is visible. */
+function warnUnsentAudio(plan, root) {
+    for (const item of plan.filter((entry) => entry.outcome === Outcome.LiveNewer || entry.outcome === Outcome.Invalid)) {
+        const folder = join(root, item.id);
+        const metaPath = join(folder, META_FILE);
+        const zips = existsSync(metaPath) ? audioUploadsFor({ id: item.id }, folder, readFileSync(metaPath, 'utf8')) : [];
+        if (zips.length > 0) console.warn(`warning: ${item.id} (${item.outcome}) has built audio pack(s) ${zips.map((zip) => zip.name).join(', ')} that are not uploaded`);
     }
 }
 
@@ -590,9 +600,25 @@ async function writeLiveState(args) {
 function readAudioRecords() {
     return readContentBooks().map((book) => {
         const castPath = join(CONTENT_ROOT, book.stem, AUDIO_CAST_FILE);
-        const records = existsSync(castPath) ? JSON.parse(readFileSync(castPath, 'utf8')).audioPacks ?? {} : {};
-        return { stem: book.stem, id: book.id, packs: Object.fromEntries(Object.entries(records).map(([language, record]) => [language, Number(record.version)])) };
+        return { stem: book.stem, id: book.id, packs: validPackVersions(recordsOf(castPath, book.stem)) };
     }).filter((book) => Object.keys(book.packs).length > 0);
+}
+
+/** The `audioPacks` records of one audio-cast.json; an unreadable file is warned about and skipped so one bad book does not stop the others. */
+function recordsOf(castPath, stem) {
+    if (!existsSync(castPath)) return {};
+    try {
+        return JSON.parse(readFileSync(castPath, 'utf8')).audioPacks ?? {};
+    } catch (error) {
+        console.warn(`warning: ${stem} ${AUDIO_CAST_FILE} is unreadable (${error.message}); no audio pack is built for it`);
+        return {};
+    }
+}
+
+/** Pure: `{ language: version }` for the records whose version is a positive integer (a missing or malformed one would read as NaN, forever behind). */
+export function validPackVersions(records) {
+    const entries = Object.entries(records ?? {}).map(([language, record]) => [language, Number(record?.version)]);
+    return Object.fromEntries(entries.filter(([, version]) => Number.isInteger(version) && version > 0));
 }
 
 /** `--audio-behind`: prints one `<stem> <language>` line for each audio pack the live store lacks, so dino-store.yml fetches only those books' clips from Git LFS and packs them. */
@@ -615,7 +641,7 @@ async function main() {
     if (!dryRun && !process.env.CLOUDFLARE_ACCOUNT_ID) throw new Error('CLOUDFLARE_ACCOUNT_ID is required when CLOUDFLARE_API_TOKEN is set.');
     const built = readBuilt(root);
     const live = await fetchLive(args, process.env);
-    if (!dryRun) pruneBuiltMetas(root, built, live);
+    pruneBuiltMetas(root, built, live); // also on --dry-run (it only edits the local built folder), so the plan matches the real run
     const plan = planStoreUploads(built, live);
     const deletions = args.includes('--delist') ? planDeletions(built, live, { contentIds: new Set(readContentBooks().map((book) => book.id)), isManaged: isManagedStory }) : [];
     if (dryRun) {
@@ -623,6 +649,7 @@ async function main() {
         deletions.forEach((story) => console.log(`delist: ${story.id} (${story.title ?? 'untitled'}), no content folder`));
         return;
     }
+    warnUnsentAudio(plan, root);
     checkDeletionLimit(deletions, live);
     const audioExists = (upload) => audioPackIsLive(live, upload); // Slice 265: the live list says which packs are in the bucket; no zip is downloaded to ask
     let uploaded = [];
