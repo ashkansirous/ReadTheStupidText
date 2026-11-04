@@ -1,6 +1,6 @@
 # Slice 261 — Dino: no starter books in the app; a first-run book picker (choose at least 2)
 
-*Built 2026-11-04, PR #808, not merged; VM and emulator checked, upgrade-from-release and iOS not yet verified.* *Planned 2026-11-04.* Dino Reader only; Android and iOS alike (and the Windows head, which shares these pages). After Slice 260 (the picker shows its tags). Slice 265 removes the starters' special handling from CI and the book builder.
+*Built 2026-11-04, merged as PR #808 (68bdba69); VM and emulator checked, upgrade-from-release and iOS not yet verified.* *Planned 2026-11-04.* Dino Reader only; Android and iOS alike (and the Windows head, which shares these pages). After Slice 260 (the picker shows its tags). Slice 265 removes the starters' special handling from CI and the book builder.
 
 **Touches:** `src/DinoReader.App/StarterStories.cs`, the starters folder under Resources/Raw (removed by this slice), `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/FirstBooksPage*.cs` (new), `src/DinoReader.App/IntroWizardPage*.cs`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/StagedBookUpdates.cs`, `src/DinoReader.App/BookOrigins.cs`, `src/DinoReader.App/UsageCounter.cs`, `src/DinoReader.App/Testing/DinoTestCommands*.cs`, `src/DinoReader.App/Testing/TestStore*.cs` (new, Debug only), `src/DinoReader.App/Resources/Raw/testbooks/**` (new, Debug only), `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/StoryActions.cs`, `src/DinoReader.App/IntroState.cs`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tools/DinoReader.BookBuilder/StarterBuilder.cs`, `tools/DinoReader.BookBuilder/Program.cs`, `src/DinoReader.Core/FirstBooks*.cs` (new), `src/DinoReader.Core/UsageEvent.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/**`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/261-dino-no-starters-first-run-book-picker.md`, `src/ReadTheStupidText.Mobile.Shared/Waiting/**`, `tools/desktop-vm/checks/dino-*.ps1`, `tools/desktop-vm/Build-TestPackage.ps1`, `tools/phone/checks/book-end.ps1`, `tools/phone/checks/cold-start.ps1`, `tools/phone/audio-timing.ps1`, `tools/phone/README.md` (wording only).
 
@@ -101,7 +101,7 @@ Findings files (outside the repo): `reviews/s261-high.md`, `s261-medium.md`, `s2
 - Cancel on the list load shows the "connect to the internet" copy though the network may be fine.
 - `.github/scripts/dino-starters.json` and `BookBuilderTests` still name starters (Slice 265 follow-up).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-04)
 
 Already written on this branch in `src/DinoReader.App/CLAUDE.md` (Slice 261: docs/plan/slices/261-dino-no-starters-first-run-book-picker.md); nothing further.
 
