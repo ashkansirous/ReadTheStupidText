@@ -78,6 +78,22 @@ public static class UsageEligibility
         return facts.IsNonStoreInstall ? UsageSkipReason.NonStoreInstall : UsageSkipReason.None;
     }
 
+    /// <summary>
+    /// The dataset these facts belong to (Slice 251). <see cref="UsageChannel.Production"/> exactly when <see cref="Check"/> says the build counts; <see cref="UsageChannel.Beta"/>
+    /// only for an iOS TestFlight install that passes every build rule (<see cref="CheckBuild"/>) and is a non-store install on a TestFlight channel (a non-store Windows
+    /// install has the Dev channel, so it stays <see cref="UsageChannel.None"/>); everything else is <see cref="UsageChannel.None"/>.
+    /// </summary>
+    public static UsageChannel ChannelOf(UsageFacts facts)
+    {
+        if (Check(facts) == UsageSkipReason.None)
+        {
+            return UsageChannel.Production;
+        }
+
+        bool testFlight = facts.IsNonStoreInstall && facts.Channel == InstallChannel.TestFlight;
+        return testFlight && CheckBuild(facts) == UsageSkipReason.None ? UsageChannel.Beta : UsageChannel.None;
+    }
+
     /// <summary>The build and device rules both usage counts and crash reports share (Slice 227): debug, unstamped, emulator, test lab, test install. The install channel is each caller's own rule.</summary>
     public static UsageSkipReason CheckBuild(UsageFacts facts)
     {

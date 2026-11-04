@@ -561,3 +561,78 @@ test("an own-book restore count with free text or a bad bucket is refused", () =
     assert.equal(parseEvent({ ...ownEvent, name: "own_book_added", detail }), null);
   }
 });
+
+// ---- Slice 251: beta route ----
+function betaRecorder() {
+  const production = [];
+  const beta = [];
+  return { production, beta, DINO_USAGE: { writeDataPoint: (p) => production.push(p) }, DINO_USAGE_BETA: { writeDataPoint: (p) => beta.push(p) } };
+}
+const postTo = (path, body) => new Request("https://dinoreader.sirous.uk" + path, { method: "POST", body: JSON.stringify(body) });
+
+test("a batch posted to the beta route lands only in the beta dataset", async () => {
+  const env = betaRecorder();
+  const response = await handleEvents(postTo("/api/events/beta", { schemaVersion: 1, events: [shelfEvent, ownEvent] }), env, on);
+  assert.equal(response.status, 204);
+  assert.equal(env.beta.length, 2);
+  assert.equal(env.production.length, 0);
+});
+
+test("the workers.dev /dino prefix reaches the beta route too", async () => {
+  const env = betaRecorder();
+  await handleEvents(postTo("/dino/api/events/beta", { events: [shelfEvent] }), env, on);
+  assert.equal(env.beta.length, 1);
+  assert.equal(env.production.length, 0);
+});
+
+test("a lookalike path that merely ends with the beta path is not beta", async () => {
+  const env = betaRecorder();
+  await handleEvents(postTo("/other/api/events/beta", { events: [shelfEvent] }), env, on);
+  assert.equal(env.beta.length, 0);
+  assert.equal(env.production.length, 1);
+});
+
+test("a batch on the production route lands only in production", async () => {
+  const env = betaRecorder();
+  assert.equal((await handleEvents(postTo("/api/events", { schemaVersion: 1, events: [shelfEvent] }), env, on)).status, 204);
+  assert.equal(env.production.length, 1);
+  assert.equal(env.beta.length, 0);
+});
+
+test("the production route refuses a batch that carries channel beta and writes nothing", async () => {
+  const env = betaRecorder();
+  assert.equal((await handleEvents(postTo("/api/events", { channel: "beta", events: [shelfEvent] }), env, on)).status, 400);
+  assert.equal(env.production.length + env.beta.length, 0);
+});
+
+test("the beta route needs only the beta binding, and without it answers 503 and writes nothing to production", async () => {
+  const betaOnly = betaRecorder();
+  delete betaOnly.DINO_USAGE;
+  assert.equal((await handleEvents(postTo("/api/events/beta", { events: [shelfEvent] }), betaOnly, on)).status, 204);
+  assert.equal(betaOnly.beta.length, 1);
+  const env = recorder();
+  assert.equal((await handleEvents(postTo("/api/events/beta", { events: [shelfEvent] }), env, on)).status, 503);
+  assert.equal(env.points.length, 0);
+});
+
+test("a beta batch is dropped when telemetry is off, like any other", async () => {
+  const env = betaRecorder();
+  assert.equal((await handleEvents(postTo("/api/events/beta", { events: [shelfEvent] }), env, off)).status, 204);
+  assert.equal(env.beta.length, 0);
+});
+
+test("the beta path is an events path; Read The Stupid Text answers it 404 and writes nothing", async () => {
+  assert.ok(isEventsPath("/api/events/beta"));
+  const env = rtstRecorder();
+  const request = new Request("https://readthestupidtext.sirous.uk/api/events/beta", { method: "POST", body: JSON.stringify({ events: [readStarted] }) });
+  assert.equal((await handleRtstEvents(request, env, on)).status, 404);
+  assert.equal(env.points.length, 0);
+});
+
+test("Read The Stupid Text ignores the channel field and never touches the Dino beta dataset", async () => {
+  const env = rtstRecorder();
+  env.DINO_USAGE_BETA = { writeDataPoint: () => assert.fail("RTST must not write to the Dino beta dataset") };
+  const request = new Request("https://readthestupidtext.sirous.uk/api/events", { method: "POST", body: JSON.stringify({ channel: "beta", events: [readStarted] }) });
+  assert.equal((await handleRtstEvents(request, env, on)).status, 204);
+  assert.equal(env.points.length, 1);
+});

@@ -232,7 +232,15 @@ export interface UsageEvent {
 /** What this module needs from the Worker's bindings (`DINO_USAGE` is declared in wrangler.jsonc). */
 export interface EventsEnv {
   readonly DINO_USAGE?: AnalyticsEngineDataset;
+  /** Slice 251: TestFlight builds' counts (`dino_usage_beta`), never mixed into `DINO_USAGE`. */
+  readonly DINO_USAGE_BETA?: AnalyticsEngineDataset;
 }
+
+/** Slice 251: TestFlight batches post to their own route, which only writes `DINO_USAGE_BETA`. A Worker without it answers 404, so a beta batch can never reach `dino_usage`. */
+export const BETA_EVENTS_PATH = "/api/events/beta";
+const DINO_PATH_PREFIX = "/dino";
+/** A `channel: "beta"` body on the production route is refused, so a beta batch that reaches it by mistake is never counted as production. */
+const BETA_CHANNEL = "beta";
 
 /** True while the remote config has telemetry on; false when it is off or missing. Rejects when the config cannot be read (answered 503, so the app retries). */
 export type TelemetryCheck = () => Promise<boolean>;
@@ -343,9 +351,14 @@ async function readBody(request: Request): Promise<unknown | "too-large" | "inva
   }
 }
 
+/** True only for the exact beta path, plain or under the workers.dev `/dino` prefix; any other path (a lookalike) is the production route. */
+function isBetaPath(pathname: string): boolean {
+  return pathname === BETA_EVENTS_PATH || pathname === DINO_PATH_PREFIX + BETA_EVENTS_PATH;
+}
+
 /** True for the one path this module answers (after the `/dino` prefix is stripped). */
 export function isEventsPath(pathname: string): boolean {
-  return pathname === EVENTS_PATH;
+  return pathname === EVENTS_PATH || pathname === BETA_EVENTS_PATH;
 }
 
 /** Turns one raw count into a data point; null when the count is invalid. */
@@ -357,7 +370,7 @@ export function requestCountry(request: Request): unknown {
 }
 
 // The shared request handling (method, telemetry switch, binding, size caps, batch limit); the two products differ only in the dataset and in what a valid count is.
-async function handleBatch(request: Request, dataset: AnalyticsEngineDataset | undefined, telemetryEnabled: TelemetryCheck, makePoint: PointMaker): Promise<Response> {
+async function handleBatch(request: Request, dataset: AnalyticsEngineDataset | undefined, telemetryEnabled: TelemetryCheck, makePoint: PointMaker, refuseBetaChannel = false): Promise<Response> {
   if (request.method !== "POST") {
     return new Response(null, { status: 405, headers: { Allow: ALLOWED_METHODS } });
   }
@@ -371,6 +384,7 @@ async function handleBatch(request: Request, dataset: AnalyticsEngineDataset | u
   const events = isRecord(body) ? body["events"] : undefined;
   if (body === "invalid" || !Array.isArray(events)) return reply(400, ErrorCode.BadRequest);
   if (events.length > MAX_EVENTS_PER_REQUEST) return reply(413, ErrorCode.TooMany);
+  if (refuseBetaChannel && isRecord(body) && body["channel"] === BETA_CHANNEL) return reply(400, ErrorCode.BadRequest);
   const context = { country: countryOf(requestCountry(request)), device: parseDevice(isRecord(body) ? body["device"] : undefined) };
   for (const raw of events) {
     if (isRobotCount(raw, context.device)) continue;
@@ -382,10 +396,11 @@ async function handleBatch(request: Request, dataset: AnalyticsEngineDataset | u
 
 /** Answers POST /api/events: 204 when taken or deliberately dropped, 400/413 for a body that is not a batch of counts. */
 export function handleEvents(request: Request, env: EventsEnv, telemetryEnabled: TelemetryCheck): Promise<Response> {
-  return handleBatch(request, env.DINO_USAGE, telemetryEnabled, (raw, context) => {
+  const beta = isBetaPath(new URL(request.url).pathname);
+  return handleBatch(request, beta ? env.DINO_USAGE_BETA : env.DINO_USAGE, telemetryEnabled, (raw, context) => {
     const event = parseEvent(raw);
     return event === null ? null : toDataPoint(event, context);
-  });
+  }, !beta);
 }
 
 // ---- Read The Stupid Text's phone counts (Slice 137, Decisions 143-145) -------------------------------------------------
@@ -525,6 +540,7 @@ export function toRtstDataPoint(event: RtstEvent, context: BatchContext = NO_CON
 
 /** Answers POST /api/events on Read The Stupid Text's host: the phone's closed event set into the RTST_USAGE dataset. */
 export function handleRtstEvents(request: Request, env: RtstEventsEnv, telemetryEnabled: TelemetryCheck): Promise<Response> {
+  if (isBetaPath(new URL(request.url).pathname)) return Promise.resolve(new Response(null, { status: 404 })); // RTST has no beta route
   return handleBatch(request, env.RTST_USAGE, telemetryEnabled, (raw, context) => {
     const event = parseRtstEvent(raw);
     return event === null ? null : toRtstDataPoint(event, context);

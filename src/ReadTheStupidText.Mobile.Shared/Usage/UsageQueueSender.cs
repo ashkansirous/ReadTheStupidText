@@ -16,6 +16,7 @@ namespace ReadTheStupidText.Mobile.Shared.Usage;
 /// <param name="ToJson">The request body for a batch.</param>
 /// <param name="ParseQueue">Reads the stored queue (never throws).</param>
 /// <param name="QueueToJson">Writes the queue for storage.</param>
+/// <param name="SendsBeta">Slice 251: true for an app whose TestFlight builds send their counts to the beta dataset (Dino Reader; they post to the beta route). False keeps today's rule: a build the gate blocks sends nothing.</param>
 public sealed record UsageQueueOptions<TEvent>(
     string BaseAddress,
     string EnabledKey,
@@ -26,7 +27,8 @@ public sealed record UsageQueueOptions<TEvent>(
     Func<bool> TelemetryKnown,
     Func<IReadOnlyList<TEvent>, string> ToJson,
     Func<string?, List<TEvent>> ParseQueue,
-    Func<IReadOnlyList<TEvent>, string> QueueToJson)
+    Func<IReadOnlyList<TEvent>, string> QueueToJson,
+    bool SendsBeta = false)
     where TEvent : class;
 
 /// <summary>
@@ -244,7 +246,8 @@ public sealed class UsageQueueSender<TEvent>(UsageQueueOptions<TEvent> options)
         using var timeout = new CancellationTokenSource(Timeout);
         string json = options.ToJson(batch);
         UsageSkipReason skip = UsageGate.Reason;
-        if (skip != UsageSkipReason.None)
+        string? path = UsageChannels.PathFor(EventsPath, UsageGate.Channel, options.SendsBeta); // Slice 251: one decision, so a beta batch can only go to the beta route
+        if (path is null)
         {
             // Dry run (Slice 167): a test build or device builds the batch but never posts it. The line holds no id or text.
             Trace.WriteLine($"{options.LogName} usage batch of {batch.Count} not sent: {skip}");
@@ -258,7 +261,7 @@ public sealed class UsageQueueSender<TEvent>(UsageQueueOptions<TEvent> options)
         Debug.WriteLine($"{options.LogName} usage batch of {batch.Count}: {json}"); // counts hold no id or text, so the body is safe to log in a debug build
 #endif
         using var body = new StringContent(json, Encoding.UTF8, "application/json");
-        using HttpResponseMessage response = await Http.PostAsync(new Uri(new Uri(options.BaseAddress), EventsPath), body, timeout.Token);
+        using HttpResponseMessage response = await Http.PostAsync(new Uri(new Uri(options.BaseAddress), path), body, timeout.Token);
         return Classify(response.StatusCode);
     }
 
