@@ -2,6 +2,19 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 256: Dino: `dump-sentences` works for picture books (Good Enough) ([slice](slices/256-good-enough-sentence-dump.md))
+
+- The dump index matches the app's sentence index on a device during premade-audio playback (Slice 246 C).
+- Item 3: Good Enough Farsi batch render (paid Gemini, needs `GEMINI_API_KEY`) not run; command in the slice file.
+
+### Slice 255: Dino: real animal recordings instead of voiced animal sound words ([slice](slices/255-dino-real-animal-sounds.md))
+
+- Farsi clip on a device (the device run's `lang=fa` launch may not have been applied to the running app).
+- Clip playback on iOS and on the Windows head (compiled only).
+- A possible double sound when a quote already says the animal's word in a language without a sound table (check2 #1).
+- Old premade dumps (Pigs, Wolf) predate the sound-entry skip and need regenerating before Slice 246 C uses them.
+- A fully cached run with no `Playing` state would not advance (same as origin/main).
+
 ### Slice 257: Dino: a quote after "said Mouse." is the Mouse's, not the Lion's ([slice](slices/257-lion-and-mouse-speaker.md))
 
 - Listen to the new Farsi clip in `D:/ReadTheStupidText-worktrees/s246-audio/books-lion-and-mouse/`.
@@ -27,6 +40,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 - Freddy and the Slipper: the Arabic, Russian, Japanese and Chinese spellings of Elham's name, by a native speaker (until now only in `docs/plan/notes/2026-11-01-freddy-and-the-slipper.md`).
 - The parallel illustration workflow (`dino-story-illustrator` modes setup / pages / finish, 3-4 at once, PR #687) has never been run: the first book drawn that way proves one lock, one stamp and matching place sheets.
+- Item 1: a forced "System UI isn't responding" dialog on the tablet AVD with the dialog guard, a flow passing with no brief text (not run).
+- Item 1: the dialog guard's restore after a lease loss (a killed run leaves `hide_error_dialogs=1`, cleared by the next `run-flows.ps1`; not exercised on a device).
+- Item 6: before/after seconds per slow flow (command in the slice file's Built block, item 6; not run).
 
 ### Slice 248: Dino iOS: leaving a book stops its read, and a new book never drives the old one's voice ([slice](slices/248-dino-stop-read-on-leave-ios.md))
 

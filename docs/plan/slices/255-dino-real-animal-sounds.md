@@ -1,6 +1,6 @@
 # Slice 255 — Dino: real animal recordings instead of voiced sound words
 
-*Built 2026-11-04 (A2-A4), PR #783, not merged; Android emulator run done, see Not yet verified.* (Planned 2026-11-03.) Dino Reader only. From the user: "the animal noises should not be read by the ai voices. I prefer
+*Built 2026-11-04 (A2-A4), merged as PR #783 (456a6a5); Android emulator run done, see Not yet verified.* (Planned 2026-11-03.) Dino Reader only. From the user: "the animal noises should not be read by the ai voices. I prefer
 to use real animal voices. can we get them form somewhere instead? like sheep and cow and pig and alike instead of
 reading it".
 
@@ -170,7 +170,7 @@ Findings files (in `D:/ReadTheStupidText-worktrees/reviews/`, outside the repo):
 - 4. leave-book-stops-read flow: PASS (38.6 s).
 - 5. Re-run of animal-clip-plays (-NoBuild, build def5fb937bbd): PASS (103.0 s); log `D:/ReadTheStupidText-worktrees/reviews/s255-device-run/rerun.log`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-04)
 
 - `src/DinoReader.App/CLAUDE.md`, replace the "Dino animal sounds (Slice 117)" paragraph: an animal's sound is a bundled CC0 recording (`animal-<kind>.m4a`, 15 animals; bear, lion, rabbit and wolf have none and get no slot), played through `IRecordingPlayer` between speech runs by `ReadingSession`, never spoken. The slot gate is `AnimalSoundClips.Has(kind)`, not a sound-word table. A line that already says the animal's word (SaysIt) keeps the voice and gets no clip. Do not add a clip path to a speech reader. A speech run's `Completed` counts only for the current run seen `Playing` (`AnimalClipRuns.AcceptCompleted`). (Slice 255: docs/plan/slices/255-dino-real-animal-sounds.md)
 - `src/DinoReader.Core/CLAUDE.md`, "Animal sounds": `AnimalSounds.Plan` counts each character's own lines, so adding or dropping a slot never moves another character's slot; `SentenceDump` and `tools/premade-audio/generate.py` skip sound entries. (Slice 255: docs/plan/slices/255-dino-real-animal-sounds.md)

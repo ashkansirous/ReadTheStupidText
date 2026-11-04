@@ -1,6 +1,6 @@
 # Slice 256 — Dino: `dump-sentences` works for picture books (Good Enough), so it gets Gemini audio
 
-*Built 2026-11-04 (items 1-2; item 3 render not run), PR #782, not merged.* (Planned 2026-11-03.) Dino Reader tooling only. Found while casting the store books for Slice 246: `dotnet run --project
+*Built 2026-11-04 (items 1-2; item 3 render not run), merged as PR #782 (5630087).* (Planned 2026-11-03.) Dino Reader tooling only. Found while casting the store books for Slice 246: `dotnet run --project
 tools/DinoReader.BookBuilder -- dump-sentences good-enough --lang fa` exits 1 with "Good Enough has 1 pages but 10
 pictures". The dump reads only `story.md`; Good Enough is a picture book whose pages come from `lines.json`
 (`Books.cs`: "null for a picture book whose pages come from lines.json"). Without a dump its cast
@@ -49,7 +49,7 @@ From review (files outside the repo, all read):
 - Medium (`s256-medium.md`, 4 findings): 1 applied (same as high 1). 2 applied (unknown-book test covers the guard). Skipped, low: 3 (`StoryOf` blocks on async); 4 (weak Farsi assertion, content-tied counts, scratch library rebuilt per test).
 - Check pass (`s256-check-medium.md`, 6 findings, all low, all skipped): 1 `StoryOf` blocks via `GetAwaiter().GetResult()`; 2 a full scratch build per call, five calls in tests; 3 path hard-coded to `good-enough` (documented as deliberate above); 4 `SourceOf`/`DumpSource` real Text-is-null detection untested (tests use a synthetic `hasStoryMd` flag); 5 the Farsi assertion fails if a legit name or sound word stays Latin; 6 tests hard-code live content facts (19 pieces, 17/2 split, first sentence).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-04)
 
 - `dump-sentences` handles a book without `story.md` only for `good-enough` (`tools/DinoReader.BookBuilder/SentenceDump.cs`, `SourceOf`/`StoryOf`); any other such book throws. A later `lines.json` book needs its own builder call added there. (Slice 256: docs/plan/slices/256-good-enough-sentence-dump.md)
 
