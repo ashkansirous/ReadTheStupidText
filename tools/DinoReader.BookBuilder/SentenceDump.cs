@@ -30,7 +30,7 @@ internal static class SentenceDump
             return 1;
         }
 
-        string json = JsonSerializer.Serialize(Build(stem, StoreBuilder.Build(Books.SpecOf(stem)), language), Options);
+        string json = JsonSerializer.Serialize(Build(stem, StoryOf(stem), language), Options);
         if (outPath is null)
         {
             Console.Out.WriteLine(json);
@@ -41,6 +41,39 @@ internal static class SentenceDump
         File.WriteAllText(outPath, json);
         Console.WriteLine($"wrote {outPath}");
         return 0;
+    }
+
+    /// <summary>Where a book's story comes from: its story.md, or the one picture book supported (Good Enough, pages from lines.json).</summary>
+    internal enum DumpSource { StoryMd, GoodEnoughPictureBook }
+
+    // The decision alone, so it is testable without a book folder: a story.md book is a text book; with no story.md only Good Enough is supported, anything else cannot be dumped.
+    internal static DumpSource SourceOf(string stem, bool hasStoryMd)
+    {
+        if (hasStoryMd)
+        {
+            return DumpSource.StoryMd;
+        }
+
+        if (stem != StarterBuilder.GoodEnoughStem)
+        {
+            throw new InvalidOperationException($"dump-sentences: book '{stem}' has no story.md and is not the known picture book '{StarterBuilder.GoodEnoughStem}'; it cannot be dumped.");
+        }
+
+        return DumpSource.GoodEnoughPictureBook;
+    }
+
+    // A text book is built as the store builds it; Good Enough (no story.md, pages from lines.json, Slice 256) as the starter builder packs it, with its line boxes,
+    // so the break map and the sentence index match what the app reads. Only Good Enough is supported as a picture book.
+    internal static Story StoryOf(string stem)
+    {
+        if (SourceOf(stem, Books.Folder(stem).Text is not null) == DumpSource.StoryMd)
+        {
+            return StoreBuilder.Build(Books.SpecOf(stem));
+        }
+
+        Story? built = null;
+        StarterBuilder.InScratchAsync(async library => built = StarterBuilder.WithTranslations(await StarterBuilder.BuildGoodEnoughAsync(library), stem)).GetAwaiter().GetResult();
+        return built!;
     }
 
     public static SentenceListing Build(string book, Story story, string language)
