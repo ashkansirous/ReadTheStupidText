@@ -287,6 +287,7 @@ public partial class StorePage : ContentPage, IGrownUpPage
 	protected override void OnSizeAllocated(double width, double height)
 	{
 		base.OnSizeAllocated(width, height);
+		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height);
 		if (width <= 0 || height <= 0 || (width == _windowSize.Width && height == _windowSize.Height))
 		{
 			return;

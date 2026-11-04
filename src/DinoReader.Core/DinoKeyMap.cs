@@ -20,6 +20,10 @@ public enum DinoKey
 	Digit7,
 	Digit8,
 	Digit9,
+
+	/// <summary>Slice 235 part C: the vertical arrows. Up and down move through a list by the window's own focus navigation; they are named here so the key map knows them.</summary>
+	Up,
+	Down,
 }
 
 /// <summary>Which kind of screen has the keyboard: the shelf, a book being read (or its silent back cover), the grown-up gate, a book's options sheet, or any other page.</summary>
@@ -31,6 +35,9 @@ public enum DinoScreen
 	ReadingBackCover,
 	Gate,
 	Sheet,
+
+	/// <summary>The Settings list (Slice 235 part C, frame 157): Right opens the focused row in the right pane.</summary>
+	Settings,
 }
 
 /// <summary>What a key press asks the screen to do.</summary>
@@ -49,6 +56,7 @@ public enum DinoKeyAction
 	GateErase,
 	GateSubmit,
 	SheetActivate,
+	OpenRow,
 }
 
 /// <summary>
@@ -82,6 +90,7 @@ public static class DinoKeyMap
 			DinoScreen.ReadingBackCover => OnReading(key, backCover: true),
 			DinoScreen.Gate => OnGate(key),
 			DinoScreen.Sheet => key is DinoKey.Enter or DinoKey.Space ? DinoKeyAction.SheetActivate : DinoKeyAction.None,
+			DinoScreen.Settings => key == DinoKey.Right ? DinoKeyAction.OpenRow : DinoKeyAction.None,
 			_ => DinoKeyAction.None,
 		};
 	}

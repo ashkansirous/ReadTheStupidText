@@ -191,6 +191,7 @@
   <data name="Key_Left" xml:space="preserve"><value>左箭头</value></data>
   <data name="Key_Right" xml:space="preserve"><value>右箭头</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Speed_SubWindows" xml:space="preserve"><value>慢一点对小朋友更容易 - 用左右方向键调整</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>再读一遍</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>只有家长能看到这里。孩子的书架只需点击一下。</value></data>
   <data name="PackStatus_OfflineClick" xml:space="preserve"><value>没有网络连接。正在使用手机语音朗读。点击可重试下载语音。</value></data>

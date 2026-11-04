@@ -25,6 +25,9 @@ internal sealed class DinoWindowFrame
 	/// <summary>The window's frame once it has been applied; null before that, or when applying it failed (the default frame stays).</summary>
 	internal static DinoWindowFrame? Current { get; private set; }
 
+	/// <summary>The tone of the page on screen (cream, paper or ink); the focus ring is yellow on ink and indigo elsewhere.</summary>
+	internal TitleBarTone Tone { get; private set; } = TitleBarTone.Cream;
+
 	private readonly AppWindow _appWindow;
 	private readonly DispatcherQueueTimer _saveTimer;
 	private RectInt32 _restored;
@@ -44,6 +47,7 @@ internal sealed class DinoWindowFrame
 	/// <summary>Applies the frame when the MAUI window gets its native window (before it is first shown).</summary>
 	public static void Attach(Microsoft.Maui.Controls.Window window)
 	{
+		WinUiCrashTrace.Hook();
 		bool applied = false; // a second event must not snap the window back or stack a second frame
 		void OnReady(object? sender, string hook)
 		{
@@ -144,6 +148,7 @@ internal sealed class DinoWindowFrame
 	// Called on the UI thread whenever a page appears (DinoTitleBar).
 	internal void ApplyTone(TitleBarTone tone)
 	{
+		Tone = tone; // the focus ring takes its colour from it (DinoFocusRing)
 		if (!AppWindowTitleBar.IsCustomizationSupported())
 		{
 			WindowTrace.Write("Dino window: title bar colours not supported, system colours stay");

@@ -51,6 +51,7 @@ internal sealed class DinoKeyboard
 	{
 		root.PreviewKeyDown += OnKeyDown;
 		root.PreviewKeyUp += OnKeyUp;
+		DinoFocusRing.Attach(root); // Slice 235 part C: the focus ring and arrow-key focus moves share this one root hook
 		_window.Deactivated += (_, _) => ReleaseHeldKeys();
 		root.LostFocus += (sender, _) =>
 		{
@@ -88,7 +89,15 @@ internal sealed class DinoKeyboard
 			e.Handled = true;
 		}
 
-		WindowTrace.Write($"Dino keyboard: {e.Key} {(used ? "used" : "not used")} ({DescribeTarget()})");
+		string line = $"Dino keyboard: {e.Key} {(used ? "used" : "not used")} ({DescribeTarget()})";
+		if (key is DinoKey.Up or DinoKey.Down)
+		{
+			WindowTrace.WriteSampled(line); // a held arrow repeats dozens of times a second
+		}
+		else
+		{
+			WindowTrace.Write(line);
+		}
 	}
 
 	// One short line of where a key went: the page DinoKeyTargets.Route picked and the screen it reports (the VM check reads this when a key it sent is not used).
@@ -144,6 +153,8 @@ internal sealed class DinoKeyboard
 		VirtualKey.Left => DinoKey.Left,
 		VirtualKey.Right => DinoKey.Right,
 		VirtualKey.Escape => DinoKey.Escape,
+		VirtualKey.Up => DinoKey.Up,
+		VirtualKey.Down => DinoKey.Down,
 		VirtualKey.Enter => DinoKey.Enter,
 		VirtualKey.Back => DinoKey.Backspace,
 		>= VirtualKey.Number0 and <= VirtualKey.Number9 => DinoKey.Digit0 + (key - VirtualKey.Number0),

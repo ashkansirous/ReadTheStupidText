@@ -59,6 +59,34 @@ public class DinoKeyMapTests
         Assert.Equal(DinoKeyAction.None, Down(DinoKey.Right, screen));
     }
 
+    // Slice 235 part C (frame 157): Right opens the focused Settings row; nothing else changes there, and no other screen reacts to it.
+    [Fact]
+    public void Right_opens_the_focused_settings_row()
+    {
+        Assert.Equal(DinoKeyAction.OpenRow, Down(DinoKey.Right, DinoScreen.Settings));
+        Assert.Equal(DinoKeyAction.None, Down(DinoKey.Right, DinoScreen.Settings, textField: true));
+        foreach (DinoKey key in new[] { DinoKey.Space, DinoKey.Left, DinoKey.Up, DinoKey.Down, DinoKey.Enter, DinoKey.Digit3 })
+        {
+            Assert.Equal(DinoKeyAction.None, Down(key, DinoScreen.Settings));
+        }
+    }
+
+    [Fact]
+    public void Up_and_down_do_nothing_on_any_screen()
+    {
+        foreach (DinoScreen screen in Enum.GetValues<DinoScreen>())
+        {
+            Assert.Equal(DinoKeyAction.None, Down(DinoKey.Up, screen));
+            Assert.Equal(DinoKeyAction.None, Down(DinoKey.Down, screen));
+        }
+    }
+
+    [Fact]
+    public void Esc_goes_back_from_settings()
+    {
+        Assert.Equal(DinoKeyAction.Back, Down(DinoKey.Escape, DinoScreen.Settings));
+    }
+
     [Theory]
     [InlineData(DinoScreen.Reading)]
     [InlineData(DinoScreen.ReadingBackCover)]

@@ -1,3 +1,4 @@
+using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
 
@@ -133,7 +134,8 @@ public sealed class GrownUpHeader : Grid
 			Content = new IconView { Kind = IconKind.Back, Color = DinoTokens.Get(DinoTokens.Ink), Size = BackIconSize, StrokeWidth = 2.6 },
 		};
 		SemanticProperties.SetDescription(back, AppResources.Common_Back);
-		DesktopTips.Set(back, AppResources.Common_Back); // no key in brackets: Esc does not go back on the grown-up pages yet (Slice 235 part C)
+		DesktopTips.Set(back, AppResources.Common_Back, DinoKey.Escape); // Esc goes back here since DinoKeyTargets.Route pops a page that is not a key target (Slice 235 part B); part C names the key
+		DesktopTips.Hover(back);
 		var tap = new TapGestureRecognizer();
 		tap.Tapped += (_, _) => BackRequested?.Invoke(this, EventArgs.Empty);
 		back.GestureRecognizers.Add(tap);

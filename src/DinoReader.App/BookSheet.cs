@@ -10,7 +10,7 @@ namespace DinoReader;
 /// (Slice 111, Decision 115), the Record and Cast pills, Edit pages (own books), Export (developer switch), "Remove from the shelf" and Done.
 /// It lives inside the shelf page rather than on the navigation stack, so leaving the app cannot strand it.
 /// </summary>
-internal sealed class BookSheet : Grid
+internal sealed class BookSheet : Grid, IPageOverlay
 {
 	/// <summary>The "Read with my voice" row: how many pages are recorded, of how many, and the switch.</summary>
 	public sealed record VoiceOffer(int Recorded, int Pages, bool On);
@@ -119,6 +119,7 @@ internal sealed class BookSheet : Grid
 	// Slice 232 part B (mock Batch 44 frame 112): held sideways a bottom sheet would cover a 360 dp screen, so the sheet is one centred card (cover left, actions right); upright it is the bottom sheet.
 	private void FitToWindow(double width, double height)
 	{
+		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height); // Slice 235 part C: through the seam, like every page
 		BookSheetShape shape = BookSheetPlan.ShapeFor(width, height);
 		if (shape != _shape)
 		{
@@ -426,12 +427,28 @@ internal sealed class BookSheet : Grid
 		if (IsVisible && _readNowRow.Handler?.PlatformView is Microsoft.UI.Xaml.UIElement element && !SheetControlHasFocus(element.XamlRoot))
 		{
 			WindowTrace.Write("Dino keyboard: the sheet's Enter or Space activated Read now");
-			_ = ReadNowAsync();
+			_ = ReadNowObservedAsync();
 			return true;
 		}
 #endif
 		return false;
 	}
+
+#if WINDOWS
+	// Slice 235 part C (part B check-4 finding 3): the key path has no tap wrapper around it, so a failed read is observed and traced here instead of going unobserved on a discarded task.
+	private async Task ReadNowObservedAsync()
+	{
+		try
+		{
+			await ReadNowAsync();
+		}
+		catch (Exception ex)
+		{
+			WindowTrace.Write($"Dino keyboard: Read now from the sheet failed: {ex.GetType().Name}: {ex.Message}");
+			System.Diagnostics.Debug.WriteLine($"Dino Reader: Read now from the sheet failed: {ex}");
+		}
+	}
+#endif
 
 #if WINDOWS
 	// True when the focused element is a button or switch inside this sheet (not the shelf behind it).
@@ -493,6 +510,7 @@ internal sealed class BookSheet : Grid
 		};
 		SemanticProperties.SetDescription(close, AppResources.Common_Close);
 		_closeButton = close;
+		DesktopTips.Hover(close);
 		CastViews.AddTap(close, () => { Dismiss(); return Task.CompletedTask; });
 		return close;
 	}

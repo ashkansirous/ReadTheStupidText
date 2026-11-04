@@ -191,6 +191,7 @@
   <data name="Key_Left" xml:space="preserve"><value>Стрелка влево</value></data>
   <data name="Key_Right" xml:space="preserve"><value>Стрелка вправо</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Speed_SubWindows" xml:space="preserve"><value>Медленнее проще для малышей - меняйте стрелками влево и вправо</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Прочитать ещё раз</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Это видят только взрослые. Полка ребёнка — одним щелчком.</value></data>
   <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Нет соединения. Читает голос телефона. Щёлкните, чтобы повторить загрузку голоса.</value></data>

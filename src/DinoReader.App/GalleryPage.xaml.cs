@@ -376,6 +376,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	protected override void OnSizeAllocated(double width, double height)
 	{
 		base.OnSizeAllocated(width, height);
+		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height);
 		if (width > 0 && height > 0 && (width != _windowSize.Width || height != _windowSize.Height))
 		{
 			_windowSize = new Size(width, height);
@@ -394,12 +395,13 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 
 		bool grownUp = _mode.IsGrownUp;
 		CornerShape corner = LandscapeLayout.CornerLayout(_windowSize.Width, _windowSize.Height);
-		ShelfShape shelf = LandscapeLayout.ShelfLayout(_windowSize.Width, _windowSize.Height);
+		ShelfShape shelf = WindowShapeSeam.ShelfLayout(DesktopTips.IsWindows, _windowSize.Width, _windowSize.Height); // a phone-landscape Windows window gets a grid, not the sideways row
 		bool rail = grownUp && corner.Rail;
 		bool sideways = !grownUp && shelf.Sideways;
 		int columns = grownUp ? corner.Columns : shelf.Columns;
 		bool tabletShelf = !grownUp && shelf.TabletUpright;
 		string key = $"{sideways}|{rail}|{corner.RailWidth}|{corner.FullRowButtons}|{columns}|{shelf.CoverHeight}|{grownUp}|{tabletShelf}|{corner.TabletUpright}";
+		ApplyShelfMargin(sideways, shelf, rail, tabletShelf); // the one thing that follows the width pixel by pixel (the 1600 dp cap on Windows); a no-op when the value is unchanged
 		if (key == _shapeKey)
 		{
 			return;
@@ -412,6 +414,9 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 			_shapeGrownUp = grownUp;
 		}
 
+#if WINDOWS
+		WindowTrace.Write($"Dino shelf: columns={columns} sideways={sideways} rail={rail} grownUp={grownUp} content={_windowSize.Width:0}x{_windowSize.Height:0}"); // the VM check reads the shelf's shape from this
+#endif
 		ApplyRail(rail, corner);
 		ApplyHeaderShape(rail, sideways, corner, tabletShelf);
 		ApplyShelfList(sideways, shelf, columns, rail, tabletShelf);
@@ -513,8 +518,9 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	// A phone held sideways: one row of covers that scrolls sideways, the last one cut off to say "more"; else a grid of this many columns. The first book on screen stays on screen.
 	private void ApplyShelfList(bool sideways, ShelfShape shelf, int columns, bool rail, bool tabletShelf)
 	{
-		double horizontalGap = tabletShelf ? TabletColumnSpacing : GridItemSpacing;
-		double verticalGap = tabletShelf ? TabletRowSpacing : GridItemSpacing;
+		bool roomy = tabletShelf || (DesktopTips.IsWindows && !sideways && !rail); // Slice 235 part C (frames 151, 154): a desktop shelf uses the tablet's gaps and 40 dp sides
+		double horizontalGap = roomy ? TabletColumnSpacing : GridItemSpacing;
+		double verticalGap = roomy ? TabletRowSpacing : GridItemSpacing;
 		bool wasSideways = StoryList.ItemsLayout is LinearItemsLayout;
 		_swapPhase = ScrollSwapPhase.SwapStarted;
 		_swapGeneration++;
@@ -529,20 +535,53 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		else
 		{
 			var grid = (GridItemsLayout)StoryList.ItemsLayout;
-			grid.Span = columns;
-			grid.HorizontalItemSpacing = horizontalGap;
-			grid.VerticalItemSpacing = verticalGap;
+			if (grid.Span != columns)
+			{
+				grid.Span = columns;
+			}
+
+			if (grid.HorizontalItemSpacing != horizontalGap)
+			{
+				grid.HorizontalItemSpacing = horizontalGap;
+			}
+
+			if (grid.VerticalItemSpacing != verticalGap)
+			{
+				grid.VerticalItemSpacing = verticalGap;
+			}
 		}
 
-		Resources[TileWidthKey] = sideways ? LandscapeLayout.CoverWidth(shelf.CoverHeight) : -1.0;
-		Resources[TileTitleLinesKey] = sideways ? 1 : 2;
-		StoryList.Margin = rail ? new Thickness(16, 14, 26, 0) : sideways ? new Thickness(LandscapeLayout.SidewaysInset, 0, 0, 0) : new Thickness(tabletShelf ? shelf.SidePadding : LandscapeLayout.PhoneShelfSidePadding, 0);
+		SetResourceIfChanged(TileWidthKey, sideways ? LandscapeLayout.CoverWidth(shelf.CoverHeight) : -1.0);
+		SetResourceIfChanged(TileTitleLinesKey, sideways ? 1 : 2);
+		ApplyShelfMargin(sideways, shelf, rail, tabletShelf);
+
 		if (wasSideways != sideways)
 		{
 			ReattachItems();
 		}
 
 		KeepFirstBookOnScreen();
+	}
+
+	// Slice 235 part C (frame 154): on Windows the 1600 dp cap is this margin, a pure function of the PAGE width; the list is never given a maximum width or asked its own size (a layout cycle on the VM).
+	private void ApplyShelfMargin(bool sideways, ShelfShape shelf, bool rail, bool tabletShelf)
+	{
+		bool roomy = tabletShelf || (DesktopTips.IsWindows && !sideways && !rail);
+		double side = roomy ? (DesktopTips.IsWindows ? WindowShapeSeam.ShelfSideMargin(_windowSize.Width, shelf.SidePadding) : shelf.SidePadding) : LandscapeLayout.PhoneShelfSidePadding;
+		Thickness margin = rail ? new Thickness(16, 14, 26, 0) : sideways ? new Thickness(LandscapeLayout.SidewaysInset, 0, 0, 0) : new Thickness(side, 0);
+		if (StoryList.Margin != margin)
+		{
+			StoryList.Margin = margin;
+		}
+	}
+
+	// A resource write re-measures every tile bound to it, so it is made only when the value really changes.
+	private void SetResourceIfChanged(string key, object value)
+	{
+		if (!Resources.TryGetValue(key, out object? current) || !Equals(current, value))
+		{
+			Resources[key] = value;
+		}
 	}
 
 	// Replacing ItemsLayout alone left the list blank on Android after a rotation (the RecyclerView kept its old layout manager's state; likely, not proven from MAUI source): a fresh bind draws the covers on both platforms.
@@ -691,14 +730,34 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	{
 		if (TileOf(sender) is { } tile)
 		{
-			await _busy.RunAsync(() => _mode.IsGrownUp ? OpenBookSheetAsync(tile.Story) : _actions.ReadAsync(Navigation, tile.Story));
+			await OpenTileAsync(tile);
 		}
 	}
+
+	// A tap on a cover (kids' mode: read it; grown-up mode: its options sheet). The Windows keyboard (Enter or Space on a focused book) takes the same path.
+	private Task OpenTileAsync(StoryTile tile) =>
+		_busy.RunAsync(() => _mode.IsGrownUp ? OpenBookSheetAsync(tile.Story) : _actions.ReadAsync(Navigation, tile.Story));
+
+	// Slice 235 part C: Windows-only desktop wiring of a book (hover, hand, Tab stop, right-click, focus back after the sheet), in Platforms/Windows/GalleryPage.Desktop.cs. No-ops elsewhere.
+	private void OnTileLoaded(object? sender, EventArgs e)
+	{
+		if (DesktopTips.IsWindows)
+		{
+			WireDesktopTile(sender as VerticalStackLayout);
+		}
+	}
+
+	partial void WireDesktopTile(VerticalStackLayout? tile);
+
+	partial void RememberTileFocus(Story opened);
+
+	partial void RestoreTileFocus();
 
 	// Grown-up mode: a book's "⋯" or its bare cover opens its options sheet (Slice 189, mock 85b; it grew out of the "This book" sheet of Slices 110 and 111): Show original text,
 	// Read with my voice, Record, Cast, Edit pages (own books), Export (developer switch) and Remove from the shelf.
 	private async Task OpenBookSheetAsync(Story tapped)
 	{
+		RememberTileFocus(tapped);
 		Story story = await _library.GetAsync(tapped.Id) ?? tapped;
 		_sheetStory = story;
 		_sheetChanged = false;
@@ -852,6 +911,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	// Waits for a save still in flight (a quick Back after a switch) so the tiles never keep the old flags; never throws out of async void.
 	private async void OnBookSheetDismissed()
 	{
+		RestoreTileFocus(); // Slice 235 part C: Esc or a click outside returns the keyboard to the book that opened the sheet (Windows only)
 		try
 		{
 			await _sheetSaveLock.WaitAsync();

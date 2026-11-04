@@ -53,6 +53,9 @@ public sealed class TransportRow : StackLayout
 		DesktopTips.Set(_previous, ReadingText.PreviousSentence, DinoKey.Left); // Slice 235 part B: Windows tooltips name the key
 		DesktopTips.Set(_next, ReadingText.NextSentence, DinoKey.Right);
 		DesktopTips.Set(_play, ReadingText.Play, DinoKey.Space);
+		DesktopTips.Hover(_previous); // Slice 235 part C: hand and one-step darker fill under the mouse (Windows only)
+		DesktopTips.Hover(_next);
+		DesktopTips.Hover(_play);
 	}
 
 	/// <summary>The smaller row used when the page is held sideways.</summary>

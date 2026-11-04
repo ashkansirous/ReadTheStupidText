@@ -193,6 +193,7 @@
   <data name="Key_Left" xml:space="preserve"><value>Vasen nuoli</value></data>
   <data name="Key_Right" xml:space="preserve"><value>Oikea nuoli</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Speed_SubWindows" xml:space="preserve"><value>Hitaampi on pienille helpompaa - vaihda vasemmalla ja oikealla nuolinäppäimellä</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Lue uudelleen</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Vain aikuiset näkevät tämän. Lapsesi hylly on yhden napsautuksen päässä.</value></data>
   <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Ei yhteyttä. Luetaan puhelimen äänellä. Yritä äänen latausta uudelleen napsauttamalla.</value></data>

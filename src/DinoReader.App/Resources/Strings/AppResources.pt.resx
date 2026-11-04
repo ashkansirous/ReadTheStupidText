@@ -191,6 +191,7 @@
   <data name="Key_Left" xml:space="preserve"><value>Seta para a esquerda</value></data>
   <data name="Key_Right" xml:space="preserve"><value>Seta para a direita</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Speed_SubWindows" xml:space="preserve"><value>Mais devagar é mais fácil para os pequenos - mude com as setas esquerda e direita</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Ler de novo</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Só os adultos veem isto. A estante da criança está a um clique.</value></data>
   <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Sem conexão. Lendo com a voz do telefone. Clique para tentar baixar a voz novamente.</value></data>

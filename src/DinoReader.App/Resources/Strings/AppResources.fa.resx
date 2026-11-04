@@ -191,6 +191,7 @@
   <data name="Key_Left" xml:space="preserve"><value>کلید جهت چپ</value></data>
   <data name="Key_Right" xml:space="preserve"><value>کلید جهت راست</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Speed_SubWindows" xml:space="preserve"><value>آهسته‌تر برای کوچولوها آسان‌تر است - با کلیدهای جهت چپ و راست تغییر دهید</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>دوباره بخوان</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>این بخش را فقط بزرگ‌ترها می‌بینند. قفسهٔ کودک شما یک کلیک فاصله دارد.</value></data>
   <data name="PackStatus_OfflineClick" xml:space="preserve"><value>اتصالی وجود ندارد. با صدای گوشی خوانده می‌شود. برای تلاش دوباره دانلود صدا کلیک کنید.</value></data>

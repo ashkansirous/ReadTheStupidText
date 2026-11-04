@@ -194,6 +194,7 @@
   <data name="Key_Left" xml:space="preserve"><value>Pfeil links</value></data>
   <data name="Key_Right" xml:space="preserve"><value>Pfeil rechts</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Speed_SubWindows" xml:space="preserve"><value>Langsamer ist leichter für die Kleinen - mit den Pfeiltasten links und rechts ändern</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Noch einmal lesen</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Das sehen nur Erwachsene. Das Regal deines Kindes ist nur einen Klick entfernt.</value></data>
   <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Keine Verbindung. Es liest die Handy-Stimme. Klicke, um den Download der Stimme zu wiederholen.</value></data>

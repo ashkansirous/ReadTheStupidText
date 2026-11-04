@@ -12,6 +12,7 @@ internal static class DinoTitleBar
 	/// <summary>Called when <paramref name="page"/> appears (and again when it changes what it is, like the shelf entering the grown-ups' corner).</summary>
 	public static void ForPage(Page page)
 	{
+		DinoFocusRing.SetArrowsFor(page);
 		if (page is GatePage || DinoWindowFrame.Current is not { } frame)
 		{
 			return; // the gate is a scrim over the page below, which keeps its colour

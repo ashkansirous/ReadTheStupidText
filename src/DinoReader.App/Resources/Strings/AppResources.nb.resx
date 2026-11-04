@@ -193,6 +193,7 @@
   <data name="Key_Left" xml:space="preserve"><value>Venstrepil</value></data>
   <data name="Key_Right" xml:space="preserve"><value>Høyrepil</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Speed_SubWindows" xml:space="preserve"><value>Saktere er lettere for de små - bruk venstre og høyre piltast for å endre</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Les igjen</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Bare voksne ser dette. Barnets hylle er ett klikk unna.</value></data>
   <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Ingen tilkobling. Leser med telefonens stemme. Klikk for å prøve stemmenedlastingen på nytt.</value></data>
