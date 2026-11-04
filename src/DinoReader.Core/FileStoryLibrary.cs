@@ -49,6 +49,42 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         return stories.OrderByDescending(s => s.Created).ToList();
     }
 
+    /// <summary>
+    /// The source ids of every story folder on disk, or null when that cannot be said for certain: the root is missing or unreadable, or any story folder's story.json could not be read.
+    /// Unlike <see cref="ListAsync"/>, which skips what it cannot read, a null here means "do not conclude a book is gone" (the audio pack sweep deletes only on a complete answer).
+    /// </summary>
+    public async Task<ISet<string>?> TryListSourceIdsAsync()
+    {
+        try
+        {
+            if (!Directory.Exists(root))
+            {
+                return null;
+            }
+
+            var sources = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string folder in Directory.EnumerateDirectories(root))
+            {
+                Story? story = await TryReadAsync(Path.GetFileName(folder));
+                if (story is null)
+                {
+                    return null;
+                }
+
+                if (story.SourceId is { } source)
+                {
+                    sources.Add(source);
+                }
+            }
+
+            return sources;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
     public Task<Story?> GetAsync(string id) => TryReadAsync(id);
 
     public async Task AddAsync(Story story)

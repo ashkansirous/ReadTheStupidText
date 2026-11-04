@@ -27,7 +27,7 @@ public enum DownloadOutcome
 /// temp file first and imported into the library only when whole, so a dropped one leaves nothing on the shelf (the importer writes
 /// <c>story.json</c> last).
 /// </summary>
-public sealed class StoreClient(IStoryLibrary library)
+public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs)
 {
 	public const string BaseAddress = "https://dinoreader.sirous.uk";
 
@@ -40,6 +40,7 @@ public sealed class StoreClient(IStoryLibrary library)
 	private const int BufferBytes = 81920;
 	private const long MaxListBytes = 1024 * 1024;
 	private const long MaxCoverBytes = 5 * 1024 * 1024;
+	private const long MaxPackBytes = 400L * 1024 * 1024;
 	private static readonly TimeSpan ListTimeout = TimeSpan.FromSeconds(20);
 	private static readonly TimeSpan StallTimeout = TimeSpan.FromSeconds(30);
 
@@ -55,6 +56,10 @@ public sealed class StoreClient(IStoryLibrary library)
 	/// <summary>The source ids of the stories on the shelf: a store entry with one of these shows "Downloaded".</summary>
 	public async Task<HashSet<string>> InstalledIdsAsync() =>
 		(await library.ListAsync()).Select(s => s.SourceId).OfType<string>().ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+	/// <summary>The source ids found by reading every story folder on disk, or null when any folder could not be read (or the library is not folder-backed): the audio pack sweep deletes nothing then.</summary>
+	public async Task<ISet<string>?> CompleteInstalledIdsAsync() =>
+		library is FileStoryLibrary files ? await files.TryListSourceIdsAsync() : null;
 
 	/// <summary>The readable stories the server lists, or <see cref="StoreLoadStatus.Offline"/> when it cannot be reached.</summary>
 	public async Task<StoreListing> ListAsync(CancellationToken cancel)
@@ -150,8 +155,17 @@ public sealed class StoreClient(IStoryLibrary library)
 				return DownloadOutcome.Done;
 			}
 
-			await FetchPackageAsync(item.DownloadUrl, part, progress, cancel);
-			return await ImportPackageAsync(part, item.Id) ? DownloadOutcome.Done : DownloadOutcome.Failed;
+			IReadOnlyList<(string Language, AudioPackInfo Pack)> wanted = WantedPacks(item, StoryLanguages.Current().All);
+			var summed = new SummedProgress(progress, wanted.Sum(w => w.Pack.Bytes ?? 0));
+			// The summed progress is the only reporter: the book fetch's own 0..1 would jump the bar between the book-only and the combined fraction.
+			await FetchPackageAsync(item.DownloadUrl, part, new Progress<double>(), cancel, (done, total) => summed.Book(done, total));
+			if (!await ImportPackageAsync(part, item.Id))
+			{
+				return DownloadOutcome.Failed;
+			}
+
+			await InstallPacksAsync(item, wanted, summed, cancel); // audio is optional: it never fails or rolls back the book
+			return DownloadOutcome.Done;
 		}
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
 		{
@@ -241,7 +255,71 @@ public sealed class StoreClient(IStoryLibrary library)
 		}
 	}
 
-	private static async Task FetchPackageAsync(string url, string part, IProgress<double> progress, CancellationToken cancel)
+	/// <summary>The packs the listing offers for the user's book languages and the story's own language (a read in it uses its pack too), one per language (Slice 246 C2).</summary>
+	public static IReadOnlyList<(string Language, AudioPackInfo Pack)> WantedPacks(StoreItem item, IEnumerable<string> languages) =>
+		languages.Append(item.Language).Select(BundledTranslations.Key).Distinct(StringComparer.Ordinal).Select(l => (Language: l, Pack: item.AudioIn(l))).Where(w => w.Pack is not null).Select(w => (w.Language, w.Pack!)).ToList();
+
+	/// <summary>
+	/// Installs <paramref name="wanted"/> packs of a book that is on the shelf, one after the other, and returns true when none of them failed in a way a retry could fix (offline or a bad
+	/// download is false; a missing pack, a pack already installed and a cancel are not). A failed pack leaves the book and the other packs alone.
+	/// </summary>
+	public async Task<bool> InstallPacksAsync(StoreItem item, IReadOnlyList<(string Language, AudioPackInfo Pack)> wanted, SummedProgress? summed, CancellationToken cancel)
+	{
+		bool allOk = true;
+		foreach ((string language, AudioPackInfo pack) in wanted)
+		{
+			PackInstall result = await InstallOnePackAsync(item.Id, language, pack, summed, cancel);
+			summed?.PackEnded();
+			allOk &= result != PackInstall.Failed;
+			if (result == PackInstall.Cancelled)
+			{
+				break; // the same cancel ends every pack; the book stays
+			}
+		}
+
+		return allOk;
+	}
+
+	// Audio never fails the book or the update check: whatever the install throws is a failed pack. The pack bytes reach the summed progress on the downloading thread, in order.
+	private async Task<PackInstall> InstallOnePackAsync(string bookId, string language, AudioPackInfo pack, SummedProgress? summed, CancellationToken cancel)
+	{
+		try
+		{
+			return await packs.InstallAsync(bookId, language, pack, summed is null ? null : new SyncProgress<long>(summed.Pack), cancel);
+		}
+		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+		{
+			return PackInstall.Cancelled;
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not install the audio pack {bookId}/{language}: {ex.Message}");
+			return PackInstall.Failed;
+		}
+	}
+
+	/// <summary>The pack store, for the reading screen's lookup and the update check.</summary>
+	public AudioPackStore Packs => packs;
+
+	/// <summary>One pack zip to a file, with the same stall guard and redirect rule as a book download (Slice 246 C2).</summary>
+	internal static async Task FetchPackAsync(string url, string toPath, IProgress<long> bytesSoFar, CancellationToken cancel)
+	{
+		try
+		{
+			await FetchPackageAsync(url, toPath, new Progress<double>(), cancel, (done, _) => bytesSoFar.Report(done), MaxPackBytes);
+		}
+		catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+		{
+			throw new AudioPackNotFoundException(url);
+		}
+		catch (StoreStorageException ex)
+		{
+			throw new IOException(ex.Message, ex); // the pack store treats a disk failure like any other failed install
+		}
+	}
+
+	private static async Task FetchPackageAsync(
+		string url, string part, IProgress<double> progress, CancellationToken cancel, Action<long, long?>? bytes = null, long cap = 0)
 	{
 		using var stall = CancellationTokenSource.CreateLinkedTokenSource(cancel);
 		stall.CancelAfter(StallTimeout);
@@ -249,7 +327,7 @@ public sealed class StoreClient(IStoryLibrary library)
 		response.Message.EnsureSuccessStatusCode();
 		Directory.CreateDirectory(Path.GetDirectoryName(part)!);
 		await using FileStream file = CreateLocalFile(part);
-		await CopyCappedAsync(response, file, StoryPackageReader.MaxTotalBytes, progress, stall, stall.Token);
+		await CopyCappedAsync(response, file, cap > 0 ? cap : StoryPackageReader.MaxTotalBytes, progress, stall, stall.Token, bytes);
 	}
 
 	private static Task<GuardedResponse> GetGuardedAsync(string path, CancellationToken cancel) =>
@@ -257,7 +335,7 @@ public sealed class StoreClient(IStoryLibrary library)
 
 	// Copies the body, giving up when it passes the cap or stalls: the stall timer is restarted after every chunk.
 	private static async Task CopyCappedAsync(
-		GuardedResponse guarded, Stream target, long cap, IProgress<double>? progress, CancellationTokenSource stall, CancellationToken cancel)
+		GuardedResponse guarded, Stream target, long cap, IProgress<double>? progress, CancellationTokenSource stall, CancellationToken cancel, Action<long, long?>? bytes = null)
 	{
 		long? total = guarded.Message.Content.Headers.ContentLength;
 		if (total > cap)
@@ -280,6 +358,7 @@ public sealed class StoreClient(IStoryLibrary library)
 			await WriteLocalAsync(target, buffer.AsMemory(0, read), cancel);
 			stall.CancelAfter(StallTimeout);
 			progress?.Report(total is > 0 ? (double)done / total.Value : 0);
+			bytes?.Invoke(done, total);
 		}
 	}
 
@@ -375,6 +454,12 @@ public sealed class StoreClient(IStoryLibrary library)
 			Debug.WriteLine($"Dino Reader could not remove a store temp file: {ex.Message}");
 		}
 	}
+}
+
+/// <summary>The audio pack store's download, through the store client's guarded fetch (Slice 246 C2). Separate from <see cref="StoreClient"/> so the store client can own the pack store.</summary>
+public sealed class StoreAudioPackFetcher : IAudioPackFetcher
+{
+	public Task FetchAsync(string url, string toPath, IProgress<long> bytesSoFar, CancellationToken cancel) => StoreClient.FetchPackAsync(url, toPath, bytesSoFar, cancel);
 }
 
 /// <summary>A failure writing the store's own temp files, not reaching the server.</summary>

@@ -50,11 +50,12 @@ public sealed class ReadingSession
 	private readonly HashSet<int> _unplayable = []; // pages whose recording failed to play this session: read in the generated voice
 	private (int ReadId, int Sentence)? _continueRead; // a generated read cut short before a recorded page: where the read goes on once it ends
 	// The read as a list of steps (speak a run / play an animal's recording, Slice 255): one read id, the step being taken and whether the next one waits for Resume.
-	private sealed class StepRead(int readId, IReadOnlyList<AnimalClipRuns.ReadStep> steps, string spoken, CancellationToken cancellation)
+	// A step is a spoken run, an animal's recording, or (Slice 246 C2) a pre-made clip of a store book's piece; a clip that cannot play turns its step into a spoken run in place.
+	private sealed class StepRead(int readId, List<PremadeAudioPlan.Step> steps, string spoken, CancellationToken cancellation)
 	{
 		public int ReadId { get; } = readId;
 
-		public IReadOnlyList<AnimalClipRuns.ReadStep> Steps { get; } = steps;
+		public List<PremadeAudioPlan.Step> Steps { get; } = steps;
 
 		public string Spoken { get; } = spoken;
 
@@ -64,6 +65,7 @@ public sealed class ReadingSession
 	}
 
 	private StepRead? _stepRead;
+	private StepRead? _restartStep; // Slice 246 C2: a pre-made clip failed while the user had paused; its piece is read by the device voice when they resume
 	private bool _pendingAdvance; // a step ended while the user had paused: Resume takes the next one
 	// Completed carries no id, so a speech step's end is accepted only for the run that was seen Playing (AnimalClipRuns.AcceptCompleted): _run counts the speech steps
 	// started (and Stop/StartAt), _playingRun is the run last seen Playing, and OnCompleted stamps _run when the signal is raised.
@@ -163,6 +165,11 @@ public sealed class ReadingSession
 			if (_recorded != RecordedPlay.None)
 			{
 				return _recorded == RecordedPlay.Playing ? SessionState.Playing : SessionState.Paused;
+			}
+
+			if (_restartStep is not null)
+			{
+				return SessionState.Paused;
 			}
 
 			if (_reader.State == PlaybackState.Playing)
@@ -297,6 +304,15 @@ public sealed class ReadingSession
 	/// <param name="counted">False for a resume of a pause the app made itself (the language menu), which is not a count (Slice 250).</param>
 	public void Resume(bool counted = true)
 	{
+		if (_restartStep is { } restart)
+		{
+			_restartStep = null;
+			AppTrace.Reading(TraceLines.ReadingEvent.Resumed, TraceLines.ReadingReason.User);
+			RaiseIf(counted, ReadingEventKind.Resumed);
+			_ = RunStepAsync(restart);
+			return;
+		}
+
 		if (_pendingAdvance)
 		{
 			RaiseIf(counted, ReadingEventKind.Resumed);
@@ -402,6 +418,7 @@ public sealed class ReadingSession
 	{
 		_continueRead = null;
 		_stepRead = null;
+		_restartStep = null;
 		_pendingAdvance = false;
 		if (_recorded != RecordedPlay.None)
 		{
@@ -543,7 +560,7 @@ public sealed class ReadingSession
 	private async Task SpeakRunsAsync(IReadOnlyList<VoicedSegment> segments, string spoken, int id, CancellationToken cancellation)
 	{
 		cancellation.ThrowIfCancellationRequested();
-		var read = new StepRead(id, AnimalClipRuns.Plan(segments), spoken, cancellation);
+		var read = new StepRead(id, PremadeAudioPlan.Plan(segments), spoken, cancellation);
 		_stepRead = read;
 		_pendingAdvance = false;
 		await StartStepAsync(read);
@@ -580,7 +597,7 @@ public sealed class ReadingSession
 		_ = RunStepAsync(read);
 	}
 
-	private bool IsPaused => _recorded == RecordedPlay.Paused || _reader.State == PlaybackState.Paused;
+	private bool IsPaused => _recorded == RecordedPlay.Paused || _restartStep is not null || _reader.State == PlaybackState.Paused;
 
 	// Resume after a step ended while paused: the pause is over and the step that was waiting starts.
 	private void ResumePendingAdvance()
@@ -626,11 +643,21 @@ public sealed class ReadingSession
 	private async Task StartStepAsync(StepRead read)
 	{
 		read.Cancellation.ThrowIfCancellationRequested();
-		AnimalClipRuns.ReadStep step = read.Steps[read.Index];
-		if (step.Clip is { } clip)
+		PremadeAudioPlan.Step step = read.Steps[read.Index];
+		if (step.Animal is { } clip)
 		{
 			PlayClip(read, clip);
 			return;
+		}
+
+		if (step.Premade is { } premade)
+		{
+			if (TryPlayPremade(read, premade))
+			{
+				return;
+			}
+
+			step = read.Steps[read.Index] = PremadeAudioPlan.AsSpoken(step); // no usable clip: this piece is read by the device voice
 		}
 
 		if (read.Index > 0)
@@ -686,6 +713,91 @@ public sealed class ReadingSession
 #endif
 		_recorded = RecordedPlay.Playing;
 		ClearPending();
+	}
+
+	// Slice 246 C2: plays the pre-made clip of a store book's piece at the reading speed, with the piece's sentence marked as it starts (the device voice marks it from its chunk event).
+	// False (nothing started) when the file is gone or the player will not open it; the caller then reads the piece with the device voice. The clip is "recorded" for the session's
+	// state, Pause, Resume and Stop, exactly as an animal's recording is, and its end advances the read like a spoken run's Completed does.
+	private bool TryPlayPremade(StepRead read, VoicedSegment segment)
+	{
+		string? path = PremadeClipMarker.PathOf(segment);
+		int index = read.Index;
+		if (path is null || !File.Exists(path))
+		{
+			AudioPackLog.Write("premade clip has no file, device voice for this piece");
+			return false;
+		}
+
+		try
+		{
+			double rate = ReadingSpeedPreference.Load().Value;
+			// The clip counts as playing before Play, so an ended or failed callback that reaches the main thread at once finds it playing and is handled, not dropped.
+			_recorded = RecordedPlay.Playing;
+			_player.Play(path, () => MainThread.BeginInvokeOnMainThread(() => ApplyPremadeEnded(read, index, failed: false)),
+				() => MainThread.BeginInvokeOnMainThread(() => ApplyPremadeEnded(read, index, failed: true)), rate);
+		}
+		catch (Exception ex)
+		{
+			_recorded = RecordedPlay.None;
+			AudioPackLog.Write($"premade clip could not play ({ex.GetType().Name}), device voice for this piece");
+			return false;
+		}
+
+		AudioPackLog.Write($"premade clip plays (sentence {StorySentences.IndexAt(_sentences, segment.SourceStart)})");
+		RunOnMain(() => MarkPremade(read, segment));
+		ClearPending();
+		return true;
+	}
+
+	private void MarkPremade(StepRead read, VoicedSegment segment)
+	{
+		int sentence = StorySentences.IndexAt(_sentences, segment.SourceStart);
+		if (read == _stepRead && sentence >= 0)
+		{
+			MoveTo(sentence, segment.SourceStart);
+		}
+	}
+
+	private static void RunOnMain(Action action)
+	{
+		if (MainThread.IsMainThread)
+		{
+			action();
+		}
+		else
+		{
+			MainThread.BeginInvokeOnMainThread(action);
+		}
+	}
+
+	// A clip that played to its end advances the read. One that failed while playing is read by the device voice instead, from its start: at once when playing, or when the user
+	// resumes when they had paused.
+	private void ApplyPremadeEnded(StepRead read, int index, bool failed)
+	{
+		if (read != _stepRead || read.Index != index || _recorded == RecordedPlay.None)
+		{
+			return; // stopped or replaced meanwhile, or this step's end was already taken
+		}
+
+		if (!failed)
+		{
+			AdvanceStep(read.ReadId);
+			return;
+		}
+
+		AudioPackLog.Write("premade clip failed while playing, device voice for this piece");
+		read.Steps[index] = PremadeAudioPlan.AsSpoken(read.Steps[index]);
+		bool wasPaused = _recorded == RecordedPlay.Paused;
+		_player.Stop();
+		_recorded = RecordedPlay.None;
+		if (wasPaused)
+		{
+			_restartStep = read;
+			StateChanged?.Invoke(this, EventArgs.Empty);
+			return;
+		}
+
+		_ = RunStepAsync(read);
 	}
 
 	private void SkipClip(StepRead read, int index)

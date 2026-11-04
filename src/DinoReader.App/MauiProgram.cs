@@ -40,6 +40,7 @@ public static class MauiProgram
 
 	// Stories live under AppDataDirectory/stories/<id>/ and never leave the device.
 	private const string StoriesFolder = "stories";
+	private const string AudioPackFolder = "audio-packs";
 
 	// Rendered PDF pages wait here (cache) until a story keeps them.
 	private const string PdfPagesFolder = "pdf-pages";
@@ -86,6 +87,7 @@ public static class MauiProgram
 		builder.Services.AddTransient<IRecordingPlayer, RecordingPlayer>();
 		builder.Services.AddSingleton<StarterStories>();
 		builder.Services.AddSingleton<StagedBookUpdates>();
+		builder.Services.AddSingleton(_ => new AudioPackStore(Path.Combine(FileSystem.AppDataDirectory, AudioPackFolder), FileSystem.CacheDirectory, new StoreAudioPackFetcher(), AudioPackLog.Write));
 		builder.Services.AddSingleton<StoreClient>();
 		builder.Services.AddSingleton<AppConfigClient>();
 		builder.Services.AddSingleton<UsageCounter>();

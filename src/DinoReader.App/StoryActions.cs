@@ -20,6 +20,7 @@ public sealed record DeletePrompt(string Title, string Body, string Accept);
 public sealed class StoryActions(IStoryLibrary library, IServiceProvider services, GrownUpMode mode)
 {
 	private const string FallbackFileName = "story";
+	private static readonly TimeSpan PackDeleteWait = TimeSpan.FromSeconds(3);
 
 	/// <summary>Opens the reading screen on <paramref name="story"/>.</summary>
 	public async Task ReadAsync(INavigation navigation, Story story)
@@ -146,6 +147,7 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		{
 			await library.DeleteAsync(story.Id);
 			StarterStories.ForgetStoreInstall(story.SourceId);
+			await DeletePacksAsync(story);
 			return DeleteOutcome.Deleted;
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -153,6 +155,25 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 			Debug.WriteLine($"Dino Reader delete failed: {ex}");
 			await page.DisplayAlertAsync(AppResources.Delete_FailedTitle, AppResources.Delete_FailedBody, AppResources.Common_Ok);
 			return DeleteOutcome.Failed;
+		}
+	}
+
+	// A deleted store book takes its pre-made audio with it (Slice 246 C2). Audio is housekeeping: a failure here never fails the delete (the next cold start's sweep catches what is left).
+	private async Task DeletePacksAsync(Story story)
+	{
+		if (story.SourceId is not { } bookId)
+		{
+			return;
+		}
+
+		try
+		{
+			using var wait = new CancellationTokenSource(PackDeleteWait); // behind a long pack download the delete does not hold the screen: the sweep takes the folder later
+			await services.GetRequiredService<AudioPackStore>().DeleteBookAsync(bookId, wait.Token);
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not delete the audio packs of {bookId}: {ex.Message}");
 		}
 	}
 }

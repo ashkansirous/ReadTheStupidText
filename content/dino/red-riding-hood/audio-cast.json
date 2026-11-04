@@ -90,10 +90,80 @@
     }
   ],
   "audioPacks": {
+    "ar": {
+      "version": 1,
+      "hash": "b746e48be7da031818a5f8de9ccd770d93f61b63ad609595c0012d0bb3e2e77d",
+      "bytes": 2260620
+    },
+    "da": {
+      "version": 1,
+      "hash": "a59dc65ae3529dbf8c792a1423bb2749cf0b61f3efe29be85caf5bf11e63a478",
+      "bytes": 1867178
+    },
+    "de": {
+      "version": 1,
+      "hash": "557e9e88a3a9773b83908b2d1378257cb669e0b0d846a32c893cc8affabe698a",
+      "bytes": 1947580
+    },
+    "en": {
+      "version": 1,
+      "hash": "93ca933ea4405b8e7ffd46f7894fa349806ba772a1e99b3d1e3b6178b99c3e83",
+      "bytes": 1900917
+    },
+    "es": {
+      "version": 1,
+      "hash": "4bf9a6c1ded1046a88769d20b673294df879c9bfed435f9d81023a5374b17693",
+      "bytes": 2136456
+    },
     "fa": {
       "version": 1,
       "hash": "e1198ce0d3c7e794e402972d753a323402554176e809cdbde9b8e681024379f8",
       "bytes": 2141011
+    },
+    "fi": {
+      "version": 1,
+      "hash": "309f3c3c6cf9e4138f76361395bcdc617c34af25c1aa3ce00cfd559887fe0a18",
+      "bytes": 2148810
+    },
+    "fr": {
+      "version": 1,
+      "hash": "0a45feac3f984ac2fafe43ea41ad08c1a9862b3da1497ee2f4104da2dd42b953",
+      "bytes": 1955472
+    },
+    "ja": {
+      "version": 1,
+      "hash": "24ce28c15920299d9557740fa51bbf41bc1e40d32c4d62c3f8ebe6e2a26ff47f",
+      "bytes": 2413834
+    },
+    "nb": {
+      "version": 1,
+      "hash": "20c5da134571c18aba0556f78ff15c4727f1cdc2b5727ddaaa70efe0c2f304d4",
+      "bytes": 1975584
+    },
+    "nl": {
+      "version": 1,
+      "hash": "02929219ce59b60cf8983400b607af4fc5dddf54d623a98728c8e0902c566e23",
+      "bytes": 1840600
+    },
+    "pt": {
+      "version": 1,
+      "hash": "3e7489de876818e1bd40658d713b3ee049ac4aa011cf3685e596589c1551d32d",
+      "bytes": 2107663
+    },
+    "ru": {
+      "version": 1,
+      "hash": "0cca61d7220753e75c1f6d506d1fc29c057cb64188c76f822c1ce491d725ba3c",
+      "bytes": 2182226
+    },
+    "sv": {
+      "version": 1,
+      "hash": "dac0efb5d53b90ac7964b94eb2163df72d5a2301c8884f1a0fcf40cd4207b0df",
+      "bytes": 2017490
+    },
+    "zh": {
+      "version": 1,
+      "hash": "34678e3ecc1ad7af4c48d2f4e383e017013d69f3cc9048ced56949a18c1efb2b",
+      "bytes": 2001592
     }
   }
 }

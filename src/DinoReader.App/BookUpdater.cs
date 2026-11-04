@@ -29,6 +29,7 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 	/// <summary>Runs one check when 7 days have passed since the last finished one.</summary>
 	public async Task RunIfDueAsync(CancellationToken cancel)
 	{
+		await SweepPacksAsync(cancel);
 		if (!BookUpdateSchedule.IsDue(LastFinished(), DateTimeOffset.UtcNow))
 		{
 			Debug.WriteLine($"{LogTag} not due, no store call");
@@ -215,7 +216,59 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		}
 
 		IReadOnlyList<BookUpdateDecision>? decisions = await RecordBaselinesAsync(await PlanAsync(listing.Items), listing.Items, cancel);
-		return decisions is not null && await StageAllAsync(decisions, listing.Items, cancel);
+		bool booksDone = decisions is not null && await StageAllAsync(decisions, listing.Items, cancel);
+		// A late pack, a new pack version or a language added since the download (Slice 246 C2). A pack that fails never keeps the check from finishing: it is tried again at the next scheduled check.
+		await SyncPacksSafelyAsync(listing.Items, cancel);
+		return booksDone;
+	}
+
+	// Audio is optional: nothing the pack sync throws (except the caller's cancel) may fail the book check or the start.
+	private async Task<bool> SyncPacksSafelyAsync(IReadOnlyList<StoreItem> items, CancellationToken cancel)
+	{
+		try
+		{
+			return await SyncPacksAsync(items, cancel);
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException || !cancel.IsCancellationRequested)
+		{
+			Debug.WriteLine($"{LogTag} the audio pack sync failed, will try at the next open: {ex.Message}");
+			return false;
+		}
+	}
+
+	// Slice 246 C2: the audio packs of the books on the shelf, for the user's book languages and each story's own. True when none failed in a way a retry could fix (offline, a bad download);
+	// the caller only logs it, so a failed pack is retried at the next scheduled check, not at every open.
+	private async Task<bool> SyncPacksAsync(IReadOnlyList<StoreItem> items, CancellationToken cancel)
+	{
+		HashSet<string> onShelf = await store.InstalledIdsAsync();
+		IReadOnlyList<string> languages = StoryLanguages.Current().All;
+		bool allOk = true;
+		foreach (StoreItem item in items.Where(i => onShelf.Contains(i.Id)))
+		{
+			cancel.ThrowIfCancellationRequested();
+			IReadOnlyList<(string Language, AudioPackInfo Pack)> wanted = StoreClient.WantedPacks(item, languages);
+			allOk &= wanted.Count == 0 || await store.InstallPacksAsync(item, wanted, null, cancel);
+		}
+
+		return allOk;
+	}
+
+	// Packs of a book that is no longer on the shelf are deleted here, at the next cold start after the delete (the delete screen is outside this slice).
+	private async Task SweepPacksAsync(CancellationToken cancel)
+	{
+		try
+		{
+			await store.Packs.SweepAsync(store.CompleteInstalledIdsAsync, cancel);
+		}
+		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+		{
+			Debug.WriteLine($"{LogTag} audio pack sweep cancelled");
+		}
+		catch (Exception ex)
+		{
+			// The sweep is housekeeping: whatever it hits, the weekly book check still runs.
+			Debug.WriteLine($"{LogTag} could not sweep the audio packs: {ex.Message}");
+		}
 	}
 
 	private async Task<IReadOnlyList<BookUpdateDecision>> PlanAsync(IReadOnlyList<StoreItem> items)

@@ -37,8 +37,20 @@ so it should not take that much space. we can generate it on my machine. create 
 **Touches, part C (app playback):** `src/DinoReader.Core/PremadeAudio*.cs` (new), `src/DinoReader.App/Reading*.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/Platforms/**`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`.
 **Touches, part D (generation runs):** generated audio outside git (store uploads only), this slice file.
 
-*In progress (wave 2026-11-04), draft PR: A8, B2, then the runs D2 (Good Enough fa; its dump was fixed by Slice 256, #782, and Leda is its approved voice), D3 and D4. Part C is not in this claim (it waits for Slice 250, which edits the same reading code).*
-**Touches:** `tools/premade-audio/**`, `content/dino/*/audio-cast.json`, `tools/DinoReader.BookBuilder/**`, `tests/DinoReader.Tests/**` (BookBuilder tests only, new files), `tools/upload-store-story.ps1`, `worker/stories.ts`, `worker/stories*.test.mjs`, `worker/CLAUDE.md`, `STORE.md`, `docs/plan/slices/246-dino-store-books-premade-audio.md`
+*A8 and B2 merged #787 (2026-11-04); see the index for D2-D4.*
+*Part C built 2026-11-04 (night 2026-11-03-2349 wave 3), PR #790.*
+**Touches:** `src/DinoReader.Core/PremadeAudio*.cs` (new), `src/DinoReader.Core/StoreCatalog.cs`, `src/DinoReader.Core/FileStoryLibrary.cs`, `src/DinoReader.App/AudioPack*.cs` (new), `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/Reading*.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/RecordingAudio*.cs`, `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/StoryActions.cs`, `src/DinoReader.App/Testing/DinoTestCommands.cs`, `src/DinoReader.App/Platforms/**`, `.maestro/dino/**`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/246-dino-store-books-premade-audio.md`
+
+**Part C design (coordinator, 2026-11-04; the builder builds this, it does not invent another).**
+- *One owner:* `AudioPackStore` (App, a singleton) owns every pack on disk, under `<app data>/audio-packs/<bookId>/<lang>-v<n>/` (manifest.json plus clips), outside the book's own folder so book updates and staging never touch it. Nothing else writes there.
+- *States per (book, language):* absent → downloading → installed vN. A folder with the final name exists only when complete: download the zip to `<cache>/audio-packs/<bookId>-<lang>-v<n>-<guid>.part`, check its length equals the listed `bytes`, extract into `<lang>-v<n>.tmp`, check every clip the manifest names is there, then rename the folder to `<lang>-v<n>` and delete older versions of that language.
+- *Interrupts:* killed while downloading or extracting: on the next start the store deletes every `*.part` file and `*.tmp` folder it owns; a final-named folder is always whole. Offline or a server error: the pack is skipped; the book download still succeeds (audio is optional, it never fails or rolls back a book); the next update check retries. Cancel: the same token cancels the book and its packs; a pack cancelled after the book was imported leaves the book in place and the pack absent. Retry is idempotent: an installed version equal to the listed one is skipped.
+- *When packs download:* with the book (the user's 2026-11-03 rule), for every one of the user's book languages (`StoryLanguages.Current()`) that the listing's `audio` map has, inside the same progress (book and pack bytes summed) and the same Cancel. A pack published later, a new version, or a language added later is fetched by `BookUpdater`'s update check for downloaded store books (the B1 choice: **update check**, not first open). A deleted book deletes its packs.
+- *Lookup:* `PremadeAudio` (Core, pure, unit-tested) parses manifest v3 and finds a clip by the hash of a piece's text: `sha256(UTF-8(NFC(text)))` in lowercase hex, exactly `clip_manifest.py:22-23`, from the plain translated piece text (the `BundledTranslations` lookup, not the `speak:` table), the same pieces `SentenceDump` dumps. No match, a missing file, or no pack → that piece uses the device voice as today. Pieces can mix in one book.
+- *Playback:* a clip plays through a speed-capable player (the existing `IRecordingPlayer` per-platform files gain a rate: Android `PlaybackParams.SetSpeed`, iOS `AVAudioPlayer.EnableRate`/`Rate`, Windows `MediaPlayer.PlaybackRate`) wrapped so `ReadingSession` sees the same events as the device voice (state Playing/Paused, the piece's highlight at clip start, Completed at its end, accepted only for a run seen Playing, as `AnimalClipRuns.AcceptCompleted`). Speed, Pause, Resume, Back/Stop and Slice 250's playback events behave the same on both paths.
+- *Not in part C:* the four starter books (bundled in the app); their audio route is a follow-up.
+
+**Touches (A8, B2, merged #787):** `tools/premade-audio/**`, `content/dino/*/audio-cast.json`, `tools/DinoReader.BookBuilder/**`, `tests/DinoReader.Tests/**` (BookBuilder tests only, new files), `tools/upload-store-story.ps1`, `worker/stories.ts`, `worker/stories*.test.mjs`, `worker/CLAUDE.md`, `STORE.md`, `docs/plan/slices/246-dino-store-books-premade-audio.md`
 
 ## Why
 
@@ -232,9 +244,26 @@ overall OK: **yes**. No lines flagged.
 
 **Part C — app playback (Android, iOS, Windows head alike)**
 - Open question for C: how the four starter books (gingerbread-man, good-enough, tortoise-and-hare, three-little-pigs) get their audio. They are bundled in the app, so `build-audio` and the store route do not cover them: bundle their packs in the app or serve them beside the store books. Their Farsi clips are rendered but unpacked.
-- [ ] C1. `PremadeAudio` in `DinoReader.Core`: parse the manifest, match a sentence by text hash, else fall back.
-- [ ] C2. Reading plays the clip when the hash matches, else the on-device voice as today; speed, pause, Back and the
+- [x] C1. `PremadeAudio` in `DinoReader.Core`: parse the manifest, match a sentence by text hash, else fall back.
+- [x] C2. Reading plays the clip when the hash matches, else the on-device voice as today; speed, pause, Back and the
   highlight behave the same on both paths. Android and iOS tasks both, plus the Windows head.
+
+*Changed while building (part C, 2026-11-04):*
+- Clips play through the animal-clip mechanism. `IRecordingPlayer` gained a rate: Android `PlaybackParams` before start, iOS `EnableRate`/`Rate` before `PrepareToPlay`, Windows `PlaybackSession.PlaybackRate`. Speed is taken at each clip's start.
+- The manifest is keyed by piece index and the hash confirms (`ClipAt(index, text)`), so the same text said by two voices gets its own clips.
+- Own-language reads use packs, and packs are fetched for the story's own language too.
+- The pack sweep deletes only when a complete library read (`FileStoryLibrary.TryListSourceIdsAsync`, a Core file outside the first Touches line, added to it) shows the book gone. A book delete calls `DeleteBookAsync` (`StoryActions.cs`).
+- A failed pack never fails a book; it is retried at the next scheduled update check. Debug-only `[AudioPack]` log lines and the `install-audio-pack` test command.
+
+*Known behaviours (part C):* starter books get no audio (follow-up: how bundled books get packs). A speed change applies from the next clip. A mid-book read re-translates the book once (table lookup, no engine; not measured, see Not yet verified for the 500 ms rule). A book already installed picks up new-language packs at the next update check, not on re-download. Cancel during the pack step keeps the book and reports Done.
+
+*From review (part C), files `D:/ReadTheStupidText-worktrees/reviews/s246c-review-high.md` (11), `s246c-review-medium.md` (11), `s246c-review-check-medium.md` (8); all read:*
+- High 1 own-language read never used a pack: applied. 2 same text, two voices: applied (index-keyed manifest). 3 book progress reported twice: applied. 4 pack errors could fail a book: applied. 5 SummedProgress races: applied. 6 sweep on a cold start: applied. 7 `DeleteBookAsync` had no caller: applied.
+- High 8 failed pack ignored until the weekly check: skipped, by design (next update check retries). 9 clip speed fixed at clip start, no flavour pace: skipped, clips carry their own pacing. 10 second translation and folder listing per read start: skipped, cost. 11 conventions (long methods, magic strings, one-line wrappers): skipped, style.
+- Medium 1 permanently failing pack re-downloads each launch: applied. 2 story language missing from the wanted set: applied. 3 sweep after a partial list: applied via the new sweep design (complete read only). 4 `_recorded` set after `Play`: applied. 6 Android speed set after `Start`: applied.
+- Medium 5 mid-clip speed change: skipped (repeats high 9). 7 mid-book re-translation: skipped, low. 8 early Done skips the pack step for an installed book: skipped, low. 9 Cancel reports Done: skipped, book kept. 10 `GetRequiredService` and the static fetch: skipped, low. 11 incomplete tables fall back to the device voice: skipped, safe.
+- Check: all skipped. 1 mid-clip speed and 4 Cancel reports Done and 5 early Done repeat skipped findings; 3 mid-book re-translation is a known behaviour; 2 quadratic piece count, 6 sweep I/O at start, 7 unpack rejects folder entries, 8 stale `_restartStep` are low.
+- Checks: DinoReader.Tests 2475; Android, iOS and Windows head builds. Emulator 2026-11-04: `premade-audio-plays` PASS (`[AudioPack]` coverage line, premade clip plays for sentences 0-4, 6 and 7, no fallback or exception), `usage-playback-events` PASS (Slice 250 lines in order). The device agent fixed the flow's Pause match for the Farsi UI, and the flow now switches the UI back to English at its end.
 
 **Part D — generation runs**
 - [x] D1. Farsi, one book (Three Little Pigs): render, listening page for the user, fix what they hear. *Done 2026-11-03 (PRs #763, #766).*
@@ -248,7 +277,8 @@ overall OK: **yes**. No lines flagged.
 - **Batch API works and is not counted against the 100 a day:** a 2-request batch on gemini-3.8-flash-tts succeeded after that day's 100 were used; a 20-request Lite batch came back in 2 min 9 s; 14 books (1,138 requests in 14 batches, 13 at once) all succeeded within minutes. Batch is half the normal price (docs). Batch limits for the 3.8 TTS models are not listed in the docs (enqueued tokens are per model); not hit so far.
 - **Batch mode** (`generate.py --batch`, `batch.py`): one batch per book-language, resumable state file, fail-closed lookup of a lost submit by display name (live listing shape `operations[].metadata.displayName`), a 2-attempt cap per failing key.
 - **Found while casting** (not fixed here): in Lion and the Mouse the Mouse's line "I didn't mean to wake you up. If you're kind to me today, I'll be kind to you one day, too!" is attributed to the Lion by the app's own segmenter (en index 14, fa 13), so both the device voice and the Gemini clip use the Lion's voice; the frog's "Ribbit!" lines in Tortoise and the Hare are spoken lines, not sound pieces.
-- [ ] D3. The other 14 languages, in the order the user picks; switch to the capped credit only with the user's yes.
+- [x] D3. The other 14 languages, in the order the user picks; switch to the capped credit only with the user's yes.
+  *Done 2026-11-04 04:11-05:21: ar, da, de, en, es, fi, fr, ja, nb, nl, pt, ru, sv, zh recorded for all 16 books, 224 of 224 book-languages, none flagged, no billing errors, about 16.8k clips, in `D:/ReadTheStupidText-worktrees/s246-audio/books-<book>/<book>/<lang>/` (Town Mouse now `books-town-mouse-country-mouse/`).*
   *Approved by the user 2026-11-03 ("Yes, all 14"): record every other language for the 15 books in Gemini batches
   (`generate.py --batch`, about 15,000 sentences, estimated about £5 at the batch half price), after A8. Output next to the
   Farsi clips (`D:/ReadTheStupidText-worktrees/s246-audio/books-<book>/<book>/<lang>/`). No listening page is required per
@@ -257,6 +287,7 @@ overall OK: **yes**. No lines flagged.
   ar, de, es, ... whichever list the slice uses)."*
 - D4 Farsi done 2026-11-04 (PR #787 merged as 0a398d5e; nothing else ticked): the 12 store-book Farsi packs are live, `audio-fa-v1.zip` each, listed by /api/stories; one pack was downloaded with a 200 and its manifest checked. Other languages and the starter books are open.
 - [ ] D4. Upload each finished book-language (store and app must match: the store-upload rule).
+  *Packs for the other 14 languages built 2026-11-04: 168 packs (12 store books x 14 languages, v1, 376 MB with Farsi); their `audioPacks` records are in the part C PR (#790). Upload follows the merge.*
   *Prep done 2026-11-04: Farsi packs v1 built for the 12 store books (1.7-3.0 MB each, about 28 MB) into `D:/ReadTheStupidText-worktrees/s246-audio/packs/<book>/<storeId>/`; their `audioPacks.fa` records are in this PR. Order (coordinator, from high finding 2): CI's `publish-store-books.mjs` rebuilds meta from the committed `audioPacks` record, so the record merges first and the upload runs after this PR merges. Not packed: gingerbread-man, good-enough, tortoise-and-hare, three-little-pigs. They are starter books (bundled in the app, `BookKind.Starter`) and `build-audio` packs store books only; see the part C question below.*
 
 ## Verification (re-planned)
@@ -331,11 +362,15 @@ Check pass (1):
 
 (none from tonight's part)
 
+#### For CLAUDE.md (part C, for `src/DinoReader.App/CLAUDE.md`)
+
+- `AudioPackStore` (`AudioPackStore.cs`) is the only writer of `<app data>/audio-packs/`; nothing else creates, moves or deletes there. A pack error never fails a book: catch it, map it to `PackInstall.Failed`, keep the book, retry at the next update check. (Slice 246: docs/plan/slices/246-dino-store-books-premade-audio.md)
+
 #### Not yet verified
 
 - Every vendor request shape is unproven until the first keyed run (Gemini model id, ElevenLabs voice id placeholder, Narakeet voice-name casing, CAMB `fa-ir`).
 - The piper-fa baseline render, on a PC that has the `piper-fa` pack and `sherpa_onnx` installed.
 - `build-audio` was run on real folders only by the pack run; the zips were not opened.
 - The live route `GET /api/stories/<id>/audio/<lang>?v=<n>` after the Worker deploys.
-- Part C's playback (not built).
+- Part C: iOS rate and playback on a device; a real store download fetching live packs; the `premade-audio-plays` flow shown failing on the old build; Windows head playback; the mid-book re-translation against the 500 ms loading-state rule (not measured).
 - Pigs Farsi: the two `say` lines (گُنده‌ی, «شالاپ، شالاپ، شالاپ!») were re-rendered in the full book on 2026-11-03 but nobody has listened to them in the book; the user heard only the spelling-page variants.

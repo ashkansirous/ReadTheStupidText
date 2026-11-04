@@ -27,6 +27,7 @@ internal static partial class DinoTestCommands
 	private const string EnterGrownUpName = "enter-grown-up";
 	private const string SetLanguageName = "set-language";
 	private const string StageBookUpdateName = "stage-book-update";
+	private const string InstallAudioPackName = "install-audio-pack";
 	private const string StartedOutcome = "started";
 	private const string VoiceKey = "voice";
 	private const string VoiceOn = "1";
@@ -67,6 +68,12 @@ internal static partial class DinoTestCommands
 		if (command.Name == StageBookUpdateName)
 		{
 			_ = StageBookUpdateAsync(command.Get(IdKey, string.Empty), command.Flag(ForceKey));
+			return StartedOutcome;
+		}
+
+		if (command.Name == InstallAudioPackName)
+		{
+			_ = InstallAudioPackAsync(command.Get(IdKey, string.Empty), command.Get(TestHookDispatcher.LanguageKey, string.Empty));
 			return StartedOutcome;
 		}
 
@@ -157,6 +164,67 @@ internal static partial class DinoTestCommands
 		catch (Exception ex)
 		{
 			Log($"{StageBookUpdateName} failed {TestHookLog.FaultSummary(ex)}");
+		}
+	}
+
+	// Slice 246 C2 (Debug only): installs a small fixture audio pack for a book on the shelf, through the real pack store (size check, unzip, completeness check, rename), so a flow can read the
+	// book with pre-made clips without the network. Every translated piece of the book's table for the language gets the same short bundled recording (the pig's), keyed by the piece text's hash,
+	// so a piece the table lacks (a speaker tag the app adds) is still read by the device voice. Logs "HOOK install-audio-pack ok <book> <lang> v1" or "failed <reason>".
+	private static async Task InstallAudioPackAsync(string id, string language)
+	{
+		try
+		{
+			IServiceProvider services = IPlatformApplication.Current!.Services;
+			Story? story = await FindWhenImportedAsync(services.GetRequiredService<IStoryLibrary>(), id.Trim());
+			IReadOnlyDictionary<string, string>? table = story is null ? null : BundledTranslations.TableFor(story, language);
+			if (story?.SourceId is not { } bookId || table is null)
+			{
+				Log($"{InstallAudioPackName} failed no book or no table for {language}");
+				return;
+			}
+
+			string key = BundledTranslations.Key(language);
+			string zip = await WriteFixturePackAsync(bookId, key, table.Values);
+			var pack = new AudioPackInfo(FixtureVersion, new FileInfo(zip).Length, "fixture");
+			PackInstall result = await services.GetRequiredService<AudioPackStore>().InstallAsync(bookId, key, pack, null, CancellationToken.None, new FixtureFetcher(zip));
+			Log(result == PackInstall.Installed || result == PackInstall.AlreadyInstalled ? $"{InstallAudioPackName} ok {bookId} {key} v{FixtureVersion}" : $"{InstallAudioPackName} failed {result}");
+		}
+		catch (Exception ex)
+		{
+			Log($"{InstallAudioPackName} failed {TestHookLog.FaultSummary(ex)}");
+		}
+	}
+
+	private const int FixtureVersion = 1;
+	private const string FixtureClipName = "fixture.m4a";
+
+	private static async Task<string> WriteFixturePackAsync(string bookId, string language, IEnumerable<string> texts)
+	{
+		string path = Path.Combine(FileSystem.CacheDirectory, $"fixture-pack-{bookId}-{language}.zip");
+		File.Delete(path);
+		using (var archive = new System.IO.Compression.ZipArchive(File.Create(path), System.IO.Compression.ZipArchiveMode.Create))
+		{
+			var entries = texts.Where(t => t.Any(char.IsLetterOrDigit)).Select((t, i) => new { index = i, hash = PremadeAudio.HashOf(t), clip = FixtureClipName });
+			var manifest = new { version = PremadeAudio.ManifestVersion, book = bookId, language, entries };
+			await using (Stream stream = archive.CreateEntry(PremadeAudio.ManifestFile).Open())
+			{
+				await System.Text.Json.JsonSerializer.SerializeAsync(stream, manifest);
+			}
+
+			await using Stream clip = archive.CreateEntry(FixtureClipName).Open();
+			await using Stream asset = await FileSystem.OpenAppPackageFileAsync(AnimalSoundClips.AssetNameOf(AnimalKind.Pig));
+			await asset.CopyToAsync(clip);
+		}
+
+		return path;
+	}
+
+	private sealed class FixtureFetcher(string zip) : IAudioPackFetcher
+	{
+		public Task FetchAsync(string url, string toPath, IProgress<long> bytesSoFar, CancellationToken cancel)
+		{
+			File.Copy(zip, toPath, overwrite: true);
+			return Task.CompletedTask;
 		}
 	}
 
