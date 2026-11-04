@@ -60,9 +60,10 @@ From review (files `D:/ReadTheStupidText-worktrees/reviews/s260-high.md`, `s260-
 - Medium 2 (first publish after merge has no live `bytes`), 3 (language change, same as high 3), 4 (slim card layout, same as high 5), 5 (large font, long labels), 7 (flow matches the text "Hot"): skipped.
 - Check 1-5 (first-publish size, `liveMeta` read twice, `DinoTokens.Get` needs `Application.Current`, tagged-first rule duplicated in Worker and app, no test for removing all tags): all low, none applied.
 
+**Post-merge fix (2026-11-04, night 2026-11-04-1441 wave 1):** after #798 merged and `publish-store` put the tags live, `store-tags.yaml` found that opening the Store crashed: `InvalidOperationException: AutomationId may only be set one time` (`StoreTagBadge.Refresh` ran once with the default tag in the constructor and again when the binding set the real one; log `D:/ReadTheStupidText-worktrees/reviews/s260-postmerge/run.log`). Fix on `fix/s260-badge-automationid`: the badge is immutable (`new StoreTagBadge(tag)` sets text, colours and AutomationId once; `StoreTagRow.Rebuild` builds fresh badges). Reviews `reviews/s260fix-high.md`, `reviews/s260fix-medium.md` (no blocking findings). Emulator (cache c5cd33a299a9): store-tags PASS with the live tags, store-credits-language PASS, dino-landscape-store PASS (`reviews/s260fix-run/`). The release run for #798 (41882363096) could not be cancelled (auto-mode denial), so a Dino build with the crash may reach internal testers before this fix's release replaces it.
+
 ## Not yet verified
 
-- Emulator flow `.maestro/dino/store-tags.yaml` after merge and `publish-store`: it needs the tags in the live list first; Lion and Mouse must show their Hot badge on screen without scrolling.
 - Tablet store flow `dino-landscape-store-tablet` on the tablet AVD (it failed on the phone AVD).
 - iOS run (compile only so far).
 - Badge look at 130-200% system font size and the slim (sideways) store card with a tagged book (extra badge row vs title and cover centre).
