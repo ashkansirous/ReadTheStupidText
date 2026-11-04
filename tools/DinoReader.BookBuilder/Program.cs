@@ -16,7 +16,7 @@ const string Usage = """
       dump-pieces [<stem>...]              write translations/pieces.json (the texts a book needs translated)
       dump-voices [--out <file>]           cast every book mechanically, as cast entries for the writers
       voice-listen --out <file>            write the English roster and the Ugly Duckling cast for tools/voice-listen
-      dump-sentences <stem> --lang <code> [--out <file>]   print every piece the app reads aloud for a store book in a language (index, highlight sentence, spoken text, speaker, narrator) as JSON, for tools/premade-audio
+      dump-sentences <stem> --lang <code> [--out <file>]   print every piece the app reads aloud for a store book or a bundled starter in a language (index, highlight sentence, spoken text, speaker, narrator) as JSON, for tools/premade-audio
       build-audio <stem> --lang <code> --clips <folder> [--out <folder>]   pack a generator clips folder (manifest.json v3 + its clips) into artifacts/store/<id>/audio-<code>-v<n>.zip and record
                                            the pack in the book's audio-cast.json (audioPacks); the version rises only when the content hash changes; the next build lists it in meta.json
     """;

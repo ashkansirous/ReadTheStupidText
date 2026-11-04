@@ -103,7 +103,9 @@ internal static class StoreBuilder
             ["titles"] = TitlesOf(spec, story),
             ["creditsByLanguage"] = spec.CreditsByLanguage is null ? null! : new SortedDictionary<string, string>(spec.CreditsByLanguage.ToDictionary(c => c.Key, c => c.Value), StringComparer.Ordinal),
         };
-        if (!string.IsNullOrEmpty(spec.Stem) && AudioPacks.MetaOf(Books.All.FirstOrDefault(b => b.Stem == spec.Stem)) is { } audio)
+        // A starter's spec has no stem (its titles come from the shipped table), so its folder is found by id (Slice 258).
+        BookFolder? audioBook = Books.All.FirstOrDefault(b => string.IsNullOrEmpty(spec.Stem) ? string.Equals(b.Info.Id, spec.Id, StringComparison.OrdinalIgnoreCase) : b.Stem == spec.Stem);
+        if (AudioPacks.MetaOf(audioBook) is { } audio)
         {
             meta["audio"] = audio; // Slice 246 B2: the book's audio packs (language to version and size), from its audio-cast.json; the Worker offers only those whose zip is uploaded
         }

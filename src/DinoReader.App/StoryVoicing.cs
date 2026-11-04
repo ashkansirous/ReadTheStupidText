@@ -18,7 +18,7 @@ namespace DinoReader;
 public sealed class StoryVoicing
 {
 	private readonly IVoicePackService _packs;
-	private readonly AudioPackStore _audioPacks; // the pre-made audio of store books (Slice 246 C2)
+	private readonly AudioPackStore _audioPacks; // the pre-made audio of store books and bundled starters (Slice 246 C2, 258)
 	private readonly NarratorChoice _narrators;
 	private readonly StoryTranslator _translator;
 	private readonly ConcurrentDictionary<string, IReadOnlyList<VoiceOption>> _pools = new();
@@ -98,7 +98,7 @@ public sealed class StoryVoicing
 	}
 
 	/// <summary>
-	/// The installed pre-made audio of a store book for the language it is read in, with the plain (displayed) text of each piece (Slice 246 C2). A piece's clip is the pack's entry at the piece's
+	/// The installed pre-made audio of a store book or bundled starter for the language it is read in, with the plain (displayed) text of each piece (Slice 246 C2). A piece's clip is the pack's entry at the piece's
 	/// position among the pieces with a letter or digit (<see cref="Offset"/> when the read starts mid-book), confirmed by the hash of the plain text; null when there is none.
 	/// </summary>
 	private sealed record PremadeSource(InstalledPack Pack, IReadOnlyList<SplitSegment> PlainPieces, int Offset)
@@ -120,7 +120,7 @@ public sealed class StoryVoicing
 	}
 
 	// The clips are keyed by the plain text, but the pieces a translated read speaks carry the speak: table's marks, so the plain pieces are translated again (a table lookup); an own-language read
-	// speaks the plain pieces as they are. Only a store book (it has a source id) can have a pack; a translated read needs its own complete table. A mismatch in the piece count means no clips.
+	// speaks the plain pieces as they are. Only a book with a source id (a store book or a bundled starter, Slice 258) can have a pack; a translated read needs its own complete table. A mismatch in the piece count means no clips.
 	private async Task<PremadeSource?> PremadeSourceAsync(
 		Story story, Prepared prepared, int fromPosition, bool wholePieces, StoryTranslator.Outcome? spoken, string reading, CancellationToken cancellationToken)
 	{

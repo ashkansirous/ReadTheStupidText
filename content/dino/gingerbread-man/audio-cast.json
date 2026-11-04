@@ -115,5 +115,82 @@
       "source": "Night-night, everybody,",
       "direction": "sleepy, with a big yawn"
     }
-  ]
+  ],
+  "audioPacks": {
+    "ar": {
+      "version": 1,
+      "hash": "b51d95a8aa7fc398954e30c8b24ea6a4e6e0ac078dd6e5479598f3c271fce3cb",
+      "bytes": 2168793
+    },
+    "da": {
+      "version": 1,
+      "hash": "87483000f888ea84d68cf6ea3892ad8330d053a25a101685b72fb47a93d1af54",
+      "bytes": 1836852
+    },
+    "de": {
+      "version": 1,
+      "hash": "eaaf4d329ff5258c2151ea3fb23431a28c763c87688e1e6cd69c9578011c7cfb",
+      "bytes": 1965033
+    },
+    "en": {
+      "version": 1,
+      "hash": "cd544080d3c4acb10bb8eb12830f04ceaa6d7dbae9792a6bd20b28bae5bbc8ac",
+      "bytes": 1931317
+    },
+    "es": {
+      "version": 1,
+      "hash": "abb97fa3cce639bc9e7d41d926862f470bbe76c632e327e7b20e4aceb66afbe6",
+      "bytes": 2206984
+    },
+    "fa": {
+      "version": 1,
+      "hash": "4cfd3752147f43e10a6a6d1abf8b8321b0d081d4226105c12bcf253b914e3d8c",
+      "bytes": 2070943
+    },
+    "fi": {
+      "version": 1,
+      "hash": "37aceaf051e288f0ffc39fb9d798a37f0b23f7317126f335a4c728e30fe03442",
+      "bytes": 2111776
+    },
+    "fr": {
+      "version": 1,
+      "hash": "931e4c2dd84b51bca9b52405a4cd3e51e5071c5e04b42cffefb66b2189e383c8",
+      "bytes": 2141082
+    },
+    "ja": {
+      "version": 1,
+      "hash": "347ed4e99d31e86475bce852e82f2acdd8ff2b31ecf4a13138b5a4ca696ed6a4",
+      "bytes": 2310916
+    },
+    "nb": {
+      "version": 1,
+      "hash": "8c3455896b26ed8eb7f5264df84de7b5d04954e6f054b0e42af10e6206e592bc",
+      "bytes": 1967114
+    },
+    "nl": {
+      "version": 1,
+      "hash": "ccc9ff99593aca5aff56e0375b9f137cdb4470bdcd61431206377b270bd954e8",
+      "bytes": 1888523
+    },
+    "pt": {
+      "version": 1,
+      "hash": "38cee4d24e930066611d11d51d4e917d3592a21bd19b23f6895e43e9cd68f824",
+      "bytes": 2089962
+    },
+    "ru": {
+      "version": 1,
+      "hash": "26a0a136a13c5955ad289e724cbd45a163f4d0925962755b141bfe7af1c03e9a",
+      "bytes": 2080308
+    },
+    "sv": {
+      "version": 1,
+      "hash": "82201769e55590cf376f3df50b79f06596924ec2fa18ad300937f884dc42e68d",
+      "bytes": 2036608
+    },
+    "zh": {
+      "version": 1,
+      "hash": "87f955f6edd2bdcde0bfb7c20290aee45635dc5545e7599476d70817b7565194",
+      "bytes": 2007646
+    }
+  }
 }

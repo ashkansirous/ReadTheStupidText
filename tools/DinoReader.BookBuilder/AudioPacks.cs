@@ -11,7 +11,7 @@ namespace DinoReader.BookBuilder;
 internal sealed record AudioPackRecord(int Version, string Hash, long Bytes);
 
 /// <summary>
-/// Slice 246 B2: the per-language audio pack of a store book. One zip per book language, <c>audio-&lt;lang&gt;-v&lt;n&gt;.zip</c>, holding the generator's <c>manifest.json</c> (version 3) and the
+/// Slice 246 B2: the per-language audio pack of a store book or a bundled starter (Slice 258). One zip per book language, <c>audio-&lt;lang&gt;-v&lt;n&gt;.zip</c>, holding the generator's <c>manifest.json</c> (version 3) and the
 /// clips it names at the zip's root, written beside the book in <c>artifacts/store/&lt;id&gt;/</c>. The clips live outside git, so the pack's version and content hash are kept in the book's
 /// <c>audio-cast.json</c> (<c>audioPacks</c>): the version goes up only when the content hash changes, and <see cref="StoreBuilder"/> copies the records into <c>meta.json</c> (<c>audio</c>), so a
 /// later <c>build</c> (and publish-store's meta refresh) keeps the field. The zip is deterministic (sorted entries, fixed time, stored), so the same clips always give the same bytes.
