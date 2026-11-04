@@ -4,7 +4,7 @@
 
 *Planned again 2026-11-03: the user un-parked it ("Yes, un-park both") before a run-all-waves run.*
 
-*In progress (wave 2026-11-03), draft PR.* **Claim note (coordinator, night 2026-11-03-2349 wave 1):** premise check on origin/main: item 1 is already done (`timeout-minutes: 90` in `dinoreader-ios.yml:68` and `ios.yml:64`, dated 2026-11-02), so this claim leaves the value and only records it. Item 3 is measure only (user, 2026-11-03): the signed build steps print their own timing (a `-v:n` performance summary or per-target times into the job summary) and the first `main` run after the merge writes the numbers here; no build setting changes. Item 4: the "Upload .ipa" step in both `ios.yml` and `dinoreader-ios.yml` retries with a back-off. Item 5 (a forced short-timeout run) is not started tonight: a dispatched run shares the release concurrency group and a later merge would cancel it (run-all-waves); it goes to *Not yet verified*.
+*Built 2026-11-04 (night 2026-11-03-2349 wave 1), PR #778, not merged. Items 1, 2, 4 done; item 3 instrumented, numbers pending; item 5 not run.* **Claim note (coordinator, night 2026-11-03-2349 wave 1):** premise check on origin/main: item 1 is already done (`timeout-minutes: 90` in `dinoreader-ios.yml:68` and `ios.yml:64`, dated 2026-11-02), so this claim leaves the value and only records it. Item 3 is measure only (user, 2026-11-03): the signed build steps print their own timing (a `-v:n` performance summary or per-target times into the job summary) and the first `main` run after the merge writes the numbers here; no build setting changes. Item 4: the "Upload .ipa" step in both `ios.yml` and `dinoreader-ios.yml` retries with a back-off. Item 5 (a forced short-timeout run) is not started tonight: a dispatched run shares the release concurrency group and a later merge would cancel it (run-all-waves); it goes to *Not yet verified*.
 
 **Touches:** `.github/workflows/release.yml`, `.github/workflows/dinoreader-ios.yml`, `.github/workflows/ios*.yml`, `.github/CLAUDE.md`, `docs/plan/slices/252-release-ios-build-timeout-and-speed.md`
 
@@ -12,12 +12,26 @@
 
 #### Work
 
-- [ ] **1. Timeouts.** `timeout-minutes` on every signed iOS build job (RTST and Dino), about 1.5x the normal time (75 for Dino on today's numbers; measure RTST's). A hung job then fails in time and frees the group.
-- [ ] **2. Re-run only the hung job.** `.github/CLAUDE.md`: when an iOS job times out, re-run only the failed jobs (`gh run rerun <id> --failed`), and note that a `pending` release run with no jobs waits on the `in_progress` run in the same group.
-- [ ] **3. Measure the signed build.** One `main` run with the build step's timing (binlog or `-v:n` summary) to name what takes the 50 minutes (AOT/LLVM, linking, the MAUI workload, signing). Then decide with the user whether TestFlight builds may drop any of it. No change is shipped on a guess. *The user, 2026-11-03: "Measure only, I decide": the run measures and writes down what each step costs and what skipping it would change, and ships no build change for item 3.*
-- [ ] **4. Retry the .ipa upload.** Release run 41375909759 (03:07Z 2026-11-02) failed at "Upload .ipa to the draft release" with "error connecting to api.github.com" after a 47-minute build (found by the final loop's pass 2; no wave report mentioned it). Retry that step a few times with a back-off so a network blip doesn't throw away the build.
+- [x] **1. Timeouts.** (Already on main: `timeout-minutes: 90` in `ios.yml` and `dinoreader-ios.yml`, 2026-11-02; value left as is.) `timeout-minutes` on every signed iOS build job (RTST and Dino), about 1.5x the normal time (75 for Dino on today's numbers; measure RTST's). A hung job then fails in time and frees the group.
+- [x] **2. Re-run only the hung job.** (Written into `.github/CLAUDE.md`.) `.github/CLAUDE.md`: when an iOS job times out, re-run only the failed jobs (`gh run rerun <id> --failed`), and note that a `pending` release run with no jobs waits on the `in_progress` run in the same group.
+- [ ] **3. Measure the signed build.** (Instrumented: both signed Release build steps run `-v:n -clp:PerformanceSummary`, tee the log and write elapsed time plus the target/task summary into the job summary. The numbers come from the first `main` run after the merge; write them here then. No build setting changed.) One `main` run with the build step's timing (binlog or `-v:n` summary) to name what takes the 50 minutes (AOT/LLVM, linking, the MAUI workload, signing). Then decide with the user whether TestFlight builds may drop any of it. No change is shipped on a guess. *The user, 2026-11-03: "Measure only, I decide": the run measures and writes down what each step costs and what skipping it would change, and ships no build change for item 3.*
+- [x] **4. Retry the .ipa upload.** (Built: 5 attempts, 30 s x attempt back-off, in both workflows.) Release run 41375909759 (03:07Z 2026-11-02) failed at "Upload .ipa to the draft release" with "error connecting to api.github.com" after a 47-minute build (found by the final loop's pass 2; no wave report mentioned it). Retry that step a few times with a back-off so a network blip doesn't throw away the build.
 - [ ] **5. Check.** A run with a forced short timeout fails the job and the next pending run starts (`gh run list --workflow release.yml`).
+
+*Changed while building:* item 1 was already on main (`timeout-minutes: 90` in both iOS workflows), so it is kept and only recorded. Item 3 stays unticked on purpose: the build steps run `-v:n -clp:PerformanceSummary`, and the job summary gets elapsed time, rc, and the target and task summaries (60 lines each, via awk with `|| true`); the numbers come from the first `main` run. Item 4: 5 tries, 30 s x attempt back-off, in both workflows.
+
+*From review* (files in `D:/ReadTheStupidText-worktrees/reviews/`, now outside the repo):
+- `s252-high.md`: applied 2 (print both target and task summaries) and 6 (item 3 left unticked). Skipped, all low: 1 (timing not written when a timeout kills the step; MSBuild prints the summary only at the end anyway), 3 (`-v:n` raises log size), 4 (wrapper and retry loop duplicated in both workflows), 5 (retry also retries permanent failures).
+- `s252-medium.md`: applied 1, 2 (SIGPIPE under pipefail from `head`) and 3 (overlapping ranges, truncation; now awk). Skipped: 4 (temp log in `$RUNNER_TEMP` is not deleted in "Remove signing material"), 5 (shared-script refactor), 6 (item 1 ticked on purpose: already on main).
+- `s252-check1-medium.md`: 6 findings, all low, none applied (summary lost on timeout kill, `-v:n` log size, retry of non-network failures, duplication, item 1 tick, overlong CLAUDE.md bullet).
+
+#### For CLAUDE.md
+
+None new: the item 2 rule (re-run only the failed iOS job; a `pending` release run with no jobs waits on the `in_progress` run of the same group) is already in `.github/CLAUDE.md` (Slice 252: docs/plan/slices/252-release-ios-build-timeout-and-speed.md).
 
 #### Not yet verified
 
-- All items (parked).
+- Item 5 (forced short-timeout run) not run: a dispatched run shares the release concurrency group and a later merge would cancel it.
+- The first `main` run's job summary (timing block) and its numbers: not yet seen or written into item 3.
+- The upload retry on a real network blip: not seen; the step logs "Upload succeeded on attempt N" on success.
+- shellcheck of the new step scripts runs only in CI.
