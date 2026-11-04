@@ -9,6 +9,8 @@
 - "Voice to text" in the user's request means the reader that turns a photo of a page into words when a grown-up captures their own book (there is no speech recognition in the app).
 - The app ships with **no page reader built in**. The first time someone captures a book, the app shows "Downloading the AI reader for <language>…" with progress and Cancel, then carries on. The same message is used for every language and alphabet.
 
+**User, 2026-11-04 (after the measurement below): "I can live with 60MB instead of 55."** Keep the built-in Latin reader on Android; leaving it out (this slice's original goal) is dropped. The iPhone build carries no page-reader files (`DinoReader-1.101.0.ipa`, 94.5 MB: 0 text-recognition files; Apple Vision is part of iOS), so nothing changes there. Still open, not decided by the user: whether this slice becomes downloadable readers for the alphabets Dino cannot read (gap below). Of the iPhone download, `TranslateMLKit.framework` is 24.5 MB and `SherpaOnnxC.framework` 9.4 MB (compressed, measured the same day).
+
 ## Measured and found 2026-11-04 (after the night 2026-11-04-1441 wave 1 parked this slice)
 
 - **Size of the built-in reader, measured in the released `DinoReader-1.101.0.apk` (60.3 MB, arm64):** ML Kit's text-recognition files (`assets/mlkit-google-ocr-models/**` plus `lib/arm64-v8a/libmlkit_google_ocr_pipeline.so`, 11.06 MB on its own) are 12.0 MB unpacked and **5.2 MB of the APK download**. Leaving them out saves about 5 MB of the 60 MB download.
