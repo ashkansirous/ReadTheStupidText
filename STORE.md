@@ -493,6 +493,29 @@ dataset terms were never settled (Slice 51 notes). `gyro`'s own card names no le
 Afghan-accented, not Farsi); `reza_ibrahim` (dataset page gone, Quran-recitation corpus), Gooya v2
 (needs its own G2P front end) and MMS-TTS (CC-BY-NC) were rejected.
 
+### Dino Book Reader: animal recordings (Slice 255)
+
+The real animal sounds in `src/DinoReader.App/Resources/Raw/animal-sounds/` are Freesound sounds under **CC0** (public domain; no credit is required, listed anyway). Each was trimmed
+and loudness-matched into a short AAC `.m4a`; licence pages read 2026-11-03. Bear, lion, rabbit and wolf have no recording and make no sound. (docs/plan/slices/255-dino-real-animal-sounds.md)
+
+| File | Sound, author, source |
+| --- | --- |
+| `cat.m4a` | "cat meow" by tuberatanka, https://freesound.org/people/tuberatanka/sounds/110011/ |
+| `bee.m4a` | "Insects - Bee; Honeybee, Buzz, Close Perspective" by TheKingOfGeeks360, https://freesound.org/people/TheKingOfGeeks360/sounds/846433/ |
+| `bird.m4a` | "BIRDSong_Blackcap, Recording 9 _JW Audio" by JW_Audio, https://freesound.org/people/JW_Audio/sounds/827197/ |
+| `duck.m4a` | "single quack from a duck" by Mikes-MultiMedia, https://freesound.org/people/Mikes-MultiMedia/sounds/418509/ |
+| `frog.m4a` | "Frog.ogg" by egomassive, https://freesound.org/people/egomassive/sounds/536759/ |
+| `goat.m4a` | "goat.mp3" by saha213131, https://freesound.org/people/saha213131/sounds/683259/ |
+| `hen.m4a` | "chicken sound - clucking.wav" by chanyatenn, https://freesound.org/people/chanyatenn/sounds/424076/ |
+| `horse.m4a` | "horse neigh shortened.wav" by shadoWisp, https://freesound.org/people/shadoWisp/sounds/269571/ |
+| `rooster.m4a` | "Rooster Crow 1" by BenjaminNelan, https://freesound.org/people/BenjaminNelan/sounds/435508/ |
+| `cow.m4a` | "Moo 3 - Moo Moo the Cow" by manofham, https://freesound.org/people/manofham/sounds/700380/ |
+| `owl.m4a` | "owl_hooting_000102_0145S3 002-070 000-002 068-074.wav" by Gerent, https://freesound.org/people/Gerent/sounds/558396/ |
+| `sheep.m4a` | "bah bala oveja/baa bleat sheep.WAV" by SergioJbs, https://freesound.org/people/SergioJbs/sounds/669872/ |
+| `pig.m4a` | "oink.wav" by krzpia, https://freesound.org/people/krzpia/sounds/510974/ |
+| `mouse.m4a` | "Mouse Squeaks.wav" by shyguy014, https://freesound.org/people/shyguy014/sounds/463789/ |
+| `dog.m4a` | "Ladrido [Bark]" by SmirnoffLulo, https://freesound.org/people/SmirnoffLulo/sounds/585873/ |
+
 ## Versioning (GitVersion → tag → release)
 
 Versioning is fully automatic and lives **entirely inside `release.yml`** — one

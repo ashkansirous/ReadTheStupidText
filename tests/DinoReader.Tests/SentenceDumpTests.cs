@@ -26,15 +26,10 @@ public sealed class SentenceDumpTests
     }
 
     [Fact]
-    public void TheAnimalSounds_TheAppInserts_AreListedInOrder_InTheirCharactersVoice()
+    public void TheAnimalSounds_AreNotListed_TheAppPlaysARecordingForThem()
     {
-        IReadOnlyList<SpokenSentence> sentences = PigsInFarsi().Sentences;
-        IReadOnlyList<SpokenSentence> sounds = sentences.Where(s => s.Sound).ToList();
-
-        Assert.NotEmpty(sounds);
-        Assert.All(sounds, s => Assert.False(string.IsNullOrEmpty(s.Speaker)));
-        Assert.All(sounds, s => Assert.Equal(s.Text, s.Source));
-        Assert.All(sounds, s => Assert.Equal(sentences[s.Index - 1].Sentence, s.Sentence));
+        Assert.DoesNotContain(PigsInFarsi().Sentences, s => s.Sound);
+        Assert.DoesNotContain(SentenceDump.Build(PigsStem, StoreBuilder.Build(Books.SpecOf(PigsStem)), "en").Sentences, s => s.Sound);
     }
 
     [Fact]
@@ -83,17 +78,6 @@ public sealed class SentenceDumpTests
         Assert.Equal(sentences[tag + 1].Speaker, sentences[tag + 2].Speaker);
         Assert.True(sentences[tag].Narrator);
         Assert.Equal(sentences.Select(s => s.Sentence).Order(), sentences.Select(s => s.Sentence));
-    }
-
-    [Fact]
-    public void English_KeepsTheStoryOrder_AndAWolfSoundSitsRightAfterHisQuote_NotAfterTheTag()
-    {
-        IReadOnlyList<SpokenSentence> sentences = SentenceDump.Build(PigsStem, StoreBuilder.Build(Books.SpecOf(PigsStem)), "en").Sentences;
-        int sound = sentences.ToList().FindIndex(s => s.Sound && s.Speaker == "Wolf");
-
-        Assert.True(sound > 0);
-        Assert.Equal("Wolf", sentences[sound - 1].Speaker);
-        Assert.False(sentences[sound - 1].Narrator);
     }
 
     [Fact]

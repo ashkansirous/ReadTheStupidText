@@ -20,6 +20,7 @@ $script:RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 
 # The emulator is one shared instance, so its state lives in the shared worktrees folder, not in any one worktree.
 function Get-SharedEmulatorDir {
+    if ($env:RTST_EMULATOR_STATE_DIR) { return $env:RTST_EMULATOR_STATE_DIR }   # self-test seam: an isolated state folder, so the real installed-app keys and leases are never read
     $parent = Split-Path $script:RepoRoot -Parent
     if ((Split-Path $parent -Leaf) -like '*-worktrees') { return Join-Path $parent '.emulator' }
     return Join-Path $parent ((Split-Path $script:RepoRoot -Leaf) + '-worktrees\.emulator')

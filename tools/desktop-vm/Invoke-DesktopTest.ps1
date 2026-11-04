@@ -169,6 +169,9 @@ if (Test-VmRunning) { Write-Host 'Free-memory guard skipped: the test VM is alre
 else { $memoryProblem = Get-MemoryProblem (Get-FreeMemoryGB) $MinFreeMemoryGB }
 if ($memoryProblem) { Write-Host "$($script:PreflightNoGo): $memoryProblem"; exit $script:PreflightExitCode }
 $msix = Find-Package
+# Slice 253 item 3: the selected checks are read against the guest screen and the built package before the VM is touched; a FAIL stops here (exit 1), a WARN is printed.
+. "$PSScriptRoot\_dryrun.ps1"
+if ((Invoke-CheckDryRun @($AppProfile.Checks) "$PSScriptRoot\checks" $msix) -gt 0) { Write-Host 'DRYRUN stopped the run: fix the check(s) above; the VM was not started.'; exit 1 }
 $credential = Get-VmCredential
 $results = @()
 $noGo = $null

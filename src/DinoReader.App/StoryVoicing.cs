@@ -154,7 +154,7 @@ public sealed class StoryVoicing
 		}
 
 		AttributionResult resolved = StoryCast.Resolve(prepared.Analysis.Attribution, story.Cast);
-		IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.WithSound(AnimalsOf(story, resolved.Characters, spokenLanguage), story.Language);
+		IReadOnlyDictionary<string, AnimalKind> animals = AnimalSoundClips.WithClip(AnimalsOf(story, resolved.Characters, spokenLanguage));
 		IReadOnlyDictionary<int, AnimalKind> plan = animals.Count == 0
 			? new Dictionary<int, AnimalKind>()
 			: AnimalSounds.Plan(SpokenOrder(story, prepared, WholeBookPieces(story, prepared, resolved), spokenLanguage), animals, story.Language);
@@ -175,15 +175,16 @@ public sealed class StoryVoicing
 	private static VoicedSegment? AnimalSoundAfter(IReadOnlyList<SplitSegment> pieces, AnimalSounds.Placement placement, VoiceCast cast, string spokenLanguage)
 	{
 		Segment quote = pieces[placement.Quote].Segment;
-		string? sound = AnimalSounds.SoundOf(placement.Kind, spokenLanguage);
-		if (sound is null || AnimalSounds.SaysIt(LineText(pieces, placement.Quote), placement.Kind, spokenLanguage))
+		// Slice 255: the slot carries a marker, and the reading session plays the animal's recording there instead of speaking the word. The recording is the same in every language,
+		// so the slot depends on the animal having a recording, not on a sound word in the spoken language (which is only a label here).
+		string sound = AnimalSounds.SoundOf(placement.Kind, spokenLanguage) ?? placement.Kind.ToString();
+		if (!AnimalSoundClips.Has(placement.Kind) || AnimalSounds.SaysIt(LineText(pieces, placement.Quote), placement.Kind, spokenLanguage))
 		{
 			return null;
 		}
 
 		int at = Math.Max(quote.SourceStart, pieces[placement.After].Segment.SourceEnd - 1);
-		return new VoicedSegment(
-			sound, cast.VoiceForLine(quote.CharacterId), at, at, at, FlavourTransform.For(AnimalSounds.FlavourFor(placement.Kind, cast.FlavourForLine(quote.CharacterId))));
+		return new VoicedSegment(sound, cast.VoiceForLine(quote.CharacterId), at, at, at, new AnimalClipMarker(placement.Kind));
 	}
 
 	// The spoken text of the line the piece at <paramref name="last"/> ends: the consecutive pieces of the same character before it.

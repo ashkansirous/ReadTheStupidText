@@ -58,6 +58,15 @@ jobs:
       - name: Emulator -NoBuild and tablet instance self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-no-build.ps1
 
+      - name: Dialog guard and closure-scope self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-dialog-guard.ps1
+
+      - name: Screenshot contact sheet self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-contact-sheet.ps1
+
+      - name: Desktop check dry-run self-test (${{ matrix.shell }})
+        run: ./tools/desktop-vm/test-check-dryrun.ps1
+
       - name: Detached background start self-test (${{ matrix.shell }})
         run: ./tools/test-detached-process.ps1
 

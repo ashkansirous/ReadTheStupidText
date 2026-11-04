@@ -93,6 +93,8 @@
 		<MauiImage Include="Resources\Images\dino_wait.png" BaseSize="84,84" />
 		<!-- The bundled starter stories (Slice 91): .dino packages opened with FileSystem.OpenAppPackageFileAsync("<name>.dino"); flat names, because the Windows package drops the folder. -->
 		<MauiAsset Include="Resources\Raw\starters\*.dino" LogicalName="%(Filename)%(Extension)" />
+		<!-- Slice 255: the animals' real recordings (CC0, credits in STORE.md), flat names for the same reason: animal-pig.m4a, opened by ReadingClips.cs. -->
+		<MauiAsset Include="Resources\Raw\animal-sounds\*.m4a" LogicalName="animal-%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<ItemGroup>
