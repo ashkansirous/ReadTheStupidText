@@ -249,6 +249,18 @@ public class UsageEventTests
         Assert.Equal(expected, IntroSteps.FromSixSteps(saved));
     }
 
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(4, 4)]
+    [InlineData(5, 4)]
+    [InlineData(99, 4)]
+    [InlineData(-1, -1)]
+    [InlineData(-7, -1)]
+    public void A_saved_step_outside_the_list_is_clamped_to_a_valid_step_and_minus_one_stays(int saved, int expected)
+    {
+        Assert.Equal(expected, IntroSteps.Clamp(saved));
+    }
+
     [Fact]
     public void The_Worker_lists_exactly_the_intro_steps_the_app_can_name()
     {

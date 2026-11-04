@@ -64,6 +64,9 @@ public partial class FirstBooksPage : ContentPage
 	private readonly WaitController _wait;
 	private readonly HashSet<string> _ticked = new(StringComparer.OrdinalIgnoreCase);
 	private readonly HashSet<string> _onShelf = new(StringComparer.OrdinalIgnoreCase);
+	private readonly List<string> _tickOrder = [];
+	private CancellationTokenSource? _downloadCancel;
+	private CancellationTokenSource? _loadCancel;
 	private readonly List<FirstBookCard> _cards = [];
 	private IReadOnlyList<StoreItem> _items = [];
 	private CancellationTokenSource _lifetime = new();
@@ -108,11 +111,37 @@ public partial class FirstBooksPage : ContentPage
 			_lifetime = new CancellationTokenSource();
 		}
 
+		Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged; // OnAppearing can fire twice without OnDisappearing
 		Connectivity.Current.ConnectivityChanged += OnConnectivityChanged;
 		if (!_loaded)
 		{
 			await _busy.RunAsync(LoadAsync);
+			return;
 		}
+
+		_ = LoadCoversAsync(_lifetime.Token); // covers cut short when the page was left come back
+	}
+
+	// Android Back / iOS swipe-back: a download wait behaves like its Cancel (ticks and landed books stay); otherwise it is the arrow; the restart root has nowhere to go back to.
+	protected override bool OnBackButtonPressed()
+	{
+		if (_wait.IsActive)
+		{
+			(_downloadCancel ?? _loadCancel)?.Cancel(); // the download wait or the list-load wait
+			return true;
+		}
+
+		if (_backRequested is not null)
+		{
+			if (!_busy.IsBusy)
+			{
+				_ = _busy.RunAsync(GoBackAsync);
+			}
+
+			return true;
+		}
+
+		return _busy.IsBusy || base.OnBackButtonPressed(); // the restart root with no wait: the platform default (Android leaves the app)
 	}
 
 	protected override void OnDisappearing()
@@ -151,7 +180,14 @@ public partial class FirstBooksPage : ContentPage
 	{
 		try
 		{
-			StoreListing listing = await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_GettingBook, canCancel: true, cancel => _store.ListAsync(cancel));
+			await ReadShelfAsync();
+			if (FirstBooks.IsSatisfied(_shelfCount))
+			{
+				await FinishAsync(); // the shelf already holds enough books: no need for the store
+				return;
+			}
+
+			StoreListing listing = await ListWithWaitAsync();
 			if (listing.Status == StoreLoadStatus.Offline)
 			{
 				ShowOffline();
@@ -162,12 +198,31 @@ public partial class FirstBooksPage : ContentPage
 		}
 		catch (OperationCanceledException)
 		{
-			ShowOffline(); // Cancel on the list wait, or the page was left: the message with Try again takes over
+			ShowLoadFailed(); // Cancel on the list wait, or the page was left: Try again takes over, but nothing reloads by itself
 		}
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader first-books load failed: {ex}");
-			ShowOffline();
+			ShowLoadFailed();
+		}
+	}
+
+	// The list-load wait ends on its own Cancel or on Back (through _loadCancel).
+	private async Task<StoreListing> ListWithWaitAsync()
+	{
+		using CancellationTokenSource backCancel = new();
+		_loadCancel = backCancel;
+		try
+		{
+			return await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_GettingBook, canCancel: true, async cancel =>
+			{
+				using CancellationTokenSource both = CancellationTokenSource.CreateLinkedTokenSource(cancel, backCancel.Token);
+				return await _store.ListAsync(both.Token);
+			});
+		}
+		finally
+		{
+			_loadCancel = null;
 		}
 	}
 
@@ -182,9 +237,11 @@ public partial class FirstBooksPage : ContentPage
 		}
 
 		_ticked.Clear();
+		_tickOrder.Clear();
 		foreach (string id in FirstBooks.AlreadyOnShelf(_items, _onShelf))
 		{
 			_ticked.Add(id);
+			_tickOrder.Add(id);
 		}
 
 		_loaded = true;
@@ -216,6 +273,14 @@ public partial class FirstBooksPage : ContentPage
 		LogState("offline");
 	}
 
+	// The list could not load for a reason other than having no connection (cancelled, timed out, failed): the same layer with Try again, but only a connection coming back reloads the offline case.
+	private void ShowLoadFailed()
+	{
+		_offline = false;
+		ShowLayer(_offlineLayer);
+		LogState("failed-load");
+	}
+
 	private void Toggle(FirstBookCard card)
 	{
 		if (_busy.IsBusy || _wait.IsActive)
@@ -225,14 +290,14 @@ public partial class FirstBooksPage : ContentPage
 
 		string id = card.Item.Id;
 		bool picked = _ticked.Add(id);
-		if (!picked)
+		if (picked)
+		{
+			_tickOrder.Add(id);
+		}
+		else
 		{
 			_ticked.Remove(id);
-		}
-
-		if (picked && FirstBooksGate.FirstPick is null)
-		{
-			FirstBooksGate.FirstPick = id;
+			_tickOrder.Remove(id);
 		}
 
 		card.SetPicked(picked);
@@ -247,6 +312,7 @@ public partial class FirstBooksPage : ContentPage
 			return;
 		}
 
+		FirstBooksGate.FirstPick = _tickOrder.FirstOrDefault(); // the first book still ticked, in tick order: the intro's "Try it" opens it
 		IReadOnlyList<StoreItem> toFetch = FirstBooks.ToDownload(_items, _ticked, _onShelf);
 		if (!await DownloadAsync(toFetch))
 		{
@@ -265,12 +331,14 @@ public partial class FirstBooksPage : ContentPage
 	{
 		_waitCovers = new FirstBooksWaitCovers(toFetch.Select(CoverOf));
 		_waitOverlay.SetContent(_waitCovers);
-		CancellationToken cancel = _wait.BeginCancellable(WaitStage.GettingFile, AppResources.FirstBooks_Getting);
+		using CancellationTokenSource linked = new();
+		_downloadCancel = linked; // set before the wait begins, so a connectivity event at once re-words it; Back cancels through this, like the overlay's Cancel
+		using CancellationTokenRegistration fromOverlay = _wait.BeginCancellable(WaitStage.GettingFile, AppResources.FirstBooks_Getting).Register(linked.Cancel);
 		try
 		{
 			for (int i = 0; i < toFetch.Count; i++)
 			{
-				if (!await FetchOneAsync(toFetch, i, cancel))
+				if (!await FetchOneAsync(toFetch, i, linked.Token))
 				{
 					return false;
 				}
@@ -280,6 +348,7 @@ public partial class FirstBooksPage : ContentPage
 		}
 		finally
 		{
+			_downloadCancel = null;
 			_wait.End();
 		}
 	}
@@ -324,6 +393,11 @@ public partial class FirstBooksPage : ContentPage
 
 	private void RefreshWaitLook()
 	{
+		if (_downloadCancel is null || !_wait.IsActive)
+		{
+			return; // a late progress report or connectivity callback must not start a wait of its own, nor re-word the list-load wait
+		}
+
 		bool offline = Connectivity.Current.NetworkAccess != NetworkAccess.Internet;
 		string line = offline ? AppResources.Wait_WaitingInternet : AppResources.FirstBooks_Getting;
 		_wait.Begin(WaitStage.GettingFile, line, canCancel: true, _progressDetail, new WaitLook(offline, _progress, null));

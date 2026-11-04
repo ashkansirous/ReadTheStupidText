@@ -686,6 +686,7 @@ public sealed class IntroWizardPage : ContentPage
 
 		_ended = true;
 		_usage.RecordGeneral(UsageEventName.IntroEnded, LanguageChoice.Current(), how);
+		FirstBooksGate.FirstPick = null; // every way out clears it (replay and skip too), so a later intro never opens a stale pick
 		if (!_replay)
 		{
 			IntroState.Clear();

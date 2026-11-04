@@ -57,6 +57,33 @@ public sealed class BookUpdatePlanTests
         Assert.Equal(skipped, decision.Skip == BookUpdateSkip.Edited);
     }
 
+    [Theory]
+    [InlineData(1, 2)]
+    [InlineData(null, 2)]
+    [InlineData(2, 5)]
+    public void AStarterKeptFromBeforeTheBundledCopiesWereRemoved_IsUpdatedFromTheStoreListing(int? installed, int storeVersion)
+    {
+        // A starter's record (it came from the app, not the store) is judged like any catalogue book: an older version than the store's is updated.
+        InstalledBookRecord[] starter = [new InstalledBookRecord(Id, installed, "c2:A")];
+
+        BookUpdateDecision decision = BookUpdatePlan.Decide([new StoreBookVersion(Id, storeVersion)], starter, [Shelf(Id, "A")]).Single();
+
+        Assert.Equal(BookUpdateAction.Update, decision.Action);
+    }
+
+    [Theory]
+    [InlineData(3, 2)]
+    [InlineData(1, 0)]
+    [InlineData(null, 0)]
+    [InlineData(0, 0)]
+    public void ARefetchVersion_IsOneBelowTheRecordedOne_AndSoBelowTheStores(int? recorded, int expected)
+    {
+        int refetch = StarterUpdate.VersionToRefetchFromStore(recorded);
+
+        Assert.Equal(expected, refetch);
+        Assert.True(StarterUpdate.NeedsUpdate(refetch, Math.Max(recorded ?? 1, 1)));
+    }
+
     [Fact]
     public void AStagedPackageIsJudgedAgainstTheLibraryAsItIsNow()
     {

@@ -54,6 +54,7 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 			if (!_complete)
 			{
 				await FinishInterruptedSwapAsync();
+				await QueueStartersForStoreAsync();
 				_complete = true;
 			}
 		}
@@ -65,6 +66,27 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 #if DINO_TEST_BOOKS
 		await Testing.TestBooks.PendingAsync();
 #endif
+	}
+
+	// An install from before Slice 261 holds starters that never took the translations of the bundled packages (no longer shipped): their recorded version is lowered once, so the book updater
+	// (BookUpdatePlan, which judges every catalogue book against the store) swaps in the store's copy, translations included. A copy the grown-up edited is skipped there, as any store update.
+	private async Task QueueStartersForStoreAsync()
+	{
+		try
+		{
+			foreach (string id in (await library.ListAsync()).Select(s => s.SourceId).OfType<string>().Where(IsStarterId).Distinct(StringComparer.OrdinalIgnoreCase))
+			{
+				if (!Preferences.Default.Get(TranslationsAdoptedKeyPrefix + id, false))
+				{
+					RecordVersion(id, StarterUpdate.VersionToRefetchFromStore(InstalledVersion(id)));
+					RecordTranslationsAdopted(id); // once: the swap records it again
+				}
+			}
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		{
+			Debug.WriteLine($"Dino Reader could not queue the starters for the store: {ex}");
+		}
 	}
 
 	/// <summary>Whether <paramref name="packageId"/> is a starter or a story the store gave (Slice 133): only such books are counted by id in the usage counts.</summary>

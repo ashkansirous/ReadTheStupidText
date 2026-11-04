@@ -23,7 +23,7 @@ public static class IntroState
 			int saved = Preferences.Default.Get(StepKey, NothingSaved);
 			if (saved != NothingSaved)
 			{
-				return saved;
+				return IntroSteps.Clamp(saved); // a value past the last step resumes at the last one instead of reading as no step
 			}
 
 			int sixSteps = Preferences.Default.Get(SixStepKey, NothingSaved);

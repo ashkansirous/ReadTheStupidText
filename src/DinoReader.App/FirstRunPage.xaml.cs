@@ -342,8 +342,8 @@ public partial class FirstRunPage : ContentPage
 		// Slice 183: asked once, just before the first big download (choosing the language starts it).
 		await PackNotificationAsk.AskOnceAsync(() => DisplayAlertAsync(AppResources.Notify_Title, AppResources.Notify_Body, AppResources.Notify_Continue, AppResources.Notify_NotNow));
 		_chosen = _selected;
+		FirstBooksGate.Pending = true; // Slice 261: language, then the books (at least two), then the voice download; set before the language is stored so a kill in between reopens on the picker
 		LanguageChoice.Apply(_chosen, _spoken, PackStartReason.User); // the grown-up's own choice; the voice pack downloads while the books are picked
-		FirstBooksGate.Pending = true; // Slice 261: language, then the books (at least two), then the voice download; a kill in between reopens on the picker
 		await ShowBooksAsync();
 	}
 

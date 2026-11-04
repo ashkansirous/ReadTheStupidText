@@ -202,6 +202,9 @@ public static class IntroSteps
         return savedIndex <= StoreIndexInSix ? savedIndex : savedIndex - 1;
     }
 
+    /// <summary>A saved step made valid: -1 (not running) stays, any other negative value is not a step (-1), and a value past the last step resumes at the last step.</summary>
+    public static int Clamp(int saved) => saved < 0 ? NotRunning : Math.Min(saved, Order.Length - 1);
+
     public static int Count => Order.Length;
 
     /// <summary>The name of step <paramref name="index"/> (0-based), or null outside the list.</summary>
