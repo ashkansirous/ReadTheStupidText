@@ -316,3 +316,4 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 251 | Dino usage from TestFlight goes to its own beta dataset, never the production counts | built | #777 | | [251-dino-beta-usage-dataset.md](../slices/251-dino-beta-usage-dataset.md) |
 | 252 | Release CI: a hung signed iOS build can't hold the release queue for hours; measure and speed up the signed iOS build | built | #778 | | [252-release-ios-build-timeout-and-speed.md](../slices/252-release-ios-build-timeout-and-speed.md) |
 | 257 | Dino: a quote after "said Mouse." is the Mouse's, not the Lion's (Lion and the Mouse) | built | #775 | | [257-lion-and-mouse-speaker.md](../slices/257-lion-and-mouse-speaker.md) |
+| 254 | Dino: speaker first in Farsi and Arabic ("X said:" then the whole quote), and animal sounds next to the animal's own words | built | #759, #762 | | [254-dino-speaker-first-and-sound-placement.md](../slices/254-dino-speaker-first-and-sound-placement.md) |
