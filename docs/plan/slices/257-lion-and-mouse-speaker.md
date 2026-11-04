@@ -6,7 +6,7 @@ I'll be kind to you one day, too!" (the part after "said Mouse.", in the paragra
 to the Lion by the app's own speaker attribution, in both English (dump index 14) and Farsi (13). So the on-device voice
 reads it in the Lion's voice today, and the Gemini clip rendered on 2026-11-03 uses the Lion's voice (Algenib).
 
-*Built 2026-11-04 (night 2026-11-03-2349 wave 1), PR #775, not merged; no device run (pure Core logic, covered by the unit tests), see Not yet verified.*
+*Built 2026-11-04 (night 2026-11-03-2349 wave 1), merged as PR #775 (95330968); no device run (pure Core logic, covered by the unit tests), see Not yet verified.*
 
 **Touches:** `src/DinoReader.Core/SpeakerAttributor.cs`, `src/DinoReader.Core/AttributionRun.cs`,
 `src/DinoReader.Core/SpeakerTagParser.cs`, `src/DinoReader.Core/SentenceBoundaries.cs`, `src/DinoReader.Core/*Rules.cs`,
@@ -54,7 +54,7 @@ Item 2 done (2026-11-04): `generate.py --batch` into `s246-audio/books-lion-and-
 - `s257-medium.md` (8 findings): 3 (mixed coordinates), 6 (Farsi test did not pin the speaker), 7 (a test that guarded nothing) and 8 (boundary tests) applied. Skipped: 1 (a tag on the next page no longer tags the quote; the accepted trade-off above), 2 (`IsLeadInToNextQuote` still measures the whole narration segment; low), 4 (double scan, constant factor only), 5 (diff noise in `FromTag`).
 - `s257-check1-medium.md` (5 low/trivial findings): none applied. 1 is the trade-off above; 2 unconfirmed, no failing case found; 3 and 5 are noise/comment only; 4 (format of the Not-yet-verified line) is done in the block below.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-04)
 
 - Dino speaker attribution (`src/DinoReader.Core/AttributionRun.cs`): a tag after a quote is read only from narration in the same paragraph. Pages join with a blank line, so a page break also ends the search. Do not add a rule that makes a quote after a finished tag sentence continue that speaker: it changes ordinary alternation. (Slice 257: docs/plan/slices/257-lion-and-mouse-speaker.md)
 

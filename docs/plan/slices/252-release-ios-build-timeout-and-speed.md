@@ -4,7 +4,7 @@
 
 *Planned again 2026-11-03: the user un-parked it ("Yes, un-park both") before a run-all-waves run.*
 
-*Built 2026-11-04 (night 2026-11-03-2349 wave 1), PR #778, not merged. Items 1, 2, 4 done; item 3 instrumented, numbers pending; item 5 not run.* **Claim note (coordinator, night 2026-11-03-2349 wave 1):** premise check on origin/main: item 1 is already done (`timeout-minutes: 90` in `dinoreader-ios.yml:68` and `ios.yml:64`, dated 2026-11-02), so this claim leaves the value and only records it. Item 3 is measure only (user, 2026-11-03): the signed build steps print their own timing (a `-v:n` performance summary or per-target times into the job summary) and the first `main` run after the merge writes the numbers here; no build setting changes. Item 4: the "Upload .ipa" step in both `ios.yml` and `dinoreader-ios.yml` retries with a back-off. Item 5 (a forced short-timeout run) is not started tonight: a dispatched run shares the release concurrency group and a later merge would cancel it (run-all-waves); it goes to *Not yet verified*.
+*Built 2026-11-04 (night 2026-11-03-2349 wave 1), merged as PR #778 (345bdf48). Items 1, 2, 4 done; item 3 instrumented, numbers pending; item 5 not run.* **Claim note (coordinator, night 2026-11-03-2349 wave 1):** premise check on origin/main: item 1 is already done (`timeout-minutes: 90` in `dinoreader-ios.yml:68` and `ios.yml:64`, dated 2026-11-02), so this claim leaves the value and only records it. Item 3 is measure only (user, 2026-11-03): the signed build steps print their own timing (a `-v:n` performance summary or per-target times into the job summary) and the first `main` run after the merge writes the numbers here; no build setting changes. Item 4: the "Upload .ipa" step in both `ios.yml` and `dinoreader-ios.yml` retries with a back-off. Item 5 (a forced short-timeout run) is not started tonight: a dispatched run shares the release concurrency group and a later merge would cancel it (run-all-waves); it goes to *Not yet verified*.
 
 **Touches:** `.github/workflows/release.yml`, `.github/workflows/dinoreader-ios.yml`, `.github/workflows/ios*.yml`, `.github/CLAUDE.md`, `docs/plan/slices/252-release-ios-build-timeout-and-speed.md`
 
@@ -25,7 +25,7 @@
 - `s252-medium.md`: applied 1, 2 (SIGPIPE under pipefail from `head`) and 3 (overlapping ranges, truncation; now awk). Skipped: 4 (temp log in `$RUNNER_TEMP` is not deleted in "Remove signing material"), 5 (shared-script refactor), 6 (item 1 ticked on purpose: already on main).
 - `s252-check1-medium.md`: 6 findings, all low, none applied (summary lost on timeout kill, `-v:n` log size, retry of non-network failures, duplication, item 1 tick, overlong CLAUDE.md bullet).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-04)
 
 None new: the item 2 rule (re-run only the failed iOS job; a `pending` release run with no jobs waits on the `in_progress` run of the same group) is already in `.github/CLAUDE.md` (Slice 252: docs/plan/slices/252-release-ios-build-timeout-and-speed.md).
 

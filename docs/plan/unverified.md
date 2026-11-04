@@ -2,6 +2,23 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 257: Dino: a quote after "said Mouse." is the Mouse's, not the Lion's ([slice](slices/257-lion-and-mouse-speaker.md))
+
+- Listen to the new Farsi clip in `D:/ReadTheStupidText-worktrees/s246-audio/books-lion-and-mouse/`.
+- On a device, Lion and the Mouse reads the Mouse's line ("I didn't mean to wake you up. ...") in the Mouse's voice (no device run: pure Core logic, covered by the unit tests).
+
+### Slice 252: Release CI: a hung signed iOS build can't hold the release queue ([slice](slices/252-release-ios-build-timeout-and-speed.md))
+
+- Item 5 (forced short-timeout run) not run: a dispatched run shares the release concurrency group and a later merge would cancel it.
+- The first `main` run's job summary (timing block) and its numbers: not yet seen or written into item 3.
+- The upload retry on a real network blip: not seen; the step logs "Upload succeeded on attempt N" on success.
+- shellcheck of the new step scripts runs only in CI.
+
+### Slice 251: Dino usage from TestFlight goes to its own beta dataset ([slice](slices/251-dino-beta-usage-dataset.md))
+
+- A TestFlight build of Dino sends rows that land in `dino_usage_beta` and none in `dino_usage` (needs a real TestFlight install; no device run was made).
+- The Workers Builds deploy after the merge carries the `DINO_USAGE_BETA` binding.
+
 ### Slice 253: Final-loop leftovers, night 2026-11-01-2355 ([slice](slices/253-final-loop-leftovers-night-2026-11-01-2355.md))
 
 - Freddy and the Slipper: the Arabic, Russian, Japanese and Chinese spellings of Elham's name, by a native speaker (until now only in `docs/plan/notes/2026-11-01-freddy-and-the-slipper.md`).
