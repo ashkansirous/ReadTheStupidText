@@ -140,8 +140,14 @@ jobs:
           CODESIGN_KEY: ${{ steps.signing.outputs.codesign_key }}
           CODESIGN_PROVISION: ${{ steps.signing.outputs.codesign_provision }}
         run: |
+          # Slice 252 item 3 (measure only): -v:n -clp:PerformanceSummary prints per-target and per-task
+          # times; they go into the job summary, also when the build fails. No build setting changes.
+          set -o pipefail
           NOW=$(date -u +%Y%m%d%H%M%S)
           BUILD="${NOW:0:8}.$((10#${NOW:8:6}))"
+          BUILD_LOG="$RUNNER_TEMP/ios-release-build.log"
+          START=$SECONDS
+          rc=0
           dotnet publish "$PROJECT" \
             -f net10.0-ios \
             -p:IncludeAndroid=false \
@@ -151,7 +157,16 @@ jobs:
             -p:CodesignKey="$CODESIGN_KEY" \
             -p:CodesignProvision="$CODESIGN_PROVISION" \
             -p:ApplicationDisplayVersion="$VERSION" \
-            -p:ApplicationVersion="$BUILD"
+            -p:ApplicationVersion="$BUILD" \
+            -v:n -clp:PerformanceSummary 2>&1 | tee "$BUILD_LOG" || rc=$?
+          {
+            echo "### Signed Release build timing (Slice 252)"
+            echo "Elapsed: $((SECONDS - START)) s, exit code ${rc}"
+            echo '```'
+            awk '/Target Performance Summary/{s=1;n=0} /Task Performance Summary/{s=2;n=0} s&&n<60{print;n++}' "$BUILD_LOG" || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          [ "$rc" -eq 0 ] || exit "$rc"
           echo "Built ${VERSION} (${BUILD})" >> "$GITHUB_STEP_SUMMARY"
 
       # Decision 70: look inside the package, a clean build proves nothing about
@@ -172,7 +187,16 @@ jobs:
         if: ${{ env.SIGN_RELEASE == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "rtst-v${VERSION}" "dist/ReadTheStupidText-${VERSION}.ipa" --repo "${{ github.repository }}" --clobber
+        run: |
+          # Slice 252 item 4: a network blip must not throw away a 50-minute build; retry with back-off.
+          for attempt in 1 2 3 4 5; do
+            if gh release upload "rtst-v${VERSION}" "dist/ReadTheStupidText-${VERSION}.ipa" --repo "${{ github.repository }}" --clobber; then
+              echo "Upload succeeded on attempt ${attempt}"; exit 0
+            fi
+            echo "::warning::Upload attempt ${attempt} failed"
+            [ "$attempt" -lt 5 ] && sleep $((attempt * 30))
+          done
+          echo "::error::Upload failed after 5 attempts"; exit 1
 
       - name: Remove signing material
         if: ${{ always() && env.SIGN_RELEASE == 'true' }}
