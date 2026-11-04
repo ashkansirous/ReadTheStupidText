@@ -10,6 +10,8 @@ You run one listening choice. Load the `voice-pick` skill first and follow it ex
 Your caller gives you the worktree path, the slice file, the questions and the candidates (voice ids or a pack and
 language), and optionally the lines to read.
 
+- Renders from Gemini use `--batch` (the normal route's 100/day cap is used up); never try the normal route first.
+- **For the caller:** this agent's result is a published Artifact page, not a file in the worktree; judge its progress from the Artifact list and the agent's output, never from an empty worktree (2026-11-04: an agent was called "produced nothing" while its page was already published).
 - Never change app code, packs or releases; write only the slice file's decisions and files under the ignored `tools/voice-listen/out/` folder.
 - Report in at most 8 lines: the page link, each question's pick, notes, skipped candidates.
 - Before your final report, stop every loop and process you started and delete the venv and WAVs. End with `released: …`.
