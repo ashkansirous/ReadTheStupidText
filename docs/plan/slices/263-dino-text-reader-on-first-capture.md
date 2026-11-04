@@ -9,6 +9,11 @@
 - "Voice to text" in the user's request means the reader that turns a photo of a page into words when a grown-up captures their own book (there is no speech recognition in the app).
 - The app ships with **no page reader built in**. The first time someone captures a book, the app shows "Downloading the AI reader for <language>…" with progress and Cancel, then carries on. The same message is used for every language and alphabet.
 
+## Measured and found 2026-11-04 (after the night 2026-11-04-1441 wave 1 parked this slice)
+
+- **Size of the built-in reader, measured in the released `DinoReader-1.101.0.apk` (60.3 MB, arm64):** ML Kit's text-recognition files (`assets/mlkit-google-ocr-models/**` plus `lib/arm64-v8a/libmlkit_google_ocr_pipeline.so`, 11.06 MB on its own) are 12.0 MB unpacked and **5.2 MB of the APK download**. Leaving them out saves about 5 MB of the 60 MB download.
+- **Gap, from reading the code (not run on a device):** Dino on Android reads only Latin-script pages. A captured Farsi, Arabic, Russian, Japanese or Chinese page gives "No text found on this page" (`Wizard_NoText`, `TextStep.xaml.cs:111`) or garbled Latin letters, with no "not supported" note: `LanguageImageTextExtractor.cs:50-83` falls back to PaddleOCR `ocr-*` packs only when one is installed, and `src/DinoReader.App` has no pack installer (`OcrPackInstaller` is RTST-only). iOS: Apple Vision covers Latin plus ja, zh, ru on iOS 16+ (`VisionImageTextExtractor.cs:21-27,43-50`), not Farsi or Arabic. Windows: `Windows.Media.Ocr` for the book's language if installed, else a profile-language fallback (`WindowsOcrTextExtractor.cs:45-57`). No slice, test or unverified line recorded this before.
+
 ## Facts to check first (not checked yet)
 
 - Android today bundles ML Kit's Latin text recognition (a few MB, `Mobile.Shared.csproj:49-66`); other alphabets already come as downloadable PaddleOCR packs (`docs/voice-packs.md`). ML Kit has a Play-services variant that downloads its model on demand: confirm with `library-docs` (context7) before switching.
