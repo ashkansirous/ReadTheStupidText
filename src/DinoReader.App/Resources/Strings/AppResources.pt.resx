@@ -163,6 +163,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Espaço dos adultos</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Só os adultos veem isto. A estante da criança está a um toque.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Voltar à estante da criança</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>Reordenar</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Toque e segure um livro e arraste-o para outro lugar. A estante do seu filho mostra a mesma ordem.</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Não foi possível salvar a nova ordem</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Algo ainda está usando o arquivo. Toque em Concluído para tentar de novo, ou em Cancelar para manter a ordem anterior.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Ler agora</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Opções de {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Da loja</value></data>

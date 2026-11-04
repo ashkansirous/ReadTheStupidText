@@ -163,6 +163,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>おとなのコーナー</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>ここはおとなだけが見られます。お子さまの本棚はワンタップで戻れます。</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>お子さまの本棚にもどる</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>並べ替え</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>本を長押ししてから、新しい場所にドラッグします。お子さまの本棚も同じ順番で表示されます。</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>新しい順番を保存できませんでした</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>ファイルがまだ使用中です。「完了」でもう一度試すか、「キャンセル」で元の順番のままにします。</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>今すぐ読む</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>{0}のオプション</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>ストアから</value></data>

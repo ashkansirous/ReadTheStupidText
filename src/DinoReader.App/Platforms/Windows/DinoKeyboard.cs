@@ -143,6 +143,8 @@ internal sealed class DinoKeyboard
 		VirtualKey.Space => DinoKey.Space,
 		VirtualKey.Left => DinoKey.Left,
 		VirtualKey.Right => DinoKey.Right,
+		VirtualKey.Up => DinoKey.Up,
+		VirtualKey.Down => DinoKey.Down,
 		VirtualKey.Escape => DinoKey.Escape,
 		VirtualKey.Enter => DinoKey.Enter,
 		VirtualKey.Back => DinoKey.Backspace,

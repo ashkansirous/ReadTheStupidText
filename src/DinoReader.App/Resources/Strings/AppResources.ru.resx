@@ -163,6 +163,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Уголок для взрослых</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Это видят только взрослые. Полка ребёнка — одним касанием.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Назад к полке ребёнка</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>Изменить порядок</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Нажмите на книгу и удерживайте, затем перетащите её на новое место. На полке ребёнка будет тот же порядок.</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Не удалось сохранить новый порядок</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Файл всё ещё занят. Нажмите «Готово», чтобы повторить, или «Отмена», чтобы оставить прежний порядок.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Читать сейчас</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Параметры: {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Из магазина</value></data>

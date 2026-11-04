@@ -165,6 +165,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Aikuisten nurkka</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Vain aikuiset näkevät tämän. Lapsesi hylly on yhden napautuksen päässä.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Takaisin lapseni hyllylle</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>Järjestä uudelleen</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Paina kirjaa pitkään ja vedä se uuteen paikkaan. Lapsesi hylly näyttää saman järjestyksen.</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Uutta järjestystä ei voitu tallentaa</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Jokin käyttää vielä tiedostoa. Yritä uudelleen valitsemalla Valmis tai säilytä vanha järjestys valitsemalla Peruuta.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Lue nyt</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Valinnat: {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Kaupasta</value></data>

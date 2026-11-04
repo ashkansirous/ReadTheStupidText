@@ -163,6 +163,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>ركن الكبار</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>هذا للكبار فقط. رف طفلك على بُعد لمسة واحدة.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>العودة إلى رف طفلي</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>إعادة الترتيب</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>اضغط مطولًا على كتاب ثم اسحبه إلى مكان جديد. يعرض رف طفلك الترتيب نفسه.</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>تعذّر حفظ الترتيب الجديد</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>هناك ما زال يستخدم الملف. اضغط «تم» للمحاولة مجددًا، أو «إلغاء» للإبقاء على الترتيب القديم.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>اقرأ الآن</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>خيارات «{0}»</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>من المتجر</value></data>

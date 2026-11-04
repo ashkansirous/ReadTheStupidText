@@ -165,6 +165,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Voksenhjørnet</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Kun voksne kan se dette. Dit barns hylde er kun et tryk væk.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Tilbage til mit barns hylde</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>Omarranger</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Tryk og hold på en bog, og træk den så til et nyt sted. Dit barns hylde viser samme rækkefølge.</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Kunne ikke gemme den nye rækkefølge</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Noget bruger stadig filen. Tryk på Færdig for at prøve igen, eller Annuller for at beholde den gamle rækkefølge.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Læs nu</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Valgmuligheder for {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Fra butikken</value></data>

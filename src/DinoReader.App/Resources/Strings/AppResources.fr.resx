@@ -163,6 +163,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Espace adultes</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Réservé aux adultes. L’étagère de votre enfant est à un tap.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Retour à l’étagère de mon enfant</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>Réorganiser</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Appuie longuement sur un livre, puis fais-le glisser vers un nouvel endroit. L’étagère de ton enfant montre le même ordre.</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Impossible d’enregistrer le nouvel ordre</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Quelque chose utilise encore le fichier. Touche Terminé pour réessayer, ou Annuler pour garder l’ancien ordre.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Lire maintenant</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Options pour {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Depuis la boutique</value></data>

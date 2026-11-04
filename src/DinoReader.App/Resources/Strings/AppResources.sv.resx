@@ -165,6 +165,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Vuxenhörnan</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Bara vuxna ser det här. Barnets hylla är ett tryck bort.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Tillbaka till barnets hylla</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>Ändra ordning</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Tryck och håll på en bok och dra den sedan till en ny plats. Ditt barns hylla visar samma ordning.</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Det gick inte att spara den nya ordningen</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Något använder fortfarande filen. Tryck på Klar för att försöka igen, eller Avbryt för att behålla den gamla ordningen.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Läs nu</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Alternativ för {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Från butiken</value></data>

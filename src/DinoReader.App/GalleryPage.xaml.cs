@@ -23,6 +23,9 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	private const double TabletColumnSpacing = 20; // Slice 234, mock Batch 45 frame 133: 20 across, 28 down
 	private const double TabletRowSpacing = 28;
 	private const double TabletTitleSize = 28;
+	private const double ReorderPhonePadding = 14;
+	private const double ReorderTabletPadding = 40;
+	private const long TapSuppressMilliseconds = 800;
 	private const double TabletIconSize = 52;
 	private static readonly Thickness TabletHeaderPadding = new(LandscapeLayout.TabletPortraitShelfSidePadding, 32, LandscapeLayout.TabletPortraitShelfSidePadding, 0);
 	private static readonly Color RailLine = Color.FromArgb("#cfc6e6"); // the corner line on the ink rail
@@ -38,6 +41,12 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	private readonly StarterStories _starters;
 	private readonly IServiceProvider _services;
 	private readonly BusyGuard _busy = new();
+	private readonly ShelfReorderView _reorder = new();
+	private int _reorderColumns = 3; // what the last layout pass says the reorder grid fits (ApplyShape)
+	private double _reorderSidePadding = ReorderPhonePadding;
+	private double _reorderGap = GridItemSpacing;
+	private bool _savingOrder; // Done is saving the order
+	private long _suppressTapUntil; // Environment.TickCount64: the release that ends a 1 s hold must not open a sheet
 	private readonly ObservableCollection<object> _items = [];
 	private readonly StorytellerDefault _storyteller;
 	private bool _readySheetOpening;
@@ -73,7 +82,9 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		BookInfo.ExportRequested += ExportSheetBookAsync;
 		BookInfo.RemoveRequested += RemoveSheetBookAsync;
 		BookInfo.Dismissed += OnBookSheetDismissed;
+		BookInfo.ReorderRequested += OpenSheetReorderAsync;
 		_languageButton = AddLanguageButton();
+		AddReorderView();
 		WaitOverlay overlay = DinoWait.OverPage();
 		Grid.SetRowSpan(overlay, GalleryRoot.RowDefinitions.Count);
 		Grid.SetColumnSpan(overlay, GalleryRoot.ColumnDefinitions.Count);
@@ -93,6 +104,16 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		var button = new StoryLanguageButton(LanguageButtonHeight, OpenLanguageMenuAsync) { IsVisible = false, AutomationId = "GalleryLanguage" };
 		header.Add(button, 2, 0);
 		return button;
+	}
+
+	// Slice 264: the reorder mode is a layer over the whole page (its own ink bar, hint and grid), above the sheet's scrim so it never shows through, below the wait overlay added after it.
+	private void AddReorderView()
+	{
+		Grid.SetRowSpan(_reorder, GalleryRoot.RowDefinitions.Count);
+		Grid.SetColumnSpan(_reorder, GalleryRoot.ColumnDefinitions.Count);
+		GalleryRoot.Children.Add(_reorder);
+		_reorder.DoneRequested += DoneReorderAsync;
+		_reorder.CancelRequested += CancelReorder;
 	}
 
 	// The same list as the reading page (88): one pick for all books, remembered. The shelf titles stay in the app language.
@@ -239,6 +260,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		ApplyMode();
 		if (!_mode.IsGrownUp)
 		{
+			CloseReorder("left grown-up mode"); // Slice 264: leaving grown-up mode cancels the reorder mode; nothing was saved
 			BookInfo.Dismiss(); // also refreshes the tiles when a switch was saved
 		}
 
@@ -324,6 +346,9 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		await WaitForStagedUpdatesAsync();
 		IReadOnlyList<Story> stories = await _library.ListAsync();
 		_shelfLanguage = LanguageChoice.Current();
+#if DEBUG
+		ReorderLog($"shelf order {string.Join(",", stories.Select(s => s.Id))}");
+#endif
 		_items.Clear();
 		// The Add button above the shelf replaced the Add tile (Slice 172, mock 85).
 		foreach (object item in GalleryItems.Build(stories, _library, _mode, _services.GetRequiredService<StoryTranslator>().ShelfTitle).Where(item => item is not AddStoryEntry))
@@ -400,6 +425,11 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		int columns = grownUp ? corner.Columns : shelf.Columns;
 		bool tabletShelf = !grownUp && shelf.TabletUpright;
 		string key = $"{sideways}|{rail}|{corner.RailWidth}|{corner.FullRowButtons}|{columns}|{shelf.CoverHeight}|{grownUp}|{tabletShelf}|{corner.TabletUpright}";
+		// The reorder layer spans the whole page, rail included, so its columns come from the full window width, not the width left of the rail.
+		_reorderColumns = !rail ? columns : corner.TabletUpright ? LandscapeLayout.TabletPortraitShelfColumns(_windowSize.Width) : LandscapeLayout.CornerColumnsFor(_windowSize.Width);
+		_reorderSidePadding = grownUp && corner.TabletUpright ? ReorderTabletPadding : ReorderPhonePadding;
+		_reorderGap = grownUp && corner.TabletUpright ? TabletColumnSpacing : GridItemSpacing;
+		_reorder.Reshape(_reorderColumns, _reorderSidePadding, _reorderGap); // a rotation or resize while the mode is open re-fits it
 		if (key == _shapeKey)
 		{
 			return;
@@ -669,10 +699,15 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	internal bool InCorner => _mode.IsGrownUp;
 
 	// Slice 235 part B: the shelf answers the Windows window's keyboard. Esc closes the book's options sheet while it is open and does nothing on the shelf itself.
-	DinoScreen IDinoKeyTarget.Screen => BookInfo.IsVisible ? DinoScreen.Sheet : DinoScreen.Shelf;
+	DinoScreen IDinoKeyTarget.Screen => _reorder.IsVisible ? DinoScreen.Reorder : BookInfo.IsVisible ? DinoScreen.Sheet : DinoScreen.Shelf;
 
 	bool IDinoKeyTarget.Handle(DinoKeyAction action, DinoKey key)
 	{
+		if (_reorder.IsVisible)
+		{
+			return HandleReorderKey(action); // Slice 264: Esc cancels the reorder mode, Enter or Space is Done
+		}
+
 		if (action == DinoKeyAction.SheetActivate)
 		{
 			return BookInfo.IsVisible && BookInfo.ActivateFocused();
@@ -687,8 +722,156 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		return true;
 	}
 
+	// Slice 264: the reorder mode ("Reorder" in a book's sheet, or a 1 second press on a cover). It works on a copy of the shelf's order held by the layer; only Done saves it, through the library,
+	// so Cancel, Back, leaving grown-up mode, the app going to the background and the app being killed all keep the stored order as it was.
+	private bool HandleReorderKey(DinoKeyAction action)
+	{
+		switch (action)
+		{
+			case DinoKeyAction.ReorderCancel:
+				CancelReorder();
+				return true;
+			case DinoKeyAction.ReorderDone:
+				_ = DoneReorderAsync(_reorder.Order);
+				return true;
+			default:
+				return _reorder.HandleKey(action);
+		}
+	}
+
+	private void OpenReorder(string? liftedId)
+	{
+		List<StoryTile> tiles = [.. _items.OfType<StoryTile>()];
+		if (!_mode.IsGrownUp || _reorder.IsVisible || tiles.Count == 0)
+		{
+			return;
+		}
+
+		ReorderTrace.Step($"page open begin books={tiles.Count}");
+		BookInfo.Hide();
+		ReorderTrace.Step("page sheet hidden");
+		_suppressTapUntil = Environment.TickCount64 + TapSuppressMilliseconds;
+		_reorder.Open(tiles, liftedId, _reorderColumns, _reorderSidePadding, _reorderGap, (double)Resources[TileTitleHeightKey]);
+		ReorderTrace.Step("page open end");
+		ReorderLog($"opened with {tiles.Count} books, lifted={liftedId ?? "none"}");
+	}
+
+	// The sheet closed with Hide, not Dismiss, so a switch saved in it is refreshed here before the layer takes its snapshot of the shelf.
+	private Task OpenSheetReorderAsync() => RunGrownUpAsync(async () =>
+	{
+		ReorderTrace.Step("sheet reorder row chosen");
+		await SettledSheetStoryAsync();
+		ReorderTrace.Step("sheet settled");
+		if (_sheetChanged)
+		{
+			_sheetChanged = false;
+			await RefreshShelfAsync();
+		}
+
+		OpenReorder(_sheetStory?.Id);
+	});
+
+	private void OnHoldRequested(object? sender, EventArgs e)
+	{
+		if (TileOf(sender) is { } tile && _mode.IsGrownUp && !BookInfo.IsVisible)
+		{
+			OpenReorder(tile.Story.Id);
+		}
+	}
+
+	private async Task DoneReorderAsync(IReadOnlyList<string> ids)
+	{
+		if (!_reorder.IsVisible || _savingOrder)
+		{
+			return;
+		}
+
+		_savingOrder = true; // Enter then a tap on Done during the save must not save twice
+		try
+		{
+			if (!await TrySaveOrderAsync(ids))
+			{
+				await DisplayAlertAsync(AppResources.Reorder_SaveFailedTitle, AppResources.Reorder_SaveFailedBody, AppResources.Common_Ok);
+				return; // the mode stays open with the edited order; Done tries again, Cancel leaves
+			}
+
+			CloseReorder("done");
+			await RefreshShelfAsync();
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException)
+		{
+			Debug.WriteLine($"Dino Reader could not finish the reorder: {ex}"); // never unobserved out of the keyboard path
+		}
+		finally
+		{
+			_savingOrder = false;
+		}
+	}
+
+	private async Task<bool> TrySaveOrderAsync(IReadOnlyList<string> ids)
+	{
+		try
+		{
+			if (_library is not FileStoryLibrary file)
+			{
+				Debug.WriteLine("Dino Reader cannot save the shelf order: the library is not the file library");
+				return false;
+			}
+
+			await file.SaveOrderAsync(ids);
+			ReorderLog($"done saved {ids.Count} books: {string.Join(",", ids)}");
+			return true;
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		{
+			Debug.WriteLine($"Dino Reader could not save the shelf order: {ex}"); // the stored order stays as it was
+			return false;
+		}
+	}
+
+	private void CancelReorder() => CloseReorder("cancel");
+
+	private void CloseReorder(string why)
+	{
+		if (_reorder.IsVisible)
+		{
+			_reorder.Close();
+			ReorderLog($"closed: {why}");
+		}
+	}
+
+	private static void SheetLog(string line)
+	{
+		ReorderTrace.Step("sheet: " + line); // Release-visible on Windows (window-trace.log)
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[BookSheet] {line}"); // tells a sheet that never opened from one that opened and was hidden
+#endif
+	}
+
+	private static void ReorderLog(string line)
+	{
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reorder] {line}"); // the shelf-reorder flow's expect-log markers (RTST-TEST tag)
+#endif
+	}
+
+#if DEBUG
+	/// <summary>Debug-only hook for the shelf-reorder flow: opens the mode if it is closed, then moves the book at 1-based position <paramref name="from"/> before the one at <paramref name="to"/>, as a drop does.</summary>
+	internal string DebugReorderMove(int from, int to)
+	{
+		OpenReorder(null);
+		return _reorder.IsVisible ? _reorder.DebugMove(from, to) : string.Empty;
+	}
+#endif
+
 	private async void OnStoryTapped(object? sender, TappedEventArgs e)
 	{
+		if (_reorder.IsVisible || Environment.TickCount64 < _suppressTapUntil)
+		{
+			SheetLog(_reorder.IsVisible ? "open dropped: reorder mode is open" : "open dropped: tap suppressed after a press");
+			return;
+		}
+
 		if (TileOf(sender) is { } tile)
 		{
 			await _busy.RunAsync(() => _mode.IsGrownUp ? OpenBookSheetAsync(tile.Story) : _actions.ReadAsync(Navigation, tile.Story));
@@ -703,6 +886,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		_sheetStory = story;
 		_sheetChanged = false;
 		BookInfo.Show(SheetContentOf(story));
+		SheetLog($"opened, visible={BookInfo.IsVisible}");
 	}
 
 	private BookSheet.Content SheetContentOf(Story story)
@@ -877,7 +1061,16 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	}
 
 	// Every grown-up action re-checks the mode right before it runs: a queued tap must not outlive the mode.
-	private Task RunGrownUpAsync(Func<Task> work) => _busy.RunAsync(() => _mode.IsGrownUp ? work() : Task.CompletedTask);
+	private Task RunGrownUpAsync(Func<Task> work) => _busy.RunAsync(() =>
+	{
+		if (!_mode.IsGrownUp)
+		{
+			SheetLog("grown-up action dropped: not in grown-up mode");
+			return Task.CompletedTask;
+		}
+
+		return work();
+	});
 
 	// The store (Slice 92, "Store" since Slice 172): a grown-up page, so it is only reachable in grown-up mode and closes with it.
 	private async void OnStoreTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(OpenStoreAsync);
@@ -895,6 +1088,11 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 
 	private async void OnOpenRequested(object? sender, EventArgs e)
 	{
+		if (_reorder.IsVisible || Environment.TickCount64 < _suppressTapUntil)
+		{
+			return;
+		}
+
 		if (TileOf(sender) is { } tile)
 		{
 			await RunGrownUpAsync(() => OpenBookSheetAsync(tile.Story));
@@ -945,6 +1143,12 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		if (_languageButton.Parent?.Parent is Grid menuHost && StoryLanguageMenu.DismissOpen(menuHost))
 		{
 			return true; // the open language list closes first
+		}
+
+		if (_reorder.IsVisible)
+		{
+			CancelReorder(); // Back is Cancel (Slice 264)
+			return true;
 		}
 
 		if (BookInfo.IsVisible)

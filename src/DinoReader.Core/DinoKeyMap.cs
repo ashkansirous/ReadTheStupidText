@@ -20,6 +20,8 @@ public enum DinoKey
 	Digit7,
 	Digit8,
 	Digit9,
+	Up,
+	Down,
 }
 
 /// <summary>Which kind of screen has the keyboard: the shelf, a book being read (or its silent back cover), the grown-up gate, a book's options sheet, or any other page.</summary>
@@ -31,6 +33,7 @@ public enum DinoScreen
 	ReadingBackCover,
 	Gate,
 	Sheet,
+	Reorder, // Slice 264: the shelf's reorder mode
 }
 
 /// <summary>What a key press asks the screen to do.</summary>
@@ -49,6 +52,13 @@ public enum DinoKeyAction
 	GateErase,
 	GateSubmit,
 	SheetActivate,
+	ReorderCancel,
+	ReorderDone,
+	ReorderToggle,
+	ReorderLeft,
+	ReorderRight,
+	ReorderUp,
+	ReorderDown,
 }
 
 /// <summary>
@@ -82,9 +92,22 @@ public static class DinoKeyMap
 			DinoScreen.ReadingBackCover => OnReading(key, backCover: true),
 			DinoScreen.Gate => OnGate(key),
 			DinoScreen.Sheet => key is DinoKey.Enter or DinoKey.Space ? DinoKeyAction.SheetActivate : DinoKeyAction.None,
+			DinoScreen.Reorder => OnReorder(key),
 			_ => DinoKeyAction.None,
 		};
 	}
+
+	// Slice 264: Space lifts the focused cover and drops it again, the arrows move the focus (or the lifted cover), Enter is Done and Esc is Cancel.
+	private static DinoKeyAction OnReorder(DinoKey key) => key switch
+	{
+		DinoKey.Enter => DinoKeyAction.ReorderDone,
+		DinoKey.Space => DinoKeyAction.ReorderToggle,
+		DinoKey.Left => DinoKeyAction.ReorderLeft,
+		DinoKey.Right => DinoKeyAction.ReorderRight,
+		DinoKey.Up => DinoKeyAction.ReorderUp,
+		DinoKey.Down => DinoKeyAction.ReorderDown,
+		_ => DinoKeyAction.None,
+	};
 
 	/// <summary>The digit 0 to 9 a key types, or null for any other key.</summary>
 	public static int? DigitOf(DinoKey key) =>
@@ -94,6 +117,7 @@ public static class DinoKeyMap
 	{
 		DinoScreen.Shelf => DinoKeyAction.None,
 		DinoScreen.Sheet => DinoKeyAction.CloseSheet,
+		DinoScreen.Reorder => DinoKeyAction.ReorderCancel,
 		_ => DinoKeyAction.Back,
 	};
 

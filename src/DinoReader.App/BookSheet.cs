@@ -62,6 +62,8 @@ internal sealed class BookSheet : Grid
 	private readonly ToggleSwitch _voice = new();
 	private readonly Border _voiceRow = new();
 	private readonly Border _removeRow = new();
+	private readonly Border _reorderRow = new();
+	private readonly Label _reorderLabel = new();
 	private readonly Border _readNowRow = new();
 	private readonly ScrollView _scroll = new();
 	private readonly Border _sheet = new();
@@ -108,6 +110,7 @@ internal sealed class BookSheet : Grid
 		VoiceRow();
 		QuietRow(_editRow, _editLabel, () => EditRequested, "BookSheetEdit");
 		QuietRow(_exportRow, _exportLabel, () => ExportRequested, "BookSheetExport");
+		ReorderRow();
 		RemoveRow();
 		_cover.StrokeThickness = 0;
 		_cover.WidthRequest = BookSheetPlan.CardCoverWidth;
@@ -157,7 +160,7 @@ internal sealed class BookSheet : Grid
 		_thumb.IsVisible = true;
 		_title.FontSize = PhoneTitleSize;
 		_header.VerticalOptions = LayoutOptions.Fill;
-		foreach (View row in new View[] { _grab, _header, _readNowRow, _row, _voiceRow, _pills, _editRow, _exportRow, _removeRow })
+		foreach (View row in new View[] { _grab, _header, _readNowRow, _row, _voiceRow, _pills, _reorderRow, _editRow, _exportRow, _removeRow })
 		{
 			_sheetRows.Children.Add(row);
 		}
@@ -192,7 +195,7 @@ internal sealed class BookSheet : Grid
 			_cardRows.Children.Add(_header);
 		}
 
-		foreach (View row in new View[] { _readNowRow, _row, _voiceRow, _pills, _editRow, _exportRow, _removeRow })
+		foreach (View row in new View[] { _readNowRow, _row, _voiceRow, _pills, _reorderRow, _editRow, _exportRow, _removeRow })
 		{
 			_cardRows.Children.Add(row);
 		}
@@ -255,6 +258,7 @@ internal sealed class BookSheet : Grid
 		_recordPill.HeightRequest = pill;
 		_castPill.HeightRequest = pill;
 		_removeRow.HeightRequest = pill;
+		_reorderRow.HeightRequest = pill;
 	}
 
 	/// <summary>Raised with the new state of "Show original text".</summary>
@@ -277,6 +281,9 @@ internal sealed class BookSheet : Grid
 
 	/// <summary>Raised for the developer-only Export; the sheet closes first.</summary>
 	public event Func<Task>? ExportRequested;
+
+	/// <summary>Raised for "Reorder" (Slice 264) after the sheet has closed; the gallery opens its reorder mode with this book lifted.</summary>
+	public event Func<Task>? ReorderRequested;
 
 	/// <summary>Raised for "Remove from the shelf"; the sheet stays open under the question and the page closes it once the book is gone.</summary>
 	public event Func<Task>? RemoveRequested;
@@ -336,6 +343,8 @@ internal sealed class BookSheet : Grid
 		_editLabel.Text = AppResources.Book_EditPages;
 		_exportLabel.Text = AppResources.Gallery_ExportStory;
 		_removeLabel.Text = AppResources.Book_Remove;
+		_reorderLabel.Text = AppResources.Gallery_Reorder;
+		SemanticProperties.SetDescription(_reorderRow, _reorderLabel.Text);
 		_readNowLabel.Text = AppResources.Book_ReadNow;
 		SemanticProperties.SetDescription(_editRow, _editLabel.Text);
 		SemanticProperties.SetDescription(_exportRow, _exportLabel.Text);
@@ -516,6 +525,38 @@ internal sealed class BookSheet : Grid
 		{
 			Dismiss(); // tells the page, so a switch saved while the sheet was open refreshes the tiles
 			if (handler() is { } requested)
+			{
+				await requested();
+			}
+		});
+		return row;
+	}
+
+	// Reorder (Slice 264, mock Batch 47 frame 172): a full-width outlined pill with a six-dot grip, between Record/Cast and Remove. It closes the sheet, then the gallery's reorder mode opens with this book lifted.
+	private Border ReorderRow()
+	{
+		_reorderLabel.FontSize = 15;
+		_reorderLabel.FontAttributes = FontAttributes.Bold;
+		_reorderLabel.TextColor = DinoTokens.Get(DinoTokens.Brand);
+		_reorderLabel.VerticalOptions = LayoutOptions.Center;
+		_reorderLabel.MaxLines = 1;
+		_reorderLabel.LineBreakMode = LineBreakMode.TailTruncation;
+		Border row = _reorderRow;
+		row.HeightRequest = ActionHeight;
+		row.StrokeThickness = PillStroke;
+		row.Stroke = DinoTokens.Get(DinoTokens.MergeBorder);
+		row.BackgroundColor = Colors.White;
+		row.StrokeShape = new RoundRectangle { CornerRadius = ActionHeight / 2 };
+		row.Content = new HorizontalStackLayout
+		{
+			Spacing = 8, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
+			Children = { ShelfReorderTiles.GripDots(DinoTokens.Get(DinoTokens.Brand)), _reorderLabel },
+		};
+		row.AutomationId = "BookSheetReorder";
+		CastViews.AddTap(row, async () =>
+		{
+			Hide();
+			if (ReorderRequested is { } requested)
 			{
 				await requested();
 			}

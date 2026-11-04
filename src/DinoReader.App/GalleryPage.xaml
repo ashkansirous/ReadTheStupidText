@@ -39,7 +39,7 @@
                             <TapGestureRecognizer Tapped="OnStoryTapped" />
                         </local:StoryCover.GestureRecognizers>
                     </local:StoryCover>
-                    <local:TileOverlay OpenRequested="OnOpenRequested" />
+                    <local:TileOverlay OpenRequested="OnOpenRequested" HoldRequested="OnHoldRequested" />
                 </Grid>
                 <Label Style="{StaticResource TileTitle}" Text="{Binding Title}" AutomationId="StoryTileTitle">
                     <Label.GestureRecognizers>

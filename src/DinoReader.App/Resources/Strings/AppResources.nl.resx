@@ -165,6 +165,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Hoek voor volwassenen</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Alleen volwassenen zien dit. De kast van je kind is één tik weg.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Terug naar de kast van mijn kind</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>Opnieuw ordenen</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Houd een boek ingedrukt en sleep het naar een nieuwe plek. De plank van je kind toont dezelfde volgorde.</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>De nieuwe volgorde kon niet worden opgeslagen</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Iets gebruikt het bestand nog. Tik op Klaar om het opnieuw te proberen, of op Annuleren om de oude volgorde te houden.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Nu lezen</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Opties voor {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Uit de winkel</value></data>
