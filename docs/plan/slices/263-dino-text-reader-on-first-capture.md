@@ -22,6 +22,18 @@
 - [ ] Strings: the message in all 15 languages.
 - [ ] Read The Stupid Text: unchanged; its build and scanner tests still pass.
 
+#### Design (Dino Reader Batch 47 Onboarding mock, frames 170-171, added 2026-11-04)
+
+Source: `docs/design/dino-reader/Dino Reader Batch 47 Onboarding.dc.html`, 2 frames at 360x760: 170 download (line 241), 171 offline (line 264). Both are the shared wait overlay over the "New book" wizard (`Sand` page, back arrow, title 20/600, a 2-column grid of page thumbnails 10 dp gap, radius 14, the grey box is an empty slot). The mock agrees with the plan's message and Cancel.
+
+- **Download (170).** Overlay `Sand` at 92%; 130 dp hopping Dino (`DinoWait`, Slice 143); "Downloading the AI reader for English…" 17/600 balanced (language name changes only); sub-line "Only the first time. It turns your photos into words." 13 `Body`; 12 dp bar (`BrandTint` track, `Brand` fill, 38%), "Downloading…" left and percent right 13.5/600; Cancel (44 high, white, 2 dp `#e3dccd` border). When it finishes it goes straight on to "Reading the pictures…" with no extra tap. Cancel goes back to the wizard and keeps the pages taken.
+- **Offline (171).** Dino icon 110 dp with a 40 dp white badge (3 dp `Sand` border); "Connect to the internet to get the AI reader" 17/600; "Your pages are kept. Dino needs the reader once to turn them into words." 13 `Body`, max 260; "Try again" 52 high, `Coral`, 16/600; Cancel below. Try again resumes where it stopped; Cancel returns to the wizard, the next capture tries again. Typed books and PDFs with text never see it.
+- **Files.** `ScanPages.cs`, `StoryWizardPage.xaml.cs`, `Mobile.Shared/Ocr/**` (progress callback), `AppResources*.resx`.
+- **New strings (15 locales).** "Downloading the AI reader for {0}…", "Only the first time. It turns your photos into words.", "Connect to the internet to get the AI reader", "Your pages are kept. Dino needs the reader once to turn them into words."
+
+**Open point: iPhone (mock question 4).** If iOS uses Apple's built-in reader, nothing downloads there and 170-171 are Android only. Slice already says to check first; this is not "Android only" by choice. **Default:** check first, write the answer in this file; if built in, ship no screen on iOS.
+**Open point: wait stage.** `WaitStage` has a fixed list; a download-with-bar stage for the reader may need a new stage. **Default:** reuse the download stage with a language-name line.
+
 ## Verification
 
 - Dino APK size before and after (expect a few MB smaller); emulator flow `capture-reader-download.yaml` (first capture shows the download message, then text appears); RTST scanner flow still passes.
