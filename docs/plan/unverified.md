@@ -2,6 +2,13 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 250: Dino usage: playback events and a session id new on every cold start ([slice](slices/250-dino-playback-events-and-session-id.md))
+
+- `seq` on a device (the Debug line has no `seq`; unit-tested only).
+- The `usage-playback-events` flow shown failing on origin/main (needs a rebuild).
+- iOS store build's first rows showing session ids and the new events.
+- Live Worker rows after the deploy.
+
 ### Slice 249: Dino: "Report a problem" in the grown-ups' corner ([slice](slices/249-dino-report-a-problem.md))
 
 - Known gap, to fix in a follow-up: with the remote crash switch off, a report the page called "kept and sent later" can be wiped at the next app start (`CrashReporter.UserReport.cs:135`).
@@ -97,6 +104,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 - Every vendor request shape is unproven until the first keyed run (Gemini model id, ElevenLabs voice id placeholder, Narakeet voice-name casing, CAMB `fa-ir`).
 - The piper-fa baseline render, on a PC that has the `piper-fa` pack and `sherpa_onnx` installed.
+- `build-audio` was run on real folders only by the pack run; the zips were not opened.
+- The live route `GET /api/stories/<id>/audio/<lang>?v=<n>` after the Worker deploys.
+- Part C's playback (not built).
+- Pigs Farsi: the two `say` lines (گُنده‌ی, «شالاپ، شالاپ، شالاپ!») were re-rendered in the full book on 2026-11-03 but nobody has listened to them in the book; the user heard only the spelling-page variants.
 
 ### Slice 242: Round 4 leftovers, night 2026-11-01-0859 ([slice](slices/242-round-4-leftovers-night-2026-11-01-0859.md))
 
