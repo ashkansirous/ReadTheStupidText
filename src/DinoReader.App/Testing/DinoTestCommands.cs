@@ -56,7 +56,7 @@ internal static partial class DinoTestCommands
 	internal static void Register()
 	{
 		TestHookDispatcher.AppCommands = Run;
-		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, VoiceKey, ForceKey, VoiceIdKey];
+		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, VoiceKey, ForceKey, VoiceIdKey, ModeKey];
 	}
 
 	private static string? Run(TestHookCommand command)
@@ -82,6 +82,17 @@ internal static partial class DinoTestCommands
 		{
 			TrackPackFetch(FetchAudioPackAsync(command.Get(IdKey, string.Empty), command.Get(TestHookDispatcher.LanguageKey, string.Empty)));
 			return StartedOutcome;
+		}
+
+		if (command.Name == ImportTestBookName)
+		{
+			_ = ImportTestBookAsync(command.Get(IdKey, string.Empty));
+			return StartedOutcome;
+		}
+
+		if (command.Name == TestStoreName)
+		{
+			return SetTestStore(command.Get(ModeKey, string.Empty));
 		}
 
 		if (command.Name == BackupRecordingsName)

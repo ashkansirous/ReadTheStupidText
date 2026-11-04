@@ -113,11 +113,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>Valmistellaan Dinon ääntä</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>{0} ääntä · tämä tehdään vain kerran</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>Ladataan…</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>Odottaa hyllyssä</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Valitse toinen kieli</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Valmista luettavaksi!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Jokainen hahmo saa oman äänensä. Hyllyssä on {0} tarinaa.</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Jokainen hahmo saa oman äänensä. Hyllyssä on yksi tarina.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Jokainen hahmo saa oman äänensä. Kirjasi ovat hyllyssä.</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>Valitse ensimmäiset kirjasi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>Valitse vähintään kaksi. Lisää saat kaupasta milloin tahansa.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>Valitse 2 kirjaa aloittaaksesi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>Valitse vielä 1</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>{0} valittu · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>{0} valittu</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>Haetaan kirjojasi…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>Kirja {0}/{1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Yhdistä internetiin valitaksesi ensimmäiset kirjasi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino tarvitsee kaksi kirjaa ennen kuin aloitat. Kytke Wi-Fi tai mobiilidata päälle ja yritä uudelleen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Kuule, kun Dino sanoo hei</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hei! Olen Dino. Luetaan yhdessä tarina.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Katso, mitä Dino osaa</value></data>
@@ -132,8 +140,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Lukon takana, kirjojen ja äänten lisäämiseen.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>Lue tarina yhdessä</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>Napauta kirjaa ja paina toista. Dino lukee ääneen ja korostaa jokaisen lauseen.</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>Hae lisää kirjoja</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>Kaupassa on lisää tarinoita, valmiina ladattaviksi.</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino avasi kirjan. ”Olipa kerran…”</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lue se omalla äänelläsi</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Äänitä itsesi lukemassa tarinaa sivu sivulta. Lapsesi voi kuunnella sen milloin tahansa.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Lisää oma kirjasi</value></data>

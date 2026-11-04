@@ -20,7 +20,7 @@ param(
     [string[]]$Rates = @("1", "2"),
     # Gap = how long past a chunk's audio length (at the rate) its successor starts. Fitted from the re-run baseline (see the slice file).
     [int]$GapLimitMs = 1300,
-    # Dino only: the starter book and the page (1-based) the read starts on, through the open-book hook (Slice 175).
+    # Dino only: the test book (skip-first-run imports the four former starters, Slice 261) and the page (1-based) the read starts on, through the open-book hook (Slice 175).
     [string]$Book = 'three-little-pigs',
     [int]$Page = 1,
     [switch]$SkipInstall,
@@ -59,7 +59,7 @@ $apps = @{
     rtst = @{ Project = 'src\ReadTheStupidText.Mobile\ReadTheStupidText.Mobile.csproj'; Id = 'uk.sirous.readthestupidtext'; Scheme = 'rtst-test'
         Listen = 'the voice reads the passage smoothly: no clicks, no robotic stretching, no cut-off words, no pause in the middle of a sentence' }
     dino = @{ Project = 'src\DinoReader.App\DinoReader.App.csproj'; Id = 'uk.sirous.dinoreader'; Scheme = 'dino-test'
-        Listen = "the voice (a real starter book page, read per character through Dino's own reader) sounds like a warm storyteller: no clicks, no cut-off words, no pause in the middle of a sentence" }
+        Listen = "the voice (a real test-book page, read per character through Dino's own reader) sounds like a warm storyteller: no clicks, no cut-off words, no pause in the middle of a sentence" }
 }
 $cfg = $apps[$App]
 $package = $cfg.Id + '.dbg'
@@ -321,7 +321,7 @@ function Wait-PackReady([string]$Phone) {
 
 # Starts the read at this rate and waits for the app to accept it; returns the phone time of its `HOOK read start`
 # log line (the app's own start of the read, so adb and `am` start-up latency are not counted). Fails fast if the hook is refused or missing.
-# RTST reads the fixed passage through the `read` hook. Dino opens a real starter book page through `open-book ... play=page speed=...` and reads it
+# RTST reads the fixed passage through the `read` hook. Dino opens a real test-book page through `open-book ... play=page speed=...` and reads it
 # on the app's own reading session (per-character voices), the same path as the Play button.
 function Start-Reading([string]$Phone, [double]$Rate) {
     $speed = $Rate.ToString([Globalization.CultureInfo]::InvariantCulture)
@@ -332,7 +332,7 @@ function Start-Reading([string]$Phone, [double]$Rate) {
     $answer = Wait-Marker $Phone 'RTST-TEST\s*:\s*HOOK (read (start|failed)|open-book (failed|fault))' 30 $sent 'waiting for the app to accept the read'
     if (-not $answer) { throw "The read hook got no HOOK line within 30 s. Sent broadcast action $($script:HookActionFormat -f $cfg.Scheme) (a wrong action fails silently). Is the dev build running and Debug?" }
     if ($answer.Line -match 'HOOK read failed') { throw 'The app refused the read hook (empty text or a bad speed).' }
-    if ($answer.Line -match 'HOOK open-book failed no book') { throw "No such book '$Book': give a starter book's id or title slug. ($($answer.Line))" }
+    if ($answer.Line -match 'HOOK open-book failed no book') { throw "No such book '$Book': give a test book's id or title slug. ($($answer.Line))" }
     if ($answer.Line -match 'HOOK open-book') { throw "The app could not open the book: $($answer.Line)" }
     return $answer.Time
 }

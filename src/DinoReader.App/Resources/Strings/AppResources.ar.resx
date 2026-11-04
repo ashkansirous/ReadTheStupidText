@@ -111,11 +111,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>جارٍ تجهيز صوت Dino</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>الصوت: {0} · يحدث هذا مرة واحدة فقط</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>جارٍ التنزيل…</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>بانتظارك على الرف</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>اختيار لغة أخرى</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>جاهز للقراءة!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>لكل شخصية صوتها الخاص. عدد القصص على الرف: {0}.</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>لكل شخصية صوتها الخاص. هناك قصة واحدة على الرف.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>لكل شخصية صوتها الخاص. كتبك على الرف.</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>اختر كتبك الأولى</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>اختر كتابين على الأقل. يمكنك الحصول على المزيد من المتجر في أي وقت.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>اختر كتابين للبدء</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>اختر كتابًا آخر</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>تم اختيار {0} · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>تم اختيار {0}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>جارٍ إحضار كتبك…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>الكتاب {0} من {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>اتصل بالإنترنت لاختيار كتبك الأولى</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>يحتاج دينو إلى كتابين قبل أن تبدأ. شغّل الواي فاي أو بيانات الجوال ثم حاول مرة أخرى.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>اسمع Dino يقول مرحبًا</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>مرحبًا! أنا Dino. لنقرأ قصة معًا.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>اكتشف ما يستطيع دينو فعله</value></data>
@@ -130,8 +138,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>خلف قفل، لإضافة الكتب والأصوات.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>لنقرأ قصة معًا</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>المس كتابًا ثم اضغط تشغيل. يقرأ دينو بصوت عالٍ ويضيء كل جملة.</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>احصل على المزيد من الكتب</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>في المتجر المزيد من القصص الجاهزة للتنزيل.</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>فتح دينو الكتاب. «كان يا ما كان…»</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>اقرأها بصوتك</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>سجّل نفسك وأنت تقرأ قصة، صفحة بصفحة. يمكن لطفلك تشغيلها في أي وقت.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>أضف كتابك الخاص</value></data>

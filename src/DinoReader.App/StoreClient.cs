@@ -49,7 +49,6 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs)
 
 	private static readonly HttpClient Http = new(new HttpClientHandler { UseCookies = false, AllowAutoRedirect = false }) { Timeout = Timeout.InfiniteTimeSpan };
 
-	// Same query as StarterStories.PresentIdsAsync; StarterStories.cs is outside Slice 92's Touches, so the copy stays for now.
 	// Ids compare case-insensitively, as the import check below does.
 	public event EventHandler? LibraryChanged;
 
@@ -64,6 +63,12 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs)
 	/// <summary>The readable stories the server lists, or <see cref="StoreLoadStatus.Offline"/> when it cannot be reached.</summary>
 	public async Task<StoreListing> ListAsync(CancellationToken cancel)
 	{
+#if DINO_TEST_BOOKS
+		if (Testing.TestStore.IsListing)
+		{
+			return await Testing.TestStore.ListAsync(); // Slice 261: the Debug test store (a scripted flow's fixture list), switched on by the test-store hook
+		}
+#endif
 		try
 		{
 			using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancel);
@@ -321,6 +326,13 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs)
 	private static async Task FetchPackageAsync(
 		string url, string part, IProgress<double> progress, CancellationToken cancel, Action<long, long?>? bytes = null, long cap = 0)
 	{
+#if DINO_TEST_BOOKS
+		if (Testing.TestStore.Serves(url))
+		{
+			await Testing.TestStore.CopyAsync(url, part, bytes, cancel); // Slice 261: a test book from the Debug assets, never a network call
+			return;
+		}
+#endif
 		using var stall = CancellationTokenSource.CreateLinkedTokenSource(cancel);
 		stall.CancelAfter(StallTimeout);
 		using GuardedResponse response = await GetGuardedAsync(url, stall.Token);

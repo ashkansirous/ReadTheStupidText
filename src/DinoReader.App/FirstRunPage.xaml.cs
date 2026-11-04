@@ -90,15 +90,13 @@ public sealed class CoralButton : Border
 }
 
 /// <summary>
-/// The first run (Slice 93, Decision 98, mock screens 16-18): the grown-up picks the language, the voice pack downloads with its real
-/// progress while the starter stories land on the shelf, then "Set up the stories" opens grown-up mode. The language is stored at the
-/// pick, so a kill after it goes straight to the gallery while the download carries on. No tutorial.
+/// The first run (Slice 93, Decision 98, mock screens 16-18): the grown-up picks the language, then (Slice 261) at least two of the store's books
+/// (<see cref="FirstBooksPage"/>, the voice pack downloads meanwhile), then the voice download shows its real progress, then "See what Dino can do"
+/// or "Skip" hands over to grown-up mode. The language is stored at the pick; a kill before the books are chosen reopens on the book picker
+/// (<see cref="FirstBooksGate"/>), a kill after goes straight to the gallery while the download carries on. No tutorial.
 /// </summary>
 public partial class FirstRunPage : ContentPage
 {
-	// One cover per starter, capped at four so the strip fits a 320dp-wide phone.
-	private static readonly int ShelfCovers = Math.Min(StarterStories.Count, 4);
-	private const double CoverWidth = 56;
 	private const int PercentScale = 100;
 	private const double UnsetWidth = -1; // VisualElement.WidthRequest's "no request"
 	private const double CardPadding = 40;
@@ -111,8 +109,6 @@ public partial class FirstRunPage : ContentPage
 	private readonly VoicePackInstaller _installer;
 	private readonly IVoicePackService _packs;
 	private readonly ISpeechReader _reader;
-	private readonly StarterStories _starters;
-	private readonly IStoryLibrary _library;
 	private readonly GrownUpMode _mode;
 	private readonly UsageCounter _usage;
 	private readonly IServiceProvider _services;
@@ -123,12 +119,11 @@ public partial class FirstRunPage : ContentPage
 	private const string LanguageIdPrefix = "FirstRunLanguage-";
 
 	private string _chosen = UiLanguage.English;
-	private bool _shelfLoaded;
 	private Size _windowSize;
 	private FirstRunShape? _shape;
 
 	public FirstRunPage(ISettingsStore settings, SpokenLanguage spoken, VoicePackInstaller installer, IVoicePackService packs, ISpeechReader reader,
-		StarterStories starters, IStoryLibrary library, GrownUpMode mode, UsageCounter usage, IServiceProvider services)
+		GrownUpMode mode, UsageCounter usage, IServiceProvider services)
 	{
 		InitializeComponent();
 		_selected = LanguageChoice.Current(settings);
@@ -136,8 +131,6 @@ public partial class FirstRunPage : ContentPage
 		_installer = installer;
 		_packs = packs;
 		_reader = reader;
-		_starters = starters;
-		_library = library;
 		_mode = mode;
 		_usage = usage;
 		_services = services;
@@ -349,14 +342,39 @@ public partial class FirstRunPage : ContentPage
 		// Slice 183: asked once, just before the first big download (choosing the language starts it).
 		await PackNotificationAsk.AskOnceAsync(() => DisplayAlertAsync(AppResources.Notify_Title, AppResources.Notify_Body, AppResources.Notify_Continue, AppResources.Notify_NotNow));
 		_chosen = _selected;
-		LanguageChoice.Apply(_chosen, _spoken, PackStartReason.User); // the grown-up's own choice
+		FirstBooksGate.Pending = true; // Slice 261: language, then the books (at least two), then the voice download; set before the language is stored so a kill in between reopens on the picker
+		LanguageChoice.Apply(_chosen, _spoken, PackStartReason.User); // the grown-up's own choice; the voice pack downloads while the books are picked
+		await ShowBooksAsync();
+	}
+
+	// Slice 261 (mock Batch 47 frames 163-166): the book picker is pushed over the language page. Back returns to the language (the first choice is let go, as Pick another does);
+	// the page's own Completed carries on to the voice download. The picker takes its words from the language just applied.
+	private async Task ShowBooksAsync()
+	{
+		FirstBooksPage page = _services.GetRequiredService<FirstBooksPage>();
+		page.BackRequested = async () =>
+		{
+			_spoken.Clear();
+			await Navigation.PopAsync();
+		};
+		page.Completed = async () =>
+		{
+			await Navigation.PopAsync();
+			ResumeAfterBooks();
+		};
+		await Navigation.PushAsync(page);
+	}
+
+	/// <summary>The books are on the shelf (Slice 261): shows the voice download of the stored language, then the ready page. Also how a restart mid-picker carries on (the language was stored at the pick).</summary>
+	public void ResumeAfterBooks()
+	{
+		_chosen = _selected;
 		ApplyTexts();
 		LanguagePanel.IsVisible = false;
 		DownloadPanel.IsVisible = true;
 		_installer.Changed -= OnInstallerChanged;
 		_installer.Changed += OnInstallerChanged;
 		Refresh();
-		_ = LoadShelfAsync();
 	}
 
 	// The texts of the download and ready screens are set here, after the pick, so they speak the language just chosen.
@@ -365,13 +383,10 @@ public partial class FirstRunPage : ContentPage
 		DownloadTitle.Text = AppResources.FirstRun_GettingReady;
 		DownloadSub.Text = AppResources.Format(AppResources.FirstRun_Once, LanguageNames.NativeName(_chosen));
 		DownloadState.Text = AppResources.FirstRun_Downloading;
-		ShelfTitle.Text = AppResources.FirstRun_Waiting;
 		PickAnother.Text = AppResources.FirstRun_PickAnother;
 		PhoneVoice.Text = AppResources.FirstRun_PhoneVoice;
 		ReadyTitle.Text = AppResources.FirstRun_Ready;
-		ReadyBody.Text = StarterStories.Count == 1
-			? AppResources.FirstRun_ReadyBodyOne
-			: AppResources.Format(AppResources.FirstRun_ReadyBody, StarterStories.Count);
+		ReadyBody.Text = AppResources.FirstRun_ReadyBody; // Slice 261: true for two books or six, so it names no count
 		HelloLabel.Text = AppResources.FirstRun_HearHello;
 		SetUpButton.Text = AppResources.Intro_SeeWhat;
 		SkipIntroLabel.Text = AppResources.Intro_SkipStart;
@@ -411,28 +426,6 @@ public partial class FirstRunPage : ContentPage
 		_installer.Changed -= OnInstallerChanged;
 		DownloadPanel.IsVisible = false;
 		ReadyPanel.IsVisible = true;
-	}
-
-	private async Task LoadShelfAsync()
-	{
-		if (_shelfLoaded)
-		{
-			return;
-		}
-
-		_shelfLoaded = true;
-		try
-		{
-			await _starters.InstallOnceAsync();
-			foreach (Story story in (await _library.ListAsync()).Take(ShelfCovers))
-			{
-				Shelf.Children.Add(new StoryCover { WidthRequest = CoverWidth, BindingContext = StoryTile.From(story, _library, _mode) });
-			}
-		}
-		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-		{
-			Debug.WriteLine($"Dino Reader could not show the shelf: {ex}");
-		}
 	}
 
 	private void OnRetryTapped(object? sender, TappedEventArgs e) => _ = _installer.StartAsync(PackStartReason.User);

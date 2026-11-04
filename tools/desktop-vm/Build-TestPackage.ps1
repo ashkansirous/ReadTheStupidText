@@ -49,7 +49,7 @@ function Build-DinoMsix([string]$Dir) {
     $packages = Join-Path $repoRoot 'src\DinoReader.App\AppPackages'
     Remove-Item $packages -Recurse -Force -ErrorAction SilentlyContinue
     dotnet publish (Join-Path $repoRoot 'src\DinoReader.App') -f net10.0-windows10.0.19041.0 -c Release --artifacts-path $buildArtifacts --disable-build-servers -p:IncludeAndroid=false `
-        -p:Platform=x64 -p:AppxPackageSigningEnabled=false
+        -p:Platform=x64 -p:AppxPackageSigningEnabled=false -p:DinoTestBooks=true
     if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }
     if (-not (Test-Path $packages)) { throw "dotnet publish wrote no AppPackages folder under src\DinoReader.App." }
     Copy-Item "$packages\*" $Dir -Recurse -Force

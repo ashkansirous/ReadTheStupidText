@@ -113,11 +113,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>Gjør Dinos stemme klar</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>{0} stemmer · dette skjer bare én gang</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>Laster ned …</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>Venter i hyllen</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Velg et annet språk</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Klar til å lese!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Hver figur får sin egen stemme. {0} historier står i hyllen.</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Hver figur får sin egen stemme. Én historie står i hyllen.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Hver figur får sin egen stemme. Bøkene dine står i hyllen.</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>Velg de første bøkene dine</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>Velg minst to. Du kan hente flere fra butikken når som helst.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>Velg 2 bøker for å starte</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>Velg 1 til</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>{0} valgt · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>{0} valgt</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>Henter bøkene dine …</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>Bok {0} av {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Koble til internett for å velge de første bøkene dine</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino trenger to bøker før du starter. Slå på Wi-Fi eller mobildata og prøv igjen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Hør Dino si hei</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hei! Jeg er Dino. La oss lese en historie sammen.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Se hva Dino kan</value></data>
@@ -132,8 +140,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Bak en lås, for å legge til bøker og stemmer.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>Les en historie sammen</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>Trykk på en bok og deretter på spill av. Dino leser høyt og lyser opp hver setning.</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>Hent flere bøker</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>Butikken har flere historier, klare til nedlasting.</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino åpnet boken. «Det var en gang…»</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Les den med din stemme</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Ta opp deg selv mens du leser en historie, side for side. Barnet ditt kan spille den av når som helst.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Legg til din egen bok</value></data>

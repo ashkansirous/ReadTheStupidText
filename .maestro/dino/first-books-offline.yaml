@@ -1,0 +1,55 @@
+# Slice 261: offline on the first-run book page shows the "Connect to the internet" message with Try again and no way past it; once the test store answers again, Try again shows the picker.
+# Against the old behaviour (starter books bundled) the flow never reaches an offline message.
+# expect-log: HOOK test-store ok offline
+# expect-log: [FirstBooks] offline listed=0 ticked=0 onShelf=0
+# expect-log: HOOK test-store ok ok
+# expect-log: [FirstBooks] list listed=4 ticked=0 onShelf=0
+appId: uk.sirous.dinoreader.dbg
+name: First books page offline
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books), on purpose: the flow is the fresh install's first run, which starts with the language page and an empty shelf.
+    clearState: true
+    arguments:
+      cmd: test-store
+      mode: offline
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- tapOn:
+    text: "Continue"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: android:id/button2
+    optional: true
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: FirstBooksOffline
+    timeout: 30000
+- assertVisible:
+    id: FirstBooksOfflineTitle
+- assertVisible:
+    id: FirstBooksTryAgain
+- assertNotVisible:
+    id: FirstBooksPicker
+- assertNotVisible:
+    id: FirstBooksContinue
+# The test store answers again; Try again loads the list.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: ok
+- tapOn:
+    id: FirstBooksTryAgain
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: FirstBooksPicker
+    timeout: 30000
+- assertVisible:
+    id: FirstBookCard-0
+- assertNotVisible:
+    id: FirstBooksOffline

@@ -98,7 +98,7 @@ public sealed class IntroWizardPage : ContentPage
 		try
 		{
 			_pictures = await IntroPictures.LoadAsync(_library);
-			_hasStarter = await IntroPictures.ShortestStarterAsync(_library) is not null;
+			_hasStarter = await IntroPictures.FirstBookAsync(_library) is not null;
 			_canRecord = _hasStarter;
 		}
 		catch (Exception ex)
@@ -238,7 +238,6 @@ public sealed class IntroWizardPage : ContentPage
 		(string title, string line) = step switch
 		{
 			IntroSteps.Read => (AppResources.Intro_ReadTitle, AppResources.Intro_ReadLine),
-			IntroSteps.Store => (AppResources.Intro_StoreTitle, AppResources.Intro_StoreLine),
 			IntroSteps.Record => (AppResources.Intro_RecordTitle, AppResources.Intro_RecordLine),
 			_ => windows ? (AppResources.Intro_AddTitleWindows, AppResources.Intro_AddLineWindows) : (AppResources.Intro_AddTitle, AppResources.Intro_AddLine),
 		};
@@ -569,10 +568,6 @@ public sealed class IntroWizardPage : ContentPage
 	{
 		switch (IntroSteps.NameAt(_step))
 		{
-			case IntroSteps.Store:
-				var store = _services.GetRequiredService<StorePage>();
-				store.LaunchedFromIntro = true; // its header button reads "Continue" and means "back to the intro, next step" (Slice 229)
-				return store;
 			case IntroSteps.Record:
 				return await CreateRecordScreenAsync();
 			case IntroSteps.Read:
@@ -585,10 +580,10 @@ public sealed class IntroWizardPage : ContentPage
 		}
 	}
 
-	// The read step (Batch 43 frame 101b) opens the shortest starter (the Tortoise and the Hare on a fresh install) in the reader; Back from it moves the intro on.
+	// The read step (Batch 43 frame 101b) opens the first book the grown-up picked (Slice 261; else the shortest book from the catalogue) in the reader; Back from it moves the intro on.
 	private async Task<Page?> CreateReadScreenAsync()
 	{
-		Story? story = await IntroPictures.ShortestStarterAsync(_library);
+		Story? story = await IntroPictures.FirstBookAsync(_library);
 		if (story is null)
 		{
 			return null;
@@ -610,7 +605,7 @@ public sealed class IntroWizardPage : ContentPage
 
 	private async Task<Page?> CreateRecordScreenAsync()
 	{
-		Story? story = await IntroPictures.ShortestStarterAsync(_library);
+		Story? story = await IntroPictures.FirstBookAsync(_library);
 		if (story is null)
 		{
 			return null;
@@ -627,7 +622,7 @@ public sealed class IntroWizardPage : ContentPage
 	{
 		try
 		{
-			_hasStarter = await IntroPictures.ShortestStarterAsync(_library) is not null;
+			_hasStarter = await IntroPictures.FirstBookAsync(_library) is not null;
 			_canRecord = _hasStarter;
 		}
 		catch (Exception ex)
@@ -691,6 +686,7 @@ public sealed class IntroWizardPage : ContentPage
 
 		_ended = true;
 		_usage.RecordGeneral(UsageEventName.IntroEnded, LanguageChoice.Current(), how);
+		FirstBooksGate.FirstPick = null; // every way out clears it (replay and skip too), so a later intro never opens a stale pick
 		if (!_replay)
 		{
 			IntroState.Clear();

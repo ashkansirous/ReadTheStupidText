@@ -113,11 +113,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>Gør Dinos stemme klar</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>{0} stemmer · det sker kun én gang</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>Henter…</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>Venter på hylden</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Vælg et andet sprog</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Klar til at læse!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Hver figur får sin egen stemme. Der står {0} historier på hylden.</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Hver figur får sin egen stemme. Der står én historie på hylden.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Hver figur får sin egen stemme. Dine bøger står på hylden.</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>Vælg dine første bøger</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>Vælg mindst to. Du kan få flere fra butikken når som helst.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>Vælg 2 bøger for at starte</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>Vælg 1 mere</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>{0} valgt · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>{0} valgt</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>Henter dine bøger…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>Bog {0} af {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Opret forbindelse til internettet for at vælge dine første bøger</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino har brug for to bøger, før du starter. Slå Wi-Fi eller mobildata til, og prøv igen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Hør Dino sige hej</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hej! Jeg er Dino. Lad os læse en historie sammen.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Se, hvad Dino kan</value></data>
@@ -132,8 +140,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Bag en lås, til at tilføje bøger og stemmer.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>Læs en historie sammen</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>Tryk på en bog og derefter på afspil. Dino læser højt og fremhæver hver sætning.</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>Hent flere bøger</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>Butikken har flere historier, klar til download.</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino åbnede bogen. „Der var engang…“</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Læs den med din stemme</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Optag dig selv, mens du læser en historie, side for side. Dit barn kan afspille den, når som helst.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Tilføj din egen bog</value></data>
