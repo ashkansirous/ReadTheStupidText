@@ -1,6 +1,6 @@
 # Slice 261: Cancel while the first books download goes back to the picker with the ticks kept (a finished book stays on the shelf, user's design review of frame 165). Against an
 # implementation that drops the ticks or moves on, the picker would show two cards unticked or the voice download would show.
-# expect-log: HOOK test-store ok slow
+# expect-log: HOOK test-store ok stall
 # expect-log: [FirstBooks] picked listed=4 ticked=2
 # expect-log: [FirstBooks] cancelled listed=4 ticked=2
 appId: uk.sirous.dinoreader.dbg
@@ -11,7 +11,7 @@ name: Cancelling the first books keeps the ticks
     clearState: true
     arguments:
       cmd: test-store
-      mode: slow
+      mode: stall
 - extendedWaitUntil:
     visible:
       id: FirstRunLanguage

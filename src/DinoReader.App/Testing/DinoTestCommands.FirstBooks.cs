@@ -7,8 +7,8 @@ namespace DinoReader.Testing;
 /// <summary>
 /// Slice 261: the test books and the test store for the first-run book picker. <c>import-test-book id=&lt;stem|id|a,b|all&gt;</c> puts those former starter books (Debug-only assets, <see cref="TestStore"/>)
 /// on the shelf through the store client's own download and logs <c>HOOK import-test-book ok &lt;ids&gt;</c> or <c>failed ...</c>; a flow that opens a book calls it first.
-/// <c>test-store mode=ok|slow|offline|off</c> switches the store list the picker and the Store page read (off, the default, is the live store); slow makes each book take about three seconds, so
-/// the download wait can be seen. Outcome: <c>HOOK test-store ok &lt;mode&gt;</c> or <c>failed unknown mode</c>.
+/// <c>test-store mode=ok|slow|stall|offline|off</c> switches the store list the picker and the Store page read (off, the default, is the live store); slow makes each book take about three seconds, so
+/// the download wait can be seen; stall holds each book for 30 s per chunk, so a flow can cancel while it is in flight. Outcome: <c>HOOK test-store ok &lt;mode&gt;</c> or <c>failed unknown mode</c>.
 /// </summary>
 internal static partial class DinoTestCommands
 {

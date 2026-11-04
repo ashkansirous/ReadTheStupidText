@@ -10,6 +10,7 @@ internal enum TestStoreMode
 	Off,
 	Ok,
 	Slow,
+	Stall,
 	Offline,
 }
 
@@ -25,6 +26,8 @@ internal static class TestStore
 	private const string AssetExtension = ".dino";
 	private const int SlowChunks = 8;
 	private const int SlowChunkMilliseconds = 350;
+	// Stall: a chunk takes far longer than any flow waits, so a download is still in flight when the flow taps Cancel (a cancel ends the delay at once).
+	private const int StallChunkMilliseconds = 30000;
 	private const int CopyBufferBytes = 81920;
 
 	// Oldest first: the last one imported is the newest and so comes first on the shelf, as the former starters did.
@@ -112,7 +115,8 @@ internal static class TestStore
 		Directory.CreateDirectory(Path.GetDirectoryName(toPath)!);
 		await using FileStream file = File.Create(toPath);
 		long total = all.Length;
-		int chunk = Mode == TestStoreMode.Slow ? (int)Math.Max(1, total / SlowChunks) : CopyBufferBytes;
+		bool timed = Mode is TestStoreMode.Slow or TestStoreMode.Stall;
+		int chunk = timed ?(int)Math.Max(1, total / SlowChunks) : CopyBufferBytes;
 		all.Position = 0;
 		byte[] buffer = new byte[chunk];
 		long done = 0;
@@ -122,9 +126,9 @@ internal static class TestStore
 			await file.WriteAsync(buffer.AsMemory(0, read), cancel);
 			done += read;
 			bytes?.Invoke(done, total);
-			if (Mode == TestStoreMode.Slow)
+			if (timed)
 			{
-				await Task.Delay(SlowChunkMilliseconds, cancel);
+				await Task.Delay(Mode == TestStoreMode.Stall ? StallChunkMilliseconds : SlowChunkMilliseconds, cancel);
 			}
 		}
 	}
