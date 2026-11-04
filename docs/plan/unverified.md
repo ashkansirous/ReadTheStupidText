@@ -2,6 +2,10 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 258: Dino: pre-made audio for the four starter books ([slice](slices/258-dino-starter-books-premade-audio.md))
+- iOS run (compile only so far).
+- Windows head run.
+
 ### Slice 250: Dino usage: playback events and a session id new on every cold start ([slice](slices/250-dino-playback-events-and-session-id.md))
 
 - `seq` on a device (the Debug line has no `seq`; unit-tested only).
