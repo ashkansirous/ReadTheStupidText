@@ -40,6 +40,8 @@ name: Reading screen keeps its page through a rotation
     id: ReadingBack
 - assertVisible:
     id: ReadingModes
+# Slice 253 item 2: beside mock frame 113 (picture + text, right-hand rail).
+- takeScreenshot: shot-113-reading
 - setOrientation: PORTRAIT
 - extendedWaitUntil:
     visible:

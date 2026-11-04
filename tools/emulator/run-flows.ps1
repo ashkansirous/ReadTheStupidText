@@ -148,6 +148,7 @@ function Get-FlowNeeds([string]$FlowFile) {
 function Wake-Emulator {
     & $script:Adb -s $script:Serial shell input keyevent KEYCODE_WAKEUP | Out-Null
     & $script:Adb -s $script:Serial shell wm dismiss-keyguard | Out-Null
+    Close-SystemDialogs   # Slice 253 item 1: a System UI "isn't responding" dialog that is already up is closed before the flow, not after it fails
 }
 
 # Slice 212: `# needs: cellular-only` = Wi-Fi off and mobile data on, so the Wi-Fi-only download card shows "Download now" instead of starting the download.
@@ -345,6 +346,7 @@ function Start-SecondHalf($Names, $Boot) {
         return $null
     }
     $log = Join-Path $script:StateDir 'split-i2.log'
+    # This detached call is a whole run-flows run on emulator-5556: it takes its own lease and runs Enable-DialogGuard / Restore-DialogGuard on that serial itself.
     $arguments = "-NoProfile -File `"$PSCommandPath`" -App $App -Instance 2 -Flow `"$($Names -join ',')`" -LogTimeoutSeconds $LogTimeoutSeconds"
     Write-Host "SPLIT: $($Names.Count) flow(s) run on emulator-5556 at the same time: $($Names -join ', ') (output $log)."
     return Start-DetachedProcess (Get-Process -Id $PID).Path $arguments $log "$log.err"
@@ -376,6 +378,7 @@ function Start-FlowsActivity([string]$Kind, [string]$Owner) {
 function Assert-LeaseHeld([string]$Owner, [string]$When) {
     if (-not (Confirm-DeviceLease $script:Serial $Owner $script:EmulatorLeaseMinutes 'emulator')) {
         Write-Host "LEASE lost: another run took $($script:Serial) $When. Stopping so two runs never share one emulator."
+        $script:DialogGuardLeaseLost = $true   # Restore-DialogGuard (in the finally) then leaves the setting to the run that holds the lease
         exit $script:ExitLeaseHeld
     }
 }
@@ -440,6 +443,7 @@ try {
     try {
         Assert-LeaseHeld $leaseOwner 'while this run waited for a free slot'  # the wait for the quiet machine can be long
         Clear-AnrDialog 'before the flows'
+        Enable-DialogGuard   # Slice 253 item 1: every AVD; put back in the finally below (a leftover 1 from a killed run is cleared)
         $secondRun = Start-SecondHalf @($splitPlan.Second) $boot2
         $myNames = @($splitPlan.First)
         if (@($splitPlan.Second).Count -gt 0 -and -not $secondRun) { $myNames += @($splitPlan.Second) }   # emulator 2 did not come up: its flows run here
@@ -461,7 +465,7 @@ try {
             $results.Add($r)
         }
         Clear-AnrDialog 'after the flows'
-    } finally { Stop-Activity $activity }
+    } finally { Restore-DialogGuard; Stop-Activity $activity }
     $failed = @($results | Where-Object { $_.Problem }).Count
     $notRun = @($results | Where-Object { $_.NotRun }).Count
     Write-Host (Format-FlowsSummary $App $results.ToArray() $total.Elapsed.TotalSeconds)
