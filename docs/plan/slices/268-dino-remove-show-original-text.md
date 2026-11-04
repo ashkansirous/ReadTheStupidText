@@ -1,8 +1,8 @@
 # Slice 268 — Dino: remove "Show original text" from grown-up mode
 
-*Planned 2026-11-04.* Dino Reader, Android and iOS alike (and the Windows head, which shares the pages). User, 2026-11-04: "there is a part in the parents mode that allows reading a book in the original language. I dont need that. remove it". Fits the rule in Slice 267: a book has no language of its own; it is read in the family's languages.
+*In progress (wave 2026-11-04), draft PR.* Dino Reader, Android and iOS alike (and the Windows head, which shares the pages). User, 2026-11-04: "there is a part in the parents mode that allows reading a book in the original language. I dont need that. remove it". Fits the rule in Slice 267: a book has no language of its own; it is read in the family's languages.
 
-**Touches:** `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.Core/BookSheetPlan.cs`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingText.cs`, `src/DinoReader.Core/LanguagePick*.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `.maestro/dino/**`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/268-dino-remove-show-original-text.md`.
+**Touches:** `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.Core/BookSheetPlan.cs`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingText.cs`, `src/DinoReader.App/StoryTranslator.cs`, `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.Core/ReadingTranslation.cs`, `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryJson.cs`, `src/DinoReader.Core/StoryPackageWriter.cs`, `src/DinoReader.Core/StarterUpdate.cs`, `src/DinoReader.Core/LanguagePick*.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `.maestro/dino/**`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/268-dino-remove-show-original-text.md`.
 
 ## What it is today (read on origin/main 2026-11-04)
 
