@@ -1,6 +1,6 @@
 # Slice 256 — Dino: `dump-sentences` works for picture books (Good Enough), so it gets Gemini audio
 
-*Planned 2026-11-03.* Dino Reader tooling only. Found while casting the store books for Slice 246: `dotnet run --project
+*In progress (wave 2026-11-04), draft PR.* (Planned 2026-11-03.) Dino Reader tooling only. Found while casting the store books for Slice 246: `dotnet run --project
 tools/DinoReader.BookBuilder -- dump-sentences good-enough --lang fa` exits 1 with "Good Enough has 1 pages but 10
 pictures". The dump reads only `story.md`; Good Enough is a picture book whose pages come from `lines.json`
 (`Books.cs`: "null for a picture book whose pages come from lines.json"). Without a dump its cast
@@ -8,7 +8,7 @@ pictures". The dump reads only `story.md`; Good Enough is a picture book whose p
 audio cannot be rendered.
 
 **Touches:** `tools/DinoReader.BookBuilder/SentenceDump.cs`, `tools/DinoReader.BookBuilder/Dumps.cs`,
-`tools/DinoReader.BookBuilder/Books.cs`, `tests/DinoReader.Tests/**` (BookBuilder tests), `content/dino/good-enough/audio-cast.json`.
+`tools/DinoReader.BookBuilder/Books.cs`, `tests/DinoReader.Tests/**` (BookBuilder tests), `content/dino/good-enough/audio-cast.json`, `tools/premade-audio/generate.py` (only if item 2 needs it), `src/DinoReader.Core/**` (read-only reuse of the segmenter; edit only if it must be made reachable), `docs/plan/slices/256-good-enough-sentence-dump.md`.
 
 ## Work
 
