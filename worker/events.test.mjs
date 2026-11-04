@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { isUnstampedVersion, MAX_EVENTS_PER_REQUEST, handleEvents, handleRtstEvents, isEventsPath, parseEvent, parseRtstEvent, toDataPoint } from "./events.ts";
+import { isUnstampedVersion, MAX_EVENTS_PER_REQUEST, handleEvents, handleRtstEvents, isEventsPath, parseEvent, parseRtstEvent, toDataPoint, toRtstDataPoint } from "./events.ts";
 
 const BOOK = "0123456789abcdef0123456789abcdef";
 const shelfEvent = {
@@ -36,8 +36,8 @@ test("a batch of valid counts is written, one data point each, and answered with
   assert.equal(env.points.length, 2);
   assert.deepEqual(env.points[0], {
     indexes: ["book_opened"],
-    blobs: ["book_opened", BOOK, "en", "shelf", "no", "1.42.0", "android", "2026-10-25", "", "none", "", "", "", "", ""],
-    doubles: [2],
+    blobs: ["book_opened", BOOK, "en", "shelf", "no", "1.42.0", "android", "2026-10-25", "", "none", "", "", "", "", "", ""],
+    doubles: [2, -1],
   });
   assert.equal(env.points[1].blobs[4], "yes");
 });
@@ -84,7 +84,7 @@ test("invalid counts are dropped one by one and unknown fields never reach the d
   const response = await handleEvents(post({ events: [...bad, extra] }), env, on);
   assert.equal(response.status, 204);
   assert.equal(env.points.length, 1);
-  assert.equal(env.points[0].blobs.length, 15);
+  assert.equal(env.points[0].blobs.length, 16);
   assert.ok(!JSON.stringify(env.points[0]).includes("secret"));
 });
 
@@ -132,7 +132,7 @@ test("only POST is answered", async () => {
 test("the path check and the parser agree on the shapes they accept", () => {
   assert.ok(isEventsPath("/api/events"));
   assert.ok(!isEventsPath("/api/events/"));
-  assert.deepEqual(parseEvent(shelfEvent), { ...shelfEvent, detail: "" });
+  assert.deepEqual(parseEvent(shelfEvent), { ...shelfEvent, detail: "", session: "", seq: -1 });
   assert.equal(parseEvent({ ...shelfEvent, language: "pt-BR" })?.language, "pt-BR");
   assert.equal(toDataPoint(shelfEvent).indexes.length, 1);
 });
@@ -441,28 +441,28 @@ test("Dino stamps the batch's country and device facts on every point as blob10-
   const env = recorder();
   const response = await handleEvents(dinoPost({ schemaVersion: 1, device, events: [shelfEvent, ownEvent] }, "GB"), env, on);
   assert.equal(response.status, 204);
-  for (const point of env.points) assert.deepEqual(point.blobs.slice(9), ["GB", "15", "tablet", "arm64", "5-8", "4-6"]);
-  assert.deepEqual(env.points[0].doubles, [2]);
+  for (const point of env.points) assert.deepEqual(point.blobs.slice(9, 15), ["GB", "15", "tablet", "arm64", "5-8", "4-6"]);
+  assert.deepEqual(env.points[0].doubles, [2, -1]);
 });
 
 test("a batch with no device object is still written, with the device fields empty (an older build)", async () => {
   const env = recorder();
   assert.equal((await handleEvents(dinoPost({ events: [shelfEvent] }, "DE"), env, on)).status, 204);
-  assert.deepEqual(env.points[0].blobs.slice(9), ["DE", "", "", "", "", ""]);
+  assert.deepEqual(env.points[0].blobs.slice(9, 15), ["DE", "", "", "", "", ""]);
   const nulled = recorder();
   assert.equal((await handleEvents(dinoPost({ events: [shelfEvent], device: null }, "DE"), nulled, on)).status, 204);
-  assert.deepEqual(nulled.points[0].blobs.slice(10), ["", "", "", "", ""]);
+  assert.deepEqual(nulled.points[0].blobs.slice(10, 15), ["", "", "", "", ""]);
 });
 
 test("an invalid device field becomes empty and never drops the count", async () => {
   const env = recorder();
   const badDevice = { osMajor: 150, formFactor: "fridge", arch: "mips", cores: "12", ram: "512GB", model: "Pixel 9" };
   assert.equal((await handleEvents(dinoPost({ events: [shelfEvent], device: badDevice }, "FR"), env, on)).status, 204);
-  assert.deepEqual(env.points[0].blobs.slice(9), ["FR", "", "", "", "", ""]);
+  assert.deepEqual(env.points[0].blobs.slice(9, 15), ["FR", "", "", "", "", ""]);
   assert.ok(!JSON.stringify(env.points[0]).includes("Pixel"));
   const partial = recorder();
   await handleEvents(dinoPost({ events: [shelfEvent], device: { ...device, osMajor: "15", cores: "9+" } }, "FR"), partial, on);
-  assert.deepEqual(partial.points[0].blobs.slice(10), ["", "tablet", "arm64", "9+", "4-6"]);
+  assert.deepEqual(partial.points[0].blobs.slice(10, 15), ["", "tablet", "arm64", "9+", "4-6"]);
 });
 
 test("the country is none for XX, T1, lower case, the wrong length, a non-string or no cf at all", async () => {
@@ -635,4 +635,77 @@ test("Read The Stupid Text ignores the channel field and never touches the Dino 
   const request = new Request("https://readthestupidtext.sirous.uk/api/events", { method: "POST", body: JSON.stringify({ channel: "beta", events: [readStarted] }) });
   assert.equal((await handleRtstEvents(request, env, on)).status, 204);
   assert.equal(env.points.length, 1);
+});
+
+// ---- Playback events and the session id (Slice 250) -----------------------------------------------------------------------
+
+const SESSION = "0123456789abcdef0123456789abcdef";
+const playback = (name, detail) => ({ ...shelfEvent, name, ...(detail === undefined ? {} : { detail }) });
+const STOP_REASONS = ["left_book", "finished", "cancelled", "language_changed", "restarted", "window_stopped", "skipped", "failed", "other"];
+
+test("the five playback names are accepted for a shelf or an own book, with no detail except read_stopped's reason", () => {
+  for (const name of ["read_started", "read_paused", "read_resumed", "book_left"]) {
+    assert.ok(parseEvent(playback(name)), name);
+    assert.ok(parseEvent({ ...ownEvent, name }), `${name} own`);
+    assert.equal(parseEvent(playback(name, "left_book")), null, `${name} takes no detail`);
+  }
+  assert.equal(parseEvent(playback("read_stopped")), null);
+  assert.equal(parseEvent({ ...shelfEvent, name: "read_started", book: "none", source: "none" }), null);
+});
+
+test("read_stopped takes exactly the nine closed reasons and drops any other", () => {
+  for (const reason of STOP_REASONS) assert.equal(parseEvent(playback("read_stopped", reason))?.detail, reason);
+  for (const bad of ["page left", "Left_Book", "left_book:1", "", "user", "x".repeat(40)]) assert.equal(parseEvent(playback("read_stopped", bad)), null, bad);
+});
+
+test("a valid session id and sequence are written as blob16 and double2", async () => {
+  const env = recorder();
+  await handleEvents(post({ events: [{ ...shelfEvent, session: SESSION, seq: 7 }, { ...shelfEvent, session: SESSION, seq: 0 }] }), env, on);
+  assert.equal(env.points[0].blobs.length, 16);
+  assert.equal(env.points[0].blobs[15], SESSION);
+  assert.deepEqual(env.points[0].doubles, [2, 7]);
+  assert.equal(env.points[1].doubles[1], 0);
+});
+
+test("a malformed session id is dropped from the row, never the event", async () => {
+  const bad = ["0123", SESSION.toUpperCase(), SESSION + "0", "g".repeat(32), 5, null, { id: SESSION }, ""];
+  for (const session of bad) {
+    const env = recorder();
+    await handleEvents(post({ events: [{ ...shelfEvent, session, seq: 3 }] }), env, on);
+    assert.equal(env.points.length, 1, String(session));
+    assert.equal(env.points[0].blobs[15], "", String(session));
+    assert.deepEqual(env.points[0].doubles, [2, -1], `${String(session)}: a sequence without a valid session is dropped too`);
+  }
+});
+
+test("a malformed sequence is dropped from the row and keeps the session id", async () => {
+  for (const seq of [-1, 1.5, "3", null, 1_000_001, Number.NaN, undefined]) {
+    const env = recorder();
+    await handleEvents(post({ events: [{ ...shelfEvent, session: SESSION, seq }] }), env, on);
+    assert.equal(env.points.length, 1, String(seq));
+    assert.equal(env.points[0].blobs[15], SESSION, String(seq));
+    assert.equal(env.points[0].doubles[1], -1, String(seq));
+  }
+});
+
+test("a count from a build without the fields still writes an empty session and sequence", () => {
+  const point = toDataPoint(parseEvent(shelfEvent));
+  assert.equal(point.blobs[15], "");
+  assert.deepEqual(point.doubles, [2, -1]);
+});
+
+test("Read The Stupid Text rows never carry a session id, even when a body sends one", () => {
+  const event = parseRtstEvent({ ...readStarted, session: SESSION, seq: 1 });
+  assert.ok(event);
+  assert.ok(!JSON.stringify(toRtstDataPoint(event)).includes(SESSION));
+});
+
+test("a session in order: the Slice 248 sequence reads read_started, book_left, read_stopped left_book, book_opened, read_started", async () => {
+  const env = recorder();
+  const names = [
+    ["read_started"], ["book_left"], ["read_stopped", "left_book"], ["book_opened"], ["read_started"],
+  ];
+  const events = names.map(([name, detail], index) => ({ ...playback(name, detail), session: SESSION, seq: index + 1 }));
+  await handleEvents(post({ events }), env, on);
+  assert.deepEqual(env.points.map((p) => [p.blobs[0], p.blobs[8], p.blobs[15], p.doubles[1]]), names.map(([name, detail], index) => [name, detail ?? "", SESSION, index + 1]));
 });

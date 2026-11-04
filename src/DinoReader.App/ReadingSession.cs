@@ -79,6 +79,9 @@ public sealed class ReadingSession
 	// stopped, fails or completes. Chunk events carry no id, so they are tagged with this when raised
 	// and dropped if the read they belong to is no longer the active one.
 	private int _activeReadId;
+
+	// Slice 250: true between a counted read_started and its read_stopped, so every start gets exactly one stop.
+	private bool _countedOpen;
 	private int _readOrigin;
 
 	// Cancelled when the read is stopped or superseded, so a translation still running for it is abandoned.
@@ -147,6 +150,9 @@ public sealed class ReadingSession
 	public event EventHandler<int>? SentenceChanged;
 
 	public event EventHandler? StateChanged;
+
+	/// <summary>Slice 250: a read started, paused, resumed or stopped (with the closed reason for a stop; null for the other verbs). The page turns each into a usage count.</summary>
+	public event Action<ReadingEventKind, ReadStopReason?>? Playback;
 
 	public event EventHandler? Failed;
 
@@ -267,13 +273,15 @@ public sealed class ReadingSession
 	}
 
 	/// <param name="reason">Why, one of <see cref="TraceLines.ReadingReason"/>; logged only when a read was playing.</param>
-	public void Pause(string reason)
+	/// <param name="counted">False for a pause the app makes itself (the language menu), which is not a count (Slice 250).</param>
+	public void Pause(string reason, bool counted = true)
 	{
 		if (_recorded == RecordedPlay.Playing)
 		{
 			AppTrace.Reading(TraceLines.ReadingEvent.Paused, reason);
 			_player.Pause();
 			_recorded = RecordedPlay.Paused;
+			RaiseIf(counted, ReadingEventKind.Paused);
 			StateChanged?.Invoke(this, EventArgs.Empty);
 			return;
 		}
@@ -281,14 +289,17 @@ public sealed class ReadingSession
 		if (_reader.State == PlaybackState.Playing)
 		{
 			AppTrace.Reading(TraceLines.ReadingEvent.Paused, reason);
+			RaiseIf(counted, ReadingEventKind.Paused);
 			_reader.Pause();
 		}
 	}
 
-	public void Resume()
+	/// <param name="counted">False for a resume of a pause the app made itself (the language menu), which is not a count (Slice 250).</param>
+	public void Resume(bool counted = true)
 	{
 		if (_pendingAdvance)
 		{
+			RaiseIf(counted, ReadingEventKind.Resumed);
 			ResumePendingAdvance();
 			return;
 		}
@@ -296,6 +307,7 @@ public sealed class ReadingSession
 		if (_recorded == RecordedPlay.Paused)
 		{
 			AppTrace.Reading(TraceLines.ReadingEvent.Resumed, TraceLines.ReadingReason.User);
+			RaiseIf(counted, ReadingEventKind.Resumed);
 			_player.Resume();
 			_recorded = RecordedPlay.Playing;
 			StateChanged?.Invoke(this, EventArgs.Empty);
@@ -305,17 +317,38 @@ public sealed class ReadingSession
 		if (_reader.State == PlaybackState.Paused)
 		{
 			AppTrace.Reading(TraceLines.ReadingEvent.Resumed, TraceLines.ReadingReason.User);
+			RaiseIf(counted, ReadingEventKind.Resumed);
 			_reader.Resume();
 		}
 	}
 
-	/// <param name="reason">Why, one of <see cref="TraceLines.ReadingReason"/>; logged only when a read was playing, paused or loading (a stop of an idle session changes nothing).</param>
-	public void Stop(string reason)
+	private void RaiseIf(bool counted, ReadingEventKind kind)
+	{
+		if (counted)
+		{
+			Playback?.Invoke(kind, null);
+		}
+	}
+
+	// Slice 250: closes the counted read if one is open, so a start never gets a second stop.
+	private void RaiseStopped(ReadStopReason reason)
+	{
+		if (_countedOpen)
+		{
+			_countedOpen = false;
+			Playback?.Invoke(ReadingEventKind.Stopped, reason);
+		}
+	}
+
+	/// <param name="reason">Why (Slice 250: a closed <see cref="ReadStopReason"/>, written to the log as its <see cref="ReadStopTrace"/> text and counted by its usage detail); logged and counted only when a read was playing, paused or loading (a stop of an idle session changes nothing).</param>
+	public void Stop(ReadStopReason reason)
 	{
 		if (State != SessionState.Idle || _activeReadId != 0)
 		{
-			AppTrace.Reading(TraceLines.ReadingEvent.Stopped, reason);
+			AppTrace.Reading(TraceLines.ReadingEvent.Stopped, ReadStopTrace.ReasonOf(reason));
 		}
+
+		RaiseStopped(reason);
 
 		CancelRead();
 		StopRecording();
@@ -326,8 +359,20 @@ public sealed class ReadingSession
 		ClearPending();
 	}
 
-	/// <summary>Reads from the start of <paramref name="sentence"/> on, in each character's voice.</summary>
-	public async Task StartAtAsync(int sentence)
+	/// <summary>Reads from the start of <paramref name="sentence"/> on, in each character's voice. A start asked for from outside counts as a started read (Slice 250); the read's own continuations do not.</summary>
+	public Task StartAtAsync(int sentence)
+	{
+		if (_story is not null && sentence >= 0 && sentence < _sentences.Count)
+		{
+			RaiseStopped(ReadStopReason.Restarted); // a start that cuts a running read closes it first
+			_countedOpen = true;
+			Playback?.Invoke(ReadingEventKind.Started, null);
+		}
+
+		return ContinueAtAsync(sentence);
+	}
+
+	private async Task ContinueAtAsync(int sentence)
 	{
 		if (_story is not { } story || sentence < 0 || sentence >= _sentences.Count)
 		{
@@ -406,11 +451,12 @@ public sealed class ReadingSession
 		{
 			_activeReadId = 0;
 			Finished = true;
+			RaiseStopped(ReadStopReason.Finished);
 			StateChanged?.Invoke(this, EventArgs.Empty);
 			return;
 		}
 
-		_ = StartAtAsync(next);
+		_ = ContinueAtAsync(next);
 	}
 
 	// The recording cannot be played (a corrupt or empty file): this page is read in the generated voice instead, and the read goes on from its start.
@@ -430,7 +476,7 @@ public sealed class ReadingSession
 			return; // paused by the user: the page reads in the generated voice when they resume playing, not on its own
 		}
 
-		_ = StartAtAsync(_pageSentences[page].First);
+		_ = ContinueAtAsync(_pageSentences[page].First);
 	}
 
 	private async Task SpeakAsync(Story story, int fromPosition, int id, CancellationToken cancellation)
@@ -476,7 +522,7 @@ public sealed class ReadingSession
 		if (segments.Count == 0 && _continueRead is { } cut && cut.ReadId == id)
 		{
 			_continueRead = null;
-			_ = StartAtAsync(cut.Sentence);
+			_ = ContinueAtAsync(cut.Sentence);
 			return false;
 		}
 
@@ -679,12 +725,13 @@ public sealed class ReadingSession
 		if (_continueRead is { } cut && cut.ReadId == id)
 		{
 			_continueRead = null;
-			_ = StartAtAsync(cut.Sentence);
+			_ = ContinueAtAsync(cut.Sentence);
 			return;
 		}
 
 		Finished = true;
 		AppTrace.Reading(TraceLines.ReadingEvent.Stopped, TraceLines.ReadingReason.Finished);
+		RaiseStopped(ReadStopReason.Finished);
 		StateChanged?.Invoke(this, EventArgs.Empty); // the page counts a finished book from this
 	}
 
@@ -803,6 +850,7 @@ public sealed class ReadingSession
 		ClearPendingIfCurrent(id);
 		if (wasCurrent)
 		{
+			RaiseStopped(ReadStopReason.Failed);
 			Failed?.Invoke(this, EventArgs.Empty);
 		}
 	}
@@ -851,6 +899,11 @@ public sealed class ReadingSession
 
 		if (state == PlaybackState.Playing || idleAfterReturn)
 		{
+			if (idleAfterReturn)
+			{
+				RaiseStopped(ReadStopReason.Other); // Slice 250: a read that ended without ever playing still closes its start, so the next start is not charged a stale "restarted" stop
+			}
+
 			ClearPending();
 			return;
 		}

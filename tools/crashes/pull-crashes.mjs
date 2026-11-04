@@ -270,12 +270,12 @@ export function codeOf(report) {
 
 export function userReportLine(report) {
   const code = codeOf(report) ?? "(no code)";
-  return `${code.length === 8 ? `${code.slice(0, 4)}-${code.slice(4)}` : code}  ${report.minute}  ${report.platform} ${report.version} ${report.channel}  country ${report.country ?? "?"}`;
+  return `${code.length === 8 ? `${code.slice(0, 4)}-${code.slice(4)}` : code}  ${report.minute}  ${report.platform} ${report.version} ${report.channel}  country ${report.country ?? "?"}${report.session ? `  session ${report.session}` : ""}`;
 }
 
 // One report in full: its fields, then the whole log tail.
 export function formatUserReport(report) {
-  const fields = ["app", "platform", "version", "channel", "kind", "minute", "country"].map((name) => `${name}: ${report[name] ?? ""}`);
+  const fields = ["app", "platform", "version", "channel", "kind", "minute", "country", "session"].map((name) => `${name}: ${report[name] ?? ""}`);
   const device = report.device ? `device: ${JSON.stringify(report.device)}` : "device: (none)";
   return [`user report ${codeOf(report) ?? ""}`, ...fields, device, "log tail:", String(report.logTail ?? "")].join("\n");
 }

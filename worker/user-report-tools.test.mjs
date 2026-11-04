@@ -61,6 +61,13 @@ test("user reports are split from crashes, so the listing shows them apart", () 
   assert.deepEqual(userReports, [userReport]);
 });
 
+test("the listing and the full form show a report's session id when it has one (Slice 250)", () => {
+  const session = "0123456789abcdef0123456789abcdef";
+  assert.match(userReportLine({ ...userReport, session }), new RegExp(`session ${session}$`));
+  assert.doesNotMatch(userReportLine(userReport), /session/);
+  assert.match(formatUserReport({ ...userReport, session }), new RegExp(`session: ${session}`));
+});
+
 test("the one-line form shows the code as the person saw it, and the full form shows the whole log tail", () => {
   assert.match(userReportLine(userReport), /^K7QX-2MRD {2}2026-11-04T09:30Z {2}ios 1\.85\.3 testflight/);
   const text = formatUserReport(userReport);

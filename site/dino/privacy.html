@@ -102,7 +102,9 @@
   not a location: the app never asks for location permission and never sends one, and the IP address itself is not
   stored. These are coarse ranges, not exact values, and nothing here is a name, an account, a device model or an identifier. They are not a guarantee of anonymity on their own, though: in a small country a rare combination of ranges could stand out, so they are used only to see the overall picture.</p>
   <p>  There is no name, account, advertising or device identifier, no install identifier, no IP address kept by the app, and
-  nothing a child typed, so a count carries nothing that names a child, a family or a device. The server (like any web
+  nothing a child typed, so a count carries nothing that names a child, a family or a device. The one number that goes
+  with the counts is a random session number: it is made new every time the app starts and is never reused for a later start. It lives in memory, and is also written only inside counts
+  still waiting in the app's local send queue; it is gone once those counts are sent. It cannot tell two sessions of one person apart. It only puts the counts of one start of the app in order. The server (like any web
   server) may see the IP address of the request, which the project does not read or store with the counts (only the approximate country it maps to, as described above). The counts are
   stored with Cloudflare (our processor) for about three months and read only as totals. The project can turn counting down or
   off from the server without an update. A grown-up can switch it off at any time under &ldquo;Help make Dino

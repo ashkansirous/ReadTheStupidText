@@ -1,8 +1,8 @@
 // Dino Reader's anonymous usage counts (Slice 133, Decisions 140-142). The app batches a session's counts into one
-//   POST /api/events    { "schemaVersion": 1, "device"?: { osMajor, formFactor, arch, cores, ram }, "events": [ { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail? } ] }
+//   POST /api/events    { "schemaVersion": 1, "device"?: { osMajor, formFactor, arch, cores, ram }, "events": [ { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail?, session?, seq? } ] }
 // and this writes each valid one to the Workers Analytics Engine dataset bound as DINO_USAGE (`dino_usage`). Nothing about the
 // caller is stored or written except the country (Slice 166: the two-letter code Cloudflare derives from the connection, `request.cf.country`;
-// never the IP, never sent by the app) and the optional `device` object's coarse closed values: no user agent, no id; the only fields kept are the ones named below, each checked
+// never the IP, never sent by the app) and the optional `device` object's coarse closed values: no user agent, and no id except (Slice 250) the random per-launch session id below, which is new at every cold start and tied to no install, device or person; the only fields kept are the ones named below, each checked
 // against a closed list or a strict pattern, so a changed or hostile client can add no free text. When the remote config
 // (Slice 132) has telemetry off or missing, the request is answered like a success and nothing is written. Likewise (Slice 179) an android or ios event whose device.arch is x64 or x86 is dropped with the same 204: real phones are ARM, so it is a robot or emulator. Only Dino Reader's
 // host and its /dino/ prefix on workers.dev route here (index.ts), which also supplies the telemetry check (it reads the
@@ -48,6 +48,17 @@ const INTRO_ENDS = ["finished", "skipped_all"] as const;
 const STORY_LANGUAGE_COUNTS = ["1", "2", "3"] as const;
 const STORY_LANGUAGE_WHERE = ["intro", "settings"] as const;
 const PACK_OUTCOMES = ["done", "failed", "cancelled"] as const;
+// Slice 250: why a read stopped (the app's ReadStopReason; a test keeps the two lists the same). `window_stopped` is accepted though no caller emits it yet.
+const READ_STOP_REASONS = ["left_book", "finished", "cancelled", "language_changed", "restarted", "window_stopped", "skipped", "failed", "other"] as const;
+
+// ---- Session id (Slice 250) ----------------------------------------------------------------------------------------------
+// A random id the app makes at every cold start and keeps only in memory, plus the count's order inside that session. Neither is tied to an
+// install, a device or a person. Both are optional (older builds, RTST) and checked on their own: a malformed one is dropped from the row, never the event.
+export const SESSION_PATTERN = /^[0-9a-f]{32}$/;
+const NO_SESSION = "";
+/** The sequence a row gets when the build sent none (a real one is never negative), like the device buckets' "no data". */
+const NO_SEQ = -1;
+const MAX_SEQ = 1_000_000;
 
 // ---- Device context (Slice 166) ------------------------------------------------------------------------------------------
 // Both apps send the coarse device facts once per batch in an optional `device` object; the Worker checks each field against a closed
@@ -189,6 +200,12 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   story_language_added: { sources: [NO_BOOK], detail: emptyDetail },
   story_language_switched: { sources: [...BOOK_SOURCES, NO_BOOK], detail: emptyDetail },
   voice_pack_download: { sources: [NO_BOOK], detail: detailIn(PACK_OUTCOMES) },
+  // Slice 250: playback events, each about a book (a shelf book or the grown-up's own); only read_stopped has a detail.
+  read_started: { sources: BOOK_SOURCES, detail: emptyDetail },
+  read_paused: { sources: BOOK_SOURCES, detail: emptyDetail },
+  read_resumed: { sources: BOOK_SOURCES, detail: emptyDetail },
+  read_stopped: { sources: BOOK_SOURCES, detail: detailIn(READ_STOP_REASONS) },
+  book_left: { sources: BOOK_SOURCES, detail: emptyDetail },
 };
 const LANGUAGE_PATTERN = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
 /** The version pattern both phone endpoints check (Slice 227 shares it with `/api/crash`). */
@@ -227,6 +244,10 @@ export interface UsageEvent {
   readonly sampleRate: number;
   /** The event's one extra closed value (see EVENT_RULES); empty for the reader events. */
   readonly detail: string;
+  /** Slice 250: the per-launch session id (32 hex digits), or empty when the build sent none or a malformed one. */
+  readonly session: string;
+  /** Slice 250: the count's order inside its session (0 or more), or -1 when there is no valid session id or sequence. */
+  readonly seq: number;
 }
 
 /** What this module needs from the Worker's bindings (`DINO_USAGE` is declared in wrangler.jsonc). */
@@ -297,10 +318,17 @@ export function parseEvent(raw: unknown): UsageEvent | null {
     typeof sampleRate === "number" &&
     sampleRate >= MIN_SAMPLE_RATE &&
     sampleRate <= 1;
-  return valid ? { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail } : null;
+  if (!valid) return null;
+  const session = matches(SESSION_PATTERN, raw["session"]) ? raw["session"] : NO_SESSION;
+  const seq = session !== NO_SESSION && isSeq(raw["seq"]) ? raw["seq"] : NO_SEQ;
+  return { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail, session, seq };
 }
 
-/** The Analytics Engine data point for a count: the name is the sampling index, every field a blob (blob10-blob15 are the batch's country and device facts, Slice 166), and the double is the count's weight (1 / the sample rate the app counted at), so SUM(double) estimates the true total. */
+function isSeq(value: unknown): value is number {
+  return Number.isInteger(value) && (value as number) >= 0 && (value as number) <= MAX_SEQ;
+}
+
+/** The Analytics Engine data point for a count: the name is the sampling index, every field a blob (blob10-blob15 are the batch's country and device facts, Slice 166; blob16 is the per-launch session id, Slice 250, empty for a build that sent none), and double1 is the count's weight (1 / the sample rate the app counted at), so SUM(double1) estimates the true total; double2 is the count's order inside its session (-1 for none). Analytics Engine takes up to 20 blobs and 20 doubles, so there is room left. */
 export function toDataPoint(event: UsageEvent, context: BatchContext = NO_CONTEXT): AnalyticsEngineDataPoint {
   const { country, device } = context;
   return {
@@ -308,8 +336,9 @@ export function toDataPoint(event: UsageEvent, context: BatchContext = NO_CONTEX
     blobs: [
       event.name, event.book, event.language, event.source, event.hasRecording ? "yes" : "no", event.version, event.platform, event.day, event.detail,
       country, device.osMajor, device.formFactor, device.arch, device.cores, device.ram,
+      event.session,
     ],
-    doubles: [1 / event.sampleRate],
+    doubles: [1 / event.sampleRate, event.seq],
   };
 }
 

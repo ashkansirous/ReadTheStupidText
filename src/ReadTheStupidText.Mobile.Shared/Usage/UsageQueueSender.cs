@@ -16,6 +16,7 @@ namespace ReadTheStupidText.Mobile.Shared.Usage;
 /// <param name="ToJson">The request body for a batch.</param>
 /// <param name="ParseQueue">Reads the stored queue (never throws).</param>
 /// <param name="QueueToJson">Writes the queue for storage.</param>
+/// <param name="Roll">Slice 250: the sampling roll (0 up to but not including 1) of the whole session, so a sampled session is complete and an unsampled one sends nothing; null rolls once for this sender (RTST).</param>
 /// <param name="SendsBeta">Slice 251: true for an app whose TestFlight builds send their counts to the beta dataset (Dino Reader; they post to the beta route). False keeps today's rule: a build the gate blocks sends nothing.</param>
 public sealed record UsageQueueOptions<TEvent>(
     string BaseAddress,
@@ -28,7 +29,8 @@ public sealed record UsageQueueOptions<TEvent>(
     Func<IReadOnlyList<TEvent>, string> ToJson,
     Func<string?, List<TEvent>> ParseQueue,
     Func<IReadOnlyList<TEvent>, string> QueueToJson,
-    bool SendsBeta = false)
+    bool SendsBeta = false,
+    double? Roll = null)
     where TEvent : class;
 
 /// <summary>
@@ -54,7 +56,7 @@ public sealed class UsageQueueSender<TEvent>(UsageQueueOptions<TEvent> options)
     // drop events recorded meanwhile nor bring back events a user switched off.
     private readonly object _queueLock = new();
     private readonly SemaphoreSlim _sending = new(1, 1);
-    private readonly double _roll = Random.Shared.NextDouble();
+    private readonly double _roll = options.Roll ?? Random.Shared.NextDouble();
     private List<TEvent>? _queue;
     private int _flushRequested;
     private int _failures;

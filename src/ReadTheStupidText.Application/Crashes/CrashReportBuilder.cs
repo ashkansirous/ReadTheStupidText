@@ -9,7 +9,8 @@ namespace ReadTheStupidText.Application.Crashes;
 /// <param name="Version">The app version.</param>
 /// <param name="Channel">The install channel; a <see cref="InstallChannel.Dev"/> install builds no report.</param>
 /// <param name="Device">The coarse device buckets, or null.</param>
-public sealed record CrashContext(string App, string Platform, string Version, InstallChannel Channel, DeviceContext? Device);
+/// <param name="Session">Slice 250: the usage session id of the launch that makes the report, or null (Read The Stupid Text; a report about an earlier launch).</param>
+public sealed record CrashContext(string App, string Platform, string Version, InstallChannel Channel, DeviceContext? Device, string? Session = null);
 
 /// <summary>Builds <see cref="CrashReport"/>s from an exception or from a native description (Slice 227). Pure.</summary>
 public static class CrashReportBuilder
@@ -35,7 +36,7 @@ public static class CrashReportBuilder
         }
 
         return CrashReportJson.Capped(new CrashReport(
-            context.App, context.Platform, context.Version, channel, kind, type, message, stack, logTail, CrashReportJson.MinuteOf(now), context.Device));
+            context.App, context.Platform, context.Version, channel, kind, type, message, stack, logTail, CrashReportJson.MinuteOf(now), context.Device, context.Session));
     }
 
     /// <summary>The stack trace of <paramref name="error"/>, then each inner exception's type and stack, so a wrapped failure keeps its origin.</summary>

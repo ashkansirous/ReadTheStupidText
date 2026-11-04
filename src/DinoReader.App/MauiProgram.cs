@@ -104,6 +104,8 @@ public static class MauiProgram
 		// Counts left from an earlier session go out now (Slice 133); the counter does nothing when counting is off.
 		_ = app.Services.GetRequiredService<UsageCounter>().FlushAsync();
 		BeginCrashReports(app.Services.GetRequiredService<AppConfigClient>());
+		string sessionId = app.Services.GetRequiredService<UsageCounter>().SessionId; // Slice 250: captured now, so the crash path never touches the container
+		CrashReporter.SessionProvider = () => sessionId; // a crash or problem report names the launch's usage session
 #if DEBUG
 		TestHooks.Install(app.Services, TestHookScheme, code => (Microsoft.Maui.Controls.Application.Current as DinoApp)?.CompleteFirstRun(code) ?? false);
 		CrashTestHook.Install(); // Slice 227: after the app's own Debug commands, so it chains onto them

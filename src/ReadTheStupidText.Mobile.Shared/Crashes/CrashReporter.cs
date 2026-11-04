@@ -216,7 +216,7 @@ public static partial class CrashReporter
             }
 
             lastReported = error;
-            Save(CrashReportBuilder.FromException(ContextNow(context), CrashKind.Managed, error, string.Empty, DateTimeOffset.UtcNow));
+            Save(CrashReportBuilder.FromException(InThisLaunch(ContextNow(context)), CrashKind.Managed, error, string.Empty, DateTimeOffset.UtcNow));
             store.MarkNotRunning();
         }
         catch (Exception hookFailure)
@@ -338,6 +338,22 @@ public static partial class CrashReporter
 
     private static CrashReport? FromNative(NativeCrash crash, string tail) =>
         context is null ? null : CrashReportBuilder.FromDescription(ContextNow(context), crash.Kind, crash.Type, crash.Message, crash.Stack, tail, crash.Time);
+
+    /// <summary>Slice 250: Dino sets this to read its usage session id; Read The Stupid Text leaves it null and its reports carry none. Read at the moment a report about this launch is made.</summary>
+    public static Func<string?>? SessionProvider { get; set; }
+
+    // A report about the launch that is running (a managed crash, a user report) carries its session id; one about an earlier launch (native, unclean exit) must not, it would name the wrong session.
+    private static CrashContext InThisLaunch(CrashContext facts)
+    {
+        try
+        {
+            return facts with { Session = SessionProvider?.Invoke() };
+        }
+        catch (Exception)
+        {
+            return facts;
+        }
+    }
 
     // The build facts a report is made with. A Debug build is a dev install, which sends nothing; with the scripted check's stub set it reports as a store
     // install so the whole path (handler, file, sender, Worker checks) runs. Release builds use the facts as read.

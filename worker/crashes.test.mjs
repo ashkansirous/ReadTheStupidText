@@ -20,6 +20,17 @@ const report = {
   device: { osMajor: 26, formFactor: "phone", arch: "arm64", cores: "5-8", ram: "4-6" },
 };
 
+test("a valid session id is kept on the report and a malformed one is dropped, never the report (Slice 250)", () => {
+  const session = "0123456789abcdef0123456789abcdef";
+  assert.equal(parseCrash({ ...report, session }, "dino")?.session, session);
+  for (const bad of ["abc", session.toUpperCase(), session + "0", 5, null]) {
+    const parsed = parseCrash({ ...report, session: bad }, "dino");
+    assert.ok(parsed, String(bad));
+    assert.equal(Object.hasOwn(parsed, "session"), false, String(bad));
+  }
+  assert.equal(Object.hasOwn(parseCrash(report, "dino"), "session"), false);
+});
+
 const post = (body, headers = {}) =>
   new Request("https://dinoreader.sirous.uk/api/crash", { method: "POST", headers, body: typeof body === "string" ? body : JSON.stringify(body) });
 
