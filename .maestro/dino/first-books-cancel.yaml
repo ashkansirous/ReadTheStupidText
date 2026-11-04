@@ -1,0 +1,54 @@
+# Slice 261: Cancel while the first books download goes back to the picker with the ticks kept (a finished book stays on the shelf, user's design review of frame 165). Against an
+# implementation that drops the ticks or moves on, the picker would show two cards unticked or the voice download would show.
+# expect-log: HOOK test-store ok slow
+# expect-log: [FirstBooks] picked listed=4 ticked=2
+# expect-log: [FirstBooks] cancelled listed=4 ticked=2
+appId: uk.sirous.dinoreader.dbg
+name: Cancelling the first books keeps the ticks
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books), on purpose: the flow is the fresh install's first run, which starts with the language page and an empty shelf.
+    clearState: true
+    arguments:
+      cmd: test-store
+      mode: slow
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- tapOn:
+    text: "Continue"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: android:id/button2
+    optional: true
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: FirstBooksPicker
+    timeout: 30000
+- tapOn:
+    id: FirstBookCard-0
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: FirstBookCard-1
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: FirstBooksContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: WaitCancel
+    timeout: 10000
+- tapOn:
+    id: WaitCancel
+    waitToSettleTimeoutMs: 300
+# Back on the picker, not on the voice download.
+- extendedWaitUntil:
+    visible:
+      id: FirstBooksPicker
+    timeout: 15000
+- assertNotVisible:
+    id: WaitLine
+- assertNotVisible:
+    id: "FirstRun(Download|Ready)"

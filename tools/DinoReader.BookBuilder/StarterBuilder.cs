@@ -8,7 +8,7 @@ namespace DinoReader.BookBuilder;
 /// <summary>
 /// Builds the bundled starter <c>.dino</c> files (Slice 91) from their <c>content/dino/&lt;stem&gt;</c> folders (Slice 157) and the "Good Enough" pictures (Slice 94),
 /// casting voices the way the app does (segment, attribute, cast over the ten Supertonic styles) and merging the checked-in translations
-/// (Slice 95). <c>build</c> rewrites <c>src/DinoReader.App/Resources/Raw/starters/</c> when a file's content changed; the tests then check the shipped files.
+/// (Slice 95). <c>build</c> rewrites <c>src/DinoReader.App/Resources/Raw/testbooks/</c> (Debug-only test books since Slice 261) when a file's content changed; the tests then check those files.
 /// <c>dump-pieces</c> writes the piece texts each book needs translated.
 /// </summary>
 internal static class StarterBuilder
@@ -43,8 +43,9 @@ internal static class StarterBuilder
     /// <summary>The package file name of every shipped starter, the picture one first (shelf order).</summary>
     public static IReadOnlyList<string> AllFileNames => Books.Starters.Select(b => b.FileName).ToList();
 
+    /// <summary>Where the committed <c>.dino</c> of each former starter lives (Slice 261): the Debug-only test books of the app, <c>Resources/Raw/testbooks/</c>. No Release build carries them.</summary>
     public static string StartersFolder() =>
-        Path.Combine(RepoRoot(), "src", "DinoReader.App", "Resources", "Raw", "starters");
+        Path.Combine(RepoRoot(), "src", "DinoReader.App", "Resources", "Raw", "testbooks");
 
     /// <summary><c>content/dino/&lt;stem&gt;/translations</c>: a book's checked-in translations (<c>&lt;lang&gt;.json</c>, <c>&lt;lang&gt;.speak.json</c>, <c>pieces.json</c>).</summary>
     public static string TranslationsFolder(string stem) => Books.Folder(stem).TranslationsPath;

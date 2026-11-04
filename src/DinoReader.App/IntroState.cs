@@ -9,22 +9,30 @@ namespace DinoReader;
 /// </summary>
 public static class IntroState
 {
-	private const string StepKey = "dino.intro.step.v2";
+	private const string StepKey = "dino.intro.step.v3";
+	private const string SixStepKey = "dino.intro.step.v2"; // saved by builds from Slice 228 to 260, when the intro had 6 steps (the store was the third)
 	private const string LegacyStepKey = "dino.intro.step"; // saved by builds before Slice 228, when the intro had 4 steps
 	private const int NotRunning = -1;
 	private const int NothingSaved = -2;
 
-	/// <summary>The saved step, or -1 when the intro is not running. An intro saved by an older build (4 steps) resumes at the same step, two places further on.</summary>
+	/// <summary>The saved step, or -1 when the intro is not running. An intro saved by an older build resumes at the same step in today's five (the store step is gone: it lands on recording).</summary>
 	public static int Step
 	{
 		get
 		{
 			int saved = Preferences.Default.Get(StepKey, NothingSaved);
-			return saved != NothingSaved ? saved : IntroSteps.FromLegacy(Preferences.Default.Get(LegacyStepKey, NotRunning));
+			if (saved != NothingSaved)
+			{
+				return saved;
+			}
+
+			int sixSteps = Preferences.Default.Get(SixStepKey, NothingSaved);
+			return sixSteps != NothingSaved ? IntroSteps.FromSixSteps(sixSteps) : IntroSteps.FromLegacy(Preferences.Default.Get(LegacyStepKey, NotRunning));
 		}
 		set
 		{
 			Preferences.Default.Set(StepKey, value);
+			Preferences.Default.Remove(SixStepKey);
 			Preferences.Default.Remove(LegacyStepKey);
 		}
 	}

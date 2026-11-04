@@ -58,8 +58,6 @@
                         <TapGestureRecognizer Tapped="OnPhoneVoiceTapped" />
                     </Label.GestureRecognizers>
                 </Label>
-                <Label x:Name="ShelfTitle" FontSize="13.5" FontAttributes="Bold" TextColor="{StaticResource Body}" Margin="0,22,0,0" />
-                <HorizontalStackLayout x:Name="Shelf" Spacing="12" />
             </VerticalStackLayout>
             </ScrollView>
             <Label Grid.Row="1" x:Name="PickAnother" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center"

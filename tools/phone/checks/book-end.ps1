@@ -1,7 +1,7 @@
 # check: Apps=dino EstimateSeconds=420 NeedsPack=true Variant=debug
 <#
 .SYNOPSIS
-  book-end: Dino plays a starter book to its end, then the phone can doze (Slice 213).
+  book-end: Dino plays a test book (one of the four skip-first-run imports, Slice 261) to its end, then the phone can doze (Slice 213).
 .DESCRIPTION
   Sends `open-book id=<book> page=1 play=1 speed=2` (play=1 reads on to the end of the book, DinoTestCommands) and waits for READ_END. Reports how long the book
   took, then polls until the app holds no wake lock (`dumpsys power`, only the LIVE `Wake Locks: size=N` block counts, never the wakelock history below it, which keeps old locks forever; a lock is the app's when its uid or its ws=WorkSource{<uid>} is the app's, so Dino's keep-screen-on SCREEN_BRIGHT_WAKE_LOCK of uid 1000 counts) and no foreground service (`dumpsys activity services`), which is

@@ -111,11 +111,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>正在准备 Dino 的语音</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>语音：{0} · 只需一次</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>正在下载…</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>书架上等着</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>选择其他语言</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>准备好阅读啦！</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>每个角色都有自己的声音。书架上有{0}个故事。</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>每个角色都有自己的声音。书架上有1个故事。</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>每个角色都有自己的声音。你的书已经在书架上。</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>选择你的第一批书</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>至少选两本。你随时可以去商店获取更多。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>选 2 本书开始</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>再选 1 本</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>已选 {0} 本 · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>已选 {0} 本</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>正在获取你的书…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>第 {0} 本，共 {1} 本</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>连接网络以选择你的第一批书</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>开始前 Dino 需要两本书。请打开 Wi-Fi 或移动数据，然后重试。</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>听 Dino 打招呼</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>你好！我是 Dino。我们一起读故事吧。</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>看看 Dino 能做什么</value></data>
@@ -130,8 +138,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>锁的后面，用来添加书和声音。</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>一起读个故事</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>点一本书，然后播放。Dino 会朗读，并点亮每一句。</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>获取更多图书</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>商店里有更多故事，可随时下载。</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>迪诺翻开了书。“从前有一天……”</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>用你的声音朗读</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>一页一页地录下你朗读故事的声音。孩子可以随时播放。</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>添加你自己的书</value></data>

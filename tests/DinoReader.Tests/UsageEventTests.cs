@@ -180,9 +180,9 @@ public class UsageEventTests
     }
 
     [Fact]
-    public void The_intro_has_six_steps_in_order_and_a_saved_index_outside_them_means_it_is_not_running()
+    public void The_intro_has_five_steps_in_order_with_no_store_step_and_a_saved_index_outside_them_means_it_is_not_running()
     {
-        Assert.Equal(["places", "read", "store", "record", "add", "languages"], Enumerable.Range(0, IntroSteps.Count).Select(IntroSteps.NameAt));
+        Assert.Equal(["places", "read", "record", "add", "languages"], Enumerable.Range(0, IntroSteps.Count).Select(IntroSteps.NameAt));
         Assert.False(IntroSteps.IsStep(-1));
         Assert.False(IntroSteps.IsStep(IntroSteps.Count));
         Assert.True(IntroSteps.IsStep(IntroSteps.Count - 1));
@@ -224,14 +224,29 @@ public class UsageEventTests
 
     [Theory]
     [InlineData(0, 2)]
-    [InlineData(3, 5)]
+    [InlineData(1, 2)]
+    [InlineData(3, 4)]
     [InlineData(-1, -1)]
     [InlineData(4, -1)]
-    public void An_intro_saved_before_the_two_new_steps_resumes_two_steps_further_on(int saved, int expected)
+    public void An_intro_saved_with_four_steps_resumes_at_the_same_step_in_the_five_without_the_store(int saved, int expected)
     {
         Assert.Equal(expected, IntroSteps.FromLegacy(saved));
-        Assert.Equal("store", IntroSteps.NameAt(IntroSteps.FromLegacy(0)));
+        Assert.Equal("record", IntroSteps.NameAt(IntroSteps.FromLegacy(0)));
         Assert.Equal("languages", IntroSteps.NameAt(IntroSteps.FromLegacy(3)));
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(1, 1)]
+    [InlineData(2, 2)]
+    [InlineData(3, 2)]
+    [InlineData(4, 3)]
+    [InlineData(5, 4)]
+    [InlineData(-1, -1)]
+    [InlineData(6, -1)]
+    public void An_intro_saved_with_six_steps_drops_the_store_step_and_moves_later_steps_back_one(int saved, int expected)
+    {
+        Assert.Equal(expected, IntroSteps.FromSixSteps(saved));
     }
 
     [Fact]
@@ -241,7 +256,8 @@ public class UsageEventTests
         Match list = Regex.Match(source, @"INTRO_STEPS = \[(?<names>[^\]]*)\]");
         string[] worker = Regex.Matches(list.Groups["names"].Value, "\"([a-z_]+)\"").Select(m => m.Groups[1].Value).ToArray();
 
-        Assert.Equal(Enumerable.Range(0, IntroSteps.Count).Select(i => IntroSteps.NameAt(i)!).Order(), worker.Order());
+        // Slice 261: the store step is retired, but apps released before it still send "store:tried", so the Worker keeps the name.
+        Assert.Equal(Enumerable.Range(0, IntroSteps.Count).Select(i => IntroSteps.NameAt(i)!).Append(IntroSteps.Store).Order(), worker.Order());
     }
 
     [Fact]

@@ -116,7 +116,6 @@ public partial class LocalizedUiTests
 
         Assert.Equal("Store", neutral["Store_Title"]);
         Assert.DoesNotContain("free", neutral["Store_OfflineBody"], StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("free", neutral["Intro_StoreLine"], StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

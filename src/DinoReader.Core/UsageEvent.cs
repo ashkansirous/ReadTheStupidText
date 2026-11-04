@@ -167,25 +167,40 @@ public static class OwnBookKind
     }
 }
 
-/// <summary>The first-run intro's steps in order (Slice 155, Decision 160): (Slice 228) the two places and a read step, then the store, recording a book, adding an own book, and (Slice 173) the story languages. The index is what is saved, so a restart resumes at the same step.</summary>
+/// <summary>The first-run intro's steps in order (Slice 155, Decision 160): (Slice 228) the two places and a read step, then recording a book, adding an own book, and (Slice 173) the story languages. Slice 261 took the store step out (the first-run book picker replaced it). The index is what is saved, so a restart resumes at the same step.</summary>
 public static class IntroSteps
 {
     public const string Places = "places";
     public const string Read = "read";
-    public const string Store = "store";
     public const string Record = "record";
     public const string Add = "add";
     public const string Languages = "languages";
 
+    /// <summary>The retired store step (Slice 261): no longer shown, but apps released before it still send <c>store:tried</c>, so the Worker keeps accepting the name.</summary>
+    public const string Store = "store";
+
     /// <summary>How many steps the intro had before Slice 228 put <see cref="Places"/> and <see cref="Read"/> in front.</summary>
     private const int LegacyCount = 4;
     private const int StepsAdded = 2;
+    private const int SixStepCount = 6;
+    private const int StoreIndexInSix = 2;
     private const int NotRunning = -1;
 
-    private static readonly string[] Order = [Places, Read, Store, Record, Add, Languages];
+    private static readonly string[] Order = [Places, Read, Record, Add, Languages];
 
-    /// <summary>The step an intro saved before Slice 228 (4 steps) resumes at: the same step, two places further on; -1 when that saved value was not a step.</summary>
-    public static int FromLegacy(int legacyIndex) => legacyIndex >= 0 && legacyIndex < LegacyCount ? legacyIndex + StepsAdded : NotRunning;
+    /// <summary>The step an intro saved before Slice 228 (4 steps: store, record, add, languages) resumes at in today's five: the store step lands on record, the others on themselves; -1 when that saved value was not a step.</summary>
+    public static int FromLegacy(int legacyIndex) => legacyIndex >= 0 && legacyIndex < LegacyCount ? FromSixSteps(legacyIndex + StepsAdded) : NotRunning;
+
+    /// <summary>The step an intro saved by a six-step build (Slice 228 to 260: places, read, store, record, add, languages) resumes at: the store step lands on record, later steps move one place back; -1 when that saved value was not a step.</summary>
+    public static int FromSixSteps(int savedIndex)
+    {
+        if (savedIndex < 0 || savedIndex >= SixStepCount)
+        {
+            return NotRunning;
+        }
+
+        return savedIndex <= StoreIndexInSix ? savedIndex : savedIndex - 1;
+    }
 
     public static int Count => Order.Length;
 

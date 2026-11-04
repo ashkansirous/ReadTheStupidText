@@ -23,7 +23,7 @@ Invoke-Check -ResultFile $ResultFile -Body {
     # name). If it is still empty, the failure lists what the page does expose instead of guessing.
     $dumpPage = { 'UI: ' + ((Get-VisibleNames (& $window) 60) -join ' / ') }
     Wait-Until { Find-UiaById (& $window) 'ReadingTransport' } 10 'not on the reading page (run the open-book check first)' | Out-Null
-    # Text-in-picture books (the starter "Good Enough") open in Picture only, where no StoryText is shown. The mode is saved per book
+    # Text-in-picture books (the book "Good Enough") open in Picture only, where no StoryText is shown. The mode is saved per book
     # (story.json PreferredMode), so switch to "Picture + text" for the check and put the original mode back at the end.
     $modeNames = 'Picture only', 'Picture + text', 'Text only'
     $selectedMode = {

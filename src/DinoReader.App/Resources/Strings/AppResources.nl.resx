@@ -113,11 +113,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>Dino’s stem wordt klaargemaakt</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>{0} stemmen · dit gebeurt maar één keer</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>Downloaden…</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>Wachten op de plank</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Kies een andere taal</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Klaar om te lezen!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Elk personage krijgt een eigen stem. Er staan {0} verhalen op de plank.</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Elk personage krijgt een eigen stem. Er staat één verhaal op de plank.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Elk personage krijgt een eigen stem. Je boeken staan op de plank.</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>Kies je eerste boeken</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>Kies er minstens twee. Je kunt altijd meer boeken in de winkel halen.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>Kies 2 boeken om te beginnen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>Kies er nog 1</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>{0} gekozen · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>{0} gekozen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>Je boeken worden opgehaald…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>Boek {0} van {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Maak verbinding met internet om je eerste boeken te kiezen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino heeft twee boeken nodig voordat je begint. Zet wifi of mobiele data aan en probeer het opnieuw.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Hoor Dino hallo zeggen</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hallo! Ik ben Dino. Laten we samen een verhaal lezen.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Ontdek wat Dino kan</value></data>
@@ -132,8 +140,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Achter een slot, om boeken en stemmen toe te voegen.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>Samen een verhaal lezen</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>Tik op een boek en dan op afspelen. Dino leest voor en laat elke zin oplichten.</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>Haal meer boeken</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>De winkel heeft meer verhalen, klaar om te downloaden.</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino sloeg het boek open. ‘Er was eens…’</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lees het met je eigen stem</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Neem jezelf op terwijl je een verhaal voorleest, pagina voor pagina. Je kind kan het altijd afspelen.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Voeg je eigen boek toe</value></data>

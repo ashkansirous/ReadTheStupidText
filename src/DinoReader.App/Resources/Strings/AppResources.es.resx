@@ -111,11 +111,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>Preparando la voz de Dino</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>Voz: {0} · esto solo pasa una vez</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>Descargando…</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>Esperando en la estantería</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Elegir otro idioma</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>¡Listo para leer!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Cada personaje tiene su propia voz. Hay {0} cuentos en la estantería.</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Cada personaje tiene su propia voz. Hay un cuento en la estantería.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Cada personaje tiene su propia voz. Tus libros están en la estantería.</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>Elige tus primeros libros</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>Elige al menos dos. Puedes conseguir más en la tienda cuando quieras.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>Elige 2 libros para empezar</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>Elige 1 más</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>{0} elegidos · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>{0} elegidos</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>Consiguiendo tus libros…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>Libro {0} de {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Conéctate a Internet para elegir tus primeros libros</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino necesita dos libros antes de empezar. Activa el Wi-Fi o los datos móviles e inténtalo de nuevo.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Oír a Dino saludar</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>¡Hola! Soy Dino. Vamos a leer un cuento juntos.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Descubre lo que hace Dino</value></data>
@@ -130,8 +138,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Tras un candado, para añadir libros y voces.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>Leer un cuento juntos</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>Toca un libro y pulsa reproducir. Dino lo lee en voz alta e ilumina cada frase.</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>Consigue más libros</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>La tienda tiene más cuentos, listos para descargar.</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino abrió el libro. «Érase una vez…»</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Léelo con tu voz</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Grábate leyendo un cuento, página por página. Tu hijo puede escucharlo cuando quiera.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Añade tu propio libro</value></data>

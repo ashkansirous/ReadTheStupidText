@@ -111,11 +111,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>Préparation de la voix de Dino</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>Voix : {0} · cela n’arrive qu’une fois</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>Téléchargement…</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>En attente sur l’étagère</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Choisir une autre langue</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Prêt à lire !</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Chaque personnage a sa propre voix. {0} histoires sont sur l’étagère.</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Chaque personnage a sa propre voix. Une histoire est sur l’étagère.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Chaque personnage a sa propre voix. Vos livres sont sur l’étagère.</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>Choisissez vos premiers livres</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>Choisissez-en au moins deux. Vous pourrez en prendre d’autres dans la boutique à tout moment.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>Choisissez 2 livres pour commencer</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>Choisissez-en 1 de plus</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>{0} choisis · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>{0} choisis</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>Récupération de vos livres…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>Livre {0} sur {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Connectez-vous à Internet pour choisir vos premiers livres</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino a besoin de deux livres avant de commencer. Activez le Wi-Fi ou les données mobiles, puis réessayez.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Écouter Dino dire bonjour</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Bonjour ! Je suis Dino. Lisons une histoire ensemble.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Découvrir ce que fait Dino</value></data>
@@ -130,8 +138,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Derrière un verrou, pour ajouter des livres et des voix.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>Lire une histoire ensemble</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>Touchez un livre, puis lecture. Dino lit à voix haute et éclaire chaque phrase.</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>Obtenir plus de livres</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>La boutique propose d’autres histoires, prêtes à télécharger.</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino a ouvert le livre. « Il était une fois… »</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lisez-le avec votre voix</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Enregistrez-vous en train de lire une histoire, page par page. Votre enfant peut l’écouter quand il veut.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Ajouter votre propre livre</value></data>

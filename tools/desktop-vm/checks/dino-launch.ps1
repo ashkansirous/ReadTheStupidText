@@ -1,4 +1,4 @@
-# Launches Dino Reader, maximises it and walks the first-run pages (English, the offline phone voice) to the shelf.
+# Launches Dino Reader, maximises it and walks the first-run pages (English, two test books from the picker, the offline phone voice) to the shelf.
 param([string] $ResultFile, [Parameter(Position = 0)] [string] $PackageName)
 . "$PSScriptRoot\_lib.ps1"
 Invoke-Check -ResultFile $ResultFile -Body {
@@ -12,6 +12,13 @@ Invoke-Check -ResultFile $ResultFile -Body {
     Start-Sleep -Seconds 2
     Invoke-Uia (Find-UiaByName -Root (& $window) -Name 'English' -ControlType Pane)
     Start-Sleep -Seconds 1
+    Invoke-Uia (Find-UiaByName -Root (& $window) -Name 'Continue' -ControlType Pane)
+    # Slice 261: no book ships in the app, so the picker comes next. This package is built with -p:DinoTestBooks=true, so the picker lists the four test books (not the live store): tick two, Continue.
+    Wait-Until { Find-UiaById (& $window) 'FirstBooksPicker' } 30 'first-books picker did not show' | Out-Null
+    foreach ($card in 'FirstBookCard-0', 'FirstBookCard-1') {
+        Invoke-Uia (Wait-Until { Find-UiaById (& $window) $card } 30 "picker card $card did not show")
+        Start-Sleep -Milliseconds 500
+    }
     Invoke-Uia (Find-UiaByName -Root (& $window) -Name 'Continue' -ControlType Pane)
     $voice = Wait-Until { Find-UiaByName -Root (& $window) -Name 'Continue with the phone voice' -ControlType Text } 30 'offline voice page did not appear'
     Invoke-Uia $voice

@@ -1,0 +1,78 @@
+# Slice 261: a real first run on a fresh install with the Debug test store (no live store): language, then the book picker (tagged books first), Continue is dead until two books are ticked,
+# two ticks download behind the wait overlay, then the first run goes on to the voice download. Against the old behaviour (starter books bundled, no picker) FirstBooksPicker never shows.
+# expect-log: HOOK test-store ok slow
+# expect-log: [FirstBooks] list listed=4 ticked=0 onShelf=0
+# expect-log: [FirstBooks] picked listed=4 ticked=1
+# expect-log: [FirstBooks] picked listed=4 ticked=2
+# expect-log: [FirstBooks] landed listed=4 ticked=2 onShelf=1
+# expect-log: [FirstBooks] landed listed=4 ticked=2 onShelf=2
+# expect-log: [FirstBooks] done listed=4 ticked=2 onShelf=2
+appId: uk.sirous.dinoreader.dbg
+name: First run asks for two books from the store
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books), on purpose: the flow is the fresh install's first run, which starts with the language page and an empty shelf.
+    clearState: true
+    arguments:
+      cmd: test-store
+      mode: slow
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- tapOn:
+    text: "Continue"
+    waitToSettleTimeoutMs: 300
+# The Slice 183 "keep downloading when locked?" sheet shows on a fresh install on some devices; dismissed when it is there.
+- tapOn:
+    id: android:id/button2
+    optional: true
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: FirstBooksPicker
+    timeout: 30000
+- assertVisible:
+    id: FirstBookCard-0
+- assertVisible:
+    id: FirstBookCard-1
+# Continue does nothing with no ticks: the picker stays and no wait shows.
+- tapOn:
+    id: FirstBooksContinue
+    waitToSettleTimeoutMs: 300
+- assertVisible:
+    id: FirstBooksPicker
+- assertNotVisible:
+    id: WaitLine
+- tapOn:
+    id: FirstBookCard-0
+    waitToSettleTimeoutMs: 300
+# One tick is still not enough.
+- tapOn:
+    id: FirstBooksContinue
+    waitToSettleTimeoutMs: 300
+- assertNotVisible:
+    id: WaitLine
+- tapOn:
+    id: FirstBookCard-1
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: FirstBooksContinue
+    waitToSettleTimeoutMs: 300
+# Slow test store: each book takes about three seconds, so the shared wait overlay (shown after 500 ms) is on screen.
+- extendedWaitUntil:
+    visible:
+      id: WaitLine
+    timeout: 10000
+# Real 12 s wait: nothing with this id ever shows, so this times out after 12000 ms; optional: true lets the flow go on to the page that follows the books.
+- extendedWaitUntil:
+    visible:
+      id: FirstRunNeverShown
+    timeout: 12000
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "FirstRun(Download|Ready)"
+    timeout: 30000
+- assertNotVisible:
+    id: FirstBooksPicker

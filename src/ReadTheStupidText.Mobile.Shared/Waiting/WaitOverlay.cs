@@ -25,6 +25,7 @@ public sealed class WaitOverlay : Grid
     private readonly Button _retry;
     private readonly ProgressBar _bar;
     private readonly NoWifiIcon _noWifi;
+    private readonly ContentView _slot = new() { IsVisible = false, HorizontalOptions = LayoutOptions.Center };
     private readonly IWaitAnimation? _animation;
     private readonly View _motion;
     private bool _waitingLook;
@@ -56,7 +57,7 @@ public sealed class WaitOverlay : Grid
         Children.Add(new VerticalStackLayout
         {
             Spacing = style.Spacing, Padding = style.Padding, VerticalOptions = LayoutOptions.Center, HorizontalOptions = LayoutOptions.Fill,
-            Children = { Centred(motion), _noWifi, _line, _detail, _bar, BuildButtonRow() },
+            Children = { Centred(motion), _noWifi, _line, _slot, _detail, _bar, BuildButtonRow() },
         });
     }
 
@@ -165,8 +166,19 @@ public sealed class WaitOverlay : Grid
         }
     }
 
+    /// <summary>
+    /// An optional view shown under the line (Dino's first-books wait shows the picked covers there, Slice 261); null removes it. The overlay clears it on <see cref="Hide"/>, so the owner sets it
+    /// before each wait. An app that never sets it draws the overlay exactly as before.
+    /// </summary>
+    public void SetContent(View? content)
+    {
+        _slot.Content = content;
+        _slot.IsVisible = content is not null;
+    }
+
     public void Hide()
     {
+        SetContent(null);
         _animation?.Stop();
         IsVisible = false;
     }

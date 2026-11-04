@@ -6,7 +6,7 @@
   Per run: force-stop the dev app, EMPTY THE SENTENCE AUDIO CACHE (<app data>/cache/sentences, written by SentenceAudioCache through
   FileSentenceStore, AndroidSupertonicSpeechReader.SentenceFolderName), launch with skip-first-run, wait for the installed voice pack, send the read hook, and read the numbers
   from the app's own markers (HOOK read start -> first CHUNK, ENGINE_READY, CHUNK_SYNTH 0 end). Without the cache clear, repeat runs read sentences from disk and
-  measured 240-578 ms, which is not a cold start. RTST reads the fixed passage; Dino opens a real starter page (same hooks as audio-timing.ps1).
+  measured 240-578 ms, which is not a cold start. RTST reads the fixed passage; Dino opens a real test-book page (skip-first-run imports the four former starters, Slice 261) (same hooks as audio-timing.ps1).
 #>
 param(
     [Parameter(Mandatory)][string]$Phone,
