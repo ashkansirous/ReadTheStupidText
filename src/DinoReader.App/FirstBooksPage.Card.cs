@@ -22,6 +22,7 @@ internal sealed class FirstBookCard : VerticalStackLayout
 	private const double CardSpacing = 6;
 	private const double CoverAspect = 4.0 / 3.0;
 	private const string AutomationPrefix = "FirstBookCard-";
+	private const string TickAutomationPrefix = "FirstBookTick-";
 
 	private readonly Border _ring = new() { Padding = RingGap, StrokeThickness = RingWidth, Stroke = Colors.Transparent, StrokeShape = new RoundRectangle { CornerRadius = CoverRadius + RingGap } };
 	private readonly Border _cover = new() { StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = CoverRadius }, BackgroundColor = DinoTokens.Get(DinoTokens.BrandTint) };
@@ -36,7 +37,7 @@ internal sealed class FirstBookCard : VerticalStackLayout
 		_cover.Content = _image;
 		_ring.Content = _cover;
 		_tick.Content = _tickIcon;
-		var host = new Grid { AutomationId = AutomationPrefix + index, Children = { _ring, _tick } };
+		var host = new Grid { AutomationId = AutomationPrefix + index, Children = { _ring, _tick, BuildTickButton(index, title, toggled) } };
 		SemanticProperties.SetDescription(host, title);
 		var tap = new TapGestureRecognizer();
 		tap.Tapped += (_, _) => toggled();
@@ -48,6 +49,29 @@ internal sealed class FirstBookCard : VerticalStackLayout
 	}
 
 	public StoreItem Item { get; }
+
+	// A transparent button over the tick circle: a real control for UI Automation (Invoke), keyboard and screen readers; the look is the circle under it.
+	private static Button BuildTickButton(int index, string title, Action toggled)
+	{
+		var button = new Button
+		{
+			AutomationId = TickAutomationPrefix + index,
+			BackgroundColor = Colors.Transparent,
+			BorderWidth = 0,
+			Padding = 0,
+			MinimumWidthRequest = 0,
+			MinimumHeightRequest = 0,
+			WidthRequest = TickSize,
+			HeightRequest = TickSize,
+			CornerRadius = (int)(TickSize / 2),
+			HorizontalOptions = LayoutOptions.End,
+			VerticalOptions = LayoutOptions.Start,
+			Margin = new Thickness(0, TickInset, TickInset, 0),
+		};
+		SemanticProperties.SetDescription(button, title);
+		button.Clicked += (_, _) => toggled();
+		return button;
+	}
 
 	/// <summary>Shows or clears the tick and the ring.</summary>
 	public void SetPicked(bool picked)

@@ -28,7 +28,7 @@ public partial class FirstBooksPage
 
 	private readonly List<Border> _backButtons = [];
 	private readonly Grid _cardsGrid = new() { ColumnSpacing = ColumnGap, RowSpacing = RowGap };
-	private readonly Label _count = new() { FontSize = CountSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
+	private readonly Label _count = new() { FontSize = CountSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, AutomationId = "FirstBooksCount" };
 	private readonly Border _continueEdge = new() { StrokeThickness = 0, Padding = new Thickness(0, 0, 0, ContinueEdge), AutomationId = "FirstBooksContinue", StrokeShape = new RoundRectangle { CornerRadius = (ContinueHeight + ContinueEdge) / 2 } };
 	private readonly Border _continueFace = new() { HeightRequest = ContinueHeight, StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = ContinueHeight / 2 } };
 	private readonly Label _continueLabel = new() { FontSize = 17, FontAttributes = FontAttributes.Bold, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };

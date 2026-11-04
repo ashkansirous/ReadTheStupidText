@@ -15,10 +15,14 @@ Invoke-Check -ResultFile $ResultFile -Body {
     Invoke-Uia (Find-UiaByName -Root (& $window) -Name 'Continue' -ControlType Pane)
     # Slice 261: no book ships in the app, so the picker comes next. This package is built with -p:DinoTestBooks=true, so the picker lists the four test books (not the live store): tick two, Continue.
     Wait-Until { Find-UiaById (& $window) 'FirstBooksPicker' } 30 'first-books picker did not show' | Out-Null
-    foreach ($card in 'FirstBookCard-0', 'FirstBookCard-1') {
-        Invoke-Uia (Wait-Until { Find-UiaById (& $window) $card } 30 "picker card $card did not show")
-        Start-Sleep -Milliseconds 500
+    # Each card's tick is a real button (FirstBookTick-n, Invoke pattern); after each tick wait for the count line to change, so the next one is never sent before the page took the first.
+    $count = { (Find-UiaById (& $window) 'FirstBooksCount').Current.Name }
+    foreach ($tick in 'FirstBookTick-0', 'FirstBookTick-1') {
+        $before = & $count
+        Invoke-Uia (Wait-Until { Find-UiaById (& $window) $tick } 30 "picker tick $tick did not show")
+        Wait-Until { (& $count) -ne $before } 10 "count line stayed '$before' after $tick" | Out-Null
     }
+    Wait-Until { (& $count) -match 'picked' } 10 "count line did not read the picked state (reads '$(& $count)')" | Out-Null
     Invoke-Uia (Find-UiaByName -Root (& $window) -Name 'Continue' -ControlType Pane)
     $voice = Wait-Until { Find-UiaByName -Root (& $window) -Name 'Continue with the phone voice' -ControlType Text } 30 'offline voice page did not appear'
     Invoke-Uia $voice
