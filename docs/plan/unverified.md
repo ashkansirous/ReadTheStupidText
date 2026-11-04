@@ -2,6 +2,14 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 249: Dino: "Report a problem" in the grown-ups' corner ([slice](slices/249-dino-report-a-problem.md))
+
+- Known gap, to fix in a follow-up: with the remote crash switch off, a report the page called "kept and sent later" can be wiped at the next app start (`CrashReporter.UserReport.cs:135`).
+- Sending a report from a TestFlight build and `pull-crashes.mjs --code <code>` on that real report.
+- The iOS log lines (page, reading, memory warning) on a device.
+- The rolling file on a device (the device run read the lines from logcat).
+- RTST logs no Back line on Android (Shell has no pop hook); not tried further.
+
 ### Slice 256: Dino: `dump-sentences` works for picture books (Good Enough) ([slice](slices/256-good-enough-sentence-dump.md))
 
 - The dump index matches the app's sentence index on a device during premade-audio playback (Slice 246 C).
