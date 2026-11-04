@@ -48,15 +48,35 @@ internal sealed class AttributionRun(
 
     private string? FromTag(int index)
     {
-        var tag = TagBefore(index) ?? TagAfter(index);
+        var tag = TagBefore(index);
+        tag ??= TagAfter(index);
         if (tag is null) return null;
         return tag.Value.Name ?? MostRecentOf(tag.Value.PronounGender);
     }
 
     private SpeakerTag? TagAfter(int index) =>
         index + 1 < segments.Count && segments[index + 1].Kind == SegmentKind.Narration && !IsLeadInToNextQuote(index)
-            ? tags.ParseAfter(segments[index + 1].Text, story)
+            && SameParagraphNarration(segments[index], segments[index + 1]) is { } narration
+            ? tags.ParseAfter(narration, story)
             : null;
+
+    /// <summary>
+    /// The narration up to the first paragraph break (a blank line, which is also a page break), or null when the break
+    /// comes between the quote and the narration's first word. `"...," said Mouse. "..."` + page break + `The Lion
+    /// laughed. "Ha!" said Lion.`: narration in a later paragraph or page never tags an earlier paragraph's quote.
+    /// </summary>
+    private string? SameParagraphNarration(Segment quote, Segment narration)
+    {
+        if (ParagraphBreak.Between(text, quote.SourceEnd, narration.SourceStart)) return null;
+        var body = narration.Text;
+        for (int i = 0; i < body.Length; i++)
+        {
+            if (!ParagraphBreak.IsAt(body, i)) continue;
+            var head = body[..i];
+            return string.IsNullOrWhiteSpace(head) ? null : head;
+        }
+        return body;
+    }
 
     /// <summary>
     /// True for `"Hello." Cotton Tail said, "Hi."`: the narration after a finished quote is an

@@ -179,6 +179,83 @@ public class SpeakerAttributorTests
     }
 
     [Fact]
+    public void Narration_after_a_page_break_does_not_tag_the_earlier_pages_quote()
+    {
+        const string text =
+            "\"Please, please let me go, Mister Lion,\" said Mouse. \"I didn't mean to wake you up. If you're kind to me today, I'll be kind to you one day, too!\"\n\n" +
+            "The Lion laughed so hard that his tummy wobbled. \"Ha, ha, ha!\" said Lion.";
+
+        Assert.Equal(new string?[] { "Mouse", "Mouse", "Lion" }, Speakers(Run(text)));
+    }
+
+    [Fact]
+    public void Narration_after_a_page_break_does_not_tag_the_earlier_pages_quote_in_Farsi()
+    {
+        var rules = LanguageRules.For("fa");
+        const string text =
+            "«خواهش می‌کنم، آقا شیره،» موش گفت. «نمی‌خواستم بیدارت کنم.»\n\n" +
+            "شیر خندید. «ها ها ها!» شیر گفت.";
+        var result = new SpeakerAttributor(rules).Attribute(text, new StorySegmenter(rules).Split(text));
+
+        var speakers = Speakers(result);
+        Assert.Equal(3, speakers.Count);
+        Assert.Equal(speakers[0], speakers[1]);
+        Assert.NotEqual(speakers[1], speakers[2]);
+        Assert.Contains("موش", speakers[1]);
+        Assert.Contains("شیر", speakers[2]);
+    }
+
+    [Fact]
+    public void A_reply_with_its_own_tag_then_more_narration_still_alternates() =>
+        Assert.Equal(new string?[] { "Peter", "Lucy", "Lucy" },
+            Speakers(Run("\"Hi,\" said Peter. \"Hello!\" Lucy replied. She smiled. \"Fine.\"")));
+
+    [Fact]
+    public void A_tag_in_the_next_paragraph_does_not_tag_the_quote_before_the_blank_line()
+    {
+        const string text = "\"Hi,\" said Peter. \"Wait for me.\"\n\nLucy laughed. \"Ha!\" said Lucy.";
+
+        Assert.Equal(new string?[] { "Peter", "Peter", "Lucy" }, Speakers(Run(text)));
+    }
+
+    [Fact]
+    public void A_tag_after_a_single_newline_still_tags_the_quote() =>
+        Assert.Equal("Lucy", Speakers(Run("\"Hi,\" said Peter. \"Wait.\"\nLucy replied.")).Last());
+
+    [Fact]
+    public void A_tag_before_a_blank_line_inside_one_narration_still_counts() =>
+        Assert.Equal("Lucy", Speakers(Run("\"Hi,\" said Peter. \"Wait.\" said Lucy.\n\nThe Lion laughed.")).Last());
+
+    [Fact]
+    public void A_CRLF_blank_line_is_a_paragraph_break()
+    {
+        const string text = "\"Hi,\" said Peter. \"Wait for me.\"\r\n\r\nLucy laughed. \"Ha!\" said Lucy.";
+
+        Assert.Equal(new string?[] { "Peter", "Peter", "Lucy" }, Speakers(Run(text)));
+    }
+
+    [Fact]
+    public void A_whitespace_only_line_is_a_paragraph_break()
+    {
+        const string text = "\"Hi,\" said Peter. \"Wait for me.\"\n  \t\nLucy laughed. \"Ha!\" said Lucy.";
+
+        Assert.Equal(new string?[] { "Peter", "Peter", "Lucy" }, Speakers(Run(text)));
+    }
+
+    [Fact]
+    public void A_quote_ending_a_page_with_its_tag_on_the_next_page_gets_no_tag_after()
+    {
+        const string text = "\"Hi,\" said Peter. \"Wait for me.\"\n\nsaid Lucy.";
+
+        Assert.Equal(new string?[] { "Peter", "Peter" }, Speakers(Run(text)));
+    }
+
+    [Fact]
+    public void A_bare_next_tag_in_the_same_paragraph_still_tags_its_quote() =>
+        Assert.Equal(new string?[] { "Peter", "Lucy" },
+            Speakers(Run("\"Hi!\" Peter said. \"Hello!\" Lucy replied. \"Fine.\"")).Take(2));
+
+    [Fact]
     public void Name_followed_by_a_non_speech_verb_is_not_the_tag() =>
         Assert.Equal(new string?[] { "Lucy" }, Speakers(Run("Lucy whispered, \"Be quiet.\" Peter nodded.")));
 }
