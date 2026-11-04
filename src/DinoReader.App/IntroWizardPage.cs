@@ -477,8 +477,10 @@ public sealed class IntroWizardPage : ContentPage
 		StoryLanguageSet before = StoryLanguages.Current();
 		StoryLanguageSet set = WithoutLostSides(_languagePicker?.Set ?? before, before);
 		StoryLanguages.SaveSides(set);
-		VoiceRequestOutcome outcome = await _services.GetRequiredService<StoryLanguagePacks>().RequestAsync(this, set.Sides, _wait); // on mobile data the grown-up is asked first
-		StartShelfAudio(set.Sides.Except(before.Sides), outcome); // Slice 262: Done leaves and the audio of the shelf books carries on in the background (Settings shows the card)
+		StoryLanguagePacks packs = _services.GetRequiredService<StoryLanguagePacks>();
+		HashSet<string> asked = [.. set.Sides.Select(UiLanguage.Resolve).Where(code => packs.StateOf(code) == LanguageVoiceState.NotInstalled)]; // the languages the request below is about
+		VoiceRequestOutcome outcome = await packs.RequestAsync(this, set.Sides, _wait); // on mobile data the grown-up is asked first
+		StartShelfAudio(set.Sides.Except(before.Sides), asked, outcome); // Slice 262: Done leaves and the audio of the shelf books carries on in the background (Settings shows the card)
 		if (!set.Sides.SequenceEqual(before.Sides))
 		{
 			StoryLanguageCounts.RecordSet(_usage, set, UsageDetail.LanguagesFromIntro, set.Sides.Except(before.Sides)); // only languages new to this phone count as added
@@ -488,12 +490,13 @@ public sealed class IntroWizardPage : ContentPage
 		await AdvanceAsync();
 	}
 
-	private void StartShelfAudio(IEnumerable<string> added, VoiceRequestOutcome outcome)
+	// The request's outcome belongs to the languages it was about (their voice was missing); an added language whose voice was already there gets NothingAsked, so a Cancel on the prompt does not stop its audio.
+	private void StartShelfAudio(IEnumerable<string> added, ISet<string> asked, VoiceRequestOutcome outcome)
 	{
 		ShelfAudioPacks shelf = _services.GetRequiredService<ShelfAudioPacks>();
 		foreach (string language in added)
 		{
-			shelf.Start(language, outcome); // a cancelled voice request starts nothing (ShelfAudioStart decides)
+			shelf.Start(language, asked.Contains(UiLanguage.Resolve(language)) ? outcome : VoiceRequestOutcome.NothingAsked); // a cancelled voice request starts nothing (ShelfAudioStart decides)
 		}
 	}
 

@@ -164,7 +164,7 @@ public sealed class ShelfAudioPacks
 		string[] known;
 		lock (_gate)
 		{
-			known = [.. _states.Keys.Concat(_runs.Keys).Distinct()];
+			known = [.. _states.Keys.Concat(_runs.Keys).Concat(Marked()).Distinct()]; // a persisted Cancel mark counts too: it can outlive any run or state (a restart)
 		}
 
 		foreach (string code in known.Where(code => !set.All.Contains(code)))
@@ -201,7 +201,7 @@ public sealed class ShelfAudioPacks
 	}
 
 	// Call under _gate. The run leaves _runs and is marked ended in one step (a Stop after an End, or the reverse, finds no run and does nothing); returns true for the one caller that retired it, who
-	// then cancels its token after leaving the lock. The token is disposed only after the run's Completion, and a new run for the language waits for that Completion (_unwinding) before it touches the pack folders.
+	// then cancels its token after leaving the lock. The token source is never disposed (it has no timer, so nothing leaks), and a new run for the language waits for that Completion (_unwinding) before it touches the pack folders.
 	private bool Retire(Run run)
 	{
 		if (run.Ended)
@@ -514,7 +514,7 @@ public sealed class ShelfAudioPacks
 		Failed,
 	}
 
-	// One language run: it owns its token and its own state, built from this run only (it starts Preparing). It leaves _runs only through Retire, under _gate; its token is disposed after Completion.
+	// One language run: it owns its token and its own state, built from this run only (it starts Preparing). It leaves _runs only through Retire, under _gate; its token source is never disposed.
 	private sealed class Run
 	{
 		public Run(string code, bool visible, bool allowMobileData, Task previous)
