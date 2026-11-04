@@ -356,8 +356,10 @@ Check pass (1):
 ## Waiting on the user
 
 - ~~The vendor keys~~ (superseded 2026-11-03: Gemini only, key created in A0 from the user's signed-in AI Studio).
-- Listening round 2 answers (more Gemini voices, plain text, emotions) pick the narrator voice for A2.
-- Confirm or change the *Recommended defaults* above.
+- ~~Listening round 2 answers (more Gemini voices, plain text, emotions) pick the narrator voice for A2.~~ (answered by the user 2026-11-03; recorded above, plan.md fixed in #770)
+- ~~Confirm or change the *Recommended defaults* above.~~ (answered by the user 2026-11-03)
+
+Nothing is waiting on the user for this slice (checked by the night 2026-11-03-2349 feedback loop).
 
 #### For CLAUDE.md
 
@@ -374,4 +376,4 @@ Check pass (1):
 - `build-audio` was run on real folders only by the pack run; the zips were not opened.
 - The live route `GET /api/stories/<id>/audio/<lang>?v=<n>` after the Worker deploys.
 - Part C: iOS rate and playback on a device; a real store download fetching live packs; the `premade-audio-plays` flow shown failing on the old build; Windows head playback; the mid-book re-translation against the 500 ms loading-state rule (not measured).
-- Pigs Farsi: the two `say` lines (گُنده‌ی, «شالاپ، شالاپ، شالاپ!») were re-rendered in the full book on 2026-11-03 but nobody has listened to them in the book; the user heard only the spelling-page variants.
+- Pigs Farsi: the two `say` lines (گُنده‌ی, «شالاپ، شالاپ، شالاپ!») were re-rendered in the full book on 2026-11-03 but nobody has listened to them in the book; the user heard only the spelling-page variants. The same holds for the two other lines with the same word re-rendered after #766 (Pim's tub line and the narrator's "big smile" line): four lines in all.
