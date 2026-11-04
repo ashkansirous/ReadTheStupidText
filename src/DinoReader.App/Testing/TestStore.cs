@@ -23,6 +23,11 @@ internal enum TestStoreMode
 internal static class TestStore
 {
 	public const string UrlScheme = "testbook:";
+	/// <summary>The language the test store lists a pre-made audio pack in (Slice 262), for the book <see cref="AudioStem"/>.</summary>
+	public const string AudioLanguage = "sv";
+	private const string AudioStem = "gingerbread-man";
+	private const string AudioAssetPrefix = "audio-";
+	private const string FixtureClip = "fixture.m4a";
 	private const string AssetExtension = ".dino";
 	private const int SlowChunks = 8;
 	private const int SlowChunkMilliseconds = 350;
@@ -93,7 +98,34 @@ internal static class TestStore
 		copy.Position = 0;
 		Story story = await StoryPackageReader.ReadStoryOnlyAsync(copy);
 		StoreTag[] tags = TagsByStem.TryGetValue(stem, out StoreTag[]? found) ? found : [];
-		return new StoreItem(manifest.Id, story.Title, story.Language, manifest.SchemaVersion, manifest.Version ?? 1, story.Pages.Count, null, null, UrlScheme + AssetNameOf(stem), Tags: tags, Bytes: copy.Length);
+		return new StoreItem(manifest.Id, story.Title, story.Language, manifest.SchemaVersion, manifest.Version ?? 1, story.Pages.Count, null, null, UrlScheme + AssetNameOf(stem), Tags: tags, Bytes: copy.Length, Audio: AudioListing(stem));
+	}
+
+	// Slice 262: one test book (gingerbread-man) lists a pre-made audio pack in AudioLanguage, so the side-language flow sees a pack arrive; the other books list none, so the quiet "has no audio yet" line shows.
+	private static IReadOnlyDictionary<string, AudioPackInfo>? AudioListing(string stem) =>
+		stem == AudioStem ? new Dictionary<string, AudioPackInfo> { [AudioLanguage] = new(1, FixturePack.Length, UrlScheme + AudioAssetPrefix + stem + ".zip") } : null;
+
+	// A pack of one clip for the book in AudioLanguage, built in memory (manifest v3 + a 4-byte clip), so the real pack store's size check, unzip, completeness check and rename all run.
+	private static readonly Lazy<byte[]> FixtureZip = new(BuildFixturePack);
+
+	private static byte[] FixturePack => FixtureZip.Value;
+
+	private static byte[] BuildFixturePack()
+	{
+		using var stream = new MemoryStream();
+		using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
+		{
+			string manifest = $$"""{"version":3,"book":"test","language":"{{AudioLanguage}}","entries":[{"index":0,"hash":"{{PremadeAudio.HashOf("x")}}","clip":"{{FixtureClip}}"}]}""";
+			using (var writer = new StreamWriter(zip.CreateEntry(PremadeAudio.ManifestFile).Open()))
+			{
+				writer.Write(manifest);
+			}
+
+			using Stream clip = zip.CreateEntry(FixtureClip).Open();
+			clip.Write([1, 2, 3, 4]);
+		}
+
+		return stream.ToArray();
 	}
 
 	private static StoryPackageManifest ManifestOf(MemoryStream package)
@@ -109,7 +141,7 @@ internal static class TestStore
 	public static async Task CopyAsync(string url, string toPath, Action<long, long?>? bytes, CancellationToken cancel)
 	{
 		string assetName = url[UrlScheme.Length..];
-		await using Stream asset = await FileSystem.OpenAppPackageFileAsync(assetName);
+		await using Stream asset = assetName.StartsWith(AudioAssetPrefix, StringComparison.Ordinal) ? new MemoryStream(FixturePack, writable: false) : await FileSystem.OpenAppPackageFileAsync(assetName);
 		using var all = new MemoryStream();
 		await asset.CopyToAsync(all, cancel);
 		Directory.CreateDirectory(Path.GetDirectoryName(toPath)!);

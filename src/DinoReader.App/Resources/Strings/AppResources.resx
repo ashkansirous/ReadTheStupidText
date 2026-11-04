@@ -17,6 +17,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Waiting for the internet · {0}%</value></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Waiting for Wi-Fi · {0}%</value></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Carries on by itself when you’re back online.</value></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>Getting {0} audio for your books</value></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} has no {1} audio yet. Dino’s reading voice will read it.</value></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} and {2} more have no {1} audio yet. Dino’s reading voice will read them.</value></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Waiting for the internet…</value></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Waiting for Wi-Fi…</value></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Getting ready…</value></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>Some {0} audio could not be fetched yet. Dino will try again later.</value></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Retry</value></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>The voice download was corrupted. Reading with the phone voice. Tap to retry.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>The natural voices pack is unusable. Reading with the phone voice.</value></data>

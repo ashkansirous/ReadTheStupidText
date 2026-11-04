@@ -16,6 +16,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Wachten op internet · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Wachten op wifi · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Gaat vanzelf verder zodra je weer online bent.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>{0}-audio ophalen voor je boeken</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} heeft nog geen {1}-audio. Dino’s leesstem leest het voor.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} en {2} andere hebben nog geen {1}-audio. Dino’s leesstem leest ze voor.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Wachten op internet…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Wachten op wifi…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Voorbereiden…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>Een deel van de {0}-audio kon nog niet worden opgehaald. Dino probeert het later opnieuw.</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Opnieuw</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>De download van de stem is beschadigd. Voorlezen met de stem van de telefoon. Tik om het opnieuw te proberen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Het pakket met natuurlijke stemmen is onbruikbaar. Voorlezen met de stem van de telefoon.</value></data>

@@ -71,6 +71,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		CrashReporter.AttachTo(window); // Slice 227: the run marker for the unclean-exit report
 		window.Resumed += (_, _) => OnResumed(_navigation!, external);
 		window.Resumed += (_, _) => _ = _config.RefreshAsync();
+		window.Resumed += (_, _) => ResumeShelfAudio(force: false);
 		var resume = _services.GetRequiredService<ReadTheStupidText.Mobile.Shared.Network.PackResumeWatcher>(); // Slice 182: created and started with the window, not when a page first asks for it
 		resume.Start();
 		window.Resumed += (_, _) => resume.NotifyForeground();
@@ -91,6 +92,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 			await _config.RefreshAsync();
 			_ = CheckBookUpdatesAsync();
 			_ = ResumeStalePartialsAsync();
+			ResumeShelfAudio(force: true);
 			if (_launchCounted)
 			{
 				return;
@@ -128,6 +130,24 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader could not check for book updates: {ex.Message}");
+		}
+	}
+
+	// Slice 262: at launch and when the app returns, a side language that still lacks packs the store has carries on (a cancelled one does not); a forced-update screen skips it.
+	private void ResumeShelfAudio(bool force)
+	{
+		if (_config.UpdateRequired)
+		{
+			return;
+		}
+
+		try
+		{
+			_services.GetRequiredService<ShelfAudioPacks>().Resume(force);
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not resume the shelf audio: {ex.Message}");
 		}
 	}
 

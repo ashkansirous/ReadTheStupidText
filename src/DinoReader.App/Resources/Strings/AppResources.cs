@@ -132,6 +132,13 @@ public static class AppResources
 	public static string StoryLanguages_Waiting => Get();
 	public static string StoryLanguages_WaitingWifi => Get();
 	public static string StoryLanguages_WaitingNote => Get();
+	public static string ShelfAudio_Getting => Get();
+	public static string ShelfAudio_NoneOne => Get();
+	public static string ShelfAudio_NoneMany => Get();
+	public static string ShelfAudio_WaitingInternet => Get();
+	public static string ShelfAudio_WaitingWifi => Get();
+	public static string ShelfAudio_Preparing => Get();
+	public static string ShelfAudio_Failed => Get();
 	public static string StoryLanguages_Retry => Get();
 	public static string PackStatus_HashMismatch => Get();
 	public static string PackStatus_HashMismatchClick => Get();

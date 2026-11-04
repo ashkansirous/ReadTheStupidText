@@ -14,6 +14,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Esperando a Internet · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Esperando Wi-Fi · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Continúa solo cuando vuelvas a estar conectado.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>Descargando el audio en {0} de tus libros</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} aún no tiene audio en {1}. La voz lectora de Dino lo leerá.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} y {2} más aún no tienen audio en {1}. La voz lectora de Dino los leerá.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Esperando a internet…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Esperando al Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Preparando…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>Parte del audio en {0} aún no se pudo descargar. Dino lo intentará de nuevo más tarde.</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Reintentar</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>La descarga de la voz se corrompió. Se lee con la voz del teléfono. Toca para reintentar.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>El paquete de voces naturales no se puede usar. Se lee con la voz del teléfono.</value></data>
