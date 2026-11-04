@@ -17,7 +17,6 @@ on:
       - 'tools/upload-store-story.ps1'
       - '.github/scripts/publish-store-books.mjs'
       - '.github/scripts/r2-wrangler.mjs'
-      - '.github/scripts/dino-starters.json'
       - '.github/workflows/dino-store.yml'
   # A daily retry: the publish compares content hashes with the live store, so a run with nothing behind uploads nothing, and a failed or cancelled upload is caught here.
   schedule:
@@ -67,6 +66,29 @@ jobs:
       - name: Read the live store state
         run: node .github/scripts/publish-store-books.mjs --live-state "$RUNNER_TEMP/live-store.json"
 
+      # Slice 265: the clips are Git LFS objects (.lfsconfig keeps them out of a normal checkout). Only the audio packs the live store lacks are built: `--audio-behind` lists
+      # `<book> <language>` pairs, each pair's clips are fetched alone (`--exclude ""` overrides the .lfsconfig exclusion) and packed before `build` so meta.json lists the pack.
+      # The zips go up before the cover, package and meta.json (publish-store-books.mjs). A pack that fails to build skips only that language; the job fails at the end naming it.
+      - name: Build the audio packs the live store lacks
+        id: audio
+        run: |
+          node .github/scripts/publish-store-books.mjs --audio-behind > "$RUNNER_TEMP/audio-behind.txt"
+          cat "$RUNNER_TEMP/audio-behind.txt"
+          failed=""
+          if [ -s "$RUNNER_TEMP/audio-behind.txt" ]; then
+            dotnet build tools/DinoReader.BookBuilder --configuration Release
+            while read -r stem language; do
+              if git lfs pull --include "content/dino/${stem}/audio/${language}/**" --exclude "" \
+                && dotnet run --no-build --project tools/DinoReader.BookBuilder --configuration Release -- build-audio "$stem" --lang "$language"; then
+                echo "audio pack built: $stem $language"
+              else
+                echo "::error::The audio pack of $stem [$language] could not be built."
+                failed="$failed $stem/$language"
+              fi
+            done < "$RUNNER_TEMP/audio-behind.txt"
+          fi
+          echo "failed=${failed# }" >> "$GITHUB_OUTPUT"
+
       # Exit 0 = all built, 2 = some invalid book skipped (the others built), anything else = a broken build: nothing is uploaded then.
       - name: Build the store books
         id: build
@@ -84,6 +106,14 @@ jobs:
         if: steps.build.outputs.status == '0' || steps.build.outputs.status == '2'
         run: |
           node .github/scripts/publish-store-books.mjs --verify
+
+      - name: Fail when an audio pack could not be built
+        if: always() && steps.audio.outputs.failed != ''
+        env:
+          FAILED: ${{ steps.audio.outputs.failed }}
+        run: |
+          echo "::error::These audio packs could not be built (their book still published without them): ${FAILED}"
+          exit 1
 
       - name: Fail when a store book was skipped as invalid
         if: always() && steps.build.outputs.status != '0'

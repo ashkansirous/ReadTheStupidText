@@ -28,6 +28,8 @@ from run_common import (EXIT_AUTH, EXIT_ENCODE, EXIT_ERRORS, EXIT_LOCKED, EXIT_N
 
 REPO_ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 DEFAULT_OUT = os.path.join(REPO_ROOT, "artifacts", "premade-audio")
+CONTENT_ROOT = os.path.join(REPO_ROOT, "content", "dino")
+AUDIO_FOLDER = "audio"  # content/dino/<book>/audio/<language>/: the clip cache, tracked in Git LFS (Slice 265)
 CAST_NAME = "audio-cast.json"
 FORMAT_M4A = "m4a"
 VARIANTS_FOLDER = "variants"
@@ -235,7 +237,7 @@ def parse_args(argv):
     p = argparse.ArgumentParser(description="Render one Gemini clip per spoken sentence of a Dino book.")
     p.add_argument("--sentences", required=True, help="JSON from BookBuilder dump-sentences")
     p.add_argument("--cast", help=f"audio cast file (default content/dino/<book>/{CAST_NAME})")
-    p.add_argument("--out", default=DEFAULT_OUT, help="output root (default artifacts/premade-audio)")
+    p.add_argument("--out", help="scratch output root, <out>/<book>/<language>/ (default: the clips go to content/dino/<book>/audio/<language>/, Git LFS, Slice 265)")
     p.add_argument("--free", action="store_true", help=f"free tier preset: {pacing.FREE_RPM} requests a minute, {pacing.FREE_RPD} a day")
     p.add_argument("--rpm", type=int, help=f"requests per minute (0 = no pacing; default {pacing.DEFAULT_RPM}, a placeholder for the paid tier)")
     p.add_argument("--rpd", type=int, help="requests per rolling 24 hours (0 = no limit; default none)")
@@ -304,7 +306,7 @@ def main(argv=None):
         print("ffmpeg was not found on PATH (set $FFMPEG to its path); rerun with --format wav to keep raw WAV clips", file=sys.stderr)
         return EXIT_NO_FFMPEG
     try:
-        with pacing.RunLock(args.out):
+        with pacing.RunLock(args.out or DEFAULT_OUT):
             return run_locked(args, book, language, sentences, cast, ffmpeg)
     except pacing.RunLocked as error:
         print(str(error), file=sys.stderr)
@@ -335,11 +337,18 @@ def run_batch(args, generator, sentences):
     return runner.run(sentences)
 
 
+def clips_folder(out, book, language):
+    """Where one book-language's clips and manifest live: the book's own LFS folder, or <out>/<book>/<language> when --out names a scratch root."""
+    if out:
+        return os.path.join(out, book, language)
+    return os.path.join(CONTENT_ROOT, book, AUDIO_FOLDER, language)
+
+
 def run_locked(args, book, language, sentences, cast, ffmpeg):
     rpm, rpd = limits(args)
-    log = pacing.UsageLog(pacing.usage_path(args.out))
+    log = pacing.UsageLog(pacing.usage_path(args.out or DEFAULT_OUT))
     pacer = pacing.Pacer(log, rpm, rpd, args.max_requests)
-    generator = Generator(Gemini(), cast, os.path.join(args.out, book, language), pacer, book, language, args.format, ffmpeg,
+    generator = Generator(Gemini(), cast, clips_folder(args.out, book, language), pacer, book, language, args.format, ffmpeg,
                           readonly=args.dry_run or args.variants is not None)
     if args.dry_run and args.batch:
         print(f"{book} [{language}]: {batch_dry_run_line(args, generator, sentences)}")

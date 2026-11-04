@@ -29,6 +29,30 @@ internal static class AudioPacks
 
     public static string PackFileName(string language, int version) => $"audio-{language}-v{version}.zip";
 
+    /// <summary>Slice 265: where a book keeps its clips, <c>content/dino/&lt;book&gt;/audio/&lt;language&gt;</c> (Git LFS; a normal checkout holds only pointer files).</summary>
+    public const string ClipsFolderName = "audio";
+
+    /// <summary>The first bytes of a Git LFS pointer file, which a checkout holds instead of a clip until <c>git lfs pull</c> fetched it.</summary>
+    private const string LfsPointerPrefix = "version https://git-lfs";
+
+    public static string ClipsFolderOf(BookFolder book, string language) => Path.Combine(book.Dir, ClipsFolderName, language);
+
+    /// <summary>True for a Git LFS pointer file (a clip or manifest that was never downloaded).</summary>
+    public static bool IsLfsPointer(string path)
+    {
+        using FileStream stream = File.OpenRead(path);
+        Span<byte> head = stackalloc byte[LfsPointerPrefix.Length];
+        return stream.Read(head) == head.Length && Encoding.ASCII.GetString(head) == LfsPointerPrefix;
+    }
+
+    private static void RejectLfsPointer(string path)
+    {
+        if (IsLfsPointer(path))
+        {
+            throw new InvalidOperationException($"{path} is a Git LFS pointer, not the file: run git lfs pull --include \"content/dino/<book>/audio/**\" --exclude \"\" first.");
+        }
+    }
+
     /// <summary>The version a pack is built as: 1 for the first, the recorded one when the content hash is unchanged, else one above it.</summary>
     public static int Decide(AudioPackRecord? recorded, string contentHash) =>
         recorded is null ? 1 : recorded.Hash == contentHash ? recorded.Version : recorded.Version + 1;
@@ -64,6 +88,7 @@ internal static class AudioPacks
             throw new InvalidOperationException($"{clipsFolder} has no {ManifestFile}; point --clips at a generator folder (tools/premade-audio).");
         }
 
+        RejectLfsPointer(manifestPath);
         using JsonDocument manifest = JsonDocument.Parse(File.ReadAllBytes(manifestPath));
         JsonElement root = manifest.RootElement;
         CheckManifest(root, language, manifestPath);
@@ -102,7 +127,14 @@ internal static class AudioPacks
             throw new InvalidOperationException($"A manifest entry in {clipsFolder} has no plain clip file name.");
         }
 
-        return File.Exists(Path.Combine(clipsFolder, clip)) ? clip : throw new InvalidOperationException($"The manifest names {clip} but {clipsFolder} has no such file.");
+        string path = Path.Combine(clipsFolder, clip);
+        if (!File.Exists(path))
+        {
+            throw new InvalidOperationException($"The manifest names {clip} but {clipsFolder} has no such file.");
+        }
+
+        RejectLfsPointer(path);
+        return clip;
     }
 
     /// <summary>The SHA-256 (lower-case hex) over each file's name, length and bytes, in the given order.</summary>

@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, contentBooks, starterDrift, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
+import { audioPacksBehind, audioUploadsFor, bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, contentBooks, starterDrift, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
 
 const A = 'a'.repeat(32);
 const B = 'b'.repeat(32);
@@ -34,7 +34,8 @@ test('uploads go cover, package, then meta.json last', () => {
 });
 
 test('liveFromApi reads the stories list and rejects anything else', () => {
-    assert.deepEqual(liveFromApi({ schemaVersion: 1, stories: [{ id: A, version: 3, title: 'x' }] }), [{ id: A, version: 3, title: 'x' }]);
+    assert.deepEqual(liveFromApi({ schemaVersion: 1, stories: [{ id: A, version: 3, title: 'x' }] }), [{ id: A, version: 3, title: 'x', audio: null }]);
+    assert.deepEqual(liveFromApi({ stories: [{ id: A, version: 3, audio: { fa: { version: 1 } } }] })[0].audio, { fa: { version: 1 } });
     assert.throws(() => liveFromApi({}), /stories/);
 });
 
@@ -107,9 +108,10 @@ test('Slice 239: too many delistings at once (a broken checkout) is refused', ()
 
 function storeFolder(books) {
     const root = mkdtempSync(join(tmpdir(), 'store-books-'));
-    for (const { id, version, withPackage = true, cover = true, hash } of books) {
+    for (const { id, version, withPackage = true, cover = true, hash, audio, zips = [] } of books) {
         mkdirSync(join(root, id));
-        writeFileSync(join(root, id, 'meta.json'), JSON.stringify(hash ? { version, contentHash: hash } : { version }));
+        writeFileSync(join(root, id, 'meta.json'), JSON.stringify({ version, ...(hash ? { contentHash: hash } : {}), ...(audio ? { audio } : {}) }));
+        zips.forEach((zip) => writeFileSync(join(root, id, zip), 'z'));
         if (withPackage) writeFileSync(join(root, id, `story-v${version}.dino`), 'x');
         if (cover) writeFileSync(join(root, id, 'cover.jpg'), 'x');
     }
@@ -133,6 +135,53 @@ test('runUploads sends only what is behind, in order, and reports it', () => {
         assert.deepEqual(sent, [`dinoreader/stories/${A}/cover.jpg`, `dinoreader/stories/${A}/story-v6.dino`, `dinoreader/stories/${A}/meta.json`]);
         assert.deepEqual(done, [{ id: A, version: 6 }]);
     });
+});
+
+test('Slice 265: the audio packs built in this run go up first, before the cover, package and meta.json', () => {
+    const audio = { fa: { version: 2 }, de: { version: 1 } };
+    withStore([{ id: A, version: 6, audio, zips: ['audio-fa-v2.zip'] }], (root) => {
+        const sent = [];
+        const plan = planStoreUploads(readBuilt(root), [{ id: A, version: 1 }]);
+        runUploads(plan, root, { put: (upload) => sent.push(upload.name), packageExists: () => false });
+        assert.deepEqual(sent, ['audio-fa-v2.zip', 'cover.jpg', 'story-v6.dino', 'meta.json']); // audio-de-v1.zip was not built here, so it is already live
+    });
+});
+
+test('Slice 265: an audio pack already in the bucket is not overwritten', () => {
+    withStore([{ id: A, version: 6, audio: { fa: { version: 2 } }, zips: ['audio-fa-v2.zip'] }], (root) => {
+        const sent = [];
+        const plan = planStoreUploads(readBuilt(root), [{ id: A, version: 1 }]);
+        runUploads(plan, root, { put: (upload) => sent.push(upload.name), packageExists: (upload) => upload.name === 'audio-fa-v2.zip' });
+        assert.deepEqual(sent, ['cover.jpg', 'story-v6.dino', 'meta.json']);
+    });
+});
+
+test('Slice 265: a same-version book with a newly built pack sends the pack, then its changed meta, and an unchanged meta still sends the pack', () => {
+    const audio = { fa: { version: 2 } };
+    withStore([{ id: A, version: 3, audio, zips: ['audio-fa-v2.zip'] }], (root) => {
+        const plan = planStoreUploads(readBuilt(root), [{ id: A, version: 3 }]);
+        const changed = [];
+        runMetaRefresh(plan, root, { put: (upload) => changed.push(upload.name), liveMeta: () => '{"version":3}', packageExists: () => false });
+        assert.deepEqual(changed, ['audio-fa-v2.zip', 'meta.json']);
+        const same = [];
+        runMetaRefresh(plan, root, { put: (upload) => same.push(upload.name), liveMeta: () => JSON.stringify({ version: 3, audio }), packageExists: () => false });
+        assert.deepEqual(same, ['audio-fa-v2.zip']);
+    });
+});
+
+test('Slice 265: audioUploadsFor ignores a meta with no audio, a broken meta and an odd language', () => {
+    const exists = () => true;
+    assert.deepEqual(audioUploadsFor({ id: A }, '/s', '{"version":1}', exists), []);
+    assert.deepEqual(audioUploadsFor({ id: A }, '/s', 'not json', exists), []);
+    assert.deepEqual(audioUploadsFor({ id: A }, '/s', '{"audio":{"../x":{"version":1}}}', exists), []);
+    assert.deepEqual(audioUploadsFor({ id: A }, '/s', '{"audio":{"fa":{"version":3}}}', exists).map((u) => u.key), [`dinoreader/stories/${A}/audio-fa-v3.zip`]);
+});
+
+test('Slice 265: a language is behind when the live store lacks its pack or lists a lower version, never when it is equal or higher', () => {
+    const books = [{ stem: 'pigs', id: A, packs: { de: 1, fa: 2, ja: 1 } }, { stem: 'hen', id: B, packs: { fa: 1 } }, { stem: 'done', id: 'c'.repeat(32), packs: { fa: 1 } }];
+    const live = [{ id: A, audio: { de: { version: 1 }, fa: { version: 1 }, ja: { version: 5 } } }, { id: B, audio: null }, { id: 'c'.repeat(32), audio: { fa: { version: 1 } } }];
+    assert.deepEqual(audioPacksBehind(books, live), [{ stem: 'pigs', languages: ['fa'] }, { stem: 'hen', languages: ['fa'] }]);
+    assert.deepEqual(audioPacksBehind([{ stem: 'new', id: A, packs: { fa: 1 } }], []), [{ stem: 'new', languages: ['fa'] }]); // a book that is not live at all needs every pack
 });
 
 test('an existing package is never overwritten, but the meta still goes up', () => {

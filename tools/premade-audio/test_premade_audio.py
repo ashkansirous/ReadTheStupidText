@@ -635,6 +635,12 @@ class MainTests(Base):
         self.assertIn("3 sentences, 3 need a request", out.getvalue())
         self.assertIn("3/min, 10/day", out.getvalue())
 
+    def test_clips_go_to_the_books_lfs_folder_unless_out_names_a_scratch_root(self):
+        """Slice 265: no --out means content/dino/<book>/audio/<language>; --out keeps the old <out>/<book>/<language> layout."""
+        expected = os.path.join(generate.REPO_ROOT, "content", "dino", "b", "audio", "fa")
+        self.assertEqual(expected, generate.clips_folder(None, "b", "fa"))
+        self.assertEqual(os.path.join(self.tmp, "b", "fa"), generate.clips_folder(self.tmp, "b", "fa"))
+
     def test_a_speaker_without_a_voice_fails_before_any_request(self):
         sentences, cast = self.files()
         pathlib.Path(sentences).write_text(json.dumps({"book": "b", "language": "fa", "sentences": [sentence(0, "x", "Troll")]}), encoding="utf8")

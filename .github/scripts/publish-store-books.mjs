@@ -23,6 +23,9 @@
  *                        changed or unhashed = max(book.json version, 1 + the highest of live and every story-v<n>.dino found in the bucket), so an existing package is never reused
  *                        or overwritten; meta.json goes up last, so a half-finished run leaves live meta behind its content and the next run publishes at a new version.
  *                        wrangler cannot list a bucket, so the packages are found by probing upward from the live version until PROBE_WINDOW versions in a row are absent.
+ *   --audio-behind       (Slice 265, BEFORE the build) prints `<book stem> <language>` for each audio pack in a book's audio-cast.json `audioPacks` that the live /api/stories `audio` lacks (or lists lower),
+ *                        so the workflow runs `git lfs pull` for those books only and `BookBuilder build-audio` for those languages. Their zips then go up before the cover, package and meta.json,
+ *                        never overwriting an existing object (the same version is the same bytes).
  *   --check-content      (FIRST step) fails when a content folder's book.json kind is Starter but the folder is missing from dino-starters.json (a new starter must build the app), or the reverse.
  *   Package versions are never reused: right before uploading story-v<n>.dino of a hashed (pipeline-managed) book, the bucket is asked whether that exact object exists; if it does the built package
  *   is renamed to n+1 and meta.json rewritten (up to MAX_VERSION_BUMPS, then the book fails and no meta goes up). This makes the probe window's gap harmless. Only after that the package, then meta.json LAST.
@@ -50,6 +53,8 @@ const KEY_PREFIX = 'dinoreader/stories';
 const META_FILE = 'meta.json';
 const COVER_FILE = 'cover.jpg';
 const STORY_ID_PATTERN = /^[0-9a-f]{32}$/;
+const AUDIO_PACK_FILE = /^audio-[a-z]{2,3}(?:-[a-z0-9]{2,8})?-v\d+\.zip$/;
+const AUDIO_CAST_FILE = 'audio-cast.json';
 const VERIFY_ATTEMPTS = 7;
 const FETCH_TIMEOUT_MS = 30000;
 const VERIFY_WAIT_MS = 20000;
@@ -125,11 +130,12 @@ export function bucketVersionMatches(liveText, builtVersion) {
  * bucket's. `liveMeta(upload)` returns the bucket's meta.json text, or null when there is none. A failing book is skipped, the
  * run then throws listing them (the error carries `done`). Returns the ids refreshed.
  */
-export function runMetaRefresh(plan, root, { put, liveMeta }) {
+export function runMetaRefresh(plan, root, { put, liveMeta, packageExists = () => false }) {
     const done = [];
     const failures = [];
     for (const book of plan.filter((item) => item.outcome === Outcome.UpToDate)) {
         try {
+            putAudioPacks(book, join(root, book.id), { put, packageExists }); // Slice 265: a pack built in this run goes up even when the meta is unchanged
             const upload = metaUpload(book, join(root, book.id));
             const live = liveMeta(upload);
             if (!metaDiffers(readFileSync(upload.path, 'utf8'), live)) continue;
@@ -157,10 +163,55 @@ export function uploadsFor({ id, version }, folder, hasCover) {
     return uploads;
 }
 
+/**
+ * Pure (Slice 265): the audio pack zips a built book folder holds that its meta.json lists (`audio`: language to {version}), as uploads. Only a pack built in this run is in the folder
+ * (the build step builds just the languages the live store is behind on), so a listed pack that is not there is already live and is skipped. `fileExists(path)` is injectable.
+ */
+export function audioUploadsFor({ id }, folder, metaText, fileExists = existsSync) {
+    let audio;
+    try {
+        audio = JSON.parse(metaText).audio;
+    } catch {
+        return [];
+    }
+    if (!audio || typeof audio !== 'object') return [];
+    return Object.keys(audio).sort().map((language) => `audio-${language}-v${audio[language]?.version}.zip`)
+        .filter((name) => AUDIO_PACK_FILE.test(name) && fileExists(join(folder, name)))
+        .map((name) => ({ name, key: `${KEY_PREFIX}/${id}/${name}`, path: join(folder, name), contentType: 'application/zip', isAudioPack: true }));
+}
+
+/** Sends the audio packs of one built book that are not in the bucket yet (never overwritten: the same version is the same content), before the cover, package and meta.json. Returns the names sent. */
+export function putAudioPacks(book, folder, { put, packageExists }) {
+    const sent = [];
+    for (const upload of audioUploadsFor(book, folder, readFileSync(join(folder, META_FILE), 'utf8'))) {
+        if (packageExists(upload)) {
+            console.log(`${upload.key} already exists, not overwriting`);
+            continue;
+        }
+        put(upload);
+        sent.push(upload.name);
+    }
+    return sent;
+}
+
+/**
+ * Pure (Slice 265): the book languages whose audio pack is behind the live store, so the build step must fetch that book's clips from Git LFS and pack them. `books` is
+ * `[{ stem, id, packs: { <language>: version } }]` (the committed `audioPacks` records of each book's audio-cast.json), `live` the /api/stories list with each story's `audio`
+ * (only the packs whose zip is in the bucket). A language is behind when the live store lacks its pack or lists a lower version; a live higher version is left alone.
+ */
+export function audioPacksBehind(books, live) {
+    const liveById = new Map(live.map((story) => [story.id, story.audio ?? {}]));
+    return books.map(({ stem, id, packs }) => {
+        const liveAudio = liveById.get(id) ?? {};
+        const languages = Object.keys(packs).sort().filter((language) => !(Number(liveAudio[language]?.version) >= packs[language]));
+        return { stem, languages };
+    }).filter((item) => item.languages.length > 0);
+}
+
 /** Pure: the live list from the /api/stories body, as `[{ id, version }]`. Throws on a body that is not the list. */
 export function liveFromApi(body) {
     if (!body || !Array.isArray(body.stories)) throw new Error('The store list has no "stories" array.');
-    return body.stories.map((story) => ({ id: story.id, version: story.version, title: story.title }));
+    return body.stories.map((story) => ({ id: story.id, version: story.version, title: story.title, audio: story.audio ?? null }));
 }
 
 /** Pure: the contentHash in a live meta.json text, or null (no meta, unreadable, or published before the hash existed). */
@@ -361,6 +412,7 @@ function settleVersion(book, folder, packageExists) {
 function uploadBook(book, root, { put, packageExists, hasCover }) {
     const folder = join(root, book.id);
     if (!existsSync(join(folder, packageName(book.version)))) throw new Error(`${book.id}: meta.json says v${book.version} but ${packageName(book.version)} is missing.`);
+    putAudioPacks(book, folder, { put, packageExists }); // Slice 265: the packs go up before the cover, package and meta.json (meta last, so a listed pack is always there)
     const { version, packageThere } = settleVersion(book, folder, packageExists);
     for (const upload of uploadsFor({ id: book.id, version }, folder, hasCover(folder))) {
         if (upload.isPackage && packageThere) {
@@ -481,10 +533,25 @@ async function writeLiveState(args) {
     console.log(`Live store state of ${Object.keys(state).length} stories written to ${target}`);
 }
 
+/** The committed audio pack records of each content book, `[{ stem, id, packs: { language: version } }]` (books without an audio-cast.json or without records are left out). */
+function readAudioRecords() {
+    return readContentBooks().map((book) => {
+        const castPath = join(CONTENT_ROOT, book.stem, AUDIO_CAST_FILE);
+        const records = existsSync(castPath) ? JSON.parse(readFileSync(castPath, 'utf8')).audioPacks ?? {} : {};
+        return { stem: book.stem, id: book.id, packs: Object.fromEntries(Object.entries(records).map(([language, record]) => [language, Number(record.version)])) };
+    }).filter((book) => Object.keys(book.packs).length > 0);
+}
+
+/** `--audio-behind`: prints one `<stem> <language>` line for each audio pack the live store lacks, so dino-store.yml fetches only those books' clips from Git LFS and packs them. */
+async function printAudioBehind(args) {
+    audioPacksBehind(readAudioRecords(), await fetchLive(args, process.env)).forEach(({ stem, languages }) => languages.forEach((language) => console.log(`${stem} ${language}`)));
+}
+
 async function main() {
     const args = process.argv.slice(2);
     if (args.includes('--check-content')) return checkContent();
     if (args.includes('--live-state')) return writeLiveState(args);
+    if (args.includes('--audio-behind')) return printAudioBehind(args);
     const rootFlag = args.indexOf('--root');
     const root = resolve(rootFlag === -1 ? 'artifacts/store' : args[rootFlag + 1]);
     if (args.includes('--verify')) return verify(args, root);
@@ -509,7 +576,7 @@ async function main() {
     const errors = [];
     for (const [step, assign] of [
         [() => runUploads(plan, root, { put: putToBucket, packageExists: packageInBucket }), (done) => { uploaded = done; }],
-        [() => runMetaRefresh(plan, root, { put: putToBucket, liveMeta: metaInBucket }), (done) => { refreshed = done; }],
+        [() => runMetaRefresh(plan, root, { put: putToBucket, liveMeta: metaInBucket, packageExists: packageInBucket }), (done) => { refreshed = done; }],
         [() => runDeletions(deletions, { remove: removeFromBucket }), (done) => { delisted = done; }],
     ]) {
         try {

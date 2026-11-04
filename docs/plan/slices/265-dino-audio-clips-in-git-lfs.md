@@ -16,12 +16,12 @@ The pre-made audio's single-sentence clips (about 510 MB, 16 books x 15 language
 
 ## Work
 
-- [ ] LFS: `.gitattributes` tracks `content/dino/**/audio/**`; `.lfsconfig` excludes them from normal fetches; move the clips from `s246-audio` into the books' folders (manifests too), commit through LFS; the folder outside git stays until the commit is pushed and read back.
-- [ ] Tools: `tools/premade-audio` reads and writes the cache in `content/dino/<book>/audio/`; BookBuilder `build-audio` packs from there; README says how to fetch the clips for one book.
-- [ ] CI: remove the starters' special handling (`dino-starters.json`, `STARTER_STEMS`, `STARTER_CONTENT_PATHS`, the starter folders in `release.yml`'s and `dinoreader.yml`'s paths); `ship-targets.mjs` maps every `content/dino/**` path, audio included, to `dinostore` only; tests assert an audio-only and a text-only change start no app build and no test workflow.
-- [ ] `dino-store.yml`: for each changed book, `git lfs pull --include content/dino/<book>/audio/**`, build its packs and upload them with the book (today packs go up by hand with `tools/upload-store-story.ps1`).
-- [ ] Upload the four former starter books' packs (built 2026-11-04, PR #792) once they are store books.
-- [ ] `.github/CLAUDE.md`: the content-only rule and the LFS fetch rule.
+- [x] LFS: `.gitattributes` tracks `content/dino/**/audio/**`; `.lfsconfig` excludes them from normal fetches; move the clips from `s246-audio` into the books' folders (manifests too), commit through LFS; the folder outside git stays until the commit is pushed and read back. *(built: 18,251 files, 16 books x 15 languages, 18,011 clips + 240 manifests, about 510 MB; the Persian clips of three-little-pigs come from `pigs-fa/`, those of town-mouse-country-mouse from `books/`; the `s246-audio` folder is untouched.)*
+- [x] Tools: `tools/premade-audio` reads and writes the cache in `content/dino/<book>/audio/`; BookBuilder `build-audio` packs from there; README says how to fetch the clips for one book. *(`generate.py` defaults to `content/dino/<book>/audio/<lang>`, `--out` keeps a scratch root; `build-audio --clips` is optional and refuses an LFS pointer file.)*
+- [x] CI: remove the starters' special handling (`dino-starters.json`, `STARTER_STEMS`, `STARTER_CONTENT_PATHS`, the starter folders in `release.yml`'s and `dinoreader.yml`'s paths); `ship-targets.mjs` maps every `content/dino/**` path, audio included, to `dinostore` only; tests assert an audio-only and a text-only change start no app build and no test workflow. *(`dino-starters.json` itself stays: `BookBuilderTests` (outside this slice) and `publish-store-books.mjs --check-content` read it until Slice 261 lands and a follow-up removes it.)*
+- [x] `dino-store.yml`: for each changed book, `git lfs pull --include content/dino/<book>/audio/**`, build its packs and upload them with the book (today packs go up by hand with `tools/upload-store-story.ps1`). *(`--audio-behind` picks the books/languages whose pack the live store lacks; their clips are fetched alone, packed before `build`, and uploaded before the cover, package and meta.)*
+- [x] Upload the four former starter books' packs (built 2026-11-04, PR #792) once they are store books. *(already live per the claim note; nothing built here.)*
+- [x] `.github/CLAUDE.md`: the content-only rule and the LFS fetch rule.
 
 ## Claim note (coordinator, 2026-11-04, night 2026-11-04-1441 wave 2)
 

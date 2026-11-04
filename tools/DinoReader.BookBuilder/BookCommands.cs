@@ -48,10 +48,10 @@ internal static class BookCommands
         live is not null && live.TryGetValue(book.Info.Id, out LiveEntry? entry) && entry.Version == book.Info.Version ? entry.Bytes : null;
 
     /// <summary>Slice 246 B2: packs the clips folder of one store book or starter language (see <see cref="AudioPacks"/>) beside the book's store folder and prints the version it was built as.</summary>
-    public static int BuildAudio(string stem, string language, string clipsFolder)
+    public static int BuildAudio(string stem, string language, string? clipsFolder)
     {
         BookFolder book = Books.Folder(stem); // store books and the four bundled starters (Slice 258): both are served by the store route under their id
-        AudioPackRecord record = AudioPacks.Build(book, language, clipsFolder, StoreBuilder.StoreFolder());
+        AudioPackRecord record = AudioPacks.Build(book, language, clipsFolder ?? AudioPacks.ClipsFolderOf(book, language), StoreBuilder.StoreFolder());
         Console.WriteLine($"built {stem} audio {language} v{record.Version} ({record.Bytes} bytes)");
         return 0;
     }
