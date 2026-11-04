@@ -21,6 +21,9 @@ public static class CrashDebug
         }
     }
 
+    /// <summary>The report code a scripted check fixed with <c>report-code code=ABCD2345</c> (Slice 249), or null for a random one.</summary>
+    public static string? ForcedReportCode { get; internal set; }
+
     internal static void SetStub(string? address)
     {
         if (string.IsNullOrEmpty(address))
@@ -46,6 +49,8 @@ public static class CrashTestHook
 {
     public const string StubCommand = "crash-stub";
     public const string TestCommand = "crash-test";
+    public const string ReportCodeCommand = "report-code";
+    public const string CodeKey = "code";
     public const string UrlKey = "url";
     public const string KindKey = "kind";
     private const string ManagedKind = "managed";
@@ -59,7 +64,7 @@ public static class CrashTestHook
     {
         Func<TestHookCommand, string?>? previous = TestHookDispatcher.AppCommands;
         TestHookDispatcher.AppCommands = command => Run(command) ?? previous?.Invoke(command);
-        TestHookDispatcher.AppLaunchKeys = TestHookDispatcher.AppLaunchKeys.Concat([UrlKey, KindKey]).Distinct().ToList();
+        TestHookDispatcher.AppLaunchKeys = TestHookDispatcher.AppLaunchKeys.Concat([UrlKey, KindKey, CodeKey]).Distinct().ToList();
     }
 
     private static string? Run(TestHookCommand command)
@@ -67,6 +72,12 @@ public static class CrashTestHook
         if (command.Name == StubCommand)
         {
             CrashDebug.SetStub(command.Get(UrlKey, string.Empty));
+            return TestHookDispatcher.Ok;
+        }
+
+        if (command.Name == ReportCodeCommand)
+        {
+            CrashDebug.ForcedReportCode = command.Get(CodeKey, string.Empty);
             return TestHookDispatcher.Ok;
         }
 

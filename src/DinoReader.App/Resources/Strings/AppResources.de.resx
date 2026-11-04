@@ -274,6 +274,18 @@
   <data name="Version_Title" xml:space="preserve"><value>Version</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Hilf mit, Dino besser zu machen</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>Sendet Zählungen wie „ein Buch aus dem Laden wurde zu Ende gelesen“. Keine Namen, keine Kennungen, nichts von dem, was du getippt hast. Dazu kommen dein Land und eine grobe Geräteart (Handy oder Tablet, Speichergröße). Stürzt die App ab, kann sie auch einen Absturzbericht senden: den Fehler und ein kurzes technisches Protokoll, nie etwas, das du gelesen oder getippt hast.</value></data>
+  <!-- Slice 249: Report a problem -->
+  <data name="ReportProblem_Title" xml:space="preserve"><value>Ein Problem melden</value></data>
+  <data name="ReportProblem_Explain" xml:space="preserve"><value>Senden Sie uns das letzte technische Protokoll der App, damit wir sehen können, was schiefgelaufen ist. Es enthält die geöffneten Bildschirme, die gedrückten Tasten und was das Vorlesen getan hat, dazu die App-Version, einen groben Gerätetyp und Ihr Land. Keine Namen, keine Buchtitel, nichts Eingetipptes. Es wird nur gesendet, wenn Sie auf „Senden“ tippen.</value></data>
+  <data name="ReportProblem_Send" xml:space="preserve"><value>Senden</value></data>
+  <data name="ReportProblem_Sending" xml:space="preserve"><value>Der Bericht wird gesendet …</value></data>
+  <data name="ReportProblem_Sent" xml:space="preserve"><value>Gesendet.</value></data>
+  <data name="ReportProblem_QuoteCode" xml:space="preserve"><value>Wenn Sie uns schreiben, nennen Sie diesen Code:</value></data>
+  <data name="ReportProblem_Copy" xml:space="preserve"><value>Kopieren</value></data>
+  <data name="ReportProblem_Copied" xml:space="preserve"><value>Kopiert</value></data>
+  <data name="ReportProblem_Failed" xml:space="preserve"><value>Der Bericht konnte gerade nicht gesendet werden. Er bleibt auf diesem Handy und wird später gesendet, oder Sie versuchen es noch einmal.</value></data>
+  <data name="ReportProblem_FailedNotKept" xml:space="preserve"><value>Der Bericht konnte gerade nicht gesendet werden. Sie können es noch einmal versuchen.</value></data>
+  <data name="ReportProblem_TryAgain" xml:space="preserve"><value>Noch einmal versuchen</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Lesetempo</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Langsamer ist für die Kleinen leichter</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · langsam</value></data>

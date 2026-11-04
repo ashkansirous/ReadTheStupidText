@@ -3,6 +3,7 @@ using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Crashes;
 
 namespace DinoReader;
 
@@ -228,6 +229,7 @@ public sealed class ReadingSession
 
 	public void Detach()
 	{
+		AppTrace.Reading(TraceLines.ReadingEvent.Detached, TraceLines.ReadingReason.PageLeft); // Slice 243 item 5
 		_reader.StateChanged -= OnReaderStateChanged;
 		_reader.ChunkChanged -= OnChunkChanged;
 		_reader.Completed -= OnCompleted;
@@ -245,10 +247,12 @@ public sealed class ReadingSession
 		SentenceChanged?.Invoke(this, sentence);
 	}
 
-	public void Pause()
+	/// <param name="reason">Why, one of <see cref="TraceLines.ReadingReason"/>; logged only when a read was playing.</param>
+	public void Pause(string reason)
 	{
 		if (_recorded == RecordedPlay.Playing)
 		{
+			AppTrace.Reading(TraceLines.ReadingEvent.Paused, reason);
 			_player.Pause();
 			_recorded = RecordedPlay.Paused;
 			StateChanged?.Invoke(this, EventArgs.Empty);
@@ -257,6 +261,7 @@ public sealed class ReadingSession
 
 		if (_reader.State == PlaybackState.Playing)
 		{
+			AppTrace.Reading(TraceLines.ReadingEvent.Paused, reason);
 			_reader.Pause();
 		}
 	}
@@ -265,6 +270,7 @@ public sealed class ReadingSession
 	{
 		if (_recorded == RecordedPlay.Paused)
 		{
+			AppTrace.Reading(TraceLines.ReadingEvent.Resumed, TraceLines.ReadingReason.User);
 			_player.Resume();
 			_recorded = RecordedPlay.Playing;
 			StateChanged?.Invoke(this, EventArgs.Empty);
@@ -273,12 +279,19 @@ public sealed class ReadingSession
 
 		if (_reader.State == PlaybackState.Paused)
 		{
+			AppTrace.Reading(TraceLines.ReadingEvent.Resumed, TraceLines.ReadingReason.User);
 			_reader.Resume();
 		}
 	}
 
-	public void Stop()
+	/// <param name="reason">Why, one of <see cref="TraceLines.ReadingReason"/>; logged only when a read was playing, paused or loading (a stop of an idle session changes nothing).</param>
+	public void Stop(string reason)
 	{
+		if (State != SessionState.Idle || _activeReadId != 0)
+		{
+			AppTrace.Reading(TraceLines.ReadingEvent.Stopped, reason);
+		}
+
 		CancelRead();
 		StopRecording();
 		_reader.Stop();
@@ -298,6 +311,7 @@ public sealed class ReadingSession
 
 		_reader.Stop();
 		StopRecording();
+		AppTrace.Reading(TraceLines.ReadingEvent.Started);
 		CancellationToken cancellation = BeginReadCancellation();
 		Finished = false;
 		MoveTo(sentence);
@@ -632,6 +646,7 @@ public sealed class ReadingSession
 		}
 
 		Stalled = next;
+		AppTrace.Reading(next ? TraceLines.ReadingEvent.Stalled : TraceLines.ReadingEvent.Unstalled);
 		StateChanged?.Invoke(this, EventArgs.Empty);
 	}
 
@@ -661,6 +676,7 @@ public sealed class ReadingSession
 		}
 
 		Finished = true;
+		AppTrace.Reading(TraceLines.ReadingEvent.Stopped, TraceLines.ReadingReason.Finished);
 		StateChanged?.Invoke(this, EventArgs.Empty); // the page counts a finished book from this
 	}
 

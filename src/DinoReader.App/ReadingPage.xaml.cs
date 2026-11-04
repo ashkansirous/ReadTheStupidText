@@ -3,6 +3,7 @@ using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Crashes;
 using ReadTheStupidText.Mobile.Shared.Waiting;
 using DinoReader.Resources.Strings;
 
@@ -335,7 +336,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		bool wasActive = before is SessionState.Playing or SessionState.Loading;
 		if (wasActive)
 		{
-			_session.Pause();
+			_session.Pause(TraceLines.ReadingReason.Other);
 		}
 
 		_languageButton.SetOpen(true);
@@ -358,7 +359,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	{
 		int sentence = Math.Max(0, _session.CurrentSentence);
 		StoryLanguages.SetPick(language);
-		_session.Stop();
+		_session.Stop(TraceLines.ReadingReason.LanguageChange);
 		_session.SetReadingLanguage(language);
 		_languageButton.SetLanguage(language);
 		_usage.Record(UsageEventName.StoryLanguageSwitched, story, language: language);
@@ -575,7 +576,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		CancelIntroRead();
 		if (_session.State is SessionState.Loading or SessionState.Playing or SessionState.Paused)
 		{
-			_session.Stop();
+			_session.Stop(TraceLines.ReadingReason.Superseded);
 		}
 
 		_follower.ResumeAt(Math.Max(0, Surface.PageOfSentence(0)));
@@ -914,7 +915,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 			return;
 		}
 
-		_session.Stop();
+		_session.Stop(TraceLines.ReadingReason.Other);
 #if DEBUG
 		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Reading] opened idle, inherited read stopped");
 #endif
@@ -956,7 +957,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		CancelDisplay();
 		Unsubscribe();
 		_session.Detach();
-		_session.Stop();
+		_session.Stop(TraceLines.ReadingReason.PageLeft);
 		_ = _usage.FlushAsync();
 #if DEBUG
 		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Reading] left the page, read stopped");
@@ -1180,7 +1181,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		try
 		{
 			EndOwnedWait();
-			_session.Stop();
+			_session.Stop(TraceLines.ReadingReason.User);
 			if (opening)
 			{
 				await _busy.RunAsync(() => Navigation.PopAsync());
@@ -1392,13 +1393,13 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		switch (_session.State)
 		{
 			case SessionState.Loading:
-				_session.Stop();
+				_session.Stop(TraceLines.ReadingReason.User);
 				break;
 			case SessionState.Playing when _follower.IsWandering:
 				JumpBackToReading();
 				break;
 			case SessionState.Playing:
-				_session.Pause();
+				_session.Pause(TraceLines.ReadingReason.User);
 				break;
 			case SessionState.Paused:
 				JumpBackToReading();
@@ -1470,7 +1471,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		if (state == SessionState.Paused)
 		{
-			_session.Stop();
+			_session.Stop(TraceLines.ReadingReason.Skipped);
 		}
 
 		_session.MoveTo(plan.Target);

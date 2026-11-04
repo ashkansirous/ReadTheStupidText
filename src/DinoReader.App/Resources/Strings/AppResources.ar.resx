@@ -271,6 +271,18 @@
   <data name="Version_Title" xml:space="preserve"><value>الإصدار</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>ساعد في تحسين دينو</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>يرسل أعدادًا مثل «تم إنهاء كتاب من المتجر». بلا أسماء ولا معرّفات ولا شيء كتبته. ويضيف أيضًا بلدك ونوع جهازك التقريبي (هاتف أو جهاز لوحي، ونطاق الذاكرة). وإذا تعطّل التطبيق، فقد يرسل أيضًا تقرير تعطّل: الخطأ وسجلًّا تقنيًا قصيرًا، وليس أبدًا أي شيء قرأته أو كتبته.</value></data>
+  <!-- Slice 249: Report a problem -->
+  <data name="ReportProblem_Title" xml:space="preserve"><value>الإبلاغ عن مشكلة</value></data>
+  <data name="ReportProblem_Explain" xml:space="preserve"><value>أرسل إلينا سجل التطبيق التقني الأخير لنرى ما الذي حدث. يتضمن الشاشات التي كانت مفتوحة والأزرار التي ضُغطت وما فعلته القراءة، إضافةً إلى إصدار التطبيق ونوع تقريبي للجهاز وبلدك. لا أسماء ولا عناوين كتب ولا أي شيء كتبه أحد. لا يُرسَل إلا عندما تضغط على «إرسال».</value></data>
+  <data name="ReportProblem_Send" xml:space="preserve"><value>إرسال</value></data>
+  <data name="ReportProblem_Sending" xml:space="preserve"><value>جارٍ إرسال البلاغ…</value></data>
+  <data name="ReportProblem_Sent" xml:space="preserve"><value>تم الإرسال.</value></data>
+  <data name="ReportProblem_QuoteCode" xml:space="preserve"><value>إذا راسلتنا، فاذكر هذا الرمز:</value></data>
+  <data name="ReportProblem_Copy" xml:space="preserve"><value>نسخ</value></data>
+  <data name="ReportProblem_Copied" xml:space="preserve"><value>تم النسخ</value></data>
+  <data name="ReportProblem_Failed" xml:space="preserve"><value>تعذّر إرسال البلاغ الآن. تم حفظه على هذا الهاتف وسيُرسل لاحقًا، أو يمكنك المحاولة مرة أخرى.</value></data>
+  <data name="ReportProblem_FailedNotKept" xml:space="preserve"><value>تعذّر إرسال البلاغ الآن. يمكنك المحاولة مرة أخرى.</value></data>
+  <data name="ReportProblem_TryAgain" xml:space="preserve"><value>حاول مرة أخرى</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>سرعة القراءة</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>الأبطأ أسهل على الصغار</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0.5x · بطيء</value></data>

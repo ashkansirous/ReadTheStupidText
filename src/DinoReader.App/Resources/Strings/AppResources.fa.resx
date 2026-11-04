@@ -271,6 +271,18 @@
   <data name="Version_Title" xml:space="preserve"><value>نسخه</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>به بهتر شدن دینو کمک کنید</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>شمارش‌هایی مثل «یک کتاب فروشگاه تمام شد» می‌فرستد. بدون نام، بدون شناسه، بدون چیزی که شما نوشته‌اید. همچنین کشور شما و نوع تقریبی دستگاه (گوشی یا تبلت، محدودهٔ حافظه) را اضافه می‌کند. اگر برنامه از کار بیفتد، ممکن است گزارش خرابی هم بفرستد: خطا و یک گزارش فنی کوتاه، و هرگز چیزی از آنچه خوانده یا نوشته‌اید.</value></data>
+  <!-- Slice 249: Report a problem -->
+  <data name="ReportProblem_Title" xml:space="preserve"><value>گزارش یک مشکل</value></data>
+  <data name="ReportProblem_Explain" xml:space="preserve"><value>گزارش فنی اخیر برنامه را برای ما بفرستید تا ببینیم چه چیزی اشتباه پیش رفته است. این گزارش شامل صفحه‌هایی که باز بودند، دکمه‌هایی که زده شدند و کاری که خواندن انجام داد است، به‌همراه نسخهٔ برنامه، نوع تقریبی دستگاه و کشور شما. بدون نام، بدون عنوان کتاب، بدون هر چیزی که کسی تایپ کرده باشد. فقط وقتی «ارسال» را بزنید فرستاده می‌شود.</value></data>
+  <data name="ReportProblem_Send" xml:space="preserve"><value>ارسال</value></data>
+  <data name="ReportProblem_Sending" xml:space="preserve"><value>در حال ارسال گزارش…</value></data>
+  <data name="ReportProblem_Sent" xml:space="preserve"><value>ارسال شد.</value></data>
+  <data name="ReportProblem_QuoteCode" xml:space="preserve"><value>اگر برای ما می‌نویسید، این کد را بنویسید:</value></data>
+  <data name="ReportProblem_Copy" xml:space="preserve"><value>کپی</value></data>
+  <data name="ReportProblem_Copied" xml:space="preserve"><value>کپی شد</value></data>
+  <data name="ReportProblem_Failed" xml:space="preserve"><value>اکنون نتوانستیم گزارش را بفرستیم. روی این گوشی نگه داشته می‌شود و بعداً فرستاده می‌شود، یا می‌توانید دوباره امتحان کنید.</value></data>
+  <data name="ReportProblem_FailedNotKept" xml:space="preserve"><value>اکنون نتوانستیم گزارش را بفرستیم. می‌توانید دوباره امتحان کنید.</value></data>
+  <data name="ReportProblem_TryAgain" xml:space="preserve"><value>دوباره امتحان کنید</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>سرعت خواندن</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>آهسته‌تر برای کوچولوها آسان‌تر است</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>۰٫۵x · آهسته</value></data>

@@ -273,6 +273,18 @@
   <data name="Version_Title" xml:space="preserve"><value>Versjon</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Hjelp oss å gjøre Dino bedre</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>Sender tall som «en bok fra butikken ble lest ferdig». Ingen navn, ingen id-er, ingenting du har skrevet. Det legger også til landet ditt og en grov enhetstype (telefon eller nettbrett, minneområde). Hvis appen krasjer, kan den også sende en krasjrapport: feilen og en kort teknisk logg, aldri noe du har lest eller skrevet.</value></data>
+  <!-- Slice 249: Report a problem -->
+  <data name="ReportProblem_Title" xml:space="preserve"><value>Rapporter et problem</value></data>
+  <data name="ReportProblem_Explain" xml:space="preserve"><value>Send oss appens siste tekniske logg slik at vi kan se hva som gikk galt. Den viser hvilke skjermer som var åpne, hvilke knapper som ble trykket på og hva opplesingen gjorde, pluss appversjonen, en omtrentlig enhetstype og landet ditt. Ingen navn, ingen boktitler, ingenting noen har skrevet. Den sendes bare når du trykker på Send.</value></data>
+  <data name="ReportProblem_Send" xml:space="preserve"><value>Send</value></data>
+  <data name="ReportProblem_Sending" xml:space="preserve"><value>Sender rapporten …</value></data>
+  <data name="ReportProblem_Sent" xml:space="preserve"><value>Sendt.</value></data>
+  <data name="ReportProblem_QuoteCode" xml:space="preserve"><value>Hvis du skriver til oss, oppgi denne koden:</value></data>
+  <data name="ReportProblem_Copy" xml:space="preserve"><value>Kopier</value></data>
+  <data name="ReportProblem_Copied" xml:space="preserve"><value>Kopiert</value></data>
+  <data name="ReportProblem_Failed" xml:space="preserve"><value>Rapporten kunne ikke sendes akkurat nå. Den lagres på denne telefonen og sendes senere, eller du kan prøve igjen.</value></data>
+  <data name="ReportProblem_FailedNotKept" xml:space="preserve"><value>Rapporten kunne ikke sendes akkurat nå. Du kan prøve igjen.</value></data>
+  <data name="ReportProblem_TryAgain" xml:space="preserve"><value>Prøv igjen</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Lesehastighet</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Saktere er lettere for de små</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · sakte</value></data>

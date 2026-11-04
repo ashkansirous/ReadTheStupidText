@@ -271,6 +271,18 @@
   <data name="Version_Title" xml:space="preserve"><value>版本</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>帮助改进 Dino</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>只发送次数，例如“商店里的一本书读完了”。没有名字，没有编号，也不含你输入的任何内容。还会附带你所在的国家和大致的设备类型（手机或平板、内存范围）。如果应用崩溃，还可能发送崩溃报告：错误信息和一段简短的技术日志，绝不包含你读过或输入的任何内容。</value></data>
+  <!-- Slice 249: Report a problem -->
+  <data name="ReportProblem_Title" xml:space="preserve"><value>报告问题</value></data>
+  <data name="ReportProblem_Explain" xml:space="preserve"><value>把应用最近的技术日志发给我们，帮助我们找出问题。其中包括打开过的界面、按过的按钮和朗读的动作，以及应用版本、大致的设备类型和你所在的国家。不含姓名、书名，也不含任何人输入的内容。只有你点按“发送”时才会发送。</value></data>
+  <data name="ReportProblem_Send" xml:space="preserve"><value>发送</value></data>
+  <data name="ReportProblem_Sending" xml:space="preserve"><value>正在发送报告…</value></data>
+  <data name="ReportProblem_Sent" xml:space="preserve"><value>已发送。</value></data>
+  <data name="ReportProblem_QuoteCode" xml:space="preserve"><value>如果你联系我们，请提供这个代码：</value></data>
+  <data name="ReportProblem_Copy" xml:space="preserve"><value>复制</value></data>
+  <data name="ReportProblem_Copied" xml:space="preserve"><value>已复制</value></data>
+  <data name="ReportProblem_Failed" xml:space="preserve"><value>现在无法发送报告。它保存在这部手机上，稍后会发送，你也可以再试一次。</value></data>
+  <data name="ReportProblem_FailedNotKept" xml:space="preserve"><value>现在无法发送报告。你可以再试一次。</value></data>
+  <data name="ReportProblem_TryAgain" xml:space="preserve"><value>再试一次</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>朗读速度</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>慢一点，小朋友更容易听懂</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0.5x · 慢</value></data>

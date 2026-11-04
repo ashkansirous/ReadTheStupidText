@@ -163,6 +163,17 @@ bugs, kept only as long as that needs, and not shared with anyone else or used f
 development builds, emulators and the test devices store review tools use send no reports; builds installed through
 TestFlight do. The project can switch crash reports off for everyone from the server.
 
+**Reports you send yourself.** Dino Reader, this project's children's reading app, has a **Report a problem** button
+in its grown-ups' corner (Android and iPhone). Read The Stupid Text has no such button. Nothing is sent until a grown-up
+presses **Send** on that page, whatever the usage switch says. The report holds the same things as a crash report
+without an error: the app and its version, the platform, the store or TestFlight, the app's recent technical log
+(32 KB at most; the app's recent technical log lines, which may include lines from earlier sessions, never a name, a title or anything typed), the
+time to the minute and the coarse device ranges and country. It also holds a random 8-character code that the app shows
+after sending, so you can quote it when you write to the project; the code names that one report and nothing else (not
+you, your phone or your install). It goes to the same server, is stored the same way, is read only by the project to
+find and fix bugs, is deleted automatically after 90 days (as crash reports are), and is not shared or used for
+advertising or tracking.
+
 ## Permissions
 
 **Windows** declares the `runFullTrust` capability, required so it can place a

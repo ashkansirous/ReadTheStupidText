@@ -271,6 +271,18 @@
   <data name="Version_Title" xml:space="preserve"><value>Версия</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Помогите улучшить Dino</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>Отправляет только счётчики, например «книга из магазина дочитана». Никаких имён, идентификаторов и ничего из того, что вы набрали. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти). Если приложение вылетит, оно также может отправить отчёт о сбое: ошибку и короткий технический журнал, но никогда ничего из того, что вы читали или набирали.</value></data>
+  <!-- Slice 249: Report a problem -->
+  <data name="ReportProblem_Title" xml:space="preserve"><value>Сообщить о проблеме</value></data>
+  <data name="ReportProblem_Explain" xml:space="preserve"><value>Отправьте нам недавний технический журнал приложения, чтобы мы увидели, что пошло не так. В нём перечислены открытые экраны, нажатые кнопки и то, что делало чтение, а также версия приложения, примерный тип устройства и ваша страна. Никаких имён, названий книг и ничего набранного. Журнал отправляется, только когда вы нажимаете «Отправить».</value></data>
+  <data name="ReportProblem_Send" xml:space="preserve"><value>Отправить</value></data>
+  <data name="ReportProblem_Sending" xml:space="preserve"><value>Отправляем отчёт…</value></data>
+  <data name="ReportProblem_Sent" xml:space="preserve"><value>Отправлено.</value></data>
+  <data name="ReportProblem_QuoteCode" xml:space="preserve"><value>Если будете писать нам, назовите этот код:</value></data>
+  <data name="ReportProblem_Copy" xml:space="preserve"><value>Копировать</value></data>
+  <data name="ReportProblem_Copied" xml:space="preserve"><value>Скопировано</value></data>
+  <data name="ReportProblem_Failed" xml:space="preserve"><value>Сейчас отчёт отправить не удалось. Он сохранён на этом телефоне и будет отправлен позже, или вы можете попробовать снова.</value></data>
+  <data name="ReportProblem_FailedNotKept" xml:space="preserve"><value>Сейчас отчёт отправить не удалось. Вы можете попробовать снова.</value></data>
+  <data name="ReportProblem_TryAgain" xml:space="preserve"><value>Попробовать снова</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Скорость чтения</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Помедленнее — малышам легче</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · медленно</value></data>

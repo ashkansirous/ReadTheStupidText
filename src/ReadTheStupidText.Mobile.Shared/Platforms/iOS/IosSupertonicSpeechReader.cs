@@ -5,6 +5,7 @@ using Foundation;
 using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
+using ReadTheStupidText.Mobile.Shared.Crashes;
 
 namespace ReadTheStupidText.Mobile.Shared;
 
@@ -66,6 +67,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
 
     // Generations past their gate and not yet finished; Stop() logs it so a flow can see Back cancel them.
     private int _generationsInFlight;
+    private readonly SynthesisQueueTrace _queueTrace = new();
 
     private readonly object _gate = new();
 
@@ -489,7 +491,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
 
         // A cancelled read starts no new work: no engine load, no generation.
         token.ThrowIfCancellationRequested();
-        Interlocked.Increment(ref _generationsInFlight);
+        LogQueue(_queueTrace.Entered(Interlocked.Increment(ref _generationsInFlight)));
         IosBuiltEngine? extra = null;
         try
         {
@@ -500,8 +502,27 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         }
         finally
         {
-            Interlocked.Decrement(ref _generationsInFlight);
+            int left = Interlocked.Decrement(ref _generationsInFlight);
             extra?.Release();
+            LogQueue(_queueTrace.Left(left));
+        }
+    }
+
+    // A queue line is a trace: written after the engine is released, and a failing log never replaces the chunk's result.
+    private void LogQueue(string? line)
+    {
+        if (line is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _log.Info(line);
+        }
+        catch (Exception)
+        {
+            // Losing one trace line is better than failing a read.
         }
     }
 

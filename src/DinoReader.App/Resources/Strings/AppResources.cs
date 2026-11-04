@@ -73,6 +73,18 @@ public static class AppResources
 	public static string Version_Title => Get();
 	public static string Usage_Title => Get();
 	public static string Usage_Helper => Get();
+	// Slice 249: Report a problem
+	public static string ReportProblem_Title => Get();
+	public static string ReportProblem_Explain => Get();
+	public static string ReportProblem_Send => Get();
+	public static string ReportProblem_Sending => Get();
+	public static string ReportProblem_Sent => Get();
+	public static string ReportProblem_QuoteCode => Get();
+	public static string ReportProblem_Copy => Get();
+	public static string ReportProblem_Copied => Get();
+	public static string ReportProblem_Failed => Get();
+	public static string ReportProblem_FailedNotKept => Get();
+	public static string ReportProblem_TryAgain => Get();
 	public static string Speed_Title => Get();
 	public static string Speed_Sub => Get();
 	public static string Speed_EndSlow => Get();
