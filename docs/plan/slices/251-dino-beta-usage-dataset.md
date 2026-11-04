@@ -1,6 +1,6 @@
 ### Slice 251 — Dino usage from TestFlight goes to its own beta dataset, never to the production counts
 
-*Built 2026-11-04 (night 2026-11-03-2349 wave 1), PR #777, not merged. Unit and Worker tests only; no device run (the beta path needs a real TestFlight install), see Not yet verified.* *Planned 2026-11-02. After [Slice 250](250-dino-playback-events-and-session-id.md).*
+*Built 2026-11-04 (night 2026-11-03-2349 wave 1), merged as PR #777 (ced3a02a). Unit and Worker tests only; no device run (the beta path needs a real TestFlight install), see Not yet verified.* *Planned 2026-11-02. After [Slice 250](250-dino-playback-events-and-session-id.md).*
 
 **Claim note (coordinator, night 2026-11-03-2349 wave 1):** built before Slice 250: neither needs the other's behaviour (250 adds events and a session id, 251 a channel), and 250 is claimed after this merges so the shared `UsageBatch.cs` and `worker/events.ts` never change in two branches at once. Premise check: `UsageGate`, `UsageQueueSender` and `UsageFacts` are shared with RTST mobile (`RtstUsage.cs`) and `CrashGate.cs` reads `UsageGate.Facts`. **Design:** the gate returns a closed `UsageChannel` (None, Production, Beta) built on the existing `InstallChannels.FromIosReceipt` (`Application/Crashes/InstallChannel.cs`); only Dino maps Beta to sending (its sender stamps `channel: beta`), RTST maps Beta to no send exactly as today, and crash reports keep today's yes/no (CrashGate unchanged in behaviour; a test proves RTST and crash results are equal to main's for every input). Android item 2: the code has no way to tell a Play testing track from production (`InstallChannels.FromAndroidInstaller` sees the same Play installer for every track), so item 2 writes down what Android testing installs send today and ships no guess. Both wrangler configs (`wrangler.jsonc`, `wrangler.workers-dev.jsonc`) get the binding (`worker/CLAUDE.md`: bindings live in both).
 
@@ -39,7 +39,7 @@
 
 **Not in this slice.** RTST (same gate; a later slice if wanted). The Windows head (Store-signed only counts today; unchanged).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-04)
 
 - `worker/CLAUDE.md`: the beta dataset rule (own route `/api/events/beta`, `DINO_USAGE_BETA` only, never mixed into production reports, `analytics-query` names the dataset). Already written in `worker/CLAUDE.md` on this branch. (Slice 251: docs/plan/slices/251-dino-beta-usage-dataset.md)
 
