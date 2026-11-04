@@ -129,3 +129,7 @@ are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CL
 - Tablet-upright page rules go through `TabletPageLayout` in `src/DinoReader.Core/TabletPageLayout.cs`: pages call only it, and it returns the old value off a tablet held upright. Picture heights come from one pure call on the page's own size, set only in `OnSizeAllocated`, never from a measured child. (Slice 234: docs/plan/slices/234-dino-tablet-portrait.md)
 - Windows keys go through one hook (`Platforms/Windows/DinoKeyboard.cs`), then Core `DinoKeyMap`, then the top page's `IDinoKeyTarget`; pages handle no keys directly. Tooltips and the "click" wording come only from `DesktopTips` (Windows only). (Slice 235: docs/plan/slices/235-dino-windows-window.md)
 - `AudioPackStore` (`AudioPackStore.cs`) is the only writer of `<app data>/audio-packs/`; nothing else creates, moves or deletes there. A pack error never fails a book: catch it, map it to `PackInstall.Failed`, keep the book, retry at the next update check. (Slice 246: docs/plan/slices/246-dino-store-books-premade-audio.md)
+
+## Store tags (Slice 260)
+
+Store tags are a closed enum (`StoreTag`: Hot, Popular, Recommended, New; case-sensitive) set by hand in each book's `book.json`. They are not part of `BookHash`, so a tag change never bumps a version. "Tagged first" is applied in both `worker/stories.ts` (`compareEntries`) and `StoreCatalog.cs`: keep the two the same. (Slice 260: docs/plan/slices/260-dino-store-tags.md)

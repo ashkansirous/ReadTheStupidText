@@ -1,6 +1,6 @@
 # Slice 260 — Dino: tags on store books (Hot, Popular, Recommended, New)
 
-*Built 2026-11-04 (night 2026-11-04-1441, wave 1), PR #798, not merged. Planned 2026-11-04.* Dino Reader only; Android and iOS alike (the Windows head shares the pages). First of the onboarding group (260-265); 261's first-run book picker shows these tags.
+*Built 2026-11-04 (night 2026-11-04-1441, wave 1), merged as PR #798 (aca9748e); tags and per-book sizes are live in /api/stories; fix PR #805 (store crash, AutomationId) open. Planned 2026-11-04.* Dino Reader only; Android and iOS alike (the Windows head shares the pages). First of the onboarding group (260-265); 261's first-run book picker shows these tags.
 
 **Touches:** `content/dino/*/book.json`, `tools/DinoReader.BookBuilder/**`, `worker/stories.ts`, `worker/stories.test.mjs`, `src/DinoReader.Core/StoreCatalog.cs`, `src/DinoReader.Core/StoreTag*.cs` (new), `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/StoreTagBadge.cs` (new), `src/DinoReader.App/DinoTokens.cs`, `src/DinoReader.App/App.xaml`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/store-tags.yaml` (new), `src/DinoReader.App/Resources/Strings/AppResources.cs` (typed accessors, hand-edited; added at claim), `src/DinoReader.App/Testing/DinoTestCommands.cs` (only if the flow needs a hook; added at claim), `docs/plan/slices/260-dino-store-tags.md`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs` (added at review).
 
@@ -69,6 +69,6 @@ From review (files `D:/ReadTheStupidText-worktrees/reviews/s260-high.md`, `s260-
 - The 15 locale labels (`Store_Tag_*`) need a native read.
 - Badge text after an app-language switch with the store page open (review high 3, not confirmed).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-04)
 
 - Store tags are a closed enum (`StoreTag`, four names, case-sensitive) set by hand in each book's `book.json`, and are not part of `BookHash`, so a tag change never bumps a version. "Tagged first" is applied in both `worker/stories.ts` (`compareEntries`) and `StoreCatalog.cs`: keep the two the same. (Slice 260: docs/plan/slices/260-dino-store-tags.md) Place in `src/DinoReader.App/CLAUDE.md` or `src/DinoReader.Core/CLAUDE.md`.

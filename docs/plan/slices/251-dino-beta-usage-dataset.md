@@ -47,3 +47,5 @@
 
 - A TestFlight build of Dino sends rows that land in `dino_usage_beta` and none in `dino_usage` (needs a real TestFlight install; no device run was made).
 - The Workers Builds deploy after the merge carries the `DINO_USAGE_BETA` binding.
+
+*Checked 2026-11-04 (Slice 259 item 7):* `npx wrangler versions view decbf16d-c9ff-49e1-8cd6-33950321234a` (deployment created 2026-11-04T00:40:58Z) lists `env.DINO_USAGE_BETA (dino_usage_beta)  Analytics Engine Dataset` beside `DINO_USAGE`, `RTST_USAGE`, `APP_CRASHES`: the binding is live (the latest version `81fefc2d-...`, 04:39Z, has it too). Order: PR #777 merged at `ced3a02a` 2026-11-04T00:40:13Z and `wrangler deployments list` shows the Worker deployment 45 s later; the release run for that merge (41748550799) was cancelled by the next merge and a Dino iOS build takes about an hour, so the Worker was live before any TestFlight build; the deploy-order claim holds. Route: GET `https://dinoreader.sirous.uk/api/events/beta` answers 405 (the RTST host answers 404, as the route is Dino's). So the second line above is checked; the first (real TestFlight install) is not.
