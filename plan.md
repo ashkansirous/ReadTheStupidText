@@ -25,6 +25,12 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 244 | Dino: find and fix the 2026-10-31/11-01 crashes (iOS layout `NSDictionary` nil, whole book queued at once, `0xdead10cc`, Back while reading) | in progress (items 2-5 merged #722; iPhone 8 run and crash follow-up open) | #722 | | [244-dino-ios-crashes-2026-11-01.md](docs/plan/slices/244-dino-ios-crashes-2026-11-01.md) |
 | 258 | Dino: pre-made audio for the four starter books (gingerbread-man, good-enough, three-little-pigs, tortoise-and-hare) | planned (PR #792 built, reviewed and green; needs the merge, then the pack upload and the premade-audio-starter emulator check) | #792 | | [258-dino-starter-books-premade-audio.md](docs/plan/slices/258-dino-starter-books-premade-audio.md) |
 | 259 | Leftovers from night 2026-11-03-2349 (mid-book loading state, batch tool low findings, VM crash evidence, iOS signed hang, Release publish in fast checks) | parked: feedback loop, waits for the user | | | [259-night-2026-11-03-2349-leftovers.md](docs/plan/slices/259-night-2026-11-03-2349-leftovers.md) |
+| 260 | Dino: tags on store books (Hot, Popular, Recommended, New) | planned | | | [260-dino-store-tags.md](docs/plan/slices/260-dino-store-tags.md) |
+| 261 | Dino: no starter books in the app; first-run book picker (main language, then at least 2 books; after 260) | planned | | | [261-dino-no-starters-first-run-book-picker.md](docs/plan/slices/261-dino-no-starters-first-run-book-picker.md) |
+| 262 | Dino: adding a second language downloads the shelf books' audio in it (after 261) | planned | | | [262-dino-side-language-downloads-book-audio.md](docs/plan/slices/262-dino-side-language-downloads-book-audio.md) |
+| 263 | Dino: the page reader (text recognition) downloads on the first capture | planned | | | [263-dino-text-reader-on-first-capture.md](docs/plan/slices/263-dino-text-reader-on-first-capture.md) |
+| 264 | Dino: grown-ups reorder the shelf (iPhone-style reorder mode) | planned | | | [264-dino-gallery-reorder-mode.md](docs/plan/slices/264-dino-gallery-reorder-mode.md) |
+| 265 | Dino: pre-made audio clips in Git LFS; book changes only publish to the store (after 261) | planned | | | [265-dino-audio-clips-in-git-lfs.md](docs/plan/slices/265-dino-audio-clips-in-git-lfs.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
