@@ -35,3 +35,13 @@ None new: the item 2 rule (re-run only the failed iOS job; a `pending` release r
 - The first `main` run's job summary (timing block) and its numbers: not yet seen or written into item 3.
 - The upload retry on a real network blip: not seen; the step logs "Upload succeeded on attempt N" on success.
 - shellcheck of the new step scripts runs only in CI.
+
+#### Signed Dino iOS step hang, run 41744435929 (from Slice 259 item 5, 2026-11-04)
+
+Read with `gh run view 41744435929 --json jobs` and `gh api repos/ashkansirous/ReadTheStupidText/actions/jobs/126294512284/logs`:
+
+- Job `build-dinoios / build` ran 00:09:15Z to 01:40:07Z, step 9 "Release build (signed .ipa)" 00:10:06Z to 01:39:56Z (89 min 50 s), conclusion `cancelled`: the 90-minute `timeout-minutes` in `dinoreader-ios.yml:68` fired, nobody cancelled it. The RTST job of the same run (`build-ios`) succeeded in 52 min.
+- The log goes silent after one line: `01:10:55.0237600Z Started external tool execution #181: /usr/bin/codesign -v --force --timestamp=none --sign 8471719C32EF44337655E42C075477639E7B2DAC .../DinoReader.App.app/Frameworks/TranslateMLKit.framework`, the first and only `/usr/bin/codesign` line; the next line is `01:39:56 ##[error]The operation was canceled.`, then `Terminate orphan process: pid (16255) (codesign)`. So `codesign` hung 29 minutes until the timeout.
+- Likely cause (read from the logs and `.github/scripts/ios-signing.sh:23`, not reproduced): the keychain is made at 00:10:06Z with `security set-keychain-settings -lut 3600` (lock after 3600 s) and the first `codesign` ran 1 h 0 min 49 s later, so the keychain was locked and `codesign` waited for a password nobody can answer. The RTST build signed inside its hour (52 min) and passed; this Dino build needed over an hour before its first signature (normally about 50 min total). That also fits the earlier hang (run 41409120502, silent after `IL stripping assemblies`).
+- Decision: the 90-minute limit stays (it freed the queue). `ios-signing.sh` now uses `set-keychain-settings -lut 21600`, with a comment saying why (Slice 259, PR #800). If the next signed build still hangs, the keychain was not the cause.
+- Not yet verified: the cause is read from the log, not reproduced; confirmed only by the next signed Dino build passing (listed in `unverified.md` under Slice 259).

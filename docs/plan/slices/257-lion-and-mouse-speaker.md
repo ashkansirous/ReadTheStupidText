@@ -58,6 +58,8 @@ Item 2 done (2026-11-04): `generate.py --batch` into `s246-audio/books-lion-and-
 
 - Dino speaker attribution (`src/DinoReader.Core/AttributionRun.cs`): a tag after a quote is read only from narration in the same paragraph. Pages join with a blank line, so a page break also ends the search. Do not add a rule that makes a quote after a finished tag sentence continue that speaker: it changes ordinary alternation. (Slice 257: docs/plan/slices/257-lion-and-mouse-speaker.md)
 
+*Checked 2026-11-04 (Slice 259 item 8), good-enough:* the "all store books, only that one line changed" comparison had left good-enough out (it could not be dumped then; Slice 256 made it dumpable). Rerun with `dotnet run --project tools/DinoReader.BookBuilder -- dump-sentences good-enough --lang en|fa`, once with `AttributionRun.cs` from before this slice (`95330968^1`, in a throwaway `git archive` copy) and once with the slice's code: the dumps are byte-identical in English and Farsi (`cmp`). Good Enough has 19 sentences per language and only two speakers (Hazelnut and the narrator), so the same-paragraph rule has nothing to change. All 16 store and starter books are now compared: only `lion-and-mouse` changed.
+
 #### Not yet verified
 
 - Listen to the new Farsi clip in `D:/ReadTheStupidText-worktrees/s246-audio/books-lion-and-mouse/`.

@@ -23,8 +23,6 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 239 | Dino: adding, changing or deleting a store story runs only the store upload (no app build, no tests, no review gate) | in progress (user, 2026-11-01: build now) | | | [239-dino-store-book-without-app-build.md](docs/plan/slices/239-dino-store-book-without-app-build.md) |
 | 243 | Crash reports: keep iOS dSYMs and symbolicate, read R2 with wrangler's login, navigation/Back/lifecycle/memory log lines, one "did it crash?" command | in progress (items 3 and 5 built; 1, 2, 4, 6-8 open) | #711 (item 3), #781 (item 5) | | [243-crash-report-gaps.md](docs/plan/slices/243-crash-report-gaps.md) |
 | 244 | Dino: find and fix the 2026-10-31/11-01 crashes (iOS layout `NSDictionary` nil, whole book queued at once, `0xdead10cc`, Back while reading) | in progress (items 2-5 merged #722; iPhone 8 run and crash follow-up open) | #722 | | [244-dino-ios-crashes-2026-11-01.md](docs/plan/slices/244-dino-ios-crashes-2026-11-01.md) |
-| 259 | Leftovers from night 2026-11-03-2349 (mid-book loading state, batch tool low findings, VM crash evidence, iOS signed hang, Release publish in fast checks) | planned (user, 2026-11-04: build all 8 items) | | | [259-night-2026-11-03-2349-leftovers.md](docs/plan/slices/259-night-2026-11-03-2349-leftovers.md) |
-| 260 | Dino: tags on store books (Hot, Popular, Recommended, New) | planned | | | [260-dino-store-tags.md](docs/plan/slices/260-dino-store-tags.md) |
 | 261 | Dino: no starter books in the app; first-run book picker (main language, then at least 2 books; after 260) | planned | | | [261-dino-no-starters-first-run-book-picker.md](docs/plan/slices/261-dino-no-starters-first-run-book-picker.md) |
 | 262 | Dino: adding a second language downloads the shelf books' audio in it (after 261) | planned | | | [262-dino-side-language-downloads-book-audio.md](docs/plan/slices/262-dino-side-language-downloads-book-audio.md) |
 | 263 | Dino: the page reader (text recognition) downloads on the first capture | planned | | | [263-dino-text-reader-on-first-capture.md](docs/plan/slices/263-dino-text-reader-on-first-capture.md) |
@@ -65,7 +63,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 299 checks across 141 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- **Not yet tried on a device:** 311 checks across 143 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
 - Slice 250 (waiting on the user, store privacy form): Play Data safety (Dino): decide whether the per-launch session id gets a **Device or other IDs** row (suggested if declared: collected, not shared, optional, purpose Analytics); the page does not settle whether it counts. App Store Connect App Privacy (Dino): no change (no Device ID row). Text in `STORE.md`, *Slice 250* ([slice](docs/plan/slices/250-dino-playback-events-and-session-id.md)).
 - Slice 255 (waiting on the user): a line whose own text already says the animal's sound word (e.g. "moo", `SaysIt`) is read by the voice with no clip, per the slice's recorded decision; the user's quote says animal noises should not be AI-voiced, so confirm or change it ([slice](docs/plan/slices/255-dino-real-animal-sounds.md)).
 - Slice 252 item 3 (open): the first `main` run after the merge writes its job-summary timing numbers into the slice file; no build setting changes until then ([slice](docs/plan/slices/252-release-ios-build-timeout-and-speed.md)).
