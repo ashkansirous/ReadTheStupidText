@@ -285,6 +285,10 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs)
 		return allOk;
 	}
 
+	/// <summary>Installs one pack of a shelf book and says exactly what happened (Slice 262: the shelf audio run maps NotFound and Failed differently).</summary>
+	public Task<PackInstall> InstallPackAsync(StoreItem item, string language, AudioPackInfo pack, CancellationToken cancel) =>
+		InstallOnePackAsync(item.Id, language, pack, null, cancel);
+
 	// Audio never fails the book or the update check: whatever the install throws is a failed pack. The pack bytes reach the summed progress on the downloading thread, in order.
 	private async Task<PackInstall> InstallOnePackAsync(string bookId, string language, AudioPackInfo pack, SummedProgress? summed, CancellationToken cancel)
 	{

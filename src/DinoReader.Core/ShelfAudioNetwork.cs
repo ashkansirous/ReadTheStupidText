@@ -31,3 +31,24 @@ public static class ShelfAudioNetwork
     /// <summary>Whether a run waits for Wi-Fi: the phone has only mobile data and the run was not allowed it.</summary>
     public static bool NeedsWifi(bool allowMobileData, bool onMobileDataOnly) => !allowMobileData && onMobileDataOnly;
 }
+
+/// <summary>Whether a shelf audio run starts (Slice 262).</summary>
+public enum ShelfAudioStartDecision
+{
+    Start,
+    Skip,
+}
+
+/// <summary>The one rule for starting a shelf audio run, so the launch check and the grown-up's add cannot disagree (Slice 262).</summary>
+public static class ShelfAudioStart
+{
+    /// <summary>
+    /// A quiet run (launch, app returns) starts only for a language whose reading voice is installed and that the grown-up has not cancelled. A visible run (the grown-up added the language)
+    /// starts from the voice request's outcome: everything but a cancelled request.
+    /// </summary>
+    public static ShelfAudioStartDecision Decide(bool voiceReady, bool cancelled, bool visible, VoiceRequestOutcome outcome)
+    {
+        bool start = visible ? ShelfAudioNetwork.ShouldStartRun(outcome) : voiceReady && !cancelled;
+        return start ? ShelfAudioStartDecision.Start : ShelfAudioStartDecision.Skip;
+    }
+}

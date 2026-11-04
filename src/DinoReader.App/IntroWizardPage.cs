@@ -490,15 +490,10 @@ public sealed class IntroWizardPage : ContentPage
 
 	private void StartShelfAudio(IEnumerable<string> added, VoiceRequestOutcome outcome)
 	{
-		if (!ShelfAudioNetwork.ShouldStartRun(outcome))
-		{
-			return; // the grown-up cancelled the voice request: nothing starts
-		}
-
 		ShelfAudioPacks shelf = _services.GetRequiredService<ShelfAudioPacks>();
 		foreach (string language in added)
 		{
-			shelf.Start(language, ShelfAudioNetwork.AllowsMobileData(outcome));
+			shelf.Start(language, outcome); // a cancelled voice request starts nothing (ShelfAudioStart decides)
 		}
 	}
 

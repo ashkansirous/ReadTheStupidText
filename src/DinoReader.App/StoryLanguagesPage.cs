@@ -210,7 +210,13 @@ public sealed class StoryLanguagePicker : ContentView
 	/// <summary>Draws again only the shelf audio cards (a book is done, a wait begins): the rest of the picker, its voice bars and any open prompt stay as they are.</summary>
 	public void UpdateShelfCards()
 	{
-		foreach ((string code, VerticalStackLayout stack) in _shelfHosts)
+		if (!MainThread.IsMainThread)
+		{
+			MainThread.BeginInvokeOnMainThread(UpdateShelfCards); // the card dictionaries are touched on the main thread only
+			return;
+		}
+
+		foreach ((string code, VerticalStackLayout stack) in _shelfHosts.ToArray())
 		{
 			if (_shelfCards.Remove(code, out View? old))
 			{
@@ -469,10 +475,7 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 			return;
 		}
 
-		if (ShelfAudioNetwork.ShouldStartRun(outcome))
-		{
-			_shelf.Start(language, ShelfAudioNetwork.AllowsMobileData(outcome)); // Slice 262: the shelf books' audio in the language, after the voice (it waits for the voice itself)
-		}
+		_shelf.Start(language, outcome); // Slice 262: the shelf books' audio in the language, after the voice (it waits for the voice itself); a cancelled request starts nothing
 
 		await OfferOwnBooksSafelyAsync(language);
 	}

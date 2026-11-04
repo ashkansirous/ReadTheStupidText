@@ -30,3 +30,24 @@ public sealed class ShelfAudioNetworkTests
     public void Waits_for_wifi_only_on_mobile_data_only_without_permission(bool allow, bool mobileOnly, bool expected) =>
         Assert.Equal(expected, ShelfAudioNetwork.NeedsWifi(allow, mobileOnly));
 }
+
+// Slice 262: the one rule for starting a run.
+public sealed class ShelfAudioStartTests
+{
+    [Theory]
+    [InlineData(true, false, ShelfAudioStartDecision.Start)]
+    [InlineData(false, false, ShelfAudioStartDecision.Skip)]
+    [InlineData(true, true, ShelfAudioStartDecision.Skip)]
+    [InlineData(false, true, ShelfAudioStartDecision.Skip)]
+    public void A_quiet_run_needs_the_installed_voice_and_no_cancel(bool voiceReady, bool cancelled, ShelfAudioStartDecision expected) =>
+        Assert.Equal(expected, ShelfAudioStart.Decide(voiceReady, cancelled, visible: false, VoiceRequestOutcome.NothingAsked));
+
+    [Theory]
+    [InlineData(VoiceRequestOutcome.NothingAsked, ShelfAudioStartDecision.Start)]
+    [InlineData(VoiceRequestOutcome.Started, ShelfAudioStartDecision.Start)]
+    [InlineData(VoiceRequestOutcome.DownloadNow, ShelfAudioStartDecision.Start)]
+    [InlineData(VoiceRequestOutcome.WaitForWifi, ShelfAudioStartDecision.Start)]
+    [InlineData(VoiceRequestOutcome.Cancelled, ShelfAudioStartDecision.Skip)]
+    public void A_visible_run_follows_the_voice_request_even_when_cancelled_before_or_voice_not_ready(VoiceRequestOutcome outcome, ShelfAudioStartDecision expected) =>
+        Assert.Equal(expected, ShelfAudioStart.Decide(voiceReady: false, cancelled: true, visible: true, outcome));
+}

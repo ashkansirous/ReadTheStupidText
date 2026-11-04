@@ -341,6 +341,35 @@ public sealed class StoryLanguagePacks
 		}
 	}
 
+	/// <summary>
+	/// Completes when the voice step of <paramref name="language"/> is over: it is installed, failed or given up, and neither downloading nor waiting for Wi-Fi or the internet (Slice 262: the shelf audio
+	/// run goes after it). Event driven, no polling: it listens to <see cref="Changed"/> first, then looks.
+	/// </summary>
+	public async Task WhenVoiceStepOverAsync(string language, CancellationToken cancel)
+	{
+		var over = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+		void Check(object? sender, EventArgs e)
+		{
+			if (!VoiceStepRunning(language))
+			{
+				over.TrySetResult();
+			}
+		}
+
+		Changed += Check;
+		try
+		{
+			Check(null, EventArgs.Empty);
+			await over.Task.WaitAsync(cancel);
+		}
+		finally
+		{
+			Changed -= Check;
+		}
+	}
+
+	private bool VoiceStepRunning(string language) => StateOf(language) == LanguageVoiceState.Downloading || IsWaitingForInternet(language) || IsWaitingForWifi(language);
+
 	/// <summary>Whether the automatic retry of <paramref name="language"/> failed too, so only the grown-up's Retry starts it again (Slice 182): the row shows Retry, not "carries on by itself".</summary>
 	public bool NeedsRetry(string language) => _resume.StateOf(ResumeKey(UiLanguage.Resolve(language))) == PackResumeState.NeedsUserRetry;
 

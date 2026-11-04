@@ -15,7 +15,6 @@ public sealed class ShelfAudioPacks
 {
 	private const string CancelledKey = "dino.shelfaudio.cancelled";
 	private const int MaxTriesPerBook = 3;
-	private static readonly TimeSpan VoicePoll = TimeSpan.FromSeconds(1);
 	private static readonly TimeSpan WifiPoll = TimeSpan.FromSeconds(5);
 	private const int MaxListTriesOnline = 3;
 	private static readonly TimeSpan OfflineRetry = TimeSpan.FromSeconds(15);
@@ -23,8 +22,9 @@ public sealed class ShelfAudioPacks
 
 	private readonly StoreClient _store;
 	private readonly StoryLanguagePacks _voices;
-	private readonly object _gate = new(); // guards _runs, _states, every Run's Ended flag and token, and the cancelled-language preference
-	private readonly Dictionary<string, Run> _runs = [];
+	private readonly object _gate = new(); // guards _runs, _unwinding, _states, every Run's mutable fields, and the cancelled-language preference
+	private readonly Dictionary<string, Run> _runs = []; // at most one live run per language
+	private readonly Dictionary<string, Task> _unwinding = []; // the Completion of the language's last retired run: a new run for it waits for that
 	private readonly Dictionary<string, ShelfAudioState> _states = [];
 	private DateTimeOffset _lastResume = DateTimeOffset.MinValue;
 
@@ -55,9 +55,11 @@ public sealed class ShelfAudioPacks
 
 	/// <summary>
 	/// Starts the fetch for a language the grown-up just added (or re-added): clears its cancel mark and shows the card at once. Does nothing when the language is not in the set (the main
-	/// language counts, Slice 267 rule) or a run is going. <paramref name="allowMobileData"/> is decided once here, from the grown-up's answer to the voice request, and kept on the run.
+	/// language counts, Slice 267 rule) or the voice request was cancelled. A run already going for the language is never replaced: it becomes visible, and mobile data is allowed on it when
+	/// <paramref name="outcome"/> (the grown-up's answer to the voice request) says so.
 	/// </summary>
-	public void Start(string language, bool allowMobileData = false) => Begin(UiLanguage.Resolve(language), quiet: false, allowMobileData);
+	public void Start(string language, VoiceRequestOutcome outcome = VoiceRequestOutcome.NothingAsked) =>
+		Begin(UiLanguage.Resolve(language), visible: true, outcome, cancelled: false);
 
 	/// <summary>
 	/// At launch and when the app returns: carries on the languages that still lack packs the store has, without showing a card until there is something to fetch.
@@ -75,9 +77,10 @@ public sealed class ShelfAudioPacks
 			_lastResume = DateTimeOffset.UtcNow;
 		}
 
-		foreach (string language in StoryLanguages.Current().All.Where(code => !IsMarkedCancelled(code))) // the main language counts like the story languages (Slice 267 rule)
+		IReadOnlyList<string> cancelled = Marked(); // read once for the whole pass
+		foreach (string language in StoryLanguages.Current().All) // the main language counts like the story languages (Slice 267 rule)
 		{
-			Begin(language, quiet: true, allowMobileData: false); // a quiet run follows the ordinary Wi-Fi rule
+			Begin(language, visible: false, VoiceRequestOutcome.NothingAsked, cancelled.Contains(language)); // a quiet run follows the ordinary Wi-Fi rule
 		}
 	}
 
@@ -90,41 +93,66 @@ public sealed class ShelfAudioPacks
 		AudioPackLog.Write($"shelf audio {code}: cancelled by the grown-up");
 	}
 
-	private void Begin(string code, bool quiet, bool allowMobileData)
+	// The one entry for every start. One run per language: a language with a live run joins it (Join), it never starts a second or drops the first.
+	private void Begin(string code, bool visible, VoiceRequestOutcome outcome, bool cancelled)
 	{
-		if (!StoryLanguages.Current().All.Contains(code))
+		bool voiceReady = _voices.StateOf(code) == LanguageVoiceState.Ready;
+		if (!StoryLanguages.Current().All.Contains(code) || ShelfAudioStart.Decide(voiceReady, cancelled, visible, outcome) == ShelfAudioStartDecision.Skip)
 		{
 			return;
 		}
 
-		if (!quiet)
+		if (visible)
 		{
 			SetMarked(code, false); // an added (or re-added) language starts again, even after a Cancel
 		}
 
-		Run run;
+		Run? run = null;
+		bool joined;
 		lock (_gate)
 		{
-			if (_runs.ContainsKey(code))
+			joined = _runs.TryGetValue(code, out Run? live);
+			if (joined)
+			{
+				Join(live!, visible, outcome);
+			}
+			else
+			{
+				run = _runs[code] = new Run(code, visible, ShelfAudioNetwork.AllowsMobileData(outcome), _unwinding.GetValueOrDefault(code) ?? Task.CompletedTask);
+			}
+		}
+
+		if (run is null)
+		{
+			PublishVisible(code);
+			return;
+		}
+
+		AudioPackLog.Write($"shelf audio {code}: run starts ({(visible ? "added" : "launch")})");
+		_ = Task.Run(() => RunAsync(run));
+		PublishVisible(code);
+	}
+
+	// Call under _gate. A quiet run turns visible, never the reverse, and mobile data, once allowed, stays allowed.
+	private static void Join(Run run, bool visible, VoiceRequestOutcome outcome)
+	{
+		run.Visible |= visible;
+		run.AllowMobileData |= ShelfAudioNetwork.AllowsMobileData(outcome);
+	}
+
+	// A visible run shows its current state at once (Preparing before anything else), so the card with Cancel is there before the voice and the listing are done.
+	private void PublishVisible(string code)
+	{
+		Run? run;
+		lock (_gate)
+		{
+			if (!_runs.TryGetValue(code, out run) || !run.Visible)
 			{
 				return;
 			}
-
-			run = _runs[code] = new Run(code, quiet, allowMobileData).Initialized();
-			if (!quiet)
-			{
-				run.Published = true;
-				run.State = _states[code] = new ShelfAudioState(ShelfAudioPhase.Preparing); // the card (with Cancel) shows at once, before the voice and the listing are done
-			}
 		}
 
-		if (!quiet)
-		{
-			RaiseChanged();
-		}
-
-		AudioPackLog.Write($"shelf audio {code}: run starts ({(quiet ? "launch" : "added")})");
-		_ = Task.Run(() => RunAsync(run));
+		Publish(run, run.State);
 	}
 
 	private void StopRemoved(StoryLanguageSet set)
@@ -166,7 +194,8 @@ public sealed class ShelfAudioPacks
 		RaiseChanged();
 	}
 
-	// Call under _gate. The run leaves _runs, is cancelled and its token is disposed, all in one step: a Stop after an End (or the reverse) finds no run and does nothing.
+	// Call under _gate. The run leaves _runs and is cancelled in one step: a Stop after an End (or the reverse) finds no run and does nothing. Its token is disposed only after its Completion,
+	// and a new run for the language waits for that Completion (_unwinding) before it touches the pack folders.
 	private void Retire(Run run)
 	{
 		if (run.Ended)
@@ -180,8 +209,8 @@ public sealed class ShelfAudioPacks
 			_runs.Remove(run.Code);
 		}
 
+		_unwinding[run.Code] = run.Completion.Task;
 		run.Cts.Cancel();
-		run.Cts.Dispose();
 	}
 
 	private async Task RunAsync(Run run)
@@ -189,8 +218,9 @@ public sealed class ShelfAudioPacks
 		string code = run.Code;
 		try
 		{
-			CancellationToken cancel = run.Token; // taken when the run was made: a Cancel may already have disposed the source
-			await WaitForVoiceAsync(run, cancel);
+			CancellationToken cancel = run.Token;
+			await run.Previous.WaitAsync(cancel); // a re-add waits for the run it replaced to finish unwinding
+			await _voices.WhenVoiceStepOverAsync(code, cancel); // the reading voice first (it shows in the same card); the run's network permission was fixed when it started
 			ShelfAudioWork? work = await PlanAsync(run, cancel);
 			if (work is not null)
 			{
@@ -208,6 +238,8 @@ public sealed class ShelfAudioPacks
 		finally
 		{
 			End(run);
+			run.Cts.Dispose(); // after the last use of its token; Retire never cancels a run that has ended
+			run.Completion.TrySetResult();
 		}
 	}
 
@@ -253,23 +285,6 @@ public sealed class ShelfAudioPacks
 		return true;
 	}
 
-	// The reading voice shows first in the same card (as today): a voice still on its way holds the audio back. The run's network permission was fixed when it started and is not read from here.
-	private async Task WaitForVoiceAsync(Run run, CancellationToken cancel)
-	{
-		string code = run.Code;
-		bool announced = false;
-		while (_voices.StateOf(code) == LanguageVoiceState.Downloading || _voices.IsWaitingForInternet(code) || _voices.IsWaitingForWifi(code))
-		{
-			if (!announced)
-			{
-				AudioPackLog.Write($"shelf audio {code}: waits for the reading voice first");
-				announced = true;
-			}
-
-			await Task.Delay(VoicePoll, cancel);
-		}
-	}
-
 	// A failed listing while offline waits for the connection (a visible run says so, a launch check stays quiet); while online it is tried a few times, then given up until the next open.
 	private async Task<ShelfAudioWork?> PlanAsync(Run run, CancellationToken cancel)
 	{
@@ -291,7 +306,7 @@ public sealed class ShelfAudioPacks
 				return null;
 			}
 
-			if (!online && !run.Quiet)
+			if (!online && IsVisible(run))
 			{
 				Publish(run, new ShelfAudioState(ShelfAudioPhase.WaitingForInternet));
 			}
@@ -310,11 +325,7 @@ public sealed class ShelfAudioPacks
 		if (total == 0)
 		{
 			AudioPackLog.Write($"shelf audio {code}: nothing to fetch ({noAudio.Count} book(s) without a pack)");
-			if (!run.Quiet)
-			{
-				Publish(run, ShelfAudioState.Idle with { NoAudioTitles = [.. noAudio] });
-			}
-
+			Publish(run, ShelfAudioState.Idle with { NoAudioTitles = [.. noAudio] }); // this run's own result, quiet or not: nothing of an earlier run's lines stays
 			return;
 		}
 
@@ -344,16 +355,15 @@ public sealed class ShelfAudioPacks
 		for (int tries = 0; tries < MaxTriesPerBook;)
 		{
 			await WaitForWifiIfNeededAsync(run, cancel);
-			bool ok = await _store.InstallPacksAsync(pick.Item, [(code, pick.Pack)], null, cancel);
+			PackInstall result = await _store.InstallPackAsync(pick.Item, code, pick.Pack, cancel);
 			cancel.ThrowIfCancellationRequested();
-			int? have = _store.Packs.InstalledVersion(id, code);
-			if (have is int version && version >= pick.Pack.Version)
+			if (result is PackInstall.Installed or PackInstall.AlreadyInstalled)
 			{
 				AudioPackLog.Write($"shelf audio {code}: {id} pack in");
 				return ShelfAudioInstall.Installed;
 			}
 
-			if (ok && have is null)
+			if (result == PackInstall.NotFound)
 			{
 				noAudio.Add(pick.Item.TitleIn(LanguageChoice.Current()) ?? pick.Item.Title);
 				AudioPackLog.Write($"shelf audio {code}: {id} has no pack in the store, reads with the reading voice");
@@ -405,7 +415,25 @@ public sealed class ShelfAudioPacks
 		AudioPackLog.Write($"shelf audio {run.Code}: Wi-Fi is back, carries on");
 	}
 
-	private static bool NeedsWifi(Run run) => ShelfAudioNetwork.NeedsWifi(run.AllowMobileData, PackResumeWatcher.CellularOnly());
+	// The permission can widen while the run goes (a quiet run the grown-up then added with "Download now"), so it is read under the gate each time.
+	private bool NeedsWifi(Run run)
+	{
+		bool allowed;
+		lock (_gate)
+		{
+			allowed = run.AllowMobileData;
+		}
+
+		return ShelfAudioNetwork.NeedsWifi(allowed, PackResumeWatcher.CellularOnly());
+	}
+
+	private bool IsVisible(Run run)
+	{
+		lock (_gate)
+		{
+			return run.Visible;
+		}
+	}
 
 	private static bool IsOnline()
 	{
@@ -477,29 +505,36 @@ public sealed class ShelfAudioPacks
 		Failed,
 	}
 
-	// One language run: it owns its token and its latest state. It leaves _runs (and its token is disposed) only through Retire, under _gate.
-	private sealed class Run(string code, bool quiet, bool allowMobileData)
+	// One language run: it owns its token and its own state, built from this run only (it starts Preparing). It leaves _runs only through Retire, under _gate; its token is disposed after Completion.
+	private sealed class Run
 	{
-		public string Code { get; } = code;
+		public Run(string code, bool visible, bool allowMobileData, Task previous)
+		{
+			Code = code;
+			Visible = visible;
+			AllowMobileData = allowMobileData;
+			Previous = previous;
+			Token = Cts.Token;
+		}
 
-		public bool Quiet { get; } = quiet;
+		public string Code { get; }
+
+		public Task Previous { get; } // the Completion of the run this one replaced
+
+		public TaskCompletionSource Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
 		public CancellationTokenSource Cts { get; } = new();
 
-		public CancellationToken Token { get; private set; }
+		public CancellationToken Token { get; } // set in the constructor: the source is disposed after Completion, and the token stays usable
 
-		public ShelfAudioState State { get; set; } = ShelfAudioState.Idle;
+		public ShelfAudioState State { get; set; } = new(ShelfAudioPhase.Preparing);
+
+		public bool Visible { get; set; } // under _gate: a quiet run becomes visible, never the reverse
 
 		public bool Ended { get; set; }
 
 		public bool Published { get; set; } // set under _gate once the run has shown a state of its own
 
-		public bool AllowMobileData { get; } = allowMobileData; // decided once when the run starts ("Download now" in this add); never re-read from the voice's live state
-
-		public Run Initialized()
-		{
-			Token = Cts.Token;
-			return this;
-		}
+		public bool AllowMobileData { get; set; } // under _gate: decided by ShelfAudioNetwork when the run starts, widened only by a later Start with "Download now"
 	}
 }
