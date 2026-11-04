@@ -4,7 +4,9 @@
 
 *Planned again 2026-11-03: the user un-parked it ("Yes, un-park both") before a run-all-waves run.*
 
-**Touches:** `tools/emulator/start-warm.ps1`, `tools/emulator/run-flows.ps1`, `tools/CLAUDE.md`, `.maestro/dino/*.yaml`, `tools/desktop-vm/checks/*.ps1`, `tests/DinoReader.Tests/**`, `docs/plan/slices/253-final-loop-leftovers-night-2026-11-01-2355.md`
+*In progress (wave 2026-11-04), draft PR.*
+
+**Touches:** `tools/emulator/start-warm.ps1`, `tools/emulator/run-flows.ps1`, `tools/CLAUDE.md`, `.maestro/dino/*.yaml`, `tools/desktop-vm/**` (item 3 dry run in the build stage), `tools/emulator/**`, `tests/DinoReader.Tests/**`, `docs/plan/slices/253-final-loop-leftovers-night-2026-11-01-2355.md`
 
 #### Work
 
