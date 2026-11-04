@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
@@ -85,6 +86,9 @@ public sealed class ReadingSession
 	// Slice 250: true between a counted read_started and its read_stopped, so every start gets exactly one stop.
 	private bool _countedOpen;
 	private int _readOrigin;
+
+	// Slice 259 item 1 (Debug trace): the time from a read's start to its first sound, once per read.
+	private ReadStartTrace? _startTrace;
 
 	// Cancelled when the read is stopped or superseded, so a translation still running for it is abandoned.
 	private CancellationTokenSource? _readCancellation;
@@ -405,6 +409,7 @@ public sealed class ReadingSession
 		_pendingReadId = id;
 		NextRun();
 		Volatile.Write(ref _activeReadId, id);
+		Volatile.Write(ref _startTrace, ReadStartTrace.Begin(id, _sentences[sentence].Start));
 		if (TryPlayRecording(story, sentence, id))
 		{
 			return;
@@ -530,6 +535,7 @@ public sealed class ReadingSession
 		story = await KeepNewCastAsync(story, reading);
 		bool untranslated = false;
 		IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, reading, fromPosition, cancellation, () => untranslated = true);
+		_startTrace?.Voiced(id, segments.Count, untranslated);
 		if (id != _pendingReadId)
 		{
 			return false;
@@ -744,6 +750,7 @@ public sealed class ReadingSession
 		}
 
 		AudioPackLog.Write($"premade clip plays (sentence {StorySentences.IndexAt(_sentences, segment.SourceStart)})");
+		NoteFirstSound("premade clip", read.ReadId);
 		RunOnMain(() => MarkPremade(read, segment));
 		ClearPending();
 		return true;
@@ -990,6 +997,17 @@ public sealed class ReadingSession
 		}
 	}
 
+	// The first sound of the read being traced (a premade clip or the device voice); later sounds of the same read and other reads' sounds log nothing.
+	// The trace is read through a local copy and cleared only if it is still that copy, so a trace a new read just started is never wiped; readId is the read that raised the sound.
+	private void NoteFirstSound(string how, int readId)
+	{
+		ReadStartTrace? trace = Volatile.Read(ref _startTrace);
+		if (trace?.FirstSound(readId, how) == true)
+		{
+			Interlocked.CompareExchange(ref _startTrace, null, trace);
+		}
+	}
+
 	private void ClearPending()
 	{
 		_pendingReadId = 0;
@@ -997,16 +1015,20 @@ public sealed class ReadingSession
 		StateChanged?.Invoke(this, EventArgs.Empty);
 	}
 
-	private void OnReaderStateChanged(object? sender, PlaybackState state) =>
-		MainThread.BeginInvokeOnMainThread(() => ApplyReaderState(state));
+	private void OnReaderStateChanged(object? sender, PlaybackState state)
+	{
+		int readId = Volatile.Read(ref _activeReadId); // the read this state belongs to, taken when the reader raised it: by the time the main thread runs it a newer read may be active
+		MainThread.BeginInvokeOnMainThread(() => ApplyReaderState(state, readId));
+	}
 
-	private void ApplyReaderState(PlaybackState state)
+	private void ApplyReaderState(PlaybackState state, int readId)
 	{
 		bool idleAfterReturn = state == PlaybackState.Idle
 			&& _pendingReadId != 0 && _pendingReadId == _returnedReadId;
 		if (state == PlaybackState.Playing)
 		{
 			_playingRun = _run;
+			NoteFirstSound("device voice", readId);
 		}
 
 		if (state == PlaybackState.Playing || idleAfterReturn)
@@ -1086,5 +1108,60 @@ public sealed class ReadingSession
 		{
 			MoveTo(sentence, position);
 		}
+	}
+}
+
+/// <summary>
+/// Slice 259 item 1 (the trace is Debug only, in the test-hook log): how long one read takes from its start to its voiced segments and to its first sound, and whether it started
+/// mid-book. A mid-book read of a translated book works out the whole book's pieces again to find its clips (<see cref="StoryVoicing"/>), so a device check reads these lines to see
+/// whether the wait passes the 500 ms rule; the page's wait overlay (<c>WaitController</c>) shows only if it does, and logs when it does.
+/// </summary>
+internal sealed class ReadStartTrace
+{
+	public const string Tag = "[ReadStart]";
+	private readonly ReadStartClock _clock;
+	private readonly bool _midBook;
+
+	private ReadStartTrace(int id, bool midBook)
+	{
+		_clock = new ReadStartClock(id);
+		_midBook = midBook;
+	}
+
+#if DEBUG
+	public static ReadStartTrace? Begin(int id, int position) => new(id, position > 0);
+#else
+	public static ReadStartTrace? Begin(int id, int position) => null; // Debug only: no Stopwatch or allocation per read in Release
+#endif
+
+	public void Voiced(int id, int segments, bool translationSkipped)
+	{
+		if (_clock.ElapsedFor(id) is { } elapsed)
+		{
+			Write($"voiced after {elapsed} ms: {segments} segments, {Where}{(translationSkipped ? ", translation skipped" : string.Empty)}");
+		}
+	}
+
+	/// <summary>Logs the first sound of the traced read; false (nothing logged, trace untouched) for any other read's sound.</summary>
+	public bool FirstSound(int id, string how)
+	{
+		if (_clock.ElapsedFor(id) is not { } elapsed)
+		{
+			return false;
+		}
+
+		Write($"first sound after {elapsed} ms ({how}), {Where}");
+		return true;
+	}
+
+	private string Where => _midBook ? "mid-book" : "from the start";
+
+	[Conditional("DEBUG")] // the call and its interpolated arguments are not compiled into Release
+	public static void Write(string line)
+	{
+		Debug.WriteLine($"{Tag} {line}");
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"{Tag} {line}");
+#endif
 	}
 }

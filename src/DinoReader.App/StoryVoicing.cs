@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Mobile.Shared;
@@ -77,7 +78,7 @@ public sealed class StoryVoicing
 			return await VoicedOwnWithPremadeAsync(story, prepared, fromPosition, wholePieces, reading, cancellationToken);
 		}
 
-		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, prepared.Analysis.Sentences.Value, reading, cancellationToken, forSpeech: true);
+		StoryTranslator.Outcome outcome = await TranslateOffUiAsync(story, prepared, reading, cancellationToken, forSpeech: true);
 		if (!outcome.Translated)
 		{
 			// The story is read as written, in its own language and voices, so the spoken pack goes back to its language too.
@@ -155,15 +156,24 @@ public sealed class StoryVoicing
 			return prepared.Pieces;
 		}
 
-		StoryTranslator.Outcome plain = await _translator.TranslateAsync(story, prepared.Pieces, prepared.Analysis.Sentences.Value, reading, cancellationToken);
+		StoryTranslator.Outcome plain = await TranslateOffUiAsync(story, prepared, reading, cancellationToken);
 		return plain.Translated ? plain.Pieces : null;
+	}
+
+	// Slice 259 item 1: a read's translation (a mid-book read works out the whole book's pieces again for its clips) runs on a worker thread. Called on the UI thread, a book's worth of
+	// table lookups that finish at once would hold the UI thread and keep the page's 500 ms wait timer from ever firing, so the loading state could not show however long the wait was.
+	private Task<StoryTranslator.Outcome> TranslateOffUiAsync(Story story, Prepared prepared, string reading, CancellationToken cancellationToken, bool forSpeech = false)
+	{
+		return Task.Run(() => _translator.TranslateAsync(story, prepared.Pieces, prepared.Analysis.Sentences.Value, reading, cancellationToken, forSpeech), cancellationToken);
 	}
 
 	// A read from the middle starts at some piece of the book: its clips are the pack's entries after the spoken pieces before it. Negative when the whole book's pieces cannot be worked out.
 	private async Task<int> ClipOffsetAsync(Story story, IReadOnlyList<SplitSegment> partial, bool wholePieces, string reading, bool translated, CancellationToken cancellationToken)
 	{
+		var watch = Stopwatch.StartNew();
 		Prepared whole = await Task.Run(() => PrepareShared(story, wholePieces), cancellationToken);
 		IReadOnlyList<SplitSegment>? all = await PlainPiecesAsync(story, whole, reading, translated, cancellationToken);
+		ReadStartTrace.Write($"whole book worked out for the clip offset in {watch.ElapsedMilliseconds} ms ({all?.Count ?? 0} pieces, translated={translated})");
 		return all is null ? -1 : PremadeSource.SpokenCount(all) - PremadeSource.SpokenCount(partial);
 	}
 
@@ -186,7 +196,7 @@ public sealed class StoryVoicing
 
 		Prepared prepared = await Task.Run(() => PrepareShared(story, _translator.UsesBundledTable(story, reading)), cancellationToken);
 		// The engine's pieces are shared with a read that speaks them at the same time (StoryTranslator), so each is translated once.
-		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, prepared.Analysis.Sentences.Value, reading, cancellationToken);
+		StoryTranslator.Outcome outcome = await TranslateOffUiAsync(story, prepared, reading, cancellationToken);
 		return outcome.Translated ? TranslatedStoryBuilder.Build(story.Pages, sentences, outcome.Pieces, StoryRecordings.PagesShownInOwnLanguage(story)) : null;
 	}
 
