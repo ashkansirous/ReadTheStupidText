@@ -3,7 +3,6 @@ using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Shared;
-using ReadTheStupidText.Mobile.Shared.Testing;
 
 namespace DinoReader;
 
@@ -600,7 +599,9 @@ public sealed class ReadingSession
 		string? path = AnimalClipFiles.PathOf(clip);
 		if (path is null)
 		{
-			TestHookLog.Write($"[Reading] animal clip {clip} has no file, slot skipped");
+#if DEBUG
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] animal clip {clip} has no file, slot skipped");
+#endif
 			SkipClip(read, index);
 			return;
 		}
@@ -612,13 +613,17 @@ public sealed class ReadingSession
 		}
 		catch (Exception ex)
 		{
-			TestHookLog.Write($"[Reading] animal clip {clip} could not play ({ex.GetType().Name}), slot skipped");
+#if DEBUG
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] animal clip {clip} could not play ({ex.GetType().Name}), slot skipped");
+#endif
 			AnimalClipFiles.Discard(clip);
 			SkipClip(read, index);
 			return;
 		}
 
-		TestHookLog.Write($"[Reading] animal clip {clip} plays");
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] animal clip {clip} plays");
+#endif
 		_recorded = RecordedPlay.Playing;
 		ClearPending();
 	}
