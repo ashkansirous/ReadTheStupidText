@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { audioPacksBehind, audioUploadsFor, bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, contentBooks, starterDrift, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
+import { audioPackIsLive, pruneUnbuiltAudio, audioPacksBehind,audioUploadsFor, bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, contentBooks, starterDrift, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
 
 const A = 'a'.repeat(32);
 const B = 'b'.repeat(32);
@@ -145,6 +145,25 @@ test('Slice 265: the audio packs built in this run go up first, before the cover
         runUploads(plan, root, { put: (upload) => sent.push(upload.name), packageExists: () => false });
         assert.deepEqual(sent, ['audio-fa-v2.zip', 'cover.jpg', 'story-v6.dino', 'meta.json']); // audio-de-v1.zip was not built here, so it is already live
     });
+});
+
+test('Slice 265: audioPackIsLive reads the live list, not the bucket', () => {
+    const live = [{ id: A, version: 1, audio: { fa: { version: 2 } } }];
+    assert.equal(audioPackIsLive(live, { key: `dinoreader/stories/${A}/audio-fa-v2.zip` }), true);
+    assert.equal(audioPackIsLive(live, { key: `dinoreader/stories/${A}/audio-fa-v3.zip` }), false);
+    assert.equal(audioPackIsLive(live, { key: `dinoreader/stories/${A}/audio-de-v2.zip` }), false);
+    assert.equal(audioPackIsLive(live, { key: `dinoreader/stories/${B}/audio-fa-v2.zip` }), false);
+});
+
+test('Slice 265: pruneUnbuiltAudio drops packs that are neither live nor built here', () => {
+    const meta = JSON.stringify({ version: 3, audio: { fa: { version: 2 }, de: { version: 1 }, no: { version: 1 } } });
+    const { text, removed } = pruneUnbuiltAudio(meta, '/s/a', { de: { version: 1 } }, (path) => path.endsWith('audio-fa-v2.zip'));
+    assert.deepEqual(removed, ['no']);
+    assert.deepEqual(Object.keys(JSON.parse(text).audio), ['fa', 'de']);
+    const none = pruneUnbuiltAudio(meta, '/s/a', {}, () => false);
+    assert.equal(none.removed.length, 3);
+    assert.equal('audio' in JSON.parse(none.text), false);
+    assert.equal(pruneUnbuiltAudio('{"version":1}', '/s/a', {}, () => false).text, '{"version":1}');
 });
 
 test('Slice 265: an audio pack already in the bucket is not overwritten', () => {

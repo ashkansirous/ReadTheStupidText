@@ -130,12 +130,12 @@ export function bucketVersionMatches(liveText, builtVersion) {
  * bucket's. `liveMeta(upload)` returns the bucket's meta.json text, or null when there is none. A failing book is skipped, the
  * run then throws listing them (the error carries `done`). Returns the ids refreshed.
  */
-export function runMetaRefresh(plan, root, { put, liveMeta, packageExists = () => false }) {
+export function runMetaRefresh(plan, root, { put, liveMeta, packageExists = () => false, audioExists = packageExists }) {
     const done = [];
     const failures = [];
     for (const book of plan.filter((item) => item.outcome === Outcome.UpToDate)) {
         try {
-            putAudioPacks(book, join(root, book.id), { put, packageExists }); // Slice 265: a pack built in this run goes up even when the meta is unchanged
+            putAudioPacks(book, join(root, book.id), { put, packageExists: audioExists }); // Slice 265: a pack built in this run goes up even when the meta is unchanged
             const upload = metaUpload(book, join(root, book.id));
             const live = liveMeta(upload);
             if (!metaDiffers(readFileSync(upload.path, 'utf8'), live)) continue;
@@ -178,6 +178,59 @@ export function audioUploadsFor({ id }, folder, metaText, fileExists = existsSyn
     return Object.keys(audio).sort().map((language) => `audio-${language}-v${audio[language]?.version}.zip`)
         .filter((name) => AUDIO_PACK_FILE.test(name) && fileExists(join(folder, name)))
         .map((name) => ({ name, key: `${KEY_PREFIX}/${id}/${name}`, path: join(folder, name), contentType: 'application/zip', isAudioPack: true }));
+}
+
+/**
+ * Pure (Slice 265): whether the live /api/stories list already offers this audio pack. The Worker lists a pack only when its zip is in the bucket, so the list answers "is it there"
+ * without downloading the zip (a `wrangler r2 object get` fetches the whole file). `upload.key` is `dinoreader/stories/<id>/audio-<language>-v<n>.zip`.
+ */
+export function audioPackIsLive(live, upload) {
+    const match = /\/([0-9a-f]{32})\/(audio-.+\.zip)$/.exec(upload.key ?? '');
+    const pack = match ? audioPackFileOf(match[2]) : null;
+    if (!pack) return false;
+    const story = live.find((item) => item.id === match[1]);
+    return Number(story?.audio?.[pack.language]?.version) === pack.version;
+}
+
+function audioPackFileOf(file) {
+    const match = /^audio-(.+)-v(\d+)\.zip$/.exec(file);
+    return match ? { language: match[1], version: Number(match[2]) } : null;
+}
+
+/**
+ * Pure (Slice 265): meta.json text with its `audio` entries limited to packs that are live (`liveAudio`: language to {version}) or whose zip was built into this folder (`fileExists`). A pack whose
+ * build or LFS fetch failed is dropped, so a listed pack is always in the bucket. Returns `{ text, removed }`; `text` is unchanged when nothing is dropped or the meta is unreadable.
+ */
+export function pruneUnbuiltAudio(metaText, folder, liveAudio, fileExists = existsSync) {
+    let meta;
+    try {
+        meta = JSON.parse(metaText);
+    } catch {
+        return { text: metaText, removed: [] };
+    }
+    if (!meta.audio || typeof meta.audio !== 'object') return { text: metaText, removed: [] };
+    const kept = {};
+    const removed = [];
+    for (const [language, info] of Object.entries(meta.audio)) {
+        const live = Number(liveAudio?.[language]?.version) === Number(info?.version);
+        if (live || fileExists(join(folder, `audio-${language}-v${info?.version}.zip`))) kept[language] = info;
+        else removed.push(language);
+    }
+    if (removed.length === 0) return { text: metaText, removed };
+    const { audio, ...rest } = meta;
+    return { text: `${JSON.stringify(Object.keys(kept).length > 0 ? { ...rest, audio: kept } : rest, null, 2)}\n`, removed };
+}
+
+/** Rewrites each built book's meta.json without the audio packs that are neither live nor built here (see pruneUnbuiltAudio); logs each dropped pack. */
+function pruneBuiltMetas(root, built, live) {
+    for (const { id } of built) {
+        const path = join(root, id, META_FILE);
+        if (!existsSync(path)) continue;
+        const { text, removed } = pruneUnbuiltAudio(readFileSync(path, 'utf8'), join(root, id), live.find((story) => story.id === id)?.audio, existsSync);
+        if (removed.length === 0) continue;
+        console.warn(`warning: ${id} meta.json lists audio pack(s) ${removed.join(', ')} that are neither live nor built in this run; not listing them`);
+        writeFileSync(path, text);
+    }
 }
 
 /** Sends the audio packs of one built book that are not in the bucket yet (never overwritten: the same version is the same content), before the cover, package and meta.json. Returns the names sent. */
@@ -370,12 +423,12 @@ function listBuilt(root) {
  * in the bucket (it is then not sent again). A failing book is skipped and the others still go up; the run then throws once listing every failed book
  * (the error carries `done`). A book without its meta stays unlisted. Returns the ids and versions uploaded.
  */
-export function runUploads(plan, root, { put, packageExists, hasCover = (folder) => existsSync(join(folder, COVER_FILE)) }) {
+export function runUploads(plan, root, { put, packageExists, audioExists = packageExists, hasCover = (folder) => existsSync(join(folder, COVER_FILE)) }) {
     const done = [];
     const failures = [];
     for (const book of plan.filter((item) => item.outcome === Outcome.Upload)) {
         try {
-            done.push({ id: book.id, version: uploadBook(book, root, { put, packageExists, hasCover }) });
+            done.push({ id: book.id, version: uploadBook(book, root, { put, packageExists, audioExists, hasCover }) });
         } catch (error) {
             failures.push(`${book.id}: ${error instanceof Error ? error.message : String(error)}`);
         }
@@ -409,10 +462,10 @@ function settleVersion(book, folder, packageExists) {
     }
 }
 
-function uploadBook(book, root, { put, packageExists, hasCover }) {
+function uploadBook(book, root, { put, packageExists, audioExists = packageExists, hasCover }) {
     const folder = join(root, book.id);
     if (!existsSync(join(folder, packageName(book.version)))) throw new Error(`${book.id}: meta.json says v${book.version} but ${packageName(book.version)} is missing.`);
-    putAudioPacks(book, folder, { put, packageExists }); // Slice 265: the packs go up before the cover, package and meta.json (meta last, so a listed pack is always there)
+    putAudioPacks(book, folder, { put, packageExists: audioExists }); // Slice 265: the packs go up before the cover, package and meta.json (meta last, so a listed pack is always there)
     const { version, packageThere } = settleVersion(book, folder, packageExists);
     for (const upload of uploadsFor({ id: book.id, version }, folder, hasCover(folder))) {
         if (upload.isPackage && packageThere) {
@@ -562,6 +615,7 @@ async function main() {
     if (!dryRun && !process.env.CLOUDFLARE_ACCOUNT_ID) throw new Error('CLOUDFLARE_ACCOUNT_ID is required when CLOUDFLARE_API_TOKEN is set.');
     const built = readBuilt(root);
     const live = await fetchLive(args, process.env);
+    if (!dryRun) pruneBuiltMetas(root, built, live);
     const plan = planStoreUploads(built, live);
     const deletions = args.includes('--delist') ? planDeletions(built, live, { contentIds: new Set(readContentBooks().map((book) => book.id)), isManaged: isManagedStory }) : [];
     if (dryRun) {
@@ -570,13 +624,14 @@ async function main() {
         return;
     }
     checkDeletionLimit(deletions, live);
+    const audioExists = (upload) => audioPackIsLive(live, upload); // Slice 265: the live list says which packs are in the bucket; no zip is downloaded to ask
     let uploaded = [];
     let refreshed = [];
     let delisted = [];
     const errors = [];
     for (const [step, assign] of [
-        [() => runUploads(plan, root, { put: putToBucket, packageExists: packageInBucket }), (done) => { uploaded = done; }],
-        [() => runMetaRefresh(plan, root, { put: putToBucket, liveMeta: metaInBucket, packageExists: packageInBucket }), (done) => { refreshed = done; }],
+        [() => runUploads(plan, root, { put: putToBucket, packageExists: packageInBucket, audioExists: audioExists }), (done) => { uploaded = done; }],
+        [() => runMetaRefresh(plan, root, { put: putToBucket, liveMeta: metaInBucket, packageExists: packageInBucket, audioExists: audioExists }), (done) => { refreshed = done; }],
         [() => runDeletions(deletions, { remove: removeFromBucket }), (done) => { delisted = done; }],
     ]) {
         try {

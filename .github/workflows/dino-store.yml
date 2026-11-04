@@ -2,7 +2,7 @@
 # Uploads the Dino store books that are behind the live store and delists the ones whose content folder is gone. It is
 # separate from release.yml so a story merge starts at once and never waits in release.yml's concurrency group behind an
 # app build (an iOS build can hold that group for an hour). Its own group queues uploads only behind each other.
-# release.yml ignores store-book folders (its push `paths`), re-including only the starters, which also build the app.
+# release.yml ignores the whole content/dino folder (its push `paths`); the starter list is checked here, in the first step below, and no longer builds the app (Slice 265).
 # Mixed pushes (story + code) match both workflows. No Actions artifacts: the books stay on the runner.
 name: Dino store books
 
@@ -77,9 +77,10 @@ jobs:
           failed=""
           if [ -s "$RUNNER_TEMP/audio-behind.txt" ]; then
             dotnet build tools/DinoReader.BookBuilder --configuration Release
+            # git and dotnet get </dev/null so neither can read the list from the loop's stdin and silently skip the pairs after it.
             while read -r stem language; do
-              if git lfs pull --include "content/dino/${stem}/audio/${language}/**" --exclude "" \
-                && dotnet run --no-build --project tools/DinoReader.BookBuilder --configuration Release -- build-audio "$stem" --lang "$language"; then
+              if git lfs pull --include "content/dino/${stem}/audio/${language}/**" --exclude "" </dev/null \
+                && dotnet run --no-build --project tools/DinoReader.BookBuilder --configuration Release -- build-audio "$stem" --lang "$language" </dev/null; then
                 echo "audio pack built: $stem $language"
               else
                 echo "::error::The audio pack of $stem [$language] could not be built."

@@ -30,6 +30,7 @@ REPO_ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 DEFAULT_OUT = os.path.join(REPO_ROOT, "artifacts", "premade-audio")
 CONTENT_ROOT = os.path.join(REPO_ROOT, "content", "dino")
 AUDIO_FOLDER = "audio"  # content/dino/<book>/audio/<language>/: the clip cache, tracked in Git LFS (Slice 265)
+LFS_POINTER_PREFIX = b"version https://git-lfs"
 CAST_NAME = "audio-cast.json"
 FORMAT_M4A = "m4a"
 VARIANTS_FOLDER = "variants"
@@ -299,6 +300,10 @@ def main(argv=None):
     book, language, sentences = load_sentences(args.sentences)
     cast = audio_cast.load(args.cast or os.path.join(REPO_ROOT, "content", "dino", book, CAST_NAME))
     cast.check(sentences, language)
+    pointer = lfs_pointer_in(clips_folder(args.out, book, language))
+    if pointer:
+        print(f"{pointer} is a Git LFS pointer, not the real file (.lfsconfig keeps the clips out of a normal checkout); run: git lfs pull --include \"content/dino/{book}/audio/{language}/**\" --exclude \"\"", file=sys.stderr)
+        return EXIT_ERRORS
     ffmpeg = encode.find_ffmpeg() if args.format == FORMAT_M4A else None
     if args.dry_run:
         return run_locked(args, book, language, sentences, cast, ffmpeg)  # sends nothing, so it needs neither ffmpeg nor the folder lock
@@ -342,6 +347,19 @@ def clips_folder(out, book, language):
     if out:
         return os.path.join(out, book, language)
     return os.path.join(CONTENT_ROOT, book, AUDIO_FOLDER, language)
+
+
+def lfs_pointer_in(folder):
+    """The first file in the clip folder that is a Git LFS pointer (a text stub, not the clip), else None: a pointer manifest would be parsed as empty and every sentence re-requested."""
+    if not os.path.isdir(folder):
+        return None
+    for name in sorted(os.listdir(folder)):
+        path = os.path.join(folder, name)
+        if os.path.isfile(path):
+            with open(path, "rb") as handle:
+                if handle.read(len(LFS_POINTER_PREFIX)) == LFS_POINTER_PREFIX:
+                    return path
+    return None
 
 
 def run_locked(args, book, language, sentences, cast, ffmpeg):

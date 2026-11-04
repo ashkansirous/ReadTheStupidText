@@ -641,6 +641,18 @@ class MainTests(Base):
         self.assertEqual(expected, generate.clips_folder(None, "b", "fa"))
         self.assertEqual(os.path.join(self.tmp, "b", "fa"), generate.clips_folder(self.tmp, "b", "fa"))
 
+    def test_an_lfs_pointer_manifest_stops_the_run_before_any_request(self):
+        """Slice 265 review: a pointer manifest.json would load as empty and re-request every sentence from the paid API."""
+        sentences, cast = self.files()
+        folder = generate.clips_folder(self.tmp, "b", "fa")
+        os.makedirs(folder, exist_ok=True)
+        pathlib.Path(folder, "manifest.json").write_bytes(b"version https://git-lfs.github.com/spec/v1\noid sha256:00\nsize 1\n")
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            code = generate.main(["--sentences", sentences, "--cast", cast, "--out", self.tmp, "--format", "wav", "--dry-run"])
+        self.assertEqual(generate.EXIT_ERRORS, code)
+        self.assertIn("git lfs pull", err.getvalue())
+
     def test_a_speaker_without_a_voice_fails_before_any_request(self):
         sentences, cast = self.files()
         pathlib.Path(sentences).write_text(json.dumps({"book": "b", "language": "fa", "sentences": [sentence(0, "x", "Troll")]}), encoding="utf8")
