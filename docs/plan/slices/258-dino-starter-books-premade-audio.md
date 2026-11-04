@@ -2,6 +2,8 @@
 
 *Planned 2026-11-04.* Follow-up to Slice 246 (parts A-D merged as #729, #768, #787, #790). Dino Reader only, Android and iOS alike (and the Windows head, which shares the code).
 
+*Night 2026-11-03-2349 wave 4: built and reviewed on PR #792; merge denied by the auto-mode classifier; parked.*
+
 **Touches:** `tools/DinoReader.BookBuilder/**`, `src/DinoReader.App/StarterStories.cs`, `src/DinoReader.App/AudioPack*.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/BookUpdater.cs`, `content/dino/{gingerbread-man,good-enough,three-little-pigs,tortoise-and-hare}/audio-cast.json`, `tests/DinoReader.Tests/**`, `docs/plan/slices/258-dino-starter-books-premade-audio.md`.
 
 ## Why
