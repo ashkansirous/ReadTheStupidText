@@ -97,11 +97,6 @@ public sealed class ShelfAudioPacks
 	private void Begin(string code, bool visible, VoiceRequestOutcome outcome, bool cancelled)
 	{
 		bool voiceReady = _voices.StateOf(code) == LanguageVoiceState.Ready;
-		if (!StoryLanguages.Current().All.Contains(code) || ShelfAudioStart.Decide(voiceReady, cancelled, visible, outcome) == ShelfAudioStartDecision.Skip)
-		{
-			return;
-		}
-
 		if (visible)
 		{
 			SetMarked(code, false); // an added (or re-added) language starts again, even after a Cancel
@@ -111,6 +106,13 @@ public sealed class ShelfAudioPacks
 		bool joined;
 		lock (_gate)
 		{
+			// The start decision and the registering of the run are one step: a Cancel or a removal landing meanwhile either comes before it (and is seen here) or retires the run made here.
+			bool markedCancelled = !visible && (cancelled || Marked().Contains(code));
+			if (!StoryLanguages.Current().All.Contains(code) || ShelfAudioStart.Decide(voiceReady, markedCancelled, visible, outcome) == ShelfAudioStartDecision.Skip)
+			{
+				return;
+			}
+
 			joined = _runs.TryGetValue(code, out Run? live);
 			if (joined)
 			{
@@ -143,16 +145,18 @@ public sealed class ShelfAudioPacks
 	// A visible run shows its current state at once (Preparing before anything else), so the card with Cancel is there before the voice and the listing are done.
 	private void PublishVisible(string code)
 	{
-		Run? run;
 		lock (_gate)
 		{
-			if (!_runs.TryGetValue(code, out run) || !run.Visible)
+			if (!_runs.TryGetValue(code, out Run? run) || !run.Visible || run.Ended)
 			{
 				return;
 			}
+
+			run.Published = true;
+			_states[code] = run.State; // read and written in one step: a state the run published meanwhile is never overwritten by a stale one
 		}
 
-		Publish(run, run.State);
+		RaiseChanged();
 	}
 
 	private void StopRemoved(StoryLanguageSet set)
@@ -174,11 +178,12 @@ public sealed class ShelfAudioPacks
 	// A null state forgets the language's entry altogether. The run (if any) is retired and the state replaced in one step, so no later update of that run can overwrite it.
 	private void Stop(string code, ShelfAudioState? state)
 	{
+		Run? retired = null;
 		lock (_gate)
 		{
 			if (_runs.TryGetValue(code, out Run? run))
 			{
-				Retire(run);
+				retired = Retire(run) ? run : null;
 			}
 
 			if (state is null)
@@ -191,18 +196,18 @@ public sealed class ShelfAudioPacks
 			}
 		}
 
+		retired?.Cts.Cancel(); // outside the lock: continuations of the awaited wait may run inline on this thread and take _gate
 		RaiseChanged();
 	}
 
-	// Call under _gate. The run leaves _runs and is cancelled in one step: a Stop after an End (or the reverse) finds no run and does nothing. Its token is disposed only after its Completion,
-	// and a new run for the language waits for that Completion (_unwinding) before it touches the pack folders.
-	private void Retire(Run run)
+	// Call under _gate. The run leaves _runs and is marked ended in one step (a Stop after an End, or the reverse, finds no run and does nothing); returns true for the one caller that retired it, who
+	// then cancels its token after leaving the lock. The token is disposed only after the run's Completion, and a new run for the language waits for that Completion (_unwinding) before it touches the pack folders.
+	private bool Retire(Run run)
 	{
 		if (run.Ended)
 		{
-			return;
+			return false;
 		}
-
 		run.Ended = true;
 		if (_runs.TryGetValue(run.Code, out Run? current) && current == run)
 		{
@@ -210,7 +215,7 @@ public sealed class ShelfAudioPacks
 		}
 
 		_unwinding[run.Code] = run.Completion.Task;
-		run.Cts.Cancel();
+		return true;
 	}
 
 	private async Task RunAsync(Run run)
@@ -246,24 +251,27 @@ public sealed class ShelfAudioPacks
 	// Only if the run was not already retired by a Cancel or a removal (they replaced the state themselves).
 	private void End(Run run)
 	{
+		bool published;
 		lock (_gate)
 		{
-			if (run.Ended)
+			if (!Retire(run))
 			{
 				return;
 			}
 
 			ShelfAudioState state = run.State;
-			Retire(run);
-			if (!run.Published)
+			published = run.Published;
+			if (published)
 			{
-				return; // a quiet run that never showed anything leaves the earlier visible state (its "no audio" and "failed" lines) alone
+				_states[run.Code] = state.IsActive ? ShelfAudioState.Idle with { NoAudioTitles = state.NoAudioTitles, Failed = state.Failed } : state;
 			}
-
-			_states[run.Code] = state.IsActive ? ShelfAudioState.Idle with { NoAudioTitles = state.NoAudioTitles, Failed = state.Failed } : state;
 		}
 
-		RaiseChanged();
+		run.Cts.Cancel(); // outside the lock; the caller disposes the source only after this returns
+		if (published) // a quiet run that never showed anything leaves the earlier visible state (its "no audio" and "failed" lines) alone
+		{
+			RaiseChanged();
+		}
 	}
 
 	// Publishes a state of the run: dropped once the run was cancelled or ended, so a late update never brings back a card the grown-up cancelled.
