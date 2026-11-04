@@ -35,7 +35,7 @@ public sealed class StoreTagRow : FlexLayout
 		Children.Clear();
 		foreach (StoreTag tag in Tags ?? [])
 		{
-			Children.Add(new StoreTagBadge { Tag = tag, Margin = new Thickness(0, 0, BadgeGap, BadgeGap) });
+			Children.Add(new StoreTagBadge(tag) { Margin = new Thickness(0, 0, BadgeGap, BadgeGap) });
 		}
 
 		IsVisible = Children.Count > 0;
@@ -44,13 +44,11 @@ public sealed class StoreTagRow : FlexLayout
 
 /// <summary>
 /// The small coloured pill a store card shows for one <see cref="StoreTag"/> (Slice 260, mock Batch 47 frame 162): 22 high, radius 11, 11.5 bold text, no icon.
-/// Colours are <see cref="DinoTokens"/> keys. Set <see cref="Tag"/> (for example from a <c>BindableLayout</c> over the row's badges) and it fills itself in.
+/// Colours are <see cref="DinoTokens"/> keys. Immutable: the tag is fixed in the constructor, which sets the label, colours and AutomationId once (MAUI allows an AutomationId to be set only one time).
+/// A card whose tags change gets new badges (<see cref="StoreTagRow"/>).
 /// </summary>
 public sealed class StoreTagBadge : Border
 {
-	public static readonly BindableProperty TagProperty =
-		BindableProperty.Create(nameof(Tag), typeof(StoreTag), typeof(StoreTagBadge), StoreTag.Hot, propertyChanged: (bindable, _, _) => ((StoreTagBadge)bindable).Refresh());
-
 	private const double PillHeight = 22;
 	private const double PillRadius = 11;
 	private const double SidePadding = 8;
@@ -58,8 +56,9 @@ public sealed class StoreTagBadge : Border
 
 	private readonly Label _label = new() { FontSize = TextSize, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1 };
 
-	public StoreTagBadge()
+	public StoreTagBadge(StoreTag tag)
 	{
+		Tag = tag;
 		MinimumHeightRequest = PillHeight; // grows with the system font size instead of clipping the label
 		Padding = new Thickness(SidePadding, 0);
 		StrokeThickness = 0;
@@ -68,11 +67,7 @@ public sealed class StoreTagBadge : Border
 		Refresh();
 	}
 
-	public StoreTag Tag
-	{
-		get => (StoreTag)GetValue(TagProperty);
-		set => SetValue(TagProperty, value);
-	}
+	public StoreTag Tag { get; }
 
 	/// <summary>The badge text in the app language (Slice 159: every word follows the app language).</summary>
 	public static string LabelOf(StoreTag tag) => tag switch
