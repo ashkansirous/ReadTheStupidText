@@ -1,8 +1,8 @@
 # Slice 266 — Waves: stop wasting the minutes between fix attempts
 
-*Planned 2026-11-04.* Tooling only (ClaudeSkills hooks and skills, this repo's device-test tools); no app change. The user, on seeing Slice 264's Windows attempts take 12 minutes apart: "plan fixing this shit!"
+*In progress (wave 2026-11-04), draft PR; the ClaudeSkills half goes in its own PR on fix/s266-stdin-empty-heredoc.* *Planned 2026-11-04.* Tooling only (ClaudeSkills hooks and skills, this repo's device-test tools); no app change. The user, on seeing Slice 264's Windows attempts take 12 minutes apart: "plan fixing this shit!"
 
-**Touches:** `tools/emulator/build-cache.ps1`, `tools/emulator/install-debug.ps1`, `tools/desktop-vm/Build-TestPackage.ps1`, `tools/desktop-vm/Invoke-DesktopTest.ps1`, `tools/CLAUDE.md`, `tools/desktop-vm/CLAUDE.md`, `docs/plan/slices/266-wave-fix-attempt-speed.md`; ClaudeSkills: `skills/feedback-loop/stdin-interpreter-guard.mjs`, `skills/feedback-loop/stdin-interpreter-guard.test.mjs`, `skills/run-wave/SKILL.md`, `agents/fix-review-findings.md`, `agents/implement-slice.md`.
+**Touches:** `tools/emulator/build-cache.ps1`, `tools/emulator/install-debug.ps1`, `tools/desktop-vm/Build-TestPackage.ps1`, `tools/desktop-vm/Invoke-DesktopTest.ps1`, `tools/emulator/run-flows.ps1`, `tools/emulator/README.md`, `tools/desktop-vm/README.md` (last three added at claim: the Android build call sites pass the tree scope, and both READMEs document the build commands), `tools/CLAUDE.md`, `tools/desktop-vm/CLAUDE.md`, `docs/plan/slices/266-wave-fix-attempt-speed.md`; ClaudeSkills: `skills/feedback-loop/stdin-interpreter-guard.mjs`, `skills/feedback-loop/stdin-interpreter-guard.test.mjs`, `skills/run-wave/SKILL.md`, `agents/fix-review-findings.md`, `agents/implement-slice.md`.
 
 ## What was measured (2026-11-04, night 2026-11-04-1441 wave 1, Slice 264's Windows reorder crash)
 
