@@ -10,7 +10,7 @@
 # expect-log: HOOK shelf-audio started sv
 # expect-log: [AudioPack] shelf audio sv: 1 book(s) need a pack, 3 without one
 # expect-log: [AudioPack] shelf audio sv: cancelled by the grown-up
-# expect-log: [AudioPack] shelf audio sv: 1 of 1 done
+# expect-log: [AudioPack] shelf audio sv: 1 of 1 done,
 # expect-log: [AudioPack] shelf audio sv: finished, 1 book(s) handled
 appId: uk.sirous.dinoreader.dbg
 name: A side language fetches the shelf books' audio
