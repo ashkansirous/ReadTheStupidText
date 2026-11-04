@@ -1,6 +1,6 @@
 # Slice 261 — Dino: no starter books in the app; a first-run book picker (choose at least 2)
 
-*In progress (wave 2026-11-04), draft PR.* *Planned 2026-11-04.* Dino Reader only; Android and iOS alike (and the Windows head, which shares these pages). After Slice 260 (the picker shows its tags). Slice 265 removes the starters' special handling from CI and the book builder.
+*Built 2026-11-04, PR #808, not merged; VM and emulator checked, upgrade-from-release and iOS not yet verified.* *Planned 2026-11-04.* Dino Reader only; Android and iOS alike (and the Windows head, which shares these pages). After Slice 260 (the picker shows its tags). Slice 265 removes the starters' special handling from CI and the book builder.
 
 **Touches:** `src/DinoReader.App/StarterStories.cs`, `src/DinoReader.App/Resources/Raw/starters/**`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/FirstBooksPage*.cs` (new), `src/DinoReader.App/IntroWizardPage*.cs`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/StagedBookUpdates.cs`, `src/DinoReader.App/BookOrigins.cs`, `src/DinoReader.App/UsageCounter.cs`, `src/DinoReader.App/Testing/DinoTestCommands*.cs`, `src/DinoReader.App/Testing/TestStore*.cs` (new, Debug only), `src/DinoReader.App/Resources/Raw/testbooks/**` (new, Debug only), `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/StoryActions.cs`, `src/DinoReader.App/IntroState.cs`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tools/DinoReader.BookBuilder/StarterBuilder.cs`, `tools/DinoReader.BookBuilder/Program.cs`, `src/DinoReader.Core/FirstBooks*.cs` (new), `src/DinoReader.Core/UsageEvent.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/**`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/261-dino-no-starters-first-run-book-picker.md`, `src/ReadTheStupidText.Mobile.Shared/Waiting/**`, `tools/desktop-vm/checks/dino-*.ps1`, `tools/desktop-vm/Build-TestPackage.ps1`, `tools/phone/checks/book-end.ps1`, `tools/phone/checks/cold-start.ps1`, `tools/phone/audio-timing.ps1`, `tools/phone/README.md` (wording only).
 
@@ -28,7 +28,7 @@ Bundling the starter books' pre-made audio would have made the app about 92 MB b
 - [x] Windows VM package: `-p:DinoTestBooks=true` (Release) carries the test books and makes the test store the default list (`DINO_TEST_BOOKS`, `DINO_TEST_STORE_ON`); `dino-launch.ps1` ticks two books on the picker. The Store and CI builds never set it (`NoBundledBooksTests`). `Build-TestPackage.ps1` passes the property.
 - [x] Download wait (frame 165): covers row with tick badges through a new optional content slot on the shared `WaitOverlay` (`SetContent`, cleared on `Hide`; RTST unchanged). Intro Read art (frame 168) draws the real caption (`Intro_ReadCaption`, 15 locales; one string highlighted whole, not a split quote). `Intro_Store*` and `FirstRun_Waiting` removed.
 - Kept deviation: the worker still accepts the old `store` intro step from old apps.
-- [ ] Android task: first run on the emulator (language, picker, two books, wizard). iOS task: the same pages compile and run on the simulator build in CI (shared code); nothing Android-only.
+- [x] Android task: first run on the emulator (language, picker, two books, wizard); see the device runs under *Changed while building*. iOS task: the same pages compile and run on the simulator build in CI (shared code); nothing Android-only. *iOS simulator run not done (see Not yet verified).*
 - [x] `src/DinoReader.App/CLAUDE.md`: replace the starter-stories rule with the first-books rule.
 
 #### Design (Dino Reader Batch 47 Onboarding mock, frames 163-168, added 2026-11-04)
@@ -68,3 +68,47 @@ Touches widened at claim from a code check on origin/main: the test commands liv
 - `dotnet test tests/DinoReader.Tests`; the Dino APK no longer contains `starters/` (list the APK's assets) and is about 13 MB smaller.
 - Emulator flows: `first-run` (language, picker with a test catalogue, two ticks, wizard without a store step), offline picker message, and every moved flow passes.
 - An upgrade from the current release keeps its four books on the shelf (emulator: install the release APK, then the new one).
+
+## Changed while building
+
+- `DinoTestBooks=true` MSBuild property (only `tools/desktop-vm/Build-TestPackage.ps1` sets it) carries the test books and the test store in the Windows VM package; Store and CI builds never set it.
+- Debug test commands `import-test-book` and `test-store` (modes include `slow` and `stall`). `skip-first-run` puts the four test books on the shelf.
+- The shared `WaitOverlay` (Mobile.Shared) got an optional content slot (`SetContent`) that shows the picked covers with tick badges; RTST is unchanged.
+- Intro is 5 steps: the store step is gone, with `IntroSteps.FromLegacy` and `Clamp` for saved step indexes. The intro Read art draws a real caption string.
+- Existing installs keep their four books and get updates and translations through the store path; a one-time refetch runs via `StarterUpdate.VersionToRefetchFromStore`.
+- The picker tick is a real Button (`FirstBookTick-<n>`) so UIA can invoke it (VM run 1 only got one card ticked by mouse click; cause unproven: double toggle or a missed click).
+- Back: cancels the download or list load, else goes to the language page; on the restart root it is the platform default.
+- Device runs (files under `D:/ReadTheStupidText-worktrees/reviews/`, outside the repo): VM run 1 (`s261-vm/`) dino-launch failed on the tick, fixed by the Button; VM run 2 (`s261-vm2/`) all six Dino checks pass. Emulator run 1 (`s261-emu/`) 8/10 pass: first-books-cancel hit a Mono SIGSEGV twice (no logcat captured, cause unknown), offline failed as a knock-on. Run 2 (`s261-emu2/`): no crash, cancel lost a timing race, fixed with the test store's stall mode. Run 3 (`s261-emu3/`): first-books-cancel, first-books-picker and first-books-offline pass, crash buffer empty.
+
+## From review
+
+Findings files (outside the repo): `reviews/s261-high.md`, `s261-medium.md`, `s261-check.md`, `s261-check2.md`, `s261-check3.md`.
+
+- High 1-5 and 7: applied.
+- High 8 (Cancel on the list-load wait showed the offline layer): partly applied; list-load Cancel now shows the offline copy.
+- High 6 (skipped): `StorePage.xaml.cs:556` `LaunchedFromIntro` and its Header.Continue wiring are dead code; outside this slice's Touches.
+- Medium 1, 2, 3, 4, 8: applied.
+- Medium 5 (skipped): `ReadShelfAsync` called in `LoadAsync` and again in `ShowListAsync`, redundant I/O. Skipped: a second shelf read per picker load is harmless.
+- Medium 6 (skipped): picker Back leaves `FirstBooksGate.Pending` true and does not revert the applied UI culture / RTL font. Skipped: back on the language page the next pick re-applies the language and culture, and the picker must stay pending until two books are on disk (design note item 1).
+- Medium 7 (skipped): nothing asserts shipped configs lack the `DinoTestBooks` constant (`NoBundledBooksTests` checks only assets). Skipped: `NoBundledBooksTests` fails if any `.github` workflow passes `DinoTestBooks`.
+- Check 1: upgrade path judged sound (no recording, edit or progress loss). All six findings (1-6) were low and skipped; none loses data or crashes. Item 6 was that nothing guards a Release package built with `-p:DinoTestBooks=true`.
+- Check 2: item 1 (tick toggling twice) was left to the VM run, which passed. Item 2 (`dino-launch.ps1` waits on English "picked") is moot: the VM picks English. Items 3-7 (low) skipped.
+- Check 3: stall mode judged sound. All eight low items skipped; item 4 (one-time refetch lowers recorded versions on upgrade) skipped because it is the deliberate one-time refetch of old starters that `s261-check.md` reviewed and found sound.
+
+## Leftovers
+
+- `StorePage.LaunchedFromIntro` dead code.
+- Cancel on the list load shows the "connect to the internet" copy though the network may be fine.
+- `.github/scripts/dino-starters.json` and `BookBuilderTests` still name starters (Slice 265 follow-up).
+
+#### For CLAUDE.md
+
+Already written on this branch in `src/DinoReader.App/CLAUDE.md` (Slice 261: docs/plan/slices/261-dino-no-starters-first-run-book-picker.md); nothing further.
+
+#### Not yet verified
+
+- Upgrade from the current release APK keeps the four books (the release signature differs from Debug).
+- iOS simulator run of the picker and first run.
+- The one-off Mono SIGSEGV on first-books-cancel (not reproduced in two later runs with the crash buffer captured).
+- The roughly 45 older flows were not all rerun (open-book, back-cover, premade-audio-plays, store-tags and grown-ups-button passed).
+- The covers row on the download wait and the intro caption were not checked by eye.
