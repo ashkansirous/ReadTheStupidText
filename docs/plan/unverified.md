@@ -105,8 +105,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Every vendor request shape is unproven until the first keyed run (Gemini model id, ElevenLabs voice id placeholder, Narakeet voice-name casing, CAMB `fa-ir`).
 - The piper-fa baseline render, on a PC that has the `piper-fa` pack and `sherpa_onnx` installed.
 - `build-audio` was run on real folders only by the pack run; the zips were not opened.
-- The live route `GET /api/stories/<id>/audio/<lang>?v=<n>` after the Worker deploys.
-- Part C's playback (not built).
+- Part C: iOS rate and playback on a device; a real store download fetching live packs; the `premade-audio-plays` flow shown failing on the old build; Windows head playback; the mid-book re-translation against the 500 ms loading-state rule (not measured).
 - Pigs Farsi: the two `say` lines (گُنده‌ی, «شالاپ، شالاپ، شالاپ!») were re-rendered in the full book on 2026-11-03 but nobody has listened to them in the book; the user heard only the spelling-page variants.
 
 ### Slice 242: Round 4 leftovers, night 2026-11-01-0859 ([slice](slices/242-round-4-leftovers-night-2026-11-01-0859.md))
