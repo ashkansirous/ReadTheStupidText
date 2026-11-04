@@ -1,6 +1,6 @@
 # Slice 265 — Dino: pre-made audio clips in Git LFS; book changes only publish to the store
 
-*Planned 2026-11-04.* Tooling and CI, no app change. After Slice 261 (the starters leave the app, so no book folder needs an app build any more).
+*In progress (wave 2026-11-04), draft PR.* *Planned 2026-11-04.* Tooling and CI, no app change. After Slice 261 (the starters leave the app, so no book folder needs an app build any more).
 
 **Touches:** `.gitattributes`, `.lfsconfig` (new), `content/dino/*/audio/**` (new, LFS), `tools/premade-audio/**`, `tools/DinoReader.BookBuilder/**`, `tools/upload-store-story.ps1`, `.github/workflows/dino-store.yml`, `.github/workflows/release.yml`, `.github/workflows/dinoreader.yml`, `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets.test.mjs`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/scripts/dino-starters.json`, `.github/CLAUDE.md`, `tools/premade-audio/README.md`, `docs/plan/slices/265-dino-audio-clips-in-git-lfs.md`.
 
@@ -22,6 +22,13 @@ The pre-made audio's single-sentence clips (about 510 MB, 16 books x 15 language
 - [ ] `dino-store.yml`: for each changed book, `git lfs pull --include content/dino/<book>/audio/**`, build its packs and upload them with the book (today packs go up by hand with `tools/upload-store-story.ps1`).
 - [ ] Upload the four former starter books' packs (built 2026-11-04, PR #792) once they are store books.
 - [ ] `.github/CLAUDE.md`: the content-only rule and the LFS fetch rule.
+
+## Claim note (coordinator, 2026-11-04, night 2026-11-04-1441 wave 2)
+
+- Built alongside Slice 261 (PR #808, in review), which owns `tools/DinoReader.BookBuilder/StarterBuilder.cs`, the starter command in `tools/DinoReader.BookBuilder/Program.cs` and `src/DinoReader.App/Resources/Raw/starters/` (moved to Debug-only `testbooks/`). This slice does not edit those two files; their starter code goes in a follow-up once both merge, if any is left. Every other part of BookBuilder stays in Touches.
+- CI order: removing the starter handling in `ship-targets.mjs` / `release.yml` / `dinoreader.yml` is safe before 261 merges only if a change under `content/dino/<starter>/` still gets the store upload; the builder checks `ship-targets.test.mjs` for the four starter books after the change.
+- The four former starter books' packs were uploaded live in night 2026-11-04-1441 wave 1 (`/api/stories` lists 15 audio languages each), so that work item is already done; the builder only confirms it.
+- The clips come from `D:/ReadTheStupidText-worktrees/s246-audio/` (978 MB with packs). That folder stays until the LFS commit is pushed and read back (`git lfs ls-files` on a fresh clone of the branch).
 
 ## Verification
 
