@@ -1,6 +1,6 @@
 ### Slice 250 — Dino usage: playback events and a session id that changes on every cold start
 
-*Built 2026-11-04 (night 2026-11-03-2349 wave 3), PR #788.* After [Slice 249](249-dino-report-a-problem.md) (merged #781).
+*Built 2026-11-04 (night 2026-11-03-2349 wave 3), merged as PR #788 (6b9b9940).* After [Slice 249](249-dino-report-a-problem.md) (merged #781).
 
 **Touches:** `src/DinoReader.App/Testing/DinoTestCommands.cs`, `src/ReadTheStupidText.Mobile.Shared/Crashes/CrashReporter*.cs`, `src/ReadTheStupidText.Mobile.Shared/Crashes/UserReport*.cs`, `src/DinoReader.App/ReportProblemPage.cs`, `tools/crashes/pull-crashes*.mjs`, `tools/dino-usage-report.ps1`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.Core/ReadStopReason.cs` (new), `src/DinoReader.App/TraceLines*.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.Core/UsageEvent.cs`, `src/DinoReader.App/UsageCounter.cs`, `src/DinoReader.App/ReadingSession.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/UsageSession*.cs` (new), `src/ReadTheStupidText.Application/Usage/UsageBatch.cs`, `src/ReadTheStupidText.Mobile.Shared/Usage/UsageQueueSender.cs`, `src/ReadTheStupidText.Application/Crashes/CrashReport.cs`, `worker/events.ts`, `worker/crashes.ts`, `worker/*.test.mjs`, `worker/CLAUDE.md`, `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`, `STORE.md`, `src/DinoReader.App/Platforms/iOS/Resources/PrivacyInfo.xcprivacy`, `tests/DinoReader.Tests/**`, `src/ReadTheStupidText.Application/Crashes/CrashReportJson.cs`, `src/ReadTheStupidText.Application/Crashes/CrashReportBuilder.cs`, `.maestro/dino/usage-playback-events.yaml`, `docs/plan/slices/250-dino-playback-events-and-session-id.md`
 
@@ -62,7 +62,7 @@ Reasons are nine, not eight: `left_book`, `finished`, `cancelled`, `language_cha
 - 2: `Resume()` after a pending advance counts a resume without a counted pause.
 - 3: the playback handler keeps the subscribe-time story until the page appears again.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-04)
 
 - `src/DinoReader.App/CLAUDE.md`: `ReadingSession.Stop` takes a `ReadStopReason` (DinoReader.Core), turned into trace text and usage Detail only at the boundary; every `read_started` gets exactly one `read_stopped` on every path (a new path closes through `RaiseStopped`); the language menu's own pauses are not counted. (Slice 250: docs/plan/slices/250-dino-playback-events-and-session-id.md)
 - `src/DinoReader.App/CLAUDE.md`: the session id is made once per launch, held in memory, written to disk only inside unsent queued events, never reused, never tied to an install, device or person; sampling is one roll per launch. (Slice 250: docs/plan/slices/250-dino-playback-events-and-session-id.md)

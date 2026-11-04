@@ -255,6 +255,7 @@ overall OK: **yes**. No lines flagged.
   language; flag any book-language whose run ends with failures.*
   *User, 2026-11-03: "Render the other 14 languages in alphabetical order (by language code as listed in the app, e.g.
   ar, de, es, ... whichever list the slice uses)."*
+- D4 Farsi done 2026-11-04 (PR #787 merged as 0a398d5e; nothing else ticked): the 12 store-book Farsi packs are live, `audio-fa-v1.zip` each, listed by /api/stories; one pack was downloaded with a 200 and its manifest checked. Other languages and the starter books are open.
 - [ ] D4. Upload each finished book-language (store and app must match: the store-upload rule).
   *Prep done 2026-11-04: Farsi packs v1 built for the 12 store books (1.7-3.0 MB each, about 28 MB) into `D:/ReadTheStupidText-worktrees/s246-audio/packs/<book>/<storeId>/`; their `audioPacks.fa` records are in this PR. Order (coordinator, from high finding 2): CI's `publish-store-books.mjs` rebuilds meta from the committed `audioPacks` record, so the record merges first and the upload runs after this PR merges. Not packed: gingerbread-man, good-enough, tortoise-and-hare, three-little-pigs. They are starter books (bundled in the app, `BookKind.Starter`) and `build-audio` packs store books only; see the part C question below.*
 
