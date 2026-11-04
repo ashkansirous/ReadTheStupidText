@@ -1,6 +1,6 @@
 ### Slice 249 — Dino: "Report a problem" in the grown-ups' corner sends the app's recent log, with a code to quote
 
-*Built 2026-11-04, PR #781 (not merged). Items 1-7 built; device run on the Android emulator passed; TestFlight and iOS not yet tried.* (Planned 2026-11-02.)
+*Built 2026-11-04, merged as PR #781 (85d78533). Items 1-7 built; device run on the Android emulator passed; TestFlight and iOS not yet tried.* (Planned 2026-11-02.)
 
 **Touches:** `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/ReportProblem*.cs` (new), `src/DinoReader.App/Resources/Strings/AppResources*.resx` (own block), `src/ReadTheStupidText.Mobile.Shared/Crashes/**`, `src/ReadTheStupidText.Application/Crashes/CrashReport.cs`, `worker/crashes.ts`, `worker/*.test.mjs`, `tools/crashes/pull-crashes.mjs`, `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`, `STORE.md`, `.maestro/dino/**`, `docs/plan/slices/249-dino-report-a-problem.md`; for item 1 (Slice 243 item 5 log lines, both apps): `src/DinoReader.App/**/*.cs`, `src/ReadTheStupidText.Mobile/**/*.cs`, `src/ReadTheStupidText.Mobile.Shared/**/*.cs`, `src/DinoReader.App/CLAUDE.md`, `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`, `tests/ReadTheStupidText.Tests/**`, `tests/DinoReader.Tests/**`, `docs/plan/slices/243-crash-report-gaps.md`
 
@@ -58,7 +58,7 @@
 
 Store privacy forms (this is the user's step): Play Data safety add **Diagnostics**; App Store privacy add **Other Diagnostic Data**, and then Dino `PrivacyInfo.xcprivacy` gets `NSPrivacyCollectedDataTypeOtherDiagnosticData`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-04)
 
 - `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`: the log-line rules the fixer wrote (Slice 249: docs/plan/slices/249-dino-report-a-problem.md): lines come from `TraceLines` (fixed words and reasons, no user text) and are written through `AppTrace`; a failing log never fails the work and is written after resources are released; `Stop`/`Pause`/`Resume` log only a call that changes state and the caller passes the reason; the synthesis queue line is written on peaks of two or more and on return to empty only; Android Back is not hooked (an always-enabled `OnBackPressedCallback` switches off predictive back), log `page popped`.
 - `worker/CLAUDE.md` (lift later): a `user_report` is answered 2xx only after its R2 put; every other path (off, dropped version or device, bad code, rate limit) is non-2xx, so the app never shows "Sent" for a report nobody stored (Slice 249: docs/plan/slices/249-dino-report-a-problem.md).
