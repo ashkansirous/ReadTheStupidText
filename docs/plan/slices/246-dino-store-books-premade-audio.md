@@ -6,7 +6,7 @@ app which is for young kids!", then: "if generating audio on the servers makes i
 so it should not take that much space. we can generate it on my machine. create a test page and generate 1 paragraph of
 1 of the stories for me via each of these services."
 
-*Tonight's part built 2026-11-02 (night 2026-11-01-2355 wave 2; the user's "Build them all. I will provide the keys tomorrow"), not merged, not yet verified against any live vendor. The slice stays open: work items 2, 4, 5, 6 are untouched and the listening test waits for the user's keys.*
+*Work items A-D done 2026-11-04; merged as PRs #729 (96684dc2), #768 (876481f8), #787 (0a398d5e), #790 (29eb4095). The four starter books are follow-up Slice 258. Older history below.*
 
 *Park note (2026-11-02, final feedback loop of night 2026-11-01-2355):* the row was `parked: waits for the user's vendor keys (listening test, work item 1); items 2-6 wait for the pick (adapters, generator core, listening-page skeleton merged #729)`. Moved back to `planned` per the user's 2026-11-01 answer (a night's last loop un-parks every parked row so the next night retries it). The next wave should check `D:/secrets/readthestupidtext/secrets.env` for the vendor keys first and re-park if they are still missing.
 
@@ -255,7 +255,7 @@ overall OK: **yes**. No lines flagged.
 - The pack sweep deletes only when a complete library read (`FileStoryLibrary.TryListSourceIdsAsync`, a Core file outside the first Touches line, added to it) shows the book gone. A book delete calls `DeleteBookAsync` (`StoryActions.cs`).
 - A failed pack never fails a book; it is retried at the next scheduled update check. Debug-only `[AudioPack]` log lines and the `install-audio-pack` test command.
 
-*Known behaviours (part C):* starter books get no audio (follow-up: how bundled books get packs). A speed change applies from the next clip. A mid-book read re-translates the book once (table lookup, no engine; not measured, see Not yet verified for the 500 ms rule). A book already installed picks up new-language packs at the next update check, not on re-download. Cancel during the pack step keeps the book and reports Done.
+*Known behaviours (part C):* starter books get no audio (follow-up: Slice 258). A speed change applies from the next clip. A mid-book read re-translates the book once (table lookup, no engine; not measured, see Not yet verified for the 500 ms rule). A book already installed picks up new-language packs at the next update check, not on re-download. Cancel during the pack step keeps the book and reports Done.
 
 *From review (part C), files `D:/ReadTheStupidText-worktrees/reviews/s246c-review-high.md` (11), `s246c-review-medium.md` (11), `s246c-review-check-medium.md` (8); all read:*
 - High 1 own-language read never used a pack: applied. 2 same text, two voices: applied (index-keyed manifest). 3 book progress reported twice: applied. 4 pack errors could fail a book: applied. 5 SummedProgress races: applied. 6 sweep on a cold start: applied. 7 `DeleteBookAsync` had no caller: applied.
@@ -286,7 +286,8 @@ overall OK: **yes**. No lines flagged.
   *User, 2026-11-03: "Render the other 14 languages in alphabetical order (by language code as listed in the app, e.g.
   ar, de, es, ... whichever list the slice uses)."*
 - D4 Farsi done 2026-11-04 (PR #787 merged as 0a398d5e; nothing else ticked): the 12 store-book Farsi packs are live, `audio-fa-v1.zip` each, listed by /api/stories; one pack was downloaded with a 200 and its manifest checked. Other languages and the starter books are open.
-- [ ] D4. Upload each finished book-language (store and app must match: the store-upload rule).
+- [x] D4. Upload each finished book-language (store and app must match: the store-upload rule).
+  *D4 done 2026-11-04: all 168 new-language packs uploaded (12 store books x 14 languages, sizes checked against the records); live /api/stories lists 15 languages with a url for each of the 12 books; one pack per language fetched with 200 and the listed bytes; a wrong version returns 404.*
   *Packs for the other 14 languages built 2026-11-04: 168 packs (12 store books x 14 languages, v1, 376 MB with Farsi); their `audioPacks` records are in the part C PR (#790). Upload follows the merge.*
   *Prep done 2026-11-04: Farsi packs v1 built for the 12 store books (1.7-3.0 MB each, about 28 MB) into `D:/ReadTheStupidText-worktrees/s246-audio/packs/<book>/<storeId>/`; their `audioPacks.fa` records are in this PR. Order (coordinator, from high finding 2): CI's `publish-store-books.mjs` rebuilds meta from the committed `audioPacks` record, so the record merges first and the upload runs after this PR merges. Not packed: gingerbread-man, good-enough, tortoise-and-hare, three-little-pigs. They are starter books (bundled in the app, `BookKind.Starter`) and `build-audio` packs store books only; see the part C question below.*
 
@@ -362,7 +363,7 @@ Check pass (1):
 
 (none from tonight's part)
 
-#### For CLAUDE.md (part C, for `src/DinoReader.App/CLAUDE.md`)
+#### For CLAUDE.md (lifted 2026-11-04; part C, for `src/DinoReader.App/CLAUDE.md`)
 
 - `AudioPackStore` (`AudioPackStore.cs`) is the only writer of `<app data>/audio-packs/`; nothing else creates, moves or deletes there. A pack error never fails a book: catch it, map it to `PackInstall.Failed`, keep the book, retry at the next update check. (Slice 246: docs/plan/slices/246-dino-store-books-premade-audio.md)
 
