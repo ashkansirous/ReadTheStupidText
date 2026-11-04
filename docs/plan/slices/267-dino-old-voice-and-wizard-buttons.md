@@ -28,6 +28,30 @@
 - [ ] Layout check in the device tests: a scripted step reads the element bounds from `uiautomator dump` and fails when two tappable elements on one screen overlap or one is cut off by the screen edge. Run it on every first-run and intro screen, on a phone in portrait at font scale 1.0 and 1.3, and in landscape. Same idea for iOS through the XCUITest tree where a simulator run exists, else recorded under *Not yet verified*.
 - [ ] Screenshots taken by flows are put on one contact sheet per run (`reviews/<slice>-shots/`) for the review step, instead of being saved and never seen.
 
+## Bug C: Farsi books read with the device voice; English is fine (user, 2026-11-04 ~20:20 UTC, Pixel 10 Pro, fresh install, Farsi then English)
+
+**What the usage counts show** (`dino_usage`, Android 1.102.0, sessions 78e4, 5818, f907, read 2026-11-04): the install started in Farsi; English was added in Settings at 19:36 (`story_languages_set 2:settings`); books 96640001 (Three Little Pigs), 61bb25b8 (Good Enough), bee62232 (Gingerbread Man) were read in fa and en. **Every fa read showed a `translating` wait, the en reads none.** The events do not say which voice read, so the cause is not provable from them.
+**Checked:** `StoreClient.WantedPacks` (`StoreClient.cs:259`) asks for every story language plus the book's own, so "only one language" (the user's option b) is unlikely; the live `/api/stories` lists `fa` audio for all 16 books.
+**Likely (unproven):** either the fa text came from on-device translation and no longer matches the recorded sentences, so playback falls back to the device voice; or the fa pack was never fetched for books installed before English was added (Bug A's 7-day rule). An emulator reproduction (Debug build, which logs `[AudioPack]`) is running; its result goes here.
+
+- [ ] Write the reproduction's verdict and log lines here, then fix that cause on Android and iOS.
+
+## Bug D: no log can say which voice read a book
+
+The user's report could not be checked from our data: the usage events carry no voice, no pack download, no failure reason, and the `[AudioPack]` lines reach the log only in Debug builds (`AudioPackLog.cs:12`).
+
+- [ ] Usage event per read: book id, language, voice used (`premade` or `device`) and, for `device`, the reason (`no_pack`, `pack_failed`, `text_mismatch`, `clip_missing`), from one shared, unit-tested place; Android and iOS alike. No book text, titles or file names (the usage-count and crash-report privacy rules); privacy page and store answers updated if a new field needs it (`worker/CLAUDE.md`, `STORE.md`).
+- [ ] Usage event per pack download: book id, language, `started` / `done` / `failed` and the failure kind (network, size mismatch, unzip, missing clip).
+- [ ] The same lines in the release build's rolling log (`AudioPackLog`), so a crash or problem report from a phone carries them (Slice 249).
+- [ ] Worker: `worker/events.ts` accepts the new fields (tests); the query that answers "which voice did session X use" is written into `docs/` next to the other analytics queries.
+
+## Bug E: the store-crash fix took hours to reach the testers
+
+The Slice 260 badge crash (`AutomationId may only be set one time`, `StoreTagBadge.Refresh`) crashed the Store on the user's Pixel 10 Pro at 20:21 UTC (crash report `crashes/dino/2026-11-04/d1f49026-11dd-43f0-a674-355705aaf061.json`, version 1.102.0). The fix #805 merged at 19:02 UTC, but its release runs (19:02, 19:10, 20:01) were each cancelled by the next merge, and dino-v1.102.1 (published 20:10) was built from #806 (18:47), before the fix. The run that carries it (f750d33, dino-v1.102.2) started 20:16.
+
+- [ ] A merge whose PR is labelled or titled as a fix of a crash (`fix(...)` touching app code) is never cancelled by a later merge: the release workflow's concurrency lets it finish, or the next run is held until it has shipped (`.github/workflows/release.yml`, `.github/CLAUDE.md`). Verify on a test branch: two quick merges, the first one's release still publishes.
+- [ ] After a crash fix merges, the wave or session confirms the build that contains it reached testers (release tag contains the fix commit: `git merge-base --is-ancestor`), and says so; never "fixed" while only the code is.
+
 ## Verification
 
 - `dotnet test tests/DinoReader.Tests`; the upgrade flow (Bug A) and the layout check (Bug B) on the emulator, both shown failing on the current build first, then passing.
