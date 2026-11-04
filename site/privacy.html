@@ -149,7 +149,9 @@
   </ul>
   <p>Every count also carries the app version, the platform and the UTC date (no time of day). Counts never
   contain the text you read, file names, scanned images, names, or any install, device, account or advertising
-  identifier, so they cannot be put together into a history of one person. Only a share of launches may count at
+  identifier, so they cannot be put together into a history of one person. (Dino Book Reader&rsquo;s counts also
+  carry a random session number: it is made new every time the app starts and is never reused for a later start. It lives in memory, and is also written only inside counts
+  still waiting in the app&rsquo;s local send queue; it is gone once those counts are sent. It cannot tell two sessions of one person apart. Read The Stupid Text sends none.) Only a share of launches may count at
   all, as set by the project.</p>
   <p>Each batch of counts also says a few coarse things about the device, as fixed lists and ranges: the form factor
   (phone, tablet, desktop or other), the operating system&rsquo;s major version, the processor type (arm64, x64, x86,

@@ -25,14 +25,26 @@ public static class UsageEventName
     public const string StoryLanguageAdded = "story_language_added";
     public const string StoryLanguageSwitched = "story_language_switched";
     public const string VoicePackDownload = "voice_pack_download";
+
+    // Slice 250: the playback events. Each names its book; read_stopped's detail is a ReadStopReason name (ReadPlaybackNames).
+    public const string ReadStarted = "read_started";
+    public const string ReadPaused = "read_paused";
+    public const string ReadResumed = "read_resumed";
+    public const string ReadStopped = "read_stopped";
+    public const string BookLeft = "book_left";
 }
 
-/// <summary>Slice 228: the one rule for a demo read (the intro's read step), which is not a real reading of a book and so counts no book open or finish.</summary>
+/// <summary>Slice 228: the one rule for a demo read (the intro's read step), which is not a real reading of a book and so counts no book open, finish or (Slice 250) playback event.</summary>
 public static class DemoReadCounting
 {
+    private static readonly HashSet<string> BookCounts =
+    [
+        UsageEventName.BookOpened, UsageEventName.BookFinished, UsageEventName.BookLeft,
+        UsageEventName.ReadStarted, UsageEventName.ReadPaused, UsageEventName.ReadResumed, UsageEventName.ReadStopped,
+    ];
+
     /// <summary>Whether the count <paramref name="eventName"/> may be recorded for a read that is (<paramref name="demoRead"/>) or is not a demo.</summary>
-    public static bool Counts(string eventName, bool demoRead) =>
-        !demoRead || (eventName != UsageEventName.BookOpened && eventName != UsageEventName.BookFinished);
+    public static bool Counts(string eventName, bool demoRead) => !demoRead || !BookCounts.Contains(eventName);
 }
 
 /// <summary>Where a counted book came from: Dino's own shelf (a starter or a store story) or a grown-up's own book.</summary>
@@ -189,8 +201,9 @@ public static class IntroSteps
 /// shelf book's package id (32 lower-case hex digits) or <see cref="UsageSource.Own"/> for a grown-up's own book, never a title; the day is
 /// the UTC date, no finer. <see cref="SampleRate"/> is the share of launches counted when this was queued, so the Worker can weight each count by 1 / rate.
 /// <see cref="Detail"/> (Slice 134) is the event's one extra closed value (see <see cref="UsageDetail"/>), empty for the reader events; a count about no book has <see cref="UsageSource.None"/> as book and source.
+/// <see cref="Session"/> and <see cref="Seq"/> (Slice 250) are the per-launch random session id (32 hex digits, in memory and on disk only inside unsent queued counts, never reused for a later launch) and the count's order inside it; null for a count made before they existed.
 /// </summary>
-public sealed record UsageEvent(string Name, string Book, string Language, string Source, bool HasRecording, string Version, string Platform, string Day, double SampleRate, string Detail = "")
+public sealed record UsageEvent(string Name, string Book, string Language, string Source, bool HasRecording, string Version, string Platform, string Day, double SampleRate, string Detail = "", string? Session = null, int? Seq = null)
 {
     private const int PackageIdLength = 32;
     private const string DayFormat = "yyyy-MM-dd";

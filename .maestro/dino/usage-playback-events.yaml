@@ -1,0 +1,61 @@
+# Slice 250: playing a book, leaving it with Back, opening another and pressing Play records, in this order and under one session id: read_started, book_left, read_stopped left_book, book_opened, read_started.
+# The Debug build writes a `[Usage] <name> <detail> session=<id>` line for each count it is asked to record (before the sampling and switch checks), so no Worker is needed and nothing is sent: the harness off switch stays on.
+# Needs the installed voice pack on the device (the device stage installs it first), as leave-book-stops-read.yaml does.
+# expect-log: HOOK skip-first-run ok
+# expect-log: [Usage] book_opened
+# expect-log: [Usage] read_started
+# expect-log: [Usage] book_left
+# expect-log: [Usage] read_stopped left_book
+# expect-log: [Usage] book_opened
+# expect-log: [Usage] read_started
+# The order and the single session id are checked from the log by the device stage (all six lines carry the same session=<32 hex>).
+# Fails against a build without the events: no `[Usage] read_started` line.
+appId: uk.sirous.dinoreader.dbg
+name: Playback events are recorded in order under one session (Dino)
+---
+- launchApp:
+    # No clearState: it would remove the neural voice pack (see leave-book-stops-read.yaml).
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+# The control describes itself as Pause while the read is Playing.
+- extendedWaitUntil:
+    visible: Pause
+    timeout: 90000
+- tapOn:
+    id: ReadingBack
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryTitle
+    timeout: 15000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: good-enough
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- extendedWaitUntil:
+    visible: Play
+    timeout: 10000
+- tapOn: Play
+- extendedWaitUntil:
+    visible: Pause
+    timeout: 90000

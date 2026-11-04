@@ -39,6 +39,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private readonly UsageCounter _usage;
 	private bool _finishCounted;
 	private bool _openCounted;
+	private Action<ReadingEventKind, ReadStopReason?>? _playbackHandler; // Slice 250: subscribed while the page is on the stack, bound to the book shown then
 	private readonly PageFollower _follower = new();
 	private readonly BusyGuard _busy = new();
 	private readonly WaitOverlay _waitOverlay = DinoWait.OverPicture();
@@ -336,7 +337,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		bool wasActive = before is SessionState.Playing or SessionState.Loading;
 		if (wasActive)
 		{
-			_session.Pause(TraceLines.ReadingReason.Other);
+			_session.Pause(TraceLines.ReadingReason.Other, counted: false); // the app's own pause is not a count
 		}
 
 		_languageButton.SetOpen(true);
@@ -346,7 +347,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		{
 			if (wasActive && _session.State == SessionState.Paused)
 			{
-				_session.Resume();
+				_session.Resume(counted: false);
 			}
 
 			return;
@@ -359,7 +360,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	{
 		int sentence = Math.Max(0, _session.CurrentSentence);
 		StoryLanguages.SetPick(language);
-		_session.Stop(TraceLines.ReadingReason.LanguageChange);
+		_session.Stop(ReadStopReason.LanguageChanged);
 		_session.SetReadingLanguage(language);
 		_languageButton.SetLanguage(language);
 		_usage.Record(UsageEventName.StoryLanguageSwitched, story, language: language);
@@ -576,7 +577,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		CancelIntroRead();
 		if (_session.State is SessionState.Loading or SessionState.Playing or SessionState.Paused)
 		{
-			_session.Stop(TraceLines.ReadingReason.Superseded);
+			_session.Stop(ReadStopReason.Restarted);
 		}
 
 		_follower.ResumeAt(Math.Max(0, Surface.PageOfSentence(0)));
@@ -893,6 +894,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		ApplyScreenAwake();
 		Unsubscribe();
 		_session.Attach();
+		SubscribePlayback();
 		_installer.Changed += OnInstallerChanged;
 		_model.ReadyChanged += OnInstallerChanged;
 		SystemTheme.Changed += OnThemeChanged;
@@ -915,7 +917,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 			return;
 		}
 
-		_session.Stop(TraceLines.ReadingReason.Other);
+		_session.Stop(ReadStopReason.Other);
 #if DEBUG
 		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Reading] opened idle, inherited read stopped");
 #endif
@@ -957,7 +959,13 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		CancelDisplay();
 		Unsubscribe();
 		_session.Detach();
-		_session.Stop(TraceLines.ReadingReason.PageLeft);
+		if (_story is { } leftBook)
+		{
+			RecordBookCount(UsageEventName.BookLeft, leftBook); // Slice 250: before the stop, so a session reads "book left, read stopped (left_book)"
+		}
+
+		_session.Stop(ReadStopReason.LeftBook);
+		UnsubscribePlayback(); // after the stop, so "read stopped (left_book)" is still counted; a late callback after the page left counts nothing
 		_ = _usage.FlushAsync();
 #if DEBUG
 		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Reading] left the page, read stopped");
@@ -1181,7 +1189,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		try
 		{
 			EndOwnedWait();
-			_session.Stop(TraceLines.ReadingReason.User);
+			_session.Stop(ReadStopReason.Cancelled);
 			if (opening)
 			{
 				await _busy.RunAsync(() => Navigation.PopAsync());
@@ -1220,6 +1228,37 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		if (_finishCounted && _story is { } story)
 		{
 			RecordBookCount(UsageEventName.BookFinished, story);
+		}
+	}
+
+	// Slice 250: each playback verb the session raises is one count about this book; a stop's detail is its closed reason.
+	private void SubscribePlayback()
+	{
+		UnsubscribePlayback();
+		if (_story is not { } book)
+		{
+			return;
+		}
+
+		_playbackHandler = (kind, reason) => OnPlayback(book, kind, reason);
+		_session.Playback += _playbackHandler;
+	}
+
+	private void UnsubscribePlayback()
+	{
+		if (_playbackHandler is not null)
+		{
+			_session.Playback -= _playbackHandler;
+			_playbackHandler = null;
+		}
+	}
+
+	private void OnPlayback(Story story, ReadingEventKind kind, ReadStopReason? reason)
+	{
+		string name = ReadPlaybackNames.EventOf(kind);
+		if (DemoReadCounting.Counts(name, _demoRead))
+		{
+			_usage.Record(name, story, reason is { } why ? ReadPlaybackNames.DetailOf(why) : string.Empty, ReadIn(story));
 		}
 	}
 
@@ -1393,7 +1432,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		switch (_session.State)
 		{
 			case SessionState.Loading:
-				_session.Stop(TraceLines.ReadingReason.User);
+				_session.Stop(ReadStopReason.Cancelled);
 				break;
 			case SessionState.Playing when _follower.IsWandering:
 				JumpBackToReading();
@@ -1471,7 +1510,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		if (state == SessionState.Paused)
 		{
-			_session.Stop(TraceLines.ReadingReason.Skipped);
+			_session.Stop(ReadStopReason.Skipped);
 		}
 
 		_session.MoveTo(plan.Target);

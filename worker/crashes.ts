@@ -1,5 +1,5 @@
 // Crash and error reports from the phone apps (Slice 227). Dino Reader and Read The Stupid Text post one report per crash:
-//   POST /api/crash   { "schemaVersion": 1, "app", "platform", "version", "channel", "kind", "exceptionType", "message", "stack", "logTail", "minute", "device"? }
+//   POST /api/crash   { "schemaVersion": 1, "app", "platform", "version", "channel", "kind", "exceptionType", "message", "stack", "logTail", "minute", "device"?, "session"? }
 // Each valid report is kept whole in R2 (`crashes/<app>/<yyyy-mm-dd>/<random id>.json` in the downloads bucket) and counted as one point in the
 // Analytics Engine dataset `app_crashes` (binding APP_CRASHES). Nothing identifies the sender: the object is named with a random id made here, the IP is
 // never stored (the rate limiter sees it as its key and keeps no record for us), and the only things taken from the connection are the country code
@@ -22,6 +22,7 @@ import {
   readCappedText,
   reply,
   requestCountry,
+  SESSION_PATTERN,
 } from "./events.ts";
 import type { DeviceContext } from "./events.ts";
 
@@ -92,6 +93,8 @@ export interface CrashReport {
   readonly logTail: string;
   readonly minute: string;
   readonly device: DeviceContext;
+  /** Slice 250: the usage session id of the launch the report was made in (32 hex digits), so its usage rows can be found; absent when the build sent none or a malformed one. */
+  readonly session?: string;
 }
 
 /** The code of a user report (`user_report` kind) from its message, or null for any other kind or a message that is not `user report <code>`. */
@@ -158,6 +161,7 @@ export function parseCrash(raw: unknown, app: string, now: Date = new Date()): C
     logTail: capTail(textOrEmpty(raw["logTail"]), LOG_TAIL_BYTES),
     minute: minuteOrNow(raw["minute"], now),
     device: parseDevice(raw["device"]),
+    ...(matches(SESSION_PATTERN, raw["session"]) ? { session: raw["session"] } : {}),
   };
   // A user report without a valid code cannot be found again, so it is refused rather than kept under a made-up name.
   if (kind === USER_REPORT_KIND && userReportCode(checked) === null) return null;

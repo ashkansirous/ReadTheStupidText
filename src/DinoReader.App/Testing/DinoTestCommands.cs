@@ -445,7 +445,7 @@ internal static partial class DinoTestCommands
 			if (sentence > lastSentence)
 			{
 				session.SentenceChanged -= handler;
-				MainThread.BeginInvokeOnMainThread(() => session.Stop(TraceLines.ReadingReason.Other));
+				MainThread.BeginInvokeOnMainThread(() => session.Stop(ReadStopReason.Other));
 			}
 		};
 		session.SentenceChanged += handler;

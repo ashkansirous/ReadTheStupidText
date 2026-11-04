@@ -49,9 +49,10 @@ public static class CrashKind
 /// <param name="LogTail">The last lines of the rolling log, capped at <see cref="CrashReportLimits.LogTailBytes"/>.</param>
 /// <param name="Minute">The UTC time of the crash to the minute, "yyyy-MM-ddTHH:mmZ".</param>
 /// <param name="Device">The coarse device buckets, or null when they could not be read.</param>
+/// <param name="Session">Slice 250: Dino's usage session id (32 hex digits, random per launch, in memory and on disk only inside unsent queued counts) of the launch the report was made in, so its usage rows can be found; null for Read The Stupid Text, and for a report about an earlier launch (native, unclean exit).</param>
 public sealed record CrashReport(
     string App, string Platform, string Version, string Channel, string Kind,
-    string ExceptionType, string Message, string Stack, string LogTail, string Minute, DeviceContext? Device = null);
+    string ExceptionType, string Message, string Stack, string LogTail, string Minute, DeviceContext? Device = null, string? Session = null);
 
 /// <summary>The size caps of a report, in UTF-8 bytes (the Worker caps the same).</summary>
 public static class CrashReportLimits
