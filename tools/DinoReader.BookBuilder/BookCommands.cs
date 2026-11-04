@@ -43,15 +43,10 @@ internal static class BookCommands
         return invalid.Count == 0 ? 0 : SkippedBooksExitCode;
     }
 
-    /// <summary>Slice 246 B2: packs the clips folder of one store book language (see <see cref="AudioPacks"/>) beside the book's store folder and prints the version it was built as.</summary>
+    /// <summary>Slice 246 B2: packs the clips folder of one store book or starter language (see <see cref="AudioPacks"/>) beside the book's store folder and prints the version it was built as.</summary>
     public static int BuildAudio(string stem, string language, string clipsFolder)
     {
-        BookFolder book = Books.Folder(stem);
-        if (book.Info.Kind != BookKind.Store)
-        {
-            throw new InvalidOperationException($"{stem} is not a store book; only store books have audio packs.");
-        }
-
+        BookFolder book = Books.Folder(stem); // store books and the four bundled starters (Slice 258): both are served by the store route under their id
         AudioPackRecord record = AudioPacks.Build(book, language, clipsFolder, StoreBuilder.StoreFolder());
         Console.WriteLine($"built {stem} audio {language} v{record.Version} ({record.Bytes} bytes)");
         return 0;

@@ -1,0 +1,56 @@
+# Slice 258: a bundled starter book (Three Little Pigs) is read with its REAL pre-made audio pack, fetched from the live store listing through the same route as a store book's pack.
+# Unlike premade-audio-plays (a fixture pack), the fetch-audio-pack hook (Debug only) downloads audio-fa-v1.zip from /api/stories/<id>/audio/fa, so this flow needs the network and the starter
+# packs uploaded (tools/upload-store-story.ps1). It fails when the hook cannot find a listed pack ("HOOK fetch-audio-pack failed ...") or when the read never plays a clip.
+# To see it fail against the old behaviour: before the packs are uploaded the listing has no pack for the starter, so "HOOK fetch-audio-pack ok" never appears and no
+# "[AudioPack] premade clip plays" line is logged (the read uses the device voice).
+# Keeps the app's data (no clearState), like premade-audio-plays; the real pack stays installed for the dev install.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK fetch-audio-pack ok
+# expect-log: pieces have a clip
+# expect-log: [AudioPack] premade clip plays
+# expect-log: HOOK read start
+appId: uk.sirous.dinoreader.dbg
+name: A bundled starter plays its real pre-made audio pack
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fetch-audio-pack
+      id: three-little-pigs
+      lang: fa
+# The download runs in the background (about 1.6 MB); the open-book hook waits for it to finish (up to 120 s) before opening the book, so no fixed sleep is needed here.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 150000
+# The Play button describes itself as Pause while the read is Playing; a clip counts as playing.
+- extendedWaitUntil:
+    visible: "Pause|توقف"
+    timeout: 90000
+- extendedWaitUntil:
+    visible:
+      id: PremadeAudioNeverShown
+    timeout: 15000
+    optional: true
+- assertVisible:
+    id: ReadingSurface
+# Put the screens back in English, so later flows that wait on English labels (Pause) still match.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: en

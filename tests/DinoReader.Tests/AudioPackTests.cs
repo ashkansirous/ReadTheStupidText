@@ -133,9 +133,33 @@ public sealed class AudioPackTests : IDisposable
     }
 
     [Fact]
-    public void NoCommittedBookClaimsAPackYet_SoNoMetaGainsAnAudioFieldBeforeAPackIsUploaded()
+    public void EveryCommittedPackRecord_NamesAnAppBookLanguage_WithAPositiveVersionAndSize()
     {
-        Assert.All(Books.All, b => Assert.True(AudioPacks.RecordsIn(b.Dir).Count == 0 || b.Info.Kind == BookKind.Store, b.Stem));
+        Assert.All(Books.All, b => Assert.All(AudioPacks.RecordsIn(b.Dir), r =>
+        {
+            Assert.Contains(r.Key, DinoReader.Core.UiLanguage.Supported);
+            Assert.True(r.Value.Version >= 1 && r.Value.Bytes > 0 && r.Value.Hash.Length == 64, $"{b.Stem}/{r.Key}");
+        }));
+    }
+
+    [Fact]
+    public void Build_AcceptsABundledStarter_Slice258()
+    {
+        // The build-audio command resolves a real starter and must get past its old "not a store book" refusal; an empty clips folder then fails on the missing manifest, writing nothing.
+        string emptyClips = Path.Combine(_root, "empty-clips");
+        Directory.CreateDirectory(emptyClips);
+        string starterStem = Books.Starters.First().Stem;
+
+        var ex = Assert.Throws<InvalidOperationException>(() => BookCommands.BuildAudio(starterStem, Language, emptyClips));
+
+        Assert.DoesNotContain("not a store book", ex.Message);
+        Assert.Contains(AudioPacks.ManifestFile, ex.Message);
+    }
+
+    [Fact]
+    public void EveryStarter_HasAPackRecordForEachOfTheAppLanguages_Slice258()
+    {
+        Assert.All(Books.Starters, b => Assert.Equal(DinoReader.Core.UiLanguage.Supported.Order(StringComparer.Ordinal), AudioPacks.RecordsIn(b.Dir).Keys.Order(StringComparer.Ordinal)));
     }
 
     private (BookFolder Book, string Clips, string Store) Arrange(string[] clipNames, string[]? extra = null)

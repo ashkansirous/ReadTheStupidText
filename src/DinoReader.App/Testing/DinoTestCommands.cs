@@ -28,6 +28,7 @@ internal static partial class DinoTestCommands
 	private const string SetLanguageName = "set-language";
 	private const string StageBookUpdateName = "stage-book-update";
 	private const string InstallAudioPackName = "install-audio-pack";
+	private const string FetchAudioPackName = "fetch-audio-pack";
 	private const string StartedOutcome = "started";
 	private const string VoiceKey = "voice";
 	private const string VoiceOn = "1";
@@ -74,6 +75,12 @@ internal static partial class DinoTestCommands
 		if (command.Name == InstallAudioPackName)
 		{
 			_ = InstallAudioPackAsync(command.Get(IdKey, string.Empty), command.Get(TestHookDispatcher.LanguageKey, string.Empty));
+			return StartedOutcome;
+		}
+
+		if (command.Name == FetchAudioPackName)
+		{
+			TrackPackFetch(FetchAudioPackAsync(command.Get(IdKey, string.Empty), command.Get(TestHookDispatcher.LanguageKey, string.Empty)));
 			return StartedOutcome;
 		}
 
@@ -192,6 +199,34 @@ internal static partial class DinoTestCommands
 		catch (Exception ex)
 		{
 			Log($"{InstallAudioPackName} failed {TestHookLog.FaultSummary(ex)}");
+		}
+	}
+
+	// Slice 258 (Debug only): installs the book's REAL pre-made pack for a language from the live store listing (the route a starter's pack travels, same as a store book's), through the pack
+	// store. Logs "HOOK fetch-audio-pack ok <book> <lang> v<n>" or "failed <reason>" (no network, the listing has no pack for the book, an install error).
+	private static async Task FetchAudioPackAsync(string id, string language)
+	{
+		try
+		{
+			IServiceProvider services = IPlatformApplication.Current!.Services;
+			StoreClient store = services.GetRequiredService<StoreClient>();
+			string storeId = await StoreIdOfAsync(services.GetRequiredService<IStoryLibrary>(), id.Trim());
+			StoreListing listing = await store.ListAsync(CancellationToken.None);
+			StoreItem? item = listing.Items.FirstOrDefault(i => string.Equals(i.Id, storeId, StringComparison.OrdinalIgnoreCase));
+			string key = BundledTranslations.Key(language);
+			AudioPackInfo? pack = item?.AudioIn(key);
+			if (item is null || pack is null)
+			{
+				Log($"{FetchAudioPackName} failed " + (item is null ? $"book {storeId} not in the listing ({listing.Status}, {listing.Items.Count} items)" : $"no listed pack for {storeId} in language '{key}'"));
+				return;
+			}
+
+			bool ok = await store.InstallPacksAsync(item, [(key, pack)], null, CancellationToken.None);
+			Log(ok ? $"{FetchAudioPackName} ok {storeId} {key} v{pack.Version}" : $"{FetchAudioPackName} failed install");
+		}
+		catch (Exception ex)
+		{
+			Log($"{FetchAudioPackName} failed {TestHookLog.FaultSummary(ex)}");
 		}
 	}
 
@@ -377,6 +412,29 @@ internal static partial class DinoTestCommands
 		return true;
 	}
 
+	// A fetch-audio-pack download runs in the background; open-book waits for it (bounded) so the read finds the pack, instead of the flow guessing a delay. Never faults (the fetch catches its own errors).
+	// Every unfinished fetch is kept (not just the latest); a finished or failed one removes itself.
+	private static readonly System.Collections.Concurrent.ConcurrentDictionary<Task, byte> s_fetchesInFlight = new();
+	private static readonly TimeSpan PackFetchWait = TimeSpan.FromSeconds(120);
+
+	private static void TrackPackFetch(Task fetch)
+	{
+		s_fetchesInFlight[fetch] = 0;
+		_ = fetch.ContinueWith(done => s_fetchesInFlight.TryRemove(done, out _), TaskScheduler.Default);
+	}
+
+	private static async Task WaitForPackFetchAsync()
+	{
+		try
+		{
+			await Task.WhenAll(s_fetchesInFlight.Keys).WaitAsync(PackFetchWait);
+		}
+		catch (TimeoutException)
+		{
+			Log($"{FetchAudioPackName} still running after {PackFetchWait.TotalSeconds:0} s");
+		}
+	}
+
 	private static async Task OpenBookAsync(string id, int page, string play)
 	{
 		if (id.Trim().Length == 0)
@@ -385,6 +443,7 @@ internal static partial class DinoTestCommands
 			return;
 		}
 
+		await WaitForPackFetchAsync();
 		IServiceProvider services = IPlatformApplication.Current!.Services;
 		NavigationPage? root = await WaitForAsync(() => Task.FromResult(GalleryRoot()));
 		if (root is null)
