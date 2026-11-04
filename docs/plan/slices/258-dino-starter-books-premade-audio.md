@@ -49,6 +49,8 @@ From review (files `D:/ReadTheStupidText-worktrees/reviews/s258-high.md`, `s258-
 - Medium 5 (pack records go stale when text changes): skipped; same as high 4, see Follow-up.
 - Check pass, 5 findings, none applied, none blocking: 1 (test forces a pack per UI language), 2 (records not checked against upload; repeats high 3), 3 (120 s wait in the test-only `open-book`), 4 (case-insensitive id vs case-sensitive Worker folder; not hit by the four starters), 5 (stale pack after a text bump; repeats high 4).
 
+**Parked 2026-11-04 (night 2026-11-03-2349, wave 4):** PR #792 passed both reviews, a check pass and every CI check (green, mergeable), but `gh pr merge 792 --merge` was denied by the auto-mode classifier ("CI Bypass") in the headless session, so it is not merged and the 60 pack zips are not uploaded. Next: merge #792 (the merge needs an allow for `gh pr merge` in the night sessions), then run `pwsh tools/upload-store-story.ps1 <id>` for each starter after `BookBuilder build` copies the packs into `artifacts/store/<id>/`, then run `premade-audio-starter` on the emulator.
+
 Follow-up: make BookBuilder `check` flag a pack whose clip hashes no longer match the text.
 
 ## Not yet verified
