@@ -13,7 +13,7 @@ namespace ReadTheStupidText.Mobile.Shared.Crashes;
 /// while the switch is off or the build may not send, the rolling log, the run marker and the pending reports are not kept at all.
 /// One crash gives one report: a system report that repeats a managed one (Android's native abort, iOS MetricKit, the run marker) is dropped.
 /// </summary>
-public static class CrashReporter
+public static partial class CrashReporter
 {
     private const string RootFolder = "crashes";
     private const string PendingFolder = "pending";
@@ -83,6 +83,7 @@ public static class CrashReporter
         // The hooks are always installed: they write only while reportingAllowed, so a closed gate keeps them silent, and a gate that opens later in the run
         // (the Debug stub set by the scripted check, see GateChanged) needs them already in place.
         InstallHandlers();
+        CrashPlatform.HookMemoryTrace(); // lines are written only while the log gate is open, like every other line
         if (!BuildEligible())
         {
             DiscardAll();
@@ -125,6 +126,8 @@ public static class CrashReporter
     {
         window.Activated += (_, _) => SetRunning(true);
         window.Stopped += (_, _) => SetRunning(false);
+        AppTrace.AttachTo(Microsoft.Maui.Controls.Application.Current); // Slice 243 item 5: page, lifecycle and Back lines for the rolling log
+        AppTrace.AttachTo(window);
     }
 
     /// <summary>Re-reads the gate now (Debug: the scripted check has just set or cleared the stub mid-run). Never throws.</summary>

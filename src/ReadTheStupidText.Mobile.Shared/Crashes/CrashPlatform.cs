@@ -18,6 +18,16 @@ internal static class CrashPlatform
 #endif
     }
 
+    /// <summary>Starts the platform's memory-warning trace line (Slice 243 item 5). Never throws.</summary>
+    public static void HookMemoryTrace()
+    {
+#if ANDROID
+        AndroidLifecycleTrace.HookMemory();
+#elif IOS
+        IosLifecycleTrace.HookMemory();
+#endif
+    }
+
     /// <summary>Starts the platform's own delivery of crash diagnostics (iOS MetricKit); <paramref name="deliver"/> is called on a background thread.</summary>
     public static void StartNativeDelivery(Action<NativeCrash> deliver)
     {

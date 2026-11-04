@@ -273,6 +273,18 @@
   <data name="Version_Title" xml:space="preserve"><value>Versie</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Help Dino beter te maken</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>Verstuurt aantallen zoals "een boek uit de winkel is uitgelezen". Geen namen, geen id's, niets wat je hebt getypt. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik). Als de app crasht, kan hij ook een crashrapport sturen: de fout en een kort technisch logboek, nooit iets wat je hebt gelezen of getypt.</value></data>
+  <!-- Slice 249: Report a problem -->
+  <data name="ReportProblem_Title" xml:space="preserve"><value>Een probleem melden</value></data>
+  <data name="ReportProblem_Explain" xml:space="preserve"><value>Stuur ons het recente technische logboek van de app, zodat we kunnen zien wat er misging. Het bevat de geopende schermen, de ingedrukte knoppen en wat het voorlezen deed, plus de appversie, een globaal toesteltype en je land. Geen namen, geen boektitels, niets wat iemand typte. Het wordt alleen verstuurd als je op Versturen tikt.</value></data>
+  <data name="ReportProblem_Send" xml:space="preserve"><value>Versturen</value></data>
+  <data name="ReportProblem_Sending" xml:space="preserve"><value>Melding wordt verstuurd…</value></data>
+  <data name="ReportProblem_Sent" xml:space="preserve"><value>Verstuurd.</value></data>
+  <data name="ReportProblem_QuoteCode" xml:space="preserve"><value>Als je ons schrijft, noem dan deze code:</value></data>
+  <data name="ReportProblem_Copy" xml:space="preserve"><value>Kopiëren</value></data>
+  <data name="ReportProblem_Copied" xml:space="preserve"><value>Gekopieerd</value></data>
+  <data name="ReportProblem_Failed" xml:space="preserve"><value>De melding kon nu niet worden verstuurd. Ze blijft bewaard op deze telefoon en wordt later verstuurd, of je kunt het opnieuw proberen.</value></data>
+  <data name="ReportProblem_FailedNotKept" xml:space="preserve"><value>De melding kon nu niet worden verstuurd. Je kunt het opnieuw proberen.</value></data>
+  <data name="ReportProblem_TryAgain" xml:space="preserve"><value>Opnieuw proberen</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Leessnelheid</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Langzamer is makkelijker voor kleintjes</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · langzaam</value></data>

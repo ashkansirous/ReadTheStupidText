@@ -7,6 +7,7 @@ using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Crashes;
 using ReadTheStupidText.Mobile.Shared.Testing;
 
 namespace DinoReader.Testing;
@@ -444,7 +445,7 @@ internal static partial class DinoTestCommands
 			if (sentence > lastSentence)
 			{
 				session.SentenceChanged -= handler;
-				MainThread.BeginInvokeOnMainThread(session.Stop);
+				MainThread.BeginInvokeOnMainThread(() => session.Stop(TraceLines.ReadingReason.Other));
 			}
 		};
 		session.SentenceChanged += handler;

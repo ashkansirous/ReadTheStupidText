@@ -271,6 +271,18 @@
   <data name="Version_Title" xml:space="preserve"><value>バージョン</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Dino をよくするために協力する</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>「ストアの本が読み終わった」のような回数だけを送ります。名前も ID も、入力した内容も送りません。あわせて、お住まいの国と大まかな端末の種類（スマートフォンかタブレットか、メモリの範囲）も送ります。アプリが異常終了したときは、クラッシュレポートも送ることがあります。内容はエラーと短い技術ログで、読んだ内容や入力した内容は含まれません。</value></data>
+  <!-- Slice 249: Report a problem -->
+  <data name="ReportProblem_Title" xml:space="preserve"><value>問題を報告</value></data>
+  <data name="ReportProblem_Explain" xml:space="preserve"><value>アプリの最近の技術ログを送ってください。何がうまくいかなかったかを確認できます。開いていた画面、押したボタン、読み上げの動作に加えて、アプリのバージョン、おおよその端末の種類、お住まいの国が含まれます。名前や本のタイトル、入力された内容は含まれません。「送信」を押したときだけ送られます。</value></data>
+  <data name="ReportProblem_Send" xml:space="preserve"><value>送信</value></data>
+  <data name="ReportProblem_Sending" xml:space="preserve"><value>レポートを送信中…</value></data>
+  <data name="ReportProblem_Sent" xml:space="preserve"><value>送信しました。</value></data>
+  <data name="ReportProblem_QuoteCode" xml:space="preserve"><value>私たちに連絡するときは、このコードをお伝えください:</value></data>
+  <data name="ReportProblem_Copy" xml:space="preserve"><value>コピー</value></data>
+  <data name="ReportProblem_Copied" xml:space="preserve"><value>コピーしました</value></data>
+  <data name="ReportProblem_Failed" xml:space="preserve"><value>今はレポートを送れませんでした。このスマートフォンに保存され、後で送られます。もう一度試すこともできます。</value></data>
+  <data name="ReportProblem_FailedNotKept" xml:space="preserve"><value>今はレポートを送れませんでした。もう一度試してください。</value></data>
+  <data name="ReportProblem_TryAgain" xml:space="preserve"><value>もう一度試す</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>読み上げの速さ</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>ゆっくりのほうが小さな子には聞きやすいです</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0.5x · ゆっくり</value></data>

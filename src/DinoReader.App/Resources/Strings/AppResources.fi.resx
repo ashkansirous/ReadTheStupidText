@@ -273,6 +273,18 @@
   <data name="Version_Title" xml:space="preserve"><value>Versio</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Auta tekemään Dinosta parempi</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>Lähettää määriä, kuten "kaupan kirja luettiin loppuun". Ei nimiä, ei tunnisteita, ei mitään kirjoittamaasi. Mukana on myös maasi ja likimääräinen laitetyyppi (puhelin tai tabletti, muistin vaihteluväli). Jos sovellus kaatuu, se voi lähettää myös kaatumisraportin: virheen ja lyhyen teknisen lokin, ei koskaan mitään lukemaasi tai kirjoittamaasi.</value></data>
+  <!-- Slice 249: Report a problem -->
+  <data name="ReportProblem_Title" xml:space="preserve"><value>Ilmoita ongelmasta</value></data>
+  <data name="ReportProblem_Explain" xml:space="preserve"><value>Lähetä meille sovelluksen viimeisin tekninen loki, jotta näemme, mikä meni pieleen. Siinä näkyvät avatut näkymät, painetut painikkeet ja mitä lukeminen teki, sekä sovelluksen versio, karkea laitetyyppi ja maasi. Ei nimiä, ei kirjojen nimiä, ei mitään, mitä kukaan on kirjoittanut. Se lähetetään vain, kun painat Lähetä.</value></data>
+  <data name="ReportProblem_Send" xml:space="preserve"><value>Lähetä</value></data>
+  <data name="ReportProblem_Sending" xml:space="preserve"><value>Lähetetään ilmoitusta…</value></data>
+  <data name="ReportProblem_Sent" xml:space="preserve"><value>Lähetetty.</value></data>
+  <data name="ReportProblem_QuoteCode" xml:space="preserve"><value>Jos kirjoitat meille, mainitse tämä koodi:</value></data>
+  <data name="ReportProblem_Copy" xml:space="preserve"><value>Kopioi</value></data>
+  <data name="ReportProblem_Copied" xml:space="preserve"><value>Kopioitu</value></data>
+  <data name="ReportProblem_Failed" xml:space="preserve"><value>Ilmoitusta ei voitu lähettää juuri nyt. Se säilytetään tässä puhelimessa ja lähetetään myöhemmin, tai voit yrittää uudelleen.</value></data>
+  <data name="ReportProblem_FailedNotKept" xml:space="preserve"><value>Ilmoitusta ei voitu lähettää juuri nyt. Voit yrittää uudelleen.</value></data>
+  <data name="ReportProblem_TryAgain" xml:space="preserve"><value>Yritä uudelleen</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Lukunopeus</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Hitaampi on helpompaa pienille</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · hidas</value></data>

@@ -168,11 +168,15 @@ internal sealed class CrashSender(
         return Http;
     }
 
-    private static async Task<HttpStatusCode?> PostAsync(string body, string address)
+    // Slice 249: a user report is posted by the person's own press, with a Cancel that stops the request (a cancel, like a network failure, gives no status; the caller looks at its own token).
+    internal static Task<HttpStatusCode?> PostBodyAsync(string body, string address, CancellationToken cancel) => PostAsync(body, address, cancel);
+
+    private static async Task<HttpStatusCode?> PostAsync(string body, string address, CancellationToken cancel = default)
     {
         try
         {
-            using var timeout = new CancellationTokenSource(RequestTimeout);
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancel);
+            timeout.CancelAfter(RequestTimeout);
             using var content = new StringContent(body, Encoding.UTF8, "application/json");
             using HttpResponseMessage response = await ClientFor().PostAsync(new Uri(new Uri(address), CrashPath), content, timeout.Token).ConfigureAwait(false);
             return response.StatusCode;

@@ -29,6 +29,9 @@ public static class CrashKind
 
     /// <summary>iOS MetricKit hang diagnostic.</summary>
     public const string Hang = "hang";
+
+    /// <summary>A report a grown-up sent on purpose from "Report a problem" (Slice 249): the log tail and the build facts, no exception. Its message is <c>user report &lt;code&gt;</c> (the code is the reference to quote).</summary>
+    public const string UserReport = "user_report";
 }
 
 /// <summary>
