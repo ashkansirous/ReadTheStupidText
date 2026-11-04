@@ -3,6 +3,7 @@
 # APK or MSIX: a second agent, a fixer after a tester, or a rerun finds the finished build instead of making it again.
 # Outputs live in <worktrees folder>\_builds\<app>-<platform>-<key>\ (outside every repo; a few newest per worktree are kept).
 . (Join-Path $PSScriptRoot 'activity.ps1')
+. (Join-Path $PSScriptRoot '..\path-length.ps1')  # Slice 266: Assert-BuildPathLength for the emulator build
 
 # What a build reads. Documentation, tools, tests and the plan are not inputs, so editing them never invalidates a build.
 # Missing paths are skipped. A toolchain or workload change outside the repo is not visible to the key: use -Rebuild after one.
@@ -91,7 +92,7 @@ function Exit-BuildLock($Mutex) {
 }
 
 # The two locks a build takes, always in this order: one per build key (two agents with the same inputs build once; the second
-# finds the finished build) and one per checkout (two builds in one worktree share its obj folders, so they run one after the other). A build with its own
+# finds the finished build) and one per checkout and scope (two builds sharing a checkout's obj folders must pass the same scope, so they run one after the other; every caller now passes one). A build with its own
 # --artifacts-path (the phone builds) shares nothing with the others: it passes a $TreeScope (its variant), so only a second build of the same variant waits.
 function Enter-BuildLocks([string]$App, [string]$Platform, [string]$Key, [string]$TreeScope = '') {
     $sha = [Security.Cryptography.SHA1]::Create()
@@ -106,6 +107,12 @@ function Enter-BuildLocks([string]$App, [string]$Platform, [string]$Key, [string
 function Exit-BuildLocks($Locks) {
     foreach ($lock in @($Locks)) { Exit-BuildLock $lock }
 }
+
+# Slice 266: the emulator (Android) and Windows test builds each build into their own --artifacts-path (restore included), so they share no obj or bin folder
+# and the per-checkout lock is per scope, not per checkout. The scope names are short on purpose (aapt2 fails past the Windows path limit, APT2264).
+$script:TestArtifactsFolderName = '.artifacts'
+function Get-TestBuildScope([string]$Prefix, [string]$App) { return "$Prefix-$App" }
+function Get-TestBuildArtifactsPath([string]$Scope) { return Join-Path (Join-Path $script:ToolsRepoRoot $script:TestArtifactsFolderName) $Scope }
 
 # A fresh folder next to the build folder to build into; Publish-BuildDir renames it into place once the metadata file is in it.
 function New-BuildTempDir([string]$Dir) {
