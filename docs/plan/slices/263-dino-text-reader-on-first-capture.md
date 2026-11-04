@@ -1,6 +1,35 @@
-# Slice 263 — Dino: the page reader (text recognition) downloads on the first capture
+# Slice 263 — Dino: both apps about 50-60 MB; drop ML Kit translation from iPhone, download what is needed on first use
 
-*Planned 2026-11-04. Parked (night 2026-11-04-1441 wave 1, not claimed): on-demand reader mechanisms unproven, needs probe builds.* Dino Reader; Android and iOS alike. Read The Stupid Text shares the scanner code in Mobile.Shared and must keep working exactly as today.
+*Planned 2026-11-04. Rewritten 2026-11-04 ~21:05 to the user's actual goal* (the user: "what I asked you to change was to download whatever you need when you need the function the first time ... and the ml kit removal from IOS to bring the package size down to 50ish MB for both android and ios. I am fine with both being 60ish as well"). The earlier text below (an Android page-reader goal) was a misreading by the main session and is kept only as the record. Dino Reader, Android and iOS. Read The Stupid Text keeps working exactly as today.
+
+## Measured (released builds, 2026-11-04)
+
+- **iPhone `DinoReader-1.101.0.ipa`, 94.5 MB download:** the app binary 32.3 MB; **`TranslateMLKit.framework` 24.5 MB** (Google ML Kit translation, used to translate a parent's own book on the phone); `SherpaOnnxC.framework` (voices) 9.4 MB; **the four starter books 12.5 MB** (three-little-pigs 3.6, good-enough 3.1, tortoise-and-hare 3.0, gingerbread-man 2.8); PdfPig and OpenXml (reading PDF and Word files) about 2.3 MB; the rest .NET. The iPhone has **no** page-reader (text recognition) files: it uses Apple Vision, part of iOS.
+- **Android `DinoReader-1.101.0.apk`, 60.3 MB:** ML Kit text recognition 5.2 MB (kept, user: fine at 60 MB); the starters about 13 MB.
+
+## Target and how it is reached
+
+| | Today | After Slice 261 (no starters) | After this slice |
+|---|---|---|---|
+| Android | 60.3 MB | about 47 MB | about 47 MB |
+| iPhone | 94.5 MB | about 82 MB | **about 57 MB** |
+
+- Starter books out: Slice 261 (in progress). Book audio in the family's 1-3 languages only, downloaded with the book: Slice 267's rule. Both already planned.
+- **This slice: the iPhone stops shipping Google ML Kit translation (24.5 MB).** A parent's own book is translated on the phone with Apple's built-in Translation framework instead, whose language models iOS downloads the first time they are needed. Apple does not allow downloading program code after install, so the ML Kit framework itself cannot be "downloaded later"; replacing it is the way to drop it.
+
+## Work
+
+- [ ] iOS: an `ITranslator` on Apple's Translation framework (on-device; models downloaded on first use with the app's wait note "Getting the <language> translation…", Cancel); `TranslateMLKit` and `MLKitBinding` removed from the iOS build. How to call it from .NET (a small Swift wrapper bound into the app, or an existing binding) and the minimum iOS version it needs are read from the docs first (a library-docs check was started 2026-11-04 ~21:05; its answer is written here). A language Apple does not translate (check Farsi) says so in the book, as Android does without a pack.
+  *Docs check 2026-11-04 ~21:10 (library-docs agent; Apple's pages did not load, so the Apple facts are from memory and UNCONFIRMED):* .NET for iOS has no binding for Apple's Translation framework (checked in github.com/dotnet/macios); it is Swift-only, so it needs a small Swift wrapper built on a Mac and bound with Native Library Interop (learn.microsoft.com/dotnet/communitytoolkit/maui/native-library-interop). Apple Translation needs iOS 18, and iOS 26 for a session without SwiftUI (unconfirmed); our minimum iOS is 15.5 (`DinoReader.App.csproj:37`, `Mobile.Shared.csproj:35`). **Apple Translation probably has no Farsi** (also possibly no da, fi, nb, sv) — unconfirmed; if true, this route loses own-book Farsi translation on iPhone.
+  *Second route (in the repo already):* downloadable translation model packs on the onnxruntime the app already ships, like `translation-en-ja` (ElanMT, Decision 171): drop ML Kit on iOS and fetch a model per language pair on first use (data, which Apple allows). Not checked: a usable model for every pair, Farsi first.
+  - [ ] Before building: confirm Farsi in Apple Translation's supported list, and check which pairs have an openly licensed model for the second route (no GPL; Slice 16 licence rule). Pick the route that keeps Farsi and every app language, write why here.
+- [ ] Android: unchanged (ML Kit translation stays; its models already download on first use).
+- [ ] Measure the iPhone and Android downloads after Slice 261 and this slice; write both numbers here. Target: about 50-60 MB each.
+- [ ] Tests: unit tests for the translator choice; iOS compile in CI; Android flows unchanged.
+
+## Not this slice (found 2026-11-04, waits for the user)
+
+- Capturing a Farsi, Arabic, Russian, Japanese or Chinese page reads no text on Android (Farsi and Arabic also on iPhone); see *Measured and found* below. Fixing it means downloadable page readers (the `ocr-*` packs Read The Stupid Text uses). Not asked for; recorded so it is not lost.
 
 **Touches:** `src/ReadTheStupidText.Mobile.Shared/ReadTheStupidText.Mobile.Shared.csproj`, `src/ReadTheStupidText.Mobile.Shared/Ocr/**`, `src/ReadTheStupidText.Mobile.Shared/Platforms/**`, `src/DinoReader.App/ScanPages.cs`, `src/DinoReader.App/StoryWizardPage.xaml.cs`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/capture-reader-download.yaml` (new), `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`, `docs/plan/slices/263-dino-text-reader-on-first-capture.md`.
 
