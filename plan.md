@@ -31,6 +31,7 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 263 | Dino: the page reader (text recognition) downloads on the first capture | planned | | | [263-dino-text-reader-on-first-capture.md](docs/plan/slices/263-dino-text-reader-on-first-capture.md) |
 | 264 | Dino: grown-ups reorder the shelf (iPhone-style reorder mode) | planned | | | [264-dino-gallery-reorder-mode.md](docs/plan/slices/264-dino-gallery-reorder-mode.md) |
 | 265 | Dino: pre-made audio clips in Git LFS; book changes only publish to the store (after 261) | planned | | | [265-dino-audio-clips-in-git-lfs.md](docs/plan/slices/265-dino-audio-clips-in-git-lfs.md) |
+| 266 | Waves: stop wasting the minutes between fix attempts (python probe hang, one Windows build per attempt, no cross-app build wait, no waiting on unrelated device runs) | planned | | | [266-wave-fix-attempt-speed.md](docs/plan/slices/266-wave-fix-attempt-speed.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
