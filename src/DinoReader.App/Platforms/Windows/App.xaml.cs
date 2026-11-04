@@ -14,6 +14,8 @@ public partial class App : MauiWinUIApplication
 		SystemTheme.RegisterReader(IsSystemDark);
 		_uiSettings.ColorValuesChanged += (_, _) => SystemTheme.Raise();
 		this.UnhandledException += OnUnhandledException;
+		this.DebugSettings.LayoutCycleTracingLevel = Microsoft.UI.Xaml.LayoutCycleTracingLevel.High; // Slice 264 diagnosis, temporary
+		LayoutCycleTrace.Start();
 	}
 
 	private const int TraceStackFrames = 30;

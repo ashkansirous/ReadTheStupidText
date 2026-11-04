@@ -59,6 +59,8 @@ internal sealed class ShelfReorderView : Grid
 		_surface.GestureRecognizers.Add(drop);
 		_scroll.Content = _surface;
 		_scroll.SizeChanged += OnScrollSizeChanged;
+		TraceSize("scroll", _scroll);
+		TraceSize("surface", _surface);
 		this.Add(_scroll, 0, 2);
 	}
 
@@ -127,6 +129,7 @@ internal sealed class ShelfReorderView : Grid
 		_lit = ShelfReorderTiles.LitSpot(_grid.TileWidth, _grid.TileHeight - TitleSpacing - titleHeight);
 		_lit.IsVisible = false;
 		_surface.Children.Add(_lit);
+		TraceSize("lit", _lit);
 		AddEntries(tiles, liftedId);
 		IsVisible = true;
 		Dispatcher.Dispatch(Relayout);
@@ -143,6 +146,7 @@ internal sealed class ShelfReorderView : Grid
 			_entries.Add(entry);
 			AttachGestures(entry);
 			_surface.Children.Add(view);
+			TraceSize($"tile{i}", view);
 			ShelfReorderTiles.ApplyLift(entry);
 			view.ZIndex = entry.Lifted ? 1 : 0;
 			ShelfReorderTiles.StartWiggle(entry, i, Dispatcher);
@@ -287,6 +291,10 @@ internal sealed class ShelfReorderView : Grid
 	}
 
 	// Sizes and places every tile from the scroll view's width; a rotation or the first show lands here, and nothing is animated.
+	// Slice 264 diagnosis: names the element and its size on every size change.
+	private static void TraceSize(string name, VisualElement element) =>
+		element.SizeChanged += (_, _) => ReorderTrace.Step($"size {name} {element.Width:0.##}x{element.Height:0.##} req={element.WidthRequest:0.##}x{element.HeightRequest:0.##}");
+
 	private void Relayout()
 	{
 		if (_closing || _entries.Count == 0 || _scroll.Width <= 0)
@@ -296,6 +304,7 @@ internal sealed class ShelfReorderView : Grid
 
 
 		_lastLayoutWidth = _scroll.Width;
+		ReorderTrace.Step($"relayout scroll={_scroll.Width:0.##}x{_scroll.Height:0.##} surface={_surface.Width:0.##}x{_surface.Height:0.##}");
 		_grid = ShelfOrderGrid.Fit(_scroll.Width, _columns, _sidePadding, _gap, _gap, _titleHeight, TitleSpacing);
 		_surface.HeightRequest = _grid.ContentHeight(_entries.Count) + BottomRoom;
 		double coverHeight = _grid.TileHeight - TitleSpacing - _titleHeight;
