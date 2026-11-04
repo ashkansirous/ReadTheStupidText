@@ -3,7 +3,6 @@
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
 ### Slice 260: Dino: tags on store books (Hot, Popular, Recommended, New) ([slice](slices/260-dino-store-tags.md))
-- Emulator flow `.maestro/dino/store-tags.yaml` after merge and `publish-store`: it needs the tags in the live list first; Lion and Mouse must show their Hot badge on screen without scrolling.
 - Tablet store flow `dino-landscape-store-tablet` on the tablet AVD (it failed on the phone AVD).
 - iOS run (compile only so far).
 - Badge look at 130-200% system font size and the slim (sideways) store card with a tagged book (extra badge row vs title and cover centre).

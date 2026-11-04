@@ -1,6 +1,6 @@
 # Slice 263 — Dino: the page reader (text recognition) downloads on the first capture
 
-*Planned 2026-11-04.* Dino Reader; Android and iOS alike. Read The Stupid Text shares the scanner code in Mobile.Shared and must keep working exactly as today.
+*Planned 2026-11-04. Parked (night 2026-11-04-1441 wave 1, not claimed): on-demand reader mechanisms unproven, needs probe builds.* Dino Reader; Android and iOS alike. Read The Stupid Text shares the scanner code in Mobile.Shared and must keep working exactly as today.
 
 **Touches:** `src/ReadTheStupidText.Mobile.Shared/ReadTheStupidText.Mobile.Shared.csproj`, `src/ReadTheStupidText.Mobile.Shared/Ocr/**`, `src/ReadTheStupidText.Mobile.Shared/Platforms/**`, `src/DinoReader.App/ScanPages.cs`, `src/DinoReader.App/StoryWizardPage.xaml.cs`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/capture-reader-download.yaml` (new), `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`, `docs/plan/slices/263-dino-text-reader-on-first-capture.md`.
 
@@ -40,6 +40,10 @@ Source: `docs/design/dino-reader/Dino Reader Batch 47 Onboarding.dc.html`, 2 fra
 
 **Open point: iPhone (mock question 4).** If iOS uses Apple's built-in reader, nothing downloads there and 170-171 are Android only. Slice already says to check first; this is not "Android only" by choice. **Default:** check first, write the answer in this file; if built in, ship no screen on iOS.
 **Open point: wait stage.** `WaitStage` has a fixed list; a download-with-bar stage for the reader may need a new stage. **Default:** reuse the download stage with a language-name line.
+
+## Parked (night 2026-11-04-1441 wave 1, not claimed)
+
+Design depends on mechanisms nobody has proven, plus one product gap. Code check on origin/main: Dino recognises page text through `OcrPositionedTextExtractor` (src/DinoReader.App/MauiProgram.cs:129) over the shared `LanguageImageTextExtractor` with the bundled ML Kit Latin model (Mobile.Shared.csproj:60, Android) or Apple Vision (iOS, built in, nothing to download). Dino has no OCR pack download at all (`OcrPackInstaller` and `ScanPackFlow` are RTST-only), so "every alphabet downloads on first capture" means a new Dino pack path too. Leaving ML Kit out for Dino only needs a per-app MSBuild switch on a shared library that restores once (two separate builds of Mobile.Shared), unproven. The on-demand variant `Xamarin.GooglePlayServices.MLKit.Text.Recognition` 119.0.1.9 exists, but whether `ModuleInstallClient` is bound in .NET, how to cancel it, and what happens without Play services (emulator) are unconfirmed. Next: a probe build of the per-app switch and a ModuleInstall probe on the emulator, then a written design.
 
 ## Verification
 

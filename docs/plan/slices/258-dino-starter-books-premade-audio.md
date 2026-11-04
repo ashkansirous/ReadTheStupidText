@@ -63,6 +63,8 @@ Follow-up: make BookBuilder `check` flag a pack whose clip hashes no longer matc
 
 ## Not yet verified
 
+(Passed 2026-11-04, night 2026-11-04-1441 wave 1, emulator: `premade-audio-starter` and `premade-audio-plays`; all 60 starter packs uploaded live.)
+
 - iOS run (compile only so far).
 - Windows head run.
 
