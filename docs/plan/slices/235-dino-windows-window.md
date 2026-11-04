@@ -180,6 +180,8 @@ Part B emulator run (after merging main): PASS 3/3 (leave-book-stops-read, read-
 
 #### Part C: parked (night 2026-11-03-2349 wave 1, two device strikes)
 
+*Moved back to planned by the night's final feedback loop (2026-11-04, user answer 2026-11-01). Park reason kept: two VM strikes on the Windows shelf; the next attempt starts with a design pass of the shelf layout, not a third patch.*
+
 *Parked 2026-11-04: VM checks fail after two fixes in the same area (the Windows shelf). Work in progress is on draft PR #776 (branch `feat/s235c-windows-polish`), unmerged and not reviewed in its last form.* Built: `WindowShapeSeam` (Core, unit-tested; off Windows it returns main's values), Windows shelf grid and column counts, hover and focus rings, Tab stops, right-click sheet, focus return, Settings Up/Down/Right (`DinoKeyMap`), the speed hint string, `ActivateFocused` observed, `WinUiCrashTrace` (logs WinUI `UnhandledException` to window-trace.log), new VM check `dino-desktop-polish.ps1`. Reviews: `s235c-high.md`, `s235c-medium.md`, `s235c-check1-medium.md`, `s235c-check2-medium.md` under `D:/ReadTheStupidText-worktrees/reviews/` (the code changed after check 2, so the gate must run again).
 
 - **Strike 1 (VM run 1-2):** the app died 90 ms after the shelf switched from the grown-ups corner to the kids' shelf: `Microsoft.UI.Xaml.LayoutCycleException` "Layout cycle detected" (HResult 0x802B0014, read by `WinUiCrashTrace`; evidence `reviews/s235c-vm-crash2/`). Which element looped was not proven; suspects were the list cap (`MaximumWidthRequest` 1600 + `HorizontalOptions Center` on the CollectionView), the margin change in the same pass, and ring Borders added to the tile template in its `Loaded` handler.
