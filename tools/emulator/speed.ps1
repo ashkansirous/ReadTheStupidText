@@ -1,5 +1,6 @@
 # Slice 241: faster emulator runs. Dot-sourced by common.ps1, not run. Pure parts are covered by test-speed.ps1.
 . (Join-Path $PSScriptRoot '..\detached-process.ps1')
+. (Join-Path $PSScriptRoot 'dialog-guard.ps1')   # Slice 253 item 1: hide_error_dialogs and CLOSE_SYSTEM_DIALOGS
 
 # ---- item 2: boot from a snapshot of a clean state
 # Line 7 of start-warm.ps1 said "no snapshots" because a resumed snapshot carried stale app and system state (Slice 162). The snapshot used now is taken once, right after a

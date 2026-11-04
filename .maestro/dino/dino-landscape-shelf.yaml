@@ -36,6 +36,8 @@ name: Shelf, corner and book sheet in landscape keep their state through a rotat
     timeout: 15000
 - assertVisible:
     id: GalleryGrownUps
+# Slice 253 item 2: the picture the contact sheet (tools/emulator/contact-sheet.ps1) puts beside mock frame 110.
+- takeScreenshot: shot-110-kids-shelf
 # Into the corner while still sideways: the rail carries the one line and the way back.
 - launchApp:
     stopApp: false
@@ -59,6 +61,8 @@ name: Shelf, corner and book sheet in landscape keep their state through a rotat
       visible: Storyteller voices are ready
     commands:
       - tapOn: "OK"
+# Slice 253 item 2: beside mock frame 111 (the grown-ups' corner with its side rail); taken after the note is dismissed so a modal is not in the shot.
+- takeScreenshot: shot-111-corner
 # A book's sheet opens as a centred card, Read now still first.
 - tapOn:
     id: TileMore
