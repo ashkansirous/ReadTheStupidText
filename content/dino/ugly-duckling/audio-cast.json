@@ -2,32 +2,32 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Mother Duck": {
       "voice": "Sulafat",
-      "style": "a warm, soft, loving mother's voice, gentle for young children, standard Tehrani accent",
+      "style": "a warm, soft, loving mother's voice, gentle for young children",
       "direction": "loving, calm and kind"
     },
     "Duckling": {
       "voice": "Achird",
-      "style": "a young, soft, warm boy's voice for young children, standard Tehrani accent",
+      "style": "a young, soft, warm boy's voice for young children",
       "direction": "gentle, shy and curious"
     },
     "Dilly": {
       "voice": "Cleo",
-      "style": "a young, bright, bouncy little girl's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, bouncy little girl's voice for young children",
       "direction": "giggly and bubbly"
     },
     "Hen": {
       "voice": "Laomedeia",
-      "style": "a bright, upbeat, friendly grown-up woman's voice for young children, standard Tehrani accent",
+      "style": "a bright, upbeat, friendly grown-up woman's voice for young children",
       "direction": "cheerful, kind and a little bustling"
     },
     "Swan": {
       "voice": "Iapetus",
-      "style": "a warm, clear, kind grown-up man's voice for young children, standard Tehrani accent",
+      "style": "a warm, clear, kind grown-up man's voice for young children",
       "direction": "kind and welcoming, gently proud"
     }
   },
@@ -85,5 +85,12 @@
       "occurrence": 2,
       "direction": "shy and hopeful"
     }
-  ]
+  ],
+  "audioPacks": {
+    "fa": {
+      "version": 1,
+      "hash": "f77d0ef0615d4d7455449db135420f5c5cae4d0d3daeafbcbc77ca7c37c83a84",
+      "bytes": 2351378
+    }
+  }
 }

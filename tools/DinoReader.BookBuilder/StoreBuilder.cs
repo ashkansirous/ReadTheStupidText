@@ -103,6 +103,11 @@ internal static class StoreBuilder
             ["titles"] = TitlesOf(spec, story),
             ["creditsByLanguage"] = spec.CreditsByLanguage is null ? null! : new SortedDictionary<string, string>(spec.CreditsByLanguage.ToDictionary(c => c.Key, c => c.Value), StringComparer.Ordinal),
         };
+        if (!string.IsNullOrEmpty(spec.Stem) && AudioPacks.MetaOf(Books.All.FirstOrDefault(b => b.Stem == spec.Stem)) is { } audio)
+        {
+            meta["audio"] = audio; // Slice 246 B2: the book's audio packs (language to version and size), from its audio-cast.json; the Worker offers only those whose zip is uploaded
+        }
+
         if (spec.ContentHash is not null)
         {
             meta["contentHash"] = spec.ContentHash; // Slice 239: publish-store compares it with the live store's

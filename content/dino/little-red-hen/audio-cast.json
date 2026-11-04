@@ -2,27 +2,27 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Hen": {
       "voice": "Sulafat",
-      "style": "a warm, bright grown-up mother hen's voice for young children, standard Tehrani accent",
+      "style": "a warm, bright grown-up mother hen's voice for young children",
       "direction": "busy, cheerful and kind"
     },
     "Dog": {
       "voice": "Puck",
-      "style": "a young, bouncy, upbeat voice for young children, standard Tehrani accent",
+      "style": "a young, bouncy, upbeat voice for young children",
       "direction": "lazy and sleepy, can't be bothered"
     },
     "Cat": {
       "voice": "Leda",
-      "style": "a young, soft, youthful voice for young children, standard Tehrani accent",
+      "style": "a young, soft, youthful voice for young children",
       "direction": "lazy and dreamy, can't be bothered"
     },
     "Duck": {
       "voice": "Fenrir",
-      "style": "a young, squeaky, excitable voice, a silly storybook duck for young children, standard Tehrani accent",
+      "style": "a young, squeaky, excitable voice, a silly storybook duck for young children",
       "direction": "silly and squawky, can't be bothered"
     }
   },
@@ -93,5 +93,12 @@
       "source": "Washing-up is fun when we do it together!",
       "direction": "happy and giggly, glad to be helping"
     }
-  ]
+  ],
+  "audioPacks": {
+    "fa": {
+      "version": 1,
+      "hash": "6541305190e951cc0a87ce9c72983ac4f0f0bd7309f29afd97acdadfd29fa068",
+      "bytes": 1982851
+    }
+  }
 }

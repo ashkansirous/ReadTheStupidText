@@ -30,6 +30,16 @@ from clip_manifest import Manifest, text_hash
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 KEY = {"GEMINI_API_KEY": "test-key"}
+REAL_ACCENTS = dict(audio_cast.ACCENTS)
+FARSI_STYLES = pathlib.Path(__file__).parent / "testdata" / "farsi-delivery-styles.json"
+
+
+def setUpModule():
+    audio_cast.ACCENTS.clear()  # the tests' toy casts compare exact styles; the accent tests put the real table back with patch.dict
+
+
+def tearDownModule():
+    audio_cast.ACCENTS.update(REAL_ACCENTS)
 NARRATOR = {"voice": "Hali", "style": "warm storyteller"}
 CAST_DATA = {"version": 1, "narrator": NARRATOR,
              "characters": {"Wolf": {"voice": "Elio", "style": "deep", "direction": "sly"}, "Pip": {"voice": "Cleo", "style": "bouncy"}},
@@ -110,7 +120,7 @@ class Base(unittest.TestCase):
         log = pacing.UsageLog(os.path.join(self.tmp, "usage.json"), clock=self.clock)
         pacer = pacing.Pacer(log, rpm, rpd, max_requests, clock=self.clock, sleep=self.clock.sleep)
         folder = os.path.join(self.tmp, "book", "fa")
-        return generate.Generator(adapter, cast or audio_cast.AudioCast(dict(CAST_DATA, lines=[])), folder, pacer, "book", "fa", fmt, ffmpeg, log=lambda *_: None)
+        return generate.Generator(adapter, cast or checked(audio_cast.AudioCast(dict(CAST_DATA, lines=[])), []), folder, pacer, "book", "fa", fmt, ffmpeg, log=lambda *_: None)
 
 
 class GeminiTests(unittest.TestCase):
@@ -235,6 +245,9 @@ class CastTests(unittest.TestCase):
         cast = audio_cast.AudioCast(CAST_DATA)
         with self.assertRaises(audio_cast.CastError):
             cast.delivery(sentence(3, "y", "Wolf"))
+        no_lines = audio_cast.AudioCast({k: v for k, v in CAST_DATA.items() if k != "lines"})
+        with self.assertRaises(audio_cast.CastError):
+            no_lines.delivery(sentence(0, "x"))  # no line entries: still must not drop the language's accent silently
         for bad in (None, "FA", "fa-IR", ""):
             with self.assertRaises(audio_cast.CastError):
                 cast.check([sentence(3, "y", "Wolf")], bad)
@@ -288,6 +301,33 @@ class CastTests(unittest.TestCase):
         self.assertEqual("شالاپ، شالاپ، شالاپ!", cast.say_for(by_index[68]))
         self.assertEqual("من یه وان گُنده پر از آب سرد و کف‌کفی گذاشتم زیر دودکش.", cast.say_for(by_index[66]))
         self.assertEqual("پیم با یه لبخند گُنده گفت:", cast.say_for(by_index[80]))
+
+
+class AccentTests(unittest.TestCase):
+    """Slice 246 A8: the accent is a per-language line added when the delivery is built, not part of any cast's style."""
+
+    def test_every_casts_farsi_delivery_is_byte_identical_to_the_one_recorded_before_the_accent_moved(self):
+        pinned = json.loads(FARSI_STYLES.read_text(encoding="utf8"))  # the style of every voice entry as the casts held it before A8
+        casts = sorted((REPO / "content" / "dino").glob("*/audio-cast.json"))
+        self.assertEqual(sorted(pinned), [c.parent.name for c in casts])
+        with unittest.mock.patch.dict(audio_cast.ACCENTS, REAL_ACCENTS):
+            for path in casts:
+                cast = audio_cast.load(str(path))
+                cast.language = "fa"
+                self.assertEqual(pinned[path.parent.name]["narrator"], cast.styled(cast.narrator["style"]), path.parent.name)
+                self.assertEqual(pinned[path.parent.name]["characters"], {n: cast.styled(e["style"]) for n, e in cast.characters.items()}, path.parent.name)
+
+    def test_no_cast_style_carries_an_accent_any_more(self):
+        for path in (REPO / "content" / "dino").glob("*/audio-cast.json"):
+            self.assertNotIn("accent", path.read_text(encoding="utf8"), path.parent.name)
+
+    def test_other_languages_get_no_accent_and_farsi_the_tehrani_one(self):
+        dump = [sentence(0, "x")]
+        with unittest.mock.patch.dict(audio_cast.ACCENTS, REAL_ACCENTS):
+            fa = checked(audio_cast.AudioCast(dict(CAST_DATA, lines=[])), dump, "fa").delivery(dump[0])
+            en = checked(audio_cast.AudioCast(dict(CAST_DATA, lines=[])), dump, "en").delivery(dump[0])
+        self.assertEqual("warm storyteller, standard Tehrani accent", fa.prompt)
+        self.assertEqual("warm storyteller", en.prompt)
 
 
 class ManifestTests(Base):

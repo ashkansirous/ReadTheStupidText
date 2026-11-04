@@ -2,27 +2,27 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Pip": {
       "voice": "Cleo",
-      "style": "a young, bouncy child's voice for young children, standard Tehrani accent",
+      "style": "a young, bouncy child's voice for young children",
       "direction": "cheerful, bouncy and a little cheeky"
     },
     "Pop": {
       "voice": "Puck",
-      "style": "a young, bright, upbeat child's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, upbeat child's voice for young children",
       "direction": "bright and eager"
     },
     "Pim": {
       "voice": "Achird",
-      "style": "a young, soft, friendly child's voice for young children, standard Tehrani accent",
+      "style": "a young, soft, friendly child's voice for young children",
       "direction": "calm, warm and sensible"
     },
     "Wolf": {
       "voice": "Elio",
-      "style": "a deep, rough grown-up voice, storybook wolf, not too scary for young children, standard Tehrani accent",
+      "style": "a deep, rough grown-up voice, storybook wolf, not too scary for young children",
       "direction": "sly and sweet-talking"
     }
   },

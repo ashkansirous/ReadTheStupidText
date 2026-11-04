@@ -2,37 +2,37 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Granny": {
       "voice": "Sulafat",
-      "style": "a warm, soft, older woman's voice, a loving granny, for young children, standard Tehrani accent",
+      "style": "a warm, soft, older woman's voice, a loving granny, for young children",
       "direction": "warm and loving"
     },
     "Grandpa": {
       "voice": "Umbriel",
-      "style": "a warm, deep, older man's voice, a jolly grandpa, for young children, standard Tehrani accent",
+      "style": "a warm, deep, older man's voice, a jolly grandpa, for young children",
       "direction": "warm and jolly"
     },
     "Gingerbread Man": {
       "voice": "Puck",
-      "style": "a young, bouncy, bright child's voice for young children, standard Tehrani accent",
+      "style": "a young, bouncy, bright child's voice for young children",
       "direction": "bouncy, cheeky and full of fun"
     },
     "Cow": {
       "voice": "Achernar",
-      "style": "a soft, warm, gentle grown-up voice, a friendly cow, for young children, standard Tehrani accent",
+      "style": "a soft, warm, gentle grown-up voice, a friendly cow, for young children",
       "direction": "gentle and friendly"
     },
     "Horse": {
       "voice": "Laomedeia",
-      "style": "a bright, upbeat, bouncy grown-up voice, a friendly horse, for young children, standard Tehrani accent",
+      "style": "a bright, upbeat, bouncy grown-up voice, a friendly horse, for young children",
       "direction": "lively and friendly"
     },
     "Fox": {
       "voice": "Achird",
-      "style": "a warm, friendly grown-up voice, a kind storybook fox, for young children, standard Tehrani accent",
+      "style": "a warm, friendly grown-up voice, a kind storybook fox, for young children",
       "direction": "kind, warm and reassuring"
     }
   },

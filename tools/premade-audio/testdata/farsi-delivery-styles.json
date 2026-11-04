@@ -1,0 +1,146 @@
+{
+ "billy-goats-gruff": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Little Billy": "a tiny, squeaky, bright child's voice for young children, standard Tehrani accent",
+   "Middle Billy": "a young, bright, upbeat voice of a bigger boy for young children, standard Tehrani accent",
+   "Big Billy": "a big, deep, warm grown-up voice, gentle and kind, for young children, standard Tehrani accent",
+   "Troll": "a gruff, gravelly grown-up voice, storybook troll, grumpy but never scary for young children, standard Tehrani accent"
+  }
+ },
+ "elves-and-shoemaker": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Hans": "a warm, kind, older man's voice, a gentle grandfather-like shoemaker, for young children, standard Tehrani accent",
+   "Greta": "a warm, soft, older woman's voice, gentle and kind, for young children, standard Tehrani accent",
+   "Nib": "a tiny, bright, bouncy little elf girl's voice for young children, standard Tehrani accent",
+   "Nob": "a tiny, upbeat, bouncy little elf boy's voice for young children, standard Tehrani accent"
+  }
+ },
+ "freddy-and-the-slipper": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Freddy": "a young, bouncy, bright child's voice, a little fox boy, for young children, standard Tehrani accent",
+   "Mummy": "a warm, soft, kind mother's voice for young children, standard Tehrani accent",
+   "Tummy": "a deep, rumbly, booming funny voice, a hungry tummy, silly and never scary for young children, standard Tehrani accent"
+  }
+ },
+ "gingerbread-man": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Granny": "a warm, soft, older woman's voice, a loving granny, for young children, standard Tehrani accent",
+   "Grandpa": "a warm, deep, older man's voice, a jolly grandpa, for young children, standard Tehrani accent",
+   "Gingerbread Man": "a young, bouncy, bright child's voice for young children, standard Tehrani accent",
+   "Cow": "a soft, warm, gentle grown-up voice, a friendly cow, for young children, standard Tehrani accent",
+   "Horse": "a bright, upbeat, bouncy grown-up voice, a friendly horse, for young children, standard Tehrani accent",
+   "Fox": "a warm, friendly grown-up voice, a kind storybook fox, for young children, standard Tehrani accent"
+  }
+ },
+ "goldilocks": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Goldilocks": "a young, bright, bouncy little girl's voice for young children, standard Tehrani accent",
+   "Papa Bear": "a big, deep, booming but warm father bear's voice, never scary for young children, standard Tehrani accent",
+   "Mama Bear": "a warm, soft, motherly grown-up voice for young children, standard Tehrani accent",
+   "Baby Bear": "a young, soft, friendly little boy's voice for young children, standard Tehrani accent"
+  }
+ },
+ "good-enough": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Hazelnut": "a young, bright, warm voice for young children, standard Tehrani accent"
+  }
+ },
+ "jack-and-the-beanstalk": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Jack": "a young, bright, upbeat little boy's voice for young children, standard Tehrani accent",
+   "Mother": "a warm, soft, gentle mum's voice for young children, standard Tehrani accent",
+   "Giant": "a deep, big, jolly grown-up voice, a friendly storybook giant, never scary for young children, standard Tehrani accent",
+   "Peddler": "a cheerful, twinkly old lady's voice, a funny little peddler, for young children, standard Tehrani accent"
+  }
+ },
+ "lion-and-mouse": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Lion": "a big, warm, rumbly grown-up voice, a kind storybook lion king, never scary for young children, standard Tehrani accent",
+   "Mouse": "a young, tiny, bright and squeaky voice for young children, standard Tehrani accent"
+  }
+ },
+ "little-red-hen": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Hen": "a warm, bright grown-up mother hen's voice for young children, standard Tehrani accent",
+   "Dog": "a young, bouncy, upbeat voice for young children, standard Tehrani accent",
+   "Cat": "a young, soft, youthful voice for young children, standard Tehrani accent",
+   "Duck": "a young, squeaky, excitable voice, a silly storybook duck for young children, standard Tehrani accent"
+  }
+ },
+ "peter-rabbit": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Mrs. Rabbit": "a warm, soft grown-up mother's voice for young children, standard Tehrani accent",
+   "Peter": "a young, bright, bouncy child's voice for young children, standard Tehrani accent",
+   "Mr. McGregor": "a gravelly old gardener's voice, grumpy but kind underneath, never scary for young children, standard Tehrani accent",
+   "Robin": "a young, lively, chirpy little bird's voice for young children, standard Tehrani accent",
+   "Flopsy": "a young, bright, warm child's voice for young children, standard Tehrani accent"
+  }
+ },
+ "red-riding-hood": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Red Riding Hood": "a young, bright, bouncy child's voice for young children, standard Tehrani accent",
+   "Mum": "a warm, soft grown-up mother's voice for young children, standard Tehrani accent",
+   "Wolf": "a young, friendly storybook wolf's voice, never scary for young children, standard Tehrani accent",
+   "Grandma": "a warm, soft, mature grandmother's voice for young children, standard Tehrani accent",
+   "Woodcutter": "a big, booming, kind grown-up man's voice for young children, standard Tehrani accent"
+  }
+ },
+ "three-little-pigs": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Pip": "a young, bouncy child's voice for young children, standard Tehrani accent",
+   "Pop": "a young, bright, upbeat child's voice for young children, standard Tehrani accent",
+   "Pim": "a young, soft, friendly child's voice for young children, standard Tehrani accent",
+   "Wolf": "a deep, rough grown-up voice, storybook wolf, not too scary for young children, standard Tehrani accent"
+  }
+ },
+ "tortoise-and-hare": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Hare": "a young, excitable, bouncy voice for young children, standard Tehrani accent",
+   "Tortoise": "a gentle, warm grown-up voice, slow and calm, for young children, standard Tehrani accent",
+   "Owl": "a warm, wise old voice, a little sleepy, for young children, standard Tehrani accent",
+   "Squirrel": "a young, bright, bouncy voice for young children, standard Tehrani accent",
+   "Hedgehog": "a young, upbeat, warm voice for young children, standard Tehrani accent",
+   "Frog": "a young, upbeat, squeaky little frog's voice for young children, standard Tehrani accent"
+  }
+ },
+ "town-mouse-country-mouse": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Town Mouse": "a young, bright, bouncy girl's voice for young children, standard Tehrani accent",
+   "Country Mouse": "a young, soft, warm boy's voice for young children, standard Tehrani accent"
+  }
+ },
+ "ugly-duckling": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Mother Duck": "a warm, soft, loving mother's voice, gentle for young children, standard Tehrani accent",
+   "Duckling": "a young, soft, warm boy's voice for young children, standard Tehrani accent",
+   "Dilly": "a young, bright, bouncy little girl's voice for young children, standard Tehrani accent",
+   "Hen": "a bright, upbeat, friendly grown-up woman's voice for young children, standard Tehrani accent",
+   "Swan": "a warm, clear, kind grown-up man's voice for young children, standard Tehrani accent"
+  }
+ },
+ "x-marks-the-treasure": {
+  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
+  "characters": {
+   "Seagull": "a bright, upbeat, squawky grown-up bird's voice, funny and friendly for young children, standard Tehrani accent",
+   "Kathryn": "a bold, bright, cheerful grown-up woman's voice, a kind pirate captain for young children, standard Tehrani accent",
+   "Izzy": "a young, bright, bouncy girl's voice for young children, standard Tehrani accent",
+   "Billy": "a young, bright, upbeat boy's voice for young children, standard Tehrani accent",
+   "Pancake Polly": "a warm, bubbly grown-up woman's voice, a jolly pirate cook for young children, standard Tehrani accent"
+  }
+ }
+}
