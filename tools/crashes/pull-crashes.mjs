@@ -4,6 +4,11 @@
 // and print them grouped by exception type and top frame, with the counts and the newest log tail of each group.
 //
 //   node tools/crashes/pull-crashes.mjs [--app dino|rtst|both] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--top 15] [--tail 12] [--out DIR] [--kind managed,native] [--channel store,testflight]
+//   node tools/crashes/pull-crashes.mjs --code K7QX-2MRD [--app dino|rtst|both] [--from YYYY-MM-DD] [--to YYYY-MM-DD]
+//
+// --code (Slice 249): one "Report a problem" report by the code the person quotes (dash and case ignored). It looks up crashes/<app>/<day>/report-<CODE>.json by prefix, newest day first
+// (default: the last 90 days, the retention), and prints the report's fields and its whole log tail. Exit 1 when none is found. The normal listing groups the crashes and lists
+// the user reports apart, one line each.
 //
 // Defaults: both apps, the last 7 days (UTC), the 15 biggest groups, a 12-line log tail, reports saved under <temp>/rtst-crashes. Read-only means the script only lists and gets objects, never writes (the login it uses is the user's general wrangler login, not a read-only credential).
 //
@@ -232,14 +237,90 @@ export function groupReports(reports) {
 
 const counts = (map) => Object.entries(map).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}:${v}`).join(" ");
 
-function printGroups(app, reports, top, tailLines) {
+// Slice 249: a "Report a problem" report is kind user_report with the message `user report <CODE>` (8 letters and digits, no 0 O 1 I L); it is kept as
+// crashes/<app>/<day>/report-<CODE>.json. The code is typed as shown (K7QX-2MRD) or not: dash, spaces and case are ignored.
+export const USER_REPORT_KIND = "user_report";
+const USER_REPORT_CODE = /^[A-HJ-KM-NP-Z2-9]{8}$/;
+const USER_REPORT_PREFIX = "report-";
+const CODE_LOOKBACK_DAYS = 89;
+
+export function normalizeCode(text) {
+  return String(text ?? "").replace(/[-\s]+/g, "").toUpperCase();
+}
+
+export function isValidCode(text) {
+  return USER_REPORT_CODE.test(normalizeCode(text));
+}
+
+// The R2 key prefix a day's report with this code is stored under (the list call is by prefix, so no other report is read).
+export function userReportPrefix(app, day, code) {
+  return `${PREFIX}${app}/${day}/${USER_REPORT_PREFIX}${normalizeCode(code)}`;
+}
+
+export const isUserReport = (report) => report?.kind === USER_REPORT_KIND;
+
+// Crashes and user reports are shown apart: the normal listing groups only the crashes and lists the user reports below, one line each.
+export function splitUserReports(reports) {
+  return { crashes: reports.filter((r) => !isUserReport(r)), userReports: reports.filter(isUserReport) };
+}
+
+export function codeOf(report) {
+  return /^user report ([A-Z0-9]+)$/.exec(String(report?.message ?? ""))?.[1];
+}
+
+export function userReportLine(report) {
+  const code = codeOf(report) ?? "(no code)";
+  return `${code.length === 8 ? `${code.slice(0, 4)}-${code.slice(4)}` : code}  ${report.minute}  ${report.platform} ${report.version} ${report.channel}  country ${report.country ?? "?"}${report.session ? `  session ${report.session}` : ""}`;
+}
+
+// One report in full: its fields, then the whole log tail.
+export function formatUserReport(report) {
+  const fields = ["app", "platform", "version", "channel", "kind", "minute", "country", "session"].map((name) => `${name}: ${report[name] ?? ""}`);
+  const device = report.device ? `device: ${JSON.stringify(report.device)}` : "device: (none)";
+  return [`user report ${codeOf(report) ?? ""}`, ...fields, device, "log tail:", String(report.logTail ?? "")].join("\n");
+}
+
+async function findUserReport(session, apps, code, from, to) {
+  for (const app of apps) {
+    for (const day of daysBetween(from, to).reverse()) {
+      const keys = (await listKeys(session, userReportPrefix(app, day, code))).filter((k) => k.endsWith(".json"));
+      for (const key of keys) {
+        const report = await getReportOrSkip(session, key);
+        if (report) return { key, report };
+      }
+    }
+  }
+  return undefined;
+}
+
+async function printOneReport(session, args, apps, today) {
+  if (!isValidCode(args.code)) throw new Error(`"${args.code}" is not a report code: 8 letters and digits, like K7QX-2MRD (no 0, O, 1, I or L).`);
+  const to = args.to ?? today;
+  const from = args.from ?? new Date(Date.parse(`${to}T00:00:00Z`) - CODE_LOOKBACK_DAYS * DAY_MS).toISOString().slice(0, 10);
+  const found = await findUserReport(session, apps, args.code, from, to);
+  if (!found) {
+    console.error(`No report with code ${normalizeCode(args.code)} between ${from} and ${to} (apps: ${apps.join(", ")}).`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`${found.key}\n`);
+  console.log(formatUserReport(found.report));
+}
+
+function printGroups(app, allReports, top, tailLines) {
+  const { crashes: reports, userReports } = splitUserReports(allReports);
   console.log(`\n=== ${app}: ${reports.length} report(s) ===`);
+  if (userReports.length > 0) console.log(`(plus ${userReports.length} user report(s), listed after the crashes)`);
   for (const group of groupReports(reports).slice(0, top)) {
     console.log(`\n${group.count} x ${group.key}`);
     console.log(`   platforms ${counts(group.platforms)} | versions ${counts(group.versions)} | channels ${counts(group.channels)} | newest ${group.newest.minute}`);
     if (group.newest.message) console.log(`   message: ${String(group.newest.message).slice(0, 300)}`);
     const tail = String(group.newest.logTail ?? "").split("\n").slice(-tailLines);
     if (tail.length > 0 && tail[0] !== "") console.log(`   log tail (newest report):\n${tail.map((l) => `     ${l}`).join("\n")}`);
+  }
+  if (userReports.length > 0) {
+    console.log(`\n--- ${app}: user reports (read one with --code <code>) ---`);
+    for (const report of userReports) console.log(`   ${userReportLine(report)}`);
   }
 }
 
@@ -250,6 +331,10 @@ async function main() {
   const to = args.to ?? today;
   const from = args.from ?? new Date(Date.parse(`${to}T00:00:00Z`) - 6 * DAY_MS).toISOString().slice(0, 10);
   const apps = args.app === "both" ? APPS : [args.app];
+  if (args.code !== undefined) {
+    await printOneReport(session, args, apps, today);
+    return;
+  }
   const kinds = args.kind?.split(",");
   const channels = args.channel?.split(",");
   const out = args.out ?? join(tmpdir(), "rtst-crashes");

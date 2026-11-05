@@ -88,7 +88,8 @@
   languages) was tried or skipped, and whether it was finished or skipped; that a grown-up chose which languages stories can be
   in (how many, from one to three, and where it was set, and each language added); that a child switched a story&rsquo;s
   language while reading (to which language); that a voice for one of those languages finished downloading, failed or was
-  cancelled (which language); and that the app was opened. Each count carries only: what happened; which free or starter book it was (its public story code) or just
+  cancelled (which language); which voice a reading used (the story&rsquo;s recorded audio, or the phone&rsquo;s own voice and, from a fixed list, why: no recorded audio on the phone,
+  its download failed, or it did not fit the text); that a download of a story&rsquo;s recorded audio started, finished or failed (and, from a fixed list, how it failed); and that the app was opened. Each count carries only: what happened; which free or starter book it was (its public story code) or just
   &ldquo;own&rdquo; for a book a grown-up added, never its title or text; the language; the one extra fact named
   above (such as the kind of source or the page range); whether a parent recording is on the book; the app version;
   the platform (Android, iPhone or Windows); and the date, with no time of day.
@@ -102,11 +103,13 @@
   not a location: the app never asks for location permission and never sends one, and the IP address itself is not
   stored. These are coarse ranges, not exact values, and nothing here is a name, an account, a device model or an identifier. They are not a guarantee of anonymity on their own, though: in a small country a rare combination of ranges could stand out, so they are used only to see the overall picture.</p>
   <p>  There is no name, account, advertising or device identifier, no install identifier, no IP address kept by the app, and
-  nothing a child typed, so a count carries nothing that names a child, a family or a device. The server (like any web
+  nothing a child typed, so a count carries nothing that names a child, a family or a device. The one number that goes
+  with the counts is a random session number: it is made new every time the app starts and is never reused for a later start. It lives in memory, and is also written only inside counts
+  still waiting in the app's local send queue; it is gone once those counts are sent. It cannot tell two sessions of one person apart. It only puts the counts of one start of the app in order. The server (like any web
   server) may see the IP address of the request, which the project does not read or store with the counts (only the approximate country it maps to, as described above). The counts are
   stored with Cloudflare (our processor) for about three months and read only as totals. The project can turn counting down or
   off from the server without an update. A grown-up can switch it off at any time under &ldquo;Help make Dino
-  better&rdquo; in Settings (behind the grown-ups gate); when it is off, nothing is sent. Test and development builds, and the test devices store review tools use, send no counts.</p>
+  better&rdquo; in Settings (behind the grown-ups gate); when it is off, nothing is sent. Development builds, emulators and the test devices store review tools use send no counts. Builds installed through TestFlight, and the copy Apple&rsquo;s App Review opens, send the same counts to a separate store for beta builds; they are never added to the counts of the published app.</p>
   <p><strong>Crash reports (Android and iPhone).</strong> If the app crashes or stops unexpectedly, it can send a crash report to
   this project&rsquo;s own server (dinoreader.sirous.uk) the next time it starts. It follows the same switch as the counts: a
   grown-up can turn it off under &ldquo;Help make Dino better&rdquo; in Settings (behind the grown-ups gate), and then nothing is kept or
@@ -120,6 +123,15 @@
   stop one connection sending too many reports). Reports are kept with Cloudflare (our processor), read only by the project to find and fix
   bugs, and are not shared or used for advertising or tracking. Test and development builds and the test devices store review tools use send
   none; builds installed through TestFlight do.</p>
+  <p><strong>Report a problem (Android and iPhone).</strong> In Settings, behind the grown-ups gate, there is a Report a problem page.
+  Nothing is sent until a grown-up presses Send on it, whatever the counts switch says. The report holds the same things as a crash
+  report without an error: the app and its version, the platform, whether the app came from the store or from TestFlight, the
+  app&rsquo;s recent technical log (32 KB at most; the app&rsquo;s recent technical log lines, which may include lines from earlier sessions, never a name, a story, a
+  page, a recording, anything a child typed, a book title, a file name or a picture), the time to the minute (UTC) and the same coarse
+  device ranges and country as the counts. It also holds a random 8-character code that the app shows after sending, so a grown-up can
+  quote it when writing to us; the code names that one report and nothing else (not the child, the phone or the install). It goes to
+  this project&rsquo;s own server (dinoreader.sirous.uk), is kept with Cloudflare (our processor), is read only by the project to find and
+  fix bugs, is deleted automatically after 90 days (as crash reports are), and is not shared or used for advertising or tracking.</p>
   <p><strong>Translation models (Android).</strong> When a story is read translated and the book has
   no built-in translation for that language, the phone downloads Google&rsquo;s on-device translation
   model for the language, once. The story text is translated on the phone and is never sent anywhere.</p>

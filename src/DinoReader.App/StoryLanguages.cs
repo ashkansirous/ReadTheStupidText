@@ -341,6 +341,35 @@ public sealed class StoryLanguagePacks
 		}
 	}
 
+	/// <summary>
+	/// Completes when the voice step of <paramref name="language"/> is over: it is installed, failed or given up, and neither downloading nor waiting for Wi-Fi or the internet (Slice 262: the shelf audio
+	/// run goes after it). Event driven, no polling: it listens to <see cref="Changed"/> first, then looks.
+	/// </summary>
+	public async Task WhenVoiceStepOverAsync(string language, CancellationToken cancel)
+	{
+		var over = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+		void Check(object? sender, EventArgs e)
+		{
+			if (!VoiceStepRunning(language))
+			{
+				over.TrySetResult();
+			}
+		}
+
+		Changed += Check;
+		try
+		{
+			Check(null, EventArgs.Empty);
+			await over.Task.WaitAsync(cancel);
+		}
+		finally
+		{
+			Changed -= Check;
+		}
+	}
+
+	private bool VoiceStepRunning(string language) => StateOf(language) == LanguageVoiceState.Downloading || IsWaitingForInternet(language) || IsWaitingForWifi(language);
+
 	/// <summary>Whether the automatic retry of <paramref name="language"/> failed too, so only the grown-up's Retry starts it again (Slice 182): the row shows Retry, not "carries on by itself".</summary>
 	public bool NeedsRetry(string language) => _resume.StateOf(ResumeKey(UiLanguage.Resolve(language))) == PackResumeState.NeedsUserRetry;
 
@@ -368,12 +397,12 @@ public sealed class StoryLanguagePacks
 	/// The sizes come from the catalogue, fetched behind <paramref name="wait"/> (shown after 500 ms, with Cancel, which drops the whole request) and given up after a
 	/// timeout, when the names are shown without sizes.
 	/// </summary>
-	public async Task RequestAsync(Page? host, IEnumerable<string> languages, WaitController? wait = null)
+	public async Task<VoiceRequestOutcome> RequestAsync(Page? host, IEnumerable<string> languages, WaitController? wait = null)
 	{
 		List<string> missing = [.. languages.Select(UiLanguage.Resolve).Distinct().Where(code => StateOf(code) == LanguageVoiceState.NotInstalled)];
 		if (missing.Count == 0)
 		{
-			return;
+			return VoiceRequestOutcome.NothingAsked;
 		}
 
 		if (host is not null)
@@ -386,13 +415,13 @@ public sealed class StoryLanguagePacks
 		if (!OnMobileDataOnly())
 		{
 			missing.ForEach(Start);
-			return;
+			return VoiceRequestOutcome.Started;
 		}
 
 		string? described = await DescribeAsync(missing, wait);
 		if (described is null)
 		{
-			return; // Cancel on the wait: nothing starts, nothing waits
+			return VoiceRequestOutcome.Cancelled; // Cancel on the wait: nothing starts, nothing waits
 		}
 
 		bool now = host is not null && await host.DisplayAlertAsync(
@@ -401,10 +430,11 @@ public sealed class StoryLanguagePacks
 		if (now)
 		{
 			missing.ForEach(code => Start(code, downloadNow: true));
-			return;
+			return VoiceRequestOutcome.DownloadNow;
 		}
 
 		WaitForWifi(missing);
+		return VoiceRequestOutcome.WaitForWifi;
 	}
 
 	private async Task<string> NotifyBodyAsync(IReadOnlyList<string> codes)

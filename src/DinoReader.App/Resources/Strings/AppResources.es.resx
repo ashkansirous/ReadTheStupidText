@@ -14,6 +14,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Esperando a Internet · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Esperando Wi-Fi · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Continúa solo cuando vuelvas a estar conectado.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>Descargando el audio en {0} de tus libros</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} aún no tiene audio en {1}. La voz lectora de Dino lo leerá.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} y {2} más aún no tienen audio en {1}. La voz lectora de Dino los leerá.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Esperando a internet…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Esperando al Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Preparando…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>Parte del audio en {0} aún no se pudo descargar. Dino lo intentará de nuevo más tarde.</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Reintentar</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>La descarga de la voz se corrompió. Se lee con la voz del teléfono. Toca para reintentar.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>El paquete de voces naturales no se puede usar. Se lee con la voz del teléfono.</value></data>
@@ -56,6 +63,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>Elegidos y con reparto para Dino</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Obtener</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Descargado</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>Tendencia</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>Popular</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>Recomendado</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>Nuevo</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} páginas · {1} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratis y sin cuenta. No se envía nada sobre ti ni sobre tu hijo.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Sin conexión</value></data>
@@ -107,11 +118,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>Preparando la voz de Dino</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>Voz: {0} · esto solo pasa una vez</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>Descargando…</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>Esperando en la estantería</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Elegir otro idioma</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>¡Listo para leer!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Cada personaje tiene su propia voz. Hay {0} cuentos en la estantería.</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Cada personaje tiene su propia voz. Hay un cuento en la estantería.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Cada personaje tiene su propia voz. Tus libros están en la estantería.</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>Elige tus primeros libros</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>Elige al menos dos. Puedes conseguir más en la tienda cuando quieras.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>Elige 2 libros para empezar</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>Elige 1 más</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>{0} elegidos · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>{0} elegidos</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>Consiguiendo tus libros…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>Libro {0} de {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Conéctate a Internet para elegir tus primeros libros</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino necesita dos libros antes de empezar. Activa el Wi-Fi o los datos móviles e inténtalo de nuevo.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Oír a Dino saludar</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>¡Hola! Soy Dino. Vamos a leer un cuento juntos.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Descubre lo que hace Dino</value></data>
@@ -126,8 +145,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Tras un candado, para añadir libros y voces.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>Leer un cuento juntos</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>Toca un libro y pulsa reproducir. Dino lo lee en voz alta e ilumina cada frase.</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>Consigue más libros</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>La tienda tiene más cuentos, listos para descargar.</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino abrió el libro. «Érase una vez…»</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Léelo con tu voz</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Grábate leyendo un cuento, página por página. Tu hijo puede escucharlo cuando quiera.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Añade tu propio libro</value></data>
@@ -163,6 +181,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Zona de adultos</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Solo los adultos ven esto. La estantería de tu hijo está a un toque.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Volver a la estantería de mi hijo</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>Reordenar</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Mantén pulsado un libro y arrástralo a otro lugar. La estantería de tu hijo muestra el mismo orden.</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>No se pudo guardar el nuevo orden</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Algo sigue usando el archivo. Toca Listo para intentarlo de nuevo, o Cancelar para mantener el orden anterior.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Leer ahora</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Opciones de {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>De la tienda</value></data>
@@ -224,8 +246,6 @@
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>Este libro</value></data>
-  <data name="Book_ShowOriginal" xml:space="preserve"><value>Mostrar el texto original</value></data>
-  <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Muestra las palabras en {0}. La voz sigue leyendo en {1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>Volver al cuento</value></data>
   <!-- /Slice 110 -->
   <!-- Slice 111 -->
@@ -272,6 +292,18 @@
   <data name="Version_Title" xml:space="preserve"><value>Versión</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Ayuda a mejorar Dino</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>Envía recuentos como "se terminó un libro de la tienda". Sin nombres, sin identificadores, nada de lo que escribiste. También añade tu país y un tipo de dispositivo aproximado (teléfono o tableta, rango de memoria). Si la app se cierra por un error, también puede enviar un informe de fallo: el error y un breve registro técnico, nunca nada de lo que leíste o escribiste.</value></data>
+  <!-- Slice 249: Report a problem -->
+  <data name="ReportProblem_Title" xml:space="preserve"><value>Informar de un problema</value></data>
+  <data name="ReportProblem_Explain" xml:space="preserve"><value>Envíanos el registro técnico reciente de la aplicación para que veamos qué salió mal. Indica las pantallas abiertas, los botones pulsados y lo que hizo la lectura, además de la versión de la aplicación, un tipo de dispositivo aproximado y tu país. Sin nombres, sin títulos de libros, nada escrito por nadie. Solo se envía cuando pulsas Enviar.</value></data>
+  <data name="ReportProblem_Send" xml:space="preserve"><value>Enviar</value></data>
+  <data name="ReportProblem_Sending" xml:space="preserve"><value>Enviando el informe…</value></data>
+  <data name="ReportProblem_Sent" xml:space="preserve"><value>Enviado.</value></data>
+  <data name="ReportProblem_QuoteCode" xml:space="preserve"><value>Si nos escribes, indica este código:</value></data>
+  <data name="ReportProblem_Copy" xml:space="preserve"><value>Copiar</value></data>
+  <data name="ReportProblem_Copied" xml:space="preserve"><value>Copiado</value></data>
+  <data name="ReportProblem_Failed" xml:space="preserve"><value>No se pudo enviar el informe ahora. Se guarda en este teléfono y se enviará más tarde, o puedes intentarlo de nuevo.</value></data>
+  <data name="ReportProblem_FailedNotKept" xml:space="preserve"><value>No se pudo enviar el informe ahora. Puedes intentarlo de nuevo.</value></data>
+  <data name="ReportProblem_TryAgain" xml:space="preserve"><value>Intentar de nuevo</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Velocidad de lectura</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Más despacio es más fácil para los pequeños</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · lento</value></data>

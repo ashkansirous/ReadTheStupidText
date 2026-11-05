@@ -20,6 +20,7 @@ $script:RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 
 # The emulator is one shared instance, so its state lives in the shared worktrees folder, not in any one worktree.
 function Get-SharedEmulatorDir {
+    if ($env:RTST_EMULATOR_STATE_DIR) { return $env:RTST_EMULATOR_STATE_DIR }   # self-test seam: an isolated state folder, so the real installed-app keys and leases are never read
     $parent = Split-Path $script:RepoRoot -Parent
     if ((Split-Path $parent -Leaf) -like '*-worktrees') { return Join-Path $parent '.emulator' }
     return Join-Path $parent ((Split-Path $script:RepoRoot -Leaf) + '-worktrees\.emulator')
@@ -231,9 +232,15 @@ function Format-CrashSummary([object[]]$Results) {
     return @(@($Results) | Where-Object { @($_.Crash).Count -gt 0 } | ForEach-Object { 'app crashed in {0}: {1}' -f $_.Name, (Get-FirstCrashLine $_.Crash) })
 }
 
+# The dump goes to a file on the device and is read with `exec-out cat`: `uiautomator dump /dev/tty` returns only the "dumped to" line from a non-tty host shell.
+$script:UiDumpDevicePath = '/sdcard/rtst-ui-dump.xml'
 function Get-UiDumpXml([scriptblock]$AdbCall = { param($a) Invoke-EmulatorAdbText $a }) {
     $null = & $AdbCall @('shell', 'am', 'force-stop', $script:MaestroDriverPackage)
-    return (& $AdbCall @('shell', 'uiautomator', 'dump', '/dev/tty'))
+    $null = & $AdbCall @('shell', 'rm', '-f', $script:UiDumpDevicePath)
+    $null = & $AdbCall @('shell', 'uiautomator', 'dump', $script:UiDumpDevicePath)
+    $xml = & $AdbCall @('exec-out', 'cat', $script:UiDumpDevicePath)
+    $null = & $AdbCall @('shell', 'rm', '-f', $script:UiDumpDevicePath)
+    return $xml
 }
 
 # Slice 225 item 21: TalkBack on the emulator without the Settings UI, so no permission dialog appears (the dialog stopped the Slice 226/231 TalkBack checks). It writes the two secure settings

@@ -2,17 +2,17 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Lion": {
       "voice": "Algenib",
-      "style": "a big, warm, rumbly grown-up voice, a kind storybook lion king, never scary for young children, standard Tehrani accent",
+      "style": "a big, warm, rumbly grown-up voice, a kind storybook lion king, never scary for young children",
       "direction": "big, warm and a little proud"
     },
     "Mouse": {
       "voice": "Leda",
-      "style": "a young, tiny, bright and squeaky voice for young children, standard Tehrani accent",
+      "style": "a young, tiny, bright and squeaky voice for young children",
       "direction": "quick, brave and kind"
     }
   },
@@ -137,5 +137,82 @@
       "source": "Night-night, big friend,",
       "direction": "sleepy and soft"
     }
-  ]
+  ],
+  "audioPacks": {
+    "ar": {
+      "version": 1,
+      "hash": "45904da3e6fd29588dc75affaabe413bfd969537945b5bb6a15efe290f036db3",
+      "bytes": 1910042
+    },
+    "da": {
+      "version": 1,
+      "hash": "17799da4212a930abe3210d30597596d69616ff1e300be82083a3edf8baed326",
+      "bytes": 1545591
+    },
+    "de": {
+      "version": 1,
+      "hash": "47b32aea1a2c0102331d63d7ca0336253aef8275c540362bf7b319baa562c550",
+      "bytes": 1664337
+    },
+    "en": {
+      "version": 1,
+      "hash": "1f3a1b2cac0dd27105ae0eb4f2a0f58baeaa09f64f673e23973510ea5007c340",
+      "bytes": 1657154
+    },
+    "es": {
+      "version": 1,
+      "hash": "e274b252406bcfa57861552ab36c5c10fe13029e56acd4250a7f2f76a79771a0",
+      "bytes": 1824510
+    },
+    "fa": {
+      "version": 1,
+      "hash": "297d1888cb0f46d1932da03080367aef320665f20b6fad319a8fad70276fa08b",
+      "bytes": 1740984
+    },
+    "fi": {
+      "version": 1,
+      "hash": "8dee54def477ff7193a0afd810b4701d1b262eef2134f7851155aeae01bb6878",
+      "bytes": 1740542
+    },
+    "fr": {
+      "version": 1,
+      "hash": "347875368d5a97dcbdd44e223e3ec0e519dc53fa3e1c9cb776c2478d205cf893",
+      "bytes": 1713761
+    },
+    "ja": {
+      "version": 1,
+      "hash": "9272ebe6ba2d5e06ed988c7c3bc84e74a8ecd7a80ad1a9f46875b90a1a800617",
+      "bytes": 1982789
+    },
+    "nb": {
+      "version": 1,
+      "hash": "3ff0e0a79c82827160c6e1dbfab772745e510a759aaba964f8401b727d558a03",
+      "bytes": 1647825
+    },
+    "nl": {
+      "version": 1,
+      "hash": "bc0dfbfe5fe3e78fc9cea1b59d4211efefaf3cb45cdf0b2fcb84afe0886d9d99",
+      "bytes": 1623004
+    },
+    "pt": {
+      "version": 1,
+      "hash": "3a7ff5f4aa50024a089afd0014a225e88c15013cb455c588b014c1b74066abd8",
+      "bytes": 1748945
+    },
+    "ru": {
+      "version": 1,
+      "hash": "0e057c256a99185d0a25a00883de38e08f69be3ff42e2de46b7fdc466e811fff",
+      "bytes": 1778274
+    },
+    "sv": {
+      "version": 1,
+      "hash": "f6f83e0d945505ba008ea6bdbd18c427d864f8b4183437492e724bd24c9dd468",
+      "bytes": 1702422
+    },
+    "zh": {
+      "version": 1,
+      "hash": "c7a8c8e05376a6e6cc650a94d3eed1af4013383d8c2a1c055a748dc5f53d01f1",
+      "bytes": 1674791
+    }
+  }
 }

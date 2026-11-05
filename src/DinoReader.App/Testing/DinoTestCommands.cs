@@ -7,6 +7,7 @@ using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Crashes;
 using ReadTheStupidText.Mobile.Shared.Testing;
 
 namespace DinoReader.Testing;
@@ -24,8 +25,15 @@ internal static partial class DinoTestCommands
 {
 	private const string Name = "open-book";
 	private const string EnterGrownUpName = "enter-grown-up";
+	private const string ShelfReorderMoveName = "shelf-reorder-move"; // Slice 264
+	private const string ShelfOrderResetName = "shelf-order-reset"; // Slice 264
+	private const string StoriesFolderName = "stories"; // same folder as MauiProgram.StoriesFolder
+	private const string ReorderFromKey = "from";
+	private const string ReorderToKey = "to";
 	private const string SetLanguageName = "set-language";
 	private const string StageBookUpdateName = "stage-book-update";
+	private const string InstallAudioPackName = "install-audio-pack";
+	private const string FetchAudioPackName = "fetch-audio-pack";
 	private const string StartedOutcome = "started";
 	private const string VoiceKey = "voice";
 	private const string VoiceOn = "1";
@@ -53,7 +61,7 @@ internal static partial class DinoTestCommands
 	internal static void Register()
 	{
 		TestHookDispatcher.AppCommands = Run;
-		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, VoiceKey, ForceKey, VoiceIdKey];
+		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, VoiceKey, ForceKey, VoiceIdKey, ModeKey, ReorderFromKey, ReorderToKey];
 	}
 
 	private static string? Run(TestHookCommand command)
@@ -69,9 +77,49 @@ internal static partial class DinoTestCommands
 			return StartedOutcome;
 		}
 
+		if (command.Name == InstallAudioPackName)
+		{
+			_ = InstallAudioPackAsync(command.Get(IdKey, string.Empty), command.Get(TestHookDispatcher.LanguageKey, string.Empty));
+			return StartedOutcome;
+		}
+
+		if (command.Name == FetchAudioPackName)
+		{
+			TrackPackFetch(FetchAudioPackAsync(command.Get(IdKey, string.Empty), command.Get(TestHookDispatcher.LanguageKey, string.Empty)));
+			return StartedOutcome;
+		}
+
+		if (command.Name == ImportTestBookName)
+		{
+			_ = ImportTestBookAsync(command.Get(IdKey, string.Empty));
+			return StartedOutcome;
+		}
+
+		if (command.Name == TestStoreName)
+		{
+			return SetTestStore(command.Get(ModeKey, string.Empty));
+		}
+
+		if (command.Name == ShelfAudioName)
+		{
+			return StartShelfAudio(command.Get(TestHookDispatcher.LanguageKey, string.Empty));
+		}
+
 		if (command.Name == BackupRecordingsName)
 		{
 			_ = BackupRecordingsAsync(command.Get(IdKey, string.Empty));
+			return StartedOutcome;
+		}
+
+		if (command.Name == ShelfReorderMoveName)
+		{
+			_ = ShelfReorderMoveAsync(command);
+			return StartedOutcome;
+		}
+
+		if (command.Name == ShelfOrderResetName)
+		{
+			ShelfOrderReset();
 			return StartedOutcome;
 		}
 
@@ -159,6 +207,95 @@ internal static partial class DinoTestCommands
 		}
 	}
 
+	// Slice 246 C2 (Debug only): installs a small fixture audio pack for a book on the shelf, through the real pack store (size check, unzip, completeness check, rename), so a flow can read the
+	// book with pre-made clips without the network. Every translated piece of the book's table for the language gets the same short bundled recording (the pig's), keyed by the piece text's hash,
+	// so a piece the table lacks (a speaker tag the app adds) is still read by the device voice. Logs "HOOK install-audio-pack ok <book> <lang> v1" or "failed <reason>".
+	private static async Task InstallAudioPackAsync(string id, string language)
+	{
+		try
+		{
+			IServiceProvider services = IPlatformApplication.Current!.Services;
+			Story? story = await FindWhenImportedAsync(services.GetRequiredService<IStoryLibrary>(), id.Trim());
+			IReadOnlyDictionary<string, string>? table = story is null ? null : BundledTranslations.TableFor(story, language);
+			if (story?.SourceId is not { } bookId || table is null)
+			{
+				Log($"{InstallAudioPackName} failed no book or no table for {language}");
+				return;
+			}
+
+			string key = BundledTranslations.Key(language);
+			string zip = await WriteFixturePackAsync(bookId, key, table.Values);
+			var pack = new AudioPackInfo(FixtureVersion, new FileInfo(zip).Length, "fixture");
+			PackInstall result = await services.GetRequiredService<AudioPackStore>().InstallAsync(bookId, key, pack, null, CancellationToken.None, new FixtureFetcher(zip));
+			Log(result == PackInstall.Installed || result == PackInstall.AlreadyInstalled ? $"{InstallAudioPackName} ok {bookId} {key} v{FixtureVersion}" : $"{InstallAudioPackName} failed {result}");
+		}
+		catch (Exception ex)
+		{
+			Log($"{InstallAudioPackName} failed {TestHookLog.FaultSummary(ex)}");
+		}
+	}
+
+	// Slice 258 (Debug only): installs the book's REAL pre-made pack for a language from the live store listing (the route a starter's pack travels, same as a store book's), through the pack
+	// store. Logs "HOOK fetch-audio-pack ok <book> <lang> v<n>" or "failed <reason>" (no network, the listing has no pack for the book, an install error).
+	private static async Task FetchAudioPackAsync(string id, string language)
+	{
+		try
+		{
+			IServiceProvider services = IPlatformApplication.Current!.Services;
+			StoreClient store = services.GetRequiredService<StoreClient>();
+			string storeId = await StoreIdOfAsync(services.GetRequiredService<IStoryLibrary>(), id.Trim());
+			StoreListing listing = await store.ListAsync(CancellationToken.None);
+			StoreItem? item = listing.Items.FirstOrDefault(i => string.Equals(i.Id, storeId, StringComparison.OrdinalIgnoreCase));
+			string key = BundledTranslations.Key(language);
+			AudioPackInfo? pack = item?.AudioIn(key);
+			if (item is null || pack is null)
+			{
+				Log($"{FetchAudioPackName} failed " + (item is null ? $"book {storeId} not in the listing ({listing.Status}, {listing.Items.Count} items)" : $"no listed pack for {storeId} in language '{key}'"));
+				return;
+			}
+
+			bool ok = await store.InstallPacksAsync(item, [(key, pack)], null, CancellationToken.None);
+			Log(ok ? $"{FetchAudioPackName} ok {storeId} {key} v{pack.Version}" : $"{FetchAudioPackName} failed install");
+		}
+		catch (Exception ex)
+		{
+			Log($"{FetchAudioPackName} failed {TestHookLog.FaultSummary(ex)}");
+		}
+	}
+
+	private const int FixtureVersion = 1;
+	private const string FixtureClipName = "fixture.m4a";
+
+	private static async Task<string> WriteFixturePackAsync(string bookId, string language, IEnumerable<string> texts)
+	{
+		string path = Path.Combine(FileSystem.CacheDirectory, $"fixture-pack-{bookId}-{language}.zip");
+		File.Delete(path);
+		using (var archive = new System.IO.Compression.ZipArchive(File.Create(path), System.IO.Compression.ZipArchiveMode.Create))
+		{
+			var entries = texts.Where(t => t.Any(char.IsLetterOrDigit)).Select((t, i) => new { index = i, hash = PremadeAudio.HashOf(t), clip = FixtureClipName });
+			var manifest = new { version = PremadeAudio.ManifestVersion, book = bookId, language, entries };
+			await using (Stream stream = archive.CreateEntry(PremadeAudio.ManifestFile).Open())
+			{
+				await System.Text.Json.JsonSerializer.SerializeAsync(stream, manifest);
+			}
+
+			await using Stream clip = archive.CreateEntry(FixtureClipName).Open();
+			await using Stream asset = await FileSystem.OpenAppPackageFileAsync(AnimalSoundClips.AssetNameOf(AnimalKind.Pig));
+			await asset.CopyToAsync(clip);
+		}
+
+		return path;
+	}
+
+	private sealed class FixtureFetcher(string zip) : IAudioPackFetcher
+	{
+		public Task FetchAsync(string url, string toPath, IProgress<long> bytesSoFar, CancellationToken cancel)
+		{
+			File.Copy(zip, toPath, overwrite: true);
+			return Task.CompletedTask;
+		}
+	}
+
 	// A slug, title or story id as the other hooks take (BookMatch) becomes the book's catalogue id, which is the store's id; an id the shelf does not know is passed on as typed.
 	private static async Task<string> StoreIdOfAsync(IStoryLibrary library, string id) =>
 		BookMatch.Find(await library.ListAsync(), id)?.SourceId ?? id;
@@ -194,6 +331,43 @@ internal static partial class DinoTestCommands
 		}
 
 		return false;
+	}
+
+	// Slice 264: stands in for the drag, which a Maestro swipe cannot make (the system drag starts on a long press). Opens the reorder mode if it is closed, then drops the book at 1-based position
+	// from before the one at to, through the same order code a drop uses. Logs "HOOK shelf-reorder-move moved <ids in the new order>" or "failed <reason>".
+	private static async Task ShelfReorderMoveAsync(TestHookCommand command)
+	{
+		try
+		{
+			NavigationPage? root = await WaitForAsync(() => Task.FromResult(GalleryRoot()));
+			if (root?.RootPage is not GalleryPage gallery || !int.TryParse(command.Get(ReorderFromKey, string.Empty), out int from) || !int.TryParse(command.Get(ReorderToKey, string.Empty), out int to))
+			{
+				Log($"{ShelfReorderMoveName} failed no gallery or bad from/to");
+				return;
+			}
+
+			string order = string.Empty;
+			await MainThread.InvokeOnMainThreadAsync(() => order = gallery.DebugReorderMove(from, to));
+			Log(order.Length == 0 ? $"{ShelfReorderMoveName} failed not in grown-up mode or position out of range" : $"{ShelfReorderMoveName} moved {order}");
+		}
+		catch (Exception ex)
+		{
+			Log($"{ShelfReorderMoveName} fault {TestHookLog.FaultSummary(ex)}");
+		}
+	}
+
+	// Slice 264: deletes the stored shelf order, so a flow starts from the default order whatever an earlier run saved. The shelf already on screen is not reloaded: the flow restarts the app after this. Logs "HOOK shelf-order-reset ok".
+	private static void ShelfOrderReset()
+	{
+		try
+		{
+			File.Delete(Path.Combine(FileSystem.AppDataDirectory, StoriesFolderName, ShelfOrder.FileName));
+			Log($"{ShelfOrderResetName} ok");
+		}
+		catch (Exception ex)
+		{
+			Log($"{ShelfOrderResetName} fault {TestHookLog.FaultSummary(ex)}");
+		}
 	}
 
 	private static async Task EnterGrownUpAsync()
@@ -308,6 +482,29 @@ internal static partial class DinoTestCommands
 		return true;
 	}
 
+	// A fetch-audio-pack download runs in the background; open-book waits for it (bounded) so the read finds the pack, instead of the flow guessing a delay. Never faults (the fetch catches its own errors).
+	// Every unfinished fetch is kept (not just the latest); a finished or failed one removes itself.
+	private static readonly System.Collections.Concurrent.ConcurrentDictionary<Task, byte> s_fetchesInFlight = new();
+	private static readonly TimeSpan PackFetchWait = TimeSpan.FromSeconds(120);
+
+	private static void TrackPackFetch(Task fetch)
+	{
+		s_fetchesInFlight[fetch] = 0;
+		_ = fetch.ContinueWith(done => s_fetchesInFlight.TryRemove(done, out _), TaskScheduler.Default);
+	}
+
+	private static async Task WaitForPackFetchAsync()
+	{
+		try
+		{
+			await Task.WhenAll(s_fetchesInFlight.Keys).WaitAsync(PackFetchWait);
+		}
+		catch (TimeoutException)
+		{
+			Log($"{FetchAudioPackName} still running after {PackFetchWait.TotalSeconds:0} s");
+		}
+	}
+
 	private static async Task OpenBookAsync(string id, int page, string play)
 	{
 		if (id.Trim().Length == 0)
@@ -316,6 +513,7 @@ internal static partial class DinoTestCommands
 			return;
 		}
 
+		await WaitForPackFetchAsync();
 		IServiceProvider services = IPlatformApplication.Current!.Services;
 		NavigationPage? root = await WaitForAsync(() => Task.FromResult(GalleryRoot()));
 		if (root is null)
@@ -444,7 +642,7 @@ internal static partial class DinoTestCommands
 			if (sentence > lastSentence)
 			{
 				session.SentenceChanged -= handler;
-				MainThread.BeginInvokeOnMainThread(session.Stop);
+				MainThread.BeginInvokeOnMainThread(() => session.Stop(ReadStopReason.Other));
 			}
 		};
 		session.SentenceChanged += handler;

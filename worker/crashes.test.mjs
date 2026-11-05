@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { CRASH_PATH, MAX_CRASH_BODY_BYTES, capHead, capTail, crashKey, handleCrash, isCrashPath, isDroppedReport, parseCrash, toCrashDataPoint } from "./crashes.ts";
+import { CRASH_PATH, MAX_CRASH_BODY_BYTES, capHead, capTail, crashKey, handleCrash, isCrashPath, isDroppedReport, parseCrash, toCrashDataPoint, userReportCode, userReportDay, userReportKey } from "./crashes.ts";
 import { parseAppConfig } from "./appconfig.ts";
 
 const report = {
@@ -19,6 +19,17 @@ const report = {
   minute: "2026-10-31T14:05Z",
   device: { osMajor: 26, formFactor: "phone", arch: "arm64", cores: "5-8", ram: "4-6" },
 };
+
+test("a valid session id is kept on the report and a malformed one is dropped, never the report (Slice 250)", () => {
+  const session = "0123456789abcdef0123456789abcdef";
+  assert.equal(parseCrash({ ...report, session }, "dino")?.session, session);
+  for (const bad of ["abc", session.toUpperCase(), session + "0", 5, null]) {
+    const parsed = parseCrash({ ...report, session: bad }, "dino");
+    assert.ok(parsed, String(bad));
+    assert.equal(Object.hasOwn(parsed, "session"), false, String(bad));
+  }
+  assert.equal(Object.hasOwn(parseCrash(report, "dino"), "session"), false);
+});
 
 const post = (body, headers = {}) =>
   new Request("https://dinoreader.sirous.uk/api/crash", { method: "POST", headers, body: typeof body === "string" ? body : JSON.stringify(body) });
@@ -68,10 +79,11 @@ test("two reports get two different random names, and nothing in the key or the 
   assert.doesNotMatch(everything, /203\.0\.113\.9|secret-agent/);
 });
 
-test("with the remote switch off nothing is read or written, and the answer is the same", async () => {
+test("with the remote switch off a crash report is a silent 204 and nothing is written; a body that is not provably a crash report is refused", async () => {
   const env = bindings();
-  const response = await handleCrash(post("not even json"), env, off, "dino");
+  const response = await handleCrash(post(report), env, off, "dino");
   assert.equal(response.status, 204);
+  assert.equal((await handleCrash(post("not even json"), env, off, "dino")).status, 400);
   assert.equal(env.objects.size, 0);
   assert.equal(env.points.length, 0);
 });
@@ -191,6 +203,95 @@ test("helpers: the path, the key and the drop rule", () => {
   const parsed = parseCrash(report, "dino");
   assert.equal(isDroppedReport(report, parsed), false);
   assert.equal(toCrashDataPoint(parsed, "NO").blobs[6], "NO");
+});
+
+// Slice 249: "Report a problem". A user report is the kind `user_report` with the message `user report <code>`, kept under crashes/<app>/<day>/report-<code>.json.
+const userReport = { ...report, kind: "user_report", exceptionType: "user_report", message: "user report K7QX2MRD", stack: "" };
+
+test("a user report is kept under report-<code> and counted once with its own kind", async () => {
+  const env = bindings();
+  const response = await handleCrash(post(userReport), env, on, "dino");
+  assert.equal(response.status, 204);
+  const [key, stored] = [...env.objects.entries()][0];
+  assert.match(key, /^crashes\/dino\/\d{4}-\d{2}-\d{2}\/report-K7QX2MRD\.json$/);
+  assert.equal(JSON.parse(stored.value).logTail, report.logTail);
+  assert.equal(env.points.length, 1);
+  assert.equal(env.points[0].indexes[0], "user_report");
+});
+
+test("a user report is filed under the day it was made, so a retry after midnight overwrites the same object", async () => {
+  const made = { ...userReport, minute: new Date(Date.now() - 60_000).toISOString().slice(0, 16) + "Z" };
+  const env = bindings();
+  assert.equal((await handleCrash(post(made), env, on, "dino")).status, 204);
+  assert.equal((await handleCrash(post(made), env, on, "dino")).status, 204);
+  assert.equal(env.objects.size, 1);
+  assert.ok([...env.objects.keys()][0].includes(`/${made.minute.slice(0, 10)}/report-K7QX2MRD.json`));
+});
+
+test("userReportDay trusts the report's own day within a day of now, and uses now's day otherwise", () => {
+  const now = new Date("2026-11-04T00:10:00Z");
+  assert.equal(userReportDay({ minute: "2026-11-03T23:58Z" }, now), "2026-11-03");
+  assert.equal(userReportDay({ minute: "2026-11-02T00:09Z" }, now), "2026-11-04", "more than a day old");
+  assert.equal(userReportDay({ minute: "2026-11-05T12:00Z" }, now), "2026-11-04", "more than a day ahead");
+});
+
+test("a user report without a valid code is refused, and an unknown kind still is", async () => {
+  for (const message of ["", "user report", "user report k7qx2mrd", "user report K7QX2MR", "user report K7QX2MRD9", "user report K7QX2MR0", "user report K7QX2MRO", "user report K7QX2MR1", "user report K7QX2MRI", "user report K7QX2MRL", "report K7QX2MRD", "user report K7QX-2MRD"]) {
+    const env = bindings();
+    assert.equal((await handleCrash(post({ ...userReport, message }), env, on, "dino")).status, 400, message);
+    assert.equal(env.objects.size, 0);
+  }
+  assert.equal((await handleCrash(post({ ...userReport, kind: "user-report" }), bindings(), on, "dino")).status, 400);
+  assert.equal((await handleCrash(post({ ...userReport, kind: "other" }), bindings(), on, "dino")).status, 400);
+});
+
+test("a crash report is not given a user report's name, and a user report's code is read only from a user report", () => {
+  assert.equal(userReportCode(parseCrash(userReport, "dino")), "K7QX2MRD");
+  assert.equal(userReportCode({ kind: "managed", message: "user report K7QX2MRD" }), null);
+  assert.equal(userReportKey("rtst", "2026-11-04", "K7QX2MRD"), "crashes/rtst/2026-11-04/report-K7QX2MRD.json");
+});
+
+test("with the remote switch off a user report is a 503 (the app says it could not send), a crash report is still a silent 204", async () => {
+  const userEnv = bindings();
+  assert.equal((await handleCrash(post(userReport), userEnv, off, "dino")).status, 503);
+  assert.equal(userEnv.objects.size, 0);
+  const crashEnv = bindings();
+  assert.equal((await handleCrash(post(report), crashEnv, off, "dino")).status, 204);
+  assert.equal(crashEnv.objects.size, 0);
+  const limited = bindings({ CRASH_LIMITER: { limit: async () => ({ success: false }) } });
+  assert.equal((await handleCrash(post(userReport), limited, off, "dino")).status, 429, "a user report over the limit while off is refused");
+  assert.equal((await handleCrash(post(report), limited, off, "dino")).status, 204, "a crash report over the limit while off stays a silent 204");
+});
+
+test("a user report is answered 2xx only after its R2 put succeeded; every other path is non-2xx", async () => {
+  const limited = () => bindings({ CRASH_LIMITER: { limit: async () => ({ success: false }) } });
+  const failing = bindings({ DOWNLOADS: { put: async () => { throw new Error("r2 down"); } } });
+  const cases = [
+    ["off", bindings(), off, userReport, 503],
+    ["off and limited", limited(), off, userReport, 429],
+    ["off and oversized", bindings(), off, "x".repeat(MAX_CRASH_BODY_BYTES + 1), 413],
+    ["off and unreadable", bindings(), off, "{not json", 400],
+    ["limited", limited(), on, userReport, 429],
+    ["unreadable", bindings(), on, "{not json", 400],
+    ["dropped device", bindings(), on, { ...userReport, version: "1.0.0" }, 422],
+    ["put error", failing, on, userReport, 503],
+    ["no bucket", bindings({ DOWNLOADS: undefined }), on, userReport, 503],
+    ["no config", bindings(), async () => { throw new Error("config down"); }, userReport, 503],
+  ];
+  for (const [name, env, flag, body, status] of cases) {
+    assert.equal((await handleCrash(post(body), env, flag, "dino")).status, status, name);
+    if (env.objects) assert.equal(env.objects.size, 0, name);
+  }
+  const kept = bindings();
+  assert.equal((await handleCrash(post(userReport), kept, on, "dino")).status, 204);
+  assert.equal(kept.objects.size, 1);
+});
+
+test("a user report from an unstamped version or an Intel device is dropped with a 422, so the app does not show a code", async () => {
+  const env = bindings();
+  assert.equal((await handleCrash(post({ ...userReport, version: "1.0.0" }), env, on, "dino")).status, 422);
+  assert.equal((await handleCrash(post({ ...userReport, device: { ...userReport.device, arch: "x64" }, platform: "android", channel: "store" }), env, on, "dino")).status, 422);
+  assert.equal(env.objects.size, 0);
 });
 
 test("the app config carries crashReports.enabled, off unless a literal true", () => {

@@ -2,13 +2,90 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Hazelnut": {
       "voice": "Leda",
-      "style": "a young, bright, warm voice for young children, standard Tehrani accent",
+      "style": "a young, bright, warm voice for young children",
       "direction": "warm and happy, a good friend"
+    }
+  },
+  "audioPacks": {
+    "ar": {
+      "version": 1,
+      "hash": "14df1c89e162d224a4f18f7f9c4615696bffc913c57656916e99bb9260a3c8df",
+      "bytes": 688623
+    },
+    "da": {
+      "version": 1,
+      "hash": "defbdb1dfa7485e210bd90181265e96ddf3434e8ef599c8673dfad32d3fe7b5e",
+      "bytes": 466594
+    },
+    "de": {
+      "version": 1,
+      "hash": "b5a80995748f4f8c8c9d0bbfc7f81bd353c8a226f5b5724ea9be55c2c74100db",
+      "bytes": 551648
+    },
+    "en": {
+      "version": 1,
+      "hash": "c579cc2b252a7c6e62a589887f2c9d303d7e50d3e0f12df371de173065e280c8",
+      "bytes": 526733
+    },
+    "es": {
+      "version": 1,
+      "hash": "346f91c4b8a1ee8e7c138add8f27d466437e84e3f773a5143ba56ceef88b10c1",
+      "bytes": 562483
+    },
+    "fa": {
+      "version": 1,
+      "hash": "d20b888ba967b5d4a6573849f02433e6a10076ed4cbe0f66ccddc23beaf36222",
+      "bytes": 559557
+    },
+    "fi": {
+      "version": 1,
+      "hash": "49116d72ad7e2f44677396bfeb6d15534fbcede9a9103dbf78ddda1eb982c693",
+      "bytes": 563382
+    },
+    "fr": {
+      "version": 1,
+      "hash": "aca93a4fe969ae08e9b8866dcde1df5aa15fe96f41f049dc10ae37894f0e33de",
+      "bytes": 501108
+    },
+    "ja": {
+      "version": 1,
+      "hash": "86330aa252e9102345c04e875249f0a64c9bfdfc4637251216dd1b928f55955c",
+      "bytes": 598402
+    },
+    "nb": {
+      "version": 1,
+      "hash": "2ac55d64367901be2ea66f2dc0b5216d25eed7aa6959608f8dee3c7f05f963f3",
+      "bytes": 509500
+    },
+    "nl": {
+      "version": 1,
+      "hash": "9ad7ab0b94b957f82552498d168614ba6fa20017f1f90abdababcdfed6f855b2",
+      "bytes": 488149
+    },
+    "pt": {
+      "version": 1,
+      "hash": "f91391380b82b9cfbbeb6bfb5d8777f4a7c75aac9530bad7ec8cbd47ec698939",
+      "bytes": 546241
+    },
+    "ru": {
+      "version": 1,
+      "hash": "4be3ada13aa270bb61da1d0f6932428e1866f6747740a98b55ab0d996e9eff9c",
+      "bytes": 645465
+    },
+    "sv": {
+      "version": 1,
+      "hash": "28715d62d1940918d0b85626db9056005d6d3c5122cca4b32076806d8dccd8f3",
+      "bytes": 546140
+    },
+    "zh": {
+      "version": 1,
+      "hash": "48f7d387eb37c164674c7e92a725e9448b9b05e2df622880d2757b622529abbc",
+      "bytes": 572908
     }
   }
 }

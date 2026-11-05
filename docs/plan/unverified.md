@@ -2,10 +2,125 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 268: Dino: remove "Show original text" from grown-up mode ([slice](slices/268-dino-remove-show-original-text.md))
+- The new flow `book-sheet-no-original.yaml` was not shown failing on the old build.
+- A book saved with the old flag on, read on a device.
+- Windows head.
+- iOS runtime (CI compiles iOS).
+
+### Slice 267: Dino bugs: books on the shelf keep the old voice; the first-run buttons overlap ([slice](slices/267-dino-old-voice-and-wizard-buttons.md))
+- The user's phone check (no phone tonight), including the "check first on the user's phone" item (app version, `dino.books.lastupdatecheck`, whether `audio-packs/<book>/` exists): the cause is from code and the emulator reproduction, not from the phone.
+- The upgrade-from-previous-release path (previous build, then install over it) is not scripted.
+- The layout check at font 1.0 and in landscape on every wizard and first-run screen: only the Record step at font 1.3 has a flow. On an emulator without a microphone the Record step may hide Try it.
+- The contact sheet of flow screenshots (`reviews/<slice>-shots/`) was not built.
+- Bug E on main: the first `fix/` merge is its first test; the wait step's `gh api` lookup has never run. Cost: a `fix/` merge no longer coalesces with later merges (one full release per fix merge, against the Actions quota rules in `.github/CLAUDE.md`).
+- iOS runtime and the XCUITest twins (`net10.0-ios` compiles; the XCUITest layout check does not exist).
+- The `read_voice` and failure-path log lines carry no messages or URLs: only the success lines were read.
+
+### Slice 264: Dino: grown-ups reorder the shelf ([slice](slices/264-dino-gallery-reorder-mode.md))
+- Windows mouse drag actually moving a tile, Done/Enter saving it and the order after a restart, Esc after a drag (a synthetic drag moved nothing; no drag trace lines).
+- A real scroll during a press cancelling the hold (the 4-book test shelf does not scroll).
+- iOS gestures (`PointerGestureRecognizer` touch on iOS).
+- Windows keyboard reorder (Space/arrows).
+- The 6-book 1,2,5,3,4,6 example on a device (unit-tested only).
+
+### Slice 262: Dino: adding a second language downloads the shelf books' audio in it ([slice](slices/262-dino-side-language-downloads-book-audio.md))
+- iOS run of the shelf-audio card and runner (compiles in CI only).
+- Kill-and-resume and offline mid-download on a device.
+- The mobile-data rule ("Download now" only) on a real phone.
+- The intro languages step path on a device.
+
+### Slice 266: Waves: stop wasting the minutes between fix attempts ([slice](slices/266-wave-fix-attempt-speed.md))
+- Item 5: a timed Windows fix attempt on a real slice (target under 6 minutes, against the measured 11.5-12.4).
+- A VM run reusing a package a fixer built in a fix round.
+
+### Slice 265: Dino: pre-made audio clips in Git LFS; book changes only publish to the store ([slice](slices/265-dino-audio-clips-in-git-lfs.md))
+- `dino-store.yml`'s first real run on main.
+- `packs.yml`'s first run with `lfs: false`.
+- `dino-starters.json` and `BookBuilderTests` still reference starters (follow-up after 261).
+
+### Slice 261: Dino: no starter books in the app; a first-run book picker ([slice](slices/261-dino-no-starters-first-run-book-picker.md))
+- Upgrade from the current release APK keeps the four books (the release signature differs from Debug).
+- iOS simulator run of the picker and first run.
+- The one-off Mono SIGSEGV on first-books-cancel (not reproduced in two later runs with the crash buffer captured).
+- The roughly 45 older flows were not all rerun (open-book, back-cover, premade-audio-plays, store-tags and grown-ups-button passed).
+- The covers row on the download wait and the intro caption were not checked by eye.
+
+### Slice 260: Dino: tags on store books (Hot, Popular, Recommended, New) ([slice](slices/260-dino-store-tags.md))
+- Tablet store flow `dino-landscape-store-tablet` on the tablet AVD (it failed on the phone AVD).
+- iOS run (compile only so far).
+- Badge look at 130-200% system font size and the slim (sideways) store card with a tagged book (extra badge row vs title and cover centre).
+- The 15 locale labels (`Store_Tag_*`) need a native read.
+- Badge text after an app-language switch with the store page open (review high 3, not confirmed).
+
+### Slice 259: Leftovers from night 2026-11-03-2349 ([slice](slices/259-night-2026-11-03-2349-leftovers.md))
+- Item 1: the mid-book wait on a slow real phone (overlay when above 500 ms); the emulator measured 540 ms to first sound with no overlay.
+- Item 1: why no overlay at 540 ms (about 40 ms over the 500 ms rule).
+- Item 4: the WER copy on a real crash (the scripted kill left `events.txt` and the trace tail only).
+- Item 4: `tools-selftests.yml`'s new crash-evidence step has not had its first CI run.
+- Follow-up, not done: document the new `exit_code_for` exit rule in `tools/premade-audio/README.md`.
+- Item 5: the keychain-lifetime cause is read from the log, not reproduced; confirmed only by the next signed Dino build passing after the `ios-signing.sh` change.
+
+### Slice 258: Dino: pre-made audio for the four starter books ([slice](slices/258-dino-starter-books-premade-audio.md))
+- iOS run (compile only so far).
+- Windows head run.
+
+### Slice 250: Dino usage: playback events and a session id new on every cold start ([slice](slices/250-dino-playback-events-and-session-id.md))
+
+- `seq` on a device (the Debug line has no `seq`; unit-tested only).
+- The `usage-playback-events` flow shown failing on origin/main (needs a rebuild).
+- iOS store build's first rows showing session ids and the new events.
+- Live Worker rows after the deploy.
+
+### Slice 249: Dino: "Report a problem" in the grown-ups' corner ([slice](slices/249-dino-report-a-problem.md))
+
+- Known gap, to fix in a follow-up: with the remote crash switch off, a report the page called "kept and sent later" can be wiped at the next app start (`CrashReporter.UserReport.cs:135`).
+- Sending a report from a TestFlight build and `pull-crashes.mjs --code <code>` on that real report.
+- The iOS log lines (page, reading, memory warning) on a device.
+- The rolling file on a device (the device run read the lines from logcat).
+- RTST logs no Back line on Android (Shell has no pop hook); not tried further.
+
+### Slice 256: Dino: `dump-sentences` works for picture books (Good Enough) ([slice](slices/256-good-enough-sentence-dump.md))
+
+- The dump index matches the app's sentence index on a device during premade-audio playback (Slice 246 C).
+- Item 3: Good Enough Farsi batch render (paid Gemini, needs `GEMINI_API_KEY`) not run; command in the slice file.
+
+### Slice 255: Dino: real animal recordings instead of voiced animal sound words ([slice](slices/255-dino-real-animal-sounds.md))
+
+- Farsi clip on a device (the device run's `lang=fa` launch may not have been applied to the running app).
+- Clip playback on iOS and on the Windows head (compiled only).
+- A possible double sound when a quote already says the animal's word in a language without a sound table (check2 #1).
+- Old premade dumps (Pigs, Wolf) predate the sound-entry skip and need regenerating before Slice 246 C uses them.
+- A fully cached run with no `Playing` state would not advance (same as origin/main).
+
+### Slice 257: Dino: a quote after "said Mouse." is the Mouse's, not the Lion's ([slice](slices/257-lion-and-mouse-speaker.md))
+
+- Listen to the new Farsi clip in `D:/ReadTheStupidText-worktrees/s246-audio/books-lion-and-mouse/`.
+- On a device, Lion and the Mouse reads the Mouse's line ("I didn't mean to wake you up. ...") in the Mouse's voice (no device run: pure Core logic, covered by the unit tests).
+
+### Slice 252: Release CI: a hung signed iOS build can't hold the release queue ([slice](slices/252-release-ios-build-timeout-and-speed.md))
+
+- Item 5 (forced short-timeout run) not run: a dispatched run shares the release concurrency group and a later merge would cancel it.
+- The first `main` run's job summary (timing block) and its numbers: not yet seen or written into item 3.
+- The upload retry on a real network blip: not seen; the step logs "Upload succeeded on attempt N" on success.
+- shellcheck of the new step scripts runs only in CI.
+
+### Slice 251: Dino usage from TestFlight goes to its own beta dataset ([slice](slices/251-dino-beta-usage-dataset.md))
+
+- A TestFlight build of Dino sends rows that land in `dino_usage_beta` and none in `dino_usage` (needs a real TestFlight install; no device run was made).
+- The Workers Builds deploy after the merge carries the `DINO_USAGE_BETA` binding.
+
+### Slice 254: Dino: speaker first in Farsi and Arabic, and animal sounds next to the animal's own words ([slice](slices/254-dino-speaker-first-and-sound-placement.md))
+
+- On a device: Three Little Pigs in Farsi reads «پیم گفت:» then the whole quote and «گرگ گفت:» before the wolf's words; English: the wolf's sound before "said Wolf", "Achoo!" in the wolf's voice.
+
 ### Slice 253: Final-loop leftovers, night 2026-11-01-2355 ([slice](slices/253-final-loop-leftovers-night-2026-11-01-2355.md))
 
 - Freddy and the Slipper: the Arabic, Russian, Japanese and Chinese spellings of Elham's name, by a native speaker (until now only in `docs/plan/notes/2026-11-01-freddy-and-the-slipper.md`).
 - The parallel illustration workflow (`dino-story-illustrator` modes setup / pages / finish, 3-4 at once, PR #687) has never been run: the first book drawn that way proves one lock, one stamp and matching place sheets.
+- Item 1: a forced "System UI isn't responding" dialog on the tablet AVD with the dialog guard, a flow passing with no brief text (not run).
+- Item 1: the dialog guard's restore after a lease loss (a killed run leaves `hide_error_dialogs=1`, cleared by the next `run-flows.ps1`; not exercised on a device).
+- Item 6: before/after seconds per slow flow (command in the slice file's Built block, item 6; not run).
 
 ### Slice 248: Dino iOS: leaving a book stops its read, and a new book never drives the old one's voice ([slice](slices/248-dino-stop-read-on-leave-ios.md))
 
@@ -52,6 +167,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 - Every vendor request shape is unproven until the first keyed run (Gemini model id, ElevenLabs voice id placeholder, Narakeet voice-name casing, CAMB `fa-ir`).
 - The piper-fa baseline render, on a PC that has the `piper-fa` pack and `sherpa_onnx` installed.
+- `build-audio` was run on real folders only by the pack run; the zips were not opened.
+- Part C: iOS rate and playback on a device; a real store download fetching live packs; the `premade-audio-plays` flow shown failing on the old build; Windows head playback; the mid-book re-translation against the 500 ms loading-state rule (not measured).
+- Pigs Farsi: the two `say` lines (گُنده‌ی, «شالاپ، شالاپ، شالاپ!») were re-rendered in the full book on 2026-11-03 but nobody has listened to them in the book; the user heard only the spelling-page variants. The same holds for the two other lines with the same word re-rendered after #766 (Pim's tub line and the narrator's "big smile" line): four lines in all.
 
 ### Slice 242: Round 4 leftovers, night 2026-11-01-0859 ([slice](slices/242-round-4-leftovers-night-2026-11-01-0859.md))
 

@@ -493,6 +493,38 @@ dataset terms were never settled (Slice 51 notes). `gyro`'s own card names no le
 Afghan-accented, not Farsi); `reza_ibrahim` (dataset page gone, Quran-recitation corpus), Gooya v2
 (needs its own G2P front end) and MMS-TTS (CC-BY-NC) were rejected.
 
+### Dino Book Reader: animal recordings (Slice 255)
+
+The real animal sounds in `src/DinoReader.App/Resources/Raw/animal-sounds/` are Freesound sounds under **CC0** (public domain; no credit is required, listed anyway). Each was trimmed
+and loudness-matched into a short AAC `.m4a`; licence pages read 2026-11-03. Bear, lion, rabbit and wolf have no recording and make no sound. (docs/plan/slices/255-dino-real-animal-sounds.md)
+
+| File | Sound, author, source |
+| --- | --- |
+| `cat.m4a` | "cat meow" by tuberatanka, https://freesound.org/people/tuberatanka/sounds/110011/ |
+| `bee.m4a` | "Insects - Bee; Honeybee, Buzz, Close Perspective" by TheKingOfGeeks360, https://freesound.org/people/TheKingOfGeeks360/sounds/846433/ |
+| `bird.m4a` | "BIRDSong_Blackcap, Recording 9 _JW Audio" by JW_Audio, https://freesound.org/people/JW_Audio/sounds/827197/ |
+| `duck.m4a` | "single quack from a duck" by Mikes-MultiMedia, https://freesound.org/people/Mikes-MultiMedia/sounds/418509/ |
+| `frog.m4a` | "Frog.ogg" by egomassive, https://freesound.org/people/egomassive/sounds/536759/ |
+| `goat.m4a` | "goat.mp3" by saha213131, https://freesound.org/people/saha213131/sounds/683259/ |
+| `hen.m4a` | "chicken sound - clucking.wav" by chanyatenn, https://freesound.org/people/chanyatenn/sounds/424076/ |
+| `horse.m4a` | "horse neigh shortened.wav" by shadoWisp, https://freesound.org/people/shadoWisp/sounds/269571/ |
+| `rooster.m4a` | "Rooster Crow 1" by BenjaminNelan, https://freesound.org/people/BenjaminNelan/sounds/435508/ |
+| `cow.m4a` | "Moo 3 - Moo Moo the Cow" by manofham, https://freesound.org/people/manofham/sounds/700380/ |
+| `owl.m4a` | "owl_hooting_000102_0145S3 002-070 000-002 068-074.wav" by Gerent, https://freesound.org/people/Gerent/sounds/558396/ |
+| `sheep.m4a` | "bah bala oveja/baa bleat sheep.WAV" by SergioJbs, https://freesound.org/people/SergioJbs/sounds/669872/ |
+| `pig.m4a` | "oink.wav" by krzpia, https://freesound.org/people/krzpia/sounds/510974/ |
+| `mouse.m4a` | "Mouse Squeaks.wav" by shyguy014, https://freesound.org/people/shyguy014/sounds/463789/ |
+| `dog.m4a` | "Ladrido [Bark]" by SmirnoffLulo, https://freesound.org/people/SmirnoffLulo/sounds/585873/ |
+
+### Dino Book Reader: audio packs of a store book (Slice 246 B2)
+
+A store book may have premade narration, one **audio pack per book and language**: the zip `audio-<lang>-v<n>.zip` (`manifest.json` version 3 plus the clips it names, flat, stored) in the book's own R2 folder
+`dinoreader/stories/<id>/`, never inside the `.dino`. `dotnet run --project tools/DinoReader.BookBuilder -- build-audio <stem> --lang <code> --clips <generator folder> [--out <folder>]` makes it into
+`artifacts/store/<id>/` and records `{version, hash, bytes}` under `audioPacks` in the book's `audio-cast.json`; the version rises only when the content hash changes (clips are outside git, so the record is the
+baseline). `build` then lists the packs in `meta.json` as `"audio": {"<lang>": {"version": n, "bytes": b}}`, and `tools/upload-store-story.ps1` uploads the zips before `meta.json`. The pack is served at
+`GET /api/stories/<id>/audio/<lang>?v=<n>` (only the listed language and version; anything else is a 404) and `/api/stories` lists the packs on offer per story (`audio`, with `url`). A book without a pack, and every
+app build that never asks for one, behaves as before. (docs/plan/slices/246-dino-store-books-premade-audio.md)
+
 ## Versioning (GitVersion → tag → release)
 
 Versioning is fully automatic and lives **entirely inside `release.yml`** — one
@@ -848,6 +880,8 @@ without a release. Store forms (the owner or Claude in the signed-in browser, af
   point's double is the count's weight (1 / the sample rate it was counted at), so query with
   `SELECT blob1 AS name, blob2 AS book, SUM(double1) FROM dino_usage GROUP BY name, book`.
 - Slice 166 adds blob10 country, blob11 OS major, blob12 form factor, blob13 CPU architecture, blob14 core bucket and blob15 RAM bucket (empty for builds that send no `device` object); the store-form additions are listed under "Slice 166 additions" in the RTST section above.
+- **Slice 250 (Dino): playback events and a per-launch session id.** New counts `read_started`, `read_paused`, `read_resumed`, `read_stopped` (detail = one of nine closed reasons) and `book_left`; every Dino count also carries a random 128-bit session id (blob16) and its order in the session (double2). The id is made at each cold start, held in memory and written to disk only inside counts still waiting in the local send queue (gone once sent), never reused for a later launch, never tied to the install, device or person. **What Google and Apple say (web-research lookup 2026-11-04, official pages only):** Play (<https://support.google.com/googleplay/android-developer/answer/10787469>) defines "Device or other IDs" as "Identifiers that relate to an individual device, browser or app", "collect" as "transmitting data from your app off a user's device", and the in-memory ephemeral exception applies only when data is not transmitted off the device; the page does not say whether a non-persisted per-launch id "relates to" a device, browser or app. Apple (<https://developer.apple.com/app-store/app-privacy-details/>) defines Device ID as "the device's advertising identifier, or other device-level ID" and User ID as an "assigned user ID ... or other user- or account-level ID that can be used to identify a particular user or account"; "collect" is transmitting data off the device so it is accessible longer than needed to service the request in real time; the page does not say whether a per-launch id is a device- or user-level ID. The PrivacyInfo/NSPrivacyCollectedDataTypes pages could not be read. **Decision (coordinator, 2026-11-04):** a per-launch random id held only in memory is not a device-level id (Apple's Device ID means a device's advertising or other device-level id), and declaring Device ID in a Kids-category app invites review trouble. So **`PrivacyInfo.xcprivacy` of Dino does not declare `NSPrivacyCollectedDataTypeDeviceID`**, and the App Store privacy form gets no Device ID row. For **Play Data safety (Dino)** the page does not settle it, so the console wording is the owner's call, listed in the slice file under *Waiting on the user* (suggested: **Device or other IDs**, collected, not shared, optional, purpose Analytics, or no row if the owner judges the id is not one relating to a device, browser or app). The sentence "no device or other ids" in the Play row above stays true of the install and the device.
+- **Slice 267 (Dino): which voice a read used, and pack downloads.** New counts `read_voice` (book, language, detail `premade` or `device:<no_pack|pack_failed|text_mismatch|clip_missing>`) and `audio_pack_download` (store book, language, detail `started`, `done` or `failed:<network|size|unzip|clip>`). Closed lists only, no title, text or file name; the same lines reach the rolling log. No new data type: it is the same "App activity" (in-app actions) already declared, so no Play Data safety or App Store privacy answer changes; `site/dino/privacy.html` names the two counts. Queries: `docs/analytics/dino-voice-queries.md`.
 - `tools/dino-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it is a noise filter and not an anonymity guarantee: say "no identifiers, counts only", never "cannot be traced".
 - Switch counting on with `telemetry` in `dinoreader/config.json` (`{"enabled": true, "sampleRate": 1}`); it is off until then.
 
@@ -868,4 +902,5 @@ Store forms (Slice 227 item 8; the owner or Claude in the signed-in browser, bef
 - **Google Play Data safety (both apps):** add **App info and performance > Crash logs**, collected, **not shared**, **processed ephemerally: no**, optional (the user can turn it off), purpose **App functionality** (and Analytics if the form insists on one); no personal info, no ids. Encrypted in transit: yes. Deletion request: not applicable.
 - **App Store privacy (both apps):** **Diagnostics > Crash Data**, **not linked to the user**, **not used for tracking**, purpose **App Functionality**. `PrivacyInfo.xcprivacy` of both apps declares the same (`NSPrivacyCollectedDataTypeCrashData`, linked false, tracking false, `NSPrivacyCollectedDataTypePurposeAppFunctionality`).
 - **Microsoft Store:** unchanged (no phone crash reports on Windows); the privacy URL stays `site/privacy.html` / `site/dino/privacy.html`, which now have a "Crash reports" section.
-- Reading them: `tools/crashes/` (`pull-crashes.mjs` for R2, `pull-apple.py` for App Store Connect and TestFlight, `pull-play.py` for the Play Developer Reporting API); see `worker/CLAUDE.md`.
+- **User-sent reports (Slice 249, Dino Reader only; Settings > Report a problem):** a grown-up's Send posts a `user_report` (kind) to the same endpoint: the app's rolling-log tail, version, platform, channel, coarse device buckets and a random 8-character code (no id, the code names only that report); stored as `crashes/dino/<day>/report-<CODE>.json` under the same 90-day lifecycle rule (checked live 2026-11-04: `crash-reports-90d`, prefix `crashes/`). It is collected only on the person's press, optional, not shared, not linked, not used for tracking. **Checked against the forms above:** the log is the same technical log the crash reports already carry, so Play's "Crash logs" and App Store's "Crash Data" answers still describe the data. But it is sent **without a crash**, and both stores list that as its own diagnostics category (Play: App info and performance > **Diagnostics**; App Store: Diagnostics > **Other Diagnostic Data**), so the safe answer is to tick those two as well, same settings (collected, not shared, optional, not linked to the user, not used for tracking, purpose App Functionality). **That is a console change, the owner's step** (recorded in the slice file's Outstanding work line); `PrivacyInfo.xcprivacy` of Dino would then declare `NSPrivacyCollectedDataTypeOtherDiagnosticData` too (a file outside Slice 249's Touches line, left to that follow-up). Until the forms are saved, keep `crashReports.enabled` as it is: the Worker answers a user report 503 while it is off, so the app never shows a code for a report nobody stored.
+- Reading them: `tools/crashes/` (`pull-crashes.mjs` for R2, `--code K7QX-2MRD` for one user report, `pull-apple.py` for App Store Connect and TestFlight, `pull-play.py` for the Play Developer Reporting API); see `worker/CLAUDE.md`.

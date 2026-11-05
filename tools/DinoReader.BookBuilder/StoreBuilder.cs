@@ -30,7 +30,7 @@ internal static class StoreBuilder
 
     /// <summary>The store entries of the four bundled starters (Decision 128), by package file name: the same ids as the bundled files, so a deleted starter can be downloaded again.</summary>
     public static IReadOnlyDictionary<string, StoreEntry> StarterEntries =>
-        Books.Starters.ToDictionary(b => b.FileName, b => new StoreEntry(b.Info.Title, b.Info.Id, b.Info.Colour, b.Info.Credits, b.Info.AgeMin, b.Info.AgeMax, b.Info.Author, b.Info.Added, b.Info.CreditsByLanguage));
+        Books.Starters.ToDictionary(b => b.FileName, b => new StoreEntry(b.Info.Title, b.Info.Id, b.Info.Colour, b.Info.Credits, b.Info.AgeMin, b.Info.AgeMax, b.Info.Author, b.Info.Added, b.Info.CreditsByLanguage, b.Info.Tags));
 
     /// <summary><c>content/dino/&lt;stem&gt;</c>: the checked-in <c>pictures/1..N.jpg</c> and <c>cover.jpg</c> of a book (Slice 119).</summary>
     public static string StoryArtFolder(string stem) => Books.Folder(stem).Dir;
@@ -63,7 +63,8 @@ internal static class StoreBuilder
         }
 
         await File.WriteAllBytesAsync(Path.Combine(folder, CoverFile), CoverBytes(story, spec, library, thumbnailPath));
-        await File.WriteAllTextAsync(Path.Combine(folder, MetaFile), MetaJson(spec, story));
+        long packageBytes = spec.LiveBytes ?? new FileInfo(Path.Combine(folder, PackageFileName(spec.Version))).Length; // a package already live at this version is never re-uploaded: list its size
+        await File.WriteAllTextAsync(Path.Combine(folder, MetaFile), MetaJson(spec, story, packageBytes));
     }
 
     /// <summary>The store list's cover (a row per story on a metered phone, so small): the checked-in <c>cover-thumb.jpg</c> (288x384, written by
@@ -82,10 +83,10 @@ internal static class StoreBuilder
     }
 
     /// <summary>The <c>meta.json</c> the Worker checks (<c>worker/stories.ts</c> <c>parseMeta</c>): the page count and the reading time come from the text.</summary>
-    public static string MetaJson(StoreStorySpec spec, Story story) =>
-        JsonSerializer.Serialize(MetaOf(spec, story), MetaOptions);
+    public static string MetaJson(StoreStorySpec spec, Story story, long? packageBytes = null) =>
+        JsonSerializer.Serialize(MetaOf(spec, story, packageBytes), MetaOptions);
 
-    private static Dictionary<string, object> MetaOf(StoreStorySpec spec, Story story)
+    private static Dictionary<string, object> MetaOf(StoreStorySpec spec, Story story, long? packageBytes)
     {
         var meta = new Dictionary<string, object>
         {
@@ -103,6 +104,23 @@ internal static class StoreBuilder
             ["titles"] = TitlesOf(spec, story),
             ["creditsByLanguage"] = spec.CreditsByLanguage is null ? null! : new SortedDictionary<string, string>(spec.CreditsByLanguage.ToDictionary(c => c.Key, c => c.Value), StringComparer.Ordinal),
         };
+        if (spec.Tags is { Count: > 0 })
+        {
+            meta["tags"] = spec.Tags.Select(StoreTags.Parse).OfType<StoreTag>().Distinct().Order().Select(tag => tag.ToString()).ToArray(); // Slice 260: list order; not part of BookHash
+        }
+
+        if (packageBytes is > 0)
+        {
+            meta["bytes"] = packageBytes.Value; // Slice 260: the size of story-v<n>.dino, for the first-run picker; not part of BookHash
+        }
+
+        // A starter's spec has no stem (its titles come from the shipped table), so its folder is found by id (Slice 258).
+        BookFolder? audioBook = Books.All.FirstOrDefault(b => string.IsNullOrEmpty(spec.Stem) ? string.Equals(b.Info.Id, spec.Id, StringComparison.OrdinalIgnoreCase) : b.Stem == spec.Stem);
+        if (AudioPacks.MetaOf(audioBook) is { } audio)
+        {
+            meta["audio"] = audio; // Slice 246 B2: the book's audio packs (language to version and size), from its audio-cast.json; the Worker offers only those whose zip is uploaded
+        }
+
         if (spec.ContentHash is not null)
         {
             meta["contentHash"] = spec.ContentHash; // Slice 239: publish-store compares it with the live store's
@@ -125,11 +143,11 @@ internal static class StoreBuilder
 }
 
 /// <summary>The store metadata of a bundled starter that is also a store story (Decision 128).</summary>
-internal sealed record StoreEntry(string Title, string Id, int ColourIndex, string Credits, int AgeMin, int AgeMax, string Author, string Added, IReadOnlyDictionary<string, string>? CreditsByLanguage = null)
+internal sealed record StoreEntry(string Title, string Id, int ColourIndex, string Credits, int AgeMin, int AgeMax, string Author, string Added, IReadOnlyDictionary<string, string>? CreditsByLanguage = null, IReadOnlyList<string>? Tags = null)
 {
     /// <summary>The spec the store builder writes it under: the story's own text and the starter's content version (<see cref="StarterBuilder.StarterVersions"/>).</summary>
     public StoreStorySpec ToSpec(Story story, int version) =>
-        new(Id, Title, string.Empty, story.Text, ColourIndex, Credits, AgeMin, AgeMax, Author, [], version, Added, CreditsByLanguage);
+        new(Id, Title, string.Empty, story.Text, ColourIndex, Credits, AgeMin, AgeMax, Author, [], version, Added, CreditsByLanguage, null, null, Tags);
 }
 
 /// <summary>

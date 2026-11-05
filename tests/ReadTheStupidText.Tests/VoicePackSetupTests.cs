@@ -324,7 +324,7 @@ public class VoicePackSetupTests
             Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack with { Version = "2" }]),
         };
         var model = new FakeModel();
-        var installer = new VoicePackInstaller(packs, model, new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier());
+        var installer = new VoicePackInstaller(packs, model, new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, new MemoryVoiceCancelStore());
 
         await installer.StartAsync(PackStartReason.User);
         await WaitUntilAsync(() => model.Initialized == 2); // the installed pack, then the updated one
@@ -339,7 +339,7 @@ public class VoicePackSetupTests
         var settings = new FakeSettings { Language = "fa" };
         var oldFarsi = new InstalledVoicePack("/packs/piper-fa", new PackManifest("piper-fa", PackKind.Voice, "fa", "1", "sherpa-onnx", [], VoiceEngineKind.Vits, [new PackVoice("piper:fa-amir", "Amir", 0)]));
         var packs = new FakePacks { Installed = [oldFarsi], Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack with { Version = "2" }]) };
-        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork { Allows = false }, new FakeNotifier());
+        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork { Allows = false }, new FakeNotifier(), null, new MemoryVoiceCancelStore());
 
         await installer.StartAsync(PackStartReason.User);
         await Task.Delay(200, TestContext.Current.CancellationToken);
@@ -353,7 +353,7 @@ public class VoicePackSetupTests
     {
         var settings = new FakeSettings { Language = "en" };
         var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [EnglishPack]) };
-        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork { Allows = false }, new FakeNotifier());
+        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork { Allows = false }, new FakeNotifier(), null, new MemoryVoiceCancelStore());
 
         await installer.StartAsync(PackStartReason.User);
 
@@ -383,7 +383,7 @@ public class VoicePackSetupTests
     {
         var settings = new FakeSettings { Language = "en" };
         var packs = new FakePacks { Installed = [InstalledEnglish()], Catalog = new PackCatalogResult(PackDownloadResult.Ok, [EnglishPack]) };
-        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier());
+        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, new MemoryVoiceCancelStore());
 
         await installer.StartAsync(PackStartReason.User);
 
@@ -396,7 +396,7 @@ public class VoicePackSetupTests
     {
         var settings = new FakeSettings { Language = "en" };
         var packs = new FakePacks { Installed = [InstalledEnglish()], CatalogThrows = true };
-        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier());
+        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, new MemoryVoiceCancelStore());
 
         await installer.StartAsync(PackStartReason.User);
 
@@ -425,7 +425,7 @@ public class VoicePackSetupTests
         var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack]) };
         var model = new FakeModel();
         var notifier = new FakeNotifier();
-        var installer = new VoicePackInstaller(packs, model, new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), notifier);
+        var installer = new VoicePackInstaller(packs, model, new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), notifier, null, new MemoryVoiceCancelStore());
         Task<bool> cancelled = packs.BlockFirstDownload();
 
         Task run = installer.StartAsync(PackStartReason.User);
@@ -938,7 +938,7 @@ public class VoicePackSetupTests
     }
 
     private static VoicePackInstaller MobileInstaller(FakePacks packs, FakeSettings settings, FakeNotifier notifier) =>
-        new(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), notifier);
+        new(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), notifier, null, new MemoryVoiceCancelStore());
 
     // Completes on the Changed event that reaches the state, so no clock decides the outcome.
     private static Task WaitForStateAsync(VoicePackInstaller installer, PackInstallState expected)

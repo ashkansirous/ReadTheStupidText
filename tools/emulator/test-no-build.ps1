@@ -36,7 +36,10 @@ $engine = (Get-Process -Id $PID).Path
 $emptyRoot = Join-Path ([IO.Path]::GetTempPath()) ('rtst-nobuild-' + [guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Force $emptyRoot
 $prior = $env:RTST_BUILD_CACHE_LOOKUP_ROOT
+$priorState = $env:RTST_EMULATOR_STATE_DIR
 $env:RTST_BUILD_CACHE_LOOKUP_ROOT = $emptyRoot
+# run-flows only looks in the cache when the installed app's key differs from the current one; a real device run on this branch leaves them equal, so the state folder is isolated too.
+$env:RTST_EMULATOR_STATE_DIR = Join-Path $emptyRoot 'state'
 try {
     foreach ($case in @(
             @{ Name = 'install-debug -NoBuild'; Script = 'install-debug.ps1'; Args = @('-App', 'dino', '-NoBuild') },
@@ -53,6 +56,7 @@ try {
     Assert-Equal 'install-debug -Rebuild -NoBuild: says why' $true ($out -match 'contradict')
 } finally {
     $env:RTST_BUILD_CACHE_LOOKUP_ROOT = $prior
+    $env:RTST_EMULATOR_STATE_DIR = $priorState
     Remove-Item $emptyRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
 

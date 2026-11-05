@@ -8,6 +8,7 @@ using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Resources.Strings;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Crashes;
 using ReadTheStupidText.Mobile.Shared.Usage;
 
 namespace ReadTheStupidText.Mobile;
@@ -198,6 +199,7 @@ public partial class ReaderPage : ContentPage
     {
         _waitTheme.Detach();
         DetachUpdateCard();
+        AppTrace.Reading(TraceLines.ReadingEvent.Detached, TraceLines.ReadingReason.PageLeft);
         _reader.StateChanged -= OnReaderStateChanged;
         _reader.ProgressChanged -= OnReaderProgressChanged;
         _reader.TimingChanged -= OnReaderTimingChanged;
@@ -217,6 +219,11 @@ public partial class ReaderPage : ContentPage
     {
         _retired = true;
         CancelDetection();
+        if (_reader.State != PlaybackState.Idle || _pendingReadId != 0)
+        {
+            AppTrace.Reading(TraceLines.ReadingEvent.Stopped, TraceLines.ReadingReason.PageLeft);
+        }
+
         _reader.Stop();
         EndFirstAudioClock(UsageOutcome.Cancelled);
         _draft.Store(TextEditor.Text, _original);
@@ -343,12 +350,14 @@ public partial class ReaderPage : ContentPage
 
         if (_reader.State == PlaybackState.Playing)
         {
+            AppTrace.Reading(TraceLines.ReadingEvent.Paused, TraceLines.ReadingReason.User);
             _reader.Pause();
             return;
         }
 
         if (_reader.State == PlaybackState.Paused && text == _lastSpokenText)
         {
+            AppTrace.Reading(TraceLines.ReadingEvent.Resumed, TraceLines.ReadingReason.User);
             _reader.Resume();
             return;
         }
@@ -367,6 +376,11 @@ public partial class ReaderPage : ContentPage
     private async Task BeginReadAsync(string text)
     {
         CancelHeadStart();
+        if (_reader.State != PlaybackState.Idle || _pendingReadId != 0)
+        {
+            AppTrace.Reading(TraceLines.ReadingEvent.Stopped, TraceLines.ReadingReason.Superseded); // only a read that was going is stopped
+        }
+
         _reader.Stop();
         EndFirstAudioClock(UsageOutcome.Cancelled); // replaced by a new read; no-op when the first sound already played
         ClearPendingRead();
@@ -447,6 +461,7 @@ public partial class ReaderPage : ContentPage
             return;
         }
 
+        AppTrace.Reading(TraceLines.ReadingEvent.Started);
         await _reader.SpeakAsync(text);
     }
 
@@ -937,6 +952,7 @@ public partial class ReaderPage : ContentPage
             if (_reader.State == PlaybackState.Playing)
             {
                 // The text may change under the read: pause it. Play resumes only if the text is unchanged.
+                AppTrace.Reading(TraceLines.ReadingEvent.Paused, TraceLines.ReadingReason.Other);
                 _reader.Pause();
             }
 

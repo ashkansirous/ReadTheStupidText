@@ -1,0 +1,114 @@
+# Slice 261 — Dino: no starter books in the app; a first-run book picker (choose at least 2)
+
+*Built 2026-11-04, merged as PR #808 (68bdba69); VM and emulator checked, upgrade-from-release and iOS not yet verified.* *Planned 2026-11-04.* Dino Reader only; Android and iOS alike (and the Windows head, which shares these pages). After Slice 260 (the picker shows its tags). Slice 265 removes the starters' special handling from CI and the book builder.
+
+**Touches:** `src/DinoReader.App/StarterStories.cs`, the starters folder under Resources/Raw (removed by this slice), `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/FirstBooksPage*.cs` (new), `src/DinoReader.App/IntroWizardPage*.cs`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/StagedBookUpdates.cs`, `src/DinoReader.App/BookOrigins.cs`, `src/DinoReader.App/UsageCounter.cs`, `src/DinoReader.App/Testing/DinoTestCommands*.cs`, `src/DinoReader.App/Testing/TestStore*.cs` (new, Debug only), `src/DinoReader.App/Resources/Raw/testbooks/**` (new, Debug only), `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/StoryActions.cs`, `src/DinoReader.App/IntroState.cs`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tools/DinoReader.BookBuilder/StarterBuilder.cs`, `tools/DinoReader.BookBuilder/Program.cs`, `src/DinoReader.Core/FirstBooks*.cs` (new), `src/DinoReader.Core/UsageEvent.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/**`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/261-dino-no-starters-first-run-book-picker.md`, `src/ReadTheStupidText.Mobile.Shared/Waiting/**`, `tools/desktop-vm/checks/dino-*.ps1`, `tools/desktop-vm/Build-TestPackage.ps1`, `tools/phone/checks/book-end.ps1`, `tools/phone/checks/cold-start.ps1`, `tools/phone/audio-timing.ps1`, `tools/phone/README.md` (wording only).
+
+## Why
+
+Bundling the starter books' pre-made audio would have made the app about 92 MB bigger (Android APK 57 to about 149 MB, iPhone IPA 90 to about 182 MB, measured 2026-11-04 from dino-v1.100.0 and the 60 built packs). The user chose instead to take the starter books out of the app (about 13 MB today) and let every family pick their first books from the store.
+
+## Decisions (user, 2026-11-04, RefineScope)
+
+- First run order: **main language, then choose books (at least 2), then the rest of the intro wizard**. The book page is mandatory; there is no skip.
+- The wizard's "store" step goes (the book picker replaces it). Its other steps stay in their order.
+- Offline on the book page: it says "Connect to the internet to choose your first books" with a Try again button, and the app goes no further until two books are downloaded.
+- The picker lists the store's books with their tags (Slice 260), tagged first; each card can be ticked; Continue is enabled from two ticks and downloads them with progress (`WaitController`, Cancel), then the wizard goes on.
+- People who already have the app keep the four starter books on their shelf: they are the same ids as the store copies, so they update and get audio like any store book. Only a fresh install starts empty with the picker.
+
+## Work
+
+- [x] Core: `FirstBooks` rules (minimum 2, tagged first, which picked books are still downloading), with unit tests.
+- [x] `FirstBooksPage`: after the language page; store list with tick boxes and tag badges; Continue from two ticks; download with progress and Cancel; offline message with Try again; every word from `AppResources` (Slice 159), layout never mirrors (Slice 96).
+- [x] `FirstRunPage`: no starter install, no cover strip of starters; the "ready" text no longer names them; the intro art (`IntroWizardPage.Art.cs`) uses art from the app, not a starter book.
+- [x] Intro wizard: drop the store step (`IntroSteps`, `UsageEvent.cs`), keep the rest; a replay from Settings has no store step either.
+- [x] Remove `Resources/Raw/starters/` and its `MauiAsset` lines; `StarterStories` keeps only what existing installs need (the installed flag and `IsStarterId` for books already on a shelf); `BookUpdater`, `StagedBookUpdates`, `BookOrigins`, `UsageCounter`, `StoreClient` treat those four ids as store books.
+- [x] Device-test hook: a Debug-only command that imports a test book from the test folder, so the Maestro flows that opened a starter book still have a book (they cannot download from the live store). Move every flow that used a starter to it. *Kept deviation: the `skip-first-run` hook imports the four test books itself (`TestBooks.StartAll`) instead of editing about 50 flows; `import-test-book` is for flows that want one.*
+- [x] Tests that read the committed starter `.dino` files read the books built from `content/dino/` instead. *Kept deviation: they read the test books through `StarterBuilder` (which writes `Resources/Raw/testbooks/`).*
+- [x] Windows VM package: `-p:DinoTestBooks=true` (Release) carries the test books and makes the test store the default list (`DINO_TEST_BOOKS`, `DINO_TEST_STORE_ON`); `dino-launch.ps1` ticks two books on the picker. The Store and CI builds never set it (`NoBundledBooksTests`). `Build-TestPackage.ps1` passes the property.
+- [x] Download wait (frame 165): covers row with tick badges through a new optional content slot on the shared `WaitOverlay` (`SetContent`, cleared on `Hide`; RTST unchanged). Intro Read art (frame 168) draws the real caption (`Intro_ReadCaption`, 15 locales; one string highlighted whole, not a split quote). `Intro_Store*` and `FirstRun_Waiting` removed.
+- Kept deviation: the worker still accepts the old `store` intro step from old apps.
+- [x] Android task: first run on the emulator (language, picker, two books, wizard); see the device runs under *Changed while building*. iOS task: the same pages compile and run on the simulator build in CI (shared code); nothing Android-only. *iOS simulator run not done (see Not yet verified).*
+- [x] `src/DinoReader.App/CLAUDE.md`: replace the starter-stories rule with the first-books rule.
+
+#### Design (Dino Reader Batch 47 Onboarding mock, frames 163-168, added 2026-11-04)
+
+Source: `docs/design/dino-reader/Dino Reader Batch 47 Onboarding.dc.html`, 6 frames at 360x760: 163 picker empty (line 75), 164 two picked (98), 165 download wait (121), 166 offline (144), 167 ready (163), 168 intro step 2 of 5 (182). The mock agrees with the plan on order, "at least 2", no skip, offline copy and the dropped store step; it adds the decisions below. Page background is `Cream` throughout; status bar and phone frame are illustration.
+
+- **Picker (163-164, `FirstBooksPage`).** Back arrow 44x44 top left (to the language page); heading "Choose your first books" 24/600; body "Pick at least two. You can get more from the Store any time." 14 `Body`. Two-column grid, side padding 16, gap 14 rows / 12 columns, cover 3:4 radius 16, title under it 14/600, tag badges (Slice 260) under the title. Tick circle 34 dp at top 8 / right 8: empty = white with 2 dp `DotIdle` border; picked = `Brand` fill with a white tick, and the cover gets a 3 dp `Brand` ring with a 3 dp `Cream` gap. Tap on the cover or the circle toggles. The list scrolls under the pinned bottom bar.
+- **Bottom bar (163-164).** Padding 12/16/24, `Cream` with a soft upward fade; count line 13.5/600 centred, `Body` while short ("Pick 2 books to start", "Pick 1 more"), `Brand` once enough ("2 picked · 9 MB", the total size from the listing). Continue 56 high, radius 28, 17/600: disabled `#e6dfd0` fill, `Muted` text, no edge; enabled `Coral` with the 5 dp `CoralEdge` bottom edge, white text. A third or fourth tick is fine.
+- **Download wait (165).** The shared wait overlay (`DinoWait`, Slice 143): `Cream` at 94%, 130 dp hopping Dino (`dinoHop` 1.1 s, shadow 64x10), "Getting your books…" 18/600, a row of the picked covers 54 wide (3:4, radius 9) with a 24 dp `#4FC060` tick badge (3 dp `Cream` border, offset -6) once a book has landed and the rest at 55% opacity, a 12 dp bar (`BrandTint` track, `Brand` fill, 72% in the frame), "Book 2 of 2" left and the percent right (13.5/600), then Cancel (44 high, white, 2 dp `#e3dccd` border, `Body` 15/600). When the connection drops the bar holds and the line reads "Waiting for the internet…" (Batch 39, frames 95).
+- **Offline (166).** Back arrow stays. Dino icon in a 150 dp `BrandTint` circle with a 44 dp white badge (4 dp `Cream` border) at bottom right; heading "Connect to the internet to choose your first books" 23/600 balanced; body "Dino needs two books before you start. Turn on Wi-Fi or mobile data, then try again." 14 `Body`, max width 270; "Try again" pinned to the bottom, full width, 56 high, `Coral`. No skip. The list loads by itself when the connection returns.
+- **Ready (167, `FirstRunPage`).** As today's frame 18 / 73 with one line changed: body "Every character gets their own voice. Your books are on the shelf." (replaces `FirstRun_ReadyBody` / `FirstRun_ReadyBodyOne`; true for 2 or 6). 150 dp `#DFF5E3` circle, 44 dp `#4FC060` tick badge, title 28/600, "Hear Dino say hello" pill 48 high (`BrandTint` fill, `Brand` text, 34 dp `Brand` play disc), primary "See what Dino can do". The voice download screen loses its "Waiting on the shelf" starter strip; bar and copy stay.
+- **Intro (168, `IntroWizardPage*`).** Step dots 8 dp (current 22x8 `Brand`, idle `DotIdle`), counter "2 of 5" 13/600 `Muted`, "Skip all" right (44 high, `Brand` 15/600). Steps are now Places, Read, Record, Add, Languages (5; `IntroSteps.Order` has 6 today). Art: a 150x240 mini phone (5 dp `Ink` border, radius 22) with Dino on a `#7FD0FF` sky block, caption "Dino opened the book. “Once upon a time…”" (highlight `#FFE27A`), a 34 dp `Coral` play disc; behind it a `#FFE9B8` ellipse. Title "Read a story together" 26/600, line 14.5 `Body`, "Try it" (56 high, `Coral`) then "Skip" (44 high, `Body`). Try it opens the first book the parent picked.
+- **Files.** `FirstBooksPage*.cs` (163-166), `FirstRunPage.xaml(.cs)` (167 and the strip removal), `IntroWizardPage*.cs` incl. `.Art.cs` (168), `FirstBooks*.cs` in Core, `UsageEvent.cs` (`IntroSteps`), `AppResources*.resx`.
+- **New strings (15 locales).** "Choose your first books", "Pick at least two. You can get more from the Store any time.", "Pick 2 books to start", "Pick 1 more", "{0} picked · {1}", "Getting your books…", "Book {0} of {1}", "Waiting for the internet…" (check `Wait_WaitingInternet` first), "Connect to the internet to choose your first books", "Dino needs two books before you start. Turn on Wi-Fi or mobile data, then try again.", "Your books are on the shelf." Reuse `Intro_Counter`, `Store_TryAgain`, `FirstRun_Continue`, `Intro_TryIt`, `FirstRun_HearHello`.
+
+**Open point: Cancel while the books download (165).** Slice says only "Cancel". Mock: back to the picker, ticks kept, a finished book stays (mock question 2). **Default:** as drawn.
+**Open point: intro art (168).** Slice says "art from the app". Mock: Dino plus plain colour blocks, not the picked books' covers (question 3). **Default:** as drawn.
+**Open point: "Skip, start reading" missing on 167.** Code has `Intro_SkipStart` and `src/DinoReader.App/CLAUDE.md` (First-run intro) says "Ready to read!" offers it; the mock shows only "See what Dino can do" and says "everything else as today". **Default:** keep "Skip, start reading" as a text button under the primary.
+**Open point: total size in the count line (164).** "2 picked · 9 MB" needs a per-book size; the listing carries audio pack `Bytes` (`StoreCatalog.cs:28`), not clearly the book's. **Default:** sum what the listing gives; show just "2 picked" when any size is unknown.
+**Open point: where the picker sits.** Plan: language, books, rest of the wizard. Mock: language, books, download (165), then the voice download screen (17), then 167. **Default:** as the mock.
+**Open point: wait text and Back on 165.** The wait overlay has no Back arrow; the picker's arrow goes to the language page. **Default:** as drawn (no arrow in 165).
+**Mock decides (slice silent):** tick on cover or circle; the "N of 5" counter; the list reloads by itself when the connection returns; "Waiting for the internet…" mid-download.
+
+**User, 2026-11-04 (design review):** Cancel while the first books download goes back to the picker with the ticks kept, and a book that already finished stays downloaded (frame 165, as drawn). The intro's pictures are Dino on plain colour blocks, art that ships in the app (frame 168, as drawn), not the picked books' covers. "Ready to read!" (frame 167) keeps "Skip, start reading" next to "See what Dino can do", as today. The picker's size line ("2 picked · 9 MB") reads the book sizes Slice 260 adds to the store list. iPhone page reader (mock question 4): Slice 263 checks it first, as planned.
+
+## Design note (coordinator, claim 2026-11-04, night 2026-11-04-1441 wave 2)
+
+Touches widened at claim from a code check on origin/main: the test commands live in `Testing/DinoTestCommands*.cs` (the planned path was wrong); `MauiProgram.cs:88` registers `StarterStories` and must register the new page; `App.xaml.cs:124` builds `BookUpdater` with `StarterStories`; `StoryActions.cs:149` calls `ForgetStoreInstall`; `IntroState.cs:23` maps saved step indexes (`IntroSteps.FromLegacy`), so dropping the Store step needs that mapping updated; `AppResources.cs` is the typed accessor for new strings; BookBuilder's `StarterBuilder.cs` writes `Resources/Raw/starters/`, so it writes the Debug test-book folder instead (or its command goes; Slice 265 removes the rest of the starter CI handling).
+
+1. **One owner of the first-run state: the library on disk.** The picker is done when the library holds at least two books (`FirstBooks.IsSatisfied(count)`, pure, Core). No separate "books chosen" flag. On every launch where first run is not finished, the app goes language, then the picker unless the library already has two books. Killed mid-download: on relaunch the picker shows again with the books that already landed shown ticked and counted (they stay on disk); the count line and Continue read the ticks. Cancel: back to the picker, ticks kept, landed books stay (user, design review). Offline before the list loads: the offline frame (166) with Try again, and it reloads by itself when the connection returns (the store page's existing connectivity watch, if it has one; else `Connectivity.ConnectivityChanged`). Offline mid-download: the bar holds with "Waiting for the internet…", as the store downloads do today; no new retry logic.
+2. **Who sees the picker.** Only an install whose first run is not finished (the existing first-run-done preference). An existing user who finished first run never sees it and keeps the four books on the shelf, which update and get audio as store books (same ids).
+3. **Test books and test store, Debug only.** The four `.dino` files move from `Resources/Raw/starters/` to a Debug-only asset folder `Resources/Raw/testbooks/` (`MauiAsset` under `Condition="'$(Configuration)' == 'Debug'"`), so Release ships none. A Debug-only test command `import-test-book <id>` imports one into the library (flows that opened a starter call it first), and a Debug-only test store (`Testing/TestStore*.cs`, switched on by a test command, off by default) makes `StoreClient`'s listing and book download read a fixture listing and those `.dino` files from the Debug assets, so the `first-run` flow never touches the live store. Every Debug-only type sits under `#if DEBUG`; a unit test or build check shows the Release build has no `testbooks/` asset.
+4. **Platforms.** All pages are shared MAUI code (Android, iOS, Windows head). Android emulator runs the flows; iOS compiles in CI; nothing Android-only.
+
+## Verification
+
+- `dotnet test tests/DinoReader.Tests`; the Dino APK no longer contains `starters/` (list the APK's assets) and is about 13 MB smaller.
+- Emulator flows: `first-run` (language, picker with a test catalogue, two ticks, wizard without a store step), offline picker message, and every moved flow passes.
+- An upgrade from the current release keeps its four books on the shelf (emulator: install the release APK, then the new one).
+
+## Changed while building
+
+- `DinoTestBooks=true` MSBuild property (only `tools/desktop-vm/Build-TestPackage.ps1` sets it) carries the test books and the test store in the Windows VM package; Store and CI builds never set it.
+- Debug test commands `import-test-book` and `test-store` (modes include `slow` and `stall`). `skip-first-run` puts the four test books on the shelf.
+- The shared `WaitOverlay` (Mobile.Shared) got an optional content slot (`SetContent`) that shows the picked covers with tick badges; RTST is unchanged.
+- Intro is 5 steps: the store step is gone, with `IntroSteps.FromLegacy` and `Clamp` for saved step indexes. The intro Read art draws a real caption string.
+- Existing installs keep their four books and get updates and translations through the store path; a one-time refetch runs via `StarterUpdate.VersionToRefetchFromStore`.
+- The picker tick is a real Button (`FirstBookTick-<n>`) so UIA can invoke it (VM run 1 only got one card ticked by mouse click; cause unproven: double toggle or a missed click).
+- Back: cancels the download or list load, else goes to the language page; on the restart root it is the platform default.
+- Device runs (files under `D:/ReadTheStupidText-worktrees/reviews/`, outside the repo): VM run 1 (`s261-vm/`) dino-launch failed on the tick, fixed by the Button; VM run 2 (`s261-vm2/`) all six Dino checks pass. Emulator run 1 (`s261-emu/`) 8/10 pass: first-books-cancel hit a Mono SIGSEGV twice (no logcat captured, cause unknown), offline failed as a knock-on. Run 2 (`s261-emu2/`): no crash, cancel lost a timing race, fixed with the test store's stall mode. Run 3 (`s261-emu3/`): first-books-cancel, first-books-picker and first-books-offline pass, crash buffer empty.
+
+## From review
+
+Findings files (outside the repo): `reviews/s261-high.md`, `s261-medium.md`, `s261-check.md`, `s261-check2.md`, `s261-check3.md`.
+
+- High 1-5 and 7: applied.
+- High 8 (Cancel on the list-load wait showed the offline layer): partly applied; list-load Cancel now shows the offline copy.
+- High 6 (skipped): `StorePage.xaml.cs:556` `LaunchedFromIntro` and its Header.Continue wiring are dead code; outside this slice's Touches.
+- Medium 1, 2, 3, 4, 8: applied.
+- Medium 5 (skipped): `ReadShelfAsync` called in `LoadAsync` and again in `ShowListAsync`, redundant I/O. Skipped: a second shelf read per picker load is harmless.
+- Medium 6 (skipped): picker Back leaves `FirstBooksGate.Pending` true and does not revert the applied UI culture / RTL font. Skipped: back on the language page the next pick re-applies the language and culture, and the picker must stay pending until two books are on disk (design note item 1).
+- Medium 7 (skipped): nothing asserts shipped configs lack the `DinoTestBooks` constant (`NoBundledBooksTests` checks only assets). Skipped: `NoBundledBooksTests` fails if any `.github` workflow passes `DinoTestBooks`.
+- Check 1: upgrade path judged sound (no recording, edit or progress loss). All six findings (1-6) were low and skipped; none loses data or crashes. Item 6 was that nothing guards a Release package built with `-p:DinoTestBooks=true`.
+- Check 2: item 1 (tick toggling twice) was left to the VM run, which passed. Item 2 (`dino-launch.ps1` waits on English "picked") is moot: the VM picks English. Items 3-7 (low) skipped.
+- Check 3: stall mode judged sound. All eight low items skipped; item 4 (one-time refetch lowers recorded versions on upgrade) skipped because it is the deliberate one-time refetch of old starters that `s261-check.md` reviewed and found sound.
+
+## Leftovers
+
+- `StorePage.LaunchedFromIntro` dead code.
+- Cancel on the list load shows the "connect to the internet" copy though the network may be fine.
+- `.github/scripts/dino-starters.json` and `BookBuilderTests` still name starters (Slice 265 follow-up).
+
+#### For CLAUDE.md (lifted 2026-11-04)
+
+Already written on this branch in `src/DinoReader.App/CLAUDE.md` (Slice 261: docs/plan/slices/261-dino-no-starters-first-run-book-picker.md); nothing further.
+
+#### Not yet verified
+
+- Upgrade from the current release APK keeps the four books (the release signature differs from Debug).
+- iOS simulator run of the picker and first run.
+- The one-off Mono SIGSEGV on first-books-cancel (not reproduced in two later runs with the crash buffer captured).
+- The roughly 45 older flows were not all rerun (open-book, back-cover, premade-audio-plays, store-tags and grown-ups-button passed).
+- The covers row on the download wait and the intro caption were not checked by eye.

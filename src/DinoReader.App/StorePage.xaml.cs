@@ -46,6 +46,9 @@ public sealed class StoreRow(StoreItem item, bool onShelf, StoreCardLayout layou
 	/// <summary>The sub-line under the title: the credit line in the app language (Slice 192: <c>creditsByLanguage</c>, else <c>credits</c>), or the language in its own name when the story has none.</summary>
 	public string Credits => Item.CreditsIn(LanguageChoice.Current()) ?? StoreText.Language(Item);
 
+	/// <summary>The tag badges above the title (Slice 260): at most two, in list order; none for an untagged book or an older Worker.</summary>
+	public IReadOnlyList<StoreTag> Badges => Item.Badges;
+
 	public bool HasDetail => Detail.Length > 0;
 	public bool HasCredits => Credits.Length > 0;
 

@@ -26,7 +26,7 @@ public static class CrashReportJson
 
     internal sealed record Wire(
         int SchemaVersion, string App, string Platform, string Version, string Channel, string Kind,
-        string ExceptionType, string Message, string Stack, string LogTail, string Minute, DeviceContext? Device);
+        string ExceptionType, string Message, string Stack, string LogTail, string Minute, DeviceContext? Device, string? Session = null);
 
     /// <summary>The report with every text field cut to its cap.</summary>
     public static CrashReport Capped(CrashReport report) => report with
@@ -80,7 +80,7 @@ public static class CrashReportJson
     }
 
     private static string Serialize(CrashReport r) => JsonSerializer.Serialize(
-        new Wire(SchemaVersion, r.App, r.Platform, r.Version, r.Channel, r.Kind, r.ExceptionType, r.Message, r.Stack, r.LogTail, r.Minute, r.Device), Options);
+        new Wire(SchemaVersion, r.App, r.Platform, r.Version, r.Channel, r.Kind, r.ExceptionType, r.Message, r.Stack, r.LogTail, r.Minute, r.Device, r.Session), Options);
 
     /// <summary>The report in <paramref name="json"/>, or null when it is missing, damaged or not this schema.</summary>
     public static CrashReport? Parse(string? json)
@@ -100,7 +100,7 @@ public static class CrashReportJson
 
             return new CrashReport(
                 wire.App, wire.Platform, wire.Version, wire.Channel, wire.Kind,
-                wire.ExceptionType ?? string.Empty, wire.Message ?? string.Empty, wire.Stack ?? string.Empty, wire.LogTail ?? string.Empty, wire.Minute ?? string.Empty, wire.Device);
+                wire.ExceptionType ?? string.Empty, wire.Message ?? string.Empty, wire.Stack ?? string.Empty, wire.LogTail ?? string.Empty, wire.Minute ?? string.Empty, wire.Device, wire.Session);
         }
         catch (JsonException)
         {

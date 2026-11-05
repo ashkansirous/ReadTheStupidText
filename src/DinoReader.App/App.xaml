@@ -12,6 +12,14 @@
         <Color x:Key="Muted">#8a8399</Color>
         <Color x:Key="Brand">#5B57E8</Color>
         <Color x:Key="BrandTint">#ECE7FF</Color>
+        <!-- Slice 260: store tag badges (Batch 47 frame 162); Popular's fill is BrandTint. -->
+        <Color x:Key="TagHotFill">#FFE3D9</Color>
+        <Color x:Key="TagHotInk">#B4552F</Color>
+        <Color x:Key="TagPopularInk">#3f3bc4</Color>
+        <Color x:Key="TagRecommendedFill">#DFF5E3</Color>
+        <Color x:Key="TagRecommendedInk">#2E7D32</Color>
+        <Color x:Key="TagNewFill">#FFF0C2</Color>
+        <Color x:Key="TagNewInk">#8A5A00</Color>
         <Color x:Key="Danger">#E5484D</Color>
         <Color x:Key="Coral">#FF7A59</Color>
         <Color x:Key="Hairline">#efe9dd</Color>

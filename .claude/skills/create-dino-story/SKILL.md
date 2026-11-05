@@ -61,7 +61,7 @@ Version bump (starters only; Slice 239): the writer bumps it when the text chang
 (`dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` raises `version` in the book's `book.json` and stores its content hash; CI's `check` fails when a starter changed without it).
 A **store book needs no stamp**: `publish-store` compares its content hash with the live store and uploads a changed book as live + 1. A store book is content only: it never edits `src/`, `tests/`
 or app files (its titles are `content/dino/<stem>/titles.json`, no row in `ShippedTitles.cs`; tests derive book counts from the folder), so its PR and merge run no test, no app build and no
-PR check, only the store upload. A starter (`"kind": "Starter"`, in `.github/scripts/dino-starters.json`) is bundled in the app and still builds it. Deleting a store book's folder delists it on the next merge (packages stay).
+PR check, only the store upload. No book is bundled in the app any more (Slices 261, 265), so every book change, audio clips included, runs only the store upload. Deleting a store book's folder delists it on the next merge (packages stay).
 
 Helpers in this folder: `gemini-grab.js` and `gemini-take-download.ps1` (step 6, save a picture),
 `gemini-clipboard.ps1` (paste the line-up; saving through it is only the fallback), `gemini-lock.ps1` (two

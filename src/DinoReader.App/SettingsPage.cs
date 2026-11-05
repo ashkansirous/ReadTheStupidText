@@ -180,6 +180,7 @@ public sealed class SettingsPage : SettingsSubPage, IDinoKeyTarget
 	private const string CodeSeparator = ", ";
 	private const int SummaryLanguages = 2;
 	private const string ReadingSpeedRowId = "SettingsReadingSpeedRow";
+	private const string ReportProblemRowId = "SettingsReportProblemRow";
 
 	private readonly IServiceProvider _services;
 	private readonly AppConfigClient _config;
@@ -394,7 +395,7 @@ public sealed class SettingsPage : SettingsSubPage, IDinoKeyTarget
 	{
 		Body.Children.Clear();
 		Grid[] reading = [LanguageRow(), StoryLanguagesRow(), NarratorRow(), SpeedRow(), AnimalRow()];
-		Grid[] phone = [BackupRow(), UsageRow(), AboutRow()];
+		Grid[] phone = PhoneRows();
 		_navRows = [.. reading, .. phone];
 		Body.Children.Add(SettingsRows.GroupHeading(AppResources.Settings_GroupReading));
 		Body.Children.Add(SettingsRows.RowsCard(reading));
@@ -430,6 +431,19 @@ public sealed class SettingsPage : SettingsSubPage, IDinoKeyTarget
 	private Grid AnimalRow() => Tinted(
 		SettingsRows.NavRow(AppResources.Settings_AnimalSounds_Title, SettingsRows.OnOff(AnimalSoundsPreference.Load()), () => OpenSectionAsync<AnimalSoundsPage>(SettingsSection.AnimalSounds), Busy),
 		SettingsSection.AnimalSounds);
+
+	// Slice 249: "Report a problem" follows About; the Windows head has no crash reporting, so it has no row.
+	private Grid[] PhoneRows()
+	{
+#if WINDOWS
+		return [BackupRow(), UsageRow(), AboutRow()];
+#else
+		return [BackupRow(), UsageRow(), AboutRow(), ReportProblemRow()];
+#endif
+	}
+
+	private Grid ReportProblemRow() =>
+		SettingsRows.NavRow(AppResources.ReportProblem_Title, null, () => Navigation.PushAsync(new ReportProblemPage()), Busy, automationId: ReportProblemRowId);
 
 	private Grid BackupRow() => SettingsRows.NavRow(AppResources.Backup_Title, null, OpenAsync<BackupPage>, Busy);
 

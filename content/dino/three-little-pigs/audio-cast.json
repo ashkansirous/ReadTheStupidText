@@ -2,27 +2,27 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Pip": {
       "voice": "Cleo",
-      "style": "a young, bouncy child's voice for young children, standard Tehrani accent",
+      "style": "a young, bouncy child's voice for young children",
       "direction": "cheerful, bouncy and a little cheeky"
     },
     "Pop": {
       "voice": "Puck",
-      "style": "a young, bright, upbeat child's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, upbeat child's voice for young children",
       "direction": "bright and eager"
     },
     "Pim": {
       "voice": "Achird",
-      "style": "a young, soft, friendly child's voice for young children, standard Tehrani accent",
+      "style": "a young, soft, friendly child's voice for young children",
       "direction": "calm, warm and sensible"
     },
     "Wolf": {
       "voice": "Elio",
-      "style": "a deep, rough grown-up voice, storybook wolf, not too scary for young children, standard Tehrani accent",
+      "style": "a deep, rough grown-up voice, storybook wolf, not too scary for young children",
       "direction": "sly and sweet-talking"
     }
   },
@@ -104,5 +104,82 @@
       "lang": "fa",
       "say": "پیم با یه لبخند گُنده گفت:"
     }
-  ]
+  ],
+  "audioPacks": {
+    "ar": {
+      "version": 1,
+      "hash": "7186add35afdd8006f049eb45cdb5dfe9b53d89267672cc021675cabb8873e89",
+      "bytes": 1722709
+    },
+    "da": {
+      "version": 1,
+      "hash": "9ddf095be5bc75082360d063d35938e0dc3d0e73555fb5b0c74aff837d379e8a",
+      "bytes": 1548144
+    },
+    "de": {
+      "version": 1,
+      "hash": "852c04143d10e1b7a04962437074be2f6621c9fccde5a1146b8a0360a3fea4f7",
+      "bytes": 1680452
+    },
+    "en": {
+      "version": 1,
+      "hash": "cfab7fcfc8f4085f9d67e1e0c9484449a793d6354fa5037baa4308dbf26efb39",
+      "bytes": 1557654
+    },
+    "es": {
+      "version": 1,
+      "hash": "57d12b33d92b6c82bae1c82f75c59f6d5b3a183d669271378871c777037f26e3",
+      "bytes": 1681329
+    },
+    "fa": {
+      "version": 1,
+      "hash": "8f30a4d266e4316df78e0afbdb6465eb2cb02f1791bfa965e0f17245db9c0a03",
+      "bytes": 1658881
+    },
+    "fi": {
+      "version": 1,
+      "hash": "a07b7f0bf8fd0cdb498839adb66dc067f317427e13583d0e1cdaf89108b2a47f",
+      "bytes": 1677440
+    },
+    "fr": {
+      "version": 1,
+      "hash": "568dd0e60db0a4d9ffb28bc19a0e7266ffe9a138b8ebe32cf099b07d2bf98895",
+      "bytes": 1607455
+    },
+    "ja": {
+      "version": 1,
+      "hash": "a43e9fc8a29650868aaf20a4090729d0e70aea1250a24ca50f6838bed5c2d540",
+      "bytes": 1834216
+    },
+    "nb": {
+      "version": 1,
+      "hash": "4e975a30c637d1ae3f5d719eedfaa87a53a6a21b718745c0ced354d01894fd6d",
+      "bytes": 1588617
+    },
+    "nl": {
+      "version": 1,
+      "hash": "9cbc29f48d6181aab2f727fbf5143fde7f794e122cff2e37d841f0398762c9b2",
+      "bytes": 1559236
+    },
+    "pt": {
+      "version": 1,
+      "hash": "3c9d285f97f266623121e7c56ad46d544f370c01951550711463b009f5135913",
+      "bytes": 1735506
+    },
+    "ru": {
+      "version": 1,
+      "hash": "3de2437b7739cdc9e945383992fe084e8088e8a03760f54e2a94e69118a32deb",
+      "bytes": 1746147
+    },
+    "sv": {
+      "version": 1,
+      "hash": "be7731fdf62f70e4f137ee1deb8aca9b69672a7140c170e265c77398c6720da0",
+      "bytes": 1671288
+    },
+    "zh": {
+      "version": 1,
+      "hash": "43b6ab6400472091faf5520d624c8edcfbf8326e4d7f34e874ca1670eeb0d0b9",
+      "bytes": 1645421
+    }
+  }
 }

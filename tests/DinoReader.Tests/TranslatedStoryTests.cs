@@ -196,11 +196,13 @@ public class TranslatedStoryTests
     }
 
     [Fact]
-    public void The_original_text_switch_survives_the_story_file_and_is_off_by_default()
+    public void An_old_story_file_with_the_removed_original_text_switch_still_opens_and_is_not_written_again()
     {
-        Story story = StoryOf(new StoryPage("Hi."));
+        string json = StoryJson.Serialize(StoryOf(new StoryPage("Hi."))).Insert(1, "\"ShowOriginal\": true,");
 
-        Assert.False(StoryJson.Deserialize(StoryJson.Serialize(story)).ShowOriginalText);
-        Assert.True(StoryJson.Deserialize(StoryJson.Serialize(story with { ShowOriginalText = true })).ShowOriginalText);
+        string rewritten = StoryJson.Serialize(StoryJson.Deserialize(json));
+
+        Assert.Contains("ShowOriginal", json);
+        Assert.DoesNotContain("ShowOriginal", rewritten);
     }
 }

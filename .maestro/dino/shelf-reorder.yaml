@@ -1,0 +1,157 @@
+# Slice 264: a grown-up reorders the shelf. The "Reorder" row of a book's sheet opens the reorder mode (Done and Cancel at the top); Cancel leaves the order as it was; Done keeps it, and it survives a restart.
+# The drag itself is not scripted: the system drag starts on a long press, which a Maestro swipe cannot make. The shelf-reorder-move hook drops the 4th book before the 2nd through the same order code a drop uses.
+# The four starter books are in a fixed order (three-little-pigs is 2nd, tortoise-and-hare 4th), so the 2nd title tells the order: before the move it is the pigs, after Done and after a restart the tortoise.
+# The 1 second press on a cover (TileOverlay's PointerGestureRecognizer) and the real drag are Not yet verified on a device: the device stage reads the [Reorder] lines of a hand run.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK shelf-order-reset ok
+# expect-log: HOOK enter-grown-up ok
+# expect-log: [Reorder] opened with 4 books,
+# expect-log: HOOK shelf-reorder-move moved
+# expect-log: [Reorder] closed: cancel
+# expect-log: [Reorder] done saved 4 books:
+# expect-log: [Reorder] closed: done
+appId: uk.sirous.dinoreader.dbg
+name: Reorder the shelf, Cancel keeps it, Done saves it across a restart
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books, a stored shelf order); fine here: the flow uses the four starter books only and opens no pack, so it needs none of it.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# Start from the default order whatever an earlier run saved: delete the stored order, then restart the app so the shelf is read again.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: shelf-order-reset
+- launchApp:
+    # launchApp-restart: reads the shelf again, now without a stored order.
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 60000
+# The one-time "Storyteller voices are ready" note can cover the corner: dismiss it only when it is on screen.
+- runFlow:
+    when:
+      visible: Storyteller voices are ready
+    commands:
+      - tapOn: "OK"
+# The tile titles are not text nodes on Android: a book is named only by the content description of its options button ("Options for <title>"), so the order is read from TileMore, in shelf order.
+# Before: the 2nd book is the pigs.
+- copyTextFrom:
+    id: TileMore
+    index: 1
+- assertTrue: ${maestro.copiedText.toLowerCase().includes('pig')}
+# The note can arrive late (the pack download ends in the background): dismiss it again just before the first tap, when it is on screen.
+- runFlow:
+    when:
+      visible: Storyteller voices are ready
+    commands:
+      - tapOn: "OK"
+# Reorder from the sheet, move the 4th book before the 2nd, then Cancel: the shelf is as it was.
+- tapOn:
+    id: TileMore
+    index: 0
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: BookSheetReorder
+    timeout: 10000
+- tapOn:
+    id: BookSheetReorder
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: ReorderDone
+    timeout: 10000
+- assertVisible:
+    id: ReorderCancel
+- assertVisible:
+    id: ReorderHint
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: shelf-reorder-move
+      from: "4"
+      to: "2"
+- extendedWaitUntil:
+    visible:
+      id: ReorderDone
+    timeout: 10000
+- tapOn:
+    id: ReorderCancel
+    waitToSettleTimeoutMs: 500
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 10000
+- assertNotVisible:
+    id: ReorderDone
+- copyTextFrom:
+    id: TileMore
+    index: 1
+- assertTrue: ${maestro.copiedText.toLowerCase().includes('pig')}
+# Again, this time Done: the tortoise is now 2nd. The note can have arrived meanwhile and covers the options button: dismiss it first.
+- runFlow:
+    when:
+      visible: Storyteller voices are ready
+    commands:
+      - tapOn: "OK"
+- tapOn:
+    id: TileMore
+    index: 0
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: BookSheetReorder
+    timeout: 10000
+- tapOn:
+    id: BookSheetReorder
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: ReorderDone
+    timeout: 10000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: shelf-reorder-move
+      from: "4"
+      to: "2"
+- extendedWaitUntil:
+    visible:
+      id: ReorderDone
+    timeout: 10000
+- tapOn:
+    id: ReorderDone
+    waitToSettleTimeoutMs: 500
+# Done lands in the grown-ups' corner, not on the kids' shelf.
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 15000
+- assertNotVisible:
+    id: ReorderDone
+- copyTextFrom:
+    id: TileMore
+    index: 1
+- assertTrue: ${maestro.copiedText.toLowerCase().includes('tortoise')}
+# Restart: the order was stored, not just shown.
+- launchApp:
+    # launchApp-restart: the flow proves the saved shelf order survives a restart of the app.
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 60000
+- copyTextFrom:
+    id: TileMore
+    index: 1
+- assertTrue: ${maestro.copiedText.toLowerCase().includes('tortoise')}

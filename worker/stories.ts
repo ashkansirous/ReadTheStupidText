@@ -4,6 +4,8 @@
 //   GET /api/stories                  the list of complete stories (60 s listing cache)
 //   GET /api/stories/<id>/cover       the cover picture
 //   GET /api/stories/<id>/download    the newest package; add ?v=<n> for that version, which is cached for a day
+//   GET /api/stories/<id>/audio/<lang>?v=<n>   Slice 246 B2: the audio pack of that book language (audio-<lang>-v<n>.zip), only when meta.json's `audio` lists exactly
+//                                     that language and version and the zip is in the folder; a missing or different ?v= is a 404. Immutable per version, cached for a day
 // A folder counts only when its meta.json and at least one package are both there (meta.json goes up
 // last, the APK-manifest convention), so a half upload is never offered. Nothing about the caller is
 // read or stored. Only Dino Reader's host and its /dino/ prefix on workers.dev route here (index.ts).
@@ -23,6 +25,7 @@ import {
   STORY_META_FILE,
   VERSIONED_CACHE,
   storyCoverKey,
+  storyFolder,
   storyMetaKey,
   storyPackageFileName,
   storyPackageKey,
@@ -33,6 +36,7 @@ export const STORIES_API_PATH = "/api/stories";
 const STORY_PATH_PREFIX = "/api/stories/";
 const COVER_SEGMENT = "cover";
 const DOWNLOAD_SEGMENT = "download";
+const AUDIO_SEGMENT = "audio";
 const VERSION_PARAM = "v";
 
 /** The list response format; the app reads `stories` and ignores fields it does not know. */
@@ -40,6 +44,7 @@ export const LIST_SCHEMA_VERSION = 1;
 
 const JPEG_CONTENT_TYPE = "image/jpeg";
 const PACKAGE_CONTENT_TYPE = "application/octet-stream";
+const AUDIO_CONTENT_TYPE = "application/zip";
 const LIST_CACHE_CONTROL = "public, max-age=60";
 const COVER_CACHE = "public, max-age=3600";
 const META_READ_BATCH = 6;
@@ -53,7 +58,14 @@ const MAX_TITLE_LANGUAGES = 20;
 const LANGUAGE_CODE = /^[a-z]{2,3}(-[a-z0-9]{2,8})?$/;
 const ALLOWED_METHODS = "GET, HEAD";
 const PACKAGE_FILE = /^story-v(\d+)\.dino$/;
+const AUDIO_FILE = /^audio-([a-z]{2,3}(?:-[a-z0-9]{2,8})?)-v(\d+)\.zip$/;
+const MAX_AUDIO_LANGUAGES = 40;
+const MAX_AUDIO_BYTES = 2_000_000_000;
 const POSITIVE_INTEGER = /^[1-9]\d{0,8}$/;
+
+/** Slice 260: the closed set of store tags, in the order a card shows them. Parsing is case-sensitive. */
+export const STORE_TAGS = ["Hot", "Popular", "Recommended", "New"] as const;
+export type StoreTag = (typeof STORE_TAGS)[number];
 
 const ErrorCode = {
   Unavailable: "stories-unavailable",
@@ -81,6 +93,18 @@ export interface StoryMeta {
   readonly titles: Readonly<Record<string, string>> | null;
   /** Slice 192: the credit line per language code, the store builder's copy of the book's `creditsByLanguage`; null when the entry has none (the card then shows `credits`). */
   readonly creditsByLanguage: Readonly<Record<string, string>> | null;
+  /** Slice 246 B2: the audio pack each book language has (pack version and zip size), the store builder's copy of the book's pack record; null when the book has none. Old apps ignore it. */
+  readonly audio: Readonly<Record<string, AudioPackInfo>> | null;
+  /** Slice 260: the store tags the user set in the book's `book.json`, only the four known names, deduplicated, in list order (Hot, Popular, Recommended, New); empty when none. */
+  readonly tags: readonly StoreTag[];
+  /** Slice 260: the size of the `story-v<n>.dino` package in bytes; null when absent or not a positive integer. */
+  readonly bytes: number | null;
+}
+
+/** One audio pack of a book language: `audio-<lang>-v<version>.zip`; `bytes` (null when unknown) lets the app show a size. */
+export interface AudioPackInfo {
+  readonly version: number;
+  readonly bytes: number | null;
 }
 
 /** One complete story: its checked meta, the package version it offers, and whether a cover was uploaded. */
@@ -89,12 +113,15 @@ export interface StoryEntry {
   readonly meta: StoryMeta;
   readonly version: number;
   readonly hasCover: boolean;
+  /** The audio packs meta.json lists AND the folder holds (a listed pack that was never uploaded is not offered); absent or null = none. */
+  readonly audio?: Readonly<Record<string, AudioPackInfo>> | null;
 }
 
 interface Folder {
   hasMeta: boolean;
   hasCover: boolean;
   versions: number[];
+  audio: Record<string, number[]>;
 }
 
 /** The `<id>` and file name of a key under the stories prefix, or null for any other key. */
@@ -106,6 +133,14 @@ export function parseStoryKey(key: string): { id: string; file: string } | null 
   return parts.length === 2 && STORY_ID_PATTERN.test(id) && file !== "" ? { id, file } : null;
 }
 
+/** The language and version an `audio-<lang>-v<n>.zip` file name carries, or null for any other name. */
+export function audioPackOf(file: string): { language: string; version: number } | null {
+  const match = AUDIO_FILE.exec(file);
+  const language = match?.[1] ?? "";
+  const digits = match?.[2] ?? "";
+  return language !== "" && POSITIVE_INTEGER.test(digits) ? { language, version: Number(digits) } : null;
+}
+
 /** The version a `story-v<n>.dino` file name carries, or null for any other name. */
 export function packageVersionOf(file: string): number | null {
   const match = PACKAGE_FILE.exec(file);
@@ -114,7 +149,7 @@ export function packageVersionOf(file: string): number | null {
 }
 
 function emptyFolder(): Folder {
-  return { hasMeta: false, hasCover: false, versions: [] };
+  return { hasMeta: false, hasCover: false, versions: [], audio: {} };
 }
 
 /** Groups listed keys by story id; keys that are not a story file are ignored. */
@@ -125,6 +160,8 @@ export function groupFolders(keys: readonly string[]): Map<string, Folder> {
     if (parsed === null) continue;
     const folder = folders.get(parsed.id) ?? emptyFolder();
     const version = packageVersionOf(parsed.file);
+    const audio = audioPackOf(parsed.file);
+    if (audio !== null) (folder.audio[audio.language] ??= []).push(audio.version);
     if (parsed.file === STORY_META_FILE) folder.hasMeta = true;
     else if (parsed.file === STORY_COVER_FILE) folder.hasCover = true;
     else if (version !== null) folder.versions.push(version);
@@ -149,6 +186,31 @@ function positiveIntegerOrNull(value: unknown): number | null {
 export function parseAgeRange(rawMin: unknown, rawMax: unknown): { ageMin: number | null; ageMax: number | null } {
   const valid = (v: unknown): v is number => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= MAX_AGE;
   return valid(rawMin) && valid(rawMax) && rawMin <= rawMax ? { ageMin: rawMin, ageMax: rawMax } : { ageMin: null, ageMax: null };
+}
+
+/** Slice 246 B2: the one rule for an audio language key, used by parseAudio and the audio route: exactly the app's lower-case code (no trimming, no case folding), so meta key, URL and zip name agree. */
+export function isAudioLanguage(code: string): boolean {
+  return LANGUAGE_CODE.test(code);
+}
+
+/** Slice 246 B2: the `audio` map of a meta.json (language code to {version, bytes}); bad codes and versions are dropped, null when nothing is left. */
+export function parseAudio(raw: unknown): Record<string, AudioPackInfo> | null {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
+  const kept: Record<string, AudioPackInfo> = {};
+  for (const [code, value] of Object.entries(raw)) {
+    const pack = typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
+    const version = positiveIntegerOrNull(pack["version"]);
+    const bytes = positiveIntegerOrNull(pack["bytes"]);
+    const sized = bytes !== null && bytes <= MAX_AUDIO_BYTES ? bytes : null;
+    if (isAudioLanguage(code) && version !== null && Object.keys(kept).length < MAX_AUDIO_LANGUAGES) kept[code] = { version, bytes: sized };
+  }
+  return Object.keys(kept).length > 0 ? kept : null;
+}
+
+/** The packs meta.json lists that the folder really holds; null when none. */
+export function offeredAudio(meta: StoryMeta, folder: Folder): Record<string, AudioPackInfo> | null {
+  const listed = Object.entries(meta.audio ?? {}).filter(([language, pack]) => folder.audio[language]?.includes(pack.version) === true);
+  return listed.length > 0 ? Object.fromEntries(listed) : null;
 }
 
 function boundedText(value: unknown, max: number): string | null {
@@ -178,6 +240,12 @@ function parseLanguageTexts(raw: unknown, maxLength: number): Record<string, str
   return Object.keys(kept).length > 0 ? kept : null;
 }
 
+/** Slice 260: the known tag names of a `tags` array, deduplicated and in list order; a wrong-typed value, an unknown or wrong-case name is dropped. */
+export function parseTags(raw: unknown): StoreTag[] {
+  if (!Array.isArray(raw)) return [];
+  return STORE_TAGS.filter((tag) => raw.includes(tag));
+}
+
 /** A checked meta, or null when a required field is missing or malformed (the story is then not offered). */
 export function parseMeta(parsed: unknown): StoryMeta | null {
   if (typeof parsed !== "object" || parsed === null) return null;
@@ -201,6 +269,9 @@ export function parseMeta(parsed: unknown): StoryMeta | null {
     author: boundedText(raw["author"], MAX_AUTHOR_LENGTH),
     titles: parseTitles(raw["titles"]),
     creditsByLanguage: parseCreditsByLanguage(raw["creditsByLanguage"]),
+    audio: parseAudio(raw["audio"]),
+    tags: parseTags(raw["tags"]),
+    bytes: positiveIntegerOrNull(raw["bytes"]),
   };
 }
 
@@ -210,8 +281,10 @@ export function offeredVersion(meta: StoryMeta, uploaded: readonly number[]): nu
   return uploaded.length === 0 ? null : Math.max(...uploaded);
 }
 
-/** Newest first by `added`, then by title and id so equal dates stay in one order. */
+/** Slice 260: tagged books first, then newest first by `added`, then by title and id so equal dates stay in one order. */
 export function compareEntries(a: StoryEntry, b: StoryEntry): number {
+  const byTagged = Number(b.meta.tags.length > 0) - Number(a.meta.tags.length > 0);
+  if (byTagged !== 0) return byTagged;
   const byDate = (b.meta.added ?? "").localeCompare(a.meta.added ?? "");
   return byDate !== 0 ? byDate : a.meta.title.localeCompare(b.meta.title) || a.id.localeCompare(b.id);
 }
@@ -230,8 +303,19 @@ export interface ListItem {
   readonly author: string | null;
   readonly titles: Readonly<Record<string, string>> | null;
   readonly creditsByLanguage: Readonly<Record<string, string>> | null;
+  /** Slice 246 B2: the packs on offer per language (version, size, link); null when the book has none. */
+  readonly audio: Readonly<Record<string, AudioPackInfo & { readonly url: string }>> | null;
+  /** Slice 260: the store tags in list order (empty when none) and the package size in bytes (null when unknown). */
+  readonly tags: readonly StoreTag[];
+  readonly bytes: number | null;
   readonly coverUrl: string | null;
   readonly downloadUrl: string;
+}
+
+function audioItems(entry: StoryEntry, base: string): Record<string, AudioPackInfo & { url: string }> | null {
+  const packs = Object.entries(entry.audio ?? {});
+  if (packs.length === 0) return null;
+  return Object.fromEntries(packs.map(([language, pack]) => [language, { ...pack, url: `${base}${AUDIO_SEGMENT}/${language}?${VERSION_PARAM}=${pack.version}` }]));
 }
 
 /** The list line for one story. `pathPrefix` is "" on the Dino host and "/dino" on workers.dev. */
@@ -252,6 +336,9 @@ export function toListItem(entry: StoryEntry, pathPrefix: string): ListItem {
     author: entry.meta.author,
     titles: entry.meta.titles,
     creditsByLanguage: entry.meta.creditsByLanguage,
+    audio: audioItems(entry, base),
+    tags: entry.meta.tags,
+    bytes: entry.meta.bytes,
     coverUrl: entry.hasCover ? `${base}${COVER_SEGMENT}${versioned}` : null,
     downloadUrl: `${base}${DOWNLOAD_SEGMENT}${versioned}`,
   };
@@ -292,7 +379,7 @@ async function readMeta(bucket: R2Bucket, id: string): Promise<StoryMeta | null>
 async function entryFor(bucket: R2Bucket, id: string, folder: Folder): Promise<StoryEntry | null> {
   const meta = await readMeta(bucket, id);
   const version = meta === null ? null : offeredVersion(meta, folder.versions);
-  return meta === null || version === null ? null : { id, meta, version, hasCover: folder.hasCover };
+  return meta === null || version === null ? null : { id, meta, version, hasCover: folder.hasCover, audio: offeredAudio(meta, folder) };
 }
 
 async function buildEntries(bucket: R2Bucket): Promise<StoryEntry[]> {
@@ -386,6 +473,19 @@ function serveDownload(request: Request, bucket: R2Bucket, entry: StoryEntry, ve
   return serve(request, bucket, packageFile(entry.id, version ?? entry.version), version === null ? NO_CACHE : VERSIONED_CACHE);
 }
 
+// Slice 246 B2: the pack of one book language at one version. Both must be what meta.json lists and the folder holds (entry.audio), so a stale or guessed pair is a 404.
+function serveAudio(request: Request, bucket: R2Bucket, entry: StoryEntry, language: string, serve: ObjectServer): Promise<Response> {
+  const version = requestedVersion(new URL(request.url));
+  const offered = isAudioLanguage(language) ? entry.audio?.[language] : undefined;
+  if (version === null || version === "invalid" || offered === undefined || offered.version !== version) return Promise.resolve(errorResponse(ErrorCode.NotFound, 404));
+  return serve(request, bucket, audioFile(entry.id, language, version), VERSIONED_CACHE);
+}
+
+function audioFile(id: string, language: string, version: number): ServedFile {
+  const fileName = `audio-${language}-v${version}.zip`;
+  return { key: `${storyFolder(id)}${fileName}`, contentType: AUDIO_CONTENT_TYPE, fileName, disposition: "attachment", unavailable: ErrorCode.StoryUnavailable };
+}
+
 function serveStoryFile(request: Request, bucket: R2Bucket, entry: StoryEntry, segment: string, serve: ObjectServer): Promise<Response> {
   const version = requestedVersion(new URL(request.url));
   if (version === "invalid" || (segment !== COVER_SEGMENT && segment !== DOWNLOAD_SEGMENT)) {
@@ -401,14 +501,16 @@ async function route(request: Request, bucket: R2Bucket, pathPrefix: string, ser
     return entries === null ? errorResponse(ErrorCode.Unavailable, 503) : listResponse(entries, pathPrefix, request.method === "HEAD");
   }
   const [id = "", segment = "", ...extra] = pathname.slice(STORY_PATH_PREFIX.length).split("/");
-  if (!STORY_ID_PATTERN.test(id) || extra.length > 0) return errorResponse(ErrorCode.NotFound, 404);
+  const audioLanguage = segment === AUDIO_SEGMENT && extra.length === 1 ? (extra[0] ?? "") : null; // audio/<lang> is the one route with a third part
+  if (!STORY_ID_PATTERN.test(id) || (extra.length > 0 && audioLanguage === null)) return errorResponse(ErrorCode.NotFound, 404);
   let entry: StoryEntry | null;
   try {
     entry = await freshEntry(bucket, id);
   } catch {
     return errorResponse(ErrorCode.Unavailable, 503);
   }
-  return entry === null ? errorResponse(ErrorCode.NotFound, 404) : serveStoryFile(request, bucket, entry, segment, serve);
+  if (entry === null) return errorResponse(ErrorCode.NotFound, 404);
+  return audioLanguage !== null ? serveAudio(request, bucket, entry, audioLanguage, serve) : serveStoryFile(request, bucket, entry, segment, serve);
 }
 
 /** True for every path this module answers (after the `/dino` prefix is stripped). */

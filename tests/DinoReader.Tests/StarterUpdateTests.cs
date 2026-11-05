@@ -213,7 +213,6 @@ public sealed class StarterUpdateTests : IDisposable
             Created = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
             PreferredMode = ReadingMode.PictureOnly,
             TranslateToMyLanguage = false,
-            ShowOriginalText = true,
             AnimalSoundsOn = false,
             UseRecordings = true,
         };
@@ -233,7 +232,6 @@ public sealed class StarterUpdateTests : IDisposable
         Assert.Equal(stored.Cast, refreshed.Cast);
         Assert.Equal(ReadingMode.PictureOnly, refreshed.PreferredMode);
         Assert.False(refreshed.TranslateToMyLanguage);
-        Assert.True(refreshed.ShowOriginalText);
         Assert.False(refreshed.AnimalSoundsOn);
         Assert.Null(refreshed.Recordings);
     }
@@ -246,7 +244,6 @@ public sealed class StarterUpdateTests : IDisposable
             NarratorVoiceId = "F3",
             PreferredMode = ReadingMode.PictureOnly,
             TranslateToMyLanguage = true,
-            ShowOriginalText = true,
             AnimalSoundsOn = false,
             Title = "My title",
         };
@@ -257,7 +254,6 @@ public sealed class StarterUpdateTests : IDisposable
         Assert.Equal("F3", refreshed.NarratorVoiceId);
         Assert.Equal(stored.PreferredMode, refreshed.PreferredMode);
         Assert.True(refreshed.TranslateToMyLanguage);
-        Assert.True(refreshed.ShowOriginalText);
         Assert.False(refreshed.AnimalSoundsOn);
         Assert.Equal("My title", refreshed.Title);
     }

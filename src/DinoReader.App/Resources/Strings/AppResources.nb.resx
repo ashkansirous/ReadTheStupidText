@@ -16,6 +16,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Venter på internett · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Venter på Wi-Fi · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Fortsetter av seg selv når du er på nett igjen.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>Henter lyd på {0} til bøkene dine</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} har ingen lyd på {1} ennå. Dinos lesestemme leser den.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} og {2} til har ingen lyd på {1} ennå. Dinos lesestemme leser dem.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Venter på internett…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Venter på Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Gjør klart…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>Noe {0}-lyd kunne ikke hentes ennå. Dino prøver igjen senere.</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Prøv igjen</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Stemmenedlastingen ble skadet. Leser med telefonens stemme. Trykk for å prøve igjen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Pakken med naturlige stemmer kan ikke brukes. Leser med telefonens stemme.</value></data>
@@ -58,6 +65,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>Valgt ut og rollebesatt for Dino</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Hent</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Lastet ned</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>Hot</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>Populær</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>Anbefalt</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>Ny</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} sider · {1} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratis og uten konto. Ingenting om deg eller barnet ditt sendes.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Du er frakoblet</value></data>
@@ -109,11 +120,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>Gjør Dinos stemme klar</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>{0} stemmer · dette skjer bare én gang</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>Laster ned …</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>Venter i hyllen</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Velg et annet språk</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Klar til å lese!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Hver figur får sin egen stemme. {0} historier står i hyllen.</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Hver figur får sin egen stemme. Én historie står i hyllen.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Hver figur får sin egen stemme. Bøkene dine står i hyllen.</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>Velg de første bøkene dine</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>Velg minst to. Du kan hente flere fra butikken når som helst.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>Velg 2 bøker for å starte</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>Velg 1 til</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>{0} valgt · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>{0} valgt</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>Henter bøkene dine …</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>Bok {0} av {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Koble til internett for å velge de første bøkene dine</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino trenger to bøker før du starter. Slå på Wi-Fi eller mobildata og prøv igjen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Hør Dino si hei</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hei! Jeg er Dino. La oss lese en historie sammen.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Se hva Dino kan</value></data>
@@ -128,8 +147,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Bak en lås, for å legge til bøker og stemmer.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>Les en historie sammen</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>Trykk på en bok og deretter på spill av. Dino leser høyt og lyser opp hver setning.</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>Hent flere bøker</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>Butikken har flere historier, klare til nedlasting.</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino åpnet boken. «Det var en gang…»</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Les den med din stemme</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Ta opp deg selv mens du leser en historie, side for side. Barnet ditt kan spille den av når som helst.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Legg til din egen bok</value></data>
@@ -165,6 +183,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Voksenhjørnet</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Bare voksne ser dette. Barnets hylle er ett trykk unna.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Tilbake til barnets hylle</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>Endre rekkefølge</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Trykk og hold på en bok, og dra den til et nytt sted. Barnets hylle viser samme rekkefølge.</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Kunne ikke lagre den nye rekkefølgen</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Noe bruker fortsatt filen. Trykk Ferdig for å prøve igjen, eller Avbryt for å beholde den gamle rekkefølgen.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Les nå</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Valg for {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Fra butikken</value></data>
@@ -226,8 +248,6 @@
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>Denne boken</value></data>
-  <data name="Book_ShowOriginal" xml:space="preserve"><value>Vis originaltekst</value></data>
-  <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Vis ordene på {0}. Stemmen leser fortsatt på {1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>Tilbake til historien</value></data>
   <!-- /Slice 110 -->
   <!-- Slice 111 -->
@@ -274,6 +294,18 @@
   <data name="Version_Title" xml:space="preserve"><value>Versjon</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Hjelp oss å gjøre Dino bedre</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>Sender tall som «en bok fra butikken ble lest ferdig». Ingen navn, ingen id-er, ingenting du har skrevet. Det legger også til landet ditt og en grov enhetstype (telefon eller nettbrett, minneområde). Hvis appen krasjer, kan den også sende en krasjrapport: feilen og en kort teknisk logg, aldri noe du har lest eller skrevet.</value></data>
+  <!-- Slice 249: Report a problem -->
+  <data name="ReportProblem_Title" xml:space="preserve"><value>Rapporter et problem</value></data>
+  <data name="ReportProblem_Explain" xml:space="preserve"><value>Send oss appens siste tekniske logg slik at vi kan se hva som gikk galt. Den viser hvilke skjermer som var åpne, hvilke knapper som ble trykket på og hva opplesingen gjorde, pluss appversjonen, en omtrentlig enhetstype og landet ditt. Ingen navn, ingen boktitler, ingenting noen har skrevet. Den sendes bare når du trykker på Send.</value></data>
+  <data name="ReportProblem_Send" xml:space="preserve"><value>Send</value></data>
+  <data name="ReportProblem_Sending" xml:space="preserve"><value>Sender rapporten …</value></data>
+  <data name="ReportProblem_Sent" xml:space="preserve"><value>Sendt.</value></data>
+  <data name="ReportProblem_QuoteCode" xml:space="preserve"><value>Hvis du skriver til oss, oppgi denne koden:</value></data>
+  <data name="ReportProblem_Copy" xml:space="preserve"><value>Kopier</value></data>
+  <data name="ReportProblem_Copied" xml:space="preserve"><value>Kopiert</value></data>
+  <data name="ReportProblem_Failed" xml:space="preserve"><value>Rapporten kunne ikke sendes akkurat nå. Den lagres på denne telefonen og sendes senere, eller du kan prøve igjen.</value></data>
+  <data name="ReportProblem_FailedNotKept" xml:space="preserve"><value>Rapporten kunne ikke sendes akkurat nå. Du kan prøve igjen.</value></data>
+  <data name="ReportProblem_TryAgain" xml:space="preserve"><value>Prøv igjen</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Lesehastighet</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Saktere er lettere for de små</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · sakte</value></data>

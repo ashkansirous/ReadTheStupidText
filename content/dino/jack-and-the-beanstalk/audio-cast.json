@@ -2,27 +2,27 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Jack": {
       "voice": "Puck",
-      "style": "a young, bright, upbeat little boy's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, upbeat little boy's voice for young children",
       "direction": "bright, eager and kind"
     },
     "Mother": {
       "voice": "Vindemiatrix",
-      "style": "a warm, soft, gentle mum's voice for young children, standard Tehrani accent",
+      "style": "a warm, soft, gentle mum's voice for young children",
       "direction": "warm and caring"
     },
     "Giant": {
       "voice": "Elio",
-      "style": "a deep, big, jolly grown-up voice, a friendly storybook giant, never scary for young children, standard Tehrani accent",
+      "style": "a deep, big, jolly grown-up voice, a friendly storybook giant, never scary for young children",
       "direction": "big, jolly and friendly"
     },
     "Peddler": {
       "voice": "Gacrux",
-      "style": "a cheerful, twinkly old lady's voice, a funny little peddler, for young children, standard Tehrani accent",
+      "style": "a cheerful, twinkly old lady's voice, a funny little peddler, for young children",
       "direction": "funny, bouncy and mysterious"
     }
   },
@@ -131,5 +131,82 @@
       "source": "Night-night, Giant,",
       "direction": "whispering, sleepy"
     }
-  ]
+  ],
+  "audioPacks": {
+    "ar": {
+      "version": 1,
+      "hash": "41e66e9f0c2827a7338977a7ebfb110c5f3d67fe8897ddd9b0f5e8fd4c621939",
+      "bytes": 3241690
+    },
+    "da": {
+      "version": 1,
+      "hash": "6cbb870a8b1e1e69377aba8a9a20c2334a2b932c5952ec6503cfc440ee63041f",
+      "bytes": 2489314
+    },
+    "de": {
+      "version": 1,
+      "hash": "4d8382ac0afc782f899445d0cb326f97b89ad115a96b1c0d717802593daea2e7",
+      "bytes": 2730854
+    },
+    "en": {
+      "version": 1,
+      "hash": "f73fc147238556a9a3fe681f4fe356abd2b70aff73dcf126d56ecfb9b76e30d6",
+      "bytes": 2681626
+    },
+    "es": {
+      "version": 1,
+      "hash": "3d209d9b43810fee6fac154cf9689e666927c650881eb76432fae94a69a8c0e3",
+      "bytes": 3070523
+    },
+    "fa": {
+      "version": 1,
+      "hash": "76919acc4709073919ca4bb253bac34f9a88f851a6a8865b9e6eb2ca6bff84bc",
+      "bytes": 3031441
+    },
+    "fi": {
+      "version": 1,
+      "hash": "5d1111d7cdcf6b79e93c938cc1a8144b28d74bdc67bec0469ae4edd5f8008991",
+      "bytes": 2946952
+    },
+    "fr": {
+      "version": 1,
+      "hash": "49710574b4086828eb3879d68a366d23ab9301b99e49c4026cf711a9fbaa7421",
+      "bytes": 2892692
+    },
+    "ja": {
+      "version": 1,
+      "hash": "e503e80779887b85687c03b8b37ff24c772c9c1b66ee9c6767aa08fd5941ea44",
+      "bytes": 3180628
+    },
+    "nb": {
+      "version": 1,
+      "hash": "dd8e6666e8cc5bab61b1b5a2d8b3e1bd5c130a483768a58187757710a9b84f54",
+      "bytes": 2783105
+    },
+    "nl": {
+      "version": 1,
+      "hash": "e2f0e57e0935994de061d150e331549b7ffbce6709b7853d9252f369ab962e93",
+      "bytes": 2660778
+    },
+    "pt": {
+      "version": 1,
+      "hash": "924e93d901e2e762df9d3766a7fe5891416a84522c9c31794ef8d9222f263031",
+      "bytes": 2991069
+    },
+    "ru": {
+      "version": 1,
+      "hash": "5643befd4173f8fe209f599c4a3c6036beb6fd282b7d30512e98395d2e09aa26",
+      "bytes": 2977859
+    },
+    "sv": {
+      "version": 1,
+      "hash": "f742ee3175374a3dd449aa07d646bc4f479fe8113ffa071da1ae47b85139adbb",
+      "bytes": 2799438
+    },
+    "zh": {
+      "version": 1,
+      "hash": "a0f8e36e7dc205fc73339b537c7f45b3afd851801923e727cb7d61d621701eb6",
+      "bytes": 2937927
+    }
+  }
 }

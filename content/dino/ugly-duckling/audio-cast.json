@@ -2,32 +2,32 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Mother Duck": {
       "voice": "Sulafat",
-      "style": "a warm, soft, loving mother's voice, gentle for young children, standard Tehrani accent",
+      "style": "a warm, soft, loving mother's voice, gentle for young children",
       "direction": "loving, calm and kind"
     },
     "Duckling": {
       "voice": "Achird",
-      "style": "a young, soft, warm boy's voice for young children, standard Tehrani accent",
+      "style": "a young, soft, warm boy's voice for young children",
       "direction": "gentle, shy and curious"
     },
     "Dilly": {
       "voice": "Cleo",
-      "style": "a young, bright, bouncy little girl's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, bouncy little girl's voice for young children",
       "direction": "giggly and bubbly"
     },
     "Hen": {
       "voice": "Laomedeia",
-      "style": "a bright, upbeat, friendly grown-up woman's voice for young children, standard Tehrani accent",
+      "style": "a bright, upbeat, friendly grown-up woman's voice for young children",
       "direction": "cheerful, kind and a little bustling"
     },
     "Swan": {
       "voice": "Iapetus",
-      "style": "a warm, clear, kind grown-up man's voice for young children, standard Tehrani accent",
+      "style": "a warm, clear, kind grown-up man's voice for young children",
       "direction": "kind and welcoming, gently proud"
     }
   },
@@ -85,5 +85,82 @@
       "occurrence": 2,
       "direction": "shy and hopeful"
     }
-  ]
+  ],
+  "audioPacks": {
+    "ar": {
+      "version": 1,
+      "hash": "1d876ee87e21d309b619c43a7c31dd386f94335b193ba2a1848a5ab7e5672a69",
+      "bytes": 2473366
+    },
+    "da": {
+      "version": 1,
+      "hash": "05091de38b7e3c66e770f9627a57f16906723f83a2873c6a760dd22146d72005",
+      "bytes": 1947105
+    },
+    "de": {
+      "version": 1,
+      "hash": "44512d2c25e687cb823a0ccb0994650a36b4cba876079d01c8e968bdf957112f",
+      "bytes": 2118954
+    },
+    "en": {
+      "version": 1,
+      "hash": "85cc2d9f9aab7b4f198b45c19f98aaccf498ff3f74ba894efb5306281668ca63",
+      "bytes": 2090600
+    },
+    "es": {
+      "version": 1,
+      "hash": "34f905484bb7b0d664708891a0d1d976e4bf4bd6b821594f725139e8f55fa7b5",
+      "bytes": 2310404
+    },
+    "fa": {
+      "version": 1,
+      "hash": "f77d0ef0615d4d7455449db135420f5c5cae4d0d3daeafbcbc77ca7c37c83a84",
+      "bytes": 2351378
+    },
+    "fi": {
+      "version": 1,
+      "hash": "9cf818df497e5cf2a8c8569e09a52a96056268877ac8b0d4199a4e79c80ffd87",
+      "bytes": 2255465
+    },
+    "fr": {
+      "version": 1,
+      "hash": "8a7824d936e8b8eb3bcc2385bbc41f6fe9d7ced29c04a449afde9abdd591a49f",
+      "bytes": 2155958
+    },
+    "ja": {
+      "version": 1,
+      "hash": "b5d9c3fcfd7f9eaee3226f08ee5da70803dfbcc47eb634035db1a95b3905752e",
+      "bytes": 2625700
+    },
+    "nb": {
+      "version": 1,
+      "hash": "ed218ff39f226feb41687ea15caf5b1daf7df87b54a4a48af79daadc242b3180",
+      "bytes": 2064798
+    },
+    "nl": {
+      "version": 1,
+      "hash": "2945e204b4fd95c4e5d4d7570147ba1f7bc52c650445af13e39296ee35f62da8",
+      "bytes": 1965594
+    },
+    "pt": {
+      "version": 1,
+      "hash": "274d369e2d4b7b57b4f4e7c86273343a00f8e8177999a7394266879e5e83dda8",
+      "bytes": 2301091
+    },
+    "ru": {
+      "version": 1,
+      "hash": "cc224389c1eae956f4fd76f4a6c332cc8493c18210b1eaed3d9fdbb1773cc27e",
+      "bytes": 2252055
+    },
+    "sv": {
+      "version": 1,
+      "hash": "a55e3f09ed8b9fe27a0abcbd15fa66df77ff61bab08fac6eac39836a6b454019",
+      "bytes": 2182895
+    },
+    "zh": {
+      "version": 1,
+      "hash": "a20ce22f175891fb5bb23c2cdf2ddba6933c1b545ed199286aae941980281d0c",
+      "bytes": 2272322
+    }
+  }
 }

@@ -5,9 +5,9 @@ public static class LanguagePick
 {
     public const int MinimumChoices = 2;
 
-    /// <summary>A book offers a language switch only when there is a choice, it shows the translation (not the original text) and it has no recordings.</summary>
-    public static bool BookSwitchable(bool hasChoice, bool showOriginalText, int recordings) =>
-        hasChoice && !showOriginalText && recordings == 0;
+    /// <summary>A book offers a language switch only when there is a choice and it has no recordings.</summary>
+    public static bool BookSwitchable(bool hasChoice, int recordings) =>
+        hasChoice && recordings == 0;
 
     /// <summary>The child's pick when the book can be read in it; else the app language, else the list's first language. With no choice to offer, the app language.</summary>
     public static string Effective(IReadOnlyList<string> readable, string main, string pick)

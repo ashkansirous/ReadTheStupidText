@@ -45,7 +45,7 @@ priority", "add slices for adding anything missing from the crash report".
 - [ ] 4. **One command answers "did it crash?"**: `tools/crashes/report.(ps1|mjs) -App dino|rtst -Since <date>` runs
   the R2 pull, `pull-apple.py` and `pull-play.py`, pairs each `unclean_exit` with the Apple/Play crash closest in time
   for the same version, symbolicates, and prints one grouped summary.
-- [ ] 5. **Rolling-log lines (Android and iOS, both apps), no user text:** page shown/left (page type name), Back
+- [x] 5. (Built in Slice 249 item 1, PR #781: `Mobile.Shared/Crashes/TraceLines` + `AppTrace`; page shown/left/popped, Back (both platforms log the pop, `page popped`; no system Back hook, it would switch off predictive back), reading events with a fixed reason, app foreground/background, memory warning, synthesis queue length. Not yet seen in a device log: see Slice 249.) **Rolling-log lines (Android and iOS, both apps), no user text:** page shown/left (page type name), Back
   pressed (toolbar and system/gesture back), reading started/paused/stopped/detached and why, app to background and
   foreground, memory warning (iOS `DidReceiveMemoryWarning`, Android `OnTrimMemory` level), synthesis queue length
   when it changes by a step. Same names on both platforms.

@@ -7,7 +7,7 @@ public class BookSheetPlanTests
     [Fact]
     public void OwnBookGetsEditPagesAndNoStoreNote()
     {
-        BookSheetPlan plan = BookSheetPlan.For(BookOrigin.Own, translated: false, hasRecording: false, developerExport: false);
+        BookSheetPlan plan = BookSheetPlan.For(BookOrigin.Own, hasRecording: false, developerExport: false);
 
         Assert.True(plan.ShowEditPages);
         Assert.False(plan.CanReAddFromStore);
@@ -18,25 +18,23 @@ public class BookSheetPlanTests
     [InlineData(BookOrigin.Store)]
     public void CatalogueBooksHaveNoEditPages(BookOrigin origin)
     {
-        Assert.False(BookSheetPlan.For(origin, false, false, false).ShowEditPages);
+        Assert.False(BookSheetPlan.For(origin, false, false).ShowEditPages);
     }
 
     [Fact]
     public void OnlyStoreBooksCanBeAddedAgain()
     {
-        Assert.True(BookSheetPlan.For(BookOrigin.Store, false, false, false).CanReAddFromStore);
-        Assert.False(BookSheetPlan.For(BookOrigin.Starter, false, false, false).CanReAddFromStore);
+        Assert.True(BookSheetPlan.For(BookOrigin.Store, false, false).CanReAddFromStore);
+        Assert.False(BookSheetPlan.For(BookOrigin.Starter, false, false).CanReAddFromStore);
     }
 
     [Fact]
-    public void OriginalAndVoiceRowsFollowTheBooksState()
+    public void VoiceRowFollowsTheBooksState()
     {
-        BookSheetPlan plan = BookSheetPlan.For(BookOrigin.Store, translated: true, hasRecording: true, developerExport: true);
+        BookSheetPlan plan = BookSheetPlan.For(BookOrigin.Store, hasRecording: true, developerExport: true);
 
-        Assert.True(plan.ShowOriginalText);
         Assert.True(plan.ShowVoice);
         Assert.True(plan.ShowExport);
-        Assert.False(BookSheetPlan.For(BookOrigin.Store, false, false, false).ShowOriginalText);
     }
 
     [Theory]
@@ -55,20 +53,20 @@ public class BookSheetPlanTests
     [InlineData(BookOrigin.Store)]
     public void ReadNowIsFirstForEveryBookKind(BookOrigin origin)
     {
-        Assert.Equal(BookSheetRow.ReadNow, BookSheetPlan.For(origin, false, false, false).Rows[0]);
-        Assert.Equal(BookSheetRow.ReadNow, BookSheetPlan.For(origin, true, true, true).Rows[0]);
+        Assert.Equal(BookSheetRow.ReadNow, BookSheetPlan.For(origin, false, false).Rows[0]);
+        Assert.Equal(BookSheetRow.ReadNow, BookSheetPlan.For(origin, true, true).Rows[0]);
     }
 
     [Fact]
     public void RowsFollowTheMockOrderAndOnlyShowWhatApplies()
     {
-        BookSheetPlan all = BookSheetPlan.For(BookOrigin.Own, translated: true, hasRecording: true, developerExport: true);
-        BookSheetPlan bare = BookSheetPlan.For(BookOrigin.Store, translated: false, hasRecording: false, developerExport: false);
+        BookSheetPlan all = BookSheetPlan.For(BookOrigin.Own, hasRecording: true, developerExport: true);
+        BookSheetPlan bare = BookSheetPlan.For(BookOrigin.Store, hasRecording: false, developerExport: false);
 
         Assert.Equal(
-            [BookSheetRow.ReadNow, BookSheetRow.ShowOriginalText, BookSheetRow.ReadWithMyVoice, BookSheetRow.RecordAndCast, BookSheetRow.EditPages, BookSheetRow.Export, BookSheetRow.Remove],
+            [BookSheetRow.ReadNow, BookSheetRow.ReadWithMyVoice, BookSheetRow.RecordAndCast, BookSheetRow.Reorder, BookSheetRow.EditPages, BookSheetRow.Export, BookSheetRow.Remove],
             all.Rows);
-        Assert.Equal([BookSheetRow.ReadNow, BookSheetRow.RecordAndCast, BookSheetRow.Remove], bare.Rows);
+        Assert.Equal([BookSheetRow.ReadNow, BookSheetRow.RecordAndCast, BookSheetRow.Reorder, BookSheetRow.Remove], bare.Rows);
     }
 
     [Theory]

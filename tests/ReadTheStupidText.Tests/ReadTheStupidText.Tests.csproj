@@ -35,6 +35,9 @@
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackDownloadHost.cs" Link="Mobile\PackDownloadHost.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackKeepAlivePolicy.cs" Link="Mobile\PackKeepAlivePolicy.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\StalePartialPolicy.cs" Link="Mobile\StalePartialPolicy.cs" />
+    <!-- Slice 243 item 5 / Slice 249: the log-line words and the "Report a problem" code and report, pure and shared by both apps. -->
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Crashes\TraceLines.cs" Link="Mobile\TraceLines.cs" />
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Crashes\ReportCode.cs" Link="Mobile\ReportCode.cs" />
     <!-- The launch scan's wanted/undecided pack rule (Slice 208), pulled out of the service so DecideAll is tested (Slice 225). -->
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\StalePartialDecider.cs" Link="Mobile\StalePartialDecider.cs" />
     <!-- The translation download session has no MAUI types (Slice 187). -->

@@ -16,6 +16,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Wachten op internet · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Wachten op wifi · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Gaat vanzelf verder zodra je weer online bent.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>{0}-audio ophalen voor je boeken</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} heeft nog geen {1}-audio. Dino’s leesstem leest het voor.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} en {2} andere hebben nog geen {1}-audio. Dino’s leesstem leest ze voor.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Wachten op internet…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Wachten op wifi…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Voorbereiden…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>Een deel van de {0}-audio kon nog niet worden opgehaald. Dino probeert het later opnieuw.</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Opnieuw</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>De download van de stem is beschadigd. Voorlezen met de stem van de telefoon. Tik om het opnieuw te proberen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Het pakket met natuurlijke stemmen is onbruikbaar. Voorlezen met de stem van de telefoon.</value></data>
@@ -58,6 +65,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>Uitgezocht en ingesproken voor Dino</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Ophalen</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Opgehaald</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>Hot</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>Populair</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>Aanbevolen</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>Nieuw</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} pagina’s · {1} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratis en zonder account. Er wordt niets over jou of je kind verstuurd.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Je bent offline</value></data>
@@ -109,11 +120,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>Dino’s stem wordt klaargemaakt</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>{0} stemmen · dit gebeurt maar één keer</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>Downloaden…</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>Wachten op de plank</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Kies een andere taal</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Klaar om te lezen!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Elk personage krijgt een eigen stem. Er staan {0} verhalen op de plank.</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Elk personage krijgt een eigen stem. Er staat één verhaal op de plank.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Elk personage krijgt een eigen stem. Je boeken staan op de plank.</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>Kies je eerste boeken</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>Kies er minstens twee. Je kunt altijd meer boeken in de winkel halen.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>Kies 2 boeken om te beginnen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>Kies er nog 1</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>{0} gekozen · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>{0} gekozen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>Je boeken worden opgehaald…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>Boek {0} van {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Maak verbinding met internet om je eerste boeken te kiezen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino heeft twee boeken nodig voordat je begint. Zet wifi of mobiele data aan en probeer het opnieuw.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Hoor Dino hallo zeggen</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hallo! Ik ben Dino. Laten we samen een verhaal lezen.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Ontdek wat Dino kan</value></data>
@@ -128,8 +147,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Achter een slot, om boeken en stemmen toe te voegen.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>Samen een verhaal lezen</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>Tik op een boek en dan op afspelen. Dino leest voor en laat elke zin oplichten.</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>Haal meer boeken</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>De winkel heeft meer verhalen, klaar om te downloaden.</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino sloeg het boek open. ‘Er was eens…’</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lees het met je eigen stem</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Neem jezelf op terwijl je een verhaal voorleest, pagina voor pagina. Je kind kan het altijd afspelen.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Voeg je eigen boek toe</value></data>
@@ -165,6 +183,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Hoek voor volwassenen</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Alleen volwassenen zien dit. De kast van je kind is één tik weg.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Terug naar de kast van mijn kind</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>Opnieuw ordenen</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Houd een boek ingedrukt en sleep het naar een nieuwe plek. De plank van je kind toont dezelfde volgorde.</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>De nieuwe volgorde kon niet worden opgeslagen</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Iets gebruikt het bestand nog. Tik op Klaar om het opnieuw te proberen, of op Annuleren om de oude volgorde te houden.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Nu lezen</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Opties voor {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Uit de winkel</value></data>
@@ -226,8 +248,6 @@
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>Dit boek</value></data>
-  <data name="Book_ShowOriginal" xml:space="preserve"><value>Originele tekst tonen</value></data>
-  <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Toon de tekst in {0}. De stem leest nog steeds in {1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>Terug naar het verhaal</value></data>
   <!-- /Slice 110 -->
   <!-- Slice 111 -->
@@ -274,6 +294,18 @@
   <data name="Version_Title" xml:space="preserve"><value>Versie</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Help Dino beter te maken</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>Verstuurt aantallen zoals "een boek uit de winkel is uitgelezen". Geen namen, geen id's, niets wat je hebt getypt. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik). Als de app crasht, kan hij ook een crashrapport sturen: de fout en een kort technisch logboek, nooit iets wat je hebt gelezen of getypt.</value></data>
+  <!-- Slice 249: Report a problem -->
+  <data name="ReportProblem_Title" xml:space="preserve"><value>Een probleem melden</value></data>
+  <data name="ReportProblem_Explain" xml:space="preserve"><value>Stuur ons het recente technische logboek van de app, zodat we kunnen zien wat er misging. Het bevat de geopende schermen, de ingedrukte knoppen en wat het voorlezen deed, plus de appversie, een globaal toesteltype en je land. Geen namen, geen boektitels, niets wat iemand typte. Het wordt alleen verstuurd als je op Versturen tikt.</value></data>
+  <data name="ReportProblem_Send" xml:space="preserve"><value>Versturen</value></data>
+  <data name="ReportProblem_Sending" xml:space="preserve"><value>Melding wordt verstuurd…</value></data>
+  <data name="ReportProblem_Sent" xml:space="preserve"><value>Verstuurd.</value></data>
+  <data name="ReportProblem_QuoteCode" xml:space="preserve"><value>Als je ons schrijft, noem dan deze code:</value></data>
+  <data name="ReportProblem_Copy" xml:space="preserve"><value>Kopiëren</value></data>
+  <data name="ReportProblem_Copied" xml:space="preserve"><value>Gekopieerd</value></data>
+  <data name="ReportProblem_Failed" xml:space="preserve"><value>De melding kon nu niet worden verstuurd. Ze blijft bewaard op deze telefoon en wordt later verstuurd, of je kunt het opnieuw proberen.</value></data>
+  <data name="ReportProblem_FailedNotKept" xml:space="preserve"><value>De melding kon nu niet worden verstuurd. Je kunt het opnieuw proberen.</value></data>
+  <data name="ReportProblem_TryAgain" xml:space="preserve"><value>Opnieuw proberen</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Leessnelheid</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Langzamer is makkelijker voor kleintjes</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · langzaam</value></data>

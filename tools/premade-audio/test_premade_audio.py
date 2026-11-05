@@ -24,12 +24,23 @@ import clip_manifest
 import encode
 import generate
 import pacing
+import run_common
 from adapter_base import HttpError
 from adapter_gemini import Gemini, wav_bytes
 from clip_manifest import Manifest, text_hash
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 KEY = {"GEMINI_API_KEY": "test-key"}
+REAL_ACCENTS = dict(audio_cast.ACCENTS)
+FARSI_STYLES = pathlib.Path(__file__).parent / "testdata" / "farsi-delivery-styles.json"
+
+
+def setUpModule():
+    audio_cast.ACCENTS.clear()  # the tests' toy casts compare exact styles; the accent tests put the real table back with patch.dict
+
+
+def tearDownModule():
+    audio_cast.ACCENTS.update(REAL_ACCENTS)
 NARRATOR = {"voice": "Hali", "style": "warm storyteller"}
 CAST_DATA = {"version": 1, "narrator": NARRATOR,
              "characters": {"Wolf": {"voice": "Elio", "style": "deep", "direction": "sly"}, "Pip": {"voice": "Cleo", "style": "bouncy"}},
@@ -110,7 +121,7 @@ class Base(unittest.TestCase):
         log = pacing.UsageLog(os.path.join(self.tmp, "usage.json"), clock=self.clock)
         pacer = pacing.Pacer(log, rpm, rpd, max_requests, clock=self.clock, sleep=self.clock.sleep)
         folder = os.path.join(self.tmp, "book", "fa")
-        return generate.Generator(adapter, cast or audio_cast.AudioCast(dict(CAST_DATA, lines=[])), folder, pacer, "book", "fa", fmt, ffmpeg, log=lambda *_: None)
+        return generate.Generator(adapter, cast or checked(audio_cast.AudioCast(dict(CAST_DATA, lines=[])), []), folder, pacer, "book", "fa", fmt, ffmpeg, log=lambda *_: None)
 
 
 class GeminiTests(unittest.TestCase):
@@ -235,6 +246,9 @@ class CastTests(unittest.TestCase):
         cast = audio_cast.AudioCast(CAST_DATA)
         with self.assertRaises(audio_cast.CastError):
             cast.delivery(sentence(3, "y", "Wolf"))
+        no_lines = audio_cast.AudioCast({k: v for k, v in CAST_DATA.items() if k != "lines"})
+        with self.assertRaises(audio_cast.CastError):
+            no_lines.delivery(sentence(0, "x"))  # no line entries: still must not drop the language's accent silently
         for bad in (None, "FA", "fa-IR", ""):
             with self.assertRaises(audio_cast.CastError):
                 cast.check([sentence(3, "y", "Wolf")], bad)
@@ -288,6 +302,33 @@ class CastTests(unittest.TestCase):
         self.assertEqual("شالاپ، شالاپ، شالاپ!", cast.say_for(by_index[68]))
         self.assertEqual("من یه وان گُنده پر از آب سرد و کف‌کفی گذاشتم زیر دودکش.", cast.say_for(by_index[66]))
         self.assertEqual("پیم با یه لبخند گُنده گفت:", cast.say_for(by_index[80]))
+
+
+class AccentTests(unittest.TestCase):
+    """Slice 246 A8: the accent is a per-language line added when the delivery is built, not part of any cast's style."""
+
+    def test_every_casts_farsi_delivery_is_byte_identical_to_the_one_recorded_before_the_accent_moved(self):
+        pinned = json.loads(FARSI_STYLES.read_text(encoding="utf8"))  # the style of every voice entry as the casts held it before A8
+        casts = sorted((REPO / "content" / "dino").glob("*/audio-cast.json"))
+        self.assertEqual(sorted(pinned), [c.parent.name for c in casts])
+        with unittest.mock.patch.dict(audio_cast.ACCENTS, REAL_ACCENTS):
+            for path in casts:
+                cast = audio_cast.load(str(path))
+                cast.language = "fa"
+                self.assertEqual(pinned[path.parent.name]["narrator"], cast.styled(cast.narrator["style"]), path.parent.name)
+                self.assertEqual(pinned[path.parent.name]["characters"], {n: cast.styled(e["style"]) for n, e in cast.characters.items()}, path.parent.name)
+
+    def test_no_cast_style_carries_an_accent_any_more(self):
+        for path in (REPO / "content" / "dino").glob("*/audio-cast.json"):
+            self.assertNotIn("accent", path.read_text(encoding="utf8"), path.parent.name)
+
+    def test_other_languages_get_no_accent_and_farsi_the_tehrani_one(self):
+        dump = [sentence(0, "x")]
+        with unittest.mock.patch.dict(audio_cast.ACCENTS, REAL_ACCENTS):
+            fa = checked(audio_cast.AudioCast(dict(CAST_DATA, lines=[])), dump, "fa").delivery(dump[0])
+            en = checked(audio_cast.AudioCast(dict(CAST_DATA, lines=[])), dump, "en").delivery(dump[0])
+        self.assertEqual("warm storyteller, standard Tehrani accent", fa.prompt)
+        self.assertEqual("warm storyteller", en.prompt)
 
 
 class ManifestTests(Base):
@@ -593,6 +634,24 @@ class MainTests(Base):
         self.assertEqual(0, code)
         self.assertIn("3 sentences, 3 need a request", out.getvalue())
         self.assertIn("3/min, 10/day", out.getvalue())
+
+    def test_clips_go_to_the_books_lfs_folder_unless_out_names_a_scratch_root(self):
+        """Slice 265: no --out means content/dino/<book>/audio/<language>; --out keeps the old <out>/<book>/<language> layout."""
+        expected = os.path.join(generate.REPO_ROOT, "content", "dino", "b", "audio", "fa")
+        self.assertEqual(expected, generate.clips_folder(None, "b", "fa"))
+        self.assertEqual(os.path.join(self.tmp, "b", "fa"), generate.clips_folder(self.tmp, "b", "fa"))
+
+    def test_an_lfs_pointer_manifest_stops_the_run_before_any_request(self):
+        """Slice 265 review: a pointer manifest.json would load as empty and re-request every sentence from the paid API."""
+        sentences, cast = self.files()
+        folder = generate.clips_folder(self.tmp, "b", "fa")
+        os.makedirs(folder, exist_ok=True)
+        pathlib.Path(folder, "manifest.json").write_bytes(b"version https://git-lfs.github.com/spec/v1\noid sha256:00\nsize 1\n")
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            code = generate.main(["--sentences", sentences, "--cast", cast, "--out", self.tmp, "--format", "wav", "--dry-run"])
+        self.assertEqual(generate.EXIT_ERRORS, code)
+        self.assertIn("git lfs pull", err.getvalue())
 
     def test_a_speaker_without_a_voice_fails_before_any_request(self):
         sentences, cast = self.files()
@@ -1046,8 +1105,9 @@ class BatchTests(Base):
         self.assertEqual((0, 2, batch.EXIT_BATCH_FAILED), (second.rendered, len(transport.posts), second.exit_code))
         third = self.runner(transport).run(self.TEXTS)
         self.assertEqual((0, 2), (third.rendered, len(transport.posts)))
-        self.assertIn(stems[1], third.errors[0])
-        self.assertIn("not requested again", third.errors[0])
+        self.assertEqual(([], generate.EXIT_OK), (third.errors, third.exit_code))
+        self.assertIn(stems[1], third.notes[0])
+        self.assertIn("not requested again", third.notes[0])
         os.remove(os.path.join(self.tmp, "book", "fa", batch.STATE_NAME))
         transport.failing = set()
         self.assertEqual(1, self.runner(transport).run(self.TEXTS).rendered)
@@ -1107,10 +1167,101 @@ class BatchTests(Base):
         self.assertEqual(1, len(runner.read_state()["silent"]))
         again = self.runner(self.batch_transport)
         second = again.run(self.TEXTS)
-        self.assertEqual((1, batch.EXIT_BATCH_FAILED), (len(self.batch_transport.posts), second.exit_code))
-        self.assertIn("not requested again", second.errors[0])
+        self.assertEqual((1, generate.EXIT_OK, []), (len(self.batch_transport.posts), second.exit_code, second.errors))
+        self.assertIn("not requested again", second.notes[0])
         os.remove(again.state_path)
         self.assertEqual(1, self.runner(self.batch_transport).run(self.TEXTS).rendered)
+
+    def stems_of_texts(self):
+        return [clip_manifest.clip_stem(t["text"], d.voice, v) for t in self.TEXTS for d, v, _ in [self.make().identity(t)]]
+
+    def test_a_rerun_with_only_held_back_clips_exits_zero_and_prints_notes(self):  # item 2
+        transport = FakeBatchTransport(states=["BATCH_STATE_SUCCEEDED"], failing=[self.stems_of_texts()[1]])
+        for _ in range(2):
+            self.runner(transport).run(self.TEXTS)
+        again = self.runner(transport).run(self.TEXTS)
+        self.assertEqual(([], 0, 1), (again.errors, again.exit_code, len(again.notes)))
+
+    # One exit rule (review finding 1, medium 9): 0 only when the run had no errors and every expected clip exists or is held back; anything else is EXIT_ERRORS.
+    def exit_for(self, generator, summary):
+        return generate.exit_code_for(generator, self.TEXTS, summary)
+
+    def test_exit_rule_nothing_to_do_is_zero(self):
+        generator = self.make()
+        generator.run(self.TEXTS)
+        self.assertEqual(generate.EXIT_OK, self.exit_for(generator, run_common.Summary()))
+
+    def test_exit_rule_only_held_back_clips_missing_is_zero(self):
+        generator = self.make()
+        generator.run(self.TEXTS[:1])
+        summary = run_common.Summary()
+        summary.held.update(self.stems_of_texts()[1:])
+        self.assertEqual(generate.EXIT_OK, self.exit_for(generator, summary))
+
+    def test_exit_rule_a_missing_clip_that_is_not_held_back_is_one(self):
+        generator = self.make()
+        generator.run(self.TEXTS[:1])
+        summary = run_common.Summary()
+        summary.held.add("not-a-real-stem")
+        self.assertEqual(generate.EXIT_ERRORS, self.exit_for(generator, summary))
+
+    def test_exit_rule_a_partial_error_is_one_even_when_clips_were_rendered(self):
+        generator = self.make()
+        generator.run(self.TEXTS)
+        summary = run_common.Summary()
+        summary.rendered = 1
+        summary.errors.append("sentence 1: failed")
+        self.assertEqual(generate.EXIT_ERRORS, self.exit_for(generator, summary))
+
+    def test_a_result_for_a_clip_that_already_exists_is_not_rewritten(self):  # item 3
+        first = self.runner(FakeBatchTransport(states=["BATCH_STATE_RUNNING"]), wait_minutes=1)
+        first.run(self.TEXTS)
+        self.make().run(self.TEXTS[:1])  # an earlier run saved clip 0 before its encode stop
+        folder = first.generator.folder
+        clip = os.path.join(folder, self.stems_of_texts()[0] + ".wav")
+        before = pathlib.Path(clip).read_bytes()
+        transport = self.batch_transport
+        transport.states = ["BATCH_STATE_SUCCEEDED"]
+        summary = self.runner(transport).run(self.TEXTS)
+        self.assertEqual((2, 0, before), (summary.rendered, summary.exit_code, pathlib.Path(clip).read_bytes()))
+        self.assertEqual({}, self.runner(transport).read_state()["failures"])
+
+    def test_a_submit_that_failed_with_429_or_5xx_says_a_rerun_resumes(self):  # item 4
+        for code in (429, 500, 503):
+            summary = self.runner(FakeBatchTransport(submit_error=http_error(code))).run(self.TEXTS)
+            self.assertEqual(batch.EXIT_BATCH_FAILED, summary.exit_code)
+            self.assertNotIn("refused", summary.stopped)
+            self.assertIn("rerun the same command to resume", summary.stopped)
+            os.remove(os.path.join(self.tmp, "book", "fa", batch.STATE_NAME))
+
+    def test_max_requests_is_not_used_up_by_pending_keys_that_no_longer_need_a_clip(self):  # item 5
+        runner = self.runner(max_requests=2)
+        self.assertEqual(["a", "b"], runner.fresh_stems(["a", "b", "c"], {"old1", "old2"}))
+        self.assertEqual(["b"], runner.fresh_stems(["a", "b", "c"], {"a"}))
+
+    def test_the_dry_run_job_count_follows_the_byte_split(self):  # item 6
+        args = unittest.mock.Mock(batch_chunk=200, max_requests=0)
+        generator = self.make()
+        self.assertIn("3 need a batch request in 1 job(s)", generate.batch_dry_run_line(args, generator, self.TEXTS))
+        self.assertIn("3 need a batch request in 3 job(s)", generate.batch_dry_run_line(args, generator, self.TEXTS, max_bytes=1))
+
+    def test_done_with_no_state_and_no_results_is_not_a_success(self):  # item 7
+        self.assertFalse(batch.job_succeeded({"done": True}))
+        self.assertFalse(batch.job_succeeded({"done": True, "response": {"inlinedResponses": []}}))
+        self.assertTrue(batch.job_succeeded({"done": True, "response": {"inlinedResponses": [batch_result("k")]}}))
+        self.assertFalse(batch.job_succeeded({"done": True, "error": {"code": 13}, "response": {"inlinedResponses": [batch_result("k")]}}))
+
+    def test_a_state_file_with_a_malformed_entry_stops_the_run_with_a_message(self):  # item 8
+        contents = ['{"batches": [5]}', '{"batches": ["x"]}', '{"batches": [{"name": "b"}]}', '{"batches": [{"name": "b", "keys": "abc"}]}',
+                    '{"batches": [{"name": 3, "keys": []}]}', '{"batches": [], "intent": 5}', '{"batches": [], "intent": {"display_name": "n"}}']
+        for content in contents:
+            runner = self.runner()
+            os.makedirs(runner.generator.folder, exist_ok=True)
+            pathlib.Path(runner.state_path).write_text(content, encoding="utf8")
+            summary = runner.run(self.TEXTS)
+            self.assertEqual((batch.EXIT_BATCH_FAILED, 0, 0), (summary.exit_code, summary.rendered, len(self.batch_transport.posts)), content)
+            self.assertIn(batch.STATE_NAME, summary.stopped)
+            os.remove(runner.state_path)
 
     def test_the_key_is_sent_in_a_header_and_never_in_the_url_or_body(self):
         requests = []

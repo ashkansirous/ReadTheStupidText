@@ -54,6 +54,8 @@ onFlowComplete:
     timeout: 10000
 - assertVisible:
     id: GrownUpDoneReadingSpeedPage
+# Slice 253 item 2: beside mock frame 118 (Settings, two panes).
+- takeScreenshot: shot-118-settings
 # A second row swaps the right pane: Animal sounds replaces Reading speed, and the list is still there (nothing was pushed).
 - tapOn:
     text: "Animal sounds"

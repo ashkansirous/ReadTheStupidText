@@ -35,7 +35,8 @@ internal sealed record AuthoredCharacter(string Name, string Voice, Gender Gende
 internal sealed record BookInfo(
     BookKind Kind, string Id, string Title, int Version, int AgeMin, int AgeMax, string Author, string Credits, int Colour, string Added, int Order,
     string[]? Characters, AuthoredCharacter[]? Cast, Dictionary<string, AnimalKind>? Animals, string[]? NotAnimals, string? ContentHash, bool? TextInPictures = null,
-    Dictionary<string, string>? CreditsByLanguage = null, string? StoryBy = null, bool? Retold = null, string? Illustration = null)
+    Dictionary<string, string>? CreditsByLanguage = null, string? StoryBy = null, bool? Retold = null, string? Illustration = null,
+    string[]? Tags = null)
 {
     /// <summary>The book's silent back cover (Slice 237) from <c>storyBy</c>, <c>retold</c>, <c>illustration</c> and the month of <see cref="Added"/>; null when it cannot be made (<c>check</c> fails such a book).</summary>
     [JsonIgnore]
@@ -45,7 +46,7 @@ internal sealed record BookInfo(
 /// <summary>One free story in the Dino store (Slice 102): its fixed package id, the folder name its files are stored under, the
 /// credit line, the age range and the author the store card and filters use (Slice 112), the generated cover colour and the characters its speech tags must give a voice.</summary>
 internal sealed record StoreStorySpec(string Id, string Title, string Stem, string Text, int ColourIndex, string Credits, int AgeMin, int AgeMax, string Author, IReadOnlyList<string> Characters, int Version, string Added,
-    IReadOnlyDictionary<string, string>? CreditsByLanguage = null, IReadOnlyDictionary<string, string>? Titles = null, string? ContentHash = null);
+    IReadOnlyDictionary<string, string>? CreditsByLanguage = null, IReadOnlyDictionary<string, string>? Titles = null, string? ContentHash = null, IReadOnlyList<string>? Tags = null, long? LiveBytes = null);
 
 /// <summary>One book's folder under <c>content/dino</c>: its files, its <c>book.json</c> and its text.</summary>
 internal sealed class BookFolder(string stem, string path, BookInfo info)
@@ -88,7 +89,7 @@ internal sealed class BookFolder(string stem, string path, BookInfo info)
     public string? Text => File.Exists(Path.Combine(Dir, StoryFile)) ? File.ReadAllText(Path.Combine(Dir, StoryFile)).ReplaceLineEndings("\n").TrimEnd('\n') : null;
 
     public StoreStorySpec ToSpec() =>
-        new(Info.Id, Info.Title, Stem, Text ?? string.Empty, Info.Colour, Info.Credits, Info.AgeMin, Info.AgeMax, Info.Author, Info.Characters ?? [], Info.Version, Info.Added, Info.CreditsByLanguage, Titles);
+        new(Info.Id, Info.Title, Stem, Text ?? string.Empty, Info.Colour, Info.Credits, Info.AgeMin, Info.AgeMax, Info.Author, Info.Characters ?? [], Info.Version, Info.Added, Info.CreditsByLanguage, Titles, null, Info.Tags);
 }
 
 /// <summary>Every book under <c>content/dino</c> (Slice 157), read once: the shared loader of the builder and of the tests that validate the books.</summary>
@@ -188,6 +189,7 @@ internal static class Books
             _ when info.Author is null || info.Credits is null => "author and credits must be strings",
             _ when info.Kind == BookKind.Starter && info.ContentHash is null => "a starter needs contentHash (run stamp)",
             _ when CreditsByLanguageProblem(info.CreditsByLanguage) is { } credits => credits,
+            _ when TagsProblem(info.Tags) is { } tags => tags,
             _ when !DateOnly.TryParseExact(info.Added, AddedFormat, out _) => $"added must be {AddedFormat}",
             _ when string.IsNullOrWhiteSpace(info.StoryBy) => "storyBy is empty (the back cover needs who wrote the story; \"traditional\" for a tale nobody owns)",
             _ when DinoReader.Core.BackCover.IsTraditional(info.StoryBy) && info.Retold != true => "a traditional tale must be retold: true",
@@ -195,6 +197,17 @@ internal static class Books
             _ when !File.Exists(Path.Combine(folder, BookFolder.StoryFile)) && !File.Exists(Path.Combine(folder, BookFolder.LinesFile)) => "needs story.md or lines.json",
             _ => null,
         };
+    }
+
+    /// <summary>Slice 260: <c>tags</c> may only name <see cref="StoreTag"/>s (Hot, Popular, Recommended, New; exact case), each once.</summary>
+    private static string? TagsProblem(string[]? tags)
+    {
+        string[] unknown = (tags ?? []).Where(name => StoreTags.Parse(name) is null).ToArray();
+        string[] repeated = (tags ?? []).GroupBy(name => name, StringComparer.Ordinal).Where(g => g.Count() > 1).Select(g => g.Key).ToArray();
+        string allowed = string.Join(", ", Enum.GetNames<StoreTag>());
+        return unknown.Length > 0 ? $"tags has unknown name(s) {string.Join(", ", unknown)} (allowed, exact case: {allowed})"
+            : repeated.Length > 0 ? $"tags repeats {string.Join(", ", repeated)}"
+            : null;
     }
 
     /// <summary>Slice 192: <c>creditsByLanguage</c> must hold a non-blank credit line for every shipped non-English language and nothing else.</summary>

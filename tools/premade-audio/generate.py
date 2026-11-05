@@ -28,6 +28,9 @@ from run_common import (EXIT_AUTH, EXIT_ENCODE, EXIT_ERRORS, EXIT_LOCKED, EXIT_N
 
 REPO_ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 DEFAULT_OUT = os.path.join(REPO_ROOT, "artifacts", "premade-audio")
+CONTENT_ROOT = os.path.join(REPO_ROOT, "content", "dino")
+AUDIO_FOLDER = "audio"  # content/dino/<book>/audio/<language>/: the clip cache, tracked in Git LFS (Slice 265)
+LFS_POINTER_PREFIX = b"version https://git-lfs"
 CAST_NAME = "audio-cast.json"
 FORMAT_M4A = "m4a"
 VARIANTS_FOLDER = "variants"
@@ -227,14 +230,15 @@ def remove_stale_variants(generator, keep_count):
 def load_sentences(path):
     with open(path, encoding="utf8") as f:
         data = json.load(f)
-    return data["book"], data["language"], data["sentences"]
+    # Slice 255: an animal sound is a bundled real recording in the app, never a rendered clip. The dump no longer lists them; an older dump still might.
+    return data["book"], data["language"], [s for s in data["sentences"] if not s.get("sound")]
 
 
 def parse_args(argv):
     p = argparse.ArgumentParser(description="Render one Gemini clip per spoken sentence of a Dino book.")
     p.add_argument("--sentences", required=True, help="JSON from BookBuilder dump-sentences")
     p.add_argument("--cast", help=f"audio cast file (default content/dino/<book>/{CAST_NAME})")
-    p.add_argument("--out", default=DEFAULT_OUT, help="output root (default artifacts/premade-audio)")
+    p.add_argument("--out", help="scratch output root, <out>/<book>/<language>/ (default: the clips go to content/dino/<book>/audio/<language>/, Git LFS, Slice 265)")
     p.add_argument("--free", action="store_true", help=f"free tier preset: {pacing.FREE_RPM} requests a minute, {pacing.FREE_RPD} a day")
     p.add_argument("--rpm", type=int, help=f"requests per minute (0 = no pacing; default {pacing.DEFAULT_RPM}, a placeholder for the paid tier)")
     p.add_argument("--rpd", type=int, help="requests per rolling 24 hours (0 = no limit; default none)")
@@ -272,10 +276,10 @@ def pending_count(generator, sentences):
     return sum(0 if generator.has_clip(stem) or generator.has_wav(stem) else 1 for stem in set(stems))  # sentences sharing a stem share one clip file
 
 
-def batch_dry_run_line(args, generator, sentences):
-    """What the real --batch run would submit: the misses not already in a pending batch (batch-state.json), within --max-requests, in chunks the runner would use."""
+def batch_dry_run_line(args, generator, sentences, max_bytes=batch.MAX_CHUNK_BYTES):
+    """What the real --batch run would submit: the misses not already in a pending batch (batch-state.json), within --max-requests, in the jobs the runner would cut (by count and by size)."""
     chunk = max(1, args.batch_chunk)
-    runner = batch.BatchRunner(generator, os.path.join(generator.folder, batch.STATE_NAME), chunk, args.max_requests)
+    runner = batch.BatchRunner(generator, os.path.join(generator.folder, batch.STATE_NAME), chunk, args.max_requests, max_bytes=max_bytes)
     try:
         state = runner.read_state()
     except batch.BatchStopped as stop:
@@ -283,9 +287,11 @@ def batch_dry_run_line(args, generator, sentences):
     covered = {key for pending in state["batches"] for key in pending["keys"]} | set((state["intent"] or {}).get("keys", []))
     stems = {generator.identity(s)[2] for s in sentences}
     misses = sorted(stem for stem in stems if not generator.has_clip(stem) and not generator.has_wav(stem))
-    need = len(runner.fresh_stems(misses, covered, state["silent"], state["failures"]))
+    fresh = runner.fresh_stems(misses, covered, state["silent"], state["failures"])
+    need = len(fresh)
+    jobs = len(batch.chunk_entries(runner.entries_for(fresh, runner.groups(sentences)), chunk, max_bytes))
     in_flight = len(covered & set(misses))
-    return (f"{len(sentences)} sentences, {need} need a batch request in {-(-need // chunk)} job(s) of up to {chunk}"
+    return (f"{len(sentences)} sentences, {need} need a batch request in {jobs} job(s) of up to {chunk}"
             + (f"; {in_flight} already in pending batches" if in_flight else ""))
 
 
@@ -294,6 +300,10 @@ def main(argv=None):
     book, language, sentences = load_sentences(args.sentences)
     cast = audio_cast.load(args.cast or os.path.join(REPO_ROOT, "content", "dino", book, CAST_NAME))
     cast.check(sentences, language)
+    pointer = lfs_pointer_in(clips_folder(args.out, book, language))
+    if pointer:
+        print(f"{pointer} is a Git LFS pointer, not the real file (.lfsconfig keeps the clips out of a normal checkout); run: git lfs pull --include \"content/dino/{book}/audio/{language}/**\" --exclude \"\"", file=sys.stderr)
+        return EXIT_ERRORS
     ffmpeg = encode.find_ffmpeg() if args.format == FORMAT_M4A else None
     if args.dry_run:
         return run_locked(args, book, language, sentences, cast, ffmpeg)  # sends nothing, so it needs neither ffmpeg nor the folder lock
@@ -301,7 +311,7 @@ def main(argv=None):
         print("ffmpeg was not found on PATH (set $FFMPEG to its path); rerun with --format wav to keep raw WAV clips", file=sys.stderr)
         return EXIT_NO_FFMPEG
     try:
-        with pacing.RunLock(args.out):
+        with pacing.RunLock(args.out or DEFAULT_OUT):
             return run_locked(args, book, language, sentences, cast, ffmpeg)
     except pacing.RunLocked as error:
         print(str(error), file=sys.stderr)
@@ -332,11 +342,31 @@ def run_batch(args, generator, sentences):
     return runner.run(sentences)
 
 
+def clips_folder(out, book, language):
+    """Where one book-language's clips and manifest live: the book's own LFS folder, or <out>/<book>/<language> when --out names a scratch root."""
+    if out:
+        return os.path.join(out, book, language)
+    return os.path.join(CONTENT_ROOT, book, AUDIO_FOLDER, language)
+
+
+def lfs_pointer_in(folder):
+    """The first file in the clip folder that is a Git LFS pointer (a text stub, not the clip), else None: a pointer manifest would be parsed as empty and every sentence re-requested."""
+    if not os.path.isdir(folder):
+        return None
+    for name in sorted(os.listdir(folder)):
+        path = os.path.join(folder, name)
+        if os.path.isfile(path):
+            with open(path, "rb") as handle:
+                if handle.read(len(LFS_POINTER_PREFIX)) == LFS_POINTER_PREFIX:
+                    return path
+    return None
+
+
 def run_locked(args, book, language, sentences, cast, ffmpeg):
     rpm, rpd = limits(args)
-    log = pacing.UsageLog(pacing.usage_path(args.out))
+    log = pacing.UsageLog(pacing.usage_path(args.out or DEFAULT_OUT))
     pacer = pacing.Pacer(log, rpm, rpd, args.max_requests)
-    generator = Generator(Gemini(), cast, os.path.join(args.out, book, language), pacer, book, language, args.format, ffmpeg,
+    generator = Generator(Gemini(), cast, clips_folder(args.out, book, language), pacer, book, language, args.format, ffmpeg,
                           readonly=args.dry_run or args.variants is not None)
     if args.dry_run and args.batch:
         print(f"{book} [{language}]: {batch_dry_run_line(args, generator, sentences)}")
@@ -349,7 +379,22 @@ def run_locked(args, book, language, sentences, cast, ffmpeg):
         return run_variants(args, generator, sentences)
     summary = run_batch(args, generator, sentences) if args.batch else generator.run(sentences)
     print(f"{book} [{language}]: {summary.line(len(sentences))}")
-    return summary.exit_code or (EXIT_ERRORS if summary.errors and not summary.rendered else EXIT_OK)
+    for note in summary.notes:
+        print(f"note: {note}")
+    return exit_code_for(generator, sentences, summary)
+
+
+def missing_clips(generator, sentences, summary):
+    """The stems of the book that have no clip and are not on the held-back list (clips an earlier run held back: silent, or failed in several batch results)."""
+    stems = {generator.identity(s)[2] for s in sentences}
+    return sorted(stem for stem in stems if not generator.has_clip(stem) and not generator.has_wav(stem) and stem not in summary.held)
+
+
+def exit_code_for(generator, sentences, summary):
+    """One rule: a stop's own code wins; otherwise 0 only when the run had no errors and every expected clip exists or is held back, else 1."""
+    if summary.exit_code:
+        return summary.exit_code
+    return EXIT_ERRORS if summary.errors or missing_clips(generator, sentences, summary) else EXIT_OK
 
 
 if __name__ == "__main__":

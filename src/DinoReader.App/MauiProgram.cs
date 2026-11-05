@@ -40,6 +40,7 @@ public static class MauiProgram
 
 	// Stories live under AppDataDirectory/stories/<id>/ and never leave the device.
 	private const string StoriesFolder = "stories";
+	private const string AudioPackFolder = "audio-packs";
 
 	// Rendered PDF pages wait here (cache) until a story keeps them.
 	private const string PdfPagesFolder = "pdf-pages";
@@ -86,10 +87,12 @@ public static class MauiProgram
 		builder.Services.AddTransient<IRecordingPlayer, RecordingPlayer>();
 		builder.Services.AddSingleton<StarterStories>();
 		builder.Services.AddSingleton<StagedBookUpdates>();
+		builder.Services.AddSingleton(services => CreateAudioPackStore(services));
 		builder.Services.AddSingleton<StoreClient>();
 		builder.Services.AddSingleton<AppConfigClient>();
 		builder.Services.AddSingleton<UsageCounter>();
 		builder.Services.AddSingleton<StoryLanguagePacks>();
+		builder.Services.AddSingleton<ShelfAudioPacks>(); // Slice 262: the one owner of the side languages' pre-made audio for the shelf books
 		AddDocumentExtractors(builder.Services);
 		AddPages(builder.Services);
 
@@ -104,11 +107,26 @@ public static class MauiProgram
 		// Counts left from an earlier session go out now (Slice 133); the counter does nothing when counting is off.
 		_ = app.Services.GetRequiredService<UsageCounter>().FlushAsync();
 		BeginCrashReports(app.Services.GetRequiredService<AppConfigClient>());
+		string sessionId = app.Services.GetRequiredService<UsageCounter>().SessionId; // Slice 250: captured now, so the crash path never touches the container
+		CrashReporter.SessionProvider = () => sessionId; // a crash or problem report names the launch's usage session
 #if DEBUG
 		TestHooks.Install(app.Services, TestHookScheme, code => (Microsoft.Maui.Controls.Application.Current as DinoApp)?.CompleteFirstRun(code) ?? false);
 		CrashTestHook.Install(); // Slice 227: after the app's own Debug commands, so it chains onto them
 #endif
 		return app;
+	}
+
+	// Slice 267: every pack download is counted (book id, language, closed outcome) and, through AudioPackLog, kept in the rolling log; no title or file name is carried.
+	private static AudioPackStore CreateAudioPackStore(IServiceProvider services)
+	{
+		var store = new AudioPackStore(Path.Combine(FileSystem.AppDataDirectory, AudioPackFolder), FileSystem.CacheDirectory, new StoreAudioPackFetcher(), AudioPackLog.Write);
+		var counter = services.GetRequiredService<UsageCounter>(); // resolved here, once, not inside the handler: a circular dependency shows at start-up, not at the first download
+		store.Outcome += (bookId, language, detail) =>
+		{
+			AudioPackLog.Write($"pack {bookId}/{language}: {detail}");
+			counter.RecordShelfBook(UsageEventName.AudioPackDownload, bookId, language, detail);
+		};
+		return store;
 	}
 
 	// Slice 227: pending crash reports are posted a little after start-up, once the remote config says crashReports.enabled (default off).
@@ -145,6 +163,7 @@ public static class MauiProgram
 		services.AddTransient<UsageCountsPage>();
 		services.AddTransient<AboutPage>();
 		services.AddTransient<FirstRunPage>();
+		services.AddTransient<FirstBooksPage>();
 		services.AddTransient<IntroWizardPage>();
 		services.AddSingleton<GrownUpMode>();
 		services.AddTransient<StoryWizardPage>();

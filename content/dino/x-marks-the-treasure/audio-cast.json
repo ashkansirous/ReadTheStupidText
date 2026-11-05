@@ -2,32 +2,32 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Seagull": {
       "voice": "Laomedeia",
-      "style": "a bright, upbeat, squawky grown-up bird's voice, funny and friendly for young children, standard Tehrani accent",
+      "style": "a bright, upbeat, squawky grown-up bird's voice, funny and friendly for young children",
       "direction": "bouncy, excitable and chatty"
     },
     "Kathryn": {
       "voice": "Kore",
-      "style": "a bold, bright, cheerful grown-up woman's voice, a kind pirate captain for young children, standard Tehrani accent",
+      "style": "a bold, bright, cheerful grown-up woman's voice, a kind pirate captain for young children",
       "direction": "bold, cheerful and full of adventure"
     },
     "Izzy": {
       "voice": "Cleo",
-      "style": "a young, bright, bouncy girl's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, bouncy girl's voice for young children",
       "direction": "sing-song, like a cheerful pirate chant"
     },
     "Billy": {
       "voice": "Puck",
-      "style": "a young, bright, upbeat boy's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, upbeat boy's voice for young children",
       "direction": "bouncy and warm"
     },
     "Pancake Polly": {
       "voice": "Sulafat",
-      "style": "a warm, bubbly grown-up woman's voice, a jolly pirate cook for young children, standard Tehrani accent",
+      "style": "a warm, bubbly grown-up woman's voice, a jolly pirate cook for young children",
       "direction": "warm, jolly and bouncy"
     }
   },
@@ -112,5 +112,82 @@
       "source": "Squawk, squawk, squawk,",
       "direction": "soft, sleepy and snuggly, very quiet"
     }
-  ]
+  ],
+  "audioPacks": {
+    "ar": {
+      "version": 1,
+      "hash": "9f7297215f82a2770c0716c2cb1830e79fad2a431fdeadc2bbc7224c82ac4c3a",
+      "bytes": 2671948
+    },
+    "da": {
+      "version": 1,
+      "hash": "defd9a01adbe386a911b7ffcd88fb66372bfcab2c26344c2b2eac56164d111ef",
+      "bytes": 2144511
+    },
+    "de": {
+      "version": 1,
+      "hash": "89ff4ee68991eeed2449bca2db83f1e558dfbe37139dd8b41f41601050a4ea64",
+      "bytes": 2352032
+    },
+    "en": {
+      "version": 1,
+      "hash": "7abe67e99faa43fafdddef07dc4ef52c2b7c08c9534b19ca1839af5ec46fbbec",
+      "bytes": 2339664
+    },
+    "es": {
+      "version": 1,
+      "hash": "22855bb594978225cedcd042693ed73a0607865e029cdb0d95191d84e27ba679",
+      "bytes": 2513372
+    },
+    "fa": {
+      "version": 1,
+      "hash": "03d07c61daa9f0ccd324569082dc0729cb1db0cdd9914cf9082c3eebfccaaee5",
+      "bytes": 2550059
+    },
+    "fi": {
+      "version": 1,
+      "hash": "02fe1548dcc2ce31e7c64d7e2881bbfce385ab9506c44bcc8ec093b9c9b21582",
+      "bytes": 2455824
+    },
+    "fr": {
+      "version": 1,
+      "hash": "a0a563db4240351ed416966b44b966e7fc343c7112f0c75e41b193d13e295a79",
+      "bytes": 2388002
+    },
+    "ja": {
+      "version": 1,
+      "hash": "a055e2b170ab061862f7102311f6473d3d005302d5675a2350712ea726887d73",
+      "bytes": 2658151
+    },
+    "nb": {
+      "version": 1,
+      "hash": "54f63ba0abce51c00f4f43c63a2a996e4ef97a28d08a5c127c81255aff53387a",
+      "bytes": 2297543
+    },
+    "nl": {
+      "version": 1,
+      "hash": "8359c574084dcebd0b3455b993f057b30e6ad47f25fa925a99c93931c1ad51da",
+      "bytes": 2221753
+    },
+    "pt": {
+      "version": 1,
+      "hash": "bfa5186b41fd461d6c56a0a369d072e94cca0c3b04c0f5ebba2665837e4c855f",
+      "bytes": 2579150
+    },
+    "ru": {
+      "version": 1,
+      "hash": "313bc18743d3cf26a182dc8b8407de19b6436cc98eb3d1b8c11126deda92b297",
+      "bytes": 2531552
+    },
+    "sv": {
+      "version": 1,
+      "hash": "e100061fd2408f7e39e95d9416e3525ca3dbdd5f1fe44a2f4a97423079d2bf05",
+      "bytes": 2338550
+    },
+    "zh": {
+      "version": 1,
+      "hash": "f35fb9076d81c855a3c729f2e37bc0f8f8e2bb346facf9b9926519ef726396a0",
+      "bytes": 2408600
+    }
+  }
 }

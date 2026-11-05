@@ -2,27 +2,27 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Little Billy": {
       "voice": "Cleo",
-      "style": "a tiny, squeaky, bright child's voice for young children, standard Tehrani accent",
+      "style": "a tiny, squeaky, bright child's voice for young children",
       "direction": "small, polite and a little shy"
     },
     "Middle Billy": {
       "voice": "Puck",
-      "style": "a young, bright, upbeat voice of a bigger boy for young children, standard Tehrani accent",
+      "style": "a young, bright, upbeat voice of a bigger boy for young children",
       "direction": "bright and a little bolder"
     },
     "Big Billy": {
       "voice": "Orus",
-      "style": "a big, deep, warm grown-up voice, gentle and kind, for young children, standard Tehrani accent",
+      "style": "a big, deep, warm grown-up voice, gentle and kind, for young children",
       "direction": "calm, kind and steady"
     },
     "Troll": {
       "voice": "Algenib",
-      "style": "a gruff, gravelly grown-up voice, storybook troll, grumpy but never scary for young children, standard Tehrani accent",
+      "style": "a gruff, gravelly grown-up voice, storybook troll, grumpy but never scary for young children",
       "direction": "grumpy and grumbly"
     }
   },
@@ -77,5 +77,82 @@
       "source": "Come back tomorrow!",
       "direction": "happy and friendly, waving goodnight"
     }
-  ]
+  ],
+  "audioPacks": {
+    "ar": {
+      "version": 1,
+      "hash": "34844bb18c6fc2306c5e8a1580cf3f9dbafd2d7a26bf981bbee78bb8378dc0cd",
+      "bytes": 2186737
+    },
+    "da": {
+      "version": 1,
+      "hash": "fdeac7c43ea02807f4239f9e686dfdd03f4fb31a9c370fb25d5c5a903dba27b2",
+      "bytes": 1792521
+    },
+    "de": {
+      "version": 1,
+      "hash": "0a07e2c7aa2e8f14bdb6e6a12788677256f463f2e5251061ca3c336c7061c585",
+      "bytes": 2037607
+    },
+    "en": {
+      "version": 1,
+      "hash": "b16afc994b760bf7c1be4a35cda5522401c066f038938f55434045dff9e6d025",
+      "bytes": 1837003
+    },
+    "es": {
+      "version": 1,
+      "hash": "b80ffd19037b43d8dd18c1f9fd3ecd70227714f67ea457eb551f7b9fd3dc75f1",
+      "bytes": 2157864
+    },
+    "fa": {
+      "version": 1,
+      "hash": "bd024b4592ea92791db4ea72e47e4f22f65c32742e883f23b7164d6741876bd9",
+      "bytes": 2096982
+    },
+    "fi": {
+      "version": 1,
+      "hash": "6c8dce109ef58b6fb4e93bfeb2adc206f8c51976b5c29cfc51062dade4a81b98",
+      "bytes": 2016574
+    },
+    "fr": {
+      "version": 1,
+      "hash": "b2bd1efbdbc965c1d3be6b30e4e941a7cc23e6440489f9d47e0eee016ff58562",
+      "bytes": 1897551
+    },
+    "ja": {
+      "version": 1,
+      "hash": "6060576844eb6e935b252b5a5bd0fd7c66193e14605b58e99a49bdf8a76cfa8e",
+      "bytes": 2250049
+    },
+    "nb": {
+      "version": 1,
+      "hash": "046085ea9e007c88789380dbeed8781b57d03e2ce5cb5e2e1b5cefdef101b209",
+      "bytes": 1930014
+    },
+    "nl": {
+      "version": 1,
+      "hash": "c8bd937f923630df1d86b6945927a45d925bcfefd5b00867ef3c329199397479",
+      "bytes": 1793179
+    },
+    "pt": {
+      "version": 1,
+      "hash": "3152e330262a9dc9a0f689a9c2c0cf050335adb4ce1f761f6e4f308a5aab3a5f",
+      "bytes": 2048732
+    },
+    "ru": {
+      "version": 1,
+      "hash": "74a7145489e05149014028a2cc9c09a13a229b5e30c4ee3dcb37531a5d7f852d",
+      "bytes": 2075698
+    },
+    "sv": {
+      "version": 1,
+      "hash": "6362a8a66f17ee794660939597ff6ee18be3cd180082e67ab110d69726491e2b",
+      "bytes": 1984415
+    },
+    "zh": {
+      "version": 1,
+      "hash": "7a91dbb95669c90ac2eb9b5f7bfb94247eb20ee1bb994b722eb395fb73c3f805",
+      "bytes": 1950681
+    }
+  }
 }

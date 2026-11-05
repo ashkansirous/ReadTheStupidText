@@ -466,6 +466,16 @@ $vmBuild = Get-Content (Join-Path $tools 'desktop-vm\Build-TestPackage.ps1') -Ra
 Assert-Equal 'item 23: the VM publish disables the build servers' $true ($vmBuild -match 'dotnet publish[^\r\n]*--disable-build-servers')
 Assert-Equal 'item 23: the VM msbuild turns node reuse off' $true ($vmBuild -match 'msbuild[^\r\n]*-nodeReuse:false')
 
+# ---- Slice 266: the emulator and Windows test builds each have their own scope and --artifacts-path, so they never wait on each other
+$emuBuild = Get-Content (Join-Path $tools 'emulator\install-debug.ps1') -Raw
+Assert-Equal 'slice 266: the emulator build passes its scope to Enter-BuildLocks' $true ($emuBuild -match 'Enter-BuildLocks[^\r\n]*\$buildScope')
+Assert-Equal 'slice 266: the VM build passes its scope to Enter-BuildLocks' $true ($vmBuild -match 'Enter-BuildLocks[^\r\n]*\$buildScope')
+Assert-Equal 'slice 266: the emulator build uses --artifacts-path' $true ($emuBuild -match 'dotnet build[^\r\n]*--artifacts-path')
+Assert-Equal 'slice 266: the VM publish uses --artifacts-path' $true ($vmBuild -match 'dotnet publish[^\r\n]*--artifacts-path')
+Assert-Equal 'slice 266: the emulator build checks the path length' $true ($emuBuild -match 'Assert-BuildPathLength')
+Assert-Equal 'slice 266: the VM build only warns about the path length (never throws)' $true (($vmBuild -match 'Test-BuildPathLength') -and ($vmBuild -notmatch 'Assert-BuildPathLength'))
+Assert-Equal 'slice 266: the emulator and Windows scopes differ' $true (($emuBuild -match "Get-TestBuildScope 'emu'") -and ($vmBuild -match "Get-TestBuildScope 'win'"))
+
 # ---- item 6: a failed build's log is kept past the next build
 $runnerSource = Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw
 Assert-Equal 'item 6: a failed build keeps its log' $true (([regex]::Matches($runnerSource, 'Save-FailedBuildLog \$')).Count -ge 2)

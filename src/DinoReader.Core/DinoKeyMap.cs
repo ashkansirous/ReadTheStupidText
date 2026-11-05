@@ -21,7 +21,7 @@ public enum DinoKey
 	Digit8,
 	Digit9,
 
-	/// <summary>Slice 235 part C: the vertical arrows. Up and down move through a list by the window's own focus navigation; they are named here so the key map knows them.</summary>
+	/// <summary>The vertical arrows: Settings (Slice 235 part C) and the reorder mode (Slice 264) use them.</summary>
 	Up,
 	Down,
 }
@@ -35,6 +35,7 @@ public enum DinoScreen
 	ReadingBackCover,
 	Gate,
 	Sheet,
+	Reorder, // Slice 264: the shelf's reorder mode
 
 	/// <summary>The Settings list (Slice 235 part C, frame 157): Right opens the focused row in the right pane.</summary>
 	Settings,
@@ -57,6 +58,13 @@ public enum DinoKeyAction
 	GateSubmit,
 	SheetActivate,
 	OpenRow,
+	ReorderCancel,
+	ReorderDone,
+	ReorderToggle,
+	ReorderLeft,
+	ReorderRight,
+	ReorderUp,
+	ReorderDown,
 }
 
 /// <summary>
@@ -91,9 +99,22 @@ public static class DinoKeyMap
 			DinoScreen.Gate => OnGate(key),
 			DinoScreen.Sheet => key is DinoKey.Enter or DinoKey.Space ? DinoKeyAction.SheetActivate : DinoKeyAction.None,
 			DinoScreen.Settings => key == DinoKey.Right ? DinoKeyAction.OpenRow : DinoKeyAction.None,
+			DinoScreen.Reorder => OnReorder(key),
 			_ => DinoKeyAction.None,
 		};
 	}
+
+	// Slice 264: Space lifts the focused cover and drops it again, the arrows move the focus (or the lifted cover), Enter is Done and Esc is Cancel.
+	private static DinoKeyAction OnReorder(DinoKey key) => key switch
+	{
+		DinoKey.Enter => DinoKeyAction.ReorderDone,
+		DinoKey.Space => DinoKeyAction.ReorderToggle,
+		DinoKey.Left => DinoKeyAction.ReorderLeft,
+		DinoKey.Right => DinoKeyAction.ReorderRight,
+		DinoKey.Up => DinoKeyAction.ReorderUp,
+		DinoKey.Down => DinoKeyAction.ReorderDown,
+		_ => DinoKeyAction.None,
+	};
 
 	/// <summary>The digit 0 to 9 a key types, or null for any other key.</summary>
 	public static int? DigitOf(DinoKey key) =>
@@ -103,6 +124,7 @@ public static class DinoKeyMap
 	{
 		DinoScreen.Shelf => DinoKeyAction.None,
 		DinoScreen.Sheet => DinoKeyAction.CloseSheet,
+		DinoScreen.Reorder => DinoKeyAction.ReorderCancel,
 		_ => DinoKeyAction.Back,
 	};
 

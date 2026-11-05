@@ -2,37 +2,37 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Hare": {
       "voice": "Fenrir",
-      "style": "a young, excitable, bouncy voice for young children, standard Tehrani accent",
+      "style": "a young, excitable, bouncy voice for young children",
       "direction": "boastful and full of beans, a cheeky show-off"
     },
     "Tortoise": {
       "voice": "Vindemiatrix",
-      "style": "a gentle, warm grown-up voice, slow and calm, for young children, standard Tehrani accent",
+      "style": "a gentle, warm grown-up voice, slow and calm, for young children",
       "direction": "slow, calm and steady"
     },
     "Owl": {
       "voice": "Sadaltager",
-      "style": "a warm, wise old voice, a little sleepy, for young children, standard Tehrani accent",
+      "style": "a warm, wise old voice, a little sleepy, for young children",
       "direction": "wise and slow"
     },
     "Squirrel": {
       "voice": "Cleo",
-      "style": "a young, bright, bouncy voice for young children, standard Tehrani accent",
+      "style": "a young, bright, bouncy voice for young children",
       "direction": "excited and cheering"
     },
     "Hedgehog": {
       "voice": "Puck",
-      "style": "a young, upbeat, warm voice for young children, standard Tehrani accent",
+      "style": "a young, upbeat, warm voice for young children",
       "direction": "excited and cheering"
     },
     "Frog": {
       "voice": "Laomedeia",
-      "style": "a young, upbeat, squeaky little frog's voice for young children, standard Tehrani accent",
+      "style": "a young, upbeat, squeaky little frog's voice for young children",
       "direction": "bouncy and cheering"
     }
   },
@@ -77,5 +77,82 @@
       "source": "Slow and steady, step by step,",
       "direction": "calm and thoughtful, trying it out"
     }
-  ]
+  ],
+  "audioPacks": {
+    "ar": {
+      "version": 1,
+      "hash": "ccf59166fbf9faee1a2187347535da93d2c16c96202777eca4487ea25d675ce7",
+      "bytes": 2186475
+    },
+    "da": {
+      "version": 1,
+      "hash": "c5b1e2cfe48b9aee25bee3760f7f24314cf26d168ec47c7a894393a56af58ae0",
+      "bytes": 1931936
+    },
+    "de": {
+      "version": 1,
+      "hash": "6c832a6b53a329446d0161341d234e621515e631ba413bf1e28b6695b2b01d6e",
+      "bytes": 2089641
+    },
+    "en": {
+      "version": 1,
+      "hash": "0d8d41c2193e3a91c5c3ffa2583ef61fb9b42d4c95bb160ad378d1cb808fd0e4",
+      "bytes": 1968588
+    },
+    "es": {
+      "version": 1,
+      "hash": "f6c71583c81e1466868a20abd09a4696464c7f738fc6378696305c12e4dc1910",
+      "bytes": 2089686
+    },
+    "fa": {
+      "version": 1,
+      "hash": "f115b6407cb93dd92f2a23841bc6442767a7d87ca98f65c1b4ad0d5d6130a5ce",
+      "bytes": 2195310
+    },
+    "fi": {
+      "version": 1,
+      "hash": "1d3056e952af80329d414028a43aa4223e8676783e70d118658a39d9b1574de4",
+      "bytes": 2059852
+    },
+    "fr": {
+      "version": 1,
+      "hash": "88a8d5feadb4f99bcfd9d7b8e310f133ac919d768c9d58389fd0b191c5137eea",
+      "bytes": 1987483
+    },
+    "ja": {
+      "version": 1,
+      "hash": "c1a94428ef4c169e07a4841afe5a0caf083934e3573c9530c9f21063fa412159",
+      "bytes": 2177994
+    },
+    "nb": {
+      "version": 1,
+      "hash": "7b68b158d020fae0e8b0fae5426ad9f2c4f681143a2b466ffdfd74291f0febe0",
+      "bytes": 1980179
+    },
+    "nl": {
+      "version": 1,
+      "hash": "0a9bf0583e106a624cd77017ec8523df1edfb63da6ccc7f4050d2181b5e28f86",
+      "bytes": 1897515
+    },
+    "pt": {
+      "version": 1,
+      "hash": "4642984b8d27f8b6e4ecfe088f780e8f51d56a0f8ab21b5db07a3133ae6d6443",
+      "bytes": 2114919
+    },
+    "ru": {
+      "version": 1,
+      "hash": "47948cc7269a14932e30496ae4cdae28031398470de8b42b03302af54f75fc68",
+      "bytes": 2037583
+    },
+    "sv": {
+      "version": 1,
+      "hash": "394c0d36d6d4cd052f5ff2d1ceccb9f6e61e0d07fcc21165ff8e647e1eef95e6",
+      "bytes": 2001016
+    },
+    "zh": {
+      "version": 1,
+      "hash": "7b7aa79feec82bfab1bfc6ee9639acad4beac21a5302a9d457a3b3d4dfd062a2",
+      "bytes": 1950704
+    }
+  }
 }

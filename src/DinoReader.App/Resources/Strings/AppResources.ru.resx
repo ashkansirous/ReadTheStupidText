@@ -14,6 +14,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Ждём интернет · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Ждём Wi-Fi · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Продолжится сама, когда вы снова будете онлайн.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>Загружаем озвучку ({0}) для твоих книг</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>У книги «{0}» пока нет озвучки ({1}). Её прочитает голос чтеца Дино.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>У книги «{0}» и ещё {2} пока нет озвучки ({1}). Их прочитает голос чтеца Дино.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Ждём интернет…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Ждём Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Готовимся…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>Часть озвучки ({0}) пока не удалось загрузить. Дино попробует ещё раз позже.</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Повторить</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Загрузка голоса повреждена. Читает голос телефона. Нажмите, чтобы повторить.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Пакет естественных голосов непригоден. Читает голос телефона.</value></data>
@@ -56,6 +63,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>Подобраны и распределены по ролям для Дино</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Скачать</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Скачано</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>Хит</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>Популярное</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>Рекомендуем</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>Новинка</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} стр. · {1} мин</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Бесплатно и без аккаунта. Ничего о вас или вашем ребёнке не отправляется.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Нет подключения</value></data>
@@ -107,11 +118,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>Готовим голос Dino</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>Голос: {0} · это нужно только один раз</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>Загрузка…</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>Ждут на полке</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Выбрать другой язык</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Готово к чтению!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>У каждого героя свой голос. Историй на полке: {0}.</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>У каждого героя свой голос. На полке одна история.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>У каждого героя свой голос. Ваши книги на полке.</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>Выберите первые книги</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>Выберите не меньше двух. Другие книги всегда можно взять в магазине.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>Выберите 2 книги, чтобы начать</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>Выберите ещё 1</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>Выбрано: {0} · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>Выбрано: {0}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>Загружаем ваши книги…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>Книга {0} из {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Подключитесь к интернету, чтобы выбрать первые книги</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino нужны две книги, прежде чем вы начнёте. Включите Wi-Fi или мобильные данные и попробуйте снова.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Послушать, как Dino здоровается</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Привет! Я Dino. Давай прочитаем историю вместе.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Узнать, что умеет Dino</value></data>
@@ -126,8 +145,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>За замком — для добавления книг и голосов.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>Прочитаем историю вместе</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>Нажмите на книгу, затем на воспроизведение. Дино читает вслух и подсвечивает каждое предложение.</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>Больше книг</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>В магазине есть ещё истории, готовые к загрузке.</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>Дино открыл книгу. «Жили-были…»</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Читайте своим голосом</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Запишите, как вы читаете историю, страницу за страницей. Ребёнок сможет включить её в любое время.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Добавьте свою книгу</value></data>
@@ -163,6 +181,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Уголок для взрослых</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Это видят только взрослые. Полка ребёнка — одним касанием.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Назад к полке ребёнка</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>Изменить порядок</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>Нажмите на книгу и удерживайте, затем перетащите её на новое место. На полке ребёнка будет тот же порядок.</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Не удалось сохранить новый порядок</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>Файл всё ещё занят. Нажмите «Готово», чтобы повторить, или «Отмена», чтобы оставить прежний порядок.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>Читать сейчас</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>Параметры: {0}</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>Из магазина</value></data>
@@ -224,8 +246,6 @@
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>Эта книга</value></data>
-  <data name="Book_ShowOriginal" xml:space="preserve"><value>Показывать оригинальный текст</value></data>
-  <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Показать слова на языке: {0}. Голос по-прежнему читает на языке: {1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>Вернуться к сказке</value></data>
   <!-- /Slice 110 -->
   <!-- Slice 111 -->
@@ -272,6 +292,18 @@
   <data name="Version_Title" xml:space="preserve"><value>Версия</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Помогите улучшить Dino</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>Отправляет только счётчики, например «книга из магазина дочитана». Никаких имён, идентификаторов и ничего из того, что вы набрали. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти). Если приложение вылетит, оно также может отправить отчёт о сбое: ошибку и короткий технический журнал, но никогда ничего из того, что вы читали или набирали.</value></data>
+  <!-- Slice 249: Report a problem -->
+  <data name="ReportProblem_Title" xml:space="preserve"><value>Сообщить о проблеме</value></data>
+  <data name="ReportProblem_Explain" xml:space="preserve"><value>Отправьте нам недавний технический журнал приложения, чтобы мы увидели, что пошло не так. В нём перечислены открытые экраны, нажатые кнопки и то, что делало чтение, а также версия приложения, примерный тип устройства и ваша страна. Никаких имён, названий книг и ничего набранного. Журнал отправляется, только когда вы нажимаете «Отправить».</value></data>
+  <data name="ReportProblem_Send" xml:space="preserve"><value>Отправить</value></data>
+  <data name="ReportProblem_Sending" xml:space="preserve"><value>Отправляем отчёт…</value></data>
+  <data name="ReportProblem_Sent" xml:space="preserve"><value>Отправлено.</value></data>
+  <data name="ReportProblem_QuoteCode" xml:space="preserve"><value>Если будете писать нам, назовите этот код:</value></data>
+  <data name="ReportProblem_Copy" xml:space="preserve"><value>Копировать</value></data>
+  <data name="ReportProblem_Copied" xml:space="preserve"><value>Скопировано</value></data>
+  <data name="ReportProblem_Failed" xml:space="preserve"><value>Сейчас отчёт отправить не удалось. Он сохранён на этом телефоне и будет отправлен позже, или вы можете попробовать снова.</value></data>
+  <data name="ReportProblem_FailedNotKept" xml:space="preserve"><value>Сейчас отчёт отправить не удалось. Вы можете попробовать снова.</value></data>
+  <data name="ReportProblem_TryAgain" xml:space="preserve"><value>Попробовать снова</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Скорость чтения</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Помедленнее — малышам легче</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · медленно</value></data>

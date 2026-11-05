@@ -2,32 +2,32 @@
   "version": 1,
   "narrator": {
     "voice": "Hali",
-    "style": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent"
+    "style": "warm, gentle, expressive storyteller voice for young children"
   },
   "characters": {
     "Mrs. Rabbit": {
       "voice": "Sulafat",
-      "style": "a warm, soft grown-up mother's voice for young children, standard Tehrani accent",
+      "style": "a warm, soft grown-up mother's voice for young children",
       "direction": "loving and gentle"
     },
     "Peter": {
       "voice": "Puck",
-      "style": "a young, bright, bouncy child's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, bouncy child's voice for young children",
       "direction": "cheeky, bouncy and curious"
     },
     "Mr. McGregor": {
       "voice": "Algenib",
-      "style": "a gravelly old gardener's voice, grumpy but kind underneath, never scary for young children, standard Tehrani accent",
+      "style": "a gravelly old gardener's voice, grumpy but kind underneath, never scary for young children",
       "direction": "grumbly and gruff, a bit funny"
     },
     "Robin": {
       "voice": "Sadachbia",
-      "style": "a young, lively, chirpy little bird's voice for young children, standard Tehrani accent",
+      "style": "a young, lively, chirpy little bird's voice for young children",
       "direction": "cheerful and helpful"
     },
     "Flopsy": {
       "voice": "Cleo",
-      "style": "a young, bright, warm child's voice for young children, standard Tehrani accent",
+      "style": "a young, bright, warm child's voice for young children",
       "direction": "sweet and kind"
     }
   },
@@ -109,5 +109,82 @@
       "source": "Night-night, my little bunnies,",
       "direction": "soft and sleepy, almost a whisper"
     }
-  ]
+  ],
+  "audioPacks": {
+    "ar": {
+      "version": 1,
+      "hash": "ec2a14fe6c70eec554d5898bdee6014b493dfe349b34000377e930a7b293e2cb",
+      "bytes": 2638126
+    },
+    "da": {
+      "version": 1,
+      "hash": "b872040c5a526b24ad65903d2d8caac773ae4e711ebc221cc495d6be78a8d302",
+      "bytes": 2124567
+    },
+    "de": {
+      "version": 1,
+      "hash": "1662f5a6bce9e32a7219b4d6b39314a873594079ec0a819df0688cf3b08957ac",
+      "bytes": 2227051
+    },
+    "en": {
+      "version": 1,
+      "hash": "b4c17780ed87f61450edc6f3205ead5bfbe5be1afe799440326b7b77bc220234",
+      "bytes": 2261420
+    },
+    "es": {
+      "version": 1,
+      "hash": "8eaaf93260fe0075c88432fcb146ac7f9e4e0ad37effe90ec1c202e432924682",
+      "bytes": 2529144
+    },
+    "fa": {
+      "version": 1,
+      "hash": "4ea59779b07eea0959c0b4096259736af652933e0cba85d7b5bf6cec7f067d66",
+      "bytes": 2480970
+    },
+    "fi": {
+      "version": 1,
+      "hash": "5541a8f883a16aec3a8b004605e876ebb0b720982bd5b0fb8d5184428abdf99c",
+      "bytes": 2445939
+    },
+    "fr": {
+      "version": 1,
+      "hash": "6be0163f8904be0524cdcbe1e953c86433aade0638b5f892740d17c5356b2c77",
+      "bytes": 2418967
+    },
+    "ja": {
+      "version": 1,
+      "hash": "e994f7d2147f84880c625e42d38dda929ba3c1fd7382b31ea209e06e1fb0afd6",
+      "bytes": 2815100
+    },
+    "nb": {
+      "version": 1,
+      "hash": "db77ee240e84cad321f066fbb8cd136569264066b3c76fe97a6f53d73a0336d2",
+      "bytes": 2326416
+    },
+    "nl": {
+      "version": 1,
+      "hash": "301c7c51851afe3aea68bbc6e76a38cd5ceb9cb69db41c9b0d99383d33ca9e09",
+      "bytes": 2142978
+    },
+    "pt": {
+      "version": 1,
+      "hash": "34a726a131b4ec9ca0dcf8fe868f5e43f91bf7bbd8f726564f5808ed414fa331",
+      "bytes": 2492982
+    },
+    "ru": {
+      "version": 1,
+      "hash": "b8d3427228e2ff86349a9bad4df3173982c5962c191bc9ceb7f44e0555b84537",
+      "bytes": 2400604
+    },
+    "sv": {
+      "version": 1,
+      "hash": "97b95d8fda33443665f09f1865fb008f1512d83fe65598f743326283a1cac0f4",
+      "bytes": 2309865
+    },
+    "zh": {
+      "version": 1,
+      "hash": "b814caac350fb469a83954f15316697c841eb5370b06b6d5373a5be647445c6b",
+      "bytes": 2450686
+    }
+  }
 }

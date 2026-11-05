@@ -46,7 +46,97 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
             }
         }
 
-        return stories.OrderByDescending(s => s.Created).ToList();
+        List<Story> newestFirst = stories.OrderByDescending(s => s.Created).ThenBy(s => s.Id, StringComparer.Ordinal).ToList(); // Id breaks ties: directory order is not a contract
+        return ShelfOrder.Apply(newestFirst, s => s.Id, await ReadOrderAsync());
+    }
+
+    private string OrderPath => Path.Combine(root, ShelfOrder.FileName);
+
+    /// <summary>The stored shelf order (Slice 264); empty when there is none or it cannot be read, which leaves today's order.</summary>
+    private async Task<IReadOnlyList<string>> ReadOrderAsync()
+    {
+        await _gate.WaitAsync(); // the replace in SaveOrderAsync holds the gate, so a read never meets a half-swapped file
+        try
+        {
+            return await ReadOrderLockedAsync();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    // The caller holds the gate.
+    private async Task<IReadOnlyList<string>> ReadOrderLockedAsync()
+    {
+        try
+        {
+            return File.Exists(OrderPath) ? ShelfOrder.Parse(await File.ReadAllTextAsync(OrderPath)) : [];
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return [];
+        }
+    }
+
+    /// <summary>Stores the shelf order (Slice 264): a temp file, then a replace, so a crash keeps the old order. Only the reorder mode's Done calls it. Books stored earlier but not in <paramref name="ids"/> (not on the screen) keep their old relative place.</summary>
+    public async Task SaveOrderAsync(IReadOnlyList<string> ids)
+    {
+        Directory.CreateDirectory(root);
+        string temp = $"{OrderPath}.{Guid.NewGuid():N}{TempSuffix}";
+        await _gate.WaitAsync(); // one gate across read, merge and replace, so a concurrent delete's forget cannot be undone by a stale merge
+        try
+        {
+            IReadOnlyList<string> onDisk = [.. (await ReadOrderLockedAsync()).Where(id => Directory.Exists(FolderOf(id)))]; // an id whose book is gone is dropped here, even if its delete could not rewrite the file
+            IReadOnlyList<string> merged = ShelfOrder.MergeShown(onDisk, ids);
+            await File.WriteAllTextAsync(temp, ShelfOrder.Serialize(merged));
+            File.Move(temp, OrderPath, overwrite: true);
+        }
+        catch
+        {
+            TryDelete(temp);
+            throw;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <summary>
+    /// The source ids of every story folder on disk, or null when that cannot be said for certain: the root is missing or unreadable, or any story folder's story.json could not be read.
+    /// Unlike <see cref="ListAsync"/>, which skips what it cannot read, a null here means "do not conclude a book is gone" (the audio pack sweep deletes only on a complete answer).
+    /// </summary>
+    public async Task<ISet<string>?> TryListSourceIdsAsync()
+    {
+        try
+        {
+            if (!Directory.Exists(root))
+            {
+                return null;
+            }
+
+            var sources = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string folder in Directory.EnumerateDirectories(root))
+            {
+                Story? story = await TryReadAsync(Path.GetFileName(folder));
+                if (story is null)
+                {
+                    return null;
+                }
+
+                if (story.SourceId is { } source)
+                {
+                    sources.Add(source);
+                }
+            }
+
+            return sources;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
     }
 
     public Task<Story?> GetAsync(string id) => TryReadAsync(id);
@@ -125,13 +215,57 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
             {
                 Directory.Delete(FolderOf(id), recursive: true);
             }
+
+            await TryForgetInOrderAsync(id);
         }
         catch (DirectoryNotFoundException)
         {
+            await TryForgetInOrderAsync(id); // the folder was already gone; the id may still be in the shelf order
         }
         finally
         {
             _gate.Release();
+        }
+    }
+
+    // The book folder is already gone here, so a locked shelf-order.json must not fail the delete: the next order save drops ids whose folder is gone.
+    private async Task TryForgetInOrderAsync(string id)
+    {
+        try
+        {
+            await ForgetInOrderAsync(id);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            System.Diagnostics.Debug.WriteLine($"Dino Reader: could not drop {id} from the shelf order: {ex.Message}");
+        }
+    }
+
+    // A removed book leaves the stored shelf order (the gate is held by the caller), so the same id coming back, restored or downloaded again, goes to the front and not to its old slot.
+    private async Task ForgetInOrderAsync(string id)
+    {
+        if (!File.Exists(OrderPath))
+        {
+            return;
+        }
+
+        IReadOnlyList<string> stored = ShelfOrder.Parse(await File.ReadAllTextAsync(OrderPath));
+        List<string> kept = ShelfOrder.Without(stored, id);
+        if (kept.Count == stored.Count)
+        {
+            return;
+        }
+
+        string temp = $"{OrderPath}.{Guid.NewGuid():N}{TempSuffix}";
+        try
+        {
+            await File.WriteAllTextAsync(temp, ShelfOrder.Serialize(kept));
+            File.Move(temp, OrderPath, overwrite: true);
+        }
+        catch
+        {
+            TryDelete(temp);
+            throw;
         }
     }
 

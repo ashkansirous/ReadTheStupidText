@@ -1,0 +1,107 @@
+# Slice 262: adding a side language fetches that language's pre-made audio for the store books on the shelf, one at a time, with a card in the language's row on Story languages (mock Batch 47, frame 169).
+# The Debug test store (test-store mode=stall, then slow) lists one audio pack, for the gingerbread-man book in Swedish, and serves a fixture zip built in memory, so the real pack store's size check, unzip,
+# completeness check and rename all run and no network is used. The other three shelf books list no Swedish pack, so the quiet "has no Svenska audio yet" line shows. The shelf-audio hook adds Swedish
+# as a side language (saved at once, as the page does) and starts the fetch; the reading-voice download is left out (it crashes the Debug x86_64 emulator build, see set-language).
+# Against the old behaviour (a side-language add only fetched the voice) no "[AudioPack] shelf audio" line is ever written and the card never shows.
+# The flow holds the pack (stall), asserts the card and Cancel mid-download, taps Cancel, then lets a second start finish (slow). The offline wait and the kill-and-resume are covered by the unit tests of the plan.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK test-store ok stall
+# expect-log: HOOK test-store ok slow
+# expect-log: HOOK shelf-audio started sv
+# expect-log: [AudioPack] shelf audio sv: 1 book(s) need a pack, 3 without one
+# expect-log: [AudioPack] shelf audio sv: cancelled by the grown-up
+# expect-log: [AudioPack] shelf audio sv: 1 of 1 done,
+# expect-log: [AudioPack] shelf audio sv: finished, 1 book(s) handled
+appId: uk.sirous.dinoreader.dbg
+name: A side language fetches the shelf books' audio
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, side languages, downloaded voice/OCR packs, installed audio packs, own books); fine here: skip-first-run puts the four test books back and the run needs no Swedish pack installed.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# stall holds the fixture pack in its first chunk (30 s per chunk), so the run is still downloading when the page opens and the flow taps Cancel.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: stall
+# The hook adds Swedish as a side language and starts a visible run, as a Settings add does. It runs before the page opens: the page draws its rows (and a language's card) when it appears,
+# and a side saved behind an open page gets no row host, so the card would not be drawn there.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: shelf-audio
+      lang: sv
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+# The one-time "Storyteller voices are ready" note can cover grown-up mode once the background pack download ends: dismiss it only when it is on screen.
+- runFlow:
+    when:
+      visible: Storyteller voices are ready
+    commands:
+      - tapOn: "OK"
+- tapOn:
+    id: GallerySettings
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: SettingsTitle
+    timeout: 10000
+- tapOn:
+    text: "Story languages.*"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: "Your child can switch between these.*"
+    timeout: 10000
+# Mid-download: the card and its Cancel are there while the pack is held.
+- extendedWaitUntil:
+    visible:
+      id: ShelfAudioCard-sv
+    timeout: 15000
+- assertVisible:
+    id: ShelfAudioCancel-sv
+- tapOn:
+    id: ShelfAudioCancel-sv
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    notVisible:
+      id: ShelfAudioCancel-sv
+    timeout: 10000
+# Let it finish: the store serves the pack in a few short timed chunks, and the hook starts the language again (a re-add after a Cancel starts afresh).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: slow
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: shelf-audio
+      lang: sv
+# The pack arrived (the log lines above), the bar and Cancel go, and the quiet line for the books without Swedish audio stays.
+- extendedWaitUntil:
+    visible:
+      id: ShelfAudioNone-sv
+    timeout: 30000
+- extendedWaitUntil:
+    notVisible:
+      id: ShelfAudioCancel-sv
+    timeout: 30000
+# Put the test store back to the live store for later flows.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: "off"

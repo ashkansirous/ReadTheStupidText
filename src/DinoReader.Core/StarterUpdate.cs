@@ -28,6 +28,12 @@ public static class StarterUpdate
     public static bool NeedsUpdate(int? installedVersion, int bundledVersion) =>
         (installedVersion ?? LegacyInstalledVersion) < bundledVersion;
 
+    /// <summary>
+    /// The version to record for a starter kept from before Slice 261 so the store path replaces it once with the store's copy (the bundled packages, which carried the translations, are gone):
+    /// one below what is recorded (the first release when none), never below zero.
+    /// </summary>
+    public static int VersionToRefetchFromStore(int? installedVersion) => Math.Max((installedVersion ?? LegacyInstalledVersion) - 1, 0);
+
     /// <summary>The hash of a story's page texts, as kept in the earlier-versions table.</summary>
     public static string PageTextHash(Story story) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join(Story.PageSeparator, story.Pages.Select(p => p.Text)))));
@@ -99,7 +105,6 @@ public static class StarterUpdate
             LanguageCasts = sameCast ? KeptLanguageCasts(stored, bundled) : bundled.LanguageCasts,
             PreferredMode = stored.PreferredMode,
             TranslateToMyLanguage = stored.TranslateToMyLanguage,
-            ShowOriginalText = stored.ShowOriginalText,
             AnimalSoundsOn = stored.AnimalSoundsOn,
         });
     }

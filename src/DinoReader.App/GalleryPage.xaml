@@ -32,25 +32,14 @@
         </Style>
 
         <DataTemplate x:Key="StoryTemplate" x:DataType="local:StoryTile">
-            <VerticalStackLayout Spacing="{StaticResource TileSpacing}" HorizontalOptions="Fill" WidthRequest="{DynamicResource TileWidth}" Loaded="OnTileLoaded">
+            <VerticalStackLayout Spacing="{StaticResource TileSpacing}" HorizontalOptions="Fill" WidthRequest="{DynamicResource TileWidth}">
                 <Grid>
                     <local:StoryCover AutomationId="StoryTile">
                         <local:StoryCover.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnStoryTapped" />
                         </local:StoryCover.GestureRecognizers>
                     </local:StoryCover>
-                    <local:TileOverlay OpenRequested="OnOpenRequested" />
-                    <!-- Slice 235 part C: the Windows hover and keyboard-focus rings live in the template (hidden, never shown off Windows), so the desktop code adds no children to a live tile (GalleryPage.Desktop.cs). -->
-                    <Border AutomationId="HoverRing" IsVisible="False" InputTransparent="True" BackgroundColor="Transparent" Stroke="#5B57E8" StrokeThickness="3">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="16" />
-                        </Border.StrokeShape>
-                    </Border>
-                    <Border AutomationId="FocusRing" IsVisible="False" InputTransparent="True" BackgroundColor="Transparent" Stroke="#5B57E8" StrokeThickness="3">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="16" />
-                        </Border.StrokeShape>
-                    </Border>
+                    <local:TileOverlay OpenRequested="OnOpenRequested" HoldRequested="OnHoldRequested" />
                 </Grid>
                 <Label Style="{StaticResource TileTitle}" Text="{Binding Title}" AutomationId="StoryTileTitle">
                     <Label.GestureRecognizers>

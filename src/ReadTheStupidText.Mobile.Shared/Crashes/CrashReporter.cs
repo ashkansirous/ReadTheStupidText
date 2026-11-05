@@ -13,7 +13,7 @@ namespace ReadTheStupidText.Mobile.Shared.Crashes;
 /// while the switch is off or the build may not send, the rolling log, the run marker and the pending reports are not kept at all.
 /// One crash gives one report: a system report that repeats a managed one (Android's native abort, iOS MetricKit, the run marker) is dropped.
 /// </summary>
-public static class CrashReporter
+public static partial class CrashReporter
 {
     private const string RootFolder = "crashes";
     private const string PendingFolder = "pending";
@@ -83,6 +83,7 @@ public static class CrashReporter
         // The hooks are always installed: they write only while reportingAllowed, so a closed gate keeps them silent, and a gate that opens later in the run
         // (the Debug stub set by the scripted check, see GateChanged) needs them already in place.
         InstallHandlers();
+        CrashPlatform.HookMemoryTrace(); // lines are written only while the log gate is open, like every other line
         if (!BuildEligible())
         {
             DiscardAll();
@@ -125,6 +126,8 @@ public static class CrashReporter
     {
         window.Activated += (_, _) => SetRunning(true);
         window.Stopped += (_, _) => SetRunning(false);
+        AppTrace.AttachTo(Microsoft.Maui.Controls.Application.Current); // Slice 243 item 5: page, lifecycle and Back lines for the rolling log
+        AppTrace.AttachTo(window);
     }
 
     /// <summary>Re-reads the gate now (Debug: the scripted check has just set or cleared the stub mid-run). Never throws.</summary>
@@ -213,7 +216,7 @@ public static class CrashReporter
             }
 
             lastReported = error;
-            Save(CrashReportBuilder.FromException(ContextNow(context), CrashKind.Managed, error, string.Empty, DateTimeOffset.UtcNow));
+            Save(CrashReportBuilder.FromException(InThisLaunch(ContextNow(context)), CrashKind.Managed, error, string.Empty, DateTimeOffset.UtcNow));
             store.MarkNotRunning();
         }
         catch (Exception hookFailure)
@@ -335,6 +338,22 @@ public static class CrashReporter
 
     private static CrashReport? FromNative(NativeCrash crash, string tail) =>
         context is null ? null : CrashReportBuilder.FromDescription(ContextNow(context), crash.Kind, crash.Type, crash.Message, crash.Stack, tail, crash.Time);
+
+    /// <summary>Slice 250: Dino sets this to read its usage session id; Read The Stupid Text leaves it null and its reports carry none. Read at the moment a report about this launch is made.</summary>
+    public static Func<string?>? SessionProvider { get; set; }
+
+    // A report about the launch that is running (a managed crash, a user report) carries its session id; one about an earlier launch (native, unclean exit) must not, it would name the wrong session.
+    private static CrashContext InThisLaunch(CrashContext facts)
+    {
+        try
+        {
+            return facts with { Session = SessionProvider?.Invoke() };
+        }
+        catch (Exception)
+        {
+            return facts;
+        }
+    }
 
     // The build facts a report is made with. A Debug build is a dev install, which sends nothing; with the scripted check's stub set it reports as a store
     // install so the whole path (handler, file, sender, Worker checks) runs. Release builds use the facts as read.

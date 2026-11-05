@@ -169,11 +169,15 @@ if (Test-VmRunning) { Write-Host 'Free-memory guard skipped: the test VM is alre
 else { $memoryProblem = Get-MemoryProblem (Get-FreeMemoryGB) $MinFreeMemoryGB }
 if ($memoryProblem) { Write-Host "$($script:PreflightNoGo): $memoryProblem"; exit $script:PreflightExitCode }
 $msix = Find-Package
+# Slice 253 item 3: the selected checks are read against the guest screen and the built package before the VM is touched; a FAIL stops here (exit 1), a WARN is printed.
+. "$PSScriptRoot\_dryrun.ps1"
+if ((Invoke-CheckDryRun @($AppProfile.Checks) "$PSScriptRoot\checks" $msix) -gt 0) { Write-Host 'DRYRUN stopped the run: fix the check(s) above; the VM was not started.'; exit 1 }
 $credential = Get-VmCredential
 $results = @()
 $noGo = $null
 $script:PreflightMissing = @()
 $session = $null
+$guestStart = $null
 # Register (and wait for a quiet-machine timing run) before taking the VM lock, so a long wait never holds every other VM run up.
 $activity = Start-Activity "vm-$App"
 try { Enter-VmLock } catch { Stop-Activity $activity; throw }
@@ -181,6 +185,7 @@ try {
     Write-Host "Restoring '$($script:CheckpointName)' and starting the VM..."
     Restore-CleanCheckpoint -Start -Quiet
     $session = New-VmSession -Credential $credential
+    $guestStart = Invoke-Command -Session $session -ScriptBlock { (Get-Date).AddMinutes(-2) }   # Slice 259 item 4: the guest clock, for the crash evidence below
     Assert-GuestPreflight -Session $session -Only @('network')
     Copy-ToGuest -Session $session -Msix $msix
     Write-Host 'Installing the package in the VM...'
@@ -208,6 +213,11 @@ try {
         $results += [pscustomobject]@{ check = 'harness'; pass = $false; message = $(if ($hasShot) { $failure } else { "$failure; screen: $(Get-ScreenText $shot)" }) }
     }
 } finally {
+    # Slice 259 item 4: a failed check or harness error may be a dead app; keep what the guest knows (event log, WER, app trace tail) before the reset to clean wipes it.
+    if ($session -and $guestStart -and -not $noGo -and $results.Where({ -not $_.pass }).Count -gt 0) {
+        $evidenceDir = if ($CopyOut) { Join-Path $CopyOut 'crash-evidence' } else { Join-Path $VmRoot "crash-evidence\$App-$(Get-Date -Format 'yyyyMMdd-HHmmss')" }
+        Copy-CrashEvidence -Session $session -HostDir $evidenceDir -ExeName $AppProfile.Exe -PackageName $AppProfile.Name -Since $guestStart
+    }
     if ($session) { Remove-PSSession $session -ErrorAction SilentlyContinue }
     if (-not $KeepRunning) {
         Write-Host "Restoring '$($script:CheckpointName)'..."

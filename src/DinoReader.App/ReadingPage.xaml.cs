@@ -3,6 +3,7 @@ using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Crashes;
 using ReadTheStupidText.Mobile.Shared.Waiting;
 using DinoReader.Resources.Strings;
 
@@ -38,6 +39,8 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private readonly UsageCounter _usage;
 	private bool _finishCounted;
 	private bool _openCounted;
+	private Action<Story, string>? _voiceUsedHandler; // Slice 267: the same lifetime, for the voice-used count
+	private Action<ReadingEventKind, ReadStopReason?>? _playbackHandler; // Slice 250: subscribed while the page is on the stack, bound to the book shown then
 	private readonly PageFollower _follower = new();
 	private readonly BusyGuard _busy = new();
 	private readonly WaitOverlay _waitOverlay = DinoWait.OverPicture();
@@ -215,7 +218,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		CountOpen();
 	}
 
-	// A book that can only be read one way (a recorded book, "Show original text", an own book on Windows or without its pack) has no button and reads in the app
+	// A book that can only be read one way (a recorded book, an own book on Windows or without its pack) has no button and reads in the app
 	// language; otherwise the child's pick applies, as long as this book can be read in it.
 	private async Task RefreshLanguageButtonAsync()
 	{
@@ -226,7 +229,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		StoryLanguageSet set = StoryLanguages.Current();
 		var translator = _services.GetRequiredService<StoryTranslator>();
-		bool switchable = LanguagePick.BookSwitchable(set.HasChoice, story.ShowOriginalText, StoryRecordings.Count(story));
+		bool switchable = LanguagePick.BookSwitchable(set.HasChoice, StoryRecordings.Count(story));
 		_readable = switchable ? await ReadableLanguagesAsync(story, set, translator) : [];
 		_packStates = PackStates(set);
 		string effective = EffectiveLanguage(set);
@@ -271,7 +274,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		StoryLanguageSet set = StoryLanguages.Current();
 		var translator = _services.GetRequiredService<StoryTranslator>();
-		bool switchable = LanguagePick.BookSwitchable(set.HasChoice, story.ShowOriginalText, StoryRecordings.Count(story));
+		bool switchable = LanguagePick.BookSwitchable(set.HasChoice, StoryRecordings.Count(story));
 		IReadOnlyList<string> readable = switchable ? await ReadableLanguagesAsync(story, set, translator) : [];
 		if (!readable.SequenceEqual(_readable))
 		{
@@ -336,7 +339,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		bool wasActive = before is SessionState.Playing or SessionState.Loading;
 		if (wasActive)
 		{
-			_session.Pause();
+			_session.Pause(TraceLines.ReadingReason.Other, counted: false); // the app's own pause is not a count
 		}
 
 		_languageButton.SetOpen(true);
@@ -346,7 +349,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		{
 			if (wasActive && _session.State == SessionState.Paused)
 			{
-				_session.Resume();
+				_session.Resume(counted: false);
 			}
 
 			return;
@@ -359,7 +362,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	{
 		int sentence = Math.Max(0, _session.CurrentSentence);
 		StoryLanguages.SetPick(language);
-		_session.Stop();
+		_session.Stop(ReadStopReason.LanguageChanged);
 		_session.SetReadingLanguage(language);
 		_languageButton.SetLanguage(language);
 		_usage.Record(UsageEventName.StoryLanguageSwitched, story, language: language);
@@ -370,8 +373,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		}
 	}
 
-	// Slice 110, Decision 112: while the story is read in the grown-up's language the page shows the translation too, unless the
-	// grown-up chose "Show original text". The source shows at once and the translation replaces it when ready (one rebuild); it stays when
+	// Slice 110, Decision 112: while the story is read in the grown-up's language the page shows the translation too. The source shows at once and the translation replaces it when ready (one rebuild); it stays when
 	// there is nothing to translate or a language model is missing. A newer call supersedes an older one.
 	private async Task ShowStoryAsync()
 	{
@@ -400,7 +402,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		CancellationToken cancellation = RestartDisplayCancellation();
 		var translator = _services.GetRequiredService<StoryTranslator>();
 		string reading = _session.ReadingLanguage;
-		if (story.ShowOriginalText || !translator.Applies(story, reading))
+		if (!translator.Applies(story, reading))
 		{
 			ShowSource(story);
 			return;
@@ -576,7 +578,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		CancelIntroRead();
 		if (_session.State is SessionState.Loading or SessionState.Playing or SessionState.Paused)
 		{
-			_session.Stop();
+			_session.Stop(ReadStopReason.Restarted);
 		}
 
 		_follower.ResumeAt(Math.Max(0, Surface.PageOfSentence(0)));
@@ -896,6 +898,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		ApplyScreenAwake();
 		Unsubscribe();
 		_session.Attach();
+		SubscribePlayback();
 		_installer.Changed += OnInstallerChanged;
 		_model.ReadyChanged += OnInstallerChanged;
 		SystemTheme.Changed += OnThemeChanged;
@@ -918,7 +921,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 			return;
 		}
 
-		_session.Stop();
+		_session.Stop(ReadStopReason.Other);
 #if DEBUG
 		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Reading] opened idle, inherited read stopped");
 #endif
@@ -960,7 +963,13 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		CancelDisplay();
 		Unsubscribe();
 		_session.Detach();
-		_session.Stop();
+		if (_story is { } leftBook)
+		{
+			RecordBookCount(UsageEventName.BookLeft, leftBook); // Slice 250: before the stop, so a session reads "book left, read stopped (left_book)"
+		}
+
+		_session.Stop(ReadStopReason.LeftBook);
+		UnsubscribePlayback(); // after the stop, so "read stopped (left_book)" is still counted; a late callback after the page left counts nothing
 		_ = _usage.FlushAsync();
 #if DEBUG
 		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Reading] left the page, read stopped");
@@ -1112,6 +1121,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 			_waitOverlay.Clip = new Microsoft.Maui.Controls.Shapes.RoundRectangleGeometry(WaitCornerRadius, new Rect(0, 0, _waitOverlay.Width, _waitOverlay.Height));
 		var wait = new WaitController(_waitOverlay);
 		wait.CancelRequested += OnWaitCancelled;
+		wait.ShownChanged += shown => ReadStartTrace.Write(shown ? $"wait overlay shown ({wait.Stage})" : "wait overlay hidden"); // Slice 259 item 1: Debug trace, proves the 500 ms rule on a device
 		return wait;
 	}
 
@@ -1184,7 +1194,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		try
 		{
 			EndOwnedWait();
-			_session.Stop();
+			_session.Stop(ReadStopReason.Cancelled);
 			if (opening)
 			{
 				await _busy.RunAsync(() => Navigation.PopAsync());
@@ -1226,12 +1236,60 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		}
 	}
 
+	// Slice 250: each playback verb the session raises is one count about this book; a stop's detail is its closed reason.
+	private void SubscribePlayback()
+	{
+		UnsubscribePlayback();
+		if (_story is not { } book)
+		{
+			return;
+		}
+
+		_playbackHandler = (kind, reason) => OnPlayback(book, kind, reason);
+		_session.Playback += _playbackHandler;
+		_voiceUsedHandler = (voiced, detail) => OnVoiceUsed(book, voiced, detail);
+		_session.VoiceUsed += _voiceUsedHandler;
+	}
+
+	private void UnsubscribePlayback()
+	{
+		if (_playbackHandler is not null)
+		{
+			_session.Playback -= _playbackHandler;
+			_playbackHandler = null;
+		}
+
+		if (_voiceUsedHandler is not null)
+		{
+			_session.VoiceUsed -= _voiceUsedHandler;
+			_voiceUsedHandler = null;
+		}
+	}
+
+	// Slice 267: one count per read, naming the voice it used (a book's own reads only; the intro's demo read counts no book event).
+	private void OnVoiceUsed(Story book, Story voiced, string detail)
+	{
+		if (ReferenceEquals(book, voiced) || book.Id == voiced.Id)
+		{
+			RecordBookCount(UsageEventName.ReadVoice, book, detail);
+		}
+	}
+
+	private void OnPlayback(Story story, ReadingEventKind kind, ReadStopReason? reason)
+	{
+		string name = ReadPlaybackNames.EventOf(kind);
+		if (DemoReadCounting.Counts(name, _demoRead))
+		{
+			_usage.Record(name, story, reason is { } why ? ReadPlaybackNames.DetailOf(why) : string.Empty, ReadIn(story));
+		}
+	}
+
 	// Slice 228: the intro's demo read is not a real reading of the book, so it counts no open or finish (the one rule is DemoReadCounting).
-	private void RecordBookCount(string name, Story story)
+	private void RecordBookCount(string name, Story story, string detail = "")
 	{
 		if (DemoReadCounting.Counts(name, _demoRead))
 		{
-			_usage.Record(name, story, language: ReadIn(story));
+			_usage.Record(name, story, detail, ReadIn(story));
 		}
 	}
 
@@ -1396,13 +1454,13 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		switch (_session.State)
 		{
 			case SessionState.Loading:
-				_session.Stop();
+				_session.Stop(ReadStopReason.Cancelled);
 				break;
 			case SessionState.Playing when _follower.IsWandering:
 				JumpBackToReading();
 				break;
 			case SessionState.Playing:
-				_session.Pause();
+				_session.Pause(TraceLines.ReadingReason.User);
 				break;
 			case SessionState.Paused:
 				JumpBackToReading();
@@ -1474,7 +1532,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		if (state == SessionState.Paused)
 		{
-			_session.Stop();
+			_session.Stop(ReadStopReason.Skipped);
 		}
 
 		_session.MoveTo(plan.Target);

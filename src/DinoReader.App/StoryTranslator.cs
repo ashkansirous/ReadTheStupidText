@@ -149,13 +149,13 @@ public sealed class StoryTranslator
 
 	/// <summary>
 	/// The title the shelf shows (Slice 159): in the grown-up's language, from the book's own table (which holds the title an own book was
-	/// translated with) or the shipped-titles table, else the title as it is. Synchronous and offline; the switch, the language pair and the grown-up's "Show original text" decide, as for the text.
+	/// translated with) or the shipped-titles table, else the title as it is. Synchronous and offline; the language pair decides, as for the text.
 	/// </summary>
 	public string ShelfTitle(Story story)
 	{
 		string target = MyLanguage;
 		string source = UiLanguage.Resolve(story.Language);
-		if (story.ShowOriginalText || !TranslationFlow.ShouldTranslate(story.TranslateToMyLanguage, source, target))
+		if (!TranslationFlow.ShouldTranslate(story.TranslateToMyLanguage, source, target))
 		{
 			return story.Title;
 		}
@@ -226,7 +226,7 @@ public sealed class StoryTranslator
 	}
 
 	/// <summary>Whether the child can read <paramref name="story"/> in <paramref name="language"/> right now, with nothing to download (Slice 173): it is the book's own
-	/// language, or it carries a table for it, or the translation engine and the packs for the pair are on the phone. False when the parent chose "Show original text" or the book does not translate.</summary>
+	/// language, or it carries a table for it, or the translation engine and the packs for the pair are on the phone. False when the book does not translate.</summary>
 	public Task<bool> CanReadInAsync(Story story, string language)
 	{
 		string source = UiLanguage.Resolve(story.Language);

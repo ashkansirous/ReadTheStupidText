@@ -475,6 +475,9 @@ public sealed class StoreStoryTests : IDisposable
             using JsonDocument meta = JsonDocument.Parse(StoreBuilder.MetaJson(spec, story));
             Assert.Equal(story.Pages.Count, meta.RootElement.GetProperty("pageCount").GetInt32());
             Assert.Equal(StarterBuilder.StarterVersions[fileName], meta.RootElement.GetProperty("version").GetInt32());
+            // Slice 258: a starter's recorded audio packs reach its meta.json, so the Worker offers them beside the store books' packs.
+            int recorded = AudioPacks.RecordsIn(Books.Starters.Single(b => b.FileName == fileName).Dir).Count;
+            Assert.Equal(recorded, meta.RootElement.TryGetProperty("audio", out JsonElement audio) ? audio.EnumerateObject().Count() : 0);
         }
     }
 

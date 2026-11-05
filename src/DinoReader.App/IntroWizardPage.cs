@@ -98,7 +98,7 @@ public sealed class IntroWizardPage : ContentPage
 		try
 		{
 			_pictures = await IntroPictures.LoadAsync(_library);
-			_hasStarter = await IntroPictures.ShortestStarterAsync(_library) is not null;
+			_hasStarter = await IntroPictures.FirstBookAsync(_library) is not null;
 			_canRecord = _hasStarter;
 		}
 		catch (Exception ex)
@@ -239,7 +239,6 @@ public sealed class IntroWizardPage : ContentPage
 		(string title, string line) = step switch
 		{
 			IntroSteps.Read => (AppResources.Intro_ReadTitle, AppResources.Intro_ReadLine),
-			IntroSteps.Store => (AppResources.Intro_StoreTitle, AppResources.Intro_StoreLine),
 			IntroSteps.Record => (AppResources.Intro_RecordTitle, AppResources.Intro_RecordLine),
 			_ => windows ? (AppResources.Intro_AddTitleWindows, AppResources.Intro_AddLineWindows) : (AppResources.Intro_AddTitle, AppResources.Intro_AddLine),
 		};
@@ -339,7 +338,8 @@ public sealed class IntroWizardPage : ContentPage
 	private static void PlaceButtons(Grid buttons, View main, View? skip, bool inRow)
 	{
 		buttons.ColumnDefinitions = inRow && skip is not null ? [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)] : [];
-		buttons.RowDefinitions = [];
+		// Upright the two buttons need their own rows: a Grid with no row definitions has one implicit row and clamps Grid.Row 1 into it, which drew Skip over Try it (Slice 267).
+		buttons.RowDefinitions = skip is not null && !inRow ? [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto)] : [new RowDefinition(GridLength.Auto)];
 		if (skip is null || !inRow)
 		{
 			SetCell(main, 0, 0, 1);
@@ -479,7 +479,10 @@ public sealed class IntroWizardPage : ContentPage
 		StoryLanguageSet before = StoryLanguages.Current();
 		StoryLanguageSet set = WithoutLostSides(_languagePicker?.Set ?? before, before);
 		StoryLanguages.SaveSides(set);
-		await _services.GetRequiredService<StoryLanguagePacks>().RequestAsync(this, set.Sides, _wait); // on mobile data the grown-up is asked first
+		StoryLanguagePacks packs = _services.GetRequiredService<StoryLanguagePacks>();
+		HashSet<string> asked = [.. set.Sides.Select(UiLanguage.Resolve).Where(code => packs.StateOf(code) == LanguageVoiceState.NotInstalled)]; // the languages the request below is about
+		VoiceRequestOutcome outcome = await packs.RequestAsync(this, set.Sides, _wait); // on mobile data the grown-up is asked first
+		StartShelfAudio(set.Sides.Except(before.Sides), asked, outcome); // Slice 262: Done leaves and the audio of the shelf books carries on in the background (Settings shows the card)
 		if (!set.Sides.SequenceEqual(before.Sides))
 		{
 			StoryLanguageCounts.RecordSet(_usage, set, UsageDetail.LanguagesFromIntro, set.Sides.Except(before.Sides)); // only languages new to this phone count as added
@@ -487,6 +490,16 @@ public sealed class IntroWizardPage : ContentPage
 
 		CountStep(tried: set.Sides.Count > 0); // nothing ticked is a Skip in effect
 		await AdvanceAsync();
+	}
+
+	// The request's outcome belongs to the languages it was about (their voice was missing); an added language whose voice was already there gets NothingAsked, so a Cancel on the prompt does not stop its audio.
+	private void StartShelfAudio(IEnumerable<string> added, ISet<string> asked, VoiceRequestOutcome outcome)
+	{
+		ShelfAudioPacks shelf = _services.GetRequiredService<ShelfAudioPacks>();
+		foreach (string language in added)
+		{
+			shelf.Start(language, asked.Contains(UiLanguage.Resolve(language)) ? outcome : VoiceRequestOutcome.NothingAsked); // a cancelled voice request starts nothing (ShelfAudioStart decides)
+		}
 	}
 
 	/// <summary>A plain text button (frames 73-76): brand-coloured unless <paramref name="colourKey"/> says otherwise.</summary>
@@ -570,10 +583,6 @@ public sealed class IntroWizardPage : ContentPage
 	{
 		switch (IntroSteps.NameAt(_step))
 		{
-			case IntroSteps.Store:
-				var store = _services.GetRequiredService<StorePage>();
-				store.LaunchedFromIntro = true; // its header button reads "Continue" and means "back to the intro, next step" (Slice 229)
-				return store;
 			case IntroSteps.Record:
 				return await CreateRecordScreenAsync();
 			case IntroSteps.Read:
@@ -586,10 +595,10 @@ public sealed class IntroWizardPage : ContentPage
 		}
 	}
 
-	// The read step (Batch 43 frame 101b) opens the shortest starter (the Tortoise and the Hare on a fresh install) in the reader; Back from it moves the intro on.
+	// The read step (Batch 43 frame 101b) opens the first book the grown-up picked (Slice 261; else the shortest book from the catalogue) in the reader; Back from it moves the intro on.
 	private async Task<Page?> CreateReadScreenAsync()
 	{
-		Story? story = await IntroPictures.ShortestStarterAsync(_library);
+		Story? story = await IntroPictures.FirstBookAsync(_library);
 		if (story is null)
 		{
 			return null;
@@ -611,7 +620,7 @@ public sealed class IntroWizardPage : ContentPage
 
 	private async Task<Page?> CreateRecordScreenAsync()
 	{
-		Story? story = await IntroPictures.ShortestStarterAsync(_library);
+		Story? story = await IntroPictures.FirstBookAsync(_library);
 		if (story is null)
 		{
 			return null;
@@ -628,7 +637,7 @@ public sealed class IntroWizardPage : ContentPage
 	{
 		try
 		{
-			_hasStarter = await IntroPictures.ShortestStarterAsync(_library) is not null;
+			_hasStarter = await IntroPictures.FirstBookAsync(_library) is not null;
 			_canRecord = _hasStarter;
 		}
 		catch (Exception ex)
@@ -692,6 +701,7 @@ public sealed class IntroWizardPage : ContentPage
 
 		_ended = true;
 		_usage.RecordGeneral(UsageEventName.IntroEnded, LanguageChoice.Current(), how);
+		FirstBooksGate.FirstPick = null; // every way out clears it (replay and skip too), so a later intro never opens a stale pick
 		if (!_replay)
 		{
 			IntroState.Clear();

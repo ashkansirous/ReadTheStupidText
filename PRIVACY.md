@@ -126,7 +126,10 @@ A count is a name plus a few values from fixed lists:
 Every count also carries the app version, the platform and the UTC date (no time of day).
 Counts never contain the text you read, file names, scanned images, names, or any install,
 device, account or advertising identifier, so they cannot be put together into a history of
-one person. Only a share of launches may count at all, as set by the project.
+one person. (Dino Reader's counts also carry a random session number: it is made new every time the
+app starts and never reused for a later start. It lives in memory, and is also written only inside counts
+still waiting in the app's local send queue, and is gone once those counts are sent. It cannot tell two sessions of one person
+apart. Read The Stupid Text sends none.) Only a share of launches may count at all, as set by the project.
 
 Each batch of counts also says a few coarse things about the device, as fixed lists and ranges: the form
 factor (phone, tablet, desktop or other), the operating system's major version, the processor type (arm64, x64,
@@ -162,6 +165,17 @@ Reports are kept in Cloudflare's R2 storage (Cloudflare is the processor), read 
 bugs, kept only as long as that needs, and not shared with anyone else or used for advertising or tracking. Test and
 development builds, emulators and the test devices store review tools use send no reports; builds installed through
 TestFlight do. The project can switch crash reports off for everyone from the server.
+
+**Reports you send yourself.** Dino Reader, this project's children's reading app, has a **Report a problem** button
+in its grown-ups' corner (Android and iPhone). Read The Stupid Text has no such button. Nothing is sent until a grown-up
+presses **Send** on that page, whatever the usage switch says. The report holds the same things as a crash report
+without an error: the app and its version, the platform, the store or TestFlight, the app's recent technical log
+(32 KB at most; the app's recent technical log lines, which may include lines from earlier sessions, never a name, a title or anything typed), the
+time to the minute and the coarse device ranges and country. It also holds a random 8-character code that the app shows
+after sending, so you can quote it when you write to the project; the code names that one report and nothing else (not
+you, your phone or your install). It goes to the same server, is stored the same way, is read only by the project to
+find and fix bugs, is deleted automatically after 90 days (as crash reports are), and is not shared or used for
+advertising or tracking.
 
 ## Permissions
 

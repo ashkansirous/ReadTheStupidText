@@ -588,28 +588,8 @@ function Format-LeaseLengthNote([string]$Mode, [int]$Minutes, [int]$WantedMinute
     return "   phone lease: $Minutes min ($why)"
 }
 
-# Item 3: the build fails early when its intermediate folders would pass the Windows path limit (APT2264 came minutes into a build). The deepest MAUI intermediate
-# below the artifacts folder is an ESTIMATE (the ML Kit asset paths are ~230 characters from the project folder): tune it when a build fails with APT2264 although this passed.
-$script:WindowsPathLimit = 260
-$script:DeepestMauiIntermediateChars = 150   # unmeasured estimate, set just below the 160 that FAILS so the warning is rare and means something: over it is only a WARNING
-$script:KnownMinimumIntermediateChars = 100  # a floor any MAUI intermediate path certainly has below the artifacts folder: over it the build cannot work (FAIL)
-# $null when fine, else @{ Level = 'Warn' | 'Fail'; Message }.
-function Test-BuildPathLength([string]$ArtifactsPath) {
-    $floor = $ArtifactsPath.Length + $script:KnownMinimumIntermediateChars
-    if ($floor -gt $script:WindowsPathLimit) {
-        return [pscustomobject]@{ Level = 'Fail'; Message = "path too long: even the shortest intermediate path would be about $floor characters (limit $($script:WindowsPathLimit)). Move the worktree or shorten '$ArtifactsPath' by $($floor - $script:WindowsPathLimit) characters." }
-    }
-    $estimate = $ArtifactsPath.Length + $script:DeepestMauiIntermediateChars
-    if ($estimate -le $script:WindowsPathLimit) { return $null }
-    return [pscustomobject]@{ Level = 'Warn'; Message = "path may be too long: the deepest intermediate path is estimated at $estimate characters (limit $($script:WindowsPathLimit); the estimate is unmeasured). If the build fails with APT2264, move the worktree or shorten '$ArtifactsPath'." }
-}
-
-function Assert-BuildPathLength([string]$ArtifactsPath) {
-    $problem = Test-BuildPathLength $ArtifactsPath
-    if (-not $problem) { return }
-    if ($problem.Level -eq 'Fail') { throw $problem.Message }
-    Write-Warning $problem.Message
-}
+# Item 3: the path-length check (Test-BuildPathLength, Assert-BuildPathLength) lives in tools/path-length.ps1 since Slice 266, shared with the emulator build.
+. (Join-Path $PSScriptRoot '..\path-length.ps1')
 
 # Item 5: the one phone build command (audio-timing.ps1 and run-checks.ps1 both call it, so a change cannot miss one). Unquoted arguments for `dotnet build`;
 # a caller that goes through Start-Process quotes the ones with spaces (ConvertTo-ProcessArguments).

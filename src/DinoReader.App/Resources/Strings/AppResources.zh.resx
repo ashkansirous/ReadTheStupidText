@@ -14,6 +14,13 @@
   <data name="StoryLanguages_Waiting" xml:space="preserve"><value>正在等待网络 · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>正在等待 Wi-Fi · {0}%</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>恢复联网后会自动继续。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Getting" xml:space="preserve"><value>正在获取你的书的{0}音频</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>《{0}》还没有{1}音频，将由 Dino 的朗读声音来读。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>《{0}》和另外{2}本书还没有{1}音频，将由 Dino 的朗读声音来读。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>正在等待网络…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>正在等待 Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Preparing" xml:space="preserve"><value>正在准备…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_Failed" xml:space="preserve"><value>部分{0}音频暂时无法获取。Dino 稍后会再试。</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>重试</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>语音下载已损坏。正在使用手机语音朗读。点按可重试。</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然语音包无法使用。正在使用手机语音朗读。</value></data>
@@ -56,6 +63,10 @@
   <data name="Store_Subtitle" xml:space="preserve"><value>为小恐龙精选并分好角色</value></data>
   <data name="Store_Get" xml:space="preserve"><value>获取</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>已下载</value></data>
+  <data name="Store_Tag_Hot" xml:space="preserve"><value>火爆</value></data>
+  <data name="Store_Tag_Popular" xml:space="preserve"><value>热门</value></data>
+  <data name="Store_Tag_Recommended" xml:space="preserve"><value>推荐</value></data>
+  <data name="Store_Tag_New" xml:space="preserve"><value>新书</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} 页 · {1} 分钟</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>免费，无需账号。不会发送任何关于您或孩子的信息。</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>您已离线</value></data>
@@ -107,11 +118,19 @@
   <data name="FirstRun_GettingReady" xml:space="preserve"><value>正在准备 Dino 的语音</value></data>
   <data name="FirstRun_Once" xml:space="preserve"><value>语音：{0} · 只需一次</value></data>
   <data name="FirstRun_Downloading" xml:space="preserve"><value>正在下载…</value></data>
-  <data name="FirstRun_Waiting" xml:space="preserve"><value>书架上等着</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>选择其他语言</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>准备好阅读啦！</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>每个角色都有自己的声音。书架上有{0}个故事。</value></data>
-  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>每个角色都有自己的声音。书架上有1个故事。</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>每个角色都有自己的声音。你的书已经在书架上。</value></data>
+  <data name="FirstBooks_Title" xml:space="preserve"><value>选择你的第一批书</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Body" xml:space="preserve"><value>至少选两本。你随时可以去商店获取更多。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickTwo" xml:space="preserve"><value>选 2 本书开始</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>再选 1 本</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Picked" xml:space="preserve"><value>已选 {0} 本 · {1}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_PickedNoSize" xml:space="preserve"><value>已选 {0} 本</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_Getting" xml:space="preserve"><value>正在获取你的书…</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BookOf" xml:space="preserve"><value>第 {0} 本，共 {1} 本</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>连接网络以选择你的第一批书</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>开始前 Dino 需要两本书。请打开 Wi-Fi 或移动数据，然后重试。</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>听 Dino 打招呼</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>你好！我是 Dino。我们一起读故事吧。</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>看看 Dino 能做什么</value></data>
@@ -126,8 +145,7 @@
   <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>锁的后面，用来添加书和声音。</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>一起读个故事</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>点一本书，然后播放。Dino 会朗读，并点亮每一句。</value></data>
-  <data name="Intro_StoreTitle" xml:space="preserve"><value>获取更多图书</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>商店里有更多故事，可随时下载。</value></data>
+  <data name="Intro_ReadCaption" xml:space="preserve"><value>迪诺翻开了书。“从前有一天……”</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>用你的声音朗读</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>一页一页地录下你朗读故事的声音。孩子可以随时播放。</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>添加你自己的书</value></data>
@@ -163,6 +181,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>家长角</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>只有家长能看到这里。孩子的书架只需轻点一下。</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>返回孩子的书架</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>重新排序</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>长按一本书，然后将它拖到新的位置。孩子的书架会显示相同的顺序。</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>无法保存新的顺序</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>文件仍被占用。点按“完成”重试，或点按“取消”保留原来的顺序。</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>立即阅读</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>“{0}”的选项</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>来自商店</value></data>
@@ -224,8 +246,6 @@
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>这本书</value></data>
-  <data name="Book_ShowOriginal" xml:space="preserve"><value>显示原文</value></data>
-  <data name="Book_ShowOriginalHint" xml:space="preserve"><value>显示{0}文字。声音仍然用{1}朗读。</value></data>
   <data name="Book_Back" xml:space="preserve"><value>回到故事</value></data>
   <!-- /Slice 110 -->
   <!-- Slice 111 -->
@@ -272,6 +292,18 @@
   <data name="Version_Title" xml:space="preserve"><value>版本</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>帮助改进 Dino</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>只发送次数，例如“商店里的一本书读完了”。没有名字，没有编号，也不含你输入的任何内容。还会附带你所在的国家和大致的设备类型（手机或平板、内存范围）。如果应用崩溃，还可能发送崩溃报告：错误信息和一段简短的技术日志，绝不包含你读过或输入的任何内容。</value></data>
+  <!-- Slice 249: Report a problem -->
+  <data name="ReportProblem_Title" xml:space="preserve"><value>报告问题</value></data>
+  <data name="ReportProblem_Explain" xml:space="preserve"><value>把应用最近的技术日志发给我们，帮助我们找出问题。其中包括打开过的界面、按过的按钮和朗读的动作，以及应用版本、大致的设备类型和你所在的国家。不含姓名、书名，也不含任何人输入的内容。只有你点按“发送”时才会发送。</value></data>
+  <data name="ReportProblem_Send" xml:space="preserve"><value>发送</value></data>
+  <data name="ReportProblem_Sending" xml:space="preserve"><value>正在发送报告…</value></data>
+  <data name="ReportProblem_Sent" xml:space="preserve"><value>已发送。</value></data>
+  <data name="ReportProblem_QuoteCode" xml:space="preserve"><value>如果你联系我们，请提供这个代码：</value></data>
+  <data name="ReportProblem_Copy" xml:space="preserve"><value>复制</value></data>
+  <data name="ReportProblem_Copied" xml:space="preserve"><value>已复制</value></data>
+  <data name="ReportProblem_Failed" xml:space="preserve"><value>现在无法发送报告。它保存在这部手机上，稍后会发送，你也可以再试一次。</value></data>
+  <data name="ReportProblem_FailedNotKept" xml:space="preserve"><value>现在无法发送报告。你可以再试一次。</value></data>
+  <data name="ReportProblem_TryAgain" xml:space="preserve"><value>再试一次</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>朗读速度</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>慢一点，小朋友更容易听懂</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0.5x · 慢</value></data>

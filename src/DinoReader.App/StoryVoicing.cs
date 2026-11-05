@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Mobile.Shared;
@@ -18,6 +19,7 @@ namespace DinoReader;
 public sealed class StoryVoicing
 {
 	private readonly IVoicePackService _packs;
+	private readonly AudioPackStore _audioPacks; // the pre-made audio of store books and bundled starters (Slice 246 C2, 258)
 	private readonly NarratorChoice _narrators;
 	private readonly StoryTranslator _translator;
 	private readonly ConcurrentDictionary<string, IReadOnlyList<VoiceOption>> _pools = new();
@@ -48,9 +50,10 @@ public sealed class StoryVoicing
 
 	private volatile SharedPlan? _lastPlan;
 
-	public StoryVoicing(IVoicePackService packs, IVoiceModelService model, StoryTranslator translator, VoicePackInstaller installer, NarratorChoice narrators)
+	public StoryVoicing(IVoicePackService packs, IVoiceModelService model, StoryTranslator translator, VoicePackInstaller installer, NarratorChoice narrators, AudioPackStore audioPacks)
 	{
 		_packs = packs;
+		_audioPacks = audioPacks;
 		CastText.RosterSource = RosterFor;
 		_narrators = narrators;
 		_translator = translator;
@@ -66,72 +69,201 @@ public sealed class StoryVoicing
 	/// that must not block the UI. The story is translated afterwards when it is set to be (Slice 66).
 	/// </summary>
 	public async Task<IReadOnlyList<VoicedSegment>> VoiceAsync(
-		Story story, string reading, int fromPosition = 0, CancellationToken cancellationToken = default, Action? translationSkipped = null)
+		Story story, string reading, int fromPosition = 0, CancellationToken cancellationToken = default, Action? translationSkipped = null, VoiceWhy? why = null)
+	{
+		return await VoiceCoreAsync(story, reading, fromPosition, cancellationToken, translationSkipped, why ?? new VoiceWhy());
+	}
+
+	/// <summary>Slice 267: why a read found no usable pre-made audio. One per read, filled while that read is voiced and passed to <see cref="ReportVoiceUsed"/>, so overlapping reads never share it.</summary>
+	public sealed class VoiceWhy
+	{
+		public DeviceVoiceReason Reason { get; set; } = DeviceVoiceReason.NoPack;
+	}
+
+	/// <summary>One line in the rolling log, and the <see cref="AudioPackUsage.ReadVoice"/> detail (<c>premade</c>, or <c>device:&lt;reason&gt;</c>) for the caller to count: which voice, and when it is the device voice, why. The caller calls it once a read has actually started.</summary>
+	public string ReportVoiceUsed(Story story, IReadOnlyList<VoicedSegment> segments, VoiceWhy why)
+	{
+		string detail = AudioPackUsage.ReadVoice(segments.Any(s => PremadeClipMarker.PathOf(s) is not null), why.Reason);
+		AudioPackLog.Write($"{story.SourceId ?? UsageSource.Own}: read voice {detail}");
+		return detail;
+	}
+
+	private async Task<IReadOnlyList<VoicedSegment>> VoiceCoreAsync(
+		Story story, string reading, int fromPosition, CancellationToken cancellationToken, Action? translationSkipped, VoiceWhy why)
 	{
 		bool wholePieces = _translator.UsesBundledTable(story, reading);
 		Prepared prepared = await Task.Run(() => fromPosition == 0 ? PrepareShared(story, wholePieces) : Prepare(story, fromPosition, wholePieces), cancellationToken);
 		if (!_translator.Applies(story, reading))
 		{
-			return await Task.Run(() => VoicedInOwnLanguage(story, prepared), cancellationToken);
+			return await VoicedOwnWithPremadeAsync(story, prepared, fromPosition, wholePieces, reading, why, cancellationToken);
 		}
 
-		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, prepared.Analysis.Sentences.Value, reading, cancellationToken, forSpeech: true);
+		StoryTranslator.Outcome outcome = await TranslateOffUiAsync(story, prepared, reading, cancellationToken, forSpeech: true);
 		if (!outcome.Translated)
 		{
 			// The story is read as written, in its own language and voices, so the spoken pack goes back to its language too.
 			translationSkipped?.Invoke();
-			return await Task.Run(() => VoicedInOwnLanguage(story, prepared), cancellationToken);
+			return await VoicedOwnWithPremadeAsync(story, prepared, fromPosition, wholePieces, reading, why, cancellationToken);
 		}
 
-		return await Task.Run(() => VoicedTranslated(story, prepared, outcome.Pieces, reading), cancellationToken);
+		PremadeSource? premade = await PremadeSourceAsync(story, prepared, fromPosition, wholePieces, outcome, reading, why, cancellationToken);
+		return await Task.Run(() => VoicedTranslated(story, prepared, outcome.Pieces, reading, premade), cancellationToken);
+	}
+
+	// The story read in its own language (the reading language is the story's, or translation was skipped): its pre-made audio for the story's language is used too (Slice 246 C2).
+	private async Task<IReadOnlyList<VoicedSegment>> VoicedOwnWithPremadeAsync(
+		Story story, Prepared prepared, int fromPosition, bool wholePieces, string reading, VoiceWhy why, CancellationToken cancellationToken)
+	{
+		PremadeSource? premade = await PremadeSourceAsync(story, prepared, fromPosition, wholePieces, null, reading, why, cancellationToken);
+		return await Task.Run(() => VoicedInOwnLanguage(story, prepared, premade), cancellationToken);
+	}
+
+	/// <summary>
+	/// The installed pre-made audio of a store book or bundled starter for the language it is read in, with the plain (displayed) text of each piece (Slice 246 C2). A piece's clip is the pack's entry at the piece's
+	/// position among the pieces with a letter or digit (<see cref="Offset"/> when the read starts mid-book), confirmed by the hash of the plain text; null when there is none.
+	/// </summary>
+	private sealed record PremadeSource(InstalledPack Pack, IReadOnlyList<SplitSegment> PlainPieces, int Offset)
+	{
+		public string? PathOf(int piece)
+		{
+			string text = PlainPieces[piece].Segment.Text;
+			if (!IsSpoken(text))
+			{
+				return null;
+			}
+
+			return Pack.PathOf(Offset + PlainPieces.Take(piece).Count(p => IsSpoken(p.Segment.Text)), text);
+		}
+
+		public static int SpokenCount(IReadOnlyList<SplitSegment> pieces) => pieces.Count(p => IsSpoken(p.Segment.Text));
+
+		private static bool IsSpoken(string text) => text.Any(char.IsLetterOrDigit);
+	}
+
+	// The clips are keyed by the plain text, but the pieces a translated read speaks carry the speak: table's marks, so the plain pieces are translated again (a table lookup); an own-language read
+	// speaks the plain pieces as they are. Only a book with a source id (a store book or a bundled starter, Slice 258) can have a pack; a translated read needs its own complete table. A mismatch in the piece count means no clips.
+	private async Task<PremadeSource?> PremadeSourceAsync(
+		Story story, Prepared prepared, int fromPosition, bool wholePieces, StoryTranslator.Outcome? spoken, string reading, VoiceWhy why, CancellationToken cancellationToken)
+	{
+		bool translated = spoken is not null;
+		if (story.SourceId is not { } bookId)
+		{
+			return null; // an own book has no pack: the default reason, no_pack
+		}
+
+		if (translated && !_translator.UsesBundledTable(story, reading))
+		{
+			why.Reason = DeviceVoiceReason.TextMismatch; // a machine translation never lines up with a pack's clips; not a missing or failed pack
+			return null;
+		}
+
+		string language = BundledTranslations.Key(translated ? _translator.SpokenLanguage(story, reading) : story.Language);
+		InstalledPack? pack = _audioPacks.Open(bookId, language);
+		if (pack is null)
+		{
+			why.Reason = _audioPacks.FailedThisLaunch(bookId, language) ? DeviceVoiceReason.PackFailed : DeviceVoiceReason.NoPack;
+			return null;
+		}
+
+		why.Reason = DeviceVoiceReason.TextMismatch;
+		IReadOnlyList<SplitSegment>? plain = await PlainPiecesAsync(story, prepared, reading, translated, cancellationToken);
+		if (plain is null || (spoken is not null && plain.Count != spoken.Pieces.Count))
+		{
+			AudioPackLog.Write($"{bookId}/{language}: the plain and spoken pieces do not line up, device voice for the whole read");
+			return null;
+		}
+
+		int offset = fromPosition == 0 ? 0 : await ClipOffsetAsync(story, plain, wholePieces, reading, translated, cancellationToken);
+		why.Reason = offset < 0 ? DeviceVoiceReason.TextMismatch : DeviceVoiceReason.ClipMissing; // a usable source whose pieces then find no clip is a missing clip
+		return offset < 0 ? null : new PremadeSource(pack, plain, offset);
+	}
+
+	private async Task<IReadOnlyList<SplitSegment>?> PlainPiecesAsync(Story story, Prepared prepared, string reading, bool translated, CancellationToken cancellationToken)
+	{
+		if (!translated)
+		{
+			return prepared.Pieces;
+		}
+
+		StoryTranslator.Outcome plain = await TranslateOffUiAsync(story, prepared, reading, cancellationToken);
+		return plain.Translated ? plain.Pieces : null;
+	}
+
+	// Slice 259 item 1: a read's translation (a mid-book read works out the whole book's pieces again for its clips) runs on a worker thread. Called on the UI thread, a book's worth of
+	// table lookups that finish at once would hold the UI thread and keep the page's 500 ms wait timer from ever firing, so the loading state could not show however long the wait was.
+	private Task<StoryTranslator.Outcome> TranslateOffUiAsync(Story story, Prepared prepared, string reading, CancellationToken cancellationToken, bool forSpeech = false)
+	{
+		return Task.Run(() => _translator.TranslateAsync(story, prepared.Pieces, prepared.Analysis.Sentences.Value, reading, cancellationToken, forSpeech), cancellationToken);
+	}
+
+	// A read from the middle starts at some piece of the book: its clips are the pack's entries after the spoken pieces before it. Negative when the whole book's pieces cannot be worked out.
+	private async Task<int> ClipOffsetAsync(Story story, IReadOnlyList<SplitSegment> partial, bool wholePieces, string reading, bool translated, CancellationToken cancellationToken)
+	{
+		var watch = Stopwatch.StartNew();
+		Prepared whole = await Task.Run(() => PrepareShared(story, wholePieces), cancellationToken);
+		IReadOnlyList<SplitSegment>? all = await PlainPiecesAsync(story, whole, reading, translated, cancellationToken);
+		ReadStartTrace.Write($"whole book worked out for the clip offset in {watch.ElapsedMilliseconds} ms ({all?.Count ?? 0} pieces, translated={translated})");
+		return all is null ? -1 : PremadeSource.SpokenCount(all) - PremadeSource.SpokenCount(partial);
+	}
+
+	// A piece whose plain text has a clip in the pack is marked with its file; the read plays it instead of speaking it. The coverage is logged once per read (Debug builds reach the test-hook log).
+	private static VoicedSegment WithPremade(VoicedSegment voiced, PremadeSource? premade, int piece)
+	{
+		string? path = premade?.PathOf(piece);
+		return path is null ? voiced : PremadeClipMarker.Mark(voiced, path);
 	}
 
 	/// <summary>The story's text in the language it is read in, for the reading screen (Slice 110, Decision 112); null when the screen shows the story as it is:
-	/// the story is not translated now, the grown-up chose "Show original text", or a missing language model left it untranslated. <paramref name="sentences"/> are the
+	/// the story is not translated now, or a missing language model left it untranslated. <paramref name="sentences"/> are the
 	/// story's sentences, which the result keeps one-to-one.</summary>
 	public async Task<TranslatedStory?> TranslatedDisplayAsync(Story story, IReadOnlyList<SentenceSpan> sentences, string reading, CancellationToken cancellationToken = default)
 	{
-		if (story.ShowOriginalText || !_translator.Applies(story, reading))
+		if (!_translator.Applies(story, reading))
 		{
 			return null;
 		}
 
 		Prepared prepared = await Task.Run(() => PrepareShared(story, _translator.UsesBundledTable(story, reading)), cancellationToken);
 		// The engine's pieces are shared with a read that speaks them at the same time (StoryTranslator), so each is translated once.
-		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, prepared.Analysis.Sentences.Value, reading, cancellationToken);
+		StoryTranslator.Outcome outcome = await TranslateOffUiAsync(story, prepared, reading, cancellationToken);
 		return outcome.Translated ? TranslatedStoryBuilder.Build(story.Pages, sentences, outcome.Pieces, StoryRecordings.PagesShownInOwnLanguage(story)) : null;
 	}
 
 	// A translated read is cast from the spoken language's own cast (Slice 108), narrated by that language's narrator.
 	// The pack scans behind the voices run here, on the worker thread that calls it.
-	private IReadOnlyList<VoicedSegment> VoicedTranslated(Story story, Prepared prepared, IReadOnlyList<SplitSegment> pieces, string reading)
+	private IReadOnlyList<VoicedSegment> VoicedTranslated(Story story, Prepared prepared, IReadOnlyList<SplitSegment> pieces, string reading, PremadeSource? premade)
 	{
 		string spoken = _translator.SpokenLanguage(story, reading);
 		VoiceCast cast = CastIn(story, prepared, spoken);
-		return WithAnimalSounds(story, prepared, cast, pieces, spoken);
+		return WithAnimalSounds(story, prepared, cast, pieces, spoken, premade);
 	}
 
-	private IReadOnlyList<VoicedSegment> VoicedInOwnLanguage(Story story, Prepared prepared)
+	private IReadOnlyList<VoicedSegment> VoicedInOwnLanguage(Story story, Prepared prepared, PremadeSource? premade = null)
 	{
 		VoiceCast cast = CastIn(story, prepared, story.Language);
-		return WithAnimalSounds(story, prepared, cast, prepared.Pieces, story.Language);
+		return WithAnimalSounds(story, prepared, cast, prepared.Pieces, story.Language, premade);
 	}
 
 	// Animal characters say their sound after every 2nd or 3rd line of their own (Slice 117, Decision 123): one extra short segment in the character's voice,
 	// spoken only (it has no text on the page). The lines are counted over the whole book in the story's language, so a read from the middle sounds like a read from the start.
 	// The sound sits right after the line's last quote piece, never after a dialogue tag that follows it (Slice 254), and after the last piece of a translated line.
 	private IReadOnlyList<VoicedSegment> WithAnimalSounds(
-		Story story, Prepared prepared, VoiceCast cast, IReadOnlyList<SplitSegment> pieces, string spokenLanguage)
+		Story story, Prepared prepared, VoiceCast cast, IReadOnlyList<SplitSegment> pieces, string spokenLanguage, PremadeSource? premade)
 	{
 		IReadOnlyDictionary<int, AnimalSounds.Placement> sounds = AnimalSoundPlacements(story, prepared, pieces, spokenLanguage).ToDictionary(p => p.After);
 		var voiced = new List<VoicedSegment>(pieces.Count + sounds.Count);
 		for (int i = 0; i < pieces.Count; i++)
 		{
-			voiced.Add(ToVoicedSegment(pieces[i], cast));
+			voiced.Add(WithPremade(ToVoicedSegment(pieces[i], cast), premade, i));
 			if (sounds.TryGetValue(i, out AnimalSounds.Placement? placement) && AnimalSoundAfter(pieces, placement, cast, spokenLanguage) is { } sound)
 			{
 				voiced.Add(sound);
 			}
+		}
+
+		if (premade is not null)
+		{
+			AudioPackLog.Write($"{story.SourceId}/{premade.Pack.Audio.Language} v{premade.Pack.Version}: {voiced.Count(s => PremadeClipMarker.PathOf(s) is not null)} of {pieces.Count} pieces have a clip");
 		}
 
 		return voiced;
@@ -154,7 +286,7 @@ public sealed class StoryVoicing
 		}
 
 		AttributionResult resolved = StoryCast.Resolve(prepared.Analysis.Attribution, story.Cast);
-		IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.WithSound(AnimalsOf(story, resolved.Characters, spokenLanguage), story.Language);
+		IReadOnlyDictionary<string, AnimalKind> animals = AnimalSoundClips.WithClip(AnimalsOf(story, resolved.Characters, spokenLanguage));
 		IReadOnlyDictionary<int, AnimalKind> plan = animals.Count == 0
 			? new Dictionary<int, AnimalKind>()
 			: AnimalSounds.Plan(SpokenOrder(story, prepared, WholeBookPieces(story, prepared, resolved), spokenLanguage), animals, story.Language);
@@ -175,15 +307,16 @@ public sealed class StoryVoicing
 	private static VoicedSegment? AnimalSoundAfter(IReadOnlyList<SplitSegment> pieces, AnimalSounds.Placement placement, VoiceCast cast, string spokenLanguage)
 	{
 		Segment quote = pieces[placement.Quote].Segment;
-		string? sound = AnimalSounds.SoundOf(placement.Kind, spokenLanguage);
-		if (sound is null || AnimalSounds.SaysIt(LineText(pieces, placement.Quote), placement.Kind, spokenLanguage))
+		// Slice 255: the slot carries a marker, and the reading session plays the animal's recording there instead of speaking the word. The recording is the same in every language,
+		// so the slot depends on the animal having a recording, not on a sound word in the spoken language (which is only a label here).
+		string sound = AnimalSounds.SoundOf(placement.Kind, spokenLanguage) ?? placement.Kind.ToString();
+		if (!AnimalSoundClips.Has(placement.Kind) || AnimalSounds.SaysIt(LineText(pieces, placement.Quote), placement.Kind, spokenLanguage))
 		{
 			return null;
 		}
 
 		int at = Math.Max(quote.SourceStart, pieces[placement.After].Segment.SourceEnd - 1);
-		return new VoicedSegment(
-			sound, cast.VoiceForLine(quote.CharacterId), at, at, at, FlavourTransform.For(AnimalSounds.FlavourFor(placement.Kind, cast.FlavourForLine(quote.CharacterId))));
+		return new VoicedSegment(sound, cast.VoiceForLine(quote.CharacterId), at, at, at, new AnimalClipMarker(placement.Kind));
 	}
 
 	// The spoken text of the line the piece at <paramref name="last"/> ends: the consecutive pieces of the same character before it.

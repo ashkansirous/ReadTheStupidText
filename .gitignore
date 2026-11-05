@@ -82,6 +82,12 @@ node_modules/
 # Scratch work folder (Slice 154: venv, audio, review answers); never committed
 /tmp/
 
+# premade-audio working files next to the clips (Slice 265): batch state, listening-test variants, kept vendor WAVs
+content/dino/*/audio/*/batch-state.json
+content/dino/*/audio/*/variants/
+content/dino/*/audio/*/*.wav
+content/dino/*/audio/*/manifest.json.bak
+
 # Python tooling (Slice 145: tools/sound-words-test)
 __pycache__/
 *.pyc
