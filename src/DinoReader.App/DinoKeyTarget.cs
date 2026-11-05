@@ -145,7 +145,9 @@ internal static class DesktopTips
 		}
 
 		bool hovering = false;
-		Color? rest = null; // the button's own fill, null included: put back as null
+		Color? restColor = null; // the button's own BackgroundColor, null included: put back as it was
+		Brush? restBrush = null; // or its own Background brush, put back as the same object
+		SolidColorBrush? ourBrush = null; // set only when the rest fill was a brush
 		Color? tint = null;
 		void Clear()
 		{
@@ -156,10 +158,19 @@ internal static class DesktopTips
 
 			hovering = false;
 			// A fill the page set while the pointer was over the button (a theme change, the Play button's state) is not ours to undo.
-			if (button.BackgroundColor is { } shown && tint is { } ours && shown.Equals(ours))
+			if (ourBrush is not null)
 			{
-				button.BackgroundColor = rest;
+				if (ReferenceEquals(button.Background, ourBrush))
+				{
+					button.Background = restBrush;
+				}
 			}
+			else if (button.BackgroundColor is { } shown && tint is { } ours && shown.Equals(ours))
+			{
+				button.BackgroundColor = restColor;
+			}
+
+			ourBrush = null;
 		}
 
 		var pointer = new PointerGestureRecognizer();
@@ -170,16 +181,31 @@ internal static class DesktopTips
 				return; // a second Enter without an Exit: the first one saved the real fill
 			}
 
+			if (button.BackgroundColor is null && button.Background is not null and not SolidColorBrush)
+			{
+				return; // a gradient or image fill is not ours to flatten: no tint
+			}
+
 			hovering = true;
-			rest = button.BackgroundColor;
-			tint = OneStepFrom(rest);
-			button.BackgroundColor = tint;
+			restColor = button.BackgroundColor;
+			restBrush = button.Background;
+			bool fillIsBrush = restColor is null && restBrush is not null;
+			tint = OneStepFrom(restColor ?? (restBrush as SolidColorBrush)?.Color);
+			if (fillIsBrush)
+			{
+				ourBrush = new SolidColorBrush(tint);
+				button.Background = ourBrush;
+			}
+			else
+			{
+				button.BackgroundColor = tint;
+			}
 		};
 		pointer.PointerExited += (_, _) => Clear();
 		button.GestureRecognizers.Add(pointer);
 		button.Unloaded += (_, _) => Clear();
 #if WINDOWS
-		DesktopPointer.UseHand(button);
+		DinoCursor.UseOpenHand(button);
 #endif
 	}
 

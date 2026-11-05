@@ -71,9 +71,9 @@ internal sealed class DinoKeyboard
 			return;
 		}
 
-		if (e.KeyStatus.WasKeyDown && (key is DinoKey.Space or DinoKey.Enter or DinoKey.Escape) && _used.Contains(e.Key))
+		if (e.KeyStatus.WasKeyDown && IsOneShotKey(key) && _used.Contains(e.Key))
 		{
-			e.Handled = true; // Windows repeats a held key: a repeat of Space, Enter or Esc never acts a second time (the gate hold must not restart, a held Esc must not pop several pages)
+			e.Handled = true; // Windows repeats a held key: a repeat of Space, Enter, Esc (or Right on Settings, which opens a row) never acts a second time (the gate hold must not restart, a held Esc must not pop several pages)
 			return;
 		}
 
@@ -107,6 +107,9 @@ internal sealed class DinoKeyboard
 		string screen = top is IDinoKeyTarget target ? target.Screen.ToString() : "no target";
 		return $"{top?.GetType().Name ?? "no page"}, {screen}";
 	}
+
+	private bool IsOneShotKey(DinoKey key) =>
+		key is DinoKey.Space or DinoKey.Enter or DinoKey.Escape || (key == DinoKey.Right && DinoKeyTargets.TopPage(_window) is SettingsPage);
 
 	private static bool HasShortcutModifier(DinoKey key) =>
 		IsDown(VirtualKey.Control) || IsDown(VirtualKey.Menu) || (DinoKeyMap.DigitOf(key) is not null && IsDown(VirtualKey.Shift));
@@ -155,8 +158,6 @@ internal sealed class DinoKeyboard
 		VirtualKey.Up => DinoKey.Up,
 		VirtualKey.Down => DinoKey.Down,
 		VirtualKey.Escape => DinoKey.Escape,
-		VirtualKey.Up => DinoKey.Up,
-		VirtualKey.Down => DinoKey.Down,
 		VirtualKey.Enter => DinoKey.Enter,
 		VirtualKey.Back => DinoKey.Backspace,
 		>= VirtualKey.Number0 and <= VirtualKey.Number9 => DinoKey.Digit0 + (key - VirtualKey.Number0),

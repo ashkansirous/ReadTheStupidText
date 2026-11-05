@@ -1,6 +1,6 @@
 ### Slice 235 — Dino on Windows: a real desktop window (size, keyboard, mouse)
 
-*Part B built 2026-11-02 (night 2026-11-01-2355 wave 6), merged as PR #745 (d8ba0b6a), all six Dino VM checks pass; part C (WindowLayout wiring into pages, hover, wheel, focus-ring styling and focus return, Settings arrow keys, right-click, shelf column counts, speed hint string) is *In progress (wave 2026-11-05), draft PR #776.** *Part A built 2026-11-02 (window and pure rules; five Dino VM checks pass), merged as PR #740 (0d135658).* *Planned 2026-11-01.* The user asked for "better design on windows". **Mock drawn 2026-11-01 (Batch 46), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges (a wide window uses its layouts) and alongside or after Slice 234 (a mid-size window uses the tablet rules).
+*Part B built 2026-11-02 (night 2026-11-01-2355 wave 6), merged as PR #745 (d8ba0b6a), all six Dino VM checks pass; part C (WindowLayout wiring into pages, hover, wheel, focus-ring styling and focus return, Settings arrow keys, right-click, shelf column counts, speed hint string) is *built 2026-11-05 (night 2026-11-04-1441 wave 4), draft PR #776, not merged; all 7 Dino VM checks pass on run 7.** *Part A built 2026-11-02 (window and pure rules; five Dino VM checks pass), merged as PR #740 (0d135658).* *Planned 2026-11-01.* The user asked for "better design on windows". **Mock drawn 2026-11-01 (Batch 46), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges (a wide window uses its layouts) and alongside or after Slice 234 (a mid-size window uses the tablet rules).
 
 **Touches:** `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/Platforms/Windows/**`, `src/DinoReader.Core/*Layout*.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/GrownUpHeader.cs`, `src/DinoReader.App/*Page*.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `tools/desktop-vm/**`, `docs/design/dino-reader/**`, `docs/plan/slices/235-dino-windows-window.md`
 
@@ -78,10 +78,10 @@ Eleven frames (158 has parts a and b) in `docs/design/dino-reader/Dino Reader Ba
 
 - [x] **Design, added by the user in Claude Design 2026-11-01 (counts as approved):** Windows mock (`Dino Reader Batch 46 Windows.dc.html` in `docs/design/dino-reader/`): the window at its opening size, at minimum size and maximised, for shelf, reading, corner, Settings, gate and a sheet; hover and focus states; the title bar; a keyboard map.
 - [x] Window size, minimum and remembered position (Windows head only, `Platforms/Windows`). Part A, built 2026-11-02.
-- [ ] Width-driven layout picks the phone, tablet or landscape rule; unit-test the width → layout mapping in Core.
-- [ ] Keyboard shortcuts and Tab order on every page; space-bar hold on the gate.
-- [ ] Hover states, wheel scrolling, tooltips on every icon button, title-bar colours.
-- [ ] Strings for the new tooltips in all 13 languages.
+- [x] Width-driven layout picks the phone, tablet or landscape rule; unit-test the width → layout mapping in Core. Part C, built 2026-11-05.
+- [x] Keyboard shortcuts and Tab order on every page; space-bar hold on the gate. Parts B and C.
+- [x] Hover states, wheel scrolling, tooltips on every icon button, title-bar colours. Tooltips and title-bar colours part B; hover (ring) and wheel part C; hover lift and shadow not built (no native property).
+- [x] Strings for the new tooltips in all 13 languages. The speed hint string is in all 13 `AppResources*.resx` (part C).
 
 This is a desktop head, so the Android/iOS parity rule does not apply; phones and tablets get nothing new from this slice beyond the shared width rules.
 
@@ -221,3 +221,40 @@ The six Dino VM checks plus `dino-desktop-polish.ps1`: a tile click opens the bo
 - **Strike 2 (VM run 3, package ad725caf328d):** no crash and no `WinUI UNHANDLED` line, but 5 of 7 checks fail: dino-launch and dino-settings PASS; dino-open-book (reading page never opens), dino-page-turn (follows), dino-keyboard (book sheet does not open from a corner tile), dino-desktop-polish (still in the grown-ups corner, never the kids' shelf), dino-window (800x560 seen, likely because dino-desktop-polish resized the window before it; not confirmed). So tiles no longer open their book or sheet on Windows. Not yet diagnosed; first places to look: the hidden ring Borders in the template sitting over the cover in the UIA tree (the checks find `StoryTile` and invoke it), and `MakeTabStop` setting `IsTabStop`/`GotFocus` on the native tile. Log `reviews/s235c-vm-run3/run.log`.
 - **Android (emulator, build ad725caf328d):** dino-landscape-shelf, open-book, back-cover, grown-ups-button, leave-book-stops-read PASS (open-book and back-cover after one rerun: the known Debug x86_64 Mono SIGSEGV at start, Slice 247).
 - **Next attempt:** start from the design, not a patch: diagnose why a tile does not open (one VM probe with the UIA tree of a tile dumped), then decide whether rings can live outside the tile (one overlay ring positioned on the focused/hovered tile) so the template is untouched.
+
+#### Part C: built (2026-11-05, night 2026-11-04-1441 wave 4, draft PR #776)
+
+Built to `reviews/s235c-design.md` (the *Part C design pass* above): `origin/main` merged into the WIP; the tile template in `GalleryPage.xaml` is identical to main. Everything per book comes from the native list (confirmed `ListViewBase`, `FormsGridView`, from the MAUI 10.0.120 source):
+
+- Focus, Enter/Space (list `KeyDown` through `AddHandler(..., handledEventsToo: true)`, because the list marks keys handled before a plain subscriber), right-click (mouse and pen only, `RightTapped` on the native list), hover (list-level `PointerMoved`; per-container `PointerEntered` stopped firing after a resize on the VM), hand cursor per container, plates transparent through list resources.
+- Focus return only after a keyboard open. The 3 dp ring shows only in the grown-ups' corner (brush swap, constant thickness per mode). `DesktopPointer` removed, `DinoCursor` reused.
+
+*Changed while building:* windows 960 or more wide and under 600 tall use phone landscape, in `WindowLayout.For` and `WindowShape.Effective` (one rule; tablet landscape there would overflow). The mock called this tablet landscape.
+
+*From review* (findings files in `D:/ReadTheStupidText-worktrees/reviews/`):
+- `s235c-r3-high.md`: applied 1, 2, 3, 4, 5, 9. Skipped 6 (reorder mode on Windows keeps phone padding and the window-wide column count; follow-up), 7 (`DesktopTips.Hover` longer than 30 lines; style), 8 (`Route` special-cases `SettingsPage` for Esc; style).
+- `s235c-r3-medium.md`: applied 1, 2, 6. Not applied: 3 (speculative; the VM screenshots/columns check covered the corner), 4, 5, 8 (low, no failure path), 7 (held Right on Settings is swallowed on purpose, high fix 5), 9 (docs, done in this pass).
+- `s235c-r3-check1-medium.md`: applied 1, 2, 3, 10. Not applied: 4 to 9 (low, cosmetic or no failure path).
+- `s235c-r3-check2-medium.md`: applied 2. Not applied: 1 (the virtualized-container follow-up, listed below), 3 to 6 (low).
+- `s235c-r3-check3-medium.md`: applied 1. Not applied: 2 to 5 (low, no failure path; 2 unconfirmed, `BookAt` maps only `StoryTile` rows).
+- `s235c-r3-check4-medium.md`: incomplete, not counted.
+- `s235c-r3-check5-medium.md`: none applied. The cast in finding 4/5's area is safe: every `IPageOverlay` is a `Grid` (`DinoKeyTarget.cs:96`).
+- `s235c-r3-check6-medium.md`: no findings.
+
+*Devices:* VM runs `reviews/s235c-r3-vm-run` to `run7`. Run 7: all 7 Dino checks PASS, no `WinUI UNHANDLED`, no layout cycle. Strike 1 (the cycle) went away with Slice 264's `AspectRatioView` fix, strike 2 (tiles not opening) with the design. Check-script fixes the runs found: hover needs real `mouse_event` moves (`Cursor.Position` alone raises no WinUI pointer move on the VM), `dino-window` runs before `dino-desktop-polish`, focus return is checked after a keyboard open, the Settings check tabs past the window's Back button. Emulator `reviews/s235c-r3-emu-run`: landscape-shelf, open-book, back-cover, grown-ups-button, shelf-reorder PASS.
+
+*Not yet verified (part C):*
+- Down right after opening Settings does nothing until Tab (focus starts on the window's Back button).
+- Reorder mode on Windows keeps phone padding (review high 6).
+- Focus return on a virtualized container is a no-op.
+- Hover lift and shadow are not built (no native property).
+- Real mouse hover on a real PC.
+- Plus the part B list above.
+
+#### For tools/desktop-vm/CLAUDE.md (part C)
+
+- `Cursor.Position` alone raises no WinUI pointer move in the VM; send `mouse_event` `MOUSEEVENTF_MOVE`. `-Check <name>` runs only `dino-launch` then the named check, so `dino-desktop-polish` needs the full set. (Slice 235: docs/plan/slices/235-dino-windows-window.md)
+
+#### For src/DinoReader.App/CLAUDE.md (part C)
+
+- On Windows, per-book input lives on the native `ListViewBase` (never the tile template or MAUI recognizers); key handlers on it need `AddHandler(..., handledEventsToo: true)`. (Slice 235: docs/plan/slices/235-dino-windows-window.md)

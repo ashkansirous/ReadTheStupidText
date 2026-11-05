@@ -66,6 +66,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		_starters = starters;
 		_services = services;
 		StoryList.ItemsSource = _items;
+		WireDesktopShelf();
 		StoryList.Scrolled += (_, e) =>
 		{
 			TileOverlay.NotifyScrollStarted(); // the platform scroller may have taken a touch that a cover's 1 s hold is still timing
@@ -365,6 +366,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	private void ApplyModeChrome(bool grownUp)
 	{
 		bool handover = grownUp && FirstRunState.HandoverPending;
+		ApplyShelfRing();
 		GrownUpsButton.IsVisible = !grownUp;
 		SettingsButton.IsVisible = grownUp;
 		ApplyLanguageButton();
@@ -933,7 +935,11 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	private Task OpenTileAsync(StoryTile tile) =>
 		_busy.RunAsync(() => _mode.IsGrownUp ? OpenBookSheetAsync(tile.Story) : _actions.ReadAsync(Navigation, tile.Story));
 
-	// Slice 235 part C: Windows-only focus return after a sheet closes, in Platforms/Windows/GalleryPage.Desktop.cs. No-ops elsewhere.
+	// Slice 235 part C: Windows-only wiring on the native list (Enter, Space, right-click, focus return after a sheet), in Platforms/Windows/GalleryPage.Desktop.cs. No-ops elsewhere.
+	partial void WireDesktopShelf();
+
+	partial void ApplyShelfRing();
+
 	partial void RememberTileFocus(Story opened);
 
 	partial void RestoreTileFocus();

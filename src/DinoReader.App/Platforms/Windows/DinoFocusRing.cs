@@ -19,6 +19,7 @@ internal static class DinoFocusRing
 	private static readonly global::Windows.UI.Color Indigo = global::Windows.UI.Color.FromArgb(0xFF, 0x5B, 0x57, 0xE8);
 	private static readonly global::Windows.UI.Color Yellow = global::Windows.UI.Color.FromArgb(0xFF, 0xFF, 0xC2, 0x4D);
 	private static readonly global::Windows.UI.Color White = global::Windows.UI.Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
+	private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Microsoft.Maui.Controls.Page, object> PagesWaitingForHandler = [];
 
 	/// <summary>Hooks the window's root once: arrows move the focus, and a focused element gets the ring in the colour of the page on screen.</summary>
 	public static void Attach(UIElement root)
@@ -35,12 +36,18 @@ internal static class DinoFocusRing
 	{
 		if (page.Handler?.PlatformView is not UIElement element)
 		{
-			// No native view yet (the first call can come before the handler exists): set it as soon as it appears.
+			// No native view yet (the first call can come before the handler exists): set it as soon as it appears. One waiting subscription per page, however often this is called meanwhile.
+			if (!PagesWaitingForHandler.TryAdd(page, new object()))
+			{
+				return;
+			}
+
 			void OnHandler(object? sender, EventArgs e)
 			{
 				if (page.Handler is not null)
 				{
 					page.HandlerChanged -= OnHandler;
+					PagesWaitingForHandler.Remove(page);
 					SetArrowsFor(page);
 				}
 			}
@@ -63,7 +70,7 @@ internal static class DinoFocusRing
 
 		if (e.OriginalSource is not Microsoft.UI.Xaml.Controls.Control control)
 		{
-			return; // a layout panel (a book on the shelf) draws its own ring, GalleryPage.Desktop.cs
+			return; // a layout panel has no focus visual; a book on the shelf is a native list item (a Control) and gets the ring above
 		}
 
 		bool onInk = DinoWindowFrame.Current?.Tone == TitleBarTone.Ink;

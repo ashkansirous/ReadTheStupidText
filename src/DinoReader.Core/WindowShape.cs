@@ -36,7 +36,7 @@ public static class WindowShapeSeam
     /// <summary>
     /// The size to hand to the existing rules. Off Windows: exactly (<paramref name="width"/>, <paramref name="height"/>). On Windows: the same size, made smaller in height only when that is what it takes for
     /// the rules to see the shape <see cref="WindowLayout.For"/> gives (a square window is landscape; a window under 960 wide is phone landscape even when 600 or more tall). A window is never
-    /// made larger, so nothing laid out from the result can overflow the real window; a short window that the mock calls tablet landscape (960+ wide, under 600 tall) stays what the rules call it.
+    /// made larger, so nothing laid out from the result can overflow the real window; a short window (under 600 tall) is phone landscape in <see cref="WindowLayout.For"/> too, so the two always agree.
     /// </summary>
     public static (double Width, double Height) Effective(bool isWindowsHead, double width, double height)
     {

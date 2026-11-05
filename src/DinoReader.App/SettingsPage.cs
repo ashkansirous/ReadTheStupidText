@@ -144,7 +144,7 @@ public sealed class SettingsPage : SettingsSubPage, IDinoKeyTarget
 	{
 #if WINDOWS
 		if (Handler?.PlatformView is Microsoft.UI.Xaml.FrameworkElement { XamlRoot: { } root }
-			&& Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root) is Microsoft.UI.Xaml.Controls.Button button
+			&& Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root) is Microsoft.UI.Xaml.Controls.Button { IsEnabled: true } button
 			&& IsRowButton(button)
 			&& new Microsoft.UI.Xaml.Automation.Peers.ButtonAutomationPeer(button) is { } peer)
 		{

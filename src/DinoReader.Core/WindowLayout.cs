@@ -39,7 +39,9 @@ public static class WindowLayout
             return width >= UprightMinimumWidth ? WindowShape.TabletUpright : WindowShape.PhonePortrait;
         }
 
-        return width >= LandscapeMinimumWidth ? WindowShape.TabletLandscape : WindowShape.PhoneLandscape;
+        // Tablet landscape needs the width AND the rules' own tablet short side: a wide but short window (under 600 tall) is laid out by the phone landscape rules, so it is that shape here too.
+        bool tallEnough = height >= LandscapeLayout.TabletShortSide;
+        return width >= LandscapeMinimumWidth && tallEnough ? WindowShape.TabletLandscape : WindowShape.PhoneLandscape;
     }
 
     /// <summary>The width the content takes: capped, then centred by the page while the cream runs edge to edge.</summary>

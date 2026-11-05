@@ -72,9 +72,9 @@ public class DinoKeyMapTests
     }
 
     [Fact]
-    public void Up_and_down_do_nothing_on_any_screen()
+    public void Up_and_down_do_nothing_on_any_screen_but_the_reorder_mode()
     {
-        foreach (DinoScreen screen in Enum.GetValues<DinoScreen>())
+        foreach (DinoScreen screen in Enum.GetValues<DinoScreen>().Where(s => s != DinoScreen.Reorder))
         {
             Assert.Equal(DinoKeyAction.None, Down(DinoKey.Up, screen));
             Assert.Equal(DinoKeyAction.None, Down(DinoKey.Down, screen));

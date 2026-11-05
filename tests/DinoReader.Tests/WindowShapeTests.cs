@@ -80,6 +80,32 @@ public class WindowShapeTests
     }
 
     [Theory]
+    [InlineData(1100, 600, WindowShape.TabletLandscape)]
+    [InlineData(800, 560, WindowShape.PhoneLandscape)]
+    [InlineData(1100, 760, WindowShape.TabletLandscape)]
+    [InlineData(1920, 1080, WindowShape.TabletLandscape)]
+    [InlineData(1100, 599, WindowShape.PhoneLandscape)] // wide but short: the phone landscape rules lay it out, so that is its shape
+    public void The_window_rule_and_the_pages_rules_give_one_shape(double width, double height, WindowShape expected)
+    {
+        (double w, double h) = WindowShapeSeam.Effective(true, width, height);
+        Assert.Equal(expected, WindowLayout.For(width, height));
+        Assert.Equal(expected, WindowShapeSeam.DeviceShapeOf(w, h));
+    }
+
+    [Theory]
+    [MemberData(nameof(Sizes))]
+    public void On_windows_every_size_gets_the_same_shape_from_both(double width, double height)
+    {
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        (double w, double h) = WindowShapeSeam.Effective(true, width, height);
+        Assert.Equal(WindowLayout.For(width, height), WindowShapeSeam.DeviceShapeOf(w, h));
+    }
+
+    [Theory]
     [MemberData(nameof(Sizes))]
     public void Asking_twice_gives_the_same_size(double width, double height)
     {

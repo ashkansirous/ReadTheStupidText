@@ -128,16 +128,47 @@ function Find-FirstTile {
     } 15 'FAIL no visible story tile'
 }
 
+Add-Type -Namespace Win32 -Name Fore -MemberDefinition '[DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow(); [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowText(IntPtr h, System.Text.StringBuilder s, int n);' -ErrorAction SilentlyContinue
+
+function Get-HoverProbe {
+    # One HOVERPROBE line: tile rect, window rect, foreground window title and the UIA element under the cursor (diagnosis, Slice 235c).
+    param($TileRect, [int] $Attempt)
+    $title = New-Object System.Text.StringBuilder 256
+    [Win32.Fore]::GetWindowText([Win32.Fore]::GetForegroundWindow(), $title, 256) | Out-Null
+    $under = 'none'
+    try {
+        $pos = [System.Windows.Forms.Cursor]::Position
+        $e = [System.Windows.Automation.AutomationElement]::FromPoint((New-Object System.Windows.Point($pos.X, $pos.Y)))
+        $under = "type=$($e.Current.ControlType.ProgrammaticName) name='$($e.Current.Name)' id='$($e.Current.AutomationId)'"
+    } catch { $under = "error $($_.Exception.Message)" }
+    return "HOVERPROBE attempt=$Attempt tile=$($TileRect.ToString()) window=$((Get-DinoWindow).Current.BoundingRectangle.ToString()) cursor=$([System.Windows.Forms.Cursor]::Position.ToString()) foreground='$($title.ToString())' under=[$under]"
+}
+
 function Test-Hover {
     param($Package)
-    $tile = Find-FirstTile
-    $r = $tile.Current.BoundingRectangle
+    # After a resize the shelf relays out and the cursor may already sit where a tile now is, so: park the cursor off the shelf, let the layout settle, re-find the tile and walk the cursor onto it in steps (real moves raise PointerEntered; a jump may not).
     $before = Count-Trace $Package 'Dino shelf: a book is hovered'
-    [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(([int]($r.X + 5)), ([int]($r.Y + 5)))
-    Start-Sleep -Milliseconds 200
-    [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(([int]($r.X + $r.Width / 2)), ([int]($r.Y + $r.Height / 2)))
-    Wait-TraceAfter $Package 'Dino shelf: a book is hovered' $before 5 'FAIL moving the mouse over a book did not lift it (no "a book is hovered" trace line)' | Out-Null
+    $hovered = $false
+    $probe = 'HOVERPROBE none'; $script:HoverProbes = @()
+    foreach ($attempt in 1..3) {
+        Focus-DinoWindow
+        [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(5, 5)
+        Start-Sleep -Milliseconds 700
+        $r = (Find-FirstTile).Current.BoundingRectangle
+        $cx = [int]($r.X + $r.Width / 2); $cy = [int]($r.Y + $r.Height / 2)
+        foreach ($step in 1..8) {
+            [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(([int](5 + ($cx - 5) * $step / 8)), ([int](5 + ($cy - 5) * $step / 8)))
+            # Setting Cursor.Position alone raised no WinUI pointer move on the VM (runs 1-3: every "a book is hovered" line came with a mouse_event click), so each step also sends a real
+            # one-pixel MOUSEEVENTF_MOVE (1) through the input queue.
+            [Win32.Mouse]::mouse_event(1, 1, 0, 0, [UIntPtr]::Zero)
+            Start-Sleep -Milliseconds 60
+        }
+        $probe = Get-HoverProbe $r $attempt
+        Write-Host $probe; $script:HoverProbes += $probe
+        try { Wait-TraceAfter $Package 'Dino shelf: a book is hovered' $before 3 'retry' | Out-Null; $hovered = $true; break } catch { }
+    }
     [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(5, 5)
+    if (-not $hovered) { throw 'FAIL moving the mouse over a book did not lift it (no "a book is hovered" trace line after 3 tries) ' + $probe }
 }
 
 function Test-TabAndEnter {
@@ -196,9 +227,22 @@ function Test-RightClickAndFocusBack {
     Wait-TraceAfter $Package 'right-click opened the book sheet' $clicked 10 'FAIL a right-click on a book in the grown-ups'' corner did not open its sheet (no trace line)' | Out-Null
     Wait-VisibleId 'BookSheetClose' 10 'FAIL the book sheet is not showing after the right-click' | Out-Null
     Focus-DinoWindow
-    $back = Count-Trace $Package 'the book has the keyboard back after the sheet closed'
     Press-Key $VkEscape
     Wait-Until { -not (Find-UiaVisibleById (Get-DinoWindow) 'BookSheetClose') } 5 'FAIL Esc did not close the book sheet' | Out-Null
+    # The keyboard returns to the book only when the keyboard opened the sheet (high review fix 3: a mouse open never moves the focus ring), so open it again with Tab and Enter.
+    $before = Count-Trace $Package 'Dino shelf: a book has the keyboard'
+    $tabs = 0
+    while ((Count-Trace $Package 'Dino shelf: a book has the keyboard') -le $before) {
+        if ($tabs -ge $MaxTabs) { throw "FAIL Tab never reached a book in the grown-ups' corner within $MaxTabs presses" }
+        Press-Key $VkTab
+        $tabs++
+    }
+    Press-Key $VkEnter
+    Wait-VisibleId 'BookSheetClose' 10 'FAIL Enter on the focused book in the grown-ups'' corner did not open its sheet' | Out-Null
+    Focus-DinoWindow
+    $back = Count-Trace $Package 'the book has the keyboard back after the sheet closed'
+    Press-Key $VkEscape
+    Wait-Until { -not (Find-UiaVisibleById (Get-DinoWindow) 'BookSheetClose') } 5 'FAIL Esc did not close the keyboard-opened book sheet' | Out-Null
     $line = Wait-TraceAfter $Package 'the book has the keyboard back after the sheet closed' $back 5 'FAIL the keyboard did not return to the book after the sheet closed (no trace line)'
     if ($line -notmatch ': True') { throw "FAIL the book refused the keyboard after the sheet closed: $line" }
 }
@@ -213,8 +257,14 @@ function Test-SettingsArrows {
     Invoke-Uia (Wait-VisibleId 'GallerySettings' 5 'FAIL no gear in grown-up mode')
     Wait-VisibleId 'SettingsTitle' 15 'FAIL Settings did not open from the gear' | Out-Null
     Focus-DinoWindow
-    Press-Key $VkTab   # the first Tab lands on the first row or button
-    $first = Get-FocusedKey
+    # Tab until a Settings row has the focus: the first Tab can land on the window's own Back button (NavigationViewBackButton, outside the page), where the page's arrow keys do not apply (VM run 6).
+    $first = $null
+    foreach ($i in 1..6) {
+        Press-Key $VkTab
+        $first = Get-FocusedKey
+        if ($first -and $first -notmatch 'NavigationViewBackButton') { break }
+    }
+    if (-not $first -or $first -match 'NavigationViewBackButton') { throw "FAIL Tab never reached a Settings row (focus '$first')" }
     Press-Key $VkDown
     $second = Get-FocusedKey
     if (-not $first -or $first -eq $second) { throw "FAIL the Down arrow did not move the focus in Settings (before '$first', after '$second')" }
@@ -234,7 +284,7 @@ Invoke-Check -ResultFile $ResultFile -Body {
         $arrows = Test-SettingsArrows
         Invoke-Uia (Wait-VisibleId 'GalleryDone' 5 'FAIL no Done button in the grown-ups corner')
         Wait-VisibleId 'GalleryGrownUps' 10 'FAIL Done did not return to the kids'' shelf' | Out-Null
-        "$columns; a hovered book lifted; Tab reached a book in $tabs presses and Enter opened it; right-click opened the sheet and Esc gave the book the keyboard back; $arrows"
+        "$columns; a hovered book lifted; Tab reached a book in $tabs presses and Enter opened it; right-click opened the sheet and Esc gave the book the keyboard back; $arrows; $($script:HoverProbes[-1])"
     } catch {
         $tail = (Get-TraceLines $pkg | Select-Object -Last 25) -join ' | '
         throw "$($_.Exception.Message) -- window-trace.log tail: $tail"
