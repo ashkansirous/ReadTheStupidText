@@ -226,7 +226,7 @@ The six Dino VM checks plus `dino-desktop-polish.ps1`: a tile click opens the bo
 
 Built to `reviews/s235c-design.md` (the *Part C design pass* above): `origin/main` merged into the WIP; the tile template in `GalleryPage.xaml` is identical to main. Everything per book comes from the native list (confirmed `ListViewBase`, `FormsGridView`, from the MAUI 10.0.120 source):
 
-- Focus, Enter/Space (list `KeyDown` through `AddHandler(..., handledEventsToo: true)`, because the list marks keys handled before a plain subscriber), right-click (mouse and pen only, `RightTapped` on the native list), hover (list-level `PointerMoved`; per-container `PointerEntered` stopped firing after a resize on the VM), hand cursor per container, plates transparent through list resources.
+- Focus, Enter/Space (list `KeyDown` through `AddHandler(..., handledEventsToo: true)`, used because a plain subscriber did not see the keys; that the list marks them handled first is not confirmed), right-click (mouse and pen only, `RightTapped` on the native list), hover (list-level `PointerMoved`; per-container `PointerEntered` seemed to stop after a resize on the VM, but that check moved the cursor with `Cursor.Position`, which raises no WinUI pointer move, so it is not proven), hand cursor per container, plates transparent through list resources.
 - Focus return only after a keyboard open. The 3 dp ring shows only in the grown-ups' corner (brush swap, constant thickness per mode). `DesktopPointer` removed, `DinoCursor` reused.
 
 *Changed while building:* windows 960 or more wide and under 600 tall use phone landscape, in `WindowLayout.For` and `WindowShape.Effective` (one rule; tablet landscape there would overflow). The mock called this tablet landscape.

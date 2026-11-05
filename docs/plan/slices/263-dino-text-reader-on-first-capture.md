@@ -2,6 +2,8 @@
 
 *Planned 2026-11-04. Rewritten 2026-11-04 ~21:05 to the user's actual goal* (the user: "what I asked you to change was to download whatever you need when you need the function the first time ... and the ml kit removal from IOS to bring the package size down to 50ish MB for both android and ios. I am fine with both being 60ish as well"). The earlier text below (an Android page-reader goal) was a misreading by the main session and is kept only as the record. Dino Reader, Android and iOS. Read The Stupid Text keeps working exactly as today.
 
+> **Park note (moved back to planned by the final feedback loop of night 2026-11-04-1441, user rule 2026-11-01):** night 2026-11-04-1441 wave 3 parked this slice because it waits for the user's choice of iPhone translation route (see *Choices for the user*). A wave that picks it up before the user has chosen does no build: it records "still waiting" here and moves on.
+
 ## Measured (released builds, 2026-11-04)
 
 - **iPhone `DinoReader-1.101.0.ipa`, 94.5 MB download:** the app binary 32.3 MB; **`TranslateMLKit.framework` 24.5 MB** (Google ML Kit translation, used to translate a parent's own book on the phone); `SherpaOnnxC.framework` (voices) 9.4 MB; **the four starter books 12.5 MB** (three-little-pigs 3.6, good-enough 3.1, tortoise-and-hare 3.0, gingerbread-man 2.8); PdfPig and OpenXml (reading PDF and Word files) about 2.3 MB; the rest .NET. The iPhone has **no** page-reader (text recognition) files: it uses Apple Vision, part of iOS.
