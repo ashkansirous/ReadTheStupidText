@@ -14,6 +14,7 @@ public enum BookSheetRow
     ReadNow,
     ReadWithMyVoice,
     RecordAndCast,
+    Reorder,
     EditPages,
     Export,
     Remove,
@@ -31,6 +32,7 @@ public sealed record BookSheetPlan(bool ShowVoice, bool ShowEditPages, bool Show
             List<BookSheetRow> rows = [BookSheetRow.ReadNow];
             AddIf(rows, ShowVoice, BookSheetRow.ReadWithMyVoice);
             rows.Add(BookSheetRow.RecordAndCast);
+            rows.Add(BookSheetRow.Reorder); // Slice 264: every book, grown-up mode (the sheet only opens there)
             AddIf(rows, ShowEditPages, BookSheetRow.EditPages);
             AddIf(rows, ShowExport, BookSheetRow.Export);
             rows.Add(BookSheetRow.Remove);

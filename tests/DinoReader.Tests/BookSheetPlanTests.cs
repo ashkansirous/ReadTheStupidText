@@ -64,9 +64,9 @@ public class BookSheetPlanTests
         BookSheetPlan bare = BookSheetPlan.For(BookOrigin.Store, hasRecording: false, developerExport: false);
 
         Assert.Equal(
-            [BookSheetRow.ReadNow, BookSheetRow.ReadWithMyVoice, BookSheetRow.RecordAndCast, BookSheetRow.EditPages, BookSheetRow.Export, BookSheetRow.Remove],
+            [BookSheetRow.ReadNow, BookSheetRow.ReadWithMyVoice, BookSheetRow.RecordAndCast, BookSheetRow.Reorder, BookSheetRow.EditPages, BookSheetRow.Export, BookSheetRow.Remove],
             all.Rows);
-        Assert.Equal([BookSheetRow.ReadNow, BookSheetRow.RecordAndCast, BookSheetRow.Remove], bare.Rows);
+        Assert.Equal([BookSheetRow.ReadNow, BookSheetRow.RecordAndCast, BookSheetRow.Reorder, BookSheetRow.Remove], bare.Rows);
     }
 
     [Theory]

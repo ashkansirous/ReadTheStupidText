@@ -1,8 +1,8 @@
 # Slice 264 — Dino: grown-ups reorder the shelf (iPhone-style reorder mode)
 
-*Planned 2026-11-04. Parked (night 2026-11-04-1441 wave 1): Windows LayoutCycleException when reorder opens, WIP on draft #799.* Dino Reader; Android and iOS alike; the Windows head gets the same mode with the mouse.
+*Built 2026-11-05, not merged (draft PR #799, branch feat/s264-shelf-reorder); Windows drag, Done and iOS not yet tried on a device, see Not yet verified.* Dino Reader; Android and iOS alike; the Windows head gets the same mode with the mouse.
 
-**Touches:** `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ShelfReorder*.cs` (new), `src/DinoReader.Core/BookSheetPlan.cs`, `src/DinoReader.Core/FileStoryLibrary.cs`, `src/DinoReader.Core/ShelfOrder*.cs` (new), `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/shelf-reorder.yaml` (new), `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/264-dino-gallery-reorder-mode.md`.
+**Touches:** `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ShelfReorder*.cs` (new), `src/DinoReader.Core/ShelfOrderGrid.cs`, `src/DinoReader.App/AspectRatioView.cs`, `src/DinoReader.App/TileOverlay.xaml`, `src/DinoReader.App/TileOverlay.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/Platforms/Windows/DinoCursor.cs`, `src/DinoReader.App/Platforms/Windows/DinoKeyboard.cs`, `src/DinoReader.App/Testing/DinoTestCommands.cs`, `src/DinoReader.App/Platforms/Windows/App.xaml.cs`, `src/DinoReader.App/Platforms/Windows/LayoutCycleTrace.cs`, `src/DinoReader.Core/DinoKeyMap.cs`, `src/DinoReader.Core/BookSheetPlan.cs`, `src/DinoReader.Core/FileStoryLibrary.cs`, `src/DinoReader.Core/ShelfOrder*.cs` (new), `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/shelf-reorder.yaml` (new), `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/264-dino-gallery-reorder-mode.md`.
 
 ## Decisions (user, 2026-11-04, the request and RefineScope)
 
@@ -41,17 +41,55 @@ Source: `docs/design/dino-reader/Dino Reader Batch 47 Onboarding.dc.html`, 5 fra
 **Open point: the 1 s press on Android/iOS.** Slice and mock agree (1 s); mock adds nothing for the phone beyond the sheet row. **Default:** as the slice.
 **Mock decides (slice silent):** hint line; nothing opens on tap in reorder mode; Cancel also lands in the corner.
 
-## Parked (night 2026-11-04-1441 wave 1)
+## Parked (night 2026-11-04-1441 wave 1) - RESOLVED 2026-11-05
+
+Resolved: the LayoutCycleException cause was found (next section) and fixed (see *Changed while building*); the reorder mode opens on the VM with 0 layout-cycle lines. The deterministic order (ThenBy Id), the second-open layout and the 1 s press regression from check pass 4 are fixed too. Original parked text, kept as history:
 
 Windows head crashes when reorder mode opens (three VM rounds; the third design fix did not cure it). Draft PR #799, WIP pushed on feat/s264-shelf-reorder. The WinUI hook names it: `Microsoft.UI.Xaml.LayoutCycleException: Layout cycle detected` about 50 ms after `page open end`, no stack (logs: D:/ReadTheStupidText-worktrees/reviews/s264-vm-diag3/ and s264-vm-diag4/). Tried: no MAUI Shadow on the lift (diag2, still crashed); Relayout only on a width change and surface height from content only (diag4, still crashed). Android works (1 s press, drag, Done, Cancel all pass on the emulator). Next: find the element in the cycle (bisect by turning off wiggle, lift Border, lit spot and the header pill one at a time on the VM), then fix. Also open from check pass 4 (reviews/s264-check4.md): default shelf order of same-time books is not deterministic (add ThenBy Id in FileStoryLibrary.cs:49), _lastLayoutWidth not reset in Open (tiles at 0,0 on a second open), async void OnPointerPressed without try/catch. Emulator run 5 (reviews/s264-emu5/): the 1 s press no longer enters reorder (it opens the book sheet; regression from the hold-cancel-on-tap change after run 4, where the press passed); the flow passes every step but its expect-log markers need a trailing comma/colon (run-flows.ps1:94 matches whole tokens); default order was the same on two fresh launches.
 
 ## Cause found 2026-11-04 ~21:10 (diagnosis run in the main session, not a wave; report `D:/ReadTheStupidText-worktrees/reviews/s264-cycle-cause.md`, logs `reviews/s264-vm-diag5/`, `s264-vm-diag6/`)
 
 - **Proven by WinUI's own trace** (`DebugSettings.LayoutCycleTracingLevel = High`, read from OutputDebugString by a new `Platforms/Windows/LayoutCycleTrace.cs` into `window-trace.log`): the loop is the cover's `AspectRatioView`. Each Arrange pass invalidates its Measure again, 8 times, then WinUI throws. `ArrangeOverride` does `if (Math.Abs(bounds.Width - lastMeasuredWidth) > 0.5) InvalidateMeasure();`; the reorder tile is 189.6 dp wide (`ShelfOrderGrid.Fit`), layout rounding measures the cover at 189 and arranges it at 190, so the difference of 1 re-triggers forever. The normal shelf has whole-number widths, which is why only reorder mode crashed. The lift shadow was ruled out again (diag6: no shadow, same crash).
-- **Fix (not yet run):** whole-number tile width in `ShelfOrderGrid.Fit`, and a threshold above layout rounding in `AspectRatioView` (more than 1 px), with a unit test on the rule. Then the Windows reorder check on the VM.
+- **Fix (done, see *Changed while building*):** whole-number tile width in `ShelfOrderGrid.Fit`, and a threshold above layout rounding in `AspectRatioView` (more than 1 px), with a unit test on the rule. Then the Windows reorder check on the VM.
 - **The VM package is a Release build** (`Build-TestPackage.ps1` publishes `-c Release`). The trace listener and the High level are in the WIP uncommitted and not Debug-only: gate them (Debug or a test switch) before merge, or keep them behind the device-test switch on purpose and say so.
 - **Android 1 s press (likely, from the code):** `TileOverlay.xaml:18` wires `PointerExited` and `PointerReleased` to `OnPointerEnded` → `CancelHold()`, and `OnPointerMoved` cancels past 12 dp; Android probably sends Exited or Moved during a still press. Confirm with one emulator run logging Pressed/Moved/Exited/Released for a 1.5 s press, then fix.
 - **Status: planned again** (resume from branch `feat/s264-shelf-reorder`, worktree `s264`, draft #799); the WIP has the trace files uncommitted.
+
+## Changed while building (review round, 2026-11-05)
+
+- **Hold gesture:** the 1 s press is one pure Core state machine, `HoldGesture` (Idle -> Pressed -> Fired or Cancelled, every release back to Idle; a tap is swallowed only when that same press fired and the reorder layer did not take the release; a move past 12 dp, the list scrolling, hide, unload or a new binding cancels). `TileOverlay` only feeds it events and a timer; every transition is unit-tested.
+- **Remeasure threshold:** `AspectRatioView` keeps 0.5 dp on Android/iOS and uses 1 dp only on Windows, one rule `ShelfOrderLayoutRules.NeedsRemeasure(..., isWindows)`. `SaveOrderAsync` now holds the library gate across read, merge and replace.
+- **Windows LayoutCycleException fixed:** whole-dp tiles (`ShelfOrderGrid.Fit`, the left margin split evenly) plus the `NeedsRemeasure` rule above. `LayoutCycleTrace`, the `App.xaml.cs` hook, `ReorderTrace`, `SheetLog` and `TraceSize` exist only in DEBUG or `DINO_TEST_BOOKS` builds.
+- **Android 1 s press regression fixed:** `PointerExited` no longer cancels the hold. `StoryList.Scrolled` cancels pending holds.
+- **Order rules:** list order is `ThenBy Id`. `SaveOrderAsync` runs under one gate and merges with the stored order (`ShelfOrder.MergeShown`: books not shown keep their place); stale ids are pruned. A cancelled drag, or a drop outside the grid, restores the pre-drag order. The intro wizard and backup sort explicitly (first added / newest); the shelf uses the stored order. Cancel is ignored while Done is saving.
+- **Known behaviour (kept):** a slow finger move during the 1 s press on a shelf that does not scroll still opens reorder, like the iPhone home screen. Android sends no pointer-move during the press (likely, not proven).
+
+## From review
+
+- `reviews/s264-high.md` (10 findings): applied 1, 2, 3, 5, 6, 9. Skipped 4 (loosening `AspectRatioView` for all platforms: the trace proved a 1 dp rounding loop; later limited to Windows by medium 1). Skipped 7 (triple debug-log helper), 8 (`ForgetInOrderAsync` duplicates the write sequence) and 10 (methods over 30 lines): refactors.
+- `reviews/s264-medium.md` (10 findings): applied 1, 2, 3, 5, 6, 8, 9. Kept 4 on purpose (the diagnostic trace stays in test builds; header fixed). Skipped 7 (books added during the mode are missed by Done): reorder is modal. Skipped 10 (`MergeShown` O(n^2)): n is small.
+- `reviews/s264-check5.md` (7 findings): applied 1, 2, 3, 5. Skipped 4 and 7 (style). 6 (touch press on `PointerGestureRecognizer`) is device-only, see Not yet verified.
+- `reviews/s264-check6.md` (8 findings): none applied; recorded as follow-ups: (1) shelf-order ids not checked with `StoryIds.IsValid` in `FileStoryLibrary.SaveOrderAsync`; (2) `TrySaveOrderAsync` catches only IO errors, any other save failure shows no alert; (3) `DropCompleted` without `_dropAccepted` may undo a valid drop (unconfirmed on devices); (4) static `ScrollStarted` handler and recycled overlays; (5) the 800 ms tap suppression is not cleared on close; (6) `MergeShown` can put an id at the front with a duplicated stored id; (7) other `ListAsync` callers (FirstBooksPage, NarratorPage, TranslationPackPrompt, StoryBackupReader) still get shelf order; (8) `HoldGesture.Cancel` after Fired drops the swallow on a relayout. 6-8 are low.
+
+## Device runs (2026-11-05)
+
+- VM (`reviews/s264-vm7`, `s264-vm8`, key ee54a281b83a): reorder opens from the ⋯ sheet with 0 layout-cycle lines, a 1.3 s mouse hold enters, Esc cancels.
+- Emulator (`reviews/s264-emu8`, key ee54a281b83a): `shelf-reorder.yaml` PASS (107 s, all markers), a 1.5 s touch press enters reorder, a normal tap after Done is not swallowed. Earlier emulator failures (`s264-emu6`, `s264-emu7`) came from a degraded emulator (black screencaps, unrelated flows failing); after a restart main's control flow passed.
+
+#### For CLAUDE.md
+
+- (`src/DinoReader.App/CLAUDE.md`) A shared view that remeasures on a width difference (`AspectRatioView`) must use a threshold above layout rounding on Windows (`ShelfOrderLayoutRules.NeedsRemeasure`: 1 dp Windows, 0.5 dp Android/iOS) and tiles must have whole-dp widths (`ShelfOrderGrid.Fit`), or WinUI throws `LayoutCycleException`. (Slice 264: docs/plan/slices/264-dino-gallery-reorder-mode.md)
+- (`src/DinoReader.App/CLAUDE.md`) The 1 s hold lives in Core `HoldGesture`; `TileOverlay` only feeds it. `PointerExited` must not cancel it (Android sends it during a still press); scrolling cancels it. (Slice 264: docs/plan/slices/264-dino-gallery-reorder-mode.md)
+- (`src/DinoReader.Core/CLAUDE.md`) Shelf order is stored in a file and saved through `FileStoryLibrary.SaveOrderAsync` under the library gate, merged with `ShelfOrder.MergeShown`; callers that need newest-first or first-added sort explicitly. (Slice 264: docs/plan/slices/264-dino-gallery-reorder-mode.md)
+- Diagnostic traces (`LayoutCycleTrace`, `ReorderTrace`) stay behind DEBUG or `DINO_TEST_BOOKS`; the VM package is a Release build. (Slice 264: docs/plan/slices/264-dino-gallery-reorder-mode.md)
+
+#### Not yet verified
+
+- Windows mouse drag actually moving a tile, Done/Enter saving it and the order after a restart, Esc after a drag (a synthetic drag moved nothing; no drag trace lines).
+- A real scroll during a press cancelling the hold (the 4-book test shelf does not scroll).
+- iOS gestures (`PointerGestureRecognizer` touch on iOS).
+- Windows keyboard reorder (Space/arrows).
+- The 6-book 1,2,5,3,4,6 example on a device (unit-tested only).
 
 ## Verification
 

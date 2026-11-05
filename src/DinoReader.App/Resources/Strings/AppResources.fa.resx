@@ -181,6 +181,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>گوشهٔ بزرگ‌ترها</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>این بخش را فقط بزرگ‌ترها می‌بینند. قفسهٔ کودک شما یک لمس فاصله دارد.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>بازگشت به قفسهٔ کودکم</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>چیدمان دوباره</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>روی یک کتاب فشار دهید و نگه دارید، سپس آن را به جای تازه بکشید. قفسهٔ کودک شما همین ترتیب را نشان می‌دهد.</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>ذخیرهٔ ترتیب تازه ممکن نشد</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>هنوز چیزی از فایل استفاده می‌کند. برای تلاش دوباره «تمام» را بزنید یا برای نگه داشتن ترتیب قبلی «لغو» را بزنید.</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>اکنون بخوان</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>گزینه‌های «{0}»</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>از فروشگاه</value></data>

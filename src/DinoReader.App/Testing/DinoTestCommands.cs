@@ -25,6 +25,11 @@ internal static partial class DinoTestCommands
 {
 	private const string Name = "open-book";
 	private const string EnterGrownUpName = "enter-grown-up";
+	private const string ShelfReorderMoveName = "shelf-reorder-move"; // Slice 264
+	private const string ShelfOrderResetName = "shelf-order-reset"; // Slice 264
+	private const string StoriesFolderName = "stories"; // same folder as MauiProgram.StoriesFolder
+	private const string ReorderFromKey = "from";
+	private const string ReorderToKey = "to";
 	private const string SetLanguageName = "set-language";
 	private const string StageBookUpdateName = "stage-book-update";
 	private const string InstallAudioPackName = "install-audio-pack";
@@ -56,7 +61,7 @@ internal static partial class DinoTestCommands
 	internal static void Register()
 	{
 		TestHookDispatcher.AppCommands = Run;
-		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, VoiceKey, ForceKey, VoiceIdKey, ModeKey];
+		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, VoiceKey, ForceKey, VoiceIdKey, ModeKey, ReorderFromKey, ReorderToKey];
 	}
 
 	private static string? Run(TestHookCommand command)
@@ -103,6 +108,18 @@ internal static partial class DinoTestCommands
 		if (command.Name == BackupRecordingsName)
 		{
 			_ = BackupRecordingsAsync(command.Get(IdKey, string.Empty));
+			return StartedOutcome;
+		}
+
+		if (command.Name == ShelfReorderMoveName)
+		{
+			_ = ShelfReorderMoveAsync(command);
+			return StartedOutcome;
+		}
+
+		if (command.Name == ShelfOrderResetName)
+		{
+			ShelfOrderReset();
 			return StartedOutcome;
 		}
 
@@ -314,6 +331,43 @@ internal static partial class DinoTestCommands
 		}
 
 		return false;
+	}
+
+	// Slice 264: stands in for the drag, which a Maestro swipe cannot make (the system drag starts on a long press). Opens the reorder mode if it is closed, then drops the book at 1-based position
+	// from before the one at to, through the same order code a drop uses. Logs "HOOK shelf-reorder-move moved <ids in the new order>" or "failed <reason>".
+	private static async Task ShelfReorderMoveAsync(TestHookCommand command)
+	{
+		try
+		{
+			NavigationPage? root = await WaitForAsync(() => Task.FromResult(GalleryRoot()));
+			if (root?.RootPage is not GalleryPage gallery || !int.TryParse(command.Get(ReorderFromKey, string.Empty), out int from) || !int.TryParse(command.Get(ReorderToKey, string.Empty), out int to))
+			{
+				Log($"{ShelfReorderMoveName} failed no gallery or bad from/to");
+				return;
+			}
+
+			string order = string.Empty;
+			await MainThread.InvokeOnMainThreadAsync(() => order = gallery.DebugReorderMove(from, to));
+			Log(order.Length == 0 ? $"{ShelfReorderMoveName} failed not in grown-up mode or position out of range" : $"{ShelfReorderMoveName} moved {order}");
+		}
+		catch (Exception ex)
+		{
+			Log($"{ShelfReorderMoveName} fault {TestHookLog.FaultSummary(ex)}");
+		}
+	}
+
+	// Slice 264: deletes the stored shelf order, so a flow starts from the default order whatever an earlier run saved. The shelf already on screen is not reloaded: the flow restarts the app after this. Logs "HOOK shelf-order-reset ok".
+	private static void ShelfOrderReset()
+	{
+		try
+		{
+			File.Delete(Path.Combine(FileSystem.AppDataDirectory, StoriesFolderName, ShelfOrder.FileName));
+			Log($"{ShelfOrderResetName} ok");
+		}
+		catch (Exception ex)
+		{
+			Log($"{ShelfOrderResetName} fault {TestHookLog.FaultSummary(ex)}");
+		}
 	}
 
 	private static async Task EnterGrownUpAsync()

@@ -299,6 +299,10 @@ public static class AppResources
 	public static string Gallery_CornerLine => Get();
 	public static string Gallery_CornerLineClick => Get();
 	public static string Gallery_BackToShelf => Get();
+	public static string Gallery_Reorder => Get();
+	public static string Gallery_ReorderHint => Get();
+	public static string Reorder_SaveFailedTitle => Get();
+	public static string Reorder_SaveFailedBody => Get();
 	public static string Book_ReadNow => Get();
 	public static string Gallery_BookOptions => Get();
 	public static string Book_FromStore => Get();

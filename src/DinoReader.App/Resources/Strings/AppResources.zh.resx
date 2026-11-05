@@ -181,6 +181,10 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>家长角</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>只有家长能看到这里。孩子的书架只需轻点一下。</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>返回孩子的书架</value></data>
+  <data name="Gallery_Reorder" xml:space="preserve"><value>重新排序</value></data>
+  <data name="Gallery_ReorderHint" xml:space="preserve"><value>长按一本书，然后将它拖到新的位置。孩子的书架会显示相同的顺序。</value></data>
+  <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>无法保存新的顺序</value></data>
+  <data name="Reorder_SaveFailedBody" xml:space="preserve"><value>文件仍被占用。点按“完成”重试，或点按“取消”保留原来的顺序。</value></data>
   <data name="Book_ReadNow" xml:space="preserve"><value>立即阅读</value></data>
   <data name="Gallery_BookOptions" xml:space="preserve"><value>“{0}”的选项</value></data>
   <data name="Book_FromStore" xml:space="preserve"><value>来自商店</value></data>

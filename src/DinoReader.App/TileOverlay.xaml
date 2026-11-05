@@ -11,9 +11,11 @@
          (6 px in), its tap area 48 dp. It opens the book's options sheet; Edit, Cast, Record, Export and Remove live in that sheet. -->
     <Grid>
         <!-- Swallows taps on the bare cover and opens the book's sheet, so they never fall through to the cover's own tap. -->
-        <Grid BackgroundColor="Transparent">
+        <Grid x:Name="Backdrop" BackgroundColor="Transparent">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnBackdropTapped" />
+                <!-- Slice 264: pressing a cover for 1 second opens the shelf's reorder mode (like iOS); moving past the slop or lifting cancels it. No PointerExited: Android raised it during a still press and cancelled the hold (likely, not yet proven). -->
+                <PointerGestureRecognizer PointerPressed="OnPointerPressed" PointerMoved="OnPointerMoved" PointerReleased="OnPointerEnded" />
             </Grid.GestureRecognizers>
         </Grid>
         <Grid x:Name="MoreButton" HorizontalOptions="End" VerticalOptions="Start" WidthRequest="48" HeightRequest="48" AutomationId="TileMore"
