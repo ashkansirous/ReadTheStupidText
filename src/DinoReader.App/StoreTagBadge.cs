@@ -33,7 +33,7 @@ public sealed class StoreTagRow : FlexLayout
 	private void Rebuild()
 	{
 		Children.Clear();
-		foreach (StoreTag tag in Tags ?? [])
+		foreach (StoreTag tag in (Tags ?? []).Where(t => Enum.IsDefined(t))) // an unknown tag shows no badge, never "New" (Slice 269)
 		{
 			Children.Add(new StoreTagBadge(tag) { Margin = new Thickness(0, 0, BadgeGap, BadgeGap) });
 		}
@@ -59,6 +59,13 @@ public sealed class StoreTagBadge : Border
 	public StoreTagBadge(StoreTag tag)
 	{
 		Tag = tag;
+		if (!Enum.IsDefined(tag))
+		{
+			IsVisible = false; // the one guard (Slice 269, "an unknown tag shows no badge"): an undefined tag is a hidden, empty pill, never an exception in a card render
+			return;
+		}
+
+		AutomationId = $"store-tag-{tag}"; // once, here: MAUI throws when an AutomationId is set a second time (Slice 260, 269)
 		MinimumHeightRequest = PillHeight; // grows with the system font size instead of clipping the label
 		Padding = new Thickness(SidePadding, 0);
 		StrokeThickness = 0;
@@ -75,7 +82,8 @@ public sealed class StoreTagBadge : Border
 		StoreTag.Hot => AppResources.Store_Tag_Hot,
 		StoreTag.Popular => AppResources.Store_Tag_Popular,
 		StoreTag.Recommended => AppResources.Store_Tag_Recommended,
-		_ => AppResources.Store_Tag_New,
+		StoreTag.New => AppResources.Store_Tag_New,
+		_ => string.Empty, // an undefined tag has no badge (Slice 269)
 	};
 
 	/// <summary>The <see cref="DinoTokens"/> keys of the pill's fill and its text, from the mock's spec card.</summary>
@@ -84,7 +92,8 @@ public sealed class StoreTagBadge : Border
 		StoreTag.Hot => (DinoTokens.TagHotFill, DinoTokens.TagHotInk),
 		StoreTag.Popular => (DinoTokens.BrandTint, DinoTokens.TagPopularInk),
 		StoreTag.Recommended => (DinoTokens.TagRecommendedFill, DinoTokens.TagRecommendedInk),
-		_ => (DinoTokens.TagNewFill, DinoTokens.TagNewInk),
+		StoreTag.New => (DinoTokens.TagNewFill, DinoTokens.TagNewInk),
+		_ => (string.Empty, string.Empty), // an undefined tag has no badge (Slice 269)
 	};
 
 	private void Refresh()
@@ -93,6 +102,5 @@ public sealed class StoreTagBadge : Border
 		_label.Text = LabelOf(Tag);
 		_label.TextColor = DinoTokens.Get(ink);
 		BackgroundColor = DinoTokens.Get(fill);
-		AutomationId = $"store-tag-{Tag}";
 	}
 }

@@ -96,6 +96,44 @@ function Get-WrongExecutableFindings([string]$Name, [string]$Text, [string]$Mani
     return $found
 }
 
+# Slice 269: a trace line a check waits for (Count-Trace / Wait-TraceAfter with a literal pattern) must exist as text in src\, or the check waits for something the app never writes.
+# Pure: $SourceText is all of src's text. A pattern with `|` needs one alternative; a pattern with a variable in it is built at run time and is not read. Matching is case-insensitive.
+function Get-TraceStringFindings([string]$Name, [string]$Text, [string]$SourceText) {
+    $found = @()
+    $number = 0
+    foreach ($line in ($Text -split "`r?`n")) {
+        $number++
+        foreach ($m in [regex]::Matches($line, "(?:Count-Trace|Wait-TraceAfter)\s+\`$\w+\s+'(?<pattern>(?:[^']|'')+)'")) {
+            $pattern = $m.Groups['pattern'].Value -replace "''", "'"   # a doubled quote is one quote in a single-quoted PowerShell string
+            if ($pattern -match '[\\\[\]()*+?{}^$]') {   # a real regex (the check matches it as one): its text is not in src as written, so it is not read
+                $found += New-DryRunFinding 'WARN' $number "$Name waits for the regex '$pattern'; its trace text was not looked for in src\ (only plain-text patterns are)."
+                continue
+            }
+            $alternatives = @($pattern -split '\|' | Where-Object { $_ })
+            $present = @($alternatives | Where-Object { Test-TraceTextInSource $_ $SourceText })
+            if ($present.Count -eq 0) { $found += New-DryRunFinding 'FAIL' $number "$Name waits for the trace text '$pattern' but no file under src\ contains it." }
+        }
+    }
+    return $found
+}
+
+# Pure: true when $Text is in the source as written, or as a source line whose `{expr}` interpolations stand for whole words of $Text (src writes $"Dino keyboard: {e.Key} ..." and the trace has "Dino keyboard: Space ...").
+function Test-TraceTextInSource([string]$Text, [string]$SourceText) {
+    if ($SourceText.IndexOf($Text, [StringComparison]::OrdinalIgnoreCase) -ge 0) { return $true }
+    $words = @($Text -split '\s+' | Where-Object { $_ })
+    $parts = $words | ForEach-Object { '(?:' + [regex]::Escape($_) + '|\{[^}\r\n]*\})' }
+    return [regex]::IsMatch($SourceText, ($parts -join '[ \t]+'), [Text.RegularExpressions.RegexOptions]::IgnoreCase)
+}
+
+$script:SourceTextCache = $null
+function Get-SourceText {
+    if ($null -eq $script:SourceTextCache) {
+        $src = Join-Path $PSScriptRoot '..\..\src'
+        $script:SourceTextCache = if (Test-Path $src) { (Get-ChildItem $src -Recurse -Include '*.cs', '*.xaml', '*.resx' -File | Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' } | ForEach-Object { Get-Content $_.FullName -Raw }) -join "`n" } else { $null }
+    }
+    return $script:SourceTextCache
+}
+
 # Dry run of the named checks (files in $ChecksDir) against an optional built package; prints each finding and returns the number of FAILs.
 function Invoke-CheckDryRun([string[]]$CheckNames, [string]$ChecksDir, [string]$MsixPath) {
     $manifestExe = if ($MsixPath -and (Test-Path $MsixPath)) { Get-MsixExecutableName $MsixPath } else { $null }
@@ -109,7 +147,9 @@ function Invoke-CheckDryRun([string[]]$CheckNames, [string]$ChecksDir, [string]$
             continue
         }
         $text = Get-Content $path -Raw
+        $sourceText = Get-SourceText
         $findings = @(Get-CheckSourceFindings $check $text) + @(Get-WrongExecutableFindings $check $text $manifestExe)
+        if ($sourceText) { $findings += @(Get-TraceStringFindings $check $text $sourceText) }
         foreach ($f in $findings) { Write-Host "DRYRUN $($f.Severity) $check line $($f.Line): $($f.Message)" }
         $failures += @($findings | Where-Object { $_.Severity -eq 'FAIL' }).Count
     }

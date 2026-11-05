@@ -316,6 +316,21 @@ function Get-CheckNeeds {
     return @($needs | Select-Object -Unique)
 }
 
+function Get-CheckAfter {
+    # Slice 269: the checks a check needs to have run before it, from a header line `# after: dino-launch, dino-open-book` in its first lines. `-Check <name>` runs them in that order
+    # (after the app's first check) instead of the caller having to know the order; a name that is not a check file throws.
+    param([Parameter(Mandatory)] [string] $Path, [Parameter(Mandatory)] [string] $ChecksDir)
+    $after = @()
+    foreach ($line in (Get-Content $Path -TotalCount 12)) {
+        if ($line -notmatch '^#\s*after:\s*(.+?)\s*$') { continue }
+        foreach ($name in ($Matches[1] -split '\s*,\s*')) {
+            if (-not (Test-Path (Join-Path $ChecksDir "$name.ps1"))) { throw "$Path declares '# after: $name' but there is no such check file." }
+            $after += $name
+        }
+    }
+    return @($after | Select-Object -Unique)
+}
+
 function Test-GuestNetwork {
     # Any HTTP answer from the site counts as network (even an error status); a timeout or DNS failure does not.
     param([Parameter(Mandatory)] $Session)

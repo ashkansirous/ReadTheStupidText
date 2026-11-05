@@ -54,6 +54,56 @@ public partial class AutomationIdAssignmentTests
     }
 
     [Fact]
+    public void The_scan_fails_on_a_copy_of_the_old_StoreTagBadge_Refresh()
+    {
+        const string bug = """
+            public sealed class StoreTagBadge : Border
+            {
+            	public StoreTagBadge(StoreTag tag)
+            	{
+            		Refresh();
+            	}
+
+            	private void Refresh()
+            	{
+            		BackgroundColor = Colors.Red;
+            		AutomationId = $"store-tag-{Tag}";
+            	}
+            }
+            """;
+
+        List<string> found = FindRepeatableAssignments(bug, "StoreTagBadge");
+
+        Assert.Single(found);
+        Assert.Contains("Refresh", found[0]);
+    }
+
+    [Fact]
+    public void The_scan_passes_a_bare_AutomationId_in_a_constructor_and_in_initializer_entries()
+    {
+        const string fine = """
+            public sealed class Badge : Border
+            {
+            	public Badge(string id)
+            	{
+            		AutomationId = id;
+            	}
+
+            	private Border Build()
+            	{
+            		return new Border
+            		{
+            			AutomationId = "Entry",
+            			Content = new Label(),
+            		};
+            	}
+            }
+            """;
+
+        Assert.Empty(FindRepeatableAssignments(fine, "Badge"));
+    }
+
+    [Fact]
     public void The_scan_passes_constructors_locals_and_object_initializers()
     {
         const string fine = """
@@ -87,13 +137,14 @@ public partial class AutomationIdAssignmentTests
         for (int i = 0; i < lines.Length; i++)
         {
             Match assign = StatementAssignment().Match(lines[i]);
-            if (!assign.Success)
+            bool bare = !assign.Success && BareStatementAssignment().IsMatch(lines[i]);
+            if (!assign.Success && !bare)
             {
                 continue;
             }
 
             (string method, bool isConstructor, int start) = EnclosingMember(lines, i);
-            string target = assign.Groups["target"].Value;
+            string target = bare ? "this" : assign.Groups["target"].Value;
             string rootName = target.Split('.')[0];
             bool local = start >= 0 && IsDeclaredLocally(string.Join('\n', lines[start..i]), rootName);
             bool allowed = FreshParameterAllowList.Contains($"{typeName}.{method}:{rootName}");
@@ -141,6 +192,10 @@ public partial class AutomationIdAssignmentTests
 
     [GeneratedRegex(@"^\s*(?<target>(?:this|[_A-Za-z]\w*)(?:\.\w+)*?)\.AutomationId\s*=(?!=)")]
     private static partial Regex StatementAssignment();
+
+    /// <summary>A bare `AutomationId = ...;` statement on the view itself (Slice 269: StoreTagBadge.Refresh). It must end in ";" so an object-initializer entry (`AutomationId = "x",`) is not taken for one.</summary>
+    [GeneratedRegex(@"^\s*AutomationId\s*=(?!=).*;\s*$")]
+    private static partial Regex BareStatementAssignment();
 
     /// <summary>A member line at one tab (or four spaces): optional modifiers, an optional return type, a name and "(". A line with "returns" is a method; without it, a constructor.</summary>
     [GeneratedRegex(@"^(?:\t| {4})(?:(?:public|private|internal|protected|static|override|async|sealed|virtual|partial)\s+)*(?:(?<returns>[\w<>\[\]?,.() ]+?)\s+)?(?<name>[A-Z_]\w*)\s*\([^;]*$")]

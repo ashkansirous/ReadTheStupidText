@@ -60,13 +60,14 @@ if ($App -eq 'auto') {
 # One row per product: the package identity name, where a fresh MSIX is usually found and the ordered checks.
 $Apps = @{
     rtst = @{ Name = 'AshkanSirous.ReadTheStupidText'; Exe = 'ReadTheStupidText.App'; Checks = @('rtst-launch', 'rtst-tray-icon', 'rtst-hotkey-read', 'rtst-selection-hotkey', 'rtst-panel-speed', 'rtst-startup-task') }
-    dino = @{ Name = 'AshkanSirous.DinoReader'; Exe = 'DinoReader.App'; Checks = @('dino-launch', 'dino-open-book', 'dino-page-turn', 'dino-settings', 'dino-keyboard', 'dino-window', 'dino-desktop-polish') }
+    dino = @{ Name = 'AshkanSirous.DinoReader'; Exe = 'DinoReader.App'; Checks = @('dino-launch', 'dino-open-book', 'dino-page-turn', 'dino-settings', 'dino-keyboard', 'dino-window', 'dino-desktop-polish', 'dino-reorder') }
 }
 $AppProfile = $Apps[$App]
 if ($Check) {
     if ($Check -notmatch "^$App-[a-z0-9-]+$") { throw "-Check ${Check}: the name must start with '$App-' (a check of this app) and use only lower-case letters, digits and dashes." }
     if (-not (Test-Path "$PSScriptRoot\checks\$Check.ps1")) { throw "-Check ${Check}: no such file in tools\desktop-vm\checks." }
-    $AppProfile.Checks = @($AppProfile.Checks[0]) + @($Check | Where-Object { $_ -ne $AppProfile.Checks[0] })
+    $prerequisites = @(Get-CheckAfter "$PSScriptRoot\checks\$Check.ps1" "$PSScriptRoot\checks")   # Slice 269: `# after:` header
+    $AppProfile.Checks = @($AppProfile.Checks[0]) + @(@($prerequisites) + @($Check) | Where-Object { $_ -ne $AppProfile.Checks[0] } | Select-Object -Unique)
 }
 
 function Find-Package {

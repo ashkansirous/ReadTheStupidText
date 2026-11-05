@@ -1,0 +1,6 @@
+# Slice 269: the known-good flow run-flows.ps1 plays before the real flows. It uses only Android's own Settings app (no app of ours, no clearState), so a failure means the
+# emulator or the Maestro driver is unwell, never the app under test. Not under .maestro, so the flow lint and the flow lists never pick it up.
+appId: com.android.settings
+---
+- launchApp
+- assertVisible: ".+"

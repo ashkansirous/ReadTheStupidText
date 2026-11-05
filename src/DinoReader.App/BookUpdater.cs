@@ -241,7 +241,9 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 	private async Task<bool> SyncPacksAsync(IReadOnlyList<StoreItem> items, CancellationToken cancel)
 	{
 		HashSet<string> onShelf = await store.InstalledIdsAsync();
-		IReadOnlyList<string> languages = StoryLanguages.Current().All;
+		// A language the grown-up cancelled (Slice 262) stays cancelled: the weekly check does not fetch its packs again (Slice 269).
+		IReadOnlyList<string> languages = ShelfAudioPacks.WithoutCancelled(StoryLanguages.Current().All);
+		Debug.WriteLine($"{LogTag} pack sync languages: {string.Join(",", languages)}");
 		bool allOk = true;
 		foreach (StoreItem item in items.Where(i => onShelf.Contains(i.Id)))
 		{
