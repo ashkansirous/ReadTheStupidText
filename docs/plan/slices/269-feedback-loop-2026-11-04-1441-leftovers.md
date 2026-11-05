@@ -29,7 +29,7 @@
 - Built: AutomationId bare-assignment scan; `StoreEveryFieldFixtureTests` (every-field listing, and a source check that fails on the pre-#805 badge); `StoreTagBadge` sets its id once, an unknown tag shows no badge; `BookUpdater` leaves cancelled languages out of the pack sync (`CancelledAudioLanguages`); `dino-reorder` VM check with real mouse moves (`Move-MouseTo`) and a `# after: dino-launch` header the runner reads for `-Check`; the dry run (`_dryrun.ps1`, self-test `test-check-dryrun.ps1`, already in CI) fails when a trace string a check waits for is not in `src\`; emulator preflight (`tools/emulator/preflight.yaml`, cold boot and one retry in `run-flows.ps1`); per-flow logcat files; `Test-LogMarker` fix with `test-log-marker.ps1`; 256 MB git buffer in `ship-targets.mjs` and `site-checks-needed.mjs`; shellcheck rules in `.github/CLAUDE.md`.
 - **Starter leftovers: no change.** The `Intro_Store*` and `FirstRun_Waiting` strings are already gone from `src` and `tools`. `dino-starters.json` and `starterDrift` stay: four books are still `kind: Starter` and `StarterBuilder.cs`, `BookBuilderTests.cs` and `dino-store.yml` still read the file.
 - **StoreTagBadge theme:** nothing to follow (`App.xaml` has one light colour per tag).
-- `tools-selftests.yml` runs `test-check-dryrun.ps1` but not `test-log-marker.ps1`; adding that step is outside this slice's Touches (`.github/workflows`).
+- `tools-selftests.yml` runs both `test-check-dryrun.ps1` and `test-log-marker.ps1` (step "Log marker self-test", added in e3221d80; corrected by the feedback loop of night 2026-11-05-1823, which read the workflow).
 - Item 17 (`tmp/` deleted during `Invoke-DesktopTest`) stays open: cause not found (see the cause search below).
 - Device runs (2026-11-05): emulator `store-tags` and `set-language` flows PASS, the preflight passed, per-flow logcat files were kept (155 s run). VM `dino-reorder` PASS at every stage (real mouse drag, order saved, survives a restart, Cancel restores the order, 0 layout-cycle lines).
 
@@ -74,3 +74,6 @@ Ruled out by reading: `Build-TestPackage.ps1:50` removes only `src\DinoReader.Ap
 - Emulator cold-boot retry path of the preflight (not triggered in the run; kill the Maestro driver after a snapshot boot).
 - `Test-LogMarker` regex: hand-checked and self-test only, not seen on a real flow with a `,` or `:` marker.
 - Apple Vision per-language support for Farsi, Arabic, Russian, Japanese and Chinese (research only; call `supportedRecognitionLanguages` on the minimum iOS).
+- A store book with an unknown tag shows no badge and no error: no unit test (MAUI types) and no flow with an unknown tag.
+- The weekly pack sync skipping cancelled languages through the static lock in `ShelfAudioPacks`: unit-tested only.
+- Item 17 (`tmp/` deleted during `Invoke-DesktopTest`) did not reproduce in four VM runs on 2026-11-05; its before/after `tmp` listing is Slice 271 item 3.

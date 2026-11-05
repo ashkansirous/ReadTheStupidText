@@ -64,3 +64,6 @@ Already added in `src/DinoReader.App/CLAUDE.md` (a native player's "finished" ha
 - Three or more pre-made clips in a row on a device (the emulator flow ends after clip 1).
 - Windows clip hand-off: no VM check plays audio clips (a harness gap).
 - `IDispatcher.Dispatch` always queues on Windows (seen only as a string match in Microsoft.Maui.dll 10.0.120, not confirmed from source).
+- A parent's recording that ends while paused waits for Resume (`_recordingEndedWhilePaused` in `ReadingSession.cs`): no unit test and no device flow; the skip reason "covered by device runs" was wrong, no run covers it (feedback loop 2026-11-05-1823; test work in Slice 271).
+- Review check2 #4 (a stale id's early return in `ApplyRecordingEnded` may leave the recording Playing with nothing playing) and #6 (iOS audio-session Deactivate only in the queued step on a stale play): both unconfirmed.
+- Review check2 #1 kept because "origin/main had the same window" (Windows Pause then Resume in the hop replays the clip): that premise was not checked.

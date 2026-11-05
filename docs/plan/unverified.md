@@ -7,11 +7,17 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Three or more pre-made clips in a row on a device (the emulator flow ends after clip 1).
 - Windows clip hand-off: no VM check plays audio clips (a harness gap).
 - `IDispatcher.Dispatch` always queues on Windows (seen only as a string match in Microsoft.Maui.dll 10.0.120, not confirmed from source).
+- A parent's recording that ends while paused waits for Resume (`_recordingEndedWhilePaused` in `ReadingSession.cs`): no unit test and no device flow (test work in Slice 271).
+- Review check2 #4 (stale id's early return in `ApplyRecordingEnded` may leave the recording Playing with nothing playing) and #6 (iOS audio-session Deactivate only in the queued step on a stale play): both unconfirmed.
+- Review check2 #1 kept because "origin/main had the same window" (Windows Pause then Resume in the hop replays the clip): premise not checked.
 
 ### Slice 269: Leftovers from night 2026-11-04-1441 ([slice](slices/269-feedback-loop-2026-11-04-1441-leftovers.md))
 - Emulator cold-boot retry path of the preflight (not triggered in the run; kill the Maestro driver after a snapshot boot).
 - `Test-LogMarker` regex: hand-checked and self-test only, not seen on a real flow with a `,` or `:` marker.
 - Apple Vision per-language support for Farsi, Arabic, Russian, Japanese and Chinese (research only; call `supportedRecognitionLanguages` on the minimum iOS).
+- A store book with an unknown tag shows no badge and no error: no unit test and no flow with an unknown tag.
+- The weekly pack sync skipping cancelled languages through the static lock in `ShelfAudioPacks`: unit-tested only.
+- `tmp/` deleted during `Invoke-DesktopTest` (item 17): cause not found, not reproduced in four VM runs on 2026-11-05 (listing in Slice 271 item 3).
 
 ### Slice 235: Dino on Windows, part C ([slice](slices/235-dino-windows-window.md))
 - Down right after opening Settings does nothing until Tab (focus starts on the window's Back button).
@@ -36,7 +42,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - The `read_voice` and failure-path log lines carry no messages or URLs: only the success lines were read.
 
 ### Slice 264: Dino: grown-ups reorder the shelf ([slice](slices/264-dino-gallery-reorder-mode.md))
-- Windows mouse drag actually moving a tile, Done/Enter saving it and the order after a restart, Esc after a drag (a synthetic drag moved nothing; no drag trace lines).
+- Esc after a drag on Windows. (The drag itself, the order saved and kept after a restart, and Cancel restoring the order passed on the VM on 2026-11-05 in Slice 269's `dino-reorder` check with real mouse moves; the pre-night run's "drag moved, order not saved" at 16:28 used the old untracked script, so it likely came from that script's synthetic moves, not checked.)
 - A real scroll during a press cancelling the hold (the 4-book test shelf does not scroll).
 - iOS gestures (`PointerGestureRecognizer` touch on iOS).
 - Windows keyboard reorder (Space/arrows).
@@ -83,7 +89,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 258: Dino: pre-made audio for the four starter books ([slice](slices/258-dino-starter-books-premade-audio.md))
 - iOS run (compile only so far).
-- Windows head run.
+- Windows head: the starter books' pre-made audio playing (launch, open book and page turn passed on the VM, 2026-11-05 16:28 pre-night run).
 
 ### Slice 250: Dino usage: playback events and a session id new on every cold start ([slice](slices/250-dino-playback-events-and-session-id.md))
 
