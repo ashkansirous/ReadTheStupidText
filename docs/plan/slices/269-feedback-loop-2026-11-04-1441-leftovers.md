@@ -20,3 +20,12 @@
 - [ ] **`Test-LogMarker` matches whole tokens only** (`tools/emulator/run-flows.ps1:94`, A 1458/1601): a marker followed by `,` or `:` fails, which marked a passing flow FAIL. Match the marker as a prefix of a token.
 - [ ] **Repo scripts with the 1 MB git buffer** (pass 2, B): `.github/scripts/ship-targets.mjs:291,296` and `site-checks-needed.mjs:27` call git with Node's default `maxBuffer`; an 18k-path merge would fail with ENOBUFS (the wave avoided it by splitting PRs). Raise it as ClaudeSkills #166 did.
 - [ ] **Non-Latin page reading in Dino** (D 2679, 4217, 4341): Dino recognises page text only with the ML Kit Latin model, so Farsi, Arabic, Russian, Japanese and Chinese books cannot be read from a photo. It sits only as a note in Slice 263. Decide with Slice 263 whether Dino gets per-alphabet recognition on first capture.
+  **User, 2026-11-05 (before night run): "Find out, don't build."** Slice 263 was dropped the same day. Tonight: research only, no app change. Find which alphabets Android (ML Kit text recognition, bundled and downloadable models) and iPhone (Apple Vision) can recognise from a photo, for Farsi, Arabic, Russian, Japanese and Chinese, and what each route costs in app size and download; write the options with sizes and sources here for the user to pick. Done when that list is in this file.
+
+## Answers and choices (2026-11-05, before night run)
+
+- **Item 22 (non-Latin):** the user's answer is above; research only.
+- **Item 19, unknown StoreTag:** an unknown tag shows no badge (hidden), not "New". Choice made by the starter session as the safe default (an unknown value must not claim the book is new); not asked.
+- **Item 18, shellcheck:** add the three failed rules to `.github/CLAUDE.md`'s workflow checklist; installing shellcheck is not needed. Starter session's choice.
+- **Item 12, starter leftovers:** remove the unused `Intro_Store*` / `FirstRun_Waiting` strings and the `starterDrift` code that assumes built-in starters; update `dino-starters.json` only where the publish tool still reads it. Starter session's choice.
+- **Devices:** emulator and the shared VM `rtst-desktop-test` (allowed in the user's autoMode settings); no phone needed. Night sessions run in permission mode `auto` (user, 2026-11-05).
