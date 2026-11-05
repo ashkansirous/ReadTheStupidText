@@ -20,7 +20,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - The upgrade-from-previous-release path (previous build, then install over it) is not scripted.
 - The layout check at font 1.0 and in landscape on every wizard and first-run screen: only the Record step at font 1.3 has a flow. On an emulator without a microphone the Record step may hide Try it.
 - The contact sheet of flow screenshots (`reviews/<slice>-shots/`) was not built.
-- Bug E on main: the first `fix/` merge is its first test; the wait step's `gh api` lookup has never run. Cost: a `fix/` merge no longer coalesces with later merges (one full release per fix merge, against the Actions quota rules in `.github/CLAUDE.md`).
+- Bug E on main: the wait step has run (read 2026-11-05 by the feedback loop: the `fix/` merge #826, release run 41950767114, success; #799's run 41951758486 ran 01:55-03:47 UTC, about 112 min against a normal 62-68, and succeeded). Still unchecked: whether that run held behind the fix run on purpose (read its version-job log), and the lookup-failed path. Cost: a `fix/` merge no longer coalesces with later merges (one full release per fix merge, against the Actions quota rules in `.github/CLAUDE.md`).
 - iOS runtime and the XCUITest twins (`net10.0-ios` compiles; the XCUITest layout check does not exist).
 - The `read_voice` and failure-path log lines carry no messages or URLs: only the success lines were read.
 
@@ -42,6 +42,8 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - A VM run reusing a package a fixer built in a fix round.
 
 ### Slice 265: Dino: pre-made audio clips in Git LFS; book changes only publish to the store ([slice](slices/265-dino-audio-clips-in-git-lfs.md))
+
+- `git lfs pull --include` of one clip from a fresh clone of main downloads the real file (only pointers were read back, 2026-11-04). Keep `s246-audio` until it does.
 - `dino-store.yml`'s first real run on main.
 - `packs.yml`'s first run with `lfs: false`.
 - `dino-starters.json` and `BookBuilderTests` still reference starters (follow-up after 261).

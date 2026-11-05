@@ -31,7 +31,7 @@ One owner for shelf pack fetching. Slice 262 made the `ShelfAudioPacks` singleto
 
 **Why the tests passed:** the flows check that a text is visible and tap it by text. Maestro taps the centre of the element's bounds from the accessibility tree, so a button covered by another still "passes". No flow checks bounds, overlap or clipping; the only screenshots (`dino-landscape-reading`, `-settings`, `-shelf`) are saved and never compared or looked at; no flow runs the Ready screen on a phone in portrait with a large font.
 
-- [ ] Reproduce: the user's screenshot, phone model and font size (Android Settings > Display > Font size) first; then the same screen size and font scale on the emulator (`wm size`, `wm density`, `settings put system font_scale`). Name the screen and the cause here.
+- [ ] Reproduce from the user's screenshot (no further request to the user, feedback loop 2026-11-05), then the same screen size and font scale on the emulator (`wm size`, `wm density`, `settings put system font_scale`). Name the screen and the cause here.
 - [x] Fix the layout so the buttons stack with their full height at every screen size and font scale (no fixed row height that the stack can outgrow), portrait and landscape, phone and tablet; Android and iOS share the page.
 - [ ] Layout check in the device tests: a scripted step reads the element bounds from `uiautomator dump` and fails when two tappable elements on one screen overlap or one is cut off by the screen edge. Run it on every first-run and intro screen, on a phone in portrait at font scale 1.0 and 1.3, and in landscape. Same idea for iOS through the XCUITest tree where a simulator run exists, else recorded under *Not yet verified*.
 - [ ] Screenshots taken by flows are put on one contact sheet per run (`reviews/<slice>-shots/`) for the review step, instead of being saved and never seen.
@@ -60,7 +60,9 @@ The user's report could not be checked from our data: the usage events carry no 
 
 The Slice 260 badge crash (`AutomationId may only be set one time`, `StoreTagBadge.Refresh`) crashed the Store on the user's Pixel 10 Pro at 20:21 UTC (crash report `crashes/dino/2026-11-04/d1f49026-11dd-43f0-a674-355705aaf061.json`, version 1.102.0). The fix #805 merged at 19:02 UTC, but its release runs (19:02, 19:10, 20:01) were each cancelled by the next merge, and dino-v1.102.1 (published 20:10) was built from #806 (18:47), before the fix. The run that carries it (f750d33, dino-v1.102.2) started 20:16.
 
-- [x] A merge whose PR is labelled or titled as a fix of a crash (`fix(...)` touching app code) is never cancelled by a later merge: the release workflow's concurrency lets it finish, or the next run is held until it has shipped (`.github/workflows/release.yml`, `.github/CLAUDE.md`). Verify on a test branch: two quick merges, the first one's release still publishes.
+> **Correction (feedback loop of night 2026-11-04-1441):** `release.yml` has `cancel-in-progress: false`, so no merge cancelled a running release; the fix's runs waited as *pending* behind an 89-minute 1.102.1 run, and each later merge replaced the pending run in the concurrency group (GitHub keeps one pending run per group). The starter session's "my #811 merge cancelled the fix release and added ~15 minutes" was wrong, and holding #812 for it gained nothing. The fix below (a separate group for `fix/` merges) still addresses the real cause: the fix's run never left the queue.
+
+- [ ] (built, not yet verified: see *Verification*) A merge whose PR is labelled or titled as a fix of a crash (`fix(...)` touching app code) is never cancelled by a later merge: the release workflow's concurrency lets it finish, or the next run is held until it has shipped (`.github/workflows/release.yml`, `.github/CLAUDE.md`). Verify on a test branch: two quick merges, the first one's release still publishes.
 - [x] After a crash fix merges, the wave or session confirms the build that contains it reached testers (release tag contains the fix commit: `git merge-base --is-ancestor`), and says so; never "fixed" while only the code is.
 
 ## Verification
@@ -117,6 +119,6 @@ Files: `reviews/s267-high.md` (9 findings), `reviews/s267-medium.md` (9), `revie
 - The upgrade-from-previous-release path (previous build, then install over it) is not scripted.
 - The layout check at font 1.0 and in landscape on every wizard and first-run screen: only the Record step at font 1.3 has a flow. On an emulator without a microphone the Record step may hide Try it.
 - The contact sheet of flow screenshots (`reviews/<slice>-shots/`) was not built.
-- Bug E on main: the first `fix/` merge is its first test; the wait step's `gh api` lookup has never run. Cost: a `fix/` merge no longer coalesces with later merges (one full release per fix merge, against the Actions quota rules in `.github/CLAUDE.md`).
+- Bug E on main: the wait step has run (read 2026-11-05 by the feedback loop: the `fix/` merge #826, release run 41950767114, success; #799's run 41951758486 ran 01:55-03:47 UTC, about 112 min against a normal 62-68, and succeeded). Still unchecked: whether that run held behind the fix run on purpose (read its version-job log), and the lookup-failed path. Cost: a `fix/` merge no longer coalesces with later merges (one full release per fix merge, against the Actions quota rules in `.github/CLAUDE.md`).
 - iOS runtime and the XCUITest twins (`net10.0-ios` compiles; the XCUITest layout check does not exist).
 - The `read_voice` and failure-path log lines carry no messages or URLs: only the success lines were read.
