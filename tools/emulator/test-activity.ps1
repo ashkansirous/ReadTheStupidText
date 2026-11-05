@@ -183,9 +183,11 @@ function Test-DumpStopsMaestroDriver {
     $fake = { param($a) $script:DumpCalls.Add($a -join ' '); 'dump-xml' }
     $xml = Get-UiDumpXml $fake
     Assert-Equal 'the dump answer comes back' 'dump-xml' $xml
-    Assert-Equal 'two adb calls' 2 $script:DumpCalls.Count
+    Assert-Equal 'five adb calls' 5 $script:DumpCalls.Count
     Assert-Equal 'the Maestro driver is force-stopped first' 'shell am force-stop dev.mobile.maestro' $script:DumpCalls[0]
-    Assert-Equal 'then the dump runs' 'shell uiautomator dump /dev/tty' $script:DumpCalls[1]
+    Assert-Equal 'then the dump runs into a device file' 'shell uiautomator dump /sdcard/rtst-ui-dump.xml' $script:DumpCalls[2]
+    Assert-Equal 'then the file is read with exec-out' 'exec-out cat /sdcard/rtst-ui-dump.xml' $script:DumpCalls[3]
+    Assert-Equal 'then the file is deleted' 'shell rm -f /sdcard/rtst-ui-dump.xml' $script:DumpCalls[4]
     $source = Get-Content (Join-Path $PSScriptRoot 'run-flows.ps1') -Raw
     Assert-Equal 'run-flows reads its ANR dump through Get-UiDumpXml' $true ($source -match 'Get-UiDumpXml')
     Assert-Equal 'run-flows has no bare uiautomator dump of its own' $false ($source -match 'shell uiautomator dump')

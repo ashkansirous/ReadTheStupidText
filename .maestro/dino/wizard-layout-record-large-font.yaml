@@ -1,0 +1,74 @@
+# Slice 267 (Bug B): on the intro wizard's Record step Skip was drawn on top of Try it (an upright button grid with no row definitions put both in row 0). Maestro taps the centre of an element's
+# bounds, so a button covered by another still "passes" a text check; this flow ends on the step and run-flows.ps1 then reads the screen's bounds (tools/emulator/layout-check.ps1) and
+# fails when two tappable elements overlap or one is cut off by the screen edge. The system font scale is 1.3 for the flow (restored after it), the case a tall translation or a large font hits first.
+# To see it fail against the old behaviour: run it on a build from before this slice; the check prints "'Try it' and 'Skip' overlap by 100% of the smaller one".
+# Replays the intro from Settings > About, like dino-landscape-intro, so no first run or voice download is needed.
+# layout-check
+# font-scale: 1.3
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK enter-grown-up ok
+appId: uk.sirous.dinoreader.dbg
+name: The Record step's Skip and Try it do not overlap at a large font
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow needs only the starter shelf and the replayed intro, no own book or voice pack.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+# The one-time "Storyteller voices are ready" note can cover grown-up mode once the background pack download ends: dismiss it only when it is on screen.
+- runFlow:
+    when:
+      visible: Storyteller voices are ready
+    commands:
+      - tapOn: "OK"
+- tapOn:
+    id: GallerySettings
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: SettingsTitle
+    timeout: 10000
+- repeat:
+    times: 8
+    while:
+      notVisible: "About & updates"
+    commands:
+      - scroll
+- tapOn:
+    text: "About & updates"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: "Show the intro again"
+    timeout: 10000
+- tapOn:
+    text: "Show the intro again"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: Dino has two places
+    timeout: 20000
+# First card -> Read step -> Skip -> the Record step, where the flow ends for the layout check.
+- tapOn:
+    id: IntroNext
+- extendedWaitUntil:
+    visible: Read a story together
+    timeout: 15000
+- tapOn:
+    text: "Skip"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: Read it in your voice
+    timeout: 15000
+- assertVisible: "Skip"

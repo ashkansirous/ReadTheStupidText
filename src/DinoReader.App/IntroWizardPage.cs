@@ -337,7 +337,8 @@ public sealed class IntroWizardPage : ContentPage
 	private static void PlaceButtons(Grid buttons, View main, View? skip, bool inRow)
 	{
 		buttons.ColumnDefinitions = inRow && skip is not null ? [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)] : [];
-		buttons.RowDefinitions = [];
+		// Upright the two buttons need their own rows: a Grid with no row definitions has one implicit row and clamps Grid.Row 1 into it, which drew Skip over Try it (Slice 267).
+		buttons.RowDefinitions = skip is not null && !inRow ? [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto)] : [new RowDefinition(GridLength.Auto)];
 		if (skip is null || !inRow)
 		{
 			SetCell(main, 0, 0, 1);

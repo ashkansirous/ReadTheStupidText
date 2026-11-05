@@ -35,12 +35,10 @@ public sealed class ShelfAudioNetworkTests
 public sealed class ShelfAudioStartTests
 {
     [Theory]
-    [InlineData(true, false, ShelfAudioStartDecision.Start)]
-    [InlineData(false, false, ShelfAudioStartDecision.Skip)]
-    [InlineData(true, true, ShelfAudioStartDecision.Skip)]
-    [InlineData(false, true, ShelfAudioStartDecision.Skip)]
-    public void A_quiet_run_needs_the_installed_voice_and_no_cancel(bool voiceReady, bool cancelled, ShelfAudioStartDecision expected) =>
-        Assert.Equal(expected, ShelfAudioStart.Decide(voiceReady, cancelled, visible: false, VoiceRequestOutcome.NothingAsked));
+    [InlineData(false, ShelfAudioStartDecision.Start)]
+    [InlineData(true, ShelfAudioStartDecision.Skip)]
+    public void A_quiet_run_needs_no_cancel_and_no_installed_voice(bool cancelled, ShelfAudioStartDecision expected) =>
+        Assert.Equal(expected, ShelfAudioStart.Decide(cancelled, visible: false, VoiceRequestOutcome.NothingAsked));
 
     [Theory]
     [InlineData(VoiceRequestOutcome.NothingAsked, ShelfAudioStartDecision.Start)]
@@ -49,5 +47,5 @@ public sealed class ShelfAudioStartTests
     [InlineData(VoiceRequestOutcome.WaitForWifi, ShelfAudioStartDecision.Start)]
     [InlineData(VoiceRequestOutcome.Cancelled, ShelfAudioStartDecision.Skip)]
     public void A_visible_run_follows_the_voice_request_even_when_cancelled_before_or_voice_not_ready(VoiceRequestOutcome outcome, ShelfAudioStartDecision expected) =>
-        Assert.Equal(expected, ShelfAudioStart.Decide(voiceReady: false, cancelled: true, visible: true, outcome));
+        Assert.Equal(expected, ShelfAudioStart.Decide(cancelled: true, visible: true, outcome));
 }

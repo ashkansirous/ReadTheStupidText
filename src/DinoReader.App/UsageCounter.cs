@@ -96,6 +96,11 @@ public sealed class UsageCounter
 		_sender.Enqueue((sampleRate, now) =>
 			Stamp(UsageEvent.ForNoBook(name, language, detail, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now)));
 
+	/// <summary>Slice 267: queues a count about one store book by its package id (never its title), in <paramref name="language"/>, with a closed <paramref name="detail"/> (an audio pack download's outcome).</summary>
+	public void RecordShelfBook(string name, string bookId, string language, string detail) =>
+		_sender.Enqueue((sampleRate, now) => UsageEvent.ForShelfBook(
+			name, bookId, language, detail, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now) is { } count ? Stamp(count) : null);
+
 	/// <summary>Queues a count about a store story (by its id, never its title) with the store filters in use.</summary>
 	public void RecordStoreDownload(StoreItem item, bool ageFilterSet, bool authorFilterSet) =>
 		_sender.Enqueue((sampleRate, now) => UsageEvent.ForShelfBook(

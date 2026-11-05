@@ -48,6 +48,8 @@ const INTRO_ENDS = ["finished", "skipped_all"] as const;
 const STORY_LANGUAGE_COUNTS = ["1", "2", "3"] as const;
 const STORY_LANGUAGE_WHERE = ["intro", "settings"] as const;
 const PACK_OUTCOMES = ["done", "failed", "cancelled"] as const;
+const READ_VOICES = ["premade", "device:no_pack", "device:pack_failed", "device:text_mismatch", "device:clip_missing"] as const;
+const AUDIO_PACK_OUTCOMES = ["started", "done", "failed:network", "failed:size", "failed:unzip", "failed:clip", "failed:missing", "failed:storage"] as const;
 // Slice 250: why a read stopped (the app's ReadStopReason; a test keeps the two lists the same). `window_stopped` is accepted though no caller emits it yet.
 const READ_STOP_REASONS = ["left_book", "finished", "cancelled", "language_changed", "restarted", "window_stopped", "skipped", "failed", "other"] as const;
 
@@ -206,6 +208,9 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   read_resumed: { sources: BOOK_SOURCES, detail: emptyDetail },
   read_stopped: { sources: BOOK_SOURCES, detail: detailIn(READ_STOP_REASONS) },
   book_left: { sources: BOOK_SOURCES, detail: emptyDetail },
+  // Slice 267: which voice a read used, and how one pre-made audio pack download went; closed lists only (docs/analytics/dino-voice-queries.md).
+  read_voice: { sources: BOOK_SOURCES, detail: detailIn(READ_VOICES) },
+  audio_pack_download: { sources: [SHELF_SOURCE], detail: detailIn(AUDIO_PACK_OUTCOMES) },
 };
 const LANGUAGE_PATTERN = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
 /** The version pattern both phone endpoints check (Slice 227 shares it with `/api/crash`). */
