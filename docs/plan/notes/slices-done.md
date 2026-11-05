@@ -333,3 +333,4 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 268 | Dino: remove "Show original text" from grown-up mode (user, 2026-11-04) | built | #825 | | [268-dino-remove-show-original-text.md](../slices/268-dino-remove-show-original-text.md) |
 | 267 | Dino bugs: books on the shelf keep the old voice (packs only on the 7-day check); the first-run buttons overlap (no layout check in the tests) | built | #826 | | [267-dino-old-voice-and-wizard-buttons.md](../slices/267-dino-old-voice-and-wizard-buttons.md) |
 | 264 | Dino: grown-ups reorder the shelf (iPhone-style reorder mode) | built | #799 | | [264-dino-gallery-reorder-mode.md](../slices/264-dino-gallery-reorder-mode.md) |
+| 235 | Dino on Windows: a real desktop window (size and minimum, width-driven layout, keyboard, hover, tooltips, title bar; after 232) | built | #740, #745, #776 | | [235-dino-windows-window.md](../slices/235-dino-windows-window.md) |

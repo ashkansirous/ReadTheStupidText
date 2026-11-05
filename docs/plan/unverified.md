@@ -2,6 +2,13 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 235: Dino on Windows, part C ([slice](slices/235-dino-windows-window.md))
+- Down right after opening Settings does nothing until Tab (focus starts on the window's Back button).
+- Reorder mode on Windows keeps phone padding (review high 6).
+- Focus return on a virtualized container is a no-op.
+- Hover lift and shadow are not built (no native property).
+- Real mouse hover on a real PC.
+
 ### Slice 268: Dino: remove "Show original text" from grown-up mode ([slice](slices/268-dino-remove-show-original-text.md))
 - The new flow `book-sheet-no-original.yaml` was not shown failing on the old build.
 - A book saved with the old flag on, read on a device.
