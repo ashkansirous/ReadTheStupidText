@@ -14,6 +14,8 @@ import { fileURLToPath } from 'node:url';
 const CONTENT_PREFIX = 'content/dino/';
 const PUSH_EVENT = 'push';
 const NO_COMMIT = /^0+$/;
+/** Node's default 1 MB would fail an 18k-path diff with ENOBUFS (Slice 269). */
+const GIT_MAX_BUFFER = 256 * 1024 * 1024;
 
 /** Pure: false only for a non-empty change set that lies entirely under content/dino/. */
 export function siteChecksNeeded(changedFiles) {
@@ -24,7 +26,7 @@ export function siteChecksNeeded(changedFiles) {
 /** The files changed between two commits, or null when git cannot say (a missing commit, a force push). */
 function changedBetween(before, sha) {
     try {
-        const out = execFileSync('git', ['diff', '--no-renames', '--name-only', before, sha], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+        const out = execFileSync('git', ['diff', '--no-renames', '--name-only', before, sha], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: GIT_MAX_BUFFER }).trim();
         return out ? out.split('\n') : [];
     } catch {
         return null;

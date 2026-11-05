@@ -182,6 +182,15 @@ function Click-Screen {
     [Win32.Mouse]::mouse_event(4, 0, 0, 0, [UIntPtr]::Zero)
 }
 
+function Move-MouseTo {
+    # A real pointer move (mouse_event MOUSEEVENTF_MOVE | ABSOLUTE | VIRTUALDESK); setting Cursor.Position alone raises no WinUI pointer move in the VM (Slice 235, Slice 269).
+    param([int] $X, [int] $Y)
+    $screen = [System.Windows.Forms.SystemInformation]::VirtualScreen
+    $ax = [uint32][Math]::Round(($X - $screen.Left) * 65535.0 / [Math]::Max(1, $screen.Width - 1))
+    $ay = [uint32][Math]::Round(($Y - $screen.Top) * 65535.0 / [Math]::Max(1, $screen.Height - 1))
+    [Win32.Mouse]::mouse_event(0x8001 -bor 0x4000, $ax, $ay, 0, [UIntPtr]::Zero)
+}
+
 function Find-UiaById {
     param([Parameter(Mandatory)] $Root, [Parameter(Mandatory)] [string] $Id)
     return $Root.FindFirst($script:TreeScope::Descendants, (New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::AutomationIdProperty, $Id)))

@@ -22,7 +22,7 @@ public sealed class ShelfAudioPacks
 
 	private readonly StoreClient _store;
 	private readonly StoryLanguagePacks _voices;
-	private readonly object _gate = new(); // guards _runs, _unwinding, _states, every Run's mutable fields, and the cancelled-language preference
+	private static readonly object _gate = new(); // static so WithoutCancelled can read under it (the class is a singleton); guards _runs, _unwinding, _states, every Run's mutable fields, and the cancelled-language preference
 	private readonly Dictionary<string, Run> _runs = []; // at most one live run per language
 	private readonly Dictionary<string, Task> _unwinding = []; // the Completion of the language's last retired run: a new run for it waits for that
 	private readonly Dictionary<string, ShelfAudioState> _states = [];
@@ -486,6 +486,18 @@ public sealed class ShelfAudioPacks
 	}
 
 	private void RaiseChanged() => MainThread.BeginInvokeOnMainThread(() => Changed?.Invoke(this, EventArgs.Empty));
+
+	/// <summary>
+	/// <paramref name="languages"/> with the cancelled ones left out (Slice 269: the weekly book check must not fetch packs for them). Read under the same lock the Cancel writes under, so a Cancel
+	/// pressed during the pass is seen by the next read.
+	/// </summary>
+	public static IReadOnlyList<string> WithoutCancelled(IEnumerable<string> languages)
+	{
+		lock (_gate)
+		{
+			return CancelledAudioLanguages.Without(languages, Preferences.Default.Get(CancelledKey, (string?)null));
+		}
+	}
 
 	private static bool IsMarkedCancelled(string code) => Marked().Contains(code);
 

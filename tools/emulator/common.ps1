@@ -305,6 +305,12 @@ function Invoke-AdbBounded([string[]]$AdbArgs, [int]$Seconds = 15) {
     return ($out.Result + $err.Result)
 }
 
+# Slice 269 (moved from run-flows.ps1 so test-log-marker.ps1 can load it): the marker starts a token and ends it: no word character follows,
+# and no ".", "/" or "-" followed by a word character either. `PAGE 1` must not match `PAGE 10`, `PAGE 1.5`, `PAGE 1/10` or `PAGE 1-x`, but `PAGE 1,` and `PAGE 1:` match.
+function Test-LogMarker([string]$Log, [string]$Marker) {
+    return $Log -match ('(?<!\S)' + [regex]::Escape($Marker) + '(?!\w|[./-]\w)')
+}
+
 # Asks the emulator; an adb failure counts as an empty answer and a hung adb as a timeout answer, so a dead emulator is a problem, never an exception or a hang.
 function Get-EmulatorHealthProblem {
     $ErrorActionPreference = 'Continue'

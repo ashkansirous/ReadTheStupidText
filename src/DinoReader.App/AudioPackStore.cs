@@ -15,6 +15,20 @@ public enum PackInstall
 	Cancelled,
 }
 
+/// <summary>
+/// The grown-up's Cancel on a side language's audio (Slice 262) is kept as a list of language codes in one preference. The weekly book check must not fetch packs for those languages (Slice 269).
+/// The preference key and its locked read belong to <c>ShelfAudioPacks.WithoutCancelled</c>; this is the pure filter it uses.
+/// </summary>
+public static class CancelledAudioLanguages
+{
+	/// <summary>The languages with the cancelled ones left out; <paramref name="savedMarks"/> is the preference's text.</summary>
+	public static IReadOnlyList<string> Without(IEnumerable<string> languages, string? savedMarks)
+	{
+		HashSet<string> cancelled = [.. StoryLanguageSet.Split(savedMarks).Select(UiLanguage.Resolve)];
+		return languages.Where(language => !cancelled.Contains(UiLanguage.Resolve(language))).ToList();
+	}
+}
+
 /// <summary>Downloads one pack zip to a file (the store client does it with its stall guards). Throws <see cref="AudioPackNotFoundException"/> for a 404, any other network or disk failure as it happens.</summary>
 public interface IAudioPackFetcher
 {

@@ -90,9 +90,15 @@ function Get-TestLog {
     return (& $script:Adb -s $script:Serial logcat -d -s $logTag 2>&1 | Out-String)
 }
 
-# Whole-token match: `PAGE 1` must not match `PAGE 10`.
-function Test-LogMarker([string]$Log, [string]$Marker) {
-    return $Log -match ('(?<!\S)' + [regex]::Escape($Marker) + '(?!\S)')
+# Slice 269: the flow's RTST-TEST lines are kept in a file per flow before the next flow clears logcat, so a measurement trace is not lost.
+function Save-FlowLogcat([string]$FlowName) {
+    try {
+        $dir = Join-Path $script:StateDir "logcat-i$Instance"
+        $null = New-Item -ItemType Directory -Force $dir
+        $path = Join-Path $dir "$FlowName.log"
+        Set-Content -Path $path -Value (Get-TestLog) -Encoding UTF8   # explicit: Windows PowerShell 5.1 would write the ANSI page and garble Farsi / Norwegian trace text
+        Write-Host "LOGCAT kept for ${FlowName}: $path"
+    } catch { Write-Host "LOGCAT could not be kept for ${FlowName}: $($_.Exception.Message)" }
 }
 
 # Returns the expected texts still missing from the marker log after the timeout.
@@ -213,6 +219,43 @@ function Invoke-GuardedFlow([string]$Maestro, [System.IO.FileInfo]$File) {
     return $rerun
 }
 
+# Slice 269: one known-good flow (preflight.yaml: Android's Settings) before the real ones. A 5-hour-old emulator cost 48 minutes and 7 diagnosis runs once, and the Maestro driver died right
+# after a snapshot boot twice; a restart fixed both in seconds. A failed or hung preflight cold-boots the emulator (Restart-Emulator) and tries once more; a second failure stops the run (exit 5).
+$script:PreflightFlow = Join-Path $PSScriptRoot 'preflight.yaml'
+$script:PreflightTimeoutSeconds = 120
+$script:PreflightFirstTimeoutSeconds = 300   # the first attempt may be the one that installs the Maestro driver (see Invoke-FlowBody), which takes longer than a plain flow
+
+function Test-MaestroPreflight([string]$Maestro, [int]$TimeoutSeconds = $script:PreflightTimeoutSeconds) {
+    $ErrorActionPreference = 'Continue'
+    $env:JAVA_TOOL_OPTIONS = "-Duser.home=$($script:MaestroHome)"
+    $p = $null
+    try {
+        $argLine = "--device $($script:Serial) test --no-reinstall-driver `"$($script:PreflightFlow)`""
+        $p = Start-Process -FilePath $Maestro -ArgumentList $argLine -NoNewWindow -PassThru -RedirectStandardOutput (Join-Path $script:StateDir "preflight-i$Instance.out") -RedirectStandardError (Join-Path $script:StateDir "preflight-i$Instance.err")
+        $null = $p.Handle
+        if (-not $p.WaitForExit($TimeoutSeconds * 1000)) {
+            & taskkill.exe /T /F /PID $p.Id 2>&1 | Out-Null
+            Write-Host "PREFLIGHT timed out after $TimeoutSeconds s (the Maestro driver or the emulator hangs)."
+            return $false
+        }
+        # A null ExitCode (a .bat wrapper whose handle was not cached) is a failure, never a pass.
+        return ($null -ne $p.ExitCode -and $p.ExitCode -eq 0)
+    } finally {
+        # Whatever ended the try (timeout, a thrown wait), the Maestro tree this call started must not outlive it.
+        if ($p -and -not $p.HasExited) { & taskkill.exe /T /F /PID $p.Id 2>&1 | Out-Null }
+        Remove-Item Env:JAVA_TOOL_OPTIONS -ErrorAction SilentlyContinue
+    }
+}
+
+function Confirm-EmulatorPreflight([string]$Maestro) {
+    if (Test-MaestroPreflight $Maestro $script:PreflightFirstTimeoutSeconds) { Write-Host 'PREFLIGHT passed: the emulator and the Maestro driver answer.'; return }
+    Write-Host 'PREFLIGHT failed: cold-booting the emulator and trying once more.'
+    Restart-Emulator
+    if (Test-MaestroPreflight $Maestro $script:PreflightFirstTimeoutSeconds) { Write-Host 'PREFLIGHT passed after the cold boot.'; return }
+    Write-Host "PREFLIGHT failed again after a cold boot. Stopping: no flow result on this emulator would mean anything (output: $(Join-Path $script:StateDir "preflight-i$Instance.err"))."
+    exit $script:ExitEmulatorUnhealthy
+}
+
 # Slice 267: a flow header `# layout-check` asks for the overlap / cut-off check on the screen the flow ends on; `# font-scale: 1.3` runs the flow at that system font scale (restored after it).
 function Test-FlowWantsLayoutCheck([string]$FlowFile) { return [bool](Get-Content $FlowFile | Where-Object { $_ -match '^#\s*layout-check\s*$' } | Select-Object -First 1) }
 
@@ -275,6 +318,7 @@ function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File) {
             if ($layout.Count -gt 0) { $problem = "Layout check failed:`n" + (($layout | ForEach-Object { "  $_" }) -join "`n") }
         }
     }
+    Save-FlowLogcat $File.BaseName
     # Slice 241 item 1: a failed flow is checked for an app crash / ANR, so the caller can stop instead of running the rest into the same dead app.
     $crash = @()
     $crashLog = ''
@@ -479,6 +523,7 @@ try {
     try {
         Assert-LeaseHeld $leaseOwner 'while this run waited for a free slot'  # the wait for the quiet machine can be long
         Clear-AnrDialog 'before the flows'
+        Confirm-EmulatorPreflight $maestro   # Slice 269
         Enable-DialogGuard   # Slice 253 item 1: every AVD; put back in the finally below (a leftover 1 from a killed run is cleared)
         $secondRun = Start-SecondHalf @($splitPlan.Second) $boot2
         $myNames = @($splitPlan.First)

@@ -61,6 +61,8 @@ const SHARED = 'src/ReadTheStupidText.Mobile.Shared/';
 const MAJOR_BUMP = 'major';
 /** The branch a local run compares against (Slice 180). */
 const DEFAULT_LOCAL_BASE = 'origin/main';
+/** Node's default 1 MB would fail an 18k-path diff with ENOBUFS (ClaudeSkills #166 raised it the same way; Slice 269). */
+const GIT_MAX_BUFFER = 256 * 1024 * 1024;
 const LINE_BREAK = String.fromCharCode(10);
 const NUL = String.fromCharCode(0);
 /** The repo this script lives in (.github/scripts/..): local mode reads this tree, not the caller's current directory. */
@@ -288,12 +290,12 @@ export function bumpKind(baseTag, newVersion, prefix) {
 }
 
 function git(args, cwd) {
-    return execFileSync('git', args, { encoding: 'utf8', cwd, stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    return execFileSync('git', args, { encoding: 'utf8', cwd, stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: GIT_MAX_BUFFER }).trim();
 }
 
 /** Like `git`, but the output is returned as it is (no trimming), for NUL-separated lists. */
 function gitRaw(args, cwd) {
-    return execFileSync('git', args, { encoding: 'utf8', cwd, stdio: ['ignore', 'pipe', 'ignore'] });
+    return execFileSync('git', args, { encoding: 'utf8', cwd, stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: GIT_MAX_BUFFER });
 }
 
 /** The newest published tag of a product merged into HEAD (HEAD's own tag included). */
