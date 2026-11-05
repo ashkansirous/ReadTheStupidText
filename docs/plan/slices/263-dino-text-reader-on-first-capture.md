@@ -1,5 +1,7 @@
 # Slice 263 — Dino: both apps about 50-60 MB; drop ML Kit translation from iPhone, download what is needed on first use
 
+**Dropped 2026-11-05 by the user: "lets keep ml kit for now."** Google ML Kit translation stays in the iPhone app (about 82 MB after Slice 261's starter removal; Android about 47 MB). Reason on record: Apple allows downloading data after install, never program code, so the ML Kit engine cannot be fetched later; the routes without it either lose Farsi (Apple Translation, Farsi unconfirmed, iOS 18 minimum) or need a 630 MB model download (M2M100). Reopen only if the user asks. The text below is the record.
+
 *Planned 2026-11-04. Rewritten 2026-11-04 ~21:05 to the user's actual goal* (the user: "what I asked you to change was to download whatever you need when you need the function the first time ... and the ml kit removal from IOS to bring the package size down to 50ish MB for both android and ios. I am fine with both being 60ish as well"). The earlier text below (an Android page-reader goal) was a misreading by the main session and is kept only as the record. Dino Reader, Android and iOS. Read The Stupid Text keeps working exactly as today.
 
 > **Park note (moved back to planned by the final feedback loop of night 2026-11-04-1441, user rule 2026-11-01):** night 2026-11-04-1441 wave 3 parked this slice because it waits for the user's choice of iPhone translation route (see *Choices for the user*). A wave that picks it up before the user has chosen does no build: it records "still waiting" here and moves on.
