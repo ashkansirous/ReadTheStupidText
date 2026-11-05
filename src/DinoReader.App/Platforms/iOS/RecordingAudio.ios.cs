@@ -85,7 +85,7 @@ internal sealed partial class RecordingPlayer
 				return;
 			}
 
-			IosAudioSession.Deactivate(this);
+			// Slice 270: ended and failed only queue the hand-off; the player is released after this delegate call has returned (disposing it in here throws ObjectDisposedException).
 			if (e.Status)
 			{
 				ended();
@@ -113,6 +113,8 @@ internal sealed partial class RecordingPlayer
 
 		player.Play();
 	}
+
+	private partial void PlatformPost(Action action) => CoreFoundation.DispatchQueue.MainQueue.DispatchAsync(action);
 
 	private partial void PlatformPause() => _player?.Pause();
 

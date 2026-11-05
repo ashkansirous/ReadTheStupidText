@@ -77,15 +77,13 @@ internal sealed partial class RecordingPlayer
 				e.Handled = true;
 				if (ReferenceEquals(_player, player))
 				{
-					ReleaseCurrent();
-					failed();
+					failed(); // Slice 270: only queues the hand-off; the player is released after this call has returned
 				}
 			};
 			player.Completion += (_, _) =>
 			{
 				if (ReferenceEquals(_player, player))
 				{
-					ReleaseCurrent();
 					ended();
 				}
 			};
@@ -140,6 +138,8 @@ internal sealed partial class RecordingPlayer
 	}
 
 	private partial void PlatformStop() => ReleaseCurrent();
+
+	private partial void PlatformPost(Action action) => new Android.OS.Handler(Android.OS.Looper.MainLooper!).Post(action);
 
 	// Frees the native player (its audio focus and file handle) once it has finished, failed or been stopped.
 	private void ReleaseCurrent()
