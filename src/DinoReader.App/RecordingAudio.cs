@@ -18,7 +18,7 @@ public interface IMicRecorder
 	Task CancelAsync();
 }
 
-/// <summary>Plays one recorded page (Slice 111). <see cref="Play"/> calls <c>ended</c> once when the file played to its end, or <c>failed</c> once when it cannot be played (a corrupt or empty file), never after <see cref="Stop"/> or a newer <see cref="Play"/>; either may be called off the main thread.</summary>
+/// <summary>Plays one recorded page (Slice 111). <see cref="Play"/> calls <c>ended</c> once when the file played to its end, or <c>failed</c> once when it cannot be played (a corrupt or empty file), never after <see cref="Stop"/> or a newer <see cref="Play"/>; both run after the native player was released, on the main loop (UI dispatcher on Windows), never inside the native finished call.</summary>
 public interface IRecordingPlayer
 {
 	void Play(string path, Action ended, Action failed);
@@ -89,17 +89,29 @@ internal sealed partial class RecordingPlayer : IRecordingPlayer
 
 	public void Play(string path, Action ended, Action failed) => Play(path, ended, failed, NormalRate);
 
+	private readonly PlayerHandOff _handOff = new(ex => AudioPackLog.Write($"player release failed: {ex.GetType().Name}"));
+
 	public void Play(string path, Action ended, Action failed, double rate)
 	{
 		Stop();
-		PlatformPlay(path, ended, failed, rate);
+		int generation = _handOff.Begin();
+		// Slice 270: the platform's finished call only queues these; the native player is released and the callback runs after that call has returned.
+		PlatformPlay(path, _handOff.Defer(generation, ended, PlatformPost, PlatformStop), _handOff.Defer(generation, failed, PlatformPost, PlatformStop), rate);
 	}
 
-	public void Pause() => PlatformPause();
+	// A clip that already reported its end or failure is finished: a Pause or Resume before the queued hand-off runs must not touch (restart) it.
+	public void Pause() => _handOff.RunUnlessFinishing(PlatformPause);
 
-	public void Resume() => PlatformResume();
+	public void Resume() => _handOff.RunUnlessFinishing(PlatformResume);
 
-	public void Stop() => PlatformStop();
+	public void Stop()
+	{
+		_handOff.Stop();
+		PlatformStop();
+	}
+
+	/// <summary>Runs <paramref name="action"/> on a later turn of the platform's loop, never inside the native call that raised it.</summary>
+	private partial void PlatformPost(Action action);
 
 	private partial void PlatformPlay(string path, Action ended, Action failed, double rate);
 

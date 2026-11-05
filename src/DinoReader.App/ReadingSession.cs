@@ -68,6 +68,7 @@ public sealed class ReadingSession
 	private StepRead? _stepRead;
 	private StepRead? _restartStep; // Slice 246 C2: a pre-made clip failed while the user had paused; its piece is read by the device voice when they resume
 	private bool _pendingAdvance; // a step ended while the user had paused: Resume takes the next one
+	private (int Id, int Page)? _recordingEndedWhilePaused; // a recorded page ended while the user had paused: Resume goes on from it
 	// Completed carries no id, so a speech step's end is accepted only for the run that was seen Playing (AnimalClipRuns.AcceptCompleted): _run counts the speech steps
 	// started (and Stop/StartAt), _playingRun is the run last seen Playing, and OnCompleted stamps _run when the signal is raised.
 	private int _run;
@@ -332,8 +333,15 @@ public sealed class ReadingSession
 		{
 			AppTrace.Reading(TraceLines.ReadingEvent.Resumed, TraceLines.ReadingReason.User);
 			RaiseIf(counted, ReadingEventKind.Resumed);
-			_player.Resume();
 			_recorded = RecordedPlay.Playing;
+			if (_recordingEndedWhilePaused is { } ended)
+			{
+				_recordingEndedWhilePaused = null;
+				ApplyRecordingEnded(ended.Id, ended.Page); // the clip had already ended: go on instead of resuming a finished player
+				return;
+			}
+
+			_player.Resume();
 			StateChanged?.Invoke(this, EventArgs.Empty);
 			return;
 		}
@@ -429,6 +437,7 @@ public sealed class ReadingSession
 		_stepRead = null;
 		_restartStep = null;
 		_pendingAdvance = false;
+		_recordingEndedWhilePaused = null; // a stale flag must not fire on a later Resume
 		if (_recorded != RecordedPlay.None)
 		{
 			_player.Stop();
@@ -459,6 +468,7 @@ public sealed class ReadingSession
 		}
 
 		_recorded = RecordedPlay.Playing;
+		_recordingEndedWhilePaused = null;
 		ClearPending();
 		return true;
 	}
@@ -468,6 +478,12 @@ public sealed class ReadingSession
 	{
 		if (id != _activeReadId || _recorded == RecordedPlay.None)
 		{
+			return;
+		}
+
+		if (_recorded == RecordedPlay.Paused)
+		{
+			_recordingEndedWhilePaused = (id, page); // Slice 270: Pause landed after the clip ended; the read holds here and Resume goes on
 			return;
 		}
 
@@ -815,6 +831,7 @@ public sealed class ReadingSession
 
 		if (!failed)
 		{
+			AudioPackLog.Write($"clip {index} ended, next"); // Slice 270: a crash report's log shows how far a book got
 			AdvanceStep(read.ReadId);
 			return;
 		}
