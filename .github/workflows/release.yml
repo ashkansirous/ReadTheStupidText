@@ -179,8 +179,7 @@ jobs:
           # A commit that cannot be read after 3 tries is reported as `lookup-failed`: it does not block (a lookup failure must never mean a 120-minute wait), and a warning names the run.
           group_of() {
             if [ "$2" = "workflow_dispatch" ]; then echo dispatch; return; fi
-            local try
-            for try in 1 2 3; do
+            for _ in 1 2 3; do
               if message=$(gh api "repos/${REPO}/commits/$3" --jq .commit.message 2>/dev/null); then
                 if grep -qiF '/fix/' <<<"$message"; then echo "fix-$1"; else echo push; fi
                 return
@@ -213,9 +212,9 @@ jobs:
               .[] | select(.number < $me and (.status == "queued" or .status == "in_progress" or .status == "waiting" or .status == "pending" or .status == "requested"))
                   | "\(.number) \(.event) \(.status) \(.headSha)"' <<<"$runs")
             blocking=""
-            while read -r number event status sha; do
+            while read -r number run_event status sha; do
               [ -z "$number" ] && continue
-              group=$(group_of "$number" "$event" "$sha")
+              group=$(group_of "$number" "$run_event" "$sha")
               if [ "$group" = "lookup-failed" ]; then
                 echo "::warning::Could not read the commit of older release run #${number} after 3 tries; treating it as not blocking."
               elif [ "$group" != "$MY_GROUP" ]; then
