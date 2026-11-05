@@ -1,6 +1,6 @@
 # Slice 269 — Leftovers from night 2026-11-04-1441 (checks that would have caught tonight's bugs, repo tools)
 
-*Parked: feedback loop, waits for the user (2026-11-05).* Found by the final feedback loop of night 2026-11-04-1441 ([note](../notes/2026-11-04-1441-feedback-loop.md)). Not built: the loop runs outside the implementation phase. Entry numbers are in the loop's digests (A = wave 1 and housekeeping 1, B = wave 2 and housekeeping 2, C = waves 3-4 and their housekeeping, D = the starter session f01c46e4).
+*Planned 2026-11-05 (user: "plan on 269 for the next wave"); was parked by the feedback loop the same morning.* Found by the final feedback loop of night 2026-11-04-1441 ([note](../notes/2026-11-04-1441-feedback-loop.md)). Not built: the loop runs outside the implementation phase. Entry numbers are in the loop's digests (A = wave 1 and housekeeping 1, B = wave 2 and housekeeping 2, C = waves 3-4 and their housekeeping, D = the starter session f01c46e4).
 
 **Touches:** `tests/ReadTheStupidText.Tests/**/AutomationIdAssignmentTests.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/Resources/Strings/**`, `tools/publish-store-books.mjs`, `tools/dino-starters.json`, `tools/emulator/run-flows.ps1`, `tools/emulator/**`, `tools/desktop-vm/**`, `.maestro/dino/**`, `.github/CLAUDE.md`, `docs/plan/slices/264-*.md`
 
