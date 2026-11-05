@@ -105,7 +105,6 @@ public static class StarterUpdate
             LanguageCasts = sameCast ? KeptLanguageCasts(stored, bundled) : bundled.LanguageCasts,
             PreferredMode = stored.PreferredMode,
             TranslateToMyLanguage = stored.TranslateToMyLanguage,
-            ShowOriginalText = stored.ShowOriginalText,
             AnimalSoundsOn = stored.AnimalSoundsOn,
         });
     }

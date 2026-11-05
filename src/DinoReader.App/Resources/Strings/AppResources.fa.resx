@@ -241,8 +241,6 @@
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>این کتاب</value></data>
-  <data name="Book_ShowOriginal" xml:space="preserve"><value>نمایش متن اصلی</value></data>
-  <data name="Book_ShowOriginalHint" xml:space="preserve"><value>کلمه‌های {0} را نشان بده. صدا همچنان به {1} می‌خواند.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>بازگشت به داستان</value></data>
   <!-- /Slice 110 -->
   <!-- Slice 111 -->

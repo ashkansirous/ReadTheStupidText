@@ -6,7 +6,7 @@ namespace DinoReader;
 
 /// <summary>
 /// A book's options sheet (Slice 110, mock frame 43; Slice 189, mock frame 85b): a white bottom sheet over the dimmed shelf, opened from the "⋯" on a book's cover in grown-up mode (the reading screen has no
-/// grown-ups button). The header names the book and where it came from. It holds the per-book "Show original text" switch (Decision 112) for a translated book, "Read with my voice" once a page is recorded
+/// grown-ups button). The header names the book and where it came from. It holds "Read with my voice" once a page is recorded
 /// (Slice 111, Decision 115), the Record and Cast pills, Edit pages (own books), Export (developer switch), "Remove from the shelf" and Done.
 /// It lives inside the shelf page rather than on the navigation stack, so leaving the app cannot strand it.
 /// </summary>
@@ -15,8 +15,8 @@ internal sealed class BookSheet : Grid
 	/// <summary>The "Read with my voice" row: how many pages are recorded, of how many, and the switch.</summary>
 	public sealed record VoiceOffer(int Recorded, int Pages, bool On);
 
-	/// <summary>What the sheet shows for one book: its name, where it came from, its cover, which rows apply and the two switches' states.</summary>
-	public sealed record Content(string Title, string OriginText, string? CoverImagePath, Color CoverFill, BookSheetPlan Plan, bool ShowOriginal, string OriginalHint, VoiceOffer? Voice);
+	/// <summary>What the sheet shows for one book: its name, where it came from, its cover, which rows apply and the voice switch's state.</summary>
+	public sealed record Content(string Title, string OriginText, string? CoverImagePath, Color CoverFill, BookSheetPlan Plan, VoiceOffer? Voice);
 
 	private const double SheetCorner = 28;
 	private const double CardCorner = 26;
@@ -55,9 +55,6 @@ internal sealed class BookSheet : Grid
 	private readonly Label _exportLabel = new();
 	private readonly Label _removeLabel = new();
 	private readonly Label _readNowLabel = new();
-	private readonly Label _hint = new() { FontSize = HintSize, LineHeight = 1.3, TextColor = DinoTokens.Get(DinoTokens.Body) };
-	private readonly ToggleSwitch _original = new();
-	private readonly Border _row = new();
 	private readonly Label _voiceHint = new() { FontSize = HintSize, LineHeight = 1.3, TextColor = DinoTokens.Get(DinoTokens.Body) };
 	private readonly ToggleSwitch _voice = new();
 	private readonly Border _voiceRow = new();
@@ -91,7 +88,6 @@ internal sealed class BookSheet : Grid
 		CastViews.AddTap(_sheet, () => Task.CompletedTask);
 		// No Done row (Slice 228): a tap outside or the labelled close button in the header closes the sheet; a swipe down is not used, it fought the scrolling rows.
 		Children.Add(_sheet);
-		_original.Toggled += (_, _) => OnToggled();
 		_voice.Toggled += (_, _) => OnVoiceToggled();
 		SizeChanged += (_, _) => FitToWindow(Width, Height);
 	}
@@ -104,7 +100,6 @@ internal sealed class BookSheet : Grid
 		_recordPill = RecordPill();
 		_castPill = CastPill();
 		ReadNowRow();
-		OriginalRow();
 		VoiceRow();
 		QuietRow(_editRow, _editLabel, () => EditRequested, "BookSheetEdit");
 		QuietRow(_exportRow, _exportLabel, () => ExportRequested, "BookSheetExport");
@@ -157,7 +152,7 @@ internal sealed class BookSheet : Grid
 		_thumb.IsVisible = true;
 		_title.FontSize = PhoneTitleSize;
 		_header.VerticalOptions = LayoutOptions.Fill;
-		foreach (View row in new View[] { _grab, _header, _readNowRow, _row, _voiceRow, _pills, _editRow, _exportRow, _removeRow })
+		foreach (View row in new View[] { _grab, _header, _readNowRow, _voiceRow, _pills, _editRow, _exportRow, _removeRow })
 		{
 			_sheetRows.Children.Add(row);
 		}
@@ -192,7 +187,7 @@ internal sealed class BookSheet : Grid
 			_cardRows.Children.Add(_header);
 		}
 
-		foreach (View row in new View[] { _readNowRow, _row, _voiceRow, _pills, _editRow, _exportRow, _removeRow })
+		foreach (View row in new View[] { _readNowRow, _voiceRow, _pills, _editRow, _exportRow, _removeRow })
 		{
 			_cardRows.Children.Add(row);
 		}
@@ -257,9 +252,6 @@ internal sealed class BookSheet : Grid
 		_removeRow.HeightRequest = pill;
 	}
 
-	/// <summary>Raised with the new state of "Show original text".</summary>
-	public event Func<bool, Task>? OriginalChanged;
-
 	/// <summary>Raised with the new state of "Read with my voice".</summary>
 	public event Func<bool, Task>? VoiceChanged;
 
@@ -290,13 +282,10 @@ internal sealed class BookSheet : Grid
 		_title.Text = content.Title;
 		_subtitle.Text = content.OriginText;
 		ShowThumb(content);
-		_hint.Text = content.OriginalHint;
-		_row.IsVisible = content.Plan.ShowOriginalText;
 		_voiceRow.IsVisible = content.Plan.ShowVoice && content.Voice is not null;
 		_editRow.IsVisible = content.Plan.ShowEditPages;
 		_exportRow.IsVisible = content.Plan.ShowExport;
 		_loading = true;
-		_original.IsOn = content.ShowOriginal;
 		_voice.IsOn = content.Voice?.On ?? false;
 		_loading = false;
 		_voiceHint.Text = content.Voice is null ? string.Empty : ReadingText.UseMyVoiceHint(content.Voice.Recorded, content.Voice.Pages);
@@ -366,14 +355,6 @@ internal sealed class BookSheet : Grid
 
 		Hide();
 		Dismissed?.Invoke();
-	}
-
-	private void OnToggled()
-	{
-		if (!_loading && OriginalChanged is { } changed)
-		{
-			_ = changed(_original.IsOn);
-		}
 	}
 
 	private void OnVoiceToggled()
@@ -554,7 +535,7 @@ internal sealed class BookSheet : Grid
 		return row;
 	}
 
-	// "Read with my voice" (frame 43): the same card as "Show original text", with the count of recorded pages under it.
+	// "Read with my voice" (frame 43): the same card style as the other sheet rows, with the count of recorded pages under it.
 	private Border VoiceRow()
 	{
 		var texts = new VerticalStackLayout
@@ -616,30 +597,6 @@ internal sealed class BookSheet : Grid
 		StrokeShape = new RoundRectangle { CornerRadius = PillHeight / 2 },
 		Content = content,
 	};
-
-	private Border OriginalRow()
-	{
-		var texts = new VerticalStackLayout
-		{
-			Spacing = 2,
-			VerticalOptions = LayoutOptions.Center,
-			Children = { new Label { Text = ReadingText.ShowOriginal, FontSize = 15, FontAttributes = FontAttributes.Bold }, _hint },
-		};
-		var grid = new Grid { ColumnSpacing = 12, ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
-		grid.Add(texts, 0);
-		_original.VerticalOptions = LayoutOptions.Center;
-		AutomationProperties.SetIsInAccessibleTree(_original, false);
-		grid.Add(_original, 1);
-		_row.BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
-		_row.StrokeThickness = 0;
-		_row.MinimumHeightRequest = RowHeight;
-		_row.Padding = new Thickness(16, 10);
-		_row.StrokeShape = new RoundRectangle { CornerRadius = RowCorner };
-		_row.Content = grid;
-		SemanticProperties.SetDescription(_row, ReadingText.ShowOriginal);
-		CastViews.AddTap(_row, () => { _original.IsOn = !_original.IsOn; return Task.CompletedTask; });
-		return _row;
-	}
 
 	private Border CastPill()
 	{

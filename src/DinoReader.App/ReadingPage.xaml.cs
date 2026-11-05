@@ -217,7 +217,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		CountOpen();
 	}
 
-	// A book that can only be read one way (a recorded book, "Show original text", an own book on Windows or without its pack) has no button and reads in the app
+	// A book that can only be read one way (a recorded book, an own book on Windows or without its pack) has no button and reads in the app
 	// language; otherwise the child's pick applies, as long as this book can be read in it.
 	private async Task RefreshLanguageButtonAsync()
 	{
@@ -228,7 +228,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		StoryLanguageSet set = StoryLanguages.Current();
 		var translator = _services.GetRequiredService<StoryTranslator>();
-		bool switchable = LanguagePick.BookSwitchable(set.HasChoice, story.ShowOriginalText, StoryRecordings.Count(story));
+		bool switchable = LanguagePick.BookSwitchable(set.HasChoice, StoryRecordings.Count(story));
 		_readable = switchable ? await ReadableLanguagesAsync(story, set, translator) : [];
 		_packStates = PackStates(set);
 		string effective = EffectiveLanguage(set);
@@ -273,7 +273,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		StoryLanguageSet set = StoryLanguages.Current();
 		var translator = _services.GetRequiredService<StoryTranslator>();
-		bool switchable = LanguagePick.BookSwitchable(set.HasChoice, story.ShowOriginalText, StoryRecordings.Count(story));
+		bool switchable = LanguagePick.BookSwitchable(set.HasChoice, StoryRecordings.Count(story));
 		IReadOnlyList<string> readable = switchable ? await ReadableLanguagesAsync(story, set, translator) : [];
 		if (!readable.SequenceEqual(_readable))
 		{
@@ -372,8 +372,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		}
 	}
 
-	// Slice 110, Decision 112: while the story is read in the grown-up's language the page shows the translation too, unless the
-	// grown-up chose "Show original text". The source shows at once and the translation replaces it when ready (one rebuild); it stays when
+	// Slice 110, Decision 112: while the story is read in the grown-up's language the page shows the translation too. The source shows at once and the translation replaces it when ready (one rebuild); it stays when
 	// there is nothing to translate or a language model is missing. A newer call supersedes an older one.
 	private async Task ShowStoryAsync()
 	{
@@ -402,7 +401,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		CancellationToken cancellation = RestartDisplayCancellation();
 		var translator = _services.GetRequiredService<StoryTranslator>();
 		string reading = _session.ReadingLanguage;
-		if (story.ShowOriginalText || !translator.Applies(story, reading))
+		if (!translator.Applies(story, reading))
 		{
 			ShowSource(story);
 			return;

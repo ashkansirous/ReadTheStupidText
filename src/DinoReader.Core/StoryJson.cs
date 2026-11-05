@@ -63,7 +63,6 @@ public static class StoryJson
             .Concat(BackCoverPage(s.BackCover)).ToList(),
         Cast = ToCastFiles(s.Cast),
         Translate = s.TranslateToMyLanguage,
-        ShowOriginal = s.ShowOriginalText ? true : null,
         Recordings = ToRecordingFiles(s.Recordings, s.Pages.Count),
         UseRecordings = s.UseRecordings && s.Recordings is { Count: > 0 } ? true : null,
         AnimalSounds = s.AnimalSoundsOn ? null : false,
@@ -88,7 +87,7 @@ public static class StoryJson
             f.Cast.Select(ToMember).ToList(),
             f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId ?? string.Empty, ParseMode(f.PreferredMode, f.WordsOverPictures), f.Translate,
             f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null, CleanTranslations(f.Translations),
-            CleanLanguageCasts(f.LanguageCasts, f.Language), f.ShowOriginal == true,
+            CleanLanguageCasts(f.LanguageCasts, f.Language),
             CleanRecordings(f.Recordings, storyPages.Count, f.Language), f.UseRecordings == true, f.AnimalSounds != false,
             f.TextInPictures == true, backCover);
     }
@@ -383,9 +382,6 @@ public static class StoryJson
         public List<PageFile> Pages { get; set; } = [];
         public List<CastFile> Cast { get; set; } = [];
         public bool Translate { get; set; }
-
-        /// <summary>The grown-up's per-story "Show original text" switch (Slice 110); absent when off.</summary>
-        public bool? ShowOriginal { get; set; }
 
         /// <summary>The parent's page recordings (Slice 111): the file of each is <see cref="StoryRecordings.FileNameOf"/>; absent when there are none.</summary>
         public List<RecordingFile>? Recordings { get; set; }

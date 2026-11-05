@@ -96,8 +96,6 @@ public static class AppResources
 	public static string Storyteller_Failed => Get();
 	public static string Storyteller_TryAgain => Get();
 	public static string Book_Title => Get();
-	public static string Book_ShowOriginal => Get();
-	public static string Book_ShowOriginalHint => Get();
 	public static string Book_Back => Get();
 	public static string Rec_Title => Get();
 	public static string Rec_Script => Get();
