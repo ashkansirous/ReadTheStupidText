@@ -59,6 +59,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 	protected override void OnSizeAllocated(double width, double height)
 	{
 		base.OnSizeAllocated(width, height);
+		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height); // Slice 235 part C: the Windows window picks its shape through the seam, phones and tablets pass through
 		if (width <= 0 || height <= 0 || (width == _windowSize.Width && height == _windowSize.Height))
 		{
 			return;

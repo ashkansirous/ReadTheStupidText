@@ -12,8 +12,28 @@ internal static class WindowTrace
 
 	internal const int MaxLines = 200;
 
+	private static readonly TimeSpan SampleGap = TimeSpan.FromSeconds(1);
+
 	private static readonly object Gate = new();
+	private static readonly Dictionary<string, DateTime> LastSampled = [];
 	private static bool _trimmed;
+
+	/// <summary>For lines a mouse sweep or a held arrow key can make hundreds of (hover, focus): the same message is written at most once a second, so the UI thread does not hit the disk on every event.</summary>
+	internal static void WriteSampled(string message)
+	{
+		DateTime now = DateTime.UtcNow;
+		lock (Gate)
+		{
+			if (LastSampled.TryGetValue(message, out DateTime last) && now - last < SampleGap)
+			{
+				return;
+			}
+
+			LastSampled[message] = now;
+		}
+
+		Write(message);
+	}
 
 	internal static void Write(string message)
 	{
@@ -33,7 +53,7 @@ internal static class WindowTrace
 		}
 	}
 
-	// One append per write; the file is cut to the last MaxLines only on the first write of a run.
+	// One append per write; the file is cut to the last MaxLines only on the first write of a run (a mid-run cut would drop lines the VM checks count). WriteSampled keeps a long session's growth small.
 	private static void TrimOnce(string path)
 	{
 		if (_trimmed)

@@ -266,7 +266,7 @@ public sealed class StoryLanguageButton : Border
 /// The list the language button opens (Slice 173, mock frame 88): one 56 px row per story language with its flag and its name in its own script, the current one
 /// tinted. A tap outside, or back, closes it without a pick. It is an overlay on the host page's own root grid (not a modal), so its card shares the page's coordinates and sits right under the button on every platform.
 /// </summary>
-public sealed class StoryLanguageMenu : Grid
+public sealed class StoryLanguageMenu : Grid, IPageOverlay
 {
 	private const int OverlayZ = 50;
 	private const double CardWidth = 200;

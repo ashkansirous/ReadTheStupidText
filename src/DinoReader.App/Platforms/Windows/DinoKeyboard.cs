@@ -51,6 +51,7 @@ internal sealed class DinoKeyboard
 	{
 		root.PreviewKeyDown += OnKeyDown;
 		root.PreviewKeyUp += OnKeyUp;
+		DinoFocusRing.Attach(root); // Slice 235 part C: the focus ring and arrow-key focus moves share this one root hook
 		_window.Deactivated += (_, _) => ReleaseHeldKeys();
 		root.LostFocus += (sender, _) =>
 		{
@@ -70,9 +71,9 @@ internal sealed class DinoKeyboard
 			return;
 		}
 
-		if (e.KeyStatus.WasKeyDown && (key is DinoKey.Space or DinoKey.Enter or DinoKey.Escape) && _used.Contains(e.Key))
+		if (e.KeyStatus.WasKeyDown && IsOneShotKey(key) && _used.Contains(e.Key))
 		{
-			e.Handled = true; // Windows repeats a held key: a repeat of Space, Enter or Esc never acts a second time (the gate hold must not restart, a held Esc must not pop several pages)
+			e.Handled = true; // Windows repeats a held key: a repeat of Space, Enter, Esc (or Right on Settings, which opens a row) never acts a second time (the gate hold must not restart, a held Esc must not pop several pages)
 			return;
 		}
 
@@ -88,7 +89,15 @@ internal sealed class DinoKeyboard
 			e.Handled = true;
 		}
 
-		WindowTrace.Write($"Dino keyboard: {e.Key} {(used ? "used" : "not used")} ({DescribeTarget()})");
+		string line = $"Dino keyboard: {e.Key} {(used ? "used" : "not used")} ({DescribeTarget()})";
+		if (key is DinoKey.Up or DinoKey.Down)
+		{
+			WindowTrace.WriteSampled(line); // a held arrow repeats dozens of times a second
+		}
+		else
+		{
+			WindowTrace.Write(line);
+		}
 	}
 
 	// One short line of where a key went: the page DinoKeyTargets.Route picked and the screen it reports (the VM check reads this when a key it sent is not used).
@@ -98,6 +107,9 @@ internal sealed class DinoKeyboard
 		string screen = top is IDinoKeyTarget target ? target.Screen.ToString() : "no target";
 		return $"{top?.GetType().Name ?? "no page"}, {screen}";
 	}
+
+	private bool IsOneShotKey(DinoKey key) =>
+		key is DinoKey.Space or DinoKey.Enter or DinoKey.Escape || (key == DinoKey.Right && DinoKeyTargets.TopPage(_window) is SettingsPage);
 
 	private static bool HasShortcutModifier(DinoKey key) =>
 		IsDown(VirtualKey.Control) || IsDown(VirtualKey.Menu) || (DinoKeyMap.DigitOf(key) is not null && IsDown(VirtualKey.Shift));

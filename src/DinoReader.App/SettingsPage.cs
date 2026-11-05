@@ -72,6 +72,7 @@ public abstract class SettingsSubPage : ContentPage, IGrownUpPage
 	protected override void OnSizeAllocated(double width, double height)
 	{
 		base.OnSizeAllocated(width, height);
+		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height);
 		if (width > 0 && height > 0)
 		{
 			_root.Margin = new Thickness(LandscapeLayout.IsLandscape(width, height) ? LandscapeLayout.SidewaysInset : 0, 0, 0, 0);
@@ -130,8 +131,52 @@ public enum SettingsSection
 /// to grown-up mode. "Reading" (Language, Narrator voice, Reading speed, Animal sounds) and "This phone" (Backup, Usage counts, About &amp; updates), each row
 /// showing its current value and opening its own page. The store is never a row (Decision 167). The Story languages row (Slice 173) sits under Language.
 /// </summary>
-public sealed class SettingsPage : SettingsSubPage
+public sealed class SettingsPage : SettingsSubPage, IDinoKeyTarget
 {
+	// Slice 235 part C (mock Batch 46 frame 157): on the Windows window the Right arrow opens the focused row in the right pane, like Enter does. Up and down move the focus by the
+	// window's own arrow-key navigation. Esc is not used here (DinoKeyTargets.Route pops the page for it). Nothing reaches this page off Windows.
+	DinoScreen IDinoKeyTarget.Screen => DinoScreen.Settings;
+
+	bool IDinoKeyTarget.Handle(DinoKeyAction action, DinoKey key) => action == DinoKeyAction.OpenRow && OpenFocusedRow();
+
+	// Opens the focused row by invoking it like a click; false when the focus is not on a button of this page, so the arrow goes on to the focused control.
+	private bool OpenFocusedRow()
+	{
+#if WINDOWS
+		if (Handler?.PlatformView is Microsoft.UI.Xaml.FrameworkElement { XamlRoot: { } root }
+			&& Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root) is Microsoft.UI.Xaml.Controls.Button { IsEnabled: true } button
+			&& IsRowButton(button)
+			&& new Microsoft.UI.Xaml.Automation.Peers.ButtonAutomationPeer(button) is { } peer)
+		{
+			WindowTrace.Write("Dino keyboard: the Right arrow opened a Settings row");
+			peer.Invoke();
+			return true;
+		}
+#endif
+		return false;
+	}
+
+#if WINDOWS
+	// Only a Settings row opens with Right; the back button and any other button on the page are left to the arrow (which then moves the focus).
+	private bool IsRowButton(Microsoft.UI.Xaml.Controls.Button focused) => RowButtonsUnder(this).Any(row => ReferenceEquals(row.Handler?.PlatformView, focused));
+
+	private static IEnumerable<RowButton> RowButtonsUnder(IVisualTreeElement element)
+	{
+		foreach (IVisualTreeElement child in element.GetVisualChildren())
+		{
+			if (child is RowButton row)
+			{
+				yield return row;
+			}
+
+			foreach (RowButton nested in RowButtonsUnder(child))
+			{
+				yield return nested;
+			}
+		}
+	}
+#endif
+
 	private const string CodeSeparator = ", ";
 	private const int SummaryLanguages = 2;
 	private const string ReadingSpeedRowId = "SettingsReadingSpeedRow";
@@ -229,6 +274,7 @@ public sealed class SettingsPage : SettingsSubPage
 	protected override void OnSizeAllocated(double width, double height)
 	{
 		base.OnSizeAllocated(width, height);
+		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height);
 		if (width <= 0 || height <= 0 || (width == _windowSize.Width && height == _windowSize.Height))
 		{
 			return;

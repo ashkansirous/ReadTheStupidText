@@ -18,10 +18,28 @@ internal static class DinoCursor
 
 	public static void Set(Microsoft.Maui.Controls.VisualElement view, DinoCursorShape shape)
 	{
-		if (view.Handler?.PlatformView is UIElement element && CursorProperty is not null)
+		if (view.Handler?.PlatformView is UIElement element)
 		{
-			CursorProperty.SetValue(element, CursorFor(shape));
+			Set(element, shape);
 		}
+	}
+
+	/// <summary>The same on a native element, for containers the page does not own as MAUI views (the shelf's native list items).</summary>
+	public static void Set(UIElement element, DinoCursorShape shape)
+	{
+		CursorProperty?.SetValue(element, CursorFor(shape));
+	}
+
+	/// <summary>Shows the open hand over <paramref name="view"/> now, or as soon as it has a native view (Slice 235 part C: buttons).</summary>
+	public static void UseOpenHand(Microsoft.Maui.Controls.VisualElement view)
+	{
+		if (view.Handler?.PlatformView is UIElement)
+		{
+			Set(view, DinoCursorShape.OpenHand);
+			return;
+		}
+
+		view.HandlerChanged += (_, _) => Set(view, DinoCursorShape.OpenHand);
 	}
 
 	// The attribute keeps the protected property when the app is trimmed.

@@ -215,6 +215,7 @@
   <data name="Key_Left" xml:space="preserve"><value>Pijl-links</value></data>
   <data name="Key_Right" xml:space="preserve"><value>Pijl-rechts</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Speed_SubWindows" xml:space="preserve"><value>Langzamer is makkelijker voor de kleintjes - wijzig met de pijltjes links en rechts</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Opnieuw lezen</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Alleen volwassenen zien dit. De kast van je kind is één klik weg.</value></data>
   <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Geen verbinding. Voorlezen met de stem van de telefoon. Klik om de download van de stem opnieuw te proberen.</value></data>

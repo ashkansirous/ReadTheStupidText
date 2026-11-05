@@ -213,6 +213,7 @@
   <data name="Key_Left" xml:space="preserve"><value>Flecha izquierda</value></data>
   <data name="Key_Right" xml:space="preserve"><value>Flecha derecha</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Speed_SubWindows" xml:space="preserve"><value>Más lento es más fácil para los pequeños - cambia con las flechas izquierda y derecha</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Leer otra vez</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Solo los adultos ven esto. La estantería de tu hijo está a un clic.</value></data>
   <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Sin conexión. Se lee con la voz del teléfono. Haz clic para reintentar la descarga de la voz.</value></data>

@@ -26,7 +26,16 @@ public static class AppResources
 	public static void UseCulture(CultureInfo culture) => _culture = culture;
 
 	/// <summary>The string for <paramref name="key"/> in the app culture, falling back to English.</summary>
-	public static string Get([CallerMemberName] string key = "") => For(UseClickWording && ClickWorded.Contains(key) ? key + ClickSuffix : key, _culture);
+	public static string Get([CallerMemberName] string key = "") => For(UseClickWording ? DesktopKey(key) : key, _culture);
+
+	// On the Windows head a worded-for-desktop string is read from its twin: "...Click" for the tap hints, "...Windows" for a hint that names the keyboard (Slice 235 part C).
+	private static string DesktopKey(string key) =>
+		ClickWorded.Contains(key) ? key + ClickSuffix : KeyboardWorded.Contains(key) ? key + KeyboardSuffix : key;
+
+	private const string KeyboardSuffix = "Windows";
+
+	// The strings that name the keyboard at a desktop window and have a "...Windows" twin (Speed_Sub: "left and right arrows to change").
+	private static readonly HashSet<string> KeyboardWorded = [nameof(Speed_Sub)];
 
 	/// <summary>
 	/// True on the Windows head (set once at start-up, Slice 235 part B): a few hints say "Tap" on a phone and "Click" at a desktop window. Each has a second string named
@@ -331,6 +340,7 @@ public static class AppResources
 	public static string Key_Left => Get();
 	public static string Key_Right => Get();
 	public static string Key_Esc => Get();
+	public static string Speed_SubWindows => Get();
 	public static string Reading_ReadAgain => Get();
 	public static string Gate_SumQuestion => Get();
 	public static string Story_Add => Get();

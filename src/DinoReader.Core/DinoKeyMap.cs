@@ -20,6 +20,8 @@ public enum DinoKey
 	Digit7,
 	Digit8,
 	Digit9,
+
+	/// <summary>The vertical arrows: Settings (Slice 235 part C) and the reorder mode (Slice 264) use them.</summary>
 	Up,
 	Down,
 }
@@ -34,6 +36,9 @@ public enum DinoScreen
 	Gate,
 	Sheet,
 	Reorder, // Slice 264: the shelf's reorder mode
+
+	/// <summary>The Settings list (Slice 235 part C, frame 157): Right opens the focused row in the right pane.</summary>
+	Settings,
 }
 
 /// <summary>What a key press asks the screen to do.</summary>
@@ -52,6 +57,7 @@ public enum DinoKeyAction
 	GateErase,
 	GateSubmit,
 	SheetActivate,
+	OpenRow,
 	ReorderCancel,
 	ReorderDone,
 	ReorderToggle,
@@ -92,6 +98,7 @@ public static class DinoKeyMap
 			DinoScreen.ReadingBackCover => OnReading(key, backCover: true),
 			DinoScreen.Gate => OnGate(key),
 			DinoScreen.Sheet => key is DinoKey.Enter or DinoKey.Space ? DinoKeyAction.SheetActivate : DinoKeyAction.None,
+			DinoScreen.Settings => key == DinoKey.Right ? DinoKeyAction.OpenRow : DinoKeyAction.None,
 			DinoScreen.Reorder => OnReorder(key),
 			_ => DinoKeyAction.None,
 		};

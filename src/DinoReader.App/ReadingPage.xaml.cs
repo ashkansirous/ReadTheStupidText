@@ -77,6 +77,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	{
 		InitializeComponent();
 		DesktopTips.Set(BackButton, AppResources.Common_Back, DinoKey.Escape); // Slice 235 part B: the tooltip names the key (a no-op off Windows)
+		DesktopTips.Hover(BackButton); // Slice 235 part C: hand and one-step darker fill under the mouse
 		_usage = usage;
 		_session = session;
 		_library = library;
@@ -668,6 +669,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	protected override void OnSizeAllocated(double width, double height)
 	{
 		base.OnSizeAllocated(width, height);
+		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height); // Slice 235 part C: the Windows window picks its shape through the seam, phones and tablets pass through
 		_layoutSize = new Size(width, height);
 		UpdateHeaderLayout(width, height);
 		FitOverlayTransport();
@@ -677,11 +679,13 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 	private ReadingLayout LayoutFor(double width, double height, ReadingMode mode)
 	{
+		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height); // the same size the page was allocated, whichever caller asks
 		return ReadingLayoutRules.For(width, height, mode, PictureTextBook.IsPictureTextBook(_shownPages));
 	}
 
 	private void UpdateHeaderLayout(double width, double height)
 	{
+		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height);
 		ReadingLayout kind = LayoutFor(width, height);
 		bool rail = kind is not (ReadingLayout.Upright or ReadingLayout.Stacked) && LandscapeLayout.ReadingControls(height) == ControlsPlacement.Rail;
 		DeviceSize size = LandscapeLayout.SizeOf(width, height); // the surface margins depend on the size class too (a window resized across 600 dp)

@@ -114,6 +114,7 @@ public sealed class ModeSwitch : Border
 		SemanticProperties.SetDescription(cell, active ? $"{label}{DescriptionSeparator}{ReadingText.ModeSelected}" : label);
 		DesktopTips.Set(cell, label); // Slice 235 part B: a Windows tooltip, no key (the modes have none)
 		cell.GestureRecognizers.Add(Tap(mode));
+		DesktopTips.Hover(cell); // Slice 235 part C: hand and hover fill (Windows only)
 		return cell;
 	}
 

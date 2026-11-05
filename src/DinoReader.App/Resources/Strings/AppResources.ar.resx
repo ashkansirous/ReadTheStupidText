@@ -213,6 +213,7 @@
   <data name="Key_Left" xml:space="preserve"><value>السهم الأيسر</value></data>
   <data name="Key_Right" xml:space="preserve"><value>السهم الأيمن</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Speed_SubWindows" xml:space="preserve"><value>الأبطأ أسهل على الصغار - استخدم السهمين الأيسر والأيمن للتغيير</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>اقرأ مرة أخرى</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>هذا للكبار فقط. رف طفلك على بُعد نقرة واحدة.</value></data>
   <data name="PackStatus_OfflineClick" xml:space="preserve"><value>لا يوجد اتصال. تتم القراءة بصوت الهاتف. انقر لإعادة محاولة تنزيل الصوت.</value></data>

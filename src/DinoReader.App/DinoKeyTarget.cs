@@ -82,8 +82,19 @@ internal static class DinoKeyTargets
 		}
 
 		DinoKeyAction action = DinoKeyMap.Resolve(key, target.Screen, textFieldFocused, keyDown);
-		return action != DinoKeyAction.None && target.Handle(action, key);
+		if (action == DinoKeyAction.None)
+		{
+			return false;
+		}
+
+		// A target that does not use Esc (Settings, which is a target only for its Right arrow) still goes back one page, as every non-target page does.
+		return target.Handle(action, key) || (action == DinoKeyAction.Back && top is SettingsPage && PopOne(top));
 	}
+}
+
+/// <summary>A view laid over a page's root grid while it is open (a sheet, a menu, a picker). A page asks whether any of them is visible before it lets the arrow keys move the focus (Slice 235 part C, Windows).</summary>
+internal interface IPageOverlay
+{
 }
 
 /// <summary>Desktop-only hints (Slice 235 part B): tooltips with the key in brackets. Every call is a no-op off Windows, so phones and tablets keep what they have.</summary>
@@ -103,6 +114,99 @@ internal static class DesktopTips
 		}
 
 		ToolTipProperties.SetText(element, key is { } shortcut ? string.Format(AppResources.Culture, WithKey, text, KeyName(shortcut)) : text);
+	}
+
+	// Mock Batch 46 frame 159: an icon button darkens one step under the pointer (#ECE7FF to #DCD5FF; from no fill it takes the first step).
+	private static readonly Color HoverFromNothing = Color.FromArgb("#ECE7FF");
+	private const float LightFillLuminosity = 0.5f;
+	private const float HoverStep = 0.07f;
+
+	// One step from the button's own fill (a coral Play stays coral): a light fill gets a little darker, a dark one a little lighter.
+	private static Color OneStepFrom(Color? fill)
+	{
+		if (fill is null || fill.Alpha == 0)
+		{
+			return HoverFromNothing;
+		}
+
+		float luminosity = fill.GetLuminosity();
+		return fill.WithLuminosity(Math.Clamp(luminosity + (luminosity > LightFillLuminosity ? -HoverStep : HoverStep), 0f, 1f));
+	}
+
+	/// <summary>
+	/// Slice 235 part C: the pointer is a hand over <paramref name="button"/> and its fill darkens one step while the mouse is over it. A no-op off Windows, so touch screens keep what they have.
+	/// The resting fill is read when the pointer arrives, so a fill the page changes in between (a selected state) is put back as it was.
+	/// </summary>
+	public static void Hover(Border button)
+	{
+		if (!IsWindows)
+		{
+			return;
+		}
+
+		bool hovering = false;
+		Color? restColor = null; // the button's own BackgroundColor, null included: put back as it was
+		Brush? restBrush = null; // or its own Background brush, put back as the same object
+		SolidColorBrush? ourBrush = null; // set only when the rest fill was a brush
+		Color? tint = null;
+		void Clear()
+		{
+			if (!hovering)
+			{
+				return;
+			}
+
+			hovering = false;
+			// A fill the page set while the pointer was over the button (a theme change, the Play button's state) is not ours to undo.
+			if (ourBrush is not null)
+			{
+				if (ReferenceEquals(button.Background, ourBrush))
+				{
+					button.Background = restBrush;
+				}
+			}
+			else if (button.BackgroundColor is { } shown && tint is { } ours && shown.Equals(ours))
+			{
+				button.BackgroundColor = restColor;
+			}
+
+			ourBrush = null;
+		}
+
+		var pointer = new PointerGestureRecognizer();
+		pointer.PointerEntered += (_, _) =>
+		{
+			if (hovering)
+			{
+				return; // a second Enter without an Exit: the first one saved the real fill
+			}
+
+			if (button.BackgroundColor is null && button.Background is not null and not SolidColorBrush)
+			{
+				return; // a gradient or image fill is not ours to flatten: no tint
+			}
+
+			hovering = true;
+			restColor = button.BackgroundColor;
+			restBrush = button.Background;
+			bool fillIsBrush = restColor is null && restBrush is not null;
+			tint = OneStepFrom(restColor ?? (restBrush as SolidColorBrush)?.Color);
+			if (fillIsBrush)
+			{
+				ourBrush = new SolidColorBrush(tint);
+				button.Background = ourBrush;
+			}
+			else
+			{
+				button.BackgroundColor = tint;
+			}
+		};
+		pointer.PointerExited += (_, _) => Clear();
+		button.GestureRecognizers.Add(pointer);
+		button.Unloaded += (_, _) => Clear();
+#if WINDOWS
+		DinoCursor.UseOpenHand(button);
+#endif
 	}
 
 	/// <summary>The key as written in the tooltip, in the app language.</summary>

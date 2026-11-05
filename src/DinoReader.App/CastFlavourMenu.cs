@@ -9,7 +9,7 @@ namespace DinoReader;
 /// A character a book already uses shows that story character after its words, and may still be picked. Like the merge sheet it lives inside the cast page,
 /// so leaving the app cannot strand it. (This file replaced the flavour menu of Slice 113: a flavour is now part of a character.)
 /// </summary>
-internal sealed class CastCharacterPicker : Grid
+internal sealed class CastCharacterPicker : Grid, IPageOverlay
 {
 	private const double SheetMaxHeight = 640;
 	private const double CardVerticalMargin = 80;

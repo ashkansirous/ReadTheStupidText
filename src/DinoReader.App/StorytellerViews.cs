@@ -201,7 +201,7 @@ internal sealed class StorytellerStatusLine : ContentView
 /// The one-time "Storyteller voices are ready" sheet (Slice 115, mock frame 51): a green check, the title, the re-cast line, a narrator row whose
 /// play button speaks the English narrator, and OK. It lives inside the gallery over the dimmed grid and opens only in grown-up mode.
 /// </summary>
-internal sealed class StorytellerReadySheet : Grid
+internal sealed class StorytellerReadySheet : Grid, IPageOverlay
 {
 	private const double SheetCorner = 28;
 	private const double BadgeSize = 56;

@@ -215,6 +215,7 @@
   <data name="Key_Left" xml:space="preserve"><value>Venstrepil</value></data>
   <data name="Key_Right" xml:space="preserve"><value>Højrepil</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Speed_SubWindows" xml:space="preserve"><value>Langsommere er lettere for de små - skift med venstre og højre piletast</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Læs igen</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Kun voksne kan se dette. Dit barns hylde er kun et klik væk.</value></data>
   <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Ingen forbindelse. Læser med telefonens stemme. Klik for at prøve at hente stemmen igen.</value></data>

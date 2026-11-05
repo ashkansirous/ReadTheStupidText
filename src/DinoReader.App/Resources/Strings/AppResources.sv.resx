@@ -215,6 +215,7 @@
   <data name="Key_Left" xml:space="preserve"><value>Vänsterpil</value></data>
   <data name="Key_Right" xml:space="preserve"><value>Högerpil</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <data name="Speed_SubWindows" xml:space="preserve"><value>Långsammare är lättare för de små - ändra med vänster- och högerpil</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Läs igen</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Bara vuxna ser det här. Barnets hylla är ett klick bort.</value></data>
   <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Ingen anslutning. Läser med telefonens röst. Klicka för att försöka ladda ned rösten igen.</value></data>

@@ -216,6 +216,8 @@
   <data name="Key_Left" xml:space="preserve"><value>Left arrow</value></data>
   <data name="Key_Right" xml:space="preserve"><value>Right arrow</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>
+  <!-- Slice 235 part C: the reading speed card's hint on a desktop window (arrow keys change the slider). -->
+  <data name="Speed_SubWindows" xml:space="preserve"><value>Slower is easier for little ones - left and right arrows to change</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Read again</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Only grown-ups see this. Your child’s shelf is one click away.</value></data>
   <data name="PackStatus_OfflineClick" xml:space="preserve"><value>No connection. Reading with the phone voice. Click to retry the voice download.</value></data>
