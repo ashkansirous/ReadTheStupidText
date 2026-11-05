@@ -1,8 +1,8 @@
 # Slice 270 — Dino iPhone crash: the audio player is thrown away inside its own "finished playing" call
 
-*Planned 2026-11-05.* Bug fix, Dino Reader, iOS (Android checked for the same pattern). Reported by the user on 2026-11-05: "I just tried the app on my iphone and it crashed multiple times. I sent the crash report."
+*In progress (wave 2026-11-05), draft PR.* Bug fix, Dino Reader, iOS (Android checked for the same pattern). Reported by the user on 2026-11-05: "I just tried the app on my iphone and it crashed multiple times. I sent the crash report."
 
-**Touches:** `src/DinoReader.App/Platforms/iOS/RecordingAudio.ios.cs`, `src/DinoReader.App/RecordingAudio.cs`, `src/DinoReader.App/Platforms/Android/RecordingAudio.android.cs`, `src/DinoReader.App/ReadingSession.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/270-dino-ios-player-disposed-in-finished-callback.md`.
+**Touches:** `src/DinoReader.App/Platforms/iOS/RecordingAudio.ios.cs`, `src/DinoReader.App/RecordingAudio.cs`, `src/DinoReader.App/Platforms/Android/RecordingAudio.android.cs`, `src/DinoReader.App/Platforms/Windows/RecordingAudio.windows.cs`, `src/DinoReader.App/ReadingSession.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/270-dino-ios-player-disposed-in-finished-callback.md`.
 
 ## What the crash reports say (read 2026-11-05 with `node tools/crashes/pull-crashes.mjs --app dino --from 2026-11-05`)
 
