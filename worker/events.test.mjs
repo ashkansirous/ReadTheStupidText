@@ -709,3 +709,28 @@ test("a session in order: the Slice 248 sequence reads read_started, book_left, 
   await handleEvents(post({ events }), env, on);
   assert.deepEqual(env.points.map((p) => [p.blobs[0], p.blobs[8], p.blobs[15], p.doubles[1]]), names.map(([name, detail], index) => [name, detail ?? "", SESSION, index + 1]));
 });
+
+// ---- Which voice a read used and how a pack download went (Slice 267) -------------------------------------------------------
+
+const VOICE_DETAILS = ["premade", "device:no_pack", "device:pack_failed", "device:text_mismatch", "device:clip_missing"];
+const PACK_DETAILS = ["started", "done", "failed:network", "failed:size", "failed:unzip", "failed:clip", "failed:missing", "failed:storage"];
+
+test("read_voice takes exactly the closed voice details for a shelf or an own book and drops any other", () => {
+  for (const detail of VOICE_DETAILS) {
+    assert.equal(parseEvent({ ...shelfEvent, name: "read_voice", detail })?.detail, detail, detail);
+    assert.ok(parseEvent({ ...ownEvent, name: "read_voice", detail }), `${detail} own`);
+  }
+  for (const bad of ["", "device", "device:", "device:other", "premade:1", "Premade", "device:no_pack:x", "a title", "x".repeat(40)]) {
+    assert.equal(parseEvent({ ...shelfEvent, name: "read_voice", detail: bad }), null, bad);
+  }
+  assert.equal(parseEvent({ ...shelfEvent, name: "read_voice" }), null);
+  assert.equal(parseEvent({ ...shelfEvent, name: "read_voice", book: "none", source: "none", detail: "premade" }), null);
+});
+
+test("audio_pack_download takes exactly the closed outcomes for a shelf book and drops any other", () => {
+  for (const detail of PACK_DETAILS) assert.equal(parseEvent({ ...shelfEvent, name: "audio_pack_download", detail })?.detail, detail, detail);
+  for (const bad of ["", "failed", "failed:", "failed:disk", "done:1", "Started", "file.zip", "x".repeat(40)]) {
+    assert.equal(parseEvent({ ...shelfEvent, name: "audio_pack_download", detail: bad }), null, bad);
+  }
+  assert.equal(parseEvent({ ...ownEvent, name: "audio_pack_download", detail: "done" }), null);
+});

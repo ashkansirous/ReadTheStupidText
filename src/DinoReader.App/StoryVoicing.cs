@@ -69,13 +69,33 @@ public sealed class StoryVoicing
 	/// that must not block the UI. The story is translated afterwards when it is set to be (Slice 66).
 	/// </summary>
 	public async Task<IReadOnlyList<VoicedSegment>> VoiceAsync(
-		Story story, string reading, int fromPosition = 0, CancellationToken cancellationToken = default, Action? translationSkipped = null)
+		Story story, string reading, int fromPosition = 0, CancellationToken cancellationToken = default, Action? translationSkipped = null, VoiceWhy? why = null)
+	{
+		return await VoiceCoreAsync(story, reading, fromPosition, cancellationToken, translationSkipped, why ?? new VoiceWhy());
+	}
+
+	/// <summary>Slice 267: why a read found no usable pre-made audio. One per read, filled while that read is voiced and passed to <see cref="ReportVoiceUsed"/>, so overlapping reads never share it.</summary>
+	public sealed class VoiceWhy
+	{
+		public DeviceVoiceReason Reason { get; set; } = DeviceVoiceReason.NoPack;
+	}
+
+	/// <summary>One line in the rolling log, and the <see cref="AudioPackUsage.ReadVoice"/> detail (<c>premade</c>, or <c>device:&lt;reason&gt;</c>) for the caller to count: which voice, and when it is the device voice, why. The caller calls it once a read has actually started.</summary>
+	public string ReportVoiceUsed(Story story, IReadOnlyList<VoicedSegment> segments, VoiceWhy why)
+	{
+		string detail = AudioPackUsage.ReadVoice(segments.Any(s => PremadeClipMarker.PathOf(s) is not null), why.Reason);
+		AudioPackLog.Write($"{story.SourceId ?? UsageSource.Own}: read voice {detail}");
+		return detail;
+	}
+
+	private async Task<IReadOnlyList<VoicedSegment>> VoiceCoreAsync(
+		Story story, string reading, int fromPosition, CancellationToken cancellationToken, Action? translationSkipped, VoiceWhy why)
 	{
 		bool wholePieces = _translator.UsesBundledTable(story, reading);
 		Prepared prepared = await Task.Run(() => fromPosition == 0 ? PrepareShared(story, wholePieces) : Prepare(story, fromPosition, wholePieces), cancellationToken);
 		if (!_translator.Applies(story, reading))
 		{
-			return await VoicedOwnWithPremadeAsync(story, prepared, fromPosition, wholePieces, reading, cancellationToken);
+			return await VoicedOwnWithPremadeAsync(story, prepared, fromPosition, wholePieces, reading, why, cancellationToken);
 		}
 
 		StoryTranslator.Outcome outcome = await TranslateOffUiAsync(story, prepared, reading, cancellationToken, forSpeech: true);
@@ -83,18 +103,18 @@ public sealed class StoryVoicing
 		{
 			// The story is read as written, in its own language and voices, so the spoken pack goes back to its language too.
 			translationSkipped?.Invoke();
-			return await VoicedOwnWithPremadeAsync(story, prepared, fromPosition, wholePieces, reading, cancellationToken);
+			return await VoicedOwnWithPremadeAsync(story, prepared, fromPosition, wholePieces, reading, why, cancellationToken);
 		}
 
-		PremadeSource? premade = await PremadeSourceAsync(story, prepared, fromPosition, wholePieces, outcome, reading, cancellationToken);
+		PremadeSource? premade = await PremadeSourceAsync(story, prepared, fromPosition, wholePieces, outcome, reading, why, cancellationToken);
 		return await Task.Run(() => VoicedTranslated(story, prepared, outcome.Pieces, reading, premade), cancellationToken);
 	}
 
 	// The story read in its own language (the reading language is the story's, or translation was skipped): its pre-made audio for the story's language is used too (Slice 246 C2).
 	private async Task<IReadOnlyList<VoicedSegment>> VoicedOwnWithPremadeAsync(
-		Story story, Prepared prepared, int fromPosition, bool wholePieces, string reading, CancellationToken cancellationToken)
+		Story story, Prepared prepared, int fromPosition, bool wholePieces, string reading, VoiceWhy why, CancellationToken cancellationToken)
 	{
-		PremadeSource? premade = await PremadeSourceAsync(story, prepared, fromPosition, wholePieces, null, reading, cancellationToken);
+		PremadeSource? premade = await PremadeSourceAsync(story, prepared, fromPosition, wholePieces, null, reading, why, cancellationToken);
 		return await Task.Run(() => VoicedInOwnLanguage(story, prepared, premade), cancellationToken);
 	}
 
@@ -123,11 +143,17 @@ public sealed class StoryVoicing
 	// The clips are keyed by the plain text, but the pieces a translated read speaks carry the speak: table's marks, so the plain pieces are translated again (a table lookup); an own-language read
 	// speaks the plain pieces as they are. Only a book with a source id (a store book or a bundled starter, Slice 258) can have a pack; a translated read needs its own complete table. A mismatch in the piece count means no clips.
 	private async Task<PremadeSource?> PremadeSourceAsync(
-		Story story, Prepared prepared, int fromPosition, bool wholePieces, StoryTranslator.Outcome? spoken, string reading, CancellationToken cancellationToken)
+		Story story, Prepared prepared, int fromPosition, bool wholePieces, StoryTranslator.Outcome? spoken, string reading, VoiceWhy why, CancellationToken cancellationToken)
 	{
 		bool translated = spoken is not null;
-		if (story.SourceId is not { } bookId || (translated && !_translator.UsesBundledTable(story, reading)))
+		if (story.SourceId is not { } bookId)
 		{
+			return null; // an own book has no pack: the default reason, no_pack
+		}
+
+		if (translated && !_translator.UsesBundledTable(story, reading))
+		{
+			why.Reason = DeviceVoiceReason.TextMismatch; // a machine translation never lines up with a pack's clips; not a missing or failed pack
 			return null;
 		}
 
@@ -135,9 +161,11 @@ public sealed class StoryVoicing
 		InstalledPack? pack = _audioPacks.Open(bookId, language);
 		if (pack is null)
 		{
+			why.Reason = _audioPacks.FailedThisLaunch(bookId, language) ? DeviceVoiceReason.PackFailed : DeviceVoiceReason.NoPack;
 			return null;
 		}
 
+		why.Reason = DeviceVoiceReason.TextMismatch;
 		IReadOnlyList<SplitSegment>? plain = await PlainPiecesAsync(story, prepared, reading, translated, cancellationToken);
 		if (plain is null || (spoken is not null && plain.Count != spoken.Pieces.Count))
 		{
@@ -146,6 +174,7 @@ public sealed class StoryVoicing
 		}
 
 		int offset = fromPosition == 0 ? 0 : await ClipOffsetAsync(story, plain, wholePieces, reading, translated, cancellationToken);
+		why.Reason = offset < 0 ? DeviceVoiceReason.TextMismatch : DeviceVoiceReason.ClipMissing; // a usable source whose pieces then find no clip is a missing clip
 		return offset < 0 ? null : new PremadeSource(pack, plain, offset);
 	}
 

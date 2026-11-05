@@ -76,6 +76,7 @@ public sealed class ReadingSession
 	private IReadOnlyList<SentenceSpan> _sentences = [];
 	private int _readSequence;
 	private int _pendingReadId;
+	private string? _voiceCountedFor; // the book and reading language whose voice was counted: one read_voice count per book in this session, not one per mid-book start
 	private int _returnedReadId;
 
 	// The read whose chunks and completion count: set when a read starts, cleared when it is
@@ -159,6 +160,9 @@ public sealed class ReadingSession
 
 	/// <summary>Slice 250: a read started, paused, resumed or stopped (with the closed reason for a stop; null for the other verbs). The page turns each into a usage count.</summary>
 	public event Action<ReadingEventKind, ReadStopReason?>? Playback;
+
+	/// <summary>Slice 267: this session's read really started; the story and the voice detail (<c>premade</c>, or <c>device:&lt;reason&gt;</c>). Raised on the session itself, so only the page that owns it counts the read.</summary>
+	public event Action<Story, string>? VoiceUsed;
 
 	public event EventHandler? Failed;
 
@@ -534,13 +538,15 @@ public sealed class ReadingSession
 		story = await RecastClashesAsync(story, reading, cancellation);
 		story = await KeepNewCastAsync(story, reading);
 		bool untranslated = false;
-		IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, reading, fromPosition, cancellation, () => untranslated = true);
+		var why = new StoryVoicing.VoiceWhy();
+		IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, reading, fromPosition, cancellation, () => untranslated = true, why);
 		_startTrace?.Voiced(id, segments.Count, untranslated);
 		if (id != _pendingReadId)
 		{
 			return false;
 		}
 
+		CountVoiceOncePerBook(story, reading, segments, why);
 		segments = StopBeforeRecordedPage(story, segments, fromPosition, id);
 		if (segments.Count == 0 && _continueRead is { } cut && cut.ReadId == id)
 		{
@@ -559,6 +565,27 @@ public sealed class ReadingSession
 
 		await SpeakRunsAsync(segments, untranslated ? UiLanguage.Resolve(story.Language) : _voicing.ReadingLanguage(story, reading), id, cancellation); // a translation that was skipped leaves the story's own voices
 		return true;
+	}
+
+	// Slice 267: the voice a book is read with is counted once per book and reading language in this session, at the moment its read really starts.
+	private void CountVoiceOncePerBook(Story story, string reading, IReadOnlyList<VoicedSegment> segments, StoryVoicing.VoiceWhy why)
+	{
+		string key = $"{story.Id}|{reading}";
+		if (_voiceCountedFor == key)
+		{
+			return;
+		}
+
+		_voiceCountedFor = key;
+		string detail = _voicing.ReportVoiceUsed(story, segments, why);
+		try
+		{
+			VoiceUsed?.Invoke(story, detail);
+		}
+		catch (Exception ex)
+		{
+			AudioPackLog.Write($"the voice-used count failed ({ex.GetType().Name})");
+		}
 	}
 
 	// The animals' recordings (Slice 255): the speech engine is only ever given the segments up to the next animal-sound slot. When that run has been spoken (ApplyCompleted)

@@ -260,9 +260,8 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs)
 		}
 	}
 
-	/// <summary>The packs the listing offers for the user's book languages and the story's own language (a read in it uses its pack too), one per language (Slice 246 C2).</summary>
-	public static IReadOnlyList<(string Language, AudioPackInfo Pack)> WantedPacks(StoreItem item, IEnumerable<string> languages) =>
-		languages.Append(item.Language).Select(BundledTranslations.Key).Distinct(StringComparer.Ordinal).Select(l => (Language: l, Pack: item.AudioIn(l))).Where(w => w.Pack is not null).Select(w => (w.Language, w.Pack!)).ToList();
+	/// <summary>The packs the listing offers for the family's languages only, never the book's own (Slice 267, <see cref="AudioPackDue"/>).</summary>
+	public static IReadOnlyList<(string Language, AudioPackInfo Pack)> WantedPacks(StoreItem item, IEnumerable<string> languages) => AudioPackDue.For(item, languages);
 
 	/// <summary>
 	/// Installs <paramref name="wanted"/> packs of a book that is on the shelf, one after the other, and returns true when none of them failed in a way a retry could fix (offline or a bad

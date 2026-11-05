@@ -24,6 +24,9 @@ public interface IAudioPackFetcher
 /// <summary>The server has no such pack version, so retrying will not help.</summary>
 public sealed class AudioPackNotFoundException(string message) : Exception(message);
 
+/// <summary>A downloaded pack whose manifest names a clip the zip did not hold (or held empty), so the pack is not kept (Slice 267: counted as a <see cref="PackFailureKind.Clip"/> failure).</summary>
+public sealed class AudioPackClipMissingException(string message) : Exception(message);
+
 /// <summary>
 /// One 0..1 progress for a book and its audio packs together (Slice 246 C2): the bytes of the book (its size is known once the response starts) plus the bytes of each pack the listing
 /// names. A pack whose size the listing does not know counts as nothing until it ends; the value never passes 1 and never goes down.
@@ -101,6 +104,7 @@ public sealed partial class AudioPackStore
 	private const string TmpExtension = ".tmp";
 	private const string CacheFolder = "audio-packs";
 	private const int MaxEntries = 4000;
+	private const int MaxRetriesPerLaunch = 1; // a pack that failed is tried once more in the same launch, no further
 	private const long MaxUnpackedBytes = 400L * 1024 * 1024;
 
 	private static readonly Regex SafeName = SafeNamePattern();
@@ -112,7 +116,44 @@ public sealed partial class AudioPackStore
 	private readonly Action<string> _log;
 	private readonly SemaphoreSlim _gate = new(1, 1);
 	private readonly ConcurrentDictionary<string, InstalledPack> _opened = new();
+	private readonly ConcurrentDictionary<string, bool> _failedThisLaunch = new();
+	private readonly ConcurrentDictionary<string, int> _failuresThisLaunch = new(); // failed downloads per book and language in this launch: a pack is tried again at most once
 	private bool _cleaned;
+
+	/// <summary>Slice 267: raised for every pack download as (book id, language, <see cref="AudioPackUsage"/> detail): started, done or failed with its kind. Carries ids and closed words only.</summary>
+	public event Action<string, string, string>? Outcome;
+
+	/// <summary>Whether a download of this book's pack in this language failed in this launch and has not worked since (the reason a read then says <see cref="DeviceVoiceReason.PackFailed"/>).</summary>
+	public bool FailedThisLaunch(string bookId, string language) => _failedThisLaunch.ContainsKey(Key(bookId, language));
+
+	private static string Key(string bookId, string language) => $"{bookId.ToLowerInvariant()}/{language}";
+
+	private void Report(string bookId, string language, string detail)
+	{
+		bool failed = detail.StartsWith(AudioPackUsage.PackFailedPrefix, StringComparison.Ordinal);
+		_failedThisLaunch.AddOrUpdate(Key(bookId, language), failed, (_, was) => detail == AudioPackUsage.PackStarted ? was : failed);
+		if (failed)
+		{
+			_failuresThisLaunch.AddOrUpdate(Key(bookId, language), 1, (_, count) => count + 1);
+		}
+
+		try
+		{
+			Outcome?.Invoke(bookId, language, detail);
+		}
+		catch (Exception ex)
+		{
+			_log($"pack {bookId}/{language}: the outcome count could not be queued ({ex.GetType().Name})");
+		}
+	}
+
+	private static PackFailureKind KindOf(Exception ex) => ex switch
+	{
+		AudioPackClipMissingException => PackFailureKind.Clip,
+		InvalidDataException => PackFailureKind.Unzip,
+		IOException or UnauthorizedAccessException => PackFailureKind.Storage,
+		_ => PackFailureKind.Network,
+	};
 
 	public AudioPackStore(string root, string cacheRoot, IAudioPackFetcher fetcher, Action<string>? log = null)
 	{
@@ -144,7 +185,7 @@ public sealed partial class AudioPackStore
 		}
 		catch (Exception ex) when (ex is IOException or PremadeAudioException or UnauthorizedAccessException)
 		{
-			_log($"pack {bookId}/{language} v{version}: manifest unreadable, no clips: {ex.Message}");
+			_log($"pack {bookId}/{language} v{version}: manifest unreadable, no clips ({ex.GetType().Name})");
 			return null;
 		}
 	}
@@ -243,7 +284,7 @@ public sealed partial class AudioPackStore
 		}
 		catch (Exception ex)
 		{
-			_log($"pack {bookId}/{language} v{pack.Version}: failed, the book is kept without it ({ex.GetType().Name}: {ex.Message})");
+			_log($"pack {bookId}/{language} v{pack.Version}: failed, the book is kept without it ({ex.GetType().Name})");
 			return PackInstall.Failed;
 		}
 	}
@@ -314,20 +355,29 @@ public sealed partial class AudioPackStore
 		string label = $"pack {bookId}/{language} v{pack.Version}";
 		string part = Path.Combine(_partFolder, $"{bookId.ToLowerInvariant()}-{language}-v{pack.Version}-{Guid.NewGuid():N}{PartExtension}");
 		string tmp = FolderOf(bookId, language, pack.Version) + TmpExtension;
+		if (_failuresThisLaunch.GetValueOrDefault(Key(bookId, language)) > MaxRetriesPerLaunch)
+		{
+			_log($"{label}: failed twice in this launch, not tried again until the next open");
+			return PackInstall.Failed;
+		}
+
 		try
 		{
 			Directory.CreateDirectory(_partFolder);
+			Report(bookId, language, AudioPackUsage.PackStarted);
 			await fetcher.FetchAsync(pack.Url, part, bytes ?? new Progress<long>(), cancel);
 			long length = new FileInfo(part).Length;
 			if (pack.Bytes is { } listed && listed != length)
 			{
 				_log($"{label}: downloaded {length} bytes, the listing says {listed}, not kept");
+				Report(bookId, language, AudioPackUsage.PackFailed(PackFailureKind.Size));
 				return PackInstall.Failed;
 			}
 
 			Unpack(part, tmp, language);
 			PublishFolder(bookId, language, pack.Version, tmp);
 			_log($"{label}: installed");
+			Report(bookId, language, AudioPackUsage.PackDone);
 			return PackInstall.Installed;
 		}
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
@@ -337,12 +387,14 @@ public sealed partial class AudioPackStore
 		}
 		catch (AudioPackNotFoundException ex)
 		{
-			_log($"{label}: not in the store ({ex.Message})");
+			_log($"{label}: not in the store");
+			Report(bookId, language, AudioPackUsage.PackFailed(PackFailureKind.Missing));
 			return PackInstall.NotFound;
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException || !cancel.IsCancellationRequested)
 		{
-			_log($"{label}: failed, the book is kept without it ({ex.GetType().Name}: {ex.Message})");
+			_log($"{label}: failed, the book is kept without it ({ex.GetType().Name})");
+			Report(bookId, language, AudioPackUsage.PackFailed(KindOf(ex)));
 			return PackInstall.Failed;
 		}
 		finally
@@ -413,7 +465,7 @@ public sealed partial class AudioPackStore
 		string? missing = audio.ClipNames.FirstOrDefault(c => !File.Exists(Path.Combine(folder, c)) || new FileInfo(Path.Combine(folder, c)).Length == 0);
 		if (missing is not null)
 		{
-			throw new InvalidDataException($"The pack lacks the clip {missing}.");
+			throw new AudioPackClipMissingException($"The pack lacks the clip {missing}.");
 		}
 	}
 

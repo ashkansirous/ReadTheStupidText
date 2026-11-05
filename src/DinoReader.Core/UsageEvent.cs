@@ -32,6 +32,10 @@ public static class UsageEventName
     public const string ReadResumed = "read_resumed";
     public const string ReadStopped = "read_stopped";
     public const string BookLeft = "book_left";
+
+    // Slice 267: which voice a read used (detail: AudioPackUsage.ReadVoice), and how one pre-made audio pack download went (detail: started / done / failed:<kind>).
+    public const string ReadVoice = "read_voice";
+    public const string AudioPackDownload = "audio_pack_download";
 }
 
 /// <summary>Slice 228: the one rule for a demo read (the intro's read step), which is not a real reading of a book and so counts no book open, finish or (Slice 250) playback event.</summary>
@@ -40,7 +44,7 @@ public static class DemoReadCounting
     private static readonly HashSet<string> BookCounts =
     [
         UsageEventName.BookOpened, UsageEventName.BookFinished, UsageEventName.BookLeft,
-        UsageEventName.ReadStarted, UsageEventName.ReadPaused, UsageEventName.ReadResumed, UsageEventName.ReadStopped,
+        UsageEventName.ReadStarted, UsageEventName.ReadPaused, UsageEventName.ReadResumed, UsageEventName.ReadStopped, UsageEventName.ReadVoice,
     ];
 
     /// <summary>Whether the count <paramref name="eventName"/> may be recorded for a read that is (<paramref name="demoRead"/>) or is not a demo.</summary>

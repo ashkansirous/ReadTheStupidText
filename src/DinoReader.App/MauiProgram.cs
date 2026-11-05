@@ -87,7 +87,7 @@ public static class MauiProgram
 		builder.Services.AddTransient<IRecordingPlayer, RecordingPlayer>();
 		builder.Services.AddSingleton<StarterStories>();
 		builder.Services.AddSingleton<StagedBookUpdates>();
-		builder.Services.AddSingleton(_ => new AudioPackStore(Path.Combine(FileSystem.AppDataDirectory, AudioPackFolder), FileSystem.CacheDirectory, new StoreAudioPackFetcher(), AudioPackLog.Write));
+		builder.Services.AddSingleton(services => CreateAudioPackStore(services));
 		builder.Services.AddSingleton<StoreClient>();
 		builder.Services.AddSingleton<AppConfigClient>();
 		builder.Services.AddSingleton<UsageCounter>();
@@ -114,6 +114,19 @@ public static class MauiProgram
 		CrashTestHook.Install(); // Slice 227: after the app's own Debug commands, so it chains onto them
 #endif
 		return app;
+	}
+
+	// Slice 267: every pack download is counted (book id, language, closed outcome) and, through AudioPackLog, kept in the rolling log; no title or file name is carried.
+	private static AudioPackStore CreateAudioPackStore(IServiceProvider services)
+	{
+		var store = new AudioPackStore(Path.Combine(FileSystem.AppDataDirectory, AudioPackFolder), FileSystem.CacheDirectory, new StoreAudioPackFetcher(), AudioPackLog.Write);
+		var counter = services.GetRequiredService<UsageCounter>(); // resolved here, once, not inside the handler: a circular dependency shows at start-up, not at the first download
+		store.Outcome += (bookId, language, detail) =>
+		{
+			AudioPackLog.Write($"pack {bookId}/{language}: {detail}");
+			counter.RecordShelfBook(UsageEventName.AudioPackDownload, bookId, language, detail);
+		};
+		return store;
 	}
 
 	// Slice 227: pending crash reports are posted a little after start-up, once the remote config says crashReports.enabled (default off).

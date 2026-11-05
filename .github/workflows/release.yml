@@ -113,8 +113,13 @@ permissions:
 # Slice 221 item 4: a workflow_dispatch run has its own group, so a later merge's push run cannot replace
 # it while it is pending (a force_all run was cancelled that way). Two groups no longer exclude each other,
 # so the first step of `version` makes a run wait for every older run of the other event type.
+# Slice 267 (Bug E): a merge from a `fix/` branch runs in a group of its own (`release-fix-<sha>`), so a later merge can never
+# replace it while it is pending (that is how the Slice 260 crash fix's release runs were dropped three times). It waits in
+# `version` instead: the wait step below holds every run behind every older run of a different group, and a run of the
+# ordinary push group also waits for an older fix run, so no two runs ever ship at once. The test is `/fix/` anywhere in the merge
+# commit's message, read the same way on both sides (the group from `github.event.head_commit.message`, the wait step from each run's commit through `gh api`).
 concurrency:
-  group: ${{ github.event_name == 'workflow_dispatch' && format('release-dispatch-{0}', github.ref) || format('release-{0}', github.ref) }}
+  group: ${{ github.event_name == 'workflow_dispatch' && format('release-dispatch-{0}', github.ref) || (contains(github.event.head_commit.message, '/fix/') && format('release-fix-{0}', github.sha)) || format('release-{0}', github.ref) }}
   cancel-in-progress: false
 
 jobs:
@@ -160,18 +165,35 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
-          EVENT: ${{ github.event_name }}
           RUN_NUMBER: ${{ github.run_number }}
+          EVENT: ${{ github.event_name }}
+          MY_FIX: ${{ contains(github.event.head_commit.message, '/fix/') }}
           # A whole older run takes up to ~60 min (observed 2026-11-01), so 2x margin; one still active after that is stuck.
           WAIT_LIMIT_MINUTES: 120
           POLL_SECONDS: 60
           MAX_LIST_ERRORS: 3
         run: |
           set -uo pipefail
+          # A run's concurrency group, as the `concurrency` block above builds it: dispatch, one per fix merge (`/fix/` anywhere in the merge commit's message), or the ordinary push group.
+          # The `contains` in the `concurrency` block ignores case, so the test here ignores case too (`grep -i`): `/Fix/` is a fix merge on both sides.
+          # A commit that cannot be read after 3 tries is reported as `lookup-failed`: it does not block (a lookup failure must never mean a 120-minute wait), and a warning names the run.
+          group_of() {
+            if [ "$2" = "workflow_dispatch" ]; then echo dispatch; return; fi
+            local try
+            for try in 1 2 3; do
+              if message=$(gh api "repos/${REPO}/commits/$3" --jq .commit.message 2>/dev/null); then
+                if grep -qiF '/fix/' <<<"$message"; then echo "fix-$1"; else echo push; fi
+                return
+              fi
+              sleep 2
+            done
+            echo lookup-failed
+          }
+          if [ "$EVENT" = "workflow_dispatch" ]; then MY_GROUP=dispatch; elif [ "$MY_FIX" = "true" ]; then MY_GROUP="fix-${RUN_NUMBER}"; else MY_GROUP=push; fi
           deadline=$(( $(date +%s) + WAIT_LIMIT_MINUTES * 60 ))
           errors=0
           while true; do
-            if ! runs=$(gh run list --repo "$REPO" --workflow release.yml --branch "$BRANCH" --limit 50 --json number,status,event 2>&1); then
+            if ! runs=$(gh run list --repo "$REPO" --workflow release.yml --branch "$BRANCH" --limit 50 --json number,status,event,headSha 2>&1); then
               errors=$(( errors + 1 ))
               if [ "$errors" -ge "$MAX_LIST_ERRORS" ]; then
                 echo "::error::gh run list failed ${errors} times in a row, so the older release runs cannot be checked; failing instead of racing them. Re-run this workflow. Last error: $runs"
@@ -186,9 +208,20 @@ jobs:
               continue
             fi
             errors=0
-            blocking=$(jq -r --argjson me "$RUN_NUMBER" --arg ev "$EVENT" '
-              [.[] | select(.event != $ev and .number < $me and (.status == "queued" or .status == "in_progress" or .status == "waiting" or .status == "pending" or .status == "requested"))
-                   | "#\(.number) (\(.event), \(.status))"] | join(", ")' <<<"$runs")
+            # Every older active run, with the commit it ran for. Its group is worked out from the commit's whole message, the same text the `concurrency` block tests.
+            active=$(jq -r --argjson me "$RUN_NUMBER" '
+              .[] | select(.number < $me and (.status == "queued" or .status == "in_progress" or .status == "waiting" or .status == "pending" or .status == "requested"))
+                  | "\(.number) \(.event) \(.status) \(.headSha)"' <<<"$runs")
+            blocking=""
+            while read -r number event status sha; do
+              [ -z "$number" ] && continue
+              group=$(group_of "$number" "$event" "$sha")
+              if [ "$group" = "lookup-failed" ]; then
+                echo "::warning::Could not read the commit of older release run #${number} after 3 tries; treating it as not blocking."
+              elif [ "$group" != "$MY_GROUP" ]; then
+                blocking="${blocking:+$blocking, }#${number} (${group}, ${status})"
+              fi
+            done <<<"$active"
             if [ -z "$blocking" ]; then
               echo "No older release run of the other event type is active; going on."
               exit 0
