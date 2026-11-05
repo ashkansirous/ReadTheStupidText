@@ -1,6 +1,6 @@
 # Slice 267 — Dino bugs: books on the shelf keep the old voice; the first-run buttons overlap
 
-*In progress (wave 2026-11-04), draft PR.* Bug fixes, Dino Reader, Android and iOS alike. Reported by the user on the latest Android build (dino-v1.102.1, 2026-11-04 20:10 UTC): "why the hell is it still using the old shitty voice? We changed that yesterday" and "the skip and check it out are on top of each other". The user also asked why the tests passed; the answers are under each bug.
+*Built 2026-11-05 on branch fix/s267-old-voice-wizard, not merged; emulator-5554 checks passed, not yet tried on the user's phone.* Bug fixes, Dino Reader, Android and iOS alike. Reported by the user on the latest Android build (dino-v1.102.1, 2026-11-04 20:10 UTC): "why the hell is it still using the old shitty voice? We changed that yesterday" and "the skip and check it out are on top of each other". The user also asked why the tests passed; the answers are under each bug.
 
 **Rule (user, 2026-11-04, decided): audio packs follow only the user's languages.** A family has a main language and up to two more (the story languages); all of them count the same. Every book they have or pick downloads its pre-made audio in exactly those languages, at book install, for books already on the shelf (starters included), when a language is added, and in the update check. A book has no language of its own for this: never add the language the book was written in (today `StoreClient.WantedPacks`, `StoreClient.cs:259-260`, adds "the book's own language", so every book also fetches English). "If a person has French and Farsi, any book he selects should always be downloaded in French and Farsi. No English." The fixes for Bugs A and C follow this rule; a unit test pins it (French + Farsi family: packs asked for are exactly `fr` and `fa`).
 
@@ -68,7 +68,7 @@ The Slice 260 badge crash (`AutomationId may only be set one time`, `StoreTagBad
 - `dotnet test tests/DinoReader.Tests`; the upgrade flow (Bug A) and the layout check (Bug B) on the emulator, both shown failing on the current build first, then passing.
 - The user's phone: after the fix build, a book already on the shelf reads with the pre-made voice after one cold start, and the Ready screen shows both buttons apart.
 
-## Built (builder, 2026-11-04, nothing run on a device)
+## Built (builder, 2026-11-04; device results below)
 
 - **Causes found in code.** Bugs A and C: (1) `StoreClient.WantedPacks` added the book's own language and the 7-day `BookUpdater` check was the only thing that fetched packs for a book already on the shelf; (2) `ShelfAudioPacks.Begin` started a launch run only when the language's reading voice was installed (`ShelfAudioStart.Decide(voiceReady, ...)`), so a family language without its voice (the Farsi main language on a phone whose voice was not there) never fetched its packs. Both fixed: `AudioPackDue`, and the voice condition removed from the quiet-run rule (a run still waits for a voice that is on its way). Bug B: `IntroWizardPage.PlaceButtons` reset the buttons grid to no row definitions upright, and a MAUI Grid with none has one implicit row that clamps `Grid.Row = 1` into row 0, so Skip was drawn over Try it; upright it now has two Auto rows (sideways one). The Ready screen (`FirstRunPage.xaml`) was a wrong guess and is unchanged.
 - **Bug D.** Core `AudioPackUsage` (closed details), events `read_voice` and `audio_pack_download` (Worker lists + tests, a Core test keeps both lists equal), `StoryVoicing.VoiceUsed` raised per read and counted by `ReadingPage` (demo reads excluded), `AudioPackStore.Outcome` per pack download, `AudioPackLog` also writes to the release rolling log (`AppTrace`). Privacy page and STORE.md updated; queries in `docs/analytics/dino-voice-queries.md`.
@@ -76,11 +76,47 @@ The Slice 260 badge crash (`AutomationId may only be set one time`, `StoreTagBad
 - **New checks.** `AudioPackDueTests`, `AudioPackUsageTests`, the `ShelfAudioStart` theory, the two Worker tests in `events.test.mjs`; `tools/emulator/test-layout-check.ps1` (fails on the Skip-over-Try-it fixture, a cut-off button; passes stacked and nested); flows `shelf-audio-on-start` (Bugs A and C) and `wizard-layout-record-large-font` (Bug B, `# layout-check` + `# font-scale: 1.3`, new run-flows.ps1 headers).
 - **Changed while building (review).** `ShelfAudioStart.Decide` no longer takes `voiceReady`, on purpose: dropping it is the Bug C fix. Packs do not need the device voice, so the quiet run starts for every family language whether or not its device voice is installed. `read_voice` is counted by the owning `ReadingSession` (its own `VoiceUsed` event), not a singleton event, so two pages never count one read twice.
 
-## Not yet verified
+## Built, final summary (2026-11-05)
 
-- The "check first on the user's phone" item (app version, `dino.books.lastupdatecheck`, whether `audio-packs/<book>/` exists) was not run: no phone tonight. The cause is from code and the emulator reproduction above, not from the phone.
-- `shelf-audio-on-start` and `wizard-layout-record-large-font` written and linted, never run; each must be shown failing on the old build first. The previous-build-then-upgrade install order is not scripted (the flow starts from books with no packs, the state an upgrade leaves).
-- The layout check on every first-run and intro screen, portrait at font 1.0 and 1.3, landscape, and the iOS (XCUITest) twin: only the Record step at 1.3 has a flow. On an emulator without a microphone the Record step may hide Try it, which makes that flow weaker than the bug.
-- Screenshots on one contact sheet per run (`reviews/<slice>-shots/`): not built; `contact-sheet.ps1` (Slice 253) still covers only the named frames.
-- Bug E: no test-branch merges were run. The first `fix/` merge on main is the first real test of `release-fix-<sha>` and the extended wait; `jq` in the wait step is untested in CI. Cost: a `fix/` merge no longer coalesces with later merges (one full release per fix merge, against the Actions quota rules in `.github/CLAUDE.md`).
-- iOS: `net10.0-ios` compiles (`-p:IncludeIos=true -p:IncludeWindows=false -p:IncludeAndroid=false`); the iOS runtime twin of every item above is unrun, and the XCUITest layout check does not exist.
+- **Bugs A and C:** `AudioPackDue.For` (family languages only, never the book's own; fr+fa test); `ShelfAudioStart.Decide` no longer waits for the reading voice to be installed (the likely Bug C cause); shelf packs are fetched each cold start and after a language is added, by the `ShelfAudioPacks` owner; failed packs are retried at most once per launch (counter is in memory, per launch).
+- **Bug B:** `IntroWizardPage.PlaceButtons` gave the buttons grid no rows upright, so Skip sat on Try it; now two Auto rows.
+- **Bug D:** events `read_voice` (once per book and reading language per session) and `audio_pack_download` (closed kinds, including `failed:missing` and `failed:storage`), Worker lists and tests, privacy page, STORE.md, `worker/CLAUDE.md`, `docs/analytics/dino-voice-queries.md`. `AudioPackLog` also writes the release rolling log, exception type names only (no messages or URLs).
+- **Bug E:** `release.yml` puts a `/fix/` merge (case-insensitive) in its own concurrency group; the wait step holds behind older active runs; the commit lookup is retried 3 times, then treated as not blocking with a warning.
+- **Tooling:** `tools/emulator/layout-check.ps1` (+ `test-layout-check.ps1`, run in `tools-selftests.yml`); `# layout-check` and `# font-scale:` flow headers in `run-flows.ps1` (restores the prior font scale). Device runs found two tool bugs, both fixed: label-over-button overlaps were not checked (only clickable pairs), and `Get-UiDumpXml`'s `uiautomator dump /dev/tty` returned no XML from a non-tty shell (now dumps to /sdcard and `exec-out cat`).
+
+## Device results (emulator-5554, 2026-11-05)
+
+- `wizard-layout-record-large-font`: PASS on the fixed build 446095cc516b; FAILS on the pre-fix build cfd10992f4e6 ("Try it" covered by "Skip").
+- `shelf-audio-on-start`: PASS. `premade-audio-plays`: PASS.
+- One run died on a network error and one on a degraded emulator (restarted); both were rerun.
+
+## From review
+
+Files: `reviews/s267-high.md` (9 findings), `reviews/s267-medium.md` (9), `reviews/s267-check1.md` (10); all read to the last finding.
+
+- **High:** applied 1-6. Skipped 7 by design (a read in the book's own language, when the translation does not apply, can still report `device:no_pack`; that follows the user's rule of no own-language pack). Skipped 8 (the failed-this-launch rule in `AudioPackStore.Report` is a dense `AddOrUpdate` lambda; make it a named helper) and 9 (the Outcome handler in `MauiProgram.cs` duplicates a log line and resolves `UsageCounter` per event); both low and style/duplication only, so skipped (9's per-event resolve was later fixed as medium 9).
+- **Medium:** applied 2, 3, 4, 5, 8, 9. Skipped 1 by design (`read_voice` is counted once per book and language per session, from the first read start). Skipped 6 (the retry counter is in memory, per launch, so it resets at the next launch). Skipped 7 as intentional (starting the quiet run without the voice installed is the Bug C fix).
+- **Check pass 1:** none applied. 5 and 6 are the user's rule and the Bug C fix. 2, 3, 4, 10 are low and left. 1, 7, 8, 9 are recorded under *Outstanding* below.
+
+## Outstanding
+
+- check1 #1: `read_voice` is counted before the read really starts (also before `StopBeforeRecordedPage` or an empty-segments return), so a Play pressed while the pack downloads or fails is counted `device:*` and later premade reads in that session are skipped (`ReadingSession.cs:570`).
+- check1 #7: `layout-check.ps1` is dot-sourced by `run-flows.ps1`, so its `param()` block and `$ErrorActionPreference` leak into run-flows scope; move the pure functions to a param-less library.
+- check1 #8: the label-overlap check flags a labelled node overlapping a clickable non-ancestor sibling (scrim, tap-to-dismiss layer): false positives on `# layout-check` flows (the launcher shows 13).
+- check1 #9: `IntroWizardPage.PlaceButtons` run again (rotation, font-scale change) may leave stale `Grid.Row`/`Grid.Column` on Skip and the main button (unconfirmed).
+
+#### For CLAUDE.md
+
+- Audio packs follow only the family's languages (main + story languages): use `AudioPackDue.For` in `src/DinoReader.Core/AudioPackDue.cs`; never add the book's own language. `ShelfAudioStart.Decide` (`src/DinoReader.Core/ShelfAudioNetwork.cs`) must not wait for the reading voice: packs do not need it. (Slice 267: docs/plan/slices/267-dino-old-voice-and-wizard-buttons.md)
+- A flow whose screen must not overlap or clip buttons carries `# layout-check` (and `# font-scale: 1.3` for a large font) as a header in `.maestro/dino/*.yaml`; `tools/emulator/layout-check.ps1` reads the `uiautomator` dump. A Maestro text tap passes on a covered button, so it cannot catch overlap. (Slice 267: docs/plan/slices/267-dino-old-voice-and-wizard-buttons.md)
+- `.github/workflows/release.yml`: a merge whose commit text contains `/fix/` (case-insensitive) runs in its own `release-fix-<sha>` group and is never cancelled by a later merge; the concurrency expression and the wait step must classify by the same text. (Slice 267: docs/plan/slices/267-dino-old-voice-and-wizard-buttons.md)
+
+#### Not yet verified
+
+- The user's phone check (no phone tonight), including the "check first on the user's phone" item (app version, `dino.books.lastupdatecheck`, whether `audio-packs/<book>/` exists): the cause is from code and the emulator reproduction, not from the phone.
+- The upgrade-from-previous-release path (previous build, then install over it) is not scripted.
+- The layout check at font 1.0 and in landscape on every wizard and first-run screen: only the Record step at font 1.3 has a flow. On an emulator without a microphone the Record step may hide Try it.
+- The contact sheet of flow screenshots (`reviews/<slice>-shots/`) was not built.
+- Bug E on main: the first `fix/` merge is its first test; the wait step's `gh api` lookup has never run. Cost: a `fix/` merge no longer coalesces with later merges (one full release per fix merge, against the Actions quota rules in `.github/CLAUDE.md`).
+- iOS runtime and the XCUITest twins (`net10.0-ios` compiles; the XCUITest layout check does not exist).
+- The `read_voice` and failure-path log lines carry no messages or URLs: only the success lines were read.
