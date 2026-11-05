@@ -42,6 +42,8 @@ Choices for the user:
 3. **Drop ML Kit, download M2M100 the first time a grown-up translates their own book.** iPhone about 57 MB, Farsi kept, but a download of about 630 MB once, and phone speed unmeasured.
 4. Another route the user names.
 
+Parked by night 2026-11-04-1441 wave 3 (not claimed): waits for the user's pick from the list above; housekeeping 3 set the plan.md row to `parked`.
+
 ## Not this slice (found 2026-11-04, waits for the user)
 
 - Capturing a Farsi, Arabic, Russian, Japanese or Chinese page reads no text on Android (Farsi and Arabic also on iPhone); see *Measured and found* below. Fixing it means downloadable page readers (the `ocr-*` packs Read The Stupid Text uses). Not asked for; recorded so it is not lost.
