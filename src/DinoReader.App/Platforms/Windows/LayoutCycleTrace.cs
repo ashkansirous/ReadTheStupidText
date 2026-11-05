@@ -1,10 +1,11 @@
+#if DEBUG || DINO_TEST_BOOKS
 using System.Runtime.InteropServices;
 using System.Text;
 
 namespace DinoReader;
 
 /// <summary>
-/// Slice 264 diagnosis (temporary, uncommitted): WinUI writes [LayoutCycleTracing] lines with OutputDebugString only. With no debugger attached, this listens the way DebugView does
+/// Slice 264 layout-cycle trace, kept on purpose in DEBUG and DINO_TEST_BOOKS builds only (the VM check reads window-trace.log; store builds exclude this file's code): WinUI writes [LayoutCycleTracing] lines with OutputDebugString only. With no debugger attached, this listens the way DebugView does
 /// (the DBWIN_BUFFER shared memory and its two events) and copies those lines of this process to window-trace.log, so a layout cycle names its element.
 /// </summary>
 internal static class LayoutCycleTrace
@@ -71,3 +72,4 @@ internal static class LayoutCycleTrace
 		return Encoding.UTF8.GetString(bytes, 0, end < 0 ? bytes.Length : end).TrimEnd('\r', '\n');
 	}
 }
+#endif

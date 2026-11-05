@@ -66,7 +66,11 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		_starters = starters;
 		_services = services;
 		StoryList.ItemsSource = _items;
-		StoryList.Scrolled += (_, e) => RememberFirstBook(e.FirstVisibleItemIndex);
+		StoryList.Scrolled += (_, e) =>
+		{
+			TileOverlay.NotifyScrollStarted(); // the platform scroller may have taken a touch that a cover's 1 s hold is still timing
+			RememberFirstBook(e.FirstVisibleItemIndex);
+		};
 		_storyteller = services.GetRequiredService<StorytellerDefault>();
 		_preview = new VoicePreview(services.GetRequiredService<ISpeechReader>());
 		StorytellerLine.DownloadNow = _storyteller.DownloadNowAsync;
@@ -705,7 +709,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	{
 		if (_reorder.IsVisible)
 		{
-			return HandleReorderKey(action); // Slice 264: Esc cancels the reorder mode, Enter or Space is Done
+			return HandleReorderKey(action); // Slice 264: Esc cancels the reorder mode, Enter is Done (Space lifts and drops a book)
 		}
 
 		if (action == DinoKeyAction.SheetActivate)
@@ -771,11 +775,12 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		OpenReorder(_sheetStory?.Id);
 	});
 
-	private void OnHoldRequested(object? sender, EventArgs e)
+	private void OnHoldRequested(object? sender, HoldRequestedEventArgs e)
 	{
 		if (TileOf(sender) is { } tile && _mode.IsGrownUp && !BookInfo.IsVisible)
 		{
 			OpenReorder(tile.Story.Id);
+			e.Opened = _reorder.IsVisible;
 		}
 	}
 
@@ -829,7 +834,14 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 	}
 
-	private void CancelReorder() => CloseReorder("cancel");
+	// Cancel while Done's save runs would claim "nothing saved" after the order was written, so the save wins.
+	private void CancelReorder()
+	{
+		if (!_savingOrder)
+		{
+			CloseReorder("cancel");
+		}
+	}
 
 	private void CloseReorder(string why)
 	{
@@ -840,6 +852,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 	}
 
+	[Conditional("DEBUG"), Conditional("DINO_TEST_BOOKS")] // compiled out of store builds
 	private static void SheetLog(string line)
 	{
 		ReorderTrace.Step("sheet: " + line); // Release-visible on Windows (window-trace.log)

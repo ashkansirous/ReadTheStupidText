@@ -46,7 +46,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
             }
         }
 
-        List<Story> newestFirst = stories.OrderByDescending(s => s.Created).ToList();
+        List<Story> newestFirst = stories.OrderByDescending(s => s.Created).ThenBy(s => s.Id, StringComparer.Ordinal).ToList(); // Id breaks ties: directory order is not a contract
         return ShelfOrder.Apply(newestFirst, s => s.Id, await ReadOrderAsync());
     }
 
@@ -58,11 +58,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         await _gate.WaitAsync(); // the replace in SaveOrderAsync holds the gate, so a read never meets a half-swapped file
         try
         {
-            return File.Exists(OrderPath) ? ShelfOrder.Parse(await File.ReadAllTextAsync(OrderPath)) : [];
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return [];
+            return await ReadOrderLockedAsync();
         }
         finally
         {
@@ -70,20 +66,39 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
     }
 
-    /// <summary>Stores the shelf order (Slice 264): a temp file, then a replace, so a crash keeps the old order. Only the reorder mode's Done calls it.</summary>
+    // The caller holds the gate.
+    private async Task<IReadOnlyList<string>> ReadOrderLockedAsync()
+    {
+        try
+        {
+            return File.Exists(OrderPath) ? ShelfOrder.Parse(await File.ReadAllTextAsync(OrderPath)) : [];
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return [];
+        }
+    }
+
+    /// <summary>Stores the shelf order (Slice 264): a temp file, then a replace, so a crash keeps the old order. Only the reorder mode's Done calls it. Books stored earlier but not in <paramref name="ids"/> (not on the screen) keep their old relative place.</summary>
     public async Task SaveOrderAsync(IReadOnlyList<string> ids)
     {
         Directory.CreateDirectory(root);
         string temp = $"{OrderPath}.{Guid.NewGuid():N}{TempSuffix}";
+        await _gate.WaitAsync(); // one gate across read, merge and replace, so a concurrent delete's forget cannot be undone by a stale merge
         try
         {
-            await File.WriteAllTextAsync(temp, ShelfOrder.Serialize(ids));
-            await MoveIntoPlaceAsync(temp, OrderPath);
+            IReadOnlyList<string> merged = ShelfOrder.MergeShown(await ReadOrderLockedAsync(), ids);
+            await File.WriteAllTextAsync(temp, ShelfOrder.Serialize(merged));
+            File.Move(temp, OrderPath, overwrite: true);
         }
         catch
         {
             TryDelete(temp);
             throw;
+        }
+        finally
+        {
+            _gate.Release();
         }
     }
 

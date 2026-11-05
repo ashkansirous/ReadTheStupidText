@@ -14,8 +14,8 @@
         <Grid x:Name="Backdrop" BackgroundColor="Transparent">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnBackdropTapped" />
-                <!-- Slice 264: pressing a cover for 1 second opens the shelf's reorder mode (like iOS); moving, lifting or a scroll taking over the touch cancels it. -->
-                <PointerGestureRecognizer PointerPressed="OnPointerPressed" PointerMoved="OnPointerMoved" PointerReleased="OnPointerEnded" PointerExited="OnPointerEnded" />
+                <!-- Slice 264: pressing a cover for 1 second opens the shelf's reorder mode (like iOS); moving past the slop or lifting cancels it. No PointerExited: Android raised it during a still press and cancelled the hold (likely, not yet proven). -->
+                <PointerGestureRecognizer PointerPressed="OnPointerPressed" PointerMoved="OnPointerMoved" PointerReleased="OnPointerEnded" />
             </Grid.GestureRecognizers>
         </Grid>
         <Grid x:Name="MoreButton" HorizontalOptions="End" VerticalOptions="Start" WidthRequest="48" HeightRequest="48" AutomationId="TileMore"

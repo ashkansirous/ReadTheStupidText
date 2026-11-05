@@ -31,6 +31,9 @@ internal sealed class ReorderEntry(StoryTile tile, Grid view, int homeIndex)
 	/// <summary>Bumped by every StartWiggle and StopWiggle: a delayed start whose number is no longer current has been cancelled.</summary>
 	public int WiggleGeneration { get; set; }
 
+	/// <summary>The timer of the one wiggle start still waiting for its stagger; stopped by the next start, by StopWiggle and so by Close.</summary>
+	public IDispatcherTimer? WiggleDelay { get; set; }
+
 	public string Id => Tile.Story.Id;
 }
 
@@ -42,6 +45,7 @@ internal static class ReorderTrace
 {
 	public const string Prefix = "Reorder trace: ";
 
+	[System.Diagnostics.Conditional("DEBUG"), System.Diagnostics.Conditional("DINO_TEST_BOOKS")] // the device-test switch: calls and their arguments are compiled out of a store build
 	public static void Step(string step)
 	{
 #if WINDOWS
@@ -133,18 +137,27 @@ internal static class ShelfReorderTiles
 
 		View view = entry.View;
 		int generation = ++entry.WiggleGeneration;
-		dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(WiggleStaggerMs * (order % 8)), () =>
+		entry.WiggleDelay?.Stop(); // one waiting start per cover: rapid lift and drop replace it instead of queuing closures that outlive Close
+		IDispatcherTimer timer = dispatcher.CreateTimer();
+		timer.Interval = TimeSpan.FromMilliseconds(Math.Max(1, WiggleStaggerMs * (order % 8)));
+		timer.IsRepeating = false;
+		timer.Tick += (_, _) =>
 		{
+			timer.Stop();
 			if (generation == entry.WiggleGeneration && !entry.Lifted && view.IsVisible)
 			{
 				new Animation(t => view.Rotation = WiggleDegrees * Math.Sin(2 * Math.PI * t)).Commit(view, WiggleAnimation, 16, WigglePeriod, Easing.Linear, repeat: () => true);
 			}
-		});
+		};
+		entry.WiggleDelay = timer;
+		timer.Start();
 	}
 
 	public static void StopWiggle(ReorderEntry entry)
 	{
 		entry.WiggleGeneration++; // cancels a start still waiting for its stagger
+		entry.WiggleDelay?.Stop();
+		entry.WiggleDelay = null;
 		entry.View.AbortAnimation(WiggleAnimation);
 		entry.View.Rotation = 0;
 	}

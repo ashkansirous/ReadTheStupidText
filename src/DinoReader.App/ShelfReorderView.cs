@@ -19,6 +19,7 @@ internal sealed class ShelfReorderView : Grid
 	private const double BottomRoom = 24;
 	private const double MinWidthChange = 1;
 	private double _lastLayoutWidth;
+	private bool _edgeScrolling;
 	private const uint DropSettleMs = 150;
 	private const int HideSourceDelayMs = 100;
 
@@ -113,6 +114,7 @@ internal sealed class ShelfReorderView : Grid
 	{
 		ReorderTrace.Step($"view open begin books={tiles.Count} lifted={liftedId is not null}");
 		ClearEntries();
+		_lastLayoutWidth = 0; // a second open at the same width, or a first show at width 0, must still lay the tiles out
 		_columns = columns;
 		_sidePadding = sidePadding;
 		_gap = gap;
@@ -193,7 +195,7 @@ internal sealed class ShelfReorderView : Grid
 	/// <summary>Re-fits the open mode to a new window shape (a rotation or a resize); nothing when it is closed.</summary>
 	public void Reshape(int columns, double sidePadding, double gap)
 	{
-		if (!IsVisible || (columns == _columns && sidePadding == _sidePadding && gap == _gap))
+		if (!IsVisible || columns < 1 || (columns == _columns && sidePadding == _sidePadding && gap == _gap))
 		{
 			return;
 		}
@@ -202,6 +204,7 @@ internal sealed class ShelfReorderView : Grid
 		_sidePadding = sidePadding;
 		_gap = gap;
 		Relayout();
+		_lastLayoutWidth = -1; // a rotation lands here before the scroll has its new width: the next width change, however small, must lay out again
 	}
 
 	private void ToggleKeyboardLift()
@@ -292,6 +295,7 @@ internal sealed class ShelfReorderView : Grid
 
 	// Sizes and places every tile from the scroll view's width; a rotation or the first show lands here, and nothing is animated.
 	// Slice 264 diagnosis: names the element and its size on every size change.
+	[System.Diagnostics.Conditional("DEBUG"), System.Diagnostics.Conditional("DINO_TEST_BOOKS")] // compiled out of store builds: no handlers, no strings
 	private static void TraceSize(string name, VisualElement element) =>
 		element.SizeChanged += (_, _) => ReorderTrace.Step($"size {name} {element.Width:0.##}x{element.Height:0.##} req={element.WidthRequest:0.##}x{element.HeightRequest:0.##}");
 
@@ -363,6 +367,8 @@ internal sealed class ShelfReorderView : Grid
 	// A tap only lifts a book (and puts the one lifted before back); nothing opens.
 	private void Lift(ReorderEntry tapped)
 	{
+		_kbIndex = -1; // a pointer lift takes over from the keyboard, as StartDrag does
+		_keyboardHolding = false;
 		foreach (ReorderEntry entry in _entries)
 		{
 			SetLifted(entry, entry == tapped);
@@ -432,11 +438,34 @@ internal sealed class ShelfReorderView : Grid
 	{
 		if (y < EdgeBand)
 		{
-			_ = _scroll.ScrollToAsync(0, Math.Max(0, _scroll.ScrollY - EdgeStep), false);
+			StartEdgeScroll(Math.Max(0, _scroll.ScrollY - EdgeStep));
 		}
 		else if (y > _scroll.Height - EdgeBand)
 		{
-			_ = _scroll.ScrollToAsync(0, _scroll.ScrollY + EdgeStep, false);
+			StartEdgeScroll(_scroll.ScrollY + EdgeStep);
+		}
+	}
+
+	// At most one edge scroll in flight: DragOver fires faster than a scroll finishes, and overlapping ones would pile up and speed the scroll with the event rate.
+	private async void StartEdgeScroll(double y)
+	{
+		if (_edgeScrolling)
+		{
+			return;
+		}
+
+		_edgeScrolling = true;
+		try
+		{
+			await _scroll.ScrollToAsync(0, y, false);
+		}
+		catch (Exception ex)
+		{
+			DebugLog($"edge scroll failed: {ex.GetType().Name}"); // an async void must never take the app down
+		}
+		finally
+		{
+			_edgeScrolling = false;
 		}
 	}
 

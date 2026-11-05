@@ -60,6 +60,28 @@ public static class ShelfOrder
         return result;
     }
 
+    /// <summary>
+    /// The order to store after a reorder of the books <paramref name="shown"/>: stored ids that were not shown (on disk but not on the screen) stay, each right after the id that preceded it
+    /// in the stored list (first if none did), so they keep their old relative place instead of coming back at the front.
+    /// </summary>
+    public static List<string> MergeShown(IReadOnlyList<string> stored, IReadOnlyList<string> shown)
+    {
+        List<string> result = [.. shown];
+        var shownSet = new HashSet<string>(shown);
+        for (int i = 0; i < stored.Count; i++)
+        {
+            if (shownSet.Contains(stored[i]) || result.Contains(stored[i]))
+            {
+                continue;
+            }
+
+            int at = i == 0 ? 0 : result.IndexOf(stored[i - 1]) + 1; // the previous stored id is already in result (shown, or kept just before)
+            result.Insert(Math.Max(at, 0), stored[i]);
+        }
+
+        return result;
+    }
+
     /// <summary>The stored ids without <paramref name="id"/>, so a book removed from the shelf and added again does not return to its old slot.</summary>
     public static List<string> Without(IReadOnlyList<string> stored, string id) => [.. stored.Where(other => other != id)];
 

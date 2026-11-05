@@ -1,3 +1,5 @@
+using DinoReader.Core;
+
 namespace DinoReader;
 
 /// <summary>A container whose height is always its width times <see cref="HeightPerWidth"/>, decided in the
@@ -31,7 +33,8 @@ public class AspectRatioView : ContentView
 	{
 		// Never clamp to the offered height (a recycled cell may carry a stale one): width x ratio always wins.
 		double height = HeightFor(bounds.Width);
-		if (Math.Abs(bounds.Width - lastMeasuredWidth) > 0.5)
+		// Windows only: above layout rounding, as WinUI measures 189.6 as 189 and arranges 190, and a smaller threshold looped into a layout cycle (Slice 264). Android and iOS keep 0.5 dp.
+		if (ShelfOrderLayoutRules.NeedsRemeasure(bounds.Width, lastMeasuredWidth, OperatingSystem.IsWindows()))
 		{
 			InvalidateMeasure();
 		}

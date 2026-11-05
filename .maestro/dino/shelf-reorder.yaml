@@ -5,10 +5,10 @@
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK shelf-order-reset ok
 # expect-log: HOOK enter-grown-up ok
-# expect-log: [Reorder] opened with 4 books
+# expect-log: [Reorder] opened with 4 books,
 # expect-log: HOOK shelf-reorder-move moved
 # expect-log: [Reorder] closed: cancel
-# expect-log: [Reorder] done saved 4 books
+# expect-log: [Reorder] done saved 4 books:
 # expect-log: [Reorder] closed: done
 appId: uk.sirous.dinoreader.dbg
 name: Reorder the shelf, Cancel keeps it, Done saves it across a restart

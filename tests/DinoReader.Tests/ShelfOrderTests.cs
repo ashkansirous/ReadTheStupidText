@@ -143,12 +143,20 @@ public class ShelfOrderGridTests
         Assert.Equal(slot, Grid.SlotAt(x, y, 5));
 
     [Fact]
-    public void FitSplitsTheWidthIntoEqualTiles()
+    public void MergeShownKeepsBooksNotOnScreenAfterTheirOldNeighbour() =>
+        Assert.Equal(["h0", "c", "a", "h1", "b"], ShelfOrder.MergeShown(["h0", "a", "h1", "b", "c"], ["c", "a", "b"]));
+
+    [Fact]
+    public void MergeShownWithNothingStoredIsTheShownOrder() =>
+        Assert.Equal(["b", "a"], ShelfOrder.MergeShown([], ["b", "a"]));
+
+    [Fact]
+    public void FitSplitsTheWidthIntoEqualWholeDpTiles()
     {
         ShelfOrderGrid fit = ShelfOrderGrid.Fit(360, 3, 14, 12, 12, 36, 7);
 
-        Assert.Equal(102.67, fit.TileWidth, 2);
-        Assert.Equal((14, 12), fit.Origin(0));
+        Assert.Equal(102, fit.TileWidth); // 102.67 floored to whole dp
+        Assert.Equal((15, 12), fit.Origin(0)); // the 2 dp left over by flooring is shared: 1 dp more on the left
     }
 
     [Fact]
@@ -182,4 +190,46 @@ public class ShelfOrderKeysTests
     [InlineData(4, DinoKeyAction.ReorderToggle, 4)]
     public void ArrowsStepOneSpotOrOneRowAndStayOnTheGrid(int index, DinoKeyAction arrow, int expected) =>
         Assert.Equal(expected, ShelfOrderKeys.Target(index, 6, 3, arrow));
+}
+
+public class ShelfOrderLayoutRulesTests
+{
+    [Theory]
+    [InlineData(189.6, 189)]
+    [InlineData(189, 189)]
+    [InlineData(0.2, 1)]
+    public void TileWidthIsWholeDp(double width, double expected) =>
+        Assert.Equal(expected, ShelfOrderLayoutRules.WholeDp(width));
+
+    [Fact]
+    public void FitGivesWholeDpTiles()
+    {
+        ShelfOrderGrid grid = ShelfOrderGrid.Fit(613.3, 3, 16, 12, 12, 40, 6);
+        Assert.Equal(Math.Floor(grid.TileWidth), grid.TileWidth);
+    }
+
+    [Theory]
+    [InlineData(190, 189, false)]
+    [InlineData(189, 190, false)]
+    [InlineData(190.01, 189, true)]
+    [InlineData(200, 189, true)]
+    [InlineData(189.4, 189, false)]
+    public void WindowsRemeasuresOnlyAboveLayoutRounding(double arranged, double measured, bool expected) =>
+        Assert.Equal(expected, ShelfOrderLayoutRules.NeedsRemeasure(arranged, measured, isWindows: true));
+
+    [Theory]
+    [InlineData(189.4, 189, false)]
+    [InlineData(189.6, 189, true)]
+    [InlineData(190, 189, true)]
+    [InlineData(189, 189, false)]
+    public void PhonesKeepTheHalfDpThreshold(double arranged, double measured, bool expected) =>
+        Assert.Equal(expected, ShelfOrderLayoutRules.NeedsRemeasure(arranged, measured, isWindows: false));
+
+    [Theory]
+    [InlineData(0, 0, false)]
+    [InlineData(12, -12, false)]
+    [InlineData(12.5, 0, true)]
+    [InlineData(0, -20, true)]
+    public void HoldSurvivesDriftUpToTheSlop(double dx, double dy, bool cancels) =>
+        Assert.Equal(cancels, ShelfOrderLayoutRules.MovedPastHoldSlop(dx, dy));
 }

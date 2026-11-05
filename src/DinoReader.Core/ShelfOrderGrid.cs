@@ -32,8 +32,10 @@ public readonly record struct ShelfOrderGrid(int Columns, double TileWidth, doub
     public static ShelfOrderGrid Fit(double width, int columns, double sidePadding, double gapX, double gapY, double titleHeight, double titleSpacing)
     {
         int cols = Math.Max(1, columns);
-        double tile = Math.Max(1, (width - (2 * sidePadding) - ((cols - 1) * gapX)) / cols);
+        double tile = ShelfOrderLayoutRules.WholeDp((width - (2 * sidePadding) - ((cols - 1) * gapX)) / cols); // whole dp: a fractional width makes WinUI's measure and arrange disagree by 1
         double cover = tile / LandscapeLayout.DefaultPictureAspect;
-        return new ShelfOrderGrid(cols, tile, cover + titleSpacing + titleHeight, gapX, gapY, sidePadding, gapY);
+        double spare = width - (2 * sidePadding) - ((cols - 1) * gapX) - (cols * tile);
+        double left = sidePadding + Math.Floor(Math.Max(0, spare) / 2); // the flooring leaves a remainder: half goes to each side, in whole dp
+        return new ShelfOrderGrid(cols, tile, cover + titleSpacing + titleHeight, gapX, gapY, left, gapY);
     }
 }

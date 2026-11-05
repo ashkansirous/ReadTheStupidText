@@ -2,7 +2,7 @@
 
 *In progress (wave 2026-11-04, night 2026-11-04-1441 wave 3), draft PR #799; resumed after the cause was found.* Dino Reader; Android and iOS alike; the Windows head gets the same mode with the mouse.
 
-**Touches:** `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ShelfReorder*.cs` (new), `src/DinoReader.App/ShelfOrderGrid.cs`, `src/DinoReader.App/AspectRatioView.cs`, `src/DinoReader.App/TileOverlay.xaml`, `src/DinoReader.App/TileOverlay.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/DinoCursor.cs`, `src/DinoReader.App/DinoKeyboard.cs`, `src/DinoReader.App/Testing/DinoTestCommands.cs`, `src/DinoReader.App/Platforms/Windows/App.xaml.cs`, `src/DinoReader.App/Platforms/Windows/LayoutCycleTrace.cs`, `src/DinoReader.Core/DinoKeyMap.cs`, `src/DinoReader.Core/BookSheetPlan.cs`, `src/DinoReader.Core/FileStoryLibrary.cs`, `src/DinoReader.Core/ShelfOrder*.cs` (new), `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/shelf-reorder.yaml` (new), `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/264-dino-gallery-reorder-mode.md`.
+**Touches:** `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ShelfReorder*.cs` (new), `src/DinoReader.Core/ShelfOrderGrid.cs`, `src/DinoReader.App/AspectRatioView.cs`, `src/DinoReader.App/TileOverlay.xaml`, `src/DinoReader.App/TileOverlay.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/Platforms/Windows/DinoCursor.cs`, `src/DinoReader.App/Platforms/Windows/DinoKeyboard.cs`, `src/DinoReader.App/Testing/DinoTestCommands.cs`, `src/DinoReader.App/Platforms/Windows/App.xaml.cs`, `src/DinoReader.App/Platforms/Windows/LayoutCycleTrace.cs`, `src/DinoReader.Core/DinoKeyMap.cs`, `src/DinoReader.Core/BookSheetPlan.cs`, `src/DinoReader.Core/FileStoryLibrary.cs`, `src/DinoReader.Core/ShelfOrder*.cs` (new), `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/shelf-reorder.yaml` (new), `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/264-dino-gallery-reorder-mode.md`.
 
 ## Decisions (user, 2026-11-04, the request and RefineScope)
 
@@ -52,6 +52,11 @@ Windows head crashes when reorder mode opens (three VM rounds; the third design 
 - **The VM package is a Release build** (`Build-TestPackage.ps1` publishes `-c Release`). The trace listener and the High level are in the WIP uncommitted and not Debug-only: gate them (Debug or a test switch) before merge, or keep them behind the device-test switch on purpose and say so.
 - **Android 1 s press (likely, from the code):** `TileOverlay.xaml:18` wires `PointerExited` and `PointerReleased` to `OnPointerEnded` → `CancelHold()`, and `OnPointerMoved` cancels past 12 dp; Android probably sends Exited or Moved during a still press. Confirm with one emulator run logging Pressed/Moved/Exited/Released for a 1.5 s press, then fix.
 - **Status: planned again** (resume from branch `feat/s264-shelf-reorder`, worktree `s264`, draft #799); the WIP has the trace files uncommitted.
+
+## Changed while building (review round, 2026-11-05)
+
+- **Hold gesture:** the 1 s press is one pure Core state machine, `HoldGesture` (Idle -> Pressed -> Fired or Cancelled, every release back to Idle; a tap is swallowed only when that same press fired and the reorder layer did not take the release; a move past 12 dp, the list scrolling, hide, unload or a new binding cancels). `TileOverlay` only feeds it events and a timer; every transition is unit-tested.
+- **Remeasure threshold:** `AspectRatioView` keeps 0.5 dp on Android/iOS and uses 1 dp only on Windows, one rule `ShelfOrderLayoutRules.NeedsRemeasure(..., isWindows)`. `SaveOrderAsync` now holds the library gate across read, merge and replace.
 
 ## Verification
 
