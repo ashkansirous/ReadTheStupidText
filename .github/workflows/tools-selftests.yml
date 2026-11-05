@@ -97,6 +97,9 @@ jobs:
       - name: Desktop test memory guard self-test (${{ matrix.shell }})
         run: ./tools/desktop-vm/test-memory-guard.ps1
 
+      - name: Layout check self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-layout-check.ps1
+
       - name: Switch-parameter assignment self-test (${{ matrix.shell }})
         run: ./tools/test-switch-param-assign.ps1
 

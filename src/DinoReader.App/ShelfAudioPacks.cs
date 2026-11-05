@@ -96,7 +96,6 @@ public sealed class ShelfAudioPacks
 	// The one entry for every start. One run per language: a language with a live run joins it (Join), it never starts a second or drops the first.
 	private void Begin(string code, bool visible, VoiceRequestOutcome outcome, bool cancelled)
 	{
-		bool voiceReady = _voices.StateOf(code) == LanguageVoiceState.Ready;
 		if (visible)
 		{
 			SetMarked(code, false); // an added (or re-added) language starts again, even after a Cancel
@@ -108,7 +107,7 @@ public sealed class ShelfAudioPacks
 		{
 			// The start decision and the registering of the run are one step: a Cancel or a removal landing meanwhile either comes before it (and is seen here) or retires the run made here.
 			bool markedCancelled = !visible && (cancelled || Marked().Contains(code));
-			if (!StoryLanguages.Current().All.Contains(code) || ShelfAudioStart.Decide(voiceReady, markedCancelled, visible, outcome) == ShelfAudioStartDecision.Skip)
+			if (!StoryLanguages.Current().All.Contains(code) || ShelfAudioStart.Decide(markedCancelled, visible, outcome) == ShelfAudioStartDecision.Skip)
 			{
 				return;
 			}
@@ -238,7 +237,7 @@ public sealed class ShelfAudioPacks
 		}
 		catch (Exception ex)
 		{
-			AudioPackLog.Write($"shelf audio {code}: run failed, will try at the next open ({ex.GetType().Name}: {ex.Message})");
+			AudioPackLog.Write($"shelf audio {code}: run failed, will try at the next open ({ex.GetType().Name})");
 		}
 		finally
 		{

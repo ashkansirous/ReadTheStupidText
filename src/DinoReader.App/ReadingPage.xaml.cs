@@ -39,6 +39,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private readonly UsageCounter _usage;
 	private bool _finishCounted;
 	private bool _openCounted;
+	private Action<Story, string>? _voiceUsedHandler; // Slice 267: the same lifetime, for the voice-used count
 	private Action<ReadingEventKind, ReadStopReason?>? _playbackHandler; // Slice 250: subscribed while the page is on the stack, bound to the book shown then
 	private readonly PageFollower _follower = new();
 	private readonly BusyGuard _busy = new();
@@ -1242,6 +1243,8 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		_playbackHandler = (kind, reason) => OnPlayback(book, kind, reason);
 		_session.Playback += _playbackHandler;
+		_voiceUsedHandler = (voiced, detail) => OnVoiceUsed(book, voiced, detail);
+		_session.VoiceUsed += _voiceUsedHandler;
 	}
 
 	private void UnsubscribePlayback()
@@ -1250,6 +1253,21 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		{
 			_session.Playback -= _playbackHandler;
 			_playbackHandler = null;
+		}
+
+		if (_voiceUsedHandler is not null)
+		{
+			_session.VoiceUsed -= _voiceUsedHandler;
+			_voiceUsedHandler = null;
+		}
+	}
+
+	// Slice 267: one count per read, naming the voice it used (a book's own reads only; the intro's demo read counts no book event).
+	private void OnVoiceUsed(Story book, Story voiced, string detail)
+	{
+		if (ReferenceEquals(book, voiced) || book.Id == voiced.Id)
+		{
+			RecordBookCount(UsageEventName.ReadVoice, book, detail);
 		}
 	}
 
@@ -1263,11 +1281,11 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	}
 
 	// Slice 228: the intro's demo read is not a real reading of the book, so it counts no open or finish (the one rule is DemoReadCounting).
-	private void RecordBookCount(string name, Story story)
+	private void RecordBookCount(string name, Story story, string detail = "")
 	{
 		if (DemoReadCounting.Counts(name, _demoRead))
 		{
-			_usage.Record(name, story, language: ReadIn(story));
+			_usage.Record(name, story, detail, ReadIn(story));
 		}
 	}
 

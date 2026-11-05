@@ -41,6 +41,7 @@ $ErrorActionPreference = 'Stop'
 trap { Write-Host "run-flows.ps1: $($_.Exception.Message)"; exit 1 }
 . (Join-Path $PSScriptRoot 'common.ps1')
 . (Join-Path $PSScriptRoot 'build-cache.ps1')
+. (Join-Path $PSScriptRoot 'layout-check.ps1')   # Slice 267: Get-LayoutProblems for the `# layout-check` flows
 $Instance = Resolve-EmulatorInstance $Instance   # 'tablet' -> '3'
 Set-EmulatorInstance $Instance
 
@@ -212,13 +213,44 @@ function Invoke-GuardedFlow([string]$Maestro, [System.IO.FileInfo]$File) {
     return $rerun
 }
 
+# Slice 267: a flow header `# layout-check` asks for the overlap / cut-off check on the screen the flow ends on; `# font-scale: 1.3` runs the flow at that system font scale (restored after it).
+function Test-FlowWantsLayoutCheck([string]$FlowFile) { return [bool](Get-Content $FlowFile | Where-Object { $_ -match '^#\s*layout-check\s*$' } | Select-Object -First 1) }
+
+function Get-FlowFontScale([string]$FlowFile) {
+    $line = Get-Content $FlowFile | Where-Object { $_ -match '^#\s*font-scale:\s*([0-9.]+)\s*$' } | Select-Object -First 1
+    if ($line -and $line -match '([0-9.]+)\s*$') { return $Matches[1] }
+    return $null
+}
+
+function Set-FontScale([string]$Scale) { & $script:Adb -s $script:Serial shell settings put system font_scale $Scale | Out-Null }
+
+# The scale the device had before a flow changed it ('null' = never set), so the flow's end puts that back and not a fixed 1.0.
+function Get-FontScale { return ("$(& $script:Adb -s $script:Serial shell settings get system font_scale)").Trim() }
+
+function Restore-FontScale([string]$Previous) {
+    if ($Previous -and $Previous -ne 'null') { Set-FontScale $Previous; return }
+    & $script:Adb -s $script:Serial shell settings delete system font_scale | Out-Null
+}
+
 function Invoke-Flow([string]$Maestro, [System.IO.FileInfo]$File) {
     $ErrorActionPreference = 'Continue'
     $cellular = (Get-FlowNeeds $File.FullName) -contains 'cellular-only'
+    $fontScale = Get-FlowFontScale $File.FullName
     Wake-Emulator
     if ($cellular) { Set-CellularOnly }
+    $previousScale = if ($fontScale) { Get-FontScale } else { $null }
+    if ($fontScale) { Set-FontScale $fontScale }
     try { return Invoke-FlowBody $Maestro $File }
-    finally { if ($cellular) { Restore-Wifi } }  # a failed flow never leaves Wi-Fi off for the next one
+    finally {
+        if ($cellular) { Restore-Wifi }  # a failed flow never leaves Wi-Fi off for the next one
+        if ($fontScale) { Restore-FontScale $previousScale }  # ...nor a font scale on; the device's own value comes back
+    }
+}
+
+# Slice 267: the screen the flow ended on, read from a uiautomator dump; returns the problem lines (empty = fine).
+function Get-FlowLayoutProblems([string]$FlowName) {
+    $dump = Get-UiDumpXml
+    return @(Get-LayoutProblems $dump $FlowName)
 }
 
 function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File) {
@@ -238,6 +270,10 @@ function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File) {
     else {
         $missing = Wait-LogMarkers @(Get-ExpectedLogs $File.FullName)
         if ($missing.Count -gt 0) { $problem = "Missing log marker(s) under tag ${logTag}: " + ($missing -join '; ') }
+        elseif (Test-FlowWantsLayoutCheck $File.FullName) {
+            $layout = @(Get-FlowLayoutProblems $File.BaseName)
+            if ($layout.Count -gt 0) { $problem = "Layout check failed:`n" + (($layout | ForEach-Object { "  $_" }) -join "`n") }
+        }
     }
     # Slice 241 item 1: a failed flow is checked for an app crash / ANR, so the caller can stop instead of running the rest into the same dead app.
     $crash = @()

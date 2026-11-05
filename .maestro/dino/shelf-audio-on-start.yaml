@@ -1,0 +1,57 @@
+# Slice 267 (Bugs A and C): books already on the shelf get their pre-made audio in the family's languages at the next cold start, with no hook fetching the pack and no 7-day wait.
+# The shelf is the four Debug test books (the state an old install had: books, no packs), the family is Farsi (the app language) and English (a side language). A cold start runs ShelfAudioPacks.Resume for
+# every family language, so the live store's Farsi pack of Three Little Pigs arrives by itself; the read then plays a clip. Needs the network and the packs uploaded (like premade-audio-starter).
+# To see it fail against the old behaviour: on a build from before this slice the cold start fetches nothing for a shelf book (only a side language's own run or the 7-day check did), so no
+# "shelf audio fa" line is ever written and the read uses the device voice ("[ReadStart] first sound ... (device voice)", no "[AudioPack] premade clip plays").
+# Not covered here: installing the previous release build and the new one over it (the harness cannot install two builds); this models the state the upgrade leaves, books with no packs.
+# expect-log: HOOK skip-first-run ok
+# expect-log: [AudioPack] shelf audio fa: run starts (launch)
+# expect-log: [AudioPack] shelf audio fa: finished,
+# expect-log: [AudioPack] premade clip plays
+# expect-log: HOOK read start
+appId: uk.sirous.dinoreader.dbg
+name: Shelf books get their audio in the family's languages at a cold start
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, side languages, downloaded voice/OCR packs, installed audio packs, own books); fine here: skip-first-run puts the four test books back and no pack must be installed beforehand.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# English joins the family as a side language (saved at once, as the page does) and its own run starts; Farsi, the main language, has no run of its own: only the cold start below can fetch its packs.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: shelf-audio
+      lang: en
+# The cold start: the app is stopped and started again with no hook, so only the launch code can fetch the packs.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# The launch run lists the store, then installs the Farsi pack of every shelf book one at a time; the open-book hook waits for the book's pack before it plays (up to 120 s).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 150000
+- extendedWaitUntil:
+    visible: "Pause|توقف"
+    timeout: 90000
+# Put the screens back in English, so later flows that wait on English labels (Pause) still match.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: en
