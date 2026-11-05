@@ -1,6 +1,6 @@
 # Slice 272 — Dino: Farsi pre-made audio falls back to the device voice after the first animal sound
 
-*Planned 2026-11-05 (user: "fix the farsi books").* Bug fix, Dino Reader, content and tooling (the app code is unchanged). Reported by the user on 2026-11-05: in Lion and Mouse in Farsi, from page 5 ("but you are too small", where the lion lifts his paw) the read falls back to the device voice and stays on it; English was fine.
+*In progress 2026-11-05 (user: "fix the farsi books").* Bug fix, Dino Reader, content and tooling (the app code is unchanged). Reported by the user on 2026-11-05: in Lion and Mouse in Farsi, from page 5 ("but you are too small", where the lion lifts his paw) the read falls back to the device voice and stays on it; English was fine.
 
 **Touches:** `content/dino/{goldilocks,lion-and-mouse,little-red-hen,red-riding-hood,three-little-pigs,tortoise-and-hare,town-mouse-country-mouse,ugly-duckling}/audio/fa/**`, the same eight books' `audio-cast.json` (`audioPacks.fa`), `tools/premade-audio/**`, `tools/DinoReader.BookBuilder/**`, `.github/workflows/dino-store.yml`, `.github/workflows/tools-selftests.yml`, `.github/CLAUDE.md`, `tools/CLAUDE.md`, `docs/plan/slices/272-dino-farsi-clips-off-by-one.md`.
 
