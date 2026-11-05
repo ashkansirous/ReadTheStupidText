@@ -27,6 +27,21 @@
 - [ ] Measure the iPhone and Android downloads after Slice 261 and this slice; write both numbers here. Target: about 50-60 MB each.
 - [ ] Tests: unit tests for the translator choice; iOS compile in CI; Android flows unchanged.
 
+## Waits for the user: how the iPhone translates Farsi without ML Kit (night 2026-11-04-1441 wave 3, not claimed)
+
+Wave 3 research (`reviews/s263-translation-route-research.md`) and a second lookup by the starter session (2026-11-04 ~23:40 UTC, web pages read, nothing downloaded):
+
+- **Apple Translation:** needs iOS 18 (our minimum is 15.5; a session without SwiftUI needs iOS 26). Apple's pages give no language list (the app is told to ask `LanguageAvailability` at run time), so Farsi is **not confirmed either way**; the consumer Translate app has no Persian (weak evidence).
+- **Meta M2M100 418M:** MIT licence, covers Farsi and every app language in one model. The smallest ONNX export (Xenova, quantized) is about **627 MB** (encoder 288 + decoder 339), read from the file list. Speed and memory on a phone are not measured.
+- **Helsinki Opus-MT `opus-mt-en-iir`:** Apache-2.0, English to Persian only. Persian to English was not found (`opus-mt-fa-en` and `opus-mt-en-fa` returned 401). Size not shown.
+- **Not usable:** NLLB-200 and the persiannlp mT5 Farsi models (non-commercial); MADLAD-400 (smallest 3B, Farsi not named).
+
+Choices for the user:
+1. **Keep ML Kit on the iPhone.** About 82 MB after Slice 261; Farsi translation stays. Android about 47 MB.
+2. **Drop ML Kit, use Apple Translation.** iPhone about 57 MB, minimum iOS raised to 18; Farsi own-book translation on iPhone only if Apple supports it (unconfirmed; a probe on an iOS 18 device would tell).
+3. **Drop ML Kit, download M2M100 the first time a grown-up translates their own book.** iPhone about 57 MB, Farsi kept, but a download of about 630 MB once, and phone speed unmeasured.
+4. Another route the user names.
+
 ## Not this slice (found 2026-11-04, waits for the user)
 
 - Capturing a Farsi, Arabic, Russian, Japanese or Chinese page reads no text on Android (Farsi and Arabic also on iPhone); see *Measured and found* below. Fixing it means downloadable page readers (the `ocr-*` packs Read The Stupid Text uses). Not asked for; recorded so it is not lost.

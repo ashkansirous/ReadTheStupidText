@@ -245,8 +245,6 @@
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>この本</value></data>
-  <data name="Book_ShowOriginal" xml:space="preserve"><value>元のテキストを表示</value></data>
-  <data name="Book_ShowOriginalHint" xml:space="preserve"><value>{0}の文字を表示します。声は今までどおり{1}で読みます。</value></data>
   <data name="Book_Back" xml:space="preserve"><value>お話にもどる</value></data>
   <!-- /Slice 110 -->
   <!-- Slice 111 -->

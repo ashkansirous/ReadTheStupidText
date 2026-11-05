@@ -247,8 +247,6 @@
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>Tämä kirja</value></data>
-  <data name="Book_ShowOriginal" xml:space="preserve"><value>Näytä alkuperäinen teksti</value></data>
-  <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Näytä sanat kielellä {0}. Ääni lukee edelleen kielellä {1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>Takaisin tarinaan</value></data>
   <!-- /Slice 110 -->
   <!-- Slice 111 -->

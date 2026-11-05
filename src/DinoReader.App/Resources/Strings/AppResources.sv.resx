@@ -247,8 +247,6 @@
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>Den här boken</value></data>
-  <data name="Book_ShowOriginal" xml:space="preserve"><value>Visa originaltexten</value></data>
-  <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Visa orden på {0}. Rösten läser fortfarande på {1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>Tillbaka till sagan</value></data>
   <!-- /Slice 110 -->
   <!-- Slice 111 -->

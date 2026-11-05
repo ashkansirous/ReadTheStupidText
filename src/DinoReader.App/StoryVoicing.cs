@@ -185,11 +185,11 @@ public sealed class StoryVoicing
 	}
 
 	/// <summary>The story's text in the language it is read in, for the reading screen (Slice 110, Decision 112); null when the screen shows the story as it is:
-	/// the story is not translated now, the grown-up chose "Show original text", or a missing language model left it untranslated. <paramref name="sentences"/> are the
+	/// the story is not translated now, or a missing language model left it untranslated. <paramref name="sentences"/> are the
 	/// story's sentences, which the result keeps one-to-one.</summary>
 	public async Task<TranslatedStory?> TranslatedDisplayAsync(Story story, IReadOnlyList<SentenceSpan> sentences, string reading, CancellationToken cancellationToken = default)
 	{
-		if (story.ShowOriginalText || !_translator.Applies(story, reading))
+		if (!_translator.Applies(story, reading))
 		{
 			return null;
 		}
