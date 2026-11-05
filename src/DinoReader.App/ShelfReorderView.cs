@@ -37,6 +37,8 @@ internal sealed class ShelfReorderView : Grid
 	private double _gap;
 	private double _titleHeight;
 	private ReorderEntry? _dragged;
+	private IReadOnlyList<string>? _orderBeforeDrag; // the order when the lift began, put back when the drag is cancelled or dropped outside the grid
+	private bool _dropAccepted;
 	private bool _closing;
 	private int _kbIndex = -1; // the spot the keyboard focus is on; -1 until a key is pressed
 	private bool _keyboardHolding; // Space lifted the focused cover and the arrows carry it
@@ -56,7 +58,11 @@ internal sealed class ShelfReorderView : Grid
 		this.Add(_hint, 0, 1);
 		var drop = new DropGestureRecognizer { AllowDrop = true };
 		drop.DragOver += OnDragOver;
-		drop.Drop += (_, _) => EndDrag();
+		drop.Drop += (_, _) =>
+		{
+			_dropAccepted = true;
+			EndDrag();
+		};
 		_surface.GestureRecognizers.Add(drop);
 		_scroll.Content = _surface;
 		_scroll.SizeChanged += OnScrollSizeChanged;
@@ -161,7 +167,7 @@ internal sealed class ShelfReorderView : Grid
 		tap.Tapped += (_, _) => Lift(entry);
 		var drag = new DragGestureRecognizer { CanDrag = true };
 		drag.DragStarting += (_, e) => StartDrag(entry, e);
-		drag.DropCompleted += (_, _) => EndDrag();
+		drag.DropCompleted += (_, _) => FinishDrag();
 		entry.View.GestureRecognizers.Add(tap);
 		entry.View.GestureRecognizers.Add(drag);
 #if WINDOWS
@@ -400,6 +406,8 @@ internal sealed class ShelfReorderView : Grid
 	{
 		e.Data.Text = entry.Id;
 		_dragged = entry;
+		_orderBeforeDrag = Order;
+		_dropAccepted = false;
 		_kbIndex = -1; // the mouse takes over from the keyboard
 		_keyboardHolding = false;
 		SetLifted(entry, false);
@@ -496,6 +504,18 @@ internal sealed class ShelfReorderView : Grid
 			entry.Slot = slot;
 			Place(entry, animate: entry != _dragged);
 		}
+	}
+
+	// The drag ended on the dragged cover: a drop on the grid already ended it; a cancel (Esc) or a drop elsewhere puts the book back where it was before the drag.
+	private void FinishDrag()
+	{
+		if (!_dropAccepted && _orderBeforeDrag is { } before)
+		{
+			ApplyOrder(before);
+		}
+
+		_dropAccepted = false;
+		EndDrag();
 	}
 
 	private void EndDrag()

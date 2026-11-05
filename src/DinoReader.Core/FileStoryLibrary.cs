@@ -87,7 +87,8 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         await _gate.WaitAsync(); // one gate across read, merge and replace, so a concurrent delete's forget cannot be undone by a stale merge
         try
         {
-            IReadOnlyList<string> merged = ShelfOrder.MergeShown(await ReadOrderLockedAsync(), ids);
+            IReadOnlyList<string> onDisk = [.. (await ReadOrderLockedAsync()).Where(id => Directory.Exists(FolderOf(id)))]; // an id whose book is gone is dropped here, even if its delete could not rewrite the file
+            IReadOnlyList<string> merged = ShelfOrder.MergeShown(onDisk, ids);
             await File.WriteAllTextAsync(temp, ShelfOrder.Serialize(merged));
             File.Move(temp, OrderPath, overwrite: true);
         }
@@ -219,6 +220,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
         catch (DirectoryNotFoundException)
         {
+            await TryForgetInOrderAsync(id); // the folder was already gone; the id may still be in the shelf order
         }
         finally
         {
@@ -226,7 +228,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
     }
 
-    // The book folder is already gone here, so a locked shelf-order.json must not fail the delete: the next save prunes the id.
+    // The book folder is already gone here, so a locked shelf-order.json must not fail the delete: the next order save drops ids whose folder is gone.
     private async Task TryForgetInOrderAsync(string id)
     {
         try

@@ -22,7 +22,11 @@ public partial class TileOverlay : ContentView
 				DesktopTips.Set(MoreButton, tile.MoreHint); // Slice 235 part B: Windows only
 			}
 		};
-		Loaded += (_, _) => ScrollStarted += CancelHold;
+		Loaded += (_, _) =>
+		{
+			ScrollStarted -= CancelHold; // Loaded can fire again without Unloaded: never subscribe twice
+			ScrollStarted += CancelHold;
+		};
 		Unloaded += (_, _) =>
 		{
 			ScrollStarted -= CancelHold;

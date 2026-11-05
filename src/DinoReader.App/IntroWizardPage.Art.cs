@@ -19,7 +19,7 @@ public sealed record IntroPictures(string? RecordPage, IReadOnlyList<string?> Ad
 	{
 		try
 		{
-			IReadOnlyList<Story> stories = await library.ListAsync();
+			IReadOnlyList<Story> stories = (await library.ListAsync()).OrderBy(s => s.Created).ThenBy(s => s.Id, StringComparer.Ordinal).ToList(); // first added first, whatever order the grown-up gave the shelf
 			Story? first = FirstOf(stories);
 			Story? other = stories.FirstOrDefault(s => s.Id != first?.Id && PagePictures(s).Count >= PhotoCount);
 			string? record = first is null ? null : PagePictures(first).Select(f => library.TryResolveFile(first.Id, f)).FirstOrDefault(p => p is not null);
@@ -47,7 +47,7 @@ public sealed record IntroPictures(string? RecordPage, IReadOnlyList<string?> Ad
 	{
 		IEnumerable<Story> catalogue = stories.Where(s => UsageEvent.ShelfId(s.SourceId) is { } id && StarterStories.IsCatalogueId(id));
 		IEnumerable<Story> pool = catalogue.Any() ? catalogue : stories;
-		return pool.Where(s => s.Pages.Count > 0).OrderBy(s => s.Pages.Count).FirstOrDefault();
+		return pool.Where(s => s.Pages.Count > 0).OrderBy(s => s.Pages.Count).ThenBy(s => s.Created).ThenBy(s => s.Id, StringComparer.Ordinal).FirstOrDefault(); // ties go to the book added first, not to the shelf order
 	}
 
 	private static List<string> PagePictures(Story story) => story.Pages.Select(p => p.ImageFile).OfType<string>().ToList();

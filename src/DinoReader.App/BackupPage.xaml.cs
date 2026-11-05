@@ -160,7 +160,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 
 	private async Task SaveAsync()
 	{
-		IReadOnlyList<Story> stories = await _library.ListAsync();
+		IReadOnlyList<Story> stories = (await _library.ListAsync()).OrderByDescending(s => s.Created).ThenBy(s => s.Id, StringComparer.Ordinal).ToList(); // newest first, whatever order the shelf has
 		if (stories.Count == 0 || !_mode.IsGrownUp)
 		{
 			return;
