@@ -2,6 +2,17 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 270: Dino iPhone crash, player disposed in its finished callback ([slice](slices/270-dino-ios-player-disposed-in-finished-callback.md))
+- iOS: the TestFlight build on the user's iPhone, then `node tools/crashes/pull-crashes.mjs --app dino --kind managed` shows no new `FinishedPlaying` ObjectDisposedException.
+- Three or more pre-made clips in a row on a device (the emulator flow ends after clip 1).
+- Windows clip hand-off: no VM check plays audio clips (a harness gap).
+- `IDispatcher.Dispatch` always queues on Windows (seen only as a string match in Microsoft.Maui.dll 10.0.120, not confirmed from source).
+
+### Slice 269: Leftovers from night 2026-11-04-1441 ([slice](slices/269-feedback-loop-2026-11-04-1441-leftovers.md))
+- Emulator cold-boot retry path of the preflight (not triggered in the run; kill the Maestro driver after a snapshot boot).
+- `Test-LogMarker` regex: hand-checked and self-test only, not seen on a real flow with a `,` or `:` marker.
+- Apple Vision per-language support for Farsi, Arabic, Russian, Japanese and Chinese (research only; call `supportedRecognitionLanguages` on the minimum iOS).
+
 ### Slice 235: Dino on Windows, part C ([slice](slices/235-dino-windows-window.md))
 - Down right after opening Settings does nothing until Tab (focus starts on the window's Back button).
 - Reorder mode on Windows keeps phone padding (review high 6).
