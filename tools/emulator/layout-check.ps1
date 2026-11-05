@@ -4,6 +4,7 @@
 .DESCRIPTION
   Maestro taps the centre of an element's bounds from the accessibility tree, so a button covered by another still "passes" a flow. This reads the same tree and checks the bounds:
     - two enabled clickable nodes that overlap, when neither is inside the other in the tree (a card that holds its own button is fine; two siblings drawn on the same spot are not);
+    - a node with visible text or a content description that overlaps a clickable node which is neither its ancestor nor its descendant (a label inside its own button is fine; the label need not be clickable itself);
     - an enabled clickable node whose bounds reach past the screen (the root node's bounds) by more than the tolerance.
   Dot-source it for the pure functions (Get-LayoutProblems), or run it: `layout-check.ps1 -LayoutXmlPath dump.xml` checks a saved dump with no device, `layout-check.ps1 -AdbSerial emulator-5554 -ScreenLabel wizard-record`
   dumps the screen over adb first. Exit 0 = no problem, 1 = problems (one `label: message` line each), 2 = no usable dump.
@@ -47,7 +48,7 @@ function Get-IntersectionArea($A, $B) {
 }
 
 # Pure: every enabled clickable node with an area, as objects carrying its bounds, its name for the message and the chain of its ancestors' index paths.
-function Get-TappableNodes([System.Xml.XmlNode]$Parent, [string]$Path, [System.Collections.Generic.List[object]]$Found) {
+function Get-TappableNodes([System.Xml.XmlNode]$Parent, [string]$Path, [System.Collections.Generic.List[object]]$Found, [System.Collections.Generic.List[object]]$Labels) {
     $i = 0
     foreach ($node in $Parent.ChildNodes) {
         if ($node.NodeType -ne 'Element' -or $node.Name -ne 'node') { continue }
@@ -58,11 +59,31 @@ function Get-TappableNodes([System.Xml.XmlNode]$Parent, [string]$Path, [System.C
             $name = $node.GetAttribute('resource-id'); if (-not $name) { $name = $node.GetAttribute('text') }; if (-not $name) { $name = $node.GetAttribute('content-desc') }; if (-not $name) { $name = $node.GetAttribute('class') }
             $Found.Add([pscustomobject]@{ Path = $here; Bounds = $bounds; Name = "$name" })
         }
-        Get-TappableNodes $node $here $Found
+        elseif ($null -ne $Labels -and $node.GetAttribute('clickable') -ne 'true' -and $bounds -and (Get-Area $bounds) -gt 0) {
+            $label = $node.GetAttribute('text'); if (-not $label) { $label = $node.GetAttribute('content-desc') }
+            if ($label) { $Labels.Add([pscustomobject]@{ Path = $here; Bounds = $bounds; Name = "$label" }) }
+        }
+        Get-TappableNodes $node $here $Found $Labels
     }
 }
 
 function Test-IsAncestorPath([string]$Ancestor, [string]$Path) { return $Path.StartsWith($Ancestor + '/') }
+
+# Pure: a node with visible text (or a content description) drawn over a tappable node that is neither its ancestor nor its descendant. A label inside its own button is fine; a label under another button (Slice 267: "Try it" under "Skip") is not, even when the label itself is not clickable.
+function Get-LabelOverlapProblems($Tappable, $Labels, [string]$Label) {
+    $problems = @()
+    foreach ($l in $Labels) {
+        foreach ($t in $Tappable) {
+            if ((Test-IsAncestorPath $t.Path $l.Path) -or (Test-IsAncestorPath $l.Path $t.Path)) { continue }
+            $shared = Get-IntersectionArea $l.Bounds $t.Bounds
+            $smaller = [math]::Min((Get-Area $l.Bounds), (Get-Area $t.Bounds))
+            if ($smaller -gt 0 -and $shared -ge $script:OverlapShareOfSmaller * $smaller) {
+                $problems += "${Label}: text '$($l.Name)' is covered by '$($t.Name)' (bounds [$($l.Bounds -join ',')] and [$($t.Bounds -join ',')])"
+            }
+        }
+    }
+    return $problems
+}
 
 # Pure: the problems of one dump, as strings ($Label first). Empty when the screen is fine.
 function Get-LayoutProblems([string]$Text, [string]$Label = 'screen') {
@@ -71,7 +92,8 @@ function Get-LayoutProblems([string]$Text, [string]$Label = 'screen') {
     $rootNode = $doc.SelectSingleNode('//hierarchy/node')
     $screen = if ($rootNode) { ConvertTo-Bounds $rootNode.GetAttribute('bounds') } else { $null }
     $tappable = New-Object 'System.Collections.Generic.List[object]'
-    Get-TappableNodes $doc.DocumentElement '' $tappable
+    $labels = New-Object 'System.Collections.Generic.List[object]'
+    Get-TappableNodes $doc.DocumentElement '' $tappable $labels
     $problems = @()
     if ($screen) {
         foreach ($t in $tappable) {
@@ -92,6 +114,7 @@ function Get-LayoutProblems([string]$Text, [string]$Label = 'screen') {
             }
         }
     }
+    $problems += Get-LabelOverlapProblems $tappable $labels $Label
     return $problems
 }
 
@@ -99,7 +122,11 @@ if ($MyInvocation.InvocationName -ne '.') {
     if ($LayoutXmlPath) { $dump = Get-Content -Raw -Path $LayoutXmlPath }
     elseif ($AdbSerial) {
         $adb = if ($env:ANDROID_HOME) { Join-Path $env:ANDROID_HOME 'platform-tools\adb.exe' } else { 'adb' }
-        $dump = (& $adb -s $AdbSerial shell uiautomator dump /dev/tty | Out-String)
+        $devicePath = '/sdcard/rtst-ui-dump.xml'   # not /dev/tty: from a non-tty host shell that returns no XML
+        & $adb -s $AdbSerial shell rm -f $devicePath | Out-Null
+        & $adb -s $AdbSerial shell uiautomator dump $devicePath | Out-Null
+        $dump = (& $adb -s $AdbSerial exec-out cat $devicePath | Out-String)
+        & $adb -s $AdbSerial shell rm -f $devicePath | Out-Null
     }
     else { Write-Host 'Pass -LayoutXmlPath <dump.xml> or -AdbSerial <emulator-5554>.'; exit 2 }
     $found = @(Get-LayoutProblems $dump $ScreenLabel)

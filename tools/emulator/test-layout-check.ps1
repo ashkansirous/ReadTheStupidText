@@ -32,6 +32,21 @@ Assert-Equal 'a button inside a clickable card passes' 0 @(Get-LayoutProblems $n
 $partial = New-Dump ((New-Button 'A' '[100,500][600,700]') + (New-Button 'B' '[400,600][900,800]'))
 Assert-Equal 'a partial overlap of siblings fails' 1 @(Get-LayoutProblems $partial 'x').Count
 
+# The real pre-fix dump (large font): only Skip is clickable, "Try it" is a plain label (and its group's content-desc) drawn inside Skip's bounds.
+$tryItUnderSkip = New-Dump ("<node bounds=""[58,2108][1023,2269]"" clickable=""false"" enabled=""true"">" +
+    "<node content-desc=""Try it"" bounds=""[58,2108][1023,2269]"" clickable=""false"" enabled=""true""><node text=""Try it"" bounds=""[481,2149][601,2216]"" clickable=""false"" enabled=""true"" /></node>" +
+    (New-Button 'Skip' '[58,2131][1023,2247]') + "</node>")
+$underFound = @(Get-LayoutProblems $tryItUnderSkip 'wizard-record-large-font')
+Assert-Equal 'a label drawn under another button fails' $true ($underFound.Count -ge 1)
+Assert-Equal 'the message names the label and the button' $true (($underFound -join ' ') -match "text 'Try it' is covered by 'Skip'")
+
+# No false positives: a label inside its own button, and text in a card under a clickable card parent.
+$ownLabel = New-Dump ("<node bounds=""[300,2000][780,2144]"" clickable=""true"" enabled=""true""><node text=""Try it"" bounds=""[400,2040][680,2100]"" clickable=""false"" enabled=""true"" /></node>")
+Assert-Equal 'a label inside its own button passes' 0 @(Get-LayoutProblems $ownLabel 'x').Count
+$card = New-Dump ("<node bounds=""[100,500][980,900]"" clickable=""true"" enabled=""true""><node bounds=""[120,520][960,880]"" clickable=""false"" enabled=""true""><node text=""Title"" bounds=""[140,540][900,600]"" clickable=""false"" enabled=""true"" /><node content-desc=""Cover"" bounds=""[140,620][900,860]"" clickable=""false"" enabled=""true"" /></node></node>" +
+    "<node text=""Heading"" bounds=""[100,100][980,200]"" clickable=""false"" enabled=""true"" />")
+Assert-Equal 'text in a card under a clickable parent passes' 0 @(Get-LayoutProblems $card 'shelf').Count
+
 # Touching edges and a disabled node are not problems.
 $touching = New-Dump ((New-Button 'A' '[100,500][500,700]') + (New-Button 'B' '[500,500][900,700]'))
 Assert-Equal 'touching edges pass' 0 @(Get-LayoutProblems $touching 'x').Count
