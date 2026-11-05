@@ -1,6 +1,6 @@
 ### Slice 235 — Dino on Windows: a real desktop window (size, keyboard, mouse)
 
-*Part B built 2026-11-02 (night 2026-11-01-2355 wave 6), merged as PR #745 (d8ba0b6a), all six Dino VM checks pass; part C (WindowLayout wiring into pages, hover, wheel, focus-ring styling and focus return, Settings arrow keys, right-click, shelf column counts, speed hint string) is *built 2026-11-05 (night 2026-11-04-1441 wave 4), draft PR #776, not merged; all 7 Dino VM checks pass on run 7.** *Part A built 2026-11-02 (window and pure rules; five Dino VM checks pass), merged as PR #740 (0d135658).* *Planned 2026-11-01.* The user asked for "better design on windows". **Mock drawn 2026-11-01 (Batch 46), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges (a wide window uses its layouts) and alongside or after Slice 234 (a mid-size window uses the tablet rules).
+*Part B built 2026-11-02 (night 2026-11-01-2355 wave 6), merged as PR #745 (d8ba0b6a), all six Dino VM checks pass; part C (WindowLayout wiring into pages, hover, wheel, focus-ring styling and focus return, Settings arrow keys, right-click, shelf column counts, speed hint string) is *built 2026-11-05 (night 2026-11-04-1441 wave 4), merged as PR #776 (1f491071); all 7 Dino VM checks pass on run 7.** *Part A built 2026-11-02 (window and pure rules; five Dino VM checks pass), merged as PR #740 (0d135658).* *Planned 2026-11-01.* The user asked for "better design on windows". **Mock drawn 2026-11-01 (Batch 46), added by the user in Claude Design, so it counts as approved**. Start after Slice 232 merges (a wide window uses its layouts) and alongside or after Slice 234 (a mid-size window uses the tablet rules).
 
 **Touches:** `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/Platforms/Windows/**`, `src/DinoReader.Core/*Layout*.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/GrownUpHeader.cs`, `src/DinoReader.App/*Page*.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `tools/desktop-vm/**`, `docs/design/dino-reader/**`, `docs/plan/slices/235-dino-windows-window.md`
 
@@ -251,10 +251,10 @@ Built to `reviews/s235c-design.md` (the *Part C design pass* above): `origin/mai
 - Real mouse hover on a real PC.
 - Plus the part B list above.
 
-#### For tools/desktop-vm/CLAUDE.md (part C)
+#### For tools/desktop-vm/CLAUDE.md (part C) (lifted 2026-11-05)
 
 - `Cursor.Position` alone raises no WinUI pointer move in the VM; send `mouse_event` `MOUSEEVENTF_MOVE`. `-Check <name>` runs only `dino-launch` then the named check, so `dino-desktop-polish` needs the full set. (Slice 235: docs/plan/slices/235-dino-windows-window.md)
 
-#### For src/DinoReader.App/CLAUDE.md (part C)
+#### For src/DinoReader.App/CLAUDE.md (part C) (lifted 2026-11-05)
 
 - On Windows, per-book input lives on the native `ListViewBase` (never the tile template or MAUI recognizers); key handlers on it need `AddHandler(..., handledEventsToo: true)`. (Slice 235: docs/plan/slices/235-dino-windows-window.md)
