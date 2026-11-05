@@ -1,6 +1,6 @@
 # Slice 264 — Dino: grown-ups reorder the shelf (iPhone-style reorder mode)
 
-*Built 2026-11-05, not merged (draft PR #799, branch feat/s264-shelf-reorder); Windows drag, Done and iOS not yet tried on a device, see Not yet verified.* Dino Reader; Android and iOS alike; the Windows head gets the same mode with the mouse.
+*Built 2026-11-05, merged as PR #799 (2fe5a6ea); Windows drag, Done and iOS not yet tried on a device, see Not yet verified.* Dino Reader; Android and iOS alike; the Windows head gets the same mode with the mouse.
 
 **Touches:** `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ShelfReorder*.cs` (new), `src/DinoReader.Core/ShelfOrderGrid.cs`, `src/DinoReader.App/AspectRatioView.cs`, `src/DinoReader.App/TileOverlay.xaml`, `src/DinoReader.App/TileOverlay.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/Platforms/Windows/DinoCursor.cs`, `src/DinoReader.App/Platforms/Windows/DinoKeyboard.cs`, `src/DinoReader.App/Testing/DinoTestCommands.cs`, `src/DinoReader.App/Platforms/Windows/App.xaml.cs`, `src/DinoReader.App/Platforms/Windows/LayoutCycleTrace.cs`, `src/DinoReader.Core/DinoKeyMap.cs`, `src/DinoReader.Core/BookSheetPlan.cs`, `src/DinoReader.Core/FileStoryLibrary.cs`, `src/DinoReader.Core/ShelfOrder*.cs` (new), `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `.maestro/dino/shelf-reorder.yaml` (new), `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/264-dino-gallery-reorder-mode.md`.
 
@@ -76,7 +76,7 @@ Windows head crashes when reorder mode opens (three VM rounds; the third design 
 - VM (`reviews/s264-vm7`, `s264-vm8`, key ee54a281b83a): reorder opens from the ⋯ sheet with 0 layout-cycle lines, a 1.3 s mouse hold enters, Esc cancels.
 - Emulator (`reviews/s264-emu8`, key ee54a281b83a): `shelf-reorder.yaml` PASS (107 s, all markers), a 1.5 s touch press enters reorder, a normal tap after Done is not swallowed. Earlier emulator failures (`s264-emu6`, `s264-emu7`) came from a degraded emulator (black screencaps, unrelated flows failing); after a restart main's control flow passed.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-05)
 
 - (`src/DinoReader.App/CLAUDE.md`) A shared view that remeasures on a width difference (`AspectRatioView`) must use a threshold above layout rounding on Windows (`ShelfOrderLayoutRules.NeedsRemeasure`: 1 dp Windows, 0.5 dp Android/iOS) and tiles must have whole-dp widths (`ShelfOrderGrid.Fit`), or WinUI throws `LayoutCycleException`. (Slice 264: docs/plan/slices/264-dino-gallery-reorder-mode.md)
 - (`src/DinoReader.App/CLAUDE.md`) The 1 s hold lives in Core `HoldGesture`; `TileOverlay` only feeds it. `PointerExited` must not cancel it (Android sends it during a still press); scrolling cancels it. (Slice 264: docs/plan/slices/264-dino-gallery-reorder-mode.md)

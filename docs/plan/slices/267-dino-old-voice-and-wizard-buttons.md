@@ -1,6 +1,6 @@
 # Slice 267 — Dino bugs: books on the shelf keep the old voice; the first-run buttons overlap
 
-*Built 2026-11-05 on branch fix/s267-old-voice-wizard, not merged; emulator-5554 checks passed, not yet tried on the user's phone.* Bug fixes, Dino Reader, Android and iOS alike. Reported by the user on the latest Android build (dino-v1.102.1, 2026-11-04 20:10 UTC): "why the hell is it still using the old shitty voice? We changed that yesterday" and "the skip and check it out are on top of each other". The user also asked why the tests passed; the answers are under each bug.
+*Built 2026-11-05, merged as PR #826 (e67f88bf); emulator-5554 checks passed, not yet tried on the user's phone.* Bug fixes, Dino Reader, Android and iOS alike. Reported by the user on the latest Android build (dino-v1.102.1, 2026-11-04 20:10 UTC): "why the hell is it still using the old shitty voice? We changed that yesterday" and "the skip and check it out are on top of each other". The user also asked why the tests passed; the answers are under each bug.
 
 **Rule (user, 2026-11-04, decided): audio packs follow only the user's languages.** A family has a main language and up to two more (the story languages); all of them count the same. Every book they have or pick downloads its pre-made audio in exactly those languages, at book install, for books already on the shelf (starters included), when a language is added, and in the update check. A book has no language of its own for this: never add the language the book was written in (today `StoreClient.WantedPacks`, `StoreClient.cs:259-260`, adds "the book's own language", so every book also fetches English). "If a person has French and Farsi, any book he selects should always be downloaded in French and Farsi. No English." The fixes for Bugs A and C follow this rule; a unit test pins it (French + Farsi family: packs asked for are exactly `fr` and `fa`).
 
@@ -105,7 +105,7 @@ Files: `reviews/s267-high.md` (9 findings), `reviews/s267-medium.md` (9), `revie
 - check1 #8: the label-overlap check flags a labelled node overlapping a clickable non-ancestor sibling (scrim, tap-to-dismiss layer): false positives on `# layout-check` flows (the launcher shows 13).
 - check1 #9: `IntroWizardPage.PlaceButtons` run again (rotation, font-scale change) may leave stale `Grid.Row`/`Grid.Column` on Skip and the main button (unconfirmed).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-05)
 
 - Audio packs follow only the family's languages (main + story languages): use `AudioPackDue.For` in `src/DinoReader.Core/AudioPackDue.cs`; never add the book's own language. `ShelfAudioStart.Decide` (`src/DinoReader.Core/ShelfAudioNetwork.cs`) must not wait for the reading voice: packs do not need it. (Slice 267: docs/plan/slices/267-dino-old-voice-and-wizard-buttons.md)
 - A flow whose screen must not overlap or clip buttons carries `# layout-check` (and `# font-scale: 1.3` for a large font) as a header in `.maestro/dino/*.yaml`; `tools/emulator/layout-check.ps1` reads the `uiautomator` dump. A Maestro text tap passes on a covered button, so it cannot catch overlap. (Slice 267: docs/plan/slices/267-dino-old-voice-and-wizard-buttons.md)
