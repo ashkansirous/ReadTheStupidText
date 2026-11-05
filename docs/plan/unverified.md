@@ -2,6 +2,28 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 268: Dino: remove "Show original text" from grown-up mode ([slice](slices/268-dino-remove-show-original-text.md))
+- The new flow `book-sheet-no-original.yaml` was not shown failing on the old build.
+- A book saved with the old flag on, read on a device.
+- Windows head.
+- iOS runtime (CI compiles iOS).
+
+### Slice 267: Dino bugs: books on the shelf keep the old voice; the first-run buttons overlap ([slice](slices/267-dino-old-voice-and-wizard-buttons.md))
+- The user's phone check (no phone tonight), including the "check first on the user's phone" item (app version, `dino.books.lastupdatecheck`, whether `audio-packs/<book>/` exists): the cause is from code and the emulator reproduction, not from the phone.
+- The upgrade-from-previous-release path (previous build, then install over it) is not scripted.
+- The layout check at font 1.0 and in landscape on every wizard and first-run screen: only the Record step at font 1.3 has a flow. On an emulator without a microphone the Record step may hide Try it.
+- The contact sheet of flow screenshots (`reviews/<slice>-shots/`) was not built.
+- Bug E on main: the first `fix/` merge is its first test; the wait step's `gh api` lookup has never run. Cost: a `fix/` merge no longer coalesces with later merges (one full release per fix merge, against the Actions quota rules in `.github/CLAUDE.md`).
+- iOS runtime and the XCUITest twins (`net10.0-ios` compiles; the XCUITest layout check does not exist).
+- The `read_voice` and failure-path log lines carry no messages or URLs: only the success lines were read.
+
+### Slice 264: Dino: grown-ups reorder the shelf ([slice](slices/264-dino-gallery-reorder-mode.md))
+- Windows mouse drag actually moving a tile, Done/Enter saving it and the order after a restart, Esc after a drag (a synthetic drag moved nothing; no drag trace lines).
+- A real scroll during a press cancelling the hold (the 4-book test shelf does not scroll).
+- iOS gestures (`PointerGestureRecognizer` touch on iOS).
+- Windows keyboard reorder (Space/arrows).
+- The 6-book 1,2,5,3,4,6 example on a device (unit-tested only).
+
 ### Slice 262: Dino: adding a second language downloads the shelf books' audio in it ([slice](slices/262-dino-side-language-downloads-book-audio.md))
 - iOS run of the shelf-audio card and runner (compiles in CI only).
 - Kill-and-resume and offline mid-download on a device.

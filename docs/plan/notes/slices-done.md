@@ -330,3 +330,6 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 265 | Dino: pre-made audio clips in Git LFS; book changes only publish to the store (clips shipped in 8 content-only PRs #815-#822, chore/s265-clips-1..8) | built | #810 | | [265-dino-audio-clips-in-git-lfs.md](../slices/265-dino-audio-clips-in-git-lfs.md) |
 | 266 | Waves: stop wasting the minutes between fix attempts (RTST half; ClaudeSkills #165) | built | #809 | | [266-wave-fix-attempt-speed.md](../slices/266-wave-fix-attempt-speed.md) |
 | 262 | Dino: adding a second language downloads the shelf books' audio in it (after 261) | built | #813 | | [262-dino-side-language-downloads-book-audio.md](../slices/262-dino-side-language-downloads-book-audio.md) |
+| 268 | Dino: remove "Show original text" from grown-up mode (user, 2026-11-04) | built | #825 | | [268-dino-remove-show-original-text.md](../slices/268-dino-remove-show-original-text.md) |
+| 267 | Dino bugs: books on the shelf keep the old voice (packs only on the 7-day check); the first-run buttons overlap (no layout check in the tests) | built | #826 | | [267-dino-old-voice-and-wizard-buttons.md](../slices/267-dino-old-voice-and-wizard-buttons.md) |
+| 264 | Dino: grown-ups reorder the shelf (iPhone-style reorder mode) | built | #799 | | [264-dino-gallery-reorder-mode.md](../slices/264-dino-gallery-reorder-mode.md) |
