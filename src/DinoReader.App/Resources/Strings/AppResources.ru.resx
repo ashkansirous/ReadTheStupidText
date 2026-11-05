@@ -241,8 +241,6 @@
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>Эта книга</value></data>
-  <data name="Book_ShowOriginal" xml:space="preserve"><value>Показывать оригинальный текст</value></data>
-  <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Показать слова на языке: {0}. Голос по-прежнему читает на языке: {1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>Вернуться к сказке</value></data>
   <!-- /Slice 110 -->
   <!-- Slice 111 -->

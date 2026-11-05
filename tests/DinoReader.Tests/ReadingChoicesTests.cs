@@ -6,13 +6,12 @@ namespace DinoReader.Tests;
 public class ReadingChoicesTests
 {
     [Theory]
-    [InlineData(true, false, 0, true)]
-    [InlineData(false, false, 0, false)]
-    [InlineData(true, true, 0, false)]
-    [InlineData(true, false, 2, false)]
-    public void A_book_is_switchable_only_with_a_choice_a_translation_and_no_recordings(bool choice, bool original, int recordings, bool expected)
+    [InlineData(true, 0, true)]
+    [InlineData(false, 0, false)]
+    [InlineData(true, 2, false)]
+    public void A_book_is_switchable_only_with_a_choice_a_translation_and_no_recordings(bool choice, int recordings, bool expected)
     {
-        Assert.Equal(expected, LanguagePick.BookSwitchable(choice, original, recordings));
+        Assert.Equal(expected, LanguagePick.BookSwitchable(choice, recordings));
     }
 
     [Fact]

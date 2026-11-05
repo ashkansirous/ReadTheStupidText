@@ -64,7 +64,6 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		StorytellerLine.Retry = _storyteller.RetryAsync;
 		ReadySheet.Play = PlayNarratorAsync;
 		ReadySheet.Closed = OnReadyClosed;
-		BookInfo.OriginalChanged += SaveShowOriginalAsync;
 		BookInfo.VoiceChanged += SaveUseVoiceAsync;
 		BookInfo.ReadRequested += ReadSheetBookAsync;
 		BookInfo.CastRequested += OpenSheetCastAsync;
@@ -695,7 +694,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 	}
 
-	// Grown-up mode: a book's "⋯" or its bare cover opens its options sheet (Slice 189, mock 85b; it grew out of the "This book" sheet of Slices 110 and 111): Show original text,
+	// Grown-up mode: a book's "⋯" or its bare cover opens its options sheet (Slice 189, mock 85b; it grew out of the "This book" sheet of Slices 110 and 111):
 	// Read with my voice, Record, Cast, Edit pages (own books), Export (developer switch) and Remove from the shelf.
 	private async Task OpenBookSheetAsync(Story tapped)
 	{
@@ -707,22 +706,16 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 
 	private BookSheet.Content SheetContentOf(Story story)
 	{
-		bool translated = _services.GetRequiredService<StoryTranslator>().Applies(story, StoryTranslator.MyLanguage);
 		BookOrigin origin = BookOrigins.Of(story);
 		StoryTile tile = StoryTile.From(story, _library, _mode);
-		string original = LanguageNames.NativeName(story.Language);
-		string spoken = LanguageNames.NativeName(StoryTranslator.MyLanguage);
 		string title = _services.GetRequiredService<StoryTranslator>().ShelfTitle(story);
-		var plan = BookSheetPlan.For(origin, translated, StoryRecordings.Count(story) > 0, DeveloperMode.Enabled);
-		return new BookSheet.Content(title, BookOrigins.Label(origin), tile.CoverImagePath, tile.CoverFill, plan, story.ShowOriginalText,
-			ReadingText.ShowOriginalHint(original, spoken), VoiceOfferOf(story));
+		var plan = BookSheetPlan.For(origin, StoryRecordings.Count(story) > 0, DeveloperMode.Enabled);
+		return new BookSheet.Content(title, BookOrigins.Label(origin), tile.CoverImagePath, tile.CoverFill, plan, VoiceOfferOf(story));
 	}
 
 	// "Read with my voice" shows only once a page is recorded.
 	private static BookSheet.VoiceOffer? VoiceOfferOf(Story story) =>
 		StoryRecordings.Count(story) is var recorded && recorded > 0 ? new BookSheet.VoiceOffer(recorded, story.Pages.Count, story.UseRecordings) : null;
-
-	private Task SaveShowOriginalAsync(bool showOriginal) => SaveSheetStoryAsync(story => story with { ShowOriginalText = showOriginal });
 
 	private Task SaveUseVoiceAsync(bool useVoice) => SaveSheetStoryAsync(story => story with { UseRecordings = useVoice });
 
