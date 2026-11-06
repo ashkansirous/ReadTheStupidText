@@ -138,6 +138,7 @@ public sealed class ReadingSession
 		}
 		catch (Exception)
 		{
+			// no-fallback: a warm-up only; the read resolves and builds the pack itself
 			// Best-effort: the read resolves and builds the pack itself.
 		}
 	}
@@ -553,11 +554,13 @@ public sealed class ReadingSession
 		}
 		catch (OperationCanceledException)
 		{
+			// no-fallback: the read was superseded or stopped
 			ClearPendingIfCurrent(id);
 			return false;
 		}
 		catch (Exception)
 		{
+			// no-fallback: the read fails and the person is told (FailRead); no other voice is tried
 			FailRead(id);
 			return false;
 		}
@@ -621,6 +624,7 @@ public sealed class ReadingSession
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: counting is best effort and never reports itself
 			AudioPackLog.Write($"the voice-used count failed ({ex.GetType().Name})");
 		}
 	}
@@ -702,10 +706,12 @@ public sealed class ReadingSession
 		}
 		catch (OperationCanceledException)
 		{
+			// no-fallback: the read was superseded or stopped
 			ClearPendingIfCurrent(id);
 		}
 		catch (Exception)
 		{
+			// no-fallback: the read fails and the person is told (FailRead); no other voice is tried
 			FailRead(id);
 		}
 	}
@@ -773,6 +779,7 @@ public sealed class ReadingSession
 #if DEBUG
 			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] animal clip {clip} could not play ({ex.GetType().Name}), slot skipped");
 #endif
+			_fallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Speech, ReadTheStupidText.Application.Usage.FallbackReason.AnimalClipUnplayable, _reading); // Slice 273 part D: the sound is skipped
 			AnimalClipFiles.Discard(clip);
 			SkipClip(read, index);
 			return;
@@ -810,6 +817,7 @@ public sealed class ReadingSession
 		{
 			_recorded = RecordedPlay.None;
 			AudioPackLog.Write($"premade clip could not play ({ex.GetType().Name}), device voice for this piece");
+			_fallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.PremadeAudio, ReadTheStupidText.Application.Usage.FallbackReason.ClipUnplayable, _reading); // Slice 273 part D
 			return false;
 		}
 
@@ -984,6 +992,7 @@ public sealed class ReadingSession
 		}
 		catch (Exception)
 		{
+			// no-fallback: the cast stays in memory, so what is heard is unchanged; only the save is lost
 			// The cast stays in memory for this session, so every later read keeps the same voices.
 		}
 

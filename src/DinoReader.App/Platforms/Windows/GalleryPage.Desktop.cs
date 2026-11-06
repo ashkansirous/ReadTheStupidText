@@ -275,6 +275,7 @@ public partial class GalleryPage
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
+			// no-fallback: traced only; the shelf stays as it was
 			WindowTrace.Write($"Dino shelf: a keyboard or right-click action failed: {ex.GetType().Name}: {ex.Message}");
 		}
 	}

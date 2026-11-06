@@ -303,6 +303,7 @@ public static class UsageBatch
         }
         catch (JsonException)
         {
+            // no-fallback: usage code never reports on itself; a damaged queue is dropped
             return [];
         }
     }

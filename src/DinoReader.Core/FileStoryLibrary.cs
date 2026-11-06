@@ -1,3 +1,5 @@
+using ReadTheStupidText.Application.Usage;
+
 namespace DinoReader.Core;
 
 /// <summary>
@@ -17,6 +19,9 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
     // would add bookkeeping for no gain. It makes "exists, then write" atomic and stops two
     // saves of one story from interleaving.
     private readonly SemaphoreSlim _gate = new(1, 1);
+
+    /// <summary>Slice 273 part D: where a read of the shelf that fell back (a stored book or the shelf order that cannot be read) is reported; the app sets it at start-up, a no-op until then.</summary>
+    public IFallbackSink Fallbacks { get; set; } = NoFallbackSink.Instance;
 
     public string FolderOf(string id) => Path.Combine(root, id);
 
@@ -55,27 +60,41 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
     /// <summary>The stored shelf order (Slice 264); empty when there is none or it cannot be read, which leaves today's order.</summary>
     private async Task<IReadOnlyList<string>> ReadOrderAsync()
     {
+        (IReadOnlyList<string> ids, bool unreadable) result;
         await _gate.WaitAsync(); // the replace in SaveOrderAsync holds the gate, so a read never meets a half-swapped file
         try
         {
-            return await ReadOrderLockedAsync();
+            result = await ReadOrderLockedAsync();
         }
         finally
         {
             _gate.Release();
         }
+
+        ReportOrderUnreadable(result.unreadable);
+        return result.ids;
     }
 
-    // The caller holds the gate.
-    private async Task<IReadOnlyList<string>> ReadOrderLockedAsync()
+    // Reported outside the gate, so counting never runs while a save waits.
+    private void ReportOrderUnreadable(bool unreadable)
+    {
+        if (unreadable)
+        {
+            Fallbacks.Report(FallbackArea.Library, FallbackReason.ShelfOrderUnreadable); // Slice 273 part D: the default order is used
+        }
+    }
+
+    // The caller holds the gate, so it does not report: it returns whether the order file could not be read and reports after releasing.
+    private async Task<(IReadOnlyList<string> Ids, bool Unreadable)> ReadOrderLockedAsync()
     {
         try
         {
-            return File.Exists(OrderPath) ? ShelfOrder.Parse(await File.ReadAllTextAsync(OrderPath)) : [];
+            return (File.Exists(OrderPath) ? ShelfOrder.Parse(await File.ReadAllTextAsync(OrderPath)) : [], false);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            return [];
+            // reported by the caller once the gate is released (ReportOrderUnreadable)
+            return ([], true);
         }
     }
 
@@ -84,16 +103,19 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
     {
         Directory.CreateDirectory(root);
         string temp = $"{OrderPath}.{Guid.NewGuid():N}{TempSuffix}";
+        bool unreadable;
         await _gate.WaitAsync(); // one gate across read, merge and replace, so a concurrent delete's forget cannot be undone by a stale merge
         try
         {
-            IReadOnlyList<string> onDisk = [.. (await ReadOrderLockedAsync()).Where(id => Directory.Exists(FolderOf(id)))]; // an id whose book is gone is dropped here, even if its delete could not rewrite the file
+            (IReadOnlyList<string> stored, unreadable) = await ReadOrderLockedAsync();
+            IReadOnlyList<string> onDisk = [.. stored.Where(id => Directory.Exists(FolderOf(id)))]; // an id whose book is gone is dropped here, even if its delete could not rewrite the file
             IReadOnlyList<string> merged = ShelfOrder.MergeShown(onDisk, ids);
             await File.WriteAllTextAsync(temp, ShelfOrder.Serialize(merged));
             File.Move(temp, OrderPath, overwrite: true);
         }
         catch
         {
+            // no-fallback: removes the temp file and rethrows
             TryDelete(temp);
             throw;
         }
@@ -101,6 +123,8 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         {
             _gate.Release();
         }
+
+        ReportOrderUnreadable(unreadable);
     }
 
     /// <summary>
@@ -135,6 +159,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // no-fallback: null means "cannot say for certain" by contract, so the audio pack sweep deletes nothing
             return null;
         }
     }
@@ -220,6 +245,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
         catch (DirectoryNotFoundException)
         {
+            // no-fallback: the folder was already gone, which is what a delete wants
             await TryForgetInOrderAsync(id); // the folder was already gone; the id may still be in the shelf order
         }
         finally
@@ -237,6 +263,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // no-fallback: logged only; the next order save drops the id whose folder is gone
             System.Diagnostics.Debug.WriteLine($"Dino Reader: could not drop {id} from the shelf order: {ex.Message}");
         }
     }
@@ -264,6 +291,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
         catch
         {
+            // no-fallback: removes the temp file and rethrows
             TryDelete(temp);
             throw;
         }
@@ -293,6 +321,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
         catch
         {
+            // no-fallback: removes the temp file and rethrows
             TryDelete(temp);
             throw;
         }
@@ -318,6 +347,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
         catch
         {
+            // no-fallback: removes the temp file and rethrows
             TryDelete(temp);
             throw;
         }
@@ -379,10 +409,22 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
             Story story = StoryJson.Deserialize(await File.ReadAllTextAsync(FilePathOf(id)));
             // A story whose stored id disagrees with its folder was copied or edited by hand;
             // it is skipped as unreadable rather than risk writes landing in another folder.
-            return story.Id == id ? story : null;
+            if (story.Id == id)
+            {
+                return story;
+            }
+
+            Fallbacks.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // Slice 273 part D: the book is left off the shelf
+            return null;
         }
-        catch (Exception ex) when (ex is StoryFormatException or IOException or UnauthorizedAccessException)
+        catch (StoryFormatException)
         {
+            Fallbacks.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // Slice 273 part D: the book is left off the shelf
+            return null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // no-fallback: a busy or locked file (a save in progress) is transient; the book is back on the next refresh, so it is not counted as unreadable
             return null;
         }
     }
@@ -410,6 +452,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
         catch
         {
+            // no-fallback: removes what this import created and rethrows
             if (createdFolder)
             {
                 TryDeleteFolder(folder);
@@ -431,6 +474,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // no-fallback: cleanup of a failed import's folder, nothing the person gets changes
         }
     }
 
@@ -446,6 +490,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
         catch
         {
+            // no-fallback: removes the temp file and rethrows
             TryDelete(temp);
             throw;
         }
@@ -459,6 +504,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // no-fallback: temp file cleanup, nothing the person gets changes
         }
     }
 }

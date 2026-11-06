@@ -3,6 +3,7 @@ using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
 using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
+using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
 using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Mobile.Shared.Crashes;
 using ReadTheStupidText.Mobile.Shared.Waiting;
@@ -128,6 +129,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
+			// no-fallback: logged only; the intro read does not start
 			Debug.WriteLine($"Dino Reader could not start the intro read: {ex}");
 		}
 	}
@@ -199,6 +201,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
+			// no-fallback: logged only; the language button keeps its last value
 			Debug.WriteLine($"Dino Reader could not work out the story languages: {ex}");
 		}
 	}
@@ -317,6 +320,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
+			// no-fallback: logged only; the language button keeps its last value
 			Debug.WriteLine($"Dino Reader could not refresh the story languages: {ex}");
 		}
 	}
@@ -384,10 +388,12 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		}
 		catch (OperationCanceledException)
 		{
+			// no-fallback: cancellation, a newer call or the page leaving superseded this one
 			// A newer call, or the page leaving, superseded this one.
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: logged only; the screen keeps what it showed (the translation case reports in TranslateForScreenAsync)
 			Debug.WriteLine($"Dino Reader could not show the story: {ex}");
 		}
 	}
@@ -457,12 +463,13 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
 			Debug.WriteLine($"Dino Reader could not translate the page: {ex}");
+			_usage.RecordFallback(story, FallbackArea.Translation, FallbackReason.TranslationError, reading); // Slice 273 part D: the page shows the story as written
 			return (null, story.Title);
 		}
 	}
 
 	// The title is cosmetic: any failure of its own leaves the source title and never costs the translated text.
-	private static async Task<string> TitleOrSourceAsync(Story story, StoryTranslator translator, string reading, CancellationToken cancellation)
+	private async Task<string> TitleOrSourceAsync(Story story, StoryTranslator translator, string reading, CancellationToken cancellation)
 	{
 		try
 		{
@@ -471,6 +478,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
 			Debug.WriteLine($"Dino Reader could not translate the title: {ex}");
+			_usage.RecordFallback(story, FallbackArea.Translation, FallbackReason.TranslationError, reading); // Slice 273 part D: the title shows as written
 			return story.Title;
 		}
 	}
@@ -608,6 +616,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
+			// no-fallback: logged only; the page stays open
 			Debug.WriteLine($"Dino Reader could not leave the page: {ex}"); // fire-and-forget from Esc and async void from Back: a throw here would crash the app
 		}
 		finally
@@ -1203,6 +1212,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
+			// no-fallback: logged only; the page stays open
 			Debug.WriteLine($"Dino Reader could not leave the page after Cancel: {ex}"); // async void: a throw here would crash the app
 		}
 	}
@@ -1439,6 +1449,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: logged only; the mode applies for this visit and is not stored
 			Debug.WriteLine($"Dino Reader could not save the reading mode: {ex}");
 		}
 		finally

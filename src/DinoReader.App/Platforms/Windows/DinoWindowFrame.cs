@@ -86,6 +86,7 @@ internal sealed class DinoWindowFrame
 		{
 			string site = ex.StackTrace?.Split('\n', 2)[0].Trim() ?? "no stack";
 			WindowTrace.Write($"Dino window: could not apply the frame: {ex.GetType().Name}: {ex.Message} at {site}");
+			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Window, ReadTheStupidText.Application.Usage.FallbackReason.WindowFrameFailed); // Slice 273 part D: the default frame stays
 			return false;
 		}
 	}
@@ -189,6 +190,7 @@ internal sealed class DinoWindowFrame
 		catch (Exception ex)
 		{
 			WindowTrace.Write($"Dino window: DisplayArea.FindAll could not be read ({ex.GetType().Name}), using the primary and the window's display");
+			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Window, ReadTheStupidText.Application.Usage.FallbackReason.DisplaysUnreadable); // Slice 273 part D
 			found.Clear();
 			found.Add(DisplayArea.Primary);
 			found.Add(DisplayArea.GetFromWindowId(_appWindow.Id, DisplayAreaFallback.Nearest));

@@ -2,6 +2,7 @@ using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Translation;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Mobile.Resources.Strings;
 using ReadTheStupidText.Mobile.Shared;
 
@@ -51,9 +52,11 @@ public partial class CapturePage : ContentPage, IScanPackUi
     private bool _scannerUnavailableShown;
     private bool _ocrUnavailable;
     private string? _pickedLanguage;
+    private readonly IFallbackSink _fallbacks; // Slice 273 part D
 
-    public CapturePage(IImageTextExtractor imageExtractor, ISettingsStore settings, ReviewHandOff handOff, IDocumentScanner? scanner = null, IOcrLineExtractor? lineExtractor = null, OcrPackInstaller? ocrPacks = null)
+    public CapturePage(IImageTextExtractor imageExtractor, ISettingsStore settings, ReviewHandOff handOff, IDocumentScanner? scanner = null, IOcrLineExtractor? lineExtractor = null, OcrPackInstaller? ocrPacks = null, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance;
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
         _imageExtractor = imageExtractor;
@@ -185,6 +188,7 @@ public partial class CapturePage : ContentPage, IScanPackUi
         }
         catch (Exception)
         {
+            // no-fallback: the person is told the scan failed; no page is added
             await AlertAsync(AppResources.Reader_ScanFailedTitle, AppResources.Reader_ScanFailedMessage);
         }
         finally
@@ -231,16 +235,19 @@ public partial class CapturePage : ContentPage, IScanPackUi
         }
         catch (DocumentScannerStartFailedException)
         {
+            // no-fallback: the person is told; the scanner registration already reported scanner_start_failed (Slice 273 part C)
             await AlertAsync(AppResources.Reader_ScannerStartFailedTitle, AppResources.Reader_ScannerStartFailedMessage);
             return [];
         }
         catch (DocumentScannerPreparingException)
         {
+            // no-fallback: the person is told the scanner is still preparing; nothing else is used
             await AlertAsync(AppResources.Reader_ScannerPreparingTitle, AppResources.Reader_ScannerPreparingMessage);
             return [];
         }
         catch (DocumentScannerUnavailableException)
         {
+            // no-fallback: the scanner registration already reported scanner_start_failed (Slice 273 part C); this is the photo it falls back to
             return await PhotoWithoutScannerAsync();
         }
     }
@@ -269,11 +276,13 @@ public partial class CapturePage : ContentPage, IScanPackUi
         }
         catch (PermissionException)
         {
+            // no-fallback: the person is told the camera is refused; nothing else is used
             await AlertAsync(AppResources.Reader_CameraAccessTitle, AppResources.Reader_CameraAccessMessage);
             return [];
         }
         catch (FeatureNotSupportedException)
         {
+            // no-fallback: falls through to the "no camera" alert below
         }
 
         await AlertAsync(AppResources.Reader_NoCameraTitle, AppResources.Reader_NoCameraMessage);
@@ -301,6 +310,7 @@ public partial class CapturePage : ContentPage, IScanPackUi
         }
         catch (Exception)
         {
+            _fallbacks.Report(FallbackArea.Ocr, FallbackReason.PageReadFailed); // Slice 273 part D: the page is left unread
             _pages.Settle(page.Id, null);
         }
         finally
@@ -345,11 +355,13 @@ public partial class CapturePage : ContentPage, IScanPackUi
         }
         catch (OcrUnavailableException)
         {
+            // no-fallback: the person is told no reader is available (_ocrUnavailable); the page stays unread
             _ocrUnavailable = true;
             return null;
         }
         catch (Exception)
         {
+            _fallbacks.Report(FallbackArea.Ocr, FallbackReason.PageReadFailed); // Slice 273 part D: the page is left unread
             return null;
         }
     }
@@ -399,10 +411,12 @@ public partial class CapturePage : ContentPage, IScanPackUi
         }
         catch (OcrUnavailableException)
         {
+            // no-fallback: rethrown
             throw;
         }
         catch (Exception)
         {
+            _fallbacks.Report(FallbackArea.Ocr, FallbackReason.PageReadFailed); // Slice 273 part D: the page is left unread
             return new ScanPageRead(null, OcrSource.MlKit, ScriptShare.Empty);
         }
     }
@@ -866,6 +880,7 @@ public partial class CapturePage : ContentPage, IScanPackUi
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException)
         {
+            // no-fallback: a thumbnail only; the tile keeps its plain background
             // No thumbnail: the tile keeps its plain background.
         }
     }

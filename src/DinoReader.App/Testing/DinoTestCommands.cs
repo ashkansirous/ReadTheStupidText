@@ -223,6 +223,7 @@ internal static partial class DinoTestCommands
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: Debug test hook, logs the fault
 			Log($"{StageBookUpdateName} failed {TestHookLog.FaultSummary(ex)}");
 		}
 	}
@@ -254,6 +255,7 @@ internal static partial class DinoTestCommands
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: Debug test hook, logs the fault
 			Log($"{InstallAudioPackName} failed {TestHookLog.FaultSummary(ex)}");
 		}
 	}
@@ -288,6 +290,7 @@ internal static partial class DinoTestCommands
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: Debug test hook, logs the fault
 			Log($"{FetchAudioPackName} failed {TestHookLog.FaultSummary(ex)}");
 		}
 	}
@@ -396,6 +399,7 @@ internal static partial class DinoTestCommands
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: Debug test hook, logs the fault
 			Log($"{ShelfReorderMoveName} fault {TestHookLog.FaultSummary(ex)}");
 		}
 	}
@@ -410,6 +414,7 @@ internal static partial class DinoTestCommands
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: Debug test hook, logs the fault
 			Log($"{ShelfOrderResetName} fault {TestHookLog.FaultSummary(ex)}");
 		}
 	}
@@ -435,6 +440,7 @@ internal static partial class DinoTestCommands
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: Debug test hook, logs the fault
 			Log($"{EnterGrownUpName} fault {TestHookLog.FaultSummary(ex)}");
 		}
 	}
@@ -461,6 +467,7 @@ internal static partial class DinoTestCommands
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: Debug test hook, logs the fault
 			Log($"{Name} fault {TestHookLog.FaultSummary(ex)}");
 		}
 	}
@@ -545,6 +552,7 @@ internal static partial class DinoTestCommands
 		}
 		catch (TimeoutException)
 		{
+			// no-fallback: Debug test hook, logs that the fetch is still running
 			Log($"{FetchAudioPackName} still running after {PackFetchWait.TotalSeconds:0} s");
 		}
 	}

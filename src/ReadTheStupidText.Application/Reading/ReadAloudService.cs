@@ -402,6 +402,7 @@ public sealed partial class ReadAloudService : IDisposable
         }
         catch (DocumentTooLargeException ex)
         {
+            // no-fallback: the file is refused (logged) and nothing is read
             _systemLog.Warning(
                 $"a {LogLineFormatter.FileKind(filePath)} file has {ex.Actual} pages, exceeding the {ex.Limit}-page limit — skipping",
                 null, ex);
@@ -409,6 +410,7 @@ public sealed partial class ReadAloudService : IDisposable
         }
         catch (Exception ex)
         {
+            // no-fallback: logged and nothing is read; no default text is used
             _systemLog.Error($"failed to extract text from a {LogLineFormatter.FileKind(filePath)} file", null, ex); // Slice 227: the kind of file, never its name
             return;
         }
@@ -661,10 +663,12 @@ public sealed partial class ReadAloudService : IDisposable
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: cancellation; the head start is an optimisation only
             // Superseded while waiting, or the preparation stored nothing (skipped, failed): the result is unused here.
         }
         catch (Exception ex)
         {
+            // no-fallback: the head start is an optimisation only; the read prepares itself when it starts
             _systemLog.Warning("head start failed", null, ex);
         }
     }
@@ -679,6 +683,7 @@ public sealed partial class ReadAloudService : IDisposable
         }
         catch (ObjectDisposedException)
         {
+            // no-fallback: the owner finished first; nothing to cancel
             // the owner finished first
         }
     }
@@ -707,6 +712,7 @@ public sealed partial class ReadAloudService : IDisposable
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: superseded during the wait
             return; // superseded during the wait; already marked ignored/interrupted
         }
 
@@ -841,6 +847,7 @@ public sealed partial class ReadAloudService : IDisposable
         }
         catch (Exception ex)
         {
+            // no-fallback: the read fails and is logged as failed; no other voice is tried here
             _log.SetState(entry, ActivityState.Failed, ActivityReason.Error);
             _systemLog.Error("read failed during synthesis/playback", entry.Id, ex);
             EndFirstAudioCount(entry, UsageOutcome.Failed);
@@ -875,6 +882,7 @@ public sealed partial class ReadAloudService : IDisposable
         }
         catch (OperationCanceledException) when (cts.IsCancellationRequested)
         {
+            // no-fallback: superseded
             CountTiming(UsageStage.Translate, UsageOutcome.Cancelled, Stopwatch.GetElapsedTime(started), null, null);
             return (new ReadText(text, false), null); // superseded: the caller sees the entry is no longer active
         }
@@ -918,6 +926,7 @@ public sealed partial class ReadAloudService : IDisposable
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: the grace wait was cancelled
             return;
         }
 

@@ -131,6 +131,7 @@ public sealed partial class ControlPanelWindow
         }
         catch (Exception)
         {
+            // no-fallback: the restart's startup resume retries the setup, and a failure there is reported by App.RunVoicePackSetupAsync
             // the restart's startup resume retries the setup
         }
     }

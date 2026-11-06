@@ -25,6 +25,7 @@ internal sealed partial class MicRecorder
 		}
 		catch
 		{
+			// no-fallback: releases the capture and rethrows
 			capture.Dispose();
 			throw;
 		}

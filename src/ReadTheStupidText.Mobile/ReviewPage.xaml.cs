@@ -304,10 +304,12 @@ public partial class ReviewPage : ContentPage
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: newer text; its own pass decides
             return; // newer text: its own pass decides
         }
         catch (Exception)
         {
+            _usage.Fallbacks.Report(FallbackArea.Translation, FallbackReason.LanguageDetectFailed); // Slice 273 part D: no translation is offered
             await ApplyDetectionAsync(null, token); // a failed detection only hides the checkbox
         }
     }
@@ -355,6 +357,7 @@ public partial class ReviewPage : ContentPage
         }
         catch (CultureNotFoundException)
         {
+            // no-fallback: a label only; the language code is shown as it is
             return code;
         }
     }
@@ -437,6 +440,7 @@ public partial class ReviewPage : ContentPage
         }
         catch (Exception)
         {
+            // no-fallback: the person is told the paste failed; no default text is used
             await DisplayAlertAsync(AppResources.Reader_PasteFailedTitle, AppResources.Reader_PasteFailedMessage, AppResources.Common_Ok, FlowDirection.LeftToRight);
         }
     }
@@ -516,6 +520,7 @@ public partial class ReviewPage : ContentPage
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: cancellation; the detection is scheduled again
             RescheduleAfterCancel(text, cts);
             return false;
         }
@@ -549,14 +554,17 @@ public partial class ReviewPage : ContentPage
         }
         catch (OperationCanceledException) when (!token.IsCancellationRequested)
         {
+            _usage.Fallbacks.Report(FallbackArea.Translation, FallbackReason.LanguageDetectFailed); // Slice 273 part D: timed out, so the text is read plainly
             return null; // timed out: read plainly, as a failed detection does
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: rethrown
             throw;
         }
         catch (Exception)
         {
+            _usage.Fallbacks.Report(FallbackArea.Translation, FallbackReason.LanguageDetectFailed); // Slice 273 part D: no translation is offered
             return null; // a failed detection only hides the checkbox
         }
     }
@@ -600,6 +608,7 @@ public partial class ReviewPage : ContentPage
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: Cancel or leaving the page; the original text stays
             if (!_leaving)
             {
                 RestartEarlyWork(); // Cancel on the wait overlay: the original text stays, so its early work starts over
@@ -607,8 +616,13 @@ public partial class ReviewPage : ContentPage
 
             return; // left the page, or Cancel on the wait overlay: the original text stays
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            if (ex is not TranslationModelUnavailableException { FallbackReported: true })
+            {
+                _usage.Fallbacks.Report(FallbackArea.Translation, FallbackReason.TranslationError, source); // Slice 273 part D: the original is read; a download failure was counted where it happened
+            }
+
             _wait.End(); // gone before the alert, not behind it
             if (!_leaving)
             {
@@ -714,6 +728,7 @@ public partial class ReviewPage : ContentPage
         }
         catch (Exception) when (!token.IsCancellationRequested)
         {
+            // no-fallback: waits for an abandoned call to settle; its outcome does not matter
             // the abandoned call failed or was cancelled: it has settled, which is all this wait needed
         }
     }
@@ -754,10 +769,12 @@ public partial class ReviewPage : ContentPage
         }
         catch (TimeoutException)
         {
+            // no-fallback: a slow engine only means the read starts without waiting longer
             return true; // slow engine: read now rather than keep the person waiting
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: Cancel on the wait overlay
             return false;
         }
         finally
@@ -887,6 +904,7 @@ public partial class ReviewPage : ContentPage
         }
         catch (Exception) when (!token.IsCancellationRequested)
         {
+            // no-fallback: the early work is an optimisation only; the wait overlay stays as it is
             return; // the early work is only an optimization: no stage named, the wait overlay stays as it is
         }
 
@@ -993,11 +1011,13 @@ public partial class ReviewPage : ContentPage
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: counts the timing and rethrows
             CountTiming(stage, UsageOutcome.Cancelled, clock.Elapsed - Excluded(excluded), source, target, early);
             throw;
         }
         catch (Exception)
         {
+            // no-fallback: counts the timing and rethrows
             CountTiming(stage, UsageOutcome.Failed, clock.Elapsed - Excluded(excluded), source, target, early);
             throw;
         }

@@ -1,0 +1,71 @@
+# Slice 273 part D: the fallbacks of the swallowed-error class (a book that cannot be read, a stand-in storyteller voice, a page translation that fails, an in-app update that falls back to the store page, a
+# font that stands in) reach Dino's usage counter. The force-fallback hook (Debug only) sends the fallback named by `id: <area>:<reason>` through the app's registered IFallbackSink (DinoFallbackSink over
+# UsageCounter), the object those catches report to, so the flow does not depend on a damaged file or a failing network. The branches that decide each real fallback are covered by the unit tests; this flow
+# proves the part D areas and reasons are on the closed list, reach UsageCounter and are counted once per session. Nothing is sent: the harness off switch stays on, and the Debug build writes a
+# `[Usage] fallback <area>:<reason> times=<n> ...` line for each fallback it is asked to count.
+# Fails against the old behaviour: before part D the areas `library` and `font` and the reason `story_unreadable` are not on the list, so UsageCounter drops them and no `[Usage] fallback` line is written for them.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK force-fallback ok
+# expect-log: [Usage] fallback library:story_unreadable times=1 queued
+# expect-log: [Usage] fallback speech:storyteller_pack_missing times=1 queued
+# expect-log: [Usage] fallback store:in_app_update_failed times=1 queued
+# expect-log: [Usage] fallback font:font_fallback times=1 queued
+# expect-log: [Usage] fallback library:story_unreadable times=2 counted
+# Keeps the app's data (no clearState): the flow reads and writes nothing stored.
+appId: uk.sirous.dinoreader.dbg
+name: Swallowed-error fallbacks are counted once and then tallied (Dino)
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "library:story_unreadable"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 10000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "speech:storyteller_pack_missing"
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 10000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "store:in_app_update_failed"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 10000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "font:font_fallback"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 10000
+# The same kind again in the same session is counted, not queued again.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "library:story_unreadable"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 10000

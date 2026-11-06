@@ -17,6 +17,7 @@ public static partial class StoreUpdater
 		}
 		catch (Exception ex) when (ex is InvalidOperationException or FeatureNotSupportedException)
 		{
+			// no-fallback: logged only; the store page is not opened
 			Debug.WriteLine($"Dino Reader could not open the store: {ex.Message}");
 		}
 	}

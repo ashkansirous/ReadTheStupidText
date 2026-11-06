@@ -1,0 +1,40 @@
+# Slice 273 part D: the swallowed-error fallbacks of the phone app (a language that could not be detected, a scanned page that could not be read) reach Read The Stupid Text's usage queue. The
+# force-fallback hook (Debug only) sends the fallback named by `id: <area>:<reason>` through the app's registered IFallbackSink (RtstUsage.Fallbacks, the FallbackReporter over RtstUsage as an
+# IUsageRecorder), the object the review and capture pages report to, so the flow does not depend on a failing detector or OCR. The branches that decide each real fallback are covered by the unit tests;
+# this flow proves the new kinds go through the app's sink. Nothing is sent: the harness off switch stays on, and the Debug build writes a `[Usage] fallback <area>:<reason>` line for each fallback reported.
+# Known limit: RTST's sink writes this line before it looks at the closed lists (they are compared by a unit test), so this flow proves the hook-to-sink path only.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK force-fallback ok
+# expect-log: [Usage] fallback translation:language_detect_failed
+# expect-log: [Usage] fallback ocr:page_read_failed
+# No clearState: the flow reads and writes nothing stored.
+appId: uk.sirous.readthestupidtext
+name: Swallowed-error fallbacks reach the usage queue (RTST)
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 20000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "translation:language_detect_failed"
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 10000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "ocr:page_read_failed"
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 10000

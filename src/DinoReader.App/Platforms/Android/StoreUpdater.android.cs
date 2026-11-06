@@ -70,6 +70,7 @@ public static partial class StoreUpdater
 		}
 		catch (Exception ex) when (ex is Java.Lang.Exception or InvalidOperationException or TaskCanceledException)
 		{
+			// no-fallback: logged only; the update screen is not shown again
 			Debug.WriteLine($"Dino Reader could not resume the Play update: {ex.Message}");
 		}
 	}
@@ -90,6 +91,7 @@ public static partial class StoreUpdater
 		catch (Exception ex) when (ex is Java.Lang.Exception or InvalidOperationException or TaskCanceledException)
 		{
 			Debug.WriteLine($"Dino Reader could not start the Play update: {ex.Message}");
+			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Store, ReadTheStupidText.Application.Usage.FallbackReason.InAppUpdateFailed); // Slice 273 part D: the store page opens instead
 			return false;
 		}
 	}
@@ -112,6 +114,7 @@ public static partial class StoreUpdater
 		}
 		catch (ActivityNotFoundException ex)
 		{
+			// no-fallback: the caller tries the next address; the person gets no store page only if both fail
 			Debug.WriteLine($"Dino Reader could not open {uri}: {ex.Message}");
 			return false;
 		}

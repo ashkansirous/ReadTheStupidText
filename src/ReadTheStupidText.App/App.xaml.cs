@@ -157,6 +157,7 @@ public partial class App : Application
         string? language = UiLanguageTag.Effective(Services.GetRequiredService<ISettingsStore>().Language, CultureInfo.CurrentUICulture.Name);
         _ = usage.StartAsync(context => UsageEvents.AppOpened(context, language, usage.OsMajor));
         var fallbacks = Services.GetRequiredService<FallbackReporter>();
+        ReadTheStupidText_App.WindowPlacer.Fallbacks = fallbacks; // Slice 273 part D: window placement fallbacks
         usage.BeforeSend = fallbacks.FlushRepeats; // Slice 273 part B: before each send, as on the phone, so a long-running tray app does not hold its totals until exit
         AppDomain.CurrentDomain.ProcessExit += (_, _) =>
         {
@@ -200,6 +201,7 @@ public partial class App : Application
         catch (Exception ex)
         {
             Services.GetRequiredService<ISystemLog>().Error("voice pack setup failed", null, ex);
+            Services.GetRequiredService<IFallbackSink>().Report(FallbackArea.Pack, FallbackReason.PackFailed); // Slice 273 part D: the Windows voice reads until the pack is set up
         }
     }
 

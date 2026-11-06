@@ -33,6 +33,22 @@ public class ReadAloudServiceGeneratingTests
     }
 
     [Fact]
+    public void The_ordinary_hotkey_read_through_a_simulated_copy_is_not_reported_as_a_fallback()
+    {
+        var reported = new List<(string Area, string Reason)>();
+        var harness = new Harness(fallbacks: new ListSink(reported));
+
+        harness.Hotkey.Press();
+
+        Assert.Empty(reported);
+    }
+
+    private sealed class ListSink(List<(string Area, string Reason)> reported) : IFallbackSink
+    {
+        public void Report(string area, string reason, string? language = null) => reported.Add((area, reason));
+    }
+
+    [Fact]
     public async Task A_blocked_gate_refuses_a_file_read_and_a_play_click()
     {
         var gate = new FakeGate();
@@ -948,13 +964,15 @@ public class ReadAloudServiceGeneratingTests
 
         public string DocumentText { get; set; } = "some text to read";
 
-        public Harness(Func<TestSettings, ReadTranslator>? translation = null, IUsageRecorder? usage = null, IReadGate? gate = null)
+        public FakeHotkey Hotkey { get; } = new();
+
+        public Harness(Func<TestSettings, ReadTranslator>? translation = null, IUsageRecorder? usage = null, IReadGate? gate = null, IFallbackSink? fallbacks = null)
         {
             Reader = new FakeReader(this);
             Service = new ReadAloudService(
-                Reader, Clipboard, new FakeHotkey(), new FakeCopier(), Monitor,
+                Reader, Clipboard, Hotkey, new FakeCopier(), Monitor,
                 new FakeClipboardMonitor(), new FakeForeground(), new FakeVoices(), new FakeModel(),
-                new FakeDocuments(this), Log, Settings, new FakeSanitizer(), new SilentLog(), HeadStart, translation?.Invoke(Settings), usage, gate);
+                new FakeDocuments(this), Log, Settings, new FakeSanitizer(), new SilentLog(), HeadStart, translation?.Invoke(Settings), usage, gate, fallbacks);
         }
     }
 
@@ -1063,7 +1081,8 @@ public class ReadAloudServiceGeneratingTests
 
     private sealed class FakeHotkey : IHotkeyService
     {
-        public event EventHandler? Pressed { add { } remove { } }
+        public event EventHandler? Pressed;
+        public void Press() => Pressed?.Invoke(this, EventArgs.Empty);
         public bool Register(nint windowHandle) => true;
         public void Unregister() { }
         public void Dispose() { }

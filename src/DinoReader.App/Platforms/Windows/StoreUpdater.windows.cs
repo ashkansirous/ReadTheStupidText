@@ -26,6 +26,7 @@ public static partial class StoreUpdater
 		}
 		catch (Exception ex) when (ex is InvalidOperationException or FeatureNotSupportedException)
 		{
+			// no-fallback: logged only; the Store page is not opened
 			Debug.WriteLine($"Dino Reader could not open the Store: {ex.Message}");
 		}
 	}
@@ -55,6 +56,7 @@ public static partial class StoreUpdater
 		{
 			// Whatever the Store APIs throw (no sign-in, unpackaged, bad handle), the caller falls back to the Store page.
 			Debug.WriteLine($"Dino Reader could not request the Store update: {ex.Message}");
+			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Store, ReadTheStupidText.Application.Usage.FallbackReason.InAppUpdateFailed); // Slice 273 part D: the Store page opens instead
 			return false;
 		}
 	}

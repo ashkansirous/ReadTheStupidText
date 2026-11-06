@@ -1,6 +1,7 @@
 using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Usage;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -19,14 +20,16 @@ public sealed partial class LanguageWindow : Window
     private readonly VoicePackSetup _setup;
     private readonly ISystemLog _log;
     private readonly Action _restart;
+    private readonly IFallbackSink _fallbacks;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
     private bool _populating;
     private bool _closed;
     private bool _languageChanged;
     private readonly string? _initialLanguage;
 
-    public LanguageWindow(ISettingsStore settings, VoicePackSetup setup, ISystemLog log, Action restart)
+    public LanguageWindow(ISettingsStore settings, VoicePackSetup setup, ISystemLog log, Action restart, IFallbackSink fallbacks)
     {
+        _fallbacks = fallbacks;
         _settings = settings;
         _setup = setup;
         _initialLanguage = settings.Language;
@@ -92,6 +95,8 @@ public sealed partial class LanguageWindow : Window
         }
         catch (Exception ex)
         {
+            // An exception escaping the installer is not one of its result paths, so it is not counted there.
+            _fallbacks.Report(FallbackArea.Pack, FallbackReason.PackFailed, _settings.Language); // Slice 273 part D
             _log.Error("voice pack setup failed", null, ex);
             _dispatcher.TryEnqueue(() => TextFlow.ForUi(StatusText, PackSetupText.For(PackSetupState.Failed, 0)));
         }

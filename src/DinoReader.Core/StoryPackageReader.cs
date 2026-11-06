@@ -41,10 +41,12 @@ public static class StoryPackageReader
         }
         catch (InvalidDataException ex)
         {
+            // no-fallback: rethrown as a StoryPackageException, the import is refused
             throw new StoryPackageException("The package is not a valid zip file.", ex);
         }
         catch (StoryFormatException ex)
         {
+            // no-fallback: rethrown as a StoryPackageException, the import is refused
             throw new StoryPackageException(ex.Message, ex);
         }
     }
@@ -74,10 +76,12 @@ public static class StoryPackageReader
         }
         catch (InvalidDataException ex)
         {
+            // no-fallback: rethrown as a StoryPackageException, the import is refused
             throw new StoryPackageException("The package is not a valid zip file.", ex);
         }
         catch (StoryFormatException ex)
         {
+            // no-fallback: rethrown as a StoryPackageException, the import is refused
             throw new StoryPackageException(ex.Message, ex);
         }
     }
@@ -106,6 +110,7 @@ public static class StoryPackageReader
         }
         catch
         {
+            // no-fallback: rolls the staged files back and rethrows
             RollBack(staged, placed);
             throw;
         }
@@ -162,6 +167,7 @@ public static class StoryPackageReader
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // no-fallback: leftover cleanup, nothing the person gets changes
             // Left for the next merge into this story, which sweeps leftovers first.
         }
     }
@@ -204,10 +210,12 @@ public static class StoryPackageReader
         }
         catch (IOException)
         {
+            // no-fallback: temp file cleanup, nothing the person gets changes
             // A temp file that cannot be deleted now is harmless; it is never read.
         }
         catch (UnauthorizedAccessException)
         {
+            // no-fallback: temp file cleanup, nothing the person gets changes
         }
     }
 
@@ -241,10 +249,12 @@ public static class StoryPackageReader
         }
         catch (InvalidDataException ex)
         {
+            // no-fallback: rethrown as a StoryPackageException, the import is refused
             throw new StoryPackageException("The package is not a valid zip file.", ex);
         }
         catch (StoryFormatException ex)
         {
+            // no-fallback: rethrown as a StoryPackageException, the import is refused
             throw new StoryPackageException(ex.Message, ex);
         }
     }
@@ -267,10 +277,12 @@ public static class StoryPackageReader
         }
         catch (InvalidDataException ex)
         {
+            // no-fallback: rethrown as a StoryPackageException, the import is refused
             throw new StoryPackageException("The package is not a valid zip file.", ex);
         }
         catch (StoryFormatException ex)
         {
+            // no-fallback: rethrown as a StoryPackageException, the import is refused
             throw new StoryPackageException(ex.Message, ex);
         }
     }

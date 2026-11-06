@@ -27,6 +27,7 @@ internal sealed partial class MicRecorder
 		}
 		catch
 		{
+			// no-fallback: releases the recorder and rethrows
 			recorder.Release();
 			recorder.Dispose();
 			throw;
@@ -94,6 +95,7 @@ internal sealed partial class RecordingPlayer
 		}
 		catch
 		{
+			// no-fallback: releases the player and rethrows
 			_player = null;
 			player.Release();
 			player.Dispose();
@@ -116,6 +118,7 @@ internal sealed partial class RecordingPlayer
 		}
 		catch (Exception ex) when (ex is Java.Lang.IllegalArgumentException or Java.Lang.IllegalStateException)
 		{
+			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.PremadeAudio, ReadTheStupidText.Application.Usage.FallbackReason.ClipSpeedUnset); // Slice 273 part D: the clip plays at its own speed
 			System.Diagnostics.Debug.WriteLine($"Dino Reader could not set the clip speed {rate}: {ex.Message}");
 		}
 	}

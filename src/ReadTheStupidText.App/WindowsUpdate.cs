@@ -145,6 +145,7 @@ public sealed class WindowsUpdate : IReadGate
         }
         catch (Exception ex)
         {
+            // no-fallback: logged only; the bar shows again next time
             System.Diagnostics.Debug.WriteLine($"Update bar could not be remembered as closed: {ex.Message}");
         }
 
@@ -160,6 +161,7 @@ public sealed class WindowsUpdate : IReadGate
         }
         catch (Exception ex)
         {
+            // no-fallback: logged only; the Store page is not opened
             System.Diagnostics.Debug.WriteLine($"The Microsoft Store page could not be opened: {ex.Message}");
         }
     }
@@ -198,6 +200,7 @@ public sealed class WindowsUpdate : IReadGate
         }
         catch (InvalidOperationException)
         {
+            // no-fallback: only an unpackaged (dev) build lacks a package version, never a shipped one; it takes the documented unstamped "0.0.0" and never updates, so no usage row is meaningful (no usage sink here)
             return FallbackVersion;
         }
     }

@@ -9,13 +9,28 @@ namespace DinoReader;
 /// </summary>
 internal static class IosAttributes
 {
+	private static int _fontFallbackReported;
+
+	// Slice 273 part D: measured on every layout pass, so the report is bounded to once per process by a flag checked before any lookup or lock.
+	private static void ReportFontFallbackOnce()
+	{
+		if (Interlocked.Exchange(ref _fontFallbackReported, 1) == 0)
+		{
+			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Font, ReadTheStupidText.Application.Usage.FallbackReason.FontFallback);
+		}
+	}
+
 	/// <summary>The named font when it exists, else the system font of the same (sanitised) size. Never null.</summary>
 	public static UIFont FontOrSystem(UIFont? named, double size)
 	{
 		double usable = AttributeFallback.SizeFor(size);
-		return AttributeFallback.SourceFor(named is not null) == FontSource.Named
-			? named!
-			: UIFont.SystemFontOfSize((nfloat)usable);
+		if (AttributeFallback.SourceFor(named is not null) == FontSource.System)
+		{
+			ReportFontFallbackOnce();
+			return UIFont.SystemFontOfSize((nfloat)usable);
+		}
+
+		return named!;
 	}
 
 	/// <summary>Attributes holding a font and nothing else, with the font guaranteed.</summary>
