@@ -69,9 +69,9 @@ public sealed class SentenceDumpTests
     public void Farsi_ReadsTheTagBeforeTheWholeSplitQuote_AndTheSourceTextsFollowTheNewOrder()
     {
         IReadOnlyList<SpokenSentence> sentences = PigsInFarsi().Sentences;
-        int tag = sentences.ToList().FindIndex(s => s.Source == "said Pim." && s.Text.EndsWith(':'));
+        int tag = sentences.ToList().FindIndex(s => s.Source == "said Pim." && s.Text == BundledTranslations.Lookup(StoreBuilder.Build(Books.SpecOf(PigsStem)), Farsi, "said Pim."));
 
-        Assert.True(tag >= 0, "a moved tag ends with a colon");
+        Assert.True(tag >= 0, "the tag comes first with the text it was translated as, its colon is display only (Slice 280)");
         Assert.Equal("A strong house takes time,", sentences[tag + 1].Source);
         Assert.Equal("I'll play when it's done.", sentences[tag + 2].Source);
         Assert.Equal(Pim, sentences[tag + 1].Speaker);

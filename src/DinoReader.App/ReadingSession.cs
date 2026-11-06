@@ -759,7 +759,7 @@ public sealed class ReadingSession
 			return false;
 		}
 
-		AudioPackLog.Write($"premade clip plays (sentence {StorySentences.IndexAt(_sentences, segment.SourceStart)})");
+		AudioPackLog.Write($"premade clip plays (sentence {StorySentences.IndexAt(_sentences, segment.SourceStart)}) clip {Path.GetFileName(path)}");
 		NoteFirstSound("premade clip", read.ReadId);
 		RunOnMain(() => MarkPiece(read, segment));
 		RunOnMain(() => PieceAudio?.Invoke(true));
