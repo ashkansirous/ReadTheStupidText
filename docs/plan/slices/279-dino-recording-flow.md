@@ -1,6 +1,14 @@
 # Slice 279 — Dino: recording your own voice, one intro page, then per character or whole page
 
-*Planned 2026-11-06.* Dino Reader only, Android, iOS and the Windows head the same in the same slice.
+*In progress (wave 2026-11-06), draft PR.* Dino Reader only, Android, iOS and the Windows head the same in the same slice.
+
+Claim notes (wave 32): the open points under *Design* take their stated defaults (follow the mock). Touches widened at
+claim from a code check: `src/DinoReader.Core/{StoryRecordings,Story,RecordLayout,BookSheetPlan,ITextMeasurer}.cs`,
+the storage API (`IStoryLibrary`, `FileStoryLibrary`), `StoryPackageWriter`/`StoryBackup*` for the per-piece clips,
+`src/DinoReader.App/{GalleryPage.xaml.cs,GalleryPage.Desktop.cs,ReadingPage.xaml.cs,IntroWizardPage.Art.cs}`,
+`src/DinoReader.App/Platforms/Windows/{DinoKeyboard,WindowsTextMeasurer}.cs`, a new
+`src/DinoReader.App/Testing/DinoTestCommands.Record.cs` (plus one dispatch line in the existing test-command router),
+and `.maestro/dino/**`. `src/DinoReader.Core/StoryTranslation.cs` is not this slice's (Slice 280 edits it).
 
 **Depends on:** Slice 278 (the cast and voice code it removes is the code this slice would otherwise have to work around).
 **Touches:** `src/DinoReader.App/{RecordPage,RecordViews,RecordingAudio,StoryActions,BookSheet,IntroWizardPage,ReadingClips,ReadingSession,ReadingSurface,PictureTextPages,TextPages,MauiProgram}.cs`,
