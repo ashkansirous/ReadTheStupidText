@@ -272,6 +272,9 @@ public class OwnBooksCleanupTests : IDisposable
     [Fact]
     public async Task A_delete_that_fails_before_the_last_step_leaves_the_own_book_listed()
     {
+        // The failure is injected with an exclusive lock on a file, which only Windows enforces;
+        // on Linux a delete succeeds despite FileShare.None (same pattern as LibraryHardeningTests).
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "Needs mandatory file locking (Windows).");
         var library = new FileStoryLibrary(_root);
         Story own = Book(null);
         await library.AddAsync(own);
