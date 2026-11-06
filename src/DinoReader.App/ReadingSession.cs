@@ -95,8 +95,11 @@ public sealed class ReadingSession
 	// Cancelled when the read is stopped or superseded, so a translation still running for it is abandoned.
 	private CancellationTokenSource? _readCancellation;
 
-	public ReadingSession(ISpeechReader reader, StoryVoicing voicing, IRecordingPlayer player, IStoryLibrary library, ISettingsStore settings, IVoiceModelService model)
+	private readonly ReadTheStupidText.Application.Usage.IFallbackSink _fallbacks; // Slice 273 part B
+
+	public ReadingSession(ISpeechReader reader, StoryVoicing voicing, IRecordingPlayer player, IStoryLibrary library, ISettingsStore settings, IVoiceModelService model, ReadTheStupidText.Application.Usage.IFallbackSink? fallbacks = null)
 	{
+		_fallbacks = fallbacks ?? ReadTheStupidText.Application.Usage.NoFallbackSink.Instance;
 		_reader = reader;
 		_voicing = voicing;
 		_player = player;
@@ -450,9 +453,15 @@ public sealed class ReadingSession
 	private bool TryPlayRecording(Story story, int sentence, int id)
 	{
 		int page = PageOf(sentence);
-		string? path = PlaysRecording(story, page) ? _library.TryResolveFile(story.Id, StoryRecordings.FileNameOf(page)) : null;
+		bool recorded = PlaysRecording(story, page);
+		string? path = recorded ? _library.TryResolveFile(story.Id, StoryRecordings.FileNameOf(page)) : null;
 		if (path is null || !File.Exists(path))
 		{
+			if (recorded)
+			{
+				ReportRecordingUnplayable(); // Slice 273 part B: the page was to play a recording but its file is gone
+			}
+
 			return false;
 		}
 
@@ -464,6 +473,7 @@ public sealed class ReadingSession
 		catch (Exception)
 		{
 			_unplayable.Add(page);
+			ReportRecordingUnplayable();
 			return false;
 		}
 
@@ -510,6 +520,7 @@ public sealed class ReadingSession
 		}
 
 		_unplayable.Add(page);
+		ReportRecordingUnplayable();
 		if (_recorded == RecordedPlay.Paused)
 		{
 			_player.Stop();
@@ -520,6 +531,10 @@ public sealed class ReadingSession
 
 		_ = ContinueAtAsync(_pageSentences[page].First);
 	}
+
+	// Slice 273 part B: a recording that cannot be played falls back to the generated voice.
+	private void ReportRecordingUnplayable() =>
+		_fallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Speech, ReadTheStupidText.Application.Usage.FallbackReason.RecordingUnplayable, _reading);
 
 	private async Task SpeakAsync(Story story, int fromPosition, int id, CancellationToken cancellation)
 	{

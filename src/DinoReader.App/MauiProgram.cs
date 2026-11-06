@@ -91,6 +91,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<StoreClient>();
 		builder.Services.AddSingleton<AppConfigClient>();
 		builder.Services.AddSingleton<UsageCounter>();
+		builder.Services.AddSingleton<ReadTheStupidText.Application.Usage.IFallbackSink, DinoFallbackSink>(); // Slice 273 part B: the shared readers and translators report fallbacks through it
 		builder.Services.AddSingleton<StoryLanguagePacks>();
 		builder.Services.AddSingleton<ShelfAudioPacks>(); // Slice 262: the one owner of the side languages' pre-made audio for the shelf books
 		AddDocumentExtractors(builder.Services);

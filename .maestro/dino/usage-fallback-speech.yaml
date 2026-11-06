@@ -1,0 +1,39 @@
+# Slice 273 part B: a speech fallback reported by the shared code reaches Dino's usage counter. The force-fallback hook (Debug only) sends one `speech` / `neural_not_ready` fallback through the app's registered
+# IFallbackSink (DinoFallbackSink), the object the shared readers and translators report to, so the flow does not depend on which voice packs the emulator holds. The branch that decides each real fallback
+# is covered by the unit tests; this flow proves the sink is registered, reaches UsageCounter and counts once per session. Nothing is sent: the harness off switch stays on, and the Debug build writes a
+# `[Usage] fallback <area>:<reason> times=<n> ...` line for each fallback it is asked to count.
+# Fails against the old behaviour: before part B there is no IFallbackSink, so the hook answers `failed` and no `[Usage] fallback speech:` line appears.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK force-fallback ok
+# expect-log: [Usage] fallback speech:neural_not_ready times=1 queued
+# expect-log: [Usage] fallback speech:neural_not_ready times=2 counted
+# Keeps the app's data (no clearState): the flow reads and writes nothing stored.
+appId: uk.sirous.dinoreader.dbg
+name: A speech fallback is counted once and then tallied (Dino)
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 10000
+# The same kind again in the same session is counted, not queued again (the tally sends the session total with the next flush).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 10000

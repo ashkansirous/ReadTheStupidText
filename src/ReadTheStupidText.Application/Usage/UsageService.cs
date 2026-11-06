@@ -60,6 +60,9 @@ public sealed class UsageService : IUsageRecorder
         _roll = roll ?? Random.Shared.NextDouble();
     }
 
+    /// <summary>Called at the start of each send, once counts are enabled, so the app can queue counts it only totals up in memory (Slice 273 part B: the fallback repeats). It must not throw and must not wait.</summary>
+    public Action? BeforeSend { get; set; }
+
     /// <summary>The operating system's major version, for the launch count.</summary>
     public int OsMajor => _build.OsMajor;
 
@@ -231,6 +234,8 @@ public sealed class UsageService : IUsageRecorder
                 Clear();
                 return;
             }
+
+            BeforeSend?.Invoke(); // the repeats queued here leave with this send, or with the next one the count itself schedules
 
             if (refreshConfig)
             {

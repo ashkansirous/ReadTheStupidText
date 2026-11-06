@@ -2,6 +2,7 @@ using System.Diagnostics;
 using AVFoundation;
 using Foundation;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Mobile.Shared;
@@ -20,6 +21,9 @@ namespace ReadTheStupidText.Mobile.Shared;
 /// </remarks>
 public sealed class AvSpeechReader : ISpeechReader, IReadingLanguage, IDisposable
 {
+    // Slice 273 part B: marks a speak call that starts a read (not a skip), so a missing phone voice is counted once, from the speak path only.
+    private sealed record FallbackRead(int? ActivityId);
+
     private readonly AVSpeechSynthesizer _synthesizer = new();
     private readonly SynthesizerDelegate _delegate;
 
@@ -38,8 +42,11 @@ public sealed class AvSpeechReader : ISpeechReader, IReadingLanguage, IDisposabl
     // read can never restart text the user has since stopped or replaced.
     private int _generation;
 
-    public AvSpeechReader()
+    private readonly PerReadFallbacks _fallbacks; // shared with the composite: one row per read
+
+    public AvSpeechReader(IFallbackSink? fallbacks = null)
     {
+        _fallbacks = PerReadFallbacks.Of(fallbacks ?? NoFallbackSink.Instance); // Slice 273 part B
         _delegate = new SynthesizerDelegate(this);
         _synthesizer.Delegate = _delegate;
         _interruptionObserver = IosAudioSession.ObserveInterruptions(OnInterruptionBegan, OnInterruptionEnded);
@@ -62,7 +69,7 @@ public sealed class AvSpeechReader : ISpeechReader, IReadingLanguage, IDisposabl
         _generation++;
         _text = text;
         ChunkChanged?.Invoke(this, new ReadChunk(0, 1, text, 0, text.Length));
-        SpeakFrom(0);
+        SpeakFrom(0, new FallbackRead(activityId));
         return Task.CompletedTask;
     }
 
@@ -143,7 +150,7 @@ public sealed class AvSpeechReader : ISpeechReader, IReadingLanguage, IDisposabl
         return Task.CompletedTask;
     }
 
-    private void SpeakFrom(int offset)
+    private void SpeakFrom(int offset, FallbackRead? read = null)
     {
         if (string.IsNullOrEmpty(_text) || offset >= _text.Length)
         {
@@ -158,7 +165,7 @@ public sealed class AvSpeechReader : ISpeechReader, IReadingLanguage, IDisposabl
         var utterance = new AVSpeechUtterance(_text[offset..])
         {
             Rate = ToUtteranceRate(_speed),
-            Voice = _voice ?? LanguageVoice(), // null = the system default voice
+            Voice = _voice ?? LanguageVoice(read), // null = the system default voice
         };
 
         _current = utterance;
@@ -206,7 +213,7 @@ public sealed class AvSpeechReader : ISpeechReader, IReadingLanguage, IDisposabl
     // not CurrentUICulture, which the app overrides with its own language. Among the installed
     // voices of the wanted language an exact-locale match wins, then enhanced/premium quality, then
     // any; no match keeps the default.
-    private AVSpeechSynthesisVoice? LanguageVoice()
+    private AVSpeechSynthesisVoice? LanguageVoice(FallbackRead? read)
     {
         if (_readingLanguage is null)
         {
@@ -219,11 +226,17 @@ public sealed class AvSpeechReader : ISpeechReader, IReadingLanguage, IDisposabl
             return null;
         }
 
-        return AVSpeechSynthesisVoice.GetSpeechVoices()
+        AVSpeechSynthesisVoice? voice = AVSpeechSynthesisVoice.GetSpeechVoices()
             .Where(v => VoiceAvailability.Primary(v.Language) == wanted)
             .OrderByDescending(v => IsExactLocale(v, _readingLanguage))
             .ThenByDescending(v => (int)v.Quality)
             .FirstOrDefault();
+        if (voice is null && read is not null)
+        {
+            _fallbacks.Report(read.ActivityId, FallbackArea.Speech, FallbackReason.PhoneLanguageMissing, _readingLanguage); // Slice 273 part B: the system default voice reads the text instead (the speak path only, not a skip; a read the composite counted adds nothing)
+        }
+
+        return voice;
     }
 
     private static string DeviceLanguage() =>

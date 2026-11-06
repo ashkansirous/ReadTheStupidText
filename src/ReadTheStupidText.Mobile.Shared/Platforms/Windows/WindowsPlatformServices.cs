@@ -16,8 +16,11 @@ public sealed class WindowsPlatformServices : IPlatformServices
 	private readonly ISystemLog _log;
 	private readonly AudioChunkPaths _audio;
 
-	public WindowsPlatformServices(IVoiceModelService model, ISystemLog log, AudioChunkPaths audio)
+	private readonly ReadTheStupidText.Application.Usage.IFallbackSink? _fallbacks;
+
+	public WindowsPlatformServices(IVoiceModelService model, ISystemLog log, AudioChunkPaths audio, ReadTheStupidText.Application.Usage.IFallbackSink? fallbacks = null)
 	{
+		_fallbacks = fallbacks; // Slice 273 part B
 		_model = model;
 		_log = log;
 		_audio = audio;
@@ -27,7 +30,7 @@ public sealed class WindowsPlatformServices : IPlatformServices
 
 	public bool SupportsTextScan => true;
 
-	public ISpeechReader CreateNeuralReader() => new WindowsNeuralReader(new SupertonicSpeechReader(_model, _log, _audio));
+	public ISpeechReader CreateNeuralReader() => new WindowsNeuralReader(new SupertonicSpeechReader(_model, _log, _audio, _fallbacks));
 
 	public ISpeechReader CreateFallbackReader() => new SpeechReader();
 

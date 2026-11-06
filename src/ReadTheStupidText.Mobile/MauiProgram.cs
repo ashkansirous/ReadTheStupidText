@@ -47,6 +47,7 @@ public static partial class MauiProgram
 		builder.Services.AddSingleton<ReviewHandOff>();
 		builder.Services.AddSingleton<EarlyStartVoice>();
 		builder.Services.AddSingleton<RtstUsage>();
+		builder.Services.AddSingleton<ReadTheStupidText.Application.Usage.IFallbackSink>(sp => sp.GetRequiredService<RtstUsage>().Fallbacks); // Slice 273 part B: the shared readers and translators report fallbacks through it
 		builder.Services.AddTransient<LanguagePage>();
 		builder.Services.AddTransient<ReaderPage>();
 		builder.Services.AddTransient<VoicePickerPage>();

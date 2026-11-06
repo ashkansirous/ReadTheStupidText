@@ -104,6 +104,9 @@ public partial class App : Application
         // Anonymous usage counts (Slice 140): one service, also the IUsageRecorder the read service and the panel's switch use.
         services.AddSingleton(_ => WindowsUsage.Create());
         services.AddSingleton<IUsageRecorder>(sp => sp.GetRequiredService<UsageService>());
+        // Slice 273 part B: the shared readers and the translator report fallbacks here; the repeats are queued at the exit flush (StartUsageCounts).
+        services.AddSingleton<FallbackReporter>();
+        services.AddSingleton<IFallbackSink>(sp => sp.GetRequiredService<FallbackReporter>());
 
         services.AddSingleton<IActivityLog, ActivityLog>();
         services.AddSingleton<ReadAloudService>();
@@ -153,7 +156,13 @@ public partial class App : Application
         var usage = Services.GetRequiredService<UsageService>();
         string? language = UiLanguageTag.Effective(Services.GetRequiredService<ISettingsStore>().Language, CultureInfo.CurrentUICulture.Name);
         _ = usage.StartAsync(context => UsageEvents.AppOpened(context, language, usage.OsMajor));
-        AppDomain.CurrentDomain.ProcessExit += (_, _) => usage.FlushForExitAsync(UsageExitWait).GetAwaiter().GetResult();
+        var fallbacks = Services.GetRequiredService<FallbackReporter>();
+        usage.BeforeSend = fallbacks.FlushRepeats; // Slice 273 part B: before each send, as on the phone, so a long-running tray app does not hold its totals until exit
+        AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+        {
+            fallbacks.FlushRepeats(); // Slice 273 part B: the session totals of fallbacks that happened again
+            usage.FlushForExitAsync(UsageExitWait).GetAwaiter().GetResult();
+        };
     }
 
     // First run (no stored language) asks for one in the language window, which starts the download.

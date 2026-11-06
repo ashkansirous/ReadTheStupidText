@@ -1,0 +1,29 @@
+# Slice 273 part B: a speech fallback reported by the shared code reaches Read The Stupid Text's usage queue. The force-fallback hook (Debug only) sends one `speech` / `neural_not_ready` fallback through the
+# app's registered IFallbackSink (RtstUsage.Fallbacks, the FallbackReporter over RtstUsage as an IUsageRecorder), the object the shared readers and translators report to, so the flow does not depend on
+# which voice packs the emulator holds. The branch that decides each real fallback is covered by the unit tests; this flow proves the sink is registered and reaches the usage queue. Nothing is sent: the
+# harness off switch stays on, and the Debug build writes a `[Usage] fallback <area>:<reason>` line for each fallback reported.
+# Fails against the old behaviour: before part B there is no IFallbackSink, so the hook answers `failed` and no `[Usage] fallback speech:` line appears.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK force-fallback ok
+# expect-log: [Usage] fallback speech:neural_not_ready
+# No clearState: the flow reads and writes nothing stored.
+appId: uk.sirous.readthestupidtext
+name: A speech fallback reaches the usage queue (RTST)
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 20000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 10000

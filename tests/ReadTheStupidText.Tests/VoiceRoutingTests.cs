@@ -26,6 +26,17 @@ public class VoiceRoutingTests
     }
 
     [Theory]
+    [InlineData(true, VoiceRoute.Read, false, true)]
+    [InlineData(true, VoiceRoute.Read, true, false)]
+    [InlineData(false, VoiceRoute.Read, false, false)]
+    [InlineData(true, VoiceRoute.NoVoice, false, false)]
+    [InlineData(true, VoiceRoute.Downloading, false, false)]
+    public void PhoneChoiceDroppedOnlyWhenChosenReadGoesAheadWithAnotherVoice(bool chose, VoiceRoute route, bool phoneReads, bool expected)
+    {
+        Assert.Equal(expected, VoiceRouting.PhoneChoiceDropped(chose, route, phoneReads));
+    }
+
+    [Theory]
     [InlineData(true, false, false, VoiceRoute.NoVoice)]
     [InlineData(true, false, true, VoiceRoute.Downloading)]
     [InlineData(true, true, true, VoiceRoute.Read)]

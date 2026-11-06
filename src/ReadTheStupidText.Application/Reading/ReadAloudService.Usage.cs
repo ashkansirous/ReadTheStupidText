@@ -14,6 +14,7 @@ namespace ReadTheStupidText.Application.Reading;
 public sealed partial class ReadAloudService
 {
     private readonly IUsageRecorder? _usage;
+    private readonly IFallbackSink _fallbacks = NoFallbackSink.Instance; // Slice 273 part B: set by the constructor
 
     // The read whose wait for the first sound is being timed, with the languages it will be counted under, as one immutable value that is
     // swapped whole; null once the wait ended, so each wait is counted once.

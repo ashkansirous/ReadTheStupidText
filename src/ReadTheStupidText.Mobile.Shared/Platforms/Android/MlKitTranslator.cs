@@ -33,7 +33,13 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
     public bool AutoDownload { get; set; } = true;
 
     // Built only when a grown-up path first needs the engine (Dino Reader removes ML Kit's start-up provider), so ML Kit starts here.
-    public MlKitTranslator() => MlKitInit.EnsureInitialized();
+    public MlKitTranslator(IFallbackSink? fallbacks = null)
+    {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance; // Slice 273 part B
+        MlKitInit.EnsureInitialized();
+    }
+
+    private readonly IFallbackSink _fallbacks;
 
     // A plain table, so constructing this class never loads ML Kit (Dino Reader keeps it unloaded until a grown-up asks for a translation).
     public IReadOnlyList<string> SupportedLanguages => MlKitLanguages.All;
@@ -89,7 +95,8 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
         }
         catch (Exception ex)
         {
-            throw new TranslationModelUnavailableException("The translation pack could not be downloaded.", ex);
+            _fallbacks.Report(FallbackArea.Translation, FallbackReason.TranslationPackFailed, language); // Slice 273 part B: the app's language code, as the translation fallbacks use
+            throw new TranslationModelUnavailableException("The translation pack could not be downloaded.", ex) { FallbackReported = true };
         }
 
         progress?.Report(1);
@@ -205,7 +212,7 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
                 .SetSourceLanguage(source)
                 .SetTargetLanguage(target)
                 .Build());
-            _opening = new Opening((source, target), client, DownloadModelAsync(client));
+            _opening = new Opening((source, target), client, DownloadModelAsync(client, EngineLanguageCodes.FromEngine(target)));
             return _opening;
         }
         finally
@@ -243,7 +250,7 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
         }
     }
 
-    private static async Task DownloadModelAsync(MlKitClient translator)
+    private async Task DownloadModelAsync(MlKitClient translator, string targetLanguage)
     {
         DownloadConditions conditions = RequireWifi
             ? new DownloadConditions.Builder().RequireWifi().Build()
@@ -254,7 +261,8 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
         }
         catch (Exception ex)
         {
-            throw new TranslationModelUnavailableException("The translation model could not be downloaded.", ex);
+            _fallbacks.Report(FallbackArea.Translation, FallbackReason.TranslationPackFailed, targetLanguage);
+            throw new TranslationModelUnavailableException("The translation model could not be downloaded.", ex) { FallbackReported = true };
         }
     }
 

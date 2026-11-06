@@ -9,7 +9,14 @@ public static class FallbackArea
     /// <summary>Dino Reader: a read that should have used the book's pre-made audio used the device voice for some or all pieces.</summary>
     public const string PremadeAudio = "premade_audio";
 
-    public static IReadOnlyList<string> All { get; } = [PremadeAudio];
+    // Part B (speech, voices and translation).
+    /// <summary>A read that should have used the natural (neural) voice, or the voice the person picked, used another engine or voice.</summary>
+    public const string Speech = "speech";
+
+    /// <summary>A read that should have been translated was read in the original text, or a translation pack could not be had.</summary>
+    public const string Translation = "translation";
+
+    public static IReadOnlyList<string> All { get; } = [PremadeAudio, Speech, Translation];
 }
 
 /// <summary>Why it fell back (Slice 273): the closed list of the <c>fallback</c> count's reason; the Worker's <c>FALLBACK_REASONS</c> must be the same list.</summary>
@@ -23,7 +30,73 @@ public static class FallbackReason
     /// <summary>Some pieces of a read had a clip and some fell back to the device voice.</summary>
     public const string Partial = "partial";
 
-    public static IReadOnlyList<string> All { get; } = [NoPack, PackFailed, TextMismatch, ClipMissing, Partial];
+    // Part B, speech (area "speech").
+    /// <summary>The neural voice's model was not ready, so the phone or Windows voice read.</summary>
+    public const string NeuralNotReady = "neural_not_ready";
+
+    /// <summary>The model went away (or could not be loaded) after the readiness check.</summary>
+    public const string NeuralUnavailable = "neural_unavailable";
+
+    /// <summary>A streamed neural read could not start; the whole text is read by the Windows voice.</summary>
+    public const string StreamUnavailable = "stream_unavailable";
+
+    /// <summary>The neural engine could not be built from an installed model.</summary>
+    public const string EngineBuildFailed = "engine_build_failed";
+
+    /// <summary>A read by voice segments was read as one joined text in the phone voice.</summary>
+    public const string SegmentsUnsupported = "segments_unsupported";
+
+    /// <summary>The phone voice cannot speak the text's language; the natural voice reads instead.</summary>
+    public const string PhoneCannotSpeak = "phone_cannot_speak";
+
+    /// <summary>No voice can read the text's language, so the read was not started.</summary>
+    public const string NoVoice = "no_voice";
+
+    /// <summary>A silent take was generated again and the new take was voiced.</summary>
+    public const string SilentRetake = "silent_retake";
+
+    /// <summary>A silent voice was replaced by the pack's sibling voice.</summary>
+    public const string SilentSibling = "silent_sibling";
+
+    /// <summary>A voice stayed silent through every retake and the sibling; the clip was played as it was.</summary>
+    public const string SilentGaveUp = "silent_gave_up";
+
+    /// <summary>Dino Reader: the voice a book suggested for a character is not in the language's roster; the closest roster voice by traits is used.</summary>
+    public const string VoiceNotInRoster = "voice_not_in_roster";
+
+    /// <summary>Dino Reader: a grown-up's recording could not be played; the generated voice reads.</summary>
+    public const string RecordingUnplayable = "recording_unplayable";
+
+    /// <summary>The phone's text-to-speech has no voice for the text's language; its default voice reads.</summary>
+    public const string PhoneLanguageMissing = "phone_language_missing";
+
+    // Part B, translation (area "translation").
+    public const string TranslationTimeout = "translation_timeout";
+    public const string TranslationPackMissing = "translation_pack_missing";
+    public const string TranslationError = "translation_error";
+
+    /// <summary>A streamed translation could not be planned; the whole text is translated instead.</summary>
+    public const string StreamPlanFailed = "stream_plan_failed";
+
+    /// <summary>A streamed translation stopped part-way; the rest was read untranslated.</summary>
+    public const string StreamPartial = "stream_partial";
+
+    /// <summary>Dino Reader: the language model for the story's pair is gone, so the story is read as written.</summary>
+    public const string TranslationModelMissing = "translation_model_missing";
+
+    /// <summary>Dino Reader: a translated read was skipped and the story was read as written.</summary>
+    public const string TranslationSkipped = "translation_skipped";
+
+    /// <summary>A translation pack could not be downloaded.</summary>
+    public const string TranslationPackFailed = "translation_pack_failed";
+
+    public static IReadOnlyList<string> All { get; } =
+    [
+        NoPack, PackFailed, TextMismatch, ClipMissing, Partial,
+        NeuralNotReady, NeuralUnavailable, StreamUnavailable, EngineBuildFailed, SegmentsUnsupported, PhoneCannotSpeak, NoVoice, SilentRetake, SilentSibling, SilentGaveUp,
+        VoiceNotInRoster, RecordingUnplayable, PhoneLanguageMissing,
+        TranslationTimeout, TranslationPackMissing, TranslationError, StreamPlanFailed, StreamPartial, TranslationModelMissing, TranslationSkipped, TranslationPackFailed,
+    ];
 }
 
 /// <summary>

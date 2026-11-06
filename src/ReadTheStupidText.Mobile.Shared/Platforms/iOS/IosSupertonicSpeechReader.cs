@@ -4,6 +4,7 @@ using AVFoundation;
 using Foundation;
 using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Shared.Crashes;
 
@@ -52,6 +53,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
 
     private readonly IVoiceModelService _model;
     private readonly ISystemLog _log;
+    private readonly IFallbackSink _fallbacks;
     private readonly SentenceAudioSource _sentences;
     private readonly ReadTimingTracker _timing = new();
     private readonly SentenceProgress _sentenceProgress = new();
@@ -153,8 +155,9 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         }
     }
 
-    public IosSupertonicSpeechReader(IVoiceModelService model, ISystemLog? log = null)
+    public IosSupertonicSpeechReader(IVoiceModelService model, ISystemLog? log = null, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance; // Slice 273 part B
         _stall = new StallReporter(this);
         _model = model;
         _log = log ?? new IosSystemLog();

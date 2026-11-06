@@ -50,8 +50,11 @@ public sealed class StoryVoicing
 
 	private volatile SharedPlan? _lastPlan;
 
-	public StoryVoicing(IVoicePackService packs, IVoiceModelService model, StoryTranslator translator, VoicePackInstaller installer, NarratorChoice narrators, AudioPackStore audioPacks)
+	private readonly UsageCounter? _usage; // Slice 273 part B
+
+	public StoryVoicing(IVoicePackService packs, IVoiceModelService model, StoryTranslator translator, VoicePackInstaller installer, NarratorChoice narrators, AudioPackStore audioPacks, UsageCounter? usage = null)
 	{
+		_usage = usage;
 		_packs = packs;
 		_audioPacks = audioPacks;
 		CastText.RosterSource = RosterFor;
@@ -585,6 +588,7 @@ public sealed class StoryVoicing
 		IReadOnlyList<CastMember> stored = hasCast ? story.CastIn(language) : StoryCast.SeedForOtherLanguage(story.Cast);
 		IReadOnlyList<VoiceOption> pool = hasCast || VoicesFor(language).Count > 0 ? VoicesFor(language) : VoicesFor(story.Language);
 		AttributionResult resolved = StoryCast.Resolve(prepared.Analysis.Attribution, stored);
+		ReportMissingSuggestedVoices(story, stored, language, pool);
 		// Names are in the story's language, so its rules guess the flavours; the stored voice and flavour (a grown-up's pick included) win (Slices 113, 116).
 		return CastWithRoster(resolved.Characters, language, pool, stored, story.Language, story.Text);
 	}
@@ -606,6 +610,17 @@ public sealed class StoryVoicing
 		return CastCharacters.Cast(
 			characters, choices, roster, narrator, c => FlavourGuess.Guess(c.Name, nameRules), Held(StoryCast.PinnedCharacters(stored), heldIds),
 			animalOf: c => animals.TryGetValue(c.Id, out AnimalKind kind) ? AnimalCharacters.HintFor(kind, c.Name, storyLanguage) : null);
+	}
+
+	// Slice 273 part B: a read counts once when the book suggests a voice the language's roster does not hold at all. Casting itself stays pure (previews and the cast screen cast too).
+	private void ReportMissingSuggestedVoices(Story story, IReadOnlyList<CastMember> stored, string language, IReadOnlyList<VoiceOption> pool)
+	{
+		IReadOnlyList<StorytellerCharacter> roster = CharacterRoster.Adapt(CharacterRoster.For(language), pool);
+		IReadOnlyList<string> missing = FallbackUsage.MissingFromRoster(stored.Select(m => m.SuggestedVoice), roster.Where(c => c.Kind == CharacterKind.Speaker).Select(c => c.Id));
+		if (missing.Count > 0)
+		{
+			_usage?.RecordFallback(story, ReadTheStupidText.Application.Usage.FallbackArea.Speech, ReadTheStupidText.Application.Usage.FallbackReason.VoiceNotInRoster, language);
+		}
 	}
 
 	// The characters named in heldIds keep their voices for this casting only, as if the grown-up had picked them; nothing is written to the cast.

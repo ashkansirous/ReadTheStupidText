@@ -3,10 +3,10 @@ namespace ReadTheStupidText.Application.Usage;
 /// <summary>
 /// Reports that a feature fell back (Slice 273) through the app's <see cref="IUsageRecorder"/>, with the same once-per-session rule as Dino Reader (the shared <see cref="FallbackTally"/>):
 /// the first of each (area, reason, language) is queued at once with count 1, and <see cref="FlushRepeats"/> queues one more row per kind that happened again, with the session total.
-/// Not wired into the RTST app yet: parts B-D of the slice call <see cref="Report"/> at their fallback points and <see cref="FlushRepeats"/> from the app's session flush.
+/// It is Read The Stupid Text's <see cref="IFallbackSink"/> (Slice 273 part B): shared code calls <see cref="Report"/> at its fallback points, and the app calls <see cref="FlushRepeats"/> at its session flush.
 /// Never throws: counting must not change what the fallback does.
 /// </summary>
-public sealed class FallbackReporter(IUsageRecorder recorder)
+public sealed class FallbackReporter(IUsageRecorder recorder) : IFallbackSink
 {
     private readonly FallbackTally _tally = new();
 
@@ -15,10 +15,11 @@ public sealed class FallbackReporter(IUsageRecorder recorder)
     {
         try
         {
-            int count = _tally.Note(area, reason, string.Empty, language ?? string.Empty);
+            string? code = UsageEvents.Language(language); // one code for the tally key and the event, so "en-US" and "en" are one kind
+            int count = _tally.Note(area, reason, string.Empty, code ?? string.Empty);
             if (FallbackTally.IsFirst(count))
             {
-                Queue(area, reason, count, language);
+                Queue(area, reason, count, code);
             }
         }
         catch (Exception)

@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Mobile.Shared.Testing;
 
 namespace ReadTheStupidText.Mobile.Testing;
@@ -18,6 +19,7 @@ internal static class RtstTestCommands
 	private const string SetLanguageName = "set-language";
 	private const string SetVoiceName = "set-voice";
 	private const string SetTranslateName = "set-translate";
+	private const string ForceFallbackName = "force-fallback";
 	private const string ModeKey = "mode";
 	private const string On = "on";
 	private const string Off = "off";
@@ -43,8 +45,18 @@ internal static class RtstTestCommands
 		SetLanguageName => SetLanguage(command.Get(TestHookDispatcher.LanguageKey, string.Empty)),
 		SetVoiceName => SetVoice(command.Get(TestHookDispatcher.IdKey, string.Empty)),
 		SetTranslateName => SetTranslate(command.Get(ModeKey, string.Empty)),
+		ForceFallbackName => ForceFallback(command.Get(TestHookDispatcher.LanguageKey, string.Empty)),
 		_ => null,
 	};
+
+	// Slice 273 part B: sends one speech fallback (neural_not_ready) through the app's registered IFallbackSink, the object the shared readers and translators report to, so a flow sees the
+	// `[Usage] fallback speech:neural_not_ready` line without depending on which voice packs the emulator holds. Logs "HOOK force-fallback ok <lang>".
+	private static string ForceFallback(string language)
+	{
+		var sink = IPlatformApplication.Current!.Services.GetRequiredService<IFallbackSink>();
+		sink.Report(FallbackArea.Speech, FallbackReason.NeuralNotReady, language.Length == 0 ? null : language);
+		return $"{TestHookDispatcher.Ok} {language}";
+	}
 
 	private static string HoldDetectionOn()
 	{

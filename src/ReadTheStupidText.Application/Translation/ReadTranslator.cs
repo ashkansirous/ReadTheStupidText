@@ -1,6 +1,7 @@
 using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Usage;
 
 namespace ReadTheStupidText.Application.Translation;
 
@@ -24,6 +25,7 @@ public sealed class ReadTranslator
     private readonly ISystemLog _log;
     private readonly TranslationPackInstaller? _packs;
     private readonly IPackUpdateNetwork? _network;
+    private readonly IFallbackSink _fallbacks;
 
     // The shortest gap before an early-start download of the same pair may be tried again.
     private const long DownloadRetryGapMs = 5 * 60 * 1000;
@@ -33,8 +35,9 @@ public sealed class ReadTranslator
 
     public ReadTranslator(
         ITranslator translator, ILanguageDetector detector, ISettingsStore settings, ISystemLog log,
-        TranslationPackInstaller? packs = null, IPackUpdateNetwork? network = null)
+        TranslationPackInstaller? packs = null, IPackUpdateNetwork? network = null, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance; // Slice 273 part B
         _network = network;
         _translator = translator;
         _detector = detector;
@@ -175,16 +178,23 @@ public sealed class ReadTranslator
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             _log.Warning("translation timed out; reading the original", activityId);
+            _fallbacks.Report(FallbackArea.Translation, FallbackReason.TranslationTimeout, target); // Slice 273 part B
             return Original(text, TranslationOutcome.TimedOut, null, target);
         }
         catch (TranslationModelUnavailableException ex)
         {
             _log.Warning("translation pack unavailable; reading the original", activityId, ex);
+            if (!ex.FallbackReported)
+            {
+                _fallbacks.Report(FallbackArea.Translation, FallbackReason.TranslationPackMissing, target);
+            }
+
             return Original(text, TranslationOutcome.ModelMissing, null, target);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _log.Warning("translation failed; reading the original", activityId, ex);
+            _fallbacks.Report(FallbackArea.Translation, FallbackReason.TranslationError, target);
             return Original(text, TranslationOutcome.Failed, null, target);
         }
     }
@@ -222,7 +232,7 @@ public sealed class ReadTranslator
         string? reused = ReusableEarly(early, text, source!, target, blocks);
 
         _log.Info($"translating {source} -> {target} in {blocks.Count} blocks", activityId);
-        return new TranslationStreamStart(null, new TranslationStream(_translator, _log, source!, target, blocks, Budget, activityId, reused));
+        return new TranslationStreamStart(null, new TranslationStream(_translator, _log, source!, target, blocks, Budget, activityId, reused, _fallbacks));
     }
 
     // The early translation only when it is of this very text and pair and its span is the first block (true by construction).
@@ -296,6 +306,7 @@ public sealed class ReadTranslator
         {
             bool downloading = _packs?.StartInBackground(source, target) == true;
             TranslationOutcome outcome = downloading ? TranslationOutcome.PackDownloading : TranslationOutcome.ModelMissing;
+            _fallbacks.Report(FallbackArea.Translation, FallbackReason.TranslationPackMissing, target); // Slice 273 part B: the pack is not on the device, the original is read
             return (Original(text, outcome, source, target), null);
         }
 
@@ -334,11 +345,13 @@ public sealed class TranslationStream
     private readonly TimeSpan _budget;
     private readonly int _activityId;
     private readonly string? _translatedFirst;
+    private readonly IFallbackSink _fallbacks;
 
     internal TranslationStream(
         ITranslator translator, ISystemLog log, string source, string target,
-        IReadOnlyList<string> blocks, TimeSpan budget, int activityId, string? translatedFirst = null)
+        IReadOnlyList<string> blocks, TimeSpan budget, int activityId, string? translatedFirst = null, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance; // Slice 273 part B
         _translatedFirst = translatedFirst;
         _translator = translator;
         _log = log;
@@ -388,7 +401,7 @@ public sealed class TranslationStream
         }
         catch (TranslationModelUnavailableException ex)
         {
-            return Fail(TranslationOutcome.ModelMissing, "pack unavailable", ex);
+            return Fail(TranslationOutcome.ModelMissing, "pack unavailable", ex, countFallback: !ex.FallbackReported);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -396,10 +409,15 @@ public sealed class TranslationStream
         }
     }
 
-    private string? Fail(TranslationOutcome outcome, string why, Exception? error)
+    private string? Fail(TranslationOutcome outcome, string why, Exception? error, bool countFallback = true)
     {
         Outcome = outcome;
         _log.Warning($"translation block {why}; reading the rest in the original", _activityId, error);
+        if (countFallback)
+        {
+            _fallbacks.Report(FallbackArea.Translation, FallbackReason.StreamPartial, Target); // Slice 273 part B (a pack download that failed was counted where it failed)
+        }
+
         return null;
     }
 }

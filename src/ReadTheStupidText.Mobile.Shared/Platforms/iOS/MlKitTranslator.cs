@@ -27,6 +27,10 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
     /// <inheritdoc />
     public bool AutoDownload { get; set; } = true;
 
+    private readonly IFallbackSink _fallbacks;
+
+    public MlKitTranslator(IFallbackSink? fallbacks = null) => _fallbacks = fallbacks ?? NoFallbackSink.Instance; // Slice 273 part B
+
     // A plain table, so constructing this class never loads ML Kit (Dino Reader keeps it unloaded until a grown-up asks for a translation).
     public IReadOnlyList<string> SupportedLanguages => MlKitLanguages.All;
 
@@ -85,7 +89,8 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
         }
         catch (Exception ex)
         {
-            throw new TranslationModelUnavailableException("The translation pack could not be downloaded.", ex);
+            _fallbacks.Report(FallbackArea.Translation, FallbackReason.TranslationPackFailed, language); // Slice 273 part B: the app's language code, as the translation fallbacks use
+            throw new TranslationModelUnavailableException("The translation pack could not be downloaded.", ex) { FallbackReported = true };
         }
 
         if (!await IsEnginePackReadyAsync(code))
@@ -336,7 +341,7 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
 
             DisposeWhenDownloaded(_opening);
             MLKTranslator client = MLKTranslator.TranslatorWithOptions(new MLKTranslatorOptions(source, target));
-            _opening = new Opening((source, target), client, DownloadModelAsync(client));
+            _opening = new Opening((source, target), client, DownloadModelAsync(client, EngineLanguageCodes.FromEngine(target)));
             return _opening;
         }
         finally
@@ -389,7 +394,7 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
         return done.Task;
     }
 
-    private static async Task DownloadModelAsync(MLKTranslator translator)
+    private async Task DownloadModelAsync(MLKTranslator translator, string targetLanguage)
     {
         var done = new TaskCompletionSource();
         var conditions = new MLKModelDownloadConditions(true, false);
@@ -409,7 +414,8 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
         }
         catch (Exception ex)
         {
-            throw new TranslationModelUnavailableException("The translation model could not be downloaded.", ex);
+            _fallbacks.Report(FallbackArea.Translation, FallbackReason.TranslationPackFailed, targetLanguage);
+            throw new TranslationModelUnavailableException("The translation model could not be downloaded.", ex) { FallbackReported = true };
         }
     }
 

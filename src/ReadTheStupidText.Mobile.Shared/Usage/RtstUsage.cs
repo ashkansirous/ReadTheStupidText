@@ -11,7 +11,7 @@ namespace ReadTheStupidText.Mobile.Shared.Usage;
 /// sent while the user's switch is off, while the remote config has telemetry off (it stays off until the store privacy declarations match,
 /// Decision 145), or when this launch was not picked by the config's sample rate.
 /// </summary>
-public sealed class RtstUsage
+public sealed class RtstUsage : IUsageRecorder
 {
     public const string BaseAddress = "https://readthestupidtext.sirous.uk";
 
@@ -38,6 +38,22 @@ public sealed class RtstUsage
         _sender = new UsageQueueSender<UsageEvent>(new UsageQueueOptions<UsageEvent>(
             BaseAddress, EnabledKey, QueueKey, LogName, UsageBatch.MaxEvents, CurrentTelemetry, () => _config.HasCopy,
             events => UsageBatch.ToJson(events, DeviceProbe.Current), UsageBatch.ParseQueue, UsageBatch.QueueToJson));
+        Fallbacks = new LoggingFallbackSink(new FallbackReporter(this));
+    }
+
+    /// <summary>
+    /// Slice 273 part B: where the phone's shared code reports that a feature fell back (the app registers it as its <see cref="IFallbackSink"/>). The first of each kind is queued at once, and the repeats
+    /// are queued with the session total just before each send (<see cref="FlushRepeatsThenSendAsync"/>).
+    /// </summary>
+    public IFallbackSink Fallbacks { get; }
+
+    private FallbackReporter Reporter => ((LoggingFallbackSink)Fallbacks).Reporter;
+
+    // Queues the fallback repeats of the session, then sends what is queued.
+    private Task FlushRepeatsThenSendAsync()
+    {
+        Reporter.FlushRepeats();
+        return _sender.FlushAsync();
     }
 
     /// <summary>True while the remote config switches crash reports on (Slice 227; default off).</summary>
@@ -139,7 +155,7 @@ public sealed class RtstUsage
                 RecordLaunch(opened);
             }
 
-            await _sender.FlushAsync().ConfigureAwait(false);
+            await FlushRepeatsThenSendAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -167,7 +183,7 @@ public sealed class RtstUsage
         {
             _config.Changed -= OnChanged;
             Record(opened);
-            _ = _sender.FlushAsync();
+            _ = FlushRepeatsThenSendAsync();
         }
 
         _config.Changed += OnChanged;
@@ -194,6 +210,6 @@ public sealed class RtstUsage
     {
         await Task.Delay(FlushDelay).ConfigureAwait(false);
         Interlocked.Exchange(ref _flushScheduled, 0);
-        await _sender.FlushAsync().ConfigureAwait(false);
+        await FlushRepeatsThenSendAsync().ConfigureAwait(false);
     }
 }
