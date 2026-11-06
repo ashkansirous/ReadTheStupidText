@@ -23,7 +23,6 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 243 | Crash reports: keep iOS dSYMs and symbolicate, read R2 with wrangler's login, navigation/Back/lifecycle/memory log lines, one "did it crash?" command | in progress (items 3 and 5 built; 1, 2, 4, 6-8 open) | #711 (item 3), #781 (item 5) | | [243-crash-report-gaps.md](docs/plan/slices/243-crash-report-gaps.md) |
 | 244 | Dino: find and fix the 2026-10-31/11-01 crashes (iOS layout `NSDictionary` nil, whole book queued at once, `0xdead10cc`, Back while reading) | in progress (items 2-5 merged #722; iPhone 8 run and crash follow-up open) | #722 | | [244-dino-ios-crashes-2026-11-01.md](docs/plan/slices/244-dino-ios-crashes-2026-11-01.md) |
 | 271 | Leftovers from night 2026-11-05-1823 (pause-path test, multi-clip VM and emulator checks, `tmp/` listing, unknown-tag flow) | parked: feedback loop, waits for the user | | | [271-night-2026-11-05-1823-leftovers.md](docs/plan/slices/271-night-2026-11-05-1823-leftovers.md) |
-| 273 | Every fallback sends an analytics event (both apps, every platform; parts A-E) | planned (parts A-C merged (#842, #845, #846); D-E open) | #842, #845, #846 | | [273-fallback-events-everywhere.md](docs/plan/slices/273-fallback-events-everywhere.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
@@ -60,7 +59,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 374 checks across 156 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- **Not yet tried on a device:** 377 checks across 156 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
 - Slice 274 follow-ups, not built ([slice](docs/plan/slices/274-dino-ios-crash-after-leaving-parent-page.md)): bump `MauiVersion` in its own slice when a MAUI release with dotnet/maui PR #38662 ships (10.0.130 or later; 10.0.120 is the newest on NuGet as of 2026-11-06); keep iOS dSYMs per release so crashes can be symbolicated.
 - Slice 273 open question for parts B and C ([slice](docs/plan/slices/273-fallback-events-everywhere.md)): on a Farsi read with a fixture fa pack only 5 of 78 pieces matched a clip although only every third entry was corrupted: fixture keys versus the text a Farsi read speaks, or a real Farsi pre-made audio gap. Check before trusting fa clip counts.
 - Slice 269 (waiting on the user): which photo-reading option for non-Latin Dino pages, (A) Japanese and Chinese via ML Kit, (B) A plus Tesseract for Farsi, Arabic and Russian on Android, or (C) leave as is; the research and sizes are in [the slice](docs/plan/slices/269-feedback-loop-2026-11-04-1441-leftovers.md). Blocks planning that slice; nothing is built until the user picks.
