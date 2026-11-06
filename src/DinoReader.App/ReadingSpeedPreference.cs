@@ -20,7 +20,7 @@ public static class ReadingSpeedPreference
 		}
 		catch (InvalidCastException)
 		{
-			// A value of another type under this key: treat it as missing.
+			// no-fallback: a value of another type under this key is treated as missing, which is the normal default speed, not a degraded path.
 			return ReadingSpeed.DefaultRate;
 		}
 	}
