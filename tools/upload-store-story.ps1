@@ -9,16 +9,48 @@ param(
   [Parameter(Mandatory = $true)][string]$Id,
   [string]$Root = (Join-Path $PSScriptRoot '..' 'artifacts' 'store'),
   [string]$Bucket = 'readthestupidtext-downloads',
-  [switch]$MetaOnly
+  [switch]$MetaOnly,
+  # Slice 277: run only the audio-completeness check and upload nothing (the dry run).
+  [switch]$CheckOnly
 )
 $ErrorActionPreference = 'Stop'
 if ($Id -notmatch '^[0-9a-f]{32}$') { throw "Not a story id: $Id" }
+
+# Slice 277: a book reaches the store only with complete audio (a pack in every language, a clip for every sentence). The check names the book, language and first missing sentences; a gap uploads nothing.
+# Needs the manifests from Git LFS: git lfs pull --include "content/dino/*/audio/*/manifest.json" --exclude ""
+$stem = Get-ChildItem -Path (Join-Path $PSScriptRoot '..' 'content' 'dino') -Directory | Where-Object { (Test-Path (Join-Path $_.FullName 'book.json')) -and ((Get-Content -Raw (Join-Path $_.FullName 'book.json') | ConvertFrom-Json).id -eq $Id) } | Select-Object -First 1 -ExpandProperty Name
+if (-not $stem) { throw "No content/dino book has the id $Id; refusing to upload a story whose audio cannot be checked." }
+$bookDir = Join-Path $PSScriptRoot '..' 'content' 'dino' $stem
+# A manifest that is still a Git LFS pointer would make the check throw with no hint; say what to run.
+$pointers = Get-ChildItem -Path (Join-Path $bookDir 'audio') -Recurse -Filter 'manifest.json' -ErrorAction SilentlyContinue | Where-Object { (Get-Content -TotalCount 1 $_.FullName) -like 'version https://git-lfs*' }
+if ($pointers) { throw "The audio manifests of $stem are Git LFS pointers; run: git lfs pull --include `"content/dino/$stem/audio/*/manifest.json`" --exclude `"`" and try again." }
+& dotnet run --project (Join-Path $PSScriptRoot 'DinoReader.BookBuilder') --configuration Release -- check-audio $stem
+if ($LASTEXITCODE -ne 0) { throw "The audio of $stem is incomplete (see the lines above); nothing was uploaded." }
+if ($CheckOnly) { Write-Host "Audio of $stem is complete; -CheckOnly, nothing uploaded."; return }
 $folder = Join-Path $Root $Id
 if (-not (Test-Path (Join-Path $folder 'meta.json'))) { throw "No meta.json in $folder; build the store folder first." }
 $packages = Get-ChildItem -Path $folder -Filter 'story-v*.dino'
 if (-not $packages) { throw "No story-v<n>.dino in $folder." }
 $meta = Get-Content -Raw (Join-Path $folder 'meta.json') | ConvertFrom-Json
 $version = $meta.version
+# The check above read the working tree; the folder being uploaded must be the build of that tree: every audio pack the book records (audio-cast.json) must be listed in meta.json at the same version.
+$castPath = Join-Path $bookDir 'audio-cast.json'
+$recorded = if (Test-Path $castPath) { (Get-Content -Raw $castPath | ConvertFrom-Json).audioPacks } else { $null }
+$listed = if ($meta.PSObject.Properties['audio']) { $meta.audio } else { $null }
+# Slice 277: a language counts as complete only with its audioPacks record too; a language with clips and a manifest but no record would ship with no audio.
+$recordedNames = if ($recorded) { @($recorded.PSObject.Properties.Name) } else { @() }
+$withoutRecord = Get-ChildItem -Path (Join-Path $bookDir 'audio') -Directory -ErrorAction SilentlyContinue | Where-Object { (Test-Path (Join-Path $_.FullName 'manifest.json')) -and ($recordedNames -notcontains $_.Name) } | ForEach-Object { $_.Name }
+if ($withoutRecord) { throw "$stem has audio for $($withoutRecord -join ', ') but no audioPacks record in audio-cast.json for it; run build-audio ($stem --lang <language>) and try again." }
+if ($recorded) {
+  foreach ($language in $recorded.PSObject.Properties) {
+    $built = if ($listed -and $listed.PSObject.Properties[$language.Name]) { $listed.($language.Name).version } else { $null }
+    if ($built -ne $language.Value.version) { throw "$folder is stale: audio $($language.Name) is v$built in meta.json but v$($language.Value.version) in $stem's audio-cast.json; rebuild the store folder (BookBuilder build, build-audio)." }
+    # Same pack version is not enough (clips can change without a new version in a folder built earlier): the size meta.json lists and the zip's own size must equal the size the book records.
+    $listedBytes = $listed.($language.Name).bytes
+    $zip = Join-Path $folder "audio-$($language.Name)-v$($language.Value.version).zip"
+    if ($listedBytes -ne $language.Value.bytes -or -not (Test-Path $zip) -or (Get-Item $zip).Length -ne $language.Value.bytes) { throw "$folder is stale: audio $($language.Name) differs in size from the pack $stem's audio-cast.json records ($($language.Value.bytes) bytes); rebuild the store folder (BookBuilder build, build-audio)." }
+  }
+}
 if (-not ($packages | Where-Object { $_.Name -eq "story-v$version.dino" })) { throw "meta.json says version $version but $folder has no story-v$version.dino; the story would drop out of the list." }
 
 function Send-Object([string]$Name, [string]$ContentType) {

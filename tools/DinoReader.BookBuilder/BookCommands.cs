@@ -20,7 +20,7 @@ internal static class BookCommands
         IReadOnlyList<BookFolder> chosen = Choose(stems);
         IReadOnlyDictionary<string, LiveEntry>? live = livePath is null ? null : StoreVersioning.Read(livePath);
         // publish-store runs no test suite: this is its gate (Slice 239). An invalid book is skipped and named, the valid ones still build.
-        IReadOnlyDictionary<string, IReadOnlyList<string>> invalid = livePath is null ? new Dictionary<string, IReadOnlyList<string>>() : StoreValidation.ProblemsByBook(chosen.Where(b => b.Info.Kind == BookKind.Store));
+        IReadOnlyDictionary<string, IReadOnlyList<string>> invalid = livePath is null ? new Dictionary<string, IReadOnlyList<string>>() : StoreValidation.ProblemsByBook(chosen.Where(b => b.Info.Kind == BookKind.Store), includeAudio: true);
         ReportInvalid(invalid);
 
         await StarterBuilder.InScratchAsync(async library =>

@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { audioPackIsLive, pruneUnbuiltAudio, audioPacksBehind, validPackVersions, audioUploadsFor, bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, contentBooks, starterDrift, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
+import { completeAudioIds, judgedAudioIds, mayChangeOnR2, refusalMessage, completeIdsOf, onlyCompleteBooks, refuseAudioGaps, audioPackIsLive, pruneUnbuiltAudio, audioPacksBehind, validPackVersions, audioUploadsFor, bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, contentBooks, starterDrift, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
 
 const A = 'a'.repeat(32);
 const B = 'b'.repeat(32);
@@ -359,4 +359,79 @@ test('a failed meta refresh is reported after the others ran', () => {
 test('the summary names a refreshed meta.json', () => {
     const plan = planStoreUploads([{ id: A, version: 3 }], [{ id: A, version: 3 }]);
     assert.match(summaryText(plan, [], [A]), new RegExp(`refreshed meta.json of ${A}`));
+});
+
+test('Slice 277: a book with incomplete audio uploads nothing, not even its meta.json, while the other books go', () => {
+    withStore([{ id: A, version: 6 }, { id: B, version: 4 }], (root) => {
+        const sent = [];
+        const plan = refuseAudioGaps(planStoreUploads(readBuilt(root), [{ id: A, version: 1 }, { id: B, version: 1 }]), new Set([B]));
+        assert.deepEqual(plan.map((item) => item.outcome), [Outcome.AudioGap, Outcome.Upload]);
+        const done = runUploads(plan, root, { put: (upload) => sent.push(upload.key), packageExists: () => false });
+        runMetaRefresh(plan, root, { put: (upload) => sent.push(upload.key), liveMeta: () => null });
+        assert.deepEqual(done, [{ id: B, version: 4 }]);
+        assert.ok(sent.length > 0 && sent.every((key) => !key.includes(A)), `nothing of ${A} may be sent: ${sent}`);
+    });
+});
+
+test('Slice 277: a book without a complete verdict changes nothing on R2 whatever its outcome, and the summary names it', () => {
+    const upToDate = refuseAudioGaps(planStoreUploads([{ id: A, version: 3 }], [{ id: A, version: 3 }]), new Set());
+    assert.equal(upToDate[0].outcome, Outcome.AudioGap);
+    const plan = refuseAudioGaps(planStoreUploads([{ id: A, version: 3 }], [{ id: A, version: 1 }]), new Set());
+    assert.equal(plan[0].outcome, Outcome.AudioGap);
+    assert.match(summaryText(plan, []), new RegExp(`${A} not uploaded: its audio is incomplete`));
+    assert.equal(mayChangeOnR2(A, new Set()), false);
+    assert.equal(mayChangeOnR2(A, new Set([A])), true);
+});
+
+test('Slice 277: an up-to-date gap book gets no meta.json refresh and no audio pack; its complete sibling is refreshed', () => {
+    withStore([{ id: A, version: 3 }, { id: B, version: 3 }], (root) => {
+        const sent = [];
+        const plan = refuseAudioGaps(planStoreUploads(readBuilt(root), [{ id: A, version: 3 }, { id: B, version: 3 }]), new Set([B]));
+        const refreshed = runMetaRefresh(plan, root, { put: (upload) => sent.push(upload.key), liveMeta: () => '{"id":"stale","version":3}' });
+        assert.deepEqual(refreshed, [B]);
+        assert.ok(sent.length > 0 && sent.every((key) => !key.includes(A)), `nothing of ${A} may be sent: ${sent}`);
+    });
+});
+
+test('Slice 277: the refusal message tells an incomplete book from an id the verdict never saw', () => {
+    const judged = judgedAudioIds(verdictText({ stem: 'a', id: A, complete: false, gaps: ['x'] }));
+    const message = refusalMessage([A, B], judged);
+    assert.match(message, new RegExp(`${A}: its audio is incomplete`));
+    assert.match(message, new RegExp(`${B}: the verdict file has no entry`));
+});
+
+const verdictText = (...books) => JSON.stringify({ books });
+const complete = (id) => ({ stem: id, id, complete: true, gaps: [] });
+
+test('Slice 277: only books with a complete verdict are complete; a gap, a tool error or a shared incomplete id is not', () => {
+    const text = verdictText(complete(A), { stem: 'b', id: B, complete: false, gaps: ['x'] }, { stem: 'c', id: 'c'.repeat(32), complete: true, gaps: [], toolError: 'boom' }, complete('d'.repeat(32)), { stem: 'd2', id: 'd'.repeat(32), complete: false, gaps: ['y'] });
+    assert.deepEqual([...completeAudioIds(text)], [A]);
+});
+
+test('Slice 277: story ids are compared case-insensitively between the verdict and the built folders', () => {
+    const upper = A.toUpperCase();
+    const complete = completeAudioIds(verdictText({ stem: 'x', id: upper, complete: true, gaps: [] }));
+    assert.equal(mayChangeOnR2(A, complete), true);
+    assert.equal(mayChangeOnR2(upper, complete), true);
+    assert.deepEqual(refuseAudioGaps(planStoreUploads([{ id: A, version: 3 }], [{ id: A, version: 1 }]), complete).map((item) => item.outcome), [Outcome.Upload]);
+    assert.doesNotMatch(refusalMessage([A], judgedAudioIds(verdictText({ id: upper }))), /no entry/);
+});
+
+test('Slice 277: a missing, unreadable or malformed verdict completes no book (fail closed)', () => {
+    for (const text of ['', 'not json', '{}', '{"books":{}}', '{"books":[null,5,"x"]}', '{"books":[{"id":"a","complete":"yes","gaps":[]}]}']) assert.equal(completeAudioIds(text).size, 0, text);
+    assert.equal(completeIdsOf(['--audio-verdict', 'nope.json'], true, () => { throw new Error('ENOENT'); }).size, 0);
+});
+
+test('Slice 277: the verdict flag is mandatory for an uploading run and optional only for a dry run', () => {
+    assert.throws(() => completeIdsOf(['--delist'], true), /--audio-verdict/);
+    assert.throws(() => completeIdsOf(['--audio-verdict'], true), /--audio-verdict/);
+    assert.equal(completeIdsOf(['--dry-run'], false), null);
+    assert.deepEqual([...completeIdsOf(['--audio-verdict', 'v.json'], true, () => verdictText(complete(A)))], [A]);
+});
+
+test('Slice 277: a built book the check never judged is refused, and no pack is built for a book that is not complete', () => {
+    const plan = refuseAudioGaps(planStoreUploads([{ id: A, version: 3 }, { id: B, version: 3 }], [{ id: A, version: 1 }, { id: B, version: 1 }]), completeAudioIds(verdictText(complete(A))));
+    assert.deepEqual(plan.map((item) => item.outcome), [Outcome.Upload, Outcome.AudioGap]);
+    const books = [{ stem: 'goldilocks', id: A }, { stem: 'peter-rabbit', id: B }];
+    assert.deepEqual(onlyCompleteBooks(books, new Set([B])).map((book) => book.stem), ['peter-rabbit']);
 });
