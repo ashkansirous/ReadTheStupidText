@@ -66,6 +66,13 @@ jobs:
       - name: Read the live store state
         run: node .github/scripts/publish-store-books.mjs --live-state "$RUNNER_TEMP/live-store.json"
 
+      # Slice 272: no pack is built or uploaded while any audio manifest in the repo fails to hash the sentences the app reads (the same check the pull request runs in tools-selftests.yml). Manifests only, never a clip.
+      - name: Check that every audio manifest lines up with the sentences the app reads
+        run: |
+          git lfs install --local
+          git lfs pull --include "content/dino/*/audio/*/manifest.json" --exclude ""
+          dotnet run --project tools/DinoReader.BookBuilder --configuration Release -- check-audio
+
       # Slice 265: the clips are Git LFS objects (.lfsconfig keeps them out of a normal checkout). Only the audio packs the live store lacks are built: `--audio-behind` lists
       # `<book> <language>` pairs, each pair's clips are fetched alone (`--exclude ""` overrides the .lfsconfig exclusion) and packed before `build` so meta.json lists the pack.
       # The zips go up before the cover, package and meta.json (publish-store-books.mjs). A book with a pack that fails to build uploads none of its new packs (staged per book); the other books go on and the job fails at the end naming the pair.

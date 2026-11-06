@@ -35,6 +35,12 @@ public sealed class PremadeAudio
     /// <summary>Every clip file name the manifest names, each once.</summary>
     public IReadOnlyCollection<string> ClipNames => _clipByIndex.Values.Select(e => e.Clip).Distinct(StringComparer.Ordinal).ToList();
 
+    /// <summary>True for a piece the read speaks (and the generator renders): it holds a letter or digit. The one rule for the position a clip is keyed by; the app and <c>check-audio</c> both call it.</summary>
+    public static bool IsSpoken(string text) => text.Any(char.IsLetterOrDigit);
+
+    /// <summary>How many of the piece texts are spoken: a clip's position is the count of spoken pieces before it.</summary>
+    public static int SpokenCount(IEnumerable<string> texts) => texts.Count(IsSpoken);
+
     /// <summary>The generator's text hash: SHA-256 of the UTF-8 bytes of the NFC form, lower-case hex.</summary>
     public static string HashOf(string text) =>
         Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(text.Normalize(NormalizationForm.FormC))));

@@ -40,6 +40,8 @@ downloaded (`*`) and which are pointers (`-`). After a render, commit the change
 record, updated by `build-audio`). `dino-store.yml` does the rest on merge: it fetches only the books whose pack the live store lacks, builds those packs and uploads them with the book. The working files
 (`batch-state.json`, `variants/`, kept `.wav`, `manifest.json.bak`) are git-ignored; the lock and `usage.json` stay in `artifacts/premade-audio`.
 
+**Check the manifests against the app (Slice 272):** `dotnet run --project tools/DinoReader.BookBuilder -- check-audio [<book>...]` compares every `audio/<lang>/manifest.json` with the sentences the app reads now, position by position, and fails naming the book, language and first bad position (CI runs it on pull requests that touch Core, `StoryVoicing.cs`, the BookBuilder or `content/dino/**`, and in `dino-store.yml` before any pack is built). Fetch the manifests first: `git lfs pull --include "content/dino/*/audio/*/manifest.json" --exclude ""`. After a change that moves the count, re-run `generate.py` on the new dump (all clips present sends 0 requests and re-indexes the manifest) and `build-audio`.
+
 ## Cast: `content/dino/<book>/audio-cast.json`
 
 Narrator voice and style, a voice and style per speaker name (as in the dump), an optional `direction` per character, optional `directions` by text hash (SHA-256 of the NFC

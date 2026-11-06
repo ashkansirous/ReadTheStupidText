@@ -19,6 +19,7 @@ const string Usage = """
       dump-sentences <stem> --lang <code> [--out <file>]   print every piece the app reads aloud for a store book or a bundled starter in a language (index, highlight sentence, spoken text, speaker, narrator) as JSON, for tools/premade-audio
       build-audio <stem> --lang <code> [--clips <folder>] [--out <folder>]   pack the clips folder (default content/dino/<stem>/audio/<code>, Git LFS: git lfs pull --include it first; manifest.json v3 + its clips) into artifacts/store/<id>/audio-<code>-v<n>.zip and record
                                            the pack in the book's audio-cast.json (audioPacks); the version rises only when the content hash changes; the next build lists it in meta.json
+      check-audio [<stem>...]              fail when a book's audio/<code>/manifest.json does not hash the sentences the app now reads, position by position (Slice 272); needs the manifests pulled from Git LFS
     """;
 
 string[] arguments = args;
@@ -54,6 +55,8 @@ try
             return outPath is null ? Fail("voice-listen needs --out <file>") : VoiceListenExport.Run(outPath);
         case "dump-sentences":
             return SentenceDump.Run(stems.FirstOrDefault(), language, outPath);
+        case "check-audio":
+            return AudioAlignment.Run(stems);
         case "build-audio":
             StoreBuilder.OutputFolder = outPath;
             return stems.Count != 1 || language is null ? Fail("build-audio needs one book and --lang <code>") : BookCommands.BuildAudio(stems[0], language, clipsPath);

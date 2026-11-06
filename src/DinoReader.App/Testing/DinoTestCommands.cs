@@ -254,6 +254,12 @@ internal static partial class DinoTestCommands
 				return;
 			}
 
+			if (await EnsureOnShelfAsync(services.GetRequiredService<IStoryLibrary>(), store, item) is { } refusal)
+			{
+				Log($"{FetchAudioPackName} failed {refusal}");
+				return;
+			}
+
 			bool ok = await store.InstallPacksAsync(item, [(key, pack)], null, CancellationToken.None);
 			Log(ok ? $"{FetchAudioPackName} ok {storeId} {key} v{pack.Version}" : $"{FetchAudioPackName} failed install");
 		}
@@ -262,6 +268,21 @@ internal static partial class DinoTestCommands
 			Log($"{FetchAudioPackName} failed {TestHookLog.FaultSummary(ex)}");
 		}
 	}
+
+	// A store book that is not on the Debug shelf (the shelf holds only the four test books) is downloaded from the live listing first, so a flow can read it. Null when it is on the shelf, else the reason.
+	private static async Task<string?> EnsureOnShelfAsync(IStoryLibrary library, StoreClient store, StoreItem item)
+	{
+		if (BookMatch.Find(await library.ListAsync(), item.Id) is not null)
+		{
+			return null;
+		}
+
+		using var timeout = new CancellationTokenSource(ShelfDownloadTimeout);
+		DownloadOutcome outcome = await store.DownloadAsync(item, new Progress<double>(), timeout.Token);
+		return outcome == DownloadOutcome.Done ? null : $"book {item.Id} did not download: {outcome}";
+	}
+
+	private static readonly TimeSpan ShelfDownloadTimeout = TimeSpan.FromMinutes(2);
 
 	private const int FixtureVersion = 1;
 	private const string FixtureClipName = "fixture.m4a";
