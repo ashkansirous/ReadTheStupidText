@@ -57,6 +57,8 @@ const META_FILE = 'meta.json';
 const COVER_FILE = 'cover.jpg';
 const STORY_ID_PATTERN = /^[0-9a-f]{32}$/;
 const AUDIO_PACK_FILE = /^audio-[a-z]{2,3}(?:-[a-z0-9]{2,8})?-v\d+\.zip$/;
+const LISTEN_TRACK_FILE = /^listen-[a-z]{2,3}(?:-[a-z0-9]{2,8})?-v\d+\.m4a$/; // Slice 281
+const LISTEN_TRACK_KEY_PARTS = /\/([0-9a-f]{32})\/listen-([a-z]{2,3}(?:-[a-z0-9]{2,8})?)-v(\d+)\.m4a$/;
 const AUDIO_CAST_FILE = 'audio-cast.json';
 const VERIFY_ATTEMPTS = 7;
 const FETCH_TIMEOUT_MS = 30000;
@@ -264,9 +266,18 @@ export function audioUploadsFor({ id }, folder, metaText, fileExists = existsSyn
         return [];
     }
     if (!audio || typeof audio !== 'object') return [];
-    return Object.keys(audio).sort().map((language) => `audio-${language}-v${audio[language]?.version}.zip`)
+    const packs = Object.keys(audio).sort().map((language) => `audio-${language}-v${audio[language]?.version}.zip`)
         .filter((name) => AUDIO_PACK_FILE.test(name) && fileExists(join(folder, name)))
         .map((name) => ({ name, key: `${KEY_PREFIX}/${id}/${name}`, path: join(folder, name), contentType: 'application/zip', isAudioPack: true }));
+    return [...packs, ...listenUploadsFor({ id }, folder, audio, fileExists)];
+}
+
+/** Pure (Slice 281): the listening tracks (`listen-<lang>-v<n>.m4a`, built by `BookBuilder build-listen`) of the packs meta.json lists with a `listenSeconds`, when built into this folder. They go up with the packs, before meta.json. */
+export function listenUploadsFor({ id }, folder, audio, fileExists = existsSync) {
+    return Object.keys(audio).sort().filter((language) => Number(audio[language]?.listenSeconds) > 0)
+        .map((language) => `listen-${language}-v${audio[language]?.version}.m4a`)
+        .filter((name) => LISTEN_TRACK_FILE.test(name) && fileExists(join(folder, name)))
+        .map((name) => ({ name, key: `${KEY_PREFIX}/${id}/${name}`, path: join(folder, name), contentType: 'audio/mp4', isAudioPack: true }));
 }
 
 /**
@@ -287,6 +298,37 @@ function audioPackFileOf(file) {
 }
 
 /**
+ * Pure (Slice 281, design 2): whether an audio upload counts as already live. **A listening track is live only when the book's meta.json in the bucket lists its `listenSeconds` at that pack version**
+ * (`bucketAudio(id)`: that meta's `audio` object, from the live state read once at the start of the run; the Worker serves nothing else). An unlisted track key is not served, so it may be written
+ * (again, over a leftover of a failed run) and meta.json is written last with the length of the file just uploaded; a listed one is never rewritten (Decision 163). A zip is asked of the live list
+ * (`audioPackIsLive`: it is large, so it is never downloaded to ask). No bucket request is made here.
+ */
+export function audioUploadExists(live, upload, bucketAudio) {
+    const track = LISTEN_TRACK_KEY_PARTS.exec(upload.key ?? '');
+    if (!track) return audioPackIsLive(live, upload);
+    const listed = bucketAudio(track[1])?.[track[2]];
+    return Number(listed?.version) === Number(track[3]) && Number(listed?.listenSeconds) > 0;
+}
+
+/**
+ * Pure (Slice 281): the live list with each pack's `listenSeconds` taken from the book's meta.json in the bucket (`bucketAudio(id)`: its `audio` object, or null), for the books in `ids` only. The Worker's list
+ * omits `listenSeconds` until it is deployed, and meta.json is written after the track, so a listed length means the track is there.
+ */
+export function withBucketListen(live, ids, bucketAudio) {
+    const wanted = new Set(ids);
+    return live.map((story) => {
+        if (!wanted.has(story.id) || !story.audio) return story;
+        const fromBucket = bucketAudio(story.id) ?? {};
+        const audio = Object.fromEntries(Object.entries(story.audio).map(([language, info]) => {
+            const listed = fromBucket[language];
+            const same = Number(listed?.version) === Number(info?.version) && Number(listed?.listenSeconds) > 0;
+            return [language, same && !(Number(info?.listenSeconds) > 0) ? { ...info, listenSeconds: Number(listed.listenSeconds) } : info];
+        }));
+        return { ...story, audio };
+    });
+}
+
+/**
  * Pure (Slice 265): meta.json text with its `audio` entries limited to packs that are live (`liveAudio`: language to {version}) or whose zip was built into this folder (`fileExists`). A pack whose
  * build or LFS fetch failed is dropped, so a listed pack is always in the bucket. Returns `{ text, removed }`; `text` is unchanged when nothing is dropped or the meta is unreadable.
  */
@@ -300,14 +342,33 @@ export function pruneUnbuiltAudio(metaText, folder, liveAudio, fileExists = exis
     if (!meta.audio || typeof meta.audio !== 'object') return { text: metaText, removed: [] };
     const kept = {};
     const removed = [];
+    let listenChanged = false;
     for (const [language, info] of Object.entries(meta.audio)) {
         const live = Number(liveAudio?.[language]?.version) >= Number(info?.version); // a higher live version is fine (audioPacksBehind builds nothing then)
-        if (live || fileExists(join(folder, `audio-${language}-v${info?.version}.zip`))) kept[language] = info;
-        else removed.push(language);
+        if (!live && !fileExists(join(folder, `audio-${language}-v${info?.version}.zip`))) {
+            removed.push(language);
+            continue;
+        }
+        const reconciled = reconcileListen(language, info, liveAudio?.[language], folder, fileExists);
+        listenChanged ||= reconciled !== info;
+        kept[language] = reconciled;
     }
-    if (removed.length === 0) return { text: metaText, removed };
+    if (removed.length === 0 && !listenChanged) return { text: metaText, removed };
     const { audio, ...rest } = meta;
     return { text: `${JSON.stringify(Object.keys(kept).length > 0 ? { ...rest, audio: kept } : rest, null, 2)}\n`, removed };
+}
+
+/**
+ * Pure (Slice 281): one listed pack with its listening track made consistent with the bucket, so meta.json and the bucket always describe the same bytes. A track the bucket's meta.json already lists at this version
+ * (`liveInfo`) keeps that length, whatever the build says (it is never rewritten); else a `listenSeconds` is kept only when the track was built into this folder (it is uploaded before meta.json) and dropped
+ * otherwise. `liveInfo` comes from a meta.json read that succeeded (an unreadable bucket stops the run before this), so an absent entry here means "not listed", never "could not tell". Returns `info` itself when nothing changes.
+ */
+export function reconcileListen(language, info, liveInfo, folder, fileExists = existsSync) {
+    const liveTrack = Number(liveInfo?.version) === Number(info?.version) && Number(liveInfo?.listenSeconds) > 0 ? Number(liveInfo.listenSeconds) : null;
+    if (liveTrack !== null) return Number(info?.listenSeconds) === liveTrack ? info : { ...info, listenSeconds: liveTrack };
+    if (!(Number(info?.listenSeconds) > 0) || fileExists(join(folder, `listen-${language}-v${info?.version}.m4a`))) return info;
+    const { listenSeconds, ...without } = info;
+    return without;
 }
 
 /** Rewrites each built book's meta.json without the audio packs that are neither live nor built here (see pruneUnbuiltAudio); logs each dropped pack. */
@@ -351,13 +412,22 @@ export function putAudioPacks(book, folder, { put, packageExists }) {
  * `[{ stem, id, packs: { <language>: version } }]` (the committed `audioPacks` records of each book's audio-cast.json), `live` the /api/stories list with each story's `audio`
  * (only the packs whose zip is in the bucket). A language is behind when the live store lacks its pack or lists a lower version; a live higher version is left alone.
  */
-export function audioPacksBehind(books, live) {
+export function audioPacksBehind(books, live, bucketAudio = () => null) {
     const liveById = new Map(live.map((story) => [story.id, story.audio ?? {}]));
     return books.map(({ stem, id, packs }) => {
         const liveAudio = liveById.get(id) ?? {};
-        const languages = Object.keys(packs).sort().filter((language) => !(Number(liveAudio[language]?.version) >= packs[language]));
+        const languages = Object.keys(packs).sort().filter((language) => isBehind(liveAudio[language], packs[language], () => bucketAudio(id)?.[language]));
         return { stem, languages };
     }).filter((item) => item.languages.length > 0);
+}
+
+// Slice 281: behind also means the pack version is live without its listening track. The track is looked for in the book's meta.json in the bucket (`bucketInfo()`, read only when the list shows no length), not in the Worker's list alone.
+function isBehind(liveInfo, version, bucketInfo) {
+    const liveVersion = Number(liveInfo?.version);
+    if (!(liveVersion >= version)) return true;
+    if (liveVersion !== version || Number(liveInfo?.listenSeconds) > 0) return false;
+    const listed = bucketInfo();
+    return !(Number(listed?.version) === version && Number(listed?.listenSeconds) > 0);
 }
 
 /** Pure: the live list from the /api/stories body, as `[{ id, version }]`. Throws on a body that is not the list. */
@@ -394,6 +464,23 @@ function bytesEntry(metaText) {
     return bytes === null ? {} : { bytes };
 }
 
+/**
+ * Pure (Slice 281): `{ audio: { <language>: { version, listenSeconds? } } }` for the live meta's `audio` object (`listenSeconds` only when it is a positive number), else `{}`. This is how a run knows which listening
+ * tracks are listed (live), from the one meta.json read per story. An unreadable text gives `{}` (the Worker lists nothing from it either).
+ */
+export function audioEntry(metaText) {
+    if (metaText === null || metaText === undefined) return {};
+    let audio;
+    try {
+        audio = JSON.parse(metaText).audio;
+    } catch {
+        return {};
+    }
+    if (!audio || typeof audio !== 'object') return {};
+    const listed = Object.entries(audio).map(([language, info]) => [language, { version: Number(info?.version), ...(Number(info?.listenSeconds) > 0 ? { listenSeconds: Number(info.listenSeconds) } : {}) }]);
+    return listed.length > 0 ? { audio: Object.fromEntries(listed) } : {};
+}
+
 /** Pure: the highest package version that exists, probing `exists(version)` upward from `from` until `window` versions in a row are absent; 0 when none. */
 export function highestPackage(exists, from, window = PROBE_WINDOW) {
     let highest = 0;
@@ -413,7 +500,10 @@ export function highestPackage(exists, from, window = PROBE_WINDOW) {
  * `liveMeta(id)` returns that story's meta.json text or null; `maxPackage(id, from)` the highest story-v<n>.dino in the bucket at or above `from`.
  */
 export function liveStateOf(live, liveMeta, maxPackage = () => 0, extraIds = []) {
-    const entries = live.map(({ id, version }) => [id, { version, contentHash: hashFromMeta(liveMeta(id)), maxPackage: maxPackage(id, version + 1), ...bytesEntry(liveMeta(id)) }]);
+    const entries = live.map(({ id, version }) => {
+        const metaText = liveMeta(id); // one read per story; an error from it propagates (never read as "no meta")
+        return [id, { version, contentHash: hashFromMeta(metaText), maxPackage: maxPackage(id, version + 1), ...bytesEntry(metaText), ...audioEntry(metaText) }];
+    });
     const liveIds = new Set(live.map((story) => story.id));
     const extra = extraIds.filter((id) => !liveIds.has(id)).map((id) => [id, { version: 0, contentHash: null, maxPackage: maxPackage(id, 1) }]);
     return Object.fromEntries([...entries, ...extra]);
@@ -635,6 +725,21 @@ function metaInBucket(upload) {
     }
 }
 
+/**
+ * Slice 281 (design 2): the `audio` object of each story's meta.json in the bucket, as `bucketAudio(id)`, from the live-state file (`--bucket-state <file>`, written by `--live-state` at the start of the job:
+ * the ONE meta.json read per story in the whole job, whose wrangler errors other than "object not found" fail that step: `metaInBucket` -> `publishedStateFrom` in r2-wrangler.mjs returns null only for a
+ * missing key and throws for auth, network or a missing bucket). A story with no entry has no listed track. Never a bucket request, so no run can read an error as "absent".
+ */
+export function bucketAudioFromState(state) {
+    return (id) => state?.[id]?.audio ?? null;
+}
+
+function bucketAudioOf(args) {
+    const flag = args.indexOf('--bucket-state');
+    if (flag === -1) throw new Error('--bucket-state <file> (the --live-state output) is required: it says which listening tracks the bucket lists.');
+    return bucketAudioFromState(JSON.parse(readFileSync(args[flag + 1], 'utf8')));
+}
+
 function packageInBucket(upload) {
     // Download to a file, not `--pipe`: the package is megabytes and would overflow the capture buffer.
     const folder = mkdtempSync(join(tmpdir(), 'store-head-'));
@@ -714,7 +819,7 @@ export function validPackVersions(records) {
 /** `--audio-behind`: prints one `<stem> <language>` line for each audio pack the live store lacks, so dino-store.yml fetches only those books' clips from Git LFS and packs them. */
 async function printAudioBehind(args) {
     const complete = completeIdsOf(args, true);
-    audioPacksBehind(onlyCompleteBooks(readAudioRecords(), complete), await fetchLive(args, process.env)).forEach(({ stem, languages }) => languages.forEach((language) => console.log(`${stem} ${language}`)));
+    audioPacksBehind(onlyCompleteBooks(readAudioRecords(), complete), await fetchLive(args, process.env), bucketAudioOf(args)).forEach(({ stem, languages }) => languages.forEach((language) => console.log(`${stem} ${language}`)));
 }
 
 async function main() {
@@ -731,7 +836,8 @@ async function main() {
     }
     if (!dryRun && !process.env.CLOUDFLARE_ACCOUNT_ID) throw new Error('CLOUDFLARE_ACCOUNT_ID is required when CLOUDFLARE_API_TOKEN is set.');
     const built = readBuilt(root);
-    const live = await fetchLive(args, process.env);
+    const bucketAudio = dryRun && !args.includes('--bucket-state') ? () => null : bucketAudioOf(args); // Slice 281: which tracks the bucket's meta.json lists (read once, by --live-state)
+    const live = withBucketListen(await fetchLive(args, process.env), built.map((book) => book.id), bucketAudio);
     pruneBuiltMetas(root, built, live); // also on --dry-run (it only edits the local built folder), so the plan matches the real run
     const complete = completeIdsOf(args, !dryRun); // Slice 277: fail closed, only a book with a complete audio verdict uploads anything
     const planned = planStoreUploads(built, live);
@@ -744,7 +850,7 @@ async function main() {
     }
     warnUnsentAudio(plan, root);
     checkDeletionLimit(deletions, live);
-    const audioExists = (upload) => audioPackIsLive(live, upload); // Slice 265: the live list says which packs are in the bucket; no zip is downloaded to ask
+    const audioExists = (upload) => audioUploadExists(live, upload, bucketAudio); // Slice 265: the live list says which zips are in the bucket (none is downloaded to ask); Slice 281: a track is live only when the bucket's meta.json lists it (no request)
     let uploaded = [];
     let refreshed = [];
     let delisted = [];

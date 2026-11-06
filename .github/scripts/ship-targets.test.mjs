@@ -641,7 +641,7 @@ test('dino-store.yml runs for every book folder and workflow_dispatch, and has i
     assert.match(text, /workflow_dispatch:/);
     assert.doesNotMatch(readFileSync(`${WORKFLOWS_DIR}release.yml`, 'utf8'), /publish-store-books/);
     assert.match(text, /schedule:\r?\n\s+- cron: /);
-    assert.match(text, /publish-store-books\.mjs --delist --audio-verdict "\$RUNNER_TEMP\/audio-verdict\.json"\r?\n/);
+    assert.match(text, /publish-store-books\.mjs --delist --bucket-state "\$RUNNER_TEMP\/live-store\.json" --audio-verdict "\$RUNNER_TEMP\/audio-verdict\.json"\r?\n/);
     assert.doesNotMatch(text, /content-changed/);
 });
 
