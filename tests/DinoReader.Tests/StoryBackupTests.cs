@@ -18,12 +18,12 @@ public sealed class StoryBackupTests : IDisposable
 
     private FileStoryLibrary Library(string name) => new(Path.Combine(_root, name));
 
-    private static Story Make(string title, string? sourceId = null) => new(
+    private static Story Make(string title, string? sourceId = null, bool own = false) => new(
         StoryIds.New(), title, "en", new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero),
         [new StoryPage("\"Hello,\" said the wolf.", "page-1.jpg"), new StoryPage("Page two.")],
         [new CastMember("wolf", "Wolf", Gender.Male, "supertonic:M3", Edited: true)],
         CoverStyle.Picture, 2, "supertonic:M1",
-        SourceId: sourceId);
+        SourceId: own ? null : sourceId ?? StoryIds.New()); // a store book unless own: the library never lists an own one (Slice 278 A3)
 
     private static async Task<Story> StoreAsync(FileStoryLibrary library, Story story)
     {
@@ -74,7 +74,7 @@ public sealed class StoryBackupTests : IDisposable
         Assert.Equal(a.Cast, restored.Cast);
         Assert.True(restored.Cast[0].Edited);
         Assert.Equal(a.Created, restored.Created);
-        Assert.Null(restored.SourceId);
+        Assert.Equal(a.SourceId, restored.SourceId);
         Assert.Equal(b.SourceId, (await target.GetAsync(b.Id))!.SourceId);
         Assert.Equal("page-bytes", await File.ReadAllTextAsync(target.TryResolveFile(a.Id, "page-1.jpg")!));
     }
@@ -102,11 +102,13 @@ public sealed class StoryBackupTests : IDisposable
         FileStoryLibrary source = Library("source");
         string sourceId = Guid.NewGuid().ToString("N");
         await StoreAsync(source, Make("Store", sourceId));
-        await StoreAsync(source, Make("Own"));
+        Story own = await StoreAsync(source, Make("Own", own: true));
         FileStoryLibrary target = Library("target");
         var added = new List<Story>();
+        using var backup = new MemoryStream(); // the library no longer lists an own book, so the backup is written from the stories themselves
+        await StoryBackupWriter.WriteAsync([(await source.ListAsync()).Single(), own], source, backup);
 
-        await StoryBackupReader.RestoreAsync(new MemoryStream(await BackupAsync(source)), target, added.Add);
+        await StoryBackupReader.RestoreAsync(new MemoryStream(backup.ToArray()), target, added.Add);
 
         Assert.Equal(sourceId, Assert.Single(added, s => s.Title == "Store").SourceId);
         Assert.Null(Assert.Single(added, s => s.Title == "Own").SourceId);

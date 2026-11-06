@@ -55,7 +55,6 @@
   <data name="Delete_Body" xml:space="preserve"><value>Dens sider, billeder og stemmer fjernes fra denne telefon.</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>Kunne ikke slette den historie</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>Noget bruger stadig dens filer. Prøv igen om lidt.</value></data>
-  <data name="Manage_EditStory" xml:space="preserve"><value>Rediger historie</value></data>
   <data name="Gallery_EditStory" xml:space="preserve"><value>Rediger {0}</value></data>
   <data name="Gallery_CastStory" xml:space="preserve"><value>Rollebesætning i {0}</value></data>
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Slet {0}</value></data>
@@ -150,10 +149,6 @@
   <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino åbnede bogen. „Der var engang…“</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Læs den med din stemme</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Optag dig selv, mens du læser en historie, side for side. Dit barn kan afspille den, når som helst.</value></data>
-  <data name="Intro_AddTitle" xml:space="preserve"><value>Tilføj din egen bog</value></data>
-  <data name="Intro_AddLine" xml:space="preserve"><value>Tag billeder af bogens sider, eller vælg en PDF. Dino læser den højt.</value></data>
-  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>Tilføj billeder eller en PDF</value></data>
-  <data name="Intro_AddLineWindows" xml:space="preserve"><value>Vælg billeder af bogens sider eller en PDF. Dino læser den højt.</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>Vis introen igen</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Fortsæt med telefonens stemme</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Klar til mit barn</value></data>
@@ -197,7 +192,7 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>Fjern “{0}” fra hylden?</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Dens sider, billeder og stemmer fjernes fra denne telefon. Du kan lægge den på hylden igen gratis fra butikken.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Fjern</value></data>
-  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Tilføj fra dine egne bøger</value></data>
+  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Hent flere bøger</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Klar</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Hent</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>Henter {0}%</value></data>
@@ -225,8 +220,6 @@
   <data name="PackStatus_FailedClick" xml:space="preserve"><value>Kunne ikke hente naturlige stemmer. Læser med telefonens stemme. Klik for at prøve igen.</value></data>
   <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Hentningen er stoppet. Læser med telefonens stemme. Klik for at hente.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Hvad er {0} plus {1}?</value></data>
-  <data name="Story_Add" xml:space="preserve"><value>Tilføj en historie</value></data>
-  <data name="Story_Title" xml:space="preserve"><value>Titel</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Historiens sprog</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · registreret</value></data>
   <data name="Story_Translate" xml:space="preserve"><value>Oversæt til mit sprog</value></data>
@@ -319,83 +312,15 @@
   <data name="Storyteller_Failed" xml:space="preserve"><value>Kunne ikke hente fortællerstemmerne</value></data>
   <data name="Storyteller_TryAgain" xml:space="preserve"><value>Prøv igen</value></data>
   <!-- /Slice 115 -->
-  <data name="Add_Scan" xml:space="preserve"><value>Scan sider</value></data>
-  <data name="Add_ScanSub" xml:space="preserve"><value>Beholder sidebillederne</value></data>
-  <data name="Add_Photos" xml:space="preserve"><value>Fotos</value></data>
-  <data name="Add_PhotosSub" xml:space="preserve"><value>Vælg fotos af siderne</value></data>
-  <data name="Add_File" xml:space="preserve"><value>PDF eller fil</value></data>
-  <data name="Add_Type" xml:space="preserve"><value>Skriv eller indsæt</value></data>
-  <data name="Add_TypeSub" xml:space="preserve"><value>Kun tekst</value></data>
-  <data name="Add_Placeholder" xml:space="preserve"><value>Skriv eller indsæt en historie</value></data>
-  <data name="Add_CheckCast" xml:space="preserve"><value>Tjek rollerne</value></data>
-  <data name="Add_Save" xml:space="preserve"><value>Gem historie</value></data>
-  <data name="Add_PickerTitle" xml:space="preserve"><value>Vælg en .txt-, .pdf- eller .docx-fil</value></data>
-  <data name="Add_PermissionTitle" xml:space="preserve"><value>Tilladelse påkrævet</value></data>
-  <data name="Add_PermissionBody" xml:space="preserve"><value>Giv adgang til filer for at læse et dokument.</value></data>
-  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>Filen er for stor</value></data>
-  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>Filen har {0} sider; grænsen er {1}.</value></data>
-  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>Kunne ikke læse den fil</value></data>
-  <data name="Add_ReadFailedBody" xml:space="preserve"><value>Filen kan være beskadiget eller i et format, der ikke understøttes.</value></data>
-  <data name="Edit_Cover" xml:space="preserve"><value>Forside</value></data>
-  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>Første side</value></data>
-  <data name="Edit_CoverColour" xml:space="preserve"><value>Farve</value></data>
-  <data name="Edit_CoverPhoto" xml:space="preserve"><value>Foto</value></data>
-  <data name="Edit_Pages" xml:space="preserve"><value>Sider</value></data>
   <data name="Wizard_Next" xml:space="preserve"><value>Næste</value></data>
-  <data name="Wizard_StepText" xml:space="preserve"><value>Tekst</value></data>
-  <data name="Wizard_AddPages" xml:space="preserve"><value>Tilføj sider</value></data>
-  <data name="Wizard_DragHint" xml:space="preserve"><value>Hold en side nede, og træk den for at flytte den</value></data>
-  <data name="Wizard_EmptyBody" xml:space="preserve"><value>Tilføj sider til din historie: scan dem, vælg fotos, tilføj en PDF eller fil, eller skriv teksten. Sæt derefter siderne i rækkefølge.</value></data>
-  <data name="Wizard_PageN" xml:space="preserve"><value>Side {0}</value></data>
-  <data name="Wizard_PageMenu" xml:space="preserve"><value>Indstillinger for siden</value></data>
-  <data name="Wizard_MenuRotate" xml:space="preserve"><value>Drej</value></data>
-  <data name="Wizard_MenuCrop" xml:space="preserve"><value>Drej eller beskær</value></data>
-  <data name="Wizard_MenuEditText" xml:space="preserve"><value>Rediger tekst</value></data>
-  <data name="Wizard_NoTextShort" xml:space="preserve"><value>Ingen tekst</value></data>
-  <data name="Wizard_NoText" xml:space="preserve"><value>Ingen tekst fundet på denne side</value></data>
-  <data name="Wizard_Reading" xml:space="preserve"><value>Læser side {0} af {1}</value></data>
   <data name="Wait_GettingVoices" xml:space="preserve"><value>Gør stemmerne klar…</value></data>
   <data name="Wait_Stalled" xml:space="preserve"><value>Gør stadig stemmen klar…</value></data>
-  <data name="Wait_ReadingPictures" xml:space="preserve"><value>Læser billederne…</value></data>
-  <data name="Wait_PageOf" xml:space="preserve"><value>Side {0} af {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Oversætter…</value></data>
   <data name="Wait_WaitingInternet" xml:space="preserve"><value>Venter på internettet</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingWifi" xml:space="preserve"><value>Venter på Wi-Fi</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_Retry" xml:space="preserve"><value>Prøv igen</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0} er {1} % hentet. Det fortsætter af sig selv, når du er online igen.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>Henter {0}. Det fortsætter af sig selv, når du er online igen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>Gemmer…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>Henter bogen…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>Sikkerhedskopierer bøgerne…</value></data>
   <data name="Wait_Restoring" xml:space="preserve"><value>Henter bøgerne tilbage…</value></data>
-  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Nogle sider blev ikke læst</value></data>
-  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} sider kunne ikke læses. De beholdes som billeder uden tekst.</value></data>
-  <data name="Pictures_NoneTitle" xml:space="preserve"><value>Denne fil har ord, men ingen billeder</value></data>
-  <data name="Pictures_NoneBody" xml:space="preserve"><value>Tilføj om du vil ét billede til hver side. Sider uden billede læses som tekst.</value></data>
-  <data name="Pictures_PickAll" xml:space="preserve"><value>Vælg billeder til alle sider</value></data>
-  <data name="Pictures_PageN" xml:space="preserve"><value>SIDE {0}</value></data>
-  <data name="Pictures_Change" xml:space="preserve"><value>Skift</value></data>
-  <data name="Pictures_Add" xml:space="preserve"><value>Tilføj billede</value></data>
-  <data name="Pictures_FoundEvery" xml:space="preserve"><value>Der er billeder på alle sider</value></data>
-  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1} sider</value></data>
-  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1} side</value></data>
-  <data name="Pictures_NextCover" xml:space="preserve"><value>Næste: omslag</value></data>
-  <data name="Wizard_CoverHint" xml:space="preserve"><value>Vælg en side, et foto eller en farve til forsiden.</value></data>
-  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Intet at læse endnu</value></data>
-  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Tilføj tekst til mindst én side, og gem derefter.</value></data>
-  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Kunne ikke gemme historien</value></data>
-  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Intet blev ændret. Prøv igen om lidt.</value></data>
-  <data name="Regions_Helper" xml:space="preserve"><value>Tryk på en boks for at læse den eller udelade den.</value></data>
-  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>Erstat din redigerede tekst med de valgte områder?</value></data>
-  <data name="Regions_ReplaceBody" xml:space="preserve"><value>Det, du har skrevet på denne side, går tabt.</value></data>
-  <data name="Regions_Replace" xml:space="preserve"><value>Erstat</value></data>
-  <data name="Regions_Keep" xml:space="preserve"><value>Behold</value></data>
-  <data name="Regions_BoxRead" xml:space="preserve"><value>Tekstboks, læses</value></data>
-  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>Tekstboks, udeladt</value></data>
-  <data name="Editor_Title" xml:space="preserve"><value>Drej og beskær</value></data>
-  <data name="Editor_RotateLeft" xml:space="preserve"><value>Drej til venstre</value></data>
-  <data name="Editor_RotateRight" xml:space="preserve"><value>Drej til højre</value></data>
-  <data name="Editor_ResetCrop" xml:space="preserve"><value>Nulstil beskæring</value></data>
   <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>Kun billeder</value></data>
   <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>Billeder + tekst</value></data>
   <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>Kun tekst</value></data>
@@ -431,11 +356,6 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Dyrelyde</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Dyrene siger af og til “Øf!” eller “Mæh!”, i alle bøger</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Der er flere figurer i bogen end de {0} fortællerfigurer, vi har, så nogle lyder ens. Fortælleren gives aldrig til en figur.</value></data>
-  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>Hent oversættelsespakker?</value></data>
-  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>For at vise og læse denne bog på {0} har Dino Reader brug for disse oversættelsespakker: {1}. De bliver på denne enhed. Hvis du springer dem over, forbliver bogen på sit eget sprog.</value></data>
-  <data name="TranslationPack_Download" xml:space="preserve"><value>Hent</value></data>
-  <data name="TranslationPack_Keep" xml:space="preserve"><value>Behold originalen</value></data>
-  <data name="TranslationPack_Failed" xml:space="preserve"><value>Oversættelsespakken kunne ikke hentes. Bogen forbliver på sit eget sprog.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Henter oversættelsespakken til {0}…</value></data>
   <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>Hvilke sprog skal historierne være på?</value></data>
   <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Vælg op til to mere. Dit barn kan skifte, mens det læser.</value></data>

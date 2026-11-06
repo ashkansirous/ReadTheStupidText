@@ -21,7 +21,7 @@ public sealed class RecordingMergeTests : IDisposable
         StoryIds.New(), "Pigs", "en", new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero),
         (pages.Length > 0 ? pages : ["One.", "Two.", "Three."]).Select(t => new StoryPage(t)).ToList(),
         [new CastMember("pig", "Pig", Gender.Male, "supertonic:M3", Edited: true)],
-        CoverStyle.Colour, 0, "supertonic:M1", SourceId: sourceId);
+        CoverStyle.Colour, 0, "supertonic:M1", SourceId: sourceId ?? StoryIds.New()); // a store book unless a source is given: the library never lists an own one (Slice 278 A3)
 
     // Stores the story in the library with an m4a stand-in (the bytes name the page and the source so a test can tell which copy it reads) for each page.
     private static async Task<Story> StoreWithRecordingsAsync(FileStoryLibrary library, Story story, string tag, params int[] pages)

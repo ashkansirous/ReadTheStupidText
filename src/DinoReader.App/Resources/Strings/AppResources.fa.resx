@@ -53,7 +53,6 @@
   <data name="Delete_Body" xml:space="preserve"><value>صفحه‌ها، تصویرها و صداهای آن از این گوشی پاک می‌شوند.</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>حذف این داستان ممکن نشد</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>چیزی هنوز از فایل‌های آن استفاده می‌کند. کمی بعد دوباره امتحان کنید.</value></data>
-  <data name="Manage_EditStory" xml:space="preserve"><value>ویرایش داستان</value></data>
   <data name="Gallery_EditStory" xml:space="preserve"><value>ویرایش {0}</value></data>
   <data name="Gallery_CastStory" xml:space="preserve"><value>شخصیت‌های {0}</value></data>
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>حذف {0}</value></data>
@@ -148,10 +147,6 @@
   <data name="Intro_ReadCaption" xml:space="preserve"><value>دینو کتاب را باز کرد. «یکی بود، یکی نبود…»</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>با صدای خودتان بخوانید</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>خودتان را هنگام خواندن یک داستان، صفحه به صفحه، ضبط کنید. فرزندتان هر وقت بخواهد می‌تواند آن را پخش کند.</value></data>
-  <data name="Intro_AddTitle" xml:space="preserve"><value>کتاب خودتان را اضافه کنید</value></data>
-  <data name="Intro_AddLine" xml:space="preserve"><value>از صفحه‌های یک کتاب عکس بگیرید یا یک فایل PDF انتخاب کنید. دینو آن را بلند می‌خواند.</value></data>
-  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>عکس یا PDF اضافه کنید</value></data>
-  <data name="Intro_AddLineWindows" xml:space="preserve"><value>عکس صفحه‌های یک کتاب یا یک فایل PDF انتخاب کنید. دینو آن را بلند می‌خواند.</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>نمایش دوبارهٔ معرفی</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>ادامه با صدای تلفن</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>آماده برای فرزندم</value></data>
@@ -195,7 +190,7 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>«{0}» از قفسه برداشته شود؟</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>صفحه‌ها، تصویرها و صداهای آن از این گوشی پاک می‌شوند. می‌توانید دوباره آن را رایگان از فروشگاه اضافه کنید.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>برداشتن</value></data>
-  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>افزودن از کتاب‌های خودتان</value></data>
+  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>دریافت کتاب‌های بیشتر</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>آماده</value></data>
   <data name="Language_Download" xml:space="preserve"><value>دانلود</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>در حال دانلود {0}%</value></data>
@@ -223,8 +218,6 @@
   <data name="PackStatus_FailedClick" xml:space="preserve"><value>صداهای طبیعی دانلود نشد. با صدای گوشی خوانده می‌شود. برای تلاش دوباره کلیک کنید.</value></data>
   <data name="PackStatus_StoppedClick" xml:space="preserve"><value>دانلود متوقف شد. با صدای گوشی خوانده می‌شود. برای دانلود کلیک کنید.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>{0} بعلاوهٔ {1} چند می‌شود؟</value></data>
-  <data name="Story_Add" xml:space="preserve"><value>افزودن داستان</value></data>
-  <data name="Story_Title" xml:space="preserve"><value>عنوان</value></data>
   <data name="Story_Language" xml:space="preserve"><value>زبان داستان</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · شناسایی شد</value></data>
   <data name="Story_Translate" xml:space="preserve"><value>ترجمه به زبان من</value></data>
@@ -317,86 +310,18 @@
   <data name="Storyteller_Failed" xml:space="preserve"><value>دریافت صداهای قصه‌گو ممکن نشد</value></data>
   <data name="Storyteller_TryAgain" xml:space="preserve"><value>دوباره تلاش کنید</value></data>
   <!-- /Slice 115 -->
-  <data name="Add_Scan" xml:space="preserve"><value>اسکن صفحه‌ها</value></data>
-  <data name="Add_ScanSub" xml:space="preserve"><value>تصویر صفحه‌ها را نگه می‌دارد</value></data>
-  <data name="Add_Photos" xml:space="preserve"><value>عکس‌ها</value></data>
-  <data name="Add_PhotosSub" xml:space="preserve"><value>عکس صفحه‌ها را انتخاب کنید</value></data>
-  <data name="Add_File" xml:space="preserve"><value>PDF یا فایل</value></data>
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
   <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
-  <data name="Add_Type" xml:space="preserve"><value>تایپ یا چسباندن</value></data>
-  <data name="Add_TypeSub" xml:space="preserve"><value>فقط متن</value></data>
-  <data name="Add_Placeholder" xml:space="preserve"><value>داستان را تایپ یا جایگذاری کنید</value></data>
-  <data name="Add_CheckCast" xml:space="preserve"><value>بررسی بازیگران</value></data>
-  <data name="Add_Save" xml:space="preserve"><value>ذخیرهٔ داستان</value></data>
-  <data name="Add_PickerTitle" xml:space="preserve"><value>یک فایل ‎.txt یا ‎.pdf یا ‎.docx انتخاب کنید</value></data>
-  <data name="Add_PermissionTitle" xml:space="preserve"><value>اجازه لازم است</value></data>
-  <data name="Add_PermissionBody" xml:space="preserve"><value>برای خواندن سند، دسترسی به فایل بدهید.</value></data>
-  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>فایل بیش از حد بزرگ است</value></data>
-  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>این فایل {0} صفحه دارد؛ حد مجاز {1} است.</value></data>
-  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>خواندن این فایل ممکن نشد</value></data>
-  <data name="Add_ReadFailedBody" xml:space="preserve"><value>شاید فایل خراب باشد یا قالب آن پشتیبانی نشود.</value></data>
-  <data name="Edit_Cover" xml:space="preserve"><value>جلد</value></data>
-  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>صفحهٔ اول</value></data>
-  <data name="Edit_CoverColour" xml:space="preserve"><value>رنگ</value></data>
-  <data name="Edit_CoverPhoto" xml:space="preserve"><value>عکس</value></data>
-  <data name="Edit_Pages" xml:space="preserve"><value>صفحه‌ها</value></data>
   <!-- Slice 78: the page-review wizard -->
   <data name="Wizard_Next" xml:space="preserve"><value>بعدی</value></data>
-  <data name="Wizard_StepText" xml:space="preserve"><value>متن</value></data>
-  <data name="Wizard_AddPages" xml:space="preserve"><value>افزودن صفحه</value></data>
-  <data name="Wizard_DragHint" xml:space="preserve"><value>یک صفحه را نگه دارید و بکشید تا جابه‌جا شود</value></data>
-  <data name="Wizard_EmptyBody" xml:space="preserve"><value>صفحه‌های داستان را اضافه کنید: اسکن کنید، عکس انتخاب کنید، فایل PDF یا متنی اضافه کنید یا متن را تایپ کنید. بعد صفحه‌ها را مرتب کنید.</value></data>
-  <data name="Wizard_PageN" xml:space="preserve"><value>صفحه {0}</value></data>
-  <data name="Wizard_PageMenu" xml:space="preserve"><value>گزینه‌های صفحه</value></data>
-  <data name="Wizard_MenuRotate" xml:space="preserve"><value>چرخاندن</value></data>
-  <data name="Wizard_MenuCrop" xml:space="preserve"><value>چرخاندن یا برش</value></data>
-  <data name="Wizard_MenuEditText" xml:space="preserve"><value>ویرایش متن</value></data>
-  <data name="Wizard_NoTextShort" xml:space="preserve"><value>بدون متن</value></data>
-  <data name="Wizard_NoText" xml:space="preserve"><value>متنی در این صفحه پیدا نشد</value></data>
-  <data name="Wizard_Reading" xml:space="preserve"><value>در حال خواندن صفحه {0} از {1}</value></data>
   <data name="Wait_GettingVoices" xml:space="preserve"><value>در حال آماده‌سازی صداها…</value></data>
   <data name="Wait_Stalled" xml:space="preserve"><value>هنوز در حال آماده‌سازی صدا…</value></data>
-  <data name="Wait_ReadingPictures" xml:space="preserve"><value>در حال خواندن تصاویر…</value></data>
-  <data name="Wait_PageOf" xml:space="preserve"><value>صفحهٔ {0} از {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>در حال ترجمه…</value></data>
   <data name="Wait_WaitingInternet" xml:space="preserve"><value>در انتظار اینترنت</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingWifi" xml:space="preserve"><value>در انتظار Wi-Fi</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_Retry" xml:space="preserve"><value>تلاش دوباره</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{1}% از {0} دریافت شده است. وقتی دوباره آنلاین شوید خودش ادامه می‌یابد.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>در حال دریافت {0}. وقتی دوباره آنلاین شوید خودش ادامه می‌یابد.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>در حال ذخیره…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>در حال آماده‌سازی کتاب…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>در حال پشتیبان‌گیری از کتاب‌ها…</value></data>
   <data name="Wait_Restoring" xml:space="preserve"><value>در حال بازیابی کتاب‌ها…</value></data>
-  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>برخی صفحه‌ها خوانده نشدند</value></data>
-  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>خواندن {0} صفحه ممکن نشد. این صفحه‌ها به‌صورت تصویر و بدون متن نگه داشته می‌شوند.</value></data>
-  <data name="Pictures_NoneTitle" xml:space="preserve"><value>این فایل کلمه دارد اما تصویر ندارد</value></data>
-  <data name="Pictures_NoneBody" xml:space="preserve"><value>اگر خواستید برای هر صفحه یک تصویر اضافه کنید. صفحه‌های بدون تصویر به‌صورت متن خوانده می‌شوند.</value></data>
-  <data name="Pictures_PickAll" xml:space="preserve"><value>انتخاب تصویر برای همه صفحه‌ها</value></data>
-  <data name="Pictures_PageN" xml:space="preserve"><value>صفحه {0}</value></data>
-  <data name="Pictures_Change" xml:space="preserve"><value>تغییر</value></data>
-  <data name="Pictures_Add" xml:space="preserve"><value>افزودن تصویر</value></data>
-  <data name="Pictures_FoundEvery" xml:space="preserve"><value>در همه صفحه‌ها تصویر پیدا شد</value></data>
-  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1} صفحه</value></data>
-  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1} صفحه</value></data>
-  <data name="Pictures_NextCover" xml:space="preserve"><value>بعدی: جلد</value></data>
-  <data name="Wizard_CoverHint" xml:space="preserve"><value>یک صفحه، عکس یا رنگ را برای جلد انتخاب کنید.</value></data>
-  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>هنوز چیزی برای خواندن نیست</value></data>
-  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>دست‌کم به یک صفحه متن اضافه کنید و ذخیره کنید.</value></data>
-  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>ذخیره داستان ممکن نشد</value></data>
-  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>چیزی تغییر نکرد. کمی بعد دوباره تلاش کنید.</value></data>
-  <data name="Regions_Helper" xml:space="preserve"><value>روی یک کادر بزنید تا خوانده شود یا کنار گذاشته شود.</value></data>
-  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>متن ویرایش‌شده شما با بخش‌های انتخاب‌شده جایگزین شود؟</value></data>
-  <data name="Regions_ReplaceBody" xml:space="preserve"><value>آنچه در این صفحه تایپ کرده‌اید از بین می‌رود.</value></data>
-  <data name="Regions_Replace" xml:space="preserve"><value>جایگزین کن</value></data>
-  <data name="Regions_Keep" xml:space="preserve"><value>نگه دار</value></data>
-  <data name="Regions_BoxRead" xml:space="preserve"><value>کادر متن، خوانده می‌شود</value></data>
-  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>کادر متن، کنار گذاشته شده</value></data>
-  <data name="Editor_Title" xml:space="preserve"><value>چرخاندن و برش</value></data>
-  <data name="Editor_RotateLeft" xml:space="preserve"><value>چرخش به چپ</value></data>
-  <data name="Editor_RotateRight" xml:space="preserve"><value>چرخش به راست</value></data>
-  <data name="Editor_ResetCrop" xml:space="preserve"><value>بازنشانی برش</value></data>
   <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>فقط تصویر</value></data>
   <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>تصویر + متن</value></data>
   <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>فقط متن</value></data>
@@ -432,11 +357,6 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>صدای حیوان‌ها</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>حیوان‌ها گاهی «خرخر!» یا «بع بع!» می‌گویند، در همهٔ کتاب‌ها</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>این کتاب شخصیت‌های بیشتری از {0} شخصیت قصه‌گوی موجود دارد، پس بعضی‌ها یک‌جور صدا می‌دهند. راوی هیچ‌وقت به شخصیتی داده نمی‌شود.</value></data>
-  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>بسته‌های ترجمه دانلود شوند؟</value></data>
-  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>برای نشان دادن و خواندن این کتاب به {0}، Dino Reader به این بسته‌های ترجمه نیاز دارد: {1}. آن‌ها روی همین دستگاه می‌مانند. اگر رد کنید، کتاب به زبان خودش می‌ماند.</value></data>
-  <data name="TranslationPack_Download" xml:space="preserve"><value>دانلود</value></data>
-  <data name="TranslationPack_Keep" xml:space="preserve"><value>نگه داشتن اصل کتاب</value></data>
-  <data name="TranslationPack_Failed" xml:space="preserve"><value>بسته‌ی ترجمه گرفته نشد. کتاب به زبان خودش می‌ماند.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>در حال گرفتن بسته‌ی ترجمه به {0}…</value></data>
   <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>قصه‌ها به چه زبان‌هایی باشند؟</value></data>
   <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>تا دو زبان دیگر انتخاب کنید. فرزندتان می‌تواند هنگام خواندن زبان را عوض کند.</value></data>

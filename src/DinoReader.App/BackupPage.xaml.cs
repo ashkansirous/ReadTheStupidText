@@ -2,6 +2,7 @@ using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using ReadTheStupidText.Application.Reading;
+using IFallbackSink = ReadTheStupidText.Application.Usage.IFallbackSink;
 using ReadTheStupidText.Mobile.Shared.Waiting;
 using RoundRectangle = Microsoft.Maui.Controls.Shapes.RoundRectangle;
 
@@ -31,6 +32,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 	private readonly ExternalActivityGuard _external;
 	private readonly GrownUpMode _mode;
 	private readonly UsageCounter _usage;
+	private readonly IFallbackSink _sink;
 	private readonly BusyGuard _busy = new();
 	private readonly WaitController _wait;
 	private int _count;
@@ -40,8 +42,9 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 	private Size _windowSize;
 	private bool _sideBySide;
 
-	public BackupPage(IStoryLibrary library, ExternalActivityGuard external, GrownUpMode mode, UsageCounter usage)
+	public BackupPage(IStoryLibrary library, ExternalActivityGuard external, GrownUpMode mode, UsageCounter usage, IFallbackSink sink)
 	{
+		_sink = sink;
 		InitializeComponent();
 		_library = library;
 		_external = external;
@@ -278,8 +281,22 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		await using FileStream file = File.OpenRead(path);
 		var added = new List<Story>();
 		StoryRestoreResult result = await StoryBackupReader.RestoreAsync(file, _library, added.Add);
+		int dropped = await DropOwnBooksAsync(added);
 		CountRestoredBooks(added);
-		return result;
+		return dropped == 0 ? result : result with { Added = result.Added - dropped, Skipped = result.Skipped + dropped };
+	}
+
+	// Slice 278 A3 (design 2): the app holds store books only, so a backed-up book with no source id (a family's own book) is removed again by the same cleanup the first start runs, and shown as skipped.
+	// The summary and the usage count see only the kept books. A book that could not be removed stays hidden (the library never lists it) and the cleanup is re-armed for the next start.
+	private async Task<int> DropOwnBooksAsync(List<Story> added)
+	{
+		OwnBooksCleanupResult cleaned = await OwnBooksCleanupRun.RunAsync(_library, _sink);
+		if (cleaned.Failed > 0 || !cleaned.Complete)
+		{
+			OwnBooksCleanup.Rearm();
+		}
+
+		return added.RemoveAll(story => cleaned.Deleted.Contains(story.Id));
 	}
 
 	// One count per restored own book (kind "restore" plus its page-count bucket, nothing the book holds), all queued in one write off the UI thread (Slice 191).

@@ -44,7 +44,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         var stories = new List<Story>();
         foreach (string folder in Directory.EnumerateDirectories(root))
         {
-            Story? story = await TryReadAsync(Path.GetFileName(folder));
+            Story? story = await TryReadAsync(Path.GetFileName(folder), includeOwn: false);
             if (story is not null)
             {
                 stories.Add(story);
@@ -223,8 +223,8 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
     }
 
-    // story.json goes first, so a delete that dies halfway leaves a folder the list already
-    // ignores; deleting again finishes the job. A folder that is already gone is not an error.
+    // story.json goes LAST, so a delete that dies halfway leaves a folder that still has its story.json: it stays listed
+    // (ListOwnFoldersAsync) and the next cleanup pass finishes the job. A folder that is already gone is not an error.
     public async Task DeleteAsync(string id)
     {
         if (!StoryIds.IsValid(id))
@@ -235,11 +235,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         await _gate.WaitAsync();
         try
         {
-            File.Delete(FilePathOf(id));
-            if (Directory.Exists(FolderOf(id)))
-            {
-                Directory.Delete(FolderOf(id), recursive: true);
-            }
+            DeleteFolderKeepingStoryJsonLast(FolderOf(id));
 
             await TryForgetInOrderAsync(id);
         }
@@ -252,6 +248,35 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         {
             _gate.Release();
         }
+    }
+
+    private static void DeleteFolderKeepingStoryJsonLast(string folder)
+    {
+        if (!Directory.Exists(folder))
+        {
+            return;
+        }
+
+        string storyPath = Path.Combine(folder, StoryFileName);
+        foreach (string entry in Directory.EnumerateFileSystemEntries(folder).ToList())
+        {
+            if (string.Equals(entry, storyPath, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (Directory.Exists(entry))
+            {
+                Directory.Delete(entry, recursive: true);
+            }
+            else
+            {
+                File.Delete(entry);
+            }
+        }
+
+        File.Delete(storyPath);
+        Directory.Delete(folder, recursive: false);
     }
 
     // The book folder is already gone here, so a locked shelf-order.json must not fail the delete: the next order save drops ids whose folder is gone.
@@ -397,7 +422,61 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
             ? Path.Combine(FolderOf(id), StoryFileName)
             : throw new ArgumentException("Not a story id.", nameof(id));
 
-    private async Task<Story?> TryReadAsync(string id)
+    /// <summary>
+    /// The folders of the own books (Slice 278 A3, design 2; <see cref="OwnBook.IsOwn"/> on the raw story.json) and whether every folder was seen. A folder with no story.json yet (a package mid-import) is not a book and is skipped;
+    /// a story.json that cannot be read, or a root that cannot be listed, makes the answer incomplete (such a book may be an own book).
+    /// </summary>
+    public async Task<OwnFolders> ListOwnFoldersAsync()
+    {
+        var ids = new List<string>();
+        try
+        {
+            if (!Directory.Exists(root))
+            {
+                return new OwnFolders(ids, true);
+            }
+
+            bool complete = true;
+            foreach (string folder in Directory.EnumerateDirectories(root))
+            {
+                complete &= await TryCollectOwnAsync(Path.GetFileName(folder), ids);
+            }
+
+            return new OwnFolders(ids, complete);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // no-fallback: incomplete by contract, so the cleanup does not mark the pass done
+            return new OwnFolders(ids, false);
+        }
+    }
+
+    // False when the folder has a story.json that could not be read.
+    private async Task<bool> TryCollectOwnAsync(string id, List<string> ids)
+    {
+        if (!StoryIds.IsValid(id) || !File.Exists(FilePathOf(id)))
+        {
+            return true;
+        }
+
+        try
+        {
+            if (OwnBook.IsOwn(await File.ReadAllTextAsync(FilePathOf(id))))
+            {
+                ids.Add(id);
+            }
+
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // no-fallback: reported by the caller as an incomplete listing
+            return false;
+        }
+    }
+
+    // includeOwn is false only for the shelf listing, which never shows an own book (Slice 278 A3); lookups by id and the source-id sweep still see every book.
+    private async Task<Story?> TryReadAsync(string id, bool includeOwn = true)
     {
         if (!StoryIds.IsValid(id) || !File.Exists(FilePathOf(id)))
         {
@@ -406,7 +485,13 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
 
         try
         {
-            Story story = StoryJson.Deserialize(await File.ReadAllTextAsync(FilePathOf(id)));
+            string text = await File.ReadAllTextAsync(FilePathOf(id));
+            if (!includeOwn && OwnBook.IsOwn(text))
+            {
+                return null;
+            }
+
+            Story story = StoryJson.Deserialize(text);
             // A story whose stored id disagrees with its folder was copied or edited by hand;
             // it is skipped as unreadable rather than risk writes landing in another folder.
             if (story.Id == id)

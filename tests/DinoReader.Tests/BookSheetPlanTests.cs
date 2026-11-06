@@ -5,20 +5,21 @@ namespace DinoReader.Tests;
 public class BookSheetPlanTests
 {
     [Fact]
-    public void OwnBookGetsEditPagesAndNoStoreNote()
+    public void OwnBookHasNoStoreNote()
     {
         BookSheetPlan plan = BookSheetPlan.For(BookOrigin.Own, hasRecording: false, developerExport: false);
 
-        Assert.True(plan.ShowEditPages);
         Assert.False(plan.CanReAddFromStore);
     }
 
     [Theory]
+    [InlineData(BookOrigin.Own)]
     [InlineData(BookOrigin.Starter)]
     [InlineData(BookOrigin.Store)]
-    public void CatalogueBooksHaveNoEditPages(BookOrigin origin)
+    public void NoBookHasAnEditPagesRow(BookOrigin origin)
     {
-        Assert.False(BookSheetPlan.For(origin, false, false).ShowEditPages);
+        Assert.DoesNotContain("EditPages", Enum.GetNames<BookSheetRow>()); // Slice 278: the story wizard is gone
+        Assert.Equal(4, BookSheetPlan.For(origin, false, false).Rows.Count);
     }
 
     [Fact]
@@ -64,7 +65,7 @@ public class BookSheetPlanTests
         BookSheetPlan bare = BookSheetPlan.For(BookOrigin.Store, hasRecording: false, developerExport: false);
 
         Assert.Equal(
-            [BookSheetRow.ReadNow, BookSheetRow.ReadWithMyVoice, BookSheetRow.RecordAndCast, BookSheetRow.Reorder, BookSheetRow.EditPages, BookSheetRow.Export, BookSheetRow.Remove],
+            [BookSheetRow.ReadNow, BookSheetRow.ReadWithMyVoice, BookSheetRow.RecordAndCast, BookSheetRow.Reorder, BookSheetRow.Export, BookSheetRow.Remove],
             all.Rows);
         Assert.Equal([BookSheetRow.ReadNow, BookSheetRow.RecordAndCast, BookSheetRow.Reorder, BookSheetRow.Remove], bare.Rows);
     }

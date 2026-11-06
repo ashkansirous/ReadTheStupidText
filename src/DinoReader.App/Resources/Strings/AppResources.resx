@@ -55,7 +55,6 @@
   <data name="Delete_Body" xml:space="preserve"><value>Its pages, pictures and voices are removed from this phone.</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>Couldn't delete that story</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>Something is still using its files. Try again in a moment.</value></data>
-  <data name="Manage_EditStory" xml:space="preserve"><value>Edit story</value></data>
   <data name="Gallery_EditStory" xml:space="preserve"><value>Edit {0}</value></data>
   <data name="Gallery_CastStory" xml:space="preserve"><value>Cast of {0}</value></data>
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Delete {0}</value></data>
@@ -150,10 +149,6 @@
   <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino opened the book. “Once upon a time…”</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Read it in your voice</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Record yourself reading a story, page by page. Your child can play it any time.</value></data>
-  <data name="Intro_AddTitle" xml:space="preserve"><value>Add your own book</value></data>
-  <data name="Intro_AddLine" xml:space="preserve"><value>Take pictures of a book’s pages, or pick a PDF. Dino reads it aloud.</value></data>
-  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>Add photos or a PDF</value></data>
-  <data name="Intro_AddLineWindows" xml:space="preserve"><value>Pick photos of a book’s pages, or a PDF. Dino reads it aloud.</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>Show the intro again</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Continue with the phone voice</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Ready for my child</value></data>
@@ -197,7 +192,7 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>Remove “{0}” from the shelf?</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Its pages, pictures and voices are removed from this phone. You can add it again for free from the Store.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Remove</value></data>
-  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Add from your own books</value></data>
+  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Get more books</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Ready</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Download</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>Downloading {0}%</value></data>
@@ -227,8 +222,6 @@
   <data name="PackStatus_FailedClick" xml:space="preserve"><value>Couldn't download natural voices. Reading with the phone voice. Click to retry.</value></data>
   <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Download stopped. Reading with the phone voice. Click to download.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>What is {0} plus {1}?</value></data>
-  <data name="Story_Add" xml:space="preserve"><value>Add a story</value></data>
-  <data name="Story_Title" xml:space="preserve"><value>Title</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Story language</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · detected</value></data>
   <data name="Story_Translate" xml:space="preserve"><value>Translate to my language</value></data>
@@ -321,84 +314,16 @@
   <data name="Storyteller_Failed" xml:space="preserve"><value>Couldn't get the storyteller voices</value></data>
   <data name="Storyteller_TryAgain" xml:space="preserve"><value>Try again</value></data>
   <!-- /Slice 115 -->
-  <data name="Add_Scan" xml:space="preserve"><value>Scan pages</value></data>
-  <data name="Add_ScanSub" xml:space="preserve"><value>Keeps the page pictures</value></data>
-  <data name="Add_Photos" xml:space="preserve"><value>Photos</value></data>
-  <data name="Add_PhotosSub" xml:space="preserve"><value>Pick page photos</value></data>
-  <data name="Add_File" xml:space="preserve"><value>PDF or file</value></data>
-  <data name="Add_Type" xml:space="preserve"><value>Type or paste</value></data>
-  <data name="Add_TypeSub" xml:space="preserve"><value>Text only</value></data>
-  <data name="Add_Placeholder" xml:space="preserve"><value>Type or paste a story</value></data>
-  <data name="Add_CheckCast" xml:space="preserve"><value>Check the cast</value></data>
-  <data name="Add_Save" xml:space="preserve"><value>Save story</value></data>
-  <data name="Add_PickerTitle" xml:space="preserve"><value>Choose a .txt, .pdf or .docx file</value></data>
-  <data name="Add_PermissionTitle" xml:space="preserve"><value>Permission needed</value></data>
-  <data name="Add_PermissionBody" xml:space="preserve"><value>Grant file access to read a document.</value></data>
-  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>File too large</value></data>
-  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>That file has {0} pages; the limit is {1}.</value></data>
-  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>Couldn't read that file</value></data>
-  <data name="Add_ReadFailedBody" xml:space="preserve"><value>The file may be corrupted or in an unsupported format.</value></data>
-  <data name="Edit_Cover" xml:space="preserve"><value>Cover</value></data>
-  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>First page</value></data>
-  <data name="Edit_CoverColour" xml:space="preserve"><value>Colour</value></data>
-  <data name="Edit_CoverPhoto" xml:space="preserve"><value>Photo</value></data>
-  <data name="Edit_Pages" xml:space="preserve"><value>Pages</value></data>
   <!-- Slice 78: the page-review wizard -->
   <data name="Wizard_Next" xml:space="preserve"><value>Next</value></data>
-  <data name="Wizard_StepText" xml:space="preserve"><value>Text</value></data>
-  <data name="Wizard_AddPages" xml:space="preserve"><value>Add pages</value></data>
-  <data name="Wizard_DragHint" xml:space="preserve"><value>Hold a page and drag it to move it</value></data>
-  <data name="Wizard_EmptyBody" xml:space="preserve"><value>Add the pages of your story: scan them, pick photos, add a PDF or file, or type the text. Then put the pages in order.</value></data>
-  <data name="Wizard_PageN" xml:space="preserve"><value>Page {0}</value></data>
-  <data name="Wizard_PageMenu" xml:space="preserve"><value>Page options</value></data>
-  <data name="Wizard_MenuRotate" xml:space="preserve"><value>Rotate</value></data>
-  <data name="Wizard_MenuCrop" xml:space="preserve"><value>Rotate or crop</value></data>
-  <data name="Wizard_MenuEditText" xml:space="preserve"><value>Edit text</value></data>
-  <data name="Wizard_NoTextShort" xml:space="preserve"><value>No text</value></data>
-  <data name="Wizard_NoText" xml:space="preserve"><value>No text found on this page</value></data>
-  <data name="Wizard_Reading" xml:space="preserve"><value>Reading page {0} of {1}</value></data>
   <data name="Wait_GettingVoices" xml:space="preserve"><value>Getting the voices ready…</value></data>
   <data name="Wait_Stalled" xml:space="preserve"><value>Still getting the voice ready…</value></data>
-  <data name="Wait_ReadingPictures" xml:space="preserve"><value>Reading the pictures…</value></data>
-  <data name="Wait_PageOf" xml:space="preserve"><value>Page {0} of {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Translating…</value></data>
   <data name="Wait_WaitingInternet" xml:space="preserve"><value>Waiting for the internet</value></data>
-  <data name="Wait_WaitingWifi" xml:space="preserve"><value>Waiting for Wi-Fi</value></data>
-  <data name="Wait_Retry" xml:space="preserve"><value>Retry</value></data>
-  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0} is {1}% downloaded. It carries on by itself when you’re back online.</value></data>
-  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>Downloading {0}. It carries on by itself when you’re back online.</value></data>
   <data name="Wait_Saving" xml:space="preserve"><value>Saving…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>Getting the book…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>Backing up the books…</value></data>
   <data name="Wait_Restoring" xml:space="preserve"><value>Putting the books back…</value></data>
-  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Some pages weren’t read</value></data>
-  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} pages could not be read. They are kept as pictures without text.</value></data>
-  <data name="Pictures_NoneTitle" xml:space="preserve"><value>This file has words but no pictures</value></data>
-  <data name="Pictures_NoneBody" xml:space="preserve"><value>Add one picture to each page if you like. Pages without one read as text.</value></data>
-  <data name="Pictures_PickAll" xml:space="preserve"><value>Pick pictures for all pages</value></data>
-  <data name="Pictures_PageN" xml:space="preserve"><value>PAGE {0}</value></data>
-  <data name="Pictures_Change" xml:space="preserve"><value>Change</value></data>
-  <data name="Pictures_Add" xml:space="preserve"><value>Add picture</value></data>
-  <data name="Pictures_FoundEvery" xml:space="preserve"><value>Pictures found on every page</value></data>
-  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1} pages</value></data>
-  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1} page</value></data>
-  <data name="Pictures_NextCover" xml:space="preserve"><value>Next: cover</value></data>
-  <data name="Wizard_CoverHint" xml:space="preserve"><value>Pick a page, a photo or a colour for the cover.</value></data>
-  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Nothing to read yet</value></data>
-  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Add some text to at least one page, then save.</value></data>
-  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Couldn’t save the story</value></data>
-  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Nothing was changed. Try again in a moment.</value></data>
-  <data name="Regions_Helper" xml:space="preserve"><value>Tap a box to read it or leave it out.</value></data>
-  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>Replace your edited text with the selected regions?</value></data>
-  <data name="Regions_ReplaceBody" xml:space="preserve"><value>What you typed on this page will be lost.</value></data>
-  <data name="Regions_Replace" xml:space="preserve"><value>Replace</value></data>
-  <data name="Regions_Keep" xml:space="preserve"><value>Keep</value></data>
-  <data name="Regions_BoxRead" xml:space="preserve"><value>Text box, read</value></data>
-  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>Text box, left out</value></data>
-  <data name="Editor_Title" xml:space="preserve"><value>Rotate and crop</value></data>
-  <data name="Editor_RotateLeft" xml:space="preserve"><value>Rotate left</value></data>
-  <data name="Editor_RotateRight" xml:space="preserve"><value>Rotate right</value></data>
-  <data name="Editor_ResetCrop" xml:space="preserve"><value>Reset crop</value></data>
   <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>Picture only</value></data>
   <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>Picture + text</value></data>
   <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>Text only</value></data>
@@ -434,11 +359,6 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Animal sounds</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Animals say “Oink!” or “Baa!” now and then, in every book</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>This book has more characters than the {0} storyteller characters there are, so some of them sound alike. The narrator is never given to a character.</value></data>
-  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>Download translation packs?</value></data>
-  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>To show and read this book in {0}, Dino Reader needs these translation packs: {1}. They stay on this device. If you skip them, the book stays in its own language.</value></data>
-  <data name="TranslationPack_Download" xml:space="preserve"><value>Download</value></data>
-  <data name="TranslationPack_Keep" xml:space="preserve"><value>Keep the original</value></data>
-  <data name="TranslationPack_Failed" xml:space="preserve"><value>Couldn't get the translation pack. The book stays in its own language.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Getting the {0} translation pack…</value></data>
   <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>Which languages should stories be in?</value></data>
   <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Pick up to two more. Your child can switch while reading.</value></data>

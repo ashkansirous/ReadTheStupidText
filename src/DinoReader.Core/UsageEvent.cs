@@ -180,8 +180,10 @@ public static class IntroSteps
     public const string Places = "places";
     public const string Read = "read";
     public const string Record = "record";
-    public const string Add = "add";
     public const string Languages = "languages";
+
+    /// <summary>The retired add-your-own-book step (Slice 278): no longer shown, but apps released before it still send <c>add:tried</c> and <c>add:skipped</c>, so the Worker keeps the name.</summary>
+    public const string Add = "add";
 
     /// <summary>The retired store step (Slice 261): no longer shown, but apps released before it still send <c>store:tried</c>, so the Worker keeps accepting the name.</summary>
     public const string Store = "store";
@@ -193,12 +195,12 @@ public static class IntroSteps
     private const int StoreIndexInSix = 2;
     private const int NotRunning = -1;
 
-    private static readonly string[] Order = [Places, Read, Record, Add, Languages];
+    private static readonly string[] Order = [Places, Read, Record, Languages];
 
-    /// <summary>The step an intro saved before Slice 228 (4 steps: store, record, add, languages) resumes at in today's five: the store step lands on record, the others on themselves; -1 when that saved value was not a step.</summary>
+    /// <summary>The step an intro saved before Slice 228 (4 steps: store, record, add, languages) resumes at in today's four: the store step lands on record, the add step on languages; -1 when that saved value was not a step.</summary>
     public static int FromLegacy(int legacyIndex) => legacyIndex >= 0 && legacyIndex < LegacyCount ? FromSixSteps(legacyIndex + StepsAdded) : NotRunning;
 
-    /// <summary>The step an intro saved by a six-step build (Slice 228 to 260: places, read, store, record, add, languages) resumes at: the store step lands on record, later steps move one place back; -1 when that saved value was not a step.</summary>
+    /// <summary>The step an intro saved by a six-step build (Slice 228 to 260: places, read, store, record, add, languages) resumes at: the store step lands on record, later steps move one place back, and the add step (Slice 278) lands on languages; -1 when that saved value was not a step.</summary>
     public static int FromSixSteps(int savedIndex)
     {
         if (savedIndex < 0 || savedIndex >= SixStepCount)
@@ -206,10 +208,10 @@ public static class IntroSteps
             return NotRunning;
         }
 
-        return savedIndex <= StoreIndexInSix ? savedIndex : savedIndex - 1;
+        return Clamp(savedIndex <= StoreIndexInSix ? savedIndex : savedIndex - 1);
     }
 
-    /// <summary>A saved step made valid: -1 (not running) stays, any other negative value is not a step (-1), and a value past the last step resumes at the last step.</summary>
+    /// <summary>A saved step made valid: -1 (not running) stays, any other negative value is not a step (-1), and a value past the last step resumes at the last step. A step saved by a five-step build (add at 3, languages at 4) therefore lands on languages (Slice 278).</summary>
     public static int Clamp(int saved) => saved < 0 ? NotRunning : Math.Min(saved, Order.Length - 1);
 
     public static int Count => Order.Length;

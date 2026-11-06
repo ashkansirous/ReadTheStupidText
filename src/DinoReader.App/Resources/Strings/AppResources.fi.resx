@@ -55,7 +55,6 @@
   <data name="Delete_Body" xml:space="preserve"><value>Sen sivut, kuvat ja äänet poistetaan tästä puhelimesta.</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>Tarinaa ei voitu poistaa</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>Jokin käyttää vielä sen tiedostoja. Yritä hetken kuluttua uudelleen.</value></data>
-  <data name="Manage_EditStory" xml:space="preserve"><value>Muokkaa tarinaa</value></data>
   <data name="Gallery_EditStory" xml:space="preserve"><value>Muokkaa: {0}</value></data>
   <data name="Gallery_CastStory" xml:space="preserve"><value>Hahmot: {0}</value></data>
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Poista {0}</value></data>
@@ -150,10 +149,6 @@
   <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino avasi kirjan. ”Olipa kerran…”</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lue se omalla äänelläsi</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Äänitä itsesi lukemassa tarinaa sivu sivulta. Lapsesi voi kuunnella sen milloin tahansa.</value></data>
-  <data name="Intro_AddTitle" xml:space="preserve"><value>Lisää oma kirjasi</value></data>
-  <data name="Intro_AddLine" xml:space="preserve"><value>Ota kuvia kirjan sivuista tai valitse PDF. Dino lukee sen ääneen.</value></data>
-  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>Lisää kuvia tai PDF</value></data>
-  <data name="Intro_AddLineWindows" xml:space="preserve"><value>Valitse kuvia kirjan sivuista tai PDF. Dino lukee sen ääneen.</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>Näytä esittely uudelleen</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Jatka puhelimen äänellä</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Valmis lapselleni</value></data>
@@ -197,7 +192,7 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>Poistetaanko ”{0}” hyllystä?</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Sen sivut, kuvat ja äänet poistetaan tästä puhelimesta. Voit lisätä sen uudelleen ilmaiseksi kaupasta.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Poista</value></data>
-  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Lisää omista kirjoistasi</value></data>
+  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Hae lisää kirjoja</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Valmis</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Lataa</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>Ladataan {0} %</value></data>
@@ -225,8 +220,6 @@
   <data name="PackStatus_FailedClick" xml:space="preserve"><value>Luonnollisia ääniä ei voitu ladata. Luetaan puhelimen äänellä. Yritä uudelleen napsauttamalla.</value></data>
   <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Lataus pysäytetty. Luetaan puhelimen äänellä. Lataa napsauttamalla.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Paljonko on {0} plus {1}?</value></data>
-  <data name="Story_Add" xml:space="preserve"><value>Lisää tarina</value></data>
-  <data name="Story_Title" xml:space="preserve"><value>Nimi</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Tarinan kieli</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · tunnistettu</value></data>
   <data name="Story_Translate" xml:space="preserve"><value>Käännä omalle kielelleni</value></data>
@@ -319,83 +312,15 @@
   <data name="Storyteller_Failed" xml:space="preserve"><value>Tarinankertojan äänien lataus epäonnistui</value></data>
   <data name="Storyteller_TryAgain" xml:space="preserve"><value>Yritä uudelleen</value></data>
   <!-- /Slice 115 -->
-  <data name="Add_Scan" xml:space="preserve"><value>Skannaa sivut</value></data>
-  <data name="Add_ScanSub" xml:space="preserve"><value>Säilyttää sivukuvat</value></data>
-  <data name="Add_Photos" xml:space="preserve"><value>Kuvat</value></data>
-  <data name="Add_PhotosSub" xml:space="preserve"><value>Valitse sivukuvat</value></data>
-  <data name="Add_File" xml:space="preserve"><value>PDF tai tiedosto</value></data>
-  <data name="Add_Type" xml:space="preserve"><value>Kirjoita tai liitä</value></data>
-  <data name="Add_TypeSub" xml:space="preserve"><value>Vain teksti</value></data>
-  <data name="Add_Placeholder" xml:space="preserve"><value>Kirjoita tai liitä tarina</value></data>
-  <data name="Add_CheckCast" xml:space="preserve"><value>Tarkista hahmot</value></data>
-  <data name="Add_Save" xml:space="preserve"><value>Tallenna tarina</value></data>
-  <data name="Add_PickerTitle" xml:space="preserve"><value>Valitse .txt-, .pdf- tai .docx-tiedosto</value></data>
-  <data name="Add_PermissionTitle" xml:space="preserve"><value>Lupa tarvitaan</value></data>
-  <data name="Add_PermissionBody" xml:space="preserve"><value>Salli tiedostojen käyttö, jotta asiakirjan voi lukea.</value></data>
-  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>Tiedosto on liian suuri</value></data>
-  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>Tiedostossa on {0} sivua; enimmäismäärä on {1}.</value></data>
-  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>Tiedostoa ei voitu lukea</value></data>
-  <data name="Add_ReadFailedBody" xml:space="preserve"><value>Tiedosto voi olla vioittunut tai muodoltaan tukematon.</value></data>
-  <data name="Edit_Cover" xml:space="preserve"><value>Kansi</value></data>
-  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>Ensimmäinen sivu</value></data>
-  <data name="Edit_CoverColour" xml:space="preserve"><value>Väri</value></data>
-  <data name="Edit_CoverPhoto" xml:space="preserve"><value>Kuva</value></data>
-  <data name="Edit_Pages" xml:space="preserve"><value>Sivut</value></data>
   <data name="Wizard_Next" xml:space="preserve"><value>Seuraava</value></data>
-  <data name="Wizard_StepText" xml:space="preserve"><value>Teksti</value></data>
-  <data name="Wizard_AddPages" xml:space="preserve"><value>Lisää sivuja</value></data>
-  <data name="Wizard_DragHint" xml:space="preserve"><value>Pidä sivua painettuna ja vedä se uuteen paikkaan</value></data>
-  <data name="Wizard_EmptyBody" xml:space="preserve"><value>Lisää tarinasi sivut: skannaa ne, valitse kuvat, lisää PDF tai tiedosto tai kirjoita teksti. Laita sitten sivut järjestykseen.</value></data>
-  <data name="Wizard_PageN" xml:space="preserve"><value>Sivu {0}</value></data>
-  <data name="Wizard_PageMenu" xml:space="preserve"><value>Sivun valinnat</value></data>
-  <data name="Wizard_MenuRotate" xml:space="preserve"><value>Käännä</value></data>
-  <data name="Wizard_MenuCrop" xml:space="preserve"><value>Käännä tai rajaa</value></data>
-  <data name="Wizard_MenuEditText" xml:space="preserve"><value>Muokkaa tekstiä</value></data>
-  <data name="Wizard_NoTextShort" xml:space="preserve"><value>Ei tekstiä</value></data>
-  <data name="Wizard_NoText" xml:space="preserve"><value>Tältä sivulta ei löytynyt tekstiä</value></data>
-  <data name="Wizard_Reading" xml:space="preserve"><value>Luetaan sivua {0}/{1}</value></data>
   <data name="Wait_GettingVoices" xml:space="preserve"><value>Valmistellaan ääniä…</value></data>
   <data name="Wait_Stalled" xml:space="preserve"><value>Ääntä valmistellaan vielä…</value></data>
-  <data name="Wait_ReadingPictures" xml:space="preserve"><value>Luetaan kuvia…</value></data>
-  <data name="Wait_PageOf" xml:space="preserve"><value>Sivu {0} / {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Käännetään…</value></data>
   <data name="Wait_WaitingInternet" xml:space="preserve"><value>Odotetaan internetiä</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingWifi" xml:space="preserve"><value>Odotetaan Wi-Fi-yhteyttä</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_Retry" xml:space="preserve"><value>Yritä uudelleen</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0} on ladattu {1} %. Lataus jatkuu itsestään, kun olet taas verkossa.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>Ladataan kieltä {0}. Lataus jatkuu itsestään, kun olet taas verkossa.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>Tallennetaan…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>Haetaan kirjaa…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>Varmuuskopioidaan kirjoja…</value></data>
   <data name="Wait_Restoring" xml:space="preserve"><value>Palautetaan kirjoja…</value></data>
-  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Joitakin sivuja ei luettu</value></data>
-  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} sivua ei voitu lukea. Ne säilytetään kuvina ilman tekstiä.</value></data>
-  <data name="Pictures_NoneTitle" xml:space="preserve"><value>Tiedostossa on sanoja mutta ei kuvia</value></data>
-  <data name="Pictures_NoneBody" xml:space="preserve"><value>Lisää halutessasi yksi kuva jokaiselle sivulle. Sivut ilman kuvaa luetaan tekstinä.</value></data>
-  <data name="Pictures_PickAll" xml:space="preserve"><value>Valitse kuvat kaikille sivuille</value></data>
-  <data name="Pictures_PageN" xml:space="preserve"><value>SIVU {0}</value></data>
-  <data name="Pictures_Change" xml:space="preserve"><value>Vaihda</value></data>
-  <data name="Pictures_Add" xml:space="preserve"><value>Lisää kuva</value></data>
-  <data name="Pictures_FoundEvery" xml:space="preserve"><value>Kuvat löytyivät joka sivulle</value></data>
-  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1} sivua</value></data>
-  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1} sivu</value></data>
-  <data name="Pictures_NextCover" xml:space="preserve"><value>Seuraavaksi: kansi</value></data>
-  <data name="Wizard_CoverHint" xml:space="preserve"><value>Valitse kanneksi sivu, kuva tai väri.</value></data>
-  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Ei vielä mitään luettavaa</value></data>
-  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Lisää tekstiä vähintään yhdelle sivulle ja tallenna sitten.</value></data>
-  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Tarinaa ei voitu tallentaa</value></data>
-  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Mitään ei muutettu. Yritä hetken kuluttua uudelleen.</value></data>
-  <data name="Regions_Helper" xml:space="preserve"><value>Napauta ruutua lukeaksesi sen tai jättääksesi sen pois.</value></data>
-  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>Korvataanko muokkaamasi teksti valituilla alueilla?</value></data>
-  <data name="Regions_ReplaceBody" xml:space="preserve"><value>Se, mitä kirjoitit tälle sivulle, katoaa.</value></data>
-  <data name="Regions_Replace" xml:space="preserve"><value>Korvaa</value></data>
-  <data name="Regions_Keep" xml:space="preserve"><value>Säilytä</value></data>
-  <data name="Regions_BoxRead" xml:space="preserve"><value>Tekstiruutu, luetaan</value></data>
-  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>Tekstiruutu, jätetty pois</value></data>
-  <data name="Editor_Title" xml:space="preserve"><value>Käännä ja rajaa</value></data>
-  <data name="Editor_RotateLeft" xml:space="preserve"><value>Käännä vasemmalle</value></data>
-  <data name="Editor_RotateRight" xml:space="preserve"><value>Käännä oikealle</value></data>
-  <data name="Editor_ResetCrop" xml:space="preserve"><value>Palauta rajaus</value></data>
   <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>Vain kuvat</value></data>
   <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>Kuvat + teksti</value></data>
   <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>Vain teksti</value></data>
@@ -431,11 +356,6 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Eläinten äänet</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Eläimet sanovat välillä “Röh!” tai “Mää!”, kaikissa kirjoissa</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Tässä kirjassa on enemmän hahmoja kuin käytettävissä olevia {0} kertojahahmoa, joten jotkin kuulostavat samalta. Kertojaa ei koskaan anneta hahmolle.</value></data>
-  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>Ladataanko käännöspaketit?</value></data>
-  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>Näyttääkseen ja lukeakseen tämän kirjan kielellä {0} Dino Reader tarvitsee nämä käännöspaketit: {1}. Ne pysyvät tällä laitteella. Jos ohitat ne, kirja pysyy omalla kielellään.</value></data>
-  <data name="TranslationPack_Download" xml:space="preserve"><value>Lataa</value></data>
-  <data name="TranslationPack_Keep" xml:space="preserve"><value>Säilytä alkuperäinen</value></data>
-  <data name="TranslationPack_Failed" xml:space="preserve"><value>Käännöspakettia ei saatu ladattua. Kirja pysyy omalla kielellään.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Ladataan {0}-käännöspakettia…</value></data>
   <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>Millä kielillä tarinoiden pitäisi olla?</value></data>
   <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Valitse enintään kaksi lisää. Lapsesi voi vaihtaa kieltä lukiessaan.</value></data>

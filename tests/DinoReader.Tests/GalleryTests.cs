@@ -176,7 +176,7 @@ public sealed class FileStoryLibraryTests : IDisposable
 
     private static Story Make(string title, int day) => new(
         StoryIds.New(), title, "en", new DateTimeOffset(2026, 10, day, 0, 0, 0, TimeSpan.Zero),
-        [new StoryPage("Text.")], [], CoverStyle.Colour, 0, "F1");
+        [new StoryPage("Text.")], [], CoverStyle.Colour, 0, "F1", SourceId: StoryIds.New()); // a store book: the library never lists an own one (Slice 278 A3)
 
     [Fact]
     public async Task Added_SurvivesANewLibraryInstance()

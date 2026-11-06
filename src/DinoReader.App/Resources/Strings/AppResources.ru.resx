@@ -53,7 +53,6 @@
   <data name="Delete_Body" xml:space="preserve"><value>Его страницы, картинки и голоса будут удалены с этого телефона.</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>Не удалось удалить историю</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>Его файлы ещё используются. Попробуйте чуть позже.</value></data>
-  <data name="Manage_EditStory" xml:space="preserve"><value>Изменить историю</value></data>
   <data name="Gallery_EditStory" xml:space="preserve"><value>Изменить {0}</value></data>
   <data name="Gallery_CastStory" xml:space="preserve"><value>Герои: {0}</value></data>
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Удалить {0}</value></data>
@@ -148,10 +147,6 @@
   <data name="Intro_ReadCaption" xml:space="preserve"><value>Дино открыл книгу. «Жили-были…»</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Читайте своим голосом</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Запишите, как вы читаете историю, страницу за страницей. Ребёнок сможет включить её в любое время.</value></data>
-  <data name="Intro_AddTitle" xml:space="preserve"><value>Добавьте свою книгу</value></data>
-  <data name="Intro_AddLine" xml:space="preserve"><value>Сфотографируйте страницы книги или выберите PDF. Dino прочитает её вслух.</value></data>
-  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>Добавьте фото или PDF</value></data>
-  <data name="Intro_AddLineWindows" xml:space="preserve"><value>Выберите фото страниц книги или PDF. Dino прочитает её вслух.</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>Показать вступление ещё раз</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Продолжить с голосом телефона</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Готово, отдаю ребёнку</value></data>
@@ -195,7 +190,7 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>Убрать «{0}» с полки?</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Его страницы, картинки и голоса будут удалены с этого телефона. Его можно снова добавить бесплатно из магазина.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Убрать</value></data>
-  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Добавить из своих книг</value></data>
+  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Получить больше книг</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Готово</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Скачать</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>Загрузка {0}%</value></data>
@@ -223,8 +218,6 @@
   <data name="PackStatus_FailedClick" xml:space="preserve"><value>Не удалось загрузить естественные голоса. Читает голос телефона. Щёлкните, чтобы повторить.</value></data>
   <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Загрузка остановлена. Читает голос телефона. Щёлкните, чтобы загрузить.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Сколько будет {0} плюс {1}?</value></data>
-  <data name="Story_Add" xml:space="preserve"><value>Добавить историю</value></data>
-  <data name="Story_Title" xml:space="preserve"><value>Название</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Язык истории</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · определён</value></data>
   <data name="Story_Translate" xml:space="preserve"><value>Перевести на мой язык</value></data>
@@ -317,86 +310,18 @@
   <data name="Storyteller_Failed" xml:space="preserve"><value>Не удалось загрузить голоса рассказчика</value></data>
   <data name="Storyteller_TryAgain" xml:space="preserve"><value>Повторить</value></data>
   <!-- /Slice 115 -->
-  <data name="Add_Scan" xml:space="preserve"><value>Сканировать страницы</value></data>
-  <data name="Add_ScanSub" xml:space="preserve"><value>Сохраняет картинки страниц</value></data>
-  <data name="Add_Photos" xml:space="preserve"><value>Фото</value></data>
-  <data name="Add_PhotosSub" xml:space="preserve"><value>Выберите фото страниц</value></data>
-  <data name="Add_File" xml:space="preserve"><value>PDF или файл</value></data>
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
   <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
-  <data name="Add_Type" xml:space="preserve"><value>Ввести или вставить</value></data>
-  <data name="Add_TypeSub" xml:space="preserve"><value>Только текст</value></data>
-  <data name="Add_Placeholder" xml:space="preserve"><value>Введите или вставьте историю</value></data>
-  <data name="Add_CheckCast" xml:space="preserve"><value>Проверить роли</value></data>
-  <data name="Add_Save" xml:space="preserve"><value>Сохранить историю</value></data>
-  <data name="Add_PickerTitle" xml:space="preserve"><value>Выберите файл .txt, .pdf или .docx</value></data>
-  <data name="Add_PermissionTitle" xml:space="preserve"><value>Нужно разрешение</value></data>
-  <data name="Add_PermissionBody" xml:space="preserve"><value>Разрешите доступ к файлам, чтобы прочитать документ.</value></data>
-  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>Файл слишком большой</value></data>
-  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>В этом файле {0} стр.; предел — {1}.</value></data>
-  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>Не удалось прочитать файл</value></data>
-  <data name="Add_ReadFailedBody" xml:space="preserve"><value>Файл может быть повреждён или иметь неподдерживаемый формат.</value></data>
-  <data name="Edit_Cover" xml:space="preserve"><value>Обложка</value></data>
-  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>Первая страница</value></data>
-  <data name="Edit_CoverColour" xml:space="preserve"><value>Цвет</value></data>
-  <data name="Edit_CoverPhoto" xml:space="preserve"><value>Фото</value></data>
-  <data name="Edit_Pages" xml:space="preserve"><value>Страницы</value></data>
   <!-- Slice 78: the page-review wizard -->
   <data name="Wizard_Next" xml:space="preserve"><value>Далее</value></data>
-  <data name="Wizard_StepText" xml:space="preserve"><value>Текст</value></data>
-  <data name="Wizard_AddPages" xml:space="preserve"><value>Добавить страницы</value></data>
-  <data name="Wizard_DragHint" xml:space="preserve"><value>Удерживайте страницу и перетащите её, чтобы переместить</value></data>
-  <data name="Wizard_EmptyBody" xml:space="preserve"><value>Добавьте страницы истории: отсканируйте их, выберите фото, добавьте PDF или файл либо введите текст. Потом расставьте страницы по порядку.</value></data>
-  <data name="Wizard_PageN" xml:space="preserve"><value>Страница {0}</value></data>
-  <data name="Wizard_PageMenu" xml:space="preserve"><value>Параметры страницы</value></data>
-  <data name="Wizard_MenuRotate" xml:space="preserve"><value>Повернуть</value></data>
-  <data name="Wizard_MenuCrop" xml:space="preserve"><value>Повернуть или обрезать</value></data>
-  <data name="Wizard_MenuEditText" xml:space="preserve"><value>Изменить текст</value></data>
-  <data name="Wizard_NoTextShort" xml:space="preserve"><value>Нет текста</value></data>
-  <data name="Wizard_NoText" xml:space="preserve"><value>На этой странице текст не найден</value></data>
-  <data name="Wizard_Reading" xml:space="preserve"><value>Чтение страницы {0} из {1}</value></data>
   <data name="Wait_GettingVoices" xml:space="preserve"><value>Готовим голоса…</value></data>
   <data name="Wait_Stalled" xml:space="preserve"><value>Всё ещё готовим голос…</value></data>
-  <data name="Wait_ReadingPictures" xml:space="preserve"><value>Читаем картинки…</value></data>
-  <data name="Wait_PageOf" xml:space="preserve"><value>Страница {0} из {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Переводим…</value></data>
   <data name="Wait_WaitingInternet" xml:space="preserve"><value>Ждём интернет</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingWifi" xml:space="preserve"><value>Ожидание Wi-Fi</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_Retry" xml:space="preserve"><value>Повторить</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0}: загружено {1}%. Загрузка продолжится сама, когда вы снова будете онлайн.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>Загрузка: {0}. Загрузка продолжится сама, когда вы снова будете онлайн.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>Сохраняем…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>Готовим книгу…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>Сохраняем книги в резервную копию…</value></data>
   <data name="Wait_Restoring" xml:space="preserve"><value>Восстанавливаем книги…</value></data>
-  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Некоторые страницы не прочитаны</value></data>
-  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>Не удалось прочитать страниц: {0}. Они сохранятся как картинки без текста.</value></data>
-  <data name="Pictures_NoneTitle" xml:space="preserve"><value>В этом файле есть текст, но нет картинок</value></data>
-  <data name="Pictures_NoneBody" xml:space="preserve"><value>При желании добавьте по одной картинке к каждой странице. Страницы без картинки читаются как текст.</value></data>
-  <data name="Pictures_PickAll" xml:space="preserve"><value>Выбрать картинки для всех страниц</value></data>
-  <data name="Pictures_PageN" xml:space="preserve"><value>СТРАНИЦА {0}</value></data>
-  <data name="Pictures_Change" xml:space="preserve"><value>Изменить</value></data>
-  <data name="Pictures_Add" xml:space="preserve"><value>Добавить картинку</value></data>
-  <data name="Pictures_FoundEvery" xml:space="preserve"><value>Картинки найдены на каждой странице</value></data>
-  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1} стр.</value></data>
-  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1} стр.</value></data>
-  <data name="Pictures_NextCover" xml:space="preserve"><value>Далее: обложка</value></data>
-  <data name="Wizard_CoverHint" xml:space="preserve"><value>Выберите для обложки страницу, фото или цвет.</value></data>
-  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Пока нечего читать</value></data>
-  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Добавьте текст хотя бы на одну страницу и сохраните.</value></data>
-  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Не удалось сохранить историю</value></data>
-  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Ничего не изменилось. Повторите попытку чуть позже.</value></data>
-  <data name="Regions_Helper" xml:space="preserve"><value>Нажмите на рамку, чтобы читать этот текст или пропустить его.</value></data>
-  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>Заменить ваш изменённый текст выбранными областями?</value></data>
-  <data name="Regions_ReplaceBody" xml:space="preserve"><value>Всё, что вы напечатали на этой странице, будет потеряно.</value></data>
-  <data name="Regions_Replace" xml:space="preserve"><value>Заменить</value></data>
-  <data name="Regions_Keep" xml:space="preserve"><value>Оставить</value></data>
-  <data name="Regions_BoxRead" xml:space="preserve"><value>Рамка с текстом, читается</value></data>
-  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>Рамка с текстом, пропускается</value></data>
-  <data name="Editor_Title" xml:space="preserve"><value>Поворот и обрезка</value></data>
-  <data name="Editor_RotateLeft" xml:space="preserve"><value>Повернуть влево</value></data>
-  <data name="Editor_RotateRight" xml:space="preserve"><value>Повернуть вправо</value></data>
-  <data name="Editor_ResetCrop" xml:space="preserve"><value>Сбросить обрезку</value></data>
   <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>Только картинки</value></data>
   <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>Картинки + текст</value></data>
   <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>Только текст</value></data>
@@ -432,11 +357,6 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Звуки животных</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Животные иногда говорят «Хрю!» или «Бе-е!» в каждой книге</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>В этой книге больше персонажей, чем есть рассказчиков ({0}), поэтому некоторые звучат одинаково. Рассказчик персонажам не выдаётся.</value></data>
-  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>Скачать пакеты перевода?</value></data>
-  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>Чтобы показать и прочитать эту книгу ({0}), Dino Reader нужны эти пакеты перевода: {1}. Они останутся на этом устройстве. Если пропустить, книга останется на своём языке.</value></data>
-  <data name="TranslationPack_Download" xml:space="preserve"><value>Скачать</value></data>
-  <data name="TranslationPack_Keep" xml:space="preserve"><value>Оставить оригинал</value></data>
-  <data name="TranslationPack_Failed" xml:space="preserve"><value>Не удалось получить пакет перевода. Книга остаётся на своём языке.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Скачиваем пакет перевода: {0}…</value></data>
   <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>На каких языках должны быть истории?</value></data>
   <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Выберите до двух дополнительных. Ребёнок сможет переключаться во время чтения.</value></data>

@@ -11,7 +11,7 @@ namespace DinoReader;
 
 /// <summary>
 /// The first-run intro (Slice 155, Decision 160, Batch 32 mock frames 74-76; Slice 228, Batch 43 frames 101 and 101b: a first card naming the kids' shelf and the grown-ups' corner, then a read step that opens a real book): steps of real actions (the store, recording a book,
-/// adding an own book), each with a picture, one line, <b>Try it</b> (opens the real screen, no gate: the person installing is the grown-up)
+/// (Slice 278: adding an own book is gone)), each with a picture, one line, <b>Try it</b> (opens the real screen, no gate: the person installing is the grown-up)
 /// and <b>Skip</b>; coming back from the screen moves on to the next step. A fourth step (Slice 173, mock frame 86) asks which story languages the
 /// child's books should be in, with <b>Done</b> and <b>Skip</b>. <b>Skip all</b> ends it at once. A first-run intro ends on the
 /// "Ready for my child" hand-over and saves its step so a restart resumes it; a replay (from grown-up settings) is not saved and ends back
@@ -236,12 +236,9 @@ public sealed class IntroWizardPage : ContentPage
 		}
 
 		bool windows = DeviceInfo.Platform == DevicePlatform.WinUI;
-		(string title, string line) = step switch
-		{
-			IntroSteps.Read => (AppResources.Intro_ReadTitle, AppResources.Intro_ReadLine),
-			IntroSteps.Record => (AppResources.Intro_RecordTitle, AppResources.Intro_RecordLine),
-			_ => windows ? (AppResources.Intro_AddTitleWindows, AppResources.Intro_AddLineWindows) : (AppResources.Intro_AddTitle, AppResources.Intro_AddLine),
-		};
+		(string title, string line) = step == IntroSteps.Read
+			? (AppResources.Intro_ReadTitle, AppResources.Intro_ReadLine)
+			: (AppResources.Intro_RecordTitle, AppResources.Intro_RecordLine);
 		var heading = new Label { Text = title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, Margin = new Thickness(0, 10, 0, 0) };
 		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level1);
 		var body = new Label { Text = line, FontSize = LineSize, LineHeight = 1.35, TextColor = DinoTokens.Get(DinoTokens.Body), HorizontalTextAlignment = TextAlignment.Center, MaximumWidthRequest = LineMaxWidth };
@@ -362,13 +359,8 @@ public sealed class IntroWizardPage : ContentPage
 		Grid.SetRowSpan(view, rowSpan);
 	}
 
-	// Read needs a starter to open; Record needs whatever recording needs; the other steps always offer Try it.
-	private bool TryItVisible(string? step) => step switch
-	{
-		IntroSteps.Read => _hasStarter,
-		IntroSteps.Record => _canRecord,
-		_ => true,
-	};
+	// Read needs a starter to open; Record needs whatever recording needs.
+	private bool TryItVisible(string? step) => step == IntroSteps.Read ? _hasStarter : _canRecord;
 
 	// The first card (Batch 43 frame 101): the two places side by side, a picture and one Next button. No Try it and no Skip: Skip all is in the bar.
 	private Grid BuildPlacesBody()
@@ -581,18 +573,12 @@ public sealed class IntroWizardPage : ContentPage
 
 	private async Task<Page?> CreateStepScreenAsync()
 	{
-		switch (IntroSteps.NameAt(_step))
+		return IntroSteps.NameAt(_step) switch
 		{
-			case IntroSteps.Record:
-				return await CreateRecordScreenAsync();
-			case IntroSteps.Read:
-				return await CreateReadScreenAsync();
-			default:
-				var wizard = _services.GetRequiredService<StoryWizardPage>();
-				wizard.LaunchedFromIntro = true;
-				await wizard.LoadAsync(null);
-				return wizard;
-		}
+			IntroSteps.Record => await CreateRecordScreenAsync(),
+			IntroSteps.Read => await CreateReadScreenAsync(),
+			_ => null, // the places and languages steps open no screen
+		};
 	}
 
 	// The read step (Batch 43 frame 101b) opens the first book the grown-up picked (Slice 261; else the shortest book from the catalogue) in the reader; Back from it moves the intro on.

@@ -33,7 +33,7 @@ public sealed class LanguageCastTests : IDisposable
 
     private static Story Make() => new(
         StoryIds.New(), "Peter Rabbit", "en", new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero),
-        [new StoryPage("\"Hello,\" said Peter.")], English, CoverStyle.Colour, 1, "supertonic:M3");
+        [new StoryPage("\"Hello,\" said Peter.")], English, CoverStyle.Colour, 1, "supertonic:M3", SourceId: StoryIds.New()); // a store book: the library never lists an own one (Slice 278 A3)
 
     [Fact]
     public void HasCastIn_TreatsAnEmptyStoredCastAsNone()

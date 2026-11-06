@@ -55,7 +55,6 @@
   <data name="Delete_Body" xml:space="preserve"><value>De pagina’s, plaatjes en stemmen worden van deze telefoon verwijderd.</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>Dat verhaal kon niet worden verwijderd</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>Er gebruikt nog iets de bestanden ervan. Probeer het over een moment opnieuw.</value></data>
-  <data name="Manage_EditStory" xml:space="preserve"><value>Verhaal bewerken</value></data>
   <data name="Gallery_EditStory" xml:space="preserve"><value>{0} bewerken</value></data>
   <data name="Gallery_CastStory" xml:space="preserve"><value>Rolverdeling van {0}</value></data>
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>{0} verwijderen</value></data>
@@ -150,10 +149,6 @@
   <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino sloeg het boek open. ‘Er was eens…’</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lees het met je eigen stem</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Neem jezelf op terwijl je een verhaal voorleest, pagina voor pagina. Je kind kan het altijd afspelen.</value></data>
-  <data name="Intro_AddTitle" xml:space="preserve"><value>Voeg je eigen boek toe</value></data>
-  <data name="Intro_AddLine" xml:space="preserve"><value>Maak foto’s van de pagina’s van een boek, of kies een pdf. Dino leest het voor.</value></data>
-  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>Voeg foto’s of een pdf toe</value></data>
-  <data name="Intro_AddLineWindows" xml:space="preserve"><value>Kies foto’s van de pagina’s van een boek, of een pdf. Dino leest het voor.</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>Introductie opnieuw bekijken</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Doorgaan met de telefoonstem</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Klaar voor mijn kind</value></data>
@@ -197,7 +192,7 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>“{0}” van de plank halen?</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>De pagina’s, plaatjes en stemmen worden van deze telefoon verwijderd. Je kunt het gratis opnieuw toevoegen vanuit de winkel.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Weghalen</value></data>
-  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Toevoegen uit je eigen boeken</value></data>
+  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Meer boeken halen</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Klaar</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Downloaden</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>{0}% downloaden</value></data>
@@ -225,8 +220,6 @@
   <data name="PackStatus_FailedClick" xml:space="preserve"><value>Natuurlijke stemmen konden niet worden gedownload. Voorlezen met de stem van de telefoon. Klik om het opnieuw te proberen.</value></data>
   <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Download gestopt. Voorlezen met de stem van de telefoon. Klik om te downloaden.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Hoeveel is {0} plus {1}?</value></data>
-  <data name="Story_Add" xml:space="preserve"><value>Een verhaal toevoegen</value></data>
-  <data name="Story_Title" xml:space="preserve"><value>Titel</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Taal van het verhaal</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · herkend</value></data>
   <data name="Story_Translate" xml:space="preserve"><value>Vertalen naar mijn taal</value></data>
@@ -319,83 +312,15 @@
   <data name="Storyteller_Failed" xml:space="preserve"><value>De verteller-stemmen konden niet worden opgehaald</value></data>
   <data name="Storyteller_TryAgain" xml:space="preserve"><value>Opnieuw proberen</value></data>
   <!-- /Slice 115 -->
-  <data name="Add_Scan" xml:space="preserve"><value>Pagina’s scannen</value></data>
-  <data name="Add_ScanSub" xml:space="preserve"><value>Bewaart de foto’s van de pagina’s</value></data>
-  <data name="Add_Photos" xml:space="preserve"><value>Foto’s</value></data>
-  <data name="Add_PhotosSub" xml:space="preserve"><value>Kies foto’s van pagina’s</value></data>
-  <data name="Add_File" xml:space="preserve"><value>PDF of bestand</value></data>
-  <data name="Add_Type" xml:space="preserve"><value>Typen of plakken</value></data>
-  <data name="Add_TypeSub" xml:space="preserve"><value>Alleen tekst</value></data>
-  <data name="Add_Placeholder" xml:space="preserve"><value>Typ of plak een verhaal</value></data>
-  <data name="Add_CheckCast" xml:space="preserve"><value>Rolverdeling controleren</value></data>
-  <data name="Add_Save" xml:space="preserve"><value>Verhaal opslaan</value></data>
-  <data name="Add_PickerTitle" xml:space="preserve"><value>Kies een .txt-, .pdf- of .docx-bestand</value></data>
-  <data name="Add_PermissionTitle" xml:space="preserve"><value>Toestemming nodig</value></data>
-  <data name="Add_PermissionBody" xml:space="preserve"><value>Geef toegang tot bestanden om een document te lezen.</value></data>
-  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>Bestand te groot</value></data>
-  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>Dat bestand heeft {0} pagina’s; de limiet is {1}.</value></data>
-  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>Dat bestand kon niet worden gelezen</value></data>
-  <data name="Add_ReadFailedBody" xml:space="preserve"><value>Het bestand is mogelijk beschadigd of heeft een niet-ondersteunde indeling.</value></data>
-  <data name="Edit_Cover" xml:space="preserve"><value>Omslag</value></data>
-  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>Eerste pagina</value></data>
-  <data name="Edit_CoverColour" xml:space="preserve"><value>Kleur</value></data>
-  <data name="Edit_CoverPhoto" xml:space="preserve"><value>Foto</value></data>
-  <data name="Edit_Pages" xml:space="preserve"><value>Pagina’s</value></data>
   <data name="Wizard_Next" xml:space="preserve"><value>Volgende</value></data>
-  <data name="Wizard_StepText" xml:space="preserve"><value>Tekst</value></data>
-  <data name="Wizard_AddPages" xml:space="preserve"><value>Pagina’s toevoegen</value></data>
-  <data name="Wizard_DragHint" xml:space="preserve"><value>Houd een pagina vast en sleep hem om hem te verplaatsen</value></data>
-  <data name="Wizard_EmptyBody" xml:space="preserve"><value>Voeg de pagina’s van je verhaal toe: scan ze, kies foto’s, voeg een PDF of bestand toe, of typ de tekst. Zet de pagina’s daarna in de juiste volgorde.</value></data>
-  <data name="Wizard_PageN" xml:space="preserve"><value>Pagina {0}</value></data>
-  <data name="Wizard_PageMenu" xml:space="preserve"><value>Paginaopties</value></data>
-  <data name="Wizard_MenuRotate" xml:space="preserve"><value>Draaien</value></data>
-  <data name="Wizard_MenuCrop" xml:space="preserve"><value>Draaien of bijsnijden</value></data>
-  <data name="Wizard_MenuEditText" xml:space="preserve"><value>Tekst bewerken</value></data>
-  <data name="Wizard_NoTextShort" xml:space="preserve"><value>Geen tekst</value></data>
-  <data name="Wizard_NoText" xml:space="preserve"><value>Geen tekst gevonden op deze pagina</value></data>
-  <data name="Wizard_Reading" xml:space="preserve"><value>Pagina {0} van {1} wordt gelezen</value></data>
   <data name="Wait_GettingVoices" xml:space="preserve"><value>De stemmen worden klaargezet…</value></data>
   <data name="Wait_Stalled" xml:space="preserve"><value>De stem wordt nog klaargemaakt…</value></data>
-  <data name="Wait_ReadingPictures" xml:space="preserve"><value>De plaatjes worden gelezen…</value></data>
-  <data name="Wait_PageOf" xml:space="preserve"><value>Pagina {0} van {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Vertalen…</value></data>
   <data name="Wait_WaitingInternet" xml:space="preserve"><value>Wachten op internet</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingWifi" xml:space="preserve"><value>Wachten op wifi</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_Retry" xml:space="preserve"><value>Opnieuw</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0} is voor {1}% gedownload. Het gaat vanzelf verder zodra je weer online bent.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>{0} downloaden. Het gaat vanzelf verder zodra je weer online bent.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>Opslaan…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>Het boek wordt opgehaald…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>Back-up van de boeken maken…</value></data>
   <data name="Wait_Restoring" xml:space="preserve"><value>De boeken terugzetten…</value></data>
-  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Sommige pagina’s zijn niet gelezen</value></data>
-  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} pagina’s konden niet worden gelezen. Ze worden bewaard als plaatjes zonder tekst.</value></data>
-  <data name="Pictures_NoneTitle" xml:space="preserve"><value>Dit bestand heeft woorden maar geen plaatjes</value></data>
-  <data name="Pictures_NoneBody" xml:space="preserve"><value>Voeg als je wilt één plaatje toe aan elke pagina. Pagina's zonder plaatje worden als tekst voorgelezen.</value></data>
-  <data name="Pictures_PickAll" xml:space="preserve"><value>Kies plaatjes voor alle pagina's</value></data>
-  <data name="Pictures_PageN" xml:space="preserve"><value>PAGINA {0}</value></data>
-  <data name="Pictures_Change" xml:space="preserve"><value>Wijzigen</value></data>
-  <data name="Pictures_Add" xml:space="preserve"><value>Plaatje toevoegen</value></data>
-  <data name="Pictures_FoundEvery" xml:space="preserve"><value>Op elke pagina plaatjes gevonden</value></data>
-  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1} pagina's</value></data>
-  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1} pagina</value></data>
-  <data name="Pictures_NextCover" xml:space="preserve"><value>Volgende: omslag</value></data>
-  <data name="Wizard_CoverHint" xml:space="preserve"><value>Kies een pagina, een foto of een kleur voor het omslag.</value></data>
-  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Nog niets om voor te lezen</value></data>
-  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Voeg tekst toe aan minstens één pagina en sla dan op.</value></data>
-  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Het verhaal kon niet worden opgeslagen</value></data>
-  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Er is niets gewijzigd. Probeer het over een moment opnieuw.</value></data>
-  <data name="Regions_Helper" xml:space="preserve"><value>Tik op een vak om het te lezen of weg te laten.</value></data>
-  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>Je bewerkte tekst vervangen door de geselecteerde gebieden?</value></data>
-  <data name="Regions_ReplaceBody" xml:space="preserve"><value>Wat je op deze pagina hebt getypt, gaat verloren.</value></data>
-  <data name="Regions_Replace" xml:space="preserve"><value>Vervangen</value></data>
-  <data name="Regions_Keep" xml:space="preserve"><value>Bewaren</value></data>
-  <data name="Regions_BoxRead" xml:space="preserve"><value>Tekstvak, wordt gelezen</value></data>
-  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>Tekstvak, weggelaten</value></data>
-  <data name="Editor_Title" xml:space="preserve"><value>Draaien en bijsnijden</value></data>
-  <data name="Editor_RotateLeft" xml:space="preserve"><value>Naar links draaien</value></data>
-  <data name="Editor_RotateRight" xml:space="preserve"><value>Naar rechts draaien</value></data>
-  <data name="Editor_ResetCrop" xml:space="preserve"><value>Bijsnijden herstellen</value></data>
   <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>Alleen plaatjes</value></data>
   <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>Plaatjes + tekst</value></data>
   <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>Alleen tekst</value></data>
@@ -431,11 +356,6 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Dierengeluiden</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>De dieren zeggen af en toe “Knor!” of “Mê!”, in elk boek</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Dit boek heeft meer personages dan de {0} vertelfiguren die er zijn, dus sommige klinken hetzelfde. De verteller wordt nooit aan een personage gegeven.</value></data>
-  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>Vertaalpakketten downloaden?</value></data>
-  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>Om dit boek in {0} te tonen en voor te lezen, heeft Dino Reader deze vertaalpakketten nodig: {1}. Ze blijven op dit apparaat. Als je ze overslaat, blijft het boek in zijn eigen taal.</value></data>
-  <data name="TranslationPack_Download" xml:space="preserve"><value>Downloaden</value></data>
-  <data name="TranslationPack_Keep" xml:space="preserve"><value>Origineel houden</value></data>
-  <data name="TranslationPack_Failed" xml:space="preserve"><value>Het vertaalpakket kon niet worden opgehaald. Het boek blijft in zijn eigen taal.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Vertaalpakket voor {0} ophalen…</value></data>
   <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>In welke talen moeten de verhalen zijn?</value></data>
   <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Kies er maximaal twee extra. Je kind kan tijdens het lezen wisselen.</value></data>

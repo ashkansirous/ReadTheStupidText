@@ -41,7 +41,6 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 			shelf.Fallbacks = new DinoFallbackSink(services.GetRequiredService<UsageCounter>()); // Slice 273 part D: an unreadable book or shelf order is counted
 		}
 
-		new TranslationPackStore().NoteInstall(FirstRunState.IsNeeded(services.GetRequiredService<ISettingsStore>())); // before anything can build StoryTranslator: a fresh install gets no pack guess
 		// Contract: AppConfigClient raises Changed only on the main thread, so this handler may touch UI directly.
 		_config.Changed += (_, _) => ShowUpdateIfRequired();
 		PageAppearing += (_, page) => OnPageAppearing(page);
