@@ -58,6 +58,14 @@ and Decision 130. Read them first: they beat the classic tale.
 - Dialogue as `"...," said <Name>.` or `<Name> said.`, with the name spelled the same everywhere, so the
   caster gives each character their own voice. Give every character in a group a name (Pip, Pop, Pim).
 - Feelings are gentle: cross, grumpy, surprised, soggy, sorry. Never terrified, hurt or crying in pain.
+- **Farsi: who speaks comes first, then the whole quote, fixed when translating.** English splits a line
+  around its tag (`"I'm fine," said Pim, "what about it?"`); Farsi never does. The Farsi text says
+  «پیم گفت: «من خوبم. حالا چی؟»», never «من خوبم» پیم گفت «حالا چی؟». Same for quote-then-tag
+  (`"No!" said Wolf.` is «گرگ گفت: «نه!»»). The translator writes this order into the Farsi
+  translation; the reader must never reorder a line while reading (user, 2026-11-06: "apply this to
+  the translation time, not when reading"). Today's piece files map one English piece to one Farsi
+  piece and cannot hold the new order; until the translation format allows it, the app's read-time
+  regroup (`SpeakerFirst`, Slice 254) stands in, and replacing it is planned work.
 
 ## 4. Picture plan (one line per page)
 
