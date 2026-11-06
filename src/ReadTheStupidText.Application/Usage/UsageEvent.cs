@@ -23,6 +23,9 @@ namespace ReadTheStupidText.Application.Usage;
 /// <param name="Source">A <see cref="UsageSource"/>: what started a Windows read (Slice 140); the phone sends none.</param>
 /// <param name="Early">Whether the wait had a head start before the tap (Slice 139): the first translation or first sound was prepared while the person decided.</param>
 /// <param name="WaitStage">A <see cref="UsageWaitStage"/>: which wait the overlay showed (<c>wait_shown</c>, <c>wait_cancelled</c>; Slice 148).</param>
+/// <param name="FallbackArea">A <see cref="Usage.FallbackArea"/>: where a feature fell back (<c>fallback</c>; Slice 273).</param>
+/// <param name="FallbackReason">A <see cref="Usage.FallbackReason"/>: why it fell back (<c>fallback</c>; Slice 273).</param>
+/// <param name="Count">How many times that fallback happened in the session so far (<c>fallback</c>; Slice 273).</param>
 public sealed record UsageEvent(
     string Name,
     string Version,
@@ -41,7 +44,10 @@ public sealed record UsageEvent(
     string? DurationBucket = null,
     string? Source = null,
     bool? Early = null,
-    string? WaitStage = null);
+    string? WaitStage = null,
+    string? FallbackArea = null,
+    string? FallbackReason = null,
+    int? Count = null);
 
 /// <summary>The closed set of counts (the Worker's <c>RTST_EVENT_RULES</c> must match).</summary>
 public static class UsageEventName
@@ -54,6 +60,9 @@ public static class UsageEventName
     public const string Timing = "timing";
     public const string WaitShown = "wait_shown";
     public const string WaitCancelled = "wait_cancelled";
+
+    /// <summary>A feature fell back to something else (Slice 273); carries an area, a reason and how many times.</summary>
+    public const string Fallback = "fallback";
 }
 
 /// <summary>Whether a read speaks the text as it is or a translation of it.</summary>

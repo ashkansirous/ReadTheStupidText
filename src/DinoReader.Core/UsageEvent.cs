@@ -36,6 +36,9 @@ public static class UsageEventName
     // Slice 267: which voice a read used (detail: AudioPackUsage.ReadVoice), and how one pre-made audio pack download went (detail: started / done / failed:<kind>).
     public const string ReadVoice = "read_voice";
     public const string AudioPackDownload = "audio_pack_download";
+
+    // Slice 273: a feature fell back to something else (detail: FallbackUsage.Detail, "<area>:<reason>"; Count: how many times in the session).
+    public const string Fallback = "fallback";
 }
 
 /// <summary>Slice 228: the one rule for a demo read (the intro's read step), which is not a real reading of a book and so counts no book open, finish or (Slice 250) playback event.</summary>
@@ -224,8 +227,9 @@ public static class IntroSteps
 /// the UTC date, no finer. <see cref="SampleRate"/> is the share of launches counted when this was queued, so the Worker can weight each count by 1 / rate.
 /// <see cref="Detail"/> (Slice 134) is the event's one extra closed value (see <see cref="UsageDetail"/>), empty for the reader events; a count about no book has <see cref="UsageSource.None"/> as book and source.
 /// <see cref="Session"/> and <see cref="Seq"/> (Slice 250) are the per-launch random session id (32 hex digits, in memory and on disk only inside unsent queued counts, never reused for a later launch) and the count's order inside it; null for a count made before they existed.
+/// <see cref="Count"/> and <see cref="DeviceCount"/> (Slice 273) are two optional whole numbers: a <c>fallback</c> count's number of times in the session, and a <c>read_voice</c> count's pieces read by clips (<see cref="Count"/>) and by the device voice (<see cref="DeviceCount"/>); left out of the JSON when null.
 /// </summary>
-public sealed record UsageEvent(string Name, string Book, string Language, string Source, bool HasRecording, string Version, string Platform, string Day, double SampleRate, string Detail = "", string? Session = null, int? Seq = null)
+public sealed record UsageEvent(string Name, string Book, string Language, string Source, bool HasRecording, string Version, string Platform, string Day, double SampleRate, string Detail = "", string? Session = null, int? Seq = null, int? Count = null, int? DeviceCount = null)
 {
     private const int PackageIdLength = 32;
     private const string DayFormat = "yyyy-MM-dd";

@@ -1,4 +1,8 @@
 using DinoReader.Core;
+using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
+using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
+using FallbackTally = ReadTheStupidText.Application.Usage.FallbackTally;
+using FallbackTotal = ReadTheStupidText.Application.Usage.FallbackTotal;
 using UsageBuckets = ReadTheStupidText.Application.Usage.UsageBuckets;
 using UsageWaitStage = ReadTheStupidText.Application.Usage.UsageWaitStage;
 using ReadTheStupidText.Mobile.Shared.Waiting;
@@ -23,6 +27,8 @@ public sealed class UsageCounter
 	private const string LogName = "Dino Reader";
 
 	private readonly UsageQueueSender<UsageEvent> _sender;
+	private readonly FallbackTally _fallbacks = new(); // Slice 273: in memory, so a new launch starts at zero
+	private readonly Dictionary<(string Book, string Language), (Story Story, string? Language)> _fallbackStories = []; // the book and language behind each tally entry, for the flush's repeat rows
 	private readonly UsageSession _session = new(); // Slice 250: one per process start, in memory only; a cold start is a new session
 
 	/// <summary>The id of this launch's session (Slice 250), for crash and problem reports; kept in memory, and on disk only inside counts still waiting in the send queue.</summary>
@@ -63,20 +69,71 @@ public sealed class UsageCounter
 	/// Queues the count <paramref name="name"/> (a <see cref="UsageEventName"/>) about <paramref name="story"/>, unless counting is off for this launch.
 	/// <paramref name="language"/> is the language it was read in (Slice 173); null counts the book's own language.
 	/// </summary>
-	public void Record(string name, Story story, string detail = "", string? language = null)
+	public void Record(string name, Story story, string detail = "", string? language = null, int? count = null, int? deviceCount = null)
 	{
 #if DEBUG
 		// Slice 250: a Debug-only line per count asked for (before the sampling and switch checks), so a device flow can read the order of a session's counts and its one session id.
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] {name} {detail} session={_session.Id}");
+		// Slice 273: with the counts a read_voice or fallback carries.
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] {name} {detail} session={_session.Id}{(count is null ? "" : $" count={count}")}{(deviceCount is null ? "" : $" device={deviceCount}")}");
 #endif
-		RecordCore(name, story, detail, language);
+		RecordCore(name, story, detail, language, count, deviceCount);
 	}
 
-	private void RecordCore(string name, Story story, string detail, string? language) =>
+	/// <summary>
+	/// Slice 273: counts that a feature fell back (<paramref name="area"/> and <paramref name="reason"/> are <see cref="FallbackArea"/> and <see cref="FallbackReason"/> values) while reading <paramref name="story"/> in <paramref name="language"/>.
+	/// The first of each (area, reason, book, language) in this session is queued at once with count 1; if it happened again, <see cref="FlushAsync"/> queues one more row with the session total (<see cref="FallbackTally"/>).
+	/// </summary>
+	public void RecordFallback(Story story, string area, string reason, string? language = null)
+	{
+		string? detail = FallbackUsage.Detail(area, reason);
+		if (detail is null)
+		{
+			return;
+		}
+
+		string readIn = language ?? story.Language;
+		lock (_fallbackStories)
+		{
+			_fallbackStories[(story.Id, readIn)] = (story, language);
+		}
+
+		int times = _fallbacks.Note(area, reason, story.Id, readIn);
+		bool first = FallbackTally.IsFirst(times);
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] fallback {detail} times={times} {(first ? "queued" : "counted, sent with the session flush")}");
+#endif
+		if (first)
+		{
+			Record(UsageEventName.Fallback, story, detail, language, times);
+		}
+	}
+
+	// Slice 273: a fallback that happened again gets one more row with the session total, queued just before the flush.
+	private void QueueFallbackRepeats()
+	{
+		foreach (FallbackTotal total in _fallbacks.TakeRepeats())
+		{
+			(Story story, string? language) known;
+			lock (_fallbackStories)
+			{
+				if (!_fallbackStories.TryGetValue((total.Book, total.Language), out known))
+				{
+					continue;
+				}
+			}
+
+			if (FallbackUsage.Detail(total.Area, total.Reason) is { } detail)
+			{
+				Record(UsageEventName.Fallback, known.story, detail, known.language, total.Count);
+			}
+		}
+	}
+
+	private void RecordCore(string name, Story story, string detail, string? language, int? count = null, int? deviceCount = null) =>
 		_sender.Enqueue((sampleRate, now) =>
 		{
 			bool fromCatalogue = UsageEvent.ShelfId(story.SourceId) is { } id && StarterStories.IsCatalogueId(id);
-			return Stamp(UsageEvent.For(name, story, fromCatalogue, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now, detail, language));
+			return Stamp(UsageEvent.For(name, story, fromCatalogue, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now, detail, language) with { Count = count, DeviceCount = deviceCount });
 		});
 
 	// Slice 250: every count carries its session id and its place in the session, so it keeps them while it waits in the queue for a later launch.
@@ -108,5 +165,9 @@ public sealed class UsageCounter
 			sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now) is { } count ? Stamp(count) : null);
 
 	/// <summary>Sends what is queued, a batch at a time. Never throws; a batch that could not be delivered stays queued and is tried again after a growing pause. Calls overlap safely.</summary>
-	public Task FlushAsync() => _sender.FlushAsync();
+	public Task FlushAsync()
+	{
+		QueueFallbackRepeats();
+		return _sender.FlushAsync();
+	}
 }

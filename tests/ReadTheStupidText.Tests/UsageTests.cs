@@ -170,7 +170,7 @@ public class UsageEventsTests
         Assert.True(rules.Success);
         string[] inWorker = Regex.Matches(rules.Groups["body"].Value, @"^\s{2}(?<name>[a-z_]+):", RegexOptions.Multiline).Select(m => m.Groups["name"].Value).ToArray();
 
-        string[] inApp = [UsageEventName.AppOpened, UsageEventName.ReadStarted, UsageEventName.TranslateOffered, UsageEventName.TranslateChosen, UsageEventName.VoiceChanged, UsageEventName.Timing, UsageEventName.WaitShown, UsageEventName.WaitCancelled];
+        string[] inApp = [UsageEventName.AppOpened, UsageEventName.ReadStarted, UsageEventName.TranslateOffered, UsageEventName.TranslateChosen, UsageEventName.VoiceChanged, UsageEventName.Timing, UsageEventName.WaitShown, UsageEventName.WaitCancelled, UsageEventName.Fallback];
         Assert.Equal(inApp.Order(), inWorker.Order());
     }
 

@@ -1,3 +1,5 @@
+using ReadTheStupidText.Application.Usage;
+
 namespace DinoReader.Core;
 
 /// <summary>Why a read used the device voice instead of the pre-made audio (Slice 267). The closed list the Worker accepts after <c>device:</c>.</summary>
@@ -38,13 +40,25 @@ public enum PackFailureKind
 public static class AudioPackUsage
 {
     public const string Premade = "premade";
+    public const string PartialDetail = "partial";
     public const string DevicePrefix = "device:";
     public const string PackStarted = "started";
     public const string PackDone = "done";
     public const string PackFailedPrefix = "failed:";
 
-    /// <summary>The detail of a <c>read_voice</c> count: the pre-made audio when any piece had a clip, else the device voice and the reason.</summary>
-    public static string ReadVoice(bool anyClip, DeviceVoiceReason whyNone) => anyClip ? Premade : DevicePrefix + ReasonName(whyNone);
+    /// <summary>
+    /// What a read used (Slice 273): <c>premade</c> when every spoken piece had a clip, <c>partial</c> when some had one and the others fell back to the device voice (Slice 272: a read that
+    /// falls back from page 5 on is not a premade read), else <c>device:&lt;reason&gt;</c>. Carries the number of pieces read by clips and by the device voice.
+    /// The fallback reason of a partial read is <c>clip_missing</c> when more of its misses were missing files than hash mismatches, else <c>text_mismatch</c> (a tie, or no miss counted, says text_mismatch).
+    /// A read with no spoken piece at all is not a fallback, and neither is a read whose book has no pack to use (<c>no_pack</c>: an own book, or a book with no pack published in that language).
+    /// </summary>
+    public static ReadVoiceUse ReadVoice(int clipPieces, int devicePieces, DeviceVoiceReason whyNone, int textMismatches = 0, int filesMissing = 0) => (clipPieces, devicePieces) switch
+    {
+        (> 0, 0) => new ReadVoiceUse(Premade, clipPieces, devicePieces, null),
+        (> 0, _) => new ReadVoiceUse(PartialDetail, clipPieces, devicePieces, filesMissing > textMismatches ? FallbackReason.ClipMissing : FallbackReason.TextMismatch),
+        (0, 0) => new ReadVoiceUse(DevicePrefix + ReasonName(whyNone), clipPieces, devicePieces, null),
+        _ => new ReadVoiceUse(DevicePrefix + ReasonName(whyNone), clipPieces, devicePieces, whyNone == DeviceVoiceReason.NoPack ? null : ReasonName(whyNone)),
+    };
 
     /// <summary>The detail of a failed <c>audio_pack_download</c> count.</summary>
     public static string PackFailed(PackFailureKind kind) => PackFailedPrefix + KindName(kind);
@@ -69,3 +83,9 @@ public static class AudioPackUsage
         _ => "clip",
     };
 }
+
+/// <summary>
+/// The voice a read used (Slice 273): the <c>read_voice</c> detail, how many pieces were read by pre-made clips and by the device voice, and the <c>fallback</c> reason (a
+/// <see cref="FallbackReason"/> value) when some or all pieces fell back, else null.
+/// </summary>
+public sealed record ReadVoiceUse(string Detail, int ClipPieces, int DevicePieces, string? FallbackReason);

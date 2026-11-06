@@ -99,11 +99,26 @@ public sealed class SyncProgress<T>(Action<T> report) : IProgress<T>
 	public void Report(T value) => report(value);
 }
 
+/// <summary>The outcome of looking a piece's clip up (Slice 273): its file when found, else why not.</summary>
+public readonly record struct ClipLookup(string? Path, ClipMiss Miss);
+
 /// <summary>An installed pack: its folder, version and the manifest read from it.</summary>
 public sealed record InstalledPack(string Folder, int Version, PremadeAudio Audio)
 {
 	/// <summary>The clip file for the <paramref name="index"/>-th spoken piece when the pack has one for that position, its hash confirms <paramref name="text"/> and the file is on disk, else null (the piece is read by the device voice).</summary>
-	public string? PathOf(int index, string text) => Audio.ClipAt(index, text) is { } name && File.Exists(Path.Combine(Folder, name)) ? Path.Combine(Folder, name) : null;
+	public string? PathOf(int index, string text) => Find(index, text).Path;
+
+	/// <summary>Like <see cref="PathOf"/>, and when there is no clip says why: a hash that does not confirm the text (or no entry for the position) is <see cref="ClipMiss.TextMismatch"/>; an entry whose file is not on disk is <see cref="ClipMiss.FileMissing"/>.</summary>
+	public ClipLookup Find(int index, string text)
+	{
+		if (Audio.ClipAt(index, text) is not { } name)
+		{
+			return new ClipLookup(null, ClipMiss.TextMismatch);
+		}
+
+		string path = Path.Combine(Folder, name);
+		return File.Exists(path) ? new ClipLookup(path, ClipMiss.None) : new ClipLookup(null, ClipMiss.FileMissing);
+	}
 }
 
 /// <summary>
@@ -316,6 +331,35 @@ public sealed partial class AudioPackStore
 		{
 			DeleteFolder(BookFolder(bookId));
 			_log($"pack {bookId}: book removed, packs deleted");
+		}
+		finally
+		{
+			_gate.Release();
+		}
+	}
+
+	/// <summary>Deletes every installed version of one book language's pack (the Debug fixture hook uses it so a fixture install is never skipped as already installed).</summary>
+	public async Task RemoveAsync(string bookId, string language, CancellationToken cancel = default)
+	{
+		if (!IsSafe(bookId, language) || !Directory.Exists(BookFolder(bookId)))
+		{
+			return;
+		}
+
+		await _gate.WaitAsync(cancel);
+		try
+		{
+			foreach (string dir in Directory.EnumerateDirectories(BookFolder(bookId)))
+			{
+				Match match = VersionFolder.Match(Path.GetFileName(dir));
+				if (match.Success && match.Groups[1].Value == language)
+				{
+					DeleteFolder(dir);
+					_opened.TryRemove(dir, out _);
+				}
+			}
+
+			_log($"pack {bookId}/{language}: removed");
 		}
 		finally
 		{

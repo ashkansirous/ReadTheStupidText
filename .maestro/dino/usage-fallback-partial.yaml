@@ -1,0 +1,79 @@
+# Slice 273 part A (a new file: usage-playback-events.yaml is the Slice 250 order flow): a read that has some pre-made clips and falls back to the device voice for the rest is counted as `partial`, never `premade` (the Slice 272 fault), and sends one `fallback` count.
+# The install-audio-pack hook (Debug only) installs a fixture pack for the starter book through the real pack store, no live pack and no network: it maps clips by the table's order, so
+# some pieces find a clip and the others are read by the device voice: miss=text_mismatch stores a wrong hash for every third entry, so the read is partial with reason text_mismatch. The hook builds fixture packs only for translated languages (English is the starter's own language), so the flow uses Farsi. The Debug build writes a `[Usage] <name> <detail> ...` line for each count it is asked to record
+# (before the sampling and switch checks), so no Worker is needed and nothing is sent: the harness off switch stays on.
+# Fails against the old behaviour: the old read_voice detail was `premade` whenever any piece had a clip, so there is no `[Usage] read_voice partial` line and no `[Usage] fallback` line.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK install-audio-pack ok
+# No exact piece counts are asserted (the clip count for a Farsi read is an open question in the slice file).
+# expect-log: [Usage] read_voice partial
+# expect-log: [Usage] fallback premade_audio:text_mismatch times=1 queued
+# Keeps the app's data (no clearState), like premade-audio-plays; the install hook always replaces the book's pack for that language, and the flow ends with a complete Farsi fixture pack and English again.
+appId: uk.sirous.dinoreader.dbg
+name: A partly pre-made read is counted as partial and falls back once (Dino)
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# skip-first-run's lang is ignored once the first run is done, and the read uses the app's current language: set it to Farsi explicitly, then corrupt the Farsi pack.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# The hook removes any installed pack for the book and language first, so a pack left by an earlier run never makes this "already installed".
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: install-audio-pack
+      id: three-little-pigs
+      lang: fa
+      miss: text_mismatch
+# The install runs in the background (a few small files): give it a moment before the read looks the pack up.
+- extendedWaitUntil:
+    visible:
+      id: PackInstallNeverShown
+    timeout: 6000
+    optional: true
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+# The control describes itself as Pause while the read is Playing (the read's voice is counted the moment it starts).
+- extendedWaitUntil:
+    visible: "Pause|توقف"
+    timeout: 90000
+- assertVisible:
+    id: ReadingSurface
+# Put the Farsi pack back to a complete one (no miss: the install replaces the corrupted fixture), so later flows see the state they had before this flow.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: install-audio-pack
+      id: three-little-pigs
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: PackInstallNeverShown
+    timeout: 6000
+    optional: true
+# Keep the screens in English, so later flows that wait on English labels (Pause) still match.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: en

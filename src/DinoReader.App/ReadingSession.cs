@@ -163,7 +163,7 @@ public sealed class ReadingSession
 	public event Action<ReadingEventKind, ReadStopReason?>? Playback;
 
 	/// <summary>Slice 267: this session's read really started; the story and the voice detail (<c>premade</c>, or <c>device:&lt;reason&gt;</c>). Raised on the session itself, so only the page that owns it counts the read.</summary>
-	public event Action<Story, string>? VoiceUsed;
+	public event Action<Story, ReadVoiceUse>? VoiceUsed;
 
 	public event EventHandler? Failed;
 
@@ -562,7 +562,6 @@ public sealed class ReadingSession
 			return false;
 		}
 
-		CountVoiceOncePerBook(story, reading, segments, why);
 		segments = StopBeforeRecordedPage(story, segments, fromPosition, id);
 		if (segments.Count == 0 && _continueRead is { } cut && cut.ReadId == id)
 		{
@@ -570,6 +569,8 @@ public sealed class ReadingSession
 			_ = ContinueAtAsync(cut.Sentence);
 			return false;
 		}
+
+		CountVoiceOncePerBook(story, reading, segments, why); // Slice 273: counted on the pieces this read really speaks, after the recorded page cut off the rest
 
 		_readOrigin = segments.Count > 0 ? segments[0].SourceStart : fromPosition;
 		await AnimalClipFiles.EnsureAsync(AnimalClipRuns.KindsIn(segments));
@@ -586,6 +587,11 @@ public sealed class ReadingSession
 	// Slice 267: the voice a book is read with is counted once per book and reading language in this session, at the moment its read really starts.
 	private void CountVoiceOncePerBook(Story story, string reading, IReadOnlyList<VoicedSegment> segments, StoryVoicing.VoiceWhy why)
 	{
+		if (!StoryVoicing.SpeaksAnyPiece(segments))
+		{
+			return; // nothing is spoken, so nothing is counted and the once-per-book key stays free for a read that speaks
+		}
+
 		string key = $"{story.Id}|{reading}";
 		if (_voiceCountedFor == key)
 		{
@@ -593,10 +599,10 @@ public sealed class ReadingSession
 		}
 
 		_voiceCountedFor = key;
-		string detail = _voicing.ReportVoiceUsed(story, segments, why);
+		ReadVoiceUse use = _voicing.ReportVoiceUsed(story, segments, why);
 		try
 		{
-			VoiceUsed?.Invoke(story, detail);
+			VoiceUsed?.Invoke(story, use);
 		}
 		catch (Exception ex)
 		{
