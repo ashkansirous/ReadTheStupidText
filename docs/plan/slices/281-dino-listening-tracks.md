@@ -1,6 +1,6 @@
 # Slice 281 — Dino: one listening track per store book and language, served for smart speakers
 
-*Built 2026-11-06 (wave 2026-11-06, ledger wave 33), merged in two PRs: #876 (e74bb206: BookBuilder `build-listen`, `AudioPacks`, Worker route and tests) and a follow-up PR with the publish side (`dino-store.yml`, `publish-store-books.mjs` and tests, `ship-targets.test.mjs`, `.github/CLAUDE.md`, this file), which the coordinator's commit brief for #876 left out by mistake (it named only tools/, tests/ and worker/ for staging). Not yet verified live (first `dino-store` run after merge, a live track).* Server and build tooling only; the Android, iOS and Windows apps do not change.
+*Built 2026-11-06 (wave 2026-11-06, ledger wave 33), merged as PR #876 (e74bb206: BookBuilder `build-listen`, `AudioPacks`, Worker route and tests) and PR #878 (edec1d8e) with the publish side (`dino-store.yml`, `publish-store-books.mjs` and tests, `ship-targets.test.mjs`, `.github/CLAUDE.md`, this file), which the coordinator's commit brief for #876 left out by mistake (it named only tools/, tests/ and worker/ for staging). Not yet verified live (first `dino-store` run after merge, a live track).* Server and build tooling only; the Android, iOS and Windows apps do not change.
 
 **Depends on:** nothing. Slices 282 (Alexa) and 283 (Sonos) both depend on this one.
 **Touches:** `tools/DinoReader.BookBuilder/ListenTrack*.cs` (new), `tools/DinoReader.BookBuilder/Program.cs` (one new command),
@@ -99,7 +99,7 @@ Files in `D:/ReadTheStupidText-worktrees/reviews/` (outside the repo):
   the full file plays in a desktop player from start to end with page gaps audible.
 - Every live store book has a track for every language with a pack (compare `/api/stories` `audio` with the new fields).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-06)
 
 - `worker/CLAUDE.md` (already added by the slice): the listen route, `GET|HEAD /api/stories/<id>/listen/<lang>?v=<n>`, serves a track only when `meta.json` lists `listenSeconds` for that language and version; 404 is no-cache. (Slice 281: docs/plan/slices/281-dino-listening-tracks.md)
 - `.github/CLAUDE.md` (already added by the slice): a listening track is live only when the bucket's `meta.json` lists `listenSeconds` at that pack version; read once in `--live-state`, any read error but not-found fails the job before uploads; never overwrite a listed track; meta last. (Slice 281: docs/plan/slices/281-dino-listening-tracks.md)
