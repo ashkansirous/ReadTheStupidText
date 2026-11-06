@@ -406,7 +406,13 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		_services.GetRequiredService<GrownUpMode>().Leave();
 		await TryAsync(() => DismissGatesAsync(navigation));
 		await TryAsync(() => DismissIntroAsync(navigation));
-		await TryAsync(() => PopGrownUpPagesAsync(navigation));
+		bool popped = await TryAsync(() => PopGrownUpPagesAsync(navigation));
+#if DEBUG
+		if (popped)
+		{
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[GrownUps] closed on stop"); // the settings-page-survives-background flow's expect-log marker: the same process ran the pop (RTST-TEST tag)
+		}
+#endif
 	}
 
 	private static async Task DismissGatesAsync(NavigationPage navigation)
@@ -435,15 +441,17 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		}
 	}
 
-	private static async Task TryAsync(Func<Task> step)
+	private static async Task<bool> TryAsync(Func<Task> step)
 	{
 		try
 		{
 			await step();
+			return true;
 		}
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader grown-up reset step failed: {ex}");
+			return false;
 		}
 	}
 }

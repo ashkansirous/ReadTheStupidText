@@ -615,7 +615,8 @@ public static class ReadingSpeedCard
 
 	private static Label EndLabel(string text) => new() { Text = text, FontSize = EndLabelSize, TextColor = DinoTokens.Get(DinoTokens.Muted) };
 
-	private static Slider Slider(double current, Label value, ISpeechReader reader)
+	// The slider sits in a ContentView so the Unloaded subscription is on a MauiView, never on the slider itself (Slice 274: iOS KVO crash).
+	private static ContentView Slider(double current, Label value, ISpeechReader reader)
 	{
 		var slider = new Slider
 		{
@@ -628,13 +629,14 @@ public static class ReadingSpeedCard
 			ThumbColor = DinoTokens.Get(DinoTokens.Brand),
 		};
 		SemanticProperties.SetDescription(slider, Described(current));
-		WireSlider(slider, value, reader);
-		return slider;
+		var host = new ContentView { Content = slider };
+		WireSlider(slider, host, value, reader);
+		return host;
 	}
 
 	// A drag commits once when it ends; any other change (TalkBack, keyboard) commits at once. A drag that never reports its end
 	// (page torn down) is closed on Unloaded so the flag cannot stay set.
-	private static void WireSlider(Slider slider, Label value, ISpeechReader reader)
+	private static void WireSlider(Slider slider, ContentView host, Label value, ISpeechReader reader)
 	{
 		bool dragging = false;
 		slider.DragStarted += (_, _) => dragging = true;
@@ -643,7 +645,7 @@ public static class ReadingSpeedCard
 			dragging = false;
 			Commit(slider, reader);
 		};
-		slider.Unloaded += (_, _) =>
+		host.Unloaded += (_, _) =>
 		{
 			if (dragging)
 			{
