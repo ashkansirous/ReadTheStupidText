@@ -55,6 +55,8 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
    Portuguese, no spaces in Japanese, the right script direction and plural forms). Translate into the
    spoken, kid-friendly register of dino-storytelling section 3 (never literary: Farsi «بذار بیام تو», not
    «بگذار بیایم تو»), with that language's own sound words, repeated so a voice reads them long enough.
+   In Farsi the speaker comes first and the quote stays whole: «پیم گفت: «من خوبم. حالا چی؟»», never the
+   English split around the tag (dino-storytelling section 3); fix it in the translation, never at read time.
    Don't touch pieces whose English didn't change.
    No ALL-CAPS words in any language's story text (EMPTY, YUCKY): the voices may spell them letter by
    letter. Show loudness with lowercase, repetition and punctuation ("empty, empty, empty!"). (Freddy
