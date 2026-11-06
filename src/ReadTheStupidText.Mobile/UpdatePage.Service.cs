@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.AppConfig;
 using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Mobile.Shared.Usage;
@@ -32,6 +33,20 @@ public sealed class AppUpdate
     private AppUpdate()
     {
         _client.Changed += (_, _) => RaiseChanged();
+        _client.FallbackReported = ReportConfigFallback; // Slice 273 part D: this client fetches the same config as RtstUsage's and reports like it
+    }
+
+    // The sink is read when a fetch fails, not at construction: this instance is built before the app's services exist. Counting never throws.
+    private static void ReportConfigFallback(string reason)
+    {
+        try
+        {
+            IPlatformApplication.Current?.Services.GetService<IFallbackSink>()?.Report(FallbackArea.Config, reason);
+        }
+        catch (Exception)
+        {
+            // no-fallback: counting is best effort and never reports itself
+        }
     }
 
     /// <summary>Raised on the main thread when the update state may have changed (a fetch brought a different config, or a Debug test config was set).</summary>
@@ -73,6 +88,7 @@ public sealed class AppUpdate
         }
         catch (Exception ex) when (ex is InvalidOperationException or PlatformNotSupportedException)
         {
+            // no-fallback: logged only; the card shows again next time
             Debug.WriteLine($"{LogName} could not remember the closed update card: {ex.Message}");
         }
 
@@ -89,6 +105,7 @@ public sealed class AppUpdate
         }
         catch (Exception ex) when (ex is InvalidOperationException or FeatureNotSupportedException)
         {
+            // no-fallback: logged only; the store page is not opened
             Debug.WriteLine($"{LogName} could not open the store: {ex.Message}");
         }
     }
@@ -101,6 +118,7 @@ public sealed class AppUpdate
         }
         catch (Exception ex) when (ex is InvalidOperationException or PlatformNotSupportedException)
         {
+            // no-fallback: a dismissed-card preference that cannot be read counts as not dismissed
             return null;
         }
     }
@@ -114,6 +132,7 @@ public sealed class AppUpdate
         }
         catch (Exception ex)
         {
+            // no-fallback: a failing listener is logged so it cannot reach the dispatcher
             Debug.WriteLine($"{LogName}: an update change handler failed: {ex.Message}");
         }
     }

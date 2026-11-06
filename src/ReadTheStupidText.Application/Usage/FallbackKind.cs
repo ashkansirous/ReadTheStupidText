@@ -35,7 +35,17 @@ public static class FallbackArea
     /// <summary>The phone's language is not one the app is translated into; English is shown.</summary>
     public const string UiLanguage = "ui_language";
 
-    public static IReadOnlyList<string> All { get; } = [PremadeAudio, Speech, Translation, Pack, Ocr, Document, Store, Config, UiLanguage];
+    // Part D (platform gaps and the swallowed-error class).
+    /// <summary>A window could not be framed or placed as intended; the default frame or a corrected place is used.</summary>
+    public const string Window = "window";
+
+    /// <summary>iOS: a named font was not found; the system font stands in.</summary>
+    public const string Font = "font";
+
+    /// <summary>Dino Reader: the shelf's stored books or their order could not be read; the default is used.</summary>
+    public const string Library = "library";
+
+    public static IReadOnlyList<string> All { get; } = [PremadeAudio, Speech, Translation, Pack, Ocr, Document, Store, Config, UiLanguage, Window, Font, Library];
 }
 
 /// <summary>Why it fell back (Slice 273): the closed list of the <c>fallback</c> count's reason; the Worker's <c>FALLBACK_REASONS</c> must be the same list.</summary>
@@ -152,6 +162,52 @@ public static class FallbackReason
     // Part C, UI language (area "ui_language").
     public const string UiLanguageUnsupported = "ui_language_unsupported";
 
+    // Part D, platform gaps and swallowed errors.
+    /// <summary>Dino Reader (area "speech"): the storyteller pack would serve this language but is not installed; the stand-in voices cast it.</summary>
+    public const string StorytellerPackMissing = "storyteller_pack_missing";
+
+    /// <summary>Dino Reader (area "speech"): an animal's sound clip could not be played and was skipped.</summary>
+    public const string AnimalClipUnplayable = "animal_clip_unplayable";
+
+    /// <summary>Dino Reader (area "premade_audio"): a pre-made clip could not be played; the device voice read that piece.</summary>
+    public const string ClipUnplayable = "clip_unplayable";
+
+    /// <summary>Dino Reader (area "premade_audio"): a clip's playback speed could not be set; it plays at its own speed.</summary>
+    public const string ClipSpeedUnset = "clip_speed_unset";
+
+    /// <summary>The in-app update could not start; the store page opens instead.</summary>
+    public const string InAppUpdateFailed = "in_app_update_failed";
+
+    /// <summary>Windows (area "window"): the window frame could not be applied; the default frame stays.</summary>
+    public const string WindowFrameFailed = "window_frame_failed";
+
+    /// <summary>Windows (area "window"): the displays could not be listed; the primary and the window's own display are used.</summary>
+    public const string DisplaysUnreadable = "displays_unreadable";
+
+    /// <summary>Windows (area "window"): the remembered position was off the work area and the panel was moved onto it.</summary>
+    public const string SavedPositionMoved = "saved_position_moved";
+
+    /// <summary>Windows (area "window"): a monitor's DPI could not be read; 96 is used.</summary>
+    public const string DpiDefaulted = "dpi_defaulted";
+
+    /// <summary>iOS (area "font"): a named font was not found; the system font stands in.</summary>
+    public const string FontFallback = "font_fallback";
+
+    /// <summary>Dino Reader (area "library"): the stored shelf order could not be read; the default order is used.</summary>
+    public const string ShelfOrderUnreadable = "shelf_order_unreadable";
+
+    /// <summary>Dino Reader (area "library"): a stored book could not be read and is left off the shelf.</summary>
+    public const string StoryUnreadable = "story_unreadable";
+
+    /// <summary>Read The Stupid Text (area "translation"): the text's language could not be detected, so no translation is offered.</summary>
+    public const string LanguageDetectFailed = "language_detect_failed";
+
+    /// <summary>Read The Stupid Text (area "ocr"): a scanned page could not be read at all and is left unread.</summary>
+    public const string PageReadFailed = "page_read_failed";
+
+    /// <summary>Dino Reader (area "config"): the saved intro step could not be resumed and was cleared, so the intro starts again.</summary>
+    public const string IntroStateReset = "intro_state_reset";
+
     public static IReadOnlyList<string> All { get; } =
     [
         NoPack, PackFailed, TextMismatch, ClipMissing, Partial,
@@ -161,6 +217,8 @@ public static class FallbackReason
         PackSyncFailed, StorytellerFailed, RecastFailed, CatalogueFailed,
         OcrBuiltinNoPack, OcrBuiltinFailed, OcrPlatformFallback, OcrPackFailed, ScannerStartFailed,
         PdfImportFailed, StoreUnreachable, UpdateCheckFailed, ConfigCached, ConfigDefault, UiLanguageUnsupported,
+        StorytellerPackMissing, AnimalClipUnplayable, ClipUnplayable, ClipSpeedUnset, InAppUpdateFailed, WindowFrameFailed, DisplaysUnreadable, SavedPositionMoved, DpiDefaulted,
+        FontFallback, ShelfOrderUnreadable, StoryUnreadable, LanguageDetectFailed, PageReadFailed, IntroStateReset,
     ];
 }
 

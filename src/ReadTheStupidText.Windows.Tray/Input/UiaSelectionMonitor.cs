@@ -55,6 +55,7 @@ public sealed class UiaSelectionMonitor : ISelectionMonitor
             }
             catch (Exception ex)
             {
+                // no-fallback: tray code holds no usage sink (Slice 273 design); without UIA the person uses the hotkey, which cannot tell a failed UIA read from the ordinary copy path, so nothing is counted
                 _log.Error("UIA failed to register selection handler", error: ex);
             }
         });
@@ -129,6 +130,7 @@ public sealed class UiaSelectionMonitor : ISelectionMonitor
         }
         catch (Exception ex)
         {
+            // no-fallback: a log label only
             return $"<unknown source: {ex.GetType().Name}>";
         }
     }
@@ -156,6 +158,7 @@ public sealed class UiaSelectionMonitor : ISelectionMonitor
         }
         catch (Exception)
         {
+            // no-fallback: reported to the caller as Unavailable ("could not read"); nothing is swapped for a default
             // UI Automation cross-process calls can throw transiently (element
             // busy, gone, timeout). This is "couldn't read", not "no selection".
             return SelectionOutcome.Unavailable;

@@ -24,6 +24,7 @@ public sealed class FallbackReporter(IUsageRecorder recorder) : IFallbackSink
         }
         catch (Exception)
         {
+            // no-fallback: counting is best effort and never reports itself
             // Counting is best effort and a fallback is never instrumented from inside the usage code (no loop).
         }
     }
@@ -40,6 +41,7 @@ public sealed class FallbackReporter(IUsageRecorder recorder) : IFallbackSink
         }
         catch (Exception)
         {
+            // no-fallback: counting is best effort and never reports itself
             // Best effort, as in Report.
         }
     }

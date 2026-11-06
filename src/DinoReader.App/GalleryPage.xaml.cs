@@ -6,6 +6,8 @@ using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
+using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Shared.Waiting;
 
@@ -185,6 +187,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: logged only; the shelf stays as it was until the next refresh
 			Debug.WriteLine($"Dino Reader gallery refresh failed: {ex}");
 		}
 	}
@@ -216,6 +219,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		{
 			// A bad saved step must never crash-loop the app: drop it and carry on with the gallery.
 			Debug.WriteLine($"Dino Reader could not resume the intro: {ex}");
+			DinoFallbacks.Report(FallbackArea.Config, FallbackReason.IntroStateReset); // Slice 273 part D: the saved intro step is cleared and progress is lost
 			IntroState.Clear();
 		}
 		finally
@@ -254,6 +258,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			// no-fallback: logged only; the shelf stays as it was until the next refresh
 			Debug.WriteLine($"Dino Reader gallery refresh failed: {ex}");
 		}
 	});
@@ -327,6 +332,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			// no-fallback: logged only; the shelf stays as it was until the next refresh
 			Debug.WriteLine($"Dino Reader gallery refresh failed: {ex}");
 		}
 	}
@@ -709,6 +715,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: logged only; the ready sheet is simply not shown
 			Debug.WriteLine($"Dino Reader ready sheet failed: {ex}");
 		}
 		finally
@@ -727,6 +734,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: logged only; the narrator sample is not played
 			Debug.WriteLine($"Dino Reader narrator sample failed: {ex}");
 		}
 	}
@@ -845,6 +853,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
+			// no-fallback: logged only; the reorder mode stays as it was
 			Debug.WriteLine($"Dino Reader could not finish the reorder: {ex}"); // never unobserved out of the keyboard path
 		}
 		finally
@@ -869,6 +878,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			// no-fallback: the save fails and the person is told (false); no default is used
 			Debug.WriteLine($"Dino Reader could not save the shelf order: {ex}"); // the stored order stays as it was
 			return false;
 		}
@@ -987,6 +997,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
+			// no-fallback: logged only; the book switch keeps its old value
 			Debug.WriteLine($"Dino Reader could not save the book switch: {ex}");
 		}
 		finally
@@ -1110,6 +1121,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
+			// no-fallback: logged only; the shelf stays as it was
 			Debug.WriteLine($"Dino Reader could not refresh the shelf after the book sheet: {ex}");
 		}
 	}
@@ -1179,6 +1191,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			// no-fallback: logged only; the shelf stays as it was until the next refresh
 			Debug.WriteLine($"Dino Reader gallery refresh failed: {ex}");
 		}
 	}

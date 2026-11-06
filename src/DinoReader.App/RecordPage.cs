@@ -450,12 +450,14 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		}
 		catch (UnauthorizedAccessException ex)
 		{
+			// no-fallback: the person is told the microphone was refused; nothing is recorded
 			Debug.WriteLine($"Dino Reader was refused the microphone: {ex.Message}");
 			TryDelete(temp);
 			await DisplayAlertAsync(AppResources.Rec_NoMicTitle, AppResources.Rec_NoMic, AppResources.Common_Ok);
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: the person is told the recording failed; nothing is recorded
 			Debug.WriteLine($"Dino Reader could not start recording: {ex}");
 			TryDelete(temp);
 			await DisplayAlertAsync(AppResources.Rec_Title, AppResources.Rec_Failed, AppResources.Common_Ok);
@@ -518,6 +520,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: the person is told the recording failed; nothing is saved
 			Debug.WriteLine($"Dino Reader could not save the recording: {ex}");
 			await DisplayAlertAsync(AppResources.Rec_Title, AppResources.Rec_Failed, AppResources.Common_Ok);
 		}
@@ -560,6 +563,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		}
 		catch
 		{
+			// no-fallback: puts the story back as it was and rethrows
 			await _library.UpdateAsync(latest);
 			throw;
 		}
@@ -607,6 +611,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: the preview of a recording is not played; no other sound is used
 			Debug.WriteLine($"Dino Reader could not play the recording: {ex}");
 			return;
 		}
@@ -644,6 +649,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			// no-fallback: logged only; the recording stays
 			Debug.WriteLine($"Dino Reader could not delete the recording: {ex}");
 		}
 
@@ -670,6 +676,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			// no-fallback: temp file cleanup, nothing the person gets changes
 			Debug.WriteLine($"Dino Reader could not remove a temporary recording: {ex.Message}");
 		}
 	}

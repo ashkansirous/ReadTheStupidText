@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using ReadTheStupidText.Application.Input;
+using ReadTheStupidText.Application.Usage;
 using Windows.Graphics;
 
 namespace ReadTheStupidText_App;
@@ -17,6 +18,9 @@ internal static class WindowPlacer
     private const int EffectiveDpi = 0; // MDT_EFFECTIVE_DPI
     private const uint DefaultDpi = 96;
 
+    /// <summary>Slice 273 part D: where a placement that fell back is reported (once per session per kind, by the sink's own tally); set at start-up, a no-op until then.</summary>
+    public static IFallbackSink Fallbacks { get; set; } = NoFallbackSink.Instance;
+
     /// <summary>Sizes and places <paramref name="window"/>; <paramref name="saved"/> is the remembered top-left, if any.</summary>
     public static void Place(AppWindow window, double logicalWidth, double logicalHeight, double designWidth, int logicalMargin, PointInt32? saved)
     {
@@ -25,7 +29,13 @@ internal static class WindowPlacer
         double scale = PanelPlacement.ScaleForDpi(MonitorDpi(area));
         (int clientW, int clientH) = PanelPlacement.DeviceSize(logicalWidth, logicalHeight, designWidth, scale);
         window.ResizeClient(new SizeInt32(clientW, clientH));
-        MoveIfChanged(window, Target(window, saved, area.WorkArea, (int)(logicalMargin * scale)));
+        PointInt32 placed = Target(window, saved, area.WorkArea, (int)(logicalMargin * scale));
+        if (saved is { } wanted && !Contains(area.WorkArea, wanted))
+        {
+            Fallbacks.Report(FallbackArea.Window, FallbackReason.SavedPositionMoved); // Slice 273 part D: the remembered place is off the work area, so the panel is moved back onto it
+        }
+
+        MoveIfChanged(window, placed);
 
         // Crossing to a monitor with another DPI can make Windows rescale the window; size it again for that monitor.
         if (window.ClientSize.Width != clientW || window.ClientSize.Height != clientH)
@@ -34,6 +44,10 @@ internal static class WindowPlacer
             MoveIfChanged(window, Target(window, saved, area.WorkArea, (int)(logicalMargin * scale)));
         }
     }
+
+    // A saved point outside every display's work area (a monitor was unplugged) is the only real "moved" case; clamping a point that is on a display is ordinary.
+    private static bool Contains(RectInt32 work, PointInt32 point) =>
+        point.X >= work.X && point.X < work.X + work.Width && point.Y >= work.Y && point.Y < work.Y + work.Height;
 
     private static PointInt32 CornerOf(RectInt32 work) => new(work.X + work.Width - 1, work.Y + work.Height - 1);
 
@@ -59,7 +73,13 @@ internal static class WindowPlacer
     private static uint MonitorDpi(DisplayArea area)
     {
         IntPtr monitor = Win32Interop.GetMonitorFromDisplayId(area.DisplayId);
-        return GetDpiForMonitor(monitor, EffectiveDpi, out uint dpiX, out _) == 0 && dpiX != 0 ? dpiX : DefaultDpi;
+        if (GetDpiForMonitor(monitor, EffectiveDpi, out uint dpiX, out _) == 0 && dpiX != 0)
+        {
+            return dpiX;
+        }
+
+        Fallbacks.Report(FallbackArea.Window, FallbackReason.DpiDefaulted); // Slice 273 part D: the panel is sized for 96 dpi
+        return DefaultDpi;
     }
 
     [DllImport("shcore.dll")]

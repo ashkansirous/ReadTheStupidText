@@ -325,7 +325,7 @@ public sealed partial class MainWindow : Window
     {
         if (_languageWindow is null)
         {
-            _languageWindow = new LanguageWindow(_settings, _packSetup, _systemLog, RestartApp);
+            _languageWindow = new LanguageWindow(_settings, _packSetup, _systemLog, RestartApp, WindowPlacer.Fallbacks); // the app's one fallback sink (set at start-up)
             _languageWindow.Closed += (_, _) => _languageWindow = null;
         }
 
@@ -542,6 +542,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex)
         {
+            // no-fallback: logged and the person is told (notification); the change applies at the next launch
             _systemLog.Warning("restart for the language change failed", null, ex);
         }
 

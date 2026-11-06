@@ -41,6 +41,7 @@ public sealed class ForegroundWindowProbe : IForegroundWindow
         }
         catch (Exception)
         {
+            // no-fallback: only the process name is lost; the window title is still used for the log line
             // The process may have exited, or be protected; the title still helps.
             return string.Empty;
         }

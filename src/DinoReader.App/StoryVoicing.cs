@@ -656,7 +656,13 @@ public sealed class StoryVoicing
 	{
 		// A language Supertonic does not serve (Norwegian) has an empty pool until its pack installs, so no Supertonic id
 		// is saved into a cast that the pack's own voices would then not know (pinned stored voices are kept as they are).
-		IReadOnlyList<VoiceInfo> voices = InstalledVoices(language)
+		IReadOnlyList<VoiceInfo>? installed = InstalledVoices(language);
+		if (installed is null && KokoroVoiceTable.Serves(language))
+		{
+			_usage?.RecordGeneralFallback(ReadTheStupidText.Application.Usage.FallbackArea.Speech, ReadTheStupidText.Application.Usage.FallbackReason.StorytellerPackMissing, language); // Slice 273 part D: the storyteller pack would serve this language; the stand-in voices cast it
+		}
+
+		IReadOnlyList<VoiceInfo> voices = installed
 			?? (SupertonicVoiceTable.Serves(language) ? SupertonicVoiceTable.VoicesFor(language) : []);
 		IReadOnlyList<VoiceOption> options = voices.Select(ToOption).ToList();
 		CastText.RememberRoster(language, CharacterRoster.Adapt(CharacterRoster.For(language), options));
@@ -677,6 +683,7 @@ public sealed class StoryVoicing
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			_usage?.RecordGeneralFallback(ReadTheStupidText.Application.Usage.FallbackArea.Pack, ReadTheStupidText.Application.Usage.FallbackReason.PackFailed); // Slice 273 part D: the installed packs cannot be read, so none are used
 			return [];
 		}
 	}

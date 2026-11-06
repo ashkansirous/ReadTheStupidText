@@ -2,6 +2,8 @@ using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
+using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
+using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Shared.Waiting;
@@ -97,6 +99,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: logged, the person is told and the page closes; no default is used
 			Debug.WriteLine($"Dino Reader cast load failed: {ex}");
 			await DisplayAlertAsync(CastText.LoadFailedTitle, CastText.LoadFailedBody, CastText.Ok);
 			await Navigation.PopAsync();
@@ -339,6 +342,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: logged and the person is told; the saved story is drawn again
 			Debug.WriteLine($"Dino Reader cast refresh failed: {ex}");
 			Render();
 			await DisplayAlertAsync(CastText.LoadFailedTitle, CastText.LoadFailedBody, CastText.Ok);
@@ -354,6 +358,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: the save fails and the person is told; no default is used
 			Debug.WriteLine($"Dino Reader cast save failed: {ex}");
 			await DisplayAlertAsync(CastText.SaveFailedTitle, CastText.SaveFailedBody, CastText.Ok);
 			return false;
@@ -403,6 +408,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: counting is best effort and never reports itself
 			Debug.WriteLine($"Dino Reader could not count a voice change: {ex.Message}");
 		}
 	}
@@ -455,6 +461,10 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		{
 			// Housekeeping only: the cast screen still opens, with the stored voices as they are.
 			Debug.WriteLine($"Dino Reader narrator recast failed: {ex}");
+			if (_story is { } story)
+			{
+				_services.GetRequiredService<UsageCounter>().RecordFallback(story, FallbackArea.Pack, FallbackReason.RecastFailed, _castLanguage); // Slice 273 part D: the old voices stay
+			}
 		}
 	}
 
@@ -491,16 +501,19 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		}
 		catch (OperationCanceledException)
 		{
+			// no-fallback: cancellation of a voice preview
 			Debug.WriteLine("Dino Reader voice preview cancelled.");
 			StopIfCurrent(cancel);
 		}
 		catch (Exception ex) when (!cancel.IsCancellationRequested)
 		{
+			// no-fallback: the preview is not played and the person is told (failed); no other voice is used
 			Debug.WriteLine($"Dino Reader voice preview failed: {ex}");
 			failed = true;
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: an error after the preview was cancelled
 			Debug.WriteLine($"Dino Reader voice preview ended after cancel: {ex.Message}");
 		}
 		finally

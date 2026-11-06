@@ -169,6 +169,7 @@ public sealed class StorytellerDefault
 		}
 		catch
 		{
+			// no-fallback: releases the consent guard and rethrows
 			_consent.Abort();
 			throw;
 		}
@@ -185,6 +186,7 @@ public sealed class StorytellerDefault
 		}
 		catch (OperationCanceledException)
 		{
+			// no-fallback: the run ended before the loading line was due
 			return;
 		}
 
@@ -204,6 +206,7 @@ public sealed class StorytellerDefault
 		}
 		catch (PackCancelledByNotificationException)
 		{
+			// no-fallback: the person cancelled the download from its notification
 			// Slice 183: Cancel on the download notification is final; the partial file stays for a later start.
 			_consent.Clear();
 			SetStatus(StorytellerStatus.None);
@@ -403,6 +406,7 @@ public sealed class StorytellerDefault
 		}
 		catch (PackCancelledByNotificationException)
 		{
+			// no-fallback: the person cancelled the download from its notification
 			return; // Slice 183: Cancel on the notification; the installed voices keep reading
 		}
 
@@ -526,6 +530,7 @@ public sealed class StorytellerDefault
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			_fallbacks.Report(FallbackArea.Pack, FallbackReason.PackFailed); // Slice 273 part D: the installed packs cannot be read, so none are used
 			return [];
 		}
 	}

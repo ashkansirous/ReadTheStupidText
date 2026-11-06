@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Usage;
 
 namespace DinoReader;
@@ -16,7 +17,27 @@ public sealed class DinoFallbackSink(UsageCounter usage) : IFallbackSink
 		}
 		catch (Exception)
 		{
+			// no-fallback: counting is best effort and never reports itself
 			// Counting is best effort: it never changes what the fallback does.
+		}
+	}
+}
+
+/// <summary>
+/// Slice 273 part D: reports a fallback from static platform code (the store updater, the window frame, the font fallback) that has no sink of its own: it asks the app's services for the
+/// <see cref="UsageCounter"/> when it is called. Never throws and never changes what the fallback does.
+/// </summary>
+public static class DinoFallbacks
+{
+	public static void Report(string area, string reason, string? language = null)
+	{
+		try
+		{
+			IPlatformApplication.Current?.Services.GetService<UsageCounter>()?.RecordGeneralFallback(area, reason, language);
+		}
+		catch (Exception)
+		{
+			// no-fallback: counting is best effort and never reports itself
 		}
 	}
 }

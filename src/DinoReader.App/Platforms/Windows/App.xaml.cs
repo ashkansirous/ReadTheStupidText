@@ -39,6 +39,7 @@ public partial class App : MauiWinUIApplication
 		}
 		catch (Exception)
 		{
+			// no-fallback: the failure trace is best effort and never replaces the original failure
 			// the trace must never replace the original failure
 		}
 	}

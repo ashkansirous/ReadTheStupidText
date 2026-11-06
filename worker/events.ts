@@ -56,6 +56,8 @@ export const FALLBACK_AREAS = [
   "speech", "translation",
   // part C: packs, OCR, documents, store, config and UI language
   "pack", "ocr", "document", "store", "config", "ui_language",
+  // part D: platform gaps and the swallowed-error class
+  "window", "font", "library",
 ] as const;
 export const FALLBACK_REASONS = [
   "no_pack", "pack_failed", "text_mismatch", "clip_missing", "partial",
@@ -68,6 +70,9 @@ export const FALLBACK_REASONS = [
   "pack_sync_failed", "storyteller_failed", "recast_failed", "catalogue_failed",
   "ocr_builtin_no_pack", "ocr_builtin_failed", "ocr_platform_fallback", "ocr_pack_failed", "scanner_start_failed",
   "pdf_import_failed", "store_unreachable", "update_check_failed", "config_cached", "config_default", "ui_language_unsupported",
+  // part D
+  "storyteller_pack_missing", "animal_clip_unplayable", "clip_unplayable", "clip_speed_unset", "in_app_update_failed", "window_frame_failed", "displays_unreadable", "saved_position_moved", "dpi_defaulted",
+  "font_fallback", "shelf_order_unreadable", "story_unreadable", "language_detect_failed", "page_read_failed", "intro_state_reset",
 ] as const;
 const MAX_COUNT = 1_000_000;
 const NO_COUNT = -1;

@@ -4,6 +4,8 @@ using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
+using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
 using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Mobile.Shared.Crashes;
 
@@ -34,6 +36,11 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		ApplyRightToLeftFonts();
 		_services = services;
 		_config = config;
+		if (services.GetService<IStoryLibrary>() is FileStoryLibrary shelf)
+		{
+			shelf.Fallbacks = new DinoFallbackSink(services.GetRequiredService<UsageCounter>()); // Slice 273 part D: an unreadable book or shelf order is counted
+		}
+
 		new TranslationPackStore().NoteInstall(FirstRunState.IsNeeded(services.GetRequiredService<ISettingsStore>())); // before anything can build StoryTranslator: a fresh install gets no pack guess
 		// Contract: AppConfigClient raises Changed only on the main thread, so this handler may touch UI directly.
 		_config.Changed += (_, _) => ShowUpdateIfRequired();
@@ -105,6 +112,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: counting is best effort and never reports itself
 			Debug.WriteLine($"Dino Reader could not count the launch: {ex.Message}");
 		}
 	}
@@ -127,9 +135,14 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 			CancellationToken token = _bookUpdateCancel.Token;
 			await Task.Run(() => updater.RunIfDueAsync(token));
 		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: a cancelled check (the window stopped or a forced-update screen showed) is not a failed one
+		}
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader could not check for book updates: {ex.Message}");
+			ReportGeneralFallback(FallbackArea.Store, FallbackReason.UpdateCheckFailed); // Slice 273 part D: no update is staged this launch
 		}
 	}
 
@@ -148,6 +161,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader could not resume the shelf audio: {ex.Message}");
+			ReportGeneralFallback(FallbackArea.Pack, FallbackReason.PackSyncFailed); // Slice 273 part D: the shelf audio is tried again at the next check
 		}
 	}
 
@@ -173,9 +187,27 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 				}
 			}
 		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: a cancelled resume is not a failed one
+		}
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader could not resume its half-finished packs: {ex.Message}");
+			ReportGeneralFallback(FallbackArea.Pack, FallbackReason.PackSyncFailed); // Slice 273 part D: the half-finished packs stay as they are
+		}
+	}
+
+	// Slice 273 part D: a fallback about no book, from a launch-time catch. Counting never throws.
+	private void ReportGeneralFallback(string area, string reason)
+	{
+		try
+		{
+			_services.GetRequiredService<UsageCounter>().RecordGeneralFallback(area, reason, LanguageChoice.Current());
+		}
+		catch (Exception)
+		{
+			// no-fallback: counting is best effort and never reports itself
 		}
 	}
 
@@ -188,6 +220,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: counting is best effort and never reports itself
 			Debug.WriteLine($"Dino Reader could not send its counts: {ex.Message}");
 		}
 	}
@@ -370,6 +403,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		}
 		catch (OperationCanceledException)
 		{
+			// no-fallback: the away timer was cancelled
 			return;
 		}
 
@@ -394,6 +428,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: logged only; the pages stay as they were
 			Debug.WriteLine($"Dino Reader reset to gallery failed: {ex}");
 		}
 	}
@@ -450,6 +485,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: logged only; the next reset step is still tried
 			Debug.WriteLine($"Dino Reader grown-up reset step failed: {ex}");
 			return false;
 		}

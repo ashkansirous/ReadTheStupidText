@@ -7,6 +7,7 @@ using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Startup;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Activity;
 using ReadTheStupidText.Domain.Reading;
 using Microsoft.UI.Dispatching;
@@ -204,10 +205,21 @@ public sealed partial class ControlPanelWindow : Window
     // re-fit the window so nothing is clipped (the overflow fix).
     private void OnRootLoaded(object sender, RoutedEventArgs e)
     {
-        _measuredHeight = RootGrid.DesiredSize.Height;
+        MeasureContent();
         if (AppWindow.IsVisible)
         {
             PositionPanel();
+        }
+    }
+
+    // Remembers the laid-out content height. A measure that yields nothing usable never replaces an earlier one;
+    // placing before the first Loaded uses the fixed height, which is ordinary and not reported (Slice 273 part D).
+    private void MeasureContent()
+    {
+        double height = RootGrid.DesiredSize.Height;
+        if (height > 0)
+        {
+            _measuredHeight = height;
         }
     }
 
@@ -405,7 +417,7 @@ public sealed partial class ControlPanelWindow : Window
     private void RefitToContent()
     {
         RootGrid.UpdateLayout();
-        _measuredHeight = RootGrid.DesiredSize.Height;
+        MeasureContent();
         if (AppWindow.IsVisible)
         {
             PositionPanel();

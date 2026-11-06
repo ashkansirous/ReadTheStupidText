@@ -49,6 +49,7 @@ internal static class WindowTrace
 		}
 		catch (Exception)
 		{
+			// no-fallback: the trace file is best effort and never breaks the window
 			// a trace must never break the window
 		}
 	}
