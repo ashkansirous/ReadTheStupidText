@@ -131,7 +131,8 @@ public sealed class JoinAudioTests
             }
         }
 
-        Assert.True(checkedPacks >= 2 * 16, "every one of the 16 books has a Persian and an Arabic pack");
+        int bookCount = Books.All.Count();
+        Assert.True(checkedPacks >= 2 * bookCount, $"every one of the {bookCount} books has a Persian and an Arabic pack");
         Assert.Empty(problems);
     }
 }

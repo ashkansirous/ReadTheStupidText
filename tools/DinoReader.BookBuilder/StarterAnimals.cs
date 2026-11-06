@@ -9,7 +9,7 @@ namespace DinoReader.BookBuilder;
 /// A character stored as no animal (<see cref="CastMember.NotAnimal"/>) is cast by gender like a person in every language: the Ugly Duckling (really a swan) and his
 /// sister Dilly, whose rosters' duckling voices are one gender per language and would otherwise give him a girl's voice or her a boy's; and the Little Red
 /// Hen's Cat (she) and Duck (he), for the same reason with the kitten and duckling voices, and Town Mouse (she) and Country Mouse (he), with the mouse voice (the cost is that they make
-/// no meow, quack, squeak or rabbit sounds). (Goldilocks' Mama Bear is a bear again: her book suggests the mummy voice, a woman's in every language, Slice 156; so are Peter Rabbit and Flopsy, on the piglet and bee voices.) The stored animal also picks the voice, so giving them back their animal
+/// no meow, quack, squeak or rabbit sounds). (Goldilocks' Mama Bear is a bear again: her book suggests the mummy voice, a woman's in every language, Slice 156; so is Flopsy, on the piglet and bee voices.) The stored animal also picks the voice, so giving them back their animal
 /// would put a man's or the wrong-gender voice on them (56 gender tests fail): a separate "cast as a person" field is needed first (Slice 152 review).
 /// A book whose writer chose each voice (<see cref="StarterVoices"/>, Slice 156) needs none of this: the Little Red Hen's Cat and Duck and the Ugly Duckling and his sister Dilly have their animals back, and their gender comes from the book.
 /// </summary>
