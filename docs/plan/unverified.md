@@ -2,6 +2,20 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 274: Dino iPhone crash after leaving the grown-ups pages ([slice](slices/274-dino-ios-crash-after-leaving-parent-page.md))
+- The user's iPhone 8 Plus (iOS 16) on the next TestFlight build: grown-ups page (Settings > Reading speed), switch app, come back: no crash.
+- The next morning, `pull-crashes.mjs` and TestFlight crash feedback show no new report for that build.
+- The iOS cause is only likely (stack matches dotnet/maui PR #38662; the one symbolicated app frame is `_xamarin_release_managed_ref+0x64`). CI keeps no dSYM, so the stack cannot be symbolicated further.
+
+### Slice 273: Every fallback sends an analytics event, part A ([slice](slices/273-fallback-events-everywhere.md))
+- After release, `analytics-query` shows `fallback` rows from production builds and none from tests or CI.
+- A store book with a published pack that is not downloaded sends no `fallback` (part C).
+
+### Slice 272: Dino Farsi clips off by one ([slice](slices/272-dino-farsi-clips-off-by-one.md))
+- Emulator: `.maestro/dino/premade-audio-past-roar.yaml` (Lion and Mouse in Farsi, live v2 pack, page 5 plays the clip at piece 19) written but not run; needs the network and the published pack.
+- Item 4: after the merge's `dino-store.yml` run, every live pack's manifest lines up with the dump (the live-scan over the store).
+- iOS: the user checks Lion and Mouse in Farsi past page 5 on the next TestFlight build.
+
 ### Slice 270: Dino iPhone crash, player disposed in its finished callback ([slice](slices/270-dino-ios-player-disposed-in-finished-callback.md))
 - iOS: the TestFlight build on the user's iPhone, then `node tools/crashes/pull-crashes.mjs --app dino --kind managed` shows no new `FinishedPlaying` ObjectDisposedException.
 - Three or more pre-made clips in a row on a device (the emulator flow ends after clip 1).
