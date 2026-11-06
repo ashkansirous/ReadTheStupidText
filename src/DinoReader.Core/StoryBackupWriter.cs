@@ -61,6 +61,7 @@ public static class StoryBackupWriter
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or StoryPackageException)
         {
+            // no-fallback: the caller counts the story as not written and returns that count to the page
             return false;
         }
     }

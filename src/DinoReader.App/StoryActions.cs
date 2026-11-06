@@ -2,6 +2,8 @@ using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
+using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
+using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
 
 namespace DinoReader;
 
@@ -69,6 +71,7 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or FeatureNotSupportedException)
 		{
+			DinoFallbacks.Report(FallbackArea.Ui, FallbackReason.TapFailed); // Slice 275 part 3: the export did nothing
 			Debug.WriteLine($"Dino Reader export failed: {ex}");
 		}
 	}
@@ -116,6 +119,7 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			DinoFallbacks.Report(FallbackArea.Ui, FallbackReason.TapFailed); // Slice 275 part 3: the delete failed; the alert below tells the person
 			Debug.WriteLine($"Dino Reader delete failed: {ex}");
 			await page.DisplayAlertAsync(AppResources.Delete_FailedTitle, AppResources.Delete_FailedBody, AppResources.Common_Ok);
 			return DeleteOutcome.Failed;
@@ -130,13 +134,19 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 			return;
 		}
 
+		using var wait = new CancellationTokenSource(PackDeleteWait); // behind a long pack download the delete does not hold the screen: the sweep takes the folder later
 		try
 		{
-			using var wait = new CancellationTokenSource(PackDeleteWait); // behind a long pack download the delete does not hold the screen: the sweep takes the folder later
 			await services.GetRequiredService<AudioPackStore>().DeleteBookAsync(bookId, wait.Token);
+		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: a timeout or other cancellation, the sweep takes the folder later by design
+			Debug.WriteLine($"Dino Reader did not wait for the audio packs of {bookId} to be deleted; the sweep takes them.");
 		}
 		catch (Exception ex)
 		{
+			DinoFallbacks.Report(FallbackArea.Pack, FallbackReason.PackSyncFailed); // Slice 275 part 3: the next cold start's sweep takes the folder
 			Debug.WriteLine($"Dino Reader could not delete the audio packs of {bookId}: {ex.Message}");
 		}
 	}

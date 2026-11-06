@@ -19,6 +19,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
     // would add bookkeeping for no gain. It makes "exists, then write" atomic and stops two
     // saves of one story from interleaving.
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private int _orderUnreadableReported; // 1 once ShelfOrderUnreadable was reported by this library (Slice 275 part 3)
 
     /// <summary>Slice 273 part D: where a read of the shelf that fell back (a stored book or the shelf order that cannot be read) is reported; the app sets it at start-up, a no-op until then.</summary>
     public IFallbackSink Fallbacks { get; set; } = NoFallbackSink.Instance;
@@ -78,7 +79,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
     // Reported outside the gate, so counting never runs while a save waits.
     private void ReportOrderUnreadable(bool unreadable)
     {
-        if (unreadable)
+        if (unreadable && Interlocked.Exchange(ref _orderUnreadableReported, 1) == 0) // once per run for this order file, not on every list and delete
         {
             Fallbacks.Report(FallbackArea.Library, FallbackReason.ShelfOrderUnreadable); // Slice 273 part D: the default order is used
         }
@@ -103,15 +104,22 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
     {
         Directory.CreateDirectory(root);
         string temp = $"{OrderPath}.{Guid.NewGuid():N}{TempSuffix}";
-        bool unreadable;
+        bool unreadable = await MergeAndReplaceOrderAsync(ids, temp);
+        ReportOrderUnreadable(unreadable); // after the gate is released
+    }
+
+    // Holds the gate across read, merge and replace; returns whether the stored order could not be read (it is then replaced by the shown ids).
+    private async Task<bool> MergeAndReplaceOrderAsync(IReadOnlyList<string> ids, string temp)
+    {
         await _gate.WaitAsync(); // one gate across read, merge and replace, so a concurrent delete's forget cannot be undone by a stale merge
         try
         {
-            (IReadOnlyList<string> stored, unreadable) = await ReadOrderLockedAsync();
+            (IReadOnlyList<string> stored, bool unreadable) = await ReadOrderLockedAsync();
             IReadOnlyList<string> onDisk = [.. stored.Where(id => Directory.Exists(FolderOf(id)))]; // an id whose book is gone is dropped here, even if its delete could not rewrite the file
             IReadOnlyList<string> merged = ShelfOrder.MergeShown(onDisk, ids);
             await File.WriteAllTextAsync(temp, ShelfOrder.Serialize(merged));
             File.Move(temp, OrderPath, overwrite: true);
+            return unreadable;
         }
         catch
         {
@@ -123,8 +131,6 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         {
             _gate.Release();
         }
-
-        ReportOrderUnreadable(unreadable);
     }
 
     /// <summary>
@@ -232,22 +238,25 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
             return;
         }
 
+        bool orderUnreadable = false;
         await _gate.WaitAsync();
         try
         {
             DeleteFolderKeepingStoryJsonLast(FolderOf(id));
 
-            await TryForgetInOrderAsync(id);
+            orderUnreadable = await TryForgetInOrderAsync(id);
         }
         catch (DirectoryNotFoundException)
         {
             // no-fallback: the folder was already gone, which is what a delete wants
-            await TryForgetInOrderAsync(id); // the folder was already gone; the id may still be in the shelf order
+            orderUnreadable = await TryForgetInOrderAsync(id); // the folder was already gone; the id may still be in the shelf order
         }
         finally
         {
             _gate.Release();
         }
+
+        ReportOrderUnreadable(orderUnreadable);
     }
 
     private static void DeleteFolderKeepingStoryJsonLast(string folder)
@@ -280,16 +289,25 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
     }
 
     // The book folder is already gone here, so a locked shelf-order.json must not fail the delete: the next order save drops ids whose folder is gone.
-    private async Task TryForgetInOrderAsync(string id)
+    // Returns whether the order file was unreadable (not a list of ids), which the caller reports after releasing the gate.
+    private async Task<bool> TryForgetInOrderAsync(string id)
     {
         try
         {
             await ForgetInOrderAsync(id);
+            return false;
+        }
+        catch (ShelfOrderUnreadableException ex)
+        {
+            // no-fallback: reported by the caller once the gate is released (ReportOrderUnreadable); the file stays, the next order save replaces it
+            System.Diagnostics.Debug.WriteLine($"Dino Reader: the shelf order is unreadable, {id} was not dropped from it: {ex.Message}");
+            return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             // no-fallback: logged only; the next order save drops the id whose folder is gone
             System.Diagnostics.Debug.WriteLine($"Dino Reader: could not drop {id} from the shelf order: {ex.Message}");
+            return false;
         }
     }
 

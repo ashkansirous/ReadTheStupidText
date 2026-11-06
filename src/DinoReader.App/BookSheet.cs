@@ -1,6 +1,8 @@
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
+using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
+using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
 
 namespace DinoReader;
 
@@ -416,8 +418,14 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		{
 			await ReadNowAsync();
 		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: the sheet closed or navigation tore the read down, a normal user action
+			WindowTrace.Write("Dino keyboard: Read now from the sheet was cancelled");
+		}
 		catch (Exception ex)
 		{
+			DinoFallbacks.Report(FallbackArea.Ui, FallbackReason.TapFailed); // Slice 275 part 3: Read now did nothing
 			WindowTrace.Write($"Dino keyboard: Read now from the sheet failed: {ex.GetType().Name}: {ex.Message}");
 			System.Diagnostics.Debug.WriteLine($"Dino Reader: Read now from the sheet failed: {ex}");
 		}

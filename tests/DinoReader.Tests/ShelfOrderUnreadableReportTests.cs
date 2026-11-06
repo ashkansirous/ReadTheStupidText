@@ -61,4 +61,16 @@ public sealed class ShelfOrderUnreadableReportTests : IDisposable
         Assert.Equal([ids[1], ids[0]], (await library.ListAsync()).Select(s => s.Id));
         Assert.Single(sink.Reported);
     }
+
+    // Slice 275 part 3 (review finding 1): a delete over a corrupt order file counts it once and still deletes the book.
+    [Fact]
+    public async Task DeletingABookOverACorruptOrderFileReportsOnceAndStillDeletes()
+    {
+        (FileStoryLibrary library, ListSink sink, string[] ids) = await ShelfWithCorruptOrderAsync();
+
+        await library.DeleteAsync(ids[0]);
+
+        Assert.Equal([(FallbackArea.Library, FallbackReason.ShelfOrderUnreadable)], sink.Reported);
+        Assert.Null(await library.GetAsync(ids[0]));
+    }
 }

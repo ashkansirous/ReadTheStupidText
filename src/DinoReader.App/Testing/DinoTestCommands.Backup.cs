@@ -30,6 +30,7 @@ internal static partial class DinoTestCommands
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: Debug-only test hook; the fault is written to the hook log
 			Log($"{BackupRecordingsName} fault {TestHookLog.FaultSummary(ex)}");
 		}
 	}

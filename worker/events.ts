@@ -80,7 +80,7 @@ export const FALLBACK_REASONS = [
   // Slice 275
   "ocr_crop_degraded", "uia_unavailable", "store_failed", "preference_unsaved",
   // Slice 279
-  "tap_failed",
+  "tap_failed", "layout_failed",
 ] as const;
 const MAX_COUNT = 1_000_000;
 const NO_COUNT = -1;

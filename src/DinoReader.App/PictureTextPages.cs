@@ -221,7 +221,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		}
 		catch (Exception ex)
 		{
-			// The page was turned or redrawn while the card was scrolling: nothing left to scroll.
+			// no-fallback: the page was turned or redrawn while the card was scrolling; nothing left to scroll
 			Debug.WriteLine($"Dino Reader: text card scroll ended early: {ex.Message}");
 		}
 		finally

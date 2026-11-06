@@ -8,6 +8,8 @@ using PlatformTextMeasurer = DinoReader.WindowsTextMeasurer;
 using System.Diagnostics;
 using DinoReader.Core;
 using Microsoft.Maui.Controls.Shapes;
+using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
+using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
 
 namespace DinoReader;
 
@@ -359,6 +361,7 @@ public sealed class ReadingSurface : Border
 		}
 		catch (Exception ex)
 		{
+			DinoFallbacks.Report(FallbackArea.Ui, FallbackReason.LayoutFailed); // Slice 275 part 3: the page keeps its previous look, or shows the error text when there is none
 			LogLayoutFailure(ex);
 			return false;
 		}

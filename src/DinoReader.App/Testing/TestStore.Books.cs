@@ -44,6 +44,7 @@ internal static class TestBooks
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: Debug-only test hook; the failure goes back to the hook as its result
 			System.Diagnostics.Debug.WriteLine($"Dino Reader could not import the test books '{names}': {ex}");
 			return ex.Message;
 		}

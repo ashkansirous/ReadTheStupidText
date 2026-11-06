@@ -48,6 +48,7 @@ public static class StoryBackupReader
         }
         catch (Exception ex) when (ex is InvalidDataException or StoryPackageException)
         {
+            // no-fallback: rethrown as StoryBackupException, which the page shows
             throw new StoryBackupException("The file is not a valid backup.", ex);
         }
     }
@@ -112,6 +113,7 @@ public static class StoryBackupReader
         }
         catch (Exception ex) when (ex is StoryPackageException or StoryFormatException or InvalidDataException or IOException or UnauthorizedAccessException)
         {
+            // no-fallback: counted in the restore result (Damaged or TooLarge), which the page shows
             return budget.Exhausted ? Outcome.TooLarge : Outcome.Damaged;
         }
     }
@@ -181,6 +183,7 @@ public static class StoryBackupReader
         }
         catch (Exception ex)
         {
+            // no-fallback: the story is already restored; only the page's notification failed
             Debug.WriteLine($"Dino Reader restore: the added-story callback failed: {ex.Message}");
         }
     }
@@ -195,6 +198,7 @@ public static class StoryBackupReader
         }
         catch (InvalidOperationException)
         {
+            // no-fallback: the book is already on the shelf (counted as skipped) or the error becomes a StoryPackageException counted as damaged
             return await library.GetAsync(packaged.Id) is null
                 ? throw new StoryPackageException("The story's file on the shelf cannot be read.")
                 : null;

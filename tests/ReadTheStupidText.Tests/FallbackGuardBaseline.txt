@@ -1,16 +1,2 @@
 # Slice 273 part E: unmarked catches per file at the time of the guard. The count may only go down.
 # Format: <repo-relative path> <count>. Regenerate with FALLBACK_GUARD_WRITE_BASELINE=1.
-src/DinoReader.App/BookSheet.cs 1
-src/DinoReader.App/IntroWizardPage.Art.cs 1
-src/DinoReader.App/IntroWizardPage.cs 4
-src/DinoReader.App/PictureTextPages.cs 1
-src/DinoReader.App/ReadingClips.cs 2
-src/DinoReader.App/ReadingSurface.cs 1
-src/DinoReader.App/RecordingAudio.cs 1
-src/DinoReader.App/StoryActions.cs 3
-src/DinoReader.App/Testing/DinoTestCommands.Backup.cs 1
-src/DinoReader.App/Testing/DinoTestCommands.FirstBooks.cs 1
-src/DinoReader.App/Testing/TestStore.Books.cs 1
-src/DinoReader.Core/StoryBackupReader.cs 3
-src/DinoReader.Core/StoryBackupWriter.cs 1
-src/DinoReader.Core/StoryPackage.cs 1
