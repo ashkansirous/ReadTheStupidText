@@ -1,6 +1,6 @@
 # Slice 278 — Dino: store books only (no own books, no scanning, no translation, no voice engine, no voice pickers)
 
-*Part A built 2026-11-06 (wave 2026-11-06, merged as PR #859, 09e2e892), not yet verified on every platform (see Not yet verified below). Part B built 2026-11-06 (wave 2026-11-06, PR #863), not yet verified on iOS. Part C merged as PR #862 (a854c8ed).* Dino Reader only (Android, iOS and the Windows head, the same in the same parts). **Read The
+*Part A merged as PR #859 (09e2e892), not yet verified on every platform (see Not yet verified below). Part B merged as PR #863 (61fa6307), not yet verified on iOS. Part C merged as PR #862 (a854c8ed). All three parts built.* Dino Reader only (Android, iOS and the Windows head, the same in the same parts). **Read The
 Stupid Text is not touched**, and neither is any shared code it uses (`src/ReadTheStupidText.Mobile.Shared`,
 `src/ReadTheStupidText.Infrastructure`, `src/ReadTheStupidText.Documents`, `src/ReadTheStupidText.Mobile`). Dino
 simply stops calling the shared pieces it no longer needs.
@@ -235,7 +235,7 @@ For `src/DinoReader.App/CLAUDE.md`:
 - A Release build downloads no voice pack.
 - The Windows MSIX still packages (`APPX1101`) and the iOS app still links: project settings unchanged, not built beyond a compile.
 
-#### For CLAUDE.md (src/DinoReader.App/CLAUDE.md)
+#### For CLAUDE.md (lifted 2026-11-06, into src/DinoReader.App/CLAUDE.md)
 
 - Dino never resolves `ISpeechReader`, `VoicePackInstaller`, `IVoicePackService` or `IVoiceModelService`; `NoSpeechEngineTests` scans `src/DinoReader.App` for them. (Slice 278: docs/plan/slices/278-dino-store-books-only.md)
 - `MauiProgram.cs` registers `InertLanguageNotifier` after `AddMobileSharedServices`, so the shared voice installer never starts on a language change. (Slice 278: docs/plan/slices/278-dino-store-books-only.md)
