@@ -1,9 +1,17 @@
 # Slice 277 — Dino: a store book is published only when every sentence in every language has pre-made audio
 
-*Planned 2026-11-06.* Dino Reader only. Read The Stupid Text is not touched.
+*In progress (wave 2026-11-06), draft PR.* Dino Reader only. Read The Stupid Text is not touched.
+
+**Claim notes (wave 30, night 2026-11-06-1250):** a `check-audio [<stem>...]` command already exists (Slice 272,
+`tools/DinoReader.BookBuilder/AudioAlignment.cs`, `Program.cs:22`); A1 extends it (missing packs, stale clips,
+zero-length clips, every offered language) instead of adding a second command. This slice also takes Slice 275
+item 6 (commit the live-store alignment scan as a `check-audio --live` mode; `reviews/lion-fa/live_scan.py`) and
+item 8 (Goldilocks: live v12 vs repo v11; make store and repo match). Clip generation (`tools/premade-audio`,
+Gemini TTS, `GEMINI_API_KEY`) is limited by its daily quota: gaps it cannot fill tonight are recorded here, not
+faked.
 
 **Depends on:** none. **Blocks:** Slice 278 part B (the voice engine leaves the app, so nothing may be missing).
-**Touches:** `tools/DinoReader.BookBuilder/**` (a new `AudioCoverage.cs`, `StoreValidation.cs`, `BookCommands.cs`, `Program.cs`), `tools/upload-store-story.ps1`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/workflows/dino-store.yml`, `tests/DinoReader.Tests/**` (BookBuilder tests, new files), `tools/premade-audio/**` (only to fill gaps the first report finds), `.claude/skills/create-dino-story/SKILL.md`, `src/DinoReader.App/CLAUDE.md`, this file.
+**Touches:** `tools/DinoReader.BookBuilder/**` (`AudioAlignment.cs`, a new `AudioCoverage.cs` if useful, `StoreValidation.cs`, `BookCommands.cs`, `Program.cs`), `content/dino/goldilocks/**` (275 item 8), `content/dino/*/audio/**` (only to fill gaps A5 finds), `reviews/lion-fa/live_scan.py` (read only, 275 item 6), `tools/upload-store-story.ps1`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/workflows/dino-store.yml`, `tests/DinoReader.Tests/**` (BookBuilder tests, new files), `tools/premade-audio/**` (only to fill gaps the first report finds), `.claude/skills/create-dino-story/SKILL.md`, `src/DinoReader.App/CLAUDE.md`, this file.
 
 ## Why
 
