@@ -7,12 +7,15 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - The next morning, `pull-crashes.mjs` and TestFlight crash feedback show no new report for that build.
 - The iOS cause is only likely (stack matches dotnet/maui PR #38662; the one symbolicated app frame is `_xamarin_release_managed_ref+0x64`). CI keeps no dSYM, so the stack cannot be symbolicated further.
 
-### Slice 273: Every fallback sends an analytics event, parts A-C ([slice](slices/273-fallback-events-everywhere.md))
+### Slice 273: Every fallback sends an analytics event, parts A-E ([slice](slices/273-fallback-events-everywhere.md))
 - After release, `analytics-query` shows `fallback` rows from production builds and none from tests or CI.
 - A store book with a published pack that is not downloaded sends no `fallback` (part C).
 - Part B, Windows rows not run on the VM: Infrastructure composite `neural_not_ready`/`neural_unavailable`/`stream_unavailable`, `engine_build_failed`, and the `UsageService.BeforeSend` flush.
 - Part B, iPhone rows compiled only: `AvSpeechReader` `phone_language_missing`, `IosSupertonic` `engine_build_failed`, iOS ML Kit `translation_pack_failed`.
 - Part B production rows: check with `analytics-query` after release.
+- Part D, Windows rows not forced on the VM: `saved_position_moved`, `displays_unreadable`, `dpi_defaulted`, `window_frame_failed`, LanguageWindow `pack_failed`.
+- Part D, iOS rows compiled only: `font_fallback`, `storyteller_pack_missing`, clip rows.
+- Part D production rows: check with `analytics-query` after release.
 - Part C, Windows rows not run on the VM: voice pack `pack_failed`, `WindowsOcrTextExtractor` `ocr_platform_fallback`.
 - Part C, iPhone rows compiled only: scanner, OCR, config hold.
 - Part C, `config_cached`/`config_default` and `ui_language` rows on a real first launch.

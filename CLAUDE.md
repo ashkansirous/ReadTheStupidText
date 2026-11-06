@@ -208,3 +208,7 @@ so a failing test blocks the release.
 - The backend/infrastructure returns structured data; the UI composes any
   user-facing copy.
 - Every method does one thing; 3–30 lines.
+- A `catch` in `src/` either reports a fallback (a call with a `FallbackArea.` argument) or has
+  `// no-fallback: <reason>` as the first line inside its brace. `FallbackGuardTests` enforces it with a
+  per-file baseline, `tests/ReadTheStupidText.Tests/FallbackGuardBaseline.txt`, that may only go down: lower a
+  file's number when you mark or instrument a catch. (Slice 273: docs/plan/slices/273-fallback-events-everywhere.md)
