@@ -20,6 +20,7 @@ public partial class App : Microsoft.Maui.Controls.Application
 	{
 		// Before InitializeComponent: pages read their strings while they are inflated.
 		UiCulture.Apply(UiCulture.Resolve(settings.Language, CultureInfo.CurrentUICulture));
+		ReportUnsupportedUiLanguage(services, settings.Language); // Slice 273 part C: the one start-up decision
 		InitializeComponent();
 
 		_services = services;
@@ -98,6 +99,26 @@ public partial class App : Microsoft.Maui.Controls.Application
 	// Voice data may have been installed in system settings while the app was away.
 	private void InvalidatePhoneVoices() =>
 		PlatformVoiceAvailability.Invalidate(_services.GetRequiredService<IPlatformServices>());
+
+	// Slice 273 part C: neither the stored nor the device language is supported, so English is shown. Counted once per launch, here, never from the pure Resolve.
+	// Counting is best effort: building the sink chain or reporting must never stop the app starting.
+	private static void ReportUnsupportedUiLanguage(IServiceProvider services, string? storedCode)
+	{
+		if (!UiCulture.FallsBackToEnglish(storedCode, CultureInfo.CurrentUICulture))
+		{
+			return;
+		}
+
+		try
+		{
+			var sink = services.GetService<ReadTheStupidText.Application.Usage.IFallbackSink>() ?? ReadTheStupidText.Application.Usage.NoFallbackSink.Instance;
+			sink.Report(ReadTheStupidText.Application.Usage.FallbackArea.UiLanguage, ReadTheStupidText.Application.Usage.FallbackReason.UiLanguageUnsupported);
+		}
+		catch (Exception)
+		{
+			// Counting is best effort.
+		}
+	}
 
 	// A finished pack install changes what can read; ask the phone again.
 	private void OnInstallerChanged(object? sender, EventArgs e)

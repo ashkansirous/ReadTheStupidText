@@ -34,8 +34,12 @@ public sealed class UsageCounter
 	/// <summary>The id of this launch's session (Slice 250), for crash and problem reports; kept in memory, and on disk only inside counts still waiting in the send queue.</summary>
 	public string SessionId => _session.Id;
 
+	private readonly ConfigFallbackHold _configHold; // Slice 273 part C: the default config has telemetry off, so config and first-launch ui_language fallbacks wait for the first real one
+
 	public UsageCounter(AppConfigClient config)
 	{
+		_configHold = new ConfigFallbackHold(() => config.HasCopy, (area, reason, language) => RecordGeneralFallback(area, reason, language));
+		config.Fetched += (_, _) => _configHold.Release(); // every successful fetch, not only a changed config
 		_sender = new UsageQueueSender<UsageEvent>(new UsageQueueOptions<UsageEvent>(
 			StoreClient.BaseAddress, EnabledKey, QueueKey, LogName, UsageBatch.MaxEvents,
 			() => (config.Current.Telemetry.Enabled, config.Current.Telemetry.SampleRate),
@@ -115,9 +119,9 @@ public sealed class UsageCounter
 	public void RecordGeneralFallback(string area, string reason, string? language = null)
 	{
 		string? detail = FallbackUsage.Detail(area, reason);
-		if (detail is null)
+		if (detail is null || _configHold.TryHold(area, reason, language))
 		{
-			return;
+			return; // Slice 273 part C: a config or first-launch ui_language fallback waits for a real config; the hold sends it back through here
 		}
 
 		string readIn = NormalisedLanguage(language);

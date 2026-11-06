@@ -29,6 +29,20 @@ public sealed class AppConfigClient
 		remove => _client.Changed -= value;
 	}
 
+	/// <summary>Slice 273 part C: raised after every successful fetch (changed or not); a handler must only queue work.</summary>
+	public event EventHandler? Fetched
+	{
+		add => _client.Fetched += value;
+		remove => _client.Fetched -= value;
+	}
+
+	/// <summary>Slice 273 part C: told<see cref="ReadTheStupidText.Application.Usage.FallbackReason.ConfigCached"/> or <see cref="ReadTheStupidText.Application.Usage.FallbackReason.ConfigDefault"/> when a fetch failed; set by the app once its usage sink exists.</summary>
+	public Action<string>? FallbackReported
+	{
+		get => _client.FallbackReported;
+		set => _client.FallbackReported = value;
+	}
+
 	/// <summary>The config in force: the last good copy, else the safe default.</summary>
 	public AppConfig Current => _client.Current;
 

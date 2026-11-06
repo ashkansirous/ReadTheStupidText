@@ -18,6 +18,7 @@ public static partial class MobileSharedServices
 	public static MauiAppBuilder AddMobileSharedServices(this MauiAppBuilder builder)
 	{
 		RegisterPlatformServices(builder.Services);
+		ReportScannerFallbacks(builder.Services);
 		builder.Services.AddSingleton<IVoicePackService, MobileVoicePackService>();
 		builder.Services.AddSingleton<IVoiceModelService, MobileVoiceModelService>();
 		builder.Services.AddSingleton<IPackUpdateNetwork, MauiPackUpdateNetwork>();
@@ -36,6 +37,9 @@ public static partial class MobileSharedServices
 	// framework listed in the csproj without a Platforms/<OS> implementation fails to compile
 	// instead of failing at runtime (Slice 44, Decision 69).
 	private static partial void RegisterPlatformServices(IServiceCollection services);
+
+	// Slice 273 part C: the platform's document scanner (Android and iOS register one; Windows none) is wrapped so a scanner that cannot start is counted as a fallback.
+	private static void ReportScannerFallbacks(IServiceCollection services) => DocumentScannerRegistration.ReportFallbacks(services);
 
 	private static ISpeechReader CreateSpeechReader(IServiceProvider services)
 	{

@@ -360,6 +360,40 @@ public class VoicePackSetupTests
         Assert.Equal(1, packs.DownloadCalls);
     }
 
+    private sealed class CountingSink : ReadTheStupidText.Application.Usage.IFallbackSink
+    {
+        public List<(string Area, string Reason, string? Language)> Reports { get; } = [];
+
+        public void Report(string area, string reason, string? language = null) => Reports.Add((area, reason, language));
+    }
+
+    [Theory]
+    [InlineData(PackDownloadResult.Failed)]
+    [InlineData(PackDownloadResult.Offline)]
+    [InlineData(PackDownloadResult.HashMismatch)]
+    public async Task A_voice_pack_that_could_not_be_installed_is_reported_as_a_pack_fallback_in_its_language(PackDownloadResult result)
+    {
+        var sink = new CountingSink();
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack]), DownloadResult = result };
+        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), new FakeSettings { Language = "fa" }, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, new MemoryVoiceCancelStore(), sink);
+
+        await installer.StartAsync(PackStartReason.User);
+
+        Assert.Equal(("pack", "pack_failed", "fa"), Assert.Single(sink.Reports));
+    }
+
+    [Fact]
+    public async Task A_voice_pack_that_installs_reports_no_fallback()
+    {
+        var sink = new CountingSink();
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [EnglishPack]) };
+        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), new FakeSettings { Language = "en" }, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), null, new MemoryVoiceCancelStore(), sink);
+
+        await installer.StartAsync(PackStartReason.User);
+
+        Assert.Empty(sink.Reports);
+    }
+
     private static async Task WaitUntilAsync(Func<bool> condition)
     {
         DateTime deadline = DateTime.UtcNow.AddSeconds(10);

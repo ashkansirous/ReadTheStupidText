@@ -55,8 +55,8 @@ public partial class App : Application
         services.AddSingleton<LocalSettingsStore>();
         services.AddSingleton<ISettingsStore>(sp => sp.GetRequiredService<LocalSettingsStore>());
         services.AddSingleton<ILanguageChangeNotifier>(sp => sp.GetRequiredService<LocalSettingsStore>());
-        services.AddSingleton<IVoicePackService>(_ => new WindowsVoicePackService(
-            PackFolders.PacksRoot(), new HttpClient(), NetworkInterface.GetIsNetworkAvailable));
+        services.AddSingleton<IVoicePackService>(sp => new WindowsVoicePackService(
+            PackFolders.PacksRoot(), new HttpClient(), NetworkInterface.GetIsNetworkAvailable, fallbacks: sp.GetRequiredService<IFallbackSink>())); // Slice 273 part C
         services.AddSingleton<IVoiceModelService, PackVoiceModelService>();
         services.AddSingleton<VoicePackSetup>();
         services.AddSingleton<SpeechReader>();

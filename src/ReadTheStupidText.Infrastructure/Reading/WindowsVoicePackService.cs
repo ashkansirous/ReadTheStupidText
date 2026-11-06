@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 
 namespace ReadTheStupidText.Infrastructure.Reading;
 
@@ -32,11 +33,13 @@ public sealed class WindowsVoicePackService : IVoicePackService
     private readonly Func<int, TimeSpan> _backoff;
     private IReadOnlyList<PackInfo>? _catalog;
     private DateTime _catalogFetchedUtc;
+    private readonly IFallbackSink _fallbacks; // Slice 273 part C
 
     public WindowsVoicePackService(
         string packsRoot, HttpClient http, Func<bool> isNetworkAvailable,
-        string catalogUrl = PackConstants.CatalogUrl, TimeSpan? stallTimeout = null, Func<int, TimeSpan>? backoff = null)
+        string catalogUrl = PackConstants.CatalogUrl, TimeSpan? stallTimeout = null, Func<int, TimeSpan>? backoff = null, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance;
         _packsRoot = packsRoot;
         _http = http;
         _isNetworkAvailable = isNetworkAvailable;
@@ -121,8 +124,34 @@ public sealed class WindowsVoicePackService : IVoicePackService
         InstalledVoicePack? installed = LoadInstalled(packId);
 
         // Hash, extract and copy are heavy: keep all of it off the calling (UI) thread.
-        return await Task.Run(() => DownloadOffCallerAsync(packId, installed, progress, cancellationToken), cancellationToken).ConfigureAwait(false);
+        PackDownloadResult result = await Task.Run(() => DownloadOffCallerAsync(packId, installed, progress, cancellationToken), cancellationToken).ConfigureAwait(false);
+        if (result != PackDownloadResult.Ok)
+        {
+            ReportVoicePackFailed(packId); // Slice 273 part C: the pack could not be installed; the Windows voice stays
+        }
+
+        return result;
     }
+
+    // Voice packs only: an OCR or translation pack's failure is reported by its own area (translation_pack_missing, ocr_*), so a second row would count it twice.
+    // The language is the pack's when it has exactly one; a multi-language pack (Supertonic) reports none.
+    private void ReportVoicePackFailed(string packId)
+    {
+        PackInfo? listed = _catalog?.FirstOrDefault(p => p.Id == packId);
+        bool isVoice = listed is not null ? listed.Kind == PackKind.Voice : KnownVoicePackIds.Contains(packId);
+        if (!isVoice)
+        {
+            return;
+        }
+
+        string? language = listed is { Languages.Count: 1 } ? listed.Languages[0] : null;
+        _fallbacks.Report(FallbackArea.Pack, FallbackReason.PackFailed, language);
+    }
+
+    private static readonly IReadOnlySet<string> KnownVoicePackIds = new HashSet<string>(StringComparer.Ordinal)
+    {
+        PackConstants.SupertonicPackId, PackConstants.PersianPackId, PackConstants.ChinesePackId, PackConstants.NorwegianPackId,
+    };
 
     private async Task<PackDownloadResult> DownloadOffCallerAsync(string packId, InstalledVoicePack? installed, IProgress<double>? progress, CancellationToken cancellationToken)
     {

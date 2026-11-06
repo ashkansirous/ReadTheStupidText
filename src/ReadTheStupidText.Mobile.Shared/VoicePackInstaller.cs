@@ -1,6 +1,7 @@
 using ReadTheStupidText.Application;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Mobile.Shared;
@@ -80,8 +81,11 @@ public sealed class VoicePackInstaller
     // What the locked end step decided, reported and published after the lock is released.
     private sealed record RunEnd(int Id, PackInstallState? Failure, bool Cancelled, bool Held, bool IsCurrent, bool Fresh, bool LanguageChosen, string? PackId, bool LanguageMoved);
 
-    public VoicePackInstaller(IVoicePackService packs, IVoiceModelService model, ISpeechReader reader, ISettingsStore settings, IPlatformServices platform, IPackUpdateNetwork network, ILanguageChangeNotifier languages, IPackResume? resume = null, IVoiceCancelStore? cancelStore = null)
+    private readonly IFallbackSink _fallbacks; // Slice 273 part C
+
+    public VoicePackInstaller(IVoicePackService packs, IVoiceModelService model, ISpeechReader reader, ISettingsStore settings, IPlatformServices platform, IPackUpdateNetwork network, ILanguageChangeNotifier languages, IPackResume? resume = null, IVoiceCancelStore? cancelStore = null, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance;
         _resume = resume;
         _hold = new VoiceCancelHold(cancelStore ?? new PreferencesVoiceCancelStore());
         _packs = packs;
@@ -368,6 +372,11 @@ public sealed class VoicePackInstaller
             var cancel = new CancellationTokenSource();
             string language = BeginPass(run, cancel);
             PackInstallState? failure = await RunGuardedAsync(new Run(run.Id, cancel.Token, run));
+            if (failure is not null and not PackInstallState.Unavailable) // Unavailable is a platform with no neural voice, not a failed install
+            {
+                _fallbacks.Report(FallbackArea.Pack, FallbackReason.PackFailed, language); // Slice 273 part C: the voice pack could not be installed; the phone voice reads
+            }
+
             RunEnd? end = EndPass(run, language, cancel, failure);
             cancel.Dispose();
             if (end is not null)

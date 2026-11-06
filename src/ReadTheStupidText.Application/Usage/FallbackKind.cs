@@ -16,7 +16,26 @@ public static class FallbackArea
     /// <summary>A read that should have been translated was read in the original text, or a translation pack could not be had.</summary>
     public const string Translation = "translation";
 
-    public static IReadOnlyList<string> All { get; } = [PremadeAudio, Speech, Translation];
+    // Part C (packs, OCR, documents, store and config).
+    /// <summary>A voice, storyteller or audio pack could not be installed or kept in line; the feature uses what it had.</summary>
+    public const string Pack = "pack";
+
+    /// <summary>A scan or picture was read by another recogniser than the one that should have, or the scanner could not start.</summary>
+    public const string Ocr = "ocr";
+
+    /// <summary>A document import fell back to a simpler reader.</summary>
+    public const string Document = "document";
+
+    /// <summary>Dino Reader: the story store or the book update check could not be reached or read.</summary>
+    public const string Store = "store";
+
+    /// <summary>The remote config could not be fetched; the last good copy, or the default, stayed in force.</summary>
+    public const string Config = "config";
+
+    /// <summary>The phone's language is not one the app is translated into; English is shown.</summary>
+    public const string UiLanguage = "ui_language";
+
+    public static IReadOnlyList<string> All { get; } = [PremadeAudio, Speech, Translation, Pack, Ocr, Document, Store, Config, UiLanguage];
 }
 
 /// <summary>Why it fell back (Slice 273): the closed list of the <c>fallback</c> count's reason; the Worker's <c>FALLBACK_REASONS</c> must be the same list.</summary>
@@ -90,13 +109,77 @@ public static class FallbackReason
     /// <summary>A translation pack could not be downloaded.</summary>
     public const string TranslationPackFailed = "translation_pack_failed";
 
+    // Part C, packs (area "pack"; a pack that could not be installed at all reuses PackFailed).
+    /// <summary>Dino Reader: the audio pack sync or sweep failed; it is tried again at the next check.</summary>
+    public const string PackSyncFailed = "pack_sync_failed";
+
+    /// <summary>Dino Reader: the storyteller voice pack could not be had; the old voices stay.</summary>
+    public const string StorytellerFailed = "storyteller_failed";
+
+    /// <summary>Dino Reader: casting the books with a new storyteller failed; the old voices stay.</summary>
+    public const string RecastFailed = "recast_failed";
+
+    /// <summary>Dino Reader: the voice catalogue or a story language's pack could not be read or fetched.</summary>
+    public const string CatalogueFailed = "catalogue_failed";
+
+    // Part C, OCR (area "ocr").
+    /// <summary>No OCR pack read the page, so the phone's built-in recogniser's reading was used.</summary>
+    public const string OcrBuiltinNoPack = "ocr_builtin_no_pack";
+
+    /// <summary>The phone's built-in recogniser failed, so the installed OCR packs were tried.</summary>
+    public const string OcrBuiltinFailed = "ocr_builtin_failed";
+
+    /// <summary>Windows: the page was read by the platform recogniser instead of an installed pack.</summary>
+    public const string OcrPlatformFallback = "ocr_platform_fallback";
+
+    /// <summary>An OCR pack could not be installed or run.</summary>
+    public const string OcrPackFailed = "ocr_pack_failed";
+
+    /// <summary>The document scanner could not start.</summary>
+    public const string ScannerStartFailed = "scanner_start_failed";
+
+    // Part C, documents (area "document").
+    public const string PdfImportFailed = "pdf_import_failed";
+
+    // Part C, store and updates (area "store").
+    public const string StoreUnreachable = "store_unreachable";
+    public const string UpdateCheckFailed = "update_check_failed";
+
+    // Part C, config (area "config"): the last good copy stayed in force, or no copy exists and the default does.
+    public const string ConfigCached = "config_cached";
+    public const string ConfigDefault = "config_default";
+
+    // Part C, UI language (area "ui_language").
+    public const string UiLanguageUnsupported = "ui_language_unsupported";
+
     public static IReadOnlyList<string> All { get; } =
     [
         NoPack, PackFailed, TextMismatch, ClipMissing, Partial,
         NeuralNotReady, NeuralUnavailable, StreamUnavailable, EngineBuildFailed, SegmentsUnsupported, PhoneCannotSpeak, NoVoice, SilentRetake, SilentSibling, SilentGaveUp,
         VoiceNotInRoster, RecordingUnplayable, PhoneLanguageMissing,
         TranslationTimeout, TranslationPackMissing, TranslationError, StreamPlanFailed, StreamPartial, TranslationModelMissing, TranslationSkipped, TranslationPackFailed,
+        PackSyncFailed, StorytellerFailed, RecastFailed, CatalogueFailed,
+        OcrBuiltinNoPack, OcrBuiltinFailed, OcrPlatformFallback, OcrPackFailed, ScannerStartFailed,
+        PdfImportFailed, StoreUnreachable, UpdateCheckFailed, ConfigCached, ConfigDefault, UiLanguageUnsupported,
     ];
+}
+
+/// <summary>Reads a fallback kind written as <c>area:reason</c> (the Debug test hook's <c>id</c> argument, Slice 273 part C).</summary>
+public static class FallbackKinds
+{
+    private const char Separator = ':';
+
+    /// <summary>The area and reason of <paramref name="kind"/>; a blank kind is the part B default, a speech fallback with <see cref="FallbackReason.NeuralNotReady"/>. Values are not checked here: an unlisted one is dropped by the sender.</summary>
+    public static (string Area, string Reason) Split(string? kind)
+    {
+        if (string.IsNullOrWhiteSpace(kind))
+        {
+            return (FallbackArea.Speech, FallbackReason.NeuralNotReady);
+        }
+
+        int at = kind.IndexOf(Separator);
+        return at < 0 ? (kind, string.Empty) : (kind[..at], kind[(at + 1)..]);
+    }
 }
 
 /// <summary>

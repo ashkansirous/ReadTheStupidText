@@ -2,6 +2,8 @@ using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using ReadTheStupidText.Application.Reading;
+using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
+using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
 using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Mobile.Shared.Network;
 using ReadTheStupidText.Mobile.Shared.Waiting;
@@ -253,6 +255,7 @@ public sealed class StoryLanguagePacks
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader could not finish its half-finished packs: {ex.Message}");
+			_usage.RecordGeneralFallback(FallbackArea.Pack, FallbackReason.PackSyncFailed); // Slice 273 part C
 		}
 	}
 
@@ -485,6 +488,7 @@ public sealed class StoryLanguagePacks
 		catch (Exception ex) when (!userCancel.IsCancellationRequested)
 		{
 			Debug.WriteLine($"Dino Reader could not read the voice catalogue: {ex.Message}");
+			_usage.RecordGeneralFallback(FallbackArea.Pack, FallbackReason.CatalogueFailed); // Slice 273 part C
 			return new PackCatalogResult(PackDownloadResult.Failed, []);
 		}
 	}
@@ -632,6 +636,7 @@ public sealed class StoryLanguagePacks
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader could not get the {code} voice: {ex}");
+			_usage.RecordGeneralFallback(FallbackArea.Pack, FallbackReason.PackFailed, code); // Slice 273 part C: the language's voices stay as they were
 			// a dropped connection is offline (keep ticked and wait); anything else is a plain failure
 			NoteResult(code, PackFailureDecision.IsNetworkLoss(ex) ? PackDownloadResult.Offline : PackDownloadResult.Failed);
 
@@ -782,6 +787,7 @@ public sealed class StoryLanguagePacks
 		NoteResult(code, catalog.Status);
 		if (catalog.Status != PackDownloadResult.Ok)
 		{
+			_usage.RecordGeneralFallback(FallbackArea.Pack, FallbackReason.CatalogueFailed); // Slice 273 part C: a non-Ok status is returned, not thrown
 			return UsageDetail.PackFailed;
 		}
 
@@ -807,6 +813,11 @@ public sealed class StoryLanguagePacks
 
 		PackDownloadResult result = await _packs.DownloadAsync(pack.Id, progress, token);
 		NoteResult(code, result);
+		if (result != PackDownloadResult.Ok)
+		{
+			_usage.RecordGeneralFallback(FallbackArea.Pack, FallbackReason.PackFailed, code); // Slice 273 part C: a failed result is returned, not thrown
+		}
+
 		return result == PackDownloadResult.Ok ? UsageDetail.PackDone : UsageDetail.PackFailed;
 	}
 
