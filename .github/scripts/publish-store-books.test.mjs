@@ -4,7 +4,8 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { completeAudioIds, judgedAudioIds, mayChangeOnR2, refusalMessage, completeIdsOf, onlyCompleteBooks, refuseAudioGaps, audioPackIsLive, pruneUnbuiltAudio, audioPacksBehind, validPackVersions, audioUploadsFor, bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, contentBooks, starterDrift, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
+import { publishedStateFrom } from './r2-wrangler.mjs';
+import { audioEntry, bucketAudioFromState, completeAudioIds, judgedAudioIds, mayChangeOnR2, refusalMessage, completeIdsOf, onlyCompleteBooks, refuseAudioGaps, audioPackIsLive, audioUploadExists, withBucketListen, pruneUnbuiltAudio, audioPacksBehind, validPackVersions, audioUploadsFor, bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, contentBooks, starterDrift, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
 
 const A = 'a'.repeat(32);
 const B = 'b'.repeat(32);
@@ -207,9 +208,107 @@ test('Slice 265: audioUploadsFor ignores a meta with no audio, a broken meta and
 
 test('Slice 265: a language is behind when the live store lacks its pack or lists a lower version, never when it is equal or higher', () => {
     const books = [{ stem: 'pigs', id: A, packs: { de: 1, fa: 2, ja: 1 } }, { stem: 'hen', id: B, packs: { fa: 1 } }, { stem: 'done', id: 'c'.repeat(32), packs: { fa: 1 } }];
-    const live = [{ id: A, audio: { de: { version: 1 }, fa: { version: 1 }, ja: { version: 5 } } }, { id: B, audio: null }, { id: 'c'.repeat(32), audio: { fa: { version: 1 } } }];
+    const live = [{ id: A, audio: { de: { version: 1, listenSeconds: 60 }, fa: { version: 1, listenSeconds: 60 }, ja: { version: 5 } } }, { id: B, audio: null }, { id: 'c'.repeat(32), audio: { fa: { version: 1, listenSeconds: 60 } } }];
     assert.deepEqual(audioPacksBehind(books, live), [{ stem: 'pigs', languages: ['fa'] }, { stem: 'hen', languages: ['fa'] }]);
     assert.deepEqual(audioPacksBehind([{ stem: 'new', id: A, packs: { fa: 1 } }], []), [{ stem: 'new', languages: ['fa'] }]); // a book that is not live at all needs every pack
+});
+
+test('Slice 281: a pack that is live at the same version without its listening track is behind too, so the track is built', () => {
+    const books = [{ stem: 'pigs', id: A, packs: { de: 1, fa: 2 } }];
+    const live = [{ id: A, audio: { de: { version: 1 }, fa: { version: 2, listenSeconds: 90 } } }];
+    assert.deepEqual(audioPacksBehind(books, live), [{ stem: 'pigs', languages: ['de'] }]);
+});
+
+test('Slice 281: audioUploadsFor adds the listening track of a pack after the packs, only for a listed length and a built file', () => {
+    const exists = (path) => path.endsWith('.zip') || path.endsWith('listen-fa-v3.m4a');
+    const meta = JSON.stringify({ audio: { fa: { version: 3, listenSeconds: 90 }, de: { version: 1, listenSeconds: 80 }, no: { version: 2 } } });
+    const uploads = audioUploadsFor({ id: A }, '/s', meta, exists);
+    assert.deepEqual(uploads.map((u) => u.name), ['audio-de-v1.zip', 'audio-fa-v3.zip', 'audio-no-v2.zip', 'listen-fa-v3.m4a']);
+    assert.equal(uploads.at(-1).contentType, 'audio/mp4');
+    assert.equal(uploads.at(-1).key, `dinoreader/stories/${A}/listen-fa-v3.m4a`);
+});
+
+test('Slice 281: a track is live only when the bucket meta.json lists it at that version (never the Worker list, no request); a zip is asked of the list', () => {
+    const live = [{ id: A, audio: { fa: { version: 3, listenSeconds: 90 } } }];
+    const bucket = (id) => (id === A ? { fa: { version: 3, listenSeconds: 90 }, de: { version: 1 } } : null);
+    const track = (language, version, id = A) => ({ key: `dinoreader/stories/${id}/listen-${language}-v${version}.m4a` });
+    assert.equal(audioUploadExists(live, track('fa', 3), bucket), true);
+    assert.equal(audioUploadExists([], track('fa', 3), bucket), true); // an old Worker's list without the length changes nothing
+    assert.equal(audioUploadExists(live, track('fa', 2), bucket), false); // another version's track is not this one
+    assert.equal(audioUploadExists(live, track('de', 1), bucket), false); // the pack is listed but no length: the track is not live
+    assert.equal(audioUploadExists(live, track('fa', 3, B), bucket), false);
+    const lookalike = (key) => audioUploadExists(live, { key: `dinoreader/stories/${A}/${key}` }, (id) => (id === A ? { fa: { version: 3, listenSeconds: 90 } } : null));
+    assert.equal(lookalike('listen-fa-v3.m4a'), true);
+    assert.equal(lookalike('listen-FA-v3.m4a'), false); // not a language code of the track-file pattern
+    assert.equal(audioUploadExists(live, { key: `dinoreader/stories/${A}/audio-fa-v3.zip` }, () => assert.fail('a zip is not asked of the bucket')), true);
+});
+
+test('Slice 281: the live state carries each story\'s listed packs and track lengths, from one meta read per story', () => {
+    const metas = { [A]: JSON.stringify({ version: 3, audio: { fa: { version: 3, bytes: 5, listenSeconds: 90 }, de: { version: 1 } } }), [B]: JSON.stringify({ version: 2, audio: 'x' }) };
+    let reads = 0;
+    const state = liveStateOf([{ id: A, version: 3 }, { id: B, version: 2 }, { id: C, version: 1 }], (id) => { reads++; return metas[id] ?? null; });
+    assert.equal(reads, 3);
+    assert.deepEqual(state[A].audio, { fa: { version: 3, listenSeconds: 90 }, de: { version: 1 } });
+    assert.equal('audio' in state[B], false);
+    assert.equal('audio' in state[C], false);
+    assert.deepEqual(audioEntry('not json'), {});
+    assert.deepEqual(bucketAudioFromState(state)(A).fa, { version: 3, listenSeconds: 90 });
+    assert.equal(bucketAudioFromState(state)(C), null);
+});
+
+test('Slice 281: an error reading a meta.json is an error, never "no meta": nothing is delisted and no track is skipped as absent', () => {
+    const failing = (id) => { throw new Error(`wrangler exited 1 reading ${id}`); };
+    assert.throws(() => liveStateOf([{ id: A, version: 3 }], failing), /wrangler exited 1/);
+    // an absent meta (publishedStateFrom said "not found") is null and lists nothing; the two are not the same thing
+    assert.doesNotThrow(() => liveStateOf([{ id: A, version: 3 }], () => null));
+    assert.throws(() => publishedStateFrom({ status: 1, output: 'Authentication error [code: 10000]' }), /Could not tell/);
+    assert.equal(publishedStateFrom({ status: 1, output: 'The specified key does not exist. (10007)' }), false);
+    // and a listed length is never dropped because the state has nothing for a story: reconcile keeps a track the state lists
+    const meta = JSON.stringify({ version: 3, audio: { fa: { version: 2, listenSeconds: 90 } } });
+    assert.deepEqual(JSON.parse(pruneUnbuiltAudio(meta, '/s/a', { fa: { version: 2, listenSeconds: 90 } }, () => false).text).audio.fa.listenSeconds, 90);
+});
+
+test('Slice 281: a track the bucket lists is neither built nor uploaded; an unlisted one is built, uploaded, and meta.json goes last', () => {
+    const books = [{ stem: 'pigs', id: A, packs: { fa: 2, de: 1 } }];
+    const live = [{ id: A, audio: { fa: { version: 2 }, de: { version: 1 } } }];
+    const bucket = (id) => (id === A ? { fa: { version: 2, listenSeconds: 90 }, de: { version: 1 } } : null);
+    assert.deepEqual(audioPacksBehind(books, live, bucket), [{ stem: 'pigs', languages: ['de'] }]); // fa is listed: not built; de is not: built
+    const audio = { fa: { version: 2, listenSeconds: 90 }, de: { version: 1, listenSeconds: 40 } };
+    withStore([{ id: A, version: 6, audio, zips: ['audio-fa-v2.zip', 'audio-de-v1.zip', 'listen-fa-v2.m4a', 'listen-de-v1.m4a'] }], (root) => {
+        const sent = [];
+        const plan = planStoreUploads(readBuilt(root), [{ id: A, version: 1 }]);
+        const audioExists = (upload) => audioUploadExists(live, upload, bucket);
+        runUploads(plan, root, { put: (upload) => sent.push(upload.name), packageExists: () => false, audioExists });
+        // both zips are live (not sent); fa's track is listed in the bucket (not sent); de's track is unlisted: uploaded, before the cover, package and meta.json
+        assert.deepEqual(sent, ['listen-de-v1.m4a', 'cover.jpg', 'story-v6.dino', 'meta.json']);
+    });
+});
+
+test('Slice 281: a built track whose length differs from the one the bucket lists keeps the listed length (meta and file stay the same bytes)', () => {
+    const meta = JSON.stringify({ version: 3, audio: { fa: { version: 2, listenSeconds: 120 } } });
+    const text = pruneUnbuiltAudio(meta, '/s/a', { fa: { version: 2, listenSeconds: 90 } }, (path) => path.endsWith('listen-fa-v2.m4a')).text;
+    assert.equal(JSON.parse(text).audio.fa.listenSeconds, 90);
+});
+
+test('Slice 281: a track length listed in the bucket meta.json counts as live even when the Worker list omits it', () => {
+    const live = [{ id: A, audio: { fa: { version: 3 }, de: { version: 1 } } }, { id: B, audio: { fa: { version: 1 } } }];
+    const bucket = (id) => (id === A ? { fa: { version: 3, listenSeconds: 90 }, de: { version: 2, listenSeconds: 40 } } : assert.fail('only the asked ids are read'));
+    const merged = withBucketListen(live, [A], bucket);
+    assert.deepEqual(merged[0].audio, { fa: { version: 3, listenSeconds: 90 }, de: { version: 1 } }); // a different version's length is not taken
+    assert.equal(merged[1], live[1]);
+    const books = [{ stem: 'pigs', id: A, packs: { fa: 3, de: 1 } }];
+    assert.deepEqual(audioPacksBehind(books, live, bucket), [{ stem: 'pigs', languages: ['de'] }]); // fa has its track in the bucket, de does not
+});
+
+test('Slice 281: pruneUnbuiltAudio drops a track length whose track is neither live nor built, and keeps a live track a committed record does not know', () => {
+    const meta = JSON.stringify({ version: 3, audio: { fa: { version: 2, listenSeconds: 90 }, de: { version: 1 }, no: { version: 1, listenSeconds: 70 } } });
+    const live = { fa: { version: 2 }, de: { version: 1, listenSeconds: 55 }, no: { version: 1, listenSeconds: 70 } };
+    const { text, removed } = pruneUnbuiltAudio(meta, '/s/a', live, () => false);
+    assert.deepEqual(removed, []);
+    assert.deepEqual(JSON.parse(text).audio, { fa: { version: 2 }, de: { version: 1, listenSeconds: 55 }, no: { version: 1, listenSeconds: 70 } });
+    const built = pruneUnbuiltAudio(meta, '/s/a', { fa: { version: 2 } }, (path) => path.endsWith('listen-fa-v2.m4a'));
+    assert.equal(JSON.parse(built.text).audio.fa.listenSeconds, 90);
+    assert.deepEqual(built.removed, ['de', 'no']);
 });
 
 test('an existing package is never overwritten, but the meta still goes up', () => {
