@@ -1,6 +1,6 @@
 # Slice 279 — Dino: recording your own voice, one intro page, then per character or whole page
 
-*Built 2026-11-06 (wave 32), not merged. Emulator and Windows VM checks pass; iPhone 8 / iOS and a real Windows microphone are not yet verified (see the end of this file).* Dino Reader only, Android, iOS and the Windows head the same in the same slice.
+*Built 2026-11-06 (wave 32), merged as PR #867 (000e1e26). Emulator and Windows VM checks pass; iPhone 8 / iOS and a real Windows microphone are not yet verified (see the end of this file).* Dino Reader only, Android, iOS and the Windows head the same in the same slice.
 
 Claim notes (wave 32): the open points under *Design* take their stated defaults (follow the mock). Touches widened at
 claim from a code check: `src/DinoReader.Core/{StoryRecordings,Story,RecordLayout,BookSheetPlan,ITextMeasurer}.cs`,
@@ -138,7 +138,7 @@ Eleven frames in `docs/design/dino-reader/Dino Reader Batch 48 Store Only and Re
 - Check 10 (2): 1 (swallow Esc under an alert or overlay) and 2 (VM check stops recording and resets) applied.
 - Check 11 (1): no user-facing finding; the one low (orphan file after a same-key backup restore) is accepted by design 3 and listed below.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-06)
 
 For `src/DinoReader.App/CLAUDE.md` (Slice 279: docs/plan/slices/279-dino-recording-flow.md):
 

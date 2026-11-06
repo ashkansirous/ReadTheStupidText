@@ -345,3 +345,4 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 277 | Dino: a store book is published only when every sentence in every language has pre-made audio | built | #858 | | [277-dino-store-audio-coverage-gate.md](../slices/277-dino-store-audio-coverage-gate.md) |
 | 278 | Dino: store books only (no own books, scanning, translation, voice engine or voice pickers; RTST untouched) | built | #859, #863, #862 | | [278-dino-store-books-only.md](../slices/278-dino-store-books-only.md) |
 | 280 | Dino: Farsi speaker first, joined at translation time from existing pieces and clips (replaces Slice 254's read-time regroup) | built | #869 | | [280-dino-farsi-speaker-first-at-translation.md](../slices/280-dino-farsi-speaker-first-at-translation.md) |
+| 279 | Dino: recording your own voice, one intro page, then per character or whole page | built | #867 | | [279-dino-recording-flow.md](../slices/279-dino-recording-flow.md) |
