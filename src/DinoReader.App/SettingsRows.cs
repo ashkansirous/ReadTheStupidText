@@ -152,7 +152,7 @@ public static class SettingsRows
 		return row;
 	}
 
-	private static string NameOf(string title, string? value) => string.IsNullOrEmpty(value) ? title : CastText.Pair(title, value);
+	private static string NameOf(string title, string? value) => string.IsNullOrEmpty(value) ? title : OwnScript.Pair(title, value);
 
 	// The value changes after the row is built (the story language, a setting), so the button's accessible name follows it.
 	private static void FollowValue(Button button, string title, Label valueLabel)
@@ -217,7 +217,7 @@ public static class SettingsRows
 	public static Grid NavRow(string title, string? value, Func<Task> tapped, BusyGuard busy, string? tagText = null, string? automationId = null)
 	{
 		Grid row = NewRowGrid(NavRowHeight);
-		row.Add(CastText.InOwnScript(new Label { Text = title, FontSize = NavTitleSize, VerticalOptions = LayoutOptions.Center }), FirstColumn);
+		row.Add(OwnScript.InOwnScript(new Label { Text = title, FontSize = NavTitleSize, VerticalOptions = LayoutOptions.Center }), FirstColumn);
 		if (tagText is not null)
 		{
 			row.Add(Tag(tagText), FirstColumn + 1);
@@ -282,7 +282,7 @@ public static class SettingsRows
 		return button;
 	}
 
-	private static Label NavValue(string text) => CastText.InOwnScript(new Label
+	private static Label NavValue(string text) => OwnScript.InOwnScript(new Label
 	{
 		Text = text,
 		FontSize = NavValueSize,
@@ -472,8 +472,8 @@ public static class AnimalSoundsCard
 			VerticalOptions = LayoutOptions.Center,
 			Children =
 			{
-				CastText.InOwnScript(new Label { Text = AppResources.Settings_AnimalSounds_Title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold }),
-				CastText.InOwnScript(new Label { Text = AppResources.Settings_AnimalSounds_Sub, FontSize = HelperSize, TextColor = DinoTokens.Get(DinoTokens.Body) }),
+				OwnScript.InOwnScript(new Label { Text = AppResources.Settings_AnimalSounds_Title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold }),
+				OwnScript.InOwnScript(new Label { Text = AppResources.Settings_AnimalSounds_Sub, FontSize = HelperSize, TextColor = DinoTokens.Get(DinoTokens.Body) }),
 			},
 		};
 		var row = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)], ColumnSpacing = 12 };
@@ -537,9 +537,9 @@ public static class UsageCountsCard
 }
 
 /// <summary>
-/// The "Reading speed" card of the grown-up settings (Slice 150, Decision 155, mock frame 70): a title, the chosen speed, a Play button that
-/// reads a sample sentence at it, and a slider from 0.5x to 1.2x in 0.05 steps. One setting for the whole app; the reader takes a change from
-/// the next sentence. A page puts it in its column of cards and supplies <c>playSample</c> (it knows the voice).
+/// The "Reading speed" card of the grown-up settings (Slice 150, Decision 155, mock frame 70): a title, the chosen speed and a slider from 0.5x to 1.2x
+/// in 0.05 steps. One setting for the whole app; pre-made clips and recordings are played at it, a change taking effect from the next clip
+/// (Slice 278 part B: there is no voice to play a sample with, so the Play button is gone). A page puts it in its column of cards.
 /// </summary>
 public static class ReadingSpeedCard
 {
@@ -549,19 +549,16 @@ public static class ReadingSpeedCard
 	private const double HelperSize = 12.5;
 	private const double ValueSize = 17;
 	private const double ValueMinWidth = 44;
-	private const double PlaySize = 44;
-	private const double SpinnerSize = 22;
 	private const double SliderHeight = 44;
 	private const double EndLabelSize = 12;
 	private const double StepsPerUnit = 1 / ReadingSpeed.Step;
 	private const double SnapTolerance = 1e-9;
-	private const int SpinnerDelayMs = 500;
 
-	public static Border Build(ISpeechReader reader, Func<Task> playSample, Action stopSample)
+	public static Border Build()
 	{
 		double current = ReadingSpeedPreference.Load().Value;
 		Label value = ValueLabel(current);
-		var column = new VerticalStackLayout { Spacing = 10, Children = { TopRow(value, PlayButton(reader, playSample, stopSample)), Slider(current, value, reader), EndsRow() } };
+		var column = new VerticalStackLayout { Spacing = 10, Children = { TopRow(value), Slider(current, value), EndsRow() } };
 		return new Border
 		{
 			BackgroundColor = Colors.White,
@@ -583,12 +580,11 @@ public static class ReadingSpeedCard
 		VerticalOptions = LayoutOptions.Center,
 	};
 
-	private static Grid TopRow(Label value, Border play)
+	private static Grid TopRow(Label value)
 	{
-		var top = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Auto)], ColumnSpacing = 10 };
+		var top = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)], ColumnSpacing = 10 };
 		top.Add(TitleBlock(), 0);
 		top.Add(value, 1);
-		top.Add(play, 2);
 		return top;
 	}
 
@@ -616,7 +612,7 @@ public static class ReadingSpeedCard
 	private static Label EndLabel(string text) => new() { Text = text, FontSize = EndLabelSize, TextColor = DinoTokens.Get(DinoTokens.Muted) };
 
 	// The slider sits in a ContentView so the Unloaded subscription is on a MauiView, never on the slider itself (Slice 274: iOS KVO crash).
-	private static ContentView Slider(double current, Label value, ISpeechReader reader)
+	private static ContentView Slider(double current, Label value)
 	{
 		var slider = new Slider
 		{
@@ -630,27 +626,27 @@ public static class ReadingSpeedCard
 		};
 		SemanticProperties.SetDescription(slider, Described(current));
 		var host = new ContentView { Content = slider };
-		WireSlider(slider, host, value, reader);
+		WireSlider(slider, host, value);
 		return host;
 	}
 
 	// A drag commits once when it ends; any other change (TalkBack, keyboard) commits at once. A drag that never reports its end
 	// (page torn down) is closed on Unloaded so the flag cannot stay set.
-	private static void WireSlider(Slider slider, ContentView host, Label value, ISpeechReader reader)
+	private static void WireSlider(Slider slider, ContentView host, Label value)
 	{
 		bool dragging = false;
 		slider.DragStarted += (_, _) => dragging = true;
 		slider.DragCompleted += (_, _) =>
 		{
 			dragging = false;
-			Commit(slider, reader);
+			Commit(slider);
 		};
 		host.Unloaded += (_, _) =>
 		{
 			if (dragging)
 			{
 				dragging = false;
-				Commit(slider, reader);
+				Commit(slider);
 			}
 		};
 		slider.ValueChanged += (_, e) =>
@@ -664,7 +660,7 @@ public static class ReadingSpeedCard
 			SemanticProperties.SetDescription(slider, Described(slider.Value));
 			if (!dragging)
 			{
-				Commit(slider, reader);
+				Commit(slider);
 			}
 		};
 	}
@@ -685,81 +681,11 @@ public static class ReadingSpeedCard
 		return false;
 	}
 
-	// Saves and applies the speed once the thumb settles, not on every tick of a drag (the reader takes it from the next sentence).
-	private static void Commit(Slider slider, ISpeechReader reader)
+	// Saves the speed once the thumb settles, not on every tick of a drag (the next clip is played at it).
+	private static void Commit(Slider slider)
 	{
 		PlaybackRate rate = ReadingSpeed.Clamp(slider.Value);
 		ReadingSpeedPreference.Save(rate);
 		SettingsRows.RaiseSettingChanged(SettingsSection.ReadingSpeed, AppResources.Format(AppResources.Speed_Value, rate.Value));
-		reader.SetSpeed(rate);
-	}
-
-	// Slice 150 review: the play icon becomes a spinner only when the sample takes over 500 ms (no flash on a fast one).
-	private static async Task PlayWithSpinnerAsync(Border button, Func<Task> playSample)
-	{
-		View icon = button.Content;
-		using var fast = new CancellationTokenSource();
-		_ = ShowSpinnerAfterDelayAsync(button, fast.Token);
-		try
-		{
-			await playSample();
-		}
-		finally
-		{
-			fast.Cancel();
-			button.Content = icon;
-		}
-	}
-
-	private static async Task ShowSpinnerAfterDelayAsync(Border button, CancellationToken token)
-	{
-		try
-		{
-			await Task.Delay(SpinnerDelayMs, token);
-		}
-		catch (OperationCanceledException)
-		{
-			return;
-		}
-
-		button.Content = new ActivityIndicator { IsRunning = true, Color = DinoTokens.Get(DinoTokens.Brand), WidthRequest = SpinnerSize, HeightRequest = SpinnerSize, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
-	}
-
-	private static Border PlayButton(ISpeechReader reader, Func<Task> playSample, Action stopSample)
-	{
-		var button = new Border
-		{
-			WidthRequest = PlaySize,
-			HeightRequest = PlaySize,
-			StrokeThickness = 0,
-			BackgroundColor = DinoTokens.Get(DinoTokens.BrandTint),
-			StrokeShape = new RoundRectangle { CornerRadius = PlaySize / 2 },
-			VerticalOptions = LayoutOptions.Center,
-			Content = new IconView { Kind = IconKind.Play, Color = DinoTokens.Get(DinoTokens.Brand), Filled = true, Size = 16 },
-		};
-		SemanticProperties.SetDescription(button, AppResources.Speed_Play);
-		bool starting = false;
-		var tap = new TapGestureRecognizer();
-		tap.Tapped += async (_, _) =>
-		{
-			// A tap while the sample is preparing or playing stops it (the Cancel).
-			if (starting || reader.State != PlaybackState.Idle)
-			{
-				stopSample();
-				return;
-			}
-
-			starting = true;
-			try
-			{
-				await PlayWithSpinnerAsync(button, playSample);
-			}
-			finally
-			{
-				starting = false;
-			}
-		};
-		button.GestureRecognizers.Add(tap);
-		return button;
 	}
 }

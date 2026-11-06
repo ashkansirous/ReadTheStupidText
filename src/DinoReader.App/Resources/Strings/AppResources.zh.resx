@@ -6,28 +6,17 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Common_Ok" xml:space="preserve"><value>确定</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>取消</value></data>
-  <data name="PackStatus_Resolving" xml:space="preserve"><value>正在检查自然语音…</value></data>
-  <data name="PackStatus_Downloading" xml:space="preserve"><value>正在下载自然语音… {0}</value></data>
-  <data name="PackStatus_Offline" xml:space="preserve"><value>没有网络连接。正在使用手机语音朗读。点按可重试下载语音。</value></data>
-  <data name="PackStatus_Waiting" xml:space="preserve"><value>正在等待网络。恢复联网后会自动继续。点按可立即重试。</value><comment>Machine draft: needs native review</comment></data>
-  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>正在等待 Wi-Fi。连上 Wi-Fi 后会自动继续。点按可立即下载。</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_Waiting" xml:space="preserve"><value>正在等待网络 · {0}%</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>正在等待 Wi-Fi · {0}%</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>恢复联网后会自动继续。</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Getting" xml:space="preserve"><value>正在获取你的书的{0}音频</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>《{0}》还没有{1}音频，将由 Dino 的朗读声音来读。</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>《{0}》和另外{2}本书还没有{1}音频，将由 Dino 的朗读声音来读。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>《{0}》还没有{1}音频，音频下载完成后，将用它的音频来读。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>《{0}》和另外{2}本书还没有{1}音频，音频下载完成后，将用它们各自的音频来读。</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>正在等待网络…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>正在等待 Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Preparing" xml:space="preserve"><value>正在准备…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>部分{0}音频暂时无法获取。Dino 稍后会再试。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_AudioUnavailable" xml:space="preserve"><value>这本书还没有这种语言的音频。</value></data>
+  <data name="Reading_NoSound" xml:space="preserve"><value>这一部分没有声音</value></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>重试</value><comment>Machine draft: needs native review</comment></data>
-  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>语音下载已损坏。正在使用手机语音朗读。点按可重试。</value></data>
-  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然语音包无法使用。正在使用手机语音朗读。</value></data>
-  <data name="PackStatus_Failed" xml:space="preserve"><value>无法下载自然语音。正在使用手机语音朗读。点按可重试。</value></data>
   <!-- Slice 204: machine draft, for native review -->
-  <data name="PackStatus_Stopped" xml:space="preserve"><value>下载已停止。正在使用手机语音朗读。点按可下载。</value></data>
-  <data name="PackStatus_Unavailable" xml:space="preserve"><value>您的语言暂无自然语音。正在使用手机语音朗读。</value></data>
   <data name="Common_Back" xml:space="preserve"><value>返回</value></data>
   <data name="Common_Save" xml:space="preserve"><value>保存</value></data>
   <data name="Common_Done" xml:space="preserve"><value>完成</value></data>
@@ -114,10 +103,6 @@
   <data name="FirstRun_Hello" xml:space="preserve"><value>你好！我们用哪种语言阅读？</value></data>
   <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino 会为它下载语音。你之后可以在锁后面更改。</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>继续</value></data>
-  <data name="FirstRun_GettingReady" xml:space="preserve"><value>正在准备 Dino 的语音</value></data>
-  <data name="FirstRun_Once" xml:space="preserve"><value>语音：{0} · 只需一次</value></data>
-  <data name="FirstRun_Downloading" xml:space="preserve"><value>正在下载…</value></data>
-  <data name="FirstRun_PickAnother" xml:space="preserve"><value>选择其他语言</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>准备好阅读啦！</value></data>
   <data name="FirstRun_ReadyBody" xml:space="preserve"><value>每个角色都有自己的声音。你的书已经在书架上。</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>选择你的第一批书</value><comment>Machine draft: needs native review</comment></data>
@@ -130,8 +115,6 @@
   <data name="FirstBooks_BookOf" xml:space="preserve"><value>第 {0} 本，共 {1} 本</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>连接网络以选择你的第一批书</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>开始前 Dino 需要两本书。请打开 Wi-Fi 或移动数据，然后重试。</value><comment>Machine draft: needs native review</comment></data>
-  <data name="FirstRun_HearHello" xml:space="preserve"><value>听 Dino 打招呼</value></data>
-  <data name="FirstRun_HelloLine" xml:space="preserve"><value>你好！我是 Dino。我们一起读故事吧。</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>看看 Dino 能做什么</value></data>
   <data name="Intro_SkipStart" xml:space="preserve"><value>跳过，开始阅读</value></data>
   <data name="Intro_SkipAll" xml:space="preserve"><value>全部跳过</value></data>
@@ -148,7 +131,6 @@
   <data name="Intro_RecordTitle" xml:space="preserve"><value>用你的声音朗读</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>一页一页地录下你朗读故事的声音。孩子可以随时播放。</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>再看一次介绍</value></data>
-  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>使用手机语音继续</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>交给孩子</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>家长模式</value></data>
   <data name="Language_Title" xml:space="preserve"><value>语言</value></data>
@@ -159,15 +141,9 @@
   <data name="Settings_NewVersion" xml:space="preserve"><value>新版本</value></data>
   <data name="Settings_GearLabel" xml:space="preserve"><value>设置（家长）</value></data>
   <data name="Settings_About" xml:space="preserve"><value>关于与更新</value></data>
-  <data name="Settings_NarratorVoice" xml:space="preserve"><value>旁白声音</value></data>
   <data name="Settings_On" xml:space="preserve"><value>开</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>关</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>设置、商店和书架</value></data>
-  <data name="Narrator_ListIntro" xml:space="preserve"><value>每种故事语言都有自己的旁白。</value></data>
-  <data name="Narrator_OneIntro" xml:space="preserve"><value>在每本{0}书里，由谁来读角色之间的部分。</value></data>
-  <data name="Narrator_TitleFor" xml:space="preserve"><value>旁白声音（{0}）</value></data>
-  <data name="Narrator_NoVoiceValue" xml:space="preserve"><value>未下载</value></data>
-  <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>这部手机上还没有{0}的声音。请返回，打开“语言”，选择{0}并下载，然后在这里选择旁白。</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>家长</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>添加和编辑书籍</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>家长专区</value></data>
@@ -191,9 +167,6 @@
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>它的页面、图片和声音将从这部手机中删除。你可以随时从商店免费重新添加。</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>移除</value></data>
   <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>获取更多书籍</value></data>
-  <data name="Language_Ready" xml:space="preserve"><value>就绪</value></data>
-  <data name="Language_Download" xml:space="preserve"><value>下载</value></data>
-  <data name="Language_Downloading" xml:space="preserve"><value>正在下载 {0}%</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>其他语言的故事仍会用它自己的语言朗读，除非该故事开启了“翻译成我的语言”。</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>请按住 3 秒。</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>请按住 3 秒</value></data>
@@ -211,12 +184,6 @@
   <data name="Speed_SubWindows" xml:space="preserve"><value>慢一点对小朋友更容易 - 用左右方向键调整</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>再读一遍</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>只有家长能看到这里。孩子的书架只需点击一下。</value></data>
-  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>没有网络连接。正在使用手机语音朗读。点击可重试下载语音。</value></data>
-  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>正在等待网络。恢复联网后会自动继续。点击可立即重试。</value></data>
-  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>正在等待 Wi-Fi。连上 Wi-Fi 后会自动继续。点击可立即下载。</value></data>
-  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>语音下载已损坏。正在使用手机语音朗读。点击可重试。</value></data>
-  <data name="PackStatus_FailedClick" xml:space="preserve"><value>无法下载自然语音。正在使用手机语音朗读。点击可重试。</value></data>
-  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>下载已停止。正在使用手机语音朗读。点击可下载。</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>{0} 加 {1} 等于多少？</value></data>
   <data name="Story_Language" xml:space="preserve"><value>故事语言</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · 已识别</value></data>
@@ -227,15 +194,8 @@
   <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>暂不支持翻译{0}</value></data>
   <!-- /Slice 107 -->
   <!-- Slice 108 -->
-  <data name="Cast_VoicesFor" xml:space="preserve"><value>{0}的声音</value></data>
   <!-- /Slice 108 -->
   <!-- Slice 109 -->
-  <data name="Narrator_Title" xml:space="preserve"><value>旁白</value></data>
-  <data name="Narrator_Subtitle" xml:space="preserve"><value>所有书的旁白声音</value></data>
-  <data name="Narrator_MyLanguage" xml:space="preserve"><value>我的语言</value></data>
-  <data name="Narrator_Footnote" xml:space="preserve"><value>如果书中的角色用了旁白的声音，Dino 会给该角色换一个声音。</value></data>
-  <data name="Cast_ChangeForAll" xml:space="preserve"><value>为所有书更改</value></data>
-  <data name="Narrator_Sample" xml:space="preserve"><value>试听这个声音</value></data>
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>这本书</value></data>
@@ -265,19 +225,8 @@
   <!-- /Slice 111 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}：{1}</value></data>
-  <data name="Cast_PickTitle" xml:space="preserve"><value>谁来扮演{0}？</value></data>
-  <data name="Cast_PickSubtitle" xml:space="preserve"><value>这本书用的语言：{0}</value></data>
-  <data name="Cast_FilterGirls" xml:space="preserve"><value>女孩</value></data>
-  <data name="Cast_FilterBoys" xml:space="preserve"><value>男孩</value></data>
-  <data name="Cast_FilterEveryone" xml:space="preserve"><value>所有人</value></data>
   <!-- /Slice 113 -->
   <!-- Slice 115 -->
-  <data name="Storyteller_Getting" xml:space="preserve"><value>正在下载讲故事的声音…</value></data>
-  <data name="Storyteller_WaitWifi" xml:space="preserve"><value>讲故事的声音正在等待 Wi-Fi</value></data>
-  <data name="Storyteller_WaitInternet" xml:space="preserve"><value>正在等待网络</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Storyteller_DownloadNow" xml:space="preserve"><value>立即下载</value></data>
-  <data name="Storyteller_Ready" xml:space="preserve"><value>讲故事的声音已就绪</value></data>
-  <data name="Storyteller_ReadyBody" xml:space="preserve"><value>你的故事现在使用新的讲故事声音。</value></data>
   <data name="Update_Title" xml:space="preserve"><value>恐龙需要更新</value></data>
   <data name="Update_Body" xml:space="preserve"><value>请让大人下载新版本。你的书和录音都会原样保留。</value></data>
   <data name="Update_Button" xml:space="preserve"><value>更新恐龙</value></data>
@@ -303,19 +252,12 @@
   <data name="Speed_Sub" xml:space="preserve"><value>慢一点，小朋友更容易听懂</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0.5x · 慢</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
-  <data name="Speed_Play" xml:space="preserve"><value>试听这个速度</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>Dino 会统计哪些书被读过，不含名字或编号。你可以在设置中关闭。还会附带你所在的国家和大致的设备类型（手机或平板、内存范围）。如果应用崩溃，还可能发送崩溃报告：错误信息和一段简短的技术日志，绝不包含你读过或输入的任何内容。</value></data>
-  <data name="Storyteller_YourNarrator" xml:space="preserve"><value>你的{0}旁白</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
-  <data name="Storyteller_Failed" xml:space="preserve"><value>无法下载讲故事的声音</value></data>
-  <data name="Storyteller_TryAgain" xml:space="preserve"><value>重试</value></data>
   <!-- /Slice 115 -->
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
-  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
   <!-- Slice 78: the page-review wizard -->
   <data name="Wizard_Next" xml:space="preserve"><value>下一步</value></data>
-  <data name="Wait_GettingVoices" xml:space="preserve"><value>正在准备声音…</value></data>
-  <data name="Wait_Stalled" xml:space="preserve"><value>仍在准备语音…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>正在翻译…</value></data>
   <data name="Wait_WaitingInternet" xml:space="preserve"><value>正在等待网络</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>正在保存…</value></data>
@@ -335,34 +277,13 @@
   <data name="Reading_ReadFailed" xml:space="preserve"><value>朗读时出了点问题。</value></data>
   <data name="Reading_LayoutFailed" xml:space="preserve"><value>无法排版这个故事。请旋转屏幕或切换模式后重试。</value></data>
   <data name="Reading_PageN" xml:space="preserve"><value>正在读第 {0} 页</value></data>
-  <data name="Cast_Title" xml:space="preserve"><value>谁在说话</value></data>
-  <data name="Cast_Narrator" xml:space="preserve"><value>旁白</value></data>
-  <data name="Cast_Main" xml:space="preserve"><value>主角</value></data>
-  <data name="Cast_Edited" xml:space="preserve"><value>已编辑</value></data>
-  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>恢复书中的声音</value></data>
-  <data name="Cast_SharedVoice" xml:space="preserve"><value>共用声音</value></data>
-  <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>未知说话者</value></data>
-  <data name="Cast_PreviewLine" xml:space="preserve"><value>你好！这就是我朗读你的故事时的声音。</value></data>
-  <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>无法保存这项更改</value></data>
-  <data name="Cast_SaveFailedBody" xml:space="preserve"><value>角色未保存。请稍后再试。</value></data>
-  <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>暂时无法播放这个声音。</value></data>
-  <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>无法打开角色列表</value></data>
-  <data name="Cast_LoadFailedBody" xml:space="preserve"><value>无法确定这个故事的角色。请稍后再试。</value></data>
-  <data name="Cast_Words_One" xml:space="preserve"><value>{0} 个词</value></data>
-  <data name="Cast_Words_Other" xml:space="preserve"><value>{0} 个词</value></data>
-  <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} 句台词</value></data>
-  <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} 句台词</value></data>
-  <data name="Cast_UsesNarrator" xml:space="preserve"><value>使用旁白的声音</value></data>
-  <data name="Cast_Hear" xml:space="preserve"><value>听 {0} 的声音</value></data>
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>动物叫声</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>动物会不时说“哼哼!”或“咩!”,每本书都一样</value></data>
-  <data name="Cast_SharedNote" xml:space="preserve"><value>这本书的角色比现有的 {0} 个讲故事角色还多，所以有些角色听起来会一样。旁白不会分给任何角色。</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>正在获取{0}翻译包…</value></data>
   <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>故事要用哪些语言？</value></data>
   <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>最多再选两种。孩子可以在阅读时切换。</value></data>
   <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>应用语言</value></data>
   <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>跳过，仅{0}</value></data>
-  <data name="StoryLanguages_Getting" xml:space="preserve"><value>正在准备语音 · {0}%</value></data>
   <data name="StoryLanguages_Full" xml:space="preserve"><value>已选三种。取消一种后才能再选其他。</value></data>
   <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>故事语言</value></data>
   <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>孩子可以在阅读时在这些语言之间切换。最多三种。</value></data>
@@ -376,20 +297,11 @@
   <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>你没有连接 Wi-Fi。将通过移动数据下载 {0}。</value></data>
   <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>立即下载</value></data>
   <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>等待 Wi-Fi</value></data>
-  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>正在等待 Wi-Fi</value></data>
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>正在更新你的书…</value></data>
   <!-- /Slice 181 -->
   <!-- Slice 183: machine draft, for native review -->
-  <data name="Notify_Title" xml:space="preserve"><value>手机锁屏时继续下载吗?</value></data>
-  <data name="Notify_Body" xml:space="preserve"><value>允许通知,这样在手机锁屏或使用其他应用时,语音仍会继续下载。你可以在通知中查看进度。</value></data>
-  <data name="Notify_NotNow" xml:space="preserve"><value>暂不</value></data>
-  <data name="Notify_Continue" xml:space="preserve"><value>继续</value></data>
   <!-- Slice 208: machine draft, for native review -->
-  <data name="PackNotify_Downloading" xml:space="preserve"><value>正在准备{0}语音（{1} MB）· {2}</value></data>
-  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>下载已暂停。点按即可完成。</value></data>
-  <data name="PackNotify_Named" xml:space="preserve"><value>{0}语音（{1} MB）</value></data>
-  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}语音（{1} MB）· 已完成 {2}%</value></data>
   <data name="BackCover_StoryBy" xml:space="preserve"><value>故事：{0}</value></data>
   <data name="BackCover_OriginalStoryBy" xml:space="preserve"><value>原作：{0}</value></data>
   <data name="BackCover_Traditional" xml:space="preserve"><value>传统故事</value></data>

@@ -152,6 +152,22 @@ public sealed partial class AudioPackStore
 	/// <summary>Slice 267: raised for every pack download as (book id, language, <see cref="AudioPackUsage"/> detail): started, done or failed with its kind. Carries ids and closed words only.</summary>
 	public event Action<string, string, string>? Outcome;
 
+	/// <summary>Raised after the installed packs changed on disk (a pack installed, a book's or a language's packs removed, the sweep deleted a book). The shelf's installed-audio snapshot rescans on it.</summary>
+	public event Action? PacksChanged;
+
+	private void NotifyPacksChanged()
+	{
+		try
+		{
+			PacksChanged?.Invoke();
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: a listener failed; the snapshot is also rescanned on resume and when a page appears
+			_log($"pack change notice failed ({ex.GetType().Name})");
+		}
+	}
+
 	/// <summary>Whether a download of this book's pack in this language failed in this launch and has not worked since (the reason a read then says <see cref="DeviceVoiceReason.PackFailed"/>).</summary>
 	public bool FailedThisLaunch(string bookId, string language) => _failedThisLaunch.TryGetValue(Key(bookId, language), out bool failed) && failed;
 
@@ -338,6 +354,8 @@ public sealed partial class AudioPackStore
 		{
 			_gate.Release();
 		}
+
+		NotifyPacksChanged();
 	}
 
 	/// <summary>Deletes every installed version of one book language's pack (the Debug fixture hook uses it so a fixture install is never skipped as already installed).</summary>
@@ -367,6 +385,8 @@ public sealed partial class AudioPackStore
 		{
 			_gate.Release();
 		}
+
+		NotifyPacksChanged();
 	}
 
 	/// <summary>
@@ -375,6 +395,7 @@ public sealed partial class AudioPackStore
 	/// </summary>
 	public async Task SweepAsync(Func<Task<ISet<string>?>> presentBooks, CancellationToken cancel = default)
 	{
+		bool swept = false;
 		await _gate.WaitAsync(cancel);
 		try
 		{
@@ -402,11 +423,17 @@ public sealed partial class AudioPackStore
 			{
 				DeleteFolder(book);
 				_log($"pack {Path.GetFileName(book)}: book is not on the shelf, packs deleted");
+				swept = true;
 			}
 		}
 		finally
 		{
 			_gate.Release();
+		}
+
+		if (swept)
+		{
+			NotifyPacksChanged();
 		}
 	}
 
@@ -438,6 +465,7 @@ public sealed partial class AudioPackStore
 			PublishFolder(bookId, language, pack.Version, tmp);
 			_log($"{label}: installed");
 			Report(bookId, language, AudioPackUsage.PackDone);
+			NotifyPacksChanged();
 			return PackInstall.Installed;
 		}
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)

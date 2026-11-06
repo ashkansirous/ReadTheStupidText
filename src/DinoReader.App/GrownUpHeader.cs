@@ -76,8 +76,8 @@ public sealed class GrownUpHeader : Grid
 		set
 		{
 			_title.Text = value;
-			CastText.InOwnScriptAligned(_title);
-			CastText.AlignWith(_subtitle, _title);
+			OwnScript.InOwnScriptAligned(_title);
+			OwnScript.AlignWith(_subtitle, _title);
 		}
 	}
 
@@ -89,7 +89,7 @@ public sealed class GrownUpHeader : Grid
 		{
 			_subtitle.Text = value;
 			_subtitle.IsVisible = !string.IsNullOrEmpty(value);
-			CastText.AlignWith(_subtitle, _title);
+			OwnScript.AlignWith(_subtitle, _title);
 		}
 	}
 

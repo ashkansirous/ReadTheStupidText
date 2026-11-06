@@ -14,7 +14,6 @@ public partial class LifecycleSubscriptionTests
     private static readonly Dictionary<string, string> Allowed = new()
     {
         ["AboutPage.cs:this"] = "a ContentPage: PageHandler's platform view is a MauiView",
-        ["IntroWizardPage.cs:this"] = "a ContentPage",
         ["SettingsPage.cs:this"] = "a ContentPage",
         ["TileOverlay.xaml.cs:this"] = "a ContentView: platform view is the MauiView ContentView",
         ["WaitOverlay.cs:this"] = "a Grid: platform view is LayoutView, a MauiView",

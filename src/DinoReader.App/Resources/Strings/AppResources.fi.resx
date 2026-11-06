@@ -5,31 +5,19 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
-  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
   <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Peruuta</value></data>
-  <data name="PackStatus_Resolving" xml:space="preserve"><value>Tarkistetaan luonnollisia ääniä…</value></data>
-  <data name="PackStatus_Downloading" xml:space="preserve"><value>Ladataan luonnollisia ääniä… {0}</value></data>
-  <data name="PackStatus_Offline" xml:space="preserve"><value>Ei yhteyttä. Luetaan puhelimen äänellä. Yritä äänen latausta uudelleen napauttamalla.</value></data>
-  <data name="PackStatus_Waiting" xml:space="preserve"><value>Odotetaan internetiä. Lataus jatkuu itsestään, kun olet taas verkossa. Yritä nyt napauttamalla.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Odotetaan Wi-Fiä. Lataus jatkuu itsestään Wi-Fillä. Lataa nyt napauttamalla.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Odotetaan internetiä · {0}%</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Odotetaan Wi-Fiä · {0}%</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Jatkuu itsestään, kun olet taas verkossa.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Getting" xml:space="preserve"><value>Haetaan {0}-ääni kirjoillesi</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>Kirjalla {0} ei ole vielä kieltä {1} olevaa ääntä. Dinon lukuääni lukee sen.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>Kirjalla {0} ja {2} muulla ei ole vielä kieltä {1} olevaa ääntä. Dinon lukuääni lukee ne.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>Kirjalla {0} ei ole vielä kieltä {1} olevaa ääntä. Se luetaan omalla äänellään, kun ääni on ladattu.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>Kirjalla {0} ja {2} muulla ei ole vielä kieltä {1} olevaa ääntä. Ne luetaan omalla äänellään, kun ääni on ladattu.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Odotetaan internetiä…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Odotetaan Wi-Fiä…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Valmistellaan…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>Osaa {0}-äänistä ei voitu vielä hakea. Dino yrittää myöhemmin uudelleen.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_AudioUnavailable" xml:space="preserve"><value>Tällä kirjalla ei ole vielä ääntä tällä kielellä.</value></data>
+  <data name="Reading_NoSound" xml:space="preserve"><value>Tässä osassa ei ole ääntä</value></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Yritä uudelleen</value><comment>Machine draft: needs native review</comment></data>
-  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Äänen lataus vioittui. Luetaan puhelimen äänellä. Yritä uudelleen napauttamalla.</value></data>
-  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Luonnollisten äänten pakettia ei voi käyttää. Luetaan puhelimen äänellä.</value></data>
-  <data name="PackStatus_Failed" xml:space="preserve"><value>Luonnollisia ääniä ei voitu ladata. Luetaan puhelimen äänellä. Yritä uudelleen napauttamalla.</value></data>
   <!-- Slice 204: machine draft, for native review -->
-  <data name="PackStatus_Stopped" xml:space="preserve"><value>Lataus pysäytetty. Luetaan puhelimen äänellä. Lataa napauttamalla.</value></data>
-  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Kielellesi ei ole vielä luonnollista ääntä. Luetaan puhelimen äänellä.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Takaisin</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Tallenna</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Valmis</value></data>
@@ -116,10 +104,6 @@
   <data name="FirstRun_Hello" xml:space="preserve"><value>Hei! Millä kielellä luemme?</value></data>
   <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino lataa sille äänen. Voit vaihtaa sen myöhemmin lukon takaa.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Jatka</value></data>
-  <data name="FirstRun_GettingReady" xml:space="preserve"><value>Valmistellaan Dinon ääntä</value></data>
-  <data name="FirstRun_Once" xml:space="preserve"><value>{0} ääntä · tämä tehdään vain kerran</value></data>
-  <data name="FirstRun_Downloading" xml:space="preserve"><value>Ladataan…</value></data>
-  <data name="FirstRun_PickAnother" xml:space="preserve"><value>Valitse toinen kieli</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Valmista luettavaksi!</value></data>
   <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Jokainen hahmo saa oman äänensä. Kirjasi ovat hyllyssä.</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Valitse ensimmäiset kirjasi</value><comment>Machine draft: needs native review</comment></data>
@@ -132,8 +116,6 @@
   <data name="FirstBooks_BookOf" xml:space="preserve"><value>Kirja {0}/{1}</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Yhdistä internetiin valitaksesi ensimmäiset kirjasi</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino tarvitsee kaksi kirjaa ennen kuin aloitat. Kytke Wi-Fi tai mobiilidata päälle ja yritä uudelleen.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="FirstRun_HearHello" xml:space="preserve"><value>Kuule, kun Dino sanoo hei</value></data>
-  <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hei! Olen Dino. Luetaan yhdessä tarina.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Katso, mitä Dino osaa</value></data>
   <data name="Intro_SkipStart" xml:space="preserve"><value>Ohita, aloita lukeminen</value></data>
   <data name="Intro_SkipAll" xml:space="preserve"><value>Ohita kaikki</value></data>
@@ -150,7 +132,6 @@
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lue se omalla äänelläsi</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Äänitä itsesi lukemassa tarinaa sivu sivulta. Lapsesi voi kuunnella sen milloin tahansa.</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>Näytä esittely uudelleen</value></data>
-  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Jatka puhelimen äänellä</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Valmis lapselleni</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Aikuisten tila</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Kieli</value></data>
@@ -161,15 +142,9 @@
   <data name="Settings_NewVersion" xml:space="preserve"><value>Uusi versio</value></data>
   <data name="Settings_GearLabel" xml:space="preserve"><value>Asetukset (aikuiset)</value></data>
   <data name="Settings_About" xml:space="preserve"><value>Tietoja ja päivitykset</value></data>
-  <data name="Settings_NarratorVoice" xml:space="preserve"><value>Kertojan ääni</value></data>
   <data name="Settings_On" xml:space="preserve"><value>Päällä</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Pois</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>Asetukset, kauppa ja hylly</value></data>
-  <data name="Narrator_ListIntro" xml:space="preserve"><value>Jokaisella tarinakielellä on oma kertojansa.</value></data>
-  <data name="Narrator_OneIntro" xml:space="preserve"><value>Kuka lukee hahmojen väliset osat jokaisessa kirjassa kielellä {0}.</value></data>
-  <data name="Narrator_TitleFor" xml:space="preserve"><value>Kertojan ääni ({0})</value></data>
-  <data name="Narrator_NoVoiceValue" xml:space="preserve"><value>Ei ladattu</value></data>
-  <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>Kielen {0} äänet eivät ole vielä tässä puhelimessa. Palaa takaisin, avaa Kieli, valitse {0} ja lataa se, ja valitse sitten kertoja tästä.</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Aikuiset</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Lisää ja muokkaa kirjoja</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Aikuisille</value></data>
@@ -193,9 +168,6 @@
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Sen sivut, kuvat ja äänet poistetaan tästä puhelimesta. Voit lisätä sen uudelleen ilmaiseksi kaupasta.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Poista</value></data>
   <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Hae lisää kirjoja</value></data>
-  <data name="Language_Ready" xml:space="preserve"><value>Valmis</value></data>
-  <data name="Language_Download" xml:space="preserve"><value>Lataa</value></data>
-  <data name="Language_Downloading" xml:space="preserve"><value>Ladataan {0} %</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>Toisella kielellä oleva tarina luetaan edelleen omalla kielellään, ellei sen tarinan kohdalla ole valittu Käännä omalle kielelleni.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Paina ja pidä 3 sekuntia.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Paina ja pidä 3 sekuntia</value></data>
@@ -213,12 +185,6 @@
   <data name="Speed_SubWindows" xml:space="preserve"><value>Hitaampi on pienille helpompaa - vaihda vasemmalla ja oikealla nuolinäppäimellä</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Lue uudelleen</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Vain aikuiset näkevät tämän. Lapsesi hylly on yhden napsautuksen päässä.</value></data>
-  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Ei yhteyttä. Luetaan puhelimen äänellä. Yritä äänen latausta uudelleen napsauttamalla.</value></data>
-  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>Odotetaan internetiä. Lataus jatkuu itsestään, kun olet taas verkossa. Yritä nyt napsauttamalla.</value></data>
-  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>Odotetaan Wi-Fiä. Lataus jatkuu itsestään Wi-Fillä. Lataa nyt napsauttamalla.</value></data>
-  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>Äänen lataus vioittui. Luetaan puhelimen äänellä. Yritä uudelleen napsauttamalla.</value></data>
-  <data name="PackStatus_FailedClick" xml:space="preserve"><value>Luonnollisia ääniä ei voitu ladata. Luetaan puhelimen äänellä. Yritä uudelleen napsauttamalla.</value></data>
-  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Lataus pysäytetty. Luetaan puhelimen äänellä. Lataa napsauttamalla.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Paljonko on {0} plus {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Tarinan kieli</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · tunnistettu</value></data>
@@ -229,15 +195,8 @@
   <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>Kieltä {0} ei voi vielä kääntää</value></data>
   <!-- /Slice 107 -->
   <!-- Slice 108 -->
-  <data name="Cast_VoicesFor" xml:space="preserve"><value>Äänet kielelle {0}</value></data>
   <!-- /Slice 108 -->
   <!-- Slice 109 -->
-  <data name="Narrator_Title" xml:space="preserve"><value>Kertoja</value></data>
-  <data name="Narrator_Subtitle" xml:space="preserve"><value>Kertojan ääni kaikille kirjoille</value></data>
-  <data name="Narrator_MyLanguage" xml:space="preserve"><value>OMA KIELENI</value></data>
-  <data name="Narrator_Footnote" xml:space="preserve"><value>Jos kirjan henkilöllä on kertojan ääni, Dino antaa hänelle toisen äänen.</value></data>
-  <data name="Cast_ChangeForAll" xml:space="preserve"><value>Vaihda kaikille kirjoille</value></data>
-  <data name="Narrator_Sample" xml:space="preserve"><value>Kuuntele tämä ääni</value></data>
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>Tämä kirja</value></data>
@@ -267,19 +226,8 @@
   <!-- /Slice 111 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
-  <data name="Cast_PickTitle" xml:space="preserve"><value>Kuka esittää hahmoa {0}?</value></data>
-  <data name="Cast_PickSubtitle" xml:space="preserve"><value>Tälle kirjalle, kieli: {0}</value></data>
-  <data name="Cast_FilterGirls" xml:space="preserve"><value>Tytöt</value></data>
-  <data name="Cast_FilterBoys" xml:space="preserve"><value>Pojat</value></data>
-  <data name="Cast_FilterEveryone" xml:space="preserve"><value>Kaikki</value></data>
   <!-- /Slice 113 -->
   <!-- Slice 115 -->
-  <data name="Storyteller_Getting" xml:space="preserve"><value>Ladataan tarinankertojan ääniä…</value></data>
-  <data name="Storyteller_WaitWifi" xml:space="preserve"><value>Tarinankertojan äänet odottavat Wi-Fi-yhteyttä</value></data>
-  <data name="Storyteller_WaitInternet" xml:space="preserve"><value>Odotetaan internetiä</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Lataa nyt</value></data>
-  <data name="Storyteller_Ready" xml:space="preserve"><value>Tarinankertojan äänet ovat valmiina</value></data>
-  <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Tarinasi käyttävät nyt uusia tarinankertojan ääniä.</value></data>
   <data name="Update_Title" xml:space="preserve"><value>Dino tarvitsee päivityksen</value></data>
   <data name="Update_Body" xml:space="preserve"><value>Pyydä aikuista hakemaan uusi versio. Kirjasi ja äänityksesi säilyvät sellaisinaan.</value></data>
   <data name="Update_Button" xml:space="preserve"><value>Päivitä Dino</value></data>
@@ -305,16 +253,10 @@
   <data name="Speed_Sub" xml:space="preserve"><value>Hitaampi on helpompaa pienille</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · hidas</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
-  <data name="Speed_Play" xml:space="preserve"><value>Kuuntele tämä nopeus</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>Dino laskee, mitä kirjoja luetaan, ilman nimiä tai tunnisteita. Voit poistaa tämän käytöstä Asetuksissa. Mukana on myös maasi ja likimääräinen laitetyyppi (puhelin tai tabletti, muistin vaihteluväli). Jos sovellus kaatuu, se voi lähettää myös kaatumisraportin: virheen ja lyhyen teknisen lokin, ei koskaan mitään lukemaasi tai kirjoittamaasi.</value></data>
-  <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Kertojasi ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} Mt</value></data>
-  <data name="Storyteller_Failed" xml:space="preserve"><value>Tarinankertojan äänien lataus epäonnistui</value></data>
-  <data name="Storyteller_TryAgain" xml:space="preserve"><value>Yritä uudelleen</value></data>
   <!-- /Slice 115 -->
   <data name="Wizard_Next" xml:space="preserve"><value>Seuraava</value></data>
-  <data name="Wait_GettingVoices" xml:space="preserve"><value>Valmistellaan ääniä…</value></data>
-  <data name="Wait_Stalled" xml:space="preserve"><value>Ääntä valmistellaan vielä…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Käännetään…</value></data>
   <data name="Wait_WaitingInternet" xml:space="preserve"><value>Odotetaan internetiä</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>Tallennetaan…</value></data>
@@ -334,34 +276,13 @@
   <data name="Reading_ReadFailed" xml:space="preserve"><value>Lukemisessa tapahtui virhe.</value></data>
   <data name="Reading_LayoutFailed" xml:space="preserve"><value>Tämän tarinan ulkoasua ei voitu muodostaa. Käännä näyttöä tai vaihda tilaa ja yritä uudelleen.</value></data>
   <data name="Reading_PageN" xml:space="preserve"><value>Luetaan sivua {0}</value></data>
-  <data name="Cast_Title" xml:space="preserve"><value>Kuka puhuu</value></data>
-  <data name="Cast_Narrator" xml:space="preserve"><value>Kertoja</value></data>
-  <data name="Cast_Main" xml:space="preserve"><value>PÄÄHAHMO</value></data>
-  <data name="Cast_Edited" xml:space="preserve"><value>MUOKATTU</value></data>
-  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>Takaisin kirjan ääneen</value></data>
-  <data name="Cast_SharedVoice" xml:space="preserve"><value>Jaettu ääni</value></data>
-  <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Tuntematon puhuja</value></data>
-  <data name="Cast_PreviewLine" xml:space="preserve"><value>Hei! Tältä kuulostan, kun luen tarinaasi.</value></data>
-  <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Muutosta ei voitu tallentaa</value></data>
-  <data name="Cast_SaveFailedBody" xml:space="preserve"><value>Hahmoja ei tallennettu. Yritä hetken kuluttua uudelleen.</value></data>
-  <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>Ääntä ei voitu toistaa juuri nyt.</value></data>
-  <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>Hahmoja ei voitu avata</value></data>
-  <data name="Cast_LoadFailedBody" xml:space="preserve"><value>Tämän tarinan hahmoja ei voitu selvittää. Yritä hetken kuluttua uudelleen.</value></data>
-  <data name="Cast_Words_One" xml:space="preserve"><value>{0} sana</value></data>
-  <data name="Cast_Words_Other" xml:space="preserve"><value>{0} sanaa</value></data>
-  <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} rivi</value></data>
-  <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} riviä</value></data>
-  <data name="Cast_UsesNarrator" xml:space="preserve"><value>käyttää kertojan ääntä</value></data>
-  <data name="Cast_Hear" xml:space="preserve"><value>Kuuntele: {0}</value></data>
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Eläinten äänet</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Eläimet sanovat välillä “Röh!” tai “Mää!”, kaikissa kirjoissa</value></data>
-  <data name="Cast_SharedNote" xml:space="preserve"><value>Tässä kirjassa on enemmän hahmoja kuin käytettävissä olevia {0} kertojahahmoa, joten jotkin kuulostavat samalta. Kertojaa ei koskaan anneta hahmolle.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Ladataan {0}-käännöspakettia…</value></data>
   <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>Millä kielillä tarinoiden pitäisi olla?</value></data>
   <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Valitse enintään kaksi lisää. Lapsesi voi vaihtaa kieltä lukiessaan.</value></data>
   <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>Sovelluksen kieli</value></data>
   <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>Ohita, vain {0}</value></data>
-  <data name="StoryLanguages_Getting" xml:space="preserve"><value>Valmistellaan ääntä · {0} %</value></data>
   <data name="StoryLanguages_Full" xml:space="preserve"><value>Kolme valittu. Poista yksi valinta, jos haluat valita toisen.</value></data>
   <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>Tarinoiden kielet</value></data>
   <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>Lapsesi voi vaihtaa näiden välillä lukiessaan. Enintään kolme.</value></data>
@@ -375,20 +296,11 @@
   <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Et ole Wi-Fi-yhteydessä. {0} ladataan mobiilidatalla.</value></data>
   <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Lataa nyt</value></data>
   <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Odota Wi-Fi-yhteyttä</value></data>
-  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>Odotetaan Wi-Fi-yhteyttä</value></data>
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Päivitetään kirjojasi…</value></data>
   <!-- /Slice 181 -->
   <!-- Slice 183: machine draft, for native review -->
-  <data name="Notify_Title" xml:space="preserve"><value>Jatketaanko lataamista, kun puhelin on lukittu?</value></data>
-  <data name="Notify_Body" xml:space="preserve"><value>Salli ilmoitukset, jotta ääni latautuu edelleen puhelimen ollessa lukittuna tai käyttäessäsi muita sovelluksia. Näet edistymisen siellä.</value></data>
-  <data name="Notify_NotNow" xml:space="preserve"><value>Ei nyt</value></data>
-  <data name="Notify_Continue" xml:space="preserve"><value>Jatka</value></data>
   <!-- Slice 208: machine draft, for native review -->
-  <data name="PackNotify_Downloading" xml:space="preserve"><value>Valmistellaan {0}-ääntä ({1} Mt) · {2}</value></data>
-  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Lataus keskeytetty. Viimeistele napauttamalla.</value></data>
-  <data name="PackNotify_Named" xml:space="preserve"><value>{0}-ääni ({1} Mt)</value></data>
-  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-ääni ({1} Mt) · {2} % valmis</value></data>
   <data name="BackCover_StoryBy" xml:space="preserve"><value>Tarina: {0}</value></data>
   <data name="BackCover_OriginalStoryBy" xml:space="preserve"><value>Alkuperäinen tarina: {0}</value></data>
   <data name="BackCover_Traditional" xml:space="preserve"><value>Perinteinen kertomus</value></data>

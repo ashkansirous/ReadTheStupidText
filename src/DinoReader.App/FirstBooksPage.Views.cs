@@ -172,7 +172,7 @@ public partial class FirstBooksPage
 
 	private string PickedLine(int ticked) =>
 		FirstBooks.TotalBytes(_items, _ticked) is { } bytes
-			? AppResources.Format(AppResources.FirstBooks_Picked, ticked, CastText.StorytellerSize(ReadTheStupidText.Application.Reading.StorytellerOffer.Megabytes(bytes)))
+			? AppResources.Format(AppResources.FirstBooks_Picked, ticked, AppResources.Format(AppResources.Storyteller_Size, ReadTheStupidText.Application.Reading.StorytellerOffer.Megabytes(bytes)))
 			: AppResources.Format(AppResources.FirstBooks_PickedNoSize, ticked);
 
 	private void BuildCards()

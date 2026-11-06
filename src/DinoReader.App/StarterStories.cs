@@ -11,7 +11,7 @@ namespace DinoReader;
 /// (<see cref="IsStarterId"/>, <see cref="IsCatalogueId"/>); they have the same ids as the store copies, so they update and get audio like any store book.
 /// This class also swaps a store book's newer package in for the copy on the shelf (<see cref="SwapFromStoreAsync"/>, Slice 181) and finishes a swap a crash interrupted.
 /// </summary>
-public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
+public sealed class StarterStories(IStoryLibrary library)
 {
 	private const string InstalledKeyPrefix = "dino.starter.installed.";
 
@@ -259,7 +259,7 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 		try
 		{
 			IReadOnlyList<StarterUpdate.RecordingMove> copied = await CopyRecordingsAsync(stored, fresh, StarterUpdate.RecordingMoves(stored, fresh));
-			refreshed = await WithAnimalVoicesAsync(stored, StarterUpdate.Refresh(stored, fresh, copied));
+			refreshed = StarterUpdate.Refresh(stored, fresh, copied);
 			await library.UpdateAsync(await WithCoverPhotoAsync(stored, fresh, refreshed));
 		}
 		catch
@@ -345,34 +345,6 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 			await library.DeleteAsync(story.Id);
 		}
 	}
-
-	// A kept character that just gained an animal gets the animal's voice, the way the cast screen picks it (a voice the grown-up chose by hand stays; a language with no voices yet is left).
-	// The voices are a nicety: if picking them fails the refreshed story is kept without them, never dropped.
-	private async Task<Story> WithAnimalVoicesAsync(Story stored, Story refreshed)
-	{
-		try
-		{
-			foreach (var group in StarterUpdate.AnimalVoicesToRecast(stored, refreshed, SpeakersFor).GroupBy(r => r.Language))
-			{
-				if (voicing.VoicesFor(group.Key).Count > 0)
-				{
-					IReadOnlyList<CastMember> cast = await voicing.RecastCharactersAsync(
-						refreshed, group.Key, refreshed.CastIn(group.Key), group.Select(r => r.CharacterId).ToList());
-					refreshed = refreshed.WithCastIn(group.Key, cast);
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			Debug.WriteLine($"Dino Reader could not pick the animal voices of the refreshed starter {stored.SourceId}: {ex}");
-		}
-
-		return refreshed;
-	}
-
-	// The speakers a cast language can really be cast with: its roster adapted to the voices installed now.
-	private IReadOnlyList<StorytellerCharacter> SpeakersFor(string language) =>
-		voicing.RosterFor(language).Where(c => c.Kind == CharacterKind.Speaker).ToList();
 
 	// A gallery photo cover the grown-up chose is copied into the refreshed story's folder under a new name; a missing file falls back to the bundled cover.
 	private async Task<Story> WithCoverPhotoAsync(Story stored, Story fresh, Story refreshed)

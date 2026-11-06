@@ -16,7 +16,7 @@ public enum DeleteOutcome
 /// <summary>The words of a delete question: its title, body and the accepting button (Slice 189: a book's "Remove from the shelf" says more than the default).</summary>
 public sealed record DeletePrompt(string Title, string Body, string Accept);
 
-/// <summary>Library actions the gallery's grown-up overlay and the cast and Record screens share (Slice 278: the story wizard is gone).</summary>
+/// <summary>Library actions the gallery's grown-up overlay and the Record screen shares (Slice 278: the story wizard and the cast screen are gone).</summary>
 public sealed class StoryActions(IStoryLibrary library, IServiceProvider services, GrownUpMode mode)
 {
 	private const string FallbackFileName = "story";
@@ -28,19 +28,6 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		var reading = services.GetRequiredService<ReadingPage>();
 		reading.Load(story);
 		await navigation.PushAsync(reading);
-	}
-
-	/// <summary>Opens the cast screen on <paramref name="story"/>; its edits are saved as they are made.</summary>
-	public async Task CastAsync(INavigation navigation, Story story)
-	{
-		if (!mode.IsGrownUp)
-		{
-			return;
-		}
-
-		var cast = services.GetRequiredService<CastPage>();
-		cast.Load(story, SaveCastAsync);
-		await navigation.PushAsync(cast);
 	}
 
 	/// <summary>Opens the Record screen on <paramref name="story"/> (Slice 111): the grown-up reads each page aloud and the recordings are saved as they are made.</summary>
@@ -57,17 +44,6 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		{
 			await navigation.PushAsync(record);
 		}
-	}
-
-	/// <summary>Saves the casts (every language's) of <paramref name="edited"/> onto the stored story, leaving
-	/// everything else in the stored file (its reading mode, say) as it is.</summary>
-	public async Task SaveCastAsync(Story edited)
-	{
-		Story current = await library.GetAsync(edited.Id) ?? throw new InvalidOperationException("The story is no longer saved.");
-		await library.UpdateAsync(current with
-		{
-			Cast = edited.Cast, LanguageCasts = edited.LanguageCasts, AnimalSoundsOn = edited.AnimalSoundsOn,
-		});
 	}
 
 	/// <summary>Developer-only (Slice 91): writes <paramref name="story"/> as a <c>.dino</c> package and hands it to the share sheet.

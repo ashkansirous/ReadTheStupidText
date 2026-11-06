@@ -6,28 +6,17 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>キャンセル</value></data>
-  <data name="PackStatus_Resolving" xml:space="preserve"><value>自然な音声を確認中…</value></data>
-  <data name="PackStatus_Downloading" xml:space="preserve"><value>自然な音声をダウンロード中… {0}</value></data>
-  <data name="PackStatus_Offline" xml:space="preserve"><value>接続されていません。スマートフォンの音声で読み上げます。タップして音声のダウンロードを再試行します。</value></data>
-  <data name="PackStatus_Waiting" xml:space="preserve"><value>インターネットを待っています。オンラインに戻ると自動で再開します。タップで今すぐ再試行します。</value><comment>Machine draft: needs native review</comment></data>
-  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Wi-Fiを待っています。Wi-Fiにつながると自動で再開します。タップで今すぐダウンロードします。</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_Waiting" xml:space="preserve"><value>インターネットを待っています · {0}%</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Wi-Fiを待っています · {0}%</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>オンラインに戻ると自動で再開します。</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Getting" xml:space="preserve"><value>本の{0}音声を取得中</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>「{0}」にはまだ{1}の音声がありません。ディノの読み上げ音声で読みます。</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>「{0}」ほか{2}冊にはまだ{1}の音声がありません。ディノの読み上げ音声で読みます。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>「{0}」にはまだ{1}の音声がありません。ダウンロードが終わると、その音声で読みます。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>「{0}」ほか{2}冊にはまだ{1}の音声がありません。ダウンロードが終わると、それぞれの音声で読みます。</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>インターネットを待っています…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Wi-Fiを待っています…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Preparing" xml:space="preserve"><value>準備しています…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>{0}の音声の一部をまだ取得できていません。ディノは後でもう一度試します。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_AudioUnavailable" xml:space="preserve"><value>この本には、この言語の音声がまだありません。</value></data>
+  <data name="Reading_NoSound" xml:space="preserve"><value>この部分には音がありません</value></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>再試行</value><comment>Machine draft: needs native review</comment></data>
-  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>音声のダウンロードが破損しました。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
-  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然な音声パックを使用できません。スマートフォンの音声で読み上げます。</value></data>
-  <data name="PackStatus_Failed" xml:space="preserve"><value>自然な音声をダウンロードできませんでした。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
   <!-- Slice 204: machine draft, for native review -->
-  <data name="PackStatus_Stopped" xml:space="preserve"><value>ダウンロードを停止しました。スマートフォンの音声で読み上げます。タップしてダウンロードします。</value></data>
-  <data name="PackStatus_Unavailable" xml:space="preserve"><value>お使いの言語の自然な音声はまだ利用できません。スマートフォンの音声で読み上げます。</value></data>
   <data name="Common_Back" xml:space="preserve"><value>戻る</value></data>
   <data name="Common_Save" xml:space="preserve"><value>保存</value></data>
   <data name="Common_Done" xml:space="preserve"><value>完了</value></data>
@@ -114,10 +103,6 @@
   <data name="FirstRun_Hello" xml:space="preserve"><value>こんにちは！どの言語で読みますか？</value></data>
   <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino がその言語の声をダウンロードします。あとでロックの奥で変更できます。</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>続ける</value></data>
-  <data name="FirstRun_GettingReady" xml:space="preserve"><value>Dino の声を準備中</value></data>
-  <data name="FirstRun_Once" xml:space="preserve"><value>声：{0} · 最初の1回だけです</value></data>
-  <data name="FirstRun_Downloading" xml:space="preserve"><value>ダウンロード中…</value></data>
-  <data name="FirstRun_PickAnother" xml:space="preserve"><value>別の言語を選ぶ</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>読む準備ができました！</value></data>
   <data name="FirstRun_ReadyBody" xml:space="preserve"><value>どのキャラクターにもそれぞれの声があります。本は本棚に入っています。</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>はじめの本をえらぼう</value><comment>Machine draft: needs native review</comment></data>
@@ -130,8 +115,6 @@
   <data name="FirstBooks_BookOf" xml:space="preserve"><value>{0}冊目 / 全{1}冊</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>インターネットにつないで、はじめの本をえらびましょう</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>はじめる前に、Dinoには2冊の本が必要です。Wi-Fiかモバイルデータをオンにして、もういちどためしてください。</value><comment>Machine draft: needs native review</comment></data>
-  <data name="FirstRun_HearHello" xml:space="preserve"><value>Dino のあいさつを聞く</value></data>
-  <data name="FirstRun_HelloLine" xml:space="preserve"><value>こんにちは！ぼくは Dino。いっしょに物語を読もう。</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Dinoでできること</value></data>
   <data name="Intro_SkipStart" xml:space="preserve"><value>スキップして読み始める</value></data>
   <data name="Intro_SkipAll" xml:space="preserve"><value>すべてスキップ</value></data>
@@ -148,7 +131,6 @@
   <data name="Intro_RecordTitle" xml:space="preserve"><value>あなたの声で読む</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>物語を1ページずつ読んで録音しましょう。お子さまはいつでも再生できます。</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>はじめの案内をもう一度見る</value></data>
-  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>スマホの声で続ける</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>子どもに渡す</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>保護者モード</value></data>
   <data name="Language_Title" xml:space="preserve"><value>言語</value></data>
@@ -159,15 +141,9 @@
   <data name="Settings_NewVersion" xml:space="preserve"><value>新しいバージョン</value></data>
   <data name="Settings_GearLabel" xml:space="preserve"><value>設定（おとな用）</value></data>
   <data name="Settings_About" xml:space="preserve"><value>アプリについて・アップデート</value></data>
-  <data name="Settings_NarratorVoice" xml:space="preserve"><value>ナレーターの声</value></data>
   <data name="Settings_On" xml:space="preserve"><value>オン</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>オフ</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>設定、ストア、本だな</value></data>
-  <data name="Narrator_ListIntro" xml:space="preserve"><value>おはなしの言語ごとに、それぞれのナレーターがいます。</value></data>
-  <data name="Narrator_OneIntro" xml:space="preserve"><value>{0}の本すべてで、登場人物のあいだの文を読むのはだれか。</value></data>
-  <data name="Narrator_TitleFor" xml:space="preserve"><value>ナレーターの声（{0}）</value></data>
-  <data name="Narrator_NoVoiceValue" xml:space="preserve"><value>未ダウンロード</value></data>
-  <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>{0}の声はまだこのスマホにありません。戻って「言語」を開き、{0}を選んでダウンロードしてから、ここで語り手を選んでください。</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>おとな</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>本を追加・編集</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>おとな向け</value></data>
@@ -191,9 +167,6 @@
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>ページ、写真、声がこのスマホから削除されます。ストアから無料でもう一度追加できます。</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>外す</value></data>
   <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>もっと本を見つける</value></data>
-  <data name="Language_Ready" xml:space="preserve"><value>準備OK</value></data>
-  <data name="Language_Download" xml:space="preserve"><value>ダウンロード</value></data>
-  <data name="Language_Downloading" xml:space="preserve"><value>ダウンロード中 {0}%</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>別の言語の物語は、その物語で「自分の言語に翻訳」をオンにしない限り、その言語のまま読み上げられます。</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>3秒間長押ししてください。</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>3秒間長押ししてください</value></data>
@@ -211,12 +184,6 @@
   <data name="Speed_SubWindows" xml:space="preserve"><value>ゆっくりのほうが小さな子には聞きやすい - 左右の矢印キーで変更</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>もう一度読む</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>ここはおとなだけが見られます。お子さまの本棚はワンクリックで戻れます。</value></data>
-  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>接続されていません。スマートフォンの音声で読み上げます。クリックして音声のダウンロードを再試行します。</value></data>
-  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>インターネットを待っています。オンラインに戻ると自動で再開します。クリックで今すぐ再試行します。</value></data>
-  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>Wi-Fiを待っています。Wi-Fiにつながると自動で再開します。クリックで今すぐダウンロードします。</value></data>
-  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>音声のダウンロードが破損しました。スマートフォンの音声で読み上げます。クリックして再試行します。</value></data>
-  <data name="PackStatus_FailedClick" xml:space="preserve"><value>自然な音声をダウンロードできませんでした。スマートフォンの音声で読み上げます。クリックして再試行します。</value></data>
-  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>ダウンロードを停止しました。スマートフォンの音声で読み上げます。クリックしてダウンロードします。</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>{0} たす {1} は？</value></data>
   <data name="Story_Language" xml:space="preserve"><value>おはなしの言語</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · 自動判定</value></data>
@@ -227,15 +194,8 @@
   <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>{0}はまだ翻訳できません</value></data>
   <!-- /Slice 107 -->
   <!-- Slice 108 -->
-  <data name="Cast_VoicesFor" xml:space="preserve"><value>{0}の声</value></data>
   <!-- /Slice 108 -->
   <!-- Slice 109 -->
-  <data name="Narrator_Title" xml:space="preserve"><value>ナレーター</value></data>
-  <data name="Narrator_Subtitle" xml:space="preserve"><value>すべての本の語り手の声</value></data>
-  <data name="Narrator_MyLanguage" xml:space="preserve"><value>わたしの言語</value></data>
-  <data name="Narrator_Footnote" xml:space="preserve"><value>本の登場人物がナレーターと同じ声のときは、Dinoがその人物に別の声を選びます。</value></data>
-  <data name="Cast_ChangeForAll" xml:space="preserve"><value>すべての本で変更</value></data>
-  <data name="Narrator_Sample" xml:space="preserve"><value>この声を聞く</value></data>
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>この本</value></data>
@@ -265,19 +225,8 @@
   <!-- /Slice 111 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}：{1}</value></data>
-  <data name="Cast_PickTitle" xml:space="preserve"><value>{0}を演じるのは誰？</value></data>
-  <data name="Cast_PickSubtitle" xml:space="preserve"><value>この本では、{0}</value></data>
-  <data name="Cast_FilterGirls" xml:space="preserve"><value>女の子</value></data>
-  <data name="Cast_FilterBoys" xml:space="preserve"><value>男の子</value></data>
-  <data name="Cast_FilterEveryone" xml:space="preserve"><value>みんな</value></data>
   <!-- /Slice 113 -->
   <!-- Slice 115 -->
-  <data name="Storyteller_Getting" xml:space="preserve"><value>語り手の声をダウンロード中…</value></data>
-  <data name="Storyteller_WaitWifi" xml:space="preserve"><value>語り手の声はWi-Fi待ちです</value></data>
-  <data name="Storyteller_WaitInternet" xml:space="preserve"><value>インターネットを待っています</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Storyteller_DownloadNow" xml:space="preserve"><value>今すぐダウンロード</value></data>
-  <data name="Storyteller_Ready" xml:space="preserve"><value>語り手の声の準備ができました</value></data>
-  <data name="Storyteller_ReadyBody" xml:space="preserve"><value>お話に新しい語り手の声が使われるようになりました。</value></data>
   <data name="Update_Title" xml:space="preserve"><value>ディノのアップデートが必要です</value></data>
   <data name="Update_Body" xml:space="preserve"><value>おとなの人に、新しいバージョンを入れてもらってね。本や録音は、そのまま残ります。</value></data>
   <data name="Update_Button" xml:space="preserve"><value>ディノをアップデート</value></data>
@@ -303,19 +252,12 @@
   <data name="Speed_Sub" xml:space="preserve"><value>ゆっくりのほうが小さな子には聞きやすいです</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0.5x · ゆっくり</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
-  <data name="Speed_Play" xml:space="preserve"><value>この速さで聞く</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>Dino はどの本が読まれたかを、名前や ID なしで数えます。設定でオフにできます。あわせて、お住まいの国と大まかな端末の種類（スマートフォンかタブレットか、メモリの範囲）も送ります。アプリが異常終了したときは、クラッシュレポートも送ることがあります。内容はエラーと短い技術ログで、読んだ内容や入力した内容は含まれません。</value></data>
-  <data name="Storyteller_YourNarrator" xml:space="preserve"><value>あなたのナレーター（{0}）</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
-  <data name="Storyteller_Failed" xml:space="preserve"><value>語り手の声をダウンロードできませんでした</value></data>
-  <data name="Storyteller_TryAgain" xml:space="preserve"><value>もう一度試す</value></data>
   <!-- /Slice 115 -->
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
-  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
   <!-- Slice 78: the page-review wizard -->
   <data name="Wizard_Next" xml:space="preserve"><value>次へ</value></data>
-  <data name="Wait_GettingVoices" xml:space="preserve"><value>声を準備しています…</value></data>
-  <data name="Wait_Stalled" xml:space="preserve"><value>まだ音声を準備しています…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>翻訳しています…</value></data>
   <data name="Wait_WaitingInternet" xml:space="preserve"><value>インターネットを待っています</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>保存しています…</value></data>
@@ -335,34 +277,13 @@
   <data name="Reading_ReadFailed" xml:space="preserve"><value>読み上げ中に問題が起きました。</value></data>
   <data name="Reading_LayoutFailed" xml:space="preserve"><value>このおはなしを表示できませんでした。画面を回すかモードを切り替えて、もう一度お試しください。</value></data>
   <data name="Reading_PageN" xml:space="preserve"><value>{0} ページを読み上げ中</value></data>
-  <data name="Cast_Title" xml:space="preserve"><value>だれが話している？</value></data>
-  <data name="Cast_Narrator" xml:space="preserve"><value>ナレーター</value></data>
-  <data name="Cast_Main" xml:space="preserve"><value>主役</value></data>
-  <data name="Cast_Edited" xml:space="preserve"><value>編集済み</value></data>
-  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>本の声にもどす</value></data>
-  <data name="Cast_SharedVoice" xml:space="preserve"><value>共有の声</value></data>
-  <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>不明な話し手</value></data>
-  <data name="Cast_PreviewLine" xml:space="preserve"><value>こんにちは！あなたのおはなしを読むときの声はこんな感じです。</value></data>
-  <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>変更を保存できませんでした</value></data>
-  <data name="Cast_SaveFailedBody" xml:space="preserve"><value>配役は保存されませんでした。しばらくしてからもう一度お試しください。</value></data>
-  <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>今は声を再生できません。</value></data>
-  <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>配役を開けませんでした</value></data>
-  <data name="Cast_LoadFailedBody" xml:space="preserve"><value>このおはなしの配役を調べられませんでした。しばらくしてからもう一度お試しください。</value></data>
-  <data name="Cast_Words_One" xml:space="preserve"><value>{0} 語</value></data>
-  <data name="Cast_Words_Other" xml:space="preserve"><value>{0} 語</value></data>
-  <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} 行</value></data>
-  <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} 行</value></data>
-  <data name="Cast_UsesNarrator" xml:space="preserve"><value>ナレーターの声で読みます</value></data>
-  <data name="Cast_Hear" xml:space="preserve"><value>{0} の声を聞く</value></data>
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>どうぶつのこえ</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>どうぶつが ときどき「ブーブー!」や「メェー!」と いいます。どの ほんでも</value></data>
-  <data name="Cast_SharedNote" xml:space="preserve"><value>この本には、用意されている {0} 人の語り手キャラクターより多くの登場人物がいるため、同じように聞こえるキャラクターがいます。ナレーターはキャラクターには使われません。</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>{0}の翻訳パックを取得中…</value></data>
   <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>おはなしは何語にしますか？</value></data>
   <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>あと2つまで選べます。お子さまは読みながら切り替えられます。</value></data>
   <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>アプリの言語</value></data>
   <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>スキップ（{0}のみ）</value></data>
-  <data name="StoryLanguages_Getting" xml:space="preserve"><value>声を準備中 · {0}%</value></data>
   <data name="StoryLanguages_Full" xml:space="preserve"><value>3つ選びました。別の言語を選ぶには、1つ外してください。</value></data>
   <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>おはなしの言語</value></data>
   <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>お子さまは読みながらこれらを切り替えられます。最大3つまで。</value></data>
@@ -376,20 +297,11 @@
   <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Wi-Fiに接続されていません。{0}をモバイルデータでダウンロードします。</value></data>
   <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>今すぐダウンロード</value></data>
   <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Wi-Fiを待つ</value></data>
-  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>Wi-Fi待ち</value></data>
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>本を更新しています…</value></data>
   <!-- /Slice 181 -->
   <!-- Slice 183: machine draft, for native review -->
-  <data name="Notify_Title" xml:space="preserve"><value>スマートフォンのロック中もダウンロードを続けますか?</value></data>
-  <data name="Notify_Body" xml:space="preserve"><value>通知を許可すると、スマートフォンがロックされている間や他のアプリを使っている間も音声のダウンロードが続きます。進み具合は通知で確認できます。</value></data>
-  <data name="Notify_NotNow" xml:space="preserve"><value>今はしない</value></data>
-  <data name="Notify_Continue" xml:space="preserve"><value>続ける</value></data>
   <!-- Slice 208: machine draft, for native review -->
-  <data name="PackNotify_Downloading" xml:space="preserve"><value>{0}の声を準備中（{1} MB）· {2}</value></data>
-  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>ダウンロードを一時停止しました。タップして完了。</value></data>
-  <data name="PackNotify_Named" xml:space="preserve"><value>{0}の音声（{1} MB）</value></data>
-  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}の音声（{1} MB）· {2}% 完了</value></data>
   <data name="BackCover_StoryBy" xml:space="preserve"><value>おはなし：{0}</value></data>
   <data name="BackCover_OriginalStoryBy" xml:space="preserve"><value>原作：{0}</value></data>
   <data name="BackCover_Traditional" xml:space="preserve"><value>むかしからのおはなし</value></data>

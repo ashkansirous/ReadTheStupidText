@@ -87,7 +87,7 @@ public partial class FirstBooksPage : ContentPage
 		BuildViews();
 	}
 
-	/// <summary>Called when the step is done (the shelf holds enough books): the first run goes on to the voice download. Set by whoever shows the page.</summary>
+	/// <summary>Called when the step is done (the shelf holds enough books): the first run goes on to "Ready to read". Set by whoever shows the page.</summary>
 	public Func<Task>? Completed { get; set; }
 
 	/// <summary>Called when the grown-up goes back to the language page. Null (the page is the root after a restart) hides the arrow.</summary>

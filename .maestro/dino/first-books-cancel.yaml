@@ -1,5 +1,5 @@
 # Slice 261: Cancel while the first books download goes back to the picker with the ticks kept (a finished book stays on the shelf, user's design review of frame 165). Against an
-# implementation that drops the ticks or moves on, the picker would show two cards unticked or the voice download would show.
+# implementation that drops the ticks or moves on, the picker would show two cards unticked or "Ready to read" would show.
 # expect-log: HOOK test-store ok stall
 # expect-log: [FirstBooks] picked listed=4 ticked=2
 # expect-log: [FirstBooks] cancelled listed=4 ticked=2
@@ -43,7 +43,7 @@ name: Cancelling the first books keeps the ticks
 - tapOn:
     id: WaitCancel
     waitToSettleTimeoutMs: 300
-# Back on the picker, not on the voice download.
+# Back on the picker, not on "Ready to read".
 - extendedWaitUntil:
     visible:
       id: FirstBooksPicker
@@ -51,4 +51,4 @@ name: Cancelling the first books keeps the ticks
 - assertNotVisible:
     id: WaitLine
 - assertNotVisible:
-    id: "FirstRun(Download|Ready)"
+    id: FirstRunReady

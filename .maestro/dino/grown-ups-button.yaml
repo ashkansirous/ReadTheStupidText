@@ -36,12 +36,6 @@ name: Grown-ups button, gear, book sheet and back chain
     id: GalleryStore
 - assertNotVisible:
     id: GalleryGrownUps
-# The one-time "Storyteller voices are ready" note can cover grown-up mode once the background pack download ends: dismiss it by its OK, only when it is on screen.
-- runFlow:
-    when:
-      visible: Storyteller voices are ready
-    commands:
-      - tapOn: "OK"
 # The sheet of a starter book: Remove, and no Edit pages row on any book (Slice 278). Keep leaves it open; a tap outside closes it.
 - tapOn:
     id: TileMore
@@ -65,12 +59,6 @@ name: Grown-ups button, gear, book sheet and back chain
     waitToSettleTimeoutMs: 300
 - assertNotVisible:
     id: BookSheetRemove
-# The voices-ready note may arrive late and cover the gear: dismiss it again, only when it is on screen.
-- runFlow:
-    when:
-      visible: Storyteller voices are ready
-    commands:
-      - tapOn: "OK"
 # Gear -> Settings (no gate); back goes to grown-up mode, not the kids' shelf.
 - tapOn:
     id: GallerySettings

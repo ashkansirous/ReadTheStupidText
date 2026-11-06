@@ -220,7 +220,7 @@ public sealed class StoryLanguageButton : Border
 			VerticalOptions = LayoutOptions.Center,
 		};
 		Content = new HorizontalStackLayout { Spacing = 6, VerticalOptions = LayoutOptions.Center, Children = { ring, _chevron } };
-		CastViews.AddTap(this, tapped);
+		Taps.AddTap(this, tapped);
 		Colour(DinoTokens.Get(DinoTokens.ControlFill), DinoTokens.Get(DinoTokens.Muted));
 	}
 
@@ -282,7 +282,7 @@ public sealed class StoryLanguageMenu : Grid, IPageOverlay
 		BackgroundColor = DinoTokens.Get(DinoTokens.Scrim);
 		ZIndex = OverlayZ;
 		FlowDirection = UiFlow.Screen;
-		CastViews.AddTap(this, () => CloseAsync(null));
+		Taps.AddTap(this, () => CloseAsync(null));
 		Add(Card(languages, current, anchor));
 	}
 
@@ -307,7 +307,7 @@ public sealed class StoryLanguageMenu : Grid, IPageOverlay
 			Shadow = new Shadow { Brush = Brush.Black, Opacity = 0.28f, Radius = 18, Offset = new Point(0, 8) },
 			Content = rows,
 		};
-		CastViews.AddTap(card, () => Task.CompletedTask); // a tap on the card itself is not "outside"
+		Taps.AddTap(card, () => Task.CompletedTask); // a tap on the card itself is not "outside"
 		return card;
 	}
 
@@ -344,7 +344,7 @@ public sealed class StoryLanguageMenu : Grid, IPageOverlay
 			Content = new HorizontalStackLayout { Spacing = 10, VerticalOptions = LayoutOptions.Center, Children = { flag, name } },
 		};
 		SemanticProperties.SetDescription(row, AppResources.Format(AppResources.StoryLanguages_ButtonLabel, LanguageNames.NativeName(language)));
-		CastViews.AddTap(row, () => CloseAsync(language));
+		Taps.AddTap(row, () => CloseAsync(language));
 		return row;
 	}
 

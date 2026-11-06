@@ -48,8 +48,7 @@ public static class AppResources
 	// The strings that say "Tap" and have a "...Click" twin; <see cref="Get"/> swaps to the twin when <see cref="UseClickWording"/> is on.
 	private static readonly HashSet<string> ClickWorded =
 	[
-		nameof(Gallery_CornerLine), nameof(PackStatus_Offline), nameof(PackStatus_Waiting), nameof(PackStatus_WaitingWifi),
-		nameof(PackStatus_HashMismatch), nameof(PackStatus_Failed), nameof(PackStatus_Stopped),
+		nameof(Gallery_CornerLine),
 	];
 
 	/// <summary>The string for <paramref name="key"/> in <paramref name="culture"/> (a story's language, say), falling back to English.</summary>
@@ -61,20 +60,6 @@ public static class AppResources
 
 	public static string App_Name => Get();
 	public static string Add_FileSub => Get();
-	public static string Cast_UnknownGender => Get();
-	public static string Cast_VoicesFor => Get();
-	public static string Narrator_Title => Get();
-	public static string Narrator_Subtitle => Get();
-	public static string Narrator_MyLanguage => Get();
-	public static string Narrator_Footnote => Get();
-	public static string Cast_ChangeForAll => Get();
-	public static string Narrator_Sample => Get();
-	public static string Storyteller_Getting => Get();
-	public static string Storyteller_WaitWifi => Get();
-	public static string Storyteller_WaitInternet => Get();
-	public static string Storyteller_DownloadNow => Get();
-	public static string Storyteller_Ready => Get();
-	public static string Storyteller_ReadyBody => Get();
 	public static string Update_Title => Get();
 	public static string Update_Body => Get();
 	public static string Update_Button => Get();
@@ -100,12 +85,8 @@ public static class AppResources
 	public static string Speed_Sub => Get();
 	public static string Speed_EndSlow => Get();
 	public static string Speed_Value => Get();
-	public static string Speed_Play => Get();
 	public static string FirstRun_Usage => Get();
-	public static string Storyteller_YourNarrator => Get();
 	public static string Storyteller_Size => Get();
-	public static string Storyteller_Failed => Get();
-	public static string Storyteller_TryAgain => Get();
 	public static string Book_Title => Get();
 	public static string Book_Back => Get();
 	public static string Rec_Title => Get();
@@ -130,17 +111,6 @@ public static class AppResources
 	public static string Rec_Failed => Get();
 	public static string Common_Ok => Get();
 	public static string Common_Cancel => Get();
-	public static string PackStatus_Resolving => Get();
-	public static string PackStatus_Downloading => Get();
-	public static string PackStatus_Offline => Get();
-	public static string PackStatus_OfflineClick => Get();
-	public static string PackStatus_Waiting => Get();
-	public static string PackStatus_WaitingClick => Get();
-	public static string PackStatus_WaitingWifi => Get();
-	public static string PackStatus_WaitingWifiClick => Get();
-	public static string StoryLanguages_Waiting => Get();
-	public static string StoryLanguages_WaitingWifi => Get();
-	public static string StoryLanguages_WaitingNote => Get();
 	public static string ShelfAudio_Getting => Get();
 	public static string ShelfAudio_NoneOne => Get();
 	public static string ShelfAudio_NoneMany => Get();
@@ -148,15 +118,9 @@ public static class AppResources
 	public static string ShelfAudio_WaitingWifi => Get();
 	public static string ShelfAudio_Preparing => Get();
 	public static string ShelfAudio_Failed => Get();
+	public static string Reading_AudioUnavailable => Get();
+	public static string Reading_NoSound => Get();
 	public static string StoryLanguages_Retry => Get();
-	public static string PackStatus_HashMismatch => Get();
-	public static string PackStatus_HashMismatchClick => Get();
-	public static string PackStatus_InvalidPack => Get();
-	public static string PackStatus_Failed => Get();
-	public static string PackStatus_FailedClick => Get();
-	public static string PackStatus_Stopped => Get();
-	public static string PackStatus_StoppedClick => Get();
-	public static string PackStatus_Unavailable => Get();
 	public static string Common_Back => Get();
 	public static string Common_Save => Get();
 	public static string Common_Done => Get();
@@ -242,10 +206,6 @@ public static class AppResources
 	public static string FirstRun_Hello => Get();
 	public static string FirstRun_HelloBody => Get();
 	public static string FirstRun_Continue => Get();
-	public static string FirstRun_GettingReady => Get();
-	public static string FirstRun_Once => Get();
-	public static string FirstRun_Downloading => Get();
-	public static string FirstRun_PickAnother => Get();
 	public static string FirstRun_Ready => Get();
 	public static string FirstRun_ReadyBody => Get();
 	public static string FirstBooks_Title => Get();
@@ -258,8 +218,6 @@ public static class AppResources
 	public static string FirstBooks_BookOf => Get();
 	public static string FirstBooks_OfflineTitle => Get();
 	public static string FirstBooks_OfflineBody => Get();
-	public static string FirstRun_HearHello => Get();
-	public static string FirstRun_HelloLine => Get();
 	public static string Intro_SeeWhat => Get();
 	public static string Intro_SkipStart => Get();
 	public static string Intro_SkipAll => Get();
@@ -276,7 +234,6 @@ public static class AppResources
 	public static string Intro_RecordTitle => Get();
 	public static string Intro_RecordLine => Get();
 	public static string Intro_ShowAgain => Get();
-	public static string FirstRun_PhoneVoice => Get();
 	public static string Gallery_ReadyForChild => Get();
 	public static string Gallery_GrownUpMode => Get();
 	public static string Language_Title => Get();
@@ -287,15 +244,9 @@ public static class AppResources
 	public static string Settings_NewVersion => Get();
 	public static string Settings_GearLabel => Get();
 	public static string Settings_About => Get();
-	public static string Settings_NarratorVoice => Get();
 	public static string Settings_On => Get();
 	public static string Settings_Off => Get();
 	public static string Language_PageSub => Get();
-	public static string Narrator_ListIntro => Get();
-	public static string Narrator_OneIntro => Get();
-	public static string Narrator_TitleFor => Get();
-	public static string Narrator_NoVoiceValue => Get();
-	public static string Narrator_NoVoiceHint => Get();
 	public static string Gallery_GrownUpsTitle => Get();
 	public static string Gallery_GrownUpsSub => Get();
 	public static string Gallery_GrownUpsButton => Get();
@@ -320,9 +271,6 @@ public static class AppResources
 	public static string Book_RemoveBodyStore => Get();
 	public static string Book_RemoveConfirm => Get();
 	public static string Gallery_GetMoreBooks => Get();
-	public static string Language_Ready => Get();
-	public static string Language_Download => Get();
-	public static string Language_Downloading => Get();
 	public static string Language_Footer => Get();
 	public static string Gate_HoldBody => Get();
 	public static string Gate_HoldDescription => Get();
@@ -347,8 +295,6 @@ public static class AppResources
 	public static string Story_TranslateAndroidOnly => Get();
 	public static string Story_TranslateUnsupportedPair => Get();
 	public static string Wizard_Next => Get();
-	public static string Wait_GettingVoices => Get();
-	public static string Wait_Stalled => Get();
 	public static string Wait_Translating => Get();
 	public static string Wait_WaitingInternet => Get();
 	public static string Wait_Saving => Get();
@@ -368,40 +314,14 @@ public static class AppResources
 	public static string Reading_ReadFailed => Get();
 	public static string Reading_LayoutFailed => Get();
 	public static string Reading_PageN => Get();
-	public static string Cast_Title => Get();
-	public static string Cast_Narrator => Get();
-	public static string Cast_Main => Get();
-	public static string Cast_Edited => Get();
-	public static string Cast_BackToBookVoice => Get();
 	public static string Cast_Pair => Get();
-	public static string Cast_PickTitle => Get();
-	public static string Cast_PickSubtitle => Get();
-	public static string Cast_FilterGirls => Get();
-	public static string Cast_FilterBoys => Get();
-	public static string Cast_FilterEveryone => Get();
-	public static string Cast_SharedVoice => Get();
-	public static string Cast_UnknownSpeaker => Get();
-	public static string Cast_PreviewLine => Get();
-	public static string Cast_SaveFailedTitle => Get();
-	public static string Cast_SaveFailedBody => Get();
-	public static string Cast_PreviewFailedBody => Get();
-	public static string Cast_LoadFailedTitle => Get();
-	public static string Cast_LoadFailedBody => Get();
-	public static string Cast_Words_One => Get();
-	public static string Cast_Words_Other => Get();
-	public static string Cast_UnknownLines_One => Get();
-	public static string Cast_UnknownLines_Other => Get();
-	public static string Cast_UsesNarrator => Get();
-	public static string Cast_Hear => Get();
 	public static string Settings_AnimalSounds_Title => Get();
 	public static string Settings_AnimalSounds_Sub => Get();
-	public static string Cast_SharedNote => Get();
 	public static string Wait_DownloadingPack => Get();
 	public static string StoryLanguages_IntroTitle => Get();
 	public static string StoryLanguages_IntroLine => Get();
 	public static string StoryLanguages_AppLanguage => Get();
 	public static string StoryLanguages_SkipOnly => Get();
-	public static string StoryLanguages_Getting => Get();
 	public static string StoryLanguages_Full => Get();
 	public static string StoryLanguages_SettingsTitle => Get();
 	public static string StoryLanguages_SettingsLine => Get();
@@ -414,16 +334,7 @@ public static class AppResources
 	public static string StoryLanguages_WifiTitle => Get();
 	public static string StoryLanguages_WifiBody => Get();
 	public static string StoryLanguages_WifiNow => Get();
-	public static string Notify_Title => Get();
-	public static string Notify_Body => Get();
-	public static string Notify_NotNow => Get();
-	public static string Notify_Continue => Get();
-	public static string PackNotify_Downloading => Get();
-	public static string PackNotify_PausedTitle => Get();
-	public static string PackNotify_Named => Get();
-	public static string PackNotify_PausedDetail => Get();
 	public static string StoryLanguages_WifiWait => Get();
-	public static string StoryLanguages_WifiWaiting => Get();
 	public static string StoryLanguages_FlagMap => Get();
 	public static string Gallery_UpdatingBooks => Get();
 	public static string BackCover_StoryBy => Get();

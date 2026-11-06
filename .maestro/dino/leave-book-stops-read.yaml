@@ -1,5 +1,5 @@
 # Slice 248: leaving a book with the Back chip stops its read, and the next book opens idle (Play, not Pause) and reads its own text.
-# Needs the installed voice pack on the device (the device stage installs it first); the flow waits for the Pause control, i.e. for the read to be Playing, before it leaves.
+# The flow waits for the Pause control, i.e. for the read to be Playing, before it leaves (Slice 278 part B: a piece with no clip is shown for a beat, which counts as Playing).
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK open-book opened page=1
 # expect-log: [Reading] left the page, read stopped
@@ -8,7 +8,7 @@ appId: uk.sirous.dinoreader.dbg
 name: Leaving a book stops the read, the next book starts idle
 ---
 - launchApp:
-    # No clearState (as in the Slice 244 flow): clearing the app's data would remove the neural voice pack, and skip-first-run skips the page that installs it. The device stage installs the pack first (first-run-pack-start.yaml); this flow keeps it.
+    # No clearState (as in the Slice 244 flow): the app keeps its data.
     arguments:
       cmd: skip-first-run
       lang: en

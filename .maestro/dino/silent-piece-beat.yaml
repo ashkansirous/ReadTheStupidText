@@ -1,0 +1,57 @@
+# Slice 278 part B: no phone voice ever reads anything. A piece with no clip and no recording is shown and highlighted for a short fixed beat, one fallback is reported for it, and the read goes on
+# with the next piece as if it had played. The shelf's audio run installs pre-made audio packs from the live store a few seconds after the books land (run 5e4c1765291f: "78 of 78 pieces have a clip"),
+# so the flow first switches the Debug test store to offline (`test-store mode=offline`, set before the first-run page): the run's store listing then fails, no pack is ever installed, and every piece of
+# Three Little Pigs has no clip. The test books themselves still import (the Debug assets never touch the network).
+# The "[AudioPack] silent piece shown (sentence n)" lines are written by ReadingSession.BeginBeat for each piece (Debug builds reach the test-hook log): sentence 0 and then sentence 1 prove the read went on
+# after the first beat. The fallback line is the sink's first row for the kind (premade_audio:clip_missing). The Play control describes itself as Pause while a beat runs (the state is Playing).
+# To see it fail against the old behaviour: before Slice 278 part B the piece was read by the device voice, so no "silent piece shown" line is ever written.
+# expect-log: HOOK test-store ok offline
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK read start
+# expect-log: [AudioPack] silent piece shown (sentence 0)
+# expect-log: [AudioPack] silent piece shown (sentence 1)
+# expect-log: [Usage] fallback premade_audio:clip_missing times=1 queued
+appId: uk.sirous.dinoreader.dbg
+name: A piece with no clip is shown for a beat and the read goes on
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, side languages, installed audio packs, a stored shelf order); fine here: skip-first-run puts the four test books back and no audio pack may be installed beforehand, so that every piece has no clip.
+    clearState: true
+    arguments:
+      cmd: test-store
+      mode: offline
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+# A beat counts as Playing, so the control offers Pause at once.
+- extendedWaitUntil:
+    visible: Pause
+    timeout: 30000
+# Real wait of 8 s (nothing with this id ever shows; optional lets the flow go on): at 1.2 s a beat, the read is on its next pieces by then.
+- extendedWaitUntil:
+    visible:
+      id: SilentBeatNeverShown
+    timeout: 8000
+    optional: true
+- assertVisible:
+    id: ReadingSurface

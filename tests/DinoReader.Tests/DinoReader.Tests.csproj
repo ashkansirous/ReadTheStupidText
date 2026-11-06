@@ -28,7 +28,6 @@
     <!-- The own-books cleanup's decision and failure handling (Slice 278 A3): plain .NET, tested on the real file. -->
     <Compile Include="..\..\src\DinoReader.App\OwnBooksCleanupRun.cs" Link="Linked\OwnBooksCleanupRun.cs" />
     <Compile Include="..\..\src\DinoReader.App\BusyGuard.cs" Link="Linked\BusyGuard.cs" />
-    <Compile Include="..\..\src\DinoReader.App\StorytellerConsent.cs" Link="Linked\StorytellerConsent.cs" />
     <!-- The pure rules of the Debug-only forced book update (Slice 225 item 16). -->
     <Compile Include="..\..\src\DinoReader.App\ForcedUpdateRules.cs" Link="Linked\ForcedUpdateRules.cs" />
     <!-- The usage session (Slice 250): plain .NET, so its id, sequence and roll are tested on the real file. -->

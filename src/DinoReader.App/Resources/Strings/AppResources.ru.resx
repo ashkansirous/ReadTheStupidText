@@ -6,28 +6,17 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Common_Ok" xml:space="preserve"><value>ОК</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Отмена</value></data>
-  <data name="PackStatus_Resolving" xml:space="preserve"><value>Поиск естественных голосов…</value></data>
-  <data name="PackStatus_Downloading" xml:space="preserve"><value>Загрузка естественных голосов… {0}</value></data>
-  <data name="PackStatus_Offline" xml:space="preserve"><value>Нет соединения. Читает голос телефона. Нажмите, чтобы повторить загрузку голоса.</value></data>
-  <data name="PackStatus_Waiting" xml:space="preserve"><value>Ждём интернет. Загрузка продолжится сама, когда вы снова будете онлайн. Нажмите, чтобы попробовать сейчас.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Ждём Wi-Fi. Загрузка продолжится сама по Wi-Fi. Нажмите, чтобы скачать сейчас.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Ждём интернет · {0}%</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Ждём Wi-Fi · {0}%</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Продолжится сама, когда вы снова будете онлайн.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Getting" xml:space="preserve"><value>Загружаем озвучку ({0}) для твоих книг</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>У книги «{0}» пока нет озвучки ({1}). Её прочитает голос чтеца Дино.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>У книги «{0}» и ещё {2} пока нет озвучки ({1}). Их прочитает голос чтеца Дино.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>У книги «{0}» пока нет озвучки ({1}). Её прочитают с озвучкой, когда она загрузится.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>У книги «{0}» и ещё {2} пока нет озвучки ({1}). Их прочитают с озвучкой, когда она загрузится.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Ждём интернет…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Ждём Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Готовимся…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>Часть озвучки ({0}) пока не удалось загрузить. Дино попробует ещё раз позже.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_AudioUnavailable" xml:space="preserve"><value>У этой книги пока нет озвучки на этом языке.</value></data>
+  <data name="Reading_NoSound" xml:space="preserve"><value>В этой части нет звука</value></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Повторить</value><comment>Machine draft: needs native review</comment></data>
-  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Загрузка голоса повреждена. Читает голос телефона. Нажмите, чтобы повторить.</value></data>
-  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Пакет естественных голосов непригоден. Читает голос телефона.</value></data>
-  <data name="PackStatus_Failed" xml:space="preserve"><value>Не удалось загрузить естественные голоса. Читает голос телефона. Нажмите, чтобы повторить.</value></data>
   <!-- Slice 204: machine draft, for native review -->
-  <data name="PackStatus_Stopped" xml:space="preserve"><value>Загрузка остановлена. Читает голос телефона. Нажмите, чтобы загрузить.</value></data>
-  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Естественный голос для вашего языка пока недоступен. Читает голос телефона.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Назад</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Сохранить</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Готово</value></data>
@@ -114,10 +103,6 @@
   <data name="FirstRun_Hello" xml:space="preserve"><value>Привет! На каком языке читаем?</value></data>
   <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino скачает для него голос. Язык можно сменить позже за замком.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Продолжить</value></data>
-  <data name="FirstRun_GettingReady" xml:space="preserve"><value>Готовим голос Dino</value></data>
-  <data name="FirstRun_Once" xml:space="preserve"><value>Голос: {0} · это нужно только один раз</value></data>
-  <data name="FirstRun_Downloading" xml:space="preserve"><value>Загрузка…</value></data>
-  <data name="FirstRun_PickAnother" xml:space="preserve"><value>Выбрать другой язык</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Готово к чтению!</value></data>
   <data name="FirstRun_ReadyBody" xml:space="preserve"><value>У каждого героя свой голос. Ваши книги на полке.</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Выберите первые книги</value><comment>Machine draft: needs native review</comment></data>
@@ -130,8 +115,6 @@
   <data name="FirstBooks_BookOf" xml:space="preserve"><value>Книга {0} из {1}</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Подключитесь к интернету, чтобы выбрать первые книги</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino нужны две книги, прежде чем вы начнёте. Включите Wi-Fi или мобильные данные и попробуйте снова.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="FirstRun_HearHello" xml:space="preserve"><value>Послушать, как Dino здоровается</value></data>
-  <data name="FirstRun_HelloLine" xml:space="preserve"><value>Привет! Я Dino. Давай прочитаем историю вместе.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Узнать, что умеет Dino</value></data>
   <data name="Intro_SkipStart" xml:space="preserve"><value>Пропустить, начать читать</value></data>
   <data name="Intro_SkipAll" xml:space="preserve"><value>Пропустить всё</value></data>
@@ -148,7 +131,6 @@
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Читайте своим голосом</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Запишите, как вы читаете историю, страницу за страницей. Ребёнок сможет включить её в любое время.</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>Показать вступление ещё раз</value></data>
-  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Продолжить с голосом телефона</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Готово, отдаю ребёнку</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Режим для взрослых</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Язык</value></data>
@@ -159,15 +141,9 @@
   <data name="Settings_NewVersion" xml:space="preserve"><value>Новая версия</value></data>
   <data name="Settings_GearLabel" xml:space="preserve"><value>Настройки (для взрослых)</value></data>
   <data name="Settings_About" xml:space="preserve"><value>О приложении и обновления</value></data>
-  <data name="Settings_NarratorVoice" xml:space="preserve"><value>Голос рассказчика</value></data>
   <data name="Settings_On" xml:space="preserve"><value>Вкл.</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Выкл.</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>Настройки, магазин и полка</value></data>
-  <data name="Narrator_ListIntro" xml:space="preserve"><value>У каждого языка историй свой рассказчик.</value></data>
-  <data name="Narrator_OneIntro" xml:space="preserve"><value>Кто читает части между героями в каждой книге ({0}).</value></data>
-  <data name="Narrator_TitleFor" xml:space="preserve"><value>Голос рассказчика ({0})</value></data>
-  <data name="Narrator_NoVoiceValue" xml:space="preserve"><value>Не скачано</value></data>
-  <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>Голосов для языка «{0}» на этом телефоне пока нет. Вернитесь, откройте «Язык», выберите «{0}» и скачайте голос, потом выберите рассказчика здесь.</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Взрослые</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Добавление и изменение книг</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Для взрослых</value></data>
@@ -191,9 +167,6 @@
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Его страницы, картинки и голоса будут удалены с этого телефона. Его можно снова добавить бесплатно из магазина.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Убрать</value></data>
   <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Получить больше книг</value></data>
-  <data name="Language_Ready" xml:space="preserve"><value>Готово</value></data>
-  <data name="Language_Download" xml:space="preserve"><value>Скачать</value></data>
-  <data name="Language_Downloading" xml:space="preserve"><value>Загрузка {0}%</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>История на другом языке по-прежнему читается на своём языке, если для неё не включён перевод на мой язык.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды</value></data>
@@ -211,12 +184,6 @@
   <data name="Speed_SubWindows" xml:space="preserve"><value>Медленнее проще для малышей - меняйте стрелками влево и вправо</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Прочитать ещё раз</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Это видят только взрослые. Полка ребёнка — одним щелчком.</value></data>
-  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Нет соединения. Читает голос телефона. Щёлкните, чтобы повторить загрузку голоса.</value></data>
-  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>Ждём интернет. Загрузка продолжится сама, когда вы снова будете онлайн. Щёлкните, чтобы попробовать сейчас.</value></data>
-  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>Ждём Wi-Fi. Загрузка продолжится сама по Wi-Fi. Щёлкните, чтобы скачать сейчас.</value></data>
-  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>Загрузка голоса повреждена. Читает голос телефона. Щёлкните, чтобы повторить.</value></data>
-  <data name="PackStatus_FailedClick" xml:space="preserve"><value>Не удалось загрузить естественные голоса. Читает голос телефона. Щёлкните, чтобы повторить.</value></data>
-  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Загрузка остановлена. Читает голос телефона. Щёлкните, чтобы загрузить.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Сколько будет {0} плюс {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Язык истории</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · определён</value></data>
@@ -227,15 +194,8 @@
   <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>Пока нельзя переводить: {0}</value></data>
   <!-- /Slice 107 -->
   <!-- Slice 108 -->
-  <data name="Cast_VoicesFor" xml:space="preserve"><value>Голоса для {0}</value></data>
   <!-- /Slice 108 -->
   <!-- Slice 109 -->
-  <data name="Narrator_Title" xml:space="preserve"><value>Рассказчик</value></data>
-  <data name="Narrator_Subtitle" xml:space="preserve"><value>Голос рассказчика для всех книг</value></data>
-  <data name="Narrator_MyLanguage" xml:space="preserve"><value>МОЙ ЯЗЫК</value></data>
-  <data name="Narrator_Footnote" xml:space="preserve"><value>Если у героя книги голос рассказчика, Дино даст ему другой голос.</value></data>
-  <data name="Cast_ChangeForAll" xml:space="preserve"><value>Изменить для всех книг</value></data>
-  <data name="Narrator_Sample" xml:space="preserve"><value>Послушать этот голос</value></data>
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>Эта книга</value></data>
@@ -265,19 +225,8 @@
   <!-- /Slice 111 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
-  <data name="Cast_PickTitle" xml:space="preserve"><value>Кто играет {0}?</value></data>
-  <data name="Cast_PickSubtitle" xml:space="preserve"><value>Для этой книги, язык: {0}</value></data>
-  <data name="Cast_FilterGirls" xml:space="preserve"><value>Девочки</value></data>
-  <data name="Cast_FilterBoys" xml:space="preserve"><value>Мальчики</value></data>
-  <data name="Cast_FilterEveryone" xml:space="preserve"><value>Все</value></data>
   <!-- /Slice 113 -->
   <!-- Slice 115 -->
-  <data name="Storyteller_Getting" xml:space="preserve"><value>Загружаем голоса рассказчика…</value></data>
-  <data name="Storyteller_WaitWifi" xml:space="preserve"><value>Голоса рассказчика ждут Wi-Fi</value></data>
-  <data name="Storyteller_WaitInternet" xml:space="preserve"><value>Ждём интернет</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Скачать сейчас</value></data>
-  <data name="Storyteller_Ready" xml:space="preserve"><value>Голоса рассказчика готовы</value></data>
-  <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Ваши истории теперь звучат новыми голосами рассказчика.</value></data>
   <data name="Update_Title" xml:space="preserve"><value>Дино нужно обновить</value></data>
   <data name="Update_Body" xml:space="preserve"><value>Попроси взрослого установить новую версию. Твои книги и записи останутся как есть.</value></data>
   <data name="Update_Button" xml:space="preserve"><value>Обновить Дино</value></data>
@@ -303,19 +252,12 @@
   <data name="Speed_Sub" xml:space="preserve"><value>Помедленнее — малышам легче</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · медленно</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
-  <data name="Speed_Play" xml:space="preserve"><value>Послушать эту скорость</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>Dino считает, какие книги читают, без имён и идентификаторов. Это можно отключить в настройках. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти). Если приложение вылетит, оно также может отправить отчёт о сбое: ошибку и короткий технический журнал, но никогда ничего из того, что вы читали или набирали.</value></data>
-  <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Ваш рассказчик ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} МБ</value></data>
-  <data name="Storyteller_Failed" xml:space="preserve"><value>Не удалось загрузить голоса рассказчика</value></data>
-  <data name="Storyteller_TryAgain" xml:space="preserve"><value>Повторить</value></data>
   <!-- /Slice 115 -->
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
-  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
   <!-- Slice 78: the page-review wizard -->
   <data name="Wizard_Next" xml:space="preserve"><value>Далее</value></data>
-  <data name="Wait_GettingVoices" xml:space="preserve"><value>Готовим голоса…</value></data>
-  <data name="Wait_Stalled" xml:space="preserve"><value>Всё ещё готовим голос…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Переводим…</value></data>
   <data name="Wait_WaitingInternet" xml:space="preserve"><value>Ждём интернет</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>Сохраняем…</value></data>
@@ -335,34 +277,13 @@
   <data name="Reading_ReadFailed" xml:space="preserve"><value>При чтении что-то пошло не так.</value></data>
   <data name="Reading_LayoutFailed" xml:space="preserve"><value>Не удалось разметить эту историю. Поверните экран или смените режим и попробуйте снова.</value></data>
   <data name="Reading_PageN" xml:space="preserve"><value>Читаем страницу {0}</value></data>
-  <data name="Cast_Title" xml:space="preserve"><value>Кто говорит</value></data>
-  <data name="Cast_Narrator" xml:space="preserve"><value>Рассказчик</value></data>
-  <data name="Cast_Main" xml:space="preserve"><value>ГЛАВНЫЙ</value></data>
-  <data name="Cast_Edited" xml:space="preserve"><value>ИЗМЕНЕНО</value></data>
-  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>Вернуть голос из книги</value></data>
-  <data name="Cast_SharedVoice" xml:space="preserve"><value>Общий голос</value></data>
-  <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Неизвестный говорящий</value></data>
-  <data name="Cast_PreviewLine" xml:space="preserve"><value>Привет! Вот так я звучу, когда читаю вашу историю.</value></data>
-  <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Не удалось сохранить изменение</value></data>
-  <data name="Cast_SaveFailedBody" xml:space="preserve"><value>Роли не сохранены. Попробуйте чуть позже.</value></data>
-  <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>Сейчас не удаётся воспроизвести голос.</value></data>
-  <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>Не удалось открыть роли</value></data>
-  <data name="Cast_LoadFailedBody" xml:space="preserve"><value>Не удалось определить роли для этой истории. Попробуйте чуть позже.</value></data>
-  <data name="Cast_Words_One" xml:space="preserve"><value>Слов: {0}</value></data>
-  <data name="Cast_Words_Other" xml:space="preserve"><value>Слов: {0}</value></data>
-  <data name="Cast_UnknownLines_One" xml:space="preserve"><value>Реплик: {0}</value></data>
-  <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>Реплик: {0}</value></data>
-  <data name="Cast_UsesNarrator" xml:space="preserve"><value>читает рассказчик</value></data>
-  <data name="Cast_Hear" xml:space="preserve"><value>Послушать: {0}</value></data>
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Звуки животных</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Животные иногда говорят «Хрю!» или «Бе-е!» в каждой книге</value></data>
-  <data name="Cast_SharedNote" xml:space="preserve"><value>В этой книге больше персонажей, чем есть рассказчиков ({0}), поэтому некоторые звучат одинаково. Рассказчик персонажам не выдаётся.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Скачиваем пакет перевода: {0}…</value></data>
   <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>На каких языках должны быть истории?</value></data>
   <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Выберите до двух дополнительных. Ребёнок сможет переключаться во время чтения.</value></data>
   <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>Язык приложения</value></data>
   <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>Пропустить, только {0}</value></data>
-  <data name="StoryLanguages_Getting" xml:space="preserve"><value>Готовим голос · {0} %</value></data>
   <data name="StoryLanguages_Full" xml:space="preserve"><value>Выбрано три. Снимите одну отметку, чтобы выбрать другой язык.</value></data>
   <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>Языки историй</value></data>
   <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>Ребёнок может переключаться между ними во время чтения. Не больше трёх.</value></data>
@@ -376,20 +297,11 @@
   <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Вы не подключены к Wi-Fi. {0} будет скачано по мобильной сети.</value></data>
   <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Скачать сейчас</value></data>
   <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Ждать Wi-Fi</value></data>
-  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>Ожидание Wi-Fi</value></data>
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Обновляем твои книги…</value></data>
   <!-- /Slice 181 -->
   <!-- Slice 183: machine draft, for native review -->
-  <data name="Notify_Title" xml:space="preserve"><value>Продолжать загрузку, когда телефон заблокирован?</value></data>
-  <data name="Notify_Body" xml:space="preserve"><value>Разрешите уведомления, чтобы голос продолжал загружаться, пока телефон заблокирован или вы пользуетесь другими приложениями. Ход загрузки будет виден там.</value></data>
-  <data name="Notify_NotNow" xml:space="preserve"><value>Не сейчас</value></data>
-  <data name="Notify_Continue" xml:space="preserve"><value>Продолжить</value></data>
   <!-- Slice 208: machine draft, for native review -->
-  <data name="PackNotify_Downloading" xml:space="preserve"><value>Подготовка голоса: {0} ({1} МБ) · {2}</value></data>
-  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Загрузка приостановлена. Нажмите, чтобы завершить.</value></data>
-  <data name="PackNotify_Named" xml:space="preserve"><value>Голос: {0} ({1} МБ)</value></data>
-  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>Голос: {0} ({1} МБ) · готово {2}%</value></data>
   <data name="BackCover_StoryBy" xml:space="preserve"><value>Автор истории: {0}</value></data>
   <data name="BackCover_OriginalStoryBy" xml:space="preserve"><value>Оригинальная история: {0}</value></data>
   <data name="BackCover_Traditional" xml:space="preserve"><value>Народная сказка</value></data>

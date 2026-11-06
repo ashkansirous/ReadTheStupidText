@@ -23,9 +23,8 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 	private bool _launchCounted;
 	private readonly CancellationTokenSource _bookUpdateCancel = new();
 	private bool _bookUpdateStarted;
-	private bool _stalePartialsStarted;
 
-	public DinoApp(IServiceProvider services, SpeechStartup startup, AppConfigClient config)
+	public DinoApp(IServiceProvider services, AppConfigClient config)
 	{
 		InitializeComponent();
 		// The kids' palette is light; night colours belong to ReadingTheme on the reading screen only.
@@ -44,20 +43,14 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		// Contract: AppConfigClient raises Changed only on the main thread, so this handler may touch UI directly.
 		_config.Changed += (_, _) => ShowUpdateIfRequired();
 		PageAppearing += (_, page) => OnPageAppearing(page);
-		_ = startup.RunAsync();
 	}
 
-	// Slice 208: a parent opening Settings gets the notification question a download outside the grown-up area postponed.
 	private static void OnPageAppearing(Page page)
 	{
 		SystemBarIcons.ForPage(page);
 #if WINDOWS
 		DinoTitleBar.ForPage(page); // Slice 235 part B: the title bar takes the page's colour
 #endif
-		if (page is SettingsPage)
-		{
-			_ = StoryLanguages.AskPendingNotificationAsync(page);
-		}
 	}
 
 	protected override Window CreateWindow(IActivationState? activationState)
@@ -97,7 +90,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		{
 			await _config.RefreshAsync();
 			_ = CheckBookUpdatesAsync();
-			_ = ResumeStalePartialsAsync();
+			_ = _services.GetRequiredService<OldVoicePacksCleanup>().RunOnceAsync(); // never throws; a failed delete is reported and retried at the next start
 			ResumeShelfAudio(force: true);
 			if (_launchCounted)
 			{
@@ -161,39 +154,6 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		{
 			Debug.WriteLine($"Dino Reader could not resume the shelf audio: {ex.Message}");
 			ReportGeneralFallback(FallbackArea.Pack, FallbackReason.PackSyncFailed); // Slice 273 part D: the shelf audio is tried again at the next check
-		}
-	}
-
-	// Slice 208: once per launch, after the current-language start (SpeechStartup), in the foreground: the half-finished packs nothing wants are deleted and the ticked languages finish.
-	private async Task ResumeStalePartialsAsync()
-	{
-		if (_config.UpdateRequired || _stalePartialsStarted)
-		{
-			return;
-		}
-
-		_stalePartialsStarted = true;
-		try
-		{
-			if (_services.GetRequiredService<IVoicePackService>() is MobileVoicePackService packs)
-			{
-				// Deletes the half-finished packs nothing wants (a pack in flight is left alone, the languages are read again before each delete), then finishes the
-				// ticked languages' partials through the normal request (Wi-Fi rule applies; a cancelled language is unticked, so it is not among them).
-				StalePartialScan scan = await Task.Run(() => packs.ScanStalePartialsAsync(() => StoryLanguages.Current().All, CancellationToken.None));
-				if (scan.Resumable.Count > 0)
-				{
-					await _services.GetRequiredService<StoryLanguagePacks>().ResumeWantedAsync(scan.Resumable);
-				}
-			}
-		}
-		catch (OperationCanceledException)
-		{
-			// no-fallback: a cancelled resume is not a failed one
-		}
-		catch (Exception ex)
-		{
-			Debug.WriteLine($"Dino Reader could not resume its half-finished packs: {ex.Message}");
-			ReportGeneralFallback(FallbackArea.Pack, FallbackReason.PackSyncFailed); // Slice 273 part D: the half-finished packs stay as they are
 		}
 	}
 
@@ -264,9 +224,9 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 
 #if DEBUG
 	/// <summary>
-	/// Debug test hook (Slice 162): finishes first run for <paramref name="code"/> like the first-run page (screen language, voice language, no
-	/// intro, a fresh gallery root) and, since Slice 261, puts the four test books on the shelf (the app bundles none); false when there is no window. Differences, on purpose: it stays in kids' mode with no hand-over
-	/// (flows tap the shelf's tiles), and it does not start the voice pack (SpokenLanguage.Use crashes the Debug x86_64 emulator build, see the slice file).
+	/// Debug test hook (Slice 162): finishes first run for <paramref name="code"/> like the first-run page (screen language, stored language, no
+	/// intro, a fresh gallery root) and, since Slice 261, puts the four test books on the shelf (the app bundles none); false when there is no window. Difference, on purpose: it stays in kids' mode with no hand-over
+	/// (flows tap the shelf's tiles).
 	/// </summary>
 	public bool CompleteFirstRun(string code)
 	{
@@ -303,7 +263,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 	}
 
 	// Slice 261: the language was stored but the books were not chosen (the app was killed on the picker or while its books downloaded): the picker opens again, with the books that landed ticked,
-	// and carries on to the voice download when the shelf holds two. It is the root, so it has no language page to go back to.
+	// and carries on to "Ready to read" when the shelf holds two. It is the root, so it has no language page to go back to.
 	private FirstBooksPage BooksPageAfterRestart()
 	{
 		var page = _services.GetRequiredService<FirstBooksPage>();
@@ -315,7 +275,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		return page;
 	}
 
-	/// <summary>Replaces the restarted picker with the first-run voice download page in the stored language (Slice 261); the fresh root speaks the language just applied.</summary>
+	/// <summary>Replaces the restarted picker with the "Ready to read" page of the first run in the stored language (Slice 261); the fresh root speaks the language just applied.</summary>
 	private void ResumeFirstRunAfterBooks()
 	{
 		UiCulture.Apply(LanguageChoice.Preferred());

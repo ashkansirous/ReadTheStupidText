@@ -36,24 +36,12 @@ name: Reorder the shelf, Cancel keeps it, Done saves it across a restart
     visible:
       id: GalleryDone
     timeout: 60000
-# The one-time "Storyteller voices are ready" note can cover the corner: dismiss it only when it is on screen.
-- runFlow:
-    when:
-      visible: Storyteller voices are ready
-    commands:
-      - tapOn: "OK"
 # The tile titles are not text nodes on Android: a book is named only by the content description of its options button ("Options for <title>"), so the order is read from TileMore, in shelf order.
 # Before: the 2nd book is the pigs.
 - copyTextFrom:
     id: TileMore
     index: 1
 - assertTrue: ${maestro.copiedText.toLowerCase().includes('pig')}
-# The note can arrive late (the pack download ends in the background): dismiss it again just before the first tap, when it is on screen.
-- runFlow:
-    when:
-      visible: Storyteller voices are ready
-    commands:
-      - tapOn: "OK"
 # Reorder from the sheet, move the 4th book before the 2nd, then Cancel: the shelf is as it was.
 - tapOn:
     id: TileMore
@@ -97,12 +85,7 @@ name: Reorder the shelf, Cancel keeps it, Done saves it across a restart
     id: TileMore
     index: 1
 - assertTrue: ${maestro.copiedText.toLowerCase().includes('pig')}
-# Again, this time Done: the tortoise is now 2nd. The note can have arrived meanwhile and covers the options button: dismiss it first.
-- runFlow:
-    when:
-      visible: Storyteller voices are ready
-    commands:
-      - tapOn: "OK"
+# Again, this time Done: the tortoise is now 2nd.
 - tapOn:
     id: TileMore
     index: 0

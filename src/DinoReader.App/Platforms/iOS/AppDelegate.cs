@@ -8,7 +8,7 @@ public class AppDelegate : MauiUIApplicationDelegate
 {
 	protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
 
-	// Marks the voice-pack folder as excluded from backups before any download (as the RTST app does).
+	// Marks the pack folder as excluded from backups before any download (as the RTST app does); Dino downloads no voice pack since Slice 278, the shared call is harmless.
 	public override bool FinishedLaunching(UIKit.UIApplication application, NSDictionary? launchOptions)
 	{
 		IosPackStorage.ExcludePacksFromBackup();

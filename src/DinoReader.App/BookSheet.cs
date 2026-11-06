@@ -7,7 +7,7 @@ namespace DinoReader;
 /// <summary>
 /// A book's options sheet (Slice 110, mock frame 43; Slice 189, mock frame 85b): a white bottom sheet over the dimmed shelf, opened from the "⋯" on a book's cover in grown-up mode (the reading screen has no
 /// grown-ups button). The header names the book and where it came from. It holds "Read with my voice" once a page is recorded
-/// (Slice 111, Decision 115), the Record and Cast pills, Export (developer switch), "Remove from the shelf" and Done.
+/// (Slice 111, Decision 115), the Record pill, Export (developer switch), "Remove from the shelf" and Done.
 /// It lives inside the shelf page rather than on the navigation stack, so leaving the app cannot strand it.
 /// </summary>
 internal sealed class BookSheet : Grid, IPageOverlay
@@ -64,14 +64,12 @@ internal sealed class BookSheet : Grid, IPageOverlay
 	private readonly Border _sheet = new();
 	private readonly VerticalStackLayout _sheetRows = new() { Spacing = 12 };
 	private readonly VerticalStackLayout _cardRows = new() { Spacing = CardRowSpacing };
-	private readonly Grid _pills = new() { ColumnSpacing = 8 };
 	private readonly Grid _card = new() { ColumnSpacing = CardPadding };
 	private readonly Border _cover = new(); // the card's big cover; the sheet's header has the small thumbnail
 	private View _grab = null!;
 	private Border _closeButton = null!;
 	private Grid _header = null!;
 	private Border _recordPill = null!;
-	private Border _castPill = null!;
 	private BookSheetShape _shape = BookSheetShape.BottomSheet;
 	private bool _loading;
 
@@ -79,13 +77,13 @@ internal sealed class BookSheet : Grid, IPageOverlay
 	{
 		IsVisible = false;
 		BackgroundColor = DinoTokens.Get(DinoTokens.SheetScrim);
-		CastViews.AddTap(this, () => { Dismiss(); return Task.CompletedTask; });
+		Taps.AddTap(this, () => { Dismiss(); return Task.CompletedTask; });
 		_sheet.BackgroundColor = Colors.White;
 		_sheet.StrokeThickness = 0;
 		_sheet.Content = _scroll; // a short screen scrolls the rows instead of cutting them off
 		BuildParts();
 		Arrange(BookSheetShape.BottomSheet);
-		CastViews.AddTap(_sheet, () => Task.CompletedTask);
+		Taps.AddTap(_sheet, () => Task.CompletedTask);
 		// No Done row (Slice 228): a tap outside or the labelled close button in the header closes the sheet; a swipe down is not used, it fought the scrolling rows.
 		Children.Add(_sheet);
 		_voice.Toggled += (_, _) => OnVoiceToggled();
@@ -98,7 +96,6 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		_grab = GrabHandle();
 		_header = Header();
 		_recordPill = RecordPill();
-		_castPill = CastPill();
 		ReadNowRow();
 		VoiceRow();
 		QuietRow(_exportRow, _exportLabel, () => ExportRequested, "BookSheetExport");
@@ -131,7 +128,6 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		_sheetRows.Children.Clear();
 		_cardRows.Children.Clear();
 		_card.Children.Clear();
-		_pills.Children.Clear();
 		if (shape.Card)
 		{
 			ArrangeCard(shape);
@@ -147,13 +143,10 @@ internal sealed class BookSheet : Grid, IPageOverlay
 	private void ArrangeSheet()
 	{
 		SizeRows(readNow: ReadNowHeight, pill: PillHeight, readNowFont: 18);
-		_pills.ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)];
-		_pills.Add(_recordPill, 0);
-		_pills.Add(_castPill, 1);
 		_thumb.IsVisible = true;
 		_title.FontSize = PhoneTitleSize;
 		_header.VerticalOptions = LayoutOptions.Fill;
-		foreach (View row in new View[] { _grab, _header, _readNowRow, _voiceRow, _pills, _reorderRow, _exportRow, _removeRow })
+		foreach (View row in new View[] { _grab, _header, _readNowRow, _voiceRow, _recordPill, _reorderRow, _exportRow, _removeRow })
 		{
 			_sheetRows.Children.Add(row);
 		}
@@ -179,16 +172,13 @@ internal sealed class BookSheet : Grid, IPageOverlay
 			SizeRows(readNow: CardReadNowHeight, pill: CardActionHeight, readNowFont: 17);
 		}
 
-		_pills.ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)];
-		_pills.Add(_recordPill, 0);
-		_pills.Add(_castPill, 1);
 		_thumb.IsVisible = false; // the big cover takes its place
 		if (!coverOnTop)
 		{
 			_cardRows.Children.Add(_header);
 		}
 
-		foreach (View row in new View[] { _readNowRow, _voiceRow, _pills, _reorderRow, _exportRow, _removeRow })
+		foreach (View row in new View[] { _readNowRow, _voiceRow, _recordPill, _reorderRow, _exportRow, _removeRow })
 		{
 			_cardRows.Children.Add(row);
 		}
@@ -249,7 +239,6 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		((Microsoft.Maui.Controls.Shapes.RoundRectangle)_readNowRow.StrokeShape!).CornerRadius = readNow / 2;
 		_readNowLabel.FontSize = readNowFont;
 		_recordPill.HeightRequest = pill;
-		_castPill.HeightRequest = pill;
 		_removeRow.HeightRequest = pill;
 		_reorderRow.HeightRequest = pill;
 	}
@@ -259,9 +248,6 @@ internal sealed class BookSheet : Grid, IPageOverlay
 
 	/// <summary>Raised for "Read now" (Slice 228); the sheet closes first and the page leaves grown-up mode to open the book.</summary>
 	public event Func<Task>? ReadRequested;
-
-	/// <summary>Raised when the grown-up asks for the cast screen; the sheet closes first.</summary>
-	public event Func<Task>? CastRequested;
 
 	/// <summary>Raised when the grown-up asks for the Record screen; the sheet closes first.</summary>
 	public event Func<Task>? RecordRequested;
@@ -385,7 +371,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		row.StrokeShape = new RoundRectangle { CornerRadius = ReadNowHeight / 2 };
 		row.Content = content;
 		row.AutomationId = "BookSheetReadNow";
-		CastViews.AddTap(row, ReadNowAsync);
+		Taps.AddTap(row, ReadNowAsync);
 		return row;
 	}
 
@@ -399,7 +385,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 	}
 
 	/// <summary>
-	/// Slice 235 part B: Enter or Space on the open sheet reads the book, as a tap on "Read now" does, unless one of the sheet's real controls (a switch or a button: voice switch, Record, Cast,
+	/// Slice 235 part B: Enter or Space on the open sheet reads the book, as a tap on "Read now" does, unless one of the sheet's real controls (a switch or a button: voice switch, Record,
 	/// Remove, close) has the keyboard focus; the key then goes on to that control. Read now is a tapped Border that WinUI cannot focus, so it never has to hold the focus. False off Windows.
 	/// </summary>
 	public bool ActivateFocused()
@@ -492,7 +478,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		SemanticProperties.SetDescription(close, AppResources.Common_Close);
 		_closeButton = close;
 		DesktopTips.Hover(close);
-		CastViews.AddTap(close, () => { Dismiss(); return Task.CompletedTask; });
+		Taps.AddTap(close, () => { Dismiss(); return Task.CompletedTask; });
 		return close;
 	}
 
@@ -511,7 +497,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		row.Content = label;
 		row.IsVisible = false;
 		row.AutomationId = automationId;
-		CastViews.AddTap(row, async () =>
+		Taps.AddTap(row, async () =>
 		{
 			Dismiss(); // tells the page, so a switch saved while the sheet was open refreshes the tiles
 			if (handler() is { } requested)
@@ -522,7 +508,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		return row;
 	}
 
-	// Reorder (Slice 264, mock Batch 47 frame 172): a full-width outlined pill with a six-dot grip, between Record/Cast and Remove. It closes the sheet, then the gallery's reorder mode opens with this book lifted.
+	// Reorder (Slice 264, mock Batch 47 frame 172): a full-width outlined pill with a six-dot grip, between Record and Remove. It closes the sheet, then the gallery's reorder mode opens with this book lifted.
 	private Border ReorderRow()
 	{
 		_reorderLabel.FontSize = 15;
@@ -543,7 +529,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 			Children = { ShelfReorderTiles.GripDots(DinoTokens.Get(DinoTokens.Brand)), _reorderLabel },
 		};
 		row.AutomationId = "BookSheetReorder";
-		CastViews.AddTap(row, async () =>
+		Taps.AddTap(row, async () =>
 		{
 			Hide();
 			if (ReorderRequested is { } requested)
@@ -575,7 +561,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		row.Content = content;
 		row.AutomationId = "BookSheetRemove";
 		SemanticProperties.SetDescription(row, AppResources.Book_Remove);
-		CastViews.AddTap(row, async () =>
+		Taps.AddTap(row, async () =>
 		{
 			if (RemoveRequested is { } requested)
 			{
@@ -607,11 +593,11 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		_voiceRow.Content = grid;
 		_voiceRow.IsVisible = false;
 		SemanticProperties.SetDescription(_voiceRow, ReadingText.UseMyVoice);
-		CastViews.AddTap(_voiceRow, () => { _voice.IsOn = !_voice.IsOn; return Task.CompletedTask; });
+		Taps.AddTap(_voiceRow, () => { _voice.IsOn = !_voice.IsOn; return Task.CompletedTask; });
 		return _voiceRow;
 	}
 
-	// The Record and Cast pills side by side (frame 43; on the landscape card too, with Remove on its own last row); both leave the reading page for their own screen.
+	// The Record pill, a full row (Batch 48 frame 177); it leaves the reading page for the Record screen.
 	private Border RecordPill()
 	{
 		var content = new HorizontalStackLayout
@@ -627,7 +613,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		};
 		Border pill = OutlinedPill(content);
 		SemanticProperties.SetDescription(pill, ReadingText.RecordButton);
-		CastViews.AddTap(pill, async () =>
+		Taps.AddTap(pill, async () =>
 		{
 			Hide();
 			if (RecordRequested is { } requested)
@@ -647,23 +633,4 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		StrokeShape = new RoundRectangle { CornerRadius = PillHeight / 2 },
 		Content = content,
 	};
-
-	private Border CastPill()
-	{
-		Border pill = OutlinedPill(new Label
-		{
-			Text = ReadingText.CastButton, FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Brand),
-			HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
-		});
-		SemanticProperties.SetDescription(pill, ReadingText.CastButton);
-		CastViews.AddTap(pill, async () =>
-		{
-			Hide();
-			if (CastRequested is { } requested)
-			{
-				await requested();
-			}
-		});
-		return pill;
-	}
 }
