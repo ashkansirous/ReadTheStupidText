@@ -1,6 +1,6 @@
 # Slice 278 — Dino: store books only (no own books, no scanning, no translation, no voice engine, no voice pickers)
 
-*Planned 2026-11-06.* Dino Reader only (Android, iOS and the Windows head, the same in the same parts). **Read The
+*Part A in progress (wave 2026-11-06), draft PR; parts B and C planned.* Dino Reader only (Android, iOS and the Windows head, the same in the same parts). **Read The
 Stupid Text is not touched**, and neither is any shared code it uses (`src/ReadTheStupidText.Mobile.Shared`,
 `src/ReadTheStupidText.Infrastructure`, `src/ReadTheStupidText.Documents`, `src/ReadTheStupidText.Mobile`). Dino
 simply stops calling the shared pieces it no longer needs.
@@ -10,7 +10,21 @@ simply stops calling the shared pieces it no longer needs.
 `src/DinoReader.App/{PageTextPage,RegionPicker,RegionOverlay,CoverPicker,StoryImport,OwnBookTranslation,PickedPhotoCache,ScanPages,ZoomablePage,TranslationPackPrompt,TranslationPackStore,StoryTranslator,LocalizedPackStatus,BookOrigins}.cs`,
 `src/DinoReader.App/{IntroWizardPage,IntroWizardPage.Art,IntroState,StoryActions,BookSheet,GalleryPage.xaml,MauiProgram,UsageEvent}.cs*`,
 `src/DinoReader.App/Resources/**` (strings), `src/DinoReader.Core/ScanLayout*.cs` (only if no store book uses it),
-`tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.Core/CLAUDE.md`.
+`tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.Core/CLAUDE.md`,
+`src/DinoReader.App/StarterStories.cs`, `src/DinoReader.App/BookSheetPlan*.cs`, `src/DinoReader.App/OwnBooksCleanup.cs` (new, A3),
+`.maestro/dino/**` (only flows that drive the removed wizard, Add pill or scan; not `premade-audio-past-roar.yaml` or
+`usage-fallback-swallowed.yaml`), `tools/desktop-vm/checks/**` (only Dino checks that drive removed screens).
+Must not edit `src/DinoReader.App/ReadingSession.cs`, `PlayerHandOff.cs` or `AudioPackStore.cs` (Slices 271 and 275 edit them in the same wave).
+
+**Design for A3 (coordinator, claim 2026-11-06).** One owner: a new `OwnBooksCleanup` run once from app start-up,
+after the library loads and before the shelf shows. The rule for "own book" is the existing one: `BookOrigins.Of`
+(`BookOrigins.cs:9-14`, from `story.SourceId` via `StarterStories.IsCatalogueId`); store books and the four former
+starters count as store books. The decision (which books go) is a pure, unit-tested function over the loaded
+stories. States: not done / done, kept in one preference key (`OwnBooksCleanupDone`, a named constant). Interrupts:
+killed or crashed mid-delete, the key is not set yet, so the next start runs it again over whatever is left
+(deleting an already-deleted book is a no-op, so it is idempotent); a failure on one book is reported with a
+`FallbackArea.` event and the rest still go, and the key is set only when no book failed. Offline does not matter
+(local files only). Logs one line with the count deleted. Nothing to cancel (no UI).
 **Touches, part B (voice engine and voice pickers out):** `src/DinoReader.App/{StoryVoicing,SpeechStartup,StorytellerDefault,StorytellerConsent,StorytellerViews,VoicePreview,NarratorPage,NarratorChoice,NarratorRecast,CastPage,CastRows,CastViews,CastText,CastFlavourMenu,ReadingClips,ReadingSession,SpokenLanguage,FirstRunPage.xaml,FirstBooksPage*,SettingsPage,SettingsRows,BookSheet,StoryActions,MauiProgram}.cs*`,
 `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/Platforms/**`, `src/DinoReader.App/Resources/**`,
 `src/DinoReader.Core/**` (cast and voice-choice types only), `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`.
