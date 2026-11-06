@@ -1,6 +1,11 @@
 # Slice 280 — Dino: Farsi speaker first, built at translation time from the pieces we already have
 
-*Planned 2026-11-06.* Dino Reader only. Replaces the read-time regroup of Slice 254
+*In progress (wave 2026-11-06), draft PR.* Claim notes (wave 32): Touches widened at claim from a code check:
+`src/DinoReader.Core/PremadeAudio.cs` (A2 index keying), `src/DinoReader.App/StoryVoicing.cs` (calls
+`SpeakerFirst.Regroups`/`SourceOrder` at :304-305, A3), `content/dino/**/audio/fa/manifest.json` (A2 rewrite; the
+`.m4a` clips stay, Slice 254's unused colon-tag clips may go) and each changed book's `book.json`/meta version bump.
+The rewritten books are uploaded to the live store right after the merge (standing approval for store-book bumps,
+2026-10-27), so store and app match. Dino Reader only. Replaces the read-time regroup of Slice 254
 ([254](254-dino-speaker-first-and-sound-placement.md)).
 
 From the user, 2026-11-06:
