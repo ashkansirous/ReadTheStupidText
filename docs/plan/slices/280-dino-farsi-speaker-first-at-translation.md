@@ -1,6 +1,6 @@
 # Slice 280 — Dino: Farsi speaker first, built at translation time from the pieces we already have
 
-*Built 2026-11-06, not merged. Checked on the Android emulator (build 2e3eab03e1f3); iOS by compile only.* Claim notes (wave 32): Touches widened at claim from a code check:
+*Built 2026-11-06, merged as PR #869 (53ae8447). Checked on the Android emulator (build 2e3eab03e1f3); iOS by compile only.* Claim notes (wave 32): Touches widened at claim from a code check:
 `src/DinoReader.Core/PremadeAudio.cs` (A2 index keying), `src/DinoReader.App/StoryVoicing.cs` (calls
 `SpeakerFirst.Regroups`/`SourceOrder` at :304-305, A3), `content/dino/**/audio/fa/manifest.json` (A2 rewrite; the
 `.m4a` clips stay, Slice 254's unused colon-tag clips may go) and each changed book's `book.json`/meta version bump.
@@ -106,7 +106,7 @@ Findings files: `reviews/s280-high.md`, `s280-medium.md`, `s280-check1.md`, `s28
 
 Result (emulator build 2e3eab03e1f3): `premade-audio-past-roar`, `premade-audio-three-clips` and `animal-clip-plays` PASS. `farsi-speaker-first-join` failed once (flow setup: the read ran in English, `skip-first-run lang=` is ignored past the first run); fixed with the set-language hook, then PASS.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-06)
 
 - `src/DinoReader.Core/CLAUDE.md`: speaker-first languages (fa, ar) join at translation time from the existing pieces. Pack manifests are keyed by spoken position and the plain-text hash, so any reorder needs `join-audio` (index and hash only, never renames). (Slice 280: docs/plan/slices/280-dino-farsi-speaker-first-at-translation.md)
 
