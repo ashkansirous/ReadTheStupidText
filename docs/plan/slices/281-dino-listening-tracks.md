@@ -1,12 +1,23 @@
 # Slice 281 — Dino: one listening track per store book and language, served for smart speakers
 
-*Planned 2026-11-06.* Server and build tooling only; the Android, iOS and Windows apps do not change.
+*In progress (wave 2026-11-06, ledger wave 33), draft PR.* Server and build tooling only; the Android, iOS and Windows apps do not change.
 
 **Depends on:** nothing. Slices 282 (Alexa) and 283 (Sonos) both depend on this one.
-**Touches:** `tools/DinoReader.BookBuilder/ListenTrack.cs` (new), `tools/DinoReader.BookBuilder/Program.cs` (one new command),
-`tests/DinoReader.Tests/ListenTrack*.cs` (new), `.github/workflows/release.yml` (the `publish-store` job only),
+**Touches:** `tools/DinoReader.BookBuilder/ListenTrack*.cs` (new), `tools/DinoReader.BookBuilder/Program.cs` (one new command),
+`tools/DinoReader.BookBuilder/StoreBuilder.cs` and `tools/DinoReader.BookBuilder/AudioPacks.cs` (the `meta.json` `audio.<lang>` fields),
+`tests/DinoReader.Tests/ListenTrack*.cs` (new), `tests/DinoReader.Tests/**` (meta.json audio tests only),
+`.github/workflows/dino-store.yml` (the `publish-store` job only), `.github/scripts/publish-store-books.mjs`,
+`.github/scripts/publish-store-books.test.mjs`, `.github/CLAUDE.md`,
 `worker/stories.ts`, `worker/stories-listen.test.mjs` (new), `worker/CLAUDE.md`, `PRIVACY.md`, `site/dino/privacy.html`, this file.
-Program.cs is also changed by Slice 279 (draft PR #867, `JoinAudio`): start this after #867 merges, and reuse its join code instead of writing a second one.
+
+*Claim notes (ground-in-code, 2026-11-06):* `publish-store` lives in `.github/workflows/dino-store.yml:34`, not `release.yml`;
+the upload order is in `.github/scripts/publish-store-books.mjs` (zip, cover, package, `meta.json` last) and its `--audio-verdict`
+gate applies to the listen tracks too (a track is uploaded only where its pack is). `meta.json` `audio.<lang>` is written by
+`StoreBuilder.cs:121` / `AudioPacks.cs:73` and parsed by `worker/stories.ts` (`AUDIO_FILE`). There is **no clip-joining code**
+in the repo: `JoinAudio.cs` is Slice 280's fa/ar manifest rewriter. The join is new, done with ffmpeg (as
+`tools/premade-audio/encode.py` already uses: native `aac`, mono 48 kb/s, `+faststart`); the job installs ffmpeg if the runner
+lacks it. The Worker's zip route (`serveAudio` / `serveObject` in `downloads.ts`) may already handle Range: reuse it, and
+the router needs a `listen` path segment beside `audio`. `/api/stories/*` is already run-worker-first, so no wrangler change.
 
 ## Why
 
