@@ -1,5 +1,12 @@
 # Dino Reader design assets
 
+**Retired by Slice 278 (store books only).** Rows below marked "retired by Slice 278" (or "partly retired") show
+screens that no longer exist in the app: add a book, scan, page editor, translation, voice download, cast and
+narrator, the old Record. The older `.dc.html` files are verbatim copies of the Claude Design project and keep
+those frames; do not build from them. The list of what leaves is Batch 48 frame 186 (line 349 of
+`Dino Reader Batch 48 Store Only and Recording.dc.html`); the replacements are Batch 48 frames 177 and 185, and
+the recording frames 178-184 and 188-191 (Slice 279).
+
 ## Screens mock — `Dino Reader v2.dc.html`
 
 - **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`,
@@ -34,9 +41,9 @@ for the caption to jump to it. The image it imports,
 | 6 | Grown-ups gate · step 1: hold | 38 |
 | 7 | Grown-ups gate · step 2: sum | 40 |
 | 8 | Gallery · grown-up mode | 41 |
-| 9 | Add a story | 47 |
-| 10 | Cast | 57 |
-| 11 | Merge two characters | 64 |
+| 9 | Add a story — retired by Slice 278, see Batch 48 frame 186 | 47 |
+| 10 | Cast — retired by Slice 278, see Batch 48 frame 186 | 57 |
+| 11 | Merge two characters — retired by Slice 278, see Batch 48 frame 186 | 64 |
 | 6b | Gate with a screen reader on | 70 |
 | 8b | Edit a story | 75 |
 | — | **Right-to-left (fa / ar)** (group) | 83 |
@@ -83,7 +90,7 @@ Implement: `Dino Reader v2.dc.html`
 | — | Intro (Batch 16, Slices 91-93, Decisions 94-99) | 18 |
 | — | **First run · Slices 91 and 93** (group) | 23 |
 | 16 | First run · language | 28 |
-| 17 | First run · download | 55 |
+| 17 | First run · download — retired by Slice 278, see Batch 48 frame 186 | 55 |
 | 18 | First run · ready | 81 |
 | 19 | First grown-up | 100 |
 | 20 | Starter gallery | 134 |
@@ -133,11 +140,11 @@ Implement: `Dino Reader Batch 16.dc.html`
 | 29 | Shelf in Farsi · still left to right | 67 |
 | 30 | Farsi book · reader keeps its layout | 84 |
 | — | **A picture for each page · adding · Slice 98 · Decision 102** (group) | 96 |
-| 31 | Text-only file · add a picture per page | 100 |
-| 32 | File with its own pictures | 118 |
+| 31 | Text-only file · add a picture per page — retired by Slice 278, see Batch 48 frame 186 | 100 |
+| 32 | File with its own pictures — retired by Slice 278, see Batch 48 frame 186 | 118 |
 | — | **A picture for each page · reading · Slice 98** (group) | 136 |
-| 34 | Upright · text over the picture | 140 |
-| 35 | Sideways · picture left, text right | 157 |
+| 34 | Upright · text over the picture — retired by Slice 278, see Batch 48 frame 186 | 140 |
+| 35 | Sideways · picture left, text right — retired by Slice 278, see Batch 48 frame 186 | 157 |
 | — | **Batch 20 · Ten open stories in the store · Slice 102 · Decision 106** (group) | 172 |
 | 36 | Free stories · with credit lines | 175 |
 
@@ -173,24 +180,24 @@ project when its slice runs; don't redraw or regenerate them.
 | # | Screen | Line |
 |---|---|---|
 | — | **Translate by default · narrator for all books · Slices 107, 109 · Decisions 111, 114** (group) | 23 |
-| 37 | New book · Text step · translate is on | 27 |
-| 38 | Grown-up mode · Narrator and Record | 50 |
-| 39 | Narrator · one per language | 82 |
+| 37 | New book · Text step · translate is on — retired by Slice 278, see Batch 48 frame 186 | 27 |
+| 38 | Grown-up mode · Narrator and Record — retired by Slice 278, see Batch 48 frame 186 | 50 |
+| 39 | Narrator · one per language — retired by Slice 278, see Batch 48 frame 186 | 82 |
 | — | **A cast per reading language · Slice 108 · Decision 113** (group) | 106 |
-| 40 | Who’s speaking · Farsi cast of an English book | 109 |
+| 40 | Who’s speaking · Farsi cast of an English book — retired by Slice 278, see Batch 48 frame 186 | 109 |
 | — | **Translated text on screen · Slice 110 · Decision 112** (group) | 128 |
-| 41 | English book, Farsi on screen | 132 |
-| 42 | Scanned page, translated · picture + text | 144 |
-| 43 | This book · grown-up options | 161 |
+| 41 | English book, Farsi on screen — retired by Slice 278, see Batch 48 frame 186 | 132 |
+| 42 | Scanned page, translated · picture + text — retired by Slice 278, see Batch 48 frame 186 | 144 |
+| 43 | This book · grown-up options — retired by Slice 278, see Batch 48 frame 186 | 161 |
 | — | **Parents read in their own voice · Slice 111 · Decision 115** (group) | 182 |
-| 44 | Record · recording a page | 186 |
-| 45 | Record · page recorded | 204 |
-| 46 | Reading a recorded page | 219 |
+| 44 | Record · recording a page — retired by Slice 278, see Batch 48 frame 186 | 186 |
+| 45 | Record · page recorded — retired by Slice 278, see Batch 48 frame 186 | 204 |
+| 46 | Reading a recorded page — retired by Slice 278, see Batch 48 frame 186 | 219 |
 | — | **Store filters · Slice 112 · Decision 116** (group) | 231 |
 | 47 | Free stories · ages 6–8 | 234 |
 | — | **Batch 23 · Voices that sound like a story · Slices 113, 114 · Decisions 117–119** (group) | 255 |
-| 48 | Who’s speaking · flavours and Storyteller offer | 259 |
-| 49 | Storyteller voices installed | 285 |
+| 48 | Who’s speaking · flavours and Storyteller offer — retired by Slice 278, see Batch 48 frame 186 | 259 |
+| 49 | Storyteller voices installed — retired by Slice 278, see Batch 48 frame 186 | 285 |
 
 (Generated from the captions with a script; regenerate it when the file is refreshed.)
 
@@ -225,13 +232,13 @@ Implement: `Dino Reader Batch 22-23.dc.html`
 | # | Screen | Line |
 |---|---|---|
 | — | **Storyteller voices by default · Slice 115 · Decisions 120, 121** (group) | 23 |
-| 50 | Grown-up mode · getting the voices | 27 |
-| 51 | Voices ready · every book re-cast | 56 |
+| 50 | Grown-up mode · getting the voices — retired by Slice 278, see Batch 48 frame 186 | 27 |
+| 51 | Voices ready · every book re-cast — retired by Slice 278, see Batch 48 frame 186 | 56 |
 | — | **Storyteller characters · Slice 116 · Decision 122 · animal sounds · Slice 117 · Decision 123** (group) | 84 |
-| 52 | Who’s speaking · characters | 88 |
-| 53 | Pick a character | 107 |
-| 54 | Who’s speaking · Farsi characters | 136 |
-| 55 | Narrator · narrator characters | 155 |
+| 52 | Who’s speaking · characters — retired by Slice 278, see Batch 48 frame 186 | 88 |
+| 53 | Pick a character — retired by Slice 278, see Batch 48 frame 186 | 107 |
+| 54 | Who’s speaking · Farsi characters — retired by Slice 278, see Batch 48 frame 186 | 136 |
+| 55 | Narrator · narrator characters — retired by Slice 278, see Batch 48 frame 186 | 155 |
 
 (Generated from the captions with a script; regenerate it when the file is refreshed.)
 
@@ -378,7 +385,7 @@ Open it in a text editor (`support.js` is not copied). Each screen is headed by 
 | 67 | Picture only | 54 |
 | 68 | Text only | 77 |
 | — | **Cast page and settings · Slices 151, 152, 150 · Decisions 155–157** (group) | 100 |
-| 69 | Who's speaking · no merge, no animal | 105 |
+| 69 | Who's speaking · no merge, no animal — retired by Slice 278, see Batch 48 frame 186 | 105 |
 | 70 | Grown-up settings · Reading speed, Animal sounds | 122 |
 | — | **Mid-read stall · Slice 148 · Vowel marks · Slice 154** (group) | 151 |
 | 71 | Mid-read · next part not voiced yet | 156 |
@@ -474,8 +481,8 @@ Open it in a text editor (`support.js` is not copied). Each screen is headed by 
 | 84 | About & updates | 147 |
 | 85 | Grown-up mode · books only | 170 |
 | 85b | Grown-up mode · a book’s ⋯ | 187 |
-| 86 | Intro · last step · story languages | 215 |
-| 87 | Settings · Story languages · downloading | 239 |
+| 86 | Intro · last step · story languages — partly retired by Slice 278, see Batch 48 frame 186: the machine-translation copy | 215 |
+| 87 | Settings · Story languages · downloading — partly retired by Slice 278, see Batch 48 frame 186: the machine-translation copy | 239 |
 | 88 | Reading · the language button, open | 259 |
 | 89 | Reading · switched to Farsi | 291 |
 | 90 | Changing the app language · which one goes | 317 |
@@ -522,15 +529,15 @@ Open it in a text editor (`support.js` is not copied). Each screen is headed by 
 | # | Screen | Line |
 |---|---|---|
 | 97 | Kids’ shelf · the Grown-ups pill | 33 |
-| 98 | Grown-ups’ corner | 50 |
+| 98 | Grown-ups’ corner — partly retired by Slice 278, see Batch 48 frame 186: the Add a book button | 50 |
 | 99 | Corner · first run, before the hand-over | 75 |
-| 100 | Book sheet · Read now first | 100 |
-| 101 | Intro · new first card · two places | 125 |
+| 100 | Book sheet · Read now first — partly retired by Slice 278, see Batch 48 frame 186: the Cast row | 100 |
+| 101 | Intro · new first card · two places — partly retired by Slice 278, see Batch 48 frame 186: the add step (steps are now place, read, record, languages: "of 4") | 125 |
 | 102 | The Grown-ups icon and pill | 182 |
 | 103 | Grown-ups’ corner · dark (needs the theme pin lifted) | 198 |
 | 104 | Store · opened from the intro · Continue | 227 |
 | 105 | Settings · from the corner · Done | 242 |
-| 106 | Record · Done, the words shown, where recordings live | 267 |
+| 106 | Record · Done, the words shown, where recordings live — partly retired by Slice 278, see Batch 48 frame 186: the words and note (replaced by Batch 48 frames 177-184, Slice 279) | 267 |
 | 107 | Settings · Farsi · Done on the left | 285 |
 | 108 | Sub-page · from the intro · Continue | 303 |
 | 109 | Store · Continue · dark | 321 |
@@ -693,11 +700,11 @@ Implement: the selected files
 | 165 | First books download | 121 |
 | 166 | First books offline | 144 |
 | 167 | Ready to read | 163 |
-| 168 | Intro read 2 of 5 | 182 |
-| 169 | Story languages audio | 211 |
-| 170 | AI reader download | 241 |
-| 171 | AI reader offline | 264 |
-| 172 | Book sheet Reorder | 289 |
+| 168 | Intro read 2 of 5 — partly retired by Slice 278, see Batch 48 frame 186: the counter reads "of 4" now | 182 |
+| 169 | Story languages audio — partly retired by Slice 278, see Batch 48 frame 186: the reading-voice line | 211 |
+| 170 | AI reader download — retired by Slice 278, see Batch 48 frame 186 | 241 |
+| 171 | AI reader offline — retired by Slice 278, see Batch 48 frame 186 | 264 |
+| 172 | Book sheet Reorder — partly retired by Slice 278, see Batch 48 frame 186: the Cast row | 289 |
 | 173 | Reorder wiggle | 314 |
 | 174 | Reorder drag | 327 |
 | 175 | Corner new order | 341 |
