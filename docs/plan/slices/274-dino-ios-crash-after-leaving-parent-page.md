@@ -1,6 +1,6 @@
 # Slice 274 — Dino iPhone crash: leave the app from the grown-ups pages and come back
 
-*Planned 2026-11-06.* Bug fix, Dino Reader, iOS first (Android checked for the same path). Reported by the user on 2026-11-06 ~00:10 UTC, testing the TestFlight build with Slice 270: "no crash on reading stories, but changing the app from parent page and coming back caused a crash."
+*In progress (wave 2026-11-06), draft PR.* Planned 2026-11-06. Parallel with Slice 273 part A, which owns StoryVoicing, ReadingPage, ReadingSession and UsageCounter in DinoReader.App. Bug fix, Dino Reader, iOS first (Android checked for the same path). Reported by the user on 2026-11-06 ~00:10 UTC, testing the TestFlight build with Slice 270: "no crash on reading stories, but changing the app from parent page and coming back caused a crash."
 
 **Touches:** `src/DinoReader.App/**` (expected: `App.xaml.cs` lifecycle, `GatePage.xaml.cs` and the grown-ups pages, `Platforms/iOS/**`), `src/ReadTheStupidText.Mobile.Shared/**` (only if the cause is in shared lifecycle or crash code), `src/ReadTheStupidText.Application/Crashes/**` (only if the cause is the rolling log), `tests/DinoReader.Tests/**`, `.maestro/dino/**`, `docs/plan/slices/274-dino-ios-crash-after-leaving-parent-page.md`. Narrow it once the cause is known.
 
