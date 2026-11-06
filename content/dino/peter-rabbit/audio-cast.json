@@ -112,8 +112,8 @@
   ],
   "audioPacks": {
     "ar": {
-      "version": 1,
-      "hash": "ec2a14fe6c70eec554d5898bdee6014b493dfe349b34000377e930a7b293e2cb",
+      "version": 2,
+      "hash": "f61128591fe26aa9f9323b7eb0622c45eda9c9a2b7b860e150098013407bb2d4",
       "bytes": 2638126
     },
     "da": {
@@ -137,8 +137,8 @@
       "bytes": 2529144
     },
     "fa": {
-      "version": 1,
-      "hash": "4ea59779b07eea0959c0b4096259736af652933e0cba85d7b5bf6cec7f067d66",
+      "version": 2,
+      "hash": "bd54ce521545ac1a4abfd08468c170d881d339751200e065ca6401eb1efecc6d",
       "bytes": 2480970
     },
     "fi": {

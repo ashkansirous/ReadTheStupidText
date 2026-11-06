@@ -48,7 +48,7 @@ public class SpeakerFirstTests
     }
 
     private static IReadOnlyList<SplitSegment> Regroup(Layout layout, string language, params int[] sentenceEnds) =>
-        SpeakerFirst.Apply(layout.Pieces, SpeakerFirst.Plan(layout.Pieces, language, layout.Text, layout.Sentences(sentenceEnds)), withColon: true, layout.Text);
+        SpeakerFirst.Apply(layout.Pieces, SpeakerFirst.Plan(layout.Pieces, language, layout.Text, layout.Sentences(sentenceEnds)), markTags: true, layout.Text);
 
     [Theory]
     [InlineData("fa", "en", true, true)]
@@ -62,6 +62,9 @@ public class SpeakerFirstTests
 
     private static string[] Texts(IReadOnlyList<SplitSegment> pieces) => pieces.Select(p => p.Segment.Text).ToArray();
 
+    // The texts as the page shows them (a joined tag with its colon); Texts is what a clip is looked up by.
+    private static string[] Shown(IReadOnlyList<SplitSegment> pieces) => pieces.Select(p => p.IntroducesQuote ? SpeakerFirst.Colon(p.Segment.Text) : p.Segment.Text).ToArray();
+
     [Theory]
     [InlineData(SpeakerFirst.Persian)]
     [InlineData(SpeakerFirst.Arabic)]
@@ -72,7 +75,7 @@ public class SpeakerFirstTests
 
         IReadOnlyList<SplitSegment> result = Regroup(layout, language, 1, 2);
 
-        Assert.Equal(["PIM SAID:", "Q1", "Q2"], Texts(result));
+        Assert.Equal(["PIM SAID:", "Q1", "Q2"], Shown(result));
     }
 
     [Fact]
@@ -80,7 +83,7 @@ public class SpeakerFirstTests
     {
         Layout layout = new Layout().Quote("Q", "Hello!").Tag("پیم گفت.", "said Pim.");
 
-        Assert.Equal(["پیم گفت:", "Q"], Texts(Regroup(layout, SpeakerFirst.Persian, 1)));
+        Assert.Equal(["پیم گفت:", "Q"], Shown(Regroup(layout, SpeakerFirst.Persian, 1)));
     }
 
     [Theory]
@@ -93,7 +96,7 @@ public class SpeakerFirstTests
     {
         Layout layout = new Layout().Quote("Q", "Hello!").Tag(tag, "said Pim.");
 
-        Assert.Equal([expected, "Q"], Texts(Regroup(layout, SpeakerFirst.Persian, 1)));
+        Assert.Equal([expected, "Q"], Shown(Regroup(layout, SpeakerFirst.Persian, 1)));
     }
 
     [Fact]
@@ -101,7 +104,7 @@ public class SpeakerFirstTests
     {
         Layout layout = new Layout().Tag("N1", "Pim said,").Quote("Q", "Hello!").Tag("N2", "The sun rose.");
 
-        Assert.Equal(["N1", "Q", "N2"], Texts(Regroup(layout, SpeakerFirst.Persian, 1, 2)));
+        Assert.Equal(["N1", "Q", "N2"], Shown(Regroup(layout, SpeakerFirst.Persian, 1, 2)));
     }
 
     [Fact]
@@ -109,7 +112,7 @@ public class SpeakerFirstTests
     {
         Layout layout = new Layout().Quote("Q", "Hello!").Tag("N", "Then Pim left.");
 
-        Assert.Equal(["Q", "N"], Texts(Regroup(layout, SpeakerFirst.Persian, 0, 1)));
+        Assert.Equal(["Q", "N"], Shown(Regroup(layout, SpeakerFirst.Persian, 0, 1)));
     }
 
     [Fact]
@@ -117,7 +120,7 @@ public class SpeakerFirstTests
     {
         Layout layout = new Layout().Quote("Q1", "One!").Tag("T1.", "said Pim.").Quote("Q2", "Two!").Tag("T2.", "said Pim.");
 
-        Assert.Equal(["T1:", "Q1", "T2:", "Q2"], Texts(Regroup(layout, SpeakerFirst.Persian, 1, 3)));
+        Assert.Equal(["T1:", "Q1", "T2:", "Q2"], Shown(Regroup(layout, SpeakerFirst.Persian, 1, 3)));
     }
 
     [Fact]
@@ -127,7 +130,7 @@ public class SpeakerFirstTests
         Layout layout = new Layout().Quote("Q1", "Hello.").Quote("Q2", "Goodbye,").Tag("T.", "said Pim.");
         IReadOnlyList<SentenceSpan> spans = layout.Sentences(0, 2);
 
-        IReadOnlyList<SplitSegment> result = SpeakerFirst.Apply(layout.Pieces, SpeakerFirst.Plan(layout.Pieces, "fa", layout.Text, spans), withColon: true);
+        IReadOnlyList<SplitSegment> result = SpeakerFirst.Apply(layout.Pieces, SpeakerFirst.Plan(layout.Pieces, "fa", layout.Text, spans), markTags: true);
 
         Assert.Equal(["Q1", "Q2", "T."], Texts(result));
         int[] sentences = result.Select(p => StorySentences.IndexAt(spans, p.Segment.SourceStart)).ToArray();
@@ -142,7 +145,7 @@ public class SpeakerFirstTests
     {
         Layout layout = new Layout().Quote("Q", "Come in,").Tag("N", narration);
 
-        Assert.Equal(["Q", "N"], Texts(Regroup(layout, SpeakerFirst.Persian, 1)));
+        Assert.Equal(["Q", "N"], Shown(Regroup(layout, SpeakerFirst.Persian, 1)));
     }
 
     [Fact]
@@ -151,7 +154,7 @@ public class SpeakerFirstTests
         // "A," said Pim, "B," said Pim.
         Layout layout = new Layout().Quote("Q1", "A,").Tag("T1,", "said Pim,").Quote("Q2", "B,").Tag("T2.", "said Pim.");
 
-        Assert.Equal(["T1,", "T2:", "Q1", "Q2"], Texts(Regroup(layout, SpeakerFirst.Persian, 3)));
+        Assert.Equal(["T1,", "T2:", "Q1", "Q2"], Shown(Regroup(layout, SpeakerFirst.Persian, 3)));
     }
 
     [Theory]
@@ -161,7 +164,7 @@ public class SpeakerFirstTests
     {
         Layout layout = new Layout().Quote("Q", "Hello!").Tag(text, source);
 
-        string tag = Texts(Regroup(layout, SpeakerFirst.Persian, 1))[0];
+        string tag = Shown(Regroup(layout, SpeakerFirst.Persian, 1))[0];
 
         Assert.DoesNotContain("::", tag);
         Assert.Equal(text == source, tag == text);
@@ -172,7 +175,7 @@ public class SpeakerFirstTests
     {
         Layout layout = new Layout().Quote("Q", "Hello!").Tag("پیم گفت:", "said Pim.");
 
-        Assert.Equal(["پیم گفت:", "Q"], Texts(Regroup(layout, SpeakerFirst.Persian, 1)));
+        Assert.Equal(["پیم گفت:", "Q"], Shown(Regroup(layout, SpeakerFirst.Persian, 1)));
     }
 
     [Fact]
@@ -183,11 +186,11 @@ public class SpeakerFirstTests
         IReadOnlyList<SentenceSpan> spans = layout.Sentences(1, 2);
         var animals = new Dictionary<string, AnimalKind> { [Pim] = AnimalKind.Pig };
 
-        IReadOnlyList<SplitSegment> heard = SpeakerFirst.SourceOrder(layout.Pieces, SpeakerFirst.Persian, layout.Text, spans);
+        IReadOnlyList<SplitSegment> heard = SpeakerFirst.JoinedSourceOrder(layout.Pieces, SpeakerFirst.Persian, layout.Text, spans);
 
         Assert.Single(AnimalSounds.Plan(layout.Pieces, animals, "en"));
         Assert.Empty(AnimalSounds.Plan(heard, animals, "en"));
-        Assert.Equal(layout.Pieces, SpeakerFirst.SourceOrder(layout.Pieces, "en", layout.Text, spans));
+        Assert.Equal(layout.Pieces, SpeakerFirst.JoinedSourceOrder(layout.Pieces, "en", layout.Text, spans));
     }
 
     [Fact]
@@ -195,7 +198,7 @@ public class SpeakerFirstTests
     {
         Layout layout = new Layout().Quote("Q1", "A,").Tag("T1,", "said Pim,").Quote("Q2", "B.");
         IReadOnlyList<SentenceSpan> spans = layout.Sentences(1, 2);
-        IReadOnlyList<SplitSegment> heard = SpeakerFirst.Apply(layout.Pieces, SpeakerFirst.Plan(layout.Pieces, "fa", layout.Text, spans), withColon: true);
+        IReadOnlyList<SplitSegment> heard = SpeakerFirst.Apply(layout.Pieces, SpeakerFirst.Plan(layout.Pieces, "fa", layout.Text, spans), markTags: true);
         StoryPage page = new(layout.Text, null);
 
         TranslatedStory shown = TranslatedStoryBuilder.Build([page], spans, heard);
@@ -211,7 +214,7 @@ public class SpeakerFirstTests
         layout.Tag("T1.", "said Pim.");
         layout.Pieces.Add(layout.Pieces[2] with { Segment = layout.Pieces[2].Segment with { Text = "T2." } });
 
-        Assert.Equal(["T1.", "T2:", "Q1a", "Q1b"], Texts(Regroup(layout, SpeakerFirst.Persian, 3)));
+        Assert.Equal(["T1.", "T2:", "Q1a", "Q1b"], Shown(Regroup(layout, SpeakerFirst.Persian, 3)));
     }
 
     [Fact]
@@ -231,12 +234,82 @@ public class SpeakerFirstTests
     }
 
     [Fact]
-    public void Without_the_colon_flag_the_texts_stay_as_they_were()
+    public void Without_the_mark_flag_no_tag_is_marked_and_the_texts_stay_as_they_were()
     {
         Layout layout = new Layout().Quote("Q", "Hello!").Tag("T.", "said Pim.");
         IReadOnlyList<SpeakerFirst.Move> order = SpeakerFirst.Plan(layout.Pieces, "fa", layout.Text, layout.Sentences(1));
 
-        Assert.Equal(["T.", "Q"], Texts(SpeakerFirst.Apply(layout.Pieces, order, withColon: false)));
+        IReadOnlyList<SplitSegment> unmarked = SpeakerFirst.Apply(layout.Pieces, order, markTags: false);
+
+        Assert.Equal(["T.", "Q"], Texts(unmarked));
+        Assert.DoesNotContain(unmarked, p => p.IntroducesQuote);
+    }
+
+    [Fact]
+    public void Join_reorders_the_translated_pieces_and_never_changes_a_text_so_a_clip_is_still_found_by_it()
+    {
+        // Slice 280: the colon is only shown; the tag's own text, which its clip is looked up by, is as translated.
+        Layout layout = new Layout().Quote("Q1", "A,").Tag("پیم گفت.", "said Pim,").Quote("Q2", "B.");
+        IReadOnlyList<SentenceSpan> spans = layout.Sentences(1, 2);
+
+        IReadOnlyList<SplitSegment> joined = SpeakerFirst.Join(layout.Pieces, "fa", "en", layout.Text, spans);
+
+        Assert.Equal(["پیم گفت.", "Q1", "Q2"], Texts(joined));
+        Assert.Equal([true, false, false], joined.Select(p => p.IntroducesQuote));
+        Assert.Equal("پیم گفت:", SpeakerFirst.Colon(joined[0].Segment.Text));
+        // The device voice says the tag as a lead-in (with the colon); the other pieces, and the lookup key of the tag, are as translated.
+        Assert.Equal(["پیم گفت:", "Q1", "Q2"], joined.Select(p => p.SpokenText));
+    }
+
+    [Fact]
+    public void A_flagged_tag_counts_as_pre_made_by_its_plain_text_not_the_colon_form()
+    {
+        Layout layout = new Layout().Quote("Q1", "A,").Tag("پیم گفت.", "said Pim,").Quote("Q2", "B.");
+        IReadOnlyList<SplitSegment> joined = SpeakerFirst.Join(layout.Pieces, "fa", "en", layout.Text, layout.Sentences(1, 2));
+        SplitSegment tag = joined[0];
+
+        Assert.True(tag.IntroducesQuote);
+        Assert.True(PremadeAudio.IsSpoken(tag.Segment.Text));
+        Assert.Equal(joined.Count, PremadeAudio.SpokenCount(joined.Select(p => p.Segment.Text)));
+        Assert.NotEqual(PremadeAudio.HashOf(tag.SpokenText), PremadeAudio.HashOf(tag.Segment.Text));
+    }
+
+    [Theory]
+    [InlineData("en", "en")]
+    [InlineData("fa", "fa")]
+    [InlineData("de", "en")]
+    public void Join_leaves_a_story_that_is_not_translated_into_a_speaker_first_language_as_it_is(string spoken, string story)
+    {
+        Layout layout = new Layout().Quote("Q", "Hello!").Tag("T.", "said Pim.");
+
+        Assert.Equal(layout.Pieces, SpeakerFirst.Join(layout.Pieces, spoken, story, layout.Text, layout.Sentences(1)));
+    }
+
+    [Fact]
+    public void The_page_shows_the_joined_tag_with_a_colon_while_the_piece_text_stays_the_translation()
+    {
+        Layout layout = new Layout().Quote("Q", "Hello!").Tag("پیم گفت.", "said Pim.");
+        IReadOnlyList<SentenceSpan> spans = layout.Sentences(1);
+        IReadOnlyList<SplitSegment> joined = SpeakerFirst.Join(layout.Pieces, "fa", "en", layout.Text, spans);
+
+        TranslatedStory shown = TranslatedStoryBuilder.Build([new StoryPage(layout.Text, null)], spans, joined);
+
+        Assert.Equal("پیم گفت: “Q”", shown.Text);
+        Assert.Equal("پیم گفت.", joined[0].Segment.Text);
+    }
+
+    [Fact]
+    public async Task Translating_a_story_joins_it_from_the_pieces_just_translated_and_asks_for_nothing_more()
+    {
+        Layout layout = new Layout().Quote("Hello!", "Hello!").Tag("said Pim.", "said Pim.");
+        var asked = new List<string>();
+
+        IReadOnlyList<SplitSegment> result = await StoryTranslation.TranslateJoinedAsync(
+            layout.Pieces, (text, _) => { asked.Add(text); return Task.FromResult(text == "said Pim." ? "پیم گفت." : "سلام!"); },
+            "fa", "en", layout.Text, layout.Sentences(1), CancellationToken.None);
+
+        Assert.Equal(["پیم گفت.", "سلام!"], Texts(result));
+        Assert.Equal(["Hello!", "said Pim."], asked.Order());
     }
 
     [Theory]
@@ -250,7 +323,7 @@ public class SpeakerFirstTests
     {
         Layout layout = new Layout().Quote("Q1", "A strong house,").Tag("T.", "said Pim,").Quote("Q2", "takes time.");
 
-        Assert.Equal(["Q1", "T.", "Q2"], Texts(Regroup(layout, language, 1, 2)));
+        Assert.Equal(["Q1", "T.", "Q2"], Shown(Regroup(layout, language, 1, 2)));
         Assert.False(SpeakerFirst.Applies(language));
     }
 }

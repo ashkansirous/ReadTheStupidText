@@ -1,0 +1,88 @@
+# Slice 280: Three Little Pigs in Farsi says who speaks first, and the reader does not reorder anything: page 4 ("A strong house takes time," said Pim. "I'll play when it's done.") is joined as the
+# translated story is built, so the page shows «پیم گفت: “...”» (tag, colon, then both halves of the quote in one pair of marks) and the pre-made clips play in that same order. The colon is display only
+# (a clip is looked up by the text as translated), so a tag whose clip did not match would be shown for a beat instead of played: the "premade clip plays" lines for page 4 prove the clips still match.
+# The fixture pack (install-audio-pack, Debug only, the real pack store) gives every translated Farsi piece a clip, numbered in the joined (spoken) order: it is joined by the same SpeakerFirst.Join the app runs.
+# run-flows.ps1 checks every expect-log line after the flow; the assertVisible below is the check that the TAG comes first on the page.
+# To see it fail against the old behaviour: with the split order the page reads «“ساختن خونه‌ی محکم وقت می‌خواد.” پیم گفت.», so the "پیم گفت: “" text is never visible.
+# Not yet run on a device (the device stage runs it after the reviews).
+# Keeps the app's data (no clearState), like premade-audio-three-clips; the fixture pack stays installed for the dev install.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK set-language ok fa
+# expect-log: HOOK install-audio-pack ok
+# expect-log: HOOK read start
+# The tag «پیم گفت.» is piece 13 of the joined order (tools/DinoReader.BookBuilder dump-sentences three-little-pigs --lang fa), in the same sentence 11 as its quote's first half (piece 14), so the sentence number alone cannot tell them apart:
+# the read logs the clip it plays, and the fixture names clip n after piece n, so "clip fixture-13.m4a" appears only when the TAG found its own clip at its place in the joined order. A tag miss fails this line.
+# expect-log: [AudioPack] premade clip plays (sentence 11) clip fixture-13.m4a
+# expect-log: [AudioPack] premade clip plays (sentence 11) clip fixture-14.m4a
+appId: uk.sirous.dinoreader.dbg
+name: Three Little Pigs in Farsi shows and reads the speaker first
+# Runs after the flow pass or fail, so a failure never leaves the app in Farsi for the flows that wait on English labels.
+onFlowComplete:
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: set-language
+        lang: en
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# skip-first-run lang=fa is ignored once the install is past first run (the run read the English shelf, translated=False): the set-language hook switches the screens (voice=0: no voice-pack start, as in past-roar).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: fa
+      voice: "0"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 30000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: install-audio-pack
+      id: three-little-pigs
+      lang: fa
+# The install runs in the background (a few small files): give it a moment before the read looks the pack up.
+- extendedWaitUntil:
+    visible:
+      id: PackInstallNeverShown
+    timeout: 6000
+    optional: true
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "4"
+      play: page
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+# The tag comes first on the page, with its colon, then the opening mark of the whole quote (the colon is display only: the clip text has the full stop).
+- extendedWaitUntil:
+    visible: ".*پیم گفت: “.*"
+    timeout: 30000
+# The Play button describes itself as Pause while the read is Playing; a clip counts as playing.
+- extendedWaitUntil:
+    visible: "Pause|توقف"
+    timeout: 90000
+# play=page stops once the page is read: wait for the visible end of that read (Pause gone); the page's clips have all played by then (checked by expect-log).
+- extendedWaitUntil:
+    notVisible: "Pause|توقف"
+    timeout: 60000
+- assertVisible:
+    id: ReadingSurface
+# Put the screens back in English, so later flows that wait on English labels (Pause) still match.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: en

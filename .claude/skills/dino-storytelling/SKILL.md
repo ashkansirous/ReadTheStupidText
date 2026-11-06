@@ -65,8 +65,9 @@ and Decision 130. Read them first: they beat the classic tale.
   the line is made by joining those existing pieces, tag first, when the translated story is built,
   and its audio by playing their existing clips in that order. Never re-translate or re-record a
   piece for this, and never reorder a line while reading (user, 2026-11-06: "apply this to the
-  translation time, not when reading"; "just concat them ... no re-recording"). Until Slice 280
-  ships, the app's read-time regroup (`SpeakerFirst`, Slice 254) still does it.
+  translation time, not when reading"; "just concat them ... no re-recording"). The app does the
+  join as it translates (`SpeakerFirst.Join`, Slice 280); a new Farsi or Arabic book's manifest is
+  lined up with it by `BookBuilder join-audio`, then `build-audio`.
 
 ## 4. Picture plan (one line per page)
 

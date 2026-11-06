@@ -1,10 +1,11 @@
 namespace DinoReader.Core;
 
 /// <summary>
-/// Speaker first (Slice 254). Persian and Arabic say who speaks before what is said ("پیم گفت: ..."), so a translated line
-/// written in the source's order, quote then dialogue tag (then the rest of the quote), is regrouped after translation to tag, quote, quote.
-/// Only the order of the pieces changes: every piece keeps its text, speaker and source range, and a tag moved in front of its quote ends with a colon
-/// instead of a full stop. A tag never moves in front of a quote piece that lies in an earlier sentence than the tag, so the highlight sentence never goes backwards.
+/// Speaker first (Slice 254, moved to translation time by Slice 280). Persian and Arabic say who speaks before what is said ("پیم گفت: ..."), so when a story is translated
+/// into one of them a line written in the source's order, quote then dialogue tag (then the rest of the quote), is joined as tag, quote, quote (<see cref="Join"/>), once, as the translated
+/// story is built: the page, the highlight and the pre-made clips all follow that one order and nothing reorders while reading.
+/// Only the order of the pieces changes: every piece keeps its text, speaker and source range (so its clip), and the tag put in front of its quote is marked
+/// (<see cref="SplitSegment.IntroducesQuote"/>) so the page shows a colon after it. A tag never moves in front of a quote piece that lies in an earlier sentence than the tag, so the highlight sentence never goes backwards.
 /// </summary>
 public static class SpeakerFirst
 {
@@ -16,7 +17,7 @@ public static class SpeakerFirst
 
     private static readonly HashSet<string> Languages = [Persian, Arabic];
 
-    private const char Colon = ':';
+    private const char ColonMark = ':';
     private const string TagStops = ".،,؛;。۔";
     private const string OpenEnded = "!?؟…";
     private const string ContinuingMarks = ",،";
@@ -40,20 +41,24 @@ public static class SpeakerFirst
     public static bool Regroups(string? spokenLanguage, string? storyLanguage, bool translated) =>
         translated && Applies(spokenLanguage) && UiLanguage.Resolve(spokenLanguage) != UiLanguage.Resolve(storyLanguage);
 
-    /// <summary>The pieces of <paramref name="pieces"/> (a read of the story whose text and sentences are given) regrouped speaker first; the same list for any other language.</summary>
-    public static IReadOnlyList<SplitSegment> Regroup(IReadOnlyList<SplitSegment> pieces, string? language, string sourceText, IReadOnlyList<SentenceSpan> sentences)
+    /// <summary>
+    /// The translation-time join (Slice 280), the one function the app and the sentence dump both call: the translated <paramref name="translated"/> pieces of a story written in
+    /// <paramref name="storyLanguage"/>, joined speaker first for <paramref name="spokenLanguage"/> using only the pieces there are (no new translation, no new clip); the same list for any other language.
+    /// </summary>
+    public static IReadOnlyList<SplitSegment> Join(
+        IReadOnlyList<SplitSegment> translated, string? spokenLanguage, string? storyLanguage, string sourceText, IReadOnlyList<SentenceSpan> sentences)
     {
-        if (!Applies(language))
+        if (!Regroups(spokenLanguage, storyLanguage, translated: true))
         {
-            return pieces;
+            return translated;
         }
 
-        return Apply(pieces, Plan(pieces, language, sourceText, sentences), withColon: true, sourceText);
+        return Apply(translated, Plan(translated, spokenLanguage, sourceText, sentences), markTags: true, sourceText);
     }
 
-    /// <summary>The story's own pieces in the order they are read in <paramref name="language"/> (texts untouched), so the animal sounds count a line the way the read hears it.</summary>
-    public static IReadOnlyList<SplitSegment> SourceOrder(IReadOnlyList<SplitSegment> pieces, string? language, string sourceText, IReadOnlyList<SentenceSpan> sentences) =>
-        Applies(language) ? Apply(pieces, Plan(pieces, language, sourceText, sentences), withColon: false) : pieces;
+    /// <summary>The story's own pieces in the order <see cref="Join"/> reads them in <paramref name="language"/> (texts untouched), so the animal sounds count a line the way the read hears it.</summary>
+    public static IReadOnlyList<SplitSegment> JoinedSourceOrder(IReadOnlyList<SplitSegment> pieces, string? language, string sourceText, IReadOnlyList<SentenceSpan> sentences) =>
+        Applies(language) ? Apply(pieces, Plan(pieces, language, sourceText, sentences), markTags: false) : pieces;
 
     /// <summary>The new order of the pieces: every index once, a tag first before the quote it belongs to. Identity when the language does not put the speaker first.</summary>
     public static IReadOnlyList<Move> Plan(IReadOnlyList<SplitSegment> pieces, string? language, string sourceText, IReadOnlyList<SentenceSpan> sentences)
@@ -71,12 +76,13 @@ public static class SpeakerFirst
     }
 
     /// <summary>
-    /// The pieces in the order of <paramref name="order"/>; with <paramref name="withColon"/> a moved tag ends with a colon (false keeps every text as it was).
-    /// A tag whose text is still the story's own words (no translation came back for it) keeps its text when <paramref name="sourceText"/> is given: no colon on a fallback.
+    /// The pieces in the order of <paramref name="order"/>, every text untouched; with <paramref name="markTags"/> the tag put in front of its quote is marked
+    /// (<see cref="SplitSegment.IntroducesQuote"/>, shown with a colon by <see cref="Colon"/>).
+    /// A tag whose text is still the story's own words (no translation came back for it) keeps no mark when <paramref name="sourceText"/> is given: no colon on a fallback.
     /// </summary>
-    public static IReadOnlyList<SplitSegment> Apply(IReadOnlyList<SplitSegment> pieces, IReadOnlyList<Move> order, bool withColon, string? sourceText = null)
+    public static IReadOnlyList<SplitSegment> Apply(IReadOnlyList<SplitSegment> pieces, IReadOnlyList<Move> order, bool markTags, string? sourceText = null)
     {
-        return order.Select(m => withColon && m.EndsWithColon && !IsSourceText(pieces[m.Index], sourceText) ? WithColon(pieces[m.Index]) : pieces[m.Index]).ToList();
+        return order.Select(m => markTags && m.EndsWithColon && !IsSourceText(pieces[m.Index], sourceText) ? pieces[m.Index] with { IntroducesQuote = true } : pieces[m.Index]).ToList();
     }
 
     // A quote (its pieces, then a plain tag that finishes its sentence) is regrouped; any other piece stays where it is.
@@ -206,15 +212,16 @@ public static class SpeakerFirst
 
     private static string Collapse(string text) => string.Join(' ', text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
 
-    private static SplitSegment WithColon(SplitSegment piece)
+    /// <summary>The tag as the page shows it in front of its quote: its stop becomes a colon (Display only: the clip is looked up by the text as translated).</summary>
+    public static string Colon(string tag)
     {
-        string text = piece.Segment.Text.TrimEnd();
-        if (text.Length == 0 || OpenEnded.Contains(text[^1]) || text[^1] == Colon)
+        string text = tag.TrimEnd();
+        if (text.Length == 0 || OpenEnded.Contains(text[^1]) || text[^1] == ColonMark)
         {
-            return piece;
+            return tag;
         }
 
         string bare = TagStops.Contains(text[^1]) ? text[..^1].TrimEnd() : text;
-        return piece with { Segment = piece.Segment with { Text = bare + Colon } };
+        return bare + ColonMark;
     }
 }
