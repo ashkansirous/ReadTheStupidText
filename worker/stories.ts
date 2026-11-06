@@ -6,6 +6,8 @@
 //   GET /api/stories/<id>/download    the newest package; add ?v=<n> for that version, which is cached for a day
 //   GET /api/stories/<id>/audio/<lang>?v=<n>   Slice 246 B2: the audio pack of that book language (audio-<lang>-v<n>.zip), only when meta.json's `audio` lists exactly
 //                                     that language and version and the zip is in the folder; a missing or different ?v= is a 404. Immutable per version, cached for a day
+//   GET /api/stories/<id>/listen/<lang>?v=<n>   Slice 281: the one listening track of that book language (listen-<lang>-v<n>.m4a, audio/mp4, inline, Range for smart speakers), only when meta.json's
+//                                     `audio` lists that language at that version WITH `listenSeconds` and the .m4a is in the folder; same 404 rules as the audio route
 // A folder counts only when its meta.json and at least one package are both there (meta.json goes up
 // last, the APK-manifest convention), so a half upload is never offered. Nothing about the caller is
 // read or stored. Only Dino Reader's host and its /dino/ prefix on workers.dev route here (index.ts).
@@ -37,6 +39,7 @@ const STORY_PATH_PREFIX = "/api/stories/";
 const COVER_SEGMENT = "cover";
 const DOWNLOAD_SEGMENT = "download";
 const AUDIO_SEGMENT = "audio";
+const LISTEN_SEGMENT = "listen";
 const VERSION_PARAM = "v";
 
 /** The list response format; the app reads `stories` and ignores fields it does not know. */
@@ -45,6 +48,7 @@ export const LIST_SCHEMA_VERSION = 1;
 const JPEG_CONTENT_TYPE = "image/jpeg";
 const PACKAGE_CONTENT_TYPE = "application/octet-stream";
 const AUDIO_CONTENT_TYPE = "application/zip";
+const LISTEN_CONTENT_TYPE = "audio/mp4";
 const LIST_CACHE_CONTROL = "public, max-age=60";
 const COVER_CACHE = "public, max-age=3600";
 const META_READ_BATCH = 6;
@@ -59,7 +63,9 @@ const LANGUAGE_CODE = /^[a-z]{2,3}(-[a-z0-9]{2,8})?$/;
 const ALLOWED_METHODS = "GET, HEAD";
 const PACKAGE_FILE = /^story-v(\d+)\.dino$/;
 const AUDIO_FILE = /^audio-([a-z]{2,3}(?:-[a-z0-9]{2,8})?)-v(\d+)\.zip$/;
+const LISTEN_FILE = /^listen-([a-z]{2,3}(?:-[a-z0-9]{2,8})?)-v(\d+)\.m4a$/;
 const MAX_AUDIO_LANGUAGES = 40;
+const MAX_LISTEN_SECONDS = 86_400;
 const MAX_AUDIO_BYTES = 2_000_000_000;
 const POSITIVE_INTEGER = /^[1-9]\d{0,8}$/;
 
@@ -105,6 +111,8 @@ export interface StoryMeta {
 export interface AudioPackInfo {
   readonly version: number;
   readonly bytes: number | null;
+  /** Slice 281: the length in whole seconds of the book's `listen-<lang>-v<version>.m4a` track; the key is absent when the book has no track (or, on an offered entry, when the track is not in the folder). */
+  readonly listenSeconds?: number;
 }
 
 /** One complete story: its checked meta, the package version it offers, and whether a cover was uploaded. */
@@ -122,6 +130,8 @@ interface Folder {
   hasCover: boolean;
   versions: number[];
   audio: Record<string, number[]>;
+  /** Slice 281: the versions of each language's `listen-<lang>-v<n>.m4a` track in the folder. */
+  listen: Record<string, number[]>;
 }
 
 /** The `<id>` and file name of a key under the stories prefix, or null for any other key. */
@@ -141,6 +151,14 @@ export function audioPackOf(file: string): { language: string; version: number }
   return language !== "" && POSITIVE_INTEGER.test(digits) ? { language, version: Number(digits) } : null;
 }
 
+/** Slice 281: the language and version a `listen-<lang>-v<n>.m4a` file name carries, or null for any other name. */
+export function listenTrackOf(file: string): { language: string; version: number } | null {
+  const match = LISTEN_FILE.exec(file);
+  const language = match?.[1] ?? "";
+  const digits = match?.[2] ?? "";
+  return language !== "" && POSITIVE_INTEGER.test(digits) ? { language, version: Number(digits) } : null;
+}
+
 /** The version a `story-v<n>.dino` file name carries, or null for any other name. */
 export function packageVersionOf(file: string): number | null {
   const match = PACKAGE_FILE.exec(file);
@@ -149,7 +167,7 @@ export function packageVersionOf(file: string): number | null {
 }
 
 function emptyFolder(): Folder {
-  return { hasMeta: false, hasCover: false, versions: [], audio: {} };
+  return { hasMeta: false, hasCover: false, versions: [], audio: {}, listen: {} };
 }
 
 /** Groups listed keys by story id; keys that are not a story file are ignored. */
@@ -162,6 +180,8 @@ export function groupFolders(keys: readonly string[]): Map<string, Folder> {
     const version = packageVersionOf(parsed.file);
     const audio = audioPackOf(parsed.file);
     if (audio !== null) (folder.audio[audio.language] ??= []).push(audio.version);
+    const listen = listenTrackOf(parsed.file);
+    if (listen !== null) (folder.listen[listen.language] ??= []).push(listen.version);
     if (parsed.file === STORY_META_FILE) folder.hasMeta = true;
     else if (parsed.file === STORY_COVER_FILE) folder.hasCover = true;
     else if (version !== null) folder.versions.push(version);
@@ -202,14 +222,24 @@ export function parseAudio(raw: unknown): Record<string, AudioPackInfo> | null {
     const version = positiveIntegerOrNull(pack["version"]);
     const bytes = positiveIntegerOrNull(pack["bytes"]);
     const sized = bytes !== null && bytes <= MAX_AUDIO_BYTES ? bytes : null;
-    if (isAudioLanguage(code) && version !== null && Object.keys(kept).length < MAX_AUDIO_LANGUAGES) kept[code] = { version, bytes: sized };
+    const seconds = positiveIntegerOrNull(pack["listenSeconds"]);
+    const listen = seconds !== null && seconds <= MAX_LISTEN_SECONDS ? { listenSeconds: seconds } : {};
+    if (isAudioLanguage(code) && version !== null && Object.keys(kept).length < MAX_AUDIO_LANGUAGES) kept[code] = { version, bytes: sized, ...listen };
   }
   return Object.keys(kept).length > 0 ? kept : null;
 }
 
+/** Slice 281: a listed pack as offered: the listening track is kept only when its .m4a is in the folder at the pack's version. */
+function withHeldTrack(language: string, pack: AudioPackInfo, folder: Folder): AudioPackInfo {
+  if (pack.listenSeconds === undefined || folder.listen[language]?.includes(pack.version) === true) return pack;
+  return { version: pack.version, bytes: pack.bytes };
+}
+
 /** The packs meta.json lists that the folder really holds; null when none. */
 export function offeredAudio(meta: StoryMeta, folder: Folder): Record<string, AudioPackInfo> | null {
-  const listed = Object.entries(meta.audio ?? {}).filter(([language, pack]) => folder.audio[language]?.includes(pack.version) === true);
+  const listed = Object.entries(meta.audio ?? {})
+    .filter(([language, pack]) => folder.audio[language]?.includes(pack.version) === true)
+    .map(([language, pack]) => [language, withHeldTrack(language, pack, folder)] as const);
   return listed.length > 0 ? Object.fromEntries(listed) : null;
 }
 
@@ -304,7 +334,7 @@ export interface ListItem {
   readonly titles: Readonly<Record<string, string>> | null;
   readonly creditsByLanguage: Readonly<Record<string, string>> | null;
   /** Slice 246 B2: the packs on offer per language (version, size, link); null when the book has none. */
-  readonly audio: Readonly<Record<string, AudioPackInfo & { readonly url: string }>> | null;
+  readonly audio: Readonly<Record<string, AudioPackInfo & { readonly url: string; readonly listenUrl?: string }>> | null;
   /** Slice 260: the store tags in list order (empty when none) and the package size in bytes (null when unknown). */
   readonly tags: readonly StoreTag[];
   readonly bytes: number | null;
@@ -312,10 +342,16 @@ export interface ListItem {
   readonly downloadUrl: string;
 }
 
-function audioItems(entry: StoryEntry, base: string): Record<string, AudioPackInfo & { url: string }> | null {
+function audioItem(base: string, language: string, pack: AudioPackInfo): AudioPackInfo & { url: string; listenUrl?: string } {
+  const query = `/${language}?${VERSION_PARAM}=${pack.version}`;
+  const item = { ...pack, url: `${base}${AUDIO_SEGMENT}${query}` };
+  return pack.listenSeconds === undefined ? item : { ...item, listenUrl: `${base}${LISTEN_SEGMENT}${query}` };
+}
+
+function audioItems(entry: StoryEntry, base: string): Record<string, AudioPackInfo & { url: string; listenUrl?: string }> | null {
   const packs = Object.entries(entry.audio ?? {});
   if (packs.length === 0) return null;
-  return Object.fromEntries(packs.map(([language, pack]) => [language, { ...pack, url: `${base}${AUDIO_SEGMENT}/${language}?${VERSION_PARAM}=${pack.version}` }]));
+  return Object.fromEntries(packs.map(([language, pack]) => [language, audioItem(base, language, pack)]));
 }
 
 /** The list line for one story. `pathPrefix` is "" on the Dino host and "/dino" on workers.dev. */
@@ -486,6 +522,22 @@ function audioFile(id: string, language: string, version: number): ServedFile {
   return { key: `${storyFolder(id)}${fileName}`, contentType: AUDIO_CONTENT_TYPE, fileName, disposition: "attachment", unavailable: ErrorCode.StoryUnavailable };
 }
 
+// Slice 281: the one listening track of a book language, for smart speakers. Same rule as the pack: meta lists that language at that version with a track length AND the .m4a is in the folder.
+// Range, HEAD and If-Range are serveObject's (downloads.ts), passed in as `serve`.
+function serveListen(request: Request, bucket: R2Bucket, entry: StoryEntry, language: string, serve: ObjectServer): Promise<Response> {
+  const version = requestedVersion(new URL(request.url));
+  const offered = isAudioLanguage(language) ? entry.audio?.[language] : undefined;
+  if (version === null || version === "invalid" || offered === undefined || offered.version !== version || offered.listenSeconds === undefined) {
+    return Promise.resolve(errorResponse(ErrorCode.NotFound, 404));
+  }
+  return serve(request, bucket, listenFile(entry.id, language, version), VERSIONED_CACHE);
+}
+
+function listenFile(id: string, language: string, version: number): ServedFile {
+  const fileName = `listen-${language}-v${version}.m4a`;
+  return { key: `${storyFolder(id)}${fileName}`, contentType: LISTEN_CONTENT_TYPE, fileName, disposition: "inline", unavailable: ErrorCode.StoryUnavailable };
+}
+
 function serveStoryFile(request: Request, bucket: R2Bucket, entry: StoryEntry, segment: string, serve: ObjectServer): Promise<Response> {
   const version = requestedVersion(new URL(request.url));
   if (version === "invalid" || (segment !== COVER_SEGMENT && segment !== DOWNLOAD_SEGMENT)) {
@@ -501,7 +553,8 @@ async function route(request: Request, bucket: R2Bucket, pathPrefix: string, ser
     return entries === null ? errorResponse(ErrorCode.Unavailable, 503) : listResponse(entries, pathPrefix, request.method === "HEAD");
   }
   const [id = "", segment = "", ...extra] = pathname.slice(STORY_PATH_PREFIX.length).split("/");
-  const audioLanguage = segment === AUDIO_SEGMENT && extra.length === 1 ? (extra[0] ?? "") : null; // audio/<lang> is the one route with a third part
+  const withLanguage = (segment === AUDIO_SEGMENT || segment === LISTEN_SEGMENT) && extra.length === 1;
+  const audioLanguage = withLanguage ? (extra[0] ?? "") : null; // audio/<lang> and listen/<lang> are the routes with a third part
   if (!STORY_ID_PATTERN.test(id) || (extra.length > 0 && audioLanguage === null)) return errorResponse(ErrorCode.NotFound, 404);
   let entry: StoryEntry | null;
   try {
@@ -510,7 +563,8 @@ async function route(request: Request, bucket: R2Bucket, pathPrefix: string, ser
     return errorResponse(ErrorCode.Unavailable, 503);
   }
   if (entry === null) return errorResponse(ErrorCode.NotFound, 404);
-  return audioLanguage !== null ? serveAudio(request, bucket, entry, audioLanguage, serve) : serveStoryFile(request, bucket, entry, segment, serve);
+  if (audioLanguage === null) return serveStoryFile(request, bucket, entry, segment, serve);
+  return segment === LISTEN_SEGMENT ? serveListen(request, bucket, entry, audioLanguage, serve) : serveAudio(request, bucket, entry, audioLanguage, serve);
 }
 
 /** True for every path this module answers (after the `/dino` prefix is stripped). */

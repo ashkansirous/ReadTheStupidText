@@ -20,7 +20,9 @@ const string Usage = """
       dump-sentences <stem> --lang <code> [--out <file>]   print every piece the app reads aloud for a store book or a bundled starter in a language (index, highlight sentence, spoken text, speaker, narrator) as JSON, for tools/premade-audio
       build-audio <stem> --lang <code> [--clips <folder>] [--out <folder>]   pack the clips folder (default content/dino/<stem>/audio/<code>, Git LFS: git lfs pull --include it first; manifest.json v3 + its clips) into artifacts/store/<id>/audio-<code>-v<n>.zip and record
                                            the pack in the book's audio-cast.json (audioPacks); the version rises only when the content hash changes; the next build lists it in meta.json
-      join-audio [<stem>...]               rewrite the Persian and Arabic audio manifests to the speaker-first join the app builds as it translates (Slice 280), from the clips already there (no recording, no
+      build-listen <stem> --lang <code>[,<code>...] [--clips <folder>] [--out <folder>]   after build-audio (Slice 281): join the pack's clips in the app's read order, 150 ms between sentences and 900 ms at a page turn, into
+                                           artifacts/store/<id>/listen-<code>-v<n>.m4a (AAC mono 48 kb/s, ffmpeg from $FFMPEG or the PATH; a missing clip fails) and record its length in audio-cast.json; the next build lists it in meta.json
+      join-audio [<stem>...]             rewrite the Persian and Arabic audio manifests to the speaker-first join the app builds as it translates (Slice 280), from the clips already there (no recording, no
                                            translation); fails and writes nothing for a manifest if any piece the app reads would have no clip. Run build-audio for each book and language afterwards to raise the pack's version
       check-audio [<stem>...] [--live] [--verdict <file>]   fail unless every book has a complete audio pack in every language the app offers (Slice 272, 277): a pack exists, every sentence the app reads has its clip, no clip
                                            is for text that is gone, every clip file is there and not empty; needs the manifests pulled from Git LFS. --live checks what the live store serves instead (downloads
@@ -69,6 +71,9 @@ try
         case "build-audio":
             StoreBuilder.OutputFolder = outPath;
             return stems.Count != 1 || language is null ? Fail("build-audio needs one book and --lang <code>") : BookCommands.BuildAudio(stems[0], language, clipsPath);
+        case "build-listen":
+            StoreBuilder.OutputFolder = outPath;
+            return stems.Count != 1 || language is null ? Fail("build-listen needs one book and --lang <code>[,<code>...]") : ListenTrack.Run(stems[0], language, clipsPath);
         default:
             return Fail(Usage);
     }

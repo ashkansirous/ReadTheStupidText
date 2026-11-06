@@ -8,7 +8,8 @@ using System.Text.Json.Nodes;
 namespace DinoReader.BookBuilder;
 
 /// <summary>What the book remembers about one published audio pack: its version, the hash of its content and its size. Lives in the book's <c>audio-cast.json</c> under <c>audioPacks</c>.</summary>
-internal sealed record AudioPackRecord(int Version, string Hash, long Bytes);
+/// <remarks>Slice 281: <paramref name="ListenSeconds"/> is the length of the book's listening track (<c>listen-&lt;lang&gt;-v&lt;n&gt;.m4a</c>, <see cref="ListenTrack"/>) of this pack version; null until it was built.</remarks>
+internal sealed record AudioPackRecord(int Version, string Hash, long Bytes, int? ListenSeconds = null);
 
 /// <summary>
 /// Slice 246 B2: the per-language audio pack of a store book or a bundled starter (Slice 258). One zip per book language, <c>audio-&lt;lang&gt;-v&lt;n&gt;.zip</c>, holding the generator's <c>manifest.json</c> (version 3) and the
@@ -22,6 +23,9 @@ internal static class AudioPacks
     public const string ManifestFile = "manifest.json";
     public const string RecordsKey = "audioPacks";
     public const int ManifestVersion = 3;
+    public const string EntriesKey = "entries";
+    public const string IndexKey = "index";
+    public const string ClipKey = "clip";
 
     private static readonly DateTimeOffset ZipTime = new(2000, 1, 1, 0, 0, 0, TimeSpan.Zero);
     private static readonly JsonSerializerOptions WriteOptions = new() { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
@@ -76,11 +80,41 @@ internal static class AudioPacks
         IReadOnlyDictionary<string, AudioPackRecord> records = book is null ? new Dictionary<string, AudioPackRecord>() : RecordsIn(book.Dir);
         return records.Count == 0
             ? null
-            : new SortedDictionary<string, object>(records.ToDictionary(r => r.Key, r => (object)new { version = r.Value.Version, bytes = r.Value.Bytes }), StringComparer.Ordinal);
+            : new SortedDictionary<string, object>(records.ToDictionary(r => r.Key, r => MetaEntryOf(r.Value)), StringComparer.Ordinal);
     }
+
+    // Slice 281: listenSeconds is listed only once the track was built (key order version, bytes, listenSeconds, so an unchanged book's meta.json text does not change).
+    private static object MetaEntryOf(AudioPackRecord record) => record.ListenSeconds is { } seconds
+        ? new { version = record.Version, bytes = record.Bytes, listenSeconds = seconds }
+        : new { version = record.Version, bytes = record.Bytes };
 
     /// <summary>The files a pack holds, in zip order: <c>manifest.json</c> first, then each clip the manifest names, once, by ordinal name. Fails on a manifest of another version or language, or a missing clip.</summary>
     public static IReadOnlyList<string> PackFiles(string clipsFolder, string language)
+    {
+        using JsonDocument manifest = OpenManifest(clipsFolder, language);
+        List<string> clips = manifest.RootElement.GetProperty(EntriesKey).EnumerateArray().Select(e => ClipName(e, clipsFolder)).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
+        RejectClashingNames(clips, clipsFolder);
+        return [ManifestFile, .. clips];
+    }
+
+    /// <summary>Slice 281: the clip file name of each manifest entry by its <c>index</c>, under the same checks as <see cref="PackFiles"/> (manifest present, not an LFS pointer, version and language, plain existing clip names that are no LFS pointers).</summary>
+    public static IReadOnlyDictionary<int, string> ClipsByIndex(string clipsFolder, string language)
+    {
+        using JsonDocument manifest = OpenManifest(clipsFolder, language);
+        var byIndex = new Dictionary<int, string>();
+        foreach (JsonElement entry in manifest.RootElement.GetProperty(EntriesKey).EnumerateArray())
+        {
+            string clip = ClipName(entry, clipsFolder);
+            if (entry.TryGetProperty(IndexKey, out JsonElement value) && value.TryGetInt32(out int index))
+            {
+                byIndex[index] = clip;
+            }
+        }
+
+        return byIndex;
+    }
+
+    private static JsonDocument OpenManifest(string clipsFolder, string language)
     {
         string manifestPath = Path.Combine(clipsFolder, ManifestFile);
         if (!File.Exists(manifestPath))
@@ -89,12 +123,9 @@ internal static class AudioPacks
         }
 
         RejectLfsPointer(manifestPath);
-        using JsonDocument manifest = JsonDocument.Parse(File.ReadAllBytes(manifestPath));
-        JsonElement root = manifest.RootElement;
-        CheckManifest(root, language, manifestPath);
-        List<string> clips = root.GetProperty("entries").EnumerateArray().Select(e => ClipName(e, clipsFolder)).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
-        RejectClashingNames(clips, clipsFolder);
-        return [ManifestFile, .. clips];
+        JsonDocument manifest = JsonDocument.Parse(File.ReadAllBytes(manifestPath));
+        CheckManifest(manifest.RootElement, language, manifestPath);
+        return manifest;
     }
 
     private static void RejectClashingNames(IReadOnlyList<string> clips, string clipsFolder)
@@ -113,7 +144,7 @@ internal static class AudioPacks
     {
         bool versionOk = root.TryGetProperty("version", out JsonElement version) && version.ValueKind == JsonValueKind.Number && version.GetInt32() == ManifestVersion;
         bool languageOk = root.TryGetProperty("language", out JsonElement lang) && lang.ValueKind == JsonValueKind.String && lang.GetString() == language;
-        if (!versionOk || !languageOk || !root.TryGetProperty("entries", out JsonElement entries) || entries.ValueKind != JsonValueKind.Array || entries.GetArrayLength() == 0)
+        if (!versionOk || !languageOk || !root.TryGetProperty(EntriesKey, out JsonElement entries) || entries.ValueKind != JsonValueKind.Array || entries.GetArrayLength() == 0)
         {
             throw new InvalidOperationException($"{path} is not a version {ManifestVersion} manifest of language '{language}' with at least one entry.");
         }
@@ -121,7 +152,7 @@ internal static class AudioPacks
 
     private static string ClipName(JsonElement entry, string clipsFolder)
     {
-        string? clip = entry.TryGetProperty("clip", out JsonElement value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+        string? clip = entry.TryGetProperty(ClipKey, out JsonElement value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
         if (string.IsNullOrEmpty(clip) || clip != Path.GetFileName(clip))
         {
             throw new InvalidOperationException($"A manifest entry in {clipsFolder} has no plain clip file name.");
@@ -187,17 +218,20 @@ internal static class AudioPacks
         Directory.CreateDirectory(folder);
         string zipPath = Path.Combine(folder, PackFileName(language, version));
         WriteZip(zipPath, clipsFolder, files);
-        var record = new AudioPackRecord(version, hash, new FileInfo(zipPath).Length);
+        AudioPackRecord? recorded = records.GetValueOrDefault(language);
+        var record = new AudioPackRecord(version, hash, new FileInfo(zipPath).Length, recorded?.Version == version ? recorded.ListenSeconds : null);
         SaveRecord(book.Dir, language, record);
         return record;
     }
 
-    private static void SaveRecord(string bookDir, string language, AudioPackRecord record)
+    internal static void SaveRecord(string bookDir, string language, AudioPackRecord record)
     {
         string path = Path.Combine(bookDir, CastFile);
         JsonObject cast = JsonNode.Parse(File.ReadAllText(path))?.AsObject() ?? throw new InvalidOperationException($"{path} is not a JSON object.");
         JsonObject packs = cast[RecordsKey]?.AsObject() ?? [];
-        packs[language] = JsonSerializer.SerializeToNode(new { version = record.Version, hash = record.Hash, bytes = record.Bytes });
+        packs[language] = record.ListenSeconds is { } seconds
+            ? JsonSerializer.SerializeToNode(new { version = record.Version, hash = record.Hash, bytes = record.Bytes, listenSeconds = seconds })
+            : JsonSerializer.SerializeToNode(new { version = record.Version, hash = record.Hash, bytes = record.Bytes });
         cast[RecordsKey] = new JsonObject(packs.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => KeyValuePair.Create(p.Key, p.Value?.DeepClone())));
         File.WriteAllText(path, cast.ToJsonString(WriteOptions).ReplaceLineEndings("\n") + "\n");
     }
