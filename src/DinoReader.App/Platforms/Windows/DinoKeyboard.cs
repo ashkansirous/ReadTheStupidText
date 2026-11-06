@@ -63,8 +63,53 @@ internal sealed class DinoKeyboard
 		WindowTrace.Write("Dino keyboard: hooked");
 	}
 
+	// Slice 279 (mock Batch 48 frame 184): on the Record screen R records and stops, Space plays a recorded piece, S skips and Right goes on. The page decides whether the key does anything now.
+	private bool TryRecordKey(object sender, KeyRoutedEventArgs e)
+	{
+		if (RecordKeyOf(e.Key) is not { } key || DinoKeyTargets.TopPage(_window) is not IRecordKeys page)
+		{
+			return false;
+		}
+
+		if (HasShortcutModifier(Map(e.Key)) || TextFieldHasFocus(sender))
+		{
+			return false;
+		}
+
+		if (e.KeyStatus.WasKeyDown && _used.Contains(e.Key))
+		{
+			e.Handled = true; // a held key acts once
+			return true;
+		}
+
+		if (!page.HandleRecordKey(key))
+		{
+			return false;
+		}
+
+		_used.Add(e.Key);
+		e.Handled = true;
+		WindowTrace.Write($"Dino keyboard: {e.Key} used (Record screen)");
+		return true;
+	}
+
+	private static RecordKey? RecordKeyOf(VirtualKey key) => key switch
+	{
+		VirtualKey.R => RecordKey.Record,
+		VirtualKey.S => RecordKey.Skip,
+		VirtualKey.Space => RecordKey.Play,
+		VirtualKey.Right => RecordKey.Next,
+		VirtualKey.Escape => RecordKey.Leave,
+		_ => null,
+	};
+
 	private void OnKeyDown(object sender, KeyRoutedEventArgs e)
 	{
+		if (TryRecordKey(sender, e))
+		{
+			return;
+		}
+
 		DinoKey key = Map(e.Key);
 		if (key == DinoKey.Other)
 		{
@@ -132,6 +177,12 @@ internal sealed class DinoKeyboard
 
 	private void OnKeyUp(object sender, KeyRoutedEventArgs e)
 	{
+		if (RecordKeyOf(e.Key) is not null && DinoKeyTargets.TopPage(_window) is IRecordKeys && _used.Remove(e.Key))
+		{
+			e.Handled = true; // the Record screen used this key going down: a focused button must not click as it comes up
+			return;
+		}
+
 		DinoKey key = Map(e.Key);
 		if (key == DinoKey.Other)
 		{

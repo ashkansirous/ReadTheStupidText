@@ -49,7 +49,11 @@ public static class FallbackArea
     /// <summary>Windows: the desktop's selection could not be watched (UI Automation); the hotkey still reads.</summary>
     public const string Input = "input";
 
-    public static IReadOnlyList<string> All { get; } = [PremadeAudio, Speech, Translation, Pack, Ocr, Document, Store, Config, UiLanguage, Window, Font, Library, Input];
+    // Slice 279.
+    /// <summary>Dino Reader: a tap's action threw and was caught, so the tap did nothing visible.</summary>
+    public const string Ui = "ui";
+
+    public static IReadOnlyList<string> All { get; } = [PremadeAudio, Speech, Translation, Pack, Ocr, Document, Store, Config, UiLanguage, Window, Font, Library, Input, Ui];
 }
 
 /// <summary>Why it fell back (Slice 273): the closed list of the <c>fallback</c> count's reason; the Worker's <c>FALLBACK_REASONS</c> must be the same list.</summary>
@@ -218,6 +222,9 @@ public static class FallbackReason
     /// <summary>Slice 275 (area "input"): UI Automation could not register for selection changes, so only the hotkey reads selected text.</summary>
     public const string UiaUnavailable = "uia_unavailable";
 
+    /// <summary>Slice 279 (area "ui"): a tap handler threw; the error was caught and the tap did nothing.</summary>
+    public const string TapFailed = "tap_failed";
+
     public static IReadOnlyList<string> All { get; } =
     [
         NoPack, PackFailed, TextMismatch, ClipMissing, Partial,
@@ -229,7 +236,7 @@ public static class FallbackReason
         PdfImportFailed, StoreUnreachable, UpdateCheckFailed, ConfigCached, ConfigDefault, UiLanguageUnsupported,
         StorytellerPackMissing, AnimalClipUnplayable, ClipUnplayable, ClipSpeedUnset, InAppUpdateFailed, WindowFrameFailed, DisplaysUnreadable, SavedPositionMoved, DpiDefaulted,
         FontFallback, ShelfOrderUnreadable, StoryUnreadable, LanguageDetectFailed, PageReadFailed, IntroStateReset,
-        OcrCropDegraded, UiaUnavailable,
+        OcrCropDegraded, UiaUnavailable, TapFailed,
     ];
 }
 

@@ -135,6 +135,7 @@ public static class MauiProgram
 		services.AddTransient<IntroWizardPage>();
 		services.AddSingleton<GrownUpMode>();
 		services.AddTransient<RecordPage>();
+		services.AddTransient<RecordIntroPage>();
 		services.AddTransient<ReadingPage>();
 		services.AddTransient<ReadingSession>();
 	}

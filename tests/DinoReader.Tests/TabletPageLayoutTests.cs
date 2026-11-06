@@ -95,13 +95,6 @@ public class TabletPageLayoutTests
     public void One_rule_gives_the_picture_height_from_the_body_height_and_the_field_focus(double body, bool focused, double expected) =>
         Assert.Equal(expected, TabletPageLayout.PictureHeight(440, body, focused));
 
-    [Theory]
-    [InlineData(1164, 400)]
-    [InlineData(1000, 320)]
-    [InlineData(700, 170)]
-    public void Record_picture_is_400_dp_or_half_the_body_below_the_header_and_fixed_rows(double window, double expected) =>
-        Assert.Equal(expected, TabletPageLayout.RecordPicture(window));
-
     [Fact]
     public void The_editor_art_is_fitted_inside_the_band_less_padding_and_the_helper_line()
     {
@@ -111,10 +104,6 @@ public class TabletPageLayoutTests
     }
 
     [Fact]
-    public void Record_uses_30_sp_words_a_400_dp_picture_and_40_dp_sides_on_a_tablet_upright()
-    {
-        Assert.Equal(30, TabletPageLayout.RecordWordsSize);
-        Assert.Equal(400, TabletPageLayout.RecordPictureHeight);
+    public void Pages_keep_40_dp_sides_on_a_tablet_upright() =>
         Assert.Equal(40, TabletPageLayout.PageSideMargin);
-    }
 }

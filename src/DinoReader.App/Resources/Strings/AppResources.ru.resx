@@ -203,26 +203,61 @@
   <!-- /Slice 110 -->
   <!-- Slice 111 -->
   <data name="Rec_Title" xml:space="preserve"><value>Запись</value></data>
-  <data name="Rec_Script" xml:space="preserve"><value>Прочитайте слова на этой странице вслух и нажмите «Стоп».</value></data>
-  <data name="Rec_Recording" xml:space="preserve"><value>Идёт запись · {0}</value></data>
   <data name="Rec_Stop" xml:space="preserve"><value>Стоп</value></data>
   <data name="Rec_Start" xml:space="preserve"><value>Запись</value></data>
-  <data name="Rec_Yours" xml:space="preserve"><value>Ваша запись</value></data>
-  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
   <data name="Rec_Redo" xml:space="preserve"><value>Записать заново</value></data>
-  <data name="Rec_Delete" xml:space="preserve"><value>Удалить запись</value></data>
-  <data name="Rec_DeleteBody" xml:space="preserve"><value>Эта страница снова будет звучать голосом Дино.</value></data>
-  <data name="Rec_Next" xml:space="preserve"><value>Следующая страница</value></data>
-  <data name="Rec_Previous" xml:space="preserve"><value>Предыдущая страница</value></data>
-  <data name="Rec_Play" xml:space="preserve"><value>Прослушать запись</value></data>
-  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · страница {1} из {2}</value></data>
   <data name="Rec_UseVoice" xml:space="preserve"><value>Читать моим голосом</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>Записано страниц: {0} из {1}. Остальные читаются голосами Дино.</value></data>
-  <data name="Rec_RecordPage" xml:space="preserve"><value>Записать {0} вашим голосом</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>Микрофон выключен</value></data>
   <data name="Rec_NoMic" xml:space="preserve"><value>Разрешите доступ к микрофону для Dino Book Reader в настройках устройства и попробуйте снова.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>Запись не удалась. Попробуйте ещё раз.</value></data>
   <!-- /Slice 111 -->
+  <!-- Slice 279 -->
+  <data name="Record_Title" xml:space="preserve"><value>Запишите свой голос</value></data>
+  <data name="Record_YourVoice" xml:space="preserve"><value>Ваш голос</value></data>
+  <data name="Record_NoteRead" xml:space="preserve"><value>Читайте вслух слова на каждом экране.</value></data>
+  <data name="Record_NoteSkip" xml:space="preserve"><value>Пропускайте то, что лучше оставить Дино.</value></data>
+  <data name="Record_NoteStays" xml:space="preserve"><value>Ваш голос остаётся на этом телефоне. Он никуда не загружается.</value></data>
+  <data name="Record_NoteStaysDevice" xml:space="preserve"><value>Ваш голос остаётся на этом устройстве. Он никуда не загружается.</value></data>
+  <data name="Record_ModeCharacter" xml:space="preserve"><value>По одному герою</value></data>
+  <data name="Record_ModePage" xml:space="preserve"><value>Страницы целиком</value></data>
+  <data name="Record_Who" xml:space="preserve"><value>Кого вы запишете?</value></data>
+  <data name="Record_Storyteller" xml:space="preserve"><value>Рассказчик</value></data>
+  <data name="Record_Lines" xml:space="preserve"><value>Реплик: {0}</value></data>
+  <data name="Record_OfCount" xml:space="preserve"><value>{0} из {1}</value></data>
+  <data name="Record_Start" xml:space="preserve"><value>Начать запись</value></data>
+  <data name="Record_LongPages" xml:space="preserve"><value>Длинные страницы делятся на части, чтобы слова всегда помещались на экране.</value></data>
+  <data name="Record_Says" xml:space="preserve"><value>{0} говорит:</value></data>
+  <data name="Record_LineOf" xml:space="preserve"><value>Реплика {0} из {1}</value></data>
+  <data name="Record_PageOf" xml:space="preserve"><value>Страница {0} из {1}</value></data>
+  <data name="Record_PagePart" xml:space="preserve"><value>Страница {0} из {1} · часть {2} из {3}</value></data>
+  <data name="Record_Skip" xml:space="preserve"><value>Пропустить</value></data>
+  <data name="Record_Next" xml:space="preserve"><value>Дальше</value></data>
+  <data name="Record_Finish" xml:space="preserve"><value>Готово</value></data>
+  <data name="Record_Play" xml:space="preserve"><value>Слушать</value></data>
+  <data name="Record_Playing" xml:space="preserve"><value>Играет</value></data>
+  <data name="Record_Recorded" xml:space="preserve"><value>Записано</value></data>
+  <data name="Record_NewTake" xml:space="preserve"><value>Новый дубль</value></data>
+  <data name="Record_OldTake" xml:space="preserve"><value>Старый дубль</value></data>
+  <data name="Record_ReplacesRest" xml:space="preserve"><value>Ваша запись остальной части этой страницы будет заменена.</value></data>
+  <data name="Record_KeepOld" xml:space="preserve"><value>Оставить старый</value></data>
+  <data name="Record_UseDino" xml:space="preserve"><value>Голос Дино</value></data>
+  <data name="Record_Undo" xml:space="preserve"><value>Отменить</value></data>
+  <data name="Record_Change" xml:space="preserve"><value>Изменить способ записи</value></data>
+  <data name="Record_Listen" xml:space="preserve"><value>Послушать и изменить</value></data>
+  <data name="Record_Rest" xml:space="preserve"><value>Записать остальное</value></data>
+  <data name="Record_Again" xml:space="preserve"><value>Записать заново с начала</value></data>
+  <data name="Record_YourRecordings" xml:space="preserve"><value>Ваши записи · {0} из {1}</value></data>
+  <data name="Record_LinesRecorded" xml:space="preserve"><value>Записано реплик: {0} из {1}</value></data>
+  <data name="Record_PagesRecorded" xml:space="preserve"><value>Записано страниц: {0} из {1}</value></data>
+  <data name="Record_RestByDino" xml:space="preserve"><value>Остальное читает Дино. Ваш голос остаётся на этом телефоне.</value></data>
+  <data name="Record_RestByDinoDevice" xml:space="preserve"><value>Остальное читает Дино. Ваш голос остаётся на этом устройстве.</value></data>
+  <data name="Record_You" xml:space="preserve"><value>Вы</value></data>
+  <data name="Record_RemoveWarn" xml:space="preserve"><value>Ваши записи этой книги тоже будут удалены.</value></data>
+  <data name="Record_SkipKey" xml:space="preserve"><value>Пропустить · S</value></data>
+  <data name="Record_RecordKey" xml:space="preserve"><value>Запись · R</value></data>
+  <data name="Record_NextKey" xml:space="preserve"><value>Дальше · →</value></data>
+  <!-- /Slice 279 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
   <!-- /Slice 113 -->

@@ -89,15 +89,18 @@ public static class StarterUpdate
     /// The cast is kept only while the bundled text still has the same characters (a changed cast would leave a voice with no one to read it);
     /// a page recording stays with its page text (<see cref="RecordingMoves"/>); only a page whose text changed loses it.
     /// <paramref name="copiedMoves"/> are the recordings whose files really moved (default: every move); only those keep a reference.</summary>
-    public static Story Refresh(Story stored, Story bundled, IReadOnlyList<RecordingMove>? copiedMoves = null)
+    public static Story Refresh(Story stored, Story bundled, IReadOnlyList<RecordingMove>? copiedMoves = null, IReadOnlyList<ClipMove>? copiedClipMoves = null)
     {
         bool sameCast = SameCharacters(stored.Cast, bundled.Cast);
         IReadOnlyList<RecordingMove> moves = copiedMoves ?? RecordingMoves(stored, bundled);
-        Dictionary<int, PageRecording>? recordings = moves.Count > 0 ? moves.ToDictionary(m => m.To, m => stored.Recordings![m.From]) : null;
+        IReadOnlyList<ClipMove> clipMoves = copiedClipMoves ?? PieceMoves(stored, bundled);
+        Dictionary<int, PageRecording>? recordings = moves.Count > 0 ? moves.ToDictionary(m => m.To, m => stored.Recordings![m.From] with { File = m.File }) : null; // a moved file is copied to its new key's usual name, or the fresh name the move carries
+        Dictionary<StoryClipKey, PageRecording>? pieces = clipMoves.Count > 0 ? clipMoves.ToDictionary(m => m.To, m => stored.PieceRecordings![m.From] with { File = m.File }) : null;
         return KeepCover(stored, bundled with
         {
             Recordings = recordings,
-            UseRecordings = recordings is not null && stored.UseRecordings,
+            PieceRecordings = pieces,
+            UseRecordings = (recordings is not null || pieces is not null) && stored.UseRecordings,
             Created = stored.Created,
             Title = stored.Title,
             NarratorVoiceId = stored.NarratorVoiceId,
@@ -247,14 +250,31 @@ public static class StarterUpdate
         var merged = new Dictionary<int, PageRecording>(target.Recordings ?? new Dictionary<int, PageRecording>());
         foreach (RecordingMove move in moves)
         {
-            merged.TryAdd(move.To, source.Recordings![move.From]);
+            merged.TryAdd(move.To, source.Recordings![move.From] with { File = move.File }); // the file is copied to the page's usual name, or the fresh name the move carries
         }
 
         return target with { Recordings = merged.Count > 0 ? merged : null };
     }
 
+    /// <summary>The story with the piece clips of <paramref name="moves"/> (taken from <paramref name="source"/>) added where no clip of the story already covers those sentences.</summary>
+    public static Story WithMovedClips(Story target, Story source, IReadOnlyList<ClipMove> moves)
+    {
+        Story merged = target;
+        foreach (ClipMove move in moves)
+        {
+            bool covered = StoryRecordings.Clips(merged).Any(c => c.Key.Overlaps(move.To));
+            if (!covered)
+            {
+                merged = StoryRecordings.WithClip(merged, move.To, source.PieceRecordings![move.From] with { File = move.File });
+            }
+        }
+
+        return merged;
+    }
+
     /// <summary>One recording carried to the refreshed story: the page it was on (<see cref="From"/>) and the page with the same text it moves to (<see cref="To"/>).</summary>
-    public readonly record struct RecordingMove(int From, int To);
+    /// <remarks><see cref="File"/> is the file name the copy was stored under when it is not the page's usual name (a file already sat there, so the copy took a fresh name); null otherwise.</remarks>
+    public readonly record struct RecordingMove(int From, int To, string? File = null);
 
     /// <summary>Which of <paramref name="stored"/>'s recordings still match <paramref name="bundled"/>: each recorded page goes to the same page index when its text is identical there,
     /// else to the first not-yet-taken bundled page with exactly the same text; a page whose text changed has no move and so loses its recording.</summary>
@@ -271,6 +291,38 @@ public static class StarterUpdate
             {
                 taken.Add(to);
                 moves.Add(new RecordingMove(from, to));
+            }
+        }
+
+        return moves;
+    }
+
+    /// <summary>One piece clip carried to the refreshed story (Slice 279): the clip it was (<see cref="From"/>) and the same sentences on the page with the same text (<see cref="To"/>).</summary>
+    /// <remarks><see cref="File"/> is the fresh file name the copy was stored under when the clip's usual name was taken; null otherwise.</remarks>
+    public readonly record struct ClipMove(StoryClipKey From, StoryClipKey To, string? File = null);
+
+    /// <summary>Which of <paramref name="stored"/>'s piece clips still match <paramref name="bundled"/>: a page recorded in pieces follows its text like a whole-page recording
+    /// (<see cref="RecordingMoves"/>, never onto a page a whole-page move took), and each of its clips keeps its sentence range on the new page.</summary>
+    public static IReadOnlyList<ClipMove> PieceMoves(Story stored, Story bundled)
+    {
+        var moves = new List<ClipMove>();
+        if (stored.PieceRecordings is not { Count: > 0 } pieces)
+        {
+            return moves;
+        }
+
+        var taken = RecordingMoves(stored, bundled).Select(m => m.To).ToHashSet();
+        IReadOnlyList<int> storedCounts = RecordSplitBook.SentenceCounts(stored);
+        IReadOnlyList<int> bundledCounts = RecordSplitBook.SentenceCounts(bundled);
+        foreach (int from in pieces.Keys.Where(k => k.IsValid && k.Page < stored.Pages.Count).Select(k => k.Page).Distinct().Order())
+        {
+            string text = stored.Pages[from].Text;
+            bool sameIndex = from < bundled.Pages.Count && !taken.Contains(from) && string.Equals(bundled.Pages[from].Text, text, StringComparison.Ordinal);
+            int to = sameIndex ? from : FirstFreePageWithText(bundled.Pages, text, taken);
+            if (to >= 0 && storedCounts[from] == bundledCounts[to]) // a different sentence count means a different split (a language or break change): the range would cover other words
+            {
+                taken.Add(to);
+                moves.AddRange(pieces.Keys.Where(k => k.IsValid && k.Page == from).Select(k => new ClipMove(k, k with { Page = to })));
             }
         }
 

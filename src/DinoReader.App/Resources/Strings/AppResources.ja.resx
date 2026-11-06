@@ -203,26 +203,61 @@
   <!-- /Slice 110 -->
   <!-- Slice 111 -->
   <data name="Rec_Title" xml:space="preserve"><value>録音</value></data>
-  <data name="Rec_Script" xml:space="preserve"><value>このページの言葉を声に出して読み、「停止」をタップしてください。</value></data>
-  <data name="Rec_Recording" xml:space="preserve"><value>録音中 · {0}</value></data>
   <data name="Rec_Stop" xml:space="preserve"><value>停止</value></data>
   <data name="Rec_Start" xml:space="preserve"><value>録音</value></data>
-  <data name="Rec_Yours" xml:space="preserve"><value>あなたの録音</value></data>
-  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
   <data name="Rec_Redo" xml:space="preserve"><value>録り直す</value></data>
-  <data name="Rec_Delete" xml:space="preserve"><value>録音を削除</value></data>
-  <data name="Rec_DeleteBody" xml:space="preserve"><value>このページは、またディノの声を使います。</value></data>
-  <data name="Rec_Next" xml:space="preserve"><value>次のページ</value></data>
-  <data name="Rec_Previous" xml:space="preserve"><value>前のページ</value></data>
-  <data name="Rec_Play" xml:space="preserve"><value>録音を再生</value></data>
-  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · {2}ページ中{1}ページ目</value></data>
   <data name="Rec_UseVoice" xml:space="preserve"><value>自分の声で読む</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{1}ページ中{0}ページを録音済み。ほかのページはディノの声を使います。</value></data>
-  <data name="Rec_RecordPage" xml:space="preserve"><value>{0}をあなたの声で録音</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>マイクがオフです</value></data>
   <data name="Rec_NoMic" xml:space="preserve"><value>端末の設定で Dino Book Reader にマイクを許可してから、もう一度お試しください。</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>録音できませんでした。もう一度お試しください。</value></data>
   <!-- /Slice 111 -->
+  <!-- Slice 279 -->
+  <data name="Record_Title" xml:space="preserve"><value>あなたの声を録音</value></data>
+  <data name="Record_YourVoice" xml:space="preserve"><value>あなたの声</value></data>
+  <data name="Record_NoteRead" xml:space="preserve"><value>各画面のことばを声に出して読みましょう。</value></data>
+  <data name="Record_NoteSkip" xml:space="preserve"><value>ディノに読んでもらいたいところはとばせます。</value></data>
+  <data name="Record_NoteStays" xml:space="preserve"><value>あなたの声はこのスマートフォンに残ります。アップロードされることはありません。</value></data>
+  <data name="Record_NoteStaysDevice" xml:space="preserve"><value>あなたの声はこの端末に残ります。アップロードされることはありません。</value></data>
+  <data name="Record_ModeCharacter" xml:space="preserve"><value>登場人物ごと</value></data>
+  <data name="Record_ModePage" xml:space="preserve"><value>ページ全体</value></data>
+  <data name="Record_Who" xml:space="preserve"><value>だれを録音しますか？</value></data>
+  <data name="Record_Storyteller" xml:space="preserve"><value>語り手</value></data>
+  <data name="Record_Lines" xml:space="preserve"><value>{0}行</value></data>
+  <data name="Record_OfCount" xml:space="preserve"><value>{0}／{1}</value></data>
+  <data name="Record_Start" xml:space="preserve"><value>録音を始める</value></data>
+  <data name="Record_LongPages" xml:space="preserve"><value>長いページは、ことばが画面に収まるように分けて表示します。</value></data>
+  <data name="Record_Says" xml:space="preserve"><value>{0}のせりふ：</value></data>
+  <data name="Record_LineOf" xml:space="preserve"><value>{0}行目／{1}行</value></data>
+  <data name="Record_PageOf" xml:space="preserve"><value>{0}／{1}ページ</value></data>
+  <data name="Record_PagePart" xml:space="preserve"><value>{0}／{1}ページ · パート{2}／{3}</value></data>
+  <data name="Record_Skip" xml:space="preserve"><value>とばす</value></data>
+  <data name="Record_Next" xml:space="preserve"><value>次へ</value></data>
+  <data name="Record_Finish" xml:space="preserve"><value>完了</value></data>
+  <data name="Record_Play" xml:space="preserve"><value>再生</value></data>
+  <data name="Record_Playing" xml:space="preserve"><value>再生中</value></data>
+  <data name="Record_Recorded" xml:space="preserve"><value>録音済み</value></data>
+  <data name="Record_NewTake" xml:space="preserve"><value>新しいテイク</value></data>
+  <data name="Record_OldTake" xml:space="preserve"><value>前のテイク</value></data>
+  <data name="Record_ReplacesRest" xml:space="preserve"><value>このページの残りの録音は置き換えられます。</value></data>
+  <data name="Record_KeepOld" xml:space="preserve"><value>前のを残す</value></data>
+  <data name="Record_UseDino" xml:space="preserve"><value>ディノの声にする</value></data>
+  <data name="Record_Undo" xml:space="preserve"><value>元に戻す</value></data>
+  <data name="Record_Change" xml:space="preserve"><value>録音のしかたを変える</value></data>
+  <data name="Record_Listen" xml:space="preserve"><value>聞いて変更</value></data>
+  <data name="Record_Rest" xml:space="preserve"><value>残りを録音</value></data>
+  <data name="Record_Again" xml:space="preserve"><value>最初から録音しなおす</value></data>
+  <data name="Record_YourRecordings" xml:space="preserve"><value>あなたの録音 · {0}／{1}</value></data>
+  <data name="Record_LinesRecorded" xml:space="preserve"><value>{1}行のうち{0}行を録音済み</value></data>
+  <data name="Record_PagesRecorded" xml:space="preserve"><value>{1}ページのうち{0}ページを録音済み</value></data>
+  <data name="Record_RestByDino" xml:space="preserve"><value>残りはディノが読みます。あなたの声はこのスマートフォンに残ります。</value></data>
+  <data name="Record_RestByDinoDevice" xml:space="preserve"><value>残りはディノが読みます。あなたの声はこの端末に残ります。</value></data>
+  <data name="Record_You" xml:space="preserve"><value>あなた</value></data>
+  <data name="Record_RemoveWarn" xml:space="preserve"><value>この本のあなたの録音も削除されます。</value></data>
+  <data name="Record_SkipKey" xml:space="preserve"><value>とばす · S</value></data>
+  <data name="Record_RecordKey" xml:space="preserve"><value>録音 · R</value></data>
+  <data name="Record_NextKey" xml:space="preserve"><value>次へ · →</value></data>
+  <!-- /Slice 279 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}：{1}</value></data>
   <!-- /Slice 113 -->

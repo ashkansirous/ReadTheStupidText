@@ -64,7 +64,8 @@ public static class StoryJson
         Cast = ToCastFiles(s.Cast),
         Translate = s.TranslateToMyLanguage,
         Recordings = ToRecordingFiles(s.Recordings, s.Pages.Count),
-        UseRecordings = s.UseRecordings && s.Recordings is { Count: > 0 } ? true : null,
+        PieceRecordings = ToPieceFiles(s.PieceRecordings, s.Pages.Count),
+        UseRecordings = s.UseRecordings && StoryRecordings.Count(s) > 0 ? true : null,
         AnimalSounds = s.AnimalSoundsOn ? null : false,
         SourceId = s.SourceId,
         Translations = ToTranslationFiles(s.Translations),
@@ -89,7 +90,7 @@ public static class StoryJson
             f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null, CleanTranslations(f.Translations),
             CleanLanguageCasts(f.LanguageCasts, f.Language),
             CleanRecordings(f.Recordings, storyPages.Count, f.Language), f.UseRecordings == true, f.AnimalSounds != false,
-            f.TextInPictures == true, backCover);
+            f.TextInPictures == true, backCover, CleanPieces(f.PieceRecordings, storyPages.Count, f.Language));
     }
 
     // Slice 237: the back cover travels as one last page (its text the credits in English, for an older app that reads it like any page);
@@ -125,7 +126,7 @@ public static class StoryJson
     {
         List<RecordingFile> files = (recordings ?? new Dictionary<int, PageRecording>())
             .Where(r => r.Key >= 0 && r.Key < pageCount).OrderBy(r => r.Key)
-            .Select(r => new RecordingFile { Page = r.Key, Language = r.Value.Language, Seconds = r.Value.Seconds }).ToList();
+            .Select(r => new RecordingFile { Page = r.Key, Language = r.Value.Language, Seconds = r.Value.Seconds, File = FileToWrite(r.Value, StoryClipKey.OfPage(r.Key)) }).ToList();
         return files.Count == 0 ? null : files;
     }
 
@@ -138,7 +139,40 @@ public static class StoryJson
         {
             if (r is not null && r.Page >= 0 && r.Page < pageCount && !kept.ContainsKey(r.Page))
             {
-                kept[r.Page] = new PageRecording(string.IsNullOrWhiteSpace(r.Language) ? storyLanguage : r.Language, Math.Max(0, r.Seconds));
+                kept[r.Page] = new PageRecording(string.IsNullOrWhiteSpace(r.Language) ? storyLanguage : r.Language, Math.Max(0, r.Seconds), FileToKeep(r.File, StoryClipKey.OfPage(r.Page)));
+            }
+        }
+
+        return kept.Count > 0 ? kept : null;
+    }
+
+    private static List<PieceRecordingFile>? ToPieceFiles(IReadOnlyDictionary<StoryClipKey, PageRecording>? pieces, int pageCount)
+    {
+        List<PieceRecordingFile> files = (pieces ?? new Dictionary<StoryClipKey, PageRecording>())
+            .Where(r => r.Key.IsValid && r.Key.Page < pageCount && !r.Key.IsWholePage).OrderBy(r => r.Key.Page).ThenBy(r => r.Key.First)
+            .Select(r => new PieceRecordingFile { Page = r.Key.Page, First = r.Key.First, Last = r.Key.Last, Language = r.Value.Language, Seconds = r.Value.Seconds, File = FileToWrite(r.Value, r.Key) }).ToList();
+        return files.Count == 0 ? null : files;
+    }
+
+    // The file name a clip stores is written only when it is not the clip's usual name (older apps and books never had one); a name that is not a recording file name is never read (a hand edit).
+    private static string? FileToWrite(PageRecording recording, StoryClipKey key) =>
+        recording.File is { } name && name != StoryRecordings.FileNameOf(key) ? name : null;
+
+    // A stored name is kept only when it is a fresh name of this very clip (its usual name plus eight hex digits): a name of another clip would play that clip's audio here and
+    // delete it on a re-record, and since a fresh name carries its clip's own stem no two clips can name one file. Anything else reads as the usual name.
+    private static string? FileToKeep(string? name, StoryClipKey key) =>
+        name is not null && StoryRecordings.IsFreshFileNameOf(name, key) ? name : null;
+
+    // A piece for a page the story does not have, with a range that is not one, or that shares a sentence with an earlier piece, is dropped (a hand edit); a missing language reads as the story's own.
+    private static IReadOnlyDictionary<StoryClipKey, PageRecording>? CleanPieces(List<PieceRecordingFile>? pieces, int pageCount, string storyLanguage)
+    {
+        var kept = new Dictionary<StoryClipKey, PageRecording>();
+        foreach (PieceRecordingFile? r in pieces ?? [])
+        {
+            var key = new StoryClipKey(r?.Page ?? -1, r?.First ?? -1, r?.Last ?? -1);
+            if (r is not null && key.IsValid && !key.IsWholePage && key.Page < pageCount && !kept.Keys.Any(k => k.Overlaps(key)))
+            {
+                kept[key] = new PageRecording(string.IsNullOrWhiteSpace(r.Language) ? storyLanguage : r.Language, Math.Max(0, r.Seconds), FileToKeep(r.File, key));
             }
         }
 
@@ -386,6 +420,10 @@ public static class StoryJson
         /// <summary>The parent's page recordings (Slice 111): the file of each is <see cref="StoryRecordings.FileNameOf"/>; absent when there are none.</summary>
         public List<RecordingFile>? Recordings { get; set; }
 
+        /// <summary>The parent's recordings of a run of sentences (Slice 279): the file of each is <see cref="StoryRecordings.FileNameOf(StoryClipKey)"/>; absent when there are none. An older app ignores the field.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<PieceRecordingFile>? PieceRecordings { get; set; }
+
         /// <summary>The per-book "Read with my voice" switch (Slice 111); absent when off.</summary>
         public bool? UseRecordings { get; set; }
 
@@ -404,6 +442,23 @@ public static class StoryJson
         public int Page { get; set; }
         public string? Language { get; set; }
         public int Seconds { get; set; }
+
+        /// <summary>The clip's file when it is not the usual name (Slice 279: a commit writes a fresh name); absent otherwise.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? File { get; set; }
+    }
+
+    private sealed class PieceRecordingFile
+    {
+        public int Page { get; set; }
+        public int First { get; set; }
+        public int Last { get; set; }
+        public string? Language { get; set; }
+        public int Seconds { get; set; }
+
+        /// <summary>The clip's file when it is not the usual name (Slice 279); absent otherwise.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? File { get; set; }
     }
 
     private sealed class PageFile

@@ -7,23 +7,24 @@ public sealed class ReadingPauseStateTests
 {
 	private const int ReadId = 7;
 	private const int Page = 3;
+	private const int Last = 5;
 
 	[Fact]
 	public void A_recording_that_ends_while_paused_is_held_for_Resume()
 	{
 		var state = new ReadingPauseState();
 
-		RecordingEndAction action = state.OnRecordingEnded(ReadId, Page, ReadId, recordingActive: true, paused: true);
+		RecordingEndAction action = state.OnRecordingEnded(ReadId, Page, Last, ReadId, recordingActive: true, paused: true);
 
 		Assert.Equal(RecordingEndAction.HoldForResume, action);
-		Assert.Equal((ReadId, Page), state.TakeHeld());
+		Assert.Equal((ReadId, Page, Last), state.TakeHeld()); // the clip's own end travels with the held state
 	}
 
 	[Fact]
 	public void Resume_takes_the_held_end_only_once()
 	{
 		var state = new ReadingPauseState();
-		state.OnRecordingEnded(ReadId, Page, ReadId, recordingActive: true, paused: true);
+		state.OnRecordingEnded(ReadId, Page, Last, ReadId, recordingActive: true, paused: true);
 
 		Assert.NotNull(state.TakeHeld());
 		Assert.Null(state.TakeHeld());
@@ -35,7 +36,7 @@ public sealed class ReadingPauseStateTests
 	{
 		var state = new ReadingPauseState();
 
-		RecordingEndAction action = state.OnRecordingEnded(ReadId, Page, ReadId, recordingActive: true, paused: false);
+		RecordingEndAction action = state.OnRecordingEnded(ReadId, Page, Last, ReadId, recordingActive: true, paused: false);
 
 		Assert.Equal(RecordingEndAction.Advance, action);
 		Assert.Null(state.TakeHeld());
@@ -46,7 +47,7 @@ public sealed class ReadingPauseStateTests
 	{
 		var state = new ReadingPauseState();
 
-		RecordingEndAction action = state.OnRecordingEnded(ReadId - 1, Page, ReadId, recordingActive: true, paused: true);
+		RecordingEndAction action = state.OnRecordingEnded(ReadId - 1, Page, Last, ReadId, recordingActive: true, paused: true);
 
 		Assert.Equal(RecordingEndAction.Ignore, action);
 		Assert.Null(state.TakeHeld());
@@ -57,7 +58,7 @@ public sealed class ReadingPauseStateTests
 	{
 		var state = new ReadingPauseState();
 
-		RecordingEndAction action = state.OnRecordingEnded(ReadId, Page, ReadId, recordingActive: false, paused: false);
+		RecordingEndAction action = state.OnRecordingEnded(ReadId, Page, Last, ReadId, recordingActive: false, paused: false);
 
 		Assert.Equal(RecordingEndAction.Ignore, action);
 		Assert.Null(state.TakeHeld());
@@ -67,7 +68,7 @@ public sealed class ReadingPauseStateTests
 	public void A_stop_or_new_play_clears_a_held_end_so_a_later_Resume_does_not_fire_it()
 	{
 		var state = new ReadingPauseState();
-		state.OnRecordingEnded(ReadId, Page, ReadId, recordingActive: true, paused: true);
+		state.OnRecordingEnded(ReadId, Page, Last, ReadId, recordingActive: true, paused: true);
 
 		state.Clear();
 
@@ -83,7 +84,7 @@ public sealed class ReadingPauseStateTests
 		Assert.Contains("_pauseState.Clear(); // a stale flag must not fire on a later Resume", session);
 		Assert.Contains("_recorded = RecordedPlay.Playing;\r\n\t\t_pauseState.Clear();", session.ReplaceLineEndings("\r\n"));
 		Assert.Contains("if (_pauseState.TakeHeld() is { } ended)", session);
-		Assert.Contains("ApplyRecordingEnded(ended.Id, ended.Page);", session);
-		Assert.Contains("_pauseState.OnRecordingEnded(id, page, activeReadId: _activeReadId, recordingActive:", session);
+		Assert.Contains("ApplyRecordingEnded(ended.Id, ended.Page, ended.Last);", session);
+		Assert.Contains("_pauseState.OnRecordingEnded(id, clipFirst, clipLast, activeReadId: _activeReadId, recordingActive:", session); // Slice 279: the int kept is the clip's first sentence, not a page
 	}
 }

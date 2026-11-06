@@ -6,50 +6,104 @@ using ReadTheStupidText.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
+/// <summary>The keys the Record screen answers on the Windows head (mock frame 184): R records and stops, Space plays, S skips, Right goes on.</summary>
+internal interface IRecordKeys
+{
+	/// <summary>Handles <paramref name="key"/> (one of R, S, Space, Right); true when it did something.</summary>
+	bool HandleRecordKey(RecordKey key);
+}
+
+/// <summary>The keys <see cref="IRecordKeys"/> is given.</summary>
+internal enum RecordKey
+{
+	Record,
+	Skip,
+	Play,
+	Next,
+	Leave,
+}
+
 /// <summary>
-/// The grown-up Record screen (Slice 111, Decision 115, mock frames 44 and 45): a parent reads a book page by page into the microphone, listens back,
-/// re-records or deletes, and moves on; any page can be skipped. A recording is saved the moment it stops (file first, then <c>story.json</c> on top of the
-/// latest stored story). The microphone is asked for only here, the first time a recording starts, and a recording never outlives the screen.
+/// The grown-up Record screen (Slice 111, Decision 115; redrawn by Slice 279 from the Batch 48 mock, frames 180 to 184 and 190 to 191): one piece at a time in the reading page's picture-and-text layout, with
+/// only Skip, Record and Next (Re-record, Play and Next once recorded). A new take is kept in a temp file and replaces the kept clip only on Next, Finish, Done or Back. The microphone is asked for only
+/// here, the first time a recording starts, and a recording never outlives the screen: leaving stops it and keeps what was said.
 /// </summary>
-public sealed class RecordPage : ContentPage, IGrownUpPage
+public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 {
 	private static readonly TimeSpan ClockTick = TimeSpan.FromMilliseconds(250);
-	private const double RecordGap = RecordLayout.ColumnGap;
-	private const double TabletSideMargin = 40;
-	private const double PhoneSideMargin = 14;
-	private const double TabletVerticalMargin = 24;
-	private const double RailClockSize = 12;
-
-	private Size _windowSize;
-	private RecordShape _shown;
-	private bool _tabletShown; // the stacked layout is drawn for a tablet held upright (Slice 234 part C)
-	private double _tabletPicture; // the picture panel height drawn for it, from the window (TabletPageLayout.RecordPicture), never from the panel
+	private static readonly TimeSpan UndoWindow = TimeSpan.FromSeconds(4);
+	private const double ColumnMaxWidth = RecordCard.ColumnMaxWidth;
+	private const double ButtonRowSpace = 14;
+	private const double SwipeThreshold = 40;
 
 	private readonly IStoryLibrary _library;
 	private readonly IMicRecorder _recorder;
 	private readonly IRecordingPlayer _player;
 	private readonly UsageCounter _usage;
 	private readonly BusyGuard _busy = new();
-
-	/// <summary>Set by the intro wizard when it pushes this page: the header button then reads "Continue" (Slice 229).</summary>
-	public bool LaunchedFromIntro { get; set; }
 	private readonly WaitOverlay _waitOverlay = DinoWait.OverPage();
 	private readonly WaitController _wait;
-	private Label _time = NewTimeLabel(sideways: false);
-	private string? _pathKey;
-	private string? _picturePath;
-	private string? _aspectOf;
-	private double _aspect;
-	private long _recordingStart; // when the running recording began: the clock reads from it, so a layout pass never touches it
-	private readonly Grid _root = new() { RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)] };
+	private readonly GrownUpHeader _header = new("RecordDone");
+	private readonly Grid _column = new() { RowDefinitions = [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)], MaximumWidthRequest = ColumnMaxWidth, HorizontalOptions = LayoutOptions.Center };
+	private readonly Grid _toastHost = new() { VerticalOptions = LayoutOptions.End, InputTransparent = false };
+	private Grid _waveHost = new();
+	private Size _windowSize;
+	private bool _playOnAppear;
+
+	private Label _clock = RecordViews.ClockLabel();
+	private RecordSetup? _setup;
+	private List<RecordPiece> _pieces = [];
 	private Story? _story;
-	private int _page;
-	private bool _recording;
-	private bool _playing;
-	private bool _starting;
+	private int _index;
+	private RecorderState _state;
+	private Task _stopTask = Task.CompletedTask;
+	private ActiveTake? _active;
 	private bool _visible;
-	private string? _tempPath;
+	private bool _left;
+	private Task? _finishUp;
+	private Task? _leave; // the one leave of this page (LeaveOnceAsync): every way out shares it
+	private int _alerts; // alerts showing now: the Windows record keys stay quiet behind one (Esc would pop the page behind the dialog)
+	private bool _appeared; // the page has been on screen since Load: a page that was never pushed has nothing to finish up
+	private bool _popped; //the page has been popped (by us, or by the system's own back); nothing pops again
+	private Task? _settle; // the removal commit in flight or done, so a second settle waits for it
+	private long _recordingStart;
 	private IDispatcherTimer? _timer;
+	private Take? _take;
+	private Playing _playing = Playing.None;
+	private double _playedSeconds;
+	private Undo? _undo;
+	private string? _pictureKey;
+	private string? _picturePath;
+
+	private enum Playing
+	{
+		None,
+		Clip,
+		Take,
+		OldClip,
+	}
+
+	/// <summary>The one state of the recorder (Slice 279, design 2): Record, Skip, Next, a swipe and "Use Dino's voice" act only in Idle; Stop only in Recording; everything waits while Stopping, which ends
+	/// only after the recorder has stopped and the take is kept. Starting is the wait for the microphone to open.</summary>
+	private enum RecorderState
+	{
+		Idle,
+		Starting,
+		Recording,
+		Stopping,
+	}
+
+	/// <summary>A recording in progress, bound to the piece shown when Record was pressed: the page's index may move on, the take stays that piece's.</summary>
+	private sealed record ActiveTake(RecordPiece Piece, string Path);
+
+	/// <summary>A new take of <see cref="Piece"/>, kept in a temp file until Next, Finish, Done or Back commits it over the clips it replaces (Slice 279).</summary>
+	private sealed record Take(RecordPiece Piece, string Path, TimeSpan Length);
+
+	/// <summary>What one committed take changed in the story: the story as saved, the files of the clips it replaced, and whether it was the first recording of those sentences.</summary>
+	private sealed record Committed(Story Story, IReadOnlyList<string> ReplacedFiles, bool First);
+
+	/// <summary>A clip the grown-up gave back to Dino's voice: the model no longer has it, the file goes when the 4 second window ends (Undo puts the entry back).</summary>
+	private sealed record Undo(StoryClipKey Key, PageRecording Recording, RecordPiece Piece, int Index, CancellationTokenSource Window);
 
 	public RecordPage(IStoryLibrary library, IMicRecorder recorder, IRecordingPlayer player, UsageCounter usage)
 	{
@@ -61,25 +115,66 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
 		_wait = new WaitController(_waitOverlay);
-		Content = new Grid { Children = { _root, _waitOverlay } };
+		_header.BackRequested += async (_, _) => await RunHandlerAsync(() => LeaveOnceAsync(toCaller: false));
+		_header.DoneRequested += async (_, _) => await RunHandlerAsync(() => LeaveOnceAsync(toCaller: true)); // leaving stops and keeps a recording in progress, as Back does
+		var root = new Grid { RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star)] };
+		root.Add(_header, 0, 0);
+		root.Add(_column, 0, 1);
+		_toastHost.Margin = new Thickness(0, 0, 0, 0);
+		Content = new Grid { Children = { root, _toastHost, _waitOverlay } };
 	}
 
-	/// <summary>Opens the screen on the first page of <paramref name="story"/>.</summary>
-	public Task LoadAsync(Story story)
+	/// <summary>Set by the intro wizard when it pushes the pages: the header button then reads "Continue" (Slice 229).</summary>
+	public bool LaunchedFromIntro { get; set; }
+
+	/// <summary>Opens the screen on the pieces of <paramref name="setup"/> at <paramref name="start"/>; a take file a killed app left in the cache is deleted first.</summary>
+	internal void Load(RecordSetup setup, int start)
 	{
-		_story = story;
-		_page = 0;
+		_setup = setup;
+		_story = setup.Story;
+		_pieces = [.. setup.Pieces];
+		_index = Math.Clamp(start, 0, Math.Max(0, _pieces.Count - 1));
+		_left = false;
+		_finishUp = null;
+		_appeared = false;
+		_leave = null;
+		_popped = false;
+		_take = null;
+		_header.Continue = LaunchedFromIntro;
+		_header.Title = setup.Story.Title;
+		DeleteStrayTakes();
+		Log($"[Record] open mode={setup.Choice.Mode} pieces={_pieces.Count} start={_index} listening={setup.Listening}");
+		_playOnAppear = setup.Listening; // each recording plays by itself on open (frame 190), once the screen is up
 		Render();
-		return Task.CompletedTask;
 	}
+
+	private static void Log(string line)
+	{
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write(line);
+#endif
+#if WINDOWS
+		WindowTrace.Write($"Dino Record: {line}"); // the Release build on the VM shows no Debug.WriteLine; the VM check reads this back
+#endif
+		Debug.WriteLine($"Dino Reader {line}");
+	}
+
+	// ---- the page's life ----
 
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
 		_visible = true;
+		_appeared = true;
 		if (Window is { } window)
 		{
 			window.Stopped += OnWindowStopped;
+		}
+
+		if (_playOnAppear)
+		{
+			_playOnAppear = false;
+			PlayKept();
 		}
 	}
 
@@ -93,351 +188,403 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		}
 
 		StopPlayback();
-		if (_recording)
+		if (Navigation.NavigationStack.Contains(this))
 		{
-			_ = DiscardRecordingAsync();
+			// Still on the stack: a page pushed over it, or the app going to the background. Not a leave; a running recording is stopped and kept, nothing more.
+			KeepRunningRecording();
+			return;
+		}
+
+		_popped = true; // really gone (our Back, a swipe, the system's back): a later leave must not pop the page beneath
+		_ = FinishUpAsync(); // a swipe back or a system back leaves the same way Back does: the take stays
+	}
+
+	private void KeepRunningRecording()
+	{
+		if (Recording)
+		{
+			_ = StopRecordingAsync();
 		}
 	}
 
-	// The app going to the background does not disappear this page, so a recording is dropped here: the microphone is never open out of sight.
+	protected override bool OnBackButtonPressed()
+	{
+		_ = LeaveOnceAsync(toCaller: false); // never throws; the one leave, queued behind a running action
+		return true;
+	}
+
+	// The app going to the background does not disappear this page, so a running recording is stopped here: the microphone is never open out of sight. What was said is kept as the take.
 	private void OnWindowStopped(object? sender, EventArgs e)
 	{
 		StopPlayback();
-		if (_recording)
-		{
-			_ = DiscardRecordingAsync().ContinueWith(_ => MainThread.BeginInvokeOnMainThread(Render), TaskScheduler.Default);
-		}
+		KeepRunningRecording();
 	}
 
-	// The clock's AutomationId is set only on the sideways layouts, so a scripted check for it fails on the wrong layout.
-	private static Label NewTimeLabel(bool sideways)
-	{
-		var label = new Label { FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Danger) };
-		if (sideways)
-		{
-			label.AutomationId = RecordViews.ClockId;
-		}
-
-		return label;
-	}
-
-	// Slice 232 part C (mock Batch 44 frames 116, 129): the window size picks one pure shape (RecordLayout.For) and Render lays the same state out in it. A rotation only calls Render again:
-	// _recording, the recorder, the clock, the playback and the page all live in fields, so a recording goes on through it and the stop square comes back in place.
 	protected override void OnSizeAllocated(double width, double height)
 	{
 		base.OnSizeAllocated(width, height);
-		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height);
-		if (width > 0 && height > 0 && (width != _windowSize.Width || height != _windowSize.Height))
+		if (width > 0 && height > 0 && _setup is not null && (width != _windowSize.Width || height != _windowSize.Height))
 		{
 			_windowSize = new Size(width, height);
-			ReapplyShape();
+			Render();
 		}
 	}
 
-	private void ReapplyShape()
+	// ---- leaving ----
+
+	// Stops a running recording (keeping it), puts a pending take in place, settles the Undo window, then pops: Back goes to the intro page, Done and Finish go on to where the intro was opened from.
+	// The one owner of leaving (Back, Done, Finish, Esc, hardware back, the empty page closing): the first call starts it, every later call gets the same task. It waits for a running action instead of being dropped, and never throws.
+	private Task LeaveOnceAsync(bool toCaller) => _leave ??= LeaveQueuedAsync(toCaller);
+
+	private async Task LeaveQueuedAsync(bool toCaller)
 	{
-		if (_story is not { Pages.Count: > 0 } story)
+		await Task.Yield(); // the caller has stored this task in _leave before the code below can finish and clear it
+		try
+		{
+			await _busy.RunWhenFreeAsync(() => LeaveCoreAsync(toCaller));
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: leaving failed after the take was kept or the old clip stayed; the page stays (_popped is still false) and the next Back tries again
+			Debug.WriteLine($"Dino Reader record page could not leave: {ex}");
+		}
+		finally
+		{
+			_leave = null; // a finished or failed leave is never cached: a later Back leaves again (or finds the page already popped)
+		}
+	}
+
+	private async Task LeaveCoreAsync(bool toCaller)
+	{
+		await FinishUpAsync();
+		if (_popped || !Navigation.NavigationStack.Contains(this))
+		{
+			return; // already gone (the system's own back): never pop the page beneath
+		}
+
+		await Navigation.PopAsync();
+		_popped = true; // only after the pop returned: a pop that threw leaves the page up and the next Back retries
+		if (toCaller && Navigation.NavigationStack.LastOrDefault() is RecordIntroPage)
+		{
+			await Navigation.PopAsync();
+		}
+	}
+
+	/// <summary>Completes when the screen has put a pending take in place and settled the Undo window after it was left; the intro waits for it before it reads the book again (Slice 279).</summary>
+	// Finishing up runs only when the page is really gone from the navigation stack (the same test as OnDisappearing), so a page shown over it or a cancelled swipe back changes nothing;
+	// if the intro asks before OnDisappearing has run, the finish-up starts here.
+	// A page that never appeared (the intro asked before the push finished, or the push never happened) has nothing to finish and must stay usable once it is pushed.
+	internal Task FinishedAsync => _finishUp ?? (_appeared && (_popped || !Navigation.NavigationStack.Contains(this)) ? FinishUpAsync() : Task.CompletedTask);
+
+	private async Task AlertAsync(string title, string message, string ok)
+	{
+		_alerts++;
+		try
+		{
+			await DisplayAlertAsync(title, message, ok);
+		}
+		finally
+		{
+			_alerts--;
+		}
+	}
+
+	// Every caller gets the one run, so a second caller (the swipe back after Back) waits for the first one's save instead of returning at once.
+	private Task FinishUpAsync() => _finishUp ??= FinishUpCoreAsync();
+
+	// Never faulted (the intro and every leave await it): a step that fails is logged, the old clip stays, and the page still leaves.
+	private async Task FinishUpCoreAsync()
+	{
+		_left = true;
+		StopPlayback();
+		try
+		{
+			await StopRecordingAsync(); // a running recording is stopped and kept as its piece's take; a stop already under way is waited for
+			await CommitTakeAsync();
+			await SettleUndoAsync();
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: saving on the way out failed (disk full, a locked file); the earlier clip stays and the page still leaves
+			Debug.WriteLine($"Dino Reader record page could not finish up: {ex}");
+		}
+	}
+
+	// ---- drawing ----
+
+	private RecordPiece? Piece => _index >= 0 && _index < _pieces.Count ? _pieces[_index] : null;
+
+	private bool Listening => _setup?.Listening == true;
+
+	private StoryClipKey? KeptClip() => Piece is { } piece && _story is { } story ? RecordSplitWalk.ClipOf(story, piece) : null;
+
+	private bool Idle => _state == RecorderState.Idle;
+
+	private bool Recording => _state == RecorderState.Recording;
+
+	private RecordStep Step => _state is RecorderState.Recording or RecorderState.Stopping ? RecordStep.Recording : _take is not null || KeptClip() is not null ? RecordStep.Recorded : RecordStep.Ready;
+
+	private void Render()
+	{
+		if (_setup is not { } setup || _story is not { } story || Piece is not { } piece)
 		{
 			return;
 		}
 
-		RecordShape shape = ShapeFor(story);
-		bool tablet = TabletPageLayout.Applies(_windowSize.Width, _windowSize.Height);
-		if (shape == _shown && tablet == _tabletShown && (!tablet || TabletPageLayout.RecordPicture(_windowSize.Height) == _tabletPicture))
-		{
-			return;
-		}
+		_header.Subtitle = HeaderLine(setup, story, piece);
+		_column.Children.Clear();
+		var stage = RecordViews.Stage(PicturePathOf(story, piece), WordsCardFor(setup, piece), RecordCard.MaxCardHeight(Height > 0 ? Height : 667));
+		AttachSwipe(stage);
+		_column.Add(stage, 0, 0);
+		_column.Add(Bottom(), 0, 1);
+		FocusRecordButton();
+	}
 
-		if (!ResizePictureColumn(shape))
+	// Frame 184 (Windows head): the keyboard lands on the Record button, with a focus ring, whenever a piece waiting to be recorded opens. Nothing happens elsewhere.
+	private void FocusRecordButton()
+	{
+#if WINDOWS
+		if (Step == RecordStep.Ready && !Listening && FindById(_column, RecordViews.RecordButtonId) is Border button)
 		{
-			Render();
+			RecordFocus.Land(button);
 		}
-
-#if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] record layout={_shown.Columns} recording={_recording} page={_page}");
 #endif
 	}
 
-	// A change of only the picture column's width (the pane follows the window width) re-places that column; no view is rebuilt, so the running clock, the recording card and playback are untouched.
-	private bool ResizePictureColumn(RecordShape shape)
+#if WINDOWS
+	private static View? FindById(IVisualTreeElement parent, string automationId)
 	{
-		bool onlyPane = shape.Columns == _shown.Columns && shape.RailWidth == _shown.RailWidth && shape.PicturePane > 0 && _shown.PicturePane > 0 && _root.ColumnDefinitions.Count > 0;
-		if (onlyPane)
+		foreach (IVisualTreeElement child in parent.GetVisualChildren())
 		{
-			_root.ColumnDefinitions[0].Width = new GridLength(shape.PicturePane);
-			_shown = shape;
+			if (child is View view && view.AutomationId == automationId)
+			{
+				return view;
+			}
+
+			if (FindById(child, automationId) is { } found)
+			{
+				return found;
+			}
 		}
 
-		return onlyPane;
+		return null;
 	}
+#endif
 
-	private RecordShape ShapeFor(Story story)
+	private string HeaderLine(RecordSetup setup, Story story, RecordPiece piece)
 	{
-		bool landscape = LandscapeLayout.IsLandscape(_windowSize.Width, _windowSize.Height);
-		string? picture = landscape ? PicturePathOf(story) : null;
-		return RecordLayout.For(_windowSize.Width, _windowSize.Height, picture is null ? null : AspectOf(picture));
-	}
-
-	// The picture file is opened once per picture, not on every size change.
-	private double AspectOf(string picture)
-	{
-		if (_aspectOf != picture)
+		if (setup.Listening)
 		{
-			_aspect = PageImageSize.Read(picture) is { Height: > 0 } size ? size.Width / size.Height : 0;
-			_aspectOf = picture;
+			return AppResources.Format(AppResources.Record_YourRecordings, _index + 1, _pieces.Count);
 		}
 
-		return _aspect;
+		if (setup.Choice.Mode == RecordMode.PerCharacter)
+		{
+			return AppResources.Format(AppResources.Record_LineOf, _index + 1, _pieces.Count);
+		}
+
+		int parts = RecordSplit.PartsOf(_pieces, piece.Key.Page);
+		return parts <= 1
+			? AppResources.Format(AppResources.Record_PageOf, piece.Key.Page + 1, story.Pages.Count)
+			: AppResources.Format(AppResources.Record_PagePart, piece.Key.Page + 1, story.Pages.Count, RecordSplit.PartNumber(_pieces, piece), parts);
 	}
 
-	// Resolved (and checked on disk) once per story page, not on every size change.
-	private string? PicturePathOf(Story story)
+	private Border WordsCardFor(RecordSetup setup, RecordPiece piece)
 	{
-		StoryPage page = story.Pages[_page];
-		string key = $"{story.Id}/{_page}/{page.ImageFile}";
-		if (_pathKey != key)
+		bool whole = setup.Choice.Mode == RecordMode.WholePage;
+		string? says = whole ? null : RecordCard.SaysOf(setup.Book, piece.Speaker);
+		RecordChip chip = _take is not null ? RecordChip.NewTake : KeptClip() is not null ? RecordChip.Recorded : RecordChip.None;
+		double font = RecordCard.FittedFontSize(whole, Width > 0 ? Width : RecordCardFit.ReferenceWindowWidth, Height > 0 ? Height : RecordCardFit.ReferenceWindowHeight); // the pieces are cut once for the reference card; a smaller card shows them smaller
+		bool replacesRest = _take is { } take && StoryRecordings.ReplacesBeyond(_story!, take.Piece.Key);
+		var view = new RecordCardView(says, piece.Text, _story!.Language, font, chip, Recording, replacesRest);
+		return RecordViews.WordsCard(view, PlayOldTakeAsync, KeepOldAsync);
+	}
+
+	private string? PicturePathOf(Story story, RecordPiece piece)
+	{
+		StoryPage page = story.Pages[piece.Key.Page];
+		string key = $"{story.Id}/{piece.Key.Page}/{page.ImageFile}";
+		if (_pictureKey != key)
 		{
 			string? picture = page.ImageFile is null ? null : _library.TryResolveFile(story.Id, page.ImageFile);
 			_picturePath = picture is not null && File.Exists(picture) ? picture : null;
-			_pathKey = key;
+			_pictureKey = key;
 		}
 
 		return _picturePath;
 	}
 
+	private View Bottom()
+	{
+		var stack = new VerticalStackLayout { Spacing = 4, Padding = new Thickness(0, ButtonRowSpace, 0, ButtonRowSpace) };
+		if (Listening)
+		{
+			_waveHost = new Grid(); // a fresh host each time: the old one is still a child of the stack that was cleared
+			stack.Add(_waveHost);
+			UpdateWave();
+		}
+
+		stack.Add(RecordViews.Controls(ButtonsFor()));
+		if (Listening && KeptClip() is not null)
+		{
+			stack.Add(RecordViews.UseDinoLink(UseDinoVoiceAsync));
+		}
+
+		return stack;
+	}
+
+	private RecordButtons ButtonsFor()
+	{
+		bool running = _state is RecorderState.Recording or RecorderState.Stopping;
+		if (running)
+		{
+			_clock = RecordViews.ClockLabel();
+			_clock.Text = StoryRecordings.Clock(Elapsed());
+		}
+
+		return new RecordButtons(
+			Step, _playing != Playing.None, IsLast: _index >= _pieces.Count - 1, Listening, DesktopTips.IsWindows, running ? _clock : null,
+			SkipAsync, StartRecordingAsync, StopRecordingAsync, RecordAgainAsync, TogglePlaybackAsync, NextAsync);
+	}
+
 	private TimeSpan Elapsed() => Stopwatch.GetElapsedTime(_recordingStart);
 
-	private string RecordingText(TimeSpan elapsed) => AppResources.Format(AppResources.Rec_Recording, StoryRecordings.Clock(elapsed));
+	// ---- moving on ----
 
-	private void Render()
+	private Task SkipAsync()
 	{
-		if (_story is not { Pages.Count: > 0 } story)
+		if (!Idle || Listening)
+		{
+			return Task.CompletedTask;
+		}
+
+		Log($"[Record] skipped piece={_index + 1} key={Piece?.Key}");
+		return GoToAsync(_index + 1);
+	}
+
+	private Task NextAsync() => _busy.RunAsync(async () =>
+	{
+		if (!Idle || Step != RecordStep.Recorded)
 		{
 			return;
 		}
 
-		_root.Children.Clear();
-		_shown = ShapeFor(story);
-		_tabletShown = TabletPageLayout.Applies(_windowSize.Width, _windowSize.Height);
-		_tabletPicture = TabletPageLayout.RecordPicture(_windowSize.Height);
-#if DEBUG
-		if (_tabletShown && _shown.Columns == RecordColumns.Stacked)
+		await CommitTakeAsync();
+		await SettleUndoAsync();
+		if (_index >= _pieces.Count - 1)
 		{
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[TabletUpright] record words={TabletPageLayout.RecordWordsSize} page={_page}");
-		}
-#endif
-		if (_shown.Columns == RecordColumns.Stacked)
-		{
-			RenderStacked(story);
+			Log("[Record] finish");
+			await FinishAsync();
 			return;
 		}
 
-		RenderSideways(story, _shown);
-	}
+		await GoToAsync(_index + 1);
+	});
 
-	private void RenderStacked(Story story)
-	{
-		_root.Padding = new Thickness(0);
-		_root.ColumnDefinitions = [];
-		_root.RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)];
-		_root.Add(Header(story), 0, 0);
-		_root.Add(Body(story), 0, 1);
-		_root.Add(Footer(story), 0, 2);
-	}
+	// Runs inside the guard (Next), so it uses the guard-free core; a Back queued meanwhile finds _popped set and does not pop again.
+	private Task FinishAsync() => LeaveCoreAsync(toCaller: true); // Finish returns to where the intro was opened from
 
-	// Held sideways: the picture column (when the page has a picture), the middle column and, on a phone, the rail with Done on top and the microphone in the middle.
-	private void RenderSideways(Story story, RecordShape shape)
-	{
-		bool phone = shape.Columns == RecordColumns.Three;
-		_root.Padding = phone ? new Thickness(RecordLayout.PhoneStartPadding, 10, RecordLayout.PhoneEndPadding, 12) : new Thickness(TabletSideMargin, TabletVerticalMargin);
-		_root.RowDefinitions = [new RowDefinition(GridLength.Star)];
-		_root.ColumnDefinitions = phone
-			? [new ColumnDefinition(shape.PicturePane), new ColumnDefinition(GridLength.Star), new ColumnDefinition(shape.RailWidth)]
-			: [new ColumnDefinition(shape.PicturePane), new ColumnDefinition(GridLength.Star)];
-		if (shape.PicturePane > 0 && PicturePathOf(story) is { } picture)
-		{
-			_root.Add(RecordViews.PictureColumn(picture), 0, 0);
-		}
-
-		View middle = SidewaysMiddle(story, shape);
-		middle.Margin = new Thickness(shape.PicturePane > 0 ? RecordGap : 0, 0, phone ? RecordGap : 0, 0);
-		_root.Add(middle, 1, 0);
-		if (phone)
-		{
-			_root.Add(SidewaysRail(story), 2, 0);
-		}
-	}
-
-	// The header, the words card, the recordings line and the recording's own card; a tablet adds the whole footer (big button, dots, arrows), a phone only the dots (its rail has the rest).
-	private Grid SidewaysMiddle(Story story, RecordShape shape)
-	{
-		bool phone = shape.Columns == RecordColumns.Three;
-		var column = new Grid
-		{
-			RowSpacing = phone ? 8 : 16,
-			RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto)],
-		};
-		GrownUpHeader header = Header(story);
-		header.ButtonVisible = !phone; // the phone's Done stands at the top of its rail
-		column.Add(header, 0, 0);
-		string words = RecordViews.PageWords(story.Pages[_page]);
-		if (words.Length > 0)
-		{
-			column.Add(RecordViews.TextPage(words, story.Language, RecordLayout.WordsSize(shape.Columns)), 0, 1);
-		}
-
-		column.Add(RecordViews.StayNote(), 0, 2);
-		column.Add(StoryRecordings.Of(story, _page) is { } recording && !_recording
-			? RecordViews.RecordedCard(recording, _playing, TogglePlaybackAsync, RecordAgainAsync, DeleteAsync)
-			: RecordViews.ScriptCard(), 0, 3);
-
-		column.Add(phone ? RecordViews.Dots(story.Pages.Count, _page, p => StoryRecordings.Of(story, p) is not null) : Footer(story, sideways: true), 0, 4);
-		return column;
-	}
-
-	private Grid SidewaysRail(Story story)
-	{
-		var rail = new Grid { RowSpacing = 8, RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)] };
-		rail.Add(RecordViews.RailDone(LaunchedFromIntro, () => _busy.RunAsync(() => Navigation.PopAsync())), 0, 0);
-		rail.Add(RailMicrophone(story), 0, 1);
-		if (!_recording)
-		{
-			// As upright: nothing moves the page while a recording runs (the recording would be saved under the wrong page).
-			rail.Add(RecordViews.RailNav(_page > 0, _page == story.Pages.Count - 1, () => GoToPageAsync(_page - 1), NextAsync), 0, 2);
-		}
-
-		return rail;
-	}
-
-	// The microphone while nothing is recorded for the page, the stop square (in the same place) with its clock while recording, nothing when the page already has a recording (its card re-records).
-	private VerticalStackLayout RailMicrophone(Story story)
-	{
-		var centre = new VerticalStackLayout { Spacing = 8, VerticalOptions = LayoutOptions.Center, HorizontalOptions = LayoutOptions.Center };
-		if (_recording)
-		{
-			_time = NewTimeLabel(sideways: true);
-			_time.FontSize = RailClockSize;
-			_time.Text = RecordingText(Elapsed());
-			centre.Add(RecordViews.RecordingLabel(_time));
-			centre.Add(RecordViews.RecordButton(recording: true, StopRecordingAsync, RecordLayout.PhoneButtonSize, sideways: true));
-		}
-		else if (StoryRecordings.Of(story, _page) is null)
-		{
-			centre.Add(RecordViews.RecordButton(recording: false, StartRecordingAsync, RecordLayout.PhoneButtonSize, sideways: true));
-		}
-
-		return centre;
-	}
-
-	private GrownUpHeader Header(Story story)
-	{
-		var header = new GrownUpHeader
-		{
-			Title = AppResources.Rec_Title,
-			Subtitle = AppResources.Format(AppResources.Rec_Subtitle, story.Title, _page + 1, story.Pages.Count),
-			Continue = LaunchedFromIntro,
-		};
-		header.BackRequested += async (_, _) => await _busy.RunAsync(() => Navigation.PopAsync());
-		header.DoneRequested += async (_, _) => await _busy.RunAsync(() => Navigation.PopAsync()); // leaving stops and keeps a recording in progress, as Back does
-		return header;
-	}
-
-	// The page as the child sees it, then either the script line (nothing recorded yet) or the recording's own card (frame 45).
-	private Grid Body(Story story)
-	{
-		StoryPage page = story.Pages[_page];
-		string? picture = page.ImageFile is null ? null : _library.TryResolveFile(story.Id, page.ImageFile);
-		double side = _tabletShown ? TabletPageLayout.PageSideMargin : PhoneSideMargin;
-		var body = new Grid { Padding = new Thickness(side, 0), RowSpacing = 12, RowDefinitions = [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto)] };
-		body.Add(RecordViews.PageView(picture is not null && File.Exists(picture) ? picture : null, page, story.Language, _tabletShown ? _tabletPicture : null), 0, 0);
-		body.Add(RecordViews.StayNote(), 0, 1);
-		body.Add(StoryRecordings.Of(story, _page) is { } recording && !_recording
-			? RecordViews.RecordedCard(recording, _playing, TogglePlaybackAsync, RecordAgainAsync, DeleteAsync)
-			: RecordViews.ScriptCard(), 0, 2);
-		return body;
-	}
-
-	private VerticalStackLayout Footer(Story story, bool sideways = false)
-	{
-		double side = _tabletShown && !sideways ? TabletPageLayout.PageSideMargin : PhoneSideMargin;
-		var footer = new VerticalStackLayout { Spacing = 10, Padding = new Thickness(side, 12, side, 22) };
-		if (_recording)
-		{
-			_time = NewTimeLabel(sideways);
-			_time.Text = RecordingText(Elapsed());
-			footer.Add(RecordViews.RecordingLabel(_time));
-			footer.Add(RecordViews.RecordButton(recording: true, StopRecordingAsync, sideways: sideways));
-			return footer;
-		}
-
-		if (StoryRecordings.Of(story, _page) is null)
-		{
-			footer.Add(RecordViews.RecordButton(recording: false, StartRecordingAsync, sideways: sideways));
-		}
-
-		footer.Add(RecordViews.Dots(story.Pages.Count, _page, p => StoryRecordings.Of(story, p) is not null));
-		footer.Add(RecordViews.NavRow(_page > 0, _page == story.Pages.Count - 1, () => GoToPageAsync(_page - 1), NextAsync));
-		return footer;
-	}
-
-	private Task NextAsync() => _story is { } story && _page < story.Pages.Count - 1 ? GoToPageAsync(_page + 1) : _busy.RunAsync(() => Navigation.PopAsync());
-
-	private Task GoToPageAsync(int page)
+	private async Task GoToAsync(int index)
 	{
 		StopPlayback();
-		_page = Math.Clamp(page, 0, (_story?.Pages.Count ?? 1) - 1);
+		if (index >= _pieces.Count)
+		{
+			await FinishAsync();
+			return;
+		}
+
+		_index = Math.Clamp(index, 0, _pieces.Count - 1);
+		_take = null;
 		Render();
-		return Task.CompletedTask;
+		Log($"[Record] piece={_index + 1} of {_pieces.Count} key={Piece?.Key} speaker={Piece?.Speaker} recorded={KeptClip() is not null}");
+		if (Listening)
+		{
+			PlayKept();
+		}
 	}
 
-	private Task RecordAgainAsync()
+	private Task SwipeBackAsync()
+	{
+		if (_index <= 0 || _state == RecorderState.Starting)
+		{
+			return Task.CompletedTask;
+		}
+
+		return _busy.RunAsync(async () =>
+		{
+			await StopRecordingAsync(); // a running recording is kept as its own piece's take first
+			await CommitTakeAsync();
+			await GoToAsync(_index - 1);
+		});
+	}
+
+	private void AttachSwipe(View stage)
+	{
+		if (!Listening)
+		{
+			return;
+		}
+
+		var swipe = new SwipeGestureRecognizer { Direction = SwipeDirection.Right, Threshold = (uint)SwipeThreshold };
+		swipe.Swiped += async (_, _) => await RunHandlerAsync(SwipeBackAsync);
+		stage.GestureRecognizers.Add(swipe);
+	}
+
+	// ---- recording ----
+
+	private async Task RecordAgainAsync()
 	{
 		StopPlayback();
-		return StartRecordingAsync();
+		await StartRecordingAsync();
 	}
 
 	private async Task StartRecordingAsync()
 	{
-		if (_recording || _starting || _story is null)
+		if (!Idle || _story is null || Piece is not { } piece)
 		{
 			return;
 		}
 
-		_starting = true;
+		_state = RecorderState.Starting;
 		try
 		{
-			await BeginRecordingAsync();
+			StopPlayback();
+			await BeginRecordingAsync(piece);
 		}
 		finally
 		{
-			_starting = false;
+			if (_state == RecorderState.Starting)
+			{
+				_state = RecorderState.Idle;
+			}
 		}
 	}
 
-	private async Task BeginRecordingAsync()
+	private async Task BeginRecordingAsync(RecordPiece piece)
 	{
-		if (!await EnsureMicrophoneAsync() || !_visible)
+		if (!await EnsureMicrophoneAsync() || !_visible || _left)
 		{
 			return;
 		}
 
-		string temp = Path.Combine(FileSystem.CacheDirectory, $"{StoryRecordings.FilePrefix}-{Guid.NewGuid():N}{StoryRecordings.FileExtension}");
+		string temp = Path.Combine(FileSystem.CacheDirectory, StoryRecordings.NewTakeFileName());
 		if (!await TryStartRecorderAsync(temp))
 		{
 			return;
 		}
 
-		if (!_visible)
+		if (!_visible || _left)
 		{
 			await _recorder.CancelAsync(); // the page was left while the recorder opened: the microphone does not stay open
 			TryDelete(temp);
 			return;
 		}
 
-		_tempPath = temp;
-		_recording = true;
+		_active = new ActiveTake(piece, temp); // the take belongs to this piece from here on, whatever the page shows later
+		_state = RecorderState.Recording;
 		_recordingStart = Stopwatch.GetTimestamp();
 		StartTimer();
+		Log($"[Record] recording piece={_index + 1} key={piece.Key}");
 		Render();
 	}
 
@@ -453,14 +600,14 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 			// no-fallback: the person is told the microphone was refused; nothing is recorded
 			Debug.WriteLine($"Dino Reader was refused the microphone: {ex.Message}");
 			TryDelete(temp);
-			await DisplayAlertAsync(AppResources.Rec_NoMicTitle, AppResources.Rec_NoMic, AppResources.Common_Ok);
+			await AlertAsync(AppResources.Rec_NoMicTitle, AppResources.Rec_NoMic, AppResources.Common_Ok);
 		}
 		catch (Exception ex)
 		{
 			// no-fallback: the person is told the recording failed; nothing is recorded
 			Debug.WriteLine($"Dino Reader could not start recording: {ex}");
 			TryDelete(temp);
-			await DisplayAlertAsync(AppResources.Rec_Title, AppResources.Rec_Failed, AppResources.Common_Ok);
+			await AlertAsync(AppResources.Record_Title, AppResources.Rec_Failed, AppResources.Common_Ok);
 		}
 
 		return false;
@@ -483,7 +630,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 			return true;
 		}
 
-		await DisplayAlertAsync(AppResources.Rec_NoMicTitle, AppResources.Rec_NoMic, AppResources.Common_Ok);
+		await AlertAsync(AppResources.Rec_NoMicTitle, AppResources.Rec_NoMic, AppResources.Common_Ok);
 		return false;
 #endif
 	}
@@ -498,46 +645,138 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 	{
 		IDispatcherTimer timer = Dispatcher.CreateTimer();
 		timer.Interval = ClockTick;
-		timer.Tick += (_, _) => _time.Text = RecordingText(Elapsed());
+		timer.Tick += (_, _) => OnTick();
 		return timer;
 	}
 
-	private async Task StopRecordingAsync()
+	private void OnTick()
 	{
-		if (!_recording)
+		if (Recording)
 		{
-			return;
+			_clock.Text = StoryRecordings.Clock(Elapsed());
+		}
+		else if (_playing != Playing.None)
+		{
+			_playedSeconds += ClockTick.TotalSeconds;
+			UpdateWave();
+		}
+	}
+
+	// Stops the recorder. A piece that has no kept clip saves the take at once; a piece that has one keeps the take as "New take" until Next, Finish, Done or Back (or "Keep the old one" drops it).
+	// Returns the stop in progress, so a caller that must not go on before the recorder has stopped and the take is kept (leaving, a swipe) waits for it; with nothing recording it returns at once.
+	private Task StopRecordingAsync()
+	{
+		if (_state == RecorderState.Recording)
+		{
+			_state = RecorderState.Stopping;
+			_stopTask = StopAndKeepAsync();
 		}
 
+		return _state == RecorderState.Stopping ? _stopTask : Task.CompletedTask;
+	}
+
+	// Stopping ends only after StopAsync has returned and the take is kept; the take is the piece Record was pressed on, read from the active take and never from the page's current index.
+	private async Task StopAndKeepAsync()
+	{
 		_timer?.Stop();
-		_recording = false;
-		string? temp = _tempPath;
-		_tempPath = null;
+		ActiveTake active = _active!;
+		_active = null;
 		try
 		{
 			TimeSpan length = await _recorder.StopAsync();
-			await SaveWithWaitAsync(temp!, length);
+			await KeepTakeAsync(new Take(active.Piece, active.Path, length));
 		}
 		catch (Exception ex)
 		{
 			// no-fallback: the person is told the recording failed; nothing is saved
 			Debug.WriteLine($"Dino Reader could not save the recording: {ex}");
-			await DisplayAlertAsync(AppResources.Rec_Title, AppResources.Rec_Failed, AppResources.Common_Ok);
+			if (_take?.Path != active.Path)
+			{
+				TryDelete(active.Path); // a take that failed to save stays as the New take
+			}
+			if (_visible)
+			{
+				await AlertAsync(AppResources.Record_Title, AppResources.Rec_Failed, AppResources.Common_Ok);
+			}
 		}
 		finally
 		{
-			TryDelete(temp);
-			Render();
+			_state = RecorderState.Idle;
+			if (_visible)
+			{
+				Render();
+			}
+		}
+	}
+
+	// Clips already in the book that share a sentence with a piece: a clip of exactly that piece, or a legacy whole-page one, a part or a line cut differently (Slice 279). They are the "old take"
+	// of a new recording and go only when it is committed.
+	private IReadOnlyList<StoryClipKey> OldClipsOf(StoryClipKey key) =>
+		_story is { } story ? StoryRecordings.Clips(story).Select(c => c.Key).Where(k => k.Overlaps(key)).ToList() : [];
+
+	private async Task KeepTakeAsync(Take take)
+	{
+		if (OldClipsOf(take.Piece.Key).Count == 0)
+		{
+			await SaveFirstTakeAsync(take);
+			return;
+		}
+
+		if (_take is { } earlier)
+		{
+			TryDelete(earlier.Path); // one take back only: the earlier new take goes, the kept clip stays the "Old take"
+		}
+
+		_take = take;
+		Log($"[Record] new-take piece={_index + 1} key={take.Piece.Key} seconds={StoryRecordings.WholeSeconds(take.Length)}");
+	}
+
+	// A piece with no clip yet saves its take at once; a failed save keeps the take as the New take, so the person can save it again.
+	private async Task SaveFirstTakeAsync(Take take)
+	{
+		try
+		{
+			await SaveTakeAsync(take);
+		}
+		catch
+		{
+			// no-fallback: the take is kept as the New take and the failure is rethrown, so the person is told the recording failed
+			_take = take;
+			throw;
+		}
+	}
+
+	private async Task CommitTakeAsync()
+	{
+		if (_take is not { } take)
+		{
+			return;
+		}
+
+		_take = null;
+		try
+		{
+			await SaveTakeAsync(take);
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: the person is told the recording failed; the old clips and their files stay, and the take file stays as the New take (a retry can save it)
+			Debug.WriteLine($"Dino Reader could not keep the new take: {ex}");
+			_take = take;
+			if (_visible)
+			{
+				await AlertAsync(AppResources.Record_Title, AppResources.Rec_Failed, AppResources.Common_Ok);
+			}
 		}
 	}
 
 	// Slice 143: saving shows the wait overlay if it takes over 500 ms; there is no Cancel, a half-saved recording is worse than waiting.
-	private async Task SaveWithWaitAsync(string temp, TimeSpan length)
+	private async Task SaveTakeAsync(Take take)
 	{
 		_wait.Begin(WaitStage.Saving, AppResources.Wait_Saving, canCancel: false);
 		try
 		{
-			await SaveRecordingAsync(temp, length);
+			await CommitAsync(take);
 		}
 		finally
 		{
@@ -545,65 +784,152 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		}
 	}
 
-	// The story goes in first, on top of the latest stored one (the reading page may have saved its own switches meanwhile), then the audio moves into
-	// place: a failure of either leaves the page's old recording and its stored length as they were.
-	private async Task SaveRecordingAsync(string temp, TimeSpan length)
+	// The one place a take becomes a clip (design 2). The take goes into a file with a fresh name (nothing is overwritten), the story is saved once with the new clip added and the replaced clips removed
+	// (on top of the latest stored one: the reading page may have saved its own switches meanwhile), and only after that save are the replaced files deleted. If the save fails the new file goes and the old
+	// clips and files are untouched.
+	private async Task CommitAsync(Take take)
 	{
-		Story shown = _story!;
-		Story latest = await _library.GetAsync(shown.Id) ?? shown;
-		Story updated = StoryRecordings.With(latest, _page, new PageRecording(latest.Language, StoryRecordings.WholeSeconds(length)));
-		await _library.UpdateAsync(updated);
+		StoryClipKey key = take.Piece.Key;
+		string storyId = _story!.Id;
+		string fileName = StoryRecordings.NewFileName(key);
+		await PlaceFileAsync(storyId, fileName, take.Path);
+		Committed committed = await SaveWithClipAsync(storyId, take, fileName);
+		_story = committed.Story; // the story is saved: from here on nothing below can make this recording "fail"
+		TryDelete(take.Path);
+		await DeleteReplacedFilesAsync(storyId, committed.ReplacedFiles);
+		Log($"[Record] saved key={key} file={fileName} seconds={StoryRecordings.WholeSeconds(take.Length)} clips={StoryRecordings.Count(committed.Story)}");
+		CountFirstRecording(committed.First, committed.Story);
+	}
+
+	private async Task PlaceFileAsync(string storyId, string fileName, string temp) =>
+		await _library.StoreRecordingFileAsync(storyId, fileName, path =>
+		{
+			File.Copy(temp, path, overwrite: true); // a copy: the take stays where it is until the story has saved
+			return Task.CompletedTask;
+		});
+
+	private async Task<Committed> SaveWithClipAsync(string storyId, Take take, string fileName)
+	{
+		StoryClipKey key = take.Piece.Key;
 		try
 		{
-			await _library.StoreRecordingAsync(shown.Id, _page, path =>
-			{
-				File.Move(temp, path, overwrite: true);
-				return Task.CompletedTask;
-			});
+			Story latest = await _library.GetAsync(storyId) ?? _story!;
+			bool first = StoryRecordings.Clips(latest).All(c => !c.Key.Overlaps(key));
+			IReadOnlyList<string> replaced = StoryRecordings.ReplacedFiles(latest, key);
+			Story updated = StoryRecordings.WithClip(latest, key, new PageRecording(latest.Language, StoryRecordings.WholeSeconds(take.Length), fileName));
+			await _library.UpdateAsync(updated);
+			return new Committed(updated, replaced, first);
 		}
 		catch
 		{
-			// no-fallback: puts the story back as it was and rethrows
-			await _library.UpdateAsync(latest);
+			// no-fallback: the story did not take the clip, so the new file goes (it is the only one this commit made) and the failure is rethrown
+			await _library.DeleteFileAsync(storyId, fileName);
 			throw;
 		}
+	}
 
-		_story = updated;
-		// Which kind of book and how many of its pages are recorded, as a bucket (Slice 134); a re-recorded page is not counted again.
-		if (StoryRecordings.Of(latest, _page) is null)
+	// Best effort: the story already names the new clip, so a replaced file that cannot be deleted is only disk space, never a failed recording.
+	private async Task DeleteReplacedFilesAsync(string storyId, IReadOnlyList<string> fileNames)
+	{
+		foreach (string name in fileNames)
+		{
+			try
+			{
+				await _library.DeleteFileAsync(storyId, name);
+			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+			{
+				// no-fallback: the recording is saved; a replaced file left on disk is never read
+				Debug.WriteLine($"Dino Reader could not delete a replaced recording file: {ex.Message}");
+			}
+		}
+	}
+
+	// Which kind of book and how many of its clips are recorded, as a bucket (Slice 134); a re-recorded piece is not counted again.
+	private void CountFirstRecording(bool first, Story updated)
+	{
+		if (first)
 		{
 			_usage.Record(UsageEventName.RecordingMade, updated, UsageDetail.PagesBucket(StoryRecordings.Count(updated)));
 		}
 	}
 
-	private async Task DiscardRecordingAsync()
+	// "Keep the old one" (frame 191): the new take is dropped and the kept clip stays.
+	private Task KeepOldAsync()
 	{
-		_timer?.Stop();
-		_recording = false;
-		string? temp = _tempPath;
-		_tempPath = null;
-		await _recorder.CancelAsync();
-		TryDelete(temp);
+		if (_take is { } take)
+		{
+			StopPlayback();
+			TryDelete(take.Path);
+			_take = null;
+			Log($"[Record] kept-old piece={_index + 1} key={Piece?.Key}");
+			Render();
+		}
+
+		return Task.CompletedTask;
 	}
+
+	// ---- playing ----
 
 	private Task TogglePlaybackAsync()
 	{
-		if (_playing)
+		if (_playing != Playing.None)
 		{
 			StopPlayback();
 			Render();
 			return Task.CompletedTask;
 		}
 
-		if (_story is { } story && _library.TryResolveFile(story.Id, StoryRecordings.FileNameOf(_page)) is { } path && File.Exists(path))
+		if (_take is { } take)
 		{
-			PlayFile(path);
+			PlayFile(take.Path, Playing.Take);
+		}
+		else
+		{
+			PlayKept();
 		}
 
 		return Task.CompletedTask;
 	}
 
-	private void PlayFile(string path)
+	private Task PlayOldTakeAsync()
+	{
+		if (_playing != Playing.None)
+		{
+			StopPlayback();
+		}
+
+		if (PathOf(KeptClip() ?? (Piece is { } shown ? OldClipsOf(shown.Key).Select(k => (StoryClipKey?)k).FirstOrDefault() : null)) is { } path)
+		{
+			PlayFile(path, Playing.OldClip);
+		}
+
+		return Task.CompletedTask;
+	}
+
+	private void PlayKept()
+	{
+		if (KeptPath() is { } path)
+		{
+			PlayFile(path, Playing.Clip);
+		}
+	}
+
+	private string? KeptPath() => PathOf(KeptClip());
+
+	private string? PathOf(StoryClipKey? clip)
+	{
+		if (clip is not { } key || _story is null)
+		{
+			return null;
+		}
+
+		string storyId = _story.Id;
+		string? path = _library.TryResolveFile(storyId, StoryRecordings.FileOf(_story, key, name => _library.TryResolveFile(storyId, name) is { } p && File.Exists(p)));
+		return path is not null && File.Exists(path) ? path : null;
+	}
+
+	private void PlayFile(string path, Playing what)
 	{
 		try
 		{
@@ -616,53 +942,269 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 			return;
 		}
 
-		_playing = true;
+		_playing = what;
+		_playedSeconds = 0;
+		StartTimer();
 		Render();
 	}
 
 	private void OnPlaybackEnded()
 	{
-		_playing = false;
+		_playing = Playing.None;
+		_timer?.Stop();
 		Render();
 	}
 
 	private void StopPlayback()
 	{
-		if (_playing)
+		if (_playing != Playing.None)
 		{
 			_player.Stop();
-			_playing = false;
+			_playing = Playing.None;
+			if (!Recording)
+			{
+				_timer?.Stop();
+			}
 		}
 	}
 
-	private async Task DeleteAsync()
+	private void UpdateWave()
 	{
-		if (_story is null || !await DisplayAlertAsync(AppResources.Rec_Delete, AppResources.Rec_DeleteBody, AppResources.Common_Delete, AppResources.Common_Keep))
+		double seconds = KeptClip() is { } key && _story is not null ? Math.Max(1, StoryRecordings.ClipOf(_story, key)?.Seconds ?? 1) : 1;
+		_waveHost.Children.Clear();
+		_waveHost.Add(RecordViews.Wave(_playing == Playing.None ? 0 : _playedSeconds / seconds));
+	}
+
+	// ---- "Use Dino's voice" (frame 190) ----
+
+	// The piece is only marked as Dino's voice (it leaves the walk, the Undo toast shows): nothing is saved or deleted until the 4 second window is over, so Undo has no IO and cannot race or fail.
+	// The removal is committed once, by SettleUndoAsync: when the window ends, or on the next action or leaving the page.
+	private Task UseDinoVoiceAsync() => RunHandlerAsync(() => _busy.RunAsync(GiveBackToDinoAsync)); // a second tap while the first is running is dropped
+
+	// An async-void tap must never throw: whatever fails here is logged and the page carries on.
+	private static async Task RunHandlerAsync(Func<Task> handler)
+	{
+		try
+		{
+			await handler();
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: a tap on this page that fails changes nothing the person has recorded
+			Debug.WriteLine($"Dino Reader record page action failed: {ex}");
+		}
+	}
+
+	private async Task GiveBackToDinoAsync()
+	{
+		if (!Idle || Piece is not { } piece || KeptClip() is not { } key)
 		{
 			return;
 		}
 
+		await SettleUndoAsync(); // a second Use Dino's voice commits the first one first
 		StopPlayback();
+		PageRecording? recording = _story is { } current ? StoryRecordings.ClipOf(current, key) : null; // the settle above may have saved the story
+		if (recording is null)
+		{
+			return;
+		}
+
+		var undo = new Undo(key, recording, piece, _index, new CancellationTokenSource());
+		_undo = undo;
+		_pieces.RemoveAt(_index);
+		DropPendingTake();
+		Log($"[Record] use-dino key={key}");
+		_toastHost.Children.Clear();
+		_toastHost.Add(RecordViews.UndoToast(AppResources.Record_UseDino, UndoAsync));
+		_ = EndUndoWindowAsync(undo);
+		if (_pieces.Count == 0)
+		{
+			return; // nothing recorded is left to walk: the screen closes when the window ends
+		}
+
+		_index = Math.Min(_index, _pieces.Count - 1);
+		Render();
+		PlayKept();
+	}
+
+	// The piece given back to Dino had a new take waiting: it goes with the clip, file and all.
+	private void DropPendingTake()
+	{
+		if (_take is { } take)
+		{
+			TryDelete(take.Path);
+			_take = null;
+		}
+	}
+
+	private async Task EndUndoWindowAsync(Undo undo)
+	{
 		try
 		{
-			await RemoveRecordingAsync(_story, _page);
+			await Task.Delay(UndoWindow, undo.Window.Token);
+		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: the window was ended early (Undo, or leaving the page), which settles it itself
+			return;
+		}
+
+		await MainThread.InvokeOnMainThreadAsync(() => RunHandlerAsync(() => CommitWhenWindowEndsAsync(undo)));
+	}
+
+	// Goes through the page's serialized path and waits for a running action instead of dropping: the removal is never lost.
+	private async Task CommitWhenWindowEndsAsync(Undo undo)
+	{
+		await _busy.RunWhenFreeAsync(async () =>
+		{
+			if (_undo == undo) // Undo, the next action or leaving may have settled it meanwhile
+			{
+				await SettleUndoAsync();
+			}
+		});
+		if (_pieces.Count == 0 && !_left)
+		{
+			await LeaveOnceAsync(toCaller: false); // the one leave: waits for a running action, and does nothing when the page is already leaving
+		}
+	}
+
+	// Commits the removal: ends the window, saves the story without the clip, then deletes its file. Called when the window runs out, on the next action and on leaving.
+	// A second caller while the commit runs waits for the same one, so the intro never reads the book before it is saved.
+	private Task SettleUndoAsync()
+	{
+		if (_undo is not { } undo)
+		{
+			return _settle ?? Task.CompletedTask;
+		}
+
+		_undo = null;
+		return _settle = CommitRemovalAsync(undo);
+	}
+
+	private async Task CommitRemovalAsync(Undo undo)
+	{
+		await undo.Window.CancelAsync();
+		_toastHost.Children.Clear();
+		if (_story is not { } shown)
+		{
+			return;
+		}
+
+		try
+		{
+			Story latest = await _library.GetAsync(shown.Id) ?? shown;
+			Story without = StoryRecordings.WithoutClip(latest, undo.Key);
+			await _library.UpdateAsync(without);
+			_story = without; // only after the save: a failed save keeps the clip in the story and on disk
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: any failure (a disk error, an unreadable story) keeps the clip in the story and its file on disk, nothing is lost; it shows again next time the book is opened.
+			// The task must not fault: every later settle, Next and leaving awaits it, and the user could not leave the screen.
+			Debug.WriteLine($"Dino Reader could not save the removal of a recording: {ex.Message}");
+			Log($"[Record] use-dino-failed key={undo.Key}");
+			return;
+		}
+
+		await DeleteGivenBackFileAsync(shown.Id, undo);
+	}
+
+	private async Task DeleteGivenBackFileAsync(string storyId, Undo undo)
+	{
+		try
+		{
+			await _library.DeleteFileAsync(storyId, StoryRecordings.FileOf(undo.Recording, undo.Key));
+			Log($"[Record] use-dino-settled key={undo.Key}");
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
-			// no-fallback: logged only; the recording stays
-			Debug.WriteLine($"Dino Reader could not delete the recording: {ex}");
+			// no-fallback: the clip is already out of the story; a file that cannot be deleted now is never read
+			Debug.WriteLine($"Dino Reader could not delete a recording: {ex.Message}");
 		}
-
-		Render();
 	}
 
-	private async Task RemoveRecordingAsync(Story shown, int page)
+	// Undo inside the window only clears the mark: no IO. It waits for a running action instead of being dropped.
+	private Task UndoAsync() => RunHandlerAsync(() => _busy.RunWhenFreeAsync(RestoreClipAsync));
+
+	private async Task RestoreClipAsync()
 	{
-		await _library.DeleteFileAsync(shown.Id, StoryRecordings.FileNameOf(page));
-		Story latest = await _library.GetAsync(shown.Id) ?? shown;
-		Story updated = StoryRecordings.Without(latest, page);
-		await _library.UpdateAsync(updated);
-		_story = updated;
+		if (_undo is not { } undo)
+		{
+			return; // the removal was already committed
+		}
+
+		_undo = null;
+		await undo.Window.CancelAsync();
+		_toastHost.Children.Clear();
+		_pieces.Insert(Math.Min(undo.Index, _pieces.Count), undo.Piece);
+		_index = Math.Min(undo.Index, _pieces.Count - 1);
+		_take = null;
+		StopPlayback();
+		Log($"[Record] undo key={undo.Key}");
+		Render();
+		PlayKept();
+	}
+
+	// ---- Windows keys (frame 184) ----
+
+	bool IRecordKeys.HandleRecordKey(RecordKey key)
+	{
+		if (_alerts > 0 || _waitOverlay.IsVisible)
+		{
+			return key == RecordKey.Leave; // an alert or the wait overlay is up: the keys belong to it, and Esc is swallowed so it cannot pop the page behind the dialog
+		}
+
+		if (key == RecordKey.Leave)
+		{
+			_ = LeaveOnceAsync(toCaller: false); // Esc is Back; the one leave waits for a running action and never throws
+			return true;
+		}
+
+		if (_busy.IsBusy || _setup is null)
+		{
+			return false;
+		}
+
+		switch (key)
+		{
+			case RecordKey.Record when Recording:
+				_ = StopRecordingAsync();
+				return true;
+			case RecordKey.Record when Idle && Step != RecordStep.Recording && !Listening:
+				_ = StartRecordingAsync();
+				return true;
+			case RecordKey.Play when Step == RecordStep.Recorded:
+				_ = TogglePlaybackAsync();
+				return true;
+			case RecordKey.Skip when Step == RecordStep.Ready && !Listening:
+				_ = SkipAsync();
+				return true;
+			case RecordKey.Next when Step == RecordStep.Recorded:
+				_ = NextAsync();
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	// ---- files ----
+
+	// A take left in the cache by an app that was killed mid-take is not a recording: it is deleted when the screen opens.
+	private static void DeleteStrayTakes()
+	{
+		try
+		{
+			foreach (string path in Directory.GetFiles(FileSystem.CacheDirectory, $"{StoryRecordings.TakePrefix}-*").Where(p => StoryRecordings.IsTakeFileName(Path.GetFileName(p))))
+			{
+				TryDelete(path);
+			}
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		{
+			// no-fallback: cache cleanup, nothing the person gets changes
+			Debug.WriteLine($"Dino Reader could not look for stray takes: {ex.Message}");
+		}
 	}
 
 	private static void TryDelete(string? path)

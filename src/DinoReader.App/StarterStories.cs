@@ -259,7 +259,8 @@ public sealed class StarterStories(IStoryLibrary library)
 		try
 		{
 			IReadOnlyList<StarterUpdate.RecordingMove> copied = await CopyRecordingsAsync(stored, fresh, StarterUpdate.RecordingMoves(stored, fresh));
-			refreshed = StarterUpdate.Refresh(stored, fresh, copied);
+			IReadOnlyList<StarterUpdate.ClipMove> copiedClips = await CopyClipsAsync(stored, fresh, StarterUpdate.PieceMoves(stored, fresh));
+			refreshed = StarterUpdate.Refresh(stored, fresh, copied, copiedClips);
 			await library.UpdateAsync(await WithCoverPhotoAsync(stored, fresh, refreshed));
 		}
 		catch
@@ -388,14 +389,18 @@ public sealed class StarterStories(IStoryLibrary library)
 
 	private async Task<Story> MoveMissingRecordingsAsync(Story extra, Story keep)
 	{
-		var wanted = StarterUpdate.RecordingMoves(extra, keep).Where(m => keep.Recordings?.ContainsKey(m.To) != true).ToList();
+		var wanted = StarterUpdate.RecordingMoves(extra, keep).Where(m => !StoryRecordings.Clips(keep).Any(c => c.Key.Overlaps(StoryClipKey.OfPage(m.To)))).ToList();
 		IReadOnlyList<StarterUpdate.RecordingMove> copied = await CopyRecordingsAsync(extra, keep, wanted);
-		if (copied.Count == 0)
+		Story withPages = StarterUpdate.WithMovedRecordings(keep, extra, copied);
+		// The piece moves are decided against the story as it stands after the whole-page ones, so no file is copied for a range the story then skips (an orphan nothing would carry or delete).
+		var wantedClips = StarterUpdate.PieceMoves(extra, keep).Where(m => !StoryRecordings.Clips(withPages).Any(c => c.Key.Overlaps(m.To))).ToList();
+		IReadOnlyList<StarterUpdate.ClipMove> copiedClips = await CopyClipsAsync(extra, keep, wantedClips);
+		if (copied.Count == 0 && copiedClips.Count == 0)
 		{
 			return keep;
 		}
 
-		Story merged = StarterUpdate.WithMovedRecordings(keep, extra, copied) with { UseRecordings = keep.UseRecordings || extra.UseRecordings };
+		Story merged = StarterUpdate.WithMovedClips(withPages, extra, copiedClips) with { UseRecordings = keep.UseRecordings || extra.UseRecordings };
 		await library.UpdateAsync(merged);
 		return merged;
 	}
@@ -406,18 +411,45 @@ public sealed class StarterStories(IStoryLibrary library)
 		var copied = new List<StarterUpdate.RecordingMove>();
 		foreach (StarterUpdate.RecordingMove move in moves)
 		{
-			string? source = library.TryResolveFile(stored.Id, StoryRecordings.FileNameOf(move.From));
+			string? source = library.TryResolveFile(stored.Id, StoryRecordings.FileOf(stored, StoryClipKey.OfPage(move.From)));
 			if (source is null || !File.Exists(source))
 			{
 				continue;
 			}
 
-			await library.StoreRecordingAsync(fresh.Id, move.To, temp =>
+			copied.Add(move with { File = await CopyClipFileAsync(fresh.Id, StoryClipKey.OfPage(move.To), source) });
+		}
+
+		return copied;
+	}
+
+	// The clip's file goes to its usual name, or to a fresh name of the clip when a file already sits there (never overwritten, never skipped: the recording is carried either way).
+	// Returns the name to record in the story, null for the usual name.
+	private async Task<string?> CopyClipFileAsync(string storyId, StoryClipKey key, string source)
+	{
+		bool taken = library.TryResolveFile(storyId, StoryRecordings.FileNameOf(key)) is { } target && File.Exists(target);
+		string name = taken ? StoryRecordings.NewFileName(key) : StoryRecordings.FileNameOf(key);
+		await library.StoreRecordingFileAsync(storyId, name, temp =>
+		{
+			File.Copy(source, temp, overwrite: true);
+			return Task.CompletedTask;
+		});
+		return taken ? name : null;
+	}
+
+	// The same for the clips of a page recorded in pieces (Slice 279); returns the moves whose file really copied.
+	private async Task<IReadOnlyList<StarterUpdate.ClipMove>> CopyClipsAsync(Story stored, Story fresh, IReadOnlyList<StarterUpdate.ClipMove> moves)
+	{
+		var copied = new List<StarterUpdate.ClipMove>();
+		foreach (StarterUpdate.ClipMove move in moves)
+		{
+			string? source = library.TryResolveFile(stored.Id, StoryRecordings.FileOf(stored, move.From));
+			if (source is null || !File.Exists(source))
 			{
-				File.Copy(source, temp, overwrite: true);
-				return Task.CompletedTask;
-			});
-			copied.Add(move);
+				continue;
+			}
+
+			copied.Add(move with { File = await CopyClipFileAsync(fresh.Id, move.To, source) });
 		}
 
 		return copied;

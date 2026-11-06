@@ -78,19 +78,6 @@ public sealed class ParentRecordingTests : IDisposable
     }
 
     [Fact]
-    public void An_edit_keeps_a_recording_only_for_a_page_that_is_still_there_with_the_same_text()
-    {
-        Story story = Recorded(0, 1, 3);
-        IReadOnlyList<StoryPage> edited = [new StoryPage("One."), new StoryPage("Two changed."), new StoryPage("Three.")];
-
-        IReadOnlyDictionary<int, PageRecording>? kept = StoryRecordings.Kept(story, edited);
-
-        Assert.Equal([0], kept!.Keys);
-        Assert.Equal(["rec-2.m4a", "rec-4.m4a"], StoryRecordings.Dropped(story, kept));
-        Assert.Null(StoryRecordings.Kept(story, [new StoryPage("Other.")]));
-    }
-
-    [Fact]
     public void The_clock_shows_minutes_and_two_digit_seconds_and_a_length_is_at_least_a_second()
     {
         Assert.Equal("0:14", StoryRecordings.Clock(TimeSpan.FromSeconds(14.4)));
@@ -202,11 +189,12 @@ public sealed class ParentRecordingTests : IDisposable
     {
         Story story = Recorded(1);
         Assert.True(StoryRecordings.Plays(story, 1));
-        Assert.Contains(1, StoryRecordings.PagesShownInOwnLanguage(story));
+        int[] oneSentenceEach = [1, 1, 1, 1];
+        Assert.Contains(1, StoryRecordings.PagesShownInOwnLanguage(story, oneSentenceEach));
 
         Story edited = story with { Language = "sv" };
         Assert.False(StoryRecordings.Plays(edited, 1));
-        Assert.Empty(StoryRecordings.PagesShownInOwnLanguage(edited));
+        Assert.Empty(StoryRecordings.PagesShownInOwnLanguage(edited, oneSentenceEach));
     }
 
     [Fact]

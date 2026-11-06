@@ -45,6 +45,15 @@ public interface IStoryLibrary
     /// A library that does not store stories on disk leaves it unsupported.</summary>
     Task<string> StoreRecordingAsync(string storyId, int page, Func<string, Task> write) => throw new NotSupportedException();
 
+    /// <summary>Stores a clip's recording as <see cref="StoryRecordings.FileNameOf(StoryClipKey)"/> (Slice 279), the same way as <see cref="StoreRecordingAsync"/>: <paramref name="write"/> fills a temp file which is
+    /// then renamed over any earlier file of that name, so a failed write keeps the old one. Returns the file name.</summary>
+    Task<string> StoreClipAsync(string storyId, StoryClipKey key, Func<string, Task> write) =>
+        key.IsWholePage ? StoreRecordingAsync(storyId, key.Page, write) : throw new NotSupportedException();
+
+    /// <summary>Stores a recording under <paramref name="fileName"/> (a name <see cref="StoryRecordings.IsRecordingFileName"/> accepts; Slice 279: a commit uses a fresh name, so it never overwrites a clip's file),
+    /// the same way as <see cref="StoreRecordingAsync"/>. Returns the file name.</summary>
+    Task<string> StoreRecordingFileAsync(string storyId, string fileName, Func<string, Task> write) => throw new NotSupportedException();
+
     /// <summary>Deletes one cover file or page recording this library stored; a missing file, an unusable name or any other file does nothing.</summary>
     Task DeleteFileAsync(string storyId, string fileName);
 }

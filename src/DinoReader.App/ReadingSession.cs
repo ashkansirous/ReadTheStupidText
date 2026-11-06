@@ -37,7 +37,11 @@ public sealed class ReadingSession
 	private IReadOnlyList<int> _pageStarts = [];
 	private (int First, int Last)[] _pageSentences = [];
 	private RecordedPlay _recorded;
-	private readonly HashSet<int> _unplayable = []; // pages whose recording failed to play this session: read from the book's own clips
+	private IReadOnlySet<int>? _clipPages; // pages whose clips play while the book is translated; null when it is not
+	private readonly HashSet<StoryClipKey> _unplayable = []; // clips of a recording that failed to play this session: read from the book's own clips (Slice 279: a clip is a run of a page's sentences)
+
+	/// <summary>A parent's clip that plays: its key, the story's sentence numbers it covers (first and last) and its length in seconds.</summary>
+	private readonly record struct ClipSpan(StoryClipKey Key, int First, int Last, int Seconds);
 	private (int ReadId, int Sentence)? _continueRead; // a read cut short before a recorded page: where the read goes on once it ends
 	// The read as a list of steps (a pre-made clip of one piece, an animal's recording, or one piece with no clip that is shown for a beat): one read id and the step being taken.
 	private sealed class StepRead(int readId, List<PremadeAudioPlan.Step> steps, CancellationToken cancellation)
@@ -149,7 +153,13 @@ public sealed class ReadingSession
 		_pageStarts = StoryRecordings.PageStarts(story.Pages);
 		_pageSentences = SentencesOfPages(story.Pages.Count);
 		_unplayable.Clear();
+		_clipPages = null;
 	}
+
+	/// <summary>While the book reads in a translation, the pages whose clips still play (the pages fully covered by clips, Slice 279); a page with only some sentences recorded reads translated with the pre-made audio. Null when the book is not translated: every clip plays.</summary>
+	public void SetClipPages(IReadOnlySet<int>? pages) => _clipPages = pages;
+
+	private bool ClipStands(StoryClipKey key) => !_unplayable.Contains(key) && (_clipPages is null || _clipPages.Contains(key.Page));
 
 	/// <summary>Takes the story as it is now (the grown-up turned "Read with my voice" on or off); the next read follows it.</summary>
 	public void UpdateStory(Story story) => _story = story;
@@ -163,31 +173,58 @@ public sealed class ReadingSession
 		}
 	}
 
-	/// <summary>The first and last sentence of the page that holds <paramref name="sentence"/> when that page plays a parent's recording (so the screen marks
-	/// the whole page softly), else null.</summary>
-	public (int First, int Last)? RecordedRangeOf(int sentence)
+	/// <summary>The first and last sentence of the clip that covers <paramref name="sentence"/> when it plays a parent's recording (so the screen marks
+	/// the whole run softly: a page, or the lines recorded as one clip), else null.</summary>
+	public (int First, int Last)? RecordedRangeOf(int sentence) =>
+		_story is { } story && ClipAt(story, sentence) is { } clip ? (clip.First, clip.Last) : null;
+
+	/// <summary>How long the clip covering <paramref name="sentence"/> runs, in seconds, when one plays; else null.</summary>
+	public int? RecordedSecondsOf(int sentence) =>
+		_story is { } story && ClipAt(story, sentence) is { } clip ? clip.Seconds : null;
+
+	// The playing clip that covers the sentence, in the story's sentence numbers; clips are counted from 0 on their page, so a clip is placed by the first sentence of its page.
+	private ClipSpan? ClipAt(Story story, int sentence)
 	{
-		if (_story is not { } story || sentence < 0 || sentence >= _sentences.Count)
+		if (sentence < 0 || sentence >= _sentences.Count)
 		{
 			return null;
 		}
 
 		int page = PageOf(sentence);
-		return PlaysRecording(story, page) && _pageSentences[page].First >= 0 ? _pageSentences[page] : null;
+		(int pageFirst, int pageLast) = _pageSentences[page];
+		return pageFirst < 0 ? null : StoryRecordings.PlayingClips(story)
+			.Where(key => key.Page == page && ClipStands(key))
+			.Select(key => SpanOf(story, key, pageFirst, pageLast))
+			.FirstOrDefault(span => span is { } s && s.First <= sentence && sentence <= s.Last);
 	}
 
-	/// <summary>How long the recording of the page holding <paramref name="sentence"/> runs, in seconds, when that page plays one; else null.</summary>
-	public int? RecordedSecondsOf(int sentence)
+	private static ClipSpan? SpanOf(Story story, StoryClipKey key, int pageFirst, int pageLast)
 	{
-		if (RecordedRangeOf(sentence) is null || _story is not { } story)
+		long first = (long)pageFirst + key.First;
+		if (!key.FitsPage(pageLast - pageFirst + 1) || StoryRecordings.ClipOf(story, key) is not { } recording)
 		{
-			return null;
+			return null; // the page has fewer sentences than the clip names: it was recorded for other words, so it neither plays nor counts as recorded (it stays in the story)
 		}
 
-		return StoryRecordings.Of(story, PageOf(sentence))?.Seconds;
+		int last = (int)Math.Min((long)pageFirst + key.Last, pageLast);
+		return new ClipSpan(key, (int)first, last, recording.Seconds);
 	}
 
-	private bool PlaysRecording(Story story, int page) => StoryRecordings.Plays(story, page) && !_unplayable.Contains(page);
+	// Every playing clip that begins after the position, the earliest first.
+	private ClipSpan? NextClipAfter(Story story, int position)
+	{
+		ClipSpan? next = null;
+		foreach (StoryClipKey key in StoryRecordings.PlayingClips(story).Where(k => ClipStands(k) && k.Page < _pageSentences.Length))
+		{
+			(int pageFirst, int pageLast) = _pageSentences[key.Page];
+			if (pageFirst >= 0 && SpanOf(story, key, pageFirst, pageLast) is { } span && _sentences[span.First].Start > position && (next is null || span.First < next.Value.First))
+			{
+				next = span;
+			}
+		}
+
+		return next;
+	}
 
 	private int PageOf(int sentence) => StoryRecordings.PageOfPosition(_pageStarts, _sentences[sentence].Start);
 
@@ -312,7 +349,7 @@ public sealed class ReadingSession
 			_recorded = RecordedPlay.Playing;
 			if (_pauseState.TakeHeld() is { } ended)
 			{
-				ApplyRecordingEnded(ended.Id, ended.Page); // the clip had already ended: go on instead of resuming a finished player
+				ApplyRecordingEnded(ended.Id, ended.Page, ended.Last); // (Page here is the clip's first sentence, Slice 279) the clip had already ended: go on instead of resuming a finished player
 				return;
 			}
 
@@ -416,35 +453,40 @@ public sealed class ReadingSession
 		beat?.Dispose();
 	}
 
-	// A recorded page plays its file (Slice 111); a file that is gone reads the page from the book's own clips. It is playing as soon as the
+	private bool FileExists(string storyId, string name) => _library.TryResolveFile(storyId, name) is { } path && File.Exists(path);
+
+	// A recorded clip plays its file (Slice 111, Slice 279: a page or a run of its sentences); a file that is gone reads those sentences from the book's own clips. It is playing as soon as the
 	// player has the file, so there is no loading state.
 	private bool TryPlayRecording(Story story, int sentence, int id)
 	{
-		int page = PageOf(sentence);
-		bool recorded = PlaysRecording(story, page);
-		string? path = recorded ? _library.TryResolveFile(story.Id, StoryRecordings.FileNameOf(page)) : null;
-		if (path is null || !File.Exists(path))
+		ClipSpan? clip = ClipAt(story, sentence);
+		string? path = clip is { } c ? _library.TryResolveFile(story.Id, StoryRecordings.FileOf(story, c.Key, name => FileExists(story.Id, name))) : null;
+		if (clip is null || path is null || !File.Exists(path))
 		{
-			if (recorded)
+			if (clip is not null)
 			{
-				ReportRecordingUnplayable(); // Slice 273 part B: the page was to play a recording but its file is gone
+				ReportRecordingUnplayable(); // Slice 273 part B: the clip was to play a recording but its file is gone
+				RecordedClipLog($"[RecordedClip] missing {clip.Value.Key}"); // the sentences are read from the book's own clips
 			}
 
 			return false;
 		}
 
+		int first = clip.Value.First;
+		int last = clip.Value.Last;
 		try
 		{
-			_player.Play(path, () => MainThread.BeginInvokeOnMainThread(() => ApplyRecordingEnded(id, page)),
-				() => MainThread.BeginInvokeOnMainThread(() => ApplyRecordingFailed(id, page)));
+			_player.Play(path, () => MainThread.BeginInvokeOnMainThread(() => ApplyRecordingEnded(id, first, last)),
+				() => MainThread.BeginInvokeOnMainThread(() => ApplyRecordingFailed(id, first)));
 		}
 		catch (Exception)
 		{
-			_unplayable.Add(page);
+			_unplayable.Add(clip.Value.Key);
 			ReportRecordingUnplayable();
 			return false;
 		}
 
+		RecordedClipLog($"[RecordedClip] playing {clip.Value.Key} sentences={clip.Value.First}-{clip.Value.Last}");
 		_recorded = RecordedPlay.Playing;
 		_pauseState.Clear();
 		RunOnMain(() => PieceAudio?.Invoke(true)); // sound plays: an earlier silent piece's status line goes
@@ -453,16 +495,17 @@ public sealed class ReadingSession
 	}
 
 	// The page's recording played to its end: the read goes on with the sentence after the page (a recorded page or the book's clips), or the story is finished.
-	private void ApplyRecordingEnded(int id, int page)
+	private void ApplyRecordingEnded(int id, int clipFirst, int clipLast)
 	{
 		// Slice 270: Pause landed after the clip ended; the read holds here and Resume goes on. A stale id or no recording playing is ignored (Slice 271: ReadingPauseState, unit-tested).
-		if (_pauseState.OnRecordingEnded(id, page, activeReadId: _activeReadId, recordingActive: _recorded != RecordedPlay.None, paused: _recorded == RecordedPlay.Paused) != RecordingEndAction.Advance)
+		// The state keeps the clip's first and last sentence (Slice 279): the read goes on after the clip's own end, whatever the story plays by then.
+		if (_pauseState.OnRecordingEnded(id, clipFirst, clipLast, activeReadId: _activeReadId, recordingActive: _recorded != RecordedPlay.None, paused: _recorded == RecordedPlay.Paused) != RecordingEndAction.Advance)
 		{
 			return;
 		}
 
 		_recorded = RecordedPlay.None;
-		int next = _pageSentences[page].Last + 1;
+		int next = clipLast + 1;
 		if (next >= _sentences.Count)
 		{
 			_activeReadId = 0;
@@ -475,15 +518,20 @@ public sealed class ReadingSession
 		_ = ContinueAtAsync(next);
 	}
 
-	// The recording cannot be played (a corrupt or empty file): this page is read from the book's own clips instead, and the read goes on from its start.
-	private void ApplyRecordingFailed(int id, int page)
+	// The recording cannot be played (a corrupt or empty file): its sentences are read from the book's own clips instead, and the read goes on from their start.
+	private void ApplyRecordingFailed(int id, int clipFirst)
 	{
 		if (id != _activeReadId || _recorded == RecordedPlay.None)
 		{
 			return;
 		}
 
-		_unplayable.Add(page);
+		if (_story is { } story && ClipAt(story, clipFirst) is { } clip)
+		{
+			_unplayable.Add(clip.Key);
+			RecordedClipLog($"[RecordedClip] unplayable {clip.Key}");
+		}
+
 		ReportRecordingUnplayable();
 		if (_recorded == RecordedPlay.Paused)
 		{
@@ -493,7 +541,16 @@ public sealed class ReadingSession
 			return; // paused by the user: the page reads from the book's clips when they resume playing, not on its own
 		}
 
-		_ = ContinueAtAsync(_pageSentences[page].First);
+		_ = ContinueAtAsync(clipFirst);
+	}
+
+	[Conditional("DEBUG")] // which clip played or was missing, so a device check can tell a recording from the book's own audio (Slice 279)
+	private static void RecordedClipLog(string line)
+	{
+		Debug.WriteLine(line);
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write(line);
+#endif
 	}
 
 	// Slice 273 part B: a recording that cannot be played falls back to the book's own clips.
@@ -940,15 +997,13 @@ public sealed class ReadingSession
 	// A generated read ends where the next page with a parent's recording begins, and goes on there with the recording (Slice 111).
 	private IReadOnlyList<VoicedSegment> StopBeforeRecordedPage(Story story, IReadOnlyList<VoicedSegment> segments, int fromPosition, int id)
 	{
-		int fromPage = StoryRecordings.PageOfPosition(_pageStarts, fromPosition);
-		int next = StoryRecordings.RecordedPages(story).FirstOrDefault(p => p > fromPage && PlaysRecording(story, p) && _pageSentences[p].First >= 0, -1);
-		if (next < 0)
+		if (NextClipAfter(story, fromPosition) is not { } next)
 		{
 			return segments;
 		}
 
-		int boundary = _pageStarts[next];
-		_continueRead = (id, _pageSentences[next].First);
+		int boundary = _sentences[next.First].Start;
+		_continueRead = (id, next.First);
 		return segments.Where(s => s.SourceEnd <= boundary).ToList(); // a segment running over the break is left to the recording, so its words are not heard twice
 	}
 

@@ -60,7 +60,7 @@ internal static partial class DinoTestCommands
 	internal static void Register()
 	{
 		TestHookDispatcher.AppCommands = Run;
-		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, ForceKey, ModeKey, ReorderFromKey, ReorderToKey];
+		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, ForceKey, ModeKey, ReorderFromKey, ReorderToKey, ClipsKey];
 	}
 
 	private static string? Run(TestHookCommand command)
@@ -107,6 +107,12 @@ internal static partial class DinoTestCommands
 		if (command.Name == ShelfAudioName)
 		{
 			return StartShelfAudio(command.Get(TestHookDispatcher.LanguageKey, string.Empty));
+		}
+
+		if (command.Name == RecordStateName)
+		{
+			_ = RecordStateAsync(command.Get(IdKey, string.Empty), command.Get(ClipsKey, string.Empty));
+			return StartedOutcome;
 		}
 
 		if (command.Name == BackupRecordingsName)

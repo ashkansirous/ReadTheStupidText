@@ -32,6 +32,61 @@ public class BusyGuardTests
     }
 
     [Fact]
+    public async Task RunAsync_DropsATapWhileAnActionRuns()
+    {
+        var guard = new BusyGuard();
+        var release = new TaskCompletionSource();
+        Task running = guard.RunAsync(() => release.Task);
+        bool ran = false;
+
+        await guard.RunAsync(() => { ran = true; return Task.CompletedTask; });
+
+        Assert.False(ran);
+        Assert.True(guard.IsBusy);
+        release.SetResult();
+        await running;
+        Assert.False(guard.IsBusy);
+    }
+
+    [Fact]
+    public async Task RunWhenFreeAsync_QueuesEveryCallerAndRunsThemOneAtATime()
+    {
+        var guard = new BusyGuard();
+        var release = new TaskCompletionSource();
+        Task running = guard.RunAsync(() => release.Task);
+        int inside = 0, maxInside = 0, done = 0;
+        Func<Task> work = async () =>
+        {
+            maxInside = Math.Max(maxInside, Interlocked.Increment(ref inside));
+            await Task.Yield();
+            Interlocked.Decrement(ref inside);
+            Interlocked.Increment(ref done);
+        };
+
+        Task first = guard.RunWhenFreeAsync(work);
+        Task second = guard.RunWhenFreeAsync(work);
+        Task third = guard.RunWhenFreeAsync(work);
+        Assert.Equal(0, done);
+
+        release.SetResult();
+        await running;
+        await Task.WhenAll(first, second, third).WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.Equal(3, done);
+        Assert.Equal(1, maxInside);
+    }
+
+    [Fact]
+    public async Task RunWhenFreeAsync_ReleasesTheGuardWhenTheWorkThrows()
+    {
+        var guard = new BusyGuard();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => guard.RunWhenFreeAsync(() => throw new InvalidOperationException()));
+
+        Assert.False(guard.IsBusy);
+    }
+
+    [Fact]
     public async Task WhenFreeAsync_EndsWhenCancelledWhileTheActionStillRuns()
     {
         var guard = new BusyGuard();

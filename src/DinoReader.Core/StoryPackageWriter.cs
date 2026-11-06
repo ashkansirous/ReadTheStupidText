@@ -15,7 +15,7 @@ public static class StoryPackageWriter
     {
         if (!includeRecordings)
         {
-            story = story with { Recordings = null, UseRecordings = false };
+            story = story with { Recordings = null, PieceRecordings = null, UseRecordings = false };
         }
 
         string packageId = story.SourceId ?? story.Id;

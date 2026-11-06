@@ -203,26 +203,61 @@
   <!-- /Slice 110 -->
   <!-- Slice 111 -->
   <data name="Rec_Title" xml:space="preserve"><value>Gravar</value></data>
-  <data name="Rec_Script" xml:space="preserve"><value>Leia em voz alta as palavras desta página e toque em Parar.</value></data>
-  <data name="Rec_Recording" xml:space="preserve"><value>A gravar · {0}</value></data>
   <data name="Rec_Stop" xml:space="preserve"><value>Parar</value></data>
   <data name="Rec_Start" xml:space="preserve"><value>Gravar</value></data>
-  <data name="Rec_Yours" xml:space="preserve"><value>A sua gravação</value></data>
-  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
   <data name="Rec_Redo" xml:space="preserve"><value>Gravar de novo</value></data>
-  <data name="Rec_Delete" xml:space="preserve"><value>Eliminar gravação</value></data>
-  <data name="Rec_DeleteBody" xml:space="preserve"><value>Esta página voltará a usar a voz do Dino.</value></data>
-  <data name="Rec_Next" xml:space="preserve"><value>Página seguinte</value></data>
-  <data name="Rec_Previous" xml:space="preserve"><value>Página anterior</value></data>
-  <data name="Rec_Play" xml:space="preserve"><value>Ouvir a sua gravação</value></data>
-  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · página {1} de {2}</value></data>
   <data name="Rec_UseVoice" xml:space="preserve"><value>Ler com a minha voz</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} de {1} páginas gravadas. As outras páginas usam as vozes do Dino.</value></data>
-  <data name="Rec_RecordPage" xml:space="preserve"><value>Gravar {0} com a sua voz</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>O microfone está desligado</value></data>
   <data name="Rec_NoMic" xml:space="preserve"><value>Permita o microfone para o Dino Book Reader nas definições do dispositivo e tente novamente.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>A gravação não funcionou. Tente novamente.</value></data>
   <!-- /Slice 111 -->
+  <!-- Slice 279 -->
+  <data name="Record_Title" xml:space="preserve"><value>Grave a sua voz</value></data>
+  <data name="Record_YourVoice" xml:space="preserve"><value>Sua voz</value></data>
+  <data name="Record_NoteRead" xml:space="preserve"><value>Leia em voz alta as palavras de cada tela.</value></data>
+  <data name="Record_NoteSkip" xml:space="preserve"><value>Pule o que você prefere que o Dino leia.</value></data>
+  <data name="Record_NoteStays" xml:space="preserve"><value>Sua voz fica neste telefone. Ela nunca é enviada a lugar nenhum.</value></data>
+  <data name="Record_NoteStaysDevice" xml:space="preserve"><value>Sua voz fica neste dispositivo. Ela nunca é enviada a lugar nenhum.</value></data>
+  <data name="Record_ModeCharacter" xml:space="preserve"><value>Um personagem de cada vez</value></data>
+  <data name="Record_ModePage" xml:space="preserve"><value>Páginas inteiras</value></data>
+  <data name="Record_Who" xml:space="preserve"><value>Quem você vai gravar?</value></data>
+  <data name="Record_Storyteller" xml:space="preserve"><value>Narrador</value></data>
+  <data name="Record_Lines" xml:space="preserve"><value>{0} falas</value></data>
+  <data name="Record_OfCount" xml:space="preserve"><value>{0} de {1}</value></data>
+  <data name="Record_Start" xml:space="preserve"><value>Começar a gravar</value></data>
+  <data name="Record_LongPages" xml:space="preserve"><value>Páginas longas vêm em partes, para que as palavras sempre caibam na tela.</value></data>
+  <data name="Record_Says" xml:space="preserve"><value>{0} diz:</value></data>
+  <data name="Record_LineOf" xml:space="preserve"><value>Fala {0} de {1}</value></data>
+  <data name="Record_PageOf" xml:space="preserve"><value>Página {0} de {1}</value></data>
+  <data name="Record_PagePart" xml:space="preserve"><value>Página {0} de {1} · parte {2} de {3}</value></data>
+  <data name="Record_Skip" xml:space="preserve"><value>Pular</value></data>
+  <data name="Record_Next" xml:space="preserve"><value>Próxima</value></data>
+  <data name="Record_Finish" xml:space="preserve"><value>Concluir</value></data>
+  <data name="Record_Play" xml:space="preserve"><value>Ouvir</value></data>
+  <data name="Record_Playing" xml:space="preserve"><value>Tocando</value></data>
+  <data name="Record_Recorded" xml:space="preserve"><value>Gravado</value></data>
+  <data name="Record_NewTake" xml:space="preserve"><value>Nova gravação</value></data>
+  <data name="Record_OldTake" xml:space="preserve"><value>Gravação antiga</value></data>
+  <data name="Record_ReplacesRest" xml:space="preserve"><value>A tua gravação do resto desta página será substituída.</value></data>
+  <data name="Record_KeepOld" xml:space="preserve"><value>Manter a antiga</value></data>
+  <data name="Record_UseDino" xml:space="preserve"><value>Usar a voz do Dino</value></data>
+  <data name="Record_Undo" xml:space="preserve"><value>Desfazer</value></data>
+  <data name="Record_Change" xml:space="preserve"><value>Mudar como você grava</value></data>
+  <data name="Record_Listen" xml:space="preserve"><value>Ouvir e mudar</value></data>
+  <data name="Record_Rest" xml:space="preserve"><value>Gravar o resto</value></data>
+  <data name="Record_Again" xml:space="preserve"><value>Gravar de novo desde o início</value></data>
+  <data name="Record_YourRecordings" xml:space="preserve"><value>Suas gravações · {0} de {1}</value></data>
+  <data name="Record_LinesRecorded" xml:space="preserve"><value>{0} de {1} falas gravadas</value></data>
+  <data name="Record_PagesRecorded" xml:space="preserve"><value>{0} de {1} páginas gravadas</value></data>
+  <data name="Record_RestByDino" xml:space="preserve"><value>O resto é lido pelo Dino. Sua voz fica neste telefone.</value></data>
+  <data name="Record_RestByDinoDevice" xml:space="preserve"><value>O resto é lido pelo Dino. Sua voz fica neste dispositivo.</value></data>
+  <data name="Record_You" xml:space="preserve"><value>Você</value></data>
+  <data name="Record_RemoveWarn" xml:space="preserve"><value>Suas gravações deste livro também serão apagadas.</value></data>
+  <data name="Record_SkipKey" xml:space="preserve"><value>Pular · S</value></data>
+  <data name="Record_RecordKey" xml:space="preserve"><value>Gravar · R</value></data>
+  <data name="Record_NextKey" xml:space="preserve"><value>Próxima · →</value></data>
+  <!-- /Slice 279 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
   <!-- /Slice 113 -->

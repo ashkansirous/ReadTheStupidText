@@ -12,8 +12,8 @@ namespace DinoReader;
 /// </summary>
 internal sealed class BookSheet : Grid, IPageOverlay
 {
-	/// <summary>The "Read with my voice" row: how many pages are recorded, of how many, and the switch.</summary>
-	public sealed record VoiceOffer(int Recorded, int Pages, bool On);
+	/// <summary>The "Read with my voice" row and the Record row's count (Slice 279): how many lines (or pages, for a book recorded as whole pages) are recorded, of how many, and the switch.</summary>
+	public sealed record VoiceOffer(RecordProgress Progress, bool On);
 
 	/// <summary>What the sheet shows for one book: its name, where it came from, its cover, which rows apply and the voice switch's state.</summary>
 	public sealed record Content(string Title, string OriginText, string? CoverImagePath, Color CoverFill, BookSheetPlan Plan, VoiceOffer? Voice);
@@ -270,16 +270,23 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		_title.Text = content.Title;
 		_subtitle.Text = content.OriginText;
 		ShowThumb(content);
-		_voiceRow.IsVisible = content.Plan.ShowVoice && content.Voice is not null;
 		_exportRow.IsVisible = content.Plan.ShowExport;
-		_loading = true;
-		_voice.IsOn = content.Voice?.On ?? false;
-		_loading = false;
-		_voiceHint.Text = content.Voice is null ? string.Empty : ReadingText.UseMyVoiceHint(content.Voice.Recorded, content.Voice.Pages);
+		ShowVoice(content.Plan, content.Voice);
 		ApplyTexts();
 		FitToParent(); // a hidden sheet gets no SizeChanged, so a rotation while it was closed is applied before it shows
 		IsVisible = true;
 		FocusReadNow();
+	}
+
+	/// <summary>Shows (or hides, with null) the "Read with my voice" row and the Record row's count. The gallery calls it again when the count of a long book is ready after the sheet opened (Slice 279).</summary>
+	public void ShowVoice(BookSheetPlan plan, VoiceOffer? voice)
+	{
+		_voiceRow.IsVisible = plan.ShowVoice && voice is not null;
+		_loading = true;
+		_voice.IsOn = voice?.On ?? false;
+		_loading = false;
+		_voiceHint.Text = voice is null ? string.Empty : ProgressText(voice.Progress);
+		ApplyRecordPill(voice);
 	}
 
 	// Slice 235 part B (mock Batch 46 frame 156): a keyboard user lands on "Read now" when the sheet opens. The row is a tapped Border, which WinUI does not focus by itself, so it is made a tab stop
@@ -597,22 +604,42 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		return _voiceRow;
 	}
 
-	// The Record pill, a full row (Batch 48 frame 177); it leaves the reading page for the Record screen.
+	/// <summary>"12 of 44 lines recorded" or, for a book recorded as whole pages, "5 of 16 pages recorded" (Slice 279, mock frame 188).</summary>
+	internal static string ProgressText(RecordProgress progress) => progress.Unit == RecordUnit.Lines
+		? AppResources.Format(AppResources.Record_LinesRecorded, progress.Done, progress.Total)
+		: AppResources.Format(AppResources.Record_PagesRecorded, progress.Done, progress.Total);
+
+	private const double VoiceRecordPillMinHeight = 56;
+	private readonly Label _recordTitle = new() { FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Brand), VerticalOptions = LayoutOptions.Center };
+	private readonly Label _recordCount = new() { FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Muted), IsVisible = false };
+	private readonly IconView _recordChevron = new() { Kind = IconKind.Chevron, Size = 18, StrokeWidth = 2.4, Color = DinoTokens.Get(DinoTokens.Muted), VerticalOptions = LayoutOptions.Center, IsVisible = false };
+	private readonly HorizontalStackLayout _recordContent = new() { Spacing = 8, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
+
+	// The row says "Record your voice"; once the book has recordings it becomes "Your voice" with the count under it and a chevron (mock frame 188).
+	private void ApplyRecordPill(VoiceOffer? voice)
+	{
+		bool has = voice is not null;
+		_recordTitle.Text = has ? AppResources.Record_YourVoice : AppResources.Record_Title;
+		_recordCount.Text = has ? ProgressText(voice!.Progress) : string.Empty;
+		_recordCount.IsVisible = has;
+		_recordChevron.IsVisible = has;
+		_recordContent.HorizontalOptions = has ? LayoutOptions.Start : LayoutOptions.Center;
+		_recordPill.MinimumHeightRequest = has ? VoiceRecordPillMinHeight : 0;
+		SemanticProperties.SetDescription(_recordPill, has ? $"{_recordTitle.Text}, {_recordCount.Text}" : _recordTitle.Text);
+	}
+
+	// The Record pill, a full row (Batch 48 frame 177); it leaves the shelf for the Record intro.
 	private Border RecordPill()
 	{
-		var content = new HorizontalStackLayout
-		{
-			Spacing = 6,
-			HorizontalOptions = LayoutOptions.Center,
-			VerticalOptions = LayoutOptions.Center,
-			Children =
-			{
-				new IconView { Kind = IconKind.Mic, Color = DinoTokens.Get(DinoTokens.Danger), Size = 18, StrokeWidth = 2.2, VerticalOptions = LayoutOptions.Center },
-				new Label { Text = ReadingText.RecordButton, FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Brand), VerticalOptions = LayoutOptions.Center },
-			},
-		};
+		var texts = new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { _recordTitle, _recordCount } };
+		_recordContent.Children.Add(new IconView { Kind = IconKind.Mic, Color = DinoTokens.Get(DinoTokens.Danger), Size = 20, StrokeWidth = 2.2, VerticalOptions = LayoutOptions.Center });
+		_recordContent.Children.Add(texts);
+		var content = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)], Padding = new Thickness(16, 0), VerticalOptions = LayoutOptions.Center };
+		content.Add(_recordContent, 0);
+		content.Add(_recordChevron, 1);
+		_recordTitle.Text = AppResources.Record_Title;
 		Border pill = OutlinedPill(content);
-		SemanticProperties.SetDescription(pill, ReadingText.RecordButton);
+		SemanticProperties.SetDescription(pill, AppResources.Record_Title);
 		Taps.AddTap(pill, async () =>
 		{
 			Hide();

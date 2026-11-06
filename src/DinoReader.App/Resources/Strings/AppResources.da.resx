@@ -204,26 +204,61 @@
   <!-- /Slice 110 -->
   <!-- Slice 111 -->
   <data name="Rec_Title" xml:space="preserve"><value>Optag</value></data>
-  <data name="Rec_Script" xml:space="preserve"><value>Læs ordene på siden højt, og tryk så på Stop.</value></data>
-  <data name="Rec_Recording" xml:space="preserve"><value>Optager · {0}</value></data>
   <data name="Rec_Stop" xml:space="preserve"><value>Stop</value></data>
   <data name="Rec_Start" xml:space="preserve"><value>Optag</value></data>
-  <data name="Rec_Yours" xml:space="preserve"><value>Din optagelse</value></data>
-  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
   <data name="Rec_Redo" xml:space="preserve"><value>Optag igen</value></data>
-  <data name="Rec_Delete" xml:space="preserve"><value>Slet optagelse</value></data>
-  <data name="Rec_DeleteBody" xml:space="preserve"><value>Siden bruger Dinos stemme igen.</value></data>
-  <data name="Rec_Next" xml:space="preserve"><value>Næste side</value></data>
-  <data name="Rec_Previous" xml:space="preserve"><value>Forrige side</value></data>
-  <data name="Rec_Play" xml:space="preserve"><value>Afspil din optagelse</value></data>
-  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · side {1} af {2}</value></data>
   <data name="Rec_UseVoice" xml:space="preserve"><value>Læs med min stemme</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} af {1} sider optaget. De andre sider bruger Dinos stemmer.</value></data>
-  <data name="Rec_RecordPage" xml:space="preserve"><value>Optag {0} med din stemme</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>Mikrofonen er slået fra</value></data>
   <data name="Rec_NoMic" xml:space="preserve"><value>Giv Dino Book Reader adgang til mikrofonen i enhedens indstillinger, og prøv igen.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>Optagelsen virkede ikke. Prøv igen.</value></data>
   <!-- /Slice 111 -->
+  <!-- Slice 279 -->
+  <data name="Record_Title" xml:space="preserve"><value>Optag din stemme</value></data>
+  <data name="Record_YourVoice" xml:space="preserve"><value>Din stemme</value></data>
+  <data name="Record_NoteRead" xml:space="preserve"><value>Læs ordene på hver skærm højt.</value></data>
+  <data name="Record_NoteSkip" xml:space="preserve"><value>Spring over det, du hellere vil lade Dino læse.</value></data>
+  <data name="Record_NoteStays" xml:space="preserve"><value>Din stemme bliver på denne telefon. Den bliver aldrig uploadet.</value></data>
+  <data name="Record_NoteStaysDevice" xml:space="preserve"><value>Din stemme bliver på denne enhed. Den bliver aldrig uploadet.</value></data>
+  <data name="Record_ModeCharacter" xml:space="preserve"><value>Én figur ad gangen</value></data>
+  <data name="Record_ModePage" xml:space="preserve"><value>Hele sider</value></data>
+  <data name="Record_Who" xml:space="preserve"><value>Hvem vil du optage?</value></data>
+  <data name="Record_Storyteller" xml:space="preserve"><value>Fortæller</value></data>
+  <data name="Record_Lines" xml:space="preserve"><value>{0} replikker</value></data>
+  <data name="Record_OfCount" xml:space="preserve"><value>{0} af {1}</value></data>
+  <data name="Record_Start" xml:space="preserve"><value>Start optagelsen</value></data>
+  <data name="Record_LongPages" xml:space="preserve"><value>Lange sider kommer i dele, så ordene altid kan være på skærmen.</value></data>
+  <data name="Record_Says" xml:space="preserve"><value>{0} siger:</value></data>
+  <data name="Record_LineOf" xml:space="preserve"><value>Replik {0} af {1}</value></data>
+  <data name="Record_PageOf" xml:space="preserve"><value>Side {0} af {1}</value></data>
+  <data name="Record_PagePart" xml:space="preserve"><value>Side {0} af {1} · del {2} af {3}</value></data>
+  <data name="Record_Skip" xml:space="preserve"><value>Spring over</value></data>
+  <data name="Record_Next" xml:space="preserve"><value>Næste</value></data>
+  <data name="Record_Finish" xml:space="preserve"><value>Færdig</value></data>
+  <data name="Record_Play" xml:space="preserve"><value>Afspil</value></data>
+  <data name="Record_Playing" xml:space="preserve"><value>Afspiller</value></data>
+  <data name="Record_Recorded" xml:space="preserve"><value>Optaget</value></data>
+  <data name="Record_NewTake" xml:space="preserve"><value>Ny optagelse</value></data>
+  <data name="Record_OldTake" xml:space="preserve"><value>Gammel optagelse</value></data>
+  <data name="Record_ReplacesRest" xml:space="preserve"><value>Din optagelse af resten af denne side bliver erstattet.</value></data>
+  <data name="Record_KeepOld" xml:space="preserve"><value>Behold den gamle</value></data>
+  <data name="Record_UseDino" xml:space="preserve"><value>Brug Dinos stemme</value></data>
+  <data name="Record_Undo" xml:space="preserve"><value>Fortryd</value></data>
+  <data name="Record_Change" xml:space="preserve"><value>Skift, hvordan du optager</value></data>
+  <data name="Record_Listen" xml:space="preserve"><value>Lyt og ændr</value></data>
+  <data name="Record_Rest" xml:space="preserve"><value>Optag resten</value></data>
+  <data name="Record_Again" xml:space="preserve"><value>Optag igen fra start</value></data>
+  <data name="Record_YourRecordings" xml:space="preserve"><value>Dine optagelser · {0} af {1}</value></data>
+  <data name="Record_LinesRecorded" xml:space="preserve"><value>{0} af {1} replikker optaget</value></data>
+  <data name="Record_PagesRecorded" xml:space="preserve"><value>{0} af {1} sider optaget</value></data>
+  <data name="Record_RestByDino" xml:space="preserve"><value>Resten læser Dino. Din stemme bliver på denne telefon.</value></data>
+  <data name="Record_RestByDinoDevice" xml:space="preserve"><value>Resten læser Dino. Din stemme bliver på denne enhed.</value></data>
+  <data name="Record_You" xml:space="preserve"><value>Dig</value></data>
+  <data name="Record_RemoveWarn" xml:space="preserve"><value>Dine optagelser af denne bog bliver også slettet.</value></data>
+  <data name="Record_SkipKey" xml:space="preserve"><value>Spring over · S</value></data>
+  <data name="Record_RecordKey" xml:space="preserve"><value>Optag · R</value></data>
+  <data name="Record_NextKey" xml:space="preserve"><value>Næste · →</value></data>
+  <!-- /Slice 279 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
   <!-- /Slice 113 -->

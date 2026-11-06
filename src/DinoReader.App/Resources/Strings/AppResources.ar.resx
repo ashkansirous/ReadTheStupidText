@@ -203,26 +203,61 @@
   <!-- /Slice 110 -->
   <!-- Slice 111 -->
   <data name="Rec_Title" xml:space="preserve"><value>تسجيل</value></data>
-  <data name="Rec_Script" xml:space="preserve"><value>اقرأ كلمات هذه الصفحة بصوت عالٍ، ثم اضغط إيقاف.</value></data>
-  <data name="Rec_Recording" xml:space="preserve"><value>جارٍ التسجيل · {0}</value></data>
   <data name="Rec_Stop" xml:space="preserve"><value>إيقاف</value></data>
   <data name="Rec_Start" xml:space="preserve"><value>تسجيل</value></data>
-  <data name="Rec_Yours" xml:space="preserve"><value>تسجيلك</value></data>
-  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
   <data name="Rec_Redo" xml:space="preserve"><value>إعادة التسجيل</value></data>
-  <data name="Rec_Delete" xml:space="preserve"><value>حذف التسجيل</value></data>
-  <data name="Rec_DeleteBody" xml:space="preserve"><value>ستستخدم هذه الصفحة صوت دينو مرة أخرى.</value></data>
-  <data name="Rec_Next" xml:space="preserve"><value>الصفحة التالية</value></data>
-  <data name="Rec_Previous" xml:space="preserve"><value>الصفحة السابقة</value></data>
-  <data name="Rec_Play" xml:space="preserve"><value>شغّل تسجيلك</value></data>
-  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · الصفحة {1} من {2}</value></data>
   <data name="Rec_UseVoice" xml:space="preserve"><value>اقرأ بصوتي</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>تم تسجيل {0} من {1} صفحات. باقي الصفحات تستخدم أصوات دينو.</value></data>
-  <data name="Rec_RecordPage" xml:space="preserve"><value>سجّل {0} بصوتك</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>الميكروفون مغلق</value></data>
   <data name="Rec_NoMic" xml:space="preserve"><value>اسمح بالميكروفون لتطبيق Dino Book Reader في إعدادات جهازك، ثم حاول مجدداً.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>لم ينجح التسجيل. حاول مرة أخرى.</value></data>
   <!-- /Slice 111 -->
+  <!-- Slice 279 -->
+  <data name="Record_Title" xml:space="preserve"><value>سجّل صوتك</value></data>
+  <data name="Record_YourVoice" xml:space="preserve"><value>صوتك</value></data>
+  <data name="Record_NoteRead" xml:space="preserve"><value>اقرأ بصوت عالٍ الكلمات الظاهرة على كل شاشة.</value></data>
+  <data name="Record_NoteSkip" xml:space="preserve"><value>تخطَّ أي جزء تفضّل أن يقرأه دينو.</value></data>
+  <data name="Record_NoteStays" xml:space="preserve"><value>يبقى صوتك على هذا الهاتف ولا يُرفع أبدًا.</value></data>
+  <data name="Record_NoteStaysDevice" xml:space="preserve"><value>يبقى صوتك على هذا الجهاز ولا يُرفع أبدًا.</value></data>
+  <data name="Record_ModeCharacter" xml:space="preserve"><value>شخصية واحدة في كل مرة</value></data>
+  <data name="Record_ModePage" xml:space="preserve"><value>صفحات كاملة</value></data>
+  <data name="Record_Who" xml:space="preserve"><value>من ستسجّل؟</value></data>
+  <data name="Record_Storyteller" xml:space="preserve"><value>الراوي</value></data>
+  <data name="Record_Lines" xml:space="preserve"><value>{0} أسطر</value></data>
+  <data name="Record_OfCount" xml:space="preserve"><value>{0} من {1}</value></data>
+  <data name="Record_Start" xml:space="preserve"><value>ابدأ التسجيل</value></data>
+  <data name="Record_LongPages" xml:space="preserve"><value>تأتي الصفحات الطويلة على أجزاء، لتتّسع الكلمات دائمًا على الشاشة.</value></data>
+  <data name="Record_Says" xml:space="preserve"><value>{0} يقول:</value></data>
+  <data name="Record_LineOf" xml:space="preserve"><value>السطر {0} من {1}</value></data>
+  <data name="Record_PageOf" xml:space="preserve"><value>الصفحة {0} من {1}</value></data>
+  <data name="Record_PagePart" xml:space="preserve"><value>الصفحة {0} من {1} · الجزء {2} من {3}</value></data>
+  <data name="Record_Skip" xml:space="preserve"><value>تخطَّ</value></data>
+  <data name="Record_Next" xml:space="preserve"><value>التالي</value></data>
+  <data name="Record_Finish" xml:space="preserve"><value>إنهاء</value></data>
+  <data name="Record_Play" xml:space="preserve"><value>تشغيل</value></data>
+  <data name="Record_Playing" xml:space="preserve"><value>قيد التشغيل</value></data>
+  <data name="Record_Recorded" xml:space="preserve"><value>تم التسجيل</value></data>
+  <data name="Record_NewTake" xml:space="preserve"><value>تسجيل جديد</value></data>
+  <data name="Record_OldTake" xml:space="preserve"><value>التسجيل القديم</value></data>
+  <data name="Record_ReplacesRest" xml:space="preserve"><value>سيتم استبدال تسجيلك لباقي هذه الصفحة.</value></data>
+  <data name="Record_KeepOld" xml:space="preserve"><value>أبقِ القديم</value></data>
+  <data name="Record_UseDino" xml:space="preserve"><value>استخدم صوت دينو</value></data>
+  <data name="Record_Undo" xml:space="preserve"><value>تراجع</value></data>
+  <data name="Record_Change" xml:space="preserve"><value>غيّر طريقة التسجيل</value></data>
+  <data name="Record_Listen" xml:space="preserve"><value>استمع وعدّل</value></data>
+  <data name="Record_Rest" xml:space="preserve"><value>سجّل الباقي</value></data>
+  <data name="Record_Again" xml:space="preserve"><value>سجّل من جديد من البداية</value></data>
+  <data name="Record_YourRecordings" xml:space="preserve"><value>تسجيلاتك · {0} من {1}</value></data>
+  <data name="Record_LinesRecorded" xml:space="preserve"><value>تم تسجيل {0} من {1} أسطر</value></data>
+  <data name="Record_PagesRecorded" xml:space="preserve"><value>تم تسجيل {0} من {1} صفحات</value></data>
+  <data name="Record_RestByDino" xml:space="preserve"><value>يقرأ دينو الباقي. يبقى صوتك على هذا الهاتف.</value></data>
+  <data name="Record_RestByDinoDevice" xml:space="preserve"><value>يقرأ دينو الباقي. يبقى صوتك على هذا الجهاز.</value></data>
+  <data name="Record_You" xml:space="preserve"><value>أنت</value></data>
+  <data name="Record_RemoveWarn" xml:space="preserve"><value>ستُحذف أيضًا تسجيلاتك لهذا الكتاب.</value></data>
+  <data name="Record_SkipKey" xml:space="preserve"><value>تخطَّ · S</value></data>
+  <data name="Record_RecordKey" xml:space="preserve"><value>تسجيل · R</value></data>
+  <data name="Record_NextKey" xml:space="preserve"><value>التالي · →</value></data>
+  <!-- /Slice 279 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
   <!-- /Slice 113 -->
