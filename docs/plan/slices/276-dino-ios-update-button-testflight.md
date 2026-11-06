@@ -16,6 +16,16 @@
 - [x] Unit test of the pure choice (channel → link and text).
 - [x] Android: no change (Play internal and closed tracks open the same Play page; checked, not changed). Windows: no change.
 
+#### Design (Dino Reader Batch 48 mock, frame 187, added 2026-11-06)
+
+One frame (187, line 376 of `docs/design/dino-reader/Dino Reader Batch 48 Store Only and Recording.dc.html`, 360 x 760). It agrees with the built slice. Its caption: "Frame 61 with only the button text changed (PR #853)".
+
+- **Update page, TestFlight install (187).** Title "Dino needs an update" (28px, 600). Body "Ask a grown-up to get the new version. Your books and recordings stay just as they are." (14.5px, `#5a5470`, line-height 1.45, max 280px). One full-width button pinned to the bottom: 56px high, radius 28, fill `#FF7A59`, shadow `0 5px 0 #E2583A`, white 17px 600 text. The 150px icon block with the 120px app icon is unchanged from frame 61.
+- **Button text.** "Open TestFlight" for a TestFlight install or one whose channel can't be read; "Open the App Store" for a real App Store install. Android and Windows keep "Update Dino". Matches `IosUpdateTarget` below.
+- **Settings row.** The caption says the Settings "A new version is ready" row uses the same link and text. Matches the review note below.
+- **Simplified:** status bar ("9:41", "100%") and phone outline are illustration.
+- No new strings; no open points.
+
 ## Review notes
 
 - Link: Dino's public TestFlight link `https://testflight.apple.com/join/WnF7M53D` (the one on `site/dino/index.html`), one constant in `IosUpdateTarget`. Only a positively App Store install opens the App Store page; TestFlight and unreadable channels open TestFlight (Dino has no App Store app yet).

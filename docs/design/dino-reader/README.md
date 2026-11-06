@@ -725,3 +725,55 @@ Also read these files the selection imports:
 
 Implement: `Dino Reader Batch 47 Onboarding.dc.html`
 ```
+
+## Batch 48 mock — `Dino Reader Batch 48 Store Only and Recording.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Batch 48 Store Only and Recording.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+48+Store+Only+and+Recording.dc.html>).
+- **Copied:** 2026-11-06, verbatim from `DesignSync get_file` (the `content` field, saved by a script). Its imports
+  were already in this folder (`assets/*/cover.jpg`, `assets/three-little-pigs/3.jpg` and `5.jpg`; the app icon is
+  `icons/ios/AppIcon-1024-light.png`, which the mock names `dino_reader_icons/ios/`).
+- **Covers:** Slices 276 (TestFlight update button, frame 187), 278 (store books only, frames 177, 185, 186) and 279
+  (the recording flow, frames 178-184 and 188-191). Recording frames are drawn at iPhone 8 size, 375 x 667.
+
+| # | Screen (caption) | Line |
+|---|---|---|
+| 177 | Book sheet · Record, no Cast | 34 |
+| 178 | Record intro · one character at a time | 56 |
+| 179 | Record intro · whole pages | 87 |
+| 180 | One line · ready to record | 111 |
+| 181 | One line · recording | 132 |
+| 182 | One line · recorded | 153 |
+| 183 | Whole page · part 1 of 2 | 174 |
+| 184 | Windows · one line, keyboard | 192 |
+| 188 | Corner and book sheet · "Your voice" shown | 218 |
+| 189 | Record intro · recordings already there | 244 |
+| 190 | Listen and change · a recorded line | 273 |
+| 191 | New take · keep it or go back | 295 |
+| 185 | Grown-ups' corner · no Add a book | 325 |
+| 186 | What leaves the design copy | 349 |
+| 187 | iPhone · TestFlight install | 376 |
+
+Open it in a text editor (`support.js` is not copied). To refresh: fetch again with `DesignSync get_file`,
+overwrite the copy with a script, regenerate the table. Never call `DesignSync` to read visual values; read this copy.
+
+Import prompt (verbatim, 2026-11-06):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+48+Store+Only+and+Recording.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino Reader Batch 48 Store Only and Recording.dc.html`
+
+Also read these files the selection imports:
+- `assets/gingerbread-man/cover.jpg`
+- `assets/good-enough/cover.jpg`
+- `assets/three-little-pigs/3.jpg`
+- `assets/three-little-pigs/5.jpg`
+- `assets/three-little-pigs/cover.jpg`
+- `assets/tortoise-and-hare/cover.jpg`
+- `dino_reader_icons/ios/AppIcon-1024-light.png`
+
+Implement: `Dino Reader Batch 48 Store Only and Recording.dc.html`
+```

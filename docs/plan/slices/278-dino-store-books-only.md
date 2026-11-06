@@ -84,6 +84,24 @@ repository later.
 - [ ] C1. Remove the add-book, scan, page-editor, translation, voice download, cast and narrator frames from the
   design copy in `docs/design/dino-reader/`, and the wizard's "add" step. (The new recording frames come with Slice 279.)
 
+#### Design (Dino Reader Batch 48 mock, frames 177, 185, 186, added 2026-11-06)
+
+Three frames in `docs/design/dino-reader/Dino Reader Batch 48 Store Only and Recording.dc.html` (lines 34, 325, 349). The mock mostly agrees with the plan; three Open points are at the end.
+
+- **A1 / B2, book sheet (177, line 34, 387 x 679).** Frame 172 with Cast gone. Rows: header (44 x 58 cover, "The Three Little Pigs", "Traditional · 16 pages"); "Read now" (60px); "Record your voice" (48px, outlined: 2px `#c9c0f5` border, `#5B57E8` text, red `#E5484D` mic icon 18px, full row); "Reorder" (48px); "Remove from the shelf" (46px). "From the Store" is gone: the line under the title is credit and length, because every book is a store book. Record opens the Slice 279 intro every time (its frame 178).
+- **A1, Grown-ups' corner (185, line 325, 360 x 760).** Frame 175 with "Add a book" gone. One full-row button: 52px, radius 18, fill `#5B57E8`, white 15px 600, shop icon + "Get more books". Below it the book list (Good Enough, The Three Little Pigs, The Gingerbread Man, The Tortoise and the Hare, 30px covers) and "Back to my child's shelf" (56px). Intro line "Only grown-ups see this. Your child's shelf is one tap away." The page title still says "Store".
+- **A3 (185 caption).** Own books are deleted on the first start after the update with no message to the user (the plan's one log line stays).
+- **C1, what leaves the design copy (186, line 349, a list, not a frame).** Own books: v2 add-story, Batch 17-18 frames 31-35, Batch 47 frames 170-171, corner "Add a book" (98, 175), the intro add step. Translation: Batch 22-23 frames 37 and 41; Batch 37 story-languages copy that mentions machine translation. Voices: Batch 16 frame 17, Batch 22-23 frames 48-49, Batch 24 frames 50-51, frame 169's reading-voice line and "Dino's reading voice will read it". Cast and Narrator: Batch 22-23 frames 38-40 and 42-43, Batch 24 frames 52-55, Batch 31 frame 69, Cast in frames 100 and 172. Old Record: Batch 22-23 frames 44-46 and 106's words and note (replaced by 177-184, Slice 279).
+- **B3, first run (186).** Language, first books (163-166), "Ready to read" (167). No voice download screen.
+- **A1, intro wizard (186).** Two places, read, record, languages: counters read "of 4" (record is step 3 of 4). Saved add steps map to languages.
+- **A2, story languages (frame 169, 186).** The list shows only languages every shelf book has; the audio card stays.
+- **Simplified:** 186 is a text list; status bars and phone outlines are illustration.
+- **Strings (13 languages):** new "Get more books"; remove every add-book, scan, translation, voice-download, cast and narrator string.
+
+**Open point: remap target of the intro's add step.** Plan A1: saved states map "to the next step". Mock 186: they map to languages. Default: languages.
+**Open point: translation languages.** Plan A2: a book is offered only in languages it has a bundled translation for. Mock 186 (frame 169): the list shows languages every shelf book has. Default: per book when reading, and the story-languages list as the mock says.
+**Open point: removing frames.** Plan C1 removes frames from the design copy. Mock 186: the older batch files keep their frames and get a "retired" line in the screen map; only the repo copy drops them. Default: leave the older `.dc.html` files verbatim and add a "retired by Slice 278" line per frame range to the README screen map.
+
 ## Verification
 
 - `dotnet test tests/DinoReader.Tests` passes; `dotnet test tests/ReadTheStupidText.Tests` passes unchanged and
