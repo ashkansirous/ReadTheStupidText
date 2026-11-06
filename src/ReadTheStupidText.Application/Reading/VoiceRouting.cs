@@ -147,6 +147,14 @@ public static class VoiceRouting
     public static bool PhoneReads(bool phoneVoiceChosen, bool packReady) => phoneVoiceChosen || !packReady;
 
     /// <summary>
+    /// Whether a read counts as "the phone voice was the person's choice, but another voice reads" (Slice 273 part B): they chose the
+    /// phone voice (before any move off it for the app language), the read goes ahead, and the phone voice is not the one that speaks.
+    /// A blocked read is not this case (it counts no_voice instead).
+    /// </summary>
+    public static bool PhoneChoiceDropped(bool personChosePhone, VoiceRoute route, bool phoneReads) =>
+        personChosePhone && route == VoiceRoute.Read && !phoneReads;
+
+    /// <summary>
     /// What happens to a read in the reading language (Slice 90): the user's phone-voice choice is kept
     /// when the phone can speak it; otherwise an installed natural pack for that language reads; otherwise
     /// the phone voice if it can; else the read is blocked. A voice for another language never reads.

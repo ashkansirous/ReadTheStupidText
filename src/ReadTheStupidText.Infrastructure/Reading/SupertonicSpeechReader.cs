@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 using Windows.Media.Core;
 using Windows.Media.Playback;
@@ -55,6 +56,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
 
     private readonly IVoiceModelService _model;
     private readonly ISystemLog _systemLog;
+    private readonly IFallbackSink _fallbacks; // Slice 273 part B
     private readonly AudioChunkPaths _audioPaths;
     private readonly NeuralSentenceSource _sentences;
     private readonly ReadTimingTracker _timing = new();
@@ -116,13 +118,14 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
 
     private long _lastTimingRaiseTicks;
 
-    public SupertonicSpeechReader(IVoiceModelService model, ISystemLog systemLog, AudioChunkPaths audioPaths)
+    public SupertonicSpeechReader(IVoiceModelService model, ISystemLog systemLog, AudioChunkPaths audioPaths, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance; // Slice 273 part B
         _stall = new StallReporter(this);
         _model = model;
         _systemLog = systemLog;
         _audioPaths = audioPaths;
-        _sentences = new NeuralSentenceSource(audioPaths.SentenceFolder, systemLog, MaxSynthesisConcurrency, paths => _engines.Acquire(paths));
+        _sentences = new NeuralSentenceSource(audioPaths.SentenceFolder, systemLog, MaxSynthesisConcurrency, paths => _engines.Acquire(paths), fallbacks);
         _player.MediaOpened += OnMediaOpened;
         _player.MediaEnded += OnMediaEnded;
         _player.PlaybackSession.PlaybackStateChanged += OnPlaybackStateChanged;
@@ -1021,6 +1024,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
             // A pack that is "ready" but cannot be loaded (files gone, native failure): the composite
             // reads with the Windows voice, and the model re-checks the installed packs.
             _systemLog.Warning("the neural engine could not be built", null, ex);
+            _fallbacks.Report(FallbackArea.Speech, FallbackReason.EngineBuildFailed); // Slice 273 part B
             RefreshModelInBackground();
             throw new NeuralEngineUnavailableException(ex);
         }

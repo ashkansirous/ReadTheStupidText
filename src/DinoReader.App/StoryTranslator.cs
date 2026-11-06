@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Translation;
+using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
+using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
 using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Mobile.Shared.ModelDownload;
 using ReadTheStupidText.Mobile.Shared.Network;
@@ -126,6 +128,7 @@ public sealed class StoryTranslator
 		if (!live && BundledTranslations.MissesAny(story, target, pieces.Select(p => p.Segment.Text)))
 		{
 			// A table with holes and nothing to fill them: reading half in one language would be worse than the source.
+			Fell(story, FallbackReason.TranslationSkipped, reading);
 			return new Outcome(pieces, false);
 		}
 
@@ -143,9 +146,18 @@ public sealed class StoryTranslator
 		{
 			Debug.WriteLine($"Dino Reader translation skipped, language model missing: {ex.Message}");
 			ForgetGonePacksInBackground(source, target); // the record said ready but the engine says a model is gone; the read does not wait for the check
+			if (!ex.FallbackReported)
+			{
+				Fell(story, FallbackReason.TranslationModelMissing, reading); // a pack download that failed was already counted where it failed
+			}
+
 			return new Outcome(pieces, false);
 		}
 	}
+
+	// Slice 273 part B: counts that a translated read was left as written, about this book and the language it was to be read in.
+	private void Fell(Story story, string reason, string reading) =>
+		(_services.GetService(typeof(UsageCounter)) as UsageCounter)?.RecordFallback(story, FallbackArea.Translation, reason, reading);
 
 	/// <summary>
 	/// The title the shelf shows (Slice 159): in the grown-up's language, from the book's own table (which holds the title an own book was
@@ -189,9 +201,14 @@ public sealed class StoryTranslator
 			string translated = (await PieceAsync(story.Title, UiLanguage.Resolve(story.Language), target, cancellationToken)).Trim();
 			return translated.Length > 0 ? translated : story.Title;
 		}
-		catch (TranslationModelUnavailableException)
+		catch (TranslationModelUnavailableException ex)
 		{
 			ForgetGonePacksInBackground(UiLanguage.Resolve(story.Language), target);
+			if (!ex.FallbackReported)
+			{
+				Fell(story, FallbackReason.TranslationModelMissing, reading);
+			}
+
 			return story.Title;
 		}
 	}
@@ -375,7 +392,7 @@ public sealed class StoryTranslator
 		{
 			Debug.WriteLine($"Dino Reader could not save a translation, language model missing: {ex.Message}");
 			await ForgetGonePacksAsync(source, language, CancellationToken.None);
-			return false;
+			return false; // not a fallback: a grown-up saving a translation, no read fell back to the original
 		}
 
 		return await StoreTableAsync(library, story.Id, language, table);

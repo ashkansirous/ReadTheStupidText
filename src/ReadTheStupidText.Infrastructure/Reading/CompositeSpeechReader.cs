@@ -1,4 +1,5 @@
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Infrastructure.Reading;
@@ -16,12 +17,14 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposab
     private readonly SupertonicSpeechReader _neural;
     private readonly SpeechReader _fallback;
     private readonly IVoiceModelService _model;
+    private readonly PerReadFallbacks _fallbacks; // Slice 273 part B: at most one fallback row per read
     private ISpeechReader _active;
     private bool _useSystemVoice;
     private volatile bool _streamUnavailable;
 
-    public CompositeSpeechReader(SupertonicSpeechReader neural, SpeechReader fallback, IVoiceModelService model)
+    public CompositeSpeechReader(SupertonicSpeechReader neural, SpeechReader fallback, IVoiceModelService model, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = PerReadFallbacks.Of(fallbacks ?? NoFallbackSink.Instance);
         _neural = neural;
         _fallback = fallback;
         _model = model;
@@ -70,14 +73,32 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposab
                 await _neural.SpeakAsync(text, activityId);
                 return;
             }
-            catch (NeuralEngineUnavailableException)
+            catch (NeuralEngineUnavailableException ex)
             {
                 // The model went away after the readiness check: read with the Windows voice.
+                ReportUnavailable(ex, FallbackReason.NeuralUnavailable, activityId);
             }
+        }
+        else if (!_useSystemVoice)
+        {
+            _fallbacks.Report(activityId, FallbackArea.Speech, FallbackReason.NeuralNotReady); // Slice 273 part B: the model is not ready, the Windows voice reads
         }
 
         _active = _fallback;
         await _fallback.SpeakAsync(text, activityId);
+    }
+
+    // Slice 273 part B: one read is one fallback row, decided inside that read (its activity id): the first fallback point it hits is its reason, and the whole-text retry of a streamed
+    // read is the same read. An engine that failed to build (an inner exception) was already counted as engine_build_failed where it happened, so the read is only marked as counted.
+    private void ReportUnavailable(NeuralEngineUnavailableException ex, string reason, int? activityId)
+    {
+        if (ex.InnerException is null)
+        {
+            _fallbacks.Report(activityId, FallbackArea.Speech, reason);
+            return;
+        }
+
+        _fallbacks.MarkReported(activityId);
     }
 
     // Slice 176: text with nothing to speak (blank, whitespace, invisible characters) never reaches an engine, which
@@ -108,6 +129,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposab
         }
         catch (NeuralEngineUnavailableException ex)
         {
+            ReportUnavailable(ex, FallbackReason.StreamUnavailable, activityId); // the whole text is read by the Windows voice
             _streamUnavailable = true;
             _active = _fallback;
             throw new StreamingUnavailableException(ex);

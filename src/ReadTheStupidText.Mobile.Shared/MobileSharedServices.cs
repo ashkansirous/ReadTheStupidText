@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Usage;
 
 namespace ReadTheStupidText.Mobile.Shared;
 
@@ -42,6 +43,7 @@ public static partial class MobileSharedServices
 		return new CompositeSpeechReader(
 			platform.CreateNeuralReader(),
 			platform.CreateFallbackReader(),
-			services.GetRequiredService<IVoiceModelService>());
+			services.GetRequiredService<IVoiceModelService>(),
+			services.GetService<IFallbackSink>()); // Slice 273 part B: the app's sink, or none
 	}
 }

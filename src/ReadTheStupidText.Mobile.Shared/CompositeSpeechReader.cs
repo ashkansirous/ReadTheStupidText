@@ -1,4 +1,5 @@
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Mobile.Shared;
@@ -16,6 +17,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
     private readonly ISpeechReader _neural;
     private readonly ISpeechReader _fallback;
     private readonly IVoiceModelService _model;
+    private readonly PerReadFallbacks _fallbacks; // Slice 273 part B: at most one fallback row per read
     private ISpeechReader _active;
     private bool _useSystemVoice;
     private string? _appReadingLanguage;
@@ -24,8 +26,9 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
     /// <summary>The app's language for an app that never calls <see cref="SetReadingLanguage"/> (Dino Reader): where the phone voice returns after a scoped read in another language.</summary>
     public Func<string?>? AppLanguage { get; set; }
 
-    public CompositeSpeechReader(ISpeechReader neural, ISpeechReader fallback, IVoiceModelService model)
+    public CompositeSpeechReader(ISpeechReader neural, ISpeechReader fallback, IVoiceModelService model, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = PerReadFallbacks.Of(fallbacks ?? NoFallbackSink.Instance);
         _neural = neural;
         _fallback = fallback;
         _model = model;
@@ -90,14 +93,36 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
                 await _neural.SpeakAsync(text, activityId);
                 return;
             }
-            catch (NeuralEngineUnavailableException)
+            catch (NeuralEngineUnavailableException ex)
             {
                 // The model went away after the readiness check: read with the phone voice.
+                FellUnavailable(ex, activityId);
             }
+        }
+        else if (!_useSystemVoice)
+        {
+            Fell(activityId, FallbackReason.NeuralNotReady); // the natural voice is not ready yet (Slice 273): the phone voice reads
         }
 
         _active = _fallback;
         await _fallback.SpeakAsync(text, activityId);
+    }
+
+    // Slice 273 part B: one count that the natural voice did not read, at most one per read (its activity id, shared with the phone voice reader, which adds nothing for a read counted here).
+    // The language is the app's (unscoped reads) or the scope's.
+    private void Fell(int? activityId, string reason, string? language = null) =>
+        _fallbacks.Report(activityId, FallbackArea.Speech, reason, language ?? _appReadingLanguage ?? AppLanguage?.Invoke());
+
+    // An engine that failed to build (an inner exception) was already counted as engine_build_failed where it happened: one failure is one row.
+    private void FellUnavailable(NeuralEngineUnavailableException ex, int? activityId, string? language = null)
+    {
+        if (ex.InnerException is null)
+        {
+            Fell(activityId, FallbackReason.NeuralUnavailable, language);
+            return;
+        }
+
+        _fallbacks.MarkReported(activityId);
     }
 
     public bool SupportsModelScope => _neural is IModelScopedReader;
@@ -125,10 +150,15 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
                 await scoped.SpeakAsync(text, model, activityId);
                 return;
             }
-            catch (NeuralEngineUnavailableException)
+            catch (NeuralEngineUnavailableException ex)
             {
                 // The model went away after the page resolved it: read with the phone voice.
+                FellUnavailable(ex, activityId, scope.Language);
             }
+        }
+        else if (!scope.PhoneVoice)
+        {
+            Fell(activityId, FallbackReason.NeuralNotReady, scope.Language); // no pack, or an engine that cannot read with a named pack: a capability gap, not a model that went away
         }
 
         _active = _fallback;
@@ -156,10 +186,15 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
                 await scoped.SpeakSegmentsAsync(segments, model, activityId);
                 return;
             }
-            catch (NeuralEngineUnavailableException)
+            catch (NeuralEngineUnavailableException ex)
             {
                 // The model went away after the page resolved it: read with the phone voice.
+                FellUnavailable(ex, activityId, scope.Language);
             }
+        }
+        else if (!scope.PhoneVoice && !_useSystemVoice)
+        {
+            Fell(activityId, scope.Model is null ? FallbackReason.NeuralNotReady : FallbackReason.SegmentsUnsupported, scope.Language); // the characters' voices are lost: the joined text is read in the phone voice
         }
 
         _active = _fallback;
@@ -219,10 +254,15 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
                 await _neural.SpeakSegmentsAsync(segments, activityId);
                 return;
             }
-            catch (NeuralEngineUnavailableException)
+            catch (NeuralEngineUnavailableException ex)
             {
                 // The model went away after the readiness check: read with the phone voice.
+                FellUnavailable(ex, activityId);
             }
+        }
+        else if (!_useSystemVoice)
+        {
+            Fell(activityId, _model.IsReady ? FallbackReason.SegmentsUnsupported : FallbackReason.NeuralNotReady); // joined text in the phone voice: the characters lose their voices
         }
 
         RestoreAppReadingLanguage(); // an earlier scoped read (Slice 173) may have pointed the phone voice at another language

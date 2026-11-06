@@ -3,6 +3,7 @@ using System.Diagnostics;
 using AndroidMedia = Android.Media;
 using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Shared.Crashes;
 using SherpaOnnx;
@@ -74,6 +75,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
 
     private readonly IVoiceModelService _model;
     private readonly ISystemLog _log;
+    private readonly IFallbackSink _fallbacks;
     private readonly SentenceAudioSource _sentences;
     private readonly ReadTimingTracker _timing = new();
     private readonly SentenceProgress _sentenceProgress = new();
@@ -204,8 +206,9 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
     }
 
-    public AndroidSupertonicSpeechReader(IVoiceModelService model, ISystemLog? log = null)
+    public AndroidSupertonicSpeechReader(IVoiceModelService model, ISystemLog? log = null, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance; // Slice 273 part B
         _stall = new StallReporter(this);
         _model = model;
         _log = log ?? new AndroidSystemLog();
@@ -877,7 +880,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
                     return await TakeAsync(engine, phrase, voice.SpeakerId, pace, singleThread: true);
                 }
                 : null,
-                nanRescue: KokoroEngineConfig.NanRescue);
+                nanRescue: KokoroEngineConfig.NanRescue, fallbacks: _fallbacks, language: engine.Model.Language);
         }
         finally
         {
@@ -1336,6 +1339,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         {
             Volatile.Write(ref _failedModelKey, ModelKey(paths));
             _log.Warning("the neural engine could not be built", error: ex);
+            _fallbacks.Report(FallbackArea.Speech, FallbackReason.EngineBuildFailed); // Slice 273 part B
             RefreshModelInBackground();
             throw new NeuralEngineUnavailableException(ex);
         }

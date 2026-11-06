@@ -1,5 +1,6 @@
 using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 using SherpaOnnx;
 
@@ -20,8 +21,11 @@ internal sealed class NeuralSentenceSource
     private readonly SemaphoreSlim _slots;
     private readonly Func<VoiceModelPaths, BuiltEngine?> _acquireEngine;
 
-    public NeuralSentenceSource(string folder, ISystemLog log, int maxConcurrency, Func<VoiceModelPaths, BuiltEngine?> acquireEngine)
+    private readonly IFallbackSink? _fallbacks;
+
+    public NeuralSentenceSource(string folder, ISystemLog log, int maxConcurrency, Func<VoiceModelPaths, BuiltEngine?> acquireEngine, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks; // Slice 273 part B: a silent take that was retaken or replaced is a fallback
         _acquireEngine = acquireEngine;
         _sentences = new SentenceAudioSource(new SentenceAudioCache(new FileSentenceStore(folder)), log);
         _log = log;
@@ -108,7 +112,7 @@ internal sealed class NeuralSentenceSource
                 sentence, voice.Id, pace, SiblingVoice.IsDropProne(voice), phrase => TakeAsync(engine, phrase, voice.SpeakerId, pace),
                 message => _log.Warning(message, activityId), token, phrase => SiblingTakeAsync(engine, phrase, voice, pace, activityId, token),
                 message => _log.Debug(message, activityId),
-                probe: ShortLineProbe.InThisBuild);
+                probe: ShortLineProbe.InThisBuild, fallbacks: _fallbacks, language: engine.Model.Language);
         }
         finally
         {

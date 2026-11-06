@@ -415,6 +415,7 @@ public partial class ReaderPage : ContentPage
             }
 
             CountReadStarted(text, plan);
+            ReportPhoneCannotSpeak(id, plan);
             await SpeakPlannedAsync(text, plan);
         }
         catch (Exception ex)
@@ -443,7 +444,7 @@ public partial class ReaderPage : ContentPage
     // Who reads one read and in which language, decided without touching the stored voice choice or
     // the app-language model (Slice 90).
     // Scope is null for the app language: that read takes the ordinary neural path, head start included.
-    private sealed record VoicePlan(string Language, ReadVoiceScope? Scope, VoiceRoute Route, VoiceModelPaths? Pack, bool PhoneReads);
+    private sealed record VoicePlan(string Language, ReadVoiceScope? Scope, VoiceRoute Route, VoiceModelPaths? Pack, bool PhoneReads, bool PhoneChoiceDropped = false);
 
     // The last head-start/label plan: same inputs, same answer, so typing in one language plans once.
     private sealed record PlanKey(string Language, string VoiceId, string? PackRoot, string? PackVersion, bool ScopedReads, bool Downloading, string AppLanguage);
@@ -518,6 +519,7 @@ public partial class ReaderPage : ContentPage
     private async Task<VoicePlan> BuildPlanAsync(string language, bool appLanguage, VoiceModelPaths? pack, bool scopedReads, bool downloading, bool atPlay)
     {
         VoiceAvailability voices = await PlatformVoiceAvailability.BuildAsync(_platform);
+        bool personChosePhone = _settings.VoiceId == SystemVoice.Id; // before the app-language move below, which rewrites the setting
         if (atPlay && appLanguage)
         {
             LeavePhoneVoiceIfItCannotReadTheApp(voices);
@@ -531,8 +533,10 @@ public partial class ReaderPage : ContentPage
         VoiceRoute route = VoiceRouting.Resolve(phoneChosen, packUsable, phoneCan, downloading);
         bool phoneReads = VoiceRouting.PhoneReads(phoneChosen, packUsable);
         VoiceModelPaths? usedPack = packUsable ? pack : null;
+        // Slice 273 part B: only recorded here; reported once per read in SpeakWithLoadingAsync, after the read is confirmed current.
+        bool phoneChoiceDropped = atPlay && VoiceRouting.PhoneChoiceDropped(personChosePhone, route, phoneReads);
         ReadVoiceScope? scope = VoiceRouting.UsesScope(appLanguage) ? new ReadVoiceScope(usedPack, phoneReads, language) : null;
-        return new VoicePlan(language, scope, route, usedPack, phoneReads);
+        return new VoicePlan(language, scope, route, usedPack, phoneReads, phoneChoiceDropped);
     }
 
     // When the phone voice would speak and is known to have none for the language, say so rather than
@@ -545,10 +549,20 @@ public partial class ReaderPage : ContentPage
         }
 
         _firstAudioClock = null; // a blocked read never had a first sound to wait for
+        PerReadFallbacks.Of(_usage.Fallbacks).Report(id, FallbackArea.Speech, FallbackReason.NoVoice, plan.Language); // Slice 273 part B: no voice reads this language (still downloading, or none); the only row of a blocked read
         ClearPendingReadIfCurrent(id);
         string message = plan.Route == VoiceRoute.Downloading ? AppResources.Reader_VoiceDownloadingMessage : AppResources.Reader_NoVoiceMessage;
         await AlertAsync(AppResources.Reader_VoiceUnavailableTitle, AppResources.Format(message, ReadingLanguageName(plan.Language)));
         return false;
+    }
+
+    // Slice 273 part B: the person chose the phone voice and another voice reads. The one place it is reported, once per read.
+    private void ReportPhoneCannotSpeak(int id, VoicePlan plan)
+    {
+        if (plan.PhoneChoiceDropped)
+        {
+            PerReadFallbacks.Of(_usage.Fallbacks).Report(id, FallbackArea.Speech, FallbackReason.PhoneCannotSpeak, plan.Language);
+        }
     }
 
     private string ReadingLanguageName(string language) =>

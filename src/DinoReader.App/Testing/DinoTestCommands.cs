@@ -34,6 +34,7 @@ internal static partial class DinoTestCommands
 	private const string StageBookUpdateName = "stage-book-update";
 	private const string InstallAudioPackName = "install-audio-pack";
 	private const string FetchAudioPackName = "fetch-audio-pack";
+	private const string ForceFallbackName = "force-fallback";
 	private const string MissKey = "miss";
 	private const string MissTextMismatch = "text_mismatch";
 	private const int MismatchEvery = 3;
@@ -84,6 +85,11 @@ internal static partial class DinoTestCommands
 		{
 			_ = InstallAudioPackAsync(command.Get(IdKey, string.Empty), command.Get(TestHookDispatcher.LanguageKey, string.Empty), command.Get(MissKey, string.Empty) == MissTextMismatch);
 			return StartedOutcome;
+		}
+
+		if (command.Name == ForceFallbackName)
+		{
+			return ForceFallback(command.Get(TestHookDispatcher.LanguageKey, string.Empty));
 		}
 
 		if (command.Name == FetchAudioPackName)
@@ -139,6 +145,15 @@ internal static partial class DinoTestCommands
 
 		_ = OpenAsync(command);
 		return TestHookDispatcher.Ok;
+	}
+
+	// Slice 273 part B: sends one speech fallback (neural_not_ready) through the app's registered IFallbackSink, the same object the shared readers and translators report to, so a flow sees the
+	// `[Usage] fallback speech:neural_not_ready times=1 queued` line without depending on which voice packs the emulator holds. Logs "HOOK force-fallback ok <lang>".
+	private static string ForceFallback(string language)
+	{
+		var sink = IPlatformApplication.Current!.Services.GetRequiredService<ReadTheStupidText.Application.Usage.IFallbackSink>();
+		sink.Report(ReadTheStupidText.Application.Usage.FallbackArea.Speech, ReadTheStupidText.Application.Usage.FallbackReason.NeuralNotReady, language.Length == 0 ? null : language);
+		return $"{TestHookDispatcher.Ok} {language}";
 	}
 
 	// Slice 209: the Language page's pick path (LanguageChoice.Apply: screens' culture and stored UI language, then SpokenLanguage.Use for the voice pack as a grown-up's tap),

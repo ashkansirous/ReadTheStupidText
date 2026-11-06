@@ -91,7 +91,7 @@ public sealed class UsageCounter
 			return;
 		}
 
-		string readIn = language ?? story.Language;
+		string readIn = NormalisedLanguage(language ?? story.Language);
 		lock (_fallbackStories)
 		{
 			_fallbackStories[(story.Id, readIn)] = (story, language);
@@ -108,11 +108,49 @@ public sealed class UsageCounter
 		}
 	}
 
+	/// <summary>
+	/// Slice 273 part B: counts a fallback that is about no book (a speech or translation fallback with no story at hand), in <paramref name="language"/> when known. Same once-per-session rule as
+	/// <see cref="RecordFallback"/>, with the book left empty in the tally.
+	/// </summary>
+	public void RecordGeneralFallback(string area, string reason, string? language = null)
+	{
+		string? detail = FallbackUsage.Detail(area, reason);
+		if (detail is null)
+		{
+			return;
+		}
+
+		string readIn = NormalisedLanguage(language);
+		int times = _fallbacks.Note(area, reason, string.Empty, readIn);
+		bool first = FallbackTally.IsFirst(times);
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] fallback {detail} times={times} {(first ? "queued" : "counted, sent with the session flush")}");
+#endif
+		if (first)
+		{
+			RecordGeneral(UsageEventName.Fallback, readIn.Length == 0 ? UsageEvent.NoLanguage : readIn, detail, times);
+		}
+	}
+
+	// The tally key and the event use one language code ("en-US" and "en" are one kind): the primary subtag, else the text as given.
+	private static string NormalisedLanguage(string? language) =>
+		ReadTheStupidText.Application.Usage.UsageEvents.Language(language) ?? language ?? string.Empty;
+
 	// Slice 273: a fallback that happened again gets one more row with the session total, queued just before the flush.
 	private void QueueFallbackRepeats()
 	{
 		foreach (FallbackTotal total in _fallbacks.TakeRepeats())
 		{
+			if (total.Book.Length == 0)
+			{
+				if (FallbackUsage.Detail(total.Area, total.Reason) is { } general)
+				{
+					RecordGeneral(UsageEventName.Fallback, total.Language.Length == 0 ? UsageEvent.NoLanguage : total.Language, general, total.Count);
+				}
+
+				continue;
+			}
+
 			(Story story, string? language) known;
 			lock (_fallbackStories)
 			{
@@ -149,9 +187,9 @@ public sealed class UsageCounter
 			.ToList());
 
 	/// <summary>Queues a count about no book (a voice change, a launch, a language change); <paramref name="language"/> is the one the count is about.</summary>
-	public void RecordGeneral(string name, string language, string detail = "") =>
+	public void RecordGeneral(string name, string language, string detail = "", int? count = null) =>
 		_sender.Enqueue((sampleRate, now) =>
-			Stamp(UsageEvent.ForNoBook(name, language, detail, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now)));
+			Stamp(UsageEvent.ForNoBook(name, language, detail, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now) with { Count = count }));
 
 	/// <summary>Slice 267: queues a count about one store book by its package id (never its title), in <paramref name="language"/>, with a closed <paramref name="detail"/> (an audio pack download's outcome).</summary>
 	public void RecordShelfBook(string name, string bookId, string language, string detail) =>

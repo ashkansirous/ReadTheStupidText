@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Android.OS;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 using AndroidTts = Android.Speech.Tts.TextToSpeech;
 using AndroidVoice = Android.Speech.Tts.Voice;
@@ -62,9 +63,12 @@ public sealed class AndroidSpeechReader : Java.Lang.Object, ISpeechReader, IRead
     private int _failedStarts;
     private long _speakStartTimestamp;
 
-    public AndroidSpeechReader(Android.Content.Context context)
+    private readonly PerReadFallbacks _fallbacks; // shared with the composite: one row per read
+
+    public AndroidSpeechReader(Android.Content.Context context, IFallbackSink? fallbacks = null)
     {
         _context = context;
+        _fallbacks = PerReadFallbacks.Of(fallbacks ?? NoFallbackSink.Instance); // Slice 273 part B
     }
 
     public event EventHandler<PlaybackState>? StateChanged;
@@ -95,7 +99,7 @@ public sealed class AndroidSpeechReader : Java.Lang.Object, ISpeechReader, IRead
     {
         await WarmUpAsync();
 
-        ApplyReadingLanguage();
+        ApplyReadingLanguage(activityId);
         _text = text;
         ChunkChanged?.Invoke(this, new ReadChunk(0, 1, text, 0, text.Length));
         SpeakFrom(0);
@@ -192,7 +196,7 @@ public sealed class AndroidSpeechReader : Java.Lang.Object, ISpeechReader, IRead
     // locale rather than read in whatever the last read left behind. SetLanguage may also drop a
     // chosen voice, so that voice is applied again once the language is set, on either path, when
     // it speaks the language now in force.
-    private void ApplyReadingLanguage()
+    private void ApplyReadingLanguage(int? activityId)
     {
         if (_readingLanguage is null || _tts is null)
         {
@@ -202,6 +206,7 @@ public sealed class AndroidSpeechReader : Java.Lang.Object, ISpeechReader, IRead
         using var locale = new JavaLocale(_readingLanguage);
         if (_tts.SetLanguage(locale) < LanguageAvailableResult.Available)
         {
+            _fallbacks.Report(activityId, FallbackArea.Speech, FallbackReason.PhoneLanguageMissing, _readingLanguage); // Slice 273 part B: the device voice reads the text instead (speak path only; a read the composite counted adds nothing)
             _tts.SetLanguage(JavaLocale.Default);
             ReapplyChosenVoice(JavaLocale.Default.Language ?? string.Empty);
             return;

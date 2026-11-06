@@ -144,8 +144,10 @@ public sealed partial class ReadAloudService : IDisposable
         IHeadStart? headStart = null,
         ReadTranslator? translation = null,
         IUsageRecorder? usage = null,
-        IReadGate? readGate = null)
+        IReadGate? readGate = null,
+        IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance; // Slice 273 part B
         _readGate = readGate;
         _reader = reader;
         _clipboard = clipboard;

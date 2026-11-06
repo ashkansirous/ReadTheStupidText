@@ -50,8 +50,19 @@ const STORY_LANGUAGE_WHERE = ["intro", "settings"] as const;
 const PACK_OUTCOMES = ["done", "failed", "cancelled"] as const;
 const READ_VOICES = ["premade", "partial", "device:no_pack", "device:pack_failed", "device:text_mismatch", "device:clip_missing"] as const;
 // Slice 273: the `fallback` count, one per (area, reason) a feature fell back for. Both apps send the same two closed lists (the app's FallbackArea and FallbackReason; a test keeps them the same). Later parts append inside their own block.
-export const FALLBACK_AREAS = ["premade_audio"] as const;
-export const FALLBACK_REASONS = ["no_pack", "pack_failed", "text_mismatch", "clip_missing", "partial"] as const;
+export const FALLBACK_AREAS = [
+  "premade_audio",
+  // part B: speech, voices and translation
+  "speech", "translation",
+] as const;
+export const FALLBACK_REASONS = [
+  "no_pack", "pack_failed", "text_mismatch", "clip_missing", "partial",
+  // part B, speech
+  "neural_not_ready", "neural_unavailable", "stream_unavailable", "engine_build_failed", "segments_unsupported", "phone_cannot_speak", "no_voice", "silent_retake", "silent_sibling", "silent_gave_up",
+  "voice_not_in_roster", "recording_unplayable", "phone_language_missing",
+  // part B, translation
+  "translation_timeout", "translation_pack_missing", "translation_error", "stream_plan_failed", "stream_partial", "translation_model_missing", "translation_skipped", "translation_pack_failed",
+] as const;
 const MAX_COUNT = 1_000_000;
 const NO_COUNT = -1;
 const AUDIO_PACK_OUTCOMES = ["started", "done", "failed:network", "failed:size", "failed:unzip", "failed:clip", "failed:missing", "failed:storage"] as const;

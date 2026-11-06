@@ -49,7 +49,8 @@ public static partial class MobileSharedServices
 		services.AddSingleton<IosNeuralReaderFactory>(provider =>
 		{
 			var model = provider.GetRequiredService<IVoiceModelService>();
-			return () => new IosSupertonicSpeechReader(model);
+			var fallbacks = provider.GetService<ReadTheStupidText.Application.Usage.IFallbackSink>(); // Slice 273 part B
+			return () => new IosSupertonicSpeechReader(model, fallbacks: fallbacks);
 		});
 	}
 }

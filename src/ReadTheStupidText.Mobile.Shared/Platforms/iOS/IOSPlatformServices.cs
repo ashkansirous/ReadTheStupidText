@@ -1,5 +1,6 @@
 using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 
 namespace ReadTheStupidText.Mobile.Shared;
 
@@ -15,8 +16,11 @@ public sealed class IOSPlatformServices : IPlatformServices
     private AvSpeechReader? _systemReader;
 
     // Both are optional: DI passes the default (null) for a service the app did not register.
-    public IOSPlatformServices(IosNeuralReaderFactory? neuralFactory = null, IImageTextExtractor? ocr = null)
+    private readonly IFallbackSink? _fallbacks;
+
+    public IOSPlatformServices(IosNeuralReaderFactory? neuralFactory = null, IImageTextExtractor? ocr = null, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks; // Slice 273 part B
         _neuralFactory = neuralFactory;
         _hasTextExtractor = ocr is not null;
     }
@@ -37,5 +41,5 @@ public sealed class IOSPlatformServices : IPlatformServices
     public Task<IReadOnlyCollection<string>?> PhoneVoiceLanguagesAsync() =>
         Task.FromResult<IReadOnlyCollection<string>?>(AvSpeechReader.InstalledLanguages());
 
-    private AvSpeechReader SystemReader() => _systemReader ??= new AvSpeechReader();
+    private AvSpeechReader SystemReader() => _systemReader ??= new AvSpeechReader(_fallbacks);
 }

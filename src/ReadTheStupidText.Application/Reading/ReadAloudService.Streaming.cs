@@ -88,6 +88,7 @@ public sealed partial class ReadAloudService
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _systemLog.Warning("streamed translation could not start; translating the whole text", entry.Id, ex);
+            _fallbacks.Report(FallbackArea.Translation, FallbackReason.StreamPlanFailed); // Slice 273 part B
             return null;
         }
     }
@@ -176,6 +177,7 @@ public sealed partial class ReadAloudService
         catch (Exception ex)
         {
             _systemLog.Warning("streamed translation stopped; reading what was translated", entry.Id, ex);
+            // Not counted here: a translator failure is already reported once by TranslationStream.Fail, and any other exception (a reader or UI handler) is no translation fallback.
         }
         finally
         {

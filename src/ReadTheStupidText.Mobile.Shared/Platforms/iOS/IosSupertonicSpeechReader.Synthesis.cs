@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 using SherpaOnnx;
 
@@ -106,7 +107,7 @@ public sealed partial class IosSupertonicSpeechReader
                     return await TakeAsync(engine, phrase, voice.SpeakerId, pace, singleThread: true);
                 }
                 : null,
-                nanRescue: KokoroEngineConfig.NanRescue);
+                nanRescue: KokoroEngineConfig.NanRescue, fallbacks: _fallbacks, language: engine.Model.Language);
         }
         finally
         {
@@ -236,6 +237,7 @@ public sealed partial class IosSupertonicSpeechReader
         {
             Volatile.Write(ref _failedModelKey, ModelKey(paths));
             _log.Warning("the neural engine could not be built", error: ex);
+            _fallbacks.Report(FallbackArea.Speech, FallbackReason.EngineBuildFailed); // Slice 273 part B
             RefreshModelInBackground();
             throw new NeuralEngineUnavailableException(ex);
         }

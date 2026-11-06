@@ -1,0 +1,20 @@
+using ReadTheStupidText.Application.Usage;
+
+namespace ReadTheStupidText.Mobile.Shared.Usage;
+
+/// <summary>
+/// Read The Stupid Text's phone <see cref="IFallbackSink"/> (Slice 273 part B): hands each fallback to the shared <see cref="FallbackReporter"/> and, in a Debug build only, writes one
+/// <c>[Usage] fallback &lt;area&gt;:&lt;reason&gt;</c> line to the test-hook log, so a device flow can prove which fallback fired. Never throws.
+/// </summary>
+internal sealed class LoggingFallbackSink(FallbackReporter reporter) : IFallbackSink
+{
+    internal FallbackReporter Reporter { get; } = reporter;
+
+    public void Report(string area, string reason, string? language = null)
+    {
+#if DEBUG
+        ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] fallback {area}:{reason}");
+#endif
+        Reporter.Report(area, reason, language);
+    }
+}

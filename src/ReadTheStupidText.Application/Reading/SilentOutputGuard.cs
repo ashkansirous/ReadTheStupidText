@@ -1,4 +1,5 @@
 using System.Globalization;
+using ReadTheStupidText.Application.Usage;
 
 namespace ReadTheStupidText.Application.Reading;
 
@@ -55,7 +56,7 @@ public static class SilentOutputGuard
     public static async Task<RescueResult> RescueAsync(
         string text, string voiceId, double pace, Func<Task<SpokenTake>> generate, Action<string> report,
         CancellationToken token = default, Func<Task<SpokenTake?>>? fallback = null, Action<string>? debug = null,
-        Func<Task<SpokenTake>>? singleThreadGenerate = null)
+        Func<Task<SpokenTake>>? singleThreadGenerate = null, IFallbackSink? fallbacks = null, string? language = null)
     {
         SpokenTake best = await generate();
         TakeStats bestStats = TakeStats.From(best);
@@ -75,6 +76,7 @@ public static class SilentOutputGuard
             if (!Failed(lastStats, text, pace))
             {
                 report($"silent voice output rescued by {(single ? "single-thread " : string.Empty)}take {attempt + 1} (voice {voiceId}, {text.Length} chars, {Measured(allMs, text, pace)})");
+                fallbacks?.Report(FallbackArea.Speech, FallbackReason.SilentRetake, language); // Slice 273 part B
                 return new RescueResult(take, false);
             }
 
@@ -86,7 +88,7 @@ public static class SilentOutputGuard
 
         if (Failed(lastStats, text, pace))
         {
-            return await TrySiblingAsync(text, voiceId, pace, (best, bestStats, allMs), fallback, report, token);
+            return await TrySiblingAsync(text, voiceId, pace, (best, bestStats, allMs), fallback, report, token, fallbacks, language);
         }
 
         ReportNearMiss(text, voiceId, pace, allMs, debug);
@@ -144,7 +146,7 @@ public static class SilentOutputGuard
         string text, string voiceId, double pace, bool splitPhrases, Func<string, Task<SpokenTake>> generate,
         Action<string> report, CancellationToken token = default, Func<string, Task<SpokenTake?>>? fallback = null,
         Action<string>? debug = null, bool probe = false, Func<string, Task<SpokenTake>>? singleThread = null,
-        KokoroNanRescue nanRescue = KokoroNanRescue.Off)
+        KokoroNanRescue nanRescue = KokoroNanRescue.Off, IFallbackSink? fallbacks = null, string? language = null)
     {
         IReadOnlyList<Phrase> phrases = splitPhrases ? PhraseSplitter.Split(text) : [new Phrase(text, 0)];
         var takes = new List<SpokenTake>();
@@ -161,7 +163,7 @@ public static class SilentOutputGuard
             RescueResult one = await RescueAsync(
                 phrase.Text, voiceId, pace, () => generate(phrase.Text), report, token,
                 fallback is null ? null : () => fallback(phrase.Text), debug,
-                rescueOnSingleThread ? () => singleThread!(phrase.Text) : null);
+                rescueOnSingleThread ? () => singleThread!(phrase.Text) : null, fallbacks, language);
             takes.Add(one.Take);
             gaveUp |= one.GaveUp;
         }
@@ -211,7 +213,7 @@ public static class SilentOutputGuard
 
     private static async Task<RescueResult> TrySiblingAsync(
         string text, string voiceId, double pace, (SpokenTake Take, TakeStats Stats, List<double> TakesMs) best, Func<Task<SpokenTake?>>? fallback,
-        Action<string> report, CancellationToken token)
+        Action<string> report, CancellationToken token, IFallbackSink? fallbacks, string? language)
     {
         token.ThrowIfCancellationRequested();
         SpokenTake? sibling = fallback is null ? null : await fallback();
@@ -221,9 +223,11 @@ public static class SilentOutputGuard
         if (siblingStats is not null && !Failed(siblingStats, text, pace))
         {
             report($"silent voice output rescued by the sibling voice (voice {voiceId}, {text.Length} chars, {measured})");
+            fallbacks?.Report(FallbackArea.Speech, FallbackReason.SilentSibling, language);
             return new RescueResult(sibling, false);
         }
 
+        fallbacks?.Report(FallbackArea.Speech, FallbackReason.SilentGaveUp, language);
         report($"silent voice output after {ExtraTakes + 1} takes{(fallback is null ? string.Empty : " and the sibling voice")}; gave up (voice {voiceId}, {text.Length} chars, {measured})");
         bool siblingBetter = siblingStats is not null && IsBetter(siblingStats, best.Stats);
         return new RescueResult(WithoutNonFinite(siblingBetter ? sibling! : best.Take), true);
