@@ -11,6 +11,13 @@ public class StoreCatalogTests
         $$"""{"id":"{{id}}","title":"{{title}}","language":"en","schemaVersion":{{schema}},"version":1,"pageCount":12,"minutes":6,"coverUrl":null,"downloadUrl":"{{download}}"}""";
 
     [Fact]
+    public void Parse_CountsTheEntriesItLeftOut()
+    {
+        IReadOnlyList<StoreItem> items = StoreCatalog.Parse($$"""{"stories":[{{Entry()}},{"id":"x","title":5}]}""", out int skipped);
+        Assert.Equal((1, 1), (items.Count, skipped));
+    }
+
+    [Fact]
     public void Parse_ReadsAWellFormedEntry()
     {
         StoreItem item = Assert.Single(StoreCatalog.Parse($$"""{"schemaVersion":1,"stories":[{{Entry()}}]}"""));

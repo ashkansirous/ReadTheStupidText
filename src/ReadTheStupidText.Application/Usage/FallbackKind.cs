@@ -218,6 +218,12 @@ public static class FallbackReason
     /// <summary>Slice 275 (area "input"): UI Automation could not register for selection changes, so only the hotkey reads selected text.</summary>
     public const string UiaUnavailable = "uia_unavailable";
 
+    /// <summary>Slice 275 (area "store"): the store answered but the listing lost entries, or a download failed for a reason that is not the network (full disk, bad package, unexpected error).</summary>
+    public const string StoreFailed = "store_failed";
+
+    /// <summary>Dino Reader (area "config"): a setting could not be read or written, so it follows its default.</summary>
+    public const string PreferenceUnsaved = "preference_unsaved";
+
     public static IReadOnlyList<string> All { get; } =
     [
         NoPack, PackFailed, TextMismatch, ClipMissing, Partial,
@@ -229,7 +235,7 @@ public static class FallbackReason
         PdfImportFailed, StoreUnreachable, UpdateCheckFailed, ConfigCached, ConfigDefault, UiLanguageUnsupported,
         StorytellerPackMissing, AnimalClipUnplayable, ClipUnplayable, ClipSpeedUnset, InAppUpdateFailed, WindowFrameFailed, DisplaysUnreadable, SavedPositionMoved, DpiDefaulted,
         FontFallback, ShelfOrderUnreadable, StoryUnreadable, LanguageDetectFailed, PageReadFailed, IntroStateReset,
-        OcrCropDegraded, UiaUnavailable,
+        OcrCropDegraded, UiaUnavailable, StoreFailed, PreferenceUnsaved,
     ];
 }
 

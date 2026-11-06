@@ -28,6 +28,7 @@ public static class LanguageChoice
 		}
 		catch (Exception ex) when (ex is InvalidOperationException or PlatformNotSupportedException)
 		{
+			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Config, ReadTheStupidText.Application.Usage.FallbackReason.PreferenceUnsaved); // Slice 275: the saved language could not be read; the app's current culture is shown as selected
 			return AppResources.Culture;
 		}
 	}
@@ -258,6 +259,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: the language change itself was applied; only the return to Settings did not happen
 			Debug.WriteLine($"Dino Reader could not reopen Settings after a language change: {ex}");
 		}
 	}

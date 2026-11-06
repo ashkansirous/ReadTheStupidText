@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using DinoReader.Core;
+using ReadTheStupidText.Application.Usage;
 
 namespace DinoReader;
 
@@ -86,6 +87,7 @@ public sealed class StarterStories(IStoryLibrary library)
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
 			Debug.WriteLine($"Dino Reader could not queue the starters for the store: {ex}");
+			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
 		}
 	}
 
@@ -294,6 +296,7 @@ public sealed class StarterStories(IStoryLibrary library)
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
 			Debug.WriteLine($"[BookUpdate] finishing the interrupted swap failed: {ex}");
+			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
 			CountSwapRecoveryFailure();
 		}
 	}

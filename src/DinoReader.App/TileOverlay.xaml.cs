@@ -75,6 +75,7 @@ public partial class TileOverlay : ContentView
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: the long-press does not start a reorder; the shelf is unchanged
 			HoldLog($"[Reorder] hold failed: {ex.GetType().Name}"); // an async void must never take the app down
 		}
 	}
@@ -93,6 +94,7 @@ public partial class TileOverlay : ContentView
 		}
 		catch (OperationCanceledException)
 		{
+			// no-fallback: the press ended before the hold time; that is the normal tap
 			source.Dispose();
 			return;
 		}

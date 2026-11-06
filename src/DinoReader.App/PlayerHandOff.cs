@@ -69,6 +69,7 @@ internal sealed class PlayerHandOff
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: logged through the error log; the callback still runs so the read continues
 			_logError?.Invoke(ex); // a failed release must not skip the callback (the read would hang) or escape the platform loop
 		}
 

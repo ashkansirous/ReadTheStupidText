@@ -185,6 +185,7 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		}
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
 		{
+			// no-fallback: cancelled by the app; the check runs again at the next open
 			Debug.WriteLine($"{LogTag} cancelled");
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or StoryPackageException or InvalidDataException or InvalidOperationException or ArgumentException)
@@ -267,6 +268,7 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		}
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
 		{
+			// no-fallback: cancelled by the app; the sweep runs again at the next check
 			Debug.WriteLine($"{LogTag} audio pack sweep cancelled");
 		}
 		catch (Exception ex)
@@ -382,6 +384,7 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
 		{
 			Debug.WriteLine($"{LogTag} {item.Id}: could not stage, run stopped: {ex.Message}");
+			store.Fallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
 			return false;
 		}
 		finally
@@ -398,6 +401,7 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			// no-fallback: housekeeping delete; nothing depends on it
 			Debug.WriteLine($"{LogTag} could not remove a temp file: {ex.Message}");
 		}
 	}

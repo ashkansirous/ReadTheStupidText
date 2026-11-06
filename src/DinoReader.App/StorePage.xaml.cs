@@ -5,6 +5,7 @@ using System.Globalization;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
+using ReadTheStupidText.Application.Usage;
 
 namespace DinoReader;
 
@@ -340,11 +341,13 @@ public partial class StorePage : ContentPage, IGrownUpPage
 		}
 		catch (OperationCanceledException)
 		{
+			// no-fallback: the page was left or the load was replaced by a newer one
 			return false;
 		}
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader store load failed: {ex}");
+			_client.Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // Slice 275: an unexpected failure (not the network) shows the offline view
 			Show(OfflineView);
 			return true;
 		}
@@ -500,10 +503,11 @@ public partial class StorePage : ContentPage, IGrownUpPage
 		}
 		catch (OperationCanceledException)
 		{
-			// The page was left: the next appearance picks up the rest.
+			// no-fallback: the page was left; the next appearance picks up the rest.
 		}
 		catch (Exception ex)
 		{
+			_client.Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // Slice 275: the cover stays a tinted block; the book itself is unaffected
 			Debug.WriteLine($"Dino Reader store cover failed: {ex.Message}");
 		}
 	}
@@ -537,6 +541,7 @@ public partial class StorePage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex)
 		{
+			_client.Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // Slice 275: StoreClient reports the failures it catches; this is anything else, and the row offers Try again
 			Debug.WriteLine($"Dino Reader store download failed: {ex}");
 		}
 		finally

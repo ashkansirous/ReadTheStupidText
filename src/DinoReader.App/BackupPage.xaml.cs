@@ -142,6 +142,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
+			// no-fallback: the grown-up is told the backup failed by an alert; nothing falls back
 			Debug.WriteLine($"Dino Reader backup failed: {ex}");
 			await DisplayAlertAsync(AppResources.Backup_Title, AppResources.Backup_Failed, AppResources.Common_Ok);
 		}
@@ -158,6 +159,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
+			// no-fallback: the count line is left as it was; the page itself works
 			Debug.WriteLine($"Dino Reader backup page failed: {ex}");
 		}
 	}
@@ -323,10 +325,12 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		}
 		catch (StoryBackupNewerException)
 		{
+			// no-fallback: the grown-up is told by an alert that the backup is from a newer app; nothing falls back
 			await DisplayAlertAsync(AppResources.Backup_Title, AppResources.Backup_Newer, AppResources.Common_Ok);
 		}
 		catch (StoryBackupException ex)
 		{
+			// no-fallback: the grown-up is told by an alert that the file is not a backup; nothing falls back
 			Debug.WriteLine($"Dino Reader backup refused: {ex.Message}");
 			await DisplayAlertAsync(AppResources.Backup_Title, AppResources.Backup_NotABackup, AppResources.Common_Ok);
 		}
