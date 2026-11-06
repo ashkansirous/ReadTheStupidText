@@ -62,6 +62,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
+            // no-fallback: the failure is returned to the caller as a PackCatalogResult, which shows or retries it
             return PackCatalogResult.Failure(ClassifyFailure(ex));
         }
     }
@@ -93,7 +94,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
 
     private InstalledVoicePack? LoadInstalled(string packId)
     {
-        string folder = PackVersionFolders.Resolve(Path.Combine(PacksRoot(), packId));
+        string folder = PackVersionFolders.Resolve(Path.Combine(PacksRoot(), packId), _fallbacks);
         string manifestPath = Path.Combine(folder, PackConstants.ManifestFileName);
         if (!File.Exists(manifestPath))
         {
@@ -111,6 +112,11 @@ public sealed class WindowsVoicePackService : IVoicePackService
         }
         catch (Exception ex) when (ex is FormatException or IOException or UnauthorizedAccessException)
         {
+            if (PackVersionFolders.FirstReportFor(folder))
+            {
+                _fallbacks.Report(FallbackArea.Pack, FallbackReason.PackFailed); // Slice 275: an unreadable pack is skipped and the other packs stay usable (once per pack folder per run)
+            }
+
             // An unreadable pack is skipped, not fatal: the others stay usable.
             return null;
         }
@@ -230,6 +236,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
+            // no-fallback: the failure is returned as a download result; the retry loop reports PackFailed once retries end
             return ClassifyFailure(ex);
         }
 
@@ -284,6 +291,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // no-fallback: the failure is returned as a download result; the retry loop reports PackFailed once retries end
             return PackErrorClassifier.ClassifyInstall(ex);
         }
     }

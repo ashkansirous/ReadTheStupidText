@@ -1,6 +1,7 @@
 using ReadTheStupidText.Application;
 using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Mobile.Resources.Strings;
 
 namespace ReadTheStupidText.Mobile;
@@ -39,8 +40,11 @@ public sealed class ScanPackFlow
     private readonly OcrPackInstaller _packs;
     private readonly IScanPackUi _ui;
 
-    public ScanPackFlow(OcrPackInstaller packs, IScanPackUi ui)
+    private readonly IFallbackSink _fallbacks; // Slice 275
+
+    public ScanPackFlow(OcrPackInstaller packs, IScanPackUi ui, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance;
         _packs = packs;
         _ui = ui;
     }
@@ -133,6 +137,7 @@ public sealed class ScanPackFlow
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: the person cancelled while the catalog was being fetched
             return null;
         }
     }
@@ -160,6 +165,7 @@ public sealed class ScanPackFlow
             }
             catch (PackCancelledByNotificationException)
             {
+                // no-fallback: the person cancelled on the notification
                 return false; // the person cancelled on the notification: no error, no retry
             }
 
@@ -191,10 +197,12 @@ public sealed class ScanPackFlow
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: cancelled by the person or the page; the caller stops, nothing else is used
             return PackDownloadResult.Failed;
         }
         catch (Exception ex)
         {
+            // no-fallback: the pack installer already reported the failed download once; Retry must not count it again
             System.Diagnostics.Debug.WriteLine($"OCR pack for '{language}' failed: {ex}");
             return PackDownloadResult.Failed;
         }

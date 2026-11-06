@@ -44,6 +44,7 @@ internal static class AndroidImageSource
         }
         catch (IOException)
         {
+            // no-fallback: unreadable EXIF means the picture is shown upright, no feature is swapped
             return (int)Android.Media.Orientation.Normal;
         }
     }

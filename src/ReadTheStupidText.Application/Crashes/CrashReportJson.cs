@@ -104,6 +104,7 @@ public static class CrashReportJson
         }
         catch (JsonException)
         {
+            // no-fallback: a damaged crash report is dropped (null), nothing else is read in its place.
             return null;
         }
     }

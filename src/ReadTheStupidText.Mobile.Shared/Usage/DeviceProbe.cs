@@ -27,6 +27,7 @@ public static class DeviceProbe
         }
         catch (Exception ex)
         {
+            // no-fallback: the device facts only enrich usage and crash reports; null means they are sent without them
             Debug.WriteLine($"Device context unreadable: {ex.Message}");
             return null;
         }

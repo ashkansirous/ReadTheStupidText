@@ -128,6 +128,45 @@ public sealed class AudioPackStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Install_ACancelledDownload_IsCountedAsCancelled_NotAsFailed()
+    {
+        using var cancel = new CancellationTokenSource();
+        AudioPackStore store = Store(new FakeFetcher(Zip()) { OnFetch = cancel.Cancel });
+        var details = new List<string>();
+        store.Outcome += (_, _, detail) => details.Add(detail);
+
+        PackInstall result = await store.InstallAsync(Book, "fa", Info(Zip()), null, cancel.Token);
+
+        Assert.Equal(PackInstall.Cancelled, result);
+        Assert.Equal([AudioPackUsage.PackStarted, AudioPackUsage.PackCancelled], details);
+        Assert.False(store.FailedThisLaunch(Book, "fa"));
+    }
+
+    [Fact]
+    public async Task FailedThisLaunch_IsFalse_BeforeAnyDownloadAndAfterASuccess()
+    {
+        byte[] zip = Zip();
+        AudioPackStore store = Store(new FakeFetcher(zip));
+        Assert.False(store.FailedThisLaunch(Book, "fa"));
+
+        await store.InstallAsync(Book, "fa", Info(zip), null, CancellationToken.None);
+
+        Assert.False(store.FailedThisLaunch(Book, "fa"));
+    }
+
+    [Fact]
+    public async Task FailedThisLaunch_IsTrue_OnlyForTheBookAndLanguageThatFailed()
+    {
+        byte[] zip = Zip();
+        AudioPackStore failing = Store(new FakeFetcher(null) { Throw = new HttpRequestException("offline") });
+
+        await failing.InstallAsync(Book, "fa", Info(zip), null, CancellationToken.None);
+
+        Assert.True(failing.FailedThisLaunch(Book, "fa"));
+        Assert.False(failing.FailedThisLaunch(Book, "nb"));
+    }
+
+    [Fact]
     public async Task Install_UnknownBytes_SkipsTheSizeCheckButStillVerifiesTheClips()
     {
         byte[] zip = Zip();

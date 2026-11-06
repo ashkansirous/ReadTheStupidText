@@ -84,7 +84,7 @@ public sealed class ReadTimingTracker
         }
         catch (Exception)
         {
-            // Test marker only; swallowed on purpose.
+            // no-fallback: test marker only; swallowed on purpose.
         }
     }
 
@@ -96,7 +96,7 @@ public sealed class ReadTimingTracker
         }
         catch (Exception)
         {
-            // Test marker only; swallowed on purpose.
+            // no-fallback: test marker only; swallowed on purpose.
         }
     }
 #endif

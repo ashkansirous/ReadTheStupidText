@@ -131,6 +131,7 @@ public sealed class RtstUsage : IUsageRecorder
         }
         catch (Exception)
         {
+            // no-fallback: an unreadable preference means the usage notice is not shown this time; counting is best effort
             return false;
         }
     }
@@ -165,6 +166,7 @@ public sealed class RtstUsage : IUsageRecorder
         }
         catch (Exception ex)
         {
+            // no-fallback: counting is best effort and must never change what the app does
             System.Diagnostics.Debug.WriteLine($"Usage start failed: {ex.Message}"); // counting must never change what the app does
         }
     }

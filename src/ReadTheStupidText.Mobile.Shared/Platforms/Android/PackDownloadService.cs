@@ -37,6 +37,7 @@ public sealed class PackDownloadService : Service
         }
         catch (Exception ex)
         {
+            // no-fallback: the keep-alive notice is refused; logged, the download continues without a notification
             // The app started this service with plain StartService, so no foreground promise was made and StopSelf is legal:
             // ForegroundServiceStartNotAllowedException (background by now, dataSync quota) or a bad notification only means no notification.
             PackDownloadHost.LogService("start-refused", ex.GetType().Name);
@@ -61,6 +62,7 @@ public sealed class PackDownloadService : Service
         }
         catch (Exception ex)
         {
+            // no-fallback: logged only; cancelling the keep-alive has no alternative path
             PackDownloadHost.LogService("cancel-failed", ex.GetType().Name);
         }
     }

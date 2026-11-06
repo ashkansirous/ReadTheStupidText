@@ -46,6 +46,7 @@ public sealed class WindowsPlatformServices : IPlatformServices
 		}
 		catch (Exception)
 		{
+			// no-fallback: null means the installed voice languages are unknown; the caller treats unknown as no restriction
 			return Task.FromResult<IReadOnlyCollection<string>?>(null);
 		}
 	}

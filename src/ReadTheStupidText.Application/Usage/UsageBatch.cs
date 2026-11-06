@@ -29,6 +29,7 @@ public static class UsageBatch
         }
         catch (JsonException)
         {
+            // no-fallback: a damaged stored queue is dropped (no events); usage code never reports its own fallbacks.
             return [];
         }
     }

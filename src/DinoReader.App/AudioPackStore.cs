@@ -153,14 +153,14 @@ public sealed partial class AudioPackStore
 	public event Action<string, string, string>? Outcome;
 
 	/// <summary>Whether a download of this book's pack in this language failed in this launch and has not worked since (the reason a read then says <see cref="DeviceVoiceReason.PackFailed"/>).</summary>
-	public bool FailedThisLaunch(string bookId, string language) => _failedThisLaunch.ContainsKey(Key(bookId, language));
+	public bool FailedThisLaunch(string bookId, string language) => _failedThisLaunch.TryGetValue(Key(bookId, language), out bool failed) && failed;
 
 	private static string Key(string bookId, string language) => $"{bookId.ToLowerInvariant()}/{language}";
 
 	private void Report(string bookId, string language, string detail)
 	{
 		bool failed = detail.StartsWith(AudioPackUsage.PackFailedPrefix, StringComparison.Ordinal);
-		_failedThisLaunch.AddOrUpdate(Key(bookId, language), failed, (_, was) => detail == AudioPackUsage.PackStarted ? was : failed);
+		_failedThisLaunch.AddOrUpdate(Key(bookId, language), failed, (_, was) => detail is AudioPackUsage.PackStarted or AudioPackUsage.PackCancelled ? was : failed);
 		if (failed)
 		{
 			_failuresThisLaunch.AddOrUpdate(Key(bookId, language), 1, (_, count) => count + 1);
@@ -280,6 +280,7 @@ public sealed partial class AudioPackStore
 		}
 		catch (OperationCanceledException)
 		{
+			// no-fallback: cancelled while waiting for another install; this download never started, so nothing is reported
 			return PackInstall.Cancelled;
 		}
 
@@ -309,6 +310,7 @@ public sealed partial class AudioPackStore
 		}
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
 		{
+			// no-fallback: cancelled before the download began (PackStarted is reported only inside InstallCoreAsync, which reports its own cancel), so no PackCancelled without a PackStarted
 			return PackInstall.Cancelled;
 		}
 		catch (Exception ex)
@@ -441,6 +443,7 @@ public sealed partial class AudioPackStore
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
 		{
 			_log($"{label}: cancelled, nothing kept");
+			Report(bookId, language, AudioPackUsage.PackCancelled);
 			return PackInstall.Cancelled;
 		}
 		catch (AudioPackNotFoundException ex)

@@ -24,6 +24,7 @@ internal static class IosCrashHooks
         }
         catch (Exception ex)
         {
+            // no-fallback: crash-hook code; without MetricKit no native crash report is sent
             System.Diagnostics.Debug.WriteLine($"MetricKit could not start: {ex.Message}");
         }
     }
@@ -52,6 +53,7 @@ internal sealed class IosMetricSubscriber(Action<NativeCrash> deliver) : NSObjec
         }
         catch (Exception ex)
         {
+            // no-fallback: crash-hook code; an unreadable payload is dropped
             System.Diagnostics.Debug.WriteLine($"MetricKit payload unreadable: {ex.Message}");
         }
     }

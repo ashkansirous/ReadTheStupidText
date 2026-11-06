@@ -73,7 +73,7 @@ public static class StallGuardedRead
         }
         catch (Exception)
         {
-            // a cancellation callback threw; the abandon below still has to happen
+            // no-fallback: a cancellation callback threw; the abandon below still has to happen
         }
 
         _ = send.ContinueWith(
@@ -104,7 +104,7 @@ public static class StallGuardedRead
         }
         catch (Exception)
         {
-            // closing something stuck on a dead socket may throw; nothing to do about it
+            // no-fallback: closing something stuck on a dead socket may throw; nothing to do about it
         }
     }
 }
@@ -208,7 +208,7 @@ internal sealed class GuardedStream(Stream inner, GuardedResponse? owner, TimeSp
         }
         catch (Exception)
         {
-            // a cancellation callback threw; the abandon below still has to happen
+            // no-fallback: a cancellation callback threw; the abandon below still has to happen
         }
 
         if (owner is not null)

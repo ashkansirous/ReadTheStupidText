@@ -113,13 +113,14 @@ public sealed class TranslationPackInstaller
         }
         catch (PackCancelledByNotificationException)
         {
-            // The user's Cancel on the download notification (Slice 183) is final; any other cancellation falls to the generic catch and stays retryable.
+            // no-fallback: the user's Cancel on the download notification (Slice 183) is final; any other cancellation falls to the generic catch and stays retryable.
             cancelled = true;
             _log.Info($"translation packs {source}>{target}: cancelled");
             Progress?.Invoke(this, new TranslationPackProgress(source, target, TranslationPackState.Idle, 0));
         }
         catch (Exception ex)
         {
+            // no-fallback: the failure is shown to the user as the Failed pack state; the download itself reports pack failures where it failed.
             _log.Warning($"translation packs {source}>{target} failed", null, ex);
             Progress?.Invoke(this, new TranslationPackProgress(source, target, TranslationPackState.Failed, 0, PackDownloadResult.Failed));
         }

@@ -81,7 +81,7 @@ public static class PackDownloadLog
         }
         catch (Exception)
         {
-            // A diagnostic sink must never replace the download's own exception.
+            // no-fallback: a diagnostic sink must never replace the download's own exception.
         }
     }
 }

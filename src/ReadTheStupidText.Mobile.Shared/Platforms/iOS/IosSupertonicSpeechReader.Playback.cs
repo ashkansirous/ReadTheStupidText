@@ -230,6 +230,7 @@ public sealed partial class IosSupertonicSpeechReader
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: cancellation on stop/skip/supersede
             // Expected on stop/skip/supersede.
         }
     }

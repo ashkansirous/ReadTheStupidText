@@ -57,6 +57,7 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive, IPackPausedNotifier
             }
             catch (Exception ex)
             {
+                // no-fallback: logged only; the keep-alive notice has no user-visible alternative
                 PackDownloadHost.LogService("cancel-failed", ex.GetType().Name); // one pack failing to cancel never skips the rest
             }
         }
@@ -73,6 +74,7 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive, IPackPausedNotifier
         }
         catch (Exception ex)
         {
+            // no-fallback: visibility unknown is logged and treated as not visible; only the keep-alive service start is affected
             PackDownloadHost.LogService(PackDownloadHost.VisibilityUnknownAction, ex.GetType().Name);
             return false;
         }
@@ -159,6 +161,7 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive, IPackPausedNotifier
         }
         catch (Exception ex)
         {
+            // no-fallback: visibility unknown is logged and treated as not foreground; only the keep-alive notice is affected
             PackDownloadHost.LogService(PackDownloadHost.VisibilityUnknownAction, ex.GetType().Name);
             return false;
         }
@@ -223,6 +226,7 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive, IPackPausedNotifier
         }
         catch (Exception ex)
         {
+            // no-fallback: the OS refused the keep-alive service; logged, the download itself continues unprotected
             PackDownloadHost.LogService("start-refused", ex.GetType().Name);
         }
     }
@@ -279,6 +283,7 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive, IPackPausedNotifier
             }
             catch (Exception ex)
             {
+                // no-fallback: a notification refresh failed; logged, the next progress tick refreshes again
                 PackDownloadHost.LogService("refresh-failed", ex.GetType().Name);
             }
         }
@@ -309,6 +314,7 @@ internal sealed class AndroidPackKeepAlive : IPackKeepAlive, IPackPausedNotifier
             }
             catch (Exception ex)
             {
+                // no-fallback: the grace-period stop failed; logged, the service is stopped by the OS or the next download
                 PackDownloadHost.LogService("refresh-failed", ex.GetType().Name);
             }
         }

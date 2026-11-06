@@ -215,6 +215,7 @@ public sealed class VoicePackInstaller
         }
         catch (ObjectDisposedException)
         {
+            // no-fallback: cancelling a run that already ended is a no-op
         }
     }
 
@@ -441,6 +442,7 @@ public sealed class VoicePackInstaller
         }
         catch (PackCancelledByNotificationException)
         {
+            // no-fallback: the person cancelled from the notification; that is a final stop, not a degradation
             lock (_gate)
             {
                 CancelRun(run.Voice!); // the notification's Cancel reached a run whose pack id was not matched: still final, no error state
@@ -450,6 +452,7 @@ public sealed class VoicePackInstaller
         }
         catch (Exception ex)
         {
+            // no-fallback: the failure is published as PackInstallState.Failed, which the person sees
             System.Diagnostics.Debug.WriteLine($"VoicePackInstaller: {ex}");
             return PackInstallState.Failed;
         }
@@ -470,6 +473,7 @@ public sealed class VoicePackInstaller
         }
         catch (OperationCanceledException) when (run.Token.IsCancellationRequested)
         {
+            // no-fallback: the run was cancelled on purpose
             return null;
         }
     }
@@ -546,10 +550,12 @@ public sealed class VoicePackInstaller
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: cancelled because a newer run took over
             // A newer run took over; it publishes its own state.
         }
         catch (Exception ex)
         {
+            _fallbacks.Report(FallbackArea.Pack, FallbackReason.UpdateCheckFailed, CurrentLanguage); // Slice 275: the installed pack stays in use and Ready is published
             System.Diagnostics.Debug.WriteLine($"VoicePackInstaller update check: {ex}");
             if (!run.Token.IsCancellationRequested)
             {
@@ -595,6 +601,7 @@ public sealed class VoicePackInstaller
         }
         catch (OperationCanceledException) when (!run.Token.IsCancellationRequested)
         {
+            _fallbacks.Report(FallbackArea.Pack, FallbackReason.UpdateCheckFailed, CurrentLanguage); // Slice 275: the update catalog timed out; the installed pack stays in use and the next check tries again
             return null;
         }
     }

@@ -45,7 +45,11 @@ public static class FallbackArea
     /// <summary>Dino Reader: the shelf's stored books or their order could not be read; the default is used.</summary>
     public const string Library = "library";
 
-    public static IReadOnlyList<string> All { get; } = [PremadeAudio, Speech, Translation, Pack, Ocr, Document, Store, Config, UiLanguage, Window, Font, Library];
+    // Slice 275.
+    /// <summary>Windows: the desktop's selection could not be watched (UI Automation); the hotkey still reads.</summary>
+    public const string Input = "input";
+
+    public static IReadOnlyList<string> All { get; } = [PremadeAudio, Speech, Translation, Pack, Ocr, Document, Store, Config, UiLanguage, Window, Font, Library, Input];
 }
 
 /// <summary>Why it fell back (Slice 273): the closed list of the <c>fallback</c> count's reason; the Worker's <c>FALLBACK_REASONS</c> must be the same list.</summary>
@@ -208,6 +212,12 @@ public static class FallbackReason
     /// <summary>Dino Reader (area "config"): the saved intro step could not be resumed and was cleared, so the intro starts again.</summary>
     public const string IntroStateReset = "intro_state_reset";
 
+    /// <summary>Slice 275 (area "ocr"): a line could not be cut from the full-size picture, so a lower-resolution crop of the detection image was recognised; small print may read worse.</summary>
+    public const string OcrCropDegraded = "ocr_crop_degraded";
+
+    /// <summary>Slice 275 (area "input"): UI Automation could not register for selection changes, so only the hotkey reads selected text.</summary>
+    public const string UiaUnavailable = "uia_unavailable";
+
     public static IReadOnlyList<string> All { get; } =
     [
         NoPack, PackFailed, TextMismatch, ClipMissing, Partial,
@@ -219,6 +229,7 @@ public static class FallbackReason
         PdfImportFailed, StoreUnreachable, UpdateCheckFailed, ConfigCached, ConfigDefault, UiLanguageUnsupported,
         StorytellerPackMissing, AnimalClipUnplayable, ClipUnplayable, ClipSpeedUnset, InAppUpdateFailed, WindowFrameFailed, DisplaysUnreadable, SavedPositionMoved, DpiDefaulted,
         FontFallback, ShelfOrderUnreadable, StoryUnreadable, LanguageDetectFailed, PageReadFailed, IntroStateReset,
+        OcrCropDegraded, UiaUnavailable,
     ];
 }
 

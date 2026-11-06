@@ -102,6 +102,7 @@ public sealed class OcrPackInstaller
         }
         catch (System.Globalization.CultureNotFoundException)
         {
+            // no-fallback: only the display name falls back to the language code; the language itself is unchanged
             return code;
         }
     }
@@ -202,11 +203,12 @@ public sealed class OcrPackInstaller
         }
         catch (PackCancelledByNotificationException)
         {
-            // Slice 183: Cancel on the download notification is final; reported as Cancelled, never retried.
+            // no-fallback: Slice 183: Cancel on the download notification is final; reported as Cancelled, never retried.
             _cancelledLanguage = language;
         }
         catch (Exception ex)
         {
+            // no-fallback: RunFlightAsync already reported the failed download once; this only records the stop
             System.Diagnostics.Debug.WriteLine($"OCR pack install for '{language}' failed: {ex.Message}");
             _stopped = (language, PackDownloadResult.Failed);
         }
@@ -327,7 +329,7 @@ public sealed class OcrPackInstaller
             }
             catch (OperationCanceledException ex) when (ex is not PackCancelledByNotificationException && !cancellationToken.IsCancellationRequested)
             {
-                // The downloader we joined gave up; loop and take over.
+                // no-fallback: the downloader we joined gave up; loop and take over.
             }
             finally
             {

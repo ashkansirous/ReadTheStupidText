@@ -41,6 +41,7 @@ internal sealed class FileSentenceStore : ISentenceStore
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // no-fallback: an unreadable cached clip is a cache miss (null) and the sentence is spoken fresh.
             return null;
         }
     }
@@ -97,6 +98,7 @@ internal sealed class FileSentenceStore : ISentenceStore
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // no-fallback: an unreadable cached clip is left out of the index (null), as a cache miss.
             return null;
         }
     }
@@ -110,7 +112,7 @@ internal sealed class FileSentenceStore : ISentenceStore
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            // Nothing to do: the cache index no longer lists the clip either way.
+            // no-fallback: nothing to do: the cache index no longer lists the clip either way.
         }
     }
 }

@@ -51,6 +51,7 @@ public sealed class WindowsPdfPageRenderer : IPdfPageRenderer
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
+			// no-fallback: the page is reported as not rendered (false) to the caller, which owns the user-facing failure
 			_log.Warning($"Could not render page {target.PageIndex} of the PDF", error: ex);
 			TryDelete(temp);
 			return false;
@@ -66,6 +67,7 @@ public sealed class WindowsPdfPageRenderer : IPdfPageRenderer
 		}
 		catch (Exception)
 		{
+			// no-fallback: best-effort temp file delete
 			// the stray temp file is overwritten by the next attempt
 		}
 	}

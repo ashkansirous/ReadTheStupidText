@@ -95,6 +95,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
             }
             catch (NeuralEngineUnavailableException ex)
             {
+                // no-fallback: FellUnavailable reports it (FallbackArea.Speech via Fell) or marks it already reported
                 // The model went away after the readiness check: read with the phone voice.
                 FellUnavailable(ex, activityId);
             }
@@ -152,6 +153,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
             }
             catch (NeuralEngineUnavailableException ex)
             {
+                // no-fallback: FellUnavailable reports it (FallbackArea.Speech via Fell) or marks it already reported
                 // The model went away after the page resolved it: read with the phone voice.
                 FellUnavailable(ex, activityId, scope.Language);
             }
@@ -188,6 +190,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
             }
             catch (NeuralEngineUnavailableException ex)
             {
+                // no-fallback: FellUnavailable reports it (FallbackArea.Speech via Fell) or marks it already reported
                 // The model went away after the page resolved it: read with the phone voice.
                 FellUnavailable(ex, activityId, scope.Language);
             }
@@ -256,6 +259,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
             }
             catch (NeuralEngineUnavailableException ex)
             {
+                // no-fallback: FellUnavailable reports it (FallbackArea.Speech via Fell) or marks it already reported
                 // The model went away after the readiness check: read with the phone voice.
                 FellUnavailable(ex, activityId);
             }

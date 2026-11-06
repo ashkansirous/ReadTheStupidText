@@ -85,6 +85,7 @@ public sealed class UsageService : IUsageRecorder
             }
             catch (Exception ex)
             {
+                // no-fallback: usage counting is best effort and never reports itself (no loop).
                 Debug.WriteLine($"Usage counts could not change their switch: {ex.Message}");
             }
         }
@@ -110,6 +111,7 @@ public sealed class UsageService : IUsageRecorder
         }
         catch (Exception ex)
         {
+            // no-fallback: usage counting is best effort and never reports itself (no loop).
             Debug.WriteLine($"Usage counts could not queue a count: {ex.Message}");
         }
     }
@@ -267,6 +269,7 @@ public sealed class UsageService : IUsageRecorder
         }
         catch (Exception ex)
         {
+            // no-fallback: a failed send backs off and retries later; usage counting never reports itself (no loop).
             Debug.WriteLine($"Usage counts could not be sent: {ex.Message}");
             BackOff();
         }
@@ -383,6 +386,7 @@ public sealed class UsageService : IUsageRecorder
         }
         catch (Exception ex)
         {
+            // no-fallback: no kept config (null) means counts are held until a config is fetched; usage counting never reports itself (no loop).
             Debug.WriteLine($"Usage counts could not read the kept config: {ex.Message}");
             return null;
         }
@@ -418,6 +422,7 @@ public sealed class UsageService : IUsageRecorder
         }
         catch (Exception ex)
         {
+            // no-fallback: the kept config stays in force and the refresh is retried; usage counting never reports itself (no loop).
             Debug.WriteLine($"Usage counts could not load the remote config: {ex.Message}");
         }
     }
@@ -430,6 +435,7 @@ public sealed class UsageService : IUsageRecorder
         }
         catch (Exception ex)
         {
+            // no-fallback: the fetched config is still applied in memory; only the on-disk copy is lost; usage counting never reports itself (no loop).
             Debug.WriteLine($"Usage counts could not keep the remote config: {ex.Message}");
         }
 

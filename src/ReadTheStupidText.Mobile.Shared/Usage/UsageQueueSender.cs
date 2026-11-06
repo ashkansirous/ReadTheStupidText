@@ -80,6 +80,7 @@ public sealed class UsageQueueSender<TEvent>(UsageQueueOptions<TEvent> options)
             }
             catch (Exception ex)
             {
+                // no-fallback: counting is best effort and must never change what the app does
                 Debug.WriteLine($"{options.LogName} could not change the counts switch: {ex.Message}");
             }
         }
@@ -111,6 +112,7 @@ public sealed class UsageQueueSender<TEvent>(UsageQueueOptions<TEvent> options)
         }
         catch (Exception ex)
         {
+            // no-fallback: counting is best effort and must never change what the app does
             Debug.WriteLine($"{options.LogName} could not queue a count: {ex.Message}");
             return 0;
         }
@@ -208,6 +210,7 @@ public sealed class UsageQueueSender<TEvent>(UsageQueueOptions<TEvent> options)
         }
         catch (Exception ex)
         {
+            // no-fallback: counting is best effort; the queue is kept and retried after a back-off
             Debug.WriteLine($"{options.LogName} could not send its counts: {ex.Message}");
             BackOff();
         }

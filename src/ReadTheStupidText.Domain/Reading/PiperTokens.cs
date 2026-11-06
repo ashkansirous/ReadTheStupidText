@@ -29,6 +29,7 @@ public static class PiperTokens
         }
         catch (DecoderFallbackException)
         {
+            // no-fallback: a validator; the invalid-UTF-8 verdict is the returned result, not a degraded behaviour
             return "the file is not valid UTF-8";
         }
     }

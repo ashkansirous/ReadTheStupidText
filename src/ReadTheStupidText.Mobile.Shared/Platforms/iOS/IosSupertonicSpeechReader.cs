@@ -488,6 +488,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
             }
             catch
             {
+                // no-fallback: the previous chunk's failure is reported by its own await; this only orders the work
                 // Swallowed: the first chunk's real outcome surfaces on its own await.
             }
         }
@@ -525,6 +526,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         }
         catch (Exception)
         {
+            // no-fallback: a lost trace line, logging only
             // Losing one trace line is better than failing a read.
         }
     }
@@ -561,6 +563,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: the read was cancelled
             return false;
         }
 
@@ -635,6 +638,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         }
         catch (NeuralEngineUnavailableException)
         {
+            // no-fallback: the engine build failure was already reported by AcquireEngine (EngineBuildFailed); null means the read's own engine serves
             return null;
         }
     }
@@ -699,6 +703,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         }
         catch
         {
+            // no-fallback: warm-up only; AcquireEngine() in the read reports a real build failure
             // Best-effort: AcquireEngine() in the read remains the safety net.
         }
     }

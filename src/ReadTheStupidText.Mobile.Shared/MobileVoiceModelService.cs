@@ -1,5 +1,6 @@
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Mobile.Shared;
@@ -36,9 +37,12 @@ public sealed class MobileVoiceModelService : IVoiceModelService, IReadingModelR
 
     private readonly bool _storyteller;
 
+    private readonly IFallbackSink _fallbacks; // Slice 275
+
     // storyteller is registered by Dino Reader only (Slice 114): with it the storyteller packs take part in the scan.
-    public MobileVoiceModelService(IVoicePackService packs, ISettingsStore settings, ILanguageChangeNotifier languages, StorytellerVoices? storyteller = null)
+    public MobileVoiceModelService(IVoicePackService packs, ISettingsStore settings, ILanguageChangeNotifier languages, StorytellerVoices? storyteller = null, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance;
         _storyteller = storyteller is not null;
         _packs = packs;
         _settings = settings;
@@ -187,6 +191,7 @@ public sealed class MobileVoiceModelService : IVoiceModelService, IReadingModelR
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            _fallbacks.Report(FallbackArea.Pack, FallbackReason.PackFailed); // Slice 275: an unreadable packs folder lists no packs, so the person sees the voice as not installed and can download it
             return [];
         }
     }

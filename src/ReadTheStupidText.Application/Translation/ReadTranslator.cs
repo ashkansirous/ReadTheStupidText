@@ -116,6 +116,7 @@ public sealed class ReadTranslator
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // no-fallback: the early start is only a head start; the read plans and translates on its own and reports its own fallbacks.
             _log.Warning("early translation planning failed", null, ex);
             return null;
         }
@@ -152,6 +153,7 @@ public sealed class ReadTranslator
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
+            // no-fallback: the early span is only a head start; the read translates the whole text itself and reports its own fallbacks.
             _log.Warning("early translation failed or timed out", null, ex);
             return null;
         }
@@ -397,14 +399,17 @@ public sealed class TranslationStream
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
+            // no-fallback: Fail() logs it and reports the StreamPartial fallback.
             return Fail(TranslationOutcome.TimedOut, "timed out", null);
         }
         catch (TranslationModelUnavailableException ex)
         {
+            // no-fallback: Fail() reports the StreamPartial fallback unless the missing pack was already reported where it failed.
             return Fail(TranslationOutcome.ModelMissing, "pack unavailable", ex, countFallback: !ex.FallbackReported);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // no-fallback: Fail() logs it and reports the StreamPartial fallback.
             return Fail(TranslationOutcome.Failed, "failed", ex);
         }
     }

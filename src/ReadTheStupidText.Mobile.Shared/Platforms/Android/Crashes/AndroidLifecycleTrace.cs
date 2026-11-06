@@ -27,6 +27,7 @@ public static class AndroidLifecycleTrace
         }
         catch (Exception ex)
         {
+            // no-fallback: lifecycle trace only; no user-visible feature depends on it
             System.Diagnostics.Debug.WriteLine($"Memory trace could not start: {ex.Message}");
         }
     }

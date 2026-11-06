@@ -1,5 +1,6 @@
 using CoreGraphics;
 using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Application.Usage;
 
 namespace ReadTheStupidText.Mobile.Shared;
 
@@ -19,8 +20,11 @@ internal sealed class IosOcrPage : IOcrPage
     private readonly string _path;
     private CGImage? _original;
 
-    public IosOcrPage(PixelImage detection, string path)
+    private readonly IFallbackSink _fallbacks; // Slice 275
+
+    public IosOcrPage(PixelImage detection, string path, IFallbackSink fallbacks)
     {
+        _fallbacks = fallbacks;
         Detection = detection;
         _path = path;
     }
@@ -35,6 +39,7 @@ internal sealed class IosOcrPage : IOcrPage
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            _fallbacks.Report(FallbackArea.Ocr, FallbackReason.OcrCropDegraded); // Slice 275: crops the already-loaded detection image instead; same recogniser, only a lower-resolution crop
             System.Diagnostics.Debug.WriteLine($"Original crop failed, cropping from the detection image: {ex.Message}");
             return ImageResizer.Crop(Detection, box);
         }

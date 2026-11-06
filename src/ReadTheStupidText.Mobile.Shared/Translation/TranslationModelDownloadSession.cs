@@ -156,6 +156,7 @@ public sealed class TranslationModelDownloadSession : IDisposable
         }
         catch (ObjectDisposedException)
         {
+            // no-fallback: cancelling a session that already ended is a no-op
             return; // disposed after the end: nothing left to stop
         }
 
@@ -238,6 +239,7 @@ public sealed class TranslationModelDownloadSession : IDisposable
         }
         catch (Exception ex)
         {
+            // no-fallback: the failure is recorded in the attempt end and handled by the session's retry and error state
             Debug.WriteLine($"A translation model download attempt failed: {ex.Message}");
             end.Set(false, _network.IsOnline, ex);
         }
@@ -273,6 +275,7 @@ public sealed class TranslationModelDownloadSession : IDisposable
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: cancellation of the watchdog when the attempt ended by itself
             // the attempt ended by itself
         }
     }
@@ -399,6 +402,7 @@ public sealed class TranslationModelDownloadSession : IDisposable
         }
         catch (Exception ex)
         {
+            // no-fallback: a failing display subscriber is logged and must not change the download
             Debug.WriteLine($"A download session subscriber failed: {ex.Message}"); // the display must never change what the download does
         }
     }

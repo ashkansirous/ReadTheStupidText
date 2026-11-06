@@ -216,7 +216,7 @@ public sealed class EarlyStartCoordinator
         }
         catch (Exception)
         {
-            // Best effort: cancelled by a newer text or a tap, or failed; the read does its own work.
+            // no-fallback: best effort: cancelled by a newer text or a tap, or failed; the read does its own work.
         }
     }
 
@@ -238,6 +238,7 @@ public sealed class EarlyStartCoordinator
         }
         catch (Exception)
         {
+            // no-fallback: the early translation is only a head start; with none, the read translates and speaks on its own.
             return null;
         }
     }
@@ -256,7 +257,7 @@ public sealed class EarlyStartCoordinator
         }
         catch (Exception)
         {
-            // Best effort, as above.
+            // no-fallback: best effort, as above.
         }
     }
 
@@ -270,7 +271,7 @@ public sealed class EarlyStartCoordinator
         }
         catch (OperationCanceledException) when (skip.IsCancellationRequested && !token.IsCancellationRequested)
         {
-            // The person tapped this side: start now.
+            // no-fallback: the person tapped this side: start now.
         }
     }
 

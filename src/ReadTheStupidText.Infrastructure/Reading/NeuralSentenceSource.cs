@@ -49,6 +49,7 @@ internal sealed class NeuralSentenceSource
         }
         catch (InvalidDataException ex)
         {
+            // no-fallback: the damaged cache entries are dropped and the chunk is resynthesized, same voice and audio
             _log.Warning("cached sentence audio would not join; resynthesizing the chunk", activityId, ex);
             units.ToList().ForEach(u => _sentences.Invalidate(KeyFor(engine, u, voice, transform)));
             return JoinClips(await GetClipsAsync(engine, units, voice, activityId, token, transform), transform);

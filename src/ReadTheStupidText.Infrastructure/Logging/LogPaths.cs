@@ -56,9 +56,11 @@ public sealed class LogPaths : ILogFolder
         }
         catch (IOException)
         {
+            // no-fallback: best-effort cleanup of old log files; a file that cannot be deleted is left for next time
         }
         catch (UnauthorizedAccessException)
         {
+            // no-fallback: best-effort cleanup of old log files; a file that cannot be deleted is left for next time
         }
     }
 }

@@ -31,6 +31,7 @@ public static class ScannedImageFiles
         }
         catch (Exception)
         {
+            // no-fallback: best-effort cleanup delete of a cache file
             // Cleanup is best effort; a leftover cache file is harmless.
         }
     }

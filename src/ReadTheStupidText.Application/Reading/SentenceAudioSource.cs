@@ -87,6 +87,7 @@ internal sealed class SentenceAudioSource
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // no-fallback: the sentence cache is an optimization; a failed store costs only a later re-synthesis.
             _log.Warning($"cache store failed for {key.ShortHash}", activityId, ex);
         }
     }
@@ -109,6 +110,7 @@ internal sealed class SentenceAudioSource
             }
             catch (OperationCanceledException) when (!token.IsCancellationRequested)
             {
+                // no-fallback: the shared synthesis was cancelled by another caller; this caller retries or throws below.
                 _inFlight.TryRemove(new KeyValuePair<string, Lazy<Task<byte[]>>>(key.Id, shared));
                 if (ReferenceEquals(shared, own))
                 {
