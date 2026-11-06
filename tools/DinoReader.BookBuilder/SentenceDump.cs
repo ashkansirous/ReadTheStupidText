@@ -88,7 +88,7 @@ internal static class SentenceDump
         var sentences = new List<SpokenSentence>(); // no animal sounds: the app plays a bundled recording for them (Slice 255), so there is nothing to render
         for (int i = 0; i < spoken.Count; i++)
         {
-            if (spoken[i].Segment.Text.Any(char.IsLetterOrDigit))
+            if (PremadeAudio.IsSpoken(spoken[i].Segment.Text))
             {
                 sentences.Add(Spoken(story, spoken[i], sources[i].Segment.Text, spans, sentences.Count));
             }

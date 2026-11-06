@@ -12,6 +12,11 @@ on:
       - '.maestro/**'
       - '.github/workflows/tools-selftests.yml'
       - 'PSScriptAnalyzerSettings.psd1'
+      # Slice 272: the Dino audio alignment check below. The `scope` job keeps the Windows self-tests off these paths.
+      - 'src/DinoReader.Core/**'
+      - 'src/ReadTheStupidText.Application/**'
+      - 'src/DinoReader.App/StoryVoicing.cs'
+      - 'content/dino/**'
 
 permissions:
   contents: read
@@ -21,8 +26,54 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Slice 272: which of the two checks below the change needs, so a Core or content change does not start the Windows self-tests and a tools change does not fetch LFS manifests.
+  scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tooling: ${{ steps.scope.outputs.tooling }}
+      audio: ${{ steps.scope.outputs.audio }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Decide which checks apply
+        id: scope
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          changed="$(git diff --name-only "$BASE" "$GITHUB_SHA")"
+          if echo "$changed" | grep -qE '^(tools/|\.maestro/|\.github/workflows/tools-selftests\.yml$|PSScriptAnalyzerSettings\.psd1$)'; then echo "tooling=true" >> "$GITHUB_OUTPUT"; else echo "tooling=false" >> "$GITHUB_OUTPUT"; fi
+          if echo "$changed" | grep -qE '^(src/DinoReader\.Core/|src/ReadTheStupidText\.Application/|src/DinoReader\.App/StoryVoicing\.cs$|tools/DinoReader\.BookBuilder/|content/dino/|\.github/workflows/tools-selftests\.yml$)'; then echo "audio=true" >> "$GITHUB_OUTPUT"; else echo "audio=false" >> "$GITHUB_OUTPUT"; fi
+
+  # Slice 272: every Dino pre-made audio manifest must hash the sentences the app reads now, position by position (Slice 255 changed the count and eight Farsi packs silently stopped fitting).
+  # Only the manifest.json files are fetched from Git LFS (about 240 small files), never a clip.
+  audio-alignment:
+    needs: scope
+    if: needs.scope.outputs.audio == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Fetch the audio manifests from Git LFS
+        run: git lfs pull --include "content/dino/*/audio/*/manifest.json" --exclude ""
+
+      - name: Check that every audio manifest lines up with the sentences the app reads
+        run: dotnet run --project tools/DinoReader.BookBuilder --configuration Release -- check-audio
+
   # Slice 215: one job, two shells (pwsh = PowerShell 7, powershell = Windows PowerShell 5.1), instead of two copies of the same steps.
   selftests:
+    needs: scope
+    if: needs.scope.outputs.tooling == 'true'
     runs-on: windows-latest
     timeout-minutes: 10
     strategy:

@@ -127,17 +127,15 @@ public sealed class StoryVoicing
 		public string? PathOf(int piece)
 		{
 			string text = PlainPieces[piece].Segment.Text;
-			if (!IsSpoken(text))
+			if (!PremadeAudio.IsSpoken(text))
 			{
 				return null;
 			}
 
-			return Pack.PathOf(Offset + PlainPieces.Take(piece).Count(p => IsSpoken(p.Segment.Text)), text);
+			return Pack.PathOf(Offset + PremadeAudio.SpokenCount(PlainPieces.Take(piece).Select(p => p.Segment.Text)), text);
 		}
 
-		public static int SpokenCount(IReadOnlyList<SplitSegment> pieces) => pieces.Count(p => IsSpoken(p.Segment.Text));
-
-		private static bool IsSpoken(string text) => text.Any(char.IsLetterOrDigit);
+		public static int SpokenCount(IReadOnlyList<SplitSegment> pieces) => PremadeAudio.SpokenCount(pieces.Select(p => p.Segment.Text));
 	}
 
 	// The clips are keyed by the plain text, but the pieces a translated read speaks carry the speak: table's marks, so the plain pieces are translated again (a table lookup); an own-language read
