@@ -4,6 +4,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 274: Dino iPhone crash after leaving the grown-ups pages ([slice](slices/274-dino-ios-crash-after-leaving-parent-page.md))
 - The user's iPhone 8 Plus (iOS 16) on the next TestFlight build: grown-ups page (Settings > Reading speed), switch app, come back: no crash.
+- Android emulator: drag and release the reading-speed slider, and open the Language page; both behave as before (the builder moved the slider's Unloaded handler onto a wrapper and made `LanguagePage.WhenLoadedAsync` wait on RootPage; added by the feedback loop of 2026-11-06).
 - The next morning, `pull-crashes.mjs` and TestFlight crash feedback show no new report for that build.
 - The iOS cause is only likely (stack matches dotnet/maui PR #38662; the one symbolicated app frame is `_xamarin_release_managed_ref+0x64`). CI keeps no dSYM, so the stack cannot be symbolicated further.
 
@@ -22,8 +23,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Part C production rows: check with `analytics-query` after release.
 
 ### Slice 272: Dino Farsi clips off by one ([slice](slices/272-dino-farsi-clips-off-by-one.md))
-- Emulator: `.maestro/dino/premade-audio-past-roar.yaml` (Lion and Mouse in Farsi, live v2 pack, page 5 plays the clip at piece 19) written but not run; needs the network and the published pack.
-- Item 4: after the merge's `dino-store.yml` run, every live pack's manifest lines up with the dump (the live-scan over the store).
+- Emulator: `.maestro/dino/premade-audio-past-roar.yaml` passes once its marker is fixed (Slice 275 item 2); the 2026-11-06 run showed the app right and the flow failing on its own marker.
 - iOS: the user checks Lion and Mouse in Farsi past page 5 on the next TestFlight build.
 
 ### Slice 270: Dino iPhone crash, player disposed in its finished callback ([slice](slices/270-dino-ios-player-disposed-in-finished-callback.md))
