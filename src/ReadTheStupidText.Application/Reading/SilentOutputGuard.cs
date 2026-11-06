@@ -105,6 +105,7 @@ public static class SilentOutputGuard
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {
+            // no-fallback: a plain retry with the same voice runs instead; a silent result is reported by the guard's own SilentRetake/SilentGaveUp reports.
             debug?.Invoke($"single-thread take failed, plain retry instead (voice {voiceId}, {text.Length} chars): {e.GetType().Name}");
             return await generate();
         }
@@ -376,6 +377,7 @@ public static class ShortLineProbe
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {
+            // no-fallback: the short line probe is a diagnostic only; no speech changes.
             debug($"short line probe failed (voice {voiceId}): {e.GetType().Name}");
         }
     }

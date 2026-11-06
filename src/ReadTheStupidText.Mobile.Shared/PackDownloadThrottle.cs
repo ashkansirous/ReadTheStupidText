@@ -29,6 +29,7 @@ internal static class PackDownloadThrottle
         }
         catch (Exception)
         {
+            // no-fallback: this reads a device-test marker file; unreadable means the throttle is off (the normal state)
             return false;
         }
 #else

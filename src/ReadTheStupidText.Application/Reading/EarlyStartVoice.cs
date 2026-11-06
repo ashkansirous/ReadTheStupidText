@@ -64,6 +64,7 @@ public sealed class EarlyStartVoice
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: a superseded or cancelled preparation stored nothing and is reported as not prepared.
             return false;
         }
     }

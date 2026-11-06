@@ -121,6 +121,7 @@ public static class PlatformVoiceAvailability
         }
         catch (Exception)
         {
+            // no-fallback: null means "the phone could not say"; the caller treats the phone's languages as unknown and decides there
             return null;
         }
     }

@@ -95,7 +95,7 @@ function Save-FlowLogcat([string]$FlowName) {
     try {
         $dir = Join-Path $script:StateDir "logcat-i$Instance"
         $null = New-Item -ItemType Directory -Force $dir
-        $path = Join-Path $dir "$FlowName.log"
+        $path = Join-Path $dir "$App-$FlowName.log"   # Slice 275 item 5: the RTST and Dino flows share names (usage-fallback-swallowed), so the app is in the file name
         Set-Content -Path $path -Value (Get-TestLog) -Encoding UTF8   # explicit: Windows PowerShell 5.1 would write the ANSI page and garble Farsi / Norwegian trace text
         Write-Host "LOGCAT kept for ${FlowName}: $path"
     } catch { Write-Host "LOGCAT could not be kept for ${FlowName}: $($_.Exception.Message)" }
@@ -381,7 +381,7 @@ function Build-BeforeLease {
     $key = Get-BuildKey
     $needed = $Install -or ((Get-InstalledKey $App) -ne $key)
     if ($needed -and -not (Find-CachedBuild (Get-NoBuildLookupDir (Get-BuildDir $App (Get-EmulatorBuildPlatform $App) $key)) '*-Signed.apk')) {
-        if (Test-NoBuildRequested $NoBuild) { Write-Host (Format-EmulatorNoBuildMiss $App $key); exit $script:EmulatorExitCacheMissed }
+        if (Test-NoBuildRequested $NoBuild) { Write-Host (Format-EmulatorNoBuildMiss $App $key); Write-BuildKeyInputs $key; exit $script:EmulatorExitCacheMissed }
         $boot = if (Test-EmulatorPresent) { $null } else { Start-EmulatorBootInBackground $Instance -ColdBoot:$ColdBoot }
         if ($boot) { Write-Host "Cache miss: building the $App APK while $($script:Serial) boots." }
         $built = $false

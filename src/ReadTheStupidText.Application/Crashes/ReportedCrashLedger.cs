@@ -66,7 +66,7 @@ public sealed class ReportedCrashLedger(string path)
         }
         catch (Exception)
         {
-            // A ledger that cannot be deleted holds only times and file names.
+            // no-fallback: a ledger that cannot be deleted holds only times and file names.
         }
     }
 
@@ -84,7 +84,7 @@ public sealed class ReportedCrashLedger(string path)
         }
         catch (Exception)
         {
-            // Without the ledger a duplicate may be reported; nothing else changes.
+            // no-fallback: without the ledger a duplicate may be reported; nothing else changes.
         }
     }
 

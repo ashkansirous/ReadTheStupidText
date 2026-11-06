@@ -109,6 +109,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
         catch (Exception ex)
         {
+            // no-fallback: probe only picks the generation window size; the full window gives the same audio
             Debug.WriteLine($"Memory probe failed, using the full generation window: {ex.Message}");
             return 0;
         }
@@ -536,6 +537,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             }
             catch
             {
+                // no-fallback: the previous chunk's failure is reported by its own await; this only orders the work
                 // Swallowed: the first chunk's real outcome surfaces on its own await.
             }
         }
@@ -573,6 +575,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
         catch (Exception)
         {
+            // no-fallback: a lost trace line, logging only
             // Losing one trace line is better than failing a read.
         }
     }
@@ -609,6 +612,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: the read was cancelled
             return false;
         }
 
@@ -684,6 +688,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
         catch (NeuralEngineUnavailableException)
         {
+            // no-fallback: the engine build failure was already reported by AcquireEngine (EngineBuildFailed); null means the read's own engine serves
             return null;
         }
     }
@@ -748,6 +753,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
         catch
         {
+            // no-fallback: warm-up only; AcquireEngine() in the read reports a real build failure
             // Best-effort: AcquireEngine() in the read remains the safety net.
         }
     }
@@ -817,6 +823,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
         catch (InvalidDataException ex)
         {
+            // no-fallback: the chunk is re-synthesized with the same engine and voice, so the audio is the same
             _log.Warning("cached sentence audio would not join; resynthesizing the chunk", error: ex);
             units.ToList().ForEach(u => _sentences.Invalidate(KeyFor(engine, u, voice, transform)));
             clips = await GetClipsAsync(engine, units, voice, transform, slots, token);
@@ -1515,6 +1522,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // no-fallback: the head start is a speed-up; the read synthesizes normally without it
             _log.Warning("head start failed", error: ex);
             return false;
         }
@@ -1663,6 +1671,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: cancellation on stop/skip/supersede
             // Expected on stop/skip/supersede.
         }
     }
@@ -1781,6 +1790,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
         catch (IOException)
         {
+            // no-fallback: best-effort temp file delete
             // Best-effort cleanup; the cache directory is periodically reclaimed
             // by the OS regardless.
         }

@@ -139,6 +139,7 @@ public sealed partial class ReadAloudService
         }
         catch (OperationCanceledException) when (!token.IsCancellationRequested)
         {
+            // no-fallback: the early head start only saves time; the read goes on and translates the whole text itself.
             _systemLog.Debug("early translation too slow; the read translates alone");
             DiscardEarlyWork();
             return null;
@@ -198,6 +199,7 @@ public sealed partial class ReadAloudService
         }
         catch (OperationCanceledException) when (!caller.IsCancellationRequested)
         {
+            // no-fallback: the early voice preparation only saves time; the read goes on without waiting for it.
             _systemLog.Debug("early voice still running; the read goes on");
         }
         finally

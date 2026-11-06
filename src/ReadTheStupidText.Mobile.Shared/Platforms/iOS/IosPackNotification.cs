@@ -35,6 +35,7 @@ internal sealed class IosPackNotification : IPackPausedNotifier
         }
         catch (Exception ex)
         {
+            // no-fallback: logged only; without notification permission the pack download simply posts no notice
             PackDownloadHost.LogService(PackDownloadHost.NotificationAuthFailedAction, ex.GetType().Name);
         }
     }
@@ -120,6 +121,7 @@ internal sealed class IosPackNotification : IPackPausedNotifier
         }
         catch (Exception ex)
         {
+            // no-fallback: logged only; a failed paused-download notice has no alternative
             PackDownloadHost.LogService(PackDownloadHost.PausedFailedAction, ex.GetType().Name);
         }
     }

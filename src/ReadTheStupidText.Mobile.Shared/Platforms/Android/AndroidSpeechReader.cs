@@ -163,6 +163,7 @@ public sealed class AndroidSpeechReader : Java.Lang.Object, ISpeechReader, IRead
         }
         catch (TimeoutException)
         {
+            // no-fallback: a slow engine start is counted as a failed start just below
             // still pending: counted below
         }
 

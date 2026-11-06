@@ -26,7 +26,7 @@ public static partial class MobileSharedServices
 	{
 		services.AddSingleton(_ => new MlKitImageTextExtractor(global::Android.App.Application.Context));
 		services.AddSingleton<IBuiltInTextRecognizer>(sp => sp.GetRequiredService<MlKitImageTextExtractor>());
-		services.AddSingleton<IPixelImageLoader>(_ => new AndroidPixelImageLoader(global::Android.App.Application.Context));
+		services.AddSingleton<IPixelImageLoader>(sp => new AndroidPixelImageLoader(global::Android.App.Application.Context, sp.GetService<ReadTheStupidText.Application.Usage.IFallbackSink>()));
 		services.TryAddSingleton<ISystemLog, AndroidSystemLog>();
 		services.AddSingleton<LanguageImageTextExtractor>();
 		services.AddSingleton<IImageTextExtractor>(sp => sp.GetRequiredService<LanguageImageTextExtractor>());

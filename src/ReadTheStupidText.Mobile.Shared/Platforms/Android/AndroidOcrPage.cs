@@ -2,6 +2,7 @@ using Android.Graphics;
 using Rect = Android.Graphics.Rect;
 using RectF = Android.Graphics.RectF;
 using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Application.Usage;
 
 namespace ReadTheStupidText.Mobile.Shared;
 
@@ -17,6 +18,7 @@ internal sealed class AndroidOcrPage : IOcrPage
 {
     private const float MarginInLineHeights = 0.1f;
 
+    private readonly IFallbackSink _fallbacks; // Slice 275
     private readonly BitmapRegionDecoder? _decoder;
     private readonly Stream? _stream;
     private readonly int _orientation;
@@ -28,8 +30,9 @@ internal sealed class AndroidOcrPage : IOcrPage
     private readonly int _uprightWidth;
     private readonly int _uprightHeight;
 
-    public AndroidOcrPage(PixelImage detection, BitmapRegionDecoder? decoder, Stream? stream, int orientation, int sourceWidth, int sourceHeight)
+    public AndroidOcrPage(PixelImage detection, BitmapRegionDecoder? decoder, Stream? stream, int orientation, int sourceWidth, int sourceHeight, IFallbackSink fallbacks)
     {
+        _fallbacks = fallbacks;
         Detection = detection;
         _decoder = decoder;
         _stream = stream;
@@ -50,6 +53,7 @@ internal sealed class AndroidOcrPage : IOcrPage
     {
         if (_decoder is null || _uprightToSource is null)
         {
+            _fallbacks.Report(FallbackArea.Ocr, FallbackReason.OcrCropDegraded); // Slice 275: no region decoder, so each line is cropped from the detection image; same as iOS, one report per degraded crop
             return ImageResizer.Crop(Detection, box);
         }
 
@@ -59,6 +63,7 @@ internal sealed class AndroidOcrPage : IOcrPage
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            _fallbacks.Report(FallbackArea.Ocr, FallbackReason.OcrCropDegraded); // Slice 275: crops the already-loaded detection image instead; same recogniser, only a lower-resolution crop
             System.Diagnostics.Debug.WriteLine($"Region decode failed, cropping from the detection image: {ex.Message}");
             return ImageResizer.Crop(Detection, box);
         }

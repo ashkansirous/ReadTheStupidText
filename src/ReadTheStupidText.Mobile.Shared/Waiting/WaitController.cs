@@ -157,6 +157,7 @@ public sealed class WaitController
         }
         catch (Exception ex)
         {
+            // no-fallback: counting is best effort and must never change what the wait does
             System.Diagnostics.Debug.WriteLine($"A wait count handler failed: {ex.Message}"); // counting must never change what the wait does
         }
     }

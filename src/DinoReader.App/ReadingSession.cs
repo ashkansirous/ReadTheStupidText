@@ -68,7 +68,7 @@ public sealed class ReadingSession
 	private StepRead? _stepRead;
 	private StepRead? _restartStep; // Slice 246 C2: a pre-made clip failed while the user had paused; its piece is read by the device voice when they resume
 	private bool _pendingAdvance; // a step ended while the user had paused: Resume takes the next one
-	private (int Id, int Page)? _recordingEndedWhilePaused; // a recorded page ended while the user had paused: Resume goes on from it
+	private readonly ReadingPauseState _pauseState = new(); // a recorded page that ended while the user had paused: Resume goes on from it (Slice 271)
 	// Completed carries no id, so a speech step's end is accepted only for the run that was seen Playing (AnimalClipRuns.AcceptCompleted): _run counts the speech steps
 	// started (and Stop/StartAt), _playingRun is the run last seen Playing, and OnCompleted stamps _run when the signal is raised.
 	private int _run;
@@ -338,9 +338,8 @@ public sealed class ReadingSession
 			AppTrace.Reading(TraceLines.ReadingEvent.Resumed, TraceLines.ReadingReason.User);
 			RaiseIf(counted, ReadingEventKind.Resumed);
 			_recorded = RecordedPlay.Playing;
-			if (_recordingEndedWhilePaused is { } ended)
+			if (_pauseState.TakeHeld() is { } ended)
 			{
-				_recordingEndedWhilePaused = null;
 				ApplyRecordingEnded(ended.Id, ended.Page); // the clip had already ended: go on instead of resuming a finished player
 				return;
 			}
@@ -441,7 +440,7 @@ public sealed class ReadingSession
 		_stepRead = null;
 		_restartStep = null;
 		_pendingAdvance = false;
-		_recordingEndedWhilePaused = null; // a stale flag must not fire on a later Resume
+		_pauseState.Clear(); // a stale flag must not fire on a later Resume
 		if (_recorded != RecordedPlay.None)
 		{
 			_player.Stop();
@@ -479,7 +478,7 @@ public sealed class ReadingSession
 		}
 
 		_recorded = RecordedPlay.Playing;
-		_recordingEndedWhilePaused = null;
+		_pauseState.Clear();
 		ClearPending();
 		return true;
 	}
@@ -487,14 +486,9 @@ public sealed class ReadingSession
 	// The page's recording played to its end: the read goes on with the sentence after the page (a recorded or a generated page), or the story is finished.
 	private void ApplyRecordingEnded(int id, int page)
 	{
-		if (id != _activeReadId || _recorded == RecordedPlay.None)
+		// Slice 270: Pause landed after the clip ended; the read holds here and Resume goes on. A stale id or no recording playing is ignored (Slice 271: ReadingPauseState, unit-tested).
+		if (_pauseState.OnRecordingEnded(id, page, activeReadId: _activeReadId, recordingActive: _recorded != RecordedPlay.None, paused: _recorded == RecordedPlay.Paused) != RecordingEndAction.Advance)
 		{
-			return;
-		}
-
-		if (_recorded == RecordedPlay.Paused)
-		{
-			_recordingEndedWhilePaused = (id, page); // Slice 270: Pause landed after the clip ended; the read holds here and Resume goes on
 			return;
 		}
 

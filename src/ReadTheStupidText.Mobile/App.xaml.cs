@@ -116,7 +116,7 @@ public partial class App : Microsoft.Maui.Controls.Application
 		}
 		catch (Exception)
 		{
-			// Counting is best effort.
+			// no-fallback: counting is best effort; it only fails when the fallback count itself cannot be made.
 		}
 	}
 

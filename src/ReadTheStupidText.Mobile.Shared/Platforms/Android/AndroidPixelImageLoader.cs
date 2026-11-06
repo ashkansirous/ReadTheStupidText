@@ -1,5 +1,6 @@
 using Android.Graphics;
 using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Application.Usage;
 
 namespace ReadTheStupidText.Mobile.Shared;
 
@@ -15,7 +16,13 @@ public sealed class AndroidPixelImageLoader : IPixelImageLoader
 {
     private readonly Android.Content.Context _context;
 
-    public AndroidPixelImageLoader(Android.Content.Context context) => _context = context;
+    private readonly IFallbackSink _fallbacks; // Slice 275
+
+    public AndroidPixelImageLoader(Android.Content.Context context, IFallbackSink? fallbacks = null)
+    {
+        _context = context;
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance;
+    }
 
     public IOcrPage Open(string imagePath, int maxSide)
     {
@@ -23,7 +30,7 @@ public sealed class AndroidPixelImageLoader : IPixelImageLoader
         int orientation = AndroidImageSource.ReadOrientation(_context, imagePath);
         PixelImage detection = LoadDetection(imagePath, SampleSize(Math.Max(width, height), maxSide), orientation);
         (BitmapRegionDecoder? decoder, Stream? stream) = TryOpenRegionDecoder(imagePath);
-        return new AndroidOcrPage(detection, decoder, stream, orientation, width, height);
+        return new AndroidOcrPage(detection, decoder, stream, orientation, width, height, _fallbacks);
     }
 
     // Null decoder when the format has none: crops then come from the detection image.
@@ -49,6 +56,7 @@ public sealed class AndroidPixelImageLoader : IPixelImageLoader
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // no-fallback: AndroidOcrPage.CropLine reports ocr_crop_degraded for every crop it takes without a decoder
             System.Diagnostics.Debug.WriteLine($"No region decoder for '{imagePath}', cropping from the detection image: {ex.Message}");
             stream?.Dispose();
             return (null, null);

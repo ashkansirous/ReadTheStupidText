@@ -1,0 +1,56 @@
+# Slice 271 item 4 (Slice 269): a store book that carries a tag this build does not know (a newer store's) shows no badge and no error. The Debug test store in mode unknowntag lists the
+# same books as mode ok, but Good Enough lists the tag names FutureTag (no build knows it) and Recommended (TestStore.cs, parsed by the real StoreTags.FromJson). Three Little Pigs still shows its Hot badge,
+# Good Enough shows only its Recommended pill, and "New" (what an unknown tag once rendered as, Slice 269) is not on the page. The flow fails against the old behaviour: a build that draws an unknown tag as "New" shows store-tag-New / "New".
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK test-store ok unknowntag
+# expect-log: HOOK enter-grown-up ok
+appId: uk.sirous.dinoreader.dbg
+name: A store book with an unknown tag shows no badge and no error
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, packs, own books); fine here: the flow reads the Debug test store list and a starter shelf, with no own book or voice pack.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: unknowntag
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: GalleryStore
+    timeout: 30000
+- tapOn:
+    id: GalleryStore
+- extendedWaitUntil:
+    visible:
+      id: store-tag-Hot
+    timeout: 30000
+- scrollUntilVisible:
+    element: "Good Enough"
+    timeout: 20000
+- assertVisible: "Good Enough"
+# Good Enough lists ["FutureTag", "Recommended"] through the real tag parse (TestStore.cs): the unknown name is dropped, the known one stays. Only this book is Recommended, so its pill proves the
+# card rendered; no other pill (New, or an empty one) appears.
+- assertVisible:
+    id: store-tag-Recommended
+- assertVisible: "Recommended"
+# No "New" badge anywhere: neither by id nor as a pill whose text is exactly New (the regex is anchored, so a title containing the word does not false-fail).
+- assertNotVisible:
+    id: store-tag-New
+- assertNotVisible:
+    text: "New"
+# The unknown tag is not drawn as a pill of its own either.
+- assertNotVisible:
+    id: store-tag-FutureTag

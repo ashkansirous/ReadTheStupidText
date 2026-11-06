@@ -27,14 +27,19 @@ internal static class StoreValidation
         return problems;
     }
 
-    /// <summary>The problems of each store book that has any, by stem (an id shared with another book counts against each store book that has it); a valid book is absent.</summary>
-    public static IReadOnlyDictionary<string, IReadOnlyList<string>> ProblemsByBook(IEnumerable<BookFolder> storeBooks)
+    /// <summary>The problems of each store book that has any, by stem (an id shared with another book counts against each store book that has it); a valid book is absent.
+    /// Text only unless <paramref name="includeAudio"/>: the audio check needs the Git LFS manifests pulled, which the unit-test checkout does not have.</summary>
+    public static IReadOnlyDictionary<string, IReadOnlyList<string>> ProblemsByBook(IEnumerable<BookFolder> storeBooks, bool includeAudio = false)
     {
         Dictionary<string, string> shared = Books.All.GroupBy(b => b.Info.Id).Where(g => g.Count() > 1).ToDictionary(g => g.Key, g => string.Join(", ", g.Select(b => b.Stem)));
         var result = new Dictionary<string, IReadOnlyList<string>>();
         foreach (BookFolder book in storeBooks)
         {
             List<string> problems = BookProblems(book).ToList();
+            if (includeAudio)
+            {
+                problems.AddRange(AudioProblems(book));
+            }
             if (shared.TryGetValue(book.Info.Id, out string? stems))
             {
                 problems.Add($"the books {stems} share the id {book.Info.Id}");
@@ -47,6 +52,22 @@ internal static class StoreValidation
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Slice 277: the audio gaps of a store book (<see cref="AudioAlignment.ProblemsOf"/>: a pack in every offered language, a clip for every sentence). Only <c>build --live</c> asks, not <see cref="BookProblems"/>:
+    /// the unit tests run on a checkout whose manifests are Git LFS pointers. A book with a gap is skipped like any invalid book, so it is not built or uploaded and the other books still go.
+    /// </summary>
+    internal static IReadOnlyList<string> AudioProblems(BookFolder book)
+    {
+        try
+        {
+            return AudioAlignment.ProblemsOf(book);
+        }
+        catch (Exception e) when (e is not OutOfMemoryException)
+        {
+            return [$"{book.Stem}: the audio check itself failed ({e.GetType().Name}: {e.Message})"];
+        }
     }
 
     public static IReadOnlyList<string> BookProblems(BookFolder book)

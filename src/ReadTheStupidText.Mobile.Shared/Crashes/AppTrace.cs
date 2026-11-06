@@ -23,7 +23,7 @@ public static class AppTrace
         }
         catch (Exception)
         {
-            // A trace line must never break the caller.
+            // no-fallback: trace logging is best effort and must never break the caller (and not report into itself)
         }
     }
 
@@ -50,6 +50,7 @@ public static class AppTrace
         }
         catch (Exception)
         {
+            // no-fallback: tracing is best effort and logging-only
             // Tracing is best effort.
         }
     }
@@ -72,6 +73,7 @@ public static class AppTrace
         }
         catch (Exception)
         {
+            // no-fallback: tracing is best effort and logging-only
             // Tracing is best effort.
         }
     }

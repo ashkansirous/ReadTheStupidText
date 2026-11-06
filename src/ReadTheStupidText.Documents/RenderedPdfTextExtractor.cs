@@ -1,5 +1,6 @@
 using System.Globalization;
 using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Application.Usage;
 
 namespace ReadTheStupidText.Documents;
 
@@ -19,10 +20,12 @@ public sealed class RenderedPdfTextExtractor : IPositionedTextExtractor
     private readonly IPdfPageRenderer _renderer;
     private readonly OcrPositionedTextExtractor _ocr;
     private readonly string _imageFolder;
+    private readonly IFallbackSink _fallbacks; // Slice 275
 
     public RenderedPdfTextExtractor(
-        IPositionedTextExtractor textLayer, IPdfPageRenderer renderer, OcrPositionedTextExtractor ocr, string imageFolder)
+        IPositionedTextExtractor textLayer, IPdfPageRenderer renderer, OcrPositionedTextExtractor ocr, string imageFolder, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance;
         _textLayer = textLayer;
         _renderer = renderer;
         _ocr = ocr;
@@ -63,6 +66,7 @@ public sealed class RenderedPdfTextExtractor : IPositionedTextExtractor
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            _fallbacks.Report(FallbackArea.Document, FallbackReason.PdfImportFailed); // Slice 275: no images, so pages keep only their text-layer lines
             return new Dictionary<int, string>();
         }
     }
@@ -80,6 +84,7 @@ public sealed class RenderedPdfTextExtractor : IPositionedTextExtractor
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            _fallbacks.Report(FallbackArea.Ocr, FallbackReason.PageReadFailed); // Slice 275: a page it cannot read stays as extracted (no recognised lines)
             return page;
         }
     }

@@ -117,11 +117,11 @@ public partial class ReaderPage
         }
         catch (OperationCanceledException)
         {
-            // Superseded by newer text: the newer pass decides.
+            // no-fallback: superseded by newer text: the newer pass decides.
         }
         catch (Exception)
         {
-            // A failed detection leaves the language unknown; it never blocks reading.
+            _usage.Fallbacks.Report(FallbackArea.Translation, FallbackReason.LanguageDetectFailed); // Slice 275: a failed detection leaves the language unknown; it never blocks reading.
             _detectedSource = null;
             OnReadingLanguageMayHaveChanged();
         }

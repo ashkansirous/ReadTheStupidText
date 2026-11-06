@@ -27,14 +27,16 @@ public sealed class UpdateConfigService
     private readonly bool _buildMayUpdate;
     private readonly TimeProvider _clock;
     private readonly UsageConfig? _testConfig;
+    private readonly IFallbackSink _fallbacks; // Slice 275
 
     private readonly object _gate = new();
     private UsageConfig? _current;
     private Task? _inFlight;
     private DateTimeOffset _notBefore = DateTimeOffset.MinValue;
 
-    public UpdateConfigService(IUsageStore store, IUsageTransport transport, AppPlatform platform, string installed, bool buildMayUpdate, string? testConfigJson = null, TimeProvider? clock = null)
+    public UpdateConfigService(IUsageStore store, IUsageTransport transport, AppPlatform platform, string installed, bool buildMayUpdate, string? testConfigJson = null, TimeProvider? clock = null, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance;
         _store = store;
         _transport = transport;
         _platform = platform;
@@ -101,6 +103,7 @@ public sealed class UpdateConfigService
         }
         catch (Exception ex)
         {
+            _fallbacks.Report(FallbackArea.Config, FallbackReason.ConfigCached); // Slice 275: the held config stays in force
             Debug.WriteLine($"Update check could not load the remote config: {ex.Message}");
         }
     }
@@ -133,6 +136,7 @@ public sealed class UpdateConfigService
         }
         catch (Exception ex)
         {
+            // no-fallback: a throwing change handler must not fault the pool task; the config itself is already applied.
             Debug.WriteLine($"Update check: a change handler failed: {ex.Message}");
         }
     }
@@ -145,6 +149,7 @@ public sealed class UpdateConfigService
         }
         catch (Exception ex)
         {
+            // no-fallback: the fetched config stays in force this run; only the on-disk copy for the next launch is lost.
             Debug.WriteLine($"Update check could not keep the remote config: {ex.Message}");
         }
     }
@@ -175,6 +180,7 @@ public sealed class UpdateConfigService
         }
         catch (Exception ex)
         {
+            _fallbacks.Report(FallbackArea.Config, FallbackReason.ConfigDefault); // Slice 275: an unreadable kept copy means the default config (no update asked)
             Debug.WriteLine($"Update check could not read the kept config: {ex.Message}");
             return UsageConfig.Default;
         }

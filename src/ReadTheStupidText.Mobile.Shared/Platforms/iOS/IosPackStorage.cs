@@ -25,6 +25,7 @@ public static class IosPackStorage
         }
         catch (Exception ex)
         {
+            // no-fallback: only the exclude-from-backup flag is lost; the packs folder works as before
             System.Diagnostics.Debug.WriteLine($"Could not prepare the packs folder: {ex.Message}");
         }
     }

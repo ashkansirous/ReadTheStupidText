@@ -84,6 +84,7 @@ public sealed class AndroidDocumentScanner : IDocumentScanner
         }
         catch (Exception)
         {
+            // no-fallback: warm-up only; a failure is reported by the scan itself when the module is really missing
             // Best effort: a failed warm-up just means the first scan may report "preparing".
         }
     }

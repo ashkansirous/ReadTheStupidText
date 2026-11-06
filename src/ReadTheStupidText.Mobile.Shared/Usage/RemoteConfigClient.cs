@@ -151,6 +151,7 @@ public sealed class RemoteConfigClient<TConfig>(RemoteConfigOptions<TConfig> opt
         }
         catch (OperationCanceledException) when (cancel.IsCancellationRequested)
         {
+            // no-fallback: cancellation by the caller at shutdown is not a failed load
             // The caller gave up (shutdown): that is not a failed load, so no back-off and no retry.
             Debug.WriteLine($"{options.LogName}: the remote config fetch was cancelled by the caller.");
         }
@@ -172,6 +173,7 @@ public sealed class RemoteConfigClient<TConfig>(RemoteConfigOptions<TConfig> opt
         }
         catch (Exception ex)
         {
+            // no-fallback: this is the fallback report itself; a failing handler is logged and cannot report into itself
             Debug.WriteLine($"{options.LogName}: a config fallback handler failed: {ex.Message}");
         }
     }
@@ -210,6 +212,7 @@ public sealed class RemoteConfigClient<TConfig>(RemoteConfigOptions<TConfig> opt
         }
         catch (Exception ex)
         {
+            // no-fallback: a failing subscriber is logged and must not stop the config load
             Debug.WriteLine($"{options.LogName}: a remote config fetched handler failed: {ex.Message}");
         }
     }
@@ -223,6 +226,7 @@ public sealed class RemoteConfigClient<TConfig>(RemoteConfigOptions<TConfig> opt
         }
         catch (Exception ex)
         {
+            // no-fallback: a failing subscriber is logged and must not crash the main-thread dispatcher
             Debug.WriteLine($"{options.LogName}: a remote config change handler failed: {ex.Message}");
         }
     }
@@ -300,6 +304,7 @@ public sealed class RemoteConfigClient<TConfig>(RemoteConfigOptions<TConfig> opt
         }
         catch (Exception ex) when (ex is InvalidOperationException or PlatformNotSupportedException)
         {
+            // no-fallback: an unreadable cache means no cached copy; the fetch then runs and reports a fallback if it fails too
             return null;
         }
     }
@@ -312,6 +317,7 @@ public sealed class RemoteConfigClient<TConfig>(RemoteConfigOptions<TConfig> opt
         }
         catch (Exception ex) when (ex is InvalidOperationException or PlatformNotSupportedException)
         {
+            // no-fallback: the fetched config is already in force; only the offline copy was not kept
             Debug.WriteLine($"{options.LogName} could not keep the remote config: {ex.Message}");
         }
     }

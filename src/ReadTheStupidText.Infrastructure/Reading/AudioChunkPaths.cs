@@ -68,9 +68,11 @@ public sealed class AudioChunkPaths
         }
         catch (IOException)
         {
+            // no-fallback: best-effort cleanup of temp chunk files; a file that cannot be deleted is left behind
         }
         catch (UnauthorizedAccessException)
         {
+            // no-fallback: best-effort cleanup of temp chunk files; a file that cannot be deleted is left behind
         }
     }
 }

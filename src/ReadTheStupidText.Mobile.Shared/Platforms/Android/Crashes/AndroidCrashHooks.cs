@@ -40,6 +40,7 @@ internal static class AndroidCrashHooks
         }
         catch (Exception ex)
         {
+            // no-fallback: crash-hook code; unreadable exit reasons only mean no native crash is reported
             System.Diagnostics.Debug.WriteLine($"Exit reasons unreadable: {ex.Message}");
             return [];
         }
@@ -96,6 +97,7 @@ internal static class AndroidCrashHooks
         }
         catch (Exception)
         {
+            // no-fallback: crash-hook code; an unreadable trace is reported as empty
             return string.Empty;
         }
     }

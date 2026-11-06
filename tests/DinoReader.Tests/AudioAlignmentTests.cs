@@ -8,14 +8,16 @@ public sealed class AudioAlignmentTests
 {
     private static SpokenSentence Piece(int index, string text) => new(index, index, text, text, null, true);
 
-    private static ManifestEntry Entry(int index, string text) => new(index, PremadeAudio.HashOf(text), text);
+    private static ManifestEntry Entry(int index, string text) => new(index, PremadeAudio.HashOf(text), text, text + ".m4a");
+
+    private static long? Present(string clip) => 1000;
 
     [Fact]
-    public void AManifestThatHashesEveryPiece_HasNoProblem()
+    public void AManifestThatHashesEveryPiece_HasNoGap()
     {
         SpokenSentence[] dump = [Piece(0, "a"), Piece(1, "b")];
 
-        Assert.Null(AudioAlignment.FirstProblem([Entry(0, "a"), Entry(1, "b")], dump));
+        Assert.Empty(AudioCoverage.Gaps([Entry(0, "a"), Entry(1, "b")], dump, Present));
     }
 
     [Fact]
@@ -24,28 +26,75 @@ public sealed class AudioAlignmentTests
         SpokenSentence[] dump = [Piece(0, "a"), Piece(1, "b"), Piece(2, "c")];
         ManifestEntry[] manifest = [Entry(0, "a"), Entry(1, "roar!"), Entry(2, "b"), Entry(3, "c")];
 
-        string? problem = AudioAlignment.FirstProblem(manifest, dump);
+        IReadOnlyList<string> gaps = AudioCoverage.Gaps(manifest, dump, Present);
 
-        Assert.NotNull(problem);
-        Assert.Contains("first bad position 1", problem);
-        Assert.Contains("roar!", problem);
-        Assert.Contains("4 manifest entries, 3 pieces read", problem);
+        Assert.Contains(gaps, g => g.Contains("2 of 3 sentence(s) have no clip") && g.Contains("position 1 \"b\""));
+        Assert.Contains(gaps, g => g.Contains("clip(s) are for text that no longer exists") && g.Contains("roar!"));
     }
 
     [Fact]
     public void AMissingEntry_IsNamedAtItsPosition()
     {
-        string? problem = AudioAlignment.FirstProblem([Entry(0, "a")], [Piece(0, "a"), Piece(1, "b")]);
+        IReadOnlyList<string> gaps = AudioCoverage.Gaps([Entry(0, "a")], [Piece(0, "a"), Piece(1, "b")], Present);
 
-        Assert.Contains("first bad position 1: the manifest has no entry", problem);
+        Assert.Contains("position 1 \"b\"", Assert.Single(gaps));
     }
 
     [Fact]
-    public void AnEntryPastTheLastPiece_IsAProblemEvenWhenEveryPieceMatches()
+    public void AnEntryPastTheLastPiece_IsAGapEvenWhenEveryPieceMatches()
     {
-        string? problem = AudioAlignment.FirstProblem([Entry(0, "a"), Entry(1, "extra")], [Piece(0, "a")]);
+        IReadOnlyList<string> gaps = AudioCoverage.Gaps([Entry(0, "a"), Entry(1, "extra")], [Piece(0, "a")], Present);
 
-        Assert.Contains("entries past the last piece", problem);
+        Assert.Contains("no longer exists", Assert.Single(gaps));
+    }
+
+    [Fact]
+    public void TwoEntriesAtOnePosition_AreAGap_EvenWhenOneOfThemMatches()
+    {
+        IReadOnlyList<string> gaps = AudioCoverage.Gaps([Entry(0, "a"), Entry(0, "orphan")], [Piece(0, "a")], Present);
+
+        Assert.Contains("more than one manifest entry", Assert.Single(gaps));
+    }
+
+    [Fact]
+    public void AManifestForAnotherLanguage_IsRejected()
+    {
+        const string json = """{"version":3,"language":"de","entries":[{"index":0,"hash":"abc","clip":"a.m4a"}]}""";
+
+        Assert.Contains("not \"fa\"", AudioAlignment.ParseProblem(json, "fa"));
+        Assert.Null(AudioAlignment.ParseProblem(json, "de"));
+    }
+
+    [Fact]
+    public void TheVerdictFile_CarriesStemIdAndWhetherEachBookIsComplete()
+    {
+        string json = AudioAlignment.VerdictJson([new BookVerdict("a", "id-a", []), new BookVerdict("b", "id-b", ["gap"]), new BookVerdict("c", "id-c", [], "TOOL ERROR c")]);
+
+        using var document = System.Text.Json.JsonDocument.Parse(json);
+        var books = document.RootElement.GetProperty("books").EnumerateArray().ToList();
+        Assert.Equal([true, false, false], books.Select(b => b.GetProperty("complete").GetBoolean()));
+        Assert.Equal(["id-a", "id-b", "id-c"], books.Select(b => b.GetProperty("id").GetString()));
+    }
+
+    [Fact]
+    public void ABookWhoseCheckThrows_GetsAVerdictThatIsNotComplete_AndAGapBookToo()
+    {
+        BookFolder[] books = [Books.Folder("three-little-pigs"), Books.Folder("lion-and-mouse")];
+
+        AudioCheckResult result = AudioAlignment.CheckBooks(books, (book, problems) =>
+        {
+            if (book.Stem == "three-little-pigs")
+            {
+                throw new NullReferenceException("bug");
+            }
+
+            problems.Add("a gap");
+            return 1;
+        });
+
+        Assert.Equal(2, result.BookVerdicts.Count);
+        Assert.All(result.BookVerdicts, v => Assert.False(v.Complete));
+        Assert.Equal(books[0].Info.Id, result.BookVerdicts[0].Id);
     }
 
     [Fact]
@@ -54,7 +103,7 @@ public sealed class AudioAlignmentTests
         string json = """{"version":3,"entries":[{"index":0,"hash":"ABC","clip":"a.m4a","text":"x"},{"index":1,"clip":"c.m4a"},{"index":2,"hash":"def"},{"index":3,"hash":"ghi","clip":""}]}""";
 
         ManifestEntry only = Assert.Single(AudioAlignment.ReadEntries(json));
-        Assert.Equal(new ManifestEntry(0, "abc", "x"), only);
+        Assert.Equal(new ManifestEntry(0, "abc", "x", "a.m4a"), only);
     }
 
     [Fact]
@@ -62,9 +111,9 @@ public sealed class AudioAlignmentTests
     {
         string json = $$"""{"version":3,"entries":[{"index":0,"hash":"{{PremadeAudio.HashOf("a")}}","clip":"a.m4a"},{"index":1,"hash":"{{PremadeAudio.HashOf("b")}}"}]}""";
 
-        string? problem = AudioAlignment.FirstProblem(AudioAlignment.ReadEntries(json), [Piece(0, "a"), Piece(1, "b")]);
+        IReadOnlyList<string> gaps = AudioCoverage.Gaps(AudioAlignment.ReadEntries(json), [Piece(0, "a"), Piece(1, "b")], Present);
 
-        Assert.Contains("first bad position 1: the manifest has no entry", problem);
+        Assert.Contains("position 1 \"b\"", Assert.Single(gaps));
     }
 
     [Theory]
@@ -75,13 +124,13 @@ public sealed class AudioAlignmentTests
     [InlineData("not json")]
     public void AManifestTheAppRejects_IsAProblem(string json)
     {
-        Assert.Contains("the app rejects the manifest", AudioAlignment.ParseProblem(json));
+        Assert.Contains("the app rejects the manifest", AudioAlignment.ParseProblem(json, "fa"));
     }
 
     [Fact]
     public void AManifestTheAppAccepts_HasNoParseProblem()
     {
-        Assert.Null(AudioAlignment.ParseProblem("""{"version":3,"language":"fa","entries":[{"index":0,"hash":"abc","clip":"a.m4a"}]}"""));
+        Assert.Null(AudioAlignment.ParseProblem("""{"version":3,"language":"fa","entries":[{"index":0,"hash":"abc","clip":"a.m4a"}]}""", "fa"));
     }
 
     [Fact]

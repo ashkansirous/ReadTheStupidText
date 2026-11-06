@@ -152,6 +152,7 @@ public sealed class TestHookDispatcher
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: test-hook code; the failure is written to the hook log as the outcome
 			outcome = $"{Failed} {TestHookLog.FaultSummary(ex)}";
 		}
 
@@ -242,6 +243,7 @@ public sealed class TestHookDispatcher
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: test-hook code; the fault is written to the hook log
 			TestHookLog.Write($"{TestHookLog.HookPrefix} {Read} fault {TestHookLog.FaultSummary(ex)}");
 		}
 	}

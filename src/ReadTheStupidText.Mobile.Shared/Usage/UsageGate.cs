@@ -47,6 +47,7 @@ public static class UsageGate
         }
         catch (Exception ex)
         {
+            // no-fallback: analytics eligibility only; unreadable facts mean nothing is counted
             System.Diagnostics.Debug.WriteLine($"Usage eligibility unreadable, not counted: {ex.Message}");
             return null;
         }
@@ -80,6 +81,7 @@ public static class UsageGate
         }
         catch (Exception ex)
         {
+            // no-fallback: analytics eligibility only; fails closed so nothing is counted
             System.Diagnostics.Debug.WriteLine($"Test Lab setting unreadable, treated as a test (fail closed): {ex.Message}");
             return true;
         }
@@ -117,6 +119,7 @@ public static class UsageGate
         }
         catch (Exception)
         {
+            // no-fallback: analytics eligibility only; an unreadable marker means no marker
             return false; // an unreadable marker means no marker: a real user still counts (the harness verifies its own write)
         }
 #else
@@ -146,6 +149,7 @@ public static class UsageGate
         }
         catch (Exception ex)
         {
+            // no-fallback: only crash reporting depends on the channel; Dev means no crash reports are sent
             System.Diagnostics.Debug.WriteLine($"Install channel unreadable, no crash reports: {ex.Message}");
             return InstallChannel.Dev;
         }

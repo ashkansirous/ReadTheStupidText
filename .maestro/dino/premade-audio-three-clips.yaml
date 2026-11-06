@@ -1,0 +1,70 @@
+# Slice 271 item 2: a store book read with a pre-made audio pack plays clip after clip, not only the first. Slice 270 hands each finished clip to a later turn of the platform loop before the
+# next clip starts (PlayerHandOff); premade-audio-plays ends after the first clip. The fixture pack (install-audio-pack, Debug only, the real pack store) gives every translated Farsi piece of
+# three-little-pigs a clip, and the opening sentences 0, 1 and 2 are pieces with clips (Slice 246: "premade clip plays for sentences 0-4"), so the three "premade clip plays (sentence n)" lines in a
+# row prove two hand-offs happened. run-flows.ps1 checks every expect-log line after the flow.
+# If a Farsi translation of the opening of three-little-pigs changes so that sentences 0-2 are no longer pieces with clips, the expect-log lines above fail: that is the cause, not the hand-off.
+# To see it fail against the old behaviour: if PlayerHandOff released the player inside the native finished call (or the read stopped after clip 1), "(sentence 1)" or "(sentence 2)" is never written.
+# Keeps the app's data (no clearState), like premade-audio-plays; the fixture pack stays installed for the dev install.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK install-audio-pack ok
+# expect-log: [AudioPack] premade clip plays (sentence 0)
+# expect-log: [AudioPack] premade clip plays (sentence 1)
+# expect-log: [AudioPack] premade clip plays (sentence 2)
+# expect-log: HOOK read start
+appId: uk.sirous.dinoreader.dbg
+name: A pre-made audio book plays three clips in a row
+# Runs after the flow pass or fail, so a failure never leaves the app in Farsi for the flows that wait on English labels.
+onFlowComplete:
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: set-language
+        lang: en
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: install-audio-pack
+      id: three-little-pigs
+      lang: fa
+# The install runs in the background (a few small files): give it a moment before the read looks the pack up.
+- extendedWaitUntil:
+    visible:
+      id: PackInstallNeverShown
+    timeout: 6000
+    optional: true
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "1"
+      play: page
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+# The Play button describes itself as Pause while the read is Playing; a clip counts as playing.
+- extendedWaitUntil:
+    visible: "Pause|توقف"
+    timeout: 90000
+# play=page stops once page 1 is read: wait for the visible end of that read (Pause gone) instead of a fixed burn; the clips of sentences 0-2 have all played by then (checked by expect-log).
+- extendedWaitUntil:
+    notVisible: "Pause|توقف"
+    timeout: 60000
+- assertVisible:
+    id: ReadingSurface
+# Put the screens back in English, so later flows that wait on English labels (Pause) still match.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: en

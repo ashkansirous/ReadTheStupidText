@@ -74,6 +74,7 @@ public static partial class CrashReporter
         }
         catch (Exception ex)
         {
+            // no-fallback: crash reporting must never report into itself; it logs and stays off
             Debug.WriteLine($"Crash reporting could not start: {ex.Message}");
         }
     }
@@ -117,6 +118,7 @@ public static partial class CrashReporter
         }
         catch (Exception ex)
         {
+            // no-fallback: crash reporting must never report into itself; it logs and stays off
             Debug.WriteLine($"Crash reporting could not begin sending: {ex.Message}");
         }
     }
@@ -144,6 +146,7 @@ public static partial class CrashReporter
         }
         catch (Exception ex)
         {
+            // no-fallback: crash reporting must never report into itself; it logs and stays off
             Debug.WriteLine($"Crash reporting could not re-read the gate: {ex.Message}");
         }
     }
@@ -163,6 +166,7 @@ public static partial class CrashReporter
         }
         catch (Exception ex)
         {
+            // no-fallback: crash reporting must never report into itself; it logs and stays off
             Debug.WriteLine($"Crash reporting could not update the run marker: {ex.Message}");
         }
     }
@@ -175,6 +179,7 @@ public static partial class CrashReporter
         }
         catch (Exception ex)
         {
+            // no-fallback: crash reporting must never report into itself; it logs and stays off
             Debug.WriteLine($"Crash reporting could not read the build facts: {ex.Message}");
             return null;
         }
@@ -197,6 +202,7 @@ public static partial class CrashReporter
         }
         catch (Exception)
         {
+            // no-fallback: crash-reporter code must never report into itself
             // Losing one log line is better than an exception on the finalizer thread.
         }
     }
@@ -221,6 +227,7 @@ public static partial class CrashReporter
         }
         catch (Exception hookFailure)
         {
+            // no-fallback: crash-reporter code must never report into itself; a throwing hook would hide the real crash
             // A hook that throws would hide the real crash.
 #if DEBUG
             Note($"unhandled hook failed: {hookFailure.GetType().Name}: {hookFailure.Message}");
@@ -274,6 +281,7 @@ public static partial class CrashReporter
         }
         catch (Exception ex)
         {
+            // no-fallback: crash reporting must never report into itself; it logs and stays off
             Debug.WriteLine($"Crash reporting could not record the last run: {ex.Message}");
         }
     }
@@ -332,6 +340,7 @@ public static partial class CrashReporter
         }
         catch (Exception ex)
         {
+            // no-fallback: crash reporting must never report into itself; it logs and stays off
             Debug.WriteLine($"Crash reporting could not take a native diagnostic: {ex.Message}");
         }
     }
@@ -351,6 +360,7 @@ public static partial class CrashReporter
         }
         catch (Exception)
         {
+            // no-fallback: crash-reporter code must never report into itself; the report simply has no session id
             return facts;
         }
     }
@@ -397,6 +407,7 @@ public static partial class CrashReporter
         }
         catch (Exception)
         {
+            // no-fallback: crash-reporter code must never report into itself; an unreadable switch means on (the default)
             return true;
         }
     }
@@ -447,6 +458,7 @@ public static partial class CrashReporter
         }
         catch (Exception ex)
         {
+            // no-fallback: crash reporting must never report into itself; it logs and stays off
             Debug.WriteLine($"Crash reporting could not clear its files: {ex.Message}");
         }
     }
@@ -463,6 +475,7 @@ public static partial class CrashReporter
         }
         catch (Exception)
         {
+            // no-fallback: a trace note for a device check, never reported
             // A note is a trace for a device check; it must never throw out of the crash handler.
         }
     }

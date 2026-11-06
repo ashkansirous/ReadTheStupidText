@@ -57,7 +57,7 @@ public sealed class RollingFileSystemLog(Func<RollingLogFile?> file) : ISystemLo
         }
         catch (Exception)
         {
-            // A broken log must not break the caller.
+            // no-fallback: a broken log must not break the caller.
         }
     }
 }

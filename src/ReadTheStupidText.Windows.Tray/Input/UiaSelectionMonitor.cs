@@ -3,6 +3,7 @@ using System.Windows.Automation;
 using System.Windows.Automation.Text;
 using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Logging;
+using ReadTheStupidText.Application.Usage;
 
 namespace ReadTheStupidText.Windows.Tray.Input;
 
@@ -22,9 +23,12 @@ public sealed class UiaSelectionMonitor : ISelectionMonitor
     private string? _lastText;
     private bool _running;
 
-    public UiaSelectionMonitor(ISystemLog log)
+    private readonly IFallbackSink _fallbacks; // Slice 275
+
+    public UiaSelectionMonitor(ISystemLog log, IFallbackSink? fallbacks = null)
     {
         _log = log;
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance;
         _handler = OnTextSelectionChanged;
     }
 
@@ -55,7 +59,7 @@ public sealed class UiaSelectionMonitor : ISelectionMonitor
             }
             catch (Exception ex)
             {
-                // no-fallback: tray code holds no usage sink (Slice 273 design); without UIA the person uses the hotkey, which cannot tell a failed UIA read from the ordinary copy path, so nothing is counted
+                _fallbacks.Report(FallbackArea.Input, FallbackReason.UiaUnavailable); // Slice 275: without UIA the person uses the hotkey
                 _log.Error("UIA failed to register selection handler", error: ex);
             }
         });

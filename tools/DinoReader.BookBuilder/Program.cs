@@ -6,6 +6,7 @@ const string KeepVersionFlag = "--keep-version";
 const string LiveFlag = "--live";
 const string LangFlag = "--lang";
 const string ClipsFlag = "--clips";
+const string VerdictFlag = "--verdict";
 const string Usage = """
     usage: DinoReader.BookBuilder <command> [<stem>...]
       build [<stem>...] [--out <folder>] [--live <file>]   write artifacts/store/<id>/ for each book and rewrite committed starters whose content changed;
@@ -19,7 +20,9 @@ const string Usage = """
       dump-sentences <stem> --lang <code> [--out <file>]   print every piece the app reads aloud for a store book or a bundled starter in a language (index, highlight sentence, spoken text, speaker, narrator) as JSON, for tools/premade-audio
       build-audio <stem> --lang <code> [--clips <folder>] [--out <folder>]   pack the clips folder (default content/dino/<stem>/audio/<code>, Git LFS: git lfs pull --include it first; manifest.json v3 + its clips) into artifacts/store/<id>/audio-<code>-v<n>.zip and record
                                            the pack in the book's audio-cast.json (audioPacks); the version rises only when the content hash changes; the next build lists it in meta.json
-      check-audio [<stem>...]              fail when a book's audio/<code>/manifest.json does not hash the sentences the app now reads, position by position (Slice 272); needs the manifests pulled from Git LFS
+      check-audio [<stem>...] [--live] [--verdict <file>]   fail unless every book has a complete audio pack in every language the app offers (Slice 272, 277): a pack exists, every sentence the app reads has its clip, no clip
+                                           is for text that is gone, every clip file is there and not empty; needs the manifests pulled from Git LFS. --live checks what the live store serves instead (downloads
+                                           its packs; read only). --verdict writes a JSON verdict per book (stem, id, complete, gaps) for the publish job, which uploads only complete books
     """;
 
 string[] arguments = args;
@@ -29,7 +32,9 @@ string? outPath = Option(OutFlag);
 string? livePath = Option(LiveFlag);
 string? language = Option(LangFlag);
 string? clipsPath = Option(ClipsFlag);
-List<string> stems = arguments.Skip(1).Where(a => !a.StartsWith("--") && a != outPath && a != livePath && a != language && a != clipsPath).ToList();
+string? verdictPath = Option(VerdictFlag);
+bool liveCheck = command == "check-audio" && Array.IndexOf(arguments, LiveFlag) >= 0; // for check-audio --live is a switch, not a file
+List<string> stems = arguments.Skip(1).Where(a => !a.StartsWith("--") && a != outPath && (liveCheck || a != livePath) && a != language && a != clipsPath && a != verdictPath).ToList();
 
 try
 {
@@ -56,7 +61,7 @@ try
         case "dump-sentences":
             return SentenceDump.Run(stems.FirstOrDefault(), language, outPath);
         case "check-audio":
-            return AudioAlignment.Run(stems);
+            return AudioAlignment.Run(stems, liveCheck, verdictPath);
         case "build-audio":
             StoreBuilder.OutputFolder = outPath;
             return stems.Count != 1 || language is null ? Fail("build-audio needs one book and --lang <code>") : BookCommands.BuildAudio(stems[0], language, clipsPath);
@@ -64,7 +69,7 @@ try
             return Fail(Usage);
     }
 }
-catch (Exception e) when (e is InvalidOperationException or System.Text.Json.JsonException or IOException)
+catch (Exception e) when (e is InvalidOperationException or System.Text.Json.JsonException or IOException or HttpRequestException or TaskCanceledException)
 {
     return Fail(e is InvalidOperationException ? e.Message : $"{e.GetType().Name}: {e.Message}");
 }

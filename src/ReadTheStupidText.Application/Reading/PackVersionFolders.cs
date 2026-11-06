@@ -1,3 +1,5 @@
+using ReadTheStupidText.Application.Usage;
+
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
@@ -16,9 +18,9 @@ public static class PackVersionFolders
     private const string VersionFolderPrefix = "v";
 
     /// <summary>The folder holding the pack's files: the active version's folder, else the pack's own folder.</summary>
-    public static string Resolve(string packFolder)
+    public static string Resolve(string packFolder, IFallbackSink? fallbacks = null)
     {
-        string active = ReadActive(packFolder);
+        string active = ReadActive(packFolder, fallbacks);
         return active.Length > 0 && Directory.Exists(Path.Combine(packFolder, active))
             ? Path.Combine(packFolder, active)
             : packFolder;
@@ -83,7 +85,7 @@ public static class PackVersionFolders
         stream.Flush(flushToDisk: true);
     }
 
-    private static string ReadActive(string packFolder)
+    private static string ReadActive(string packFolder, IFallbackSink? fallbacks = null)
     {
         string pointer = Path.Combine(packFolder, ActiveFileName);
         try
@@ -94,9 +96,22 @@ public static class PackVersionFolders
         }
         catch (IOException)
         {
+            if (fallbacks is not null && FirstReportFor(packFolder))
+            {
+                fallbacks.Report(FallbackArea.Pack, FallbackReason.PackFailed); // Slice 275: an unreadable active pointer means no active version (empty), so the pack is treated as not installed.
+            }
+
             return string.Empty;
         }
     }
+
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte> ReportedPackFolders = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// True the first time an unreadable pack folder is seen in this app run. A pack is listed again on every
+    /// screen and read, so the same unchanged pack is reported once per run, not once per listing (Slice 275).
+    /// </summary>
+    public static bool FirstReportFor(string packFolder) => ReportedPackFolders.TryAdd(packFolder, 0);
 
     // A pack with no active version keeps whatever it has. A version folder newer than the active one is a
     // complete install the app was killed before activating: it is kept, not deleted. Anything that cannot be
@@ -139,7 +154,7 @@ public static class PackVersionFolders
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            // Still in use: it is retried at the next start.
+            // no-fallback: still in use: it is retried at the next start.
         }
     }
 }

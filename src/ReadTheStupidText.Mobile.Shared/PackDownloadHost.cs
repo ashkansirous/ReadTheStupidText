@@ -143,6 +143,7 @@ public static class PackDownloadHost
             }
             catch (Exception ex)
             {
+                // no-fallback: one failing cancel handler is logged and must not stop the others
                 LogService("cancel-handler-failed", ex.GetType().Name);
             }
         }
@@ -195,6 +196,7 @@ public static class PackDownloadHost
         }
         catch (Exception ex)
         {
+            // no-fallback: best-effort cleanup of platform transfer leftovers
             LogService("discard-failed", ex.GetType().Name);
         }
     }
@@ -266,6 +268,7 @@ public static class PackDownloadHost
         }
         catch (Exception ex)
         {
+            // no-fallback: the paused notice is optional; the download state is unchanged and the failure is logged
             LogService(PausedFailedAction, ex.GetType().Name);
         }
     }
@@ -285,6 +288,7 @@ public static class PackDownloadHost
         }
         catch (Exception ex)
         {
+            // no-fallback: best-effort removal of a notice
             LogService(PausedClearFailedAction, ex.GetType().Name);
         }
     }
@@ -300,6 +304,7 @@ public static class PackDownloadHost
         }
         catch (Exception)
         {
+            // no-fallback: a diagnostic log sink failing is logging-only
             // A diagnostic sink must never break a download.
         }
     }

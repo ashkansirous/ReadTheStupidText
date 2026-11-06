@@ -151,6 +151,7 @@ It needs no secrets to build, so any change to `src/DinoReader.App/**`, `DinoRea
 Mobile.Shared's `.pdb` twice, APPX1101). The RTST Store submit matches only `ReadTheStupidText.App_*.msix`.
 `store-submit.yml` has no default Store id: `product_id` is required (RTST passes `vars.STORE_PRODUCT_ID`, Dino `vars.DINOREADER_STORE_APP_ID`) and a guard step fails when the package and id belong to different apps or `STORE_PRODUCT_ID` is unset. (Slice 127: docs/plan/slices/127-release-safety-fixes.md)
 Never pipe a producer into `grep -q` under `pipefail` (`release.yml`, `.github/scripts`): capture the output first, or here-string it into grep. (Slice 127)
+A Dino store book reaches R2 only through `check-audio`'s verdict: `.github/scripts/publish-store-books.mjs` needs `--audio-verdict <file>` (written by `check-audio --verdict`), and a book with no complete verdict changes nothing on R2 (no meta.json, pack or cover); the job fails naming it. Do not add an upload path that skips the verdict. (Slice 277: docs/plan/slices/277-dino-store-audio-coverage-gate.md)
 
 ## iOS review cadence
 

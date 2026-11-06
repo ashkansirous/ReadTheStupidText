@@ -64,6 +64,7 @@ public sealed record UsageConfig(TelemetrySettings Telemetry, PlatformVersions A
         }
         catch (JsonException)
         {
+            // no-fallback: a body that is not JSON gives the default config; callers decide whether it replaces a kept copy (TryParseServed does not).
             return Default;
         }
     }
@@ -92,6 +93,7 @@ public sealed record UsageConfig(TelemetrySettings Telemetry, PlatformVersions A
         }
         catch (JsonException)
         {
+            // no-fallback: a body that is not a served config is rejected (false) so it never replaces a good copy.
             return false;
         }
     }

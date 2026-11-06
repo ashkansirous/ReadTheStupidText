@@ -60,11 +60,13 @@ public sealed partial class ReadAloudService
         }
         catch (StreamingUnavailableException ex)
         {
+            _fallbacks.Report(FallbackArea.Speech, FallbackReason.StreamUnavailable); // Slice 275: the whole translated text is read instead of streaming
             _systemLog.Warning("the reader could not stream; reading the whole translated text", entry.Id, ex);
             return false; // the reader now reports SupportsStreaming false; the caller reads the whole text
         }
         catch (OperationCanceledException) when (cts.IsCancellationRequested)
         {
+            // no-fallback: superseded by a newer read; counted as a cancelled timing below.
             CountTiming(UsageStage.Translate, UsageOutcome.Cancelled, Stopwatch.GetElapsedTime(started), null, null);
             return true; // superseded: the entry was finalized by Supersede
         }
@@ -172,10 +174,11 @@ public sealed partial class ReadAloudService
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
-            // Superseded or stopped: the reader is stopped by whoever did that.
+            // no-fallback: superseded or stopped: the reader is stopped by whoever did that.
         }
         catch (Exception ex)
         {
+            // no-fallback: a translator failure is already reported once by TranslationStream.Fail; any other exception is no translation fallback.
             _systemLog.Warning("streamed translation stopped; reading what was translated", entry.Id, ex);
             // Not counted here: a translator failure is already reported once by TranslationStream.Fail, and any other exception (a reader or UI handler) is no translation fallback.
         }

@@ -184,6 +184,7 @@ public sealed class PackResumeCoordinator : IPackResume
         }
         catch (Exception ex)
         {
+            // no-fallback: a failed resume gives its retry back below and the pack download itself reports its own failure.
             System.Diagnostics.Debug.WriteLine($"Pack resume failed: {ex.Message}");
         }
 

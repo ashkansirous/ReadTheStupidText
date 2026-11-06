@@ -566,6 +566,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: the read was cancelled or superseded
             return false;
         }
     }
@@ -638,6 +639,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
                 }
                 catch
                 {
+                    // no-fallback: the first chunk's own outcome (and its report) surfaces on its own await
                     // Swallowed: the first chunk's real outcome surfaces on its own await.
                 }
             }
@@ -704,6 +706,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
             }
             catch (OperationCanceledException)
             {
+                // no-fallback: the read was stopped or superseded
                 // Stopped or superseded: the pump has nothing left to start.
             }
         }
@@ -735,6 +738,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: the read was cancelled or superseded
             return false;
         }
 
@@ -813,6 +817,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         }
         catch (NeuralEngineUnavailableException)
         {
+            // no-fallback: AcquireEngine already reported the engine build failure; the caller logs that the read's voice is used
             return null;
         }
     }
@@ -866,6 +871,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         }
         catch
         {
+            // no-fallback: best-effort pre-load; the read builds the engine itself
             // Best-effort: the read builds the engine itself.
         }
     });
@@ -891,6 +897,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         }
         catch
         {
+            // no-fallback: best-effort warm-up; any real error surfaces on the first read
             // Best-effort: any real error surfaces on the first read.
         }
     }
@@ -1093,6 +1100,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // no-fallback: the head start is an optimisation; the read prepares its chunks itself
             _systemLog.Warning("head start failed", null, ex);
             return false;
         }
