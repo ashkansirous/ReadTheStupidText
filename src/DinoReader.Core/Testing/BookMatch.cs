@@ -27,7 +27,7 @@ internal static class BookMatch
 			return null;
 		}
 
-		IReadOnlyList<SentenceSpan> sentences = StorySentences.Build(story.Text, LanguageRules.For(story.Language), story.BreakMap());
+		IReadOnlyList<SentenceSpan> sentences = RecordSplitBook.SentencesOf(story);
 		IReadOnlyList<int> starts = StoryRecordings.PageStarts(story.Pages);
 		int first = -1;
 		int last = -1;

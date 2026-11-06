@@ -203,26 +203,61 @@
   <!-- /Slice 110 -->
   <!-- Slice 111 -->
   <data name="Rec_Title" xml:space="preserve"><value>Grabar</value></data>
-  <data name="Rec_Script" xml:space="preserve"><value>Lee en voz alta las palabras de esta página y toca Detener.</value></data>
-  <data name="Rec_Recording" xml:space="preserve"><value>Grabando · {0}</value></data>
   <data name="Rec_Stop" xml:space="preserve"><value>Detener</value></data>
   <data name="Rec_Start" xml:space="preserve"><value>Grabar</value></data>
-  <data name="Rec_Yours" xml:space="preserve"><value>Tu grabación</value></data>
-  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
   <data name="Rec_Redo" xml:space="preserve"><value>Grabar de nuevo</value></data>
-  <data name="Rec_Delete" xml:space="preserve"><value>Eliminar grabación</value></data>
-  <data name="Rec_DeleteBody" xml:space="preserve"><value>Esta página volverá a usar la voz de Dino.</value></data>
-  <data name="Rec_Next" xml:space="preserve"><value>Página siguiente</value></data>
-  <data name="Rec_Previous" xml:space="preserve"><value>Página anterior</value></data>
-  <data name="Rec_Play" xml:space="preserve"><value>Reproducir tu grabación</value></data>
-  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · página {1} de {2}</value></data>
   <data name="Rec_UseVoice" xml:space="preserve"><value>Leer con mi voz</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} de {1} páginas grabadas. Las demás páginas usan las voces de Dino.</value></data>
-  <data name="Rec_RecordPage" xml:space="preserve"><value>Grabar {0} con tu voz</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>El micrófono está desactivado</value></data>
   <data name="Rec_NoMic" xml:space="preserve"><value>Permite el micrófono para Dino Book Reader en los ajustes del dispositivo y vuelve a intentarlo.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>La grabación no funcionó. Inténtalo de nuevo.</value></data>
   <!-- /Slice 111 -->
+  <!-- Slice 279 -->
+  <data name="Record_Title" xml:space="preserve"><value>Graba tu voz</value></data>
+  <data name="Record_YourVoice" xml:space="preserve"><value>Tu voz</value></data>
+  <data name="Record_NoteRead" xml:space="preserve"><value>Lee en voz alta las palabras de cada pantalla.</value></data>
+  <data name="Record_NoteSkip" xml:space="preserve"><value>Salta lo que prefieras que lea Dino.</value></data>
+  <data name="Record_NoteStays" xml:space="preserve"><value>Tu voz se queda en este teléfono. Nunca se sube a ningún sitio.</value></data>
+  <data name="Record_NoteStaysDevice" xml:space="preserve"><value>Tu voz se queda en este dispositivo. Nunca se sube a ningún sitio.</value></data>
+  <data name="Record_ModeCharacter" xml:space="preserve"><value>Un personaje cada vez</value></data>
+  <data name="Record_ModePage" xml:space="preserve"><value>Páginas enteras</value></data>
+  <data name="Record_Who" xml:space="preserve"><value>¿A quién vas a grabar?</value></data>
+  <data name="Record_Storyteller" xml:space="preserve"><value>Narrador</value></data>
+  <data name="Record_Lines" xml:space="preserve"><value>{0} líneas</value></data>
+  <data name="Record_OfCount" xml:space="preserve"><value>{0} de {1}</value></data>
+  <data name="Record_Start" xml:space="preserve"><value>Empezar a grabar</value></data>
+  <data name="Record_LongPages" xml:space="preserve"><value>Las páginas largas vienen en partes, para que las palabras siempre quepan en la pantalla.</value></data>
+  <data name="Record_Says" xml:space="preserve"><value>{0} dice:</value></data>
+  <data name="Record_LineOf" xml:space="preserve"><value>Línea {0} de {1}</value></data>
+  <data name="Record_PageOf" xml:space="preserve"><value>Página {0} de {1}</value></data>
+  <data name="Record_PagePart" xml:space="preserve"><value>Página {0} de {1} · parte {2} de {3}</value></data>
+  <data name="Record_Skip" xml:space="preserve"><value>Saltar</value></data>
+  <data name="Record_Next" xml:space="preserve"><value>Siguiente</value></data>
+  <data name="Record_Finish" xml:space="preserve"><value>Terminar</value></data>
+  <data name="Record_Play" xml:space="preserve"><value>Reproducir</value></data>
+  <data name="Record_Playing" xml:space="preserve"><value>Reproduciendo</value></data>
+  <data name="Record_Recorded" xml:space="preserve"><value>Grabado</value></data>
+  <data name="Record_NewTake" xml:space="preserve"><value>Toma nueva</value></data>
+  <data name="Record_OldTake" xml:space="preserve"><value>Toma anterior</value></data>
+  <data name="Record_ReplacesRest" xml:space="preserve"><value>Tu grabación del resto de esta página será reemplazada.</value></data>
+  <data name="Record_KeepOld" xml:space="preserve"><value>Conservar la anterior</value></data>
+  <data name="Record_UseDino" xml:space="preserve"><value>Usar la voz de Dino</value></data>
+  <data name="Record_Undo" xml:space="preserve"><value>Deshacer</value></data>
+  <data name="Record_Change" xml:space="preserve"><value>Cambiar cómo grabas</value></data>
+  <data name="Record_Listen" xml:space="preserve"><value>Escuchar y cambiar</value></data>
+  <data name="Record_Rest" xml:space="preserve"><value>Grabar el resto</value></data>
+  <data name="Record_Again" xml:space="preserve"><value>Grabar otra vez desde el principio</value></data>
+  <data name="Record_YourRecordings" xml:space="preserve"><value>Tus grabaciones · {0} de {1}</value></data>
+  <data name="Record_LinesRecorded" xml:space="preserve"><value>{0} de {1} líneas grabadas</value></data>
+  <data name="Record_PagesRecorded" xml:space="preserve"><value>{0} de {1} páginas grabadas</value></data>
+  <data name="Record_RestByDino" xml:space="preserve"><value>Dino lee el resto. Tu voz se queda en este teléfono.</value></data>
+  <data name="Record_RestByDinoDevice" xml:space="preserve"><value>Dino lee el resto. Tu voz se queda en este dispositivo.</value></data>
+  <data name="Record_You" xml:space="preserve"><value>Tú</value></data>
+  <data name="Record_RemoveWarn" xml:space="preserve"><value>Tus grabaciones de este libro también se borrarán.</value></data>
+  <data name="Record_SkipKey" xml:space="preserve"><value>Saltar · S</value></data>
+  <data name="Record_RecordKey" xml:space="preserve"><value>Grabar · R</value></data>
+  <data name="Record_NextKey" xml:space="preserve"><value>Siguiente · →</value></data>
+  <!-- /Slice 279 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
   <!-- /Slice 113 -->

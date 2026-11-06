@@ -26,12 +26,6 @@ public static class TabletPageLayout
     /// <summary>Frames 142-146: a page's content sits 40 dp from the window's sides on a tablet held upright (the phone's is 14).</summary>
     public const double PageSideMargin = 40;
 
-    /// <summary>Frame 142: the words are 30 sp on a tablet held upright.</summary>
-    public const double RecordWordsSize = 30;
-
-    /// <summary>Frame 142: the page picture above the words is this tall.</summary>
-    public const double RecordPictureHeight = 400;
-
     /// <summary>Frame 145: the editor's picture is this tall, and a 120 dp strip while the keyboard is up.</summary>
     public const double EditorPictureHeight = 440;
     public const double EditorPictureStripHeight = 120;
@@ -88,10 +82,9 @@ public static class TabletPageLayout
     public const double PictureHeightShare = 0.5;
 
     /// <summary>
-    /// Heights of what sits around the picture, taken off the window height to give the body height: Record's header, the lines and card under the picture and the footer; the editor's header and the
-    /// five lines its field must keep. Estimates in dp (the pages read the window, never their own panel, so there is no loop).
+    /// Height of what sits around the picture, taken off the window height to give the body height: the editor's header and the
+    /// five lines its field must keep. Estimate in dp (the pages read the window, never their own panel, so there is no loop).
     /// </summary>
-    public const double RecordFixedRows = 360;
     public const double EditorFixedRows = 272;
 
     /// <summary>
@@ -107,9 +100,6 @@ public static class TabletPageLayout
 
         return bodyHeight > 0 ? Math.Min(mockHeight, bodyHeight * PictureHeightShare) : mockHeight;
     }
-
-    /// <summary>Record's picture panel on a tablet held upright: 400 dp, or less when the window is short.</summary>
-    public static double RecordPicture(double windowHeight) => PictureHeight(RecordPictureHeight, windowHeight - RecordFixedRows, false);
 
     /// <summary>Room around the art inside the editor's panel (8 dp each side), and the helper line under it when it shows.</summary>
     public const double EditorPanelPadding = 8;

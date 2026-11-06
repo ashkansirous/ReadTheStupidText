@@ -24,13 +24,29 @@ public sealed class WindowsTextMeasurer : ITextMeasurer, IDisposable
 
 	public WindowsTextMeasurer(string fontFamily, double fontSize)
 	{
-		var fonts = IPlatformApplication.Current!.Services.GetRequiredService<IFontManager>();
 		_format = new CanvasTextFormat
 		{
-			FontFamily = fonts.GetFontFamily(Microsoft.Maui.Font.OfSize(fontFamily, fontSize)).Source,
+			FontFamily = FamilySource(fontFamily, fontSize),
 			FontSize = (float)fontSize,
 			WordWrapping = CanvasWordWrapping.NoWrap,
 		};
+	}
+
+	// MAUI's font manager builds a WinUI FontFamily, which only works on the UI thread; the cut itself runs on a worker thread (wrong-thread COMException 0x8001010E otherwise).
+	private static string FamilySource(string fontFamily, double fontSize)
+	{
+		if (MainThread.IsMainThread)
+		{
+			return ResolveFamilySource(fontFamily, fontSize);
+		}
+
+		return MainThread.InvokeOnMainThreadAsync(() => ResolveFamilySource(fontFamily, fontSize)).GetAwaiter().GetResult();
+	}
+
+	private static string ResolveFamilySource(string fontFamily, double fontSize)
+	{
+		var fonts = IPlatformApplication.Current!.Services.GetRequiredService<IFontManager>();
+		return fonts.GetFontFamily(Microsoft.Maui.Font.OfSize(fontFamily, fontSize)).Source;
 	}
 
 	public double Width(string text)

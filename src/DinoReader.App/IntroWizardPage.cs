@@ -599,7 +599,7 @@ public sealed class IntroWizardPage : ContentPage
 			return null;
 		}
 
-		var record = _services.GetRequiredService<RecordPage>();
+		var record = _services.GetRequiredService<RecordIntroPage>();
 		record.LaunchedFromIntro = true;
 		await record.LoadAsync(story);
 		return record;

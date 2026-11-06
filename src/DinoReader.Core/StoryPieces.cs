@@ -34,7 +34,7 @@ public static class StoryPieces
     /// <summary>All pieces of the story from the start, analysed from scratch (what a first read produces).</summary>
     public static IReadOnlyList<SplitSegment> Of(Story story)
     {
-        LanguageRules rules = LanguageRules.For(UiLanguage.Resolve(story.Language));
+        LanguageRules rules = RecordSplitBook.RulesOf(story);
         LineBreakMap breaks = story.BreakMap();
         AttributionResult attribution = new SpeakerAttributor(rules).Attribute(story.Text, new StorySegmenter(rules).Split(story.Text, breaks));
         AttributionResult resolved = StoryCast.Resolve(attribution, story.Cast);

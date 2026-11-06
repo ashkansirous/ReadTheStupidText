@@ -1,4 +1,5 @@
 using DinoReader.Core;
+using DinoReader.Resources.Strings;
 
 namespace DinoReader;
 
@@ -36,6 +37,12 @@ public sealed record StoryTile(Story Story, Color CoverColour, string? CoverImag
 
 	/// <summary>What a screen reader says on the cover's "⋯" dot (Slice 189).</summary>
 	public string MoreHint => GalleryText.BookOptions(Title);
+
+	/// <summary>Whether the cover wears the "You" chip (Slice 279, mock frame 188): the book holds at least one of the grown-up's recordings.</summary>
+	public bool HasYourVoice => StoryRecordings.Count(Story) > 0;
+
+	/// <summary>The chip's text, also what a screen reader says.</summary>
+	public string YourVoiceLabel => AppResources.Record_You;
 
 	public static StoryTile From(Story story, IStoryLibrary library, GrownUpMode mode, string? displayTitle = null)
 	{

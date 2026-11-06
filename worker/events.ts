@@ -60,6 +60,8 @@ export const FALLBACK_AREAS = [
   "window", "font", "library",
   // Slice 275
   "input",
+  // Slice 279
+  "ui",
 ] as const;
 export const FALLBACK_REASONS = [
   "no_pack", "pack_failed", "text_mismatch", "clip_missing", "partial",
@@ -77,6 +79,8 @@ export const FALLBACK_REASONS = [
   "font_fallback", "shelf_order_unreadable", "story_unreadable", "language_detect_failed", "page_read_failed", "intro_state_reset",
   // Slice 275
   "ocr_crop_degraded", "uia_unavailable", "store_failed", "preference_unsaved",
+  // Slice 279
+  "tap_failed",
 ] as const;
 const MAX_COUNT = 1_000_000;
 const NO_COUNT = -1;

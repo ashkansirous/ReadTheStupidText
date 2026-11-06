@@ -19,10 +19,11 @@ internal enum RecordingEndAction
 /// </summary>
 internal sealed class ReadingPauseState
 {
-	private (int Id, int Page)? _endedWhilePaused;
+	private (int Id, int Page, int Last)? _endedWhilePaused;
 
-	/// <summary>Decides what the ended call of page <paramref name="page"/> in read <paramref name="id"/> does, and remembers it when the read must wait for Resume.</summary>
-	public RecordingEndAction OnRecordingEnded(int id, int page, int activeReadId, bool recordingActive, bool paused)
+	/// <summary>Decides what the ended call of the clip that starts at sentence <paramref name="page"/> and ends at sentence <paramref name="last"/> in read <paramref name="id"/> does, and remembers it when the read must wait for Resume.
+	/// The clip's own end travels with it (Slice 279), so the read goes on after the clip even when the story no longer plays it.</summary>
+	public RecordingEndAction OnRecordingEnded(int id, int page, int last, int activeReadId, bool recordingActive, bool paused)
 	{
 		if (id != activeReadId || !recordingActive)
 		{
@@ -31,7 +32,7 @@ internal sealed class ReadingPauseState
 
 		if (paused)
 		{
-			_endedWhilePaused = (id, page);
+			_endedWhilePaused = (id, page, last);
 			return RecordingEndAction.HoldForResume;
 		}
 
@@ -39,9 +40,9 @@ internal sealed class ReadingPauseState
 	}
 
 	/// <summary>The recorded page that ended during the pause (removed from the state), or null when none did.</summary>
-	public (int Id, int Page)? TakeHeld()
+	public (int Id, int Page, int Last)? TakeHeld()
 	{
-		(int Id, int Page)? held = _endedWhilePaused;
+		(int Id, int Page, int Last)? held = _endedWhilePaused;
 		_endedWhilePaused = null;
 		return held;
 	}

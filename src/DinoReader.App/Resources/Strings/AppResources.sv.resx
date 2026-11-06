@@ -204,26 +204,61 @@
   <!-- /Slice 110 -->
   <!-- Slice 111 -->
   <data name="Rec_Title" xml:space="preserve"><value>Spela in</value></data>
-  <data name="Rec_Script" xml:space="preserve"><value>Läs orden på sidan högt och tryck sedan på Stopp.</value></data>
-  <data name="Rec_Recording" xml:space="preserve"><value>Spelar in · {0}</value></data>
   <data name="Rec_Stop" xml:space="preserve"><value>Stopp</value></data>
   <data name="Rec_Start" xml:space="preserve"><value>Spela in</value></data>
-  <data name="Rec_Yours" xml:space="preserve"><value>Din inspelning</value></data>
-  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
   <data name="Rec_Redo" xml:space="preserve"><value>Spela in igen</value></data>
-  <data name="Rec_Delete" xml:space="preserve"><value>Ta bort inspelning</value></data>
-  <data name="Rec_DeleteBody" xml:space="preserve"><value>Sidan använder Dinos röst igen.</value></data>
-  <data name="Rec_Next" xml:space="preserve"><value>Nästa sida</value></data>
-  <data name="Rec_Previous" xml:space="preserve"><value>Föregående sida</value></data>
-  <data name="Rec_Play" xml:space="preserve"><value>Spela upp din inspelning</value></data>
-  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · sida {1} av {2}</value></data>
   <data name="Rec_UseVoice" xml:space="preserve"><value>Läs med min röst</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} av {1} sidor inspelade. De andra sidorna använder Dinos röster.</value></data>
-  <data name="Rec_RecordPage" xml:space="preserve"><value>Spela in {0} med din röst</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>Mikrofonen är av</value></data>
   <data name="Rec_NoMic" xml:space="preserve"><value>Tillåt mikrofonen för Dino Book Reader i enhetens inställningar och försök igen.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>Inspelningen fungerade inte. Försök igen.</value></data>
   <!-- /Slice 111 -->
+  <!-- Slice 279 -->
+  <data name="Record_Title" xml:space="preserve"><value>Spela in din röst</value></data>
+  <data name="Record_YourVoice" xml:space="preserve"><value>Din röst</value></data>
+  <data name="Record_NoteRead" xml:space="preserve"><value>Läs högt orden på varje skärm.</value></data>
+  <data name="Record_NoteSkip" xml:space="preserve"><value>Hoppa över det du hellre låter Dino läsa.</value></data>
+  <data name="Record_NoteStays" xml:space="preserve"><value>Din röst stannar på den här telefonen. Den laddas aldrig upp.</value></data>
+  <data name="Record_NoteStaysDevice" xml:space="preserve"><value>Din röst stannar på den här enheten. Den laddas aldrig upp.</value></data>
+  <data name="Record_ModeCharacter" xml:space="preserve"><value>En karaktär i taget</value></data>
+  <data name="Record_ModePage" xml:space="preserve"><value>Hela sidor</value></data>
+  <data name="Record_Who" xml:space="preserve"><value>Vem ska du spela in?</value></data>
+  <data name="Record_Storyteller" xml:space="preserve"><value>Berättare</value></data>
+  <data name="Record_Lines" xml:space="preserve"><value>{0} repliker</value></data>
+  <data name="Record_OfCount" xml:space="preserve"><value>{0} av {1}</value></data>
+  <data name="Record_Start" xml:space="preserve"><value>Börja spela in</value></data>
+  <data name="Record_LongPages" xml:space="preserve"><value>Långa sidor kommer i delar, så att orden alltid ryms på skärmen.</value></data>
+  <data name="Record_Says" xml:space="preserve"><value>{0} säger:</value></data>
+  <data name="Record_LineOf" xml:space="preserve"><value>Replik {0} av {1}</value></data>
+  <data name="Record_PageOf" xml:space="preserve"><value>Sida {0} av {1}</value></data>
+  <data name="Record_PagePart" xml:space="preserve"><value>Sida {0} av {1} · del {2} av {3}</value></data>
+  <data name="Record_Skip" xml:space="preserve"><value>Hoppa över</value></data>
+  <data name="Record_Next" xml:space="preserve"><value>Nästa</value></data>
+  <data name="Record_Finish" xml:space="preserve"><value>Klar</value></data>
+  <data name="Record_Play" xml:space="preserve"><value>Spela upp</value></data>
+  <data name="Record_Playing" xml:space="preserve"><value>Spelar upp</value></data>
+  <data name="Record_Recorded" xml:space="preserve"><value>Inspelat</value></data>
+  <data name="Record_NewTake" xml:space="preserve"><value>Ny inspelning</value></data>
+  <data name="Record_OldTake" xml:space="preserve"><value>Gammal inspelning</value></data>
+  <data name="Record_ReplacesRest" xml:space="preserve"><value>Din inspelning av resten av den här sidan ersätts.</value></data>
+  <data name="Record_KeepOld" xml:space="preserve"><value>Behåll den gamla</value></data>
+  <data name="Record_UseDino" xml:space="preserve"><value>Använd Dinos röst</value></data>
+  <data name="Record_Undo" xml:space="preserve"><value>Ångra</value></data>
+  <data name="Record_Change" xml:space="preserve"><value>Ändra hur du spelar in</value></data>
+  <data name="Record_Listen" xml:space="preserve"><value>Lyssna och ändra</value></data>
+  <data name="Record_Rest" xml:space="preserve"><value>Spela in resten</value></data>
+  <data name="Record_Again" xml:space="preserve"><value>Spela in igen från början</value></data>
+  <data name="Record_YourRecordings" xml:space="preserve"><value>Dina inspelningar · {0} av {1}</value></data>
+  <data name="Record_LinesRecorded" xml:space="preserve"><value>{0} av {1} repliker inspelade</value></data>
+  <data name="Record_PagesRecorded" xml:space="preserve"><value>{0} av {1} sidor inspelade</value></data>
+  <data name="Record_RestByDino" xml:space="preserve"><value>Resten läser Dino. Din röst stannar på den här telefonen.</value></data>
+  <data name="Record_RestByDinoDevice" xml:space="preserve"><value>Resten läser Dino. Din röst stannar på den här enheten.</value></data>
+  <data name="Record_You" xml:space="preserve"><value>Du</value></data>
+  <data name="Record_RemoveWarn" xml:space="preserve"><value>Dina inspelningar av den här boken raderas också.</value></data>
+  <data name="Record_SkipKey" xml:space="preserve"><value>Hoppa över · S</value></data>
+  <data name="Record_RecordKey" xml:space="preserve"><value>Spela in · R</value></data>
+  <data name="Record_NextKey" xml:space="preserve"><value>Nästa · →</value></data>
+  <!-- /Slice 279 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
   <!-- /Slice 113 -->

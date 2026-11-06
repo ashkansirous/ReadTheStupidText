@@ -204,26 +204,61 @@
   <!-- /Slice 110 -->
   <!-- Slice 111 -->
   <data name="Rec_Title" xml:space="preserve"><value>Opnemen</value></data>
-  <data name="Rec_Script" xml:space="preserve"><value>Lees de woorden op deze pagina hardop voor en tik dan op Stop.</value></data>
-  <data name="Rec_Recording" xml:space="preserve"><value>Opnemen · {0}</value></data>
   <data name="Rec_Stop" xml:space="preserve"><value>Stop</value></data>
   <data name="Rec_Start" xml:space="preserve"><value>Opnemen</value></data>
-  <data name="Rec_Yours" xml:space="preserve"><value>Jouw opname</value></data>
-  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
   <data name="Rec_Redo" xml:space="preserve"><value>Opnieuw opnemen</value></data>
-  <data name="Rec_Delete" xml:space="preserve"><value>Opname verwijderen</value></data>
-  <data name="Rec_DeleteBody" xml:space="preserve"><value>Deze pagina gebruikt weer de stem van Dino.</value></data>
-  <data name="Rec_Next" xml:space="preserve"><value>Volgende pagina</value></data>
-  <data name="Rec_Previous" xml:space="preserve"><value>Vorige pagina</value></data>
-  <data name="Rec_Play" xml:space="preserve"><value>Je opname afspelen</value></data>
-  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · pagina {1} van {2}</value></data>
   <data name="Rec_UseVoice" xml:space="preserve"><value>Lezen met mijn stem</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} van {1} pagina's opgenomen. De andere pagina's gebruiken de stemmen van Dino.</value></data>
-  <data name="Rec_RecordPage" xml:space="preserve"><value>{0} met je eigen stem opnemen</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>De microfoon staat uit</value></data>
   <data name="Rec_NoMic" xml:space="preserve"><value>Sta de microfoon toe voor Dino Book Reader in de instellingen van je apparaat en probeer het opnieuw.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>De opname is mislukt. Probeer het opnieuw.</value></data>
   <!-- /Slice 111 -->
+  <!-- Slice 279 -->
+  <data name="Record_Title" xml:space="preserve"><value>Neem je stem op</value></data>
+  <data name="Record_YourVoice" xml:space="preserve"><value>Jouw stem</value></data>
+  <data name="Record_NoteRead" xml:space="preserve"><value>Lees de woorden op elk scherm hardop voor.</value></data>
+  <data name="Record_NoteSkip" xml:space="preserve"><value>Sla over wat Dino liever voorleest.</value></data>
+  <data name="Record_NoteStays" xml:space="preserve"><value>Je stem blijft op deze telefoon. Hij wordt nooit geüpload.</value></data>
+  <data name="Record_NoteStaysDevice" xml:space="preserve"><value>Je stem blijft op dit apparaat. Hij wordt nooit geüpload.</value></data>
+  <data name="Record_ModeCharacter" xml:space="preserve"><value>Eén personage tegelijk</value></data>
+  <data name="Record_ModePage" xml:space="preserve"><value>Hele pagina's</value></data>
+  <data name="Record_Who" xml:space="preserve"><value>Wie ga je opnemen?</value></data>
+  <data name="Record_Storyteller" xml:space="preserve"><value>Verteller</value></data>
+  <data name="Record_Lines" xml:space="preserve"><value>{0} regels</value></data>
+  <data name="Record_OfCount" xml:space="preserve"><value>{0} van {1}</value></data>
+  <data name="Record_Start" xml:space="preserve"><value>Begin met opnemen</value></data>
+  <data name="Record_LongPages" xml:space="preserve"><value>Lange pagina's komen in delen, zodat de woorden altijd op het scherm passen.</value></data>
+  <data name="Record_Says" xml:space="preserve"><value>{0} zegt:</value></data>
+  <data name="Record_LineOf" xml:space="preserve"><value>Regel {0} van {1}</value></data>
+  <data name="Record_PageOf" xml:space="preserve"><value>Pagina {0} van {1}</value></data>
+  <data name="Record_PagePart" xml:space="preserve"><value>Pagina {0} van {1} · deel {2} van {3}</value></data>
+  <data name="Record_Skip" xml:space="preserve"><value>Overslaan</value></data>
+  <data name="Record_Next" xml:space="preserve"><value>Volgende</value></data>
+  <data name="Record_Finish" xml:space="preserve"><value>Klaar</value></data>
+  <data name="Record_Play" xml:space="preserve"><value>Afspelen</value></data>
+  <data name="Record_Playing" xml:space="preserve"><value>Speelt af</value></data>
+  <data name="Record_Recorded" xml:space="preserve"><value>Opgenomen</value></data>
+  <data name="Record_NewTake" xml:space="preserve"><value>Nieuwe opname</value></data>
+  <data name="Record_OldTake" xml:space="preserve"><value>Oude opname</value></data>
+  <data name="Record_ReplacesRest" xml:space="preserve"><value>Je opname van de rest van deze pagina wordt vervangen.</value></data>
+  <data name="Record_KeepOld" xml:space="preserve"><value>Oude houden</value></data>
+  <data name="Record_UseDino" xml:space="preserve"><value>Dino's stem gebruiken</value></data>
+  <data name="Record_Undo" xml:space="preserve"><value>Ongedaan maken</value></data>
+  <data name="Record_Change" xml:space="preserve"><value>Verander hoe je opneemt</value></data>
+  <data name="Record_Listen" xml:space="preserve"><value>Beluisteren en aanpassen</value></data>
+  <data name="Record_Rest" xml:space="preserve"><value>De rest opnemen</value></data>
+  <data name="Record_Again" xml:space="preserve"><value>Opnieuw opnemen vanaf het begin</value></data>
+  <data name="Record_YourRecordings" xml:space="preserve"><value>Je opnames · {0} van {1}</value></data>
+  <data name="Record_LinesRecorded" xml:space="preserve"><value>{0} van {1} regels opgenomen</value></data>
+  <data name="Record_PagesRecorded" xml:space="preserve"><value>{0} van {1} pagina's opgenomen</value></data>
+  <data name="Record_RestByDino" xml:space="preserve"><value>De rest leest Dino voor. Je stem blijft op deze telefoon.</value></data>
+  <data name="Record_RestByDinoDevice" xml:space="preserve"><value>De rest leest Dino voor. Je stem blijft op dit apparaat.</value></data>
+  <data name="Record_You" xml:space="preserve"><value>Jij</value></data>
+  <data name="Record_RemoveWarn" xml:space="preserve"><value>Je opnames van dit boek worden ook verwijderd.</value></data>
+  <data name="Record_SkipKey" xml:space="preserve"><value>Overslaan · S</value></data>
+  <data name="Record_RecordKey" xml:space="preserve"><value>Opnemen · R</value></data>
+  <data name="Record_NextKey" xml:space="preserve"><value>Volgende · →</value></data>
+  <!-- /Slice 279 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
   <!-- /Slice 113 -->

@@ -30,20 +30,23 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		await navigation.PushAsync(reading);
 	}
 
-	/// <summary>Opens the Record screen on <paramref name="story"/> (Slice 111): the grown-up reads each page aloud and the recordings are saved as they are made.</summary>
-	public async Task RecordAsync(INavigation navigation, Story story)
+	/// <summary>Opens the Record intro on <paramref name="story"/> (Slice 111, Slice 279): every tap on Record starts there, with the words that apply to every recording, then the recording pages.</summary>
+	public async Task<bool> RecordAsync(INavigation navigation, Story story)
 	{
 		if (!mode.IsGrownUp)
 		{
-			return;
+			return false;
 		}
 
-		var record = services.GetRequiredService<RecordPage>();
-		await record.LoadAsync(story);
-		if (mode.IsGrownUp)
+		var intro = services.GetRequiredService<RecordIntroPage>();
+		await intro.LoadAsync(story);
+		if (!mode.IsGrownUp)
 		{
-			await navigation.PushAsync(record);
+			return false;
 		}
+
+		await navigation.PushAsync(intro);
+		return true;
 	}
 
 	/// <summary>Developer-only (Slice 91): writes <paramref name="story"/> as a <c>.dino</c> package and hands it to the share sheet.
@@ -106,6 +109,7 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		try
 		{
 			await library.DeleteAsync(story.Id);
+			RecordChoices.Forget(story.Id); // the remembered record choice goes with the book (Slice 279)
 			StarterStories.ForgetStoreInstall(story.SourceId);
 			await DeletePacksAsync(story);
 			return DeleteOutcome.Deleted;

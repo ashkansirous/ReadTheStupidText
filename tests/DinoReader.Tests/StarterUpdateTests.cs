@@ -323,6 +323,51 @@ public sealed class StarterUpdateTests : IDisposable
     }
 
     [Fact]
+    public void Refresh_CarriesPieceClips_WithTheirPageAndSentenceRange()
+    {
+        var first = new StoryClipKey(0, 0, 1);
+        var second = new StoryClipKey(1, 2, 2);
+        Story stored = Paged("One.", "Two.") with
+        {
+            PieceRecordings = new Dictionary<StoryClipKey, PageRecording> { [first] = new("en", 3), [second] = new("en", 5) },
+            UseRecordings = true,
+        };
+
+        var moves = StarterUpdate.PieceMoves(stored, Paged("Two.", "New.", "One."));
+        Story refreshed = StarterUpdate.Refresh(stored, Paged("Two.", "New.", "One.") with { Id = "new" });
+
+        Assert.Equal([new StarterUpdate.ClipMove(first, first with { Page = 2 }), new StarterUpdate.ClipMove(second, second with { Page = 0 })], moves);
+        Assert.Equal(new PageRecording("en", 3), refreshed.PieceRecordings![new StoryClipKey(2, 0, 1)]);
+        Assert.Equal(new PageRecording("en", 5), refreshed.PieceRecordings[new StoryClipKey(0, 2, 2)]);
+        Assert.True(refreshed.UseRecordings);
+        Assert.Null(refreshed.Recordings);
+    }
+
+    [Fact]
+    public void Refresh_DropsPieceClips_WhenThePageTextChanged_OrTheFileDidNotCopy()
+    {
+        var key = new StoryClipKey(0, 0, 0);
+        Story stored = Paged("One.") with { PieceRecordings = new Dictionary<StoryClipKey, PageRecording> { [key] = new("en", 3) }, UseRecordings = true };
+
+        Assert.Empty(StarterUpdate.PieceMoves(stored, Paged("Changed.")));
+        Assert.Null(StarterUpdate.Refresh(stored, Paged("One.") with { Id = "new" }, [], []).PieceRecordings);
+        Assert.False(StarterUpdate.Refresh(stored, Paged("Changed.") with { Id = "new" }).UseRecordings);
+    }
+
+    [Fact]
+    public void WithMovedClips_SkipsRangesTheStoryAlreadyCovers()
+    {
+        Story target = Paged("One.", "Two.") with { PieceRecordings = new Dictionary<StoryClipKey, PageRecording> { [new StoryClipKey(0, 0, 0)] = new("en", 1) } };
+        Story source = Paged("One.", "Two.") with { PieceRecordings = new Dictionary<StoryClipKey, PageRecording> { [new StoryClipKey(0, 0, 1)] = new("en", 8), [new StoryClipKey(1, 0, 0)] = new("en", 9) } };
+
+        Story merged = StarterUpdate.WithMovedClips(target, source, [new StarterUpdate.ClipMove(new StoryClipKey(0, 0, 1), new StoryClipKey(0, 0, 1)), new StarterUpdate.ClipMove(new StoryClipKey(1, 0, 0), new StoryClipKey(1, 0, 0))]);
+
+        Assert.Equal(new PageRecording("en", 1), merged.PieceRecordings![new StoryClipKey(0, 0, 0)]);
+        Assert.Equal(new PageRecording("en", 9), merged.PieceRecordings[new StoryClipKey(1, 0, 0)]);
+        Assert.Equal(2, merged.PieceRecordings.Count);
+    }
+
+    [Fact]
     public void Refresh_KeepsOnlyTheRecordingsWhoseFilesCopied()
     {
         Story stored = Paged("One.", "Two.") with

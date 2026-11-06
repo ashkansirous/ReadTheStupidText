@@ -61,8 +61,8 @@ public static class StoryPackageReader
             using var zip = new ZipArchive(package, ZipArchiveMode.Read, leaveOpen: true);
             Dictionary<string, ZipArchiveEntry> entries = IndexEntries(zip);
             Story backed = await ReadStoryAsync(entries);
-            List<int> pages = StoryRecordings.MergeablePages(phone, backed, name => entries.TryGetValue(name, out ZipArchiveEntry? e) && e.Length > 0)
-                .Where(page => IsNewHere(library, phone, backed, page, entries))
+            List<StoryClipKey> pages = StoryRecordings.MergeableClips(phone, backed, name => entries.TryGetValue(name, out ZipArchiveEntry? e) && e.Length > 0)
+                .Where(key => IsNewHere(library, phone, backed, key, entries))
                 .ToList();
             if (pages.Count == 0)
             {
@@ -70,8 +70,8 @@ public static class StoryPackageReader
             }
 
             SweepLeftovers(library, phone.Id);
-            Story merged = StoryRecordings.WithMerged(phone, backed, pages);
-            await StageAndPlaceAsync(library, phone, pages, entries, budget, () => library.UpdateAsync(merged));
+            Story merged = StoryRecordings.WithMergedClips(phone, backed, pages);
+            await StageAndPlaceAsync(library, merged, pages, entries, budget, () => library.UpdateAsync(merged));
             return merged;
         }
         catch (InvalidDataException ex)
@@ -88,15 +88,15 @@ public static class StoryPackageReader
 
     // Every audio file is written to a temp name first. Each phone file it replaces is first moved to "<name>.bak", then the new one moves in, and only then is the story saved (commit).
     // On any failure every .bak goes back, files that had no earlier file are deleted and the temps are removed, so the phone's audio and story stay exactly as they were.
-    private static async Task StageAndPlaceAsync(IStoryLibrary library, Story phone, List<int> pages, Dictionary<string, ZipArchiveEntry> entries, ByteBudget budget, Func<Task> commit)
+    private static async Task StageAndPlaceAsync(IStoryLibrary library, Story merged, List<StoryClipKey> clips, Dictionary<string, ZipArchiveEntry> entries, ByteBudget budget, Func<Task> commit)
     {
         var staged = new List<(string Temp, string Target)>();
         var placed = new List<(string Target, string? Backup)>();
         try
         {
-            foreach (int page in pages)
+            foreach (StoryClipKey clip in clips)
             {
-                await StageOneAsync(library, phone.Id, StoryRecordings.FileNameOf(page), entries, budget, staged);
+                await StageOneAsync(library, merged.Id, StoryRecordings.FileOf(merged, clip), entries, budget, staged);
             }
 
             foreach ((string temp, string target) in staged)
@@ -220,14 +220,14 @@ public static class StoryPackageReader
     }
 
     // A backed-up recording is new to the phone when the phone has no entry for the page, a different one, or no audio file of the same size.
-    private static bool IsNewHere(IStoryLibrary library, Story phone, Story backed, int page, Dictionary<string, ZipArchiveEntry> entries)
+    private static bool IsNewHere(IStoryLibrary library, Story phone, Story backed, StoryClipKey clip, Dictionary<string, ZipArchiveEntry> entries)
     {
-        if (StoryRecordings.Of(phone, page) != backed.Recordings![page])
+        if (StoryRecordings.ClipOf(phone, clip) != StoryRecordings.ClipOf(backed, clip))
         {
             return true;
         }
 
-        string name = StoryRecordings.FileNameOf(page);
+        string name = StoryRecordings.FileOf(backed, clip);
         string? path = library.TryResolveFile(phone.Id, name);
         return path is null || !File.Exists(path) || new FileInfo(path).Length != entries[name].Length;
     }
@@ -391,15 +391,15 @@ public static class StoryPackageReader
     }
 
     // Only a backup restore brings a parent's recordings back (Slice 111): a shared or store package never carries any, so one that names recordings is not trusted with them.
-    private static Story WithoutRecordings(Story story) => story with { Recordings = null, UseRecordings = false };
+    private static Story WithoutRecordings(Story story) => story with { Recordings = null, PieceRecordings = null, UseRecordings = false };
 
     // A recording the package does not carry (the writer skips a missing file) is dropped, so "Read with my voice" never names a page with nothing to play (Slice 111).
     private static Story WithoutMissingRecordings(Story story, Dictionary<string, ZipArchiveEntry> entries)
     {
         Story kept = story;
-        foreach (int page in StoryRecordings.RecordedPages(story).Where(p => !entries.ContainsKey(StoryRecordings.FileNameOf(p))))
+        foreach (StoryClipKey clip in StoryRecordings.Clips(story).Select(c => c.Key).Where(k => !entries.ContainsKey(StoryRecordings.FileOf(story, k))))
         {
-            kept = StoryRecordings.Without(kept, page);
+            kept = StoryRecordings.WithoutClip(kept, clip);
         }
 
         return kept;

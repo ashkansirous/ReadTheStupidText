@@ -354,14 +354,27 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         return name;
     }
 
-    public async Task<string> StoreRecordingAsync(string storyId, int page, Func<string, Task> write)
+    public Task<string> StoreRecordingAsync(string storyId, int page, Func<string, Task> write) =>
+        StoreClipAsync(storyId, StoryClipKey.OfPage(page), write);
+
+    public async Task<string> StoreClipAsync(string storyId, StoryClipKey key, Func<string, Task> write)
     {
-        if (page < 0)
+        if (!key.IsValid)
         {
-            throw new ArgumentOutOfRangeException(nameof(page));
+            throw new ArgumentOutOfRangeException(nameof(key));
         }
 
-        string name = StoryRecordings.FileNameOf(page);
+        return await StoreRecordingFileAsync(storyId, StoryRecordings.FileNameOf(key), write);
+    }
+
+    public async Task<string> StoreRecordingFileAsync(string storyId, string fileName, Func<string, Task> write)
+    {
+        if (!StoryRecordings.IsRecordingFileName(fileName))
+        {
+            throw new ArgumentException("Not a recording file name.", nameof(fileName));
+        }
+
+        string name = fileName;
         string target = TryResolveFile(storyId, name) ?? throw new ArgumentException("Not a plain file name.", nameof(storyId));
         Directory.CreateDirectory(FolderOf(storyId));
         string temp = $"{target}.{Guid.NewGuid():N}{TempSuffix}";

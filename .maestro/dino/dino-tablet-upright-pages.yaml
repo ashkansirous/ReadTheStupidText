@@ -1,18 +1,18 @@
-# Slice 234 part C (mock Batch 45 frames 142, 144, 146): on a tablet held upright (run on RTST_Tablet, 800 x 1280 dp) Record shows the page picture, the words at 30 sp, the recordings line and the microphone centred at the foot;
-# Backup has its two cards side by side (Slice 278 part B: the Cast screen is gone). Each page logs its tablet-upright line once its layout is applied. Tablet emulator only: a phone never logs [TabletUpright].
+# Slice 234 part C (mock Batch 45 frames 144, 146): on a tablet held upright (run on RTST_Tablet, 800 x 1280 dp) Backup has its two cards side by side (Slice 278 part B: the Cast screen is gone).
+# The page logs its tablet-upright line once its layout is applied. Tablet emulator only: a phone never logs [TabletUpright]. Slice 279 redrew the Record screen as one centred column (mock Batch 48 frames 180 to 184),
+# so its tablet-upright layout (frame 142) and this flow's Record part are gone.
 # Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback. The gate is not tapped: the enter-grown-up hook stands in for a passed gate (grown-ups-button.yaml covers the gate chain).
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK enter-grown-up ok
 # run-flows matches whole tokens, so each line is listed by its first tokens; the numbers that depend on the book are left out.
-# expect-log: [TabletUpright] record words=30
 # expect-log: [TabletUpright] backup sideBySide=True
 appId: uk.sirous.dinoreader.dbg
-name: Record and Backup use the tablet-upright layouts
+name: Backup uses the tablet-upright layout
 onFlowComplete:
   - setOrientation: PORTRAIT
 ---
 - launchApp:
-    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow only opens a starter book's Record and the Backup page, and records, saves and restores nothing.
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow only opens the Backup page, and records, saves and restores nothing.
     clearState: true
     permissions:
       all: allow
@@ -32,33 +32,6 @@ onFlowComplete:
     visible:
       id: GalleryDone
     timeout: 30000
-# Record (142): header with Done, the words, the recordings line and the microphone are on screen together, upright.
-- tapOn:
-    id: TileMore
-    index: 0
-    waitToSettleTimeoutMs: 300
-- extendedWaitUntil:
-    visible:
-      id: BookSheetRemove
-    timeout: 10000
-- tapOn:
-    text: Record
-    waitToSettleTimeoutMs: 300
-- extendedWaitUntil:
-    visible:
-      id: RecordPageWords
-    timeout: 15000
-- assertVisible:
-    id: GrownUpDone
-- assertVisible:
-    id: RecordingsStayNote
-- tapOn:
-    id: GrownUpDone
-    waitToSettleTimeoutMs: 300
-- extendedWaitUntil:
-    visible:
-      id: GalleryDone
-    timeout: 15000
 # Backup (146): the two cards are both on screen upright.
 - tapOn:
     id: GallerySettings

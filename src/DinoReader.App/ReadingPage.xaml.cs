@@ -165,7 +165,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		_session.SetReadingLanguage(StoryLanguages.Current().Main); // the app language until the book says it can be read in the child's pick (OpenWithLanguagesAsync)
 		TitleLabel.Text = story.Title;
 		SideTitle.Text = story.Title;
-		_sentences = StorySentences.Build(story.Text, LanguageRules.For(story.Language), story.BreakMap());
+		_sentences = RecordSplitBook.SentencesOf(story); // the same cut the Record screen makes, so a clip's sentence numbers match
 		_session.Open(story, _sentences);
 		_theme = CurrentTheme();
 		_mode = story.Mode;
@@ -396,6 +396,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		string reading = _session.ReadingLanguage;
 		if (!translator.Applies(story, reading))
 		{
+			_session.SetClipPages(null);
 			ShowSource(story);
 			return;
 		}
@@ -405,7 +406,14 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 			ShowSource(story);
 		}
 
+		// A translated book plays a page's clips only where they cover the whole page (Slice 279); the display and the read agree on the same pages.
+		_session.SetClipPages(StoryRecordings.PagesShownInOwnLanguage(story, StoryRecordings.SentencesPerPage(story.Pages, _sentences)));
 		(TranslatedStory? translated, string title) = await TranslateForScreenAsync(story, translator, reading, cancellation);
+		if (translated is null && version == _displayVersion)
+		{
+			_session.SetClipPages(null); // the translation failed: the book reads in its own language, every clip plays
+		}
+
 		if (translated is not null && version == _displayVersion && !cancellation.IsCancellationRequested)
 		{
 			ShowTranslation(story, translated, title);

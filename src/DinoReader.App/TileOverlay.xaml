@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
     x:DataType="local:StoryTile"
     IsVisible="{Binding Mode.IsGrownUp}">
 
@@ -18,6 +19,18 @@
                 <PointerGestureRecognizer PointerPressed="OnPointerPressed" PointerMoved="OnPointerMoved" PointerReleased="OnPointerEnded" />
             </Grid.GestureRecognizers>
         </Grid>
+        <!-- Slice 279 (Batch 48 frame 188): a book with the parent's recordings wears a white "You" chip with a red mic, bottom-left, 5 px in (26 px high, radius 13). The kids' shelf never shows this overlay. -->
+        <Border x:Name="YourVoiceChip" IsVisible="{Binding HasYourVoice}" InputTransparent="True" HorizontalOptions="Start" VerticalOptions="End" Margin="5"
+                HeightRequest="26" Padding="8,0" BackgroundColor="White" StrokeThickness="0" AutomationId="TileYourVoice"
+                SemanticProperties.Description="{Binding YourVoiceLabel}">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="13" />
+            </Border.StrokeShape>
+            <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
+                <local:IconView Kind="Mic" Color="{StaticResource Danger}" Size="13" StrokeWidth="2.4" VerticalOptions="Center" />
+                <Label Text="{Binding YourVoiceLabel}" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource Ink}" VerticalOptions="Center" LineBreakMode="NoWrap" />
+            </HorizontalStackLayout>
+        </Border>
         <Grid x:Name="MoreButton" HorizontalOptions="End" VerticalOptions="Start" WidthRequest="48" HeightRequest="48" AutomationId="TileMore"
               SemanticProperties.Description="{Binding MoreHint}">
             <Border WidthRequest="36" HeightRequest="36" BackgroundColor="White" StrokeThickness="0">

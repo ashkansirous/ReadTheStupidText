@@ -203,26 +203,61 @@
   <!-- /Slice 110 -->
   <!-- Slice 111 -->
   <data name="Rec_Title" xml:space="preserve"><value>录音</value></data>
-  <data name="Rec_Script" xml:space="preserve"><value>大声读出这一页的文字，然后点按“停止”。</value></data>
-  <data name="Rec_Recording" xml:space="preserve"><value>正在录音 · {0}</value></data>
   <data name="Rec_Stop" xml:space="preserve"><value>停止</value></data>
   <data name="Rec_Start" xml:space="preserve"><value>录音</value></data>
-  <data name="Rec_Yours" xml:space="preserve"><value>你的录音</value></data>
-  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
   <data name="Rec_Redo" xml:space="preserve"><value>重新录音</value></data>
-  <data name="Rec_Delete" xml:space="preserve"><value>删除录音</value></data>
-  <data name="Rec_DeleteBody" xml:space="preserve"><value>这一页将再次使用恐龙的声音。</value></data>
-  <data name="Rec_Next" xml:space="preserve"><value>下一页</value></data>
-  <data name="Rec_Previous" xml:space="preserve"><value>上一页</value></data>
-  <data name="Rec_Play" xml:space="preserve"><value>播放你的录音</value></data>
-  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · 第 {1} 页，共 {2} 页</value></data>
   <data name="Rec_UseVoice" xml:space="preserve"><value>用我的声音朗读</value></data>
   <data name="Rec_UseVoiceHint" xml:space="preserve"><value>已录制 {0} / {1} 页。其他页使用恐龙的声音。</value></data>
-  <data name="Rec_RecordPage" xml:space="preserve"><value>用你的声音录制{0}</value></data>
   <data name="Rec_NoMicTitle" xml:space="preserve"><value>麦克风已关闭</value></data>
   <data name="Rec_NoMic" xml:space="preserve"><value>请在设备设置中允许 Dino Book Reader 使用麦克风，然后重试。</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>录音失败了。请再试一次。</value></data>
   <!-- /Slice 111 -->
+  <!-- Slice 279 -->
+  <data name="Record_Title" xml:space="preserve"><value>录下你的声音</value></data>
+  <data name="Record_YourVoice" xml:space="preserve"><value>你的声音</value></data>
+  <data name="Record_NoteRead" xml:space="preserve"><value>把每个屏幕上的文字大声读出来。</value></data>
+  <data name="Record_NoteSkip" xml:space="preserve"><value>想让恐龙来读的部分可以跳过。</value></data>
+  <data name="Record_NoteStays" xml:space="preserve"><value>你的声音只保存在这部手机上，绝不会上传。</value></data>
+  <data name="Record_NoteStaysDevice" xml:space="preserve"><value>你的声音只保存在这台设备上，绝不会上传。</value></data>
+  <data name="Record_ModeCharacter" xml:space="preserve"><value>一次一个角色</value></data>
+  <data name="Record_ModePage" xml:space="preserve"><value>整页</value></data>
+  <data name="Record_Who" xml:space="preserve"><value>你要录谁的台词？</value></data>
+  <data name="Record_Storyteller" xml:space="preserve"><value>讲述者</value></data>
+  <data name="Record_Lines" xml:space="preserve"><value>{0} 句</value></data>
+  <data name="Record_OfCount" xml:space="preserve"><value>{0}/{1}</value></data>
+  <data name="Record_Start" xml:space="preserve"><value>开始录音</value></data>
+  <data name="Record_LongPages" xml:space="preserve"><value>较长的页面会分成几部分，让文字始终能放进屏幕。</value></data>
+  <data name="Record_Says" xml:space="preserve"><value>{0}说：</value></data>
+  <data name="Record_LineOf" xml:space="preserve"><value>第 {0} 句，共 {1} 句</value></data>
+  <data name="Record_PageOf" xml:space="preserve"><value>第 {0} 页，共 {1} 页</value></data>
+  <data name="Record_PagePart" xml:space="preserve"><value>第 {0} 页，共 {1} 页 · 第 {2} 部分，共 {3} 部分</value></data>
+  <data name="Record_Skip" xml:space="preserve"><value>跳过</value></data>
+  <data name="Record_Next" xml:space="preserve"><value>下一个</value></data>
+  <data name="Record_Finish" xml:space="preserve"><value>完成</value></data>
+  <data name="Record_Play" xml:space="preserve"><value>播放</value></data>
+  <data name="Record_Playing" xml:space="preserve"><value>播放中</value></data>
+  <data name="Record_Recorded" xml:space="preserve"><value>已录音</value></data>
+  <data name="Record_NewTake" xml:space="preserve"><value>新录音</value></data>
+  <data name="Record_OldTake" xml:space="preserve"><value>旧录音</value></data>
+  <data name="Record_ReplacesRest" xml:space="preserve"><value>此页其余部分的录音将被替换。</value></data>
+  <data name="Record_KeepOld" xml:space="preserve"><value>保留旧的</value></data>
+  <data name="Record_UseDino" xml:space="preserve"><value>改用恐龙的声音</value></data>
+  <data name="Record_Undo" xml:space="preserve"><value>撤销</value></data>
+  <data name="Record_Change" xml:space="preserve"><value>更改录音方式</value></data>
+  <data name="Record_Listen" xml:space="preserve"><value>试听并修改</value></data>
+  <data name="Record_Rest" xml:space="preserve"><value>录制剩下的</value></data>
+  <data name="Record_Again" xml:space="preserve"><value>从头重新录音</value></data>
+  <data name="Record_YourRecordings" xml:space="preserve"><value>你的录音 · {0}/{1}</value></data>
+  <data name="Record_LinesRecorded" xml:space="preserve"><value>已录 {0}/{1} 句</value></data>
+  <data name="Record_PagesRecorded" xml:space="preserve"><value>已录 {0}/{1} 页</value></data>
+  <data name="Record_RestByDino" xml:space="preserve"><value>其余由恐龙来读。你的声音只保存在这部手机上。</value></data>
+  <data name="Record_RestByDinoDevice" xml:space="preserve"><value>其余由恐龙来读。你的声音只保存在这台设备上。</value></data>
+  <data name="Record_You" xml:space="preserve"><value>你</value></data>
+  <data name="Record_RemoveWarn" xml:space="preserve"><value>你为这本书录的音也会一并删除。</value></data>
+  <data name="Record_SkipKey" xml:space="preserve"><value>跳过 · S</value></data>
+  <data name="Record_RecordKey" xml:space="preserve"><value>录音 · R</value></data>
+  <data name="Record_NextKey" xml:space="preserve"><value>下一个 · →</value></data>
+  <!-- /Slice 279 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}：{1}</value></data>
   <!-- /Slice 113 -->

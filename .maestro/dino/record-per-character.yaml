@@ -1,0 +1,199 @@
+# Slice 279: Record opens the intro page, a book is recorded a line at a time for the ticked characters, and the recorded lines play back in the reader.
+# Tap Record on Three Little Pigs, untick the Storyteller on the intro, start, record two lines (each: Record, a second and a half of microphone, Stop, Next), skip the third line and press Done.
+# The record-state hook then reads the library (two clips, each with a non-empty file), and open-book play=1 reads the book from the start: the Storyteller's sentences have no recording and no pre-made
+# audio (the test store is offline, so no audio pack is installed and each is shown for a short beat), then the first recorded line plays its own file.
+# The microphone permission is granted at launch. The emulator's microphone gives silence or noise, which is enough for a file with a length.
+# To see it fail against the old behaviour: before this slice Record opened one page at a time with no intro, so "RecordIntroStart" never shows and no "[Record]" line is written.
+# expect-log: HOOK test-store ok offline
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK enter-grown-up ok
+# expect-log: [Record] open mode=PerCharacter
+# expect-log: [Record] skipped
+# expect-log: [Record] saved
+# expect-log: HOOK record-state ok clips=2
+# expect-log: [RecordedClip] playing
+appId: uk.sirous.dinoreader.dbg
+name: Record a book a line at a time and read it back
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, side languages, installed audio packs, a stored shelf order); fine here: skip-first-run puts the test books back and no audio pack may be installed, so every piece without a recording has no clip.
+    clearState: true
+    permissions:
+      all: allow
+    arguments:
+      cmd: test-store
+      mode: offline
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+# The book's sheet, then its Record row: the intro page opens, with the notes once and the two ways to record.
+- tapOn:
+    text: ".*Three Little Pigs.*"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: BookSheetRemove
+    timeout: 10000
+- tapOn:
+    text: "Record your voice"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordIntroStart
+    timeout: 20000
+- assertVisible: "Read aloud the words on each screen."
+- assertVisible: "Who will you record?"
+- assertVisible: "One character at a time"
+# One character unticked: the Storyteller. The recording pages then hold only the other characters' lines.
+- tapOn:
+    text: "Storyteller"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: RecordIntroStart
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordButton
+    timeout: 20000
+- assertVisible: "Line 1 of .*"
+- assertNotVisible: "Storyteller says:"
+# The recording pages carry no instruction, no "stays on this phone" note and no page counter.
+- assertNotVisible: "Read aloud the words on each screen."
+- assertNotVisible:
+    id: RecordingsStayNote
+# Line 1: record, a second and a half, stop. The chip says Recorded and Next is live.
+- tapOn:
+    id: RecordButton
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordStopButton
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: RecordNeverShown
+    timeout: 1500
+    optional: true
+- tapOn:
+    id: RecordStopButton
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordChip
+    timeout: 20000
+- assertVisible: "Recorded"
+- tapOn:
+    id: RecordNext
+    waitToSettleTimeoutMs: 300
+# Line 2 the same way.
+- extendedWaitUntil:
+    visible: "Line 2 of .*"
+    timeout: 15000
+- tapOn:
+    id: RecordButton
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordStopButton
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: RecordNeverShown
+    timeout: 1500
+    optional: true
+- tapOn:
+    id: RecordStopButton
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordChip
+    timeout: 20000
+- tapOn:
+    id: RecordNext
+    waitToSettleTimeoutMs: 300
+# Line 3: skipped, nothing recorded for it.
+- extendedWaitUntil:
+    visible: "Line 3 of .*"
+    timeout: 15000
+- tapOn:
+    id: RecordSkip
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: "Line 4 of .*"
+    timeout: 15000
+# Done half-way keeps what was recorded and returns to the intro in its "Your voice" state (the slice's decision: the intro reopens on the same choice). Back goes to the book's sheet; close it to reach the shelf.
+- tapOn:
+    id: RecordDone
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordIntroProgress
+    timeout: 20000
+- assertVisible: "2 of .* lines recorded"
+- back
+- extendedWaitUntil:
+    visible:
+      id: BookSheetClose
+    timeout: 20000
+- tapOn:
+    id: BookSheetClose
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 20000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: record-state
+      id: three-little-pigs
+      clips: "2"
+- extendedWaitUntil:
+    visible:
+      id: RecordNeverShown
+    timeout: 3000
+    optional: true
+# Read the book back from the start: the Storyteller's sentences are shown for a beat each, then the first recorded line plays its own file.
+# The open-book hook refuses while grown-up mode is on (a child cannot open a book from there), so leave it the way a grown-up does: Done.
+- tapOn:
+    id: GalleryDone
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryGrownUps
+    timeout: 20000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: RecordNeverShown
+    timeout: 25000
+    optional: true
+- assertVisible:
+    id: ReadingSurface

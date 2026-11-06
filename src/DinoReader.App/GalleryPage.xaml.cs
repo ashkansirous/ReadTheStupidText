@@ -51,6 +51,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	private long _suppressTapUntil; // Environment.TickCount64: the release that ends a 1 s hold must not open a sheet
 	private readonly ObservableCollection<object> _items = [];
 	private Story? _sheetStory; // the book the "This book" sheet is open on
+	private string? _reopenSheetFor; // the book whose Record flow is open: the sheet opens again on it when the flow is left
 	private bool _sheetChanged; // a switch was saved while the sheet was open: the tiles are rebuilt when it closes
 	private readonly SemaphoreSlim _sheetSaveLock = new(1, 1);
 	private readonly StoryLanguageButton _languageButton; // Slice 173 (mock 79): the child's story-language button, left of the grown-ups button, with two or three story languages
@@ -153,6 +154,8 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	protected override async void OnAppearing()
 	{
 		base.OnAppearing();
+		string? reopenSheetFor = _reopenSheetFor; // taken now: only this appearing (the return from the Record push) may reopen the sheet; any other one clears it
+		_reopenSheetFor = null;
 		_mode.PropertyChanged -= OnModeChanged;
 		_mode.PropertyChanged += OnModeChanged;
 		StoreClient store = _services.GetRequiredService<StoreClient>();
@@ -176,12 +179,24 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 			await _starters.InstallOnceAsync();
 			await RefreshAsync();
 			await ResumeIntroAsync();
+			await ReopenSheetAfterRecordAsync(reopenSheetFor);
 		}
 		catch (Exception ex)
 		{
 			// no-fallback: logged only; the shelf stays as it was until the next refresh
 			Debug.WriteLine($"Dino Reader gallery refresh failed: {ex}");
 		}
+	}
+
+	// Back from the Record intro lands on the book sheet it was opened from (mock frame 178), on Android, iOS and Windows.
+	private async Task ReopenSheetAfterRecordAsync(string? id)
+	{
+		if (id is null || !_mode.IsGrownUp || await _library.GetAsync(id) is not { } story)
+		{
+			return;
+		}
+
+		await _busy.RunWhenFreeAsync(() => OpenBookSheetAsync(story)); // queued behind a running grown-up action, never dropped
 	}
 
 	// Slice 278 A3: the one-time deletion of the families' own books runs in the background, once per app run; the library never lists them, so the shelf needs no reload.
@@ -877,8 +892,10 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		Story story = await _library.GetAsync(tapped.Id) ?? tapped;
 		_sheetStory = story;
 		_sheetChanged = false;
-		BookInfo.Show(SheetContentOf(story));
+		BookSheet.Content content = SheetContentOf(story);
+		BookInfo.Show(content);
 		SheetLog($"opened, visible={BookInfo.IsVisible}");
+		_ = ShowVoiceWhenReadyAsync(story, content.Plan);
 	}
 
 	private BookSheet.Content SheetContentOf(Story story)
@@ -887,12 +904,41 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		StoryTile tile = StoryTile.From(story, _library, _mode);
 		string title = _services.GetRequiredService<StoryTranslator>().ShelfTitle(story);
 		var plan = BookSheetPlan.For(origin, StoryRecordings.Count(story) > 0, DeveloperMode.Enabled);
-		return new BookSheet.Content(title, BookOrigins.Label(origin), tile.CoverImagePath, tile.CoverFill, plan, VoiceOfferOf(story));
+		return new BookSheet.Content(title, BookOrigins.Label(origin), tile.CoverImagePath, tile.CoverFill, plan, Voice: null);
 	}
 
-	// "Read with my voice" shows only once a page is recorded.
-	private static BookSheet.VoiceOffer? VoiceOfferOf(Story story) =>
-		StoryRecordings.Count(story) is var recorded && recorded > 0 ? new BookSheet.VoiceOffer(recorded, story.Pages.Count, story.UseRecordings) : null;
+	// The count needs the whole book split into sentences and speakers, which can take a while on a long book: the sheet opens at once and the voice row and the count show when that is ready (Slice 279).
+	private async Task ShowVoiceWhenReadyAsync(Story story, BookSheetPlan plan)
+	{
+		BookSheet.VoiceOffer? offer;
+		try
+		{
+			offer = await Task.Run(() => VoiceOfferOf(story));
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: the sheet stays without the voice row and the count; nothing is lost
+			Debug.WriteLine($"Dino Reader could not count the recordings of a book: {ex.Message}");
+			return;
+		}
+
+		if (offer is not null && BookInfo.IsVisible && _sheetStory?.Id == story.Id)
+		{
+			BookInfo.ShowVoice(plan, offer with { On = _sheetStory.UseRecordings });
+		}
+	}
+
+	// "Read with my voice" and the Record row's count show only once something is recorded (Slice 279): lines recorded of all lines, or pages for a book recorded as whole pages.
+	private static BookSheet.VoiceOffer? VoiceOfferOf(Story story)
+	{
+		if (StoryRecordings.Count(story) == 0)
+		{
+			return null;
+		}
+
+		RecordBook book = RecordSplitBook.Of(story);
+		return new BookSheet.VoiceOffer(RecordSplitWalk.Progress(story, book, RecordChoices.Load(story, book).Mode), story.UseRecordings);
+	}
 
 	private Task SaveUseVoiceAsync(bool useVoice) => SaveSheetStoryAsync(story => story with { UseRecordings = useVoice });
 
@@ -952,7 +998,13 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	{
 		if (await SettledSheetStoryAsync() is { } story)
 		{
-			await RunGrownUpAsync(() => _actions.RecordAsync(Navigation, story));
+			await RunGrownUpAsync(async () =>
+			{
+				if (await _actions.RecordAsync(Navigation, story))
+				{
+					_reopenSheetFor = story.Id; // set only once the intro is pushed: Back from the record flow returns to this book's sheet (mock frame 178)
+				}
+			});
 		}
 	}
 
@@ -1001,7 +1053,13 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	private static DeletePrompt RemovePrompt(Story story, string shelfTitle)
 	{
 		bool fromStore = BookOrigins.Of(story) == BookOrigin.Store;
-		return new DeletePrompt(AppResources.Format(AppResources.Book_RemoveTitle, shelfTitle), fromStore ? AppResources.Book_RemoveBodyStore : AppResources.Delete_Body, AppResources.Book_RemoveConfirm);
+		string body = fromStore ? AppResources.Book_RemoveBodyStore : AppResources.Delete_Body;
+		if (StoryRecordings.Count(story) > 0)
+		{
+			body = string.Concat(body, "\n\n", AppResources.Record_RemoveWarn); // Slice 279: a book with recordings says they go too
+		}
+
+		return new DeletePrompt(AppResources.Format(AppResources.Book_RemoveTitle, shelfTitle), body, AppResources.Book_RemoveConfirm);
 	}
 
 	// Waits for a save still in flight (a quick Back after a switch) so the tiles never keep the old flags; never throws out of async void.
