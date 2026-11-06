@@ -97,6 +97,8 @@ repository later.
 
 **Part C — design**
 
+*Part C: In progress (wave 2026-11-06), draft PR, built alongside part B (it edits only `docs/design/dino-reader/**`). Open point taken as its default: the older `.dc.html` batch files stay verbatim (they are copies of the Claude Design project); the README screen map in `docs/design/dino-reader/` marks each removed frame range "retired by Slice 278" and points to Batch 48 frame 186.*
+
 - [ ] C1. Remove the add-book, scan, page-editor, translation, voice download, cast and narrator frames from the
   design copy in `docs/design/dino-reader/`, and the wizard's "add" step. (The new recording frames come with Slice 279.)
 
