@@ -74,6 +74,7 @@ public static class LanguageChoice
 public partial class LanguagePage : ContentPage, IGrownUpPage
 {
 	private const int LoadWaitMilliseconds = 2000;
+	private const int LoadPollMilliseconds = 50;
 	private const double RowMinHeight = 54;
 	private const double CheckSize = 26;
 	private const double BarHeight = 8;
@@ -362,24 +363,23 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 		}
 	}
 
-	// True when the new root is on screen; false when the wait ran out, so no push lands on a page without a handler.
+	// True when the NavigationPage is loaded (IsLoaded; reading it registers no KVO); false when the wait ran out, so no push lands on a page without a handler.
+	// Polled, not subscribed: a Loaded/Unloaded subscription on the NavigationPage would put KVO observers on its plain UINavigationController view (Slice 274).
 	private static async Task<bool> WhenLoadedAsync(NavigationPage navigation)
 	{
-		if (navigation.IsLoaded)
+		DateTime deadline = DateTime.UtcNow.AddMilliseconds(LoadWaitMilliseconds);
+		while (!IsReadyToPush(navigation))
 		{
-			return true;
+			if (DateTime.UtcNow >= deadline)
+			{
+				return false;
+			}
+
+			await Task.Delay(LoadPollMilliseconds);
 		}
 
-		var loaded = new TaskCompletionSource();
-		void OnLoaded(object? sender, EventArgs e) => loaded.TrySetResult();
-		navigation.Loaded += OnLoaded;
-		try
-		{
-			return await Task.WhenAny(loaded.Task, Task.Delay(LoadWaitMilliseconds)) == loaded.Task;
-		}
-		finally
-		{
-			navigation.Loaded -= OnLoaded;
-		}
+		return true;
 	}
+
+	private static bool IsReadyToPush(NavigationPage navigation) => navigation.IsLoaded;
 }
