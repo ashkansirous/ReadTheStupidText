@@ -26,8 +26,8 @@ Read first, in full: `.claude/skills/create-dino-story/SKILL.md` (rule 1 and the
 - **Words.** Short sentences, no word a 5-year-old wouldn't know without a reason, no awkward phrasing aloud.
   Fail any ALL-CAPS word in the story text: a voice may spell it letter by letter.
 - **Register, every language (Decision 152).** Fail any literary, old or written-only form (Farsi
-  «بگذار»، «بیایم»، «می‌باشد» where a parent says «بذار»، «بیام»، «هست»), and any sound word that is a
-  single short word instead of a repeated one (dino-storytelling section 3).
+  «بگذار»، «بیایم»، «می‌باشد» where a parent says «بذار»، «بیام»، «هست»). A single sound word is fine; never
+  fail a page for not repeating one (user, 2026-11-06).
 - **Plan.** Each picture-plan line matches its page's text, and neighbouring pages show different pictures.
 - **Voices (Slice 156).** Every character has an entry in the `cast` of the book's `content/dino/<stem>/book.json`; the suggested roster character fits it (age, gender, kind, how it should sound:
   a squawky seagull is not a warm mummy), no two characters of the book share one, and the traits are true to the text. List each misfit as a page-less "voices" finding.

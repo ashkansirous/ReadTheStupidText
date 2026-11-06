@@ -128,7 +128,7 @@ Decisions 1-99 are in [notes/decisions-001-099.md](notes/decisions-001-099.md) (
 
 150. **Farsi's default voice is `mana` (female) in both apps; `ganji_adabi` leaves the cast (Batch 30).** Characters on it move to `ganji`/`gyro`; it stays selectable; grown-ups' picks are kept; the default changes in code, not in `packs.yml`. (Slice 144)
 
-151. **Sound-word spellings are measured per voice before any book is rewritten (Batch 30).** Until the list exists, sound words use repetition with punctuation. (Slice 145)
+151. **Sound-word spellings are measured per voice before any book is rewritten (Batch 30).** Until the list exists, sound words use repetition with punctuation. (Slice 145) **Withdrawn 2026-11-06 (user):** sound words no longer need repeating; a single one is fine.
 
 152. **Dino books are written in spoken, kid-friendly language in every language (Batch 30).** The way a parent talks to a 4-6-year-old: colloquial forms, diminutives, exclamations; never literary or written-only forms. (Slice 146)
 
