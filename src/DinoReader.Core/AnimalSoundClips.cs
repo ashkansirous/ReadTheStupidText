@@ -110,14 +110,6 @@ public static class AnimalClipRuns
     public static Advance Decide(bool stale, bool cancelled, bool paused) =>
         stale || cancelled ? Advance.Ignore : paused ? Advance.Defer : Advance.Start;
 
-    /// <summary>
-    /// Whether a speech engine's Completed ends the current speech step. The event carries no id, so it is accepted only when it was raised for the current run
-    /// (<paramref name="stampedRun"/> equals <paramref name="currentRun"/>), that run was seen Playing (<paramref name="playingRun"/>), and the read is the active one.
-    /// A late Completed of a stopped run, one raised before the run played, and a duplicate (the caller clears <paramref name="playingRun"/> after taking one) are refused.
-    /// </summary>
-    public static bool AcceptCompleted(int readId, int activeReadId, int stampedRun, int currentRun, int playingRun) =>
-        readId != 0 && readId == activeReadId && stampedRun == currentRun && currentRun == playingRun;
-
     /// <summary>The kinds of the slots in <paramref name="segments"/>, each once.</summary>
     public static IReadOnlyList<AnimalKind> KindsIn(IReadOnlyList<VoicedSegment> segments) =>
         segments.Select(ClipOf).OfType<AnimalKind>().Distinct().ToList();

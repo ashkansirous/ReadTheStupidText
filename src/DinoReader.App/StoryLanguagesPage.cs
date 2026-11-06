@@ -8,35 +8,28 @@ namespace DinoReader;
 
 /// <summary>
 /// The list of languages a parent ticks story languages from (Slice 173, mock frames 86 and 87): the app language first, ticked and locked, then the other
-/// fourteen, each a tickable row. Two ticked fills the set and greys the rest. With <see cref="StoryLanguagePacks"/> a ticked language starts its voice
-/// download and shows its progress with Cancel (Settings); without, it only holds the picks (the intro, which starts the downloads on Done).
+/// fourteen, each a tickable row. Two ticked fills the set and greys the rest. With the <see cref="ShelfAudioPacks"/> (Settings) a tick is saved at once and starts the
+/// language's pre-made audio, shown as a card with Cancel; without, it only holds the picks (the intro, which starts the audio on Done). Slice 278 part B: no voice is downloaded.
 /// </summary>
 public sealed class StoryLanguagePicker : ContentView
 {
 	private const double RowMinHeight = 54;
 	private const double CheckSize = 26;
 	private const double CheckCorner = 8;
-	private const double BarHeight = 8;
 	private const double NameSize = 15;
 	private const double NoteSize = 12.5;
 	private const double CardCorner = 18;
 	private const double DisabledOpacity = 0.45;
-	private const int PercentScale = 100;
 
-	private static readonly Color ReadyGreen = Color.FromArgb("#3E9A4E");
 	private static readonly Color LockedGrey = Color.FromArgb("#C9C3D6");
 
-	private readonly StoryLanguagePacks? _packs;
 	private readonly ShelfAudioPacks? _shelf;
-	private readonly Dictionary<string, (ProgressBar Bar, Label Status)> _live = [];
-	private readonly Dictionary<string, LanguageVoiceState> _shown = [];
 	private readonly Dictionary<string, VerticalStackLayout> _shelfHosts = [];
 	private readonly Dictionary<string, View> _shelfCards = [];
 
-	public StoryLanguagePicker(StoryLanguageSet initial, StoryLanguagePacks? packs, ShelfAudioPacks? shelf = null)
+	public StoryLanguagePicker(StoryLanguageSet initial, ShelfAudioPacks? shelf = null)
 	{
 		Set = initial;
-		_packs = packs;
 		_shelf = shelf;
 		Rebuild();
 	}
@@ -47,48 +40,14 @@ public sealed class StoryLanguagePicker : ContentView
 	/// <summary>Raised after a tick or an untick with the language and whether it is now ticked.</summary>
 	public event Action<string, bool>? Toggled;
 
-	/// <summary>Raised when a language's voice should be fetched: it was just ticked, or its "Download" was tapped. The owner asks about mobile data and starts it.</summary>
-	public event Action<string>? DownloadRequested;
-
-	/// <summary>Moves a running download's bar without rebuilding; true when nothing but progress changed. False means the rows must be rebuilt.</summary>
-	public bool TryUpdateProgress()
-	{
-		if (_packs is null || _shown.Any(shown => _packs.StateOf(shown.Key) != shown.Value))
-		{
-			return false;
-		}
-
-		foreach ((string code, (ProgressBar bar, Label status)) in _live)
-		{
-			double progress = _packs.ProgressOf(code);
-			bar.Progress = progress;
-			status.Text = AppResources.Format(AppResources.StoryLanguages_Getting, (int)(progress * PercentScale));
-		}
-
-		return true;
-	}
-
-	/// <summary>Unticks the given languages (a failed download unticked them behind this picker's back) and shows it.</summary>
-	public void Untick(IEnumerable<string> languages)
-	{
-		StoryLanguageSet before = Set;
-		Set = languages.Aggregate(Set, (set, code) => set.WithoutSide(code));
-		if (!Set.Sides.SequenceEqual(before.Sides))
-		{
-			Rebuild();
-		}
-	}
-
-	/// <summary>Builds the rows again from the current ticks and download states.</summary>
+	/// <summary>Builds the rows again from the current ticks.</summary>
 	public void Rebuild()
 	{
-		if (_packs is not null)
+		if (_shelf is not null)
 		{
-			Set = StoryLanguages.Current(); // Settings saves every tick at once; a failed download may have unticked a language behind the page's back
+			Set = StoryLanguages.Current(); // Settings saves every tick at once
 		}
 
-		_live.Clear();
-		_shown.Clear();
 		_shelfHosts.Clear();
 		_shelfCards.Clear();
 		var rows = new VerticalStackLayout();
@@ -125,18 +84,18 @@ public sealed class StoryLanguagePicker : ContentView
 			Opacity = disabled ? DisabledOpacity : 1,
 		};
 		grid.Add(Check(ticked, main), 0);
-		grid.Add(NameAndProgress(code, ticked && !main), 1);
-		View? end = EndView(code, main, ticked);
+		grid.Add(NameAndCard(code, ticked && !main), 1);
+		View? end = EndView(main);
 		if (end is not null)
 		{
 			grid.Add(end, 2);
 		}
 
 		string name = LanguageNames.NativeName(code);
-		SemanticProperties.SetDescription(grid, main ? CastText.Pair(name, AppResources.StoryLanguages_AppLanguage) : name);
+		SemanticProperties.SetDescription(grid, main ? OwnScript.Pair(name, AppResources.StoryLanguages_AppLanguage) : name);
 		if (!main && !disabled)
 		{
-			CastViews.AddTap(grid, () => ToggleAsync(code));
+			Taps.AddTap(grid, () => ToggleAsync(code));
 		}
 
 		return grid;
@@ -162,7 +121,7 @@ public sealed class StoryLanguagePicker : ContentView
 		return box;
 	}
 
-	private View NameAndProgress(string code, bool sideTicked)
+	private View NameAndCard(string code, bool sideTicked)
 	{
 		bool rtl = DinoFonts.IsRightToLeft(code);
 		var stack = new VerticalStackLayout { Spacing = 6, VerticalOptions = LayoutOptions.Center };
@@ -174,19 +133,9 @@ public sealed class StoryLanguagePicker : ContentView
 			FontFamily = rtl ? DinoFonts.Persian : DinoFonts.Ui,
 			FlowDirection = rtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight,
 		});
-		if (_packs is not null && sideTicked)
+		if (sideTicked)
 		{
-			_shown[code] = _packs.StateOf(code);
-			if (_shown[code] == LanguageVoiceState.Downloading)
-			{
-				AddProgress(stack, code);
-			}
-			else if (_shown[code] == LanguageVoiceState.NotInstalled && _packs.IsWaitingForInternet(code))
-			{
-				AddWaiting(stack, code);
-			}
-
-			AddShelfCard(stack, code); // Slice 262 (frame 169): the voice bar shows first, the shelf books' audio card (with Cancel) under it in the same row
+			AddShelfCard(stack, code); // Slice 262 (frame 169): the shelf books' audio card (with Cancel) under the name in the same row
 		}
 
 		return stack;
@@ -207,7 +156,7 @@ public sealed class StoryLanguagePicker : ContentView
 		}
 	}
 
-	/// <summary>Draws again only the shelf audio cards (a book is done, a wait begins): the rest of the picker, its voice bars and any open prompt stay as they are.</summary>
+	/// <summary>Draws again only the shelf audio cards (a book is done, a wait begins): the rest of the picker and any open prompt stay as they are.</summary>
 	public void UpdateShelfCards()
 	{
 		if (!MainThread.IsMainThread)
@@ -233,139 +182,28 @@ public sealed class StoryLanguagePicker : ContentView
 		return Task.CompletedTask;
 	}
 
-	private void AddProgress(VerticalStackLayout stack, string code)
-	{
-		double progress = _packs!.ProgressOf(code);
-		var bar = new ProgressBar { Progress = progress, ProgressColor = DinoTokens.Get(DinoTokens.Brand), HeightRequest = BarHeight };
-		var status = new Label
-		{
-			Text = AppResources.Format(AppResources.StoryLanguages_Getting, (int)(progress * PercentScale)),
-			FontSize = 12,
-			TextColor = DinoTokens.Get(DinoTokens.Muted),
-		};
-		_live[code] = (bar, status);
-		stack.Children.Add(bar);
-		stack.Children.Add(status);
-	}
+	private static View? EndView(bool main) =>
+		main ? Note(AppResources.StoryLanguages_AppLanguage, DinoTokens.Get(DinoTokens.Muted)) : null;
 
-	// Mock frame 95: the bar keeps its share but goes grey, the line says what it waits for, a note says it carries on by itself, and Retry tries at once.
-	private void AddWaiting(VerticalStackLayout stack, string code)
-	{
-		double progress = _packs!.ProgressOf(code);
-		int percent = (int)(progress * PercentScale);
-		string template = _packs.WaitingNeedsWifi(code) ? AppResources.StoryLanguages_WaitingWifi : AppResources.StoryLanguages_Waiting;
-		stack.Children.Add(new ProgressBar { Progress = progress, ProgressColor = DinoTokens.Get(DinoTokens.Muted), HeightRequest = BarHeight });
-		bool needsRetry = _packs.NeedsRetry(code); // the automatic retry failed too: no "carries on by itself", only Retry
-		string line = needsRetry ? AppResources.StoryLanguages_Failed : AppResources.Format(template, percent);
-		stack.Children.Add(new Label { Text = line, FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted) });
-		if (!needsRetry)
-		{
-			stack.Children.Add(new Label { Text = AppResources.StoryLanguages_WaitingNote, FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted) });
-		}
-
-		Label retry = Note(AppResources.StoryLanguages_Retry, DinoTokens.Get(DinoTokens.Brand), bold: true);
-		CastViews.AddTap(retry, () =>
-		{
-			DownloadRequested?.Invoke(code);
-			return Task.CompletedTask;
-		});
-		stack.Children.Add(retry);
-	}
-
-	private View? EndView(string code, bool main, bool ticked)
-	{
-		if (main)
-		{
-			return Note(AppResources.StoryLanguages_AppLanguage, DinoTokens.Get(DinoTokens.Muted));
-		}
-
-		if (ShowsRetry(code, ticked))
-		{
-			return RetryNote(code, retick: !StoryLanguages.IsWanted(code));
-		}
-
-		if (_packs is null || !ticked)
-		{
-			return null;
-		}
-
-		return _packs.StateOf(code) switch
-		{
-			LanguageVoiceState.Ready => Note(AppResources.Language_Ready, ReadyGreen, bold: true),
-			LanguageVoiceState.Downloading => CancelButton(code),
-			_ when _packs.IsWaitingForInternet(code) => CancelButton(code), // frame 95: Cancel still unticks the language
-			_ => RetryNote(code, retick: false),
-		};
-	}
-
-	private static Label Note(string text, Color colour, bool bold = false) => new()
+	private static Label Note(string text, Color colour) => new()
 	{
 		Text = text,
 		FontSize = NoteSize,
-		FontAttributes = bold ? FontAttributes.Bold : FontAttributes.None,
 		TextColor = colour,
 		VerticalOptions = LayoutOptions.Center,
 	};
-
-	// A book in this language was read with the phone's voice (its pack is missing), or the last download failed and unticked it. Never on a full set: the tap would have nothing to tick.
-	private bool ShowsRetry(string code, bool ticked)
-	{
-		if (_packs is null || ticked || _packs.StateOf(code) != LanguageVoiceState.NotInstalled)
-		{
-			return false;
-		}
-
-		return StoryLanguages.IsWanted(code) || (_packs.HasFailed(code) && !Set.IsFull);
-	}
-
-	private Label RetryNote(string code, bool retick)
-	{
-		string text = _packs!.HasFailed(code) ? AppResources.StoryLanguages_Failed : _packs.IsWaitingForWifi(code) ? AppResources.StoryLanguages_WifiWaiting : AppResources.Language_Download;
-		Label note = Note(text, DinoTokens.Get(DinoTokens.Brand), bold: true);
-		CastViews.AddTap(note, () => retick && !Set.Contains(code) ? ToggleAsync(code) : RequestDownload(code)); // a failed, unticked row's Retry ticks it again; the phone-voice "Download" fetches without ticking
-		return note;
-	}
-
-	private Task RequestDownload(string code)
-	{
-		DownloadRequested?.Invoke(code);
-		return Task.CompletedTask;
-	}
-
-	private Border CancelButton(string code)
-	{
-		var cancel = new Border
-		{
-			HeightRequest = 36,
-			Padding = new Thickness(14, 0),
-			StrokeShape = new RoundRectangle { CornerRadius = 18 },
-			BackgroundColor = Colors.White,
-			Stroke = DinoTokens.Get(DinoTokens.Hairline),
-			StrokeThickness = 2,
-			VerticalOptions = LayoutOptions.Center,
-			Content = new Label { Text = AppResources.Common_Cancel, FontSize = 13.5, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Body), VerticalOptions = LayoutOptions.Center },
-		};
-		SemanticProperties.SetDescription(cancel, AppResources.Common_Cancel);
-		CastViews.AddTap(cancel, () => ToggleAsync(code)); // Cancel unticks (mock 87)
-		return cancel;
-	}
 
 	private Task ToggleAsync(string code)
 	{
 		if (Set.Contains(code))
 		{
 			Set = Set.WithoutSide(code);
-			Toggled?.Invoke(code, false); // save the untick first: Cancel raises Changed, and the page re-syncs from the saved set
-			_packs?.Cancel(code);
+			Toggled?.Invoke(code, false); // saved first: the untick stops that language's shelf audio run (ShelfAudioPacks listens for the saved set)
 		}
 		else if (Set.CanAdd(code))
 		{
 			Set = Set.WithSide(code);
 			Toggled?.Invoke(code, true);
-			if (_packs is not null)
-			{
-				DownloadRequested?.Invoke(code);
-			}
 		}
 
 		Rebuild();
@@ -375,32 +213,25 @@ public sealed class StoryLanguagePicker : ContentView
 
 /// <summary>
 /// Settings, Story languages (Slice 173, mock frame 87): the picker with its explanation and, once three are picked, the line that says to untick one first.
-/// A tick saves at once and starts that language's voice download; leaving counts the change (<see cref="UsageEventName.StoryLanguagesSet"/>, and one
+/// A tick saves at once and starts that language's pre-made audio for the shelf books; leaving counts the change (<see cref="UsageEventName.StoryLanguagesSet"/>, and one
 /// <see cref="UsageEventName.StoryLanguageAdded"/> per language added).
 /// </summary>
 public sealed class StoryLanguagesPage : SettingsSubPage
 {
-	private readonly StoryLanguagePacks _packs;
 	private readonly ShelfAudioPacks _shelf;
 	private readonly UsageCounter _usage;
-	private readonly WaitOverlay _waitOverlay = DinoWait.OverPage();
-	private readonly WaitController _wait;
 	private readonly StoryLanguagePicker _picker;
 	private readonly Label _full;
 	private readonly List<string> _added = [];
 	private StoryLanguageSet _opened = StoryLanguages.Current();
 
-	public StoryLanguagesPage(StoryLanguagePacks packs, ShelfAudioPacks shelf, UsageCounter usage)
+	public StoryLanguagesPage(ShelfAudioPacks shelf, UsageCounter usage)
 		: base(AppResources.StoryLanguages_SettingsTitle)
 	{
-		_packs = packs;
 		_shelf = shelf;
 		_usage = usage;
-		_wait = new WaitController(_waitOverlay);
-		AddOverlay(_waitOverlay);
-		_picker = new StoryLanguagePicker(_opened, packs, shelf);
+		_picker = new StoryLanguagePicker(_opened, shelf);
 		_picker.Toggled += OnToggled;
-		_picker.DownloadRequested += OnDownloadRequested;
 		_full = new Label { Text = AppResources.StoryLanguages_Full, FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Muted), Margin = new Thickness(4, 0), LineHeight = 1.2 };
 		Body.Children.Add(new Label { Text = AppResources.StoryLanguages_SettingsLine, FontSize = 13.5, TextColor = DinoTokens.Get(DinoTokens.Body), Margin = new Thickness(4, 0), LineHeight = 1.2 });
 		Body.Children.Add(_picker);
@@ -412,7 +243,6 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 	{
 		base.OnAppearing();
 		SetTitle(AppResources.StoryLanguages_SettingsTitle);
-		_packs.Changed += OnPacksChanged;
 		_shelf.Changed += OnShelfChanged;
 		_opened = StoryLanguages.Current();
 		_picker.Rebuild();
@@ -421,23 +251,15 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 	protected override void OnDisappearing()
 	{
 		base.OnDisappearing();
-		_packs.Changed -= OnPacksChanged;
 		_shelf.Changed -= OnShelfChanged;
 		CountChange();
-	}
-
-	private void OnPacksChanged(object? sender, EventArgs e)
-	{
-		if (!_picker.Set.Sides.SequenceEqual(StoryLanguages.Current().Sides) || !_picker.TryUpdateProgress())
-		{
-			_picker.Rebuild();
-			ShowFull(); // a background failure may have unticked a language
-		}
 	}
 
 	// A shelf audio step has no bar to move in place: only the rows' cards are drawn again (a book is done at most every few seconds), never the whole picker.
 	private void OnShelfChanged(object? sender, EventArgs e) => _picker.UpdateShelfCards();
 
+	// A tick saves at once and fetches the language's pre-made audio for the shelf books (Slice 262). On mobile data only, the grown-up is asked first whether to download now
+	// or wait for Wi-Fi (ShelfAudioAsk); the run is started with the answer.
 	private void OnToggled(string language, bool ticked)
 	{
 		StoryLanguages.SaveSides(_picker.Set);
@@ -446,31 +268,31 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 			_added.Add(language);
 		}
 
+		if (ticked)
+		{
+			_ = StartAudioAsync(language);
+		}
+
 		ShowFull();
 	}
 
-	// A tick (or "Download") fetches the voice; on mobile data the grown-up is asked first (mock 87, frame 50). The parent's own books that still need their
-	// translation into the language are then offered its translation pack (the child's reader never offers a download).
-	private async void OnDownloadRequested(string language)
+	private async Task StartAudioAsync(string language)
 	{
-		VoiceRequestOutcome outcome;
+		VoiceRequestOutcome outcome = VoiceRequestOutcome.NothingAsked;
 		try
 		{
-			outcome = await _packs.RequestAsync(Window?.Page ?? this, [language], _wait);
-		}
-		catch (OperationCanceledException)
-		{
-			return; // the grown-up cancelled or dismissed the mobile-data prompt: not a failure
+			outcome = await ShelfAudioAsk.AskAsync(this, [language]);
 		}
 		catch (Exception ex)
 		{
-			System.Diagnostics.Debug.WriteLine($"Dino Reader could not start the {language} voice: {ex}");
-			PackDownloadLog.LanguageFailure(language, PackDownloadResult.Failed, PackFailureAction.UntickAndShowRetry);
-			_packs.GiveUp(language);
-			return;
+			// no-fallback: the question could not be shown; the audio then follows the ordinary Wi-Fi rule
+			AudioPackLog.Write($"the mobile data question failed ({ex.GetType().Name})");
 		}
 
-		_shelf.Start(language, outcome); // Slice 262: the shelf books' audio in the language, after the voice (it waits for the voice itself); a cancelled request starts nothing
+		if (StoryLanguages.Current().Sides.Contains(language))
+		{
+			_shelf.Start(language, outcome); // unticked while the question was open: nothing is fetched for it
+		}
 	}
 
 	private void ShowFull() => _full.IsVisible = _picker.Set.IsFull;
@@ -535,7 +357,7 @@ public sealed class DropLanguageSheet : ContentPage
 		SafeAreaEdges = SafeAreaEdges.None;
 		FlowDirection = UiFlow.Screen;
 		var scrim = new Grid { BackgroundColor = DinoTokens.Get(DinoTokens.SheetScrim) };
-		CastViews.AddTap(scrim, () => CloseAsync(null));
+		Taps.AddTap(scrim, () => CloseAsync(null));
 		scrim.Add(Sheet(newMain));
 		Content = scrim;
 		Render();
@@ -567,7 +389,7 @@ public sealed class DropLanguageSheet : ContentPage
 			StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(SheetCorner, SheetCorner, 0, 0) },
 			Content = column,
 		};
-		CastViews.AddTap(sheet, () => Task.CompletedTask);
+		Taps.AddTap(sheet, () => Task.CompletedTask);
 		return sheet;
 	}
 
@@ -583,7 +405,7 @@ public sealed class DropLanguageSheet : ContentPage
 			Content = new Label { Text = AppResources.Common_Cancel, FontSize = 16, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Body), HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center },
 		};
 		SemanticProperties.SetDescription(cancel, AppResources.Common_Cancel);
-		CastViews.AddTap(cancel, () => CloseAsync(null));
+		Taps.AddTap(cancel, () => CloseAsync(null));
 		return cancel;
 	}
 
@@ -601,7 +423,7 @@ public sealed class DropLanguageSheet : ContentPage
 		_remove.StrokeShape = new RoundRectangle { CornerRadius = ButtonHeight / 2 };
 		_remove.Padding = new Thickness(8, 0);
 		_remove.Content = _removeLabel;
-		CastViews.AddTap(_remove, () => _picked is null ? Task.CompletedTask : CloseAsync(_picked));
+		Taps.AddTap(_remove, () => _picked is null ? Task.CompletedTask : CloseAsync(_picked));
 		return _remove;
 	}
 
@@ -662,7 +484,7 @@ public sealed class DropLanguageSheet : ContentPage
 		}
 
 		SemanticProperties.SetDescription(row, name.Text);
-		CastViews.AddTap(row, () =>
+		Taps.AddTap(row, () =>
 		{
 			_picked = language;
 			Render();

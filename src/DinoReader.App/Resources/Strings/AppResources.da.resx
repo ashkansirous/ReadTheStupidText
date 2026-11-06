@@ -5,31 +5,19 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
-  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
   <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Annuller</value></data>
-  <data name="PackStatus_Resolving" xml:space="preserve"><value>Leder efter naturlige stemmer…</value></data>
-  <data name="PackStatus_Downloading" xml:space="preserve"><value>Henter naturlige stemmer… {0}</value></data>
-  <data name="PackStatus_Offline" xml:space="preserve"><value>Ingen forbindelse. Læser med telefonens stemme. Tryk for at prøve at hente stemmen igen.</value></data>
-  <data name="PackStatus_Waiting" xml:space="preserve"><value>Venter på internettet. Det fortsætter af sig selv, når du er online igen. Tryk for at prøve nu.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Venter på Wi-Fi. Det fortsætter af sig selv på Wi-Fi. Tryk for at hente nu.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Venter på internettet · {0}%</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Venter på Wi-Fi · {0}%</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Fortsætter af sig selv, når du er online igen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Getting" xml:space="preserve"><value>Henter lyd på {0} til dine bøger</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} har endnu ingen lyd på {1}. Dinos læsestemme læser den.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} og {2} andre har endnu ingen lyd på {1}. Dinos læsestemme læser dem.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} har endnu ingen lyd på {1}. Den læses med sin egen lyd, når den er hentet.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} og {2} andre har endnu ingen lyd på {1}. De læses med deres egen lyd, når den er hentet.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Venter på internettet…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Venter på Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Gør klar…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>Noget {0}-lyd kunne ikke hentes endnu. Dino prøver igen senere.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_AudioUnavailable" xml:space="preserve"><value>Der er endnu ingen lyd til denne bog på dette sprog.</value></data>
+  <data name="Reading_NoSound" xml:space="preserve"><value>Denne del har ingen lyd</value></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Prøv igen</value><comment>Machine draft: needs native review</comment></data>
-  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Hentningen af stemmen blev beskadiget. Læser med telefonens stemme. Tryk for at prøve igen.</value></data>
-  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Pakken med naturlige stemmer kan ikke bruges. Læser med telefonens stemme.</value></data>
-  <data name="PackStatus_Failed" xml:space="preserve"><value>Kunne ikke hente naturlige stemmer. Læser med telefonens stemme. Tryk for at prøve igen.</value></data>
   <!-- Slice 204: machine draft, for native review -->
-  <data name="PackStatus_Stopped" xml:space="preserve"><value>Hentningen er stoppet. Læser med telefonens stemme. Tryk for at hente.</value></data>
-  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Der er endnu ingen naturlig stemme til dit sprog. Læser med telefonens stemme.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Tilbage</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Gem</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Færdig</value></data>
@@ -116,10 +104,6 @@
   <data name="FirstRun_Hello" xml:space="preserve"><value>Hej! Hvilket sprog skal vi læse på?</value></data>
   <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino henter en stemme til det. Du kan ændre det senere bag låsen.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Fortsæt</value></data>
-  <data name="FirstRun_GettingReady" xml:space="preserve"><value>Gør Dinos stemme klar</value></data>
-  <data name="FirstRun_Once" xml:space="preserve"><value>{0} stemmer · det sker kun én gang</value></data>
-  <data name="FirstRun_Downloading" xml:space="preserve"><value>Henter…</value></data>
-  <data name="FirstRun_PickAnother" xml:space="preserve"><value>Vælg et andet sprog</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Klar til at læse!</value></data>
   <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Hver figur får sin egen stemme. Dine bøger står på hylden.</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Vælg dine første bøger</value><comment>Machine draft: needs native review</comment></data>
@@ -132,8 +116,6 @@
   <data name="FirstBooks_BookOf" xml:space="preserve"><value>Bog {0} af {1}</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Opret forbindelse til internettet for at vælge dine første bøger</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino har brug for to bøger, før du starter. Slå Wi-Fi eller mobildata til, og prøv igen.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="FirstRun_HearHello" xml:space="preserve"><value>Hør Dino sige hej</value></data>
-  <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hej! Jeg er Dino. Lad os læse en historie sammen.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Se, hvad Dino kan</value></data>
   <data name="Intro_SkipStart" xml:space="preserve"><value>Spring over, begynd at læse</value></data>
   <data name="Intro_SkipAll" xml:space="preserve"><value>Spring alt over</value></data>
@@ -150,7 +132,6 @@
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Læs den med din stemme</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Optag dig selv, mens du læser en historie, side for side. Dit barn kan afspille den, når som helst.</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>Vis introen igen</value></data>
-  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Fortsæt med telefonens stemme</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Klar til mit barn</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Voksentilstand</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Sprog</value></data>
@@ -161,15 +142,9 @@
   <data name="Settings_NewVersion" xml:space="preserve"><value>Ny version</value></data>
   <data name="Settings_GearLabel" xml:space="preserve"><value>Indstillinger (voksne)</value></data>
   <data name="Settings_About" xml:space="preserve"><value>Om og opdateringer</value></data>
-  <data name="Settings_NarratorVoice" xml:space="preserve"><value>Fortællerstemme</value></data>
   <data name="Settings_On" xml:space="preserve"><value>Til</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Fra</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>Indstillinger, butikken og hylden</value></data>
-  <data name="Narrator_ListIntro" xml:space="preserve"><value>Hvert historiesprog har sin egen fortæller.</value></data>
-  <data name="Narrator_OneIntro" xml:space="preserve"><value>Hvem der læser stykkerne mellem figurerne i hver {0} bog.</value></data>
-  <data name="Narrator_TitleFor" xml:space="preserve"><value>Fortællerstemme ({0})</value></data>
-  <data name="Narrator_NoVoiceValue" xml:space="preserve"><value>Ikke hentet</value></data>
-  <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>Stemmerne til {0} er ikke på denne telefon endnu. Gå tilbage, åbn Sprog, vælg {0} og hent den, og vælg så fortælleren her.</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Voksne</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Tilføj og rediger bøger</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>For voksne</value></data>
@@ -193,9 +168,6 @@
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Dens sider, billeder og stemmer fjernes fra denne telefon. Du kan lægge den på hylden igen gratis fra butikken.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Fjern</value></data>
   <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Hent flere bøger</value></data>
-  <data name="Language_Ready" xml:space="preserve"><value>Klar</value></data>
-  <data name="Language_Download" xml:space="preserve"><value>Hent</value></data>
-  <data name="Language_Downloading" xml:space="preserve"><value>Henter {0}%</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>En historie på et andet sprog bliver stadig læst på sit eget sprog, medmindre Oversæt til mit sprog er slået til for den historie.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Tryk og hold nede i 3 sekunder.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Tryk og hold nede i 3 sekunder</value></data>
@@ -213,12 +185,6 @@
   <data name="Speed_SubWindows" xml:space="preserve"><value>Langsommere er lettere for de små - skift med venstre og højre piletast</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Læs igen</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Kun voksne kan se dette. Dit barns hylde er kun et klik væk.</value></data>
-  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Ingen forbindelse. Læser med telefonens stemme. Klik for at prøve at hente stemmen igen.</value></data>
-  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>Venter på internettet. Det fortsætter af sig selv, når du er online igen. Klik for at prøve nu.</value></data>
-  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>Venter på Wi-Fi. Det fortsætter af sig selv på Wi-Fi. Klik for at hente nu.</value></data>
-  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>Hentningen af stemmen blev beskadiget. Læser med telefonens stemme. Klik for at prøve igen.</value></data>
-  <data name="PackStatus_FailedClick" xml:space="preserve"><value>Kunne ikke hente naturlige stemmer. Læser med telefonens stemme. Klik for at prøve igen.</value></data>
-  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Hentningen er stoppet. Læser med telefonens stemme. Klik for at hente.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Hvad er {0} plus {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Historiens sprog</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · registreret</value></data>
@@ -229,15 +195,8 @@
   <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>Kan ikke oversætte {0} endnu</value></data>
   <!-- /Slice 107 -->
   <!-- Slice 108 -->
-  <data name="Cast_VoicesFor" xml:space="preserve"><value>Stemmer til {0}</value></data>
   <!-- /Slice 108 -->
   <!-- Slice 109 -->
-  <data name="Narrator_Title" xml:space="preserve"><value>Fortæller</value></data>
-  <data name="Narrator_Subtitle" xml:space="preserve"><value>Fortællerstemmen til alle bøger</value></data>
-  <data name="Narrator_MyLanguage" xml:space="preserve"><value>MIT SPROG</value></data>
-  <data name="Narrator_Footnote" xml:space="preserve"><value>Hvis en figur i en bog har fortællerens stemme, giver Dino figuren en anden.</value></data>
-  <data name="Cast_ChangeForAll" xml:space="preserve"><value>Skift for alle bøger</value></data>
-  <data name="Narrator_Sample" xml:space="preserve"><value>Hør denne stemme</value></data>
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>Denne bog</value></data>
@@ -267,19 +226,8 @@
   <!-- /Slice 111 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
-  <data name="Cast_PickTitle" xml:space="preserve"><value>Hvem spiller {0}?</value></data>
-  <data name="Cast_PickSubtitle" xml:space="preserve"><value>Til denne bog, på {0}</value></data>
-  <data name="Cast_FilterGirls" xml:space="preserve"><value>Piger</value></data>
-  <data name="Cast_FilterBoys" xml:space="preserve"><value>Drenge</value></data>
-  <data name="Cast_FilterEveryone" xml:space="preserve"><value>Alle</value></data>
   <!-- /Slice 113 -->
   <!-- Slice 115 -->
-  <data name="Storyteller_Getting" xml:space="preserve"><value>Henter fortællerstemmerne…</value></data>
-  <data name="Storyteller_WaitWifi" xml:space="preserve"><value>Fortællerstemmerne venter på Wi-Fi</value></data>
-  <data name="Storyteller_WaitInternet" xml:space="preserve"><value>Venter på internettet</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Hent nu</value></data>
-  <data name="Storyteller_Ready" xml:space="preserve"><value>Fortællerstemmerne er klar</value></data>
-  <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Dine historier bruger nu de nye fortællerstemmer.</value></data>
   <data name="Update_Title" xml:space="preserve"><value>Dino skal opdateres</value></data>
   <data name="Update_Body" xml:space="preserve"><value>Bed en voksen om at hente den nye version. Dine bøger og optagelser forbliver, som de er.</value></data>
   <data name="Update_Button" xml:space="preserve"><value>Opdater Dino</value></data>
@@ -305,16 +253,10 @@
   <data name="Speed_Sub" xml:space="preserve"><value>Langsommere er nemmere for de små</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · langsom</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
-  <data name="Speed_Play" xml:space="preserve"><value>Hør denne hastighed</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>Dino tæller, hvilke bøger der bliver læst, uden navne eller id'er. Du kan slå det fra i Indstillinger. Det tilføjer også dit land og en grov enhedstype (telefon eller tablet, hukommelsesinterval). Hvis appen går ned, kan den også sende en nedbrudsrapport: fejlen og en kort teknisk log, aldrig noget, du har læst eller skrevet.</value></data>
-  <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Din fortæller ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
-  <data name="Storyteller_Failed" xml:space="preserve"><value>Kunne ikke hente fortællerstemmerne</value></data>
-  <data name="Storyteller_TryAgain" xml:space="preserve"><value>Prøv igen</value></data>
   <!-- /Slice 115 -->
   <data name="Wizard_Next" xml:space="preserve"><value>Næste</value></data>
-  <data name="Wait_GettingVoices" xml:space="preserve"><value>Gør stemmerne klar…</value></data>
-  <data name="Wait_Stalled" xml:space="preserve"><value>Gør stadig stemmen klar…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Oversætter…</value></data>
   <data name="Wait_WaitingInternet" xml:space="preserve"><value>Venter på internettet</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>Gemmer…</value></data>
@@ -334,34 +276,13 @@
   <data name="Reading_ReadFailed" xml:space="preserve"><value>Noget gik galt under læsningen.</value></data>
   <data name="Reading_LayoutFailed" xml:space="preserve"><value>Kunne ikke sætte denne historie op. Drej skærmen, eller skift tilstand for at prøve igen.</value></data>
   <data name="Reading_PageN" xml:space="preserve"><value>Læser side {0}</value></data>
-  <data name="Cast_Title" xml:space="preserve"><value>Hvem taler</value></data>
-  <data name="Cast_Narrator" xml:space="preserve"><value>Fortæller</value></data>
-  <data name="Cast_Main" xml:space="preserve"><value>HOVED</value></data>
-  <data name="Cast_Edited" xml:space="preserve"><value>RETTET</value></data>
-  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>Tilbage til bogens stemme</value></data>
-  <data name="Cast_SharedVoice" xml:space="preserve"><value>Delt stemme</value></data>
-  <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Ukendt taler</value></data>
-  <data name="Cast_PreviewLine" xml:space="preserve"><value>Hej! Sådan lyder jeg, når jeg læser din historie.</value></data>
-  <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Kunne ikke gemme den ændring</value></data>
-  <data name="Cast_SaveFailedBody" xml:space="preserve"><value>Rollerne blev ikke gemt. Prøv igen om lidt.</value></data>
-  <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>Stemmen kunne ikke afspilles lige nu.</value></data>
-  <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>Kunne ikke åbne rollerne</value></data>
-  <data name="Cast_LoadFailedBody" xml:space="preserve"><value>Rollerne kunne ikke findes ud af for denne historie. Prøv igen om lidt.</value></data>
-  <data name="Cast_Words_One" xml:space="preserve"><value>{0} ord</value></data>
-  <data name="Cast_Words_Other" xml:space="preserve"><value>{0} ord</value></data>
-  <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} replik</value></data>
-  <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} replikker</value></data>
-  <data name="Cast_UsesNarrator" xml:space="preserve"><value>bruger fortællerens stemme</value></data>
-  <data name="Cast_Hear" xml:space="preserve"><value>Hør {0}</value></data>
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Dyrelyde</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Dyrene siger af og til “Øf!” eller “Mæh!”, i alle bøger</value></data>
-  <data name="Cast_SharedNote" xml:space="preserve"><value>Der er flere figurer i bogen end de {0} fortællerfigurer, vi har, så nogle lyder ens. Fortælleren gives aldrig til en figur.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Henter oversættelsespakken til {0}…</value></data>
   <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>Hvilke sprog skal historierne være på?</value></data>
   <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Vælg op til to mere. Dit barn kan skifte, mens det læser.</value></data>
   <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>App-sprog</value></data>
   <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>Spring over, kun {0}</value></data>
-  <data name="StoryLanguages_Getting" xml:space="preserve"><value>Gør stemmen klar · {0} %</value></data>
   <data name="StoryLanguages_Full" xml:space="preserve"><value>Tre valgt. Fjern et flueben for at vælge et andet.</value></data>
   <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>Historiesprog</value></data>
   <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>Dit barn kan skifte mellem disse, mens det læser. Op til tre.</value></data>
@@ -375,20 +296,11 @@
   <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Du er ikke på Wi-Fi. {0} hentes via mobildata.</value></data>
   <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Hent nu</value></data>
   <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Vent på Wi-Fi</value></data>
-  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>Venter på Wi-Fi</value></data>
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Opdaterer dine bøger…</value></data>
   <!-- /Slice 181 -->
   <!-- Slice 183: machine draft, for native review -->
-  <data name="Notify_Title" xml:space="preserve"><value>Vil du fortsætte med at downloade, når telefonen er låst?</value></data>
-  <data name="Notify_Body" xml:space="preserve"><value>Tillad notifikationer for at holde stemmen ved med at downloade, mens telefonen er låst, eller du bruger andre apps. Du kan se fremgangen der.</value></data>
-  <data name="Notify_NotNow" xml:space="preserve"><value>Ikke nu</value></data>
-  <data name="Notify_Continue" xml:space="preserve"><value>Fortsæt</value></data>
   <!-- Slice 208: machine draft, for native review -->
-  <data name="PackNotify_Downloading" xml:space="preserve"><value>Gør {0}-stemmen klar ({1} MB) · {2}</value></data>
-  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Download sat på pause. Tryk for at gøre den færdig.</value></data>
-  <data name="PackNotify_Named" xml:space="preserve"><value>{0}-stemmen ({1} MB)</value></data>
-  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-stemmen ({1} MB) · {2} % færdig</value></data>
   <data name="BackCover_StoryBy" xml:space="preserve"><value>Historie af {0}</value></data>
   <data name="BackCover_OriginalStoryBy" xml:space="preserve"><value>Oprindelig historie af {0}</value></data>
   <data name="BackCover_Traditional" xml:space="preserve"><value>Et traditionelt eventyr</value></data>

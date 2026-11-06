@@ -53,12 +53,6 @@ name: Shelf, corner and book sheet in landscape keep their state through a rotat
     id: GalleryStore
 - assertVisible:
     id: StoryTile
-# The one-time "Storyteller voices are ready" note can cover the corner once the background pack download ends: dismiss it by its OK, only when it is on screen.
-- runFlow:
-    when:
-      visible: Storyteller voices are ready
-    commands:
-      - tapOn: "OK"
 # Slice 253 item 2: beside mock frame 111 (the grown-ups' corner with its side rail); taken after the note is dismissed so a modal is not in the shot.
 - takeScreenshot: shot-111-corner
 # A book's sheet opens as a centred card, Read now still first.

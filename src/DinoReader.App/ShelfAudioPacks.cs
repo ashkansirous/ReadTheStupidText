@@ -1,5 +1,6 @@
 using DinoReader.Core;
 using Microsoft.Maui.Networking;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Mobile.Shared.Network;
 
 namespace DinoReader;
@@ -8,7 +9,7 @@ namespace DinoReader;
 /// The one owner of "get a side language's pre-made audio for every store book on the shelf" (Slice 262, Decisions in its slice file). A singleton, so a run started in Settings or at the end of the
 /// intro goes on when the page is left. It keeps no queue: each run asks <see cref="ShelfAudioPlan"/> what the shelf still lacks (store listing, shelf ids, installed packs), then installs the
 /// packs one at a time through <see cref="AudioPackStore"/> (the only writer of the pack folders; an atomic install, so a kill leaves nothing half-written and the next launch asks again).
-/// The reading voice of the language arrives first (<see cref="StoryLanguagePacks"/>); a run waits for it. Offline it waits for the connection, on mobile data it waits for Wi-Fi under the voice's rule.
+/// Offline it waits for the connection, on mobile data it waits for Wi-Fi unless the grown-up chose "Download now" when adding the language (<see cref="ShelfAudioAsk"/>); a quiet launch run is never asked.
 /// Cancel stops the rest, keeps the language and the packs already in, and is remembered so launch does not start it again; removing the language clears that.
 /// </summary>
 public sealed class ShelfAudioPacks
@@ -21,22 +22,138 @@ public sealed class ShelfAudioPacks
 	private static readonly TimeSpan ResumeEvery = TimeSpan.FromMinutes(5);
 
 	private readonly StoreClient _store;
-	private readonly StoryLanguagePacks _voices;
 	private static readonly object _gate = new(); // static so WithoutCancelled can read under it (the class is a singleton); guards _runs, _unwinding, _states, every Run's mutable fields, and the cancelled-language preference
 	private readonly Dictionary<string, Run> _runs = []; // at most one live run per language
 	private readonly Dictionary<string, Task> _unwinding = []; // the Completion of the language's last retired run: a new run for it waits for that
 	private readonly Dictionary<string, ShelfAudioState> _states = [];
 	private DateTimeOffset _lastResume = DateTimeOffset.MinValue;
 
-	public ShelfAudioPacks(StoreClient store, StoryLanguagePacks voices)
+	private const string InstalledKey = "dino.shelfaudio.installed";
+	private InstalledShelfAudio _installed; // under _gate: the last scan of which (book, language) packs are on the phone; the one source both pages read (Slice 278 part B, reviews/s278b-design.md)
+	private readonly ScanRequests _scanRequests = new();
+	private readonly object _scanLock = new();
+	private TaskCompletionSource _scanDone = new();
+
+	public ShelfAudioPacks(StoreClient store)
 	{
 		_store = store;
-		_voices = voices;
+		store.Packs.PacksChanged += () => _ = RescanAsync(); // a book download, a book update, a removal or the sweep changed the pack folders: the snapshot follows
+		_installed = InstalledShelfAudio.Parse(Preferences.Default.Get(InstalledKey, (string?)null)); // the last-known list, read at once, so a cold start shows it before the scan corrects it
 		StoryLanguages.SidesSaved += StopRemoved; // a language that left the set stops its run and forgets its cancel
 	}
 
+	/// <summary>The languages the child's list offers on the shelf: the main one, and each with audio installed for at least one shelf book. Reads the snapshot only, never the disk.</summary>
+	public IReadOnlyList<string> ShelfLanguages(StoryLanguageSet set)
+	{
+		lock (_gate)
+		{
+			return _installed.ForShelf(set.All, set.Main);
+		}
+	}
+
+	/// <summary>Whether a book can be read in a language: the main one always, otherwise when that book's audio is installed. Reads the snapshot only, never the disk.</summary>
+	public bool OffersBook(string language, string main, string? bookId)
+	{
+		lock (_gate)
+		{
+			return _installed.OffersBook(language, main, bookId);
+		}
+	}
+
+	/// <summary>
+	/// Scans the pack folders for the shelf books off the UI thread and replaces the snapshot (saving it); <see cref="Changed"/> fires on the main thread when it differs. Called at start, after
+	/// every pack installed here, when the language set changes and when the shelf list changes. The newest scan wins.
+	/// </summary>
+	public Task RescanAsync()
+	{
+		TaskCompletionSource done;
+		bool startLoop;
+		lock (_scanLock)
+		{
+			startLoop = _scanRequests.Request();
+			if (startLoop)
+			{
+				_scanDone = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+			}
+
+			done = _scanDone;
+		}
+
+		if (startLoop)
+		{
+			_ = Task.Run(() => ScanLoopAsync(done));
+		}
+
+		return done.Task; // completes when the scan that includes this request has finished
+	}
+
+	// Single-flight: one scan at a time; a request during a scan reruns once after it (ScanRequests).
+	private async Task ScanLoopAsync(TaskCompletionSource done)
+	{
+		try
+		{
+			while (_scanRequests.TakeNext())
+			{
+				await ScanGuardedAsync();
+			}
+		}
+		finally
+		{
+			done.TrySetResult();
+		}
+	}
+
+	// Any throw in one scan (disk, Preferences, Serialize, a listener) must not leave the loop, or ScanRequests stays running and no scan ever starts again.
+	private async Task ScanGuardedAsync()
+	{
+		try
+		{
+			await ScanOnceAsync();
+		}
+		catch (Exception ex)
+		{
+			// the last good snapshot stays; the next request scans again
+			AudioPackLog.Write($"installed audio scan failed ({ex.GetType().Name})");
+			_store.Fallbacks.Report(FallbackArea.Pack, FallbackReason.PackSyncFailed);
+		}
+	}
+
+	private async Task ScanOnceAsync()
+	{
+		ISet<string> ids = await _store.InstalledIdsAsync();
+		IReadOnlyList<string> languages = StoryLanguages.Current().All;
+		AudioPackStore packs = _store.Packs;
+		InstalledShelfAudio found = await Task.Run(() => ScanInstalled(packs, ids, languages));
+
+		bool changed;
+		lock (_gate)
+		{
+			changed = !_installed.SameAs(found);
+			_installed = found;
+			Preferences.Default.Set(InstalledKey, found.Serialize());
+		}
+
+		if (changed)
+		{
+			RaiseChanged();
+		}
+	}
+
+	private static InstalledShelfAudio ScanInstalled(AudioPackStore packs, IEnumerable<string> bookIds, IReadOnlyList<string> languages) =>
+		new(bookIds.SelectMany(id => languages.Where(language => packs.InstalledVersion(id, BundledTranslations.Key(language)) is not null).Select(language => (language, id))));
+
 	/// <summary>Raised on the main thread whenever a state changes (a run starts, a book is done, a wait begins or ends).</summary>
 	public event EventHandler? Changed;
+
+	/// <summary>Whether the live run for <paramref name="language"/> still has to fetch this book's pack. Only then does a book's status line show the run's progress.</summary>
+	public bool RunIncludes(string language, string? bookId)
+	{
+		string code = UiLanguage.Resolve(language);
+		lock (_gate)
+		{
+			return bookId is not null && _runs.TryGetValue(code, out Run? run) && !run.Ended && run.Pending.Contains(bookId);
+		}
+	}
 
 	/// <summary>Where <paramref name="language"/>'s shelf audio stands. Cancelled when the grown-up stopped it and it has not been started again.</summary>
 	public ShelfAudioState StateOf(string language)
@@ -67,6 +184,7 @@ public sealed class ShelfAudioPacks
 	/// </summary>
 	public void Resume(bool force = false)
 	{
+		_ = RescanAsync(); // start and every return to the app: a pack changed meanwhile shows in the child's list
 		lock (_gate)
 		{
 			if (!force && DateTimeOffset.UtcNow - _lastResume < ResumeEvery)
@@ -160,6 +278,7 @@ public sealed class ShelfAudioPacks
 
 	private void StopRemoved(StoryLanguageSet set)
 	{
+		_ = RescanAsync(); // the language set changed: the child's list follows it
 		string[] known;
 		lock (_gate)
 		{
@@ -224,7 +343,6 @@ public sealed class ShelfAudioPacks
 		{
 			CancellationToken cancel = run.Token;
 			await run.Previous.WaitAsync(cancel); // a re-add waits for the run it replaced to finish unwinding
-			await _voices.WhenVoiceStepOverAsync(code, cancel); // the reading voice first (it shows in the same card); the run's network permission was fixed when it started
 			ShelfAudioWork? work = await PlanAsync(run, cancel);
 			if (work is not null)
 			{
@@ -338,6 +456,11 @@ public sealed class ShelfAudioPacks
 		}
 
 		AudioPackLog.Write($"shelf audio {code}: {total} book(s) need a pack, {noAudio.Count} without one");
+		lock (_gate)
+		{
+			run.Pending.UnionWith(work.Needed.Select(pick => pick.Item.Id));
+		}
+
 		var state = new ShelfAudioState(ShelfAudioPhase.Running, 0, total, NoAudioTitles: [.. noAudio]);
 		foreach (ShelfAudioPick pick in work.Needed)
 		{
@@ -345,6 +468,11 @@ public sealed class ShelfAudioPacks
 			state = state with { Phase = ShelfAudioPhase.Running, CurrentTitle = pick.Item.TitleIn(LanguageChoice.Current()) ?? pick.Item.Title };
 			Publish(run, state);
 			ShelfAudioInstall result = await InstallOneAsync(run, pick, noAudio, cancel);
+			lock (_gate)
+			{
+				run.Pending.Remove(pick.Item.Id); // handled (in, no pack, or given up): the book no longer waits on this run
+			}
+
 			state = result == ShelfAudioInstall.Failed ? state.WithBookFailed() : state.WithBookDone();
 			state = state with { NoAudioTitles = [.. noAudio] };
 			AudioPackLog.Write($"shelf audio {code}: {state.Done} of {state.Total} done, {state.Failed} failed");
@@ -368,13 +496,14 @@ public sealed class ShelfAudioPacks
 			if (result is PackInstall.Installed or PackInstall.AlreadyInstalled)
 			{
 				AudioPackLog.Write($"shelf audio {code}: {id} pack in");
+				await RescanAsync(); // the pages read the snapshot, so it is refreshed before the run publishes this book as done
 				return ShelfAudioInstall.Installed;
 			}
 
 			if (result == PackInstall.NotFound)
 			{
 				noAudio.Add(pick.Item.TitleIn(LanguageChoice.Current()) ?? pick.Item.Title);
-				AudioPackLog.Write($"shelf audio {code}: {id} has no pack in the store, reads with the reading voice");
+				AudioPackLog.Write($"shelf audio {code}: {id} has no pack in the store yet");
 				return ShelfAudioInstall.NoPack;
 			}
 
@@ -404,7 +533,7 @@ public sealed class ShelfAudioPacks
 		AudioPackLog.Write($"shelf audio {run.Code}: back online, carries on");
 	}
 
-	// The voice's own rule: on mobile data only, and the run was not allowed mobile data when it started ("Download now" in this add), the audio waits for Wi-Fi.
+	// On mobile data only, and the run was not allowed mobile data when it started, the audio waits for Wi-Fi.
 	private async Task WaitForWifiIfNeededAsync(Run run, CancellationToken cancel)
 	{
 		if (!NeedsWifi(run))
@@ -554,6 +683,8 @@ public sealed class ShelfAudioPacks
 		public bool Ended { get; set; }
 
 		public bool Published { get; set; } // set under _gate once the run has shown a state of its own
+
+		public HashSet<string> Pending { get; } = []; // under _gate: ids of the books this run still has to fetch (set when it has planned; a book leaves it once handled)
 
 		public bool AllowMobileData { get; set; } // under _gate: decided by ShelfAudioNetwork when the run starts, widened only by a later Start with "Download now"
 	}

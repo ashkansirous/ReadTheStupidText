@@ -128,7 +128,7 @@ public enum SettingsSection
 
 /// <summary>
 /// The Settings page (Slice 172, mock frames 80 and 87): opened from the gear in grown-up mode (Slice 189; the gate was passed to get there), and Back returns
-/// to grown-up mode. "Reading" (Language, Narrator voice, Reading speed, Animal sounds) and "This phone" (Backup, Usage counts, About &amp; updates), each row
+/// to grown-up mode. "Reading" (Language, Story languages, Reading speed, Animal sounds) and "This phone" (Backup, Usage counts, About &amp; updates), each row
 /// showing its current value and opening its own page. The store is never a row (Decision 167). The Story languages row (Slice 173) sits under Language.
 /// </summary>
 public sealed class SettingsPage : SettingsSubPage, IDinoKeyTarget
@@ -177,15 +177,12 @@ public sealed class SettingsPage : SettingsSubPage, IDinoKeyTarget
 	}
 #endif
 
-	private const string CodeSeparator = ", ";
-	private const int SummaryLanguages = 2;
 	private const string ReadingSpeedRowId = "SettingsReadingSpeedRow";
 	private const string ReportProblemRowId = "SettingsReportProblemRow";
 
 	private readonly IServiceProvider _services;
 	private readonly AppConfigClient _config;
 	private readonly ISettingsStore _settings;
-	private readonly StoryVoicing _voicing;
 	private readonly UsageCounter _usage;
 
 	// Slice 232 part D (mock Batch 44 frames 118, 128). This page owns which section the right pane shows, so a rotation keeps it; the pane's page is built again only when the
@@ -203,13 +200,12 @@ public sealed class SettingsPage : SettingsSubPage, IDinoKeyTarget
 	private bool _appeared;
 	private Size _windowSize;
 
-	public SettingsPage(IServiceProvider services, AppConfigClient config, ISettingsStore settings, StoryVoicing voicing, UsageCounter usage)
+	public SettingsPage(IServiceProvider services, AppConfigClient config, ISettingsStore settings, UsageCounter usage)
 		: base(AppResources.Settings_Title)
 	{
 		_services = services;
 		_config = config;
 		_settings = settings;
-		_voicing = voicing;
 		_usage = usage;
 		_split = new Grid { ColumnDefinitions = [new ColumnDefinition(new GridLength(LandscapeLayout.PhoneListPane)), new ColumnDefinition(GridLength.Star)] };
 		_split.Add(_pane, 1);
@@ -393,7 +389,7 @@ public sealed class SettingsPage : SettingsSubPage, IDinoKeyTarget
 	private void Rebuild()
 	{
 		Body.Children.Clear();
-		Grid[] reading = [LanguageRow(), StoryLanguagesRow(), NarratorRow(), SpeedRow(), AnimalRow()];
+		Grid[] reading = [LanguageRow(), StoryLanguagesRow(), SpeedRow(), AnimalRow()];
 		Grid[] phone = PhoneRows();
 		_navRows = [.. reading, .. phone];
 		Body.Children.Add(SettingsRows.GroupHeading(AppResources.Settings_GroupReading));
@@ -419,10 +415,7 @@ public sealed class SettingsPage : SettingsSubPage, IDinoKeyTarget
 	private Grid StoryLanguagesRow() =>
 		SettingsRows.NavRow(AppResources.StoryLanguages_SettingsTitle, StoryLanguages.Names(StoryLanguages.Current().All), OpenAsync<StoryLanguagesPage>, Busy);
 
-	private Grid NarratorRow() =>
-		SettingsRows.NavRow(AppResources.Settings_NarratorVoice, NarratorSummary(), OpenAsync<NarratorLanguagesPage>, Busy);
-
-	// Reading speed, Animal sounds, Usage counts and About show in the right pane in two panes; Language, Story languages, Narrator voice and Backup push in both.
+	// Reading speed, Animal sounds, Usage counts and About show in the right pane in two panes; Language, Story languages and Backup push in both.
 	private Grid SpeedRow() => Tinted(
 		SettingsRows.NavRow(AppResources.Speed_Title, AppResources.Format(AppResources.Speed_Value, ReadingSpeedPreference.Load().Value), () => OpenSectionAsync<ReadingSpeedPage>(SettingsSection.ReadingSpeed), Busy, automationId: ReadingSpeedRowId),
 		SettingsSection.ReadingSpeed);
@@ -458,18 +451,4 @@ public sealed class SettingsPage : SettingsSubPage, IDinoKeyTarget
 	}
 
 	private Task OpenAsync<TPage>() where TPage : Page => Navigation.PushAsync(_services.GetRequiredService<TPage>());
-
-	// "Story Granny" for one language, "Story Granny (EN), Mana (FA)" for several; past SummaryLanguages the rest is "+n" (the value is one short line).
-	private string NarratorSummary()
-	{
-		IReadOnlyList<string> languages = _voicing.NarratorLanguages();
-		if (languages.Count == 1)
-		{
-			return CastText.VoiceName(_voicing.NarratorOf(languages[0]), languages[0]);
-		}
-
-		IEnumerable<string> shown = languages.Take(SummaryLanguages).Select(language => $"{CastText.VoiceName(_voicing.NarratorOf(language), language)} ({language.ToUpperInvariant()})");
-		string summary = string.Join(CodeSeparator, shown);
-		return languages.Count > SummaryLanguages ? $"{summary} +{languages.Count - SummaryLanguages}" : summary;
-	}
 }

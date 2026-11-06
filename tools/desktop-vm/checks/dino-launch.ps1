@@ -1,4 +1,4 @@
-# Launches Dino Reader, maximises it and walks the first-run pages (English, two test books from the picker, the offline phone voice) to the shelf.
+# Launches Dino Reader, maximises it and walks the first-run pages (English, two test books from the picker, "Ready to read") to the shelf.
 param([string] $ResultFile, [Parameter(Position = 0)] [string] $PackageName)
 . "$PSScriptRoot\_lib.ps1"
 Invoke-Check -ResultFile $ResultFile -Body {
@@ -24,8 +24,7 @@ Invoke-Check -ResultFile $ResultFile -Body {
     }
     Wait-Until { (& $count) -match 'picked' } 10 "count line did not read the picked state (reads '$(& $count)')" | Out-Null
     Invoke-Uia (Find-UiaByName -Root (& $window) -Name 'Continue' -ControlType Pane)
-    $voice = Wait-Until { Find-UiaByName -Root (& $window) -Name 'Continue with the phone voice' -ControlType Text } 30 'offline voice page did not appear'
-    Invoke-Uia $voice
+    # Slice 278 part B: there is no voice download page any more; the "Ready to read" page follows the picker.
     $skip = Wait-Until { Find-UiaByName -Root (& $window) -Name 'Skip, start reading' -ControlType Button } 30 'ready page did not appear'
     Invoke-Uia $skip
     $title = Wait-Until { Find-UiaById (& $window) 'GalleryTitle' } 30 'the shelf did not show'

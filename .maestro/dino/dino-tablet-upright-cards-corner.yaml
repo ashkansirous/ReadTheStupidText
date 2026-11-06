@@ -29,12 +29,6 @@ name: Corner rail, book card and Settings two panes on a tablet held upright
     visible:
       id: GalleryDone
     timeout: 30000
-# The one-time "Storyteller voices are ready" note can cover the corner once the background pack download ends: dismiss it only when it is on screen.
-- runFlow:
-    when:
-      visible: Storyteller voices are ready
-    commands:
-      - tapOn: "OK"
 - assertVisible:
     id: GalleryCornerLine
 # A book's options: a centred card with Read now, closed by a tap outside it (the scrim at the top left of the screen).

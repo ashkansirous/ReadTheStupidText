@@ -1,6 +1,6 @@
 # Slice 278 — Dino: store books only (no own books, no scanning, no translation, no voice engine, no voice pickers)
 
-*Part A built 2026-11-06 (wave 2026-11-06, merged as PR #859, 09e2e892), not yet verified on every platform (see Not yet verified below); parts B and C planned. Part B is unblocked: Slice 277 merged as PR #858 on 2026-11-06.* Dino Reader only (Android, iOS and the Windows head, the same in the same parts). **Read The
+*Part A built 2026-11-06 (wave 2026-11-06, merged as PR #859, 09e2e892), not yet verified on every platform (see Not yet verified below). Part B built 2026-11-06 (wave 2026-11-06, PR #863), not yet verified on iOS. Part C merged as PR #862 (a854c8ed).* Dino Reader only (Android, iOS and the Windows head, the same in the same parts). **Read The
 Stupid Text is not touched**, and neither is any shared code it uses (`src/ReadTheStupidText.Mobile.Shared`,
 `src/ReadTheStupidText.Infrastructure`, `src/ReadTheStupidText.Documents`, `src/ReadTheStupidText.Mobile`). Dino
 simply stops calling the shared pieces it no longer needs.
@@ -30,6 +30,22 @@ Offline does not matter (local files only).
 **Touches, part B (voice engine and voice pickers out):** `src/DinoReader.App/{StoryVoicing,SpeechStartup,StorytellerDefault,StorytellerConsent,StorytellerViews,VoicePreview,NarratorPage,NarratorChoice,NarratorRecast,CastPage,CastRows,CastViews,CastText,CastFlavourMenu,ReadingClips,ReadingSession,SpokenLanguage,FirstRunPage.xaml,FirstBooksPage*,SettingsPage,SettingsRows,BookSheet,StoryActions,MauiProgram}.cs*`,
 `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/Platforms/**`, `src/DinoReader.App/Resources/**`,
 `src/DinoReader.Core/**` (cast and voice-choice types only), `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`.
+**Touches widened for part B (claim, 2026-11-06, from a ground-in-code read of origin/main):** `src/DinoReader.App/{App.xaml,GalleryPage.xaml,LanguagePage.xaml,ReadingPage.xaml,ReadingSpeedPage,IntroWizardPage,StoryLanguages,StoryLanguagesPage,StoryLanguageButton,StarterStories,CloseQuestionPage,GrownUpHeader,ReadingText,RecordViews,ShelfAudioPacksCard,ShelfReorderView,UsageEvent}.cs*`,
+`src/DinoReader.App/Testing/**` (Debug test hooks: drop `voice=`, `voiceId=`, the voice-ready acknowledgement; keep the rest),
+`src/DinoReader.Core/{Story,StoryJson,StoryDraft,StoryPieces,StarterUpdate,UsageEvent,BookSheetPlan,FirstBooks}.cs` (only to stop the app needing cast data; parsing keeps tolerating stored `cast` fields),
+`.maestro/dino/**` (flows that drive the Cast screen, the voice-ready scrim, voice ids or the voice download; not `premade-audio-past-roar.yaml`),
+`tools/desktop-vm/checks/dino-*.ps1` (dino-launch waits for "Continue with the phone voice"), `tests/ReadTheStupidText.Tests/FallbackGuardBaseline.txt` (only deleted or changed Dino files' lines).
+Must not edit: `tools/DinoReader.BookBuilder/**` (it builds the store audio with `VoiceCaster`, `CharacterRoster` and the cast), any shared project (`src/ReadTheStupidText.*`, `src/AndroidSherpaPackaging.props`), `worker/**`, `docs/design/**` (part C).
+
+**Design for part B (coordinator, claim 2026-11-06):**
+- **Core cast and voice types stay** where `tools/DinoReader.BookBuilder` or `StoryJson` uses them (the store's audio is built from them). Delete a Core type only when no App, BookBuilder or test code still needs it after the App removal. A saved book's `cast` / language casts still parse and are ignored by the app.
+- **A piece with no clip and no recording is not spoken.** Reading shows that piece's text and highlights for a short fixed beat, then goes on to the next piece, as if it had played; it reports one fallback per occurrence through the existing sink with an existing `FallbackArea`/reason (no Worker change). A clip that fails to play is treated the same way. No code path in Dino resolves `ISpeechReader`, `IVoicePackService`, `VoicePackInstaller` or `IVoiceModelService` after part B.
+- **Reading speed:** keep the setting only if pre-made clip playback already honours it (read `ReadingSpeedPage` / the clip player); otherwise remove the row. Write which in the slice file.
+- **Language packs:** a story language needs only its audio pack (`AudioPackStore`); the per-language voice pack download, its prompt, consent and progress go.
+- **First run:** language, first books, then the shelf; saved first-run states that pointed at the voice wait go to the shelf.
+- **Shared registration:** `AddMobileSharedServices()` still registers the shared speech reader (shared code, not edited); Dino just never resolves it. If sherpa-onnx / voice-pack natives still land in the Dino packages through the shared props or `Mobile.Shared`, write it into *Outstanding for the repo split* like A4.
+- **Test hooks and flows:** remove the hooks and flows that only exist for voices (cast screen, voice id, first-run pack start); fix the flows and the VM `dino-launch` check that wait for or dismiss the voice-ready scrim.
+
 **Touches, part C (design copy):** `docs/design/dino-reader/**`.
 Parts A and B share hub files (`MauiProgram.cs`, `StoryActions.cs`, `BookSheet.cs`, resources): build them one after
 the other, not in the same wave.
@@ -84,16 +100,16 @@ repository later.
 
 **Part B — voice engine and voice pickers out**
 
-- [ ] B1. Reading plays only pre-made clips and recordings: remove the device-voice path from `StoryVoicing` /
+- [x] B1. Reading plays only pre-made clips and recordings: remove the device-voice path from `StoryVoicing` /
   `ReadingClips` / `ReadingSession`, and every speech engine, voice pack download and voice consent from Dino
   (Android, iOS, Windows head).
-- [ ] B2. Remove the cast page, narrator page, voice preview and their entries in the book sheet and settings; drop
+- [x] B2. Remove the cast page, narrator page, voice preview and their entries in the book sheet and settings; drop
   narrator recasting. A stored cast in a saved book is ignored on load (no crash on old files).
-- [ ] B3. First run no longer waits for a voice download: language, first books, then the shelf (the books' audio
+- [x] B3. First run no longer waits for a voice download: language, first books, then the shelf (the books' audio
   packs still download with the books, as today).
-- [ ] B4. Remove the sherpa-onnx and voice-pack references from the Dino project only (`DinoReader.App.csproj`);
+- [x] B4 (checked, imports kept, see Part B built). Remove the sherpa-onnx and voice-pack references from the Dino project only (`DinoReader.App.csproj`);
   never from shared projects (same check and *Outstanding work* note as A4 if they still come in through them).
-- [ ] B5. Tests updated; a test that reading a page with no clip and no recording never asks for a speech engine.
+- [x] B5. Tests updated; a test that reading a page with no clip and no recording never asks for a speech engine.
 
 **Part C — design**
 
@@ -159,6 +175,72 @@ For `src/DinoReader.App/CLAUDE.md`:
 - No flow asserts the "Get more books" text or that the Add pill is gone.
 - The A3 cleanup has no device check: no Debug hook seeds an own book, so deleting an own book on a real install is untried.
 - No iOS device run is recorded for part A.
+
+## Part B built (2026-11-06)
+
+**Reading speed (decision):** kept. The pre-made clip player already honours it on all three platforms (`IRecordingPlayer.Play(..., rate)`: Android `PlaybackParams.SetSpeed`, Windows `PlaybackSession.PlaybackRate`, iOS player rate), so `ReadingSpeedPreference` stays and `ReadingSession.TryPlayPremade` still passes it. Only the sample "Play" button on the Reading speed card went (it spoke a line with the voice). A piece shown for a beat ignores the speed.
+
+**Built:**
+- `ReadingSession` has no speech reader: steps are `PlaybackSteps.Plan` (new, Core, pure): a pre-made clip, an animal's recording, or one piece with no clip. A silent piece is marked and held for `PlaybackSteps.BeatMilliseconds` (1200 ms), reports one `premade_audio` fallback per step (`clip_missing`; `clip_unplayable` when the file would not play), logs `[AudioPack] silent piece shown (sentence n)`, and the read goes on. Pause cancels the beat, Resume shows the piece again, Stop and a newer read cancel it.
+- `StoryVoicing` no longer casts, names or picks voices; it cuts the pieces, finds each clip and plans the animals' slots (`VoicedSegment.VoiceId` is empty).
+- Gone: `CastPage/Rows/Views/Text/FlavourMenu`, `NarratorPage/Choice/Recast`, `VoicePreview`, `SpeechStartup`, `SpokenLanguage`, `StorytellerDefault/Consent/Views`, `StoryLanguagePacks`, `LocalizedPackStatus`, the book sheet's Cast pill (Record is a full row now), Settings' Narrator row, the gallery's storyteller line and "ready" sheet, the reading page's pack status line, the first run's voice download page and "hear hello" pill, the Language page's Ready/Download column, the story-languages picker's voice bars. `LanguageChoice.Apply(code, settings)` stores the language; `Taps` and `OwnScript` replace the helpers that lived in the cast files. Debug hooks `voice=`, `voiceId=`, `speed=` and the voice-ready acknowledgement are gone.
+- Adding a story language only fetches the books' audio (`ShelfAudioPacks`). Review fix: on a phone with only mobile data the grown-up is asked "Download on mobile data?" (Download now / Wait for Wi-Fi) as before (`ShelfAudioAsk`, Settings tick and intro Done); a quiet launch run still waits for Wi-Fi.
+- Review fixes (high pass): the reading page shows the book's audio state (`ReadingAudioStatus`: getting audio with progress, waiting for Wi-Fi or the internet, or "No audio for this book in this language yet.") while a piece has no clip; the silent beat pauses when the page is covered (lock, background, gate) and goes on when shown; the child's shelf language list needs an installed audio pack; a read of only silent pieces is not counted as `read_voice` (each piece reports the clip fallback); `OldVoicePacksCleanup` deletes the old voice and storyteller packs and their partials once, by known pack id only; the read wait says "Getting the book…". Unused strings removed (about 90 keys).
+- Flows: removed `dino-landscape-cast`, `open-book-voice-id`, `first-run-pack-start`, `download-now-tap`, `read-back-reread-background` (engine log markers); removed the "Storyteller voices are ready" dismissals from 21 flows; first-run flows wait for `FirstRunReady`; new `silent-piece-beat`. VM check `dino-launch` no longer waits for "Continue with the phone voice".
+- Tests: `NoSpeechEngineTests` (pure `PlaybackSteps` cases and a source scan: no `ISpeechReader`, `IVoicePackService`, `IVoiceModelService`, `VoicePackInstaller` and the like in `src/DinoReader.App`, the session reports the fallback once per step); `StorytellerConsentTests` and `AcceptCompleted` removed; the lifecycle allow-list and two source-text tests follow the new code. `FallbackGuardBaseline.txt` lowered (deleted files, `SettingsRows` 3 to 2, `StarterStories` 3 to 2).
+
+**Outstanding for the repo split (B4):** the sherpa-onnx and onnxruntime packages still reach the Dino packages through `Mobile.Shared` (and `Infrastructure` on Windows). Dino's csproj keeps its three imports (`AndroidSherpaPackaging.props`, `IosSherpaPackaging.props`, the WinML target) because they are what neutralise the transitive packages: a trial without the Android import still shipped `libsherpa-onnx-c-api.so` and `libonnxruntime.so` in the x86_64 Debug APK, NuGet's `ExcludeAssets` does not flow through a project reference, and the iOS import also links the framework `Mobile.Shared`'s P/Invokes need. Removing them without editing the shared projects would risk the Android wrong-OS natives, `APPX1101` and an iOS link failure. Drop them with the repo split. The Android manifest keeps `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC` and `POST_NOTIFICATIONS` for the same reason (the shared downloader's service is merged in); nothing in Dino starts it.
+
+**Known behaviour left in place:** Debug builds only: `Mobile.Shared/Testing` (`TestHooks.Install`) still resolves `ISpeechReader` and `VoicePackInstaller`, so a Debug build builds the engine at start-up; Release never does. Core's `CastEditor`, `CastSheet`, `CastRowLookup`, `NarratorSetting`, `FlavourTransform`, `PitchShifter` and `StarterUpdate.AnimalVoicesToRecast` have no app caller left but their tests are many and intertwined (`AuthoredVoiceTests`, `FarsiDefaultVoiceTests`), so they stay for a later sweep. About 110 strings (`Cast_*`, `Narrator_*`, `Storyteller_*`, `PackStatus_*`, `PackNotify_*`, `Notify_*`, `Language_Ready/Download/Downloading`, `StoryLanguages_Getting/Wifi*/Waiting*`, `FirstRun_GettingReady/Once/Downloading/PickAnother/HearHello/HelloLine/PhoneVoice`, `Speed_Play`, `Settings_NarratorVoice`, `Wait_Stalled`) are unused in the 15 resx files and `AppResources.cs`; removing them is a mechanical pass not done here. `.maestro/README.md` (outside this part's Touches) still lists `first-run-pack-start` and the `speed=` argument.
+
+**From review** (high pass, `D:/ReadTheStupidText-worktrees/reviews/s278b-high.md`): 1 to 6, 8 and 9 applied (the "Review fixes (high pass)" bullet above). 7 skipped: the beat tests are source-string asserts and the `silent-piece-beat` flow does not pause or leave; the beat state machine was later replaced by `SilentBeat` (see check pass 1), which has pure unit tests.
+
+**From review** (medium pass, `D:/ReadTheStupidText-worktrees/reviews/s278b-medium.md`):
+- 1 and 7 applied as one design: `BeatVisibility` (Core, pure, unit-tested for hide then beat start, beat then hide, hide then resume, show then resume) holds the one hidden flag; `ReadingSession` parks a beat that would start while the page is covered, and Resume never restarts a beat while hidden.
+- 2 applied: after the mobile-data answer only the languages still selected start (`StoryLanguagesPage`, `IntroWizardPage`).
+- 3 applied: the audio status line is cleared when an animal clip or a recorded page plays (`PieceAudio(true)`), so it shows only while a silent beat runs.
+- 4 applied: `ShelfAudioAsk` uses `CellularOnlyKnown()`, so a failed connectivity read asks nothing and starts normally.
+- 5 applied: the gallery follows `ShelfAudioPacks.Changed` (subscribed in OnAppearing, removed in OnDisappearing).
+- 6 applied: installed audio languages are a snapshot computed off the UI thread (on a new shelf list and on each shelf audio change).
+- 8 skipped by design: only known voice pack ids are deleted, which is safe. 9 skipped: cleanup during a forced update is harmless.
+
+**Changed while building (check pass 1):** after two strikes on both areas the review findings were not patched; `D:/ReadTheStupidText-worktrees/reviews/s278b-design.md` replaced them. `BeatVisibility` and its tests are deleted; `SilentBeat` (Core, pure) is the one clock of a silent piece (Active, Hidden, HeldByPerson; the timer runs only while all allow it), `ReadingSession` owns one. `InstalledShelfAudio` (Core, pure) plus `ShelfAudioPacks.RescanAsync/ShelfLanguages/OffersBook` are the one snapshot and the one rule for which languages are offered; the gallery and the reading page read no pack folder. New string `Reading_NoSound` ("This part has no sound") in all 15 resx.
+
+**From review** (`D:/ReadTheStupidText-worktrees/reviews/s278b-check1.md`):
+- 1 to 7 resolved by the design above: 1 (no page reads pack folders; the snapshot is scanned off the UI thread), 2 (one rule, an active download neither hides nor shows a language), 3 (the last snapshot is saved to Preferences and loaded at start), 4 (a pack landing only updates the language button's choices; the open book is never re-rendered and `ReadingLanguage` never changes), 5 (`BeginBeat` always does the immediate part, only the timer waits), 6 (resume logs `User` only when counted, else `Other`; a resume while covered is logged and the timer waits for Show), 7 (status line is progress, waiting, or "This part has no sound", never "audio unavailable").
+- 9 resolved: `Pause` while a beat is active sets the person's hold whatever the reason or `_stepRead`. 8 skipped (dead guard is harmless).
+
+**From review** (`D:/ReadTheStupidText-worktrees/reviews/s278b-check2.md`):
+- 1 applied: `AudioPackStore.PacksChanged` (raised after an install, `DeleteBookAsync`, `RemoveAsync` and a sweep that deleted) makes `ShelfAudioPacks` rescan; the gallery and a book also rescan when they appear. 2+3 applied as one change: the scan is single-flight with a dirty flag (`ScanRequests`, Core, unit-tested): a request during a scan reruns once after it; a failed scan keeps the last good snapshot, reports one `Pack` fallback and a later request rescans. 4 applied: the status line shows download progress only when this book's pack is in the live run (`ShelfAudioPacks.RunIncludes`), else the plain "This part has no sound". 5 applied: `UpdateLanguageButtonAsync` drops the result of a stale call (version counter).
+- 6 skipped (unconfirmed; a new read must not clear a real cover). 7 skipped (low; the existing `SilentBeat` tests stand). 8 skipped (decided: `Begin` starts a new read the person asked for, so clearing their old pause is right).
+
+**From review** (`D:/ReadTheStupidText-worktrees/reviews/s278b-check3.md`):
+- 1 applied: `ShelfAudioPacks.ScanLoopAsync` runs each scan through `ScanGuardedAsync`, so a throw anywhere in a scan (disk, `Preferences.Set`, `Serialize`, `SameAs`, a listener) keeps the last snapshot, reports the one `Pack` fallback and the loop reaches `TakeNext`, which clears `ScanRequests`' running state. No unit test: `ScanRequests` is pure and cannot throw; the guard is in the App-layer loop.
+
+**From review** (`D:/ReadTheStupidText-worktrees/reviews/s278b-check4.md`): 1 (low) skipped: after a `Preferences` throw in a scan, `Changed` is not raised and the next scan sees the same snapshot, so pages stay stale until another trigger; very unlikely.
+
+**From review** (`D:/ReadTheStupidText-worktrees/reviews/s278b-check5.md`): the 7 findings (all low: Debug skip-first-run waits the idle grace, the "nothing resolves" comment is false in Debug, string-position test on `MauiProgram`, the notifier's doc names only the installer, last-registration-wins is order-fragile, two `silent-piece-beat` flow weaknesses) were skipped; no `LanguageChanged` consumer in Dino breaks with the inert notifier.
+
+**CI fix and check6** (`D:/ReadTheStupidText-worktrees/reviews/s278b-check6.md`): CI's `FallbackGuardTests` failed on the new `ReadingSpeedPreference.cs` catch (local runs passed because the file was still untracked); it got a `// no-fallback:` marker (the catch returns the normal default speed). Check6's 7 findings were skipped: 1 (case-sensitive book-id match in `InstalledShelfAudio`) because both sides take the id from the same story/pack id and `AudioPackStore.cs` compares ordinally too; 2 (a removed pack leaves the open book in its language) because the book then shows the "no sound" line, nothing breaks; 3 (cleanup duplicates the packs-root path) because a wrong path only means nothing is deleted; 4-7 low.
+
+**Device bug found and fixed:** after the first run Dino still downloaded the 124 MB `supertonic-3` voice pack (Debug skip-first-run set `settings.Language`, which raised `LanguageChanged`, which reached the shared `VoicePackInstaller.OnLanguageChanged`). Fix: `InertLanguageNotifier` is registered after `AddMobileSharedServices`. For Release, no construction of the installer was found by reading the code; no Release run was made.
+
+**Device (part B):** Windows VM, 8 Dino checks PASS (launch, open-book, page-turn, settings, keyboard, window, desktop-polish, reorder) on build 5e4c1765291f. Android emulator, flows `dino-landscape-firstrun`, `side-language-audio` and `grown-ups-button` PASS on 5e4c1765291f; `silent-piece-beat` and `dino-landscape-firstrun` PASS on b68f4acf604b with no PACKDL line (no voice pack download).
+
+**Not yet verified (part B):**
+- iOS device or simulator run.
+- The mobile-data prompt (`ShelfAudioAsk`) on a real cellular-only phone.
+- The beat pausing on screen lock (no scripted flow).
+- Flows not run this round: `dino-landscape-settings`, `premade-audio-past-roar`, `usage-playback-events`, `dino-landscape-store` (the first emulator run's results were lost: the agent piped `run-flows` through `Out-String`).
+- A Release build downloads no voice pack.
+- The Windows MSIX still packages (`APPX1101`) and the iOS app still links: project settings unchanged, not built beyond a compile.
+
+#### For CLAUDE.md (src/DinoReader.App/CLAUDE.md)
+
+- Dino never resolves `ISpeechReader`, `VoicePackInstaller`, `IVoicePackService` or `IVoiceModelService`; `NoSpeechEngineTests` scans `src/DinoReader.App` for them. (Slice 278: docs/plan/slices/278-dino-store-books-only.md)
+- `MauiProgram.cs` registers `InertLanguageNotifier` after `AddMobileSharedServices`, so the shared voice installer never starts on a language change. (Slice 278: docs/plan/slices/278-dino-store-books-only.md)
+- A piece with no clip and no recording is shown for a `SilentBeat` (Core) and reports `premade_audio:clip_missing` once per step. (Slice 278: docs/plan/slices/278-dino-store-books-only.md)
+- Shelf language choices come only from `ShelfAudioPacks`' `InstalledShelfAudio` snapshot; no page reads pack folders. (Slice 278: docs/plan/slices/278-dino-store-books-only.md)
 
 ## Verification
 

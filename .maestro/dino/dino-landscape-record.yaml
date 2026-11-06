@@ -31,12 +31,6 @@ name: Record screen keeps a running recording through a rotation
     visible:
       id: GalleryDone
     timeout: 30000
-# The one-time "Storyteller voices are ready" note may cover the shelf: dismiss it by its OK, only when it is on screen.
-- runFlow:
-    when:
-      visible: Storyteller voices are ready
-    commands:
-      - tapOn: "OK"
 - tapOn:
     id: TileMore
     index: 0

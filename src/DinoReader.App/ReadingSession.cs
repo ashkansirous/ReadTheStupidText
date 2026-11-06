@@ -1,8 +1,6 @@
 using System.Diagnostics;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Mobile.Shared.Crashes;
 
@@ -17,18 +15,13 @@ public enum SessionState
 }
 
 /// <summary>
-/// One story being read aloud: starts a read at a sentence, follows the reader's chunks to say which
-/// sentence is being spoken, and keeps the loading state straight. The page only draws what this
-/// reports. Events are raised on the main thread (Slice 60's <c>ChunkChanged</c> fires after
-/// <c>player.Start()</c>, possibly off it). A page with a parent's recording (Slice 111, Decision 115) plays its file instead, then the read goes on
-/// with the next page; a generated read stops where the next recorded page begins.
+/// One story being read: starts a read at a sentence, follows the pre-made clips and recordings to say which sentence is being heard, and keeps the loading state straight.
+/// The page only draws what this reports. Events are raised on the main thread. A page with a parent's recording (Slice 111, Decision 115) plays its file, then the read goes on
+/// with the next page. Slice 278 part B: nothing here asks for a speech engine. A piece with no clip and no recording is not spoken: it is shown and highlighted for a short fixed beat
+/// (<see cref="PlaybackSteps.BeatMilliseconds"/>), one fallback is reported for it, and the read goes on to the next piece as if it had played.
 /// </summary>
 public sealed class ReadingSession
 {
-	// How long the session waits for the first audio after SpeakSegmentsAsync returns before it
-	// stops showing the loading state (same grace as the Read The Stupid Text reader page).
-	private static readonly TimeSpan FirstAudioGrace = TimeSpan.FromSeconds(8);
-
 	private enum RecordedPlay
 	{
 		None,
@@ -36,58 +29,46 @@ public sealed class ReadingSession
 		Paused,
 	}
 
-	private readonly ISpeechReader _reader;
 	private readonly StoryVoicing _voicing;
 	private readonly IRecordingPlayer _player;
 	private readonly IStoryLibrary _library;
-	private readonly ISettingsStore _settings;
-	private readonly IVoiceModelService _model;
 	private Story? _story;
 	private string _reading = UiLanguage.English; // the language this screen reads in (the child's pick, Slice 173): passed to everything the read uses, never stored
 	private IReadOnlyList<int> _pageStarts = [];
 	private (int First, int Last)[] _pageSentences = [];
 	private RecordedPlay _recorded;
-	private readonly HashSet<string> _recastChecked = []; // books whose cast was checked against the narrator this session (Slice 144)
-	private readonly HashSet<int> _unplayable = []; // pages whose recording failed to play this session: read in the generated voice
-	private (int ReadId, int Sentence)? _continueRead; // a generated read cut short before a recorded page: where the read goes on once it ends
-	// The read as a list of steps (speak a run / play an animal's recording, Slice 255): one read id, the step being taken and whether the next one waits for Resume.
-	// A step is a spoken run, an animal's recording, or (Slice 246 C2) a pre-made clip of a store book's piece; a clip that cannot play turns its step into a spoken run in place.
-	private sealed class StepRead(int readId, List<PremadeAudioPlan.Step> steps, string spoken, CancellationToken cancellation)
+	private readonly HashSet<int> _unplayable = []; // pages whose recording failed to play this session: read from the book's own clips
+	private (int ReadId, int Sentence)? _continueRead; // a read cut short before a recorded page: where the read goes on once it ends
+	// The read as a list of steps (a pre-made clip of one piece, an animal's recording, or one piece with no clip that is shown for a beat): one read id and the step being taken.
+	private sealed class StepRead(int readId, List<PremadeAudioPlan.Step> steps, CancellationToken cancellation)
 	{
 		public int ReadId { get; } = readId;
 
 		public List<PremadeAudioPlan.Step> Steps { get; } = steps;
 
-		public string Spoken { get; } = spoken;
-
 		public CancellationToken Cancellation { get; } = cancellation;
 
 		public int Index { get; set; }
+
+		public HashSet<int> Reported { get; } = []; // the steps whose missing or unplayable clip was already reported, so a resumed step reports nothing twice
 	}
 
 	private StepRead? _stepRead;
-	private StepRead? _restartStep; // Slice 246 C2: a pre-made clip failed while the user had paused; its piece is read by the device voice when they resume
+	private StepRead? _restartStep; // a step paused by the user (a piece shown for a beat, or a clip that failed while paused): it starts again when they resume
+	private CancellationTokenSource? _beat; // the timer of the beat being shown; null when none runs (a covered page or a person's pause stops it)
+	private readonly SilentBeat _silent = new(); // the one clock of a silent piece: active, covered, held by the person; the timer runs only while all allow it (Slice 278 part B, reviews/s278b-design.md)
 	private bool _pendingAdvance; // a step ended while the user had paused: Resume takes the next one
 	private readonly ReadingPauseState _pauseState = new(); // a recorded page that ended while the user had paused: Resume goes on from it (Slice 271)
-	// Completed carries no id, so a speech step's end is accepted only for the run that was seen Playing (AnimalClipRuns.AcceptCompleted): _run counts the speech steps
-	// started (and Stop/StartAt), _playingRun is the run last seen Playing, and OnCompleted stamps _run when the signal is raised.
-	private int _run;
-	private int _playingRun;
-	private Func<Story, Task>? _saveCast;
 	private IReadOnlyList<SentenceSpan> _sentences = [];
 	private int _readSequence;
 	private int _pendingReadId;
 	private string? _voiceCountedFor; // the book and reading language whose voice was counted: one read_voice count per book in this session, not one per mid-book start
-	private int _returnedReadId;
 
-	// The read whose chunks and completion count: set when a read starts, cleared when it is
-	// stopped, fails or completes. Chunk events carry no id, so they are tagged with this when raised
-	// and dropped if the read they belong to is no longer the active one.
+	// The read whose steps count: set when a read starts, cleared when it is stopped, fails or completes. A callback tagged with another id is dropped.
 	private int _activeReadId;
 
 	// Slice 250: true between a counted read_started and its read_stopped, so every start gets exactly one stop.
 	private bool _countedOpen;
-	private int _readOrigin;
 
 	// Slice 259 item 1 (Debug trace): the time from a read's start to its first sound, once per read.
 	private ReadStartTrace? _startTrace;
@@ -97,57 +78,24 @@ public sealed class ReadingSession
 
 	private readonly ReadTheStupidText.Application.Usage.IFallbackSink _fallbacks; // Slice 273 part B
 
-	public ReadingSession(ISpeechReader reader, StoryVoicing voicing, IRecordingPlayer player, IStoryLibrary library, ISettingsStore settings, IVoiceModelService model, ReadTheStupidText.Application.Usage.IFallbackSink? fallbacks = null)
+	public ReadingSession(StoryVoicing voicing, IRecordingPlayer player, IStoryLibrary library, ReadTheStupidText.Application.Usage.IFallbackSink? fallbacks = null)
 	{
 		_fallbacks = fallbacks ?? ReadTheStupidText.Application.Usage.NoFallbackSink.Instance;
-		_reader = reader;
 		_voicing = voicing;
 		_player = player;
 		_library = library;
-		_settings = settings;
-		_model = model;
-		if (reader is CompositeSpeechReader composite)
-		{
-			composite.AppLanguage ??= () => LanguageChoice.Current(settings); // where the phone voice returns after a read in the child's pick (Slice 173)
-		}
 	}
 
-	/// <summary>The language this screen reads in (Slice 173). It belongs to this session alone: the stored voice and app language are never changed or shadowed by it.</summary>
+	/// <summary>The language this screen reads in (Slice 173). It belongs to this session alone: the stored app language is never changed or shadowed by it.</summary>
 	public string ReadingLanguage => _reading;
 
 	/// <summary>Reads in <paramref name="language"/> from the next read on.</summary>
-	public void SetReadingLanguage(string language)
-	{
-		string resolved = UiLanguage.Resolve(language);
-		bool changed = !string.Equals(_reading, resolved, StringComparison.Ordinal);
-		_reading = resolved;
-		if (changed)
-		{
-			_ = WarmUpLanguageAsync(resolved); // the model of a pick other than the stored language is built before its first read, not during it (Slice 177's warm-up)
-		}
-	}
+	public void SetReadingLanguage(string language) => _reading = UiLanguage.Resolve(language);
 
-	private async Task WarmUpLanguageAsync(string language)
-	{
-		try
-		{
-			if (_reader is IReadScoped scoped && !IsStoredVoiceLanguage(language) && _model is IReadingModelResolver resolver && await resolver.ModelForAsync(language) is { } pack)
-			{
-				await scoped.WarmUpScopedAsync(pack);
-			}
-		}
-		catch (Exception)
-		{
-			// no-fallback: a warm-up only; the read resolves and builds the pack itself
-			// Best-effort: the read resolves and builds the pack itself.
-		}
-	}
-
-	/// <summary>The sentence being spoken, or the last one spoken; -1 before the first.</summary>
+	/// <summary>The sentence being heard, or the last one; -1 before the first.</summary>
 	public int CurrentSentence { get; private set; } = -1;
 
-	/// <summary>The story index being spoken, inside <see cref="CurrentSentence"/> (a chunk of a long sentence
-	/// starts mid-sentence); -1 before the first.</summary>
+	/// <summary>The story index being heard, inside <see cref="CurrentSentence"/>; -1 before the first.</summary>
 	public int CurrentPosition { get; private set; } = -1;
 
 	/// <summary>True once a read reached its natural end, so Play starts the story again from the top.
@@ -156,9 +104,6 @@ public sealed class ReadingSession
 
 	public void ClearFinished() => Finished = false;
 
-	/// <summary>True while a read that had started waits for its next chunk of audio (Slice 148): the page shows "Still getting the voice ready".</summary>
-	public bool Stalled { get; private set; }
-
 	public event EventHandler<int>? SentenceChanged;
 
 	public event EventHandler? StateChanged;
@@ -166,8 +111,11 @@ public sealed class ReadingSession
 	/// <summary>Slice 250: a read started, paused, resumed or stopped (with the closed reason for a stop; null for the other verbs). The page turns each into a usage count.</summary>
 	public event Action<ReadingEventKind, ReadStopReason?>? Playback;
 
-	/// <summary>Slice 267: this session's read really started; the story and the voice detail (<c>premade</c>, or <c>device:&lt;reason&gt;</c>). Raised on the session itself, so only the page that owns it counts the read.</summary>
+	/// <summary>Slice 267: this session's read really started; the story and the voice detail (<c>premade</c>, or <c>device:&lt;reason&gt;</c>, the reason the pieces without a clip had none). Raised on the session itself, so only the page that owns it counts the read.</summary>
 	public event Action<Story, ReadVoiceUse>? VoiceUsed;
+
+	/// <summary>The piece now shown has (true) or lacks (false) a clip. Raised on the main thread; the page shows the book's audio state while pieces lack one, so a read with no audio is never a silent slideshow with no word about it.</summary>
+	public event Action<bool>? PieceAudio;
 
 	public event EventHandler? Failed;
 
@@ -180,31 +128,24 @@ public sealed class ReadingSession
 				return _recorded == RecordedPlay.Playing ? SessionState.Playing : SessionState.Paused;
 			}
 
-			if (_restartStep is not null)
+			if (_restartStep is not null || (_silent.Active && _silent.HeldByPerson))
 			{
 				return SessionState.Paused;
 			}
 
-			if (_reader.State == PlaybackState.Playing)
+			if (_silent.Active)
 			{
-				return SessionState.Playing;
+				return SessionState.Playing; // running, or only covered: the pending marker is already cleared, so never Loading
 			}
 
-			if (_pendingReadId != 0)
-			{
-				return SessionState.Loading;
-			}
-
-			return _reader.State == PlaybackState.Paused ? SessionState.Paused : SessionState.Idle;
+			return _pendingReadId != 0 ? SessionState.Loading : SessionState.Idle;
 		}
 	}
 
-	/// <param name="saveCast">Stores the story with a cast made for a language that had none (Slice 108); null keeps nothing.</param>
-	public void Open(Story story, IReadOnlyList<SentenceSpan> sentences, Func<Story, Task>? saveCast = null)
+	public void Open(Story story, IReadOnlyList<SentenceSpan> sentences)
 	{
 		_story = story;
 		_sentences = sentences;
-		_saveCast = saveCast;
 		_pageStarts = StoryRecordings.PageStarts(story.Pages);
 		_pageSentences = SentencesOfPages(story.Pages.Count);
 		_unplayable.Clear();
@@ -213,7 +154,7 @@ public sealed class ReadingSession
 	/// <summary>Takes the story as it is now (the grown-up turned "Read with my voice" on or off); the next read follows it.</summary>
 	public void UpdateStory(Story story) => _story = story;
 
-	/// <summary>Turns "Read with my voice" on or off on the session's own story, leaving the rest of it (a cast made this session, say) as it is.</summary>
+	/// <summary>Turns "Read with my voice" on or off on the session's own story, leaving the rest of it as it is.</summary>
 	public void SetUseRecordings(bool useRecordings)
 	{
 		if (_story is { } story)
@@ -263,23 +204,7 @@ public sealed class ReadingSession
 		return pages;
 	}
 
-	public void Attach()
-	{
-		Detach();
-		_reader.StateChanged += OnReaderStateChanged;
-		_reader.ChunkChanged += OnChunkChanged;
-		_reader.Completed += OnCompleted;
-		_reader.StallChanged += OnReaderStallChanged;
-	}
-
-	public void Detach()
-	{
-		AppTrace.Reading(TraceLines.ReadingEvent.Detached, TraceLines.ReadingReason.PageLeft); // Slice 243 item 5
-		_reader.StateChanged -= OnReaderStateChanged;
-		_reader.ChunkChanged -= OnChunkChanged;
-		_reader.Completed -= OnCompleted;
-		_reader.StallChanged -= OnReaderStallChanged;
-	}
+	public void Detach() => AppTrace.Reading(TraceLines.ReadingEvent.Detached, TraceLines.ReadingReason.PageLeft); // Slice 243 item 5
 
 	/// <summary>Moves the current sentence without reading (a skip while nothing plays).</summary>
 	public void MoveTo(int sentence) => MoveTo(sentence, _sentences[sentence].Start);
@@ -306,23 +231,70 @@ public sealed class ReadingSession
 			return;
 		}
 
-		if (_reader.State == PlaybackState.Playing)
+		if (_silent.Active && !_silent.HeldByPerson)
 		{
 			AppTrace.Reading(TraceLines.ReadingEvent.Paused, reason);
 			RaiseIf(counted, ReadingEventKind.Paused);
-			_reader.Pause();
+			if (_silent.Pause())
+			{
+				StopBeat();
+			}
+
+			AudioPackLog.Write("silent piece paused, it is shown again on resume");
+			StateChanged?.Invoke(this, EventArgs.Empty);
 		}
+	}
+
+	/// <summary>A piece shown for a beat has no sound, so while the page is covered (screen lock, another app, the grown-up gate) its timer stops; it never runs on unseen. Only the cover flips: a person's pause is untouched. A clip plays on, as audio does.</summary>
+	public void PauseBeatWhenHidden()
+	{
+		if (_silent.Hide())
+		{
+			StopBeat();
+		}
+	}
+
+	/// <summary>The page is shown again: the beat of a piece that is still wanted starts again, whole. A pause the person made themselves stays paused.</summary>
+	public void ResumeBeatWhenShown()
+	{
+		if (_silent.Show())
+		{
+			StartBeatTimer();
+		}
+	}
+
+	// The person (or the app's own pause, uncounted) resumes a held beat: logged as a user resume only when counted, and the whole beat starts at once, or when the page is shown if it is covered.
+	private void ResumeBeat(bool counted)
+	{
+		AppTrace.Reading(TraceLines.ReadingEvent.Resumed, counted ? TraceLines.ReadingReason.User : TraceLines.ReadingReason.Other);
+		RaiseIf(counted, ReadingEventKind.Resumed);
+		if (_silent.Resume())
+		{
+			StartBeatTimer();
+		}
+		else if (_silent.Hidden)
+		{
+			AudioPackLog.Write("silent piece resumed while the page is covered, it is shown when the page is");
+		}
+
+		StateChanged?.Invoke(this, EventArgs.Empty);
 	}
 
 	/// <param name="counted">False for a resume of a pause the app made itself (the language menu), which is not a count (Slice 250).</param>
 	public void Resume(bool counted = true)
 	{
+		if (_silent.Active && _silent.HeldByPerson)
+		{
+			ResumeBeat(counted);
+			return;
+		}
+
 		if (_restartStep is { } restart)
 		{
 			_restartStep = null;
 			AppTrace.Reading(TraceLines.ReadingEvent.Resumed, TraceLines.ReadingReason.User);
 			RaiseIf(counted, ReadingEventKind.Resumed);
-			_ = RunStepAsync(restart);
+			RunStep(restart);
 			return;
 		}
 
@@ -346,14 +318,6 @@ public sealed class ReadingSession
 
 			_player.Resume();
 			StateChanged?.Invoke(this, EventArgs.Empty);
-			return;
-		}
-
-		if (_reader.State == PlaybackState.Paused)
-		{
-			AppTrace.Reading(TraceLines.ReadingEvent.Resumed, TraceLines.ReadingReason.User);
-			RaiseIf(counted, ReadingEventKind.Resumed);
-			_reader.Resume();
 		}
 	}
 
@@ -387,14 +351,11 @@ public sealed class ReadingSession
 
 		CancelRead();
 		StopRecording();
-		_reader.Stop();
 		_activeReadId = 0;
-		NextRun();
-		Stalled = false;
 		ClearPending();
 	}
 
-	/// <summary>Reads from the start of <paramref name="sentence"/> on, in each character's voice. A start asked for from outside counts as a started read (Slice 250); the read's own continuations do not.</summary>
+	/// <summary>Reads from the start of <paramref name="sentence"/> on. A start asked for from outside counts as a started read (Slice 250); the read's own continuations do not.</summary>
 	public Task StartAtAsync(int sentence)
 	{
 		if (_story is not null && sentence >= 0 && sentence < _sentences.Count)
@@ -414,7 +375,6 @@ public sealed class ReadingSession
 			return;
 		}
 
-		_reader.Stop();
 		StopRecording();
 		AppTrace.Reading(TraceLines.ReadingEvent.Started);
 		CancellationToken cancellation = BeginReadCancellation();
@@ -422,7 +382,6 @@ public sealed class ReadingSession
 		MoveTo(sentence);
 		int id = ++_readSequence;
 		_pendingReadId = id;
-		NextRun();
 		Volatile.Write(ref _activeReadId, id);
 		Volatile.Write(ref _startTrace, ReadStartTrace.Begin(id, _sentences[sentence].Start));
 		if (TryPlayRecording(story, sentence, id))
@@ -431,7 +390,7 @@ public sealed class ReadingSession
 		}
 
 		StateChanged?.Invoke(this, EventArgs.Empty);
-		await SpeakAsync(story, _sentences[sentence].Start, id, cancellation);
+		await TryStartReadAsync(story, _sentences[sentence].Start, id, cancellation);
 	}
 
 	private void StopRecording()
@@ -439,7 +398,9 @@ public sealed class ReadingSession
 		_continueRead = null;
 		_stepRead = null;
 		_restartStep = null;
+		_silent.End();
 		_pendingAdvance = false;
+		StopBeat();
 		_pauseState.Clear(); // a stale flag must not fire on a later Resume
 		if (_recorded != RecordedPlay.None)
 		{
@@ -448,7 +409,14 @@ public sealed class ReadingSession
 		}
 	}
 
-	// A recorded page plays its file (Slice 111); a file that is gone reads the page in the generated voice. It is playing as soon as the
+	private void StopBeat()
+	{
+		CancellationTokenSource? beat = Interlocked.Exchange(ref _beat, null);
+		beat?.Cancel();
+		beat?.Dispose();
+	}
+
+	// A recorded page plays its file (Slice 111); a file that is gone reads the page from the book's own clips. It is playing as soon as the
 	// player has the file, so there is no loading state.
 	private bool TryPlayRecording(Story story, int sentence, int id)
 	{
@@ -479,11 +447,12 @@ public sealed class ReadingSession
 
 		_recorded = RecordedPlay.Playing;
 		_pauseState.Clear();
+		RunOnMain(() => PieceAudio?.Invoke(true)); // sound plays: an earlier silent piece's status line goes
 		ClearPending();
 		return true;
 	}
 
-	// The page's recording played to its end: the read goes on with the sentence after the page (a recorded or a generated page), or the story is finished.
+	// The page's recording played to its end: the read goes on with the sentence after the page (a recorded page or the book's clips), or the story is finished.
 	private void ApplyRecordingEnded(int id, int page)
 	{
 		// Slice 270: Pause landed after the clip ended; the read holds here and Resume goes on. A stale id or no recording playing is ignored (Slice 271: ReadingPauseState, unit-tested).
@@ -506,7 +475,7 @@ public sealed class ReadingSession
 		_ = ContinueAtAsync(next);
 	}
 
-	// The recording cannot be played (a corrupt or empty file): this page is read in the generated voice instead, and the read goes on from its start.
+	// The recording cannot be played (a corrupt or empty file): this page is read from the book's own clips instead, and the read goes on from its start.
 	private void ApplyRecordingFailed(int id, int page)
 	{
 		if (id != _activeReadId || _recorded == RecordedPlay.None)
@@ -521,57 +490,45 @@ public sealed class ReadingSession
 			_player.Stop();
 			_recorded = RecordedPlay.None;
 			StateChanged?.Invoke(this, EventArgs.Empty);
-			return; // paused by the user: the page reads in the generated voice when they resume playing, not on its own
+			return; // paused by the user: the page reads from the book's clips when they resume playing, not on its own
 		}
 
 		_ = ContinueAtAsync(_pageSentences[page].First);
 	}
 
-	// Slice 273 part B: a recording that cannot be played falls back to the generated voice.
+	// Slice 273 part B: a recording that cannot be played falls back to the book's own clips.
 	private void ReportRecordingUnplayable() =>
 		_fallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Speech, ReadTheStupidText.Application.Usage.FallbackReason.RecordingUnplayable, _reading);
 
-	private async Task SpeakAsync(Story story, int fromPosition, int id, CancellationToken cancellation)
-	{
-		if (await TryStartReadAsync(story, fromPosition, id, cancellation))
-		{
-			await WaitForFirstAudioAsync(id);
-		}
-	}
-
 	// A superseded or stopped read never alerts and never touches the current read's loading state.
-	private async Task<bool> TryStartReadAsync(Story story, int fromPosition, int id, CancellationToken cancellation)
+	private async Task TryStartReadAsync(Story story, int fromPosition, int id, CancellationToken cancellation)
 	{
 		try
 		{
-			return await StartVoicedReadAsync(story, fromPosition, id, cancellation);
+			await StartVoicedReadAsync(story, fromPosition, id, cancellation);
 		}
 		catch (OperationCanceledException)
 		{
 			// no-fallback: the read was superseded or stopped
 			ClearPendingIfCurrent(id);
-			return false;
 		}
 		catch (Exception)
 		{
-			// no-fallback: the read fails and the person is told (FailRead); no other voice is tried
+			// no-fallback: the read fails and the person is told (FailRead); nothing else is tried
 			FailRead(id);
-			return false;
 		}
 	}
 
-	private async Task<bool> StartVoicedReadAsync(Story story, int fromPosition, int id, CancellationToken cancellation)
+	private async Task StartVoicedReadAsync(Story story, int fromPosition, int id, CancellationToken cancellation)
 	{
 		string reading = _reading; // this read keeps the language it started in, whatever the screen switches to meanwhile
-		story = await RecastClashesAsync(story, reading, cancellation);
-		story = await KeepNewCastAsync(story, reading);
 		bool untranslated = false;
 		var why = new StoryVoicing.VoiceWhy();
 		IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, reading, fromPosition, cancellation, () => untranslated = true, why);
 		_startTrace?.Voiced(id, segments.Count, untranslated);
 		if (id != _pendingReadId)
 		{
-			return false;
+			return;
 		}
 
 		segments = StopBeforeRecordedPage(story, segments, fromPosition, id);
@@ -579,21 +536,18 @@ public sealed class ReadingSession
 		{
 			_continueRead = null;
 			_ = ContinueAtAsync(cut.Sentence);
-			return false;
+			return;
 		}
 
-		CountVoiceOncePerBook(story, reading, segments, why); // Slice 273: counted on the pieces this read really speaks, after the recorded page cut off the rest
-
-		_readOrigin = segments.Count > 0 ? segments[0].SourceStart : fromPosition;
+		CountVoiceOncePerBook(story, reading, segments, why); // Slice 273: counted on the pieces this read really plays, after the recorded page cut off the rest
 		await AnimalClipFiles.EnsureAsync(AnimalClipRuns.KindsIn(segments));
-		cancellation.ThrowIfCancellationRequested(); // a Stop, Back or another sentence during the copy: this read never speaks or plays a clip
+		cancellation.ThrowIfCancellationRequested(); // a Stop, Back or another sentence during the copy: this read never plays a clip
 		if (id != _pendingReadId)
 		{
-			return false;
+			return;
 		}
 
-		await SpeakRunsAsync(segments, untranslated ? UiLanguage.Resolve(story.Language) : _voicing.ReadingLanguage(story, reading), id, cancellation); // a translation that was skipped leaves the story's own voices
-		return true;
+		BeginSteps(segments, id, cancellation);
 	}
 
 	// Slice 267: the voice a book is read with is counted once per book and reading language in this session, at the moment its read really starts.
@@ -601,7 +555,7 @@ public sealed class ReadingSession
 	{
 		if (!StoryVoicing.SpeaksAnyPiece(segments))
 		{
-			return; // nothing is spoken, so nothing is counted and the once-per-book key stays free for a read that speaks
+			return; // nothing is played, so nothing is counted and the once-per-book key stays free for a read that plays
 		}
 
 		string key = $"{story.Id}|{reading}";
@@ -623,18 +577,25 @@ public sealed class ReadingSession
 		}
 	}
 
-	// The animals' recordings (Slice 255): the speech engine is only ever given the segments up to the next animal-sound slot. When that run has been spoken (ApplyCompleted)
-	// the animal's recording plays, and when it ends the segments after the slot go on, so the engine never voices a sound word and Pause, Resume, Back and Stop work as for a recorded page.
-	private async Task SpeakRunsAsync(IReadOnlyList<VoicedSegment> segments, string spoken, int id, CancellationToken cancellation)
+	// The read as steps (PlaybackSteps): a piece's clip, an animal's recording, or a piece with no clip shown for a beat. When the last step has ended the read is over.
+	private void BeginSteps(IReadOnlyList<VoicedSegment> segments, int id, CancellationToken cancellation)
 	{
 		cancellation.ThrowIfCancellationRequested();
-		var read = new StepRead(id, PremadeAudioPlan.Plan(segments), spoken, cancellation);
+		var read = new StepRead(id, PlaybackSteps.Plan(segments), cancellation);
 		_stepRead = read;
 		_pendingAdvance = false;
-		await StartStepAsync(read);
+		if (read.Steps.Count == 0)
+		{
+			_stepRead = null;
+			ClearPending();
+			EndRead(id);
+			return;
+		}
+
+		StartStep(read);
 	}
 
-	// Every end signal of a step (the run was spoken, the clip ended or failed, the clip file is missing) comes here with the read's id. A stale or cancelled read is dropped,
+	// Every end signal of a step (the clip ended or failed, the beat is over, the clip file is missing) comes here with the read's id. A stale or cancelled read is dropped,
 	// a paused one waits for Resume, and otherwise the next step starts; past the last step the read ends.
 	private void AdvanceStep(int readId)
 	{
@@ -662,21 +623,15 @@ public sealed class ReadingSession
 			return;
 		}
 
-		_ = RunStepAsync(read);
+		RunStep(read);
 	}
 
-	private bool IsPaused => _recorded == RecordedPlay.Paused || _restartStep is not null || _reader.State == PlaybackState.Paused;
+	private bool IsPaused => _recorded == RecordedPlay.Paused || _restartStep is not null || (_silent.Active && _silent.HeldByPerson);
 
 	// Resume after a step ended while paused: the pause is over and the step that was waiting starts.
 	private void ResumePendingAdvance()
 	{
 		_pendingAdvance = false;
-		NextRun(); // the Stop below raises a Completed that belongs to the run that had ended
-		if (_reader.State == PlaybackState.Paused)
-		{
-			_reader.Stop(); // its run had already ended
-		}
-
 		if (_recorded != RecordedPlay.None)
 		{
 			_player.Stop(); // a paused clip must not stay loaded
@@ -689,14 +644,13 @@ public sealed class ReadingSession
 		}
 	}
 
-	// A step that follows the first one: started from an end signal, so it owns its own failure handling and first-audio wait.
-	private async Task RunStepAsync(StepRead read)
+	// A step that follows the first one: started from an end signal, so it owns its own failure handling.
+	private void RunStep(StepRead read)
 	{
 		int id = read.ReadId;
 		try
 		{
-			await StartStepAsync(read);
-			await WaitForFirstAudioAsync(id);
+			StartStep(read);
 		}
 		catch (OperationCanceledException)
 		{
@@ -705,12 +659,12 @@ public sealed class ReadingSession
 		}
 		catch (Exception)
 		{
-			// no-fallback: the read fails and the person is told (FailRead); no other voice is tried
+			// no-fallback: the read fails and the person is told (FailRead); nothing else is tried
 			FailRead(id);
 		}
 	}
 
-	private async Task StartStepAsync(StepRead read)
+	private void StartStep(StepRead read)
 	{
 		read.Cancellation.ThrowIfCancellationRequested();
 		PremadeAudioPlan.Step step = read.Steps[read.Index];
@@ -727,26 +681,11 @@ public sealed class ReadingSession
 				return;
 			}
 
-			step = read.Steps[read.Index] = PremadeAudioPlan.AsSpoken(step); // no usable clip: this piece is read by the device voice
+			step = read.Steps[read.Index] = PlaybackSteps.AsSilentPiece(step); // no usable clip: this piece is shown for a beat
 		}
 
-		if (read.Index > 0)
-		{
-			_pendingReadId = read.ReadId; // the run after a recording loads like the first one
-			StateChanged?.Invoke(this, EventArgs.Empty);
-		}
-
-		NextRun();
-		if (step.Run.Count > 0)
-		{
-			_readOrigin = step.Run[0].SourceStart;
-		}
-
-		await SpeakAsync(step.Run, read.Spoken);
+		BeginBeat(read, step);
 	}
-
-	// A new speech run (or a stop): any Completed raised before this point belongs to an earlier run and must not advance this one.
-	private void NextRun() => Interlocked.Increment(ref _run);
 
 	// Plays the animal's recording. A clip that is missing or will not play is skipped silently, never read as the sound word, and the read goes straight on (posted, so it
 	// never runs inside the step that is starting).
@@ -783,19 +722,20 @@ public sealed class ReadingSession
 		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] animal clip {clip} plays");
 #endif
 		_recorded = RecordedPlay.Playing;
+		RunOnMain(() => PieceAudio?.Invoke(true)); // sound plays: an earlier silent piece's status line goes
 		ClearPending();
 	}
 
-	// Slice 246 C2: plays the pre-made clip of a store book's piece at the reading speed, with the piece's sentence marked as it starts (the device voice marks it from its chunk event).
-	// False (nothing started) when the file is gone or the player will not open it; the caller then reads the piece with the device voice. The clip is "recorded" for the session's
-	// state, Pause, Resume and Stop, exactly as an animal's recording is, and its end advances the read like a spoken run's Completed does.
+	// Slice 246 C2: plays the pre-made clip of a store book's piece at the reading speed, with the piece's sentence marked as it starts.
+	// False (nothing started) when the file is gone or the player will not open it; the caller then shows the piece for a beat. The clip is "recorded" for the session's
+	// state, Pause, Resume and Stop, exactly as an animal's recording is, and its end advances the read.
 	private bool TryPlayPremade(StepRead read, VoicedSegment segment)
 	{
 		string? path = PremadeClipMarker.PathOf(segment);
 		int index = read.Index;
 		if (path is null || !File.Exists(path))
 		{
-			AudioPackLog.Write("premade clip has no file, device voice for this piece");
+			AudioPackLog.Write("premade clip has no file, the piece is shown for a beat");
 			return false;
 		}
 
@@ -810,19 +750,33 @@ public sealed class ReadingSession
 		catch (Exception ex)
 		{
 			_recorded = RecordedPlay.None;
-			AudioPackLog.Write($"premade clip could not play ({ex.GetType().Name}), device voice for this piece");
-			_fallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.PremadeAudio, ReadTheStupidText.Application.Usage.FallbackReason.ClipUnplayable, _reading); // Slice 273 part D
+			AudioPackLog.Write($"premade clip could not play ({ex.GetType().Name}), the piece is shown for a beat");
+			if (read.Reported.Add(index))
+			{
+				_fallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.PremadeAudio, ReadTheStupidText.Application.Usage.FallbackReason.ClipUnplayable, _reading); // Slice 273 part D
+			}
+
 			return false;
 		}
 
 		AudioPackLog.Write($"premade clip plays (sentence {StorySentences.IndexAt(_sentences, segment.SourceStart)})");
 		NoteFirstSound("premade clip", read.ReadId);
-		RunOnMain(() => MarkPremade(read, segment));
+		RunOnMain(() => MarkPiece(read, segment));
+		RunOnMain(() => PieceAudio?.Invoke(true));
 		ClearPending();
 		return true;
 	}
 
-	private void MarkPremade(StepRead read, VoicedSegment segment)
+	// A piece that is not played reports one fallback per occurrence, through the app's sink: once for a step, however often a pause makes it start again.
+	private void ReportPieceFallback(StepRead read, int index, string reason)
+	{
+		if (read.Reported.Add(index))
+		{
+			_fallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.PremadeAudio, reason, _reading);
+		}
+	}
+
+	private void MarkPiece(StepRead read, VoicedSegment segment)
 	{
 		int sentence = StorySentences.IndexAt(_sentences, segment.SourceStart);
 		if (read == _stepRead && sentence >= 0)
@@ -843,8 +797,69 @@ public sealed class ReadingSession
 		}
 	}
 
-	// A clip that played to its end advances the read. One that failed while playing is read by the device voice instead, from its start: at once when playing, or when the user
-	// resumes when they had paused.
+	// A piece with no clip and no recording is not spoken (Slice 278 part B): its sentence is marked, it stays for a short fixed beat, one fallback is reported for it, and the read
+	// goes on with the next piece as if it had played. The piece is current at once, covered page or not; only the timer waits for SilentBeat (a cover or the person's pause stops it, and
+	// whatever lets it run again starts a whole beat). Stop and a newer read cancel it too.
+	private void BeginBeat(StepRead read, PremadeAudioPlan.Step step)
+	{
+		int index = read.Index;
+		VoicedSegment piece = step.Run[0];
+		ReportPieceFallback(read, index, ReadTheStupidText.Application.Usage.FallbackReason.ClipMissing);
+		AudioPackLog.Write($"silent piece shown (sentence {StorySentences.IndexAt(_sentences, piece.SourceStart)})");
+		NoteFirstSound("silent piece", read.ReadId);
+		bool timerRuns = _silent.Begin(); // before ClearPending, so the state is Playing (never Loading) the moment the pending marker goes
+		RunOnMain(() => MarkPiece(read, piece));
+		RunOnMain(() => PieceAudio?.Invoke(false));
+		ClearPending();
+		if (timerRuns)
+		{
+			StartBeatTimer();
+		}
+	}
+
+	// Starts the whole beat for the step now shown (the one place a timer is made).
+	private void StartBeatTimer()
+	{
+		if (_stepRead is not { } read)
+		{
+			return;
+		}
+
+		StopBeat();
+		CancellationTokenSource beat = CancellationTokenSource.CreateLinkedTokenSource(read.Cancellation);
+		_beat = beat;
+		_ = EndBeatAsync(read, read.Index, beat);
+	}
+
+	private async Task EndBeatAsync(StepRead read, int index, CancellationTokenSource beat)
+	{
+		try
+		{
+			await Task.Delay(PlaybackSteps.BeatMilliseconds, beat.Token);
+		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: the beat was cancelled by a pause, a stop or a newer read
+			return;
+		}
+
+		MainThread.BeginInvokeOnMainThread(() => ApplyBeatEnded(read, index, beat));
+	}
+
+	private void ApplyBeatEnded(StepRead read, int index, CancellationTokenSource beat)
+	{
+		if (!ReferenceEquals(_beat, beat) || read != _stepRead || read.Index != index)
+		{
+			return; // paused, stopped or replaced meanwhile
+		}
+
+		Interlocked.CompareExchange(ref _beat, null, beat);
+		beat.Dispose();
+		_silent.End();
+		AdvanceStep(read.ReadId);
+	}
+
+	// A clip that played to its end advances the read. One that failed while playing is shown for a beat instead: at once when playing, or when the user resumes when they had paused.
 	private void ApplyPremadeEnded(StepRead read, int index, bool failed)
 	{
 		if (read != _stepRead || read.Index != index || _recorded == RecordedPlay.None)
@@ -859,8 +874,9 @@ public sealed class ReadingSession
 			return;
 		}
 
-		AudioPackLog.Write("premade clip failed while playing, device voice for this piece");
-		read.Steps[index] = PremadeAudioPlan.AsSpoken(read.Steps[index]);
+		AudioPackLog.Write("premade clip failed while playing, the piece is shown for a beat");
+		ReportPieceFallback(read, index, ReadTheStupidText.Application.Usage.FallbackReason.ClipUnplayable);
+		read.Steps[index] = PlaybackSteps.AsSilentPiece(read.Steps[index]);
 		bool wasPaused = _recorded == RecordedPlay.Paused;
 		_player.Stop();
 		_recorded = RecordedPlay.None;
@@ -871,7 +887,7 @@ public sealed class ReadingSession
 			return;
 		}
 
-		_ = RunStepAsync(read);
+		RunStep(read);
 	}
 
 	private void SkipClip(StepRead read, int index)
@@ -904,7 +920,7 @@ public sealed class ReadingSession
 		}
 	}
 
-	// The read has spoken everything: it goes on where a recorded page begins, or the story is finished.
+	// The read has played everything: it goes on where a recorded page begins, or the story is finished.
 	private void EndRead(int id)
 	{
 		_activeReadId = 0;
@@ -921,29 +937,6 @@ public sealed class ReadingSession
 		StateChanged?.Invoke(this, EventArgs.Empty); // the page counts a finished book from this
 	}
 
-	// The voices of the segments belong to the pack of the language they are spoken in. That is the stored voice language for most reads (the plain read, head start
-	// and all); a read in another language names its pack for this read only (Slice 173), so the stored language, the installer and the active model stay as they were.
-	// A language whose pack is not on the phone (or an engine that cannot take a named pack) is read by the phone voice in that language; nothing is ever fetched here.
-	private async Task SpeakAsync(IReadOnlyList<VoicedSegment> segments, string spoken)
-	{
-		if (_reader is not IReadScoped scoped || IsStoredVoiceLanguage(spoken))
-		{
-			await _reader.SpeakSegmentsAsync(segments);
-			return;
-		}
-
-		VoiceModelPaths? pack = _model is IReadingModelResolver resolver ? await resolver.ModelForAsync(spoken) : null;
-		if (pack is null)
-		{
-			StoryLanguages.NoteWanted(spoken); // read by the phone voice for want of a pack: Settings > Story languages shows it as missing, the child sees nothing
-		}
-
-		await scoped.SpeakSegmentsScopedAsync(segments, new ReadVoiceScope(pack, pack is null, spoken));
-	}
-
-	private bool IsStoredVoiceLanguage(string language) =>
-		string.Equals(VoiceAvailability.Primary(language), VoiceAvailability.Primary(LanguageChoice.Current(_settings)), StringComparison.OrdinalIgnoreCase);
-
 	// A generated read ends where the next page with a parent's recording begins, and goes on there with the recording (Slice 111).
 	private IReadOnlyList<VoicedSegment> StopBeforeRecordedPage(Story story, IReadOnlyList<VoicedSegment> segments, int fromPosition, int id)
 	{
@@ -957,59 +950,6 @@ public sealed class ReadingSession
 		int boundary = _pageStarts[next];
 		_continueRead = (id, _pageSentences[next].First);
 		return segments.Where(s => s.SourceEnd <= boundary).ToList(); // a segment running over the break is left to the recording, so its words are not heard twice
-	}
-
-	// A stored cast that gives a character the narrator's voice (or a voice the language dropped) is re-cast and saved (Slice 144: Farsi's default narrator became mana).
-	// A book already checked this session is not checked again: a cast that cannot move (the one woman's voice is both narrator and mum) would otherwise be rebuilt on every read.
-	private async Task<Story> RecastClashesAsync(Story story, string reading, CancellationToken cancellation)
-	{
-		if (_saveCast is null || _recastChecked.Contains(story.Id))
-		{
-			return story;
-		}
-
-		Story? recast = await NarratorRecast.TryRecastAsync(_voicing, story, cancellation);
-		if (recast is not null || _voicing.VoicesFor(_voicing.ReadingLanguage(story, reading)).Count > 0)
-		{
-			_recastChecked.Add(story.Id); // only once the language has voices: a pack still installing is checked again on the next read
-		}
-
-		return recast is null ? story : await PersistCastAsync(recast);
-	}
-
-	// Keeps the story with its new cast in memory and tries to store it. A failed save only costs that: the next successful save stores it.
-	private async Task<Story> PersistCastAsync(Story withCast)
-	{
-		try
-		{
-			await _saveCast!(withCast);
-		}
-		catch (Exception)
-		{
-			// no-fallback: the cast stays in memory, so what is heard is unchanged; only the save is lost
-			// The cast stays in memory for this session, so every later read keeps the same voices.
-		}
-
-		_story = withCast;
-		return withCast;
-	}
-
-	// The first read in a language with no cast stores the one it makes, so its voices stay put (Slice 108). A failed save only costs that.
-	private async Task<Story> KeepNewCastAsync(Story story, string reading)
-	{
-		string language = _voicing.ReadingLanguage(story, reading);
-		if (_saveCast is null || story.HasCastIn(language))
-		{
-			return story;
-		}
-
-		StoryVoicing.NewCast? made = await _voicing.NewCastForReadingAsync(story, reading);
-		if (made is null)
-		{
-			return story; // no voices or characters yet: asked again on the next read, once a pack has installed
-		}
-
-		return await PersistCastAsync(story.WithCastIn(made.Language, made.Members));
 	}
 
 	private CancellationToken BeginReadCancellation()
@@ -1042,30 +982,15 @@ public sealed class ReadingSession
 		}
 	}
 
-	// SpeakSegmentsAsync returned but nothing plays yet: keep loading until Playing, an Idle after
-	// the return (ApplyReaderState), or the grace expires.
-	private async Task WaitForFirstAudioAsync(int id)
-	{
-		if (id != _pendingReadId || _reader.State == PlaybackState.Playing)
-		{
-			ClearPendingIfCurrent(id);
-			return;
-		}
-
-		_returnedReadId = id;
-		await Task.Delay(FirstAudioGrace);
-		ClearPendingIfCurrent(id);
-	}
-
 	private void ClearPendingIfCurrent(int id)
 	{
-		if (id == _pendingReadId && _reader.State != PlaybackState.Playing)
+		if (id == _pendingReadId)
 		{
 			ClearPending();
 		}
 	}
 
-	// The first sound of the read being traced (a premade clip or the device voice); later sounds of the same read and other reads' sounds log nothing.
+	// The first sound of the read being traced (a premade clip or a silent piece); later sounds of the same read and other reads' sounds log nothing.
 	// The trace is read through a local copy and cleared only if it is still that copy, so a trace a new read just started is never wiped; readId is the read that raised the sound.
 	private void NoteFirstSound(string how, int readId)
 	{
@@ -1079,103 +1004,7 @@ public sealed class ReadingSession
 	private void ClearPending()
 	{
 		_pendingReadId = 0;
-		_returnedReadId = 0;
 		StateChanged?.Invoke(this, EventArgs.Empty);
-	}
-
-	private void OnReaderStateChanged(object? sender, PlaybackState state)
-	{
-		int readId = Volatile.Read(ref _activeReadId); // the read this state belongs to, taken when the reader raised it: by the time the main thread runs it a newer read may be active
-		MainThread.BeginInvokeOnMainThread(() => ApplyReaderState(state, readId));
-	}
-
-	private void ApplyReaderState(PlaybackState state, int readId)
-	{
-		bool idleAfterReturn = state == PlaybackState.Idle
-			&& _pendingReadId != 0 && _pendingReadId == _returnedReadId;
-		if (state == PlaybackState.Playing)
-		{
-			_playingRun = _run;
-			NoteFirstSound("device voice", readId);
-		}
-
-		if (state == PlaybackState.Playing || idleAfterReturn)
-		{
-			if (idleAfterReturn)
-			{
-				RaiseStopped(ReadStopReason.Other); // Slice 250: a read that ended without ever playing still closes its start, so the next start is not charged a stale "restarted" stop
-			}
-
-			ClearPending();
-			return;
-		}
-
-		StateChanged?.Invoke(this, EventArgs.Empty);
-	}
-
-	private void OnReaderStallChanged(object? sender, bool stalled)
-	{
-		int id = Volatile.Read(ref _activeReadId);
-		MainThread.BeginInvokeOnMainThread(() => ApplyStall(stalled, id));
-	}
-
-	// Only the active generated read can stall; a stall of a replaced or stopped read, or one that ends, is dropped or cleared.
-	private void ApplyStall(bool stalled, int id)
-	{
-		bool next = stalled && id != 0 && id == _activeReadId && _recorded == RecordedPlay.None;
-		if (next == Stalled)
-		{
-			return;
-		}
-
-		Stalled = next;
-		AppTrace.Reading(next ? TraceLines.ReadingEvent.Stalled : TraceLines.ReadingEvent.Unstalled);
-		StateChanged?.Invoke(this, EventArgs.Empty);
-	}
-
-	private void OnCompleted(object? sender, EventArgs e)
-	{
-		int id = Volatile.Read(ref _activeReadId);
-		int run = Volatile.Read(ref _run);
-		MainThread.BeginInvokeOnMainThread(() => ApplyCompleted(id, run));
-	}
-
-	// Only the active read's current run can end a step, and only once that run was seen Playing (as on origin/main): a stopped or replaced run's late Completed
-	// (the event carries no id) is stamped with an older run, or arrives before the new run plays, and is ignored. A duplicate is ignored too.
-	private void ApplyCompleted(int id, int stampedRun)
-	{
-		if (_recorded != RecordedPlay.None || !AnimalClipRuns.AcceptCompleted(id, _activeReadId, stampedRun, _run, _playingRun))
-		{
-			return;
-		}
-
-		_playingRun = 0; // this run's end is taken
-		AdvanceStep(id); // the run has been spoken: the next step starts, or the read ends
-	}
-
-	private void OnChunkChanged(object? sender, ReadChunk chunk)
-	{
-		int id = Volatile.Read(ref _activeReadId);
-		MainThread.BeginInvokeOnMainThread(() => ApplyChunk(chunk, id));
-	}
-
-	// A chunk's range indexes the whole story; the sentence holding its start is the one being spoken.
-	// The system-voice fallback speaks the joined segments as one utterance and reports the range
-	// (0, length) of that text, which is not a story position: such a whole-read chunk is placed at
-	// the read's own start, so the mark never jumps back to the first sentence.
-	private void ApplyChunk(ReadChunk chunk, int id)
-	{
-		if (id == 0 || id != _activeReadId)
-		{
-			return;
-		}
-
-		int position = chunk.ChunkCount <= 1 ? _readOrigin : chunk.SourceStart;
-		int sentence = StorySentences.IndexAt(_sentences, position);
-		if (sentence >= 0)
-		{
-			MoveTo(sentence, position);
-		}
 	}
 }
 

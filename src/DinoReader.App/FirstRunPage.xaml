@@ -9,9 +9,8 @@
     NavigationPage.HasNavigationBar="False"
     SafeAreaEdges="Container">
 
-    <!-- First run (mock screens 16, 17, 18), shown once on a fresh install before the gallery: pick the language, watch the voice
-         download, then hand over to grown-up mode. Values come from "Dino Reader Batch 16.dc.html". The download and ready
-         texts are set in code, after the pick, so they speak the language just chosen. -->
+    <!-- First run (mock screens 16 and 18), shown once on a fresh install before the gallery: pick the language, pick the first books, then hand over to
+         grown-up mode. Values come from "Dino Reader Batch 16.dc.html". The ready texts are set in code, after the pick, so they speak the language just chosen. -->
     <!-- Slice 234 part B (mock Batch 45 frame 138): on a tablet held upright the three pages share one centred white card; everywhere else the frame is invisible and fills the page. -->
     <Border x:Name="CardFrame" StrokeThickness="0" BackgroundColor="Transparent">
     <Grid>
@@ -37,38 +36,7 @@
             <local:CoralButton x:Name="ContinueButton" Grid.Row="1" Text="{x:Static res:AppResources.FirstRun_Continue}" Clicked="OnContinueClicked" />
         </Grid>
 
-        <!-- Screen 17: the voice downloads. -->
-        <Grid x:Name="DownloadPanel" AutomationId="FirstRunDownload" RowDefinitions="*,Auto" Padding="22,0,22,22" IsVisible="False">
-            <ScrollView x:Name="DownloadScroll">
-            <VerticalStackLayout x:Name="DownloadStack" Spacing="14" Padding="0,56,0,0">
-                <Label x:Name="DownloadTitle" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center" SemanticProperties.HeadingLevel="Level1" />
-                <Label x:Name="DownloadSub" FontSize="14" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
-                <ProgressBar x:Name="Bar" ProgressColor="{StaticResource Brand}" HeightRequest="8" Margin="0,18,0,0" />
-                <Grid ColumnDefinitions="*,Auto">
-                    <Label x:Name="DownloadState" FontSize="13.5" TextColor="{StaticResource Body}" />
-                    <Label Grid.Column="1" x:Name="DownloadPercent" FontSize="13.5" FontAttributes="Bold" TextColor="{StaticResource Brand}" />
-                </Grid>
-                <Label x:Name="DownloadProblem" FontSize="13.5" TextColor="{StaticResource Danger}" HorizontalTextAlignment="Center" IsVisible="False">
-                    <Label.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnRetryTapped" />
-                    </Label.GestureRecognizers>
-                </Label>
-                <Label x:Name="PhoneVoice" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center" IsVisible="False">
-                    <Label.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnPhoneVoiceTapped" />
-                    </Label.GestureRecognizers>
-                </Label>
-            </VerticalStackLayout>
-            </ScrollView>
-            <Label Grid.Row="1" x:Name="PickAnother" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center"
-                   Padding="0,12">
-                <Label.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnPickAnotherTapped" />
-                </Label.GestureRecognizers>
-            </Label>
-        </Grid>
-
-        <!-- Screen 18: ready. -->
+        <!-- Screen 18: ready (Slice 278 part B: the voice download screen, 17, is gone; the books are picked first, then this). -->
         <Grid x:Name="ReadyPanel" AutomationId="FirstRunReady" RowDefinitions="*,Auto" Padding="22,0,22,22" IsVisible="False">
             <ScrollView x:Name="ReadyScroll" Grid.Row="0">
             <VerticalStackLayout x:Name="ReadyStack" Spacing="14" Padding="0,56,0,0">
@@ -80,23 +48,6 @@
                     </Border>
                     <Label x:Name="ReadyTitle" FontSize="24" FontAttributes="Bold" HorizontalTextAlignment="Center" SemanticProperties.HeadingLevel="Level1" />
                     <Label x:Name="ReadyBody" FontSize="14" LineHeight="1.4" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
-                    <Border x:Name="HelloPill" HeightRequest="48" BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0" HorizontalOptions="Center" Padding="7,0,18,0">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="24" />
-                        </Border.StrokeShape>
-                        <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
-                            <Border WidthRequest="34" HeightRequest="34" BackgroundColor="{StaticResource Brand}" StrokeThickness="0">
-                                <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="17" />
-                                </Border.StrokeShape>
-                                <local:IconView Kind="Play" Color="White" Size="16" HorizontalOptions="Center" VerticalOptions="Center" />
-                            </Border>
-                            <Label x:Name="HelloLabel" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" VerticalOptions="Center" />
-                        </HorizontalStackLayout>
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnHelloTapped" />
-                        </Border.GestureRecognizers>
-                    </Border>
                 </VerticalStackLayout>
             </ScrollView>
             <VerticalStackLayout x:Name="ReadyActions" Grid.Row="1">

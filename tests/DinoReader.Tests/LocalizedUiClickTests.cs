@@ -3,7 +3,7 @@ namespace DinoReader.Tests;
 // Slice 235 part B: the Windows window says "click" where a phone says "tap", from separate strings (AppResources.UseClickWording picks them), in every language.
 public partial class LocalizedUiTests
 {
-    private static readonly string[] ClickWordedKeys = ["Gallery_CornerLine", "PackStatus_Offline", "PackStatus_Waiting", "PackStatus_WaitingWifi", "PackStatus_HashMismatch", "PackStatus_Failed", "PackStatus_Stopped"];
+    private static readonly string[] ClickWordedKeys = ["Gallery_CornerLine"];
 
     [Fact]
     public void Every_language_words_each_click_twin_differently_from_its_tap_string()

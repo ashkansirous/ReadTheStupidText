@@ -32,12 +32,6 @@ name: Corner line, sticky way back and Read now
     id: GalleryCornerLine
 - assertNotVisible:
     id: GalleryGrownUps
-# The one-time "Storyteller voices are ready" note can cover the corner once the background pack download ends: dismiss it by its OK, only when it is on screen (a point tap would hit "Back to my child's shelf").
-- runFlow:
-    when:
-      visible: Storyteller voices are ready
-    commands:
-      - tapOn: "OK"
 - tapOn:
     id: TileMore
     index: 0

@@ -141,24 +141,12 @@ public class AnimalSoundClipTests
     public void Decide_DropsAStaleOrCancelledRead_WaitsWhenPaused_ElseStarts(bool stale, bool cancelled, bool paused, AnimalClipRuns.Advance expected) =>
         Assert.Equal(expected, AnimalClipRuns.Decide(stale, cancelled, paused));
 
-    [Theory]
-    [InlineData(5, 5, 3, 3, 3, true)] // normal: current run, seen Playing
-    [InlineData(5, 5, 3, 3, 0, false)] // late Completed before this run played (or a duplicate: playing run cleared)
-    [InlineData(5, 5, 2, 3, 3, false)] // stamped by an earlier run
-    [InlineData(5, 5, 4, 4, 3, false)] // stopped/new run not yet playing: playing run is older
-    [InlineData(5, 0, 3, 3, 3, false)] // read stopped
-    [InlineData(5, 6, 3, 3, 3, false)] // read replaced
-    [InlineData(0, 0, 3, 3, 3, false)]
-    public void AcceptCompleted_OnlyForTheCurrentRunSeenPlaying(int readId, int activeId, int stamped, int current, int playing, bool expected) =>
-        Assert.Equal(expected, AnimalClipRuns.AcceptCompleted(readId, activeId, stamped, current, playing));
-
     [Fact]
     public void EveryEndSignalOfAStep_GoesThroughAdvanceStep()
     {
         string session = File.ReadAllText(Path.Combine(StarterBuilder.RepoRoot(), "src", "DinoReader.App", "ReadingSession.cs"));
 
-        Assert.Contains("AdvanceStep(id); // the run has been spoken", session);
-        Assert.Contains("AdvanceStep(read.ReadId);", session);
+        Assert.Contains("AdvanceStep(read.ReadId);", session); // a clip that ended, a beat that is over
         Assert.Contains("MainThread.BeginInvokeOnMainThread(() => AdvanceIfCurrent(read, index))", session);
         Assert.Contains("_pendingAdvance = true;", session);
         Assert.DoesNotContain("ContinueAfterClip", session);
@@ -233,7 +221,8 @@ public class AnimalSoundClipTests
     {
         string session = File.ReadAllText(Path.Combine(StarterBuilder.RepoRoot(), "src", "DinoReader.App", "ReadingSession.cs"));
 
-        Assert.Contains("PremadeAudioPlan.Plan(segments)", session); // Slice 246 C2: the plan cuts pre-made clips out and hands the rest to AnimalClipRuns.Plan
+        Assert.Contains("PlaybackSteps.Plan(segments)", session); // Slice 278 B: the plan is PlaybackSteps over the Slice 246 C2 plan, which cuts pre-made clips out and hands the rest to AnimalClipRuns.Plan
+        Assert.Contains("PremadeAudioPlan.Plan(segments)", File.ReadAllText(Path.Combine(StarterBuilder.RepoRoot(), "src", "DinoReader.Core", "PlaybackSteps.cs")));
         Assert.Contains("AnimalClipRuns.Plan(run", File.ReadAllText(Path.Combine(StarterBuilder.RepoRoot(), "src", "DinoReader.Core", "PremadeAudio.cs")));
         Assert.Contains("PlayClip(read, clip);", session);
         Assert.Contains("[Reading] animal clip {clip} plays", session);

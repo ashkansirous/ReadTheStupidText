@@ -53,7 +53,7 @@
            (never regenerated); the background is the icon's gradient start colour. -->
       <uap:VisualElements
         DisplayName="Dino Book Reader"
-        Description="Dino Book Reader reads stories aloud with a voice for every character"
+        Description="Dino Book Reader reads picture-book stories aloud with the audio that comes with each book"
         BackgroundColor="#FFD9BF"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
@@ -73,7 +73,7 @@
   </Applications>
 
   <Capabilities>
-    <!-- Network is used only to download the language voice pack; story text never leaves the device. -->
+    <!-- Network is used only to download the books' pre-made audio and the free story list; story text never leaves the device. -->
     <Capability Name="internetClient" />
     <rescap:Capability Name="runFullTrust" />
     <!-- The microphone is used only on the Record screen, behind the grown-up gate, to save a parent's own reading of a page (Slice 111); recordings stay on the device. -->

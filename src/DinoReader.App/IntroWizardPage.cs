@@ -46,7 +46,6 @@ public sealed class IntroWizardPage : ContentPage
 	private IntroPictures _pictures = IntroPictures.None;
 	private readonly WaitOverlay _waitOverlay = DinoWait.OverPage();
 	private readonly WaitController _wait;
-	private StoryLanguageSet? _openedLanguages; // the saved set when the story-languages step opened: a side missing from the saved set later was unticked by a failed download
 	private StoryLanguagePicker? _languagePicker; // the picks of the story-languages step, kept while it shows
 	private int _step;
 	private bool _replay;
@@ -412,21 +411,13 @@ public sealed class IntroWizardPage : ContentPage
 		return AdvanceAsync();
 	}
 
-	// The fourth step (mock 86): the app language is ticked and locked, up to two more can be ticked; Done saves them and starts their voices, Skip keeps the app language only.
+	// The fourth step (mock 86): the app language is ticked and locked, up to two more can be ticked; Done saves them and starts their audio, Skip keeps the app language only.
 	private Grid BuildLanguagesBody()
 	{
 		var heading = new Label { Text = AppResources.StoryLanguages_IntroTitle, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, Margin = new Thickness(0, 10, 0, 0) };
 		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level1);
 		var line = new Label { Text = AppResources.StoryLanguages_IntroLine, FontSize = LineSize, LineHeight = 1.35, TextColor = DinoTokens.Get(DinoTokens.Body), HorizontalTextAlignment = TextAlignment.Center };
-		if (_languagePicker is null)
-		{
-			_openedLanguages = StoryLanguages.Current();
-			_languagePicker = new StoryLanguagePicker(_openedLanguages, null);
-			StoryLanguagePacks packs = _services.GetRequiredService<StoryLanguagePacks>();
-			EventHandler lost = (_, _) => _languagePicker?.Untick(LostSides(StoryLanguages.Current()));
-			packs.Changed += lost;
-			Unloaded += (_, _) => packs.Changed -= lost;
-		}
+		_languagePicker ??= new StoryLanguagePicker(StoryLanguages.Current());
 		var done = new CoralButton { Text = AppResources.Common_Done };
 		done.Clicked += async (_, _) => await _busy.RunAsync(DoneLanguagesAsync);
 		StoryLanguageSet saved = StoryLanguages.Current();
@@ -459,22 +450,13 @@ public sealed class IntroWizardPage : ContentPage
 		PlaceButtons(buttons, done, skip, shape.ButtonsInRow);
 	}
 
-	// A side saved when the step opened but gone from the saved set now was unticked behind the picker's back (a failed download): the picker shows it unticked, and Done must not tick it again.
-	private StoryLanguageSet WithoutLostSides(StoryLanguageSet picked, StoryLanguageSet saved) =>
-		LostSides(saved).Aggregate(picked, (set, side) => set.WithoutSide(side));
-
-	private IEnumerable<string> LostSides(StoryLanguageSet saved) => _openedLanguages?.Sides.Where(side => !saved.Contains(side)) ?? [];
-
-	// Saves the ticked languages, starts the voice of each (they keep downloading behind the next screens; Settings shows their progress) and counts the set.
+	// Saves the ticked languages, starts the pre-made audio of each (it keeps downloading behind the next screens; Settings shows its progress) and counts the set.
 	private async Task DoneLanguagesAsync()
 	{
 		StoryLanguageSet before = StoryLanguages.Current();
-		StoryLanguageSet set = WithoutLostSides(_languagePicker?.Set ?? before, before);
+		StoryLanguageSet set = _languagePicker?.Set ?? before;
 		StoryLanguages.SaveSides(set);
-		StoryLanguagePacks packs = _services.GetRequiredService<StoryLanguagePacks>();
-		HashSet<string> asked = [.. set.Sides.Select(UiLanguage.Resolve).Where(code => packs.StateOf(code) == LanguageVoiceState.NotInstalled)]; // the languages the request below is about
-		VoiceRequestOutcome outcome = await packs.RequestAsync(this, set.Sides, _wait); // on mobile data the grown-up is asked first
-		StartShelfAudio(set.Sides.Except(before.Sides), asked, outcome); // Slice 262: Done leaves and the audio of the shelf books carries on in the background (Settings shows the card)
+		await StartShelfAudioAsync(set.Sides.Except(before.Sides).ToList()); // Slice 262: Done leaves and the audio of the shelf books carries on in the background (Settings shows the card)
 		if (!set.Sides.SequenceEqual(before.Sides))
 		{
 			StoryLanguageCounts.RecordSet(_usage, set, UsageDetail.LanguagesFromIntro, set.Sides.Except(before.Sides)); // only languages new to this phone count as added
@@ -484,13 +466,25 @@ public sealed class IntroWizardPage : ContentPage
 		await AdvanceAsync();
 	}
 
-	// The request's outcome belongs to the languages it was about (their voice was missing); an added language whose voice was already there gets NothingAsked, so a Cancel on the prompt does not stop its audio.
-	private void StartShelfAudio(IEnumerable<string> added, ISet<string> asked, VoiceRequestOutcome outcome)
+	// On mobile data only, the grown-up is asked once for all the added languages whether to download now or wait for Wi-Fi.
+	private async Task StartShelfAudioAsync(IReadOnlyList<string> added)
 	{
-		ShelfAudioPacks shelf = _services.GetRequiredService<ShelfAudioPacks>();
-		foreach (string language in added)
+		VoiceRequestOutcome outcome = VoiceRequestOutcome.NothingAsked;
+		try
 		{
-			shelf.Start(language, asked.Contains(UiLanguage.Resolve(language)) ? outcome : VoiceRequestOutcome.NothingAsked); // a cancelled voice request starts nothing (ShelfAudioStart decides)
+			outcome = await ShelfAudioAsk.AskAsync(this, added);
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: the question could not be shown; the audio then follows the ordinary Wi-Fi rule
+			AudioPackLog.Write($"the mobile data question failed ({ex.GetType().Name})");
+		}
+
+		ShelfAudioPacks shelf = _services.GetRequiredService<ShelfAudioPacks>();
+		IReadOnlyList<string> selected = StoryLanguages.Current().Sides;
+		foreach (string language in added.Where(selected.Contains)) // only those still selected after the question
+		{
+			shelf.Start(language, outcome);
 		}
 	}
 
@@ -592,17 +586,10 @@ public sealed class IntroWizardPage : ContentPage
 
 		var reading = _services.GetRequiredService<ReadingPage>();
 		reading.Load(story);
-		reading.MarkDemoRead(); // the demo read counts nothing, voice ready or not
-		if (VoiceReadyToPlay())
-		{
-			reading.PlayForIntro(); // already playing when it opens (frame 101b); it returns here on its last page
-		}
-		// else the voice is still downloading or failed: the reader shows its own pack status and Back still moves the intro on, so no auto-play over a silent wait
+		reading.MarkDemoRead(); // the demo read counts nothing
+		reading.PlayForIntro(); // already playing when it opens (frame 101b); it returns here on its last page
 		return reading;
 	}
-
-	private bool VoiceReadyToPlay() =>
-		_services.GetRequiredService<VoicePackInstaller>().State is PackInstallState.Idle or PackInstallState.Ready;
 
 	private async Task<Page?> CreateRecordScreenAsync()
 	{

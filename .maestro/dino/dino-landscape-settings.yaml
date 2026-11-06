@@ -33,12 +33,6 @@ onFlowComplete:
     visible:
       id: GalleryDone
     timeout: 30000
-# The one-time "Storyteller voices are ready" note can cover grown-up mode once the background pack download ends: dismiss it only when it is on screen.
-- runFlow:
-    when:
-      visible: Storyteller voices are ready
-    commands:
-      - tapOn: "OK"
 - tapOn:
     id: GallerySettings
     waitToSettleTimeoutMs: 300

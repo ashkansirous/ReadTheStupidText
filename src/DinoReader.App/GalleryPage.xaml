@@ -130,8 +130,6 @@
                 </Border>
             </Grid>
         </VerticalStackLayout>
-        <!-- Slice 115 (mock frame 50): the storyteller download's status line, grown-up mode only. -->
-        <local:StorytellerStatusLine x:Name="StorytellerLine" />
         </VerticalStackLayout>
         </ScrollView>
 
@@ -144,8 +142,6 @@
         <!-- Slice 228 (mock Batch 43 frames 98 and 99): the sticky way back, pinned under the grid in grown-up mode. It reads "Back to my child's shelf", or "Ready for my child" during the first hand-over. -->
         <local:CoralButton Grid.Row="3" Grid.ColumnSpan="2" x:Name="HandoverButton" AutomationId="GalleryDone" Margin="14,12,14,24" Icon="Play" IsVisible="False" Clicked="OnHandoverClicked" />
 
-        <!-- Slice 115 (mock frame 51): the one-time "Storyteller voices are ready" sheet over the whole page. -->
-        <local:StorytellerReadySheet Grid.RowSpan="4" Grid.ColumnSpan="2" x:Name="ReadySheet" />
         <local:BookSheet Grid.RowSpan="4" Grid.ColumnSpan="2" x:Name="BookInfo" />
     </Grid>
 </ContentPage>

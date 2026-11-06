@@ -12,7 +12,7 @@ public partial class LocalizedUiTests
     private static readonly string ResourcesFolder = Path.Combine(AppFolder, "Resources", "Strings");
 
     // Keys whose value is deliberately inherited from English: the product name, file extensions, the unknown-gender mark and the flag map (country codes, Slice 173).
-    private static readonly HashSet<string> MayInherit = ["App_Name", "Add_FileSub", "Cast_UnknownGender", "StoryLanguages_FlagMap"];
+    private static readonly HashSet<string> MayInherit = ["App_Name", "Add_FileSub","StoryLanguages_FlagMap"];
 
     [Fact]
     public void Every_language_file_has_exactly_the_neutral_keys_with_the_same_placeholders()
@@ -68,7 +68,7 @@ public partial class LocalizedUiTests
     public void The_settings_strings_are_translated_in_every_language()
     {
         Dictionary<string, string> neutral = Load(NeutralFile);
-        string[] keys = ["Settings_Title", "Settings_GroupReading", "Settings_GroupPhone", "Settings_NewVersion", "Settings_GearLabel", "Settings_About", "Settings_NarratorVoice", "Narrator_TitleFor", "Gallery_GrownUpsTitle"];
+        string[] keys = ["Settings_Title", "Settings_GroupReading", "Settings_GroupPhone", "Settings_NewVersion", "Settings_GearLabel", "Settings_About", "Gallery_GrownUpsTitle"];
 
         foreach (string file in LanguageFiles())
         {

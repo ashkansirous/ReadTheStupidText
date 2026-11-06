@@ -1,10 +1,7 @@
-using System.Diagnostics;
-using System.Globalization;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls.Shapes;
-using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Mobile.Shared;
 
@@ -15,7 +12,7 @@ public static class FirstRunState
 {
 	private const string HandoverPendingKey = "dino.handover.pending";
 
-	/// <summary>A fresh install has no language yet: Dino no longer picks English by itself (<see cref="SpeechStartup"/>). Every install made
+	/// <summary>A fresh install has no language yet: Dino no longer picks English by itself. Every install made
 	/// before this slice stored one at launch, so none of them sees the first run.</summary>
 	public static bool IsNeeded(ISettingsStore settings) => settings.Language is null;
 
@@ -91,13 +88,12 @@ public sealed class CoralButton : Border
 
 /// <summary>
 /// The first run (Slice 93, Decision 98, mock screens 16-18): the grown-up picks the language, then (Slice 261) at least two of the store's books
-/// (<see cref="FirstBooksPage"/>, the voice pack downloads meanwhile), then the voice download shows its real progress, then "See what Dino can do"
-/// or "Skip" hands over to grown-up mode. The language is stored at the pick; a kill before the books are chosen reopens on the book picker
-/// (<see cref="FirstBooksGate"/>), a kill after goes straight to the gallery while the download carries on. No tutorial.
+/// (<see cref="FirstBooksPage"/>), then "Ready to read": "See what Dino can do" or "Skip" hands over to grown-up mode. Slice 278 part B: there is no voice to download,
+/// so the books' own audio packs (fetched with the books) are all that is fetched. The language is stored at the pick; a kill before the books are chosen reopens on the
+/// book picker (<see cref="FirstBooksGate"/>), a kill after goes straight to the gallery. No tutorial.
 /// </summary>
 public partial class FirstRunPage : ContentPage
 {
-	private const int PercentScale = 100;
 	private const double UnsetWidth = -1; // VisualElement.WidthRequest's "no request"
 	private const double CardPadding = 40;
 	private const double CardCorner = 32;
@@ -105,10 +101,7 @@ public partial class FirstRunPage : ContentPage
 	private const double CardLanguageButtonHeight = 56;
 	private const double PhoneLanguageButtonHeight = 52;
 
-	private readonly SpokenLanguage _spoken;
-	private readonly VoicePackInstaller _installer;
-	private readonly IVoicePackService _packs;
-	private readonly ISpeechReader _reader;
+	private readonly ISettingsStore _settings;
 	private readonly GrownUpMode _mode;
 	private readonly UsageCounter _usage;
 	private readonly IServiceProvider _services;
@@ -122,15 +115,11 @@ public partial class FirstRunPage : ContentPage
 	private Size _windowSize;
 	private FirstRunShape? _shape;
 
-	public FirstRunPage(ISettingsStore settings, SpokenLanguage spoken, VoicePackInstaller installer, IVoicePackService packs, ISpeechReader reader,
-		GrownUpMode mode, UsageCounter usage, IServiceProvider services)
+	public FirstRunPage(ISettingsStore settings, GrownUpMode mode, UsageCounter usage, IServiceProvider services)
 	{
 		InitializeComponent();
 		_selected = LanguageChoice.Current(settings);
-		_spoken = spoken;
-		_installer = installer;
-		_packs = packs;
-		_reader = reader;
+		_settings = settings;
 		_mode = mode;
 		_usage = usage;
 		_services = services;
@@ -165,7 +154,7 @@ public partial class FirstRunPage : ContentPage
 	}
 
 	// Slice 232 part E (mock Batch 44 frames 123, 130): held sideways the language page splits (welcome left, a 3-column grid right with Continue under it) and the
-	// download and ready pages lose their tall top padding and keep clear of the camera cut-out; rotating only re-places views, so the pick and the page shown stay.
+	// ready page loses its tall top padding and keeps clear of the camera cut-out; rotating only re-places views, so the pick and the page shown stay.
 	protected override void OnSizeAllocated(double width, double height)
 	{
 		base.OnSizeAllocated(width, height);
@@ -188,11 +177,9 @@ public partial class FirstRunPage : ContentPage
 	{
 		Thickness padding = shape.Card ? new Thickness(CardPadding) : new Thickness(22, 0, 22, 22);
 		LanguagePanel.Padding = padding;
-		DownloadPanel.Padding = padding;
 		ReadyPanel.Padding = padding;
 		double topPadding = shape.Card ? CardStackTop : shape.Split ? 12 : 28;
 		LanguageStack.Padding = new Thickness(0, topPadding, 0, 16);
-		DownloadStack.Padding = new Thickness(0, shape.Card ? CardStackTop : shape.Split ? 12 : 56, 0, 0);
 		ReadyStack.Padding = new Thickness(0, shape.Card ? CardStackTop : shape.Split ? 12 : 56, 0, 0);
 		PlaceCardFrame(shape);
 		PlaceLanguagePanel(shape);
@@ -238,7 +225,7 @@ public partial class FirstRunPage : ContentPage
 	}
 
 	private (Grid Panel, ScrollView Scroll, View Below)[] CardPages() =>
-		[(LanguagePanel, WelcomeScroll, ContinueButton), (DownloadPanel, DownloadScroll, PickAnother), (ReadyPanel, ReadyScroll, ReadyActions)];
+		[(LanguagePanel, WelcomeScroll, ContinueButton), (ReadyPanel, ReadyScroll, ReadyActions)];
 
 	private void OnCardActionSized(object? sender, EventArgs e)
 	{
@@ -254,7 +241,7 @@ public partial class FirstRunPage : ContentPage
 #if DEBUG
 		if (_shape is { } shape)
 		{
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] firstrun split={shape.Split} columns={shape.LanguageColumns} page={(LanguagePanel.IsVisible ? "language" : DownloadPanel.IsVisible ? "download" : "ready")} selected={_selected} card={shape.Card} cardWidth={shape.CardWidth}");
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] firstrun split={shape.Split} columns={shape.LanguageColumns} page={(LanguagePanel.IsVisible ? "language" : "ready")} selected={_selected} card={shape.Card} cardWidth={shape.CardWidth}");
 		}
 #endif
 	}
@@ -336,26 +323,24 @@ public partial class FirstRunPage : ContentPage
 		}
 	}
 
-	private async void OnContinueClicked(object? sender, EventArgs e) => await _busy.RunAsync(StartDownloadAsync);
+	private async void OnContinueClicked(object? sender, EventArgs e) => await _busy.RunAsync(ContinueAsync);
 
-	private async Task StartDownloadAsync()
+	private async Task ContinueAsync()
 	{
-		// Slice 183: asked once, just before the first big download (choosing the language starts it).
-		await PackNotificationAsk.AskOnceAsync(() => DisplayAlertAsync(AppResources.Notify_Title, AppResources.Notify_Body, AppResources.Notify_Continue, AppResources.Notify_NotNow));
 		_chosen = _selected;
-		FirstBooksGate.Pending = true; // Slice 261: language, then the books (at least two), then the voice download; set before the language is stored so a kill in between reopens on the picker
-		LanguageChoice.Apply(_chosen, _spoken, PackStartReason.User); // the grown-up's own choice; the voice pack downloads while the books are picked
+		FirstBooksGate.Pending = true; // Slice 261: language, then the books (at least two), then "Ready to read"; set before the language is stored so a kill in between reopens on the picker
+		LanguageChoice.Apply(_chosen, _settings); // the grown-up's own choice
 		await ShowBooksAsync();
 	}
 
-	// Slice 261 (mock Batch 47 frames 163-166): the book picker is pushed over the language page. Back returns to the language (the first choice is let go, as Pick another does);
-	// the page's own Completed carries on to the voice download. The picker takes its words from the language just applied.
+	// Slice 261 (mock Batch 47 frames 163-166): the book picker is pushed over the language page. Back returns to the language (the first choice is let go);
+	// the page's own Completed carries on to "Ready to read". The picker takes its words from the language just applied.
 	private async Task ShowBooksAsync()
 	{
 		FirstBooksPage page = _services.GetRequiredService<FirstBooksPage>();
 		page.BackRequested = async () =>
 		{
-			_spoken.Clear();
+			_settings.Language = null;
 			await Navigation.PopAsync();
 		};
 		page.Completed = async () =>
@@ -366,95 +351,23 @@ public partial class FirstRunPage : ContentPage
 		await Navigation.PushAsync(page);
 	}
 
-	/// <summary>The books are on the shelf (Slice 261): shows the voice download of the stored language, then the ready page. Also how a restart mid-picker carries on (the language was stored at the pick).</summary>
+	/// <summary>The books are on the shelf (Slice 261): shows the ready page. Also how a restart mid-picker carries on (the language was stored at the pick).</summary>
 	public void ResumeAfterBooks()
 	{
 		_chosen = _selected;
 		ApplyTexts();
 		LanguagePanel.IsVisible = false;
-		DownloadPanel.IsVisible = true;
-		_installer.Changed -= OnInstallerChanged;
-		_installer.Changed += OnInstallerChanged;
-		Refresh();
-	}
-
-	// The texts of the download and ready screens are set here, after the pick, so they speak the language just chosen.
-	private void ApplyTexts()
-	{
-		DownloadTitle.Text = AppResources.FirstRun_GettingReady;
-		DownloadSub.Text = AppResources.Format(AppResources.FirstRun_Once, LanguageNames.NativeName(_chosen));
-		DownloadState.Text = AppResources.FirstRun_Downloading;
-		PickAnother.Text = AppResources.FirstRun_PickAnother;
-		PhoneVoice.Text = AppResources.FirstRun_PhoneVoice;
-		ReadyTitle.Text = AppResources.FirstRun_Ready;
-		ReadyBody.Text = AppResources.FirstRun_ReadyBody; // Slice 261: true for two books or six, so it names no count
-		HelloLabel.Text = AppResources.FirstRun_HearHello;
-		SetUpButton.Text = AppResources.Intro_SeeWhat;
-		SkipIntroLabel.Text = AppResources.Intro_SkipStart;
-		ReadyUsage.Text = AppResources.FirstRun_Usage;
-	}
-
-	private void OnInstallerChanged(object? sender, EventArgs e) => Refresh();
-
-	// Ready as soon as the chosen language's pack is installed (or there is no neural voice to wait for, so the phone voice reads).
-	// An Unavailable state counts only once the worker has stored the chosen language: before that it is a stale reading.
-	private void Refresh()
-	{
-		if (!DownloadPanel.IsVisible)
-		{
-			return;
-		}
-
-		PackInstallState state = _installer.State;
-		if (LanguageChoice.IsInstalled(_packs, _chosen) || (state == PackInstallState.Unavailable && _spoken.HasStored(_chosen)))
-		{
-			ShowReady();
-			return;
-		}
-
-		bool failed = _installer.CanRetry || state == PackInstallState.InvalidPack;
-		double progress = state == PackInstallState.Downloading ? Math.Clamp(_installer.Progress, 0, 1) : 0;
-		Bar.Progress = progress;
-		DownloadPercent.Text = string.Create(AppResources.Culture, $"{(int)(progress * PercentScale)}%");
-		DownloadProblem.IsVisible = failed;
-		PhoneVoice.IsVisible = failed;
-		DownloadProblem.Text = failed ? LocalizedPackStatus.Compose(state, progress) : null;
-		DownloadProblem.TextColor = DinoTokens.Get(state == PackInstallState.Stopped ? DinoTokens.Body : DinoTokens.Danger); // Slice 204: a deliberate stop is not an error
-	}
-
-	private void ShowReady()
-	{
-		_installer.Changed -= OnInstallerChanged;
-		DownloadPanel.IsVisible = false;
 		ReadyPanel.IsVisible = true;
 	}
 
-	private void OnRetryTapped(object? sender, TappedEventArgs e) => _ = _installer.StartAsync(PackStartReason.User);
-
-	// Offline or a failed download must not trap a fresh install: the phone voice reads until a pack is installed.
-	private void OnPhoneVoiceTapped(object? sender, TappedEventArgs e) => ShowReady();
-
-	// Going back to change the language lets go of the first choice through SpokenLanguage, so a pending switch cannot store it again.
-	// A download already running may finish in the background; nothing waits for it.
-	private void OnPickAnotherTapped(object? sender, TappedEventArgs e)
+	// The texts of the ready screen are set here, after the pick, so they speak the language just chosen.
+	private void ApplyTexts()
 	{
-		_installer.Changed -= OnInstallerChanged;
-		_spoken.Clear();
-		DownloadPanel.IsVisible = false;
-		LanguagePanel.IsVisible = true;
-	}
-
-	private async void OnHelloTapped(object? sender, TappedEventArgs e)
-	{
-		try
-		{
-			string line = AppResources.For(nameof(AppResources.FirstRun_HelloLine), CultureInfo.GetCultureInfo(_chosen));
-			await _reader.SpeakAsync(line);
-		}
-		catch (Exception ex) when (ex is not OperationCanceledException)
-		{
-			Debug.WriteLine($"Dino Reader could not say hello: {ex}");
-		}
+		ReadyTitle.Text = AppResources.FirstRun_Ready;
+		ReadyBody.Text = AppResources.FirstRun_ReadyBody; // Slice 261: true for two books or six, so it names no count
+		SetUpButton.Text = AppResources.Intro_SeeWhat;
+		SkipIntroLabel.Text = AppResources.Intro_SkipStart;
+		ReadyUsage.Text = AppResources.FirstRun_Usage;
 	}
 
 	// "See what Dino can do" (Slice 155, mock 73) starts the intro: a fresh root (in the chosen language and flow direction) replaces this page, and the

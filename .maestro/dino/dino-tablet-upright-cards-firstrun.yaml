@@ -40,4 +40,4 @@ onFlowComplete:
 - assertVisible: Deutsch
 - assertVisible: Continue
 - assertNotVisible:
-    id: FirstRunDownload
+    id: FirstRunReady

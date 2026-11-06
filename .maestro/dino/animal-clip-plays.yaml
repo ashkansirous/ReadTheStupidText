@@ -1,18 +1,17 @@
 # Slice 255: reading Three Little Pigs plays a real pig recording where the pig's sound word used to be spoken, and goes on with the next words afterwards.
 # The flow fails when the "[Reading] animal clip Pig plays" line is missing: run-flows.ps1 checks every expect-log line after the flow (the wait below is only a delay for the read to reach the slot).
-# Needs the installed voice pack on the device (the device stage installs it first); like leave-book-stops-read it keeps the app's data.
+# Slice 278 part B: nothing speaks, so no voice pack is needed; the book's pieces without a clip are shown for a beat each (1.2 s) until the pig's slot is reached.
 # To see it fail against the old behaviour: on the old build the sound word is spoken and "[Reading] animal clip Pig plays" never appears.
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK open-book opened page=1
 # expect-log: HOOK read start
 # expect-log: [Reading] animal clip Pig plays
-# expect-log: CHUNK_SYNTH 0 start
-# The open-book hook starts the read without the "[Reading] read starts" line (that one is logged on the other path). The last line is only a weak "read continues" mark: the checker does not order lines, and in the device run it was logged again after the clip.
+# The open-book hook starts the read without the "[Reading] read starts" line (that one is logged on the other path)..
 appId: uk.sirous.dinoreader.dbg
 name: A pig's sound is a real recording that plays inside the read
 ---
 - launchApp:
-    # No clearState: clearing the app's data would remove the neural voice pack, and skip-first-run skips the page that installs it.
+    # No clearState: the app keeps its data, as the other read flows do.
     arguments:
       cmd: skip-first-run
       lang: en

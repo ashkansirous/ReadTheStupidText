@@ -1,6 +1,5 @@
 # Slice 250: playing a book, leaving it with Back, opening another and pressing Play records, in this order and under one session id: read_started, book_left, read_stopped left_book, book_opened, read_started.
 # The Debug build writes a `[Usage] <name> <detail> session=<id>` line for each count it is asked to record (before the sampling and switch checks), so no Worker is needed and nothing is sent: the harness off switch stays on.
-# Needs the installed voice pack on the device (the device stage installs it first), as leave-book-stops-read.yaml does.
 # expect-log: HOOK skip-first-run ok
 # expect-log: [Usage] book_opened
 # expect-log: [Usage] read_started
@@ -14,7 +13,7 @@ appId: uk.sirous.dinoreader.dbg
 name: Playback events are recorded in order under one session (Dino)
 ---
 - launchApp:
-    # No clearState: it would remove the neural voice pack (see leave-book-stops-read.yaml).
+    # No clearState: the app keeps its data (see leave-book-stops-read.yaml).
     arguments:
       cmd: skip-first-run
       lang: en

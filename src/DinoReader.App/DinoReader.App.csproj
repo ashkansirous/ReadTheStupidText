@@ -118,19 +118,20 @@
 		<PackageReference Include="Xamarin.Google.Android.Play.App.Update" Version="2.1.0.20" />
 	</ItemGroup>
 
-	<!-- ExcludeAssets does not flow through a project reference (see AndroidSherpaPackaging.props). -->
+	<!-- Slice 278 part B: Dino calls no speech engine, but the sherpa-onnx and onnxruntime packages still reach this project through Mobile.Shared (and Infrastructure on Windows), and NuGet's
+	     ExcludeAssets does not flow through a project reference. These imports are what keep the wrong-OS native libraries and the duplicate onnxruntime.dll out of the packages (and, on iOS, link
+	     the framework Mobile.Shared's P/Invokes need); removing them here would break the Android, iOS and Windows packages. They go with the repo split, when Dino stops referencing Mobile.Shared. -->
 	<Import Project="..\AndroidSherpaPackaging.props" />
 	<Import Project="..\AndroidRelease.props" />
 	<!-- Slice 162: the iOS URL scheme of the Debug-only test hooks (the props adds it in Debug iOS builds only). -->
 	<PropertyGroup><TestHookPlist>TestHooks.Dino.plist</TestHookPlist></PropertyGroup>
 	<Import Project="..\ReadTheStupidText.Mobile.Shared\Testing\TestHooks.props" />
 
-	<!-- iOS neural voice and OCR native packaging (Slice 67): the sherpa-onnx framework fetch and
-	     onnxruntime, imported like the Android one above. -->
+	<!-- The same reason as above (iOS framework fetch and link). -->
 	<Import Project="..\ReadTheStupidText.Mobile.Shared\IosSherpaPackaging.props" />
 
 	<!-- Same fix as the RTST App: the Windows App SDK pulls WinML, whose onnxruntime.dll collides with
-	     sherpa-onnx's version-matched one at the package root (APPX1101). We use sherpa's. -->
+	     sherpa-onnx's version-matched one at the package root (APPX1101). The same reason as above. -->
 	<Target Name="RemoveWinMlOnnxRuntimeDuplicate" AfterTargets="GetPackagingOutputs" BeforeTargets="_ComputeAppxPackagePayload" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
 		<ItemGroup>
 			<PackagingOutputs Remove="@(PackagingOutputs)" Condition="'%(FileName)%(Extension)' == 'onnxruntime.dll' and $([System.String]::Copy('%(FullPath)').Replace('\','/').ToLowerInvariant().Contains('/microsoft.windows.ai.machinelearning/'))" />

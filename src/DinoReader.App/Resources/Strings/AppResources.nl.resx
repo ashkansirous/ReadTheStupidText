@@ -5,31 +5,19 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
     <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
-  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
   <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
   <data name="Common_Cancel" xml:space="preserve"><value>Annuleren</value></data>
-  <data name="PackStatus_Resolving" xml:space="preserve"><value>Zoeken naar natuurlijke stemmen…</value></data>
-  <data name="PackStatus_Downloading" xml:space="preserve"><value>Natuurlijke stemmen worden gedownload… {0}</value></data>
-  <data name="PackStatus_Offline" xml:space="preserve"><value>Geen verbinding. Voorlezen met de stem van de telefoon. Tik om de download van de stem opnieuw te proberen.</value></data>
-  <data name="PackStatus_Waiting" xml:space="preserve"><value>Wachten op internet. Het gaat vanzelf verder zodra je weer online bent. Tik om het nu te proberen.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Wachten op wifi. Het gaat vanzelf verder via wifi. Tik om nu te downloaden.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Wachten op internet · {0}%</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Wachten op wifi · {0}%</value><comment>Machine draft: needs native review</comment></data>
-  <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Gaat vanzelf verder zodra je weer online bent.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Getting" xml:space="preserve"><value>{0}-audio ophalen voor je boeken</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} heeft nog geen {1}-audio. Dino’s leesstem leest het voor.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} en {2} andere hebben nog geen {1}-audio. Dino’s leesstem leest ze voor.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} heeft nog geen {1}-audio. Het wordt voorgelezen met zijn eigen audio zodra die is gedownload.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} en {2} andere hebben nog geen {1}-audio. Ze worden voorgelezen met hun eigen audio zodra die is gedownload.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Wachten op internet…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Wachten op wifi…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Voorbereiden…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>Een deel van de {0}-audio kon nog niet worden opgehaald. Dino probeert het later opnieuw.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_AudioUnavailable" xml:space="preserve"><value>Dit boek heeft in deze taal nog geen audio.</value></data>
+  <data name="Reading_NoSound" xml:space="preserve"><value>Dit deel heeft geen geluid</value></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Opnieuw</value><comment>Machine draft: needs native review</comment></data>
-  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>De download van de stem is beschadigd. Voorlezen met de stem van de telefoon. Tik om het opnieuw te proberen.</value></data>
-  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Het pakket met natuurlijke stemmen is onbruikbaar. Voorlezen met de stem van de telefoon.</value></data>
-  <data name="PackStatus_Failed" xml:space="preserve"><value>Natuurlijke stemmen konden niet worden gedownload. Voorlezen met de stem van de telefoon. Tik om het opnieuw te proberen.</value></data>
   <!-- Slice 204: machine draft, for native review -->
-  <data name="PackStatus_Stopped" xml:space="preserve"><value>Download gestopt. Voorlezen met de stem van de telefoon. Tik om te downloaden.</value></data>
-  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Er is nog geen natuurlijke stem voor jouw taal. Voorlezen met de stem van de telefoon.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Terug</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Opslaan</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Klaar</value></data>
@@ -116,10 +104,6 @@
   <data name="FirstRun_Hello" xml:space="preserve"><value>Hallo! In welke taal lezen we?</value></data>
   <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino downloadt er een stem voor. Je kunt de taal later wijzigen achter het slot.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Doorgaan</value></data>
-  <data name="FirstRun_GettingReady" xml:space="preserve"><value>Dino’s stem wordt klaargemaakt</value></data>
-  <data name="FirstRun_Once" xml:space="preserve"><value>{0} stemmen · dit gebeurt maar één keer</value></data>
-  <data name="FirstRun_Downloading" xml:space="preserve"><value>Downloaden…</value></data>
-  <data name="FirstRun_PickAnother" xml:space="preserve"><value>Kies een andere taal</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Klaar om te lezen!</value></data>
   <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Elk personage krijgt een eigen stem. Je boeken staan op de plank.</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Kies je eerste boeken</value><comment>Machine draft: needs native review</comment></data>
@@ -132,8 +116,6 @@
   <data name="FirstBooks_BookOf" xml:space="preserve"><value>Boek {0} van {1}</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Maak verbinding met internet om je eerste boeken te kiezen</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino heeft twee boeken nodig voordat je begint. Zet wifi of mobiele data aan en probeer het opnieuw.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="FirstRun_HearHello" xml:space="preserve"><value>Hoor Dino hallo zeggen</value></data>
-  <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hallo! Ik ben Dino. Laten we samen een verhaal lezen.</value></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Ontdek wat Dino kan</value></data>
   <data name="Intro_SkipStart" xml:space="preserve"><value>Overslaan, begin met lezen</value></data>
   <data name="Intro_SkipAll" xml:space="preserve"><value>Alles overslaan</value></data>
@@ -150,7 +132,6 @@
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lees het met je eigen stem</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Neem jezelf op terwijl je een verhaal voorleest, pagina voor pagina. Je kind kan het altijd afspelen.</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>Introductie opnieuw bekijken</value></data>
-  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Doorgaan met de telefoonstem</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Klaar voor mijn kind</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Volwassenenmodus</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Taal</value></data>
@@ -161,15 +142,9 @@
   <data name="Settings_NewVersion" xml:space="preserve"><value>Nieuwe versie</value></data>
   <data name="Settings_GearLabel" xml:space="preserve"><value>Instellingen (volwassenen)</value></data>
   <data name="Settings_About" xml:space="preserve"><value>Over en updates</value></data>
-  <data name="Settings_NarratorVoice" xml:space="preserve"><value>Stem van de verteller</value></data>
   <data name="Settings_On" xml:space="preserve"><value>Aan</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Uit</value></data>
   <data name="Language_PageSub" xml:space="preserve"><value>Instellingen, de winkel en de plank</value></data>
-  <data name="Narrator_ListIntro" xml:space="preserve"><value>Elke verhaaltaal heeft zijn eigen verteller.</value></data>
-  <data name="Narrator_OneIntro" xml:space="preserve"><value>Wie de stukken tussen de personages leest, in elk {0} boek.</value></data>
-  <data name="Narrator_TitleFor" xml:space="preserve"><value>Stem van de verteller ({0})</value></data>
-  <data name="Narrator_NoVoiceValue" xml:space="preserve"><value>Niet gedownload</value></data>
-  <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>De stemmen voor {0} staan nog niet op deze telefoon. Ga terug, open Taal, kies {0} en download de stem, en kies hier de verteller.</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Volwassenen</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Boeken toevoegen en bewerken</value></data>
   <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Voor volwassenen</value></data>
@@ -193,9 +168,6 @@
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>De pagina’s, plaatjes en stemmen worden van deze telefoon verwijderd. Je kunt het gratis opnieuw toevoegen vanuit de winkel.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Weghalen</value></data>
   <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Meer boeken halen</value></data>
-  <data name="Language_Ready" xml:space="preserve"><value>Klaar</value></data>
-  <data name="Language_Download" xml:space="preserve"><value>Downloaden</value></data>
-  <data name="Language_Downloading" xml:space="preserve"><value>{0}% downloaden</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>Een verhaal in een andere taal wordt nog steeds in zijn eigen taal voorgelezen, tenzij Vertalen naar mijn taal voor dat verhaal aan staat.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Houd 3 seconden ingedrukt.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Houd 3 seconden ingedrukt</value></data>
@@ -213,12 +185,6 @@
   <data name="Speed_SubWindows" xml:space="preserve"><value>Langzamer is makkelijker voor de kleintjes - wijzig met de pijltjes links en rechts</value></data>
   <data name="Reading_ReadAgain" xml:space="preserve"><value>Opnieuw lezen</value></data>
   <data name="Gallery_CornerLineClick" xml:space="preserve"><value>Alleen volwassenen zien dit. De kast van je kind is één klik weg.</value></data>
-  <data name="PackStatus_OfflineClick" xml:space="preserve"><value>Geen verbinding. Voorlezen met de stem van de telefoon. Klik om de download van de stem opnieuw te proberen.</value></data>
-  <data name="PackStatus_WaitingClick" xml:space="preserve"><value>Wachten op internet. Het gaat vanzelf verder zodra je weer online bent. Klik om het nu te proberen.</value></data>
-  <data name="PackStatus_WaitingWifiClick" xml:space="preserve"><value>Wachten op wifi. Het gaat vanzelf verder via wifi. Klik om nu te downloaden.</value></data>
-  <data name="PackStatus_HashMismatchClick" xml:space="preserve"><value>De download van de stem is beschadigd. Voorlezen met de stem van de telefoon. Klik om het opnieuw te proberen.</value></data>
-  <data name="PackStatus_FailedClick" xml:space="preserve"><value>Natuurlijke stemmen konden niet worden gedownload. Voorlezen met de stem van de telefoon. Klik om het opnieuw te proberen.</value></data>
-  <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Download gestopt. Voorlezen met de stem van de telefoon. Klik om te downloaden.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Hoeveel is {0} plus {1}?</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Taal van het verhaal</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · herkend</value></data>
@@ -229,15 +195,8 @@
   <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>{0} kan nog niet worden vertaald</value></data>
   <!-- /Slice 107 -->
   <!-- Slice 108 -->
-  <data name="Cast_VoicesFor" xml:space="preserve"><value>Stemmen voor {0}</value></data>
   <!-- /Slice 108 -->
   <!-- Slice 109 -->
-  <data name="Narrator_Title" xml:space="preserve"><value>Verteller</value></data>
-  <data name="Narrator_Subtitle" xml:space="preserve"><value>De stem van de verteller voor alle boeken</value></data>
-  <data name="Narrator_MyLanguage" xml:space="preserve"><value>MIJN TAAL</value></data>
-  <data name="Narrator_Footnote" xml:space="preserve"><value>Als een personage in een boek de stem van de verteller heeft, geeft Dino dat personage een andere.</value></data>
-  <data name="Cast_ChangeForAll" xml:space="preserve"><value>Wijzigen voor alle boeken</value></data>
-  <data name="Narrator_Sample" xml:space="preserve"><value>Deze stem beluisteren</value></data>
   <!-- /Slice 109 -->
   <!-- Slice 110 -->
   <data name="Book_Title" xml:space="preserve"><value>Dit boek</value></data>
@@ -267,19 +226,8 @@
   <!-- /Slice 111 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
-  <data name="Cast_PickTitle" xml:space="preserve"><value>Wie speelt {0}?</value></data>
-  <data name="Cast_PickSubtitle" xml:space="preserve"><value>Voor dit boek, taal: {0}</value></data>
-  <data name="Cast_FilterGirls" xml:space="preserve"><value>Meisjes</value></data>
-  <data name="Cast_FilterBoys" xml:space="preserve"><value>Jongens</value></data>
-  <data name="Cast_FilterEveryone" xml:space="preserve"><value>Iedereen</value></data>
   <!-- /Slice 113 -->
   <!-- Slice 115 -->
-  <data name="Storyteller_Getting" xml:space="preserve"><value>Verteller-stemmen worden opgehaald…</value></data>
-  <data name="Storyteller_WaitWifi" xml:space="preserve"><value>Verteller-stemmen wachten op wifi</value></data>
-  <data name="Storyteller_WaitInternet" xml:space="preserve"><value>Wachten op internet</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Nu downloaden</value></data>
-  <data name="Storyteller_Ready" xml:space="preserve"><value>De verteller-stemmen zijn klaar</value></data>
-  <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Je verhalen gebruiken nu de nieuwe verteller-stemmen.</value></data>
   <data name="Update_Title" xml:space="preserve"><value>Dino moet bijgewerkt worden</value></data>
   <data name="Update_Body" xml:space="preserve"><value>Vraag een volwassene om de nieuwe versie te halen. Je boeken en opnames blijven precies zoals ze zijn.</value></data>
   <data name="Update_Button" xml:space="preserve"><value>Dino bijwerken</value></data>
@@ -305,16 +253,10 @@
   <data name="Speed_Sub" xml:space="preserve"><value>Langzamer is makkelijker voor kleintjes</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · langzaam</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
-  <data name="Speed_Play" xml:space="preserve"><value>Hoor deze snelheid</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>Dino telt welke boeken worden gelezen, zonder namen of id's. Je kunt dit uitzetten in Instellingen. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik). Als de app crasht, kan hij ook een crashrapport sturen: de fout en een kort technisch logboek, nooit iets wat je hebt gelezen of getypt.</value></data>
-  <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Jouw verteller ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
-  <data name="Storyteller_Failed" xml:space="preserve"><value>De verteller-stemmen konden niet worden opgehaald</value></data>
-  <data name="Storyteller_TryAgain" xml:space="preserve"><value>Opnieuw proberen</value></data>
   <!-- /Slice 115 -->
   <data name="Wizard_Next" xml:space="preserve"><value>Volgende</value></data>
-  <data name="Wait_GettingVoices" xml:space="preserve"><value>De stemmen worden klaargezet…</value></data>
-  <data name="Wait_Stalled" xml:space="preserve"><value>De stem wordt nog klaargemaakt…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Vertalen…</value></data>
   <data name="Wait_WaitingInternet" xml:space="preserve"><value>Wachten op internet</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>Opslaan…</value></data>
@@ -334,34 +276,13 @@
   <data name="Reading_ReadFailed" xml:space="preserve"><value>Er ging iets mis tijdens het lezen.</value></data>
   <data name="Reading_LayoutFailed" xml:space="preserve"><value>Dit verhaal kon niet worden weergegeven. Draai het scherm of wissel van modus om het opnieuw te proberen.</value></data>
   <data name="Reading_PageN" xml:space="preserve"><value>Pagina {0} wordt gelezen</value></data>
-  <data name="Cast_Title" xml:space="preserve"><value>Wie praat er</value></data>
-  <data name="Cast_Narrator" xml:space="preserve"><value>Verteller</value></data>
-  <data name="Cast_Main" xml:space="preserve"><value>HOOFDROL</value></data>
-  <data name="Cast_Edited" xml:space="preserve"><value>AANGEPAST</value></data>
-  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>Terug naar de stem van het boek</value></data>
-  <data name="Cast_SharedVoice" xml:space="preserve"><value>Gedeelde stem</value></data>
-  <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Onbekende spreker</value></data>
-  <data name="Cast_PreviewLine" xml:space="preserve"><value>Hallo! Zo klink ik als ik jouw verhaal voorlees.</value></data>
-  <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Die wijziging kon niet worden opgeslagen</value></data>
-  <data name="Cast_SaveFailedBody" xml:space="preserve"><value>De rolverdeling is niet opgeslagen. Probeer het over een moment opnieuw.</value></data>
-  <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>De stem kon nu niet worden afgespeeld.</value></data>
-  <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>De rolverdeling kon niet worden geopend</value></data>
-  <data name="Cast_LoadFailedBody" xml:space="preserve"><value>De rolverdeling kon voor dit verhaal niet worden bepaald. Probeer het over een moment opnieuw.</value></data>
-  <data name="Cast_Words_One" xml:space="preserve"><value>{0} woord</value></data>
-  <data name="Cast_Words_Other" xml:space="preserve"><value>{0} woorden</value></data>
-  <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} regel</value></data>
-  <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} regels</value></data>
-  <data name="Cast_UsesNarrator" xml:space="preserve"><value>gebruikt de stem van de verteller</value></data>
-  <data name="Cast_Hear" xml:space="preserve"><value>Hoor {0}</value></data>
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Dierengeluiden</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>De dieren zeggen af en toe “Knor!” of “Mê!”, in elk boek</value></data>
-  <data name="Cast_SharedNote" xml:space="preserve"><value>Dit boek heeft meer personages dan de {0} vertelfiguren die er zijn, dus sommige klinken hetzelfde. De verteller wordt nooit aan een personage gegeven.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Vertaalpakket voor {0} ophalen…</value></data>
   <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>In welke talen moeten de verhalen zijn?</value></data>
   <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Kies er maximaal twee extra. Je kind kan tijdens het lezen wisselen.</value></data>
   <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>App-taal</value></data>
   <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>Overslaan, alleen {0}</value></data>
-  <data name="StoryLanguages_Getting" xml:space="preserve"><value>Stem wordt klaargezet · {0}%</value></data>
   <data name="StoryLanguages_Full" xml:space="preserve"><value>Drie gekozen. Haal er één weg om een andere te kiezen.</value></data>
   <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>Verhaaltalen</value></data>
   <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>Je kind kan tijdens het lezen tussen deze talen wisselen. Maximaal drie.</value></data>
@@ -375,20 +296,11 @@
   <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Je bent niet op wifi. {0} wordt gedownload via mobiele data.</value></data>
   <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Nu downloaden</value></data>
   <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Wachten op wifi</value></data>
-  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>Wachten op wifi</value></data>
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Je boeken worden bijgewerkt…</value></data>
   <!-- /Slice 181 -->
   <!-- Slice 183: machine draft, for native review -->
-  <data name="Notify_Title" xml:space="preserve"><value>Blijven downloaden als de telefoon vergrendeld is?</value></data>
-  <data name="Notify_Body" xml:space="preserve"><value>Sta meldingen toe zodat de stem blijft downloaden terwijl de telefoon vergrendeld is of je andere apps gebruikt. Je ziet de voortgang daar.</value></data>
-  <data name="Notify_NotNow" xml:space="preserve"><value>Niet nu</value></data>
-  <data name="Notify_Continue" xml:space="preserve"><value>Doorgaan</value></data>
   <!-- Slice 208: machine draft, for native review -->
-  <data name="PackNotify_Downloading" xml:space="preserve"><value>De {0}-stem wordt klaargemaakt ({1} MB) · {2}</value></data>
-  <data name="PackNotify_PausedTitle" xml:space="preserve"><value>Download gepauzeerd. Tik om af te ronden.</value></data>
-  <data name="PackNotify_Named" xml:space="preserve"><value>{0}-stem ({1} MB)</value></data>
-  <data name="PackNotify_PausedDetail" xml:space="preserve"><value>{0}-stem ({1} MB) · {2}% klaar</value></data>
   <data name="BackCover_StoryBy" xml:space="preserve"><value>Verhaal van {0}</value></data>
   <data name="BackCover_OriginalStoryBy" xml:space="preserve"><value>Oorspronkelijk verhaal van {0}</value></data>
   <data name="BackCover_Traditional" xml:space="preserve"><value>Een traditioneel verhaal</value></data>

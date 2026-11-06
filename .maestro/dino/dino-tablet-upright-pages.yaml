@@ -1,19 +1,18 @@
 # Slice 234 part C (mock Batch 45 frames 142, 144, 146): on a tablet held upright (run on RTST_Tablet, 800 x 1280 dp) Record shows the page picture, the words at 30 sp, the recordings line and the microphone centred at the foot;
-# Cast is two columns; Backup has its two cards side by side. Each page logs its tablet-upright line once its layout is applied. Tablet emulator only: a phone never logs [TabletUpright].
+# Backup has its two cards side by side (Slice 278 part B: the Cast screen is gone). Each page logs its tablet-upright line once its layout is applied. Tablet emulator only: a phone never logs [TabletUpright].
 # Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback. The gate is not tapped: the enter-grown-up hook stands in for a passed gate (grown-ups-button.yaml covers the gate chain).
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK enter-grown-up ok
 # run-flows matches whole tokens, so each line is listed by its first tokens; the numbers that depend on the book are left out.
 # expect-log: [TabletUpright] record words=30
-# expect-log: [TabletUpright] cast columns=2 picker=560
 # expect-log: [TabletUpright] backup sideBySide=True
 appId: uk.sirous.dinoreader.dbg
-name: Record, Cast and Backup use the tablet-upright layouts
+name: Record and Backup use the tablet-upright layouts
 onFlowComplete:
   - setOrientation: PORTRAIT
 ---
 - launchApp:
-    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow only opens a starter book's Record and Cast and the Backup page, and records, saves and restores nothing.
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow only opens a starter book's Record and the Backup page, and records, saves and restores nothing.
     clearState: true
     permissions:
       all: allow
@@ -33,12 +32,6 @@ onFlowComplete:
     visible:
       id: GalleryDone
     timeout: 30000
-# The one-time "Storyteller voices are ready" note may cover the shelf: dismiss it by its OK, only when it is on screen.
-- runFlow:
-    when:
-      visible: Storyteller voices are ready
-    commands:
-      - tapOn: "OK"
 # Record (142): header with Done, the words, the recordings line and the microphone are on screen together, upright.
 - tapOn:
     id: TileMore
@@ -62,29 +55,6 @@ onFlowComplete:
 - tapOn:
     id: GrownUpDone
     waitToSettleTimeoutMs: 300
-- extendedWaitUntil:
-    visible:
-      id: GalleryDone
-    timeout: 15000
-# Cast (144): two columns, the narrator and Done on screen; the picker card is checked on the device stage by its log line.
-- tapOn:
-    id: TileMore
-    index: 0
-    waitToSettleTimeoutMs: 300
-- extendedWaitUntil:
-    visible:
-      id: BookSheetRemove
-    timeout: 10000
-- tapOn:
-    text: Cast
-    waitToSettleTimeoutMs: 300
-- extendedWaitUntil:
-    visible: "Who’s speaking"
-    timeout: 30000
-- assertVisible:
-    id: GrownUpDone
-- tapOn:
-    id: GrownUpDone
 - extendedWaitUntil:
     visible:
       id: GalleryDone

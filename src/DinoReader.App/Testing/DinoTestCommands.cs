@@ -13,7 +13,7 @@ using ReadTheStupidText.Mobile.Shared.Testing;
 namespace DinoReader.Testing;
 
 /// <summary>
-/// Dino Reader's own Debug test command (Slice 175): <c>open-book id=&lt;starter&gt; [page=n] [play=1|page] [speed=2]</c> opens that book's reading screen on page n
+/// Dino Reader's own Debug test command (Slice 175): <c>open-book id=&lt;starter&gt; [page=n] [play=1|page]</c> opens that book's reading screen on page n
 /// (1-based, default 1), like a child tapping the tile, and with <c>play=1</c> reads from that page on to the end of the book on the app's own reader (the same session the Play
 /// button uses); <c>play=page</c> stops once the page is read, so a timing run is finite. <c>id</c> is the book's package id, its story id or its title as a slug (<c>three-little-pigs</c>). It registers itself with the
 /// dispatcher, so no app start-up code changes; Release has none of it. Outcome lines: <c>HOOK open-book opened ...</c> or <c>failed ...</c>;
@@ -39,17 +39,12 @@ internal static partial class DinoTestCommands
 	private const string MissTextMismatch = "text_mismatch";
 	private const int MismatchEvery = 3;
 	private const string StartedOutcome = "started";
-	private const string VoiceKey = "voice";
-	private const string VoiceOn = "1";
 	private const string ForceKey = "force";
-	private const int StoredWaitMilliseconds = 240000;
 	private const string IdKey = TestHookDispatcher.IdKey;
 	private const string PageKey = "page";
 	private const string PlayKey = "play";
 	private const string PlayOn = "1";
 	private const string PlayPageOnly = "page";
-	private const string SpeedKey = "speed";
-	private const string VoiceIdKey = "voiceId";
 	private const string SessionField = "_session";
 	private const int RetryMilliseconds = 250;
 	private const int StableChecks = 4;
@@ -65,7 +60,7 @@ internal static partial class DinoTestCommands
 	internal static void Register()
 	{
 		TestHookDispatcher.AppCommands = Run;
-		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, VoiceKey, ForceKey, VoiceIdKey, ModeKey, ReorderFromKey, ReorderToKey];
+		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, ForceKey, ModeKey, ReorderFromKey, ReorderToKey];
 	}
 
 	private static string? Run(TestHookCommand command)
@@ -158,9 +153,9 @@ internal static partial class DinoTestCommands
 		return $"{TestHookDispatcher.Ok} {language}";
 	}
 
-	// Slice 209: the Language page's pick path (LanguageChoice.Apply: screens' culture and stored UI language, then SpokenLanguage.Use for the voice pack as a grown-up's tap),
-	// then the root rebuilt in the new language as leaving that page does. A code that is not one of the fifteen fails loudly (UiLanguage.Resolve would fall back to English).
-	// The voice-pack start (SpokenLanguage.Use) runs only with voice=1: it is known to crash the Debug x86_64 emulator build (see CompleteFirstRun), so the default skips it and a real phone passes voice=1.
+	// Slice 209: the Language page's pick path (LanguageChoice.Apply: screens' culture, stored UI language and the stored language), then the root rebuilt in the new language as leaving
+	// that page does. A code that is not one of the fifteen fails loudly (UiLanguage.Resolve would fall back to English). Slice 278 part B: no voice pack is started, so there is no voice=
+	// switch; a flow that still passes one (voice: "0") is ignored.
 	private static string SetLanguage(TestHookCommand command)
 	{
 		string code = command.Get(TestHookDispatcher.LanguageKey, string.Empty);
@@ -169,39 +164,9 @@ internal static partial class DinoTestCommands
 			return $"{TestHookDispatcher.Failed} {TestHookDispatcher.Unknown} {code}";
 		}
 
-		IServiceProvider services = IPlatformApplication.Current!.Services;
-		bool withVoice = command.Get(VoiceKey, string.Empty) == VoiceOn;
-		if (withVoice)
-		{
-			SpokenLanguage spoken = services.GetRequiredService<SpokenLanguage>();
-			LanguageChoice.Apply(code, spoken, PackStartReason.User);
-			_ = LogStoredWhenServedAsync(spoken, UiLanguage.Resolve(code));
-		}
-		else
-		{
-			services.GetRequiredService<ISettingsStore>().Language = LanguageChoice.ApplyScreens(code); // as CompleteFirstRun: the stored language is what the state hook reports
-		}
-
+		LanguageChoice.Apply(code, IPlatformApplication.Current!.Services.GetRequiredService<ISettingsStore>()); // the stored language is what the state hook reports
 		((DinoApp)Microsoft.Maui.Controls.Application.Current!).RebuildRoot();
-		return withVoice ? StartedOutcome : $"{TestHookDispatcher.Ok} {UiLanguage.Resolve(code)}";
-	}
-
-	// SpokenLanguage.Use stores the language on a worker only after the previous language's pack download has settled (ServeAsync waits for it), so on a phone that was still fetching the last
-	// language the stored setting (what the state hook reports) lags the tap. The hook therefore answers ok only once the language is stored, or failed after a bound.
-	private static async Task LogStoredWhenServedAsync(SpokenLanguage spoken, string language)
-	{
-		for (int waited = 0; waited < StoredWaitMilliseconds; waited += RetryMilliseconds)
-		{
-			if (spoken.HasStored(language))
-			{
-				Log($"{SetLanguageName} {TestHookDispatcher.Ok} {language}");
-				return;
-			}
-
-			await Task.Delay(RetryMilliseconds);
-		}
-
-		Log($"{SetLanguageName} {TestHookDispatcher.Failed} not stored within {StoredWaitMilliseconds / 1000} s");
+		return $"{TestHookDispatcher.Ok} {UiLanguage.Resolve(code)}";
 	}
 
 	// Slice 209: stages the store's newer version of the book for the next cold start (BookUpdater.StageNowAsync, the staging the 7-day check uses). Logs
@@ -230,7 +195,7 @@ internal static partial class DinoTestCommands
 
 	// Slice 246 C2 (Debug only): installs a small fixture audio pack for a book on the shelf, through the real pack store (size check, unzip, completeness check, rename), so a flow can read the
 	// book with pre-made clips without the network. Every translated piece of the book's table for the language gets the same short bundled recording (the pig's), keyed by the piece text's hash,
-	// so a piece the table lacks (a speaker tag the app adds) is still read by the device voice. Logs "HOOK install-audio-pack ok <book> <lang> v1" or "failed <reason>".
+	// so a piece the table lacks (a speaker tag the app adds) has no clip and is shown for a beat. Logs "HOOK install-audio-pack ok <book> <lang> v1" or "failed <reason>".
 	// Slice 273: miss=text_mismatch stores a wrong hash for every third entry, so those pieces find no clip (ClipMiss.TextMismatch) and the read is partial; no miss option = a complete pack.
 	private static async Task InstallAudioPackAsync(string id, string language, bool mismatch = false)
 	{
@@ -348,13 +313,7 @@ internal static partial class DinoTestCommands
 		BookMatch.Find(await library.ListAsync(), id)?.SourceId ?? id;
 
 	// Waits for the gallery to be the window's root (a new window starts in kids' mode and would undo an earlier Enter), then enters grown-up mode on the UI thread.
-	// The one-time "Storyteller voices are ready" scrim would cover the gear and the book "..." buttons, so the hook marks it as seen before entering.
-	private static void EnterAcknowledgingReadyNote()
-	{
-		IServiceProvider services = IPlatformApplication.Current!.Services;
-		services.GetRequiredService<StorytellerDefault>().AcknowledgeReady();
-		services.GetRequiredService<GrownUpMode>().Enter();
-	}
+	private static void EnterGrownUpMode() => IPlatformApplication.Current!.Services.GetRequiredService<GrownUpMode>().Enter();
 
 	// The window's start-up stop/resume calls can still reset kids' mode: enter, then wait until grown-up mode has stayed on for several checks in a row (entering again when it was reset), within a bound.
 	private static async Task<bool> EnterUntilStableAsync()
@@ -367,7 +326,7 @@ internal static partial class DinoTestCommands
 			if (!await MainThread.InvokeOnMainThreadAsync(() => mode.IsGrownUp))
 			{
 				stable = 0;
-				await MainThread.InvokeOnMainThreadAsync(EnterAcknowledgingReadyNote);
+				await MainThread.InvokeOnMainThreadAsync(EnterGrownUpMode);
 			}
 			else if (++stable >= StableChecks)
 			{
@@ -452,17 +411,6 @@ internal static partial class DinoTestCommands
 			string id = command.Get(IdKey, string.Empty);
 			int page = int.TryParse(command.Get(PageKey, "1"), out int parsed) && parsed >= 1 ? parsed : 1;
 			string play = command.Get(PlayKey, string.Empty);
-			if (!TrySetSpeed(command.Get(SpeedKey, string.Empty)))
-			{
-				Log($"{Name} failed bad speed");
-				return;
-			}
-
-			if (!TrySetVoice(command.Get(VoiceIdKey, string.Empty)))
-			{
-				return;
-			}
-
 			await OpenBookAsync(id, page, play);
 		}
 		catch (Exception ex)
@@ -470,67 +418,6 @@ internal static partial class DinoTestCommands
 			// no-fallback: Debug test hook, logs the fault
 			Log($"{Name} fault {TestHookLog.FaultSummary(ex)}");
 		}
-	}
-
-	// Item 1 of Slice 221: voiceId=<id> makes the read use that voice, as a voice pick does: the reader's own voice (SetVoice, what a read takes at its start, in this process only) and, when an installed
-	// pack lists the voice, that language's narrator (StoryVoicing.SetNarrator, what a book's voiced segments take). The narrator PERSISTS (the same stored setting a Settings pick writes), by design:
-	// the hook exists so runs stop editing prefs by hand. A flow that must leave a dev install as it found it ends by setting the voice it started with. The id must be one an installed pack or the
-	// built-in Supertonic table offers. Logs "HOOK open-book voice <id>" (the line a check counts) or "failed unknown voice <id>"; no voiceId leaves the voice alone.
-	private static bool TrySetVoice(string voiceId)
-	{
-		if (voiceId.Length == 0)
-		{
-			return true;
-		}
-
-		IServiceProvider services = IPlatformApplication.Current!.Services;
-		var voicing = services.GetRequiredService<StoryVoicing>();
-		string? packLanguage = PackLanguageOfVoice(voicing, voiceId);
-		if (packLanguage is null && !ModelOffersVoice(services, voiceId))
-		{
-			Log($"{Name} failed {TestHookDispatcher.Unknown} voice {voiceId}");
-			return false;
-		}
-
-		services.GetRequiredService<ISpeechReader>().SetVoice(voiceId);
-		if (packLanguage is not null)
-		{
-			voicing.SetNarrator(packLanguage, voiceId);
-		}
-
-		Log($"{Name} voice {voiceId}");
-		return true;
-	}
-
-	// The language that itself lists the voice (the current one first, then the story languages), or null: a voice is never registered under a language that does not list it.
-	private static string? PackLanguageOfVoice(StoryVoicing voicing, string voiceId)
-	{
-		IEnumerable<string> languages = voicing.NarratorLanguages().Prepend(LanguageChoice.Current());
-		return languages.FirstOrDefault(l => voicing.VoicesFor(l).Any(v => v.Id == voiceId));
-	}
-
-	// True when the model in use, or the built-in English table, offers the voice (it can be spoken, but belongs to no language's narrator).
-	private static bool ModelOffersVoice(IServiceProvider services, string voiceId)
-	{
-		IReadOnlyList<VoiceInfo> modelVoices = services.GetRequiredService<IVoiceModelService>().Paths?.AvailableVoices ?? SupertonicVoiceTable.Voices;
-		return modelVoices.Any(v => v.Id == voiceId);
-	}
-
-	// The reader's own speed, as the read hook sets it (nothing is stored); no speed given leaves it alone.
-	private static bool TrySetSpeed(string text)
-	{
-		if (text.Length == 0)
-		{
-			return true;
-		}
-
-		if (!double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double speed))
-		{
-			return false;
-		}
-
-		IPlatformApplication.Current!.Services.GetRequiredService<ISpeechReader>().SetSpeed(new PlaybackRate(speed));
-		return true;
 	}
 
 	// A fetch-audio-pack download runs in the background; open-book waits for it (bounded) so the read finds the pack, instead of the flow guessing a delay. Never faults (the fetch catches its own errors).

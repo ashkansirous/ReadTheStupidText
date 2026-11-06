@@ -212,7 +212,7 @@ internal static class RecordViews
 			Content = new IconView { Kind = playing ? IconKind.Pause : IconKind.Play, Filled = true, Size = 16, Color = DinoTokens.Get(DinoTokens.Brand) },
 		};
 		SemanticProperties.SetDescription(button, playing ? ReadingText.Pause : AppResources.Rec_Play);
-		CastViews.AddTap(button, play);
+		Taps.AddTap(button, play);
 		return button;
 	}
 
@@ -228,7 +228,7 @@ internal static class RecordViews
 			},
 		};
 		SemanticProperties.SetDescription(button, AppResources.Rec_Redo);
-		CastViews.AddTap(button, redo);
+		Taps.AddTap(button, redo);
 		return button;
 	}
 
@@ -240,7 +240,7 @@ internal static class RecordViews
 			Content = new IconView { Kind = IconKind.Trash, Size = 20, StrokeWidth = 2.2, Color = DinoTokens.Get(DinoTokens.Danger) },
 		};
 		SemanticProperties.SetDescription(button, AppResources.Rec_Delete);
-		CastViews.AddTap(button, delete);
+		Taps.AddTap(button, delete);
 		return button;
 	}
 
@@ -262,7 +262,7 @@ internal static class RecordViews
 			: new IconView { Kind = IconKind.Mic, Color = Colors.White, Size = size * MicShare, StrokeWidth = 2.4, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
 		string caption = recording ? AppResources.Rec_Stop : AppResources.Rec_Start;
 		SemanticProperties.SetDescription(front, caption);
-		CastViews.AddTap(front, tapped);
+		Taps.AddTap(front, tapped);
 		return new VerticalStackLayout
 		{
 			Spacing = 10,
@@ -332,7 +332,7 @@ internal static class RecordViews
 			Content = new IconView { Kind = IconKind.Back, Size = 22, StrokeWidth = 2.6, Color = DinoTokens.Get(DinoTokens.Brand) },
 		};
 		SemanticProperties.SetDescription(back, AppResources.Rec_Previous);
-		CastViews.AddTap(back, () => hasPrevious ? previous() : Task.CompletedTask);
+		Taps.AddTap(back, () => hasPrevious ? previous() : Task.CompletedTask);
 		row.Add(back, 0);
 		row.Add(NextButton(isLast, next), 1);
 		return row;
@@ -349,7 +349,7 @@ internal static class RecordViews
 			Content = new Label { Text = text, FontSize = 16, FontAttributes = FontAttributes.Bold, TextColor = Colors.White, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center },
 		};
 		SemanticProperties.SetDescription(front, text);
-		CastViews.AddTap(front, next);
+		Taps.AddTap(front, next);
 		return new Grid { Children = { edge, front }, HeightRequest = NavSize + 5 };
 	}
 
@@ -365,7 +365,7 @@ internal static class RecordViews
 			Content = new Label { Text = text, FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = Colors.White, VerticalOptions = LayoutOptions.Center },
 		};
 		SemanticProperties.SetDescription(pill, text);
-		CastViews.AddTap(pill, done);
+		Taps.AddTap(pill, done);
 		return pill;
 	}
 
@@ -373,9 +373,9 @@ internal static class RecordViews
 	public static HorizontalStackLayout RailNav(bool hasPrevious, bool isLast, Func<Task> previous, Func<Task> next)
 	{
 		var back = RailArrow(IconKind.Back, AppResources.Rec_Previous, hasPrevious ? 1 : 0.4);
-		CastViews.AddTap(back, () => hasPrevious ? previous() : Task.CompletedTask);
+		Taps.AddTap(back, () => hasPrevious ? previous() : Task.CompletedTask);
 		var forward = isLast ? RailArrow(IconKind.Check, AppResources.Common_Done, 1) : RailArrow(IconKind.Chevron, AppResources.Rec_Next, 1);
-		CastViews.AddTap(forward, next);
+		Taps.AddTap(forward, next);
 		return new HorizontalStackLayout { Spacing = 8, HorizontalOptions = LayoutOptions.Center, Children = { back, forward } };
 	}
 

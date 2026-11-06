@@ -36,8 +36,6 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private readonly ReadingSession _session;
 	private readonly IStoryLibrary _library;
 	private readonly IServiceProvider _services;
-	private readonly VoicePackInstaller _installer;
-	private readonly IVoiceModelService _model;
 	private readonly UsageCounter _usage;
 	private bool _finishCounted;
 	private bool _openCounted;
@@ -50,13 +48,14 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private bool _loadingSeen;
 	private readonly ReadWaitOwner _waitOwner = new();
 	private bool _firstLoadDone; // the first Loading is the book opening; later ones are restarts the reader triggered
-	private readonly SemaphoreSlim _saveLock = new(1, 1); // the cast save and the mode save each read-modify-write _story: one at a time
+	private readonly SemaphoreSlim _saveLock = new(1, 1); // the mode save read-modify-writes _story: one at a time
 	private Story? _story;
 	private readonly TaskCompletionSource _appeared = new(TaskCreationOptions.RunContinuationsAsynchronously);
 	private Task _languageReady = Task.CompletedTask; // the first work-out of the book's story languages (Slice 173)
 	private IReadOnlyList<SentenceSpan> _sentences = [];
 	private ReadingTheme _theme = ReadingTheme.For(false);
 	private bool _visible;
+	private bool _pieceLacksAudio; // the piece now shown has no clip: the audio status line is shown
 	private bool _onStack;
 	private Window? _watchedWindow;
 	private const double FullHeaderRowSpacing = 2;
@@ -71,11 +70,10 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private CancellationTokenSource? _displayCancellation; // the screen's translation: stopped when a newer one starts or the page goes away
 	private ReadingMode _mode = ReadingMode.Text; // the mode on screen now, which a translation that arrives late must not undo
 	private readonly StoryLanguageButton _languageButton; // Slice 173: the child's story-language button, shown only when this book can be read in two or more story languages
-	private string _packStates = string.Empty; // the side languages' voice states the list was worked out with
+	private int _languageButtonVersion; // bumped by every UpdateLanguageButtonAsync call; a result of an older call is dropped
 	private IReadOnlyList<string> _readable = []; // the story languages this book can be read in right now (with nothing to download)
 
-	public ReadingPage(ReadingSession session, IStoryLibrary library, IServiceProvider services,
-		VoicePackInstaller installer, IVoiceModelService model, UsageCounter usage)
+	public ReadingPage(ReadingSession session, IStoryLibrary library, IServiceProvider services, UsageCounter usage)
 	{
 		InitializeComponent();
 		DesktopTips.Set(BackButton, AppResources.Common_Back, DinoKey.Escape); // Slice 235 part B: the tooltip names the key (a no-op off Windows)
@@ -84,15 +82,13 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		_session = session;
 		_library = library;
 		_services = services;
-		_installer = installer;
-		_model = model;
 		_session.SentenceChanged += OnSentenceChanged;
 		_session.StateChanged += OnSessionStateChanged;
+		_session.PieceAudio += OnPieceAudio;
 		_wait = BuildWait();
 		_session.Failed += OnReadFailed;
 		_languageButton = new StoryLanguageButton(LanguageButtonHeight, OnLanguageTappedAsync) { IsVisible = false, AutomationId = "ReadingLanguage" };
 		HeaderControls.Children.Insert(0, _languageButton);
-		ShowPackStatus();
 	}
 
 	private bool _introRead; // Slice 228: opened by the intro's read step, which plays at once and goes back to the intro when the book ends
@@ -170,7 +166,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		TitleLabel.Text = story.Title;
 		SideTitle.Text = story.Title;
 		_sentences = StorySentences.Build(story.Text, LanguageRules.For(story.Language), story.BreakMap());
-		_session.Open(story, _sentences, SaveCastAsync);
+		_session.Open(story, _sentences);
 		_theme = CurrentTheme();
 		_mode = story.Mode;
 		_shownPages = story.Pages;
@@ -235,7 +231,6 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		var translator = _services.GetRequiredService<StoryTranslator>();
 		bool switchable = LanguagePick.BookSwitchable(set.HasChoice, StoryRecordings.Count(story));
 		_readable = switchable ? await ReadableLanguagesAsync(story, set, translator) : [];
-		_packStates = PackStates(set);
 		string effective = EffectiveLanguage(set);
 		_session.SetReadingLanguage(effective);
 		_languageButton.SetLanguage(effective);
@@ -250,16 +245,15 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		return LanguagePick.Effective(_readable, set.Main, StoryLanguages.Pick());
 	}
 
-	// The languages the child may switch to (Slice 173, Decision 2): the book can be read in it with nothing to download, and its voice is already on the phone.
-	// The child can never start a download; the voices come from Settings or the intro, behind the gate.
+	// The languages the child may switch to (Slice 173, Decision 2): the book can be read in it with nothing to download, and the book's pre-made audio in it is already on the phone.
+	// The child can never start a download; the audio comes from Settings or the intro, behind the gate (Slice 278 part B: no voice pack is involved any more).
 	private async Task<IReadOnlyList<string>> ReadableLanguagesAsync(Story story, StoryLanguageSet set, StoryTranslator translator)
 	{
-		var packs = _services.GetRequiredService<StoryLanguagePacks>();
 		var readable = new List<string>();
+		var shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
 		foreach (string language in set.All)
 		{
-			bool voiceThere = language == set.Main || packs.StateOf(language) == LanguageVoiceState.Ready;
-			if (voiceThere && await translator.CanReadInAsync(story, language))
+			if (shelfAudio.OffersBook(language, set.Main, story.SourceId) && await translator.CanReadInAsync(story, language)) // the snapshot's one rule, never the disk
 			{
 				readable.Add(language);
 			}
@@ -268,7 +262,8 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		return readable;
 	}
 
-	// A pack that finished, or an own book that just got its table, changes what the child can switch to; the list and the button are worked out again then.
+	// A pack that finished, or an own book that just got its table, changes what the child can switch to; only the choices are worked out again then.
+	// The open book is never re-rendered and ReadingLanguage never changes under a read: a newly installed language is used when the child picks it or opens the book again.
 	private async Task UpdateLanguageButtonAsync()
 	{
 		if (_story is not { } story || !_onStack)
@@ -276,10 +271,16 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 			return;
 		}
 
+		int version = ++_languageButtonVersion;
 		StoryLanguageSet set = StoryLanguages.Current();
 		var translator = _services.GetRequiredService<StoryTranslator>();
 		bool switchable = LanguagePick.BookSwitchable(set.HasChoice, StoryRecordings.Count(story));
 		IReadOnlyList<string> readable = switchable ? await ReadableLanguagesAsync(story, set, translator) : [];
+		if (version != _languageButtonVersion || !_onStack)
+		{
+			return; // a newer call started meanwhile (or the page was left): only the latest result is applied
+		}
+
 		if (!readable.SequenceEqual(_readable))
 		{
 			StoryLanguageMenu.DismissOpen(Root); // a list open over the old choices closes (its Back path resumes the read) rather than staying orphaned
@@ -287,29 +288,13 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		_readable = readable;
 		_languageButton.IsVisible = _readable.Count >= 2;
-		string shown = LanguagePick.Shown(_readable, _session.ReadingLanguage, set.Main, StoryLanguages.Pick());
-		bool moved = shown != _session.ReadingLanguage;
-		_session.SetReadingLanguage(shown); // the flag and the reads (and usage counts) always name the same language
-		_languageButton.SetLanguage(shown);
-		_packStates = PackStates(set);
-		if (moved)
-		{
-			await ShowStoryAsync();
-		}
 	}
 
-	private string PackStates(StoryLanguageSet set)
+	// A book's audio pack that finished (the shelf audio run raises Changed after each book) changes what the child can switch to.
+	private void OnShelfAudioChanged(object? sender, EventArgs e)
 	{
-		var packs = _services.GetRequiredService<StoryLanguagePacks>();
-		return string.Join(',', set.Sides.Select(side => packs.StateOf(side)));
-	}
-
-	private void OnLanguagePacksChanged(object? sender, EventArgs e)
-	{
-		if (PackStates(StoryLanguages.Current()) != _packStates)
-		{
-			_ = UpdateLanguageButtonSafeAsync();
-		}
+		ShowAudioStatus(); // the audio status line follows the run's progress
+		_ = UpdateLanguageButtonSafeAsync();
 	}
 
 	private async Task UpdateLanguageButtonSafeAsync()
@@ -901,40 +886,22 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
-		StopInheritedReadOnFirstAppearing();
 		_appeared.TrySetResult();
 		_visible = true;
 		_onStack = true;
+		_session.ResumeBeatWhenShown();
 		ApplyScreenAwake();
 		Unsubscribe();
-		_session.Attach();
 		SubscribePlayback();
-		_installer.Changed += OnInstallerChanged;
-		_model.ReadyChanged += OnInstallerChanged;
 		SystemTheme.Changed += OnThemeChanged;
-		_services.GetRequiredService<StoryLanguagePacks>().Changed += OnLanguagePacksChanged;
-		ShowPackStatus();
+		var shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
+		shelfAudio.Changed += OnShelfAudioChanged;
+		_ = shelfAudio.RescanAsync(); // a book opened: its language choices follow the packs on the phone
 		if (CurrentTheme() != _theme)
 		{
 			_theme = CurrentTheme();
 			ApplyTheme();
 		}
-	}
-
-	// Slice 248: every book's session drives the one shared reader, so a book that is opening stops whatever the reader still
-	// holds (an earlier book's read). Only the first appearing: coming back from the gate must not stop this book's own read.
-	// It runs before _appeared is set, so the intro read (PlayWhenShownAsync) starts after the stop.
-	private void StopInheritedReadOnFirstAppearing()
-	{
-		if (_appeared.Task.IsCompleted)
-		{
-			return;
-		}
-
-		_session.Stop(ReadStopReason.Other);
-#if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Reading] opened idle, inherited read stopped");
-#endif
 	}
 
 	// Disappearing also fires for a locked screen, another app or the gate over this page; the read
@@ -945,6 +912,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		base.OnDisappearing();
 		_visible = false;
 		_introPopQueued = false; // a pop that has not run yet must not fire once the page is covered or leaving
+		_session.PauseBeatWhenHidden(); // a piece shown for a beat has no sound, so it must not run on unseen
 		Dispatcher.Dispatch(LeavePageIfOffStack);
 	}
 
@@ -988,10 +956,8 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 	private void Unsubscribe()
 	{
-		_installer.Changed -= OnInstallerChanged;
-		_model.ReadyChanged -= OnInstallerChanged;
 		SystemTheme.Changed -= OnThemeChanged;
-		_services.GetRequiredService<StoryLanguagePacks>().Changed -= OnLanguagePacksChanged;
+		_services.GetRequiredService<ShelfAudioPacks>().Changed -= OnShelfAudioChanged;
 	}
 
 	// The app pins UserAppTheme to Light (kids' palette), so RequestedTheme is always Light and MAUI raises no
@@ -1112,6 +1078,49 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		RenderChrome();
 		ApplyScreenAwake();
 		ApplyWait();
+		ShowAudioStatus();
+	}
+
+	private void OnPieceAudio(bool hasClip)
+	{
+		_pieceLacksAudio = !hasClip;
+		ShowAudioStatus();
+	}
+
+	// A piece with no clip is only shown for a beat, so the page says why there is no sound: the book's audio is downloading (with its progress), waiting for Wi-Fi or the internet, or not there.
+	// Shown while a read is going and its current piece has no clip; the intro's demo read is this same page.
+	private void ShowAudioStatus()
+	{
+		if (_session.State == SessionState.Idle)
+		{
+			_pieceLacksAudio = false; // a stopped read says nothing; the next read's first piece sets it again
+		}
+
+		string? status = _pieceLacksAudio && _story is { } book ? AudioStatusText(book) : null;
+		StatusLabel.Text = status;
+		StatusLabel.IsVisible = status is not null;
+	}
+
+	private string AudioStatusText(Story book)
+	{
+		string language = ReadIn(book);
+		var shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
+		if (!shelfAudio.RunIncludes(language, book.SourceId))
+		{
+			return AppResources.Reading_NoSound; // this book's pack is not being fetched (no pack, already in, another language's run): never promise sound that is not coming
+		}
+
+		ShelfAudioState state = shelfAudio.StateOf(language);
+		return state.Phase switch
+		{
+			ShelfAudioPhase.Running when state.Total > 0 =>
+				AppResources.Format(AppResources.ShelfAudio_Getting, LanguageNames.NativeName(language)) + " " + AppResources.Format(AppResources.Intro_Counter, state.Position, state.Total),
+			ShelfAudioPhase.Running => AppResources.Format(AppResources.ShelfAudio_Getting, LanguageNames.NativeName(language)),
+			ShelfAudioPhase.Preparing => AppResources.ShelfAudio_Preparing,
+			ShelfAudioPhase.WaitingForInternet => AppResources.ShelfAudio_WaitingInternet,
+			ShelfAudioPhase.WaitingForWifi => AppResources.ShelfAudio_WaitingWifi,
+			_ => AppResources.Reading_NoSound, // idle, done, cancelled, failed or the main language: one plain line, never "audio unavailable"
+		};
 	}
 
 	// Slice 143: a read that is waiting for its first audio (the voice, or the translation it needs) shows the wait overlay after 500 ms
@@ -1148,14 +1157,14 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		}
 
 		// Slice 148: this page ends the one wait it began (loading or stalled) as soon as the read no longer needs it; a wait it did not begin (save, import) is left alone.
-		ReadWaitAction action = _waitOwner.Next(loading, _session.Stalled, ForeignWaitActive());
+		ReadWaitAction action = _waitOwner.Next(loading, stalled: false, ForeignWaitActive()); // nothing stalls any more: no engine builds audio while the read waits
 		if (action == ReadWaitAction.End)
 		{
 			EndWait();
 		}
 		else if (action == ReadWaitAction.Begin)
 		{
-			BeginReadWait(loading);
+			BeginReadWait();
 		}
 	}
 
@@ -1164,17 +1173,11 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		return _wait.IsActive && !_waitOwner.Owns;
 	}
 
-	private void BeginReadWait(bool loading)
+	private void BeginReadWait()
 	{
-		if (!loading)
-		{
-			_wait.Begin(WaitStage.Stalled, AppResources.Wait_Stalled, canCancel: true);
-			return;
-		}
-
 		bool translating = IsTranslating();
 		WaitStage stage = translating ? WaitStage.Translating : WaitStage.PreparingVoice;
-		_wait.Begin(stage, translating ? AppResources.Wait_Translating : AppResources.Wait_GettingVoices, canCancel: true); // while a wait runs this re-words it
+		_wait.Begin(stage, translating ? AppResources.Wait_Translating : AppResources.Wait_GettingBook, canCancel: true); // while a wait runs this re-words it
 	}
 
 	// Cancel, or the page leaving: the overlay goes whichever wait showed, and the page owns none.
@@ -1398,42 +1401,6 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		_ = SaveModeAsync(mode);
 	}
 
-	// The casts made on a first read in another language are kept in story.json, on top of whatever the page has saved since (the reading mode).
-	private async Task SaveCastAsync(Story withCast)
-	{
-		await _saveLock.WaitAsync();
-		try
-		{
-			// Merged into the latest stored story (the cast screen may have saved edits meanwhile): only a language that has no cast there yet is added.
-			Story latest = await _library.GetAsync(withCast.Id) ?? _story ?? withCast;
-			Story updated = AddNewCasts(latest, withCast);
-			if (!ReferenceEquals(updated, latest))
-			{
-				await _library.UpdateAsync(updated);
-			}
-
-			_story = _story is { } shown ? AddNewCasts(shown, updated) : updated;
-		}
-		finally
-		{
-			_saveLock.Release();
-		}
-	}
-
-	private static Story AddNewCasts(Story target, Story source)
-	{
-		Story merged = target;
-		foreach (string language in source.LanguageCasts?.Keys ?? [])
-		{
-			if (!merged.HasCastIn(language) && source.CastIn(language).Count > 0)
-			{
-				merged = merged.WithCastIn(language, source.CastIn(language));
-			}
-		}
-
-		return merged;
-	}
-
 	// The choice is remembered per story in story.json. A failed save only loses the preference.
 	private async Task SaveModeAsync(ReadingMode mode)
 	{
@@ -1566,23 +1533,4 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 	private async void OnReadFailed(object? sender, EventArgs e) =>
 		await DisplayAlertAsync(ReadingText.CouldntRead, ReadingText.ReadFailed, ReadingText.Ok);
-
-	private void OnInstallerChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(ShowPackStatus);
-
-	private void OnPackStatusTapped(object? sender, TappedEventArgs e)
-	{
-		if (_installer.CanRetry)
-		{
-			_ = _installer.StartAsync(PackStartReason.User);
-		}
-	}
-
-	// Every non-ready pack state, Failed included, has copy (with its retry hint) in
-	// PackStatusText; tapping the label retries when the installer allows it.
-	private void ShowPackStatus()
-	{
-		string? status = LocalizedPackStatus.Compose(_installer.State, _installer.Progress);
-		StatusLabel.Text = status;
-		StatusLabel.IsVisible = status is not null;
-	}
 }

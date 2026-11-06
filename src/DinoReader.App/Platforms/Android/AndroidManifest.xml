@@ -5,11 +5,11 @@
 		     MlKitInit.EnsureInitialized() starts ML Kit by hand right before a grown-up's translation, scan or text recognition. -->
 		<provider android:name="com.google.mlkit.common.internal.MlKitInitProvider" android:authorities="${applicationId}.mlkitinitprovider" tools:node="remove" />
 	</application>
-	<!-- Network is used only to download the language voice pack and, behind the grown-up gate, the free story list and the stories a grown-up picks (Slice 92), and Google's on-device translation model for a language (Slice 95); text never leaves the device. -->
+	<!-- Network is used only to download the books' pre-made audio and, behind the grown-up gate, the free story list and the stories a grown-up picks (Slice 92); text never leaves the device. -->
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-	<!-- Slice 183: a big voice, translation or scan pack keeps downloading while the phone is locked. A foreground service of type dataSync
-	     holds the download and shows one ongoing progress notification (shown only if notifications are allowed; local, nothing is sent). -->
+	<!-- Slice 183: Mobile.Shared's pack downloader holds a big download in a foreground service of type dataSync with one ongoing progress notification. Dino downloads no voice, translation or scan pack
+	     since Slice 278, so nothing starts it; the three permissions stay because the shared library's service declaration is merged into this manifest (drop them with the repo split). -->
 	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 	<uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

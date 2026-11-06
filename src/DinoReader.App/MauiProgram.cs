@@ -42,22 +42,18 @@ public static class MauiProgram
 				fonts.AddFont("Vazirmatn.ttf", DinoFonts.Persian);
 			});
 
+		// Slice 278 part B: this registers the shared speech reader and voice services too, but nothing in Dino ever resolves them (ReadingSessionNeverAsksForASpeechEngineTests scans the sources for that).
 		builder.AddMobileSharedServices();
-		builder.Services.AddSingleton<SpeechStartup>();
+		builder.Services.AddSingleton<ILanguageChangeNotifier, InertLanguageNotifier>(); // replaces the shared one (last registration wins): a language change must never start a voice pack download in Dino
 		builder.Services.AddSingleton<StoryTranslator>();
-		builder.Services.AddSingleton<SpokenLanguage>();
-		builder.Services.AddSingleton<NarratorChoice>();
-		// Registered here only (Slice 114): with it the voice model service also looks at the installed storyteller packs, so Dino's English books can read with Kokoro.
-		builder.Services.AddSingleton<StorytellerVoices>();
 		builder.Services.AddSingleton<StoryVoicing>();
-		// The storyteller pack downloads by itself and re-casts every book when it lands (Slice 115).
-		builder.Services.AddSingleton<StorytellerDefault>();
 		builder.Services.AddSingleton<IStoryLibrary>(_ => new FileStoryLibrary(Path.Combine(FileSystem.AppDataDirectory, StoriesFolder)));
 		builder.Services.AddSingleton<GrownUpGate>();
 		builder.Services.AddSingleton<ExternalActivityGuard>();
 		builder.Services.AddSingleton<StoryActions>();
 		builder.Services.AddTransient<IMicRecorder, MicRecorder>();
 		builder.Services.AddTransient<IRecordingPlayer, RecordingPlayer>();
+		builder.Services.AddSingleton<OldVoicePacksCleanup>(); // Slice 278 part B review: deletes the old voice packs once, started at launch
 		builder.Services.AddSingleton<OwnBooksCleanup>(); // Slice 278 A3: deletes the families' own books once, started by GalleryPage.OnAppearing, once per app run
 		builder.Services.AddSingleton<StarterStories>();
 		builder.Services.AddSingleton<StagedBookUpdates>();
@@ -65,8 +61,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<StoreClient>();
 		builder.Services.AddSingleton<AppConfigClient>();
 		builder.Services.AddSingleton<UsageCounter>();
-		builder.Services.AddSingleton<ReadTheStupidText.Application.Usage.IFallbackSink, DinoFallbackSink>(); // Slice 273 part B: the shared readers and translators report fallbacks through it
-		builder.Services.AddSingleton<StoryLanguagePacks>();
+		builder.Services.AddSingleton<ReadTheStupidText.Application.Usage.IFallbackSink, DinoFallbackSink>(); // Slice 273 part B: the reading session and the app's own code report fallbacks through it
 		builder.Services.AddSingleton<ShelfAudioPacks>(); // Slice 262: the one owner of the side languages' pre-made audio for the shelf books
 		AddPages(builder.Services);
 
@@ -77,8 +72,6 @@ public static class MauiProgram
 
 		MauiApp app = builder.Build();
 		WireConfigFallbacks(app.Services); // before the first config fetch starts (FlushAsync and BeginCrashReports below), so a fast failure is not lost
-		// Stories still carry their language's narrator on disk, for older builds that require the field (Slice 109).
-		StoryJson.LegacyNarratorOf = language => app.Services.GetRequiredService<StoryVoicing>().LegacyNarratorOf(language);
 		// Counts left from an earlier session go out now (Slice 133); the counter does nothing when counting is off.
 		_ = app.Services.GetRequiredService<UsageCounter>().FlushAsync();
 		BeginCrashReports(app.Services.GetRequiredService<AppConfigClient>());
@@ -131,8 +124,6 @@ public static class MauiProgram
 		services.AddTransient<UpdatePage>();
 		services.AddTransient<BackupPage>();
 		services.AddTransient<LanguagePage>();
-		services.AddTransient<NarratorPage>();
-		services.AddTransient<NarratorLanguagesPage>();
 		services.AddTransient<SettingsPage>();
 		services.AddTransient<StoryLanguagesPage>();
 		services.AddTransient<ReadingSpeedPage>();
@@ -143,7 +134,6 @@ public static class MauiProgram
 		services.AddTransient<FirstBooksPage>();
 		services.AddTransient<IntroWizardPage>();
 		services.AddSingleton<GrownUpMode>();
-		services.AddTransient<CastPage>();
 		services.AddTransient<RecordPage>();
 		services.AddTransient<ReadingPage>();
 		services.AddTransient<ReadingSession>();

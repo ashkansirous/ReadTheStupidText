@@ -22,11 +22,6 @@ name: Book sheet has no Show original text
     visible:
       id: GalleryDone
     timeout: 30000
-- runFlow:
-    when:
-      visible: Storyteller voices are ready
-    commands:
-      - tapOn: "OK"
 - tapOn:
     id: TileMore
     index: 0

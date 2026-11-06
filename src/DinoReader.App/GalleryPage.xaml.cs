@@ -50,12 +50,9 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	private bool _savingOrder; // Done is saving the order
 	private long _suppressTapUntil; // Environment.TickCount64: the release that ends a 1 s hold must not open a sheet
 	private readonly ObservableCollection<object> _items = [];
-	private readonly StorytellerDefault _storyteller;
-	private bool _readySheetOpening;
 	private Story? _sheetStory; // the book the "This book" sheet is open on
 	private bool _sheetChanged; // a switch was saved while the sheet was open: the tiles are rebuilt when it closes
 	private readonly SemaphoreSlim _sheetSaveLock = new(1, 1);
-	private readonly VoicePreview _preview;
 	private readonly StoryLanguageButton _languageButton; // Slice 173 (mock 79): the child's story-language button, left of the grown-ups button, with two or three story languages
 
 	public GalleryPage(IStoryLibrary library, GrownUpGate gate, GrownUpMode mode, StoryActions actions, StarterStories starters, IServiceProvider services)
@@ -74,15 +71,8 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 			TileOverlay.NotifyScrollStarted(); // the platform scroller may have taken a touch that a cover's 1 s hold is still timing
 			RememberFirstBook(e.FirstVisibleItemIndex);
 		};
-		_storyteller = services.GetRequiredService<StorytellerDefault>();
-		_preview = new VoicePreview(services.GetRequiredService<ISpeechReader>());
-		StorytellerLine.DownloadNow = _storyteller.DownloadNowAsync;
-		StorytellerLine.Retry = _storyteller.RetryAsync;
-		ReadySheet.Play = PlayNarratorAsync;
-		ReadySheet.Closed = OnReadyClosed;
 		BookInfo.VoiceChanged += SaveUseVoiceAsync;
 		BookInfo.ReadRequested += ReadSheetBookAsync;
-		BookInfo.CastRequested += OpenSheetCastAsync;
 		BookInfo.RecordRequested += OpenSheetRecordAsync;
 		BookInfo.ExportRequested += ExportSheetBookAsync;
 		BookInfo.RemoveRequested += RemoveSheetBookAsync;
@@ -152,24 +142,26 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		_languageButton.SetLanguage(LanguagePick.ShelfShown(choosable, pick, set.Main));
 	}
 
-	// The child can pick only a language whose voice is already on the phone (Slice 173): a download starts from Settings or the intro, behind the gate.
-	private IReadOnlyList<string> ChoosableLanguages(StoryLanguageSet set)
-	{
-		var packs = _services.GetRequiredService<StoryLanguagePacks>();
-		return [.. set.All.Where(language => language == set.Main || packs.StateOf(language) == LanguageVoiceState.Ready)];
-	}
+	// The child can pick only a language whose audio is installed for a book on the shelf (Slice 173): a download starts from Settings or the intro, behind the gate. The one rule and the one
+	// snapshot are ShelfAudioPacks' (Slice 278 part B): this page reads no pack folder and does not look at a running download, so the reading page gives the same list.
+	private IReadOnlyList<string> ChoosableLanguages(StoryLanguageSet set) =>
+		_services.GetRequiredService<ShelfAudioPacks>().ShelfLanguages(set);
+
+	// Changed is raised on the main thread; the snapshot is already updated.
+	private void OnShelfAudioChanged(object? sender, EventArgs e) => ApplyLanguageButton();
 
 	protected override async void OnAppearing()
 	{
 		base.OnAppearing();
 		_mode.PropertyChanged -= OnModeChanged;
 		_mode.PropertyChanged += OnModeChanged;
-		_storyteller.Changed -= OnStorytellerChanged;
-		_storyteller.Changed += OnStorytellerChanged;
-		_preview.Attach();
 		StoreClient store = _services.GetRequiredService<StoreClient>();
 		store.LibraryChanged -= OnLibraryChanged;
 		store.LibraryChanged += OnLibraryChanged;
+		ShelfAudioPacks shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
+		shelfAudio.Changed -= OnShelfAudioChanged;
+		shelfAudio.Changed += OnShelfAudioChanged;
+		_ = shelfAudio.RescanAsync(); // the gallery is shown: a pack that changed meanwhile shows in the child's list
 		ApplyMode();
 		if (Window is { } window)
 		{
@@ -258,9 +250,8 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 
 		_mode.PropertyChanged -= OnModeChanged;
-		_storyteller.Changed -= OnStorytellerChanged;
-		_preview.Detach();
 		_services.GetRequiredService<StoreClient>().LibraryChanged -= OnLibraryChanged;
+		_services.GetRequiredService<ShelfAudioPacks>().Changed -= OnShelfAudioChanged;
 	}
 
 	// A store download can finish on a background thread while the gallery shows; reload the list on the UI thread (Slice 92).
@@ -329,7 +320,6 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		SettingsButton.SetValue(ToolTipProperties.TextProperty, AppResources.Settings_GearLabel);
 		StoreLabel.Text = AppResources.Gallery_GetMoreBooks;
 		StoreButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Gallery_GetMoreBooks);
-		StorytellerLine.Invalidate();
 	}
 
 	private readonly WaitController _wait;
@@ -367,6 +357,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	{
 		await WaitForStagedUpdatesAsync();
 		IReadOnlyList<Story> stories = await _library.ListAsync();
+		_ = _services.GetRequiredService<ShelfAudioPacks>().RescanAsync(); // the shelf list changed: the snapshot of installed audio follows it
 		_shelfLanguage = LanguageChoice.Current();
 #if DEBUG
 		ReorderLog($"shelf order {string.Join(",", stories.Select(s => s.Id))}");
@@ -394,7 +385,6 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		TitleLabel.Text = grownUp ? AppResources.Gallery_CornerTitle : AppResources.Gallery_Title;
 		GrownUpActions.IsVisible = grownUp;
 		ApplyCornerHeader(grownUp);
-		ApplyStorytellerChrome(grownUp);
 		BackgroundColor = DinoTokens.Get(grownUp ? DinoTokens.Sand : DinoTokens.Cream);
 #if WINDOWS
 		DinoTitleBar.Refresh(this); // Slice 235 part B: entering or leaving the corner changes the title bar colour at once
@@ -509,7 +499,6 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		ActionPair.Padding = rail ? new Thickness(inset, 0, 14, 10) : new Thickness(14, 0, 14, 14);
 		double height = rows ? 56 : rail ? 44 : 52;
 		ApplyButtonHeights(rail, height);
-		StorytellerLine.Padding = rail ? new Thickness(inset, 0, 14, 10) : new Thickness(18, 0, 18, 12);
 		// Slice 234 part B (mock Batch 45 frame 139): on a tablet held upright the store button is solid indigo in the rail, as in the portrait bar.
 		StoreButton.BackgroundColor = rail && !corner.TabletUpright ? RailButtonFill : DinoTokens.Get(DinoTokens.Brand);
 		StoreLabel.FontSize = rail && !rows ? 14 : 15;
@@ -669,74 +658,6 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		{
 			_swapPhase = ScrollSwapPhase.Idle;
 		}
-	}
-
-	// The pack service reports from a worker thread (Slice 115).
-	private void OnStorytellerChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(() => ApplyStorytellerChrome(_mode.IsGrownUp));
-
-	private void ApplyStorytellerChrome(bool grownUp)
-	{
-		StorytellerLine.Apply(_storyteller.Status, grownUp);
-		if (grownUp && _storyteller.ReadyPending && !ReadySheet.IsVisible && !_readySheetOpening)
-		{
-			_readySheetOpening = true;
-			_ = ShowReadySheetAsync();
-		}
-		else if (!grownUp)
-		{
-			// Never in the child's view: the note waits for the next time grown-up mode opens.
-			ReadySheet.Hide();
-		}
-	}
-
-	// The language the "ready" sheet names the narrator of: the grown-up's own when the installed storyteller pack speaks it (Slice 118: a version-2 pack speaks English, Spanish, Portuguese, Chinese; version 1 only English), else English.
-	private string StorytellerLanguage()
-	{
-		string mine = LanguageChoice.Current(_services.GetRequiredService<ISettingsStore>());
-		return KokoroVoiceTable.Serves(mine) && _storyteller.Speaks(mine) ? mine : KokoroVoiceTable.EnglishCode;
-	}
-
-	private async Task ShowReadySheetAsync()
-	{
-		try
-		{
-			string language = StorytellerLanguage();
-			string narrator = await Task.Run(() => _services.GetRequiredService<StoryVoicing>().NarratorOf(language));
-			if (_mode.IsGrownUp && _storyteller.ReadyPending)
-			{
-				ReadySheet.Show(CastText.VoiceName(narrator, language), language);
-			}
-		}
-		catch (Exception ex)
-		{
-			// no-fallback: logged only; the ready sheet is simply not shown
-			Debug.WriteLine($"Dino Reader ready sheet failed: {ex}");
-		}
-		finally
-		{
-			_readySheetOpening = false;
-		}
-	}
-
-	private async Task PlayNarratorAsync()
-	{
-		try
-		{
-			string language = StorytellerLanguage();
-			string narrator = _services.GetRequiredService<StoryVoicing>().NarratorOf(language);
-			await _preview.PlayAsync(CastText.PreviewLineFor(language), narrator, VoiceFlavour.Storyteller);
-		}
-		catch (Exception ex)
-		{
-			// no-fallback: logged only; the narrator sample is not played
-			Debug.WriteLine($"Dino Reader narrator sample failed: {ex}");
-		}
-	}
-
-	private void OnReadyClosed()
-	{
-		_preview.Stop();
-		_storyteller.AcknowledgeReady();
 	}
 
 	private static StoryTile? TileOf(object? sender) => (sender as BindableObject)?.BindingContext as StoryTile;
@@ -1025,14 +946,6 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		FirstRunState.HandoverPending = false;
 		_mode.Leave();
 		await _actions.ReadAsync(Navigation, story);
-	}
-
-	private async Task OpenSheetCastAsync()
-	{
-		if (await SettledSheetStoryAsync() is { } story)
-		{
-			await RunGrownUpAsync(() => _actions.CastAsync(Navigation, story));
-		}
 	}
 
 	private async Task OpenSheetRecordAsync()
