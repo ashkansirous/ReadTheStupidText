@@ -1,6 +1,15 @@
 # Slice 283 — Dino: a Sonos music service for the store books (anonymous, no login)
 
-*Planned 2026-11-06.* Server only (Cloudflare Worker); the apps do not change.
+*In progress (wave 2026-11-06, ledger wave 33), draft PR.* Server only (Cloudflare Worker); the apps do not change.
+
+*Claim notes (2026-11-06, unattended night):* the code is built now, as the Decisions say (build during Sonos's review weeks).
+The user step (Sonos Company partner account, service submission, sandbox integration, Self Test, a play on their own
+Sonos) needs the user's login and stays open under *Waiting on the user*; the submission text is written into this file.
+Slice 281 is merged (#876 plus its publish-side follow-up); a book's track is listed in `/api/stories` as `audio.<lang>`
+`listenSeconds` and served at `listenUrl` (`/api/stories/<id>/listen/<lang>?v=<n>`). Slice 281 removed its Alexa/Sonos
+privacy paragraphs: this slice adds the Sonos one. `worker/index.ts:109-110` dispatches by path after `resolveSite`, which
+needs no change for `/sonos`; `worker/check-configs.mjs` requires each `run_worker_first` entry to have its `/dino/...` twin
+in both wrangler files, no entry covered by another glob (`worker/jsonc-run-first.mjs`), and both files identical apart from `routes`.
 
 **Depends on:** Slice 281 (the listening tracks). Can be built alongside Slice 282: the Touches overlap only on the
 one-line hub edits (`worker/index.ts`, `resolveSite`, both wrangler files) and the privacy files.
