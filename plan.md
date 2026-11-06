@@ -24,6 +24,9 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 244 | Dino: find and fix the 2026-10-31/11-01 crashes (iOS layout `NSDictionary` nil, whole book queued at once, `0xdead10cc`, Back while reading) | in progress (items 2-5 merged #722; iPhone 8 run and crash follow-up open) | #722 | | [244-dino-ios-crashes-2026-11-01.md](docs/plan/slices/244-dino-ios-crashes-2026-11-01.md) |
 | 275 | Leftovers from night 2026-11-06-0042 (408 unmarked catches, past-roar flow marker, cache-key miss, live-scan script, cancelled pack count, Goldilocks version) | planned (user, 2026-11-06; part 1 merged #857; part 2 merged #868; part 3 left: Dino catches in Slice 279's files plus FileStoryLibrary's shelf-order paths) | | | [275-night-2026-11-06-0042-leftovers.md](docs/plan/slices/275-night-2026-11-06-0042-leftovers.md) |
 | 279 | Dino: recording your own voice, one intro page, then per character or whole page | in progress (draft #867) | | | [279-dino-recording-flow.md](docs/plan/slices/279-dino-recording-flow.md) |
+| 281 | Dino: one listening track per store book and language, served for smart speakers | planned (user, 2026-11-06; after #867) | | | [281-dino-listening-tracks.md](docs/plan/slices/281-dino-listening-tracks.md) |
+| 282 | Dino: an Alexa kid skill that reads the store books (no login) | planned (user, 2026-11-06; needs 281) | | | [282-dino-alexa-kid-skill.md](docs/plan/slices/282-dino-alexa-kid-skill.md) |
+| 283 | Dino: a Sonos music service for the store books (anonymous, no login) | planned (user, 2026-11-06; needs 281; Sonos application can start now) | | | [283-dino-sonos-music-service.md](docs/plan/slices/283-dino-sonos-music-service.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
@@ -145,6 +148,8 @@ Built but not verified (details in each slice file):
 - Slice 227 (PR #654, crash reports) deployed and live: Worker deployed (Workers Builds success on b8c420d); `POST https://dinoreader.sirous.uk/api/crash` answers 204 with crash reports off; `/crashes/x.json` answers 404; R2 lifecycle rule `crash-reports-90d` (prefix `crashes/`, 90 days) added 2026-10-31. The read-only R2 token `CF_R2_CRASHES_READ` is no longer needed: `tools/crashes/pull-crashes.mjs` now reads through wrangler's login (PR #711, [Slice 243](docs/plan/slices/243-crash-report-gaps.md) item 3); App Store App Privacy "Crash Data" published for both apps and Play Data safety "Crash logs" submitted and live for both (2026-11-01), and `crashReports.enabled` is true in both remote configs (2026-11-01); item 9 (symbolicate the 2026-10-28 TestFlight crash) open ([slice](docs/plan/slices/227-crash-reports.md)).
 
 ## Out of Scope
+
+- **(Slices 281-283, Alexa and Sonos)** Any login or account linking; parents' own recordings on speakers (they never leave the phone); casting from the app (AirPlay, Bluetooth, local Sonos control); pictures on Echo Show screens; Alexa languages other than English in the first skill; counting speaker plays.
 
 - **(Batch 31)** Animals and sounds for parent-provided books (photos, PDFs, typed: unchanged); robotic-voice checks beyond English unless English shows flavours are the cause; reading speeds above 1.2x in Dino; vowel marks for languages other than Farsi and Arabic.
 - **(Batch 28)** Any install, device or advertising id; per-family profiles or parental-consent flows; third-party analytics SDKs; analytics in RTST; remote config for RTST.
