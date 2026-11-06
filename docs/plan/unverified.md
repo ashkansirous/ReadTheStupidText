@@ -3,7 +3,6 @@
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
 ### Slice 274: Dino iPhone crash after leaving the grown-ups pages ([slice](slices/274-dino-ios-crash-after-leaving-parent-page.md))
-- The user's iPhone 8 Plus (iOS 16) on the next TestFlight build: grown-ups page (Settings > Reading speed), switch app, come back: no crash.
 - Android emulator: drag and release the reading-speed slider, and open the Language page; both behave as before (the builder moved the slider's Unloaded handler onto a wrapper and made `LanguagePage.WhenLoadedAsync` wait on RootPage; added by the feedback loop of 2026-11-06).
 - The next morning, `pull-crashes.mjs` and TestFlight crash feedback show no new report for that build.
 - The iOS cause is only likely (stack matches dotnet/maui PR #38662; the one symbolicated app frame is `_xamarin_release_managed_ref+0x64`). CI keeps no dSYM, so the stack cannot be symbolicated further.
@@ -24,10 +23,8 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 272: Dino Farsi clips off by one ([slice](slices/272-dino-farsi-clips-off-by-one.md))
 - Emulator: `.maestro/dino/premade-audio-past-roar.yaml` passes once its marker is fixed (Slice 275 item 2); the 2026-11-06 run showed the app right and the flow failing on its own marker.
-- iOS: the user checks Lion and Mouse in Farsi past page 5 on the next TestFlight build.
 
 ### Slice 270: Dino iPhone crash, player disposed in its finished callback ([slice](slices/270-dino-ios-player-disposed-in-finished-callback.md))
-- iOS: the TestFlight build on the user's iPhone, then `node tools/crashes/pull-crashes.mjs --app dino --kind managed` shows no new `FinishedPlaying` ObjectDisposedException.
 - Three or more pre-made clips in a row on a device (the emulator flow ends after clip 1).
 - Windows clip hand-off: no VM check plays audio clips (a harness gap).
 - `IDispatcher.Dispatch` always queues on Windows (seen only as a string match in Microsoft.Maui.dll 10.0.120, not confirmed from source).
@@ -137,6 +134,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 255: Dino: real animal recordings instead of voiced animal sound words ([slice](slices/255-dino-real-animal-sounds.md))
 
+- User listening check (2026-11-06, "I need to think about it"): a line whose own text already says the animal's sound word (e.g. "moo", `SaysIt`) is read by the voice with no clip, per the slice's recorded decision; the user's quote says animal noises should not be AI-voiced, so the user listens and confirms or changes it.
 - Farsi clip on a device (the device run's `lang=fa` launch may not have been applied to the running app).
 - Clip playback on iOS and on the Windows head (compiled only).
 - A possible double sound when a quote already says the animal's word in a language without a sound table (check2 #1).

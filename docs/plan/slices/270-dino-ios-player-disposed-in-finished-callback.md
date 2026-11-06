@@ -1,6 +1,6 @@
 # Slice 270 — Dino iPhone crash: the audio player is thrown away inside its own "finished playing" call
 
-*Built 2026-11-05 (wave 2026-11-05), merged as PR #834 (75a3a7c8). Not verified: the iPhone/TestFlight crash read is still to do ("Prove it" stays open).* Bug fix, Dino Reader, iOS (Android checked for the same pattern). Reported by the user on 2026-11-05: "I just tried the app on my iphone and it crashed multiple times. I sent the crash report."
+*Built 2026-11-05 (wave 2026-11-05), merged as PR #834 (75a3a7c8). Verified 2026-11-06 by the user on iPhone (TestFlight): tested, no crashes (also 2026-11-06 ~00:10: "no crash on reading stories").* Bug fix, Dino Reader, iOS (Android checked for the same pattern). Reported by the user on 2026-11-05: "I just tried the app on my iphone and it crashed multiple times. I sent the crash report."
 
 **Touches:** `src/DinoReader.App/Platforms/iOS/RecordingAudio.ios.cs`, `src/DinoReader.App/RecordingAudio.cs`, `src/DinoReader.App/Platforms/Android/RecordingAudio.android.cs`, `src/DinoReader.App/Platforms/Windows/RecordingAudio.windows.cs`, `src/DinoReader.App/ReadingSession.cs`, `src/DinoReader.App/PlayerHandOff.cs` (new, added during the build), `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/270-dino-ios-player-disposed-in-finished-callback.md`.
 
