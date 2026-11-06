@@ -216,23 +216,6 @@ public sealed class StoreStoryTests : IDisposable
         AssertEachIsPlayedByTheirGender(story, language, expected);
     }
 
-    // The Tale of Peter Rabbit (Slice 121): Mrs. Rabbit and Flopsy are "she", Peter, Mr. McGregor and Robin "he". The roster's bunny voice is a girl in most
-    // languages, so Peter's book suggests a boy's voice (piglet) and Flopsy's a girl's (bee); both are rabbits again (Slice 156). Mrs. Rabbit suggests the mummy voice.
-    [Theory]
-    [MemberData(nameof(Languages))]
-    public void TheTaleOfPeterRabbit_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
-    {
-        var expected = new Dictionary<string, Gender>
-        {
-            ["Mrs. Rabbit"] = Gender.Female, ["Flopsy"] = Gender.Female, ["Peter"] = Gender.Male, ["Mr. McGregor"] = Gender.Male, ["Robin"] = Gender.Male,
-        };
-
-        Story story = StoreBuilder.Build(Books.SpecOf("peter-rabbit"));
-        Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
-        Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
-        AssertEachIsPlayedByTheirGender(story, language, expected);
-    }
-
     // X Marks the Treasure! (Slice 121): Kathryn, Izzy and Pancake Polly are girls, the Seagull is a "she" with no animal word the guesser knows, Billy is a boy.
     [Theory]
     [MemberData(nameof(Languages))]

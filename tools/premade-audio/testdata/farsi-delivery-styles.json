@@ -76,16 +76,6 @@
    "Duck": "a young, squeaky, excitable voice, a silly storybook duck for young children, standard Tehrani accent"
   }
  },
- "peter-rabbit": {
-  "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
-  "characters": {
-   "Mrs. Rabbit": "a warm, soft grown-up mother's voice for young children, standard Tehrani accent",
-   "Peter": "a young, bright, bouncy child's voice for young children, standard Tehrani accent",
-   "Mr. McGregor": "a gravelly old gardener's voice, grumpy but kind underneath, never scary for young children, standard Tehrani accent",
-   "Robin": "a young, lively, chirpy little bird's voice for young children, standard Tehrani accent",
-   "Flopsy": "a young, bright, warm child's voice for young children, standard Tehrani accent"
-  }
- },
  "red-riding-hood": {
   "narrator": "warm, gentle, expressive storyteller voice for young children, standard Tehrani accent",
   "characters": {
