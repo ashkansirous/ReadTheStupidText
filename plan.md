@@ -25,6 +25,9 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 271 | Leftovers from night 2026-11-05-1823 (pause-path test, multi-clip VM and emulator checks, `tmp/` listing, unknown-tag flow) | planned | | | [271-night-2026-11-05-1823-leftovers.md](docs/plan/slices/271-night-2026-11-05-1823-leftovers.md) |
 | 275 | Leftovers from night 2026-11-06-0042 (408 unmarked catches, past-roar flow marker, cache-key miss, live-scan script, cancelled pack count, Goldilocks version) | planned (user, 2026-11-06) | | | [275-night-2026-11-06-0042-leftovers.md](docs/plan/slices/275-night-2026-11-06-0042-leftovers.md) |
 | 276 | Dino iOS update button for TestFlight testers | planned (user request 2026-11-06, blocks the minVersion step) | | | [276-dino-ios-update-button-testflight.md](docs/plan/slices/276-dino-ios-update-button-testflight.md) |
+| 277 | Dino: a store book is published only when every sentence in every language has pre-made audio | planned (user, 2026-11-06; blocks 278 part B) | | | [277-dino-store-audio-coverage-gate.md](docs/plan/slices/277-dino-store-audio-coverage-gate.md) |
+| 278 | Dino: store books only (no own books, scanning, translation, voice engine or voice pickers; RTST untouched) | planned (user, 2026-11-06; part B after 277) | | | [278-dino-store-books-only.md](docs/plan/slices/278-dino-store-books-only.md) |
+| 279 | Dino: recording your own voice, one intro page, then per character or whole page | planned (user, 2026-11-06; after 278) | | | [279-dino-recording-flow.md](docs/plan/slices/279-dino-recording-flow.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
