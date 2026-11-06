@@ -27,15 +27,19 @@ internal static class StoreValidation
         return problems;
     }
 
-    /// <summary>The problems of each store book that has any, by stem (an id shared with another book counts against each store book that has it); a valid book is absent.</summary>
-    public static IReadOnlyDictionary<string, IReadOnlyList<string>> ProblemsByBook(IEnumerable<BookFolder> storeBooks)
+    /// <summary>The problems of each store book that has any, by stem (an id shared with another book counts against each store book that has it); a valid book is absent.
+    /// Text only unless <paramref name="includeAudio"/>: the audio check needs the Git LFS manifests pulled, which the unit-test checkout does not have.</summary>
+    public static IReadOnlyDictionary<string, IReadOnlyList<string>> ProblemsByBook(IEnumerable<BookFolder> storeBooks, bool includeAudio = false)
     {
         Dictionary<string, string> shared = Books.All.GroupBy(b => b.Info.Id).Where(g => g.Count() > 1).ToDictionary(g => g.Key, g => string.Join(", ", g.Select(b => b.Stem)));
         var result = new Dictionary<string, IReadOnlyList<string>>();
         foreach (BookFolder book in storeBooks)
         {
             List<string> problems = BookProblems(book).ToList();
-            problems.AddRange(AudioProblems(book));
+            if (includeAudio)
+            {
+                problems.AddRange(AudioProblems(book));
+            }
             if (shared.TryGetValue(book.Info.Id, out string? stems))
             {
                 problems.Add($"the books {stems} share the id {book.Info.Id}");

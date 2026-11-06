@@ -82,6 +82,8 @@ above `book.json`'s. The live Goldilocks audio lines up with the repo text in al
 - `s277-check1.md`: 1 (the design), 4, 5, 7, 8 applied. Skipped: 2 (clip names come from trusted repo manifests), 3 (low, live-pack cache), 6 (low, the double check costs time only).
 - `s277-check2.md`: 1, 2, 4 applied. Skipped: 3 (same as medium 1, an LFS pointer counts by its recorded size).
 - `s277-check3.md`: all skipped. 1 intended (a PR that leaves a gap should fail); 2 wording only; 3 dead branch; 4 no two `content/dino` books share an id today (checked 2026-11-06); 5 and 7 low tooling; 6 a malformed live list aborts the read-only check, which fails closed.
+- CI fix after the first push: the `test` job checks out without Git LFS, so `TheValidationByBook_IsEmptyForTheRepoAndNamesNoValidBook` saw every audio manifest as a pointer. `StoreValidation.ProblemsByBook(includeAudio)`: the repo-wide validation is text-only; `build --live` (after `dino-store.yml` pulls the manifests) and `check-audio` (the `audio-alignment` job pulls them) run the audio check.
+- `s277-check4.md` (after the CI fix): all 5 skipped. 1 the default only affects the text-only repo test; publishing stays fail-closed through the verdict in `publish-store-books.mjs`; 3 a failed LFS pull writes no verdict, so nothing is published and the job prints the infrastructure message; 5 an exception in the audio check skips that book (fail closed); 2 and 4 low.
 
 #### For CLAUDE.md
 

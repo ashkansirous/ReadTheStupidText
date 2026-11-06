@@ -109,6 +109,34 @@ public sealed class AudioCoverageTests
         }
     }
 
+    // The CI test job checks out without git lfs pull: the text-only validation must not look at manifests, while the store build (includeAudio) fails closed on a pointer.
+    [Fact]
+    public void ManifestsThatAreLfsPointers_AreIgnoredByTheTextOnlyValidation_AndRefusedByTheAudioValidation()
+    {
+        string folder = Directory.CreateTempSubdirectory("dino-cov-lfs").FullName;
+        try
+        {
+            foreach (string language in AudioCoverage.OfferedLanguages)
+            {
+                Directory.CreateDirectory(Path.Combine(folder, "audio", language));
+                File.WriteAllText(Path.Combine(folder, "audio", language, "manifest.json"), "version https://git-lfs.github.com/spec/v1\noid sha256:abc\nsize 10\n");
+            }
+
+            BookFolder real = Books.Folder("lion-and-mouse");
+            var book = new BookFolder(real.Stem, folder, real.Info);
+
+            IReadOnlyDictionary<string, IReadOnlyList<string>> textOnly = StoreValidation.ProblemsByBook([book]);
+            IReadOnlyDictionary<string, IReadOnlyList<string>> withAudio = StoreValidation.ProblemsByBook([book], includeAudio: true);
+
+            Assert.DoesNotContain(textOnly.GetValueOrDefault(book.Stem) ?? [], p => p.Contains("LFS pointer") || p.Contains("audio"));
+            Assert.Contains(withAudio[book.Stem], p => p.Contains("the manifest is a Git LFS pointer"));
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
     [Fact]
     public void ALanguageWithAManifestButNoAudioPacksRecord_IsAGap()
     {
