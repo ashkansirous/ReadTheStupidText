@@ -2,6 +2,13 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 279: Dino: recording your own voice, one intro page, then per character or whole page ([slice](slices/279-dino-recording-flow.md))
+- iPhone 8 / iOS simulator layout and recording (no Mac to run it).
+- A real microphone recording on Windows (the VM has none; R opens Windows' microphone consent prompt).
+- Backup merge with a whole-page clip and a piece clip on the same page, and orphan files after a same-key restore.
+- Intro freeze on a long book: not measured.
+- The 13 translations are machine-drafted.
+
 ### Slice 280: Dino: Farsi speaker first, joined at translation time ([slice](slices/280-dino-farsi-speaker-first-at-translation.md))
 - iOS beyond compile.
 - The Windows head.
