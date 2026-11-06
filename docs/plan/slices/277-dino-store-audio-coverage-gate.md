@@ -1,6 +1,6 @@
 # Slice 277 — Dino: a store book is published only when every sentence in every language has pre-made audio
 
-*Built 2026-11-06 (wave 2026-11-06), PR #858, not merged; not yet verified on the first `dino-store.yml` run on main.* Dino Reader only. Read The Stupid Text is not touched.
+*Built 2026-11-06 (wave 2026-11-06), merged as PR #858 (0f922e2d); not yet verified on the first `dino-store.yml` run on main.* Dino Reader only. Read The Stupid Text is not touched.
 
 **Claim notes (wave 30, night 2026-11-06-1250):** a `check-audio [<stem>...]` command already exists (Slice 272,
 `tools/DinoReader.BookBuilder/AudioAlignment.cs`, `Program.cs:22`); A1 extends it (missing packs, stale clips,
@@ -85,7 +85,7 @@ above `book.json`'s. The live Goldilocks audio lines up with the repo text in al
 - CI fix after the first push: the `test` job checks out without Git LFS, so `TheValidationByBook_IsEmptyForTheRepoAndNamesNoValidBook` saw every audio manifest as a pointer. `StoreValidation.ProblemsByBook(includeAudio)`: the repo-wide validation is text-only; `build --live` (after `dino-store.yml` pulls the manifests) and `check-audio` (the `audio-alignment` job pulls them) run the audio check.
 - `s277-check4.md` (after the CI fix): all 5 skipped. 1 the default only affects the text-only repo test; publishing stays fail-closed through the verdict in `publish-store-books.mjs`; 3 a failed LFS pull writes no verdict, so nothing is published and the job prints the infrastructure message; 5 an exception in the audio check skips that book (fail closed); 2 and 4 low.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-06)
 
 - A Dino store book reaches R2 only through `check-audio`'s verdict: `.github/scripts/publish-store-books.mjs` needs `--audio-verdict <file>` (written by `check-audio --verdict`), and a book with no complete verdict changes nothing on R2 (no meta.json, pack or cover); the job fails naming it. Do not add an upload path that skips the verdict. (Slice 277: docs/plan/slices/277-dino-store-audio-coverage-gate.md)
 

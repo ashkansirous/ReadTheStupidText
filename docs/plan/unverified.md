@@ -2,6 +2,12 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 277: Dino: a store book is published only with complete pre-made audio ([slice](slices/277-dino-store-audio-coverage-gate.md))
+- The first `dino-store.yml` run on main with the new steps (`check-audio --verdict`, `--audio-verdict`, the final failing step).
+
+### Slice 271: Leftovers from night 2026-11-05-1823 ([slice](slices/271-night-2026-11-05-1823-leftovers.md))
+- A Windows VM check that plays a pre-made-audio book past two clip hand-offs (item 2, VM half): the VM package is a Release build with no Debug test hooks, so no fixture audio pack can be installed there; it needs Debug test hooks (or an install path) in the VM package first.
+
 ### Slice 274: Dino iPhone crash after leaving the grown-ups pages ([slice](slices/274-dino-ios-crash-after-leaving-parent-page.md))
 - Android emulator: drag and release the reading-speed slider, and open the Language page; both behave as before (the builder moved the slider's Unloaded handler onto a wrapper and made `LanguagePage.WhenLoadedAsync` wait on RootPage; added by the feedback loop of 2026-11-06).
 - The next morning, `pull-crashes.mjs` and TestFlight crash feedback show no new report for that build.
@@ -25,10 +31,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Emulator: `.maestro/dino/premade-audio-past-roar.yaml` passes once its marker is fixed (Slice 275 item 2); the 2026-11-06 run showed the app right and the flow failing on its own marker.
 
 ### Slice 270: Dino iPhone crash, player disposed in its finished callback ([slice](slices/270-dino-ios-player-disposed-in-finished-callback.md))
-- Three or more pre-made clips in a row on a device (the emulator flow ends after clip 1).
 - Windows clip hand-off: no VM check plays audio clips (a harness gap).
 - `IDispatcher.Dispatch` always queues on Windows (seen only as a string match in Microsoft.Maui.dll 10.0.120, not confirmed from source).
-- A parent's recording that ends while paused waits for Resume (`_recordingEndedWhilePaused` in `ReadingSession.cs`): no unit test and no device flow (test work in Slice 271).
+- A parent's recording that ends while paused waits for Resume (`_recordingEndedWhilePaused` in `ReadingSession.cs`): the logic is unit-tested now (Slice 271, `ReadingPauseStateTests`); the device flow is still owed.
 - Review check2 #4 (stale id's early return in `ApplyRecordingEnded` may leave the recording Playing with nothing playing) and #6 (iOS audio-session Deactivate only in the queued step on a stale play): both unconfirmed.
 - Review check2 #1 kept because "origin/main had the same window" (Windows Pause then Resume in the hop replays the clip): premise not checked.
 
@@ -36,9 +41,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Emulator cold-boot retry path of the preflight (not triggered in the run; kill the Maestro driver after a snapshot boot).
 - `Test-LogMarker` regex: hand-checked and self-test only, not seen on a real flow with a `,` or `:` marker.
 - Apple Vision per-language support for Farsi, Arabic, Russian, Japanese and Chinese (research only; call `supportedRecognitionLanguages` on the minimum iOS).
-- A store book with an unknown tag shows no badge and no error: no unit test and no flow with an unknown tag.
 - The weekly pack sync skipping cancelled languages through the static lock in `ShelfAudioPacks`: unit-tested only.
-- `tmp/` deleted during `Invoke-DesktopTest` (item 17): cause not found, not reproduced in four VM runs on 2026-11-05 (listing in Slice 271 item 3).
 
 ### Slice 235: Dino on Windows, part C ([slice](slices/235-dino-windows-window.md))
 - Down right after opening Settings does nothing until Tab (focus starts on the window's Back button).
