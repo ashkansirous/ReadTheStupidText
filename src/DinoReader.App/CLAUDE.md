@@ -146,3 +146,7 @@ Never subscribe `Loaded`/`Unloaded` on a view whose iOS platform view lacks Move
 ## Store tags (Slice 260)
 
 Store tags are a closed enum (`StoreTag`: Hot, Popular, Recommended, New; case-sensitive) set by hand in each book's `book.json`. They are not part of `BookHash`, so a tag change never bumps a version. "Tagged first" is applied in both `worker/stories.ts` (`compareEntries`) and `StoreCatalog.cs`: keep the two the same. (Slice 260: docs/plan/slices/260-dino-store-tags.md)
+
+## Own books cleanup (Slice 278)
+
+The own-books cleanup (`OwnBooksCleanup.cs`, `OwnBooksCleanupRun.cs`) is single-flight, started from `GalleryPage.OnAppearing` independent of the starter install and refresh, deletes `story.json` last, catches every exception except cancellation per book, and is done when the listing was complete with no failure or after 3 failed starts. Backup restore runs the same run and drops the own books it removes. Do not add a second deletion path. (Slice 278: docs/plan/slices/278-dino-store-books-only.md)

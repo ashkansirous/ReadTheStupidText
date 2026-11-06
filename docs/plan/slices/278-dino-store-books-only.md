@@ -1,6 +1,6 @@
 # Slice 278 — Dino: store books only (no own books, no scanning, no translation, no voice engine, no voice pickers)
 
-*Part A built 2026-11-06 (wave 2026-11-06, PR #859, not merged), not yet verified on every platform (see Not yet verified below); parts B and C planned. Part B is unblocked: Slice 277 merged as PR #858 on 2026-11-06.* Dino Reader only (Android, iOS and the Windows head, the same in the same parts). **Read The
+*Part A built 2026-11-06 (wave 2026-11-06, merged as PR #859, 09e2e892), not yet verified on every platform (see Not yet verified below); parts B and C planned. Part B is unblocked: Slice 277 merged as PR #858 on 2026-11-06.* Dino Reader only (Android, iOS and the Windows head, the same in the same parts). **Read The
 Stupid Text is not touched**, and neither is any shared code it uses (`src/ReadTheStupidText.Mobile.Shared`,
 `src/ReadTheStupidText.Infrastructure`, `src/ReadTheStupidText.Documents`, `src/ReadTheStupidText.Mobile`). Dino
 simply stops calling the shared pieces it no longer needs.
@@ -141,7 +141,7 @@ Three frames in `docs/design/dino-reader/Dino Reader Batch 48 Store Only and Rec
 
 **Device (part A):** Windows VM, 8 Dino checks PASS (launch, open-book, page-turn, settings, keyboard, window, desktop-polish, reorder). Android emulator, flows `dino-landscape-shelf`, `grown-ups-button` (no Edit row) and `dino-landscape-intro` PASS on build 4597ede207de.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-06)
 
 For `src/DinoReader.Core/CLAUDE.md`:
 - A book is "own" (added by the family, deleted on update) only when `OwnBook.IsOwn(rawStoryJson)` says so: `story.json` has no `sourceId` field or it is JSON null. A malformed, empty or non-string `sourceId` is not own. Never decide "own" anywhere else (preferences keys, parsed `Story.SourceId`). `FileStoryLibrary.ListAsync` never returns own books; `GetAsync` and `TryListSourceIdsAsync` still see them. (Slice 278: docs/plan/slices/278-dino-store-books-only.md)

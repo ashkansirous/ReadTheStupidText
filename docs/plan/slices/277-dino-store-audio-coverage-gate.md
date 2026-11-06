@@ -1,6 +1,6 @@
 # Slice 277 — Dino: a store book is published only when every sentence in every language has pre-made audio
 
-*Built 2026-11-06 (wave 2026-11-06), merged as PR #858 (0f922e2d); not yet verified on the first `dino-store.yml` run on main.* Dino Reader only. Read The Stupid Text is not touched.
+*Built 2026-11-06 (wave 2026-11-06), merged as PR #858 (0f922e2d); verified on the first `dino-store.yml` run on main (run 42229431973, success).* Dino Reader only. Read The Stupid Text is not touched.
 
 **Claim notes (wave 30, night 2026-11-06-1250):** a `check-audio [<stem>...]` command already exists (Slice 272,
 `tools/DinoReader.BookBuilder/AudioAlignment.cs`, `Program.cs:22`); A1 extends it (missing packs, stale clips,
@@ -91,4 +91,4 @@ above `book.json`'s. The live Goldilocks audio lines up with the repo text in al
 
 #### Not yet verified
 
-- The first `dino-store.yml` run on main with the new steps (`check-audio --verdict`, `--audio-verdict`, the final failing step).
+- None left. Verified 2026-11-06: the first `dino-store.yml` run on main with the new steps (run 42229431973, push of 0f922e2d) ended `success`: "Check that every book's audio is complete", "Build the audio packs the live store lacks", "Build the store books" and the upload step succeeded; both "Fail when ..." steps were skipped.
