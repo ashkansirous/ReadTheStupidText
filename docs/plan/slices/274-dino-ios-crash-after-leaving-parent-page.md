@@ -1,6 +1,6 @@
 # Slice 274 — Dino iPhone crash: leave the app from the grown-ups pages and come back
 
-*Built 2026-11-06, not merged. Cause likely, not proven; not yet tried on the user's iPhone (see Not yet verified).* Planned 2026-11-06. Parallel with Slice 273 part A, which owns StoryVoicing, ReadingPage, ReadingSession and UsageCounter in DinoReader.App. Bug fix, Dino Reader, iOS first (Android checked for the same path). Reported by the user on 2026-11-06 ~00:10 UTC, testing the TestFlight build with Slice 270: "no crash on reading stories, but changing the app from parent page and coming back caused a crash."
+*Built 2026-11-06, merged as PR #843 (bc4b8a8c). Cause likely, not proven; not yet tried on the user's iPhone (see Not yet verified).* Planned 2026-11-06. Parallel with Slice 273 part A, which owns StoryVoicing, ReadingPage, ReadingSession and UsageCounter in DinoReader.App. Bug fix, Dino Reader, iOS first (Android checked for the same path). Reported by the user on 2026-11-06 ~00:10 UTC, testing the TestFlight build with Slice 270: "no crash on reading stories, but changing the app from parent page and coming back caused a crash."
 
 **Touches:** `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/LanguagePage.xaml.cs`, `tests/DinoReader.Tests/LifecycleSubscriptionTests.cs`, `.maestro/dino/settings-page-survives-background.yaml`, `docs/plan/slices/274-dino-ios-crash-after-leaving-parent-page.md`.
 
@@ -59,7 +59,7 @@ From review (files outside the repo, read in full):
 
 Verified on the Android emulator (emulator-5554): the flow passes (pid 11741 unchanged across home and return); slider drag then home and back passes (pid 9810, no FATAL); changing the language to French then reopening Settings passes.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-06)
 
 - `src/DinoReader.App/CLAUDE.md`: never subscribe `Loaded`/`Unloaded` on a view whose iOS platform view lacks MovedToWindow (Slider, Button, ImageButton, Switch, Stepper, ProgressBar, GraphicsView, NavigationPage); use the page or a ContentView wrapper. `tests/DinoReader.Tests/LifecycleSubscriptionTests.cs` enforces it. (Slice 274: docs/plan/slices/274-dino-ios-crash-after-leaving-parent-page.md)
 

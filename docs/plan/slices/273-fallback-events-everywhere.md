@@ -1,6 +1,6 @@
 # Slice 273 — Every fallback sends an analytics event (both apps, every platform)
 
-*Part A built 2026-11-06 (draft PR, not merged), parts B-E planned; the slice stays in progress.* Planned 2026-11-05. Part A's own Touches line (below, under Work) is this PR's scope; parallel with Slice 274, which owns the Dino lifecycle and grown-ups pages. User, 2026-11-05: "all fallback cases in the whole code should add an analytics event", after a Farsi Dino read fell back to the device voice from page 5 on and our data showed nothing (Slice 272).
+*Part A built 2026-11-06, merged as PR #842 (22792b47), parts B-E planned; the slice stays in progress.* Planned 2026-11-05. Part A's own Touches line (below, under Work) is this PR's scope; parallel with Slice 274, which owns the Dino lifecycle and grown-ups pages. User, 2026-11-05: "all fallback cases in the whole code should add an analytics event", after a Farsi Dino read fell back to the device voice from page 5 on and our data showed nothing (Slice 272).
 
 **Touches:** `worker/events.ts`, `worker/events.test.mjs`, `worker/CLAUDE.md`, `src/DinoReader.Core/UsageEvent.cs`, `src/DinoReader.Core/AudioPackUsage.cs`, `src/DinoReader.Core/FallbackUsage.cs` (new), `src/DinoReader.App/**`, `src/ReadTheStupidText.Application/Usage/**`, `src/ReadTheStupidText.Application/Usage/FallbackKind.cs` (new), `src/ReadTheStupidText.Application/Reading/**`, `src/ReadTheStupidText.Application/Translation/ReadTranslator.cs`, `src/ReadTheStupidText.Infrastructure/Reading/**`, `src/ReadTheStupidText.Infrastructure/Usage/**`, `src/ReadTheStupidText.Mobile.Shared/**`, `src/ReadTheStupidText.Mobile/**`, `src/ReadTheStupidText.App/**`, `src/ReadTheStupidText.Windows.Tray/**`, `tests/DinoReader.Tests/**`, `tests/ReadTheStupidText.Tests/**`, `.maestro/dino/**`, `docs/plan/slices/273-fallback-events-everywhere.md`. Parts A-D below narrow this.
 
@@ -44,7 +44,7 @@ Part A is the smallest end-to-end piece and goes first; B, C and D can run in pa
 - Emulator (Dino and RTST Android): one scripted flow per part that forces a fallback (Debug test hook) and reads the sent batch; Windows VM for the Windows-only rows (Part B neural to WinRT, Part D selection).
 - After release: `analytics-query` shows `fallback` rows from production builds within a day, and none from tests or CI.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-06)
 
 - `tools/CLAUDE.md`: an `# expect-log:` marker must end at a word boundary (Test-LogMarker), so never end one mid-token like `session=`. (Slice 273: docs/plan/slices/273-fallback-events-everywhere.md)
 - `worker/CLAUDE.md`: already written in this branch; nothing more to lift.
