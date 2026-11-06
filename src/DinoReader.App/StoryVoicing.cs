@@ -78,14 +78,32 @@ public sealed class StoryVoicing
 	public sealed class VoiceWhy
 	{
 		public DeviceVoiceReason Reason { get; set; } = DeviceVoiceReason.NoPack;
+
+		/// <summary>Slice 273: how this read's pieces found their clips; null while no usable pack was opened for it (no clip was looked for).</summary>
+		public ClipMisses? Misses { get; set; }
+	}
+
+	/// <summary>Slice 273: whether a read speaks any piece at all, by clip or by the device voice (animal sounds and pieces with no letter do not count).</summary>
+	public static bool SpeaksAnyPiece(IReadOnlyList<VoicedSegment> segments)
+	{
+		return segments.Any(s => PremadeClipMarker.PathOf(s) is not null || (s.Transform is not AnimalClipMarker && PremadeAudio.IsSpoken(s.Text)));
 	}
 
 	/// <summary>One line in the rolling log, and the <see cref="AudioPackUsage.ReadVoice"/> detail (<c>premade</c>, or <c>device:&lt;reason&gt;</c>) for the caller to count: which voice, and when it is the device voice, why. The caller calls it once a read has actually started.</summary>
-	public string ReportVoiceUsed(Story story, IReadOnlyList<VoicedSegment> segments, VoiceWhy why)
+	public ReadVoiceUse ReportVoiceUsed(Story story, IReadOnlyList<VoicedSegment> segments, VoiceWhy why)
 	{
-		string detail = AudioPackUsage.ReadVoice(segments.Any(s => PremadeClipMarker.PathOf(s) is not null), why.Reason);
-		AudioPackLog.Write($"{story.SourceId ?? UsageSource.Own}: read voice {detail}");
-		return detail;
+		int clips = segments.Count(s => PremadeClipMarker.PathOf(s) is not null);
+		int device = segments.Count(s => PremadeClipMarker.PathOf(s) is null && s.Transform is not AnimalClipMarker && PremadeAudio.IsSpoken(s.Text));
+		bool missRecorded = why.Misses is { TextMismatch: > 0 } or { FileMissing: > 0 };
+		DeviceVoiceReason reason = clips == 0 && missRecorded ? why.Misses!.Reason : why.Reason; // with no miss recorded the read's own reason stands
+		ReadVoiceUse use = AudioPackUsage.ReadVoice(clips, device, reason, why.Misses?.TextMismatch ?? 0, why.Misses?.FileMissing ?? 0);
+		if (clips == 0 && why.Misses is not null && !missRecorded)
+		{
+			use = use with { FallbackReason = null }; // a pack was opened but no clip was looked up (nothing spoken was checked): not a fallback
+		}
+
+		AudioPackLog.Write($"{story.SourceId ?? UsageSource.Own}: read voice {use.Detail} ({clips} pieces by clip, {device} by the device voice)");
+		return use;
 	}
 
 	private async Task<IReadOnlyList<VoicedSegment>> VoiceCoreAsync(
@@ -122,7 +140,7 @@ public sealed class StoryVoicing
 	/// The installed pre-made audio of a store book or bundled starter for the language it is read in, with the plain (displayed) text of each piece (Slice 246 C2). A piece's clip is the pack's entry at the piece's
 	/// position among the pieces with a letter or digit (<see cref="Offset"/> when the read starts mid-book), confirmed by the hash of the plain text; null when there is none.
 	/// </summary>
-	private sealed record PremadeSource(InstalledPack Pack, IReadOnlyList<SplitSegment> PlainPieces, int Offset)
+	private sealed record PremadeSource(InstalledPack Pack, IReadOnlyList<SplitSegment> PlainPieces, int Offset, ClipMisses Misses)
 	{
 		public string? PathOf(int piece)
 		{
@@ -132,7 +150,9 @@ public sealed class StoryVoicing
 				return null;
 			}
 
-			return Pack.PathOf(Offset + PremadeAudio.SpokenCount(PlainPieces.Take(piece).Select(p => p.Segment.Text)), text);
+			ClipLookup found = Pack.Find(Offset + PremadeAudio.SpokenCount(PlainPieces.Take(piece).Select(p => p.Segment.Text)), text);
+			Misses.Note(piece, found.Miss);
+			return found.Path;
 		}
 
 		public static int SpokenCount(IReadOnlyList<SplitSegment> pieces) => PremadeAudio.SpokenCount(pieces.Select(p => p.Segment.Text));
@@ -144,6 +164,7 @@ public sealed class StoryVoicing
 		Story story, Prepared prepared, int fromPosition, bool wholePieces, StoryTranslator.Outcome? spoken, string reading, VoiceWhy why, CancellationToken cancellationToken)
 	{
 		bool translated = spoken is not null;
+		why.Misses = null;
 		if (story.SourceId is not { } bookId)
 		{
 			return null; // an own book has no pack: the default reason, no_pack
@@ -173,7 +194,13 @@ public sealed class StoryVoicing
 
 		int offset = fromPosition == 0 ? 0 : await ClipOffsetAsync(story, plain, wholePieces, reading, translated, cancellationToken);
 		why.Reason = offset < 0 ? DeviceVoiceReason.TextMismatch : DeviceVoiceReason.ClipMissing; // a usable source whose pieces then find no clip is a missing clip
-		return offset < 0 ? null : new PremadeSource(pack, plain, offset);
+		if (offset < 0)
+		{
+			return null;
+		}
+
+		why.Misses = new ClipMisses(); // one tally per voicing of this read, so a second voicing never adds to the first
+		return new PremadeSource(pack, plain, offset, why.Misses);
 	}
 
 	private async Task<IReadOnlyList<SplitSegment>?> PlainPiecesAsync(Story story, Prepared prepared, string reading, bool translated, CancellationToken cancellationToken)

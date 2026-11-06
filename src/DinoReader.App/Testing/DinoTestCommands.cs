@@ -34,6 +34,9 @@ internal static partial class DinoTestCommands
 	private const string StageBookUpdateName = "stage-book-update";
 	private const string InstallAudioPackName = "install-audio-pack";
 	private const string FetchAudioPackName = "fetch-audio-pack";
+	private const string MissKey = "miss";
+	private const string MissTextMismatch = "text_mismatch";
+	private const int MismatchEvery = 3;
 	private const string StartedOutcome = "started";
 	private const string VoiceKey = "voice";
 	private const string VoiceOn = "1";
@@ -79,7 +82,7 @@ internal static partial class DinoTestCommands
 
 		if (command.Name == InstallAudioPackName)
 		{
-			_ = InstallAudioPackAsync(command.Get(IdKey, string.Empty), command.Get(TestHookDispatcher.LanguageKey, string.Empty));
+			_ = InstallAudioPackAsync(command.Get(IdKey, string.Empty), command.Get(TestHookDispatcher.LanguageKey, string.Empty), command.Get(MissKey, string.Empty) == MissTextMismatch);
 			return StartedOutcome;
 		}
 
@@ -210,7 +213,8 @@ internal static partial class DinoTestCommands
 	// Slice 246 C2 (Debug only): installs a small fixture audio pack for a book on the shelf, through the real pack store (size check, unzip, completeness check, rename), so a flow can read the
 	// book with pre-made clips without the network. Every translated piece of the book's table for the language gets the same short bundled recording (the pig's), keyed by the piece text's hash,
 	// so a piece the table lacks (a speaker tag the app adds) is still read by the device voice. Logs "HOOK install-audio-pack ok <book> <lang> v1" or "failed <reason>".
-	private static async Task InstallAudioPackAsync(string id, string language)
+	// Slice 273: miss=text_mismatch stores a wrong hash for every third entry, so those pieces find no clip (ClipMiss.TextMismatch) and the read is partial; no miss option = a complete pack.
+	private static async Task InstallAudioPackAsync(string id, string language, bool mismatch = false)
 	{
 		try
 		{
@@ -224,9 +228,11 @@ internal static partial class DinoTestCommands
 			}
 
 			string key = BundledTranslations.Key(language);
-			string zip = await WriteFixturePackAsync(bookId, key, table.Values);
+			string zip = await WriteFixturePackAsync(bookId, key, table.Values, mismatch);
 			var pack = new AudioPackInfo(FixtureVersion, new FileInfo(zip).Length, "fixture");
-			PackInstall result = await services.GetRequiredService<AudioPackStore>().InstallAsync(bookId, key, pack, null, CancellationToken.None, new FixtureFetcher(zip));
+			AudioPackStore packs = services.GetRequiredService<AudioPackStore>();
+			await packs.RemoveAsync(bookId, key); // always replace: a pack left by an earlier run must never make this install "already installed"
+			PackInstall result = await packs.InstallAsync(bookId, key, pack, null, CancellationToken.None, new FixtureFetcher(zip));
 			Log(result == PackInstall.Installed || result == PackInstall.AlreadyInstalled ? $"{InstallAudioPackName} ok {bookId} {key} v{FixtureVersion}" : $"{InstallAudioPackName} failed {result}");
 		}
 		catch (Exception ex)
@@ -287,13 +293,13 @@ internal static partial class DinoTestCommands
 	private const int FixtureVersion = 1;
 	private const string FixtureClipName = "fixture.m4a";
 
-	private static async Task<string> WriteFixturePackAsync(string bookId, string language, IEnumerable<string> texts)
+	private static async Task<string> WriteFixturePackAsync(string bookId, string language, IEnumerable<string> texts, bool mismatch = false)
 	{
 		string path = Path.Combine(FileSystem.CacheDirectory, $"fixture-pack-{bookId}-{language}.zip");
 		File.Delete(path);
 		using (var archive = new System.IO.Compression.ZipArchive(File.Create(path), System.IO.Compression.ZipArchiveMode.Create))
 		{
-			var entries = texts.Where(t => t.Any(char.IsLetterOrDigit)).Select((t, i) => new { index = i, hash = PremadeAudio.HashOf(t), clip = FixtureClipName });
+			var entries = texts.Where(t => t.Any(char.IsLetterOrDigit)).Select((t, i) => new { index = i, hash = PremadeAudio.HashOf(mismatch && i % MismatchEvery == 0 ? t + "#" : t), clip = FixtureClipName });
 			var manifest = new { version = PremadeAudio.ManifestVersion, book = bookId, language, entries };
 			await using (Stream stream = archive.CreateEntry(PremadeAudio.ManifestFile).Open())
 			{

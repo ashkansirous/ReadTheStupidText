@@ -81,6 +81,15 @@ public static class UsageEvents
     /// <summary>The person tapped Cancel on the wait overlay after it had shown for <paramref name="shown"/> (Slice 148).</summary>
     public static UsageEvent WaitCancelled(UsageContext context, WaitStage stage, TimeSpan shown) => Wait(context, UsageEventName.WaitCancelled, stage, shown);
 
+    /// <summary>
+    /// A feature fell back (Slice 273): <paramref name="area"/> and <paramref name="reason"/> must be on the closed <see cref="FallbackArea"/> and <see cref="FallbackReason"/> lists, else null (no count is made),
+    /// <paramref name="count"/> is how many times it happened this session (at least 1), and the language is optional.
+    /// </summary>
+    public static UsageEvent? Fallback(UsageContext context, string area, string reason, int count, string? language = null) =>
+        FallbackArea.All.Contains(area) && FallbackReason.All.Contains(reason) && count >= 1
+            ? Make(context, UsageEventName.Fallback) with { FallbackArea = area, FallbackReason = reason, Count = count, Language = Language(language) }
+            : null;
+
     private static UsageEvent Wait(UsageContext context, string name, WaitStage stage, TimeSpan shown) =>
         Make(context, name) with { WaitStage = UsageWaitStage.Of(stage), DurationBucket = UsageBuckets.Duration(shown) };
 

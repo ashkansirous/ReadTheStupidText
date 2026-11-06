@@ -292,6 +292,21 @@ public sealed class AudioPackStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Find_SaysWhyAPieceHasNoClip_AHashThatMissesIsATextMismatch_AGoneFileIsAMissingClip()
+    {
+        byte[] zip = Zip();
+        AudioPackStore store = Store(new FakeFetcher(zip));
+        await store.InstallAsync(Book, "fa", Info(zip), null, CancellationToken.None);
+        InstalledPack pack = store.Open(Book, "fa")!;
+
+        Assert.Equal(new ClipLookup(Path.Combine(pack.Folder, "a.m4a"), ClipMiss.None), pack.Find(0, Text + "a.m4a"));
+        Assert.Equal(ClipMiss.TextMismatch, pack.Find(0, "an edited sentence").Miss);
+        Assert.Equal(ClipMiss.TextMismatch, pack.Find(1, Text + "a.m4a").Miss);
+        File.Delete(Path.Combine(pack.Folder, "a.m4a"));
+        Assert.Equal(new ClipLookup(null, ClipMiss.FileMissing), pack.Find(0, Text + "a.m4a"));
+    }
+
+    [Fact]
     public async Task Sweep_DeletesThePacksOfBooksNotOnTheShelf_AndKeepsTheOthers()
     {
         byte[] zip = Zip();

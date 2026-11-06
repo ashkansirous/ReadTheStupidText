@@ -2,6 +2,7 @@ using System.Diagnostics;
 using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
+using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
 using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Mobile.Shared.Crashes;
 using ReadTheStupidText.Mobile.Shared.Waiting;
@@ -39,7 +40,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private readonly UsageCounter _usage;
 	private bool _finishCounted;
 	private bool _openCounted;
-	private Action<Story, string>? _voiceUsedHandler; // Slice 267: the same lifetime, for the voice-used count
+	private Action<Story, ReadVoiceUse>? _voiceUsedHandler; // Slice 267: the same lifetime, for the voice-used count
 	private Action<ReadingEventKind, ReadStopReason?>? _playbackHandler; // Slice 250: subscribed while the page is on the stack, bound to the book shown then
 	private readonly PageFollower _follower = new();
 	private readonly BusyGuard _busy = new();
@@ -1247,7 +1248,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		_playbackHandler = (kind, reason) => OnPlayback(book, kind, reason);
 		_session.Playback += _playbackHandler;
-		_voiceUsedHandler = (voiced, detail) => OnVoiceUsed(book, voiced, detail);
+		_voiceUsedHandler = (voiced, use) => OnVoiceUsed(book, voiced, use);
 		_session.VoiceUsed += _voiceUsedHandler;
 	}
 
@@ -1267,11 +1268,16 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	}
 
 	// Slice 267: one count per read, naming the voice it used (a book's own reads only; the intro's demo read counts no book event).
-	private void OnVoiceUsed(Story book, Story voiced, string detail)
+	// Slice 273: it names the pieces read by clips and by the device voice (never "premade" for a read that fell back part-way, Slice 272), and a read that fell back also sends the fallback count.
+	private void OnVoiceUsed(Story book, Story voiced, ReadVoiceUse use)
 	{
-		if (ReferenceEquals(book, voiced) || book.Id == voiced.Id)
+		if ((ReferenceEquals(book, voiced) || book.Id == voiced.Id) && DemoReadCounting.Counts(UsageEventName.ReadVoice, _demoRead))
 		{
-			RecordBookCount(UsageEventName.ReadVoice, book, detail);
+			_usage.Record(UsageEventName.ReadVoice, book, use.Detail, ReadIn(book), use.ClipPieces, use.DevicePieces);
+			if (use.FallbackReason is { } reason)
+			{
+				_usage.RecordFallback(book, FallbackArea.PremadeAudio, reason, ReadIn(book));
+			}
 		}
 	}
 

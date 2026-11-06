@@ -1,8 +1,9 @@
 // Run: node --test worker/events.test.mjs (node 22.18+/24 strip the types of events.ts).
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
-import { isUnstampedVersion, MAX_EVENTS_PER_REQUEST, handleEvents, handleRtstEvents, isEventsPath, parseEvent, parseRtstEvent, toDataPoint, toRtstDataPoint } from "./events.ts";
+import { FALLBACK_AREAS, FALLBACK_REASONS, isUnstampedVersion, MAX_EVENTS_PER_REQUEST, handleEvents, handleRtstEvents, isEventsPath, parseEvent, parseRtstEvent, toDataPoint, toRtstDataPoint } from "./events.ts";
 
 const BOOK = "0123456789abcdef0123456789abcdef";
 const shelfEvent = {
@@ -37,7 +38,7 @@ test("a batch of valid counts is written, one data point each, and answered with
   assert.deepEqual(env.points[0], {
     indexes: ["book_opened"],
     blobs: ["book_opened", BOOK, "en", "shelf", "no", "1.42.0", "android", "2026-10-25", "", "none", "", "", "", "", "", ""],
-    doubles: [2, -1],
+    doubles: [2, -1, -1, -1],
   });
   assert.equal(env.points[1].blobs[4], "yes");
 });
@@ -132,7 +133,7 @@ test("only POST is answered", async () => {
 test("the path check and the parser agree on the shapes they accept", () => {
   assert.ok(isEventsPath("/api/events"));
   assert.ok(!isEventsPath("/api/events/"));
-  assert.deepEqual(parseEvent(shelfEvent), { ...shelfEvent, detail: "", session: "", seq: -1 });
+  assert.deepEqual(parseEvent(shelfEvent), { ...shelfEvent, detail: "", session: "", seq: -1, count: -1, deviceCount: -1 });
   assert.equal(parseEvent({ ...shelfEvent, language: "pt-BR" })?.language, "pt-BR");
   assert.equal(toDataPoint(shelfEvent).indexes.length, 1);
 });
@@ -258,7 +259,7 @@ test("a phone read count is written with its fields in the fixed blob order", as
     {
       indexes: ["read_started"],
       blobs: ["read_started", "1.4.0", "android", "2026-10-26", "fr", "fr", "original", "supertonic", "yes", "200-1000", "", "", "", "", "", "", "", "none", "", ""],
-      doubles: [2, -1, -1],
+      doubles: [2, -1, -1, -1],
     },
   ]);
 });
@@ -442,7 +443,7 @@ test("Dino stamps the batch's country and device facts on every point as blob10-
   const response = await handleEvents(dinoPost({ schemaVersion: 1, device, events: [shelfEvent, ownEvent] }, "GB"), env, on);
   assert.equal(response.status, 204);
   for (const point of env.points) assert.deepEqual(point.blobs.slice(9, 15), ["GB", "15", "tablet", "arm64", "5-8", "4-6"]);
-  assert.deepEqual(env.points[0].doubles, [2, -1]);
+  assert.deepEqual(env.points[0].doubles, [2, -1, -1, -1]);
 });
 
 test("a batch with no device object is still written, with the device fields empty (an older build)", async () => {
@@ -484,7 +485,7 @@ test("the RTST phone count gets country, form factor and arch as blob18-blob20 a
   assert.equal(point.blobs.length, 20);
   assert.deepEqual(point.blobs.slice(17), ["SE", "tablet", "arm64"]);
   assert.equal(point.blobs[10], "15", "osMajor (blob11) is filled on every event from the device object");
-  assert.deepEqual(point.doubles, [2, 5, 4]);
+  assert.deepEqual(point.doubles, [2, 5, 4, -1]);
 });
 
 test("the RTST bucket doubles cover every bucket, and -1 means the build sent none", async () => {
@@ -493,11 +494,11 @@ test("the RTST bucket doubles cover every bucket, and -1 means the build sent no
     const env = rtstRecorder();
     const request = new Request("https://readthestupidtext.sirous.uk/api/events", { method: "POST", body: JSON.stringify({ device: { ...device, cores, ram }, events: [readStarted] }) });
     await handleRtstEvents(request, env, on);
-    assert.deepEqual(env.points[0].doubles.slice(1), [coreBound, ramBound], `${cores} ${ram}`);
+    assert.deepEqual(env.points[0].doubles.slice(1, 3), [coreBound, ramBound], `${cores} ${ram}`);
   }
   const old = rtstRecorder();
   await handleRtstEvents(rtstPost([readStarted]), old, on);
-  assert.deepEqual(old.points[0].doubles, [2, -1, -1]);
+  assert.deepEqual(old.points[0].doubles, [2, -1, -1, -1]);
 });
 
 test("an old RTST build keeps its own osMajor on app_opened, and the event's value wins over the device's", async () => {
@@ -663,7 +664,7 @@ test("a valid session id and sequence are written as blob16 and double2", async 
   await handleEvents(post({ events: [{ ...shelfEvent, session: SESSION, seq: 7 }, { ...shelfEvent, session: SESSION, seq: 0 }] }), env, on);
   assert.equal(env.points[0].blobs.length, 16);
   assert.equal(env.points[0].blobs[15], SESSION);
-  assert.deepEqual(env.points[0].doubles, [2, 7]);
+  assert.deepEqual(env.points[0].doubles, [2, 7, -1, -1]);
   assert.equal(env.points[1].doubles[1], 0);
 });
 
@@ -674,7 +675,7 @@ test("a malformed session id is dropped from the row, never the event", async ()
     await handleEvents(post({ events: [{ ...shelfEvent, session, seq: 3 }] }), env, on);
     assert.equal(env.points.length, 1, String(session));
     assert.equal(env.points[0].blobs[15], "", String(session));
-    assert.deepEqual(env.points[0].doubles, [2, -1], `${String(session)}: a sequence without a valid session is dropped too`);
+    assert.deepEqual(env.points[0].doubles, [2, -1, -1, -1], `${String(session)}: a sequence without a valid session is dropped too`);
   }
 });
 
@@ -691,7 +692,7 @@ test("a malformed sequence is dropped from the row and keeps the session id", as
 test("a count from a build without the fields still writes an empty session and sequence", () => {
   const point = toDataPoint(parseEvent(shelfEvent));
   assert.equal(point.blobs[15], "");
-  assert.deepEqual(point.doubles, [2, -1]);
+  assert.deepEqual(point.doubles, [2, -1, -1, -1]);
 });
 
 test("Read The Stupid Text rows never carry a session id, even when a body sends one", () => {
@@ -712,7 +713,7 @@ test("a session in order: the Slice 248 sequence reads read_started, book_left, 
 
 // ---- Which voice a read used and how a pack download went (Slice 267) -------------------------------------------------------
 
-const VOICE_DETAILS = ["premade", "device:no_pack", "device:pack_failed", "device:text_mismatch", "device:clip_missing"];
+const VOICE_DETAILS = ["premade", "partial", "device:no_pack", "device:pack_failed", "device:text_mismatch", "device:clip_missing"];
 const PACK_DETAILS = ["started", "done", "failed:network", "failed:size", "failed:unzip", "failed:clip", "failed:missing", "failed:storage"];
 
 test("read_voice takes exactly the closed voice details for a shelf or an own book and drops any other", () => {
@@ -733,4 +734,71 @@ test("audio_pack_download takes exactly the closed outcomes for a shelf book and
     assert.equal(parseEvent({ ...shelfEvent, name: "audio_pack_download", detail: bad }), null, bad);
   }
   assert.equal(parseEvent({ ...ownEvent, name: "audio_pack_download", detail: "done" }), null);
+});
+
+// ---- The fallback count (Slice 273 part A) ----------------------------------------------------------------------------------
+
+const FALLBACK_DETAILS = FALLBACK_AREAS.flatMap((area) => FALLBACK_REASONS.map((reason) => `${area}:${reason}`));
+
+test("fallback takes exactly area:reason from the closed lists, for a shelf book, an own book or no book", () => {
+  assert.ok(FALLBACK_DETAILS.length >= 5);
+  for (const detail of FALLBACK_DETAILS) {
+    assert.equal(parseEvent({ ...shelfEvent, name: "fallback", detail })?.detail, detail, detail);
+    assert.ok(parseEvent({ ...ownEvent, name: "fallback", detail }), `${detail} own`);
+    assert.ok(parseEvent({ ...noBook, name: "fallback", detail }), `${detail} none`);
+  }
+  for (const bad of ["", "premade_audio", "premade_audio:", ":partial", "premade_audio:other", "other:partial", "premade_audio:partial:1", "a title", "x".repeat(40)]) {
+    assert.equal(parseEvent({ ...shelfEvent, name: "fallback", detail: bad }), null, bad);
+  }
+  assert.equal(parseEvent({ ...shelfEvent, name: "fallback" }), null);
+});
+
+test("a fallback and a read_voice carry their counts as double3 and double4, and a malformed count is dropped from the row", async () => {
+  const env = recorder();
+  const events = [
+    { ...shelfEvent, name: "fallback", detail: "premade_audio:partial", count: 3 },
+    { ...shelfEvent, name: "read_voice", detail: "partial", count: 8, deviceCount: 2 },
+    { ...shelfEvent, name: "fallback", detail: "premade_audio:partial", count: -1 },
+    { ...shelfEvent, name: "fallback", detail: "premade_audio:partial", count: "3", deviceCount: 1.5 },
+  ];
+  await handleEvents(post({ events }), env, on);
+  assert.deepEqual(env.points.map((p) => p.doubles.slice(2)), [[3, -1], [8, 2], [-1, -1], [-1, -1]]);
+});
+
+test("count and deviceCount are kept only for fallback and read_voice and dropped from every other event", async () => {
+  const env = recorder();
+  const events = [
+    { ...shelfEvent, name: "book_opened", count: 999999, deviceCount: 5 },
+    { ...shelfEvent, name: "read_started", count: 7 },
+    { ...shelfEvent, name: "read_voice", detail: "premade", count: 7, deviceCount: 0 },
+  ];
+  await handleEvents(post({ events }), env, on);
+  assert.deepEqual(env.points.map((p) => p.doubles.slice(2)), [[-1, -1], [-1, -1], [7, 0]]);
+});
+
+test("no fallback area or reason ever equals an RTST timing stage or outcome, so the shared blobs stay unambiguous", () => {
+  const source = readFileSync(new URL("./events.ts", import.meta.url), "utf8");
+  const listOf = (name) => [...source.match(new RegExp(`${name} = \\[([^\\]]*)\\]`))[1].matchAll(/"([a-z_:]+)"/g)].map((m) => m[1]);
+  const timing = [...listOf("RTST_STAGES"), ...listOf("RTST_OUTCOMES")];
+  assert.ok(timing.length >= 6);
+  for (const value of [...FALLBACK_AREAS, ...FALLBACK_REASONS]) {
+    assert.ok(!timing.includes(value), `${value} is also a timing stage or outcome`);
+  }
+});
+
+test("the RTST fallback count stores area and reason in the stage and outcome blobs and count as double4", async () => {
+  const env = rtstRecorder();
+  const good = rtst("fallback", { fallbackArea: "premade_audio", fallbackReason: "no_pack", count: 4 });
+  await handleRtstEvents(rtstPost([good]), env, on);
+  assert.equal(env.points.length, 1);
+  assert.equal(env.points[0].blobs[11], "premade_audio");
+  assert.equal(env.points[0].blobs[12], "no_pack");
+  assert.equal(env.points[0].doubles[3], 4);
+  assert.ok(parseRtstEvent({ ...good, count: undefined }));
+  assert.deepEqual(toRtstDataPoint(parseRtstEvent({ ...good, count: undefined })).doubles.slice(3), [-1]);
+  for (const bad of [{ fallbackArea: "x" }, { fallbackReason: "x" }, { count: -2 }, { count: 1.5 }, { stage: "translate" }, { mode: "original" }]) {
+    assert.equal(parseRtstEvent({ ...good, ...bad }), null, JSON.stringify(bad));
+  }
+  assert.equal(parseRtstEvent({ ...good, fallbackArea: undefined }), null);
+  assert.equal(parseRtstEvent({ ...readStarted, fallbackArea: "premade_audio" }), null);
 });
