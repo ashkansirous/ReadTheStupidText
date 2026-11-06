@@ -25,6 +25,7 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 275 | Leftovers from night 2026-11-06-0042 (408 unmarked catches, past-roar flow marker, cache-key miss, live-scan script, cancelled pack count, Goldilocks version) | planned (user, 2026-11-06; part 1 merged #857; item 1 Dino folders left (after Slice 278)) | | | [275-night-2026-11-06-0042-leftovers.md](docs/plan/slices/275-night-2026-11-06-0042-leftovers.md) |
 | 278 | Dino: store books only (no own books, scanning, translation, voice engine or voice pickers; RTST untouched) | planned (user, 2026-11-06; part A merged #859; parts B and C open (B unblocked: 277 merged #858)) | | | [278-dino-store-books-only.md](docs/plan/slices/278-dino-store-books-only.md) |
 | 279 | Dino: recording your own voice, one intro page, then per character or whole page | planned (user, 2026-11-06; after 278) | | | [279-dino-recording-flow.md](docs/plan/slices/279-dino-recording-flow.md) |
+| 280 | Dino: Farsi speaker first, joined at translation time from existing pieces and clips (replaces Slice 254's read-time regroup) | planned (user, 2026-11-06) | | | [280-dino-farsi-speaker-first-at-translation.md](docs/plan/slices/280-dino-farsi-speaker-first-at-translation.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
