@@ -51,7 +51,7 @@ public sealed class UpdatePage : ContentPage
 		BackgroundColor = DinoTokens.Get(DinoTokens.Cream);
 		NavigationPage.SetHasNavigationBar(this, false);
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
-		var button = new CoralButton { Text = AppResources.Update_Button };
+		var button = new CoralButton { Text = ButtonText() };
 		button.Clicked += (_, _) => _ = _busy.RunAsync(UpdateAsync);
 		var grid = new Grid { RowDefinitions = [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)], Padding = new Thickness(Gutter, 0, Gutter, Gutter) };
 		grid.Add(Message(), 0);
@@ -60,6 +60,11 @@ public sealed class UpdatePage : ContentPage
 	}
 
 	protected override bool OnBackButtonPressed() => true;
+
+	// Slice 276: on iOS the button says which store it opens (TestFlight or App Store); other platforms keep "Update Dino".
+	private static string ButtonText() => OperatingSystem.IsIOS()
+		? AppResources.Get(IosUpdateTarget.For(ReadTheStupidText.Mobile.Shared.Crashes.CrashGate.Channel).TextKey)
+		: AppResources.Update_Button;
 
 	private async Task UpdateAsync()
 	{

@@ -290,6 +290,8 @@
   <data name="Update_Title" xml:space="preserve"><value>Dino skal opdateres</value></data>
   <data name="Update_Body" xml:space="preserve"><value>Bed en voksen om at hente den nye version. Dine bøger og optagelser forbliver, som de er.</value></data>
   <data name="Update_Button" xml:space="preserve"><value>Opdater Dino</value></data>
+  <data name="Update_OpenTestFlight" xml:space="preserve"><value>Åbn TestFlight</value></data>
+  <data name="Update_OpenAppStore" xml:space="preserve"><value>Åbn App Store</value></data>
   <data name="Version_NewReady" xml:space="preserve"><value>En ny version er klar</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Version</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Hjælp med at gøre Dino bedre</value></data>
