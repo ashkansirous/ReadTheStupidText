@@ -383,8 +383,6 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 	private readonly StoryLanguagePacks _packs;
 	private readonly ShelfAudioPacks _shelf;
 	private readonly UsageCounter _usage;
-	private readonly IStoryLibrary _library;
-	private readonly StoryTranslator _translator;
 	private readonly WaitOverlay _waitOverlay = DinoWait.OverPage();
 	private readonly WaitController _wait;
 	private readonly StoryLanguagePicker _picker;
@@ -392,14 +390,12 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 	private readonly List<string> _added = [];
 	private StoryLanguageSet _opened = StoryLanguages.Current();
 
-	public StoryLanguagesPage(StoryLanguagePacks packs, ShelfAudioPacks shelf, UsageCounter usage, IStoryLibrary library, StoryTranslator translator)
+	public StoryLanguagesPage(StoryLanguagePacks packs, ShelfAudioPacks shelf, UsageCounter usage)
 		: base(AppResources.StoryLanguages_SettingsTitle)
 	{
 		_packs = packs;
 		_shelf = shelf;
 		_usage = usage;
-		_library = library;
-		_translator = translator;
 		_wait = new WaitController(_waitOverlay);
 		AddOverlay(_waitOverlay);
 		_picker = new StoryLanguagePicker(_opened, packs, shelf);
@@ -420,7 +416,6 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 		_shelf.Changed += OnShelfChanged;
 		_opened = StoryLanguages.Current();
 		_picker.Rebuild();
-		_ = _translator.ReconcilePacksAsync(); // a grown-up screen: adds the packs an older install already has to the record (loads ML Kit)
 	}
 
 	protected override void OnDisappearing()
@@ -476,31 +471,6 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 		}
 
 		_shelf.Start(language, outcome); // Slice 262: the shelf books' audio in the language, after the voice (it waits for the voice itself); a cancelled request starts nothing
-
-		await OfferOwnBooksSafelyAsync(language);
-	}
-
-	private async Task OfferOwnBooksSafelyAsync(string language)
-	{
-		try
-		{
-			await OfferOwnBooksAsync(language);
-		}
-		catch (Exception ex)
-		{
-			System.Diagnostics.Debug.WriteLine($"Dino Reader could not offer the {language} translation: {ex}"); // the voice download is running; this offer is optional
-		}
-	}
-
-	private async Task OfferOwnBooksAsync(string language)
-	{
-		if (!_translator.IsAvailable || !StoryLanguages.Current().Contains(language))
-		{
-			return; // no engine on this build (Windows), or the language was unticked meanwhile
-		}
-
-		var prompt = new TranslationPackPrompt(_translator, _library);
-		await prompt.OfferForLanguageAsync(Window?.Page ?? this, language, (stage, line) => _wait.BeginCancellable(stage, line), () => _wait.End(), _wait);
 	}
 
 	private void ShowFull() => _full.IsVisible = _picker.Set.IsFull;

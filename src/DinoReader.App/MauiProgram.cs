@@ -1,11 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using DinoReader.Core;
-using ReadTheStupidText.Application.Documents;
-using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Crashes;
-using ReadTheStupidText.Documents;
 using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Mobile.Shared.Crashes;
 #if DEBUG
@@ -16,34 +13,9 @@ namespace DinoReader;
 
 public static class MauiProgram
 {
-	// Dino asks before a translation pack downloads (Slice 159, Decision 164): the engine is created with auto-download off, whoever resolves it first.
-	private static void AskBeforePackDownloads(IServiceCollection services)
-	{
-		ServiceDescriptor? original = services.LastOrDefault(d => d.ServiceType == typeof(ReadTheStupidText.Application.Translation.ITranslator));
-		if (original?.ImplementationType is not { } engineType)
-		{
-			return;
-		}
-
-		services.Remove(original);
-		services.AddSingleton<ReadTheStupidText.Application.Translation.ITranslator>(sp =>
-		{
-			var engine = (ReadTheStupidText.Application.Translation.ITranslator)ActivatorUtilities.CreateInstance(sp, engineType);
-			if (engine is ITranslationPacks packs)
-			{
-				packs.AutoDownload = false;
-			}
-
-			return engine;
-		});
-	}
-
 	// Stories live under AppDataDirectory/stories/<id>/ and never leave the device.
 	private const string StoriesFolder = "stories";
 	private const string AudioPackFolder = "audio-packs";
-
-	// Rendered PDF pages wait here (cache) until a story keeps them.
-	private const string PdfPagesFolder = "pdf-pages";
 
 #if DEBUG
 	// Slice 162: the iOS URL scheme of the Debug-only scripted-flow hooks (Android listens for a broadcast instead).
@@ -71,7 +43,6 @@ public static class MauiProgram
 			});
 
 		builder.AddMobileSharedServices();
-		AskBeforePackDownloads(builder.Services);
 		builder.Services.AddSingleton<SpeechStartup>();
 		builder.Services.AddSingleton<StoryTranslator>();
 		builder.Services.AddSingleton<SpokenLanguage>();
@@ -87,6 +58,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<StoryActions>();
 		builder.Services.AddTransient<IMicRecorder, MicRecorder>();
 		builder.Services.AddTransient<IRecordingPlayer, RecordingPlayer>();
+		builder.Services.AddSingleton<OwnBooksCleanup>(); // Slice 278 A3: deletes the families' own books once, started by GalleryPage.OnAppearing, once per app run
 		builder.Services.AddSingleton<StarterStories>();
 		builder.Services.AddSingleton<StagedBookUpdates>();
 		builder.Services.AddSingleton(services => CreateAudioPackStore(services));
@@ -96,7 +68,6 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ReadTheStupidText.Application.Usage.IFallbackSink, DinoFallbackSink>(); // Slice 273 part B: the shared readers and translators report fallbacks through it
 		builder.Services.AddSingleton<StoryLanguagePacks>();
 		builder.Services.AddSingleton<ShelfAudioPacks>(); // Slice 262: the one owner of the side languages' pre-made audio for the shelf books
-		AddDocumentExtractors(builder.Services);
 		AddPages(builder.Services);
 
 #if DEBUG
@@ -151,18 +122,6 @@ public static class MauiProgram
 	private static void BeginCrashReports(AppConfigClient config) =>
 		CrashReporter.BeginSending(new CrashSendOptions(StoreClient.BaseAddress, () => config.Current.CrashReportsEnabled, () => config.HasCopy, () => config.RefreshAsync()));
 
-	private static void AddDocumentExtractors(IServiceCollection services)
-	{
-		services.AddSingleton<PlainTextExtractor>();
-		services.AddSingleton<PdfTextExtractor>();
-		services.AddSingleton<DocxTextExtractor>();
-		services.AddSingleton<IDocumentTextExtractor, CompositeDocumentTextExtractor>();
-		services.AddSingleton(sp => new RenderedPdfTextExtractor(new PdfPositionedTextExtractor(),
-			sp.GetRequiredService<IPdfPageRenderer>(), sp.GetRequiredService<OcrPositionedTextExtractor>(),
-			Path.Combine(FileSystem.CacheDirectory, PdfPagesFolder)));
-		services.AddSingleton(sp => new StoryImport(sp.GetRequiredService<IPageImageKeeper>()));
-	}
-
 	// Pages are transient: each is opened with an explicit Load(story), never a one-shot
 	// Shell hand-off to a cached page.
 	private static void AddPages(IServiceCollection services)
@@ -184,7 +143,6 @@ public static class MauiProgram
 		services.AddTransient<FirstBooksPage>();
 		services.AddTransient<IntroWizardPage>();
 		services.AddSingleton<GrownUpMode>();
-		services.AddTransient<StoryWizardPage>();
 		services.AddTransient<CastPage>();
 		services.AddTransient<RecordPage>();
 		services.AddTransient<ReadingPage>();

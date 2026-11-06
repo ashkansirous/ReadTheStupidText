@@ -15,14 +15,13 @@ public enum BookSheetRow
     ReadWithMyVoice,
     RecordAndCast,
     Reorder,
-    EditPages,
     Export,
     Remove,
 }
 
 /// <summary>Which rows a book's options sheet (the "⋯" on its cover, Slice 189, mock Batch 37 frame 85b) shows. Read with my voice
-/// depends on the book's state, Edit pages only on an own book, Export only with the developer switch, and a Store book's Remove says it can come back.</summary>
-public sealed record BookSheetPlan(bool ShowVoice, bool ShowEditPages, bool ShowExport, bool CanReAddFromStore)
+/// depends on the book's state, Export only with the developer switch, and a Store book's Remove says it can come back.</summary>
+public sealed record BookSheetPlan(bool ShowVoice, bool ShowExport, bool CanReAddFromStore)
 {
     /// <summary>The rows in the order the sheet shows them (Slice 228, mock Batch 43 frame 100): <see cref="BookSheetRow.ReadNow"/> is always first, then the book's switches and the Record and Cast pills, then the rows that depend on the book, and Remove last.</summary>
     public IReadOnlyList<BookSheetRow> Rows
@@ -33,7 +32,6 @@ public sealed record BookSheetPlan(bool ShowVoice, bool ShowEditPages, bool Show
             AddIf(rows, ShowVoice, BookSheetRow.ReadWithMyVoice);
             rows.Add(BookSheetRow.RecordAndCast);
             rows.Add(BookSheetRow.Reorder); // Slice 264: every book, grown-up mode (the sheet only opens there)
-            AddIf(rows, ShowEditPages, BookSheetRow.EditPages);
             AddIf(rows, ShowExport, BookSheetRow.Export);
             rows.Add(BookSheetRow.Remove);
             return rows;
@@ -49,7 +47,7 @@ public sealed record BookSheetPlan(bool ShowVoice, bool ShowEditPages, bool Show
     }
 
     public static BookSheetPlan For(BookOrigin origin, bool hasRecording, bool developerExport) =>
-        new(hasRecording, origin == BookOrigin.Own, developerExport, origin == BookOrigin.Store);
+        new(hasRecording, developerExport, origin == BookOrigin.Store);
 
     /// <summary>The origin of a book: a catalogue book (<paramref name="fromCatalogue"/>) is a starter when the app installed it itself, else a Store book; anything else is the grown-up's own.</summary>
     public static BookOrigin OriginOf(bool fromCatalogue, bool installedAsStarter) =>

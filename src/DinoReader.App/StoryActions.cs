@@ -16,7 +16,7 @@ public enum DeleteOutcome
 /// <summary>The words of a delete question: its title, body and the accepting button (Slice 189: a book's "Remove from the shelf" says more than the default).</summary>
 public sealed record DeletePrompt(string Title, string Body, string Accept);
 
-/// <summary>Library actions the gallery's grown-up overlay and the edit screens share.</summary>
+/// <summary>Library actions the gallery's grown-up overlay and the cast and Record screens share (Slice 278: the story wizard is gone).</summary>
 public sealed class StoryActions(IStoryLibrary library, IServiceProvider services, GrownUpMode mode)
 {
 	private const string FallbackFileName = "story";
@@ -28,22 +28,6 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		var reading = services.GetRequiredService<ReadingPage>();
 		reading.Load(story);
 		await navigation.PushAsync(reading);
-	}
-
-	/// <summary>Opens the wizard to edit <paramref name="story"/>, or to add a story when it is null (Slice 78).</summary>
-	public async Task EditAsync(INavigation navigation, Story? story)
-	{
-		if (!mode.IsGrownUp)
-		{
-			return;
-		}
-
-		var wizard = services.GetRequiredService<StoryWizardPage>();
-		await wizard.LoadAsync(story);
-		if (mode.IsGrownUp)
-		{
-			await navigation.PushAsync(wizard);
-		}
 	}
 
 	/// <summary>Opens the cast screen on <paramref name="story"/>; its edits are saved as they are made.</summary>

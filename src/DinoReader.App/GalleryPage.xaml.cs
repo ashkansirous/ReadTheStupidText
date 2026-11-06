@@ -84,7 +84,6 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		BookInfo.ReadRequested += ReadSheetBookAsync;
 		BookInfo.CastRequested += OpenSheetCastAsync;
 		BookInfo.RecordRequested += OpenSheetRecordAsync;
-		BookInfo.EditRequested += OpenSheetEditAsync;
 		BookInfo.ExportRequested += ExportSheetBookAsync;
 		BookInfo.RemoveRequested += RemoveSheetBookAsync;
 		BookInfo.Dismissed += OnBookSheetDismissed;
@@ -178,6 +177,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 			window.Resumed += OnWindowResumed;
 		}
 
+		_ = CleanOwnBooksAsync(); // started on its own, so a failing starter install or refresh never keeps it from running
 		try
 		{
 			// The starters are on the shelf before the first list is read (Slice 91); a later call is a no-op.
@@ -189,6 +189,20 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		{
 			// no-fallback: logged only; the shelf stays as it was until the next refresh
 			Debug.WriteLine($"Dino Reader gallery refresh failed: {ex}");
+		}
+	}
+
+	// Slice 278 A3: the one-time deletion of the families' own books runs in the background, once per app run; the library never lists them, so the shelf needs no reload.
+	private async Task CleanOwnBooksAsync()
+	{
+		try
+		{
+			await _services.GetRequiredService<OwnBooksCleanup>().RunOnceAsync();
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: the cleanup reports its own failures; this only guards the fire-and-forget task
+			Debug.WriteLine($"Dino Reader own-books cleanup failed: {ex}");
 		}
 	}
 
@@ -313,10 +327,8 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		GrownUpsButton.SetValue(SemanticProperties.HintProperty, AppResources.Gallery_OpensGateHint);
 		SettingsButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Settings_GearLabel);
 		SettingsButton.SetValue(ToolTipProperties.TextProperty, AppResources.Settings_GearLabel);
-		AddBookLabel.Text = AppResources.Gallery_AddFromBooks;
-		AddBookButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Gallery_AddFromBooks);
-		StoreLabel.Text = AppResources.Store_Title;
-		StoreButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Store_Title);
+		StoreLabel.Text = AppResources.Gallery_GetMoreBooks;
+		StoreButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Gallery_GetMoreBooks);
 		StorytellerLine.Invalidate();
 	}
 
@@ -498,38 +510,20 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		double height = rows ? 56 : rail ? 44 : 52;
 		ApplyButtonHeights(rail, height);
 		StorytellerLine.Padding = rail ? new Thickness(inset, 0, 14, 10) : new Thickness(18, 0, 18, 12);
-		AddBookButton.BackgroundColor = rail ? RailButtonFill : Colors.White;
-		// Slice 234 part B (mock Batch 45 frame 139): on a tablet held upright Store is solid indigo in the rail, as in the portrait bar.
+		// Slice 234 part B (mock Batch 45 frame 139): on a tablet held upright the store button is solid indigo in the rail, as in the portrait bar.
 		StoreButton.BackgroundColor = rail && !corner.TabletUpright ? RailButtonFill : DinoTokens.Get(DinoTokens.Brand);
-		AddBookLabel.TextColor = rail ? Colors.White : DinoTokens.Get(DinoTokens.Ink);
-		AddBookIcon.Color = rail ? DinoTokens.Get(DinoTokens.Coral) : DinoTokens.Get(DinoTokens.Ink);
-		AddBookLabel.FontSize = rail && !rows ? 14 : 15;
-		StoreLabel.FontSize = AddBookLabel.FontSize;
-		LayoutOptions content = rows ? LayoutOptions.Start : LayoutOptions.Center;
-		AddBookContent.HorizontalOptions = content;
-		StoreContent.HorizontalOptions = content;
-		AddBookButton.Padding = rows ? new Thickness(18, 0) : new Thickness(0);
-		StoreButton.Padding = AddBookButton.Padding;
-		Grid.SetColumnSpan(AddBookButton, rows ? 2 : 1);
-		Grid.SetColumnSpan(StoreButton, rows ? 2 : 1);
-		Grid.SetColumn(StoreButton, rows ? 0 : 1);
-		Grid.SetRow(StoreButton, rows ? 1 : 0);
+		StoreLabel.FontSize = rail && !rows ? 14 : 15;
+		StoreContent.HorizontalOptions = rows ? LayoutOptions.Start : LayoutOptions.Center;
+		StoreButton.Padding = rows ? new Thickness(18, 0) : new Thickness(0);
 	}
 
 	// Portrait keeps the fixed 52 dp tiles with a truncated label; only on the rail does a label wrap to two lines and make its tile taller.
 	private void ApplyButtonHeights(bool rail, double height)
 	{
-		foreach (Border button in new[] { AddBookButton, StoreButton })
-		{
-			button.HeightRequest = rail ? -1 : height;
-			button.MinimumHeightRequest = rail ? height : -1;
-		}
-
-		foreach (Label label in new[] { AddBookLabel, StoreLabel })
-		{
-			label.LineBreakMode = rail ? LineBreakMode.WordWrap : LineBreakMode.TailTruncation;
-			label.MaxLines = rail ? 2 : -1;
-		}
+		StoreButton.HeightRequest = rail ? -1 : height;
+		StoreButton.MinimumHeightRequest = rail ? height : -1;
+		StoreLabel.LineBreakMode = rail ? LineBreakMode.WordWrap : LineBreakMode.TailTruncation;
+		StoreLabel.MaxLines = rail ? 2 : -1;
 	}
 
 	// The header: a compact bar in the kids' sideways shelf, the rail's top in the corner (the title may take two lines there), else the portrait bar.
@@ -1049,14 +1043,6 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 	}
 
-	private async Task OpenSheetEditAsync()
-	{
-		if (await SettledSheetStoryAsync() is { } story)
-		{
-			await RunGrownUpAsync(() => _actions.EditAsync(Navigation, story));
-		}
-	}
-
 	private async Task ExportSheetBookAsync()
 	{
 		if (await SettledSheetStoryAsync() is { } story)
@@ -1157,8 +1143,6 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 			await Navigation.PushAsync(store);
 		}
 	}
-
-	private async void OnAddTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(() => _actions.EditAsync(Navigation, null));
 
 	private async void OnOpenRequested(object? sender, EventArgs e)
 	{

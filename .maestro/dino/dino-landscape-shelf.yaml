@@ -50,8 +50,6 @@ name: Shelf, corner and book sheet in landscape keep their state through a rotat
 - assertVisible:
     id: GalleryCornerLine
 - assertVisible:
-    id: GalleryAddBook
-- assertVisible:
     id: GalleryStore
 - assertVisible:
     id: StoryTile

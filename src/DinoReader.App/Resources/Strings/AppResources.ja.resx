@@ -53,7 +53,6 @@
   <data name="Delete_Body" xml:space="preserve"><value>ページ、写真、声がこのスマホから削除されます。</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>おはなしを削除できませんでした</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>ファイルがまだ使用中です。しばらくしてからもう一度お試しください。</value></data>
-  <data name="Manage_EditStory" xml:space="preserve"><value>おはなしを編集</value></data>
   <data name="Gallery_EditStory" xml:space="preserve"><value>{0}を編集</value></data>
   <data name="Gallery_CastStory" xml:space="preserve"><value>{0}の登場人物</value></data>
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>{0}を削除</value></data>
@@ -148,10 +147,6 @@
   <data name="Intro_ReadCaption" xml:space="preserve"><value>ディノが本を開きました。「むかしむかし…」</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>あなたの声で読む</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>物語を1ページずつ読んで録音しましょう。お子さまはいつでも再生できます。</value></data>
-  <data name="Intro_AddTitle" xml:space="preserve"><value>自分の本を追加</value></data>
-  <data name="Intro_AddLine" xml:space="preserve"><value>本のページを撮影するか、PDFを選びます。Dinoが読み上げます。</value></data>
-  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>写真またはPDFを追加</value></data>
-  <data name="Intro_AddLineWindows" xml:space="preserve"><value>本のページの写真かPDFを選びます。Dinoが読み上げます。</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>はじめの案内をもう一度見る</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>スマホの声で続ける</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>子どもに渡す</value></data>
@@ -195,7 +190,7 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>「{0}」を本棚から外しますか？</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>ページ、写真、声がこのスマホから削除されます。ストアから無料でもう一度追加できます。</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>外す</value></data>
-  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>自分の本から追加</value></data>
+  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>もっと本を見つける</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>準備OK</value></data>
   <data name="Language_Download" xml:space="preserve"><value>ダウンロード</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>ダウンロード中 {0}%</value></data>
@@ -223,8 +218,6 @@
   <data name="PackStatus_FailedClick" xml:space="preserve"><value>自然な音声をダウンロードできませんでした。スマートフォンの音声で読み上げます。クリックして再試行します。</value></data>
   <data name="PackStatus_StoppedClick" xml:space="preserve"><value>ダウンロードを停止しました。スマートフォンの音声で読み上げます。クリックしてダウンロードします。</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>{0} たす {1} は？</value></data>
-  <data name="Story_Add" xml:space="preserve"><value>おはなしを追加</value></data>
-  <data name="Story_Title" xml:space="preserve"><value>タイトル</value></data>
   <data name="Story_Language" xml:space="preserve"><value>おはなしの言語</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · 自動判定</value></data>
   <data name="Story_Translate" xml:space="preserve"><value>自分の言語に翻訳</value></data>
@@ -317,86 +310,18 @@
   <data name="Storyteller_Failed" xml:space="preserve"><value>語り手の声をダウンロードできませんでした</value></data>
   <data name="Storyteller_TryAgain" xml:space="preserve"><value>もう一度試す</value></data>
   <!-- /Slice 115 -->
-  <data name="Add_Scan" xml:space="preserve"><value>ページをスキャン</value></data>
-  <data name="Add_ScanSub" xml:space="preserve"><value>ページの絵を残します</value></data>
-  <data name="Add_Photos" xml:space="preserve"><value>写真</value></data>
-  <data name="Add_PhotosSub" xml:space="preserve"><value>ページの写真を選ぶ</value></data>
-  <data name="Add_File" xml:space="preserve"><value>PDFまたはファイル</value></data>
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
   <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
-  <data name="Add_Type" xml:space="preserve"><value>入力または貼り付け</value></data>
-  <data name="Add_TypeSub" xml:space="preserve"><value>テキストのみ</value></data>
-  <data name="Add_Placeholder" xml:space="preserve"><value>おはなしを入力または貼り付け</value></data>
-  <data name="Add_CheckCast" xml:space="preserve"><value>配役を確認</value></data>
-  <data name="Add_Save" xml:space="preserve"><value>おはなしを保存</value></data>
-  <data name="Add_PickerTitle" xml:space="preserve"><value>.txt、.pdf、.docx のファイルを選んでください</value></data>
-  <data name="Add_PermissionTitle" xml:space="preserve"><value>許可が必要です</value></data>
-  <data name="Add_PermissionBody" xml:space="preserve"><value>ドキュメントを読むには、ファイルへのアクセスを許可してください。</value></data>
-  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>ファイルが大きすぎます</value></data>
-  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>このファイルは {0} ページあり、上限は {1} ページです。</value></data>
-  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>ファイルを読み込めませんでした</value></data>
-  <data name="Add_ReadFailedBody" xml:space="preserve"><value>ファイルが壊れているか、対応していない形式の可能性があります。</value></data>
-  <data name="Edit_Cover" xml:space="preserve"><value>表紙</value></data>
-  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>最初のページ</value></data>
-  <data name="Edit_CoverColour" xml:space="preserve"><value>色</value></data>
-  <data name="Edit_CoverPhoto" xml:space="preserve"><value>写真</value></data>
-  <data name="Edit_Pages" xml:space="preserve"><value>ページ</value></data>
   <!-- Slice 78: the page-review wizard -->
   <data name="Wizard_Next" xml:space="preserve"><value>次へ</value></data>
-  <data name="Wizard_StepText" xml:space="preserve"><value>テキスト</value></data>
-  <data name="Wizard_AddPages" xml:space="preserve"><value>ページを追加</value></data>
-  <data name="Wizard_DragHint" xml:space="preserve"><value>ページを長押ししてドラッグすると並べ替えられます</value></data>
-  <data name="Wizard_EmptyBody" xml:space="preserve"><value>物語のページを追加します。スキャン、写真の選択、PDFやファイルの追加、またはテキストの入力ができます。そのあとでページを並べ替えましょう。</value></data>
-  <data name="Wizard_PageN" xml:space="preserve"><value>{0}ページ</value></data>
-  <data name="Wizard_PageMenu" xml:space="preserve"><value>ページのオプション</value></data>
-  <data name="Wizard_MenuRotate" xml:space="preserve"><value>回転</value></data>
-  <data name="Wizard_MenuCrop" xml:space="preserve"><value>回転・トリミング</value></data>
-  <data name="Wizard_MenuEditText" xml:space="preserve"><value>テキストを編集</value></data>
-  <data name="Wizard_NoTextShort" xml:space="preserve"><value>テキストなし</value></data>
-  <data name="Wizard_NoText" xml:space="preserve"><value>このページにはテキストが見つかりませんでした</value></data>
-  <data name="Wizard_Reading" xml:space="preserve"><value>{1}ページ中{0}ページ目を読み取り中</value></data>
   <data name="Wait_GettingVoices" xml:space="preserve"><value>声を準備しています…</value></data>
   <data name="Wait_Stalled" xml:space="preserve"><value>まだ音声を準備しています…</value></data>
-  <data name="Wait_ReadingPictures" xml:space="preserve"><value>絵を読み取っています…</value></data>
-  <data name="Wait_PageOf" xml:space="preserve"><value>{1}ページ中{0}ページ目</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>翻訳しています…</value></data>
   <data name="Wait_WaitingInternet" xml:space="preserve"><value>インターネットを待っています</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingWifi" xml:space="preserve"><value>Wi-Fi待ち</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_Retry" xml:space="preserve"><value>再試行</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0}は{1}%ダウンロード済みです。オンラインに戻ると自動で再開します。</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>{0}をダウンロード中。オンラインに戻ると自動で再開します。</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>保存しています…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>本を準備しています…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>本をバックアップしています…</value></data>
   <data name="Wait_Restoring" xml:space="preserve"><value>本を復元しています…</value></data>
-  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>読み取れなかったページがあります</value></data>
-  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0}ページを読み取れませんでした。テキストなしの画像として残ります。</value></data>
-  <data name="Pictures_NoneTitle" xml:space="preserve"><value>このファイルには文章はありますが、絵がありません</value></data>
-  <data name="Pictures_NoneBody" xml:space="preserve"><value>よければ、各ページに絵を1枚ずつ追加してください。絵のないページは文字だけで読まれます。</value></data>
-  <data name="Pictures_PickAll" xml:space="preserve"><value>すべてのページの絵を選ぶ</value></data>
-  <data name="Pictures_PageN" xml:space="preserve"><value>{0}ページ</value></data>
-  <data name="Pictures_Change" xml:space="preserve"><value>変更</value></data>
-  <data name="Pictures_Add" xml:space="preserve"><value>絵を追加</value></data>
-  <data name="Pictures_FoundEvery" xml:space="preserve"><value>すべてのページに絵が見つかりました</value></data>
-  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1}ページ</value></data>
-  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1}ページ</value></data>
-  <data name="Pictures_NextCover" xml:space="preserve"><value>次へ：表紙</value></data>
-  <data name="Wizard_CoverHint" xml:space="preserve"><value>表紙にするページ、写真、または色を選んでください。</value></data>
-  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>まだ読むものがありません</value></data>
-  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>少なくとも1ページにテキストを追加してから保存してください。</value></data>
-  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>物語を保存できませんでした</value></data>
-  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>何も変更されていません。しばらくしてからもう一度お試しください。</value></data>
-  <data name="Regions_Helper" xml:space="preserve"><value>枠をタップすると、読むか読まないかを切り替えられます。</value></data>
-  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>編集したテキストを、選んだ領域のテキストに置き換えますか？</value></data>
-  <data name="Regions_ReplaceBody" xml:space="preserve"><value>このページで入力した内容は失われます。</value></data>
-  <data name="Regions_Replace" xml:space="preserve"><value>置き換える</value></data>
-  <data name="Regions_Keep" xml:space="preserve"><value>そのまま残す</value></data>
-  <data name="Regions_BoxRead" xml:space="preserve"><value>テキスト枠、読む</value></data>
-  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>テキスト枠、読まない</value></data>
-  <data name="Editor_Title" xml:space="preserve"><value>回転とトリミング</value></data>
-  <data name="Editor_RotateLeft" xml:space="preserve"><value>左に回転</value></data>
-  <data name="Editor_RotateRight" xml:space="preserve"><value>右に回転</value></data>
-  <data name="Editor_ResetCrop" xml:space="preserve"><value>トリミングをリセット</value></data>
   <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>絵だけ</value></data>
   <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>絵と文字</value></data>
   <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>文字だけ</value></data>
@@ -432,11 +357,6 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>どうぶつのこえ</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>どうぶつが ときどき「ブーブー!」や「メェー!」と いいます。どの ほんでも</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>この本には、用意されている {0} 人の語り手キャラクターより多くの登場人物がいるため、同じように聞こえるキャラクターがいます。ナレーターはキャラクターには使われません。</value></data>
-  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>翻訳パックをダウンロードしますか？</value></data>
-  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>この本を{0}で表示して読み上げるには、Dino Readerに次の翻訳パックが必要です：{1}。この端末に保存されます。スキップすると、本は元の言語のままです。</value></data>
-  <data name="TranslationPack_Download" xml:space="preserve"><value>ダウンロード</value></data>
-  <data name="TranslationPack_Keep" xml:space="preserve"><value>元のままにする</value></data>
-  <data name="TranslationPack_Failed" xml:space="preserve"><value>翻訳パックを取得できませんでした。本は元の言語のままです。</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>{0}の翻訳パックを取得中…</value></data>
   <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>おはなしは何語にしますか？</value></data>
   <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>あと2つまで選べます。お子さまは読みながら切り替えられます。</value></data>

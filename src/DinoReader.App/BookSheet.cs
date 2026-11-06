@@ -7,7 +7,7 @@ namespace DinoReader;
 /// <summary>
 /// A book's options sheet (Slice 110, mock frame 43; Slice 189, mock frame 85b): a white bottom sheet over the dimmed shelf, opened from the "⋯" on a book's cover in grown-up mode (the reading screen has no
 /// grown-ups button). The header names the book and where it came from. It holds "Read with my voice" once a page is recorded
-/// (Slice 111, Decision 115), the Record and Cast pills, Edit pages (own books), Export (developer switch), "Remove from the shelf" and Done.
+/// (Slice 111, Decision 115), the Record and Cast pills, Export (developer switch), "Remove from the shelf" and Done.
 /// It lives inside the shelf page rather than on the navigation stack, so leaving the app cannot strand it.
 /// </summary>
 internal sealed class BookSheet : Grid, IPageOverlay
@@ -49,9 +49,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 	private readonly Label _title = new() { FontSize = PhoneTitleSize, FontAttributes = FontAttributes.Bold, LineHeight = 1.2, MaxLines = 2, LineBreakMode = LineBreakMode.TailTruncation };
 	private readonly Label _subtitle = new() { FontSize = 13, TextColor = DinoTokens.Get(DinoTokens.Muted) };
 	private readonly Border _thumb = new();
-	private readonly Border _editRow = new();
 	private readonly Border _exportRow = new();
-	private readonly Label _editLabel = new();
 	private readonly Label _exportLabel = new();
 	private readonly Label _removeLabel = new();
 	private readonly Label _readNowLabel = new();
@@ -103,7 +101,6 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		_castPill = CastPill();
 		ReadNowRow();
 		VoiceRow();
-		QuietRow(_editRow, _editLabel, () => EditRequested, "BookSheetEdit");
 		QuietRow(_exportRow, _exportLabel, () => ExportRequested, "BookSheetExport");
 		ReorderRow();
 		RemoveRow();
@@ -156,7 +153,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		_thumb.IsVisible = true;
 		_title.FontSize = PhoneTitleSize;
 		_header.VerticalOptions = LayoutOptions.Fill;
-		foreach (View row in new View[] { _grab, _header, _readNowRow, _voiceRow, _pills, _reorderRow, _editRow, _exportRow, _removeRow })
+		foreach (View row in new View[] { _grab, _header, _readNowRow, _voiceRow, _pills, _reorderRow, _exportRow, _removeRow })
 		{
 			_sheetRows.Children.Add(row);
 		}
@@ -191,7 +188,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 			_cardRows.Children.Add(_header);
 		}
 
-		foreach (View row in new View[] { _readNowRow, _voiceRow, _pills, _reorderRow, _editRow, _exportRow, _removeRow })
+		foreach (View row in new View[] { _readNowRow, _voiceRow, _pills, _reorderRow, _exportRow, _removeRow })
 		{
 			_cardRows.Children.Add(row);
 		}
@@ -269,9 +266,6 @@ internal sealed class BookSheet : Grid, IPageOverlay
 	/// <summary>Raised when the grown-up asks for the Record screen; the sheet closes first.</summary>
 	public event Func<Task>? RecordRequested;
 
-	/// <summary>Raised when the grown-up asks to edit the book's pages (own books); the sheet closes first.</summary>
-	public event Func<Task>? EditRequested;
-
 	/// <summary>Raised for the developer-only Export; the sheet closes first.</summary>
 	public event Func<Task>? ExportRequested;
 
@@ -291,7 +285,6 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		_subtitle.Text = content.OriginText;
 		ShowThumb(content);
 		_voiceRow.IsVisible = content.Plan.ShowVoice && content.Voice is not null;
-		_editRow.IsVisible = content.Plan.ShowEditPages;
 		_exportRow.IsVisible = content.Plan.ShowExport;
 		_loading = true;
 		_voice.IsOn = content.Voice?.On ?? false;
@@ -330,13 +323,11 @@ internal sealed class BookSheet : Grid, IPageOverlay
 	// The labels are set on every show, so a changed app language reaches this cached sheet.
 	private void ApplyTexts()
 	{
-		_editLabel.Text = AppResources.Book_EditPages;
 		_exportLabel.Text = AppResources.Gallery_ExportStory;
 		_removeLabel.Text = AppResources.Book_Remove;
 		_reorderLabel.Text = AppResources.Gallery_Reorder;
 		SemanticProperties.SetDescription(_reorderRow, _reorderLabel.Text);
 		_readNowLabel.Text = AppResources.Book_ReadNow;
-		SemanticProperties.SetDescription(_editRow, _editLabel.Text);
 		SemanticProperties.SetDescription(_exportRow, _exportLabel.Text);
 		SemanticProperties.SetDescription(_removeRow, _removeLabel.Text);
 		SemanticProperties.SetDescription(_readNowRow, _readNowLabel.Text);
@@ -505,7 +496,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		return close;
 	}
 
-	// Edit pages and Export: quiet full-width rows under the pills; each closes the sheet before its screen opens.
+	// Export: a quiet full-width row under the pills; each closes the sheet before its screen opens.
 	private Border QuietRow(Border row, Label label, Func<Func<Task>?> handler, string automationId)
 	{
 		label.FontSize = 15;

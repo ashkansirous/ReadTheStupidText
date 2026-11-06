@@ -6,25 +6,21 @@ namespace DinoReader;
 
 /// <summary>
 /// The picture files the intro's step art is drawn from. The Places and Read steps are drawn from art that ships in the app (Dino on plain colour blocks, Slice 261, mock Batch 47 frame 168);
-/// the Record and Add steps show a page of the grown-up's first book and two pages of another one from the shelf. A null file draws a plain tinted block.
+/// the Record step shows a page of the grown-up's first book (Slice 278: the Add step is gone). A null file draws a plain tinted block.
 /// </summary>
-public sealed record IntroPictures(string? RecordPage, IReadOnlyList<string?> AddPhotos)
+public sealed record IntroPictures(string? RecordPage)
 {
-	private const int PhotoCount = 2;
+	public static readonly IntroPictures None = new((string?)null);
 
-	public static readonly IntroPictures None = new(null, [null, null]);
-
-	/// <summary>Reads the shelf and picks the art: a page of the first book, two pages of another book.</summary>
+	/// <summary>Reads the shelf and picks the art: a page of the first book.</summary>
 	public static async Task<IntroPictures> LoadAsync(IStoryLibrary library)
 	{
 		try
 		{
 			IReadOnlyList<Story> stories = (await library.ListAsync()).OrderBy(s => s.Created).ThenBy(s => s.Id, StringComparer.Ordinal).ToList(); // first added first, whatever order the grown-up gave the shelf
 			Story? first = FirstOf(stories);
-			Story? other = stories.FirstOrDefault(s => s.Id != first?.Id && PagePictures(s).Count >= PhotoCount);
 			string? record = first is null ? null : PagePictures(first).Select(f => library.TryResolveFile(first.Id, f)).FirstOrDefault(p => p is not null);
-			string?[] photos = other is null ? [null, null] : PagePictures(other).Take(PhotoCount).Select(f => library.TryResolveFile(other.Id, f)).ToArray();
-			return new IntroPictures(record, photos);
+			return new IntroPictures(record);
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
@@ -60,7 +56,6 @@ public static class IntroArt
 	private const double NarrowSide = 220;
 	private const double BadgeSize = 60;
 	private const double ShadowRadius = 20;
-	private const double BorderWidth = 5;
 	private const double PhoneWidth = 120;
 	private const double PhoneHeight = 200;
 	private const double PhoneBorder = 4;
@@ -76,16 +71,13 @@ public static class IntroArt
 	private static readonly Color ReadAura = Color.FromArgb("#FFE9B8");
 	private static readonly Color CaptionHighlight = Color.FromArgb("#FFE27A");
 	private static readonly Color RecordTint = Color.FromArgb("#FFE3D9");
-	private static readonly Color AddTint = Color.FromArgb("#FFF0C2");
 	private static readonly Color RecordBadge = Color.FromArgb("#FF7A59");
-	private static readonly Color AddBadge = Color.FromArgb("#5B57E8");
 
 	public static View Build(string step, IntroPictures pictures, bool windows) => step switch
 	{
 		IntroSteps.Places => Places(),
 		IntroSteps.Read => Read(),
-		IntroSteps.Record => Record(pictures),
-		_ => Add(pictures, windows),
+		_ => Record(pictures),
 	};
 
 	// Batch 43 frame 101: two small phones tilted -4 and +4 degrees, the kids' shelf (cream, a cover) and the grown-ups' corner (sand, an ink bar with an amber lock).
@@ -176,16 +168,6 @@ public static class IntroArt
 		return art;
 	}
 
-	private static AbsoluteLayout Add(IntroPictures pictures, bool windows)
-	{
-		AbsoluteLayout art = Canvas(NarrowSide, Side);
-		Place(art, Ellipse(AddTint), 10, 0, NarrowSide - 20, Side);
-		Place(art, Photo(pictures.AddPhotos[0], -6), 34, 40, 124, 166);
-		Place(art, Photo(pictures.AddPhotos[1], 5), NarrowSide - 34 - 124, 54, 124, 166);
-		Place(art, Badge(AddBadge, windows ? IconKind.Picture : IconKind.Camera, 2.4), NarrowSide - 30 - BadgeSize, Side - 14 - BadgeSize, BadgeSize, BadgeSize);
-		return art;
-	}
-
 	private static AbsoluteLayout Canvas(double width, double height) => new() { WidthRequest = width, HeightRequest = height, HorizontalOptions = LayoutOptions.Center };
 
 	private static void Place(AbsoluteLayout art, View view, double x, double y, double width, double height, double rotation = 0)
@@ -206,15 +188,6 @@ public static class IntroArt
 		Shadow = new Shadow { Brush = Colors.Black, Offset = new Point(0, 8), Radius = (float)ShadowRadius, Opacity = 0.2f },
 		Content = Image(file),
 	};
-
-	// The Add step's photos: a white edge round the picture.
-	private static Border Photo(string? file, double rotation)
-	{
-		Border photo = Picture(file, 12, rotation);
-		photo.Stroke = Colors.White;
-		photo.StrokeThickness = BorderWidth;
-		return photo;
-	}
 
 	private static Image Image(string? file) => new() { Aspect = Aspect.AspectFill, Source = file is null ? null : ImageSource.FromFile(file) };
 

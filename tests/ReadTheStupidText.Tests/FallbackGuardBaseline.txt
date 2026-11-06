@@ -5,7 +5,6 @@ src/DinoReader.App/BackCoverText.cs 1
 src/DinoReader.App/BackupPage.xaml.cs 4
 src/DinoReader.App/BookSheet.cs 1
 src/DinoReader.App/BookUpdater.cs 4
-src/DinoReader.App/CoverPicker.cs 2
 src/DinoReader.App/DinoLog.cs 1
 src/DinoReader.App/ExportFolders.cs 1
 src/DinoReader.App/FirstBooksPage.cs 4
@@ -14,10 +13,7 @@ src/DinoReader.App/IntroWizardPage.Art.cs 1
 src/DinoReader.App/IntroWizardPage.cs 4
 src/DinoReader.App/LanguagePage.xaml.cs 2
 src/DinoReader.App/NarratorPage.cs 5
-src/DinoReader.App/PageEditorPage.xaml.cs 3
 src/DinoReader.App/PageImageSize.cs 3
-src/DinoReader.App/PagesStep.xaml.cs 13
-src/DinoReader.App/PickedPhotoCache.cs 1
 src/DinoReader.App/PictureTextPages.cs 1
 src/DinoReader.App/PlayerHandOff.cs 1
 src/DinoReader.App/ReadingClips.cs 2
@@ -37,17 +33,12 @@ src/DinoReader.App/StarterStories.cs 3
 src/DinoReader.App/StoreClient.cs 10
 src/DinoReader.App/StorePage.xaml.cs 5
 src/DinoReader.App/StoryActions.cs 3
-src/DinoReader.App/StoryImport.cs 4
 src/DinoReader.App/StoryLanguages.cs 3
-src/DinoReader.App/StoryLanguagesPage.cs 3
-src/DinoReader.App/StoryTranslator.cs 6
-src/DinoReader.App/StoryWizardPage.xaml.cs 3
+src/DinoReader.App/StoryLanguagesPage.cs 2
 src/DinoReader.App/Testing/DinoTestCommands.Backup.cs 1
 src/DinoReader.App/Testing/DinoTestCommands.FirstBooks.cs 1
 src/DinoReader.App/Testing/TestStore.Books.cs 1
-src/DinoReader.App/TextStep.xaml.cs 5
 src/DinoReader.App/TileOverlay.xaml.cs 2
-src/DinoReader.App/TranslationPackPrompt.cs 2
 src/DinoReader.Core/AppConfig.cs 2
 src/DinoReader.Core/LatestWinsWorker.cs 1
 src/DinoReader.Core/ShelfOrder.cs 1

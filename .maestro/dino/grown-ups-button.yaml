@@ -33,8 +33,6 @@ name: Grown-ups button, gear, book sheet and back chain
 - assertVisible:
     id: GallerySettings
 - assertVisible:
-    id: GalleryAddBook
-- assertVisible:
     id: GalleryStore
 - assertNotVisible:
     id: GalleryGrownUps
@@ -44,7 +42,7 @@ name: Grown-ups button, gear, book sheet and back chain
       visible: Storyteller voices are ready
     commands:
       - tapOn: "OK"
-# The sheet of a starter book: Remove, no Edit pages. Keep leaves it open; a tap outside closes it.
+# The sheet of a starter book: Remove, and no Edit pages row on any book (Slice 278). Keep leaves it open; a tap outside closes it.
 - tapOn:
     id: TileMore
     index: 0

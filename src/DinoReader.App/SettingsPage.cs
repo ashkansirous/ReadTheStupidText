@@ -243,7 +243,6 @@ public sealed class SettingsPage : SettingsSubPage, IDinoKeyTarget
 	{
 		base.OnAppearing();
 		_appeared = true;
-		_ = _services.GetRequiredService<StoryTranslator>().ReconcilePacksAsync(); // behind the grown-up gate: adds the packs an older install already has to the record
 		_config.Changed -= OnConfigChanged; // never twice
 		_config.Changed += OnConfigChanged;
 		SettingsRows.SettingChanged -= RefreshValue; // never twice

@@ -53,7 +53,6 @@
   <data name="Delete_Body" xml:space="preserve"><value>As páginas, imagens e vozes dele serão removidas deste telefone.</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>Não foi possível excluir a história</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>Algo ainda está usando os arquivos. Tente novamente em instantes.</value></data>
-  <data name="Manage_EditStory" xml:space="preserve"><value>Editar história</value></data>
   <data name="Gallery_EditStory" xml:space="preserve"><value>Editar {0}</value></data>
   <data name="Gallery_CastStory" xml:space="preserve"><value>Elenco de {0}</value></data>
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Excluir {0}</value></data>
@@ -148,10 +147,6 @@
   <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino abriu o livro. «Era uma vez…»</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Leia com a sua voz</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Grave-se lendo uma história, página por página. Seu filho pode ouvir quando quiser.</value></data>
-  <data name="Intro_AddTitle" xml:space="preserve"><value>Adicione o seu próprio livro</value></data>
-  <data name="Intro_AddLine" xml:space="preserve"><value>Tire fotos das páginas de um livro ou escolha um PDF. O Dino lê em voz alta.</value></data>
-  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>Adicionar fotos ou um PDF</value></data>
-  <data name="Intro_AddLineWindows" xml:space="preserve"><value>Escolha fotos das páginas de um livro ou um PDF. O Dino lê em voz alta.</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>Mostrar a introdução de novo</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Continuar com a voz do telefone</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Pronto para meu filho</value></data>
@@ -195,7 +190,7 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>Remover “{0}” da estante?</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>As páginas, imagens e vozes dele serão removidas deste telefone. Você pode adicioná-lo de novo, de graça, pela loja.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Remover</value></data>
-  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Adicionar dos seus próprios livros</value></data>
+  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Obter mais livros</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Pronto</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Baixar</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>Baixando {0}%</value></data>
@@ -223,8 +218,6 @@
   <data name="PackStatus_FailedClick" xml:space="preserve"><value>Não foi possível baixar as vozes naturais. Lendo com a voz do telefone. Clique para tentar novamente.</value></data>
   <data name="PackStatus_StoppedClick" xml:space="preserve"><value>Download interrompido. Lendo com a voz do telefone. Clique para baixar.</value></data>
   <data name="Gate_SumQuestion" xml:space="preserve"><value>Quanto é {0} mais {1}?</value></data>
-  <data name="Story_Add" xml:space="preserve"><value>Adicionar uma história</value></data>
-  <data name="Story_Title" xml:space="preserve"><value>Título</value></data>
   <data name="Story_Language" xml:space="preserve"><value>Idioma da história</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · detectado</value></data>
   <data name="Story_Translate" xml:space="preserve"><value>Traduzir para o meu idioma</value></data>
@@ -317,86 +310,18 @@
   <data name="Storyteller_Failed" xml:space="preserve"><value>Não foi possível baixar as vozes de narrador</value></data>
   <data name="Storyteller_TryAgain" xml:space="preserve"><value>Tentar de novo</value></data>
   <!-- /Slice 115 -->
-  <data name="Add_Scan" xml:space="preserve"><value>Digitalizar páginas</value></data>
-  <data name="Add_ScanSub" xml:space="preserve"><value>Mantém as imagens das páginas</value></data>
-  <data name="Add_Photos" xml:space="preserve"><value>Fotos</value></data>
-  <data name="Add_PhotosSub" xml:space="preserve"><value>Escolha fotos das páginas</value></data>
-  <data name="Add_File" xml:space="preserve"><value>PDF ou arquivo</value></data>
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
   <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
-  <data name="Add_Type" xml:space="preserve"><value>Digitar ou colar</value></data>
-  <data name="Add_TypeSub" xml:space="preserve"><value>Somente texto</value></data>
-  <data name="Add_Placeholder" xml:space="preserve"><value>Digite ou cole uma história</value></data>
-  <data name="Add_CheckCast" xml:space="preserve"><value>Conferir o elenco</value></data>
-  <data name="Add_Save" xml:space="preserve"><value>Salvar história</value></data>
-  <data name="Add_PickerTitle" xml:space="preserve"><value>Escolha um arquivo .txt, .pdf ou .docx</value></data>
-  <data name="Add_PermissionTitle" xml:space="preserve"><value>Permissão necessária</value></data>
-  <data name="Add_PermissionBody" xml:space="preserve"><value>Conceda acesso aos arquivos para ler um documento.</value></data>
-  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>Arquivo muito grande</value></data>
-  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>Esse arquivo tem {0} páginas; o limite é {1}.</value></data>
-  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>Não foi possível ler o arquivo</value></data>
-  <data name="Add_ReadFailedBody" xml:space="preserve"><value>O arquivo pode estar corrompido ou em um formato não compatível.</value></data>
-  <data name="Edit_Cover" xml:space="preserve"><value>Capa</value></data>
-  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>Primeira página</value></data>
-  <data name="Edit_CoverColour" xml:space="preserve"><value>Cor</value></data>
-  <data name="Edit_CoverPhoto" xml:space="preserve"><value>Foto</value></data>
-  <data name="Edit_Pages" xml:space="preserve"><value>Páginas</value></data>
   <!-- Slice 78: the page-review wizard -->
   <data name="Wizard_Next" xml:space="preserve"><value>Avançar</value></data>
-  <data name="Wizard_StepText" xml:space="preserve"><value>Texto</value></data>
-  <data name="Wizard_AddPages" xml:space="preserve"><value>Adicionar páginas</value></data>
-  <data name="Wizard_DragHint" xml:space="preserve"><value>Mantenha uma página pressionada e arraste para movê-la</value></data>
-  <data name="Wizard_EmptyBody" xml:space="preserve"><value>Adicione as páginas da história: digitalize, escolha fotos, adicione um PDF ou arquivo, ou digite o texto. Depois coloque as páginas em ordem.</value></data>
-  <data name="Wizard_PageN" xml:space="preserve"><value>Página {0}</value></data>
-  <data name="Wizard_PageMenu" xml:space="preserve"><value>Opções da página</value></data>
-  <data name="Wizard_MenuRotate" xml:space="preserve"><value>Girar</value></data>
-  <data name="Wizard_MenuCrop" xml:space="preserve"><value>Girar ou cortar</value></data>
-  <data name="Wizard_MenuEditText" xml:space="preserve"><value>Editar o texto</value></data>
-  <data name="Wizard_NoTextShort" xml:space="preserve"><value>Sem texto</value></data>
-  <data name="Wizard_NoText" xml:space="preserve"><value>Nenhum texto encontrado nesta página</value></data>
-  <data name="Wizard_Reading" xml:space="preserve"><value>Lendo a página {0} de {1}</value></data>
   <data name="Wait_GettingVoices" xml:space="preserve"><value>Preparando as vozes…</value></data>
   <data name="Wait_Stalled" xml:space="preserve"><value>Ainda a preparar a voz…</value></data>
-  <data name="Wait_ReadingPictures" xml:space="preserve"><value>Lendo as imagens…</value></data>
-  <data name="Wait_PageOf" xml:space="preserve"><value>Página {0} de {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Traduzindo…</value></data>
   <data name="Wait_WaitingInternet" xml:space="preserve"><value>Aguardando a internet</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingWifi" xml:space="preserve"><value>A aguardar Wi-Fi</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_Retry" xml:space="preserve"><value>Tentar de novo</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0} está {1}% baixado. Continua sozinho quando você voltar a ficar online.</value><comment>Machine draft: needs native review</comment></data>
-  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>Baixando {0}. Continua sozinho quando você voltar a ficar online.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>Salvando…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>Preparando o livro…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>A fazer cópia dos livros…</value></data>
   <data name="Wait_Restoring" xml:space="preserve"><value>A restaurar os livros…</value></data>
-  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Algumas páginas não foram lidas</value></data>
-  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>Não foi possível ler {0} páginas. Elas ficam como imagens sem texto.</value></data>
-  <data name="Pictures_NoneTitle" xml:space="preserve"><value>Este arquivo tem texto, mas não tem imagens</value></data>
-  <data name="Pictures_NoneBody" xml:space="preserve"><value>Adicione uma imagem a cada página, se quiser. As páginas sem imagem são lidas como texto.</value></data>
-  <data name="Pictures_PickAll" xml:space="preserve"><value>Escolher imagens para todas as páginas</value></data>
-  <data name="Pictures_PageN" xml:space="preserve"><value>PÁGINA {0}</value></data>
-  <data name="Pictures_Change" xml:space="preserve"><value>Alterar</value></data>
-  <data name="Pictures_Add" xml:space="preserve"><value>Adicionar imagem</value></data>
-  <data name="Pictures_FoundEvery" xml:space="preserve"><value>Imagens encontradas em todas as páginas</value></data>
-  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1} páginas</value></data>
-  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1} página</value></data>
-  <data name="Pictures_NextCover" xml:space="preserve"><value>Próximo: capa</value></data>
-  <data name="Wizard_CoverHint" xml:space="preserve"><value>Escolha uma página, uma foto ou uma cor para a capa.</value></data>
-  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Ainda não há nada para ler</value></data>
-  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Adicione texto a pelo menos uma página e salve.</value></data>
-  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Não foi possível salvar a história</value></data>
-  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Nada foi alterado. Tente novamente em instantes.</value></data>
-  <data name="Regions_Helper" xml:space="preserve"><value>Toque numa caixa para lê-la ou deixá-la de fora.</value></data>
-  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>Substituir o seu texto editado pelas regiões escolhidas?</value></data>
-  <data name="Regions_ReplaceBody" xml:space="preserve"><value>O que você digitou nesta página será perdido.</value></data>
-  <data name="Regions_Replace" xml:space="preserve"><value>Substituir</value></data>
-  <data name="Regions_Keep" xml:space="preserve"><value>Manter</value></data>
-  <data name="Regions_BoxRead" xml:space="preserve"><value>Caixa de texto, lida</value></data>
-  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>Caixa de texto, deixada de fora</value></data>
-  <data name="Editor_Title" xml:space="preserve"><value>Girar e cortar</value></data>
-  <data name="Editor_RotateLeft" xml:space="preserve"><value>Girar para a esquerda</value></data>
-  <data name="Editor_RotateRight" xml:space="preserve"><value>Girar para a direita</value></data>
-  <data name="Editor_ResetCrop" xml:space="preserve"><value>Redefinir corte</value></data>
   <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>Só imagens</value></data>
   <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>Imagens + texto</value></data>
   <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>Só texto</value></data>
@@ -432,11 +357,6 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Sons de animais</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Os animais dizem “Oinc!” ou “Béé!” de vez em quando, em todos os livros</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Este livro tem mais personagens do que os {0} personagens narradores disponíveis, então alguns soam iguais. O narrador nunca é dado a um personagem.</value></data>
-  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>Transferir pacotes de tradução?</value></data>
-  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>Para mostrar e ler este livro em {0}, o Dino Reader precisa destes pacotes de tradução: {1}. Ficam neste dispositivo. Se os ignorar, o livro fica na sua própria língua.</value></data>
-  <data name="TranslationPack_Download" xml:space="preserve"><value>Baixar</value></data>
-  <data name="TranslationPack_Keep" xml:space="preserve"><value>Manter o original</value></data>
-  <data name="TranslationPack_Failed" xml:space="preserve"><value>Não foi possível obter o pacote de tradução. O livro continua no idioma original.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Baixando o pacote de tradução para {0}…</value></data>
   <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>Em que idiomas devem estar as histórias?</value></data>
   <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Escolha até mais dois. O seu filho pode mudar enquanto lê.</value></data>

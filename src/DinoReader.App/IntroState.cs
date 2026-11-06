@@ -15,7 +15,7 @@ public static class IntroState
 	private const int NotRunning = -1;
 	private const int NothingSaved = -2;
 
-	/// <summary>The saved step, or -1 when the intro is not running. An intro saved by an older build resumes at the same step in today's five (the store step is gone: it lands on recording).</summary>
+	/// <summary>The saved step, or -1 when the intro is not running. An intro saved by an older build resumes at the same step in today's four (the store step is gone: it lands on recording; the add step is gone too, Slice 278: it lands on languages).</summary>
 	public static int Step
 	{
 		get

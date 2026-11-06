@@ -6,6 +6,9 @@ public interface IStoryLibrary
     /// <summary>All readable stories, newest first. A story whose file cannot be read is skipped.</summary>
     Task<IReadOnlyList<Story>> ListAsync();
 
+    /// <summary>The own books' folders (Slice 278 A3); a library that is not the on-disk one has none.</summary>
+    Task<OwnFolders> ListOwnFoldersAsync() => Task.FromResult(new OwnFolders([], true));
+
     Task<Story?> GetAsync(string id);
 
     /// <summary>Saves a new story; throws if the id is already used.</summary>

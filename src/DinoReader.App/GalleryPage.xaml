@@ -106,35 +106,23 @@
             </Border>
         </Grid>
 
-        <!-- Grown-up mode (mock 85, Slice 172): only "Add from your own books" and the Store, full width. The store is behind the gate (ready for paid books later). -->
+        <!-- Grown-up mode (mock 85, Slice 172; Slice 278): only "Get more books" (the store), full width. The store is behind the gate (ready for paid books later). -->
         <!-- Slice 232 part B: in the corner's rail this scrolls (it moves to the star row) so a short phone never pushes the way back off the screen. -->
         <ScrollView x:Name="ActionsScroll" Grid.Row="1" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Never">
         <VerticalStackLayout x:Name="ActionsHost">
         <VerticalStackLayout x:Name="GrownUpActions" Spacing="0" IsVisible="False">
             <!-- Slice 228 (mock Batch 43 frame 98): the one line that names this place. -->
             <Label x:Name="CornerLine" AutomationId="GalleryCornerLine" Text="{x:Static res:AppResources.Gallery_CornerLine}" FontSize="13.5" TextColor="#5a5470" Padding="18,12,18,10" />
-            <Grid x:Name="ActionPair" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8" Padding="14,0,14,14">
-                <Border x:Name="AddBookButton" AutomationId="GalleryAddBook" HeightRequest="52" BackgroundColor="White" StrokeThickness="0"
-                        SemanticProperties.Description="{x:Static res:AppResources.Gallery_AddFromBooks}">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="18" />
-                    </Border.StrokeShape>
-                    <Grid x:Name="AddBookContent" ColumnDefinitions="Auto,*" ColumnSpacing="8" HorizontalOptions="Center" VerticalOptions="Center">
-                        <local:IconView x:Name="AddBookIcon" Kind="Plus" Color="{StaticResource Ink}" Size="20" StrokeWidth="2.8" VerticalOptions="Center" />
-                        <Label x:Name="AddBookLabel" Text="{x:Static res:AppResources.Gallery_AddFromBooks}" FontSize="15" Grid.Column="1" FontAttributes="Bold" TextColor="{StaticResource Ink}" LineBreakMode="TailTruncation" VerticalOptions="Center" />
-                    </Grid>
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnAddTapped" />
-                    </Border.GestureRecognizers>
-                </Border>
-                <Border Grid.Column="1" x:Name="StoreButton" AutomationId="GalleryStore" HeightRequest="52" BackgroundColor="{StaticResource Brand}" StrokeThickness="0"
-                        SemanticProperties.Description="{x:Static res:AppResources.Store_Title}">
+            <!-- Slice 278 (Batch 48 frame 185): one full-row button, "Get more books", opens the store; "Add a book" is gone. -->
+            <Grid x:Name="ActionPair" ColumnDefinitions="*" Padding="14,0,14,14">
+                <Border x:Name="StoreButton" AutomationId="GalleryStore" HeightRequest="52" BackgroundColor="{StaticResource Brand}" StrokeThickness="0"
+                        SemanticProperties.Description="{x:Static res:AppResources.Gallery_GetMoreBooks}">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="18" />
                     </Border.StrokeShape>
                     <Grid x:Name="StoreContent" ColumnDefinitions="Auto,*" ColumnSpacing="8" HorizontalOptions="Center" VerticalOptions="Center">
                         <local:IconView Kind="Book" Color="White" Size="20" StrokeWidth="2.2" VerticalOptions="Center" />
-                        <Label x:Name="StoreLabel" Text="{x:Static res:AppResources.Store_Title}" FontSize="15" Grid.Column="1" FontAttributes="Bold" TextColor="White" LineBreakMode="TailTruncation" VerticalOptions="Center" />
+                        <Label x:Name="StoreLabel" Text="{x:Static res:AppResources.Gallery_GetMoreBooks}" FontSize="15" Grid.Column="1" FontAttributes="Bold" TextColor="White" LineBreakMode="TailTruncation" VerticalOptions="Center" />
                     </Grid>
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnStoreTapped" />
