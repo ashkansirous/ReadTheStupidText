@@ -93,7 +93,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            // reported by the caller once the gate is released (ReportOrderUnreadable)
+            // no-fallback: reported by the caller once the gate is released (ReportOrderUnreadable)
             return ([], true);
         }
     }
