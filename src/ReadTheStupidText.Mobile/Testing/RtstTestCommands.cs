@@ -45,16 +45,18 @@ internal static class RtstTestCommands
 		SetLanguageName => SetLanguage(command.Get(TestHookDispatcher.LanguageKey, string.Empty)),
 		SetVoiceName => SetVoice(command.Get(TestHookDispatcher.IdKey, string.Empty)),
 		SetTranslateName => SetTranslate(command.Get(ModeKey, string.Empty)),
-		ForceFallbackName => ForceFallback(command.Get(TestHookDispatcher.LanguageKey, string.Empty)),
+		ForceFallbackName => ForceFallback(command.Get(TestHookDispatcher.LanguageKey, string.Empty), command.Get(TestHookDispatcher.IdKey, string.Empty)),
 		_ => null,
 	};
 
 	// Slice 273 part B: sends one speech fallback (neural_not_ready) through the app's registered IFallbackSink, the object the shared readers and translators report to, so a flow sees the
 	// `[Usage] fallback speech:neural_not_ready` line without depending on which voice packs the emulator holds. Logs "HOOK force-fallback ok <lang>".
-	private static string ForceFallback(string language)
+	// Slice 273 part C: with id=<area>:<reason> it sends that fallback instead (a pack, OCR, config or UI language one).
+	private static string ForceFallback(string language, string kind)
 	{
 		var sink = IPlatformApplication.Current!.Services.GetRequiredService<IFallbackSink>();
-		sink.Report(FallbackArea.Speech, FallbackReason.NeuralNotReady, language.Length == 0 ? null : language);
+		(string area, string reason) = FallbackKinds.Split(kind);
+		sink.Report(area, reason, language.Length == 0 ? null : language);
 		return $"{TestHookDispatcher.Ok} {language}";
 	}
 

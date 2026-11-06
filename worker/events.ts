@@ -54,6 +54,8 @@ export const FALLBACK_AREAS = [
   "premade_audio",
   // part B: speech, voices and translation
   "speech", "translation",
+  // part C: packs, OCR, documents, store, config and UI language
+  "pack", "ocr", "document", "store", "config", "ui_language",
 ] as const;
 export const FALLBACK_REASONS = [
   "no_pack", "pack_failed", "text_mismatch", "clip_missing", "partial",
@@ -62,6 +64,10 @@ export const FALLBACK_REASONS = [
   "voice_not_in_roster", "recording_unplayable", "phone_language_missing",
   // part B, translation
   "translation_timeout", "translation_pack_missing", "translation_error", "stream_plan_failed", "stream_partial", "translation_model_missing", "translation_skipped", "translation_pack_failed",
+  // part C
+  "pack_sync_failed", "storyteller_failed", "recast_failed", "catalogue_failed",
+  "ocr_builtin_no_pack", "ocr_builtin_failed", "ocr_platform_fallback", "ocr_pack_failed", "scanner_start_failed",
+  "pdf_import_failed", "store_unreachable", "update_check_failed", "config_cached", "config_default", "ui_language_unsupported",
 ] as const;
 const MAX_COUNT = 1_000_000;
 const NO_COUNT = -1;

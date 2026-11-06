@@ -1,0 +1,72 @@
+# Slice 273 part C: the pack, OCR, store and config fallbacks reach Dino's usage counter. The force-fallback hook (Debug only) sends the fallback named by `id: <area>:<reason>` through the app's registered
+# IFallbackSink (DinoFallbackSink over UsageCounter), the object the pack, OCR, store and config code report to, so the flow does not depend on a pack failing, a scan or the network. The branch that
+# decides each real fallback is covered by the unit tests; this flow proves the new areas and reasons are on the closed list, reach UsageCounter and are counted once per session. Nothing is sent:
+# the harness off switch stays on, and the Debug build writes a `[Usage] fallback <area>:<reason> times=<n> ...` line for each fallback it is asked to count.
+# Fails against the old behaviour: before part C the area `pack`, `ocr`, `store` and `config` are not on the list, so UsageCounter drops them and no `[Usage] fallback` line is written for them.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK force-fallback ok
+# expect-log: [Usage] fallback pack:pack_failed times=1 queued
+# expect-log: [Usage] fallback ocr:ocr_builtin_no_pack times=1 queued
+# expect-log: [Usage] fallback store:store_unreachable times=1 queued
+# expect-log: [Usage] fallback config:config_cached times=1 queued
+# expect-log: [Usage] fallback pack:pack_failed times=2 counted
+# Keeps the app's data (no clearState): the flow reads and writes nothing stored.
+appId: uk.sirous.dinoreader.dbg
+name: Pack, OCR, store and config fallbacks are counted once and then tallied (Dino)
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "pack:pack_failed"
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 10000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "ocr:ocr_builtin_no_pack"
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 10000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "store:store_unreachable"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 10000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "config:config_cached"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 10000
+# The same kind again in the same session is counted, not queued again.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "pack:pack_failed"
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 10000

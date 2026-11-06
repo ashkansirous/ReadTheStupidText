@@ -55,7 +55,9 @@ public static class MauiProgram
 		// Slice 227: first of all, so even a crash during start-up leaves a pending report; it follows the grown-up's usage switch.
 		CrashReporter.Start(CrashApp.Dino, UsageCounter.EnabledKey);
 		// Before anything reads the culture (services, resources, the first page), including the UI thread's own.
-		UiCulture.Apply(UiCulture.Resolve(LanguageChoice.Preferred()));
+		System.Globalization.CultureInfo preferredCulture = LanguageChoice.Preferred();
+		bool deviceLanguageUnsupported = !UiLanguage.IsSupported(preferredCulture.Name); // Slice 273 part C: reported once the sink exists, below
+		UiCulture.Apply(UiCulture.Resolve(preferredCulture));
 		TextFlowHandlers.Register();
 		var builder = MauiApp.CreateBuilder();
 		builder
@@ -103,11 +105,18 @@ public static class MauiProgram
 #endif
 
 		MauiApp app = builder.Build();
+		WireConfigFallbacks(app.Services); // before the first config fetch starts (FlushAsync and BeginCrashReports below), so a fast failure is not lost
 		// Stories still carry their language's narrator on disk, for older builds that require the field (Slice 109).
 		StoryJson.LegacyNarratorOf = language => app.Services.GetRequiredService<StoryVoicing>().LegacyNarratorOf(language);
 		// Counts left from an earlier session go out now (Slice 133); the counter does nothing when counting is off.
 		_ = app.Services.GetRequiredService<UsageCounter>().FlushAsync();
 		BeginCrashReports(app.Services.GetRequiredService<AppConfigClient>());
+		if (deviceLanguageUnsupported)
+		{
+			app.Services.GetRequiredService<ReadTheStupidText.Application.Usage.IFallbackSink>().Report(
+				ReadTheStupidText.Application.Usage.FallbackArea.UiLanguage, ReadTheStupidText.Application.Usage.FallbackReason.UiLanguageUnsupported);
+		}
+
 		string sessionId = app.Services.GetRequiredService<UsageCounter>().SessionId; // Slice 250: captured now, so the crash path never touches the container
 		CrashReporter.SessionProvider = () => sessionId; // a crash or problem report names the launch's usage session
 #if DEBUG
@@ -115,6 +124,14 @@ public static class MauiProgram
 		CrashTestHook.Install(); // Slice 227: after the app's own Debug commands, so it chains onto them
 #endif
 		return app;
+	}
+
+	// Slice 273 part C: the config client reports "last good copy used" / "default used" through the app's sink. The sink only queues a count (it never fetches the config),
+	// so reporting from the client's own failure path cannot loop. Wired after the build because the sink depends on the counter, which depends on the config client.
+	private static void WireConfigFallbacks(IServiceProvider services)
+	{
+		var sink = services.GetRequiredService<ReadTheStupidText.Application.Usage.IFallbackSink>();
+		services.GetRequiredService<AppConfigClient>().FallbackReported = reason => sink.Report(ReadTheStupidText.Application.Usage.FallbackArea.Config, reason);
 	}
 
 	// Slice 267: every pack download is counted (book id, language, closed outcome) and, through AudioPackLog, kept in the rolling log; no title or file name is carried.

@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Mobile.Resources.Strings;
 using ReadTheStupidText.Mobile.Shared;
 
@@ -38,8 +39,11 @@ public sealed class OcrPackInstaller
     private (string Language, PackDownloadResult Result)? _stopped; // how the background install ended, reported once the guard is clear
     private readonly ConcurrentDictionary<string, DownloadFlight> _flights = new(StringComparer.OrdinalIgnoreCase); // one download per pack id, shared by the background run and a person waiting (Slice 87)
 
-    public OcrPackInstaller(IVoicePackService packs, ISettingsStore settings, ILanguageChangeNotifier languages, VoicePackInstaller voice, IPackResume? resume = null)
+    private readonly IFallbackSink _fallbacks; // Slice 273 part C
+
+    public OcrPackInstaller(IVoicePackService packs, ISettingsStore settings, ILanguageChangeNotifier languages, VoicePackInstaller voice, IPackResume? resume = null, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance;
         _resume = resume;
         _packs = packs;
         _settings = settings;
@@ -332,6 +336,15 @@ public sealed class OcrPackInstaller
         }
     }
 
+    // Slice 273 part C: an OCR pack that could not be installed (failed, or no network) leaves scans on the built-in recognizer; a cancel is the person's own choice.
+    private void ReportWhenNotInstalled(PackDownloadResult result)
+    {
+        if (result != PackDownloadResult.Ok)
+        {
+            _fallbacks.Report(FallbackArea.Ocr, FallbackReason.OcrPackFailed);
+        }
+    }
+
     private async Task<PackDownloadResult> RunFlightAsync(string packId, DownloadFlight flight, CancellationToken cancellationToken)
     {
         try
@@ -339,12 +352,18 @@ public sealed class OcrPackInstaller
             PackDownloadResult result = await _packs.DownloadAsync(packId, flight, cancellationToken).ConfigureAwait(false);
             System.Diagnostics.Debug.WriteLine($"OCR pack '{packId}': {result}");
             _flights.TryRemove(packId, out _);
+            ReportWhenNotInstalled(result);
             flight.Complete(result);
             return result;
         }
         catch (Exception ex)
         {
             _flights.TryRemove(packId, out _);
+            if (ex is not OperationCanceledException)
+            {
+                _fallbacks.Report(FallbackArea.Ocr, FallbackReason.OcrPackFailed); // Slice 273 part C: scans stay on the built-in recognizer
+            }
+
             flight.Fail(ex);
             throw;
         }

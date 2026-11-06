@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Mobile.Shared.Network;
@@ -61,8 +62,11 @@ public sealed class StorytellerDefault
 	private double _lastReported = -1;
 	private StorytellerStatus _status = StorytellerStatus.None;
 
-	public StorytellerDefault(IVoicePackService packs, IStoryLibrary library, StoryVoicing voicing, PackResumeWatcher resume)
+	private readonly IFallbackSink _fallbacks; // Slice 273 part C
+
+	public StorytellerDefault(IVoicePackService packs, IStoryLibrary library, StoryVoicing voicing, PackResumeWatcher resume, IFallbackSink? fallbacks = null)
 	{
+		_fallbacks = fallbacks ?? NoFallbackSink.Instance;
 		_resume = resume;
 		_packs = packs;
 		_library = library;
@@ -209,6 +213,7 @@ public sealed class StorytellerDefault
 		{
 			// The books keep reading with the current voices; the grown-up can try again from the status line.
 			Debug.WriteLine($"Dino Reader storyteller default failed: {ex}");
+			_fallbacks.Report(FallbackArea.Pack, FallbackReason.StorytellerFailed);
 			SetStatus(FailureStatus(ex));
 		}
 
@@ -301,6 +306,7 @@ public sealed class StorytellerDefault
 		if (result != PackDownloadResult.Ok)
 		{
 			_stoppedWith = result;
+			_fallbacks.Report(FallbackArea.Pack, FallbackReason.StorytellerFailed); // Slice 273 part C: a failed result is returned, not thrown
 			// Offline carries on by itself: the same waiting card as for Wi-Fi, not the "Try again" failure card.
 			SetStatus(new StorytellerStatus(StoppedPhase(result), 0, megabytes));
 			return;
@@ -402,6 +408,7 @@ public sealed class StorytellerDefault
 
 		if (result != PackDownloadResult.Ok)
 		{
+			_fallbacks.Report(FallbackArea.Pack, FallbackReason.StorytellerFailed); // Slice 273 part C: the installed voices keep reading
 			return;
 		}
 
@@ -430,6 +437,7 @@ public sealed class StorytellerDefault
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader storyteller recast failed: {ex.Message}");
+			_fallbacks.Report(FallbackArea.Pack, FallbackReason.RecastFailed);
 		}
 	}
 
@@ -444,6 +452,7 @@ public sealed class StorytellerDefault
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader storyteller recast could not list the library: {ex.Message}");
+			_fallbacks.Report(FallbackArea.Pack, FallbackReason.RecastFailed);
 			return;
 		}
 
@@ -493,6 +502,7 @@ public sealed class StorytellerDefault
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader storyteller recast of '{storyId}' failed: {ex.Message}");
+			_fallbacks.Report(FallbackArea.Pack, FallbackReason.RecastFailed);
 			return RecastOutcome.Failed;
 		}
 	}

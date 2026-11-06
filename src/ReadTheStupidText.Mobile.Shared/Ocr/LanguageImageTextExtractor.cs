@@ -4,6 +4,7 @@ using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Usage;
 
 namespace ReadTheStupidText.Mobile.Shared;
 
@@ -32,8 +33,11 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
     private readonly ISystemLog _log;
     private readonly HashSet<(string Folder, string Version)> _failedToLoad = []; // packs that threw while loading: skipped until their folder or version changes
 
-    public LanguageImageTextExtractor(IBuiltInTextRecognizer builtIn, IVoicePackService packs, ISettingsStore settings, IPixelImageLoader loader, ISystemLog log)
+    private readonly IFallbackSink _fallbacks; // Slice 273 part C
+
+    public LanguageImageTextExtractor(IBuiltInTextRecognizer builtIn, IVoicePackService packs, ISettingsStore settings, IPixelImageLoader loader, ISystemLog log, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance;
         _log = log;
         _builtIn = builtIn;
         _packs = packs;
@@ -65,7 +69,8 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
             return new ImageText(builtIn.Lines, OcrSource.MlKit, builtIn.Width, builtIn.Height, builtIn.FullText);
         }
 
-        if (await BestPackReadingAsync(imagePath, candidates, share, cancellationToken).ConfigureAwait(false) is { } reading)
+        (OcrReading? packReading, bool packFailed) = await BestPackReadingAsync(imagePath, candidates, share, cancellationToken).ConfigureAwait(false);
+        if (packReading is { } reading)
         {
             return new ImageText(reading.Lines, OcrSource.PaddleOcr, reading.Width, reading.Height);
         }
@@ -80,7 +85,19 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
             ExceptionDispatchInfo.Capture(builtInError).Throw(); // nothing else could read the page
         }
 
-        return new ImageText(builtIn.Lines, FallbackSource(hint, share), builtIn.Width, builtIn.Height, builtIn.FullText);
+        OcrSource source = FallbackSource(hint, share);
+        ReportBuiltInUsed(source == OcrSource.MlKitPackPending && candidates.Count == 0 && !packFailed, hint);
+        return new ImageText(builtIn.Lines, source, builtIn.Width, builtIn.Height, builtIn.FullText);
+    }
+
+    // Slice 273 part C: a pack would have read this page (its script is one the built-in recognizer does not cover) but none is installed, so the built-in reading stands.
+    // A settled built-in read never reports; a pack that crashed was already reported where it happened (ocr_pack_failed).
+    private void ReportBuiltInUsed(bool report, string hint)
+    {
+        if (report)
+        {
+            _fallbacks.Report(FallbackArea.Ocr, FallbackReason.OcrBuiltinNoPack, hint);
+        }
     }
 
     // A built-in failure (decode error, out of memory, ML Kit) leaves an empty reading and the error,
@@ -94,18 +111,21 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
         catch (Exception ex) when (ex is not (OperationCanceledException or OutOfMemoryException))
         {
             _log.Warning("The built-in recognizer failed, trying the OCR packs", null, ex);
+            _fallbacks.Report(FallbackArea.Ocr, FallbackReason.OcrBuiltinFailed);
             return (new OcrReading([], 0, 0), ex);
         }
     }
 
     // Each candidate pack loads at most once; OcrPackChoice names the winner and stops the scan at a clear win.
-    private async Task<OcrReading?> BestPackReadingAsync(string imagePath, IReadOnlyList<OcrModelPaths> candidates, ScriptShare builtIn, CancellationToken cancellationToken)
+    private async Task<(OcrReading? Best, bool AnyFailed)> BestPackReadingAsync(string imagePath, IReadOnlyList<OcrModelPaths> candidates, ScriptShare builtIn, CancellationToken cancellationToken)
     {
         var choice = new OcrPackChoice(builtIn);
         OcrReading? best = null;
+        bool anyFailed = false;
         foreach (OcrModelPaths paths in candidates)
         {
-            OcrReading? reading = await TryPaddleAsync(paths, imagePath, cancellationToken).ConfigureAwait(false);
+            (OcrReading? reading, bool failed) = await TryPaddleAsync(paths, imagePath, cancellationToken).ConfigureAwait(false);
+            anyFailed |= failed;
             if (reading is not null && choice.Offer(paths, ScriptDetector.Analyze(reading.Lines.Select(l => l.Text))))
             {
                 best = reading;
@@ -117,7 +137,7 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
             }
         }
 
-        return best;
+        return (best, anyFailed);
     }
 
     public void Dispose()
@@ -148,25 +168,27 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
         return _builtIn.Covers(language) ? OcrSource.MlKit : OcrSource.MlKitPackPending;
     }
 
-    // Null when the pack could not run or found no text: the caller falls back.
-    private async Task<OcrReading?> TryPaddleAsync(OcrModelPaths paths, string imagePath, CancellationToken cancellationToken)
+    // Reading null when the pack could not run or found no text: the caller falls back. Failed is true when the pack threw or was retired for failing to load (reported as ocr_pack_failed here).
+    private async Task<(OcrReading? Reading, bool Failed)> TryPaddleAsync(OcrModelPaths paths, string imagePath, CancellationToken cancellationToken)
     {
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             if (_failedToLoad.Contains((paths.Folder, paths.Version)))
             {
-                return null;
+                _fallbacks.Report(FallbackArea.Ocr, FallbackReason.OcrPackFailed);
+                return (null, true);
             }
 
             OcrReading reading = await Task.Run(() => ReadWithEngine(paths, imagePath, cancellationToken), cancellationToken).ConfigureAwait(false);
-            return reading.Lines.Count > 0 ? reading : null; // a blank result is worth a second opinion from the built-in recognizer
+            return (reading.Lines.Count > 0 ? reading : null, false); // a blank result is worth a second opinion from the built-in recognizer
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _log.Warning($"PaddleOCR pack '{paths.Folder}' failed, using the built-in recognizer", null, ex);
             MarkFailedWhenStructural(paths, ex);
-            return null;
+            _fallbacks.Report(FallbackArea.Ocr, FallbackReason.OcrPackFailed);
+            return (null, true);
         }
         finally
         {

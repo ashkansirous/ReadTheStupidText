@@ -802,3 +802,16 @@ test("the RTST fallback count stores area and reason in the stage and outcome bl
   assert.equal(parseRtstEvent({ ...good, fallbackArea: undefined }), null);
   assert.equal(parseRtstEvent({ ...readStarted, fallbackArea: "premade_audio" }), null);
 });
+
+test("the part C fallbacks (packs, OCR, documents, store, config, UI language) are accepted by both apps' events", () => {
+  const partC = [
+    ["pack", "pack_sync_failed"], ["pack", "storyteller_failed"], ["pack", "recast_failed"], ["pack", "catalogue_failed"], ["pack", "pack_failed"],
+    ["ocr", "ocr_builtin_no_pack"], ["ocr", "ocr_builtin_failed"], ["ocr", "ocr_platform_fallback"], ["ocr", "ocr_pack_failed"], ["ocr", "scanner_start_failed"],
+    ["document", "pdf_import_failed"], ["store", "store_unreachable"], ["store", "update_check_failed"],
+    ["config", "config_cached"], ["config", "config_default"], ["ui_language", "ui_language_unsupported"],
+  ];
+  for (const [area, reason] of partC) {
+    assert.equal(parseEvent({ ...noBook, name: "fallback", detail: `${area}:${reason}` })?.detail, `${area}:${reason}`, `${area}:${reason}`);
+    assert.ok(parseRtstEvent(rtst("fallback", { fallbackArea: area, fallbackReason: reason, count: 1 })), `${area}:${reason} rtst`);
+  }
+});

@@ -45,6 +45,13 @@
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Translation\SingleModelCall.cs" Link="Mobile\SingleModelCall.cs" />
     <EmbeddedResource Include="..\..\src\ReadTheStupidText.Mobile\Resources\Strings\AppResources.resx" Link="Mobile\AppResources.resx" LogicalName="ReadTheStupidText.Mobile.Resources.Strings.AppResources.resources" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\IPlatformServices.cs" Link="Mobile\IPlatformServices.cs" />
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\IDocumentScanner.cs" Link="Mobile\IDocumentScanner.cs" />
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\DocumentScannerReporting.cs" Link="Mobile\DocumentScannerReporting.cs" />
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\DocumentScannerRegistration.cs" Link="Mobile\DocumentScannerRegistration.cs" />
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Usage\ConfigFallbackHold.cs" Link="Mobile\ConfigFallbackHold.cs" />
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\DocumentScannerStartFailedException.cs" Link="Mobile\DocumentScannerStartFailedException.cs" />
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\DocumentScannerUnavailableException.cs" Link="Mobile\DocumentScannerUnavailableException.cs" />
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\DocumentScannerPreparingException.cs" Link="Mobile\DocumentScannerPreparingException.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -53,6 +60,7 @@
 
   <ItemGroup>
     <PackageReference Include="xunit.v3.mtp-v2" Version="3.2.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
   </ItemGroup>
 
   <ItemGroup>

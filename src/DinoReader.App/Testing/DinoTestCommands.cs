@@ -89,7 +89,7 @@ internal static partial class DinoTestCommands
 
 		if (command.Name == ForceFallbackName)
 		{
-			return ForceFallback(command.Get(TestHookDispatcher.LanguageKey, string.Empty));
+			return ForceFallback(command.Get(TestHookDispatcher.LanguageKey, string.Empty), command.Get(IdKey, string.Empty));
 		}
 
 		if (command.Name == FetchAudioPackName)
@@ -149,10 +149,12 @@ internal static partial class DinoTestCommands
 
 	// Slice 273 part B: sends one speech fallback (neural_not_ready) through the app's registered IFallbackSink, the same object the shared readers and translators report to, so a flow sees the
 	// `[Usage] fallback speech:neural_not_ready times=1 queued` line without depending on which voice packs the emulator holds. Logs "HOOK force-fallback ok <lang>".
-	private static string ForceFallback(string language)
+	// Slice 273 part C: with id=<area>:<reason> it sends that fallback instead (a pack, OCR, store or config one), so a flow proves each area reaches the counter.
+	private static string ForceFallback(string language, string kind)
 	{
 		var sink = IPlatformApplication.Current!.Services.GetRequiredService<ReadTheStupidText.Application.Usage.IFallbackSink>();
-		sink.Report(ReadTheStupidText.Application.Usage.FallbackArea.Speech, ReadTheStupidText.Application.Usage.FallbackReason.NeuralNotReady, language.Length == 0 ? null : language);
+		(string area, string reason) = ReadTheStupidText.Application.Usage.FallbackKinds.Split(kind);
+		sink.Report(area, reason, language.Length == 0 ? null : language);
 		return $"{TestHookDispatcher.Ok} {language}";
 	}
 

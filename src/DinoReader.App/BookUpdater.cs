@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using DinoReader.Core;
+using ReadTheStupidText.Application.Usage;
 
 namespace DinoReader;
 
@@ -189,6 +190,7 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or StoryPackageException or InvalidDataException or InvalidOperationException or ArgumentException)
 		{
 			Debug.WriteLine($"{LogTag} check failed: {ex}");
+			store.Fallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
 		}
 	}
 
@@ -232,6 +234,7 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		catch (Exception ex) when (ex is not OperationCanceledException || !cancel.IsCancellationRequested)
 		{
 			Debug.WriteLine($"{LogTag} the audio pack sync failed, will try at the next open: {ex.Message}");
+			store.Fallbacks.Report(FallbackArea.Pack, FallbackReason.PackSyncFailed);
 			return false;
 		}
 	}
@@ -270,6 +273,7 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		{
 			// The sweep is housekeeping: whatever it hits, the weekly book check still runs.
 			Debug.WriteLine($"{LogTag} could not sweep the audio packs: {ex.Message}");
+			store.Fallbacks.Report(FallbackArea.Pack, FallbackReason.PackSyncFailed);
 		}
 	}
 
@@ -328,6 +332,7 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		catch (Exception ex) when (ex is StoryPackageException or InvalidDataException)
 		{
 			Debug.WriteLine($"{LogTag} {id}: baseline unreadable, book skipped: {ex.Message}");
+			store.Fallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
 			return Baseline.Unavailable;
 		}
 		finally

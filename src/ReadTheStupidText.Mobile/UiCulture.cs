@@ -31,6 +31,13 @@ public static class UiCulture
         return Fallback;
     }
 
+    /// <summary>
+    /// Slice 273 part C: true when neither the stored language nor the device language is one of the fifteen, so <see cref="Resolve"/> shows English. Pure; the app asks it once, where it applies
+    /// its UI culture at start-up, and reports the fallback there.
+    /// </summary>
+    public static bool FallsBackToEnglish(string? storedCode, CultureInfo deviceCulture) =>
+        !AppLanguages.TryParse(storedCode, out _) && !AppLanguages.TryParse(deviceCulture.TwoLetterISOLanguageName, out _);
+
     /// <summary>True for right-to-left languages (Farsi, Arabic). The explicit code list backs up a runtime without ICU data.</summary>
     public static bool IsRightToLeft(CultureInfo culture) =>
         culture.TextInfo.IsRightToLeft || RightToLeftCodes.Contains(culture.TwoLetterISOLanguageName);

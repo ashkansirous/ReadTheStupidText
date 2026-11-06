@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using ReadTheStupidText.Application.Usage;
 
 namespace ReadTheStupidText.Mobile.Shared.Usage;
 
@@ -56,6 +57,18 @@ public sealed class RemoteConfigClient<TConfig>(RemoteConfigOptions<TConfig> opt
     /// dispatch, never directly from the pool), so subscribers may touch UI; a caller awaiting <see cref="RefreshAsync"/> cannot assume handlers have run yet.
     /// </summary>
     public event EventHandler? Changed;
+
+    /// <summary>
+    /// Slice 273 part C: raised after every successful fetch, changed or not, once a real config is held. Raised on the pool thread; a handler must only queue work (it never fetches).
+    /// </summary>
+    public event EventHandler? Fetched;
+
+    /// <summary>
+    /// Slice 273 part C: called with <see cref="ReadTheStupidText.Application.Usage.FallbackReason.ConfigCached"/> (a fetch failed and a good copy stays in force) or
+    /// <see cref="ReadTheStupidText.Application.Usage.FallbackReason.ConfigDefault"/> (it failed and no copy exists). The app points it at a sink that only queues a count and never
+    /// fetches, so reporting from here cannot loop; a handler that throws is ignored.
+    /// </summary>
+    public Action<string>? FallbackReported { get; set; }
 
     /// <summary>The config in force: the last good copy, else the default.</summary>
     public TConfig Current => Held();
@@ -130,6 +143,7 @@ public sealed class RemoteConfigClient<TConfig>(RemoteConfigOptions<TConfig> opt
             {
                 Debug.WriteLine($"{options.LogName} ignored a remote config body that is not a config.");
                 SetNotBefore(RetryInterval);
+                ReportFallback();
                 return;
             }
 
@@ -145,6 +159,20 @@ public sealed class RemoteConfigClient<TConfig>(RemoteConfigOptions<TConfig> opt
             // Whatever went wrong (network, timeout, parsing), the copy in force stays and the fire-and-forget task never faults.
             Debug.WriteLine($"{options.LogName} could not load the remote config: {ex.Message}");
             HandleFailure(ex);
+            ReportFallback();
+        }
+    }
+
+    // The fetch did not bring a config: the last good copy stays in force, or the default when there is none. Never throws, and never starts a fetch.
+    private void ReportFallback()
+    {
+        try
+        {
+            FallbackReported?.Invoke(HasCopy ? FallbackReason.ConfigCached : FallbackReason.ConfigDefault);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"{options.LogName}: a config fallback handler failed: {ex.Message}");
         }
     }
 
@@ -169,6 +197,20 @@ public sealed class RemoteConfigClient<TConfig>(RemoteConfigOptions<TConfig> opt
         if (changed)
         {
             MainThread.BeginInvokeOnMainThread(RaiseChanged);
+        }
+
+        RaiseFetched();
+    }
+
+    private void RaiseFetched()
+    {
+        try
+        {
+            Fetched?.Invoke(this, EventArgs.Empty);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"{options.LogName}: a remote config fetched handler failed: {ex.Message}");
         }
     }
 

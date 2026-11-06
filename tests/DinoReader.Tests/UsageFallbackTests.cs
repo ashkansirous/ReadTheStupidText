@@ -19,6 +19,23 @@ public sealed class UsageFallbackTests
         Assert.All(FallbackReason.All, reason => Assert.NotNull(FallbackUsage.Detail(FallbackArea.PremadeAudio, reason)));
     }
 
+    [Theory]
+    [InlineData("pack", "pack_sync_failed")]
+    [InlineData("pack", "storyteller_failed")]
+    [InlineData("pack", "recast_failed")]
+    [InlineData("pack", "catalogue_failed")]
+    [InlineData("pack", "pack_failed")]
+    [InlineData("ocr", "ocr_builtin_no_pack")]
+    [InlineData("ocr", "scanner_start_failed")]
+    [InlineData("document", "pdf_import_failed")]
+    [InlineData("store", "store_unreachable")]
+    [InlineData("store", "update_check_failed")]
+    [InlineData("config", "config_cached")]
+    [InlineData("config", "config_default")]
+    [InlineData("ui_language", "ui_language_unsupported")]
+    public void Slice_273_part_C_kinds_have_a_detail_the_worker_list_accepts(string area, string reason) =>
+        Assert.Equal($"{area}:{reason}", FallbackUsage.Detail(area, reason));
+
     [Fact]
     public void Only_the_first_fallback_of_a_kind_is_sent_at_once_and_a_repeat_comes_once_with_the_session_total()
     {

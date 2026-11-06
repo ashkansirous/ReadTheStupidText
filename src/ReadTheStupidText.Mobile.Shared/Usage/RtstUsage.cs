@@ -38,7 +38,13 @@ public sealed class RtstUsage : IUsageRecorder
         _sender = new UsageQueueSender<UsageEvent>(new UsageQueueOptions<UsageEvent>(
             BaseAddress, EnabledKey, QueueKey, LogName, UsageBatch.MaxEvents, CurrentTelemetry, () => _config.HasCopy,
             events => UsageBatch.ToJson(events, DeviceProbe.Current), UsageBatch.ParseQueue, UsageBatch.QueueToJson));
-        Fallbacks = new LoggingFallbackSink(new FallbackReporter(this));
+        var reporter = new FallbackReporter(this);
+        // Slice 273 part C: config and first-launch ui_language fallbacks wait for a real config (the default has telemetry off and would drop them), like the launch count (_skippedOpened).
+        var hold = new ConfigFallbackHold(() => _config.HasCopy, reporter.Report);
+        _config.Fetched += (_, _) => hold.Release(); // every successful fetch, not only a changed config: a first fetch equal to the default must still release
+        Fallbacks = new LoggingFallbackSink(reporter, hold);
+        // A failed config fetch is a fallback (last good copy, else default). The reporter only queues a count (it never fetches), so this cannot loop.
+        _config.FallbackReported = reason => Fallbacks.Report(FallbackArea.Config, reason);
     }
 
     /// <summary>

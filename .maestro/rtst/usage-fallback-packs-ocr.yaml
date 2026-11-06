@@ -1,0 +1,71 @@
+# Slice 273 part C: the pack, OCR, config and UI-language fallbacks reach Read The Stupid Text's usage queue. The force-fallback hook (Debug only) sends the fallback named by `id: <area>:<reason>`
+# through the app's registered IFallbackSink (RtstUsage.Fallbacks, the FallbackReporter over RtstUsage as an IUsageRecorder), the object the pack installers, the OCR reader, the scanner and the
+# config client report to, so the flow does not depend on a pack failing, a scan or the network. The branch that decides each real fallback is covered by the unit tests; this flow proves the new
+# areas and reasons are on the closed list and reach the usage queue. Nothing is sent: the harness off switch stays on, and the Debug build writes a `[Usage] fallback <area>:<reason>` line for each
+# fallback reported.
+# Fails against the old behaviour: before part C the hook's `id` is ignored and only `speech:neural_not_ready` is reported, so none of the lines below appears.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK force-fallback ok
+# expect-log: [Usage] fallback pack:pack_failed
+# expect-log: [Usage] fallback ocr:ocr_pack_failed
+# expect-log: [Usage] fallback ocr:scanner_start_failed
+# expect-log: [Usage] fallback config:config_default
+# expect-log: [Usage] fallback ui_language:ui_language_unsupported
+# No clearState: the flow reads and writes nothing stored.
+appId: uk.sirous.readthestupidtext
+name: Pack, OCR, config and UI-language fallbacks reach the usage queue (RTST)
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 20000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "pack:pack_failed"
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 10000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "ocr:ocr_pack_failed"
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 10000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "ocr:scanner_start_failed"
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 10000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "config:config_default"
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 10000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-fallback
+      id: "ui_language:ui_language_unsupported"
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 10000

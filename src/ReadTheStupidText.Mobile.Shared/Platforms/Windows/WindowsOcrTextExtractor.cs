@@ -1,4 +1,5 @@
 using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Application.Usage;
 using Windows.Globalization;
 using Windows.Graphics.Imaging;
 using Windows.Media.Ocr;
@@ -14,8 +15,10 @@ namespace ReadTheStupidText.Mobile.Shared;
 /// upright image (EXIF orientation applied), scaled down first when the picture exceeds the
 /// engine's maximum. Everything runs on the device.
 /// </summary>
-public sealed class WindowsOcrTextExtractor : IImageTextExtractor, IOcrLineExtractor
+public sealed class WindowsOcrTextExtractor(IFallbackSink? fallbacks = null) : IImageTextExtractor, IOcrLineExtractor
 {
+	private readonly IFallbackSink _fallbacks = fallbacks ?? NoFallbackSink.Instance; // Slice 273 part C
+
 	private const string ChineseCode = "zh";
 	private const string ChineseTag = "zh-Hans-CN";
 	private const string JapaneseCode = "ja";
@@ -26,7 +29,7 @@ public sealed class WindowsOcrTextExtractor : IImageTextExtractor, IOcrLineExtra
 	public Task<ImageText> ExtractLinesAsync(string imagePath, string language, CancellationToken cancellationToken) =>
 		ReadAsync(imagePath, language, cancellationToken);
 
-	private static async Task<ImageText> ReadAsync(string location, string? language, CancellationToken cancellationToken)
+	private async Task<ImageText> ReadAsync(string location, string? language, CancellationToken cancellationToken)
 	{
 		string path = ScannedText.ToLocalPath(location)
 			?? throw new IOException($"Not a local image: '{location}'.");
@@ -37,6 +40,11 @@ public sealed class WindowsOcrTextExtractor : IImageTextExtractor, IOcrLineExtra
 		OcrResult result = await engine.RecognizeAsync(bitmap).AsTask(cancellationToken).ConfigureAwait(false);
 		IReadOnlyList<ReadTheStupidText.Application.Images.OcrLine> lines = ToLines(result, language);
 		OcrSource source = matchesLanguage ? OcrSource.MlKit : OcrSource.PlatformFallback;
+		if (!matchesLanguage)
+		{
+			_fallbacks.Report(FallbackArea.Ocr, FallbackReason.OcrPlatformFallback, language); // Slice 273 part C: Windows has no OCR engine for the language
+		}
+
 		return new ImageText(lines, source, bitmap.PixelWidth, bitmap.PixelHeight);
 	}
 

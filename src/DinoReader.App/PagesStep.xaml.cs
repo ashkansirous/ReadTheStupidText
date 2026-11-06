@@ -584,9 +584,17 @@ public partial class PagesStep : ContentView
 		}
 
 		string name = Path.GetFileNameWithoutExtension(file.FileName);
-		if (file.FileName.EndsWith(PdfExtension, StringComparison.OrdinalIgnoreCase) && await TryAddPdfAsync(file.FullPath, name))
+		bool isPdf = file.FileName.EndsWith(PdfExtension, StringComparison.OrdinalIgnoreCase);
+		if (isPdf && await TryAddPdfAsync(file.FullPath, name))
 		{
 			return;
+		}
+
+		if (isPdf)
+		{
+			// Slice 273 part C: the page-picture import could not read the PDF, so its plain text is read instead.
+			_session.Services.GetService<ReadTheStupidText.Application.Usage.IFallbackSink>()?.Report(
+				ReadTheStupidText.Application.Usage.FallbackArea.Document, ReadTheStupidText.Application.Usage.FallbackReason.PdfImportFailed);
 		}
 
 		string? text = await ExtractAsync(file.FullPath);
