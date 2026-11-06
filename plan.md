@@ -25,6 +25,7 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 271 | Leftovers from night 2026-11-05-1823 (pause-path test, multi-clip VM and emulator checks, `tmp/` listing, unknown-tag flow) | parked: feedback loop, waits for the user | | | [271-night-2026-11-05-1823-leftovers.md](docs/plan/slices/271-night-2026-11-05-1823-leftovers.md) |
 | 272 | Dino: Farsi pre-made audio falls back after the first animal sound (8 books) | planned (user, 2026-11-05: fix now) | | | [272-dino-farsi-clips-off-by-one.md](docs/plan/slices/272-dino-farsi-clips-off-by-one.md) |
 | 273 | Every fallback sends an analytics event (both apps, every platform; parts A-E) | planned | | | [273-fallback-events-everywhere.md](docs/plan/slices/273-fallback-events-everywhere.md) |
+| 274 | Dino iPhone crash: leave the app from the grown-ups pages and come back | planned | | | [274-dino-ios-crash-after-leaving-parent-page.md](docs/plan/slices/274-dino-ios-crash-after-leaving-parent-page.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
