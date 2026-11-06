@@ -30,6 +30,7 @@ internal static class AndroidInstallSource
         }
         catch (Exception ex)
         {
+            // no-fallback: crash/analytics metadata only; an unknown installer is treated as not Play
             System.Diagnostics.Debug.WriteLine($"Installer package unreadable, treated as not Play: {ex.Message}");
             return null;
         }

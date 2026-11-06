@@ -380,7 +380,7 @@ public partial class CapturePage : ContentPage, IScanPackUi
             await Task.Delay(TimeSpan.FromMilliseconds(300));
         }
 
-        IReadOnlyList<ScanPageRead>? reads = await new ScanPackFlow(_ocrPacks, this).ResolveAsync([location], [first], ReadAgainAsync);
+        IReadOnlyList<ScanPageRead>? reads = await new ScanPackFlow(_ocrPacks, this, _fallbacks).ResolveAsync([location], [first], ReadAgainAsync);
 
         return reads?[0].Text;
     }

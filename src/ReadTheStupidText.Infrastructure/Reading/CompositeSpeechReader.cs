@@ -75,6 +75,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposab
             }
             catch (NeuralEngineUnavailableException ex)
             {
+                // no-fallback: ReportUnavailable below records the fallback to the Windows voice
                 // The model went away after the readiness check: read with the Windows voice.
                 ReportUnavailable(ex, FallbackReason.NeuralUnavailable, activityId);
             }

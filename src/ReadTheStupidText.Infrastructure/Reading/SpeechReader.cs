@@ -75,6 +75,7 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: the read was cancelled or superseded
             return;
         }
 

@@ -56,18 +56,6 @@ a device-level id (such as the advertising identifier), and this one is not (coo
         </dict>
         <dict>
             <key>NSPrivacyCollectedDataType</key>
-            <string>NSPrivacyCollectedDataTypeOtherDiagnosticData</string>
-            <key>NSPrivacyCollectedDataTypeLinked</key>
-            <false/>
-            <key>NSPrivacyCollectedDataTypeTracking</key>
-            <false/>
-            <key>NSPrivacyCollectedDataTypePurposes</key>
-            <array>
-                <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
-            </array>
-        </dict>
-        <dict>
-            <key>NSPrivacyCollectedDataType</key>
             <string>NSPrivacyCollectedDataTypeCrashData</string>
             <key>NSPrivacyCollectedDataTypeLinked</key>
             <false/>

@@ -141,6 +141,7 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
         }
         catch (Exception ex)
         {
+            // no-fallback: best-effort delete of an abandoned download
             System.Diagnostics.Debug.WriteLine($"A cancelled translation pack could not be removed: {ex.Message}");
         }
     }

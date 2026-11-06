@@ -309,6 +309,7 @@ public partial class ReaderPage : ContentPage
         }
         catch (PermissionException)
         {
+            // no-fallback: the person is told and nothing is substituted
             await AlertAsync(AppResources.Reader_FilePermissionTitle, AppResources.Reader_FilePermissionMessage);
             return;
         }
@@ -326,10 +327,12 @@ public partial class ReaderPage : ContentPage
         }
         catch (DocumentTooLargeException ex)
         {
+            // no-fallback: the person is told and nothing is substituted
             await AlertAsync(AppResources.Reader_FileTooLargeTitle, AppResources.Format(AppResources.Reader_FileTooLargeMessage, ex.Actual, ex.Limit));
         }
         catch (Exception)
         {
+            // no-fallback: the person is told and nothing is substituted
             await AlertAsync(AppResources.Reader_FileUnreadableTitle, AppResources.Reader_FileUnreadableMessage);
         }
 
@@ -420,6 +423,7 @@ public partial class ReaderPage : ContentPage
         }
         catch (Exception ex)
         {
+            // no-fallback: a failed read ends the read and the person is told (the usage outcome counts it as failed)
             bool wasCurrent = id == _pendingReadId;
             if (wasCurrent)
             {
@@ -723,7 +727,7 @@ public partial class ReaderPage : ContentPage
         }
         catch (OperationCanceledException)
         {
-            // A newer change decides.
+            // no-fallback: a newer change decides.
         }
     }
 
@@ -929,6 +933,7 @@ public partial class ReaderPage : ContentPage
         }
         catch (Exception)
         {
+            // no-fallback: the person is told and nothing is substituted
             await AlertAsync(AppResources.Reader_PasteFailedTitle, AppResources.Reader_PasteFailedMessage);
         }
         finally
@@ -1043,11 +1048,11 @@ public partial class ReaderPage : ContentPage
         }
         catch (OperationCanceledException)
         {
-            // Superseded by a newer edit, or Play was tapped.
+            // no-fallback: superseded by a newer edit, or Play was tapped.
         }
         catch (Exception)
         {
-            // A head start is an optimization: failing to prepare never reaches the user.
+            // no-fallback: a head start is an optimization: Play still reads the same text with the same voice, only without the prepared sentences.
         }
     }
 

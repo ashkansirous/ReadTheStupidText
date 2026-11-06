@@ -1,13 +1,14 @@
 # Slice 272: Lion and Mouse in Farsi is read with its REAL pre-made pack from the piece after the lion's roar on, not by the device voice. The old Farsi pack counted the sound word (the roar) as a spoken
 # piece, so from piece 19 on every clip's hash missed and the device voice read the rest. The fetch-audio-pack hook (Debug only) installs the live store's Farsi pack through the pack store, so this needs the
 # network and the re-aligned pack published (the merge's dino-store.yml run, v2 or higher). The Debug shelf holds only four test books, so the fetch-audio-pack hook first downloads the book itself from
-# The listing keys books by their 32-hex id (content/dino/lion-and-mouse/book.json), not the slug, so every hook here is given the id.
 # the live listing when the shelf lacks it (EnsureOnShelfAsync in DinoTestCommands.cs), then installs its pack; open-book waits for both.
+# The listing keys books by their 32-hex id (content/dino/lion-and-mouse/book.json), not the slug, so every hook here is given the id.
+# The "pieces have a clip" line (StoryVoicing.cs) reads "<id>/fa v2: 56 of 56 pieces have a clip"; its marker ends at the colon, because Test-LogMarker needs a word boundary (Slice 275 item 2).
 # It fails against the old pack: "(sentence 16)" is the highlight sentence of piece 19, the first piece the old pack missed, so with the old pack that line is never written (the device voice reads it).
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK set-language ok fa
 # expect-log: HOOK fetch-audio-pack ok 1ca50c6936cc44788b992726784e8132 fa
-# expect-log: 1ca50c6936cc44788b992726784e8132/fa v
+# expect-log: 1ca50c6936cc44788b992726784e8132/fa v2:
 # expect-log: [AudioPack] premade clip plays (sentence 16)
 # expect-log: HOOK read start
 appId: uk.sirous.dinoreader.dbg

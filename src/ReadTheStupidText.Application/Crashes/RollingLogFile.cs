@@ -50,7 +50,7 @@ public sealed class RollingLogFile
         }
         catch (Exception)
         {
-            // A broken log must not break the app; the next call tries again.
+            // no-fallback: a broken log must not break the app; the next call tries again.
             CloseQuietly();
         }
     }
@@ -67,7 +67,7 @@ public sealed class RollingLogFile
         }
         catch (Exception)
         {
-            // Nothing more can be done in a crash handler.
+            // no-fallback: nothing more can be done in a crash handler.
         }
     }
 
@@ -90,7 +90,7 @@ public sealed class RollingLogFile
         }
         catch (Exception)
         {
-            // A file that cannot be deleted now is deleted at the next check.
+            // no-fallback: a file that cannot be deleted now is deleted at the next check.
         }
     }
 
@@ -103,6 +103,7 @@ public sealed class RollingLogFile
         }
         catch (Exception)
         {
+            // no-fallback: an unreadable log has an empty tail.
             return string.Empty;
         }
     }
@@ -120,6 +121,7 @@ public sealed class RollingLogFile
         }
         catch (Exception)
         {
+            // no-fallback: an unreadable log has an empty tail.
             return Task.FromResult(string.Empty);
         }
     }
@@ -146,6 +148,7 @@ public sealed class RollingLogFile
         }
         catch (Exception)
         {
+            // no-fallback: an unreadable log has an empty tail.
             return string.Empty;
         }
     }
@@ -239,7 +242,7 @@ public sealed class RollingLogFile
         }
         catch (Exception)
         {
-            // Closing a broken writer can fail; it is dropped either way.
+            // no-fallback: closing a broken writer can fail; it is dropped either way.
         }
 
         _writer = null;

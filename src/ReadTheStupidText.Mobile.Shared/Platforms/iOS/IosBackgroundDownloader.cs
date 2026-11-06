@@ -254,6 +254,7 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
             }
             catch (Exception ex)
             {
+                // no-fallback: native delegate callback; logged, the pause still completes (finally) and resume data is simply not kept
                 LogDelegateFailure(nameof(PauseAsync), ex);
             }
             finally
@@ -300,6 +301,7 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
         }
         catch (OperationCanceledException)
         {
+            // no-fallback: the transfer ended, so the watchdog stops
             // the transfer ended
         }
     }
@@ -330,6 +332,7 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
         }
         catch (Exception ex)
         {
+            // no-fallback: native delegate callback; logged, only the waiting-for-network flag is not set
             LogDelegateFailure(nameof(TaskIsWaitingForConnectivity), ex);
         }
     }
@@ -359,6 +362,7 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
         }
         catch (Exception ex)
         {
+            // no-fallback: native delegate callback; logged, a progress update is lost
             LogDelegateFailure(nameof(DidWriteData), ex); // a progress handler or an odd task description must never unwind into native dispatch
         }
     }
@@ -378,6 +382,7 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
         }
         catch (Exception ex)
         {
+            // no-fallback: native delegate callback; the failure is recorded in _failures and surfaces as the pack download's own retryable failure
             LogDelegateFailure(nameof(DidFinishDownloading), ex);
             _failures[downloadTask.TaskIdentifier] = ex.Message;
         }
@@ -421,6 +426,7 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
         }
         catch (Exception ex)
         {
+            // no-fallback: native delegate callback; logged, it must never unwind into native dispatch
             LogDelegateFailure(nameof(DidCompleteWithError), ex);
         }
     }
@@ -465,6 +471,7 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
         }
         catch (Exception ex)
         {
+            // no-fallback: resume data is an optimisation; logged, the next attempt restarts from the partial file
             LogDelegateFailure(nameof(KeepOrDropResumeData), ex);
         }
     }
@@ -539,6 +546,7 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
         }
         catch (Exception ex)
         {
+            // no-fallback: native delegate callback; logged, it must never unwind into native dispatch
             LogDelegateFailure(nameof(DidFinishEventsForBackgroundSession), ex);
         }
     }

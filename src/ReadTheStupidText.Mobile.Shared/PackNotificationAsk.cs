@@ -27,6 +27,7 @@ public static class PackNotificationAsk
         }
         catch (Exception ex)
         {
+            // no-fallback: an unknown state means the question may be asked; nothing the person relies on degrades
             System.Diagnostics.Debug.WriteLine($"Notification question state unknown: {ex.GetType().Name}: {ex.Message}");
             return false;
         }
@@ -50,6 +51,7 @@ public static class PackNotificationAsk
         }
         catch (Exception ex)
         {
+            // no-fallback: the optional notification question is skipped; the download itself is unaffected
             System.Diagnostics.Debug.WriteLine($"Notification question skipped: {ex.GetType().Name}: {ex.Message}");
         }
         finally

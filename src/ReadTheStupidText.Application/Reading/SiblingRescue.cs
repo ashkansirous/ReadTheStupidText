@@ -61,6 +61,7 @@ public static class SiblingRescue
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // no-fallback: the silent take stands and SilentOutputGuard reports the outcome (SilentGaveUp).
             ops.Warn("the sibling voice could not be loaded; the silent take stands", ex);
         }
         finally

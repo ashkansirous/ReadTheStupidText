@@ -50,6 +50,7 @@ public static class WindowsUsage
         }
         catch (Exception ex)
         {
+            // no-fallback: usage counting only; an unreadable package fails closed (not counted), nothing the user sees degrades
             System.Diagnostics.Debug.WriteLine($"Store install unreadable, not counted (fail closed): {ex.Message}");
             return false;
         }
@@ -64,6 +65,7 @@ public static class WindowsUsage
         }
         catch (Exception)
         {
+            // no-fallback: usage counting only; a machine that will not describe itself sends no device object
             return null;
         }
     }
@@ -78,6 +80,7 @@ public static class WindowsUsage
         }
         catch (InvalidOperationException)
         {
+            // no-fallback: usage counting only; a build with no package identity reports the placeholder version
             return FallbackVersion;
         }
     }

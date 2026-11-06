@@ -41,7 +41,7 @@ public static class TranslationLanguageChoices
         }
         catch (Exception)
         {
-            // A language the system cannot name must never stop the picker (or the page) building.
+            // no-fallback: only the label falls back to the language code; a language the system cannot name must never stop the picker (or the page) building.
             return new TranslationLanguageChoice(code, code);
         }
     }

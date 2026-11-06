@@ -62,6 +62,7 @@ internal sealed class CrashSender(
         }
         catch (Exception ex)
         {
+            // no-fallback: the crash sender must never report into itself; the pending reports stay for the next launch
             Debug.WriteLine($"crash reports could not be sent: {ex.Message}");
         }
         finally
@@ -183,6 +184,7 @@ internal sealed class CrashSender(
         }
         catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException)
         {
+            // no-fallback: the crash sender must never report into itself; null means "not sent", the report is kept and retried
             return null;
         }
     }

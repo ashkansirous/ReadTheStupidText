@@ -2,6 +2,7 @@ using CoreGraphics;
 using Foundation;
 using ImageIO;
 using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Application.Usage;
 
 namespace ReadTheStupidText.Mobile.Shared;
 
@@ -18,13 +19,17 @@ public sealed class IosPixelImageLoader : IPixelImageLoader
     // 12 MP photo without a 48 MP one costing 200 MB.
     internal const int MaxRecognitionSide = 4096;
 
+    private readonly IFallbackSink _fallbacks; // Slice 275
+
+    public IosPixelImageLoader(IFallbackSink? fallbacks = null) => _fallbacks = fallbacks ?? NoFallbackSink.Instance;
+
     public IOcrPage Open(string imagePath, int maxSide)
     {
         string path = ScannedText.ToLocalPath(imagePath)
             ?? throw new IOException($"Not a local image: '{imagePath}'.");
 
         using CGImage detection = DecodeUpright(path, maxSide);
-        return new IosOcrPage(DetectionImage(detection), path);
+        return new IosOcrPage(DetectionImage(detection), path, _fallbacks);
     }
 
     // A decode failure is a plain I/O error of this image, not a model fault (see LanguageImageTextExtractor).

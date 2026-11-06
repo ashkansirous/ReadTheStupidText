@@ -1,5 +1,6 @@
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Infrastructure.Reading;
@@ -26,8 +27,11 @@ public sealed class PackVoiceModelService : IVoiceModelService
     private int _refreshing;
     private int _rerunRequested;
 
-    public PackVoiceModelService(IVoicePackService packs, ISettingsStore settings, ILanguageChangeNotifier languages)
+    private readonly IFallbackSink _fallbacks; // Slice 275
+
+    public PackVoiceModelService(IVoicePackService packs, ISettingsStore settings, ILanguageChangeNotifier languages, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance;
         _packs = packs;
         _settings = settings;
         languages.LanguageChanged += (_, _) => RefreshInBackground();
@@ -131,6 +135,7 @@ public sealed class PackVoiceModelService : IVoiceModelService
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            _fallbacks.Report(FallbackArea.Pack, FallbackReason.PackFailed); // Slice 275: an unreadable pack folder lists no packs; the readiness check then reports the missing model
             return [];
         }
     }

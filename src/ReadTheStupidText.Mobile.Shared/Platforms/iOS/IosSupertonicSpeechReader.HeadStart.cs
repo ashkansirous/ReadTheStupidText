@@ -48,6 +48,7 @@ public sealed partial class IosSupertonicSpeechReader
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // no-fallback: the head start is a speed-up; the read synthesizes normally without it
             _log.Warning("head start failed", error: ex);
             return false;
         }

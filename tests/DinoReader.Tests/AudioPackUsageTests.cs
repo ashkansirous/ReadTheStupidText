@@ -84,7 +84,7 @@ public sealed class AudioPackUsageTests
     {
         string source = File.ReadAllText(Path.Combine(RepoRoot(), "worker", "events.ts"));
         string[] voices = [AudioPackUsage.Premade, AudioPackUsage.PartialDetail, .. Enum.GetValues<DeviceVoiceReason>().Select(r => AudioPackUsage.ReadVoice(0, 1, r).Detail)];
-        string[] packs = [AudioPackUsage.PackStarted, AudioPackUsage.PackDone, .. Enum.GetValues<PackFailureKind>().Select(AudioPackUsage.PackFailed)];
+        string[] packs = [AudioPackUsage.PackStarted, AudioPackUsage.PackDone, AudioPackUsage.PackCancelled, .. Enum.GetValues<PackFailureKind>().Select(AudioPackUsage.PackFailed)];
 
         Assert.Equal(voices.Order(), ListIn(source, "READ_VOICES").Order());
         Assert.Equal(packs.Order(), ListIn(source, "AUDIO_PACK_OUTCOMES").Order());

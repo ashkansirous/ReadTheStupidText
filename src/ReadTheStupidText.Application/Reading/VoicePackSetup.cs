@@ -1,4 +1,5 @@
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Application.Reading;
@@ -43,8 +44,11 @@ public sealed class VoicePackSetup
     // How long the update check waits for the catalog; offline or slow, the installed pack stays as it is.
     private static readonly TimeSpan UpdateCatalogTimeout = TimeSpan.FromSeconds(15);
 
-    public VoicePackSetup(IVoicePackService packs, IVoiceModelService model, ISettingsStore settings)
+    private readonly IFallbackSink _fallbacks; // Slice 275: a skipped or failed update check is reported
+
+    public VoicePackSetup(IVoicePackService packs, IVoiceModelService model, ISettingsStore settings, IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance;
         _packs = packs;
         _model = model;
         _settings = settings;
@@ -190,10 +194,11 @@ public sealed class VoicePackSetup
         }
         catch (OperationCanceledException)
         {
-            // A run for another language took over; it publishes its own state.
+            // no-fallback: a run for another language took over; it publishes its own state.
         }
         catch (Exception ex)
         {
+            _fallbacks.Report(FallbackArea.Pack, FallbackReason.UpdateCheckFailed, language); // Slice 275: the installed pack stays in use
             System.Diagnostics.Debug.WriteLine($"VoicePackSetup update check: {ex}");
             RestoreReady(language);
         }
@@ -261,7 +266,7 @@ public sealed class VoicePackSetup
         }
         catch (ObjectDisposedException)
         {
-            // The update just ended: nothing to stop.
+            // no-fallback: the update just ended: nothing to stop.
         }
     }
 
@@ -276,6 +281,7 @@ public sealed class VoicePackSetup
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
+            _fallbacks.Report(FallbackArea.Pack, FallbackReason.UpdateCheckFailed, language); // Slice 275: a slow catalog skips this update check; the installed pack stays in use
             return null; // the catalog was too slow
         }
     }

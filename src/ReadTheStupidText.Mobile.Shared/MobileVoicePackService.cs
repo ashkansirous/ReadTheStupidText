@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using ReadTheStupidText.Application;
 using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 
 namespace ReadTheStupidText.Mobile.Shared;
 
@@ -38,8 +39,11 @@ public sealed class MobileVoicePackService : IVoicePackService
     private IReadOnlyList<PackInfo>? _catalog;
     private DateTime _catalogFetchedUtc;
 
-    public MobileVoicePackService()
+    private readonly IFallbackSink _fallbacks; // Slice 275
+
+    public MobileVoicePackService(IFallbackSink? fallbacks = null)
     {
+        _fallbacks = fallbacks ?? NoFallbackSink.Instance;
         PackVersionFolders.DeleteOldVersions(PacksRoot()); // app start: nothing holds the folders of old versions yet
     }
 
@@ -57,6 +61,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
+            // no-fallback: the failure is returned as a result the caller shows (and reports) to the person
             return PackCatalogResult.Failure(ClassifyFailure(ex));
         }
     }
@@ -110,6 +115,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // no-fallback: false is returned and the caller tells the person the pack could not be removed
             System.Diagnostics.Debug.WriteLine($"Could not remove pack '{packId}': {ex.Message}");
             return false;
         }
@@ -131,13 +137,14 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // no-fallback: best-effort cleanup delete of a folder
             System.Diagnostics.Debug.WriteLine($"Could not delete '{folder}': {ex.Message}");
         }
     }
 
-    private static IReadOnlyList<InstalledVoicePack> InstalledPacks(PackKind kind) => InstalledPacks(k => k == kind);
+    private IReadOnlyList<InstalledVoicePack> InstalledPacks(PackKind kind) => InstalledPacks(k => k == kind);
 
-    private static IReadOnlyList<InstalledVoicePack> InstalledPacks(Func<PackKind, bool> wanted) =>
+    private IReadOnlyList<InstalledVoicePack> InstalledPacks(Func<PackKind, bool> wanted) =>
         Directory.EnumerateDirectories(PacksRoot())
             .Select(folder => Path.GetFileName(folder))
             .Where(PackNaming.IsValidId)
@@ -146,9 +153,9 @@ public sealed class MobileVoicePackService : IVoicePackService
             .Where(p => wanted(p.Manifest.Kind))
             .ToList();
 
-    private static InstalledVoicePack? LoadInstalled(string packId)
+    private InstalledVoicePack? LoadInstalled(string packId)
     {
-        string folder = PackVersionFolders.Resolve(Path.Combine(PacksRoot(), packId));
+        string folder = PackVersionFolders.Resolve(Path.Combine(PacksRoot(), packId), _fallbacks);
         string manifestPath = Path.Combine(folder, PackConstants.ManifestFileName);
         if (!File.Exists(manifestPath))
         {
@@ -166,10 +173,12 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
         catch (FormatException)
         {
+            if (PackVersionFolders.FirstReportFor(folder)) { _fallbacks.Report(FallbackArea.Pack, FallbackReason.PackFailed); } // Slice 275: a pack with an unreadable manifest counts as not installed, so it is offered for download again
             return null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            if (PackVersionFolders.FirstReportFor(folder)) { _fallbacks.Report(FallbackArea.Pack, FallbackReason.PackFailed); } // Slice 275: an unreadable pack counts as not installed, so it is offered for download again
             // An unreadable pack is skipped, not fatal: the others stay usable.
             System.Diagnostics.Debug.WriteLine($"Skipping voice pack '{packId}': {ex.Message}");
             return null;
@@ -293,6 +302,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // no-fallback: the stale-partial scan is housekeeping; an empty result only leaves the partials for the next launch
             Debug.WriteLine($"Stale partial scan failed: {ex.Message}");
             return StalePartialScan.Empty;
         }
@@ -312,6 +322,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // no-fallback: housekeeping listing; no partials found only means nothing is cleaned or resumed this time
             Debug.WriteLine($"Could not list partial downloads: {ex.Message}");
         }
 
@@ -373,6 +384,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // no-fallback: best-effort cleanup delete of a stale partial; false means kept
             Debug.WriteLine($"Could not delete the partial of '{decision.PackId}': {ex.Message}");
             return false;
         }
@@ -409,6 +421,7 @@ public sealed class MobileVoicePackService : IVoicePackService
             }
             catch (ObjectDisposedException)
             {
+                // no-fallback: cancelling a run that already ended is a no-op
                 // The run already ended and disposed its source: nothing left to cancel.
             }
         }
@@ -430,6 +443,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
         catch (Exception ex)
         {
+            // no-fallback: the keep-alive is optional; the download runs without it and logs start-refused
             PackDownloadHost.LogService("start-refused", ex.GetType().Name); // best effort: the download runs without a keep-alive
             return null;
         }
@@ -520,6 +534,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
+            // no-fallback: the failure is returned as a result the caller shows (and reports) to the person
             return ClassifyFailure(ex);
         }
 
@@ -574,6 +589,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // no-fallback: the failure is returned as a result the caller shows (and reports) to the person
             return PackErrorClassifier.ClassifyInstall(ex);
         }
     }

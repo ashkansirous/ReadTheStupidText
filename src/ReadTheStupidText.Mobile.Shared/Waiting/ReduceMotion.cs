@@ -14,6 +14,7 @@ public static class ReduceMotion
             }
             catch (Exception)
             {
+                // no-fallback: an unreadable reduce-motion setting means motion stays on (the default)
                 return false;
             }
         }

@@ -60,6 +60,7 @@ public sealed class PackResumeWatcher : IPackResume, IDisposable
         }
         catch (Exception ex)
         {
+            // no-fallback: an unreadable network state only holds back an automatic restart; the person can still resume by hand
             System.Diagnostics.Debug.WriteLine($"Connectivity read failed: {ex.Message}");
             return true; // cannot tell: the conservative answer, no automatic restart over a link that may be mobile data
         }
@@ -78,6 +79,7 @@ public sealed class PackResumeWatcher : IPackResume, IDisposable
         }
         catch (Exception ex)
         {
+            // no-fallback: an unreadable network state is treated as "not known to be cellular"; the caller only uses it to word a notice
             System.Diagnostics.Debug.WriteLine($"Connectivity read failed: {ex.Message}");
             return false;
         }
@@ -105,6 +107,7 @@ public sealed class PackResumeWatcher : IPackResume, IDisposable
             }
             catch (Exception ex)
             {
+                // no-fallback: one failing event subscriber is logged and must not stop the others
                 System.Diagnostics.Debug.WriteLine($"Network change subscriber failed: {ex.Message}");
             }
         }
@@ -124,6 +127,7 @@ public sealed class PackResumeWatcher : IPackResume, IDisposable
         }
         catch (Exception ex)
         {
+            // no-fallback: an automatic restart that could not be triggered leaves the pack paused; the person can resume by hand
             System.Diagnostics.Debug.WriteLine($"Pack resume trigger failed: {ex.Message}");
         }
     }
@@ -149,6 +153,7 @@ public sealed class PackResumeWatcher : IPackResume, IDisposable
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
+            // no-fallback: an unreadable partial counts as length 0, only used to word a notice
             return 0;
         }
     }

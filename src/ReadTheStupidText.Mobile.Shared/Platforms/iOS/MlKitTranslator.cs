@@ -164,6 +164,7 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
             }
             catch (Exception ex) when (ex is OperationCanceledException or ObjectDisposedException)
             {
+                // no-fallback: the poll ended; the download completion is finished below (timeout) or already by Cleanup
                 // Cleanup stopped the timer (already finished), or the timeout did (below).
                 Finish(new TimeoutException("The translation pack download timed out."));
             }
@@ -255,6 +256,7 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
         }
         catch (Exception ex)
         {
+            // no-fallback: best-effort delete of an abandoned download
             System.Diagnostics.Debug.WriteLine($"A cancelled translation pack could not be removed: {ex.Message}");
         }
         finally

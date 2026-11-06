@@ -69,7 +69,7 @@ public partial class App : Application
 
         services.AddSingleton<IClipboardReader, ClipboardReader>();
         // While an update is required (Slice 217) ReadAloudService itself refuses every read through this gate and the panel reopens on the notice.
-        services.AddSingleton<WindowsUpdate>(_ => WindowsUpdate.Create());
+        services.AddSingleton<WindowsUpdate>(sp => WindowsUpdate.Create(sp.GetRequiredService<IFallbackSink>()));
         services.AddSingleton<IReadGate>(sp => sp.GetRequiredService<WindowsUpdate>());
         services.AddSingleton<IHotkeyService, GlobalHotkeyService>();
         services.AddSingleton<ISelectionCopier, SelectionCopier>();

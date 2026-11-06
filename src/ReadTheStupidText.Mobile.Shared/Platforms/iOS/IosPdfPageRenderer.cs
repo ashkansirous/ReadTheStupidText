@@ -50,6 +50,7 @@ public sealed class IosPdfPageRenderer : IPdfPageRenderer
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // no-fallback: the page is reported as not rendered (false) to the caller, which owns the user-facing failure
             System.Diagnostics.Debug.WriteLine($"Could not render page {target.PageIndex} of '{target.OutputPath}': {ex.Message}");
             return false;
         }
@@ -114,6 +115,7 @@ public sealed class IosPdfPageRenderer : IPdfPageRenderer
         }
         catch (Exception)
         {
+            // no-fallback: best-effort temp file delete
             // the stray temp file is overwritten by the next attempt
         }
     }

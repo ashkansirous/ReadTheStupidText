@@ -46,6 +46,7 @@ public sealed partial class IosSupertonicSpeechReader
         }
         catch (InvalidDataException ex)
         {
+            // no-fallback: the chunk is re-synthesized with the same engine and voice, so the audio is the same
             _log.Warning("cached sentence audio would not join; resynthesizing the chunk", error: ex);
             units.ToList().ForEach(u => _sentences.Invalidate(KeyFor(engine, u, voice, transform)));
             clips = await GetClipsAsync(engine, units, voice, transform, token);
@@ -192,6 +193,7 @@ public sealed partial class IosSupertonicSpeechReader
             }
             catch
             {
+                // no-fallback: cleanup wait; a real failure already surfaced on the consumer's await
                 // Cancelled or failed: a real failure already surfaced on the consumer's await.
             }
         }
@@ -298,6 +300,7 @@ public sealed partial class IosSupertonicSpeechReader
         }
         catch (IOException)
         {
+            // no-fallback: best-effort temp file delete
             // Best-effort cleanup; the cache directory is reclaimed by the OS regardless.
         }
     }

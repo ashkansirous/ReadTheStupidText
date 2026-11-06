@@ -58,6 +58,7 @@ public sealed class AndroidPdfPageRenderer : IPdfPageRenderer
         }
         catch (Exception ex) when (ex is IOException or Java.Lang.Exception or InvalidOperationException)
         {
+            // no-fallback: the page is reported as not rendered (false) to the caller, which owns the user-facing failure
             System.Diagnostics.Debug.WriteLine($"Could not render page {target.PageIndex} of '{target.OutputPath}': {ex.Message}");
             return false;
         }

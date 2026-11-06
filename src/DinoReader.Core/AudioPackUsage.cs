@@ -46,6 +46,9 @@ public static class AudioPackUsage
     public const string PackDone = "done";
     public const string PackFailedPrefix = "failed:";
 
+    /// <summary>The reader ended the download (Slice 275): not a failure, so it adds no retry count and no pack_failed fallback.</summary>
+    public const string PackCancelled = "cancelled";
+
     /// <summary>
     /// What a read used (Slice 273): <c>premade</c> when every spoken piece had a clip, <c>partial</c> when some had one and the others fell back to the device voice (Slice 272: a read that
     /// falls back from page 5 on is not a premade read), else <c>device:&lt;reason&gt;</c>. Carries the number of pieces read by clips and by the device voice.

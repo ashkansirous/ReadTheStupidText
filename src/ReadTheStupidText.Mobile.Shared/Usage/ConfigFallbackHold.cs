@@ -57,6 +57,7 @@ public sealed class ConfigFallbackHold(Func<bool> configHeld, Action<string, str
             }
             catch (Exception)
             {
+                // no-fallback: this is the fallback count itself being sent; counting is best effort
                 // Counting is best effort: it never changes what the fallback does.
             }
         }

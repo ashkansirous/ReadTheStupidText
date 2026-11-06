@@ -58,6 +58,8 @@ export const FALLBACK_AREAS = [
   "pack", "ocr", "document", "store", "config", "ui_language",
   // part D: platform gaps and the swallowed-error class
   "window", "font", "library",
+  // Slice 275
+  "input",
 ] as const;
 export const FALLBACK_REASONS = [
   "no_pack", "pack_failed", "text_mismatch", "clip_missing", "partial",
@@ -73,10 +75,12 @@ export const FALLBACK_REASONS = [
   // part D
   "storyteller_pack_missing", "animal_clip_unplayable", "clip_unplayable", "clip_speed_unset", "in_app_update_failed", "window_frame_failed", "displays_unreadable", "saved_position_moved", "dpi_defaulted",
   "font_fallback", "shelf_order_unreadable", "story_unreadable", "language_detect_failed", "page_read_failed", "intro_state_reset",
+  // Slice 275
+  "ocr_crop_degraded", "uia_unavailable",
 ] as const;
 const MAX_COUNT = 1_000_000;
 const NO_COUNT = -1;
-const AUDIO_PACK_OUTCOMES = ["started", "done", "failed:network", "failed:size", "failed:unzip", "failed:clip", "failed:missing", "failed:storage"] as const;
+const AUDIO_PACK_OUTCOMES = ["started", "done", "failed:network", "failed:size", "failed:unzip", "failed:clip", "failed:missing", "failed:storage", "cancelled"] as const;
 // Slice 250: why a read stopped (the app's ReadStopReason; a test keeps the two lists the same). `window_stopped` is accepted though no caller emits it yet.
 const READ_STOP_REASONS = ["left_book", "finished", "cancelled", "language_changed", "restarted", "window_stopped", "skipped", "failed", "other"] as const;
 

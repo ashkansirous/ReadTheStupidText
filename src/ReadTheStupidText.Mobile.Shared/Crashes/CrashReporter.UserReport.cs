@@ -62,6 +62,7 @@ public static partial class CrashReporter
         }
         catch (Exception ex)
         {
+            // no-fallback: crash reporting must never report into itself; the Failed outcome is shown to the person
             Debug.WriteLine($"Crash reporting could not send a user report: {ex.Message}");
             return UserReportOutcome.Failed;
         }

@@ -27,9 +27,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Part C, `config_cached`/`config_default` and `ui_language` rows on a real first launch.
 - Part C production rows: check with `analytics-query` after release.
 
-### Slice 272: Dino Farsi clips off by one ([slice](slices/272-dino-farsi-clips-off-by-one.md))
-- Emulator: `.maestro/dino/premade-audio-past-roar.yaml` passes once its marker is fixed (Slice 275 item 2); the 2026-11-06 run showed the app right and the flow failing on its own marker.
-
 ### Slice 270: Dino iPhone crash, player disposed in its finished callback ([slice](slices/270-dino-ios-player-disposed-in-finished-callback.md))
 - Windows clip hand-off: no VM check plays audio clips (a harness gap).
 - `IDispatcher.Dispatch` always queues on Windows (seen only as a string match in Microsoft.Maui.dll 10.0.120, not confirmed from source).

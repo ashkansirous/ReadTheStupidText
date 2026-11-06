@@ -33,6 +33,7 @@ public sealed class PendingCrashStore(string folder)
         }
         catch (Exception)
         {
+            // no-fallback: the crash report is not kept and the caller is told (false); crash storage is best effort.
             return false;
         }
     }
@@ -51,6 +52,7 @@ public sealed class PendingCrashStore(string folder)
         }
         catch (Exception)
         {
+            // no-fallback: an unreadable crash folder lists as empty; pending reports are retried at the next launch.
             return [];
         }
     }
@@ -64,6 +66,7 @@ public sealed class PendingCrashStore(string folder)
         }
         catch (Exception)
         {
+            // no-fallback: an unreadable pending crash file reads as null and is skipped.
             return null;
         }
     }
@@ -90,6 +93,7 @@ public sealed class PendingCrashStore(string folder)
         }
         catch (Exception)
         {
+            // no-fallback: an unreadable pending crash file has no body (null) and is not posted.
             return null;
         }
     }
@@ -108,7 +112,7 @@ public sealed class PendingCrashStore(string folder)
         }
         catch (Exception)
         {
-            // A file that cannot be deleted is tried again at the next launch.
+            // no-fallback: a file that cannot be deleted is tried again at the next launch.
         }
     }
 
@@ -131,7 +135,7 @@ public sealed class PendingCrashStore(string folder)
         }
         catch (Exception)
         {
-            // Without the marker an unclean exit goes unseen; nothing else changes.
+            // no-fallback: without the marker an unclean exit goes unseen; nothing else changes.
         }
     }
 
@@ -149,6 +153,7 @@ public sealed class PendingCrashStore(string folder)
         }
         catch (Exception)
         {
+            // no-fallback: an unreadable run marker reads as a clean exit (null).
             return null;
         }
     }

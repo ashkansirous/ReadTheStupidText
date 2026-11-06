@@ -1,4 +1,5 @@
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 using Windows.Networking.Connectivity;
 
 namespace ReadTheStupidText.Infrastructure.Translation;
@@ -9,6 +10,10 @@ namespace ReadTheStupidText.Infrastructure.Translation;
 /// </summary>
 public sealed class WindowsPackUpdateNetwork : IPackUpdateNetwork
 {
+    private readonly IFallbackSink _fallbacks; // Slice 275
+
+    public WindowsPackUpdateNetwork(IFallbackSink? fallbacks = null) => _fallbacks = fallbacks ?? NoFallbackSink.Instance;
+
     public bool AllowsAutomaticUpdate
     {
         get
@@ -20,6 +25,7 @@ public sealed class WindowsPackUpdateNetwork : IPackUpdateNetwork
             }
             catch (Exception)
             {
+                _fallbacks.Report(FallbackArea.Pack, FallbackReason.UpdateCheckFailed); // Slice 275: an unreadable connection cost defers an automatic pack update (treated as metered)
                 return false; // cannot tell: treat as metered
             }
         }

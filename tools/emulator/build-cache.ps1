@@ -36,12 +36,43 @@ function Get-BuildInputTree {
     }
 }
 
-function Get-BuildKey {
+# Slice 275 item 4: the "<path>=<tree hash>" lines the key is made of, so a miss can name the input that differs from an earlier key's.
+function Get-BuildKeyInputs {
     $tree = Get-BuildInputTree
-    $parts = foreach ($path in $script:BuildInputPaths) {
+    return @(foreach ($path in $script:BuildInputPaths) {
         $hash = try { Invoke-Git @('rev-parse', "${tree}:$path") | Select-Object -First 1 } catch { $null }
         if ($hash) { "$path=$hash" }
+    })
+}
+
+# Printed on a cache miss: compare two runs' lines to see which input changed between them (the key itself is only a hash of them).
+function Write-BuildKeyInputs([string]$Key) {
+    $inputs = Get-BuildKeyInputs
+    Write-Host "Build key $Key is made of:"
+    foreach ($line in $inputs) { Write-Host "  $line" }
+    $newest = Get-NewestBuildInputs
+    if ($newest) {
+        $differ = @($inputs | Where-Object { $newest.inputs -notcontains $_ })
+        Write-Host "Inputs that differ from the newest build of this worktree (key $($newest.key)): $(if ($differ.Count) { $differ -join ', ' } else { 'none listed (an input path was added or removed)' })"
+    } else { Write-Host 'No earlier build of this worktree recorded its inputs, so nothing to compare with.' }
+}
+
+# The newest build of this worktree whose build.json lists its inputs (written by Save-BuildMeta since Slice 275), or $null.
+function Get-NewestBuildInputs {
+    $root = Join-Path (Get-WorktreesRoot) '_builds'
+    if (-not (Test-Path $root)) { return $null }
+    $mine = Split-Path $script:ToolsRepoRoot -Leaf
+    foreach ($dir in (Get-ChildItem $root -Directory | Sort-Object LastWriteTime -Descending)) {
+        $meta = Join-Path $dir.FullName $script:BuildMetaFile
+        if (-not (Test-Path $meta)) { continue }
+        $json = Get-Content $meta -Raw | ConvertFrom-Json
+        if ($json.worktree -eq $mine -and $json.inputs) { return $json }
     }
+    return $null
+}
+
+function Get-BuildKey {
+    $parts = Get-BuildKeyInputs
     $sha = [Security.Cryptography.SHA1]::Create()
     $bytes = $sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($parts -join "`n"))
     return ([BitConverter]::ToString($bytes) -replace '-', '').ToLowerInvariant().Substring(0, $script:BuildKeyLength)
@@ -127,7 +158,7 @@ function Publish-BuildDir([string]$Temp, [string]$Dir) {
 }
 
 function Save-BuildMeta([string]$Dir, [string]$App, [string]$Platform, [string]$Key) {
-    @{ app = $App; platform = $Platform; key = $Key; worktree = (Split-Path $script:ToolsRepoRoot -Leaf); built = (Get-Date).ToString('o') } |
+    @{ app = $App; platform = $Platform; key = $Key; worktree = (Split-Path $script:ToolsRepoRoot -Leaf); built = (Get-Date).ToString('o'); inputs = @(Get-BuildKeyInputs) } |
         ConvertTo-Json | Set-Content (Join-Path $Dir $script:BuildMetaFile)
 }
 

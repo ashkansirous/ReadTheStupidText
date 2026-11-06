@@ -55,6 +55,7 @@ public sealed class SingleModelCall
         }
         catch (Exception) when (!token.IsCancellationRequested)
         {
+            // no-fallback: the other call's failure is its own to report; only its end matters here
             // it ended with an error: the way is clear
         }
     }

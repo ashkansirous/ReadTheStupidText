@@ -67,11 +67,11 @@ public sealed class WindowsUpdate : IReadGate
     public bool ShowAvailableBar => _service.State == UpdateState.Available && !UpdateDecision.IsDismissed(ReadDismissed(), _service.Config, AppPlatform.Windows);
 
     /// <summary>The service over the usage counts' file store and Read The Stupid Text's own host, for this build.</summary>
-    public static WindowsUpdate Create()
+    public static WindowsUpdate Create(IFallbackSink fallbacks)
     {
         string version = InstalledVersion();
         var service = new UpdateConfigService(
-            new UsageFileStore(), new UsageHttpTransport(), AppPlatform.Windows, version, UpdateDecision.BuildMayUpdate(Facts(version)), TestConfig());
+            new UsageFileStore(), new UsageHttpTransport(), AppPlatform.Windows, version, UpdateDecision.BuildMayUpdate(Facts(version)), TestConfig(), fallbacks: fallbacks);
         return new WindowsUpdate(service);
     }
 
