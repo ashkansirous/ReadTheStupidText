@@ -1,6 +1,6 @@
 # Slice 278 — Dino: store books only (no own books, no scanning, no translation, no voice engine, no voice pickers)
 
-*Part A built 2026-11-06 (wave 2026-11-06, merged as PR #859, 09e2e892), not yet verified on every platform (see Not yet verified below); parts B and C planned. Part B is unblocked: Slice 277 merged as PR #858 on 2026-11-06.* Dino Reader only (Android, iOS and the Windows head, the same in the same parts). **Read The
+*Part A built 2026-11-06 (wave 2026-11-06, merged as PR #859, 09e2e892), not yet verified on every platform (see Not yet verified below). Part B: In progress (wave 2026-11-06), draft PR. Part C: own claim (see Part C below).* Dino Reader only (Android, iOS and the Windows head, the same in the same parts). **Read The
 Stupid Text is not touched**, and neither is any shared code it uses (`src/ReadTheStupidText.Mobile.Shared`,
 `src/ReadTheStupidText.Infrastructure`, `src/ReadTheStupidText.Documents`, `src/ReadTheStupidText.Mobile`). Dino
 simply stops calling the shared pieces it no longer needs.
@@ -30,6 +30,22 @@ Offline does not matter (local files only).
 **Touches, part B (voice engine and voice pickers out):** `src/DinoReader.App/{StoryVoicing,SpeechStartup,StorytellerDefault,StorytellerConsent,StorytellerViews,VoicePreview,NarratorPage,NarratorChoice,NarratorRecast,CastPage,CastRows,CastViews,CastText,CastFlavourMenu,ReadingClips,ReadingSession,SpokenLanguage,FirstRunPage.xaml,FirstBooksPage*,SettingsPage,SettingsRows,BookSheet,StoryActions,MauiProgram}.cs*`,
 `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/Platforms/**`, `src/DinoReader.App/Resources/**`,
 `src/DinoReader.Core/**` (cast and voice-choice types only), `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`.
+**Touches widened for part B (claim, 2026-11-06, from a ground-in-code read of origin/main):** `src/DinoReader.App/{App.xaml,GalleryPage.xaml,LanguagePage.xaml,ReadingPage.xaml,ReadingSpeedPage,IntroWizardPage,StoryLanguages,StoryLanguagesPage,StoryLanguageButton,StarterStories,CloseQuestionPage,GrownUpHeader,ReadingText,RecordViews,ShelfAudioPacksCard,ShelfReorderView,UsageEvent}.cs*`,
+`src/DinoReader.App/Testing/**` (Debug test hooks: drop `voice=`, `voiceId=`, the voice-ready acknowledgement; keep the rest),
+`src/DinoReader.Core/{Story,StoryJson,StoryDraft,StoryPieces,StarterUpdate,UsageEvent,BookSheetPlan,FirstBooks}.cs` (only to stop the app needing cast data; parsing keeps tolerating stored `cast` fields),
+`.maestro/dino/**` (flows that drive the Cast screen, the voice-ready scrim, voice ids or the voice download; not `premade-audio-past-roar.yaml`),
+`tools/desktop-vm/checks/dino-*.ps1` (dino-launch waits for "Continue with the phone voice"), `tests/ReadTheStupidText.Tests/FallbackGuardBaseline.txt` (only deleted or changed Dino files' lines).
+Must not edit: `tools/DinoReader.BookBuilder/**` (it builds the store audio with `VoiceCaster`, `CharacterRoster` and the cast), any shared project (`src/ReadTheStupidText.*`, `src/AndroidSherpaPackaging.props`), `worker/**`, `docs/design/**` (part C).
+
+**Design for part B (coordinator, claim 2026-11-06):**
+- **Core cast and voice types stay** where `tools/DinoReader.BookBuilder` or `StoryJson` uses them (the store's audio is built from them). Delete a Core type only when no App, BookBuilder or test code still needs it after the App removal. A saved book's `cast` / language casts still parse and are ignored by the app.
+- **A piece with no clip and no recording is not spoken.** Reading shows that piece's text and highlights for a short fixed beat, then goes on to the next piece, as if it had played; it reports one fallback per occurrence through the existing sink with an existing `FallbackArea`/reason (no Worker change). A clip that fails to play is treated the same way. No code path in Dino resolves `ISpeechReader`, `IVoicePackService`, `VoicePackInstaller` or `IVoiceModelService` after part B.
+- **Reading speed:** keep the setting only if pre-made clip playback already honours it (read `ReadingSpeedPage` / the clip player); otherwise remove the row. Write which in the slice file.
+- **Language packs:** a story language needs only its audio pack (`AudioPackStore`); the per-language voice pack download, its prompt, consent and progress go.
+- **First run:** language, first books, then the shelf; saved first-run states that pointed at the voice wait go to the shelf.
+- **Shared registration:** `AddMobileSharedServices()` still registers the shared speech reader (shared code, not edited); Dino just never resolves it. If sherpa-onnx / voice-pack natives still land in the Dino packages through the shared props or `Mobile.Shared`, write it into *Outstanding for the repo split* like A4.
+- **Test hooks and flows:** remove the hooks and flows that only exist for voices (cast screen, voice id, first-run pack start); fix the flows and the VM `dino-launch` check that wait for or dismiss the voice-ready scrim.
+
 **Touches, part C (design copy):** `docs/design/dino-reader/**`.
 Parts A and B share hub files (`MauiProgram.cs`, `StoryActions.cs`, `BookSheet.cs`, resources): build them one after
 the other, not in the same wave.
