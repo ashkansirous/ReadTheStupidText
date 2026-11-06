@@ -2,8 +2,15 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
-### Slice 277: Dino: a store book is published only with complete pre-made audio ([slice](slices/277-dino-store-audio-coverage-gate.md))
-- The first `dino-store.yml` run on main with the new steps (`check-audio --verdict`, `--audio-verdict`, the final failing step).
+### Slice 278: Dino: store books only, part A ([slice](slices/278-dino-store-books-only.md))
+- Android emulator flow `dino-landscape-store` was not reached in the 10-minute run.
+- No flow asserts the "Get more books" text or that the Add pill is gone.
+- The A3 cleanup has no device check: no Debug hook seeds an own book, so deleting an own book on a real install is untried.
+- No iOS device run is recorded for part A.
+
+### Slice 275: Leftovers from night 2026-11-06-0042, part 1 ([slice](slices/275-night-2026-11-06-0042-leftovers.md))
+- Item 7: no emulator flow cancels an audio pack download and checks that `cancelled` is sent (there is no test hook to stall a pack fetch); only unit and Worker tests cover it.
+- Item 4: the cause of the earlier `-NoBuild` cache-key miss is unknown; `-NoBuild` hit the cache for both apps on 2026-11-06 only.
 
 ### Slice 271: Leftovers from night 2026-11-05-1823 ([slice](slices/271-night-2026-11-05-1823-leftovers.md))
 - A Windows VM check that plays a pre-made-audio book past two clip hand-offs (item 2, VM half): the VM package is a Release build with no Debug test hooks, so no fixture audio pack can be installed there; it needs Debug test hooks (or an install path) in the VM package first.
