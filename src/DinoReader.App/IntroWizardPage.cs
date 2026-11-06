@@ -6,6 +6,8 @@ using Microsoft.Maui.Controls.Shapes;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Mobile.Shared.Waiting;
+using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
+using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
 
 namespace DinoReader;
 
@@ -96,20 +98,51 @@ public sealed class IntroWizardPage : ContentPage
 		_wait.Begin(WaitStage.GettingFile, AppResources.Wait_GettingBook, canCancel: false);
 		try
 		{
-			_pictures = await IntroPictures.LoadAsync(_library);
-			_hasStarter = await IntroPictures.FirstBookAsync(_library) is not null;
+			_pictures = await LoadIntroPicturesAsync();
+			_hasStarter = await HasStarterAsync();
 			_canRecord = _hasStarter;
-		}
-		catch (Exception ex)
-		{
-			Debug.WriteLine($"Dino Reader could not load the intro pictures: {ex}");
-			_pictures = IntroPictures.None;
-			_hasStarter = false;
-			_canRecord = false;
 		}
 		finally
 		{
 			_wait.End();
+		}
+	}
+
+	private async Task<IntroPictures> LoadIntroPicturesAsync()
+	{
+		try
+		{
+			return await IntroPictures.LoadAsync(_library);
+		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: a cancelled load is not a failure; the intro starts with no pictures
+			return IntroPictures.None;
+		}
+		catch (Exception ex)
+		{
+			DinoFallbacks.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // Slice 275 part 3: the intro starts with no pictures
+			Debug.WriteLine($"Dino Reader could not load the intro pictures: {ex}");
+			return IntroPictures.None;
+		}
+	}
+
+	private async Task<bool> HasStarterAsync()
+	{
+		try
+		{
+			return await IntroPictures.FirstBookAsync(_library) is not null;
+		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: a cancelled check is not a failure; no starter book to record on
+			return false;
+		}
+		catch (Exception ex)
+		{
+			DinoFallbacks.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // Slice 275 part 3: no starter book to record on
+			Debug.WriteLine($"Dino Reader could not check the starter book: {ex}");
+			return false;
 		}
 	}
 
@@ -547,6 +580,7 @@ public sealed class IntroWizardPage : ContentPage
 		catch (Exception ex)
 		{
 			_launchedStep = false;
+			DinoFallbacks.Report(FallbackArea.Ui, FallbackReason.TapFailed); // Slice 275 part 3: the step's screen did not open
 			Debug.WriteLine($"Dino Reader could not open the intro step: {ex}");
 			return false;
 		}
@@ -615,6 +649,7 @@ public sealed class IntroWizardPage : ContentPage
 		}
 		catch (Exception ex)
 		{
+			DinoFallbacks.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // Slice 275 part 3: the record step stays as it was
 			Debug.WriteLine($"Dino Reader could not check for a book to record on: {ex}");
 		}
 	}
@@ -659,7 +694,7 @@ public sealed class IntroWizardPage : ContentPage
 		}
 		catch (Exception ex)
 		{
-			// The modal may already be gone (the app left, or the update page replaced it): the intro has ended either way.
+			// no-fallback: the modal may already be gone (the app left, or the update page replaced it); the intro has ended either way
 			Debug.WriteLine($"Dino Reader intro modal pop failed: {ex}");
 		}
 	}

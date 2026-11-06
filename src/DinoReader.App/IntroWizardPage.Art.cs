@@ -12,21 +12,13 @@ public sealed record IntroPictures(string? RecordPage)
 {
 	public static readonly IntroPictures None = new((string?)null);
 
-	/// <summary>Reads the shelf and picks the art: a page of the first book.</summary>
+	/// <summary>Reads the shelf and picks the art: a page of the first book. An unreadable shelf throws; the caller (IntroWizardPage.LoadPicturesAsync) reports it once and falls back to <see cref="None"/>.</summary>
 	public static async Task<IntroPictures> LoadAsync(IStoryLibrary library)
 	{
-		try
-		{
-			IReadOnlyList<Story> stories = (await library.ListAsync()).OrderBy(s => s.Created).ThenBy(s => s.Id, StringComparer.Ordinal).ToList(); // first added first, whatever order the grown-up gave the shelf
-			Story? first = FirstOf(stories);
-			string? record = first is null ? null : PagePictures(first).Select(f => library.TryResolveFile(first.Id, f)).FirstOrDefault(p => p is not null);
-			return new IntroPictures(record);
-		}
-		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-		{
-			System.Diagnostics.Debug.WriteLine($"Dino Reader could not pick the intro pictures: {ex}");
-			return None;
-		}
+		IReadOnlyList<Story> stories = (await library.ListAsync()).OrderBy(s => s.Created).ThenBy(s => s.Id, StringComparer.Ordinal).ToList(); // first added first, whatever order the grown-up gave the shelf
+		Story? first = FirstOf(stories);
+		string? record = first is null ? null : PagePictures(first).Select(f => library.TryResolveFile(first.Id, f)).FirstOrDefault(p => p is not null);
+		return new IntroPictures(record);
 	}
 
 	/// <summary>The book the intro opens (Slice 261): the first one the grown-up picked on the first-run book page, else the shortest catalogue book, else the shortest book at all; null on an empty shelf.</summary>

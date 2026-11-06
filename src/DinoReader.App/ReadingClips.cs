@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using DinoReader.Core;
+using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
+using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
 
 namespace DinoReader;
 
@@ -34,6 +36,7 @@ internal static class AnimalClipFiles
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: removing a clip is housekeeping; the leftover file is replaced on the next preparation
 			Debug.WriteLine($"Dino Reader animal clip {kind}: could not be removed: {ex.Message}");
 		}
 	}
@@ -71,6 +74,7 @@ internal static class AnimalClipFiles
 		}
 		catch (Exception ex)
 		{
+			DinoFallbacks.Report(FallbackArea.Speech, FallbackReason.AnimalClipUnplayable); // Slice 275 part 3: that animal's slot stays silent
 			Debug.WriteLine($"Dino Reader animal clip {kind}: could not be prepared, that slot stays silent: {ex.Message}");
 		}
 	}

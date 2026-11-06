@@ -231,6 +231,9 @@ public static class FallbackReason
     /// <summary>Slice 279 (area "ui"): a tap handler threw; the error was caught and the tap did nothing.</summary>
     public const string TapFailed = "tap_failed";
 
+    /// <summary>Slice 275 (area "ui"): a page of the story could not be laid out, so the reading card shows the error text instead.</summary>
+    public const string LayoutFailed = "layout_failed";
+
     public static IReadOnlyList<string> All { get; } =
     [
         NoPack, PackFailed, TextMismatch, ClipMissing, Partial,
@@ -242,7 +245,7 @@ public static class FallbackReason
         PdfImportFailed, StoreUnreachable, UpdateCheckFailed, ConfigCached, ConfigDefault, UiLanguageUnsupported,
         StorytellerPackMissing, AnimalClipUnplayable, ClipUnplayable, ClipSpeedUnset, InAppUpdateFailed, WindowFrameFailed, DisplaysUnreadable, SavedPositionMoved, DpiDefaulted,
         FontFallback, ShelfOrderUnreadable, StoryUnreadable, LanguageDetectFailed, PageReadFailed, IntroStateReset,
-        OcrCropDegraded, UiaUnavailable, StoreFailed, PreferenceUnsaved, TapFailed,
+        OcrCropDegraded, UiaUnavailable, StoreFailed, PreferenceUnsaved, TapFailed, LayoutFailed,
     ];
 }
 

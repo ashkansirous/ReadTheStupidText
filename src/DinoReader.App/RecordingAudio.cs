@@ -73,6 +73,7 @@ internal sealed partial class MicRecorder : IMicRecorder
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: a cancel discards the take anyway; nothing the person hears or sees changes
 			Debug.WriteLine($"Dino Reader could not stop a recording cleanly: {ex.Message}");
 		}
 	}

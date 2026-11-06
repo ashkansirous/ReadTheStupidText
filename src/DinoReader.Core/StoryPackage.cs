@@ -37,6 +37,7 @@ public sealed record StoryPackageManifest(int SchemaVersion, string Id, string T
         }
         catch (JsonException)
         {
+            // no-fallback: version 0 means unknown, which the caller rejects as an invalid package
             return 0;
         }
     }
@@ -53,6 +54,7 @@ public sealed record StoryPackageManifest(int SchemaVersion, string Id, string T
         }
         catch (JsonException ex)
         {
+            // no-fallback: rethrown as StoryPackageException, which the importer reports to the person
             throw new StoryPackageException("The package manifest is not valid.", ex);
         }
     }
