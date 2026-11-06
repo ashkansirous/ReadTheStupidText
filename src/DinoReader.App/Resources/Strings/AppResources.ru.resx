@@ -288,6 +288,8 @@
   <data name="Update_Title" xml:space="preserve"><value>Дино нужно обновить</value></data>
   <data name="Update_Body" xml:space="preserve"><value>Попроси взрослого установить новую версию. Твои книги и записи останутся как есть.</value></data>
   <data name="Update_Button" xml:space="preserve"><value>Обновить Дино</value></data>
+  <data name="Update_OpenTestFlight" xml:space="preserve"><value>Открыть TestFlight</value></data>
+  <data name="Update_OpenAppStore" xml:space="preserve"><value>Открыть App Store</value></data>
   <data name="Version_NewReady" xml:space="preserve"><value>Доступна новая версия</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Версия</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Помогите улучшить Dino</value></data>

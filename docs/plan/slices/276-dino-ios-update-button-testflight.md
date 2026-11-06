@@ -1,6 +1,6 @@
 # Slice 276 — Dino iPhone: the "Update needed" button opens TestFlight for TestFlight installs
 
-*In progress 2026-11-06.* Bug fix, Dino Reader, iOS. Found while preparing the user's request (2026-11-06): set Dino's iOS `minVersion` to 1.106.8 once that build is approved for the External testing group.
+*Built 2026-11-06, PR #853.* Bug fix, Dino Reader, iOS. Found while preparing the user's request (2026-11-06): set Dino's iOS `minVersion` to 1.106.8 once that build is approved for the External testing group.
 
 **Touches:** `src/DinoReader.App/Platforms/iOS/StoreUpdater.ios.cs`, `src/DinoReader.App/UpdatePage*.cs` (button text only, if needed), `src/DinoReader.App/Resources/Strings/**` (only if the text changes), `tests/DinoReader.Tests/**`, `docs/plan/slices/276-dino-ios-update-button-testflight.md`.
 
@@ -12,9 +12,16 @@
 
 ## Work
 
-- [ ] On iOS, a TestFlight install's update button opens the TestFlight app on Dino's page (`itms-beta://` / the TestFlight link for the app; check the scheme with `library-docs` or `web-research` first); an App Store install keeps the App Store page. The button text says what it opens ("Open TestFlight" vs "Open the App Store"), in every app language.
-- [ ] Unit test of the pure choice (channel → link and text).
-- [ ] Android: no change (Play internal and closed tracks open the same Play page; checked, not changed). Windows: no change.
+- [x] On iOS, a TestFlight install's update button opens the TestFlight app on Dino's page (`itms-beta://` / the TestFlight link for the app; check the scheme with `library-docs` or `web-research` first); an App Store install keeps the App Store page. The button text says what it opens ("Open TestFlight" vs "Open the App Store"), in every app language.
+- [x] Unit test of the pure choice (channel → link and text).
+- [x] Android: no change (Play internal and closed tracks open the same Play page; checked, not changed). Windows: no change.
+
+## Review notes
+
+- Link: Dino's public TestFlight link `https://testflight.apple.com/join/WnF7M53D` (the one on `site/dino/index.html`), one constant in `IosUpdateTarget`. Only a positively App Store install opens the App Store page; TestFlight and unreadable channels open TestFlight (Dino has no App Store app yet).
+- The Settings "A new version is ready" row shares `StoreUpdater.OpenStoreAsync`, so it now also opens TestFlight for TestFlight installs (intended).
+- Review finding 4 (catch filter only covers `InvalidOperationException`/`FeatureNotSupportedException`, pre-existing): not changed.
+- Review finding 6 (tests cover only the channel-to-link mapping, not the channel source or link validity): not changed; link validity is a device check.
 
 ## Verification
 

@@ -78,6 +78,8 @@ public static class AppResources
 	public static string Update_Title => Get();
 	public static string Update_Body => Get();
 	public static string Update_Button => Get();
+	public static string Update_OpenTestFlight => Get();
+	public static string Update_OpenAppStore => Get();
 	public static string Version_NewReady => Get();
 	public static string Version_Title => Get();
 	public static string Usage_Title => Get();

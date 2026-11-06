@@ -288,6 +288,8 @@
   <data name="Update_Title" xml:space="preserve"><value>ディノのアップデートが必要です</value></data>
   <data name="Update_Body" xml:space="preserve"><value>おとなの人に、新しいバージョンを入れてもらってね。本や録音は、そのまま残ります。</value></data>
   <data name="Update_Button" xml:space="preserve"><value>ディノをアップデート</value></data>
+  <data name="Update_OpenTestFlight" xml:space="preserve"><value>TestFlightを開く</value></data>
+  <data name="Update_OpenAppStore" xml:space="preserve"><value>App Storeを開く</value></data>
   <data name="Version_NewReady" xml:space="preserve"><value>新しいバージョンがあります</value></data>
   <data name="Version_Title" xml:space="preserve"><value>バージョン</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Dino をよくするために協力する</value></data>

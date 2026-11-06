@@ -288,6 +288,8 @@
   <data name="Update_Title" xml:space="preserve"><value>دینو به به‌روزرسانی نیاز دارد</value></data>
   <data name="Update_Body" xml:space="preserve"><value>از یک بزرگ‌تر بخواه نسخهٔ تازه را بگیرد. کتاب‌ها و ضبط‌های تو همان‌طور که هستند می‌مانند.</value></data>
   <data name="Update_Button" xml:space="preserve"><value>به‌روزرسانی دینو</value></data>
+  <data name="Update_OpenTestFlight" xml:space="preserve"><value>باز کردن TestFlight</value></data>
+  <data name="Update_OpenAppStore" xml:space="preserve"><value>باز کردن App Store</value></data>
   <data name="Version_NewReady" xml:space="preserve"><value>نسخهٔ تازه آماده است</value></data>
   <data name="Version_Title" xml:space="preserve"><value>نسخه</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>به بهتر شدن دینو کمک کنید</value></data>

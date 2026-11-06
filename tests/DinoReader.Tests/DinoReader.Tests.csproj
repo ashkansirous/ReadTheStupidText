@@ -36,6 +36,8 @@
     <Compile Include="..\..\src\DinoReader.App\AudioPackStore.cs" Link="Linked\AudioPackStore.cs" />
     <!-- The player hand-off (Slice 270): plain .NET, so the "release after the native call returned" contract is tested on the real file. -->
     <Compile Include="..\..\src\DinoReader.App\PlayerHandOff.cs" Link="Linked\PlayerHandOff.cs" />
+    <!-- The iOS update button's link and text per install channel (Slice 276). -->
+    <Compile Include="..\..\src\DinoReader.App\IosUpdateTarget.cs" Link="Linked\IosUpdateTarget.cs" />
     <!-- The pure font/size fallback behind the iOS text attributes (Slice 244). -->
     <Compile Include="..\..\src\DinoReader.App\Platforms\iOS\AttributeFallback.cs" Link="Linked\AttributeFallback.cs" />
   </ItemGroup>
