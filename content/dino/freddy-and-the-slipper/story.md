@@ -1,7 +1,9 @@
-Freddy the fox was an ordinary fox,
+Freddy the fox was a beautiful fox,
 not tall like a tree and not small like a box.
-"I'm not the fanciest fox," Freddy said,
-"but I've got a nice tail and a fluffy red head!"
+He had twinkly eyes and a warm, happy smile,
+and a fluffy red tail that went swish all the while.
+"I'm clever, I'm kind, and I'm wise," Freddy said,
+"and I love my soft tail and my fluffy red head!"
 ---
 One evening his Mummy called, "Dinner, my dear!
 I've made you some stew. Come and sit over here!"
@@ -26,12 +28,12 @@ He searched every cupboard, each corner and nook.
 He peeked in the fridge and he peeked in the pot.
 "Anything tasty?" asked Tummy. Said Freddy, "Er... not."
 ---
-"I know!" whispered Freddy. "The neighbours next door
-grilled kebabs today! Maybe there's one more!"
+"I know!" whispered Freddy. "Out there on the grill,
+Daddy made kebabs! Maybe one's there still!"
 "Kebab!" cheered Tummy. "Hooray! Yum-yum-yum!
 Go, Freddy, go! Get a kebab for your tum!"
 ---
-So over the fence went the fox with a hop,
+So out to the garden went the fox with a hop,
 and he tiptoed up close to the grill. Then... stop!
 He looked at the cold grill with hope in his eyes.
 "Hurry up!" grumbled Tummy with rumbly cries.
@@ -48,13 +50,13 @@ That's not a kebab! What is that? Oh dear!"
 ---
 "It's not a kebab! It's a smelly old shoe!
 Is it a slipper? A sandal? I don't have a clue!"
-"A clog?" asked Tummy. "A flip-flop?" Said Freddy, "Oh, how should I know?
-All I know is it's yucky! Oh no, oh no, no!"
+"A clog?" asked Tummy. "A flip-flop?" Said Freddy, "Oh! Wait! Now I know!
+It's Daddy's old slipper! Yuck! Oh no, oh no, no!"
 ---
 Poor Freddy was hungry and grumpy and sad.
 "Rumble-grumble," moaned Tummy. "Oh, this is so bad!"
 ---
-So Freddy went home, and what did he find?
+So Freddy crept back inside, and what did he find?
 Some cold, plain potatoes, the not-yummy kind.
 "Cold, plain potatoes?" grumbled Tummy. "Boo-hoo!"
 "I know," sighed Freddy, "but they'll have to do."

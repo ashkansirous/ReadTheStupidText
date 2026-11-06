@@ -59,12 +59,12 @@
     },
     {
       "speaker": "Freddy",
-      "source": "The neighbours next door\ngrilled kebabs today!",
+      "source": "Out there on the grill,\nDaddy made kebabs!",
       "direction": "whispering, excited"
     },
     {
       "speaker": "Freddy",
-      "source": "Maybe there's one more!",
+      "source": "Maybe one's there still!",
       "direction": "whispering, excited"
     },
     {
@@ -106,6 +106,16 @@
       "speaker": "Tummy",
       "source": "Oh dear!",
       "direction": "worried"
+    },
+    {
+      "speaker": "Freddy",
+      "source": "Now I know!",
+      "direction": "suddenly realising, surprised"
+    },
+    {
+      "speaker": "Freddy",
+      "source": "It's Daddy's old slipper!",
+      "direction": "disgusted and funny, realising what he chewed"
     },
     {
       "speaker": "Freddy",
@@ -160,79 +170,79 @@
   ],
   "audioPacks": {
     "ar": {
-      "version": 2,
-      "hash": "7b2009d1284e71dd701303b8130e742b4f96da2d7b5b56272542829b246ecd24",
-      "bytes": 2058752
+      "version": 3,
+      "hash": "a86077ec595543ac718db3cb27a9d7000395828a34b136e662a98a7417c443ab",
+      "bytes": 2214563
     },
     "da": {
-      "version": 1,
-      "hash": "f496bb33e2e56528dc1726d9008501bfd44ea19bba722c4e4429b712c91d8385",
-      "bytes": 1830735
+      "version": 2,
+      "hash": "326aa49745a82c7f578b491b4db644a34807043de8a4269d7d78d4f8e931cba5",
+      "bytes": 1938308
     },
     "de": {
-      "version": 1,
-      "hash": "ce57ba87d4d559bfc4f9045bb02ebc674f9b673cdc2c0956c26e8e723c870e00",
-      "bytes": 1940931
+      "version": 2,
+      "hash": "266b5f625ba35742f63c19dec68c5b4648e754ba07246cf33cbc2e25a752cac9",
+      "bytes": 2077396
     },
     "en": {
-      "version": 1,
-      "hash": "93ece6cb45805dedf38aa3660beab11c99118a42abd6a7c30449ef36e61f2b4a",
-      "bytes": 1767109
+      "version": 2,
+      "hash": "d3c3c9ed913ec6d4f26cb4296b19edda8318dc9c2c9595d336972b8c8f35ba03",
+      "bytes": 1876418
     },
     "es": {
-      "version": 1,
-      "hash": "c6d36c2a5d763bc2200c7dd6b42c76f649561ce26a548f479113608b115aa5a8",
-      "bytes": 2083929
+      "version": 2,
+      "hash": "9a7bb81f244051d93a5baf1530e413f214e37a85d07ea9e067483b3243b78daf",
+      "bytes": 2238983
     },
     "fa": {
-      "version": 2,
-      "hash": "22ca79b23a3055cb04234a17ca09dd9bb9d83c935dbfbf2b4b902752546be26c",
-      "bytes": 2089672
+      "version": 3,
+      "hash": "0367a3dff0b4207c0c19c968f4fb5e76bff6019d50a28b150b003abf471a1007",
+      "bytes": 2181319
     },
     "fi": {
-      "version": 1,
-      "hash": "db727bd23c661513761b3c5cb2618e5a0ce5e3922f70a01d3a027a35140cdd29",
-      "bytes": 2063184
+      "version": 2,
+      "hash": "639306f368aeaea0f73f9ad18d6f552490578f4db0a6110107bbf5443e192c87",
+      "bytes": 2203628
     },
     "fr": {
-      "version": 1,
-      "hash": "1debfd977b37bfbf147d9e758643f008a80ec72d566d17ed223e327956b4a305",
-      "bytes": 1963627
+      "version": 2,
+      "hash": "83f62ecf13e1eefa60ee16d20fdce7592913758df48aa5ad8dd9492a4f56253a",
+      "bytes": 2115555
     },
     "ja": {
-      "version": 1,
-      "hash": "7ed70c8b0a624a0ff5211dbcecc67c75a7d64875465cfb78d479b776d20a6df1",
-      "bytes": 2178226
+      "version": 2,
+      "hash": "25f6d7ca246fb1272c1e271b8ecaf889da8923e7ca6d14c15a0ef233a60205ae",
+      "bytes": 2245548
     },
     "nb": {
-      "version": 1,
-      "hash": "2e6bbf33ea545c2c092b65bfa9522e1f6b2af90339688cd913626a8faee2e276",
-      "bytes": 1903182
+      "version": 2,
+      "hash": "31f94b31f4d2c0f9b6b7bd2f8651129b7828ef38f83d39242ad2808424a4743f",
+      "bytes": 2029893
     },
     "nl": {
-      "version": 1,
-      "hash": "993003a5e8d52ed5749d35f716291669bc6a8aada135892f75cbc2c88c7bea18",
-      "bytes": 1833286
+      "version": 2,
+      "hash": "466b76dec82d43cfd4b190a10709a5b008e56823fb43b48255f98a805ca47a54",
+      "bytes": 1926377
     },
     "pt": {
-      "version": 1,
-      "hash": "58b12af47c107d57c936f63a51d7f487b100f8e2d29607dfdf8f0f421d703f5f",
-      "bytes": 2132698
+      "version": 2,
+      "hash": "0f5e3d4736af6770608c4e1a3f0ec4b12375a372a98241f63f134d0e278a118f",
+      "bytes": 2290880
     },
     "ru": {
-      "version": 1,
-      "hash": "5b85cd7d1d70d73905190b304c48165ea7c64dba9333d6a73aa0d79c29bcaafc",
-      "bytes": 1987762
+      "version": 2,
+      "hash": "554d4babfa63052e1e08f59bda89d6949227a2087b3548e5f5e733dd0b1b89aa",
+      "bytes": 2120735
     },
     "sv": {
-      "version": 1,
-      "hash": "9da259af2d9ad1d5f241506244838032f261edc8961ca0ca4cdac9aa078bef98",
-      "bytes": 1972339
+      "version": 2,
+      "hash": "dfabbb759242b610a82c39804d3c9bc5ea9e6113af6a50f92cad4353f3883a4e",
+      "bytes": 2079742
     },
     "zh": {
-      "version": 1,
-      "hash": "6bd365110b658997cb822097d5929da80f52f3763bbb5bdd8bdb7de349eed457",
-      "bytes": 2005237
+      "version": 2,
+      "hash": "50a78375b352ea116b3e80a8f345c7ad6d9ac41186ae2da600441ce5059fbe84",
+      "bytes": 2103783
     }
   }
 }

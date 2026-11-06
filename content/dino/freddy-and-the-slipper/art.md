@@ -1,9 +1,35 @@
 # Freddy and the Slipper: art record
 
 Store book (not a starter), by Elham Shafiei Gol and Ashkan Sirous, for about age 4. Source: the user's phone scope doc of 2026-11-01 ("Approved
-English text", 12 pages). Freddy the fox won't eat his dinner, his talking Tummy keeps him awake, he sneaks next door hoping
-for a leftover kebab, chomps a smelly brown slipper instead, eats cold potatoes, and the next night eats all his stew. The
-book teaches four shoe words (slipper, sandal, clog, flip-flop).
+English text", 12 pages). Freddy the fox won't eat his dinner, his talking Tummy keeps him awake, he sneaks out to his own
+garden hoping for a kebab left on the grill Daddy used earlier, chomps Daddy's smelly old brown slipper instead, eats cold
+potatoes, and the next night eats all his stew. The book teaches four shoe words (slipper, sandal, clog, flip-flop).
+
+## Text change of 2026-11-06 (user-approved wording, applied verbatim)
+
+- **Page 1:** "an ordinary fox" and "I'm not the fanciest fox ... but I've got a nice tail" became "a beautiful fox", a new
+  couplet ("He had twinkly eyes and a warm, happy smile, / and a fluffy red tail that went swish all the while.") and "I'm
+  clever, I'm kind, and I'm wise ... and I love my soft tail and my fluffy red head!". Why: the fox must not say he isn't
+  pretty. The page is now about 65 words, a little over the ~60 guide; the user approved this exact wording.
+- **Page 7:** "The neighbours next door grilled kebabs today! Maybe there's one more!" became "Out there on the grill, /
+  Daddy made kebabs! Maybe one's there still!". **Page 8, first line:** "So over the fence went the fox with a hop" became
+  "So out to the garden went the fox with a hop". Why: Daddy grilled the kebabs, so Freddy goes out to his own garden instead
+  of jumping the neighbours' fence at night.
+- **Page 11, last two lines:** "Oh, how should I know? / All I know is it's yucky!" became "Oh! Wait! Now I know! / It's
+  Daddy's old slipper! Yuck!": Freddy realises it is Daddy's old slipper. "Now I know!" is its own piece, not page 7's
+  "I know!", so every language says "now I get it" there, not "I have an idea".
+- **Page 13, first line** (text review): "So Freddy went home, and what did he find?" became "So Freddy crept back inside,
+  and what did he find?": the grill is in his own garden now, so he never left home. French "wise" on page 1 is «plein de
+  sagesse», not «sage» (which reads as well-behaved).
+- **Daddy** is only mentioned (pages 7 and 11), never drawn and never speaks: no cast entry, no voice, not in `characters`.
+  Speakers checked with `dump-sentences`: every new quote goes to Freddy, the new narration lines to the narrator.
+- **Pictures are not redrawn.** Every page keeps its picture: page 1 (Freddy proudly showing his tail) fits the new words;
+  pages 7-12 stay as drawn, and the low fence in them now reads as the edge of Freddy's own garden; page 11 (Freddy holding
+  the slipper up, puzzled) is the moment he works out whose slipper it is.
+- 13 new pieces translated into all 13 languages; the swish is one sound word in every language, not a triple (user
+  decision, 2026-11-06: the repeat-three-times rule is withdrawn for this line); 9 pieces that no longer exist were dropped from every translation file (now 112 pieces). In `audio-cast.json` the two page-7 line entries follow the new English, "Now I know!" got the
+  direction "suddenly realising, surprised", and "It's Daddy's old slipper!" got a direction (cast checked
+  with `generate.py --dry-run`, en and fa). The clips of the changed sentences are not rendered yet.
 
 ## Changes to the approved text (each one forced by a rule)
 
@@ -64,20 +90,23 @@ text or letters anywhere.
   heel, a bit scuffed, no laces, no face. **Its size is fixed: about as long as Freddy's forearm** (elbow to paw), on every
   page and the cover, never bigger or smaller. Never a pair, never another kind of shoe.
 
-There are no other characters: the neighbours never appear (they are asleep), no other animals, no live chicken or hen
-anywhere (chicken is only a word for dinner).
+There are no other characters: **Daddy** is only mentioned (he grilled the kebabs earlier; the slipper is his) and is never
+drawn; nobody else appears, no other animals, no live chicken or hen anywhere (chicken is only a word for dinner).
 
 ## Places (the same in every picture)
 
-- **Freddy's garden** (page 1): a sunny lawn with one tall tree on the left and a small cardboard box on the grass.
+- **The meadow** (page 1): a sunny lawn with one tall tree on the left and a small cardboard box on the grass. It is not
+  Freddy's garden of pages 8-12; never redraw either to match the other.
 - **The kitchen** (pages 2, 3, 6, 7, 13, 14): a cosy kitchen, a round wooden table with a blue-and-white checked cloth,
-  cream cupboards, a white fridge, a pot with a lid on the worktop, **one wide window with a single pane** looking out on the
-  neighbours' garden. **No lit stove, no flame, no steam, no kettle**; food in bowls is shown without steam. **The plate of
+  cream cupboards, a white fridge, a pot with a lid on the worktop, **one wide window with a single pane** looking out on
+  Freddy's own garden. **No lit stove, no flame, no steam, no kettle**; food in bowls is shown without steam. **The plate of
   potatoes:** a white plate of four plain boiled potatoes; it sits on a fridge shelf on page 6 and on the table on page 13.
 - **Freddy's bedroom** (pages 4, 5): a small bed with a white sheet, an electric bedside lamp (no candle), one wide window with
   a single pane and the moon outside.
-- **The neighbours' garden** (pages 8-12): moonlit grass, a low wooden fence between the two gardens, **a small round grey
-  barbecue grill on three legs, cold: no fire, no embers, no glow, no smoke**, its lid open; a garden shed behind.
+- **Freddy's garden at night** (pages 8-12): moonlit grass, a low wooden fence at the edge of the garden, **a small round
+  grey barbecue grill on three legs, the one Daddy used earlier, cold: no fire, no embers, no glow, no smoke**, its lid open;
+  a garden shed behind. (Until 2026-11-06 this was the neighbours' garden; the pictures stay as drawn, and the fence now
+  reads as the edge of Freddy's own garden. Nobody else is in it.)
 - Time: late afternoon (page 1), evening (pages 2-4), night (pages 5-13, moonlight; the kitchen lit by the open fridge on
   page 6 and a ceiling lamp on page 13), the next evening (page 14).
 
@@ -87,23 +116,23 @@ Every page: the whole scene sits in the top 70% of the picture; **the bottom 30%
 important in it**. No text, letters, words, sound effects or writing anywhere. Freddy is the same on every page (striped
 T-shirt, bright orange-red fur). Nobody is hurt; Freddy's yuck faces are funny, never pained.
 
-| Page | One action (who, count, where, when) | Picture |
+| Page | One action (who, count, where, when) | Picture (2026-11-06: every picture kept) |
 | --- | --- | --- |
-| Cover | Freddy (1), late afternoon on the grass, holds the brown slipper (forearm-long) away from him by its heel between two claws, nose wrinkled, one paw on his tummy, funny face. Nobody else | new |
-| 1 | Late afternoon, Freddy's garden: Freddy (1) stands proudly showing off his fluffy tail, the tall tree on one side and the small box on the other. Nobody else | new |
-| 2 | Evening, the kitchen: Freddy (1) sits at the table nibbling a carrot (a cucumber slice and a bread crust on his plate), his bowl of stew untouched; Mummy (1) stands by the table with her wooden spoon, calling him | new |
-| 3 | Evening, the kitchen: Mummy (1) holds out a spoonful of stew; Freddy (1) shakes his head, both paws on his tummy | new |
-| 4 | Evening, the bedroom: Mummy (1) at the open door waves goodnight; Freddy (1) in bed under the white sheet reaches to switch off the bedside lamp | new |
-| 5 | Night, the dark bedroom, moonlight through the window: Freddy (1) sits up in bed, one paw on his tummy, the other finger to his lips (shh). Nobody else | new |
-| 6 | Night, the kitchen: Freddy (1) peeks into the open fridge (its light on him); on a fridge shelf, the white plate of plain boiled potatoes; behind him cupboard doors stand open and the pot on the worktop has its lid off, **empty: its inside visible, no stew in it**. Nobody else | new |
-| 7 | Night, the kitchen: Freddy (1) at the window points out at the neighbours' garden (fence and cold grill small outside), whispering, one paw on his tummy. Nobody else | new |
-| 8 | Night, the neighbours' garden: Freddy (1) tiptoes from the fence towards the cold grill, one paw on his tummy, eyes on the grill; the fence just behind him. Nobody else | new |
-| 9 | Night, the neighbours' garden: Freddy (1) jumps for joy beside the cold grill, pointing at a small brown thing on the grass under it. Nobody else | new |
-| 10 | Night, the neighbours' garden: Freddy (1) spits the brown slipper out, eyes squeezed shut, tongue out in a funny "yuck" face; the slipper flies a little way out in front of him; the cold grill behind. Nobody else | new |
-| 11 | Night, the neighbours' garden: Freddy (1) holds the brown slipper up at arm's length by its heel and stares at it, puzzled; **the slipper is clearly a brown house slipper, about as long as his forearm**. Nobody else | new |
-| 12 | Night, the neighbours' garden: Freddy (1) sits on the grass by the fence, hungry and grumpy, both paws on his tummy; the slipper lies on the grass beside him. Nobody else | new |
-| 13 | Night, the kitchen under the ceiling lamp: Freddy (1) sits alone at the table eating cold plain boiled potatoes from the white plate (the one on the fridge shelf on page 6), frowning. Nobody else | new |
-| 14 | The next evening, the kitchen: Freddy (1) at the table holds up his empty stew bowl for more, smiling big; Mummy (1) beside him smiles, holding the pot and her wooden spoon. Calm, happy ending | new |
+| Cover | Freddy (1), late afternoon on the grass, holds the brown slipper (forearm-long) away from him by its heel between two claws, nose wrinkled, one paw on his tummy, funny face. Nobody else | keep |
+| 1 | Late afternoon, the meadow: Freddy (1) stands proudly showing off his fluffy tail, the tall tree on one side and the small box on the other. Nobody else | keep |
+| 2 | Evening, the kitchen: Freddy (1) sits at the table nibbling a carrot (a cucumber slice and a bread crust on his plate), his bowl of stew untouched; Mummy (1) stands by the table with her wooden spoon, calling him | keep |
+| 3 | Evening, the kitchen: Mummy (1) holds out a spoonful of stew; Freddy (1) shakes his head, both paws on his tummy | keep |
+| 4 | Evening, the bedroom: Mummy (1) at the open door waves goodnight; Freddy (1) in bed under the white sheet reaches to switch off the bedside lamp | keep |
+| 5 | Night, the dark bedroom, moonlight through the window: Freddy (1) sits up in bed, one paw on his tummy, the other finger to his lips (shh). Nobody else | keep |
+| 6 | Night, the kitchen: Freddy (1) peeks into the open fridge (its light on him); on a fridge shelf, the white plate of plain boiled potatoes; behind him cupboard doors stand open and the pot on the worktop has its lid off, **empty: its inside visible, no stew in it**. Nobody else | keep |
+| 7 | Night, the kitchen: Freddy (1) at the window points out at the garden (fence and cold grill small outside), whispering about Daddy's kebabs, one paw on his tummy. Nobody else | keep |
+| 8 | Night, Freddy's garden: Freddy (1) tiptoes from the fence towards the cold grill, one paw on his tummy, eyes on the grill; the fence just behind him. Nobody else | keep |
+| 9 | Night, Freddy's garden: Freddy (1) jumps for joy beside the cold grill, pointing at a small brown thing on the grass under it. Nobody else | keep |
+| 10 | Night, Freddy's garden: Freddy (1) spits the brown slipper out, eyes squeezed shut, tongue out in a funny "yuck" face; the slipper flies a little way out in front of him; the cold grill behind. Nobody else | keep |
+| 11 | Night, Freddy's garden: Freddy (1) holds the brown slipper up at arm's length by its heel and stares at it, puzzled, the moment he works out it is Daddy's old slipper; **the slipper is clearly a brown house slipper, about as long as his forearm**. Nobody else | keep |
+| 12 | Night, Freddy's garden: Freddy (1) sits on the grass by the fence, hungry and grumpy, both paws on his tummy; the slipper lies on the grass beside him. Nobody else | keep |
+| 13 | Night, the kitchen under the ceiling lamp: Freddy (1) sits alone at the table eating cold plain boiled potatoes from the white plate (the one on the fridge shelf on page 6), frowning. Nobody else | keep |
+| 14 | The next evening, the kitchen: Freddy (1) at the table holds up his empty stew bowl for more, smiling big; Mummy (1) beside him smiles, holding the pot and her wooden spoon. Calm, happy ending | keep |
 
 Check (dino-storytelling section 4):
 
@@ -119,7 +148,7 @@ Notes for the illustrator:
 
 - Every page with the grill (7-12) says: "the grill is cold and unlit: no fire, no embers, no glow, no smoke".
 - Pages 3, 5, 7, 8, 10 and 12 are Tummy's moments: a paw on Freddy's tummy where it fits the action (as each page's plan says), never a face or creature on it.
-- Pages 8-12 share the neighbours' garden; tell them apart by the action (tiptoe, jump, spit, hold up, sit).
+- Pages 8-12 share Freddy's garden at night (drawn before 2026-11-06 as the neighbours' garden; kept, the fence is the garden's edge); tell them apart by the action (tiptoe, jump, spit, hold up, sit).
 - Every prompt with the slipper says "one brown felt house slipper, about as long as Freddy's forearm".
 - Mummy and Freddy side by side (pages 2, 3, 4, 14): spell out both looks; Mummy taller, darker, in her apron.
 - Gemini refuses one-character scenes more often (see the skill); if a Freddy-alone page is refused, the fence, shed and moon
@@ -151,7 +180,7 @@ chosen by hand (English roster, `CharacterRosterEnglish.cs`).
 
 ## Translations
 
-All 13 languages, written for this text (108 pieces). No existing book rhymes, so the translations follow the store books'
+All 13 languages, written for this text (108 pieces; 112 since the 2026-11-06 change, the 13 new ones translated that day). No existing book rhymes, so the translations follow the store books'
 practice: meaning first, spoken kid register (Decision 152); a rhyme is kept only where it fell out naturally (Dutch page 1).
 The shoe words are real shoe words in each language (for example de Hausschuh/Sandale/Holzschuh/Flipflop, nl
 pantoffel/sandaal/klomp/slipper, fr pantoufle/sandale/sabot/tong, fa دمپایی روفرشی/صندل/کفش چوبی/دمپایی لاانگشتی, so slipper and flip-flop differ; the Farsi
@@ -169,7 +198,7 @@ after a quote ("sagte Freddy,", "dijo Barriguita.") start lower case, as in the 
 Kept for now, not open:
 
 - **Tummy's voice against "Tummy squeaked"** (page 5): Tummy keeps the booming `dragon` voice and "Tummy squeaked" stays.
-- **Freddy sneaks out alone at night** (pages 6-12), over the fence into the neighbours' garden, and Mummy never knows: stays.
+- **Freddy sneaks out alone at night** (pages 6-12), out to the grill in his own garden (since 2026-11-06; before, over the fence into the neighbours' garden), and Mummy never knows: stays.
 - **Two awkward lines** stay as approved: "Er... not." (page 6) and "What kebab is this meat?" (page 10).
 
 ## Still open
@@ -177,6 +206,8 @@ Kept for now, not open:
 - The Farsi pronunciation review (`farsi-review-book`, through the `farsi-review` agent), with the vowel marks.
 - A `voice-pick` listening for Tummy, only if the user wants one later.
 - A listen on a phone before shipping (rhythm, the sound words, the four voices).
+- After the 2026-11-06 text change: render the clips of the changed sentences in all 15 languages (`tools/premade-audio`,
+  `--batch`) so `check-audio` has no gap before the store upload; the new Farsi pieces join the Farsi review.
 
 ## Check results
 
