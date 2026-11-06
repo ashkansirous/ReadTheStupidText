@@ -59,6 +59,7 @@ public sealed class LatestWinsWorker<T>(Func<T, Task> serve, Action<Exception> o
         }
         catch (Exception ex)
         {
+            // no-fallback: handed to the caller's onError, which decides what it means
             onError(ex);
         }
     }

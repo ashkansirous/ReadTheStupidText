@@ -217,7 +217,7 @@ internal static partial class DinoTestCommands
 			}
 
 			string key = BundledTranslations.Key(language);
-			string zip = await WriteFixturePackAsync(bookId, key, table.Values, mismatch);
+			string zip = await WriteFixturePackAsync(bookId, key, await FixtureTextsAsync(services, story, key, table), mismatch);
 			var pack = new AudioPackInfo(FixtureVersion, new FileInfo(zip).Length, "fixture");
 			AudioPackStore packs = services.GetRequiredService<AudioPackStore>();
 			await packs.RemoveAsync(bookId, key); // always replace: a pack left by an earlier run must never make this install "already installed"
@@ -282,7 +282,9 @@ internal static partial class DinoTestCommands
 	private static readonly TimeSpan ShelfDownloadTimeout = TimeSpan.FromMinutes(2);
 
 	private const int FixtureVersion = 1;
-	private const string FixtureClipName = "fixture.m4a";
+
+	// One clip file for each spoken piece, numbered by its position, so a read's log names the clip of the exact piece it played (the speaker-first flow checks the tag's own).
+	private static string FixtureClipOf(int index) => $"fixture-{index}.m4a";
 
 	private static async Task<string> WriteFixturePackAsync(string bookId, string language, IEnumerable<string> texts, bool mismatch = false)
 	{
@@ -290,19 +292,38 @@ internal static partial class DinoTestCommands
 		File.Delete(path);
 		using (var archive = new System.IO.Compression.ZipArchive(File.Create(path), System.IO.Compression.ZipArchiveMode.Create))
 		{
-			var entries = texts.Where(t => t.Any(char.IsLetterOrDigit)).Select((t, i) => new { index = i, hash = PremadeAudio.HashOf(mismatch && i % MismatchEvery == 0 ? t + "#" : t), clip = FixtureClipName });
+			var spoken = texts.Where(t => t.Any(char.IsLetterOrDigit)).ToList();
+			var entries = spoken.Select((t, i) => new { index = i, hash = PremadeAudio.HashOf(mismatch && i % MismatchEvery == 0 ? t + "#" : t), clip = FixtureClipOf(i) });
 			var manifest = new { version = PremadeAudio.ManifestVersion, book = bookId, language, entries };
 			await using (Stream stream = archive.CreateEntry(PremadeAudio.ManifestFile).Open())
 			{
 				await System.Text.Json.JsonSerializer.SerializeAsync(stream, manifest);
 			}
 
-			await using Stream clip = archive.CreateEntry(FixtureClipName).Open();
-			await using Stream asset = await FileSystem.OpenAppPackageFileAsync(AnimalSoundClips.AssetNameOf(AnimalKind.Pig));
-			await asset.CopyToAsync(clip);
+			for (int i = 0; i < spoken.Count; i++)
+			{
+				await using Stream clip = archive.CreateEntry(FixtureClipOf(i)).Open();
+				await using Stream asset = await FileSystem.OpenAppPackageFileAsync(AnimalSoundClips.AssetNameOf(AnimalKind.Pig));
+				await asset.CopyToAsync(clip);
+			}
 		}
 
 		return path;
+	}
+
+	// The texts the fixture pack has a clip for, in the order the app plays them. A speaker-first language (Slice 280) is ordered by the app's own call, StoryTranslator.TranslateAsync (the join it makes
+	// as it translates), over the book's pieces, so the clip numbers follow the joined order; any other language, or a table with a hole, keeps the table's order.
+	private static async Task<IEnumerable<string>> FixtureTextsAsync(IServiceProvider services, Story story, string key, IReadOnlyDictionary<string, string> table)
+	{
+		if (!SpeakerFirst.Regroups(key, story.Language, translated: true))
+		{
+			return table.Values;
+		}
+
+		LanguageRules rules = LanguageRules.For(UiLanguage.Resolve(story.Language));
+		IReadOnlyList<SentenceSpan> sentences = StorySentences.Build(story.Text, rules, story.BreakMap());
+		StoryTranslator.Outcome outcome = await services.GetRequiredService<StoryTranslator>().TranslateAsync(story, StoryPieces.Of(story), sentences, key, CancellationToken.None);
+		return outcome.Translated ? outcome.Pieces.Select(p => p.Segment.Text) : table.Values;
 	}
 
 	private sealed class FixtureFetcher(string zip) : IAudioPackFetcher

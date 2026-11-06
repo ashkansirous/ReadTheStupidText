@@ -233,6 +233,7 @@ public static class ShippedTitles
 			["sv"] = "Tomtarna och skomakaren",
 			["zh"] = "小精灵和鞋匠",
 		},
+		// Delisted from the store but kept for installed copies: readers who downloaded it keep their translated titles.
 		["The Tale of Peter Rabbit"] = new(StringComparer.Ordinal)
 		{
 			["ar"] = "حكاية بيتر الأرنب",

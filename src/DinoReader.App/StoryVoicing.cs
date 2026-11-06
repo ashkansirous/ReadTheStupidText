@@ -299,11 +299,9 @@ public sealed class StoryVoicing
 		return plan;
 	}
 
-	// Only a translated read is regrouped: a failed or skipped translation is read in the story's own language (VoicedInOwnLanguage), which keeps its order.
+	// The story's pieces in the order the translated story joined them (Slice 280, the join made in StoryTranslator.TranslateAsync): a failed or skipped translation is read in the story's own language (VoicedInOwnLanguage), which keeps its order.
 	private static IReadOnlyList<SplitSegment> SpokenOrder(Story story, Prepared prepared, IReadOnlyList<SplitSegment> pieces, string spokenLanguage) =>
-		SpeakerFirst.Regroups(spokenLanguage, story.Language, translated: spokenLanguage != UiLanguage.Resolve(story.Language))
-			? SpeakerFirst.SourceOrder(pieces, spokenLanguage, story.Text, prepared.Analysis.Sentences.Value)
-			: pieces;
+		StoryTranslator.JoinedSourceOrder(story, pieces, prepared.Analysis.Sentences.Value, spokenLanguage);
 
 	private static IReadOnlyList<SplitSegment> WholeBookPieces(Story story, Prepared prepared, AttributionResult resolved) =>
 		prepared.WholeBook ? prepared.Pieces : StoryPieces.Split(story, resolved, prepared.Analysis.Sentences.Value, 0);
@@ -399,7 +397,8 @@ public sealed class StoryVoicing
 		return new LanguagePipeline(rules, new StorySegmenter(rules), new SpeakerAttributor(rules));
 	}
 
-	// A piece plays no voice: its clip is attached afterwards (WithPremade), and a piece with no clip is shown for a beat.
+	// A piece plays no voice: its clip is attached afterwards (WithPremade), and a piece with no clip is shown for a beat. The text is the plain Segment.Text (the key of the clip and of every spoken count);
+	// SplitSegment.SpokenText, with the display colon, is only for a device voice that speaks the piece.
 	private static VoicedSegment ToVoicedSegment(SplitSegment piece)
 	{
 		Segment segment = piece.Segment;

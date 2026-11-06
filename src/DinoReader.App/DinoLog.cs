@@ -33,6 +33,7 @@ internal static class DinoLog
 		}
 		catch (Exception logFailure)
 		{
+			// no-fallback: the logger itself failed; it never reports itself
 			Debug.WriteLine($"Dino Reader could not log '{message}': {logFailure.Message}; original: {error}");
 		}
 	}

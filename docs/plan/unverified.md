@@ -2,6 +2,12 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 280: Dino: Farsi speaker first, joined at translation time ([slice](slices/280-dino-farsi-speaker-first-at-translation.md))
+- iOS beyond compile.
+- The Windows head.
+- On a real phone: the live fa/ar packs after the upload.
+- Whether a debug build skips the production usage counter when the `install-audio-pack` test hook hits a table hole (check3 finding 5, unconfirmed).
+
 ### Slice 278: Dino: store books only, parts A and B ([slice](slices/278-dino-store-books-only.md))
 - Part B: iOS device or simulator run.
 - Part B: the mobile-data prompt (`ShelfAudioAsk`) on a real cellular-only phone.
@@ -14,8 +20,9 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - The A3 cleanup has no device check: no Debug hook seeds an own book, so deleting an own book on a real install is untried.
 - No iOS device run is recorded for part A.
 
-### Slice 275: Leftovers from night 2026-11-06-0042, part 1 ([slice](slices/275-night-2026-11-06-0042-leftovers.md))
+### Slice 275: Leftovers from night 2026-11-06-0042, parts 1 and 2 ([slice](slices/275-night-2026-11-06-0042-leftovers.md))
 - Item 7: no emulator flow cancels an audio pack download and checks that `cancelled` is sent (there is no test hook to stall a pack fetch); only unit and Worker tests cover it.
+- Item 1 part 2: the new `store_failed`, `preference_unsaved` and `shelf_order_unreadable` rows were not seen on a device (no flow forces them); iOS and the Windows head were not run (shared code).
 - Item 4: the cause of the earlier `-NoBuild` cache-key miss is unknown; `-NoBuild` hit the cache for both apps on 2026-11-06 only.
 
 ### Slice 271: Leftovers from night 2026-11-05-1823 ([slice](slices/271-night-2026-11-05-1823-leftovers.md))

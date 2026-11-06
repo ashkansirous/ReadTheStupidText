@@ -47,8 +47,12 @@ public static class StoreCatalog
     private static readonly JsonSerializerOptions Options = new() { PropertyNameCaseInsensitive = true };
 
     /// <summary>The well-formed entries of a list response; a malformed entry is skipped, a body that is no list throws <see cref="JsonException"/>.</summary>
-    public static IReadOnlyList<StoreItem> Parse(string json)
+    public static IReadOnlyList<StoreItem> Parse(string json) => Parse(json, out _);
+
+    /// <summary>Like <see cref="Parse(string)"/>, and says how many entries of the list were left out as malformed, so the caller can count a listing that lost books.</summary>
+    public static IReadOnlyList<StoreItem> Parse(string json, out int skipped)
     {
+        skipped = 0;
         using JsonDocument document = JsonDocument.Parse(json);
         if (document.RootElement.ValueKind != JsonValueKind.Object)
         {
@@ -60,7 +64,9 @@ public static class StoreCatalog
             return [];
         }
 
-        return StoreTags.TaggedFirst(stories.EnumerateArray().Select(ItemOf).OfType<StoreItem>(), item => item.TagList);
+        List<StoreItem> items = [.. stories.EnumerateArray().Select(ItemOf).OfType<StoreItem>()];
+        skipped = stories.GetArrayLength() - items.Count;
+        return StoreTags.TaggedFirst(items, item => item.TagList);
     }
 
     /// <summary>The entries this app can read, in list order.</summary>
@@ -76,6 +82,7 @@ public static class StoreCatalog
         }
         catch (JsonException)
         {
+            // no-fallback: a pure parser; the left-out item is counted in Parse's skipped value, which StoreClient.LoadAsync reports (store_failed)
             return null;
         }
     }

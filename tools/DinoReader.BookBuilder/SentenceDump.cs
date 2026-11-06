@@ -97,16 +97,21 @@ internal static class SentenceDump
         return new SentenceListing(book, key, sentences);
     }
 
-    // The pieces as the app speaks them: the displayed translation of each, regrouped speaker first in Persian and Arabic by the same code the app runs after translating (Slice 254).
-    // The source texts follow the new order unchanged, so each spoken piece still names the story piece it translates.
+    // The pieces as the app speaks them: the displayed translation of each, joined speaker first in Persian and Arabic by the same code the app runs as it translates (SpeakerFirst.Join, Slice 280).
+    // The text of a joined tag is the one it was translated as (its colon is display only), so its clip is the one it already has. The source texts follow the new order unchanged,
+    // so each spoken piece still names the story piece it translates.
     private static (IReadOnlyList<SplitSegment> Spoken, IReadOnlyList<SplitSegment> Sources) SpeakerFirstOrder(
         Story story, IReadOnlyList<SplitSegment> source, IReadOnlyList<SentenceSpan> spans, string key)
     {
         IReadOnlyList<SplitSegment> translated = source.Select(p => p with { Segment = p.Segment with { Text = BundledTranslations.Lookup(story, key, p.Segment.Text) ?? p.Segment.Text } }).ToList();
         // The app's own decision (SpeakerFirst.Regroups): offline it translates through the book's table only when the table covers every piece (StoryTranslator.Applies).
         bool usesTable = BundledTranslations.Has(story, key) && BundledTranslations.IsComplete(story, key);
-        IReadOnlyList<SpeakerFirst.Move> order = SpeakerFirst.Plan(source, SpeakerFirst.Regroups(key, story.Language, usesTable) ? key : UiLanguage.English, story.Text, spans);
-        return (SpeakerFirst.Apply(translated, order, withColon: true, story.Text), SpeakerFirst.Apply(source, order, withColon: false));
+        if (!SpeakerFirst.Regroups(key, story.Language, usesTable))
+        {
+            return (translated, source);
+        }
+
+        return (SpeakerFirst.Join(translated, key, story.Language, story.Text, spans), SpeakerFirst.JoinedSourceOrder(source, key, story.Text, spans));
     }
 
     private static string? SpeakerName(Story story, string? id) =>

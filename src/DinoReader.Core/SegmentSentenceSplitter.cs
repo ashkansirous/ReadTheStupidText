@@ -1,7 +1,15 @@
 namespace DinoReader.Core;
 
-/// <summary>A segment piece with the story index where its text begins (a quote's piece after the first has no mark of its own).</summary>
-public sealed record SplitSegment(Segment Segment, int TextStart);
+/// <summary>
+/// A segment piece with the story index where its text begins (a quote's piece after the first has no mark of its own).
+/// <paramref name="IntroducesQuote"/> (Slice 280) marks the last tag the speaker-first join put in front of its quote: the page shows its stop as a colon, while its text,
+/// and so the key of its pre-made clip (<c>Segment.Text</c>), stays as translated. <see cref="SpokenText"/> is what a voice without a clip says: the tag with its colon, as a lead-in.
+/// </summary>
+public sealed record SplitSegment(Segment Segment, int TextStart, bool IntroducesQuote = false)
+{
+    /// <summary>What the device voice speaks for this piece; the clip lookup key is always <c>Segment.Text</c>.</summary>
+    public string SpokenText => IntroducesQuote ? SpeakerFirst.Colon(Segment.Text) : Segment.Text;
+}
 
 /// <summary>
 /// Cuts segments at the sentence starts inside them, so the reader has at least one chunk per

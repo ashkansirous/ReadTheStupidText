@@ -56,6 +56,7 @@ public static class ScreenAwake
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: the screen keeps the phone's own timeout; no other behaviour changes
 			System.Diagnostics.Trace.TraceError($"KeepScreenOn failed: {ex.Message}");
 		}
 	}

@@ -85,7 +85,10 @@ public static class ShelfOrder
     /// <summary>The stored ids without <paramref name="id"/>, so a book removed from the shelf and added again does not return to its old slot.</summary>
     public static List<string> Without(IReadOnlyList<string> stored, string id) => [.. stored.Where(other => other != id)];
 
-    /// <summary>The ids in a stored file; an empty list when the text is missing or is not a JSON list of strings.</summary>
+    /// <summary>
+    /// The ids in a stored file; an empty list when the text is missing. Text that is not a JSON list of strings throws <see cref="ShelfOrderUnreadableException"/> (an <see cref="IOException"/>),
+    /// so the library, which already reports an unreadable order file and falls back to the default order, counts it too.
+    /// </summary>
     public static IReadOnlyList<string> Parse(string? json)
     {
         if (string.IsNullOrWhiteSpace(json))
@@ -97,11 +100,15 @@ public static class ShelfOrder
         {
             return JsonSerializer.Deserialize<List<string>>(json)?.Where(id => !string.IsNullOrEmpty(id)).ToList() ?? [];
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
-            return [];
+            // no-fallback: a pure parser with no sink; rethrown as an IOException that FileStoryLibrary reports (shelf_order_unreadable) where it reads the file
+            throw new ShelfOrderUnreadableException(ex);
         }
     }
 
     public static string Serialize(IReadOnlyList<string> ids) => JsonSerializer.Serialize(ids);
 }
+
+/// <summary>The shelf order file holds text that is not a JSON list of ids. An <see cref="IOException"/>, so the places that already treat an unreadable order file as "use the default order" report it.</summary>
+public sealed class ShelfOrderUnreadableException(Exception inner) : IOException("The shelf order file is not a list of book ids.", inner);

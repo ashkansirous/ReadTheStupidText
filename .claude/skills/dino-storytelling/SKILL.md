@@ -45,16 +45,9 @@ and Decision 130. Read them first: they beat the classic tale.
   written-only forms. Farsi is the worst offender: «خوک کوچولو! خوک کوچولو! بذار بیام تو!», never
   «بچه خوک بچه خوک بگذار بیایم تو» (spoken verb forms: بذار، بیام، میخوام، نمیشه; کوچولو, not بچه‌ی).
   English: "Little pig, little pig, let me come in!", "Uh-oh!", "Yay!", not "Pray let me enter".
-- **Sounds are read aloud by a voice, so make them long enough to hear (Decision 151).** Never a single short "Bang!".
-  Measured only in English, Spanish, Chinese and Farsi, by length and a weak speech-recognition check, **not yet confirmed by a
-  human listen** (Slice 145; numbers and per-voice detail: docs/plan/notes/2026-10-26-sound-words-aloud.md). Any other language
-  is untested: use the repeat form and flag the sound for a listen.
-  - **Repeat the sound with `!`, `,` or `...` between** ("Dang! Dang! Dang!", «¡Pum! ¡Pum! ¡Pum!», 砰砰砰！). A triple is the
-    only form measured long enough on every voice; a double is uneven.
-  - **Little or no letter stretching.** It lengthened a little but cost recognition ("Whooosh!", "Daaang!", "Knoooock!"), and
-    stretch inside a repeat was spelled out by Kokoro.
-  - **Farsi: never a lone short sound word** (the default voice, mana, drops «تق!», «دنگ!», «ووش!»); prefer a plain triple
-    («تق تق تق!»), and avoid «دَنگ» forms. **Chinese: never a lone character**; repeat it.
+- **Sound words are written as the story needs them**: a single "swish" or "Bang!" is fine. The old rule that
+  every sound word must be repeated three times so the voice reads it long enough is withdrawn (user, 2026-11-06;
+  Decision 151).
 - Dialogue as `"...," said <Name>.` or `<Name> said.`, with the name spelled the same everywhere, so the
   caster gives each character their own voice. Give every character in a group a name (Pip, Pop, Pim).
 - Feelings are gentle: cross, grumpy, surprised, soggy, sorry. Never terrified, hurt or crying in pain.
@@ -65,8 +58,9 @@ and Decision 130. Read them first: they beat the classic tale.
   the line is made by joining those existing pieces, tag first, when the translated story is built,
   and its audio by playing their existing clips in that order. Never re-translate or re-record a
   piece for this, and never reorder a line while reading (user, 2026-11-06: "apply this to the
-  translation time, not when reading"; "just concat them ... no re-recording"). Until Slice 280
-  ships, the app's read-time regroup (`SpeakerFirst`, Slice 254) still does it.
+  translation time, not when reading"; "just concat them ... no re-recording"). The app does the
+  join as it translates (`SpeakerFirst.Join`, Slice 280); a new Farsi or Arabic book's manifest is
+  lined up with it by `BookBuilder join-audio`, then `build-audio`.
 
 ## 4. Picture plan (one line per page)
 

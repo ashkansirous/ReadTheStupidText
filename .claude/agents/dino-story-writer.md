@@ -54,7 +54,7 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
    every new or reworded piece into `content/dino/<stem>/translations/<lang>.json` (all 13 languages). Keep each language's own conventions (Brazilian
    Portuguese, no spaces in Japanese, the right script direction and plural forms). Translate into the
    spoken, kid-friendly register of dino-storytelling section 3 (never literary: Farsi «بذار بیام تو», not
-   «بگذار بیایم تو»), with that language's own sound words, repeated so a voice reads them long enough.
+   «بگذار بیایم تو»), with that language's own sound words (as many as the English has; no forced repeats).
    In Farsi the speaker comes first and the quote stays whole: «پیم گفت: «من خوبم. حالا چی؟»», never the
    English split around the tag (dino-storytelling section 3); fix it in the translation, never at read time.
    Don't touch pieces whose English didn't change.

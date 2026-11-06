@@ -44,6 +44,18 @@ public static class StoryTranslation
         }
     }
 
+    /// <summary>
+    /// <see cref="TranslateAsync"/> and then the speaker-first join (Slice 280, <see cref="SpeakerFirst.Join"/>): the translated story a Persian or Arabic read plays and shows comes out already in its
+    /// reading order, built only from the pieces just translated. Any other language is returned as translated.
+    /// </summary>
+    public static async Task<IReadOnlyList<SplitSegment>> TranslateJoinedAsync(
+        IReadOnlyList<SplitSegment> pieces, PieceTranslator translate, string? spokenLanguage, string? storyLanguage, string sourceText, IReadOnlyList<SentenceSpan> sentences,
+        CancellationToken cancellationToken, int maxParallel = DefaultParallelism)
+    {
+        IReadOnlyList<SplitSegment> translated = await TranslateAsync(pieces, translate, cancellationToken, maxParallel);
+        return SpeakerFirst.Join(translated, spokenLanguage, storyLanguage, sourceText, sentences);
+    }
+
     // Lets the pieces that were cancelled by the first fault finish, so none of their exceptions goes unobserved.
     private static void ObserveAll(Task[] work)
     {

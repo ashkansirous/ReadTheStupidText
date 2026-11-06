@@ -58,11 +58,16 @@ public sealed class StoryTranslator
 		}
 
 		PieceTranslator table = forSpeech ? BundledTranslations.ComposeSpoken(story, target, null) : BundledTranslations.Compose(story, target, null);
-		var translated = await StoryTranslation.TranslateAsync(pieces, table, cancellationToken);
-		// Persian and Arabic say who speaks first (Slice 254); every other language keeps the order it was translated in.
-		// The sentences are the ones the voice analysed, so the plan and the spoken grouping can never disagree.
-		return new Outcome(SpeakerFirst.Regroups(target, story.Language, translated: true) ? SpeakerFirst.Regroup(translated, target, story.Text, sentences) : translated, true);
+		// Persian and Arabic say who speaks first (Slice 254): the translated story is joined that way as it is built (Slice 280), from the pieces just translated;
+		// every other language keeps the order it was translated in. The sentences are the ones the voice analysed, so the plan and the spoken grouping can never disagree.
+		var translated = await StoryTranslation.TranslateJoinedAsync(pieces, table, target, story.Language, story.Text, sentences, cancellationToken);
+		return new Outcome(translated, true);
 	}
+
+	/// <summary>The story's own pieces in the order a read spoken in <paramref name="spokenLanguage"/> plays them (the join of <see cref="TranslateAsync"/>, texts untouched), so the animal sounds count a joined line as one.
+	/// A read that is not a translation (the spoken language is the story's own) keeps the story's order.</summary>
+	public static IReadOnlyList<SplitSegment> JoinedSourceOrder(Story story, IReadOnlyList<SplitSegment> pieces, IReadOnlyList<SentenceSpan> sentences, string spokenLanguage) =>
+		SpeakerFirst.Regroups(spokenLanguage, story.Language, translated: true) ? SpeakerFirst.JoinedSourceOrder(pieces, spokenLanguage, story.Text, sentences) : pieces;
 
 	// Slice 273 part B: counts that a translated read was left as written, about this book and the language it was to be read in.
 	private void Fell(Story story, string reason, string reading) =>

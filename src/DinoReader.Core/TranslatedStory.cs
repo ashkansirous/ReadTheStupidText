@@ -178,7 +178,9 @@ public static class TranslatedStoryBuilder
                 j++;
             }
 
-            string run = string.Join(Space, translated.Skip(i).Take(j - i + 1).Select(p => p.Segment.Text));
+            // A tag joined in front of its quote (Slice 280) shows its colon, on the flagged piece only; the colon is never part of the text its clip is keyed by.
+            string run = string.Join(Space, translated.Skip(i).Take(j - i + 1).Select(p => p.IntroducesQuote ? SpeakerFirst.Colon(p.Segment.Text) : p.Segment.Text));
+
             SplitSegment? next = j + 1 < translated.Count ? translated[j + 1] : null;
             SplitSegment? previous = i > 0 ? translated[i - 1] : null;
             pieces.Add((translated[i], Marked(translated[i], previous, next, run, source)));
@@ -200,7 +202,7 @@ public static class TranslatedStoryBuilder
         return opening + run + (closes ? ClosingQuote : string.Empty);
     }
 
-    // Two quotes of one speaker that a speaker-first read (Slice 254) put side by side, though the source had words between them, read as one quote.
+    // Two quotes of one speaker that the speaker-first join (Slice 254, 280) put side by side, though the source had words between them, read as one quote.
     private static bool JoinsQuote(SplitSegment? before, SplitSegment piece, string source)
     {
         if (before is null || before.Segment.Kind != SegmentKind.Quote || piece.Segment.Kind != SegmentKind.Quote

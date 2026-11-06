@@ -351,11 +351,13 @@ public sealed class ShelfAudioPacks
 		}
 		catch (OperationCanceledException)
 		{
+			// no-fallback: cancelled by the app or the language change; the next open plans the run again
 			AudioPackLog.Write($"shelf audio {code}: run ended by cancel");
 		}
 		catch (Exception ex)
 		{
 			AudioPackLog.Write($"shelf audio {code}: run failed, will try at the next open ({ex.GetType().Name})");
+			_store.Fallbacks.Report(FallbackArea.Pack, FallbackReason.PackSyncFailed);
 		}
 		finally
 		{
@@ -580,6 +582,7 @@ public sealed class ShelfAudioPacks
 		}
 		catch (Exception)
 		{
+			// no-fallback: a platform that cannot say is treated as connected; a failed fetch reports itself
 			return true; // a platform that cannot say is treated as connected; a failed fetch is then counted as a try
 		}
 	}

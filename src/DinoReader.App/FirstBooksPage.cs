@@ -198,10 +198,12 @@ public partial class FirstBooksPage : ContentPage
 		}
 		catch (OperationCanceledException)
 		{
+			// no-fallback: the grown-up cancelled or left the page; the load-failed state is shown, nothing was swapped in
 			ShowLoadFailed(); // Cancel on the list wait, or the page was left: Try again takes over, but nothing reloads by itself
 		}
 		catch (Exception ex)
 		{
+			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Store, ReadTheStupidText.Application.Usage.FallbackReason.StoreFailed); // Slice 275: the page shows its load-failed state with Try again
 			Debug.WriteLine($"Dino Reader first-books load failed: {ex}");
 			ShowLoadFailed();
 		}
@@ -441,10 +443,11 @@ public partial class FirstBooksPage : ContentPage
 		}
 		catch (OperationCanceledException)
 		{
-			// The page was left: the covers stay as the tinted blocks.
+			// no-fallback: the page was left; the covers stay as the tinted blocks.
 		}
 		catch (Exception ex)
 		{
+			DinoFallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Store, ReadTheStupidText.Application.Usage.FallbackReason.StoreFailed); // Slice 275: the cover stays a tinted block; the book itself is unaffected
 			Debug.WriteLine($"Dino Reader first-books cover failed: {ex.Message}");
 		}
 	}
