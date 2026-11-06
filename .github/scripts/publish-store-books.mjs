@@ -26,6 +26,9 @@
  *   --audio-behind       (Slice 265, BEFORE the build) prints `<book stem> <language>` for each audio pack in a book's audio-cast.json `audioPacks` that the live /api/stories `audio` lacks (or lists lower),
  *                        so the workflow runs `git lfs pull` for those books only and `BookBuilder build-audio` for those languages. Their zips then go up before the cover, package and meta.json,
  *                        never overwriting an existing object (the same version is the same bytes).
+ *   --audio-verdict <file>  (Slice 277, REQUIRED by --audio-behind and by every uploading run) the JSON `BookBuilder check-audio --verdict <file>` wrote. Fail closed: a book is published only when the file
+ *                        holds a complete verdict for its id; a missing or unreadable file, or a book not in it, or one with a gap (a language with no pack, a sentence with no clip, a stale or empty clip)
+ *                        builds no pack and uploads nothing, not even its meta.json. The other books go on and the run fails at the end naming it. A --dry-run may leave the flag out.
  *   --check-content      (FIRST step) fails when a content folder's book.json kind is Starter but the folder is missing from dino-starters.json (a new starter must build the app), or the reverse.
  *   Package versions are never reused: right before uploading story-v<n>.dino of a hashed (pipeline-managed) book, the bucket is asked whether that exact object exists; if it does the built package
  *   is renamed to n+1 and meta.json rewritten (up to MAX_VERSION_BUMPS, then the book fails and no meta goes up). This makes the probe window's gap harmless. Only after that the package, then meta.json LAST.
@@ -70,7 +73,93 @@ const BOOK_FILE = 'book.json';
 const STARTER_KIND = 'starter';
 const STORE_KIND = 'store';
 
-export const Outcome = { Upload: 'upload', UpToDate: 'upToDate', LiveNewer: 'liveNewer', Invalid: 'invalid' };
+export const Outcome = { Upload: 'upload', UpToDate: 'upToDate', LiveNewer: 'liveNewer', Invalid: 'invalid', AudioGap: 'audioGap' };
+
+/**
+ * Pure (Slice 277), the ONE rule for every write to R2: a book whose id has no complete audio verdict (`completeIds`, the ids that `BookBuilder check-audio --verdict` found complete: a pack in every
+ * language, a clip for every sentence) changes NOTHING on R2, whatever its outcome (upload, upToDate meta refresh, audio packs): no meta.json, no pack, no cover. Its live copy stays as it is. Such a
+ * book gets the outcome `audioGap`, which runUploads and runMetaRefresh skip, so the other books go on; the job then fails naming each one. The cost (a gap book's metadata change waits until its audio
+ * is fixed) is accepted. Invalid and liveNewer books write nothing anyway and keep their outcome.
+ */
+export function refuseAudioGaps(plan, completeIds) {
+    return plan.map((item) => (mayChangeOnR2(item.id, completeIds) || !WRITING_OUTCOMES.has(item.outcome) ? item : { ...item, outcome: Outcome.AudioGap }));
+}
+
+const WRITING_OUTCOMES = new Set([Outcome.Upload, Outcome.UpToDate]);
+
+/** Pure (Slice 277): whether a book may change anything on R2, from the verdict alone. refuseAudioGaps (uploads, meta refresh) and onlyCompleteBooks (audio packs) both decide through it. */
+export function mayChangeOnR2(id, completeIds) {
+    return completeIds.has(String(id).toLowerCase());
+}
+
+/** Pure (Slice 277): the audio records of the books that may change on R2 only, so no pack is built for a book that is refused anyway. */
+export function onlyCompleteBooks(books, completeIds) {
+    return books.filter((book) => mayChangeOnR2(book.id, completeIds));
+}
+
+/** Pure (Slice 277): every story id the verdict file mentions, complete or not; a refused id outside this set means the built id differs from book.json's. */
+export function judgedAudioIds(text) {
+    try {
+        const books = JSON.parse(text).books;
+        return new Set(Array.isArray(books) ? books.map((book) => book?.id).filter((id) => typeof id === 'string').map((id) => id.toLowerCase()) : []);
+    } catch {
+        return new Set();
+    }
+}
+
+/** Pure (Slice 277): the message for the books refused, saying for each whether the check judged it incomplete or never saw its id. */
+export function refusalMessage(refusedIds, judgedIds) {
+    const unjudged = refusedIds.filter((id) => !judgedIds.has(String(id).toLowerCase()));
+    const incomplete = refusedIds.filter((id) => judgedIds.has(String(id).toLowerCase()));
+    const parts = [];
+    if (incomplete.length > 0) parts.push(`Nothing changed on R2 for ${incomplete.join(', ')}: its audio is incomplete (see the check-audio step).`);
+    if (unjudged.length > 0) parts.push(`Nothing changed on R2 for ${unjudged.join(', ')}: the verdict file has no entry for that story id (the built id differs from book.json's, or the check did not run).`);
+    return parts.join(' ');
+}
+
+/**
+ * Pure (Slice 277): the story ids a `check-audio --verdict` file calls complete: `{"books":[{"stem","id","complete":true,"gaps":[]}]}`. Anything unreadable, malformed or empty gives no id, so nothing
+ * is published; an id that any entry calls incomplete (two stems sharing an id) is not complete.
+ */
+export function completeAudioIds(text) {
+    try {
+        const books = JSON.parse(text).books;
+        if (!Array.isArray(books)) return new Set();
+        const isComplete = (book) => typeof book?.id === 'string' && book.complete === true && Array.isArray(book.gaps) && book.gaps.length === 0 && !book.toolError;
+        const lower = (id) => (typeof id === 'string' ? id.toLowerCase() : id);
+        const incomplete = new Set(books.filter((book) => !isComplete(book)).map((book) => lower(book?.id)));
+        return new Set(books.filter(isComplete).map((book) => lower(book.id)).filter((id) => !incomplete.has(id)));
+    } catch {
+        return new Set();
+    }
+}
+
+/**
+ * The complete-audio ids of the `--audio-verdict <file>` argument. A real (uploading) run requires the flag and throws without it; a missing or unreadable file gives an empty set (nothing is published).
+ * Returns null only when `required` is false and the flag is absent (a dry run, which uploads nothing).
+ */
+export function completeIdsOf(args, required, read = (path) => readFileSync(path, 'utf8')) {
+    const flag = args.indexOf('--audio-verdict');
+    if (flag === -1 || !args[flag + 1]) {
+        if (required) throw new Error('--audio-verdict <file> is required: a book is published only with a complete audio verdict from BookBuilder check-audio --verdict.');
+        return null;
+    }
+    try {
+        return completeAudioIds(read(args[flag + 1]));
+    } catch {
+        return new Set();
+    }
+}
+
+/** The ids the `--audio-verdict <file>` file mentions at all (empty when the flag is absent or the file unreadable); only used to word the refusal. */
+export function judgedIdsOf(args, read = (path) => readFileSync(path, 'utf8')) {
+    const flag = args.indexOf('--audio-verdict');
+    try {
+        return flag === -1 ? new Set() : judgedAudioIds(read(args[flag + 1]));
+    } catch {
+        return new Set();
+    }
+}
 
 export const packageName = (version) => `story-v${version}.dino`;
 
@@ -497,6 +586,7 @@ export function summaryText(plan, uploaded, metaRefreshed = [], delisted = []) {
     delisted.forEach((id) => lines.push(`- delisted ${id} (content folder deleted; packages kept)`));
     plan.filter((item) => item.outcome === Outcome.LiveNewer).forEach((item) => lines.push(`- warning: ${item.id} built v${item.version} but live is v${item.liveVersion}; not uploaded`));
     plan.filter((item) => item.outcome === Outcome.Invalid).forEach((item) => lines.push(`- error: ${item.id} has no valid version in meta.json`));
+    plan.filter((item) => item.outcome === Outcome.AudioGap).forEach((item) => lines.push(`- error: ${item.id} not uploaded: its audio is incomplete, or its id has no complete verdict (see the check-audio step)`));
     return lines.join('\n');
 }
 
@@ -623,7 +713,8 @@ export function validPackVersions(records) {
 
 /** `--audio-behind`: prints one `<stem> <language>` line for each audio pack the live store lacks, so dino-store.yml fetches only those books' clips from Git LFS and packs them. */
 async function printAudioBehind(args) {
-    audioPacksBehind(readAudioRecords(), await fetchLive(args, process.env)).forEach(({ stem, languages }) => languages.forEach((language) => console.log(`${stem} ${language}`)));
+    const complete = completeIdsOf(args, true);
+    audioPacksBehind(onlyCompleteBooks(readAudioRecords(), complete), await fetchLive(args, process.env)).forEach(({ stem, languages }) => languages.forEach((language) => console.log(`${stem} ${language}`)));
 }
 
 async function main() {
@@ -642,7 +733,9 @@ async function main() {
     const built = readBuilt(root);
     const live = await fetchLive(args, process.env);
     pruneBuiltMetas(root, built, live); // also on --dry-run (it only edits the local built folder), so the plan matches the real run
-    const plan = planStoreUploads(built, live);
+    const complete = completeIdsOf(args, !dryRun); // Slice 277: fail closed, only a book with a complete audio verdict uploads anything
+    const planned = planStoreUploads(built, live);
+    const plan = complete ? refuseAudioGaps(planned, complete) : planned;
     const deletions = args.includes('--delist') ? planDeletions(built, live, { contentIds: new Set(readContentBooks().map((book) => book.id)), isManaged: isManagedStory }) : [];
     if (dryRun) {
         plan.forEach((item) => console.log(`${item.outcome}: ${item.id} built v${item.version}, live ${item.liveVersion ?? 'none'}`));
@@ -670,6 +763,8 @@ async function main() {
     }
     writeSummary(summaryText(plan, uploaded, refreshed, delisted));
     if (plan.some((item) => item.outcome === Outcome.Invalid)) errors.push(new Error('A built store book has no valid version in meta.json.'));
+    const refused = plan.filter((item) => item.outcome === Outcome.AudioGap).map((item) => item.id);
+    if (refused.length > 0) errors.push(new Error(refusalMessage(refused, judgedIdsOf(args))));
     if (errors.length > 0) throw new Error(errors.map((error) => error.message).join(' | '));
 }
 

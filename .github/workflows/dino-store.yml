@@ -66,12 +66,21 @@ jobs:
       - name: Read the live store state
         run: node .github/scripts/publish-store-books.mjs --live-state "$RUNNER_TEMP/live-store.json"
 
-      # Slice 272: no pack is built or uploaded while any audio manifest in the repo fails to hash the sentences the app reads (the same check the pull request runs in tools-selftests.yml). Manifests only, never a clip.
-      - name: Check that every audio manifest lines up with the sentences the app reads
+      # Slices 272 and 277: a book reaches the store only with complete audio: a pack in every language, a clip for every sentence the app reads, no stale or empty clip (manifests and clip sizes only, no clip is downloaded;
+      # the same check the pull request runs in tools-selftests.yml). A book with a gap, or none in the verdict file audio-verdict.json, builds no pack and uploads nothing (build --live skips it, publish-store-books.mjs refuses it),
+      # the other books still go, and the "Fail when audio is incomplete" step fails the job at the end.
+      - name: Check that every book's audio is complete
+        id: audiocheck
         run: |
           git lfs install --local
-          git lfs pull --include "content/dino/*/audio/*/manifest.json" --exclude ""
-          dotnet run --project tools/DinoReader.BookBuilder --configuration Release -- check-audio
+          status=0
+          # An LFS fetch failure is an infrastructure failure, not an audio gap: status is still written (no verdict file means nothing is published) and the failing step says which.
+          if git lfs pull --include "content/dino/*/audio/*/manifest.json" --exclude ""; then
+            dotnet run --project tools/DinoReader.BookBuilder --configuration Release -- check-audio --verdict "$RUNNER_TEMP/audio-verdict.json" || status=$?
+          else
+            status=lfs
+          fi
+          echo "status=$status" >> "$GITHUB_OUTPUT"
 
       # Slice 265: the clips are Git LFS objects (.lfsconfig keeps them out of a normal checkout). Only the audio packs the live store lacks are built: `--audio-behind` lists
       # `<book> <language>` pairs, each pair's clips are fetched alone (`--exclude ""` overrides the .lfsconfig exclusion) and packed before `build` so meta.json lists the pack.
@@ -79,7 +88,7 @@ jobs:
       - name: Build the audio packs the live store lacks
         id: audio
         run: |
-          node .github/scripts/publish-store-books.mjs --audio-behind > "$RUNNER_TEMP/audio-behind.txt"
+          node .github/scripts/publish-store-books.mjs --audio-behind --audio-verdict "$RUNNER_TEMP/audio-verdict.json" > "$RUNNER_TEMP/audio-behind.txt"
           cat "$RUNNER_TEMP/audio-behind.txt"
           failed=""
           if [ -s "$RUNNER_TEMP/audio-behind.txt" ]; then
@@ -122,12 +131,24 @@ jobs:
       # --delist on every run, so a delisting is never lost when a pending run is replaced: the script delists only pipeline-managed ids (live contentHash) with no content folder at all, refuses more than 3 or half the live list, and an invalid book is skipped, not delisted.
       - name: Upload the books that are behind the live store, delist the ones whose content folder is gone
         if: steps.build.outputs.status == '0' || steps.build.outputs.status == '2'
-        run: node .github/scripts/publish-store-books.mjs --delist
+        run: node .github/scripts/publish-store-books.mjs --delist --audio-verdict "$RUNNER_TEMP/audio-verdict.json"
 
       - name: Check that no built book is still behind
         if: steps.build.outputs.status == '0' || steps.build.outputs.status == '2'
         run: |
           node .github/scripts/publish-store-books.mjs --verify
+
+      - name: Fail when a book's audio is incomplete
+        if: always() && steps.audiocheck.outputs.status != '' && steps.audiocheck.outputs.status != '0'
+        env:
+          STATUS: ${{ steps.audiocheck.outputs.status }}
+        run: |
+          if [ "$STATUS" = lfs ]; then
+            echo "::error::git lfs pull of the audio manifests failed, so no audio verdict exists and nothing was uploaded: an infrastructure failure, not an audio gap. Rerun the job."
+            exit 1
+          fi
+          echo "::error::The audio check exited ${STATUS}: books without a complete audio verdict were not uploaded (the others were); the gaps are listed in the check step above. Run BookBuilder check-audio for the missing sentences."
+          exit 1
 
       - name: Fail when an audio pack could not be built
         if: always() && steps.audio.outputs.failed != ''

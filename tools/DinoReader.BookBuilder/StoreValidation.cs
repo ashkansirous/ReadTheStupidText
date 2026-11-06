@@ -35,6 +35,7 @@ internal static class StoreValidation
         foreach (BookFolder book in storeBooks)
         {
             List<string> problems = BookProblems(book).ToList();
+            problems.AddRange(AudioProblems(book));
             if (shared.TryGetValue(book.Info.Id, out string? stems))
             {
                 problems.Add($"the books {stems} share the id {book.Info.Id}");
@@ -47,6 +48,22 @@ internal static class StoreValidation
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Slice 277: the audio gaps of a store book (<see cref="AudioAlignment.ProblemsOf"/>: a pack in every offered language, a clip for every sentence). Only <c>build --live</c> asks, not <see cref="BookProblems"/>:
+    /// the unit tests run on a checkout whose manifests are Git LFS pointers. A book with a gap is skipped like any invalid book, so it is not built or uploaded and the other books still go.
+    /// </summary>
+    internal static IReadOnlyList<string> AudioProblems(BookFolder book)
+    {
+        try
+        {
+            return AudioAlignment.ProblemsOf(book);
+        }
+        catch (Exception e) when (e is not OutOfMemoryException)
+        {
+            return [$"{book.Stem}: the audio check itself failed ({e.GetType().Name}: {e.Message})"];
+        }
     }
 
     public static IReadOnlyList<string> BookProblems(BookFolder book)
