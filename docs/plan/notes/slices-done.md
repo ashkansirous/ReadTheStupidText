@@ -343,3 +343,4 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 271 | Leftovers from night 2026-11-05-1823 (pause-path test, multi-clip VM and emulator checks, `tmp/` listing, unknown-tag flow) | built | #856 | | [271-night-2026-11-05-1823-leftovers.md](../slices/271-night-2026-11-05-1823-leftovers.md) |
 | 276 | Dino iOS update button for TestFlight testers | built | #853 | | [276-dino-ios-update-button-testflight.md](../slices/276-dino-ios-update-button-testflight.md) |
 | 277 | Dino: a store book is published only when every sentence in every language has pre-made audio | built | #858 | | [277-dino-store-audio-coverage-gate.md](../slices/277-dino-store-audio-coverage-gate.md) |
+| 278 | Dino: store books only (no own books, scanning, translation, voice engine or voice pickers; RTST untouched) | built | #859, #863, #862 | | [278-dino-store-books-only.md](../slices/278-dino-store-books-only.md) |

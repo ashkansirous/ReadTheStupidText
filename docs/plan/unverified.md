@@ -2,7 +2,13 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
-### Slice 278: Dino: store books only, part A ([slice](slices/278-dino-store-books-only.md))
+### Slice 278: Dino: store books only, parts A and B ([slice](slices/278-dino-store-books-only.md))
+- Part B: iOS device or simulator run.
+- Part B: the mobile-data prompt (`ShelfAudioAsk`) on a real cellular-only phone.
+- Part B: the beat pausing on screen lock (no scripted flow).
+- Part B: flows not run this round: `dino-landscape-settings`, `premade-audio-past-roar`, `usage-playback-events`, `dino-landscape-store` (the first emulator run's results were lost: the agent piped `run-flows` through `Out-String`).
+- Part B: a Release build downloads no voice pack.
+- Part B: the Windows MSIX still packages (`APPX1101`) and the iOS app still links: project settings unchanged, not built beyond a compile.
 - Android emulator flow `dino-landscape-store` was not reached in the 10-minute run.
 - No flow asserts the "Get more books" text or that the Add pill is gone.
 - The A3 cleanup has no device check: no Debug hook seeds an own book, so deleting an own book on a real install is untried.
