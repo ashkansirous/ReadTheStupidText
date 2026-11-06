@@ -2,6 +2,12 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 281: Dino: one listening track per store book and language ([slice](slices/281-dino-listening-tracks.md))
+- The first `dino-store` run after merge (the backfill takes several runs; watch it).
+- `curl -I` and a ranged `curl -r 0-1023` on a live track answer 200 and 206 with `audio/mp4`.
+- Play one track end to end (page gaps audible).
+- Every live store book has a track for every language with a pack.
+
 ### Slice 279: Dino: recording your own voice, one intro page, then per character or whole page ([slice](slices/279-dino-recording-flow.md))
 - iPhone 8 / iOS simulator layout and recording (no Mac to run it).
 - A real microphone recording on Windows (the VM has none; R opens Windows' microphone consent prompt).
@@ -27,9 +33,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - The A3 cleanup has no device check: no Debug hook seeds an own book, so deleting an own book on a real install is untried.
 - No iOS device run is recorded for part A.
 
-### Slice 275: Leftovers from night 2026-11-06-0042, parts 1 and 2 ([slice](slices/275-night-2026-11-06-0042-leftovers.md))
+### Slice 275: Leftovers from night 2026-11-06-0042, parts 1 to 3 ([slice](slices/275-night-2026-11-06-0042-leftovers.md))
 - Item 7: no emulator flow cancels an audio pack download and checks that `cancelled` is sent (there is no test hook to stall a pack fetch); only unit and Worker tests cover it.
 - Item 1 part 2: the new `store_failed`, `preference_unsaved` and `shelf_order_unreadable` rows were not seen on a device (no flow forces them); iOS and the Windows head were not run (shared code).
+- Item 1 part 3: `layout_failed` and the new `FileStoryLibrary` order-file reports were not seen on a device (no flow forces them); iOS and the Windows head were not run (shared code); no test for a failed order-file write (OS-dependent).
 - Item 4: the cause of the earlier `-NoBuild` cache-key miss is unknown; `-NoBuild` hit the cache for both apps on 2026-11-06 only.
 
 ### Slice 271: Leftovers from night 2026-11-05-1823 ([slice](slices/271-night-2026-11-05-1823-leftovers.md))
