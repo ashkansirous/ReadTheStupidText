@@ -175,4 +175,50 @@ public sealed class PlayerHandOffTests
 
 		Assert.Equal(1, failures);
 	}
+
+	// Slice 271 item 2: a pre-made book plays clip after clip; each finished callback releases its player only after the native call returned, so three clips in a row never throw.
+	[Fact]
+	public void Three_clips_in_a_row_each_release_their_player_after_their_finished_call_returned()
+	{
+		var players = new List<FakePlayer>();
+		var started = new List<int>();
+		void PlayClip(int number)
+		{
+			var player = new FakePlayer();
+			players.Add(player);
+			started.Add(number);
+			Action ended = Defer(player, () =>
+			{
+				if (number < 3)
+				{
+					PlayClip(number + 1);
+				}
+			});
+			Post(() =>
+			{
+				player.InCallback = true; // the platform's finished delegate for this clip: only queues
+				ended();
+				player.InCallback = false;
+			});
+		}
+
+		PlayClip(1);
+		RunLoop();
+
+		Assert.Equal([1, 2, 3], started);
+		Assert.All(players, p => Assert.True(p.Disposed));
+	}
+
+	[Fact]
+	public void A_finished_call_releases_nothing_before_the_loop_turn()
+	{
+		var player = new FakePlayer();
+		Action ended = Defer(player, () => { });
+
+		ended();
+
+		Assert.False(player.Disposed); // released only on the later turn, never inside the native finished call
+		RunLoop();
+		Assert.True(player.Disposed);
+	}
 }

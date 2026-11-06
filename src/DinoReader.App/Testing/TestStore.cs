@@ -1,5 +1,6 @@
 #if DINO_TEST_BOOKS
 using System.IO.Compression;
+using System.Text.Json;
 using DinoReader.Core;
 
 namespace DinoReader.Testing;
@@ -12,6 +13,8 @@ internal enum TestStoreMode
 	Slow,
 	Stall,
 	Offline,
+	/// <summary>Slice 271: the same list as Ok, but <see cref="UnknownTagStem"/> lists a tag name this build does not know next to a known one (a newer store's), so a flow sees the unknown one dropped with no badge and no error.</summary>
+	UnknownTag,
 }
 
 /// <summary>
@@ -29,6 +32,9 @@ internal static class TestStore
 	private const string AudioAssetPrefix = "audio-";
 	private const string FixtureClip = "fixture.m4a";
 	private const string AssetExtension = ".dino";
+	private const string UnknownTagStem = "good-enough"; // Slice 271: carries UnknownTag in TestStoreMode.UnknownTag
+	// The tags array a newer store serves for the book: a name this build has no case for, then one it has. It goes through the same StoreTags.FromJson the real listing uses.
+	private const string UnknownTagListing = """["FutureTag","Recommended"]""";
 	private const int SlowChunks = 8;
 	private const int SlowChunkMilliseconds = 350;
 	// Stall: a chunk takes far longer than any flow waits, so a download is still in flight when the flow taps Cancel (a cancel ends the delay at once).
@@ -98,6 +104,12 @@ internal static class TestStore
 		copy.Position = 0;
 		Story story = await StoryPackageReader.ReadStoryOnlyAsync(copy);
 		StoreTag[] tags = TagsByStem.TryGetValue(stem, out StoreTag[]? found) ? found : [];
+		if (Mode == TestStoreMode.UnknownTag && stem == UnknownTagStem)
+		{
+			using JsonDocument listed = JsonDocument.Parse(UnknownTagListing);
+			tags = [.. StoreTags.FromJson(listed.RootElement)]; // Slice 271 (Slice 269): the real parse drops the name this build has no case for
+		}
+
 		return new StoreItem(manifest.Id, story.Title, story.Language, manifest.SchemaVersion, manifest.Version ?? 1, story.Pages.Count, null, null, UrlScheme + AssetNameOf(stem), Tags: tags, Bytes: copy.Length, Audio: AudioListing(stem));
 	}
 

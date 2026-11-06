@@ -162,6 +162,23 @@ function Test-VmRunning {
     try { return ((Get-VM -Name $script:VmName -ErrorAction Stop).State -eq 'Running') } catch { return $false }
 }
 
+# Slice 271 item 3 (Slice 269 item 17: the worktree's tmp\ was deleted during a run, cause not found): the listing is printed before the run, after each check and after the run, so the next
+# deletion names its step. Never throws and never changes anything.
+function Get-TmpListing {
+    param([string] $TmpDir)
+    if (-not (Test-Path -LiteralPath $TmpDir)) { return "tmp\ does not exist at $TmpDir" }
+    try {
+        $items = @(Get-ChildItem -LiteralPath $TmpDir -Force -ErrorAction Stop | Sort-Object Name | ForEach-Object { $_.Name })
+        $stamp = (Get-Item -LiteralPath $TmpDir -Force).LastWriteTime.ToString('yyyy-MM-dd HH:mm:ss')
+        return "tmp\ ($TmpDir, last written $stamp) holds $($items.Count) item(s): $(if ($items.Count -gt 0) { $items -join ', ' } else { '(empty)' })"
+    } catch { return "tmp\ could not be listed: $($_.Exception.Message)" }
+}
+
+function Write-TmpListing {
+    param([string] $When)
+    Write-Host "TMPLIST ${When}: $(Get-TmpListing (Join-Path (Split-Path (Split-Path $PSScriptRoot)) 'tmp'))"
+}
+
 function Get-FreeMemoryGB { return [math]::Round((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB, 1) }   # FreePhysicalMemory is in KB
 
 # ---- main ----
@@ -180,6 +197,7 @@ $script:PreflightMissing = @()
 $session = $null
 $guestStart = $null
 # Register (and wait for a quiet-machine timing run) before taking the VM lock, so a long wait never holds every other VM run up.
+try { Write-TmpListing 'before the run' } catch { Write-Warning "Tmp listing failed: $($_.Exception.Message)" }   # before Start-Activity: a throw here must not leave the quiet-machine registration held
 $activity = Start-Activity "vm-$App"
 try { Enter-VmLock } catch { Stop-Activity $activity; throw }
 try {
@@ -203,6 +221,7 @@ try {
         $r = Invoke-InteractiveScript -Session $session -GuestScript "$($script:GuestWorkDir)\checks\$check.ps1" -ScriptArgs @($AppProfile.Name)
         $message = if ($r.noResult) { "$($r.message); screen: $(Get-ScreenText (Save-VmScreenshot -Reason "check-$check"))" } else { $r.message }
         $results += [pscustomobject]@{ check = $check; pass = [bool]$r.pass; message = $message }
+        Write-TmpListing "after check $check"
     }
     if ($CopyOut) { Copy-ResultFiles -Session $session -HostDir $CopyOut }
 } catch {
@@ -226,6 +245,7 @@ try {
     }
     Stop-Activity $activity
     Exit-VmLock
+    try { Write-TmpListing 'after the run' } catch { Write-Warning "Tmp listing failed: $($_.Exception.Message)" }   # a listing error must not mask the run's own failure
 }
 if ($noGo) { exit $script:PreflightExitCode }
 Write-Results -Results $results
