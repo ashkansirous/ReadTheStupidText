@@ -429,12 +429,16 @@ public static class AnimalSoundsPreference
 		}
 		catch (Exception)
 		{
-			// A value of another type under this key, or a preferences store that cannot be read: treat it as missing (on).
+			AnimalSoundsPreference.ReportUnsaved(ReadTheStupidText.Application.Usage.FallbackArea.Config); // Slice 275: a value of another type under this key, or a preferences store that cannot be read, is treated as missing (on)
 			return true;
 		}
 	}
 
 	public static void Save(bool on) => Preferences.Default.Set(Key, on);
+
+	/// <summary>Counts a preference that could not be read or written (the sounds then follow the default, on).</summary>
+	public static void ReportUnsaved(string area) =>
+		DinoFallbacks.Report(area, ReadTheStupidText.Application.Usage.FallbackReason.PreferenceUnsaved);
 }
 
 /// <summary>
@@ -458,7 +462,7 @@ public static class AnimalSoundsCard
 		}
 		catch (Exception)
 		{
-			// The switch still shows the grown-up's choice; it is saved again on the next change.
+			AnimalSoundsPreference.ReportUnsaved(ReadTheStupidText.Application.Usage.FallbackArea.Config); // Slice 275: the switch still shows the choice, but after a restart the sounds follow the default (on)
 		}
 	}
 

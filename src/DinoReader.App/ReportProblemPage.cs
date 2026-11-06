@@ -156,6 +156,7 @@ public sealed class ReportProblemPage : SettingsSubPage
 		}
 		catch (Exception)
 		{
+			// no-fallback: the clipboard refused; the code stays on screen to read and type
 			return; // the clipboard can refuse (a locked-down device); the code stays on screen to read and type
 		}
 		copy.Text = AppResources.ReportProblem_Copied;

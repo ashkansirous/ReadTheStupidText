@@ -126,6 +126,7 @@ public sealed record AppConfig(PlatformVersions Android, PlatformVersions Ios, P
         }
         catch (JsonException)
         {
+            // no-fallback: a pure parser; the config client reports config_cached or config_default where it decides (Slice 273 part C)
             return Default;
         }
     }
@@ -153,6 +154,7 @@ public sealed record AppConfig(PlatformVersions Android, PlatformVersions Ios, P
         }
         catch (JsonException)
         {
+            // no-fallback: a pure check; a body that fails it is refused and the config client reports config_cached or config_default
             return false;
         }
 

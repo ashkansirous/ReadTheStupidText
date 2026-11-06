@@ -469,6 +469,7 @@ internal sealed class ShelfReorderView : Grid
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: the list simply does not scroll this tick; drag-reorder still works
 			DebugLog($"edge scroll failed: {ex.GetType().Name}"); // an async void must never take the app down
 		}
 		finally

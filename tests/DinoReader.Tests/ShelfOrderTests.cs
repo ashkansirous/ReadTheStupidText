@@ -47,10 +47,14 @@ public sealed class ShelfOrderTests : IDisposable
     [Theory]
     [InlineData(null)]
     [InlineData("")]
+    public void NoTextIsAnEmptyOrder(string? json) =>
+        Assert.Empty(ShelfOrder.Parse(json));
+
+    [Theory]
     [InlineData("not json")]
     [InlineData("{\"a\":1}")]
-    public void AnUnreadableFileIsAnEmptyOrderNotACrash(string? json) =>
-        Assert.Empty(ShelfOrder.Parse(json));
+    public void CorruptTextSignalsAnUnreadableFile(string json) =>
+        Assert.Throws<ShelfOrderUnreadableException>(() => ShelfOrder.Parse(json));
 
     [Fact]
     public void SerializeThenParseRoundTrips() =>

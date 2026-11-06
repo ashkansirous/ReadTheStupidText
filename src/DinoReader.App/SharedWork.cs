@@ -52,7 +52,7 @@ internal sealed class SharedWork<TKey, TResult> where TKey : notnull
 			}
 			catch (Exception)
 			{
-				// How the cancelled work ended does not matter; only that it has.
+				// no-fallback: how the cancelled work ended does not matter; only that it has.
 			}
 		}
 	}

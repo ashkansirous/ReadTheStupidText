@@ -40,6 +40,7 @@ public static class PageImageSize
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: no size; each caller lays the picture out at its default aspect
 			System.Diagnostics.Debug.WriteLine($"Dino Reader could not read the size of {path}: {ex.Message}");
 			return null;
 		}
@@ -73,6 +74,7 @@ public static class PageImageSize
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: no size; each caller lays the picture out at its default aspect
 			System.Diagnostics.Debug.WriteLine($"Dino Reader could not read the size of {path}: {ex.Message}");
 			return null;
 		}
@@ -88,6 +90,7 @@ public static class PageImageSize
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: no size; each caller lays the picture out at its default aspect
 			System.Diagnostics.Debug.WriteLine($"Dino Reader could not read the size of {path}: {ex.Message}");
 			return null;
 		}

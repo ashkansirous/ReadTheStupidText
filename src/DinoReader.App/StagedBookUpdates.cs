@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using DinoReader.Core;
+using ReadTheStupidText.Application.Usage;
 
 namespace DinoReader;
 
@@ -83,6 +84,7 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"{LogTag} applying staged books failed, retried at the next launch: {ex}");
+			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
 		}
 
 		Debug.WriteLine($"{LogTag} apply end after {clock.ElapsedMilliseconds} ms");
@@ -145,17 +147,20 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 		catch (Exception ex) when (ex is StoryPackageException or InvalidDataException)
 		{
 			Debug.WriteLine($"{LogTag} {entry.Id}: bad staged package dropped: {ex.Message}");
+			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
 			RestoreForcedVersion(entry.Id);
 			DeleteEntry(entry);
 		}
 		catch (Exception ex) when (ex is IOException or InvalidOperationException or UnauthorizedAccessException)
 		{
 			Debug.WriteLine($"{LogTag} {entry.Id}: swap failed, entry kept for the next launch: {ex.Message}");
+			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
 		}
 		catch (Exception ex)
 		{
 			// Never the stored book: only the staged copy goes, so a package that fails the same way every time cannot loop.
 			Debug.WriteLine($"{LogTag} {entry.Id}: unexpected failure, staged entry dropped: {ex}");
+			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
 			RestoreForcedVersion(entry.Id);
 			DeleteEntry(entry);
 		}
@@ -234,6 +239,7 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			// no-fallback: housekeeping delete; nothing depends on it
 			Debug.WriteLine($"{LogTag} could not remove a staged file: {ex.Message}");
 		}
 	}

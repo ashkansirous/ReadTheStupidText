@@ -80,12 +80,18 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, IFa
 			using GuardedResponse response = await GetGuardedAsync(ListPath, timeout.Token);
 			response.Message.EnsureSuccessStatusCode();
 			string json = await ReadCappedTextAsync(response, timeout.Token);
-			return new StoreListing(StoreLoadStatus.Ok, StoreCatalog.Readable(StoreCatalog.Parse(json)));
+			IReadOnlyList<StoreItem> parsed = StoreCatalog.Parse(json, out int skipped);
+			if (skipped > 0)
+			{
+				Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // Slice 275: the listing lost books the server sent (malformed entries); the rest is shown
+			}
+
+			return new StoreListing(StoreLoadStatus.Ok, StoreCatalog.Readable(parsed));
 		}
 		catch (Exception ex) when (IsNetworkFailure(ex) && !cancel.IsCancellationRequested)
 		{
 			Debug.WriteLine($"Dino Reader could not load the free stories: {ex.Message}");
-			ReportUnreachable(ex);
+			ReportFallback(ex);
 			return new StoreListing(StoreLoadStatus.Offline, []);
 		}
 	}
@@ -113,7 +119,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, IFa
 		catch (Exception ex) when ((IsNetworkFailure(ex) || ex is StoreStorageException) && !cancel.IsCancellationRequested)
 		{
 			Debug.WriteLine($"Dino Reader could not fetch a store cover: {ex.Message}");
-			ReportUnreachable(ex);
+			ReportFallback(ex);
 			return null;
 		}
 	}
@@ -180,12 +186,13 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, IFa
 		}
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
 		{
+			// no-fallback: the grown-up cancelled the download
 			return DownloadOutcome.Cancelled;
 		}
 		catch (Exception ex) when (IsNetworkFailure(ex) || ex is StoreStorageException or StoryPackageException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException)
 		{
 			Debug.WriteLine($"Dino Reader could not get the story {item.Id}: {ex}");
-			ReportUnreachable(ex);
+			ReportFallback(ex);
 			return DownloadOutcome.Failed;
 		}
 		finally
@@ -209,6 +216,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, IFa
 		}
 		catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound && !cancel.IsCancellationRequested)
 		{
+			// no-fallback: the store answered that this version is gone; the caller treats it as not found, not as a failure
 			Debug.WriteLine($"Dino Reader found no such book version in the store: {downloadUrl}");
 			TryDelete(part);
 			return new PackageFetch(null, true);
@@ -216,7 +224,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, IFa
 		catch (Exception ex) when ((IsNetworkFailure(ex) || ex is StoreStorageException) && !cancel.IsCancellationRequested)
 		{
 			Debug.WriteLine($"Dino Reader could not fetch a book update: {ex.Message}");
-			ReportUnreachable(ex);
+			ReportFallback(ex);
 			TryDelete(part);
 			return new PackageFetch(null, false);
 		}
@@ -305,10 +313,12 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, IFa
 		}
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
 		{
+			// no-fallback: the grown-up cancelled; the pack store counts its own cancels
 			return PackInstall.Cancelled;
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: AudioPackStore.InstallAsync reports its own failures and never throws; this is only a last guard
 			Debug.WriteLine($"Dino Reader could not install the audio pack {bookId}/{language}: {ex.Message}");
 			return PackInstall.Failed;
 		}
@@ -459,19 +469,15 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, IFa
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			// no-fallback: housekeeping delete of old covers; nothing depends on it
 			Debug.WriteLine($"Dino Reader could not prune old store covers: {ex.Message}");
 		}
 	}
 
-	// Slice 273 part C: the store could not be reached, so the shelf shows what it had (one row per session; the sink never throws). Only a network failure counts:
-	// a full disk, a bad package or a malformed listing means the store answered, so it is not store_unreachable.
-	private void ReportUnreachable(Exception ex)
-	{
-		if (IsUnreachable(ex))
-		{
-			Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreUnreachable);
-		}
-	}
+	// Slice 273 part C: the store could not be reached, so the shelf shows what it had (one row per session; the sink never throws). Only a network failure is store_unreachable:
+	// a full disk, a bad package or a malformed listing means the store answered, so it is store_failed (Slice 275).
+	private void ReportFallback(Exception ex) =>
+		Fallbacks.Report(FallbackArea.Store, IsUnreachable(ex) ? FallbackReason.StoreUnreachable : FallbackReason.StoreFailed);
 
 	private static bool IsUnreachable(Exception ex) =>
 		ex is HttpRequestException or TimeoutException or OperationCanceledException or IOException { InnerException: System.Net.Sockets.SocketException };
@@ -487,6 +493,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, IFa
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			// no-fallback: housekeeping delete of a temp file; nothing depends on it
 			Debug.WriteLine($"Dino Reader could not remove a store temp file: {ex.Message}");
 		}
 	}

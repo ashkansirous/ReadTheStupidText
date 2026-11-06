@@ -188,6 +188,7 @@ public sealed partial class AudioPackStore
 		}
 		catch (Exception ex)
 		{
+			// no-fallback: the count itself could not be queued; counting is best effort and never reports itself
 			_log($"pack {bookId}/{language}: the outcome count could not be queued ({ex.GetType().Name})");
 		}
 	}
@@ -230,6 +231,8 @@ public sealed partial class AudioPackStore
 		}
 		catch (Exception ex) when (ex is IOException or PremadeAudioException or UnauthorizedAccessException)
 		{
+			// no-fallback: marked failed for this launch, so the read that finds no clips reports premade_audio pack_failed (not no_pack) at the place that decides (StoryVoicing)
+			_failedThisLaunch[Key(bookId, language)] = true;
 			_log($"pack {bookId}/{language} v{version}: manifest unreadable, no clips ({ex.GetType().Name})");
 			return null;
 		}
@@ -332,6 +335,7 @@ public sealed partial class AudioPackStore
 		catch (Exception ex)
 		{
 			_log($"pack {bookId}/{language} v{pack.Version}: failed, the book is kept without it ({ex.GetType().Name})");
+			Report(bookId, language, AudioPackUsage.PackFailed(KindOf(ex))); // failed before InstallCoreAsync, which reports its own failures
 			return PackInstall.Failed;
 		}
 	}
@@ -605,6 +609,7 @@ public sealed partial class AudioPackStore
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			// no-fallback: housekeeping delete; nothing depends on it
 			System.Diagnostics.Debug.WriteLine($"Dino Reader could not remove a pack temp file: {ex.Message}");
 		}
 	}
@@ -620,6 +625,7 @@ public sealed partial class AudioPackStore
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			// no-fallback: housekeeping delete; nothing depends on it
 			System.Diagnostics.Debug.WriteLine($"Dino Reader could not remove a pack folder: {ex.Message}");
 		}
 	}

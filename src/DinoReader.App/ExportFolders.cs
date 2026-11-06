@@ -41,6 +41,7 @@ internal static class ExportFolders
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
+			// no-fallback: housekeeping delete of a temporary export; nothing depends on it
 			Debug.WriteLine($"Dino Reader could not remove an export: {ex.Message}");
 		}
 	}

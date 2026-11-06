@@ -77,6 +77,7 @@ public static class BackCoverText
 		}
 		catch (FormatException)
 		{
+			// no-fallback: a translation with a bad placeholder shows the English text; a build-time string defect, not a runtime degrade
 			return string.Format(CultureInfo.InvariantCulture, AppResources.For(key, CultureInfo.InvariantCulture), args);
 		}
 	}

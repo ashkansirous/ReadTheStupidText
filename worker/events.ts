@@ -76,7 +76,7 @@ export const FALLBACK_REASONS = [
   "storyteller_pack_missing", "animal_clip_unplayable", "clip_unplayable", "clip_speed_unset", "in_app_update_failed", "window_frame_failed", "displays_unreadable", "saved_position_moved", "dpi_defaulted",
   "font_fallback", "shelf_order_unreadable", "story_unreadable", "language_detect_failed", "page_read_failed", "intro_state_reset",
   // Slice 275
-  "ocr_crop_degraded", "uia_unavailable",
+  "ocr_crop_degraded", "uia_unavailable", "store_failed", "preference_unsaved",
 ] as const;
 const MAX_COUNT = 1_000_000;
 const NO_COUNT = -1;
