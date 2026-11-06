@@ -46,9 +46,14 @@ translated piece and as a clip.
   existing translated pieces. The same function serves the app and the BookBuilder dump. Tests: quote-tag-quote,
   quote-tag, tag-quote and narration unchanged, a quote spanning two sentences, and every split quote in the 16
   store books' Farsi files joins without a missing piece.
-- [ ] A2. Audio reuse: each part of a joined line plays the clip it already has (key unchanged, including the tag's
-  original stop). Remove the colon-tag clips Slice 254 added if nothing else uses them. Test: Three Little Pigs
-  Farsi needs zero new clips (the dump reports every piece found in `audio-cast.json`).
+- [ ] A2. Audio reuse: each part of a joined line plays the clip it already has. Checked 2026-11-06 (origin/main):
+  `PremadeAudio.Find(index, text)` (`PremadeAudio.cs:54`) matches a manifest entry by **position in the spoken list
+  and** SHA-256 of the text, so a new order needs each Farsi `audio/fa/manifest.json` rewritten to the joined
+  order (indexes only, the clip files stay), and the tag's lookup text keeps its original stop so its old clip
+  matches (a colon is display only). 16 books have Farsi manifests. A BookBuilder command rewrites them from the
+  existing clips and fails if any piece has no clip. Remove the colon-tag clips Slice 254 added if nothing else
+  uses them. Test: every Farsi book needs zero new clips. (Slice 254's "only the colon tags get new clips" missed
+  the index keying.)
 - [ ] A3. Remove the read-time regroup: `StoryTranslator` no longer calls `SpeakerFirst.Regroup`; `SpeakerFirst`
   keeps only what A1 needs (or goes). Animal sounds read the joined order from the translated story, not from
   `SpeakerFirst.SourceOrder`; Slice 254's placement tests still pass.
