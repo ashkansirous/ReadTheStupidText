@@ -1,6 +1,6 @@
 # Slice 276 — Dino iPhone: the "Update needed" button opens TestFlight for TestFlight installs
 
-*Planned 2026-11-06.* Bug fix, Dino Reader, iOS. Found while preparing the user's request (2026-11-06): set Dino's iOS `minVersion` to 1.106.8 once that build is approved for the External testing group.
+*In progress 2026-11-06.* Bug fix, Dino Reader, iOS. Found while preparing the user's request (2026-11-06): set Dino's iOS `minVersion` to 1.106.8 once that build is approved for the External testing group.
 
 **Touches:** `src/DinoReader.App/Platforms/iOS/StoreUpdater.ios.cs`, `src/DinoReader.App/UpdatePage*.cs` (button text only, if needed), `src/DinoReader.App/Resources/Strings/**` (only if the text changes), `tests/DinoReader.Tests/**`, `docs/plan/slices/276-dino-ios-update-button-testflight.md`.
 
