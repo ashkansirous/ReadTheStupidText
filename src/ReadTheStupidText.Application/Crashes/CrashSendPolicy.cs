@@ -9,4 +9,14 @@ public static class CrashSendPolicy
     /// and anything else (a redirect, 401, 403) is not a verdict on the report. A network failure (no status) keeps it too.
     /// </summary>
     public static bool DeleteAfter(int? statusCode) => statusCode is { } code && (code is >= 200 and < 300 or 400 or 413 or 422);
+
+    /// <summary>
+    /// True when a user report that failed to send is to be kept for a retry (Slice 300): only while the person's usage switch is on and the Worker did not
+    /// give a final verdict (<see cref="DeleteAfter"/>). With the switch off the next start wipes the queue, so a copy saved now would be a false "kept".
+    /// </summary>
+    public static bool KeepFailedUserReport(int? statusCode, bool mayReport) => mayReport && !DeleteAfter(statusCode);
+
+    /// <summary>Saves a failed user report when <see cref="KeepFailedUserReport"/> says so; true when a copy was saved.</summary>
+    public static bool TryKeepFailedUserReport(PendingCrashStore? store, CrashReport report, int? statusCode, bool usageSwitchOn, DateTimeOffset now)
+        => KeepFailedUserReport(statusCode, usageSwitchOn) && store?.Save(report, now) == true;
 }
