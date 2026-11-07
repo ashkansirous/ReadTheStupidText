@@ -1,6 +1,6 @@
 # Slice 302 — Slice 239 leftovers: renamed store package downloaded twice, `dino-store.yml` paths
 
-*Built (wave 2026-11-07, night 2026-11-07-1412), PR #906.* Planned 2026-11-07. Two low items from [Slice 239](239-dino-store-book-without-app-build.md), moved from plan.md's *Outstanding work*.
+*Built (wave 2026-11-07, night 2026-11-07-1412), merged as PR #906 (3713b1bb).* Planned 2026-11-07. Two low items from [Slice 239](239-dino-store-book-without-app-build.md), moved from plan.md's *Outstanding work*.
 
 **Touches:** `.github/workflows/dino-store.yml`, `.github/scripts/ship-targets.mjs`, `.github/scripts/*.test.*`, `.github/CLAUDE.md`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/StarterStories.cs`, `tests/DinoReader.Tests/**`, `docs/plan/slices/302-slice-239-leftovers.md`
 

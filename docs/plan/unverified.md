@@ -2,6 +2,16 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 304: Slice 202 re-review and the InitWait order test ([slice](slices/304-slice-202-rereview-and-initwait-test.md))
+- Review-picked language holds after Review's Read, and an edit clears it (device).
+- Scan or import of the same text keeps the language (device).
+- Language-change rebuild shows a loading state when it takes over 500 ms (review 9; caller in Settings/AppShell, not read by this slice).
+- Stalled-read overlay is not restored after leaving and returning (review 6): `ISpeechReader` exposes no stalled state; follow-up is [Slice 313](slices/313-reader-stall-overlay-after-return.md).
+- No scripted flow yet for Review-pick-then-Read.
+
+### Slice 302: Slice 239 leftovers ([slice](slices/302-slice-239-leftovers.md))
+- Item 1 was closed from a code read only: the "renamed store package downloaded twice" report was not reproduced on a device run, so a double download on a fresh install is not ruled out.
+
 ### Slice 298: Slice 264 gallery reorder follow-ups ([slice](slices/298-slice-264-gallery-reorder-follow-ups.md))
 - Real drag in both drop event orders (Drop then DropCompleted, and the reverse) on Android, iOS and the Windows head.
 - A 1 s hold, and a scroll that cancels the hold, on Android, iOS and the Windows head.
