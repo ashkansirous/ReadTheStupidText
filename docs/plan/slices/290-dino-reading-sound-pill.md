@@ -82,6 +82,12 @@ language name in a Fredoka line.
 - A Farsi or Arabic pill whose text wraps (label right-aligned, icon still left).
 - iPhone and the Windows head: not built here; shared code with no platform branches.
 
+## Left from the check pass (`D:\ReadTheStupidText-worktrees\reviews\290-check.md`, both low, not applied)
+
+- A light/bedtime colour switch while the Getting pill shows and its text does not change leaves the ring on the old
+  colours until the next count (`SoundStatusPill.cs` early return skips the ring's `Invalidate`).
+- `ReadingPage.xaml.cs` ~1111: two null checks on the story that could drift apart (cleanup).
+
 ## Verification
 
 - Fast checks: `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj`, the Dino Android build, FallbackGuard.
