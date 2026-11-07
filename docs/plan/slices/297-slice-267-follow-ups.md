@@ -1,6 +1,6 @@
 # Slice 297 — Slice 267 follow-ups (read_voice count, layout-check leaks, wizard button grid)
 
-*Planned 2026-11-07.* Four items left by [Slice 267](267-dino-old-voice-and-wizard-buttons.md) (built, #826). Moved from plan.md's *Outstanding work*. Items 1 and 4 are app code (the same MAUI code on Android and iOS); items 2 and 3 are emulator tooling.
+*In progress (wave 2026-11-07), draft PR.* Planned 2026-11-07. Four items left by [Slice 267](267-dino-old-voice-and-wizard-buttons.md) (built, #826). Moved from plan.md's *Outstanding work*. Items 1 and 4 are app code (the same MAUI code on Android and iOS); items 2 and 3 are emulator tooling.
 
 **Touches:** `src/DinoReader.App/ReadingSession.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `tools/emulator/layout-check.ps1`, `tools/emulator/run-flows.ps1`, `tools/emulator/test-layout-check.ps1`, `tests/DinoReader.Tests/**`, `docs/plan/slices/297-slice-267-follow-ups.md`
 
