@@ -29,6 +29,7 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 289 | Dino: count Sonos plays on the server | planned (depends on 283) | | | [289-dino-count-sonos-plays.md](docs/plan/slices/289-dino-count-sonos-plays.md) |
 | 284 | Leftovers from night 2026-11-06-1250 final feedback loop (fallback guard on untracked files, VM record check, device marks, three small follow-ups) | parked: feedback loop, waits for the user | | | [284-final-loop-leftovers-night-2026-11-06-1250.md](docs/plan/slices/284-final-loop-leftovers-night-2026-11-06-1250.md) |
 | 286 | Dino: record your voice in each story language, and hear it when reading in that language | planned | | | [286-dino-recordings-per-story-language.md](docs/plan/slices/286-dino-recordings-per-story-language.md) |
+| 287 | Dino: the reading page's sound line as a pill (Batch 50 design; restyles Slice 285 C) | planned | | | [287-dino-reading-sound-pill.md](docs/plan/slices/287-dino-reading-sound-pill.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 

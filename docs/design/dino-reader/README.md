@@ -784,3 +784,58 @@ Also read these files the selection imports:
 
 Implement: `Dino Reader Batch 48 Store Only and Recording.dc.html`
 ```
+
+## Batch 50 mock — `Dino Reader Batch 50 Sound States and Sonos.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Batch 50 Sound States and Sonos.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+50+Sound+States+and+Sonos.dc.html>).
+- **Copied:** 2026-11-07, verbatim from `DesignSync get_file`: the `content` fields were written to disk by a script
+  that read them out of the session transcript, never retyped. The Sonos files it shows are in `sonos/` here
+  (the PNGs decoded from base64): `service-logo-20/40/80/112/200/400.png`, `service-logo-40.svg`,
+  `service-logo-400.svg`, `full-logo.svg`, `badge-40.svg`, `support-banner.png`, `support-banner.svg`.
+  `assets/three-little-pigs/5.jpg` was already in this folder; it was not fetched again.
+- **Covers:** Slice 287 (the reading page's sound line as a pill, frames 197-199; it restyles what Slice 285 C built
+  with no mock) and Slice 283 (the Sonos brand images for the developer portal).
+- **One word differs from the app:** the mock's caption calls the shipped line "Getting {0} sound for your books".
+  The shipped English string `ShelfAudio_Getting` is "Getting {0} audio for your books" and other screens use it too;
+  Slice 287 keeps the shipped words and takes only the shape and the "·" before the count.
+- Batch 49 (`Dino Reader Batch 49 Recording per Language.dc.html`, Slice 286) is in the Claude Design project but is
+  not copied here yet.
+
+| # | Screen (caption) | Line |
+|---|---|---|
+| — | Reading page sound line · Slice 285 C · phone (group) | 23 |
+| 197 | Getting sound · 3 of 15 | 28 |
+| 198 | Waiting for Wi-Fi | 60 |
+| 199 | One part has no sound | 92 |
+| — | Sonos brand assets · Slice 283 (group) | 123 |
+| — | Service logo · square | 128 |
+| — | Full logo · 20 px high · and badge · 40 × 40 | 143 |
+| — | Support banner · 800 × 200 | 158 |
+
+(Generated from the `data-screen-label` attributes and section captions.) Open it in a text editor (`support.js` is
+not copied). To refresh: fetch again with `DesignSync get_file`, overwrite the copy with a script, regenerate the
+table. Never call `DesignSync` to read visual values; read this copy.
+
+Import prompt (verbatim, 2026-11-07):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+50+Sound+States+and+Sonos.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino Reader Batch 50 Sound States and Sonos.dc.html`
+
+Also read these files the selection imports:
+- `assets/three-little-pigs/5.jpg`
+- `sonos/badge-40.svg`
+- `sonos/full-logo.svg`
+- `sonos/service-logo-112.png`
+- `sonos/service-logo-20.png`
+- `sonos/service-logo-200.png`
+- `sonos/service-logo-40.png`
+- `sonos/service-logo-80.png`
+- `sonos/support-banner.png`
+
+Implement: `Dino Reader Batch 50 Sound States and Sonos.dc.html`
+```
