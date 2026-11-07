@@ -68,7 +68,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 403 checks across 163 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- **Not yet tried on a device:** 406 checks across 164 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
 - Slice 275 item 4 (open, root cause unknown): the earlier `-NoBuild` cache-key miss; `-NoBuild` hit the cache for both apps on 2026-11-06 only ([slice](docs/plan/slices/275-night-2026-11-06-0042-leftovers.md)).
 - **Waiting on the user:** Slice 283 (code merged, #879): the Sonos Company partner account, service submission, brand images, sandbox integration, Self Test and a play on their Sonos. Blocks: the service going live in the Sonos app (Sonos review takes weeks, so the submission starts the clock). The submission text to paste is in [the slice file](docs/plan/slices/283-dino-sonos-music-service.md) (*Submission text*).
 - **Waiting on the user:** Slice 282 (parked): item 1 is unsettled, whether a kid skill may use AudioPlayer. Either the user asks Amazon (their developer account) or chooses a skill not marked for kids ([slice](docs/plan/slices/282-dino-alexa-kid-skill.md)).
