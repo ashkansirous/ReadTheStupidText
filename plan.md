@@ -29,7 +29,6 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 289 | Dino: count Sonos plays on the server | planned (depends on 283) | | | [289-dino-count-sonos-plays.md](docs/plan/slices/289-dino-count-sonos-plays.md) |
 | 284 | Leftovers from night 2026-11-06-1250 final feedback loop (fallback guard on untracked files, VM record check, device marks, three small follow-ups) | parked: feedback loop, waits for the user | | | [284-final-loop-leftovers-night-2026-11-06-1250.md](docs/plan/slices/284-final-loop-leftovers-night-2026-11-06-1250.md) |
 | 286 | Dino: record your voice in each story language, and hear it when reading in that language | planned | | | [286-dino-recordings-per-story-language.md](docs/plan/slices/286-dino-recordings-per-story-language.md) |
-| 290 | Dino: the reading page's sound line as a pill (Batch 50 design; restyles Slice 285 C) | planned | | | [290-dino-reading-sound-pill.md](docs/plan/slices/290-dino-reading-sound-pill.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
@@ -68,7 +67,8 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 406 checks across 164 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- **Not yet tried on a device:** 410 checks across 165 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- Slice 290 check-pass leftovers, both low, not applied ([slice](docs/plan/slices/290-dino-reading-sound-pill.md)): a light/bedtime colour switch while the Getting pill shows with unchanged text leaves the ring on the old colours until the next count (`SoundStatusPill.cs` early return skips the ring's `Invalidate`); two null checks on the story near `ReadingPage.xaml.cs` 1111 could drift apart (cleanup).
 - Slice 275 item 4 (open, root cause unknown): the earlier `-NoBuild` cache-key miss; `-NoBuild` hit the cache for both apps on 2026-11-06 only ([slice](docs/plan/slices/275-night-2026-11-06-0042-leftovers.md)).
 - **Waiting on the user:** Slice 283 (code merged, #879): the Sonos Company partner account, service submission, brand images, sandbox integration, Self Test and a play on their Sonos. Blocks: the service going live in the Sonos app (Sonos review takes weeks, so the submission starts the clock). The submission text to paste is in [the slice file](docs/plan/slices/283-dino-sonos-music-service.md) (*Submission text*).
 - **Waiting on the user:** Slice 282 (parked): item 1 is unsettled, whether a kid skill may use AudioPlayer. Either the user asks Amazon (their developer account) or chooses a skill not marked for kids ([slice](docs/plan/slices/282-dino-alexa-kid-skill.md)).
