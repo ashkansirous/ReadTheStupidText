@@ -32,6 +32,12 @@ Range requests, so counting fetches would over-count.
   (not estimated). If not, or it needs a review we don't want now: write `listenSeconds` as an estimate at `getMediaURI`.
   Write the answer into this file before building.
 
+#### Design (Dino Reader Stats Dashboard mock, frame 200, added 2026-11-07)
+
+No UI here. The dashboard shows Sonos as a chip (`#2b2540`, between Windows and Alexa), hatches Sonos hours as estimates, labels the legend "Sonos (estimate)", and says "Speakers stream and don’t download" under the downloads tile, so Sonos rows carry no downloads. The mock has no Sonos rows for Own books and starts Sonos on 1 Dec 2026 (made-up data).
+
+**Open point: reported versus estimated.** The mock treats every Sonos hour as an estimate; this slice may store `reported` seconds. **Default:** the dashboard hatches only the `estimated` rows (Slice 287 open point), so keep the `estimated` / `reported` detail in `blob9` as planned.
+
 ## Work
 
 - [ ] 1. `web-research`: Sonos play reporting; answer written here.
