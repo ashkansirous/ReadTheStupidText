@@ -839,3 +839,42 @@ Also read these files the selection imports:
 
 Implement: `Dino Reader Batch 50 Sound States and Sonos.dc.html`
 ```
+
+## Batch 51 mock — `Dino Reader Stats Dashboard.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Stats Dashboard.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Stats+Dashboard.dc.html>).
+- **Copied:** 2026-11-07 from `DesignSync get_file`, checked byte for byte (26,764 bytes) against the `content` field
+  pulled out of the session transcript by a script. The icon it imports, `dino_reader_icons/ios/AppIcon-1024-light.png`,
+  is already here as `icons/ios/AppIcon-1024-light.png`; the book covers it names (`assets/<book>/cover.jpg`) are the
+  store covers, served live by `/api/stories/<id>/cover`.
+- **Covers:** Slice 287 (the `/stats` page), with the listens and hours of Slices 288 and 289. The numbers in the mock
+  are made up; "Dino 1.112" and "10 Nov 2026" are placeholders for Slice 288's real release.
+- **Not to copy:** the mock loads Fredoka from Google Fonts for the canvas only; the page itself loads no web font and
+  makes no third-party requests (its own caption says so).
+
+| # | Screen (caption) | Line |
+|---|---|---|
+| 200 | Stats dashboard · /stats · desktop, 1280 wide | 25 |
+| — | Notes: Filters | 142 |
+| — | Notes: Numbers and chart | 143 |
+| — | Notes: States | 144 |
+
+(Generated from the `data-screen-label` attribute and the note captions.) Open it in a text editor (`support.js` is not
+copied). The page's behaviour (periods, grouping rules, platform order and colours, sorting) is in the script at the end
+of the file. To refresh: fetch again with `DesignSync get_file`, write the copy with a script, regenerate the table.
+
+Import prompt (verbatim, 2026-11-07):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Stats+Dashboard.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino Reader Stats Dashboard.dc.html`
+
+Also read these files the selection imports:
+- `dino_reader_icons/ios/AppIcon-1024-light.png`
+
+Implement: `Dino Reader Stats Dashboard.dc.html`
+```
