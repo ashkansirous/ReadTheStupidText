@@ -1,6 +1,6 @@
 # Slice 289 — Dino: count Sonos plays on the server
 
-*Built 2026-11-07 (wave 2026-11-07, night 2026-11-07-1412 wave 5), PR #929, not merged; not yet verified live.* *Planned 2026-11-07.* Server only (Cloudflare Worker). The apps do not change.
+*Built 2026-11-07 (wave 2026-11-07, night 2026-11-07-1412 wave 5), merged as PR #929 (d31726c); not yet verified live.* *Planned 2026-11-07.* Server only (Cloudflare Worker). The apps do not change.
 
 **Depends on:** Slice 283 (the Sonos music service). Feeds Slice 287 (the dashboard).
 **Touches:** `worker/events.ts` (shared row layout), `worker/appconfig.ts` (telemetry switch read), `worker/index.ts` (env plumbing), `worker/sonos.ts`, `worker/sonos-soap.ts`, `worker/speaker-usage.ts` (new: writes a speaker play to
@@ -77,6 +77,6 @@ The detail blob stays so a later mock can change it.
 - Country may be empty if the Request rebuilt by `withPath` in `worker/index.ts` drops `cf` (review check1 #2).
 - A live Sonos play counts exactly one row, once the user's Sonos sandbox (Slice 283) works.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-07)
 
 - Worker: speaker plays (Sonos, later Alexa) are counted through `worker/speaker-usage.ts` (`recordSpeakerPlay`), never `/api/events`; hours queries exclude `blob7 = 'sonos'`. (Slice 289: docs/plan/slices/289-dino-count-sonos-plays.md)
