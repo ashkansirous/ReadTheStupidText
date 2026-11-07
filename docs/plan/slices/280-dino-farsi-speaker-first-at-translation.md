@@ -52,6 +52,7 @@ translated piece and as a clip.
 - join-audio never renames a clip (medium review finding 1, second strike on the retarget): every manifest entry keeps the clip file it has; the command rewrites only an entry's text hash and
   text (its index is the piece's), and fails if an entry has no clip. No renames and no adopting a file, so no stale or orphaned clip can arise. The manifests were rewritten from origin/main's, so Slice 254's
   colon-text clips are the ones used; the old-stop clips in Pigs and Goldilocks stay on disk, unused.
+- (Slice 284 removed `SplitSegment.SpokenText`: nothing read it, a device voice speaks `Segment.Text` with no colon. The lines below describe the Slice 280 state.)
 - Device voice (review finding 2): the clip key stays the tag's text as translated; what the device voice speaks for a joined tag is `SplitSegment.SpokenText` (the tag with its colon, as a lead-in),
   the one place that decides spoken text vs lookup key. (Later review found `SpokenText` is not read by app code, so a piece with no clip read by a device voice loses the colon; recorded under *From review* as a follow-up.)
 - Join at translation time: `StoryTranslation.TranslateJoinedAsync` calls `SpeakerFirst.Join`; `Regroup`/`SourceOrder` are removed. Animal sounds use `SpeakerFirst.JoinedSourceOrder`.

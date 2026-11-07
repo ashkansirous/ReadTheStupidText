@@ -49,11 +49,38 @@ Set-EmulatorInstance $Instance
 & (Join-Path $PSScriptRoot 'lint-flows.ps1')
 if ($LASTEXITCODE -ne 0) { Write-Host 'The flow lint failed (see above): fix the flows first. Nothing was built or run.'; exit 1 }
 
+# Slice 284 item 3: this run marks its worktree as busy with its own uniquely named file in the git dir (the agents' `device-test-running*` marks), removed in the outer finally
+# below; two runs on one worktree each remove only their own. Same two functions in tools/desktop-vm/Invoke-DesktopTest.ps1 (checked by tools/emulator/test-worktree-mark.ps1).
+function New-WorktreeRunMark([string]$Owner, [string]$Root) {
+    try {
+        $gitDir = (& git -C $Root rev-parse --absolute-git-dir 2>$null)
+        if ($LASTEXITCODE -ne 0 -or -not $gitDir) { return $null }
+        # Slice 284 design (two strikes): a mark is stale only if its pid is dead, or its StartTime is readable and later than the mark's write time (a reused pid).
+        # An unreadable StartTime (access denied) counts as live. Each mark is judged in its own try, and our own mark never depends on reading other processes.
+        foreach ($old in @(Get-ChildItem -LiteralPath $gitDir -Filter 'device-test-running-*-*-*' -File -ErrorAction SilentlyContinue)) {
+            try {
+                if ($old.Name -notmatch '^device-test-running-.+-(\d+)-[0-9a-f]{8}$') { continue }
+                $markOwner = Get-Process -Id ([int]$Matches[1]) -ErrorAction SilentlyContinue
+                $stale = -not $markOwner
+                if ($markOwner) { try { $stale = $markOwner.StartTime -gt $old.LastWriteTime } catch { $stale = $false } }
+                if ($stale) { Remove-Item -LiteralPath $old.FullName -Force -ErrorAction SilentlyContinue }
+            } catch { continue }
+        }
+    } catch { return $null }
+    $path = Join-Path $gitDir ("device-test-running-$Owner-$PID-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+    try { Set-Content -LiteralPath $path -Value "$Owner pid $PID started $((Get-Date).ToString('o'))" } catch { Write-Warning "Run mark not written ($($_.Exception.Message)); the run goes on without one."; return $null }
+    return $path
+}
+function Remove-WorktreeRunMark([string]$Path) {
+    if ($Path) { Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue }
+}
+$runMark = $null
 # Slice 242: the switch must reach every nested install-debug.ps1 call (restart, stale-build install) and every child run: the variable carries it.
 $priorNoBuild = $env:RTST_NO_BUILD
 if ($NoBuild.IsPresent) { $env:RTST_NO_BUILD = '1' }
 # The variable is restored when the script ends (also on exit), so it never leaks into the calling session. The block below is not re-indented, to keep the diff small.
 try {
+$runMark = New-WorktreeRunMark 'run-flows' $PSScriptRoot
 
 # -App auto: one run per touched app, each through this same script, so a failing app does not hide the next one.
 if ($App -eq 'auto') {
@@ -559,5 +586,6 @@ try {
     if ($boot2) { if ($null -eq $priorTwoEmulators) { Remove-Item Env:RTST_ALLOW_TWO_EMULATORS -ErrorAction SilentlyContinue } else { $env:RTST_ALLOW_TWO_EMULATORS = $priorTwoEmulators }; & (Join-Path $PSScriptRoot 'stop.ps1') -Instance 2 | Out-Null }   # only a split boots emulator 2, so only a split stops it
 }
 } finally {
-    if ($null -eq $priorNoBuild) { Remove-Item Env:RTST_NO_BUILD -ErrorAction SilentlyContinue } else { $env:RTST_NO_BUILD = $priorNoBuild }
+    try { Remove-WorktreeRunMark $runMark } catch { Write-Warning "Run mark removal failed: $($_.Exception.Message)" }
+    try { if ($null -eq $priorNoBuild) { Remove-Item Env:RTST_NO_BUILD -ErrorAction SilentlyContinue } else { $env:RTST_NO_BUILD = $priorNoBuild } } catch { Write-Warning "Restoring RTST_NO_BUILD failed: $($_.Exception.Message)" }
 }

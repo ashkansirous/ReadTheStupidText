@@ -72,7 +72,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - iOS beyond compile.
 - The Windows head.
 - On a real phone: the live fa/ar packs after the upload.
-- Whether a debug build skips the production usage counter when the `install-audio-pack` test hook hits a table hole (check3 finding 5, unconfirmed).
 
 ### Slice 278: Dino: store books only, parts A and B ([slice](slices/278-dino-store-books-only.md))
 - Part B: iOS device or simulator run.

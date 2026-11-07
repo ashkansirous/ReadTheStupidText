@@ -257,8 +257,6 @@ public class SpeakerFirstTests
         Assert.Equal(["پیم گفت.", "Q1", "Q2"], Texts(joined));
         Assert.Equal([true, false, false], joined.Select(p => p.IntroducesQuote));
         Assert.Equal("پیم گفت:", SpeakerFirst.Colon(joined[0].Segment.Text));
-        // The device voice says the tag as a lead-in (with the colon); the other pieces, and the lookup key of the tag, are as translated.
-        Assert.Equal(["پیم گفت:", "Q1", "Q2"], joined.Select(p => p.SpokenText));
     }
 
     [Fact]
@@ -271,7 +269,7 @@ public class SpeakerFirstTests
         Assert.True(tag.IntroducesQuote);
         Assert.True(PremadeAudio.IsSpoken(tag.Segment.Text));
         Assert.Equal(joined.Count, PremadeAudio.SpokenCount(joined.Select(p => p.Segment.Text)));
-        Assert.NotEqual(PremadeAudio.HashOf(tag.SpokenText), PremadeAudio.HashOf(tag.Segment.Text));
+        Assert.NotEqual(PremadeAudio.HashOf(SpeakerFirst.Colon(tag.Segment.Text)), PremadeAudio.HashOf(tag.Segment.Text));
     }
 
     [Theory]

@@ -397,8 +397,7 @@ public sealed class StoryVoicing
 		return new LanguagePipeline(rules, new StorySegmenter(rules), new SpeakerAttributor(rules));
 	}
 
-	// A piece plays no voice: its clip is attached afterwards (WithPremade), and a piece with no clip is shown for a beat. The text is the plain Segment.Text (the key of the clip and of every spoken count);
-	// SplitSegment.SpokenText, with the display colon, is only for a device voice that speaks the piece.
+	// A piece plays no voice: its clip is attached afterwards (WithPremade), and a piece with no clip is shown for a beat. The text is the plain Segment.Text (the key of the clip and of every spoken count).
 	private static VoicedSegment ToVoicedSegment(SplitSegment piece)
 	{
 		Segment segment = piece.Segment;
