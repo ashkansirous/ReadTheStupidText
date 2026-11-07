@@ -106,8 +106,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
             PackManifest manifest = PackManifest.Parse(File.ReadAllText(manifestPath));
             bool complete = manifest.Id == packId
                 && manifest.MissingFiles(f => File.Exists(Path.Combine(folder, f))).Count == 0
-                && manifest.BrokenTokenFoldersIn(folder).Count == 0; // Slice 201: a pack sherpa would abort on is not installed
-            LogBrokenTokens(packId, manifest, folder);
+                && !HasBrokenTokens(packId, manifest, folder); // Slice 201: a pack sherpa would abort on is not installed
             return complete ? new InstalledVoicePack(folder, manifest) : null;
         }
         catch (Exception ex) when (ex is FormatException or IOException or UnauthorizedAccessException)
@@ -459,13 +458,18 @@ public sealed class WindowsVoicePackService : IVoicePackService
         return nested ? folders[0] : scratch;
     }
 
-    // Debug-only marker (Slice 201): a device check can tell "pack rejected for its tokens.txt" from "pack missing".
-    private static void LogBrokenTokens(string packId, PackManifest manifest, string folder)
+    // True when an installed pack's tokens.txt would abort sherpa (Slice 201). Slice 303: it also reports a fallback (once per pack folder per run), so a release build leaves a trace;
+    // the Debug marker lets a device check tell "rejected" from "missing".
+    private bool HasBrokenTokens(string packId, PackManifest manifest, string folder)
     {
-        if (manifest.BrokenTokenFoldersIn(folder).Count > 0)
+        if (manifest.BrokenTokenFoldersIn(folder).Count == 0)
         {
-            System.Diagnostics.Debug.WriteLine($"RTST_PACK_TOKENS_REJECTED pack={packId} version={manifest.Version}");
+            return false;
         }
+
+        System.Diagnostics.Debug.WriteLine($"RTST_PACK_TOKENS_REJECTED pack={packId} version={manifest.Version}");
+        if (PackVersionFolders.FirstTokensReportFor(folder)) { _fallbacks.Report(FallbackArea.Pack, FallbackReason.PackFailed); }
+        return true;
     }
 
     private static void ValidatePayload(PackInfo pack, string payload)

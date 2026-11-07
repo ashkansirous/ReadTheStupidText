@@ -1,0 +1,24 @@
+# Slice 303 item 1: an installed piper-nb whose tokens.txt fails the shape check reads as "not installed" and now also reports a fallback (pack:pack_failed, once per pack folder per run), so a release build leaves a trace.
+# The Debug build writes a `[Usage] fallback pack:pack_failed` line for each fallback reported. Android only. Written, not yet run (Slice 303: docs/plan/slices/303-slice-201-review-leftovers.md).
+# Fails against the old behaviour: before Slice 303 the rejection wrote only the Debug marker RTST_PACK_TOKENS_REJECTED, never a fallback, so the usage line does not appear.
+# The usage line is `<area>:<reason>` only (LoggingFallbackSink): it carries no pack id, so this flow cannot tell piper-nb's failure from another pack's. The plant below makes piper-nb the only pack that can fail; the Debug marker RTST_PACK_TOKENS_REJECTED pack=piper-nb is in logcat, not the test-hook log, so check it by hand when the flow passes.
+# Precondition (adb, before the flow; why it sits in needs-file, as the stale-partial flow does: run-flows.ps1 runs only the *.yaml files directly in an app folder):
+#   1. Install the Debug build and open it once (so files/packs exists), then plant a corrupted pack (a copy of a good piper-nb v2 whose voices/nvcc/tokens.txt has the line "aɪ 161", or the old v1 pack) under
+#      files/packs/piper-nb/v1 with an `active` file holding "v1":
+#        adb -s emulator-5554 shell "run-as uk.sirous.readthestupidtext sh -c 'mkdir -p files/packs/piper-nb/v1/voices/nvcc'"
+#        (write pack.json, voices/nvcc/model.onnx and the bad voices/nvcc/tokens.txt there, then:  echo -n v1 > files/packs/piper-nb/active)
+#   2. Run:  maestro --device emulator-5554 test .maestro/rtst/needs-file/corrupt-piper-pack-logged.yaml
+# expect-log: HOOK skip-first-run ok
+# expect-log: [Usage] fallback pack:pack_failed
+appId: uk.sirous.readthestupidtext
+name: A corrupted installed piper-nb pack reports a fallback
+---
+# No clearState: the planted pack must survive until the app lists installed packs at launch.
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+      lang: nb
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 30000

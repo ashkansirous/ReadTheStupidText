@@ -62,6 +62,13 @@ public class PiperTokensTests
     [Fact]
     public void A_negative_id_is_accepted_as_sherpa_accepts_it() => Assert.True(PiperTokens.IsValid(Good + "b -1\n"));
 
+    // Slice 303: the same verdicts as the packs.yml checker's fixtures (only space and tab are trimmed; ids are int32).
+    [Fact]
+    public void A_no_break_space_token_is_not_the_space_token() => Assert.True(PiperTokens.IsValid("_ 0\n^ 1\n$ 2\n  3\n4\n"));
+
+    [Fact]
+    public void An_id_beyond_int32_is_rejected() => Assert.False(PiperTokens.IsValid(Good + "b 2147483648\n"));
+
     [Fact]
     public void A_duplicate_token_is_rejected() => Assert.False(PiperTokens.IsValid(Good + "a 9\n"));
 
@@ -106,6 +113,26 @@ public class PiperTokensTests
         PackManifest other = PiperPack() with { Id = "other-vits" };
 
         Assert.Empty(other.BrokenTokenFolders(_ => Encoding.UTF8.GetBytes("AA0 1\nab 2\n")));
+    }
+
+    // Slice 303 item 2: lines split on \n only (a trailing \r is stripped), the same as the packs.yml checker; a Unicode line separator never splits.
+    [Theory]
+    [InlineData(0x2028)]
+    [InlineData(0x2029)]
+    [InlineData(0x0085)]
+    public void A_unicode_line_separator_does_not_split_a_line(int separator)
+    {
+        string content = Good + "b 6" + (char)separator + "c 7\n";
+
+        Assert.False(PiperTokens.IsValid(content));
+        Assert.Contains("line 7", PiperTokens.Problem(content));
+    }
+
+    [Fact]
+    public void A_carriage_return_ends_no_line_but_is_stripped_before_a_line_feed()
+    {
+        Assert.True(PiperTokens.IsValid(Good.Replace("\n", "\r\n")));
+        Assert.False(PiperTokens.IsValid(Good.Replace("a 4\n", "a 4\rb 8\n")));
     }
 
     private static PackManifest PiperPack() => new(

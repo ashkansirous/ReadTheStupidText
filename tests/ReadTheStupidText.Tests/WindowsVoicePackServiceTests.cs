@@ -307,6 +307,36 @@ public sealed class WindowsVoicePackServiceTests : IDisposable
         Assert.Empty(service.GetInstalledVoicePacks());
     }
 
+    // Slice 303 item 1: an installed Piper pack that fails the tokens check reads as not installed and reports one pack fallback per run.
+    [Fact]
+    public void An_installed_piper_pack_with_bad_tokens_is_not_installed_and_reports_a_fallback_once()
+    {
+        string folder = Path.Combine(_root.FullName, PackConstants.NorwegianPackId);
+        Directory.CreateDirectory(Path.Combine(folder, "voices", "nvcc"));
+        File.WriteAllText(Path.Combine(folder, "pack.json"),
+            """
+            { "id": "piper-nb", "kind": "voice", "language": "nb", "version": "1", "engine": "sherpa-onnx", "model": "vits",
+              "voices": [ { "id": "piper:nb-knn", "name": "KNN", "sid": 0, "model": "voices/nvcc" } ],
+              "files": ["voices/nvcc/model.onnx", "voices/nvcc/tokens.txt"] }
+            """);
+        File.WriteAllText(Path.Combine(folder, "voices", "nvcc", "model.onnx"), "x");
+        File.WriteAllText(Path.Combine(folder, "voices", "nvcc", "tokens.txt"), "_ 0\n^ 1\n$ 2\naɪ 3\n");
+        var sink = new RecordingSink();
+        var service = new WindowsVoicePackService(_root.FullName, new HttpClient(new FakeServer("[]", [])), () => true, CatalogUrl, fallbacks: sink);
+
+        Assert.Null(service.GetInstalledPath(PackConstants.NorwegianPackId));
+        Assert.Empty(service.GetInstalledVoicePacks());
+
+        Assert.Equal([(ReadTheStupidText.Application.Usage.FallbackArea.Pack, ReadTheStupidText.Application.Usage.FallbackReason.PackFailed)], sink.Reports);
+    }
+
+    private sealed class RecordingSink : ReadTheStupidText.Application.Usage.IFallbackSink
+    {
+        public List<(string Area, string Reason)> Reports { get; } = [];
+
+        public void Report(string area, string reason, string? language = null) => Reports.Add((area, reason));
+    }
+
     private sealed class SyncProgress : IProgress<double>
     {
         public List<double> Values { get; } = [];
