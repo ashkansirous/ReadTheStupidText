@@ -2,6 +2,13 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 294: The `-NoBuild` cache-key miss in the emulator runner ([slice](slices/294-emulator-nobuild-cache-key-miss.md))
+- Item 3, the `first-run` flake: no failing log was kept, so no cause and no fix.
+- `tools/phone/run-checks.ps1` `Stop-CacheMissed` miss printout does not print the inputs (outside this slice's Touches).
+
+### Slice 292: Fix the flaky `TranslationModelDownloadSessionTests.Progress_is_reported_while_downloading` ([slice](slices/292-fix-flaky-translation-download-progress-test.md))
+- The 200-run loop of `Progress_is_reported_while_downloading` (only 25 runs were done).
+
 ### Slice 286: Dino: record your voice in each story language, and hear it when reading in that language ([slice](slices/286-dino-recordings-per-story-language.md))
 - iOS device or simulator: the record-per-language flow was not run.
 - Windows head on a real screen: centring of the record intro on a wide window.

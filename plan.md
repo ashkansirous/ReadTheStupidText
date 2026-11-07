@@ -29,8 +29,6 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 289 | Dino: count Sonos plays on the server | planned (depends on 283) | | | [289-dino-count-sonos-plays.md](docs/plan/slices/289-dino-count-sonos-plays.md) |
 | 284 | Leftovers from night 2026-11-06-1250 final feedback loop (fallback guard on untracked files, VM record check, device marks, three small follow-ups) | planned (user, 2026-11-07) | | | [284-final-loop-leftovers-night-2026-11-06-1250.md](docs/plan/slices/284-final-loop-leftovers-night-2026-11-06-1250.md) |
 | 291 | Store listings and screenshots for both apps on Play, App Store and Microsoft Store | planned | | | [291-store-listings-and-screenshots.md](docs/plan/slices/291-store-listings-and-screenshots.md) |
-| 292 | Fix the flaky `TranslationModelDownloadSessionTests.Progress_is_reported_while_downloading` | planned | | | [292-fix-flaky-translation-download-progress-test.md](docs/plan/slices/292-fix-flaky-translation-download-progress-test.md) |
-| 294 | The `-NoBuild` cache-key miss in the emulator runner (Slice 275 item 4) | planned | | | [294-emulator-nobuild-cache-key-miss.md](docs/plan/slices/294-emulator-nobuild-cache-key-miss.md) |
 | 295 | Bump `MauiVersion` once a MAUI release with dotnet/maui PR #38662 ships | planned (starts when 10.0.130 or later exists) | | | [295-bump-maui-version-for-pr-38662.md](docs/plan/slices/295-bump-maui-version-for-pr-38662.md) |
 | 296 | Why a Farsi read matched 5 of 78 pieces to clips (fixture keys or a real fa audio gap) | planned | | | [296-farsi-read-clip-match.md](docs/plan/slices/296-farsi-read-clip-match.md) |
 | 297 | Slice 267 follow-ups (read_voice count, layout-check leaks, wizard button grid) | planned | | | [297-slice-267-follow-ups.md](docs/plan/slices/297-slice-267-follow-ups.md) |
@@ -87,7 +85,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 414 checks across 166 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- **Not yet tried on a device:** 417 checks across 168 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
 - Slice 290 part B (merged, #895) leftovers, all low: `Label.Text` is null under FormattedText, `SoundPillText` marks the first occurrence of the name, the FormattedString is rebuilt on each changed call, ja/zh use the system font ([slice](docs/plan/slices/290-dino-reading-sound-pill.md), *Part B: left from the medium review*). Part B also fixed the two check-pass leftovers that Slice 293 lists.
 - Slice 290 device check needs two things: a Debug-only test hook (`src/DinoReader.App/Testing/**`) that holds the pill in each state plus a Maestro screenshot flow, and a cold emulator restart for the Maestro driver crash ([slice](docs/plan/slices/290-dino-reading-sound-pill.md), *Follow-up needed for the device check*).
 - **Waiting on the user:** Slice 283 (code merged, #879): the Sonos Company partner account, service submission, brand images, sandbox integration, Self Test and a play on their Sonos. Blocks: the service going live in the Sonos app (Sonos review takes weeks, so the submission starts the clock). The submission text to paste is in [the slice file](docs/plan/slices/283-dino-sonos-music-service.md) (*Submission text*).
