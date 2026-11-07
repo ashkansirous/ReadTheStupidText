@@ -1,10 +1,12 @@
 # Slice 284 — Leftovers from night 2026-11-06-1250's final feedback loop
 
-**Status: planned.** The user, 2026-11-07: "284 should be added to the plan." (Un-parked from `parked: feedback loop, waits for the user`.)
+**Status: *In progress (wave 2026-11-07), draft PR.*** (was: planned.) The user, 2026-11-07: "284 should be added to the plan." (Un-parked from `parked: feedback loop, waits for the user`.)
 
 *Parked 2026-11-07 by the final feedback loop of night 2026-11-06-1250 (note: `docs/plan/notes/2026-11-06-1250-feedback-loop.md`): `parked: feedback loop, waits for the user`. Repo code found by the loop is never built unreviewed; the user un-parks it.* Un-parked the same day, see above.
 
-**Touches:** `tests/ReadTheStupidText.Tests/FallbackGuardTests.cs`, this file.
+**Touches:** `tests/ReadTheStupidText.Tests/FallbackGuardTests.cs`, `tools/desktop-vm/checks/dino-record.ps1`, `tools/desktop-vm/CLAUDE.md`, `tools/emulator/run-flows.ps1`, `tools/desktop-vm/Invoke-DesktopTest.ps1`, `tools/CLAUDE.md`, `tools/emulator/test-*.ps1`, `src/DinoReader.Core/SegmentSentenceSplitter.cs`, `src/DinoReader.App/StoryVoicing.cs`, `tests/DinoReader.Tests/SpeakerFirstTests.cs`, `.maestro/dino/first-run*.yaml`, `docs/plan/unverified.md`, this file.
+
+**Claim notes (wave 2026-11-07, run-all-waves, no user to ask):** Touches widened from a ground-in-code premise check (items 2-6 named files outside it). Item 4 decision: remove the dead `SplitSegment.SpokenText` (a device voice keeps today's behaviour, no colon lead-in), since nothing reads it. Item 3: the scripts create and remove their own uniquely named `device-test-running-<id>` mark in the worktree's git dir; the agent-side readers live in ClaudeSkills and are not changed here. Item 6: investigate the `first-run` flake from its flow and logs; fix the wait if a cause is found, else record what was read.
 
 ## Work
 
