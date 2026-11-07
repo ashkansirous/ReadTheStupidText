@@ -29,11 +29,7 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 291 | Store listings and screenshots for both apps on Play, App Store and Microsoft Store | planned | | | [291-store-listings-and-screenshots.md](docs/plan/slices/291-store-listings-and-screenshots.md) |
 | 295 | Bump `MauiVersion` once a MAUI release with dotnet/maui PR #38662 ships | planned (starts when 10.0.130 or later exists) | | | [295-bump-maui-version-for-pr-38662.md](docs/plan/slices/295-bump-maui-version-for-pr-38662.md) |
 | 296 | Why a Farsi read matched 5 of 78 pieces to clips (fixture keys or a real fa audio gap) | planned | | | [296-farsi-read-clip-match.md](docs/plan/slices/296-farsi-read-clip-match.md) |
-| 297 | Slice 267 follow-ups (read_voice count, layout-check leaks, wizard button grid) | planned | | | [297-slice-267-follow-ups.md](docs/plan/slices/297-slice-267-follow-ups.md) |
-| 310 | Dino Debug hook to force a voice-pack download failure | planned | | | [310-dino-debug-hook-force-pack-failure.md](docs/plan/slices/310-dino-debug-hook-force-pack-failure.md) |
 | 311 | Crash data for the Windows apps from the Microsoft Store | planned | | | [311-windows-store-crash-data.md](docs/plan/slices/311-windows-store-crash-data.md) |
-| 312 | Read the iPhone's crash logs from this PC | planned | | | [312-read-iphone-crash-logs-from-this-pc.md](docs/plan/slices/312-read-iphone-crash-logs-from-this-pc.md) |
-| 314 | Restore the "Still getting the voice ready" overlay when the person returns to the reader during a stalled read | planned | | | [314-reader-stall-overlay-after-return.md](docs/plan/slices/314-reader-stall-overlay-after-return.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
@@ -72,7 +68,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 447 checks across 180 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- **Not yet tried on a device:** 455 checks across 184 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
 - Slice 305 follow-ups: remove the speech engine from the Dino Windows head (move the logging that lives in Infrastructure out first); stale sherpa-props path filters for Dino in `ship-targets.mjs` and `dinoreader*.yml` (harmless) ([slice](docs/plan/slices/305-dino-package-cleanup-ml-kit-and-sherpa.md)).
 - Slice 301 item 3 not built (premise wrong: 3 of 5 flows were deleted by Slice 278); re-plan from a fresh `PHASES` run ([slice](docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md)).
 - Slice 301 follow-ups (`reviews/s301-check2.md` 1-3): the preflight's Maestro launcher needs the same time bound, a java child that outlives the root process, an overall timeout in `speed.ps1`'s `Wait-ProcessWithCrashWatch`; reword the `WATCH kill-wait done` log line on a natural end ([slice](docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md)).
