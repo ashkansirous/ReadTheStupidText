@@ -2,6 +2,12 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 286: Dino: record your voice in each story language, and hear it when reading in that language ([slice](slices/286-dino-recordings-per-story-language.md))
+- iOS device or simulator: the record-per-language flow was not run.
+- Windows head on a real screen: centring of the record intro on a wide window.
+- The 14 hand-written language-name strings (`StoryLanguages_NameMap`) and the `Record_LanguageUnavailable` / `Record_LanguageRetry` translations have not been checked by native speakers.
+- Emulator store audio had to be seeded because the store was unreachable in the test setup, so the real download path was not covered.
+
 ### Slice 290: the reading page's sound line as a pill ([slice](slices/290-dino-reading-sound-pill.md))
 - Every pill state on a device against frames 197-199 (lilac Getting pill with the language name in Vazirmatn and "· N of M", Wi-Fi, Preparing, no sound), the medium weight and the new translations. No flow stops on the reading page while a pill shows (part B).
 - The pill's accessibility text: no `ReadingAudioStatus` node appeared in uiautomator dumps during the language flow (part B).
