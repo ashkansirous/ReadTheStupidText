@@ -217,7 +217,8 @@ function Format-FlowsSummary([string]$App, [object[]]$Results, [double]$Seconds)
     $failed = @($Results | Where-Object { $_.Problem }).Count
     $notRun = @($Results | Where-Object { $_.NotRun }).Count
     $passed = $Results.Length - $failed - $notRun
-    return ('{0}: {1} passed, {2} failed, {3} not run (app crashed) in {4:n1} s.' -f $App, $passed, $failed, $notRun, $Seconds)
+    $why = if (@($Results | Where-Object { Test-RunnerStuck $_ }).Count -gt 0) { 'runner stuck' } else { 'app crashed' }
+    return ('{0}: {1} passed, {2} failed, {3} not run ({4}) in {5:n1} s.' -f $App, $passed, $failed, $notRun, $why, $Seconds)
 }
 
 # Slice 241: the one line that names a crash, from Find-AppCrashLines output (the exception / signal / ANR line, else the first line).
@@ -230,6 +231,127 @@ function Get-FirstCrashLine([object[]]$Crash) {
 # Slice 241: `app crashed in <flow>: <first crash line>` for every flow that crashed, or nothing.
 function Format-CrashSummary([object[]]$Results) {
     return @(@($Results) | Where-Object { @($_.Crash).Count -gt 0 } | ForEach-Object { 'app crashed in {0}: {1}' -f $_.Name, (Get-FirstCrashLine $_.Crash) })
+}
+
+# Slice 301 item 1: the wait after the crash watch killed Maestro has a limit. If `taskkill /T /F` did not end the process, the run reports `crash-kill-failed` and goes on
+# instead of hanging until the night watchdog. Returns $true when the process ended. Debug line per branch (WATCH kill-wait done / WATCH crash-kill-failed).
+$script:CrashKillWaitSeconds = 60
+$script:CrashKillRetrySeconds = 15
+function Wait-AfterCrashKill($Process, [int]$Seconds = $script:CrashKillWaitSeconds, [int]$RetryEvery = $script:CrashKillRetrySeconds, [scriptblock]$Kill = { param($ProcessId) Stop-ProcessTree $ProcessId }) {
+    $left = $Seconds
+    while ($left -gt 0) {
+        $slice = [Math]::Min($RetryEvery, $left)
+        if ($Process.WaitForExit($slice * 1000)) { Write-Host "WATCH kill-wait done: the Maestro process ended after the kill."; return $true }
+        $left -= $slice
+        if ($left -gt 0) { Write-Host "WATCH kill-wait: pid $($Process.Id) still alive; killing the tree again."; & $Kill $Process.Id }   # Slice 301 review: a first kill that raced a spawning child is tried again
+    }
+    Write-Host "WATCH runner-stuck: the Maestro process (pid $($Process.Id)) was still alive $Seconds s after the kill."
+    return $false
+}
+
+# Slice 301 (one design): a Maestro tree is launched only by Invoke-MaestroWatched, and it returns only when the tree has ended or the result says RunnerStuck. Every exit path (natural end,
+# crash-kill, timeout) goes through this one bounded wait-and-rekill. Returns the end state: RunnerStuck (the tree is still alive after the wait), ExitCode (-1 when killed or stuck), Killed, StuckPid.
+function Resolve-MaestroEnd($Process, [bool]$Killed, [int]$Seconds = $script:CrashKillWaitSeconds, [int]$RetryEvery = $script:CrashKillRetrySeconds, [scriptblock]$Kill = { param($ProcessId) Stop-ProcessTree $ProcessId }) {
+    $ended = Wait-AfterCrashKill $Process $Seconds $RetryEvery $Kill
+    $code = if ($Killed -or -not $ended) { -1 } else { [int]$Process.ExitCode }
+    return [pscustomobject]@{ RunnerStuck = (-not $ended); ExitCode = $code; Killed = $Killed; StuckPid = $(if ($ended) { 0 } else { [int]$Process.Id }) }
+}
+
+# The one predicate checked before EVERY further Maestro launch (crash retry, guarded rerun, next flow): a result whose Maestro tree would not exit.
+function Test-RunnerStuck($Result) {
+    return [bool]($Result -and $Result.PSObject.Properties['RunnerStuck'] -and $Result.RunnerStuck)
+}
+
+# Pure: the stop reason text for a stuck runner (never "app crashed").
+function Format-RunnerStuckReason([int]$ProcessId) {
+    return ('runner stuck: Maestro tree {0} would not exit' -f $ProcessId)
+}
+
+# Pure: why the run must stop after this flow result, or '' to go on: a stuck Maestro tree first (it may still hold the device and driver), else the first crash line.
+function Get-RunStopReason($Result) {
+    if (Test-RunnerStuck $Result) { return (Format-RunnerStuckReason ([int]$Result.StuckPid)) }
+    if (@($Result.Crash).Count -gt 0) { return (Get-FirstCrashLine $Result.Crash) }
+    return ''
+}
+
+# Pure: the stop/NOTRUN line for a stop reason: a stuck runner is named as that, anything else is the app's crash.
+function Format-RunStopLine([string]$FlowName, [string]$Reason) {
+    if ($Reason -like 'runner stuck:*') { return $Reason }
+    return "app crashed in ${FlowName}: $Reason"
+}
+
+# Slice 301 review: builds the one-attempt scriptblock for Invoke-CrashRetryFlow. $Guarded is the guarded-flow function as a scriptblock (${function:Invoke-GuardedFlow}): a closure runs in
+# its own module and cannot see the calling script's functions, so it calls the block it captured.
+function New-GuardedFlowRunBlock([scriptblock]$Guarded, [string]$Maestro, $File) {
+    return { & $Guarded $Maestro $File }.GetNewClosure()
+}
+
+# Pure: the problem line of a flow whose Maestro tree would not exit.
+function Format-RunnerStuckLine([int]$ProcessId, [int]$Seconds) {
+    return ('{0} (still alive {1} s after the kill; the run stops).' -f (Format-RunnerStuckReason $ProcessId), $Seconds)
+}
+
+# Pure: one summary line per flow whose Maestro tree would not exit, or nothing.
+function Format-RunnerStuckSummary([object[]]$Results) {
+    return @(@($Results) | Where-Object { Test-RunnerStuck $_ } | ForEach-Object { '{0} (flow {1})' -f (Format-RunnerStuckReason ([int]$_.StuckPid)), $_.Name })
+}
+
+# The flow's own log (`<app>-<flow>.log`, rewritten by Save-FlowLogcat after every run): its write time, or $null when there is none. Taken before a run so an attempt log can tell
+# whether that run saved a log of its own.
+function Get-FlowLogStamp([string]$Dir, [string]$AppName, [string]$FlowName) {
+    $plain = Join-Path $Dir "$AppName-$FlowName.log"
+    if (-not (Test-Path $plain)) { return $null }
+    return (Get-Item $plain).LastWriteTimeUtc
+}
+
+# Slice 301 item 2: a crash-retried flow keeps each attempt's log, `<app>-<flow>.attempt<N>.log` beside the flow's own log: the flow's marker lines (copied from
+# `<app>-<flow>.log`, which the next attempt overwrites) and the crash buffer the watch saw. Returns the path written, or $null when it could not be written.
+# $SavedAfter (the Get-FlowLogStamp taken before that attempt's run, $null for "no check"; pass $false when there was no log before): the attempt log is written only from a flow log
+# that run saved, i.e. one newer than the stamp; otherwise nothing is written and the line says so (a missing second log must not leave the first attempt's text under "attempt 2").
+function Save-AttemptLog([string]$Dir, [string]$AppName, [string]$FlowName, [int]$Attempt, [string]$CrashLog, $SavedAfter = $null) {
+    try {
+        $null = New-Item -ItemType Directory -Force $Dir
+        if ($Attempt -eq 1) { Get-ChildItem $Dir -Filter "$AppName-$FlowName.attempt*.log" -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue }   # a retry starts with attempt 1: older runs' attempt logs are not read as this run's
+        $plain = Join-Path $Dir "$AppName-$FlowName.log"
+        if ($null -ne $SavedAfter) {
+            $stamp = Get-FlowLogStamp $Dir $AppName $FlowName
+            $fresh = $stamp -and (($SavedAfter -is [bool]) -or $stamp -gt [datetime]$SavedAfter)
+            if (-not $fresh) { Write-Host "LOGCAT no attempt $Attempt log for ${FlowName}: that run did not save a flow log."; return $null }
+        }
+        $markers = if (Test-Path $plain) { "$(Get-Content $plain -Raw)" } else { '' }
+        $path = Join-Path $Dir "$AppName-$FlowName.attempt$Attempt.log"
+        Set-Content -Path $path -Value ("--- flow log, attempt $Attempt ---`n$markers`n--- crash buffer, attempt $Attempt ---`n$CrashLog") -Encoding UTF8
+        return $path
+    } catch { Write-Host "LOGCAT attempt $Attempt log could not be kept for ${FlowName}: $($_.Exception.Message)"; return $null }
+}
+
+# Pure: one summary line per crash-retried flow naming both attempts' log paths (own `retry-logs` prefix: Format-RetrySummary owns the `crash-retried` line).
+function Format-RetryLogLines([object[]]$Results) {
+    return @(@($Results) | Where-Object { $_.PSObject.Properties['RetryLogs'] -and @($_.RetryLogs).Count -gt 0 } | ForEach-Object { 'retry-logs {0}: {1}' -f $_.Name, ((@($_.RetryLogs) | ForEach-Object { if ($_) { $_ } else { '(not kept)' } }) -join ' and ') })
+}
+
+# Slice 247 item c, Slice 301 review: the crash-retry glue lives here (not in run-flows.ps1, which cannot be dot-sourced) so test-speed.ps1 drives it with stubs. $RunFlow runs one attempt and
+# returns the flow result; $IsRetryable takes the first run's crash log. A first run whose Maestro tree is stuck (Test-RunnerStuck) is never retried (its tree may still hold the out/err files
+# and the device): it is returned as it is, with RunnerStuck set, so the report says `runner stuck`.
+function Invoke-CrashRetryFlow([string]$FlowName, [string]$LogDir, [string]$AppName, [scriptblock]$RunFlow, [scriptblock]$IsRetryable) {
+    $stamp1 = Get-FlowLogStamp $LogDir $AppName $FlowName
+    $first = & $RunFlow
+    if (Test-RunnerStuck $first) { Write-Host "WATCH no retry for ${FlowName}: the Maestro tree would not exit."; return $first }
+    if (-not $first.Problem -or @($first.Crash).Count -eq 0) { return $first }
+    if (-not (& $IsRetryable $first.CrashLog)) { Write-Host "WATCH no retry for ${FlowName}: not a Mono SIGSEGV within $($script:MonoRetryMaxUptimeSeconds) s of the start."; return $first }
+    $line = Format-CrashRetryLine $FlowName (Get-FirstCrashLine $first.Crash)
+    Write-Host $line
+    if ($first.Phases) { Write-Host $first.Phases }
+    $firstLog = Save-AttemptLog $LogDir $AppName $FlowName 1 $first.CrashLog $(if ($stamp1) { $stamp1 } else { $false })   # the second run overwrites the flow's log, so the first attempt's is kept under its own name now
+    $stamp2 = Get-FlowLogStamp $LogDir $AppName $FlowName
+    $second = & $RunFlow   # the one predicate was checked on $first above; a stuck second run is returned with RunnerStuck and no third run follows
+    $secondLog = Save-AttemptLog $LogDir $AppName $FlowName 2 $second.CrashLog $(if ($stamp2) { $stamp2 } else { $false })
+    $second.RetryLogs = @($firstLog, $secondLog)
+    $second.Retried = $line
+    if ($second.Problem) { $second.Problem = "First attempt: $(Get-FirstCrashLine $first.Crash)`n" + $second.Problem }   # Slice 301 review: a second failure still names what the first one crashed with
+    $second.FirstRunSeconds = $first.Seconds
+    $second.Seconds += $first.Seconds   # the row's time is both runs, so a flow that crashes on every cold start does not look quick
+    return $second
 }
 
 # The dump goes to a file on the device and is read with `exec-out cat`: `uiautomator dump /dev/tty` returns only the "dumped to" line from a non-tty host shell.
