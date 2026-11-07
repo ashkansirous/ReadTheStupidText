@@ -59,6 +59,8 @@ public static class DinoTokens
 	public const string DisabledLabel = "DisabledLabel";
 	public const string DisabledNote = "DisabledNote";
 	public const string OnBrand = "OnBrand";
+	public const string SoundPillSand = "SoundPillSand";
+	public const string RingTrack = "RingTrack";
 	public const string StorytellerOn = "StorytellerOn";
 	public const string TagHotFill = "TagHotFill";
 	public const string TagHotInk = "TagHotInk";

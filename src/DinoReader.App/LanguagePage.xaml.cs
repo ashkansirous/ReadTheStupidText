@@ -69,6 +69,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	private readonly IServiceProvider _services;
 	private readonly string _openedWith;
 	private readonly StoryLanguageSet _openedSet; // the story languages when the page opened: what a change adds is compared with it (Slice 285)
+	private bool _asking; // the mobile-data question is open: a leave event must not start the audio before the answer
 	private readonly HashSet<string> _audioStarted = []; // languages whose shelf audio run this page already started quietly (a swipe back), so it is not started twice
 	private string? _pending;
 	private StoryLanguageSet? _sides; // the story languages as the taps so far leave them; saved only when the page is left with a changed language
@@ -106,7 +107,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	// A sheet covering the page (the drop-language sheet) fires OnDisappearing too, with the page still on the stack: only a page that has left the stack starts the audio of what it changed.
 	private void StartAudioIfLeft()
 	{
-		if (!Navigation.NavigationStack.Contains(this))
+		if (!_asking && !Navigation.NavigationStack.Contains(this)) // while the mobile-data question is open, its answer starts the audio
 		{
 			StartShelfAudioSafely(VoiceRequestOutcome.NothingAsked); // a swipe back never asks; Back asks first (BackAsync) and starts with the answer
 		}
@@ -287,6 +288,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	private async Task AskAndStartShelfAudioAsync()
 	{
 		VoiceRequestOutcome outcome = VoiceRequestOutcome.NothingAsked;
+		_asking = true;
 		try
 		{
 			outcome = await ShelfAudioAsk.AskAsync(this, ShelfAudioLanguages.Added(_openedSet, StoryLanguages.Current()));
@@ -295,6 +297,10 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 		{
 			// no-fallback: the question could not be shown; the audio then follows the ordinary Wi-Fi rule
 			AudioPackLog.Write($"the mobile data question failed ({ex.GetType().Name})");
+		}
+		finally
+		{
+			_asking = false;
 		}
 
 		StartShelfAudioSafely(outcome);

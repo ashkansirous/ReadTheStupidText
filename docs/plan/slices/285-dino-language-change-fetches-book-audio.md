@@ -1,6 +1,11 @@
 ### Slice 285 — Dino: changing the app language fetches the books' sound in that language
 
-*Built (2026-11-07), branch fix/dino-language-change-audio.*
+*Merged 2026-11-07: part 1 as PR #886 (50b61b3f), part 2 as PR #890 (1869b64e).*
+
+**Part 2: item C (the book-open quiet start) was removed, and the reading page starts no fetch** (two-strikes redesign, 2026-11-07; `reviews/285-medium.md`, `285-check.md`, `285b-high.md`, `lang-audio-2-high.md`). Item C drew findings in three review rounds, so it was removed (`ShelfAudioOpenMemory` and its tests, `StartQuietForBookAsync`, the listing cache, `_audioLeft`, the page's audio cancellation source, `ShelfAudioLanguages.BookNeedsQuietStart` and its test). A non-forced `Resume()` from the reading page was tried and also dropped: reviewed twice, it added nothing over `Resume` at launch and on return to the app, because its 5-minute throttle swallows it. Book sound is fetched by the paths that existed before Slice 285: launch and return-to-app `Resume`, a book download or update (`BookUpdater` syncs packs in the same check), and the language pickers (part A). `ShelfAudioLanguages.ToStartOnLeaving` keeps its tests. Part 2 also reset `LanguagePage._asking` in a `finally`.
+- [x] 285-check 6: a leave handler firing while the Back dialog (mobile-data question) is open doesn't mark the language started (`_asking` guard in `LanguagePage`). The grown-up's "Download now" answer reaches `Start`.
+- [x] The two language-change emulator flows (`language-change-fetches-audio`, `language-change-back-key-fetches-audio`) PASS on emulator-5554 after the redesign (2026-11-07), and so do `premade-audio-plays` and `silent-piece-beat`.
+
 
 **Built:**
 - Reviews: high `reviews/285-high.md` (all 10 applied); medium `reviews/285-medium.md` (1-5 and 8 applied; 6 checked on the emulator; 7 by design, since a quiet start follows the Wi-Fi rule).
@@ -49,7 +54,7 @@ What the three sources showed (2026-11-07):
   - The new pack must be fetched in the same check, and the reading page must open the newest installed version.
   - If it isn't (e.g. only the next launch `Resume` or the weekly check would do it), make the update start the shelf run for that language.
   - Add a unit test for the decision (pure code in `DinoReader.Core` if it lives there).
-- [x] **C. The reading page tells the truth.**
+- [ ] **C. The reading page tells the truth.** (Built in part 1, removed in part 2. The reading page starts no fetch and its status line only reports.)
   - "This part has no sound" is the default whenever no shelf run covers the book (`ReadingPage.xaml.cs` ~1098). Only one of those cases is real.
   - When the book has a pack listed in this language on the store and it isn't installed, start the shelf run for that language from the reading page. Show its downloading line instead of "no sound".
   - Keep "no sound" only for pieces the installed, newest pack really lacks.

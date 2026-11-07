@@ -1,6 +1,8 @@
 # Slice 284 — Leftovers from night 2026-11-06-1250's final feedback loop
 
-*Parked 2026-11-07 by the final feedback loop of night 2026-11-06-1250 (note: `docs/plan/notes/2026-11-06-1250-feedback-loop.md`): `parked: feedback loop, waits for the user`. Repo code found by the loop is never built unreviewed; the user un-parks it.*
+**Status: planned.** The user, 2026-11-07: "284 should be added to the plan." (Un-parked from `parked: feedback loop, waits for the user`.)
+
+*Parked 2026-11-07 by the final feedback loop of night 2026-11-06-1250 (note: `docs/plan/notes/2026-11-06-1250-feedback-loop.md`): `parked: feedback loop, waits for the user`. Repo code found by the loop is never built unreviewed; the user un-parks it.* Un-parked the same day, see above.
 
 **Touches:** `tests/ReadTheStupidText.Tests/FallbackGuardTests.cs`, this file.
 

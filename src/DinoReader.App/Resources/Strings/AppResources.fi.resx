@@ -16,6 +16,7 @@
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>Osaa {0}-äänistä ei voitu vielä hakea. Dino yrittää myöhemmin uudelleen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Reading_AudioUnavailable" xml:space="preserve"><value>Tällä kirjalla ei ole vielä ääntä tällä kielellä.</value></data>
   <data name="Reading_NoSound" xml:space="preserve"><value>Tässä osassa ei ole ääntä</value></data>
+  <data name="Reading_GettingSound" xml:space="preserve"><value>Haetaan kirjoillesi ääntä kielellä {0}</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Yritä uudelleen</value><comment>Machine draft: needs native review</comment></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="Common_Back" xml:space="preserve"><value>Takaisin</value></data>

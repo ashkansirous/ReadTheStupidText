@@ -15,6 +15,7 @@
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>部分{0}音频暂时无法获取。Dino 稍后会再试。</value><comment>Machine draft: needs native review</comment></data>
   <data name="Reading_AudioUnavailable" xml:space="preserve"><value>这本书还没有这种语言的音频。</value></data>
   <data name="Reading_NoSound" xml:space="preserve"><value>这一部分没有声音</value></data>
+  <data name="Reading_GettingSound" xml:space="preserve"><value>正在为你的书获取{0}声音</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>重试</value><comment>Machine draft: needs native review</comment></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="Common_Back" xml:space="preserve"><value>返回</value></data>

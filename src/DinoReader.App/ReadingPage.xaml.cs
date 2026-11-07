@@ -69,7 +69,6 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private int _displayVersion;
 	private string? _translationShownFor; // the reading language whose translation the screen shows now (Slice 286): a refresh in that language keeps the recordings playing
 	private string? _translationFailedFor; // the reading language whose translation could not be made: the next Play tries it again, so its recordings are not off for good
-	private CancellationTokenSource? _audioCancellation; // the book-open audio check (Slice 285): stopped when the page leaves, restarted by a reading-language switch
 	private CancellationTokenSource? _displayCancellation; // the screen's translation: stopped when a newer one starts or the page goes away
 	private ReadingMode _mode = ReadingMode.Text; // the mode on screen now, which a translation that arrives late must not undo
 	private readonly StoryLanguageButton _languageButton; // Slice 173: the child's story-language button, shown only when this book can be read in two or more story languages
@@ -188,7 +187,6 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	{
 		_languageReady = SettleLanguagesAsync();
 		await _languageReady;
-		_ = StartQuietAudioForBookAsync(); // Load runs once per page, so this is once per page instance
 		_ = CountOpenWhenShownAsync();
 		await ShowStoryAsync();
 	}
@@ -372,7 +370,6 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		_session.SetReadingLanguage(language);
 		_languageButton.SetLanguage(language);
 		_usage.Record(UsageEventName.StoryLanguageSwitched, story, language: language);
-		_ = StartQuietAudioForBookAsync(); // the new reading language's missing pack starts too (Slice 285)
 		await ShowStoryAsync();
 		if (restart)
 		{
@@ -978,7 +975,6 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		EndOwnedWait();
 		ApplyScreenAwake();
 		CancelDisplay();
-		CancelAudioCheck();
 		Unsubscribe();
 		_session.Detach();
 		if (_story is { } leftBook)
@@ -1136,67 +1132,38 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 			_pieceLacksAudio = false; // a stopped read says nothing; the next read's first piece sets it again
 		}
 
-		string? status = _pieceLacksAudio && _story is { } book ? AudioStatusText(book) : null;
-		StatusLabel.Text = status;
-		StatusLabel.IsVisible = status is not null;
-	}
+		if (!_pieceLacksAudio || _story is not { } book)
+		{
+			StatusPill.IsVisible = false;
+			return;
+		}
 
-	private string AudioStatusText(Story book)
-	{
 		string language = ReadIn(book);
+		string nativeName = LanguageNames.NativeName(language);
+		SoundStatusPillState status = AudioStatus(book, language);
+		StatusPill.Show(status, AudioStatusText(status, nativeName), nativeName);
+		StatusPill.IsVisible = true;
+	}
+
+	// Never promises sound that is not coming: a book whose pack is not being fetched (no pack, already in, another language's run) is "no sound"; idle, done, cancelled, failed or the main language is one plain line, never "audio unavailable".
+	private SoundStatusPillState AudioStatus(Story book, string language)
+	{
 		var shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
-		if (!shelfAudio.RunIncludes(language, book.SourceId))
-		{
-			return AppResources.Reading_NoSound; // this book's pack is not being fetched (no pack, already in, another language's run): never promise sound that is not coming
-		}
+		return SoundStatusPillState.From(shelfAudio.RunIncludes(language, book.SourceId), shelfAudio.StateOf(language));
+	}
 
-		ShelfAudioState state = shelfAudio.StateOf(language);
-		return state.Phase switch
+	private static string AudioStatusText(SoundStatusPillState status, string nativeName)
+	{
+		string getting = AppResources.Format(AppResources.Reading_GettingSound, nativeName);
+		return status.Kind switch
 		{
-			ShelfAudioPhase.Running when state.Total > 0 =>
-				AppResources.Format(AppResources.ShelfAudio_Getting, LanguageNames.NativeName(language)) + " " + AppResources.Format(AppResources.Intro_Counter, state.Position, state.Total),
-			ShelfAudioPhase.Running => AppResources.Format(AppResources.ShelfAudio_Getting, LanguageNames.NativeName(language)),
-			ShelfAudioPhase.Preparing => AppResources.ShelfAudio_Preparing,
-			ShelfAudioPhase.WaitingForInternet => AppResources.ShelfAudio_WaitingInternet,
-			ShelfAudioPhase.WaitingForWifi => AppResources.ShelfAudio_WaitingWifi,
-			_ => AppResources.Reading_NoSound, // idle, done, cancelled, failed or the main language: one plain line, never "audio unavailable"
+			SoundStatusKind.Getting when status.HasCount => getting + SoundStatusPillState.CountSeparator + AppResources.Format(AppResources.Intro_Counter, status.Position, status.Total),
+			SoundStatusKind.Getting => getting,
+			SoundStatusKind.Preparing => AppResources.ShelfAudio_Preparing,
+			SoundStatusKind.WaitingForInternet => AppResources.ShelfAudio_WaitingInternet,
+			SoundStatusKind.WaitingForWifi => AppResources.ShelfAudio_WaitingWifi,
+			_ => AppResources.Reading_NoSound,
 		};
-	}
-
-	// Slice 285 C: once per page, when the book is opened, a pack the store lists for it in the reading language that is missing or older starts that language's run quietly (the status line only reads the run).
-	private async Task StartQuietAudioForBookAsync()
-	{
-		try
-		{
-			if (_story is { } book)
-			{
-				CancellationToken cancel = RestartAudioCancellation();
-				await _services.GetRequiredService<ShelfAudioPacks>().StartQuietForBookAsync(ReadIn(book), book.SourceId, cancel);
-			}
-		}
-		catch (OperationCanceledException)
-		{
-			// no-fallback: the page left or the reading language changed again; the newer check (if any) decides
-		}
-		catch (Exception ex)
-		{
-			// no-fallback: written to the audio log; the launch and return checks fetch the book's audio later
-			AudioPackLog.Write($"the book's audio check failed ({ex.GetType().Name})");
-		}
-	}
-
-	// The book-open audio check lives as long as the page and the reading language it was started for: leaving the page or switching the language cancels it.
-	private CancellationToken RestartAudioCancellation()
-	{
-		CancelAudioCheck();
-		_audioCancellation = new CancellationTokenSource();
-		return _audioCancellation.Token;
-	}
-
-	private void CancelAudioCheck()
-	{
-		_audioCancellation?.Cancel();
-		_audioCancellation = null;
 	}
 
 	// Slice 143: a read that is waiting for its first audio (the voice, or the translation it needs) shows the wait overlay after 500 ms

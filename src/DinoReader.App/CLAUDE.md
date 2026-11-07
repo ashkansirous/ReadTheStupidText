@@ -27,7 +27,8 @@ are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CL
 > Slices 172-174 (gear, story languages, reading screen) `Dino Reader Batch 37.dc.html`, for Slices 228-231
 > (grown-ups' corner, Done/Continue, Record) `Dino Reader Batch 43 Grown-ups Corner.dc.html`, and for Slice 232
 > (landscape, every screen) `Dino Reader Batch 44 Landscape.dc.html`, and for Slices 276, 278 and 279 (store books only,
-> the recording flow, TestFlight update) `Dino Reader Batch 48 Store Only and Recording.dc.html` (index in
+> the recording flow, TestFlight update) `Dino Reader Batch 48 Store Only and Recording.dc.html`, and for Slice 290
+> (reading page sound pill) and the Sonos brand images `Dino Reader Batch 50 Sound States and Sonos.dc.html` (index in
 > that folder's README): read visual values (colours, sizes, copy, layout) from it,
 > never guess them, and never call `DesignSync` for them.
 
@@ -147,3 +148,11 @@ Store tags are a closed enum (`StoreTag`: Hot, Popular, Recommended, New; case-s
 ## Own books cleanup (Slice 278)
 
 The own-books cleanup (`OwnBooksCleanup.cs`, `OwnBooksCleanupRun.cs`) is single-flight, started from `GalleryPage.OnAppearing` independent of the starter install and refresh, deletes `story.json` last, catches every exception except cancellation per book, and is done when the listing was complete with no failure or after 3 failed starts. Backup restore runs the same run and drops the own books it removes. Do not add a second deletion path. (Slice 278: docs/plan/slices/278-dino-store-books-only.md)
+
+## Language change fetches the books' sound (Slice 285)
+
+Every way of changing the story or app language (`LanguagePage`, `StoryLanguagesPage`, `IntroWizardPage`) must start `ShelfAudioPacks.Start` for each added language. The reading page starts no fetch. The emulator flows `language-change-fetches-audio` and `language-change-back-key-fetches-audio` guard it. (Slice 285: docs/plan/slices/285-dino-language-change-fetches-book-audio.md)
+
+## Fredoka Medium is derived (Slice 290 part B)
+
+`Resources/Fonts/Fredoka-Medium.ttf` is a fontTools static wght=500 instance of the variable `Fredoka.ttf`, family renamed "Fredoka Medium". Regenerate it if `Fredoka.ttf` changes. (Slice 290: docs/plan/slices/290-dino-reading-sound-pill.md)

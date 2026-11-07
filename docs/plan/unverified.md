@@ -2,6 +2,17 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 290: the reading page's sound line as a pill ([slice](slices/290-dino-reading-sound-pill.md))
+- Every pill state on a device against frames 197-199 (lilac Getting pill with the language name in Vazirmatn and "· N of M", Wi-Fi, Preparing, no sound), the medium weight and the new translations. No flow stops on the reading page while a pill shows (part B).
+- The pill's accessibility text: no `ReadingAudioStatus` node appeared in uiautomator dumps during the language flow (part B).
+- A Farsi or Arabic pill whose text wraps (label right-aligned, icon still left).
+- iPhone and the Windows head (incl. the UIA name): not built here; shared code with no platform branches.
+
+### Slice 285: Dino: changing the app language fetches the books' sound in that language ([slice](slices/285-dino-language-change-fetches-book-audio.md))
+- iPhone: switch the app language, open a store book, press Play. Sound should play in the new language with no relaunch.
+- Windows head: the same.
+- The user's phone: Freddy in English after the v6 text update. The English `clip_missing` events of 2026-11-07 07:05Z have no code explanation yet.
+
 ### Slice 283: Dino: a Sonos music service for the store books ([slice](slices/283-dino-sonos-music-service.md))
 - Live `POST /sonos` after the Worker deploy: getMetadata root lists the languages, getMediaURI returns the track URL.
 - Sonos Self Test passes.

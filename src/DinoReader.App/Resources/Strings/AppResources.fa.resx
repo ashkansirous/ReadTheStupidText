@@ -15,6 +15,7 @@
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>بخشی از صدای {0} هنوز دریافت نشد. دینو بعداً دوباره تلاش می‌کند.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Reading_AudioUnavailable" xml:space="preserve"><value>این کتاب هنوز به این زبان صدا ندارد.</value></data>
   <data name="Reading_NoSound" xml:space="preserve"><value>این بخش صدا ندارد</value></data>
+  <data name="Reading_GettingSound" xml:space="preserve"><value>در حال دریافت صدای {0} برای کتاب‌هایت</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>تلاش دوباره</value><comment>Machine draft: needs native review</comment></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="Common_Back" xml:space="preserve"><value>بازگشت</value></data>

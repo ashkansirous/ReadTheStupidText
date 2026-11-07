@@ -15,6 +15,7 @@
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>{0}の音声の一部をまだ取得できていません。ディノは後でもう一度試します。</value><comment>Machine draft: needs native review</comment></data>
   <data name="Reading_AudioUnavailable" xml:space="preserve"><value>この本には、この言語の音声がまだありません。</value></data>
   <data name="Reading_NoSound" xml:space="preserve"><value>この部分には音がありません</value></data>
+  <data name="Reading_GettingSound" xml:space="preserve"><value>あなたの本の{0}の音を取得中</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>再試行</value><comment>Machine draft: needs native review</comment></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="Common_Back" xml:space="preserve"><value>戻る</value></data>

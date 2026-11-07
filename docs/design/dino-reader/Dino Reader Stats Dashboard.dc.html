@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>html,body{margin:0;padding:0;background:#e9e4d8;}*{box-sizing:border-box;}a{color:#5B57E8;}a:hover{color:#3f3bc4;}select,input,button{font-family:inherit;}</style>
+</helmet>
+<section style="padding:48px 56px 80px;font-family:'Fredoka',system-ui,sans-serif;color:#2b2540">
+ <div style="max-width:1280px;display:flex;flex-direction:column;gap:8px">
+  <div style="font-size:12px;font-weight:600;letter-spacing:2px;color:#5B57E8;text-transform:uppercase">Dino Reader · Batch 51 (Slice 287, with 288 and 289) · planned 2026-11-07</div>
+  <div style="font-size:34px;font-weight:600">Usage dashboard at dinoreader.sirous.uk/stats</div>
+  <div style="font-size:15px;color:#5a5470;line-height:1.55;max-width:1000px;text-wrap:pretty">One page behind Cloudflare Access, in the Dino site’s own look (its colours, no web font, no third-party requests). Filters on top, three numbers that double as the chart’s switch, one stacked chart coloured by platform, and the books table. Everything below is clickable; the numbers are made up, drawn as if read on 15 Dec 2026 so the “counts from” notes show. Frame 200. The Tweaks panel switches to the loading and error states.</div>
+ </div>
+
+ <div style="display:flex;flex-direction:column;gap:10px;margin-top:28px">
+  <div style="font-size:14px;font-weight:600;color:#3a3450">200 · /stats · desktop, 1280 wide</div>
+  <div data-screen-label="200 Stats dashboard" style="width:1280px;border-radius:12px;overflow:hidden;background:#F3EFE6;box-shadow:0 24px 60px rgba(43,37,64,.22);border:1px solid #d9d2c4">
+   <div style="height:40px;background:#e6e0d3;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid #d9d2c4">
+    <div style="width:11px;height:11px;border-radius:50%;background:#ff5f57"></div><div style="width:11px;height:11px;border-radius:50%;background:#febc2e"></div><div style="width:11px;height:11px;border-radius:50%;background:#28c840"></div>
+    <div style="margin-left:18px;height:26px;flex:0 1 480px;border-radius:13px;background:#F3EFE6;display:flex;align-items:center;padding:0 12px;font-size:12.5px;color:#5a5470">dinoreader.sirous.uk/stats</div>
+   </div>
+
+   <div style="padding:20px 32px 40px;display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+     <img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:40px;height:40px;border-radius:10px;display:block">
+     <div style="display:flex;flex-direction:column;flex:1;min-width:200px"><span style="font-size:19px;font-weight:600;line-height:1.2">Dino Book Reader · Usage</span><span style="font-size:13px;color:#8a8399">Counts of events, never people. Updated hourly · last at 14:00 UTC.</span></div>
+     <span style="font-size:13px;color:#5a5470;display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5a5470" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path></svg>elinsoftuk@gmail.com</span>
+    </div>
+
+    <div style="background:#FFF6E6;border:1px solid #d9d2c4;border-radius:16px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center">
+     <div style="display:flex;flex-direction:column;gap:6px">
+      <span style="font-size:12px;font-weight:600;color:#8a8399;letter-spacing:.5px">PERIOD</span>
+      <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#F3EFE6;border:1px solid #d9d2c4">
+       <sc-for list="{{ presets }}" as="p" hint-placeholder-count="5">
+        <button onClick="{{ p.pick }}" style="height:32px;padding:0 13px;border:0;border-radius:999px;font-size:14px;font-weight:500;cursor:pointer;background:{{ p.bg }};color:{{ p.fg }};box-shadow:{{ p.shadow }}">{{ p.label }}</button>
+       </sc-for>
+      </div>
+     </div>
+     <div style="display:flex;flex-direction:column;gap:6px">
+      <span style="font-size:12px;font-weight:600;color:#8a8399;letter-spacing:.5px">BARS BY</span>
+      <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#F3EFE6;border:1px solid #d9d2c4">
+       <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+        <button onClick="{{ g.pick }}" style="height:32px;padding:0 13px;border:0;border-radius:999px;font-size:14px;font-weight:500;cursor:pointer;background:{{ g.bg }};color:{{ g.fg }};box-shadow:{{ g.shadow }};opacity:{{ g.op }}">{{ g.label }}</button>
+       </sc-for>
+      </div>
+     </div>
+     <div style="display:flex;flex-direction:column;gap:6px">
+      <span style="font-size:12px;font-weight:600;color:#8a8399;letter-spacing:.5px">BOOK</span>
+      <select value="{{ book }}" onChange="{{ setBook }}" style="height:38px;min-width:220px;border:1px solid #d9d2c4;border-radius:10px;background:#fff;padding:0 10px;font-size:14px;color:#2b2540">
+       <sc-for list="{{ bookOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.id }}">{{ o.title }}</option></sc-for>
+      </select>
+     </div>
+     <div style="display:flex;flex-direction:column;gap:6px;flex-basis:100%">
+      <span style="font-size:12px;font-weight:600;color:#8a8399;letter-spacing:.5px">PLATFORMS</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+       <sc-for list="{{ platformChips }}" as="c" hint-placeholder-count="5">
+        <button onClick="{{ c.toggle }}" title="{{ c.tip }}" style="height:34px;padding:0 14px 0 10px;border-radius:999px;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;background:{{ c.bg }};color:{{ c.fg }};border:{{ c.border }};opacity:{{ c.op }}"><span style="width:12px;height:12px;border-radius:4px;background:{{ c.dot }}"></span>{{ c.label }}<span style="font-size:12px;color:#8a8399">{{ c.note }}</span></button>
+       </sc-for>
+      </div>
+     </div>
+    </div>
+
+    <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+     <div style="background:#FFF0EA;border:1px solid #f2c4b4;border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:14px">
+      <span style="flex:1;font-size:15px;color:#3a3450">Couldn’t load the numbers. Analytics Engine or the database didn’t answer.</span>
+      <button style="height:38px;padding:0 18px;border-radius:999px;border:0;background:#5B57E8;color:#fff;font-size:14px;font-weight:600">Try again</button>
+     </div>
+    </sc-if>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
+     <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="3">
+      <button onClick="{{ t.pick }}" style="text-align:left;cursor:pointer;background:{{ t.bg }};border:{{ t.border }};border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;color:#2b2540">
+       <span style="font-size:13px;font-weight:600;color:#5a5470;display:flex;align-items:center;gap:8px">{{ t.label }}<span style="font-size:11.5px;font-weight:600;color:#5B57E8">{{ t.shown }}</span></span>
+       <span style="font-size:34px;font-weight:600;line-height:1.15;color:{{ t.numColor }}">{{ t.value }}</span>
+       <span style="font-size:12.5px;color:#8a8399;line-height:1.4;text-wrap:pretty">{{ t.sub }}</span>
+      </button>
+     </sc-for>
+    </div>
+
+    <div style="background:#FFF6E6;border:1px solid #d9d2c4;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+     <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+      <span style="font-size:17px;font-weight:600">{{ chartTitle }}</span>
+      <span style="font-size:13px;color:#8a8399">{{ chartSub }}</span>
+      <span style="flex:1"></span>
+      <div style="display:flex;flex-wrap:wrap;gap:12px">
+       <sc-for list="{{ legend }}" as="l" hint-placeholder-count="4"><span style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:#5a5470"><span style="width:12px;height:12px;border-radius:3px;background:{{ l.bg }}"></span>{{ l.label }}</span></sc-for>
+      </div>
+     </div>
+     <sc-if value="{{ showSince }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size:12.5px;color:#5a5470;background:#ECE7FF;border-radius:10px;padding:6px 10px;align-self:flex-start">{{ sinceNote }}</div>
+     </sc-if>
+     <div style="display:flex;gap:8px;position:relative">
+      <div style="width:44px;height:240px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;font-size:11.5px;color:#8a8399;padding-bottom:0">
+       <sc-for list="{{ yTicks }}" as="y" hint-placeholder-count="5"><span style="line-height:0">{{ y }}</span></sc-for>
+      </div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+       <div style="height:240px;position:relative;border-bottom:1px solid #cfc7b6;background:repeating-linear-gradient(to bottom,transparent 0,transparent 59px,#ebe4d6 59px,#ebe4d6 60px)">
+        <div style="position:absolute;inset:0;display:flex;align-items:flex-end;gap:{{ barGap }}px">
+         <sc-for list="{{ bars }}" as="b" hint-placeholder-count="12">
+          <div title="{{ b.tip }}" style="flex:1;min-width:0;height:100%;display:flex;flex-direction:column-reverse;cursor:default" style-hover="filter:brightness(1.06)">
+           <sc-for list="{{ b.segs }}" as="s" hint-placeholder-count="2"><div style="height:{{ s.h }}px;background:{{ s.bg }};border-radius:{{ s.r }}"></div></sc-for>
+          </div>
+         </sc-for>
+        </div>
+        <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+         <div style="position:absolute;inset:0;background:rgba(255,246,230,.82);display:flex;align-items:center;justify-content:center;font-size:14px;color:#5a5470">Loading…</div>
+        </sc-if>
+       </div>
+       <div style="display:flex;gap:{{ barGap }}px">
+        <sc-for list="{{ bars }}" as="b" hint-placeholder-count="12"><span style="flex:1;min-width:0;text-align:center;font-size:11px;color:#8a8399;white-space:nowrap;overflow:visible">{{ b.label }}</span></sc-for>
+       </div>
+      </div>
+     </div>
+    </div>
+
+    <div style="background:#FFF6E6;border:1px solid #d9d2c4;border-radius:16px;overflow:hidden">
+     <div style="display:flex;align-items:baseline;gap:10px;padding:16px 18px 10px"><span style="font-size:17px;font-weight:600">Top books</span><span style="font-size:13px;color:#8a8399">in this period and these platforms · click a book to filter, a heading to sort</span></div>
+     <div style="display:grid;grid-template-columns:minmax(0,2.2fr) repeat(3,minmax(0,1fr));padding:8px 18px;border-top:1px solid #e6dfd0;border-bottom:1px solid #e6dfd0;font-size:12.5px;font-weight:600;color:#5a5470">
+      <span>Book</span>
+      <sc-for list="{{ sortHeads }}" as="h" hint-placeholder-count="3"><button onClick="{{ h.pick }}" style="border:0;background:none;padding:0;text-align:right;font-size:12.5px;font-weight:600;cursor:pointer;color:{{ h.fg }}">{{ h.label }}</button></sc-for>
+     </div>
+     <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+      <div onClick="{{ r.pick }}" style="display:grid;grid-template-columns:minmax(0,2.2fr) repeat(3,minmax(0,1fr));align-items:center;padding:8px 18px;border-bottom:1px solid #efe9dd;cursor:pointer;background:{{ r.bg }}" style-hover="background:#fbefd9">
+       <div style="display:flex;align-items:center;gap:12px;min-width:0"><span style="width:22px;font-size:12.5px;color:#8a8399;text-align:right">{{ r.rank }}</span><div style="width:30px;height:40px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#e6dccb;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#5a5470;background-image:{{ r.cover }};background-size:cover;background-position:center">{{ r.initial }}</div><span style="font-size:14.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.title }}</span></div>
+       <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="3"><div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px"><span style="font-size:14.5px;font-variant-numeric:tabular-nums;color:{{ c.fg }}">{{ c.text }}</span><div style="width:72px;height:4px;border-radius:2px;background:#ebe4d6;overflow:hidden;display:flex;justify-content:flex-end"><div style="width:{{ c.w }}%;height:100%;background:{{ c.bar }}"></div></div></div></sc-for>
+      </div>
+     </sc-for>
+    </div>
+
+    <div style="font-size:12.5px;color:#8a8399;line-height:1.5;max-width:900px;text-wrap:pretty">Downloads are store-book downloads from the apps. A listen is a book played for 30 seconds or more. Hours are real played time from the app; for speakers without reported time, the book’s length (hatched, estimate). Weeks start Monday, UTC. Data from {{ dataFrom }}; kept daily in D1 after Analytics Engine drops raw rows.</div>
+   </div>
+  </div>
+  <div style="width:1280px;font-size:12.5px;color:#5a5470;line-height:1.55;text-wrap:pretty;display:flex;flex-direction:column;gap:6px">
+   <div><b>Filters.</b> Four fixed periods, no custom dates; the chart’s subtitle names the exact days. “Today” allows only day bars; “This year” starts on week bars. Platforms are chips in their chart colour; at least one stays on. <b>Alexa</b> is shown but off and dimmed until Slice 282 ships (“not live yet”). The book picker lists store titles from <code>/api/stories</code> plus “Own books”.</div>
+   <div><b>Numbers and chart.</b> The three tiles are the chart’s switch, so there is one chart, not three. Bars stack by platform in a fixed order (Android, iPhone, iPad, Windows, Sonos, Alexa). <b>iPhone and iPad are split</b> by the batch’s form factor (<code>blob12</code>, phone or tablet, Slice 166), so the rollup keys iOS rows as <code>iphone</code> or <code>ipad</code>. iOS rows with no form factor (builds before Slice 166) count under iPhone with a one-line note in the hover; Android keeps one chip although tablets are known too. Sonos hours are hatched because they are estimates (Slice 289). When the period starts before listens were counted, a note says from when (Slice 288’s release); earlier bars are empty, not zero-height errors. Hover a bar for its exact numbers.</div>
+   <div><b>States.</b> A wait over 500 ms greys the chart with “Loading…” and keeps the old numbers; an error shows one line with Try again. On a phone the tiles stack and the table keeps Book and the sorted column.</div>
+  </div>
+ </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;'live'|'loading'|'error'&quot;}}">
+class Component extends DCLogic {
+  state = { preset: '30', from: null, to: null, group: 'day', book: 'all', plats: { android: true, iphone: true, ipad: true, windows: true, sonos: true, alexa: false }, metric: 'downloads', sort: 'downloads' };
+
+  componentDidMount() {
+    const DAY = 864e5, today = Date.UTC(2026, 11, 15), start = Date.UTC(2026, 0, 1);
+    let s = 7; const rnd = () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t ^= t + Math.imul(t ^ (t >>> 7), 61 | t); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const books = [
+      { id: 'three-little-pigs', title: 'The Three Little Pigs', w: 1.0, len: 540, cover: 'assets/three-little-pigs/cover.jpg' },
+      { id: 'gingerbread-man', title: 'The Gingerbread Man', w: 0.85, len: 480, cover: 'assets/gingerbread-man/cover.jpg' },
+      { id: 'freddy-and-the-slipper', title: 'Freddy and the Slipper', w: 0.7, len: 420 },
+      { id: 'tortoise-and-hare', title: 'The Tortoise and the Hare', w: 0.62, len: 390, cover: 'assets/tortoise-and-hare/cover.jpg' },
+      { id: 'good-enough', title: 'Good Enough', w: 0.55, len: 360, cover: 'assets/good-enough/cover.jpg' },
+      { id: 'billy-goats-gruff', title: 'The Three Billy Goats Gruff', w: 0.48, len: 450 },
+      { id: 'goldilocks', title: 'Goldilocks and the Three Bears', w: 0.4, len: 510 },
+      { id: 'own', title: 'Own books', w: 0.3, len: 300 }
+    ];
+    const share = { android: 0.5, iphone: 0.2, ipad: 0.14, windows: 0.18, sonos: 0.12 };
+    this.LISTEN_FROM = Date.UTC(2026, 10, 10); this.SONOS_FROM = Date.UTC(2026, 11, 1);
+    const rows = [];
+    for (let d = start; d <= today; d += DAY) {
+      const g = 0.4 + 1.6 * (d - start) / (today - start), dow = new Date(d).getUTCDay(), wk = (dow === 0 || dow === 6) ? 1.35 : 1;
+      for (const b of books) for (const p of ['android', 'iphone', 'ipad', 'windows', 'sonos']) {
+        if (p === 'sonos' && (d < this.SONOS_FROM || b.id === 'own')) continue;
+        const base = 9 * b.w * share[p] * g * wk * (0.6 + rnd() * 0.8);
+        const dl = p === 'sonos' || b.id === 'own' ? 0 : Math.round(base);
+        const li = d >= this.LISTEN_FROM ? Math.round(base * (p === 'sonos' ? 2.2 : 3.1)) : 0;
+        const sec = p === 'sonos' ? 0 : Math.round(li * b.len * (0.55 + rnd() * 0.35));
+        const est = p === 'sonos' ? li * b.len : 0;
+        rows.push({ d, b: b.id, p, dl, li, sec, est });
+      }
+    }
+    this.data = { rows, books, today, start, DAY };
+    this.forceUpdate();
+  }
+
+  range() {
+    const { today, start, DAY } = this.data, st = this.state;
+    if (st.preset === 'today') return [today, today];
+    if (st.preset === '7') return [today - 6 * DAY, today];
+    if (st.preset === '30') return [today - 29 * DAY, today];
+    if (st.preset === 'year') return [start, today];
+    return [st.from ?? today - 29 * DAY, st.to ?? today];
+  }
+
+  renderVals() {
+    const set = (o) => () => this.setState(o);
+    const PL = [
+      { id: 'android', label: 'Android', color: '#4FB860' },
+      { id: 'iphone', label: 'iPhone', color: '#5B57E8' },
+      { id: 'ipad', label: 'iPad', color: '#A9A6F7' },
+      { id: 'windows', label: 'Windows', color: '#F2994A' },
+      { id: 'sonos', label: 'Sonos', color: '#2b2540' },
+      { id: 'alexa', label: 'Alexa', color: '#4BB3D9' }
+    ];
+    const st = this.state, mode = this.props.state ?? 'live';
+    const pill = (on) => ({ bg: on ? '#fff' : 'transparent', fg: on ? '#2b2540' : '#5a5470', shadow: on ? '0 1px 3px rgba(43,37,64,.16)' : 'none' });
+    const presets = [['today', 'Today'], ['7', 'Last 7 days'], ['30', 'Last 30 days'], ['year', 'This year']].map(([id, label]) => ({ label, ...pill(st.preset === id), pick: () => this.setState({ preset: id, group: id === 'today' ? 'day' : (id === 'year' && st.group === 'day' ? 'week' : st.group) }) }));
+    const groups = [['day', 'Day'], ['week', 'Week'], ['month', 'Month']].map(([id, label]) => ({ label, ...pill(st.group === id), op: st.preset === 'today' && id !== 'day' ? 0.4 : 1, pick: () => st.preset !== 'today' && this.setState({ group: id }) }));
+    const platformChips = PL.map(p => {
+      const on = !!st.plats[p.id], live = p.id !== 'alexa';
+      return { label: p.label, dot: p.color, note: live ? '' : 'not live yet', tip: live ? '' : 'Counts start when Slice 282 ships',
+        bg: on ? '#fff' : 'transparent', fg: on ? '#2b2540' : '#8a8399', border: on ? '2px solid ' + p.color : '2px solid #d9d2c4', op: live ? 1 : 0.55,
+        toggle: () => { if (!live) return; const n = { ...st.plats, [p.id]: !on }; if (!Object.keys(n).some(k => n[k])) return; this.setState({ plats: n }); } };
+    });
+    const iso = (t) => new Date(t).toISOString().slice(0, 10);
+    const base = { presets, groups, platformChips, isLoading: mode === 'loading', isError: mode === 'error', book: st.book,
+      setBook: (e) => this.setState({ book: e.target.value }),
+      setFrom: (e) => { const v = Date.parse(e.target.value); if (!isNaN(v)) this.setState({ preset: 'custom', from: v, to: this.range()[1] }); },
+      setTo: (e) => { const v = Date.parse(e.target.value); if (!isNaN(v)) this.setState({ preset: 'custom', to: v, from: this.range()[0] }); } };
+    if (!this.data) return { ...base, tiles: [], bars: [], rows: [], legend: [], yTicks: [], sortHeads: [], bookOptions: [] };
+    const { rows, books, DAY } = this.data, [from, to] = this.range();
+    const inP = rows.filter(r => r.d >= from && r.d <= to && st.plats[r.p]);
+    const sel = st.book === 'all' ? inP : inP.filter(r => r.b === st.book);
+    const sum = (arr, k) => arr.reduce((a, r) => a + r[k], 0);
+    const fmt = (n) => Math.round(n).toLocaleString('en-GB');
+    const hrs = (sec) => { const h = sec / 3600; return h < 10 ? h.toFixed(1) : fmt(h); };
+    const dl = sum(sel, 'dl'), li = sum(sel, 'li'), sec = sum(sel, 'sec'), est = sum(sel, 'est');
+    const before = from < this.LISTEN_FROM;
+    const fmtDay = (t, o) => new Date(t).toLocaleDateString('en-GB', { timeZone: 'UTC', ...o });
+    const since = 'Listens and hours count from Dino 1.112, ' + fmtDay(this.LISTEN_FROM, { day: 'numeric', month: 'short', year: 'numeric' }) + ' (Slice 288).';
+    const tileDefs = [
+      { id: 'downloads', label: 'Book downloads', value: fmt(dl), sub: 'Store books, from the apps. Speakers stream and don’t download.' },
+      { id: 'listens', label: 'Listens', value: fmt(li), sub: before ? 'Counted from 10 Nov 2026 · played for 30 s or more' : 'Played for 30 s or more' },
+      { id: 'hours', label: 'Hours listened', value: hrs(sec + est), sub: est > 0 ? 'incl. ' + hrs(est) + ' h estimated for Sonos' : 'Real played time from the app' }
+    ];
+    const tiles = tileDefs.map(t => ({ ...t, shown: st.metric === t.id ? 'IN THE CHART' : '', bg: st.metric === t.id ? '#fff' : '#FFF6E6', border: st.metric === t.id ? '2px solid #5B57E8' : '1px solid #d9d2c4', numColor: mode === 'loading' ? '#c9c2b4' : '#2b2540', pick: () => this.setState({ metric: t.id }) }));
+    const keyOf = (d) => {
+      if (st.group === 'day') return d;
+      if (st.group === 'week') { const dow = (new Date(d).getUTCDay() + 6) % 7; return d - dow * DAY; }
+      const x = new Date(d); return Date.UTC(x.getUTCFullYear(), x.getUTCMonth(), 1);
+    };
+    const buckets = new Map();
+    for (let d = from; d <= to; d += DAY) { const k = keyOf(d); if (!buckets.has(k)) buckets.set(k, []); }
+    for (const r of sel) buckets.get(keyOf(r.d))?.push(r);
+    const order = PL.filter(p => st.plats[p.id]);
+    const val = (arr) => st.metric === 'downloads' ? { v: sum(arr, 'dl'), e: 0 } : st.metric === 'listens' ? { v: sum(arr, 'li'), e: 0 } : { v: sum(arr, 'sec') / 3600, e: sum(arr, 'est') / 3600 };
+    const bucketVals = [...buckets.entries()].map(([k, arr]) => ({ k, parts: order.map(p => { const x = val(arr.filter(r => r.p === p.id)); return { p, v: x.v, e: x.e }; }) }));
+    const max = Math.max(1, ...bucketVals.map(b => b.parts.reduce((a, x) => a + x.v + x.e, 0)));
+    const step = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000, 10000].find(s => s * 4 >= max) || 20000;
+    const top = step * 4, H = 240;
+    const n = bucketVals.length, every = Math.ceil(n / 14);
+    const label = (k) => st.group === 'month' ? fmtDay(k, { month: 'short' }) : fmtDay(k, { day: 'numeric', month: 'short' });
+    const bars = bucketVals.map((b, i) => {
+      const segs = []; let tot = 0;
+      b.parts.forEach(x => {
+        if (x.v > 0) segs.push({ h: Math.max(1, x.v / top * H).toFixed(1), bg: x.p.color, r: '0' });
+        if (x.e > 0) segs.push({ h: Math.max(1, x.e / top * H).toFixed(1), bg: 'repeating-linear-gradient(135deg,' + x.p.color + ' 0 3px,#b8b2c8 3px 6px)', r: '0' });
+        tot += x.v + x.e;
+      });
+      if (segs.length) segs[segs.length - 1].r = '4px 4px 0 0';
+      const unit = st.metric === 'hours' ? ' h' : '';
+      return { segs, label: i % every === 0 ? label(b.k) : '', tip: label(b.k) + ': ' + (st.metric === 'hours' ? tot.toFixed(1) : fmt(tot)) + unit + '\n' + b.parts.map(x => x.p.label + ' ' + (st.metric === 'hours' ? (x.v + x.e).toFixed(1) : fmt(x.v))).join('\n') };
+    });
+    const yTicks = [4, 3, 2, 1, 0].map(i => fmt(step * i));
+    const legend = order.map(p => ({ label: p.label + (p.id === 'sonos' && st.metric === 'hours' ? ' (estimate)' : ''), bg: p.id === 'sonos' && st.metric === 'hours' ? 'repeating-linear-gradient(135deg,#2b2540 0 3px,#b8b2c8 3px 6px)' : p.color }));
+    const bookTitle = st.book === 'all' ? 'All books' : books.find(b => b.id === st.book)?.title;
+    const metricName = { downloads: 'Book downloads', listens: 'Listens', hours: 'Hours listened' }[st.metric];
+    const per = { day: 'per day', week: 'per week', month: 'per month' }[st.group];
+    const rowsOut = books.map(b => { const a = inP.filter(r => r.b === b.id); return { b, dl: sum(a, 'dl'), li: sum(a, 'li'), h: (sum(a, 'sec') + sum(a, 'est')) / 3600 }; });
+    const sk = { downloads: 'dl', listens: 'li', hours: 'h' }[st.sort];
+    rowsOut.sort((x, y) => y[sk] - x[sk]);
+    const mx = { dl: Math.max(1, ...rowsOut.map(r => r.dl)), li: Math.max(1, ...rowsOut.map(r => r.li)), h: Math.max(1, ...rowsOut.map(r => r.h)) };
+    const tableRows = rowsOut.map((r, i) => ({ rank: i + 1, title: r.b.title, cover: r.b.cover ? 'url(' + r.b.cover + ')' : 'none', initial: r.b.cover ? '' : (r.b.id === 'own' ? '✎' : r.b.title.replace(/^The /, '')[0]), bg: st.book === r.b.id ? '#ECE7FF' : 'transparent',
+      pick: () => this.setState({ book: st.book === r.b.id ? 'all' : r.b.id }),
+      cells: [['dl', fmt(r.dl)], ['li', fmt(r.li)], ['h', r.h < 10 ? r.h.toFixed(1) : fmt(r.h)]].map(([k, text]) => ({ text: r.b.id === 'own' && k === 'dl' ? '—' : text, w: (r[k] / mx[k] * 100).toFixed(0), bar: k === sk ? '#5B57E8' : '#c9c2b4', fg: k === sk ? '#2b2540' : '#5a5470' })) }));
+    const sortHeads = [['downloads', 'Downloads'], ['listens', 'Listens'], ['hours', 'Hours']].map(([id, l]) => ({ label: l + (st.sort === id ? ' ↓' : ''), fg: st.sort === id ? '#5B57E8' : '#5a5470', pick: () => this.setState({ sort: id }) }));
+    return { ...base, fromStr: iso(from), toStr: iso(to), tiles, bars, barGap: n > 60 ? 1 : n > 20 ? 3 : 8, yTicks, legend,
+      chartTitle: metricName + ' ' + per, chartSub: bookTitle + ' · ' + fmtDay(from, { day: 'numeric', month: 'short' }) + ' – ' + fmtDay(to, { day: 'numeric', month: 'short', year: 'numeric' }),
+      showSince: st.metric !== 'downloads' && before, sinceNote: since, rows: tableRows, sortHeads,
+      bookOptions: [{ id: 'all', title: 'All books' }, ...books.map(b => ({ id: b.id, title: b.title }))], dataFrom: '1 Jan 2026' };
+  }
+}
+</script>
+</body>
+</html>
