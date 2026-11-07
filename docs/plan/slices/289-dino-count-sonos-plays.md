@@ -16,35 +16,32 @@ Range requests, so counting fetches would over-count.
 
 ## Decisions (user, 2026-11-07)
 
-- One listen per book play. Hours: the played time if Sonos reports it to our service, else the book's length
-  (`listenSeconds`), stored as an estimate and shown hatched on the dashboard.
+- One listen per book play. Hours: the book's length (`listenSeconds`), stored as an estimate and shown hatched on the
+  dashboard. (The first plan also allowed Sonos-reported played time; the mock, which wins, draws all Sonos hours as estimates.)
 - Alexa is counted the same way inside Slice 282 when it is built.
 
 ## Design (planning defaults)
 
 - Count in the `getMediaURI` handler (one call per track play), not on the audio route, so Range requests never count.
 - `speaker-usage.ts` writes a `book_listened` row with platform `sonos`, the book id, the language, source `shelf`,
-  `double1` = 1 (no sampling), `double5` = seconds, and detail (`blob9`) `estimated` or `reported`. No household id, no IP, no
-  account; country from Cloudflare like app rows. It never goes through `/api/events`, whose platform list stays
+  `double1` = 1 (no sampling), `double5` = the book's `listenSeconds`, and detail (`blob9`) `estimated`. No household id,
+  no IP, no account; country from Cloudflare like app rows. It never goes through `/api/events`, whose platform list stays
   android/ios/windows. Switched off when `telemetry.enabled` is false in `dinoreader/config.json`, like app counts.
-- **First item: check Sonos's docs** (`web-research`) for play reporting (e.g. `reportPlaySeconds` / `reportPlayStatus`
-  and the manifest capability it needs). If Sonos sends played time: implement it and write a seconds row per report
-  (not estimated). If not, or it needs a review we don't want now: write `listenSeconds` as an estimate at `getMediaURI`.
-  Write the answer into this file before building.
 
 #### Design (Dino Reader Stats Dashboard mock, frame 200, added 2026-11-07)
 
 No UI here. The dashboard shows Sonos as a chip (`#2b2540`, between Windows and Alexa), hatches Sonos hours as estimates, labels the legend "Sonos (estimate)", and says "Speakers stream and don’t download" under the downloads tile, so Sonos rows carry no downloads. The mock has no Sonos rows for Own books and starts Sonos on 1 Dec 2026 (made-up data).
 
-**Open point: reported versus estimated.** The mock treats every Sonos hour as an estimate; this slice may store `reported` seconds. **Default:** the dashboard hatches only the `estimated` rows (Slice 287 open point), so keep the `estimated` / `reported` detail in `blob9` as planned.
+**Changed to match the mock (2026-11-07, the mock wins):** the mock draws every Sonos hour as an estimate ("Sonos hours
+are hatched because they are estimates (Slice 289)", line 143; legend "Sonos (estimate)"). So this slice writes the
+book's length (`listenSeconds`) as the seconds of each play, detail `estimated`, and does not build Sonos play reporting.
+The detail blob stays so a later mock can change it.
 
 ## Work
 
-- [ ] 1. `web-research`: Sonos play reporting; answer written here.
-- [ ] 2. `speaker-usage.ts` + tests; `getMediaURI` writes one row per call.
-- [ ] 3. Play reporting handlers if item 1 says yes (tests with recorded SOAP bodies); else the estimate path.
-- [ ] 4. Privacy page and `PRIVACY.md`: one line on counting speaker plays (book, language, length; nothing about the home).
-- [ ] 5. `worker/CLAUDE.md`: Sonos plays are counted at `getMediaURI`, never on the audio route.
+- [ ] 1. `speaker-usage.ts` + tests; `getMediaURI` writes one row per call with the book's length as estimated seconds.
+- [ ] 2. Privacy page and `PRIVACY.md`: one line on counting speaker plays (book, language, length; nothing about the home).
+- [ ] 3. `worker/CLAUDE.md`: Sonos plays are counted at `getMediaURI`, never on the audio route.
 
 ## Verification
 
