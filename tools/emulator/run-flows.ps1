@@ -238,6 +238,7 @@ function Confirm-EmulatorHealthy([string]$When) {
 function Invoke-GuardedFlow([string]$Maestro, [System.IO.FileInfo]$File) {
     $null = Confirm-EmulatorHealthy "before $($File.BaseName)"
     $r = Invoke-Flow $Maestro $File
+    if (Test-RunnerStuck $r) { return $r }   # Slice 301: the one predicate before every launch; a stuck Maestro tree is never joined by a second one
     if (-not $r.Problem) { $script:UnhealthyCount = 0; return $r }  # a flow that passed: the emulator is fine, so only consecutive deaths count
     if (Confirm-EmulatorHealthy "after the failed flow $($File.BaseName)") { $script:UnhealthyCount = 0; return $r }
     Write-Host "The failure of $($File.BaseName) came with a dead emulator, so it says nothing about the app; running the flow again."
@@ -355,8 +356,9 @@ function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File) {
         $crash = @(Find-AppCrashLines $crashLog $logs.Anr $packages[$App])
     }
     if ($run.Killed) { $problem += "`nMaestro was killed by the crash watch as soon as the app crashed (Slice 247)." }
+    if ($run.RunnerStuck) { $problem += "`n" + (Format-RunnerStuckLine $run.StuckPid $script:CrashKillWaitSeconds) }
     if ($crash.Count -gt 0) { $problem += "`nAPP CRASH/ANR during the flow:`n" + (($crash | ForEach-Object { "  $_" }) -join "`n") }
-    return [pscustomobject]@{ Name = $File.BaseName; Seconds = $sw.Elapsed.TotalSeconds; Problem = $problem; Crash = $crash; CrashLog = $crashLog; NotRun = $null; Phases = $phasesLine; Retried = $null; FirstRunSeconds = 0.0 }
+    return [pscustomobject]@{ Name = $File.BaseName; Seconds = $sw.Elapsed.TotalSeconds; Problem = $problem; Crash = $crash; CrashLog = $crashLog; NotRun = $null; Phases = $phasesLine; Retried = $null; FirstRunSeconds = 0.0; RunnerStuck = [bool]$run.RunnerStuck; StuckPid = [int]$run.StuckPid; RetryLogs = @() }
 }
 
 # Slice 247 item e: Maestro runs as a child process; every 2 s the crash buffer is read for this app, and a crash kills the whole Maestro tree (maestro.bat, cmd, java), so a launch
@@ -371,12 +373,11 @@ function Invoke-MaestroWatched([string]$Maestro, [System.IO.FileInfo]$File) {
     $seen = @{ CrashLog = '' }
     $probe = New-AppCrashProbe $script:Serial $packages[$App] $seen
     $killed = Wait-ProcessWithCrashWatch $p $probe $script:CrashWatchPollSeconds
-    $p.WaitForExit()
+    $end = Resolve-MaestroEnd $p $killed   # Slice 301: every exit path ends in the same bounded wait-and-rekill; a tree still alive after it is RunnerStuck (common.ps1)
     # The two streams stay apart: the "Maestro failed:" text quotes the last lines of each, labelled, so neither stream's failure line is pushed out by the other's noise.
     $stdout = "$(Get-Content $outFile -Raw -ErrorAction SilentlyContinue)"
     $stderr = "$(Get-Content $errFile -Raw -ErrorAction SilentlyContinue)"
-    $code = if ($killed) { -1 } else { [int]$p.ExitCode }
-    return [pscustomobject]@{ Stdout = $stdout; Stderr = $stderr; ExitCode = $code; Killed = $killed; CrashLog = $seen.CrashLog }
+    return [pscustomobject]@{ Stdout = $stdout; Stderr = $stderr; ExitCode = $end.ExitCode; Killed = $killed; RunnerStuck = $end.RunnerStuck; StuckPid = $end.StuckPid; CrashLog = $seen.CrashLog }
 }
 
 # Slice 247 item a: the PHASES line of the flow just run (from Maestro's commands.json), printed after the PASS/FAIL line; $null when Maestro wrote none.
@@ -388,17 +389,9 @@ function Get-FlowPhasesLine([string]$FlowName, [datetime]$Since, [double]$TotalS
 
 # Slice 247 item c: a flow whose app died with a Mono SIGSEGV within 20 s of its start runs once more (the first run is reported as crash-retried); any other crash, or a second one, fails as before.
 function Invoke-FlowCrashRetry([string]$Maestro, [System.IO.FileInfo]$File) {
-    $first = Invoke-GuardedFlow $Maestro $File
-    if (-not $first.Problem -or @($first.Crash).Count -eq 0) { return $first }
-    if (-not (Test-RetryableMonoCrash $first.CrashLog $packages[$App] $script:MonoRetryMaxUptimeSeconds)) { Write-Host "WATCH no retry for $($File.BaseName): not a Mono SIGSEGV within $($script:MonoRetryMaxUptimeSeconds) s of the start."; return $first }
-    $line = Format-CrashRetryLine $File.BaseName (Get-FirstCrashLine $first.Crash)
-    Write-Host $line
-    if ($first.Phases) { Write-Host $first.Phases }
-    $second = Invoke-GuardedFlow $Maestro $File
-    $second.Retried = $line
-    $second.FirstRunSeconds = $first.Seconds
-    $second.Seconds += $first.Seconds   # the row's time is both runs, so a flow that crashes on every cold start does not look quick
-    return $second
+    $runFlow = New-GuardedFlowRunBlock ${function:Invoke-GuardedFlow} $Maestro $File   # Slice 301 review: a closure cannot see this script's functions, so the function itself is passed in
+    $isRetryable = { param($CrashLog) Test-RetryableMonoCrash $CrashLog $packages[$App] $script:MonoRetryMaxUptimeSeconds }
+    return Invoke-CrashRetryFlow $File.BaseName (Join-Path $script:StateDir "logcat-i$Instance") $App $runFlow $isRetryable   # logic and tests: common.ps1 / test-speed.ps1
 }
 
 # Slice 207: the APK is built (or found in the cache) before the emulator lease is taken, so a cold build never holds the emulator or runs a waiter's wait out.
@@ -546,6 +539,7 @@ try {
     if ($installProblem) { throw "$installProblem; run install-debug.ps1 -App $App (or pass -Install)." }
 
     $total = [Diagnostics.Stopwatch]::StartNew()
+    $stuckPid = 0
     $activity = Start-FlowsActivity "flows-$App-i$Instance" $leaseOwner
     try {
         Assert-LeaseHeld $leaseOwner 'while this run waited for a free slot'  # the wait for the quiet machine can be long
@@ -557,11 +551,11 @@ try {
         if (@($splitPlan.Second).Count -gt 0 -and -not $secondRun) { $myNames += @($splitPlan.Second) }   # emulator 2 did not come up: its flows run here
         $results = New-Object System.Collections.Generic.List[object]
         $crashedIn = $null
-        $crashLine = ''
+        $stopLine = ''
         foreach ($file in @($files | Where-Object { $myNames -contains $_.BaseName })) {
-            if ($crashedIn) {   # Slice 241 item 1: the app is dead; running on only waits out each flow's timeouts
-                Write-Host ("{0,-5} {1} (app crashed in {2}: {3})" -f 'NOTRUN', $file.BaseName, $crashedIn, $crashLine)
-                $results.Add([pscustomobject]@{ Name = $file.BaseName; Seconds = 0; Problem = $null; Crash = @(); NotRun = "app crashed in ${crashedIn}: $crashLine" })
+            if ($crashedIn) {   # Slice 241 item 1: the app is dead (or, Slice 301, the Maestro tree is stuck); running on only waits out each flow's timeouts
+                Write-Host ("{0,-5} {1} ({2})" -f 'NOTRUN', $file.BaseName, $stopLine)
+                $results.Add([pscustomobject]@{ Name = $file.BaseName; Seconds = 0; Problem = $null; Crash = @(); NotRun = $stopLine })
                 continue
             }
             Assert-LeaseHeld $leaseOwner 'during the flows'  # renewed between flows
@@ -569,16 +563,23 @@ try {
             Write-Host ("{0,-5} {1} ({2:n1} s){3}" -f $(if ($r.Problem) { 'FAIL' } else { 'PASS' }), $r.Name, $r.Seconds, $(if ($r.Retried) { ' [crash-retried]' } else { '' }))
             if ($r.Phases) { Write-Host $r.Phases }
             if ($r.Problem) { Write-Host ($r.Problem -replace '(?m)^', '      ') }
-            if (@($r.Crash).Count -gt 0) { $crashedIn = $r.Name; $crashLine = Get-FirstCrashLine $r.Crash; Write-Host "app crashed in $($r.Name): $crashLine"; Write-Host 'The remaining flows on this emulator are not run.' }
+            $reason = Get-RunStopReason $r   # Slice 301: a stuck Maestro tree (it may still hold the device) or a crash ends the run; the stuck one is named as that, never as an app crash
+            if ($reason) { $crashedIn = $r.Name; $stopLine = Format-RunStopLine $r.Name $reason; Write-Host $stopLine; Write-Host 'The remaining flows on this emulator are not run.' }
+            if (Test-RunnerStuck $r) { $stuckPid = $r.StuckPid }
             $results.Add($r)
         }
-        Clear-AnrDialog 'after the flows'
-    } finally { Restore-DialogGuard; Stop-Activity $activity }
+        if (-not $stuckPid) { Clear-AnrDialog 'after the flows' }
+    } finally {
+        if ($stuckPid) { Stop-ProcessTree $stuckPid }   # Slice 301: one last kill of the tree that would not exit
+        Restore-DialogGuard; Stop-Activity $activity
+    }
     $failed = @($results | Where-Object { $_.Problem }).Count
     $notRun = @($results | Where-Object { $_.NotRun }).Count
     Write-Host (Format-FlowsSummary $App $results.ToArray() $total.Elapsed.TotalSeconds)
     foreach ($crashSummary in @(Format-CrashSummary $results.ToArray())) { Write-Host $crashSummary }
     foreach ($retrySummary in @(Format-RetrySummary $results.ToArray())) { Write-Host $retrySummary }
+    foreach ($logLine in @(Format-RetryLogLines $results.ToArray())) { Write-Host $logLine }
+    foreach ($stuckSummary in @(Format-RunnerStuckSummary $results.ToArray())) { Write-Host $stuckSummary }
     $secondExit = if ($secondRun) { Wait-SecondHalf $secondRun } else { 0 }
     if ($failed -gt 0 -or $notRun -gt 0 -or $secondExit -ne 0) { exit 1 }
 } finally {

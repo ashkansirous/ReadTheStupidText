@@ -153,5 +153,147 @@ Assert-Equal 'phases: slowest' 'assertCondition 25.2 s FAILED' $ph.Slowest
 Assert-Equal 'phases: empty json' 'none' (Get-FlowPhaseTimes '').Largest
 Assert-Equal 'phases: line' $true ((Format-FlowPhases 'f' $ph 40.0) -like 'PHASES f: launch 2.6 s, wait 30.4 s, action 0.4 s, other 6.6 s*largest: Wait*')
 
+# Slice 301 item 1: a kill that never ends (a fake process whose WaitForExit always times out) is reported after the limit, not waited out
+$stuck = [pscustomobject]@{ Id = 4242 }
+$stuck | Add-Member -MemberType ScriptMethod -Name WaitForExit -Value { param([int]$Milliseconds) Start-Sleep -Milliseconds $Milliseconds; return $false }
+$killTimer = [Diagnostics.Stopwatch]::StartNew()
+Assert-Equal 'kill-wait: a process that never ends gives false' $false (Wait-AfterCrashKill $stuck 1)
+Assert-Equal 'kill-wait: it returns after the limit (under 10 s)' $true ($killTimer.Elapsed.TotalSeconds -lt 10)
+$gone = [pscustomobject]@{ Id = 1 }
+$gone | Add-Member -MemberType ScriptMethod -Name WaitForExit -Value { param([int]$Milliseconds) return $true }
+Assert-Equal 'kill-wait: a process that ended gives true' $true (Wait-AfterCrashKill $gone 1)
+Assert-Equal 'kill-wait: the default limit is 60 s' 60 $script:CrashKillWaitSeconds
+Assert-Equal 'stuck: line names the tree and is not a crash' $true ((Format-RunnerStuckLine 4242 60) -like 'runner stuck: Maestro tree 4242 would not exit*60 s*' -and (Format-RunnerStuckLine 4242 60) -notlike '*crash*')
+Assert-Equal 'stuck: summary names only the flow that is stuck' 1 @(Format-RunnerStuckSummary @([pscustomobject]@{ Name = 'a'; RunnerStuck = $true; StuckPid = 9 }, [pscustomobject]@{ Name = 'b'; RunnerStuck = $false }, [pscustomobject]@{ Name = 'c' })).Count
+
+# Slice 301 (one design): Resolve-MaestroEnd is the one exit path. A tree still alive after a NATURAL end (not killed) is stuck too; one that ends is not.
+$killsSeen = New-Object System.Collections.ArrayList
+$aliveTree = [pscustomobject]@{ Id = 555; ExitCode = 0 }
+$aliveTree | Add-Member -MemberType ScriptMethod -Name WaitForExit -Value { param([int]$Milliseconds) Start-Sleep -Milliseconds 20; return $false }
+$endNatural = Resolve-MaestroEnd $aliveTree $false 2 1({ param($ProcessId) [void]$killsSeen.Add($ProcessId) }.GetNewClosure())
+Assert-Equal 'end: a tree alive after a natural exit is RunnerStuck' $true $endNatural.RunnerStuck
+Assert-Equal 'end: ... with its pid, exit code -1, and a re-kill tried' $true ($endNatural.StuckPid -eq 555 -and $endNatural.ExitCode -eq -1 -and $killsSeen.Count -ge 1 -and -not $endNatural.Killed)
+$endAfterKill = Resolve-MaestroEnd $aliveTree $true 1 1 ({ param($ProcessId) }.GetNewClosure())
+Assert-Equal 'end: a tree alive after the crash-kill is RunnerStuck, not a crash state' $true ($endAfterKill.RunnerStuck -and $endAfterKill.Killed -and $endAfterKill.ExitCode -eq -1)
+$goneTree = [pscustomobject]@{ Id = 556; ExitCode = 3 }
+$goneTree | Add-Member -MemberType ScriptMethod -Name WaitForExit -Value { param([int]$Milliseconds) return $true }
+$endGone = Resolve-MaestroEnd $goneTree $false 1 1
+Assert-Equal 'end: a tree that ended gives its exit code and is not stuck' $true (-not $endGone.RunnerStuck -and $endGone.ExitCode -eq 3 -and $endGone.StuckPid -eq 0)
+Assert-Equal 'end: the predicate sees the stuck result' $true (Test-RunnerStuck $endNatural)
+Assert-Equal 'end: ... and not the clean one, nor $null, nor a result without the property' $false ((Test-RunnerStuck $endGone) -or (Test-RunnerStuck $null) -or (Test-RunnerStuck ([pscustomobject]@{ Name = 'x' })))
+
+# Slice 301 item 2: a flow that crashes once leaves two logs (attempt 1 with the crash, attempt 2), and the summary names both paths
+$logDir = Join-Path ([IO.Path]::GetTempPath()) ("rtst-attempt-" + [guid]::NewGuid().ToString('N'))
+try {
+    $null = New-Item -ItemType Directory -Force $logDir
+    Set-Content (Join-Path $logDir 'dino-f.log') 'RTST-TEST first run line'
+    $log1 = Save-AttemptLog $logDir 'dino' 'f' 1 'F libc: Fatal signal 11 (SIGSEGV)'
+    Set-Content (Join-Path $logDir 'dino-f.log') 'RTST-TEST second run line'   # the retry overwrites the flow's own log
+    $log2 = Save-AttemptLog $logDir 'dino' 'f' 2 ''
+    Assert-Equal 'attempt logs: two files left' 2 @(Get-ChildItem $logDir -Filter 'dino-f.attempt*.log').Count
+    Assert-Equal 'attempt logs: attempt 1 keeps the crash' $true ("$(Get-Content $log1 -Raw)" -like '*Fatal signal 11*first run line*' -or "$(Get-Content $log1 -Raw)" -like '*first run line*Fatal signal 11*')
+    Assert-Equal 'attempt logs: attempt 2 has the second run, not the crash' $true ("$(Get-Content $log2 -Raw)" -like '*second run line*' -and "$(Get-Content $log2 -Raw)" -notlike '*Fatal signal*')
+    $lines = @(Format-RetryLogLines @([pscustomobject]@{ Name = 'f'; RetryLogs = @($log1, $log2) }, [pscustomobject]@{ Name = 'g'; RetryLogs = @() }))
+    Assert-Equal 'attempt logs: one summary line for the retried flow' 1 $lines.Count
+    Assert-Equal 'attempt logs: the line prints both paths' $true ($lines[0].Contains($log1) -and $lines[0].Contains($log2))
+} finally { Remove-Item $logDir -Recurse -Force -ErrorAction SilentlyContinue }
+
+# Slice 301 review: the kill is issued again partway, stale attempt logs are cleared, and the retry glue (Invoke-CrashRetryFlow) is driven with stubbed runs
+$script:killCalls = 0
+$slow = [pscustomobject]@{ Id = 7 }
+$slow | Add-Member -MemberType ScriptMethod -Name WaitForExit -Value { param([int]$Milliseconds) Start-Sleep -Milliseconds 50; return $false }
+Assert-Equal 'kill-wait: stuck process gives false after retries' $false (Wait-AfterCrashKill $slow 3 1 { param($ProcessId) $script:killCalls++ })
+Assert-Equal 'kill-wait: the kill is re-issued between slices (3 s, every 1 s = 2 re-kills)' 2 $script:killCalls
+$retryDir = Join-Path ([IO.Path]::GetTempPath()) ("rtst-retry-" + [guid]::NewGuid().ToString('N'))
+try {
+    $null = New-Item -ItemType Directory -Force $retryDir
+    Set-Content (Join-Path $retryDir 'dino-f.attempt1.log') 'stale'
+    Set-Content (Join-Path $retryDir 'dino-f.attempt2.log') 'stale'
+    $null = Save-AttemptLog $retryDir 'dino' 'f' 1 'fresh crash'
+    Assert-Equal 'attempt logs: a stale attempt 2 is cleared when attempt 1 is saved' 1 @(Get-ChildItem $retryDir -Filter 'dino-f.attempt*.log').Count
+    $crashed = { [pscustomobject]@{ Name = 'f'; Seconds = 2.0; Problem = 'boom'; Crash = @('F libc: Fatal signal 11'); CrashLog = 'F libc: Fatal signal 11'; Phases = $null; Retried = $null; FirstRunSeconds = 0.0; RunnerStuck = $false; StuckPid = 0; RetryLogs = @() } }
+    $script:runs = 0
+    $r = Invoke-CrashRetryFlow 'f' $retryDir 'dino' { $script:runs++; & $crashed } { param($l) $true }
+    Assert-Equal 'retry glue: a retryable crash runs twice' 2 $script:runs
+    Assert-Equal 'retry glue: the row is marked retried with both logs and both times' $true ($r.Retried -and @($r.RetryLogs).Count -eq 2 -and $r.Seconds -eq 4.0 -and $r.FirstRunSeconds -eq 2.0)
+    $script:runs = 0
+    $r = Invoke-CrashRetryFlow 'f' $retryDir 'dino' { $script:runs++; $x = & $crashed; $x.RunnerStuck = $true; $x.StuckPid = 77; $x } { param($l) $true }
+    Assert-Equal 'retry glue: a crash whose Maestro tree is stuck is not retried' 1 $script:runs
+    Assert-Equal 'retry glue: ... and keeps RunnerStuck for the report' $true (Test-RunnerStuck $r)
+    Assert-Equal 'retry glue: ... and the run stop text is the stuck text, not an app crash' 'runner stuck: Maestro tree 77 would not exit' (Format-RunStopLine 'f' (Get-RunStopReason $r))
+    $script:runs = 0
+    $r = Invoke-CrashRetryFlow 'f' $retryDir 'dino' { $script:runs++; $x = & $crashed; if ($script:runs -ge 2) { $x.RunnerStuck = $true; $x.StuckPid = 88 }; $x } { param($l) $true }
+    Assert-Equal 'retry glue: a stuck attempt 2 ends it after two runs (no third)' 2 $script:runs
+    Assert-Equal 'retry glue: ... the result carries RunnerStuck and the stuck stop reason' $true ((Test-RunnerStuck $r) -and (Get-RunStopReason $r) -eq 'runner stuck: Maestro tree 88 would not exit')
+    $script:runs = 0
+    $r = Invoke-CrashRetryFlow 'f' $retryDir 'dino' { $script:runs++; & $crashed } { param($l) $false }
+    Assert-Equal 'retry glue: a non-Mono crash is not retried' 1 $script:runs
+    $script:runs = 0
+    $r = Invoke-CrashRetryFlow 'f' $retryDir 'dino' { $script:runs++; $x = & $crashed; $x.Problem = $null; $x } { param($l) $true }
+    Assert-Equal 'retry glue: a passing flow runs once' 1 $script:runs
+    $script:runs = 0
+    $r = Invoke-CrashRetryFlow 'f' $retryDir 'dino' { $script:runs++; & $crashed } { param($l) $true }
+    Assert-Equal 'retry glue: a second failure names the first attempt crash' $true ($r.Problem -like 'First attempt:*Fatal signal 11*boom*')
+} finally { Remove-Item $retryDir -Recurse -Force -ErrorAction SilentlyContinue }
+
+# Slice 301 review: run-stop reason (a crash, or a Maestro that outlived the kill, ends the run)
+Assert-Equal 'stop: a clean result goes on' '' (Get-RunStopReason ([pscustomobject]@{ Crash = @(); RunnerStuck = $false }))
+Assert-Equal 'stop: a crash stops with its line' 'F libc: Fatal signal 11' (Get-RunStopReason ([pscustomobject]@{ Crash = @('F libc: Fatal signal 11'); RunnerStuck = $false }))
+Assert-Equal 'stop: a stuck tree stops even with no crash line' 'runner stuck: Maestro tree 5 would not exit' (Get-RunStopReason ([pscustomobject]@{ Crash = @(); RunnerStuck = $true; StuckPid = 5 }))
+Assert-Equal 'stop: a stuck tree wins over a crash line, and is never called an app crash' 'runner stuck: Maestro tree 5 would not exit' (Format-RunStopLine 'f' (Get-RunStopReason ([pscustomobject]@{ Crash = @('F libc: x'); RunnerStuck = $true; StuckPid = 5 })))
+Assert-Equal 'stop: a crash is named as the app crash' 'app crashed in f: F libc: x' (Format-RunStopLine 'f' 'F libc: x')
+Assert-Equal 'stop: the summary says runner stuck when a tree is stuck' 'dino: 0 passed, 1 failed, 1 not run (runner stuck) in 1.0 s.' (Format-FlowsSummary 'dino' @([pscustomobject]@{ Problem = 'p'; NotRun = $null; RunnerStuck = $true; StuckPid = 5 }, [pscustomobject]@{ Problem = $null; NotRun = 'runner stuck: x' }) 1.0)
+
+# Slice 301 review: the REAL Invoke-FlowCrashRetry from run-flows.ps1 (which cannot be dot-sourced) is parsed out and run with a stub Invoke-GuardedFlow defined in this script's scope,
+# so a closure that cannot see a script-scope function fails here ("term not recognized") instead of on the first real flow.
+$flowsAst = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PSScriptRoot 'run-flows.ps1'), [ref]$null, [ref]$null)
+$retryFn = $flowsAst.Find({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Invoke-FlowCrashRetry' }, $true)
+Assert-Equal 'wiring: Invoke-FlowCrashRetry found in run-flows.ps1' $true ($null -ne $retryFn)
+Invoke-Expression $retryFn.Extent.Text
+$script:guardedCalls = @()
+function Invoke-GuardedFlow([string]$Maestro, $File) {
+    $script:guardedCalls += "$Maestro|$($File.BaseName)"
+    return [pscustomobject]@{ Name = $File.BaseName; Seconds = 1.0; Problem = $null; Crash = @(); CrashLog = ''; Phases = $null; Retried = $null; FirstRunSeconds = 0.0; RunnerStuck = $false; StuckPid = 0; RetryLogs = @() }
+}
+$packages = @{ dino = 'uk.test' }
+$App = 'dino'
+$Instance = 1
+$script:StateDir = [IO.Path]::GetTempPath()
+$wired = Invoke-FlowCrashRetry 'maestro-stub' ([System.IO.FileInfo]::new((Join-Path $PSScriptRoot 'common.ps1')))
+Assert-Equal 'wiring: the closure reaches the script-scope guarded flow' 'maestro-stub|common' ($script:guardedCalls -join ',')
+Assert-Equal 'wiring: the flow result comes back' 'common' $wired.Name
+
+# The scoping failure shows only when the code runs under -Command (tools/CLAUDE.md, Slice 253 item 5), so the same real function is run once more in a child process started that way.
+$childShell = (Get-Process -Id $PID).Path
+$childCode = ". '$((Join-Path $PSScriptRoot 'common.ps1'))'; function Invoke-GuardedFlow(`$Maestro, `$File) { [pscustomobject]@{ Name = 'ok' } }; $($retryFn.Extent.Text); `$packages = @{ dino = 'x' }; `$App = 'dino'; `$Instance = 1; `$script:StateDir = [IO.Path]::GetTempPath(); (Invoke-FlowCrashRetry 'm' ([System.IO.FileInfo]::new('x.txt'))).Name"
+$childOut = (& $childShell -NoProfile -Command $childCode 2>&1 | Out-String).Trim()
+Assert-Equal 'wiring: the real Invoke-FlowCrashRetry works under -Command too' 'ok' ($childOut -split "`n" | Select-Object -Last 1).Trim()
+
+# Slice 301: attempt 2's log is written only from a flow log that run 2 saved. Run 2 saves none here (the glue's stubbed runs touch no file), so no attempt-2 log exists.
+$missDir = Join-Path ([IO.Path]::GetTempPath()) ("rtst-miss-" + [guid]::NewGuid().ToString('N'))
+try {
+    $null = New-Item -ItemType Directory -Force $missDir
+    $script:missRuns = 0
+    $runWritesLogOnce = { $script:missRuns++; if ($script:missRuns -eq 1) { Start-Sleep -Milliseconds 60; Set-Content (Join-Path $missDir 'dino-f.log') 'run one saved' }; [pscustomobject]@{ Name = 'f'; Seconds = 1.0; Problem = 'boom'; Crash = @('F libc: Fatal signal 11'); CrashLog = 'F libc: Fatal signal 11'; Phases = $null; Retried = $null; FirstRunSeconds = 0.0; RunnerStuck = $false; StuckPid = 0; RetryLogs = @() } }
+    $missResult = Invoke-CrashRetryFlow 'f' $missDir 'dino' $runWritesLogOnce { param($l) $true }
+    Assert-Equal 'attempt logs: run 1 saved a log, so attempt 1 is kept' $true ($null -ne $missResult.RetryLogs[0] -and (Test-Path $missResult.RetryLogs[0]))
+    Assert-Equal 'attempt logs: run 2 saved none, so no attempt-2 log exists and its slot is empty' $true ($null -eq $missResult.RetryLogs[1] -and -not (Test-Path (Join-Path $missDir 'dino-f.attempt2.log')))
+    Assert-Equal 'attempt logs: the summary says (not kept) for it' $true ((@(Format-RetryLogLines @($missResult))[0]) -like '*and (not kept)')
+} finally { Remove-Item $missDir -Recurse -Force -ErrorAction SilentlyContinue }
+
+# Slice 301: the real Invoke-GuardedFlow from run-flows.ps1 never launches a second Maestro (the health-guard rerun) after a stuck first run.
+$guardFn = $flowsAst.Find({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Invoke-GuardedFlow' }, $true)
+Assert-Equal 'wiring: Invoke-GuardedFlow found in run-flows.ps1' $true ($null -ne $guardFn)
+Remove-Item Function:\Invoke-GuardedFlow
+Invoke-Expression $guardFn.Extent.Text
+$script:flowLaunches = 0
+function Confirm-EmulatorHealthy([string]$When) { return $false }   # a dead emulator: without the predicate the guard would run the flow again
+function Get-EmulatorHealthProblem { return 'dead' }
+function Invoke-Flow([string]$Maestro, $File) { $script:flowLaunches++; return [pscustomobject]@{ Name = 'f'; Problem = 'p'; Crash = @(); RunnerStuck = $true; StuckPid = 31 } }
+$script:UnhealthyCount = 0
+$guarded = Invoke-GuardedFlow 'm' ([System.IO.FileInfo]::new('x.txt'))
+Assert-Equal 'guarded: a stuck first run is returned with no rerun (one launch)' 1 $script:flowLaunches
+Assert-Equal 'guarded: ... still stuck' $true (Test-RunnerStuck $guarded)
+
 if ($script:failed -gt 0) { Write-Host "$($script:failed) check(s) failed."; exit 1 }
 Write-Host 'test-speed: all passed.'
