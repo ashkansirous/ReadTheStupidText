@@ -13,3 +13,9 @@
 ## Verification
 
 - A written answer with the doc URLs; if built, the script prints rows (or "none, below threshold") for both Windows apps and its test passes against a recorded response.
+
+## User answer (2026-11-07, before the night run)
+
+- **Item 3 decided: plan a new slice.** If the Microsoft Store does not give crash data for the Windows apps, add a
+  `planned` slice (next free number) so the Windows apps report their own crashes the way the mobile apps do. No
+  question to the user is needed.

@@ -128,3 +128,10 @@ Settled by the mock, left open by the plan: grouping rules, y-axis steps, bar ga
   same day (weighted), per platform.
 - Opening `/stats` signed out ends at the Access login; `elinsoftuk@gmail.com` gets in, another email is refused.
 - The page at 1280 wide matches frame 200 (layout, colours, copy, chip order, states); screenshots in the PR.
+
+## Checked before the night run (2026-11-07)
+
+- **No Cloudflare token with Access edit rights exists** in `D:\secrets` (only `CF_ANALYTICS_READ_TOKEN`, read-only).
+  So the Access application on `/stats*` and `/api/stats*` is the one user step, done with the user present; the
+  night builds everything else. The Worker's own `Cf-Access-Jwt-Assertion` check refuses requests without a valid
+  token, so the routes stay closed until Access is set up.
