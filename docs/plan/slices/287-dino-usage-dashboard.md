@@ -1,6 +1,6 @@
 # Slice 287 — Dino: a private usage dashboard at dinoreader.sirous.uk/stats
 
-*Planned 2026-11-07.* Server only (Cloudflare Worker, D1, the Dino site). The apps do not change here.
+*Planned 2026-11-07.* **Park note (2026-11-07, night run wave 5):** parked: needs a Cloudflare token with edit rights or the user's login, for the D1 database, the Cloudflare Access app (elinsoftuk@gmail.com), the Access team domain/audience and the Worker secret; D:/secrets holds only the read-only `CF_ANALYTICS_READ_TOKEN`. Blocks the whole dashboard. Server only (Cloudflare Worker, D1, the Dino site). The apps do not change here.
 
 **Depends on:** nothing to start. Slice 288 (the app's listens and listening time) and Slice 289 (Sonos plays)
 fill the listen and hour numbers; until they ship those columns show zero with a note saying from which version
