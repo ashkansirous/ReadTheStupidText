@@ -58,10 +58,8 @@ jobs:
       - name: Install wrangler
         run: npm ci --ignore-scripts --no-audit --no-fund
 
-      # Slice 239: no test suite runs for a store-only change, so the checks live in this job: the content folders against dino-starters.json (a new Starter must build the app),
-      # then `build --live` validates each store book before it builds it: an invalid book is skipped and named, the valid ones are still built and uploaded, and the job fails at the end.
-      - name: Check the content folders against the starter list
-        run: node .github/scripts/publish-store-books.mjs --check-content
+      # Slice 239: no test suite runs for a store-only change, so the checks live in this job: `build --live` validates each store book (its book.json kind included) before it builds it:
+      # an invalid book is skipped and named, the valid ones are still built and uploaded, and the job fails at the end.
 
       # The live store's version, content hash and highest package of every story, so the build can version a changed book above everything in the bucket (no stamp needed).
       - name: Read the live store state
