@@ -93,3 +93,27 @@ language name in a Fredoka line.
 - Fast checks: `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj`, the Dino Android build, FallbackGuard.
 - Emulator, after both reviews: the two flows above, plus screenshots of the getting and no-sound pills.
 - iOS: compile only from Windows; an iPhone look goes to *Not yet verified*.
+
+## Part B — exactly as designed (in progress, 2026-11-07, branch feat/s290b-dino-sound-pill-as-designed)
+
+User, 2026-11-07: "The design is always the right choice! do everything as designed. fix the small issues as well".
+Part A kept two things that differ from the mock and left three small issues. Part B builds the mock exactly.
+
+**Touches:** `src/DinoReader.App/SoundStatusPill*.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/Resources/Fonts/**`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/DinoFonts.cs`, `src/DinoReader.App/DinoReader.App.csproj`, `tests/DinoReader.Tests/**`, `.maestro/dino/**`, `docs/plan/slices/290-dino-reading-sound-pill.md`
+
+- [ ] **Words (frame 197):** the pill says "Getting {0} sound for your books" as the mock does. `ShelfAudio_Getting`
+      ("… audio …") is also used by `ShelfAudioPacksCard.cs` on another screen, so add a new string
+      `Reading_GettingSound` for the pill only, in English and all 14 locale files (word for "sound", not "audio",
+      in each language; same wording style as `Reading_NoSound` in that file).
+- [ ] **Weight:** the pill text is Fredoka weight 500 as the mock says. The app ships one `Fredoka.ttf`
+      (`MauiProgram.cs` line 39). Add a Medium (500) face (OFL 1.1, like the existing file; make a static instance from
+      the variable font if `Fredoka.ttf` is variable, else the upstream static Medium), register it in
+      `DinoFonts`, use it for the pill label.
+- [ ] **Language name in its own script:** frame 197 sets "فارسی" in Vazirmatn inside the Fredoka line. Use a span
+      in Vazirmatn (or the font the app already uses for that script) for the native language name.
+- [ ] **Ring colours after a theme switch** (check-pass 1): refresh and `Invalidate` the ring on every `Show`, even
+      when state and text are unchanged.
+- [ ] **Null checks** (check-pass 2): one check of the story in `ShowAudioStatus`, passed down.
+- [ ] **No wasted first render** (high-review 9): the icon is not built with a default `Lock` kind.
+- [ ] **Device:** screenshots of every pill state against frames 197 (lilac, ring part-filled, "· N of M"), 198
+      (Wi-Fi) and 199, plus a Farsi pill. Screen capture must run during the flow (start it before the flow).
