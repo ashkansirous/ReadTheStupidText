@@ -3,7 +3,7 @@
   Self-test for Slice 267's layout-check.ps1: it must fail on the intro wizard bug (Skip drawn over Try it) and on a button cut off by the screen, and pass a clean screen. Needs no device. Run in pwsh and powershell 5.1.
 #>
 $ErrorActionPreference = 'Stop'
-. (Join-Path $PSScriptRoot 'layout-check.ps1')
+. (Join-Path $PSScriptRoot 'layout-check.lib.ps1')
 $script:failed = 0
 function Assert-Equal([string]$Name, $Expected, $Actual) {
     if ("$Expected" -ne "$Actual") { $script:failed++; Write-Host "FAIL: $Name expected [$Expected] got [$Actual]" }
@@ -60,6 +60,44 @@ Assert-Equal 'a button cut off by the screen fails' 1 $cutFound.Count
 Assert-Equal 'the cut-off message says so' $true (($cutFound -join ' ') -match 'cut off')
 
 Assert-Equal 'no dump is reported' $true ((@(Get-LayoutProblems 'nothing' 'x') -join ' ') -match 'no usable UI dump')
+
+# Slice 297 item 3: a full-screen tap-to-dismiss scrim (clickable, no text, whole-window bounds) beside a button is not an overlap; a real overlap next to it still fails.
+$scrim = New-Dump ("<node bounds=""[0,0][1080,2400]"" clickable=""true"" enabled=""true"" />" + (New-Button 'Close' '[300,2000][780,2144]') + "<node text=""Menu"" bounds=""[100,500][900,700]"" clickable=""false"" enabled=""true"" />")
+Assert-Equal 'a scrim sibling passes' 0 @(Get-LayoutProblems $scrim 'menu').Count
+$scrimAndOverlap = New-Dump ("<node bounds=""[0,0][1080,2400]"" clickable=""true"" enabled=""true"" />" + (New-Button 'Try it' '[300,2100][780,2244]') + (New-Button 'Skip' '[300,2100][780,2244]'))
+Assert-Equal 'a real overlap still fails beside a scrim' 1 @(Get-LayoutProblems $scrimAndOverlap 'wizard-record').Count
+$bigButton = New-Dump ((New-Button 'Everything' '[0,0][1080,2400]') + (New-Button 'Other' '[300,2000][780,2144]'))
+Assert-Equal 'a full-screen node with text is not a scrim' 1 @(Get-LayoutProblems $bigButton 'x').Count
+
+# Slice 297 item 3 (review): a scrim drawn AFTER a button is on top of it and swallows its taps, so it is reported; a text label under a later scrim too, but not under an earlier one.
+$scrimOnTop = New-Dump ((New-Button 'Close' '[300,2000][780,2144]') + "<node bounds=""[0,0][1080,2400]"" clickable=""true"" enabled=""true"" />")
+Assert-Equal 'a scrim drawn over a button is reported' 1 @(Get-LayoutProblems $scrimOnTop 'x').Count
+$scrimOverLabel = New-Dump ("<node text=""Menu"" bounds=""[100,500][900,700]"" clickable=""false"" enabled=""true"" />" + "<node bounds=""[0,0][1080,2400]"" clickable=""true"" enabled=""true"" />")
+Assert-Equal 'a scrim drawn over a label is reported' 1 @(Get-LayoutProblems $scrimOverLabel 'x').Count
+
+# Slice 297 item 4: the CLI wrapper keeps param(): a positional dump path and the -Name=value form still work, and no dump exits 2.
+$cli = Join-Path $PSScriptRoot 'layout-check.ps1'
+$dumpFile = Join-Path ([System.IO.Path]::GetTempPath()) "layout-check-selftest-$PID.xml"
+Set-Content -Path $dumpFile -Value $scrimAndOverlap
+$shell = (Get-Process -Id $PID).Path
+& $shell -NoProfile -File $cli $dumpFile | Out-Null
+Assert-Equal 'positional dump path is read (overlap, exit 1)' 1 $LASTEXITCODE
+& $shell -NoProfile -File $cli -LayoutXmlPath $dumpFile -ScreenLabel wizard | Out-Null
+Assert-Equal 'named dump path is read (overlap, exit 1)' 1 $LASTEXITCODE
+& $shell -NoProfile -File $cli | Out-Null
+Assert-Equal 'no argument exits 2' 2 $LASTEXITCODE
+Remove-Item $dumpFile
+
+# Slice 297 item 2: dot-sourcing the check leaves the caller's scope alone (no param() variables, no changed ErrorActionPreference).
+function Test-DotSourceLeaks {
+    $ErrorActionPreference = 'Continue'
+    . (Join-Path $PSScriptRoot 'layout-check.lib.ps1')
+    return @{ Preference = "$ErrorActionPreference"; Label = [bool](Get-Variable ScreenLabel -ErrorAction SilentlyContinue); Xml = [bool](Get-Variable LayoutXmlPath -ErrorAction SilentlyContinue) }
+}
+$leak = Test-DotSourceLeaks
+Assert-Equal 'dot-sourcing keeps the caller ErrorActionPreference' 'Continue' $leak.Preference
+Assert-Equal 'dot-sourcing defines no ScreenLabel in the caller' $false $leak.Label
+Assert-Equal 'dot-sourcing defines no LayoutXmlPath in the caller' $false $leak.Xml
 
 # run-flows.ps1 must wire the check in.
 $runFlows = Get-Content (Join-Path $PSScriptRoot 'run-flows.ps1') -Raw

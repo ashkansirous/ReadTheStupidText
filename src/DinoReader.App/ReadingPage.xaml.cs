@@ -40,7 +40,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private bool _finishCounted;
 	private bool _openCounted;
 	private Action<bool>? _audibleHandler; // Slice 288: the same lifetime, for the listening-time tally
-	private Action<Story, ReadVoiceUse>? _voiceUsedHandler; // Slice 267: the same lifetime, for the voice-used count
+	private Action<Story, ReadVoiceUse, string>? _voiceUsedHandler; // Slice 267: the same lifetime, for the voice-used count
 	private Action<ReadingEventKind, ReadStopReason?>? _playbackHandler; // Slice 250: subscribed while the page is on the stack, bound to the book shown then
 	private readonly PageFollower _follower = new();
 	private readonly BusyGuard _busy = new();
@@ -1306,7 +1306,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		_playbackHandler = (kind, reason) => OnPlayback(book, kind, reason);
 		_session.Playback += _playbackHandler;
-		_voiceUsedHandler = (voiced, use) => OnVoiceUsed(book, voiced, use);
+		_voiceUsedHandler = (voiced, use, reading) => OnVoiceUsed(book, voiced, use, reading);
 		_session.VoiceUsed += _voiceUsedHandler;
 		_audibleHandler = _usage.SetAudible; // Slice 288: the listening-time tally runs on the session's audio output alone
 		_session.Audible += _audibleHandler;
@@ -1337,14 +1337,16 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 	// Slice 267: one count per read, naming the voice it used (a book's own reads only; the intro's demo read counts no book event).
 	// Slice 273: it names the pieces read by clips and by the device voice (never "premade" for a read that fell back part-way, Slice 272), and a read that fell back also sends the fallback count.
-	private void OnVoiceUsed(Story book, Story voiced, ReadVoiceUse use)
+	// Slice 297: the language is the one the read started with (the session carries it to the first clip), not whatever the reading language is when the count is made.
+	private void OnVoiceUsed(Story book, Story voiced, ReadVoiceUse use, string reading)
 	{
 		if ((ReferenceEquals(book, voiced) || book.Id == voiced.Id) && DemoReadCounting.Counts(UsageEventName.ReadVoice, _demoRead))
 		{
-			_usage.Record(UsageEventName.ReadVoice, book, use.Detail, ReadIn(book), use.ClipPieces, use.DevicePieces);
+			string language = _services.GetRequiredService<StoryTranslator>().SpokenLanguage(book, reading);
+			_usage.Record(UsageEventName.ReadVoice, book, use.Detail, language, use.ClipPieces, use.DevicePieces);
 			if (use.FallbackReason is { } reason)
 			{
-				_usage.RecordFallback(book, FallbackArea.PremadeAudio, reason, ReadIn(book));
+				_usage.RecordFallback(book, FallbackArea.PremadeAudio, reason, language);
 			}
 		}
 	}
