@@ -31,7 +31,7 @@ $script:SpaceEscape = '%s'                    # `input text` takes %s for a spac
 function Invoke-Tap([string]$ElementId) {
     Assert-WithinBudget "tapping $ElementId"
     $engine = (Get-Process -Id $PID).Path
-    & $engine -NoProfile -File $script:TapScript -Id $ElementId -App $App -Serial $Phone | ForEach-Object { Write-Host "   tap: $_" }
+    & $engine -NoProfile -File $script:TapScript -Id $ElementId -App $App -Serial $Phone @(Get-AllowEmulatorArguments $Phone) | ForEach-Object { Write-Host "   tap: $_" }
     if ($LASTEXITCODE -ne 0) { throw "tap.ps1 -Id $ElementId exited $LASTEXITCODE (the element was not found or another app is on screen)." }
 }
 
@@ -45,7 +45,7 @@ function Clear-ReviewDraft {
 # The editor must hold exactly the typed text, or the highlight would be judged on someone else's sentences.
 function Assert-TypedTextShown {
     $engine = (Get-Process -Id $PID).Path
-    $listed = @(& $engine -NoProfile -File $script:TapScript -List -App $App -Serial $Phone | ForEach-Object { "$_" })
+    $listed = @(& $engine -NoProfile -File $script:TapScript -List -App $App -Serial $Phone @(Get-AllowEmulatorArguments $Phone) | ForEach-Object { "$_" })
     if (-not (Test-EditorHoldsText $listed $script:EditorId $script:TypedText)) { throw "The review editor does not hold exactly the typed text (an old draft was not cleared, or the text did not go in)." }
 }
 

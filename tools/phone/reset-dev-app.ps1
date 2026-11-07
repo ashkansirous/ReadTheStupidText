@@ -20,10 +20,11 @@ param(
     [Parameter(Mandatory)][ValidateSet('rtst', 'dino')][string]$App,
     [ValidateSet('setting', 'clear', 'reinstall', 'auto')][string]$Level = 'setting',
     [string]$Serial,
+    [switch]$AllowEmulator,   # Slice 308: passed by run-checks.ps1's checks for a named emulator serial; by hand, this script stays wireless-only
     [int]$AliveSeconds = 60
 )
 $ErrorActionPreference = 'Stop'
-. (Join-Path $PSScriptRoot 'checks\_lib.ps1')   # Slice 236 item 3: Get-DownloadHoldLines (pure). Before common.ps1 on purpose: both define Get-PackageUid and common.ps1's adb version must win here.
+. (Join-Path $PSScriptRoot 'checks\_lib.ps1')   # Slice 236 item 3: Get-DownloadHoldLines (pure). The dump parser there is Get-PackageUidFromDump, so the name never collides with common.ps1's adb Get-PackageUid.
 . (Join-Path $PSScriptRoot 'common.ps1')
 . (Join-Path $PSScriptRoot '..\emulator\build-cache.ps1')
 
@@ -241,7 +242,7 @@ function Test-HoldNeedsClear([string]$Phone, [string]$LevelName) {
     return $true
 }
 
-$phone = Find-WirelessPhone $Serial
+$phone = Find-WirelessPhone $Serial -AllowEmulator:$AllowEmulator
 if (-not $phone) { Write-PairingAsk; exit 2 }
 Assert-PhoneLease $phone
 foreach ($name in $(if ($Level -eq 'auto') { 'setting', 'clear', 'reinstall' } else { $Level })) {

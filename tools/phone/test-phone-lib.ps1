@@ -195,6 +195,53 @@ Assert-Equal 'restore deletes the timeout' $true ($restore -like '*device_config
 Assert-Equal 'restore resets the compat flag' $true ($restore -like '*am compat reset FGS_INTRODUCE_TIME_LIMITS uk.sirous.rtst.dbg*')
 Assert-Equal 'paused check never calls svc' $false ((Get-Content (Join-Path $PSScriptRoot 'checks\paused-notification.ps1') -Raw) -match "'svc'")
 
+# ---- Slice 308: run-checks.ps1 -Serial emulator-NNNN. The emulator is accepted only with -AllowEmulator (run-checks passes it) and only when named; every other script stays wireless-only.
+$emu = [pscustomobject]@{ Serial = 'emulator-5554'; State = 'device' }
+$wifi = [pscustomobject]@{ Serial = '192.168.1.20:41234'; State = 'device' }
+$usb = [pscustomobject]@{ Serial = 'R5CR1234ABC'; State = 'device' }
+$offlineEmu = [pscustomobject]@{ Serial = 'emulator-5556'; State = 'offline' }
+Assert-Equal 'named emulator is accepted with -AllowEmulator' 'emulator-5554' (Select-ReadyPhoneSerial @($usb, $emu, $wifi) 'emulator-5554' $true)
+Assert-Equal 'named emulator is refused without -AllowEmulator' $null (Select-ReadyPhoneSerial @($usb, $emu, $wifi) 'emulator-5554')
+Assert-Equal 'no serial: the wireless phone, never the emulator' '192.168.1.20:41234' (Select-ReadyPhoneSerial @($emu, $usb, $wifi) '' $true)
+Assert-Equal 'no serial and only an emulator: nothing' $null (Select-ReadyPhoneSerial @($emu) '' $true)
+Assert-Equal 'unknown (USB) serial is rejected even when named' $null (Select-ReadyPhoneSerial @($usb, $wifi) 'R5CR1234ABC' $true)
+Assert-Equal 'a named emulator that is not connected is nothing' $null (Select-ReadyPhoneSerial @($wifi) 'emulator-5554' $true)
+Assert-Equal 'an offline emulator is nothing' $null (Select-ReadyPhoneSerial @($offlineEmu) 'emulator-5556' $true)
+Assert-Equal 'named wireless serial still works' '192.168.1.20:41234' (Select-ReadyPhoneSerial @($emu, $wifi) '192.168.1.20:41234' $true)
+Assert-Equal 'a malformed emulator name is rejected' $null (Select-ReadyPhoneSerial @($emu) 'emulator-abc' $true)
+Assert-Equal 'a malformed emulator serial is named invalid' $true ((Get-EmulatorProblemText 'emulator-abc' @($emu)) -match 'not a valid emulator serial')
+Assert-Equal 'an offline emulator says its adb state' $true ((Get-EmulatorProblemText 'emulator-5556' @($offlineEmu)) -match 'is offline in adb')
+Assert-Equal 'an absent emulator says not running' $true ((Get-EmulatorProblemText 'emulator-5554' @($wifi)) -match 'not running')
+Assert-Equal 'a non-emulator serial gets no emulator text' $null (Get-EmulatorProblemText '192.168.1.20:41234' @($wifi))
+Assert-Equal 'Test-EmulatorSerial: emulator' $true (Test-EmulatorSerial 'emulator-5554')
+Assert-Equal 'Test-EmulatorSerial: wireless' $false (Test-EmulatorSerial '192.168.1.20:41234')
+
+# ---- Slice 308 (two strikes): the device kind is decided once from the serial; which lease and gates apply is a pure function of it.
+Assert-Equal 'kind: emulator serial' 'Emulator' (Get-DeviceKind 'emulator-5554')
+Assert-Equal 'kind: wireless serial' 'Phone' (Get-DeviceKind '192.168.1.20:41234')
+Assert-Equal 'kind: no serial is the phone' 'Phone' (Get-DeviceKind '')
+Assert-Equal 'kind: a malformed emulator name is the phone (and then refused as a wireless serial)' 'Phone' (Get-DeviceKind 'emulator-abc')
+$phonePlan = Get-DeviceKindPlan (Get-DeviceKind '192.168.1.20:41234')
+$emulatorPlan = Get-DeviceKindPlan (Get-DeviceKind 'emulator-5554')
+Assert-Equal 'phone plan: phone lease' 'phone' $phonePlan.LeaseKind
+Assert-Equal 'phone plan: gates apply' $true ($phonePlan.ChargerGate -and $phonePlan.StayOn -and $phonePlan.Aot)
+Assert-Equal 'emulator plan: emulator lease only' 'emulator' $emulatorPlan.LeaseKind
+Assert-Equal 'emulator plan: no charger gate, stay-on or AOT' $false ($emulatorPlan.ChargerGate -or $emulatorPlan.StayOn -or $emulatorPlan.Aot)
+Assert-Equal 'emulator lease key is the adb serial (no adb read)' 'emulator-5554' (Get-DeviceLeaseKey 'emulator-5554' 'Emulator')
+Assert-Equal 'child scripts get -AllowEmulator for an emulator serial' '-AllowEmulator' ((Get-AllowEmulatorArguments 'emulator-5554') -join ' ')
+Assert-Equal 'child scripts get nothing for a phone serial' 0 (@(Get-AllowEmulatorArguments '192.168.1.20:41234').Count)
+Assert-Equal 'Assert-PhoneLease on an emulator serial returns without any adb or lease read' $null (Assert-PhoneLease 'emulator-5554')
+Assert-Equal 'review 1: emulator + named -Variant aot is an error' $true ([bool](Get-VariantKindError 'Emulator' $true 'aot'))
+Assert-Equal 'review 1: emulator + named -Variant debug is fine' $null (Get-VariantKindError 'Emulator' $true 'debug')
+Assert-Equal 'review 1: emulator + no named variant is fine (the default value is not a pin)' $null (Get-VariantKindError 'Emulator' $false 'aot')
+Assert-Equal 'review 1: phone + -Variant aot is fine' $null (Get-VariantKindError 'Phone' $true 'aot')
+Assert-Equal 'review 1: run-checks applies it to every mode (before -Build/-Prepare branch)' $true ((Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw) -match 'Get-VariantKindError \$script:Kind \$PSBoundParameters\.ContainsKey')
+Assert-Equal 'review 6: Start-KeepAwake in run-checks is gated by the plan StayOn' 0 ([regex]::Matches((Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw), '= Start-KeepAwake')).Count
+Assert-Equal 'no ambient opt-in: an environment variable never admits an emulator' $null (Select-ReadyPhoneSerial @($emu) 'emulator-5554')
+$ambient = ('RTST_PHONE_' + 'ALLOW_EMULATOR')
+$withAmbient = @(Get-ChildItem $PSScriptRoot -Recurse -Include *.ps1 | Where-Object { $_.Name -notlike 'test-*' -and (Get-Content $_.FullName -Raw) -match $ambient })
+Assert-Equal 'no tool reads the ambient emulator opt-in variable' 0 $withAmbient.Count
+
 if ($failed) { Write-Host "$failed phone-lib checks failed (PowerShell $($PSVersionTable.PSVersion))."; exit 1 }
 Write-Host "All phone-lib checks pass (PowerShell $($PSVersionTable.PSVersion))."
 exit 0

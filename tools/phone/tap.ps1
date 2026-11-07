@@ -27,6 +27,7 @@ param(
     [int]$WaitSeconds = 10,
     [string]$ExpectText,
     [string]$Serial,
+    [switch]$AllowEmulator,   # Slice 308: passed by run-checks.ps1's checks for a named emulator serial; by hand, tap.ps1 stays wireless-only
     [string]$XmlFile
 )
 $ErrorActionPreference = 'Stop'
@@ -131,7 +132,7 @@ function Write-ScreenChange([string]$Phone, $Before) {
     return $afterNodes
 }
 
-$phone = if ($XmlFile) { 'saved-dump' } else { Find-WirelessPhone $Serial }
+$phone = if ($XmlFile) { 'saved-dump' } else { Find-WirelessPhone $Serial -AllowEmulator:$AllowEmulator }
 if (-not $phone) { Write-PairingAsk; exit 2 }
 if (-not $XmlFile) { Assert-PhoneLease $phone }
 if ($List) { Write-ScreenList (Get-ScreenNodes $phone); exit 0 }

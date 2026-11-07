@@ -361,8 +361,8 @@ Assert-Equal 'review: records with a post time are not flagged' $false (Test-Pos
 Assert-Equal 'review: the unknown post time is named, not "no notification"' $true ((Resolve-NotificationVerdict $null $true).Detail -like '*no post time*')
 
 # ---- book-end: wake locks of the app's uid, or a foreground service
-Assert-Equal 'uid from dumpsys package' '10234' (Get-PackageUid '    userId=10234')
-Assert-Equal 'uid from appId (S21)' '10460' (Get-PackageUid '    appId=10460')
+Assert-Equal 'uid from dumpsys package' '10234' (Get-PackageUidFromDump '    userId=10234')
+Assert-Equal 'uid from appId (S21)' '10460' (Get-PackageUidFromDump '    appId=10460')
 $power = "Wake Locks: size=2`n  PARTIAL_WAKE_LOCK              'AudioMix' ACQ=-5s23ms (uid=1013 pid=900)`n  PARTIAL_WAKE_LOCK              'MediaPlayer' ACQ=-2s (uid=10234 pid=4242)"
 Assert-Equal 'app wake lock held' $true (Test-AppHoldsWake $power '' '10234')
 Assert-Equal 'other uid only' $false (Test-AppHoldsWake "Wake Locks: size=1`n  PARTIAL_WAKE_LOCK 'AudioMix' (uid=1013 pid=900)" '' '10234')
@@ -759,6 +759,20 @@ Assert-Equal 'no override line, nothing to reset' 0 @(Get-CompatOverrideLines @(
 $pausedText = Get-Content (Join-Path $PSScriptRoot 'checks\paused-notification.ps1') -Raw
 Assert-Equal 'the compat reset call is guarded by what was found' $true ($pausedText -match 'if \(\$compatPresent\) \{ Invoke-Adb[^\r\n]*''reset''')
 Assert-Equal 'the timeout delete is guarded by what was found' $true ($pausedText -match 'if \(\$timeoutPresent\) \{ Invoke-Adb[^\r\n]*''delete''')
+
+# ---- Slice 308: an emulator run caches the x86_64 APK (audio-timing.ps1 -Emulator's name), a phone run the arm64 one. The serial selector itself is tested in test-phone-lib.ps1.
+Assert-Equal 'phone platform stays arm64' 'android-dbg-arm64' (Get-CachePlatform 'debug')
+Assert-Equal 'emulator debug platform' 'android-dbg-x64' (Get-CachePlatform 'debug' 'x64')
+Assert-Equal 'emulator aot platform' 'android-dbg-x64-aot' (Get-CachePlatform 'aot' 'x64')
+$runChecksText = Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw
+Assert-Equal 'a run on a kind without AOT (an emulator) is pinned to debug' $true ($runChecksText -match 'not \$script:KindPlan\.Aot[^\r\n]*\$script:PinVariant = \$script:VariantDebug')
+Assert-Equal 'run-checks takes ONE lease, by the kind plan (a single Wait-ForLease, no phone key for an emulator)' $true ((([regex]::Matches($runChecksText, 'Wait-ForLease')).Count -eq 1) -and ($runChecksText -match 'Wait-ForLease \$State\.Key \$State\.Owner \$minutes \$wait \$State\.LeaseKind'))
+Assert-Equal 'the readiness gate returns before any adb read when the kind has no charger gate' $true ($runChecksText -match '(?s)function Confirm-PhoneReady\(\[string\]\$Phone\) \{\r?\n\s*if \(-not \$script:KindPlan\.ChargerGate\) \{ return \$null \}')
+Assert-Equal 'the lease key and run marker key come from the kind (Get-DeviceLeaseKey)' 2 ([regex]::Matches($runChecksText, 'Get-DeviceLeaseKey')).Count
+Assert-Equal 'run-checks passes -AllowEmulator to preflight through the kind helper' $true ($runChecksText -match 'PreflightScript -Serial \$Phone -App \$App -Fix @\(Get-AllowEmulatorArguments \$Phone\)')
+foreach ($name in 'highlight', 'translate') {
+    Assert-Equal "$name check passes the kind's tap arguments" $true ((Get-Content (Join-Path $PSScriptRoot "checks\$name.ps1") -Raw) -match 'Get-AllowEmulatorArguments \$Phone')
+}
 
 if ($failed) { Write-Host "$failed run-checks checks failed (PowerShell $($PSVersionTable.PSVersion))."; exit 1 }
 Write-Host "All run-checks checks pass (PowerShell $($PSVersionTable.PSVersion))."
