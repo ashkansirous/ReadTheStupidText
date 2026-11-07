@@ -89,7 +89,9 @@ public sealed class ReadingSession
 	private IReadOnlyList<SentenceSpan> _sentences = [];
 	private int _readSequence;
 	private int _pendingReadId;
-	private string? _voiceCountedFor; // the book and reading language whose voice was counted: one read_voice count per book in this session, not one per mid-book start
+	private sealed record VoiceToCount(Story Story, IReadOnlyList<VoicedSegment> Segments, StoryVoicing.VoiceWhy Why);
+
+	private readonly PendingVoiceCount<VoiceToCount> _voiceCount = new(); // Slice 297: the read's voice, counted when its first clip plays (not when the read starts), so a read that fails before any audio counts nothing; also the once-per-book key (one read_voice count per book and reading language in this session, not one per mid-book start)
 
 	// The read whose steps count: set when a read starts, cleared when it is stopped, fails or completes. A callback tagged with another id is dropped.
 	private int _activeReadId;
@@ -156,7 +158,7 @@ public sealed class ReadingSession
 	public event Action<ReadingEventKind, ReadStopReason?>? Playback;
 
 	/// <summary>Slice 267: this session's read really started; the story and the voice detail (<c>premade</c>, or <c>device:&lt;reason&gt;</c>, the reason the pieces without a clip had none). Raised on the session itself, so only the page that owns it counts the read.</summary>
-	public event Action<Story, ReadVoiceUse>? VoiceUsed;
+	public event Action<Story, ReadVoiceUse, string>? VoiceUsed; // the string is the reading language the read started with (Slice 297: not the one set by the time the first clip plays)
 
 	/// <summary>The piece now shown has (true) or lacks (false) a clip. Raised on the main thread; the page shows the book's audio state while pieces lack one, so a read with no audio is never a silent slideshow with no word about it.</summary>
 	public event Action<bool>? PieceAudio;
@@ -460,6 +462,7 @@ public sealed class ReadingSession
 		CancelRead();
 		StopRecording();
 		_activeReadId = 0;
+		_voiceCount.Clear();
 		ClearPending();
 	}
 
@@ -490,6 +493,7 @@ public sealed class ReadingSession
 		MoveTo(sentence);
 		int id = ++_readSequence;
 		_pendingReadId = id;
+		_voiceCount.Clear(); // a new read starts with nothing to count; an earlier read's record never waits behind it
 		Volatile.Write(ref _activeReadId, id);
 		Volatile.Write(ref _startTrace, ReadStartTrace.Begin(id, _sentences[sentence].Start));
 		if (TryPlayRecording(story, sentence, id))
@@ -582,6 +586,7 @@ public sealed class ReadingSession
 		if (next >= _sentences.Count)
 		{
 			_activeReadId = 0;
+			_voiceCount.ClearIfRead(id);
 			Finished = true;
 			RaiseStopped(ReadStopReason.Finished);
 			RaiseStateChanged();
@@ -669,7 +674,7 @@ public sealed class ReadingSession
 			return;
 		}
 
-		CountVoiceOncePerBook(story, reading, segments, why); // Slice 273: counted on the pieces this read really plays, after the recorded page cut off the rest
+		_voiceCount.Begin(id, reading, new VoiceToCount(story, segments, why)); // Slice 273: counted on the pieces this read really plays, after the recorded page cut off the rest; Slice 297: at the first clip, see CountVoiceOnFirstClip
 		await AnimalClipFiles.EnsureAsync(AnimalClipRuns.KindsIn(segments));
 		cancellation.ThrowIfCancellationRequested(); // a Stop, Back or another sentence during the copy: this read never plays a clip
 		if (id != _pendingReadId)
@@ -680,7 +685,29 @@ public sealed class ReadingSession
 		BeginSteps(segments, id, cancellation, ClipMisses.SilentPieceReason(why.Reason, why.Misses));
 	}
 
-	// Slice 267: the voice a book is read with is counted once per book and reading language in this session, at the moment its read really starts.
+	// Slice 297: the first clip of a read has started playing, so its voice is counted now; a later clip, or a clip of another read, counts nothing (the pending count is taken once, and only by its own read).
+	private void CountVoiceOnFirstClip(int readId)
+	{
+		if (_voiceCount.Take(readId) is not { } pending)
+		{
+			return;
+		}
+
+		RunOnMain(() => // StartStep can run off the main thread; the VoiceUsed handlers and the once-per-book key are used on it
+		{
+			try
+			{
+				CountVoiceOncePerBook(pending.Payload.Story, pending.Reading, pending.Payload.Segments, pending.Payload.Why);
+			}
+			catch (Exception ex)
+			{
+				// no-fallback: counting is best effort and must never fail a read whose first clip already plays
+				AudioPackLog.Write($"the voice count of read {readId} failed ({ex.GetType().Name})");
+			}
+		});
+	}
+
+	// Slice 267: the voice a book is read with is counted once per book and reading language in this session, at the moment its first clip plays (Slice 297).
 	private void CountVoiceOncePerBook(Story story, string reading, IReadOnlyList<VoicedSegment> segments, StoryVoicing.VoiceWhy why)
 	{
 		if (!StoryVoicing.SpeaksAnyPiece(segments))
@@ -688,17 +715,21 @@ public sealed class ReadingSession
 			return; // nothing is played, so nothing is counted and the once-per-book key stays free for a read that plays
 		}
 
-		string key = $"{story.Id}|{reading}";
-		if (_voiceCountedFor == key)
+		if (_voiceCount.IsBookClaimed(story.Id, reading))
 		{
 			return;
 		}
 
-		_voiceCountedFor = key;
 		ReadVoiceUse use = _voicing.ReportVoiceUsed(story, segments, why);
+		if (!_voiceCount.ClaimBook(story.Id, reading)) // claimed only after the report succeeded, so a throw above leaves the book free for the next read
+		{
+			return;
+		}
+
+		AudioPackLog.Write($"first clip plays, the voice is counted (book {story.Id}, reading {reading})");
 		try
 		{
-			VoiceUsed?.Invoke(story, use);
+			VoiceUsed?.Invoke(story, use, reading);
 		}
 		catch (Exception ex)
 		{
@@ -896,6 +927,7 @@ public sealed class ReadingSession
 
 		AudioPackLog.Write($"premade clip plays (sentence {StorySentences.IndexAt(_sentences, segment.SourceStart)}) clip {Path.GetFileName(path)}");
 		NoteFirstSound("premade clip", read.ReadId);
+		CountVoiceOnFirstClip(read.ReadId);
 		RunOnMain(() => MarkPiece(read, segment));
 		RunOnMain(() => PieceAudio?.Invoke(true));
 		ClearPending();
@@ -1060,6 +1092,7 @@ public sealed class ReadingSession
 	private void EndRead(int id)
 	{
 		_activeReadId = 0;
+		_voiceCount.ClearIfRead(id);
 		if (_continueRead is { } cut && cut.ReadId == id)
 		{
 			_continueRead = null;
@@ -1106,6 +1139,7 @@ public sealed class ReadingSession
 		if (wasCurrent)
 		{
 			_activeReadId = 0;
+			_voiceCount.ClearIfRead(id);
 		}
 
 		ClearPendingIfCurrent(id);

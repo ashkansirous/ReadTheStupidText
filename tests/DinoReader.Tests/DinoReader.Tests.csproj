@@ -38,6 +38,8 @@
     <Compile Include="..\..\src\DinoReader.App\PlayerHandOff.cs" Link="Linked\PlayerHandOff.cs" />
     <!-- The recorded-page pause state (Slice 271), split out of ReadingSession so it needs no MAUI main thread. -->
     <Compile Include="..\..\src\DinoReader.App\ReadingPauseState.cs" Link="Linked\ReadingPauseState.cs" />
+    <!-- The pending read_voice count (Slice 297), split out of ReadingSession so it needs no MAUI main thread. -->
+    <Compile Include="..\..\src\DinoReader.App\PendingVoiceCount.cs" Link="Linked\PendingVoiceCount.cs" />
     <!-- The iOS update button's link and text per install channel (Slice 276). -->
     <Compile Include="..\..\src\DinoReader.App\IosUpdateTarget.cs" Link="Linked\IosUpdateTarget.cs" />
     <!-- The pure font/size fallback behind the iOS text attributes (Slice 244). -->

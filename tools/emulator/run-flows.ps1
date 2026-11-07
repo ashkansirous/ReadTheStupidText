@@ -41,7 +41,7 @@ $ErrorActionPreference = 'Stop'
 trap { Write-Host "run-flows.ps1: $($_.Exception.Message)"; exit 1 }
 . (Join-Path $PSScriptRoot 'common.ps1')
 . (Join-Path $PSScriptRoot 'build-cache.ps1')
-. (Join-Path $PSScriptRoot 'layout-check.ps1')   # Slice 267: Get-LayoutProblems for the `# layout-check` flows
+. (Join-Path $PSScriptRoot 'layout-check.lib.ps1')   # Slice 267: Get-LayoutProblems for the `# layout-check` flows (Slice 297: the param-less library, not the CLI wrapper)
 $Instance = Resolve-EmulatorInstance $Instance   # 'tablet' -> '3'
 Set-EmulatorInstance $Instance
 
