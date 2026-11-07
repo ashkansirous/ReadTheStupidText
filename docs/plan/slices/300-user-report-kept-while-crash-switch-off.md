@@ -1,6 +1,6 @@
 # Slice 300 — A kept problem report must not be wiped at next start when the remote crash switch is off
 
-*Built 2026-11-07 (wave 3, night 2026-11-07-1412), draft PR #919, not merged; emulator and iOS device checks not yet run.* *Planned 2026-11-07.* Known gap from [Slice 249](249-dino-report-a-problem.md): a report kept while the remote crash switch is off can be wiped at the next start although the page said "kept" (`src/ReadTheStupidText.Mobile.Shared/Crashes/CrashReporter.UserReport.cs:135`, which logs "kept for retry" and returns `FailedKept`). Moved from plan.md's *Outstanding work*. Shared code: Android and iOS (and the Windows head) behave the same.
+*Built 2026-11-07 (wave 3, night 2026-11-07-1412), merged as PR #919 (234b6290); emulator and iOS device checks not yet run.* *Planned 2026-11-07.* Known gap from [Slice 249](249-dino-report-a-problem.md): a report kept while the remote crash switch is off can be wiped at the next start although the page said "kept" (`src/ReadTheStupidText.Mobile.Shared/Crashes/CrashReporter.UserReport.cs:135`, which logs "kept for retry" and returns `FailedKept`). Moved from plan.md's *Outstanding work*. Shared code: Android and iOS (and the Windows head) behave the same.
 
 **Touches:** `src/ReadTheStupidText.Mobile.Shared/Crashes/CrashReporter.UserReport.cs`, `src/ReadTheStupidText.Mobile.Shared/Crashes/CrashReporter*.cs`, `src/ReadTheStupidText.Application/Crashes/CrashSendPolicy.cs`, `tests/DinoReader.Tests/**`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/300-user-report-kept-while-crash-switch-off.md`, `src/ReadTheStupidText.Mobile.Shared/Crashes/**` (CrashSender.cs, the report store; widened at claim)
 
@@ -54,7 +54,7 @@
 - Skipped #4 (`reviews/s300-check2.md`): "BuildEligible already true here" - low, a wording nit in the log line.
 - Skipped #5 (`reviews/s300-check2.md`): "No test of caller (PostUserReportAsync outcome Failed vs FailedKept with switch off)" - low; goes to the emulator check.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-07)
 
 None.
 

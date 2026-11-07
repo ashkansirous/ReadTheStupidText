@@ -1,6 +1,6 @@
 # Slice 301 — Slice 247 follow-ups: emulator runner crash wait, crash log on retry, faster slow flows
 
-*Built 2026-11-07 (wave 3, night 2026-11-07-1412) for items 1 and 2, draft PR #918, not merged; item 3 not built (needs a re-plan). Device-checked on emulator-5554 for the happy path only, see Not yet verified.* *Planned 2026-11-07.* Three items left by [Slice 247](247-final-loop-leftovers-night-2026-11-01-0859.md), not built. Moved from plan.md's *Outstanding work*. Tooling only (the runner drives the Android emulator; iOS has no equivalent runner here).
+*Built 2026-11-07 (wave 3, night 2026-11-07-1412) for items 1 and 2, merged as PR #918 (70bb3a5a); item 3 not built (needs a re-plan). Device-checked on emulator-5554 for the happy path only, see Not yet verified.* *Planned 2026-11-07.* Three items left by [Slice 247](247-final-loop-leftovers-night-2026-11-01-0859.md), not built. Moved from plan.md's *Outstanding work*. Tooling only (the runner drives the Android emulator; iOS has no equivalent runner here).
 
 **Touches:** `tools/emulator/run-flows.ps1`, `tools/emulator/common.ps1`, `.maestro/dino/**`, `tools/CLAUDE.md`, `docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md`, `tools/emulator/test-*.ps1` (self-tests; widened at claim), `.maestro/rtst/**` (if the five flows include RTST ones)
 
@@ -54,6 +54,6 @@
 - Check 2 findings 1-3: the preflight's own Maestro launcher needs the same bound, a java child that outlives the root process, an overall timeout in `speed.ps1`'s `Wait-ProcessWithCrashWatch`.
 - Reword the `WATCH kill-wait done` log line on a natural end.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-07)
 
 - `tools/CLAUDE.md` already carries the rule in this slice's diff (only `Invoke-MaestroWatched` launches Maestro; every exit goes through `Resolve-MaestroEnd`; a live tree is `RunnerStuck`, checked by `Test-RunnerStuck` before any further launch) (Slice 301: docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md).

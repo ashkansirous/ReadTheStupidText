@@ -2,6 +2,19 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 303: Slice 201 review leftovers ([slice](slices/303-slice-201-review-leftovers.md))
+- Windows read path with a bad pack (VM not run: free memory 6.5 GB, under the 8 GB needed).
+- iOS device: bad Piper pack reports `pack_failed` and the guard stops the engine build.
+- A real `packs.yml` run (next packs release): the new tokens check and fixture self-test.
+
+### Slice 301: Slice 247 follow-ups, emulator runner ([slice](slices/301-slice-247-follow-ups-emulator-runner.md))
+- A real crash-kill on a Mono SIGSEGV: the retry and the two attempt logs (only self-tests with stubs and fake processes, and a passing happy-path run).
+- A real stuck Maestro tree (`RunnerStuck`, rest NOTRUN).
+
+### Slice 300: Kept problem report with the crash switch off ([slice](slices/300-user-report-kept-while-crash-switch-off.md))
+- Emulator: with the usage switch off, a failed user-report send shows the not-kept text and logs `not kept, usage switch off`. Needs a Debug hook that makes the report endpoint refuse; none exists.
+- iOS device: the same shared code, not run on a device.
+
 ### Slice 307: ClaudeSkills hooks and guards leftovers ([slice](slices/307-claudeskills-hooks-and-guards-leftovers.md))
 - Whether Claude Code shows `additionalContext` from a PreToolUse hook that returns no `permissionDecision` (the SDK type marks the field optional; not seen live).
 - Item 10 (open, not built): `phone-network-guard.mjs` still wrongly denies a read-only grep with a quoted `\|adb` pattern.
