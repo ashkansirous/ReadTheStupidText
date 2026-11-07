@@ -18,6 +18,7 @@ public partial class ReaderPage
 
     // The detector's latest confident guess (a primary language code), or null.
     private string? _detectedSource;
+    private bool _languagePickedInReview;
 
     private void InitTranslation(ILanguageDetector? detector)
     {
@@ -45,12 +46,18 @@ public partial class ReaderPage
         RenderReading();
 
         ScheduleReadingLanguageRefresh();
+        if (_settingEditorText && _languagePickedInReview)
+        {
+            return; // the replaced text keeps the language the person picked in Review
+        }
+
+        _languagePickedInReview = false; // any edit ends the pick, whether or not a detector exists
+        _detectedSource = null;
         if (_detector is null)
         {
             return;
         }
 
-        _detectedSource = null;
         if (string.IsNullOrWhiteSpace(e.NewTextValue))
         {
             ResetSource();
@@ -68,18 +75,29 @@ public partial class ReaderPage
 
     // Scan and file import replace the text for good, so the old text's detected language goes too,
     // and the head start prepares at once (the TextChanged this raises must not also schedule a debounced one).
-    private void ReplaceEditorText(string text)
+    // A language picked in Review (pickedLanguage) holds for this text until the person edits it; detection must not overwrite it.
+    private void ReplaceEditorText(string text, string? pickedLanguage = null)
     {
         // Whatever is playing (or generating) belongs to the old text.
         _reader.Stop();
         EndFirstAudioClock(UsageOutcome.Cancelled);
         ClearPendingRead();
 
+        bool textUnchanged = string.Equals(TextEditor.Text, text, StringComparison.Ordinal);
+        if (textUnchanged && pickedLanguage is null)
+        {
+            // Same text, no pick: no TextChanged and nothing about the language changes.
+            StartHeadStart(TimeSpan.Zero);
+            return;
+        }
+
         if (_detector is not null)
         {
             ResetSource();
         }
 
+        _detectedSource = pickedLanguage;
+        _languagePickedInReview = pickedLanguage is not null;
         _settingEditorText = true;
         try
         {
@@ -88,6 +106,12 @@ public partial class ReaderPage
         finally
         {
             _settingEditorText = false;
+        }
+
+        if (textUnchanged)
+        {
+            // Equal text raises no TextChanged: run the language refresh it would have run once; the head start below already uses the pick's key.
+            ScheduleReadingLanguageRefresh();
         }
 
         StartHeadStart(TimeSpan.Zero);
@@ -121,6 +145,11 @@ public partial class ReaderPage
         }
         catch (Exception)
         {
+            if (token.IsCancellationRequested || _retired)
+            {
+                return; // superseded or retired: a dead page must not touch the shared head start
+            }
+
             _usage.Fallbacks.Report(FallbackArea.Translation, FallbackReason.LanguageDetectFailed); // Slice 275: a failed detection leaves the language unknown; it never blocks reading.
             _detectedSource = null;
             OnReadingLanguageMayHaveChanged();

@@ -19,6 +19,8 @@
   <ItemGroup>
     <!-- Pure BCL helper from the Android-only Mobile project, compiled in (Slice 53). -->
     <Compile Include="..\..\src\ReadTheStupidText.Mobile\UiCulture.cs" Link="Mobile\UiCulture.cs" />
+    <!-- Pure open-order rule for ReaderPage (Slice 304). -->
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile\ReaderOpenOrder.cs" Link="Mobile\ReaderOpenOrder.cs" />
     <!-- Pure BCL language-tag helper from the WinUI App project, compiled in (Slice 57). -->
     <Compile Include="..\..\src\ReadTheStupidText.App\UiLanguageTag.cs" Link="App\UiLanguageTag.cs" />
     <!-- Pack status composers and the state enum, to check the localized copy covers every state.
