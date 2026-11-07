@@ -37,12 +37,15 @@
       "/api/events", "/api/events/beta",
       // Slice 227: crash and error reports from the phone apps (worker/crashes.ts).
       "/api/crash",
+      // Slice 283: Dino Reader's anonymous Sonos music service (worker/sonos.ts).
+      "/sonos",
       // The Dino Reader site on *.workers.dev, under /dino/ (worker/downloads.ts resolveSite).
       "/dino", "/dino/", "/dino/index.html", "/dino/privacy", "/dino/privacy/", "/dino/privacy.html", "/dino/download", "/dino/download/*",
       "/dino/api/stories", "/dino/api/stories/*",
       "/dino/api/app-config",
       "/dino/api/events", "/dino/api/events/beta",
-      "/dino/api/crash"
+      "/dino/api/crash",
+      "/dino/sonos"
     ]
   },
 
