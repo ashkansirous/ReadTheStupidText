@@ -209,15 +209,22 @@ public class TranslationModelDownloadSessionTests
     [Fact]
     public async Task Progress_is_reported_while_downloading()
     {
-        var seen = new List<double?>();
-        using var session = new TranslationModelDownloadSession("mlkit-fa", (progress, _) =>
+        // Progress<T> posts its callback to the thread pool, so the attempt stays open until the Changed event for 0.4 arrives (no sleeps).
+        var reported = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var session = new TranslationModelDownloadSession("mlkit-fa", async (progress, token) =>
         {
             progress.Report(0.4);
-            return Task.Delay(50);
+            await reported.Task.WaitAsync(Limit, token);
         }, new FakeNetwork(), false);
-        session.Changed += snapshot => seen.Add(snapshot.Progress);
+        session.Changed += snapshot =>
+        {
+            if (snapshot.Progress == 0.4)
+            {
+                reported.TrySetResult();
+            }
+        };
         await session.RunAsync(CancellationToken.None).WaitAsync(Limit);
-        Assert.Contains(0.4, seen);
+        Assert.True(reported.Task.IsCompletedSuccessfully);
     }
 
     [Theory]
