@@ -102,3 +102,4 @@ finally { Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyCo
 
 if ($failed -gt 0) { Write-Host "$failed check(s) FAILED"; exit 1 }
 Write-Host 'worktree mark self-test: all passed'
+exit 0
