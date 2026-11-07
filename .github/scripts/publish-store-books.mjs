@@ -29,14 +29,13 @@
  *   --audio-verdict <file>  (Slice 277, REQUIRED by --audio-behind and by every uploading run) the JSON `BookBuilder check-audio --verdict <file>` wrote. Fail closed: a book is published only when the file
  *                        holds a complete verdict for its id; a missing or unreadable file, or a book not in it, or one with a gap (a language with no pack, a sentence with no clip, a stale or empty clip)
  *                        builds no pack and uploads nothing, not even its meta.json. The other books go on and the run fails at the end naming it. A --dry-run may leave the flag out.
- *   --check-content      (FIRST step) fails when a content folder's book.json kind is Starter but the folder is missing from dino-starters.json (a new starter must build the app), or the reverse.
  *   Package versions are never reused: right before uploading story-v<n>.dino of a hashed (pipeline-managed) book, the bucket is asked whether that exact object exists; if it does the built package
  *   is renamed to n+1 and meta.json rewritten (up to MAX_VERSION_BUMPS, then the book fails and no meta goes up). This makes the probe window's gap harmless. Only after that the package, then meta.json LAST.
  *   --delist             (dino-store.yml passes it on every run; the guards below make that safe) a live story whose content folder is gone loses its listing, i.e. its meta.json only (packages stay for installed copies).
  *                        Only stories this pipeline manages (the live meta.json carries a contentHash) and whose id has no content folder at all (an invalid book is skipped, not delisted) are delisted.
  *                        The ids are logged first (the dry-run line), then deleted; more than MAX_DELETIONS ids, or half the live list, is refused (a broken checkout, not a deletion).
  *
- * Usage: node publish-store-books.mjs [--dry-run] [--verify] [--delist] [--check-content] [--live-state <file>] [--root <store folder>] [--live-file <api json>]
+ * Usage: node publish-store-books.mjs [--dry-run] [--verify] [--delist] [--live-state <file>] [--root <store folder>] [--live-file <api json>]
  *   (no flag)   upload what is behind (with --delist, then delist what has no content folder); fails when CLOUDFLARE_API_TOKEN is unset
  *   --dry-run   print the plan, upload nothing, need no token
  *   --verify    fail when any built book is still behind the live list (retried: the list is cached ~60 s)
@@ -70,9 +69,7 @@ export const PROBE_WINDOW = 3;
 /** Right before an upload, a package version found already in the bucket is moved up this many times at most (the probe can miss a package; a version is never reused). */
 export const MAX_VERSION_BUMPS = 20;
 const CONTENT_ROOT = 'content/dino';
-const STARTERS_FILE = join(fileURLToPath(new URL('.', import.meta.url)), 'dino-starters.json');
 const BOOK_FILE = 'book.json';
-const STARTER_KIND = 'starter';
 const STORE_KIND = 'store';
 
 export const Outcome = { Upload: 'upload', UpToDate: 'upToDate', LiveNewer: 'liveNewer', Invalid: 'invalid', AudioGap: 'audioGap' };
@@ -517,31 +514,9 @@ export function contentBooks(stems, readBook) {
     });
 }
 
-/** Pure: the drift between the content folders' kinds and dino-starters.json (a list of stems); empty when they agree. */
-export function starterDrift(books, starters) {
-    const problems = [];
-    const byStem = new Map(books.map((book) => [book.stem, book]));
-    for (const book of books) {
-        if (book.kind === STARTER_KIND && !starters.includes(book.stem)) problems.push(`${book.stem} is a Starter in ${BOOK_FILE} but missing from .github/scripts/dino-starters.json (a new starter must build the app: add it there and to the dinoreader.yml paths)`);
-        if (book.kind !== STARTER_KIND && book.kind !== STORE_KIND) problems.push(`${book.stem}/${BOOK_FILE} has an unknown kind "${book.kind}"`);
-    }
-    for (const stem of starters) {
-        const book = byStem.get(stem);
-        if (!book) problems.push(`dino-starters.json lists ${stem} but there is no content/dino/${stem} folder`);
-        else if (book.kind !== STARTER_KIND) problems.push(`dino-starters.json lists ${stem} but its ${BOOK_FILE} kind is ${book.kind}`);
-    }
-    return problems;
-}
-
 function readContentBooks() {
     const stems = readdirSync(CONTENT_ROOT, { withFileTypes: true }).filter((entry) => entry.isDirectory() && existsSync(join(CONTENT_ROOT, entry.name, BOOK_FILE))).map((entry) => entry.name);
     return contentBooks(stems, (stem) => JSON.parse(readFileSync(join(CONTENT_ROOT, stem, BOOK_FILE), 'utf8')));
-}
-
-function checkContent() {
-    const problems = starterDrift(readContentBooks(), JSON.parse(readFileSync(STARTERS_FILE, 'utf8')));
-    if (problems.length > 0) throw new Error(`The content folders and dino-starters.json disagree: ${problems.join(' | ')}`);
-    console.log('The content folders and dino-starters.json agree.');
 }
 
 /**
@@ -824,7 +799,6 @@ async function printAudioBehind(args) {
 
 async function main() {
     const args = process.argv.slice(2);
-    if (args.includes('--check-content')) return checkContent();
     if (args.includes('--live-state')) return writeLiveState(args);
     if (args.includes('--audio-behind')) return printAudioBehind(args);
     const rootFlag = args.indexOf('--root');

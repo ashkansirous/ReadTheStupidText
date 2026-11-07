@@ -171,7 +171,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - `git lfs pull --include` of one clip from a fresh clone of main downloads the real file (only pointers were read back, 2026-11-04). Keep `s246-audio` until it does.
 - `dino-store.yml`'s first real run on main.
 - `packs.yml`'s first run with `lfs: false`.
-- `dino-starters.json` and `BookBuilderTests` still reference starters (follow-up after 261).
 
 ### Slice 261: Dino: no starter books in the app; a first-run book picker ([slice](slices/261-dino-no-starters-first-run-book-picker.md))
 - Upgrade from the current release APK keeps the four books (the release signature differs from Debug).

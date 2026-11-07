@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { publishedStateFrom } from './r2-wrangler.mjs';
-import { audioEntry, bucketAudioFromState, completeAudioIds, judgedAudioIds, mayChangeOnR2, refusalMessage, completeIdsOf, onlyCompleteBooks, refuseAudioGaps, audioPackIsLive, audioUploadExists, withBucketListen, pruneUnbuiltAudio, audioPacksBehind, validPackVersions, audioUploadsFor, bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, contentBooks, starterDrift, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
+import { audioEntry, bucketAudioFromState, completeAudioIds, judgedAudioIds, mayChangeOnR2, refusalMessage, completeIdsOf, onlyCompleteBooks, refuseAudioGaps, audioPackIsLive, audioUploadExists, withBucketListen, pruneUnbuiltAudio, audioPacksBehind, validPackVersions, audioUploadsFor, bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
 
 const A = 'a'.repeat(32);
 const B = 'b'.repeat(32);
@@ -71,14 +71,6 @@ test('Slice 239: package probing climbs past a gap smaller than the window and s
     assert.equal(highestPackage((v) => [5, 6, 8].includes(v), 5), 8);
     assert.equal(highestPackage((v) => v === 9, 5), 0);
     assert.equal(highestPackage(() => false, 1), 0);
-});
-
-test('Slice 239: a Starter folder missing from dino-starters.json, or listed but not a Starter, fails the content check', () => {
-    const books = contentBooks(['a', 'b', 'c'], (stem) => ({ id: stem, kind: stem === 'c' ? 'Store' : 'Starter' }));
-    assert.deepEqual(starterDrift(books, ['a', 'b']), []);
-    assert.match(starterDrift(books, ['a']).join(), /b is a Starter .* missing from .*dino-starters\.json/);
-    assert.match(starterDrift(books, ['a', 'b', 'c']).join(), /lists c but its book\.json kind is store/);
-    assert.match(starterDrift(books, ['a', 'b', 'gone']).join(), /lists gone but there is no content\/dino\/gone/);
 });
 
 test('Slice 239: a live story with no built folder is planned for delisting, never one that is built', () => {

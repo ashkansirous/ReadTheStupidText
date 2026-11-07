@@ -1,15 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { CONTENT_MARKDOWN, GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, changedFilesSince, localChangedFiles, matchesPattern, newestAppTag, parseCommits, parseLocalArgs, planFor, productBump, shipTargets, shipTargetsPerProduct } from './ship-targets.mjs';
 
-// Slice 265: the four books once bundled in the app (dino-starters.json stays only for BookBuilder's kind check); they are store-only content like every other book.
-const FORMER_STARTERS = JSON.parse(readFileSync(fileURLToPath(new URL('./dino-starters.json', import.meta.url)), 'utf8'));
+// Slice 265: every book is store-only content (Slice 299: dino-starters.json is gone); the book stems are read from the real content folders, so a renamed book cannot leave these tests empty.
+const CONTENT_DIR = fileURLToPath(new URL('../../content/dino/', import.meta.url));
+const BOOK_STEMS = readdirSync(CONTENT_DIR).filter((stem) => existsSync(join(CONTENT_DIR, stem, 'book.json')));
 const M = 'src/ReadTheStupidText.Mobile';
 const S = 'src/ReadTheStupidText.Mobile.Shared';
 const NONE = { windows: false, windowsstore: false, android: false, ios: false, dinoreader: false, dinoapp: false, dinoios: false, dinowin: false, dinostore: false };
@@ -141,12 +142,6 @@ test('an iOS-only change reports ios and nothing else (release.yml declines to s
 test('DinoReader.Core builds the Dino Reader app (Slice 60) but no RTST platform', () => {
     const t = targetsOf(['src/DinoReader.Core/a.cs']);
     assert.deepEqual([t.windows, t.android, t.ios, t.dinoapp], [false, false, false, true]);
-});
-
-test('Slice 239: dino-starters.json is exactly the books whose book.json kind is Starter', () => {
-    const root = fileURLToPath(new URL('../../content/dino/', import.meta.url));
-    const starters = readdirSync(root).filter((stem) => JSON.parse(readFileSync(join(root, stem, 'book.json'), 'utf8')).kind === 'Starter');
-    assert.deepEqual([...FORMER_STARTERS].sort(), starters.sort());
 });
 
 test('Slice 239: a store-only change starts no suite, no app and no RTST target', () => {
@@ -627,7 +622,8 @@ test('release.yml ignores every book folder, audio clips included, but still run
     const paths = pushPathsOf('release.yml');
     assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/story.md'), false);
     assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/pictures/1.jpg'), false);
-    for (const stem of FORMER_STARTERS) assert.equal(pushRuns(paths, `content/dino/${stem}/book.json`), false, stem);
+    assert.ok(BOOK_STEMS.length > 0, 'content/dino has no book folders');
+    for (const stem of BOOK_STEMS) assert.equal(pushRuns(paths, `content/dino/${stem}/book.json`), false, stem);
     assert.equal(pushRuns(paths, 'content/dino/three-little-pigs/audio/fa/manifest.json'), false);
     assert.equal(pushRuns(paths, 'content/dino/three-little-pigs/audio/fa/0a1b2c3d4e5f6071-Hali-gemini-tts-6de2d2f6.m4a'), false);
     for (const file of ['src/DinoReader.Core/Parser.cs', 'docs/plan/x.md', '.github/workflows/release.yml']) assert.equal(pushRuns(paths, file), true, file);
@@ -638,7 +634,7 @@ test('release.yml ignores every book folder, audio clips included, but still run
 test('dino-store.yml runs for every book folder and workflow_dispatch, and has its own concurrency group', () => {
     const paths = pushPathsOf('dino-store.yml');
     assert.equal(pushRuns(paths, 'content/dino/x-marks-the-treasure/story.md'), true);
-    for (const stem of FORMER_STARTERS) assert.equal(pushRuns(paths, `content/dino/${stem}/book.json`), true, stem);
+    for (const stem of BOOK_STEMS) assert.equal(pushRuns(paths, `content/dino/${stem}/book.json`), true, stem);
     assert.equal(pushRuns(paths, 'content/dino/three-little-pigs/audio/fa/0a1b2c3d4e5f6071-Hali-gemini-tts-6de2d2f6.m4a'), true);
     const text = readFileSync(`${WORKFLOWS_DIR}dino-store.yml`, 'utf8');
     assert.match(text, /group: dino-store\r?\n\s+cancel-in-progress: false/);

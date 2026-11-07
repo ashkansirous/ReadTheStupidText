@@ -36,16 +36,6 @@ public sealed class BookBuilderTests : IDisposable
         Assert.Equal(0, await BookCommands.CheckAsync());
     }
 
-    // Slice 239: ship-targets.mjs decides starter vs store by this list (path filters cannot read book.json), so it must name exactly the starters.
-    [Fact]
-    public void TheStarterListOfThePipelines_NamesExactlyTheBooksOfKindStarter()
-    {
-        string file = Path.Combine(Books.RepoRoot(), ".github", "scripts", "dino-starters.json");
-        string[] listed = JsonSerializer.Deserialize<string[]>(File.ReadAllText(file))!;
-
-        Assert.Equal(Books.Starters.Select(b => b.Stem).Order(StringComparer.Ordinal), listed.Order(StringComparer.Ordinal));
-    }
-
     [Theory]
     [InlineData(1, "same", 5, "same", 5)]
     [InlineData(1, "new", 5, "old", 6)]
