@@ -152,3 +152,7 @@ The own-books cleanup (`OwnBooksCleanup.cs`, `OwnBooksCleanupRun.cs`) is single-
 ## Language change fetches the books' sound (Slice 285)
 
 Every way of changing the story or app language (`LanguagePage`, `StoryLanguagesPage`, `IntroWizardPage`) must start `ShelfAudioPacks.Start` for each added language. The reading page starts no fetch. The emulator flows `language-change-fetches-audio` and `language-change-back-key-fetches-audio` guard it. (Slice 285: docs/plan/slices/285-dino-language-change-fetches-book-audio.md)
+
+## Fredoka Medium is derived (Slice 290 part B)
+
+`Resources/Fonts/Fredoka-Medium.ttf` is a fontTools static wght=500 instance of the variable `Fredoka.ttf`, family renamed "Fredoka Medium". Regenerate it if `Fredoka.ttf` changes. (Slice 290: docs/plan/slices/290-dino-reading-sound-pill.md)

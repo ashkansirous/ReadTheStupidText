@@ -1,6 +1,6 @@
 ### Slice 290 — Dino: the reading page's sound line as a pill (Batch 50 design)
 
-*Built 2026-11-07, merged as PR #889 (ca6b039f).*
+*Built 2026-11-07, merged as PR #889 (ca6b039f); part B merged as PR #895 (ed0bd9a6).*
 
 **Touches:** `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/IconView.cs`, `src/DinoReader.App/App.xaml`, `src/DinoReader.App/SoundStatusPill*.cs`, `tests/DinoReader.Tests/**`, `.maestro/dino/**`, `docs/plan/slices/290-dino-reading-sound-pill.md`
 
