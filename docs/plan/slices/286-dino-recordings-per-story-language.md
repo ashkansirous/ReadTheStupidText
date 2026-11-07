@@ -38,8 +38,7 @@ Code check (origin/main, 2026-11-07): every recording is tied to `story.Language
 4. **Recordings that already exist belong to the app's main language** (`StoryLanguageSet.Main`, the language the app is shown in), not
    to the book's stored `Language` field. Plan text and UI never speak of a book's "original language": there is no such product concept.
 
-Smaller defaults (not raised by the user; the user may override): each language keeps its own pieces, because sentence splits differ
-per language. Delete and re-record touch only the picked language. The "use my recordings" switch stays one switch for the book.
+Each language keeps its own pieces, because sentence splits differ per language. Delete and re-record touch only the picked language.
 
 #### Design (Dino Reader Batch 49 Recording per Language mock, section 192-196, added 2026-11-07)
 
@@ -53,11 +52,10 @@ Five frames on iPhone 8 (375 x 667), English app with Farsi as a side language; 
 
 New strings (both locales, every app language): the `Record in` label already exists as `Record_Language`; the mock adds none beyond the book-sheet line template "{0} {1} of {2}" joined by " · " and the header line "{language} · Line {n} of {m}" / page variants. Language names come from `LanguageNames`.
 
-**Open point: speaker names and "says" line language.** The plan says the card text and speakers follow the picked language (`RecordIntroPage.cs` `BookInAsync` applies `WithSpeakerNames`). The mock shows English names ("The Wolf", "First little pig") in the checklist and on the card in the Farsi frames, and says "The Wolf says:" stays in the app language. Default: follow the mock, names and the "says" label in the app language; only the words are the picked language.
-
-**Open point: flag in the record header.** The mock puts a flag and the language name in the record page's small line; the plan didn't mention it. Default: add it, using the flag the reading page's language button draws (`StoryLanguageButton.cs`), shown only when the family has more than one story language.
-
-**Open point: per-language mode and ticks.** The plan's smaller default kept one choice per book. The mock (question 1, drawn answer) keeps the mode and the ticks per language. Default: per language, as drawn; the "use my recordings" switch stays one switch for the book.
+**The mock decides (it always wins over this plan):**
+- Speaker names in the checklist and the "The Wolf says:" label stay in the **app language**; only the words on the card are in the picked language.
+- The record page's small header line is a 14px round flag, the language name and the position, shown when the family has more than one story language.
+- How you record (one character at a time or whole pages) and the ticks are kept **per language**. The "use my recordings" switch stays one switch for the book.
 
 Details the mock settles that the plan left open: the language row is a two-column card grid with flags, not a list with radios; counts on the cards are in the unit of that language's mode (lines or pages), not always pages; the intro opens on the app language; the book-sheet line lists every language with recordings.
 
