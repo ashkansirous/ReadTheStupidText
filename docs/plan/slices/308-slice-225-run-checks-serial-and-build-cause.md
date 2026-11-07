@@ -1,6 +1,6 @@
 # Slice 308 — Slice 225 items 3 and 6: `run-checks.ps1 -Serial` for emulators, and the failed-build cause
 
-*Built 2026-11-07 (wave 2026-11-07, PR #914, not merged). Item 1 run on emulator-5554 (paused-notification PASS); item 2 cause not found, see Not yet verified.* (Planned 2026-11-07.) From [Slice 225](225-device-tooling-leftovers-night-2026-10-31-1301.md) (PR #696). Item 3 was not built: the phone checks have no emulator path. Item 6: the runner's Debug builds failed or stalled repeatedly (entries 249, 494, 630: "stalled: log not grown 5 min", "dino debug failed") and runs fell back to the cached AOT build; nobody read `build-dino-debug.log` / `build-rtst-debug.log`, so the cause is unknown. Moved from plan.md's *Outstanding work*. Tooling only.
+*Built 2026-11-07, merged as PR #914 (9bf1a034). Item 1 run on emulator-5554 (paused-notification PASS); item 2 cause not found, see Not yet verified.* (Planned 2026-11-07.) From [Slice 225](225-device-tooling-leftovers-night-2026-10-31-1301.md) (PR #696). Item 3 was not built: the phone checks have no emulator path. Item 6: the runner's Debug builds failed or stalled repeatedly (entries 249, 494, 630: "stalled: log not grown 5 min", "dino debug failed") and runs fell back to the cached AOT build; nobody read `build-dino-debug.log` / `build-rtst-debug.log`, so the cause is unknown. Moved from plan.md's *Outstanding work*. Tooling only.
 
 **Touches:** `tools/phone/run-checks.ps1`, `tools/phone/common.ps1`, `tools/phone/test-run-checks.ps1`, `tools/phone/checks/_device.ps1`, `tools/phone/checks/_lib.ps1`, `tools/phone/test-phone-lib.ps1`, `tools/phone/README.md`, `tools/phone/connect.ps1`, `tools/phone/preflight.ps1`, `tools/phone/reset-dev-app.ps1`, `tools/phone/tap.ps1`, `tools/phone/lease.ps1`, `tools/emulator/common.ps1`, `tools/emulator/install-debug.ps1`, `tools/CLAUDE.md`, `docs/plan/slices/308-slice-225-run-checks-serial-and-build-cause.md`
 
@@ -55,7 +55,7 @@ Check passes 1 and 2 both found holes in the emulator opt-in (an ambient `RTST_P
 - Skipped #5 (`reviews/s308-check4.md`): "no test scans dot-source graph", style.
 - Skipped #6 (`reviews/s308-check4.md`): "uses literal 'aot'; run-checks.ps1 exits bare 2", style.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-07)
 
 - `run-checks.ps1 -Serial emulator-NNNN` runs the phone checks on an emulator; the emulator is allowed only when named, and `-AllowEmulator` is an explicit parameter passed to each child script (`tools/phone/common.ps1`). No environment variable opts in; phone scripts run by hand stay wireless-only. An emulator takes the emulator lease only, never the phone lease; `-Variant aot` is refused. (Slice 308: docs/plan/slices/308-slice-225-run-checks-serial-and-build-cause.md)
 - A function name defined in both `tools/phone/common.ps1` and a `tools/phone/checks/*.ps1` file shadows silently after dot-sourcing (Slice 308: `Get-PackageUid` left the dev app's uid unread). Check for an existing name before adding a helper. (Slice 308: docs/plan/slices/308-slice-225-run-checks-serial-and-build-cause.md)
