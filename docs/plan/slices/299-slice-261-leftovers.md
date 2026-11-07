@@ -1,8 +1,10 @@
 # Slice 299 — Slice 261 leftovers (dead `LaunchedFromIntro`, Cancel on list load, starter names)
 
-*Planned 2026-11-07.* Three leftovers from [Slice 261](261-dino-no-starters-first-run-book-picker.md), not built. Moved from plan.md's *Outstanding work*. App code is shared MAUI (Android and iOS together).
+*In progress (wave 2026-11-07), draft PR.* (Planned 2026-11-07.) Three leftovers from [Slice 261](261-dino-no-starters-first-run-book-picker.md), not built. Moved from plan.md's *Outstanding work*. App code is shared MAUI (Android and iOS together).
 
-**Touches:** `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/IntroWizardPage.cs`, `.github/scripts/dino-starters.json`, `tests/DinoReader.Tests/BookBuilderTests.cs`, `docs/plan/slices/299-slice-261-leftovers.md`
+**Touches:** `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/FirstBooksPage.cs`, `src/DinoReader.App/CLAUDE.md`, `.github/scripts/dino-starters.json`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books*.test.mjs`, `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets*.test.mjs`, `.github/workflows/dino-store.yml`, `.github/CLAUDE.md`, `tests/DinoReader.Tests/BookBuilderTests.cs`, `tests/DinoReader.Tests/FirstBooks*Tests.cs`, `docs/plan/slices/299-slice-261-leftovers.md`
+
+**Claim notes (wave 2026-11-07, run-all-waves):** premise check: item 1, nothing sets `StorePage.LaunchedFromIntro`; `IntroWizardPage.cs:637` sets the RecordPage/RecordIntroPage property, which stays. Item 2: `StorePage.LoadAsync` already treats a cancel as non-offline (`StorePage.xaml.cs:326-352`, `StoreClient.cs:91,119`); the first-run picker `FirstBooksPage.cs:191` is the likely place a cancelled load shows offline: reproduce there with a test first, fix only if it fails. Item 3: the json is read by `publish-store-books.mjs` (`--check-content`), `dino-store.yml:61` and its paths filter; remove it and those reads (or rename to what it does now if the check still has a job), keep CI green.
 
 ## Work
 
