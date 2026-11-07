@@ -1,9 +1,9 @@
 # Slice 289 — Dino: count Sonos plays on the server
 
-*Planned 2026-11-07.* Server only (Cloudflare Worker). The apps do not change.
+*In progress (wave 2026-11-07), draft PR.* *Planned 2026-11-07.* Server only (Cloudflare Worker). The apps do not change.
 
 **Depends on:** Slice 283 (the Sonos music service). Feeds Slice 287 (the dashboard).
-**Touches:** `worker/sonos.ts`, `worker/sonos-soap.ts`, `worker/speaker-usage.ts` (new: writes a speaker play to
+**Touches:** `worker/events.ts` (shared row layout), `worker/appconfig.ts` (telemetry switch read), `worker/index.ts` (env plumbing), `worker/sonos.ts`, `worker/sonos-soap.ts`, `worker/speaker-usage.ts` (new: writes a speaker play to
 `DINO_USAGE`), `worker/sonos.test.mjs`, `worker/speaker-usage.test.mjs` (new), `site/dino/privacy.html`, `PRIVACY.md`,
 `worker/CLAUDE.md`, `docs/plan/slices/283-dino-sonos-music-service.md` (submission text, if reporting is declared), this file.
 
