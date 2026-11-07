@@ -27,11 +27,6 @@ public sealed class ShelfAudioPacks
 	private readonly Dictionary<string, Task> _unwinding = []; // the Completion of the language's last retired run: a new run for it waits for that
 	private readonly Dictionary<string, ShelfAudioState> _states = [];
 	private DateTimeOffset _lastResume = DateTimeOffset.MinValue;
-	private readonly ShelfAudioOpenMemory _openMemory = new(); // runs that failed in this app run, so a book reopen does not start them again (Slice 285)
-	private readonly object _listingLock = new();
-	private StoreListing? _listing; // under _listingLock: the last good store listing and when it came, reused by book opens for a few minutes
-	private DateTimeOffset? _listingAt;
-	private bool _openListingFailed; // under _listingLock: a listing fetch for a book open failed; no further open asks until one succeeds (Resume or a run's planning)
 
 	private const string InstalledKey = "dino.shelfaudio.installed";
 	private InstalledShelfAudio _installed; // under _gate: the last scan of which (book, language) packs are on the phone; the one source both pages read (Slice 278 part B, reviews/s278b-design.md)
@@ -157,91 +152,6 @@ public sealed class ShelfAudioPacks
 		lock (_gate)
 		{
 			return bookId is not null && _runs.TryGetValue(code, out Run? run) && !run.Ended && run.Pending.Contains(bookId);
-		}
-	}
-
-	/// <summary>
-	/// Slice 285 C: a book was opened. When <paramref name="language"/> is one of the story languages, the store lists a pack of <paramref name="bookId"/> in it and the newest installed pack is older
-	/// or missing, starts the language's run quietly: the same path as <see cref="Resume"/> (no card; the grown-up's Cancel mark is honoured inside the start's own lock; the ordinary Wi-Fi rule
-	/// applies). It never clears a Cancel mark and never asks about mobile data. A listing that cannot be fetched starts nothing.
-	/// </summary>
-	public async Task StartQuietForBookAsync(string language, string? bookId, CancellationToken cancel)
-	{
-		string code = UiLanguage.Resolve(language);
-		bool inSet = StoryLanguages.Current().All.Contains(code);
-		if (bookId is null || !inSet)
-		{
-			return;
-		}
-
-		if (_openMemory.HasFailed(code, bookId))
-		{
-			return; // a run for this book and language failed in this app run: Resume and the weekly check retry, a reopen does not
-		}
-
-		StoreListing? listing = await RecentListingAsync(cancel);
-		StoreItem? item = listing?.Items.FirstOrDefault(i => string.Equals(i.Id, bookId, StringComparison.OrdinalIgnoreCase));
-		if (item is null)
-		{
-			return;
-		}
-
-		string key = BundledTranslations.Key(code);
-		int? installed = await Task.Run(() => _store.Packs.InstalledVersion(item.Id, key), cancel); // reads the pack folder: off the UI thread
-		cancel.ThrowIfCancellationRequested(); // the page left (or the reading language changed) while this waited
-		if (!ShelfAudioLanguages.BookNeedsQuietStart(inSet, item.AudioIn(key)?.Version, installed))
-		{
-			return;
-		}
-
-		AudioPackLog.Write($"shelf audio {code}: a book was opened that lacks its pack");
-		Begin(code, visible: false, VoiceRequestOutcome.NothingAsked, cancelled: false); // quiet, as Resume: Begin reads the Cancel mark under the gate and skips
-	}
-
-	// The listing a book open uses: one fetched in the last few minutes is reused, none is asked for while offline, and once a fetch failed no open asks again in this app run (so a train
-	// ride is at most one fallback report); Resume and the runs' own planning still retry, and a good listing of theirs clears the failure. Null when there is no usable listing.
-	private async Task<StoreListing?> RecentListingAsync(CancellationToken cancel)
-	{
-		lock (_listingLock)
-		{
-			if (ShelfAudioOpenMemory.ListingIsFresh(_listingAt, DateTimeOffset.UtcNow))
-			{
-				return _listing;
-			}
-
-			if (_openListingFailed)
-			{
-				return null;
-			}
-		}
-
-		if (!IsOnline())
-		{
-			return null;
-		}
-
-		StoreListing fetched = await _store.ListAsync(cancel);
-		RememberListing(fetched);
-		lock (_listingLock)
-		{
-			_openListingFailed = fetched.Status != StoreLoadStatus.Ok;
-		}
-
-		return fetched.Status == StoreLoadStatus.Ok ? fetched : null;
-	}
-
-	private void RememberListing(StoreListing listing)
-	{
-		if (listing.Status != StoreLoadStatus.Ok)
-		{
-			return;
-		}
-
-		lock (_listingLock)
-		{
-			_listing = listing;
-			_listingAt = DateTimeOffset.UtcNow;
-			_openListingFailed = false;
 		}
 	}
 
@@ -441,13 +351,12 @@ public sealed class ShelfAudioPacks
 		}
 		catch (OperationCanceledException)
 		{
-			// no-fallback: cancelled by the app or the language change; the next open plans the run again
+			// no-fallback: cancelled by the app or the language change; the next launch or return to the app plans the run again
 			AudioPackLog.Write($"shelf audio {code}: run ended by cancel");
 		}
 		catch (Exception ex)
 		{
-			_openMemory.MarkFailed(code, null);
-			AudioPackLog.Write($"shelf audio {code}: run failed, will try at the next open ({ex.GetType().Name})");
+			AudioPackLog.Write($"shelf audio {code}: run failed, will try at the next launch or return to the app ({ex.GetType().Name})");
 			_store.Fallbacks.Report(FallbackArea.Pack, FallbackReason.PackSyncFailed);
 		}
 		finally
@@ -504,7 +413,7 @@ public sealed class ShelfAudioPacks
 		return true;
 	}
 
-	// A failed listing while offline waits for the connection (a visible run says so, a launch check stays quiet); while online it is tried a few times, then given up until the next open.
+	// A failed listing while offline waits for the connection (a visible run says so, a launch check stays quiet); while online it is tried a few times, then given up until the next launch or return to the app.
 	private async Task<ShelfAudioWork?> PlanAsync(Run run, CancellationToken cancel)
 	{
 		string code = run.Code;
@@ -514,7 +423,6 @@ public sealed class ShelfAudioPacks
 			StoreListing listing = await _store.ListAsync(cancel);
 			if (listing.Status == StoreLoadStatus.Ok)
 			{
-				RememberListing(listing);
 				ISet<string> shelf = await _store.InstalledIdsAsync();
 				return ShelfAudioPlan.For(listing.Items, shelf, code, _store.Packs.InstalledVersion, LanguageChoice.Current());
 			}
@@ -522,8 +430,7 @@ public sealed class ShelfAudioPacks
 			bool online = IsOnline();
 			if (online && ++onlineFailures >= MaxListTriesOnline)
 			{
-				AudioPackLog.Write($"shelf audio {code}: the store listing failed {onlineFailures} times while online, gives up until the next open");
-				_openMemory.MarkFailed(code, null);
+				AudioPackLog.Write($"shelf audio {code}: the store listing failed {onlineFailures} times while online, gives up until the next launch or return to the app");
 				return null;
 			}
 
@@ -568,7 +475,6 @@ public sealed class ShelfAudioPacks
 				run.Pending.Remove(pick.Item.Id); // handled (in, no pack, or given up): the book no longer waits on this run
 			}
 
-			RememberInstallResult(code, pick.Item.Id, result);
 			state = result == ShelfAudioInstall.Failed ? state.WithBookFailed() : state.WithBookDone();
 			state = state with { NoAudioTitles = [.. noAudio] };
 			AudioPackLog.Write($"shelf audio {code}: {state.Done} of {state.Total} done, {state.Failed} failed");
@@ -579,20 +485,7 @@ public sealed class ShelfAudioPacks
 		AudioPackLog.Write($"shelf audio {code}: finished, {total} book(s) handled");
 	}
 
-	// A book that gave up is not started again by a reopen in this app run; a pack that came in clears it.
-	private void RememberInstallResult(string code, string bookId, ShelfAudioInstall result)
-	{
-		if (result == ShelfAudioInstall.Failed)
-		{
-			_openMemory.MarkFailed(code, bookId);
-		}
-		else if (result == ShelfAudioInstall.Installed)
-		{
-			_openMemory.Clear(code, bookId);
-		}
-	}
-
-	// A pack the store turned out not to have (404) goes to the quiet line. A book that keeps failing while online is Failed (not done) for this run, with a backoff between tries; the next open tries it again.
+	// A pack the store turned out not to have (404) goes to the quiet line. A book that keeps failing while online is Failed (not done) for this run, with a backoff between tries; the next launch or return to the app tries it again.
 	private async Task<ShelfAudioInstall> InstallOneAsync(Run run, ShelfAudioPick pick, List<string> noAudio, CancellationToken cancel)
 	{
 		string code = run.Code;
