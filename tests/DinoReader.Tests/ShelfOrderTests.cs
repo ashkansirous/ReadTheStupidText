@@ -75,6 +75,9 @@ public sealed class ShelfOrderTests : IDisposable
         await library.SaveOrderAsync([a, c, b]);
         Assert.Equal([a, c, b], (await library.ListAsync()).Select(s => s.Id));
 
+        await Assert.ThrowsAsync<ArgumentException>(() => library.SaveOrderAsync([c, "../evil", a]));
+        Assert.Equal([a, c, b], (await library.ListAsync()).Select(s => s.Id)); // the refused save wrote nothing
+
         string d = StoryIds.New();
         await library.AddAsync(Make(d, 4));
         Assert.Equal([d, a, c, b], (await library.ListAsync()).Select(s => s.Id));
@@ -149,6 +152,14 @@ public class ShelfOrderGridTests
     [Fact]
     public void MergeShownKeepsBooksNotOnScreenAfterTheirOldNeighbour() =>
         Assert.Equal(["h0", "c", "a", "h1", "b"], ShelfOrder.MergeShown(["h0", "a", "h1", "b", "c"], ["c", "a", "b"]));
+
+    [Fact]
+    public void MergeShownDropsARepeatedShownId() =>
+        Assert.Equal(["b", "c", "a"], ShelfOrder.MergeShown(["a", "b", "c"], ["b", "a", "b"]));
+
+    [Fact]
+    public void MergeShownDropsARepeatedStoredId() =>
+        Assert.Equal(["b", "a", "x"], ShelfOrder.MergeShown(["a", "x", "x"], ["b", "a"]));
 
     [Fact]
     public void MergeShownWithNothingStoredIsTheShownOrder() =>

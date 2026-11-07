@@ -809,7 +809,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 			ReorderLog($"done saved {ids.Count} books: {string.Join(",", ids)}");
 			return true;
 		}
-		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException) // ArgumentException: an id that is not a story id (Slice 298)
 		{
 			// no-fallback: the save fails and the person is told (false); no default is used
 			Debug.WriteLine($"Dino Reader could not save the shelf order: {ex}"); // the stored order stays as it was

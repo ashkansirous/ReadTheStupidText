@@ -66,7 +66,7 @@ public static class ShelfOrder
     /// </summary>
     public static List<string> MergeShown(IReadOnlyList<string> stored, IReadOnlyList<string> shown)
     {
-        List<string> result = [.. shown];
+        List<string> result = [.. shown.Distinct()]; // a repeated id would come out twice in the stored list (Slice 298)
         var shownSet = new HashSet<string>(shown);
         for (int i = 0; i < stored.Count; i++)
         {

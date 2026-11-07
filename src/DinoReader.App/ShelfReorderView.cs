@@ -37,8 +37,7 @@ internal sealed class ShelfReorderView : Grid
 	private double _gap;
 	private double _titleHeight;
 	private ReorderEntry? _dragged;
-	private IReadOnlyList<string>? _orderBeforeDrag; // the order when the lift began, put back when the drag is cancelled or dropped outside the grid
-	private bool _dropAccepted;
+	private readonly ShelfDragSession _drag = new(); // the drag's end decisions (undo on cancel, keep a landed drop, either event order) live here in Core
 	private bool _closing;
 	private int _kbIndex = -1; // the spot the keyboard focus is on; -1 until a key is pressed
 	private bool _keyboardHolding; // Space lifted the focused cover and the arrows carry it
@@ -58,11 +57,7 @@ internal sealed class ShelfReorderView : Grid
 		this.Add(_hint, 0, 1);
 		var drop = new DropGestureRecognizer { AllowDrop = true };
 		drop.DragOver += OnDragOver;
-		drop.Drop += (_, _) =>
-		{
-			_dropAccepted = true;
-			EndDrag();
-		};
+		drop.Drop += (_, _) => ApplyDragOutcome(_drag.Drop(Environment.TickCount64));
 		_surface.GestureRecognizers.Add(drop);
 		_scroll.Content = _surface;
 		_scroll.SizeChanged += OnScrollSizeChanged;
@@ -167,7 +162,7 @@ internal sealed class ShelfReorderView : Grid
 		tap.Tapped += (_, _) => Lift(entry);
 		var drag = new DragGestureRecognizer { CanDrag = true };
 		drag.DragStarting += (_, e) => StartDrag(entry, e);
-		drag.DropCompleted += (_, _) => FinishDrag();
+		drag.DropCompleted += (_, _) => ApplyDragOutcome(_drag.Completed(Order, Environment.TickCount64));
 		entry.View.GestureRecognizers.Add(tap);
 		entry.View.GestureRecognizers.Add(drag);
 #if WINDOWS
@@ -274,6 +269,7 @@ internal sealed class ShelfReorderView : Grid
 		ReorderTrace.Step("view close begin");
 		_closing = true;
 		ClearEntries();
+		_drag.Reset();
 		IsVisible = false;
 		ReorderTrace.Step("view close end");
 	}
@@ -287,7 +283,7 @@ internal sealed class ShelfReorderView : Grid
 
 		_entries.Clear();
 		_surface.Children.Clear();
-		_dragged = null;
+		_dragged = null; // the drag session stays: a rebuild mid-drag must still let a cancel restore the pre-drag order (reset in Close, or by the next Begin)
 	}
 
 	// Only a change of the scroll's width re-lays out (a height-only change, or a scrollbar flicker under 1 dp, must not feed back into the surface size: Windows threw a layout cycle).
@@ -406,8 +402,7 @@ internal sealed class ShelfReorderView : Grid
 	{
 		e.Data.Text = entry.Id;
 		_dragged = entry;
-		_orderBeforeDrag = Order;
-		_dropAccepted = false;
+		_drag.Begin(Order);
 		_kbIndex = -1; // the mouse takes over from the keyboard
 		_keyboardHolding = false;
 		SetLifted(entry, false);
@@ -507,16 +502,18 @@ internal sealed class ShelfReorderView : Grid
 		}
 	}
 
-	// The drag ended on the dragged cover: a drop on the grid already ended it; a cancel (Esc) or a drop elsewhere puts the book back where it was before the drag.
-	private void FinishDrag()
+	// Slice 298: the drop and drop-completed events only go to ShelfDragSession (Core, unit-tested, any event order); this applies what it decides.
+	private void ApplyDragOutcome(ShelfDragOutcome outcome)
 	{
-		if (!_dropAccepted && _orderBeforeDrag is { } before)
+		if (outcome.Order is { } order)
 		{
-			ApplyOrder(before);
+			ApplyOrder(order);
 		}
 
-		_dropAccepted = false;
-		EndDrag();
+		if (outcome.EndVisual)
+		{
+			EndDrag();
+		}
 	}
 
 	private void EndDrag()

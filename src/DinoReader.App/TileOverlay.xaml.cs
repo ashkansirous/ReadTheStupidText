@@ -22,14 +22,10 @@ public partial class TileOverlay : ContentView
 				DesktopTips.Set(MoreButton, tile.MoreHint); // Slice 235 part B: Windows only
 			}
 		};
-		Loaded += (_, _) =>
-		{
-			ScrollStarted -= CancelHold; // Loaded can fire again without Unloaded: never subscribe twice
-			ScrollStarted += CancelHold;
-		};
+		Loaded += (_, _) => Register();
 		Unloaded += (_, _) =>
 		{
-			ScrollStarted -= CancelHold;
+			Unregister();
 			CancelHold();
 		};
 		PropertyChanged += (_, args) =>
@@ -52,14 +48,35 @@ public partial class TileOverlay : ContentView
 	private readonly HoldGesture _gesture = new(); // all hold decisions live here (Core, unit-tested); this view feeds it events and a timer
 
 	// The platform scroller takes a touch without telling the overlay (no move, no release), so the gallery raises this when its list starts to scroll.
-	private static event Action? ScrollStarted;
+	// Slice 298: the overlays that are on screen, held weakly. A static event held every subscribed overlay (and its recycled cell) alive, and a cell recycled without Unloaded kept
+	// its handler; here each overlay adds and removes only itself, and a collected one drops out on the next scroll.
+	private static readonly List<WeakReference<TileOverlay>> Live = [];
+
+	private void Register()
+	{
+		Unregister(); // Loaded can fire again without Unloaded: never register twice
+		Live.Add(new WeakReference<TileOverlay>(this));
+	}
+
+	private void Unregister() => Live.RemoveAll(reference => !reference.TryGetTarget(out TileOverlay? overlay) || ReferenceEquals(overlay, this));
 
 	/// <summary>The gallery's list started to scroll: every waiting hold is over.</summary>
-	public static void NotifyScrollStarted() => ScrollStarted?.Invoke();
+	public static void NotifyScrollStarted()
+	{
+		foreach (WeakReference<TileOverlay> reference in Live.ToArray())
+		{
+			if (reference.TryGetTarget(out TileOverlay? overlay))
+			{
+				overlay.CancelHoldKeepingSwallow();
+			}
+		}
+
+		Live.RemoveAll(reference => !reference.TryGetTarget(out _));
+	}
 
 	private void OnBackdropTapped(object? sender, TappedEventArgs e)
 	{
-		if (_gesture.ShouldSwallowTap())
+		if (_gesture.ShouldSwallowTap(Environment.TickCount64))
 		{
 			return; // the release after a hold must not also open the sheet
 		}
@@ -130,7 +147,7 @@ public partial class TileOverlay : ContentView
 		}
 
 		StopTimer();
-		_gesture.Release(); // decides whether the tap that follows (or just came) is swallowed
+		_gesture.Release(Environment.TickCount64); // decides whether the tap that follows (or just came) is swallowed
 	}
 
 	// Debug only, like the gallery's [Reorder] lines: a device check reads which path (fired, moved, released) a press took.
@@ -141,10 +158,17 @@ public partial class TileOverlay : ContentView
 #endif
 	}
 
-	// Hide, unload, a new binding or a scroll: the hold is over and nothing is left to swallow.
+	// Hide, unload or a new binding: the hold is over and nothing is left to swallow (a leftover swallow would drop the first tap on the next book).
 	private void CancelHold()
 	{
 		_gesture.Cancel();
+		StopTimer();
+	}
+
+	// A scroll: a waiting hold is over, but a fired hold keeps its swallow until the release.
+	private void CancelHoldKeepingSwallow()
+	{
+		_gesture.CancelKeepingSwallow();
 		StopTimer();
 	}
 
