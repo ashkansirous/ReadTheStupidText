@@ -25,6 +25,7 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 282 | Dino: an Alexa kid skill that reads the store books (no login) | planned (park reason in the slice file; item 1 still waits on the user) | | | [282-dino-alexa-kid-skill.md](docs/plan/slices/282-dino-alexa-kid-skill.md) |
 | 283 | Dino: a Sonos music service for the store books (anonymous, no login) | code merged #879; waiting on the user: Sonos partner account, service submission, sandbox integration, Self Test | #879 | | [283-dino-sonos-music-service.md](docs/plan/slices/283-dino-sonos-music-service.md) |
 | 284 | Leftovers from night 2026-11-06-1250 final feedback loop (fallback guard on untracked files, VM record check, device marks, three small follow-ups) | parked: feedback loop, waits for the user | | | [284-final-loop-leftovers-night-2026-11-06-1250.md](docs/plan/slices/284-final-loop-leftovers-night-2026-11-06-1250.md) |
+| 286 | Dino: record your voice in each story language, and hear it when reading in that language | planned | | | [286-dino-recordings-per-story-language.md](docs/plan/slices/286-dino-recordings-per-story-language.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
