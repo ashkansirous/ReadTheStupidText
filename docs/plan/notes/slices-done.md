@@ -372,3 +372,6 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 310 | Dino Debug hook to force a voice-pack download failure | built | #925 | | [310-dino-debug-hook-force-pack-failure.md](../slices/310-dino-debug-hook-force-pack-failure.md) |
 | 312 | Read the iPhone's crash logs from this PC | built | #924 | | [312-read-iphone-crash-logs-from-this-pc.md](../slices/312-read-iphone-crash-logs-from-this-pc.md) |
 | 314 | Restore the "Still getting the voice ready" overlay when the person returns to the reader during a stalled read | built | #927 | | [314-reader-stall-overlay-after-return.md](../slices/314-reader-stall-overlay-after-return.md) |
+| 289 | Dino: count Sonos plays on the server | built | #929 | | [289-dino-count-sonos-plays.md](../slices/289-dino-count-sonos-plays.md) |
+| 311 | Crash data for the Windows apps from the Microsoft Store | built | #930 | | [311-windows-store-crash-data.md](../slices/311-windows-store-crash-data.md) |
+| 296 | Why a Farsi read matched 5 of 78 pieces to clips (fixture keys or a real fa audio gap) | built | #931 | | [296-farsi-read-clip-match.md](../slices/296-farsi-read-clip-match.md) |

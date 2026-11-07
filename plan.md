@@ -25,11 +25,8 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 282 | Dino: an Alexa kid skill that reads the store books (no login) | planned (item 1 decided 2026-11-07: kid skill with AudioPlayer, fall back to a non-kid skill if certification refuses) | | | [282-dino-alexa-kid-skill.md](docs/plan/slices/282-dino-alexa-kid-skill.md) |
 | 283 | Dino: a Sonos music service for the store books (anonymous, no login) | code merged #879; waiting on the user: Sonos partner account, service submission, sandbox integration, Self Test | #879 | | [283-dino-sonos-music-service.md](docs/plan/slices/283-dino-sonos-music-service.md) |
 | 287 | Dino: a private usage dashboard at dinoreader.sirous.uk/stats (downloads, listens, hours; by day/week/month, book, platform) | planned | | | [287-dino-usage-dashboard.md](docs/plan/slices/287-dino-usage-dashboard.md) |
-| 289 | Dino: count Sonos plays on the server | planned (depends on 283) | | | [289-dino-count-sonos-plays.md](docs/plan/slices/289-dino-count-sonos-plays.md) |
 | 291 | Store listings and screenshots for both apps on Play, App Store and Microsoft Store | planned | | | [291-store-listings-and-screenshots.md](docs/plan/slices/291-store-listings-and-screenshots.md) |
 | 295 | Bump `MauiVersion` once a MAUI release with dotnet/maui PR #38662 ships | planned (starts when 10.0.130 or later exists) | | | [295-bump-maui-version-for-pr-38662.md](docs/plan/slices/295-bump-maui-version-for-pr-38662.md) |
-| 296 | Why a Farsi read matched 5 of 78 pieces to clips (fixture keys or a real fa audio gap) | planned | | | [296-farsi-read-clip-match.md](docs/plan/slices/296-farsi-read-clip-match.md) |
-| 311 | Crash data for the Windows apps from the Microsoft Store | planned | | | [311-windows-store-crash-data.md](docs/plan/slices/311-windows-store-crash-data.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
@@ -68,7 +65,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 455 checks across 184 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- **Not yet tried on a device:** 466 checks across 187 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
 - Slice 305 follow-ups: remove the speech engine from the Dino Windows head (move the logging that lives in Infrastructure out first); stale sherpa-props path filters for Dino in `ship-targets.mjs` and `dinoreader*.yml` (harmless) ([slice](docs/plan/slices/305-dino-package-cleanup-ml-kit-and-sherpa.md)).
 - Slice 301 item 3 not built (premise wrong: 3 of 5 flows were deleted by Slice 278); re-plan from a fresh `PHASES` run ([slice](docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md)).
 - Slice 301 follow-ups (`reviews/s301-check2.md` 1-3): the preflight's Maestro launcher needs the same time bound, a java child that outlives the root process, an overall timeout in `speed.ps1`'s `Wait-ProcessWithCrashWatch`; reword the `WATCH kill-wait done` log line on a natural end ([slice](docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md)).

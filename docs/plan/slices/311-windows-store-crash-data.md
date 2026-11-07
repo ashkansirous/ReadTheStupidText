@@ -1,6 +1,6 @@
 # Slice 311 — Crash data for the Windows apps from the Microsoft Store
 
-*Built 2026-11-07 (wave 2026-11-07, night 2026-11-07-1412 wave 5), PR #930, not merged; the real pull is not yet verified.* *Planned 2026-11-07.* Not covered by any slice (round 3 feedback loop of 2026-11-01): crash data for the Windows apps (RTST's WinUI tray app and Dino's Windows head) from the Microsoft Store. The vendor docs read on 2026-11-01 (session 6777932c, entry 453) say Partner Center's Health report shows crashes and hangs and the Store analytics API has a `failurehits` endpoint. Not checked: whether they cover these MSIX/WinUI apps, and the reported 100-install threshold. Moved from plan.md's *Outstanding work*. Related: [Slice 227](227-crash-reports.md) (Android/iOS crash reports), [Slice 243](243-crash-report-gaps.md).
+*Built 2026-11-07 (wave 2026-11-07, night 2026-11-07-1412 wave 5), merged as PR #930 (18d34a9); the real pull is not yet verified.* *Planned 2026-11-07.* Not covered by any slice (round 3 feedback loop of 2026-11-01): crash data for the Windows apps (RTST's WinUI tray app and Dino's Windows head) from the Microsoft Store. The vendor docs read on 2026-11-01 (session 6777932c, entry 453) say Partner Center's Health report shows crashes and hangs and the Store analytics API has a `failurehits` endpoint. Not checked: whether they cover these MSIX/WinUI apps, and the reported 100-install threshold. Moved from plan.md's *Outstanding work*. Related: [Slice 227](227-crash-reports.md) (Android/iOS crash reports), [Slice 243](243-crash-report-gaps.md).
 
 **Touches:** `tools/crashes/**` (new `pull-store.mjs` or `.py` and a test; `pull-crashes.test.mjs` and `stub-server.mjs` if shared), `.github/workflows/store-submit.yml` (only for the secrets it already holds), `STORE.md`, `docs/plan/slices/311-windows-store-crash-data.md`
 
@@ -59,11 +59,11 @@
 - [ ] A real pull with the Actions secrets exported for both apps (they are not readable on this PC; run it from a workflow or after the user exports them): does it print rows or `none` for RTST `9NGT1BN1H92V` and Dino, and are the failure names symbolised?
 - [ ] Whether either app is under an undocumented Store threshold. If a real pull returns no rows for an app with users, plan the self-reporting Windows slice (item 3, already decided).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-07)
 
 - `tools/CLAUDE.md`: `tools/crashes/pull-store.mjs` pulls Microsoft Store crash rows for the Windows apps; it reads credentials only from env (`AZURE_AD_TENANT_ID`, `AZURE_AD_APPLICATION_CLIENT_ID`, `AZURE_AD_APPLICATION_SECRET`, required `STORE_PRODUCT_ID`, optional `DINOREADER_STORE_APP_ID`); the secrets exist only as Actions secrets. Test it with `node --test "tools/crashes/**/*.test.mjs"` (the bare-directory form fails on Node 24). (Slice 311: docs/plan/slices/311-windows-store-crash-data.md)
 
-#### For README.md
+#### For README.md (lifted 2026-11-07)
 
 Nothing user-facing.
 
