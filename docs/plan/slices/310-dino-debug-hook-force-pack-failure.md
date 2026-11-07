@@ -1,6 +1,6 @@
 # Slice 310 — Dino Debug hook to force a voice-pack download failure
 
-*Built 2026-11-07 (wave 2026-11-07, PR #925, not merged). Android emulator flows pass; iOS not yet verified.* Planned 2026-11-07. Testing gap: Dino has no Debug hook to force a pack failure; testers corrupt the `.partial` file by hand. It was "worth adding with Slice 187" and 187 shipped without it. Moved from plan.md's *Built but not verified*. Debug builds only; the hook must never exist in a Release build and never reach production analytics (`UsageEligibility` already blocks Debug).
+*Built 2026-11-07 (wave 2026-11-07, PR #925, merged as 4cda30ce). Android emulator flows pass; iOS not yet verified.* Planned 2026-11-07. Testing gap: Dino has no Debug hook to force a pack failure; testers corrupt the `.partial` file by hand. It was "worth adding with Slice 187" and 187 shipped without it. Moved from plan.md's *Built but not verified*. Debug builds only; the hook must never exist in a Release build and never reach production analytics (`UsageEligibility` already blocks Debug).
 
 **Touches:** `src/DinoReader.App/Testing/DinoTestCommands.cs`, `src/ReadTheStupidText.Mobile.Shared/Testing/TestHookDispatcher.cs`, `src/DinoReader.App/Testing/DinoTestCommands.ShelfAudio.cs`, `src/DinoReader.App/AudioPackStore.cs`, `src/ReadTheStupidText.Mobile.Shared/VoicePackInstaller.cs`, `tests/DinoReader.Tests/AudioPackStoreTests.cs`, `.maestro/dino/**`, `tools/emulator/**`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Testing/CLAUDE.md`, `docs/plan/slices/310-dino-debug-hook-force-pack-failure.md`
 
@@ -28,7 +28,7 @@
 - Skipped #4 (`reviews/s310-check2.md`): "probe checks only the two paths just deleted" (the probe exists to show the cleanup left nothing, so "none" is the expected result)
 - Skipped #1 (`reviews/s310-check3.md`): "restart half has no explicit retry trigger" (speculative race on the launch resume; the device run passed all three)
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-07)
 
 - Dino's `force-pack-failure mode=network|corrupt|disk-full|off` Debug hook fails the next `AudioPackStore` install (not voice packs); it lasts one process, so a flow restarts to clear it. Expect-log markers must start after whitespace, so prefix the book id. Already written in `src/DinoReader.App/Testing/CLAUDE.md` and `src/DinoReader.App/CLAUDE.md` (Slice 310: docs/plan/slices/310-dino-debug-hook-force-pack-failure.md).
 

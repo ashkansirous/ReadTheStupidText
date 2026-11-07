@@ -1,6 +1,6 @@
 # Slice 314 — Restore the "Still getting the voice ready" overlay when the person returns to the reader during a stalled read
 
-*Built 2026-11-07 (wave 2026-11-07, PR #927, not merged); the stall-return case is not yet verified on Android or iOS.* Planned 2026-11-07. Follow-up to [Slice 304](304-slice-202-rereview-and-initwait-test.md) review 6 (`reviews/s304-202-medium.md`): `ReaderPage.OnAppearing` re-subscribes `StallChanged`, but `ISpeechReader` exposes no stalled state, so a stalled read is silent with no Cancel after the person visits Settings or Review and comes back. Android and iOS both (shared `ReaderPage`).
+*Built 2026-11-07 (wave 2026-11-07, PR #927, merged as 882e01ce); the stall-return case is not yet verified on Android or iOS.* Planned 2026-11-07. Follow-up to [Slice 304](304-slice-202-rereview-and-initwait-test.md) review 6 (`reviews/s304-202-medium.md`): `ReaderPage.OnAppearing` re-subscribes `StallChanged`, but `ISpeechReader` exposes no stalled state, so a stalled read is silent with no Cancel after the person visits Settings or Review and comes back. Android and iOS both (shared `ReaderPage`).
 
 **Touches:** `src/ReadTheStupidText.Application/**` (`ISpeechReader`), `src/ReadTheStupidText.Mobile.Shared/**` (the phone readers and `CompositeSpeechReader`), `src/ReadTheStupidText.Infrastructure/Reading/**` (Windows readers), `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/314-reader-stall-overlay-after-return.md`
 
@@ -40,7 +40,7 @@
 - Skipped #2 (`reviews/s314-check2.md`): "Release runs inside Cancel()" (low, not a defect).
 - Skipped #3 (`reviews/s314-check2.md`): "await pending after cancel may return a value" (low, pre-existing).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-07)
 
 - A reader that raises `StallChanged` must also return `IsStalled` (`ISpeechReader`, `Application/Reading/ISpeechReader.cs`): the default is false, which hides the stall from `ReaderPage.RestoreStallWait` after the person returns to the reader. Pass the read's per-generation token to `StallReporter.WatchAsync` so Stop or a superseding read ends the stall. (Slice 314: docs/plan/slices/314-reader-stall-overlay-after-return.md)
 

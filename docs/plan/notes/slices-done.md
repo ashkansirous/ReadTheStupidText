@@ -368,3 +368,7 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 301 | Slice 247 follow-ups: emulator runner crash wait, crash log on retry (item 3, faster slow flows, not built) | built | #918 | | [301-slice-247-follow-ups-emulator-runner.md](../slices/301-slice-247-follow-ups-emulator-runner.md) |
 | 303 | Slice 201 review leftovers that change behaviour | built | #921 | | [303-slice-201-review-leftovers.md](../slices/303-slice-201-review-leftovers.md) |
 | 305 | Dino package cleanup: ML Kit, sherpa-onnx and onnxruntime out of the Dino packages | built | #920 | | [305-dino-package-cleanup-ml-kit-and-sherpa.md](../slices/305-dino-package-cleanup-ml-kit-and-sherpa.md) |
+| 297 | Slice 267 follow-ups (read_voice count, layout-check leaks, wizard button grid) | built | #926 | | [297-slice-267-follow-ups.md](../slices/297-slice-267-follow-ups.md) |
+| 310 | Dino Debug hook to force a voice-pack download failure | built | #925 | | [310-dino-debug-hook-force-pack-failure.md](../slices/310-dino-debug-hook-force-pack-failure.md) |
+| 312 | Read the iPhone's crash logs from this PC | built | #924 | | [312-read-iphone-crash-logs-from-this-pc.md](../slices/312-read-iphone-crash-logs-from-this-pc.md) |
+| 314 | Restore the "Still getting the voice ready" overlay when the person returns to the reader during a stalled read | built | #927 | | [314-reader-stall-overlay-after-return.md](../slices/314-reader-stall-overlay-after-return.md) |

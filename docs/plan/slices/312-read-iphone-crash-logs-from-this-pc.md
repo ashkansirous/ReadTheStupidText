@@ -1,6 +1,6 @@
 # Slice 312 — Read the iPhone's crash logs from this PC
 
-*Built 2026-11-07 (wave 2026-11-07, PR #924), not yet verified on a real iPhone (item 2 open).* Planned 2026-11-07. Untried: reading the iPhone 8's crash logs from this PC (libimobiledevice `idevicecrashreport`, or an equivalent) so iOS crashes can be checked without the user. Moved from plan.md's *Outstanding work*. Related: [Slice 243](243-crash-report-gaps.md) (dSYMs, symbolication, "did it crash?" command), [Slice 244](244-dino-ios-crashes-2026-11-01.md).
+*Built 2026-11-07 (wave 2026-11-07, PR #924, merged as ca8b00cf), not yet verified on a real iPhone (item 2 open).* Planned 2026-11-07. Untried: reading the iPhone 8's crash logs from this PC (libimobiledevice `idevicecrashreport`, or an equivalent) so iOS crashes can be checked without the user. Moved from plan.md's *Outstanding work*. Related: [Slice 243](243-crash-report-gaps.md) (dSYMs, symbolication, "did it crash?" command), [Slice 244](244-dino-ios-crashes-2026-11-01.md).
 
 Rule check: the real phone is wireless-debugging only for Android. For an iPhone the transport is Apple's, so the first step is to find out whether a wireless route exists (libimobiledevice supports network pairing after a first USB pairing; Apple's tools use Wi-Fi sync). The user's rule about USB is for the Android phone; if a first iPhone pairing needs a cable, that is one plug-in, said plainly before it happens.
 
@@ -45,7 +45,7 @@ Check pass 2 (`reviews/s312-check2.md`), all low, none applied:
 - Skipped #3 (`reviews/s312-check2.md`): "unparsable captureTime returns MinValue silently" (low, unconfirmed).
 - Skipped #4 (`reviews/s312-check2.md`): "ConvertFrom-Json on real .ips bodies with keys differing only by case would throw" (low, unconfirmed).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-07)
 
 None beyond the `tools/CLAUDE.md` edit already made in this slice.
 

@@ -2,6 +2,22 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 314: Restore the stall overlay when the person returns to the reader ([slice](slices/314-reader-stall-overlay-after-return.md))
+- The stall-return case itself on Android and iOS (start a stalled read, open Settings, come back: overlay and Cancel shown); no Debug hook forces a stall.
+- The iOS stall watcher on device.
+
+### Slice 312: Read the iPhone's crash logs from this PC ([slice](slices/312-read-iphone-crash-logs-from-this-pc.md))
+- Item 2: a real pair and pull on the iPhone (needs the user's one-time Apple Devices/driver and libimobiledevice install, and one cable pairing).
+- The real `.ips` field names and header layout: the parser was written from the known iOS crash format and checked only against a synthetic fixture, so the first real file may need a tweak.
+
+### Slice 310: Dino Debug hook to force a voice-pack download failure ([slice](slices/310-dino-debug-hook-force-pack-failure.md))
+- iOS: the same hook and three flows on an iOS Debug build (no Mac or iPhone in the 2026-11-07 wave).
+
+### Slice 297: Slice 267 follow-ups ([slice](slices/297-slice-267-follow-ups.md))
+- iOS wizard layout (no Mac or iPhone tonight).
+- `read_voice` counted at the first premade clip on iOS.
+- Dino Windows head not built.
+
 ### Slice 305: Dino package cleanup ([slice](slices/305-dino-package-cleanup-ml-kit-and-sherpa.md))
 - iOS TestFlight look of Dino and its IPA size (iOS only compiled).
 - Windows VM run of the Dino Windows head (unchanged by design; 6.5 GB free).

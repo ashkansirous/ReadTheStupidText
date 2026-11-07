@@ -1,6 +1,6 @@
 # Slice 297 — Slice 267 follow-ups (read_voice count, layout-check leaks, wizard button grid)
 
-*Built 2026-11-07 (wave 2026-11-07, PR #926), not merged; iOS wizard and read_voice on iOS not yet verified.* Planned 2026-11-07. Four items left by [Slice 267](267-dino-old-voice-and-wizard-buttons.md) (built, #826). Moved from plan.md's *Outstanding work*. Items 1 and 4 are app code (the same MAUI code on Android and iOS); items 2 and 3 are emulator tooling.
+*Built 2026-11-07 (wave 2026-11-07, PR #926, merged as 8abf2632); iOS wizard and read_voice on iOS not yet verified.* Planned 2026-11-07. Four items left by [Slice 267](267-dino-old-voice-and-wizard-buttons.md) (built, #826). Moved from plan.md's *Outstanding work*. Items 1 and 4 are app code (the same MAUI code on Android and iOS); items 2 and 3 are emulator tooling.
 
 **Touches:** `src/DinoReader.App/ReadingSession.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/PendingVoiceCount.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `tools/emulator/layout-check.ps1`, `tools/emulator/layout-check.lib.ps1`, `tools/emulator/run-flows.ps1`, `tools/emulator/test-layout-check.ps1`, `tests/DinoReader.Tests/**`, `docs/plan/slices/297-slice-267-follow-ups.md`
 
@@ -37,7 +37,7 @@
 
 *Verified:* DinoReader.Tests 3875 pass; `test-layout-check.ps1` passes on pwsh and Windows PowerShell 5.1; Android Debug and iOS compile 0 errors. Emulator (build e84ff515add9): `premade-audio-plays` PASS with the log "[AudioPack] first clip plays, the voice is counted (book d81e..., reading en)" right after the clip start; `first-run` PASS; `wizard-layout-record-large-font` (layout-check) PASS. Logs in `reviews/wave40-device/s297/`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-07)
 
 None.
 
