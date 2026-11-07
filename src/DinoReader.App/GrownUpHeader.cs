@@ -33,7 +33,7 @@ public sealed class GrownUpHeader : Grid
 	private readonly Label _title = new() { FontSize = TitleSize, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1 };
 	private readonly Label _subtitle = new() { FontSize = SubtitleSize, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1, VerticalOptions = LayoutOptions.Center };
 	private readonly Grid _subtitleRow = new() { ColumnSpacing = 0, IsVisible = false, ColumnDefinitions = [new ColumnDefinition(0),new ColumnDefinition(GridLength.Star)] };
-	private View? _flag;
+	private FlagRing? _flag;
 	private readonly Border _button = new() { HeightRequest = ButtonHeight, StrokeThickness = 0, VerticalOptions = LayoutOptions.Center };
 	private readonly Button _hit = new() { BackgroundColor = Colors.Transparent, TextColor = Colors.Transparent, BorderWidth = 0, Padding = 0 };
 	private readonly Grid _face = new();
@@ -103,20 +103,22 @@ public sealed class GrownUpHeader : Grid
 	/// <summary>Puts a small round flag of <paramref name="language"/> before the line under the title (the record page's story language, Slice 286); null removes it.</summary>
 	public void SetSubtitleFlag(string? language)
 	{
-		if (_flag is not null)
-		{
-			_subtitleRow.Remove(_flag);
-			_flag = null;
-		}
-
-		// A fixed column (like the "Record in" cards) so the flag always has its size; no flag means no column and no gap.
+		// One ring for the header's life, only its country changes: a ring added to the already laid-out row was left unmeasured (0x0, drawn as a dot, Slice 286 flag-measure.txt).
+		_flag ??= NewFlag(language);
 		_subtitleRow.ColumnDefinitions[0].Width = language is null ? new GridLength(0) : new GridLength(FlagSize);
 		_subtitleRow.ColumnSpacing = language is null ? 0 : FlagGap;
+		_flag.IsVisible = language is not null;
 		if (language is not null)
 		{
-			_flag = new FlagRing(language, FlagSize, FlagRingWidth, Color.FromRgba(43, 37, 64, FlagRingAlpha));
-			_subtitleRow.Add(_flag, 0);
+			_flag.SetLanguage(language);
 		}
+	}
+
+	private FlagRing NewFlag(string? language)
+	{
+		var flag = new FlagRing(language ?? string.Empty, FlagSize, FlagRingWidth, Color.FromRgba(43, 37, 64, FlagRingAlpha));
+		_subtitleRow.Add(flag, 0);
+		return flag;
 	}
 
 	/// <summary>False hides the Back button (a page shown in Settings' right pane, whose list header already has one, Slice 232 part D).</summary>

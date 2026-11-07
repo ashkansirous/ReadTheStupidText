@@ -37,6 +37,8 @@ public sealed class FlagView : GraphicsView
 /// </summary>
 public sealed class FlagRing : Border
 {
+	private readonly FlagView _flag;
+
 	public FlagRing(string language, double size, double ringThickness, Color ring)
 	{
 		WidthRequest = size;
@@ -47,8 +49,11 @@ public sealed class FlagRing : Border
 		BackgroundColor = Colors.Transparent;
 		VerticalOptions = LayoutOptions.Center;
 		HorizontalOptions = LayoutOptions.Start;
-		Content = new FlagView { Country = StoryLanguages.FlagOf(language), WidthRequest = size, HeightRequest = size };
+		Content = _flag = new FlagView { Country = StoryLanguages.FlagOf(language), WidthRequest = size, HeightRequest = size };
 	}
+
+	/// <summary>Shows another language's flag in the same ring (a ring that stays on screen is never replaced: a late-added one can stay unmeasured).</summary>
+	public void SetLanguage(string language) => _flag.Country = StoryLanguages.FlagOf(language);
 }
 
 internal sealed class FlagDrawable : IDrawable

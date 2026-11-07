@@ -7,6 +7,7 @@
 # expect-log: HOOK test-store ok offline
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK shelf-audio started fa
+# expect-log: HOOK install-audio-pack ok
 # expect-log: HOOK enter-grown-up ok
 # expect-log: HOOK record-state ok clips=2 files=2 switch=True languages=en:1,fa:1
 # expect-log: [RecordedClip] playing
@@ -41,6 +42,18 @@ name: Record a book in each story language and read it back in each
     arguments:
       cmd: shelf-audio
       lang: fa
+# The store is offline, so no Farsi pack arrives: install the small fixture pack (the real pack store, Debug only) so the book is readable in Farsi (ShelfAudioPacks.OffersBook needs its audio on the phone).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: install-audio-pack
+      id: three-little-pigs
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: PackInstallNeverShown
+    timeout: 6000
+    optional: true
 - launchApp:
     stopApp: false
     arguments:
@@ -194,19 +207,34 @@ name: Record a book in each story language and read it back in each
 - extendedWaitUntil:
     visible:
       id: RecordNeverShown
-    timeout: 25000
+    timeout: 12000
     optional: true
-# Pick Farsi: the read restarts in Farsi and the Farsi take plays.
+# Pick Farsi (the pick is kept for the next read): leave the book and open it again from its first page, so the Farsi take on the first line plays; a read that restarts mid-book would pass it.
 - tapOn:
     id: ReadingLanguage
     waitToSettleTimeoutMs: 300
 - tapOn:
     text: "فارسی"
     waitToSettleTimeoutMs: 300
+- back
+- extendedWaitUntil:
+    visible:
+      id: GalleryGrownUps
+    timeout: 20000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingLanguage
+    timeout: 30000
 - extendedWaitUntil:
     visible:
       id: RecordNeverShown
-    timeout: 25000
+    timeout: 15000
     optional: true
 - assertVisible:
     id: ReadingSurface

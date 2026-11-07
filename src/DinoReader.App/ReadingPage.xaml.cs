@@ -234,8 +234,8 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		CountOpen();
 	}
 
-	// A book that can only be read one way (a recorded book, an own book on Windows or without its pack) has no button and reads in the app
-	// language; otherwise the child's pick applies, as long as this book can be read in it.
+	// A book that can only be read one way (an own book on Windows or without its pack, a family with one story language) has no button and reads in the app
+	// language; otherwise the child's pick applies, as long as this book can be read in it. A recorded book keeps the button (Slice 286: each language has its own takes).
 	private async Task RefreshLanguageButtonAsync()
 	{
 		if (_story is not { } story)

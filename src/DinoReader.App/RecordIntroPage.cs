@@ -23,6 +23,15 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	private const double RadioSize = 20;
 	private const double ModeRadius = 16;
 	private const double ButtonHeight = 52;
+	private const double OutlinedLabelSize = 15.5;
+	private const double OutlinedPadding = 12;
+	private const double OutlinedStroke = 2;
+	private const double BottomSideMargin = 14;
+	private const double PlayIconSize = 16;
+	private const double PlayIconGap = 7;
+	private const string OutlinedStrokeColor = "#C9C0F5";
+	private const double OutlinedMinLabelSize = 11;
+	private const double OutlinedLabelStep = 0.5;
 	private const double CardHeight = 56;
 	private const double CardGap = 8;
 	private const double CardFlagSize = 30;
@@ -52,7 +61,8 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	private readonly WaitController _wait;
 	private readonly GrownUpHeader _header = new("RecordIntroDone");
 	private readonly VerticalStackLayout _body = new() { Spacing = 14 };
-	private readonly Grid _bottom = new() { ColumnSpacing = 10, Padding = new Thickness(SideMargin, 8, SideMargin, 16) };
+	// Frame 192's bottom bar: padding 10 14 16, two equal columns, 8 gap. The side space is the Column margin (set in the constructor), so the buttons are half the screen less 14 and 4.
+	private readonly Grid _bottom = new() { ColumnSpacing = 8, Padding = new Thickness(0, 10, 0, 16) };
 	internal const string LanguageIdPrefix = "RecordLanguage-";
 
 	private Story? _story;
@@ -89,6 +99,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		root.Add(_header, 0, 0);
 		root.Add(scroll, 0, 1);
 		root.Add(Column(_bottom), 0, 2);
+		_bottom.Margin = new Thickness(BottomSideMargin, 0);
 		Content = new Grid { Children = { root, _waitOverlay } };
 	}
 
@@ -255,7 +266,16 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		content.HorizontalOptions = LayoutOptions.Fill;
 		content.Margin = new Thickness(SideMargin, 0);
 		var holder = new Grid { MaximumWidthRequest = ColumnMaxWidth + 2 * SideMargin, HorizontalOptions = LayoutOptions.Center, Children = { content } };
-		return holder;
+		// A centred holder is only as wide as its content, so the button row's Star columns shrank to their labels and clipped them (Slice 286); the holder takes the room it has, up to the maximum.
+		var outer = new Grid { Children = { holder } };
+		outer.SizeChanged += (_, _) =>
+		{
+			if (outer.Width > 0)
+			{
+				holder.WidthRequest = Math.Min(outer.Width, ColumnMaxWidth + 2 * SideMargin);
+			}
+		};
+		return outer;
 	}
 
 	// ---- drawing ----
@@ -871,16 +891,39 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 
 	private static Border OutlinedButton(string text, string id, bool enabled, Func<Task> tapped)
 	{
+		var label = new Label { Text = text, FontSize = OutlinedLabelSize, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Brand), VerticalOptions = LayoutOptions.Center, LineBreakMode = LineBreakMode.NoWrap, MaxLines = 1 };
+		var icon = new IconView { Kind = IconKind.Play, Filled = true, Size = PlayIconSize, Color = DinoTokens.Get(DinoTokens.Brand), VerticalOptions = LayoutOptions.Center };
+		// Frame 192: the play icon, then the words, as one centred group in the half-width pill; the font only shrinks (a narrow phone, a large font) when the group would not fit.
+		var group = new HorizontalStackLayout { Spacing = PlayIconGap, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center, Children = { icon, label } };
 		var button = new Border
 		{
-			AutomationId = id, HeightRequest = ButtonHeight, StrokeThickness = 2, Stroke = DinoTokens.Get(DinoTokens.Brand), BackgroundColor = Colors.White, Opacity = enabled ? 1 : 0.4, IsEnabled = enabled,
+			AutomationId = id, HeightRequest = ButtonHeight, StrokeThickness = OutlinedStroke, Stroke = Color.FromArgb(OutlinedStrokeColor), BackgroundColor = Colors.White, Opacity = enabled ? 1 : 0.4, IsEnabled = enabled,
 			StrokeShape = new RoundRectangle { CornerRadius = ButtonHeight / 2 },
-			Content = new Label { Text = text, FontSize = 16, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Brand), HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1 },
+			Padding = new Thickness(OutlinedPadding, 0),
+			Content = group,
 		};
+		button.SizeChanged += (_, _) => ShrinkToFit(label, button.Width - 2 * (OutlinedPadding + OutlinedStroke) - PlayIconSize - PlayIconGap);
 		SemanticProperties.SetDescription(button, text);
 		Taps.AddTap(button, () => enabled ? tapped() : Task.CompletedTask);
 		DesktopTips.Hover(button);
 		return button;
+	}
+
+	// Starts from the design's size every time (a wider pill, a smaller font setting, another language) and steps down until the text's natural width fits the room.
+	private static void ShrinkToFit(Label label, double room)
+	{
+		if (room <= 0)
+		{
+			return;
+		}
+
+		double size = OutlinedLabelSize;
+		label.FontSize = size;
+		while (size > OutlinedMinLabelSize && label.Measure(double.PositiveInfinity, double.PositiveInfinity).Width > room)
+		{
+			size -= OutlinedLabelStep;
+			label.FontSize = size;
+		}
 	}
 
 	// ---- going on ----
