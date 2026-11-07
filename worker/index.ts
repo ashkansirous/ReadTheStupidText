@@ -50,10 +50,13 @@ function serveStories(request: Request, url: URL, env: Env, site: ResolvedSite):
 }
 
 // Slice 283: Dino Reader's anonymous Sonos music service (worker/sonos.ts).
-function serveSonos(request: Request, url: URL, env: Env, site: ResolvedSite): Promise<Response> | Response {
+// Slice 289: each play is counted in `dino_usage` under the apps' own telemetry switch (declared further down: function declarations are hoisted).
+function serveSonos(request: Request, url: URL, env: Env & EventsEnv, site: ResolvedSite, ctx: ExecutionContext): Promise<Response> | Response {
   if (site.product !== Product.DinoReader) return new Response("Not found", { status: 404 });
   const pathPrefix = site.home === "/" ? "" : DINO_PATH_PREFIX;
-  return handleSonos(withPath(request, url, site.path), env, pathPrefix, serveObject);
+  // ctx.waitUntil is called as a method (destructuring it throws "Illegal invocation"); the play is counted after the answer is sent.
+  const usage = { dataset: env.DINO_USAGE, telemetryEnabled: telemetryCheck(env, APP_CONFIG_KEY), defer: (work: Promise<unknown>) => ctx.waitUntil(work) };
+  return handleSonos(withPath(request, url, site.path), env, pathPrefix, serveObject, usage);
 }
 
 // Each product has its own config object in the downloads bucket (Slice 137 added Read The Stupid Text's).
@@ -109,14 +112,14 @@ function serveEvents(request: Request, env: Env & EventsEnv & RtstEventsEnv, sit
   return site.product === Product.DinoReader ? handleEvents(request, env, check) : handleRtstEvents(request, env, check);
 }
 
-async function serveAsset(request: Request, env: Env): Promise<Response> {
+async function serveAsset(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(request.url);
   if (isHiddenDinoPath(url.hostname, url.pathname)) return new Response("Not found", { status: 404 });
   const redirect = canonicalRedirect(url.hostname, url.pathname, url.search);
   if (redirect !== null) return Response.redirect(new URL(redirect, url).toString(), 302);
   const site = resolveSite(url.hostname, url.pathname);
   if (isStoryPath(site.path)) return serveStories(request, url, env, site);
-  if (isSonosPath(site.path)) return serveSonos(request, url, env, site);
+  if (isSonosPath(site.path)) return serveSonos(request, url, env, site, ctx);
   if (isAppConfigPath(site.path)) return serveAppConfig(request, env, site);
   if (isEventsPath(site.path)) return serveEvents(request, env, site);
   if (isCrashPath(site.path)) return serveCrash(request, env, site);
@@ -128,7 +131,7 @@ async function serveAsset(request: Request, env: Env): Promise<Response> {
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    return withSecurityHeaders(await serveAsset(request, env));
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    return withSecurityHeaders(await serveAsset(request, env, ctx));
   },
 } satisfies ExportedHandler<Env>;

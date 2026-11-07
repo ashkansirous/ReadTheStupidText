@@ -256,3 +256,83 @@ test("the service never logs", async () => {
   }
   assert.deepEqual(seen, []);
 });
+
+// Slice 289: a play is counted at getMediaURI, once per call, never for browsing, metadata or a refused id.
+function countingUsage(enabled = true) {
+  const points = [];
+  return { points, usage: { dataset: { writeDataPoint: (point) => points.push(point) }, telemetryEnabled: async () => enabled } };
+}
+
+async function callCounting(usage, action, inner) {
+  const init = { method: "POST", body: envelope(action, inner), headers: { SOAPAction: `"${NS}#${action}"` } };
+  const response = await handleSonos(new Request("https://dino.test/sonos", init), env(), "", serveObject, usage);
+  return { response, text: await response.text() };
+}
+
+test("each getMediaURI writes one sonos book_listened row with the book's length as estimated seconds", async () => {
+  const { points, usage } = countingUsage();
+  const first = await callCounting(usage, "getMediaURI", `<id>track:fa:${ID_A}</id>`);
+  assert.equal(first.response.status, 200);
+  assert.equal(points.length, 1);
+  assert.equal(points[0].blobs[0], "book_listened");
+  assert.equal(points[0].blobs[1], ID_A);
+  assert.equal(points[0].blobs[2], "fa");
+  assert.equal(points[0].blobs[6], "sonos");
+  assert.equal(points[0].blobs[8], "estimated");
+  assert.equal(points[0].doubles[0], 1);
+  assert.equal(points[0].doubles[4], 540);
+  await callCounting(usage, "getMediaURI", `<id>track:fa:${ID_A}</id>`);
+  assert.equal(points.length, 2);
+});
+
+test("browsing, metadata, last-update and an unknown track write no row", async () => {
+  const { points, usage } = countingUsage();
+  await callCounting(usage, "getMetadata", "<id>root</id><index>0</index><count>50</count><recursive>true</recursive>");
+  await callCounting(usage, "getExtendedMetadata", `<id>track:en:${ID_A}</id>`);
+  await callCounting(usage, "getMediaMetadata", `<id>track:en:${ID_A}</id>`);
+  await callCounting(usage, "getLastUpdate");
+  const missing = await callCounting(usage, "getMediaURI", "<id>track:en:nope</id>");
+  assert.equal(missing.response.status, 500);
+  assert.equal(points.length, 0);
+});
+
+test("with telemetry off, getMediaURI still answers and writes nothing", async () => {
+  const { points, usage } = countingUsage(false);
+  const { response, text } = await callCounting(usage, "getMediaURI", `<id>track:en:${ID_A}</id>`);
+  assert.equal(response.status, 200);
+  assert.match(text, /getMediaURIResult/);
+  assert.equal(points.length, 0);
+});
+
+// Slice 289: the answer never waits for the count (it is handed to ctx.waitUntil), and a failing count never fails the play.
+test("getMediaURI answers while the telemetry read is still pending, and the count finishes after", async () => {
+  const points = [];
+  const deferred = [];
+  let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  const usage = {
+    dataset: { writeDataPoint: (point) => points.push(point) },
+    telemetryEnabled: async () => { await gate; return true; },
+    defer: (work) => deferred.push(work),
+  };
+  const { response } = await callCounting(usage, "getMediaURI", `<id>track:fa:${ID_A}</id>`);
+  assert.equal(response.status, 200);
+  assert.equal(deferred.length, 1);
+  assert.equal(points.length, 0);
+  release();
+  await Promise.all(deferred);
+  assert.equal(points.length, 1);
+});
+
+test("a count that throws never fails the play", async () => {
+  const deferred = [];
+  const usage = {
+    dataset: { writeDataPoint: () => { throw new Error("boom"); } },
+    telemetryEnabled: async () => { throw new Error("r2 down"); },
+    defer: (work) => deferred.push(work),
+  };
+  const { response, text } = await callCounting(usage, "getMediaURI", `<id>track:fa:${ID_A}</id>`);
+  assert.equal(response.status, 200);
+  assert.match(text, /getMediaURIResult/);
+  await Promise.all(deferred);
+});

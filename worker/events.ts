@@ -22,7 +22,7 @@ export const MAX_EVENTS_PER_REQUEST = 50;
 const MAX_BODY_BYTES = 32 * 1024;
 const ALLOWED_METHODS = "POST";
 const OWN_BOOK = "own";
-const SHELF_SOURCE = "shelf";
+export const SHELF_SOURCE = "shelf";
 const NO_BOOK = "none";
 const PLATFORMS = ["android", "ios", "windows"] as const;
 const BOOK_SOURCES = [SHELF_SOURCE, OWN_BOOK] as const;
@@ -83,8 +83,8 @@ export const FALLBACK_REASONS = [
   "tap_failed", "layout_failed",
 ] as const;
 const MAX_COUNT = 1_000_000;
-const MAX_SECONDS = 86_400;
-const NO_COUNT = -1;
+export const MAX_SECONDS = 86_400;
+export const NO_COUNT = -1;
 // Slice 313: a shelf book was behind the store: "<result>:<from version>:<to version>", like "updated:5:6" (the app's BookUpdateResult; versions only).
 const BOOK_UPDATE_RESULTS = ["staged", "updated", "skipped_edited", "failed"] as const;
 const BOOK_UPDATE_VERSION = /^\d{1,4}$/;
@@ -96,9 +96,9 @@ const READ_STOP_REASONS = ["left_book", "finished", "cancelled", "language_chang
 // A random id the app makes at every cold start and keeps only in memory, plus the count's order inside that session. Neither is tied to an
 // install, a device or a person. Both are optional (older builds, RTST) and checked on their own: a malformed one is dropped from the row, never the event.
 export const SESSION_PATTERN = /^[0-9a-f]{32}$/;
-const NO_SESSION = "";
+export const NO_SESSION = "";
 /** The sequence a row gets when the build sent none (a real one is never negative), like the device buckets' "no data". */
-const NO_SEQ = -1;
+export const NO_SEQ = -1;
 const MAX_SEQ = 1_000_000;
 
 // ---- Device context (Slice 166) ------------------------------------------------------------------------------------------
@@ -262,7 +262,7 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   read_resumed: { sources: BOOK_SOURCES, detail: emptyDetail },
   read_stopped: { sources: BOOK_SOURCES, detail: detailIn(READ_STOP_REASONS), seconds: true },
   book_left: { sources: BOOK_SOURCES, detail: emptyDetail },
-  // Slice 288: a reading reached 30 s of played audio (one per reading); `seconds` is double5 on read_paused / read_stopped only (a book_listened carries none; one sent is ignored, so hours never count twice).
+  // Slice 288: a reading reached 30 s of played audio (one per reading); `seconds` is double5 on read_paused / read_stopped only (an app's book_listened carries none and one sent to /api/events is ignored; only a speaker platform's row (Slice 289, speaker-usage.ts, platform `sonos`, detail `estimated`) carries an estimated `seconds`, so always filter hours on blob1 and blob7).
   book_listened: { sources: BOOK_SOURCES, detail: emptyDetail },
   // Slice 267: which voice a read used, and how one pre-made audio pack download went; closed lists only (docs/analytics/dino-voice-queries.md).
   read_voice: { sources: BOOK_SOURCES, detail: detailIn(READ_VOICES), counts: true },
@@ -272,7 +272,7 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   // Slice 273: a feature fell back (area:reason); about a book or about no book. Its `count` is how many times in that session.
   fallback: { sources: [...BOOK_SOURCES, NO_BOOK], detail: fallbackDetail, counts: true },
 };
-const LANGUAGE_PATTERN = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
+export const LANGUAGE_PATTERN = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
 /** The version pattern both phone endpoints check (Slice 227 shares it with `/api/crash`). */
 export const VERSION_PATTERN = /^\d{1,6}(\.\d{1,6}){1,3}$/;
 // Slice 167: the project default version of a build never stamped by CI, i.e. built on a desk. A backstop for the apps' own test-build gate:
@@ -320,6 +320,16 @@ export interface UsageEvent {
   /** Slice 288: whole seconds of audio played (read_paused, read_stopped), or -1 when none was sent or it was out of range. */
   readonly seconds: number;
 }
+
+/** The optional fields of a count, all "none" (a caller that has none of them, like a speaker row, spreads this and sets only what it has). Typed on UsageEvent, so a new field there fails to compile wherever a row is built. */
+export const NO_EXTRA_FIELDS: Pick<UsageEvent, "detail" | "session" | "seq" | "count" | "deviceCount" | "seconds"> = {
+  detail: NO_DETAIL,
+  session: NO_SESSION,
+  seq: NO_SEQ,
+  count: NO_COUNT,
+  deviceCount: NO_COUNT,
+  seconds: NO_COUNT,
+};
 
 /** What this module needs from the Worker's bindings (`DINO_USAGE` is declared in wrangler.jsonc). */
 export interface EventsEnv {

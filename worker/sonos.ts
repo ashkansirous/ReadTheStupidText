@@ -7,6 +7,8 @@ import { handleStories } from "./stories.ts";
 import type { ListItem, ObjectServer } from "./stories.ts";
 import { FaultCode, FaultMessage, SoapFault, SonosAction, escapeXml, faultResponse, parseSonosRequest, readBoundedText, resultResponse, tag } from "./sonos-soap.ts";
 import type { SonosActionName, SonosRequest } from "./sonos-soap.ts";
+import { SPEAKER_PLATFORM_SONOS, recordSpeakerPlay } from "./speaker-usage.ts";
+import type { SpeakerUsage } from "./speaker-usage.ts";
 
 export const SONOS_PATH = "/sonos";
 const ROOT_ID = "root";
@@ -209,8 +211,13 @@ function getMediaMetadata(tracks: readonly Track[], request: SonosRequest): Resp
   return resultResponse(SonosAction.GetMediaMetadata, trackFields(requireTrack(tracks, request.id)));
 }
 
-function getMediaUri(tracks: readonly Track[], request: SonosRequest): Response {
-  return resultResponse(SonosAction.GetMediaURI, escapeXml(requireTrack(tracks, request.id).listenUrl));
+// Slice 289: the one place a Sonos play is counted. Sonos asks for a track's URI once per play, while the audio route sees one fetch per Range request, so counting there would over-count.
+async function getMediaUri(tracks: readonly Track[], request: SonosRequest, usage: SpeakerUsage | undefined, httpRequest: Request): Promise<Response> {
+  const track = requireTrack(tracks, request.id);
+  const counting = recordSpeakerPlay(usage, { platform: SPEAKER_PLATFORM_SONOS, book: track.storyId, language: track.language, seconds: track.seconds }, httpRequest).catch(() => false);
+  if (usage?.defer === undefined) await counting;
+  else usage.defer(counting); // the answer never waits for the telemetry read or the row write
+  return resultResponse(SonosAction.GetMediaURI, escapeXml(track.listenUrl));
 }
 
 function getLastUpdate(tracks: readonly Track[]): Response {
@@ -218,7 +225,7 @@ function getLastUpdate(tracks: readonly Track[]): Response {
   return resultResponse(SonosAction.GetLastUpdate, inner);
 }
 
-function answer(tracks: readonly Track[], request: SonosRequest): Response {
+async function answer(tracks: readonly Track[], request: SonosRequest, usage: SpeakerUsage | undefined, httpRequest: Request): Promise<Response> {
   const action = request.action as SonosActionName;
   switch (action) {
     case SonosAction.GetMetadata:
@@ -228,7 +235,7 @@ function answer(tracks: readonly Track[], request: SonosRequest): Response {
     case SonosAction.GetMediaMetadata:
       return getMediaMetadata(tracks, request);
     case SonosAction.GetMediaURI:
-      return getMediaUri(tracks, request);
+      return getMediaUri(tracks, request, usage, httpRequest);
     case SonosAction.GetLastUpdate:
       return getLastUpdate(tracks);
     default:
@@ -241,19 +248,19 @@ export function isSonosPath(pathname: string): boolean {
   return pathname === SONOS_PATH;
 }
 
-async function respond(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer): Promise<Response> {
+async function respond(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer, usage: SpeakerUsage | undefined): Promise<Response> {
   const text = await readBoundedText(request);
   if (text === null) throw new SoapFault(FaultCode.Unknown, FaultMessage.TooLarge);
   const parsed = parseSonosRequest(text);
   if (parsed === null) throw new SoapFault(FaultCode.Unknown, FaultMessage.NotSoap);
-  return answer(await loadTracks(request, env, pathPrefix, serve), parsed);
+  return answer(await loadTracks(request, env, pathPrefix, serve), parsed, usage, request);
 }
 
-/** The Sonos SMAPI endpoint: POST only, every failure a SOAP fault with HTTP 500. `pathPrefix` is "" on the Dino host and "/dino" under workers.dev. */
-export async function handleSonos(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer): Promise<Response> {
+/** The Sonos SMAPI endpoint: POST only, every failure a SOAP fault with HTTP 500. `pathPrefix` is "" on the Dino host and "/dino" under workers.dev. `usage` (Slice 289) counts each getMediaURI as one play; without it nothing is counted. */
+export async function handleSonos(request: Request, env: { DOWNLOADS?: R2Bucket }, pathPrefix: string, serve: ObjectServer, usage?: SpeakerUsage): Promise<Response> {
   if (request.method !== "POST") return new Response(null, { status: NOT_ALLOWED_STATUS, headers: { Allow: ALLOWED_METHODS } });
   try {
-    return await respond(request, env, pathPrefix, serve);
+    return await respond(request, env, pathPrefix, serve, usage);
   } catch (error) {
     // no-fallback: the fault is the answer; a failure is never logged (ids and titles stay out of logs)
     return faultResponse(error instanceof SoapFault ? error : new SoapFault(FaultCode.Unavailable, FaultMessage.Unavailable));
