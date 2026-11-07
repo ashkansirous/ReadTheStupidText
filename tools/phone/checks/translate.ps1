@@ -28,7 +28,7 @@ if ($script:ForeignText -notmatch '^[A-Za-z ]+$') { throw 'ForeignText must be A
 function Invoke-Tap([string]$ElementId) {
     Assert-WithinBudget "tapping $ElementId"
     $engine = (Get-Process -Id $PID).Path
-    & $engine -NoProfile -File $script:TapScript -Id $ElementId -App $App -Serial $Phone | ForEach-Object { Write-Host "   tap: $_" }
+    & $engine -NoProfile -File $script:TapScript -Id $ElementId -App $App -Serial $Phone @(Get-AllowEmulatorArguments $Phone) | ForEach-Object { Write-Host "   tap: $_" }
     if ($LASTEXITCODE -ne 0) { throw "tap.ps1 -Id $ElementId exited $LASTEXITCODE (the element was not found or another app is on screen)." }
 }
 

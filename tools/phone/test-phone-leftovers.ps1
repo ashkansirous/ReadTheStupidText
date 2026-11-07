@@ -393,11 +393,11 @@ try {
     Assert-Equal 'round 3: preflight -Fix heals through the same function' $true ((Get-Content (Join-Path $PSScriptRoot 'preflight.ps1') -Raw) -match '(?s)if \(\$Fix\).*Invoke-StayOnRestore')
     $leaseScript = Get-Content (Join-Path $PSScriptRoot 'lease.ps1') -Raw
     Assert-Equal 'item 11: lease.ps1 -Release goes through Close-PhoneLease' $true ($leaseScript -match 'Close-PhoneLease')
-    Assert-Equal 'review 2: the timed run releases through Close-PhoneLease, not Remove-Lease' $true (((Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw) -match 'Close-PhoneLease') -and ((Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw) -notmatch 'Remove-Lease'))
+    Assert-Equal 'review 2: the timed run releases a phone through Close-PhoneLease; Remove-Lease is only the emulator branch of Close-DeviceLease' $true (((Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw) -match 'Close-PhoneLease') -and ([regex]::Matches((Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw), 'Remove-Lease')).Count -eq 1)
     $preflightText = Get-Content (Join-Path $PSScriptRoot 'preflight.ps1') -Raw
     Assert-Equal 'review 2 / Slice 236 item 6: Save-StayOn only inside the -Fix branch of preflight' $true ($preflightText -match '(?s)if \(-not \$Fix\) \{ Write-Check ''stay awake''[^\r\n]*return \}\r?\n(?:\s*#[^\r\n]*\r?\n)?\s*\$recorded = Save-StayOnOriginal' -and ([regex]::Matches($preflightText, 'Save-StayOn')).Count -eq 1)
     Assert-Equal 'review 2: lease.ps1 -Take records it only when it is a new take' $true ($leaseScript -match '(?s)\$wasMine.*if \(-not \$wasMine\).*Save-StayOnForLease')
-    Assert-Equal 'review 2: the timed run records it only when it takes the lease itself' $true ((Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw) -match 'if \(-not \$heldBy -and -not \$State\.Mine\)[^}]*Save-StayOnForLease')
+    Assert-Equal 'review 2: the timed run records it only when it takes the lease itself' $true ((Get-Content (Join-Path $PSScriptRoot 'run-checks.ps1') -Raw) -match 'if \(-not \$heldBy -and -not \$State\.Mine -and \$script:KindPlan\.StayOn\)[^}]*Save-StayOnForLease')
     Assert-Equal 'review 2: no power key press is left in the release code' $false ((Get-Content (Join-Path $PSScriptRoot 'common.ps1') -Raw) -match 'PowerKeyEvent')
 
     # review 1: another owner's live lease stops the clear (unless -Force); the holder and an unleased phone are allowed
@@ -420,6 +420,29 @@ try {
     $script:FakeDataSync = '30000'
     Assert-Equal 'review 1: the holder itself may clear' 1 (Clear-DeviceLeftovers 'ph' $devPackages).Leftovers.Count
     Remove-Lease 'FAKESERIAL1' 'me' | Out-Null
+
+    # Slice 308 review 3/4: an emulator is guarded by the emulator lease (kind 'emulator', key = adb serial), never the phone lease or ro.serialno
+    $script:EmulatorLeaseDir = Join-Path $script:LeaseDir 'emulator'
+    $null = New-Item -ItemType Directory -Force $script:EmulatorLeaseDir
+    Reset-Fake
+    $script:FakeDataSync = '30000'
+    Assert-Equal 'emulator: another owner holds the emulator lease' $true (Request-Lease 'emulator-5554' 'someone-else' 60 0 'emulator')
+    $emuRefused = $null
+    try { Clear-DeviceLeftovers 'emulator-5554' $devPackages | Out-Null } catch { $emuRefused = $_.Exception.Message }
+    Assert-Equal 'emulator: the clear is refused, naming the holder and -Force' $true ($emuRefused -like '*someone-else*-Force*')
+    Assert-Equal 'emulator: ro.serialno is never read' 0 @($script:AdbCalls | Where-Object { $_ -like '*ro.serialno*' }).Count
+    Assert-Equal 'emulator: nothing was cleared' 0 @($script:AdbCalls | Where-Object { $_ -like '*device_config delete*' }).Count
+    Assert-Equal 'emulator: -Force clears anyway' 1 (Clear-DeviceLeftovers 'emulator-5554' $devPackages -Force).Leftovers.Count
+    $emuOwned = $null
+    try { Assert-NoOtherPhoneLease 'emulator-5554' } catch { $emuOwned = $_.Exception.Message }
+    Assert-Equal 'emulator: Assert-NoOtherPhoneLease throws for another owner' $true ([bool]$emuOwned)
+    $emuExit = & (Get-Process -Id $PID).Path -NoProfile -Command ". '$(Join-Path $PSScriptRoot 'common.ps1')'; `$script:EmulatorLeaseDir = '$($script:EmulatorLeaseDir)'; `$env:RTST_PHONE_OWNER = 'me'; Assert-PhoneLease 'emulator-5554'" 2>&1
+    Assert-Equal 'emulator: Assert-PhoneLease exits 4 while another owner holds the emulator lease' 4 $LASTEXITCODE
+    Remove-Lease 'emulator-5554' 'someone-else' 0 'emulator' | Out-Null
+    Reset-Fake
+    $script:FakeDataSync = '30000'
+    Assert-Equal 'emulator: a phone lease of another owner does not block the emulator' 1 ((Request-Lease 'FAKESERIAL1' 'someone-else' 60) -and (Clear-DeviceLeftovers 'emulator-5554' $devPackages).Leftovers.Count)
+    Remove-Lease 'FAKESERIAL1' 'someone-else' | Out-Null
     Remove-Item Env:RTST_PHONE_OWNER -ErrorAction SilentlyContinue
 } finally { Remove-Item $stayDir, $script:LeaseDir -Recurse -Force -ErrorAction SilentlyContinue }
 
@@ -482,6 +505,24 @@ Assert-Equal 'item 6: a failed build keeps its log' $true (([regex]::Matches($ru
 
 # ---- item 17 hook: the PowerShell lint settings file exists and the workflow runs it
 Assert-Equal 'item 17: the analyzer settings file exists' $true (Test-Path (Join-Path $PSScriptRoot '..\..\PSScriptAnalyzerSettings.psd1'))
+
+# ---- Slice 308: the uid read works on an emulator and on the phone, in the load order every check uses (common.ps1, then checks/_lib.ps1)
+# Root cause on the emulator run: _lib.ps1 defined its own one-parameter Get-PackageUid, which replaced common.ps1's adb one; `Get-PackageUid $Phone $package` then dropped the package into $args, matched nothing and returned $null.
+. (Join-Path $PSScriptRoot 'checks\_lib.ps1')
+$script:FakePmOutput = @()
+function Invoke-Adb([string]$Serial, [string[]]$Arguments, [int]$TimeoutSeconds = 0) { return $script:FakePmOutput }
+$devPackage = 'uk.sirous.readthestupidtext.dbg'
+$script:FakePmOutput = @("package:$devPackage uid:10230")   # captured on emulator-5554: `pm list packages -U uk.sirous.readthestupidtext.dbg`
+Assert-Equal 'slice 308: emulator uid read after _lib.ps1 is loaded' 10230 (Get-PackageUid 'emulator-5554' $devPackage)
+$script:FakePmOutput = @('package:uk.sirous.readthestupidtext.dbg  uid:10460', 'package:uk.sirous.readthestupidtext.dbg.other uid:10461')   # the phone's form, with a longer package name listed after it
+Assert-Equal 'slice 308: phone uid read after _lib.ps1 is loaded' 10460 (Get-PackageUid '192.168.1.5:5555' $devPackage)
+Assert-Equal 'slice 308: the dump parser has its own name' 10234 ([int](Get-PackageUidFromDump '    userId=10234'))
+$libFunctions = @([Management.Automation.Language.Parser]::ParseFile((Join-Path $PSScriptRoot 'checks\_lib.ps1'), [ref]$null, [ref]$null).FindAll({ param($n) $n -is [Management.Automation.Language.FunctionDefinitionAst] }, $true) | ForEach-Object { $_.Name })
+$commonFunctions = @([Management.Automation.Language.Parser]::ParseFile((Join-Path $PSScriptRoot 'common.ps1'), [ref]$null, [ref]$null).FindAll({ param($n) $n -is [Management.Automation.Language.FunctionDefinitionAst] }, $true) | ForEach-Object { $_.Name })
+Assert-Equal 'slice 308: no function is defined in both common.ps1 and checks/_lib.ps1' '' (@($libFunctions | Where-Object { $commonFunctions -contains $_ }) -join ',')
+
+# ---- Slice 308: the lease note names the lease the run holds
+Assert-Equal 'slice 308: emulator lease note' '   emulator lease: 25 min (a timed run needs 25 min: its budget plus the margin)' (Format-LeaseLengthNote 'a timed run' 25 25 0 'emulator')
 
 if ($failed) { Write-Host "$failed phone-leftovers checks failed (PowerShell $($PSVersionTable.PSVersion))."; exit 1 }
 Write-Host "All phone-leftovers checks pass (PowerShell $($PSVersionTable.PSVersion))."

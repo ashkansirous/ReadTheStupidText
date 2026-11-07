@@ -64,8 +64,18 @@ $ErrorActionPreference = 'Stop'
 $package = Get-DevPackage $App
 $script:Projects = @{ rtst = 'src\ReadTheStupidText.Mobile\ReadTheStupidText.Mobile.csproj'; dino = 'src\DinoReader.App\DinoReader.App.csproj' }
 $script:ApkFilter = '*-Signed.apk'
-$script:Rid = 'android-arm64'
-$script:Platform = Get-CachePlatform $Variant
+# Slice 308 (two strikes): the device kind is decided once, from -Serial (Get-DeviceKind), and Get-DeviceKindPlan says which lease and gates it has. An emulator builds and caches the x86_64 APK
+# (the same RID and cache name as audio-timing.ps1 -Emulator), a phone the arm64 one. No environment variable: the child scripts get -AllowEmulator as a parameter.
+$script:Kind = Get-DeviceKind $Serial
+$script:KindPlan = Get-DeviceKindPlan $script:Kind
+$script:OnEmulator = ($script:Kind -eq $script:KindEmulator)
+$variantError = Get-VariantKindError $script:Kind $PSBoundParameters.ContainsKey('Variant') $Variant   # Slice 308 review 1: also for -Build and -Prepare
+if ($variantError) { Write-Host $variantError; exit 2 }   # 2 = $script:ExitNoPhone's value: no usable device for that request
+$script:Rid = if ($script:OnEmulator) { 'android-x64' } else { 'android-arm64' }
+$script:CacheAbi = if ($script:OnEmulator) { 'x64' } else { 'arm64' }
+$script:Platform = Get-CachePlatform $Variant $script:CacheAbi
+# An emulator is never timed, so it gets no AOT build (slow, stall-prone, meaningless there): a run on one is pinned to debug (the start of the run says so).
+if (-not $script:KindPlan.Aot -and -not $Build -and -not $Prepare) { $script:PinVariant = $script:VariantDebug }
 $script:VoiceList = @($Voices | ForEach-Object { $_ -split ',' } | Where-Object { $_ })   # one comma list works in any shell
 $script:WaitedSeconds = 0          # time spent only waiting for a build: not part of the budget
 $script:InstalledVariant = $null  # the variant this run has put on the phone (at most one swap: debug -> aot)
@@ -105,7 +115,7 @@ function Get-RunStatusPath {
 }
 
 function Find-VariantApk([string]$V, [string]$Key) {
-    $dir = Get-BuildDir $App (Get-CachePlatform $V) $Key
+    $dir = Get-BuildDir $App (Get-CachePlatform $V $script:CacheAbi) $Key
     $testRoot = [Environment]::GetEnvironmentVariable('RTST_BUILD_CACHE_LOOKUP_ROOT')   # test seam: the self-test points the lookup at an empty folder so a -NoBuild child always misses
     if ($testRoot) { $dir = Join-Path $testRoot (Split-Path $dir -Leaf) }
     return Find-CachedBuild $dir $script:ApkFilter
@@ -158,7 +168,7 @@ function Invoke-DotnetBuild([string]$V, [string[]]$BuildArguments) {
 # Debug build for the phone's ABI (AOT when asked) into the cache; the same command as audio-timing.ps1's Build-PhoneApk, and the same cache name, so the two share builds.
 function Build-VariantApk([string]$V, [string]$Dir, [string]$Key) {
     $project = Join-Path $script:RepoRoot $script:Projects[$App]
-    $platform = Get-CachePlatform $V
+    $platform = Get-CachePlatform $V $script:CacheAbi
     $artifacts = Get-PhoneArtifactsPath $script:RepoRoot $App $platform
     Assert-BuildPathLength $artifacts   # Slice 216: fail now, not minutes into the build (APT2264)
     Remove-Item $artifacts -Recurse -Force -ErrorAction SilentlyContinue
@@ -176,7 +186,7 @@ function Build-VariantApk([string]$V, [string]$Dir, [string]$Key) {
 # Under the build locks: the key is read again (the files may have changed while waiting for a lock) and the cache looked at again (another agent may have built it).
 # Each variant builds into its own --artifacts-path (no shared obj folders), so the checkout lock is per variant: Debug and AOT of one checkout run at the same time.
 function Build-UnderLocks([string]$V, [string]$WaitedKey) {
-    $platform = Get-CachePlatform $V
+    $platform = Get-CachePlatform $V $script:CacheAbi
     $locks = Enter-BuildLocks $App $platform $WaitedKey $platform
     try {
         $key = Get-BuildKey
@@ -194,7 +204,7 @@ function Invoke-BuildMode {
     $activity = $null
     try {
         Write-BuildStatus $Variant $script:StateQueued
-        $activity = Start-Activity "build-$App-$(Get-CachePlatform $Variant)"
+        $activity = Start-Activity "build-$App-$(Get-CachePlatform $Variant $script:CacheAbi)"
         Build-UnderLocks $Variant $key
     } catch { Write-BuildStatus $Variant $script:StateFailed $_.Exception.Message; Write-Host "BUILD FAILED: $($_.Exception.Message)"; Save-FailedBuildLog $Variant $_.Exception.Message; return $script:ExitBuildFailed }
     finally { if ($activity) { Stop-Activity $activity } }
@@ -225,6 +235,7 @@ function Start-VariantBuilds($Plans, [bool]$NoStart = $false) {
             Remove-Item (Get-BuildStatusPath $v) -Force -ErrorAction SilentlyContinue
             $procLog = (Get-BuildLogPath $v) + $script:BuildProcessLogSuffix
             $arguments = @('-NoProfile', '-File', "`"$PSCommandPath`"", '-Build', '-App', $App, '-Variant', $v)
+            if ($script:OnEmulator) { $arguments += @('-Serial', $Serial) }   # the build child must pick the emulator's ABI and cache name too
             # Slice 241 item 5: detached (no inherited handles). Start-Process -Redirect... left the child holding the caller's own stdout pipe, so `run-checks ... 2>&1 | tail` waited ~8 min for the AOT build (2026-11-01).
             $record.Process = Start-DetachedProcess $engine ($arguments -join ' ') $procLog "$procLog.err"
             Write-Host "building $App $v in the background for this run, about $($script:BuildMinutes) min if not cached by another agent (status $(Get-BuildStatusPath $v), log $(Get-BuildLogPath $v))"
@@ -313,7 +324,7 @@ function Invoke-Preflight([string]$Phone) {
     $engine = (Get-Process -Id $PID).Path
     $ErrorActionPreference = 'Continue'   # preflight's own exit code and lines are the answer; a stderr line must not end this script
     # -Fix: stay-awake is the one phone setting the runner may change (preflight.ps1 sets nothing else).
-    $lines = @(& $engine -NoProfile -File $script:PreflightScript -Serial $Phone -App $App -Fix 2>&1 | ForEach-Object { "$_" })
+    $lines = @(& $engine -NoProfile -File $script:PreflightScript -Serial $Phone -App $App -Fix @(Get-AllowEmulatorArguments $Phone) 2>&1 | ForEach-Object { "$_" })
     $exitCode = $LASTEXITCODE
     $lines | Where-Object { "$_".Trim() -notlike 'PREFLIGHT *' } | ForEach-Object { Write-Host $_ }
     $verdict = Resolve-PreflightVerdict $lines $exitCode
@@ -336,6 +347,7 @@ function Read-PhoneReadiness([string]$Phone) {
 
 # While any stay-on record exists (preflight.ps1 -Fix or the lease take wrote it) the original is saved, so the runner may set stay-awake back to 7; otherwise the change is someone else's and the run stops naming it.
 function Confirm-PhoneReady([string]$Phone) {
+    if (-not $script:KindPlan.ChargerGate) { return $null }   # Slice 308: an emulator has no charger or stay-on setting to re-read (Get-DeviceKindPlan)
     $ready = Read-PhoneReadiness $Phone
     if ($ready.Stop -or $ready.SetStayOn) { Start-Sleep -Seconds 2; $ready = Read-PhoneReadiness $Phone }
     foreach ($note in $ready.Notes) { Write-Host "   CHANGED: $note" }
@@ -428,9 +440,9 @@ function Invoke-PrepareSteps([string]$Phone) {
 function Invoke-PrepareGuarded([string]$Phone, $State) {
     Initialize-StageLease $State $Phone
     $heldBy = Take-PhoneLease $State $Phone
-    if ($heldBy) { Write-Host "PREPARE STOPPED: waited too long for $heldBy (the phone lease)"; return $script:ExitLeaseHeldByOther }
+    if ($heldBy) { Write-Host "PREPARE STOPPED: waited too long for $heldBy (the $($State.LeaseKind) lease)"; return $script:ExitLeaseHeldByOther }
     $env:RTST_PHONE_OWNER = $State.Owner
-    $State.Awake = Start-KeepAwake $Phone
+    $State.Awake = if ($script:KindPlan.StayOn) { Start-KeepAwake $Phone } else { $null }   # Slice 308: an emulator needs no wake keys
     $notInstalled = Resolve-DeviceInstall $Phone $State
     if ($notInstalled) { Write-Host "PREPARE STOPPED: $notInstalled"; return (Get-InstallStopCode $notInstalled) }
     $verdict = Invoke-Preflight $Phone
@@ -445,6 +457,20 @@ function Reset-BudgetClock {
     $script:WaitedSeconds = $clock.WaitedSeconds
 }
 
+# A device kind without AOT (an emulator) is pinned to debug: one line says so, naming the checks that need the aot build and so cannot run.
+function Write-AotNote($Plans) {
+    if ($script:KindPlan.Aot) { return }
+    $needAot = @($Plans | Where-Object { $_.Status -ne $script:StatusSkipped -and $_.Variant -ceq $script:VariantAot } | ForEach-Object { $_.Name })
+    $names = $(if ($needAot.Count -gt 0) { " Checks that need the aot build will FAIL here: $($needAot -join ', ')." } else { '' })
+    Write-Host "emulator: no AOT build or timing (an emulator is never timed), so this run is pinned to the debug build.$names"
+}
+
+function Write-NoPhone([string]$Serial) {
+    $devices = @(); try { $devices = @(Get-AdbDevices) } catch { Write-Host "adb failed: $($_.Exception.Message)" }
+    $problem = Get-EmulatorProblemText $Serial $devices
+    if ($problem) { Write-Host $problem } else { Write-PairingAsk }
+}
+
 function Invoke-PrepareMode {
     $script:Budget = $script:PrepareLeaseMinutes   # only the lease and the install step read it; there is no check budget in this mode
     $script:CachedKey = Get-BuildKey
@@ -456,8 +482,8 @@ function Invoke-PrepareMode {
         $script:Apk = Find-VariantApk $Variant $script:CachedKey
     }
     Reset-BudgetClock   # the build above is outside any budget: the lease wait and the install start their clock now (run start and waited seconds together)
-    $phone = Find-WirelessPhone $Serial
-    if (-not $phone) { Write-PairingAsk; return $script:ExitNoPhone }
+    $phone = Find-WirelessPhone $Serial -AllowEmulator:$script:OnEmulator
+    if (-not $phone) { Write-NoPhone $Serial; return $script:ExitNoPhone }
     $state = New-StageState
     try { return (Invoke-PrepareGuarded $phone $state) }
     catch { Write-Host "PREPARE FAIL: runner error: $($_.Exception.Message)"; return $script:ExitRunnerError }
@@ -495,7 +521,7 @@ function Get-RowForCheck($Plan, [string]$Phone, [string]$PacksState, [string]$Ru
 
 # Minutes to write when the lease is renewed: the budget and its margin, never less than the caller's own lease still has.
 function Get-OwnLeaseMinutes($State) {
-    $held = Read-Lease $State.Key
+    $held = Read-Lease $State.Key 0 $State.LeaseKind
     $expires = 0
     if ($held -and $held.Owner -ceq $State.Owner) { $expires = $held.Expires }
     return (Get-LeaseMinutes $expires (Get-UnixNow) ($Budget + $script:LeaseExtraMinutes))
@@ -503,14 +529,14 @@ function Get-OwnLeaseMinutes($State) {
 
 # Minutes the caller's own lease still has (0 when none or not theirs); read before the lease is written, so the note can say a longer own lease was kept.
 function Get-OwnRemainingMinutes($State) {
-    $held = Read-Lease $State.Key
+    $held = Read-Lease $State.Key 0 $State.LeaseKind
     if (-not $held -or $held.Owner -cne $State.Owner) { return 0 }
     return [int][math]::Ceiling(($held.Expires - (Get-UnixNow)) / 60.0)
 }
 
 function Confirm-OwnLease($State) {
     $minutes = Get-OwnLeaseMinutes $State
-    return (Confirm-DeviceLease $State.Key $State.Owner $minutes 'phone')
+    return (Confirm-DeviceLease $State.Key $State.Owner $minutes $State.LeaseKind)
 }
 
 # ---- run-status.json: what the coordinator reads from outside (each build, each check, the last update). Rewritten at every step, every 30 s while waiting, and by the checks' wait loops.
@@ -610,23 +636,29 @@ function Invoke-Cleanup([string]$What, [scriptblock]$Step) {
 # Each step on its own, the lease last: one failure (a dropped phone) must not leave the quiet lock or the lease held.
 function Close-DeviceStage([string]$Phone, $State) {
     Invoke-Cleanup 'stop the keep-awake job' { Stop-KeepAwake $State.Awake }
-    Invoke-Cleanup 'force-stop the dev app' { if ($State.HoldsLease -and (Test-OwnsLease (Read-Lease $State.Key) $State.Owner)) { Invoke-Adb $Phone @('shell', 'am', 'force-stop', $package) | Out-Null } }
+    Invoke-Cleanup 'force-stop the dev app' { if ($State.HoldsLease -and (Test-OwnsLease (Read-Lease $State.Key 0 $State.LeaseKind) $State.Owner)) { Invoke-Adb $Phone @('shell', 'am', 'force-stop', $package) | Out-Null } }
     Invoke-Cleanup 'release the quiet machine' { if ($State.Quiet) { Exit-QuietMachine $State.Quiet } }
     $env:RTST_PHONE_OWNER = $State.PreviousOwner
-    Invoke-Cleanup 'release the phone lease' { if ($State.HoldsLease -and -not $State.Mine) { Close-PhoneLease $Phone $State.Key $State.Owner | Out-Null } }
+    Invoke-Cleanup 'release the lease' { if ($State.HoldsLease -and -not $State.Mine) { Close-DeviceLease $Phone $State | Out-Null } }
+}
+
+# The one release by kind: the phone lease also puts the stay-on setting back; an emulator has only the emulator lease (key = adb serial). Pure choice in Get-DeviceKindPlan.
+function Close-DeviceLease([string]$Phone, $State) {
+    if ($State.LeaseKind -eq 'emulator') { return (Remove-Lease $State.Key $State.Owner 0 'emulator') }
+    return (Close-PhoneLease $Phone $State.Key $State.Owner)
 }
 
 # What the stage holds, so the cleanup can release it whatever happened; no adb in here (the lease key is read in Initialize-StageLease, inside the guarded part).
 function New-StageState([string]$Owner = (Get-DeviceLeaseOwner 'run-checks')) {
     return [pscustomobject]@{
-        Key = $null; Owner = $Owner; Mine = $false; HoldsLease = $false; Quiet = $null; Awake = $null
+        Key = $null; LeaseKind = $script:KindPlan.LeaseKind; Owner = $Owner; Mine = $false; HoldsLease = $false; Quiet = $null; Awake = $null
         PreviousOwner = $env:RTST_PHONE_OWNER; Rows = (New-Object System.Collections.ArrayList)
     }
 }
 
 function Initialize-StageLease($State, [string]$Phone) {
-    $State.Key = Get-PhoneLeaseKey $Phone
-    $held = Read-Lease $State.Key
+    $State.Key = Get-DeviceLeaseKey $Phone $script:Kind
+    $held = Read-Lease $State.Key 0 $State.LeaseKind
     $State.Mine = [bool]($held -and $held.Owner -ceq $State.Owner)
 }
 
@@ -635,12 +667,13 @@ function Take-PhoneLease($State, [string]$Phone) {
     $wait = Get-BudgetPreWaitMinutes $script:RunStart $script:WaitedSeconds (Get-Date) $Budget
     $minutes = Get-OwnLeaseMinutes $State
     $ownRemaining = Get-OwnRemainingMinutes $State   # before the write: afterwards it would be the new length
-    $heldBy = Wait-ForLease $State.Key $State.Owner $minutes $wait 'phone'
-    if (-not $heldBy -and -not $State.Mine) {
+    # Slice 308: one lease per kind (Get-DeviceKindPlan): a phone the phone lease, an emulator only the emulator lease that run-flows, install-debug and audio-timing -Emulator use (key = adb serial).
+    $heldBy = Wait-ForLease $State.Key $State.Owner $minutes $wait $State.LeaseKind
+    if (-not $heldBy -and -not $State.Mine -and $script:KindPlan.StayOn) {
         # Review 2: record the screen timeout only when this run itself takes the lease (a lease the caller already held is theirs to restore).
         try { Save-StayOnForLease $Phone $State.Key $State.Owner | Out-Null } catch { Write-Host "WARNING: could not record the screen timeout: $($_.Exception.Message)" }
     }
-    if (-not $heldBy) { $State.HoldsLease = $true; Write-Host (Format-LeaseLengthNote $(if ($Prepare) { '-Prepare' } else { 'a timed run' }) $minutes ($Budget + $script:LeaseExtraMinutes) $ownRemaining) }
+    if (-not $heldBy) { $State.HoldsLease = $true; Write-Host (Format-LeaseLengthNote $(if ($Prepare) { '-Prepare' } else { 'a timed run' }) $minutes ($Budget + $script:LeaseExtraMinutes) $ownRemaining $State.LeaseKind) }
     return $heldBy
 }
 
@@ -655,7 +688,7 @@ function Enter-QuietWithinBudget($State) {
 # Sets the variant a step works on: the cache name, the key, the APK.
 function Use-Variant([string]$V) {
     $script:Variant = $V
-    $script:Platform = Get-CachePlatform $V
+    $script:Platform = Get-CachePlatform $V $script:CacheAbi
     $script:CachedKey = $script:RunKey
     $script:Apk = Find-VariantApk $V $script:CachedKey
     if (-not $script:Apk) { throw "the $V build is not in the cache any more (the files changed during the run?)" }
@@ -684,10 +717,10 @@ function Get-InstallStopCode([string]$Reason) {
 function Invoke-GuardedStage($Plans, [string]$Phone, $State) {
     Initialize-StageLease $State $Phone
     $heldBy = Take-PhoneLease $State $Phone
-    if ($heldBy) { return (Stop-Stage $Plans $State "waited too long for $heldBy (the phone lease)" $script:ExitLeaseHeldByOther) }
+    if ($heldBy) { return (Stop-Stage $Plans $State "waited too long for $heldBy (the $($State.LeaseKind) lease)" $script:ExitLeaseHeldByOther) }
     $env:RTST_PHONE_OWNER = $State.Owner
     if (-not (Confirm-OwnLease $State)) { return (Stop-Stage $Plans $State $script:LeaseLostReason $script:ExitLeaseHeldByOther) }
-    $State.Awake = Start-KeepAwake $Phone
+    $State.Awake = if ($script:KindPlan.StayOn) { Start-KeepAwake $Phone } else { $null }   # Slice 308: an emulator needs no wake keys
     $stop = Invoke-Checks $Plans $Phone $State
     if ($stop) { return (Stop-Stage $Plans $State $stop.Reason $stop.Code) }
     Write-Summary @(Get-FinalRows $Plans $State.Rows 'not run')
@@ -740,13 +773,14 @@ if ($NoBuild -or $env:RTST_NO_BUILD -eq '1') {
     $missed = @(Get-NoBuildMiss $plans ([bool](Find-VariantApk $script:VariantDebug $noBuildKey)) ([bool](Find-VariantApk $script:VariantAot $noBuildKey)) $script:PinVariant)
     if ($missed.Count -gt 0) { exit (Stop-CacheMissed $plans (Format-NoBuildMiss $App $missed $noBuildKey)) }
 }
-$phone = Find-WirelessPhone $Serial
-if (-not $phone) { Write-PairingAsk; exit $script:ExitNoPhone }
+$phone = Find-WirelessPhone $Serial -AllowEmulator:$script:OnEmulator
+if (-not $phone) { Write-NoPhone $Serial; exit $script:ExitNoPhone }
+Write-AotNote @($plans)
 # Slice 221: a second run with the same lease owner while the first is alive is refused before any build or lease (exit 4), unless -Force. The default owner is stable per phone
 # (run-checks-<phone key>, Get-RunChecksOwner), so a second run started in another shell without an owner variable is refused too.
 # A phone that cannot be read, or a marker that cannot be written, is a runner error: the table and exit 7, as the same failure inside the stage.
 try {
-    $runKey = Get-PhoneLeaseKey $phone
+    $runKey = Get-DeviceLeaseKey $phone $script:Kind
     $script:RunOwner = Get-RunChecksOwner $runKey
     $runRefusal = Request-RunMarker $runKey $script:RunOwner $Force.IsPresent
 }

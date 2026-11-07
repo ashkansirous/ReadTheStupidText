@@ -124,8 +124,10 @@ function Resolve-CheckSelection([string[]]$Requested, [string]$App, $Catalogue, 
 }
 
 # 'aot' or 'debug' -> the platform part of the build cache name (the same one audio-timing.ps1 uses for the phone: dev package, ABI, AOT flag).
-function Get-CachePlatform([string]$Variant) {
-    return 'android-dbg-arm64' + $(if ($Variant -eq $script:VariantAot) { '-aot' } else { '' })
+# Slice 308: run-checks.ps1 passes 'x64' for an emulator serial (audio-timing.ps1 -Emulator's android-dbg-x64 cache name); the default is the phone's arm64.
+function Get-CachePlatform([string]$Variant, [string]$Abi = 'arm64') {
+    $suffix = if ($Variant -eq $script:VariantAot) { '-aot' } else { '' }
+    return "android-dbg-$Abi$suffix"
 }
 
 
@@ -367,7 +369,7 @@ function Get-NotificationTitleProblem([string]$Title) {
 }
 
 # ---- book-end: can the phone doze? A held wake lock of the app's uid, or its foreground service, keeps it awake.
-function Get-PackageUid([string]$PackageDump) {
+function Get-PackageUidFromDump([string]$PackageDump) {
     if ("$PackageDump" -match '(?:userId|appId)=(\d+)') { return $Matches[1] }
     return $null
 }

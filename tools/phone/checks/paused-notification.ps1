@@ -217,7 +217,7 @@ function Wait-AppBackgrounded([int]$Seconds = 30) {
 # Every variant therefore clears that hold first: reset-dev-app -Level clear (the installed packs are kept aside and put back; -Level data does not exist).
 function Clear-DevDownloadHold {
     Write-Host "   clearing any download hold left by an earlier check (reset-dev-app -Level clear)"
-    & (Join-Path (Join-Path $PSScriptRoot '..') 'reset-dev-app.ps1') -App $App -Level clear -Serial $Phone | Out-Host
+    & (Join-Path (Join-Path $PSScriptRoot '..') 'reset-dev-app.ps1') -App $App -Level clear -Serial $Phone -AllowEmulator:((Get-DeviceKind $Phone) -eq $script:KindEmulator) | Out-Host
     if ($LASTEXITCODE -ne 0) { throw "reset-dev-app -Level clear did not bring $package back alive (exit $LASTEXITCODE), so a download hold could not be cleared" }
     # pm clear also resets the runtime notification permission (S21 2026-11-01: the channel read importance=NONE after it), so grant it again.
     $answer = (Invoke-Adb $Phone @('shell', 'pm', 'grant', $package, 'android.permission.POST_NOTIFICATIONS')) -join ' '

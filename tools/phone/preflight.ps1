@@ -13,6 +13,7 @@
 #>
 param(
     [string]$Serial,
+    [switch]$AllowEmulator,   # Slice 308: run-checks.ps1 passes it for a named emulator serial; run by hand, preflight stays wireless-only
     [switch]$Fix,
     [switch]$Restore,   # Slice 236 item 6: writes stay_on_while_plugged_in back to the value -Fix (or a lease take) recorded, then exits; no checks run
     [ValidateSet('rtst', 'dino', 'both')][string]$App = 'both'
@@ -36,12 +37,14 @@ function Invoke-Check([string]$Name, [scriptblock]$CheckBody) {
 }
 
 function Test-Charging([string]$Phone) {
+    if ((Get-DeviceKind $Phone) -eq $script:KindEmulator) { Write-Check 'charging' 'N/A' 'an emulator has no charger to depend on'; return }
     $power = Get-PowerState $Phone
     if ($power.Powered) { Write-Check 'charging' 'OK' "on charger, $($power.Wakefulness)" }
     else { Write-Check 'charging' 'FAIL' "ON BATTERY ($($power.Wakefulness)): plug the phone in" }
 }
 
 function Test-ScreenLock([string]$Phone) {
+    if ((Get-DeviceKind $Phone) -eq $script:KindEmulator) { Write-Check 'screen lock' 'N/A' 'an emulator has no user lock screen (the warm AVD is unlocked)'; return }
     $window = (Invoke-Adb $Phone @('shell', 'dumpsys window | grep -i keyguard')) -join "`n"
     $disabled = (Invoke-Adb $Phone @('shell', 'cmd lock_settings get-disabled')) -join ' '
     switch (Resolve-LockState $window $disabled) {
@@ -52,6 +55,7 @@ function Test-ScreenLock([string]$Phone) {
 }
 
 function Test-StayAwake([string]$Phone) {
+    if ((Get-DeviceKind $Phone) -eq $script:KindEmulator) { Write-Check 'stay awake' 'N/A' 'an emulator has no charger setting to depend on'; return }   # Slice 308: first, before any phone-only adb read
     if ($Fix) {
         # Round 3: a dead run's record is healed by the same restore rule before this run reads the setting, so a leftover 7 is not mistaken for the user's own choice.
         try { $healed = Invoke-StayOnRestore $Phone (Get-PhoneLeaseKey $Phone) ''; if ($healed -and $healed.Restored) { Write-Host "   put back stay_on_while_plugged_in to $($healed.Value) for a dead run's record" } }
@@ -112,11 +116,13 @@ function Test-DeviceLeftovers([string]$Phone) {
 }
 
 function Test-Lease([string]$Phone) {
-    $held = Read-Lease (Get-PhoneLeaseKey $Phone)
+    $plan = Get-DeviceKindPlan (Get-DeviceKind $Phone)   # an emulator's lease is the emulator lease (key = adb serial), a phone's the phone lease (key = ro.serialno)
+    $name = "$($plan.LeaseKind) lease"
+    $held = Read-Lease (Get-DeviceLeaseKey $Phone (Get-DeviceKind $Phone)) 0 $plan.LeaseKind
     $me = [Environment]::GetEnvironmentVariable($script:LeaseOwnerVariable)
-    if (-not $held) { Write-Check 'phone lease' 'WARN' 'no lease held: another session can take the phone mid-run (lease.ps1 -Take -Owner <name>, then set $env:RTST_PHONE_OWNER)' }
-    elseif ($held.Owner -eq $me) { Write-Check 'phone lease' 'OK' "held by this session ($(Format-LeaseHolder $held))" }
-    else { Write-Check 'phone lease' 'FAIL' "held by $(Format-LeaseHolder $held), not by this session ('$me')" }
+    if (-not $held) { Write-Check $name 'WARN' "no lease held: another session can take the $($plan.LeaseKind) mid-run (lease.ps1 -Take -Owner <name>, then set `$env:RTST_PHONE_OWNER)" }
+    elseif ($held.Owner -eq $me) { Write-Check $name 'OK' "held by this session ($(Format-LeaseHolder $held))" }
+    else { Write-Check $name 'FAIL' "held by $(Format-LeaseHolder $held), not by this session ('$me')" }
 }
 
 # Slice 236 item 6: the same restore rule every release path uses (written back only if the phone still holds the value the tooling set). Exit 0 restored or nothing recorded, 1 left alone or the value changed since.
@@ -130,18 +136,18 @@ function Invoke-RestoreMode([string]$Phone) {
 }
 
 $phone = $null
-try { $phone = Find-WirelessPhone $Serial } catch { Write-Host "adb failed: $($_.Exception.Message)"; Write-Host "PREFLIGHT NO-GO: adb: $($_.Exception.Message)"; exit 1 }
+try { $phone = Find-WirelessPhone $Serial -AllowEmulator:$AllowEmulator } catch { Write-Host "adb failed: $($_.Exception.Message)"; Write-Host "PREFLIGHT NO-GO: adb: $($_.Exception.Message)"; exit 1 }
 if (-not $phone) { Write-PairingAsk; exit 2 }
 if ($Restore) { exit (Invoke-RestoreMode $phone) }
 Write-Host "Preflight for $phone"
-Write-Check 'connection' 'OK' 'wireless adb'
+Write-Check 'connection' 'OK' $(if ((Get-DeviceKind $phone) -eq $script:KindEmulator) { 'emulator (named by run-checks)' } else { 'wireless adb' })
 Invoke-Check 'charging' { Test-Charging $phone }
 Invoke-Check 'screen lock' { Test-ScreenLock $phone }
 Invoke-Check 'stay awake' { Test-StayAwake $phone }
 Invoke-Check 'free space' { Test-FreeSpace $phone }
 Invoke-Check 'device leftovers' { Test-DeviceLeftovers $phone }
 Test-DevApps $phone
-Invoke-Check 'phone lease' { Test-Lease $phone }
+Invoke-Check "$((Get-DeviceKindPlan (Get-DeviceKind $phone)).LeaseKind) lease" { Test-Lease $phone }
 if ($script:Reasons.Count -eq 0) { Write-Host 'PREFLIGHT GO'; exit 0 }
 Write-Host "PREFLIGHT NO-GO: $($script:Reasons -join '; ')"
 exit 1

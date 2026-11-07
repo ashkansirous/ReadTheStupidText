@@ -42,7 +42,7 @@ function Wait-WakeReleased([string]$Uid, [datetime]$Since) {
 
 # The uid the wake locks are matched by; without it the lock test would skip and pass, so not finding it is a failure.
 function Get-AppUid {
-    $uid = Get-PackageUid ((Invoke-Adb $Phone @('shell', 'dumpsys', 'package', $package)) -join "`n")
+    $uid = Get-PackageUidFromDump ((Invoke-Adb $Phone @('shell', 'dumpsys', 'package', $package)) -join "`n")
     if (-not $uid) { throw "Could not read the uid of $package from dumpsys package (no userId=): the wake-lock check cannot run." }
     return $uid
 }

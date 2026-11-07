@@ -19,10 +19,68 @@ function Get-AdbDevices {
 }
 
 # The wireless phone that is ready, or $null. With -Serial, only that exact serial counts.
-function Find-WirelessPhone([string]$Serial) {
-    $devices = @(Get-AdbDevices | Where-Object { $_.State -eq 'device' -and $_.Serial -match $script:WirelessPattern })
-    if ($Serial) { $devices = @($devices | Where-Object { $_.Serial -eq $Serial }) }
-    return $devices | Select-Object -First 1 -ExpandProperty Serial
+# Slice 308 (two strikes): -AllowEmulator is an explicit parameter, never an environment variable. run-checks.ps1 passes it (and its checks pass it to tap.ps1, reset-dev-app.ps1, preflight.ps1) only when Get-DeviceKind says the -Serial is an emulator; every script run by hand stays wireless-only.
+function Find-WirelessPhone([string]$Serial, [switch]$AllowEmulator) {
+    return Select-ReadyPhoneSerial @(Get-AdbDevices) $Serial $AllowEmulator.IsPresent
+}
+
+# Slice 308 item 1: with -AllowEmulator, an emulator serial (`emulator-5554`) is accepted only when the caller names it with -Serial; without a name, or with any other serial, only wireless phones count.
+$script:PhoneEmulatorSerialPattern = '^emulator-\d{4,5}$'
+function Test-EmulatorSerial([string]$Serial) { return [bool]($Serial -match $script:PhoneEmulatorSerialPattern) }
+
+# The device kind, decided once from the serial: 'Emulator' for emulator-NNNN, else 'Phone' (also for no serial: the wireless phone).
+$script:KindPhone = 'Phone'
+$script:KindEmulator = 'Emulator'
+function Get-DeviceKind([string]$Serial) { return $(if (Test-EmulatorSerial $Serial) { $script:KindEmulator } else { $script:KindPhone }) }
+
+# Which lease and which phone-only gates a kind has. Phone: the phone lease (key = ro.serialno), charger/readiness gate, stay-on, AOT. Emulator: only the emulator lease (key = adb serial, as tools/emulator does), none of the others.
+function Get-DeviceKindPlan([string]$Kind) {
+    $phone = ($Kind -ne $script:KindEmulator)
+    return [pscustomobject]@{
+        Kind = $Kind; LeaseKind = $(if ($phone) { 'phone' } else { 'emulator' })
+        ChargerGate = $phone; StayOn = $phone; Aot = $phone
+    }
+}
+
+# Slice 308 review: an emulator is never timed and has no AOT build, so an explicitly named -Variant aot with it is an error (never a silent override). $null when fine.
+function Get-VariantKindError([string]$Kind, [bool]$VariantNamed, [string]$Variant) {
+    if ((Get-DeviceKindPlan $Kind).Aot -or -not $VariantNamed -or $Variant -ne 'aot') { return $null }
+    return 'An emulator has no aot build (it is never timed): -Variant aot cannot be used with an emulator serial. Use -Variant debug (or no -Variant), or run on the phone.'
+}
+
+# The extra arguments for a child script started with `powershell -File`/`pwsh -File` on this serial: -AllowEmulator for an emulator, nothing for a phone.
+function Get-AllowEmulatorArguments([string]$Serial) {
+    if ((Get-DeviceKind $Serial) -eq $script:KindEmulator) { return @('-AllowEmulator') }
+    return @()
+}
+
+# The lease key of a device: the phone's ro.serialno (read over adb), an emulator's adb serial.
+function Get-DeviceLeaseKey([string]$AdbSerial, [string]$Kind) {
+    if ($Kind -eq $script:KindEmulator) { return $AdbSerial }
+    return (Get-PhoneLeaseKey $AdbSerial)
+}
+
+function Select-ReadyPhoneSerial([object[]]$Devices, [string]$Serial, [bool]$AllowEmulator = $false) {
+    $ready = @($Devices | Where-Object { $_.State -eq 'device' })
+    if ($AllowEmulator -and $Serial -and (Test-EmulatorSerial $Serial)) { $ready = @($ready | Where-Object { $_.Serial -eq $Serial }) }
+    else {
+        $ready = @($ready | Where-Object { $_.Serial -match $script:WirelessPattern })
+        if ($Serial) { $ready = @($ready | Where-Object { $_.Serial -eq $Serial }) }
+    }
+    return $ready | Select-Object -First 1 -ExpandProperty Serial
+}
+
+function Write-EmulatorNotRunning([string]$Serial) {
+    Write-Host "The emulator $Serial is not running (or not ready). Start it with tools/emulator/start-warm.ps1, then run this again."
+}
+
+# Slice 308 review 8: why a named emulator serial found nothing, from what adb lists; $null when the serial is not emulator-shaped at all (the caller then says the wireless pairing text).
+function Get-EmulatorProblemText([string]$Serial, [object[]]$Devices) {
+    if ($Serial -notmatch '^emulator') { return $null }
+    if (-not (Test-EmulatorSerial $Serial)) { return "'$Serial' is not a valid emulator serial: use emulator-<port>, for example emulator-5554." }
+    $listed = @($Devices | Where-Object { $_.Serial -eq $Serial }) | Select-Object -First 1
+    if ($listed -and $listed.State -ne 'device') { return "The emulator $Serial is $($listed.State) in adb, not ready: wait for it to finish booting (or restart it with tools/emulator/start-warm.ps1), then run this again." }
+    return "The emulator $Serial is not running (or not ready). Start it with tools/emulator/start-warm.ps1, then run this again."
 }
 
 function Write-PairingAsk {
@@ -168,12 +226,14 @@ function Get-PhoneLeaseKey([string]$AdbSerial) {
 # Exits 4 when a live lease belongs to someone other than $env:RTST_PHONE_OWNER; no lease means allowed (older scripts keep working).
 # The caller's own lease is renewed when under 15 minutes remain, so a long run does not lose the phone to another session half-way.
 function Assert-PhoneLease([string]$Serial) {
-    $key = Get-PhoneLeaseKey $Serial
-    $held = Read-Lease $key
+    $kind = Get-DeviceKind $Serial   # Slice 308: the kind picks the lease: a phone's (key = ro.serialno) or an emulator's (kind 'emulator', key = adb serial)
+    $leaseKind = (Get-DeviceKindPlan $kind).LeaseKind
+    $key = Get-DeviceLeaseKey $Serial $kind
+    $held = Read-Lease $key 0 $leaseKind
     $me = [Environment]::GetEnvironmentVariable($script:LeaseOwnerVariable)
-    if ($me -and (Test-LeaseNeedsRenewal $held $me (Get-UnixNow))) { Update-Lease $key $me $script:DefaultLeaseMinutes | Out-Null }
+    if ($me -and (Test-LeaseNeedsRenewal $held $me (Get-UnixNow))) { Update-Lease $key $me $script:DefaultLeaseMinutes 0 $leaseKind | Out-Null }
     if (-not $held -or $held.Owner -ceq $me) { return }
-    Write-Host "Phone $key is leased by $(Format-LeaseHolder $held); this session's owner is '$me' (set `$env:$($script:LeaseOwnerVariable) to the lease owner, or wait). Not touching the phone."
+    Write-Host "Device $key is leased by $(Format-LeaseHolder $held 0 $leaseKind); this session's owner is '$me' (set `$env:$($script:LeaseOwnerVariable) to the lease owner, or wait). Not touching the device."
     exit $script:ExitLeaseHeld
 }
 
@@ -583,9 +643,9 @@ function Remove-RunMarker([string]$PhoneKey, [string]$Owner, [string]$Dir = '') 
 }
 
 # Item 6: one line that says how long a lease is written for and why (the budget plus its margin, or the caller's own longer lease, or the -Prepare allowance).
-function Format-LeaseLengthNote([string]$Mode, [int]$Minutes, [int]$WantedMinutes, [int]$OwnRemainingMinutes) {
+function Format-LeaseLengthNote([string]$Mode, [int]$Minutes, [int]$WantedMinutes, [int]$OwnRemainingMinutes, [string]$LeaseKind = 'phone') {
     $why = if ($OwnRemainingMinutes -gt $WantedMinutes) { "your own lease still has $OwnRemainingMinutes min, never shortened" } else { "$Mode needs $WantedMinutes min: its budget plus the margin" }
-    return "   phone lease: $Minutes min ($why)"
+    return "   $LeaseKind lease: $Minutes min ($why)"
 }
 
 # Item 3: the path-length check (Test-BuildPathLength, Assert-BuildPathLength) lives in tools/path-length.ps1 since Slice 266, shared with the emulator build.
@@ -788,11 +848,13 @@ function Get-DeviceRestorePlan([string]$Package, [int]$Uid, [string]$DataSyncVal
 
 # Review 1: another session's live lease means its run may be using the very timeout or block that looks like a leftover, so clearing is refused (throws) unless -Force.
 function Assert-NoOtherPhoneLease([string]$Serial) {
-    $key = Get-PhoneLeaseKey $Serial
-    $held = Read-Lease $key
+    $kind = Get-DeviceKind $Serial
+    $leaseKind = (Get-DeviceKindPlan $kind).LeaseKind
+    $key = Get-DeviceLeaseKey $Serial $kind
+    $held = Read-Lease $key 0 $leaseKind
     $me = [Environment]::GetEnvironmentVariable($script:LeaseOwnerVariable)
     if (-not $held -or $held.Owner -ceq $me) { return }
-    throw "Phone $key is leased by $(Format-LeaseHolder $held); this session's owner is '$me'. Not clearing device leftovers while another session's lease is live (its run may be using them). Wait for the lease, or pass -Force."
+    throw "Device $key is leased by $(Format-LeaseHolder $held); this session's owner is '$me'. Not clearing device leftovers while another session's lease is live (its run may be using them). Wait for the lease, or pass -Force."
 }
 
 # Reads, clears and reads again. Returns Leftovers (what was found), Remaining (what a second read still shows) and Unknown (a block list the read-back could not read). A dev package that is not installed is skipped.
