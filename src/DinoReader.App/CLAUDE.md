@@ -148,3 +148,7 @@ Store tags are a closed enum (`StoreTag`: Hot, Popular, Recommended, New; case-s
 ## Own books cleanup (Slice 278)
 
 The own-books cleanup (`OwnBooksCleanup.cs`, `OwnBooksCleanupRun.cs`) is single-flight, started from `GalleryPage.OnAppearing` independent of the starter install and refresh, deletes `story.json` last, catches every exception except cancellation per book, and is done when the listing was complete with no failure or after 3 failed starts. Backup restore runs the same run and drops the own books it removes. Do not add a second deletion path. (Slice 278: docs/plan/slices/278-dino-store-books-only.md)
+
+## Language change fetches the books' sound (Slice 285)
+
+Every way of changing the story or app language (`LanguagePage`, `StoryLanguagesPage`, `IntroWizardPage`) must start `ShelfAudioPacks.Start` for each added language. The reading page starts no fetch. The emulator flows `language-change-fetches-audio` and `language-change-back-key-fetches-audio` guard it. (Slice 285: docs/plan/slices/285-dino-language-change-fetches-book-audio.md)
