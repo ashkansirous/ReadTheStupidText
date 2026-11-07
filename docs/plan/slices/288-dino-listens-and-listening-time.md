@@ -40,7 +40,7 @@ time, so listening time cannot be worked out from what is stored.
 
 #### Design (Dino Reader Stats Dashboard mock, frame 200, added 2026-11-07)
 
-No app UI. The dashboard (Slice 287) shows the numbers: "Listens" with the sub "Played for 30 s or more", "Hours listened" with "Real played time from the app", and a note "Listens and hours count from Dino 1.112, 10 Nov 2026 (Slice 288)." The version and date are placeholders; record this slice's real release version and date here when it ships so Slice 287's note can use them. Nothing here changes: the 30 second rule and `double5` seconds match the mock. The dashboard splits iOS into iPhone and iPad from the batch's `blob12` form factor (Slice 166), already sent, so the app sends nothing new for it.
+No app UI. The dashboard (Slice 287) shows the numbers: "Listens" with the sub "Played for 30 s or more", "Hours listened" with "Real played time from the app", and a note "Listens and hours count from Dino 1.112, 10 Nov 2026 (Slice 288)." The note's wording is the mock's; its version and date are filled with this slice's real release, so record the version and date here when it ships (Slice 287's `/api/stats` returns them). Nothing here changes: the 30 second rule and `double5` seconds match the mock. The dashboard splits iOS into iPhone and iPad from the batch's `blob12` form factor (Slice 166), already sent, so the app sends nothing new for it.
 
 ## Work
 
