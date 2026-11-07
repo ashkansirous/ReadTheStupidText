@@ -234,7 +234,7 @@ public sealed class StoryVoicing
 		Prepared prepared = await Task.Run(() => PrepareShared(story, _translator.UsesBundledTable(story, reading)), cancellationToken);
 		// The engine's pieces are shared with a read that plays them at the same time (StoryTranslator), so each is translated once.
 		StoryTranslator.Outcome outcome = await TranslateOffUiAsync(story, prepared, reading, cancellationToken);
-		return outcome.Translated ? TranslatedStoryBuilder.Build(story.Pages, sentences, outcome.Pieces, StoryRecordings.PagesShownInOwnLanguage(story, StoryRecordings.SentencesPerPage(story.Pages, sentences))) : null;
+		return outcome.Translated ? TranslatedStoryBuilder.Build(story.Pages, sentences, outcome.Pieces) : null;
 	}
 
 	// A translated read plays the spoken language's pieces and clips.

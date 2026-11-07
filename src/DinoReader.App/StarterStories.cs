@@ -392,7 +392,7 @@ public sealed class StarterStories(IStoryLibrary library)
 
 	private async Task<Story> MoveMissingRecordingsAsync(Story extra, Story keep)
 	{
-		var wanted = StarterUpdate.RecordingMoves(extra, keep).Where(m => !StoryRecordings.Clips(keep).Any(c => c.Key.Overlaps(StoryClipKey.OfPage(m.To)))).ToList();
+		var wanted = StarterUpdate.RecordingMoves(extra, keep).Where(m => !StoryRecordings.Clips(keep).Any(c => c.Key.Overlaps(StoryClipKey.OfPage(m.To, UiLanguage.Resolve(extra.Recordings![m.From].Language))))).ToList();
 		IReadOnlyList<StarterUpdate.RecordingMove> copied = await CopyRecordingsAsync(extra, keep, wanted);
 		Story withPages = StarterUpdate.WithMovedRecordings(keep, extra, copied);
 		// The piece moves are decided against the story as it stands after the whole-page ones, so no file is copied for a range the story then skips (an orphan nothing would carry or delete).
@@ -414,13 +414,13 @@ public sealed class StarterStories(IStoryLibrary library)
 		var copied = new List<StarterUpdate.RecordingMove>();
 		foreach (StarterUpdate.RecordingMove move in moves)
 		{
-			string? source = library.TryResolveFile(stored.Id, StoryRecordings.FileOf(stored, StoryClipKey.OfPage(move.From)));
+			string? source = library.TryResolveFile(stored.Id, StoryRecordings.FileOf(stored, StoryClipKey.OfPage(move.From, StoryClipKey.NoLanguage)));
 			if (source is null || !File.Exists(source))
 			{
 				continue;
 			}
 
-			copied.Add(move with { File = await CopyClipFileAsync(fresh.Id, StoryClipKey.OfPage(move.To), source) });
+			copied.Add(move with { File = await CopyClipFileAsync(fresh.Id, StoryClipKey.OfPage(move.To, StoryClipKey.NoLanguage), source) });
 		}
 
 		return copied;

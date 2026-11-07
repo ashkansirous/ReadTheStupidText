@@ -799,8 +799,7 @@ Implement: `Dino Reader Batch 48 Store Only and Recording.dc.html`
 - **One word differs from the app:** the mock's caption calls the shipped line "Getting {0} sound for your books".
   The shipped English string `ShelfAudio_Getting` is "Getting {0} audio for your books" and other screens use it too;
   Slice 290 keeps the shipped words and takes only the shape and the "·" before the count.
-- Batch 49 (`Dino Reader Batch 49 Recording per Language.dc.html`, Slice 286) is in the Claude Design project but is
-  not copied here yet.
+- Batch 49 (`Dino Reader Batch 49 Recording per Language.dc.html`, Slice 286) is copied here; see its own section below.
 
 | # | Screen (caption) | Line |
 |---|---|---|
@@ -877,4 +876,44 @@ Also read these files the selection imports:
 - `dino_reader_icons/ios/AppIcon-1024-light.png`
 
 Implement: `Dino Reader Stats Dashboard.dc.html`
+```
+
+## Batch 49 mock — `Dino Reader Batch 49 Recording per Language.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Batch 49 Recording per Language.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+49+Recording+per+Language.dc.html>).
+- **Copied:** 2026-11-07, verbatim: the `DesignSync get_file` result came back inline (not truncated) and a script took its
+  `content` field from the session transcript, so nothing was retyped. Its imports were already in this folder
+  (`assets/{gingerbread-man,good-enough,three-little-pigs}/cover.jpg`, `assets/three-little-pigs/3.jpg`).
+- **Covers:** Slice 286 (recording per story language). Changes Batch 48 frames 178, 182, 188 and 189. iPhone 8, 375 x 667,
+  English app with Farsi as a side language. The mock's two review questions take the drawn answers: the way you record
+  (one character at a time / whole pages) and the ticks are kept per language; the intro opens on the app language.
+
+| # | Screen (caption) | Line |
+|---|---|---|
+| 192 | Record intro · English, recordings there | 34 |
+| 193 | Record intro · Farsi, nothing yet | 67 |
+| 194 | One line · Farsi | 101 |
+| 195 | Book sheet · your voice per language | 127 |
+| 196 | Reading a recorded book in Farsi | 153 |
+
+Open it in a text editor (`support.js` is not copied). To refresh: fetch again with `DesignSync get_file`,
+overwrite the copy with a script, regenerate the table. Never call `DesignSync` to read visual values; read this copy.
+
+Import prompt (verbatim, 2026-11-07):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+49+Recording+per+Language.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino Reader Batch 49 Recording per Language.dc.html`
+
+Also read these files the selection imports:
+- `assets/gingerbread-man/cover.jpg`
+- `assets/good-enough/cover.jpg`
+- `assets/three-little-pigs/3.jpg`
+- `assets/three-little-pigs/cover.jpg`
+
+Implement: `Dino Reader Batch 49 Recording per Language.dc.html`
 ```

@@ -1,3 +1,4 @@
+using System.Globalization;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
@@ -15,7 +16,11 @@ namespace DinoReader;
 internal sealed class BookSheet : Grid, IPageOverlay
 {
 	/// <summary>The "Read with my voice" row and the Record row's count (Slice 279): how many lines (or pages, for a book recorded as whole pages) are recorded, of how many, and the switch.</summary>
-	public sealed record VoiceOffer(RecordProgress Progress, bool On);
+	public sealed record VoiceOffer(IReadOnlyList<LanguageProgress> Languages, bool On);
+
+	/// <summary>How much of the book is recorded in one story language (Slice 286, frame 195).</summary>
+	/// <remarks><paramref name="TotalKnown"/> is false when the language's lines could not be counted (its translation failed): then only <c>Progress.Done</c>, the clips recorded, is shown, never "x of y".</remarks>
+	public sealed record LanguageProgress(string Language, RecordProgress Progress, bool TotalKnown = true);
 
 	/// <summary>What the sheet shows for one book: its name, where it came from, its cover, which rows apply and the voice switch's state.</summary>
 	public sealed record Content(string Title, string OriginText, string? CoverImagePath, Color CoverFill, BookSheetPlan Plan, VoiceOffer? Voice);
@@ -55,7 +60,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 	private readonly Label _exportLabel = new();
 	private readonly Label _removeLabel = new();
 	private readonly Label _readNowLabel = new();
-	private readonly Label _voiceHint = new() { FontSize = HintSize, LineHeight = 1.3, TextColor = DinoTokens.Get(DinoTokens.Body) };
+	private readonly Label _voiceHint = new() { FontSize = HintSize, LineHeight = 1.3, TextColor = DinoTokens.Get(DinoTokens.Body), MaxLines = 1, LineBreakMode = LineBreakMode.TailTruncation };
 	private readonly ToggleSwitch _voice = new();
 	private readonly Border _voiceRow = new();
 	private readonly Border _removeRow = new();
@@ -287,7 +292,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		_loading = true;
 		_voice.IsOn = voice?.On ?? false;
 		_loading = false;
-		_voiceHint.Text = voice is null ? string.Empty : ProgressText(voice.Progress);
+		_voiceHint.Text = voice is null ? string.Empty : VoiceText(voice);
 		ApplyRecordPill(voice);
 	}
 
@@ -617,21 +622,39 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		? AppResources.Format(AppResources.Record_LinesRecorded, progress.Done, progress.Total)
 		: AppResources.Format(AppResources.Record_PagesRecorded, progress.Done, progress.Total);
 
+	/// <summary>The sheet's "Your voice" line (frame 195): one language with recordings keeps "12 of 44 lines recorded"; several list each, in story-language order, with names in the app language:
+	/// "English 12 of 44 · Farsi 6 of 41".</summary>
+	internal static string VoiceText(VoiceOffer voice)
+	{
+		if (voice.Languages.Count == 1)
+		{
+			LanguageProgress only = voice.Languages[0];
+			return only.TotalKnown ? ProgressText(only.Progress) : only.Progress.Done.ToString(CultureInfo.CurrentCulture);
+		}
+
+		return string.Join(VoiceSeparator, voice.Languages.Select(l => $"{StoryLanguages.NameInAppLanguage(l.Language)} {CountText(l)}"));
+	}
+
+	private static string CountText(LanguageProgress language) => language.TotalKnown
+		? AppResources.Format(AppResources.Record_OfCount, language.Progress.Done, language.Progress.Total)
+		: language.Progress.Done.ToString(CultureInfo.CurrentCulture);
+
+	private const string VoiceSeparator = " · ";
 	private const double VoiceRecordPillMinHeight = 56;
 	private readonly Label _recordTitle = new() { FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Brand), VerticalOptions = LayoutOptions.Center };
-	private readonly Label _recordCount = new() { FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Muted), IsVisible = false };
+	private readonly Label _recordCount = new() { FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Body), IsVisible = false, MaxLines = 1, LineBreakMode = LineBreakMode.TailTruncation };
 	private readonly IconView _recordChevron = new() { Kind = IconKind.Chevron, Size = 18, StrokeWidth = 2.4, Color = DinoTokens.Get(DinoTokens.Muted), VerticalOptions = LayoutOptions.Center, IsVisible = false };
-	private readonly HorizontalStackLayout _recordContent = new() { Spacing = 8, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
+	private readonly Grid _recordContent = new() { ColumnSpacing = 8, ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)], HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
 
 	// The row says "Record your voice"; once the book has recordings it becomes "Your voice" with the count under it and a chevron (mock frame 188).
 	private void ApplyRecordPill(VoiceOffer? voice)
 	{
 		bool has = voice is not null;
 		_recordTitle.Text = has ? AppResources.Record_YourVoice : AppResources.Record_Title;
-		_recordCount.Text = has ? ProgressText(voice!.Progress) : string.Empty;
+		_recordCount.Text = has ? VoiceText(voice!) : string.Empty;
 		_recordCount.IsVisible = has;
 		_recordChevron.IsVisible = has;
-		_recordContent.HorizontalOptions = has ? LayoutOptions.Start : LayoutOptions.Center;
+		_recordContent.HorizontalOptions = has ? LayoutOptions.Fill : LayoutOptions.Center; // filled, so the count's line is as wide as the row and truncates past it
 		_recordPill.MinimumHeightRequest = has ? VoiceRecordPillMinHeight : 0;
 		SemanticProperties.SetDescription(_recordPill, has ? $"{_recordTitle.Text}, {_recordCount.Text}" : _recordTitle.Text);
 	}
@@ -640,8 +663,8 @@ internal sealed class BookSheet : Grid, IPageOverlay
 	private Border RecordPill()
 	{
 		var texts = new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { _recordTitle, _recordCount } };
-		_recordContent.Children.Add(new IconView { Kind = IconKind.Mic, Color = DinoTokens.Get(DinoTokens.Danger), Size = 20, StrokeWidth = 2.2, VerticalOptions = LayoutOptions.Center });
-		_recordContent.Children.Add(texts);
+		_recordContent.Add(new IconView { Kind = IconKind.Mic, Color = DinoTokens.Get(DinoTokens.Danger), Size = 20, StrokeWidth = 2.2, VerticalOptions = LayoutOptions.Center }, 0);
+		_recordContent.Add(texts, 1);
 		var content = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)], Padding = new Thickness(16, 0), VerticalOptions = LayoutOptions.Center };
 		content.Add(_recordContent, 0);
 		content.Add(_recordChevron, 1);

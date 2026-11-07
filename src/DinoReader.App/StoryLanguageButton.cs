@@ -31,6 +31,31 @@ public sealed class FlagView : GraphicsView
 	}
 }
 
+/// <summary>
+/// A <see cref="FlagView"/> in a round ring, the one drawing every flag on screen shares (Slice 286): the language button, the language menu rows, the record page's header and the
+/// "Record in" cards. The ring is drawn inside <paramref name="size"/>.
+/// </summary>
+public sealed class FlagRing : Border
+{
+	private readonly FlagView _flag;
+
+	public FlagRing(string language, double size, double ringThickness, Color ring)
+	{
+		WidthRequest = size;
+		HeightRequest = size;
+		Stroke = ring;
+		StrokeThickness = ringThickness;
+		StrokeShape = new Ellipse();
+		BackgroundColor = Colors.Transparent;
+		VerticalOptions = LayoutOptions.Center;
+		HorizontalOptions = LayoutOptions.Start;
+		Content = _flag = new FlagView { Country = StoryLanguages.FlagOf(language), WidthRequest = size, HeightRequest = size };
+	}
+
+	/// <summary>Shows another language's flag in the same ring (a ring that stays on screen is never replaced: a late-added one can stay unmeasured).</summary>
+	public void SetLanguage(string language) => _flag.Country = StoryLanguages.FlagOf(language);
+}
+
 internal sealed class FlagDrawable : IDrawable
 {
 	public string Country { get; set; } = string.Empty;

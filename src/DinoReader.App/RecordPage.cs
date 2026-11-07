@@ -35,6 +35,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 	private const double ColumnMaxWidth = RecordCard.ColumnMaxWidth;
 	private const double ButtonRowSpace = 14;
 	private const double SwipeThreshold = 40;
+	private const string HeaderSeparator = " · ";
 
 	private readonly IStoryLibrary _library;
 	private readonly IMicRecorder _recorder;
@@ -331,7 +332,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 			return;
 		}
 
-		_header.Subtitle = HeaderLine(setup, story, piece);
+		ShowHeaderLine(setup, story, piece);
 		_column.Children.Clear();
 		var stage = RecordViews.Stage(PicturePathOf(story, piece), WordsCardFor(setup, piece), RecordCard.MaxCardHeight(Height > 0 ? Height : 667));
 		AttachSwipe(stage);
@@ -371,6 +372,15 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 	}
 #endif
 
+	// Frame 194: with more than one story language the small line starts with the picked language's round flag and its name (in the app language): "Farsi · Line 4 of 41".
+	private void ShowHeaderLine(RecordSetup setup, Story story, RecordPiece piece)
+	{
+		string line = HeaderLine(setup, story, piece);
+		bool named = StoryLanguages.Current().HasChoice;
+		_header.SetSubtitleFlag(named ? setup.Language : null);
+		_header.Subtitle = named ? $"{StoryLanguages.NameInAppLanguage(setup.Language)}{HeaderSeparator}{line}" : line;
+	}
+
 	private string HeaderLine(RecordSetup setup, Story story, RecordPiece piece)
 	{
 		if (setup.Listening)
@@ -396,7 +406,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 		RecordChip chip = _take is not null ? RecordChip.NewTake : KeptClip() is not null ? RecordChip.Recorded : RecordChip.None;
 		double font = RecordCard.FittedFontSize(whole, Width > 0 ? Width : RecordCardFit.ReferenceWindowWidth, Height > 0 ? Height : RecordCardFit.ReferenceWindowHeight); // the pieces are cut once for the reference card; a smaller card shows them smaller
 		bool replacesRest = _take is { } take && StoryRecordings.ReplacesBeyond(_story!, take.Piece.Key);
-		var view = new RecordCardView(says, piece.Text, _story!.Language, font, chip, Recording, replacesRest);
+		var view = new RecordCardView(says, piece.Text, setup.Language, font, chip, Recording, replacesRest);
 		return RecordViews.WordsCard(view, PlayOldTakeAsync, KeepOldAsync);
 	}
 
@@ -798,7 +808,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 		TryDelete(take.Path);
 		await DeleteReplacedFilesAsync(storyId, committed.ReplacedFiles);
 		Log($"[Record] saved key={key} file={fileName} seconds={StoryRecordings.WholeSeconds(take.Length)} clips={StoryRecordings.Count(committed.Story)}");
-		CountFirstRecording(committed.First, committed.Story);
+		CountFirstRecording(committed.First, committed.Story, key.Language);
 	}
 
 	private async Task PlaceFileAsync(string storyId, string fileName, string temp) =>
@@ -816,7 +826,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 			Story latest = await _library.GetAsync(storyId) ?? _story!;
 			bool first = StoryRecordings.Clips(latest).All(c => !c.Key.Overlaps(key));
 			IReadOnlyList<string> replaced = StoryRecordings.ReplacedFiles(latest, key);
-			Story updated = StoryRecordings.WithClip(latest, key, new PageRecording(latest.Language, StoryRecordings.WholeSeconds(take.Length), fileName));
+			Story updated = StoryRecordings.WithClip(latest, key, new PageRecording(key.Language, StoryRecordings.WholeSeconds(take.Length), fileName));
 			await _library.UpdateAsync(updated);
 			return new Committed(updated, replaced, first);
 		}
@@ -846,11 +856,11 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 	}
 
 	// Which kind of book and how many of its clips are recorded, as a bucket (Slice 134); a re-recorded piece is not counted again.
-	private void CountFirstRecording(bool first, Story updated)
+	private void CountFirstRecording(bool first, Story updated, string language)
 	{
 		if (first)
 		{
-			_usage.Record(UsageEventName.RecordingMade, updated, UsageDetail.PagesBucket(StoryRecordings.Count(updated)));
+			_usage.Record(UsageEventName.RecordingMade, updated, UsageDetail.PagesBucket(StoryRecordings.Count(updated, language))); // Slice 286: the progress in the language just recorded
 		}
 	}
 
@@ -1107,14 +1117,20 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 			return;
 		}
 
-		await DeleteGivenBackFileAsync(shown.Id, undo);
+		await DeleteGivenBackFileAsync(shown.Id, undo, _story!);
 	}
 
-	private async Task DeleteGivenBackFileAsync(string storyId, Undo undo)
+	private async Task DeleteGivenBackFileAsync(string storyId, Undo undo, Story saved)
 	{
 		try
 		{
-			await _library.DeleteFileAsync(storyId, StoryRecordings.FileOf(undo.Recording, undo.Key));
+			string name = StoryRecordings.FileOf(undo.Recording, undo.Key);
+			if (StoryRecordings.IsReferenced(saved, name))
+			{
+				return; // another clip (any language) still names this file: it stays
+			}
+
+			await _library.DeleteFileAsync(storyId, name);
 			Log($"[Record] use-dino-settled key={undo.Key}");
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

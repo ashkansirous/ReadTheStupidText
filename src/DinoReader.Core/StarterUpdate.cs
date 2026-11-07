@@ -311,14 +311,19 @@ public static class StarterUpdate
             return moves;
         }
 
-        var taken = RecordingMoves(stored, bundled).Select(m => m.To).ToHashSet();
+        IReadOnlyList<RecordingMove> wholeMoves = RecordingMoves(stored, bundled);
+        var taken = new HashSet<int>(); // pages taken by piece moves
         IReadOnlyList<int> storedCounts = RecordSplitBook.SentenceCounts(stored);
         IReadOnlyList<int> bundledCounts = RecordSplitBook.SentenceCounts(bundled);
         foreach (int from in pieces.Keys.Where(k => k.IsValid && k.Page < stored.Pages.Count).Select(k => k.Page).Distinct().Order())
         {
             string text = stored.Pages[from].Text;
-            bool sameIndex = from < bundled.Pages.Count && !taken.Contains(from) && string.Equals(bundled.Pages[from].Text, text, StringComparison.Ordinal);
-            int to = sameIndex ? from : FirstFreePageWithText(bundled.Pages, text, taken);
+            // Slice 286: a whole-page move only blocks a page for pieces of its own language; clips of two languages share a page.
+            var languages = pieces.Keys.Where(k => k.Page == from).Select(k => k.Language).ToHashSet();
+            var blocked = new HashSet<int>(taken);
+            blocked.UnionWith(wholeMoves.Where(m => languages.Contains(UiLanguage.Resolve(stored.Recordings![m.From].Language))).Select(m => m.To));
+            bool sameIndex = from < bundled.Pages.Count && !blocked.Contains(from) && string.Equals(bundled.Pages[from].Text, text, StringComparison.Ordinal);
+            int to = sameIndex ? from : FirstFreePageWithText(bundled.Pages, text, blocked);
             if (to >= 0 && storedCounts[from] == bundledCounts[to]) // a different sentence count means a different split (a language or break change): the range would cover other words
             {
                 taken.Add(to);

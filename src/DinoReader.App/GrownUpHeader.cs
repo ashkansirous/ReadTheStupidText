@@ -17,6 +17,10 @@ public sealed class GrownUpHeader : Grid
 	private const double BackIconSize = 22;
 	private const double TitleSize = 20;
 	private const double SubtitleSize = 12;
+	private const double FlagSize = 14;
+	private const double FlagGap = 5;
+	private const double FlagRingWidth = 1;
+	private const float FlagRingAlpha = 0.14f;
 	private const double ButtonHeight = 44;
 	private const double ButtonLabelSize = 15;
 	private const double DonePadding = 20;
@@ -27,7 +31,9 @@ public sealed class GrownUpHeader : Grid
 	private const string DoneAutomationId = "GrownUpDone";
 
 	private readonly Label _title = new() { FontSize = TitleSize, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1 };
-	private readonly Label _subtitle = new() { FontSize = SubtitleSize, IsVisible = false, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1 };
+	private readonly Label _subtitle = new() { FontSize = SubtitleSize, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1, VerticalOptions = LayoutOptions.Center };
+	private readonly Grid _subtitleRow = new() { ColumnSpacing = 0, IsVisible = false, ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)] };
+	private readonly FlagRing _flag = new(string.Empty, FlagSize, FlagRingWidth, Color.FromRgba(43, 37, 64, FlagRingAlpha));
 	private readonly Border _button = new() { HeightRequest = ButtonHeight, StrokeThickness = 0, VerticalOptions = LayoutOptions.Center };
 	private readonly Button _hit = new() { BackgroundColor = Colors.Transparent, TextColor = Colors.Transparent, BorderWidth = 0, Padding = 0 };
 	private readonly Grid _face = new();
@@ -53,7 +59,10 @@ public sealed class GrownUpHeader : Grid
 		_button.StrokeShape = new RoundRectangle { CornerRadius = ButtonHeight / 2 };
 		_button.BackgroundColor = DinoTokens.Get(DinoTokens.Brand);
 		this.Add(_back = BuildBack(), 0);
-		this.Add(new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { _title, _subtitle } }, 1);
+		_flag.IsVisible = false; // the one ring lives in the row from the start (an Auto column is 0 wide while it is hidden); SetSubtitleFlag only shows it and changes its country
+		_subtitleRow.Add(_flag, 0);
+		_subtitleRow.Add(_subtitle, 1);
+		this.Add(new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { _title, _subtitleRow } }, 1);
 		this.Add(_button, 2);
 		_face.Children.Add(_hit);
 		_button.Content = _face;
@@ -88,8 +97,21 @@ public sealed class GrownUpHeader : Grid
 		set
 		{
 			_subtitle.Text = value;
-			_subtitle.IsVisible = !string.IsNullOrEmpty(value);
+			_subtitleRow.IsVisible = !string.IsNullOrEmpty(value);
 			OwnScript.AlignWith(_subtitle, _title);
+		}
+	}
+
+	/// <summary>Puts a small round flag of <paramref name="language"/> before the line under the title (the record page's story language, Slice 286); null removes it.</summary>
+	public void SetSubtitleFlag(string? language)
+	{
+		// One ring for the header's life, built before the first layout, whatever the first call is: a ring added to the already laid-out row was left unmeasured (0x0, drawn as a dot, Slice 286 flag-measure.txt).
+		// Only its country and visibility change here; the Auto column is the ring's own size when shown and 0 when hidden.
+		_subtitleRow.ColumnSpacing = language is null ? 0 : FlagGap;
+		_flag.IsVisible = language is not null;
+		if (language is not null)
+		{
+			_flag.SetLanguage(language);
 		}
 	}
 

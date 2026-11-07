@@ -226,6 +226,12 @@
   <data name="Record_Storyteller" xml:space="preserve"><value>الراوي</value></data>
   <data name="Record_Lines" xml:space="preserve"><value>{0} أسطر</value></data>
   <data name="Record_OfCount" xml:space="preserve"><value>{0} من {1}</value></data>
+  <data name="Record_Language" xml:space="preserve"><value>التسجيل بلغة</value></data>
+  <data name="Record_LanguagePages" xml:space="preserve"><value>{0} من {1}</value></data>
+  <data name="Record_LanguageNone" xml:space="preserve"><value>لا شيء بعد</value></data>
+  <data name="Record_LanguageRetry" xml:space="preserve"><value>اضغط للمحاولة مرة أخرى</value></data>
+  <data name="StoryLanguages_NameMap" xml:space="preserve"><value>en:الإنجليزية,fa:الفارسية,fr:الفرنسية,es:الإسبانية,pt:البرتغالية,zh:الصينية,ar:العربية,ru:الروسية,ja:اليابانية,da:الدنماركية,fi:الفنلندية,sv:السويدية,nb:النرويجية,nl:الهولندية,de:الألمانية</value></data>
+  <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}: تعذّر الحصول على الكلمات.</value></data>
   <data name="Record_Start" xml:space="preserve"><value>ابدأ التسجيل</value></data>
   <data name="Record_LongPages" xml:space="preserve"><value>تأتي الصفحات الطويلة على أجزاء، لتتّسع الكلمات دائمًا على الشاشة.</value></data>
   <data name="Record_Says" xml:space="preserve"><value>{0} يقول:</value></data>

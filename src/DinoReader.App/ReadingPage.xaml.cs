@@ -67,6 +67,8 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private bool _hasBackCover; // the book shows the silent back cover as its last page (Slice 237)
 	private bool _translatedDisplay; // the page shows the translation (Slice 110): its offsets are not the story's, so the spoken position is not used
 	private int _displayVersion;
+	private string? _translationShownFor; // the reading language whose translation the screen shows now (Slice 286): a refresh in that language keeps the recordings playing
+	private string? _translationFailedFor; // the reading language whose translation could not be made: the next Play tries it again, so its recordings are not off for good
 	private CancellationTokenSource? _displayCancellation; // the screen's translation: stopped when a newer one starts or the page goes away
 	private ReadingMode _mode = ReadingMode.Text; // the mode on screen now, which a translation that arrives late must not undo
 	private readonly StoryLanguageButton _languageButton; // Slice 173: the child's story-language button, shown only when this book can be read in two or more story languages
@@ -206,10 +208,22 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private async Task StartReadAtAsync(int sentence)
 	{
 		await _languageReady;
+		RetryFailedTranslation();
 #if DEBUG
 		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] read starts story={DinoReader.Core.BookMatch.Slug(_story?.Title ?? string.Empty)}");
 #endif
 		await _session.StartAtAsync(sentence);
+	}
+
+	// Slice 286: a translation that failed leaves that language's recordings off (the screen shows the story as written). Every Play tries it again in the background, once at a time, and the session
+	// starts the read again with the recording when it succeeds, so the recordings are never off for good.
+	private void RetryFailedTranslation()
+	{
+		if (_translationFailedFor is { } failed && failed == _session.ReadingLanguage)
+		{
+			_translationFailedFor = null;
+			_ = ShowStoryAsync();
+		}
 	}
 
 	private async Task CountOpenWhenShownAsync()
@@ -218,8 +232,8 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		CountOpen();
 	}
 
-	// A book that can only be read one way (a recorded book, an own book on Windows or without its pack) has no button and reads in the app
-	// language; otherwise the child's pick applies, as long as this book can be read in it.
+	// A book that can only be read one way (an own book on Windows or without its pack, a family with one story language) has no button and reads in the app
+	// language; otherwise the child's pick applies, as long as this book can be read in it. A recorded book keeps the button (Slice 286: each language has its own takes).
 	private async Task RefreshLanguageButtonAsync()
 	{
 		if (_story is not { } story)
@@ -229,7 +243,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		StoryLanguageSet set = StoryLanguages.Current();
 		var translator = _services.GetRequiredService<StoryTranslator>();
-		bool switchable = LanguagePick.BookSwitchable(set.HasChoice, StoryRecordings.Count(story));
+		bool switchable = LanguagePick.BookSwitchable(set.HasChoice);
 		_readable = switchable ? await ReadableLanguagesAsync(story, set, translator) : [];
 		string effective = EffectiveLanguage(set);
 		_session.SetReadingLanguage(effective);
@@ -274,7 +288,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		int version = ++_languageButtonVersion;
 		StoryLanguageSet set = StoryLanguages.Current();
 		var translator = _services.GetRequiredService<StoryTranslator>();
-		bool switchable = LanguagePick.BookSwitchable(set.HasChoice, StoryRecordings.Count(story));
+		bool switchable = LanguagePick.BookSwitchable(set.HasChoice);
 		IReadOnlyList<string> readable = switchable ? await ReadableLanguagesAsync(story, set, translator) : [];
 		if (version != _languageButtonVersion || !_onStack)
 		{
@@ -396,9 +410,19 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		string reading = _session.ReadingLanguage;
 		if (!translator.Applies(story, reading))
 		{
-			_session.SetClipPages(null);
+			_translationShownFor = null;
+			_translationFailedFor = null;
+			_session.SetScreenTextMatchesReading(true);
 			ShowSource(story);
 			return;
+		}
+
+		// Slice 286: the reading language's recordings play only while the screen shows that language's words; until the translation is in they do not, and the session starts the running read again
+		// when it arrives. A refresh in the language already on screen leaves the flag alone, so a running read is never cut by it.
+		if (_translationShownFor != reading)
+		{
+			_translationShownFor = null;
+			_session.SetScreenTextMatchesReading(false);
 		}
 
 		if (!_surfaceShown)
@@ -406,18 +430,22 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 			ShowSource(story);
 		}
 
-		// A translated book plays a page's clips only where they cover the whole page (Slice 279); the display and the read agree on the same pages.
-		_session.SetClipPages(StoryRecordings.PagesShownInOwnLanguage(story, StoryRecordings.SentencesPerPage(story.Pages, _sentences)));
 		(TranslatedStory? translated, string title) = await TranslateForScreenAsync(story, translator, reading, cancellation);
-		if (translated is null && version == _displayVersion)
+		if (version != _displayVersion || cancellation.IsCancellationRequested)
 		{
-			_session.SetClipPages(null); // the translation failed: the book reads in its own language, every clip plays
+			return;
 		}
 
-		if (translated is not null && version == _displayVersion && !cancellation.IsCancellationRequested)
+		if (translated is null)
 		{
-			ShowTranslation(story, translated, title);
+			_translationFailedFor = reading; // the page shows the story as written; Play tries the translation again (StartReadAtAsync)
+			return;
 		}
+
+		_translationFailedFor = null;
+		_translationShownFor = reading;
+		_session.SetScreenTextMatchesReading(true);
+		ShowTranslation(story, translated, title);
 	}
 
 	private CancellationToken RestartDisplayCancellation()

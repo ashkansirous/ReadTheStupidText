@@ -51,6 +51,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	private long _suppressTapUntil; // Environment.TickCount64: the release that ends a 1 s hold must not open a sheet
 	private readonly ObservableCollection<object> _items = [];
 	private Story? _sheetStory; // the book the "This book" sheet is open on
+	private CancellationTokenSource? _sheetCountCts; // the sheet's background count of each language's recordings: cancelled when the sheet closes or another book opens
 	private string? _reopenSheetFor; // the book whose Record flow is open: the sheet opens again on it when the flow is left
 	private bool _sheetChanged; // a switch was saved while the sheet was open: the tiles are rebuilt when it closes
 	private readonly SemaphoreSlim _sheetSaveLock = new(1, 1);
@@ -264,6 +265,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 			window.Resumed -= OnWindowResumed;
 		}
 
+		CancelSheetCount();
 		_mode.PropertyChanged -= OnModeChanged;
 		_services.GetRequiredService<StoreClient>().LibraryChanged -= OnLibraryChanged;
 		_services.GetRequiredService<ShelfAudioPacks>().Changed -= OnShelfAudioChanged;
@@ -730,6 +732,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 
 		ReorderTrace.Step($"page open begin books={tiles.Count}");
+		CancelSheetCount();
 		BookInfo.Hide();
 		ReorderTrace.Step("page sheet hidden");
 		_suppressTapUntil = Environment.TickCount64 + TapSuppressMilliseconds;
@@ -895,7 +898,16 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		BookSheet.Content content = SheetContentOf(story);
 		BookInfo.Show(content);
 		SheetLog($"opened, visible={BookInfo.IsVisible}");
-		_ = ShowVoiceWhenReadyAsync(story, content.Plan);
+		CancelSheetCount();
+		var counting = new CancellationTokenSource();
+		_sheetCountCts = counting;
+		_ = ShowVoiceWhenReadyAsync(story, content.Plan, counting.Token);
+	}
+
+	private void CancelSheetCount()
+	{
+		_sheetCountCts?.Cancel();
+		_sheetCountCts = null;
 	}
 
 	private BookSheet.Content SheetContentOf(Story story)
@@ -908,12 +920,17 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	}
 
 	// The count needs the whole book split into sentences and speakers, which can take a while on a long book: the sheet opens at once and the voice row and the count show when that is ready (Slice 279).
-	private async Task ShowVoiceWhenReadyAsync(Story story, BookSheetPlan plan)
+	private async Task ShowVoiceWhenReadyAsync(Story story, BookSheetPlan plan, CancellationToken cancellation)
 	{
 		BookSheet.VoiceOffer? offer;
 		try
 		{
-			offer = await Task.Run(() => VoiceOfferOf(story));
+			offer = await VoiceOfferOfAsync(story, cancellation);
+		}
+		catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+		{
+			// no-fallback: the sheet closed or another book opened; the count is dropped
+			return;
 		}
 		catch (Exception ex)
 		{
@@ -922,23 +939,60 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 			return;
 		}
 
-		if (offer is not null && BookInfo.IsVisible && _sheetStory?.Id == story.Id)
+		if (offer is not null && !cancellation.IsCancellationRequested && BookInfo.IsVisible && _sheetStory?.Id == story.Id)
 		{
 			BookInfo.ShowVoice(plan, offer with { On = _sheetStory.UseRecordings });
 		}
 	}
 
 	// "Read with my voice" and the Record row's count show only once something is recorded (Slice 279): lines recorded of all lines, or pages for a book recorded as whole pages.
-	private static BookSheet.VoiceOffer? VoiceOfferOf(Story story)
+	private async Task<BookSheet.VoiceOffer?> VoiceOfferOfAsync(Story story, CancellationToken cancellation)
 	{
 		if (StoryRecordings.Count(story) == 0)
 		{
 			return null;
 		}
 
-		RecordBook book = RecordSplitBook.Of(story);
-		return new BookSheet.VoiceOffer(RecordSplitWalk.Progress(story, book, RecordChoices.Load(story, book).Mode), story.UseRecordings);
+		RecordBook source = await Task.Run(() => RecordSplitBook.Of(story), cancellation);
+		// every story language that has recordings, in story-language order, each counted in its own mode's unit and from its own lines (Slice 286, frames 193 and 195)
+		var languages = new List<BookSheet.LanguageProgress>();
+		foreach (string language in StoryLanguages.Current().All.Where(l => StoryRecordings.Count(story, l) > 0))
+		{
+			languages.Add(await LanguageProgressOfAsync(story, source, language, cancellation));
+		}
+
+		return languages.Count == 0 ? null : new BookSheet.VoiceOffer(languages, story.UseRecordings);
 	}
+
+	// One language's count from its own words (the translation's, when it reads translated). When the translation cannot be made (offline) the language still shows, with the pages recorded of all pages
+	// (the same in every language), so the voice row never vanishes while recordings exist; the next time the sheet opens the words are tried again.
+	private async Task<BookSheet.LanguageProgress> LanguageProgressOfAsync(Story story, RecordBook source, string language, CancellationToken cancellation)
+	{
+		try
+		{
+			RecordBook? book = await RecordBooks.InAsync(_services, story, source, language, cancellation);
+			if (book is null)
+			{
+				return PagesOnly(story, source, language);
+			}
+
+			RecordMode mode = RecordChoices.ModeOf(story, language);
+			IReadOnlyList<RecordPiece> lines = mode == RecordMode.PerCharacter ? await Task.Run(() => RecordBooks.AllLines(story, book, language), cancellation) : [];
+			return new BookSheet.LanguageProgress(language, RecordBooks.Progress(story, book, lines, mode, language));
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException || !cancellation.IsCancellationRequested)
+		{
+			// no-fallback: the language shows the pages recorded; nothing is lost
+			Debug.WriteLine($"Dino Reader could not count the recordings in {language} for the sheet: {ex.Message}");
+			return PagesOnly(story, source, language);
+		}
+	}
+
+	// A language recorded per line cannot be counted in pages (a page needs every sentence), so it shows the clips recorded alone, never a wrong "0 of N"; whole pages are the same in every language.
+	private static BookSheet.LanguageProgress PagesOnly(Story story, RecordBook source, string language) =>
+		RecordChoices.ModeOf(story, language) == RecordMode.WholePage
+			? new(language, RecordSplitWalk.Progress(story, source, RecordMode.WholePage, language))
+			: new(language, new RecordProgress(StoryRecordings.Count(story, language), 0, RecordUnit.Lines), TotalKnown: false);
 
 	private Task SaveUseVoiceAsync(bool useVoice) => SaveSheetStoryAsync(story => story with { UseRecordings = useVoice });
 
@@ -1037,6 +1091,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 				return;
 			}
 
+			CancelSheetCount();
 			BookInfo.Hide();
 			_sheetStory = null;
 			_sheetChanged = false;
@@ -1065,6 +1120,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	// Waits for a save still in flight (a quick Back after a switch) so the tiles never keep the old flags; never throws out of async void.
 	private async void OnBookSheetDismissed()
 	{
+		CancelSheetCount();
 		RestoreTileFocus(); // Slice 235 part C: Esc or a click outside returns the keyboard to the book that opened the sheet (Windows only)
 		try
 		{

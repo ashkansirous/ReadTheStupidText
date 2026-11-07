@@ -57,6 +57,22 @@ public static class StoryLanguages
 		return string.Empty;
 	}
 
+	/// <summary>The name of <paramref name="language"/> in the app's language ("Farsi" in an English app), from the strings file; its own script's name when the map lacks it (Slice 286).</summary>
+	public static string NameInAppLanguage(string language)
+	{
+		string code = UiLanguage.Resolve(language);
+		foreach (string pair in AppResources.StoryLanguages_NameMap.Split(PairSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+		{
+			string[] parts = pair.Split(FlagSeparator);
+			if (parts.Length == 2 && parts[0] == code)
+			{
+				return parts[1];
+			}
+		}
+
+		return LanguageNames.NativeName(code);
+	}
+
 	/// <summary>The languages in <paramref name="languages"/> by their names in their own script, like "English, فارسی".</summary>
 	public static string Names(IEnumerable<string> languages) => string.Join(", ", languages.Select(LanguageNames.NativeName));
 }

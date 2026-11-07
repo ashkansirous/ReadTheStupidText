@@ -110,6 +110,11 @@ public static class AppResources
 	public static string Record_Storyteller => Get();
 	public static string Record_Lines => Get();
 	public static string Record_OfCount => Get();
+	public static string Record_Language => Get();
+	public static string Record_LanguagePages => Get();
+	public static string Record_LanguageNone => Get();
+	public static string Record_LanguageRetry => Get();
+	public static string Record_LanguageUnavailable => Get();
 	public static string Record_Start => Get();
 	public static string Record_LongPages => Get();
 	public static string Record_Says => Get();
@@ -370,6 +375,7 @@ public static class AppResources
 	public static string StoryLanguages_WifiNow => Get();
 	public static string StoryLanguages_WifiWait => Get();
 	public static string StoryLanguages_FlagMap => Get();
+	public static string StoryLanguages_NameMap => Get();
 	public static string Gallery_UpdatingBooks => Get();
 	public static string BackCover_StoryBy => Get();
 	public static string BackCover_OriginalStoryBy => Get();

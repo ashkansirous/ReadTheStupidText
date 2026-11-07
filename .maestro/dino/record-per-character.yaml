@@ -73,7 +73,7 @@ name: Record a book a line at a time and read it back
     visible:
       id: RecordButton
     timeout: 20000
-- assertVisible: "Line 1 of .*"
+- assertVisible: ".*Line 1 of .*"
 - assertNotVisible: "Storyteller says:"
 # The recording pages carry no instruction, no "stays on this phone" note and no page counter.
 - assertNotVisible: "Read aloud the words on each screen."
@@ -105,7 +105,7 @@ name: Record a book a line at a time and read it back
     waitToSettleTimeoutMs: 300
 # Line 2 the same way.
 - extendedWaitUntil:
-    visible: "Line 2 of .*"
+    visible: ".*Line 2 of .*"
     timeout: 15000
 - tapOn:
     id: RecordButton
@@ -131,13 +131,13 @@ name: Record a book a line at a time and read it back
     waitToSettleTimeoutMs: 300
 # Line 3: skipped, nothing recorded for it.
 - extendedWaitUntil:
-    visible: "Line 3 of .*"
+    visible: ".*Line 3 of .*"
     timeout: 15000
 - tapOn:
     id: RecordSkip
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
-    visible: "Line 4 of .*"
+    visible: ".*Line 4 of .*"
     timeout: 15000
 # Done half-way keeps what was recorded and returns to the intro in its "Your voice" state (the slice's decision: the intro reopens on the same choice). Back goes to the book's sheet; close it to reach the shelf.
 - tapOn:

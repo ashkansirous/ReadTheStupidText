@@ -44,7 +44,8 @@ internal static partial class DinoTestCommands
 		}
 
 		bool countOk = expected.Length == 0 || (int.TryParse(expected, out int wanted) && wanted == clips);
-		string detail = $"clips={clips} files={clips - missing} switch={story.UseRecordings}";
+		string languages = string.Join(',', StoryRecordings.Clips(story).GroupBy(c => c.Key.Language).OrderBy(g => g.Key, StringComparer.Ordinal).Select(g => $"{g.Key}:{g.Count()}")); // Slice 286: the clips each story language holds
+		string detail = $"clips={clips} files={clips - missing} switch={story.UseRecordings} languages={languages}";
 		return missing == 0 && countOk ? $"{RecordStateName} ok {detail}" : $"{RecordStateName} failed {detail} expected={expected}";
 	}
 }

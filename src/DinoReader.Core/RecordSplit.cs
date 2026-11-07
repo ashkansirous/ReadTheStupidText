@@ -34,7 +34,7 @@ public static class RecordSplit
     /// (the card never covers more than half the screen); without it every line is whole.</summary>
     public static IReadOnlyList<RecordPiece> ByCharacter(IReadOnlyList<RecordSentence> sentences, IReadOnlySet<string> ticked, Func<string, double>? heightOf = null, double maxHeight = double.MaxValue) =>
         RunLists(sentences).Where(run => ticked.Contains(run[0].Speaker))
-            .SelectMany(run => Fit(run, heightOf, maxHeight))
+            .SelectMany(run => Fit(run, heightOf, maxHeight)).Where(HasWords)
             .ToList();
 
     /// <summary>How many lines each speaker has in the book, whoever is ticked.</summary>
@@ -51,8 +51,11 @@ public static class RecordSplit
             pieces.AddRange(PackPage(page.OrderBy(s => s.Index).ToList(), heightOf, maxHeight));
         }
 
-        return pieces;
+        return pieces.Where(HasWords).ToList();
     }
+
+    // A translated book can hold sentences with no words (shown with an earlier one): a piece made only of them has nothing to read out, so it is never a card, a checklist entry or a silent clip (Slice 286).
+    private static bool HasWords(RecordPiece piece) => !string.IsNullOrWhiteSpace(piece.Text);
 
     /// <summary>How many pieces cover page <paramref name="page"/>.</summary>
     public static int PartsOf(IReadOnlyList<RecordPiece> pieces, int page) => pieces.Count(p => p.Key.Page == page);
@@ -85,18 +88,19 @@ public static class RecordSplit
         last.Page == next.Page && last.Speaker == next.Speaker && next.Index == last.Index + 1;
 
     private static RecordPiece PieceOf(IReadOnlyList<RecordSentence> run) =>
-        new(new StoryClipKey(run[0].Page, run[0].Index, run[^1].Index), run[0].Speaker, TextOf(run));
+        new(new StoryClipKey(run[0].Page, run[0].Index, run[^1].Index, StoryClipKey.NoLanguage), run[0].Speaker, TextOf(run));
 
     /// <summary>The words of <paramref name="run"/> as the book shows them: sentences side by side, a blank line where a paragraph ends.</summary>
     public static string TextOf(IReadOnlyList<RecordSentence> run)
     {
         var text = new System.Text.StringBuilder();
-        for (int i = 0; i < run.Count; i++)
+        List<RecordSentence> shown = run.Where(s => s.Text.Length > 0).ToList(); // a translated sentence whose words were shown with an earlier one has none (Slice 286)
+        for (int i = 0; i < shown.Count; i++)
         {
-            text.Append(run[i].Text);
-            if (i < run.Count - 1)
+            text.Append(shown[i].Text);
+            if (i < shown.Count - 1)
             {
-                text.Append(run[i].EndsParagraph ? ParagraphJoin : SentenceJoin);
+                text.Append(shown[i].EndsParagraph ? ParagraphJoin : SentenceJoin);
             }
         }
 

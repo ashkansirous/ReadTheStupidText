@@ -227,6 +227,12 @@
   <data name="Record_Storyteller" xml:space="preserve"><value>Forteller</value></data>
   <data name="Record_Lines" xml:space="preserve"><value>{0} replikker</value></data>
   <data name="Record_OfCount" xml:space="preserve"><value>{0} av {1}</value></data>
+  <data name="Record_Language" xml:space="preserve"><value>Ta opp på</value></data>
+  <data name="Record_LanguagePages" xml:space="preserve"><value>{0} av {1}</value></data>
+  <data name="Record_LanguageNone" xml:space="preserve"><value>Ingenting ennå</value></data>
+  <data name="Record_LanguageRetry" xml:space="preserve"><value>Trykk for å prøve igjen</value></data>
+  <data name="StoryLanguages_NameMap" xml:space="preserve"><value>en:engelsk,fa:persisk,fr:fransk,es:spansk,pt:portugisisk,zh:kinesisk,ar:arabisk,ru:russisk,ja:japansk,da:dansk,fi:finsk,sv:svensk,nb:norsk,nl:nederlandsk,de:tysk</value></data>
+  <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}: ordene kunne ikke hentes.</value></data>
   <data name="Record_Start" xml:space="preserve"><value>Start opptaket</value></data>
   <data name="Record_LongPages" xml:space="preserve"><value>Lange sider kommer i deler, så ordene alltid får plass på skjermen.</value></data>
   <data name="Record_Says" xml:space="preserve"><value>{0} sier:</value></data>
