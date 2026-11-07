@@ -15,6 +15,7 @@
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>Parte do áudio em {0} ainda não pôde ser descarregada. O Dino vai tentar novamente mais tarde.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Reading_AudioUnavailable" xml:space="preserve"><value>Este livro ainda não tem áudio neste idioma.</value></data>
   <data name="Reading_NoSound" xml:space="preserve"><value>Esta parte não tem som</value></data>
+  <data name="Reading_GettingSound" xml:space="preserve"><value>A obter o som em {0} dos teus livros</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Tentar de novo</value><comment>Machine draft: needs native review</comment></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="Common_Back" xml:space="preserve"><value>Voltar</value></data>

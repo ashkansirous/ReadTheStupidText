@@ -16,6 +16,7 @@
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>En del av {0}-ljudet kunde inte hämtas än. Dino försöker igen senare.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Reading_AudioUnavailable" xml:space="preserve"><value>Den här boken har ännu inget ljud på det här språket.</value></data>
   <data name="Reading_NoSound" xml:space="preserve"><value>Den här delen har inget ljud</value></data>
+  <data name="Reading_GettingSound" xml:space="preserve"><value>Hämtar ljud på {0} till dina böcker</value><comment>Machine draft: needs native review</comment></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Försök igen</value><comment>Machine draft: needs native review</comment></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="Common_Back" xml:space="preserve"><value>Tillbaka</value></data>

@@ -1104,14 +1104,17 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 			_pieceLacksAudio = false; // a stopped read says nothing; the next read's first piece sets it again
 		}
 
-		string? language = _pieceLacksAudio && _story is { } book ? ReadIn(book) : null;
-		SoundStatusPillState? status = language is not null && _story is { } shownBook ? AudioStatus(shownBook, language) : null;
-		if (status is not null && language is not null)
+		if (!_pieceLacksAudio || _story is not { } book)
 		{
-			StatusPill.Show(status, AudioStatusText(status, language));
+			StatusPill.IsVisible = false;
+			return;
 		}
 
-		StatusPill.IsVisible = status is not null;
+		string language = ReadIn(book);
+		string nativeName = LanguageNames.NativeName(language);
+		SoundStatusPillState status = AudioStatus(book, language);
+		StatusPill.Show(status, AudioStatusText(status, nativeName), nativeName);
+		StatusPill.IsVisible = true;
 	}
 
 	// Never promises sound that is not coming: a book whose pack is not being fetched (no pack, already in, another language's run) is "no sound"; idle, done, cancelled, failed or the main language is one plain line, never "audio unavailable".
@@ -1121,9 +1124,9 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		return SoundStatusPillState.From(shelfAudio.RunIncludes(language, book.SourceId), shelfAudio.StateOf(language));
 	}
 
-	private static string AudioStatusText(SoundStatusPillState status, string language)
+	private static string AudioStatusText(SoundStatusPillState status, string nativeName)
 	{
-		string getting = AppResources.Format(AppResources.ShelfAudio_Getting, LanguageNames.NativeName(language));
+		string getting = AppResources.Format(AppResources.Reading_GettingSound, nativeName);
 		return status.Kind switch
 		{
 			SoundStatusKind.Getting when status.HasCount => getting + SoundStatusPillState.CountSeparator + AppResources.Format(AppResources.Intro_Counter, status.Position, status.Total),

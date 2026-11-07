@@ -17,6 +17,7 @@
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>Some {0} audio could not be fetched yet. Dino will try again later.</value></data>
   <data name="Reading_AudioUnavailable" xml:space="preserve"><value>undefined</value></data>
   <data name="Reading_NoSound" xml:space="preserve"><value>This part has no sound</value></data>
+  <data name="Reading_GettingSound" xml:space="preserve"><value>Getting {0} sound for your books</value></data>
   <data name="StoryLanguages_Retry" xml:space="preserve"><value>Retry</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Save</value></data>

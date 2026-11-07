@@ -153,6 +153,7 @@ public static class AppResources
 	public static string ShelfAudio_Failed => Get();
 	public static string Reading_AudioUnavailable => Get();
 	public static string Reading_NoSound => Get();
+	public static string Reading_GettingSound => Get();
 	public static string StoryLanguages_Retry => Get();
 	public static string Common_Back => Get();
 	public static string Common_Save => Get();

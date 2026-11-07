@@ -7,9 +7,14 @@ namespace DinoReader;
 public static class DinoFonts
 {
 	public const string Ui = "Fredoka";
+	/// <summary>Fredoka at weight 500, a static instance of the variable Fredoka.ttf; only the sound pill's label uses it (Batch 50 frames 197-199).</summary>
+	public const string UiMedium = "FredokaMedium";
 	public const string Reading = "Andika";
 	public const string ReadingBold = "AndikaBold";
 	public const string Persian = "Vazirmatn";
+
+	/// <summary>The pill label's font for one piece of text: Fredoka Medium, or Vazirmatn when the text starts right to left (Fredoka has no Arabic letters).</summary>
+	public static string UiMediumForText(string? text) => TextDirection.StartsRightToLeft(text) ? Persian : UiMedium;
 
 	/// <summary>The font a story's text is set in: Vazirmatn for Farsi and Arabic, Andika otherwise.</summary>
 	public static string ReadingFor(string language) => IsRightToLeft(language) ? Persian : Reading;

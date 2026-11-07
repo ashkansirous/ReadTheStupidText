@@ -93,3 +93,69 @@ language name in a Fredoka line.
 - Fast checks: `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj`, the Dino Android build, FallbackGuard.
 - Emulator, after both reviews: the two flows above, plus screenshots of the getting and no-sound pills.
 - iOS: compile only from Windows; an iPhone look goes to *Not yet verified*.
+
+## Part B — exactly as designed (built 2026-11-07, branch feat/s290b-dino-sound-pill-as-designed)
+
+User, 2026-11-07: "The design is always the right choice! do everything as designed. fix the small issues as well".
+Part A kept two things that differ from the mock and left three small issues. Part B builds the mock exactly.
+
+**Touches:** `src/DinoReader.App/SoundStatusPill*.cs`, `src/DinoReader.App/SoundPillText.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/Resources/Fonts/**`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/DinoFonts.cs`, `src/DinoReader.App/DinoReader.App.csproj`, `tests/DinoReader.Tests/**`, `.maestro/dino/**`, `docs/plan/slices/290-dino-reading-sound-pill.md`
+
+- [x] **Words (frame 197):** the pill says "Getting {0} sound for your books" as the mock does. `ShelfAudio_Getting`
+      ("… audio …") is also used by `ShelfAudioPacksCard.cs` on another screen, so add a new string
+      `Reading_GettingSound` for the pill only, in English and all 14 locale files (word for "sound", not "audio",
+      in each language; same wording style as `Reading_NoSound` in that file).
+- [x] **Weight:** the pill text is Fredoka weight 500 as the mock says. The app ships one `Fredoka.ttf`
+      (`MauiProgram.cs` line 39). Add a Medium (500) face (OFL 1.1, like the existing file; make a static instance from
+      the variable font if `Fredoka.ttf` is variable, else the upstream static Medium), register it in
+      `DinoFonts`, use it for the pill label.
+- [x] **Language name in its own script:** frame 197 sets "فارسی" in Vazirmatn inside the Fredoka line. Use a span
+      in Vazirmatn (or the font the app already uses for that script) for the native language name.
+- [x] **Ring colours after a theme switch** (check-pass 1): refresh and `Invalidate` the ring on every `Show`, even
+      when state and text are unchanged.
+- [x] **Null checks** (check-pass 2): one check of the story in `ShowAudioStatus`, passed down.
+- [x] **No wasted first render** (high-review 9): the icon is not built with a default `Lock` kind.
+- [ ] **Device:** screenshots of every pill state against frames 197 (lilac, ring part-filled, "· N of M"), 198
+      (Wi-Fi) and 199, plus a Farsi pill. Screen capture must run during the flow (start it before the flow).
+      Not reached, see *Part B: not yet verified*.
+
+### Part B built (2026-11-07)
+
+- New string `Reading_GettingSound` ("Getting {0} sound for your books") in all 15 resx files, used only by the pill;
+  `ShelfAudio_Getting` unchanged for `ShelfAudioPacksCard`. Non-English texts are machine drafts (marked in the files);
+  de, nl, fi, ar, zh, ja rewritten after review.
+- `Resources/Fonts/Fredoka-Medium.ttf`: a static wght=500 instance of the variable `Fredoka.ttf` (fontTools), family
+  renamed "Fredoka Medium", OS/2 weight 500; OFL 1.1, no Reserved Font Name. Registered as `DinoFonts.UiMedium`, used
+  only by the pill label; a right-to-left pill line switches to Vazirmatn (Fredoka has no Arabic letters).
+- Label is a FormattedString: a right-to-left native language name is a Vazirmatn span (pure `SoundPillText.Split`
+  and `FontFor`, tested); the label also carries a `SemanticProperties.Description` with the plain text.
+- Small fixes: ring and icon colours refresh on every `Show`; one story null check; the icon is never drawn as Lock.
+- Reviews: high `D:\ReadTheStupidText-worktrees\reviews\290b-high.md` (all 7 applied); medium
+  `D:\ReadTheStupidText-worktrees\reviews\290b-medium.md` (6 low, not applied: listed below).
+- Fast checks: DinoReader.Tests 3776 passed, 1 skipped, 0 failed; Dino Android build 0 errors.
+- Emulator-5554, 2026-11-07: `language-change-fetches-audio` PASS (2nd try; 1st died on a Maestro "Device server
+  died" crash). `silent-piece-beat` did not run: the Maestro driver crashed twice (DeviceServerDiedException, harness,
+  empty app logcat).
+
+### Part B: not yet verified
+
+- Every pill state on a device against frames 197-199 (lilac Getting pill with "فارسی" in Vazirmatn and "· N of M",
+  Wi-Fi, Preparing, no sound), the medium weight and the new translations. No flow stops on the reading page while a
+  pill shows: the language flow ends on the Grown-ups shelf and the fetch can finish before a frame is taken.
+- The pill's accessibility text: no `ReadingAudioStatus` node appeared in uiautomator dumps during the language flow.
+- iPhone and the Windows head (incl. the UIA name).
+
+### Part B: left from the medium review (all low)
+
+- `SoundStatusPill.cs` ~92: with FormattedText, `Label.Text` is null; anything reading `.Text` sees nothing.
+- `SoundPillText.cs` ~12: `IndexOf` marks the first occurrence of the name; a translation repeating it could mark the
+  wrong one.
+- The FormattedString is rebuilt on each changed call; the ring redraws even while hidden.
+- ja/zh pill text uses the system font (as elsewhere in the app).
+
+### Follow-up needed for the device check
+
+- A Debug-only test hook (`src/DinoReader.App/Testing/**`) that opens a store book and holds the pill in each state
+  (Getting with a count, Wi-Fi, Preparing, no sound), and a Maestro flow that screenshots each state. Without it, no
+  flow can show the pill long enough to compare with the mock.
+- The Maestro driver crash after boot (`silent-piece-beat`): restart the emulator cold before the next run.
