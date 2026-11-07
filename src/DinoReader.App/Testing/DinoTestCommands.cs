@@ -115,6 +115,11 @@ internal static partial class DinoTestCommands
 			return StartShelfAudio(command.Get(TestHookDispatcher.LanguageKey, string.Empty));
 		}
 
+		if (command.Name == ForcePackFailureName)
+		{
+			return ForcePackFailure(command.Get(ModeKey, string.Empty));
+		}
+
 		if (command.Name == RecordStateName)
 		{
 			_ = RecordStateAsync(command.Get(IdKey, string.Empty), command.Get(ClipsKey, string.Empty));
