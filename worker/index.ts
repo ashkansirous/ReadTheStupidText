@@ -21,6 +21,8 @@ import { handleEvents, handleRtstEvents, isEventsPath } from "./events";
 import type { EventsEnv, RtstEventsEnv } from "./events";
 import { handleStories, isStoryPath } from "./stories";
 import { handleSonos, isSonosPath } from "./sonos";
+import { handleAlexa, isAlexaPath } from "./alexa";
+import type { AlexaEnv } from "./alexa";
 
 const SECURITY_HEADERS: Readonly<Record<string, string>> = {
   "X-Content-Type-Options": "nosniff",
@@ -57,6 +59,14 @@ function serveSonos(request: Request, url: URL, env: Env & EventsEnv, site: Reso
   // ctx.waitUntil is called as a method (destructuring it throws "Illegal invocation"); the play is counted after the answer is sent.
   const usage = { dataset: env.DINO_USAGE, telemetryEnabled: telemetryCheck(env, APP_CONFIG_KEY), defer: (work: Promise<unknown>) => ctx.waitUntil(work) };
   return handleSonos(withPath(request, url, site.path), env, pathPrefix, serveObject, usage);
+}
+
+// Slice 282: Dino Reader's anonymous Alexa kid skill (worker/alexa.ts); each segment played is counted like a Sonos play.
+function serveAlexa(request: Request, url: URL, env: Env & EventsEnv & AlexaEnv, site: ResolvedSite, ctx: ExecutionContext): Promise<Response> | Response {
+  if (site.product !== Product.DinoReader) return new Response("Not found", { status: 404 });
+  const pathPrefix = site.home === "/" ? "" : DINO_PATH_PREFIX;
+  const usage = { dataset: env.DINO_USAGE, telemetryEnabled: telemetryCheck(env, APP_CONFIG_KEY), defer: (work: Promise<unknown>) => ctx.waitUntil(work) };
+  return handleAlexa(withPath(request, url, site.path), env, pathPrefix, serveObject, usage);
 }
 
 // Each product has its own config object in the downloads bucket (Slice 137 added Read The Stupid Text's).
@@ -120,6 +130,7 @@ async function serveAsset(request: Request, env: Env, ctx: ExecutionContext): Pr
   const site = resolveSite(url.hostname, url.pathname);
   if (isStoryPath(site.path)) return serveStories(request, url, env, site);
   if (isSonosPath(site.path)) return serveSonos(request, url, env, site, ctx);
+  if (isAlexaPath(site.path)) return serveAlexa(request, url, env, site, ctx);
   if (isAppConfigPath(site.path)) return serveAppConfig(request, env, site);
   if (isEventsPath(site.path)) return serveEvents(request, env, site);
   if (isCrashPath(site.path)) return serveCrash(request, env, site);

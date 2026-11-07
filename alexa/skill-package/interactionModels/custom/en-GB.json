@@ -1,0 +1,34 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "dino book reader",
+      "intents": [
+        {
+          "name": "ReadBookIntent",
+          "slots": [{ "name": "book", "type": "AMAZON.SearchQuery" }],
+          "samples": [
+            "read {book}",
+            "read me {book}",
+            "read the story {book}",
+            "play {book}",
+            "play the story {book}",
+            "tell me {book}",
+            "open {book}",
+            "I want to hear {book}"
+          ]
+        },
+        { "name": "AMAZON.PauseIntent", "samples": [] },
+        { "name": "AMAZON.ResumeIntent", "samples": [] },
+        { "name": "AMAZON.StopIntent", "samples": [] },
+        { "name": "AMAZON.CancelIntent", "samples": [] },
+        { "name": "AMAZON.NextIntent", "samples": [] },
+        { "name": "AMAZON.PreviousIntent", "samples": [] },
+        { "name": "AMAZON.StartOverIntent", "samples": [] },
+        { "name": "AMAZON.HelpIntent", "samples": [] },
+        { "name": "AMAZON.FallbackIntent", "samples": [] },
+        { "name": "AMAZON.NavigateHomeIntent", "samples": [] }
+      ],
+      "types": []
+    }
+  }
+}
