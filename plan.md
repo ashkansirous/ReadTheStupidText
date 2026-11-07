@@ -34,7 +34,6 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 301 | Slice 247 follow-ups: emulator runner crash wait, crash log on retry, faster slow flows | planned | | | [301-slice-247-follow-ups-emulator-runner.md](docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md) |
 | 303 | Slice 201 review leftovers that change behaviour | planned | | | [303-slice-201-review-leftovers.md](docs/plan/slices/303-slice-201-review-leftovers.md) |
 | 305 | Dino package cleanup: ML Kit, sherpa-onnx and onnxruntime out of the Dino packages | planned | | | [305-dino-package-cleanup-ml-kit-and-sherpa.md](docs/plan/slices/305-dino-package-cleanup-ml-kit-and-sherpa.md) |
-| 307 | ClaudeSkills hooks and guards leftovers (built in `D:\ClaudeSkills`) | planned | | | [307-claudeskills-hooks-and-guards-leftovers.md](docs/plan/slices/307-claudeskills-hooks-and-guards-leftovers.md) |
 | 310 | Dino Debug hook to force a voice-pack download failure | planned | | | [310-dino-debug-hook-force-pack-failure.md](docs/plan/slices/310-dino-debug-hook-force-pack-failure.md) |
 | 311 | Crash data for the Windows apps from the Microsoft Store | planned | | | [311-windows-store-crash-data.md](docs/plan/slices/311-windows-store-crash-data.md) |
 | 312 | Read the iPhone's crash logs from this PC | planned | | | [312-read-iphone-crash-logs-from-this-pc.md](docs/plan/slices/312-read-iphone-crash-logs-from-this-pc.md) |
@@ -77,7 +76,9 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 435 checks across 175 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- **Not yet tried on a device:** 437 checks across 176 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- Slice 307 item 10 (open, built in ClaudeSkills #186 without it): `phone-network-guard.mjs` still wrongly denies a read-only grep with a quoted `\|adb` pattern; four review passes found safety gaps in every fix, so it stays as on main ([slice](docs/plan/slices/307-claudeskills-hooks-and-guards-leftovers.md)).
+- Follow-up: promote the Slice 307 advisory hooks to deny where `~/.claude/logs/advisory-hooks.log` shows they are right; a later slice, decided from that log ([slice](docs/plan/slices/307-claudeskills-hooks-and-guards-leftovers.md)).
 - Slice 290 part B (merged, #895) leftovers, all low: `Label.Text` is null under FormattedText, `SoundPillText` marks the first occurrence of the name, the FormattedString is rebuilt on each changed call, ja/zh use the system font ([slice](docs/plan/slices/290-dino-reading-sound-pill.md), *Part B: left from the medium review*). Part B also fixed the two check-pass leftovers that Slice 293 lists.
 - Slice 290 device check needs two things: a Debug-only test hook (`src/DinoReader.App/Testing/**`) that holds the pill in each state plus a Maestro screenshot flow, and a cold emulator restart for the Maestro driver crash ([slice](docs/plan/slices/290-dino-reading-sound-pill.md), *Follow-up needed for the device check*).
 - Slice 299 item 2 follow-up (merged, #912): Cancel during the first-run list load shows the "Connect to the internet" copy; it needs distinct cancelled and failed strings in every language ([slice](docs/plan/slices/299-slice-261-leftovers.md)).
