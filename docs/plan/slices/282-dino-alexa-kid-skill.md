@@ -1,12 +1,53 @@
 # Slice 282 — Dino: an Alexa kid skill that reads the store books
 
-*Planned 2026-11-06; status `planned`, item 1 decided 2026-11-07 (see Work).* *Earlier park reason, now settled (night 2026-11-06-1250 wave 4; moved back to planned by the night's final feedback loop, 2026-11-07): item 1 unsettled. Amazon's kid-skill, policy and AudioPlayer pages neither allow nor forbid long-form audio (AudioPlayer) in a child-directed skill. Next step: the user asks Amazon (developer support, their account) or chooses a skill not marked for kids; a wave re-parks it until then.* Server only (Cloudflare Worker) plus the skill definition; the apps do not change.
+*In progress (wave 2026-11-07), draft PR.* *Planned 2026-11-06; item 1 decided 2026-11-07 (see Work).* *Earlier park reason, now settled (night 2026-11-06-1250 wave 4; moved back to planned by the night's final feedback loop, 2026-11-07): item 1 unsettled. Amazon's kid-skill, policy and AudioPlayer pages neither allow nor forbid long-form audio (AudioPlayer) in a child-directed skill. Next step: the user asks Amazon (developer support, their account) or chooses a skill not marked for kids; a wave re-parks it until then.* Server only (Cloudflare Worker) plus the skill definition; the apps do not change.
 
 **Depends on:** Slice 281 (the listening tracks).
-**Touches:** `alexa/skill-package/**` (new: manifest, interaction models en-GB and en-US), `worker/alexa.ts` (new),
-`worker/alexa-verify.ts` (new), `worker/alexa*.test.mjs` (new), `worker/index.ts` (one dispatch line), `worker/downloads.ts`
-(`resolveSite`), `wrangler.jsonc` and `wrangler.workers-dev.jsonc` (`run_worker_first`, with the `/dino/...` twin
-check-configs requires), `worker/CLAUDE.md`, `PRIVACY.md`, `site/dino/privacy.html`, this file.
+**Touches:** `alexa/skill-package/**` (new: manifest, interaction models en-GB and en-US), `worker/alexa*.ts` (new),
+`worker/alexa*.test.mjs` (new), `worker/index.ts` (one dispatch line), `worker/speaker-usage.ts`,
+`worker/speaker-usage.test.mjs`, `wrangler.jsonc` and `wrangler.workers-dev.jsonc` (`run_worker_first` with the
+`/dino/...` twin check-configs requires, and an `ALEXA_SKILL_ID` var), `package.json` and `package-lock.json` (only if
+the certificate library below is added), `worker/CLAUDE.md`, `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`,
+this file. (Wave 2026-11-07 premise check: `resolveSite` already strips `/dino`, so `worker/downloads.ts` is not touched.)
+
+## Design (coordinator, wave 2026-11-07, before the claim)
+
+Premises checked on origin/main 9ec6489c: dispatch goes like Sonos (`worker/index.ts:120-122`, `serveSonos` at :54-59);
+`/api/stories` items carry `listenUrl` and `listenSeconds` (only books that have both; the list may be empty);
+`recordSpeakerPlay(usage, {platform, book, language, seconds}, request)` (`worker/speaker-usage.ts:65`) hardcodes detail
+`estimated` (:55); no X.509 code or dependency exists; worker tests run with `node --test worker/*.test.mjs` and import
+`.ts` by type-stripping (no enums, no parameter properties).
+
+- **State: none on the server.** The one owner of playback state is Alexa. Every AudioPlayer `Play` directive carries a
+  token `v1|<bookId>|<lang>|<storyVersion>|<segmentStartMs>`; every request about playback (AudioPlayer events,
+  PlaybackController, built-in intents) reads `context.AudioPlayer.token` and `offsetInMilliseconds`. Interrupts:
+  pause/stop = `AudioPlayer.Stop`, nothing stored; resume = a new `Play` of the same book at the sent offset with a
+  new token whose `segmentStartMs` is that offset; next/previous = the neighbour in the live `/api/stories` order
+  (wrap off: last + next says there is no next book); start over = offset 0; a token that no longer parses or names a book
+  no longer listed = say the book is not available and list books. A malformed or foreign token is never trusted for
+  anything but these fields, each validated (book id pattern from `speaker-usage.ts`, lang in the listed languages,
+  numbers in range).
+- **Counting (Slice 289 table):** one `book_listened` row per played segment, written on `PlaybackStopped` or
+  `PlaybackFinished`: seconds = event offset minus the token's `segmentStartMs` (clamped to 0..listenSeconds), detail
+  `reported`; if the event carries no offset, the book's `listenSeconds` minus segment start, detail `estimated`.
+  `SpeakerPlay` gains an optional `detail` (default `estimated`, so Sonos is unchanged) and `speaker-usage.ts` exports
+  `SPEAKER_PLATFORM_ALEXA = "alexa"`. A paused-and-resumed book makes two rows (no state to join them): written in
+  `worker/CLAUDE.md` next to the `blob7` notes. No household, user, device or skill-instance id is stored; the Worker
+  logs nothing (worker/CLAUDE.md:26).
+- **Request check (`alexa-verify.ts`), all pure functions plus one fetch:** (1) `SignatureCertChainUrl` rules (https,
+  host `s3.amazonaws.com` case-insensitive, path starts `/echo.api/` after normalising, port 443 or none); (2) fetch the
+  PEM chain, cached per isolate by URL; (3) leaf valid now, SAN contains `echo-api.amazon.com`, chain verifies up to a
+  root in a small bundled list; (4) `Signature-256` header = base64 RSA-SHA256 over the raw body bytes with the leaf key
+  (`crypto.subtle`); (5) `request.timestamp` within 150 s; (6) when the `ALEXA_SKILL_ID` var is non-empty,
+  `session.application.applicationId` / `context.System.application.applicationId` must equal it (empty until the user
+  creates the skill: the signature already proves the request is from Alexa). Any failure = HTTP 400, no body detail.
+  Certificate parsing: first `library-docs` (context7) for `@peculiar/x509` (or `pkijs`) working in Workers; use it if it
+  bundles with wrangler and runs under `node --test`; otherwise a minimal DER reader limited to what the steps need.
+  Which roots Amazon's current `echo-api` chain ends in comes from fetching the live chain (read-only), not from memory.
+  Tests use a test-generated CA, leaf and signed bodies (injectable root list and clock), plus forged-signature,
+  stale-timestamp, bad-URL and wrong-SAN cases.
+- **Speech copy** lives in `alexa.ts` as named constants (the backend speaks to the user here; there is no other UI).
+  Launch lists at most 5 titles; an empty list says there are no books yet and ends the session.
 
 ## Why
 
