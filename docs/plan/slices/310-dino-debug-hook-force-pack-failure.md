@@ -1,8 +1,8 @@
 # Slice 310 — Dino Debug hook to force a voice-pack download failure
 
-*Planned 2026-11-07.* Testing gap: Dino has no Debug hook to force a pack failure; testers corrupt the `.partial` file by hand. It was "worth adding with Slice 187" and 187 shipped without it. Moved from plan.md's *Built but not verified*. Debug builds only; the hook must never exist in a Release build and never reach production analytics (`UsageEligibility` already blocks Debug).
+*In progress (wave 2026-11-07), draft PR.* Planned 2026-11-07. Testing gap: Dino has no Debug hook to force a pack failure; testers corrupt the `.partial` file by hand. It was "worth adding with Slice 187" and 187 shipped without it. Moved from plan.md's *Built but not verified*. Debug builds only; the hook must never exist in a Release build and never reach production analytics (`UsageEligibility` already blocks Debug).
 
-**Touches:** `src/DinoReader.App/Testing/DinoTestCommands.cs`, `src/DinoReader.App/Testing/DinoTestCommands.ShelfAudio.cs`, `src/DinoReader.App/AudioPackStore.cs`, `src/ReadTheStupidText.Mobile.Shared/VoicePackInstaller.cs`, `tests/DinoReader.Tests/AudioPackStoreTests.cs`, `.maestro/dino/**`, `tools/emulator/**`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/310-dino-debug-hook-force-pack-failure.md`
+**Touches:** `src/DinoReader.App/Testing/DinoTestCommands.cs`, `src/ReadTheStupidText.Mobile.Shared/Testing/TestHookDispatcher.cs`, `src/DinoReader.App/Testing/DinoTestCommands.ShelfAudio.cs`, `src/DinoReader.App/AudioPackStore.cs`, `src/ReadTheStupidText.Mobile.Shared/VoicePackInstaller.cs`, `tests/DinoReader.Tests/AudioPackStoreTests.cs`, `.maestro/dino/**`, `tools/emulator/**`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/310-dino-debug-hook-force-pack-failure.md`
 
 ## Work
 
