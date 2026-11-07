@@ -72,9 +72,6 @@ public partial class ReaderPage : ContentPage
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
         ApplyScanAvailability(platform.SupportsTextScan);
-        // Before the first text is set: that fires TextChanged, which renders the player and reads the wait parts.
-        InitWait();
-
         _reader = reader;
         _settings = settings;
         _documentExtractor = documentExtractor;
@@ -87,7 +84,8 @@ public partial class ReaderPage : ContentPage
         _review = review;
         _usage = usage;
         _earlyVoice = earlyVoice;
-        TextEditor.Text = draft.Take();
+        // InitWait must run before the first text is set: that fires TextChanged, which renders the player and reads the wait parts.
+        ReaderOpenOrder.Open(initWait: InitWait, showText: () => TextEditor.Text = draft.Take());
         _original = draft.TakeOriginal();
         TextEditor.FlowDirection = TextFlow.ContentDirection(TextEditor.Text);
         draft.RegisterRebuildHook(PrepareForRebuild);
@@ -156,9 +154,8 @@ public partial class ReaderPage : ContentPage
             return;
         }
 
-        ReplaceEditorText(result.Text);
+        ReplaceEditorText(result.Text, result.Language);
         _original = result.Original;
-        _detectedSource = result.Language;
         if (result.Language is null && _detector is not null)
         {
             ScheduleDetection(result.Text); // the review page could not tell: look again, the voice follows the text
@@ -219,6 +216,8 @@ public partial class ReaderPage : ContentPage
     {
         _retired = true;
         CancelDetection();
+        _headStartCts?.Cancel(); // this page's own async work only; the shared head start belongs to the new page
+        _languageRefreshCts?.Cancel();
         if (_reader.State != PlaybackState.Idle || _pendingReadId != 0)
         {
             AppTrace.Reading(TraceLines.ReadingEvent.Stopped, TraceLines.ReadingReason.PageLeft);

@@ -81,6 +81,11 @@ public partial class ReaderPage
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
+            if (_retired)
+            {
+                return;
+            }
+
             if (stalled)
             {
                 BeginStallWait();
