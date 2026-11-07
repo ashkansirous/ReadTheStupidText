@@ -34,12 +34,52 @@ public sealed class ShelfAudioPacks
 	private readonly object _scanLock = new();
 	private TaskCompletionSource _scanDone = new();
 
-	public ShelfAudioPacks(StoreClient store)
+	private readonly StagedBookUpdates _staged;
+	private readonly IBookTextSync _textSync; // Slice 313: brings a behind book's text up to date before its pack is planned (injected, so no start-up path can forget it)
+
+	public ShelfAudioPacks(StoreClient store, IBookTextSync textSync, StagedBookUpdates staged)
 	{
 		_store = store;
+		_textSync = textSync;
+		_staged = staged;
+		staged.Swapped += (_, _) => TextChanged(); // a book's text was just swapped in: its pack is planned again, whichever path swapped it
 		store.Packs.PacksChanged += () => _ = RescanAsync(); // a book download, a book update, a removal or the sweep changed the pack folders: the snapshot follows
 		_installed = InstalledShelfAudio.Parse(Preferences.Default.Get(InstalledKey, (string?)null)); // the last-known list, read at once, so a cold start shows it before the scan corrects it
 		StoryLanguages.SidesSaved += StopRemoved; // a language that left the set stops its run and forgets its cancel
+	}
+
+	/// <summary>
+	/// Slice 313: a shelf book's newer text was just swapped in, so the pack made for it must be fetched now. A language with a live run is marked and planned again when that run ends (joining
+	/// it would keep the old plan, which left this book out); any other language starts a quiet run at once, past the <see cref="ResumeEvery"/> throttle. A cancelled language stays cancelled.
+	/// </summary>
+	public void TextChanged()
+	{
+		StoryLanguageSet set = StoryLanguages.Current();
+		IReadOnlyList<string> languages;
+		lock (_gate)
+		{
+			// Only the main language and the ones with audio installed on the shelf (a language with none has no pack to make for this text), plus any with a live run.
+			languages = set.All.Where(l => _runs.ContainsKey(l) || _installed.ForShelf(set.All, set.Main).Contains(l)).ToList();
+		}
+
+		foreach (string language in languages)
+		{
+			PlanAgain(language);
+		}
+	}
+
+	private void PlanAgain(string code)
+	{
+		lock (_gate)
+		{
+			if (_runs.TryGetValue(code, out Run? live))
+			{
+				live.PlanAgain = true; // read by RunAsync after End, which retires the run under this same lock
+				return;
+			}
+		}
+
+		Begin(code, visible: false, VoiceRequestOutcome.NothingAsked, cancelled: false);
 	}
 
 	/// <summary>The languages the child's list offers on the shelf: the main one, and each with audio installed for at least one shelf book. Reads the snapshot only, never the disk.</summary>
@@ -366,6 +406,23 @@ public sealed class ShelfAudioPacks
 			// arrives after the run ended then stays harmless (no ObjectDisposedException).
 			run.Completion.TrySetResult();
 		}
+
+		StartAgainIfAsked(run);
+	}
+
+	// Slice 313: a text swapped in while this run was live asked for a new plan. Read after End, so a request made after the run left _runs started its own run instead; one request, one extra run.
+	private void StartAgainIfAsked(Run run)
+	{
+		bool again;
+		lock (_gate)
+		{
+			again = run.PlanAgain;
+		}
+
+		if (again)
+		{
+			Begin(run.Code, visible: false, VoiceRequestOutcome.NothingAsked, cancelled: false);
+		}
 	}
 
 	// Only if the run was not already retired by a Cancel or a removal (they replaced the state themselves).
@@ -424,7 +481,8 @@ public sealed class ShelfAudioPacks
 			if (listing.Status == StoreLoadStatus.Ok)
 			{
 				ISet<string> shelf = await _store.InstalledIdsAsync();
-				return ShelfAudioPlan.For(listing.Items, shelf, code, _store.Packs.InstalledVersion, LanguageChoice.Current());
+				ISet<string> textBehind = await TextBehindAsync(run, listing.Items, cancel);
+				return ShelfAudioPlan.For(listing.Items, shelf, code, _store.Packs.InstalledVersion, LanguageChoice.Current(), textBehind);
 			}
 
 			bool online = IsOnline();
@@ -442,6 +500,28 @@ public sealed class ShelfAudioPacks
 			AudioPackLog.Write($"shelf audio {code}: the store cannot be reached ({(online ? "online" : "offline")}), tries again");
 			await Task.Delay(ShelfAudioBackoff.Delay(attempt), cancel);
 			await WaitForOnlineAsync(cancel);
+		}
+	}
+
+	// Slice 313: the text comes first. A text sync that fails for any reason other than the cancel leaves the plan as it was before (no book held back): audio is optional and never blocks the run.
+	// The text's downloads follow the same network rule as the pack downloads: on mobile data the run waits for Wi-Fi first, unless the grown-up allowed mobile data for it.
+	private async Task<ISet<string>> TextBehindAsync(Run run, IReadOnlyList<StoreItem> items, CancellationToken cancel)
+	{
+		try
+		{
+			ISet<string> behind = await _textSync.SyncTextAsync(items, token => WaitForWifiIfNeededAsync(run, token), cancel);
+			if (behind.Count > 0)
+			{
+				AudioPackLog.Write($"shelf audio: {behind.Count} book(s) have older text than the store, their packs wait");
+			}
+
+			return behind;
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException || !cancel.IsCancellationRequested)
+		{
+			AudioPackLog.Write($"shelf audio: the book text check failed, packs planned as before: {ex.Message}");
+			_store.Fallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Store, ReadTheStupidText.Application.Usage.FallbackReason.UpdateCheckFailed);
+			return new HashSet<string>();
 		}
 	}
 
@@ -684,6 +764,8 @@ public sealed class ShelfAudioPacks
 		public bool Visible { get; set; } // under _gate: a quiet run becomes visible, never the reverse
 
 		public bool Ended { get; set; }
+
+		public bool PlanAgain { get; set; } // under _gate: a book's text was swapped in while the run was live, so the language is planned again when it ends
 
 		public bool Published { get; set; } // set under _gate once the run has shown a state of its own
 

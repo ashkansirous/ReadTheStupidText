@@ -85,6 +85,9 @@ export const FALLBACK_REASONS = [
 const MAX_COUNT = 1_000_000;
 const MAX_SECONDS = 86_400;
 const NO_COUNT = -1;
+// Slice 313: a shelf book was behind the store: "<result>:<from version>:<to version>", like "updated:5:6" (the app's BookUpdateResult; versions only).
+const BOOK_UPDATE_RESULTS = ["staged", "updated", "skipped_edited", "failed"] as const;
+const BOOK_UPDATE_VERSION = /^\d{1,4}$/;
 const AUDIO_PACK_OUTCOMES = ["started", "done", "failed:network", "failed:size", "failed:unzip", "failed:clip", "failed:missing", "failed:storage", "cancelled"] as const;
 // Slice 250: why a read stopped (the app's ReadStopReason; a test keeps the two lists the same). `window_stopped` is accepted though no caller emits it yet.
 const READ_STOP_REASONS = ["left_book", "finished", "cancelled", "language_changed", "restarted", "window_stopped", "skipped", "failed", "other"] as const;
@@ -223,6 +226,11 @@ const storyLanguagesDetail = (value: unknown): boolean => {
   return parts.length === 2 && oneOf(STORY_LANGUAGE_COUNTS, parts[0]) && oneOf(STORY_LANGUAGE_WHERE, parts[1]);
 };
 
+const bookUpdateDetail = (value: unknown): boolean => {
+  const parts = typeof value === "string" ? value.split(WAIT_DETAIL_SEPARATOR) : [];
+  return parts.length === 3 && oneOf(BOOK_UPDATE_RESULTS, parts[0]) && matches(BOOK_UPDATE_VERSION, parts[1]) && matches(BOOK_UPDATE_VERSION, parts[2]);
+};
+
 // A fallback count's detail is "<area>:<reason>", like "premade_audio:partial" (Slice 273): both halves come from closed lists.
 const fallbackDetail = (value: unknown): boolean => {
   const parts = typeof value === "string" ? value.split(WAIT_DETAIL_SEPARATOR) : [];
@@ -259,6 +267,8 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   // Slice 267: which voice a read used, and how one pre-made audio pack download went; closed lists only (docs/analytics/dino-voice-queries.md).
   read_voice: { sources: BOOK_SOURCES, detail: detailIn(READ_VOICES), counts: true },
   audio_pack_download: { sources: [SHELF_SOURCE], detail: detailIn(AUDIO_PACK_OUTCOMES) },
+  // Slice 313: a shelf book was behind the store; one count per book and outcome (result:from:to).
+  book_update: { sources: [SHELF_SOURCE], detail: bookUpdateDetail },
   // Slice 273: a feature fell back (area:reason); about a book or about no book. Its `count` is how many times in that session.
   fallback: { sources: [...BOOK_SOURCES, NO_BOOK], detail: fallbackDetail, counts: true },
 };

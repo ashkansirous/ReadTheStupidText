@@ -66,6 +66,8 @@ public sealed class ReadingSession
 		public int Index { get; set; }
 
 		public HashSet<int> Reported { get; } = []; // the steps whose missing or unplayable clip was already reported, so a resumed step reports nothing twice
+
+		public string SilentReason { get; init; } = ReadTheStupidText.Application.Usage.FallbackReason.ClipMissing; // Slice 313: what a piece shown for a beat reports (text_mismatch when the pack is out of line with the text)
 	}
 
 	private StepRead? _stepRead;
@@ -675,7 +677,7 @@ public sealed class ReadingSession
 			return;
 		}
 
-		BeginSteps(segments, id, cancellation);
+		BeginSteps(segments, id, cancellation, ClipMisses.SilentPieceReason(why.Reason, why.Misses));
 	}
 
 	// Slice 267: the voice a book is read with is counted once per book and reading language in this session, at the moment its read really starts.
@@ -706,10 +708,10 @@ public sealed class ReadingSession
 	}
 
 	// The read as steps (PlaybackSteps): a piece's clip, an animal's recording, or a piece with no clip shown for a beat. When the last step has ended the read is over.
-	private void BeginSteps(IReadOnlyList<VoicedSegment> segments, int id, CancellationToken cancellation)
+	private void BeginSteps(IReadOnlyList<VoicedSegment> segments, int id, CancellationToken cancellation, string silentReason)
 	{
 		cancellation.ThrowIfCancellationRequested();
-		var read = new StepRead(id, PlaybackSteps.Plan(segments), cancellation);
+		var read = new StepRead(id, PlaybackSteps.Plan(segments), cancellation) { SilentReason = silentReason };
 		_stepRead = read;
 		_pendingAdvance = false;
 		if (read.Steps.Count == 0)
@@ -937,8 +939,8 @@ public sealed class ReadingSession
 	{
 		int index = read.Index;
 		VoicedSegment piece = step.Run[0];
-		ReportPieceFallback(read, index, ReadTheStupidText.Application.Usage.FallbackReason.ClipMissing);
-		AudioPackLog.Write($"silent piece shown (sentence {StorySentences.IndexAt(_sentences, piece.SourceStart)})");
+		ReportPieceFallback(read, index, read.SilentReason);
+		AudioPackLog.Write($"silent piece shown (sentence {StorySentences.IndexAt(_sentences, piece.SourceStart)}) {read.SilentReason}");
 		NoteFirstSound("silent piece", read.ReadId);
 		bool timerRuns = _silent.Begin(); // before ClearPending, so the state is Playing (never Loading) the moment the pending marker goes
 		RunOnMain(() => MarkPiece(read, piece));

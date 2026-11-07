@@ -73,6 +73,40 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 		}
 	}
 
+	/// <summary>Slice 313: raised (on a background thread) when a newer package was just staged; a shown shelf then applies it at once (<see cref="ApplyPendingAsync"/>).</summary>
+	public event EventHandler? Staged;
+
+	public void NotifyStaged() => Staged?.Invoke(this, EventArgs.Empty);
+
+	/// <summary>
+	/// Slice 313: raised after an apply that swapped at least one book's text in, whichever path applied it (the cold start, the shown shelf): the audio packs are planned again, so the pack
+	/// made for the new text is fetched even when a run was live or nothing else would have asked.
+	/// </summary>
+	public event EventHandler? Swapped;
+
+	private bool _swappedInRun; // one apply at a time, so one flag is enough
+
+	/// <summary>Whether a package waits to be applied.</summary>
+	public bool HasPending => ListEntries().Count > 0;
+
+	/// <summary>
+	/// Slice 313: applies whatever is staged now, after any apply already running (never two at once, so the shelf is never read mid-swap). Called only by the gallery, when it is shown or
+	/// appears, which is when no book can be open; the one-per-process <see cref="ApplyOnceAsync"/> still covers the first load. Never throws.
+	/// </summary>
+	public Task ApplyPendingAsync()
+	{
+		lock (_lock)
+		{
+			return _applyTask = ApplyAfterAsync(_applyTask ?? Task.CompletedTask);
+		}
+	}
+
+	private async Task ApplyAfterAsync(Task previous)
+	{
+		await previous;
+		await RunApplyAsync();
+	}
+
 	private async Task RunApplyAsync()
 	{
 		var clock = Stopwatch.StartNew();
@@ -88,6 +122,26 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 		}
 
 		Debug.WriteLine($"{LogTag} apply end after {clock.ElapsedMilliseconds} ms");
+		RaiseSwapped();
+	}
+
+	private void RaiseSwapped()
+	{
+		if (!_swappedInRun)
+		{
+			return;
+		}
+
+		_swappedInRun = false;
+		try
+		{
+			Swapped?.Invoke(this, EventArgs.Empty); // ShelfAudioPacks subscribes at app start (DinoApp constructor), before any apply can run
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: a listener's fault never fails the apply; the packs are planned again at the next launch or return
+			Debug.WriteLine($"{LogTag} swapped listener failed: {ex.Message}");
+		}
 	}
 
 	private async Task ApplyAllAsync(IReadOnlyList<Entry> entries)
@@ -121,6 +175,7 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 			if (decision?.Skip == BookUpdateSkip.Edited)
 			{
 				StarterStories.RecordSeenVersion(entry.Id, entry.Version);
+				ReportApply(entry, BookUpdateResult.SkippedEdited);
 			}
 
 			RestoreForcedVersion(entry.Id);
@@ -128,13 +183,16 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 			return;
 		}
 
+		int from = StarterStories.RecordedVersion(entry.Id) ?? StarterUpdate.LegacyInstalledVersion;
 		try
 		{
 			bool swapped = await SwapAsync(entry);
-			Debug.WriteLine($"{LogTag} {entry.Id}: {(swapped ? $"swapped to v{entry.Version}" : "edited, left as it is")}");
+			BookUpdateEvents.Line($"{LogTag} {entry.Id}: {(swapped ? $"swapped to v{entry.Version}" : "edited, left as it is")}");
+			BookUpdateEvents.Report(entry.Id, from, entry.Version, swapped ? BookUpdateResult.Updated : BookUpdateResult.SkippedEdited);
 			if (swapped)
 			{
 				ForgetForcedVersion(entry.Id);
+				_swappedInRun = true;
 			}
 			else
 			{
@@ -147,22 +205,19 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 		catch (Exception ex) when (ex is StoryPackageException or InvalidDataException)
 		{
 			Debug.WriteLine($"{LogTag} {entry.Id}: bad staged package dropped: {ex.Message}");
+			ReportApply(entry, BookUpdateResult.Failed);
 			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
+			// Slice 313: not a give-up (that would release the pack gate and bring new sound on old text): the bad copy is deleted so the next store-listing pass downloads it again.
 			RestoreForcedVersion(entry.Id);
 			DeleteEntry(entry);
-		}
-		catch (Exception ex) when (ex is IOException or InvalidOperationException or UnauthorizedAccessException)
-		{
-			Debug.WriteLine($"{LogTag} {entry.Id}: swap failed, entry kept for the next launch: {ex.Message}");
-			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
 		}
 		catch (Exception ex)
 		{
-			// Never the stored book: only the staged copy goes, so a package that fails the same way every time cannot loop.
-			Debug.WriteLine($"{LogTag} {entry.Id}: unexpected failure, staged entry dropped: {ex}");
+			// Slice 313: any other failure (storage, an unexpected fault) is retryable: the staged entry stays and the swap is tried again at the next apply; the old pack stays in use meanwhile.
+			// Never the stored book is touched, and nothing is counted toward a give-up.
+			Debug.WriteLine($"{LogTag} {entry.Id}: swap failed, entry kept for the next apply: {ex}");
+			ReportApply(entry, BookUpdateResult.Failed);
 			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
-			RestoreForcedVersion(entry.Id);
-			DeleteEntry(entry);
 		}
 	}
 
@@ -186,6 +241,10 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 		_forcedVersions.Forget(id);
 #endif
 	}
+
+	// Slice 313: the book_update count for a staged entry that was dropped or failed at apply (a swap reports itself, it knows the version it replaced).
+	private static void ReportApply(Entry entry, string result) =>
+		BookUpdateEvents.Report(entry.Id, StarterStories.RecordedVersion(entry.Id) ?? StarterUpdate.LegacyInstalledVersion, entry.Version, result);
 
 	private async Task<bool> SwapAsync(Entry entry)
 	{

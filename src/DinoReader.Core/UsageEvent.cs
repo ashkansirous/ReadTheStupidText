@@ -42,6 +42,9 @@ public static class UsageEventName
 
     // Slice 273: a feature fell back to something else (detail: FallbackUsage.Detail, "<area>:<reason>"; Count: how many times in the session).
     public const string Fallback = "fallback";
+
+    // Slice 313: a shelf book was behind the store (detail: BookUpdateUsage.Detail, "<result>:<from>:<to>", versions only).
+    public const string BookUpdate = "book_update";
 }
 
 /// <summary>Slice 228: the one rule for a demo read (the intro's read step), which is not a real reading of a book and so counts no book open, finish or (Slice 250) playback event.</summary>

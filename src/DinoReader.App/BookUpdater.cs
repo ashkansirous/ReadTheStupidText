@@ -10,7 +10,7 @@ namespace DinoReader;
 /// can be open. The time of the last finished check is saved when every due book was dealt with (downloaded, up to date, edited, missing from the store or not ours);
 /// a failed starter install, an offline run or a failed download stops without saving, so the next open tries again.
 /// </summary>
-public sealed class BookUpdater(StoreClient store, StarterStories starters, StagedBookUpdates staged)
+public sealed class BookUpdater(StoreClient store, StarterStories starters, StagedBookUpdates staged) : IBookTextSync
 {
 	public const string LastCheckKey = "dino.books.lastupdatecheck";
 
@@ -220,17 +220,191 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 
 		IReadOnlyList<BookUpdateDecision>? decisions = await RecordBaselinesAsync(await PlanAsync(listing.Items), listing.Items, cancel);
 		bool booksDone = decisions is not null && await StageAllAsync(decisions, listing.Items, cancel);
+		ISet<string> textBehind = await TextBehindAsync(listing.Items, decisions);
+		if (staged.HasPending)
+		{
+			staged.NotifyStaged(); // Slice 313: a shown shelf swaps the staged text in at once (only when a package really waits)
+		}
+
 		// A late pack, a new pack version or a language added since the download (Slice 246 C2). A pack that fails never keeps the check from finishing: it is tried again at the next scheduled check.
-		await SyncPacksSafelyAsync(listing.Items, cancel);
+		// Slice 313: a book whose text is still behind keeps its old pack; the pack for the newer text comes once that text is in.
+		await SyncPacksSafelyAsync(listing.Items, textBehind, cancel);
 		return booksDone;
 	}
 
-	// Audio is optional: nothing the pack sync throws (except the caller's cancel) may fail the book check or the start.
-	private async Task<bool> SyncPacksSafelyAsync(IReadOnlyList<StoreItem> items, CancellationToken cancel)
+	// Slice 313: the shelf books whose text is still older than the store's after this plan (all the ones the cheap check finds when there is no plan, a failed baseline).
+	private async Task<ISet<string>> TextBehindAsync(IReadOnlyList<StoreItem> items, IReadOnlyList<BookUpdateDecision>? decisions)
+	{
+		IReadOnlyList<string> behind = (await BehindAsync(items)).Select(b => b.Id).ToList();
+		return decisions is null ? behind.ToHashSet(StringComparer.OrdinalIgnoreCase) : BookTextCurrency.StillBehind(decisions, behind);
+	}
+
+	// Slice 313: the catalogue books on the shelf whose recorded version is below the store's, from the listing alone (no hashing, no network). A book whose edit was already settled for that
+	// version, and one given up after repeated failures, are not behind: neither forces a plan or holds its pack back.
+	private async Task<IReadOnlyList<StoreBookVersion>> BehindAsync(IReadOnlyList<StoreItem> items)
+	{
+		HashSet<string> onShelf = (await store.InstalledIdsAsync()).Where(StarterStories.IsCatalogueId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+		return BookTextCurrency.Behind(items.Select(i => new StoreBookVersion(i.Id, i.Version)), onShelf, StarterStories.RecordedVersion, StarterStories.RecordedSeenVersion)
+			.Where(b => !BookTextFailures.IsGivenUp(b.Id, b.Version)).ToList();
+	}
+
+	/// <summary>
+	/// Slice 313: called with every store listing the app fetches for audio (launch, return, a language change), not weekly. A shelf book whose text is behind the store's is staged now
+	/// (the shown shelf swaps it in at once, else the next time the shelf appears) and counted (<c>book_update</c>). Returns the ids whose text is still older, so their packs wait for the text.
+	/// Nothing behind: no plan, no network, an empty set.
+	/// </summary>
+	public async Task<ISet<string>> SyncTextAsync(IReadOnlyList<StoreItem> items, Func<CancellationToken, Task> beforeDownload, CancellationToken cancel)
+	{
+		var behind = (await BehindAsync(items)).Select(b => b.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+		if (behind.Count == 0)
+		{
+			return behind;
+		}
+
+		if (await NeedsDownloadAsync(items, behind))
+		{
+			await beforeDownload(cancel); // the pack downloads' network rule (Wi-Fi unless mobile data was allowed), only when a download is due, outside the one-run lock
+		}
+
+		await Run.WaitAsync(cancel);
+		try
+		{
+			return await SyncBehindGuardedAsync(items, behind, cancel);
+		}
+		finally
+		{
+			Run.Release();
+		}
+	}
+
+	// Slice 313: whether the plan for the behind books needs a download (an update to fetch or a baseline). Edited and not-in-the-store books need none, so they never wait for Wi-Fi. A plan that
+	// cannot be made says yes: the guarded sync below reports its failure.
+	private async Task<bool> NeedsDownloadAsync(IReadOnlyList<StoreItem> items, ISet<string> behind)
 	{
 		try
 		{
-			return await SyncPacksAsync(items, cancel);
+			await starters.InstallOnceAsync();
+			if (!starters.InstallComplete)
+			{
+				return false;
+			}
+
+			return (await PlanAsync(items)).Any(d => behind.Contains(d.Id) && d.Action != BookUpdateAction.Skip);
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or StoryPackageException or InvalidDataException or InvalidOperationException or ArgumentException)
+		{
+			// no-fallback: only decides whether to wait for Wi-Fi; the guarded sync that follows makes the same plan and reports its failure
+			Debug.WriteLine($"{LogTag} text sync pre-plan failed: {ex.Message}");
+			return true;
+		}
+	}
+
+	private async Task<ISet<string>> SyncBehindGuardedAsync(IReadOnlyList<StoreItem> items, ISet<string> behind, CancellationToken cancel)
+	{
+		try
+		{
+			return await SyncBehindAsync(items, behind, cancel);
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or StoryPackageException or InvalidDataException or InvalidOperationException or ArgumentException)
+		{
+			BookUpdateEvents.Line($"{LogTag} text sync failed, the packs wait: {ex.Message}");
+			store.Fallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
+			return behind;
+		}
+	}
+
+	private async Task<ISet<string>> SyncBehindAsync(IReadOnlyList<StoreItem> items, ISet<string> behind, CancellationToken cancel)
+	{
+		await starters.InstallOnceAsync();
+		if (!starters.InstallComplete)
+		{
+			BookUpdateEvents.Line($"{LogTag} text sync: a starter is not installed yet, the packs wait");
+			return behind;
+		}
+
+		IReadOnlyList<BookUpdateDecision>? decisions = await RecordBaselinesAsync(await PlanAsync(items), items, cancel);
+		if (decisions is null)
+		{
+			BookUpdateEvents.Line($"{LogTag} text sync: no network for the baseline, the packs wait");
+			ReportEach(behind, items, BookUpdateResult.Failed); // retryable: nothing is given up, the next listing pass tries again; counted once for this pass
+			store.Fallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
+			return WithoutGivenUp(behind, items);
+		}
+
+		if (await StageBehindAsync(decisions, behind, items, cancel))
+		{
+			staged.NotifyStaged();
+		}
+
+		return WithoutGivenUp(BookTextCurrency.StillBehind(decisions, behind), items);
+	}
+
+	// A book given up for this store version (the store has no usable package for it) stops holding its pack back: sound is never kept waiting forever for a text that cannot come.
+	private static ISet<string> WithoutGivenUp(ISet<string> ids, IReadOnlyList<StoreItem> items) =>
+		ids.Where(id => !items.Any(i => string.Equals(i.Id, id, StringComparison.OrdinalIgnoreCase) && BookTextFailures.IsGivenUp(i.Id, i.Version))).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+	// True when at least one book's newer text is now staged. Each behind book is counted with its own result.
+	private async Task<bool> StageBehindAsync(IReadOnlyList<BookUpdateDecision> decisions, ISet<string> behind, IReadOnlyList<StoreItem> items, CancellationToken cancel)
+	{
+		bool anyStaged = false;
+		foreach (BookUpdateDecision decision in decisions.Where(d => behind.Contains(d.Id)))
+		{
+			cancel.ThrowIfCancellationRequested();
+			StoreItem item = items.First(i => string.Equals(i.Id, decision.Id, StringComparison.OrdinalIgnoreCase));
+			bool alreadyStaged = staged.StagedVersion(item.Id) is { } have && have >= item.Version;
+			string? result = await StageResultAsync(decision, item, cancel);
+			if (result is not null)
+			{
+				BookUpdateEvents.Report(item.Id, StarterStories.RecordedVersion(item.Id) ?? StarterUpdate.LegacyInstalledVersion, item.Version, result);
+				anyStaged |= result == BookUpdateResult.Staged && !alreadyStaged; // only a package that just arrived wakes the shelf: one that already waited failed to apply
+			}
+		}
+
+		return anyStaged;
+	}
+
+	private async Task<string?> StageResultAsync(BookUpdateDecision decision, StoreItem item, CancellationToken cancel)
+	{
+		if (decision.Skip == BookUpdateSkip.Edited)
+		{
+			StarterStories.RecordSeenVersion(item.Id, item.Version); // settled for this store version: the book is no longer behind, so it is not planned again at every listing
+			return BookUpdateResult.SkippedEdited;
+		}
+
+		if (decision.Action != BookUpdateAction.Update)
+		{
+			return null;
+		}
+
+		StageOutcome outcome = await FetchAndStageAsync(item, cancel);
+		if (outcome == StageOutcome.Staged && staged.StagedVersion(item.Id) is { } have && have >= item.Version)
+		{
+			return BookUpdateResult.Staged;
+		}
+
+		if (outcome == StageOutcome.NotInStore)
+		{
+			BookTextFailures.GiveUp(item.Id, item.Version); // the only permanent case: the store has no package for this version
+		}
+
+		store.Fallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
+		return BookUpdateResult.Failed; // every other failure is retried at the next listing pass
+	}
+
+	private void ReportEach(IEnumerable<string> ids, IReadOnlyList<StoreItem> items, string result)
+	{
+		foreach (StoreItem item in items.Where(i => ids.Contains(i.Id, StringComparer.OrdinalIgnoreCase)))
+		{
+			BookUpdateEvents.Report(item.Id, StarterStories.RecordedVersion(item.Id) ?? StarterUpdate.LegacyInstalledVersion, item.Version, result);
+		}
+	}
+
+	// Audio is optional: nothing the pack sync throws (except the caller's cancel) may fail the book check or the start.
+	private async Task<bool> SyncPacksSafelyAsync(IReadOnlyList<StoreItem> items, ISet<string> textBehind, CancellationToken cancel)
+	{
+		try
+		{
+			return await SyncPacksAsync(items, textBehind, cancel);
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException || !cancel.IsCancellationRequested)
 		{
@@ -242,7 +416,7 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 
 	// Slice 246 C2: the audio packs of the books on the shelf, for the user's book languages and each story's own. True when none failed in a way a retry could fix (offline, a bad download);
 	// the caller only logs it, so a failed pack is retried at the next scheduled check, not at every open.
-	private async Task<bool> SyncPacksAsync(IReadOnlyList<StoreItem> items, CancellationToken cancel)
+	private async Task<bool> SyncPacksAsync(IReadOnlyList<StoreItem> items, ISet<string> textBehind, CancellationToken cancel)
 	{
 		HashSet<string> onShelf = await store.InstalledIdsAsync();
 		// A language the grown-up cancelled (Slice 262) stays cancelled: the weekly check does not fetch its packs again (Slice 269).
@@ -252,6 +426,12 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		foreach (StoreItem item in items.Where(i => onShelf.Contains(i.Id)))
 		{
 			cancel.ThrowIfCancellationRequested();
+			if (textBehind.Contains(item.Id))
+			{
+				BookUpdateEvents.Line($"{LogTag} {item.Id}: text is behind the store, its pack waits for the text");
+				continue;
+			}
+
 			IReadOnlyList<(string Language, AudioPackInfo Pack)> wanted = StoreClient.WantedPacks(item, languages);
 			allOk &= wanted.Count == 0 || await store.InstallPacksAsync(item, wanted, null, cancel);
 		}
@@ -362,30 +542,50 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 	// a failed download or a storage error.
 	private async Task<bool> StageOneAsync(StoreItem item, CancellationToken cancel)
 	{
+		StageOutcome outcome = await FetchAndStageAsync(item, cancel);
+		if (outcome == StageOutcome.NotInStore)
+		{
+			BookTextFailures.GiveUp(item.Id, item.Version); // Slice 313: the weekly check gives up on a 404 exactly like the listing pass
+			BookUpdateEvents.Report(item.Id, StarterStories.RecordedVersion(item.Id) ?? StarterUpdate.LegacyInstalledVersion, item.Version, BookUpdateResult.Failed);
+			store.Fallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
+		}
+
+		return outcome != StageOutcome.Failed;
+	}
+
+	private enum StageOutcome
+	{
+		Staged,
+		NotInStore,
+		Failed,
+	}
+
+	private async Task<StageOutcome> FetchAndStageAsync(StoreItem item, CancellationToken cancel)
+	{
 		if (staged.StagedVersion(item.Id) is { } have && have >= item.Version)
 		{
 			Debug.WriteLine($"{LogTag} {item.Id}: v{have} already staged");
-			return true;
+			return StageOutcome.Staged;
 		}
 
 		PackageFetch fetch = await store.FetchPackageFileAsync(item.DownloadUrl, cancel);
 		if (fetch.File is not { } file)
 		{
 			Debug.WriteLine($"{LogTag} {item.Id}: {(fetch.NotFound ? "package not in the store, skipped" : "download failed, run stopped")}");
-			return fetch.NotFound;
+			return fetch.NotFound ? StageOutcome.NotInStore : StageOutcome.Failed;
 		}
 
 		try
 		{
 			staged.Stage(item.Id, item.Version, file);
 			Debug.WriteLine($"{LogTag} {item.Id}: v{item.Version} staged for the next start");
-			return true;
+			return StageOutcome.Staged;
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
 		{
 			Debug.WriteLine($"{LogTag} {item.Id}: could not stage, run stopped: {ex.Message}");
 			store.Fallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
-			return false;
+			return StageOutcome.Failed;
 		}
 		finally
 		{
@@ -403,6 +603,47 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		{
 			// no-fallback: housekeeping delete; nothing depends on it
 			Debug.WriteLine($"{LogTag} could not remove a temp file: {ex.Message}");
+		}
+	}
+}
+
+/// <summary>
+/// Slice 313: the <c>book_update</c> count (a shelf book was behind the store: result, from-version, to-version, no text and no title) and its Debug-only log line, which a scripted flow reads
+/// through the test log. One count per book, versions and result in each process, so a listing fetched again does not repeat it (a failed result is the exception: every capped retry is counted). Counting goes through <see cref="UsageCounter"/>, so the one
+/// production-only gate applies; it never throws.
+/// </summary>
+internal static class BookUpdateEvents
+{
+	private static readonly HashSet<string> Sent = [];
+
+	public static void Line(string text)
+	{
+		Debug.WriteLine(text);
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write(text);
+#endif
+	}
+
+	public static void Report(string bookId, int fromVersion, int toVersion, string result)
+	{
+		string detail = BookUpdateUsage.Detail(result, fromVersion, toVersion);
+		Line($"[BookUpdate] book_update {detail}");
+		lock (Sent)
+		{
+			// A failure is counted every time it is reported: once per listing pass (throttled to launch / return / language change), so a retried failure shows as retries, not as one event per process.
+			if (!Sent.Add($"{bookId}|{detail}") && result != BookUpdateResult.Failed)
+			{
+				return;
+			}
+		}
+
+		try
+		{
+			IPlatformApplication.Current?.Services.GetService<UsageCounter>()?.RecordShelfBook(DinoReader.Core.UsageEventName.BookUpdate, bookId, LanguageChoice.Current(), detail);
+		}
+		catch (Exception)
+		{
+			// no-fallback: counting is best effort and never reports itself
 		}
 	}
 }
