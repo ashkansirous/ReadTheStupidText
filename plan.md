@@ -30,9 +30,6 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 295 | Bump `MauiVersion` once a MAUI release with dotnet/maui PR #38662 ships | planned (starts when 10.0.130 or later exists) | | | [295-bump-maui-version-for-pr-38662.md](docs/plan/slices/295-bump-maui-version-for-pr-38662.md) |
 | 296 | Why a Farsi read matched 5 of 78 pieces to clips (fixture keys or a real fa audio gap) | planned | | | [296-farsi-read-clip-match.md](docs/plan/slices/296-farsi-read-clip-match.md) |
 | 297 | Slice 267 follow-ups (read_voice count, layout-check leaks, wizard button grid) | planned | | | [297-slice-267-follow-ups.md](docs/plan/slices/297-slice-267-follow-ups.md) |
-| 300 | A kept problem report must not be wiped at next start when the remote crash switch is off | planned | | | [300-user-report-kept-while-crash-switch-off.md](docs/plan/slices/300-user-report-kept-while-crash-switch-off.md) |
-| 301 | Slice 247 follow-ups: emulator runner crash wait, crash log on retry, faster slow flows | planned | | | [301-slice-247-follow-ups-emulator-runner.md](docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md) |
-| 303 | Slice 201 review leftovers that change behaviour | planned | | | [303-slice-201-review-leftovers.md](docs/plan/slices/303-slice-201-review-leftovers.md) |
 | 305 | Dino package cleanup: ML Kit, sherpa-onnx and onnxruntime out of the Dino packages | planned | | | [305-dino-package-cleanup-ml-kit-and-sherpa.md](docs/plan/slices/305-dino-package-cleanup-ml-kit-and-sherpa.md) |
 | 310 | Dino Debug hook to force a voice-pack download failure | planned | | | [310-dino-debug-hook-force-pack-failure.md](docs/plan/slices/310-dino-debug-hook-force-pack-failure.md) |
 | 311 | Crash data for the Windows apps from the Microsoft Store | planned | | | [311-windows-store-crash-data.md](docs/plan/slices/311-windows-store-crash-data.md) |
@@ -76,7 +73,10 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 437 checks across 176 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- **Not yet tried on a device:** 444 checks across 179 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- Slice 301 item 3 not built (premise wrong: 3 of 5 flows were deleted by Slice 278); re-plan from a fresh `PHASES` run ([slice](docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md)).
+- Slice 301 follow-ups (`reviews/s301-check2.md` 1-3): the preflight's Maestro launcher needs the same time bound, a java child that outlives the root process, an overall timeout in `speed.ps1`'s `Wait-ProcessWithCrashWatch`; reword the `WATCH kill-wait done` log line on a natural end ([slice](docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md)).
+- Slice 300: a Debug hook that makes the user-report endpoint refuse, so its emulator check can run ([slice](docs/plan/slices/300-user-report-kept-while-crash-switch-off.md)).
 - Slice 307 item 10 (open, built in ClaudeSkills #186 without it): `phone-network-guard.mjs` still wrongly denies a read-only grep with a quoted `\|adb` pattern; four review passes found safety gaps in every fix, so it stays as on main ([slice](docs/plan/slices/307-claudeskills-hooks-and-guards-leftovers.md)).
 - Follow-up: promote the Slice 307 advisory hooks to deny where `~/.claude/logs/advisory-hooks.log` shows they are right; a later slice, decided from that log ([slice](docs/plan/slices/307-claudeskills-hooks-and-guards-leftovers.md)).
 - Slice 290 part B (merged, #895) leftovers, all low: `Label.Text` is null under FormattedText, `SoundPillText` marks the first occurrence of the name, the FormattedString is rebuilt on each changed call, ja/zh use the system font ([slice](docs/plan/slices/290-dino-reading-sound-pill.md), *Part B: left from the medium review*). Part B also fixed the two check-pass leftovers that Slice 293 lists.

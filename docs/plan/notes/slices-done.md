@@ -364,3 +364,6 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 299 | Slice 261 leftovers (dead `LaunchedFromIntro`, Cancel on list load, starter names) | built | #912 | | [299-slice-261-leftovers.md](../slices/299-slice-261-leftovers.md) |
 | 308 | Slice 225 items 3 and 6: `run-checks.ps1 -Serial` for emulators, failed-build cause | built | #914 | | [308-slice-225-run-checks-serial-and-build-cause.md](../slices/308-slice-225-run-checks-serial-and-build-cause.md) |
 | 307 | ClaudeSkills hooks and guards leftovers (built in `D:\ClaudeSkills`; item 10 open) | built | ClaudeSkills #186 | | [307-claudeskills-hooks-and-guards-leftovers.md](../slices/307-claudeskills-hooks-and-guards-leftovers.md) |
+| 300 | A kept problem report must not be wiped at next start when the remote crash switch is off | built | #919 | | [300-user-report-kept-while-crash-switch-off.md](../slices/300-user-report-kept-while-crash-switch-off.md) |
+| 301 | Slice 247 follow-ups: emulator runner crash wait, crash log on retry (item 3, faster slow flows, not built) | built | #918 | | [301-slice-247-follow-ups-emulator-runner.md](../slices/301-slice-247-follow-ups-emulator-runner.md) |
+| 303 | Slice 201 review leftovers that change behaviour | built | #921 | | [303-slice-201-review-leftovers.md](../slices/303-slice-201-review-leftovers.md) |

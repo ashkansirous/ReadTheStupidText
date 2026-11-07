@@ -1,6 +1,6 @@
 # Slice 303 — Slice 201 review leftovers that change behaviour
 
-*Built 2026-11-07 (wave 3, night 2026-11-07-1412), draft PR #921, not merged; Windows read path, iOS device and a real packs.yml run not yet verified.* *Planned 2026-11-07.* Four items from [Slice 201](201-norwegian-pack-crash.md)'s review, listed in plan.md's *Outstanding work* and in the slice file. Moved here.
+*Built 2026-11-07 (wave 3, night 2026-11-07-1412), merged as PR #921 (6c487973); Windows read path, iOS device and a real packs.yml run not yet verified.* *Planned 2026-11-07.* Four items from [Slice 201](201-norwegian-pack-crash.md)'s review, listed in plan.md's *Outstanding work* and in the slice file. Moved here.
 
 **Touches:** `.github/workflows/packs.yml`, `src/ReadTheStupidText.Application/Reading/**`, `src/ReadTheStupidText.Infrastructure/Reading/SherpaEngineFactory.cs`, `src/ReadTheStupidText.Mobile.Shared/MobileVoicePackService.cs`, `src/ReadTheStupidText.Mobile.Shared/VoicePackInstaller.cs`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/303-slice-201-review-leftovers.md`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosTtsEngine.cs` (item 4 parity), `src/ReadTheStupidText.Application/**` (FallbackArea, item 3 constant), `src/ReadTheStupidText.Domain/**` (widened at claim), `src/ReadTheStupidText.Infrastructure/Reading/WindowsVoicePackService.cs`, `.maestro/rtst/needs-file/**` (widened mid-build: item 1 Windows half and its scripted check; no other live slice touches them)
 
@@ -44,7 +44,7 @@
 
 *Device:* emulator-5554, cached rtst `b1bb6fd542a3`. `corrupt-piper-pack-logged` PASS (19 s, `[Usage] fallback pack:pack_failed`; logcat `RTST_PACK_TOKENS_REJECTED pack=piper-nb version=v1`). `paste-and-read` PASS (a good supertonic pack reads). The flow asserts area:reason only, because the line carries no pack id.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-07)
 
 - A new Piper-style pack id must be added to `PackConstants.PiperPackIds`: `PiperTokenGuard` (`src/ReadTheStupidText.Application/Reading/`) checks tokens.txt only for those ids (and for a VITS voice with an empty `PackId`) before sherpa builds the engine, and a bad file aborts the process natively. Build `VoiceModelPaths` with `PackId` set. (Slice 303: docs/plan/slices/303-slice-201-review-leftovers.md)
 - Every `new OfflineTts(` site (Windows `SherpaEngineFactory`, Android, iOS) calls `PiperTokenGuard.Require` first; keep the three in step. (Slice 303: docs/plan/slices/303-slice-201-review-leftovers.md)
