@@ -1,8 +1,8 @@
 # Slice 309 — Split `src/DinoReader.App/CLAUDE.md` (52 KB, budget ~20 KB)
 
-*Planned 2026-11-07.* The Dino app's folder rules file is read whole every time anyone works in `src/DinoReader.App/`. plan.md said 41 KB; it is now 52,793 bytes (read 2026-11-07). The promised split was never planned. Moved from plan.md's *Built but not verified*. Docs only; run it between waves, when no other branch edits the file (`archive-docs` rule).
+*In progress (wave 2026-11-07), draft PR.* Planned 2026-11-07. The Dino app's folder rules file is read whole every time anyone works in `src/DinoReader.App/`. plan.md said 41 KB; it is now 52,793 bytes (read 2026-11-07). The promised split was never planned. Moved from plan.md's *Built but not verified*. Docs only; run it between waves, when no other branch edits the file (`archive-docs` rule).
 
-**Touches:** `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/**/CLAUDE.md` (new, one per area), `docs/plan/notes/dino-app-claude-md-history.md` (new), `docs/plan/slices/309-split-dino-app-claude-md.md`
+**Touches:** `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/**/CLAUDE.md` (new, one per area), `docs/plan/notes/dino-app-claude-md-history.md` (new), `docs/plan/slices/309-split-dino-app-claude-md.md`. The root `CLAUDE.md` line for item 4 goes in this file's *For CLAUDE.md* block and is lifted by the index pass.
 
 ## Work
 
