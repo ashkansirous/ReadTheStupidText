@@ -32,7 +32,7 @@ public sealed class GrownUpHeader : Grid
 
 	private readonly Label _title = new() { FontSize = TitleSize, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1 };
 	private readonly Label _subtitle = new() { FontSize = SubtitleSize, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1, VerticalOptions = LayoutOptions.Center };
-	private readonly Grid _subtitleRow = new() { ColumnSpacing = FlagGap, IsVisible = false, ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)] };
+	private readonly Grid _subtitleRow = new() { ColumnSpacing = 0, IsVisible = false, ColumnDefinitions = [new ColumnDefinition(0),new ColumnDefinition(GridLength.Star)] };
 	private View? _flag;
 	private readonly Border _button = new() { HeightRequest = ButtonHeight, StrokeThickness = 0, VerticalOptions = LayoutOptions.Center };
 	private readonly Button _hit = new() { BackgroundColor = Colors.Transparent, TextColor = Colors.Transparent, BorderWidth = 0, Padding = 0 };
@@ -109,6 +109,9 @@ public sealed class GrownUpHeader : Grid
 			_flag = null;
 		}
 
+		// A fixed column (like the "Record in" cards) so the flag always has its size; no flag means no column and no gap.
+		_subtitleRow.ColumnDefinitions[0].Width = language is null ? new GridLength(0) : new GridLength(FlagSize);
+		_subtitleRow.ColumnSpacing = language is null ? 0 : FlagGap;
 		if (language is not null)
 		{
 			_flag = new FlagRing(language, FlagSize, FlagRingWidth, Color.FromRgba(43, 37, 64, FlagRingAlpha));

@@ -79,7 +79,7 @@ name: Record a book in each story language and read it back in each
     visible:
       id: RecordButton
     timeout: 20000
-- assertVisible: "Line 1 of .*"
+- assertVisible: ".*Line 1 of .*"
 # One English line: record, a second and a half, stop, Done.
 - tapOn:
     id: RecordButton
