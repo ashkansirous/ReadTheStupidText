@@ -76,9 +76,9 @@ Reasons are nine, not eight: `left_book`, `finished`, `cancelled`, `language_cha
 - iOS store build's first rows showing session ids and the new events.
 - Live Worker rows after the deploy.
 
-#### Waiting on the user
+#### Decided 2026-11-07 (was: waiting on the user)
 
-Store privacy form (the user's step, after this merges): Play Data safety (Dino): decide whether the per-launch session id gets a **Device or other IDs** row (suggested if declared: collected, not shared, optional, purpose Analytics); the page does not settle whether it counts. App Store Connect App Privacy (Dino): no change (no Device ID row, decision above). Text is in `STORE.md`, *Slice 250*.
+Store privacy form, Play Data safety (Dino). The user: "it is an id so I think we should have it as an id. but it is not personable id, so you should take that decision based on their documentation." Code (read 2026-11-07): the session id is 16 random bytes, new at each app start, in memory only (`src/DinoReader.App/UsageSession.cs:20`, `UsageCounter.cs:32`). Play's definition of Device or other IDs ("Identifiers that relate to an individual device, browser or app"; https://support.google.com/googleplay/android-developer/answer/10787469) and its in-app-event exception do not clearly cover a per-launch id, so the safe reading is to keep **Device or other IDs** declared (collected, not shared). The live form already has it ticked (checked 2026-11-06): **no change to make.** App Store Connect App Privacy (Dino): no change (no Device ID row, decision above). Text is in `STORE.md`, *Slice 250*.
 
 **Not in this slice.** RTST events and session ids. Any id that survives a restart.
 

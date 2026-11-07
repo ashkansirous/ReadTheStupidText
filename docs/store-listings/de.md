@@ -33,11 +33,12 @@ Auf Android kannst du Text einfügen oder tippen, eine .txt-, .pdf- oder .docx-D
 - Natürlich klingende Stimmen, die auf deinem Gerät laufen
 - Lesetempo von 0,5x bis 2x
 - Funktioniert offline (Android lädt seine Stimme beim ersten Start einmal herunter). Dein Text, deine Dateien und deine Scans verlassen dein Gerät nie
-- Kein Konto und keine Analyse
+- Kein Konto und keine Werbung
+- Optionale anonyme Nutzungszählungen ohne Text, Namen oder Kennungen; in den Einstellungen jederzeit abschaltbar
 
 ## Google Play only: download note (append to the full description)
 
-Beim ersten Start der App auf Android lädt sie ein Stimmpaket von etwa 145 MB herunter und braucht dafür einmal eine Internetverbindung (WLAN empfohlen). Bis der Download fertig ist, liest die App mit der eingebauten Stimme deines Handys vor. Es wird nur das Stimmpaket heruntergeladen. Dein Text, deine Dateien und deine Scans bleiben auf deinem Gerät, und sobald die Stimme installiert ist, nutzt die App das Netzwerk nicht.
+Beim ersten Start der App auf Android lädt sie ein Stimmpaket von etwa 145 MB herunter und braucht dafür einmal eine Internetverbindung (WLAN empfohlen). Bis der Download fertig ist, liest die App mit der eingebauten Stimme deines Handys vor. Das Scannen lädt außerdem ein kleines Texterkennungspaket für deine Sprache herunter. Nur diese Pakete werden heruntergeladen: Dein Text, deine Dateien und deine Scans bleiben auf deinem Gerät, und sobald die Stimme installiert ist, nutzt das Vorlesen das Netzwerk nicht. Die einzige weitere Netzwerknutzung sind die optionalen anonymen Nutzungszählungen und Absturzberichte, die du in den Einstellungen abschalten kannst.
 
 ## App Store (iOS)
 
@@ -60,9 +61,10 @@ Füge Text ein oder tippe ihn, öffne eine .txt-, .pdf- oder .docx-Datei oder sc
 - Natürlich klingende Stimmen, die auf deinem Gerät laufen
 - Lesetempo von 0,5x bis 2x
 - Funktioniert offline (die App lädt ihre Stimme beim ersten Start einmal herunter). Dein Text, deine Dateien und deine Scans verlassen dein Gerät nie
-- Kein Konto und keine Analyse
+- Kein Konto und keine Werbung
+- Optionale anonyme Nutzungszählungen ohne Text, Namen oder Kennungen; in den Einstellungen jederzeit abschaltbar
 
-Beim ersten Start lädt die App ein Stimmpaket von etwa 145 MB herunter und braucht dafür einmal eine Internetverbindung (WLAN empfohlen). Bis der Download fertig ist, liest die App mit der eingebauten Stimme deines iPhones vor. Es wird nur das Stimmpaket heruntergeladen. Dein Text, deine Dateien und deine Scans bleiben auf deinem Gerät, und sobald die Stimme installiert ist, nutzt die App das Netzwerk nicht.
+Beim ersten Start lädt die App ein Stimmpaket von etwa 145 MB herunter und braucht dafür einmal eine Internetverbindung (WLAN empfohlen). Bis der Download fertig ist, liest die App mit der eingebauten Stimme deines iPhones vor. Das Scannen lädt außerdem ein kleines Texterkennungspaket für deine Sprache herunter. Nur diese Pakete werden heruntergeladen: Dein Text, deine Dateien und deine Scans bleiben auf deinem Gerät, und sobald die Stimme installiert ist, nutzt das Vorlesen das Netzwerk nicht.
 
 ## Notes for apply
 
