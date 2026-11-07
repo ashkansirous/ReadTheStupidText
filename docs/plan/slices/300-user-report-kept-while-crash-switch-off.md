@@ -1,8 +1,10 @@
 # Slice 300 — A kept problem report must not be wiped at next start when the remote crash switch is off
 
-*Planned 2026-11-07.* Known gap from [Slice 249](249-dino-report-a-problem.md): a report kept while the remote crash switch is off can be wiped at the next start although the page said "kept" (`src/ReadTheStupidText.Mobile.Shared/Crashes/CrashReporter.UserReport.cs:135`, which logs "kept for retry" and returns `FailedKept`). Moved from plan.md's *Outstanding work*. Shared code: Android and iOS (and the Windows head) behave the same.
+*In progress (wave 2026-11-07), draft PR.* *Planned 2026-11-07.* Known gap from [Slice 249](249-dino-report-a-problem.md): a report kept while the remote crash switch is off can be wiped at the next start although the page said "kept" (`src/ReadTheStupidText.Mobile.Shared/Crashes/CrashReporter.UserReport.cs:135`, which logs "kept for retry" and returns `FailedKept`). Moved from plan.md's *Outstanding work*. Shared code: Android and iOS (and the Windows head) behave the same.
 
-**Touches:** `src/ReadTheStupidText.Mobile.Shared/Crashes/CrashReporter.UserReport.cs`, `src/ReadTheStupidText.Mobile.Shared/Crashes/CrashReporter*.cs`, `src/ReadTheStupidText.Application/Crashes/CrashSendPolicy.cs`, `tests/DinoReader.Tests/**`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/300-user-report-kept-while-crash-switch-off.md`
+**Touches:** `src/ReadTheStupidText.Mobile.Shared/Crashes/CrashReporter.UserReport.cs`, `src/ReadTheStupidText.Mobile.Shared/Crashes/CrashReporter*.cs`, `src/ReadTheStupidText.Application/Crashes/CrashSendPolicy.cs`, `tests/DinoReader.Tests/**`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/300-user-report-kept-while-crash-switch-off.md`, `src/ReadTheStupidText.Mobile.Shared/Crashes/**` (CrashSender.cs, the report store; widened at claim)
+
+**Decision (wave 3, night 2026-11-07-1412, taken without the user since the slice prefers it):** keep user-written reports on the device while the switch is off and send them when it turns on. Nothing leaves the device while the switch is off, so the switch still stops all sending. **Test rule:** the emulator check never changes the live remote config; it uses a Debug-only override if one exists, else it goes to *Not yet verified*.
 
 ## Work
 
