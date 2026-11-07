@@ -41,6 +41,26 @@ Code check (origin/main, 2026-11-07): every recording is tied to `story.Language
 Smaller defaults (not raised by the user; the user may override): each language keeps its own pieces, because sentence splits differ
 per language. Delete and re-record touch only the picked language. The "use my recordings" switch stays one switch for the book.
 
+#### Design (Dino Reader Batch 49 Recording per Language mock, section 192-196, added 2026-11-07)
+
+Five frames on iPhone 8 (375 x 667), English app with Farsi as a side language; they change Batch 48 frames 178, 182, 188 and 189 and match this plan. All five are real screens, none is a labelling illustration. Fonts: Fredoka, Vazirmatn for Farsi. The mock's two review questions take the drawn answers: how you record (one character at a time or whole pages) and the ticks are kept **per language**, and the intro **always opens on the app language**.
+
+- **C, Record intro, language row (frames 192, 193).** A `Record in` label (12.5px, 600, `#8a8399`), then one card per story language in a two-column grid, 8px gap. Card: 56px high, radius 16, white, picked card ringed 2.5px `#5B57E8`. Inside, a 30px round flag (ring 2px white plus 1px hairline) and two lines: the name in its own script (15px, 600; Vazirmatn for Farsi) and that language's count (12px: "12 of 44" in `#5a5470`, or "Nothing yet" in `#8a8399`). Counts are in the unit of that language's pieces (lines for "One character at a time"). Three languages make three narrower cards in one row; names never wrap ("Svenska" is the longest). With one story language the row is not shown and the page is frame 189. Tapping a card swaps the page below the row, never the row.
+- **C, per-language page below the row (192, 193).** Frame 192 (recordings in English) is frame 189: "12 of 44 lines recorded" (15px, 600) with "One character at a time" (12.5px) on the right, an 8px bar (`#ECE7FF` track, `#E5484D` fill), "The rest is read by Dino. Your voice stays on this phone.", then `Who will you record?` (12.5px, 600, `#8a8399`) over rows of 42px with a 24px box (radius 7), name, count ("0 of 24", green `#2E7D32` "9 of 9"). Buttons "Listen and change" (outlined) and "Record the rest" (`#FF7A59`), 52px, two columns. Frame 193 (Farsi, nothing yet) is frame 178: the three notes, the two mode cards, the checklist with "N lines" counts, and a full-width "Start recording" (17px). Line counts are Farsi's own (Storyteller 21, not 24).
+- **C, record line page (frame 194, from 180).** Header: title "The Three Little Pigs" (18px, 600), small line (12px, `#8a8399`) is a 14px round flag, the language name and the position: "Farsi · Line 4 of 41". Card text is the book's Farsi text, right to left (Vazirmatn 22px, line height 1.6, `dir=rtl`). The label "The Wolf says:" (13.5px, 600, `#5B57E8`), the Skip / Record / Next buttons and the layout stay in the app language and do not mirror. Recording, recorded, Listen and change (190) and New take (191) touch only that language's clips; whole pages are cut by that language's own lengths.
+- **C, book sheet (frame 195, from 188).** The "Your voice" row's small line (12.5px, `#5a5470`) lists each language that has recordings, in story-language order, language names in the app language: "English 12 of 44 · Farsi 6 of 41". A language with nothing recorded is left out, so a book recorded in English only still reads "12 of 44 lines recorded". It fits one line with three languages and truncates past that. The "You" chip on the cover shows when any language has a recording.
+- **D, reading (frame 196, exactly 89).** The language button is back on a book with recordings (a ring in the mock only points at it). The recorded line is highlighted as usual; sentences not recorded in Farsi play Dino's Farsi clips with no gap or change on screen. Switching to English plays the English takes; a piece recorded only in English plays Dino's Farsi clip when reading in Farsi. The child sees no sign of whose voice it is. Frame 88's note loses "Hidden for recorded books".
+
+New strings (both locales, every app language): the `Record in` label already exists as `Record_Language`; the mock adds none beyond the book-sheet line template "{0} {1} of {2}" joined by " · " and the header line "{language} · Line {n} of {m}" / page variants. Language names come from `LanguageNames`.
+
+**Open point: speaker names and "says" line language.** The plan says the card text and speakers follow the picked language (`RecordIntroPage.cs` `BookInAsync` applies `WithSpeakerNames`). The mock shows English names ("The Wolf", "First little pig") in the checklist and on the card in the Farsi frames, and says "The Wolf says:" stays in the app language. Default: follow the mock, names and the "says" label in the app language; only the words are the picked language.
+
+**Open point: flag in the record header.** The mock puts a flag and the language name in the record page's small line; the plan didn't mention it. Default: add it, using the flag the reading page's language button draws (`StoryLanguageButton.cs`), shown only when the family has more than one story language.
+
+**Open point: per-language mode and ticks.** The plan's smaller default kept one choice per book. The mock (question 1, drawn answer) keeps the mode and the ticks per language. Default: per language, as drawn; the "use my recordings" switch stays one switch for the book.
+
+Details the mock settles that the plan left open: the language row is a two-column card grid with flags, not a list with radios; counts on the cards are in the unit of that language's mode (lines or pages), not always pages; the intro opens on the app language; the book-sheet line lists every language with recordings.
+
 ## Work
 
 - [x] **A. Core model, smallest end to end first.** The recording key includes the language (page + first/last sentence + language). Do
@@ -69,6 +89,11 @@ per language. Delete and re-record touch only the picked language. The "use my r
       Extend the scripted emulator record flow with two story languages: record one piece in each, listen back, read in each and hear the right clip.
 - [x] **G. Docs.** Update the parent-recordings rule in `src/DinoReader.App/CLAUDE.md`: drop "matches the story language", and say clips are per story
       language, keyed by language, and played in the reading language.
+- [x] **H. Design alignment (Batch 49 frames 192-196).** "Record in" label and two/three-column language cards with the shared `FlagRing` flag and each language's own count
+      ("12 of 44", `Record_LanguagePages` now "{0} of {1}" in all 15 languages; "Nothing yet"); the record mode and ticks kept per language (`RecordChoices` key carries the language, the old
+      per-book choice carries over to the app's main language); speaker labels and checklist names stay in the app language (`WithSpeakerNames` removed); record header small line with a 14 px flag
+      and "<language> · Line 4 of 41" (`GrownUpHeader.SetSubtitleFlag`); book sheet "Your voice" line lists every language with recordings ("English 12 of 44 · Farsi 6 of 41", names from the new
+      `StoryLanguages_NameMap` string in all 15 languages), one line truncated; "Who will you record?" as the 12.5 px muted heading.
 
 ## Verification
 

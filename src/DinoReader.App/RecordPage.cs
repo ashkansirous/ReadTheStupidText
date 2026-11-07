@@ -35,6 +35,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 	private const double ColumnMaxWidth = RecordCard.ColumnMaxWidth;
 	private const double ButtonRowSpace = 14;
 	private const double SwipeThreshold = 40;
+	private const string HeaderSeparator = " · ";
 
 	private readonly IStoryLibrary _library;
 	private readonly IMicRecorder _recorder;
@@ -331,7 +332,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 			return;
 		}
 
-		_header.Subtitle = HeaderLine(setup, story, piece);
+		ShowHeaderLine(setup, story, piece);
 		_column.Children.Clear();
 		var stage = RecordViews.Stage(PicturePathOf(story, piece), WordsCardFor(setup, piece), RecordCard.MaxCardHeight(Height > 0 ? Height : 667));
 		AttachSwipe(stage);
@@ -370,6 +371,15 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 		return null;
 	}
 #endif
+
+	// Frame 194: with more than one story language the small line starts with the picked language's round flag and its name (in the app language): "Farsi · Line 4 of 41".
+	private void ShowHeaderLine(RecordSetup setup, Story story, RecordPiece piece)
+	{
+		string line = HeaderLine(setup, story, piece);
+		bool named = StoryLanguages.Current().HasChoice;
+		_header.SetSubtitleFlag(named ? setup.Language : null);
+		_header.Subtitle = named ? $"{StoryLanguages.NameInAppLanguage(setup.Language)}{HeaderSeparator}{line}" : line;
+	}
 
 	private string HeaderLine(RecordSetup setup, Story story, RecordPiece piece)
 	{

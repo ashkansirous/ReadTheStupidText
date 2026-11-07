@@ -44,15 +44,6 @@ public static class RecordSplitBook
         return book with { Sentences = sentences };
     }
 
-    /// <summary>The book with each speaker named as <paramref name="cast"/> (the picked story language's cast) names the character (Slice 286): the "Rex says:" line and the checklist use the language's own names.
-    /// A speaker the cast does not name keeps its name.</summary>
-    public static RecordBook WithSpeakerNames(RecordBook book, IReadOnlyList<CastMember> cast)
-    {
-        IReadOnlyList<RecordSpeaker> speakers = book.Speakers
-            .Select(s => cast.FirstOrDefault(c => c.CharacterId == s.Id) is { Name: { Length: > 0 } name } ? s with { Name = name } : s).ToList();
-        return book with { Speakers = speakers };
-    }
-
     private static string TranslatedShown(string text, SentenceSpan span) =>
         span.Start >= 0 && span.End <= text.Length && span.End > span.Start ? text[span.Start..span.End].Replace(LineBreak, Blank).Trim() : string.Empty;
 

@@ -10,7 +10,7 @@ namespace DinoReader;
 
 /// <summary>
 /// The page every tap on Record opens (Slice 279, Batch 48 mock frames 178, 179 and 189): the words that apply to every recording once, the two ways to record (a character at a time, or whole pages),
-/// and the characters to record. A book that already has recordings leads with how much is recorded and offers "Listen and change" and "Record the rest". The choice is remembered per book.
+/// and the characters to record. A book that already has recordings leads with how much is recorded and offers "Listen and change" and "Record the rest". The choice is remembered per book and story language.
 /// None of this text is repeated on the recording pages.
 /// </summary>
 public sealed class RecordIntroPage : ContentPage, IGrownUpPage
@@ -23,6 +23,12 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	private const double RadioSize = 20;
 	private const double ModeRadius = 16;
 	private const double ButtonHeight = 52;
+	private const double CardHeight = 56;
+	private const double CardGap = 8;
+	private const double CardFlagSize = 30;
+	private const double CardFlagGap = 9;
+	private const double SelectedRing = 2.5;
+	private const float FlagRingAlpha = 0.14f;
 	private const double BarHeight = 8;
 	private const double ChangeHeight = 40;
 	private const string PageName = "RecordIntro";
@@ -59,6 +65,13 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	private bool _showChange;
 	private (string Key, IReadOnlyList<RecordPiece> Pieces)? _cut; // the book's pieces for the mode and ticks in Key, cut once on a worker thread
 	private bool _warming;
+	private readonly Dictionary<string, IReadOnlyList<RecordPiece>> _lines = []; // each story language's spoken lines as the record page cuts them in it: every count comes from these (frame 193)
+	private readonly HashSet<string> _linesFailed = []; // languages whose words could not be made: not tried again until the page is opened again or the grown-up taps that language's card
+	private CancellationTokenSource? _warmCts; // the background cut that is running: cancelled when the page goes away or a newer version of the story loads
+	private bool _cutting; // a cut has run over 500 ms: counts still being cut show a quiet "..." instead of staying blank
+	private bool _shown;
+	private const string PendingCount = "…";
+	private static readonly TimeSpan CuttingDelay = TimeSpan.FromMilliseconds(500);
 	private RecordPage? _record; // the recording page last pushed from here: the book is read again only after it has finished saving
 
 	public RecordIntroPage(IStoryLibrary library, IServiceProvider services)
@@ -129,7 +142,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	}
 
 	// The book as it reads in <language>: the story's own words, or those of its translation when it is read translated in that language (the same text the reading screen shows), with the
-	// speakers named as that language's cast names them. Both share the story's sentence numbers, so a clip's key means the same sentences in every language. Worked out once per language;
+	// speakers keeping the app language's names (labels stay in the app language). Both share the story's sentence numbers, so a clip's key means the same sentences in every language. Worked out once per language;
 	// null when the translation could not be made.
 	private async Task<RecordBook?> BookInAsync(Story story, string language, CancellationToken cancellation)
 	{
@@ -139,14 +152,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		}
 
 		_source ??= await Task.Run(() => RecordSplitBook.Of(story), cancellation);
-		RecordBook? book = _source;
-		if (_services.GetRequiredService<StoryTranslator>().Applies(story, language))
-		{
-			TranslatedStory? translated = await _services.GetRequiredService<StoryVoicing>().TranslatedDisplayAsync(story, RecordSplitBook.SentencesOf(story), language, cancellation);
-			book = translated is null ? null : RecordSplitBook.WithTranslatedText(_source, translated);
-			book = book is not null && story.HasCastIn(language) ? RecordSplitBook.WithSpeakerNames(book, story.CastIn(language)) : book;
-		}
-
+		RecordBook? book = await RecordBooks.InAsync(_services, story, _source, language, cancellation);
 		if (book is not null)
 		{
 			_books[language] = book;
@@ -172,7 +178,24 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	protected override async void OnAppearing()
 	{
 		base.OnAppearing();
+		_shown = true;
+		_linesFailed.Clear(); // a language whose words failed is tried again each time the page opens
 		await RefreshStoryAsync();
+	}
+
+	protected override void OnDisappearing()
+	{
+		base.OnDisappearing();
+		_shown = false;
+		CancelWarm();
+	}
+
+	// Stops the background cut (its half-made results are dropped) and clears the loading mark.
+	private void CancelWarm()
+	{
+		_warmCts?.Cancel();
+		_warmCts = null;
+		_cutting = false;
 	}
 
 	// Coming back from the recording page: the recordings may have changed, so the counts and buttons are read again.
@@ -214,8 +237,11 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 			return;
 		}
 
+		CancelWarm();
 		_source = null;
 		_books.Clear();
+		_lines.Clear();
+		_linesFailed.Clear();
 		_book = await TryBookAsync(latest, _language);
 		if (_book is not null)
 		{
@@ -275,51 +301,207 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 
 		_body.Add(_choice.Mode == RecordMode.PerCharacter ? Checklist(story, book) : LongPagesLine());
 		AddButtons(story, book, has);
-		Debug.WriteLine($"Dino Reader {PageName}: mode={_choice.Mode} ticked={_choice.Ticked.Count} recorded={StoryRecordings.Count(story, _language)} language={_language}");
+		Debug.WriteLine($"Dino Reader {PageName}: mode={_choice.Mode} ticked={_choice.Ticked.Count} recorded={StoryRecordings.Count(story, _language)} language={_language} lines={(_lines.TryGetValue(_language, out IReadOnlyList<RecordPiece>? own) ? own.Count : -1)}");
+		if (_shown && PendingLines(story).Count > 0)
+		{
+			_ = WarmLinesAsync(story);
+		}
+	}
+
+	// ---- each language's own line counts (frame 193) ----
+
+	// The languages whose lines are needed and not cut yet: the picked one and those with recordings (their "x of y"); any other shows "Nothing yet" and is cut only when picked.
+	private List<string> PendingLines(Story story) => StoryLanguages.Current().All
+		.Where(l => (l == _language || StoryRecordings.Count(story, l) > 0) && !_lines.ContainsKey(l) && !_linesFailed.Contains(l)).ToList();
+
+	// Cuts the needed languages' lines off the UI thread, in the background, and draws the counts as each is ready; until then a count is blank (a quiet "..." after 500 ms), never another language's number.
+	// Leaving the page or loading a newer version of the story cancels it and its results are dropped.
+	private async Task WarmLinesAsync(Story story)
+	{
+		if (_warmCts is not null)
+		{
+			return;
+		}
+
+		var cts = new CancellationTokenSource();
+		_warmCts = cts;
+		_ = ShowCuttingAfterDelayAsync(cts);
+		while (!cts.IsCancellationRequested && PendingLines(story) is { Count: > 0 } pending)
+		{
+			await CutLinesAsync(story, pending[0], cts.Token);
+			if (!cts.IsCancellationRequested)
+			{
+				Render();
+			}
+		}
+
+		bool current = ReferenceEquals(_warmCts, cts) && !cts.IsCancellationRequested;
+		cts.Cancel(); // ends the 500 ms timer
+		if (current)
+		{
+			_warmCts = null;
+			_cutting = false;
+			Render();
+		}
+	}
+
+	private async Task ShowCuttingAfterDelayAsync(CancellationTokenSource cts)
+	{
+		try
+		{
+			await Task.Delay(CuttingDelay, cts.Token);
+		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: the cut finished or was cancelled before it took long; no loading mark is needed
+			return;
+		}
+
+		if (ReferenceEquals(_warmCts, cts))
+		{
+			_cutting = true;
+			Render();
+		}
+	}
+
+	private bool CutPending(string language) => _cutting && !_lines.ContainsKey(language) && !_linesFailed.Contains(language);
+
+	private async Task CutLinesAsync(Story story, string language, CancellationToken cancellation)
+	{
+		try
+		{
+			RecordBook source = _source ?? await Task.Run(() => RecordSplitBook.Of(story), cancellation);
+			cancellation.ThrowIfCancellationRequested();
+			_source ??= source;
+			RecordBook? book = _books.GetValueOrDefault(language) ?? await RecordBooks.InAsync(_services, story, source, language, cancellation);
+			cancellation.ThrowIfCancellationRequested();
+			if (book is null)
+			{
+				_linesFailed.Add(language);
+				return;
+			}
+
+			IReadOnlyList<RecordPiece> lines = await Task.Run(() => RecordBooks.AllLines(story, book, language), cancellation);
+			cancellation.ThrowIfCancellationRequested();
+			_books[language] = book;
+			_lines[language] = lines;
+		}
+		catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+		{
+			// no-fallback: the page went away or the story changed; the half-made result is dropped
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: that language shows no count; nothing is lost
+			Debug.WriteLine($"Dino Reader could not count the lines in {language} for the record page: {ex.Message}");
+			_linesFailed.Add(language);
+		}
 	}
 
 	// ---- the story language to record in (Slice 286) ----
 
-	// One row per story language (the app language first): a radio, the name in its own script and how much of the book is recorded in it.
+	// "Record in" and one card per story language (the app language first), frames 192 and 193: two languages sit in two columns, three in three narrower ones, so a name never wraps.
 	private View LanguageRows(Story story)
 	{
-		var list = new VerticalStackLayout { Spacing = 0 };
-		var heading = new Label { Text = AppResources.Record_Language, FontSize = 17, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), Margin = new Thickness(0, 6, 0, 6) };
-		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level2);
-		list.Add(heading);
-		foreach (string language in StoryLanguages.Current().All)
+		IReadOnlyList<string> languages = StoryLanguages.Current().All;
+		var list = new VerticalStackLayout { Spacing = 8 };
+		list.Add(SmallHeading(AppResources.Record_Language));
+		var cards = new Grid { ColumnSpacing = CardGap };
+		for (int i = 0; i < languages.Count; i++)
 		{
-			list.Add(LanguageRow(story, language));
+			cards.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+			cards.Add(LanguageCard(story, languages[i]), i);
 		}
 
+		list.Add(cards);
 		return list;
 	}
 
-	private View LanguageRow(Story story, string language)
+	// The 12.5 px muted heading above a block ("Record in", "Who will you record?"), frames 192 to 193.
+	private static Label SmallHeading(string text)
 	{
-		var row = new Grid { HeightRequest = RowHeight, ColumnSpacing = 12, ColumnDefinitions = [new ColumnDefinition(RadioSize), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
-		row.Add(Radio(language == _language), 0);
-		var name = new Label { Text = LanguageNames.NativeName(language), FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), VerticalOptions = LayoutOptions.Center };
-		OwnScript.InOwnScript(name);
-		row.Add(name, 1);
-		row.Add(new Label { Text = LanguageProgressText(story, language), FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Muted), VerticalOptions = LayoutOptions.Center }, 2);
-		row.AutomationId = LanguageIdPrefix + language;
-		SemanticProperties.SetDescription(row, LanguageNames.NativeName(language));
-		Taps.AddTap(row, () => ChooseLanguageAsync(language));
-		return row;
+		var heading = new Label { Text = text, FontSize = 12.5, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Muted), Margin = new Thickness(4, 0, 4, 0) };
+		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level2);
+		return heading;
 	}
 
-	private static string LanguageProgressText(Story story, string language)
+	private View LanguageCard(Story story, string language)
 	{
-		int pages = StoryRecordings.PagesRecorded(story, language);
-		return pages == 0 ? AppResources.Record_LanguageNone : AppResources.Format(AppResources.Record_LanguagePages, pages, story.Pages.Count);
+		bool selected = language == _language;
+		var name = new Label
+		{
+			Text = LanguageNames.NativeName(language), FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1,
+		};
+		OwnScript.InOwnScript(name);
+		string progress = LanguageProgressText(story, language);
+		var count = new Label
+		{
+			Text = progress, FontSize = 12, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1,
+			TextColor = DinoTokens.Get(StoryRecordings.Count(story, language) == 0 ? DinoTokens.Muted : DinoTokens.Body),
+		};
+		var texts = new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { name, count } };
+		var content = new Grid { ColumnSpacing = CardFlagGap, Padding = new Thickness(10, 0), ColumnDefinitions = [new ColumnDefinition(CardFlagSize), new ColumnDefinition(GridLength.Star)] };
+		content.Add(new FlagRing(language, CardFlagSize, 1, Color.FromRgba(43, 37, 64, FlagRingAlpha)), 0);
+		content.Add(texts, 1);
+		var card = new Border
+		{
+			AutomationId = LanguageIdPrefix + language, HeightRequest = CardHeight, BackgroundColor = Colors.White, StrokeThickness = SelectedRing, Content = content,
+			Stroke = selected ? DinoTokens.Get(DinoTokens.Brand) : Colors.Transparent, StrokeShape = new RoundRectangle { CornerRadius = ModeRadius },
+		};
+		SemanticProperties.SetDescription(card, $"{LanguageNames.NativeName(language)}, {progress}");
+		Taps.AddTap(card, () => ChooseLanguageAsync(language));
+		return card;
+	}
+
+	// "12 of 44" in the unit of that language's own way of recording (lines for one character at a time, pages for whole pages), no extra word; "Nothing yet" when none.
+	private string LanguageProgressText(Story story, string language)
+	{
+		if (StoryRecordings.Count(story, language) == 0)
+		{
+			return AppResources.Record_LanguageNone;
+		}
+
+		RecordMode mode = RecordChoices.ModeOf(story, language); // the same source the book sheet uses, so card and sheet agree
+		if (LanguageProgress(story, language, mode) is { } progress)
+		{
+			return AppResources.Format(AppResources.Record_LanguagePages, progress.Done, progress.Total);
+		}
+
+		if (_linesFailed.Contains(language) && _source is { } source)
+		{
+			RecordProgress pages = RecordSplitWalk.Progress(story, source, RecordMode.WholePage, language); // its words could not be made: the pages recorded, which every language shares
+			return AppResources.Format(AppResources.Record_LanguagePages, pages.Done, pages.Total);
+		}
+
+		return CutPending(language) ? PendingCount : string.Empty; // still being cut: a quiet mark after 500 ms, no number rather than a wrong one
+	}
+
+	// The count of <language> in <mode> from that language's own pieces (pages are the same in every language); null while its lines are not cut yet.
+	private RecordProgress? LanguageProgress(Story story, string language, RecordMode mode)
+	{
+		if (_books.GetValueOrDefault(language) is not { } book || (mode == RecordMode.PerCharacter && !_lines.ContainsKey(language)))
+		{
+			return null;
+		}
+
+		return RecordBooks.Progress(story, book, _lines.GetValueOrDefault(language) ?? [], mode, language);
 	}
 
 	// The picked language drives everything after it: the words, the pieces, the recordings. Its book is worked out under the wait overlay when that takes over 500 ms (Cancel stops it).
 	// When the words cannot be made the page stays in the language it had and says so with Retry.
 	private Task ChooseLanguageAsync(string language) => _busy.RunAsync(async () =>
 	{
-		if (_story is not { } story || (language == _language && _book is not null))
+		if (_story is not { } story)
+		{
+			return;
+		}
+
+		if (_linesFailed.Remove(language))
+		{
+			Render(); // a tap on a language whose words failed tries them again
+		}
+
+		if (language == _language && _book is not null)
 		{
 			return;
 		}
@@ -420,7 +602,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		if (_choice.Mode != mode && _story is not null)
 		{
 			_choice = _choice with { Mode = mode };
-			RecordChoices.Save(_story.Id, _choice);
+			RecordChoices.Save(_story.Id, _language, _choice);
 			Render();
 		}
 
@@ -437,20 +619,20 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	private View Checklist(Story story, RecordBook book)
 	{
 		var list = new VerticalStackLayout { Spacing = 0 };
-		var heading = new Label { Text = AppResources.Record_Who, FontSize = 17, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), Margin = new Thickness(0, 6, 0, 6) };
-		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level2);
-		list.Add(heading);
-		IReadOnlyDictionary<string, int> counts = RecordSplit.LineCounts(book.Sentences);
+		list.Add(SmallHeading(AppResources.Record_Who));
+		// the picked language's own lines per speaker once they are cut; until then the rows show their names with no count (never another language's)
+		IReadOnlyList<RecordPiece>? cut = _lines.GetValueOrDefault(_language);
+		IReadOnlyDictionary<string, int> counts = cut is null ? RecordSplit.LineCounts(book.Sentences) : cut.GroupBy(p => p.Speaker).ToDictionary(g => g.Key, g => g.Count());
 		bool has = StoryRecordings.Count(story, _language) > 0;
 		foreach (RecordSpeaker speaker in book.Speakers.Where(s => counts.ContainsKey(s.Id)))
 		{
-			list.Add(SpeakerRow(story, book, speaker, counts[speaker.Id], has));
+			list.Add(SpeakerRow(story, book, speaker, cut is null ? null : counts[speaker.Id], has));
 		}
 
 		return list;
 	}
 
-	private View SpeakerRow(Story story, RecordBook book, RecordSpeaker speaker, int lines, bool has)
+	private View SpeakerRow(Story story, RecordBook book, RecordSpeaker speaker, int? lines, bool has)
 	{
 		bool ticked = _choice.Ticked.Contains(speaker.Id);
 		var row = new Grid { HeightRequest = RowHeight, ColumnSpacing = 12, ColumnDefinitions = [new ColumnDefinition(BoxSize), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
@@ -482,14 +664,19 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	}
 
 	// "24 lines" for a book with nothing recorded; with recordings the speaker's own progress ("0 of 24", green "9 of 9" when done).
-	private View CountLabel(Story story, RecordBook book, RecordSpeaker speaker, int lines, bool has)
+	private View CountLabel(Story story, RecordBook book, RecordSpeaker speaker, int? lines, bool has)
 	{
-		if (!has)
+		if (lines is not { } count)
 		{
-			return new Label { Text = AppResources.Format(AppResources.Record_Lines, lines), FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Muted), VerticalOptions = LayoutOptions.Center };
+			return new Label { Text = CutPending(_language) ? PendingCount : string.Empty, FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Muted), VerticalOptions = LayoutOptions.Center }; // still being cut
 		}
 
-		RecordProgress progress = RecordSplitWalk.SpeakerProgress(story, book, speaker.Id, _language);
+		if (!has)
+		{
+			return new Label { Text = AppResources.Format(AppResources.Record_Lines, count), FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Muted), VerticalOptions = LayoutOptions.Center };
+		}
+
+		RecordProgress progress = RecordBooks.LinesProgress(story, _lines[_language], speaker.Id);
 		bool done = progress.Total > 0 && progress.Done == progress.Total;
 		return new Label
 		{
@@ -512,7 +699,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		}
 
 		_choice = _choice with { Ticked = ticked };
-		RecordChoices.Save(_story.Id, _choice);
+		RecordChoices.Save(_story.Id, _language, _choice);
 		Render();
 		return Task.CompletedTask;
 	}
@@ -521,10 +708,12 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 
 	private View ProgressBlock(Story story, RecordBook book)
 	{
-		RecordProgress progress = RecordSplitWalk.Progress(story, book, _choice.Mode, _language);
-		string text = progress.Unit == RecordUnit.Lines
-			? AppResources.Format(AppResources.Record_LinesRecorded, progress.Done, progress.Total)
-			: AppResources.Format(AppResources.Record_PagesRecorded, progress.Done, progress.Total);
+		RecordProgress? ready = LanguageProgress(story, _language, _choice.Mode); // null while this language's lines are being cut: no number yet
+		RecordProgress progress = ready ?? new RecordProgress(0, 0, _choice.Mode == RecordMode.PerCharacter ? RecordUnit.Lines : RecordUnit.Pages);
+		string text = ready is null ? (CutPending(_language) ? PendingCount : string.Empty)
+			: progress.Unit == RecordUnit.Lines
+				? AppResources.Format(AppResources.Record_LinesRecorded, progress.Done, progress.Total)
+				: AppResources.Format(AppResources.Record_PagesRecorded, progress.Done, progress.Total);
 		var top = new Grid { ColumnSpacing = 10, ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
 		top.Add(new Label { AutomationId = ProgressId, Text = text, FontSize = 17, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), VerticalOptions = LayoutOptions.Center }, 0);
 		top.Add(new Label
@@ -688,7 +877,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 
 	private Task StartAsync(Story story, RecordBook book, bool resume) => _busy.RunAsync(async () =>
 	{
-		RecordChoices.Save(story.Id, _choice);
+		RecordChoices.Save(story.Id, _language, _choice);
 		TraceWindows($"Record intro: Start tapped mode={_choice.Mode} ticked={_choice.Ticked.Count} resume={resume}");
 		IReadOnlyList<RecordPiece> pieces = await PiecesUnderWaitAsync(story, book);
 		TraceWindows($"Record intro: pieces cut count={pieces.Count}");
@@ -713,7 +902,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 
 	private Task ListenAsync(Story story, RecordBook book) => _busy.RunAsync(async () =>
 	{
-		RecordChoices.Save(story.Id, _choice);
+		RecordChoices.Save(story.Id, _language, _choice);
 		IReadOnlyList<RecordPiece> pieces = RecordSplitWalk.Recorded(story, book, _choice.Mode, _choice.Ticked, _language);
 		if (pieces.Count > 0)
 		{

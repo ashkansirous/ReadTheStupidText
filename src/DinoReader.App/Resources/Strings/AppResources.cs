@@ -373,6 +373,7 @@ public static class AppResources
 	public static string StoryLanguages_WifiNow => Get();
 	public static string StoryLanguages_WifiWait => Get();
 	public static string StoryLanguages_FlagMap => Get();
+	public static string StoryLanguages_NameMap => Get();
 	public static string Gallery_UpdatingBooks => Get();
 	public static string BackCover_StoryBy => Get();
 	public static string BackCover_OriginalStoryBy => Get();

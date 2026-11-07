@@ -14,15 +14,19 @@ namespace DinoReader;
 /// (their keys carry <paramref name="Language"/>), and whether the screen only plays recordings back.</summary>
 internal sealed record RecordSetup(Story Story, RecordBook Book, RecordChoice Choice, IReadOnlyList<RecordPiece> Pieces, bool Listening, string Language);
 
-/// <summary>The remembered choice of one book (Slice 279): the mode and the ticked characters are kept per book in the app's preferences, so the intro opens on what was chosen last.</summary>
+/// <summary>The remembered choice of one book in one story language (Slice 279, per language since Slice 286): the mode and the ticked characters are kept per book and language in the app's preferences,
+/// so the intro opens on what was chosen last in each. A choice made before Slice 286 was kept per book (the old key) and carries over to the app's language.</summary>
 internal static class RecordChoices
 {
 	private const string KeyPrefix = "dino.record.choice.";
+	private const char LanguageSeparator = '.';
 
-	/// <summary>The choice remembered for <paramref name="story"/>, cleaned of characters the book does not have; the defaults (mode from its recordings in <paramref name="language"/>, everybody ticked) when none is.</summary>
+	private static string KeyOf(string storyId, string language) => KeyPrefix + storyId + LanguageSeparator + UiLanguage.Resolve(language);
+
+	/// <summary>The choice remembered for <paramref name="story"/> in <paramref name="language"/>, cleaned of characters the book does not have; the defaults (mode from its recordings in that language, everybody ticked) when none is.</summary>
 	public static RecordChoice Load(Story story, RecordBook book, string language)
 	{
-		RecordChoice? saved = RecordSplitWalk.Read(Preferences.Default.Get(KeyPrefix + story.Id, string.Empty));
+		RecordChoice? saved = Saved(story.Id, language);
 		HashSet<string> everyone = book.Speakers.Select(s => s.Id).ToHashSet();
 		if (saved is null)
 		{
@@ -32,10 +36,31 @@ internal static class RecordChoices
 		return new RecordChoice(saved.Mode, saved.Ticked.Where(everyone.Contains).ToHashSet());
 	}
 
-	public static void Save(string storyId, RecordChoice choice) =>
-		Preferences.Default.Set(KeyPrefix + storyId, RecordSplitWalk.Write(choice));
+	/// <summary>The way <paramref name="language"/> is recorded in (the language card's count is in its unit): the remembered mode, else the one its recordings were made in.</summary>
+	public static RecordMode ModeOf(Story story, string language) => Saved(story.Id, language)?.Mode ?? RecordSplitWalk.DefaultMode(story, language);
 
-	public static void Forget(string storyId) => Preferences.Default.Remove(KeyPrefix + storyId);
+	private static RecordChoice? Saved(string storyId, string language)
+	{
+		RecordChoice? saved = RecordSplitWalk.Read(Preferences.Default.Get(KeyOf(storyId, language), string.Empty));
+		if (saved is null && UiLanguage.Resolve(language) == StoryLanguages.Current().Main)
+		{
+			saved = RecordSplitWalk.Read(Preferences.Default.Get(KeyPrefix + storyId, string.Empty)); // the per-book choice of an older version
+		}
+
+		return saved;
+	}
+
+	public static void Save(string storyId, string language, RecordChoice choice) =>
+		Preferences.Default.Set(KeyOf(storyId, language), RecordSplitWalk.Write(choice));
+
+	public static void Forget(string storyId)
+	{
+		Preferences.Default.Remove(KeyPrefix + storyId);
+		foreach ((string code, _) in LanguageNames.All)
+		{
+			Preferences.Default.Remove(KeyOf(storyId, code));
+		}
+	}
 }
 
 /// <summary>The words card's size rules and the measuring that cuts a page into parts that fit it (Slice 279, mock frames 180 and 183): the card never covers more than half the screen.</summary>
