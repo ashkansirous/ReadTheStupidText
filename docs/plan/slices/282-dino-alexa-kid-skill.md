@@ -49,8 +49,13 @@ User, 2026-11-06: Dino books on Alexa, no login, no parent recordings. Facts che
 - [ ] `alexa-verify.ts`: certificate URL rules, chain check, signature check, 150 s timestamp. Tests with recorded requests.
 - [ ] `alexa.ts`: LaunchRequest, ReadBookIntent (book slot filled from the live list), AMAZON built-ins, AudioPlayer events
       (answer with no speech), SessionEnded. One handler per request type.
+- [ ] Count plays for the usage dashboard (added 2026-11-07, Slices 287 and 289; the user wants Alexa in its platform
+      filter): one `book_listened` row with platform `alexa` per book started, through `worker/speaker-usage.ts` (Slice 289);
+      played seconds from the AudioPlayer `PlaybackStopped`/`PlaybackFinished` offset (detail `reported`), else the book's
+      length (detail `estimated`). No household or account id. Adds `worker/speaker-usage.ts` to this slice's Touches.
 - [ ] `skill-package/`: manifest marked child-directed, Kids category, privacy policy URL, en-GB and en-US models.
-- [ ] Privacy text: one paragraph on Alexa (what Amazon sends us: the request, no name or account; what we keep: nothing).
+- [ ] Privacy text: one paragraph on Alexa (what Amazon sends us: the request, no name or account; what we keep: a count
+      of each book played and for how long, nothing about the home).
 - [ ] **User steps** (their Amazon login): create the developer account, create the skill from `skill-package/`, set the
       endpoint, enable testing; later, submit for certification. Steps Claude can do with a token (ASK CLI) it does.
 

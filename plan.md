@@ -24,6 +24,9 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 244 | Dino: find and fix the 2026-10-31/11-01 crashes (iOS layout `NSDictionary` nil, whole book queued at once, `0xdead10cc`, Back while reading) | in progress (items 2-5 merged #722; iPhone 8 run and crash follow-up open) | #722 | | [244-dino-ios-crashes-2026-11-01.md](docs/plan/slices/244-dino-ios-crashes-2026-11-01.md) |
 | 282 | Dino: an Alexa kid skill that reads the store books (no login) | planned (park reason in the slice file; item 1 still waits on the user) | | | [282-dino-alexa-kid-skill.md](docs/plan/slices/282-dino-alexa-kid-skill.md) |
 | 283 | Dino: a Sonos music service for the store books (anonymous, no login) | code merged #879; waiting on the user: Sonos partner account, service submission, sandbox integration, Self Test | #879 | | [283-dino-sonos-music-service.md](docs/plan/slices/283-dino-sonos-music-service.md) |
+| 287 | Dino: a private usage dashboard at dinoreader.sirous.uk/stats (downloads, listens, hours; by day/week/month, book, platform) | planned | | | [287-dino-usage-dashboard.md](docs/plan/slices/287-dino-usage-dashboard.md) |
+| 288 | Dino: the app counts listens (30 s or more) and real listening time | planned | | | [288-dino-listens-and-listening-time.md](docs/plan/slices/288-dino-listens-and-listening-time.md) |
+| 289 | Dino: count Sonos plays on the server | planned (depends on 283) | | | [289-dino-count-sonos-plays.md](docs/plan/slices/289-dino-count-sonos-plays.md) |
 | 284 | Leftovers from night 2026-11-06-1250 final feedback loop (fallback guard on untracked files, VM record check, device marks, three small follow-ups) | parked: feedback loop, waits for the user | | | [284-final-loop-leftovers-night-2026-11-06-1250.md](docs/plan/slices/284-final-loop-leftovers-night-2026-11-06-1250.md) |
 | 286 | Dino: record your voice in each story language, and hear it when reading in that language | planned | | | [286-dino-recordings-per-story-language.md](docs/plan/slices/286-dino-recordings-per-story-language.md) |
 
@@ -154,7 +157,8 @@ Built but not verified (details in each slice file):
 
 ## Out of Scope
 
-- **(Slices 281-283, Alexa and Sonos)** Any login or account linking; parents' own recordings on speakers (they never leave the phone); casting from the app (AirPlay, Bluetooth, local Sonos control); pictures on Echo Show screens; Alexa languages other than English in the first skill; counting speaker plays.
+- **(Slices 281-283, Alexa and Sonos)** Any login or account linking; parents' own recordings on speakers (they never leave the phone); casting from the app (AirPlay, Bluetooth, local Sonos control); pictures on Echo Show screens; Alexa languages other than English in the first skill. (Counting speaker plays moved in scope 2026-11-07: Slices 289 and 282.)
+- **(Slices 287-289, usage dashboard)** Counting people or devices (no install or device id is added); per-book stats for parents' own books (one "Own books" line); dashboard access for anyone but the user; TestFlight/App Review rows (`dino_usage_beta`).
 
 - **(Batch 31)** Animals and sounds for parent-provided books (photos, PDFs, typed: unchanged); robotic-voice checks beyond English unless English shows flavours are the cause; reading speeds above 1.2x in Dino; vowel marks for languages other than Farsi and Arabic.
 - **(Batch 28)** Any install, device or advertising id; per-family profiles or parental-consent flows; third-party analytics SDKs; analytics in RTST; remote config for RTST.
