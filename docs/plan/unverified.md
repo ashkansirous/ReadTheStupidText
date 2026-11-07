@@ -63,6 +63,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 308: Slice 225 run-checks -Serial and failed-build cause ([slice](slices/308-slice-225-run-checks-serial-and-build-cause.md))
 - Slice 225 item 2 cause (entries 249/494/630): no failed Debug build log exists on disk; the next failed build leaves `<log>.failed.log` to read.
+- Phone `paused-notification` before the `Get-PackageUid` fix: the shadowing left the dev app's uid unread, so earlier phone PASS results may never have blocked the network; re-run it on the phone once (feedback loop 2026-11-07-1412, [Slice 315](slices/315-feedback-loop-2026-11-07-1412-leftovers.md) item 11).
 
 ### Slice 299: Slice 261 leftovers ([slice](slices/299-slice-261-leftovers.md))
 - First-run picker and Cancel during the list load on emulator and iOS (item 2 follow-up: a cancelled load shows the "Connect to the internet" copy; a distinct copy needs new strings in every language).
