@@ -1,6 +1,6 @@
 # Slice 288 — Dino: the app counts listens and real listening time
 
-*Built 2026-11-07 (wave 2026-11-07, PR #901), not merged. Fast tests only; the emulator run was blocked (see Not yet verified).* *Planned 2026-11-07.* Dino Reader only. Android, iOS and the Windows head the same, in the same slice (the code is the
+*Built 2026-11-07 (wave 2026-11-07), merged as PR #901 (41419276). Fast tests only; the emulator run was blocked (see Not yet verified).* *Planned 2026-11-07.* Dino Reader only. Android, iOS and the Windows head the same, in the same slice (the code is the
 shared Core and App, so one change covers all three; verification runs on Android and iOS).
 
 **Depends on:** Slice 250 (playback events and the session id). Feeds Slice 287 (the dashboard).
@@ -95,7 +95,7 @@ Findings files (outside the repo, `D:/ReadTheStupidText-worktrees/reviews/`): `s
 - Check 3 (7): skipped 4 (a consumer relying on listen-before-stop order across threads is not a case today), 5 (explicit and setter calls are idempotent), 6 (no `Playback` subscriber reads `State`). Applied per the notes: 1 (language switch keeps the tally), 2 (`LeavePage` ends with `EndReading`), 3 (`_playStarting`), 7 (`SetAudible(true)` with no open reading does nothing).
 - Check 4 (2, both low): skipped both. 1 (a throwing handler reported as ClipUnplayable): no concrete path; the reviewer believes `RecordLogged` swallows errors, not verified. 2 (a different story discarding unsent seconds): no rebind without `LeavePage`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-07)
 
 Already written in the slice branch (`src/DinoReader.App/CLAUDE.md` line 126, `worker/CLAUDE.md` line 19), each with its Slice 288 link; the index pass lifts nothing more. Rules they carry: the tally is driven only by `ReadingSession`'s real audible state, through one setter (`UsageCounter.SetAudible`); `read_paused`/`read_stopped` always carry `seconds` (0 allowed), `book_listened` none; hours = `SUM(double5)` over paused/stopped rows with `double5 >= 0`, always filtered on `blob1`. Deploy the Worker with the batched release: an old Worker drops `book_listened`.
 

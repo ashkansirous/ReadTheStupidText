@@ -2,6 +2,20 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 298: Slice 264 gallery reorder follow-ups ([slice](slices/298-slice-264-gallery-reorder-follow-ups.md))
+- Real drag in both drop event orders (Drop then DropCompleted, and the reverse) on Android, iOS and the Windows head.
+- A 1 s hold, and a scroll that cancels the hold, on Android, iOS and the Windows head.
+- Hold release after a relayout (rotation) on Android, iOS and the Windows head.
+- Windows keyboard reorder on the Windows head.
+- iOS compile of the changes not run.
+- Tablet-upright flow not run.
+
+### Slice 288: Dino: the app counts listens (30 s or more) and real listening time ([slice](slices/288-dino-listens-and-listening-time.md))
+- usage-listen-seconds flow (`.maestro/dino/usage-listen-seconds.yaml`) on the Android emulator: the 2026-11-07 run was blocked at install (C: full, `INSTALL_FAILED_INTERNAL_ERROR`, res=-110).
+- The same flow on the iOS simulator.
+- The same flow on the Windows head.
+- The release version and date of this slice, for Slice 287's dashboard note (version line not filled until it ships).
+
 ### Slice 294: The `-NoBuild` cache-key miss in the emulator runner ([slice](slices/294-emulator-nobuild-cache-key-miss.md))
 - Item 3, the `first-run` flake: no failing log was kept, so no cause and no fix.
 - `tools/phone/run-checks.ps1` `Stop-CacheMissed` miss printout does not print the inputs (outside this slice's Touches).
