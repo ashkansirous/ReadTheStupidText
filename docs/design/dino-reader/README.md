@@ -794,11 +794,11 @@ Implement: `Dino Reader Batch 48 Store Only and Recording.dc.html`
   (the PNGs decoded from base64): `service-logo-20/40/80/112/200/400.png`, `service-logo-40.svg`,
   `service-logo-400.svg`, `full-logo.svg`, `badge-40.svg`, `support-banner.png`, `support-banner.svg`.
   `assets/three-little-pigs/5.jpg` was already in this folder; it was not fetched again.
-- **Covers:** Slice 287 (the reading page's sound line as a pill, frames 197-199; it restyles what Slice 285 C built
+- **Covers:** Slice 290 (the reading page's sound line as a pill, frames 197-199; it restyles what Slice 285 C built
   with no mock) and Slice 283 (the Sonos brand images for the developer portal).
 - **One word differs from the app:** the mock's caption calls the shipped line "Getting {0} sound for your books".
   The shipped English string `ShelfAudio_Getting` is "Getting {0} audio for your books" and other screens use it too;
-  Slice 287 keeps the shipped words and takes only the shape and the "·" before the count.
+  Slice 290 keeps the shipped words and takes only the shape and the "·" before the count.
 - Batch 49 (`Dino Reader Batch 49 Recording per Language.dc.html`, Slice 286) is in the Claude Design project but is
   not copied here yet.
 
