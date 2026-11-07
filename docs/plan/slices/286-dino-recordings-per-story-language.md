@@ -1,6 +1,6 @@
 # Slice 286 — Dino: record your voice in each story language, and hear it when reading in that language
 
-*Planned 2026-11-07.* Dino Reader only. Android, iOS and the Windows head the same, in the same slice.
+*In progress 2026-11-07.* Dino Reader only. Android, iOS and the Windows head the same, in the same slice.
 
 **Depends on:** Slices 111 and 279 (parent recordings and the recording flow this changes).
 **Touches:** `src/DinoReader.Core/{StoryRecordings,Story,LanguagePick,StoryClipKey}.cs`, `src/DinoReader.Core/StoryPackage*.cs`
