@@ -1104,30 +1104,34 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 			_pieceLacksAudio = false; // a stopped read says nothing; the next read's first piece sets it again
 		}
 
-		string? status = _pieceLacksAudio && _story is { } book ? AudioStatusText(book) : null;
-		StatusLabel.Text = status;
-		StatusLabel.IsVisible = status is not null;
-	}
-
-	private string AudioStatusText(Story book)
-	{
-		string language = ReadIn(book);
-		var shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
-		if (!shelfAudio.RunIncludes(language, book.SourceId))
+		string? language = _pieceLacksAudio && _story is { } book ? ReadIn(book) : null;
+		SoundStatusPillState? status = language is not null && _story is { } shownBook ? AudioStatus(shownBook, language) : null;
+		if (status is not null && language is not null)
 		{
-			return AppResources.Reading_NoSound; // this book's pack is not being fetched (no pack, already in, another language's run): never promise sound that is not coming
+			StatusPill.Show(status, AudioStatusText(status, language));
 		}
 
-		ShelfAudioState state = shelfAudio.StateOf(language);
-		return state.Phase switch
+		StatusPill.IsVisible = status is not null;
+	}
+
+	// Never promises sound that is not coming: a book whose pack is not being fetched (no pack, already in, another language's run) is "no sound"; idle, done, cancelled, failed or the main language is one plain line, never "audio unavailable".
+	private SoundStatusPillState AudioStatus(Story book, string language)
+	{
+		var shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
+		return SoundStatusPillState.From(shelfAudio.RunIncludes(language, book.SourceId), shelfAudio.StateOf(language));
+	}
+
+	private static string AudioStatusText(SoundStatusPillState status, string language)
+	{
+		string getting = AppResources.Format(AppResources.ShelfAudio_Getting, LanguageNames.NativeName(language));
+		return status.Kind switch
 		{
-			ShelfAudioPhase.Running when state.Total > 0 =>
-				AppResources.Format(AppResources.ShelfAudio_Getting, LanguageNames.NativeName(language)) + " " + AppResources.Format(AppResources.Intro_Counter, state.Position, state.Total),
-			ShelfAudioPhase.Running => AppResources.Format(AppResources.ShelfAudio_Getting, LanguageNames.NativeName(language)),
-			ShelfAudioPhase.Preparing => AppResources.ShelfAudio_Preparing,
-			ShelfAudioPhase.WaitingForInternet => AppResources.ShelfAudio_WaitingInternet,
-			ShelfAudioPhase.WaitingForWifi => AppResources.ShelfAudio_WaitingWifi,
-			_ => AppResources.Reading_NoSound, // idle, done, cancelled, failed or the main language: one plain line, never "audio unavailable"
+			SoundStatusKind.Getting when status.HasCount => getting + SoundStatusPillState.CountSeparator + AppResources.Format(AppResources.Intro_Counter, status.Position, status.Total),
+			SoundStatusKind.Getting => getting,
+			SoundStatusKind.Preparing => AppResources.ShelfAudio_Preparing,
+			SoundStatusKind.WaitingForInternet => AppResources.ShelfAudio_WaitingInternet,
+			SoundStatusKind.WaitingForWifi => AppResources.ShelfAudio_WaitingWifi,
+			_ => AppResources.Reading_NoSound,
 		};
 	}
 

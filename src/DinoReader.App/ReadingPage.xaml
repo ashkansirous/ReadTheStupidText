@@ -55,8 +55,8 @@
             </Border>
         </Grid>
 
-        <Label Grid.Row="2" x:Name="StatusLabel" AutomationId="ReadingAudioStatus" FontSize="14" TextColor="{StaticResource Body}" IsVisible="False"
-               HorizontalOptions="Center" Margin="14,8,14,0" />
+        <!-- Slice 290: the sound line is a pill (Batch 50 frames 197-199); ReadingAudioStatus sits on its label. -->
+        <local:SoundStatusPill Grid.Row="2" x:Name="StatusPill" IsVisible="False" Margin="14,12,14,0" />
 
         <local:PagerDots x:Name="Dots" AutomationId="ReadingDots" Grid.Row="3" IsVisible="False" />
         <local:TransportRow x:Name="Transport" ZIndex="2" AutomationId="ReadingTransport" Grid.Row="4" VerticalOptions="End" PreviousTapped="OnPreviousTapped" PlayTapped="OnPlayTapped"

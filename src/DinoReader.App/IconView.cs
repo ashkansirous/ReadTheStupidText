@@ -30,6 +30,8 @@ public enum IconKind
 	Download,
 	BookPlus,
 	MoreDots,
+	Wifi,
+	SoundOff,
 }
 
 /// <summary>Draws one <see cref="IconKind"/> as a stroked path, so colour and size follow the design tokens.</summary>
@@ -69,7 +71,10 @@ public sealed class IconView : ContentView
 	private const string AddBookPlus = "M18 15.9v4.2M15.9 18h4.2";
 
 	// Slice 189: the grown-ups button (a book with a plus at its lower right) and the cover's "⋯" dots are drawn on the exact 24-unit grid of the mock, not stretched to their own bounds.
-	private static readonly HashSet<IconKind> ExactGridKinds = [IconKind.BookPlus, IconKind.MoreDots];
+	private static readonly HashSet<IconKind> ExactGridKinds = [IconKind.BookPlus, IconKind.MoreDots, IconKind.Wifi, IconKind.SoundOff];
+
+	// The Wi-Fi icon's dot: a filled circle of r 1 at (12, 19.5), unstroked, as the mock draws it.
+	private const string WifiDot = "M11 19.5a1 1 0 1 0 2 0a1 1 0 1 0-2 0z";
 
 	// Path data copied from the mock's inline SVGs (rects and circles rewritten as arcs).
 	private static readonly Dictionary<IconKind, string> Paths = new()
@@ -89,6 +94,9 @@ public sealed class IconView : ContentView
 		[IconKind.Narrator] = "M5.5 8a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0 M3 20c.6-3.6 3-5.5 6-5.5s5.4 1.9 6 5.5 M17 8.5c1 .8 1.5 1.8 1.5 3s-.5 2.2-1.5 3 M19.5 6c1.6 1.4 2.5 3.4 2.5 5.5s-.9 4.1-2.5 5.5",
 		[IconKind.BookPlus] = "M12 20H6.5A2.5 2.5 0 0 1 4 17.5v-11A2.5 2.5 0 0 1 6.5 4H17a1 1 0 0 1 1 1v6 M4 17.5A2.5 2.5 0 0 1 6.5 15H12 M18 14.5v7M14.5 18h7",
 		[IconKind.MoreDots] = "M3.5 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0 M10 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0 M16.5 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0",
+		// Slice 290: the sound pill's icons (Batch 50 frames 198-199); the Wi-Fi dot is its own filled r 1 circle (WifiDot), as in the mock.
+		[IconKind.Wifi] = "M2.5 9 a14 14 0 0 1 19 0 M5.8 12.6 a9 9 0 0 1 12.4 0 M9 16.1 a4.4 4.4 0 0 1 6 0",
+		[IconKind.SoundOff] = "M4 9.5h3.5L12 5.5v13l-4.5-4H4z M16 9.5l5 5 M21 9.5l-5 5",
 		[IconKind.Download] = "M12 4v11M7 10l5 5 5-5 M5 20h14",
 		[IconKind.Mic] = "M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z M5.5 11a6.5 6.5 0 0 0 13 0 M12 17.5V21",
 		[IconKind.Book] = "M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z M12 6.5v13",
@@ -226,6 +234,11 @@ public sealed class IconView : ContentView
 			VerticalOptions = LayoutOptions.Center,
 		};
 		layout.Add(GridLayer(Paths[Kind], Color, Filled ? new SolidColorBrush(Color) : Brush.Transparent, Size / GridSize, Filled ? 0 : StrokeWidth));
+		if (Kind == IconKind.Wifi)
+		{
+			layout.Add(GridLayer(WifiDot, Color, new SolidColorBrush(Color), Size / GridSize, 0));
+		}
+
 		return layout;
 	}
 
