@@ -44,10 +44,15 @@ public static partial class MobileSharedServices
 	private static ISpeechReader CreateSpeechReader(IServiceProvider services)
 	{
 		var platform = services.GetRequiredService<IPlatformServices>();
+#if NO_SPEECH_ENGINES
+		// Slice 305: an app without the engines (Dino Reader on Android and iOS) only has the phone's own voice; the Debug test hooks still resolve a reader. The switch is never defined for the Windows head (Mobile.Shared.csproj).
+		return platform.CreateFallbackReader();
+#else
 		return new CompositeSpeechReader(
 			platform.CreateNeuralReader(),
 			platform.CreateFallbackReader(),
 			services.GetRequiredService<IVoiceModelService>(),
 			services.GetService<IFallbackSink>()); // Slice 273 part B: the app's sink, or none
+#endif
 	}
 }

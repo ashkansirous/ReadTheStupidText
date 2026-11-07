@@ -24,6 +24,30 @@
 		     project it builds: this library is never an MSIX, so it keeps its own value (see the
 		     TreatAsLocalProperty on <Project>). -->
 
+		<!-- Slice 305: per-app switches, true unless the app says false (a global property from its ProjectReference wins).
+		     IncludeSpeechEngines: sherpa-onnx, onnxruntime (the managed binding and PaddleOCR) and the neural readers.
+		     IncludeMlKit: ML Kit (Android Document Scanner, Text Recognition, Translate; iOS Translate).
+		     Read The Stupid Text sets both true; Dino Reader sets both false, so none of it reaches its packages.
+		     Files and registrations behind them: NO_SPEECH_ENGINES / NO_MLKIT below and in the source. The Windows head keeps
+		     Infrastructure (logging), so its engine DLLs stay (see DinoReader.App.csproj). -->
+		<!-- One rule: the switches count only for the android and ios target platforms. For every other target (Dino Reader's Windows head)
+		     they are treated as true, so no source, package, define or output path changes there. Everything below reads SharedSpeechEngines / SharedMlKit. -->
+		<SharedSwitchesApply Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' Or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">true</SharedSwitchesApply>
+		<SharedSpeechEngines>true</SharedSpeechEngines>
+		<SharedMlKit>true</SharedMlKit>
+		<SharedSpeechEngines Condition="'$(SharedSwitchesApply)' == 'true' And '$(IncludeSpeechEngines)' == 'false'">false</SharedSpeechEngines>
+		<SharedMlKit Condition="'$(SharedSwitchesApply)' == 'true' And '$(IncludeMlKit)' == 'false'">false</SharedMlKit>
+		<DefineConstants Condition="'$(SharedSpeechEngines)' == 'false'">$(DefineConstants);NO_SPEECH_ENGINES</DefineConstants>
+		<DefineConstants Condition="'$(SharedMlKit)' == 'false'">$(DefineConstants);NO_MLKIT</DefineConstants>
+
+		<!-- Slice 305: the off-variant (an app that switched an engine off) builds into its own obj and bin folders, so a build of the
+		     other app never picks up this variant's Mobile.Shared.dll (both variants share one project folder). The restore assets file
+		     stays shared on purpose: it is the same package set for both (PrivateAssets keeps the extras from flowing on). -->
+		<MobileSharedVariant Condition="'$(SharedSpeechEngines)' == 'false' Or '$(SharedMlKit)' == 'false'">lean</MobileSharedVariant>
+		<MobileSharedPlatformSegment Condition="'$(MobileSharedVariant)' != '' And '$(Platform)' != '' And '$(Platform)' != 'AnyCPU'">$(Platform)\</MobileSharedPlatformSegment>
+		<IntermediateOutputPath Condition="'$(MobileSharedVariant)' != ''">obj\$(MobileSharedVariant)\$(MobileSharedPlatformSegment)$(Configuration)\</IntermediateOutputPath>
+		<OutputPath Condition="'$(MobileSharedVariant)' != ''">bin\$(MobileSharedVariant)\$(MobileSharedPlatformSegment)$(Configuration)\</OutputPath>
+
 		<RootNamespace>ReadTheStupidText.Mobile.Shared</RootNamespace>
 		<UseMaui>true</UseMaui>
 		<SingleProject>true</SingleProject>
@@ -51,19 +75,21 @@
 	     carries ML Kit's Latin recognizer (a few MB of model plus native libraries); the
 	     language OCR packs are still downloaded, not bundled. The sherpa-onnx packaging (and why
 	     it is imported by the apps too) is in AndroidSherpaPackaging.props. -->
-	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' And '$(SharedMlKit)' != 'false'">
 		<!-- Slice 45: ML Kit Document Scanner, delivered by Google Play services (no native library
 		     or model in the APK). -->
-		<PackageReference Include="Xamarin.GooglePlayServices.MLKit.DocumentScanner" Version="116.0.0.4" />
+		<PackageReference Include="Xamarin.GooglePlayServices.MLKit.DocumentScanner" Version="$(MlKitDocumentScannerVersion)" PrivateAssets="all" />
 
 		<!-- ML Kit text recognition for MlKitImageTextExtractor (Platforms/Android). -->
-		<PackageReference Include="Xamarin.Google.MLKit.TextRecognition" Version="116.0.1.8" />
-		<PackageReference Include="Xamarin.GooglePlayServices.Tasks" Version="118.4.1.3" />
+		<PackageReference Include="Xamarin.Google.MLKit.TextRecognition" Version="$(MlKitTextRecognitionVersion)" PrivateAssets="all" />
+		<PackageReference Include="Xamarin.GooglePlayServices.Tasks" Version="$(MlKitGmsTasksVersion)" PrivateAssets="all" />
 
 		<!-- Slice 54/95: ML Kit Translation for MlKitTranslator (Platforms/Android), registered by both apps: a ~30 MB
 		     model per language is downloaded by ML Kit on first use (see PRIVACY.md). -->
-		<PackageReference Include="Xamarin.Google.MLKit.Translate" Version="117.0.3.9" />
+		<PackageReference Include="Xamarin.Google.MLKit.Translate" Version="$(MlKitTranslateVersion)" PrivateAssets="all" />
+	</ItemGroup>
 
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
 		<!-- The scanner and the text recognizer both pull Fragment.Ktx 1.8.8.1 while the MAUI graph
 		     resolves Fragment 1.9.0 (which already contains the ktx classes): D8 fails with
 		     duplicate classes. Pin the matching Ktx build. -->
@@ -83,8 +109,8 @@
 	     NuGet, so OnnxRuntimeVersion is 1.28.0); bump both together and re-check the unzipped APK
 	     (CLAUDE.md native-dependency rule). Windows bundles the same onnxruntime (Slice 245), so one
 	     version serves every platform. -->
-	<ItemGroup>
-		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="$(OnnxRuntimeVersion)" />
+	<ItemGroup Condition="'$(SharedSpeechEngines)' != 'false'">
+		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="$(OnnxRuntimeVersion)" PrivateAssets="all" />
 	</ItemGroup>
 
 	<!-- Slice 67: the iOS engine (Platforms/iOS) compiles here against the managed sherpa-onnx
@@ -93,17 +119,17 @@
 	     linked by each app project, which is the one that needs them. The version is SherpaOnnxVersion
 	     (SherpaOnnxVersion.props), the same one the apps' native framework uses. The
 	     package's nuspec depends on every runtime.* native package; none has an iOS asset. -->
-	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
-		<PackageReference Include="org.k2fsa.sherpa.onnx" Version="$(SherpaOnnxVersion)" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.android-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.android-x64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-x64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-x64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x86" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' And '$(SharedSpeechEngines)' != 'false'">
+		<PackageReference Include="org.k2fsa.sherpa.onnx" Version="$(SherpaOnnxVersion)" PrivateAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.android-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" PrivateAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.android-x64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" PrivateAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" PrivateAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-x64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" PrivateAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" PrivateAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-x64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" PrivateAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" PrivateAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" PrivateAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x86" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" PrivateAssets="all" />
 	</ItemGroup>
 
 	<!-- Slice 160: ML Kit Translate on iOS (Platforms/iOS/MlKitTranslator.cs), the twin of the Android package above.
@@ -114,11 +140,11 @@
 		<DefineConstants>$(DefineConstants);IOS_SIMULATOR_NO_MLKIT</DefineConstants>
 		<IosSimulatorNoMlKit>true</IosSimulatorNoMlKit>
 	</PropertyGroup>
-	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' And !$(RuntimeIdentifier.StartsWith('iossimulator')) And '$(IosSimulatorBuild)' != 'true'">
-		<PackageReference Include="EngageSolutionsGroup.Apple.MLKitTranslate" Version="8.1.0" />
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' And !$(RuntimeIdentifier.StartsWith('iossimulator')) And '$(IosSimulatorBuild)' != 'true' And '$(SharedMlKit)' != 'false'">
+		<PackageReference Include="EngageSolutionsGroup.Apple.MLKitTranslate" Version="$(MlKitTranslateIosVersion)" PrivateAssets="all" />
 	</ItemGroup>
-	<!-- Removed in a target because the MAUI SDK adds the Platforms/iOS files after this point. -->
-	<Target Name="DropMlKitTranslatorOnSimulator" BeforeTargets="CoreCompile;XamarinPreBuild;BeforeCompile" Condition="'$(IosSimulatorNoMlKit)' == 'true'">
+	<!-- Removed in a target because the MAUI SDK adds the Platforms/iOS files after this point. Slice 305: also when the app sets IncludeMlKit=false. -->
+	<Target Name="DropIosMlKitTranslator" BeforeTargets="CoreCompile;XamarinPreBuild;BeforeCompile" Condition="'$(IosSimulatorNoMlKit)' == 'true' Or '$(SharedMlKit)' == 'false'">
 		<ItemGroup>
 			<Compile Remove="Platforms\iOS\MlKitTranslator.cs" />
 		</ItemGroup>
@@ -131,7 +157,28 @@
 		<ProjectReference Include="..\ReadTheStupidText.Infrastructure\ReadTheStupidText.Infrastructure.csproj" />
 	</ItemGroup>
 
-	<Import Project="..\AndroidSherpaPackaging.props" />
+	<Import Project="..\AndroidSherpaPackaging.props" Condition="'$(SharedSpeechEngines)' != 'false'" />
+	<!-- Slice 305: the sherpa packages the props declare are for compiling Mobile.Shared only; an app that links the engine imports the same props itself, so they must not flow to one that does not (Dino Reader).
+	     NuGet restore never sees an app's per-reference properties, so PrivateAssets is the only switch. -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' And '$(SharedSpeechEngines)' != 'false'">
+		<PackageReference Update="org.k2fsa.sherpa.onnx*" PrivateAssets="all" />
+	</ItemGroup>
+
+	<!-- Slice 305: the sources that need the engines or ML Kit are not compiled for an app that switched them off. Removed in targets because
+	     the MAUI SDK adds the Platforms\ files late. Their registrations and call sites sit behind NO_SPEECH_ENGINES / NO_MLKIT. -->
+	<Target Name="DropSpeechEngineSources" BeforeTargets="CoreCompile;XamarinPreBuild;BeforeCompile" Condition="'$(SharedSpeechEngines)' == 'false'">
+		<ItemGroup>
+			<Compile Remove="KokoroEngineConfig.cs" />
+			<Compile Remove="Ocr\LanguageImageTextExtractor.cs;Ocr\OnnxOcrInference.cs;Ocr\PaddleOcrEngine.cs" />
+			<Compile Remove="Platforms\Android\AndroidSupertonicSpeechReader.cs" />
+			<Compile Remove="Platforms\iOS\IosSupertonicSpeechReader*.cs;Platforms\iOS\IosSherpaLibrary.cs;Platforms\iOS\IosTtsEngine.cs" />
+		</ItemGroup>
+	</Target>
+	<Target Name="DropMlKitSources" BeforeTargets="CoreCompile;XamarinPreBuild;BeforeCompile" Condition="'$(SharedMlKit)' == 'false'">
+		<ItemGroup>
+			<Compile Remove="Platforms\Android\AndroidDocumentScanner.cs;Platforms\Android\MlKitImageTextExtractor.cs;Platforms\Android\MlKitInit.cs;Platforms\Android\MlKitTranslator.cs" />
+		</ItemGroup>
+	</Target>
 
 	<!-- Slice 162: the scripted-flow test hooks exist in Debug only. Every file is also inside #if DEBUG; this drops the files
 	     themselves from any other configuration. Removed in a target because the MAUI SDK adds Platforms\ files late. -->

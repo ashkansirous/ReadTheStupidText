@@ -62,14 +62,11 @@ public class MainActivity : MauiAppCompatActivity
 		controller.AppearanceLightNavigationBars = dark;
 	}
 
-	// The ML Kit document scanner returns only through the legacy activity-result channel.
-	// Without this forward its pending scan never completed (cancel, failure or a missing module
-	// alike) and the Add page stayed busy until restart. AndroidDocumentScanner ignores other codes.
+	// Play's in-app update returns through the legacy activity-result channel. (Slice 305: Dino links no ML Kit document scanner any more, so there is no scan to forward.)
 #pragma warning disable CS0618
 	protected override void OnActivityResult(int requestCode, Result resultCode, Android.Content.Intent? data)
 	{
 		base.OnActivityResult(requestCode, resultCode, data);
-		AndroidDocumentScanner.HandleActivityResult(requestCode, resultCode, data);
 		StoreUpdater.HandleActivityResult(requestCode, resultCode);
 	}
 #pragma warning restore CS0618

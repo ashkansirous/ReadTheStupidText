@@ -110,7 +110,7 @@ jobs:
         if: ${{ env.SIGN_RELEASE != 'true' }}
         run: |
           dotnet publish src/DinoReader.App/DinoReader.App.csproj -f net10.0-android -c Release -p:AndroidPackageFormat=aab
-          bash .github/scripts/check-android-natives.sh "$PUBLISH_DIR"/uk.sirous.dinoreader-Signed.aab
+          bash .github/scripts/check-android-natives.sh "$PUBLISH_DIR"/uk.sirous.dinoreader-Signed.aab --none
 
       - name: Decode upload keystore
         if: ${{ env.SIGN_RELEASE == 'true' }}
@@ -143,7 +143,7 @@ jobs:
 
       - name: Check the native libraries in the signed .aab
         if: ${{ env.SIGN_RELEASE == 'true' }}
-        run: bash .github/scripts/check-android-natives.sh "dist/DinoReader-${VERSION}.aab"
+        run: bash .github/scripts/check-android-natives.sh "dist/DinoReader-${VERSION}.aab" --none
 
       # APK is the sideload format (adb install / tap to install).
       - name: Release build (signed .apk)
@@ -167,7 +167,7 @@ jobs:
 
       - name: Check the native libraries in the signed .apk
         if: ${{ env.SIGN_RELEASE == 'true' }}
-        run: bash .github/scripts/check-android-natives.sh "dist/DinoReader-${VERSION}.apk"
+        run: bash .github/scripts/check-android-natives.sh "dist/DinoReader-${VERSION}.apk" --none
 
       - name: Upload .aab + .apk to the draft release
         if: ${{ env.SIGN_RELEASE == 'true' }}
