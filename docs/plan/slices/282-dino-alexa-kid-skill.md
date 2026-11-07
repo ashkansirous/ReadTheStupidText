@@ -1,6 +1,6 @@
 # Slice 282 — Dino: an Alexa kid skill that reads the store books
 
-*Built 2026-11-07 (night 2026-11-07-1412 wave 6), PR #935, not merged; not yet tried on a real Echo.* *Planned 2026-11-06; item 1 decided 2026-11-07 (see Work).* Server only (Cloudflare Worker) plus the skill definition; the apps do not change.
+*Built 2026-11-07 (night 2026-11-07-1412 wave 6), merged as PR #935 (e1d0a461); not yet tried on a real Echo.* *Planned 2026-11-06; item 1 decided 2026-11-07 (see Work).* Server only (Cloudflare Worker) plus the skill definition; the apps do not change.
 
 **Depends on:** Slice 281 (the listening tracks).
 **Touches:** `alexa/skill-package/**` (new: manifest, interaction models en-GB and en-US), `worker/alexa*.ts` (new),
@@ -139,7 +139,7 @@ User, 2026-11-06: Dino books on Alexa, no login, no parent recordings. Facts che
 
 *Outstanding (pre-existing, not this slice):* `wrangler.jsonc` has observability enabled for every route while the Sonos and Alexa privacy paragraphs say the receiving server may log and "Dino Reader itself does not receive or keep" that log. Check what Workers Logs record and make the text true, or switch logging off for those routes (raised by the medium, check 2 and check 3 reviews).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-07)
 
 - The Alexa endpoint fails closed: an empty `ALEXA_SKILL_ID` (`wrangler.jsonc`, `wrangler.workers-dev.jsonc`) rejects every request with 400, because Amazon's signature proves only that the sender is Alexa. Do not add a fail-open path. `worker/alexa-verify.ts`. (Slice 282: docs/plan/slices/282-dino-alexa-kid-skill.md)
 - Alexa AudioPlayer and PlaybackController replies carry directives only, never speech; the server keeps no playback state (the token and offset come from each request). `worker/alexa.ts`. (Slice 282: docs/plan/slices/282-dino-alexa-kid-skill.md)
