@@ -43,31 +43,31 @@ per language. Delete and re-record touch only the picked language. The "use my r
 
 ## Work
 
-- [ ] **A. Core model, smallest end to end first.** The recording key includes the language (page + first/last sentence + language). Do
+- [x] **A. Core model, smallest end to end first.** The recording key includes the language (page + first/last sentence + language). Do
       the same for whole-page clips and the file name, e.g. `rec-<lang>-<page>-<first>-<last>-<hex>.m4a`. Old names and old keys still load.
       `PlaysClip(story, key, readingLanguage)` compares with the reading language. Add `StoryRecordings.Count(story, language)` and use
       it for the progress label.
-- [ ] **B. Migration.** On load, a recording with no language key, or one whose language came from the old `story.Language`, is filed
+- [x] **B. Migration.** On load, a recording with no language key, or one whose language came from the old `story.Language`, is filed
       under the app's main language at the moment of migration (decision 4). The migration runs once per book and is saved. Backups and restore
       merge (`StoryPackageReader`, Slice 230 order: stage, `UpdateAsync`, `.bak` rollback) carry the language per clip. A pre-286 backup
       restores into the main language.
-- [ ] **C. Recording screen.** Add a language row to `RecordIntroPage` (story languages only, app language picked by default, per-language
+- [x] **C. Recording screen.** Add a language row to `RecordIntroPage` (story languages only, app language picked by default, per-language
       progress). `RecordPage` and `RecordPieces` take the picked language: the card text comes from the book's translation in that language (the same
       source the reader shows, `StoryTranslator`), and pieces are cut and measured in that language. Listen back, re-record, delete and Undo act on
       that language's clips only. Right-to-left languages (Farsi, Arabic) lay out the card text right to left, following the existing RTL rules
       in `src/DinoReader.App/CLAUDE.md`.
-- [ ] **D. Reading.** Drop the recordings condition from `LanguagePick.BookSwitchable`, so the picker shows whenever the book has a choice.
+- [x] **D. Reading.** Drop the recordings condition from `LanguagePick.BookSwitchable`, so the picker shows whenever the book has a choice.
       `ReadingSession` and `ReadingClips` pass the reading language to `PlaysClip`. Switching language mid-book switches which recordings play. The
       page shows that language's text as usual.
-- [ ] **E. Strings** for the language row and progress label, in every app language.
-- [ ] **F. Tests.** Core unit tests cover:
+- [x] **E. Strings** for the language row and progress label, in every app language.
+- [x] **F. Tests.** Core unit tests cover:
       - keys with language, and two languages on the same piece not overwriting each other;
       - old keys and file names migrating to the main language;
       - `PlaysClip` by reading language, and the `BookSwitchable` change;
       - restore of old and new backups.
 
       Extend the scripted emulator record flow with two story languages: record one piece in each, listen back, read in each and hear the right clip.
-- [ ] **G. Docs.** Update the parent-recordings rule in `src/DinoReader.App/CLAUDE.md`: drop "matches the story language", and say clips are per story
+- [x] **G. Docs.** Update the parent-recordings rule in `src/DinoReader.App/CLAUDE.md`: drop "matches the story language", and say clips are per story
       language, keyed by language, and played in the reading language.
 
 ## Verification

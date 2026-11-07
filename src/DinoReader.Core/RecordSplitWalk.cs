@@ -21,10 +21,10 @@ public sealed record RecordChoice(RecordMode Mode, IReadOnlySet<string> Ticked);
 /// </summary>
 public static class RecordSplitWalk
 {
-    /// <summary>The clip that covers every sentence of <paramref name="piece"/>, or null when the piece is not (fully) recorded.</summary>
+    /// <summary>The clip, in the piece's own language (its key's, Slice 286), that covers every sentence of <paramref name="piece"/>, or null when the piece is not (fully) recorded.</summary>
     public static StoryClipKey? ClipOf(Story story, RecordPiece piece) =>
         StoryRecordings.Clips(story).Select(c => (StoryClipKey?)c.Key)
-            .FirstOrDefault(k => k!.Value.Page == piece.Key.Page && k.Value.First <= piece.Key.First && piece.Key.Last <= k.Value.Last);
+            .FirstOrDefault(k => k!.Value.Language == piece.Key.Language && k.Value.Page == piece.Key.Page && k.Value.First <= piece.Key.First && piece.Key.Last <= k.Value.Last);
 
     public static bool IsRecorded(Story story, RecordPiece piece) => ClipOf(story, piece) is not null;
 
@@ -46,44 +46,48 @@ public static class RecordSplitWalk
     }
 
     /// <summary>The mode to open a book in when none is remembered: a book whose recordings are all whole pages (made before Slice 279) opens as whole pages, any other as per character.</summary>
-    public static RecordMode DefaultMode(Story story)
+    public static RecordMode DefaultMode(Story story, string language)
     {
-        var clips = StoryRecordings.Clips(story).ToList();
+        var clips = StoryRecordings.Clips(story, language).ToList();
         return clips.Count > 0 && clips.All(c => c.Key.IsWholePage) ? RecordMode.WholePage : RecordMode.PerCharacter;
     }
 
     /// <summary>The count the book sheet shows (mock frame 188): lines recorded of all lines for a per-character book, pages recorded of all pages for a whole-page book. A page counts as recorded when every sentence of it is covered.</summary>
-    public static RecordProgress Progress(Story story, RecordBook book, RecordMode mode)
+    public static RecordProgress Progress(Story story, RecordBook book, RecordMode mode, string language)
     {
         if (mode == RecordMode.WholePage)
         {
-            return PageProgress(story, book);
+            return PageProgress(story, book, language);
         }
 
-        IReadOnlyList<RecordPiece> lines = RecordSplit.ByCharacter(book.Sentences, book.Speakers.Select(s => s.Id).ToHashSet());
+        IReadOnlyList<RecordPiece> lines = InLanguage(RecordSplit.ByCharacter(book.Sentences, book.Speakers.Select(s => s.Id).ToHashSet()), language);
         return new RecordProgress(RecordedCount(story, lines), lines.Count, RecordUnit.Lines);
     }
 
-    /// <summary>How many lines of one speaker are recorded, of that speaker's lines.</summary>
-    public static RecordProgress SpeakerProgress(Story story, RecordBook book, string speaker)
+    /// <summary>How many lines of one speaker are recorded in <paramref name="language"/>, of that speaker's lines.</summary>
+    public static RecordProgress SpeakerProgress(Story story, RecordBook book, string speaker, string language)
     {
-        IReadOnlyList<RecordPiece> lines = RecordSplit.ByCharacter(book.Sentences, new HashSet<string> { speaker });
+        IReadOnlyList<RecordPiece> lines = InLanguage(RecordSplit.ByCharacter(book.Sentences, new HashSet<string> { speaker }), language);
         return new RecordProgress(RecordedCount(story, lines), lines.Count, RecordUnit.Lines);
     }
 
-    private static RecordProgress PageProgress(Story story, RecordBook book)
+    /// <summary><paramref name="pieces"/> with every key filed under <paramref name="language"/> (the split itself knows no language, Slice 286).</summary>
+    public static IReadOnlyList<RecordPiece> InLanguage(IReadOnlyList<RecordPiece> pieces, string language) =>
+        pieces.Select(p => p with { Key = p.Key.In(language) }).ToList();
+
+    private static RecordProgress PageProgress(Story story, RecordBook book, string language)
     {
         var pages = book.Sentences.GroupBy(s => s.Page).ToList();
-        int done = pages.Count(page => page.All(s => StoryRecordings.ClipCovering(story, s.Page, s.Index) is not null));
+        int done = pages.Count(page => page.All(s => StoryRecordings.ClipCovering(story, s.Page, s.Index, language) is not null));
         return new RecordProgress(done, pages.Count, RecordUnit.Pages);
     }
 
     /// <summary>The recordings "Listen and change" walks, in story order, each clip once (mock frame 190): in per-character mode the clips of ticked speakers, in whole-page mode all of them.
     /// A piece is the clip's own sentences, its speaker the one who says the first of them.</summary>
-    public static IReadOnlyList<RecordPiece> Recorded(Story story, RecordBook book, RecordMode mode, IReadOnlySet<string> ticked)
+    public static IReadOnlyList<RecordPiece> Recorded(Story story, RecordBook book, RecordMode mode, IReadOnlySet<string> ticked, string language)
     {
         var pieces = new List<RecordPiece>();
-        foreach (StoryClipKey clip in StoryRecordings.Clips(story).Select(c => c.Key))
+        foreach (StoryClipKey clip in StoryRecordings.Clips(story, language).Select(c => c.Key))
         {
             List<RecordSentence> covered = book.Sentences.Where(s => s.Page == clip.Page && s.Index >= clip.First && s.Index <= clip.Last).ToList();
             if (covered.Count == 0 || (mode == RecordMode.PerCharacter && !ticked.Contains(covered[0].Speaker)))
@@ -91,7 +95,7 @@ public static class RecordSplitWalk
                 continue;
             }
 
-            var key = new StoryClipKey(clip.Page, covered[0].Index, covered[^1].Index);
+            var key = new StoryClipKey(clip.Page, covered[0].Index, covered[^1].Index, clip.Language);
             pieces.Add(new RecordPiece(key, covered[0].Speaker, RecordSplit.TextOf(covered)));
         }
 

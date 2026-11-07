@@ -110,6 +110,10 @@ public static class AppResources
 	public static string Record_Storyteller => Get();
 	public static string Record_Lines => Get();
 	public static string Record_OfCount => Get();
+	public static string Record_Language => Get();
+	public static string Record_LanguagePages => Get();
+	public static string Record_LanguageNone => Get();
+	public static string Record_LanguageUnavailable => Get();
 	public static string Record_Start => Get();
 	public static string Record_LongPages => Get();
 	public static string Record_Says => Get();

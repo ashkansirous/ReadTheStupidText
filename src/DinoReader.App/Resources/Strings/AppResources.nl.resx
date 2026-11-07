@@ -226,6 +226,10 @@
   <data name="Record_Storyteller" xml:space="preserve"><value>Verteller</value></data>
   <data name="Record_Lines" xml:space="preserve"><value>{0} regels</value></data>
   <data name="Record_OfCount" xml:space="preserve"><value>{0} van {1}</value></data>
+  <data name="Record_Language" xml:space="preserve"><value>Opnemen in</value></data>
+  <data name="Record_LanguagePages" xml:space="preserve"><value>{0} van {1} pagina’s</value></data>
+  <data name="Record_LanguageNone" xml:space="preserve"><value>Nog niets</value></data>
+  <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}: de woorden konden niet worden opgehaald.</value></data>
   <data name="Record_Start" xml:space="preserve"><value>Begin met opnemen</value></data>
   <data name="Record_LongPages" xml:space="preserve"><value>Lange pagina's komen in delen, zodat de woorden altijd op het scherm passen.</value></data>
   <data name="Record_Says" xml:space="preserve"><value>{0} zegt:</value></data>

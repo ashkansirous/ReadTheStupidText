@@ -226,6 +226,10 @@
   <data name="Record_Storyteller" xml:space="preserve"><value>Fortæller</value></data>
   <data name="Record_Lines" xml:space="preserve"><value>{0} replikker</value></data>
   <data name="Record_OfCount" xml:space="preserve"><value>{0} af {1}</value></data>
+  <data name="Record_Language" xml:space="preserve"><value>Indtal på</value></data>
+  <data name="Record_LanguagePages" xml:space="preserve"><value>{0} af {1} sider</value></data>
+  <data name="Record_LanguageNone" xml:space="preserve"><value>Intet endnu</value></data>
+  <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}: ordene kunne ikke hentes.</value></data>
   <data name="Record_Start" xml:space="preserve"><value>Start optagelsen</value></data>
   <data name="Record_LongPages" xml:space="preserve"><value>Lange sider kommer i dele, så ordene altid kan være på skærmen.</value></data>
   <data name="Record_Says" xml:space="preserve"><value>{0} siger:</value></data>

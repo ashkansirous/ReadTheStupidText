@@ -13,9 +13,9 @@ public sealed class RecordCommitTests
     [Fact]
     public void A_stored_file_is_read_back_only_for_its_own_clip()
     {
-        var piece = new StoryClipKey(2, 0, 1);
+        var piece = new StoryClipKey(2, 0, 1, "en");
         string own = StoryRecordings.NewFileName(piece);
-        string ofPage = StoryRecordings.NewFileName(StoryClipKey.OfPage(0));
+        string ofPage = StoryRecordings.NewFileName(StoryClipKey.OfPage(0, "en"));
         Story story = MakeStory("A.", "B.", "C. D.") with
         {
             Recordings = new Dictionary<int, PageRecording> { [0] = new("en", 1, ofPage), [1] = new("en", 1, "rec-1-0123abcd.m4a") },
@@ -32,8 +32,8 @@ public sealed class RecordCommitTests
     [Fact]
     public void A_stored_file_of_another_clip_or_a_duplicate_is_never_read_back()
     {
-        var piece = new StoryClipKey(1, 0, 0);
-        string pageFile = StoryRecordings.NewFileName(StoryClipKey.OfPage(0));
+        var piece = new StoryClipKey(1, 0, 0, "en");
+        string pageFile = StoryRecordings.NewFileName(StoryClipKey.OfPage(0, "en"));
         Story story = MakeStory("A.", "B.") with
         {
             Recordings = new Dictionary<int, PageRecording> { [0] = new("en", 1, pageFile) },
@@ -50,16 +50,16 @@ public sealed class RecordCommitTests
     [Fact]
     public void A_clip_fits_a_page_only_when_all_its_sentences_exist()
     {
-        Assert.True(StoryClipKey.OfPage(0).FitsPage(1));
-        Assert.True(new StoryClipKey(0, 0, 2).FitsPage(3));
-        Assert.False(new StoryClipKey(0, 0, 2).FitsPage(2));
-        Assert.False(new StoryClipKey(0, 1, 1).FitsPage(1));
+        Assert.True(StoryClipKey.OfPage(0, "en").FitsPage(1));
+        Assert.True(new StoryClipKey(0, 0, 2, "en").FitsPage(3));
+        Assert.False(new StoryClipKey(0, 0, 2, "en").FitsPage(2));
+        Assert.False(new StoryClipKey(0, 1, 1, "en").FitsPage(1));
     }
 
     [Fact]
     public void A_starter_move_carries_the_fresh_file_name_it_was_stored_under()
     {
-        var piece = new StoryClipKey(0, 0, 0);
+        var piece = new StoryClipKey(0, 0, 0, "en");
         string fresh = StoryRecordings.NewFileName(piece);
         Story stored = MakeStory("A.", "B.") with
         {
@@ -80,7 +80,7 @@ public sealed class RecordCommitTests
     [Fact]
     public void A_fresh_file_name_is_a_recording_name_of_its_clip_and_never_repeats()
     {
-        var piece = new StoryClipKey(2, 0, 1);
+        var piece = new StoryClipKey(2, 0, 1, "en");
 
         string first = StoryRecordings.NewFileName(piece);
         string second = StoryRecordings.NewFileName(piece);
@@ -88,21 +88,21 @@ public sealed class RecordCommitTests
         Assert.NotEqual(first, second);
         Assert.True(StoryRecordings.IsRecordingFileName(first));
         Assert.True(StoryRecordings.IsFreshFileNameOf(first, piece));
-        Assert.False(StoryRecordings.IsFreshFileNameOf(first, new StoryClipKey(2, 0, 2)));
-        Assert.StartsWith("rec-3-1-2-", first);
-        Assert.StartsWith("rec-4-", StoryRecordings.NewFileName(StoryClipKey.OfPage(3)));
-        Assert.False(StoryRecordings.IsFreshFileNameOf("rec-3-1-2.m4a", piece));
+        Assert.False(StoryRecordings.IsFreshFileNameOf(first, new StoryClipKey(2, 0, 2, "en")));
+        Assert.StartsWith("rec-en-3-1-2-", first);
+        Assert.StartsWith("rec-en-4-", StoryRecordings.NewFileName(StoryClipKey.OfPage(3, "en")));
+        Assert.False(StoryRecordings.IsFreshFileNameOf("rec-en-3-1-2.m4a", piece));
     }
 
     [Fact]
     public void A_clip_without_a_stored_file_name_uses_its_usual_one()
     {
-        var piece = new StoryClipKey(0, 1, 1);
+        var piece = new StoryClipKey(0, 1, 1, "en");
         Story old = StoryRecordings.WithClip(MakeStory("A. B."), piece, new PageRecording("en", 3));
         string fresh = StoryRecordings.NewFileName(piece);
         Story named = StoryRecordings.WithClip(old, piece, new PageRecording("en", 3, fresh));
 
-        Assert.Equal("rec-1-2-2.m4a", StoryRecordings.FileOf(old, piece));
+        Assert.Equal("rec-en-1-2-2.m4a", StoryRecordings.FileOf(old, piece));
         Assert.Equal(fresh, StoryRecordings.FileOf(named, piece));
         Assert.Equal([fresh], StoryRecordings.Files(named));
     }
@@ -110,16 +110,16 @@ public sealed class RecordCommitTests
     [Fact]
     public void A_stored_name_that_is_not_a_recording_file_name_is_not_trusted()
     {
-        var piece = new StoryClipKey(0, 1, 1);
+        var piece = new StoryClipKey(0, 1, 1, "en");
         Story story = StoryRecordings.WithClip(MakeStory("A. B."), piece, new PageRecording("en", 3, "../evil.m4a"));
 
-        Assert.Equal("rec-1-2-2.m4a", StoryRecordings.FileOf(story, piece));
+        Assert.Equal("rec-en-1-2-2.m4a", StoryRecordings.FileOf(story, piece));
     }
 
     [Fact]
     public void A_stored_file_name_survives_the_story_file_and_is_left_out_when_it_is_the_usual_one()
     {
-        var piece = new StoryClipKey(0, 1, 1);
+        var piece = new StoryClipKey(0, 1, 1, "en");
         string fresh = StoryRecordings.NewFileName(piece);
         Story named = StoryRecordings.WithClip(MakeStory("A. B."), piece, new PageRecording("en", 3, fresh));
         string json = StoryJson.Serialize(named);
@@ -130,8 +130,8 @@ public sealed class RecordCommitTests
         Assert.Contains(fresh, json);
         Assert.Equal(fresh, StoryRecordings.ClipOf(back, piece)!.File);
         Assert.Null(StoryRecordings.ClipOf(foreign, piece)!.File); // a recording name that is not this clip's own fresh name is not read back (check 2, finding 1)
-        Assert.Equal("rec-1-2-2.m4a", StoryRecordings.FileOf(foreign, piece, name => name == "rec-9-aaaaaaaa.m4a"));
-        Assert.Equal("rec-1-2-2.m4a", StoryRecordings.FileOf(foreign, piece, _ => false)); // a stored name whose file is not there reads the clip's usual name
+        Assert.Equal("rec-en-1-2-2.m4a", StoryRecordings.FileOf(foreign, piece, name => name == "rec-9-aaaaaaaa.m4a"));
+        Assert.Equal("rec-en-1-2-2.m4a", StoryRecordings.FileOf(foreign, piece, _ => false)); // a stored name whose file is not there reads the clip's usual name
         Assert.Null(StoryRecordings.ClipOf(StoryJson.Deserialize(json.Replace(fresh, "../evil.m4a")), piece)!.File);
         Assert.DoesNotContain("\"File\"", StoryJson.Serialize(StoryRecordings.WithClip(MakeStory("A. B."), piece, new PageRecording("en", 3))));
     }
@@ -140,28 +140,28 @@ public sealed class RecordCommitTests
     public void A_new_clip_replaces_the_files_of_every_clip_it_shares_a_sentence_with_its_own_old_one_included()
     {
         Story story = MakeStory("A. B. C. D.");
-        var exact = new StoryClipKey(0, 0, 1);
-        var other = new StoryClipKey(0, 3, 3);
+        var exact = new StoryClipKey(0, 0, 1, "en");
+        var other = new StoryClipKey(0, 3, 3, "en");
         string exactFile = StoryRecordings.NewFileName(exact);
         story = StoryRecordings.WithClip(story, exact, new PageRecording("en", 2, exactFile));
         story = StoryRecordings.WithClip(story, other, new PageRecording("en", 2));
 
         Assert.Equal([exactFile], StoryRecordings.ReplacedFiles(story, exact));
-        Assert.Equal([exactFile], StoryRecordings.ReplacedFiles(story, new StoryClipKey(0, 1, 2)));
-        Assert.Empty(StoryRecordings.ReplacedFiles(story, new StoryClipKey(0, 2, 2)));
+        Assert.Equal([exactFile], StoryRecordings.ReplacedFiles(story, new StoryClipKey(0, 1, 2, "en")));
+        Assert.Empty(StoryRecordings.ReplacedFiles(story, new StoryClipKey(0, 2, 2, "en")));
     }
 
     [Fact]
     public void A_take_narrower_than_an_old_clip_replaces_beyond_itself_and_an_equal_or_wider_one_does_not()
     {
         Story whole = StoryRecordings.With(MakeStory("A. B. C."), 0, new PageRecording("en", 5));
-        Story piece = StoryRecordings.WithClip(MakeStory("A. B. C."), new StoryClipKey(0, 0, 1), new PageRecording("en", 5));
+        Story piece = StoryRecordings.WithClip(MakeStory("A. B. C."), new StoryClipKey(0, 0, 1, "en"), new PageRecording("en", 5));
 
-        Assert.True(StoryRecordings.ReplacesBeyond(whole, new StoryClipKey(0, 1, 1)));
-        Assert.True(StoryRecordings.ReplacesBeyond(piece, new StoryClipKey(0, 1, 2)));
-        Assert.False(StoryRecordings.ReplacesBeyond(piece, new StoryClipKey(0, 0, 1)));
-        Assert.False(StoryRecordings.ReplacesBeyond(piece, new StoryClipKey(0, 0, 2)));
-        Assert.False(StoryRecordings.ReplacesBeyond(piece, new StoryClipKey(0, 2, 2)));
+        Assert.True(StoryRecordings.ReplacesBeyond(whole, new StoryClipKey(0, 1, 1, "en")));
+        Assert.True(StoryRecordings.ReplacesBeyond(piece, new StoryClipKey(0, 1, 2, "en")));
+        Assert.False(StoryRecordings.ReplacesBeyond(piece, new StoryClipKey(0, 0, 1, "en")));
+        Assert.False(StoryRecordings.ReplacesBeyond(piece, new StoryClipKey(0, 0, 2, "en")));
+        Assert.False(StoryRecordings.ReplacesBeyond(piece, new StoryClipKey(0, 2, 2, "en")));
     }
 
     [Fact]
@@ -173,7 +173,7 @@ public sealed class RecordCommitTests
             var library = new FileStoryLibrary(root);
             Story story = MakeStory("A. B.");
             await library.AddAsync(story);
-            var key = new StoryClipKey(0, 0, 1);
+            var key = new StoryClipKey(0, 0, 1, "en");
             string oldName = StoryRecordings.NewFileName(key);
             string newName = StoryRecordings.NewFileName(key);
             await library.StoreRecordingFileAsync(story.Id, oldName, path => File.WriteAllTextAsync(path, "old"));
@@ -206,7 +206,7 @@ public sealed class RecordCommitTests
     [Fact]
     public void A_piece_clip_does_not_move_when_the_page_splits_into_a_different_number_of_sentences()
     {
-        var piece = new StoryClipKey(0, 1, 1);
+        var piece = new StoryClipKey(0, 1, 1, "en");
         const string Page = "こんにちは。元気ですか。"; // two Japanese sentences, which English rules do not split
         Story stored = MakeStoryIn("en", Page) with { PieceRecordings = new Dictionary<StoryClipKey, PageRecording> { [piece] = new("en", 3) }, UseRecordings = true };
         Story sameSplit = MakeStoryIn("en", Page);
@@ -221,7 +221,7 @@ public sealed class RecordCommitTests
     [Fact]
     public void A_moved_clip_does_not_carry_the_old_story_files_name()
     {
-        var piece = new StoryClipKey(0, 0, 0);
+        var piece = new StoryClipKey(0, 0, 0, "en");
         string fresh = StoryRecordings.NewFileName(piece);
         Story stored = MakeStory("A.") with { PieceRecordings = new Dictionary<StoryClipKey, PageRecording> { [piece] = new("en", 3, fresh) }, UseRecordings = true };
 
@@ -253,6 +253,6 @@ public sealed class RecordCommitTests
     {
         Story story = StoryRecordings.With(MakeStory("A.", "..."), 1, new PageRecording("en", 2));
 
-        Assert.Contains(1, StoryRecordings.PagesShownInOwnLanguage(story, [1, 0]));
+        Assert.True(StoryRecordings.PlaysClip(story, StoryClipKey.OfPage(1, "en"), "en"));
     }
 }

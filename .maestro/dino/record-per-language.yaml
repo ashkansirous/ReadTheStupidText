@@ -1,0 +1,208 @@
+# Slice 286: a book is recorded in each story language separately, the Record intro lists the languages with how much is recorded in each, and the reader plays the take of the language it is read in.
+# Story languages English (the app language) and Farsi (the shelf-audio hook adds Farsi as a side language; the store is offline, so no pack arrives and the pieces without a take show for a beat).
+# On the intro: untick the Storyteller, Start, record one line in English, Done. Pick Farsi on the intro (its row says "Nothing yet"), Start: the card shows Farsi words; record one line, Done.
+# record-state then lists one clip in each language. open-book play=1 reads in English and plays the English take; the language button is there for the recorded book, and picking Farsi plays the Farsi take.
+# To see it fail against the old behaviour: before this slice the intro had no language rows ("RecordLanguage-fa" never shows), every take was filed under the story's language (no "languages=en:1,fa:1" in
+# the record-state line) and the reading screen hid the language button on a recorded book.
+# expect-log: HOOK test-store ok offline
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK shelf-audio started fa
+# expect-log: HOOK enter-grown-up ok
+# expect-log: HOOK record-state ok clips=2 files=2 switch=True languages=en:1,fa:1
+# expect-log: [RecordedClip] playing
+# expect-log: reading=en
+# expect-log: reading=fa
+appId: uk.sirous.dinoreader.dbg
+name: Record a book in each story language and read it back in each
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, side languages, installed audio packs, a stored shelf order); fine here: skip-first-run puts the test books back, the hook adds Farsi again and no audio pack may be installed.
+    clearState: true
+    permissions:
+      all: allow
+    arguments:
+      cmd: test-store
+      mode: offline
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: shelf-audio
+      lang: fa
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+- tapOn:
+    text: ".*Three Little Pigs.*"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: BookSheetRemove
+    timeout: 10000
+- tapOn:
+    text: "Record your voice"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordIntroStart
+    timeout: 20000
+# The language rows: both story languages, English picked, nothing recorded in either yet.
+- assertVisible: "Record in"
+- assertVisible:
+    id: RecordLanguage-en
+- assertVisible:
+    id: RecordLanguage-fa
+- tapOn:
+    text: "Storyteller"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: RecordIntroStart
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordButton
+    timeout: 20000
+- assertVisible: "Line 1 of .*"
+# One English line: record, a second and a half, stop, Done.
+- tapOn:
+    id: RecordButton
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordStopButton
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: RecordNeverShown
+    timeout: 1500
+    optional: true
+- tapOn:
+    id: RecordStopButton
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordChip
+    timeout: 20000
+- tapOn:
+    id: RecordDone
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordIntroProgress
+    timeout: 20000
+- assertVisible: "1 of .* lines recorded"
+# Farsi: its row says nothing is recorded; the card then shows Farsi words (Arabic script), not the English ones.
+- tapOn:
+    id: RecordLanguage-fa
+    waitToSettleTimeoutMs: 300
+- assertVisible: "Nothing yet"
+- tapOn:
+    text: "Storyteller"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: RecordIntroStart
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordPageWords
+      text: ".*[؀-ۿ].*"
+    timeout: 20000
+- tapOn:
+    id: RecordButton
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordStopButton
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: RecordNeverShown
+    timeout: 1500
+    optional: true
+- tapOn:
+    id: RecordStopButton
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordChip
+    timeout: 20000
+- tapOn:
+    id: RecordDone
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordIntroProgress
+    timeout: 20000
+- back
+- extendedWaitUntil:
+    visible:
+      id: BookSheetClose
+    timeout: 20000
+- tapOn:
+    id: BookSheetClose
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 20000
+# One take in each language, both with files.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: record-state
+      id: three-little-pigs
+      clips: "2"
+- tapOn:
+    id: GalleryDone
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryGrownUps
+    timeout: 20000
+# Read in English: the language button is on the recorded book and the English take plays.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingLanguage
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: RecordNeverShown
+    timeout: 25000
+    optional: true
+# Pick Farsi: the read restarts in Farsi and the Farsi take plays.
+- tapOn:
+    id: ReadingLanguage
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    text: "فارسی"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: RecordNeverShown
+    timeout: 25000
+    optional: true
+- assertVisible:
+    id: ReadingSurface

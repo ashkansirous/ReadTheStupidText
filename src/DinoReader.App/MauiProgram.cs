@@ -47,6 +47,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ILanguageChangeNotifier, InertLanguageNotifier>(); // replaces the shared one (last registration wins): a language change must never start a voice pack download in Dino
 		builder.Services.AddSingleton<StoryTranslator>();
 		builder.Services.AddSingleton<StoryVoicing>();
+		StoryJson.MainLanguageOf = AppLanguageForMigration; // Slice 286: books recorded before recordings had a language are filed under the app language when first read
 		builder.Services.AddSingleton<IStoryLibrary>(_ => new FileStoryLibrary(Path.Combine(FileSystem.AppDataDirectory, StoriesFolder)));
 		builder.Services.AddSingleton<GrownUpGate>();
 		builder.Services.AddSingleton<ExternalActivityGuard>();
@@ -92,6 +93,20 @@ public static class MauiProgram
 
 	// Slice 273 part C: the config client reports "last good copy used" / "default used" through the app's sink. The sink only queues a count (it never fetches the config),
 	// so reporting from the client's own failure path cannot loop. Wired after the build because the sink depends on the counter, which depends on the config client.
+	// The app's real language, or null when the preference store cannot be read yet: the book is then read without migrating its older recordings (Slice 286).
+	private static string? AppLanguageForMigration()
+	{
+		try
+		{
+			return LanguageChoice.Current();
+		}
+		catch (Exception ex) when (ex is InvalidOperationException or PlatformNotSupportedException)
+		{
+			// no-fallback: the older recordings stay unfiled and the book is migrated on a later read
+			return null;
+		}
+	}
+
 	private static void WireConfigFallbacks(IServiceProvider services)
 	{
 		var sink = services.GetRequiredService<ReadTheStupidText.Application.Usage.IFallbackSink>();

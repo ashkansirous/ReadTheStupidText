@@ -10,22 +10,23 @@ using DinoReader.Resources.Strings;
 
 namespace DinoReader;
 
-/// <summary>What the Record screen walks (Slice 279): the story, how it was read into sentences and speakers, the grown-up's choice, and the pieces that choice makes at this window size.</summary>
-internal sealed record RecordSetup(Story Story, RecordBook Book, RecordChoice Choice, IReadOnlyList<RecordPiece> Pieces, bool Listening);
+/// <summary>What the Record screen walks (Slice 279): the story, how it was read into sentences and speakers (in the picked story language, Slice 286), the grown-up's choice, the pieces that choice makes at this window size
+/// (their keys carry <paramref name="Language"/>), and whether the screen only plays recordings back.</summary>
+internal sealed record RecordSetup(Story Story, RecordBook Book, RecordChoice Choice, IReadOnlyList<RecordPiece> Pieces, bool Listening, string Language);
 
 /// <summary>The remembered choice of one book (Slice 279): the mode and the ticked characters are kept per book in the app's preferences, so the intro opens on what was chosen last.</summary>
 internal static class RecordChoices
 {
 	private const string KeyPrefix = "dino.record.choice.";
 
-	/// <summary>The choice remembered for <paramref name="story"/>, cleaned of characters the book does not have; the defaults (mode from its recordings, everybody ticked) when none is.</summary>
-	public static RecordChoice Load(Story story, RecordBook book)
+	/// <summary>The choice remembered for <paramref name="story"/>, cleaned of characters the book does not have; the defaults (mode from its recordings in <paramref name="language"/>, everybody ticked) when none is.</summary>
+	public static RecordChoice Load(Story story, RecordBook book, string language)
 	{
 		RecordChoice? saved = RecordSplitWalk.Read(Preferences.Default.Get(KeyPrefix + story.Id, string.Empty));
 		HashSet<string> everyone = book.Speakers.Select(s => s.Id).ToHashSet();
 		if (saved is null)
 		{
-			return new RecordChoice(RecordSplitWalk.DefaultMode(story), everyone);
+			return new RecordChoice(RecordSplitWalk.DefaultMode(story, language), everyone);
 		}
 
 		return new RecordChoice(saved.Mode, saved.Ticked.Where(everyone.Contains).ToHashSet());
@@ -78,14 +79,18 @@ internal static class RecordCard
 
 	/// <summary>The pieces of <paramref name="book"/> for <paramref name="choice"/>, cut against the fixed reference card (never the live window), so a clip's key means the same words on every device and after a rotation.
 	/// Heights come from the platform's text measurer with the reading font.</summary>
-	public static IReadOnlyList<RecordPiece> Pieces(Story story, RecordBook book, RecordChoice choice)
+	public static IReadOnlyList<RecordPiece> Pieces(Story story, RecordBook book, RecordChoice choice, string language) =>
+		RecordSplitWalk.InLanguage(Cut(book, choice, language), language);
+
+	// Cut and measured in the picked language: its reading font, the words of its translation (Slice 286).
+	private static IReadOnlyList<RecordPiece> Cut(RecordBook book, RecordChoice choice, string language)
 	{
 		bool whole = choice.Mode == RecordMode.WholePage;
 		double fontSize = whole ? WholePageFontSize : LineFontSize;
 		double maxHeight = MaxTextHeight(RecordCardFit.ReferenceWindowHeight, withSaysRow: !whole);
 		double width = TextWidth(RecordCardFit.ReferenceWindowWidth);
 #if ANDROID || IOS || WINDOWS
-		using var measurer = new PlatformTextMeasurer(DinoFonts.ReadingFor(story.Language), fontSize);
+		using var measurer = new PlatformTextMeasurer(DinoFonts.ReadingFor(language), fontSize);
 		Func<string, double> heightOf = text => HeightOf(text, width, fontSize, measurer);
 		return whole ? RecordSplit.WholePages(book.Sentences, heightOf, maxHeight) : RecordSplit.ByCharacter(book.Sentences, choice.Ticked, heightOf, maxHeight);
 #else

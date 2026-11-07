@@ -30,6 +30,32 @@ public static class RecordSplitBook
         return new RecordBook(sentences, Speakers(attribution, sentences));
     }
 
+    /// <summary>The book with every sentence's words replaced by the same sentence of <paramref name="translated"/> (Slice 286): the card of a recording in another story language shows the
+    /// text the reader shows in that language. <see cref="TranslatedStory.Sentences"/> keeps the source's sentences one to one, so the sentence numbers a clip is keyed by do not change.</summary>
+    public static RecordBook? WithTranslatedText(RecordBook book, TranslatedStory translated)
+    {
+        if (translated.Sentences.Count != book.Sentences.Count)
+        {
+            return null; // the sentences do not line up one to one: the caller reports the language as unavailable instead of showing other-language words
+        }
+
+        IReadOnlyList<RecordSentence> sentences = book.Sentences
+            .Select((s, i) => s with { Text = TranslatedShown(translated.Text, translated.Sentences[i]) }).ToList();
+        return book with { Sentences = sentences };
+    }
+
+    /// <summary>The book with each speaker named as <paramref name="cast"/> (the picked story language's cast) names the character (Slice 286): the "Rex says:" line and the checklist use the language's own names.
+    /// A speaker the cast does not name keeps its name.</summary>
+    public static RecordBook WithSpeakerNames(RecordBook book, IReadOnlyList<CastMember> cast)
+    {
+        IReadOnlyList<RecordSpeaker> speakers = book.Speakers
+            .Select(s => cast.FirstOrDefault(c => c.CharacterId == s.Id) is { Name: { Length: > 0 } name } ? s with { Name = name } : s).ToList();
+        return book with { Speakers = speakers };
+    }
+
+    private static string TranslatedShown(string text, SentenceSpan span) =>
+        span.Start >= 0 && span.End <= text.Length && span.End > span.Start ? text[span.Start..span.End].Replace(LineBreak, Blank).Trim() : string.Empty;
+
     /// <summary>How many sentences each page of <paramref name="story"/> holds under the reading screen's split (its language's rules and its line breaks), so a clip's sentence numbers can be checked against a page.</summary>
     public static IReadOnlyList<int> SentenceCounts(Story story)
     {

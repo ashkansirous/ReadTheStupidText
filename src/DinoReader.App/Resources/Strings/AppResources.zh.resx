@@ -225,6 +225,10 @@
   <data name="Record_Storyteller" xml:space="preserve"><value>讲述者</value></data>
   <data name="Record_Lines" xml:space="preserve"><value>{0} 句</value></data>
   <data name="Record_OfCount" xml:space="preserve"><value>{0}/{1}</value></data>
+  <data name="Record_Language" xml:space="preserve"><value>录音语言</value></data>
+  <data name="Record_LanguagePages" xml:space="preserve"><value>{0}/{1}页</value></data>
+  <data name="Record_LanguageNone" xml:space="preserve"><value>还没有</value></data>
+  <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}：无法获取文字。</value></data>
   <data name="Record_Start" xml:space="preserve"><value>开始录音</value></data>
   <data name="Record_LongPages" xml:space="preserve"><value>较长的页面会分成几部分，让文字始终能放进屏幕。</value></data>
   <data name="Record_Says" xml:space="preserve"><value>{0}说：</value></data>

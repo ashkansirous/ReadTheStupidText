@@ -225,6 +225,10 @@
   <data name="Record_Storyteller" xml:space="preserve"><value>راوی</value></data>
   <data name="Record_Lines" xml:space="preserve"><value>{0} سطر</value></data>
   <data name="Record_OfCount" xml:space="preserve"><value>{0} از {1}</value></data>
+  <data name="Record_Language" xml:space="preserve"><value>ضبط به زبان</value></data>
+  <data name="Record_LanguagePages" xml:space="preserve"><value>{0} از {1} صفحه</value></data>
+  <data name="Record_LanguageNone" xml:space="preserve"><value>هنوز چیزی نیست</value></data>
+  <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}: دریافت متن ممکن نشد.</value></data>
   <data name="Record_Start" xml:space="preserve"><value>شروع ضبط</value></data>
   <data name="Record_LongPages" xml:space="preserve"><value>صفحه‌های بلند در چند بخش می‌آیند تا کلمه‌ها همیشه روی صفحه جا شوند.</value></data>
   <data name="Record_Says" xml:space="preserve"><value>{0} می‌گوید:</value></data>

@@ -228,6 +228,10 @@
   <data name="Record_Storyteller" xml:space="preserve"><value>Storyteller</value></data>
   <data name="Record_Lines" xml:space="preserve"><value>{0} lines</value></data>
   <data name="Record_OfCount" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="Record_Language" xml:space="preserve"><value>Record in</value></data>
+  <data name="Record_LanguagePages" xml:space="preserve"><value>{0} of {1} pages</value></data>
+  <data name="Record_LanguageNone" xml:space="preserve"><value>Nothing yet</value></data>
+  <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}: could not get the words.</value></data>
   <data name="Record_Start" xml:space="preserve"><value>Start recording</value></data>
   <data name="Record_LongPages" xml:space="preserve"><value>Long pages come in parts, so the words always fit on the screen.</value></data>
   <data name="Record_Says" xml:space="preserve"><value>{0} says:</value></data>

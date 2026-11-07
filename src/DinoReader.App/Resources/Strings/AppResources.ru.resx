@@ -225,6 +225,10 @@
   <data name="Record_Storyteller" xml:space="preserve"><value>Рассказчик</value></data>
   <data name="Record_Lines" xml:space="preserve"><value>Реплик: {0}</value></data>
   <data name="Record_OfCount" xml:space="preserve"><value>{0} из {1}</value></data>
+  <data name="Record_Language" xml:space="preserve"><value>Язык записи</value></data>
+  <data name="Record_LanguagePages" xml:space="preserve"><value>{0} из {1} страниц</value></data>
+  <data name="Record_LanguageNone" xml:space="preserve"><value>Пока ничего</value></data>
+  <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}: не удалось получить слова.</value></data>
   <data name="Record_Start" xml:space="preserve"><value>Начать запись</value></data>
   <data name="Record_LongPages" xml:space="preserve"><value>Длинные страницы делятся на части, чтобы слова всегда помещались на экране.</value></data>
   <data name="Record_Says" xml:space="preserve"><value>{0} говорит:</value></data>

@@ -225,6 +225,10 @@
   <data name="Record_Storyteller" xml:space="preserve"><value>語り手</value></data>
   <data name="Record_Lines" xml:space="preserve"><value>{0}行</value></data>
   <data name="Record_OfCount" xml:space="preserve"><value>{0}／{1}</value></data>
+  <data name="Record_Language" xml:space="preserve"><value>録音する言語</value></data>
+  <data name="Record_LanguagePages" xml:space="preserve"><value>{0}／{1}ページ</value></data>
+  <data name="Record_LanguageNone" xml:space="preserve"><value>まだありません</value></data>
+  <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}：文章を取得できませんでした。</value></data>
   <data name="Record_Start" xml:space="preserve"><value>録音を始める</value></data>
   <data name="Record_LongPages" xml:space="preserve"><value>長いページは、ことばが画面に収まるように分けて表示します。</value></data>
   <data name="Record_Says" xml:space="preserve"><value>{0}のせりふ：</value></data>

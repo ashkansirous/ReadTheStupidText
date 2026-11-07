@@ -36,6 +36,8 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	internal const string ChangeId = "RecordIntroChange";
 	internal const string SpeakerIdPrefix = "RecordSpeaker-";
 	internal const string ProgressId = "RecordIntroProgress";
+	internal const string UnavailableId = "RecordLanguageUnavailable";
+	internal const string RetryId = "RecordLanguageRetry";
 
 	private readonly IStoryLibrary _library;
 	private readonly IServiceProvider _services;
@@ -45,8 +47,14 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	private readonly GrownUpHeader _header = new("RecordIntroDone");
 	private readonly VerticalStackLayout _body = new() { Spacing = 14 };
 	private readonly Grid _bottom = new() { ColumnSpacing = 10, Padding = new Thickness(SideMargin, 8, SideMargin, 16) };
+	internal const string LanguageIdPrefix = "RecordLanguage-";
+
 	private Story? _story;
-	private RecordBook? _book;
+	private RecordBook? _book; // the book in the picked story language (the words of its translation, Slice 286)
+	private RecordBook? _source; // the book as the story itself reads, whose sentence numbers every language shares
+	private readonly Dictionary<string, RecordBook> _books = [];
+	private string? _unavailable; // the language whose words could not be made, shown with Retry (Slice 286)
+	private string _language = UiLanguage.English; // the story language being recorded in: the app language until the grown-up picks another
 	private RecordChoice _choice = new(RecordMode.PerCharacter, new HashSet<string>());
 	private bool _showChange;
 	private (string Key, IReadOnlyList<RecordPiece> Pieces)? _cut; // the book's pieces for the mode and ticks in Key, cut once on a worker thread
@@ -78,20 +86,73 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	public async Task LoadAsync(Story story)
 	{
 		_story = story;
+		_language = StoryLanguages.Current().Main;
 		_header.Title = AppResources.Record_Title;
 		_header.Subtitle = story.Title;
-		_wait.Begin(WaitStage.GettingFile, AppResources.Wait_GettingBook, canCancel: false);
+		_book = await TryBookAsync(story, _language);
+		if (_book is not null)
+		{
+			_choice = RecordChoices.Load(story, _book, _language);
+		}
+
+		Render();
+	}
+
+	// The book in <language> behind the wait overlay (with Cancel: a translation engine can run long), or null when it could not be made: the page then shows the language as unavailable
+	// with Retry (Slice 286), never the story's own words under another language's name. Nothing is cached for a failure, so Retry works the translation again.
+	private async Task<RecordBook?> TryBookAsync(Story story, string language)
+	{
+		CancellationToken cancellation = _wait.BeginCancellable(WaitStage.GettingFile, AppResources.Wait_GettingBook);
 		try
 		{
-			_book = await Task.Run(() => RecordSplitBook.Of(story));
+			RecordBook? book = await BookInAsync(story, language, cancellation);
+			_unavailable = book is null ? language : null;
+			return book;
+		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: the grown-up cancelled the wait; the page stays as it was (with no book yet, it shows Retry)
+			_unavailable = _book is null ? language : null; // a cancelled switch is not a failure: the book already shown stays, with no "unavailable" line beside it
+			return null;
+		}
+		catch (Exception ex)
+		{
+			// no-fallback: the language shows as unavailable with Retry; no other language's words are shown for it
+			Debug.WriteLine($"Dino Reader could not read the book in {language} for the record page: {ex.Message}");
+			_unavailable = language;
+			return null;
 		}
 		finally
 		{
 			_wait.End();
 		}
+	}
 
-		_choice = RecordChoices.Load(story, _book);
-		Render();
+	// The book as it reads in <language>: the story's own words, or those of its translation when it is read translated in that language (the same text the reading screen shows), with the
+	// speakers named as that language's cast names them. Both share the story's sentence numbers, so a clip's key means the same sentences in every language. Worked out once per language;
+	// null when the translation could not be made.
+	private async Task<RecordBook?> BookInAsync(Story story, string language, CancellationToken cancellation)
+	{
+		if (_books.TryGetValue(language, out RecordBook? cached))
+		{
+			return cached;
+		}
+
+		_source ??= await Task.Run(() => RecordSplitBook.Of(story), cancellation);
+		RecordBook? book = _source;
+		if (_services.GetRequiredService<StoryTranslator>().Applies(story, language))
+		{
+			TranslatedStory? translated = await _services.GetRequiredService<StoryVoicing>().TranslatedDisplayAsync(story, RecordSplitBook.SentencesOf(story), language, cancellation);
+			book = translated is null ? null : RecordSplitBook.WithTranslatedText(_source, translated);
+			book = book is not null && story.HasCastIn(language) ? RecordSplitBook.WithSpeakerNames(book, story.CastIn(language)) : book;
+		}
+
+		if (book is not null)
+		{
+			_books[language] = book;
+		}
+
+		return book;
 	}
 
 	// An async-void handler must never throw: a failed Back is logged and the page stays.
@@ -132,6 +193,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 			Story? latest = await _library.GetAsync(_story.Id);
 			if (latest is not null)
 			{
+				await ReloadBookIfWordsChangedAsync(latest);
 				_story = latest;
 				Render();
 			}
@@ -140,6 +202,25 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		{
 			// no-fallback: the page keeps the counts it had; nothing is lost (this runs from an async-void OnAppearing, so it must not throw)
 			Debug.WriteLine($"Dino Reader could not reload the book for the record page: {ex.Message}");
+		}
+	}
+
+	// The cached books were cut from the story's words, language and cast: when the story was edited meanwhile they are dropped and the picked language's book is made again (a story edit must
+	// never leave the cards, the checklist or the clips' sentence numbers on stale words).
+	private async Task ReloadBookIfWordsChangedAsync(Story latest)
+	{
+		if (_story is not { } old || (old.Text == latest.Text && old.Language == latest.Language && old.Cast.Select(c => (c.CharacterId, c.Name)).SequenceEqual(latest.Cast.Select(c => (c.CharacterId, c.Name)))))
+		{
+			return;
+		}
+
+		_source = null;
+		_books.Clear();
+		_book = await TryBookAsync(latest, _language);
+		if (_book is not null)
+		{
+			_choice = RecordChoices.Load(latest, _book, _language);
+			_cut = null;
 		}
 	}
 
@@ -155,16 +236,32 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 
 	private void Render()
 	{
-		if (_story is not { } story || _book is not { } book)
+		if (_story is not { } story)
 		{
 			return;
 		}
 
-		bool has = StoryRecordings.Count(story) > 0;
+		if (_book is not { } book)
+		{
+			RenderUnavailable(story);
+			return;
+		}
+
+		bool has = StoryRecordings.Count(story, _language) > 0;
 		_header.Title = has ? AppResources.Record_YourVoice : AppResources.Record_Title;
 		_body.Children.Clear();
 		_bottom.Children.Clear();
 		_bottom.ColumnDefinitions = [];
+		if (StoryLanguages.Current().HasChoice)
+		{
+			_body.Add(LanguageRows(story));
+		}
+
+		if (_unavailable is { } missing)
+		{
+			_body.Add(UnavailableBlock(missing));
+		}
+
 		if (has)
 		{
 			_body.Add(ProgressBlock(story, book));
@@ -178,7 +275,90 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 
 		_body.Add(_choice.Mode == RecordMode.PerCharacter ? Checklist(story, book) : LongPagesLine());
 		AddButtons(story, book, has);
-		Debug.WriteLine($"Dino Reader {PageName}: mode={_choice.Mode} ticked={_choice.Ticked.Count} recorded={StoryRecordings.Count(story)}");
+		Debug.WriteLine($"Dino Reader {PageName}: mode={_choice.Mode} ticked={_choice.Ticked.Count} recorded={StoryRecordings.Count(story, _language)} language={_language}");
+	}
+
+	// ---- the story language to record in (Slice 286) ----
+
+	// One row per story language (the app language first): a radio, the name in its own script and how much of the book is recorded in it.
+	private View LanguageRows(Story story)
+	{
+		var list = new VerticalStackLayout { Spacing = 0 };
+		var heading = new Label { Text = AppResources.Record_Language, FontSize = 17, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), Margin = new Thickness(0, 6, 0, 6) };
+		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level2);
+		list.Add(heading);
+		foreach (string language in StoryLanguages.Current().All)
+		{
+			list.Add(LanguageRow(story, language));
+		}
+
+		return list;
+	}
+
+	private View LanguageRow(Story story, string language)
+	{
+		var row = new Grid { HeightRequest = RowHeight, ColumnSpacing = 12, ColumnDefinitions = [new ColumnDefinition(RadioSize), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
+		row.Add(Radio(language == _language), 0);
+		var name = new Label { Text = LanguageNames.NativeName(language), FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), VerticalOptions = LayoutOptions.Center };
+		OwnScript.InOwnScript(name);
+		row.Add(name, 1);
+		row.Add(new Label { Text = LanguageProgressText(story, language), FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Muted), VerticalOptions = LayoutOptions.Center }, 2);
+		row.AutomationId = LanguageIdPrefix + language;
+		SemanticProperties.SetDescription(row, LanguageNames.NativeName(language));
+		Taps.AddTap(row, () => ChooseLanguageAsync(language));
+		return row;
+	}
+
+	private static string LanguageProgressText(Story story, string language)
+	{
+		int pages = StoryRecordings.PagesRecorded(story, language);
+		return pages == 0 ? AppResources.Record_LanguageNone : AppResources.Format(AppResources.Record_LanguagePages, pages, story.Pages.Count);
+	}
+
+	// The picked language drives everything after it: the words, the pieces, the recordings. Its book is worked out under the wait overlay when that takes over 500 ms (Cancel stops it).
+	// When the words cannot be made the page stays in the language it had and says so with Retry.
+	private Task ChooseLanguageAsync(string language) => _busy.RunAsync(async () =>
+	{
+		if (_story is not { } story || (language == _language && _book is not null))
+		{
+			return;
+		}
+
+		RecordBook? book = await TryBookAsync(story, language);
+		if (book is not null)
+		{
+			_book = book;
+			_language = language;
+			_choice = RecordChoices.Load(story, book, language);
+			_cut = null;
+			_showChange = false;
+		}
+
+		Render();
+	});
+
+	// The page when no book could be made for the language it opened in: the language rows and the unavailable line with Retry.
+	private void RenderUnavailable(Story story)
+	{
+		_header.Title = AppResources.Record_Title;
+		_body.Children.Clear();
+		_bottom.Children.Clear();
+		_bottom.ColumnDefinitions = [];
+		if (StoryLanguages.Current().HasChoice)
+		{
+			_body.Add(LanguageRows(story));
+		}
+
+		_body.Add(UnavailableBlock(_unavailable ?? _language));
+	}
+
+	// "<language>: could not get the words." and a Retry button that works the words out again.
+	private View UnavailableBlock(string language)
+	{
+		var block = new VerticalStackLayout { Spacing = 10, Margin = new Thickness(0, 8, 0, 8) };
+		block.Add(new Label { AutomationId = UnavailableId, Text = AppResources.Format(AppResources.Record_LanguageUnavailable, LanguageNames.NativeName(language)), FontSize = 15, LineHeight = 1.3, TextColor = DinoTokens.Get(DinoTokens.Ink) });
+		block.Add(OutlinedButton(AppResources.StoryLanguages_Retry, RetryId, true, () => ChooseLanguageAsync(language)));
+		return block;
 	}
 
 	private void AddNotesAndModes()
@@ -261,7 +441,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level2);
 		list.Add(heading);
 		IReadOnlyDictionary<string, int> counts = RecordSplit.LineCounts(book.Sentences);
-		bool has = StoryRecordings.Count(story) > 0;
+		bool has = StoryRecordings.Count(story, _language) > 0;
 		foreach (RecordSpeaker speaker in book.Speakers.Where(s => counts.ContainsKey(s.Id)))
 		{
 			list.Add(SpeakerRow(story, book, speaker, counts[speaker.Id], has));
@@ -302,14 +482,14 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	}
 
 	// "24 lines" for a book with nothing recorded; with recordings the speaker's own progress ("0 of 24", green "9 of 9" when done).
-	private static View CountLabel(Story story, RecordBook book, RecordSpeaker speaker, int lines, bool has)
+	private View CountLabel(Story story, RecordBook book, RecordSpeaker speaker, int lines, bool has)
 	{
 		if (!has)
 		{
 			return new Label { Text = AppResources.Format(AppResources.Record_Lines, lines), FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Muted), VerticalOptions = LayoutOptions.Center };
 		}
 
-		RecordProgress progress = RecordSplitWalk.SpeakerProgress(story, book, speaker.Id);
+		RecordProgress progress = RecordSplitWalk.SpeakerProgress(story, book, speaker.Id, _language);
 		bool done = progress.Total > 0 && progress.Done == progress.Total;
 		return new Label
 		{
@@ -341,7 +521,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 
 	private View ProgressBlock(Story story, RecordBook book)
 	{
-		RecordProgress progress = RecordSplitWalk.Progress(story, book, _choice.Mode);
+		RecordProgress progress = RecordSplitWalk.Progress(story, book, _choice.Mode, _language);
 		string text = progress.Unit == RecordUnit.Lines
 			? AppResources.Format(AppResources.Record_LinesRecorded, progress.Done, progress.Total)
 			: AppResources.Format(AppResources.Record_PagesRecorded, progress.Done, progress.Total);
@@ -402,7 +582,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		}
 
 		_bottom.ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)];
-		bool canListen = canStart && RecordSplitWalk.Recorded(story, book, _choice.Mode, _choice.Ticked).Count > 0; // nothing recorded in this scope: Listen would do nothing
+		bool canListen = canStart && RecordSplitWalk.Recorded(story, book, _choice.Mode, _choice.Ticked, _language).Count > 0; // nothing recorded in this scope: Listen would do nothing
 		_bottom.Add(OutlinedButton(AppResources.Record_Listen, ListenId, canListen, () => ListenAsync(story, book)), 0, 0);
 		bool allDone = canStart && CachedPieces() is { Count: > 0 } cut && RecordSplitWalk.FirstUnrecorded(story, cut) < 0;
 		_bottom.Add(StartButton(allDone ? AppResources.Record_Again : AppResources.Record_Rest, RestId, canStart, () => StartAsync(story, book, resume: !allDone)), 1, 0);
@@ -414,7 +594,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 
 	// ---- the pieces, cut off the UI thread ----
 
-	private string CutKey() => $"{_choice.Mode}|{string.Join(',', _choice.Ticked.Order(StringComparer.Ordinal))}";
+	private string CutKey() => $"{_language}|{_choice.Mode}|{string.Join(',', _choice.Ticked.Order(StringComparer.Ordinal))}";
 
 	private IReadOnlyList<RecordPiece>? CachedPieces() => _cut is { } cut && cut.Key == CutKey() ? cut.Pieces : null;
 
@@ -428,7 +608,8 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 
 		string key = CutKey();
 		RecordChoice choice = _choice;
-		IReadOnlyList<RecordPiece> pieces = await Task.Run(() => RecordCard.Pieces(story, book, choice));
+		string language = _language;
+		IReadOnlyList<RecordPiece> pieces = await Task.Run(() => RecordCard.Pieces(story, book, choice, language));
 		_cut = (key, pieces);
 		return pieces;
 	}
@@ -518,7 +699,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		}
 
 		int start = resume ? Math.Max(0, RecordSplitWalk.FirstUnrecorded(story, pieces)) : 0;
-		await OpenRecordPageAsync(new RecordSetup(story, book, _choice, pieces, Listening: false), start);
+		await OpenRecordPageAsync(new RecordSetup(story, book, _choice, pieces, Listening: false, _language), start);
 	});
 
 	// Release-visible on the Windows VM (window-trace.log); nothing elsewhere.
@@ -533,10 +714,10 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	private Task ListenAsync(Story story, RecordBook book) => _busy.RunAsync(async () =>
 	{
 		RecordChoices.Save(story.Id, _choice);
-		IReadOnlyList<RecordPiece> pieces = RecordSplitWalk.Recorded(story, book, _choice.Mode, _choice.Ticked);
+		IReadOnlyList<RecordPiece> pieces = RecordSplitWalk.Recorded(story, book, _choice.Mode, _choice.Ticked, _language);
 		if (pieces.Count > 0)
 		{
-			await OpenRecordPageAsync(new RecordSetup(story, book, _choice, pieces, Listening: true), 0);
+			await OpenRecordPageAsync(new RecordSetup(story, book, _choice, pieces, Listening: true, _language), 0);
 		}
 	});
 

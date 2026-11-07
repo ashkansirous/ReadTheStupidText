@@ -42,12 +42,12 @@ public sealed class ParentRecordingTests : IDisposable
     {
         Story one = Recorded(1);
         Assert.True(one.UseRecordings);
-        Assert.True(StoryRecordings.Plays(one, 1));
-        Assert.False(StoryRecordings.Plays(one, 0));
+        Assert.True(StoryRecordings.PlaysClip(one, StoryClipKey.OfPage(1, "en"), "en"));
+        Assert.False(StoryRecordings.PlaysClip(one, StoryClipKey.OfPage(0, "en"), "en"));
 
         Story twoThenSwitchedOff = StoryRecordings.With(one with { UseRecordings = false }, 2, new PageRecording("en", 5));
         Assert.False(twoThenSwitchedOff.UseRecordings);
-        Assert.False(StoryRecordings.Plays(twoThenSwitchedOff, 1));
+        Assert.False(StoryRecordings.PlaysClip(twoThenSwitchedOff, StoryClipKey.OfPage(1, "en"), "en"));
 
         Story none = StoryRecordings.Without(StoryRecordings.Without(twoThenSwitchedOff, 1), 2);
         Assert.Null(none.Recordings);
@@ -185,16 +185,14 @@ public sealed class ParentRecordingTests : IDisposable
     }
 
     [Fact]
-    public void A_recording_plays_only_in_the_language_it_was_made_in()
+    public void A_recording_plays_only_while_reading_in_the_language_it_was_made_in()
     {
         Story story = Recorded(1);
-        Assert.True(StoryRecordings.Plays(story, 1));
-        int[] oneSentenceEach = [1, 1, 1, 1];
-        Assert.Contains(1, StoryRecordings.PagesShownInOwnLanguage(story, oneSentenceEach));
+        Assert.True(StoryRecordings.PlaysClip(story, StoryClipKey.OfPage(1, "en"), "en"));
+        Assert.False(StoryRecordings.PlaysClip(story, StoryClipKey.OfPage(1, "en"), "sv")); // reading in another language: the pre-made audio plays
 
-        Story edited = story with { Language = "sv" };
-        Assert.False(StoryRecordings.Plays(edited, 1));
-        Assert.Empty(StoryRecordings.PagesShownInOwnLanguage(edited, oneSentenceEach));
+        Story edited = story with { Language = "sv" }; // the story's own language no longer decides it (Slice 286)
+        Assert.True(StoryRecordings.PlaysClip(edited, StoryClipKey.OfPage(1, "en"), "en"));
     }
 
     [Fact]

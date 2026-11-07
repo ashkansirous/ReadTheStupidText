@@ -373,7 +373,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
     }
 
     public Task<string> StoreRecordingAsync(string storyId, int page, Func<string, Task> write) =>
-        StoreClipAsync(storyId, StoryClipKey.OfPage(page), write);
+        StoreClipAsync(storyId, StoryClipKey.OfPage(page, StoryClipKey.NoLanguage), write);
 
     public async Task<string> StoreClipAsync(string storyId, StoryClipKey key, Func<string, Task> write)
     {
@@ -522,11 +522,17 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
                 return null;
             }
 
-            Story story = StoryJson.Deserialize(text);
+            string? mainLanguage = StoryJson.MainLanguageOf(); // read once: the returned story and the saved migration use the same language; null (not known yet) migrates and saves nothing
+            Story story = StoryJson.Deserialize(text, out bool migrated, mainLanguage);
             // A story whose stored id disagrees with its folder was copied or edited by hand;
             // it is skipped as unreadable rather than risk writes landing in another folder.
             if (story.Id == id)
             {
+                if (migrated)
+                {
+                    await SaveMigratedRecordingsAsync(story, mainLanguage!);
+                }
+
                 return story;
             }
 
@@ -542,6 +548,30 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         {
             // no-fallback: a busy or locked file (a save in progress) is transient; the book is back on the next refresh, so it is not counted as unreadable
             return null;
+        }
+    }
+
+    // Slice 286: a book whose recordings predate the language key was read with them filed under the main language; saving it once makes that permanent, so a later change of the
+    // app language never moves them. It runs under the gate and re-reads the file, so a save made meanwhile is never overwritten by the stale copy.
+    private async Task SaveMigratedRecordingsAsync(Story migrated, string mainLanguage)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            string text = await File.ReadAllTextAsync(FilePathOf(migrated.Id));
+            Story current = StoryJson.Deserialize(text, out bool stillOld, mainLanguage);
+            if (stillOld)
+            {
+                await WriteAsync(current);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or StoryFormatException)
+        {
+            // no-fallback: the migration is read again, the same way, on the next read of the book
+        }
+        finally
+        {
+            _gate.Release();
         }
     }
 

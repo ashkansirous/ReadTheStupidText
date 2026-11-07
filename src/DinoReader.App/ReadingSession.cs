@@ -34,10 +34,10 @@ public sealed class ReadingSession
 	private readonly IStoryLibrary _library;
 	private Story? _story;
 	private string _reading = UiLanguage.English; // the language this screen reads in (the child's pick, Slice 173): passed to everything the read uses, never stored
+	private bool _screenTextMatches = true; // false while the screen shows the story as written because the translation to the reading language failed (Slice 286)
 	private IReadOnlyList<int> _pageStarts = [];
 	private (int First, int Last)[] _pageSentences = [];
 	private RecordedPlay _recorded;
-	private IReadOnlySet<int>? _clipPages; // pages whose clips play while the book is translated; null when it is not
 	private readonly HashSet<StoryClipKey> _unplayable = []; // clips of a recording that failed to play this session: read from the book's own clips (Slice 279: a clip is a run of a page's sentences)
 
 	/// <summary>A parent's clip that plays: its key, the story's sentence numbers it covers (first and last) and its length in seconds.</summary>
@@ -94,7 +94,16 @@ public sealed class ReadingSession
 	public string ReadingLanguage => _reading;
 
 	/// <summary>Reads in <paramref name="language"/> from the next read on.</summary>
-	public void SetReadingLanguage(string language) => _reading = UiLanguage.Resolve(language);
+	public void SetReadingLanguage(string language)
+	{
+		string resolved = UiLanguage.Resolve(language);
+		if (resolved != _reading)
+		{
+			_screenTextMatches = false; // until the page works out what to show (it always does next), the screen still holds the old language's words: no clip of the new language plays beside them
+		}
+
+		_reading = resolved;
+	}
 
 	/// <summary>The sentence being heard, or the last one; -1 before the first.</summary>
 	public int CurrentSentence { get; private set; } = -1;
@@ -153,13 +162,38 @@ public sealed class ReadingSession
 		_pageStarts = StoryRecordings.PageStarts(story.Pages);
 		_pageSentences = SentencesOfPages(story.Pages.Count);
 		_unplayable.Clear();
-		_clipPages = null;
 	}
 
-	/// <summary>While the book reads in a translation, the pages whose clips still play (the pages fully covered by clips, Slice 279); a page with only some sentences recorded reads translated with the pre-made audio. Null when the book is not translated: every clip plays.</summary>
-	public void SetClipPages(IReadOnlySet<int>? pages) => _clipPages = pages;
+	// A clip plays in the language it was recorded in (Slice 286): the reading language picks which clips are in play, and the screen shows that language's text, so no clip is left out for its page's text.
+	private bool ClipStands(StoryClipKey key) => _screenTextMatches && !_unplayable.Contains(key);
 
-	private bool ClipStands(StoryClipKey key) => !_unplayable.Contains(key) && (_clipPages is null || _clipPages.Contains(key.Page));
+	/// <summary>Whether the screen shows the text in the reading language. False after the screen's translation failed (it shows the story as written): no recording of the reading language plays then,
+	/// so the words on the screen never disagree with the voice. The page sets it each time it works out what to show.</summary>
+	public void SetScreenTextMatchesReading(bool matches)
+	{
+		bool turnedOn = matches && !_screenTextMatches;
+		_screenTextMatches = matches;
+		if (turnedOn)
+		{
+			ReplanVoicedRead();
+		}
+	}
+
+	// A read voiced while the screen's words were not in place read the sentences of a clip too. Now that the words are in place the read starts again at the sentence being heard, so that clip (or the
+	// next one) plays; with no clip ahead, or while paused or playing a clip, nothing changes. It runs only when the flag really flips, so a screen refresh in the same language never restarts a read.
+	private void ReplanVoicedRead()
+	{
+		bool voiced = _recorded == RecordedPlay.None && _activeReadId != 0 && State is SessionState.Playing or SessionState.Loading;
+		if (_story is not { } story || !voiced || CurrentSentence < 0 || CurrentSentence >= _sentences.Count)
+		{
+			return;
+		}
+
+		if (ClipAt(story, CurrentSentence) is not null || NextClipAfter(story, CurrentPosition) is not null)
+		{
+			_ = ContinueAtAsync(CurrentSentence);
+		}
+	}
 
 	/// <summary>Takes the story as it is now (the grown-up turned "Read with my voice" on or off); the next read follows it.</summary>
 	public void UpdateStory(Story story) => _story = story;
@@ -192,7 +226,7 @@ public sealed class ReadingSession
 
 		int page = PageOf(sentence);
 		(int pageFirst, int pageLast) = _pageSentences[page];
-		return pageFirst < 0 ? null : StoryRecordings.PlayingClips(story)
+		return pageFirst < 0 ? null : StoryRecordings.PlayingClips(story, _reading)
 			.Where(key => key.Page == page && ClipStands(key))
 			.Select(key => SpanOf(story, key, pageFirst, pageLast))
 			.FirstOrDefault(span => span is { } s && s.First <= sentence && sentence <= s.Last);
@@ -214,7 +248,7 @@ public sealed class ReadingSession
 	private ClipSpan? NextClipAfter(Story story, int position)
 	{
 		ClipSpan? next = null;
-		foreach (StoryClipKey key in StoryRecordings.PlayingClips(story).Where(k => ClipStands(k) && k.Page < _pageSentences.Length))
+		foreach (StoryClipKey key in StoryRecordings.PlayingClips(story, _reading).Where(k => ClipStands(k) && k.Page < _pageSentences.Length))
 		{
 			(int pageFirst, int pageLast) = _pageSentences[key.Page];
 			if (pageFirst >= 0 && SpanOf(story, key, pageFirst, pageLast) is { } span && _sentences[span.First].Start > position && (next is null || span.First < next.Value.First))
@@ -486,7 +520,7 @@ public sealed class ReadingSession
 			return false;
 		}
 
-		RecordedClipLog($"[RecordedClip] playing {clip.Value.Key} sentences={clip.Value.First}-{clip.Value.Last}");
+		RecordedClipLog($"[RecordedClip] playing {clip.Value.Key} sentences={clip.Value.First}-{clip.Value.Last} reading={_reading}"); // Slice 286: the line a device check reads to tell which language's take played
 		_recorded = RecordedPlay.Playing;
 		_pauseState.Clear();
 		RunOnMain(() => PieceAudio?.Invoke(true)); // sound plays: an earlier silent piece's status line goes

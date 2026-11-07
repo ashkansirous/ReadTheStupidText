@@ -225,6 +225,10 @@
   <data name="Record_Storyteller" xml:space="preserve"><value>Narrador</value></data>
   <data name="Record_Lines" xml:space="preserve"><value>{0} falas</value></data>
   <data name="Record_OfCount" xml:space="preserve"><value>{0} de {1}</value></data>
+  <data name="Record_Language" xml:space="preserve"><value>Gravar em</value></data>
+  <data name="Record_LanguagePages" xml:space="preserve"><value>{0} de {1} páginas</value></data>
+  <data name="Record_LanguageNone" xml:space="preserve"><value>Ainda nada</value></data>
+  <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}: não foi possível obter as palavras.</value></data>
   <data name="Record_Start" xml:space="preserve"><value>Começar a gravar</value></data>
   <data name="Record_LongPages" xml:space="preserve"><value>Páginas longas vêm em partes, para que as palavras sempre caibam na tela.</value></data>
   <data name="Record_Says" xml:space="preserve"><value>{0} diz:</value></data>

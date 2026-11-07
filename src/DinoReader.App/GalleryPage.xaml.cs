@@ -937,7 +937,8 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 
 		RecordBook book = RecordSplitBook.Of(story);
-		return new BookSheet.VoiceOffer(RecordSplitWalk.Progress(story, book, RecordChoices.Load(story, book).Mode), story.UseRecordings);
+		string language = StoryLanguages.Current().All.OrderByDescending(l => StoryRecordings.Count(story, l)).First(); // the story language with the most recorded (the app language on a tie): Slice 286
+		return new BookSheet.VoiceOffer(RecordSplitWalk.Progress(story, book, RecordChoices.Load(story, book, language).Mode, language), story.UseRecordings);
 	}
 
 	private Task SaveUseVoiceAsync(bool useVoice) => SaveSheetStoryAsync(story => story with { UseRecordings = useVoice });
