@@ -1,8 +1,8 @@
-# Slice 313 — Restore the "Still getting the voice ready" overlay when the person returns to the reader during a stalled read
+# Slice 314 — Restore the "Still getting the voice ready" overlay when the person returns to the reader during a stalled read
 
 *Planned 2026-11-07.* Follow-up to [Slice 304](304-slice-202-rereview-and-initwait-test.md) review 6 (`reviews/s304-202-medium.md`): `ReaderPage.OnAppearing` re-subscribes `StallChanged`, but `ISpeechReader` exposes no stalled state, so a stalled read is silent with no Cancel after the person visits Settings or Review and comes back. Android and iOS both (shared `ReaderPage`).
 
-**Touches:** `src/ReadTheStupidText.Application/**` (`ISpeechReader`), the `ISpeechReader` implementations (find them with a grep; Mobile and Infrastructure), `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/313-reader-stall-overlay-after-return.md`
+**Touches:** `src/ReadTheStupidText.Application/**` (`ISpeechReader`), the `ISpeechReader` implementations (find them with a grep; Mobile and Infrastructure), `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/314-reader-stall-overlay-after-return.md`
 
 ## Work
 

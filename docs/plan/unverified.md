@@ -6,7 +6,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - Review-picked language holds after Review's Read, and an edit clears it (device).
 - Scan or import of the same text keeps the language (device).
 - Language-change rebuild shows a loading state when it takes over 500 ms (review 9; caller in Settings/AppShell, not read by this slice).
-- Stalled-read overlay is not restored after leaving and returning (review 6): `ISpeechReader` exposes no stalled state; follow-up is [Slice 313](slices/313-reader-stall-overlay-after-return.md).
+- Stalled-read overlay is not restored after leaving and returning (review 6): `ISpeechReader` exposes no stalled state; follow-up is [Slice 314](slices/314-reader-stall-overlay-after-return.md).
 - No scripted flow yet for Review-pick-then-Read.
 
 ### Slice 302: Slice 239 leftovers ([slice](slices/302-slice-239-leftovers.md))

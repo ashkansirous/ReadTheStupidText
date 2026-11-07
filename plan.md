@@ -41,7 +41,7 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 310 | Dino Debug hook to force a voice-pack download failure | planned | | | [310-dino-debug-hook-force-pack-failure.md](docs/plan/slices/310-dino-debug-hook-force-pack-failure.md) |
 | 311 | Crash data for the Windows apps from the Microsoft Store | planned | | | [311-windows-store-crash-data.md](docs/plan/slices/311-windows-store-crash-data.md) |
 | 312 | Read the iPhone's crash logs from this PC | planned | | | [312-read-iphone-crash-logs-from-this-pc.md](docs/plan/slices/312-read-iphone-crash-logs-from-this-pc.md) |
-| 313 | Restore the "Still getting the voice ready" overlay when the person returns to the reader during a stalled read | planned | | | [313-reader-stall-overlay-after-return.md](docs/plan/slices/313-reader-stall-overlay-after-return.md) |
+| 314 | Restore the "Still getting the voice ready" overlay when the person returns to the reader during a stalled read | planned | | | [314-reader-stall-overlay-after-return.md](docs/plan/slices/314-reader-stall-overlay-after-return.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
