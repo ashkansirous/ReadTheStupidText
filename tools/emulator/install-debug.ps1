@@ -92,7 +92,7 @@ if ($Rebuild -and (Test-NoBuildRequested $NoBuild)) {
 }
 $apk = if ($Rebuild) { $null } else { Find-CachedBuild $buildDir $apkFilter }
 if ((Test-NoBuildRequested $NoBuild) -and -not (Find-CachedBuild (Get-NoBuildLookupDir $buildDir) $apkFilter)) {
-    Write-Host (Format-EmulatorNoBuildMiss $App $key)
+    Write-EmulatorNoBuildMiss $App $key
     exit $script:EmulatorExitCacheMissed
 }
 $boot = if ($BuildOnly) { $null } else { Start-EmulatorInBackground }
