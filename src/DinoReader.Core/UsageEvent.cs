@@ -33,6 +33,9 @@ public static class UsageEventName
     public const string ReadStopped = "read_stopped";
     public const string BookLeft = "book_left";
 
+    // Slice 288: a reading that reached 30 s of played audio (one per reading). read_paused and read_stopped also carry Seconds.
+    public const string BookListened = "book_listened";
+
     // Slice 267: which voice a read used (detail: AudioPackUsage.ReadVoice), and how one pre-made audio pack download went (detail: started / done / failed:<kind>).
     public const string ReadVoice = "read_voice";
     public const string AudioPackDownload = "audio_pack_download";
@@ -47,7 +50,7 @@ public static class DemoReadCounting
     private static readonly HashSet<string> BookCounts =
     [
         UsageEventName.BookOpened, UsageEventName.BookFinished, UsageEventName.BookLeft,
-        UsageEventName.ReadStarted, UsageEventName.ReadPaused, UsageEventName.ReadResumed, UsageEventName.ReadStopped, UsageEventName.ReadVoice,
+        UsageEventName.ReadStarted, UsageEventName.ReadPaused, UsageEventName.ReadResumed, UsageEventName.ReadStopped, UsageEventName.ReadVoice, UsageEventName.BookListened,
     ];
 
     /// <summary>Whether the count <paramref name="eventName"/> may be recorded for a read that is (<paramref name="demoRead"/>) or is not a demo.</summary>
@@ -230,8 +233,9 @@ public static class IntroSteps
 /// <see cref="Detail"/> (Slice 134) is the event's one extra closed value (see <see cref="UsageDetail"/>), empty for the reader events; a count about no book has <see cref="UsageSource.None"/> as book and source.
 /// <see cref="Session"/> and <see cref="Seq"/> (Slice 250) are the per-launch random session id (32 hex digits, in memory and on disk only inside unsent queued counts, never reused for a later launch) and the count's order inside it; null for a count made before they existed.
 /// <see cref="Count"/> and <see cref="DeviceCount"/> (Slice 273) are two optional whole numbers: a <c>fallback</c> count's number of times in the session, and a <c>read_voice</c> count's pieces read by clips (<see cref="Count"/>) and by the device voice (<see cref="DeviceCount"/>); left out of the JSON when null.
+/// <see cref="Seconds"/> (Slice 288) is the whole seconds of audio played since the previous paused or stopped row of the reading, on <c>read_paused</c> and <c>read_stopped</c> (always, 0 allowed; never on <c>book_listened</c>); left out of the JSON when null.
 /// </summary>
-public sealed record UsageEvent(string Name, string Book, string Language, string Source, bool HasRecording, string Version, string Platform, string Day, double SampleRate, string Detail = "", string? Session = null, int? Seq = null, int? Count = null, int? DeviceCount = null)
+public sealed record UsageEvent(string Name, string Book, string Language, string Source, bool HasRecording, string Version, string Platform, string Day, double SampleRate, string Detail = "", string? Session = null, int? Seq = null, int? Count = null, int? DeviceCount = null, int? Seconds = null)
 {
     private const int PackageIdLength = 32;
     private const string DayFormat = "yyyy-MM-dd";

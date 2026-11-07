@@ -83,6 +83,7 @@ export const FALLBACK_REASONS = [
   "tap_failed", "layout_failed",
 ] as const;
 const MAX_COUNT = 1_000_000;
+const MAX_SECONDS = 86_400;
 const NO_COUNT = -1;
 const AUDIO_PACK_OUTCOMES = ["started", "done", "failed:network", "failed:size", "failed:unzip", "failed:clip", "failed:missing", "failed:storage", "cancelled"] as const;
 // Slice 250: why a read stopped (the app's ReadStopReason; a test keeps the two lists the same). `window_stopped` is accepted though no caller emits it yet.
@@ -190,6 +191,8 @@ interface EventRule {
   readonly language?: string;
   /** Slice 273: true for the events whose `count` and `deviceCount` are kept (`fallback`, `read_voice`); every other event's numbers are dropped. */
   readonly counts?: boolean;
+  /** Slice 288: true for the events whose `seconds` (whole seconds of audio played, 0 to a day) is kept (`read_paused`, `read_stopped`). */
+  readonly seconds?: boolean;
 }
 
 const emptyDetail = (value: unknown): boolean => value === undefined || value === NO_DETAIL;
@@ -247,10 +250,12 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   voice_pack_download: { sources: [NO_BOOK], detail: detailIn(PACK_OUTCOMES) },
   // Slice 250: playback events, each about a book (a shelf book or the grown-up's own); only read_stopped has a detail.
   read_started: { sources: BOOK_SOURCES, detail: emptyDetail },
-  read_paused: { sources: BOOK_SOURCES, detail: emptyDetail },
+  read_paused: { sources: BOOK_SOURCES, detail: emptyDetail, seconds: true },
   read_resumed: { sources: BOOK_SOURCES, detail: emptyDetail },
-  read_stopped: { sources: BOOK_SOURCES, detail: detailIn(READ_STOP_REASONS) },
+  read_stopped: { sources: BOOK_SOURCES, detail: detailIn(READ_STOP_REASONS), seconds: true },
   book_left: { sources: BOOK_SOURCES, detail: emptyDetail },
+  // Slice 288: a reading reached 30 s of played audio (one per reading); `seconds` is double5 on read_paused / read_stopped only (a book_listened carries none; one sent is ignored, so hours never count twice).
+  book_listened: { sources: BOOK_SOURCES, detail: emptyDetail },
   // Slice 267: which voice a read used, and how one pre-made audio pack download went; closed lists only (docs/analytics/dino-voice-queries.md).
   read_voice: { sources: BOOK_SOURCES, detail: detailIn(READ_VOICES), counts: true },
   audio_pack_download: { sources: [SHELF_SOURCE], detail: detailIn(AUDIO_PACK_OUTCOMES) },
@@ -302,6 +307,8 @@ export interface UsageEvent {
   readonly count: number;
   /** Slice 273: how many pieces a read gave to the device voice (read_voice), or -1 when none was sent. */
   readonly deviceCount: number;
+  /** Slice 288: whole seconds of audio played (read_paused, read_stopped), or -1 when none was sent or it was out of range. */
+  readonly seconds: number;
 }
 
 /** What this module needs from the Worker's bindings (`DINO_USAGE` is declared in wrangler.jsonc). */
@@ -375,7 +382,7 @@ export function parseEvent(raw: unknown): UsageEvent | null {
   if (!valid) return null;
   const session = matches(SESSION_PATTERN, raw["session"]) ? raw["session"] : NO_SESSION;
   const seq = session !== NO_SESSION && isSeq(raw["seq"]) ? raw["seq"] : NO_SEQ;
-  return { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail, session, seq, count: rule.counts ? countOrNone(raw["count"]) : NO_COUNT, deviceCount: rule.counts ? countOrNone(raw["deviceCount"]) : NO_COUNT };
+  return { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail, session, seq, count: rule.counts ? countOrNone(raw["count"]) : NO_COUNT, deviceCount: rule.counts ? countOrNone(raw["deviceCount"]) : NO_COUNT, seconds: rule.seconds ? secondsOrNone(raw["seconds"]) : NO_COUNT };
 }
 
 /** A count's optional number, 0 to a million, else -1: a malformed one is dropped from the row, never the event. */
@@ -383,11 +390,16 @@ function countOrNone(value: unknown): number {
   return Number.isInteger(value) && (value as number) >= 0 && (value as number) <= MAX_COUNT ? (value as number) : NO_COUNT;
 }
 
+/** A count's played seconds, 0 to a day, else -1: a malformed one is dropped from the row, never the event. */
+function secondsOrNone(value: unknown): number {
+  return Number.isInteger(value) && (value as number) >= 0 && (value as number) <= MAX_SECONDS ? (value as number) : NO_COUNT;
+}
+
 function isSeq(value: unknown): value is number {
   return Number.isInteger(value) && (value as number) >= 0 && (value as number) <= MAX_SEQ;
 }
 
-/** The Analytics Engine data point for a count: the name is the sampling index, every field a blob (blob10-blob15 are the batch's country and device facts, Slice 166; blob16 is the per-launch session id, Slice 250, empty for a build that sent none), and double1 is the count's weight (1 / the sample rate the app counted at), so SUM(double1) estimates the true total; double2 is the count's order inside its session (-1 for none); double3 and double4 (Slice 273) are the count's `count` and `deviceCount` (-1 for none). Analytics Engine takes up to 20 blobs and 20 doubles, so there is room left. */
+/** The Analytics Engine data point for a count: the name is the sampling index, every field a blob (blob10-blob15 are the batch's country and device facts, Slice 166; blob16 is the per-launch session id, Slice 250, empty for a build that sent none), and double1 is the count's weight (1 / the sample rate the app counted at), so SUM(double1) estimates the true total; double2 is the count's order inside its session (-1 for none); double3 and double4 (Slice 273) are the count's `count` and `deviceCount` (-1 for none); double5 (Slice 288) is the played `seconds` of a read_paused or read_stopped (-1 for none). Analytics Engine takes up to 20 blobs and 20 doubles, so there is room left. */
 export function toDataPoint(event: UsageEvent, context: BatchContext = NO_CONTEXT): AnalyticsEngineDataPoint {
   const { country, device } = context;
   return {
@@ -397,7 +409,7 @@ export function toDataPoint(event: UsageEvent, context: BatchContext = NO_CONTEX
       country, device.osMajor, device.formFactor, device.arch, device.cores, device.ram,
       event.session,
     ],
-    doubles: [1 / event.sampleRate, event.seq, event.count, event.deviceCount],
+    doubles: [1 / event.sampleRate, event.seq, event.count, event.deviceCount, event.seconds],
   };
 }
 

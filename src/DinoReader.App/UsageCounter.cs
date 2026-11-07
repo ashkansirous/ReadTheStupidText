@@ -30,6 +30,14 @@ public sealed class UsageCounter
 	private readonly FallbackTally _fallbacks = new(); // Slice 273: in memory, so a new launch starts at zero
 	private readonly Dictionary<(string Book, string Language), (Story Story, string? Language)> _fallbackStories = []; // the book and language behind each tally entry, for the flush's repeat rows
 	private readonly UsageSession _session = new(); // Slice 250: one per process start, in memory only; a cold start is a new session
+	private const int ListenTimerSlackMilliseconds = 50;
+	private readonly object _listen = new(); // Slice 288: guards the tally, the story it is for and its timer
+	private readonly ListenTally _tally = new(() => Environment.TickCount64);
+	private readonly System.Threading.Timer _listenTimer; // fires when the current reading's played time reaches 30 s
+	private (Story Story, string? Language)? _listenStory;
+
+	// Slice 288: a book_listened decided under _listen, queued after the lock is released (so no lock is held across the send queue).
+	private readonly record struct PendingListen(Story Story, string? Language);
 
 	/// <summary>The id of this launch's session (Slice 250), for crash and problem reports; kept in memory, and on disk only inside counts still waiting in the send queue.</summary>
 	public string SessionId => _session.Id;
@@ -38,6 +46,7 @@ public sealed class UsageCounter
 
 	public UsageCounter(AppConfigClient config)
 	{
+		_listenTimer = new System.Threading.Timer(_ => OnListenTimer(), null, Timeout.Infinite, Timeout.Infinite);
 		_configHold = new ConfigFallbackHold(() => config.HasCopy, (area, reason, language) => RecordGeneralFallback(area, reason, language));
 		config.Fetched += (_, _) => _configHold.Release(); // every successful fetch, not only a changed config
 		_sender = new UsageQueueSender<UsageEvent>(new UsageQueueOptions<UsageEvent>(
@@ -75,12 +84,165 @@ public sealed class UsageCounter
 	/// </summary>
 	public void Record(string name, Story story, string detail = "", string? language = null, int? count = null, int? deviceCount = null)
 	{
+		(PendingListen? listen, int? seconds) = TallyPlayback(name, story, detail, language);
+		if (listen is { } reached)
+		{
+			RecordListen(reached); // before the pause or stop row it belongs ahead of, on this same thread
+		}
+
+		RecordLogged(name, story, detail, language, count, deviceCount, seconds);
+	}
+
+	// The one path every count takes to the queue.
+	private void RecordLogged(string name, Story story, string detail, string? language, int? count, int? deviceCount, int? seconds)
+	{
 #if DEBUG
 		// Slice 250: a Debug-only line per count asked for (before the sampling and switch checks), so a device flow can read the order of a session's counts and its one session id.
-		// Slice 273: with the counts a read_voice or fallback carries.
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] {name} {detail} session={_session.Id}{(count is null ? "" : $" count={count}")}{(deviceCount is null ? "" : $" device={deviceCount}")}");
+		// Slice 273: with the counts a read_voice or fallback carries. Slice 288: with the played seconds a read_paused or read_stopped carries (book_listened carries none).
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] {name}{(detail.Length == 0 ? "" : $" {detail}")} session={_session.Id}{(count is null ? "" : $" count={count}")}{(deviceCount is null ? "" : $" device={deviceCount}")}{(seconds is null ? "" : $" seconds={seconds}")}");
 #endif
-		RecordCore(name, story, detail, language, count, deviceCount);
+		RecordCore(name, story, detail, language, count, deviceCount, seconds);
+	}
+
+	private void RecordListen(PendingListen listen) =>
+		RecordLogged(UsageEventName.BookListened, listen.Story, string.Empty, listen.Language, null, null, null);
+
+	/// <summary>
+	/// Slice 288: the reading session says whether audio is really being heard (a clip or recording playing, or a silent piece shown): false while a piece loads, a menu holds the read, a person
+	/// paused, or a silent piece is covered. This is the only thing that runs or stops the listen tally; the playback counts only read it. Safe to call from any thread.
+	/// </summary>
+	public void SetAudible(bool audible)
+	{
+		PendingListen? listen;
+		lock (_listen)
+		{
+			_tally.SetAudible(audible); // the tally remembers it, so the next reading starts in step; a usage verb never sets it
+			if (audible)
+			{
+				ScheduleListen();
+				return;
+			}
+
+			_listenTimer.Change(Timeout.Infinite, Timeout.Infinite);
+			listen = TakeListenIfReached(); // a listen that crossed 30 s just before the pause still counts, once
+		}
+
+		if (listen is { } reached)
+		{
+			RecordListen(reached);
+		}
+	}
+
+	/// <summary>
+	/// Slice 288: the page was left. A reading still open here (its read_stopped never came, e.g. after a language switch with no restart) gets its read_stopped (left_book) carrying the seconds heard,
+	/// preceded by its listen if due; then audio is reported as not heard. Does nothing when no reading is open. Safe to call from any thread.
+	/// </summary>
+	public void EndReading()
+	{
+		PendingListen? listen = null;
+		int? seconds = null;
+		(Story Story, string? Language)? book;
+		lock (_listen)
+		{
+			book = _listenStory;
+			if (_tally.Active)
+			{
+				(listen, seconds) = ReportHeardSeconds(ended: true);
+			}
+		}
+
+		if (listen is { } reached)
+		{
+			RecordListen(reached);
+		}
+
+		if (book is { } open && seconds is not null)
+		{
+			RecordLogged(UsageEventName.ReadStopped, open.Story, ReadPlaybackNames.LeftBook, open.Language, null, null, seconds);
+		}
+
+		SetAudible(false);
+	}
+
+	// Slice 288: a start opens a reading's tally (it never resets one for the same story; a different story's start ends the old one first); a pause or stop gives back the whole seconds heard since the last of them, 0 when none (the row always carries them).
+	// Any listen that just reached 30 s is decided here too, and queued by the caller after the lock is released, ahead of the row.
+	private (PendingListen? Listen, int? Seconds) TallyPlayback(string name, Story story, string detail, string? language)
+	{
+		lock (_listen)
+		{
+			switch (name)
+			{
+				case UsageEventName.ReadStarted:
+					StartListening(story, language);
+					return (null, null);
+				case UsageEventName.ReadPaused:
+					return ReportHeardSeconds(ended: false);
+				case UsageEventName.ReadStopped:
+					return ReportHeardSeconds(ended: detail != ReadPlaybackNames.LanguageChanged); // a language switch keeps the sitting: its start follows for the same story
+				default:
+					return (null, null);
+			}
+		}
+	}
+
+	private void StartListening(Story story, string? language)
+	{
+		// A different story than the open one ended that reading first (its unsent seconds are dropped). A second start of the open story (a language switch) keeps the tally and takes the current language.
+		_tally.Start(story.Id);
+		_listenStory = (story, language);
+
+		ScheduleListen();
+	}
+
+	// A pause or stop: the listen that just reached 30 s comes first (the caller queues it before this row), then the seconds are read. A stop closes the reading; whether audio is heard is the session's word alone.
+	private (PendingListen? Listen, int? Seconds) ReportHeardSeconds(bool ended)
+	{
+		PendingListen? listen = TakeListenIfReached();
+		int seconds = _tally.TakeSeconds() ?? 0;
+		if (ended)
+		{
+			_tally.Stop();
+			_listenTimer.Change(Timeout.Infinite, Timeout.Infinite);
+		}
+
+		return (listen, seconds);
+	}
+
+	// Arms the timer for the moment played time reaches 30 s, or leaves it off when the reading is not playing or already counted.
+	private void ScheduleListen()
+	{
+		long? left = _tally.MillisecondsUntilListen();
+		_listenTimer.Change(left is { } due ? due + ListenTimerSlackMilliseconds : Timeout.Infinite, Timeout.Infinite);
+	}
+
+	// The timer fired: if the reading really has 30 s of played time, the one book_listened is queued for it (an app killed later still counts the listen).
+	private void OnListenTimer()
+	{
+		PendingListen? listen;
+		lock (_listen)
+		{
+			listen = TakeListenIfReached();
+			if (listen is null)
+			{
+				ScheduleListen(); // woke a hair early: wait out the rest
+			}
+		}
+
+		if (listen is { } reached)
+		{
+			RecordListen(reached);
+		}
+	}
+
+	// Called with _listen held: decides whether the one book_listened is due (it carries no seconds: they are on the pause and stop rows only). The caller queues it after the lock is released.
+	private PendingListen? TakeListenIfReached()
+	{
+		if (!_tally.TryMarkListened() || _listenStory is not { } book)
+		{
+			return null;
+		}
+
+		return new PendingListen(book.Story, book.Language);
 	}
 
 	/// <summary>
@@ -171,11 +333,11 @@ public sealed class UsageCounter
 		}
 	}
 
-	private void RecordCore(string name, Story story, string detail, string? language, int? count = null, int? deviceCount = null) =>
+	private void RecordCore(string name, Story story, string detail, string? language, int? count = null, int? deviceCount = null, int? seconds = null) =>
 		_sender.Enqueue((sampleRate, now) =>
 		{
 			bool fromCatalogue = UsageEvent.ShelfId(story.SourceId) is { } id && StarterStories.IsCatalogueId(id);
-			return Stamp(UsageEvent.For(name, story, fromCatalogue, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now, detail, language) with { Count = count, DeviceCount = deviceCount });
+			return Stamp(UsageEvent.For(name, story, fromCatalogue, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now, detail, language) with { Count = count, DeviceCount = deviceCount, Seconds = seconds });
 		});
 
 	// Slice 250: every count carries its session id and its place in the session, so it keeps them while it waits in the queue for a later launch.
