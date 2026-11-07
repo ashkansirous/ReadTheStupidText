@@ -100,8 +100,14 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
     }
 
     /// <summary>Stores the shelf order (Slice 264): a temp file, then a replace, so a crash keeps the old order. Only the reorder mode's Done calls it. Books stored earlier but not in <paramref name="ids"/> (not on the screen) keep their old relative place.</summary>
+    /// <exception cref="ArgumentException">An id is not a story id (Slice 298): nothing is written, so the stored order stays as it was.</exception>
     public async Task SaveOrderAsync(IReadOnlyList<string> ids)
     {
+        if (ids.Any(id => !StoryIds.IsValid(id)))
+        {
+            throw new ArgumentException("The shelf order holds an id that is not a story id.", nameof(ids));
+        }
+
         Directory.CreateDirectory(root);
         string temp = $"{OrderPath}.{Guid.NewGuid():N}{TempSuffix}";
         bool unreadable = await MergeAndReplaceOrderAsync(ids, temp);

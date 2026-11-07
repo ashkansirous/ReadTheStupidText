@@ -19,6 +19,10 @@ public sealed class HoldGesture
     private double _startX;
     private double _startY;
     private bool _swallowTap;
+    private long _swallowExpiresAt;
+
+    /// <summary>A release's own tap arrives within milliseconds; a swallow left by a fired hold expires this long after that release, so a stale one can never eat a later tap (Slice 298).</summary>
+    public const long SwallowWindowMilliseconds = 500;
 
     public HoldPhase Phase { get; private set; } = HoldPhase.Idle;
 
@@ -58,24 +62,43 @@ public sealed class HoldGesture
         Phase = opened ? HoldPhase.Idle : HoldPhase.Fired;
     }
 
-    /// <summary>Scrolling began, the cover hid, unloaded or was given another book: the hold is over. A fired hold also loses its swallow.</summary>
+    /// <summary>The cover hid, unloaded or was given another book (Slice 298): the hold is over and nothing is left to swallow, a fired hold included, so the first tap on the next book is never dropped.</summary>
     public void Cancel()
     {
-        Phase = Phase == HoldPhase.Pressed ? HoldPhase.Cancelled : HoldPhase.Idle;
         _swallowTap = false;
+        Phase = Phase == HoldPhase.Pressed ? HoldPhase.Cancelled : HoldPhase.Idle;
+    }
+
+    /// <summary>The list began to scroll or the reorder layer took over: a waiting hold is over, but a fired hold keeps its swallow, so a relayout in the middle of the touch
+    /// does not turn the release into a tap that opens the sheet; the release, or the next press, ends it.</summary>
+    public void CancelKeepingSwallow()
+    {
+        if (Phase == HoldPhase.Pressed)
+        {
+            Phase = HoldPhase.Cancelled;
+        }
+        else if (Phase != HoldPhase.Fired)
+        {
+            Phase = HoldPhase.Idle;
+        }
     }
 
     /// <summary>The finger or mouse button came up (or the system cancelled the touch). Always lands in Idle; a fired hold leaves one tap to swallow.</summary>
-    public void Release()
+    public void Release(long nowMilliseconds)
     {
-        _swallowTap = _swallowTap || Phase == HoldPhase.Fired;
+        if (Phase == HoldPhase.Fired)
+        {
+            _swallowTap = true;
+            _swallowExpiresAt = nowMilliseconds + SwallowWindowMilliseconds;
+        }
+
         Phase = HoldPhase.Idle;
     }
 
     /// <summary>A tap arrived. Returns true when it is the release of the press that fired the hold and must not open the sheet. The tap may come before or after <see cref="Release"/>.</summary>
-    public bool ShouldSwallowTap()
+    public bool ShouldSwallowTap(long nowMilliseconds)
     {
-        bool swallow = _swallowTap || Phase == HoldPhase.Fired;
+        bool swallow = (_swallowTap && nowMilliseconds <= _swallowExpiresAt) || Phase == HoldPhase.Fired;
         _swallowTap = false;
         if (Phase == HoldPhase.Fired)
         {
