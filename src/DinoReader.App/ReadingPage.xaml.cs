@@ -39,6 +39,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private readonly UsageCounter _usage;
 	private bool _finishCounted;
 	private bool _openCounted;
+	private Action<bool>? _audibleHandler; // Slice 288: the same lifetime, for the listening-time tally
 	private Action<Story, ReadVoiceUse>? _voiceUsedHandler; // Slice 267: the same lifetime, for the voice-used count
 	private Action<ReadingEventKind, ReadStopReason?>? _playbackHandler; // Slice 250: subscribed while the page is on the stack, bound to the book shown then
 	private readonly PageFollower _follower = new();
@@ -984,6 +985,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		_session.Stop(ReadStopReason.LeftBook);
 		UnsubscribePlayback(); // after the stop, so "read stopped (left_book)" is still counted; a late callback after the page left counts nothing
+		_usage.EndReading(); // Slice 288: the one place that closes a reading on leaving: a still-open one gets its read_stopped with the seconds, then audio is no longer heard
 		_ = _usage.FlushAsync();
 #if DEBUG
 		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Reading] left the page, read stopped");
@@ -1306,6 +1308,9 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		_session.Playback += _playbackHandler;
 		_voiceUsedHandler = (voiced, use) => OnVoiceUsed(book, voiced, use);
 		_session.VoiceUsed += _voiceUsedHandler;
+		_audibleHandler = _usage.SetAudible; // Slice 288: the listening-time tally runs on the session's audio output alone
+		_session.Audible += _audibleHandler;
+		_usage.SetAudible(_session.AudibleNow); // a flip while unsubscribed raised nothing here: read the current state once
 	}
 
 	private void UnsubscribePlayback()
@@ -1320,6 +1325,13 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		{
 			_session.VoiceUsed -= _voiceUsedHandler;
 			_voiceUsedHandler = null;
+		}
+
+		if (_audibleHandler is not null)
+		{
+			_session.Audible -= _audibleHandler;
+			_audibleHandler = null;
+			_usage.SetAudible(false); // no flip reaches the tally while unsubscribed; the next subscribe reads the session's state again
 		}
 	}
 

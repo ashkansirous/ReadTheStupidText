@@ -1,0 +1,70 @@
+# Slice 288: a book played for 35 s, paused, resumed for 10 s and left records exactly one `book_listened` (at 30 s of played time, while still playing)
+# and played seconds on the pause (about 35) and on the stop (about 10); the paused wait does not count.
+# The Debug build writes `[Usage] <name> <detail> session=<id> seconds=<n>` for each count it is asked to record, and `[Usage] book_listened session=<id>` (no seconds: only the pause and stop rows carry them) when the listen is queued, so no Worker is needed and nothing is sent: the harness off switch stays on.
+# expect-log: HOOK skip-first-run ok
+# expect-log: [Usage] read_started
+# expect-log: [Usage] book_listened
+# expect-log: [Usage] read_paused
+# expect-log: [Usage] read_resumed
+# expect-log: [Usage] read_stopped left_book
+# The device stage also checks from the log: one `book_listened` line, `read_paused ... seconds=` between 34 and 37, `read_stopped left_book ... seconds=` between 9 and 12, and book_listened logged before read_paused.
+# Fails against a build without the tally: no `[Usage] book_listened` line and no `seconds=` on the pause and stop lines.
+appId: uk.sirous.dinoreader.dbg
+name: A 35 s read gives one listen and played seconds (Dino)
+---
+- launchApp:
+    # No clearState: the app keeps its data (see leave-book-stops-read.yaml).
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+# The control describes itself as Pause while the read is Playing.
+- extendedWaitUntil:
+    visible: Pause
+    timeout: 90000
+# Play for 35 s (waiting for a control that never shows is the flow's fixed wait).
+- extendedWaitUntil:
+    visible:
+      id: ListenWaitNeverShown
+    timeout: 35000
+    optional: true
+- tapOn: Pause
+- extendedWaitUntil:
+    visible: Play
+    timeout: 10000
+# Paused for 3 s: not counted.
+- extendedWaitUntil:
+    visible:
+      id: ListenWaitNeverShown
+    timeout: 3000
+    optional: true
+- tapOn: Play
+- extendedWaitUntil:
+    visible: Pause
+    timeout: 10000
+# Play for 10 s more, then leave the book: read_stopped left_book with the seconds since the resume.
+- extendedWaitUntil:
+    visible:
+      id: ListenWaitNeverShown
+    timeout: 10000
+    optional: true
+- tapOn:
+    id: ReadingBack
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryTitle
+    timeout: 15000

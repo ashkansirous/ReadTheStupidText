@@ -129,7 +129,8 @@ device, account or advertising identifier, so they cannot be put together into a
 one person. (Dino Reader's counts also carry a random session number: it is made new every time the
 app starts and never reused for a later start. It lives in memory, and is also written only inside counts
 still waiting in the app's local send queue, and is gone once those counts are sent. It cannot tell two sessions of one person
-apart. Read The Stupid Text sends none.) Only a share of launches may count at all, as set by the project.
+apart. Read The Stupid Text sends none. Dino Reader also counts when a book was listened to for 30 seconds or more, and
+how many seconds of audio were played in a reading, as one whole number when it is paused or stopped: no time of day, no title.) Only a share of launches may count at all, as set by the project.
 
 Each batch of counts also says a few coarse things about the device, as fixed lists and ranges: the form
 factor (phone, tablet, desktop or other), the operating system's major version, the processor type (arm64, x64,

@@ -37,7 +37,18 @@ public sealed class ReadingSession
 	private bool _screenTextMatches = true; // false while the screen shows the story as written because the translation to the reading language failed (Slice 286)
 	private IReadOnlyList<int> _pageStarts = [];
 	private (int First, int Last)[] _pageSentences = [];
-	private RecordedPlay _recorded;
+	private RecordedPlay _recordedPlay;
+
+	// Slice 288: every change to a field IsAudible reads goes through a setter that runs UpdateAudible, so no transition can skip it.
+	private RecordedPlay _recorded
+	{
+		get => _recordedPlay;
+		set
+		{
+			_recordedPlay = value;
+			UpdateAudible();
+		}
+	}
 	private readonly HashSet<StoryClipKey> _unplayable = []; // clips of a recording that failed to play this session: read from the book's own clips (Slice 279: a clip is a run of a page's sentences)
 
 	/// <summary>A parent's clip that plays: its key, the story's sentence numbers it covers (first and last) and its length in seconds.</summary>
@@ -58,7 +69,17 @@ public sealed class ReadingSession
 	}
 
 	private StepRead? _stepRead;
-	private StepRead? _restartStep; // a step paused by the user (a piece shown for a beat, or a clip that failed while paused): it starts again when they resume
+	private StepRead? _restartStepRead;
+
+	private StepRead? _restartStep // a step paused by the user (a piece shown for a beat, or a clip that failed while paused): it starts again when they resume
+	{
+		get => _restartStepRead;
+		set
+		{
+			_restartStepRead = value;
+			UpdateAudible();
+		}
+	}
 	private CancellationTokenSource? _beat; // the timer of the beat being shown; null when none runs (a covered page or a person's pause stops it)
 	private readonly SilentBeat _silent = new(); // the one clock of a silent piece: active, covered, held by the person; the timer runs only while all allow it (Slice 278 part B, reviews/s278b-design.md)
 	private bool _pendingAdvance; // a step ended while the user had paused: Resume takes the next one
@@ -120,6 +141,14 @@ public sealed class ReadingSession
 	public event EventHandler<int>? SentenceChanged;
 
 	public event EventHandler? StateChanged;
+
+	/// <summary>Slice 288: audio started or stopped being heard (see <see cref="IsAudible"/>); raised on a change only, before the pause or stop count it belongs to. The listening-time tally runs on this alone.</summary>
+	public event Action<bool>? Audible;
+
+	/// <summary>Slice 288: the last value <see cref="Audible"/> raised (false before any); a page that subscribes later reads it once to start in step.</summary>
+	public bool AudibleNow => _audible;
+
+	private bool _audible;
 
 	/// <summary>Slice 250: a read started, paused, resumed or stopped (with the closed reason for a stop; null for the other verbs). The page turns each into a usage count.</summary>
 	public event Action<ReadingEventKind, ReadStopReason?>? Playback;
@@ -297,22 +326,25 @@ public sealed class ReadingSession
 			AppTrace.Reading(TraceLines.ReadingEvent.Paused, reason);
 			_player.Pause();
 			_recorded = RecordedPlay.Paused;
+			UpdateAudible(); // before the count, so the pause's seconds include what played up to now
 			RaiseIf(counted, ReadingEventKind.Paused);
-			StateChanged?.Invoke(this, EventArgs.Empty);
+			RaiseStateChanged();
 			return;
 		}
 
 		if (_silent.Active && !_silent.HeldByPerson)
 		{
 			AppTrace.Reading(TraceLines.ReadingEvent.Paused, reason);
-			RaiseIf(counted, ReadingEventKind.Paused);
 			if (_silent.Pause())
 			{
 				StopBeat();
 			}
 
+			UpdateAudible(); // before the count, as for a clip
+			RaiseIf(counted, ReadingEventKind.Paused);
+
 			AudioPackLog.Write("silent piece paused, it is shown again on resume");
-			StateChanged?.Invoke(this, EventArgs.Empty);
+			RaiseStateChanged();
 		}
 	}
 
@@ -323,6 +355,8 @@ public sealed class ReadingSession
 		{
 			StopBeat();
 		}
+
+		UpdateAudible();
 	}
 
 	/// <summary>The page is shown again: the beat of a piece that is still wanted starts again, whole. A pause the person made themselves stays paused.</summary>
@@ -332,6 +366,8 @@ public sealed class ReadingSession
 		{
 			StartBeatTimer();
 		}
+
+		UpdateAudible();
 	}
 
 	// The person (or the app's own pause, uncounted) resumes a held beat: logged as a user resume only when counted, and the whole beat starts at once, or when the page is shown if it is covered.
@@ -348,7 +384,7 @@ public sealed class ReadingSession
 			AudioPackLog.Write("silent piece resumed while the page is covered, it is shown when the page is");
 		}
 
-		StateChanged?.Invoke(this, EventArgs.Empty);
+		RaiseStateChanged();
 	}
 
 	/// <param name="counted">False for a resume of a pause the app made itself (the language menu), which is not a count (Slice 250).</param>
@@ -388,7 +424,7 @@ public sealed class ReadingSession
 			}
 
 			_player.Resume();
-			StateChanged?.Invoke(this, EventArgs.Empty);
+			RaiseStateChanged();
 		}
 	}
 
@@ -418,8 +454,7 @@ public sealed class ReadingSession
 			AppTrace.Reading(TraceLines.ReadingEvent.Stopped, ReadStopTrace.ReasonOf(reason));
 		}
 
-		RaiseStopped(reason);
-
+		RaiseStopped(reason); // first: the read_stopped row carries the seconds heard up to now and closes the tally; only then does audio stop being heard
 		CancelRead();
 		StopRecording();
 		_activeReadId = 0;
@@ -460,7 +495,7 @@ public sealed class ReadingSession
 			return;
 		}
 
-		StateChanged?.Invoke(this, EventArgs.Empty);
+		RaiseStateChanged();
 		await TryStartReadAsync(story, _sentences[sentence].Start, id, cancellation);
 	}
 
@@ -478,6 +513,8 @@ public sealed class ReadingSession
 			_player.Stop();
 			_recorded = RecordedPlay.None;
 		}
+
+		UpdateAudible();
 	}
 
 	private void StopBeat()
@@ -545,7 +582,7 @@ public sealed class ReadingSession
 			_activeReadId = 0;
 			Finished = true;
 			RaiseStopped(ReadStopReason.Finished);
-			StateChanged?.Invoke(this, EventArgs.Empty);
+			RaiseStateChanged();
 			return;
 		}
 
@@ -571,7 +608,7 @@ public sealed class ReadingSession
 		{
 			_player.Stop();
 			_recorded = RecordedPlay.None;
-			StateChanged?.Invoke(this, EventArgs.Empty);
+			RaiseStateChanged();
 			return; // paused by the user: the page reads from the book's clips when they resume playing, not on its own
 		}
 
@@ -834,12 +871,17 @@ public sealed class ReadingSession
 		{
 			double rate = ReadingSpeedPreference.Load().Value;
 			// The clip counts as playing before Play, so an ended or failed callback that reaches the main thread at once finds it playing and is handled, not dropped.
+			// Slice 288: but it is not audible until Play has returned, so loading time is never heard time (and a Play that throws raises no audible flip).
+			_playStarting = true;
 			_recorded = RecordedPlay.Playing;
 			_player.Play(path, () => MainThread.BeginInvokeOnMainThread(() => ApplyPremadeEnded(read, index, failed: false)),
 				() => MainThread.BeginInvokeOnMainThread(() => ApplyPremadeEnded(read, index, failed: true)), rate);
+			_playStarting = false;
+			UpdateAudible();
 		}
 		catch (Exception ex)
 		{
+			_playStarting = false;
 			_recorded = RecordedPlay.None;
 			AudioPackLog.Write($"premade clip could not play ({ex.GetType().Name}), the piece is shown for a beat");
 			if (read.Reported.Add(index))
@@ -947,6 +989,7 @@ public sealed class ReadingSession
 		Interlocked.CompareExchange(ref _beat, null, beat);
 		beat.Dispose();
 		_silent.End();
+		UpdateAudible(); // the beat is over: no silent time counts while the next piece loads
 		AdvanceStep(read.ReadId);
 	}
 
@@ -974,7 +1017,7 @@ public sealed class ReadingSession
 		if (wasPaused)
 		{
 			_restartStep = read;
-			StateChanged?.Invoke(this, EventArgs.Empty);
+			RaiseStateChanged();
 			return;
 		}
 
@@ -1025,7 +1068,7 @@ public sealed class ReadingSession
 		Finished = true;
 		AppTrace.Reading(TraceLines.ReadingEvent.Stopped, TraceLines.ReadingReason.Finished);
 		RaiseStopped(ReadStopReason.Finished);
-		StateChanged?.Invoke(this, EventArgs.Empty); // the page counts a finished book from this
+		RaiseStateChanged(); // the page counts a finished book from this
 	}
 
 	// A generated read ends where the next page with a parent's recording begins, and goes on there with the recording (Slice 111).
@@ -1093,6 +1136,28 @@ public sealed class ReadingSession
 	private void ClearPending()
 	{
 		_pendingReadId = 0;
+		RaiseStateChanged();
+	}
+
+	// Slice 288: audio is heard while a clip or recording plays, or a silent piece runs on a shown page; never while a piece loads, a person or a menu paused it, or a silent piece is covered.
+	private bool IsAudible => !_playStarting && (_recorded == RecordedPlay.Playing || (_recorded == RecordedPlay.None && _restartStep is null && _silent.Running));
+
+	private bool _playStarting; // a clip is marked playing but its Play call has not returned yet: not heard (Slice 288)
+
+	// The one place the audible flag changes: raised only when it flips, before the state change that follows it.
+	private void UpdateAudible()
+	{
+		bool audible = IsAudible;
+		if (audible != _audible)
+		{
+			_audible = audible;
+			Audible?.Invoke(audible);
+		}
+	}
+
+	private void RaiseStateChanged()
+	{
+		UpdateAudible();
 		StateChanged?.Invoke(this, EventArgs.Empty);
 	}
 }
