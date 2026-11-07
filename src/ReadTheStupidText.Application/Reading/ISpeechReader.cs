@@ -43,6 +43,10 @@ public interface ISpeechReader
         remove { }
     }
 
+    /// <summary>True while the read waits for its next chunk of audio, the state behind <see cref="StallChanged"/> (Slice 314): a page that
+    /// subscribes late reads it to restore its overlay. A reader that cannot know never stalls, which is the default.</summary>
+    bool IsStalled => false;
+
     /// <summary>Raised on any thread when a later sentence of the playing chunk starts (Slice 190), for the phone's one-sentence highlight.
     /// A reader that does not know its sentence starts (Windows, the phone's own voice) never raises it, which is the default.</summary>
     event EventHandler<SentenceChange>? SentenceChanged

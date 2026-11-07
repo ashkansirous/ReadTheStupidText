@@ -149,6 +149,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         remove => _stall.Changed -= value;
     }
 
+    public bool IsStalled => _stall.IsStalled;
+
     public PlaybackState State => _state;
 
     public bool ReadInProgress
@@ -734,7 +736,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         string path;
         try
         {
-            path = await _stall.WatchAsync(generated);
+            path = await _stall.WatchAsync(generated, token);
         }
         catch (OperationCanceledException)
         {

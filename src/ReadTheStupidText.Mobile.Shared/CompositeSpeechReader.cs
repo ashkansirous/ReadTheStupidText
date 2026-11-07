@@ -74,6 +74,8 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
 
     public event EventHandler<bool>? StallChanged;
 
+    public bool IsStalled => _active.IsStalled;
+
     public PlaybackState State => _active.State;
 
     public async Task SpeakAsync(string text, int? activityId = null)

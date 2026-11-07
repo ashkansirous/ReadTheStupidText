@@ -24,7 +24,7 @@ public sealed class StallReporter(object owner)
     /// Awaits <paramref name="pending"/>; a task that is not finished yet counts as a stall for as long as it takes. Watches are counted,
     /// so the stall ends only when the last of overlapping watches (a replaced read ending late, its replacement still waiting) is done.
     /// </summary>
-    public async Task<T> WatchAsync<T>(Task<T> pending)
+    public async Task<T> WatchAsync<T>(Task<T> pending, CancellationToken token)
     {
         if (pending.IsCompleted)
         {
@@ -32,13 +32,25 @@ public sealed class StallReporter(object owner)
         }
 
         Move(+1);
+        int released = 0;
+        void Release()
+        {
+            if (Interlocked.Exchange(ref released, 1) == 0)
+            {
+                Move(-1);
+            }
+        }
+
+        // Slice 314: the ticket goes at whichever comes first, the chunk arriving or the read being stopped, so a stopped read whose
+        // native synthesis is still running no longer counts as a stall.
+        using CancellationTokenRegistration registration = token.Register(Release);
         try
         {
             return await pending;
         }
         finally
         {
-            Move(-1);
+            Release();
         }
     }
 
