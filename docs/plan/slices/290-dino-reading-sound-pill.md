@@ -1,6 +1,6 @@
 ### Slice 290 — Dino: the reading page's sound line as a pill (Batch 50 design)
 
-*In progress (2026-11-07), branch feat/s290-dino-sound-pill.*
+*Built (2026-11-07), branch feat/s290-dino-sound-pill.*
 
 **Touches:** `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/IconView.cs`, `src/DinoReader.App/App.xaml`, `src/DinoReader.App/SoundStatusPill*.cs`, `tests/DinoReader.Tests/**`, `.maestro/dino/**`, `docs/plan/slices/290-dino-reading-sound-pill.md`
 
@@ -45,17 +45,42 @@ language name in a Fredoka line.
 
 ## Work
 
-- [ ] Android and iOS (shared MAUI code; the Windows head gets it too): replace `StatusLabel` with a pill view
+- [x] Android and iOS (shared MAUI code; the Windows head gets it too): replace `StatusLabel` with a pill view
       (`Border` + icon + `Label`), keep `AutomationId="ReadingAudioStatus"` on the element whose text the flows read.
-- [ ] `AudioStatusText` returns the state as data (kind + text + progress), not only a string; the view picks colours
+- [x] `AudioStatusText` returns the state as data (kind + text + progress), not only a string; the view picks colours
       and icon from the kind. Backend stays copy-free; the text still comes from `AppResources`.
-- [ ] Icons: add `Wifi` and `SoundOff` to `IconKind` (paths from the mock), and a progress ring (reuse
+- [x] Icons: add `Wifi` and `SoundOff` to `IconKind` (paths from the mock), and a progress ring (reuse
       `HoldRingDrawable` if it fits, else a small drawable) that redraws when the run's position changes.
-- [ ] Colour token for the sand pill `#F0E8D8` in `App.xaml` if none exists; no hex in code.
-- [ ] The count joins with ` · ` (a named constant or a resource, not a literal in the method).
-- [ ] Unit test for the state-to-kind mapping (pure).
-- [ ] Emulator: the existing `.maestro/dino/language-change-fetches-audio` and `silent-piece-beat` flows still pass
-      (they read `ReadingAudioStatus`); a screenshot of 197 and 199 compared with the mock.
+- Why the ring is its own drawable (`SoundStatusPillRing`), not `HoldRingDrawable`: the mock's ring is a 24-unit ring with a down arrow inside and a track, unlike `HoldRingDrawable`'s hold ring, so reuse did not fit.
+- [x] Colour token for the sand pill `#F0E8D8` in `App.xaml` if none exists; no hex in code.
+- [x] The count joins with ` · ` (a named constant or a resource, not a literal in the method).
+- [x] Unit test for the state-to-kind mapping (pure).
+- [x] Emulator: the existing `.maestro/dino/language-change-fetches-audio` and `silent-piece-beat` flows still pass
+      (they read `ReadingAudioStatus`); a screenshot of 199 compared with the mock (197 not captured, see below).
+
+## Built (2026-11-07)
+
+- New `SoundStatusPill.cs` (Border, ring, IconView, Label; `ReadingAudioStatus` on the label), pure
+  `SoundStatusPillState.cs` (kind, count, `CountSeparator` " · "), `SoundStatusPillRing.cs`; `IconKind.Wifi` and
+  `SoundOff` (filled r=1 Wi-Fi dot); tokens `SoundPillSand` and `RingTrack` in `App.xaml`/`DinoTokens.cs`. Row pinned
+  left-to-right (icon leading), label text follows its own language direction; icons hidden from the screen reader.
+- Reviews: high `D:\ReadTheStupidText-worktrees\reviews\290-high.md` (1, 2, 3, 5, 6, 8, 9, 10 applied; 4 skipped: the
+  app ships no medium Fredoka weight; 7 skipped, reason below); medium `D:\ReadTheStupidText-worktrees\reviews\290-medium.md`
+  (1 high, construction order, and 2, 4, 5 applied; 3 skipped, the view is a fixed 24 units; 6 skipped, the count
+  matches the shipped counter).
+- The ring is its own drawable, not `HoldRingDrawable`: the mock's ring is a 24-unit ring with a download arrow inside.
+- Fast checks: DinoReader.Tests 3777 passed, 1 skipped; Dino Android build 0 errors.
+- Emulator-5554, 2026-11-07: `language-change-fetches-audio` PASS, `silent-piece-beat` PASS. Screenshot of the
+  no-sound pill (`reviews/290-device/silent-piece-no-sound.png`) matches frame 199 by eye: sand pill, muted speaker
+  left, text hugging, centred between picture and transport row.
+
+## Not yet verified
+
+- The "Getting … audio · N of M" pill (frame 197): lilac colour, the ring filling, the " · " count. No screenshot was
+  taken while it showed (the run's screen capture started after that flow; the emulator was then held by another run).
+- The Wi-Fi pill (frame 198) and the Preparing pill on a device.
+- A Farsi or Arabic pill whose text wraps (label right-aligned, icon still left).
+- iPhone and the Windows head: not built here; shared code with no platform branches.
 
 ## Verification
 

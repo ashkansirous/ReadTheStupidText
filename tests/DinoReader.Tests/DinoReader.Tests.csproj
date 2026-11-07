@@ -42,6 +42,8 @@
     <Compile Include="..\..\src\DinoReader.App\IosUpdateTarget.cs" Link="Linked\IosUpdateTarget.cs" />
     <!-- The pure font/size fallback behind the iOS text attributes (Slice 244). -->
     <Compile Include="..\..\src\DinoReader.App\Platforms\iOS\AttributeFallback.cs" Link="Linked\AttributeFallback.cs" />
+    <!-- The reading page's sound pill: which pill a shelf-run state maps to (Slice 290). -->
+    <Compile Include="..\..\src\DinoReader.App\SoundStatusPillState.cs" Link="Linked\SoundStatusPillState.cs" />
   </ItemGroup>
 
   <ItemGroup>
