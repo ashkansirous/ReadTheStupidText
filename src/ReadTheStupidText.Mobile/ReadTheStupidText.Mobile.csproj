@@ -12,6 +12,10 @@
 		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' == ''">net10.0-ios</TargetFrameworks>
 		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' != '' And !$(TargetFrameworks.Contains('net10.0-ios'))">$(TargetFrameworks);net10.0-ios</TargetFrameworks>
 
+		<!-- Slice 305: Mobile.Shared's per-app switches (Dino Reader sets both false): this app links the speech engines and ML Kit. -->
+		<IncludeSpeechEngines>true</IncludeSpeechEngines>
+		<IncludeMlKit>true</IncludeMlKit>
+
 		<OutputType>Exe</OutputType>
 		<RootNamespace>ReadTheStupidText.Mobile</RootNamespace>
 		<UseMaui>true</UseMaui>
@@ -96,6 +100,14 @@
 		     see PRIVACY.md) moved to Mobile.Shared with Dino Reader's translation (Slice 95). -->
 		<PackageReference Include="Xamarin.Google.MLKit.Language.Id" Version="117.0.6.9" />
 
+		<!-- Slice 305: Mobile.Shared references these with PrivateAssets="all", so they no longer flow to Dino Reader (which links no ML Kit and no onnxruntime);
+		     this app asks for them itself, at the same versions (SherpaOnnxVersion.props), to ship exactly what it did before. -->
+		<PackageReference Include="Xamarin.GooglePlayServices.MLKit.DocumentScanner" Version="$(MlKitDocumentScannerVersion)" />
+		<PackageReference Include="Xamarin.Google.MLKit.TextRecognition" Version="$(MlKitTextRecognitionVersion)" />
+		<PackageReference Include="Xamarin.GooglePlayServices.Tasks" Version="$(MlKitGmsTasksVersion)" />
+		<PackageReference Include="Xamarin.Google.MLKit.Translate" Version="$(MlKitTranslateVersion)" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="$(OnnxRuntimeVersion)" />
+
 		<!-- The scanner and the text recognizer both pull Fragment.Ktx 1.8.8.1 while the MAUI
 		     graph resolves Fragment 1.9.0 (which already contains the ktx classes): D8 fails
 		     with duplicate classes. Pin the matching Ktx build. -->
@@ -106,6 +118,11 @@
 	     the SherpaOnnxC.xcframework fetch and the full onnxruntime package, shared with Dino Reader.
 	     The engine and OCR code itself lives in ReadTheStupidText.Mobile.Shared. -->
 	<Import Project="..\ReadTheStupidText.Mobile.Shared\IosSherpaPackaging.props" />
+
+	<!-- Slice 305: ML Kit Translate on iOS, referenced here because Mobile.Shared's own reference is PrivateAssets="all" (Dino Reader links none). Not in the simulator compile: the xcframework has no simulator slice. -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' And !$(RuntimeIdentifier.StartsWith('iossimulator'))">
+		<PackageReference Include="EngageSolutionsGroup.Apple.MLKitTranslate" Version="$(MlKitTranslateIosVersion)" />
+	</ItemGroup>
 
 	<!-- The privacy manifest App Store Connect requires; the iOS counterpart of the Android
 	     manifest. -->
@@ -140,7 +157,7 @@
 		<ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
 		<ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
 		<ProjectReference Include="..\ReadTheStupidText.Documents\ReadTheStupidText.Documents.csproj" />
-		<ProjectReference Include="..\ReadTheStupidText.Mobile.Shared\ReadTheStupidText.Mobile.Shared.csproj" AdditionalProperties="IosSimulatorBuild=$(RuntimeIdentifier.StartsWith('iossimulator'))" /> <!-- a global RuntimeIdentifier does not reach Mobile.Shared; it needs to know about a simulator build (no ML Kit there) -->
+		<ProjectReference Include="..\ReadTheStupidText.Mobile.Shared\ReadTheStupidText.Mobile.Shared.csproj" AdditionalProperties="IosSimulatorBuild=$(RuntimeIdentifier.StartsWith('iossimulator'));IncludeSpeechEngines=$(IncludeSpeechEngines);IncludeMlKit=$(IncludeMlKit)" /> <!-- a global RuntimeIdentifier does not reach Mobile.Shared; it needs to know about a simulator build (no ML Kit there) -->
 	</ItemGroup>
 
 	<!-- Fail early and clearly instead of restoring a project with no target framework. -->

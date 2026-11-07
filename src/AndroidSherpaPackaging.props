@@ -4,8 +4,8 @@
 	<Import Project="$(MSBuildThisFileDirectory)SherpaOnnxVersion.props" />
 
 	<!-- The Android sherpa-onnx native packaging, shared by every project that links the engine:
-	     ReadTheStupidText.Mobile.Shared (it compiles against sherpa) AND each app (Read The
-	     Stupid Text Mobile, Dino Reader). It must be imported by the apps too: NuGet's
+	     ReadTheStupidText.Mobile.Shared (it compiles against sherpa) AND each app that links it (Read The
+	     Stupid Text Mobile; Dino Reader does not since Slice 305, and must not import this). It must be imported by such an app too: NuGet's
 	     ExcludeAssets does not flow to a consuming project, so an app that only references
 	     Mobile.Shared would restore the seven non-Android runtime.* packages with all their
 	     assets and the Android SDK would see their linux/win/osx native libraries as

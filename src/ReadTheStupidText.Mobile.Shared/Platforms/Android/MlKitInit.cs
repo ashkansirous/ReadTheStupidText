@@ -4,8 +4,8 @@ namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Starts Google ML Kit by hand (the 2026-10-29 ML Kit-only-for-grown-ups fix). ML Kit's own <c>MlKitInitProvider</c> would start it when the process starts; Dino Reader (a children's
-/// app) removes that provider in its manifest so nothing of ML Kit runs until a grown-up asks for a translation or a scan. Whatever is about to use ML Kit
-/// calls <see cref="EnsureInitialized"/> first. Read The Stupid Text keeps the provider, so there the call finds ML Kit already started and does nothing.
+/// app) links no ML Kit at all since Slice 305, so it has no provider to remove and this file is not compiled for it. An app that links ML Kit calls <see cref="EnsureInitialized"/> before using it;
+/// Read The Stupid Text keeps ML Kit's provider, so there the call finds ML Kit already started and does nothing.
 /// </summary>
 public static class MlKitInit
 {

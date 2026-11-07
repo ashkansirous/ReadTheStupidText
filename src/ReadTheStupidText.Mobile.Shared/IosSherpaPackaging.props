@@ -2,8 +2,8 @@
 
 	<!-- The iOS neural-voice native packaging for an app project (Slice 49, 67): the managed
 	     sherpa-onnx binding, the engine's SherpaOnnxC.xcframework (fetched and hash-checked, then
-	     linked as a framework) and the full onnxruntime package PaddleOCR needs. Imported by both
-	     ReadTheStupidText.Mobile and DinoReader.App. The version comes from ..\SherpaOnnxVersion.props
+	     linked as a framework) and the full onnxruntime package PaddleOCR needs. Imported by
+	     ReadTheStupidText.Mobile only (Dino Reader links no engine since Slice 305; do not import it there). The version comes from ..\SherpaOnnxVersion.props
 	     (Slice 245), the same one Android and Windows use, which ReadTheStupidText.Mobile.Shared.csproj
 	     imports too; SherpaIosZipSha256 below must change with it. -->
 	<Import Project="$(MSBuildThisFileDirectory)..\SherpaOnnxVersion.props" />
