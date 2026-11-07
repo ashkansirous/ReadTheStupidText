@@ -2,6 +2,11 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 296: Why a Farsi read matched 5 of 78 pieces to clips ([slice](slices/296-farsi-read-clip-match.md))
+- iOS: a Farsi read on an iPhone reports its clip count (no iOS `fa` reads in production in 30 days, so no log to read yet).
+- Mid-book read start (`ClipOffsetAsync`) is not modelled or run; only reads from the start are covered.
+- Runs 2 and 3 used throwaway flows not in the repo; only run 1's build label (`0ac339e41410`) is proven.
+
 ### Slice 311: Crash data for the Windows apps from the Microsoft Store ([slice](slices/311-windows-store-crash-data.md))
 - A real pull with the Actions secrets exported for both apps (not readable on this PC): does it print rows or `none` for RTST `9NGT1BN1H92V` and Dino, and are the failure names symbolised?
 - Whether either app is under an undocumented Store threshold; if a real pull returns no rows for an app with users, plan the self-reporting Windows slice (item 3, already decided).
