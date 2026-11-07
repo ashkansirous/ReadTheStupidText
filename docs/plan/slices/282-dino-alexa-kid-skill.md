@@ -1,6 +1,6 @@
 # Slice 282 — Dino: an Alexa kid skill that reads the store books
 
-*In progress (wave 2026-11-07), draft PR.* *Planned 2026-11-06; item 1 decided 2026-11-07 (see Work).* *Earlier park reason, now settled (night 2026-11-06-1250 wave 4; moved back to planned by the night's final feedback loop, 2026-11-07): item 1 unsettled. Amazon's kid-skill, policy and AudioPlayer pages neither allow nor forbid long-form audio (AudioPlayer) in a child-directed skill. Next step: the user asks Amazon (developer support, their account) or chooses a skill not marked for kids; a wave re-parks it until then.* Server only (Cloudflare Worker) plus the skill definition; the apps do not change.
+*Built 2026-11-07 (night 2026-11-07-1412 wave 6), PR #935, not merged; not yet tried on a real Echo.* *Planned 2026-11-06; item 1 decided 2026-11-07 (see Work).* Server only (Cloudflare Worker) plus the skill definition; the apps do not change.
 
 **Depends on:** Slice 281 (the listening tracks).
 **Touches:** `alexa/skill-package/**` (new: manifest, interaction models en-GB and en-US), `worker/alexa*.ts` (new),
@@ -38,9 +38,13 @@ Premises checked on origin/main 9ec6489c: dispatch goes like Sonos (`worker/inde
   host `s3.amazonaws.com` case-insensitive, path starts `/echo.api/` after normalising, port 443 or none); (2) fetch the
   PEM chain, cached per isolate by URL; (3) leaf valid now, SAN contains `echo-api.amazon.com`, chain verifies up to a
   root in a small bundled list; (4) `Signature-256` header = base64 RSA-SHA256 over the raw body bytes with the leaf key
-  (`crypto.subtle`); (5) `request.timestamp` within 150 s; (6) when the `ALEXA_SKILL_ID` var is non-empty,
-  `session.application.applicationId` / `context.System.application.applicationId` must equal it (empty until the user
-  creates the skill: the signature already proves the request is from Alexa). Any failure = HTTP 400, no body detail.
+  (`crypto.subtle`); (5) `request.timestamp` within 150 s; (6) `session.application.applicationId` / `context.System.application.applicationId` must equal the `ALEXA_SKILL_ID`
+  var. **Fail closed (review, 2026-11-07):** an empty id refuses every request with 400, because the signature only proves
+  the sender is Alexa, not that it is our skill (any developer could point a skill at this URL). The user step of creating
+  the skill sets the id in both wrangler configs; until then the endpoint answers 400 to everyone. Any failure = HTTP 400, no body detail.
+  Also from review: the chain cache is keyed by the normalised URL (origin and path, size-capped, failures kept 60 s), bodies are
+  read with a running byte cap, both signature-algorithm fields must match and be RSA-SHA256, issuers must be CAs, and
+  PlaybackController answers hold AudioPlayer directives only (Amazon's PlaybackController reference).
   Certificate parsing: first `library-docs` (context7) for `@peculiar/x509` (or `pkijs`) working in Workers; use it if it
   bundles with wrangler and runs under `node --test`; otherwise a minimal DER reader limited to what the steps need.
   Which roots Amazon's current `echo-api` chain ends in comes from fetching the live chain (read-only), not from memory.
@@ -89,20 +93,25 @@ User, 2026-11-06: Dino books on Alexa, no login, no parent recordings. Facts che
       child-directed restriction). **Decision: build it as a kid skill using AudioPlayer; if certification refuses
       AudioPlayer, fall back to a skill not marked for kids** (then update the privacy and policy text to match). Nobody
       asks Amazon.
-- [ ] Context7 / `library-docs` for the ASK request/response JSON, AudioPlayer directives and the signature-verification
-      steps before any code (no SDK assumed: the Worker is plain TypeScript).
-- [ ] `alexa-verify.ts`: certificate URL rules, chain check, signature check, 150 s timestamp. Tests with recorded requests.
-- [ ] `alexa.ts`: LaunchRequest, ReadBookIntent (book slot filled from the live list), AMAZON built-ins, AudioPlayer events
+- [x] Context7 / `library-docs` for the ASK request/response JSON, AudioPlayer directives and the signature-verification
+      steps before any code (no SDK assumed: the Worker is plain TypeScript). (Done: `/alexa/alexa-skills-kit-sdk-for-nodejs`,
+      `/peculiarventures/x509`; the manifest fields from Amazon's skill-manifest page. Certificate library: none, a minimal DER
+      reader, because `@peculiar/x509` needs a reflect polyfill under node and wrangler.)
+- [x] `alexa-verify.ts`: certificate URL rules, chain check, signature check, 150 s timestamp. Tests with a test-generated CA
+      and signed bodies (plus the real Amazon chain checked once by hand at a date inside its validity).
+- [x] `alexa.ts`: LaunchRequest, ReadBookIntent (book slot filled from the live list), AMAZON built-ins, AudioPlayer events
       (answer with no speech), SessionEnded. One handler per request type.
-- [ ] Count plays for the usage dashboard (added 2026-11-07, Slices 287 and 289; the user wants Alexa in its platform
+- [x] Count plays for the usage dashboard (added 2026-11-07, Slices 287 and 289; the user wants Alexa in its platform
       filter): one `book_listened` row with platform `alexa` per book started, through `worker/speaker-usage.ts` (Slice 289);
       played seconds from the AudioPlayer `PlaybackStopped`/`PlaybackFinished` offset (detail `reported`), else the book's
       length (detail `estimated`). No household or account id. Adds `worker/speaker-usage.ts` to this slice's Touches.
-- [ ] `skill-package/`: manifest marked child-directed, Kids category, privacy policy URL, en-GB and en-US models.
-- [ ] Privacy text: one paragraph on Alexa (what Amazon sends us: the request, no name or account; what we keep: a count
+- [x] `skill-package/`: manifest marked child-directed, category `CHILDRENS_EDUCATION_AND_REFERENCE` (`KIDS` is not a value; a child-directed skill must use one of four CHILDRENS_ categories, per Amazon's skill-manifest reference), privacy policy URL, en-GB and en-US models, and the four PNG icons (108x108 and 512x512, from `site/dino/icon.png`) under `alexa/skill-package/assets/`.
+- [x] Privacy text (`PRIVACY.md` and `site/dino/privacy.html`; `site/privacy.html` is the RTST page and has no Sonos paragraph either): one paragraph on Alexa (what Amazon sends us: the request, no name or account; what we keep: a count
       of each book played and for how long, nothing about the home).
 - [ ] **User steps** (their Amazon login): create the developer account, create the skill from `skill-package/`, set the
       endpoint, enable testing; later, submit for certification. Steps Claude can do with a token (ASK CLI) it does.
+
+**Waiting on the user** (blocks the skill going live, not the merge): create the Amazon developer account and the skill from `alexa/skill-package/`, set the endpoint `https://dinoreader.sirous.uk/alexa`, then the skill id goes into `ALEXA_SKILL_ID` in both wrangler configs by a PR (until then every request gets 400); enable testing; later submit for certification.
 
 ## Verification
 
@@ -110,3 +119,37 @@ User, 2026-11-06: Dino books on Alexa, no login, no parent recordings. Facts che
 - On the user's own Echo in development: open, list, read a book, pause, resume after a minute (resumes at the same
   place), next, stop.
 - Beta with a few families before certification; certification passed and the skill live in the UK.
+
+*Changed while building:* `POST /alexa` and `/dino/alexa` in `worker/alexa.ts`, `alexa-verify.ts` (hand-written DER reader: `@peculiar/x509` needs a reflect polyfill under node and wrangler), `alexa-roots.ts` (Amazon Root CA 1 and Starfield Services G2, from the live echo-api chain); `speaker-usage.ts` has an optional `detail` and `SPEAKER_PLATFORM_ALEXA`. Manifest category is `CHILDRENS_EDUCATION_AND_REFERENCE` (`KIDS` is not a valid value per the skill-manifest docs); icons come from the 1024 Dino app icon. Privacy text is in `PRIVACY.md` and `site/dino/privacy.html` (`site/privacy.html` unchanged: RTST page). Differences from the design: an empty `ALEXA_SKILL_ID` rejects every request (fail closed); the chain cache holds successes only, LRU 16, TTL min(1 h, leaf notAfter) (redesign after check 1, second strike); cheap claims (timestamp, skill id) run before the chain fetch; a resume past the end or with a changed story version starts at 0; PlaybackController answers are directives only (Amazon docs); NavigateHome = stop.
+
+*Tests:* `node --test worker/*.test.mjs` 269/269, `npm run typecheck` green.
+
+*From review:* files `reviews/pr-935-high.md`, `reviews/pr-935-medium.md`, `reviews/pr-935-check1.md`, `reviews/pr-935-check2.md`, `reviews/pr-935-check3.md` read in full; findings not listed as skipped were applied (check 3 itself says "no new failure path" for its own skips).
+- Skipped #8 (`reviews/pr-935-high.md`): "Verify and reword the privacy text, or exclude /alexa from logging." (pre-existing issue, see Outstanding below)
+- Skipped #1 (`reviews/pr-935-medium.md`): "redeployed over a dashboard-set id" (the user sets the id in the configs by PR)
+- Skipped #7 (`reviews/pr-935-medium.md`): "restarts a book when the offset is at or past catalogue seconds" (by design since high #5: a finished or stale resume starts over)
+- Skipped #5 (`reviews/pr-935-check1.md`): "returns end:true with no directive" for next on the last book (a voice Next past the end speaks and ends the session; a PlaybackController button answer may not carry speech per Amazon's PlaybackController docs, and the current book keeps playing)
+- Skipped #7 (`reviews/pr-935-check1.md`): "replayed signed PlaybackStopped/Finished accepted within 150 s window" (the design keeps no server state, so no dedup store; a replay needs a captured signed request and only adds one anonymous count)
+- Skipped #8 (`reviews/pr-935-check1.md`): "ignores pathLenConstraint, keyUsage, EKU, name constraints" (the roots are pinned to Amazon Root CA 1 and Starfield Services G2, both Amazon-owned, and the leaf must name echo-api.amazon.com)
+- Skipped #2 (`reviews/pr-935-check2.md`): "use plain MAX_SECONDS clamp when offset is present" (low; efficiency only, no wrong result)
+- Skipped #4 (`reviews/pr-935-check2.md`): "skips intermediate pathLenConstraint, KeyUsage, EKU and leaf usage checks" (low; same as check1 #8: pinned Amazon-owned roots and the echo-api SAN)
+- Skipped #5 (`reviews/pr-935-check2.md`): "no single-flight for chain fetch" (low; a cold start fetches the chain a few times at most, no wrong result)
+- Skipped #6 (`reviews/pr-935-check2.md`): "Accepted as best effort (no server state)" (low, double-counting on retry)
+- Skipped #1-#5 (`reviews/pr-935-check3.md`): "Skipped 2, 4, 5, 6: no new failure path"; all five findings are low and were left unapplied (#1 is about one second of silence at a resume just under the end, low; #5 is the pre-existing logging question in Outstanding)
+
+*Outstanding (pre-existing, not this slice):* `wrangler.jsonc` has observability enabled for every route while the Sonos and Alexa privacy paragraphs say the receiving server may log and "Dino Reader itself does not receive or keep" that log. Check what Workers Logs record and make the text true, or switch logging off for those routes (raised by the medium, check 2 and check 3 reviews).
+
+#### For CLAUDE.md
+
+- The Alexa endpoint fails closed: an empty `ALEXA_SKILL_ID` (`wrangler.jsonc`, `wrangler.workers-dev.jsonc`) rejects every request with 400, because Amazon's signature proves only that the sender is Alexa. Do not add a fail-open path. `worker/alexa-verify.ts`. (Slice 282: docs/plan/slices/282-dino-alexa-kid-skill.md)
+- Alexa AudioPlayer and PlaybackController replies carry directives only, never speech; the server keeps no playback state (the token and offset come from each request). `worker/alexa.ts`. (Slice 282: docs/plan/slices/282-dino-alexa-kid-skill.md)
+
+#### For README.md
+
+None (server only, not user-facing yet).
+
+#### Not yet verified
+
+- Everything on a real Echo: open, list, read, pause, resume after a minute, next, stop.
+- Request shapes for AudioPlayer events and built-in intents are partly written from memory (only the Play directive and PlaybackController were checked against Amazon's docs).
+- A real signed Alexa request passing verification live.

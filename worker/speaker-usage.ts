@@ -10,9 +10,13 @@ import type { TelemetryCheck, UsageEvent } from "./events.ts";
 import { STORY_ID_PATTERN } from "./download-keys.mjs";
 
 export const SPEAKER_PLATFORM_SONOS = "sonos";
+/** Slice 282: Alexa's platform name in the row. */
+export const SPEAKER_PLATFORM_ALEXA = "alexa";
 export const BOOK_LISTENED = "book_listened";
 /** The row's detail: the seconds are the book's length, not a measured listening time (the dashboard hatches them). */
 export const DETAIL_ESTIMATED = "estimated";
+/** Slice 282: the seconds are a played time the speaker reported (Alexa's AudioPlayer offsets). */
+export const DETAIL_REPORTED = "reported";
 const NO_VERSION = "";
 const FULL_WEIGHT = 1;
 const ISO_DAY_LENGTH = 10;
@@ -23,6 +27,8 @@ export interface SpeakerPlay {
   readonly book: string;
   readonly language: string;
   readonly seconds: number;
+  /** Slice 282: `reported` when the speaker said how long it played; default `estimated` (Sonos). */
+  readonly detail?: typeof DETAIL_ESTIMATED | typeof DETAIL_REPORTED;
 }
 
 /** What a caller needs to count: the usage dataset (`DINO_USAGE`) and the config's telemetry switch. */
@@ -52,7 +58,7 @@ export function speakerEvent(play: SpeakerPlay, now: Date): UsageEvent | null {
     day: now.toISOString().slice(0, ISO_DAY_LENGTH),
     sampleRate: FULL_WEIGHT,
     ...NO_EXTRA_FIELDS,
-    detail: DETAIL_ESTIMATED,
+    detail: play.detail ?? DETAIL_ESTIMATED,
     seconds: wholeSecondsOrNone(play.seconds),
   };
 }

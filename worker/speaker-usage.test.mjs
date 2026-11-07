@@ -33,6 +33,11 @@ test("a play is one book_listened row: shelf book, estimated seconds, platform a
   assert.deepEqual(point.doubles, [1, -1, -1, -1, 600]);
 });
 
+test("a caller that measured the seconds can say so (Alexa): detail reported, default stays estimated", () => {
+  assert.equal(speakerEvent({ ...PLAY, platform: "alexa", detail: "reported" }, NOW).detail, "reported");
+  assert.equal(speakerEvent(PLAY, NOW).detail, DETAIL_ESTIMATED);
+});
+
 test("the platform is the caller's, so Alexa can use the same module", () => {
   assert.equal(speakerEvent({ ...PLAY, platform: "alexa" }, NOW).platform, "alexa");
 });
