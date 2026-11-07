@@ -356,3 +356,7 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 294 | The `-NoBuild` cache-key miss in the emulator runner (Slice 275 item 4) | built | #900 | | [294-emulator-nobuild-cache-key-miss.md](../slices/294-emulator-nobuild-cache-key-miss.md) |
 | 298 | Slice 264 gallery reorder follow-ups | built | #903 | | [298-slice-264-gallery-reorder-follow-ups.md](../slices/298-slice-264-gallery-reorder-follow-ups.md) |
 | 288 | Dino: the app counts listens (30 s or more) and real listening time | built | #901 | | [288-dino-listens-and-listening-time.md](../slices/288-dino-listens-and-listening-time.md) |
+| 302 | Slice 239 leftovers: renamed store package downloaded twice, `dino-store.yml` paths | built | #906 | | [302-slice-239-leftovers.md](../slices/302-slice-239-leftovers.md) |
+| 304 | Slice 202: rerun the medium review on `ReaderPage` as merged, test the `InitWait` order | built | #908 | | [304-slice-202-rereview-and-initwait-test.md](../slices/304-slice-202-rereview-and-initwait-test.md) |
+| 306 | ClaudeSkills merge pipeline leftovers (built in `D:\ClaudeSkills`) | built | ClaudeSkills #184 | | [306-claudeskills-merge-pipeline-leftovers.md](../slices/306-claudeskills-merge-pipeline-leftovers.md) |
+| 309 | Split `src/DinoReader.App/CLAUDE.md` (52 KB, budget ~20 KB) with archive-docs | built | #907 | | [309-split-dino-app-claude-md.md](../slices/309-split-dino-app-claude-md.md) |
