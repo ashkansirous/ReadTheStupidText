@@ -1,8 +1,8 @@
 # Slice 303 — Slice 201 review leftovers that change behaviour
 
-*Planned 2026-11-07.* Four items from [Slice 201](201-norwegian-pack-crash.md)'s review, listed in plan.md's *Outstanding work* and in the slice file. Moved here.
+*In progress (wave 2026-11-07), draft PR.* *Planned 2026-11-07.* Four items from [Slice 201](201-norwegian-pack-crash.md)'s review, listed in plan.md's *Outstanding work* and in the slice file. Moved here.
 
-**Touches:** `.github/workflows/packs.yml`, `src/ReadTheStupidText.Application/Reading/**`, `src/ReadTheStupidText.Infrastructure/Reading/SherpaEngineFactory.cs`, `src/ReadTheStupidText.Mobile.Shared/MobileVoicePackService.cs`, `src/ReadTheStupidText.Mobile.Shared/VoicePackInstaller.cs`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/303-slice-201-review-leftovers.md`
+**Touches:** `.github/workflows/packs.yml`, `src/ReadTheStupidText.Application/Reading/**`, `src/ReadTheStupidText.Infrastructure/Reading/SherpaEngineFactory.cs`, `src/ReadTheStupidText.Mobile.Shared/MobileVoicePackService.cs`, `src/ReadTheStupidText.Mobile.Shared/VoicePackInstaller.cs`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/303-slice-201-review-leftovers.md`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosTtsEngine.cs` (item 4 parity), `src/ReadTheStupidText.Application/**` (FallbackArea, item 3 constant), `src/ReadTheStupidText.Domain/**` (widened at claim)
 
 ## Work
 
