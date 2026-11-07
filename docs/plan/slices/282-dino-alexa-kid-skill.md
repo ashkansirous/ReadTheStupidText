@@ -1,6 +1,6 @@
 # Slice 282 — Dino: an Alexa kid skill that reads the store books
 
-*Planned 2026-11-06.* Server only (Cloudflare Worker) plus the skill definition; the apps do not change.
+*Planned 2026-11-06.* *Park reason (night 2026-11-06-1250 wave 4; moved back to planned by the night's final feedback loop, 2026-11-07): item 1 unsettled. Amazon's kid-skill, policy and AudioPlayer pages neither allow nor forbid long-form audio (AudioPlayer) in a child-directed skill. Next step: the user asks Amazon (developer support, their account) or chooses a skill not marked for kids; a wave re-parks it until then.* Server only (Cloudflare Worker) plus the skill definition; the apps do not change.
 
 **Depends on:** Slice 281 (the listening tracks).
 **Touches:** `alexa/skill-package/**` (new: manifest, interaction models en-GB and en-US), `worker/alexa.ts` (new),
