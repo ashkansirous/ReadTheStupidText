@@ -1,6 +1,6 @@
 # Slice 292 — Fix the flaky `TranslationModelDownloadSessionTests.Progress_is_reported_while_downloading`
 
-*Planned 2026-11-07.* Test only (unless the session's progress reporting needs a synchronous seam). Moved from plan.md's *Outstanding work*.
+*In progress (wave 2026-11-07), draft PR.* *Planned 2026-11-07.* Test only (unless the session's progress reporting needs a synchronous seam). Moved from plan.md's *Outstanding work*.
 
 **Touches:** `tests/ReadTheStupidText.Tests/TranslationModelDownloadSessionTests.cs`, `src/ReadTheStupidText.Mobile.Shared/Translation/TranslationModelDownloadSession.cs`, `docs/plan/slices/292-fix-flaky-translation-download-progress-test.md`
 
