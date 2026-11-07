@@ -33,7 +33,9 @@
 
 **Deploy order.** Intended: the Worker deploys on merge through Workers Builds, before any app build from the same merge reaches TestFlight, so the beta route exists when the first beta batch is posted. Not checked: the order and the `DINO_USAGE_BETA` binding (Slice 259 item 7). Checked on 2026-11-04 by the night's feedback loop audit: GET `/api/events/beta` answers 405, so the route is live.
 
-**Waiting on the user.** Android Play internal and closed-track installs cannot be told from production on the device (the installer is `com.android.vending` for every track), so they count in production `dino_usage` today. Whether to accept that or plan a server-side split is the user's call; today's behaviour is kept.
+**Decided 2026-11-07 (user, was: waiting on the user):** "internal testers are real users. but not bots, google test or my implementation code." So Play internal and closed-track testers stay counted in production `dino_usage` (nothing to split server-side). Play's pre-launch report robots and Firebase Test Lab, Google's test devices, and our own tests, emulators, Debug builds and CI must never be counted. Code read 2026-11-07: those are already blocks in the gate (`UsageEligibility.cs`: Debug, unstamped, emulator and robot fingerprints, `TestLab` from the `firebase.test.lab` setting with a setting that cannot be read counted as a test, test install, non-store install; `UsageGate.cs:19`, `:44`), so no work item is added. Not tried on a Play pre-launch run (the Not yet verified lines still stand). The earlier text, now settled:
+
+**Android finding (settled).** Android Play internal and closed-track installs cannot be told from production on the device (the installer is `com.android.vending` for every track), so they count in production `dino_usage` today. Whether to accept that or plan a server-side split is the user's call; today's behaviour is kept.
 
 **User, 2026-11-03:** The night may merge this slice; its Worker change goes live on merge through Workers Builds (production deploy approved). For 251 that includes the new DINO_USAGE_BETA Analytics Engine binding. (This does not approve the store privacy form steps.)
 

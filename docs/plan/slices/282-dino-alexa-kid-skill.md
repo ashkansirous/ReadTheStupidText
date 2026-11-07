@@ -1,6 +1,6 @@
 # Slice 282 — Dino: an Alexa kid skill that reads the store books
 
-*Planned 2026-11-06.* *Park reason (night 2026-11-06-1250 wave 4; moved back to planned by the night's final feedback loop, 2026-11-07): item 1 unsettled. Amazon's kid-skill, policy and AudioPlayer pages neither allow nor forbid long-form audio (AudioPlayer) in a child-directed skill. Next step: the user asks Amazon (developer support, their account) or chooses a skill not marked for kids; a wave re-parks it until then.* Server only (Cloudflare Worker) plus the skill definition; the apps do not change.
+*Planned 2026-11-06; status `planned`, item 1 decided 2026-11-07 (see Work).* *Earlier park reason, now settled (night 2026-11-06-1250 wave 4; moved back to planned by the night's final feedback loop, 2026-11-07): item 1 unsettled. Amazon's kid-skill, policy and AudioPlayer pages neither allow nor forbid long-form audio (AudioPlayer) in a child-directed skill. Next step: the user asks Amazon (developer support, their account) or chooses a skill not marked for kids; a wave re-parks it until then.* Server only (Cloudflare Worker) plus the skill definition; the apps do not change.
 
 **Depends on:** Slice 281 (the listening tracks).
 **Touches:** `alexa/skill-package/**` (new: manifest, interaction models en-GB and en-US), `worker/alexa.ts` (new),
@@ -41,9 +41,13 @@ User, 2026-11-06: Dino books on Alexa, no login, no parent recordings. Facts che
 
 ## Work
 
-- [ ] 1. Before building: ask Amazon (developer support / forum) or read the certification checklist for kid skills and
-      AudioPlayer; write the answer here. If refused, stop and bring the choice back to the user (a skill not marked for
-      kids changes the privacy and policy picture).
+- [x] 1. **Decided 2026-11-07 (user):** "I am not going to ask amazon anything on 282. We do based on whatever we can find in their documentation." Amazon's documentation (read 2026-11-07) lists what a child-directed skill may not do: collect personal information, account linking, selling outside In-Skill Purchasing, promoting or directing users to content outside Alexa, content not suitable for all ages
+      (https://developer.amazon.com/en-US/docs/alexa/custom-skills/policy-requirements-for-an-alexa-skill.html,
+      https://developer.amazon.com/en-US/alexa/alexa-haus/child-directed-skills). Nothing in them bars the AudioPlayer
+      interface (https://developer.amazon.com/en-US/docs/alexa/custom-skills/audioplayer-interface-reference.html has no
+      child-directed restriction). **Decision: build it as a kid skill using AudioPlayer; if certification refuses
+      AudioPlayer, fall back to a skill not marked for kids** (then update the privacy and policy text to match). Nobody
+      asks Amazon.
 - [ ] Context7 / `library-docs` for the ASK request/response JSON, AudioPlayer directives and the signature-verification
       steps before any code (no SDK assumed: the Worker is plain TypeScript).
 - [ ] `alexa-verify.ts`: certificate URL rules, chain check, signature check, 150 s timestamp. Tests with recorded requests.

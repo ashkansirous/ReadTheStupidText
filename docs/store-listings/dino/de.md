@@ -38,6 +38,7 @@ FÜR KINDER GEMACHT
 - Einstellungen sowie das Hinzufügen und Löschen von Geschichten liegen hinter einer Erwachsenensperre.
 - Die Stimmen werden auf dem Handy erzeugt. Sobald die Stimme für Ihre Sprache geladen ist, funktioniert das Vorlesen offline.
 - Ihre Geschichten, Fotos und Scans bleiben auf Ihrem Gerät.
+- Optionale anonyme Nutzungszählungen ohne Namen oder Kennungen, in den Einstellungen abschaltbar (hinter der Erwachsenensperre).
 
 ## App Store (iOS)
 

@@ -13,6 +13,13 @@ Neither app has a German listing on Google Play or the App Store, and Read The S
 - User, 2026-10-30: draft only tonight; nothing goes live until the user approves the German text.
 - **User, 2026-11-01: approved** ("193 should not be waiting for me. I approved"). Apply started the same day through the `store-listing` agent.
 
+#### Status 2026-11-07: nothing waits on the user except one permission
+
+- App Store: done (below).
+- **Google Play needs one permission:** "Manage store presence" for the service account `auto-deploy-to-google-play@read-the-stupid-text.iam.gserviceaccount.com` on both apps (Play Console, Users and permissions). Granting it from Claude's Chrome was refused by the auto-mode permission check on 2026-11-07, so it is the user's one click, or an allow from the user. Then the apply is rerun (Slice 291 item 1 corrects the same listings in the same pass).
+- **RTST Partner Center German** goes in through Chrome (Claude's work, no user step).
+- Native German read of both texts is still to do; it does not block the apply.
+
 #### Apply result (2026-11-01)
 
 - **App Store Connect, both apps: done.** de-DE added to app info (name, subtitle) and to the version in `PREPARE_FOR_SUBMISSION` (RTST 1.76.1, Dino 1.81.1: description, keywords, promotional text); read back matches the drafts. Dino's "auf dem Handy" became "auf dem iPhone oder iPad". Nothing submitted; the German goes to Apple with the next submission.
