@@ -1,6 +1,6 @@
 # Slice 298 — Slice 264 gallery reorder follow-ups
 
-*Built 2026-11-07 (wave 2026-11-07), PR #903, not merged. Emulator flows pass; the gesture checks below are not yet verified on a device.* *Planned 2026-11-07.* Findings from check6 of [Slice 264](264-dino-gallery-reorder-mode.md), not built. Moved from plan.md's *Outstanding work*. All code is shared MAUI, so Android and iOS get each fix together; the gesture items need a look on both.
+*Built 2026-11-07 (wave 2026-11-07), merged as PR #903 (ca585cff). Emulator flows pass; the gesture checks below are not yet verified on a device.* *Planned 2026-11-07.* Findings from check6 of [Slice 264](264-dino-gallery-reorder-mode.md), not built. Moved from plan.md's *Outstanding work*. All code is shared MAUI, so Android and iOS get each fix together; the gesture items need a look on both.
 
 **Touches:** `src/DinoReader.Core/FileStoryLibrary.cs`, `src/DinoReader.Core/ShelfOrder.cs`, `src/DinoReader.Core/HoldGesture.cs`, `src/DinoReader.Core/ShelfDragSession.cs`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/TileOverlay.xaml.cs`, `src/DinoReader.App/ShelfReorderView.cs`, `tests/ReadTheStupidText.Tests/FallbackGuardBaseline.txt`, (item 7 only if a caller must change: `src/DinoReader.App/{BackupPage,FirstBooksPage,IntroWizardPage.Art,StarterStories,StagedBookUpdates,StoreClient}*.cs`), `src/DinoReader.Core/CLAUDE.md`, `tests/DinoReader.Tests/**`, `docs/plan/slices/298-slice-264-gallery-reorder-follow-ups.md`
 
@@ -85,7 +85,7 @@
 
 **Device (emulator, 2026-11-07, build key fdc0f216b731):** flows first-run, shelf-reorder (open from sheet, Cancel, Done, order survives restart), shelf-audio-on-start and dino-landscape-shelf all PASS. Logs: `D:/ReadTheStupidText-worktrees/reviews/s298-emu/`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-07)
 
 - `src/DinoReader.Core/ShelfDragSession.cs`: the platform may send Drop and DropCompleted in either order. Reset the session only in `ShelfReorderView.Close` and `Begin`, never on a rebuild mid-drag, and accept a Drop after Completed only within `LateDropWindowMilliseconds` (1000). (Slice 298: docs/plan/slices/298-slice-264-gallery-reorder-follow-ups.md)
 - `src/DinoReader.Core/HoldGesture.cs`: `Cancel` leaves a Fired hold Fired (the swallow survives a relayout); a swallow after `Release` expires 500 ms later; callers pass `Environment.TickCount64`. (Slice 298: docs/plan/slices/298-slice-264-gallery-reorder-follow-ups.md)

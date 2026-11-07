@@ -354,3 +354,5 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 293 | Slice 290 check-pass leftovers (sound pill ring on colour switch, story null checks) | built (done by Slice 290 part B) | #895 | | [293-slice-290-check-pass-leftovers.md](../slices/293-slice-290-check-pass-leftovers.md) |
 | 292 | Fix the flaky `TranslationModelDownloadSessionTests.Progress_is_reported_while_downloading` | built | #902 | | [292-fix-flaky-translation-download-progress-test.md](../slices/292-fix-flaky-translation-download-progress-test.md) |
 | 294 | The `-NoBuild` cache-key miss in the emulator runner (Slice 275 item 4) | built | #900 | | [294-emulator-nobuild-cache-key-miss.md](../slices/294-emulator-nobuild-cache-key-miss.md) |
+| 298 | Slice 264 gallery reorder follow-ups | built | #903 | | [298-slice-264-gallery-reorder-follow-ups.md](../slices/298-slice-264-gallery-reorder-follow-ups.md) |
+| 288 | Dino: the app counts listens (30 s or more) and real listening time | built | #901 | | [288-dino-listens-and-listening-time.md](../slices/288-dino-listens-and-listening-time.md) |
