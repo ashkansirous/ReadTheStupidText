@@ -1,0 +1,99 @@
+# Slice 285: changing the app language on Grown-ups, Settings, Language fetches the books' pre-made audio in that language, so a book opened afterwards plays clips and never says "This part has no sound".
+# Slice 278 part B rewrote the Language page and dropped the fetch (and the flows that would have caught it): the user's Freddy's story was silent after a switch to Farsi. The language is picked through
+# the real page (no hook sets it), so only the page's own code can start the run. Needs the network and the live Farsi pack of Three Little Pigs (like shelf-audio-on-start).
+# To see it fail against the old behaviour: on a build from before this slice no "shelf audio fa: run starts (added)" line is written after the pick, the open-book hook finds no pack, no
+# "[AudioPack] premade clip plays" line appears and the reading page shows "This part has no sound" (the last assertion below).
+# Fix A (the Language page starts the run) is told apart from fix C (opening a book starts a quiet run, logged "(launch)"): only the page's visible start writes "run starts (added)", and the
+# markers are checked over the whole flow, so a green run means A started it. The book is opened only after Settings is back on screen below, i.e. after that start.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK enter-grown-up ok
+# expect-log: [AudioPack] shelf audio fa: run starts (added)
+# expect-log: [AudioPack] shelf audio fa: finished,
+# expect-log: [AudioPack] premade clip plays
+# expect-log: HOOK read start
+appId: uk.sirous.dinoreader.dbg
+name: Changing the app language fetches the books' audio in it
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, side languages, installed audio packs, own books); fine here: skip-first-run puts the four test books back and no Farsi pack may be installed beforehand.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+- runFlow:
+    when:
+      visible: Storyteller voices are ready
+    commands:
+      - tapOn: "OK"
+- tapOn:
+    id: GallerySettings
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: SettingsTitle
+    timeout: 10000
+- tapOn:
+    text: "Language"
+    waitToSettleTimeoutMs: 300
+# The Language page lists the fifteen languages by their own names; picking Farsi switches the screens at once, and Done commits the change (the run starts here).
+- extendedWaitUntil:
+    visible: "فارسی"
+    timeout: 10000
+- tapOn:
+    text: "فارسی"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: GrownUpDone
+    waitToSettleTimeoutMs: 300
+# The root is rebuilt in Farsi and Settings reopens on it.
+- extendedWaitUntil:
+    visible:
+      id: SettingsTitle
+    timeout: 15000
+# Leave Settings and grown-up mode: the open-book hook refuses while grown-up mode is on.
+- tapOn:
+    id: GrownUpDoneSettingsPage
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 15000
+- tapOn:
+    id: GalleryDone
+- extendedWaitUntil:
+    visible:
+      id: GalleryGrownUps
+    timeout: 15000
+# The open-book hook waits for the book's pack before it plays (up to 120 s), as in shelf-audio-on-start.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 150000
+- extendedWaitUntil:
+    visible: "Pause|توقف"
+    timeout: 90000
+# A clip is playing, so the page must not say the part has no sound (English or Farsi words).
+- assertNotVisible: "This part has no sound|این بخش صدا ندارد"
+# Put the screens back in English, so later flows that wait on English labels (Pause) still match.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: en
