@@ -108,11 +108,13 @@ name: Record a book in each story language and read it back in each
       id: RecordIntroProgress
     timeout: 20000
 - assertVisible: "1 of .* lines recorded"
+- takeScreenshot: shot-192-record-intro-en
 # Farsi: its row says nothing is recorded; the card then shows Farsi words (Arabic script), not the English ones.
 - tapOn:
     id: RecordLanguage-fa
     waitToSettleTimeoutMs: 300
 - assertVisible: "Nothing yet"
+- takeScreenshot: shot-193-record-intro-fa
 - tapOn:
     text: "Storyteller"
     waitToSettleTimeoutMs: 300
@@ -124,6 +126,7 @@ name: Record a book in each story language and read it back in each
       id: RecordPageWords
       text: ".*[؀-ۿ].*"
     timeout: 20000
+- takeScreenshot: shot-194-record-line-fa
 - tapOn:
     id: RecordButton
     waitToSettleTimeoutMs: 300
@@ -155,6 +158,7 @@ name: Record a book in each story language and read it back in each
     visible:
       id: BookSheetClose
     timeout: 20000
+- takeScreenshot: shot-195-book-sheet-languages
 - tapOn:
     id: BookSheetClose
     waitToSettleTimeoutMs: 300
