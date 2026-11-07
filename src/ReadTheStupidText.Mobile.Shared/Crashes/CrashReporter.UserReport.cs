@@ -10,7 +10,7 @@ public enum UserReportOutcome
     /// <summary>The Worker kept the report: show the code.</summary>
     Sent,
 
-    /// <summary>It could not be sent now, and no copy is queued (this install sends nothing, the Worker refused the report, or it could not be saved): only Try again helps.</summary>
+    /// <summary>It could not be sent now, and no copy is queued (this install sends nothing, the person's usage switch is off, the Worker refused the report, or it could not be saved): only Try again helps.</summary>
     Failed,
 
     /// <summary>It could not be sent now; a copy is queued on the phone for the crash queue's own retry, so it really will be sent later.</summary>
@@ -23,6 +23,10 @@ public enum UserReportOutcome
 /// <summary>The "Report a problem" side of crash reporting (Slice 249): the report a grown-up sends on purpose, with a code to quote.</summary>
 public static partial class CrashReporter
 {
+    private const string VerdictKept = "kept for retry";
+    private const string VerdictNotKept = "not kept";
+    private const string VerdictNotKeptMayNotReport = "not kept, this build or the usage switch may not report";
+
     /// <summary>A fresh reference code for one report (Debug: the code a scripted check fixed with <c>report-code</c>, so a flow can look for it on screen).</summary>
     public static string NewReportCode()
     {
@@ -38,7 +42,7 @@ public static partial class CrashReporter
     /// <summary>
     /// Sends one user report with <paramref name="code"/> (a <see cref="ReportCode"/>) to <paramref name="baseAddress"/> (the app's own host): the build facts and the end of the
     /// rolling log, nothing typed. This is a deliberate press, so it goes even while the usage switch is off (the log tail is then empty) and does not wait for the remote config
-    /// (the Worker answers 503 while it is off, which is a failure here). A failure keeps the report in the pending queue to be sent later. Never throws.
+    /// (the Worker answers 503 while it is off, which is a failure here). A failure keeps a copy in the pending queue for a later retry only while the usage switch is on and the Worker did not refuse the report. Never throws.
     /// </summary>
     public static async Task<UserReportOutcome> SendUserReportAsync(string code, string baseAddress, CancellationToken cancel)
     {
@@ -133,8 +137,10 @@ public static partial class CrashReporter
         }
 
         DropQueuedCopies(code); // one queued copy per code: a retry replaces the last one
-        bool kept = !CrashSendPolicy.DeleteAfter(number) && store?.Save(report, DateTimeOffset.UtcNow) == true;
-        Note($"user report failed (status {(number is null ? "none" : number)}), {(kept ? "kept for retry" : "not kept")}, code {code}");
+        bool mayReport = MayReport(); // switch off: the next start wipes the queue, so a copy saved now would be a false "kept"
+        bool kept = CrashSendPolicy.TryKeepFailedUserReport(store, report, number, mayReport, DateTimeOffset.UtcNow);
+        string verdict = kept ? VerdictKept : mayReport ? VerdictNotKept : VerdictNotKeptMayNotReport;
+        Note($"user report failed (status {(number is null ? "none" : number)}), {verdict}, code {code}");
         return kept ? UserReportOutcome.FailedKept : UserReportOutcome.Failed;
     }
 }

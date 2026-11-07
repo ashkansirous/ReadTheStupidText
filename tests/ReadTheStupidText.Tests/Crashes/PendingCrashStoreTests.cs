@@ -143,4 +143,51 @@ public sealed class PendingCrashStoreTests : IDisposable
         Assert.Equal("A", report.ExceptionType);
         Assert.Equal(store.List()[0], path);
     }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(503)]
+    [InlineData(404)]
+    [InlineData(401)]
+    [InlineData(403)]
+    [InlineData(301)]
+    public void A_failed_user_report_is_kept_only_while_the_switch_is_on(int? status)
+    {
+        Assert.True(CrashSendPolicy.KeepFailedUserReport(status, mayReport: true));
+        Assert.False(CrashSendPolicy.KeepFailedUserReport(status, mayReport: false)); // the caller then saves nothing and answers Failed
+    }
+
+    [Theory]
+    [InlineData(400)]
+    [InlineData(413)]
+    [InlineData(422)]
+    [InlineData(200)]
+    public void A_user_report_the_worker_refused_is_never_kept(int status)
+    {
+        Assert.False(CrashSendPolicy.KeepFailedUserReport(status, mayReport: true));
+    }
+
+    [Fact]
+    public void With_the_switch_on_a_failed_user_report_leaves_one_saved_copy_and_with_it_off_none()
+    {
+        var store = new PendingCrashStore(_folder);
+        CrashReport report = Report("user report ABCD2345") with { Kind = CrashKind.UserReport };
+
+        Assert.False(CrashSendPolicy.TryKeepFailedUserReport(store, report, 503, usageSwitchOn: false, DateTimeOffset.UtcNow));
+        Assert.Empty(store.List());
+
+        Assert.True(CrashSendPolicy.TryKeepFailedUserReport(store, report, 503, usageSwitchOn: true, DateTimeOffset.UtcNow));
+        Assert.Single(store.List());
+
+        Assert.False(CrashSendPolicy.TryKeepFailedUserReport(store, report, 422, usageSwitchOn: true, DateTimeOffset.UtcNow));
+        Assert.Single(store.List());
+    }
+
+    [Fact]
+    public void A_failed_user_report_with_no_store_is_not_kept_and_does_not_throw()
+    {
+        CrashReport report = Report("user report ABCD2345") with { Kind = CrashKind.UserReport };
+
+        Assert.False(CrashSendPolicy.TryKeepFailedUserReport(null, report, 503, usageSwitchOn: true, DateTimeOffset.UtcNow));
+    }
 }
