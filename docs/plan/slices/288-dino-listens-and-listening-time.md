@@ -1,6 +1,6 @@
 # Slice 288 — Dino: the app counts listens and real listening time
 
-*Planned 2026-11-07.* Dino Reader only. Android, iOS and the Windows head the same, in the same slice (the code is the
+*In progress (wave 2026-11-07), draft PR.* *Planned 2026-11-07.* Dino Reader only. Android, iOS and the Windows head the same, in the same slice (the code is the
 shared Core and App, so one change covers all three; verification runs on Android and iOS).
 
 **Depends on:** Slice 250 (playback events and the session id). Feeds Slice 287 (the dashboard).
