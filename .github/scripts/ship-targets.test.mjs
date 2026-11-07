@@ -34,7 +34,7 @@ const CASES = [
     ['Mobile csproj', [`${M}/ReadTheStupidText.Mobile.csproj`], { android: true, ios: true }],
     ['Mobile resource', [`${M}/Resources/Images/a.png`], { android: true, ios: true }],
     ['Domain core', ['src/ReadTheStupidText.Domain/PlaybackRate.cs'], ALL3],
-    ['Application core', ['src/ReadTheStupidText.Application/X.cs'], ALL3],
+    ['Application core (also selects the store job: LineReflow, Slice 302)', ['src/ReadTheStupidText.Application/X.cs'], { ...ALL3, dinostore: true }],
     ['Documents core', ['src/ReadTheStupidText.Documents/X.cs'], ALL3],
     ['unit tests build and ship nothing', ['tests/ReadTheStupidText.Tests/X.cs'], {}],
     ['solution file', ['ReadTheStupidText.slnx'], ALL3],
@@ -152,6 +152,10 @@ test('Slice 239: dino-starters.json is exactly the books whose book.json kind is
 test('Slice 239: a store-only change starts no suite, no app and no RTST target', () => {
     const t = targetsOf(['content/dino/new-book/book.json', 'content/dino/new-book/story.md', 'content/dino/old-book/pictures/1.jpg']);
     assert.deepEqual(t, { ...NONE, dinostore: true });
+});
+
+test('Slice 302: an Application-only change selects the store job (LineReflow)', () => {
+    assert.equal(targetsOf(['src/ReadTheStupidText.Application/LineReflow.cs']).dinostore, true);
 });
 
 test('a store-book change publishes books but ships no app (Slice 158)', () => {
@@ -555,7 +559,7 @@ test('Slice 218 (git): no marker tag falls back to the release diff, never to sh
         const { plans, flags } = flagsFor(dir);
         assert.equal(plans.rtst.storeChangedFiles, undefined);
         assert.deepEqual([flags.windows, flags.windowsstore, flags.android], [true, false, true]);
-        assert.deepEqual([flags.dinoios, flags.dinostore], [true, false]);
+        assert.deepEqual([flags.dinoios, flags.dinostore], [true, true]); // an Application change selects the store job too (Slice 302)
     });
 });
 

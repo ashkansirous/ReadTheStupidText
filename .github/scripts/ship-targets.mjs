@@ -202,6 +202,7 @@ export const GROUPS = {
     dinostore: {
         include: [
             'src/DinoReader.Core/',
+            'src/ReadTheStupidText.Application/', // LineReflow, used by the book builder (Slice 302)
             'content/dino/',
             'tools/DinoReader.BookBuilder/',
             'tools/upload-store-story.ps1',

@@ -13,6 +13,7 @@ on:
       - 'content/dino/**'
       - 'tools/DinoReader.BookBuilder/**'
       - 'src/DinoReader.Core/**'
+      - 'src/ReadTheStupidText.Application/**'
       - 'src/DinoReader.App/ShippedTitles.cs'
       - 'tools/upload-store-story.ps1'
       - '.github/scripts/publish-store-books.mjs'
