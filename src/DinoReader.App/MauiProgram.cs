@@ -37,6 +37,7 @@ public static class MauiProgram
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("Fredoka.ttf", DinoFonts.Ui);
+				fonts.AddFont("Fredoka-Medium.ttf", DinoFonts.UiMedium);
 				fonts.AddFont("Andika-Regular.ttf", DinoFonts.Reading);
 				fonts.AddFont("Andika-Bold.ttf", DinoFonts.ReadingBold);
 				fonts.AddFont("Vazirmatn.ttf", DinoFonts.Persian);

@@ -1,3 +1,4 @@
+using DinoReader.Core;
 using Microsoft.Maui.Controls.Shapes;
 
 namespace DinoReader;
@@ -29,6 +30,8 @@ public sealed class SoundStatusPill : Border
 	private readonly Label _label;
 	private readonly Grid _row;
 	private SoundStatusPillState? _shown;
+	private string? _shownText;
+	private string? _shownName;
 
 	public SoundStatusPill()
 	{
@@ -39,30 +42,56 @@ public sealed class SoundStatusPill : Border
 		MinimumHeightRequest = MinHeight;
 		HorizontalOptions = LayoutOptions.Center;
 		_ringView = new GraphicsView { Drawable = _ring, WidthRequest = RingSize, HeightRequest = RingSize, VerticalOptions = LayoutOptions.Center, InputTransparent = true };
-		_icon = new IconView { Size = IconSize, StrokeWidth = IconStroke, VerticalOptions = LayoutOptions.Center };
+		_icon = new IconView { Size = IconSize, StrokeWidth = IconStroke, VerticalOptions = LayoutOptions.Center, IsVisible = false }; // hidden until ShowLeading sets its kind, so the default kind is never drawn
 		AutomationProperties.SetIsInAccessibleTree(_ringView, false); // the label carries the words; the decoration is not read out
 		AutomationProperties.SetIsInAccessibleTree(_icon, false);
-		_label = new Label { AutomationId = TextAutomationId, FontSize = TextSize, FontAttributes = FontAttributes.None, LineHeight = LineHeight, VerticalOptions = LayoutOptions.Center };
+		_label = new Label { AutomationId = TextAutomationId, FontSize = TextSize, FontFamily = DinoFonts.UiMedium, FontAttributes = FontAttributes.None, LineHeight = LineHeight, VerticalOptions = LayoutOptions.Center };
 		_row = BuildRow(_ringView, _icon, _label); // after every child exists, so BuildRow can never add a null one
 		Content = _row;
 	}
 
-	/// <summary>Shows <paramref name="state"/> with <paramref name="text"/> (the caller composes it from the app's strings).</summary>
-	public void Show(SoundStatusPillState state, string text)
+	/// <summary>
+	/// Shows <paramref name="state"/> with <paramref name="text"/> (the caller composes it from the app's strings); <paramref name="nativeName"/>, when the text holds it
+	/// and it is written right to left, is set in that script's font inside the Fredoka line, as frame 197 does.
+	/// </summary>
+	public void Show(SoundStatusPillState state, string text, string? nativeName = null)
 	{
 		Color ink = DinoTokens.Get(state.IsBrandPill ? DinoTokens.BrandEdge : DinoTokens.Body);
 		BackgroundColor = DinoTokens.Get(state.IsBrandPill ? DinoTokens.BrandTint : DinoTokens.SoundPillSand);
 		_label.TextColor = ink; // colours are re-read on every call, so a light/dark switch shows even when state and text are unchanged
-		if (state == _shown && text == _label.Text)
+		if (_icon.IsVisible)
 		{
-			_icon.Color = ink;
-			return; // nothing else changed: skip the icon rebuild and the ring redraw
+			_icon.Color = ink; // a theme switch recolours a shown icon; a hidden one is never rebuilt (its default kind is a padlock)
+		}
+
+		_ring.Progress = state.RingProgress;
+		_ringView.Invalidate(); // the ring reads its colours when drawn: redraw on every call, so a theme switch shows too
+		if (state == _shown && text == _shownText && nativeName == _shownName)
+		{
+			return; // nothing else changed: skip the icon and label rebuild
 		}
 
 		_shown = state;
-		_label.Text = text;
-		_label.FlowDirection = UiFlow.ForText(text); // the row stays left-to-right; the words follow their own language when they wrap
+		_shownText = text;
+		_shownName = nativeName;
+		ShowText(text, nativeName);
 		ShowLeading(state, ink);
+	}
+
+	private void ShowText(string text, string? nativeName)
+	{
+		string font = DinoFonts.UiMediumForText(text);
+		_label.FontFamily = font;
+		_label.FlowDirection = UiFlow.ForText(text); // the row stays left-to-right; the words follow their own language when they wrap
+		var formatted = new FormattedString();
+		foreach (SoundPillRun run in SoundPillText.Split(text, nativeName))
+		{
+			string runFont = SoundPillText.FontFor(run, font, DinoFonts.Persian); // only a right-to-left name needs another font
+			formatted.Spans.Add(new Span { Text = run.Text, FontFamily = runFont });
+		}
+
+		_label.FormattedText = formatted;
+		SemanticProperties.SetDescription(_label, text); // a FormattedText label can have an empty UIA name on Windows (Slice 205: TextPages.cs)
 	}
 
 	private static Grid BuildRow(GraphicsView ringView, IconView icon, Label label)
@@ -89,8 +118,6 @@ public sealed class SoundStatusPill : Border
 			_icon.Kind = shown;
 		}
 
-		_ring.Progress = state.RingProgress;
-		_ringView.Invalidate();
 		bool hasLeading = _ringView.IsVisible || _icon.IsVisible;
 		double left = _ringView.IsVisible ? LeftPadRing : LeftPadIcon;
 		_row.Padding = new Thickness(left, VerticalPad, RightPad, VerticalPad); // the one place the padding is set
