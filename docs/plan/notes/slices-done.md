@@ -367,3 +367,4 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 300 | A kept problem report must not be wiped at next start when the remote crash switch is off | built | #919 | | [300-user-report-kept-while-crash-switch-off.md](../slices/300-user-report-kept-while-crash-switch-off.md) |
 | 301 | Slice 247 follow-ups: emulator runner crash wait, crash log on retry (item 3, faster slow flows, not built) | built | #918 | | [301-slice-247-follow-ups-emulator-runner.md](../slices/301-slice-247-follow-ups-emulator-runner.md) |
 | 303 | Slice 201 review leftovers that change behaviour | built | #921 | | [303-slice-201-review-leftovers.md](../slices/303-slice-201-review-leftovers.md) |
+| 305 | Dino package cleanup: ML Kit, sherpa-onnx and onnxruntime out of the Dino packages | built | #920 | | [305-dino-package-cleanup-ml-kit-and-sherpa.md](../slices/305-dino-package-cleanup-ml-kit-and-sherpa.md) |

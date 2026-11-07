@@ -2,6 +2,11 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 305: Dino package cleanup ([slice](slices/305-dino-package-cleanup-ml-kit-and-sherpa.md))
+- iOS TestFlight look of Dino and its IPA size (iOS only compiled).
+- Windows VM run of the Dino Windows head (unchanged by design; 6.5 GB free).
+- A parallel build of both apps in one msbuild invocation.
+
 ### Slice 303: Slice 201 review leftovers ([slice](slices/303-slice-201-review-leftovers.md))
 - Windows read path with a bad pack (VM not run: free memory 6.5 GB, under the 8 GB needed).
 - iOS device: bad Piper pack reports `pack_failed` and the guard stops the engine build.
