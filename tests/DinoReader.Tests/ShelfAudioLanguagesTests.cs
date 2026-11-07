@@ -50,14 +50,4 @@ public sealed class ShelfAudioLanguagesTests
         Assert.Equal(["sv"], ShelfAudioLanguages.ToStartOnLeaving(before, after, new HashSet<string> { "fa" }));
         Assert.Empty(ShelfAudioLanguages.ToStartOnLeaving(before, after, new HashSet<string> { "fa", "sv" }));
     }
-
-    [Theory]
-    [InlineData(true, 3, null, true)] // the store lists a pack and none is installed
-    [InlineData(true, 3, 1, true)] // an older pack is installed
-    [InlineData(true, 3, 3, false)] // the newest is installed
-    [InlineData(true, 3, 5, false)] // a newer one than listed is left alone
-    [InlineData(true, null, null, false)] // the store lists no pack for the book in this language
-    [InlineData(false, 3, null, false)] // the language is not one of the story languages
-    public void Opening_a_book_starts_a_quiet_run_only_when_a_listed_pack_is_missing_or_older(bool inSet, int? listed, int? installed, bool expected) =>
-        Assert.Equal(expected, ShelfAudioLanguages.BookNeedsQuietStart(inSet, listed, installed));
 }

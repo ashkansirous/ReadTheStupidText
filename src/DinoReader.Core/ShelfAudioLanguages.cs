@@ -16,11 +16,4 @@ public static class ShelfAudioLanguages
     /// </summary>
     public static IReadOnlyList<string> ToStartOnLeaving(StoryLanguageSet before, StoryLanguageSet after, IReadOnlySet<string> alreadyStarted) =>
         Added(before, after).Where(language => !alreadyStarted.Contains(language)).ToList();
-
-    /// <summary>
-    /// Whether opening a book starts a quiet run (Slice 285 C): the language is one of the story languages, the store lists a pack of the book in it (<paramref name="listedVersion"/>)
-    /// and the newest installed one (<paramref name="installedVersion"/>) is older or missing.
-    /// </summary>
-    public static bool BookNeedsQuietStart(bool languageInStorySet, int? listedVersion, int? installedVersion) =>
-        languageInStorySet && listedVersion is { } listed && (installedVersion is null || installedVersion < listed);
 }
