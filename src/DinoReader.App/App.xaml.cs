@@ -35,6 +35,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		ApplyRightToLeftFonts();
 		_services = services;
 		_config = config;
+		_ = services.GetRequiredService<ShelfAudioPacks>(); // Slice 313: its constructor subscribes to StagedBookUpdates.Swapped, so it must exist before the cold-start apply (GalleryPage) can swap a text
 		if (services.GetService<IStoryLibrary>() is FileStoryLibrary shelf)
 		{
 			shelf.Fallbacks = new DinoFallbackSink(services.GetRequiredService<UsageCounter>()); // Slice 273 part D: an unreadable book or shelf order is counted

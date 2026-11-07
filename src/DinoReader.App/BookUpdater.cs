@@ -540,8 +540,18 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 
 	// True when the run goes on: the package is staged (or already was), or the version is not in the store (404). False stops the run without saving the time:
 	// a failed download or a storage error.
-	private async Task<bool> StageOneAsync(StoreItem item, CancellationToken cancel) =>
-		await FetchAndStageAsync(item, cancel) != StageOutcome.Failed;
+	private async Task<bool> StageOneAsync(StoreItem item, CancellationToken cancel)
+	{
+		StageOutcome outcome = await FetchAndStageAsync(item, cancel);
+		if (outcome == StageOutcome.NotInStore)
+		{
+			BookTextFailures.GiveUp(item.Id, item.Version); // Slice 313: the weekly check gives up on a 404 exactly like the listing pass
+			BookUpdateEvents.Report(item.Id, StarterStories.RecordedVersion(item.Id) ?? StarterUpdate.LegacyInstalledVersion, item.Version, BookUpdateResult.Failed);
+			store.Fallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed);
+		}
+
+		return outcome != StageOutcome.Failed;
+	}
 
 	private enum StageOutcome
 	{

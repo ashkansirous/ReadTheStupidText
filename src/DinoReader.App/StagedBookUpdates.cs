@@ -135,7 +135,7 @@ public sealed class StagedBookUpdates(IStoryLibrary library, StarterStories star
 		_swappedInRun = false;
 		try
 		{
-			Swapped?.Invoke(this, EventArgs.Empty);
+			Swapped?.Invoke(this, EventArgs.Empty); // ShelfAudioPacks subscribes at app start (DinoApp constructor), before any apply can run
 		}
 		catch (Exception ex)
 		{

@@ -34,12 +34,14 @@ public sealed class ShelfAudioPacks
 	private readonly object _scanLock = new();
 	private TaskCompletionSource _scanDone = new();
 
+	private readonly StagedBookUpdates _staged;
 	private readonly IBookTextSync _textSync; // Slice 313: brings a behind book's text up to date before its pack is planned (injected, so no start-up path can forget it)
 
 	public ShelfAudioPacks(StoreClient store, IBookTextSync textSync, StagedBookUpdates staged)
 	{
 		_store = store;
 		_textSync = textSync;
+		_staged = staged;
 		staged.Swapped += (_, _) => TextChanged(); // a book's text was just swapped in: its pack is planned again, whichever path swapped it
 		store.Packs.PacksChanged += () => _ = RescanAsync(); // a book download, a book update, a removal or the sweep changed the pack folders: the snapshot follows
 		_installed = InstalledShelfAudio.Parse(Preferences.Default.Get(InstalledKey, (string?)null)); // the last-known list, read at once, so a cold start shows it before the scan corrects it

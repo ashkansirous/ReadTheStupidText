@@ -62,6 +62,17 @@ Android, iOS and Windows share this code; all three get it.
 - Skipped #4 (`reviews/313-medium.md`): "records a permanent \"store has no package\" failure whenever StageOneAsync returned true": replaced by the simplified give-up (only a 404 / not-in-store gives up for that store version).
 - Skipped #7 (`reviews/313-medium.md`): "records a permanent failure and deletes the staged entry; transient faults": replaced by the simplified give-up (an unexpected exception is retryable, the staged entry stays).
 
+*From review:* check pass (`reviews/313-check.md`): 4, 6, 9 applied.
+- #4: the staged-update refresh handler catches every exception and reports a fallback (`GalleryPage.OnBookUpdateStaged`), coalescing kept.
+- #6: `StagedBookUpdates` remembers a swap nobody heard (`TakeUnheardSwap`); `ShelfAudioPacks.Resume` plans the packs again for it, past the throttle.
+- #9: `BookUpdater.StageOneAsync` (weekly check) gives up on a 404 like the listing pass.
+- Skipped 1, 2, 3, 5, 7, 8 (low or by design: retries are throttled to listing passes; a 404 give-up resets on the next store version).
+
+*From review:* check pass 2 (`reviews/313-check2.md`): 1-4 applied.
+- #1 and #2: the `_swapUnheard` / `TakeUnheardSwap` flag of check #6 is removed (it raced and skipped `TextChanged`). `DinoApp`'s constructor resolves `ShelfAudioPacks` first, so its `StagedBookUpdates.Swapped` subscription exists before any apply; every swap reaches `TextChanged()` (live run: PlanAgain; otherwise a quiet run past the throttle).
+- #3: the weekly check's 404 give-up (`BookUpdater.StageOneAsync`) also reports `book_update:failed` and an `UpdateCheckFailed` fallback.
+- #4: `GalleryPage.OnBookUpdateStaged` lets `OperationCanceledException` pass silently (no pass after it); any other failure is reported per pass, so a queued `_stagedRefreshAgain` pass still runs.
+
 *Fast checks:* `DinoReader.Tests` 3860 passed (1 skipped), Dino Android build, `FallbackGuard` 47/47, worker events tests 79/79.
 
 *Emulator-5554, 2026-11-07:* `book-text-and-sound-in-step` PASS (`book_update staged:13:14`, `book_update updated:13:14`, `78 of 78 pieces have a clip`, `premade clip plays`). The first run failed on a flow bug (expect-log markers ending in a colon), fixed. `premade-audio-plays`, `language-change-fetches-audio`, `language-change-back-key-fetches-audio` and `silent-piece-beat` PASS. The flow can't show changed text on screen: the test store serves the same text.

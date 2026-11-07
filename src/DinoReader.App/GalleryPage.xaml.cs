@@ -292,20 +292,41 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 			do
 			{
 				_stagedRefreshAgain = false;
-				await RefreshAsync();
+				if (!await TryRefreshAfterStagedUpdateAsync())
+				{
+					break; // cancelled (the gallery went away): no further pass
+				}
 			}
-			while (_stagedRefreshAgain);
-		}
-		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-		{
-			// no-fallback: logged only; the shelf stays as it was until the next refresh
-			Debug.WriteLine($"Dino Reader gallery refresh after a book update failed: {ex}");
+			while (_stagedRefreshAgain); // a failed pass still gets the pass a later signal asked for
 		}
 		finally
 		{
 			_stagedRefreshRunning = false;
 		}
 	});
+
+	// False only when the refresh was cancelled. Nothing escapes (this runs on a background-triggered path and would crash the app); the shelf stays as it was until the next refresh.
+	private static async Task<bool> TryRefreshAfterStagedUpdateAsync(Func<Task> refresh)
+	{
+		try
+		{
+			await refresh();
+			return true;
+		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: a refresh cancelled by the gallery's teardown is not a failure
+			return false;
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader gallery refresh after a book update failed: {ex}");
+			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed); // Slice 313
+			return true;
+		}
+	}
+
+	private Task<bool> TryRefreshAfterStagedUpdateAsync() => TryRefreshAfterStagedUpdateAsync(RefreshAsync);
 
 	private bool _stagedRefreshRunning;
 	private bool _stagedRefreshAgain;
