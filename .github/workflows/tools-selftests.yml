@@ -118,6 +118,9 @@ jobs:
       - name: Screenshot contact sheet self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-contact-sheet.ps1
 
+      - name: Worktree run mark self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-worktree-mark.ps1
+
       - name: Desktop check dry-run self-test (${{ matrix.shell }})
         run: ./tools/desktop-vm/test-check-dryrun.ps1
 

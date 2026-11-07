@@ -193,6 +193,48 @@ if ((Invoke-CheckDryRun @($AppProfile.Checks) "$PSScriptRoot\checks" $msix) -gt 
 $credential = Get-VmCredential
 $results = @()
 $noGo = $null
+# Slice 284 item 3: this run marks its worktree as busy with its own uniquely named file in the git dir (the agents' `device-test-running*` marks), removed when the run ends;
+# two runs on one worktree each remove only their own. Same two functions in tools/emulator/run-flows.ps1 (checked by tools/emulator/test-worktree-mark.ps1).
+function New-WorktreeRunMark([string]$Owner, [string]$Root) {
+    try {
+        $gitDir = (& git -C $Root rev-parse --absolute-git-dir 2>$null)
+        if ($LASTEXITCODE -ne 0 -or -not $gitDir) { return $null }
+        # Slice 284 design (two strikes): a mark is stale only if its pid is dead, or its StartTime is readable and later than the mark's write time (a reused pid).
+        # An unreadable StartTime (access denied) counts as live. Each mark is judged in its own try, and our own mark never depends on reading other processes.
+        foreach ($old in @(Get-ChildItem -LiteralPath $gitDir -Filter 'device-test-running-*-*-*' -File -ErrorAction SilentlyContinue)) {
+            try {
+                if ($old.Name -notmatch '^device-test-running-.+-(\d+)-[0-9a-f]{8}$') { continue }
+                $markOwner = Get-Process -Id ([int]$Matches[1]) -ErrorAction SilentlyContinue
+                $stale = -not $markOwner
+                if ($markOwner) { try { $stale = $markOwner.StartTime -gt $old.LastWriteTime } catch { $stale = $false } }
+                if ($stale) { Remove-Item -LiteralPath $old.FullName -Force -ErrorAction SilentlyContinue }
+            } catch { continue }
+        }
+    } catch { return $null }
+    $path = Join-Path $gitDir ("device-test-running-$Owner-$PID-" + [guid]::NewGuid().ToString('N').Substring(0, 8))
+    try { Set-Content -LiteralPath $path -Value "$Owner pid $PID started $((Get-Date).ToString('o'))" } catch { Write-Warning "Run mark not written ($($_.Exception.Message)); the run goes on without one."; return $null }
+    return $path
+}
+function Remove-WorktreeRunMark([string]$Path) {
+    if ($Path) { Remove-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue }
+}
+# Slice 284 check pass 2: the dino-record key-R stage finds the app's microphone alerts by their text, read here from this worktree's English resx (the keys RecordPage.cs shows),
+# so a reworded alert never silently breaks the stage. The guest has no repo: the texts go over as one base64 JSON argument; a missing key is passed as an error the stage fails with.
+function Get-RecordAlertArgument {
+    $resx = Join-Path $PSScriptRoot '..\..\src\DinoReader.App\Resources\Strings\AppResources.resx'
+    $keys = @{ NoMic = 'Rec_NoMicTitle'; Failed = 'Rec_Failed' }
+    $payload = @{ Error = $null; NoMic = $null; Failed = $null }
+    try {
+        $data = ([xml](Get-Content -LiteralPath $resx -Raw -Encoding UTF8)).root.data
+        foreach ($name in $keys.Keys) {
+            $entry = @($data | Where-Object { $_.name -eq $keys[$name] }) | Select-Object -First 1
+            if (-not $entry -or -not $entry.value) { throw "resx key $($keys[$name]) is missing in $resx" }
+            $payload[$name] = [string]$entry.value
+        }
+    } catch { $payload.Error = "cannot read the microphone alert texts: $($_.Exception.Message)" }
+    return [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes(($payload | ConvertTo-Json -Compress)))
+}
+$runMark = $null   # created below, once the quiet-machine registration is done and the try that owns its removal is next
 $script:PreflightMissing = @()
 $session = $null
 $guestStart = $null
@@ -201,6 +243,7 @@ try { Write-TmpListing 'before the run' } catch { Write-Warning "Tmp listing fai
 $activity = Start-Activity "vm-$App"
 try { Enter-VmLock } catch { Stop-Activity $activity; throw }
 try {
+    $runMark = New-WorktreeRunMark 'desktop-test' $PSScriptRoot   # first statement of the try whose finally removes it (Slice 284 design, two strikes)
     Write-Host "Restoring '$($script:CheckpointName)' and starting the VM..."
     Restore-CleanCheckpoint -Start -Quiet
     $session = New-VmSession -Credential $credential
@@ -218,7 +261,9 @@ try {
             Invoke-Command -Session $session -ArgumentList $AppProfile.Exe -ScriptBlock { param($exe) Stop-Process -Name $exe -Force -ErrorAction SilentlyContinue }
         }
         Write-Host "Running check $check..."
-        $r = Invoke-InteractiveScript -Session $session -GuestScript "$($script:GuestWorkDir)\checks\$check.ps1" -ScriptArgs @($AppProfile.Name)
+        $checkArgs = @($AppProfile.Name)
+        if ($check -eq 'dino-record') { $checkArgs += Get-RecordAlertArgument }
+        $r = Invoke-InteractiveScript -Session $session -GuestScript "$($script:GuestWorkDir)\checks\$check.ps1" -ScriptArgs $checkArgs
         $message = if ($r.noResult) { "$($r.message); screen: $(Get-ScreenText (Save-VmScreenshot -Reason "check-$check"))" } else { $r.message }
         $results += [pscustomobject]@{ check = $check; pass = [bool]$r.pass; message = $message }
         Write-TmpListing "after check $check"
@@ -236,15 +281,16 @@ try {
     # Slice 259 item 4: a failed check or harness error may be a dead app; keep what the guest knows (event log, WER, app trace tail) before the reset to clean wipes it.
     if ($session -and $guestStart -and -not $noGo -and $results.Where({ -not $_.pass }).Count -gt 0) {
         $evidenceDir = if ($CopyOut) { Join-Path $CopyOut 'crash-evidence' } else { Join-Path $VmRoot "crash-evidence\$App-$(Get-Date -Format 'yyyyMMdd-HHmmss')" }
-        Copy-CrashEvidence -Session $session -HostDir $evidenceDir -ExeName $AppProfile.Exe -PackageName $AppProfile.Name -Since $guestStart
+        try { Copy-CrashEvidence -Session $session -HostDir $evidenceDir -ExeName $AppProfile.Exe -PackageName $AppProfile.Name -Since $guestStart } catch { Write-Warning "Crash evidence copy failed: $($_.Exception.Message)" }
     }
     if ($session) { Remove-PSSession $session -ErrorAction SilentlyContinue }
     if (-not $KeepRunning) {
         Write-Host "Restoring '$($script:CheckpointName)'..."
         try { Restore-CleanCheckpoint -Quiet } catch { Write-Warning "Reset to clean failed: $($_.Exception.Message)" }
     }
-    Stop-Activity $activity
-    Exit-VmLock
+    try { Stop-Activity $activity } catch { Write-Warning "Stop-Activity failed: $($_.Exception.Message)" }
+    try { Remove-WorktreeRunMark $runMark } catch { Write-Warning "Run mark removal failed: $($_.Exception.Message)" }
+    try { Exit-VmLock } catch { Write-Warning "Exit-VmLock failed: $($_.Exception.Message)" }
     try { Write-TmpListing 'after the run' } catch { Write-Warning "Tmp listing failed: $($_.Exception.Message)" }   # a listing error must not mask the run's own failure
 }
 if ($noGo) { exit $script:PreflightExitCode }

@@ -32,6 +32,68 @@ public class FallbackGuardTests
     }
 
     [Fact]
+    public void SourceListing_IncludesAnUntrackedNotIgnoredFile()
+    {
+        // Slice 284 review finding 8: a new, not yet added .cs file (a bare catch in it) must be scanned, not only what git tracks.
+        var repo = Path.Combine(Path.GetTempPath(), "rtst-fallback-guard-" + Guid.NewGuid().ToString("N"));
+        var src = Path.Combine(repo, "src");
+        Directory.CreateDirectory(src);
+        try
+        {
+            File.WriteAllText(Path.Combine(src, "Tracked.cs"), "class Tracked { }");
+            File.WriteAllText(Path.Combine(src, "Untracked.cs"), "class Untracked { }");
+            RunGit(repo, "init", "-q");
+            RunGit(repo, "add", "src/Tracked.cs");
+
+            var files = TrackedSourceFiles(src);
+
+            Assert.NotNull(files);
+            Assert.Contains(Path.Combine(src, "Tracked.cs"), files!);
+            Assert.Contains(Path.Combine(src, "Untracked.cs"), files!);
+        }
+        finally
+        {
+            ForceDeleteDirectory(repo);
+        }
+    }
+
+    private static void RunGit(string repo, params string[] arguments)
+    {
+        var info = new System.Diagnostics.ProcessStartInfo("git", ["-C", repo, .. arguments])
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        ScrubGitEnvironment(info);
+        using var process = System.Diagnostics.Process.Start(info)!;
+        var outputTask = process.StandardOutput.ReadToEndAsync();
+        process.StandardError.ReadToEnd();
+        outputTask.Wait();
+        process.WaitForExit();
+        Assert.Equal(0, process.ExitCode);
+    }
+
+    private static void ScrubGitEnvironment(System.Diagnostics.ProcessStartInfo info)
+    {
+        // A hook or CI wrapper that sets these would send `git init` / `git add` to the outer repo instead of the temp one.
+        foreach (var name in new[] { "GIT_DIR", "GIT_INDEX_FILE", "GIT_WORK_TREE" })
+        {
+            info.Environment.Remove(name);
+        }
+    }
+
+    private static void ForceDeleteDirectory(string path)
+    {
+        foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
+        {
+            File.SetAttributes(file, FileAttributes.Normal);
+        }
+
+        Directory.Delete(path, recursive: true);
+    }
+
+    [Fact]
     public void Marker_WithReason_Passes()
     {
         Assert.Equal(0, Unmarked("class C { void M() { try { } catch (Exception) {\n // no-fallback: user cancelled\n } } }"));
@@ -268,31 +330,24 @@ public class FallbackGuardTests
         return Directory.EnumerateFiles(srcRoot, "*.cs", options);
     }
 
-    /// <summary>Git-tracked *.cs files under src (what CI sees); null when git is unavailable or fails.</summary>
-    private static List<string>? TrackedSourceFiles(string srcRoot)
+    /// <summary>Git-tracked plus untracked-not-ignored *.cs files under src (CI sees only the committed files; a local scratch .cs is scanned here on purpose, so a new file's bare catch fails before it is committed); null when git is unavailable or fails.</summary>
+    internal static List<string>? TrackedSourceFiles(string srcRoot)
     {
         try
         {
             var repoRoot = Path.GetDirectoryName(srcRoot)!;
-            var info = new System.Diagnostics.ProcessStartInfo("git", ["-C", repoRoot, "ls-files", "-z", "--", "src"])
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-            };
-            using var process = System.Diagnostics.Process.Start(info)!;
-            var output = process.StandardOutput.ReadToEnd();
-            process.StandardError.ReadToEnd();
-            process.WaitForExit();
-            if (process.ExitCode != 0 || output.Length == 0)
+            var tracked = GitListFiles(repoRoot, ["ls-files", "-z", "--", "src"]);
+            var untracked = GitListFiles(repoRoot, ["ls-files", "-z", "--others", "--exclude-standard", "--", "src"]);
+            if (tracked is null || untracked is null || tracked.Length == 0)
             {
                 return null;
             }
 
-            return output.Split('\0', StringSplitOptions.RemoveEmptyEntries)
+            return tracked.Concat(untracked)
                 .Where(p => p.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
                 .Select(p => Path.Combine(repoRoot, p.Replace('/', Path.DirectorySeparatorChar)))
                 .Where(File.Exists)
+                .Distinct()
                 .ToList();
         }
         catch (Exception)
@@ -300,6 +355,23 @@ public class FallbackGuardTests
             // no-fallback: test helper; without git the guard walks the directory instead
             return null;
         }
+    }
+
+    private static string[]? GitListFiles(string repoRoot, IEnumerable<string> gitArguments)
+    {
+        var info = new System.Diagnostics.ProcessStartInfo("git", ["-C", repoRoot, .. gitArguments])
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        ScrubGitEnvironment(info);
+        using var process = System.Diagnostics.Process.Start(info)!;
+        var errorTask = process.StandardError.ReadToEndAsync();
+        var output = process.StandardOutput.ReadToEnd();
+        errorTask.Wait();
+        process.WaitForExit();
+        return process.ExitCode == 0 ? output.Split('\0', StringSplitOptions.RemoveEmptyEntries) : null;
     }
 
     private static bool IsSkipped(string srcRoot, string path)

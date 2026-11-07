@@ -4,8 +4,8 @@
 #   2 Start recording -> the Record screen: one piece, Skip / Record / key labels "Skip . S", "Record . R"
 #   3 S -> trace line "Dino keyboard: S used" (a piece skipped)
 #   4 Esc -> back out of the Record screen (before R: R may raise the microphone consent prompt, a window outside the app)
-#   5 reopen, R last -> the trace line "Dino keyboard: R used" (recording started or the mic refused: UI is read back), the window that has focus after R is named; R again stops
-param([string] $ResultFile, [Parameter(Position = 0)] [string] $PackageName)
+#   5 reopen, R last -> the trace line "Dino keyboard: R used" AND the Stop button (a recording state; a consent prompt that holds focus fails the stage, Slice 284), the window that has focus after R is named; R again stops
+param([string] $ResultFile, [Parameter(Position = 0)] [string] $PackageName, [Parameter(Position = 1)] [string] $AlertTextsBase64)
 . "$PSScriptRoot\_lib.ps1"
 
 $HoldRingName = 'Press and hold for 3 seconds'
@@ -18,6 +18,13 @@ function Get-DinoWindow {
     $w = Get-AppWindows 'DinoReader.App' | Select-Object -First 1
     if (-not $w) { throw 'Dino Reader is not running' }
     return $w
+}
+function Get-AlertTexts {
+    # The app's microphone alert texts, read by the host from the worktree's resx (Invoke-DesktopTest.ps1, Get-RecordAlertArgument); a missing argument or key fails the stage.
+    if (-not $AlertTextsBase64) { throw 'the host passed no microphone alert texts (resx keys Rec_NoMicTitle, Rec_Failed)' }
+    $texts = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($AlertTextsBase64)) | ConvertFrom-Json
+    if ($texts.Error) { throw $texts.Error }
+    return $texts
 }
 function Get-TraceLines {
     $p = Join-Path $env:LOCALAPPDATA "Packages\$((Get-InstalledPackage $PackageName).PackageFamilyName)\LocalState\$TraceFileName"
@@ -166,7 +173,8 @@ Invoke-Check -ResultFile $ResultFile -Body {
         Press-Key $VkR
         # Wait on the trace line, not a fixed time; a miss is reported below with the UI.
         try { Wait-Until { (Count-Trace 'Dino keyboard: R used') -gt $before } 6 'R trace line' | Out-Null } catch { $null = $_ }
-        Start-Sleep -Seconds 1
+        # Review finding 1: the trace line is logged before the recorder opens the device (asynchronous on Windows), so wait for the Stop button too; a miss is judged below.
+        try { Wait-Until { Find-Visible 'RecordStopButton' } 8 'the Stop button' | Out-Null } catch { $null = $_ }
         $used = (Count-Trace 'Dino keyboard: R used') - $before
         $focus = Get-FocusedWindowNote
         $state = if (Find-Visible 'RecordStopButton') { 'Stop button showing (recording)' } else { 'no Stop button' }
@@ -174,6 +182,21 @@ Invoke-Check -ResultFile $ResultFile -Body {
         $detail = "reopened ($startNote); R used x$used; $state; focus after R: $focus; UI: $ui"
         try {
             if ($used -lt 1) { throw "R was not used (no trace line); $state; focus after R: $focus; UI: $ui" }
+            # Slice 284: the trace line alone also appears while the microphone-consent prompt holds focus and no recording starts. Pass only when a recording state shows:
+            # the Stop button, or the app's own refusal alert (RecordPage.TryStartRecorderAsync: "Microphone is off" when refused, "The recording didn't work..." with no usable microphone;
+            # the alerts carry no AutomationId, so they are found by their English text, as the VM runs in English). Neither showing (a consent prompt holding focus) fails.
+            $dinoWindow = Get-DinoWindow
+            if (-not $dinoWindow) { throw "R was used but the Dino window is gone; focus after R: $focus" }
+            $alertTexts = Get-AlertTexts
+            $refused = (Find-UiaExact $dinoWindow $alertTexts.NoMic) -or (Find-UiaExact $dinoWindow $alertTexts.Failed)
+            if ($refused) {
+                # The alert is modal: dismiss it so it never covers the later stages or takes the finally block's second R. It must be gone within 3 s, else the stage fails (check pass 2).
+                try { Invoke-Uia (Find-UiaExact $dinoWindow 'OK' 'Button') } catch { Press-Key $VkEscape }
+                try { Wait-Until { -not ((Find-UiaExact (Get-DinoWindow) $alertTexts.NoMic) -or (Find-UiaExact (Get-DinoWindow) $alertTexts.Failed)) } 3 'the alert to close' | Out-Null }
+                catch { throw "the microphone alert did not close within 3 s after dismissing it (OK button / Escape); it would block the later stages; UI: $ui" }
+            }
+            if (-not (Find-Visible 'RecordStopButton') -and -not $refused) { throw "R was used but neither a recording nor a microphone-refused/no-microphone alert showed (a microphone consent prompt may hold focus); focus after R: $focus; UI: $ui" }
+            if ($refused) { $detail += '; microphone refused or missing (the app showed its alert), key handling itself worked' }
         }
         finally {
             # Always stop a running recording, also when the stage fails, so the mic is not left live for the next check.
