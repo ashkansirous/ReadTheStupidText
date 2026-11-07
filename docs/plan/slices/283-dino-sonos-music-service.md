@@ -86,7 +86,7 @@ skipped, not fatal. Nothing is logged (`worker/CLAUDE.md:24`). Tests: worker sui
 
 ## Waiting on the user (their login)
 
-Sonos Company partner account and service submission (text above); company details; brand images; Sonos ID for the sandbox; localisation
+Sonos Company partner account and service submission (text above); company details; uploading the ready brand images (*Brand Assets* below); Sonos ID for the sandbox; localisation
 strings; then the sandbox integration at `https://dinoreader.sirous.uk/sonos`, Self Test, and a play on their own Sonos.
 Unknown: whether the partner account costs anything; whether Self Test skips authentication tests for an anonymous service.
 
@@ -128,7 +128,18 @@ Self Test skips its Authentication tests for anonymous (found out at the first S
 - **Implemented calls:** getMetadata, getExtendedMetadata, getMediaMetadata, getMediaURI, getLastUpdate. Media: `audio/mp4` (AAC in .m4a) served over HTTPS with Range and HEAD support.
 - **Privacy policy:** https://dinoreader.sirous.uk/privacy (section "Dino Reader on Sonos (optional)").
 - **Territory / availability:** worldwide (the user confirms).
-- **Needed from the user:** company details, logo / full logo / badge images (Brand Assets), the Sonos ID for the sandbox, the localization file or the two strings above.
+- **Brand Assets (ready, 2026-11-07):** upload from `docs/design/dino-reader/sonos/`: service logo `service-logo-400.png` (other sizes, or `service-logo-400.svg`, if the portal asks), full logo `full-logo.svg` (129 x 20, white on transparent), badge `badge-40.svg`, support banner `support-banner.png` (800 x 200; `support-banner.svg` too). See *Design* below.
+- **Needed from the user:** company details, the Sonos ID for the sandbox, the localization file or the two strings above.
+
+## Design
+
+Batch 50 mock, `docs/design/dino-reader/Dino Reader Batch 50 Sound States and Sonos.dc.html` lines 123-170 (index in
+`docs/design/dino-reader/README.md`); the files are in `docs/design/dino-reader/sonos/`. Built to Sonos's *Add logos*
+page (read by the designer 2026-11-07). Service logo: the full-colour Book hug on flat `#FFBDB4` (no gradient, no
+transparency, no rounded corners), PNG 20/40/80/112/200/400 and SVG 40/400. Full logo and badge: one-colour white on
+transparent, cut-out shapes, plain paths only (wordmark is Fredoka 600 as outlines). Support banner: white background,
+colour character, ink wordmark. Nothing built differs: the Worker serves no service logo (only each book's cover as `albumArtURI`, `worker/sonos.ts`), so the images only go into the
+developer portal with the submission.
 
 ## Verification
 

@@ -27,7 +27,8 @@ are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CL
 > Slices 172-174 (gear, story languages, reading screen) `Dino Reader Batch 37.dc.html`, for Slices 228-231
 > (grown-ups' corner, Done/Continue, Record) `Dino Reader Batch 43 Grown-ups Corner.dc.html`, and for Slice 232
 > (landscape, every screen) `Dino Reader Batch 44 Landscape.dc.html`, and for Slices 276, 278 and 279 (store books only,
-> the recording flow, TestFlight update) `Dino Reader Batch 48 Store Only and Recording.dc.html` (index in
+> the recording flow, TestFlight update) `Dino Reader Batch 48 Store Only and Recording.dc.html`, and for Slice 290
+> (reading page sound pill) and the Sonos brand images `Dino Reader Batch 50 Sound States and Sonos.dc.html` (index in
 > that folder's README): read visual values (colours, sizes, copy, layout) from it,
 > never guess them, and never call `DesignSync` for them.
 
