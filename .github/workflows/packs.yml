@@ -403,7 +403,9 @@ jobs:
           python3 - "$work/tokens.txt" src-models/nb-nvcc/tokens.txt <<'PY'
           import sys
           kept, dropped = [], []
-          for line in open(sys.argv[1], encoding="utf-8").read().splitlines():
+          # Split on chr(10) only, as the app (PiperTokens.Problem) and the check step below do: str.splitlines() also splits on U+2028 and others.
+          for line in open(sys.argv[1], encoding="utf-8", newline="").read().split(chr(10)):
+              line = line.rstrip(chr(13))
               if not line:
                   continue
               token = line.rsplit(" ", 1)[0]
@@ -484,32 +486,69 @@ jobs:
         run: |
           set -euo pipefail
           python3 - "out/$PERSIAN_ID" "out/$NORWEGIAN_ID" <<'PY'
-          import glob, os, re, sys
-          bad = []
-          files = [f for pack in sys.argv[1:] for f in glob.glob(os.path.join(pack, "voices", "*", "tokens.txt"))]
-          if len(files) != 5:
-              raise SystemExit("expected the 4 Persian voices and the Norwegian voice, found " + str(files))
-          for path in files:
+          import glob, json, os, re, sys
+
+          def problems(text, label):
+              bad = []
               seen = set()
-              # Raw bytes, strict UTF-8, BOM kept: sherpa-onnx reads the bytes, so a BOM joins the first token.
-              lines = open(path, "rb").read().decode("utf-8").split(chr(10))
+              # Split on chr(10) only, as the app does (PiperTokens.Problem); str.splitlines() would also split on U+2028.
+              lines = text.split(chr(10))
               if lines[-1] == "":
                   lines.pop()
               for number, line in enumerate(lines, 1):
-                  line = line.rstrip(chr(13) + " " + chr(9))
+                  # Same trims as PiperTokens.TrySplit: all trailing CRs, then trailing space/tab; head trimmed of space/tab only (not str.strip(), which also drops U+00A0 etc.).
+                  line = line.rstrip(chr(13)).rstrip(" " + chr(9))
                   head, sep, tail = line.rpartition(" ")
-                  token = " " if head.strip() == "" else head
+                  token = " " if head.strip(" " + chr(9)) == "" else head
                   # sherpa skips a Coqui-style <BLNK> line and accepts a signed id (istream >> int32).
-                  if not re.fullmatch(r"[+-]?[0-9]+", tail):
-                      bad.append(path + ":" + str(number) + ": " + repr(line))
+                  if not re.fullmatch(r"[+-]?[0-9]+", tail) or not -2147483648 <= int(tail) <= 2147483647:
+                      bad.append(label + ":" + str(number) + ": " + repr(line))
                   elif token == "<BLNK>":
                       continue
                   elif len(token) != 1 or token in seen:
-                      bad.append(path + ":" + str(number) + ": " + repr(line))
+                      bad.append(label + ":" + str(number) + ": " + repr(line))
                   seen.add(token)
               for needed in "_^$":
                   if needed not in seen:
-                      bad.append(path + ": missing token " + needed)
+                      bad.append(label + ": missing token " + needed)
+              return bad
+
+          # Fixture self-test (Slice 303): the checker itself must treat a U+2028 as part of a line, a CRLF ending as a plain one.
+          base = chr(10).join(["_ 0", "^ 1", "$ 2"]) + chr(10)
+          if problems(base, "fixture-good"):
+              raise SystemExit("self-test: a sound tokens.txt was rejected")
+          if problems(base + "a 3" + chr(13) + chr(10), "fixture-crlf"):
+              raise SystemExit("self-test: a CRLF line ending was rejected")
+          if not problems(base + "a 3" + chr(0x2028) + "b 4" + chr(10), "fixture-u2028"):
+              raise SystemExit("self-test: a U+2028 inside a line was treated as a line break")
+          # Same verdicts as PiperTokensTests: a U+00A0 token is not the space token, and an id beyond int32 is rejected.
+          if problems(base + chr(0xA0) + " 3" + chr(10) + "4" + chr(10), "fixture-nbsp"):
+              raise SystemExit("self-test: a U+00A0 token was treated as the space token")
+          if not problems(base + "a 2147483648" + chr(10), "fixture-int32"):
+              raise SystemExit("self-test: an id beyond int32 was accepted")
+
+          def expected_tokens(pack):
+              # The files a pack must hold come from its own pack.json (one tokens.txt per distinct voice model folder), not a fixed count.
+              with open(os.path.join(pack, "pack.json"), encoding="utf-8") as handle:
+                  manifest = json.load(handle)
+              folders = set()
+              for voice in manifest["voices"]:
+                  if not voice.get("model"):
+                      raise SystemExit("pack " + pack + ": voice " + str(voice.get("id")) + " has no 'model' folder in pack.json, so its tokens.txt cannot be checked")
+                  folders.add(voice["model"].strip("/"))
+              return {os.path.normpath(os.path.join(pack, folder, "tokens.txt")) for folder in folders}
+
+          bad = []
+          files = []
+          for pack in sys.argv[1:]:
+              found = {os.path.normpath(f) for f in glob.glob(os.path.join(pack, "voices", "*", "tokens.txt"))}
+              expected = expected_tokens(pack)
+              if found != expected:
+                  raise SystemExit("pack " + pack + " holds " + str(sorted(found)) + " but its pack.json lists " + str(sorted(expected)))
+              files += sorted(found)
+          for path in files:
+              # Raw bytes, strict UTF-8, BOM kept: sherpa-onnx reads the bytes, so a BOM joins the first token.
+              bad += problems(open(path, "rb").read().decode("utf-8"), path)
           if bad:
               print(chr(10).join(bad))
               raise SystemExit("tokens.txt has entries sherpa-onnx's Piper reader aborts on")

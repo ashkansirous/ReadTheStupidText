@@ -113,6 +113,14 @@ public static class PackVersionFolders
     /// </summary>
     public static bool FirstReportFor(string packFolder) => ReportedPackFolders.TryAdd(packFolder, 0);
 
+    /// <summary>
+    /// Like <see cref="FirstReportFor"/> but for a pack rejected for a bad tokens file (Slice 303): its own key, so an earlier
+    /// unreadable-pointer or manifest report for the same folder cannot hide it.
+    /// </summary>
+    public static bool FirstTokensReportFor(string packFolder) => ReportedPackFolders.TryAdd(packFolder + TokensKeySuffix, 0);
+
+    private const string TokensKeySuffix = ":tokens";
+
     // A pack with no active version keeps whatever it has. A version folder newer than the active one is a
     // complete install the app was killed before activating: it is kept, not deleted. Anything that cannot be
     // deleted (a file still held open) is left for the next start.

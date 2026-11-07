@@ -8,7 +8,8 @@ namespace ReadTheStupidText.Application.Reading;
 /// <see cref="Voices"/>. The synthesis engine knows its own file layout under the
 /// directory; the defaults describe the single English Supertonic model Windows ships.
 /// <see cref="PackVersion"/> is the installed pack's manifest version (empty for a model that
-/// has no pack), so cached audio is not reused after a pack update.
+/// has no pack), so cached audio is not reused after a pack update. <see cref="PackId"/> is the pack's manifest id
+/// (empty for a model that has no pack); the Piper tokens check gates on it (Slice 303).
 /// </summary>
 public sealed record VoiceModelPaths(
     string RootDir,
@@ -16,7 +17,8 @@ public sealed record VoiceModelPaths(
     string Language = SupertonicVoiceTable.EnglishCode,
     IReadOnlyList<VoiceInfo>? Voices = null,
     string PackVersion = "",
-    string ModelDir = "")
+    string ModelDir = "",
+    string PackId = "")
 {
     /// <summary>
     /// The folder the engine loads <c>model.onnx</c> and <c>tokens.txt</c> from: the pack root, or

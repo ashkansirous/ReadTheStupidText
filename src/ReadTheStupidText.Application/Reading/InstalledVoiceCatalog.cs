@@ -22,7 +22,7 @@ public static class InstalledVoiceCatalog
             IReadOnlyList<VoiceInfo> voices = VoicesOf(pack.Manifest, language);
             if (voices.Count > 0)
             {
-                var paths = new VoiceModelPaths(pack.Folder, pack.Manifest.Model, language, voices, pack.Manifest.Version);
+                var paths = new VoiceModelPaths(pack.Folder, pack.Manifest.Model, language, voices, pack.Manifest.Version, PackId: pack.Manifest.Id);
 
                 // Aimed at the default voice's model, for a reader that does not pick a model per voice.
                 return paths.ForVoice(paths.ResolveVoice(null));

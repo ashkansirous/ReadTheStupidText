@@ -1398,7 +1398,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         config.Model.NumThreads = threads;
         config.Model.Provider = "cpu";
         RequireModelFiles(paths, config);
-        RequirePiperTokens(paths, config);
+        PiperTokenGuard.Require(paths); // Slice 201/303: sherpa aborts the process on a bad Piper tokens.txt; checked before the native load
         return new OfflineTts(config);
     }
 
@@ -1430,22 +1430,6 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
                 System.Diagnostics.Debug.WriteLine(message);
                 throw new FileNotFoundException(message, file);
             }
-        }
-    }
-
-    // Slice 201: sherpa-onnx's Piper reader aborts the whole process (no managed exception) on a tokens.txt token of
-    // more than one code point, so a Piper pack is checked here, after the install check, before the native load.
-    private static void RequirePiperTokens(VoiceModelPaths paths, OfflineTtsConfig config)
-    {
-        if (paths.Kind != VoiceEngineKind.Vits)
-        {
-            return;
-        }
-
-        string? problem = PiperTokens.ProblemInFile(config.Model.Vits.Tokens);
-        if (problem is not null)
-        {
-            throw new InvalidDataException($"Piper tokens file '{config.Model.Vits.Tokens}' would crash the speech engine: {problem}.");
         }
     }
 
