@@ -16,6 +16,20 @@ internal static partial class DinoTestCommands
 {
 	private const string ShelfAudioName = "shelf-audio";
 
+	private const string ForcePackFailureName = "force-pack-failure";
+
+	/// <summary>Slice 310: <c>force-pack-failure mode=network|corrupt|disk-full|off</c> makes every pack download fail that way until <c>off</c> (or the app is killed). Outcome: <c>HOOK force-pack-failure ok &lt;mode&gt;</c>.</summary>
+	private static string ForcePackFailure(string mode)
+	{
+		if (!ForcedPackFailures.TryParse(mode, out PackFailureInjection kind))
+		{
+			return $"{TestHookDispatcher.Failed} {TestHookDispatcher.Unknown} {mode}";
+		}
+
+		AudioPackStore.ForcedFailure = kind;
+		return $"{TestHookDispatcher.Ok} {mode}";
+	}
+
 	private static string StartShelfAudio(string language)
 	{
 		if (!UiLanguage.IsSupported(language))

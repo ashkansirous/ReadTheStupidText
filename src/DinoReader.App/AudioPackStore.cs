@@ -102,6 +102,83 @@ public sealed class SyncProgress<T>(Action<T> report) : IProgress<T>
 /// <summary>The outcome of looking a piece's clip up (Slice 273): its file when found, else why not.</summary>
 public readonly record struct ClipLookup(string? Path, ClipMiss Miss);
 
+#if DEBUG
+/// <summary>Slice 310 (Debug only): how the next pack downloads are made to fail, so a flow can check the failure line and the cleanup without corrupting a file by hand.</summary>
+public enum PackFailureInjection
+{
+	None,
+
+	/// <summary>The connection drops part-way: some bytes are written, then the fetch throws (counted as a network failure).</summary>
+	Network,
+
+	/// <summary>The download finishes but its last bytes are damaged, so the zip cannot be read (counted as an unzip failure).</summary>
+	Corrupt,
+
+	/// <summary>The phone runs out of room part-way: some bytes are written, then the fetch throws an <see cref="IOException"/> (counted as a storage failure).</summary>
+	DiskFull,
+}
+
+/// <summary>Slice 310 (Debug only): the hook's words for each <see cref="PackFailureInjection"/>.</summary>
+public static class ForcedPackFailures
+{
+	public const string Off = "off";
+	public const string NetworkWord = "network";
+	public const string CorruptWord = "corrupt";
+	public const string DiskFullWord = "disk-full";
+
+	public static bool TryParse(string? word, out PackFailureInjection kind)
+	{
+		(bool known, kind) = word switch
+		{
+			Off => (true, PackFailureInjection.None),
+			NetworkWord => (true, PackFailureInjection.Network),
+			CorruptWord => (true, PackFailureInjection.Corrupt),
+			DiskFullWord => (true, PackFailureInjection.DiskFull),
+			_ => (false, PackFailureInjection.None),
+		};
+		return known;
+	}
+}
+
+/// <summary>Slice 310 (Debug only): wraps the real fetcher and makes it fail in the named way. The caller's <see cref="PackFailureInjection.None"/> never gets here (the store only wraps for a kind that is set).</summary>
+public sealed class FailingAudioPackFetcher(IAudioPackFetcher inner, PackFailureInjection kind) : IAudioPackFetcher
+{
+	public const int PartialBytes = 1024;
+	private const int DamagedTailBytes = 64;
+
+	public async Task FetchAsync(string url, string toPath, IProgress<long> bytesSoFar, CancellationToken cancel)
+	{
+		if (kind == PackFailureInjection.Corrupt)
+		{
+			await inner.FetchAsync(url, toPath, bytesSoFar, cancel);
+			DamageTail(toPath);
+			return;
+		}
+
+		if (kind == PackFailureInjection.None)
+		{
+			await inner.FetchAsync(url, toPath, bytesSoFar, cancel);
+			return;
+		}
+
+		await File.WriteAllBytesAsync(toPath, new byte[PartialBytes], cancel);
+		bytesSoFar.Report(PartialBytes);
+		throw kind == PackFailureInjection.DiskFull
+			? new IOException("Injected: no space left on the device.")
+			: new HttpRequestException("Injected: the connection dropped.");
+	}
+
+	// The zip's end-of-directory record sits in the last bytes, so overwriting them keeps the length (the size check passes) and breaks the unzip.
+	private static void DamageTail(string path)
+	{
+		using FileStream file = new(path, FileMode.Open, FileAccess.Write);
+		int tail = (int)Math.Min(DamagedTailBytes, file.Length);
+		file.Seek(-tail, SeekOrigin.End);
+		file.Write(new byte[tail]);
+	}
+}
+#endif
+
 /// <summary>An installed pack: its folder, version and the manifest read from it.</summary>
 public sealed record InstalledPack(string Folder, int Version, PremadeAudio Audio)
 {
@@ -148,6 +225,17 @@ public sealed partial class AudioPackStore
 	private readonly ConcurrentDictionary<string, bool> _failedThisLaunch = new();
 	private readonly ConcurrentDictionary<string, int> _failuresThisLaunch = new(); // failed downloads per book and language in this launch: a pack is tried again at most once
 	private bool _cleaned;
+
+#if DEBUG
+	/// <summary>Slice 310 (Debug only): while not <see cref="PackFailureInjection.None"/>, every download fails in that way (set by the <c>force-pack-failure</c> test hook).</summary>
+	public static PackFailureInjection ForcedFailure
+	{
+		get => (PackFailureInjection)Volatile.Read(ref _forcedFailure);
+		set => Volatile.Write(ref _forcedFailure, (int)value);
+	}
+
+	private static int _forcedFailure;
+#endif
 
 	/// <summary>Slice 267: raised for every pack download as (book id, language, <see cref="AudioPackUsage"/> detail): started, done or failed with its kind. Carries ids and closed words only.</summary>
 	public event Action<string, string, string>? Outcome;
@@ -452,10 +540,22 @@ public sealed partial class AudioPackStore
 			return PackInstall.Failed;
 		}
 
+#if DEBUG
+		bool forced = false;
+#endif
 		try
 		{
 			Directory.CreateDirectory(_partFolder);
 			Report(bookId, language, AudioPackUsage.PackStarted);
+#if DEBUG
+			PackFailureInjection forcedNow = ForcedFailure; // read once: the hook can switch it from another thread
+			forced = forcedNow != PackFailureInjection.None;
+			if (forced)
+			{
+				_log($"{label}: Debug failure forced ({forcedNow})");
+				fetcher = new FailingAudioPackFetcher(fetcher, forcedNow);
+			}
+#endif
 			await fetcher.FetchAsync(pack.Url, part, bytes ?? new Progress<long>(), cancel);
 			long length = new FileInfo(part).Length;
 			if (pack.Bytes is { } listed && listed != length)
@@ -494,6 +594,12 @@ public sealed partial class AudioPackStore
 		{
 			DeleteFile(part);
 			DeleteFolder(tmp);
+#if DEBUG
+			if (forced) // only an attempt with a forced failure logs this, so a normal install writes no probe line
+			{
+				_log($"{label}: temp files left {(File.Exists(part) || Directory.Exists(tmp) ? "yes" : "none")}");
+			}
+#endif
 		}
 	}
 

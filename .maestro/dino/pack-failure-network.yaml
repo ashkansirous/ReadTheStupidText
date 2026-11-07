@@ -1,0 +1,84 @@
+# Slice 310: a pack download whose connection drops part-way fails with a clear line, leaves no temp file, and the next launch fetches the pack. The Debug hook force-pack-failure makes every pack
+# download fail the named way (network = some bytes, then a network error) so nobody corrupts a .part file by hand. Same setup as side-language-audio: the test store lists one Swedish pack.
+# The run tries a book three times with a 15 s and a 30 s wait between them, so the failed line takes about a minute. The app is then restarted (a pack that failed twice in a launch is not tried
+# again until the next open). The restart clears the process-wide failure switch, so the next launch fetches the pack.
+# Against the old behaviour there is no hook: "HOOK force-pack-failure ok network" is never written and the run installs the pack, so no failed line shows.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK test-store ok ok
+# expect-log: HOOK force-pack-failure ok network
+# expect-log: HOOK shelf-audio started sv
+# expect-log: Debug failure forced (Network)
+# expect-log: bee62232085d4c1ab50cdf574530f473/sv: failed:network
+# expect-log: temp files left none
+# expect-log: bee62232085d4c1ab50cdf574530f473 pack in
+# expect-log: [AudioPack] shelf audio sv: 1 of 1 done,
+appId: uk.sirous.dinoreader.dbg
+name: A dropped pack download shows the failure and the next launch retries
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, side languages, downloaded voice/OCR packs, installed audio packs, own books); fine here: skip-first-run puts the four test books back and the run needs no Swedish pack installed.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: ok
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-pack-failure
+      mode: network
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: shelf-audio
+      lang: sv
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+- tapOn:
+    id: GallerySettings
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: SettingsTitle
+    timeout: 10000
+- tapOn:
+    text: "Story languages.*"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: "Your child can switch between these.*"
+    timeout: 10000
+# The failed line shows once the three tries are used up (about 45 s of waits).
+- extendedWaitUntil:
+    visible:
+      id: ShelfAudioFailed-sv
+    timeout: 120000
+# launchApp-restart: the failure switch lives in the process, so a restart is the "next launch" that fetches the pack (a pack failed twice in a launch is not tried again until then).
+- launchApp:
+    arguments:
+      cmd: test-store
+      mode: ok
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# The retry is the launch-time resume after the restart: run-flows.ps1 checks the "pack in" and "1 of 1 done" expect-log lines above.
+# Put the test store back to the live store for later flows.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: "off"

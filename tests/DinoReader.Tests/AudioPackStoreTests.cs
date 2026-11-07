@@ -473,6 +473,58 @@ public sealed class AudioPackStoreTests : IDisposable
         public void Report(T value) => report(value);
     }
 
+#if DEBUG
+    // Slice 310: the Debug failure injection, through the store with the failing fetcher passed in (the static switch is not touched, so parallel tests are not affected).
+    [Theory]
+    [InlineData(PackFailureInjection.Network, "failed:network")]
+    [InlineData(PackFailureInjection.Corrupt, "failed:unzip")]
+    [InlineData(PackFailureInjection.DiskFull, "failed:storage")]
+    public async Task InjectedFailure_IsCountedAsItsKind_AndLeavesNoTempFile(PackFailureInjection kind, string expected)
+    {
+        byte[] zip = Zip();
+        AudioPackStore store = Store(new FakeFetcher(zip));
+        var outcomes = new List<string>();
+        store.Outcome += (_, _, detail) => outcomes.Add(detail);
+
+        PackInstall result = await store.InstallAsync(Book, "fa", Info(zip), null, CancellationToken.None, new FailingAudioPackFetcher(new FakeFetcher(zip), kind));
+
+        Assert.Equal(PackInstall.Failed, result);
+        Assert.Equal(expected, outcomes.Last());
+        Assert.Null(store.InstalledVersion(Book, "fa"));
+        Assert.Empty(Directory.EnumerateFiles(Cache));
+    }
+
+    [Fact]
+    public async Task InjectedCorruptFailure_KeepsTheLength_SoOnlyTheUnzipFails()
+    {
+        byte[] zip = Zip();
+        string path = Path.Combine(_dir, "pack.part");
+        Directory.CreateDirectory(_dir);
+
+        await new FailingAudioPackFetcher(new FakeFetcher(zip), PackFailureInjection.Corrupt).FetchAsync("u", path, new Progress<long>(), CancellationToken.None);
+
+        Assert.Equal(zip.Length, new FileInfo(path).Length);
+        Assert.NotEqual(zip, File.ReadAllBytes(path));
+    }
+
+    [Theory]
+    [InlineData("network", PackFailureInjection.Network)]
+    [InlineData("corrupt", PackFailureInjection.Corrupt)]
+    [InlineData("disk-full", PackFailureInjection.DiskFull)]
+    [InlineData("off", PackFailureInjection.None)]
+    public void ForcedPackFailures_ParsesEachWord(string word, PackFailureInjection expected)
+    {
+        Assert.True(ForcedPackFailures.TryParse(word, out PackFailureInjection kind));
+        Assert.Equal(expected, kind);
+    }
+
+    [Fact]
+    public void ForcedPackFailures_RefusesAnUnknownWord()
+    {
+        Assert.False(ForcedPackFailures.TryParse("flaky", out _));
+    }
+#endif
+
     private sealed class FakeFetcher(byte[]? content) : IAudioPackFetcher
     {
         public int Calls { get; private set; }

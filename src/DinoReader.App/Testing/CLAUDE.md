@@ -3,4 +3,5 @@
 Loaded when you work under `src/DinoReader.App/Testing`. App-wide rules: `../CLAUDE.md`.
 
 - Debug hooks `import-test-book id=<stem|all>` and `test-store mode=ok|slow|stall|offline|off` (`TestStore*.cs`; `StoreClient` reads the fixture list and `testbook:` addresses) give a flow books and a picker without the live store; `skip-first-run` puts the four test books on the shelf; `shelf-audio lang=sv` starts a run against the test store's one pack. (Slice 261: docs/plan/slices/261-dino-no-starters-first-run-book-picker.md)
+- Debug hook `force-pack-failure mode=network|corrupt|disk-full|off` makes every `AudioPackStore` download fail that way (`AudioPackStore.ForcedFailure`, `#if DEBUG`, this process only, so a flow restarts the app before its success half). (Slice 310: docs/plan/slices/310-dino-debug-hook-force-pack-failure.md)
 - Maestro flow expect-log markers must be written with `TestHookLog.Write` (RTST-TEST tag), not `Debug.WriteLine`. (Slice 228: docs/plan/slices/228-dino-grownups-corner-clarity.md)
