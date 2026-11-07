@@ -109,6 +109,9 @@ jobs:
       - name: Emulator -NoBuild and tablet instance self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-no-build.ps1
 
+      - name: Emulator build-key self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-build-key.ps1
+
       - name: Dialog guard and closure-scope self-test (${{ matrix.shell }})
         run: ./tools/emulator/test-dialog-guard.ps1
 

@@ -381,7 +381,7 @@ function Build-BeforeLease {
     $key = Get-BuildKey
     $needed = $Install -or ((Get-InstalledKey $App) -ne $key)
     if ($needed -and -not (Find-CachedBuild (Get-NoBuildLookupDir (Get-BuildDir $App (Get-EmulatorBuildPlatform $App) $key)) '*-Signed.apk')) {
-        if (Test-NoBuildRequested $NoBuild) { Write-Host (Format-EmulatorNoBuildMiss $App $key); Write-BuildKeyInputs $key; exit $script:EmulatorExitCacheMissed }
+        if (Test-NoBuildRequested $NoBuild) { Write-EmulatorNoBuildMiss $App $key; exit $script:EmulatorExitCacheMissed }
         $boot = if (Test-EmulatorPresent) { $null } else { Start-EmulatorBootInBackground $Instance -ColdBoot:$ColdBoot }
         if ($boot) { Write-Host "Cache miss: building the $App APK while $($script:Serial) boots." }
         $built = $false

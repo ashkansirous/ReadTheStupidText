@@ -37,24 +37,51 @@ function Get-BuildInputTree {
 }
 
 # Slice 275 item 4: the "<path>=<tree hash>" lines the key is made of, so a miss can name the input that differs from an earlier key's.
+# Returns the tree hash and the lines together: the key is hashed from exactly this list (one computation per key).
 function Get-BuildKeyInputs {
     $tree = Get-BuildInputTree
-    return @(foreach ($path in $script:BuildInputPaths) {
-        $hash = try { Invoke-Git @('rev-parse', "${tree}:$path") | Select-Object -First 1 } catch { $null }
-        if ($hash) { "$path=$hash" }
-    })
+    # Slice 294: one ls-tree call that throws on a git failure. The old per-path rev-parse sat in a try/catch that dropped the path on ANY failure,
+    # so a transient git error turned into a key with one input fewer (a silent, different key); only a path that is not in the tree is left out now.
+    # core.quotePath=false keeps a non-ASCII path unquoted so it still matches; empty output (no input path in the tree) gives no lines.
+    $hashes = @{}
+    foreach ($line in @(Invoke-Git (@('-c', 'core.quotePath=false', 'ls-tree', $tree, '--') + $script:BuildInputPaths)) | Where-Object { "$_".Trim() }) {
+        $fields = ("$line" -split "`t", 2)
+        if ($fields.Count -lt 2) { continue }
+        $hashes[$fields[1]] = ($fields[0] -split ' ')[2]
+    }
+    $lines = @(foreach ($path in $script:BuildInputPaths) { if ($hashes.ContainsKey($path)) { "$path=$($hashes[$path])" } })
+    # Slice 294: no input line means the wrong root or an empty tree; every such tree would hash to the same key and reuse a foreign build.
+    if ($lines.Count -eq 0) { throw "No build input ($($script:BuildInputPaths -join ', ')) was found in git tree $tree of $($script:ToolsRepoRoot): refusing to make a build key from nothing." }
+    return [pscustomobject]@{ Tree = $tree; Inputs = $lines }
+}
+
+# The result of the last Get-BuildKeyResult per key, so the miss printout and Save-BuildMeta use the list the key was hashed from and never recompute.
+$script:BuildKeyResults = @{}
+
+function Get-BuildKeyResult {
+    $computed = Get-BuildKeyInputs
+    $sha = [Security.Cryptography.SHA1]::Create()
+    $bytes = $sha.ComputeHash([Text.Encoding]::UTF8.GetBytes(@($computed.Inputs) -join "`n"))
+    $key = ([BitConverter]::ToString($bytes) -replace '-', '').ToLowerInvariant().Substring(0, $script:BuildKeyLength)
+    $result = [pscustomobject]@{ Key = $key; Tree = $computed.Tree; Inputs = @($computed.Inputs) }
+    $script:BuildKeyResults[$key] = $result
+    return $result
 }
 
 # Printed on a cache miss: compare two runs' lines to see which input changed between them (the key itself is only a hash of them).
+# Diagnostic only: it never recomputes, and a failure here is logged, never turned into a different exit code.
 function Write-BuildKeyInputs([string]$Key) {
-    $inputs = Get-BuildKeyInputs
-    Write-Host "Build key $Key is made of:"
-    foreach ($line in $inputs) { Write-Host "  $line" }
-    $newest = Get-NewestBuildInputs
-    if ($newest) {
-        $differ = @($inputs | Where-Object { $newest.inputs -notcontains $_ })
-        Write-Host "Inputs that differ from the newest build of this worktree (key $($newest.key)): $(if ($differ.Count) { $differ -join ', ' } else { 'none listed (an input path was added or removed)' })"
-    } else { Write-Host 'No earlier build of this worktree recorded its inputs, so nothing to compare with.' }
+    try {
+        $result = $script:BuildKeyResults[$Key]
+        if (-not $result) { Write-Host "Build key ${Key}: its inputs were not recorded in this process, so none are listed."; return }
+        Write-Host "Build key $Key is made of (git tree $($result.Tree)):"
+        foreach ($line in $result.Inputs) { Write-Host "  $line" }
+        $newest = Get-NewestBuildInputs
+        if ($newest) {
+            $differ = @($result.Inputs | Where-Object { $newest.inputs -notcontains $_ })
+            Write-Host "Inputs that differ from the newest build of this worktree (key $($newest.key)): $(if ($differ.Count) { $differ -join ', ' } else { 'none listed (an input path was added or removed)' })"
+        } else { Write-Host 'No earlier build of this worktree recorded its inputs, so nothing to compare with.' }
+    } catch { Write-Host "Could not list the inputs of build key ${Key}: $($_.Exception.Message)" }
 }
 
 # The newest build of this worktree whose build.json lists its inputs (written by Save-BuildMeta since Slice 275), or $null.
@@ -66,16 +93,14 @@ function Get-NewestBuildInputs {
         $meta = Join-Path $dir.FullName $script:BuildMetaFile
         if (-not (Test-Path $meta)) { continue }
         $json = Get-Content $meta -Raw | ConvertFrom-Json
-        if ($json.worktree -eq $mine -and $json.inputs) { return $json }
+        if ($json.worktree -eq $mine -and $json.inputs -and $json.inputsRecorded -ne $false) { return $json }
     }
     return $null
 }
 
+# The key lookup itself fails loudly on a git failure (a wrong key is worse than none).
 function Get-BuildKey {
-    $parts = Get-BuildKeyInputs
-    $sha = [Security.Cryptography.SHA1]::Create()
-    $bytes = $sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($parts -join "`n"))
-    return ([BitConverter]::ToString($bytes) -replace '-', '').ToLowerInvariant().Substring(0, $script:BuildKeyLength)
+    return (Get-BuildKeyResult).Key
 }
 
 function Get-BuildDir([string]$App, [string]$Platform, [string]$Key) {
@@ -89,6 +114,12 @@ $script:EmulatorExitCacheMissed = 6
 function Test-NoBuildRequested([bool]$NoBuildSwitch) { return ($NoBuildSwitch -or $env:RTST_NO_BUILD -eq '1') }
 
 function Format-EmulatorNoBuildMiss([string]$App, [string]$Key) { return "cache missed for $App, key ${Key}: run install-debug.ps1 -BuildOnly first" }
+
+# Slice 294: every -NoBuild cache miss in the emulator scripts prints the miss line and then the key's inputs and tree hash through here.
+function Write-EmulatorNoBuildMiss([string]$App, [string]$Key) {
+    Write-Host (Format-EmulatorNoBuildMiss $App $Key)
+    Write-BuildKeyInputs $Key
+}
 
 function Get-NoBuildLookupDir([string]$Dir) {
     if (-not $env:RTST_BUILD_CACHE_LOOKUP_ROOT) { return $Dir }
@@ -157,8 +188,25 @@ function Publish-BuildDir([string]$Temp, [string]$Dir) {
     Move-Item $Temp $Dir
 }
 
+# The inputs and tree are the ones the key was hashed from (never recomputed); they are diagnostic, so a git failure is logged and a finished build is still saved.
+function Get-RecordedBuildInputs([string]$Key) {
+    try {
+        $result = $script:BuildKeyResults[$Key]
+        if (-not $result) { $result = Get-BuildKeyResult }
+        if ($result.Key -ne $Key) { Write-Host "Inputs recorded for build key $($result.Key), not ${Key}: the tree changed since the key was computed."; return $null }
+        return $result
+    } catch {
+        Write-Host "Could not record the inputs of build key ${Key}: $($_.Exception.Message)"
+        return $null
+    }
+}
+
 function Save-BuildMeta([string]$Dir, [string]$App, [string]$Platform, [string]$Key) {
-    @{ app = $App; platform = $Platform; key = $Key; worktree = (Split-Path $script:ToolsRepoRoot -Leaf); built = (Get-Date).ToString('o'); inputs = @(Get-BuildKeyInputs) } |
+    $recorded = Get-RecordedBuildInputs $Key
+    $inputs = if ($recorded) { @($recorded.Inputs) } else { @() }
+    $tree = if ($recorded) { $recorded.Tree } else { $null }
+    # inputsRecorded = $false marks a record that failed (git error, or the tree changed since the key): an empty list there is "unknown", not "no inputs".
+    @{ app = $App; platform = $Platform; key = $Key; worktree = (Split-Path $script:ToolsRepoRoot -Leaf); built = (Get-Date).ToString('o'); tree = $tree; inputs = $inputs; inputsRecorded = [bool]$recorded } |
         ConvertTo-Json | Set-Content (Join-Path $Dir $script:BuildMetaFile)
 }
 
