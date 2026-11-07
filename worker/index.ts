@@ -20,6 +20,7 @@ import type { CrashesEnv } from "./crashes";
 import { handleEvents, handleRtstEvents, isEventsPath } from "./events";
 import type { EventsEnv, RtstEventsEnv } from "./events";
 import { handleStories, isStoryPath } from "./stories";
+import { handleSonos, isSonosPath } from "./sonos";
 
 const SECURITY_HEADERS: Readonly<Record<string, string>> = {
   "X-Content-Type-Options": "nosniff",
@@ -46,6 +47,13 @@ function serveStories(request: Request, url: URL, env: Env, site: ResolvedSite):
   if (site.product !== Product.DinoReader) return new Response("Not found", { status: 404 });
   const pathPrefix = site.home === "/" ? "" : DINO_PATH_PREFIX;
   return handleStories(withPath(request, url, site.path), env, pathPrefix, serveObject);
+}
+
+// Slice 283: Dino Reader's anonymous Sonos music service (worker/sonos.ts).
+function serveSonos(request: Request, url: URL, env: Env, site: ResolvedSite): Promise<Response> | Response {
+  if (site.product !== Product.DinoReader) return new Response("Not found", { status: 404 });
+  const pathPrefix = site.home === "/" ? "" : DINO_PATH_PREFIX;
+  return handleSonos(withPath(request, url, site.path), env, pathPrefix, serveObject);
 }
 
 // Each product has its own config object in the downloads bucket (Slice 137 added Read The Stupid Text's).
@@ -108,6 +116,7 @@ async function serveAsset(request: Request, env: Env): Promise<Response> {
   if (redirect !== null) return Response.redirect(new URL(redirect, url).toString(), 302);
   const site = resolveSite(url.hostname, url.pathname);
   if (isStoryPath(site.path)) return serveStories(request, url, env, site);
+  if (isSonosPath(site.path)) return serveSonos(request, url, env, site);
   if (isAppConfigPath(site.path)) return serveAppConfig(request, env, site);
   if (isEventsPath(site.path)) return serveEvents(request, env, site);
   if (isCrashPath(site.path)) return serveCrash(request, env, site);

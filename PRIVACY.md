@@ -177,6 +177,8 @@ you, your phone or your install). It goes to the same server, is stored the same
 find and fix bugs, is deleted automatically after 90 days (as crash reports are), and is not shared or used for
 advertising or tracking.
 
+**Dino Reader on Sonos (optional).** Dino Reader's free story-store books can also be played through the Dino Reader music service in the Sonos app. It has no account or sign-in. When Sonos browses or plays it, Sonos's servers ask this project's server for the list of books and for a book's audio; Sonos sends the request, and the server answers it and keeps nothing: no household, speaker or Sonos account identifier, no list of what was played, and no log of the books asked for. Like any web request it is seen by the server that receives it, which may log the connecting address under its own privacy policy; Dino Reader itself does not receive or keep it. What Sonos collects about your listening is governed by Sonos's own privacy policy.
+
 ## Permissions
 
 **Windows** declares the `runFullTrust` capability, required so it can place a
