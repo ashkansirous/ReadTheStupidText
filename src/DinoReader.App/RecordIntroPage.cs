@@ -50,6 +50,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	private const float FlagRingAlpha = 0.14f;
 	private const double BarHeight = 8;
 	private const double ChangeHeight = 40;
+	private static readonly TimeSpan ScrollSettle = TimeSpan.FromMilliseconds(100);
 	private const string PageName = "RecordIntro";
 
 	/// <summary>The AutomationIds the scripted check taps.</summary>
@@ -83,6 +84,8 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	private string _language = UiLanguage.English; // the story language being recorded in: the app language until the grown-up picks another
 	private RecordChoice _choice = new(RecordMode.PerCharacter, new HashSet<string>());
 	private bool _showChange;
+	private ScrollView? _scroll;
+	private View? _optionsTop; // the first block "Change how you record" opens (the notes card): scrolled into view when it opens
 	private (string Key, IReadOnlyList<RecordPiece> Pieces)? _cut; // the book's pieces for the mode and ticks in Key, cut once on a worker thread
 	private bool _warming;
 	private readonly Dictionary<string, IReadOnlyList<RecordPiece>> _lines = []; // each story language's spoken lines as the record page cuts them in it: every count comes from these (frame 193)
@@ -104,7 +107,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		_wait = new WaitController(_waitOverlay);
 		_header.ButtonVisible = false;
 		_header.BackRequested += async (_, _) => await BackAsync();
-		var scroll = new ScrollView { Content = new Grid { Children = { Column(_body) } } };
+		var scroll = _scroll = new ScrollView { Content = new Grid { Children = { Column(_body) } } };
 		var root = new Grid { RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)] };
 		root.Add(_header, 0, 0);
 		root.Add(scroll, 0, 1);
@@ -276,7 +279,11 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		content.Margin = new Thickness(SideMargin, 0);
 		// The holder fills the room it has, up to the maximum, from the first frame: a centred holder is only as wide as its content, so the button row's Star columns shrank to their labels and clipped them
 		// (Slice 286). No width is set from a size event, so there is no narrow first frame and nothing stale after a resize or rotation (the Windows head and wide screens keep the maximum width).
-		return new Grid { MaximumWidthRequest = ColumnMaxWidth + 2 * SideMargin, HorizontalOptions = LayoutOptions.Fill, Children = { content } };
+		// Centred on a wide screen: the holder is Center with a width-wanting spacer (zero height, as wide as the maximum), so it wants the maximum width and is given the room it has when that is less
+		// (the phone keeps the full width, exactly as before); on a wide screen the capped column sits in the middle, never against the left edge.
+		double max = ColumnMaxWidth + 2 * SideMargin;
+		var spacer = new BoxView { WidthRequest = max, HeightRequest = 0, Color = Colors.Transparent, InputTransparent = true };
+		return new Grid { MaximumWidthRequest = max, HorizontalOptions = LayoutOptions.Center, Children = { spacer, content } };
 	}
 
 	// ---- drawing ----
@@ -590,7 +597,8 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		notes.Add(Note(IconKind.ReadAloud, AppResources.Record_NoteRead));
 		notes.Add(Note(IconKind.SkipNext, AppResources.Record_NoteSkip));
 		notes.Add(Note(IconKind.Phone, DeviceInfo.Idiom == DeviceIdiom.Phone ? AppResources.Record_NoteStays : AppResources.Record_NoteStaysDevice));
-		_body.Add(WhiteCard(notes, BlockTopExtra));
+		_optionsTop = WhiteCard(notes, BlockTopExtra);
+		_body.Add(_optionsTop);
 		var modes = new Grid { ColumnSpacing = BlockSpacing, ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)] };
 		modes.Add(ModeCard(ModeCharacterId, AppResources.Record_ModeCharacter, RecordMode.PerCharacter), 0);
 		modes.Add(ModeCard(ModePageId, AppResources.Record_ModePage, RecordMode.WholePage), 1);
@@ -624,12 +632,12 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		var top = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
 		top.Add(icon, 0);
 		top.Add(Radio(selected), 1);
-		var content = new VerticalStackLayout { Spacing = ModeSpacing, Padding = new Thickness(12, 10), VerticalOptions = LayoutOptions.Center };
+		var content = new VerticalStackLayout { Spacing = ModeSpacing, Padding = new Thickness(12, 10), VerticalOptions = LayoutOptions.Center }; // the card itself fills the row, so both cards are as tall as the taller one
 		content.Add(top);
 		content.Add(new Label { Text = text, FontSize = 14, FontAttributes = FontAttributes.Bold, LineHeight = 1.2, TextColor = DinoTokens.Get(DinoTokens.Ink) });
 		var card = new Border
 		{
-			AutomationId = id, BackgroundColor = Colors.White, Stroke = selected ? DinoTokens.Get(DinoTokens.Brand) : Colors.Transparent, StrokeThickness = SelectedRing,
+			AutomationId = id, VerticalOptions = LayoutOptions.Fill, BackgroundColor = Colors.White, Stroke = selected ? DinoTokens.Get(DinoTokens.Brand) : Colors.Transparent, StrokeThickness = SelectedRing,
 			StrokeShape = new RoundRectangle { CornerRadius = ModeRadius }, Content = content,
 		};
 		SemanticProperties.SetDescription(card, text);
@@ -703,7 +711,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	private View SpeakerRow(Story story, RecordBook book, RecordSpeaker speaker, int? lines, bool has)
 	{
 		bool ticked = _choice.Ticked.Contains(speaker.Id);
-		var row = new Grid { HeightRequest = RowHeight, ColumnSpacing = 12, Padding = new Thickness(BlockPaddingSide, 0), BackgroundColor = Colors.White, ColumnDefinitions = [new ColumnDefinition(BoxSize), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
+		var row = new Grid { MinimumHeightRequest = RowHeight, ColumnSpacing = 12, Padding = new Thickness(BlockPaddingSide, 0), BackgroundColor = Colors.White, ColumnDefinitions = [new ColumnDefinition(BoxSize), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
 		row.Add(Box(ticked), 0);
 		var name = new Label { Text = RecordCard.NameOf(speaker), FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(ticked ? DinoTokens.Ink : DinoTokens.Body), VerticalOptions = LayoutOptions.Center };
 		OwnScript.InOwnScript(name);
@@ -818,13 +826,20 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 			HeightRequest = ChangeHeight, VerticalTextAlignment = TextAlignment.Center, HorizontalOptions = LayoutOptions.Start,
 		};
 		SemanticProperties.SetDescription(link, AppResources.Record_Change);
-		Taps.AddTap(link, () =>
-		{
-			_showChange = !_showChange;
-			Render();
-			return Task.CompletedTask;
-		});
+		Taps.AddTap(link, ShowOrHideChangeAsync);
 		return link;
+	}
+
+	// Opening the options adds them below the list, mostly off screen: scroll them into view once they are laid out, so the tap visibly does something.
+	private async Task ShowOrHideChangeAsync()
+	{
+		_showChange = !_showChange;
+		Render();
+		if (_showChange && _scroll is { } scroll && _optionsTop is { } top)
+		{
+			await Task.Delay(ScrollSettle);
+			await scroll.ScrollToAsync(top, ScrollToPosition.Start, true);
+		}
 	}
 
 	// ---- the buttons ----
@@ -942,6 +957,8 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 			Padding = new Thickness(OutlinedPadding, OutlinedPaddingVertical),
 			Content = group,
 		};
+		// A grid that is centred is measured with the label unconstrained on some heads, so MaxLines never wraps: the label's width is capped to what is left in the pill once the icon is placed.
+		button.SizeChanged += (_, _) => label.MaximumWidthRequest = Math.Max(0, button.Width - 2 * OutlinedPadding - 2 * OutlinedStroke - PlayIconSize - PlayIconGap);
 		SemanticProperties.SetDescription(button, text);
 		Taps.AddTap(button, () => enabled ? tapped() : Task.CompletedTask);
 		DesktopTips.Hover(button);

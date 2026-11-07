@@ -207,13 +207,27 @@ name: Record a book in each story language and read it back in each
     timeout: 12000
     optional: true
 # Pick Farsi (the pick is kept for the next read): leave the book and open it again from its first page, so the Farsi take on the first line plays; a read that restarts mid-book would pass it.
-- tapOn:
-    id: ReadingLanguage
-    waitToSettleTimeoutMs: 300
-- extendedWaitUntil:
-    visible:
-      text: "فارسی"
-    timeout: 60000
+# The menu is built when it opens and the pack installs in the background, so a menu opened too early lacks Farsi for good: open it, give it a few seconds, and if Farsi is missing close it (hardware Back) and open it again (15 tries, about 60 s).
+- repeat:
+    times: 15
+    while:
+      notVisible:
+        text: "فارسی"
+    commands:
+      - tapOn:
+          id: ReadingLanguage
+          waitToSettleTimeoutMs: 300
+      - extendedWaitUntil:
+          visible:
+            text: "فارسی"
+          timeout: 4000
+          optional: true
+      - runFlow:
+          when:
+            notVisible:
+              text: "فارسی"
+          commands:
+            - back
 - tapOn:
     text: "فارسی"
     waitToSettleTimeoutMs: 300
