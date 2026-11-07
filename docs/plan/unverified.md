@@ -2,6 +2,10 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
+### Slice 307: ClaudeSkills hooks and guards leftovers ([slice](slices/307-claudeskills-hooks-and-guards-leftovers.md))
+- Whether Claude Code shows `additionalContext` from a PreToolUse hook that returns no `permissionDecision` (the SDK type marks the field optional; not seen live).
+- Item 10 (open, not built): `phone-network-guard.mjs` still wrongly denies a read-only grep with a quoted `\|adb` pattern.
+
 ### Slice 308: Slice 225 run-checks -Serial and failed-build cause ([slice](slices/308-slice-225-run-checks-serial-and-build-cause.md))
 - Slice 225 item 2 cause (entries 249/494/630): no failed Debug build log exists on disk; the next failed build leaves `<log>.failed.log` to read.
 
