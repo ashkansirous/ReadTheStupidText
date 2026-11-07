@@ -229,6 +229,7 @@
   <data name="Record_Language" xml:space="preserve"><value>Opnemen in</value></data>
   <data name="Record_LanguagePages" xml:space="preserve"><value>{0} van {1}</value></data>
   <data name="Record_LanguageNone" xml:space="preserve"><value>Nog niets</value></data>
+  <data name="Record_LanguageRetry" xml:space="preserve"><value>Tik om het opnieuw te proberen</value></data>
   <data name="StoryLanguages_NameMap" xml:space="preserve"><value>en:Engels,fa:Perzisch,fr:Frans,es:Spaans,pt:Portugees,zh:Chinees,ar:Arabisch,ru:Russisch,ja:Japans,da:Deens,fi:Fins,sv:Zweeds,nb:Noors,nl:Nederlands,de:Duits</value></data>
   <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}: de woorden konden niet worden opgehaald.</value></data>
   <data name="Record_Start" xml:space="preserve"><value>Begin met opnemen</value></data>

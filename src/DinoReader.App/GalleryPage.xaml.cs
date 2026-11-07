@@ -988,8 +988,11 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 	}
 
+	// A language recorded per line cannot be counted in pages (a page needs every sentence), so it shows the clips recorded alone, never a wrong "0 of N"; whole pages are the same in every language.
 	private static BookSheet.LanguageProgress PagesOnly(Story story, RecordBook source, string language) =>
-		new(language, RecordSplitWalk.Progress(story, source, RecordMode.WholePage, language));
+		RecordChoices.ModeOf(story, language) == RecordMode.WholePage
+			? new(language, RecordSplitWalk.Progress(story, source, RecordMode.WholePage, language))
+			: new(language, new RecordProgress(StoryRecordings.Count(story, language), 0, RecordUnit.Lines), TotalKnown: false);
 
 	private Task SaveUseVoiceAsync(bool useVoice) => SaveSheetStoryAsync(story => story with { UseRecordings = useVoice });
 

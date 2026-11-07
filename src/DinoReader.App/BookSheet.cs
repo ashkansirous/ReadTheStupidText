@@ -1,3 +1,4 @@
+using System.Globalization;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
@@ -18,7 +19,8 @@ internal sealed class BookSheet : Grid, IPageOverlay
 	public sealed record VoiceOffer(IReadOnlyList<LanguageProgress> Languages, bool On);
 
 	/// <summary>How much of the book is recorded in one story language (Slice 286, frame 195).</summary>
-	public sealed record LanguageProgress(string Language, RecordProgress Progress);
+	/// <remarks><paramref name="TotalKnown"/> is false when the language's lines could not be counted (its translation failed): then only <c>Progress.Done</c>, the clips recorded, is shown, never "x of y".</remarks>
+	public sealed record LanguageProgress(string Language, RecordProgress Progress, bool TotalKnown = true);
 
 	/// <summary>What the sheet shows for one book: its name, where it came from, its cover, which rows apply and the voice switch's state.</summary>
 	public sealed record Content(string Title, string OriginText, string? CoverImagePath, Color CoverFill, BookSheetPlan Plan, VoiceOffer? Voice);
@@ -626,11 +628,16 @@ internal sealed class BookSheet : Grid, IPageOverlay
 	{
 		if (voice.Languages.Count == 1)
 		{
-			return ProgressText(voice.Languages[0].Progress);
+			LanguageProgress only = voice.Languages[0];
+			return only.TotalKnown ? ProgressText(only.Progress) : only.Progress.Done.ToString(CultureInfo.CurrentCulture);
 		}
 
-		return string.Join(VoiceSeparator, voice.Languages.Select(l => $"{StoryLanguages.NameInAppLanguage(l.Language)} {AppResources.Format(AppResources.Record_OfCount, l.Progress.Done, l.Progress.Total)}"));
+		return string.Join(VoiceSeparator, voice.Languages.Select(l => $"{StoryLanguages.NameInAppLanguage(l.Language)} {CountText(l)}"));
 	}
+
+	private static string CountText(LanguageProgress language) => language.TotalKnown
+		? AppResources.Format(AppResources.Record_OfCount, language.Progress.Done, language.Progress.Total)
+		: language.Progress.Done.ToString(CultureInfo.CurrentCulture);
 
 	private const string VoiceSeparator = " · ";
 	private const double VoiceRecordPillMinHeight = 56;

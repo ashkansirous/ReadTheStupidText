@@ -113,6 +113,7 @@ public static class AppResources
 	public static string Record_Language => Get();
 	public static string Record_LanguagePages => Get();
 	public static string Record_LanguageNone => Get();
+	public static string Record_LanguageRetry => Get();
 	public static string Record_LanguageUnavailable => Get();
 	public static string Record_Start => Get();
 	public static string Record_LongPages => Get();

@@ -229,6 +229,7 @@
   <data name="Record_Language" xml:space="preserve"><value>Spela in på</value></data>
   <data name="Record_LanguagePages" xml:space="preserve"><value>{0} av {1}</value></data>
   <data name="Record_LanguageNone" xml:space="preserve"><value>Inget ännu</value></data>
+  <data name="Record_LanguageRetry" xml:space="preserve"><value>Tryck för att försöka igen</value></data>
   <data name="StoryLanguages_NameMap" xml:space="preserve"><value>en:engelska,fa:persiska,fr:franska,es:spanska,pt:portugisiska,zh:kinesiska,ar:arabiska,ru:ryska,ja:japanska,da:danska,fi:finska,sv:svenska,nb:norska,nl:nederländska,de:tyska</value></data>
   <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}: det gick inte att hämta orden.</value></data>
   <data name="Record_Start" xml:space="preserve"><value>Börja spela in</value></data>

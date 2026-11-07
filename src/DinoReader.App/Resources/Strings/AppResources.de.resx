@@ -230,6 +230,7 @@
   <data name="Record_Language" xml:space="preserve"><value>Aufnehmen auf</value></data>
   <data name="Record_LanguagePages" xml:space="preserve"><value>{0} von {1}</value></data>
   <data name="Record_LanguageNone" xml:space="preserve"><value>Noch nichts</value></data>
+  <data name="Record_LanguageRetry" xml:space="preserve"><value>Tippen, um es erneut zu versuchen</value></data>
   <data name="StoryLanguages_NameMap" xml:space="preserve"><value>en:Englisch,fa:Persisch,fr:Französisch,es:Spanisch,pt:Portugiesisch,zh:Chinesisch,ar:Arabisch,ru:Russisch,ja:Japanisch,da:Dänisch,fi:Finnisch,sv:Schwedisch,nb:Norwegisch,nl:Niederländisch,de:Deutsch</value></data>
   <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}: Die Wörter konnten nicht geladen werden.</value></data>
   <data name="Record_Start" xml:space="preserve"><value>Aufnahme starten</value></data>

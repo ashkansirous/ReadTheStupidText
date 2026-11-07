@@ -228,6 +228,7 @@
   <data name="Record_Language" xml:space="preserve"><value>Enregistrer en</value></data>
   <data name="Record_LanguagePages" xml:space="preserve"><value>{0} sur {1}</value></data>
   <data name="Record_LanguageNone" xml:space="preserve"><value>Rien pour l’instant</value></data>
+  <data name="Record_LanguageRetry" xml:space="preserve"><value>Touchez pour réessayer</value></data>
   <data name="StoryLanguages_NameMap" xml:space="preserve"><value>en:anglais,fa:persan,fr:français,es:espagnol,pt:portugais,zh:chinois,ar:arabe,ru:russe,ja:japonais,da:danois,fi:finnois,sv:suédois,nb:norvégien,nl:néerlandais,de:allemand</value></data>
   <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0} : impossible d’obtenir les mots.</value></data>
   <data name="Record_Start" xml:space="preserve"><value>Commencer l'enregistrement</value></data>

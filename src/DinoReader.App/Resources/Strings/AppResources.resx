@@ -231,6 +231,7 @@
   <data name="Record_Language" xml:space="preserve"><value>Record in</value></data>
   <data name="Record_LanguagePages" xml:space="preserve"><value>{0} of {1}</value></data>
   <data name="Record_LanguageNone" xml:space="preserve"><value>Nothing yet</value></data>
+  <data name="Record_LanguageRetry" xml:space="preserve"><value>Tap to try again</value></data>
   <data name="StoryLanguages_NameMap" xml:space="preserve"><value>en:English,fa:Farsi,fr:French,es:Spanish,pt:Portuguese,zh:Chinese,ar:Arabic,ru:Russian,ja:Japanese,da:Danish,fi:Finnish,sv:Swedish,nb:Norwegian,nl:Dutch,de:German</value></data>
   <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}: could not get the words.</value></data>
   <data name="Record_Start" xml:space="preserve"><value>Start recording</value></data>

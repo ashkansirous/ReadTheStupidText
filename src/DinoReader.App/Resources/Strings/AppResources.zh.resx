@@ -228,6 +228,7 @@
   <data name="Record_Language" xml:space="preserve"><value>录音语言</value></data>
   <data name="Record_LanguagePages" xml:space="preserve"><value>{0}/{1}</value></data>
   <data name="Record_LanguageNone" xml:space="preserve"><value>还没有</value></data>
+  <data name="Record_LanguageRetry" xml:space="preserve"><value>点按重试</value></data>
   <data name="StoryLanguages_NameMap" xml:space="preserve"><value>en:英语,fa:波斯语,fr:法语,es:西班牙语,pt:葡萄牙语,zh:中文,ar:阿拉伯语,ru:俄语,ja:日语,da:丹麦语,fi:芬兰语,sv:瑞典语,nb:挪威语,nl:荷兰语,de:德语</value></data>
   <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}：无法获取文字。</value></data>
   <data name="Record_Start" xml:space="preserve"><value>开始录音</value></data>

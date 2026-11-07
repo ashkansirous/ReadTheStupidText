@@ -311,8 +311,10 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	// ---- each language's own line counts (frame 193) ----
 
 	// The languages whose lines are needed and not cut yet: the picked one and those with recordings (their "x of y"); any other shows "Nothing yet" and is cut only when picked.
+	// The picked language comes first, so its counts are not held up by another language's translation.
 	private List<string> PendingLines(Story story) => StoryLanguages.Current().All
-		.Where(l => (l == _language || StoryRecordings.Count(story, l) > 0) && !_lines.ContainsKey(l) && !_linesFailed.Contains(l)).ToList();
+		.Where(l => (l == _language || StoryRecordings.Count(story, l) > 0) && !_lines.ContainsKey(l) && !_linesFailed.Contains(l))
+		.OrderBy(l => l == _language ? 0 : 1).ToList();
 
 	// Cuts the needed languages' lines off the UI thread, in the background, and draws the counts as each is ready; until then a count is blank (a quiet "..." after 500 ms), never another language's number.
 	// Leaving the page or loading a newer version of the story cancels it and its results are dropped.
@@ -392,9 +394,12 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex)
 		{
-			// no-fallback: that language shows no count; nothing is lost
+			// no-fallback: that language shows a tap-to-retry hint instead of a count; nothing is lost
 			Debug.WriteLine($"Dino Reader could not count the lines in {language} for the record page: {ex.Message}");
-			_linesFailed.Add(language);
+			if (!cancellation.IsCancellationRequested) // a translator that throws something else when cancelled must not mark the new story's language failed
+			{
+				_linesFailed.Add(language);
+			}
 		}
 	}
 
@@ -437,7 +442,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		var count = new Label
 		{
 			Text = progress, FontSize = 12, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1,
-			TextColor = DinoTokens.Get(StoryRecordings.Count(story, language) == 0 ? DinoTokens.Muted : DinoTokens.Body),
+			TextColor = DinoTokens.Get(StoryRecordings.Count(story, language) == 0 || progress == AppResources.Record_LanguageRetry ? DinoTokens.Muted : DinoTokens.Body),
 		};
 		var texts = new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { name, count } };
 		var content = new Grid { ColumnSpacing = CardFlagGap, Padding = new Thickness(10, 0), ColumnDefinitions = [new ColumnDefinition(CardFlagSize), new ColumnDefinition(GridLength.Star)] };
@@ -467,10 +472,15 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 			return AppResources.Format(AppResources.Record_LanguagePages, progress.Done, progress.Total);
 		}
 
-		if (_linesFailed.Contains(language) && _source is { } source)
+		if (_linesFailed.Contains(language))
 		{
-			RecordProgress pages = RecordSplitWalk.Progress(story, source, RecordMode.WholePage, language); // its words could not be made: the pages recorded, which every language shares
-			return AppResources.Format(AppResources.Record_LanguagePages, pages.Done, pages.Total);
+			if (mode == RecordMode.WholePage && _source is { } source)
+			{
+				RecordProgress pages = RecordSplitWalk.Progress(story, source, RecordMode.WholePage, language); // its words could not be made: the pages recorded, which every language shares
+				return AppResources.Format(AppResources.Record_LanguagePages, pages.Done, pages.Total);
+			}
+
+			return AppResources.Record_LanguageRetry; // per-line lines cannot be counted without its words: a tap tries again, never a wrong "0 of N"
 		}
 
 		return CutPending(language) ? PendingCount : string.Empty; // still being cut: a quiet mark after 500 ms, no number rather than a wrong one

@@ -229,6 +229,7 @@
   <data name="Record_Language" xml:space="preserve"><value>Äänitä kielellä</value></data>
   <data name="Record_LanguagePages" xml:space="preserve"><value>{0} / {1}</value></data>
   <data name="Record_LanguageNone" xml:space="preserve"><value>Ei vielä mitään</value></data>
+  <data name="Record_LanguageRetry" xml:space="preserve"><value>Yritä uudelleen napauttamalla</value></data>
   <data name="StoryLanguages_NameMap" xml:space="preserve"><value>en:englanti,fa:persia,fr:ranska,es:espanja,pt:portugali,zh:kiina,ar:arabia,ru:venäjä,ja:japani,da:tanska,fi:suomi,sv:ruotsi,nb:norja,nl:hollanti,de:saksa</value></data>
   <data name="Record_LanguageUnavailable" xml:space="preserve"><value>{0}: sanoja ei saatu.</value></data>
   <data name="Record_Start" xml:space="preserve"><value>Aloita äänitys</value></data>
