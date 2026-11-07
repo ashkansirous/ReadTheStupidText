@@ -16,22 +16,32 @@ namespace DinoReader;
 public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 {
 	private const double ColumnMaxWidth = 560;
-	private const double SideMargin = 20;
-	private const double RowHeight = 44;
+	private const double SideMargin = 14; // frames 192 and 193: the body's and the bottom bar's side padding
+	private const double RowHeight = 42;
 	private const double BoxSize = 24;
 	private const double BoxCorner = 7;
 	private const double RadioSize = 20;
 	private const double ModeRadius = 16;
 	private const double ButtonHeight = 52;
 	private const double OutlinedLabelSize = 15.5;
+	private const double StartLabelSize = 17;
 	private const double OutlinedPadding = 12;
+	private const double OutlinedPaddingVertical = 6;
 	private const double OutlinedStroke = 2;
-	private const double BottomSideMargin = 14;
 	private const double PlayIconSize = 16;
 	private const double PlayIconGap = 7;
 	private const string OutlinedStrokeColor = "#C9C0F5";
-	private const double OutlinedMinLabelSize = 11;
-	private const double OutlinedLabelStep = 0.5;
+	private const string DividerColor = "#efe9dd";
+	private const string DoneGreen = "#2E7D32";
+	private const double BlockSpacing = 8;
+	private const double BlockPaddingVertical = 12;
+	private const double BlockPaddingSide = 14;
+	private const double BlockTopExtra = 4;
+	private const double NoteIconSize = 18;
+	private const double NoteGap = 10;
+	private const double NoteSpacing = 9;
+	private const double ModeIconSize = 22;
+	private const double ModeSpacing = 6;
 	private const double CardHeight = 56;
 	private const double CardGap = 8;
 	private const double CardFlagSize = 30;
@@ -60,8 +70,8 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	private readonly WaitOverlay _waitOverlay = DinoWait.OverPage();
 	private readonly WaitController _wait;
 	private readonly GrownUpHeader _header = new("RecordIntroDone");
-	private readonly VerticalStackLayout _body = new() { Spacing = 14 };
-	// Frame 192's bottom bar: padding 10 14 16, two equal columns, 8 gap. The side space is the Column margin (set in the constructor), so the buttons are half the screen less 14 and 4.
+	private readonly VerticalStackLayout _body = new() { Spacing = BlockSpacing };
+	// Frame 192's bottom bar: padding 10 14 16, two equal columns, 8 gap. The side space is the Column margin, so the buttons are half the screen less 14 and 4.
 	private readonly Grid _bottom = new() { ColumnSpacing = 8, Padding = new Thickness(0, 10, 0, 16) };
 	internal const string LanguageIdPrefix = "RecordLanguage-";
 
@@ -99,7 +109,6 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		root.Add(_header, 0, 0);
 		root.Add(scroll, 0, 1);
 		root.Add(Column(_bottom), 0, 2);
-		_bottom.Margin = new Thickness(BottomSideMargin, 0);
 		Content = new Grid { Children = { root, _waitOverlay } };
 	}
 
@@ -111,7 +120,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	{
 		_story = story;
 		_language = StoryLanguages.Current().Main;
-		_header.Title = AppResources.Record_Title;
+		_header.Title = AppResources.Record_YourVoice; // frames 192 and 193: "Your voice" in every state
 		_header.Subtitle = story.Title;
 		_book = await TryBookAsync(story, _language);
 		if (_book is not null)
@@ -265,17 +274,9 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	{
 		content.HorizontalOptions = LayoutOptions.Fill;
 		content.Margin = new Thickness(SideMargin, 0);
-		var holder = new Grid { MaximumWidthRequest = ColumnMaxWidth + 2 * SideMargin, HorizontalOptions = LayoutOptions.Center, Children = { content } };
-		// A centred holder is only as wide as its content, so the button row's Star columns shrank to their labels and clipped them (Slice 286); the holder takes the room it has, up to the maximum.
-		var outer = new Grid { Children = { holder } };
-		outer.SizeChanged += (_, _) =>
-		{
-			if (outer.Width > 0)
-			{
-				holder.WidthRequest = Math.Min(outer.Width, ColumnMaxWidth + 2 * SideMargin);
-			}
-		};
-		return outer;
+		// The holder fills the room it has, up to the maximum, from the first frame: a centred holder is only as wide as its content, so the button row's Star columns shrank to their labels and clipped them
+		// (Slice 286). No width is set from a size event, so there is no narrow first frame and nothing stale after a resize or rotation (the Windows head and wide screens keep the maximum width).
+		return new Grid { MaximumWidthRequest = ColumnMaxWidth + 2 * SideMargin, HorizontalOptions = LayoutOptions.Fill, Children = { content } };
 	}
 
 	// ---- drawing ----
@@ -294,7 +295,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		}
 
 		bool has = StoryRecordings.Count(story, _language) > 0;
-		_header.Title = has ? AppResources.Record_YourVoice : AppResources.Record_Title;
+		_header.Title = AppResources.Record_YourVoice;
 		_body.Children.Clear();
 		_bottom.Children.Clear();
 		_bottom.ColumnDefinitions = [];
@@ -311,15 +312,23 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		if (has)
 		{
 			_body.Add(ProgressBlock(story, book));
-			_body.Add(ChangeLink());
 		}
 
-		if (!has || _showChange)
+		if (!has)
 		{
 			AddNotesAndModes();
 		}
 
 		_body.Add(_choice.Mode == RecordMode.PerCharacter ? Checklist(story, book) : LongPagesLine());
+		if (has)
+		{
+			_body.Add(ChangeLink()); // frame 192: below the list, out of view on a small phone
+			if (_showChange)
+			{
+				AddNotesAndModes();
+			}
+		}
+
 		AddButtons(story, book, has);
 		Debug.WriteLine($"Dino Reader {PageName}: mode={_choice.Mode} ticked={_choice.Ticked.Count} recorded={StoryRecordings.Count(story, _language)} language={_language} lines={(_lines.TryGetValue(_language, out IReadOnlyList<RecordPiece>? own) ? own.Count : -1)}");
 		if (_shown && PendingLines(story).Count > 0)
@@ -458,14 +467,16 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 			Text = LanguageNames.NativeName(language), FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1,
 		};
 		OwnScript.InOwnScript(name);
+		name.HorizontalOptions = LayoutOptions.Start; // frame 193: a Farsi name sits left, next to the flag, like English; only its own words read right to left
 		string progress = LanguageProgressText(story, language);
 		var count = new Label
 		{
 			Text = progress, FontSize = 12, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1,
 			TextColor = DinoTokens.Get(StoryRecordings.Count(story, language) == 0 || progress == AppResources.Record_LanguageRetry ? DinoTokens.Muted : DinoTokens.Body),
 		};
-		var texts = new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { name, count } };
-		var content = new Grid { ColumnSpacing = CardFlagGap, Padding = new Thickness(10, 0), ColumnDefinitions = [new ColumnDefinition(CardFlagSize), new ColumnDefinition(GridLength.Star)] };
+		count.HorizontalOptions = LayoutOptions.Start;
+		var texts = new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, FlowDirection = FlowDirection.LeftToRight, Children = { name, count } };
+		var content = new Grid { FlowDirection = FlowDirection.LeftToRight, ColumnSpacing = CardFlagGap, Padding = new Thickness(10, 0), ColumnDefinitions = [new ColumnDefinition(CardFlagSize), new ColumnDefinition(GridLength.Star)] };
 		content.Add(new FlagRing(language, CardFlagSize, 1, Color.FromRgba(43, 37, 64, FlagRingAlpha)), 0);
 		content.Add(texts, 1);
 		var card = new Border
@@ -552,7 +563,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	// The page when no book could be made for the language it opened in: the language rows and the unavailable line with Retry.
 	private void RenderUnavailable(Story story)
 	{
-		_header.Title = AppResources.Record_Title;
+		_header.Title = AppResources.Record_YourVoice;
 		_body.Children.Clear();
 		_bottom.Children.Clear();
 		_bottom.ColumnDefinitions = [];
@@ -575,10 +586,12 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 
 	private void AddNotesAndModes()
 	{
-		_body.Add(Note(IconKind.Book, AppResources.Record_NoteRead));
-		_body.Add(Note(IconKind.SkipForward, AppResources.Record_NoteSkip));
-		_body.Add(Note(IconKind.Lock, DeviceInfo.Idiom == DeviceIdiom.Phone ? AppResources.Record_NoteStays : AppResources.Record_NoteStaysDevice));
-		var modes = new Grid { ColumnSpacing = 10, ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)] };
+		var notes = new VerticalStackLayout { Spacing = NoteSpacing };
+		notes.Add(Note(IconKind.ReadAloud, AppResources.Record_NoteRead));
+		notes.Add(Note(IconKind.SkipNext, AppResources.Record_NoteSkip));
+		notes.Add(Note(IconKind.Phone, DeviceInfo.Idiom == DeviceIdiom.Phone ? AppResources.Record_NoteStays : AppResources.Record_NoteStaysDevice));
+		_body.Add(WhiteCard(notes, BlockTopExtra));
+		var modes = new Grid { ColumnSpacing = BlockSpacing, ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)] };
 		modes.Add(ModeCard(ModeCharacterId, AppResources.Record_ModeCharacter, RecordMode.PerCharacter), 0);
 		modes.Add(ModeCard(ModePageId, AppResources.Record_ModePage, RecordMode.WholePage), 1);
 		_body.Add(modes);
@@ -586,22 +599,38 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 
 	private static View Note(IconKind icon, string text)
 	{
-		var row = new HorizontalStackLayout { Spacing = 12 };
-		row.Add(new IconView { Kind = icon, Size = 20, StrokeWidth = 2, Color = DinoTokens.Get(DinoTokens.Brand), VerticalOptions = LayoutOptions.Start, Margin = new Thickness(0, 2, 0, 0) });
-		row.Add(new Label { Text = text, FontSize = 15, LineHeight = 1.3, TextColor = DinoTokens.Get(DinoTokens.Ink), VerticalOptions = LayoutOptions.Center, WidthRequest = ColumnMaxWidth - 60 });
+		var row = new Grid { ColumnSpacing = NoteGap, ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)] };
+		row.Add(new IconView { Kind = icon, Size = NoteIconSize, StrokeWidth = 2.2, Color = DinoTokens.Get(DinoTokens.Brand), VerticalOptions = LayoutOptions.Start, Margin = new Thickness(0, 1, 0, 0) }, 0);
+		row.Add(new Label { Text = text, FontSize = 13.5, LineHeight = 1.35, TextColor = DinoTokens.Get(DinoTokens.Ink), VerticalOptions = LayoutOptions.Center }, 1);
 		return row;
 	}
 
+	// A white card, radius 16, padding 12 14 (frames 192 and 193); topExtra is the mock's extra margin above it.
+	private static Border WhiteCard(View content, double topExtra = 0) => new()
+	{
+		BackgroundColor = Colors.White, StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = ModeRadius }, Padding = new Thickness(BlockPaddingSide, BlockPaddingVertical),
+		Margin = new Thickness(0, topExtra, 0, 0), Content = content,
+	};
+
+	// Frame 193: the mode icon top left and the radio top right, then the label (14 px, 600) under them.
 	private Border ModeCard(string id, string text, RecordMode mode)
 	{
 		bool selected = _choice.Mode == mode;
-		var content = new VerticalStackLayout { Spacing = 10, Padding = new Thickness(14, 14), VerticalOptions = LayoutOptions.Center };
-		content.Add(Radio(selected));
-		content.Add(new Label { Text = text, FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink) });
+		var icon = new IconView
+		{
+			Kind = mode == RecordMode.PerCharacter ? IconKind.Speech : IconKind.Page, Size = ModeIconSize, StrokeWidth = 2.2, HorizontalOptions = LayoutOptions.Start, VerticalOptions = LayoutOptions.Center,
+			Color = DinoTokens.Get(selected ? DinoTokens.Brand : DinoTokens.Body),
+		};
+		var top = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
+		top.Add(icon, 0);
+		top.Add(Radio(selected), 1);
+		var content = new VerticalStackLayout { Spacing = ModeSpacing, Padding = new Thickness(12, 10), VerticalOptions = LayoutOptions.Center };
+		content.Add(top);
+		content.Add(new Label { Text = text, FontSize = 14, FontAttributes = FontAttributes.Bold, LineHeight = 1.2, TextColor = DinoTokens.Get(DinoTokens.Ink) });
 		var card = new Border
 		{
-			AutomationId = id, BackgroundColor = Colors.White, Stroke = selected ? DinoTokens.Get(DinoTokens.Brand) : DinoTokens.Get(DinoTokens.Hairline), StrokeThickness = selected ? 2.5 : 1,
-			StrokeShape = new RoundRectangle { CornerRadius = ModeRadius }, MinimumHeightRequest = RowHeight + 40, Content = content,
+			AutomationId = id, BackgroundColor = Colors.White, Stroke = selected ? DinoTokens.Get(DinoTokens.Brand) : Colors.Transparent, StrokeThickness = SelectedRing,
+			StrokeShape = new RoundRectangle { CornerRadius = ModeRadius }, Content = content,
 		};
 		SemanticProperties.SetDescription(card, text);
 		Taps.AddTap(card, () => ChooseModeAsync(mode));
@@ -612,8 +641,8 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	{
 		var ring = new Border
 		{
-			WidthRequest = RadioSize, HeightRequest = RadioSize, StrokeThickness = 2, BackgroundColor = Colors.Transparent, HorizontalOptions = LayoutOptions.Start,
-			Stroke = selected ? DinoTokens.Get(DinoTokens.Brand) : DinoTokens.Get(DinoTokens.Hairline), StrokeShape = new RoundRectangle { CornerRadius = RadioSize / 2 },
+			WidthRequest = RadioSize, HeightRequest = RadioSize, StrokeThickness = 2, BackgroundColor = Colors.Transparent, HorizontalOptions = LayoutOptions.End, VerticalOptions = LayoutOptions.Center,
+			Stroke = selected ? DinoTokens.Get(DinoTokens.Brand) : DinoTokens.Get(DinoTokens.CheckEmpty), StrokeShape = new RoundRectangle { CornerRadius = RadioSize / 2 },
 		};
 		if (selected)
 		{
@@ -648,26 +677,35 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 
 	private View Checklist(Story story, RecordBook book)
 	{
-		var list = new VerticalStackLayout { Spacing = 0 };
-		list.Add(SmallHeading(AppResources.Record_Who));
+		var list = new VerticalStackLayout { Spacing = BlockSpacing };
+		var heading = SmallHeading(AppResources.Record_Who);
+		heading.Margin = new Thickness(4, 2, 4, 0);
+		list.Add(heading);
+		var rows = new VerticalStackLayout { Spacing = 0 };
 		// the picked language's own lines per speaker once they are cut; until then the rows show their names with no count (never another language's)
 		IReadOnlyList<RecordPiece>? cut = _lines.GetValueOrDefault(_language);
 		IReadOnlyDictionary<string, int> counts = cut is null ? RecordSplit.LineCounts(book.Sentences) : cut.GroupBy(p => p.Speaker).ToDictionary(g => g.Key, g => g.Count());
 		bool has = StoryRecordings.Count(story, _language) > 0;
 		foreach (RecordSpeaker speaker in book.Speakers.Where(s => counts.ContainsKey(s.Id)))
 		{
-			list.Add(SpeakerRow(story, book, speaker, cut is null ? null : counts[speaker.Id], has));
+			if (rows.Children.Count > 0)
+			{
+				rows.Add(new BoxView { HeightRequest = 1, Color = Color.FromArgb(DividerColor) });
+			}
+
+			rows.Add(SpeakerRow(story, book, speaker, cut is null ? null : counts[speaker.Id], has));
 		}
 
+		list.Add(new Border { BackgroundColor = Colors.White, StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = ModeRadius }, Content = rows });
 		return list;
 	}
 
 	private View SpeakerRow(Story story, RecordBook book, RecordSpeaker speaker, int? lines, bool has)
 	{
 		bool ticked = _choice.Ticked.Contains(speaker.Id);
-		var row = new Grid { HeightRequest = RowHeight, ColumnSpacing = 12, ColumnDefinitions = [new ColumnDefinition(BoxSize), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
+		var row = new Grid { HeightRequest = RowHeight, ColumnSpacing = 12, Padding = new Thickness(BlockPaddingSide, 0), BackgroundColor = Colors.White, ColumnDefinitions = [new ColumnDefinition(BoxSize), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
 		row.Add(Box(ticked), 0);
-		var name = new Label { Text = RecordCard.NameOf(speaker), FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), VerticalOptions = LayoutOptions.Center };
+		var name = new Label { Text = RecordCard.NameOf(speaker), FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(ticked ? DinoTokens.Ink : DinoTokens.Body), VerticalOptions = LayoutOptions.Center };
 		OwnScript.InOwnScript(name);
 		row.Add(name, 1);
 		row.Add(CountLabel(story, book, speaker, lines, has), 2);
@@ -711,7 +749,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		return new Label
 		{
 			Text = AppResources.Format(AppResources.Record_OfCount, progress.Done, progress.Total), FontSize = 12.5, FontAttributes = done ? FontAttributes.Bold : FontAttributes.None,
-			TextColor = done ? Color.FromArgb("#2E7D32") : DinoTokens.Get(DinoTokens.Muted), VerticalOptions = LayoutOptions.Center,
+			TextColor = done ? Color.FromArgb(DoneGreen) : DinoTokens.Get(DinoTokens.Muted), VerticalOptions = LayoutOptions.Center,
 		};
 	}
 
@@ -745,17 +783,17 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 				? AppResources.Format(AppResources.Record_LinesRecorded, progress.Done, progress.Total)
 				: AppResources.Format(AppResources.Record_PagesRecorded, progress.Done, progress.Total);
 		var top = new Grid { ColumnSpacing = 10, ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
-		top.Add(new Label { AutomationId = ProgressId, Text = text, FontSize = 17, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), VerticalOptions = LayoutOptions.Center }, 0);
+		top.Add(new Label { AutomationId = ProgressId, Text = text, FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), VerticalOptions = LayoutOptions.Center }, 0);
 		top.Add(new Label
 		{
 			Text = _choice.Mode == RecordMode.PerCharacter ? AppResources.Record_ModeCharacter : AppResources.Record_ModePage, FontSize = 12.5,
 			TextColor = DinoTokens.Get(DinoTokens.Muted), VerticalOptions = LayoutOptions.Center,
 		}, 1);
-		var block = new VerticalStackLayout { Spacing = 8 };
+		var block = new VerticalStackLayout { Spacing = BlockSpacing };
 		block.Add(top);
 		block.Add(Bar(progress));
-		block.Add(new Label { Text = DeviceInfo.Idiom == DeviceIdiom.Phone ? AppResources.Record_RestByDino : AppResources.Record_RestByDinoDevice, FontSize = 13, LineHeight = 1.35, TextColor = DinoTokens.Get(DinoTokens.Body) });
-		return block;
+		block.Add(new Label { Text = DeviceInfo.Idiom == DeviceIdiom.Phone ? AppResources.Record_RestByDino : AppResources.Record_RestByDinoDevice, FontSize = 12.5, LineHeight = 1.4, TextColor = DinoTokens.Get(DinoTokens.Body) });
+		return WhiteCard(block, BlockTopExtra); // frame 192: the progress sits in a white card
 	}
 
 	private static View Bar(RecordProgress progress)
@@ -804,7 +842,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		bool canListen = canStart && RecordSplitWalk.Recorded(story, book, _choice.Mode, _choice.Ticked, _language).Count > 0; // nothing recorded in this scope: Listen would do nothing
 		_bottom.Add(OutlinedButton(AppResources.Record_Listen, ListenId, canListen, () => ListenAsync(story, book)), 0, 0);
 		bool allDone = canStart && CachedPieces() is { Count: > 0 } cut && RecordSplitWalk.FirstUnrecorded(story, cut) < 0;
-		_bottom.Add(StartButton(allDone ? AppResources.Record_Again : AppResources.Record_Rest, RestId, canStart, () => StartAsync(story, book, resume: !allDone)), 1, 0);
+		_bottom.Add(StartButton(allDone ? AppResources.Record_Again : AppResources.Record_Rest, RestId, canStart, () => StartAsync(story, book, resume: !allDone), OutlinedLabelSize), 1, 0);
 		if (canStart && CachedPieces() is null)
 		{
 			_ = WarmPiecesAsync(story, book); // the whole book is measured in the background; the button reads "Record again" when it is done, if it is
@@ -873,15 +911,15 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 	}
 
 
-	private static Border StartButton(string text, string id, bool enabled, Func<Task> tapped)
+	private static Border StartButton(string text, string id, bool enabled, Func<Task> tapped, double labelSize = StartLabelSize)
 	{
 		var edge = DinoTokens.Get(DinoTokens.CoralEdge);
 		var button = new Border
 		{
-			AutomationId = id, HeightRequest = ButtonHeight, StrokeThickness = 0, BackgroundColor = DinoTokens.Get(DinoTokens.Coral), Opacity = enabled ? 1 : 0.4, IsEnabled = enabled,
+			AutomationId = id, MinimumHeightRequest = ButtonHeight, StrokeThickness = 0, BackgroundColor = DinoTokens.Get(DinoTokens.Coral), Opacity = enabled ? 1 : 0.4, IsEnabled = enabled,
 			StrokeShape = new RoundRectangle { CornerRadius = ButtonHeight / 2 },
 			Shadow = new Shadow { Brush = new SolidColorBrush(edge), Offset = new Point(0, 5), Radius = 0, Opacity = 1f },
-			Content = new Label { Text = text, FontSize = 17, FontAttributes = FontAttributes.Bold, TextColor = Colors.White, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center },
+			Content = new Label { Text = text, FontSize = labelSize, FontAttributes = FontAttributes.Bold, TextColor = Colors.White, HorizontalTextAlignment = TextAlignment.Center, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center },
 		};
 		SemanticProperties.SetDescription(button, text);
 		Taps.AddTap(button, () => enabled ? tapped() : Task.CompletedTask);
@@ -891,39 +929,23 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 
 	private static Border OutlinedButton(string text, string id, bool enabled, Func<Task> tapped)
 	{
-		var label = new Label { Text = text, FontSize = OutlinedLabelSize, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Brand), VerticalOptions = LayoutOptions.Center, LineBreakMode = LineBreakMode.NoWrap, MaxLines = 1 };
+		var label = new Label { Text = text, FontSize = OutlinedLabelSize, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Brand), VerticalOptions = LayoutOptions.Center, HorizontalTextAlignment = TextAlignment.Center, MaxLines = 2 };
 		var icon = new IconView { Kind = IconKind.Play, Filled = true, Size = PlayIconSize, Color = DinoTokens.Get(DinoTokens.Brand), VerticalOptions = LayoutOptions.Center };
-		// Frame 192: the play icon, then the words, as one centred group in the half-width pill; the font only shrinks (a narrow phone, a large font) when the group would not fit.
-		var group = new HorizontalStackLayout { Spacing = PlayIconGap, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center, Children = { icon, label } };
+		// Frame 192: the play icon, then the words, as one centred group in the half-width pill. The words keep the design's size and never clip: a narrow phone or a large font wraps them to a second line and the pill grows.
+		var group = new Grid { ColumnSpacing = PlayIconGap, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center, ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)] };
+		group.Add(icon, 0);
+		group.Add(label, 1);
 		var button = new Border
 		{
-			AutomationId = id, HeightRequest = ButtonHeight, StrokeThickness = OutlinedStroke, Stroke = Color.FromArgb(OutlinedStrokeColor), BackgroundColor = Colors.White, Opacity = enabled ? 1 : 0.4, IsEnabled = enabled,
+			AutomationId = id, MinimumHeightRequest = ButtonHeight, StrokeThickness = OutlinedStroke, Stroke = Color.FromArgb(OutlinedStrokeColor), BackgroundColor = Colors.White, Opacity = enabled ? 1 : 0.4, IsEnabled = enabled,
 			StrokeShape = new RoundRectangle { CornerRadius = ButtonHeight / 2 },
-			Padding = new Thickness(OutlinedPadding, 0),
+			Padding = new Thickness(OutlinedPadding, OutlinedPaddingVertical),
 			Content = group,
 		};
-		button.SizeChanged += (_, _) => ShrinkToFit(label, button.Width - 2 * (OutlinedPadding + OutlinedStroke) - PlayIconSize - PlayIconGap);
 		SemanticProperties.SetDescription(button, text);
 		Taps.AddTap(button, () => enabled ? tapped() : Task.CompletedTask);
 		DesktopTips.Hover(button);
 		return button;
-	}
-
-	// Starts from the design's size every time (a wider pill, a smaller font setting, another language) and steps down until the text's natural width fits the room.
-	private static void ShrinkToFit(Label label, double room)
-	{
-		if (room <= 0)
-		{
-			return;
-		}
-
-		double size = OutlinedLabelSize;
-		label.FontSize = size;
-		while (size > OutlinedMinLabelSize && label.Measure(double.PositiveInfinity, double.PositiveInfinity).Width > room)
-		{
-			size -= OutlinedLabelStep;
-			label.FontSize = size;
-		}
 	}
 
 	// ---- going on ----

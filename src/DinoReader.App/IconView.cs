@@ -30,6 +30,11 @@ public enum IconKind
 	Download,
 	BookPlus,
 	MoreDots,
+	Speech,
+	Page,
+	ReadAloud,
+	SkipNext,
+	Phone,
 }
 
 /// <summary>Draws one <see cref="IconKind"/> as a stroked path, so colour and size follow the design tokens.</summary>
@@ -69,7 +74,7 @@ public sealed class IconView : ContentView
 	private const string AddBookPlus = "M18 15.9v4.2M15.9 18h4.2";
 
 	// Slice 189: the grown-ups button (a book with a plus at its lower right) and the cover's "⋯" dots are drawn on the exact 24-unit grid of the mock, not stretched to their own bounds.
-	private static readonly HashSet<IconKind> ExactGridKinds = [IconKind.BookPlus, IconKind.MoreDots];
+	private static readonly HashSet<IconKind> ExactGridKinds = [IconKind.BookPlus, IconKind.MoreDots, IconKind.Speech, IconKind.Page, IconKind.ReadAloud, IconKind.SkipNext, IconKind.Phone];
 
 	// Path data copied from the mock's inline SVGs (rects and circles rewritten as arcs).
 	private static readonly Dictionary<IconKind, string> Paths = new()
@@ -89,7 +94,13 @@ public sealed class IconView : ContentView
 		[IconKind.Narrator] = "M5.5 8a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0 M3 20c.6-3.6 3-5.5 6-5.5s5.4 1.9 6 5.5 M17 8.5c1 .8 1.5 1.8 1.5 3s-.5 2.2-1.5 3 M19.5 6c1.6 1.4 2.5 3.4 2.5 5.5s-.9 4.1-2.5 5.5",
 		[IconKind.BookPlus] = "M12 20H6.5A2.5 2.5 0 0 1 4 17.5v-11A2.5 2.5 0 0 1 6.5 4H17a1 1 0 0 1 1 1v6 M4 17.5A2.5 2.5 0 0 1 6.5 15H12 M18 14.5v7M14.5 18h7",
 		[IconKind.MoreDots] = "M3.5 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0 M10 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0 M16.5 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0",
-		[IconKind.Download] = "M12 4v11M7 10l5 5 5-5 M5 20h14",
+		// Slice 286 (Batch 49 frames 192-193): the record intro's mode icons and notes, copied from the mock's inline SVGs on its 24-unit grid (rects rewritten as arcs).
+		[IconKind.Speech] = "M4 5.5h16v10H10l-4 3.5v-3.5H4z",
+		[IconKind.Page] = "M7.5 3h9A2.5 2.5 0 0 1 19 5.5v13a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 5 18.5v-13A2.5 2.5 0 0 1 7.5 3z M8.5 8h7M8.5 12h7M8.5 16h4",
+		[IconKind.ReadAloud] = "M3 5.5h7a2 2 0 0 1 2 2V20a2 2 0 0 0-2-2H3z M21 5.5h-7a2 2 0 0 0-2 2V20a2 2 0 0 1 2-2h7z",
+		[IconKind.SkipNext] = "M5 5l9 7-9 7z M18 5v14",
+		[IconKind.Phone] = "M8.5 2.5h7A2.5 2.5 0 0 1 18 5v14a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 6 19V5a2.5 2.5 0 0 1 2.5-2.5z M11 18.5h2",
+		[IconKind.Download] ="M12 4v11M7 10l5 5 5-5 M5 20h14",
 		[IconKind.Mic] = "M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z M5.5 11a6.5 6.5 0 0 0 13 0 M12 17.5V21",
 		[IconKind.Book] = "M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z M12 6.5v13",
 		[IconKind.Picture] = "M6 4.5h12A2.5 2.5 0 0 1 20.5 7v10a2.5 2.5 0 0 1-2.5 2.5H6A2.5 2.5 0 0 1 3.5 17V7A2.5 2.5 0 0 1 6 4.5z M7.2 10a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0 M4.5 17.5l5-5 4 4 2.5-2.5 3.5 3.5",

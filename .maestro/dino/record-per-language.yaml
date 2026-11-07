@@ -49,11 +49,8 @@ name: Record a book in each story language and read it back in each
       cmd: install-audio-pack
       id: three-little-pigs
       lang: fa
-- extendedWaitUntil:
-    visible:
-      id: PackInstallNeverShown
-    timeout: 6000
-    optional: true
+# No fixed pause here: the install finishes in the background and its only on-screen effect is Farsi in the reading page's language menu, so that menu is waited on (up to 60 s) where Farsi is picked below.
+# run-flows.ps1 also checks the "HOOK install-audio-pack ok" line after the flow.
 - launchApp:
     stopApp: false
     arguments:
@@ -213,6 +210,10 @@ name: Record a book in each story language and read it back in each
 - tapOn:
     id: ReadingLanguage
     waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      text: "فارسی"
+    timeout: 60000
 - tapOn:
     text: "فارسی"
     waitToSettleTimeoutMs: 300
