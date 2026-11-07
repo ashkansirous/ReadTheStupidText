@@ -1,8 +1,8 @@
 # Slice 298 — Slice 264 gallery reorder follow-ups
 
-*Planned 2026-11-07.* Findings from check6 of [Slice 264](264-dino-gallery-reorder-mode.md), not built. Moved from plan.md's *Outstanding work*. All code is shared MAUI, so Android and iOS get each fix together; the gesture items need a look on both.
+*In progress (wave 2026-11-07), draft PR.* *Planned 2026-11-07.* Findings from check6 of [Slice 264](264-dino-gallery-reorder-mode.md), not built. Moved from plan.md's *Outstanding work*. All code is shared MAUI, so Android and iOS get each fix together; the gesture items need a look on both.
 
-**Touches:** `src/DinoReader.Core/FileStoryLibrary.cs`, `src/DinoReader.Core/ShelfOrder.cs`, `src/DinoReader.Core/HoldGesture.cs`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/TileOverlay.xaml.cs`, `src/DinoReader.Core/CLAUDE.md`, `tests/DinoReader.Tests/**`, `docs/plan/slices/298-slice-264-gallery-reorder-follow-ups.md`
+**Touches:** `src/DinoReader.Core/FileStoryLibrary.cs`, `src/DinoReader.Core/ShelfOrder.cs`, `src/DinoReader.Core/HoldGesture.cs`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/TileOverlay.xaml.cs`, `src/DinoReader.App/ShelfReorderView.cs`, `tests/ReadTheStupidText.Tests/FallbackGuardBaseline.txt`, (item 7 only if a caller must change: `src/DinoReader.App/{BackupPage,FirstBooksPage,IntroWizardPage.Art,StarterStories,StagedBookUpdates,StoreClient}*.cs`), `src/DinoReader.Core/CLAUDE.md`, `tests/DinoReader.Tests/**`, `docs/plan/slices/298-slice-264-gallery-reorder-follow-ups.md`
 
 ## Work
 
