@@ -350,4 +350,5 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 281 | Dino: one listening track per store book and language, served for smart speakers | built | #876, #878 | | [281-dino-listening-tracks.md](../slices/281-dino-listening-tracks.md) |
 | 285 | Dino: changing the app language fetches the books' sound in that language | built | #886, #890 | | [285-dino-language-change-fetches-book-audio.md](../slices/285-dino-language-change-fetches-book-audio.md) |
 | 290 | Dino: the reading page's sound line as a pill (Batch 50 design; restyles Slice 285 C; part B, exactly as designed, #895) | built | #889, #895 | | [290-dino-reading-sound-pill.md](../slices/290-dino-reading-sound-pill.md) |
+| 286 | Dino: record your voice in each story language, and hear it when reading in that language | built | #885 | | [286-dino-recordings-per-story-language.md](../slices/286-dino-recordings-per-story-language.md) |
 | 293 | Slice 290 check-pass leftovers (sound pill ring on colour switch, story null checks) | built (done by Slice 290 part B) | #895 | | [293-slice-290-check-pass-leftovers.md](../slices/293-slice-290-check-pass-leftovers.md) |

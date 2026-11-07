@@ -1,6 +1,6 @@
 # Slice 286 — Dino: record your voice in each story language, and hear it when reading in that language
 
-*Built 2026-11-07, PR #885.* Dino Reader only. Android, iOS and the Windows head the same, in the same slice.
+*Built 2026-11-07, merged as PR #885 (4ed2fb8e).* Dino Reader only. Android, iOS and the Windows head the same, in the same slice.
 
 **Depends on:** Slices 111 and 279 (parent recordings and the recording flow this changes).
 **Touches:** `src/DinoReader.Core/{StoryRecordings,Story,LanguagePick,StoryClipKey}.cs`, `src/DinoReader.Core/StoryPackage*.cs`
@@ -127,7 +127,7 @@ Details the mock settles that the plan left open: the language row is a two-colu
 - check5: fixed 1, 2, 3, 4, 5, 10. Skipped 6 (follows 1), 7 (Dino never mirrors), 8 (alert titles keep Record_Title), 9 (one small view per header).
 - check6: its 2 low findings accepted.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-07)
 
 - In `src/DinoReader.App/CLAUDE.md`: parent recordings are per story language (key and file name carry the language) and play only when the reading language matches. Old clips file under the app's main language, only once it is known. (Slice 286: docs/plan/slices/286-dino-recordings-per-story-language.md)
 - In `src/DinoReader.App/CLAUDE.md`: a view added to a row that is already laid out may never be measured (0x0). Keep one view and change its content, as `GrownUpHeader` does with its `FlagRing`. (Slice 286: docs/plan/slices/286-dino-recordings-per-story-language.md)
