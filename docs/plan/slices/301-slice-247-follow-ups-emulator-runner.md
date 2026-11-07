@@ -1,8 +1,8 @@
 # Slice 301 — Slice 247 follow-ups: emulator runner crash wait, crash log on retry, faster slow flows
 
-*Planned 2026-11-07.* Three items left by [Slice 247](247-final-loop-leftovers-night-2026-11-01-0859.md), not built. Moved from plan.md's *Outstanding work*. Tooling only (the runner drives the Android emulator; iOS has no equivalent runner here).
+*In progress (wave 2026-11-07), draft PR.* *Planned 2026-11-07.* Three items left by [Slice 247](247-final-loop-leftovers-night-2026-11-01-0859.md), not built. Moved from plan.md's *Outstanding work*. Tooling only (the runner drives the Android emulator; iOS has no equivalent runner here).
 
-**Touches:** `tools/emulator/run-flows.ps1`, `tools/emulator/common.ps1`, `.maestro/dino/**`, `tools/CLAUDE.md`, `docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md`
+**Touches:** `tools/emulator/run-flows.ps1`, `tools/emulator/common.ps1`, `.maestro/dino/**`, `tools/CLAUDE.md`, `docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md`, `tools/emulator/test-*.ps1` (self-tests; widened at claim), `.maestro/rtst/**` (if the five flows include RTST ones)
 
 ## Work
 
