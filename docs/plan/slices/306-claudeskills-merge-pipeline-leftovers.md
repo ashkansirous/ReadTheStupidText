@@ -13,3 +13,9 @@
 ## Verification
 
 - Tests in the ClaudeSkills repo: a `--repo`-pinned merge of a PR with an uncovered changed file is denied; a skip record whose reason is absent from its findings file is flagged; the merge-in case continues without a second dispatch. Record the PR numbers here.
+
+## User answer (2026-11-07, before the night run)
+
+- **Hook edits allowed.** The user approved changing the hooks and guards named in this slice (through the normal
+  two-pass review gate and a ClaudeSkills PR). This is the user's explicit ask for those hook edits; it covers only
+  the hooks this slice names, not `autoMode`, `permissions` or other settings.

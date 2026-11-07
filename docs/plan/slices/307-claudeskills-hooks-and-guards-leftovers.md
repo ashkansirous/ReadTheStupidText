@@ -24,3 +24,9 @@
 ## Verification
 
 - Each item has a test or a recorded run in the ClaudeSkills PR; record the PR numbers here. Items already fixed when the work starts are ticked with the PR that fixed them, read from the repo, not from memory.
+
+## User answer (2026-11-07, before the night run)
+
+- **Hook edits allowed.** The user approved changing the hooks and guards named in this slice, including the
+  `start-detached.ps1` hook of item 13 (through the normal two-pass review gate and a ClaudeSkills PR). It covers
+  only the hooks this slice names, not `autoMode`, `permissions` or other settings.

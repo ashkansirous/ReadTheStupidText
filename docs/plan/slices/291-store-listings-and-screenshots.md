@@ -28,3 +28,11 @@ Facts from plan.md, to be re-read live before each edit (the `store-listing` age
 
 - Each live listing read back equals the repo text; no listing says "no analytics" (RTST) or "3 to 8" (Dino, site).
 - Every store has the screenshot sizes it requires; the App Store Connect version shows no missing items.
+
+## User answers (2026-11-07, before the night run)
+
+- **App Store legal values (item 4): not tonight.** The user did not approve sending the drafts' declarations
+  (copyright, content rights, age rating, review contact) yet, and Apple's required contact phone number is not
+  stored anywhere. Item 4 waits for the user; a night wave does not write any App Store declaration.
+- **Play "Manage store presence" grant (item 1): later.** The user will grant it another time; until then the
+  Play publish waits. Items that need neither (listing text in the repo, screenshots, Microsoft Store text) may be built.
