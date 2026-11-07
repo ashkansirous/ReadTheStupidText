@@ -130,6 +130,7 @@ public partial class ReaderPage : ContentPage
         _reader.ChunkChanged += OnReaderChunkChanged;
         _reader.SentenceChanged += OnSentenceChanged;
         _reader.StallChanged += OnReaderStallChanged;
+        RestoreStallWait(); // Slice 314: a stall that began while this page was off-stack raised no event it could hear
         _installer.Changed += OnInstallerChanged;
         _model.ReadyChanged += OnInstallerChanged;
         AttachUpdateCard();

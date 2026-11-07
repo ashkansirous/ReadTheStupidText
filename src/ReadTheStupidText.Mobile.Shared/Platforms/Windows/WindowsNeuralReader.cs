@@ -33,6 +33,8 @@ public sealed class WindowsNeuralReader : ISpeechReader, IModelScopedSegmentRead
 	public event EventHandler<ReadChunk>? ChunkChanged;
 	public event EventHandler<bool>? StallChanged;
 
+	public bool IsStalled => _inner.IsStalled;
+
 	public PlaybackState State => _inner.State;
 
 	public bool SupportsSegments => _inner.SupportsSegments;

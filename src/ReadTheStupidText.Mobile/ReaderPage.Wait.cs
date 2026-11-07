@@ -97,6 +97,28 @@ public partial class ReaderPage
         });
     }
 
+    // Slice 314: a page coming back reads the stall on the main thread, so a stall ending meanwhile cannot leave a stale overlay. A stopped
+    // read has already released its stall (StallReporter.WatchAsync ends it on the read's token), so IsStalled alone decides.
+    private void RestoreStallWait()
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (_retired)
+            {
+                return;
+            }
+
+            if (_reader.IsStalled)
+            {
+                BeginStallWait();
+            }
+            else
+            {
+                EndStallWait();
+            }
+        });
+    }
+
     private void BeginStallWait()
     {
         if (!_wait.IsActive)

@@ -192,6 +192,8 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         remove => _stall.Changed -= value;
     }
 
+    public bool IsStalled => _stall.IsStalled;
+
     public PlaybackState State => _state;
 
     public bool SupportsSegments => true;
@@ -608,7 +610,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         string wavPath;
         try
         {
-            wavPath = await _stall.WatchAsync(generated);
+            wavPath = await _stall.WatchAsync(generated, token);
         }
         catch (OperationCanceledException)
         {
