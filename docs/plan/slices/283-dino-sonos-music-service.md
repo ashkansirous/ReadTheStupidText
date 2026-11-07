@@ -1,6 +1,6 @@
 # Slice 283 — Dino: a Sonos music service for the store books (anonymous, no login)
 
-*Code built 2026-11-06 (wave 2026-11-06, ledger wave 33, PR #879, not merged); user steps open (Sonos partner account, submission, sandbox, Self Test, a play on their Sonos).* Server only (Cloudflare Worker); the apps do not change.
+*Code built 2026-11-06 (wave 2026-11-06, ledger wave 33), merged as PR #879 (a0687a11); user steps open (Sonos partner account, submission, sandbox, Self Test, a play on their Sonos).* Server only (Cloudflare Worker); the apps do not change.
 
 *Claim notes (2026-11-06, unattended night):* the code is built now, as the Decisions say (build during Sonos's review weeks).
 The user step (Sonos Company partner account, service submission, sandbox integration, Self Test, a play on their own
@@ -96,7 +96,7 @@ Unknown: whether the partner account costs anything; whether Self Test skips aut
 - Sonos Self Test passes.
 - A real play on a Sonos speaker.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-07; already in worker/CLAUDE.md from the slice PR)
 
 - `worker/sonos.ts`: the SMAPI action is read only from the Body's action element, never the SOAPAction header. The catalog token in
   getLastUpdate must hash every field shown in browse results, so a new shown field goes into the hash. Register the endpoint on the
