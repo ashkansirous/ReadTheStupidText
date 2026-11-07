@@ -75,12 +75,14 @@ public static class ShelfAudioPlan
     /// </summary>
     /// <param name="installedVersion">The installed pack version of (book id, language), or null.</param>
     /// <param name="titleLanguage">The screen language the book titles are named in (the listing's title in it, else the story's own).</param>
-    public static ShelfAudioWork For(IEnumerable<StoreItem> listing, ISet<string> shelfIds, string language, Func<string, string, int?> installedVersion, string titleLanguage)
+    /// <param name="textBehind">Slice 313: the shelf books whose text is older than the store's. Their pack is made for the newer text, so it is not fetched yet (the text comes first, then the pack); an installed pack is kept.</param>
+    public static ShelfAudioWork For(
+        IEnumerable<StoreItem> listing, ISet<string> shelfIds, string language, Func<string, string, int?> installedVersion, string titleLanguage, ISet<string>? textBehind = null)
     {
         string key = BundledTranslations.Key(language);
         var needed = new List<ShelfAudioPick>();
         var none = new List<string>();
-        foreach (StoreItem item in listing.Where(i => shelfIds.Contains(i.Id)))
+        foreach (StoreItem item in listing.Where(i => shelfIds.Contains(i.Id) && textBehind?.Contains(i.Id) != true))
         {
             int? have = installedVersion(item.Id, key);
             AudioPackInfo? pack = item.AudioIn(key);

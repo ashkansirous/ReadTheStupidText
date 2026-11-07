@@ -736,6 +736,16 @@ test("audio_pack_download takes exactly the closed outcomes for a shelf book and
   assert.equal(parseEvent({ ...ownEvent, name: "audio_pack_download", detail: "done" }), null);
 });
 
+test("book_update takes result:from:to for a shelf book and drops any other detail", () => {
+  for (const detail of ["staged:5:6", "updated:1:12", "skipped_edited:5:6", "failed:0:6"]) {
+    assert.equal(parseEvent({ ...shelfEvent, name: "book_update", detail })?.detail, detail, detail);
+  }
+  for (const bad of ["", "updated", "updated:5", "updated:5:6:7", "done:5:6", "updated:a:6", "updated:5:", "updated:12345:6", "Updated:5:6"]) {
+    assert.equal(parseEvent({ ...shelfEvent, name: "book_update", detail: bad }), null, bad);
+  }
+  assert.equal(parseEvent({ ...ownEvent, name: "book_update", detail: "updated:5:6" }), null);
+});
+
 // ---- The fallback count (Slice 273 part A) ----------------------------------------------------------------------------------
 
 const FALLBACK_DETAILS = FALLBACK_AREAS.flatMap((area) => FALLBACK_REASONS.map((reason) => `${area}:${reason}`));

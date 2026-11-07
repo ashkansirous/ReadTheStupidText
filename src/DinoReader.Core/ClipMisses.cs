@@ -1,3 +1,5 @@
+using ReadTheStupidText.Application.Usage;
+
 namespace DinoReader.Core;
 
 /// <summary>Why a spoken piece found no clip in an installed pack (Slice 273): the pack's entry for its position is missing or its hash is not the text's (the pack and the text are out of line), or the entry is right but its file is not on disk.</summary>
@@ -35,4 +37,13 @@ public sealed class ClipMisses
 
     /// <summary>The reason a read with no clip at all gives: a hash that misses means the pack is out of line with the text, else the files are missing.</summary>
     public DeviceVoiceReason Reason => TextMismatch > 0 ? DeviceVoiceReason.TextMismatch : DeviceVoiceReason.ClipMissing;
+
+    /// <summary>
+    /// The fallback reason a piece shown for a beat reports (Slice 313): <c>text_mismatch</c> when the read's pack is out of line with the shown text (a hash missed, or the read's own reason says
+    /// so), else <c>clip_missing</c>. <paramref name="misses"/> is null when no pack was opened for the read.
+    /// </summary>
+    public static string SilentPieceReason(DeviceVoiceReason readReason, ClipMisses? misses) =>
+        misses is { TextMismatch: > 0 } || (misses is null && readReason == DeviceVoiceReason.TextMismatch)
+            ? FallbackReason.TextMismatch
+            : FallbackReason.ClipMissing;
 }

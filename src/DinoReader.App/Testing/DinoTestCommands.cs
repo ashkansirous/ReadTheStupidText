@@ -76,6 +76,12 @@ internal static partial class DinoTestCommands
 			return StartedOutcome;
 		}
 
+		if (command.Name == SeedOldBookName)
+		{
+			_ = SeedOldBookAsync(command.Get(IdKey, string.Empty));
+			return StartedOutcome;
+		}
+
 		if (command.Name == InstallAudioPackName)
 		{
 			_ = InstallAudioPackAsync(command.Get(IdKey, string.Empty), command.Get(TestHookDispatcher.LanguageKey, string.Empty), command.Get(MissKey, string.Empty) == MissTextMismatch);

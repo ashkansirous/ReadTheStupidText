@@ -9,6 +9,7 @@ Names and details (the Worker accepts exactly these; `worker/events.ts`, `AudioP
 
 `double3` and `double4` mean different things per event name (`read_voice`: pieces by clips and by the device voice; `fallback`: times this session and none), so always filter on `blob1`.
 - `audio_pack_download`: one per download step, about a store book. Detail `started`, `done`, `failed:network`, `failed:size`, `failed:unzip`, `failed:clip`, `failed:missing` (the store has no such pack version, a 404), `failed:storage` (disk full or no access). A cancelled download sends no closing count, so `started` minus `done` minus `failed:*` includes cancelled and in-flight ones. A pack that failed is tried at most twice per launch. `blob3` is the pack's language.
+- `book_update` (Slice 313): a shelf book's text was behind the store's, about a store book. Detail `<result>:<from version>:<to version>` with result `staged` (the newer text is downloaded and waits), `updated` (swapped in), `skipped_edited` (the grown-up changed the book, left as it is) or `failed` (download, baseline or swap failed; tried at most 3 times per store version, then the book is given up and its pack no longer waits for the text). Versions only, never text or a title. One count per book, versions and result in each launch, except `failed`, which is counted at every try, so `failed` rows show the retries.
 
 ## Which voice did session X use
 

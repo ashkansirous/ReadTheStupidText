@@ -166,6 +166,9 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		shelfAudio.Changed -= OnShelfAudioChanged;
 		shelfAudio.Changed += OnShelfAudioChanged;
 		_ = shelfAudio.RescanAsync(); // the gallery is shown: a pack that changed meanwhile shows in the child's list
+		StagedBookUpdates staged = _services.GetRequiredService<StagedBookUpdates>();
+		staged.Staged -= OnBookUpdateStaged;
+		staged.Staged += OnBookUpdateStaged; // Slice 313: while the shelf is shown no book is open, so a newly staged text is swapped in at once
 		ApplyMode();
 		if (Window is { } window)
 		{
@@ -269,7 +272,43 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		_mode.PropertyChanged -= OnModeChanged;
 		_services.GetRequiredService<StoreClient>().LibraryChanged -= OnLibraryChanged;
 		_services.GetRequiredService<ShelfAudioPacks>().Changed -= OnShelfAudioChanged;
+		_services.GetRequiredService<StagedBookUpdates>().Staged -= OnBookUpdateStaged;
 	}
+
+	// Slice 313: a newer book text was staged while the shelf shows (raised on a background thread). The refresh applies it behind the "Updating your books" overlay when the shelf is free;
+	// the packs made for the new text follow through StagedBookUpdates.Swapped (ShelfAudioPacks plans again), so nothing is retried here: a text that could not be applied waits for the next appearing.
+	private void OnBookUpdateStaged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(async () =>
+	{
+		// One refresh at a time for staged updates (main thread only): a second signal while one runs only asks for one more pass after it, so two refreshes never swap and reload the shelf at once.
+		if (_stagedRefreshRunning)
+		{
+			_stagedRefreshAgain = true;
+			return;
+		}
+
+		_stagedRefreshRunning = true;
+		try
+		{
+			do
+			{
+				_stagedRefreshAgain = false;
+				await RefreshAsync();
+			}
+			while (_stagedRefreshAgain);
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		{
+			// no-fallback: logged only; the shelf stays as it was until the next refresh
+			Debug.WriteLine($"Dino Reader gallery refresh after a book update failed: {ex}");
+		}
+		finally
+		{
+			_stagedRefreshRunning = false;
+		}
+	});
+
+	private bool _stagedRefreshRunning;
+	private bool _stagedRefreshAgain;
 
 	// A store download can finish on a background thread while the gallery shows; reload the list on the UI thread (Slice 92).
 	private void OnLibraryChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(async () =>
@@ -364,11 +403,23 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		await _wait.RunAsync(WaitStage.Saving, AppResources.Gallery_UpdatingBooks, canCancel: false, async _ =>
 		{
 			await _starters.InstallOnceAsync();
-			await _services.GetRequiredService<StagedBookUpdates>().ApplyOnceAsync();
+			StagedBookUpdates staged = _services.GetRequiredService<StagedBookUpdates>();
+			await staged.ApplyOnceAsync();
+			if (staged.HasPending && ShelfFreeForSwap())
+			{
+				await staged.ApplyPendingAsync(); // Slice 313: a text staged since the last apply, whenever the shelf shows and nothing is open over it
+			}
+
 			return true;
 		});
 		Debug.WriteLine($"[BookUpdate] gallery waited {clock.ElapsedMilliseconds} ms for the staged apply");
 	}
+
+	// Slice 313: a book is swapped (deleted and imported again under a new id) only while the shelf really is the page in front with nothing open over it: no book opening, no sheet, no modal,
+	// no other page pushed. Otherwise the staged text waits for the next refresh (the next appearing).
+	private bool ShelfFreeForSwap() =>
+		!_busy.IsBusy && _sheetStory is null && !BookInfo.IsVisible && !_reorder.IsVisible && Navigation.ModalStack.Count == 0
+		&& (Navigation.NavigationStack.LastOrDefault() is not { } top || top == this);
 
 	private async Task RefreshAsync()
 	{

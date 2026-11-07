@@ -1,0 +1,79 @@
+# Slice 313: a store book that is behind the store gets its newer text at once (not weekly, not after a second cold start), and its audio stays in step with the text it is read with.
+# The seed-old-book hook (Debug only) lowers the recorded version of the test book by one, turns the test store on and starts the shelf audio run, the one place the app learns the store's
+# version at launch or return. The run stages the newer text (the "[BookUpdate] book_update staged" line), the shown shelf swaps it in at once ("[BookUpdate] ... swapped" and
+# "book_update updated"), and the book is then read with the installed fixture pack (install-audio-pack, made for the text): clips play, no piece is shown silent.
+# The test store serves the same text as the shelf copy, so this flow proves the update path and that sound survives it; that a changed text is shown is the unit tests' job (BookTextCurrency, the
+# swap's own tests). To see it fail against the old behaviour: before Slice 313 nothing checked the version when the audio run started, so no "book_update" line is ever written and the
+# book would stay at its old version until the weekly check and a second cold start.
+# Keeps the app's data (no clearState), like premade-audio-plays; the fixture pack stays installed for the dev install.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK install-audio-pack ok
+# expect-log: HOOK seed-old-book ok
+# expect-log: [BookUpdate] book_update staged
+# expect-log: [BookUpdate] book_update updated
+# expect-log: pieces have a clip
+# expect-log: [AudioPack] premade clip plays
+# expect-log: HOOK read start
+appId: uk.sirous.dinoreader.dbg
+name: A book behind the store updates at once and keeps its sound
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: install-audio-pack
+      id: three-little-pigs
+      lang: fa
+# The install runs in the background (a few small files): give it a moment before the book is made old.
+- extendedWaitUntil:
+    visible:
+      id: PackInstallNeverShown
+    timeout: 6000
+    optional: true
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: seed-old-book
+      id: three-little-pigs
+# The audio run lists the test store, stages the newer text and the shown shelf swaps it in: give the whole chain time (the line checks above prove each step ran).
+- extendedWaitUntil:
+    visible:
+      id: BookUpdateNeverShown
+    timeout: 15000
+    optional: true
+- assertVisible:
+    id: StoryTile
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+# The Play button describes itself as Pause while the read is Playing; a clip counts as playing.
+- extendedWaitUntil:
+    visible: "Pause|توقف"
+    timeout: 90000
+- extendedWaitUntil:
+    visible:
+      id: PremadeAudioNeverShown
+    timeout: 15000
+    optional: true
+- assertVisible:
+    id: ReadingSurface
+# Put the screens back in English, so later flows that wait on English labels (Pause) still match.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: en
