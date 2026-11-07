@@ -32,7 +32,7 @@ time, so listening time cannot be worked out from what is stored.
   so an app killed later still counts the listen.
 - Every `read_paused` and `read_stopped` row always carries `seconds` (0 allowed, also when no tally is open): the whole seconds
   heard since the previous paused/stopped row of this reading (0-86400; above is dropped from the row, not the event).
-  `book_listened` carries **no** seconds (so nothing is counted twice; the Worker ignores one if sent). Absent only on rows of
+  An app's `book_listened` carries **no** seconds (so nothing is counted twice; the Worker ignores one sent to `/api/events`); only Slice 289's speaker rows (platform `sonos`, detail `estimated`) carry an estimated one, so hours filter on `blob1` and exclude `blob7 = 'sonos'`. Absent only on rows of
   other kinds. One reading is one story: a `read_started` for a different story ends the open tally first (its unsent seconds
   are dropped); in the app this cannot happen without a `read_stopped`, because leaving the page always stops the read
   first (`ReadingPage.cs` `LeavePage` -> `ReadingSession.Stop`, which closes the counted read), so it is only a guard. When the
