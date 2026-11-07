@@ -1,8 +1,10 @@
 # Slice 308 — Slice 225 items 3 and 6: `run-checks.ps1 -Serial` for emulators, and the failed-build cause
 
-*Planned 2026-11-07.* From [Slice 225](225-device-tooling-leftovers-night-2026-10-31-1301.md) (PR #696). Item 3 was not built: the phone checks have no emulator path. Item 6: the runner's Debug builds failed or stalled repeatedly (entries 249, 494, 630: "stalled: log not grown 5 min", "dino debug failed") and runs fell back to the cached AOT build; nobody read `build-dino-debug.log` / `build-rtst-debug.log`, so the cause is unknown. Moved from plan.md's *Outstanding work*. Tooling only.
+*In progress (wave 2026-11-07), draft PR.* (Planned 2026-11-07.) From [Slice 225](225-device-tooling-leftovers-night-2026-10-31-1301.md) (PR #696). Item 3 was not built: the phone checks have no emulator path. Item 6: the runner's Debug builds failed or stalled repeatedly (entries 249, 494, 630: "stalled: log not grown 5 min", "dino debug failed") and runs fell back to the cached AOT build; nobody read `build-dino-debug.log` / `build-rtst-debug.log`, so the cause is unknown. Moved from plan.md's *Outstanding work*. Tooling only.
 
-**Touches:** `tools/phone/run-checks.ps1`, `tools/phone/common.ps1`, `tools/phone/test-run-checks.ps1`, `tools/phone/checks/_device.ps1`, `tools/phone/README.md`, `tools/emulator/common.ps1`, `tools/emulator/install-debug.ps1`, `tools/CLAUDE.md`, `docs/plan/slices/308-slice-225-run-checks-serial-and-build-cause.md`
+**Touches:** `tools/phone/run-checks.ps1`, `tools/phone/common.ps1`, `tools/phone/test-run-checks.ps1`, `tools/phone/checks/_device.ps1`, `tools/phone/README.md`, `tools/phone/connect.ps1`, `tools/phone/lease.ps1`, `tools/emulator/common.ps1`, `tools/emulator/install-debug.ps1`, `tools/CLAUDE.md`, `docs/plan/slices/308-slice-225-run-checks-serial-and-build-cause.md`
+
+**Claim notes (wave 2026-11-07, run-all-waves):** `tools/phone/audio-timing.ps1` already has an `-Emulator`/`-Serial` path to copy. `tools/CLAUDE.md` is shared with Slice 284 in this wave (each adds its own lines). Item 2 is an investigation: if no Debug build fails or stalls in the runs made, record that with the log lines read.
 
 ## Work
 
