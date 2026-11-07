@@ -1,6 +1,6 @@
 # Slice 286 — Dino: record your voice in each story language, and hear it when reading in that language
 
-*In progress 2026-11-07.* Dino Reader only. Android, iOS and the Windows head the same, in the same slice.
+*Built 2026-11-07, PR #885.* Dino Reader only. Android, iOS and the Windows head the same, in the same slice.
 
 **Depends on:** Slices 111 and 279 (parent recordings and the recording flow this changes).
 **Touches:** `src/DinoReader.Core/{StoryRecordings,Story,LanguagePick,StoryClipKey}.cs`, `src/DinoReader.Core/StoryPackage*.cs`
@@ -107,3 +107,34 @@ Details the mock settles that the plan left open: the language row is a two-colu
 - Upgrade check: a book recorded before this slice still plays its recordings in the app's main language after updating.
 - iOS: the same flow compiles and runs on the simulator scripted flow if one exists, otherwise it goes to *Not yet verified*. Windows head: covered by
   shared code; the VM runs only if Windows-specific record code changes.
+
+## Result
+
+*Changed while building:*
+- Recordings are keyed by story language (file names `rec-<lang>-...`). Old clips migrate to the app's main language, and only once the main language is known.
+- Record intro, record header, book sheet and reading follow design Batch 49 frames 192-196 (item H): language cards with each language's own counts, record mode and ticks per language, header flag plus language line, sheet line "English n of m · Farsi n of m", and the reading language picker kept, with a recording played only in the reading language.
+- Proven bug fixed: a header flag added after the layout was measured 0x0 (evidence `tmp/diag/flag-measure.txt`). The header now keeps one `FlagRing` and changes its country.
+- Android, iOS and Windows heads build.
+- Emulator (Android, emulator-5554): 2026-11-07 10:47 record-per-character and record-page-shows-words pass; 2026-11-07 11:01 (bcf9fec8) record-per-language and wizard-layout-record-large-font pass. Logcat shows reading=en and reading=fa clips; screenshots match frames 192-195.
+
+*From review:* files `D:\ReadTheStupidText-worktrees\reviews\s286-{high,medium,check1..check6}.md`, outside the repo (outcomes below are from the coordinator's notes, not from the files):
+- high: fixed 1, 3, 4, 5, 6, 7, 9, 10 (plus a speaker-name change, later reverted to match the design). Skipped 2 (clips of a language removed from the set stay on disk and return if it is re-added; no data lost) and 8 (style).
+- medium: fixed 2, 4, 5, 6, 7, 9, 10. Skipped 1 (decision 4: old clips go to the app's main language), 3 (same as high 2), 8 (intro opens in the app language and one "use recordings" switch: agreed, matches the design).
+- check1: fixed 1-7 and 12. Skipped 8 (as high 2), 9 (harmless legacy key), 10 and 11 (match design frames 194/195).
+- check2: fixed 1, 2, 4, 7. Skipped 3, 5, 6 (small speed points, nothing visible).
+- check3: its 3 low findings accepted.
+- check4: fixed 1, 2, 3, 6, 7; 4 resolved by the margin change in 3; lows 5, 8, 9, 10 accepted.
+- check5: fixed 1, 2, 3, 4, 5, 10. Skipped 6 (follows 1), 7 (Dino never mirrors), 8 (alert titles keep Record_Title), 9 (one small view per header).
+- check6: its 2 low findings accepted.
+
+#### For CLAUDE.md
+
+- In `src/DinoReader.App/CLAUDE.md`: parent recordings are per story language (key and file name carry the language) and play only when the reading language matches. Old clips file under the app's main language, only once it is known. (Slice 286: docs/plan/slices/286-dino-recordings-per-story-language.md)
+- In `src/DinoReader.App/CLAUDE.md`: a view added to a row that is already laid out may never be measured (0x0). Keep one view and change its content, as `GrownUpHeader` does with its `FlagRing`. (Slice 286: docs/plan/slices/286-dino-recordings-per-story-language.md)
+
+#### Not yet verified
+
+- iOS device or simulator: the record-per-language flow was not run.
+- Windows head on a real screen: centring of the record intro on a wide window.
+- The 14 hand-written language-name strings (`StoryLanguages_NameMap`) and the `Record_LanguageUnavailable` / `Record_LanguageRetry` translations have not been checked by native speakers.
+- Emulator store audio had to be seeded because the store was unreachable in the test setup, so the real download path was not covered.
