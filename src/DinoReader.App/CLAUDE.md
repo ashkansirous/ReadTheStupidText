@@ -70,6 +70,8 @@ index is that folder's README): read visual values (colours, sizes, copy, layout
 - A native player's "finished"/"failed" handler never starts, stops or disposes a player directly (AVAudioPlayer throws `ObjectDisposedException`): wrap them in `PlayerHandOff` as `RecordingPlayer.Play` does. (Slice 270: docs/plan/slices/270-dino-ios-player-disposed-in-finished-callback.md)
 - `Resources/Fonts/Fredoka-Medium.ttf` is a fontTools static wght=500 instance of `Fredoka.ttf` renamed "Fredoka Medium"; regenerate if `Fredoka.ttf` changes. (Slice 290: docs/plan/slices/290-dino-reading-sound-pill.md)
 - Settings > "Report a problem" (`ReportProblemPage`, not on Windows) sends via `CrashReporter.SendUserReportAsync` behind the wait overlay; reading calls through `ReadingSession.Stop/Pause(reason)` pass a fixed `TraceLines.ReadingReason`, never text. (Slice 249: docs/plan/slices/249-dino-report-a-problem.md)
+- First run and intro are built on `OnboardingShell`: under 600 wide one column, 600 or wider two panes, and waits, offline and ready a centred 440 column; the rules are in `OnboardingLayout.Shape`. (Slice 325: docs/plan/slices/325-dino-2026-11-08-redesign.md)
+- Windows intro keys: Enter is always Next/Done and the intro always claims it; Space activates the focused control. Do not add focus clearing or a held-key set. Book picker: Enter is Continue and is claimed while the list shows (a focused Back or Continue button still takes it). (Slice 325: docs/plan/slices/325-dino-2026-11-08-redesign.md)
 
 ## Usage counts
 
