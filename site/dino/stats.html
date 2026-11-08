@@ -7,7 +7,10 @@
   <title>Dino Book Reader · Usage</title>
   <link rel="icon" type="image/png" href="/dino/icon.png" />
   <style>
-    :root { color-scheme: light; }
+    /* Five layouts, picked by the script from the viewport and written to <html data-layout>:
+       desktop (1280 and up, the default below), side (1100-1279, sidebar), tabp (601-1099), phonep (up to 600),
+       phonel (height up to 500, landscape; checked first). Slice 318, mock frames 200-204. */
+    :root { color-scheme: light; --ph: 240px; --yw: 44px; --lab: 11px; --dot: 12px; }
     * { box-sizing: border-box; }
     body {
       margin: 0; background: #F3EFE6; color: #2b2540; line-height: normal;
@@ -15,13 +18,19 @@
     }
     button, select { font-family: inherit; color: inherit; }
     .page { max-width: 1280px; margin: 0 auto; padding: 20px 32px 40px; display: flex; flex-direction: column; gap: 20px; }
+    .left, .right { display: contents; }
+    .foot { order: 9; }
+    .card { background: #FFF6E6; border: 1px solid #d9d2c4; border-radius: 16px; }
+
+    /* header */
     .head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .head img { width: 40px; height: 40px; border-radius: 10px; display: block; }
     .head .text { display: flex; flex-direction: column; flex: 1; min-width: 200px; }
     .head .title { font-size: 19px; font-weight: 600; line-height: 1.2; }
     .head .sub { font-size: 13px; color: #8a8399; }
-    .card { background: #FFF6E6; border: 1px solid #d9d2c4; border-radius: 16px; }
+    /* filters */
     .filters { padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; }
+    .frow { display: contents; }
     .field { display: flex; flex-direction: column; gap: 6px; }
     .field.wide { flex-basis: 100%; }
     .label { font-size: 12px; font-weight: 600; color: #8a8399; letter-spacing: .5px; text-transform: uppercase; }
@@ -36,10 +45,14 @@
     .chip.off-live { opacity: .55; cursor: default; }
     .chip .dot { width: 12px; height: 12px; border-radius: 4px; }
     .chip .note { font-size: 12px; color: #8a8399; }
+
+    /* error */
     .error { display: none; background: #FFF0EA; border: 1px solid #f2c4b4; border-radius: 16px; padding: 18px 20px; align-items: center; gap: 14px; }
     .error.show { display: flex; }
-    .error span { flex: 1; font-size: 15px; color: #3a3450; }
+    .error .etext { flex: 1; font-size: 15px; color: #3a3450; }
     .error button { height: 38px; padding: 0 18px; border-radius: 999px; border: 0; background: #5B57E8; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+    /* tiles */
     .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
     .tile { text-align: left; cursor: pointer; background: #FFF6E6; border: 1px solid #d9d2c4; border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; color: #2b2540; }
     .tile.on { background: #fff; border: 2px solid #5B57E8; }
@@ -47,8 +60,10 @@
     .tile .shown { font-size: 11.5px; font-weight: 600; color: #5B57E8; }
     .tile .num { font-size: 34px; font-weight: 600; line-height: 1.15; color: #2b2540; }
     .loading .tile .num, .stale .tile .num, .blank .tile .num { color: #c9c2b4; }
-    .stale .chart .plot, .stale .books #rows { opacity: .4; filter: grayscale(1); }
+    .stale .chart .plot, .stale .books #rows, .stale .mbooks #mrows { opacity: .4; filter: grayscale(1); }
     .tile .tsub { font-size: 12.5px; color: #8a8399; line-height: 1.4; text-wrap: pretty; }
+
+    /* chart */
     .chart { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
     .chart .top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
     .chart .ctitle { font-size: 17px; font-weight: 600; }
@@ -56,34 +71,42 @@
     .chart .grow { flex: 1; }
     .legend { display: flex; flex-wrap: wrap; gap: 12px; }
     .legend span { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #5a5470; }
-    .legend i { width: 12px; height: 12px; border-radius: 3px; display: block; }
+    .legend i { width: var(--dot); height: var(--dot); border-radius: 3px; display: block; }
     .since { display: none; font-size: 12.5px; color: #5a5470; background: #ECE7FF; border-radius: 10px; padding: 6px 10px; align-self: flex-start; }
     .since.show { display: block; }
+    .readout { color: #8a8399; }
+    .readout.pk { color: #2b2540; }
     .plot { display: flex; gap: 8px; position: relative; }
-    .yaxis { width: 44px; height: 240px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; font-size: 11.5px; color: #8a8399; }
+    .yaxis { width: var(--yw); height: var(--ph); display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; font-size: 11.5px; color: #8a8399; }
     .yaxis span { line-height: 0; }
     .area { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-    .grid { height: 240px; position: relative; border-bottom: 1px solid #cfc7b6; background: repeating-linear-gradient(to bottom, transparent 0, transparent 59px, #ebe4d6 59px, #ebe4d6 60px); }
+    .grid { height: var(--ph); position: relative; border-bottom: 1px solid #cfc7b6; background-image: linear-gradient(to bottom, transparent calc(100% - 1px), #ebe4d6 calc(100% - 1px)); background-size: 100% 25%; }
     .bars { position: absolute; inset: 0; display: flex; align-items: flex-end; }
     .bar { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column-reverse; cursor: default; }
+    .bar > div { flex-shrink: 0; }
     .bar:hover { filter: brightness(1.06); }
+    .bars.has-pick .bar { opacity: .4; }
+    .bars.has-pick .bar.pk { opacity: 1; }
     .overlay { display: none; position: absolute; inset: 0; background: rgba(255,246,230,.82); align-items: center; justify-content: center; font-size: 14px; color: #5a5470; }
     .overlay.show { display: flex; }
+    .rowsload { padding: 18px 4px; font-size: 14px; color: #5a5470; }
     .xlabels { display: flex; }
-    .xlabels span { flex: 1; min-width: 0; text-align: center; font-size: 11px; color: #8a8399; white-space: nowrap; overflow: visible; }
+    .xlabels span { flex: 1; min-width: 0; display: flex; justify-content: center; font-size: var(--lab); color: #8a8399; white-space: nowrap; }
+
+    /* table (desktop, tablets, phone landscape) */
     .books { overflow: hidden; }
     .books .bhead { display: flex; align-items: baseline; gap: 10px; padding: 16px 18px 10px; flex-wrap: wrap; }
     .books .btitle { font-size: 17px; font-weight: 600; }
     .books .bsub { font-size: 13px; color: #8a8399; }
     .cols { display: grid; grid-template-columns: minmax(0, 2.2fr) repeat(3, minmax(0, 1fr)); }
-    .cols.heads { padding: 8px 18px; border-top: 1px solid #e6dfd0; border-bottom: 1px solid #e6dfd0; font-size: 12.5px; font-weight: 600; color: #5a5470; }
+    .cols.heads { padding: 8px 18px; border-top: 1px solid #e6dfd0; border-bottom: 1px solid #e6dfd0; font-size: 12.5px; font-weight: 600; color: #5a5470; align-items: center; }
     .cols.heads button { border: 0; background: none; padding: 0; text-align: right; font-size: 12.5px; font-weight: 600; cursor: pointer; color: #5a5470; }
     .cols.heads button.sorted { color: #5B57E8; }
     .row { align-items: center; padding: 8px 18px; border-bottom: 1px solid #efe9dd; cursor: pointer; }
-    .row:hover { background: #fbefd9; }
-    .row.picked { background: #ECE7FF; }
+    .row:hover, .mrow:hover { background: #fbefd9; }
+    .row.picked, .mrow.picked { background: #ECE7FF; }
     .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
-    .rank { width: 22px; font-size: 12.5px; color: #8a8399; text-align: right; }
+    .rank { width: 22px; font-size: 12.5px; color: #8a8399; text-align: right; flex-shrink: 0; }
     .cover { width: 30px; height: 40px; border-radius: 6px; overflow: hidden; flex-shrink: 0; background-color: #e6dccb; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #5a5470; background-size: cover; background-position: center; }
     .btn { font-size: 14.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .cell { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
@@ -93,61 +116,309 @@
     .track div { height: 100%; background: #c9c2b4; }
     .cell.sorted .track div { background: #5B57E8; }
     .foot { font-size: 12.5px; color: #8a8399; line-height: 1.5; max-width: 900px; text-wrap: pretty; }
-    @media (max-width: 640px) {
-      .page { padding: 16px 14px 32px; }
-      .cols { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); }
-      .cols .hide-phone { display: none; }
-    }
+
+    /* phone portrait list of top books */
+    .mbooks { overflow: hidden; }
+    .mbooks .mhead { padding: 12px 12px 8px; display: flex; flex-direction: column; gap: 2px; }
+    .mbooks .mtitle { font-size: 16px; font-weight: 600; }
+    .mbooks .msub { font-size: 12.5px; color: #8a8399; }
+    .mrow { display: flex; align-items: center; gap: 10px; padding: 8px 12px; min-height: 56px; border-top: 1px solid #efe9dd; cursor: pointer; }
+    .mrow .rank { width: 14px; font-size: 12px; }
+    .mrow .mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .mrow .mt { font-size: 14.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mrow .mo { font-size: 12px; color: #8a8399; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mrow .mr { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .mrow .mn { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .mrow .mtrack { width: 52px; height: 4px; border-radius: 2px; background: #ebe4d6; display: flex; justify-content: flex-end; overflow: hidden; }
+    .mrow .mtrack div { height: 100%; background: #5B57E8; }
+
+    /* parts shown only in some layouts (the layout rules below switch them on); must come after the base rules above */
+    .ts, .ss, .top-presets, .fbtn, .sumline, .sheet-head, #scrim, .psub, .legend-b, .readout, .mbooks, .ht, .bs-t, .e-s, .nl-s, .pl-s, .f-tab, .f-short { display: none; }
+
+    /* ---- tablet portrait, 601-1099 (frame 203) ---- */
+    [data-layout="tabp"] .page { padding: 20px 24px 32px; gap: 16px; }
+    [data-layout="tabp"] .head .title { font-size: 20px; }
+    [data-layout="tabp"] .filters { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 14px; }
+    [data-layout="tabp"] .frow { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 14px; }
+    [data-layout="tabp"] .field.wide { flex-basis: auto; }
+    [data-layout="tabp"] .seg button { flex: 1; height: 40px; padding: 0; font-size: 14.5px; }
+    [data-layout="tabp"] select#book { height: 44px; width: 100%; min-width: 0; padding: 0 12px; font-size: 16px; border-radius: 12px; }
+    [data-layout="tabp"] .chip { height: 44px; padding: 0 14px 0 11px; font-size: 14.5px; }
+    [data-layout="tabp"] .error { padding: 14px 16px; }
+    [data-layout="tabp"] .error button { height: 44px; font-size: 15px; }
+    [data-layout="tabp"] .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    [data-layout="tabp"] .tile { padding: 14px 16px; }
+    [data-layout="tabp"] .tile .num { font-size: 30px; }
+    [data-layout="tabp"] .chart { padding: 14px 16px; gap: 10px; }
+    [data-layout="tabp"] .legend-t { display: none; }
+    [data-layout="tabp"] .legend-b { display: flex; gap: 6px 14px; }
+    [data-layout="tabp"] .readout { display: block; font-size: 13px; min-height: 18px; }
+    [data-layout="tabp"] .yaxis { width: 40px; }
+    [data-layout="tabp"] .bhead { padding: 14px 16px 10px; }
+    [data-layout="tabp"] .bs-d { display: none; }
+    [data-layout="tabp"] .bs-t { display: inline; }
+    [data-layout="tabp"] .cols.heads { padding: 4px 16px; }
+    [data-layout="tabp"] .cols.heads button { min-height: 36px; }
+    [data-layout="tabp"] .row { padding: 8px 16px; min-height: 56px; }
+    [data-layout="tabp"] .rank { width: 18px; }
+    [data-layout="tabp"] .track { width: 60px; }
+    [data-layout="tabp"] .foot { max-width: none; }
+    [data-layout="tabp"] .f-long { display: none; }
+    [data-layout="tabp"] .f-tab { display: inline; }
+
+    /* ---- tablet landscape, 1100-1279, sidebar (frame 204) ---- */
+    [data-layout="side"] body { overflow: hidden; }
+    [data-layout="side"] .page { max-width: none; margin: 0; padding: 0; gap: 0; flex-direction: row; height: 100vh; height: 100dvh; overflow: hidden; }
+    [data-layout="side"] .left { display: flex; flex-direction: column; width: 290px; flex: none; overflow-y: auto; background: #FFF6E6; border-right: 1px solid #d9d2c4; padding: 18px 18px 20px; gap: 18px; }
+    [data-layout="side"] .right { display: flex; flex-direction: column; flex: 1; min-width: 0; overflow-y: auto; padding: 18px 22px 28px; gap: 14px; }
+    [data-layout="side"] .head { flex-wrap: nowrap; gap: 10px; }
+    [data-layout="side"] .head img { width: 38px; height: 38px; }
+    [data-layout="side"] .head .text { min-width: 0; }
+    [data-layout="side"] .head .title { font-size: 18px; }
+    [data-layout="side"] .head .sub { font-size: 12.5px; }
+    [data-layout="side"] .filters { background: none; border: 0; border-radius: 0; padding: 0; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 18px; }
+    [data-layout="side"] .field.wide { flex-basis: auto; }
+    [data-layout="side"] .seg button { flex: 1; height: 40px; padding: 0 2px; font-size: 14px; }
+    [data-layout="side"] select#book { height: 44px; width: 100%; min-width: 0; padding: 0 10px; font-size: 16px; border-radius: 12px; }
+    [data-layout="side"] .chips { gap: 6px; }
+    [data-layout="side"] .chip { height: 44px; padding: 0 12px 0 10px; font-size: 14px; gap: 7px; }
+    [data-layout="side"] .chip .dot { width: 11px; height: 11px; }
+    [data-layout="side"] .chip .note { display: none; }
+    [data-layout="side"] .foot { order: 0; margin-top: auto; font-size: 12px; max-width: none; }
+    [data-layout="side"] .error { padding: 12px 16px; }
+    [data-layout="side"] .error button { height: 44px; font-size: 15px; }
+    [data-layout="side"] .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    [data-layout="side"] .tile { padding: 12px 16px; gap: 3px; }
+    [data-layout="side"] .tile .num { font-size: 28px; }
+    [data-layout="side"] .tile .tsub { font-size: 12px; line-height: 1.35; }
+    [data-layout="side"] .chart { padding: 12px 16px; gap: 8px; --dot: 11px; }
+    [data-layout="side"] .chart .ctitle { font-size: 16px; }
+    [data-layout="side"] .legend { gap: 4px 12px; }
+    [data-layout="side"] .legend span { font-size: 12px; gap: 5px; }
+    [data-layout="side"] .since { padding: 5px 10px; }
+    [data-layout="side"] .readout { display: block; font-size: 13px; min-height: 18px; }
+    [data-layout="side"] { --ph: 200px; --yw: 40px; }
+    [data-layout="tabp"] { --yw: 40px; }
+    [data-layout="tabp"] .grid, [data-layout="side"] .grid { background-size: 100% 25%; background-image: linear-gradient(to bottom, #ebe4d6 1px, transparent 1px); }
+    [data-layout="side"] .bhead, [data-layout="side"] .hb { display: none; }
+    [data-layout="side"] .ht { display: inline; font-size: 16px; color: #2b2540; }
+    [data-layout="side"] .cols.heads { padding: 4px 16px; border-top: 0; }
+    [data-layout="side"] .cols.heads button { min-height: 40px; }
+    [data-layout="side"] .row { padding: 6px 16px; min-height: 52px; }
+    [data-layout="side"] .rank { width: 18px; }
+    [data-layout="side"] .cover { width: 28px; height: 38px; }
+    [data-layout="side"] .track { width: 64px; }
+    [data-layout="side"] .f-long { display: none; }
+    [data-layout="side"] .f-short { display: inline; }
+
+    /* ---- shared by the two phone layouts: Filters button and sheet ---- */
+    [data-phone] .head .text { min-width: 0; }
+    [data-phone] .top-presets { display: flex; padding: 3px; background: #FFF6E6; }
+    [data-phone] .fbtn { display: flex; align-items: center; border: 1px solid #d9d2c4; background: #FFF6E6; cursor: pointer; color: #2b2540; text-align: left; }
+    [data-phone] .fbtn .flabel { font-size: 14px; font-weight: 600; color: #5B57E8; }
+    [data-phone] .fbtn svg { flex-shrink: 0; }
+    [data-phone] .f-period { display: none; }
+    [data-phone] .filters { display: none; position: fixed; z-index: 20; background: #FFF6E6; border: 0; flex-direction: column; flex-wrap: nowrap; align-items: stretch; overflow-y: auto; }
+    [data-phone][data-sheet] .filters { display: flex; }
+    [data-phone][data-sheet] #scrim { display: block; position: fixed; inset: 0; z-index: 10; background: rgba(43,37,64,.38); }
+    [data-phone][data-sheet] body { overflow: hidden; }
+    [data-phone] .field.wide { flex-basis: auto; }
+    [data-phone] .sheet-head { display: flex; flex-direction: column; gap: 16px; }
+    [data-phone] .grab { width: 40px; height: 5px; border-radius: 3px; background: #d9d2c4; align-self: center; }
+    [data-phone] .srow { display: flex; align-items: center; }
+    [data-phone] .srow span { flex: 1; font-size: 18px; font-weight: 600; }
+    [data-phone] .done { height: 44px; padding: 0 20px; border: 0; border-radius: 999px; background: #5B57E8; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+    [data-phone] .seg button { flex: 1; padding: 0 4px; }
+    [data-phone] .error { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 14px; border-radius: 14px; }
+    [data-phone] .error .etext { font-size: 14px; flex: none; }
+    [data-phone] .error button { height: 44px; font-size: 15px; }
+    [data-phone] .tile .shown { display: none; }
+    [data-phone] .tile .tsub { display: none; }
+    [data-phone] .tile { border-radius: 14px; }
+    [data-phone] .legend-t { display: none; }
+    [data-phone] .legend-b { display: flex; --dot: 10px; }
+    [data-phone] .readout { display: block; }
+    [data-phone] .yaxis { width: 32px; }
+    [data-phone] .plot { gap: 6px; }
+    [data-phone] .grid { background-size: 100% 50%; background-image: linear-gradient(to bottom, #ebe4d6 1px, transparent 1px); }
+    [data-phone] .grow { display: none; }
+
+    /* ---- phone portrait, up to 600 wide (frame 201) ---- */
+    [data-layout="phonep"] { --ph: 170px; --lab: 10.5px; }
+    [data-layout="phonep"] .page { padding: 6px 16px 24px; gap: 14px; }
+    [data-layout="phonep"] .head { gap: 14px 10px; }
+    [data-layout="phonep"] .head img { width: 36px; height: 36px; border-radius: 9px; }
+    [data-layout="phonep"] .head .sub { font-size: 12.5px; }
+    [data-layout="phonep"] .top-presets { flex-basis: 100%; }
+    [data-layout="phonep"] .top-presets button { height: 40px; font-size: 14.5px; }
+    [data-layout="phonep"] .fbtn { flex-basis: 100%; min-height: 44px; border-radius: 12px; padding: 0 12px; gap: 10px; }
+    [data-layout="phonep"] .fbtn .fsum { flex: 1; min-width: 0; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    [data-layout="phonep"] .fbtn svg { width: 18px; height: 18px; }
+    [data-layout="phonep"] .filters { left: 0; right: 0; bottom: 0; max-height: 92vh; border-radius: 24px 24px 0 0; padding: 8px 16px 30px; gap: 16px; }
+    [data-layout="phonep"] .seg button { height: 40px; font-size: 14.5px; }
+    [data-layout="phonep"] select#book { height: 46px; width: 100%; min-width: 0; padding: 0 12px; font-size: 16px; border-radius: 12px; }
+    [data-layout="phonep"] .chip { height: 44px; padding: 0 14px 0 11px; font-size: 14.5px; }
+    [data-layout="phonep"] .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    [data-layout="phonep"] .tile { padding: 10px 11px; min-height: 72px; gap: 2px; }
+    [data-layout="phonep"] .tile .name { font-size: 12.5px; }
+    [data-layout="phonep"] .tile .num { font-size: 22px; line-height: 1.2; }
+    [data-layout="phonep"] .chart { padding: 12px; gap: 10px; }
+    [data-layout="phonep"] .chart .top { flex-direction: column; align-items: stretch; gap: 2px; }
+    [data-layout="phonep"] .chart .ctitle { font-size: 16px; }
+    [data-layout="phonep"] .chart .csub { font-size: 12.5px; }
+    [data-layout="phonep"] .since { font-size: 12px; border-radius: 8px; padding: 6px 9px; line-height: 1.4; }
+    [data-layout="phonep"] .readout { font-size: 12.5px; line-height: 1.4; min-height: 35px; }
+    [data-layout="phonep"] .yaxis { font-size: 11px; }
+    [data-layout="phonep"] .legend { gap: 6px 12px; }
+    [data-layout="phonep"] .legend span { font-size: 12px; gap: 5px; }
+    [data-layout="phonep"] .books { display: none; }
+    [data-layout="phonep"] .mbooks { display: block; }
+    [data-layout="phonep"] .foot { font-size: 12px; max-width: none; }
+    [data-layout="phonep"] .f-long { display: none; }
+    [data-layout="phonep"] .f-short { display: inline; }
+
+    /* ---- phone landscape, height up to 500 (frame 202) ---- */
+    [data-layout="phonel"] { --ph: 120px; --lab: 10.5px; }
+    [data-layout="phonel"] .page { padding: 10px 50px 20px; gap: 10px; }
+    [data-layout="phonel"] .head { flex-wrap: nowrap; gap: 10px; }
+    [data-layout="phonel"] .head img { width: 30px; height: 30px; border-radius: 8px; }
+    [data-layout="phonel"] .head .text { flex: 1; }
+    [data-layout="phonel"] .head .title { font-size: 17px; }
+    [data-layout="phonel"] .head .sub { display: none; }
+    [data-layout="phonel"] .top-presets { padding: 2px; }
+    [data-layout="phonel"] .top-presets button { height: 40px; padding: 0 14px; font-size: 14px; white-space: nowrap; }
+    [data-layout="phonel"] .fbtn { height: 44px; padding: 0 14px; border-radius: 999px; gap: 8px; }
+    [data-layout="phonel"] .fbtn .fsum { display: none; }
+    [data-layout="phonel"] .fbtn svg { width: 16px; height: 16px; }
+    [data-layout="phonel"] .sumline { display: block; font-size: 12.5px; color: #8a8399; margin-top: -4px; }
+    [data-layout="phonel"] .filters { top: 0; right: 0; bottom: 0; width: 360px; padding: 14px 50px 16px 18px; gap: 12px; }
+    [data-layout="phonel"] .grab { display: none; }
+    [data-layout="phonel"] .sheet-head { gap: 0; }
+    [data-layout="phonel"] .srow span { font-size: 17px; }
+    [data-layout="phonel"] .done { padding: 0 18px; }
+    [data-layout="phonel"] .seg button { height: 38px; font-size: 14px; }
+    [data-layout="phonel"] select#book { height: 44px; width: 100%; min-width: 0; padding: 0 10px; font-size: 16px; border-radius: 12px; }
+    [data-layout="phonel"] .chips { gap: 6px; }
+    [data-layout="phonel"] .chip { height: 44px; padding: 0 12px 0 10px; font-size: 14px; gap: 7px; }
+    [data-layout="phonel"] .chip .dot { width: 11px; height: 11px; }
+    [data-layout="phonel"] .chip .note { display: none; }
+    [data-layout="phonel"] .right { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 10px; align-items: stretch; }
+    [data-layout="phonel"] .error { grid-column: 1 / -1; }
+    [data-layout="phonel"] .tiles { display: flex; flex-direction: column; gap: 8px; }
+    [data-layout="phonel"] .tile { flex: 1; min-height: 56px; padding: 6px 12px; gap: 0; justify-content: center; }
+    [data-layout="phonel"] .tile .name { font-size: 12px; }
+    [data-layout="phonel"] .tile .num { font-size: 21px; }
+    [data-layout="phonel"] .chart { padding: 10px 12px; gap: 6px; min-width: 0; }
+    [data-layout="phonel"] .chart .top { gap: 8px; }
+    [data-layout="phonel"] .chart .ctitle { font-size: 15px; }
+    [data-layout="phonel"] .csub { display: none; }
+    [data-layout="phonel"] .psub { display: inline; font-size: 12px; color: #8a8399; }
+    [data-layout="phonel"] .since, [data-layout="phonel"] .since.show { display: none; }
+    [data-layout="phonel"] .readout { font-size: 12px; line-height: 1.35; min-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    [data-layout="phonel"] .yaxis { font-size: 11px; }
+    [data-layout="phonel"] .area { gap: 5px; }
+    [data-layout="phonel"] .legend { gap: 4px 12px; }
+    [data-layout="phonel"] .legend span { font-size: 11.5px; gap: 5px; }
+    [data-layout="phonel"] .books { grid-column: 1 / -1; }
+    [data-layout="phonel"] .bhead, [data-layout="phonel"] .hb { display: none; }
+    [data-layout="phonel"] .ht { display: inline; }
+    [data-layout="phonel"] .cols.heads { padding: 10px 14px; border-top: 0; }
+    [data-layout="phonel"] .cols.heads button { min-height: 28px; }
+    [data-layout="phonel"] .row { padding: 6px 14px; min-height: 48px; }
+    [data-layout="phonel"] .who { gap: 10px; }
+    [data-layout="phonel"] .rank { width: 16px; font-size: 12px; }
+    [data-layout="phonel"] .cover { width: 26px; height: 34px; border-radius: 5px; font-size: 12px; }
+    [data-layout="phonel"] .btn { font-size: 14px; }
+    [data-layout="phonel"] .cell .n { font-size: 14px; }
+    [data-layout="phonel"] .track { display: none; }
+    [data-layout="phonel"] .foot { display: none; }
+
+    /* short and long variants of the same text */
+    [data-compact] .tl, [data-compact] .sl { display: none; }
+    [data-compact] .ts, [data-compact] .ss { display: inline; }
+    [data-layout="tabp"] .tl, [data-layout="tabp"] .sl { display: inline; }
+    [data-layout="tabp"] .ts, [data-layout="tabp"] .ss { display: none; }
+    html:not([data-layout="desktop"]) .pl-l { display: none; }
+    html:not([data-layout="desktop"]) .pl-s { display: inline; }
+    html:not([data-layout="desktop"]) .e-l { display: none; }
+    html:not([data-layout="desktop"]) .e-s { display: inline; }
+    html:not([data-layout="desktop"]) .tile .shown { display: none; }
+    [data-phone] .nl-l { display: none; }
+    [data-phone] .nl-s { display: inline; }
   </style>
 </head>
 <body>
+<div id="scrim" data-act="close"></div>
 <div class="page" id="page">
-  <div class="head">
-    <img src="/dino/icon.png" alt="" />
-    <div class="text"><span class="title">Dino Book Reader · Usage</span><span class="sub" id="updated"></span></div>
-  </div>
-
-  <div class="card filters">
-    <div class="field"><span class="label">Period</span><div class="seg" id="presets"></div></div>
-    <div class="field"><span class="label">Bars by</span><div class="seg" id="groups"></div></div>
-    <div class="field"><span class="label">Book</span><select id="book"></select></div>
-    <div class="field wide"><span class="label">Platforms</span><div class="chips" id="chips"></div></div>
-  </div>
-
-  <div class="error" id="error" role="alert">
-    <span>Couldn’t load the numbers. Analytics Engine or the database didn’t answer.</span>
-    <button type="button" id="retry">Try again</button>
-  </div>
-
-  <div class="tiles" id="tiles"></div>
-
-  <div class="card chart">
-    <div class="top">
-      <span class="ctitle" id="ctitle"></span><span class="csub" id="csub"></span><span class="grow"></span>
-      <div class="legend" id="legend"></div>
-    </div>
-    <div class="since" id="since"></div>
-    <div class="plot">
-      <div class="yaxis" id="yaxis"></div>
-      <div class="area">
-        <div class="grid"><div class="bars" id="bars"></div><div class="overlay" id="overlay">Loading…</div></div>
-        <div class="xlabels" id="xlabels"></div>
+  <div class="left">
+    <div class="head">
+      <img src="/dino/icon.png" alt="" />
+      <div class="text">
+        <span class="title"><span class="tl">Dino Book Reader · Usage</span><span class="ts">Usage</span></span>
+        <span class="sub"><span class="sl" id="updated"></span><span class="ss" id="updatedS"></span></span>
       </div>
+      <div class="seg top-presets" id="presetsTop"></div>
+      <button type="button" class="fbtn" id="fbtn" data-act="open" aria-haspopup="dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B57E8" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg>
+        <span class="fsum" id="fsum"></span><span class="flabel">Filters</span>
+      </button>
+    </div>
+    <div class="sumline" id="sumline"></div>
+
+    <div class="card filters" id="filters">
+      <div class="sheet-head"><div class="grab"></div><div class="srow"><span>Filters</span><button type="button" class="done" id="done" data-act="close">Done</button></div></div>
+      <div class="frow">
+        <div class="field f-period"><span class="label">Period</span><div class="seg" id="presets"></div></div>
+        <div class="field"><span class="label">Bars by</span><div class="seg" id="groups"></div></div>
+      </div>
+      <div class="field"><span class="label">Book</span><select id="book"></select></div>
+      <div class="field wide"><span class="label">Platforms</span><div class="chips" id="chips"></div></div>
+    </div>
+
+    <div class="foot" id="foot"><span class="f-long" id="footL"></span><span class="f-tab" id="footT"></span><span class="f-short">A listen is 30 s or more. Sonos hours are estimates (hatched). Weeks start Monday, UTC.</span></div>
+  </div>
+
+  <div class="right">
+    <div class="error" id="error" role="alert">
+      <div class="etext"><span class="e-l">Couldn’t load the numbers. Analytics Engine or the database didn’t answer.</span><span class="e-s">Couldn’t load the numbers.</span></div>
+      <button type="button" id="retry">Try again</button>
+    </div>
+
+    <div class="tiles" id="tiles"></div>
+
+    <div class="card chart">
+      <div class="top">
+        <span class="ctitle" id="ctitle"></span><span class="csub" id="csub"></span><span class="psub" id="psub"></span><span class="grow"></span>
+        <div class="legend legend-t" id="legend"></div>
+      </div>
+      <div class="since" id="since"></div>
+      <div class="readout" id="readout"></div>
+      <div class="plot">
+        <div class="yaxis" id="yaxis"></div>
+        <div class="area">
+          <div class="grid"><div class="bars" id="bars"></div><div class="overlay" id="overlay">Loading…</div></div>
+          <div class="xlabels" id="xlabels"></div>
+        </div>
+      </div>
+      <div class="legend legend-b" id="legendB"></div>
+    </div>
+
+    <div class="card books">
+      <div class="bhead"><span class="btitle">Top books</span><span class="bsub"><span class="bs-d">in this period and these platforms · click a book to filter, a heading to sort</span><span class="bs-t">tap a book to filter, a heading to sort</span></span></div>
+      <div class="cols heads" id="heads"></div>
+      <div id="rows"></div>
+    </div>
+
+    <div class="card mbooks">
+      <div class="mhead"><span class="mtitle">Top books</span><span class="msub" id="msub"></span></div>
+      <div id="mrows"></div>
     </div>
   </div>
-
-  <div class="card books">
-    <div class="bhead"><span class="btitle">Top books</span><span class="bsub">in this period and these platforms · click a book to filter, a heading to sort</span></div>
-    <div class="cols heads" id="heads"></div>
-    <div id="rows"></div>
-  </div>
-
-  <div class="foot" id="foot"></div>
 </div>
 <script>
 (function () {
   "use strict";
-  var DAY = 864e5, H = 240, LOADING_MS = 500, SLICE = "Slice 288";
+  var DAY = 864e5, LOADING_MS = 500;
   var PREFIX = location.pathname.indexOf("/dino/") === 0 ? "/dino" : "";
   var PL = [
     { id: "android", label: "Android", color: "#4FB860" },
@@ -157,21 +428,80 @@
     { id: "sonos", label: "Sonos", color: "#2b2540" },
     { id: "alexa", label: "Alexa", color: "#4BB3D9" }
   ];
-  var PRESETS = [["today", "Today"], ["7", "Last 7 days"], ["30", "Last 30 days"], ["year", "This year"]];
+  var PRESETS = [["today", "Today", "Today"], ["7", "Last 7 days", "7 days"], ["30", "Last 30 days", "30 days"], ["year", "This year", "Year"]];
   var GROUPS = [["day", "Day"], ["week", "Week"], ["month", "Month"]];
-  var TILES = [["downloads", "Book downloads"], ["listens", "Listens"], ["hours", "Hours listened"]];
+  var TILES = [["downloads", "Book downloads", "Downloads"], ["listens", "Listens", "Listens"], ["hours", "Hours listened", "Hours"]];
   var STEPS = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000, 10000];
-  var st = { preset: "30", group: "day", book: "all", plats: { android: true, iphone: true, ipad: true, windows: true, sonos: true, alexa: false }, metric: "downloads", sort: "downloads" };
-  var TIMEOUT_MS = 20000;
-  var stories = [], loading = true, failed = false, token = 0, timer = 0, overlayOn = false, lastHtml = {}, ctl = null, abortTimer = 0;
+  // Per layout: how many date labels, how many y labels, and which bar-gap scale (wide: 1/3/8 px, narrow: 0/2/6 px).
+  var LAY = {
+    desktop: { labels: 14, ticks: 5, narrow: false }, side: { labels: 14, ticks: 5, narrow: false }, tabp: { labels: 8, ticks: 5, narrow: false },
+    phonep: { labels: 5, ticks: 3, narrow: true }, phonel: { labels: 8, ticks: 3, narrow: true }
+  };
+  var st = { preset: "30", group: "day", book: "all", plats: { android: true, iphone: true, ipad: true, windows: true, sonos: true, alexa: false }, metric: "downloads", sort: "downloads", picked: null };
+  var TIMEOUT_MS = 20000, FOCUS_ATTRS = ["data-preset", "data-group", "data-plat", "data-metric"];
+  var stories = [], storiesPending = true, storiesFailed = false, loading = true, failed = false, token = 0, timer = 0, overlayOn = false, lastHtml = {}, ctl = null, abortTimer = 0, layout = "desktop";
 
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function fmt(n) { return Math.round(n).toLocaleString("en-GB"); }
-  function hrs(sec) { var h = Math.round(sec / 360) / 10; return h < 10 ? h.toFixed(1) : fmt(h); }
+  // Time never shows as "0.0": 0, under 1 min, whole minutes, one decimal up to 10 h, then whole hours (mock note "Short listening times").
+  // Callers pass seconds that went through hours (x / 3600 * 3600), so they are rounded to whole seconds first: 59.9999999 s is 1 min, not "under 1 min".
+  // A value that rounds to 60 min is shown in hours (3599 s is 1.0 h, never "60 min").
+  function fdur(s) {
+    s = Math.round(s);
+    if (s <= 0) return "0";
+    if (s < 60) return "under 1 min";
+    if (Math.round(s / 60) < 60) return Math.round(s / 60) + " min";
+    if (Math.round(s / 360) < 100) return (s / 3600).toFixed(1) + " h";
+    return Math.round(s / 3600).toLocaleString("en-GB") + " h";
+  }
+  function pad2(n) { return ("0" + n).slice(-2); }
   function iso(t) { return new Date(t).toISOString().slice(0, 10); }
   function ms(day) { return Date.parse(day + "T00:00:00Z"); }
   function fmtDay(t, o) { return new Date(t).toLocaleDateString("en-GB", Object.assign({ timeZone: "UTC" }, o)); }
+
+  // The layout comes from the viewport (same sizes as the mock frames) and is written to <html> for the stylesheet.
+  function pickLayout() {
+    if (window.matchMedia("(max-height: 500px) and (orientation: landscape)").matches) return "phonel";
+    var w = window.innerWidth;
+    return w <= 600 ? "phonep" : w <= 1099 ? "tabp" : w <= 1279 ? "side" : "desktop";
+  }
+  function setFlag(root, name, on) { if (on) root.setAttribute(name, ""); else root.removeAttribute(name); }
+  function applyLayout() {
+    var next = pickLayout(), root = document.documentElement;
+    if (next === layout && root.getAttribute("data-layout") === next) return false;
+    layout = next;
+    root.setAttribute("data-layout", next);
+    setFlag(root, "data-phone", next === "phonep" || next === "phonel");
+    setFlag(root, "data-compact", next === "side" || next === "phonep" || next === "phonel");
+    if (!isPhone()) setSheet(false);
+    return true;
+  }
+  function isPhone() { return layout === "phonep" || layout === "phonel"; }
+  function setSheet(open) {
+    var root = document.documentElement;
+    if (open === root.hasAttribute("data-sheet")) return;
+    setFlag(root, "data-sheet", open);
+    $("fbtn").setAttribute("aria-expanded", open ? "true" : "false");
+    setSheetRole(open);
+    if (open) $("done").focus(); else if (isPhone()) $("fbtn").focus();
+  }
+  // On a phone the open sheet is a modal dialog; elsewhere the filters are plain page controls and carry no dialog role.
+  function setSheetRole(open) {
+    var sheet = $("filters");
+    if (open && isPhone()) { sheet.setAttribute("role", "dialog"); sheet.setAttribute("aria-modal", "true"); sheet.setAttribute("aria-label", "Filters"); }
+    else { sheet.removeAttribute("role"); sheet.removeAttribute("aria-modal"); sheet.removeAttribute("aria-label"); }
+  }
+  // Tab stays inside the open sheet.
+  function trapTab(e) {
+    if (e.key !== "Tab" || !document.documentElement.hasAttribute("data-sheet")) return;
+    var items = [].slice.call($("filters").querySelectorAll("button, select")).filter(function (el) { return el.offsetParent !== null && !el.disabled; });
+    if (!items.length) return;
+    var first = items[0], last = items[items.length - 1], a = document.activeElement;
+    if (!$("filters").contains(a)) { e.preventDefault(); first.focus(); }
+    else if (e.shiftKey && a === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && a === last) { e.preventDefault(); first.focus(); }
+  }
 
   function todayUtc() { var n = new Date(); return Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate()); }
   function range() {
@@ -226,31 +556,70 @@
   function alexaLive() { var d = sd(); return !!(d && Array.isArray(d.platforms) && d.platforms.indexOf("alexa") >= 0); }
   function done() { loading = false; overlayOn = false; clearTimeout(timer); clearTimeout(abortTimer); paint(); }
 
+  // The store list gives the book titles and covers. Until it answers the page counts as loading (book rows are held back, so titles never jump in
+  // over short ids) and say "Loading books…" in their own place once the numbers are drawn; the chart overlay belongs to the numbers only. On failure the rows keep short ids and the footer says titles didn't load.
   function loadStories() {
-    return fetch(PREFIX + "/api/stories").then(function (r) { return r.ok ? r.json() : { stories: [] }; })
+    var storiesCtl = new AbortController(), storiesAbort = setTimeout(function () { storiesCtl.abort(); }, TIMEOUT_MS);
+    return fetch(PREFIX + "/api/stories", { signal: storiesCtl.signal }).then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
       .then(function (b) { stories = (b.stories || []).map(function (s) { return { id: s.id, title: typeof s.title === "string" ? s.title : "Book " + String(s.id).slice(0, 8), cover: s.coverUrl }; }); })
-      .catch(function () { stories = []; });
+      .catch(function (e) { console.error("stats: book titles failed to load", e); stories = []; storiesFailed = true; })
+      .then(function () { clearTimeout(storiesAbort); storiesPending = false; paint(); });
   }
-  // The store list, "Own books", then every book the shown counts name or `want` (a book id) that the store list lacks (retired, unpublished, or the list failed to load), so the select and the rows can always show it.
+  // The store list, then every book the shown counts name or `want` (a book id) that the store list lacks (retired, unpublished, or the list failed to load), so the select and the rows can always show it.
+  // Own books are not counted (mock note "Filters"), so the API's `own` bucket never gets a row or an option.
+  var OWN_BOOK = "own";
+  // Built once per paint and book id (render clears the cache).
+  var bookCache = {};
   function bookList(want) {
-    var list = stories.concat([{ id: "own", title: "Own books", cover: null }]), known = {}, d = sd();
+    if (!bookCache[want]) bookCache[want] = buildBookList(want);
+    return bookCache[want];
+  }
+  function buildBookList(want) {
+    var list = stories.slice(), known = {}, d = sd();
     list.forEach(function (b) { known[b.id] = true; });
     var extra = (d && Array.isArray(d.books) ? d.books.map(function (t) { return t.book; }) : []).concat(want === "all" ? [] : [want]);
     extra.forEach(function (id) {
-      if (!known[id]) { known[id] = true; list.push({ id: id, title: "Book " + String(id).slice(0, 8), cover: null }); }
+      if (!known[id] && id !== OWN_BOOK) { known[id] = true; list.push({ id: id, title: "Book " + String(id).slice(0, 8), cover: null }); }
     });
     return list;
+  }
+  function bookTitle(id) {
+    if (id === "all") return "All books";
+    return (bookList(id).filter(function (b) { return b.id === id; })[0] || { title: "Book" }).title;
+  }
+
+  // Filter summary for the phone button and the landscape line: <book> · <all platforms | N platforms> · by <day|week|month>.
+  function summary() {
+    // "All platforms" means the five non-Alexa platforms (the mock); Alexa starts off, so it never changes the default wording.
+    var main = PL.filter(function (p) { return p.id !== "alexa"; });
+    var on = PL.filter(function (p) { return st.plats[p.id]; }).length;
+    var all = main.every(function (p) { return st.plats[p.id]; }) && !st.plats.alexa;
+    return bookTitle(st.book) + " · " + (all ? "all platforms" : on + " platforms") + " · by " + st.group;
   }
 
   function pill(on, dim) { return (on ? "on" : "") + (dim ? " dim" : ""); }
   // Rebuilds a control only when its markup changed, so an open dropdown or a focused chip survives the repaints of the overlay timer and the responses.
   function setHtml(id, html) {
     if (lastHtml[id] === html) return false;
-    lastHtml[id] = html; $(id).innerHTML = html; return true;
+    var box = $(id), active = document.activeElement, key = active && box.contains(active) ? focusKey(active) : null;
+    lastHtml[id] = html; box.innerHTML = html;
+    if (key !== null) refocus(box, key);
+    return true;
+  }
+  // A focused control inside a rebuilt box gets its focus back (found by its data attribute), so a keyboard user keeps their place.
+  function focusKey(el) {
+    for (var i = 0; i < FOCUS_ATTRS.length; i++) if (el.hasAttribute(FOCUS_ATTRS[i])) return [FOCUS_ATTRS[i], el.getAttribute(FOCUS_ATTRS[i])];
+    return null;
+  }
+  function refocus(box, key) {
+    var el = box.querySelector("[" + key[0] + '="' + key[1] + '"]');
+    if (el) el.focus();
   }
   function paintFilters() {
     var today = st.preset === "today";
-    setHtml("presets", PRESETS.map(function (p) { return '<button type="button" class="' + pill(st.preset === p[0]) + '" data-preset="' + p[0] + '">' + p[1] + "</button>"; }).join(""));
+    var presets = PRESETS.map(function (p) { return '<button type="button" class="' + pill(st.preset === p[0]) + '" data-preset="' + p[0] + '"><span class="pl-l">' + p[1] + '</span><span class="pl-s">' + p[2] + "</span></button>"; }).join("");
+    setHtml("presets", presets);
+    setHtml("presetsTop", presets);
     setHtml("groups", GROUPS.map(function (g) { return '<button type="button" class="' + pill(st.group === g[0], today && g[0] !== "day") + '" data-group="' + g[0] + '">' + g[1] + "</button>"; }).join(""));
     var sel = $("book");
     setHtml("book", '<option value="all">All books</option>' + bookList(st.book).map(function (b) { return '<option value="' + esc(b.id) + '">' + esc(b.title) + "</option>"; }).join(""));
@@ -260,11 +629,12 @@
       return '<button type="button" class="chip' + (on ? " on" : "") + (live ? "" : " off-live") + '" data-plat="' + p.id + '"' + (live ? "" : ' title="Counts start when Slice 282 ships"') +
         (on ? ' style="border-color:' + p.color + '"' : "") + '><span class="dot" style="background:' + p.color + '"></span>' + p.label + (live ? "" : '<span class="note">not live yet</span>') + "</button>";
     }).join(""));
+    $("fsum").textContent = summary();
   }
 
   function sum(rows, k) { return rows.reduce(function (a, r) { return a + r[k]; }, 0); }
   // The one state value: "loading" | "ready" | "error" (with `data` set: previous numbers greyed; with `data` null: nothing to show).
-  function viewState() { return loading ? "loading" : failed ? "error" : "ready"; }
+  function viewState() { return loading || storiesPending ? "loading" : failed ? "error" : "ready"; }
   // Every paint goes through here. An exception while painting is logged and shows the error banner, never swallowed.
   function paint() {
     try { render(viewState()); } catch (e) {
@@ -275,6 +645,7 @@
   }
   function render(state) {
     var err = state === "error", blank = !shown, data = sd();
+    bookCache = {};
     document.body.className = state === "loading" ? (overlayOn ? "loading" : "") : err && shown ? "stale" : blank ? "blank" : "";
     $("error").className = "error" + (err ? " show" : "");
     $("overlay").className = "overlay" + (overlayOn ? " show" : "");
@@ -287,17 +658,20 @@
     var from = data && data.listensFrom ? ms(data.listensFrom.day) : null;
     var before = from === null || r[0] < from;
     var version = data && data.listensFrom ? data.listensFrom.version : "1.115";
-    var since = "Listens and hours count from Dino " + version + (from === null ? "" : ", " + fmtDay(from, { day: "numeric", month: "short", year: "numeric" })) + " (" + SLICE + ").";
+    var since = "Listens and hours count from Dino " + version + (from === null ? "" : ", " + fmtDay(from, { day: "numeric", month: "short", year: "numeric" })) + " (Slice 288).";
     paintTiles(dl, li, sec, est, before, from, blank);
     paintChart(r, sel, before, since, blank);
-    paintTable(r, blank);
+    paintTable(blank || storiesPending);
+    if (storiesPending && !blank) paintBooksWaiting();
     paintFoot();
   }
 
   function paintHead() {
     var d = sd(), at = d && d.updatedAt ? new Date(d.updatedAt) : null;
-    var last = at ? " · last at " + ("0" + at.getUTCHours()).slice(-2) + ":" + ("0" + at.getUTCMinutes()).slice(-2) + " UTC" : "";
-    $("updated").textContent = "Counts of events, never people. Updated hourly" + last + ".";
+    var hhmm = at ? pad2(at.getUTCHours()) + ":" + pad2(at.getUTCMinutes()) + " UTC" : "";
+    $("updated").textContent = "Counts of events, never people. Updated hourly" + (hhmm ? " · last at " + hhmm : "") + ".";
+    $("updatedS").textContent = hhmm ? "Updated " + hhmm : "Updated hourly";
+    $("sumline").textContent = summary() + " · " + (hhmm ? "updated " + hhmm : "updated hourly");
   }
 
   function paintTiles(dl, li, sec, est, before, from, none) {
@@ -305,11 +679,11 @@
     var defs = {
       downloads: { value: none ? dash : fmt(dl), sub: "Store books, from the apps. Speakers stream and don’t download." },
       listens: { value: none ? dash : fmt(li), sub: before ? "Counted from " + (from === null ? "Dino 1.115" : fmtDay(from, { day: "numeric", month: "short", year: "numeric" })) + " · played for 30 s or more" : "Played for 30 s or more" },
-      hours: { value: none ? dash : hrs(sec + est), sub: est > 0 ? "incl. " + hrs(est) + " h estimated for Sonos" : "Real played time from the app" }
+      hours: { value: none ? dash : fdur(sec + est), sub: est > 0 ? "incl. " + fdur(est) + " estimated for Sonos" : "Real played time from the app" }
     };
     setHtml("tiles", TILES.map(function (t) {
       var on = st.metric === t[0], d = defs[t[0]];
-      return '<button type="button" class="tile' + (on ? " on" : "") + '" data-metric="' + t[0] + '"><span class="name">' + t[1] + '<span class="shown">' + (on ? "IN THE CHART" : "") + '</span></span><span class="num">' + d.value + '</span><span class="tsub">' + esc(d.sub) + "</span></button>";
+      return '<button type="button" class="tile' + (on ? " on" : "") + '" data-metric="' + t[0] + '"><span class="name"><span class="nl-l">' + t[1] + '</span><span class="nl-s">' + t[2] + '</span><span class="shown">' + (on ? "IN THE CHART" : "") + '</span></span><span class="num">' + d.value + '</span><span class="tsub">' + esc(d.sub) + "</span></button>";
     }).join(""));
   }
 
@@ -328,105 +702,193 @@
   }
 
   function hatch(color) { return "repeating-linear-gradient(135deg," + color + " 0 3px,#b8b2c8 3px 6px)"; }
-  function paintChart(r, sel, before, since, blank) {
-    var bv = bucketValues(r, sel), hours = st.metric === "hours";
-    var max = Math.max.apply(null, [1].concat(bv.map(function (b) { return b.parts.reduce(function (a, x) { return a + x.v + x.e; }, 0); })));
-    var step = STEPS.filter(function (s) { return s * 4 >= max; })[0] || 20000, top = step * 4;
-    var n = bv.length, every = Math.ceil(n / 14), gap = n > 60 ? 1 : n > 20 ? 3 : 8;
-    var label = function (k) { return qy().group === "month" ? fmtDay(ms(k), { month: "short" }) : fmtDay(ms(k), { day: "numeric", month: "short" }); };
-    var unit = hours ? " h" : "";
+  function totalOf(b) { return b.parts.reduce(function (a, x) { return a + x.v + x.e; }, 0); }
+  function barGap(n) { return LAY[layout].narrow ? (n > 60 ? 0 : n > 20 ? 2 : 6) : (n > 60 ? 1 : n > 20 ? 3 : 8); }
+  function segHtml(s) { return '<div style="height:' + s.h + "%;background:" + s.bg + ";border-radius:" + s.r + '"></div>'; }
+  // A bar's segments are heights in percent of the plot (min 0.4%), so one plot works at 120, 170, 200 and 240 px.
+  function barSegs(b, top) {
+    var segs = [];
+    b.parts.forEach(function (x) {
+      if (x.v > 0) segs.push({ h: Math.max(0.4, x.v / top * 100).toFixed(2), bg: x.p.color, r: "0" });
+      if (x.e > 0) segs.push({ h: Math.max(0.4, x.e / top * 100).toFixed(2), bg: hatch(x.p.color), r: "0" });
+    });
+    if (segs.length) segs[segs.length - 1].r = "4px 4px 0 0";
+    return segs;
+  }
+  // The tapped bar's line above the chart: <name> · <total> — <Platform amount>, ...
+  function readoutText(b, fv) {
+    var nm = qy().group === "day" ? fmtDay(ms(b.k), { weekday: "short" }) + " " + fmtDay(ms(b.k), { day: "numeric", month: "short" })
+      : qy().group === "week" ? "Week of " + fmtDay(ms(b.k), { day: "numeric", month: "short" })
+      : fmtDay(ms(b.k), { month: "long", year: "numeric" });
+    var parts = b.parts.filter(function (x) { return x.v + x.e > 0; }).map(function (x) { return x.p.label + " " + fv(x.v + x.e); });
+    return nm + " · " + fv(totalOf(b)) + (parts.length ? " — " + parts.join(", ") : "");
+  }
+  function bucketLabel(key) { return qy().group === "month" ? fmtDay(ms(key), { month: "short" }) : fmtDay(ms(key), { day: "numeric", month: "short" }); }
+  // Bars, x labels and y labels. `c` is the scale: step, top, fv (value formatter), pk (picked bar) and tapping.
+  function paintBars(bv, c, blank) {
+    var n = bv.length, every = Math.ceil(n / LAY[layout].labels), gap = barGap(n);
     $("bars").style.gap = gap + "px"; $("xlabels").style.gap = gap + "px";
-    $("bars").innerHTML = blank ? "" : bv.map(function (b) {
-      var segs = [], tot = 0;
-      b.parts.forEach(function (x) {
-        if (x.v > 0) segs.push({ h: Math.max(1, x.v / top * H).toFixed(1), bg: x.p.color });
-        if (x.e > 0) segs.push({ h: Math.max(1, x.e / top * H).toFixed(1), bg: hatch(x.p.color) });
-        tot += x.v + x.e;
-      });
-      var tip = label(b.k) + ": " + (hours ? tot.toFixed(1) : fmt(tot)) + unit + "\n" + b.parts.map(function (x) { return x.p.label + " " + (hours ? (x.v + x.e).toFixed(1) : fmt(x.v)); }).join("\n");
-      return '<div class="bar" title="' + esc(tip) + '">' + segs.map(function (s, i) {
-        return '<div style="height:' + s.h + "px;background:" + s.bg + ";border-radius:" + (i === segs.length - 1 ? "4px 4px 0 0" : "0") + '"></div>';
-      }).join("") + "</div>";
+    $("bars").className = "bars" + (c.tapping ? " has-pick" : "");
+    var rove = c.pk !== null ? c.pk : 0;
+    var focused = document.activeElement && $("bars").contains(document.activeElement) ? document.activeElement.getAttribute("data-bar") : null;
+    $("bars").innerHTML = blank ? "" : bv.map(function (b, i) {
+      var tip = bucketLabel(b.k) + ": " + c.fv(totalOf(b)) + "\n" + b.parts.map(function (x) { return x.p.label + " " + c.fv(x.v + x.e); }).join("\n");
+      // Only the touch layouts act on a tap, so only they get button semantics (one tab stop, arrow keys move between bars); on desktop a bar is a hover tooltip.
+      var sem = layout === "desktop" ? "" : ' role="button" tabindex="' + (i === rove ? 0 : -1) + '" aria-pressed="' + (i === c.pk) + '" aria-label="' + esc(tip.replace(/\n/g, ", ")) + '"';
+      return '<div class="bar' + (i === c.pk ? " pk" : "") + '" data-bar="' + i + '" data-key="' + esc(b.k) + '"' + sem + ' title="' + esc(tip) + '">' + barSegs(b, c.top).map(segHtml).join("") + "</div>";
     }).join("");
-    $("xlabels").innerHTML = blank ? "" : bv.map(function (b, i) { return "<span>" + (i % every === 0 ? label(b.k) : "") + "</span>"; }).join("");
-    $("yaxis").innerHTML = blank ? "" : [4, 3, 2, 1, 0].map(function (i) { return "<span>" + fmt(step * i) + "</span>"; }).join("");
-    $("legend").innerHTML = livePlatforms(qy().plats).map(function (p) {
+    if (focused !== null) refocus($("bars"), ["data-bar", focused]);
+    $("xlabels").innerHTML = blank ? "" : bv.map(function (b, i) { return "<span>" + (i % every === 0 ? bucketLabel(b.k) : "") + "</span>"; }).join("");
+    var ticks = LAY[layout].ticks === 3 ? [4, 2, 0] : [4, 3, 2, 1, 0];
+    $("yaxis").innerHTML = blank ? "" : ticks.map(function (i) { return "<span>" + fmt(c.step * i) + "</span>"; }).join("");
+  }
+  function paintLegend(hours) {
+    var legend = livePlatforms(qy().plats).map(function (p) {
       var est = p.id === "sonos" && hours;
       return '<span><i style="background:' + (est ? hatch("#2b2540") : p.color) + '"></i>' + p.label + (est ? " (estimate)" : "") + "</span>";
     }).join("");
-    var book = qy().book === "all" ? "All books" : (bookList(qy().book).filter(function (b) { return b.id === qy().book; })[0] || { title: "Book" }).title;
-    var name = { downloads: "Book downloads", listens: "Listens", hours: "Hours listened" }[st.metric];
+    $("legend").innerHTML = legend; $("legendB").innerHTML = legend;
+  }
+  function paintChartTitles(r, useMin, since, before) {
+    var name = { downloads: "Book downloads", listens: "Listens", hours: useMin ? "Minutes listened" : "Hours listened" }[st.metric];
     $("ctitle").textContent = name + " per " + qy().group;
-    $("csub").textContent = book + " · " + fmtDay(r[0], { day: "numeric", month: "short" }) + " – " + fmtDay(r[1], { day: "numeric", month: "short", year: "numeric" });
+    $("csub").textContent = bookTitle(qy().book) + " · " + fmtDay(r[0], { day: "numeric", month: "short" }) + " – " + fmtDay(r[1], { day: "numeric", month: "short", year: "numeric" });
+    $("psub").textContent = fmtDay(r[0], { day: "numeric", month: "short" }) + " – " + fmtDay(r[1], { day: "numeric", month: "short" });
     $("since").textContent = since;
     $("since").className = "since" + (st.metric !== "downloads" && before ? " show" : "");
   }
+  function paintChart(r, sel, before, since, blank) {
+    var bv = bucketValues(r, sel), hours = st.metric === "hours";
+    var rawMax = Math.max.apply(null, [0].concat(bv.map(totalOf)));
+    // No bar reaches an hour: the chart switches to minutes (the tile stays "Hours listened").
+    var useMin = hours && !blank && rawMax < 1, k = useMin ? 60 : 1;
+    bv.forEach(function (b) { b.parts.forEach(function (x) { x.v *= k; x.e *= k; }); });
+    var step = STEPS.filter(function (s) { return s * 4 >= Math.max(1, rawMax * k); })[0] || 20000;
+    // The pick is the bucket's key, so a new query (another platform or book, a new range) never leaves it on a different bucket.
+    var pk = null;
+    bv.forEach(function (b, i) { if (b.k === st.picked) pk = i; });
+    if (pk === null) st.picked = null;
+    var tapping = pk !== null && layout !== "desktop";
+    var fv = function (v) { return hours ? fdur(v * (useMin ? 60 : 3600)) : fmt(v); };
+    paintBars(bv, { step: step, top: step * 4, fv: fv, pk: pk, tapping: tapping }, blank);
+    paintLegend(hours);
+    paintChartTitles(r, useMin, since, before);
+    $("readout").textContent = tapping && !blank ? readoutText(bv[pk], fv) : "Tap a bar to see its numbers.";
+    $("readout").className = "readout" + (tapping && !blank ? " pk" : "");
+  }
 
   var SORT_KEY = { downloads: "dl", listens: "li", hours: "h" };
-  function paintTable(r, blank) {
-    var byBook = {}, d = sd(), pick = qy().book;
+  var ZERO = { downloads: 0, listens: 0, seconds: 0, secondsEstimated: 0 };
+  // One entry per book (includes books the counts name but the store list lacks). The Worker leaves the own bucket out of the series and the book totals, so the rows add up to the tiles.
+  function bookRows() {
+    var byBook = {}, d = sd();
     (d && Array.isArray(d.books) ? d.books : []).forEach(function (b) { byBook[b.book] = b; });
-    var list = bookList(pick); // includes books the counts name but the store list lacks, so the rows add up to the tiles
-    var rows = list.map(function (b) {
-      var t = byBook[b.id] || { downloads: 0, listens: 0, seconds: 0, secondsEstimated: 0 };
+    return bookList(qy().book).map(function (b) {
+      var t = byBook[b.id] || ZERO;
       return { b: b, dl: t.downloads, li: t.listens, h: (t.seconds + t.secondsEstimated) / 3600 };
     });
-    var sk = SORT_KEY[st.sort];
+  }
+  function maxOf(rows, k) { return Math.max.apply(null, [1].concat(rows.map(function (x) { return x[k]; }))); }
+  function coverHtml(x) {
+    var initial = x.b.cover ? "" : esc((x.b.title.replace(/^The /, "")[0] || "").toUpperCase());
+    return '<div class="cover" ' + (x.b.cover ? 'data-cover="' + esc(x.b.cover) + '"' : "") + ">" + initial + "</div>";
+  }
+  function paintTable(blank) {
+    var rows = bookRows(), pick = qy().book, sk = SORT_KEY[st.sort];
     rows.sort(function (x, y) { return y[sk] - x[sk]; });
-    var mx = { dl: Math.max.apply(null, [1].concat(rows.map(function (x) { return x.dl; }))), li: Math.max.apply(null, [1].concat(rows.map(function (x) { return x.li; }))), h: Math.max.apply(null, [1].concat(rows.map(function (x) { return x.h; }))) };
-    $("heads").innerHTML = "<span>Book</span>" + [["downloads", "Downloads"], ["listens", "Listens"], ["hours", "Hours"]].map(function (h, i) {
-      return '<button type="button" class="' + (st.sort === h[0] ? "sorted" : "") + (i === 0 ? "" : " ") + '" data-sort="' + h[0] + '">' + h[1] + (st.sort === h[0] ? " ↓" : "") + "</button>";
+    var mx = { dl: maxOf(rows, "dl"), li: maxOf(rows, "li"), h: maxOf(rows, "h") };
+    $("heads").innerHTML = '<span><span class="hb">Book</span><span class="ht">Top books</span></span>' + [["downloads", "Downloads"], ["listens", "Listens"], ["hours", "Hours"]].map(function (h) {
+      return '<button type="button" class="' + (st.sort === h[0] ? "sorted" : "") + '" data-sort="' + h[0] + '">' + h[1] + (st.sort === h[0] ? " ↓" : "") + "</button>";
     }).join("");
     $("rows").innerHTML = blank ? "" : rows.map(function (x, i) {
-      var cover = x.b.cover ? 'data-cover="' + esc(x.b.cover) + '"' : "";
-      var initial = x.b.cover ? "" : (x.b.id === "own" ? "✎" : esc((x.b.title.replace(/^The /, "")[0] || "").toUpperCase()));
-      return '<div class="cols row' + (pick === x.b.id ? " picked" : "") + '" data-book="' + esc(x.b.id) + '"><div class="who"><span class="rank">' + (i + 1) + '</span><div class="cover" ' + cover + '>' + initial + '</div><span class="btn">' + esc(x.b.title) + "</span></div>" +
+      return '<div class="cols row' + (pick === x.b.id ? " picked" : "") + '" data-book="' + esc(x.b.id) + '"><div class="who"><span class="rank">' + (i + 1) + "</span>" + coverHtml(x) + '<span class="btn">' + esc(x.b.title) + "</span></div>" +
         [["dl", x.dl, "downloads"], ["li", x.li, "listens"], ["h", x.h, "hours"]].map(function (c) {
-          var text = x.b.id === "own" && c[0] === "dl" ? "—" : (c[0] === "h" ? hrs(c[1] * 3600) : fmt(c[1]));
-          var hide = st.sort !== c[2] ? " hide-phone" : "";
-          return '<div class="cell' + (c[0] === sk ? " sorted" : "") + hide + '"><span class="n">' + text + '</span><div class="track"><div style="width:' + (c[1] / mx[c[0]] * 100).toFixed(0) + '%"></div></div></div>';
+          var text = c[0] === "h" ? fdur(c[1] * 3600) : fmt(c[1]);
+          return '<div class="cell' + (c[0] === sk ? " sorted" : "") + '"><span class="n">' + text + '</span><div class="track"><div style="width:' + (c[1] / mx[c[0]] * 100).toFixed(0) + '%"></div></div></div>';
         }).join("") + "</div>";
     }).join("");
+    paintMobileList(rows, mx, blank);
     paintCovers();
-    markPhoneHeads();
+  }
+  // Phone portrait list: follows the chart's metric, the other two numbers in words under the title (a zero is left out).
+  function paintMobileList(rows, mx, blank) {
+    var mk = SORT_KEY[st.metric], pick = qy().book;
+    var list = rows.slice().sort(function (x, y) { return y[mk] - x[mk]; });
+    var text = function (x, k) { return k === "dl" ? fmt(x.dl) : k === "li" ? fmt(x.li) : fdur(x.h * 3600); };
+    var words = { dl: " downloads", li: " listens", h: "" };
+    $("msub").textContent = "by " + st.metric + ", like the chart · tap to filter";
+    $("mrows").innerHTML = blank ? "" : list.map(function (x, i) {
+      var other = ["dl", "li", "h"].filter(function (k) { return k !== mk && x[k] > 0; }).map(function (k) { return text(x, k) + words[k]; }).join(" · ");
+      return '<div class="mrow' + (pick === x.b.id ? " picked" : "") + '" data-book="' + esc(x.b.id) + '"><span class="rank">' + (i + 1) + "</span>" + coverHtml(x) +
+        '<div class="mid"><span class="mt">' + esc(x.b.title) + '</span><span class="mo">' + esc(other) + '</span></div><div class="mr"><span class="mn">' + text(x, mk) +
+        '</span><div class="mtrack"><div style="width:' + (x[mk] / mx[mk] * 100).toFixed(0) + '%"></div></div></div></div>';
+    }).join("");
   }
   // The cover URL goes through the DOM (a CSS string, JSON-quoted), never through markup, so a quote or bracket in it cannot leave the url().
   function paintCovers() {
-    var els = $("rows").querySelectorAll(".cover[data-cover]");
+    var els = document.querySelectorAll("#rows .cover[data-cover], #mrows .cover[data-cover]");
     for (var i = 0; i < els.length; i++) {
       var u = els[i].getAttribute("data-cover");
-      if (/^(https:\/\/|\/)/.test(u)) els[i].style.backgroundImage = "url(" + JSON.stringify(u) + ")";
+      if (isOwnCover(u)) els[i].style.backgroundImage = "url(" + JSON.stringify(u) + ")";
     }
   }
-  function markPhoneHeads() {
-    var btns = $("heads").querySelectorAll("button");
-    for (var i = 0; i < btns.length; i++) if (!btns[i].classList.contains("sorted")) btns[i].classList.add("hide-phone");
+  // Only this site's own cover path (/api/stories/<id>/cover, with its version query) is fetched: never another host.
+  function isOwnCover(u) {
+    return typeof u === "string" && u.indexOf(PREFIX + "/api/stories/") === 0 && /^\/api\/stories\/[0-9a-f]{32}\/cover(\?[A-Za-z0-9=&_.-]*)?$/.test(u.slice(PREFIX.length));
+  }
+
+  // The numbers are drawn but the book titles are not: only the book rows say so, the tiles and the chart stay readable.
+  function paintBooksWaiting() {
+    var note = '<div class="rowsload" role="status">Loading books…</div>';
+    $("rows").innerHTML = note; $("mrows").innerHTML = note;
   }
 
   function paintFoot() {
     var d = sd(), from = d && d.firstDay ? fmtDay(ms(d.firstDay), { day: "numeric", month: "short", year: "numeric" }) : "the first rollup";
-    $("foot").textContent = "Downloads are store-book downloads from the apps. A listen is a book played for 30 seconds or more. Hours are real played time from the app; for speakers without reported time, the book’s length (hatched, estimate). Weeks start Monday, UTC. Data from " + from + "; kept daily in D1 after Analytics Engine drops raw rows.";
+    $("footL").textContent = "Downloads are store-book downloads from the apps. A listen is a book played for 30 seconds or more. Hours are real played time from the app; for speakers without reported time, the book’s length (hatched, estimate). Weeks start Monday, UTC. Data from " + from + "; kept daily in D1 after Analytics Engine drops raw rows.";
+    $("footT").textContent = "A listen is a book played for 30 s or more. Sonos hours are the book’s length (hatched, estimate). Weeks start Monday, UTC. Data from " + from + ".";
+    if (storiesFailed) { $("footL").textContent += " Book titles couldn’t load, so books show a short id."; $("footT").textContent += " Book titles couldn’t load."; }
   }
 
   function onClick(e) {
-    var el = e.target.closest("[data-preset],[data-group],[data-plat],[data-metric],[data-sort],[data-book]");
+    var bar = e.target.closest("[data-bar]");
+    if (bar) { if (layout !== "desktop") { var key = bar.getAttribute("data-key"); st.picked = st.picked === key ? null : key; paint(); } return; }
+    var el = e.target.closest("[data-preset],[data-group],[data-plat],[data-metric],[data-sort],[data-book],[data-act]");
     if (!el) return;
     var d = el.dataset;
-    if (d.preset) { st.group = d.preset === "today" ? "day" : (d.preset === "year" && st.group === "day" ? "week" : st.group); st.preset = d.preset; load(); }
-    else if (d.group) { if (st.preset === "today") return; st.group = d.group; load(); }
+    if (d.act) { setSheet(d.act === "open"); return; }
+    if (d.preset) { st.group = d.preset === "today" ? "day" : (d.preset === "year" && st.group === "day" ? "week" : st.group); st.preset = d.preset; st.picked = null; load(); }
+    else if (d.group) { if (st.preset === "today") return; st.group = d.group; st.picked = null; load(); }
     else if (d.plat) { if (d.plat === "alexa" && !alexaLive()) return; var n = Object.assign({}, st.plats); n[d.plat] = !n[d.plat]; if (!PL.some(function (p) { return n[p.id]; })) return; st.plats = n; load(); }
-    else if (d.metric) { st.metric = d.metric; paint(); }
-    else if (d.sort) { st.sort = d.sort; paint(); }
+    else if (d.metric) { st.metric = d.metric; }
+    else if (d.sort) { st.sort = d.sort; }
     else if (d.book) { st.book = st.book === d.book ? "all" : d.book; load(); }
     paint();
   }
   document.addEventListener("click", onClick);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") setSheet(false);
+    trapTab(e);
+    var bar = e.target.closest && e.target.closest("[data-bar]");
+    if (bar && layout !== "desktop" && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); bar.click(); }
+    if (bar && layout !== "desktop") moveBarFocus(e, bar);
+  });
+  // Arrow keys, Home and End move between the bars; only the focused bar is a tab stop.
+  function moveBarFocus(e, bar) {
+    var all = bar.parentNode.children, at = Number(bar.getAttribute("data-bar"));
+    var to = { ArrowLeft: at - 1, ArrowRight: at + 1, Home: 0, End: all.length - 1 }[e.key];
+    if (to === undefined || to < 0 || to >= all.length) return;
+    e.preventDefault();
+    bar.setAttribute("tabindex", "-1"); all[to].setAttribute("tabindex", "0"); all[to].focus();
+  }
+  window.addEventListener("resize", function () { if (applyLayout()) paint(); });
   $("book").addEventListener("change", function (e) { st.book = e.target.value; load(); paint(); });
   $("retry").addEventListener("click", function () { load(); paint(); });
 
+  applyLayout();
   paint();
-  loadStories().then(function () { paint(); });
   load();
+  loadStories();
 })();
 </script>
 </body>
