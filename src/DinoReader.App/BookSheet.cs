@@ -275,6 +275,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 	{
 		_ = _scroll.ScrollToAsync(0, 0, false); // the next book's sheet opens at its header
 		_title.Text = content.Title;
+		_title.FontFamily = TextDirection.StartsRightToLeft(content.Title) ? DinoFonts.Persian : DinoFonts.Ui; // Slice 323: the title follows its own direction, as on the tile
 		_subtitle.Text = content.OriginText;
 		ShowThumb(content);
 		_exportRow.IsVisible = content.Plan.ShowExport;

@@ -1,0 +1,101 @@
+# Slice 323 (Decision 173): the kids' shelf's tile titles are in the story language picked on the shelf's language button. Story languages English (the app language) and Farsi (the shelf-audio hook adds Farsi
+# as a side language; the store is offline, so the small fixture pack is installed so the button offers Farsi). The shelf first shows the English title "The Three Little Pigs"; picking Farsi on the button
+# retitles the tile at once to its Farsi title (ShippedTitles / the book's own table); picking English again brings the English title back.
+# To see it fail against the old behaviour: before this slice the tiles stayed in the app language, so "سه بچه خوک کوچولو" never shows after the pick (the assertVisible below times out).
+# The Debug line "[ShelfTitles] en -> fa" proves the rebuild ran (and not just a lucky redraw).
+# Not yet run on a device (the device stage runs it after the reviews).
+# expect-log: HOOK test-store ok offline
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK shelf-audio started fa
+# expect-log: HOOK install-audio-pack ok
+# expect-log: [ShelfTitles] en -> fa
+# expect-log: [ShelfTitles] fa -> en
+appId: uk.sirous.dinoreader.dbg
+name: Shelf titles follow the story language picked on the shelf
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, side languages, the remembered shelf pick, installed audio packs, a stored shelf order); fine here: skip-first-run puts the test books back, the hook adds Farsi again and no pack may be installed beforehand.
+    clearState: true
+    permissions:
+      all: allow
+    arguments:
+      cmd: test-store
+      mode: offline
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: shelf-audio
+      lang: fa
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: install-audio-pack
+      id: three-little-pigs
+      lang: fa
+# The English title shows before the pick.
+- extendedWaitUntil:
+    visible: "The Three Little Pigs"
+    timeout: 30000
+# The shelf button appears once Farsi is installed for a book on the shelf; its menu is built when it opens and the pack installs in the background, so open it until Farsi is listed (15 tries, about 60 s).
+- extendedWaitUntil:
+    visible:
+      id: GalleryLanguage
+    timeout: 60000
+- repeat:
+    times: 15
+    while:
+      notVisible:
+        text: "فارسی"
+    commands:
+      - tapOn:
+          id: GalleryLanguage
+          waitToSettleTimeoutMs: 300
+      - extendedWaitUntil:
+          visible:
+            text: "فارسی"
+          timeout: 4000
+          optional: true
+      - runFlow:
+          when:
+            notVisible:
+              text: "فارسی"
+          commands:
+            # The list is open without Farsi: the button underneath closes it again (a Back press could leave the app).
+            - tapOn:
+                id: GalleryLanguage
+                waitToSettleTimeoutMs: 300
+- tapOn:
+    text: "فارسی"
+    waitToSettleTimeoutMs: 300
+# The tile is retitled in place, without leaving the shelf.
+- extendedWaitUntil:
+    visible: "سه بچه خوک کوچولو"
+    timeout: 15000
+- assertNotVisible: "The Three Little Pigs"
+# Back to English: the English title returns.
+- tapOn:
+    id: GalleryLanguage
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      text: "English"
+    timeout: 8000
+- tapOn:
+    text: "English"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: "The Three Little Pigs"
+    timeout: 15000
