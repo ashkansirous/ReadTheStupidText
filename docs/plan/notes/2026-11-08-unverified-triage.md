@@ -6,6 +6,17 @@ Removed: 106 lines. Still open: 416 (Live 130, iOS 70, Android 152, Windows 52, 
 
 The analytics pass over the Android/iOS/Windows/Live lines found almost nothing provable: most are layout, look, test-tooling or listening checks that no event records. One contradiction: English and Farsi `clip_missing` rows on Android up to v1.114.0, all before the Slice 313 fix (dino-v1.116.0); the Slice 285 line stays open until rows on 1.116+ are clean.
 
+## The user's iPhone session, 2026-11-08
+
+The user used Dino 1.117.0 from TestFlight on an iPhone (iOS 16, session `26b3cf3b…`, 08:10-08:22 UTC), "clicking on as many routes as possible": 5 books, 12 reads (Farsi, then Spanish), a recording, the store with a download, Settings (reading speed, story languages with Spanish added and all 9 Spanish packs fetched, 0 failed), animal sounds, About, the intro replay, the grown-ups' gate and Report a problem (code T7RS-G327, read with `pull-crashes.mjs --code`). No fallback, crash or unclean exit on 1.117.0. The 1.109.0 session just before it (08:06-08:09) had 5 `clip_missing` and 2 `text_mismatch` fallbacks on book `6eff8d77…` in Farsi; on 1.117.0 the same book played "119 of 119 pieces have a clip", consistent with the Slice 313 fix.
+
+Closed by it:
+- **Slice 296:** iOS: a Farsi read on an iPhone reports its clip count. *Why:* report log `read voice premade (108 pieces by clip, 0 with no clip)` and 119/107/19 on other books; `read_voice` rows with counts in `dino_usage_beta`.
+- **Slice 249:** Sending a report from a TestFlight build and `pull-crashes.mjs --code <code>` on that real report. *Why:* T7RS-G327 sent from 1.117.0 `testflight` and read back whole.
+- **Slice 249**, narrowed: "The iOS log lines (page, reading, memory warning)": the page and reading lines are in the report; only the memory-warning line stays open.
+
+Not closed: Freddy (`af402c99…`, Slice 313's iPhone line) was not read in this session; Slice 285's line needs the *app* language switched, and the session switched the story language.
+
 ## Replaced or removed by later code (51)
 
 - **Slice 304:** Stalled-read overlay is not restored after leaving and returning (review 6): `ISpeechReader` exposes no stalled state; follow-up is [Slice 314](slices/314-reader-stall-overlay-after-return.md).

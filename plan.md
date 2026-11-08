@@ -66,7 +66,8 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 430 checks across 162 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- **Not yet tried on a device:** 428 checks across 161 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- Dino iOS rolling log: report T7RS-G327 (1.117.0, 2026-11-08) has the previous run's last line cut mid-word (`reading paused (ot` then the next launch's `08:10:50.730 ...`), so a line is lost when the app is killed (here, likely the TestFlight update). Check whether the file writer flushes per line ([note](docs/plan/notes/2026-11-08-unverified-triage.md)).
 - Slice 305 follow-ups: remove the speech engine from the Dino Windows head (move the logging that lives in Infrastructure out first); stale sherpa-props path filters for Dino in `ship-targets.mjs` and `dinoreader*.yml` (harmless) ([slice](docs/plan/slices/305-dino-package-cleanup-ml-kit-and-sherpa.md)).
 - Slice 301 item 3 not built (premise wrong: 3 of 5 flows were deleted by Slice 278); re-plan from a fresh `PHASES` run ([slice](docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md)).
 - Slice 301 follow-ups (`reviews/s301-check2.md` 1-3): the preflight's Maestro launcher needs the same time bound, a java child that outlives the root process, an overall timeout in `speed.ps1`'s `Wait-ProcessWithCrashWatch`; reword the `WATCH kill-wait done` log line on a natural end ([slice](docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md)).

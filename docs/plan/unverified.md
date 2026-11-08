@@ -32,8 +32,6 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Live:** Everything on a real Echo: open, list, read, pause, resume after a minute, next, stop.
 - **Live:** A real signed Alexa request passing verification live.
 
-### Slice 296: Why a Farsi read matched 5 of 78 pieces to clips ([slice](slices/296-farsi-read-clip-match.md))
-- **iOS:** iOS: a Farsi read on an iPhone reports its clip count (no iOS `fa` reads in production in 30 days, so no log to read yet).
 
 ### Slice 311: Crash data for the Windows apps from the Microsoft Store ([slice](slices/311-windows-store-crash-data.md))
 - **Live:** A real pull with the Actions secrets exported for both apps (not readable on this PC): does it print rows or `none` for RTST `9NGT1BN1H92V` and Dino, and are the failure names symbolised?
@@ -257,8 +255,7 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Android:** `seq` on a device (the Debug line has no `seq`; unit-tested only).
 
 ### Slice 249: Dino: "Report a problem" in the grown-ups' corner ([slice](slices/249-dino-report-a-problem.md))
-- **iOS:** Sending a report from a TestFlight build and `pull-crashes.mjs --code <code>` on that real report.
-- **iOS:** The iOS log lines (page, reading, memory warning) on a device.
+- **iOS:** The iOS memory-warning log line on a device (the page and reading lines were seen in report T7RS-G327, 2026-11-08).
 - **Android:** The rolling file on a device (the device run read the lines from logcat).
 
 ### Slice 256: Dino: `dump-sentences` works for picture books (Good Enough) ([slice](slices/256-good-enough-sentence-dump.md))
