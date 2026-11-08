@@ -106,6 +106,8 @@ Page background `Cream`; the main coral button is 56 high, radius 28, `0 5px 0 #
 
 Parts A and C share `GalleryPage.xaml(.cs)`: run A, then C. B, D and E touch other files and can run in parallel with them; E needs D's `OnboardingShell` (D1) first. Each part adds its strings in its own marked block in every resx. Each part's Android, iOS and Windows tasks are inside the part.
 
+**Start order (user answer, 2026-11-08, before the night run):** build parts B, D and E now, without waiting for Slice 321. Parts A and C start only once Slice 321 (PR #962) has merged, because both rewrite the rail and header code in `GalleryPage.xaml.cs` that 321's reorder layer sits on; until then they wait, and F waits for all of A-E. Told the dependency is only that shared file, the user chose "B, D, E now; A, C after 321". A night wave may claim this slice for B, D and E alone and leave A and C unticked.
+
 ## Parts
 
 ### A. Corner shell and Books tab (frames P1-P5, L1, T1, T2 chrome, W1 chrome)
