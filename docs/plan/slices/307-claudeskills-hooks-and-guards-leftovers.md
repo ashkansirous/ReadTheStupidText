@@ -50,7 +50,7 @@
 
 *Changed while building:* two-strikes design decision: the new heuristic hooks (items 1, 5 checkout/restore, 8, 13) are advisory only. They return `additionalContext`, never a `permissionDecision` (an "allow" would skip the user's prompt), and log to `~/.claude/logs/advisory-hooks.log`. Promoting one to deny is a later slice, decided from that log. Item 10's `isSimpleSearch` exception and wrapper detection were dropped after pass 4 (design file `reviews/s307-design.md`: origin/main's logic kept).
 
-*From review:* files `reviews/s307-high.md` (10 findings), `reviews/s307-medium.md` (8), `reviews/s307-check1.md` (10), `-check2.md` (6), `-check3.md` (7), `-check4.md` (6), `-check5.md` (4), all read in full. The brief states every finding not listed below was applied; this file did not re-check that against the code. Skips:
+*From review:* files `reviews/s307-high.md` (10 findings), `reviews/s307-medium.md` (8), `reviews/s307-check1.md` (10), `-check2.md` (6), `-check3.md` (7), `-check4.md` (6), `-check5.md` (4), all read in full. The brief states every finding not listed below was applied; this file did not re-check that against the code. The `reviews/` files are under `D:/ClaudeSkills-worktrees/reviews`, so `check-review-skips.mjs` passes these lines only with `--root D:/ClaudeSkills-worktrees` (wave 1, night 2026-11-08-0106). Skips:
 
 - Skipped #1 (`reviews/s307-medium.md`): "treats every untracked script" (worktree-script-guard became advisory by the design decision).
 - Skipped #2 (`reviews/s307-medium.md`): "powershell -NoProfile -ExecutionPolicy Bypass" (phone-network-guard reverted to main by the design).
