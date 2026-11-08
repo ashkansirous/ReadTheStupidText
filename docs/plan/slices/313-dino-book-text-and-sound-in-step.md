@@ -1,6 +1,6 @@
 ### Slice 313 — Dino: a shelf book's text and its sound always match
 
-*Built 2026-11-07, PR pending.*
+*Built 2026-11-07, merged as PR #915 (2a1a55aa, 2026-11-07 15:45Z). Indexed by the night 2026-11-08-0106 feedback loop: no index pass had run for it.*
 
 **Touches:** `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ShelfAudioPacks.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StagedBookUpdates.cs`, `src/DinoReader.App/ReadingSession.cs`, `src/DinoReader.App/Testing/**`, `src/DinoReader.Core/BookUpdatePlan.cs`, `src/DinoReader.Core/AudioPackDue.cs`, `src/DinoReader.Core/**`, `worker/events.ts` (only if a new event name must be allowed), `.maestro/dino/**`, `tests/DinoReader.Tests/**`, `docs/plan/slices/313-dino-book-text-and-sound-in-step.md`
 
@@ -81,7 +81,7 @@ Android, iOS and Windows share this code; all three get it.
 - The user's phone: Freddy in English and Farsi after updating to the release with this slice.
 - iPhone: same path.
 - Windows head: same path.
-- Worker deploy needed before `book_update` events are stored.
+- ~~Worker deploy needed before `book_update` events are stored.~~ Done: the Workers Builds check-run on 2a1a55aa is `success` (read by the night 2026-11-08-0106 feedback loop's auditor with `gh api .../check-runs`).
 
 #### For CLAUDE.md
 
