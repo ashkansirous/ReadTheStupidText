@@ -921,3 +921,123 @@ Also read these files the selection imports:
 
 Implement: `Dino Reader Batch 49 Recording per Language.dc.html`
 ```
+
+## 2026-11-08 redesign (Slice 325)
+
+Two mocks from 2026-11-08 restyle every Dino Reader page left after Slice 278: the grown-ups corner as three tabs
+(Books, Store, Settings) with the way back in the ink header, a kids shelf to match, and onboarding in the same
+skeleton. One layout rule: **under 600 wide the tabs go along the bottom; 600 or wider the ink becomes a left rail.**
+The grown-up file builds option 1c of `Dino Reader Grown-ups Corner Controls.dc.html`, copied here too because it links
+to it. Its image `dino_reader_icons/ios/AppIcon-1024-light.png` is already here as `icons/ios/AppIcon-1024-light.png`; the
+book covers are already in `assets/`. Open the files in a text editor (`support.js` is not copied). Refresh: fetch
+again with `DesignSync get_file`, overwrite the copy with a script, regenerate the tables. Never call `DesignSync` to
+read visual values; read these copies.
+
+## Grown-ups corner and kids shelf — `Dino reader- 2026-11-08 grownup.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino reader- 2026-11-08 grownup.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+reader-+2026-11-08+grownup.dc.html>).
+- **Copied:** 2026-11-08, verbatim from `DesignSync get_file`: the `content` field was written to disk by a script, never retyped.
+- **Covers:** Slice 325: the corner on every screen size (P, L, T, W frames) and the kids shelf (K frames). It replaces the rails in frames 111, 126, 139 and 155.
+
+| # | Screen (caption) | Line |
+|---|---|---|
+| — | Phones · portrait · actual size in pt / dp (group) | 23 |
+| P1 | iPhone 8 | 30 |
+| P2 | iPhone 15 Pro | 55 |
+| P3 | iPhone 17 Pro Max | 79 |
+| P4 | Pixel 10 Pro | 103 |
+| P5 | Samsung S26 Ultra | 127 |
+| — | 600 wide or more · the ink becomes a rail (group) | 151 |
+| L1 | Phone landscape | 156 |
+| T1 | Tablet portrait | 179 |
+| T2 | Tablet landscape Store | 201 |
+| W1 | Windows Settings | 223 |
+| — | Kids’ shelf · phones · portrait (group) | 260 |
+| K1 | Shelf iPhone 8 | 267 |
+| K1-de | Shelf German | 283 |
+| K2 | Shelf iPhone 15 Pro | 297 |
+| K3 | Shelf iPhone 17 Pro Max | 310 |
+| K4 | Shelf Pixel 10 Pro | 323 |
+| K5 | Shelf Samsung S26 Ultra | 336 |
+| — | Kids’ shelf · 600 wide or more · a cream rail (group) | 349 |
+| KL1 | Shelf phone landscape | 354 |
+| KT1 | Shelf tablet portrait | 370 |
+| KT2 | Shelf tablet landscape | 384 |
+| KW1 | Shelf Windows | 398 |
+
+(Generated from the `data-screen-label` attributes and section captions.)
+
+## Onboarding — `Dino Reader- 2026-11-08 Onboarding.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader- 2026-11-08 Onboarding.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader-+2026-11-08+Onboarding.dc.html>).
+- **Copied:** 2026-11-08, verbatim from `DesignSync get_file`: the `content` field was written to disk by a script, never retyped.
+- **Covers:** Slice 325: first run (language, first books, getting the books, offline, ready) and the intro (two places, read, record, languages) on every screen size.
+
+| # | Screen (caption) | Line |
+|---|---|---|
+| — | The whole flow · iPhone 15 Pro · 393 × 852 (group) | 32 |
+| O1 | Language phone | 37 |
+| O2 | First books phone | 53 |
+| O3 | Getting books phone | 71 |
+| O4 | Offline phone | 90 |
+| O5 | Ready phone | 106 |
+| O6 | Intro two places phone | 121 |
+| O7 | Intro read phone | 145 |
+| O8 | Intro record phone | 161 |
+| O9 | Intro languages phone | 177 |
+| — | The tightest phone · iPhone 8 · 375 × 667 (group) | 195 |
+| O1-8 | Language iPhone 8 | 202 |
+| O2-8 | First books iPhone 8 | 222 |
+| O6-8 | Intro iPhone 8 | 242 |
+| — | Phone landscape · iPhone 15 Pro · 852 × 393 (group) | 265 |
+| OL1 | Language landscape | 270 |
+| OL2 | First books landscape | 290 |
+| OL7 | Intro landscape | 309 |
+| — | Tablet portrait · 820 × 1180 (group) | 326 |
+| OT2 | First books tablet portrait | 331 |
+| OT6 | Intro tablet portrait | 350 |
+| OT9 | Intro languages tablet portrait | 372 |
+| — | Tablet landscape · 1180 × 820 (group) | 391 |
+| OTL1 | Language tablet landscape | 396 |
+| OTL7 | Intro read tablet landscape | 414 |
+| OTL8 | Intro record tablet landscape | 429 |
+| — | Windows · 1100 × 760 (group) | 444 |
+| OW2 | First books Windows | 449 |
+| OW6 | Intro Windows | 471 |
+| OW5 | Ready Windows | 496 |
+
+(Generated from the `data-screen-label` attributes and section captions.)
+
+## Corner controls options — `Dino Reader Grown-ups Corner Controls.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Grown-ups Corner Controls.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Grown-ups+Corner+Controls.dc.html>).
+- **Copied:** 2026-11-08, verbatim from `DesignSync get_file`: the `content` field was written to disk by a script, never retyped.
+- **Covers:** the four options for the corner's controls; the 2026-11-08 grown-up mock builds option 1c. Reference only.
+
+| # | Screen (caption) | Line |
+|---|---|---|
+| 1a | Labelled doors | 27 |
+| 1b | One dock | 52 |
+| 1c | Corner tabs | 75 |
+| 1d | Exit top left | 98 |
+
+(Generated from the `data-screen-label` attributes and section captions.)
+
+Import prompt (verbatim, 2026-11-08):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+reader-+2026-11-08+grownup.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino reader- 2026-11-08 grownup.dc.html`
+- `Dino Reader- 2026-11-08 Onboarding.dc.html`
+
+Also read these files the selection imports:
+- `dino_reader_icons/ios/AppIcon-1024-light.png`
+
+Implement: the selected files
+```

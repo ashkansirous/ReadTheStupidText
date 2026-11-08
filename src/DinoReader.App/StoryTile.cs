@@ -28,6 +28,10 @@ public sealed record StoryTile(Story Story, Color CoverColour, string? CoverImag
 
 	public string RtlCoverFont => DinoFonts.Persian;
 
+	/// <summary>The font of the title under the cover (Slice 323): Vazirmatn for a Farsi or Arabic title, as on the reading page, else the UI font of the screens. It follows the title's own direction, not the app language.
+	/// The label's direction follows its own text through <c>TextFlowHandlers</c>.</summary>
+	public string TitleFont => TitleIsRightToLeft ? DinoFonts.Persian : DinoFonts.Ui;
+
 	private const float TintTowardsWhite = 0.7f;
 
 	private static Color PaleTint(Color colour) => new(

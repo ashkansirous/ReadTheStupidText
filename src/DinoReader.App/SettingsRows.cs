@@ -669,7 +669,7 @@ public static class ReadingSpeedCard
 		};
 	}
 
-	// The title plus the spoken value, so a screen reader says "Reading speed, 0.8x" rather than a raw percentage.
+	// The title plus the spoken value, so a screen reader says "Reading speed, 1x" rather than a raw percentage.
 	private static string Described(double speed) => $"{AppResources.Speed_Title}, {Display(speed)}";
 
 	// Puts the thumb on a step; false when it had to move (the move raises ValueChanged again).

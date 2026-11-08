@@ -41,7 +41,7 @@
                     </local:StoryCover>
                     <local:TileOverlay OpenRequested="OnOpenRequested" HoldRequested="OnHoldRequested" />
                 </Grid>
-                <Label Style="{StaticResource TileTitle}" Text="{Binding Title}" AutomationId="StoryTileTitle">
+                <Label Style="{StaticResource TileTitle}" Text="{Binding Title}" FontFamily="{Binding TitleFont}" AutomationId="StoryTileTitle">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnStoryTapped" />
                     </Label.GestureRecognizers>

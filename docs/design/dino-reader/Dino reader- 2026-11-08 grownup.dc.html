@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Vazirmatn:wght@400;600&display=swap" rel="stylesheet">
+<style>html,body{margin:0;padding:0;background:#f3efe6;}*{box-sizing:border-box;}a{color:#5B57E8;}a:hover{color:#3f3bc4;}</style>
+</helmet>
+<section style="padding:48px 56px 80px;font-family:'Fredoka',system-ui,sans-serif;color:#2b2540">
+ <div style="max-width:1100px">
+  <div style="font-size:12px;font-weight:600;letter-spacing:2px;color:#5B57E8;text-transform:uppercase">Dino Reader · Grown-ups’ corner · option <a href="Dino%20Reader%20Grown-ups%20Corner%20Controls.dc.html#1c">1c</a> on every screen</div>
+  <div style="font-size:34px;font-weight:600;margin-top:6px">Corner tabs, way back in the ink, and a kids’ shelf to match</div>
+  <div style="font-size:15px;color:#5a5470;line-height:1.55;max-width:960px;margin-top:10px;text-wrap:pretty">Books, Store and Settings are three tabs of the corner. The coral way back always sits in the ink, next to the corner’s name. One rule picks the layout: <b>under 600 wide, tabs go along the bottom</b>; <b>600 or wider</b> (phone landscape, tablets, Windows), the ink becomes a left rail holding the name, the way back, then the tabs. This replaces the rails in frames 111, 126, 139 and 155, which still had Add a book and a gear.</div>
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:#8a8399;text-transform:uppercase;margin-top:36px">Phones · portrait · actual size in pt / dp</div>
+ <div style="display:flex;flex-wrap:wrap;gap:36px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">P1 · iPhone 8 · 375 × 667</div>
+   <div style="width:403px;padding:70px 14px 86px;border-radius:56px;background:#2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);position:relative">
+    <div style="position:absolute;top:32px;left:50%;margin-left:-30px;width:60px;height:6px;border-radius:3px;background:#46405c"></div>
+    <div data-screen-label="P1 iPhone 8" style="width:375px;height:667px;overflow:hidden;background:#F3EFE6;display:flex;flex-direction:column">
+     <div style="background:#2b2540;color:#fff;flex-shrink:0">
+      <div style="height:20px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;font-size:12px;font-weight:600"><span style="width:60px">Carrier</span><span>9:41</span><span style="width:60px;text-align:right">100%</span></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 12px 12px 16px">
+       <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;letter-spacing:.8px;color:#FFC24D;text-transform:uppercase"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path></svg>Grown-ups’ corner</span><span style="font-size:22px;font-weight:600">Books</span></div>
+       <div style="height:44px;padding:0 16px 0 12px;border-radius:22px;background:#FF7A59;box-shadow:0 3px 0 #E2583A;color:#fff;font-size:15px;font-weight:600;display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l6.4 4.6c.4.3.4 1 0 1.3l-6.4 4.6c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg>Child’s shelf</div>
+      </div>
+     </div>
+     <div style="padding:10px 16px 8px;font-size:13px;color:#5a5470;line-height:1.4;flex-shrink:0">Only grown-ups see this. Your child’s shelf is one tap away.</div>
+     <div style="flex:1;min-height:0;padding:0 12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-content:start;overflow:hidden">
+      <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="9"><div style="display:flex;flex-direction:column;gap:5px;position:relative"><div style="aspect-ratio:3/4;border-radius:12px;background:{{ c.bg }}"></div><div style="position:absolute;right:4px;top:4px;width:30px;height:30px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(43,37,64,.2);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#2b2540"><circle cx="5.5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="18.5" cy="12" r="2"></circle></svg></div><span style="font-size:12px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+     </div>
+     <div style="flex-shrink:0;background:#fff;border-top:1px solid #e8e1d3;padding:4px 8px 4px;display:grid;grid-template-columns:repeat(3,1fr)">
+      <div style="height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#5B57E8"><div style="width:52px;height:28px;border-radius:14px;background:#ECE7FF;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h4v15H5zM10.5 4.5h4v15h-4z"></path><path d="M16 5.5l3.5-.8 3 14.3-3.5.8z"></path></svg></div><span style="font-size:12px;font-weight:600">Books</span></div>
+      <div style="height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#5a5470"><div style="width:52px;height:28px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5L5.5 4h13L20 9.5"></path><path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"></path><path d="M5.5 11.5V20h13v-8.5"></path><path d="M10 20v-5h4v5"></path></svg></div><span style="font-size:12px;font-weight:600">Store</span></div>
+      <div style="height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#5a5470"><div style="width:52px;height:28px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"></path></svg></div><span style="font-size:12px;font-weight:600">Settings</span></div>
+     </div>
+    </div>
+    <div style="position:absolute;bottom:16px;left:50%;margin-left:-28px;width:56px;height:56px;border-radius:50%;border:3px solid #46405c"></div>
+   </div>
+   <div style="width:403px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">The tightest case. No home bar, so the tab bar sits flush (4 pt padding) and is 60 pt tall. Status bar 20 pt. Two full rows of covers above the fold. German “Kinderregal” fits the pill at 375; if a language overflows, the pill drops its label and keeps the icon, never the title.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">P2 · iPhone 15 Pro · 393 × 852</div>
+   <div data-screen-label="P2 iPhone 15 Pro" style="width:405px;height:864px;border-radius:55px;overflow:hidden;background:#F3EFE6;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;position:relative">
+    <div style="background:#2b2540;color:#fff;flex-shrink:0">
+     <div style="height:54px;display:flex;align-items:center;justify-content:space-between;padding:6px 32px 0 40px;font-size:15px;font-weight:600;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:11px;margin-left:-63px;width:126px;height:37px;border-radius:19px;background:#000"></div><span>100%</span></div>
+     <div style="display:flex;align-items:center;gap:10px;padding:6px 12px 14px 18px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;letter-spacing:.8px;color:#FFC24D;text-transform:uppercase"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path></svg>Grown-ups’ corner</span><span style="font-size:22px;font-weight:600">Books</span></div>
+      <div style="height:44px;padding:0 16px 0 12px;border-radius:22px;background:#FF7A59;box-shadow:0 3px 0 #E2583A;color:#fff;font-size:15px;font-weight:600;display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l6.4 4.6c.4.3.4 1 0 1.3l-6.4 4.6c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg>Child’s shelf</div>
+     </div>
+    </div>
+    <div style="padding:12px 18px 10px;font-size:13.5px;color:#5a5470;line-height:1.4;flex-shrink:0">Only grown-ups see this. Your child’s shelf is one tap away.</div>
+    <div style="flex:1;min-height:0;padding:0 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-content:start;overflow:hidden">
+     <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="9"><div style="display:flex;flex-direction:column;gap:5px;position:relative"><div style="aspect-ratio:3/4;border-radius:12px;background:{{ c.bg }}"></div><div style="position:absolute;right:4px;top:4px;width:30px;height:30px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(43,37,64,.2);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#2b2540"><circle cx="5.5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="18.5" cy="12" r="2"></circle></svg></div><span style="font-size:12.5px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+    </div>
+    <div style="flex-shrink:0;background:#fff;border-top:1px solid #e8e1d3;padding:6px 10px 34px;display:grid;grid-template-columns:repeat(3,1fr);position:relative">
+     <div style="height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#5B57E8"><div style="width:52px;height:28px;border-radius:14px;background:#ECE7FF;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h4v15H5zM10.5 4.5h4v15h-4z"></path><path d="M16 5.5l3.5-.8 3 14.3-3.5.8z"></path></svg></div><span style="font-size:12px;font-weight:600">Books</span></div>
+     <div style="height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#5a5470"><div style="width:52px;height:28px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5L5.5 4h13L20 9.5"></path><path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"></path><path d="M5.5 11.5V20h13v-8.5"></path><path d="M10 20v-5h4v5"></path></svg></div><span style="font-size:12px;font-weight:600">Store</span></div>
+     <div style="height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#5a5470"><div style="width:52px;height:28px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"></path></svg></div><span style="font-size:12px;font-weight:600">Settings</span></div>
+     <div style="position:absolute;bottom:8px;left:50%;margin-left:-67px;width:134px;height:5px;border-radius:3px;background:#2b2540"></div>
+    </div>
+   </div>
+   <div style="width:405px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">The reference size. The ink header runs up behind the Dynamic Island (54 pt status area). The tab bar adds the 34 pt home-bar inset under its 58 pt row. Three rows of covers above the fold.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">P3 · iPhone 17 Pro Max · 440 × 956</div>
+   <div data-screen-label="P3 iPhone 17 Pro Max" style="width:452px;height:968px;border-radius:62px;overflow:hidden;background:#F3EFE6;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column">
+    <div style="background:#2b2540;color:#fff;flex-shrink:0">
+     <div style="height:62px;display:flex;align-items:center;justify-content:space-between;padding:8px 36px 0 48px;font-size:16px;font-weight:600;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:14px;margin-left:-63px;width:126px;height:37px;border-radius:19px;background:#000"></div><span>100%</span></div>
+     <div style="display:flex;align-items:center;gap:10px;padding:6px 16px 16px 22px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;letter-spacing:.8px;color:#FFC24D;text-transform:uppercase"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path></svg>Grown-ups’ corner</span><span style="font-size:24px;font-weight:600">Books</span></div>
+      <div style="height:48px;padding:0 18px 0 14px;border-radius:24px;background:#FF7A59;box-shadow:0 3px 0 #E2583A;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l6.4 4.6c.4.3.4 1 0 1.3l-6.4 4.6c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg>Child’s shelf</div>
+     </div>
+    </div>
+    <div style="padding:14px 22px 12px;font-size:14px;color:#5a5470;line-height:1.4;flex-shrink:0">Only grown-ups see this. Your child’s shelf is one tap away.</div>
+    <div style="flex:1;min-height:0;padding:0 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px 12px;align-content:start;overflow:hidden">
+     <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="9"><div style="display:flex;flex-direction:column;gap:6px;position:relative"><div style="aspect-ratio:3/4;border-radius:14px;background:{{ c.bg }}"></div><div style="position:absolute;right:5px;top:5px;width:32px;height:32px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(43,37,64,.2);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#2b2540"><circle cx="5.5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="18.5" cy="12" r="2"></circle></svg></div><span style="font-size:13.5px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+    </div>
+    <div style="flex-shrink:0;background:#fff;border-top:1px solid #e8e1d3;padding:6px 16px 34px;display:grid;grid-template-columns:repeat(3,1fr);position:relative">
+     <div style="height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#5B57E8"><div style="width:56px;height:30px;border-radius:15px;background:#ECE7FF;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h4v15H5zM10.5 4.5h4v15h-4z"></path><path d="M16 5.5l3.5-.8 3 14.3-3.5.8z"></path></svg></div><span style="font-size:13px;font-weight:600">Books</span></div>
+     <div style="height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#5a5470"><div style="width:56px;height:30px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5L5.5 4h13L20 9.5"></path><path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"></path><path d="M5.5 11.5V20h13v-8.5"></path><path d="M10 20v-5h4v5"></path></svg></div><span style="font-size:13px;font-weight:600">Store</span></div>
+     <div style="height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#5a5470"><div style="width:56px;height:30px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"></path></svg></div><span style="font-size:13px;font-weight:600">Settings</span></div>
+     <div style="position:absolute;bottom:8px;left:50%;margin-left:-72px;width:144px;height:5px;border-radius:3px;background:#2b2540"></div>
+    </div>
+   </div>
+   <div style="width:452px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Still three columns: four would shrink covers below the 15 Pro’s. The extra width goes to bigger covers, margins and type (title 24, pill 48 tall). The status area is 62 pt. Three full rows, with the fourth peeking.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">P4 · Pixel 10 Pro · 412 × 915 dp</div>
+   <div data-screen-label="P4 Pixel 10 Pro" style="width:424px;height:927px;border-radius:46px;overflow:hidden;background:#F3EFE6;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column">
+    <div style="background:#2b2540;color:#fff;flex-shrink:0">
+     <div style="height:44px;display:flex;align-items:center;justify-content:space-between;padding:4px 26px 0;font-size:14px;font-weight:500;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:13px;margin-left:-11px;width:22px;height:22px;border-radius:50%;background:#000"></div><span>100%</span></div>
+     <div style="display:flex;align-items:center;gap:10px;padding:6px 14px 14px 20px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;letter-spacing:.8px;color:#FFC24D;text-transform:uppercase"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path></svg>Grown-ups’ corner</span><span style="font-size:22px;font-weight:600">Books</span></div>
+      <div style="height:48px;padding:0 18px 0 14px;border-radius:24px;background:#FF7A59;box-shadow:0 3px 0 #E2583A;color:#fff;font-size:15px;font-weight:600;display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l6.4 4.6c.4.3.4 1 0 1.3l-6.4 4.6c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg>Child’s shelf</div>
+     </div>
+    </div>
+    <div style="padding:12px 20px 10px;font-size:13.5px;color:#5a5470;line-height:1.4;flex-shrink:0">Only grown-ups see this. Your child’s shelf is one tap away.</div>
+    <div style="flex:1;min-height:0;padding:0 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px 10px;align-content:start;overflow:hidden">
+     <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="9"><div style="display:flex;flex-direction:column;gap:5px;position:relative"><div style="aspect-ratio:3/4;border-radius:12px;background:{{ c.bg }}"></div><div style="position:absolute;right:4px;top:4px;width:30px;height:30px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(43,37,64,.2);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#2b2540"><circle cx="5.5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="18.5" cy="12" r="2"></circle></svg></div><span style="font-size:13px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+    </div>
+    <div style="flex-shrink:0;background:#fff;border-top:1px solid #e8e1d3;padding:6px 10px 24px;display:grid;grid-template-columns:repeat(3,1fr);position:relative">
+     <div style="height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#5B57E8"><div style="width:56px;height:30px;border-radius:15px;background:#ECE7FF;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h4v15H5zM10.5 4.5h4v15h-4z"></path><path d="M16 5.5l3.5-.8 3 14.3-3.5.8z"></path></svg></div><span style="font-size:12px;font-weight:600">Books</span></div>
+     <div style="height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#5a5470"><div style="width:56px;height:30px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5L5.5 4h13L20 9.5"></path><path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"></path><path d="M5.5 11.5V20h13v-8.5"></path><path d="M10 20v-5h4v5"></path></svg></div><span style="font-size:12px;font-weight:600">Store</span></div>
+     <div style="height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#5a5470"><div style="width:56px;height:30px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"></path></svg></div><span style="font-size:12px;font-weight:600">Settings</span></div>
+     <div style="position:absolute;bottom:9px;left:50%;margin-left:-54px;width:108px;height:4px;border-radius:2px;background:#2b2540"></div>
+    </div>
+   </div>
+   <div style="width:424px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Edge-to-edge: the ink draws under the status bar and the punch-hole camera, and the white tab bar draws under the gesture handle (24 dp inset). Pill is 48 dp, Android’s touch minimum. Android Back on any tab goes to the child’s shelf, like the coral pill; it doesn’t step back through tabs.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">P5 · Samsung S26 Ultra · 412 × 891 dp</div>
+   <div data-screen-label="P5 Samsung S26 Ultra" style="width:424px;height:903px;border-radius:26px;overflow:hidden;background:#F3EFE6;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column">
+    <div style="background:#2b2540;color:#fff;flex-shrink:0">
+     <div style="height:38px;display:flex;align-items:center;justify-content:space-between;padding:2px 20px 0;font-size:13.5px;font-weight:500;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:10px;margin-left:-9px;width:18px;height:18px;border-radius:50%;background:#000"></div><span>100%</span></div>
+     <div style="display:flex;align-items:center;gap:10px;padding:6px 14px 14px 20px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;letter-spacing:.8px;color:#FFC24D;text-transform:uppercase"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path></svg>Grown-ups’ corner</span><span style="font-size:22px;font-weight:600">Books</span></div>
+      <div style="height:48px;padding:0 18px 0 14px;border-radius:24px;background:#FF7A59;box-shadow:0 3px 0 #E2583A;color:#fff;font-size:15px;font-weight:600;display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l6.4 4.6c.4.3.4 1 0 1.3l-6.4 4.6c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg>Child’s shelf</div>
+     </div>
+    </div>
+    <div style="padding:12px 20px 10px;font-size:13.5px;color:#5a5470;line-height:1.4;flex-shrink:0">Only grown-ups see this. Your child’s shelf is one tap away.</div>
+    <div style="flex:1;min-height:0;padding:0 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px 10px;align-content:start;overflow:hidden">
+     <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="9"><div style="display:flex;flex-direction:column;gap:5px;position:relative"><div style="aspect-ratio:3/4;border-radius:12px;background:{{ c.bg }}"></div><div style="position:absolute;right:4px;top:4px;width:30px;height:30px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(43,37,64,.2);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#2b2540"><circle cx="5.5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="18.5" cy="12" r="2"></circle></svg></div><span style="font-size:13px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+    </div>
+    <div style="flex-shrink:0;background:#fff;border-top:1px solid #e8e1d3;padding:6px 10px 0;display:grid;grid-template-columns:repeat(3,1fr)">
+     <div style="height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#5B57E8"><div style="width:56px;height:30px;border-radius:15px;background:#ECE7FF;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h4v15H5zM10.5 4.5h4v15h-4z"></path><path d="M16 5.5l3.5-.8 3 14.3-3.5.8z"></path></svg></div><span style="font-size:12px;font-weight:600">Books</span></div>
+     <div style="height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#5a5470"><div style="width:56px;height:30px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5L5.5 4h13L20 9.5"></path><path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"></path><path d="M5.5 11.5V20h13v-8.5"></path><path d="M10 20v-5h4v5"></path></svg></div><span style="font-size:12px;font-weight:600">Store</span></div>
+     <div style="height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#5a5470"><div style="width:56px;height:30px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"></path></svg></div><span style="font-size:12px;font-weight:600">Settings</span></div>
+    </div>
+    <div style="height:48px;flex-shrink:0;background:#fff;display:grid;grid-template-columns:repeat(3,1fr);align-items:center;justify-items:center;color:#5a5470"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 5h12v14H6z"></path><path d="M10 9v6M14 9v6"></path></svg><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="5"></rect></svg><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div>
+   </div>
+   <div style="width:424px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Drawn with Samsung’s three-button bar (48 dp), since many Galaxy owners keep it on. The tab bar sits on top of it; with gestures on it looks like P4. Squarer screen corners, so no corner padding is needed. Size assumed equal to the S25 Ultra; check once the S26 Ultra’s specs are confirmed.</div>
+  </div>
+
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:#8a8399;text-transform:uppercase;margin-top:48px">600 wide or more · the ink becomes a rail</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">L1 · Phone landscape · iPhone 15 Pro · 852 × 393</div>
+   <div data-screen-label="L1 Phone landscape" style="width:864px;height:405px;border-radius:55px;overflow:hidden;background:#F3EFE6;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;position:relative">
+    <div style="width:250px;flex-shrink:0;background:#2b2540;color:#fff;padding:18px 14px 18px 62px;display:flex;flex-direction:column;gap:8px;position:relative">
+     <div style="position:absolute;left:11px;top:50%;margin-top:-63px;width:37px;height:126px;border-radius:19px;background:#000"></div>
+     <div style="display:flex;align-items:center;gap:7px;font-size:16px;font-weight:600;padding:0 4px 4px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg>Grown-ups’ corner</div>
+     <div style="height:44px;border-radius:22px;background:#FF7A59;box-shadow:0 3px 0 #E2583A;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l6.4 4.6c.4.3.4 1 0 1.3l-6.4 4.6c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg>Child’s shelf</div>
+     <div style="height:1px;background:rgba(255,255,255,.12);margin:6px 0 2px"></div>
+     <div style="height:46px;border-radius:14px;background:rgba(255,255,255,.14);display:flex;align-items:center;gap:10px;padding:0 12px;font-size:15px;font-weight:600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h4v15H5zM10.5 4.5h4v15h-4z"></path><path d="M16 5.5l3.5-.8 3 14.3-3.5.8z"></path></svg>Books</div>
+     <div style="height:46px;border-radius:14px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:15px;font-weight:600;color:#cfc6e6"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5L5.5 4h13L20 9.5"></path><path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"></path><path d="M5.5 11.5V20h13v-8.5"></path><path d="M10 20v-5h4v5"></path></svg>Store</div>
+     <div style="height:46px;border-radius:14px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:15px;font-weight:600;color:#cfc6e6"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"></path></svg>Settings</div>
+    </div>
+    <div style="flex:1;min-width:0;padding:16px 50px 0 20px;display:flex;flex-direction:column;gap:10px">
+     <div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:20px;font-weight:600">Books</span><span style="font-size:12.5px;color:#5a5470">Only grown-ups see this.</span></div>
+     <div style="flex:1;min-height:0;display:grid;grid-template-columns:repeat(5,1fr);gap:12px 10px;align-content:start;overflow:hidden">
+      <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="9"><div style="display:flex;flex-direction:column;gap:5px;position:relative"><div style="aspect-ratio:3/4;border-radius:12px;background:{{ c.bg }}"></div><div style="position:absolute;right:4px;top:4px;width:30px;height:30px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(43,37,64,.2);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#2b2540"><circle cx="5.5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="18.5" cy="12" r="2"></circle></svg></div><span style="font-size:12px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+     </div>
+    </div>
+    <div style="position:absolute;bottom:8px;left:50%;margin-left:-67px;width:134px;height:5px;border-radius:3px;background:#2b2540"></div>
+   </div>
+   <div style="width:864px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">A bottom bar would eat a sixth of 393 pt, so the tabs move into the ink rail. Rail order is the phone header’s, top to bottom: name, way back, tabs. The rail starts after the Dynamic Island’s 59 pt safe area (it flips sides when the phone turns the other way). Status bar hidden, as iOS does in landscape. Five columns of covers. The short “Only grown-ups see this” line moves beside the title.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">T1 · Tablet portrait · iPad · 820 × 1180</div>
+   <div data-screen-label="T1 Tablet portrait" style="width:836px;height:1196px;border-radius:40px;overflow:hidden;background:#F3EFE6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex">
+    <div style="width:260px;flex-shrink:0;background:#2b2540;color:#fff;padding:40px 18px 32px 26px;display:flex;flex-direction:column;gap:12px">
+     <div style="display:flex;align-items:center;gap:10px;font-size:22px;font-weight:600;line-height:1.15;padding:0 4px 6px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg>Grown-ups’ corner</div>
+     <div style="height:56px;border-radius:28px;background:#FF7A59;box-shadow:0 4px 0 #E2583A;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l6.4 4.6c.4.3.4 1 0 1.3l-6.4 4.6c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg>Back to my child’s shelf</div>
+     <div style="font-size:14px;color:#cfc6e6;line-height:1.45;padding:2px 4px 0">Only grown-ups see this.</div>
+     <div style="height:1px;background:rgba(255,255,255,.12);margin:8px 0 4px"></div>
+     <div style="height:56px;border-radius:16px;background:rgba(255,255,255,.14);display:flex;align-items:center;gap:12px;padding:0 16px;font-size:17px;font-weight:600"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h4v15H5zM10.5 4.5h4v15h-4z"></path><path d="M16 5.5l3.5-.8 3 14.3-3.5.8z"></path></svg>Books</div>
+     <div style="height:56px;border-radius:16px;display:flex;align-items:center;gap:12px;padding:0 16px;font-size:17px;font-weight:600;color:#cfc6e6"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5L5.5 4h13L20 9.5"></path><path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"></path><path d="M5.5 11.5V20h13v-8.5"></path><path d="M10 20v-5h4v5"></path></svg>Store</div>
+     <div style="height:56px;border-radius:16px;display:flex;align-items:center;gap:12px;padding:0 16px;font-size:17px;font-weight:600;color:#cfc6e6"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"></path></svg>Settings</div>
+    </div>
+    <div style="flex:1;min-width:0;padding:40px 32px 0 28px;display:flex;flex-direction:column;gap:20px">
+     <span style="font-size:28px;font-weight:600">Books</span>
+     <div style="flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);gap:22px 16px;align-content:start;overflow:hidden">
+      <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="9"><div style="display:flex;flex-direction:column;gap:7px;position:relative"><div style="aspect-ratio:3/4;border-radius:14px;background:{{ c.bg }}"></div><div style="position:absolute;right:6px;top:6px;width:36px;height:36px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(43,37,64,.2);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="#2b2540"><circle cx="5.5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="18.5" cy="12" r="2"></circle></svg></div><span style="font-size:15px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+     </div>
+    </div>
+   </div>
+   <div style="width:836px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Replaces 139. The rail narrows from 300 to 260 because it only holds navigation now; the books get three wider columns. The coral button has room for its full words again. Tabs are 56 tall: a tablet is held with both hands, so reach isn’t a concern, and the top-down order (way back first) reads the same as the phone.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">T2 · Tablet landscape · 1180 × 820 · Store tab</div>
+   <div data-screen-label="T2 Tablet landscape Store" style="width:1196px;height:836px;border-radius:40px;overflow:hidden;background:#F3EFE6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex">
+    <div style="width:290px;flex-shrink:0;background:#2b2540;color:#fff;padding:36px 20px 32px 32px;display:flex;flex-direction:column;gap:12px">
+     <div style="display:flex;align-items:center;gap:10px;font-size:22px;font-weight:600;line-height:1.15;padding:0 4px 6px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg>Grown-ups’ corner</div>
+     <div style="height:56px;border-radius:28px;background:#FF7A59;box-shadow:0 4px 0 #E2583A;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l6.4 4.6c.4.3.4 1 0 1.3l-6.4 4.6c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg>Back to my child’s shelf</div>
+     <div style="font-size:14px;color:#cfc6e6;line-height:1.45;padding:2px 4px 0">Only grown-ups see this.</div>
+     <div style="height:1px;background:rgba(255,255,255,.12);margin:8px 0 4px"></div>
+     <div style="height:56px;border-radius:16px;display:flex;align-items:center;gap:12px;padding:0 16px;font-size:17px;font-weight:600;color:#cfc6e6"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h4v15H5zM10.5 4.5h4v15h-4z"></path><path d="M16 5.5l3.5-.8 3 14.3-3.5.8z"></path></svg>Books</div>
+     <div style="height:56px;border-radius:16px;background:rgba(255,255,255,.14);display:flex;align-items:center;gap:12px;padding:0 16px;font-size:17px;font-weight:600"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5L5.5 4h13L20 9.5"></path><path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"></path><path d="M5.5 11.5V20h13v-8.5"></path><path d="M10 20v-5h4v5"></path></svg>Store</div>
+     <div style="height:56px;border-radius:16px;display:flex;align-items:center;gap:12px;padding:0 16px;font-size:17px;font-weight:600;color:#cfc6e6"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"></path></svg>Settings</div>
+    </div>
+    <div style="flex:1;min-width:0;padding:36px 40px 0 32px;display:flex;flex-direction:column;gap:18px">
+     <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:28px;font-weight:600">Store</span><span style="font-size:14px;color:#8a8399">Picked and cast for Dino</span></div>
+     <div style="flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start;overflow:hidden">
+      <sc-for list="{{ store }}" as="s" hint-placeholder-count="8"><div style="background:#fff;border-radius:18px;padding:14px;display:flex;gap:14px;align-items:center"><div style="width:76px;aspect-ratio:3/4;border-radius:10px;flex-shrink:0;background:{{ s.bg }}"></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:16px;font-weight:600;line-height:1.25">{{ s.t }}</span><span style="font-size:12.5px;color:#8a8399">{{ s.by }}</span><span style="font-size:13px;color:#5a5470">{{ s.meta }}</span></div><sc-if value="{{ s.owned }}" hint-placeholder-val="{{ false }}"><div style="height:44px;display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;color:#2E7D32;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"></path></svg>On the shelf</div></sc-if><sc-if value="{{ s.get }}" hint-placeholder-val="{{ true }}"><div style="height:44px;padding:0 18px;border-radius:22px;background:#5B57E8;color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;flex-shrink:0">Get</div></sc-if></div></sc-for>
+     </div>
+    </div>
+   </div>
+   <div style="width:1196px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Replaces 126, shown on the Store tab so a tab’s page is visible in the rail layout. The Store is no longer a pushed page: no back arrow, no Done. Its cards are frame 143’s, two columns. When the intro opens the Store (74), it still pushes a separate full-screen Store with Continue (104), because the intro needs a way back to the wizard; the tab is for everyday use.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">W1 · Windows · 1100 × 760 · Settings tab, Store hovered</div>
+   <div data-screen-label="W1 Windows Settings" style="width:1100px;height:760px;border-radius:8px;overflow:hidden;background:#F3EFE6;border:1px solid #c9c2b4;box-shadow:0 24px 60px rgba(43,37,64,.28);display:flex;flex-direction:column">
+    <div style="height:32px;flex-shrink:0;display:flex;align-items:center;background:#2b2540;color:#fff"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:16px;height:16px;border-radius:4px;margin:0 10px 0 14px"><span style="flex:1;font-size:12.5px;font-weight:500;color:#cfc6e6">Grown-ups’ corner · Dino Reader</span><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:1px;background:#fff"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:10px;border:1px solid #fff"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px">✕</div></div>
+    <div style="flex:1;min-height:0;display:flex">
+     <div style="width:280px;flex-shrink:0;background:#2b2540;color:#fff;padding:14px 20px 24px 28px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px;font-size:21px;font-weight:600;line-height:1.15;padding:0 4px 6px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg>Grown-ups’ corner</div>
+      <div style="height:52px;border-radius:26px;background:#FF7A59;box-shadow:0 4px 0 #E2583A;font-size:15.5px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l6.4 4.6c.4.3.4 1 0 1.3l-6.4 4.6c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg>Back to my child’s shelf</div>
+      <div style="font-size:13.5px;color:#cfc6e6;line-height:1.45;padding:2px 4px 0">Only grown-ups see this.</div>
+      <div style="height:1px;background:rgba(255,255,255,.12);margin:8px 0 4px"></div>
+      <div style="height:48px;border-radius:14px;display:flex;align-items:center;gap:12px;padding:0 14px;font-size:16px;font-weight:600;color:#cfc6e6"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h4v15H5zM10.5 4.5h4v15h-4z"></path><path d="M16 5.5l3.5-.8 3 14.3-3.5.8z"></path></svg>Books<span style="margin-left:auto;font-size:12px;font-weight:500;color:#8e86a8">Ctrl+1</span></div>
+      <div style="height:48px;border-radius:14px;background:rgba(255,255,255,.07);display:flex;align-items:center;gap:12px;padding:0 14px;font-size:16px;font-weight:600;color:#fff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5L5.5 4h13L20 9.5"></path><path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"></path><path d="M5.5 11.5V20h13v-8.5"></path><path d="M10 20v-5h4v5"></path></svg>Store<span style="margin-left:auto;font-size:12px;font-weight:500;color:#8e86a8">Ctrl+2</span></div>
+      <div style="height:48px;border-radius:14px;background:rgba(255,255,255,.14);display:flex;align-items:center;gap:12px;padding:0 14px;font-size:16px;font-weight:600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC24D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"></path></svg>Settings<span style="margin-left:auto;font-size:12px;font-weight:500;color:#8e86a8">Ctrl+3</span></div>
+     </div>
+     <div style="flex:1;min-width:0;padding:20px 40px 0 32px;display:flex;flex-direction:column;gap:12px;overflow:hidden">
+      <span style="font-size:26px;font-weight:600;padding-bottom:4px">Settings</span>
+      <div style="max-width:620px;display:flex;flex-direction:column;gap:10px">
+       <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:#8a8399;text-transform:uppercase;padding:0 4px">Reading</div>
+       <div style="background:#fff;border-radius:18px;overflow:hidden">
+        <sc-for list="{{ reading }}" as="r" hint-placeholder-count="5"><div style="min-height:50px;padding:0 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #efe9dd"><span style="flex:1;font-size:15px">{{ r.k }}</span><span style="font-size:14.5px;font-weight:600;color:#5a5470">{{ r.v }}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a8399" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></div></sc-for>
+       </div>
+       <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:#8a8399;text-transform:uppercase;padding:6px 4px 0">This computer</div>
+       <div style="background:#fff;border-radius:18px;overflow:hidden">
+        <sc-for list="{{ device }}" as="r" hint-placeholder-count="3"><div style="min-height:50px;padding:0 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #efe9dd"><span style="flex:1;font-size:15px">{{ r.k }}</span><span style="font-size:14.5px;font-weight:600;color:#5a5470">{{ r.v }}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a8399" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></div></sc-for>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div style="width:1100px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Replaces 155 and 157. Settings is a tab, so 157’s back and Done go; sub-pages (Reading speed, Narrator…) open inside the content area with their own back arrow, and the rail stays. Labels make 155’s gear tooltip unnecessary. Store shows the hover fill (one step lighter than selected). Ctrl+1/2/3 switch tabs and show as hints in the rail; Esc does nothing here, so a stray key from a child can’t leave or enter anything. Below 800 wide (the 153 minimum) the rail stays: 800 is above the 600 rule.</div>
+  </div>
+
+ </div>
+
+ <div style="max-width:1100px;margin-top:64px">
+  <div style="font-size:28px;font-weight:600">Kids’ shelf, same skeleton</div>
+  <div style="font-size:15px;color:#5a5470;line-height:1.55;max-width:960px;margin-top:8px;text-wrap:pretty">The shelf uses the corner’s layout with the colour swapped: cream instead of ink, no tabs. The switch between the two places is always in the same spot: on phones, the pill top right (<b>Grown-ups</b> here, <b>Child’s shelf</b> there); on wide screens, the button under the name in the rail. <b>Fix:</b> “My stories” was being cut to “Stories…” beside the Dino icon. Now the title is the first thing to give way: it switches to a short form (“Stories”), then hides; the Dino icon stays as the shelf’s mark. The Grown-ups pill always keeps its word. The language button is a flag of the current story language on every screen, never text: in the header row with the title: left of the pill on phones, at the right end of the title row in the wide rails. The Grown-ups button keeps its full row.</div>
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:#8a8399;text-transform:uppercase;margin-top:28px">Kids’ shelf · phones · portrait</div>
+ <div style="display:flex;flex-wrap:wrap;gap:36px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">K1 · iPhone 8 · 375 × 667</div>
+   <div style="width:403px;padding:70px 14px 86px;border-radius:56px;background:#2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);position:relative">
+    <div style="position:absolute;top:32px;left:50%;margin-left:-30px;width:60px;height:6px;border-radius:3px;background:#46405c"></div>
+    <div data-screen-label="K1 Shelf iPhone 8" style="width:375px;height:667px;overflow:hidden;background:#FFF6E6;display:flex;flex-direction:column">
+     <div style="height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 8px;font-size:12px;font-weight:600"><span style="width:60px">Carrier</span><span>9:41</span><span style="width:60px;text-align:right">100%</span></div>
+     <div style="display:flex;align-items:center;gap:10px;padding:10px 12px 14px 16px;flex-shrink:0"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:40px;height:40px;border-radius:11px;flex-shrink:0"><span style="flex:1;font-size:22px;font-weight:600;line-height:1.1">Stories</span><div style="width:44px;height:44px;border-radius:50%;background:rgba(43,37,64,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:26px;height:26px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 1.5px rgba(43,37,64,.15)"><svg width="100%" height="100%" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" style="display:block"><rect width="60" height="30" fill="#012169"></rect><path d="M0 0L60 30M60 0L0 30" stroke="#fff" stroke-width="6"></path><path d="M0 0L60 30M60 0L0 30" stroke="#C8102E" stroke-width="2"></path><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"></path><path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="6"></path></svg></div></div><div style="height:44px;padding:0 14px 0 11px;border-radius:22px;background:rgba(43,37,64,.07);display:flex;align-items:center;gap:6px;color:#3a3450;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg><span style="font-size:15px;font-weight:600">Grown-ups</span></div></div>
+     <div style="flex:1;min-height:0;padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:14px 12px;align-content:start;overflow:hidden">
+      <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="6"><div style="display:flex;flex-direction:column;gap:7px"><div style="aspect-ratio:3/4;border-radius:16px;background:{{ c.bg }};box-shadow:0 4px 0 rgba(43,37,64,.08)"></div><span style="font-size:14px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+     </div>
+    </div>
+    <div style="position:absolute;bottom:16px;left:50%;margin-left:-28px;width:56px;height:56px;border-radius:50%;border:3px solid #46405c"></div>
+   </div>
+   <div style="width:403px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Same header geometry as P1: the pill sits exactly where the coral Child’s shelf pill sits in the corner, at the same 44 pt height. At 375 pt with the flag shown, “My stories” doesn’t fit, so the title takes its short form, “Stories”. No tab bar: the shelf has one job. Two columns of big covers.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">K1-de · iPhone 8 · German, language button shown</div>
+   <div style="width:403px;padding:70px 14px 86px;border-radius:56px;background:#2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);position:relative">
+    <div style="position:absolute;top:32px;left:50%;margin-left:-30px;width:60px;height:6px;border-radius:3px;background:#46405c"></div>
+    <div data-screen-label="K1-de Shelf German" style="width:375px;height:667px;overflow:hidden;background:#FFF6E6;display:flex;flex-direction:column">
+     <div style="height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 8px;font-size:12px;font-weight:600"><span style="width:60px">Carrier</span><span>9:41</span><span style="width:60px;text-align:right">100%</span></div>
+     <div style="display:flex;align-items:center;gap:8px;padding:10px 12px 14px 16px;flex-shrink:0"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:40px;height:40px;border-radius:11px;flex-shrink:0"><span style="flex:1"></span><div style="width:44px;height:44px;border-radius:50%;background:rgba(43,37,64,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:26px;height:26px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 1.5px rgba(43,37,64,.15)"><svg width="100%" height="100%" viewBox="0 0 3 3" preserveAspectRatio="none" style="display:block"><rect width="3" height="1" fill="#000"></rect><rect y="1" width="3" height="1" fill="#DD0000"></rect><rect y="2" width="3" height="1" fill="#FFCE00"></rect></svg></div></div><div style="height:44px;padding:0 14px 0 11px;border-radius:22px;background:rgba(43,37,64,.07);display:flex;align-items:center;gap:6px;color:#3a3450;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg><span style="font-size:15px;font-weight:600">Für Erwachsene</span></div></div>
+     <div style="flex:1;min-height:0;padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:14px 12px;align-content:start;overflow:hidden">
+      <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="6"><div style="display:flex;flex-direction:column;gap:7px"><div style="aspect-ratio:3/4;border-radius:16px;background:{{ c.bg }};box-shadow:0 4px 0 rgba(43,37,64,.08)"></div><span style="font-size:14px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+     </div>
+    </div>
+    <div style="position:absolute;bottom:16px;left:50%;margin-left:-28px;width:56px;height:56px;border-radius:50%;border:3px solid #46405c"></div>
+   </div>
+   <div style="width:403px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">The case that cut the title. With the flag and “Für Erwachsene”, even the short form “Geschichten” doesn’t fit at 375, so the title hides and the Dino icon stands alone. Order of give: full title → short title → no title. The pill and the flag never shrink. Replaces 102’s rule. Each language needs a short form in the strings file (<code>ShelfTitleShort</code>).</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">K2 · iPhone 15 Pro · 393 × 852</div>
+   <div data-screen-label="K2 Shelf iPhone 15 Pro" style="width:405px;height:864px;border-radius:55px;overflow:hidden;background:#FFF6E6;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;position:relative">
+    <div style="height:54px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:6px 32px 0 40px;font-size:15px;font-weight:600;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:11px;margin-left:-63px;width:126px;height:37px;border-radius:19px;background:#000"></div><span>100%</span></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px 16px 18px;flex-shrink:0"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:44px;height:44px;border-radius:12px;flex-shrink:0"><span style="flex:1;font-size:22px;font-weight:600;line-height:1.1">My stories</span><div style="width:44px;height:44px;border-radius:50%;background:rgba(43,37,64,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:26px;height:26px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 1.5px rgba(43,37,64,.15)"><svg width="100%" height="100%" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" style="display:block"><rect width="60" height="30" fill="#012169"></rect><path d="M0 0L60 30M60 0L0 30" stroke="#fff" stroke-width="6"></path><path d="M0 0L60 30M60 0L0 30" stroke="#C8102E" stroke-width="2"></path><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"></path><path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="6"></path></svg></div></div><div style="height:44px;padding:0 16px 0 12px;border-radius:22px;background:rgba(43,37,64,.07);display:flex;align-items:center;gap:6px;color:#3a3450;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg><span style="font-size:15px;font-weight:600">Grown-ups</span></div></div>
+    <div style="flex:1;min-height:0;padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:16px 14px;align-content:start;overflow:hidden">
+     <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="6"><div style="display:flex;flex-direction:column;gap:7px"><div style="aspect-ratio:3/4;border-radius:16px;background:{{ c.bg }};box-shadow:0 4px 0 rgba(43,37,64,.08)"></div><span style="font-size:14.5px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+    </div>
+    <div style="position:absolute;bottom:8px;left:50%;margin-left:-67px;width:134px;height:5px;border-radius:3px;background:#2b2540"></div>
+   </div>
+   <div style="width:405px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">The covers run under the home bar (no tab bar to sit on). Pair with P2: header row at the same height, pill in the same spot.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">K3 · iPhone 17 Pro Max · 440 × 956</div>
+   <div data-screen-label="K3 Shelf iPhone 17 Pro Max" style="width:452px;height:968px;border-radius:62px;overflow:hidden;background:#FFF6E6;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;position:relative">
+    <div style="height:62px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 36px 0 48px;font-size:16px;font-weight:600;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:14px;margin-left:-63px;width:126px;height:37px;border-radius:19px;background:#000"></div><span>100%</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 16px 18px 22px;flex-shrink:0"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:48px;height:48px;border-radius:13px;flex-shrink:0"><span style="flex:1;font-size:24px;font-weight:600;line-height:1.1">My stories</span><div style="width:48px;height:48px;border-radius:50%;background:rgba(43,37,64,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:30px;height:30px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 1.5px rgba(43,37,64,.15)"><svg width="100%" height="100%" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" style="display:block"><rect width="60" height="30" fill="#012169"></rect><path d="M0 0L60 30M60 0L0 30" stroke="#fff" stroke-width="6"></path><path d="M0 0L60 30M60 0L0 30" stroke="#C8102E" stroke-width="2"></path><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"></path><path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="6"></path></svg></div></div><div style="height:48px;padding:0 18px 0 14px;border-radius:24px;background:rgba(43,37,64,.07);display:flex;align-items:center;gap:7px;color:#3a3450;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg><span style="font-size:16px;font-weight:600">Grown-ups</span></div></div>
+    <div style="flex:1;min-height:0;padding:0 20px;display:grid;grid-template-columns:1fr 1fr;gap:18px 16px;align-content:start;overflow:hidden">
+     <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="6"><div style="display:flex;flex-direction:column;gap:8px"><div style="aspect-ratio:3/4;border-radius:18px;background:{{ c.bg }};box-shadow:0 4px 0 rgba(43,37,64,.08)"></div><span style="font-size:15.5px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+    </div>
+    <div style="position:absolute;bottom:8px;left:50%;margin-left:-72px;width:144px;height:5px;border-radius:3px;background:#2b2540"></div>
+   </div>
+   <div style="width:452px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Still two columns: bigger covers are easier for small fingers. Sizes step up as in P3 (title 24, pill 48).</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">K4 · Pixel 10 Pro · 412 × 915 dp</div>
+   <div data-screen-label="K4 Shelf Pixel 10 Pro" style="width:424px;height:927px;border-radius:46px;overflow:hidden;background:#FFF6E6;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;position:relative">
+    <div style="height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:4px 26px 0;font-size:14px;font-weight:500;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:13px;margin-left:-11px;width:22px;height:22px;border-radius:50%;background:#000"></div><span>100%</span></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px 16px 20px;flex-shrink:0"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:44px;height:44px;border-radius:12px;flex-shrink:0"><span style="flex:1;font-size:22px;font-weight:600;line-height:1.1">My stories</span><div style="width:48px;height:48px;border-radius:50%;background:rgba(43,37,64,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:30px;height:30px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 1.5px rgba(43,37,64,.15)"><svg width="100%" height="100%" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" style="display:block"><rect width="60" height="30" fill="#012169"></rect><path d="M0 0L60 30M60 0L0 30" stroke="#fff" stroke-width="6"></path><path d="M0 0L60 30M60 0L0 30" stroke="#C8102E" stroke-width="2"></path><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"></path><path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="6"></path></svg></div></div><div style="height:48px;padding:0 18px 0 14px;border-radius:24px;background:rgba(43,37,64,.07);display:flex;align-items:center;gap:6px;color:#3a3450;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg><span style="font-size:15px;font-weight:600">Grown-ups</span></div></div>
+    <div style="flex:1;min-height:0;padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:16px 14px;align-content:start;overflow:hidden">
+     <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="6"><div style="display:flex;flex-direction:column;gap:7px"><div style="aspect-ratio:3/4;border-radius:16px;background:{{ c.bg }};box-shadow:0 4px 0 rgba(43,37,64,.08)"></div><span style="font-size:15px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+    </div>
+    <div style="position:absolute;bottom:9px;left:50%;margin-left:-54px;width:108px;height:4px;border-radius:2px;background:#2b2540"></div>
+   </div>
+   <div style="width:424px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Edge-to-edge like P4. Android Back on the shelf does nothing (a child can’t back out of the app by accident), as today.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">K5 · Samsung S26 Ultra · 412 × 891 dp</div>
+   <div data-screen-label="K5 Shelf Samsung S26 Ultra" style="width:424px;height:903px;border-radius:26px;overflow:hidden;background:#FFF6E6;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column">
+    <div style="height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:2px 20px 0;font-size:13.5px;font-weight:500;position:relative"><span>9:41</span><div style="position:absolute;left:50%;top:10px;margin-left:-9px;width:18px;height:18px;border-radius:50%;background:#000"></div><span>100%</span></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px 16px 20px;flex-shrink:0"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:44px;height:44px;border-radius:12px;flex-shrink:0"><span style="flex:1;font-size:22px;font-weight:600;line-height:1.1">My stories</span><div style="width:48px;height:48px;border-radius:50%;background:rgba(43,37,64,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:30px;height:30px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 1.5px rgba(43,37,64,.15)"><svg width="100%" height="100%" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" style="display:block"><rect width="60" height="30" fill="#012169"></rect><path d="M0 0L60 30M60 0L0 30" stroke="#fff" stroke-width="6"></path><path d="M0 0L60 30M60 0L0 30" stroke="#C8102E" stroke-width="2"></path><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"></path><path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="6"></path></svg></div></div><div style="height:48px;padding:0 18px 0 14px;border-radius:24px;background:rgba(43,37,64,.07);display:flex;align-items:center;gap:6px;color:#3a3450;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg><span style="font-size:15px;font-weight:600">Grown-ups</span></div></div>
+    <div style="flex:1;min-height:0;padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:16px 14px;align-content:start;overflow:hidden">
+     <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="6"><div style="display:flex;flex-direction:column;gap:7px"><div style="aspect-ratio:3/4;border-radius:16px;background:{{ c.bg }};box-shadow:0 4px 0 rgba(43,37,64,.08)"></div><span style="font-size:15px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+    </div>
+    <div style="height:48px;flex-shrink:0;background:#FFF6E6;border-top:1px solid #efe4cf;display:grid;grid-template-columns:repeat(3,1fr);align-items:center;justify-items:center;color:#5a5470"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 5h12v14H6z"></path><path d="M10 9v6M14 9v6"></path></svg><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="5"></rect></svg><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div>
+   </div>
+   <div style="width:424px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">With the three-button bar, as P5. The bar takes the shelf’s cream so it doesn’t read as a tab bar.</div>
+  </div>
+
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:#8a8399;text-transform:uppercase;margin-top:48px">Kids’ shelf · 600 wide or more · a cream rail</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">KL1 · Phone landscape · iPhone 15 Pro · 852 × 393</div>
+   <div data-screen-label="KL1 Shelf phone landscape" style="width:864px;height:405px;border-radius:55px;overflow:hidden;background:#FFF6E6;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;position:relative">
+    <div style="width:250px;flex-shrink:0;background:rgba(43,37,64,.05);padding:18px 14px 18px 62px;display:flex;flex-direction:column;gap:8px;position:relative">
+     <div style="position:absolute;left:11px;top:50%;margin-top:-63px;width:37px;height:126px;border-radius:19px;background:#000"></div>
+     <div style="display:flex;align-items:center;gap:6px;font-size:16px;font-weight:600;padding:0 0 4px"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:28px;height:28px;border-radius:8px"><span style="flex:1;min-width:0">My stories</span><div style="width:44px;height:44px;border-radius:50%;background:rgba(43,37,64,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:26px;height:26px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 1.5px rgba(43,37,64,.15)"><svg width="100%" height="100%" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" style="display:block"><rect width="60" height="30" fill="#012169"></rect><path d="M0 0L60 30M60 0L0 30" stroke="#fff" stroke-width="6"></path><path d="M0 0L60 30M60 0L0 30" stroke="#C8102E" stroke-width="2"></path><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"></path><path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="6"></path></svg></div></div></div>
+     <div style="height:44px;border-radius:22px;background:rgba(43,37,64,.07);color:#3a3450;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg>Grown-ups</div>
+    </div>
+    <div style="flex:1;min-width:0;padding:18px 50px 0 22px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px 14px;align-content:start;overflow:hidden">
+     <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="8"><div style="display:flex;flex-direction:column;gap:7px"><div style="aspect-ratio:3/4;border-radius:16px;background:{{ c.bg }};box-shadow:0 4px 0 rgba(43,37,64,.08)"></div><span style="font-size:14px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+    </div>
+    <div style="position:absolute;bottom:8px;left:50%;margin-left:-67px;width:134px;height:5px;border-radius:3px;background:#2b2540"></div>
+   </div>
+   <div style="width:864px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Pair with L1: same 250 pt rail, same name-then-button order. The Grown-ups pill sits exactly where the coral button sits, so going in and coming out is the same tap. The rail is the shelf’s cream with a 5% ink wash, not a new colour. Four columns (not five) keeps covers big. The flag ends the title row; the Grown-ups button keeps the full row below, matching the corner’s coral button.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">KT1 · Tablet portrait · 820 × 1180</div>
+   <div data-screen-label="KT1 Shelf tablet portrait" style="width:836px;height:1196px;border-radius:40px;overflow:hidden;background:#FFF6E6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex">
+    <div style="width:260px;flex-shrink:0;background:rgba(43,37,64,.05);padding:40px 18px 32px 26px;display:flex;flex-direction:column;gap:12px">
+     <div style="display:flex;align-items:center;gap:10px;font-size:20px;font-weight:600;line-height:1.15;padding:0 0 6px"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:40px;height:40px;border-radius:12px;flex-shrink:0"><span style="flex:1;min-width:0">My stories</span><div style="width:48px;height:48px;border-radius:50%;background:rgba(43,37,64,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:30px;height:30px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 1.5px rgba(43,37,64,.15)"><svg width="100%" height="100%" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" style="display:block"><rect width="60" height="30" fill="#012169"></rect><path d="M0 0L60 30M60 0L0 30" stroke="#fff" stroke-width="6"></path><path d="M0 0L60 30M60 0L0 30" stroke="#C8102E" stroke-width="2"></path><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"></path><path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="6"></path></svg></div></div></div>
+     <div style="height:56px;border-radius:28px;background:rgba(43,37,64,.07);color:#3a3450;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg>Grown-ups</div>
+    </div>
+    <div style="flex:1;min-width:0;padding:40px 32px 0 28px;display:grid;grid-template-columns:repeat(3,1fr);gap:28px 18px;align-content:start;overflow:hidden">
+     <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="9"><div style="display:flex;flex-direction:column;gap:8px"><div style="aspect-ratio:3/4;border-radius:18px;background:{{ c.bg }};box-shadow:0 5px 0 rgba(43,37,64,.08)"></div><span style="font-size:17px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+    </div>
+   </div>
+   <div style="width:836px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Replaces 133. Pair with T1: the rail is the same 260 dp, and switching places only changes its colour. Three columns, down from 133’s four, in exchange for the match; covers are still bigger than on any phone.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">KT2 · Tablet landscape · 1180 × 820</div>
+   <div data-screen-label="KT2 Shelf tablet landscape" style="width:1196px;height:836px;border-radius:40px;overflow:hidden;background:#FFF6E6;border:8px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex">
+    <div style="width:290px;flex-shrink:0;background:rgba(43,37,64,.05);padding:36px 20px 32px 32px;display:flex;flex-direction:column;gap:12px">
+     <div style="display:flex;align-items:center;gap:10px;font-size:22px;font-weight:600;line-height:1.15;padding:0 2px 6px"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:44px;height:44px;border-radius:12px;flex-shrink:0"><span style="flex:1;min-width:0">My stories</span><div style="width:52px;height:52px;border-radius:50%;background:rgba(43,37,64,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:34px;height:34px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 1.5px rgba(43,37,64,.15)"><svg width="100%" height="100%" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" style="display:block"><rect width="60" height="30" fill="#012169"></rect><path d="M0 0L60 30M60 0L0 30" stroke="#fff" stroke-width="6"></path><path d="M0 0L60 30M60 0L0 30" stroke="#C8102E" stroke-width="2"></path><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"></path><path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="6"></path></svg></div></div></div>
+     <div style="height:56px;border-radius:28px;background:rgba(43,37,64,.07);color:#3a3450;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg>Grown-ups</div>
+    </div>
+    <div style="flex:1;min-width:0;padding:36px 40px 0 32px;display:grid;grid-template-columns:repeat(4,1fr);gap:26px 20px;align-content:start;overflow:hidden">
+     <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="8"><div style="display:flex;flex-direction:column;gap:8px"><div style="aspect-ratio:3/4;border-radius:18px;background:{{ c.bg }};box-shadow:0 5px 0 rgba(43,37,64,.08)"></div><span style="font-size:17px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+    </div>
+   </div>
+   <div style="width:1196px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Pair with T2: 290 dp rail, four columns.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">KW1 · Windows · 1100 × 760 · Grown-ups hovered</div>
+   <div data-screen-label="KW1 Shelf Windows" style="width:1100px;height:760px;border-radius:8px;overflow:hidden;background:#FFF6E6;border:1px solid #c9c2b4;box-shadow:0 24px 60px rgba(43,37,64,.28);display:flex;flex-direction:column">
+    <div style="height:32px;flex-shrink:0;display:flex;align-items:center;background:#FFF6E6;color:#2b2540"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:16px;height:16px;border-radius:4px;margin:0 10px 0 14px"><span style="flex:1;font-size:12.5px;font-weight:500;color:#5a5470">Dino Reader</span><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:1px;background:#2b2540"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:10px;border:1px solid #2b2540"></div></div><div style="width:46px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px">✕</div></div>
+    <div style="flex:1;min-height:0;display:flex">
+     <div style="width:280px;flex-shrink:0;background:rgba(43,37,64,.05);padding:14px 20px 24px 28px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px;font-size:21px;font-weight:600;line-height:1.15;padding:0 2px 6px"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:40px;height:40px;border-radius:11px;flex-shrink:0"><span style="flex:1;min-width:0">My stories</span><div style="width:48px;height:48px;border-radius:50%;background:rgba(43,37,64,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:30px;height:30px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 1.5px rgba(43,37,64,.15)"><svg width="100%" height="100%" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" style="display:block"><rect width="60" height="30" fill="#012169"></rect><path d="M0 0L60 30M60 0L0 30" stroke="#fff" stroke-width="6"></path><path d="M0 0L60 30M60 0L0 30" stroke="#C8102E" stroke-width="2"></path><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"></path><path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="6"></path></svg></div></div></div>
+      <div style="height:52px;border-radius:26px;background:rgba(43,37,64,.13);color:#2b2540;font-size:15.5px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path><path d="M12 14.6v2"></path></svg>Grown-ups</div>
+     </div>
+     <div style="flex:1;min-width:0;padding:20px 40px 0 32px;display:grid;grid-template-columns:repeat(4,1fr);gap:24px 18px;align-content:start;overflow:hidden">
+      <sc-for list="{{ shelf }}" as="c" hint-placeholder-count="8"><div style="display:flex;flex-direction:column;gap:8px"><div style="aspect-ratio:3/4;border-radius:16px;background:{{ c.bg }};box-shadow:0 5px 0 rgba(43,37,64,.08)"></div><span style="font-size:16px;font-weight:600;line-height:1.2">{{ c.t }}</span></div></sc-for>
+     </div>
+    </div>
+   </div>
+   <div style="width:1100px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">Replaces 151. Pair with W1: the title bar is cream here and ink in the corner, as before. The Grown-ups button is shown hovered (fill steps from 7% to 13% ink). No keyboard shortcut opens the corner: the gate still needs the hold.</div>
+  </div>
+
+ </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const img = n => `url(assets/${n}/cover.jpg) center/cover`;
+    return {
+      shelf: [
+        { bg: img('good-enough'), t: 'Good Enough' },
+        { bg: img('three-little-pigs'), t: 'The Three Little Pigs' },
+        { bg: img('gingerbread-man'), t: 'The Gingerbread Man' },
+        { bg: img('tortoise-and-hare'), t: 'The Tortoise and the Hare' },
+        { bg: '#FFC24D', t: 'The Lion and the Mouse' },
+        { bg: '#7FD0FF', t: 'The Tale of Peter Rabbit' },
+        { bg: '#A9A2FF', t: 'The Ugly Duckling' },
+        { bg: '#FF7A59', t: 'Goldilocks' },
+        { bg: '#9BD67A', t: 'The Little Red Hen' },
+        { bg: '#FFC24D', t: 'The Elves and the Shoemaker' },
+        { bg: '#7FD0FF', t: 'Chicken Licken' },
+        { bg: '#A9A2FF', t: 'The Boy Who Cried Wolf' }
+      ],
+      store: [
+        { bg: img('gingerbread-man'), t: 'The Gingerbread Man', by: 'Retold traditional tale', meta: '12 pages · 6 min', owned: true, get: false },
+        { bg: img('tortoise-and-hare'), t: 'The Tortoise and the Hare', by: 'Retold from Aesop', meta: '10 pages · 5 min', owned: true, get: false },
+        { bg: '#FFC24D', t: 'The Lion and the Mouse', by: 'Retold from Aesop', meta: '8 pages · 4 min', owned: false, get: true },
+        { bg: '#7FD0FF', t: 'The Tale of Peter Rabbit', by: 'Beatrix Potter, 1902', meta: '15 pages · 8 min', owned: false, get: true },
+        { bg: '#A9A2FF', t: 'The Ugly Duckling', by: 'Hans Christian Andersen', meta: '14 pages · 7 min', owned: false, get: true },
+        { bg: '#9BD67A', t: 'The Little Red Hen', by: 'Retold folk tale', meta: '9 pages · 4 min', owned: false, get: true },
+        { bg: '#FF7A59', t: 'Goldilocks', by: 'Retold traditional tale', meta: '11 pages · 5 min', owned: false, get: true },
+        { bg: '#FFC24D', t: 'The Elves and the Shoemaker', by: 'Brothers Grimm', meta: '12 pages · 6 min', owned: false, get: true }
+      ],
+      reading: [
+        { k: 'Language', v: 'English' },
+        { k: 'Story languages', v: 'English, فارسی' },
+        { k: 'Narrator voice', v: 'Story Granny' },
+        { k: 'Reading speed', v: '0.8x' },
+        { k: 'Animal sounds', v: 'On' }
+      ],
+      device: [
+        { k: 'Backup', v: '' },
+        { k: 'Usage counts', v: 'On' },
+        { k: 'About & updates', v: '' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
