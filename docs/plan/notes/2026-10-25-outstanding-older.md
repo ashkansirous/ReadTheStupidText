@@ -2,6 +2,8 @@
 
 Built-but-unverified items for Slices 43-95 and older, moved verbatim from plan.md's *Outstanding work* by archive-docs. Each slice file holds its own detail.
 
+*History only since 2026-11-08: the lines still open moved to [unverified.md](../unverified.md) (last block), the rest were closed by the [triage](2026-11-08-unverified-triage.md).*
+
 - Slice 43: the 8 translated Play listings are only worth adding when the app goes to Play production (it is closed testing now); get a native read first. The Microsoft Store keeps its existing Windows-specific listing (decided 2026-10-20). ([slice](docs/plan/slices/43-store-listing-refresh.md))
 - Slice 59: attribution quality on a real children's book text (only unit-test fixtures so far); check with the first Slice 60 read ([slice](docs/plan/slices/59-dialogue-parser-voice-caster.md)).
 - Slice 58: decide whether Dino Reader project additions to `ReadTheStupidText.slnx` / the workflows should keep re-releasing the RTST apps (today `*.slnx` and `release.yml` are core paths in `ship-targets.mjs`); seen when Slice 59's merge shipped an unchanged RTST release ([slice](docs/plan/slices/58-dino-reader-skeleton.md)).
