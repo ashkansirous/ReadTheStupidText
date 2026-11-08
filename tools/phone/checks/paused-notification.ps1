@@ -25,7 +25,7 @@ param(
     [switch]$Stall   # Slice 241 item 7: not a paused notice at all: one body read hangs (hook stall-pack-network) and the stall guard must log it (see pack-stall.ps1)
 )
 $ErrorActionPreference = 'Stop'
-if ($Repost) { $NetworkOnly = [switch]$true }   # the re-post variant cuts the network the same way
+$useNetworkOnly = $NetworkOnly -or $Repost   # the re-post variant cuts the network the same way
 . (Join-Path $PSScriptRoot '..\common.ps1')
 . (Join-Path $PSScriptRoot '_lib.ps1')
 . (Join-Path $PSScriptRoot '_device.ps1')
@@ -286,7 +286,7 @@ function Invoke-RepostSecondEnd($First, [string]$AppPid) {
 }
 
 function Invoke-PausedCheck {
-    if ($NetworkOnly) { Set-NetworkOnlySetup } else { Assert-TimeLimitPhone; Set-ShortTimeLimit }
+    if ($useNetworkOnly) { Set-NetworkOnlySetup } else { Assert-TimeLimitPhone; Set-ShortTimeLimit }
     Set-DevMarker $Phone $package $script:ThrottleMarkerName
     $since = Get-PhoneEpochMs
     $appPid = Start-DevAppWithHook $Phone $package 'skip-first-run'
@@ -294,7 +294,7 @@ function Invoke-PausedCheck {
     if (-not $start) { return (New-CheckResult $false (Get-NoPackStartReason (Get-PidLog $Phone $appPid) @($packId))) }
     Write-Host "   download started: $($start.Line.Trim()); sending the app to the background"
     Invoke-Adb $Phone @('shell', 'input', 'keyevent', 'KEYCODE_HOME') | Out-Null
-    if ($NetworkOnly) {
+    if ($useNetworkOnly) {
         if (-not (Wait-AppBackgrounded)) { return (New-CheckResult $false "$package was still the resumed app 30 s after the HOME key, so the network cut would not be a background end") }
         Start-Sleep -Seconds $script:BackgroundSettleSeconds
         $timeout = [pscustomobject]@{ Time = $start.Time }
@@ -306,7 +306,7 @@ function Invoke-PausedCheck {
         Write-Host "   time limit fired; blocking the dev app's network (not the phone's) so the run ends unfinished"
     }
     $cutAt = (Get-PhoneEpochMs) / 1000.0   # the marker must come from this run's network cut, never an earlier one
-    if ($NetworkOnly) {
+    if ($useNetworkOnly) {
         $drop = Send-DevHook $Phone $App 'drop-pack-network'
         Write-Host "   drop-pack-network: $drop"
     } else {
@@ -315,11 +315,11 @@ function Invoke-PausedCheck {
     $marker = Wait-LogMatch $Phone $package $appPid $script:PausedMarkerPattern $PausedTimeoutSeconds $cutAt "waiting for PACKDL paused-notified after the run failed"
     if (-not $marker) { return (New-CheckResult $false "no 'PACKDL service paused-notified' within $PausedTimeoutSeconds s of cutting the network (the run did not end unfinished, or the app was on screen). The app's last lines: $(Get-AppLogTail (Get-PidLog $Phone $appPid) 6)") }
     Write-Host "   $($marker.Line.Trim())"
-    if ($NetworkOnly -and $marker.Line -notmatch 'reason=(offline|failed|transport)') { return (New-CheckResult $false "the paused-notified marker carries no end reason (Slice 233): $($marker.Line.Trim())") }
+    if ($useNetworkOnly -and $marker.Line -notmatch 'reason=(offline|failed|transport)') { return (New-CheckResult $false "the paused-notified marker carries no end reason (Slice 233): $($marker.Line.Trim())") }
     $note = Wait-PausedNotice $since
     if (-not $note) { return (New-CheckResult $false "the log said paused-notified but no notification titled '$($script:PausedTitle)' is in dumpsys notification (notifications off for the dev app?)") }
     if (-not (Test-PausedText $note)) { return (New-CheckResult $false "the paused notification does not name the language and the size: title '$($note.Title)', text '$($note.Text)'") }
-    if (-not $NetworkOnly) { $null = Set-Network $true }
+    if (-not $useNetworkOnly) { $null = Set-Network $true }
     if (-not (Test-AppResumedAfterTap)) { return (New-CheckResult $false "launching the notice's target did not bring $package to the foreground") }
     $restart = Wait-LogMatch $Phone $package $appPid $script:PackStartPattern $script:ResumeSeconds ($marker.Time + 0.001) "waiting for the download to start again"
     if (-not $restart) { return (New-CheckResult $false "the download did not log PACKDL start again within $($script:ResumeSeconds) s of the network coming back and the app opening") }
@@ -343,8 +343,8 @@ try {
     if (-not $moved -and (Test-PhonePathExists $movedPath)) { $moved = $true }   # the move happened but something after it threw
 } finally {
     $networkRestored = $true; $timeLimitRestored = $true
-    if (-not $NetworkOnly) { $networkRestored = Set-Network $true }   # the network-only variant never blocks the app's network (Slice 233)
-    if (-not $NetworkOnly) { $timeLimitRestored = Reset-TimeLimit }   # the network-only variant never set the timeout or the compat flag: leave any the phone already had
+    if (-not $useNetworkOnly) { $networkRestored = Set-Network $true }   # the network-only variant never blocks the app's network (Slice 233)
+    if (-not $useNetworkOnly) { $timeLimitRestored = Reset-TimeLimit }   # the network-only variant never set the timeout or the compat flag: leave any the phone already had
     if ($script:HealStarted) { Stop-HealWhenRestored $networkRestored $timeLimitRestored }
     if ($moved) { $restoreProblem = Restore-MovedPack }
 }
