@@ -2,6 +2,8 @@
 
 *Planned 2026-11-07; starts only when the release exists.* **Park note (2026-11-07, night run wave 5):** parked: waits for MAUI 10.0.130 or later on NuGet; newest was 10.0.120 (checked 2026-11-07 ~20:20Z). An external wait, not a user item. From [Slice 274](274-dino-ios-crash-after-leaving-parent-page.md): the iOS crash after leaving a parent page has a local workaround; the underlying fix is dotnet/maui PR #38662, which needs 10.0.130 or later. 10.0.120 is the newest on NuGet as of 2026-11-06 (`Directory.Build.props:7` pins `10.0.120`). iOS dSYMs per release are Slice 243's, not this slice's. Moved from plan.md's *Outstanding work*. Nothing is filed upstream (user rule: nothing leaves this machine as a report).
 
+**User, 2026-11-08:** "keep it in the plan until we get the update". The user sees no 10.0.130 planned; the next listed is 11.0. Read 2026-11-08 ~01:10Z: dotnet/maui #38662 merged 2026-09-30 into `inflight/current`, milestone ".NET 10 SR12"; its merge commit 334edc6b is not an ancestor of tags 10.0.120 or 11.0.100-rc.2 (GitHub compare: diverged), and 10.0.120's release notes don't mention #38662. Not checked: whether it was cherry-picked under another commit. NuGet newest: 10.0.120 and 11.0.0-rc.2.26505.5. A night run checks NuGet (and an 11.0 GA release) and leaves this slice planned if neither carries the fix.
+
 **Touches:** `Directory.Build.props`, `src/DinoReader.App/DinoReader.App.csproj`, `src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj`, `tests/DinoReader.Tests/LifecycleSubscriptionTests.cs`, `docs/plan/slices/295-bump-maui-version-for-pr-38662.md`
 
 ## Work
