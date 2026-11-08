@@ -1,6 +1,8 @@
 # Slice 336: Listening page: Farsi sukun sentence on Android and iPhone
 
-*Planned 2026-11-08.* The user asked for one slice per check that needs their ear ("Abou the ones that need my ear, I probably need a page to listen to them and say what I think. Add a slice for each so that you can implement a page for me to listen to them and tell what is wrong with them"). This one comes from Slice 245's open check, moved out of `docs/plan/unverified.md` on 2026-11-08 ([record](../notes/2026-11-08-unverified-triage.md)):
+*Dropped 2026-11-08 (planned 2026-11-08).* **Why dropped:** the check is Read The Stupid Text's Farsi reading (Piper `mana`, `piper-fa`; Dino has no speech engine since Slice 278). It asks whether Android and iPhone sound the same, which a PC-rendered listening page cannot show, and the code gives both the same pack and the same `ConfigureVits` settings (AndroidSupertonicSpeechReader.cs, IosTtsEngine.cs) with the shared chunker. A page was published (https://claude.ai/artifact/V9bF6fMchZovsM67xvV5Jp); the user asked "why do I have to mark this? ... this is the old engine", so it was withdrawn unanswered. Silent short Farsi words in the same path are a measured fix item in Slice 341.
+
+The user asked for one slice per check that needs their ear ("Abou the ones that need my ear, I probably need a page to listen to them and say what I think. Add a slice for each so that you can implement a page for me to listen to them and tell what is wrong with them"). This one comes from Slice 245's open check, moved out of `docs/plan/unverified.md` on 2026-11-08 ([record](../notes/2026-11-08-unverified-triage.md)):
 
 > **iOS:** The same Farsi sukun sentence sounding the same on Android and iOS.
 
