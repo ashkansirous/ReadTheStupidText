@@ -9,10 +9,22 @@ $script:NeedStubScripts = [ordered]@{
     'crash-stub'  = 'tools\crashes\stub-server.mjs'
 }
 $script:NeedStubPort = 8787
+# Where each stub saves its report-N.json by default (the stub scripts' own default --out).
+$script:NeedStubOutDirs = @{
+    'report-stub' = 'dino-report-stub'
+    'crash-stub'  = 'rtst-crash-stub'
+}
+
+# Removes the report-N.json files an earlier stub left for $Need, so a flow never reads old reports. Run for a stub this run started and for a reused one alike (a running stub numbers its next report after the highest file left, so it restarts at report-1).
+function Clear-NeedStubReports([string]$Need, [string]$OutDir = (Join-Path ([System.IO.Path]::GetTempPath()) $script:NeedStubOutDirs[$Need])) {
+    if (-not (Test-Path $OutDir)) { return }
+    Get-ChildItem -Path $OutDir -Filter 'report-*.json' -File | Where-Object { $_.Name -match '^report-\d+\.json$' } | Remove-Item -Force
+}
 
 # Pure: the `needs` values that name a host stub, in the order they appear.
 function Get-StubNeeds([string[]]$Needs) {
-    return @($Needs | Where-Object { $script:NeedStubScripts.Contains($_) })
+    # A flow with no `# needs:` header passes $null (or an empty list, or blank values): it needs no stub.
+    return @($Needs | Where-Object { -not [string]::IsNullOrEmpty($_) -and $script:NeedStubScripts.Contains($_) })
 }
 
 # Pure: the stub script (relative to the repo root) for one `needs` value.
@@ -74,14 +86,15 @@ function Start-NeedStub([string]$Need, [string]$RepoRoot, [int]$Port = $script:N
     if (Test-PortListening $Port) {
         $identity = Get-StubIdentity $Port
         if ($identity -ne $Need) { throw "Port $Port is held by '$identity' (not '$Need'): a stale or other stub is listening, and the flow would run against it. Stop it (or the process holding the port) and run again." }
-        Write-Host "STUB $Need already listening on port $Port (not started by this run, left running)"
+        Clear-NeedStubReports $Need
+        Write-Host "STUB $Need already listening on port $Port (not started by this run, left running; its old reports cleared)"
         return [pscustomobject]@{ Process = $null; Port = $Port; Script = $script }
     }
     $node = (Get-Command node -ErrorAction Stop).Source
     $process = Start-Process -FilePath $node -ArgumentList "`"$script`" --port $Port" -WindowStyle Hidden -PassThru
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $deadline -and -not $process.HasExited) {
-        if (Test-PortListening $Port) { Write-Host "STUB $Need started on port $Port (pid $($process.Id))"; return [pscustomobject]@{ Process = $process; Port = $Port; Script = $script } }
+        if (Test-PortListening $Port) { Clear-NeedStubReports $Need; Write-Host "STUB $Need started on port $Port (pid $($process.Id))"; return [pscustomobject]@{ Process = $process; Port = $Port; Script = $script } }
         Start-Sleep -Milliseconds 300
     }
     if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue }

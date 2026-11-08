@@ -736,7 +736,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         string path;
         try
         {
-            path = await _stall.WatchAsync(generated, token);
+            path = await _stall.WatchAsync(generated, token, firstChunk: index == 0);
         }
         catch (OperationCanceledException)
         {

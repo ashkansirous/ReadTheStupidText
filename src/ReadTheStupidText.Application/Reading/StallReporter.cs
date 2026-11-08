@@ -28,11 +28,12 @@ public sealed class StallReporter(object owner)
     /// <summary>
     /// Awaits <paramref name="pending"/>; a task that is not finished yet counts as a stall for as long as it takes. Watches are counted,
     /// so the stall ends only when the last of overlapping watches (a replaced read ending late, its replacement still waiting) is done.
+    /// <paramref name="firstChunk"/> is true for chunk 0 of a read: only that wait may take an armed Debug <see cref="StallHook"/> request, so a running read's later chunks never use it up.
     /// </summary>
-    public async Task<T> WatchAsync<T>(Task<T> pending, CancellationToken token)
+    public async Task<T> WatchAsync<T>(Task<T> pending, CancellationToken token, bool firstChunk = false)
     {
 #if DEBUG
-        bool held = Hook.Take(); // Slice 320 item 7: the stall-read test hook holds this one chunk wait so the overlay can be reached
+        bool held = firstChunk && Hook.Take(); // Slice 320 item 7: the stall-read test hook holds a read's first chunk wait (never a later chunk) so the overlay can be reached
 #else
         const bool held = false;
 #endif

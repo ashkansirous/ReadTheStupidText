@@ -561,7 +561,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         string wavPath;
         try
         {
-            wavPath = await _stall.WatchAsync(generated, token);
+            wavPath = await _stall.WatchAsync(generated, token, firstChunk: index == 0);
         }
         catch (OperationCanceledException)
         {

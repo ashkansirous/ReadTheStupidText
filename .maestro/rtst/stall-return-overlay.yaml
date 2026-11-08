@@ -3,6 +3,7 @@
 # Precondition: a neural voice pack is installed (the system voice has no chunk wait): run `tools/phone/run-checks.ps1 -Prepare` style setup or any flow that downloaded it first; no clearState keeps it.
 # Without it no chunk wait is held and "STALL hold begins" is never written, so the flow fails instead of passing on the system voice.
 # expect-log: HOOK skip-first-run ok
+# expect-log: HOOK set-language ok en
 # expect-log: HOOK stall-read ok
 # expect-log: STALL hold begins
 # expect-log: STALL hold released
@@ -18,6 +19,16 @@ name: The stall overlay comes back when the person returns to the reader
     visible:
       id: EditLink
     timeout: 20000
+# skip-first-run keeps a stored UI language, so an earlier flow's Farsi would make the overlay line Farsi and the read a translation: put English back by hook (a no-op when it already is).
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 15000
 - tapOn:
     id: EditLink
     waitToSettleTimeoutMs: 300

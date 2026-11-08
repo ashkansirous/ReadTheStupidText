@@ -610,7 +610,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         string wavPath;
         try
         {
-            wavPath = await _stall.WatchAsync(generated, token);
+            wavPath = await _stall.WatchAsync(generated, token, firstChunk: index == 0);
         }
         catch (OperationCanceledException)
         {

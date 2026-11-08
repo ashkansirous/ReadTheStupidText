@@ -17,7 +17,7 @@ public class StallHookTests
         using var stop = new CancellationTokenSource();
 
         hook.Arm();
-        Task<string> waiting = reporter.WatchAsync(Task.FromResult("audio"), stop.Token);
+        Task<string> waiting = reporter.WatchAsync(Task.FromResult("audio"), stop.Token, firstChunk: true);
 
         Assert.False(waiting.IsCompleted);
         Assert.True(reporter.IsStalled);
@@ -48,7 +48,7 @@ public class StallHookTests
         var reporter = new StallReporter(this) { Hook = hook };
 
         hook.Arm();
-        string value = await reporter.WatchAsync(Task.FromResult("audio"), CancellationToken.None);
+        string value = await reporter.WatchAsync(Task.FromResult("audio"), CancellationToken.None, firstChunk: true);
 
         Assert.Equal("audio", value);
         Assert.False(reporter.IsStalled);
@@ -62,11 +62,30 @@ public class StallHookTests
         var reporter = new StallReporter(this) { Hook = hook };
 
         hook.Arm();
-        await reporter.WatchAsync(Task.FromResult("first"), CancellationToken.None);
-        Task<string> second = reporter.WatchAsync(Task.FromResult("second"), CancellationToken.None);
+        await reporter.WatchAsync(Task.FromResult("first"), CancellationToken.None, firstChunk: true);
+        Task<string> second = reporter.WatchAsync(Task.FromResult("second"), CancellationToken.None, firstChunk: true);
 
         Assert.True(second.IsCompletedSuccessfully);
         Assert.False(reporter.IsStalled);
+    }
+
+    [Fact]
+    public async Task A_later_chunk_wait_of_another_read_does_not_use_up_the_request()
+    {
+        var hook = new StallHook { HoldFor = TimeSpan.FromMilliseconds(50) };
+        var reporter = new StallReporter(this) { Hook = hook };
+
+        hook.Arm();
+        Task<string> laterChunk = reporter.WatchAsync(Task.FromResult("chunk 3"), CancellationToken.None);
+
+        Assert.True(laterChunk.IsCompletedSuccessfully);
+        Assert.False(reporter.IsStalled);
+
+        Task<string> firstChunkOfTheRead = reporter.WatchAsync(Task.FromResult("chunk 0"), CancellationToken.None, firstChunk: true);
+
+        Assert.False(firstChunkOfTheRead.IsCompleted);
+        Assert.True(reporter.IsStalled);
+        Assert.Equal("chunk 0", await firstChunkOfTheRead);
     }
 
     [Fact]

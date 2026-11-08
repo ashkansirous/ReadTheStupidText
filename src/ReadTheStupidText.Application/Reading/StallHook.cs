@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
-/// Slice 320 item 7 (Debug only): the <c>stall-read</c> test hook arms one held chunk wait. The next chunk wait that starts after arming (the first <see cref="StallReporter.WatchAsync{T}"/>, nothing else:
+/// Slice 320 item 7 (Debug only): the <c>stall-read</c> test hook arms one held chunk wait. The next first-chunk wait that starts after arming (a <see cref="StallReporter.WatchAsync{T}"/> call with firstChunk true, i.e. chunk 0 of a read; later chunks never take it:
 /// the request is used up by it) then counts as a stall for <see cref="HoldFor"/> (90 s), or until its read is stopped, even though the chunk is ready, so the "Still getting the voice ready" overlay and its
 /// Cancel can be reached on a device (Android and iOS alike: the hook arrives through each platform's entry point). The request names no read: a flow arms it right before it starts a read of ONE short sentence,
 /// so that read's only chunk wait is the next one; arming while another read is running, or for a longer text, holds whichever chunk wait comes first. A request nobody took within two minutes lapses, so it

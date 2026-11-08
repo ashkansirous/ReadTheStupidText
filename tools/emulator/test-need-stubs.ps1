@@ -24,9 +24,22 @@ function Get-FreePort {
 Assert-Equal 'stub needs are picked out' 'report-stub,crash-stub' ((Get-StubNeeds @('cellular-only', 'report-stub', 'crash-stub')) -join ',')
 Assert-Equal 'no stub need' 0 (@(Get-StubNeeds @('cellular-only')).Count)
 Assert-Equal 'empty needs' 0 (@(Get-StubNeeds @()).Count)
+Assert-Equal 'no needs header (null) needs no stub' 0 (@(Get-StubNeeds $null).Count)
+Assert-Equal 'blank need needs no stub' 0 (@(Get-StubNeeds @('', $null)).Count)
 foreach ($need in @('report-stub', 'crash-stub')) {
     Assert-Equal "script of $need exists" $true (Test-Path (Join-Path $repo (Get-NeedStubScript $need)))
 }
+
+$reportDir = Join-Path $PSScriptRoot ("tmp-reports-" + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $reportDir | Out-Null
+try {
+    Set-Content -Path (Join-Path $reportDir 'report-1.json') -Value '{}'
+    Set-Content -Path (Join-Path $reportDir 'report-12.json') -Value '{}'
+    Set-Content -Path (Join-Path $reportDir 'keep.txt') -Value 'x'
+    Clear-NeedStubReports 'crash-stub' $reportDir
+    Assert-Equal 'old report-N.json files are cleared' 0 @(Get-ChildItem $reportDir -Filter 'report-*.json').Count
+    Assert-Equal 'other files are left' $true (Test-Path (Join-Path $reportDir 'keep.txt'))
+} finally { Remove-Item -Recurse -Force $reportDir }
 
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
     Write-Host 'NOT RUN: node is not on PATH, so the start/stop leg did not run.'

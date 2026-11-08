@@ -45,9 +45,19 @@ export function clearOldReports(outDir) {
   for (const name of readdirSync(outDir)) if (/^report-\d+\.json$/.test(name)) rmSync(join(outDir, name));
 }
 
+/** The number for the next report: one past the highest report-N.json in outDir, so a stub that keeps running starts again at report-1 after its folder was cleared. */
+export function nextReportNumber(outDir) {
+  mkdirSync(outDir, { recursive: true }); // the folder may have been deleted while the stub runs
+  let highest = 0;
+  for (const name of readdirSync(outDir)) {
+    const match = /^report-(\d+)\.json$/.exec(name);
+    if (match) highest = Math.max(highest, Number(match[1]));
+  }
+  return highest + 1;
+}
+
 export function startStub(port, outDir) {
   mkdirSync(outDir, { recursive: true });
-  let count = 0;
   const server = createServer((request, response) => {
     const chunks = [];
     let size = 0;
@@ -59,7 +69,7 @@ export function startStub(port, outDir) {
       let verdict = 400;
       if (request.method === "POST" && request.url === CRASH_PATH && size <= MAX_BYTES) {
         const text = Buffer.concat(chunks).toString("utf8");
-        writeFileSync(join(outDir, `report-${++count}.json`), text);
+        writeFileSync(join(outDir, `report-${nextReportNumber(outDir)}.json`), text);
         try {
           verdict = isExpectedReport(JSON.parse(text)) ? 204 : 400;
         } catch {
