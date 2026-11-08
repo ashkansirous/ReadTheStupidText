@@ -41,6 +41,8 @@
     ]
   },
   "r2_buckets": [{ "binding": "DOWNLOADS", "bucket_name": "readthestupidtext-downloads" }],
+  // Slice 287: the dashboard's daily rollup table (worker/schema/stats.sql), created 2026-11-08.
+  "d1_databases": [{ "binding": "STATS", "database_name": "dino-stats", "database_id": "e7fe3a48-af07-4331-ab1c-15882b802599" }],
   "analytics_engine_datasets": [
     { "binding": "DINO_USAGE", "dataset": "dino_usage" },
     // Slice 251: Dino counts from TestFlight builds, never mixed into dino_usage.
@@ -57,10 +59,10 @@
   // Slice 282: the Alexa skill id (amzn1.ask.skill...). Empty until the skill exists, and while it is empty
   // every Alexa request is refused with 400 (worker/alexa-verify.ts fails closed). Set it here, in BOTH wrangler configs, by a PR
   // once the skill exists, never in the dashboard: each deploy overwrites a dashboard value with this one.
-  "vars": { "ALEXA_SKILL_ID": "" },
+  "vars": { "ALEXA_SKILL_ID": "", "ANALYTICS_ACCOUNT_ID": "985d711340bd2cf7bf5d71f04a7e84c9" },
 
   // Slice 287: the hourly rollup of Analytics Engine into D1 for /stats (worker/stats-rollup.ts). Harmless without the
-  // STATS binding: it logs and returns. The D1 binding itself is added after `wrangler d1 create` (docs/DEPLOYING.md).
+  // STATS binding: it logs and returns. The STATS binding is above, next to r2_buckets (docs/DEPLOYING.md).
   "triggers": { "crons": ["7 * * * *"] },
 
   "observability": { "enabled": true }
