@@ -1,6 +1,6 @@
 # Slice 287 — Dino: a public usage dashboard at dinoreader.sirous.uk/stats
 
-*Planned 2026-11-07.* Server only (Cloudflare Worker, D1, the Dino site). The apps do not change here.
+*In progress (wave 2026-11-08), draft PR.* Server only (Cloudflare Worker, D1, the Dino site). The apps do not change here.
 
 **User answer (2026-11-08): the dashboard is public.** "its not private! I want everyone to see that dashboard". So there is
 no Cloudflare Access, no Zero Trust, no sign-in, no JWT check and no signed-in email; anyone can open `/stats`. This
@@ -18,7 +18,9 @@ they count.
 `worker/stats*.test.mjs` (new), `worker/index.ts` (routes + `scheduled`),
 `worker/schema/stats.sql` (new D1 table), `wrangler.jsonc`, `wrangler.workers-dev.jsonc` (D1 binding, cron trigger,
 `run_worker_first` for `/stats`, `/api/stats` and their `/dino` twins), `site/dino/stats.html` (new), `worker/CLAUDE.md`,
-`docs/analytics/dino-dashboard-queries.md` (new), this file.
+`docs/analytics/dino-dashboard-queries.md` (new), `worker/check-configs.mjs`, `worker/downloads.ts` (`resolveSite`, `/dino/` prefix), `docs/DEPLOYING.md` (D1 creation, the secret), `package.json`/`package-lock.json` (only if a dependency is added), this file.
+
+**Deploy (claim note, 2026-11-08):** the Worker deploy waits on plan.md's *Worker not deployed* / Slice 282 observability bullet (deploying publishes privacy text that may be untrue), so this slice builds, creates the D1 database (its id goes into both wrangler configs) and sets the secret, but does not deploy; the live checks go to *Not yet verified* until the next deploy.
 
 ## Why
 
