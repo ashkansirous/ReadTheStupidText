@@ -368,6 +368,45 @@ function Get-NotificationTitleProblem([string]$Title) {
     return $null
 }
 
+# ---- Slice 320 item 3: the notification flags of a `dumpsys notification` record (paused-notification-repost).
+# Only the text of the notification itself carries its flags: other parts of a record (sound, audio attributes, actions) print their own flags=0x..., so the search starts at "Notification(" and stops at
+# the next record. Tried in order: (1) the stock form `defaults=0x<hex> flags=0x<hex>` (the pair is what Notification.toString prints, on one line or wrapped over several, as a Samsung
+# dump can print it); (2) the first `flags=0x<hex>` after "Notification(". $null when the record shows none. The Samsung (S21, Android 15) dump of 2026-11-08 was not saved, so the fixtures in
+# fixtures/notification-record-*.txt are the stock form and the wrapped form written by hand: the first S21 run that still reads $null prints the start of the record (Format-NotificationRecordExcerpt).
+function Get-NotificationFlagsFromText([string]$Raw) {
+    $opening = [regex]::Match($Raw, '(?<![A-Za-z])Notification\(')   # not the "Notification(" inside "StatusBarNotification(", which starts before the notification's own text
+    if (-not $opening.Success) { return $null }
+    $span = $Raw.Substring($opening.Index)
+    $next = $span.IndexOf('NotificationRecord(', 1, [StringComparison]::Ordinal)
+    if ($next -gt 0) { $span = $span.Substring(0, $next) }
+    foreach ($pattern in @('\bdefaults=0x[0-9a-fA-F]+\s+flags=0x([0-9a-fA-F]+)', '\bflags=0x([0-9a-fA-F]+)')) {
+        if ($span -match $pattern) { return [Convert]::ToInt64($Matches[1], 16) }
+    }
+    return $null
+}
+
+# Notification.FLAG_AUTO_CANCEL: AndroidPackKeepAlive.BuildPaused calls SetAutoCancel(true) on every paused notice, so the notification's own flags always include it.
+$script:AutoCancelFlag = 0x10
+function Test-NotificationFlagsPlausible([int64]$Flags) { return (($Flags -band $script:AutoCancelFlag) -ne 0) }
+
+# The file name for a saved raw record: <tag>-<yyyyMMdd-HHmmss>.txt with anything unsafe in the tag turned into '_'.
+function Get-NotificationRecordFileName([string]$Tag, [datetime]$When) { return ("notification-record-$($Tag -replace '[^A-Za-z0-9._-]', '_')-$($When.ToString('yyyyMMdd-HHmmss')).txt") }
+
+# Saves a raw dumpsys record in $Directory (created if missing) and returns the path, so a failed notification check leaves the record the next reader needs.
+function Save-NotificationRecord([string]$Raw, [string]$Directory, [string]$Tag) {
+    $null = New-Item -ItemType Directory -Force $Directory
+    $path = Join-Path $Directory (Get-NotificationRecordFileName $Tag (Get-Date))
+    [IO.File]::WriteAllText($path, $Raw)
+    return $path
+}
+
+# The first characters of a record on one line, for an error that cannot read the flags, so the next run of the check shows what the device printed.
+function Format-NotificationRecordExcerpt([string]$Raw, [int]$Length = 700) {
+    $oneLine = ($Raw -replace '\s+', ' ').Trim()
+    if ($oneLine.Length -le $Length) { return $oneLine }
+    return $oneLine.Substring(0, $Length) + '...'
+}
+
 # ---- book-end: can the phone doze? A held wake lock of the app's uid, or its foreground service, keeps it awake.
 function Get-PackageUidFromDump([string]$PackageDump) {
     if ("$PackageDump" -match '(?:userId|appId)=(\d+)') { return $Matches[1] }
@@ -565,8 +604,9 @@ function Format-PackProgress([long]$Bytes, $TotalBytes = $null) {
     return "$mb MB (total size not known)"
 }
 
-# Pack ids the neural reader of each app needs (PackConstants.SupertonicPackId; Dino's storyteller is kokoro-en); any one of them is enough.
-$script:RequiredPacks = @{ rtst = @('supertonic-3'); dino = @('supertonic-3', 'kokoro-en') }
+# Pack ids the neural reader of each app needs (PackConstants.SupertonicPackId); any one of them is enough.
+# Slice 320 item 4: Dino needs none since Slice 278 (it plays the store books' pre-made audio packs and the device voice), so its list is empty: -Prepare and the setup do not wait for a voice pack there.
+$script:RequiredPacks = @{ rtst = @('supertonic-3'); dino = @() }
 
 # ---- cold-start report
 function Format-ColdStartRuns($Runs) {
@@ -590,9 +630,12 @@ function Get-LogCursor([string[]]$Lines, [double]$Current) {
 # ---- book-end proof that the book played, and that the wake dumps could be read
 $script:BookOpenedPattern = 'HOOK open-book opened'
 $script:MinimumBookChunks = 2
+$script:PremadeClipPattern = '\[AudioPack\] premade clip plays'
 function Resolve-BookPlayProof([string[]]$Lines) {
     $events = @(ConvertFrom-TimingLog $Lines)
-    $chunks = @($events | Where-Object Kind -eq 'chunk').Count
+    # Slice 320 item 4: Dino plays pre-made clips (`[AudioPack] premade clip plays (sentence N)`) and the device voice, not neural chunks: a clip counts like a chunk.
+    $clips = @($Lines | Where-Object { "$_" -match $script:PremadeClipPattern }).Count
+    $chunks = @($events | Where-Object Kind -eq 'chunk').Count + $clips
     $opened = [bool]($Lines | Where-Object { "$_" -match $script:BookOpenedPattern })
     $ended = [bool]($events | Where-Object Kind -eq 'end')
     $problem = $null

@@ -1,0 +1,4 @@
+# needs: cellular-only, report-stub
+appId: uk.sirous.dinoreader.dbg
+---
+- back

@@ -4,6 +4,9 @@
 # for 30 s (the wait below), and that one follows the tap. The visible "Download stopped" text proves the Stopped state.
 # The UI is Farsi (lang: fa). The pack status label has AutomationId PackStatusLabel (Slice 215): the flow matches that id plus the fa strings PackStatus_Downloading / PackStatus_Stopped for the state, so the id pins the element and the text pins the state.
 # Android only. The notification's Cancel is fired by the Debug test hook `cancel-pack-downloads`.
+# Slice 320 item 2: the flow no longer races the download (the 61 MB pack finished in 14.7 s on the emulator before the Cancel hook landed). The first launch arms the Debug hook stall-pack-network, so the
+# download's first body read hangs for good (the 60 s stall guard would end it, long after the Cancel at the 20 s mark); it is armed before skip-first-run starts the download, and an armed request lapses after two minutes. It is aimed at the Farsi voice pack by id (piper-fa), so an OCR or translation pack fetched first does not take the hang and leave the voice pack to finish.
+# expect-log: HOOK stall-pack-network ok
 # expect-log: VOICEPACK held-user-cancelled fa
 appId: uk.sirous.readthestupidtext
 name: Cancelled voice pack stays cancelled
@@ -11,6 +14,11 @@ name: Cancelled voice pack stays cancelled
 - launchApp:
     # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow starts the voice pack download itself and needs the pack missing.
     clearState: true
+    arguments:
+      cmd: stall-pack-network
+      id: piper-fa
+- launchApp:
+    stopApp: false
     arguments:
       cmd: skip-first-run
       lang: fa

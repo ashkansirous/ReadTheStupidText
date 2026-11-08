@@ -15,5 +15,13 @@
   { "shot": "shot-O6-8-intro", "flow": "dino-redesign-intro", "label": "Intro wizard step, 8-inch tablet", "mock": "Dino Reader- 2026-11-08 Onboarding.dc.html", "frame": "O6-8" },
   { "shot": "shot-OL7-intro", "flow": "dino-redesign-intro", "label": "Intro wizard, held sideways", "mock": "Dino Reader- 2026-11-08 Onboarding.dc.html", "frame": "OL7" },
   { "shot": "shot-OTL7-intro", "flow": "dino-redesign-intro", "label": "Intro wizard, tablet held sideways", "mock": "Dino Reader- 2026-11-08 Onboarding.dc.html", "frame": "OTL7" },
-  { "shot": "shot-OT9-intro", "flow": "dino-redesign-intro", "label": "Intro wizard, tablet upright", "mock": "Dino Reader- 2026-11-08 Onboarding.dc.html", "frame": "OT9" }
+  { "shot": "shot-OT9-intro", "flow": "dino-redesign-intro", "label": "Intro wizard, tablet upright", "mock": "Dino Reader- 2026-11-08 Onboarding.dc.html", "frame": "OT9" },
+  { "shot": "shelf-landscape-ar", "flow": "dino-landscape-shelf-ar", "label": "Kids' shelf, held sideways, Arabic (right to left)", "mock": "Dino Reader Batch 44 Landscape.dc.html", "frame": "110" },
+  { "shot": "corner-landscape-ar", "flow": "dino-landscape-shelf-ar", "label": "Grown-ups' corner with its side rail, Arabic (right to left)", "mock": "Dino Reader Batch 44 Landscape.dc.html", "frame": "111" },
+  { "shot": "settings-landscape-ar", "flow": "dino-landscape-settings-ar", "label": "Settings, two panes, Arabic (right to left)", "mock": "Dino Reader Batch 44 Landscape.dc.html", "frame": "118" },
+  { "shot": "back-cover-ar", "flow": "back-cover-ar", "label": "Back cover, Arabic (right to left; no mock frame)", "mock": "none (no design frame for the back cover)", "frame": "none" },
+  { "shot": "shelf-landscape-fa", "flow": "dino-landscape-shelf-fa", "label": "Kids' shelf, held sideways, Farsi (right to left)", "mock": "Dino Reader Batch 44 Landscape.dc.html", "frame": "110" },
+  { "shot": "corner-landscape-fa", "flow": "dino-landscape-shelf-fa", "label": "Grown-ups' corner with its side rail, Farsi (right to left)", "mock": "Dino Reader Batch 44 Landscape.dc.html", "frame": "111" },
+  { "shot": "settings-landscape-fa", "flow": "dino-landscape-settings-fa", "label": "Settings, two panes, Farsi (right to left)", "mock": "Dino Reader Batch 44 Landscape.dc.html", "frame": "118" },
+  { "shot": "back-cover-fa", "flow": "back-cover-fa", "label": "Back cover, Farsi (right to left; no mock frame)", "mock": "none (no design frame for the back cover)", "frame": "none" }
 ]

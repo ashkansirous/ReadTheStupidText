@@ -1,5 +1,6 @@
 # Slice 227: a managed crash is written to a pending file in the crashing process and posted at the next launch, with its log tail, to a local stub.
-# Precondition (the host, before the run): `node tools/crashes/stub-server.mjs` is listening on port 8787; the emulator reaches it as http://10.0.2.2:8787.
+# needs: crash-stub
+# Precondition (Slice 320: run-flows.ps1 sets it up from the line above): `node tools/crashes/stub-server.mjs` is listening on port 8787; the emulator reaches it as http://10.0.2.2:8787.
 # The stub answers 204 only for the report the Debug hook throws (System.InvalidOperationException "Slice 227 crash test", kind managed, the hook's known line in the log tail),
 # and 400 for anything else, so the marker below proves that report arrived whole. Debug builds never report on their own: the `crash-stub` hook is what lets this one through.
 # Fails against a build without the pipeline: no `crash-test` command, so no HOOK ok line, no CRASH_REPORT marker.

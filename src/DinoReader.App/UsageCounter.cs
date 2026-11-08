@@ -341,7 +341,15 @@ public sealed class UsageCounter
 		});
 
 	// Slice 250: every count carries its session id and its place in the session, so it keeps them while it waits in the queue for a later launch.
-	private UsageEvent Stamp(UsageEvent count) => count with { Session = _session.Id, Seq = _session.NextSeq() };
+	private UsageEvent Stamp(UsageEvent count)
+	{
+		UsageEvent stamped = count with { Session = _session.Id, Seq = _session.NextSeq() };
+#if DEBUG
+		// Slice 320 item 7: a Debug-only line per count that reached the queue, with the seq it was given (the line in RecordLogged is written before sampling, so it has none), so a flow reads the sequence on a device. Nothing is sent from here.
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] seq={stamped.Seq} {stamped.Name} session={stamped.Session}");
+#endif
+		return stamped;
+	}
 
 	/// <summary>
 	/// Queues the count <paramref name="name"/> for every book in <paramref name="counted"/> (its story and detail) in one queue write (Slice 191). Each is

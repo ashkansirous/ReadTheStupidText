@@ -1,0 +1,32 @@
+# Slice 320 item 7 (L78, Slice 275): an unreadable shelf order file is really met by the library, which falls back to the default order and counts `library:shelf_order_unreadable`.
+# The corrupt-shelf-order hook (Debug only) writes text that is not a JSON list over the stored order file and lists the shelf, so the real catch reports; usage-fallback-swallowed.yaml sends fallbacks by hand and only proves the sink.
+# Nothing is sent: the harness off switch stays on, and the Debug build writes a `[Usage] fallback <area>:<reason> times=<n> ...` line for each fallback it is asked to count.
+# The damaged file is deleted again at the end (shelf-order-reset) so later flows start from the default order.
+# Fails against a build without the hook: "HOOK corrupt-shelf-order written" is never written.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK corrupt-shelf-order written
+# expect-log: [Usage] fallback library:shelf_order_unreadable times=1 queued
+appId: uk.sirous.dinoreader.dbg
+name: An unreadable shelf order file is counted as a fallback (Dino)
+---
+- launchApp:
+    # No clearState: the flow keeps the app's data; the order file it damages is removed again by the last step.
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: corrupt-shelf-order
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 15000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: shelf-order-reset

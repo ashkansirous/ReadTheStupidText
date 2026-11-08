@@ -1,11 +1,11 @@
 // Run: node --test tools/crashes/stub-server.test.mjs
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync } from "node:fs";
+import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { isExpectedReport, startStub } from "./stub-server.mjs";
+import { isExpectedReport, nextReportNumber, startStub } from "./stub-server.mjs";
 
 const expected = {
   schemaVersion: 1,
@@ -32,4 +32,19 @@ test("the stub answers 204 for the expected report and 400 for anything else, an
   assert.equal((await post("/api/crash", "not json")).status, 400);
   assert.equal((await post("/elsewhere", expected)).status, 400);
   server.close();
+});
+
+test("a running stub numbers its next report after the highest one left, so a cleared folder restarts at report-1", () => {
+  const dir = mkdtempSync(join(tmpdir(), "stub-"));
+  assert.equal(nextReportNumber(dir), 1);
+  writeFileSync(join(dir, "report-1.json"), "{}");
+  writeFileSync(join(dir, "report-7.json"), "{}");
+  writeFileSync(join(dir, "other.txt"), "x");
+  assert.equal(nextReportNumber(dir), 8);
+});
+
+test("a reports folder deleted while the stub runs is created again instead of crashing", () => {
+  const dir = join(mkdtempSync(join(tmpdir(), "stub-")), "gone");
+  assert.equal(nextReportNumber(dir), 1);
+  assert.equal(existsSync(dir), true);
 });

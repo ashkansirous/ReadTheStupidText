@@ -133,7 +133,7 @@ public sealed class TestHookDispatcher
 			State => Report(),
 			CancelPackDownloads => CancelDownloads(),
 			DropPackNetwork => DropNetwork(),
-			StallPackNetwork => StallNetwork(),
+			StallPackNetwork => StallNetwork(command),
 			Read => StartRead(command),
 			_ => AppCommands?.Invoke(command) ?? Unknown,
 		};
@@ -268,9 +268,11 @@ public sealed class TestHookDispatcher
 	}
 
 	// Slice 241: the running pack download's next body read hangs like a dead socket; the 60 s stall guard must log `PACKDL stall` and the retry must go on (see PackDownloadThrottle).
-	private static string StallNetwork()
+	// Slice 320: with id=<pack> (e.g. piper-fa) only that pack's transfer hangs; another pack's download leaves the request armed.
+	private static string StallNetwork(TestHookCommand command)
 	{
-		PackDownloadThrottle.RequestStall();
+		string packId = command.Get(IdKey, string.Empty);
+		PackDownloadThrottle.RequestStall(packId.Length == 0 ? null : packId);
 		return Ok;
 	}
 

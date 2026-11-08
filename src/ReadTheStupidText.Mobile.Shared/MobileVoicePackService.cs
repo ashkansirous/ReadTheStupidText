@@ -660,7 +660,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         long written = resumed ? offset : 0; // a 200 means the server ignored Range: restart
         Func<Stream, Stream>? wrapInner = null;
 #if DEBUG
-        wrapInner = PackDownloadThrottle.WrapForStallHook; // Slice 241: the stall-pack-network test hook hangs one read under the guard
+        wrapInner = PackDownloadThrottle.WrapForStallHook(pack.Id); // Slice 241: the stall-pack-network test hook hangs one read under the guard
 #endif
         await using Stream body = await guarded.OpenBodyAsync(StallTimeout, cancellationToken, new DownloadTag(pack.Id, written), wrapInner).ConfigureAwait(false);
         await using var file = new FileStream(partial, resumed ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.None, FileBufferBytes, useAsync: true);
@@ -671,7 +671,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
         finally
         {
-            PackDownloadThrottle.ClearStall(); // a stall request that found no read to hang must not survive this download
+            PackDownloadThrottle.ClearStall(pack.Id); // a stall request that found no read to hang must not survive this download
         }
 #else
         await CopyWithStallGuardAsync(body, file, pack, written, progress, cancellationToken).ConfigureAwait(false);

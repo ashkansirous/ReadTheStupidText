@@ -116,6 +116,9 @@ public enum PackFailureInjection
 
 	/// <summary>The phone runs out of room part-way: some bytes are written, then the fetch throws an <see cref="IOException"/> (counted as a storage failure).</summary>
 	DiskFull,
+
+	/// <summary>Slice 320 item 7: the download hangs like a dead socket after some bytes: it neither ends nor fails until the person cancels it (or the hook says <c>off</c> and the app restarts), so a flow can cancel a pack fetch that is really running.</summary>
+	Stall,
 }
 
 /// <summary>Slice 310 (Debug only): the hook's words for each <see cref="PackFailureInjection"/>.</summary>
@@ -125,6 +128,7 @@ public static class ForcedPackFailures
 	public const string NetworkWord = "network";
 	public const string CorruptWord = "corrupt";
 	public const string DiskFullWord = "disk-full";
+	public const string StallWord = "stall";
 
 	public static bool TryParse(string? word, out PackFailureInjection kind)
 	{
@@ -134,6 +138,7 @@ public static class ForcedPackFailures
 			NetworkWord => (true, PackFailureInjection.Network),
 			CorruptWord => (true, PackFailureInjection.Corrupt),
 			DiskFullWord => (true, PackFailureInjection.DiskFull),
+			StallWord => (true, PackFailureInjection.Stall),
 			_ => (false, PackFailureInjection.None),
 		};
 		return known;
@@ -163,6 +168,11 @@ public sealed class FailingAudioPackFetcher(IAudioPackFetcher inner, PackFailure
 
 		await File.WriteAllBytesAsync(toPath, new byte[PartialBytes], cancel);
 		bytesSoFar.Report(PartialBytes);
+		if (kind == PackFailureInjection.Stall)
+		{
+			await Task.Delay(Timeout.Infinite, cancel); // only the person's cancel ends it: the store logs "cancelled, nothing kept" and reports the cancel
+		}
+
 		throw kind == PackFailureInjection.DiskFull
 			? new IOException("Injected: no space left on the device.")
 			: new HttpRequestException("Injected: the connection dropped.");

@@ -41,6 +41,7 @@ $ErrorActionPreference = 'Stop'
 trap { Write-Host "run-flows.ps1: $($_.Exception.Message)"; exit 1 }
 . (Join-Path $PSScriptRoot 'common.ps1')
 . (Join-Path $PSScriptRoot 'build-cache.ps1')
+. (Join-Path $PSScriptRoot 'need-stubs.ps1')   # Slice 320 item 5: the host stubs a flow's `# needs: report-stub|crash-stub` asks for
 . (Join-Path $PSScriptRoot 'layout-check.lib.ps1')   # Slice 267: Get-LayoutProblems for the `# layout-check` flows (Slice 297: the param-less library, not the CLI wrapper)
 $Instance = Resolve-EmulatorInstance $Instance   # 'tablet' -> '3'
 Set-EmulatorInstance $Instance
@@ -173,9 +174,8 @@ function Clear-AnrDialog([string]$When) {
 
 # Slice 212: the values a flow's `# needs:` header line may carry (lint-flows.ps1 rejects any other); a flow with one runs under that network state.
 function Get-FlowNeeds([string]$FlowFile) {
-    $line = Get-Content $FlowFile | Where-Object { $_ -match '^#\s*needs:\s*(.+)$' } | Select-Object -First 1
-    if (-not $line) { return @() }
-    return @(($line -replace '^#\s*needs:\s*', '') -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    $lines = @(Get-Content $FlowFile | Where-Object { $_ -match '^#\s*needs:\s*(.+)$' })   # every `# needs:` line counts, as lint-flows reads them
+    return @($lines | ForEach-Object { ($_ -replace '^#\s*needs:\s*', '') -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 }
 
 # Slice 212: after start-warm the emulator sits on the lock screen and the first flow would fail at its first assert; wake it and dismiss the keyguard before every flow.
@@ -328,19 +328,31 @@ function Restore-FontScale([string]$Previous) {
     & $script:Adb -s $script:Serial shell settings delete system font_scale | Out-Null
 }
 
+# The result of a flow whose setup failed before Maestro ran: the same shape Invoke-FlowBody returns, with the setup error as its problem.
+function New-FlowSetupFailure([System.IO.FileInfo]$File, [string]$Message) {
+    return [pscustomobject]@{ Name = $File.BaseName; Seconds = 0.0; Problem = "Setup failed before the flow ran: $Message"; Crash = @(); CrashLog = ''; NotRun = $null; Phases = ''; Retried = $null; FirstRunSeconds = 0.0; RunnerStuck = $false; StuckPid = 0; RetryLogs = @() }
+}
+
 function Invoke-Flow([string]$Maestro, [System.IO.FileInfo]$File) {
     $ErrorActionPreference = 'Continue'
     $cellular = (Get-FlowNeeds $File.FullName) -contains 'cellular-only'
+    $cycle = (Get-FlowNeeds $File.FullName) -contains 'screen-cycle'
     $fontScale = Get-FlowFontScale $File.FullName
     Wake-Emulator
-    $cycle = (Get-FlowNeeds $File.FullName) -contains 'screen-cycle'
-    if ($cellular) { Set-CellularOnly }
-    $previousScale = if ($fontScale) { Get-FontScale } else { $null }
-    if ($fontScale) { Set-FontScale $fontScale }
-    try { return Invoke-FlowBody $Maestro $File $cycle }
-    finally {
-        if ($cellular) { Restore-Wifi }  # a failed flow never leaves Wi-Fi off for the next one
-        if ($fontScale) { Restore-FontScale $previousScale }  # ...nor a font scale on; the device's own value comes back
+    $stubs = New-Object System.Collections.Generic.List[object]
+    $previousScale = $null
+    $scaleSaved = $false    # restore only what was saved: a setup step that threw first changed nothing to put back
+    $cellularSet = $false
+    try {
+        try { foreach ($need in @(Get-StubNeeds (Get-FlowNeeds $File.FullName))) { $stubs.Add((Start-NeedStub $need $script:RepoRoot)) } }   # Slice 320 item 5
+        catch { return New-FlowSetupFailure $File $_.Exception.Message }   # a stub that cannot start fails this flow only; the run goes on (the finally stops any stub already started)
+        if ($cellular) { $cellularSet = $true; Set-CellularOnly }   # flagged first: a half-done switch is still undone
+        if ($fontScale) { $previousScale = Get-FontScale; $scaleSaved = $true; Set-FontScale $fontScale }
+        return Invoke-FlowBody $Maestro $File $cycle
+    } finally {
+        foreach ($stub in $stubs) { Stop-NeedStub $stub }   # only a stub this run started; a failed flow never leaves one listening
+        if ($cellularSet) { Restore-Wifi }  # a failed flow never leaves Wi-Fi off for the next one
+        if ($scaleSaved) { Restore-FontScale $previousScale }  # ...nor a font scale on; the device's own value comes back
     }
 }
 

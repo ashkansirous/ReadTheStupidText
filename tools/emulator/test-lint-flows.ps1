@@ -51,6 +51,8 @@ Assert-Findings 'plain-dino-appid.yaml' @(New-Expect 1 'is not a dev package')  
 Assert-Findings 'no-separator.yaml' @(New-Expect 1 'no --- line')
 Assert-Findings 'no-appid.yaml' @(New-Expect 2 'the header has no appId')
 Assert-Findings 'needs-ok.yaml' @()
+Assert-Findings 'needs-stub-ok.yaml' @()   # Slice 320 item 5: report-stub and crash-stub are known needs
+Assert-Findings 'needs-two-stubs.yaml' @(New-Expect 1 'is a second host stub')   # Slice 320 check 1 #3: both stubs use port 8787
 Assert-Findings 'needs-unknown.yaml' @((New-Expect 1 "'# needs: wifi-only' is not a known value"), (New-Expect 2 "'# needs: offline' is not a known value"))
 Assert-Findings 'expect-log-ok.yaml' @()
 Assert-Findings 'expect-log-bad-start.yaml' @(New-Expect 2 'must start a token')   # Slice 315 item 15: the incident marker ': failed:network'

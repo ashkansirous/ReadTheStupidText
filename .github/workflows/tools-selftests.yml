@@ -148,6 +148,13 @@ jobs:
       - name: Phone leftovers self-test (${{ matrix.shell }})
         run: ./tools/phone/test-phone-leftovers.ps1
 
+      # Slice 320: the run-checks runner's pure helpers (notification flags, Dino prepare/book-end) and the host stubs a flow's `# needs:` asks for (starts a real stub from the setup-node Node on a free port).
+      - name: Run-checks runner self-test (${{ matrix.shell }})
+        run: ./tools/phone/test-run-checks.ps1
+
+      - name: Flow host stub self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-need-stubs.ps1
+
       - name: Desktop crash-evidence self-test (${{ matrix.shell }})
         run: ./tools/desktop-vm/test-crash-evidence.ps1
 

@@ -20,6 +20,7 @@ internal static class RtstTestCommands
 	private const string SetVoiceName = "set-voice";
 	private const string SetTranslateName = "set-translate";
 	private const string ForceFallbackName = "force-fallback";
+	private const string StallReadName = "stall-read";
 	private const string ModeKey = "mode";
 	private const string On = "on";
 	private const string Off = "off";
@@ -37,6 +38,7 @@ internal static class RtstTestCommands
 	{
 		TestHookDispatcher.AppCommands = Run;
 		TestHookDispatcher.AppLaunchKeys = [ModeKey];
+		StallHook.Shared.Log = TestHookLog.Write; // Slice 320 item 7: the held-wait markers go to the RTST-TEST log
 	}
 
 	private static string? Run(TestHookCommand command) => command.Name switch
@@ -46,8 +48,17 @@ internal static class RtstTestCommands
 		SetVoiceName => SetVoice(command.Get(TestHookDispatcher.IdKey, string.Empty)),
 		SetTranslateName => SetTranslate(command.Get(ModeKey, string.Empty)),
 		ForceFallbackName => ForceFallback(command.Get(TestHookDispatcher.LanguageKey, string.Empty), command.Get(TestHookDispatcher.IdKey, string.Empty)),
+		StallReadName => ArmStallRead(),
 		_ => null,
 	};
+
+	// Slice 320 item 7: the next read's chunk wait is held for 90 s (or until the read stops), so the stall overlay with its Cancel shows and a flow can leave the reader and come back (Slice 314).
+	// Needs a neural voice pack (the system voice has no chunk wait). Logs "HOOK stall-read ok"; the held wait writes "STALL hold begins" and "STALL hold released".
+	private static string ArmStallRead()
+	{
+		StallHook.Shared.Arm();
+		return TestHookDispatcher.Ok;
+	}
 
 	// Slice 273 part B: sends one speech fallback (neural_not_ready) through the app's registered IFallbackSink, the object the shared readers and translators report to, so a flow sees the
 	// `[Usage] fallback speech:neural_not_ready` line without depending on which voice packs the emulator holds. Logs "HOOK force-fallback ok <lang>".

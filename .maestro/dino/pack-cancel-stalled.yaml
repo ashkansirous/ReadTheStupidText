@@ -1,0 +1,92 @@
+# Slice 320 item 7 (L16/L77 family, Slice 275 item 7): cancelling an audio pack download that is really running ends it as cancelled, keeps nothing and reports the cancel.
+# The Debug hook force-pack-failure mode=stall makes every pack download hang after a few bytes, like a dead socket (it neither finishes nor fails), so the Cancel on the Story languages card
+# reaches a fetch that is running. Same setup as pack-failure-network: the test store lists one Swedish pack. The switch lives in the process; the last step turns it off.
+# Against a build without the stall word the hook answers `failed unknown stall`, so "HOOK force-pack-failure ok stall" is never written and the flow fails.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK test-store ok ok
+# expect-log: HOOK force-pack-failure ok stall
+# expect-log: HOOK shelf-audio started sv
+# expect-log: Debug failure forced (Stall)
+# The card vanishing alone proves nothing (a failure also removes it); the proof of "cancelled" is the `cancelled, nothing kept` line below. run-flows clears logcat before each flow, so the line cannot come
+# from an earlier flow, and the injected stall (Task.Delay(Infinite, cancel)) has no other exit than the person's cancel: the line exists only because the Cancel tap reached a running fetch.
+# expect-log: cancelled, nothing kept
+# expect-log: HOOK force-pack-failure ok off
+appId: uk.sirous.dinoreader.dbg
+name: Cancelling a stalled audio pack download ends it as cancelled and keeps nothing
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, side languages, downloaded voice/OCR packs, installed audio packs, own books); fine here: skip-first-run puts the four test books back and the run needs no Swedish pack installed.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: ok
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-pack-failure
+      mode: stall
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: shelf-audio
+      lang: sv
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+- tapOn:
+    id: GallerySettings
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: SettingsTitle
+    timeout: 10000
+- tapOn:
+    text: "Story languages.*"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: "Your child can switch between these.*"
+    timeout: 10000
+# The card with Cancel stays up while the stalled download runs (nothing ends it but the Cancel).
+- extendedWaitUntil:
+    visible:
+      id: ShelfAudioCancel-sv
+    timeout: 30000
+# Real 8 s wait with the card up: nothing with this id ever shows, so this times out and optional: true lets the flow go on; a download that failed or finished would have removed the card.
+- extendedWaitUntil:
+    visible:
+      id: StalledDownloadNeverShown
+    timeout: 8000
+    optional: true
+- assertVisible:
+    id: ShelfAudioCancel-sv
+- tapOn:
+    id: ShelfAudioCancel-sv
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    notVisible:
+      id: ShelfAudioCancel-sv
+    timeout: 15000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-pack-failure
+      mode: "off"
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: "off"

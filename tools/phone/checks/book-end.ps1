@@ -1,11 +1,12 @@
-# check: Apps=dino EstimateSeconds=420 NeedsPack=true Variant=debug
+# check: Apps=dino EstimateSeconds=420 NeedsPack=false Variant=debug
 <#
 .SYNOPSIS
   book-end: Dino plays a test book (one of the four skip-first-run imports, Slice 261) to its end, then the phone can doze (Slice 213).
 .DESCRIPTION
   Sends `open-book id=<book> page=1 play=1 speed=2` (play=1 reads on to the end of the book, DinoTestCommands) and waits for READ_END. Reports how long the book
   took, then polls until the app holds no wake lock (`dumpsys power`, only the LIVE `Wake Locks: size=N` block counts, never the wakelock history below it, which keeps old locks forever; a lock is the app's when its uid or its ws=WorkSource{<uid>} is the app's, so Dino's keep-screen-on SCREEN_BRIGHT_WAKE_LOCK of uid 1000 counts) and no foreground service (`dumpsys activity services`), which is
-  the time to doze. Passes when both are released within -DozeLimitSeconds of READ_END. Fails (never passes) when the uid or the dumps cannot be read, and needs proof the book played (HOOK open-book opened, at least 2 CHUNK lines, READ_END). The dump formats are read by pattern and are not yet confirmed on the S21.
+  the time to doze. Passes when both are released within -DozeLimitSeconds of READ_END. Fails (never passes) when the uid or the dumps cannot be read, and needs proof the book played (HOOK open-book opened, at least 2 CHUNK or `[AudioPack] premade clip plays` lines, READ_END). The dump formats are read by pattern and are not yet confirmed on the S21.
+  Slice 320 item 4: Dino has no voice pack since Slice 278 (the check used to wait for PACK_READY of a kokoro-en pack and could never start). It now installs the Debug fixture audio pack of the book (`install-audio-pack`, Start-ReadyDinoApp) so the read plays clips; no pack download, NeedsPack=false.
 #>
 param(
     [Parameter(Mandatory)][string]$Phone,
@@ -47,7 +48,7 @@ function Get-AppUid {
     return $uid
 }
 
-$appPid = Start-ReadyApp $Phone $App $package
+$appPid = Start-ReadyDinoApp $Phone $package $Book
 $uid = Get-AppUid
 $begun = Get-Date
 $sent = Send-DevHook $Phone $App 'open-book' @{ id = $Book; page = '1'; play = '1'; speed = '2' }
