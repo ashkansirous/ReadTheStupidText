@@ -32,7 +32,6 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 333 | Listening page: Lion and Mouse Farsi clip | planned (needs the user's ear) | | | [333-lion-and-mouse-farsi-clip.md](docs/plan/slices/333-lion-and-mouse-farsi-clip.md) |
 | 334 | Listening page: speaker first in Farsi (Three Little Pigs) and the wolf's sound in English | planned (needs the user's ear) | | | [334-speaker-first-in-farsi-three-little-pigs-and-the.md](docs/plan/slices/334-speaker-first-in-farsi-three-little-pigs-and-the.md) |
 | 335 | Listening page: Pigs Farsi, four re-rendered lines | planned (needs the user's ear) | | | [335-pigs-farsi-four-re-rendered-lines.md](docs/plan/slices/335-pigs-farsi-four-re-rendered-lines.md) |
-| 336 | Listening page: Farsi sukun sentence on Android and iPhone | planned (needs the user's ear) | | | [336-farsi-sukun-sentence-on-android-and-iphone.md](docs/plan/slices/336-farsi-sukun-sentence-on-android-and-iphone.md) |
 | 337 | Listening page: Dino first-run hello line sounds whole | planned (needs the user's ear) | | | [337-dino-first-run-hello-line-sounds-whole.md](docs/plan/slices/337-dino-first-run-hello-line-sounds-whole.md) |
 | 339 | Listening page: real phone audio timing | planned (needs the user's ear) | | | [339-real-phone-audio-timing.md](docs/plan/slices/339-real-phone-audio-timing.md) |
 | 340 | Listening page: mid-book speed change on a phone | planned (needs the user's ear) | | | [340-mid-book-speed-change-on-a-phone.md](docs/plan/slices/340-mid-book-speed-change-on-a-phone.md) |
