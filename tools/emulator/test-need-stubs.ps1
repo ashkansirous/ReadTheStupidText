@@ -26,6 +26,18 @@ Assert-Equal 'no stub need' 0 (@(Get-StubNeeds @('cellular-only')).Count)
 Assert-Equal 'empty needs' 0 (@(Get-StubNeeds @()).Count)
 Assert-Equal 'no needs header (null) needs no stub' 0 (@(Get-StubNeeds $null).Count)
 Assert-Equal 'blank need needs no stub' 0 (@(Get-StubNeeds @('', $null)).Count)
+
+# Get-FlowNeeds (run-flows.ps1, which cannot be dot-sourced) reads every `# needs:` line, not only the first.
+$flowNeedsAst = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PSScriptRoot 'run-flows.ps1'), [ref]$null, [ref]$null)
+$flowNeedsDef = $flowNeedsAst.Find({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Get-FlowNeeds' }, $true)
+. ([scriptblock]::Create($flowNeedsDef.Extent.Text))
+$flowNeedsFile = Join-Path ([IO.Path]::GetTempPath()) ("flow-needs-" + [guid]::NewGuid().ToString('N') + '.yaml')
+try {
+    Set-Content -Path $flowNeedsFile -Value @('# needs: cellular-only', '# needs: report-stub, crash-stub', 'appId: x', '- launchApp')
+    Assert-Equal 'flow needs: every needs line is read' 'cellular-only,report-stub,crash-stub' ((Get-FlowNeeds $flowNeedsFile) -join ',')
+    Set-Content -Path $flowNeedsFile -Value @('appId: x')
+    Assert-Equal 'flow needs: no needs line' 0 (@(Get-FlowNeeds $flowNeedsFile).Count)
+} finally { Remove-Item $flowNeedsFile -Force -ErrorAction SilentlyContinue }
 foreach ($need in @('report-stub', 'crash-stub')) {
     Assert-Equal "script of $need exists" $true (Test-Path (Join-Path $repo (Get-NeedStubScript $need)))
 }

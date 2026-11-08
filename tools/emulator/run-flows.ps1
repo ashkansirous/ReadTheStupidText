@@ -174,9 +174,8 @@ function Clear-AnrDialog([string]$When) {
 
 # Slice 212: the values a flow's `# needs:` header line may carry (lint-flows.ps1 rejects any other); a flow with one runs under that network state.
 function Get-FlowNeeds([string]$FlowFile) {
-    $line = Get-Content $FlowFile | Where-Object { $_ -match '^#\s*needs:\s*(.+)$' } | Select-Object -First 1
-    if (-not $line) { return @() }
-    return @(($line -replace '^#\s*needs:\s*', '') -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    $lines = @(Get-Content $FlowFile | Where-Object { $_ -match '^#\s*needs:\s*(.+)$' })   # every `# needs:` line counts, as lint-flows reads them
+    return @($lines | ForEach-Object { ($_ -replace '^#\s*needs:\s*', '') -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 }
 
 # Slice 212: after start-warm the emulator sits on the lock screen and the first flow would fail at its first assert; wake it and dismiss the keyguard before every flow.
