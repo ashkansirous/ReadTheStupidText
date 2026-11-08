@@ -8,10 +8,14 @@
 
 ## Items
 
-- [ ] Make the audio exactly as the app plays it: render it with the app's own engine and packs (the `voice-pick` skill's render path), or record it from the dev app on the S21 when rendering cannot reproduce it (speed changes, timing, a Sonos or store track). Note how each clip was made and its build or pack version.
-- [ ] Publish one private listening page through the repo's `voice-pick` agent: a play button per clip, the line of text it reads, and for each clip "sounds right" or "something is wrong" with a free-text box for what is wrong (and a timestamp when it helps). English and Farsi only.
-- [ ] When the user has answered, write every answer into this file, word for word.
-- [ ] Each "something is wrong" becomes a fix item in this slice (cause, then fix, through the normal review gate). Every "sounds right" closes the check.
+- [x] Make the audio exactly as the app plays it: the shipped premade Gemini clips (Git LFS, origin/main d12cb1a7, manifest order) plus the bundled `animal-sounds/frog.m4a` where the app adds it, joined with no gap (the app plays the animal clip right after the last premade piece). A first version of the page used on-device sherpa voices by mistake; the user noticed ("it seems to be using the old tts engine") and it was rebuilt. Which lines get an animal clip and the Farsi `SaysIt` no-match were worked out from the code, not run.
+- [x] Publish one private listening page: https://claude.ai/artifact/3i6zzScCcsXVGkvZyRr6yi (version 2). Only two animal lines in the 15 store books say their own sound: the Frog in tortoise-and-hare and the Hen in ugly-duckling. The real gap is a sound spelled in a way the table does not list (every language has a sound table, so the slice's "a language without a sound table" does not occur): the Farsi Frog writes «قور قور!» as two words, the table has «قورقور», so the app plays frog.m4a after the voice.
+- [x] When the user has answered, write every answer into this file, word for word (below).
+- [x] Each "something is wrong" becomes a fix item in this slice. None was wrong, so the check is closed.
+
+## The user's answers (2026-11-08, Done pressed 19:25Z, page version 2)
+
+All four **sound right**, no notes: en-frog-ribbit "Ribbit! Ribbit! Ribbit!", en-hen-cluck "Cluck, cluck, cluck!", fa-frog-ghor «قور قور!» followed by the frog recording, fa-hen-ghod «قد قد قدا!». So the Farsi voice-plus-recording sounds fine to the user and needs no change. (Docs `en1`-`en3` in the page's database are answers to the withdrawn version 1 and do not count.)
 
 ## Verification
 
