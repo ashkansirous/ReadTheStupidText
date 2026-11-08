@@ -2,7 +2,7 @@
 
 Every slice's open Not yet verified checks, newest slice first. A line leaves when the check passes on a device or the user confirms it; plan.md's Outstanding work keeps only the count. The user (2026-11-01 07:31): "I dont have time to check your shit on ios"; the lines stay here until a device run or the user clears them.
 
-Each line starts with what it needs: **Android** (a scripted emulator run), **iOS** (an iPhone, a Mac or TestFlight), **Windows** (the VM or the desktop), **Live** (a live event, outside hardware or the user's ear), **Logs** (production analytics can prove it once enough rows arrive). Triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)).
+Each line starts with what it needs: **Android** (a scripted emulator run), **iOS** (an iPhone, a Mac or TestFlight), **Windows** (the VM or the desktop), **Live** (a live event, outside hardware or the user's ear), **Logs** (production analytics can prove it once enough rows arrive). Triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)). The 2026-11-08 device run (emulator, S21, VM) passed 49 more and the user's iPhone session 2 more; same record.
 
 ### Slice 318: Dino: the /stats page on phones and tablets ([slice](slices/318-dino-stats-phone-tablet.md))
 - **Android:** A real phone and a real tablet in both orientations on the live `/stats` page (touch, notch spacing, Filters sheet focus, the side panel in landscape).
@@ -37,7 +37,6 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Live:** Everything on a real Echo: open, list, read, pause, resume after a minute, next, stop.
 - **Live:** A real signed Alexa request passing verification live.
 
-
 ### Slice 311: Crash data for the Windows apps from the Microsoft Store ([slice](slices/311-windows-store-crash-data.md))
 - **Live:** A real pull with the Actions secrets exported for both apps (not readable on this PC): does it print rows or `none` for RTST `9NGT1BN1H92V` and Dino, and are the failure names symbolised?
 - **Live:** Whether either app is under an undocumented Store threshold; if a real pull returns no rows for an app with users, plan the self-reporting Windows slice (item 3, already decided).
@@ -62,14 +61,11 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 
 ### Slice 297: Slice 267 follow-ups ([slice](slices/297-slice-267-follow-ups.md))
 - **iOS:** iOS wizard layout (no Mac or iPhone tonight).
-- **Windows:** Dino Windows head not built.
 
 ### Slice 305: Dino package cleanup ([slice](slices/305-dino-package-cleanup-ml-kit-and-sherpa.md))
 - **iOS:** iOS TestFlight look of Dino and its IPA size (iOS only compiled).
-- **Windows:** Windows VM run of the Dino Windows head (unchanged by design; 6.5 GB free).
 
 ### Slice 303: Slice 201 review leftovers ([slice](slices/303-slice-201-review-leftovers.md))
-- **Windows:** Windows read path with a bad pack (VM not run: free memory 6.5 GB, under the 8 GB needed).
 - **iOS:** iOS device: bad Piper pack reports `pack_failed` and the guard stops the engine build.
 - **Live:** A real `packs.yml` run (next packs release): the new tokens check and fixture self-test.
 
@@ -95,7 +91,6 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Windows:** Windows VM `dino-record` key-R stage (Stop button or the microphone alert, alert texts read from the host resx, dismiss): never run. Judge check3 findings 1-4 on that run.
 
 ### Slice 304: Slice 202 re-review and the InitWait order test ([slice](slices/304-slice-202-rereview-and-initwait-test.md))
-- **Android:** Review-picked language holds after Review's Read, and an edit clears it (device).
 - **Android:** Scan or import of the same text keeps the language (device).
 - **Android:** Language-change rebuild shows a loading state when it takes over 500 ms (review 9; caller in Settings/AppShell, not read by this slice).
 
@@ -106,17 +101,10 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Android:** Real drag in both drop event orders (Drop then DropCompleted, and the reverse) on Android, iOS and the Windows head.
 - **Android:** A 1 s hold, and a scroll that cancels the hold, on Android, iOS and the Windows head.
 - **Android:** Hold release after a relayout (rotation) on Android, iOS and the Windows head.
-- **Windows:** Windows keyboard reorder on the Windows head.
-- **iOS:** iOS compile of the changes not run.
-- **Android:** Tablet-upright flow not run.
 
 ### Slice 288: Dino: the app counts listens (30 s or more) and real listening time ([slice](slices/288-dino-listens-and-listening-time.md))
-- **Android:** usage-listen-seconds flow (`.maestro/dino/usage-listen-seconds.yaml`) on the Android emulator: the 2026-11-07 run was blocked at install (C: full, `INSTALL_FAILED_INTERNAL_ERROR`, res=-110).
 - **iOS:** The same flow on the iOS simulator.
 - **Windows:** The same flow on the Windows head.
-
-### Slice 292: Fix the flaky `TranslationModelDownloadSessionTests.Progress_is_reported_while_downloading` ([slice](slices/292-fix-flaky-translation-download-progress-test.md))
-- **Windows:** The 200-run loop of `Progress_is_reported_while_downloading` (only 25 runs were done).
 
 ### Slice 286: Dino: record your voice in each story language, and hear it when reading in that language ([slice](slices/286-dino-recordings-per-story-language.md))
 - **iOS:** iOS device or simulator: the record-per-language flow was not run.
@@ -159,13 +147,11 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Live:** On a real phone: the live fa/ar packs after the upload.
 
 ### Slice 278: Dino: store books only, parts A and B ([slice](slices/278-dino-store-books-only.md))
-- **iOS:** Part B: iOS device or simulator run.
 - **Live:** Part B: the mobile-data prompt (`ShelfAudioAsk`) on a real cellular-only phone.
 - **Android:** Part B: the beat pausing on screen lock (no scripted flow).
 - **Android:** Part B: flows not run this round: `dino-landscape-settings`, `premade-audio-past-roar`, `usage-playback-events`, `dino-landscape-store` (the first emulator run's results were lost: the agent piped `run-flows` through `Out-String`).
 - **Android:** Part B: a Release build downloads no voice pack.
 - **Windows:** Part B: the Windows MSIX still packages (`APPX1101`) and the iOS app still links: project settings unchanged, not built beyond a compile.
-- **Android:** Android emulator flow `dino-landscape-store` was not reached in the 10-minute run.
 - **Android:** No flow asserts the "Get more books" text or that the Add pill is gone.
 - **Android:** The A3 cleanup has no device check: no Debug hook seeds an own book, so deleting an own book on a real install is untried.
 - **iOS:** No iOS device run is recorded for part A.
@@ -202,14 +188,12 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **iOS:** Apple Vision per-language support for Farsi, Arabic, Russian, Japanese and Chinese (research only; call `supportedRecognitionLanguages` on the minimum iOS).
 
 ### Slice 235: Dino on Windows, part C ([slice](slices/235-dino-windows-window.md))
-- **Windows:** Down right after opening Settings does nothing until Tab (focus starts on the window's Back button).
 - **Windows:** Reorder mode on Windows keeps phone padding (review high 6).
 - **Windows:** Real mouse hover on a real PC.
 
 ### Slice 268: Dino: remove "Show original text" from grown-up mode ([slice](slices/268-dino-remove-show-original-text.md))
 - **Android:** The new flow `book-sheet-no-original.yaml` was not shown failing on the old build.
 - **Android:** A book saved with the old flag on, read on a device.
-- **Windows:** Windows head.
 - **iOS:** iOS runtime (CI compiles iOS).
 
 ### Slice 267: Dino bugs: books on the shelf keep the old voice; the first-run buttons overlap ([slice](slices/267-dino-old-voice-and-wizard-buttons.md))
@@ -220,7 +204,6 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **iOS:** iOS runtime and the XCUITest twins (`net10.0-ios` compiles; the XCUITest layout check does not exist).
 
 ### Slice 264: Dino: grown-ups reorder the shelf ([slice](slices/264-dino-gallery-reorder-mode.md))
-- **Windows:** Esc after a drag on Windows. (The drag itself, the order saved and kept after a restart, and Cancel restoring the order passed on the VM on 2026-11-05 in Slice 269's `dino-reorder` check with real mouse moves; the pre-night run's "drag moved, order not saved" at 16:28 used the old untracked script, so it likely came from that script's synthetic moves, not checked.)
 - **Android:** The 6-book 1,2,5,3,4,6 example on a device (unit-tested only).
 
 ### Slice 262: Dino: adding a second language downloads the shelf books' audio in it ([slice](slices/262-dino-side-language-downloads-book-audio.md))
@@ -231,7 +214,6 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 
 ### Slice 266: Waves: stop wasting the minutes between fix attempts ([slice](slices/266-wave-fix-attempt-speed.md))
 - **Live:** Item 5: a timed Windows fix attempt on a real slice (target under 6 minutes, against the measured 11.5-12.4).
-- **Windows:** A VM run reusing a package a fixer built in a fix round.
 
 ### Slice 265: Dino: pre-made audio clips in Git LFS; book changes only publish to the store ([slice](slices/265-dino-audio-clips-in-git-lfs.md))
 - **Live:** `git lfs pull --include` of one clip from a fresh clone of main downloads the real file (only pointers were read back, 2026-11-04). Keep `s246-audio` until it does.
@@ -245,7 +227,6 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Android:** The covers row on the download wait and the intro caption were not checked by eye.
 
 ### Slice 260: Dino: tags on store books (Hot, Popular, Recommended, New) ([slice](slices/260-dino-store-tags.md))
-- **Android:** Tablet store flow `dino-landscape-store-tablet` on the tablet AVD (it failed on the phone AVD).
 - **Android:** Badge look at 130-200% system font size and the slim (sideways) store card with a tagged book (extra badge row vs title and cover centre).
 - **Live:** The 15 locale labels (`Store_Tag_*`) need a native read.
 - **Android:** Badge text after an app-language switch with the store page open (review high 3, not confirmed).
@@ -298,7 +279,6 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 
 ### Slice 247: Leftovers from the night's final feedback loop ([slice](slices/247-final-loop-leftovers-night-2026-11-01-0859.md))
 - **Live:** Mono SIGSEGV retry on a real tombstone: the fixture is copied from the note, and no SIGSEGV occurred in the 2026-11-02 runs.
-- **Android:** Cause of the `first-run` flow failure (assertCondition, 24.4 s) on the 2026-11-02 emulator run.
 - **Live:** Item b: the S21 kokoro-en stall cause, until a real stall prints the PACKDL tail.
 
 ### Slice 235: Dino on Windows, parts A and B ([slice](slices/235-dino-windows-window.md))
@@ -306,9 +286,7 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Windows:** Why Right takes about 2 s after a read starts on the VM (speech start busy on the UI thread?), and whether a real PC has the same delay.
 - **Windows:** Esc on the language page / cast picker through the new back path; held Esc on Settings/Language/Cast/Record pops exactly one page; the gate hold ending on Alt-Tab; title bar colour after the intro and the gate close.
 - **Live:** Typing the sum on AZERTY / AltGr layouts (on-screen pad and numpad only); Tab then Enter on "Back to story".
-- **Windows:** The title bar back to cream after Esc from the book is shown by the check's pass but not read from the trace.
 - **Live:** Opening at 1100 x 760 on a screen larger than 1024 x 768 (the VM clamps it).
-- **Windows:** A maximised window closed and reopened stays maximised (high finding 6).
 - **Windows:** 150% scaling and the unit of `PreferredMinimumWidth/Height`.
 - **Live:** Two monitors, and an unplugged display (saved place on a missing monitor).
 - **Live:** Title bar height and colour by eye.
@@ -316,10 +294,8 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 ### Slice 234: Dino tablet held upright, parts A-C ([slice](slices/234-dino-tablet-portrait.md))
 - **Live:** Part C: Record, Cast with the picker, the editor (keyboard down and up), Store and Backup against frames 142-146 by eye (no screenshots; no script reaches those screens with a screenshot step).
 - **Live:** Part C: `RecordFixedRows` / `EditorFixedRows` on a real tablet.
-- **Android:** Part A (from the final feedback loop, 2026-11-02): after the store flow rotated back to upright, the shelf logged `layout=rail ... tabletUpright=False` (234A emulator run). Likely moot after part B's `TabletUpright` flag; check the shelf log line on an upright tablet after a rotate-back.
 - **Android:** Part C: Cast picker on a short window or with the keyboard.
 - **Live:** Part B: cards, corner and Settings against frames 136-141 by eye (the flows take no screenshots).
-- **Android:** Part B: dino-tablet-upright-shelf and dino-landscape-reading-tablet regression not rerun after part B.
 - **Live:** Part B: a drifting finger on the gate hold.
 - **Android:** Part B: a short tablet window (cards cap and scroll).
 - **Live:** Part A: stacked reading page against frames 134, 135 and 150 by eye (no screenshot taken).
@@ -336,7 +312,6 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Live:** Pigs Farsi: the two `say` lines (گُنده‌ی, «شالاپ، شالاپ، شالاپ!») were re-rendered in the full book on 2026-11-03 but nobody has listened to them in the book; the user heard only the spelling-page variants. The same holds for the two other lines with the same word re-rendered after #766 (Pim's tub line and the narrator's "big smile" line): four lines in all.
 
 ### Slice 242: Round 4 leftovers, night 2026-11-01-0859 ([slice](slices/242-round-4-leftovers-night-2026-11-01-0859.md))
-- **Android:** `run-flows.ps1 -Install -NoBuild` may still build (check pass, low finding 1: the explicit `-Install` path lacks the no-build exit).
 - **Live:** Item 6: the 34/26 dp phone insets (no log or tree value; screenshots only).
 - **Live:** Item 6: the tablet screenshot against frame 127, by eye only.
 
@@ -353,7 +328,6 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Android:** What a lower version does on phones: Slice 220's record says a re-download is decided by `PackVersions.IsNewer` only, so a phone holding piper-nb 2 would most likely keep it and a fresh install would get 1; not checked on a device.
 
 ### Slice 236: phone runner gaps, night 2026-11-01-0859 ([slice](slices/236-phone-runner-gaps-night-2026-11-01-0859.md))
-- **Android:** Item 3 on a device: cancel a pack download, `reset-dev-app.ps1 -Level auto`, the pack starts again.
 - **Android:** Item 6 with no lease held: `preflight.ps1 -Fix` then `-Restore` back to 0.
 - **Android:** A mid-run `CHANGED:` stop with no record.
 - **Android:** The `dumpsys platform_compat` override-line wording (`Get-CompatOverrideLines` matching).
@@ -362,14 +336,12 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 ### Slice 245: sherpa-onnx one version ([slice](slices/245-sherpa-onnx-one-version.md))
 - **Logs:** Dino `supertonic-3`, `piper-fa`, `piper-nb` and `melo` reads on a device; RTST Android Supertonic read.
 - **iOS:** Scan/OCR (PaddleOCR) and translation with managed onnxruntime 1.28.0 against native 1.28.2 on Android, iOS and Windows.
-- **Windows:** Windows VM reads: the VM did not start (host had 6.9 GB free, gate is 8 GB, because the emulator ran at the same time).
 - **iOS:** iOS everything (needs the TestFlight build).
 - **iOS:** The same Farsi sukun sentence sounding the same on Android and iOS.
 
 ### Slice 241: Faster, quieter device tests ([slice](slices/241-device-test-speed.md))
 - **Android:** Item 1, crash fail-fast: a flow list with a launch crash prints one FAIL with the crash lines and NOTRUN (naming the crash) for the rest in under one flow's time.
 - **Android:** Item 3, timing: a cache-miss run's total is build time, not build plus boot (the `Cache miss` line itself passed on 2026-11-01; the time was not recorded).
-- **Android:** `PACKDL progress` lines every ~5 s on a normal download (the runner shows only the first).
 - **iOS:** The iOS stall watcher on a device.
 - **Android:** The `-Split` two-emulator path.
 
@@ -386,11 +358,9 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Live:** Part E: screenshots against frames 121, 122, 123, 130 (the flows take none), including check 3 (gate keys uneven in tall rows) and check 4 (long language names in 3 columns).
 - **Android:** Part E: `first-run.yaml` on this build against main (the SIGSEGV; not proven unrelated).
 - **Live:** Part E: the gate sum step sideways (the hold is not scriptable).
-- **Android:** Part E: tablet intro, gate and first run.
 - **iOS:** Part E: iPhone and iPad (iOS compile only).
 - **Live:** Part E: TalkBack order.
 - **Live:** Part D: screenshots against frames 117, 118, 124, 128 by eye.
-- **Android:** Part D: tablet Store with 3 columns, and tablet Backup.
 - **Live:** Part D: TalkBack order in two panes.
 - **Android:** Part D: the hosted pane's right edge inset on a notch phone.
 - **Android:** Part B: the same book stays in view after rotating a shelf with more than 4 books (the emulator shelf has 4, all on screen).
@@ -400,7 +370,6 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Android:** Part B: rotating with the sheet open during a Remove confirmation.
 - **Live:** Part B: VoiceOver / TalkBack order in the rail.
 - **Live:** Part C: screenshots of each landscape state against frames 116, 119, 120, 129 (the flows take none; the user's eye).
-- **Android:** Part C: tablet frames (129) on the RTST_Tablet emulator (Slice 242 adds it).
 - **Live:** Part C: the editor thumbnail with a real keyboard on a scanned page (the flow reaches only a typed page).
 - **Android:** Part C: a tablet with the keyboard up counts as a phone (short side under 600) and shows the thumbnail.
 - **iOS:** Part C: iOS compile and iPhone/iPad.
@@ -410,38 +379,30 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Live:** VoiceOver / TalkBack order in landscape.
 - **Live:** Picture-only chip placement against frame 114 (the user's eye).
 - **Android:** A window 600-700 dp on the short side choosing rail versus row.
-- **Windows:** Windows head in a wide window.
 - **iOS:** Portrait reading unchanged on iOS, Windows and tablets after `TransportRow`'s base class changed to `StackLayout` (shown only by two Android emulator flows).
 - **Live:** Phone side margins (about 14 dp, mock 34/26) and tablet frame 127's title against the mock (the user's eye).
 
 ### Slice 225: Device-test tooling leftovers, night 2026-10-31-1301 ([slice](slices/225-device-tooling-leftovers-night-2026-10-31-1301.md))
 - **Live:** Paused-notification checks on the S21 (needs `run-checks.ps1 -Build -App rtst` first; cache miss).
 - **Android:** `stay_on` restore when the user changed the value (self-tested only).
-- **Android:** Heal `trap` and `kill -0` under Android sh.
 - **Live:** `Clear-PageCache` on a rooted device.
-- **Android:** `uiautomator dump /dev/tty` returned no XML on the emulator (2026-11-01): check whether run-flows' ANR dump is affected.
 - **Android:** Item 16 in the Debug app: the `[BookUpdate] ... forced entry dropped, recorded version put back` and `forced-apply mark expired` lines.
 - **Android:** Item 21: a flow reading a TalkBack focus event (TalkBack on and off passed; the focus event was not read).
 
 ### Slice 230: Dino: say plainly that recordings stay on the phone, and restore brings them back ([slice](slices/230-dino-recordings-copy-and-restore-merge.md))
-- **Android:** Hearing the restored recording play ("Read with my voice").
 - **iOS:** iOS simulator or TestFlight: back up, restore, recordings come back.
 - **iOS:** VoiceOver on the new Record/Backup lines.
 - **iOS:** iPhone and iPad layouts of the new lines.
-- **Windows:** Windows head wording ("this computer").
 - **Live:** Native-speaker check of the new strings in the 14 machine-drafted locales (Farsi and Arabic right to left).
 
 ### Slice 221: Device-test tooling leftovers from the 2026-10-30-2100 night, round 1 ([slice](slices/221-device-test-tooling-leftovers-night-1.md))
 - **Live:** Item 6 on the real phone: two timed runs with the same owner, the second exits 4.
 - **Live:** Item 4 on GitHub: a force_all dispatch followed by a merge still runs its jobs; the wait step's `jq`/`gh` output on a real run.
-- **Android:** `run-flows.ps1` exits 137 after printing PASS (not investigated).
 - **Android:** Item 3 seen in a device-test run log.
 - **Android:** `adb uninstall` stderr under Windows PowerShell 5.1 with `ErrorActionPreference` Stop (`Remove-StaleDevPackages`, `tools/emulator/common.ps1:151`) could abort the install instead of warning.
 
 ### Slice 229: Dino Done/Continue button on every grown-up page ([slice](slices/229-dino-subpage-done-button.md))
 - **Android:** Page editor header over the crop stage (44 dp pill vs 38).
-- **Android:** Intro-wizard Continue flow (no hook to start the intro at that step).
-- **Android:** Farsi/Arabic: Done stays top right.
 - **iOS:** iOS VoiceOver, iPhone and iPad hand checks.
 
 ### Slice 224: Phone runner build-cache gaps ([slice](slices/224-phone-runner-build-cache-gaps.md))
@@ -450,7 +411,6 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 ### Slice 237: Dino back cover (credits page) ([slice](slices/237-dino-back-cover-credits.md))
 - **Android:** Landscape layout of the back cover.
 - **Android:** Farsi/Arabic right-to-left back cover and Persian digits.
-- **Android:** Picture-only and text-only reading modes on a device.
 - **Android:** Old installed app reading the page aloud without breaking.
 - **iOS:** iOS and Windows on a device (compile only).
 - **Live:** The ar/ru/ja/zh labels by a native speaker.
@@ -461,17 +421,14 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Live:** A real network loss: the device run used the Debug-only `drop-pack-network` hook, not a real loss.
 
 ### Slice 228: Dino grown-ups' corner clarity ([slice](slices/228-dino-grownups-corner-clarity.md))
-- **Windows:** Windows head and VM: shared UI, not run.
 - **iOS:** iOS: compile only.
 - **Android:** Corner tiles and title truncation on a small phone and on a tablet.
-- **Android:** Read step with no starter book.
 - **Live:** The translated strings are machine drafts.
 - **Android:** The intro read's return being cancelled by Play/pause, skip or a page turn (the emulator recheck tapped the page surface, which is not one of those).
 - **Android:** The 48 dp close button on a device (changed after the last emulator run; check pass only).
 
 ### Slice 220: Kokoro silent short lines on arm64 ([slice](slices/220-kokoro-silent-short-lines-arm64.md))
 - **iOS:** iOS: compile only.
-- **Windows:** The Windows Dino head on kokoro-en 3.
 - **Android:** The 68-read Slice 210 set.
 - **Android:** A fresh install's rebuilt non-kokoro packs (rebuilt in packs-11 at the same versions, no device run).
 
@@ -484,7 +441,6 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Live:** TalkBack / VoiceOver hearing each reading page once.
 - **iOS:** iPhone / iPad / VoiceOver / TestFlight hand checks (the user's answer: they do these later).
 - **iOS:** iOS: a settings row with the button text left null keeps its height and look, and `settings-reading-speed-row.yaml` on iOS needs an in-app back step instead of `- back` ([slice](slices/226-dino-settings-rows-review-leftovers.md)).
-- **Android:** The row-button width fix on Android: re-read the Settings row button bounds in a `uiautomator` dump (seen only on the Windows VM), and confirm the `Grid.Add` span cause its comment states ([slice](slices/226-dino-settings-rows-review-leftovers.md)).
 
 ### Slice 223: usage version rule ([slice](slices/223-usage-version-rule-cleanup.md))
 - **Logs:** Live: a read-only `rtst_usage` / `dino_usage` query shows event counts per real version unchanged after the 2026-11-01 Worker deploy, no real version newly counted as unstamped ([slice](slices/223-usage-version-rule-cleanup.md)).
@@ -512,7 +468,6 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 - **Android:** Dino: the first-run hello line (and the voice preview on a reader without segment support) now gets the short first piece; check on a phone that it still sounds whole ([slice](slices/214-rtst-phone-cold-first-audio.md)).
 
 ### Slice 213: phone check runner ([slice](slices/213-phone-check-runner.md))
-- **Android:** Slice 213: the `notification-text` check has never been seen failing (not run with a broken pack).
 - **Live:** Slice 213 (PR #610): a cold-cache run where the AOT build fails or stalls (the FAIL path); a run while another session holds the lease; the ... [full text](notes/2026-10-30-outstanding-detail.md#o017) ([slice](slices/213-phone-check-runner.md))
 
 ### Slice 211: play before detection waits for it ([slice](slices/211-play-before-detection-waits-for-it.md))
@@ -529,9 +484,6 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 
 ### Slice 206: phone run scripts ([slice](slices/206-phone-run-scripts.md))
 - **Live:** Slice 206 (PR #594): `preflight.ps1` reading a PIN or pattern lock as NO-GO; `reset-dev-app.ps1 -Level reinstall`; Dino resets (`-App dino`); ... [full text](notes/2026-10-30-outstanding-detail.md#o001) ([slice](slices/206-phone-run-scripts.md))
-
-### Slice 205: dino windows reading speed and page turn checks ([slice](slices/205-dino-windows-reading-speed-and-page-turn-checks.md))
-- **Android:** Slice 205 (PR #645): Android Settings row width vs screen (the uiautomator dump came back empty after a permission dialog; no Maestro flow targets the Reading speed row); the row opening with a tap and with TalkBack / VoiceOver on Android and iOS was never run ([slice](slices/205-dino-windows-reading-speed-and-page-turn-checks.md)).
 
 ### Slice 204: cancelled voice pack stays cancelled ([slice](slices/204-cancelled-voice-pack-stays-cancelled.md))
 - **iOS:** Slice 204 (PR #588): Dino on device; iOS TestFlight; native read of the Stopped strings (machine drafts)([slice](slices/204-cancelled-voice-pack-stays-cancelled.md)).
@@ -557,17 +509,8 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 ### Slice 190: rtst phone sentence highlight ([slice](slices/190-rtst-phone-sentence-highlight.md))
 - **Android:** Slice 190 (PR #573): on-screen sentence highlight PASS on the S21 (2026-10-30); pause/resume mid-chunk; iOS TestFlight read of a 3-sentence ... [full text](notes/2026-10-30-outstanding-detail.md#o007) ([slice](slices/190-rtst-phone-sentence-highlight.md))
 
-### Slice 188: dino settings vm check ([slice](slices/188-dino-settings-vm-check.md))
-- **Windows:** Slice 188 (PR #585): reading speed row navigation on the Windows head by UIA (a Grid with a tap gesture; neither a label click nor a pane-centre ... [full text](notes/2026-10-30-outstanding-detail.md#o010) ([slice](slices/188-dino-settings-vm-check.md))
-
-### Slice 187: translation download waits for internet ([slice](slices/187-translation-download-waits-for-internet.md))
-- **Android:** Slice 187 (PR #576): the waiting look by eye (title, grey bar); Dino's translation wait on a device; other wait overlays after the `Center` -> ... [full text](notes/2026-10-30-outstanding-detail.md#o009) ([slice](slices/187-translation-download-waits-for-internet.md))
-
 ### Slice 186: no ocr download after voice cancel ([slice](slices/186-no-ocr-download-after-voice-cancel.md))
 - **iOS:** Slice 186 (PR #574): iOS TestFlight: the notification Cancel holds the scan pack ([slice](slices/186-no-ocr-download-after-voice-cancel.md)).
-
-### Slice 185: close three old gaps ([slice](slices/185-close-three-old-gaps.md))
-- **Android:** Slice 185 (PR #545): AOT cold start measured on a phone (first audio 624 ms, but taken with `audio-timing.ps1`, which labels warm-cache repeats as ... [full text](notes/2026-10-30-outstanding-detail.md#o020) ([slice](slices/185-close-three-old-gaps.md))
 
 ### Slice 184: windows english to japanese pack ([slice](slices/184-windows-english-to-japanese-pack.md))
 - **Windows:** Slice 184: a real English-to-Japanese translation in the Windows app (download the pack, translate in the control panel); the C# tokenizer path has ... [full text](notes/2026-10-30-outstanding-detail.md#o071) ([slice](slices/184-windows-english-to-japanese-pack.md))
@@ -677,12 +620,6 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 ### Slice 126: dino keep screen awake ([slice](slices/126-dino-keep-screen-awake.md))
 - **Android:** Slice 126: emulator PASS (screen stays on while playing, sleeps after pause and at the end); screen awake on a real phone PASS while playing (end ... [full text](notes/2026-10-30-outstanding-detail.md#o063) ([slice](slices/126-dino-keep-screen-awake.md))
 
-### Slice 124: dino words panel matches mock ([slice](slices/124-dino-words-panel-matches-mock.md))
-- **Android:** Slice 124: emulator 2026-10-25 PASS for the switch card and sub-line, the fade while scrolled and the panel inside the picture (bottom alignment of ... [full text](notes/2026-10-30-outstanding-detail.md#o060) ([slice](slices/124-dino-words-panel-matches-mock.md))
-
-### Slice 123: dino pigs one action per page ([slice](slices/123-dino-pigs-one-action-per-page.md))
-- **Android:** Slice 123: on the phone, the pigs show 16 pages with pictures; an installed v3 copy updates to v4 and keeps recordings on unchanged pages ([slice](slices/123-dino-pigs-one-action-per-page.md)).
-
 ### Slice 122: dino text panel 30 and switch ([slice](slices/122-dino-text-panel-30-and-switch.md))
 - **Android:** Slice 122: on the user's phone, pigs upright and sideways (panel at most 30%); photo/PDF import defaults the switch off; a wide picture sideways ... [full text](notes/2026-10-30-outstanding-detail.md#o059) ([slice](slices/122-dino-text-panel-30-and-switch.md))
 
@@ -704,20 +641,11 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 ### Slice 103: nordic dutch languages ([slice](slices/103-nordic-dutch-languages.md))
 - **Android:** Slice 103: emulator check of each new UI language; Windows head in Dutch; a native read of all translations; Dino's iOS app has no localisation ... [full text](notes/2026-10-30-outstanding-detail.md#o049) ([slice](slices/103-nordic-dutch-languages.md))
 
-### Slice 102: dino store ten stories ([slice](slices/102-dino-store-ten-stories.md))
-- **Android:** Slice 102: emulator: ten cards with credits, download, read with voices, Farsi read; a native-speaker read of the translations ([slice](slices/102-dino-store-ten-stories.md)).
-
-### Slice 101: rtst mobile review and translate ([slice](slices/101-rtst-mobile-review-and-translate.md))
-- **Android:** Slice 101: emulator device-test of the page; real ML Kit download and translation PASS on the S21 (fr/es/de, [S21 night ... [full text](notes/2026-10-30-outstanding-detail.md#o051) ([slice](slices/101-rtst-mobile-review-and-translate.md))
-
 ### Slice 100: rtst mobile page capture wizard ([slice](slices/100-rtst-mobile-page-capture-wizard.md))
 - **Live:** Slice 100: a real ML Kit scan on a signed-in phone; iOS capture (compile and behaviour); a native read of the new strings ([slice](slices/100-rtst-mobile-page-capture-wizard.md)).
 
 ### Slice 99: rtst mobile minimal main page ([slice](slices/99-rtst-mobile-minimal-main-page.md))
 - **Live:** Slice 99: full TalkBack walk-through; iOS device run; Settings voice name refresh PASS on the S21 ([S21 night runs](notes/2026-10-29-s21-night-runs.md)) ([slice](slices/99-rtst-mobile-minimal-main-page.md)).
-
-### Slice 98: dino picture and text books ([slice](slices/98-dino-picture-and-text-books.md))
-- **Windows:** Slice 98: emulator result for the picture + text flow was recorded in the slice; Windows head side-by-side layout in a wide window; Three Little ... [full text](notes/2026-10-30-outstanding-detail.md#o048) ([slice](slices/98-dino-picture-and-text-books.md))
 
 ### Slice 96: dino layout never mirrors ([slice](slices/96-dino-layout-never-mirrors.md))
 - **Android:** Slice 96: emulator in Farsi and Arabic (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader ([slice](slices/96-dino-layout-never-mirrors.md)).

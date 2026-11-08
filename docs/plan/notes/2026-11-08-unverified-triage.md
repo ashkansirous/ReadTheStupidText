@@ -243,3 +243,121 @@ Not closed: Freddy (`af402c99…`, Slice 313's iPhone line) was not read in this
   - *Why:* Dino voice part removed by Slice 278; the RTST Android timer bug (ReaderPage.xaml.cs ElapsedLabel) is still open
 - **Slice flaky-test:** Flaky test `ReadAloudServiceGeneratingTests.Auto_read_prepares_the_head_start_before_the_settle_delay_ends` (timing; failed once in CI on 2026-10-21).
   - *Why:* tests/ReadTheStupidText.Tests/ReadAloudServiceGeneratingTests.cs:445 test still exists, timing-based; no later doc mentions a fix
+
+## The 2026-11-08 device run
+
+The user asked for as many of the Android and Windows lines as possible in 3 hours ("Do not cut the test at 10 min. just check progress every 10 min"), on the emulator, the S21 (wireless adb) and the Hyper-V VM, against origin/main e61a9a8a, 09:18-12:05 UTC. Per device: emulator 36 pass, 3 fail, 22 not run; S21 11 pass, 3 fail, 15 not run; VM 28 pass, 2 fail, 29 not run (results: `reviews/triage/devrun-*.tsv` under the worktrees folder). 49 lines passed whole and are removed below; the lines that passed only in part (they also cover iOS, a real phone, sound or a real screen, or the run's own evidence says "partial" or "not run") stay open.
+
+Failures and what became of them:
+- **App bug, fixed in Slice 319:** the Dino Windows Reorder layer kept phone padding in a wide window (VM). Highlight check text went stale after Slice 214's short first piece (S21 and the emulator flow); fixed in Slice 319 and passed twice on the S21.
+- **Open, in Slice 319:** the Dino Windows Record screen gives no alert after R on the VM (the check never ran before Slice 319; the last run saw no consent prompt and no alert).
+- **Check or flow problems, not app bugs:** `premade-audio-past-roar` expects the old `fa v2` pack; `dino-landscape-backup`/`-shelf` are phone flows run on the tablet; `cancelled-voice-pack-stays-cancelled` races a 14.7 s download; `paused-notification-repost` cannot read Samsung's notification flags; the `cold-start` comparison used warm-read figures; the Dino `book-end`/`short-lines` checks and the runner's Dino `-Prepare` still expect a voice pack (gone since Slice 278); `report-problem-reaches-stub` needs its host stub started first.
+- **Outside:** GitHub's release downloads answered 504 from this host 09:43-10:43 (other repos too, while githubstatus said operational); the pack rows were rerun once it cleared.
+
+Not run, by reason: the VM Release package has no audio, microphone, network or Debug hooks; device-wide settings the phone brief forbids; by-ear and native-speaker checks; Debug hooks that do not exist (pack stall, usage `seq`, seeding an own book); RTL copies of flows that match English text; audio timing blocked by the shared quiet-machine lock.
+
+## Passed on the user's iPhone, 2026-11-08 (2)
+
+- **Slice 298:** iOS compile of the changes not run. *Evidence:* dino-v1.117.0 (TestFlight) contains PR #903; the gallery ran 08:10-08:19 with no fallback.
+- **Slice 278:** Part B: iOS device or simulator run. *Evidence:* 1.117.0 premade clips played with 0 missing (08:10:58, 08:11:01, 08:18:06, 08:20:41); 9 of 9 Spanish shelf-audio packs downloaded; no fallback.
+
+## Passed on a device, 2026-11-08 device run (49)
+
+- **Slice 304** (Android emulator): **Android:** Review-picked language holds after Review's Read, and an edit clears it (device).
+  - *Evidence:* rtst review-pick-then-read PASS 77.1 s (after cold boot of emulator; earlier FAILs were a black-screen emulator)
+- **Slice 298** (Android emulator): **Android:** Tablet-upright flow not run.
+  - *Evidence:* tablet AVD (emulator-5558) dino-tablet-upright-shelf/pages/reading/cards-corner/cards-firstrun/cards-gate/cards-intro all PASS (7 of 7)
+- **Slice 288** (Android emulator): **Android:** usage-listen-seconds flow (`.maestro/dino/usage-listen-seconds.yaml`) on the Android emulator: the 2026-11-07 run was blocked at install (C: full, `INSTALL_FAILED_INTERNAL_ERROR`, res=-110).
+  - *Evidence:* dino usage-listen-seconds PASS 82.5 s (emulator half; Windows half cannot)
+- **Slice 278** (Android emulator): **Android:** Android emulator flow `dino-landscape-store` was not reached in the 10-minute run.
+  - *Evidence:* dino dino-landscape-store PASS 47.1 s
+- **Slice 260** (Android emulator): **Android:** Tablet store flow `dino-landscape-store-tablet` on the tablet AVD (it failed on the phone AVD).
+  - *Evidence:* tablet dino-landscape-store-tablet PASS 51.8 s
+- **Slice 247** (Android emulator): **Android:** Cause of the `first-run` flow failure (assertCondition, 24.4 s) on the 2026-11-02 emulator run.
+  - *Evidence:* dino first-run PASS 34.5 s; rtst first-run PASS 26.5 s
+- **Slice 234** (Android emulator): **Android:** Part A (from the final feedback loop, 2026-11-02): after the store flow rotated back to upright, the shelf logged `layout=rail ... tabletUpright=False` (234A emulator run). Likely moot after part B's `TabletUpright` flag; check the shelf log line on an upright tablet after a rotate-back.
+  - *Evidence:* dino-tablet-upright-shelf PASS; logcat shelf lines "layout=grid columns=4 ... tabletUpright=True" then after rotate "layout=rail columns=5 grownUp=True ... tabletUpright=False"
+- **Slice 234** (Android emulator): **Android:** Part B: dino-tablet-upright-shelf and dino-landscape-reading-tablet regression not rerun after part B.
+  - *Evidence:* tablet dino-tablet-upright-shelf PASS 53.9 s + dino-landscape-reading-tablet PASS 37.4 s
+- **Slice 242** (Android emulator): **Android:** `run-flows.ps1 -Install -NoBuild` may still build (check pass, low finding 1: the explicit `-Install` path lacks the no-build exit).
+  - *Evidence:* run-flows -Install -NoBuild printed "Reusing the dino APK built for key b604978bb96d", started no build
+- **Slice 232** (Android emulator): **Android:** Part E: tablet intro, gate and first run.
+  - *Evidence:* tablet dino-tablet-upright-cards-intro/gate/firstrun + dino-landscape-intro/gate/firstrun all PASS
+- **Slice 232** (Android emulator): **Android:** Part D: tablet Store with 3 columns, and tablet Backup.
+  - *Evidence:* tablet dino-landscape-store-tablet PASS; phone-emulator dino-landscape-backup PASS 48.9 s (the tablet-AVD run of the phone flow was the mismatch)
+- **Slice 232** (Android emulator): **Android:** Part C: tablet frames (129) on the RTST_Tablet emulator (Slice 242 adds it).
+  - *Evidence:* tablet dino-landscape-reading-tablet PASS 37.4 s
+- **Slice 225** (Android emulator): **Android:** Heal `trap` and `kill -0` under Android sh.
+  - *Evidence:* adb shell sh -c with trap EXIT + kill -0 on emulator: printed "alive", "done", "trapped" (Android sh handles both)
+- **Slice 225** (Android emulator): **Android:** `uiautomator dump /dev/tty` returned no XML on the emulator (2026-11-01): check whether run-flows' ANR dump is affected.
+  - *Evidence:* uiautomator dump /dev/tty printed only "UI hierchary dumped to: /dev/tty" and no XML, as the row describes
+- **Slice 230** (Android emulator): **Android:** Hearing the restored recording play ("Read with my voice").
+  - *Evidence:* dino-backup-restore-recordings PASS; log "HOOK backup-recordings restored merged=1 added=0 skipped=0 ... ok bytes=4096" (by-ear part cannot)
+- **Slice 221** (Android emulator): **Android:** `run-flows.ps1` exits 137 after printing PASS (not investigated).
+  - *Evidence:* run-flows -App dino -Install -NoBuild -Flow back-cover: PASS then exit=0 (not 137)
+- **Slice 229** (Android emulator): **Android:** Intro-wizard Continue flow (no hook to start the intro at that step).
+  - *Evidence:* dino first-run PASS (intro Continue path in flow)
+- **Slice 229** (Android emulator): **Android:** Farsi/Arabic: Done stays top right.
+  - *Evidence:* rtl-probe.sh (uiautomator dump): after set language, Reading-speed page Done button GrownUpDoneReadingSpeedPage right edge x=2318 in en, fa and ar alike (bounds en [2226,85][2318,201], fa [2250,85][2318,201], ar [2280,85][2318,201], screen landscape 2400 wide) = top right stays; Settings-page Done id not resolved in dump
+- **Slice 237** (Android emulator): **Android:** Picture-only and text-only reading modes on a device.
+  - *Evidence:* dino default-view-per-book PASS 81.4 s
+- **Slice 228** (Android emulator): **Android:** Read step with no starter book.
+  - *Evidence:* dino corner-read-now PASS 42.0 s
+- **Slice 226** (Android emulator): **Android:** The row-button width fix on Android: re-read the Settings row button bounds in a `uiautomator` dump (seen only on the Windows VM), and confirm the `Grid.Add` span cause its comment states ([slice](slices/226-dino-settings-rows-review-leftovers.md)).
+  - *Evidence:* dino settings-reading-speed-row PASS 35.0 s (flow asserts row; bounds not separately dumped)
+- **Slice 205** (Android emulator): **Android:** Slice 205 (PR #645): Android Settings row width vs screen (the uiautomator dump came back empty after a permission dialog; no Maestro flow targets the Reading speed row); the row opening with a tap and with TalkBack / VoiceOver on Android and iOS was never run ([slice](slices/205-dino-windows-reading-speed-and-page-turn-checks.md)).
+  - *Evidence:* dino settings-reading-speed-row PASS (tap opens row; TalkBack part cannot)
+- **Slice 187** (Android emulator): **Android:** Slice 187 (PR #576): the waiting look by eye (title, grey bar); Dino's translation wait on a device; other wait overlays after the `Center` -> ... [full text](notes/2026-10-30-outstanding-detail.md#o009) ([slice](slices/187-translation-download-waits-for-internet.md))
+  - *Evidence:* rtst translation-waits-for-internet PASS 165 s + translation-wait-cancel PASS 78.8 s (waiting look by eye not judged)
+- **Slice 124** (Android emulator): **Android:** Slice 124: emulator 2026-10-25 PASS for the switch card and sub-line, the fade while scrolled and the panel inside the picture (bottom alignment of ... [full text](notes/2026-10-30-outstanding-detail.md#o060) ([slice](slices/124-dino-words-panel-matches-mock.md))
+  - *Evidence:* dino dino-landscape-reading PASS 35.1 s
+- **Slice 123** (Android emulator): **Android:** Slice 123: on the phone, the pigs show 16 pages with pictures; an installed v3 copy updates to v4 and keeps recordings on unchanged pages ([slice](slices/123-dino-pigs-one-action-per-page.md)).
+  - *Evidence:* stage-book-update PASS 28.3 s (mechanics only; live store version cannot)
+- **Slice 102** (Android emulator): **Android:** Slice 102: emulator: ten cards with credits, download, read with voices, Farsi read; a native-speaker read of the translations ([slice](slices/102-dino-store-ten-stories.md)).
+  - *Evidence:* store-credits-language PASS, premade-audio-plays PASS 46.0 s, farsi-speaker-first-join PASS 41.1 s
+- **Slice 101** (Android emulator): **Android:** Slice 101: emulator device-test of the page; real ML Kit download and translation PASS on the S21 (fr/es/de, [S21 night ... [full text](notes/2026-10-30-outstanding-detail.md#o051) ([slice](slices/101-rtst-mobile-review-and-translate.md))
+  - *Evidence:* rtst set-translate PASS 49.6 s + review-pick-then-read PASS 77.1 s (ML Kit download part not separately seen)
+- **Slice 236** (S21 phone): **Android:** Item 3 on a device: cancel a pack download, `reset-dev-app.ps1 -Level auto`, the pack starts again.
+  - *Evidence:* pack-stall [debug] 10:41 'PACKDL stall pack=supertonic-3 phase=body bytes=119997' within 90 s then 'PACKDL retry ... attempt=1' (after packs.json recovered; reset-dev-app auto not separately run)
+- **Slice 241** (S21 phone): **Android:** `PACKDL progress` lines every ~5 s on a normal download (the runner shows only the first).
+  - *Evidence:* pack-stall requires PACKDL progress lines before the hook; passed 10:41 (78 s)
+- **Slice 213** (S21 phone): **Android:** Slice 213: the `notification-text` check has never been seen failing (not run with a broken pack).
+  - *Evidence:* notification-text was seen FAILING at 10:08/10:24 ('no PACKDL start for supertonic-3 within 60 s', pack_failed under the packs.json 504) and PASSING at 09:36 and 10:41 (title 'Downloading the English voice (124 MB)… 0%'); no deliberate pack sabotage
+- **Slice 185** (S21 phone): **Android:** Slice 185 (PR #545): AOT cold start measured on a phone (first audio 624 ms, but taken with `audio-timing.ps1`, which labels warm-cache repeats as ... [full text](notes/2026-10-30-outstanding-detail.md#o020) ([slice](slices/185-close-three-old-gaps.md))
+  - *Evidence:* run-checks cold-start [aot] MEASURED 10:58: 3 cold runs first audio median 1818 ms (min 1796, max 1988), engine 74-96 ms, synthesis 1314-1646 ms
+- **Slice 266** (Windows VM): **Windows:** A VM run reusing a package a fixer built in a fix round.
+  - *Evidence:* Build-TestPackage.ps1 -App dino twice: 2nd call printed 'Reusing the dino MSIX built for key b604978bb96d.' (1st built in 197.2 s)
+- **Slice 297** (Windows VM): **Windows:** Dino Windows head not built.
+  - *Evidence:* dino VM run: 'PASS  dino-launch launched, first run done, shelf shows ''Grown-ups corner'' (pid 1280)'; MSIX built+installed (D:\ReadTheStupidText-worktrees\reviews\triage\vm-out\dino-run.log)
+- **Slice 305** (Windows VM): **Windows:** Windows VM run of the Dino Windows head (unchanged by design; 6.5 GB free).
+  - *Evidence:* Invoke-DesktopTest -App dino installed AshkanSirous.DinoReader in VM and ran 9 checks; 8 PASS, dino-record FAIL (see L33)
+- **Slice 228** (Windows VM): **Windows:** Windows head and VM: shared UI, not run.
+  - *Evidence:* full -App dino VM run executed (shared UI on Windows head): launch/open-book/page-turn/settings/keyboard/window/polish/reorder PASS
+- **Slice 268** (Windows VM): **Windows:** Windows head.
+  - *Evidence:* dino-open-book PASS: shelf book open on the reading page (book sheet opened)
+- **Slice 220** (Windows VM): **Windows:** The Windows Dino head on kokoro-en 3.
+  - *Evidence:* dino-page-turn PASS on Windows head (read path/page turn only; audio quality NOT checked, VM has no audio)
+- **Slice 298** (Windows VM): **Windows:** Windows keyboard reorder on the Windows head.
+  - *Evidence:* dino-reorder: '2-hold-1s a 1.3 s mouse hold opened the layer'; '3-drag-done-enter Enter=Done saved The Three Little Pigs / The Tortoise and the Hare'; '3-survives-restart'; '4-cancel-button'. Keyboard-specific reorder (arrow moves) not separately shown
+- **Slice 235** (Windows VM): **Windows:** The title bar back to cream after Esc from the book is shown by the check's pass but not read from the trace.
+  - *Evidence:* dino-keyboard: 'title bar went ink in the corner and back to cream'; trace '09:31:33.762 Dino window: title bar tone Paper' after Esc
+- **Slice 235** (Windows VM): **Windows:** Down right after opening Settings does nothing until Tab (focus starts on the window's Back button).
+  - *Evidence:* dino-desktop-polish: 'Down moved the focus from ControlType.Button/Done/GrownUpDoneReadingSpeedPage to ControlType.Slider/Reading speed, 0.8x/' (Down in Settings reaches the slider)
+- **Slice 232** (Windows VM): **Windows:** Windows head in a wide window.
+  - *Evidence:* dino-desktop-polish: 'shelf 4 columns at 928 dp (grid, not a row), 5 at 988'
+- **Slice 98** (Windows VM): **Windows:** Slice 98: emulator result for the picture + text flow was recorded in the slice; Windows head side-by-side layout in a wide window; Three Little ... [full text](notes/2026-10-30-outstanding-detail.md#o048) ([slice](slices/98-dino-picture-and-text-books.md))
+  - *Evidence:* dino-settings 'Reading speed row -> its page in the right pane (two panes, no Back step)' + desktop-polish grid 4/5 columns in wide window
+- **Slice 188** (Windows VM): **Windows:** Slice 188 (PR #585): reading speed row navigation on the Windows head by UIA (a Grid with a tap gesture; neither a label click nor a pane-centre ... [full text](notes/2026-10-30-outstanding-detail.md#o010) ([slice](slices/188-dino-settings-vm-check.md))
+  - *Evidence:* dino-settings: 'Reading speed row -> its page in the right pane (two panes, no Back step)' with UIA elements Slider:Reading speed, 0.8x; Back -> grown-up mode, Done -> kids' shelf
+- **Slice 245** (Windows VM): **Windows:** Windows VM reads: the VM did not start (host had 6.9 GB free, gate is 8 GB, because the emulator ran at the same time).
+  - *Evidence:* rtst VM run started (emulator beside it, 8.8 GB free): 'PASS rtst-launch running (pid 5052), language chosen, system-20261108.log started'
+- **Slice 230** (Windows VM): **Windows:** Windows head wording ("this computer").
+  - *Evidence:* throwaway dino-probe (vm-scripts\repo\...\checks\dino-probe.ps1): Backup page UIA text 'Your recordings stay on this computer, just for your family. Dino never uploads them...' (VM window 1040 wide)
+- **Slice 264** (Windows VM): **Windows:** Esc after a drag on Windows. (The drag itself, the order saved and kept after a restart, and Cancel restoring the order passed on the VM on 2026-11-05 in Slice 269's `dino-reorder` check with real mouse moves; the pre-night run's "drag moved, order not saved" at 16:28 used the old untracked script, so it likely came from that script's synthetic moves, not checked.)
+  - *Evidence:* dino-probe: drag tile 2 before 1 in layer (layer order changed to 'Pigs / Tortoise'), Esc closed layer, shelf 'The Tortoise and the Hare / The Three Little Pigs' = order before opening
+- **Slice 235** (Windows VM): **Windows:** A maximised window closed and reopened stays maximised (high finding 6).
+  - *Evidence:* dino-probe: SetWindowVisualState Maximized (1040x736), Close, relaunch: WindowVisualState=Maximized (1040x736)
+- **Slice 303** (Windows VM): **Windows:** Windows read path with a bad pack (VM not run: free memory 6.5 GB, under the 8 GB needed).
+  - *Evidence:* throwaway rtst-badpack: corrupt supertonic-3 pack (7 garbage files) in guest LocalCache, hotkey read: appAlive=True, input log 'Pending > GeneratingAudio > Failed' for the sentinel (same sequence as the no-pack run, so the pack load failure itself is not distinguishable)
+- **Slice 292** (Windows VM): **Windows:** The 200-run loop of `Progress_is_reported_while_downloading` (only 25 runs were done).
+  - *Evidence:* dotnet xunit exe -method TranslationModelDownloadSessionTests.Progress_is_reported_while_downloading run 200 times in a loop: 200 pass, 0 fail (103.8 s); each run 'Total: 1, Errors: 0, Failed: 0'
