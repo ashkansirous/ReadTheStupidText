@@ -361,3 +361,283 @@ Not run, by reason: the VM Release package has no audio, microphone, network or 
   - *Evidence:* throwaway rtst-badpack: corrupt supertonic-3 pack (7 garbage files) in guest LocalCache, hotkey read: appAlive=True, input log 'Pending > GeneratingAudio > Failed' for the sentinel (same sequence as the no-pack run, so the pack load failure itself is not distinguishable)
 - **Slice 292** (Windows VM): **Windows:** The 200-run loop of `Progress_is_reported_while_downloading` (only 25 runs were done).
   - *Evidence:* dotnet xunit exe -method TranslationModelDownloadSessionTests.Progress_is_reported_while_downloading run 200 times in a loop: 200 pass, 0 fail (103.8 s); each run 'Total: 1, Errors: 0, Failed: 0'
+
+## Cut to what can be tested (user, 2026-11-08)
+
+The user: "remove everything that is beyond my power to test ... keep only whatever I can test. for the rest, if you can rely on production data and bug reports. otherwise, just remove them". They have an Echo, a Sonos, an iPhone and the S21; no old phone; camera features are out; they judge English and Farsi only. A Sonnet agent classified all 383 lines (`reviews/prune/classes.tsv` under the worktrees folder); mixed lines kept only their testable part. Result: 251 kept (tagged You or Device), 30 watched in production data, 14 listening checks moved to slices 323-336, 86 removed, 2 passed on a device in the second run.
+
+## Watched in production data instead (analytics, fallbacks, crash store, problem reports) (30)
+
+- **Slice Slice 316:** **Android:** The pack failure log line format (type, status, inner type, url) has not been seen in a device log.
+  - *Why:* fallback pack_failed events
+- **Slice Slice 287:** **Live:** Yesterday's downloads equal an `analytics-query` count per platform.
+  - *Why:* analytics-query vs download counts
+- **Slice Slice 287:** **Live:** The first real cron run: the `json_each` insert on real D1, and the 9 hourly runs that backfill.
+  - *Why:* Worker cron / D1 rows
+- **Slice Slice 311:** **Live:** A real pull with the Actions secrets exported for both apps (not readable on this PC): does it print rows or `none` for RTST `9NGT1BN1H92V` and Dino, and are the failure names symbolised?
+  - *Why:* crash pull workflow output
+- **Slice Slice 289:** **Live:** Whether Sonos's `getMediaURI` request comes from the player or from Sonos's cloud (decides what the row's country means).
+  - *Why:* dino_usage platform=sonos rows
+- **Slice Slice 289:** **Live:** That Sonos calls `getMediaURI` once per play (prefetch, resume, retry or reconnect may over-count plays and hours).
+  - *Why:* dino_usage platform=sonos rows
+- **Slice Slice 289:** **Live:** Country may be empty if the Request rebuilt by `withPath` in `worker/index.ts` drops `cf` (review check1 #2).
+  - *Why:* dino_usage sonos country
+- **Slice Slice 303:** **iOS:** iOS device: bad Piper pack reports `pack_failed` and the guard stops the engine build.
+  - *Why:* fallback pack_failed
+- **Slice Slice 285:** **Logs:** The user's phone: Freddy in English after the v6 text update. The English `clip_missing` events of 2026-11-07 07:05Z are explained by Slice 313 (sound pack installed ahead of the book text); the phone check is Slice 313's below.
+  - *Why:* clip_missing events
+- **Slice Slice 275:** **Android:** Item 1 part 2: the new `store_failed`, `preference_unsaved` and `shelf_order_unreadable` rows were not seen on a device (no flow forces them); iOS and the Windows head were not run (shared code).
+  - *Why:* fallback events store_failed, preference_unsaved, shelf_order_unreadable
+- **Slice Slice 275:** **Android:** Item 1 part 3: `layout_failed` and the new `FileStoryLibrary` order-file reports were not seen on a device (no flow forces them); iOS and the Windows head were not run (shared code); no test for a failed order-file write (OS-dependent).
+  - *Why:* fallback events layout_failed and FileStoryLibrary order-file reports
+- **Slice Slice 274:** **Live:** The next morning, `pull-crashes.mjs` and TestFlight crash feedback show no new report for that build.
+  - *Why:* crash store, TestFlight crash feedback
+- **Slice Slice 273:** **Logs:** A store book with a published pack that is not downloaded sends no `fallback` (part C).
+  - *Why:* fallback events
+- **Slice Slice 273:** **Windows:** Part B, Windows rows not run on the VM: Infrastructure composite `neural_not_ready`/`neural_unavailable`/`stream_unavailable`, `engine_build_failed`, and the `UsageService.BeforeSend` flush.
+  - *Why:* fallback events neural_not_ready, neural_unavailable, stream_unavailable, engine_build_failed
+- **Slice Slice 273:** **iOS:** Part B, iPhone rows compiled only: `AvSpeechReader` `phone_language_missing`, `IosSupertonic` `engine_build_failed`, iOS ML Kit `translation_pack_failed`.
+  - *Why:* fallback events phone_language_missing, engine_build_failed, translation_pack_failed
+- **Slice Slice 273:** **Windows:** Part D, Windows rows not forced on the VM: `saved_position_moved`, `displays_unreadable`, `dpi_defaulted`, `window_frame_failed`, LanguageWindow `pack_failed`.
+  - *Why:* fallback events saved_position_moved, displays_unreadable, dpi_defaulted, window_frame_failed, pack_failed
+- **Slice Slice 273:** **iOS:** Part D, iOS rows compiled only: `font_fallback`, `storyteller_pack_missing`, clip rows.
+  - *Why:* fallback events font_fallback, storyteller_pack_missing, clip rows
+- **Slice Slice 273:** **Logs:** Part D production rows: check with `analytics-query` after release.
+  - *Why:* fallback events (Part D)
+- **Slice Slice 273:** **Windows:** Part C, Windows rows not run on the VM: voice pack `pack_failed`, `WindowsOcrTextExtractor` `ocr_platform_fallback`.
+  - *Why:* fallback events pack_failed
+- **Slice Slice 273:** **iOS:** Part C, iPhone rows compiled only: scanner, OCR, config hold.
+  - *Why:* fallback event config hold
+- **Slice Slice 273:** **Logs:** Part C, `config_cached`/`config_default` and `ui_language` rows on a real first launch.
+  - *Why:* fallback events config_cached, config_default, ui_language
+- **Slice Slice 247:** **Live:** Item b: the S21 kokoro-en stall cause, until a real stall prints the PACKDL tail.
+  - *Why:* fallback pack_failed / PACKDL tail
+- **Slice Slice 244:** **Logs:** No new NSDictionary or `0xdead10cc` crash for a week after release (`tools/crashes`).
+  - *Why:* crash store (tools/crashes)
+- **Slice Slice 245:** **Logs:** Dino `supertonic-3`, `piper-fa`, `piper-nb` and `melo` reads on a device; RTST Android Supertonic read.
+  - *Why:* usage read events per engine
+- **Slice Slice 223:** **Logs:** Live: a read-only `rtst_usage` / `dino_usage` query shows event counts per real version unchanged after the 2026-11-01 Worker deploy, no real version newly counted as unstamped ([slice](slices/223-usage-version-rule-cleanup.md)).
+  - *Why:* rtst_usage / dino_usage version counts
+- **Slice Slice 227:** **iOS:** Slice 227 not yet verified: iOS on a real TestFlight build (report tagged `testflight`, receipt name), MetricKit `native` report 24 h later, `crash-test kind=kill` gives one `unclean_exit`, Android exit reasons, an R2 object and `app_crashes` row once on, `dino_usage` TestFlight leak (27 rows stored), `pull-crashes.mjs`/`pull-apple.py`/`pull-play.py` against the real services ([slice](slices/227-crash-reports.md)).
+  - *Why:* crash store app_crashes, unclean_exit, MetricKit native reports
+- **Slice Slice 219:** **Logs:** Slice 219 (PR #632): after deploy, a read-only `rtst_usage` / `dino_usage` query shows no new `0.x` rows; a local Windows run adds no new row ([slice](slices/219-usage-drops-dev-versions.md)).
+  - *Why:* rtst_usage / dino_usage no 0.x rows
+- **Slice Slice 140:** **Logs:** Slice 140: queue file under `LocalFolder/usage` not exercised (needs `telemetry.enabled` on); no Windows rows in `rtst_usage` yet (telemetry on since 2026-10-27) ([slice](slices/140-rtst-windows-usage-counts.md)).
+  - *Why:* rtst_usage windows rows
+- **Slice Slice 137:** **Logs:** Slice 137: telemetry on since 2026-10-27 and rows arrive in `rtst_usage` (so far test devices only); iOS compile; emulator pass done 2026-10-26 ... [full text](notes/2026-10-30-outstanding-detail.md#o034) ([slice](slices/137-rtst-phone-usage-counts.md))
+  - *Why:* rtst_usage rows
+- **Slice Slice 134:** **Logs:** Slice 134: telemetry on since 2026-10-27, `tools/dino-usage-report.ps1` runs against live data; emulator smoke of each event; `own_book_added` not ... [full text](notes/2026-10-30-outstanding-detail.md#o068) ([slice](slices/134-dino-usage-events-and-report.md))
+  - *Why:* dino_usage events
+
+## Listening checks moved to their own slices (14)
+
+- **Slice Slice 281:** **Live:** Play one track end to end (page gaps audible).
+  - *Why:* Store listening track: page gaps audible
+- **Slice Slice 255:** **Live:** User listening check (2026-11-06, "I need to think about it"): a line whose own text already says the animal's sound word (e.g. "moo", `SaysIt`) is read by the voice with no clip, per the slice's recorded decision; the user's quote says animal noises should not be AI-voiced, so the user listens and confirms or changes it.
+  - *Why:* Animal sound word already in the text (moo)
+- **Slice Slice 255:** **Android:** A possible double sound when a quote already says the animal's word in a language without a sound table (check2 #1).
+  - *Why:* Double animal sound when a quote names the animal
+- **Slice Slice 257:** **Live:** Listen to the new Farsi clip in `D:/ReadTheStupidText-worktrees/s246-audio/books-lion-and-mouse/`.
+  - *Why:* Lion and Mouse Farsi clip
+- **Slice Slice 254:** **Live:** On a device: Three Little Pigs in Farsi reads «پیم گفت:» then the whole quote and «گرگ گفت:» before the wolf's words; English: the wolf's sound before "said Wolf", "Achoo!" in the wolf's voice.
+  - *Why:* Speaker first in Farsi (Three Little Pigs) and the wolf's sound in English
+- **Slice Slice 246:** **Live:** Pigs Farsi: the two `say` lines (گُنده‌ی, «شالاپ، شالاپ، شالاپ!») were re-rendered in the full book on 2026-11-03 but nobody has listened to them in the book; the user heard only the spelling-page variants. The same holds for the two other lines with the same word re-rendered after #766 (Pim's tub line and the narrator's "big smile" line): four lines in all.
+  - *Why:* Pigs Farsi: four re-rendered lines
+- **Slice Slice 245:** **iOS:** The same Farsi sukun sentence sounding the same on Android and iOS.
+  - *Why:* Farsi sukun sentence on Android and iPhone
+- **Slice Slice 214:** **Android:** Dino: the first-run hello line (and the voice preview on a reader without segment support) now gets the short first piece; check on a phone that it still sounds whole ([slice](slices/214-rtst-phone-cold-first-audio.md)).
+  - *Why:* Dino first-run hello line sounds whole
+- **Slice Slice 210:** **Live:** Slice 210 (PR #631): listening to the rescued lines (the user's ear); Spanish, Portuguese and Chinese Kokoro voices (`ef_dora`, `pf_dora` have no sibling); iOS compile only ([slice](slices/210-kokoro-short-line-dropped.md)).
+  - *Why:* Kokoro rescued short lines (English)
+- **Slice Slice 165:** **Live:** Slice 165: the user's listening check on the phone (Slice 163 and the Slice 175/176 gaps are closed) ([slice](slices/165-real-phone-audio-timing-checks.md))
+  - *Why:* Real phone audio timing (Slice 165)
+- **Slice Slice 150:** **Live:** Slice 150: a mid-book speed change heard on a real phone; Windows head and iOS readers apply `SetSpeed` on the next sentence; native-speaker read ... [full text](notes/2026-10-30-outstanding-detail.md#o072) ([slice](slices/150-dino-slower-reading-speed.md))
+  - *Why:* Mid-book speed change on a phone
+- **Slice Slice 149:** **iOS:** Slice 149: emulator Farsi read passed by logs only, not heard; iOS compile of `IosSupertonicSpeechReader.Synthesis.cs` and `SiblingRescue`; a ... [full text](notes/2026-10-30-outstanding-detail.md#o039) ([slice](slices/149-never-drop-a-short-word.md))
+  - *Why:* Farsi short words never dropped (Slice 149)
+- **Slice Slices 43-95:** **Android:** Slice 51: run `packs.yml` with `release_number=2` (all three versions `1`), then a one-line PR flipping `PackConstants.CatalogUrl` to `packs-2`; until then Farsi and Chinese read with the phone voice. Then hear fa and zh on a device, judge Arabic/Japanese quality and French-as-French by ear, and re-check the `fa_IR-amir-medium` licence before a wide launch. ([slice](docs/plan/slices/51-multilingual-voices.md))
+  - *Why:* Farsi voice pack (Slice 51)
+- **Slice Slices 43-95:** **Windows:** Slice 89: Windows desktop acceptance of the four voices not run (a stale `desktop-rtl` dev package blocks deploy); iOS on a device; Pixel timing of cold voice preparation (7-8 s on the emulator, 16 s on a cold mid-read swap); a saved Amir choice falling back to Ganji Adabi, on a device; the play button shows idle after Back while chunks still play. ([slice](docs/plan/slices/89-four-farsi-voices.md))
+  - *Why:* Four Farsi voices (Slice 89)
+
+## Removed: nobody here can test them (86)
+
+- **Slice Slice 316:** **iOS:** Flows `rtst/review-pick-then-read` and `dino-landscape-reading` not run (no Mac); iOS compile not run here.
+  - *Why:* needs a Mac
+- **Slice Slice 315:** **Live:** The first night with the disk-free preflight and the `died`-status trace (items 2 and 3).
+  - *Why:* tooling, shows in the next night run
+- **Slice Slice 311:** **Live:** Whether either app is under an undocumented Store threshold; if a real pull returns no rows for an app with users, plan the self-reporting Windows slice (item 3, already decided).
+  - *Why:* undocumented Store threshold, nobody can act
+- **Slice Slice 289:** **Live:** Speaker rows carry no app version, so test or sandbox plays cannot be filtered by version: reports filter `blob7 = 'sonos'`, and Slice 287 must handle platform `sonos` explicitly.
+  - *Why:* design note, not a check
+- **Slice Slice 310:** **iOS:** iOS: the same hook and three flows on an iOS Debug build (no Mac or iPhone in the 2026-11-07 wave).
+  - *Why:* needs a Mac
+- **Slice Slice 303:** **Live:** A real `packs.yml` run (next packs release): the new tokens check and fixture self-test.
+  - *Why:* CI run shows it
+- **Slice Slice 301:** **Live:** A real crash-kill on a Mono SIGSEGV: the retry and the two attempt logs (only self-tests with stubs and fake processes, and a passing happy-path run).
+  - *Why:* cannot force a Mono SIGSEGV
+- **Slice Slice 301:** **Live:** A real stuck Maestro tree (`RunnerStuck`, rest NOTRUN).
+  - *Why:* cannot force a stuck Maestro tree
+- **Slice Slice 307:** **Live:** Whether Claude Code shows `additionalContext` from a PreToolUse hook that returns no `permissionDecision` (the SDK type marks the field optional; not seen live).
+  - *Why:* Claude Code tool behaviour, not the apps
+- **Slice Slice 308:** **Live:** Slice 225 item 2 cause (entries 249/494/630): no failed Debug build log exists on disk; the next failed build leaves `<log>.failed.log` to read.
+  - *Why:* no failed build to read
+- **Slice Slice 288:** **iOS:** The same flow on the iOS simulator.
+  - *Why:* iOS simulator, needs a Mac
+- **Slice Slice 281:** **Live:** The first `dino-store` run after merge (the backfill takes several runs; watch it).
+  - *Why:* CI run shows it
+- **Slice Slice 279:** **Live:** The 13 translations are machine-drafted.
+  - *Why:* 13 translations, other languages
+- **Slice Slice 280:** **iOS:** iOS beyond compile.
+  - *Why:* vague iOS line
+- **Slice Slice 280:** **Windows:** The Windows head.
+  - *Why:* vague Windows line
+- **Slice Slice 278:** **Windows:** Part B: the Windows MSIX still packages (`APPX1101`) and the iOS app still links: project settings unchanged, not built beyond a compile.
+  - *Why:* CI build shows it
+- **Slice Slice 278:** **iOS:** No iOS device run is recorded for part A.
+  - *Why:* vague iOS line
+- **Slice Slice 269:** **iOS:** Apple Vision per-language support for Farsi, Arabic, Russian, Japanese and Chinese (research only; call `supportedRecognitionLanguages` on the minimum iOS).
+  - *Why:* OCR research
+- **Slice Slice 268:** **iOS:** iOS runtime (CI compiles iOS).
+  - *Why:* vague iOS line
+- **Slice Slice 267:** **Live:** Bug E on main: the wait step has run (read 2026-11-05 by the feedback loop: the `fix/` merge #826, release run 41950767114, success; #799's run 41951758486 ran 01:55-03:47 UTC, about 112 min against a normal 62-68, and succeeded). Still unchecked: whether that run held behind the fix run on purpose (read its version-job log), and the lookup-failed path. Cost: a `fix/` merge no longer coalesces with later merges (one full release per fix merge, against the Actions quota rules in `.github/CLAUDE.md`).
+  - *Why:* CI run
+- **Slice Slice 267:** **iOS:** iOS runtime and the XCUITest twins (`net10.0-ios` compiles; the XCUITest layout check does not exist).
+  - *Why:* vague iOS line, needs a Mac for XCUITest
+- **Slice Slice 266:** **Live:** Item 5: a timed Windows fix attempt on a real slice (target under 6 minutes, against the measured 11.5-12.4).
+  - *Why:* tooling timing
+- **Slice Slice 265:** **Live:** `dino-store.yml`'s first real run on main.
+  - *Why:* CI run
+- **Slice Slice 265:** **Live:** `packs.yml`'s first run with `lfs: false`.
+  - *Why:* CI run
+- **Slice Slice 259:** **Live:** Item 4: the WER copy on a real crash (the scripted kill left `events.txt` and the trace tail only).
+  - *Why:* cannot force a real crash
+- **Slice Slice 259:** **Live:** Item 4: `tools-selftests.yml`'s new crash-evidence step has not had its first CI run.
+  - *Why:* CI run
+- **Slice Slice 259:** **Live:** Item 5: the keychain-lifetime cause is read from the log, not reproduced; confirmed only by the next signed Dino build passing after the `ios-signing.sh` change.
+  - *Why:* CI signing
+- **Slice Slice 249:** **iOS:** The iOS memory-warning log line on a device (the page and reading lines were seen in report T7RS-G327, 2026-11-08).
+  - *Why:* cannot force an iOS memory warning
+- **Slice Slice 256:** **Live:** Item 3: Good Enough Farsi batch render (paid Gemini, needs `GEMINI_API_KEY`) not run; command in the slice file.
+  - *Why:* paid render, not a check
+- **Slice Slice 252:** **Live:** Item 5 (forced short-timeout run) not run: a dispatched run shares the release concurrency group and a later merge would cancel it.
+  - *Why:* CI run
+- **Slice Slice 252:** **Live:** The first `main` run's job summary (timing block) and its numbers: not yet seen or written into item 3.
+  - *Why:* CI run
+- **Slice Slice 252:** **Live:** The upload retry on a real network blip: not seen; the step logs "Upload succeeded on attempt N" on success.
+  - *Why:* CI run
+- **Slice Slice 252:** **Live:** shellcheck of the new step scripts runs only in CI.
+  - *Why:* CI run
+- **Slice Slice 253:** **Live:** Freddy and the Slipper: the Arabic, Russian, Japanese and Chinese spellings of Elham's name, by a native speaker (until now only in `docs/plan/notes/2026-11-01-freddy-and-the-slipper.md`).
+  - *Why:* Arabic, Russian, Japanese, Chinese spellings
+- **Slice Slice 253:** **Live:** The parallel illustration workflow (`dino-story-illustrator` modes setup / pages / finish, 3-4 at once, PR #687) has never been run: the first book drawn that way proves one lock, one stamp and matching place sheets.
+  - *Why:* workflow never run, not a check
+- **Slice Slice 247:** **Live:** Mono SIGSEGV retry on a real tombstone: the fixture is copied from the note, and no SIGSEGV occurred in the 2026-11-02 runs.
+  - *Why:* cannot force a Mono SIGSEGV
+- **Slice Slice 235:** **Live:** Two monitors, and an unplugged display (saved place on a missing monitor).
+  - *Why:* multi-monitor hardware
+- **Slice Slice 234:** **iOS:** iPad (compile only), parts A-C.
+  - *Why:* no iPad
+- **Slice Slice 246:** **Live:** Every vendor request shape is unproven until the first keyed run (Gemini model id, ElevenLabs voice id placeholder, Narakeet voice-name casing, CAMB `fa-ir`).
+  - *Why:* vendor keys, tooling
+- **Slice Slice 244:** **iOS:** iOS simulator flow (no CI workflow runs one).
+  - *Why:* needs a Mac
+- **Slice Slice 244:** **Live:** The 3-window on a sub-3 GB device.
+  - *Why:* sub-3 GB device
+- **Slice Slice 244:** **iOS:** The iOS twin of the Maestro flow.
+  - *Why:* needs a Mac
+- **Slice Slice 238:** **Live:** The check's first run in CI on the PR.
+  - *Why:* CI run
+- **Slice Slice 245:** **iOS:** iOS everything (needs the TestFlight build).
+  - *Why:* vague iOS line
+- **Slice Slice 240:** **Live:** `gh cache delete` of a cache entry created on another ref may be refused (only warns; not run).
+  - *Why:* CI behaviour
+- **Slice Slice 240:** **Live:** A release run on `main` with the Store MSIX build pinned to SDK 10.0.402 (was floating `10.0.x`) packages both architectures and uploads them to the draft release (only PR runs have used the pin).
+  - *Why:* CI run
+- **Slice Slice 239:** **Live:** A real story-only PR shows no PR checks and, after merge, runs only `dino-store.yml` (no `release.yml`).
+  - *Why:* CI run
+- **Slice Slice 239:** **Live:** Delisting a deleted book on a real run.
+  - *Why:* CI run
+- **Slice Slice 232 parts A-E:** **Live:** Part C: the editor thumbnail with a real keyboard on a scanned page (the flow reaches only a typed page).
+  - *Why:* scanned page, scan
+- **Slice Slice 225:** **Live:** `Clear-PageCache` on a rooted device.
+  - *Why:* rooted device
+- **Slice Slice 221:** **Live:** Item 4 on GitHub: a force_all dispatch followed by a merge still runs its jobs; the wait step's `jq`/`gh` output on a real run.
+  - *Why:* CI run
+- **Slice Slice 229:** **iOS:** iOS VoiceOver, iPhone and iPad hand checks.
+  - *Why:* vague iOS hand checks
+- **Slice Slice 237:** **Live:** The ar/ru/ja/zh labels by a native speaker.
+  - *Why:* ar/ru/ja/zh native speaker
+- **Slice Slice 233:** **iOS:** iOS on a device: the VoiceOver, TestFlight, iPhone and iPad hand checks (the user's answer: they do these later). Only the iOS compile was checked.
+  - *Why:* vague iOS hand checks
+- **Slice Slice 220:** **iOS:** iOS: compile only.
+  - *Why:* compile only
+- **Slice Slice 220:** **iOS:** iOS: compile only.
+  - *Why:* compile only
+- **Slice Slice 231:** **Android:** A scanned book showing its lines on the Record page.
+  - *Why:* scanned book
+- **Slice Slice 231:** **iOS:** iPhone, iPad, VoiceOver and TestFlight hand checks (the user's answer: they do these later) ([slice](slices/231-dino-record-page-shows-words.md)).
+  - *Why:* vague iOS hand checks
+- **Slice Slice 226:** **iOS:** iPhone / iPad / VoiceOver / TestFlight hand checks (the user's answer: they do these later).
+  - *Why:* vague iOS hand checks
+- **Slice Slice 222:** **Live:** The marker guards' behaviour on the next real store-submit run (the first on main after this merges) ([slice](slices/222-store-marker-hardening.md)).
+  - *Why:* CI run
+- **Slice Slice 209:** **iOS:** Slice 209 (PR #644): the iOS URL-scheme hooks on a device (compile-checked only) ([slice](slices/209-settings-and-book-update-test-hooks.md)).
+  - *Why:* needs a Mac
+- **Slice Slice 195:** **Live:** Slice 195 (PR #592): hearing the picks (default `nb-knv` is measured, not heard); iOS TestFlight run of the new order; Windows head; Dino narrator on a device ([slice](slices/195-norwegian-default-voice.md)).
+  - *Why:* Norwegian voice
+- **Slice Slice 186:** **iOS:** Slice 186 (PR #574): iOS TestFlight: the notification Cancel holds the scan pack ([slice](slices/186-no-ocr-download-after-voice-cancel.md)).
+  - *Why:* scan pack
+- **Slice Slice 184:** **Windows:** Slice 184: a real English-to-Japanese translation in the Windows app (download the pack, translate in the control panel); the C# tokenizer path has ... [full text](notes/2026-10-30-outstanding-detail.md#o071) ([slice](slices/184-windows-english-to-japanese-pack.md))
+  - *Why:* Japanese translation
+- **Slice Slice 175:** **iOS:** Slice 175 (PR #517): iOS hooks on a device (no Mac); no unit tests for `LaunchKeys`, `BookMatch` or the timing parser (Slice 199). The VM items ... [full text](notes/2026-10-30-outstanding-detail.md#o077) ([slice](slices/175-test-gaps-permanent-checks.md))
+  - *Why:* needs a Mac
+- **Slice Slice 169:** **Live:** Slice 169 (PR #503): German sound words and pages heard aloud on a phone; a German book on iOS (TestFlight); end-of-batch check that /api/stories ... [full text](notes/2026-10-30-outstanding-detail.md#o031) ([slice](slices/169-german-dino-books.md))
+  - *Why:* German
+- **Slice Slice 168:** **iOS:** Slice 168 (PR #495): German heard on iOS (TestFlight) and Windows (waits on packs-8); Android German read done by log (1795 ms, [S21 night ... [full text](notes/2026-10-30-outstanding-detail.md#o030) ([slice](slices/168-german-in-both-apps.md))
+  - *Why:* German
+- **Slice Slice 162:** **iOS:** Slice 162 (PR #490): iOS hooks and the `rtst-test://` / `dino-test://` URL scheme have never run (no Mac), compile-checked only; Dino ... [full text](notes/2026-10-30-outstanding-detail.md#o026) ([slice](slices/162-scripted-device-flows.md))
+  - *Why:* needs a Mac
+- **Slice Slice 146:** **Live:** Slice 146: native read of all 13 translations per book; a listen to the new sound-word triples in ar, da, fi, fr, ja, nb, nl, pt, ru, sv; upload of ... [full text](notes/2026-10-30-outstanding-detail.md#o042) ([slice](slices/146-dino-books-kid-friendly-language.md))
+  - *Why:* other-language native reads and listens
+- **Slice Slice 131:** **Live:** Slice 131: macOS CI iOS build after merge; emulator launch of both apps PASS 2026-10-26 ([slice](slices/131-mobile-shared-namespace.md)).
+  - *Why:* macOS CI build
+- **Slice Slice 106:** **Windows:** Slice 106: Norwegian on a Windows head via `MarianEngine` (third-party conversion, never run); en to da/fi/sv/nl/nb and back on Windows; the ... [full text](notes/2026-10-30-outstanding-detail.md#o070) ([slice](slices/106-windows-nordic-dutch-translation-packs.md))
+  - *Why:* Nordic/Dutch translation
+- **Slice Slice 104:** **Live:** Slice 104: listen to pick the clearest default voice (KNN is a placeholder; Slice 195); Norsk download and read on the S21 PASS via Slice 201; ... [full text](notes/2026-10-30-outstanding-detail.md#o052) ([slice](slices/104-piper-norwegian-pack.md))
+  - *Why:* Norwegian
+- **Slice Slice 103:** **Android:** Slice 103: emulator check of each new UI language; Windows head in Dutch; a native read of all translations; Dino's iOS app has no localisation ... [full text](notes/2026-10-30-outstanding-detail.md#o049) ([slice](slices/103-nordic-dutch-languages.md))
+  - *Why:* Nordic/Dutch languages
+- **Slice Slice 100:** **Live:** Slice 100: a real ML Kit scan on a signed-in phone; iOS capture (compile and behaviour); a native read of the new strings ([slice](slices/100-rtst-mobile-page-capture-wizard.md)).
+  - *Why:* ML Kit scan
+- **Slice Slices 43-95:** **Live:** Slice 43: the 8 translated Play listings are only worth adding when the app goes to Play production (it is closed testing now); get a native read first. The Microsoft Store keeps its existing Windows-specific listing (decided 2026-10-20). ([slice](docs/plan/slices/43-store-listing-refresh.md))
+  - *Why:* translated Play listings
+- **Slice Slices 43-95:** **Android:** Slice 45: a real multi-page scan on a Google-signed-in device (module download, edge detection, page order, gallery import, text appended and read aloud) ([slice](docs/plan/slices/45-android-document-scanner.md)).
+  - *Why:* scan
+- **Slice Slices 43-95:** **Android:** Slice 45: the no-Play-services `MediaPicker` fallback on a device without Play services ([slice](docs/plan/slices/45-android-document-scanner.md)).
+  - *Why:* no-Play-services phone, scan
+- **Slice Slices 43-95:** **Live:** Slice 70: a PR touching only one platform runs only that platform's workflow ([slice](docs/plan/slices/70-split-build-pipeline.md)).
+  - *Why:* CI behaviour
+- **Slice Slices 43-95:** **Android:** Slice 52: run `packs.yml` with a new release number and `ocr_pack_version=1`, then flip `PackConstants.CatalogUrl`; until then OCR packs are not live. Real scans in ar/fa/ru/zh/ja/fr (accuracy, reading order, RTL numbers, time per page), memory with the 84 MB CJK pack; follow-up: the voice installer does not check for newer voice-pack versions at start-up. ([slice](docs/plan/slices/52-paddleocr-per-language.md))
+  - *Why:* OCR packs
+- **Slice Slices 43-95:** **Live:** Slice 53: a native-speaker read of the eight translations; Arabic RTL on the emulator (only Farsi walked through); follow-ups: translate neural voice names, fold `LocalizedPackStatus` into `PackStatusText`. ([slice](docs/plan/slices/53-localized-ui-rtl.md))
+  - *Why:* Arabic and other translations
+- **Slice Slices 43-95:** **Android:** Slice 63: draw boxes over a scanned page, an EXIF-rotated photo and PDFs with and without a text layer (ML Kit and PaddleOCR); RTL line order on a real Arabic/Farsi page; the RTST scan flow unchanged on a Google-signed-in device; follow-up: wire Dino's Scan, Photos and PDF import to the shared services ([slice](docs/plan/slices/63-positioned-text-extraction.md)).
+  - *Why:* scanned page
+- **Slice Slices 43-95:** **Live:** Slice 57: native-speaker review of the 9 machine-translated resw files; the Store listing showing the 9 languages after the next submission ([slice](docs/plan/slices/57-windows-localization-translation.md)).
+  - *Why:* machine translations in nine languages
+- **Slice Slices 43-95:** **Android:** Slice 86: a scanned page with a heading reads the heading as its own unit on a Google-signed-in Android device and in the Windows Mobile build (the emulator's ML Kit scanner fails) ([slice](docs/plan/slices/86-rtst-scan-line-geometry.md)).
+  - *Why:* scan
+- **Slice Slices 43-95:** **Android:** Slice 83: one-page, two-page and blank-page scans on a Google-signed-in device; the editor read-only during OCR ([slice](docs/plan/slices/83-scan-replaces-the-text.md)).
+  - *Why:* scan
+- **Slice Slices 43-95:** **Android:** Slice 84: the Nutkin page with the app in Farsi, a Farsi page, and an English app with a Farsi page, on a Google-signed-in device. Resolved: the Farsi OCR pack is offered and downloaded (Slice 87). ([slice](docs/plan/slices/84-ocr-follows-the-page-not-the-app-language.md))
+  - *Why:* OCR
+- **Slice Slices 43-95:** **Android:** Slice 87: on a Google-signed-in device with the app in English, scan a Farsi page, get asked, pick Farsi, see progress, and the page reads as Farsi; a second Farsi page has no prompt; Cancel keeps the text; airplane mode shows the message with Retry; native-speaker check of the 5 new strings ([slice](docs/plan/slices/87-scan-downloads-the-page-language-pack.md)).
+  - *Why:* scan
+
+## Passed on a device on 2026-11-08 (second run) (2)
+
+- **Slice Slice 316:** **Android:** The reader clock shows `0:00` after a read and never `elapsed > total` on a device (unit-tested only).
+  - *Why:* passed on a device 2026-11-08
+- **Slice Slices 43-95:** **Android:** Slice 76: on a device, a pasted hard-wrapped email and a scanned book page read with no pause mid-sentence (RTST Android, RTST Windows, Dino) ([slice](docs/plan/slices/76-soft-line-break-reflow.md)).
+  - *Why:* passed on a device 2026-11-08
