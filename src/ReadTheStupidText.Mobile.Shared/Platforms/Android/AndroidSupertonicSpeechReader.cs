@@ -803,6 +803,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
 
         (byte[] wav, SentenceTimeline? timeline) = await JoinSentencesAsync(engine, units, voice, transform, slots, token);
+        token.ThrowIfCancellationRequested(); // a chunk that finishes after Stop must not raise timing after the Idle of its read (Slice 316)
         RecordChunkDuration(index, WavFile.TryGetDuration(wav) ?? TimeSpan.Zero);
         _log.Debug($"chunk {index} ({chunk.Length} chars, {units.Count} sentence(s)) ready in " +
             $"{Stopwatch.GetElapsedTime(started).TotalMilliseconds:F0} ms");
@@ -1652,7 +1653,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             while (!token.IsCancellationRequested)
             {
                 await Task.Delay(PollInterval, token);
-                ReportProgress(player);
+                ReportProgress(player, token);
             }
         }
         catch (OperationCanceledException)
@@ -1662,8 +1663,14 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
     }
 
-    private void ReportProgress(AndroidMedia.MediaPlayer player)
+    // A tick that was already past the delay when StopPolling cancelled it raises nothing: the timing events end before the Idle of the same read (Slice 316).
+    private void ReportProgress(AndroidMedia.MediaPlayer player, CancellationToken token)
     {
+        if (token.IsCancellationRequested)
+        {
+            return;
+        }
+
         int chunkCount = Volatile.Read(ref _chunkCount);
         int chunkIndex = Volatile.Read(ref _currentChunkIndex);
         if (chunkCount == 0 || !TryReadPlayer(player, out int duration, out int position))

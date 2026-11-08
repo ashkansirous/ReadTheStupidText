@@ -525,6 +525,78 @@ public sealed class AudioPackStoreTests : IDisposable
     }
 #endif
 
+    // Slice 316 item 3: the failure line names the exception type and the pack's URL, never the exception message.
+    [Fact]
+    public async Task AFailedDownload_LogsTheTypeAndTheUrl_NotTheMessage()
+    {
+        byte[] zip = Zip();
+        AudioPackStore store = Store(new FakeFetcher(zip) { Throw = new IOException("disk is full") });
+
+        PackInstall result = await store.InstallAsync(Book, "fa", new AudioPackInfo(1, zip.Length, "https://packs.example/fa.zip"), null, CancellationToken.None);
+
+        Assert.Equal(PackInstall.Failed, result);
+        Assert.Contains(_log, line => line.Contains("failed") && line.Contains("IOException; url=https://packs.example/fa.zip") && !line.Contains("disk is full"));
+    }
+
+    [Fact]
+    public void FailureDetail_ShowsAMarkerForAFileUrl()
+    {
+        string detail = AudioPackStore.FailureDetail(new IOException("x"), "file:///data/user/0/app/files/x.zip");
+
+        Assert.DoesNotContain("/data/", detail);
+        Assert.DoesNotContain("file:", detail);
+        Assert.Contains("url=<non-http-url>", detail);
+    }
+
+    [Fact]
+    public void FailureDetail_NamesOnlyTheTypeAndTheUrl_NeverTheMessage()
+    {
+        var ex = new IOException(@"Could not find '/data/user/0/my app/files/x.part' or \\server\share\a.zip or C:\Users\Jane Doe\a.zip token=abc");
+
+        string detail = AudioPackStore.FailureDetail(ex, "https://h.example/p.zip");
+
+        Assert.Equal("IOException; url=https://h.example/p.zip", detail);
+    }
+
+    [Fact]
+    public void FailureDetail_KeepsTheHttpStatusCode()
+    {
+        var ex = new HttpRequestException("Response status code does not indicate success: 404 (Not Found).", null, System.Net.HttpStatusCode.NotFound);
+
+        string detail = AudioPackStore.FailureDetail(ex, "https://h.example/p/fa.zip");
+
+        Assert.StartsWith("HttpRequestException; status=404; url=", detail);
+        Assert.DoesNotContain("Not Found", detail);
+    }
+
+    [Fact]
+    public void FailureDetail_NamesTheInnerExceptionType()
+    {
+        var ex = new HttpRequestException("GET https://h/p?token=abc failed", new IOException("secret detail"));
+
+        string detail = AudioPackStore.FailureDetail(ex, "https://h.example/p.zip");
+
+        Assert.Contains("; inner=IOException; url=", detail);
+        Assert.DoesNotContain("abc", detail);
+        Assert.DoesNotContain("secret", detail);
+    }
+
+    [Fact]
+    public void FailureDetail_DropsTheUrlUserinfoAndQuery()
+    {
+        string detail = AudioPackStore.FailureDetail(new IOException("x"), "https://user:secret@cdn.example:8443/p/fa.zip?token=abc#frag");
+
+        Assert.Equal("IOException; url=https://cdn.example:8443/p/fa.zip", detail);
+    }
+
+    [Fact]
+    public void FailureDetail_ShowsAMarkerForAMalformedUrl()
+    {
+        string detail = AudioPackStore.FailureDetail(new IOException("x"), "not a url");
+
+        Assert.EndsWith("url=<invalid-url>", detail);
+    }
+
     private sealed class FakeFetcher(byte[]? content) : IAudioPackFetcher
     {
         public int Calls { get; private set; }

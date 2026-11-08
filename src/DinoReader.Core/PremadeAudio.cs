@@ -41,6 +41,10 @@ public sealed class PremadeAudio
     /// <summary>How many of the piece texts are spoken: a clip's position is the count of spoken pieces before it.</summary>
     public static int SpokenCount(IEnumerable<string> texts) => texts.Count(IsSpoken);
 
+    /// <summary>Slice 316 item 3: where a read that starts mid-book begins in the pack: the whole book's spoken pieces minus the partial read's.</summary>
+    public static int ClipOffset(IEnumerable<string> wholeBookTexts, IEnumerable<string> partialReadTexts) =>
+        SpokenCount(wholeBookTexts) - SpokenCount(partialReadTexts);
+
     /// <summary>The generator's text hash: SHA-256 of the UTF-8 bytes of the NFC form, lower-case hex.</summary>
     public static string HashOf(string text) =>
         Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(text.Normalize(NormalizationForm.FormC))));

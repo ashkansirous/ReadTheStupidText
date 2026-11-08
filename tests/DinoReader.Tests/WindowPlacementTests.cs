@@ -108,6 +108,30 @@ public class WindowPlacementTests
         Assert.Equal(new PixelRect(0, 0, 1920, 1040), Resolve(saved, Main).Bounds);
     }
 
+    // Slice 316 item 7: a window saved maximised reopens maximised, and the normal bounds behind it are the clamped ones, so un-maximising never gives a window bigger than the screen.
+    [Fact]
+    public void A_maximised_window_saved_larger_than_a_small_screen_keeps_maximised_with_clamped_restored_bounds()
+    {
+        var small = new PixelRect(0, 0, 1366, 728);
+        var saved = new SavedWindow(new PixelRect(100, 100, 1800, 1000), true);
+
+        WindowOpening opening = Resolve(saved, small);
+
+        Assert.True(opening.Maximised);
+        Assert.Equal(new PixelRect(0, 0, 1366, 728), opening.Bounds);
+    }
+
+    [Fact]
+    public void A_maximised_window_off_every_display_keeps_maximised_with_normal_bounds_inside_the_main_one()
+    {
+        var saved = new SavedWindow(new PixelRect(9000, 9000, 2500, 1500), true);
+
+        WindowOpening opening = Resolve(saved, Main);
+
+        Assert.True(opening.Maximised);
+        Assert.Equal(new PixelRect(0, 0, 1920, 1040), opening.Bounds);
+    }
+
     [Fact]
     public void A_saved_position_near_the_right_or_bottom_edge_is_pulled_back_inside_the_work_area()
     {

@@ -137,8 +137,6 @@ public sealed class StoryVoicing
 			Misses.Note(piece, found.Miss);
 			return found.Path;
 		}
-
-		public static int SpokenCount(IReadOnlyList<SplitSegment> pieces) => PremadeAudio.SpokenCount(pieces.Select(p => p.Segment.Text));
 	}
 
 	// The clips are keyed by the plain text, but the pieces a translated read plays carry the speak: table's marks, so the plain pieces are translated again (a table lookup); an own-language read
@@ -211,7 +209,7 @@ public sealed class StoryVoicing
 		Prepared whole = await Task.Run(() => PrepareShared(story, wholePieces), cancellationToken);
 		IReadOnlyList<SplitSegment>? all = await PlainPiecesAsync(story, whole, reading, translated, cancellationToken);
 		ReadStartTrace.Write($"whole book worked out for the clip offset in {watch.ElapsedMilliseconds} ms ({all?.Count ?? 0} pieces, translated={translated})");
-		return all is null ? -1 : PremadeSource.SpokenCount(all) - PremadeSource.SpokenCount(partial);
+		return all is null ? -1 : PremadeAudio.ClipOffset(all.Select(p => p.Segment.Text), partial.Select(p => p.Segment.Text));
 	}
 
 	// A piece whose plain text has a clip in the pack is marked with its file; the read plays it. The coverage is logged once per read (Debug builds reach the test-hook log).

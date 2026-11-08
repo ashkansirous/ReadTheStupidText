@@ -1,3 +1,5 @@
+using ReadTheStupidText.Domain.Reading;
+
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
@@ -9,8 +11,18 @@ public static class ReadTimingFormatter
 {
     private const string UnknownDuration = "--:--";
 
-    public static string Format(ReadTiming timing) =>
-        $"{FormatDuration(timing.Elapsed)}/{FormatDuration(timing.Total)}";
+    /// <summary>The timing to show: elapsed never runs past a known total (a position can overshoot the estimate at the end of a chunk).</summary>
+    public static ReadTiming ClampToTotal(ReadTiming timing) =>
+        timing.Total is { } total && timing.Elapsed > total ? timing with { Elapsed = total } : timing;
+
+    /// <summary>The clock of a player with nothing playing: zero elapsed, unknown total.</summary>
+    public static ReadTiming Idle { get; } = new(TimeSpan.Zero, null);
+
+    public static string Format(ReadTiming timing)
+    {
+        ReadTiming shown = ClampToTotal(timing);
+        return $"{FormatDuration(shown.Elapsed)}/{FormatDuration(shown.Total)}";
+    }
 
     /// <summary>One side of the player clock for the phone: <c>m:ss</c> (minutes unpadded), or <c>--:--</c> when unknown.</summary>
     public static string FormatClock(TimeSpan? duration) =>

@@ -25,7 +25,6 @@ on:
       - 'GitVersion.dino.yml'
       - 'Directory.Build.props'
       - 'src/SherpaOnnxVersion.props'
-      - '*.slnx'
       - '.gitattributes'
       - '.github/workflows/release.yml'
       - '.github/workflows/tests.yml'

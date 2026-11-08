@@ -103,7 +103,6 @@ export const CORE_PATHS = [
     'Directory.Build.props',
     'src/SherpaOnnxVersion.props',
     'GitVersion.yml',
-    '*.slnx',
     '.gitattributes',
     '.github/workflows/release.yml',
     '.github/workflows/tests.yml',

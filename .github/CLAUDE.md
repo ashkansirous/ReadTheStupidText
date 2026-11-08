@@ -57,7 +57,7 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 
 > **Merging a change to a core path builds every app.** The core paths in
 > `ship-targets.mjs` include `.github/workflows/release.yml`, `tests.yml`,
-> `.github/scripts/find-release.sh`, `ship-targets.mjs`, `*.slnx`, `GitVersion.yml`,
+> `.github/scripts/find-release.sh`, `ship-targets.mjs`, `GitVersion.yml`,
 > `global.json` and `Directory.Build.props`, so a PR that edits any of them (even a Dino
 > Reader-only PR adding a project to the solution) builds all platforms, cuts a version and submits to Google Play and
 > TestFlight on merge (the Store only if a Windows path also changed, see above). Expect that, or batch such
