@@ -1,0 +1,91 @@
+# Slice 325 part E (onboarding mock "Dino Reader- 2026-11-08 Onboarding.dc.html", frames O6-O9): the intro on the new skeleton, from "See what Dino can do" through its four steps. Scripted only.
+# The intro logs its step and shape ([Redesign] intro step=<places|read|record|languages> shape=stack|split). Shots: shot-O6-intro beside O6 (the two places), shot-OT9-intro beside O9 (languages, OT9 on RTST_Tablet),
+# shot-O6-8-intro is the same first step run at 375 x 667 (`wm size 750x1334`, `wm density 320`, restored after), shot-OL7-intro the read step run sideways, shot-OTL7-intro the read step on RTST_Tablet sideways.
+# Against the old wizard the [Redesign] intro line never appears, so the expect-log lines fail on a build from before this slice.
+# The first run is driven for real (the Debug test store gives the two books) so the flow does not depend on where Settings keeps "Show the intro again".
+# layout-check
+# expect-log: HOOK test-store ok ok
+# expect-log: [Redesign] intro step=places shape=stack
+# expect-log: [Redesign] intro step=read shape=stack
+# expect-log: [Redesign] intro step=record shape=stack
+# expect-log: [Redesign] intro step=languages shape=stack
+appId: uk.sirous.dinoreader.dbg
+name: The intro on the new skeleton, four steps
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books), on purpose: the flow is the fresh install's first run, which starts with the language page and an empty shelf.
+    clearState: true
+    arguments:
+      cmd: test-store
+      mode: ok
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- tapOn:
+    text: "Continue"
+    waitToSettleTimeoutMs: 300
+# The Slice 183 "keep downloading when locked?" sheet shows on a fresh install on some devices; dismissed when it is there.
+- tapOn:
+    id: android:id/button2
+    optional: true
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: FirstBooksPicker
+    timeout: 30000
+- tapOn:
+    id: FirstBookCard-0
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: FirstBookCard-1
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: FirstBooksContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: FirstRunReady
+    timeout: 40000
+- tapOn:
+    text: "See what Dino can do"
+    waitToSettleTimeoutMs: 300
+# Step 1: the top bar (dots, "1 of 4", Skip all), the two mini phones, the two places, the new grown-ups line, Next.
+- extendedWaitUntil:
+    visible: Dino has two places
+    timeout: 30000
+- assertVisible: "1 of 4"
+- assertVisible: "Skip all"
+- assertVisible: "Behind a lock: your books, the Store and settings."
+- assertNotVisible: "Behind a lock, for adding books and voices."
+- assertVisible:
+    id: IntroNext
+- takeScreenshot: shot-O6-intro
+- takeScreenshot: shot-O6-8-intro
+- tapOn:
+    id: IntroNext
+    waitToSettleTimeoutMs: 300
+# Step 2: read a story. Skip (the demo read is not driven here).
+- extendedWaitUntil:
+    visible: Read a story together
+    timeout: 15000
+- assertVisible: "2 of 4"
+- takeScreenshot: shot-OL7-intro
+- takeScreenshot: shot-OTL7-intro
+- tapOn:
+    text: "Skip"
+    waitToSettleTimeoutMs: 300
+# Step 3: record, with the new line.
+- extendedWaitUntil:
+    visible: Read it in your voice
+    timeout: 15000
+- assertVisible: "Record one character at a time, or whole pages. Your child can play it any time."
+- tapOn:
+    text: "Skip"
+    waitToSettleTimeoutMs: 300
+# Step 4: the languages step, the list in its own pane or under the heading.
+- extendedWaitUntil:
+    visible: Which languages should stories be in?
+    timeout: 15000
+- assertVisible: "4 of 4"
+- takeScreenshot: shot-OT9-intro

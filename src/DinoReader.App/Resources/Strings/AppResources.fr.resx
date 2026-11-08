@@ -102,12 +102,13 @@
   <data name="Backup_TooLarge" xml:space="preserve"><value>Trop volumineuses pour être restaurées</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} n’ont pas pu être ajoutées à la sauvegarde.</value></data>
   <data name="FirstRun_Hello" xml:space="preserve"><value>Bonjour ! Dans quelle langue lisons-nous ?</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino télécharge une voix pour cette langue. Vous pourrez la changer plus tard derrière le cadenas.</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Vous pourrez la changer plus tard dans l’espace adultes.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Continuer</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Prêt à lire !</value></data>
   <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Chaque personnage a sa propre voix. Vos livres sont sur l’étagère.</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Choisissez vos premiers livres</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>Choisissez-en au moins deux. Vous pourrez en prendre d’autres dans la boutique à tout moment.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BodyShort" xml:space="preserve"><value>Choisissez-en au moins deux. D’autres dans la boutique à tout moment.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_PickTwo" xml:space="preserve"><value>Choisissez 2 livres pour commencer</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>Choisissez-en 1 de plus</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Picked" xml:space="preserve"><value>{0} choisis · {1}</value><comment>Machine draft: needs native review</comment></data>
@@ -117,7 +118,6 @@
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Connectez-vous à Internet pour choisir vos premiers livres</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino a besoin de deux livres avant de commencer. Activez le Wi-Fi ou les données mobiles, puis réessayez.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Découvrir ce que fait Dino</value></data>
-  <data name="Intro_SkipStart" xml:space="preserve"><value>Passer, commencer à lire</value></data>
   <data name="Intro_SkipAll" xml:space="preserve"><value>Tout passer</value></data>
   <data name="Intro_TryIt" xml:space="preserve"><value>Essayer</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>Passer</value></data>
@@ -125,12 +125,13 @@
   <data name="Intro_PlacesTitle" xml:space="preserve"><value>Dino a deux espaces</value></data>
   <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>Étagère des enfants</value></data>
   <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>Touchez un livre et écoutez.</value></data>
-  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Derrière un verrou, pour ajouter des livres et des voix.</value></data>
+  <data name="Intro_PlacesKidsLineClick" xml:space="preserve"><value>Cliquez sur un livre et écoutez.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Derrière un verrou : vos livres, la boutique et les réglages.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>Lire une histoire ensemble</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>Touchez un livre, puis lecture. Dino lit à voix haute et éclaire chaque phrase.</value></data>
   <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino a ouvert le livre. « Il était une fois… »</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lisez-le avec votre voix</value></data>
-  <data name="Intro_RecordLine" xml:space="preserve"><value>Enregistrez-vous en train de lire une histoire, page par page. Votre enfant peut l’écouter quand il veut.</value></data>
+  <data name="Intro_RecordLine" xml:space="preserve"><value>Enregistrez un personnage à la fois, ou des pages entières. Votre enfant peut l’écouter quand il veut.</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>Revoir l’introduction</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Prêt pour mon enfant</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Mode adulte</value></data>
@@ -294,7 +295,6 @@
   <data name="Speed_Sub" xml:space="preserve"><value>Plus lentement, c’est plus facile pour les petits</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · lent</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino compte quels livres sont lus, sans noms ni identifiants. Vous pouvez le désactiver dans les Réglages. Il ajoute aussi votre pays et un type d’appareil approximatif (téléphone ou tablette, plage de mémoire). Si l’appli plante, elle peut aussi envoyer un rapport de plantage : l’erreur et un court journal technique, jamais rien de ce que vous avez lu ou saisi.</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} Mo</value></data>
   <!-- /Slice 115 -->
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>

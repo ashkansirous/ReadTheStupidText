@@ -4,6 +4,18 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 **Only what can be tested stays here** (the user, 2026-11-08: "keep only whatever I can test"). Each line starts with who tests it: **You** (the user: the iPhone, the S21 by hand, the Echo, the Sonos, an English or Farsi read, a decision or account only you hold) or **Device** (Claude, on the Android emulator or tablet AVD, the S21 by script, or the Windows VM). Checks nobody here can test were removed; behaviours only real use shows are watched in production data instead; checks that need the user's ear are listening-page slices 330-343. All three lists are in the [record](notes/2026-11-08-unverified-triage.md). Earlier on 2026-11-08: triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)). The 2026-11-08 device run (emulator, S21, VM) passed 49 more and the user's iPhone session 2 more; same record.
 
+### Slice 147: iOS review cadence: one review at a time, the newest build, never cancel ([slice](slices/147-ios-review-cadence.md))
+- **You:** the first successful `appstore-submit.yml` run (manual; its only two runs, 2026-10-30, concluded failure): it should report the listing items Apple still needs (screenshots, privacy, age rating). The first scheduled `testflight-external.yml` run already succeeded.
+
+### Slice 325: Dino every page in the 2026-11-08 design, parts D and E ([slice](slices/325-dino-2026-11-08-redesign.md))
+- **Device:** VM `dino-keyboard` after the first run: with `-Check dino-keyboard` alone the app is still in the first-run grown-up handover; needs the full Dino list or an `# after:` step that leaves grown-up mode.
+- **Device:** The post-loop Windows run of `dino-launch`'s new walk: `dino-onboarding-keys` reaches the shelf first, so `dino-launch` returns early.
+- **Device:** No `layout-check ok` line was printed for any onboarding or intro flow.
+- **You:** iOS on a device (34 pt home bar, 59 pt island inset) for the first run and intro.
+- **Device:** Windows intro Left from the languages step may drop unsaved ticks (check6 #4, unconfirmed).
+- **You:** 14 machine-drafted translations of the new first-run strings need native review.
+- **Device:** Contact sheet for the new shots: the onboarding flow names shot-OL1-language and shot-OTL1-language but takes neither (no manifest row); O1 / O1-8 and O6 / O6-8 may be the same image if the 375 x 667 resize does not take effect between captures; the intro flow header says O9 where the frame is OT9 (comment only).
+
 ### Slice 323: Dino shelf titles follow the story language picked on the shelf ([slice](slices/323-dino-shelf-titles-follow-story-language.md))
 - **You:** iOS has no scripted run: the shelf title font for a Farsi title (Vazirmatn) on a tile and in the book sheet.
 - **You:** On the iPhone (TestFlight): picking فارسی on the shelf retitles "Good Enough" and "The Three Little Pigs".

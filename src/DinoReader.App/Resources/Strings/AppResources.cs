@@ -85,7 +85,6 @@ public static class AppResources
 	public static string Speed_Sub => Get();
 	public static string Speed_EndSlow => Get();
 	public static string Speed_Value => Get();
-	public static string FirstRun_Usage => Get();
 	public static string Storyteller_Size => Get();
 	public static string Book_Title => Get();
 	public static string Book_Back => Get();
@@ -249,6 +248,7 @@ public static class AppResources
 	public static string FirstRun_ReadyBody => Get();
 	public static string FirstBooks_Title => Get();
 	public static string FirstBooks_Body => Get();
+	public static string FirstBooks_BodyShort => Get();
 	public static string FirstBooks_PickTwo => Get();
 	public static string FirstBooks_PickOneMore => Get();
 	public static string FirstBooks_Picked => Get();
@@ -258,7 +258,6 @@ public static class AppResources
 	public static string FirstBooks_OfflineTitle => Get();
 	public static string FirstBooks_OfflineBody => Get();
 	public static string Intro_SeeWhat => Get();
-	public static string Intro_SkipStart => Get();
 	public static string Intro_SkipAll => Get();
 	public static string Intro_TryIt => Get();
 	public static string Intro_Skip => Get();
@@ -266,6 +265,7 @@ public static class AppResources
 	public static string Intro_PlacesTitle => Get();
 	public static string Intro_PlacesKidsTitle => Get();
 	public static string Intro_PlacesKidsLine => Get();
+	public static string Intro_PlacesKidsLineClick => Get();
 	public static string Intro_PlacesGrownLine => Get();
 	public static string Intro_ReadTitle => Get();
 	public static string Intro_ReadLine => Get();

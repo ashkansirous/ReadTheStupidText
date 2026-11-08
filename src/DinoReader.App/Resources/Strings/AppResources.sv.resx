@@ -103,12 +103,13 @@
   <data name="Backup_TooLarge" xml:space="preserve"><value>För stor för att återställas</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} kunde inte läggas till i säkerhetskopian.</value></data>
   <data name="FirstRun_Hello" xml:space="preserve"><value>Hej! Vilket språk ska vi läsa på?</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino laddar ned en röst för det. Du kan ändra det senare bakom låset.</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Du kan ändra det senare i Vuxenhörnan.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Fortsätt</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Redo att läsa!</value></data>
   <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Varje figur får sin egen röst. Dina böcker står på hyllan.</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Välj dina första böcker</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>Välj minst två. Du kan hämta fler i butiken när som helst.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BodyShort" xml:space="preserve"><value>Välj minst två. Fler i butiken när som helst.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_PickTwo" xml:space="preserve"><value>Välj 2 böcker för att börja</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>Välj 1 till</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Picked" xml:space="preserve"><value>{0} valda · {1}</value><comment>Machine draft: needs native review</comment></data>
@@ -118,7 +119,6 @@
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Anslut till internet för att välja dina första böcker</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino behöver två böcker innan du börjar. Slå på wifi eller mobildata och försök igen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Se vad Dino kan</value></data>
-  <data name="Intro_SkipStart" xml:space="preserve"><value>Hoppa över, börja läsa</value></data>
   <data name="Intro_SkipAll" xml:space="preserve"><value>Hoppa över allt</value></data>
   <data name="Intro_TryIt" xml:space="preserve"><value>Prova</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>Hoppa över</value></data>
@@ -126,12 +126,13 @@
   <data name="Intro_PlacesTitle" xml:space="preserve"><value>Dino har två platser</value></data>
   <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>Barnens hylla</value></data>
   <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>Tryck på en bok och lyssna.</value></data>
-  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Bakom ett lås, för att lägga till böcker och röster.</value></data>
+  <data name="Intro_PlacesKidsLineClick" xml:space="preserve"><value>Klicka på en bok och lyssna.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Bakom ett lås: dina böcker, butiken och inställningarna.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>Läs en saga tillsammans</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>Tryck på en bok och sedan på spela. Dino läser högt och lyser upp varje mening.</value></data>
   <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino öppnade boken. ”Det var en gång…”</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Läs den med din röst</value></data>
-  <data name="Intro_RecordLine" xml:space="preserve"><value>Spela in dig själv när du läser en saga, sida för sida. Ditt barn kan spela upp den när som helst.</value></data>
+  <data name="Intro_RecordLine" xml:space="preserve"><value>Spela in en figur i taget, eller hela sidor. Ditt barn kan spela upp den när som helst.</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>Visa introt igen</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Klart för mitt barn</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Vuxenläge</value></data>
@@ -295,7 +296,6 @@
   <data name="Speed_Sub" xml:space="preserve"><value>Långsammare är lättare för de små</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · långsamt</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino räknar vilka böcker som läses, utan namn eller id:n. Du kan stänga av det i Inställningar. Det lägger också till ditt land och en grov enhetstyp (telefon eller surfplatta, minnesintervall). Om appen kraschar kan den också skicka en kraschrapport: felet och en kort teknisk logg, aldrig något du har läst eller skrivit.</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <!-- /Slice 115 -->
   <data name="Wizard_Next" xml:space="preserve"><value>Nästa</value></data>

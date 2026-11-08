@@ -108,7 +108,7 @@ Decisions 1-99 are in [notes/decisions-001-099.md](notes/decisions-001-099.md) (
 
 140. **Dino usage data is anonymous counts with context, never an install, device or advertising id (Batch 28).** No typed text, no own-book titles, nothing finer than the hour. A per-device profile would be a child's personal information under COPPA and profiling under the UK Children's code. (Slice 133; note: docs/plan/notes/2026-10-25-dino-usage-insights.md)
 
-141. **Usage counts are on by default with a grown-up off switch and a line in the first-run screens (Batch 28).** (Slice 133)
+141. **Usage counts are on by default with a grown-up off switch and a line in the first-run screens (Batch 28).** (Slice 133) Amended 2026-11-08 (user: "Drop it, as the mock"): the first-run Ready page no longer carries the usage-count line; the disclosure is the Settings switch and the privacy page. (Slice 325 D5: docs/plan/slices/325-dino-2026-11-08-redesign.md)
 
 142. **Usage events go to Workers Analytics Engine, batched per session, switched and sampled by the remote config (Batch 28).** Reports suppress counts under 10. (Slices 133-134)
 

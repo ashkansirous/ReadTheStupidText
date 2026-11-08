@@ -102,12 +102,13 @@
   <data name="Backup_TooLarge" xml:space="preserve"><value>برای بازیابی بسیار بزرگ است</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>افزودن {0} به پشتیبان ممکن نبود.</value></data>
   <data name="FirstRun_Hello" xml:space="preserve"><value>سلام! به چه زبانی بخوانیم؟</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino برای آن یک صدا دانلود می‌کند. بعداً می‌توانید پشت قفل آن را عوض کنید.</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>بعداً می‌توانید آن را در گوشهٔ بزرگ‌ترها عوض کنید.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>ادامه</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>آماده‌ی خواندن!</value></data>
   <data name="FirstRun_ReadyBody" xml:space="preserve"><value>هر شخصیت صدای خودش را دارد. کتاب‌هایتان روی قفسه است.</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>اولین کتاب‌هایتان را انتخاب کنید</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>دست‌کم دو کتاب انتخاب کنید. هر وقت خواستید می‌توانید کتاب‌های بیشتری از فروشگاه بگیرید.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BodyShort" xml:space="preserve"><value>دست‌کم دو کتاب انتخاب کنید. بیشتر در فروشگاه، هر وقت خواستید.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_PickTwo" xml:space="preserve"><value>برای شروع 2 کتاب انتخاب کنید</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>1 کتاب دیگر انتخاب کنید</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Picked" xml:space="preserve"><value>{0} انتخاب شد · {1}</value><comment>Machine draft: needs native review</comment></data>
@@ -117,7 +118,6 @@
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>برای انتخاب اولین کتاب‌هایتان به اینترنت وصل شوید</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino پیش از شروع به دو کتاب نیاز دارد. وای‌فای یا داده همراه را روشن کنید و دوباره تلاش کنید.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>ببینید دینو چه کارهایی می‌کند</value></data>
-  <data name="Intro_SkipStart" xml:space="preserve"><value>رد کردن و شروع خواندن</value></data>
   <data name="Intro_SkipAll" xml:space="preserve"><value>رد کردن همه</value></data>
   <data name="Intro_TryIt" xml:space="preserve"><value>امتحان کنید</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>رد کردن</value></data>
@@ -125,12 +125,13 @@
   <data name="Intro_PlacesTitle" xml:space="preserve"><value>دینو دو جا دارد</value></data>
   <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>قفسهٔ بچه‌ها</value></data>
   <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>فقط روی یک کتاب بزنید و گوش کنید.</value></data>
-  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>پشت یک قفل، برای افزودن کتاب و صدا.</value></data>
+  <data name="Intro_PlacesKidsLineClick" xml:space="preserve"><value>فقط روی یک کتاب کلیک کنید و گوش کنید.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>پشت یک قفل: کتاب‌ها، فروشگاه و تنظیمات شما.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>با هم یک قصه بخوانیم</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>روی یک کتاب بزنید و پخش را بزنید. دینو با صدای بلند می‌خواند و هر جمله را روشن می‌کند.</value></data>
   <data name="Intro_ReadCaption" xml:space="preserve"><value>دینو کتاب را باز کرد. «یکی بود، یکی نبود…»</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>با صدای خودتان بخوانید</value></data>
-  <data name="Intro_RecordLine" xml:space="preserve"><value>خودتان را هنگام خواندن یک داستان، صفحه به صفحه، ضبط کنید. فرزندتان هر وقت بخواهد می‌تواند آن را پخش کند.</value></data>
+  <data name="Intro_RecordLine" xml:space="preserve"><value>هر بار یک شخصیت را ضبط کنید، یا صفحه‌های کامل را. فرزندتان هر وقت بخواهد می‌تواند آن را پخش کند.</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>نمایش دوبارهٔ معرفی</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>آماده برای فرزندم</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>حالت بزرگسال</value></data>
@@ -294,7 +295,6 @@
   <data name="Speed_Sub" xml:space="preserve"><value>آهسته‌تر برای کوچولوها آسان‌تر است</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>۰٫۵x · آهسته</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>دینو می‌شمارد کدام کتاب‌ها خوانده می‌شوند، بدون نام و شناسه. می‌توانید این را در تنظیمات خاموش کنید. همچنین کشور شما و نوع تقریبی دستگاه (گوشی یا تبلت، محدودهٔ حافظه) را اضافه می‌کند. اگر برنامه از کار بیفتد، ممکن است گزارش خرابی هم بفرستد: خطا و یک گزارش فنی کوتاه، و هرگز چیزی از آنچه خوانده یا نوشته‌اید.</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} مگابایت</value></data>
   <!-- /Slice 115 -->
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>

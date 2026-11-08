@@ -3,6 +3,8 @@ using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Mobile.Shared.Waiting;
+using UsageBuckets = ReadTheStupidText.Application.Usage.UsageBuckets;
+using UsageWaitStage = ReadTheStupidText.Application.Usage.UsageWaitStage;
 
 namespace DinoReader;
 
@@ -45,16 +47,11 @@ public static class FirstBooksGate
 /// Offline, a message with Try again takes its place and the list loads by itself when the connection returns. After a kill the books that landed come back ticked, and a shelf that already
 /// holds two books ends the step at once. All words come from <see cref="AppResources"/>; the layout never mirrors (Slice 96).
 /// </summary>
-public partial class FirstBooksPage : ContentPage
+public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 {
-	private const double SideMargin = 16;
-	private const double ColumnGap = 12;
-	private const double RowGap = 14;
-	private const double MinCardWidth = 150;
-	private const int MinColumns = 2;
-	private const int MaxColumns = 4;
 	private const int CoverParallelism = 4;
 	private const int PercentScale = 100;
+	private const int WaitShownMilliseconds = 500; // the shared wait counts only a wait the grown-up could see (Slice 148); the getting page keeps that rule for its count
 
 	private readonly StoreClient _store;
 	private readonly IStoryLibrary _library;
@@ -72,8 +69,10 @@ public partial class FirstBooksPage : ContentPage
 	private CancellationTokenSource _lifetime = new();
 	private bool _loaded;
 	private bool _finished;
+	private bool _handedOver;
 	private bool _offline;
-	private double _width;
+	private Size _windowSize;
+	private OnboardingShape? _shape;
 
 	public FirstBooksPage(StoreClient store, IStoryLibrary library, UsageCounter usage)
 	{
@@ -119,15 +118,25 @@ public partial class FirstBooksPage : ContentPage
 			return;
 		}
 
+		if (_gettingLayer.IsVisible)
+		{
+			StartHop(); // the getting page stayed up after success; OnDisappearing stopped its hop
+		}
+
 		_ = LoadCoversAsync(_lifetime.Token); // covers cut short when the page was left come back
 	}
 
 	// Android Back / iOS swipe-back: a download wait behaves like its Cancel (ticks and landed books stay); otherwise it is the arrow; the restart root has nowhere to go back to.
 	protected override bool OnBackButtonPressed()
 	{
-		if (_wait.IsActive)
+		if (_finished)
 		{
-			(_downloadCancel ?? _loadCancel)?.Cancel(); // the download wait or the list-load wait
+			return true; // the page is handing over to the ready page: Back must not pop the language page under it
+		}
+
+		if (_wait.IsActive || _downloadCancel is not null)
+		{
+			(_downloadCancel ?? _loadCancel)?.Cancel(); // the getting page or the list-load wait
 			return true;
 		}
 
@@ -149,22 +158,31 @@ public partial class FirstBooksPage : ContentPage
 		base.OnDisappearing();
 		Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
 		_lifetime.Cancel();
+		StopHop(); // the getting page can stay up after success; its endless hop must not outlive the page
 	}
 
 	protected override void OnSizeAllocated(double width, double height)
 	{
 		base.OnSizeAllocated(width, height);
-		if (width > 0 && width != _width)
+		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height);
+		if (width <= 0 || height <= 0 || (width == _windowSize.Width && height == _windowSize.Height))
 		{
-			_width = width;
-			PlaceCards();
+			return;
+		}
+
+		_windowSize = new Size(width, height);
+		OnboardingShape shape = OnboardingLayout.Shape(width, height, DesktopTips.IsWindows, intro: false);
+		if (shape != _shape)
+		{
+			_shape = shape;
+			ApplyShape(shape);
 		}
 	}
 
-	// A list that could not load comes back by itself when the connection does; a download in progress only re-words its wait.
+	// A list that could not load comes back by itself when the connection does; a download in progress only re-words its page.
 	private async void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
 	{
-		if (_wait.IsActive)
+		if (_wait.IsActive || _downloadCancel is not null)
 		{
 			MainThread.BeginInvokeOnMainThread(RefreshWaitLook);
 			return;
@@ -285,7 +303,7 @@ public partial class FirstBooksPage : ContentPage
 
 	private void Toggle(FirstBookCard card)
 	{
-		if (_busy.IsBusy || _wait.IsActive)
+		if (_busy.IsBusy || _wait.IsActive || _downloadCancel is not null)
 		{
 			return;
 		}
@@ -314,17 +332,31 @@ public partial class FirstBooksPage : ContentPage
 			return;
 		}
 
-		FirstBooksGate.FirstPick = _tickOrder.FirstOrDefault(); // the first book still ticked, in tick order: the intro's "Try it" opens it
 		IReadOnlyList<StoreItem> toFetch = FirstBooks.ToDownload(_items, _ticked, _onShelf);
-		if (!await DownloadAsync(toFetch))
+		try
 		{
-			return;
-		}
+			if (await DownloadAsync(toFetch))
+			{
+				await ReadShelfAsync();
+			}
+			else
+			{
+				return;
+			}
 
-		await ReadShelfAsync();
-		if (FirstBooks.IsSatisfied(_shelfCount))
+			if (FirstBooks.IsSatisfied(_shelfCount))
+			{
+				FirstBooksGate.FirstPick = _tickOrder.FirstOrDefault(); // set only once the books are on the shelf: the first book still ticked, in tick order, is the intro's "Try it"
+				await FinishAsync();
+			}
+		}
+		finally
 		{
-			await FinishAsync();
+			// the getting page stays only once FinishAsync handed over (the page is leaving), the offline page stays if it came up meanwhile, the picker returns otherwise (also when Completed threw)
+			if (FirstBooks.EndOfContinue(_handedOver, _offlineLayer.IsVisible) == ContinueEnd.ShowPicker)
+			{
+				ShowLayer(_listLayer);
+			}
 		}
 	}
 
@@ -332,10 +364,10 @@ public partial class FirstBooksPage : ContentPage
 	private async Task<bool> DownloadAsync(IReadOnlyList<StoreItem> toFetch)
 	{
 		_waitCovers = new FirstBooksWaitCovers(toFetch.Select(CoverOf));
-		_waitOverlay.SetContent(_waitCovers);
 		using CancellationTokenSource linked = new();
-		_downloadCancel = linked; // set before the wait begins, so a connectivity event at once re-words it; Back cancels through this, like the overlay's Cancel
-		using CancellationTokenRegistration fromOverlay = _wait.BeginCancellable(WaitStage.GettingFile, AppResources.FirstBooks_Getting).Register(linked.Cancel);
+		_downloadCancel = linked; // set before the page shows, so a connectivity event at once re-words it; Back and the page's Cancel both cancel through this
+		long started = Stopwatch.GetTimestamp();
+		ShowGetting(_waitCovers);
 		try
 		{
 			for (int i = 0; i < toFetch.Count; i++)
@@ -351,7 +383,23 @@ public partial class FirstBooksPage : ContentPage
 		finally
 		{
 			_downloadCancel = null;
-			_wait.End();
+			CountGettingWait(Stopwatch.GetElapsedTime(started), linked.IsCancellationRequested);
+		}
+	}
+
+	// Slice 148 counted every wait that showed and every Cancel on one; the getting page is a page, not the shared overlay, so it reports the same two counts itself (only when it stayed 500 ms or more).
+	private void CountGettingWait(TimeSpan shown, bool cancelled)
+	{
+		if (shown.TotalMilliseconds < WaitShownMilliseconds)
+		{
+			return;
+		}
+
+		string detail = UsageDetail.Wait(UsageWaitStage.Of(WaitStage.GettingFile), UsageBuckets.Duration(shown));
+		_usage.RecordGeneral(UsageEventName.WaitShown, UsageEvent.NoLanguage, detail);
+		if (cancelled)
+		{
+			_usage.RecordGeneral(UsageEventName.WaitCancelled, UsageEvent.NoLanguage, detail);
 		}
 	}
 
@@ -378,31 +426,62 @@ public partial class FirstBooksPage : ContentPage
 	}
 
 	private double _progress;
-	private string _progressDetail = string.Empty;
+	private string _bookOfText = string.Empty;
+	private string _percentText = string.Empty;
 	private FirstBooksWaitCovers? _waitCovers;
 
-	// The cover file the picker already loaded for this book, or null (the wait then draws the tinted block).
+	// The cover file the picker already loaded for this book, or null (the getting page then draws the tinted block).
 	private string? CoverOf(StoreItem item) => _cards.FirstOrDefault(c => string.Equals(c.Item.Id, item.Id, StringComparison.OrdinalIgnoreCase))?.CoverPath;
 
-	// The shared wait: "Getting your books…", "Book 2 of 2 · 72%" and a bar over all the books; with no connection the line reads "Waiting for the internet" and the bar holds.
+	// The getting page (frame O3): "Getting your books…", "Book 2 of 2" and "72%" under a bar over all the books; with no connection the line reads "Waiting for the internet" and the bar holds.
 	private void ShowProgress(int index, int total, double fraction)
 	{
 		_progress = Math.Clamp((index + fraction) / Math.Max(total, 1), 0, 1);
-		string percent = string.Create(AppResources.Culture, $"{(int)(_progress * PercentScale)}%");
-		_progressDetail = $"{AppResources.Format(AppResources.FirstBooks_BookOf, FirstBooks.BookNumber(index, total), total)} · {percent}";
+		_percentText = string.Create(AppResources.Culture, $"{(int)(_progress * PercentScale)}%");
+		_bookOfText = AppResources.Format(AppResources.FirstBooks_BookOf, FirstBooks.BookNumber(index, total), total);
 		RefreshWaitLook();
 	}
 
 	private void RefreshWaitLook()
 	{
-		if (_downloadCancel is null || !_wait.IsActive)
+		if (_downloadCancel is null)
 		{
-			return; // a late progress report or connectivity callback must not start a wait of its own, nor re-word the list-load wait
+			return; // a late progress report or connectivity callback must not re-word a page that is gone
 		}
 
 		bool offline = Connectivity.Current.NetworkAccess != NetworkAccess.Internet;
 		string line = offline ? AppResources.Wait_WaitingInternet : AppResources.FirstBooks_Getting;
-		_wait.Begin(WaitStage.GettingFile, line, canCancel: true, _progressDetail, new WaitLook(offline, _progress, null));
+		SetGettingText(line, _bookOfText, _percentText, _progress);
+	}
+
+	// Frames O2 / O2-8 / OL2 / OT2 / OW2: Enter is Continue (once two are picked), Space ticks the focused cover; Esc goes back to the language page (or cancels the download).
+	DinoScreen IDinoKeyTarget.Screen => DinoScreen.FirstBooks;
+
+	bool IDinoKeyTarget.Handle(DinoKeyAction action, DinoKey key)
+	{
+		switch (action)
+		{
+			case DinoKeyAction.PickToggle when _cards.FirstOrDefault(c => c.TickFocused) is { } card && _listLayer.IsVisible:
+				Toggle(card);
+				return true;
+			case DinoKeyAction.PickContinue when _listLayer.IsVisible:
+				// Enter is Continue here: when it cannot continue yet it is still ours, or WinUI would click the focused tick button and untick that cover; on the Back or Continue button it is theirs (WinUI activates it)
+				if (_backButtons.Any(b => b.IsFocused) || _continue.IsFocused)
+				{
+					return false;
+				}
+
+				if (FirstBooks.CanContinue(_ticked.Count) && !_busy.IsBusy && !_wait.IsActive && _downloadCancel is null)
+				{
+					_ = _busy.RunAsync(ContinueAsync);
+				}
+
+				return true;
+			case DinoKeyAction.Back:
+				return OnBackButtonPressed();
+			default:
+				return false;
+		}
 	}
 
 	private async Task FinishAsync()
@@ -415,9 +494,21 @@ public partial class FirstBooksPage : ContentPage
 		_finished = true;
 		FirstBooksGate.Pending = false;
 		LogState("done");
-		if (Completed is { } completed)
+		try
 		{
-			await completed();
+			if (Completed is { } completed)
+			{
+				await completed();
+			}
+
+			_handedOver = true; // only now has the page really handed over: EndOfContinue keeps the getting page up for this and nothing else
+		}
+		catch
+		{
+			// no-fallback: restores the gate and rethrows to ContinueAsync's caller
+			FirstBooksGate.Pending = true; // the hand-over failed: the picker comes back and Continue can try again
+			_finished = false;
+			throw;
 		}
 	}
 
@@ -451,11 +542,6 @@ public partial class FirstBooksPage : ContentPage
 			Debug.WriteLine($"Dino Reader first-books cover failed: {ex.Message}");
 		}
 	}
-
-	// How many columns fit: at least two, as many 150 dp cards as the width allows, at most four.
-	private int Columns() => Math.Clamp((int)((_width - 2 * SideMargin + ColumnGap) / (MinCardWidth + ColumnGap)), MinColumns, MaxColumns);
-
-	private double CardWidth(int columns) => (_width - 2 * SideMargin - ColumnGap * (columns - 1)) / columns;
 
 	// Debug-only marker a flow reads: the page state, how many books are ticked and how many are on the shelf.
 	private void LogState(string what)

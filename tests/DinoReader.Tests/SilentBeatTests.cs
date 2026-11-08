@@ -44,8 +44,8 @@ public class SilentBeatTests
     private static bool Apply(SilentBeat beat, Event e) => e switch
     {
         Event.Begin => beat.Begin(),
-        Event.Hide => beat.Hide(),
-        Event.Show => beat.Show(),
+        Event.Hide => beat.SetHidden(true),
+        Event.Show => beat.SetHidden(false),
         Event.Pause => beat.Pause(),
         Event.Resume => beat.Resume(),
         _ => EndBeat(beat),
@@ -114,9 +114,9 @@ public class SilentBeatTests
         beat.Begin();
         beat.Pause();
 
-        beat.Hide();
+        beat.SetHidden(true);
 
-        Assert.False(beat.Show());
+        Assert.False(beat.SetHidden(false));
         Assert.True(beat.HeldByPerson);
         Assert.False(beat.Running);
         Assert.True(beat.Resume());
@@ -126,11 +126,11 @@ public class SilentBeatTests
     public void Begin_under_a_covered_page_waits_and_show_starts_a_whole_beat()
     {
         var beat = new SilentBeat();
-        beat.Hide();
+        beat.SetHidden(true);
 
         Assert.False(beat.Begin());
         Assert.True(beat.Active);
-        Assert.True(beat.Show());
+        Assert.True(beat.SetHidden(false));
     }
 
     [Fact]
@@ -139,10 +139,10 @@ public class SilentBeatTests
         var beat = new SilentBeat();
         beat.Begin();
         beat.Pause();
-        beat.Hide();
+        beat.SetHidden(true);
 
         Assert.False(beat.Resume());
-        Assert.True(beat.Show());
+        Assert.True(beat.SetHidden(false));
     }
 
     [Fact]
@@ -151,10 +151,35 @@ public class SilentBeatTests
         var beat = new SilentBeat();
         Assert.True(beat.Begin());
 
-        Assert.True(beat.Hide());
-        Assert.False(beat.Hide());
-        Assert.True(beat.Show());
-        Assert.False(beat.Show());
+        Assert.True(beat.SetHidden(true));
+        Assert.False(beat.SetHidden(true));
+        Assert.True(beat.SetHidden(false));
+        Assert.False(beat.SetHidden(false));
+    }
+
+    [Fact]
+    public void Setting_the_same_cover_twice_does_nothing_the_second_time()
+    {
+        var beat = new SilentBeat();
+        beat.Begin();
+
+        Assert.True(beat.SetHidden(true));
+        Assert.False(beat.SetHidden(true));
+        Assert.True(beat.SetHidden(false));
+        Assert.False(beat.SetHidden(false));
+    }
+
+    [Fact]
+    public void Showing_does_not_release_a_pause_the_person_made()
+    {
+        var beat = new SilentBeat();
+        beat.Begin();
+        beat.Pause();
+        beat.SetHidden(true);
+
+        Assert.False(beat.SetHidden(false));
+        Assert.True(beat.HeldByPerson);
+        Assert.True(beat.Resume());
     }
 
     [Fact]
@@ -173,7 +198,7 @@ public class SilentBeatTests
         var beat = new SilentBeat();
         beat.Begin();
         beat.Pause();
-        beat.Hide();
+        beat.SetHidden(true);
 
         beat.End();
 

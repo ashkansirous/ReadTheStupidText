@@ -195,6 +195,31 @@ function Set-CellularOnly {
 
 function Restore-Wifi { & $script:Adb -s $script:Serial shell svc wifi enable | Out-Null }
 
+# Slice 322: `# needs: screen-cycle` = while the flow runs, a background job, once the reading page has shown its first silent piece (setup keeps the display on), puts the screen to sleep for 4 s every 12 s and wakes it (Get-ScreenCycleCommands). Returns the job; Stop-ScreenCycle ends it and wakes the screen.
+function Start-ScreenCycle {
+    $cmds = @(Get-ScreenCycleCommands)
+    return Start-Job -ArgumentList $script:Adb, $script:Serial, $cmds -ScriptBlock {
+        param($Adb, $Serial, $Cmds)
+        # The setup (clearState, first-run language, library) needs the display on: the cycle starts only once the reading page showed its first silent piece, or after 150 s at the latest.
+        $deadline = (Get-Date).AddSeconds(150)
+        Start-Sleep -Seconds 3
+        while ((Get-Date) -lt $deadline -and -not ((& $Adb -s $Serial logcat -d -s RTST-TEST 2>&1 | Out-String) -match 'silent piece shown')) { Start-Sleep -Seconds 2 }
+        if ((Get-Date) -ge $deadline) { Write-Output 'screen-cycle: no "silent piece shown" within 150 s, cycling anyway' }
+        while ($true) {
+            Start-Sleep -Seconds 8
+            & $Adb -s $Serial shell $Cmds[0] | Out-Null
+            Start-Sleep -Seconds 4
+            & $Adb -s $Serial shell $Cmds[1] | Out-Null
+            & $Adb -s $Serial shell $Cmds[2] | Out-Null
+        }
+    }
+}
+
+function Stop-ScreenCycle($Job) {
+    if ($Job) { Receive-Job $Job -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_ }; Stop-Job $Job -ErrorAction SilentlyContinue; Remove-Job $Job -Force -ErrorAction SilentlyContinue }
+    Wake-Emulator   # a flow never leaves the screen asleep for the next one
+}
+
 # Slice 215: restarts the emulator from a neutral folder (never from inside a worktree, so the emulator process never holds one open) and reinstalls
 # the app when the restart lost it. Returns after the boot; the caller re-checks the health.
 function Restart-Emulator {
@@ -312,6 +337,7 @@ function New-FlowSetupFailure([System.IO.FileInfo]$File, [string]$Message) {
 function Invoke-Flow([string]$Maestro, [System.IO.FileInfo]$File) {
     $ErrorActionPreference = 'Continue'
     $cellular = (Get-FlowNeeds $File.FullName) -contains 'cellular-only'
+    $cycle = (Get-FlowNeeds $File.FullName) -contains 'screen-cycle'
     $fontScale = Get-FlowFontScale $File.FullName
     Wake-Emulator
     $stubs = New-Object System.Collections.Generic.List[object]
@@ -323,7 +349,7 @@ function Invoke-Flow([string]$Maestro, [System.IO.FileInfo]$File) {
         catch { return New-FlowSetupFailure $File $_.Exception.Message }   # a stub that cannot start fails this flow only; the run goes on (the finally stops any stub already started)
         if ($cellular) { $cellularSet = $true; Set-CellularOnly }   # flagged first: a half-done switch is still undone
         if ($fontScale) { $previousScale = Get-FontScale; $scaleSaved = $true; Set-FontScale $fontScale }
-        return Invoke-FlowBody $Maestro $File
+        return Invoke-FlowBody $Maestro $File $cycle
     } finally {
         foreach ($stub in $stubs) { Stop-NeedStub $stub }   # only a stub this run started; a failed flow never leaves one listening
         if ($cellularSet) { Restore-Wifi }  # a failed flow never leaves Wi-Fi off for the next one
@@ -337,7 +363,7 @@ function Get-FlowLayoutProblems([string]$FlowName) {
     return @(Get-LayoutProblems $dump $FlowName)
 }
 
-function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File) {
+function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File, [bool]$Cycle = $false) {
     $ErrorActionPreference = 'Continue'
     & $script:Adb -s $script:Serial logcat -b all -c   # every buffer: the crash/events buffers must not carry an earlier flow's ANR into this flow's verdict
     $sw = [Diagnostics.Stopwatch]::StartNew()
@@ -345,8 +371,15 @@ function Invoke-FlowBody([string]$Maestro, [System.IO.FileInfo]$File) {
     $env:JAVA_TOOL_OPTIONS = "-Duser.home=$($script:MaestroHome)"
     # --no-reinstall-driver only skips a reinstall: Maestro still installs its driver when it is missing, which is how the first flow of a run (and the rerun after a restart) gets it.
     $startedAt = Get-Date
-    try { $run = Invoke-MaestroWatched $Maestro $File }
-    finally { Remove-Item Env:JAVA_TOOL_OPTIONS -ErrorAction SilentlyContinue }
+    $cycleJob = $null
+    try {
+        if ($Cycle) { $cycleJob = Start-ScreenCycle }   # after the logcat clear above: a stale "silent piece shown" from an earlier flow cannot start it
+        $run = Invoke-MaestroWatched $Maestro $File
+    }
+    finally {
+        if ($Cycle) { Stop-ScreenCycle $cycleJob }
+        Remove-Item Env:JAVA_TOOL_OPTIONS -ErrorAction SilentlyContinue
+    }
     $exit = $run.ExitCode
     $phasesLine = Get-FlowPhasesLine $File.BaseName $startedAt $sw.Elapsed.TotalSeconds
     $problem = $null

@@ -1,5 +1,13 @@
 namespace DinoReader.Core;
 
+/// <summary>The page the first-books picker shows once Continue has ended.</summary>
+public enum ContinueEnd
+{
+    KeepGetting,
+    KeepOffline,
+    ShowPicker,
+}
+
 /// <summary>
 /// The first-books rules (Slice 261): a fresh install starts with an empty shelf and a grown-up picks at least <see cref="Minimum"/> books from the store before the
 /// app goes on. The library on disk is the one owner of the state (<see cref="IsSatisfied"/>); the picker only decides what is ticked and what still has to be fetched.
@@ -36,6 +44,15 @@ public static class FirstBooks
         List<StoreItem> ticked = items.Where(item => tickedIds.Contains(item.Id)).ToList();
         return ticked.Count > 0 && ticked.All(item => item.Bytes is > 0) ? ticked.Sum(item => item.Bytes!.Value) : null;
     }
+
+    /// <summary>
+    /// Which page the picker shows when Continue ends (one table, one input that says whether the page really handed over): handed over (Completed returned) -> the getting page stays, the page is leaving;
+    /// otherwise the offline page is up (the connection dropped meanwhile) -> it stays; anything else (cancel, failure, exception, shelf not satisfied, Completed threw) -> the picker.
+    /// </summary>
+    public static ContinueEnd EndOfContinue(bool handedOver, bool offlinePageShown) =>
+        handedOver ? ContinueEnd.KeepGetting
+        : offlinePageShown ? ContinueEnd.KeepOffline
+        : ContinueEnd.ShowPicker;
 
     /// <summary>"N of M" for the download wait: the 1-based number of the book being fetched, never past the total.</summary>
     public static int BookNumber(int landed, int total) => Math.Min(landed + 1, Math.Max(total, 1));

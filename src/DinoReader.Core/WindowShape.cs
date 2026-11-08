@@ -124,6 +124,75 @@ public static class WindowShapeSeam
         return new ShelfGeometry(side, 0, side, columns, gapX, gapY);
     }
 
+    /// <summary>Mock Batch 47 frames 173/174 (phone): the Reorder grid has 14 dp sides, 3 across, 10 across and 27 down (mock row pitch `RH=180` less the mock tile 153); no top padding under the hint.</summary>
+    public const double ReorderPhoneSide = 14;
+    public const int ReorderPhoneColumns = 3;
+    public const double ReorderPhoneGapX = 10;
+    public const double ReorderPhoneGapY = 27;
+
+    /// <summary>Mock frame 176 (Windows, a 1100 dp window): 40 dp sides, 6 across, an 18 dp gap both ways, no top padding.</summary>
+    public const double ReorderDesktopSide = 40;
+    public const int ReorderDesktopMockColumns = 6;
+    public const double ReorderDesktopGap = 18;
+    public const double ReorderDesktopMockWidth = 1100;
+    public const int ReorderDesktopMinColumns = 3;
+
+    /// <summary>The cover-to-title spacing of a Reorder tile (<see cref="ShelfOrderGrid.Fit(double,int,double,double,double,double,double,double,double)"/>'s titleSpacing).</summary>
+    public const double ReorderTitleSpacing = 7;
+
+    /// <summary>The mock's Windows tile width: the 1100 dp frame less 2 x 40 sides and 5 x 18 gaps, over 6 columns (155 dp).</summary>
+    public static double ReorderDesktopTileWidth =>
+        (ReorderDesktopMockWidth - (2 * ReorderDesktopSide) - ((ReorderDesktopMockColumns - 1) * ReorderDesktopGap)) / ReorderDesktopMockColumns;
+
+    /// <summary>The Windows Reorder columns for a window: how many of the mock's 155 dp tiles fit between 40 dp sides with 18 dp gaps, at least 3. 6 at 1100 dp; the tile size stays the mock's at any width, the column count follows the width.</summary>
+    public static int ReorderDesktopColumns(double windowWidth) =>
+        Math.Max(ReorderDesktopMinColumns, (int)Math.Floor(((windowWidth - (2 * ReorderDesktopSide) + ReorderDesktopGap) / (ReorderDesktopTileWidth + ReorderDesktopGap)) + ReorderColumnEpsilon));
+
+    /// <summary>Float slack for the column count: a window exactly one column wider than a whole number of tiles (1100 dp: 6.0) must not lose a column to rounding.</summary>
+    public const double ReorderColumnEpsilon = 1e-9;
+
+    /// <summary>The Reorder layer has no mock frame on a tablet or a phone held sideways (the mock draws portrait phones and one Windows window): both keep the shelf's geometry (a phone rotated while the mode is open therefore relayouts between the two, by decision).</summary>
+    public static bool ReorderUsesShelfGeometry(bool tablet, double windowWidth, double windowHeight) => tablet || windowWidth > windowHeight;
+
+    /// <summary>The Windows head keeps the mock's frame 176 for a landscape window that is not a tablet; a portrait (narrow) Windows window has no frame and takes the phone's or the tablet's geometry like the other heads.</summary>
+    public static bool ReorderUsesDesktopGeometry(bool isWindows, bool tablet, double windowWidth, double windowHeight) => isWindows && !tablet && windowWidth > windowHeight;
+
+    /// <summary>The one tablet test for the Reorder layer: the shelf's own classification, or the corner's when the grown-ups' corner is showing.</summary>
+    public static bool IsTabletUpright(bool grownUp, bool shelfTabletUpright, bool cornerTabletUpright) => grownUp ? cornerTabletUpright : shelfTabletUpright;
+
+    /// <summary>The hint above the grid (frames 173/174: padding 12 / 18 / 12, 13.5 pt; frame 176: 16 / 40 / 14, 14 pt). The tablet keeps Slice 319's 12 / 18 / 8, 13.5 pt (no tablet frame).</summary>
+    public readonly record struct ReorderHint(double Left, double Top, double Right, double Bottom, double FontSize);
+
+    /// <summary>The Reorder layer's grid and hint (Slice 321).</summary>
+    public readonly record struct ReorderLayerShape(ShelfGeometry Grid, ReorderHint Hint);
+
+    /// <summary>
+    /// The Windows head's Reorder layer, the mock's frame 176 (Slice 321). The layer covers the whole page including the grown-ups' rail (it spans every column of the gallery grid), so the 40 dp sides are
+    /// measured from the page's own edges and the columns come from the full page width: no rail offset.
+    /// </summary>
+    public static ReorderLayerShape ReorderLayerDesktop(double pageWidth)
+    {
+        ShelfGeometry desktop = new(ReorderDesktopSide, 0, ReorderDesktopSide, ReorderDesktopColumns(pageWidth), ReorderDesktopGap, ReorderDesktopGap);
+        return new ReorderLayerShape(desktop, new ReorderHint(ReorderDesktopSide, 16, ReorderDesktopSide, 14, 14));
+    }
+
+    /// <summary>
+    /// A tablet, or a phone held sideways, has no mock frame, so the layer keeps the shelf's geometry (<paramref name="shelfOnPage"/>, already measured from the page's left edge, which is the layer's: the layer spans the page)
+    /// as Slice 319 did, with the old top inset (the shelf's own, else one gap). The hint starts at the grid's left edge. A phone rotated while the mode is open switches between this and <see cref="ReorderLayerPhone"/> (slice decision).
+    /// </summary>
+    public static ReorderLayerShape ReorderLayerShelf(ShelfGeometry shelfOnPage)
+    {
+        double top = shelfOnPage.Top > 0 ? shelfOnPage.Top : shelfOnPage.GapY;
+        return new ReorderLayerShape(shelfOnPage with { Top = top }, new ReorderHint(shelfOnPage.Left, 12, shelfOnPage.Right, 8, 13.5));
+    }
+
+    /// <summary>A phone held upright, mock frames 173/174: 14 dp sides, 3 across, no top padding under the hint.</summary>
+    public static ReorderLayerShape ReorderLayerPhone()
+    {
+        ShelfGeometry phone = new(ReorderPhoneSide, 0, ReorderPhoneSide, ReorderPhoneColumns, ReorderPhoneGapX, ReorderPhoneGapY);
+        return new ReorderLayerShape(phone, new ReorderHint(18, 12, 18, 12, 13.5));
+    }
+
     private static double SideMargin(bool isWindowsHead, bool tabletShelf, double pageWidth, double sidePadding)
     {
         if (!tabletShelf && !isWindowsHead)

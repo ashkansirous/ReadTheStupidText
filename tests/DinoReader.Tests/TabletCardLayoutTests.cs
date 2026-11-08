@@ -5,10 +5,9 @@ namespace DinoReader.Tests;
 public class TabletCardLayoutTests
 {
     [Fact]
-    public void The_drawn_card_widths_are_520_620_and_560()
+    public void The_drawn_card_widths_are_520_and_560()
     {
         Assert.Equal(520, TabletCardLayout.MaxWidthOf(TabletCardKind.Gate));
-        Assert.Equal(620, TabletCardLayout.MaxWidthOf(TabletCardKind.FirstRun));
         Assert.Equal(560, TabletCardLayout.MaxWidthOf(TabletCardKind.BookSheet));
     }
 
@@ -23,10 +22,9 @@ public class TabletCardLayoutTests
     [InlineData(600, 600, 520)]
     [InlineData(640, 640, 560)]
     [InlineData(804, 1164, 1084)]
-    public void The_gate_and_first_run_cards_never_outgrow_the_window_less_margins(double w, double h, double expected)
+    public void The_gate_card_never_outgrows_the_window_less_margins(double w, double h, double expected)
     {
         Assert.Equal(expected, OnboardingLayout.Gate(w, h).CardMaxHeight);
-        Assert.Equal(expected, OnboardingLayout.FirstRun(w, h).CardMaxHeight);
         Assert.Equal(expected, TabletCardLayout.CardMaxHeight(h));
     }
 

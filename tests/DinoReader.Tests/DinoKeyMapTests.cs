@@ -134,6 +134,27 @@ public class DinoKeyMapTests
         Assert.Equal(DinoKeyAction.NextPage, Down(DinoKey.Right, DinoScreen.Reading));
     }
 
+    // Slice 325 part D (frame OW2): the first-run picker.
+    [Fact]
+    public void The_first_books_picker_ticks_with_space_and_continues_with_enter()
+    {
+        Assert.Equal(DinoKeyAction.PickToggle, Down(DinoKey.Space, DinoScreen.FirstBooks));
+        Assert.Equal(DinoKeyAction.PickContinue, Down(DinoKey.Enter, DinoScreen.FirstBooks));
+        Assert.Equal(DinoKeyAction.Back, Down(DinoKey.Escape, DinoScreen.FirstBooks));
+        Assert.Equal(DinoKeyAction.None, Down(DinoKey.Left, DinoScreen.FirstBooks));
+    }
+
+    // Slice 325 part E (frame OW6): the intro.
+    [Fact]
+    public void The_intro_takes_enter_as_next_esc_as_skip_all_and_the_arrows_as_steps()
+    {
+        Assert.Equal(DinoKeyAction.IntroNext, Down(DinoKey.Enter, DinoScreen.Intro));
+        Assert.Equal(DinoKeyAction.IntroSkipAll, Down(DinoKey.Escape, DinoScreen.Intro));
+        Assert.Equal(DinoKeyAction.IntroPrevious, Down(DinoKey.Left, DinoScreen.Intro));
+        Assert.Equal(DinoKeyAction.IntroForward, Down(DinoKey.Right, DinoScreen.Intro));
+        Assert.Equal(DinoKeyAction.None, Down(DinoKey.Space, DinoScreen.Intro));
+    }
+
     [Fact]
     public void Digits_map_to_their_value()
     {

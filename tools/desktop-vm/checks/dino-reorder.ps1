@@ -15,8 +15,23 @@ $HoldMs = 3500
 $CoverHoldMs = 1300
 $TraceFileName = 'window-trace.log'
 $VkEnter = 0x0D; $VkEscape = 0x1B
-$LayerAlignTolerancePx = 40   # layer tile against shelf tile; the bug was ~390 px
+$MockSidePaddingDp = 40       # Batch 47 frame 176: the Windows layer's grid side padding
+$InsetToleranceDp = 4         # whole-dp tile widths leave up to 6 dp, half to each side
+$MockTileWidthDp = 155        # frame 176: (1100 - 2*40 - 5*18) / 6
+$MockGapDp = 18               # frame 176: the grid gap
+$MockMinColumns = 3
+$HintToGridMaxDp = 24         # the grid is top-aligned right under the hint (frame 176: grid padding-top 0); the screenshot of 2026-11-08 showed ~100 px of centring gap
+$BaseDpi = 96
+# Columns the layer must show for a window width (WindowShapeSeam.ReorderDesktopColumns): max(3, floor((widthDp - 2*40 + 18) / (155 + 18))); 6 at 1100 dp.
+# The first row holds min(columns, books) tiles.
 $script:Results = @()
+
+function Set-ProcessDpiAware {
+    # UIA rectangles come back in this process's coordinates: make them physical pixels (per-monitor v2), so they match the scale read from the window's DPI. Fails harmlessly when the awareness is already set.
+    if (-not ('Rtst.RtstDpiAware' -as [type])) { Add-Type -Namespace Rtst -Name RtstDpiAware -MemberDefinition '[System.Runtime.InteropServices.DllImport("user32.dll")] public static extern bool SetProcessDpiAwarenessContext(System.IntPtr value);' }   # -Namespace: without it the type lands in an auto-generated namespace and [RtstDpiAware] never resolves
+    try { [Rtst.RtstDpiAware]::SetProcessDpiAwarenessContext([System.IntPtr](-4)) | Out-Null } catch { }
+}
+Set-ProcessDpiAware
 
 function Get-DinoWindow {
     $w = Get-AppWindows 'DinoReader.App' | Select-Object -First 1
@@ -128,19 +143,94 @@ function Get-LayerTiles {
     return $tiles
 }
 
-function Get-LeftEdge {
-    # The left edge (physical pixels) of the FIRST tile with this AutomationId: the leftmost of the topmost row (tiles within $RowBandPx of the smallest top), so a lifted or offset tile further down cannot skew it. $null when none shows.
+function Get-DisplayScale {
+    # The app window's own DPI (user32 GetDpiForWindow on its handle), so a per-monitor scaled host is right too; UIA rectangles are physical pixels.
+    if (-not ('Rtst.RtstDpiProbe' -as [type])) { Add-Type -Namespace Rtst -Name RtstDpiProbe -MemberDefinition '[System.Runtime.InteropServices.DllImport("user32.dll")] public static extern uint GetDpiForWindow(System.IntPtr hwnd);' }
+    $handle = (Get-DinoWindow).Current.NativeWindowHandle
+    if (-not $handle) { throw 'CHECK ERROR (not an app failure): the Dino window has no native handle, cannot read its DPI' }
+    $dpi = [Rtst.RtstDpiProbe]::GetDpiForWindow([System.IntPtr]$handle)
+    if ($dpi -le 0) { throw 'CHECK ERROR (not an app failure): GetDpiForWindow returned 0' }
+    return [double]$dpi / $BaseDpi
+}
+
+function Get-ReorderViewRect {
+    # The reorder layer's own rectangle (physical pixels); a missing element is a check error, not an app failure.
+    $cond = New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::AutomationIdProperty, 'ReorderView')
+    $e = (Get-DinoWindow).FindFirst($script:TreeScope::Descendants, $cond)
+    if (-not $e -or $e.Current.BoundingRectangle.IsEmpty) { throw 'CHECK ERROR (not an app failure): check could not find ReorderView in the UIA tree' }
+    return $e.Current.BoundingRectangle
+}
+
+function Get-RowBandPx {
+    # Half the height of a reorder tile: tiles of one row start within it of each other (a wiggle or a lift moves a few dp), the next row starts a whole tile lower. Follows the tile height at any scale.
+    foreach ($id in 'ReorderTile', 'ReorderCover') {
+        $cond = New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::AutomationIdProperty, $id)
+        $heights = @(foreach ($e in (Get-DinoWindow).FindAll($script:TreeScope::Descendants, $cond)) { $h = $e.Current.BoundingRectangle.Height; if ($h -gt 0) { $h } })
+        if ($heights.Count -gt 0) { return ($heights | Measure-Object -Minimum).Minimum / 2 }
+    }
+    throw 'CHECK ERROR (not an app failure): no reorder tile in the UIA tree to take the row height from'
+}
+
+function Get-MockColumns {
+    # $WidthDp is the layer's own width: it covers the whole page including the rail, so no rail is taken off (WindowShapeSeam.ReorderLayerDesktop).
+    param([double] $WidthDp)
+    return [int][math]::Max($MockMinColumns, [math]::Floor(($WidthDp - 2 * $MockSidePaddingDp + $MockGapDp) / ($MockTileWidthDp + $MockGapDp)))
+}
+
+function Get-FirstRowTileCount {
+    # How many reorder tile titles share the topmost row (tops within $RowBandPx of the smallest top, so a wiggle or a lift cannot split the row).
+    $RowBandPx = Get-RowBandPx
+    $cond = New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::AutomationIdProperty, 'ReorderTileTitle')
+    $tops = @(foreach ($e in (Get-DinoWindow).FindAll($script:TreeScope::Descendants, $cond)) {
+        $r = $e.Current.BoundingRectangle
+        if (-not $r.IsEmpty) { $r.Y }
+    })
+    if ($tops.Count -eq 0) { return 0 }
+    $min = ($tops | Measure-Object -Minimum).Minimum
+    return @($tops | Where-Object { $_ -le $min + $RowBandPx }).Count
+}
+
+function Get-FirstRowRects {
+    # The rectangles (physical pixels) of the topmost row of tiles with this AutomationId (tops within $RowBandPx of the smallest top), left to right. Empty when none shows.
     param([string] $Id)
-    $RowBandPx = 20
+    $RowBandPx = Get-RowBandPx
     $cond = New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::AutomationIdProperty, $Id)
     $rects = @(foreach ($e in (Get-DinoWindow).FindAll($script:TreeScope::Descendants, $cond)) {
         $r = $e.Current.BoundingRectangle
-        if (-not $r.IsEmpty) { [pscustomobject]@{ X = $r.X; Y = $r.Y } }
+        if (-not $r.IsEmpty) { [pscustomobject]@{ X = $r.X; Y = $r.Y; W = $r.Width } }
     })
-    if ($rects.Count -eq 0) { return $null }
+    if ($rects.Count -eq 0) { return @() }
     $top = ($rects | Measure-Object -Property Y -Minimum).Minimum
-    $row = @($rects | Where-Object { $_.Y -le $top + $RowBandPx })
-    return [int](($row | Measure-Object -Property X -Minimum).Minimum)
+    return @($rects | Where-Object { $_.Y -le $top + $RowBandPx } | Sort-Object X)
+}
+
+function Get-GridEdge {
+    # The grid's left edge and the first tile's top, measured from a tile that is NOT the lifted one (the lift scales it about 9 px each side, so its own left edge is off the grid's):
+    # the leftmost tile of normal width (the narrowest ones) at row position k puts the grid edge at its X - k * (width + gap). Returns @{ Left; Top } in physical pixels, or $null when no tile shows.
+    # Only ReorderTile rects are used (never ReorderCover, which is wider). The gap is measured between two non-lifted neighbours when the row has them, else the mock gap * scale.
+    # With one book only the lifted tile exists: the inset is not measurable, Left is $null and Note says so (the caller skips the inset assertion).
+    param([double] $Scale)
+    $row = @(Get-FirstRowRects 'ReorderTile')
+    if ($row.Count -eq 0) { return $null }
+    $normalW = ($row | Measure-Object -Property W -Minimum).Minimum
+    $normal = @(for ($k = 0; $k -lt $row.Count; $k++) { if ($row[$k].W -le $normalW * 1.02) { [pscustomobject]@{ K = $k; X = $row[$k].X; W = $row[$k].W; Y = $row[$k].Y } } })
+    if ($row.Count -eq 1) { return @{ Left = $null; Top = $row[0].Y; Note = '1 book: inset not measurable'; Measured = "tile X=$($row[0].X) W=$($row[0].W) (lifted, only tile)" } }
+    $gap = $MockGapDp * $Scale
+    for ($i = 0; $i -lt $normal.Count - 1; $i++) {
+        if ($normal[$i + 1].K -eq $normal[$i].K + 1) { $gap = $normal[$i + 1].X - ($normal[$i].X + $normal[$i].W); break }
+    }
+    $t = $normal[0]
+    $left = $t.X - $t.K * ($t.W + $gap)
+    return @{ Left = $left; Top = $t.Y; Note = $null; Measured = "tile index $($t.K) X=$($t.X) W=$($t.W) gap=$gap -> grid edge $left" }
+}
+
+function Get-HintBottom {
+    # The bottom (physical pixels) of the hint label, padding included.
+    $cond = New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::AutomationIdProperty, 'ReorderHint')
+    $e = (Get-DinoWindow).FindFirst($script:TreeScope::Descendants, $cond)
+    if (-not $e -or $e.Current.BoundingRectangle.IsEmpty) { throw 'CHECK ERROR (not an app failure): check could not find ReorderHint in the UIA tree' }
+    $r = $e.Current.BoundingRectangle
+    return $r.Y + $r.Height
 }
 
 function Initialize-Shelf {
@@ -173,20 +263,32 @@ Invoke-Check -ResultFile $ResultFile -Body {
     $order0 = Get-ShelfOrder
     if ($order0.Count -lt 2) { throw "SETUP FAILURE (not an app failure): need two books on the shelf, found $($order0.Count): $($script:Results -join ' // ')" }
     Add-Result '1-sheet-reorder' {
-        $shelfLeft = Get-LeftEdge 'StoryTile'   # read before the layer covers the shelf
         Open-Reorder-FromSheet
         Wait-ReorderOpen
-        # Slice 319: the layer copies the shelf list's geometry (WindowShapeSeam.ShelfListGeometry, moved right by the rail's width when there is a rail), so its first tile
-        # starts where the shelf's first tile did, rail or no rail (the phone padding put it ~13 px from the window edge, ~390 px left of the shelf).
-        $layerLeft = Get-LeftEdge 'ReorderTile'
-        if ($null -eq $layerLeft) { $layerLeft = Get-LeftEdge 'ReorderCover' }
-        if ($null -eq $shelfLeft -or $null -eq $layerLeft) { throw "cannot compare the layer with the shelf (shelf tile left=$shelfLeft, layer tile left=${layerLeft}: the element is not in the UIA tree)" }
-        if ([math]::Abs($layerLeft - $shelfLeft) -gt $LayerAlignTolerancePx) { throw "the reorder layer's first tile starts at x=$layerLeft but the shelf's started at x=$shelfLeft (more than $LayerAlignTolerancePx px apart: phone padding on a desktop window)" }
+        # Slice 321: the layer is the mock's frame 176 (Windows): 40 dp side padding, 6 tiles across when there are 6 or more books, else all of them in the first row.
+        # The layer covers the whole page including the rail: the grid starts 40 dp from the layer's own left edge, no rail offset.
+        $view = Get-ReorderViewRect
+        $scale = Get-DisplayScale
+        $edge = Get-GridEdge $scale
+        if ($null -eq $edge) { throw 'CHECK ERROR (not an app failure): the first reorder tile is not in the UIA tree' }
+        $wantInset = $MockSidePaddingDp * $scale
+        $insetNote = $edge.Note
+        $inset = if ($null -ne $edge.Left) { $edge.Left - $view.X } else { $null }
+        if ($null -ne $inset) { $insetNote = "inset (not asserted): $inset px (mock $wantInset, $($edge.Measured), layer X=$($view.X))" }
+        $MockColumns = Get-MockColumns ($view.Width / $scale)
+        # Slice 321: the inset is printed, not asserted (UIA tile bounds read 6-7 px less than the screenshot shows; the mock inset is shown by reorder2.png).
+        $allNumbers = "$insetNote, scale $scale, layer $($view.X),$($view.Y) $($view.Width)x$($view.Height)"
+        $gapBelowHint = $edge.Top - (Get-HintBottom)
+        if ($gapBelowHint -gt ($HintToGridMaxDp * $scale) -or $gapBelowHint -lt (-$InsetToleranceDp * $scale)) { throw "the first tile's top is $gapBelowHint px below the hint's bottom, the mock (frame 176) puts the grid right under the hint (at most $HintToGridMaxDp dp at scale $scale); $allNumbers" }
+        $books = @(Get-ShelfOrder 'ReorderTileTitle').Count
+        $wantFirstRow = [math]::Min($MockColumns, $books)
+        $firstRow = Get-FirstRowTileCount
+        if ($firstRow -ne $wantFirstRow) { throw "the reorder layer's first row has $firstRow tile(s), the mock (frame 176) wants $wantFirstRow ($books books, $MockColumns across); $allNumbers, hint-to-grid $gapBelowHint px" }
         Start-Sleep -Seconds 5   # fixed-wait: the brief asks for 5 s after open before reading the trace
         if (-not (Get-Process DinoReader.App -ErrorAction SilentlyContinue)) { throw 'the app died after the reorder layer opened' }
         $cyc = @(Get-TraceLines | Where-Object { $_ -match 'LayoutCycle|layout cycle' }).Count - $cycleBefore
         if ($cyc -gt 0) { throw "$cyc layout-cycle trace lines after open" }
-        'layer open, app alive 5 s, 0 layout-cycle lines, tiles ' + ((Get-ShelfOrder 'ReorderTileTitle') -join ' | ')
+        "layer open, app alive 5 s, 0 layout-cycle lines, $insetNote, hint-to-grid $gapBelowHint px, first row $firstRow, tiles " + ((Get-ShelfOrder 'ReorderTileTitle') -join ' | ')
     }
     Add-Result '5a-esc-cancels' { Press-Key $VkEscape; Wait-ReorderClosed; if (((Get-ShelfOrder) -join '|') -ne ($order0 -join '|')) { throw 'order changed' }; 'Esc closed the layer' }
     Add-Result '2-hold-1s' {

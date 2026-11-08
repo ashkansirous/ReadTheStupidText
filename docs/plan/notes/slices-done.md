@@ -384,4 +384,6 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 319 | Fixes from the 2026-11-08 device run (item 2, Dino Windows Record screen alert, still open) | built | #957 | | [319-device-run-2026-11-08-fixes.md](../slices/319-device-run-2026-11-08-fixes.md) |
 | 324 | Dino reads at 1x by default (Decision 172) | built | #959 | | [324-dino-default-speed-1x.md](../slices/324-dino-default-speed-1x.md) |
 | 323 | Dino shelf titles follow the story language picked on the shelf (Decision 173) | built | #965 | | [323-dino-shelf-titles-follow-story-language.md](../slices/323-dino-shelf-titles-follow-story-language.md) |
+| 336 | Listening page: Farsi sukun sentence on Android and iPhone | dropped 2026-11-08: a listen cannot compare the phones; same pack and config in code | | | [336-farsi-sukun-sentence-on-android-and-iphone.md](../slices/336-farsi-sukun-sentence-on-android-and-iphone.md) |
+| 147 | iOS review cadence: one review at a time, the newest build, never cancel | built | #386 | | [147-ios-review-cadence.md](../slices/147-ios-review-cadence.md) |
 | 338 | Listening page: Kokoro rescued short lines (English) | dropped 2026-11-08: no shipped app speaks with Kokoro | | | [338-kokoro-rescued-short-lines-english.md](../slices/338-kokoro-rescued-short-lines-english.md) |
