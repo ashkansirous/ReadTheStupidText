@@ -1,12 +1,21 @@
-# Slice 287 — Dino: a private usage dashboard at dinoreader.sirous.uk/stats
+# Slice 287 — Dino: a public usage dashboard at dinoreader.sirous.uk/stats
 
-*Planned 2026-11-07.* **Park note (2026-11-07, night run wave 5):** parked: needs a Cloudflare token with edit rights or the user's login, for the D1 database, the Cloudflare Access app (elinsoftuk@gmail.com), the Access team domain/audience and the Worker secret; D:/secrets holds only the read-only `CF_ANALYTICS_READ_TOKEN`. Blocks the whole dashboard. Server only (Cloudflare Worker, D1, the Dino site). The apps do not change here.
+*Planned 2026-11-07.* Server only (Cloudflare Worker, D1, the Dino site). The apps do not change here.
+
+**User answer (2026-11-08): the dashboard is public.** "its not private! I want everyone to see that dashboard". So there is
+no Cloudflare Access, no Zero Trust, no sign-in, no JWT check and no signed-in email; anyone can open `/stats`. This
+overrides the mock's lock glyph and email in the header (the user's own words beat the mock here) and the earlier
+"behind Access" decision. Zero Trust was not activated (the checkout was left at the card-authorisation step).
+
+**Nothing waits on the user any more.** The night's park note (wave 5) was wrong about the token: the wrangler OAuth
+login on this machine has `d1 (write)` and `workers_scripts (write)` (checked with `wrangler whoami`, 2026-11-08), which
+covers the D1 database, the Worker secret and the deploy. Access was the only thing it could not do, and it is gone.
 
 **Depends on:** nothing to start. Slice 288 (the app's listens and listening time) and Slice 289 (Sonos plays)
 fill the listen and hour numbers; until they ship those columns show zero with a note saying from which version
 they count.
-**Touches:** `worker/stats.ts` (new: page data API), `worker/stats-rollup.ts` (new: cron rollup), `worker/stats-access.ts`
-(new: Cloudflare Access token check), `worker/stats*.test.mjs` (new), `worker/index.ts` (routes + `scheduled`),
+**Touches:** `worker/stats.ts` (new: page data API), `worker/stats-rollup.ts` (new: cron rollup),
+`worker/stats*.test.mjs` (new), `worker/index.ts` (routes + `scheduled`),
 `worker/schema/stats.sql` (new D1 table), `wrangler.jsonc`, `wrangler.workers-dev.jsonc` (D1 binding, cron trigger,
 `run_worker_first` for `/stats`, `/api/stats` and their `/dino` twins), `site/dino/stats.html` (new), `worker/CLAUDE.md`,
 `docs/analytics/dino-dashboard-queries.md` (new), this file.
@@ -38,8 +47,7 @@ in a way that implements that fucking mock up." The page is built exactly as fra
    played time if Sonos/Alexa report it, else the book's length, shown hatched as an estimate.
 3. **Platforms** (from the mock): Android, iPhone, iPad, Windows, Sonos, Alexa, as colour chips. Alexa is shown now, off
    and dimmed with "not live yet", and becomes a normal chip when Slice 282 ships.
-4. **Where:** `dinoreader.sirous.uk/stats`, behind Cloudflare Access letting in only `elinsoftuk@gmail.com` (the account
-   the mock shows signed in). A daily rollup into permanent storage (D1) so day, week and month views keep their history
+4. **Where:** `dinoreader.sirous.uk/stats`, public, no sign-in (user, 2026-11-08; replaces "behind Cloudflare Access"). A daily rollup into permanent storage (D1) so day, week and month views keep their history
    after Analytics Engine drops the raw rows. Filters (from the mock): four fixed periods (Today, Last 7 days, Last 30
    days, This year), bars by day/week/month, book, platform chips. No custom dates.
 
@@ -53,23 +61,23 @@ in a way that implements that fucking mock up." The page is built exactly as fra
   Analytics Engine still holds. Production dataset `dino_usage` only, never `dino_usage_beta`.
 - **Token.** The Worker reads Analytics Engine with the existing read-only `CF_ANALYTICS_READ_TOKEN` (in `D:\secrets`) as a
   Worker secret (`manage-secrets`), plus the account id as a var.
-- **Access.** A Cloudflare Access application on `dinoreader.sirous.uk/stats*` and `/api/stats*`, one allow rule:
-  `elinsoftuk@gmail.com` (one-time PIN). `/api/stats` returns the `email` claim of the checked token, which the header shows. The Worker also checks the `Cf-Access-Jwt-Assertion` token (signature against the team's
-  certs, audience tag) on both paths and answers 403 without a valid one, because the `workers.dev` `/dino/stats` twin is
-  not behind Access. Set up through the API if a token with Access edit rights exists; otherwise one user step.
+- **Public, read-only.** No login. `/stats`, `/api/stats` and their `workers.dev` `/dino` twins are open to everyone and
+  only read D1 (never Analytics Engine per request, so a visitor cannot spend the token's quota). `/api/stats` answers
+  with `Cache-Control: public, max-age=300` (the data changes hourly), takes only the documented query parameters
+  (anything else is a 400) and returns aggregate counts only: no per-event rows, no country, no version below the
+  "counts from" line.
 - **Page.** `site/dino/stats.html`: plain HTML with inline script, built to match frame 200 exactly (every value in the
   Design subsection below). No third-party requests: the mock's own caption says "no web font", so the page uses the Dino
   site's font stack (`site/dino/index.html`: Fredoka first, used when installed, else the rounded system font), which is
   how the mock's Fredoka look is reached without loading a font.
 - **API.** `GET /api/stats?from=&to=&group=day|week|month&platform=…&book=…` returns series, the top-books table, the
-  last rollup time, the first day with listens (with the app version that started counting them) and the signed-in
-  email, as data, no copy. Platform values: android, iphone, ipad, windows, sonos, alexa. Weeks start Monday, UTC.
+  last rollup time and the first day with listens (with the app version that started counting them), as data, no copy. Platform values: android, iphone, ipad, windows, sonos, alexa. Weeks start Monday, UTC.
 
 #### Design (Dino Reader Stats Dashboard mock, section Batch 51, frame 200, added 2026-11-07)
 
 One frame (200, line 25 of `docs/design/dino-reader/Dino Reader Stats Dashboard.dc.html`, 1280 wide, inside a browser-window illustration) plus three note paragraphs (lines 142-144) and the behaviour script (lines 149-281). The numbers are made up, drawn as if read on 15 Dec 2026. The mock agrees with the plan on layout, Access, the hourly rollup, no third-party requests, hatched estimates, the 30-second listen and Monday weeks. Where it differed from the first plan, the plan was changed to match it (list under **Plan changed to match the mock** below). The browser chrome (traffic lights, the 480px address pill, the page heading block) and the Tweaks panel for live, loading and error are illustration, not UI. Page ink `#2b2540`, muted `#5a5470` and `#8a8399`, brand `#5B57E8`, page `#F3EFE6`, cards `#FFF6E6` with a 1px `#d9d2c4` border and radius 16. Content padding 20px 32px 40px, gap 20.
 
-- **Header (Work 1).** Dino icon 40px, radius 10; title "Dino Book Reader · Usage" (19px, 600); second line "Counts of events, never people. Updated hourly · last at 14:00 UTC." (13px, `#8a8399`). Right: a lock glyph (16px stroke icon) and the signed-in email. The "last at" time is the last rollup run, so `/api/stats` must return it (a one-row `meta` table or the max `updated_at`); the page does not work it out.
+- **Header (Work 1).** Dino icon 40px, radius 10; title "Dino Book Reader · Usage" (19px, 600); second line "Counts of events, never people. Updated hourly · last at 14:00 UTC." (13px, `#8a8399`). The mock's lock glyph and signed-in email at the right are not built: the page is public (user, 2026-11-08). The "last at" time is the last rollup run, so `/api/stats` must return it (a one-row `meta` table or the max `updated_at`); the page does not work it out.
 - **Filters card (Work 3).** Labels 12px, 600, `#8a8399`, letter-spacing .5, upper case: PERIOD, BARS BY, BOOK, PLATFORMS (PLATFORMS on its own full-width row). PERIOD and BARS BY are segmented pills: track padding 3, radius 999, `#F3EFE6`, 1px `#d9d2c4`; buttons 32px high, padding 0 13px, 14px, 500; selected `#fff` / `#2b2540` with shadow `0 1px 3px rgba(43,37,64,.16)`, others transparent / `#5a5470`. PERIOD: "Today", "Last 7 days", "Last 30 days", "This year". BARS BY: "Day", "Week", "Month". BOOK: a select, 38px high, min 220px, radius 10, white; first option "All books", then the store titles from `/api/stories`, last "Own books".
 - **Period and grouping rules (Work 3).** Defaults: Last 30 days, bars by Day, All books, all platforms but Alexa, tile Book downloads, table sorted by Downloads. Ranges end today (UTC): 7 days = today minus 6; 30 days = today minus 29; This year = 1 Jan. "Today" forces Day and dims Week and Month to opacity .4 (not clickable). Picking "This year" while on Day switches to Week; other presets keep the grouping. Buckets cover every day of the range, empty ones included. Week key = that Monday (UTC), month key = the 1st; the label is the key's date. Bar labels "d MMM" (en-GB), month bars "MMM"; every ceil(n/14)th label is drawn.
 - **Platform chips (Work 1, 3).** Fixed order and colours: Android `#4FB860`, iPhone `#5B57E8`, iPad `#A9A6F7`, Windows `#F2994A`, Sonos `#2b2540`, Alexa `#4BB3D9`. Chip 34px high, padding 0 14px 0 10px, radius 999, 14px, 500, a 12px square dot (radius 4) in its colour. On: white, 2px border in its colour. Off: transparent, 2px `#d9d2c4`, text `#8a8399`. At least one chip stays on (a click on the last one is ignored). Alexa: off, opacity .55, not clickable, note "not live yet" (12px, `#8a8399`) and tooltip "Counts start when Slice 282 ships"; it becomes a normal chip when Slice 282 ships.
@@ -89,8 +97,7 @@ One frame (200, line 25 of `docs/design/dino-reader/Dino Reader Stats Dashboard.
 - **iPhone and iPad** are two platforms (lines 143, 197-202): the rollup writes `platform` as `iphone` or `ipad` from
   `blob12` as above. `/api/events` platforms stay android/ios/windows (that is the apps' wire format, not the page's).
 - **One chart** switched by the three tiles (line 143), not a chart per metric.
-- **Signed-in email** in the header (line 35): the `email` claim of the checked Access token, returned by `/api/stats`.
-  The Access allow rule is `elinsoftuk@gmail.com`, the account the mock shows.
+- **Signed-in email** in the header (line 35): dropped by the user's 2026-11-08 answer (public page, no sign-in).
 - **Font:** the look of Fredoka with no font download, through the Dino site's font stack (the mock's caption at line 20
   says "no web font"; its Google Fonts link at lines 12-13 only renders the canvas in Claude Design).
 - **Platform chips** in the mock's colours, Alexa shown off and dimmed with "not live yet" (line 142).
@@ -107,8 +114,8 @@ Settled by the mock, left open by the plan: grouping rules, y-axis steps, bar ga
 ## Work
 
 - [ ] 1. Smallest end to end: D1 database and table, the rollup for `downloads` only, `/api/stats`, and the page as frame
-      200 (header with the signed-in email, filters card, tiles, chart, table, footer, loading and error states) showing
-      downloads, behind Access (`elinsoftuk@gmail.com`) with the JWT check. Deploy and see real numbers.
+      200 (header without the lock and email, filters card, tiles, chart, table, footer, loading and error states) showing
+      downloads, public. Deploy and see real numbers.
 - [ ] 2. Add `listens`, `seconds` and `seconds_estimated` to the rollup and the page (zero until Slices 288/289 ship; the
       "counts from" note as in the mock).
 - [ ] 3. Week and month grouping with the mock's rules, the book picker, the sortable top-books table, the iPhone/iPad
@@ -117,21 +124,19 @@ Settled by the mock, left open by the plan: grouping rules, y-axis steps, bar ga
       before review.
 - [ ] 4. Backfill on the first run; a test that re-running a day gives the same rows.
 - [ ] 5. `docs/analytics/dino-dashboard-queries.md`: the rollup SQL, for the `analytics-query` agent to cross-check.
-- [ ] 6. `worker/CLAUDE.md`: the stats routes, the Access + JWT rule, the cron and D1 binding, and that the page makes no
+- [ ] 6. `worker/CLAUDE.md`: the stats routes (public, read-only from D1, cached 5 minutes), the cron and D1 binding, and that the page makes no
       third-party requests.
 
 ## Verification
 
 - `npm ci && npm run typecheck` and `node --test worker/stats*.test.mjs`: rollup SQL per metric, idempotent upsert, week and
-  month grouping, JWT accepted/rejected, `/dino/stats` on workers.dev refused without a token.
-- Live: the page behind Access shows yesterday's downloads equal to an `analytics-query` count of `store_download` for the
+  month grouping, unknown query parameters refused, the response carries no per-event rows.
+- Live: the public page shows yesterday's downloads equal to an `analytics-query` count of `store_download` for the
   same day (weighted), per platform.
-- Opening `/stats` signed out ends at the Access login; `elinsoftuk@gmail.com` gets in, another email is refused.
+- Opening `/stats` in a private window, signed in to nothing, shows the page.
 - The page at 1280 wide matches frame 200 (layout, colours, copy, chip order, states); screenshots in the PR.
 
 ## Checked before the night run (2026-11-07)
 
-- **No Cloudflare token with Access edit rights exists** in `D:\secrets` (only `CF_ANALYTICS_READ_TOKEN`, read-only).
-  So the Access application on `/stats*` and `/api/stats*` is the one user step, done with the user present; the
-  night builds everything else. The Worker's own `Cf-Access-Jwt-Assertion` check refuses requests without a valid
-  token, so the routes stay closed until Access is set up.
+- (Superseded 2026-11-08.) This said Access was the one user step. The page is now public, so there is no Access step;
+  the D1 database, the Worker secret and the deploy go through the wrangler OAuth login (`d1 (write)`, `workers_scripts (write)`).
