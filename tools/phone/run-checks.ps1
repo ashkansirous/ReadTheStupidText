@@ -750,6 +750,7 @@ function Invoke-DeviceStage($Plans, [string]$Phone) {
 # -NoBuild and a cache miss: the line, the table (every check SKIP) and run-status.json, then a code of its own. Before the lease and any process.
 function Stop-CacheMissed($Plans, [string]$Line) {
     Write-Host $Line
+    Write-BuildKeyInputs (Get-BuildKey)   # Slice 316 item 5: the inputs the key is made of, and which differ from the newest build (the emulator scripts print the same through Write-EmulatorNoBuildMiss)
     $rows = @(Get-FinalRows $Plans @() "not run: $Line")
     $views = @{}
     foreach ($v in @($script:VariantDebug, $script:VariantAot)) { $views[$v] = [pscustomobject]@{ State = $(if (Find-VariantApk $v (Get-BuildKey)) { $script:StateOk } else { $script:StateFailed }); Failure = $(if (Find-VariantApk $v (Get-BuildKey)) { $null } else { 'not cached; -NoBuild' }) } }

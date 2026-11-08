@@ -1,4 +1,5 @@
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Tests;
 
@@ -34,6 +35,32 @@ public class ReadTimingFormatterTests
     public void FormatClock_renders_dashes_when_unknown()
     {
         Assert.Equal("--:--", ReadTimingFormatter.FormatClock(null));
+    }
+
+    [Fact]
+    public void ClampToTotal_caps_elapsed_at_a_known_total()
+    {
+        var clamped = ReadTimingFormatter.ClampToTotal(new ReadTiming(TimeSpan.FromSeconds(12), TimeSpan.FromSeconds(10)));
+
+        Assert.Equal(TimeSpan.FromSeconds(10), clamped.Elapsed);
+        Assert.Equal("00:10/00:10", ReadTimingFormatter.Format(new ReadTiming(TimeSpan.FromSeconds(12), TimeSpan.FromSeconds(10))));
+    }
+
+    [Fact]
+    public void ClampToTotal_leaves_elapsed_alone_when_below_or_total_unknown()
+    {
+        var below = new ReadTiming(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(10));
+        var unknown = new ReadTiming(TimeSpan.FromSeconds(30), null);
+
+        Assert.Equal(below, ReadTimingFormatter.ClampToTotal(below));
+        Assert.Equal(unknown, ReadTimingFormatter.ClampToTotal(unknown));
+    }
+
+    [Fact]
+    public void Idle_clock_is_zero_elapsed_and_unknown_total()
+    {
+        Assert.Equal("0:00", ReadTimingFormatter.FormatClock(ReadTimingFormatter.Idle.Elapsed));
+        Assert.Equal("--:--", ReadTimingFormatter.FormatClock(ReadTimingFormatter.Idle.Total));
     }
 
     [Fact]

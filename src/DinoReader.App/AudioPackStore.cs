@@ -281,6 +281,25 @@ public sealed partial class AudioPackStore
 		}
 	}
 
+	/// <summary>Slice 316 item 3: what a failure-path log line adds, a closed set with no free text from the device: the exception type, the HTTP status code when there is one, the inner exception's type, and the pack URL (scheme, host, port, path).</summary>
+	internal static string FailureDetail(Exception ex, string url)
+	{
+		string status = ex is HttpRequestException { StatusCode: { } code } ? $"; status={(int)code}" : string.Empty;
+		string inner = ex.InnerException is null ? string.Empty : $"; inner={ex.InnerException.GetType().Name}";
+		return $"{ex.GetType().Name}{status}{inner}; url={SafeUrl(url)}";
+	}
+
+	private const string InvalidUrlMarker = "<invalid-url>";
+	private const string NonHttpUrlMarker = "<non-http-url>";
+
+	// http/https only, as scheme, host, port and path: never userinfo or a query (a token), and never a file: URL, which would show a device path. A URL that does not parse, or has another scheme, shows a marker.
+	private static string SafeUrl(string url)
+	{
+		if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? parsed)) return InvalidUrlMarker;
+		if (parsed.Scheme != Uri.UriSchemeHttp && parsed.Scheme != Uri.UriSchemeHttps) return NonHttpUrlMarker;
+		return parsed.GetComponents(UriComponents.Scheme | UriComponents.Host | UriComponents.Port | UriComponents.Path, UriFormat.UriEscaped);
+	}
+
 	private static PackFailureKind KindOf(Exception ex) => ex switch
 	{
 		AudioPackClipMissingException => PackFailureKind.Clip,
@@ -422,7 +441,7 @@ public sealed partial class AudioPackStore
 		}
 		catch (Exception ex)
 		{
-			_log($"pack {bookId}/{language} v{pack.Version}: failed, the book is kept without it ({ex.GetType().Name})");
+			_log($"pack {bookId}/{language} v{pack.Version}: failed, the book is kept without it ({FailureDetail(ex, pack.Url)})");
 			Report(bookId, language, AudioPackUsage.PackFailed(KindOf(ex))); // failed before InstallCoreAsync, which reports its own failures
 			return PackInstall.Failed;
 		}
@@ -560,7 +579,7 @@ public sealed partial class AudioPackStore
 			long length = new FileInfo(part).Length;
 			if (pack.Bytes is { } listed && listed != length)
 			{
-				_log($"{label}: downloaded {length} bytes, the listing says {listed}, not kept");
+				_log($"{label}: downloaded {length} bytes, the listing says {listed}, not kept (url={SafeUrl(pack.Url)})");
 				Report(bookId, language, AudioPackUsage.PackFailed(PackFailureKind.Size));
 				return PackInstall.Failed;
 			}
@@ -580,13 +599,13 @@ public sealed partial class AudioPackStore
 		}
 		catch (AudioPackNotFoundException ex)
 		{
-			_log($"{label}: not in the store");
+			_log($"{label}: not in the store ({FailureDetail(ex, pack.Url)})");
 			Report(bookId, language, AudioPackUsage.PackFailed(PackFailureKind.Missing));
 			return PackInstall.NotFound;
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException || !cancel.IsCancellationRequested)
 		{
-			_log($"{label}: failed, the book is kept without it ({ex.GetType().Name})");
+			_log($"{label}: failed, the book is kept without it ({FailureDetail(ex, pack.Url)})");
 			Report(bookId, language, AudioPackUsage.PackFailed(KindOf(ex)));
 			return PackInstall.Failed;
 		}

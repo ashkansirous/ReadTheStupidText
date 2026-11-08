@@ -1,0 +1,44 @@
+# Slice 316 item 4 (Slice 304): the language Review detected holds for the Read that follows it: Italian text, Translate unticked, Read -> the reader plays in Italian, not in a guess from the script.
+# expect-log: READ_LANGUAGE it
+# The marker (Debug only, ReaderPage.SpeakWithLoadingAsync) is written before the voice check (AllowReadAsync), so it appears even when this emulator has no Italian voice and the "no voice" alert shows instead of audio.
+# Without the hold the reader would read the Latin-script text in the app language (en), the marker would say `READ_LANGUAGE en` and the flow would fail.
+# Needs the language detector (ML Kit language id, no download) so the Translate row appears. Platform-neutral YAML: the same file runs on iOS.
+# Not covered here: that a later edit clears the pick (needs a main-page edit step); that stays in Slice 304's Not yet verified.
+# No clearState: nothing here depends on a fresh install; skip-first-run only moves past first run.
+appId: uk.sirous.readthestupidtext
+name: Review-picked language holds for the Read
+---
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 20000
+- tapOn:
+    id: EditLink
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: ReviewEditor
+    waitToSettleTimeoutMs: 300
+- inputText: "Ciao a tutti, questa sera leggeremo insieme una lunga storia molto interessante."
+- hideKeyboard
+- extendedWaitUntil:
+    visible:
+      id: ReviewTranslateRow
+    timeout: 15000
+# The row is ticked by default; one tap unticks it, so Read reads the text as Italian.
+- tapOn:
+    id: ReviewTranslateRow
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: ReviewRead
+    waitToSettleTimeoutMs: 300
+# Optional: on an emulator with no Italian voice the "no voice" alert shows instead of the reader (2026-11-08 run: `READ_LANGUAGE it`, then `fallback speech:no_voice`); the expect-log marker above is the assertion.
+- extendedWaitUntil:
+    visible:
+      id: ReadingText
+    timeout: 30000
+    optional: true
+# No Play tap: the reader reads the review's text at once (Slice 101), and that read is the one the marker must come from. A second read started by Play would take its language from the text again and could log `it` without the Review pick, so the flow would no longer fail on the old behaviour.

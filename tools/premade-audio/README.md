@@ -85,6 +85,7 @@ else is reused. Saved after every clip; a rerun resumes. A manifest of another v
 
 One run per output folder: `<out>/.run.lock` (`artifacts/premade-audio/.run.lock` without `--out`) is an OS lock (dropped if the process dies); a second run exits 7. Exit codes: 0 done or stopped at a budget/daily limit, 1 sentences failed
 (or three errors in a row), 2 no ffmpeg, 3 no key, 4 401/402/403, 5 encode failure (the paid WAV is kept and encoded on the next run with no new request), 6 a second 429, 7 folder locked.
+One rule picks the code at the end (`exit_code_for` in `generate.py`): a stop's own code (2-8 above) wins; otherwise 0 only when the run had no errors and every clip the book needs exists or is on the held-back list (clips an earlier run held back as silent or failed in several batch results), else 1. A run that ended cleanly but left a clip missing therefore exits 1, never 0.
 A clip that trims to under 0.1 s (silent) counts as an error and is requested again on a rerun. Manifest entries that no longer match the dump (text, voice or variant) are dropped at the start of a run.
 
 Requests are spaced to the per-minute limit; the daily count is a rolling 24 hours kept in `<out>/usage.json` (`artifacts/premade-audio/` without `--out`) (never looser than the vendor's calendar reset), so a later run

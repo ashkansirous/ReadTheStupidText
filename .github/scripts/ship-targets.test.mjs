@@ -38,7 +38,8 @@ const CASES = [
     ['Application core (also selects the store job: LineReflow, Slice 302)', ['src/ReadTheStupidText.Application/X.cs'], { ...ALL3, dinostore: true }],
     ['Documents core', ['src/ReadTheStupidText.Documents/X.cs'], ALL3],
     ['unit tests build and ship nothing', ['tests/ReadTheStupidText.Tests/X.cs'], {}],
-    ['solution file', ['ReadTheStupidText.slnx'], ALL3],
+    // Slice 316 item 8: no build or test job goes through the solution file (each builds its own csproj), so editing it, e.g. a Dino-only line, ships nothing.
+    ['solution file builds and ships nothing', ['ReadTheStupidText.slnx'], {}],
     ['global.json', ['global.json'], ALL3],
     ['Directory.Build.props', ['Directory.Build.props'], ALL3],
     ['sherpa-onnx version props (Slice 245)', ['src/SherpaOnnxVersion.props'], ALL3],

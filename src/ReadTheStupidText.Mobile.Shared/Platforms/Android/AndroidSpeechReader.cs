@@ -354,6 +354,12 @@ public sealed class AndroidSpeechReader : Java.Lang.Object, ISpeechReader, IRead
 
     private void RaiseTiming()
     {
+        // Slice 316: an OnRangeStart still in flight on the binder thread after Stop/Idle raises nothing; SpeakFrom sets Playing before its own raise.
+        if (State == PlaybackState.Idle)
+        {
+            return;
+        }
+
         TimeSpan elapsed = Stopwatch.GetElapsedTime(_speakStartTimestamp);
         TimingChanged?.Invoke(this, new ReadTiming(elapsed, null));
     }

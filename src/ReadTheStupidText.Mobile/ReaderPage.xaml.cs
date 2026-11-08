@@ -411,8 +411,19 @@ public partial class ReaderPage : ContentPage
         try
         {
             // The text on screen is what is read: a translation was made on the review page (Slice 101).
-            VoicePlan plan = await PlanVoiceAsync(ReadingLanguageFor(text), atPlay: true);
-            if (!IsCurrentRead(id) || !await AllowReadAsync(id, plan))
+            string readingLanguage = ReadingLanguageFor(text);
+            VoicePlan plan = await PlanVoiceAsync(readingLanguage, atPlay: true);
+            if (!IsCurrentRead(id))
+            {
+                return;
+            }
+
+#if DEBUG
+            // Slice 316: the scripted Review-pick-then-Read check asserts the language a Play reads in. Logged only for the read that is still current, and before the voice check, so an emulator with no voice for that language still shows which language was asked for.
+            ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"READ_LANGUAGE {readingLanguage}");
+#endif
+
+            if (!await AllowReadAsync(id, plan))
             {
                 return;
             }
@@ -671,6 +682,7 @@ public partial class ReaderPage : ContentPage
         {
             ClearHighlight();
             EndStallWait();
+            ShowTiming(ReadTimingFormatter.Idle);
         }
 
         // The dimmed, untouchable player is for an idle page only: a read still playing keeps its controls.
@@ -699,8 +711,9 @@ public partial class ReaderPage : ContentPage
 
     private void ShowTiming(ReadTiming timing)
     {
-        ElapsedLabel.Text = ReadTimingFormatter.FormatClock(timing.Elapsed);
-        TotalLabel.Text = ReadTimingFormatter.FormatClock(timing.Total);
+        ReadTiming shown = ReadTimingFormatter.ClampToTotal(timing);
+        ElapsedLabel.Text = ReadTimingFormatter.FormatClock(shown.Elapsed);
+        TotalLabel.Text = ReadTimingFormatter.FormatClock(shown.Total);
     }
 
     private static readonly TimeSpan ReadingLanguageDebounce = TimeSpan.FromMilliseconds(400);

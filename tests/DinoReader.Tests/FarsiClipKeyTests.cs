@@ -30,13 +30,13 @@ public sealed class FarsiClipKeyTests : IDisposable
     }
 
     // The pieces the reader plays and keys its clips by: the reading session's Prepare (wholePieces, as a bundled table read) and the book's table through the translate-and-join.
-    private static async Task<IReadOnlyList<string>> ReaderTextsAsync(Story story)
+    private static async Task<IReadOnlyList<string>> ReaderTextsAsync(Story story, int fromPosition = 0)
     {
         LanguageRules rules = LanguageRules.For(UiLanguage.Resolve(story.Language));
         LineBreakMap breaks = story.BreakMap();
         IReadOnlyList<SentenceSpan> spans = StorySentences.Build(story.Text, rules, breaks);
         AttributionResult resolved = StoryCast.Resolve(new SpeakerAttributor(rules).Attribute(story.Text, new StorySegmenter(rules).Split(story.Text, breaks)), story.Cast);
-        IReadOnlyList<SplitSegment> whole = StoryPieces.Split(story, resolved, spans, 0, wholePieces: true);
+        IReadOnlyList<SplitSegment> whole = StoryPieces.Split(story, resolved, spans, fromPosition, wholePieces: true);
         IReadOnlyList<SplitSegment> translated = await StoryTranslation.TranslateJoinedAsync(
             whole, BundledTranslations.Compose(story, Farsi, null), Farsi, story.Language, story.Text, spans, CancellationToken.None);
         return translated.Select(p => p.Segment.Text).ToList();
@@ -67,7 +67,7 @@ public sealed class FarsiClipKeyTests : IDisposable
         new(folder, 1, PremadeAudio.Parse(File.ReadAllText(Path.Combine(folder, PremadeAudio.ManifestFile))));
 
     // The reader's lookup (StoryVoicing.PremadeSource.PathOf) over a read's pieces: how many find a clip, and how many missed for each reason.
-    private static (int Matched, int TextMismatch, int FileMissing) Lookup(IReadOnlyList<string> readerTexts, InstalledPack pack)
+    private static (int Matched, int TextMismatch, int FileMissing) Lookup(IReadOnlyList<string> readerTexts, InstalledPack pack, int offset = 0)
     {
         int matched = 0, mismatch = 0, missing = 0;
         for (int piece = 0; piece < readerTexts.Count; piece++)
@@ -77,7 +77,7 @@ public sealed class FarsiClipKeyTests : IDisposable
                 continue;
             }
 
-            ClipLookup found = pack.Find(PremadeAudio.SpokenCount(readerTexts.Take(piece)), readerTexts[piece]);
+            ClipLookup found = pack.Find(offset + PremadeAudio.SpokenCount(readerTexts.Take(piece)), readerTexts[piece]);
             matched += found.Path is null ? 0 : 1;
             mismatch += found.Miss == ClipMiss.TextMismatch ? 1 : 0;
             missing += found.Miss == ClipMiss.FileMissing ? 1 : 0;
@@ -98,6 +98,46 @@ public sealed class FarsiClipKeyTests : IDisposable
         Assert.Equal(PigsSpokenPieces, matched);
         Assert.Equal(reader.Count(PremadeAudio.IsSpoken), matched);
         Assert.Equal(0, mismatch + missing);
+    }
+
+    // Slice 316 item 2: a read that starts on a later page (StoryVoicing.ClipOffsetAsync: the whole book's spoken count minus the partial read's) finds the clips that belong to its pieces, not the first ones.
+    [Fact]
+    public async Task AReadStartingMidBook_WithTheClipOffset_MatchesEveryPieceItPlays()
+    {
+        Story story = StoreBuilder.Build(Books.SpecOf(PigsStem));
+        IReadOnlyList<string> whole = await ReaderTextsAsync(story);
+        IReadOnlyList<string> partial = await ReaderTextsAsync(story, story.Text.Length / 2);
+        int offset = PremadeAudio.ClipOffset(whole, partial); // the method StoryVoicing.ClipOffsetAsync returns
+        InstalledPack pack = InstallFixture(whole, mismatch: false);
+
+        (int matched, int mismatch, int missing) = Lookup(partial, pack, offset);
+
+        Assert.InRange(partial.Count(PremadeAudio.IsSpoken), 1, PigsSpokenPieces - 1);
+        Assert.True(offset > 0);
+        Assert.Equal(partial.Count(PremadeAudio.IsSpoken), matched);
+        Assert.Equal(0, mismatch + missing);
+    }
+
+    [Fact]
+    public void ClipOffset_CountsOnlySpokenPiecesBeforeTheStart()
+    {
+        string[] whole = ["One.", "...", "Two.", "Three."];
+
+        Assert.Equal(1, PremadeAudio.ClipOffset(whole, ["Two.", "Three."]));
+        Assert.Equal(2, PremadeAudio.ClipOffset(whole, ["Three."]));
+        Assert.Equal(0, PremadeAudio.ClipOffset(whole, whole));
+    }
+
+    [Fact]
+    public async Task AReadStartingMidBook_WithoutTheClipOffset_MissesItsClips()
+    {
+        Story story = StoreBuilder.Build(Books.SpecOf(PigsStem));
+        IReadOnlyList<string> whole = await ReaderTextsAsync(story);
+        IReadOnlyList<string> partial = await ReaderTextsAsync(story, story.Text.Length / 2);
+
+        (int matched, _, _) = Lookup(partial, InstallFixture(whole, mismatch: false));
+
+        Assert.True(matched < partial.Count(PremadeAudio.IsSpoken));
     }
 
     [Fact]

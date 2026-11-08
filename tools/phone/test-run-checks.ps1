@@ -616,6 +616,7 @@ $expected = [ordered]@{
     'pack-stall'                  = @{ Apps = 'rtst'; Estimate = 200; PerRun = $null; Pack = $true; Variant = 'debug' }
     'paused-notification'         = @{ Apps = 'rtst'; Estimate = 240; PerRun = $null; Pack = $true; Variant = 'debug' }
     'paused-notification-network' = @{ Apps = 'rtst'; Estimate = 200; PerRun = $null; Pack = $true; Variant = 'debug' }
+    'paused-notification-repost'  = @{ Apps = 'rtst'; Estimate = 300; PerRun = $null; Pack = $true; Variant = 'debug' }
     'short-lines'                 = @{ Apps = 'dino'; Estimate = 200; PerRun = $null; Pack = $true; Variant = 'debug' }
     'translate'                   = @{ Apps = 'rtst'; Estimate = 150; PerRun = $null; Pack = $true; Variant = 'debug' }
     'voice'                       = @{ Apps = 'rtst'; Estimate = 90; PerRun = $null; Pack = $true; Variant = 'debug' }

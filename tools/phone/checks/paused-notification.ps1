@@ -21,9 +21,11 @@ param(
     [Parameter(Mandatory)][ValidateSet('rtst', 'dino')][string]$App,
     [int]$PausedTimeoutSeconds = 150,
     [switch]$NetworkOnly,   # Slice 233: no dataSync time limit; the backgrounded app just loses its network (see paused-notification-network.ps1)
+    [switch]$Repost,   # Slice 316 (233): network-only, then a second failed automatic resume; the first notice alerts, the re-post is silent (see paused-notification-repost.ps1)
     [switch]$Stall   # Slice 241 item 7: not a paused notice at all: one body read hangs (hook stall-pack-network) and the stall guard must log it (see pack-stall.ps1)
 )
 $ErrorActionPreference = 'Stop'
+if ($Repost) { $NetworkOnly = [switch]$true }   # the re-post variant cuts the network the same way
 . (Join-Path $PSScriptRoot '..\common.ps1')
 . (Join-Path $PSScriptRoot '_lib.ps1')
 . (Join-Path $PSScriptRoot '_device.ps1')
@@ -166,12 +168,12 @@ function Restore-MovedPack {
 }
 
 # The paused notice posted after $SinceMs: a record of the dev package whose title is the paused title.
-function Wait-PausedNotice([int64]$SinceMs) {
+function Wait-PausedNotice([int64]$SinceMs, [int64]$PostedAfterMs = -1) {
     $started = Get-Date
     do {
         Assert-WithinBudget 'waiting for the paused notification'
         $records = Get-NotificationRecords @(Invoke-Adb $Phone @('shell', 'dumpsys notification --noredact')) $package
-        $note = @($records | Where-Object { $_.Title -eq $script:PausedTitle -and $_.PostTime -ge $SinceMs } | Select-Object -Last 1)
+        $note = @($records | Where-Object { $_.Title -eq $script:PausedTitle -and $_.PostTime -ge $SinceMs -and $_.PostTime -gt $PostedAfterMs } | Select-Object -Last 1)
         if ($note.Count -gt 0) { return $note[0] }
         Start-Sleep -Seconds 2
     } while (((Get-Date) - $started).TotalSeconds -lt $script:NoticeSeconds)
@@ -250,6 +252,39 @@ function Invoke-StallCheck {
     return (New-CheckResult $true "hung read ended as '$($stall.Line.Trim())' within $($script:StallWithinSeconds) s; then '$($retry.Line.Trim())'")
 }
 
+# Slice 316 (233): Notification.FLAG_ONLY_ALERT_ONCE. AndroidPackKeepAlive.BuildPaused sets it (SetOnlyAlertOnce) only on the silent re-post; dumpsys prints "flags=0x<hex>" on the record.
+$script:OnlyAlertOnceFlag = 0x8
+
+# The notification flags of a dumpsys record, or $null when the record shows none. Only the "Notification(...)" line carries the notification's own flags: other lines of the raw record
+# (sound, audio attributes, actions) print their own flags=0x..., so the first match in the whole record is not the right one.
+function Get-NotificationFlags($Note) {
+    foreach ($line in ("$($Note.Raw)" -split "`n")) {
+        if ($line -match 'Notification\(.*?\bflags=0x([0-9a-fA-F]+)') { return [Convert]::ToInt64($Matches[1], 16) }
+    }
+    return $null
+}
+
+# Second failed automatic resume (the app was opened, the download started again): background it, drop the connection again, and the re-post must carry the only-alert-once flag the first post lacks.
+function Invoke-RepostSecondEnd($First, [string]$AppPid) {
+    $secondSince = Get-PhoneEpochMs
+    Invoke-Adb $Phone @('shell', 'input', 'keyevent', 'KEYCODE_HOME') | Out-Null
+    if (-not (Wait-AppBackgrounded)) { return (New-CheckResult $false "$package was still the resumed app 30 s after the second HOME key") }
+    Start-Sleep -Seconds $script:BackgroundSettleSeconds
+    $cutAt = $secondSince / 1000.0   # the same instant the notice search starts from: a re-post that comes before the hook (a fast second failure) still counts
+    Write-Host "   second drop-pack-network: $(Send-DevHook $Phone $App 'drop-pack-network')"
+    $marker = Wait-LogMatch $Phone $package $AppPid $script:PausedMarkerPattern $PausedTimeoutSeconds $cutAt 'waiting for the second PACKDL paused-notified'
+    if (-not $marker) { return (New-CheckResult $false "no second 'PACKDL service paused-notified' within $PausedTimeoutSeconds s of the second connection drop: the re-post did not happen") }
+    if ($First.PostTime -le 0) { throw "the first paused notice's dumpsys record has no post time, so the re-post cannot be told apart from it (check error, not a product failure)" }
+    $second = Wait-PausedNotice $secondSince $First.PostTime
+    if (-not $second) { return (New-CheckResult $false "the second paused-notified marker was logged but no notice titled '$($script:PausedTitle)' with a later post time than the first ($($First.PostTime)) is in dumpsys notification") }
+    $firstFlags = Get-NotificationFlags $First
+    $secondFlags = Get-NotificationFlags $second
+    if ($null -eq $firstFlags -or $null -eq $secondFlags) { throw "a paused notice's dumpsys record shows no Notification(... flags=0x...): first '$firstFlags', second '$secondFlags' (check error, not a product failure)" }
+    if (($firstFlags -band $script:OnlyAlertOnceFlag) -ne 0) { return (New-CheckResult $false "the first notice already carries FLAG_ONLY_ALERT_ONCE (flags 0x$($firstFlags.ToString('x'))): it should alert") }
+    if (($secondFlags -band $script:OnlyAlertOnceFlag) -eq 0) { return (New-CheckResult $false "the re-post does not carry FLAG_ONLY_ALERT_ONCE (flags 0x$($secondFlags.ToString('x'))): a repeated failed resume alerts again") }
+    return (New-CheckResult $true "first notice flags 0x$($firstFlags.ToString('x')) (alerts), re-post flags 0x$($secondFlags.ToString('x')) (only-alert-once, silent); $($marker.Line.Trim())")
+}
+
 function Invoke-PausedCheck {
     if ($NetworkOnly) { Set-NetworkOnlySetup } else { Assert-TimeLimitPhone; Set-ShortTimeLimit }
     Set-DevMarker $Phone $package $script:ThrottleMarkerName
@@ -289,6 +324,7 @@ function Invoke-PausedCheck {
     $restart = Wait-LogMatch $Phone $package $appPid $script:PackStartPattern $script:ResumeSeconds ($marker.Time + 0.001) "waiting for the download to start again"
     if (-not $restart) { return (New-CheckResult $false "the download did not log PACKDL start again within $($script:ResumeSeconds) s of the network coming back and the app opening") }
     if (-not (Test-NoticeGone $since)) { return (New-CheckResult $false "the paused notice is still shown after the download restarted") }
+    if ($Repost) { return (Invoke-RepostSecondEnd $note $appPid) }
     return (New-CheckResult $true "paused notification title '$($note.Title)', text '$($note.Text)'; the app came back from its content intent, the download restarted ($($restart.Line.Trim())) and the notice is gone")
 }
 

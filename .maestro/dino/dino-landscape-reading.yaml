@@ -40,6 +40,9 @@ name: Reading screen keeps its page through a rotation
     id: ReadingBack
 - assertVisible:
     id: ReadingModes
+# Slice 316 item 4 (Slice 242 item 6): on a phone (rail controls) the tablet title stays hidden; only the tablet flows show it. Run on a tablet AVD this line would fail, and the tablet flows own that layout.
+- assertNotVisible:
+    id: ReadingTabletTitle
 # Slice 253 item 2: beside mock frame 113 (picture + text, right-hand rail).
 - takeScreenshot: shot-113-reading
 - setOrientation: PORTRAIT
