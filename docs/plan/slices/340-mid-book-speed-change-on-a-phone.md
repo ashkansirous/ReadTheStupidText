@@ -1,6 +1,6 @@
 # Slice 340: Listening page: Mid-book speed change on a phone
 
-*Parked (night 2026-11-08-1703 wave 1): needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page).*
+*Parked: the listening page is published (https://claude.ai/artifact/NWRNCx8GhfZneYoZ4Gt3NQ); waits for the user's answers.* Clips: Dino Three Little Pigs page 1 at 1x, 0.6x and 1.2x, recorded with `scrcpy --audio-source=playback` over wireless adb. A mid-read speed change is no longer possible: reading stops when the page is left, so the page compares the three speeds instead.
 
 *Planned 2026-11-08.* The user asked for one slice per check that needs their ear ("Abou the ones that need my ear, I probably need a page to listen to them and say what I think. Add a slice for each so that you can implement a page for me to listen to them and tell what is wrong with them"). This one comes from Slice 150's open check, moved out of `docs/plan/unverified.md` on 2026-11-08 ([record](../notes/2026-11-08-unverified-triage.md)):
 
@@ -10,8 +10,8 @@
 
 ## Items
 
-- [ ] Make the audio exactly as the app plays it: render it with the app's own engine and packs (the `voice-pick` skill's render path), or record it from the dev app on the S21 when rendering cannot reproduce it (speed changes, timing, a Sonos or store track). Note how each clip was made and its build or pack version.
-- [ ] Publish one private listening page through the repo's `voice-pick` agent: a play button per clip, the line of text it reads, and for each clip "sounds right" or "something is wrong" with a free-text box for what is wrong (and a timestamp when it helps). English and Farsi only.
+- [x] Make the audio exactly as the app plays it: render it with the app's own engine and packs (the `voice-pick` skill's render path), or record it from the dev app on the S21 when rendering cannot reproduce it (speed changes, timing, a Sonos or store track). Note how each clip was made and its build or pack version.
+- [x] Publish one private listening page through the repo's `voice-pick` agent: a play button per clip, the line of text it reads, and for each clip "sounds right" or "something is wrong" with a free-text box for what is wrong (and a timestamp when it helps). English and Farsi only.
 - [ ] When the user has answered, write every answer into this file, word for word.
 - [ ] Each "something is wrong" becomes a fix item in this slice (cause, then fix, through the normal review gate). Every "sounds right" closes the check.
 
