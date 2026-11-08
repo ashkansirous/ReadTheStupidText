@@ -83,7 +83,8 @@ public sealed class ReadingSession
 		}
 	}
 	private CancellationTokenSource? _beat; // the timer of the beat being shown; null when none runs (a covered page or a person's pause stops it)
-	private readonly SilentBeat _silent = new(); // the one clock of a silent piece: active, covered, held by the person; the timer runs only while all allow it (Slice 278 part B, reviews/s278b-design.md)
+	private bool _beatPausedByCover; // a running silent beat was stopped by the cover: the next lift is a resume, otherwise a start (log wording only)
+	private readonly SilentBeat _silent = new(BeatCoverFacts.StartsHidden); // the one clock of a silent piece: active, covered, held by the person; the timer runs only while all allow it (Slice 278 part B, reviews/s278b-design.md)
 	private bool _pendingAdvance; // a step ended while the user had paused: Resume takes the next one
 	private readonly ReadingPauseState _pauseState = new(); // a recorded page that ended while the user had paused: Resume goes on from it (Slice 271)
 	private IReadOnlyList<SentenceSpan> _sentences = [];
@@ -352,23 +353,26 @@ public sealed class ReadingSession
 		}
 	}
 
-	/// <summary>A piece shown for a beat has no sound, so while the page is covered (screen lock, another app, the grown-up gate) its timer stops; it never runs on unseen. Only the cover flips: a person's pause is untouched. A clip plays on, as audio does.</summary>
-	public void PauseBeatWhenHidden()
+	/// <summary>
+	/// A piece shown for a beat has no sound, so while the page cannot be seen (screen lock, another app, the grown-up gate, the page leaving) its timer stops; it never runs on unseen. The page states the combined
+	/// fact after every event (Slice 322); the same value twice does nothing. Only the cover flips: a person's pause is untouched. A clip plays on, as audio does.
+	/// </summary>
+	public void SetBeatHidden(bool hidden, BeatCoverCause cause)
 	{
-		if (_silent.Hide())
+		if (_silent.SetHidden(hidden))
 		{
-			StopBeat();
-		}
-
-		UpdateAudible();
-	}
-
-	/// <summary>The page is shown again: the beat of a piece that is still wanted starts again, whole. A pause the person made themselves stays paused.</summary>
-	public void ResumeBeatWhenShown()
-	{
-		if (_silent.Show())
-		{
-			StartBeatTimer();
+			if (hidden)
+			{
+				StopBeat();
+				_beatPausedByCover = true;
+				AudioPackLog.Write(cause == BeatCoverCause.Window ? "silent piece paused, the window is not in front" : "silent piece paused, the page is not shown");
+			}
+			else
+			{
+				StartBeatTimer();
+				AudioPackLog.Write(_beatPausedByCover ? "silent piece resumed, the page is shown and its window is in front" : "silent piece started, the page is shown and its window is in front");
+				_beatPausedByCover = false;
+			}
 		}
 
 		UpdateAudible();
@@ -385,7 +389,7 @@ public sealed class ReadingSession
 		}
 		else if (_silent.Hidden)
 		{
-			AudioPackLog.Write("silent piece resumed while the page is covered, it is shown when the page is");
+			AudioPackLog.Write("silent piece resumed while the page is hidden, it is shown when the page is");
 		}
 
 		RaiseStateChanged();
