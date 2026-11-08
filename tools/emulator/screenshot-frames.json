@@ -6,5 +6,14 @@
   { "shot": "shot-192-record-intro-en", "flow": "record-per-language", "label": "Record intro, English picked, recordings there", "mock": "Dino Reader Batch 49 Recording per Language.dc.html", "frame": "192" },
   { "shot": "shot-193-record-intro-fa", "flow": "record-per-language", "label": "Record intro, Farsi picked, nothing yet", "mock": "Dino Reader Batch 49 Recording per Language.dc.html", "frame": "193" },
   { "shot": "shot-194-record-line-fa", "flow": "record-per-language", "label": "One line, Farsi", "mock": "Dino Reader Batch 49 Recording per Language.dc.html", "frame": "194" },
-  { "shot": "shot-195-book-sheet-languages", "flow": "record-per-language", "label": "Book sheet, your voice per language", "mock": "Dino Reader Batch 49 Recording per Language.dc.html", "frame": "195" }
+  { "shot": "shot-195-book-sheet-languages", "flow": "record-per-language", "label": "Book sheet, your voice per language", "mock": "Dino Reader Batch 49 Recording per Language.dc.html", "frame": "195" },
+  { "shot": "shot-O1-language", "flow": "dino-redesign-onboarding", "label": "Onboarding, pick the language", "mock": "Dino Reader- 2026-11-08 Onboarding.dc.html", "frame": "O1" },
+  { "shot": "shot-O1-8-language", "flow": "dino-redesign-onboarding", "label": "Onboarding language, 8-inch tablet", "mock": "Dino Reader- 2026-11-08 Onboarding.dc.html", "frame": "O1-8" },
+  { "shot": "shot-O2-books", "flow": "dino-redesign-onboarding", "label": "Onboarding, pick the first books", "mock": "Dino Reader- 2026-11-08 Onboarding.dc.html", "frame": "O2" },
+  { "shot": "shot-OW2-books", "flow": "dino-redesign-onboarding", "label": "Onboarding books, Windows window", "mock": "Dino Reader- 2026-11-08 Onboarding.dc.html", "frame": "OW2" },
+  { "shot": "shot-O6-intro", "flow": "dino-redesign-intro", "label": "Intro wizard step", "mock": "Dino Reader- 2026-11-08 Onboarding.dc.html", "frame": "O6" },
+  { "shot": "shot-O6-8-intro", "flow": "dino-redesign-intro", "label": "Intro wizard step, 8-inch tablet", "mock": "Dino Reader- 2026-11-08 Onboarding.dc.html", "frame": "O6-8" },
+  { "shot": "shot-OL7-intro", "flow": "dino-redesign-intro", "label": "Intro wizard, held sideways", "mock": "Dino Reader- 2026-11-08 Onboarding.dc.html", "frame": "OL7" },
+  { "shot": "shot-OTL7-intro", "flow": "dino-redesign-intro", "label": "Intro wizard, tablet held sideways", "mock": "Dino Reader- 2026-11-08 Onboarding.dc.html", "frame": "OTL7" },
+  { "shot": "shot-OT9-intro", "flow": "dino-redesign-intro", "label": "Intro wizard, tablet upright", "mock": "Dino Reader- 2026-11-08 Onboarding.dc.html", "frame": "OT9" }
 ]

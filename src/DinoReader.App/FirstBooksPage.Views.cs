@@ -5,48 +5,49 @@ using ReadTheStupidText.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
-// The views of the first-run book picker (Slice 261, mock Batch 47 frames 163-166): the list with its pinned bottom bar, and the offline message. Built once; a size change only re-places the cards.
+// The views of the first-run book picker (Slice 261, mock Batch 47 frames 163-166; Slice 325 part D, onboarding mock frames O2, O2-8, OL2, OT2, OW2, O4): the list with its pinned bottom bar and the offline
+// message, both on OnboardingShell. Built once; a size change only re-places the views and the cards.
 public partial class FirstBooksPage
 {
 	private const double BackSize = 44;
 	private const double BackIconSize = 22;
-	private const double HeadingSize = 24;
-	private const double BodySize = 14;
 	private const double CountSize = 13.5;
-	private const double ContinueHeight = 56;
-	private const double ContinueEdge = 5;
-	private const double BarTop = 12;
-	private const double BarBottom = 24;
+	private const double ColumnGap = 14;
+	private const double RowGap = 16;
+	private const double BarFade = 16;
 	private const double OfflineIconSize = 150;
-	private const double OfflineBadgeSize = 52;
+	private const double OfflineBadgeSize = 44;
 	private const double OfflineBadgeBorder = 4;
 	private const double OfflineBodyMaxWidth = 270;
 	private const double OfflineHeadingSize = 23;
-	private const double OfflineIconInner = 96;
-	private const double NoWifiScale = 0.62;
-	private const string DisabledFill = "#e6dfd0";
+	private const double OfflineIconInner = 110;
+	private const double NoWifiScale = 0.5;
+	private const double HeaderIconSize = 64;
+	private const double HeaderIconRadius = 18;
 
 	private readonly List<Border> _backButtons = [];
 	private readonly Grid _cardsGrid = new() { ColumnSpacing = ColumnGap, RowSpacing = RowGap };
-	private readonly Label _count = new() { FontSize = CountSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, AutomationId = "FirstBooksCount" };
-	private readonly Border _continueEdge = new() { StrokeThickness = 0, Padding = new Thickness(0, 0, 0, ContinueEdge), AutomationId = "FirstBooksContinue", StrokeShape = new RoundRectangle { CornerRadius = (ContinueHeight + ContinueEdge) / 2 } };
-	private readonly Border _continueFace = new() { HeightRequest = ContinueHeight, StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = ContinueHeight / 2 } };
-	private readonly Label _continueLabel = new() { FontSize = 17, FontAttributes = FontAttributes.Bold, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
+	private readonly Label _heading = new() { FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink), VerticalOptions = LayoutOptions.Center };
+	private readonly Label _body = new() { LineHeight = 1.4, TextColor = DinoTokens.Get(DinoTokens.Body) };
+	private readonly Label _count = new() { FontSize = CountSize, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center, AutomationId = "FirstBooksCount" };
+	private readonly CoralButton _continue = new() { AutomationId = "FirstBooksContinue", Text = AppResources.FirstRun_Continue };
+	private readonly Border _headerIcon = new() { WidthRequest = HeaderIconSize, HeightRequest = HeaderIconSize, StrokeThickness = 0, HorizontalOptions = LayoutOptions.Start, IsVisible = false, StrokeShape = new RoundRectangle { CornerRadius = HeaderIconRadius }, Content = new Image { Source = "dino_icon", Aspect = Aspect.AspectFill } };
+	private readonly VerticalStackLayout _titleBlock = new() { Spacing = 4, VerticalOptions = LayoutOptions.Center };
+	private Grid _header = null!;
+	private Border _headerBack = null!;
 	private Grid _listLayer = null!;
 	private Grid _offlineLayer = null!;
-	private VerticalStackLayout _bar = null!;
+	private Grid _gettingLayer = null!;
+	private Grid _bar = null!;
+	private OnboardingShell _listShell = null!;
+	private OnboardingShell _offlineShell = null!;
 
 	private void BuildViews()
 	{
 		_listLayer = BuildListLayer();
 		_offlineLayer = BuildOfflineLayer();
-		_bar = BuildBar();
-		var content = new Grid { Children = { _listLayer, _offlineLayer } };
-		var root = new Grid { RowDefinitions = [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)] };
-		root.Add(content, 0, 0);
-		root.Add(_bar, 0, 1);
-		Grid.SetRowSpan(_waitOverlay, 2);
-		root.Add(_waitOverlay, 0, 0);
+		_gettingLayer = BuildGettingLayer();
+		var root = new Grid { Children = { _listLayer, _offlineLayer, _gettingLayer, _waitOverlay } };
 		Content = root;
 		ShowLayer(_listLayer);
 		SetContinueEnabled(false);
@@ -54,12 +55,17 @@ public partial class FirstBooksPage
 
 	private Grid BuildListLayer()
 	{
-		var heading = new Label { Text = AppResources.FirstBooks_Title, FontSize = HeadingSize, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Ink) };
-		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level1);
-		var body = new Label { Text = AppResources.FirstBooks_Body, FontSize = BodySize, LineHeight = 1.4, TextColor = DinoTokens.Get(DinoTokens.Body) };
-		var column = new VerticalStackLayout { Spacing = 8, Padding = new Thickness(SideMargin, 0, SideMargin, BarBottom), Children = { BuildBack(), heading, body, _cardsGrid } };
-		_cardsGrid.Margin = new Thickness(0, 12, 0, 0);
-		return new Grid { AutomationId = "FirstBooksPicker", Children = { new ScrollView { Content = column } } };
+		SemanticProperties.SetHeadingLevel(_heading, SemanticHeadingLevel.Level1);
+		_heading.Text = AppResources.FirstBooks_Title;
+		_body.Text = AppResources.FirstBooks_Body;
+		_titleBlock.Children.Add(_heading);
+		_titleBlock.Children.Add(_body);
+		_headerBack = BuildBack();
+		_header = new Grid { RowSpacing = 8, ColumnSpacing = 4, Children = { _headerBack, _headerIcon, _titleBlock } };
+		_bar = BuildBar();
+		_cardsGrid.Margin = new Thickness(0, 3, 0, 8);
+		_listShell = new OnboardingShell(_header, new ScrollView { Content = _cardsGrid }, _bar);
+		return new Grid { AutomationId = "FirstBooksPicker", Children = { _listShell } };
 	}
 
 	private Grid BuildOfflineLayer()
@@ -67,25 +73,27 @@ public partial class FirstBooksPage
 		var heading = new Label
 		{
 			Text = AppResources.FirstBooks_OfflineTitle, FontSize = OfflineHeadingSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center,
-			TextColor = DinoTokens.Get(DinoTokens.Ink), MaximumWidthRequest = 300, AutomationId = "FirstBooksOfflineTitle",
+			TextColor = DinoTokens.Get(DinoTokens.Ink), AutomationId = "FirstBooksOfflineTitle",
 		};
 		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level1);
 		var body = new Label
 		{
-			Text = AppResources.FirstBooks_OfflineBody, FontSize = BodySize, LineHeight = 1.4, HorizontalTextAlignment = TextAlignment.Center,
-			TextColor = DinoTokens.Get(DinoTokens.Body), MaximumWidthRequest = OfflineBodyMaxWidth,
+			Text = AppResources.FirstBooks_OfflineBody, FontSize = 14, LineHeight = 1.4, HorizontalTextAlignment = TextAlignment.Center,
+			TextColor = DinoTokens.Get(DinoTokens.Body), MaximumWidthRequest = OfflineBodyMaxWidth, HorizontalOptions = LayoutOptions.Center,
 		};
-		var middle = new VerticalStackLayout { Spacing = 16, VerticalOptions = LayoutOptions.Center, HorizontalOptions = LayoutOptions.Center, Children = { BuildOfflineIcon(), heading, body } };
-		var tryAgain = new CoralButton { Text = AppResources.Store_TryAgain, AutomationId = "FirstBooksTryAgain", Margin = new Thickness(SideMargin, 0, SideMargin, BarBottom) };
+		var words = new VerticalStackLayout { Spacing = 16, HorizontalOptions = LayoutOptions.Fill, Children = { BuildOfflineIcon(), heading, body } };
+		var tryAgain = new CoralButton { Text = AppResources.Store_TryAgain, AutomationId = "FirstBooksTryAgain" };
 		tryAgain.Clicked += async (_, _) => await _busy.RunAsync(LoadAsync);
-		var layer = new Grid { AutomationId = "FirstBooksOffline", RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)] };
-		layer.Add(new VerticalStackLayout { Padding = new Thickness(SideMargin, 0), Children = { BuildBack() } }, 0, 0);
-		layer.Add(middle, 0, 1);
-		layer.Add(tryAgain, 0, 2);
+		_offlineShell = new OnboardingShell(words, null, tryAgain, centred: true);
+		var layer = new Grid { AutomationId = "FirstBooksOffline", RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star)] };
+		layer.Add(new VerticalStackLayout { Padding = new Thickness(OnboardingBackInset, 0), Children = { BuildBack() } }, 0, 0);
+		layer.Add(_offlineShell, 0, 1);
 		return layer;
 	}
 
-	// The dino in a 150 dp tinted circle with a small white no-connection badge at its bottom right (frame 166).
+	private const double OnboardingBackInset = 14;
+
+	// The dino in a 150 dp tinted circle with a white 44 dp no-connection badge at its bottom right (frame O4).
 	private static Grid BuildOfflineIcon()
 	{
 		var circle = new Border
@@ -135,24 +143,75 @@ public partial class FirstBooksPage
 		}
 	}
 
-	private VerticalStackLayout BuildBar()
+	// The pinned bottom bar (frame O2): cream with a soft fade above it, the count and Continue. Which of them goes where is PlaceBar's call.
+	private Grid BuildBar()
 	{
-		_continueLabel.Text = AppResources.FirstRun_Continue;
-		_continueFace.Content = _continueLabel;
-		_continueEdge.Content = _continueFace;
-		SemanticProperties.SetDescription(_continueEdge, AppResources.FirstRun_Continue);
-		var tap = new TapGestureRecognizer();
-		tap.Tapped += async (_, _) => await _busy.RunAsync(ContinueAsync);
-		_continueEdge.GestureRecognizers.Add(tap);
-		return new VerticalStackLayout { Spacing = 8, Padding = new Thickness(SideMargin, BarTop, SideMargin, BarBottom), BackgroundColor = DinoTokens.Get(DinoTokens.Cream), Children = { _count, _continueEdge } };
+		_continue.Clicked += async (_, _) => await _busy.RunAsync(ContinueAsync);
+		var bar = new Grid { BackgroundColor = DinoTokens.Get(DinoTokens.Cream), Shadow = new Shadow { Brush = new Color(1f, 246 / 255f, 230 / 255f, 0.95f), Offset = new Point(0, -8), Radius = (float)BarFade, Opacity = 0.95f } };
+		bar.Add(_count);
+		bar.Add(_continue);
+		return bar;
+	}
+
+	// Frames O2 / O2-8 / OL2 / OW2: the count sits above Continue on a normal phone and beside it (count left, Continue right) on the iPhone 8 and in every two-pane shape.
+	private void PlaceBar(OnboardingShape shape)
+	{
+		bool beside = OnboardingLayout.CountBesideContinue(shape);
+		(double width, double height) = OnboardingLayout.ContinueSize(shape);
+		_continue.SetSize(beside && double.IsNaN(width) ? 200 : width, height);
+		_bar.RowSpacing = 8;
+		_bar.ColumnSpacing = 12;
+		_bar.ColumnDefinitions = beside ? [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] : [];
+		_bar.RowDefinitions = beside ? [new RowDefinition(GridLength.Auto)] : [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto)];
+		Grid.SetRow(_count, 0);
+		Grid.SetColumn(_count, 0);
+		Grid.SetRow(_continue, beside ? 0 : 1);
+		Grid.SetColumn(_continue, beside ? 1 : 0);
+		_count.HorizontalTextAlignment = beside ? TextAlignment.Start : TextAlignment.Center;
+		_count.HorizontalOptions = beside ? LayoutOptions.Start : LayoutOptions.Fill;
+		_continue.HorizontalOptions = beside ? LayoutOptions.End : LayoutOptions.Fill;
+	}
+
+	// Back arrow, title and line (frames O2, O2-8, OL2, OT2, OW2): stacked normally; on the iPhone 8 the title and the shorter line join the back row; on Windows the 64 dp icon sits above the title.
+	private void PlaceHeader(OnboardingShape shape)
+	{
+		bool joined = shape.Compact;
+		(double heading, double body) = HeaderSizes(shape);
+		_heading.FontSize = heading;
+		_body.FontSize = body;
+		_body.Text = OnboardingLayout.ShortBooksLine(shape) ? AppResources.FirstBooks_BodyShort : AppResources.FirstBooks_Body;
+		_headerIcon.IsVisible = shape.Split && shape.Family == OnboardingFamily.Windows;
+		_header.ColumnDefinitions = joined ? [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)] : [];
+		_header.RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto)];
+		Grid.SetRow(_headerBack, 0);
+		Grid.SetColumn(_headerBack, 0);
+		Grid.SetRow(_headerIcon, 1);
+		Grid.SetColumn(_headerIcon, 0);
+		Grid.SetRow(_titleBlock, joined ? 0 : 2);
+		Grid.SetColumn(_titleBlock, joined ? 1 : 0);
+		Grid.SetColumnSpan(_headerIcon, joined ? 2 : 1);
+		Grid.SetColumnSpan(_titleBlock, 1);
+	}
+
+	private static (double Heading, double Body) HeaderSizes(OnboardingShape shape)
+	{
+		if (!shape.Split)
+		{
+			return (shape.Compact ? 22 : 24, shape.Compact ? 13 : 14);
+		}
+
+		return shape.Family switch
+		{
+			OnboardingFamily.PhoneLandscape => (21, 13),
+			OnboardingFamily.Windows => (30, 15.5),
+			_ => (30, 15),
+		};
 	}
 
 	private void SetContinueEnabled(bool enabled)
 	{
-		_continueEdge.BackgroundColor = enabled ? DinoTokens.Get(DinoTokens.CoralEdge) : Colors.Transparent;
-		_continueFace.BackgroundColor = enabled ? DinoTokens.Get(DinoTokens.Coral) : Color.FromArgb(DisabledFill);
-		_continueLabel.TextColor = enabled ? Colors.White : DinoTokens.Get(DinoTokens.Muted);
-		SemanticProperties.SetHint(_continueEdge, enabled ? string.Empty : AppResources.FirstBooks_PickTwo);
+		_continue.Active = enabled;
+		SemanticProperties.SetHint(_continue, enabled ? string.Empty : AppResources.FirstBooks_PickTwo);
 	}
 
 	// The count line and Continue follow the ticks: "Pick 2 books to start", "Pick 1 more", then "N picked · size" in the brand colour.
@@ -193,30 +252,65 @@ public partial class FirstBooksPage
 		PlaceCards();
 	}
 
+	// A size change: every shell and the header and bar are re-placed, then the covers.
+	private void ApplyShape(OnboardingShape shape)
+	{
+		_listShell.Place(shape);
+		_offlineShell.Place(shape);
+		_gettingShell.Place(shape);
+		PlaceHeader(shape);
+		PlaceBar(shape);
+		PlaceCards();
+		LogShape();
+	}
+
 	private void PlaceCards()
 	{
-		if (_cards.Count == 0 || _width <= 0)
+		if (_shape is not { } shape || _cards.Count == 0 || _windowSize.Width <= 0)
 		{
 			return;
 		}
 
-		int columns = Columns();
-		double width = CardWidth(columns);
+		int columns = OnboardingLayout.BookColumns(shape);
+		double available = OnboardingShell.RightWidth(_windowSize.Width, shape);
+		double width = Math.Max(0, (available - (ColumnGap * (columns - 1))) / columns);
+		bool tags = OnboardingLayout.TagsShown(shape);
 		_cardsGrid.ColumnDefinitions = [.. Enumerable.Range(0, columns).Select(_ => new ColumnDefinition(GridLength.Auto))];
-		_cardsGrid.RowDefinitions = [.. Enumerable.Range(0, (_cards.Count + columns - 1) / columns).Select(_ => new RowDefinition(GridLength.Auto))];
+		_cardsGrid.RowDefinitions = [.. Enumerable.Range(0, OnboardingLayout.RowsFor(_cards.Count, columns)).Select(_ => new RowDefinition(GridLength.Auto))];
 		for (int i = 0; i < _cards.Count; i++)
 		{
+			GridCell cell = OnboardingLayout.CellOf(i, columns);
 			_cards[i].SetWidth(width);
-			Grid.SetRow(_cards[i], i / columns);
-			Grid.SetColumn(_cards[i], i % columns);
+			_cards[i].SetTagsVisible(tags);
+			Grid.SetRow(_cards[i], cell.Row);
+			Grid.SetColumn(_cards[i], cell.Column);
 		}
 	}
 
-	// One layer shows at a time; the bottom bar belongs to the list only.
+	// One layer shows at a time; the bottom bar is the list shell's foot. The hop runs only while the getting page shows.
 	private void ShowLayer(Grid layer)
 	{
 		_listLayer.IsVisible = layer == _listLayer;
 		_offlineLayer.IsVisible = layer == _offlineLayer;
-		_bar.IsVisible = layer == _listLayer;
+		_gettingLayer.IsVisible = layer == _gettingLayer;
+		if (layer != _gettingLayer)
+		{
+			StopHop();
+		}
+
+		LogShape();
+	}
+
+	// Debug-only marker the onboarding flow reads: the page shown and how the shell is arranged (the waits, offline and ready pages are always one centred column).
+	private void LogShape()
+	{
+#if DEBUG
+		if (_shape is { } shape)
+		{
+			string page = _gettingLayer.IsVisible ? "getting" : _offlineLayer.IsVisible ? "offline" : "books";
+			string kind = page == "books" ? (shape.Split ? "split" : "stack") : "centred";
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] onboarding page={page} shape={kind}");
+		}
+#endif
 	}
 }

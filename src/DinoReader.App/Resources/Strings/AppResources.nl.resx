@@ -103,12 +103,13 @@
   <data name="Backup_TooLarge" xml:space="preserve"><value>Te groot om terug te zetten</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} kon niet aan de back-up worden toegevoegd.</value></data>
   <data name="FirstRun_Hello" xml:space="preserve"><value>Hallo! In welke taal lezen we?</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino downloadt er een stem voor. Je kunt de taal later wijzigen achter het slot.</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Je kunt de taal later wijzigen in de hoek voor volwassenen.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Doorgaan</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Klaar om te lezen!</value></data>
   <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Elk personage krijgt een eigen stem. Je boeken staan op de plank.</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Kies je eerste boeken</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>Kies er minstens twee. Je kunt altijd meer boeken in de winkel halen.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BodyShort" xml:space="preserve"><value>Kies er minstens twee. Meer in de winkel, altijd.</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_PickTwo" xml:space="preserve"><value>Kies 2 boeken om te beginnen</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>Kies er nog 1</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Picked" xml:space="preserve"><value>{0} gekozen · {1}</value><comment>Machine draft: needs native review</comment></data>
@@ -118,7 +119,6 @@
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Maak verbinding met internet om je eerste boeken te kiezen</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino heeft twee boeken nodig voordat je begint. Zet wifi of mobiele data aan en probeer het opnieuw.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Ontdek wat Dino kan</value></data>
-  <data name="Intro_SkipStart" xml:space="preserve"><value>Overslaan, begin met lezen</value></data>
   <data name="Intro_SkipAll" xml:space="preserve"><value>Alles overslaan</value></data>
   <data name="Intro_TryIt" xml:space="preserve"><value>Proberen</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>Overslaan</value></data>
@@ -126,12 +126,13 @@
   <data name="Intro_PlacesTitle" xml:space="preserve"><value>Dino heeft twee plekken</value></data>
   <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>Kinderkast</value></data>
   <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>Tik op een boek en luister.</value></data>
-  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Achter een slot, om boeken en stemmen toe te voegen.</value></data>
+  <data name="Intro_PlacesKidsLineClick" xml:space="preserve"><value>Klik op een boek en luister.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Achter een slot: je boeken, de winkel en de instellingen.</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>Samen een verhaal lezen</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>Tik op een boek en dan op afspelen. Dino leest voor en laat elke zin oplichten.</value></data>
   <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino sloeg het boek open. ‘Er was eens…’</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lees het met je eigen stem</value></data>
-  <data name="Intro_RecordLine" xml:space="preserve"><value>Neem jezelf op terwijl je een verhaal voorleest, pagina voor pagina. Je kind kan het altijd afspelen.</value></data>
+  <data name="Intro_RecordLine" xml:space="preserve"><value>Neem één personage tegelijk op, of hele pagina’s. Je kind kan het altijd afspelen.</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>Introductie opnieuw bekijken</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Klaar voor mijn kind</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Volwassenenmodus</value></data>
@@ -295,7 +296,6 @@
   <data name="Speed_Sub" xml:space="preserve"><value>Langzamer is makkelijker voor kleintjes</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · langzaam</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino telt welke boeken worden gelezen, zonder namen of id's. Je kunt dit uitzetten in Instellingen. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik). Als de app crasht, kan hij ook een crashrapport sturen: de fout en een kort technisch logboek, nooit iets wat je hebt gelezen of getypt.</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <!-- /Slice 115 -->
   <data name="Wizard_Next" xml:space="preserve"><value>Volgende</value></data>

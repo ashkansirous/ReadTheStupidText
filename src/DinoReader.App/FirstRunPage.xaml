@@ -3,65 +3,15 @@
     x:Class="DinoReader.FirstRunPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:DinoReader"
-    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
     BackgroundColor="{StaticResource Cream}"
     NavigationPage.HasNavigationBar="False"
     SafeAreaEdges="Container">
 
-    <!-- First run (mock screens 16 and 18), shown once on a fresh install before the gallery: pick the language, pick the first books, then hand over to
-         grown-up mode. Values come from "Dino Reader Batch 16.dc.html". The ready texts are set in code, after the pick, so they speak the language just chosen. -->
-    <!-- Slice 234 part B (mock Batch 45 frame 138): on a tablet held upright the three pages share one centred white card; everywhere else the frame is invisible and fills the page. -->
-    <Border x:Name="CardFrame" StrokeThickness="0" BackgroundColor="Transparent">
+    <!-- First run (onboarding mock 2026-11-08, Slice 325 part D: frames O1, O5 and their size variants), shown once on a fresh install before the gallery: pick the language, pick the first books,
+         then hand over to grown-up mode. Both panels are OnboardingShell views built in code (FirstRunPage.xaml.cs) so one skeleton serves every window size; the ready texts are set after the pick,
+         so they speak the language just chosen. -->
     <Grid>
-        <!-- Screen 16: language. -->
-        <Grid x:Name="LanguagePanel" AutomationId="FirstRunLanguage" RowDefinitions="*,Auto" Padding="22,0,22,22">
-            <!-- Slice 232 part E (mock Batch 44 frame 123): held sideways the welcome stays left and the language grid moves into its own scroll on the right, Continue pinned under it. -->
-            <ScrollView x:Name="WelcomeScroll">
-                <VerticalStackLayout x:Name="LanguageStack" Spacing="14" Padding="0,28,0,16">
-                    <Border WidthRequest="92" HeightRequest="92" StrokeThickness="0" HorizontalOptions="Center">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="24" />
-                        </Border.StrokeShape>
-                        <Image Source="dino_icon" Aspect="AspectFill" SemanticProperties.Description="{x:Static res:AppResources.App_Name}" />
-                    </Border>
-                    <Label Text="{x:Static res:AppResources.FirstRun_Hello}" FontSize="24" FontAttributes="Bold" HorizontalTextAlignment="Center"
-                           SemanticProperties.HeadingLevel="Level1" />
-                    <Label Text="{x:Static res:AppResources.FirstRun_HelloBody}" FontSize="14" LineHeight="1.4" TextColor="{StaticResource Body}"
-                           HorizontalTextAlignment="Center" />
-                    <Grid x:Name="LanguageGrid" ColumnSpacing="8" RowSpacing="8" Margin="0,8,0,0" />
-                </VerticalStackLayout>
-            </ScrollView>
-            <ScrollView x:Name="GridScroll" Grid.Column="1" IsVisible="False" Padding="0,12,0,12" />
-            <local:CoralButton x:Name="ContinueButton" Grid.Row="1" Text="{x:Static res:AppResources.FirstRun_Continue}" Clicked="OnContinueClicked" />
-        </Grid>
-
-        <!-- Screen 18: ready (Slice 278 part B: the voice download screen, 17, is gone; the books are picked first, then this). -->
-        <Grid x:Name="ReadyPanel" AutomationId="FirstRunReady" RowDefinitions="*,Auto" Padding="22,0,22,22" IsVisible="False">
-            <ScrollView x:Name="ReadyScroll" Grid.Row="0">
-            <VerticalStackLayout x:Name="ReadyStack" Spacing="14" Padding="0,56,0,0">
-                    <Border WidthRequest="92" HeightRequest="92" StrokeThickness="0" HorizontalOptions="Center">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="24" />
-                        </Border.StrokeShape>
-                        <Image Source="dino_icon" Aspect="AspectFill" />
-                    </Border>
-                    <Label x:Name="ReadyTitle" FontSize="24" FontAttributes="Bold" HorizontalTextAlignment="Center" SemanticProperties.HeadingLevel="Level1" />
-                    <Label x:Name="ReadyBody" FontSize="14" LineHeight="1.4" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
-                </VerticalStackLayout>
-            </ScrollView>
-            <VerticalStackLayout x:Name="ReadyActions" Grid.Row="1">
-            <!-- Slice 133 (mock frame 63): the one line about anonymous counts, set in code after the pick. -->
-            <Label x:Name="ReadyUsage" FontSize="12.5" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center"
-                   HorizontalOptions="Center" MaximumWidthRequest="290" Margin="0,0,0,14" />
-            <!-- Slice 155 (mock frame 73): the intro starts here, or the grown-up skips straight to the hand-over. -->
-            <VerticalStackLayout Spacing="4">
-                <local:CoralButton x:Name="SetUpButton" Clicked="OnSeeWhatClicked" />
-                <Button x:Name="SkipIntroLabel" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" BackgroundColor="Transparent" Padding="12,0" MinimumHeightRequest="44" BorderWidth="0"
-                        Clicked="OnSkipIntroTapped" />
-            </VerticalStackLayout>
-            </VerticalStackLayout>
-        </Grid>
+        <Grid x:Name="LanguagePanel" AutomationId="FirstRunLanguage" />
+        <Grid x:Name="ReadyPanel" AutomationId="FirstRunReady" IsVisible="False" />
     </Grid>
-    </Border>
 </ContentPage>

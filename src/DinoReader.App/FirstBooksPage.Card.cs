@@ -18,7 +18,7 @@ internal sealed class FirstBookCard : VerticalStackLayout
 	private const double TickBorder = 2;
 	private const double TickIconSize = 18;
 	private const double TickIconStroke = 3;
-	private const double TitleSize = 14;
+	private const double TitleSize = 14.5;
 	private const double CardSpacing = 6;
 	private const double CoverAspect = 4.0 / 3.0;
 	private const string AutomationPrefix = "FirstBookCard-";
@@ -29,6 +29,10 @@ internal sealed class FirstBookCard : VerticalStackLayout
 	private readonly Image _image = new() { Aspect = Aspect.AspectFill };
 	private readonly Border _tick = new() { WidthRequest = TickSize, HeightRequest = TickSize, StrokeShape = new Ellipse(), HorizontalOptions = LayoutOptions.End, VerticalOptions = LayoutOptions.Start, Margin = new Thickness(0, TickInset, TickInset, 0) };
 	private readonly IconView _tickIcon = new() { Kind = IconKind.Check, Color = Colors.White, Size = TickIconSize, StrokeWidth = TickIconStroke, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
+	private readonly Button _tickButton;
+	private readonly ContentView _tags;
+	private bool _picked;
+	private bool _hover;
 
 	public FirstBookCard(StoreItem item, int index, string title, Action toggled)
 	{
@@ -37,18 +41,49 @@ internal sealed class FirstBookCard : VerticalStackLayout
 		_cover.Content = _image;
 		_ring.Content = _cover;
 		_tick.Content = _tickIcon;
-		var host = new Grid { AutomationId = AutomationPrefix + index, Children = { _ring, _tick, BuildTickButton(index, title, toggled) } };
+		_tickButton = BuildTickButton(index, title, toggled);
+		var host = new Grid { AutomationId = AutomationPrefix + index, Children = { _ring, _tick, _tickButton } };
 		SemanticProperties.SetDescription(host, title);
 		var tap = new TapGestureRecognizer();
 		tap.Tapped += (_, _) => toggled();
 		host.GestureRecognizers.Add(tap);
+		AddHover(host);
 		Children.Add(host);
 		Children.Add(new Label { Text = title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, MaxLines = 2, LineBreakMode = LineBreakMode.TailTruncation, TextColor = DinoTokens.Get(DinoTokens.Ink) });
-		Children.Add(new StoreTagRow { Tags = item.Badges });
+		_tags = new ContentView { Content = new StoreTagRow { Tags = item.Badges } }; // the host hides as a whole; the row keeps its own visibility for a book with no tags
+		Children.Add(_tags);
 		SetPicked(false);
 	}
 
 	public StoreItem Item { get; }
+
+	/// <summary>True while this cover's tick button has the keyboard focus (Windows: Space ticks it, frame OW2).</summary>
+	public bool TickFocused => _tickButton.IsFocused;
+
+	/// <summary>The store tags show on every shape but a phone held sideways (frame OL2); a book with no tags keeps the row hidden either way.</summary>
+	public void SetTagsVisible(bool visible) => _tags.IsVisible = visible;
+
+	// Windows (frame OW2): the pointer rings an unpicked cover in indigo, as on the corner. Off Windows there is no pointer, so nothing is added.
+	private void AddHover(View host)
+	{
+		if (!DesktopTips.IsWindows)
+		{
+			return;
+		}
+
+		var pointer = new PointerGestureRecognizer();
+		pointer.PointerEntered += (_, _) => SetHover(true);
+		pointer.PointerExited += (_, _) => SetHover(false);
+		host.GestureRecognizers.Add(pointer);
+	}
+
+	private void SetHover(bool hover)
+	{
+		_hover = hover;
+		ShowRing();
+	}
+
+	private void ShowRing() => _ring.Stroke = _picked || _hover ? DinoTokens.Get(DinoTokens.Brand) : Colors.Transparent;
 
 	// A transparent button over the tick circle: a real control for UI Automation (Invoke), keyboard and screen readers; the look is the circle under it.
 	private static Button BuildTickButton(int index, string title, Action toggled)
@@ -76,7 +111,8 @@ internal sealed class FirstBookCard : VerticalStackLayout
 	/// <summary>Shows or clears the tick and the ring.</summary>
 	public void SetPicked(bool picked)
 	{
-		_ring.Stroke = picked ? DinoTokens.Get(DinoTokens.Brand) : Colors.Transparent;
+		_picked = picked;
+		ShowRing();
 		_tick.BackgroundColor = picked ? DinoTokens.Get(DinoTokens.Brand) : Colors.White;
 		_tick.Stroke = picked ? DinoTokens.Get(DinoTokens.Brand) : DinoTokens.Get(DinoTokens.DotIdle);
 		_tick.StrokeThickness = TickBorder;
