@@ -4,6 +4,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 Each line starts with what it needs: **Android** (a scripted emulator run), **iOS** (an iPhone, a Mac or TestFlight), **Windows** (the VM or the desktop), **Live** (a live event, outside hardware or the user's ear), **Logs** (production analytics can prove it once enough rows arrive). Triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)).
 
+### Slice 313: Dino: a shelf book's text and its sound always match ([slice](slices/313-dino-book-text-and-sound-in-step.md))
+- **Android:** The user's phone: Freddy in English and Farsi after updating to the release with this slice (Dino 1.116.0 or later): new text, and sound plays.
+- **iOS:** iPhone: the same path.
+- **Windows:** Windows head: the same path.
+
 ### Slice 316: Gaps found by the unverified-checks triage ([slice](slices/316-unverified-triage-gaps.md))
 - **Android:** The reader clock shows `0:00` after a read and never `elapsed > total` on a device (unit-tested only).
 - **Android:** The pack failure log line format (type, status, inner type, url) has not been seen in a device log.
@@ -125,7 +130,7 @@ Each line starts with what it needs: **Android** (a scripted emulator run), **iO
 ### Slice 285: Dino: changing the app language fetches the books' sound in that language ([slice](slices/285-dino-language-change-fetches-book-audio.md))
 - **iOS:** iPhone: switch the app language, open a store book, press Play. Sound should play in the new language with no relaunch.
 - **Windows:** Windows head: the same.
-- **Logs:** The user's phone: Freddy in English after the v6 text update. The English `clip_missing` events of 2026-11-07 07:05Z have no code explanation yet.
+- **Logs:** The user's phone: Freddy in English after the v6 text update. The English `clip_missing` events of 2026-11-07 07:05Z are explained by Slice 313 (sound pack installed ahead of the book text); the phone check is Slice 313's below.
 
 ### Slice 283: Dino: a Sonos music service for the store books ([slice](slices/283-dino-sonos-music-service.md))
 - **Live:** Live `POST /sonos` after the Worker deploy: getMetadata root lists the languages, getMediaURI returns the track URL.
