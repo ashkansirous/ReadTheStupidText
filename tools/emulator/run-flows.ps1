@@ -504,7 +504,11 @@ try {
     $script:MaestroHome = Join-Path $toolsDir "maestro-home\i$Instance"
     $null = New-Item -ItemType Directory -Force $script:MaestroOut, $script:MaestroHome
     Write-Host "Instance ${Instance}: Maestro home $($script:MaestroHome)"
-    $env:MAESTRO_OPTS = "-Duser.home=$($script:MaestroHome)"
+    $removedStale = Remove-StaleMaestroTempDirs $toolsDir   # Slice 315 item 1: folders of dead runs; a live pid's folder stays
+    if ($removedStale -gt 0) { Write-Host "MAESTRO-TEMP-APK swept $removedStale stale run folder$(if ($removedStale -eq 1) { '' } else { 's' })." }
+    $script:MaestroTempDir = Get-MaestroTempDir $toolsDir $Instance   # Slice 315 items 1-3: this run's own java.io.tmpdir, deleted in the outer finally below
+    $null = New-Item -ItemType Directory -Force $script:MaestroTempDir
+    $env:MAESTRO_OPTS = "-Duser.home=$(Get-SpaceFreePath $script:MaestroHome) $(Get-MaestroTempOption (Get-SpaceFreePath $script:MaestroTempDir))"   # throws before Maestro starts when a path has a space and no short name
     $env:MAESTRO_CLI_NO_ANALYTICS_NOTIFICATION = '1'
     # Slice 241 item 4: the flows are known now, so a split's second emulator boots while this one installs.
     $flowDir = Join-Path $script:RepoRoot ".maestro\$App"
@@ -583,6 +587,7 @@ try {
     $secondExit = if ($secondRun) { Wait-SecondHalf $secondRun } else { 0 }
     if ($failed -gt 0 -or $notRun -gt 0 -or $secondExit -ne 0) { exit 1 }
 } finally {
+    try { $null = Remove-MaestroTempDir $script:MaestroTempDir } catch { Write-Warning "Maestro temp APK cleanup failed: $($_.Exception.Message)" }   # Slice 315 item 2: also when discovery, install or boot threw
     if ($leaseTaken) { Remove-Lease $script:Serial $leaseOwner 0 'emulator' | Out-Null }
     if ($boot2) { if ($null -eq $priorTwoEmulators) { Remove-Item Env:RTST_ALLOW_TWO_EMULATORS -ErrorAction SilentlyContinue } else { $env:RTST_ALLOW_TWO_EMULATORS = $priorTwoEmulators }; & (Join-Path $PSScriptRoot 'stop.ps1') -Instance 2 | Out-Null }   # only a split boots emulator 2, so only a split stops it
 }

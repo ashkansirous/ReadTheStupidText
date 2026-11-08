@@ -60,7 +60,7 @@ function Test-PackVersionAtLeast([string]$Active, [string]$Expected) {
 
 # The sentence-audio cache is cache/sentences in the app's data folder (AndroidSupertonicSpeechReader SentenceFolderName, under FileSystem.CacheDirectory); a cached line is played with no synthesis, so no probe line. Never the packs folder (files/packs).
 $sentenceCachePath = 'cache/sentences'
-function Clear-SentenceCache {
+function Clear-ProbeSentenceCache {   # Slice 315 item 27: not Clear-SentenceCache, which common.ps1 defines with other parameters
     $out = @(Invoke-Adb $Phone @('shell', "run-as $package sh -c 'rm -rf $sentenceCachePath; [ -e $sentenceCachePath ] && echo STILL_THERE || echo CLEARED'"))
     if ("$($out | Select-Object -Last 1)".Trim() -ne 'CLEARED') { throw "Could not clear $sentenceCachePath of $package (output: $($out -join ' | '))." }
 }
@@ -98,7 +98,7 @@ try {
         $appPid = Start-ReadyApp $Phone $App $package
         foreach ($line in $Lines) {
             for ($i = 1; $i -le $Repeats; $i++) {
-                Clear-SentenceCache
+                Clear-ProbeSentenceCache
                 $one = Read-OneLine $appPid $line
                 $row = [pscustomobject]@{ Voice = $voice; Repeat = $i; Chars = $line.Length; Ended = $one.Ended; Probe = $one.Facts.Probe; GaveUp = $one.Facts.GaveUp; Rescue = $one.Facts.Rescue; Retries = $one.Facts.Retries; NanTakes = $one.Facts.NanTakes }
                 $rows += $row

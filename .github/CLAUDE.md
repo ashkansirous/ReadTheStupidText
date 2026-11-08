@@ -38,7 +38,8 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 > Android, `Mobile/Platforms/iOS` -> iOS, rest of `Mobile` -> both; `App`/`Infrastructure`
 > -> Windows; core paths -> all; a major bump -> all). `ship-targets.test.mjs` checks
 > every platform workflow's `pull_request.paths` matches it, so change them together.
-> `release-scripts.yml` runs all script tests and actionlint (`.github/actionlint.yaml`)
+> `release-scripts.yml` runs all script tests (`node --test .github/scripts/*.test.mjs`, the glob form,
+> as `release-scripts.yml:52` runs it; a bare directory fails on Node 24) and actionlint (`.github/actionlint.yaml`)
 > on PRs touching `.github/**`. An untouched platform is neither built nor submitted;
 > its assets are carried forward. The iOS PR check builds Debug (simulator); only main does the signed Release (PR #206). When adding a project or shared build file, add its
 > path to `ship-targets.mjs`. Never add `actions/upload-artifact` for build outputs.

@@ -91,3 +91,4 @@ Assert-Equal 'dino-reorder declares the launch check first' 'dino-launch' (@(Get
 
 if ($script:failed -gt 0) { Write-Host "$($script:failed) check(s) failed."; exit 1 }
 Write-Host 'test-check-dryrun: all passed.'
+exit 0

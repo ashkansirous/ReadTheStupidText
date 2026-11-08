@@ -938,11 +938,6 @@ function Get-StayOnRecordAction($Record, [string]$Owner, [int]$MyPid, [bool]$Pid
     return 'Restore'
 }
 
-function Test-ProcessAlive([int]$ProcessId) {
-    if ($ProcessId -le 0) { return $false }
-    return [bool](Get-Process -Id $ProcessId -ErrorAction SilentlyContinue)
-}
-
 # The one restore rule: orig is written back only if the phone's current value still equals set; the record is then deleted either way. Returns { Restored; Value; Action } or $null when there was no record.
 # Never hands a record to another owner: a record of someone else is only healed when it is dead (see Get-StayOnRecordAction).
 function Invoke-StayOnRestore([string]$Serial, [string]$PhoneKey, [string]$Owner, [string]$Dir = '', [DateTime]$NowUtc = [DateTime]::UtcNow) {

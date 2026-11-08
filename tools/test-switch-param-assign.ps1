@@ -76,5 +76,26 @@ foreach ($file in Get-ChildItem $toolsRoot -Recurse -Filter *.ps1) {
     }
 }
 
+# Slice 315 item 8 (review finding 8): every self-test that tools-selftests.yml runs ends with an explicit `exit`. CI's pwsh/powershell shells forward a stale $LASTEXITCODE from a native
+# call or child script at the end of the step, so a test that prints "all passed" and ends on such a call fails the step (test-layout-check.ps1, 898359dc).
+function Get-LastCodeLine([string]$Path) {
+    $lines = @(Get-Content -LiteralPath $Path | Where-Object { $_.Trim() })
+    if ($lines.Count -eq 0) { return '' }
+    return $lines[-1].Trim()
+}
+Assert-Equal 'fixture: a last line that is a native call is not an exit' $false ('cmd /c exit 3' -match '^exit\b')
+$workflowText = [IO.File]::ReadAllText((Join-Path $toolsRoot '..\.github\workflows\tools-selftests.yml'))
+$listed = @([regex]::Matches($workflowText, '(?m)^\s+run:\s*\./(tools/(?:\S+/)?test-[\w-]+\.ps1)\s*$') | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique)
+Assert-Equal 'tools-selftests.yml lists self-tests' $true ($listed.Count -gt 10)
+Assert-Equal 'the explicit-exit scan also covers a test directly under tools/' $true ($listed -contains 'tools/test-switch-param-assign.ps1')
+Assert-Equal 'the explicit-exit scan also covers a test in a subfolder' $true ($listed -contains 'tools/desktop-vm/test-check-dryrun.ps1')
+foreach ($relative in $listed) {
+    $path = Join-Path $toolsRoot ('..\' + ($relative -replace '/', '\'))
+    if (-not (Test-Path -LiteralPath $path)) { $failed++; Write-Host "FAIL: tools-selftests.yml runs $relative, which does not exist."; continue }
+    $last = Get-LastCodeLine $path
+    if ($last -notmatch '^exit\b') { $failed++; Write-Host "FAIL: $relative ends with [$last], not an explicit exit (CI would forward a stale `$LASTEXITCODE)." }
+}
+
 if ($failed -gt 0) { Write-Host "$failed failure(s)."; exit 1 }
 Write-Host 'switch-param-assign self-test: all passed.'
+exit 0

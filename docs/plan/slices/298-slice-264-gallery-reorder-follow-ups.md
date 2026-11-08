@@ -52,36 +52,44 @@
 - 2 (stale comment on `CancelHold`): applied, comment fixed.
 - 3 (DropCompleted before Drop reverts an accepted drop): applied, drag end moved into the pure `ShelfDragSession`, which handles both orders.
 - 4 (UndoAfter test helper re-implements the view): applied, `ShelfDragSession` tests replace the copy of the view logic.
-- 5 (`hasOrderBeforeDrag` duplicated condition): skipped, style.
-- 6 (`SaveOrderAsync` validates only shown ids): skipped, stored ids are only written by our own `SaveOrderAsync`.
-- 7 (`TileOverlay` Register/Unregister O(n)): skipped, shelves are tens of books.
+- Skipped #5 (`reviews/s298-high.md`): "the condition lives in two places and can drift" - style (`hasOrderBeforeDrag` duplicated condition).
+- Skipped #6 (`reviews/s298-high.md`): "New ArgumentException guard validates only shown ids, not stored ids" - stored ids are only written by our own `SaveOrderAsync`.
+- Skipped #7 (`reviews/s298-high.md`): "Register()/Unregister() each RemoveAll over the whole Live list on every Loaded/Unloaded" - shelves are tens of books.
 
 *s298-medium.md (6):*
 - 1 (stale `_endedWith` Drop after cancel): applied, Drop after Completed counts only within 1000 ms (Built, 3 drag session).
 - 2 (swallow left armed after release then scroll): addressed by the 500 ms swallow expiry (check pass 2 note 6).
-- 3 (`ArgumentException` catch hides other errors): skipped, decided in the slice (see check pass 2 note 3).
-- 4 (`TileOverlay` ToArray per scroll): skipped, low (see check pass 2 note 5).
-- 5 (clearing `_suppressTapUntil` on close re-opens the hold-release tap): not applied; origin/main behaviour kept (item 5).
-- 6 (Maestro flow `shelf-reorder-close-tap` taps the menu, not a hold): not applied; item 5 was dropped, so the close-tap flow is gone from the build (Built 5: no close-tap flow).
+- Skipped #3 (`reviews/s298-medium.md`): "treats any ArgumentException as a normal save failure and only Debug.WriteLines it" - decided in the slice (see check pass 2 note 3).
+- Skipped #4 (`reviews/s298-medium.md`): "NotifyScrollStarted allocates ToArray copy and RemoveAll on every scroll start" - low (see check pass 2 note 5).
+- Not applied #5 (`reviews/s298-medium.md`): "also removes suppression for a hold release still in flight" - origin/main behaviour kept (item 5 was dropped).
+- Not applied #6 (`reviews/s298-medium.md`): "Flow taps BookSheetReorder (not a 1 s pointer hold)" - item 5 was dropped, so the close-tap flow is gone from the build (Built 5: no close-tap flow).
 
 *s298-check1.md (8):*
-- 1, 2, 8 (CloseReorder swallow / `_suppressTapUntil` handling): not applied, item 5 dropped, origin/main behaviour kept.
+- Not applied #1 (`reviews/s298-check1.md`): "CloseReorder arms a 1500 ms swallow when closing within 800 ms of a hold-open" - item 5 dropped, origin/main behaviour kept.
+- Not applied #2 (`reviews/s298-check1.md`): "OnOpenRequested (keyboard/Enter open) calls TakeSwallowNextOpen" - item 5 dropped, origin/main behaviour kept.
+- Not applied #8 (`reviews/s298-check1.md`): "CloseReorder sets _suppressTapUntil = 0 unconditionally" - item 5 dropped, origin/main behaviour kept.
 - 3 (Fired hold swallows the next tap after a scroll): addressed by the 500 ms swallow expiry.
 - 4 (`_drag.Reset()` in the rebuild path): applied, `Reset` only in `Close` (Built, 3 drag session).
 - 5 (no expiry on UndoneAwaitingDrop): applied, 1000 ms late-drop window.
 - 6 (non-GUID id makes Done fail): no change, every shelf id passes `StoryIds.IsValid` (Built, 2 check pass 1 note).
-- 7 (`TileOverlay` O(n) lists): skipped, low.
+- Skipped #7 (`reviews/s298-check1.md`): "Register/Unregister do O(n) RemoveAll per Loaded/Unloaded" - low.
 
-*s298-check2.md (7):* findings 1-7 are recorded above under *Review notes (check pass 2)*: 6 applied, 1-5 and 7 skipped with reasons.
+*s298-check2.md (7):* #6 applied (the 500 ms swallow expiry, check pass 2 note 6); the rest are one line each, with the reasons also under *Review notes (check pass 2)*.
+- Skipped #1 (`reviews/s298-check2.md`): "1000 ms late-drop window is a guess; if Drop arrives later on Windows the dropped order reverts silently" - decided in the slice.
+- Skipped #2 (`reviews/s298-check2.md`): "a stray Drop within 1 s re-applies the mid-drag order and undoes the cancel (flicker)" - the 1 s late-drop window is the decided trade-off.
+- Skipped #3 (`reviews/s298-check2.md`): "catching ArgumentException around whole save hides unrelated argument bugs" - decided in the slice (the catch stays; ids reaching the gallery are valid).
+- Skipped #4 (`reviews/s298-check2.md`): "MergeShown uses result.Contains (linear) inside a loop" - trivial.
+- Skipped #5 (`reviews/s298-check2.md`): "Register/Unregister mutate it unsynchronised and rescan fully" - low (the weak list is small and only touched on the UI thread).
+- Skipped #7 (`reviews/s298-check2.md`): "old recognizers' DropCompleted applies stale _before to rebuilt entries" - the old recognizer's Completed restores the pre-drag id order, which is the right order for the rebuilt entries.
 
-*s298-check3.md (7), all skipped, low:*
-- 1 (Fired hold keeps swallowing after a scroll with no Release): skipped, low; platform Press/Tapped ordering not confirmed, and the next Press clears it.
-- 2 (Release after a scroll-interrupted fired hold arms a 500 ms swallow): skipped, low; a quick tap on the same cover within 500 ms is the cost.
-- 3 (Drop later than 1000 ms is discarded): skipped, the window is the decided trade-off.
-- 4 (late Drop re-applies the order with EndVisual=false): skipped, low, unconfirmed on a device.
-- 5 (`TileOverlay` static list, no thread guard, O(n) scan): skipped, low (UI-thread only).
-- 6 (non-GUID id makes every Done fail): skipped, no such id reaches the shelf.
-- 7 (`MergeShown` dedup count cosmetic): skipped, cosmetic.
+*s298-check3.md (7), all low and unchanged:*
+- Skipped #1 (`reviews/s298-check3.md`): "Platform Press/Tapped ordering not checked" - low; not confirmed, and the next Press clears it.
+- Skipped #2 (`reviews/s298-check3.md`): "A Release after a scroll-interrupted fired hold arms a fresh 500 ms swallow though no tap is expected" - low; a quick tap on the same cover within 500 ms is the cost.
+- Skipped #3 (`reviews/s298-check3.md`): "A Drop arriving more than 1000 ms after Completed is discarded after the old order was restored" - the window is the decided trade-off.
+- Skipped #4 (`reviews/s298-check3.md`): "the late Drop re-applies the dropped order with EndVisual=false, possibly flickering/mis-slotting" - low, unconfirmed on a device.
+- Skipped #5 (`reviews/s298-check3.md`): "list mutated from Loaded/Unloaded/scroll callbacks with no thread guard" - low (UI-thread only).
+- Skipped #6 (`reviews/s298-check3.md`): "a sample/legacy book would make every reorder Done fail" - no such id reaches the shelf.
+- Skipped #7 (`reviews/s298-check3.md`): "the dedup hides an upstream duplicate" - cosmetic.
 
 **Device (emulator, 2026-11-07, build key fdc0f216b731):** flows first-run, shelf-reorder (open from sheet, Cancel, Done, order survives restart), shelf-audio-on-start and dino-landscape-shelf all PASS. Logs: `D:/ReadTheStupidText-worktrees/reviews/s298-emu/`.
 

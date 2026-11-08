@@ -22,18 +22,19 @@
 - Item 4: no code change (`PlaceButtons` resets rows and columns); pinned by a source test.
 
 *From review* (files in `D:/ReadTheStupidText-worktrees/reviews/`): high 2, 3, 4, 5, 7, 8 applied; medium 2, 3, 6 applied; check1 1, 2, 3 applied; check2 1-5 all low, none applied.
-- Skipped #1 (`reviews/s297-high.md`): "make VoiceToCount a sealed class or use ReferenceEquals"
-- Skipped #6 (`reviews/s297-high.md`): "only counts `SetCell(` substrings"
-- Skipped #1 (`reviews/s297-medium.md`): "under-reported until a later piece plays"
-- Skipped #4 (`reviews/s297-medium.md`): "tests assert on source-text positions"
-- Skipped #5 (`reviews/s297-medium.md`): "Intended tradeoff, low risk"
-- Skipped #4 (`reviews/s297-check1.md`): "odd layouts may hide overlaps"
-- Skipped #5 (`reviews/s297-check1.md`): "Get-LayoutProblems throws on a malformed dump"
-- Skipped #1 (`reviews/s297-check2.md`): "arguably right; add a Volatile.Read"
-- Skipped #2 (`reviews/s297-check2.md`): "stale record can linger until the next Clear"
-- Skipped #3 (`reviews/s297-check2.md`): "safe today because main-thread only"
-- Skipped #4 (`reviews/s297-check2.md`): "could misclassify a demo read if it changed in between"
-- Skipped #5 (`reviews/s297-check2.md`): "no test drives Take + Stop + hop"
+- Partly applied high #8 (`reviews/s297-high.md`): "carry reading language (and demo flag) in the pending record" - the language is carried; the demo flag is not (the fixer left it out: the session has no demo notion, so the page reads `_demoRead` while subscribed). A read whose demo state changes between the first clip and the count is classified by the page's value at that moment (check 2 #4).
+- Skipped #1 (`reviews/s297-high.md`): "make VoiceToCount a sealed class or use ReferenceEquals" - low; "harmless today since ReadId is unique" (the same review file).
+- Skipped #6 (`reviews/s297-high.md`): "only counts `SetCell(` substrings" - low; item 4 needed no code change (`PlaceButtons` resets rows and columns), and the test only pins that.
+- Skipped #1 (`reviews/s297-medium.md`): "under-reported until a later piece plays" - the count is deliberately tied to the first played clip (item 1), so a book whose clips all fail counts nothing.
+- Skipped #4 (`reviews/s297-medium.md`): "tests assert on source-text positions" - low; accepted, the behaviour of the pending record is unit-tested separately.
+- Skipped #5 (`reviews/s297-medium.md`): "Intended tradeoff, low risk" - the review's own verdict on the scrim rule (item 3).
+- Skipped #4 (`reviews/s297-check1.md`): "odd layouts may hide overlaps" - low; the same accepted tradeoff as medium #5.
+- Skipped #5 (`reviews/s297-check1.md`): "Get-LayoutProblems throws on a malformed dump" - low-medium; no reason was recorded when it was left (feedback loop 2026-11-07-1412, entry 1098), so it stays open for the next layout-check change.
+- Skipped #1 (`reviews/s297-check2.md`): "arguably right; add a Volatile.Read" - the clip did play, so counting the read is arguably right.
+- Skipped #2 (`reviews/s297-check2.md`): "stale record can linger until the next Clear" - Take is keyed by the read id, so a stale record is never counted wrongly.
+- Skipped #3 (`reviews/s297-check2.md`): "safe today because main-thread only" - not a defect now.
+- Skipped #4 (`reviews/s297-check2.md`): "could misclassify a demo read if it changed in between" - low; the known demo-flag limit in the first line above.
+- Skipped #5 (`reviews/s297-check2.md`): "no test drives Take + Stop + hop" - all check 2 findings are low and optional (the review's wording).
 
 *Verified:* DinoReader.Tests 3875 pass; `test-layout-check.ps1` passes on pwsh and Windows PowerShell 5.1; Android Debug and iOS compile 0 errors. Emulator (build e84ff515add9): `premade-audio-plays` PASS with the log "[AudioPack] first clip plays, the voice is counted (book d81e..., reading en)" right after the clip start; `first-run` PASS; `wizard-layout-record-large-font` (layout-check) PASS. Logs in `reviews/wave40-device/s297/`.
 

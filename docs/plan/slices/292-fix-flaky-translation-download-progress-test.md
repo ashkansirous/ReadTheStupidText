@@ -25,11 +25,12 @@
 *Changed while building:* item 2 (the `IProgress<T>` constructor seam) was not needed: waiting on the real `Changed` event exercises the real `Progress<double>`, so there is no production change.
 
 *From review:* high (`reviews/s292-high.md`, 4 findings) and medium (`reviews/s292-medium.md`, 3 findings), all low, none applied.
-- High 1 and medium 1 (the `IsCompletedSuccessfully` assertion cannot fail on its own; a missing progress shows as a timeout or download-failed exception): skipped, the test is still correct and fails either way, only the message is weaker.
-- High 2 (a regression that stops progress reports shows as "download failed" after the 5 s wait): skipped, same reason.
+- Skipped high #1 (`reviews/s292-high.md`): "can never fail on its own" - the test is still correct and fails either way (a timeout or download-failed exception), only the message is weaker.
+- Skipped medium #1 (`reviews/s292-medium.md`): "only checks the handler's own flag" - same reason as high #1.
+- Skipped high #2 (`reviews/s292-high.md`): "after a 5 s wait, since TryAttemptAsync swallows the attempt's TimeoutException as a generic attempt failure" - same reason, the test fails either way.
 - High 3 and medium 3 (the 200-run loop is not recorded): handled by the 25-run result above and *Not yet verified* below; item 2 is marked not needed.
-- High 4 (Touches line lists the unchanged production file): skipped, left as planned.
-- Medium 2 (exact `== 0.4` in the `Changed` handler, `>= 0.4` would be sturdier): skipped, 0.4 is the exact value the test itself reports.
+- Skipped high #4 (`reviews/s292-high.md`): "which the diff does not change" - the Touches line was left as planned.
+- Skipped medium #2 (`reviews/s292-medium.md`): "Passes today (Math.Clamp returns 0.4)" - 0.4 is the exact value the test itself reports.
 
 #### Not yet verified
 

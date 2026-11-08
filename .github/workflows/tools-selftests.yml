@@ -163,6 +163,16 @@ jobs:
       - name: Switch-parameter assignment self-test (${{ matrix.shell }})
         run: ./tools/test-switch-param-assign.ps1
 
+      # Slice 315: Maestro's tmp<digits>.apk cleanup (item 1), no duplicate function names in tools/phone (item 27), the CI-form runner (item 7).
+      - name: Maestro temp APK cleanup self-test (${{ matrix.shell }})
+        run: ./tools/emulator/test-maestro-temp-apks.ps1
+
+      - name: Phone duplicate function name self-test (${{ matrix.shell }})
+        run: ./tools/phone/test-duplicate-functions.ps1
+
+      - name: CI-form runner self-test (${{ matrix.shell }})
+        run: ./tools/test-run-selftests-ci-form.ps1
+
       # Slice 225 item 17: PowerShell lint. PSScriptAnalyzer is installed on demand; PSScriptAnalyzerSettings.psd1 holds the baseline (rules that fire by design are off).
       # Any Error-level finding and any parse error (checked with the shell's own parser, so PowerShell 7-only syntax fails the Windows PowerShell 5.1 leg) fails the job, except the one baseline
       # entry: that rule in that one file (the VM password helper reads a local secret). Warnings are annotated, not failing.
