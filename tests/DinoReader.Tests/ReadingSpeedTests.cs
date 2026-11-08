@@ -5,9 +5,15 @@ namespace DinoReader.Tests;
 public class ReadingSpeedTests
 {
     [Fact]
-    public void The_default_is_eight_tenths()
+    public void The_default_is_normal_speed()
     {
-        Assert.Equal(0.8, ReadingSpeed.DefaultRate.Value);
+        Assert.Equal(1.0, ReadingSpeed.DefaultRate.Value);
+    }
+
+    [Fact]
+    public void The_default_is_inside_the_range_and_on_a_step()
+    {
+        Assert.Equal(ReadingSpeed.Default, ReadingSpeed.Clamp(ReadingSpeed.Default).Value);
     }
 
     [Theory]

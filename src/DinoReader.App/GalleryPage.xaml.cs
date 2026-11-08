@@ -110,7 +110,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		_reorder.CancelRequested += CancelReorder;
 	}
 
-	// The same list as the reading page (88): one pick for all books, remembered. The shelf titles stay in the app language.
+	// The same list as the reading page (88): one pick for all books, remembered. The tile titles follow it (Slice 323, Decision 173).
 	private async Task OpenLanguageMenuAsync()
 	{
 		await _busy.RunAsync(async () =>
@@ -128,6 +128,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 			StoryLanguages.SetPick(picked);
 			_services.GetRequiredService<UsageCounter>().RecordGeneral(UsageEventName.StoryLanguageSwitched, picked);
 			ApplyLanguageButton();
+			_ = RequestShelfCheckAsync();
 		});
 	}
 
@@ -136,9 +137,101 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	{
 		StoryLanguageSet set = StoryLanguages.Current();
 		IReadOnlyList<string> choosable = ChoosableLanguages(set);
-		_languageButton.IsVisible = !_mode.IsGrownUp && choosable.Count >= 2;
-		string pick = StoryLanguages.Pick();
-		_languageButton.SetLanguage(LanguagePick.ShelfShown(choosable, pick, set.Main));
+		_languageButton.IsVisible = LanguagePick.ShelfButtonShown(_mode.IsGrownUp, choosable);
+		_languageButton.SetLanguage(LanguagePick.ShelfShown(choosable, StoryLanguages.Pick(), set.Main));
+	}
+
+	private bool _pageAppeared; // the first appearing started; before it a check-only trigger never builds the first shelf
+	private bool _shelfStale; // the last build failed: the next trigger of any kind rebuilds
+	private string? _shelfTitleLanguage; // the language the tile titles were built in (Slice 323); set only after a build finished, so a failed one is tried again
+	private Task<bool> _refreshLoop = Task.FromResult(true);
+	private bool _rebuildRequested; // a trigger that rebuilds whatever the languages are
+	private bool _checkRequested; // a trigger that rebuilds only when a language changed
+	private bool _callerReportsFailure; // the requester of this pass reports a failed build in its own words, so the loop stays quiet
+	private bool _refreshCancelled; // a rebuild was cancelled by the gallery's teardown: not a failure, the loop ends
+
+	// The one shelf refresh path (Slice 323): every trigger (appearing, library change, staged update, mode, pick, pack change) comes here. It records the request and starts the loop when none runs,
+	// so builds never overlap and a trigger raised during a build is served by the next pass. The returned task ends when the loop has drained; a check-only request (force false) is skipped by the
+	// loop when the languages the tiles were built in are still the current ones.
+	// The task's result is false when the shelf is still stale after the loop drained (a rebuild failed); a cancel is not a failure.
+	private Task<bool> RequestShelfRefresh(bool force, bool callerReportsFailure = false)
+	{
+		_rebuildRequested |= force;
+		_callerReportsFailure |= callerReportsFailure;
+		_checkRequested = true;
+		if (_refreshLoop.IsCompleted)
+		{
+			_refreshLoop = RunRefreshLoopAsync();
+		}
+
+		return _refreshLoop;
+	}
+
+	// The loop never lets an exception out (Slice 323): each rebuild is wrapped once in TryRebuildShelfAsync, a failure marks the shelf stale, and every joiner just awaits a task that completes.
+	// A trigger raised during a failed build is served by the next pass (one immediate retry); a second failure in a row waits for the next trigger.
+	private async Task<bool> RunRefreshLoopAsync()
+	{
+		int failedInARow = 0;
+		_refreshCancelled = false;
+		while ((_rebuildRequested || _checkRequested) && failedInARow < MaxRebuildAttempts && !_refreshCancelled)
+		{
+			bool force = _rebuildRequested;
+			_rebuildRequested = false;
+			_checkRequested = false;
+			if (!force && !_shelfStale && !ShelfRefreshRule.ShouldRebuild(_shelfLanguage, _shelfTitleLanguage, LanguageChoice.Current(), ShelfTitleLanguage(), _pageAppeared))
+			{
+				continue;
+			}
+
+			failedInARow = await TryRebuildShelfAsync() ? 0 : failedInARow + 1;
+		}
+
+		_callerReportsFailure = false;
+		return _refreshCancelled || !_shelfStale; // flags still set after two failures stay set: the next trigger of any kind serves them
+	}
+
+	private const int MaxRebuildAttempts = 2;
+
+	private async Task<bool> TryRebuildShelfAsync()
+	{
+		try
+		{
+			await RebuildShelfAsync();
+			_shelfStale = false;
+			return true;
+		}
+		catch (OperationCanceledException)
+		{
+			// no-fallback: a wait cancelled by the gallery's teardown is not a failure; the shelf stays stale and the loop ends without a retry
+			_shelfStale = true;
+			_refreshCancelled = true;
+			return false;
+		}
+		catch (Exception ex)
+		{
+			_shelfStale = true; // the next trigger of any kind rebuilds, even a check-only one
+			Debug.WriteLine($"Dino Reader gallery refresh failed: {ex}");
+			if (!_callerReportsFailure)
+			{
+				DinoFallbacks.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // Slice 323: the shelf keeps what it showed and is rebuilt on the next trigger
+			}
+			return false;
+		}
+	}
+
+	// A trigger nobody waits for. RequestShelfRefresh never faults, so it needs no catch.
+	private async Task RequestShelfCheckAsync() => await RequestShelfRefresh(false);
+
+	// A book is named the same way on its tile, its sheet and its delete prompt (Slice 323): the title its tile shows; a book not on the shelf is named by the same rule.
+	private string ShelfTitleOf(Story story) =>
+		_items.OfType<StoryTile>().FirstOrDefault(tile => tile.Story.Id == story.Id)?.Title
+		?? _services.GetRequiredService<StoryTranslator>().ShelfTitle(story, ShelfTitleLanguage());
+
+	// The tile titles' language right now (Slice 323).
+	private string ShelfTitleLanguage()
+	{
+		StoryLanguageSet set = StoryLanguages.Current();
+		return LanguagePick.ShelfTitles(_mode.IsGrownUp, ChoosableLanguages(set), StoryLanguages.Pick(), set.Main);
 	}
 
 	// The child can pick only a language whose audio is installed for a book on the shelf (Slice 173): a download starts from Settings or the intro, behind the gate. The one rule and the one
@@ -147,7 +240,11 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		_services.GetRequiredService<ShelfAudioPacks>().ShelfLanguages(set);
 
 	// Changed is raised on the main thread; the snapshot is already updated.
-	private void OnShelfAudioChanged(object? sender, EventArgs e) => ApplyLanguageButton();
+	private void OnShelfAudioChanged(object? sender, EventArgs e)
+	{
+		ApplyLanguageButton();
+		_ = RequestShelfCheckAsync();
+	}
 
 	protected override async void OnAppearing()
 	{
@@ -178,7 +275,8 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		{
 			// The starters are on the shelf before the first list is read (Slice 91); a later call is a no-op.
 			await _starters.InstallOnceAsync();
-			await RefreshAsync();
+			_pageAppeared = true; // only now may a check-only trigger build a first shelf
+			await RequestShelfRefresh(true); // forced on every appearing, so a stale shelf heals here
 			await ResumeIntroAsync();
 			await ReopenSheetAfterRecordAsync(reopenSheetFor);
 		}
@@ -289,10 +387,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 			do
 			{
 				_stagedRefreshAgain = false;
-				if (!await TryRefreshAfterStagedUpdateAsync())
-				{
-					break; // cancelled (the gallery went away): no further pass
-				}
+				await RefreshAfterStagedUpdateAsync();
 			}
 			while (_stagedRefreshAgain); // a failed pass still gets the pass a later signal asked for
 		}
@@ -302,28 +397,14 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		}
 	});
 
-	// False only when the refresh was cancelled. Nothing escapes (this runs on a background-triggered path and would crash the app); the shelf stays as it was until the next refresh.
-	private static async Task<bool> TryRefreshAfterStagedUpdateAsync(Func<Task> refresh)
+	// RequestShelfRefresh never throws and reports its own failure; this caller keeps the event Slice 313 counts: a rebuild that left the shelf stale is an UpdateCheckFailed. The shelf stays as it was until the next refresh.
+	private async Task RefreshAfterStagedUpdateAsync()
 	{
-		try
+		if (!await RequestShelfRefresh(true, callerReportsFailure: true))
 		{
-			await refresh();
-			return true;
-		}
-		catch (OperationCanceledException)
-		{
-			// no-fallback: a refresh cancelled by the gallery's teardown is not a failure
-			return false;
-		}
-		catch (Exception ex)
-		{
-			Debug.WriteLine($"Dino Reader gallery refresh after a book update failed: {ex}");
 			DinoFallbacks.Report(FallbackArea.Store, FallbackReason.UpdateCheckFailed); // Slice 313
-			return true;
 		}
 	}
-
-	private Task<bool> TryRefreshAfterStagedUpdateAsync() => TryRefreshAfterStagedUpdateAsync(RefreshAsync);
 
 	private bool _stagedRefreshRunning;
 	private bool _stagedRefreshAgain;
@@ -331,15 +412,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	// A store download can finish on a background thread while the gallery shows; reload the list on the UI thread (Slice 92).
 	private void OnLibraryChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(async () =>
 	{
-		try
-		{
-			await RefreshAsync();
-		}
-		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-		{
-			// no-fallback: logged only; the shelf stays as it was until the next refresh
-			Debug.WriteLine($"Dino Reader gallery refresh failed: {ex}");
-		}
+		await RefreshShelfAsync();
 	});
 
 	// The tiles follow the mode through their binding; only the Add entry and the chrome change here.
@@ -362,10 +435,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 
 	private void ApplyMode()
 	{
-		if (_shelfLanguage is not null && _shelfLanguage != LanguageChoice.Current())
-		{
-			_ = RefreshShelfAsync(); // the app language changed: the shelf titles (and the Add tile, rebuilt with them) follow it
-		}
+		_ = RequestShelfCheckAsync(); // the app language or the title language changed: the shelf titles (and the Add tile, rebuilt with them) follow it
 
 		ApplyTexts();
 
@@ -402,15 +472,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 
 	private async Task RefreshShelfAsync()
 	{
-		try
-		{
-			await RefreshAsync();
-		}
-		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-		{
-			// no-fallback: logged only; the shelf stays as it was until the next refresh
-			Debug.WriteLine($"Dino Reader gallery refresh failed: {ex}");
-		}
+		await RequestShelfRefresh(true); // never faults: the loop reports a failed build itself
 	}
 
 	// Slice 181: staged store updates are swapped in once per process, and the shelf is never read before that finished, whoever asks (first load, library change, resume).
@@ -439,21 +501,31 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		!_busy.IsBusy && _sheetStory is null && !BookInfo.IsVisible && !_reorder.IsVisible && Navigation.ModalStack.Count == 0
 		&& (Navigation.NavigationStack.LastOrDefault() is not { } top || top == this);
 
-	private async Task RefreshAsync()
+	private async Task RebuildShelfAsync()
 	{
 		await WaitForStagedUpdatesAsync();
 		IReadOnlyList<Story> stories = await _library.ListAsync();
 		_ = _services.GetRequiredService<ShelfAudioPacks>().RescanAsync(); // the shelf list changed: the snapshot of installed audio follows it
-		_shelfLanguage = LanguageChoice.Current();
+		string appLanguage = LanguageChoice.Current();
+		string titleLanguage = ShelfTitleLanguage();
 #if DEBUG
 		ReorderLog($"shelf order {string.Join(",", stories.Select(s => s.Id))}");
 #endif
 		_items.Clear();
 		// The Add button above the shelf replaced the Add tile (Slice 172, mock 85).
-		foreach (object item in GalleryItems.Build(stories, _library, _mode, _services.GetRequiredService<StoryTranslator>().ShelfTitle).Where(item => item is not AddStoryEntry))
+		foreach (object item in GalleryItems.Build(stories, _library, _mode, story => _services.GetRequiredService<StoryTranslator>().ShelfTitle(story, titleLanguage)).Where(item => item is not AddStoryEntry))
 		{
 			_items.Add(item);
 		}
+
+#if DEBUG
+		if (_shelfTitleLanguage is not null && _shelfTitleLanguage != titleLanguage)
+		{
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[ShelfTitles] {_shelfTitleLanguage} -> {titleLanguage}"); // the shelf-titles-follow-story-language flow's expect-log markers (RTST-TEST tag)
+		}
+#endif
+		_shelfLanguage = appLanguage; // recorded only now: a build that failed leaves them stale, so the next ask retries
+		_shelfTitleLanguage = titleLanguage;
 
 		ApplyModeChrome(_mode.IsGrownUp);
 	}
@@ -993,7 +1065,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	{
 		BookOrigin origin = BookOrigins.Of(story);
 		StoryTile tile = StoryTile.From(story, _library, _mode);
-		string title = _services.GetRequiredService<StoryTranslator>().ShelfTitle(story);
+		string title = ShelfTitleOf(story);
 		var plan = BookSheetPlan.For(origin, StoryRecordings.Count(story) > 0, DeveloperMode.Enabled);
 		return new BookSheet.Content(title, BookOrigins.Label(origin), tile.CoverImagePath, tile.CoverFill, plan, Voice: null);
 	}
@@ -1164,7 +1236,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		await _sheetSaveLock.WaitAsync();
 		try
 		{
-			DeleteOutcome outcome = await _actions.ConfirmDeleteAsync(this, story, RemovePrompt(story, _services.GetRequiredService<StoryTranslator>().ShelfTitle(story)));
+			DeleteOutcome outcome = await _actions.ConfirmDeleteAsync(this, story, RemovePrompt(story, ShelfTitleOf(story)));
 			if (outcome == DeleteOutcome.Declined)
 			{
 				return;
@@ -1276,7 +1348,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		{
 			if (DeveloperMode.RegisterTap())
 			{
-				await RefreshAsync();
+				await RequestShelfRefresh(true);
 			}
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

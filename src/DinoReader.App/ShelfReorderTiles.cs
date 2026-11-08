@@ -80,7 +80,7 @@ internal static class ShelfReorderTiles
 		var cover = new StoryCover { BindingContext = tile, InputTransparent = true, AutomationId = "ReorderCover" };
 		var title = new Label
 		{
-			Text = tile.Title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, LineHeight = 1.25, MaxLines = 2,
+			Text = tile.Title, FontFamily = tile.TitleFont, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, LineHeight = 1.25, MaxLines = 2,
 			LineBreakMode = LineBreakMode.TailTruncation, HeightRequest = titleHeight, InputTransparent = true, AutomationId = "ReorderTileTitle",
 		};
 		var view = new Grid { RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto)], RowSpacing = titleSpacing, AutomationId = "ReorderTile", FlowDirection = FlowDirection.LeftToRight };
