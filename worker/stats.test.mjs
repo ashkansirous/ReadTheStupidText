@@ -15,6 +15,7 @@ function fakeDb(seed = [], failDay = null) {
   const meta = new Map();
   const rollupDays = new Map();
   const calls = [];
+  const callArgs = [];
   const ops = { count: 0 };
   const statement = (sql) => ({
     sql,
@@ -50,11 +51,13 @@ function fakeDb(seed = [], failDay = null) {
     meta,
     rollupDays,
     calls,
+    callArgs,
     ops,
     prepare: (sql) => statement(sql),
     async batch(statements) {
       ops.count += 1;
       calls.push(statements.map((s) => s.sql));
+      callArgs.push(statements.map((s) => s.args));
       if (statements.length === 1 && statements[0].sql.includes("INTO rollup_days")) {
         if (failDay !== null && statements[0].args[0] === failDay) throw new Error("D1 down");
         rollupDays.set(statements[0].args[0], statements[0].args[1]);
@@ -464,6 +467,25 @@ test("every stats path in run_worker_first is a page or a redirect on the Dino h
       assert.ok(redirect !== null || served, `${host}${path} is neither redirected nor served`);
     }
   }
+});
+
+test("without a book filter the series and book totals leave the own bucket out (bound, not inlined); an explicit own filter still reads it", async () => {
+  const all = fakeDb();
+  await handleStats(url("from=2026-11-01&to=2026-11-11"), { STATS: all });
+  const [series, books] = all.calls.at(-1);
+  const [seriesArgs, bookArgs] = all.callArgs.at(-1);
+  assert.match(series, /book != ?/);
+  assert.match(books, /book != ?/);
+  assert.doesNotMatch(series + books, /'own'/);
+  assert.equal(seriesArgs.at(-1), "own");
+  assert.equal(bookArgs.at(-1), "own");
+  const own = fakeDb();
+  await handleStats(url("from=2026-11-01&to=2026-11-11&book=own"), { STATS: own });
+  const [ownSeries, ownBooks] = own.calls.at(-1);
+  assert.match(ownSeries, /book = ?/);
+  assert.doesNotMatch(ownSeries, /book != /);
+  assert.doesNotMatch(ownBooks, /book != /, "with the own filter the book totals read the own bucket too, so rows agree with the chart");
+  assert.equal(own.callArgs.at(-1)[0].at(-1), "own");
 });
 
 test("/stats is a Dino page on both hosts' mapping", () => {

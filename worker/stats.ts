@@ -27,7 +27,8 @@ const ALLOWED_PARAMS: readonly string[] = ["from", "to", "group", "platform", "b
 const GROUPS = ["day", "week", "month"] as const;
 type Group = (typeof GROUPS)[number];
 const DAY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
-const BOOK_PATTERN = /^([0-9a-f]{32}|own)$/;
+const OWN_BOOK = "own";
+const BOOK_PATTERN = new RegExp(`^([0-9a-f]{32}|${OWN_BOOK})$`);
 const MONDAY_OFFSET = 6;
 const DAYS_IN_WEEK = 7;
 
@@ -152,11 +153,15 @@ function placeholders(count: number): string {
 function readStatements(db: D1Database, query: StatsQuery): D1PreparedStatement[] {
   const range = [query.from, query.to];
   const where = `day BETWEEN ? AND ? AND platform IN (${placeholders(query.platforms.length)})`;
-  const bookClause = query.book === null ? "" : " AND book = ?";
-  const seriesArgs = [...range, ...query.platforms, ...(query.book === null ? [] : [query.book])];
+  // Own books are not counted anywhere on the dashboard (mock note "Filters"): unless the own bucket itself is asked for, the series and the book totals both leave it out, so tiles, chart and rows agree.
+  const ownAsked = query.book === OWN_BOOK;
+  const seriesClause = query.book === null ? " AND book != ?" : " AND book = ?";
+  const seriesArgs = [...range, ...query.platforms, query.book ?? OWN_BOOK];
+  const totalsClause = ownAsked ? "" : " AND book != ?";
+  const totalsArgs = [...range, ...query.platforms, ...(ownAsked ? [] : [OWN_BOOK])];
   return [
-    db.prepare(`SELECT day, platform, metric, SUM(value) AS value FROM daily_stats WHERE ${where}${bookClause} GROUP BY day, platform, metric`).bind(...seriesArgs),
-    db.prepare(`SELECT book, metric, SUM(value) AS value FROM daily_stats WHERE ${where} GROUP BY book, metric`).bind(...range, ...query.platforms),
+    db.prepare(`SELECT day, platform, metric, SUM(value) AS value FROM daily_stats WHERE ${where}${seriesClause} GROUP BY day, platform, metric`).bind(...seriesArgs),
+    db.prepare(`SELECT book, metric, SUM(value) AS value FROM daily_stats WHERE ${where}${totalsClause} GROUP BY book, metric`).bind(...totalsArgs),
     db.prepare("SELECT value FROM meta WHERE key = ?").bind(META_LAST_RUN),
     db.prepare("SELECT MIN(day) AS day FROM daily_stats"),
     db.prepare("SELECT DISTINCT platform FROM daily_stats WHERE value > 0"),
