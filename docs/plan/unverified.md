@@ -4,6 +4,18 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 Each line starts with what it needs: **Android** (a scripted emulator run), **iOS** (an iPhone, a Mac or TestFlight), **Windows** (the VM or the desktop), **Live** (a live event, outside hardware or the user's ear), **Logs** (production analytics can prove it once enough rows arrive). Triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)).
 
+### Slice 315: Feedback loop 2026-11-07-1412 leftovers ([slice](slices/315-feedback-loop-2026-11-07-1412-leftovers.md))
+- **Live:** The first night with the disk-free preflight and the `died`-status trace (items 2 and 3).
+
+### Slice 291: Store listings and screenshots for both apps ([slice](slices/291-store-listings-and-screenshots.md))
+- **Live:** A native speaker reads the translated Microsoft Store notes and usage-counts bullets in `de es fr pt ar fa ja ru zh` before the Partner Center push.
+
+### Slice 287: Dino: a public usage dashboard at dinoreader.sirous.uk/stats ([slice](slices/287-dino-usage-dashboard.md))
+- **Live:** Yesterday's downloads equal an `analytics-query` count per platform.
+- **Live:** A private-window open of the public page shows it.
+- **Live:** The first real cron run: the `json_each` insert on real D1, and the 9 hourly runs that backfill.
+- **Live:** The page side by side with mock frame 200 at 1280 (the mock's `support.js` is not in the repo, so it could not be rendered).
+
 ### Slice 282: Dino: an Alexa kid skill that reads the store books ([slice](slices/282-dino-alexa-kid-skill.md))
 - **Live:** Everything on a real Echo: open, list, read, pause, resume after a minute, next, stop.
 - **Live:** A real signed Alexa request passing verification live.

@@ -24,7 +24,7 @@
 *From review* (files in `D:/ReadTheStupidText-worktrees/reviews/`): high 2, 3, 4, 5, 7, 8 applied; medium 2, 3, 6 applied; check1 1, 2, 3 applied; check2 1-5 all low, none applied.
 - Partly applied high #8 (`reviews/s297-high.md`): "carry reading language (and demo flag) in the pending record" - the language is carried; the demo flag is not (the fixer left it out: the session has no demo notion, so the page reads `_demoRead` while subscribed). A read whose demo state changes between the first clip and the count is classified by the page's value at that moment (check 2 #4).
 - Skipped #1 (`reviews/s297-high.md`): "make VoiceToCount a sealed class or use ReferenceEquals" - low; "harmless today since ReadId is unique" (the same review file).
-- Skipped #6 (`reviews/s297-high.md`): "only counts `SetCell(` substrings" - low; item 4 needed no code change (`PlaceButtons` resets rows and columns), and the test only pins that.
+- Skipped #6 (`reviews/s297-high.md`): "test only counts" `SetCell(` substrings - low; item 4 needed no code change (`PlaceButtons` resets rows and columns), and the test only pins that.
 - Skipped #1 (`reviews/s297-medium.md`): "under-reported until a later piece plays" - the count is deliberately tied to the first played clip (item 1), so a book whose clips all fail counts nothing.
 - Skipped #4 (`reviews/s297-medium.md`): "tests assert on source-text positions" - low; accepted, the behaviour of the pending record is unit-tested separately.
 - Skipped #5 (`reviews/s297-medium.md`): "Intended tradeoff, low risk" - the review's own verdict on the scrim rule (item 3).

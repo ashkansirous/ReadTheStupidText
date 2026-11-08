@@ -1,6 +1,6 @@
 # Slice 291 — Store listings and screenshots for both apps on Play, App Store and Microsoft Store
 
-*In progress (wave 2026-11-08), draft PR: item 2 and the repo listing text of items 1 and 3 only (no store push, no screenshots); the rest stays open.* **Wave scope (2026-11-08):** this wave's PR touches only `docs/store-listings/**`, `site/dino/privacy.html`, `site/dino/index.html` (same age range) and this file. **Park note (2026-11-07, night run wave 5):** parked: the Play "Manage store presence" grant (user: later) and the App Store legal values (user: not tonight), per the User answers 2026-11-07. Blocks pushing the listings. Store text and images, no app code. Moves the listing bullets out of plan.md's *Outstanding work* (the Play "out of date" bullet, the App Store go-live bullet, the stale RTST Microsoft Store English listing from Slice 193's live read, the Slice 194 screenshot retake).
+*In progress (wave 2026-11-08), PR #941 merged (08e1d63a): item 2 and the repo listing text of items 1 and 3 only (no store push, no screenshots); the rest stays open.* **Wave scope (2026-11-08):** this wave's PR touches only `docs/store-listings/**`, `site/dino/privacy.html`, `site/dino/index.html` (same age range) and this file. **Park note (2026-11-07, night run wave 5):** parked: the Play "Manage store presence" grant (user: later) and the App Store legal values (user: not tonight), per the User answers 2026-11-07. Blocks pushing the listings. Store text and images, no app code. Moves the listing bullets out of plan.md's *Outstanding work* (the Play "out of date" bullet, the App Store go-live bullet, the stale RTST Microsoft Store English listing from Slice 193's live read, the Slice 194 screenshot retake).
 
 **Touches:** `docs/store-listings/**`, `STORE.md`, `site/dino/privacy.html`, `site/dino/index.html`, `.github/workflows/store-screenshots.yml` (new: macOS simulator screenshots), `tools/emulator/screenshot-frames.json`, `tools/desktop-vm/checks/rtst-panel-screenshot.ps1`, `docs/plan/slices/291-store-listings-and-screenshots.md`
 
@@ -35,7 +35,7 @@
 - Applied #1: `de.md` now has its own Microsoft Store download note (translation of `en.md`) and its stale "left out" drafting note is rewritten.
 - Applied #2: the "no analytics" bullet in `es ar fa fr ja pt ru zh` is replaced by "no account" plus the optional anonymous usage counts bullet from `en.md` (my own translation).
 - Skipped #3 (`reviews/pr-941-check1-medium.md`): "effective date bumped to 8 November 2026 though only the age range changed" - the age range is policy text, so the effective date moves with it
-- Skipped #4 (`reviews/pr-941-check1-medium.md`): "\"up to about 150 MB\" not checked against real pack sizes" - packs.yml caps voice packs at 100 MB and Kokoro at 150 MB, an upper bound
+- Skipped #4 (`reviews/pr-941-check1-medium.md`): "not checked against real pack sizes" (the 150 MB claim) - packs.yml caps voice packs at 100 MB and Kokoro at 150 MB, an upper bound
 - Skipped #5 (`reviews/pr-941-check1-medium.md`): "new Microsoft Store notes are unreviewed machine translations meant for direct paste" - native review of the translated notes goes to Not yet verified below
 
 ## Not yet verified
