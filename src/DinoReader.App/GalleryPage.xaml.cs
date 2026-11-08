@@ -25,8 +25,6 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	private const double TabletColumnSpacing = 20; // Slice 234, mock Batch 45 frame 133: 20 across, 28 down
 	private const double TabletRowSpacing = 28;
 	private const double TabletTitleSize = 28;
-	private const double ReorderPhonePadding = 14;
-	private const double ReorderTabletPadding = 40;
 	private const long TapSuppressMilliseconds = 800;
 	private const double TabletIconSize = 52;
 	private static readonly Thickness TabletHeaderPadding = new(LandscapeLayout.TabletPortraitShelfSidePadding, 32, LandscapeLayout.TabletPortraitShelfSidePadding, 0);
@@ -44,9 +42,8 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	private readonly IServiceProvider _services;
 	private readonly BusyGuard _busy = new();
 	private readonly ShelfReorderView _reorder = new();
-	private int _reorderColumns = 3; // what the last layout pass says the reorder grid fits (ApplyShape)
-	private double _reorderSidePadding = ReorderPhonePadding;
-	private double _reorderGap = GridItemSpacing;
+	private WindowShapeSeam.ShelfGeometry _shelfGeometry = new(LandscapeLayout.PhoneShelfSidePadding, 0, LandscapeLayout.PhoneShelfSidePadding, 3, GridItemSpacing, GridItemSpacing); // the shelf list's margins, columns and gaps from the last layout pass (ApplyShape); the Reorder layer copies it (Slice 319)
+	private WindowShapeSeam.ShelfGeometry _reorderGeometry = new(LandscapeLayout.PhoneShelfSidePadding, 0, LandscapeLayout.PhoneShelfSidePadding, 3, GridItemSpacing, GridItemSpacing); // the same on the whole page (beside a rail, moved right by its width)
 	private bool _savingOrder; // Done is saving the order
 	private long _suppressTapUntil; // Environment.TickCount64: the release that ends a 1 s hold must not open a sheet
 	private readonly ObservableCollection<object> _items = [];
@@ -528,12 +525,11 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		int columns = grownUp ? corner.Columns : shelf.Columns;
 		bool tabletShelf = !grownUp && shelf.TabletUpright;
 		string key = $"{sideways}|{rail}|{corner.RailWidth}|{corner.FullRowButtons}|{columns}|{shelf.CoverHeight}|{grownUp}|{tabletShelf}|{corner.TabletUpright}";
-		ApplyShelfMargin(sideways, shelf, rail, tabletShelf); // the one thing that follows the width pixel by pixel (the 1600 dp cap on Windows); a no-op when the value is unchanged
-		// The reorder layer spans the whole page, rail included, so its columns come from the full window width, not the width left of the rail.
-		_reorderColumns = !rail ? columns : corner.TabletUpright ? LandscapeLayout.TabletPortraitShelfColumns(_windowSize.Width) : LandscapeLayout.CornerColumnsFor(_windowSize.Width);
-		_reorderSidePadding = grownUp && corner.TabletUpright ? ReorderTabletPadding : ReorderPhonePadding;
-		_reorderGap = grownUp && corner.TabletUpright ? TabletColumnSpacing : GridItemSpacing;
-		_reorder.Reshape(_reorderColumns, _reorderSidePadding, _reorderGap); // a rotation or resize while the mode is open re-fits it
+		bool roomy = tabletShelf || (DesktopTips.IsWindows && !sideways && !rail); // Slice 235 part C (frames 151, 154): a desktop shelf uses the tablet's gaps and 40 dp sides
+		_shelfGeometry = WindowShapeSeam.ShelfListGeometry(DesktopTips.IsWindows, sideways, rail, tabletShelf, _windowSize.Width, shelf.SidePadding, columns, roomy ? TabletColumnSpacing : GridItemSpacing, roomy ? TabletRowSpacing : GridItemSpacing);
+		ApplyShelfMargin(_shelfGeometry, sideways, rail); // the one thing that follows the width pixel by pixel (the 1600 dp cap on Windows); a no-op when the value is unchanged
+		_reorderGeometry = rail ? _shelfGeometry.BesideRail(corner.RailWidth) : _shelfGeometry; // the layer spans the whole page, so beside a rail it starts where the shelf list starts on the page
+		_reorder.Reshape(_reorderGeometry); // a rotation or resize while the mode is open re-fits it
 		if (key == _shapeKey)
 		{
 			return;
@@ -631,9 +627,8 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	// A phone held sideways: one row of covers that scrolls sideways, the last one cut off to say "more"; else a grid of this many columns. The first book on screen stays on screen.
 	private void ApplyShelfList(bool sideways, ShelfShape shelf, int columns, bool rail, bool tabletShelf)
 	{
-		bool roomy = tabletShelf || (DesktopTips.IsWindows && !sideways && !rail); // Slice 235 part C (frames 151, 154): a desktop shelf uses the tablet's gaps and 40 dp sides
-		double horizontalGap = roomy ? TabletColumnSpacing : GridItemSpacing;
-		double verticalGap = roomy ? TabletRowSpacing : GridItemSpacing;
+		double horizontalGap = _shelfGeometry.GapX; // the same record the Reorder layer copies, so the two gaps cannot drift
+		double verticalGap = _shelfGeometry.GapY;
 		bool wasSideways = StoryList.ItemsLayout is LinearItemsLayout;
 		_swapPhase = ScrollSwapPhase.SwapStarted;
 		_swapGeneration++;
@@ -666,7 +661,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 
 		SetResourceIfChanged(TileWidthKey, sideways ? LandscapeLayout.CoverWidth(shelf.CoverHeight) : -1.0);
 		SetResourceIfChanged(TileTitleLinesKey, sideways ? 1 : 2);
-		ApplyShelfMargin(sideways, shelf, rail, tabletShelf);
+		ApplyShelfMargin(_shelfGeometry, sideways, rail);
 
 		if (wasSideways != sideways)
 		{
@@ -677,11 +672,9 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	}
 
 	// Slice 235 part C (frame 154): on Windows the 1600 dp cap is this margin, a pure function of the PAGE width; the list is never given a maximum width or asked its own size (a layout cycle on the VM).
-	private void ApplyShelfMargin(bool sideways, ShelfShape shelf, bool rail, bool tabletShelf)
+	private void ApplyShelfMargin(WindowShapeSeam.ShelfGeometry geometry, bool sideways, bool rail)
 	{
-		bool roomy = tabletShelf || (DesktopTips.IsWindows && !sideways && !rail);
-		double side = roomy ? (DesktopTips.IsWindows ? WindowShapeSeam.ShelfSideMargin(_windowSize.Width, shelf.SidePadding) : shelf.SidePadding) : LandscapeLayout.PhoneShelfSidePadding;
-		Thickness margin = rail ? new Thickness(16, 14, 26, 0) : sideways ? new Thickness(LandscapeLayout.SidewaysInset, 0, 0, 0) : new Thickness(side, 0);
+		Thickness margin = rail ? new Thickness(geometry.Left, geometry.Top, geometry.Right, 0) : sideways ? new Thickness(geometry.Left, 0, 0, 0) : new Thickness(geometry.Left, 0, geometry.Right, 0);
 		if (StoryList.Margin != margin)
 		{
 			StoryList.Margin = margin;
@@ -808,7 +801,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		BookInfo.Hide();
 		ReorderTrace.Step("page sheet hidden");
 		_suppressTapUntil = Environment.TickCount64 + TapSuppressMilliseconds;
-		_reorder.Open(tiles, liftedId, _reorderColumns, _reorderSidePadding, _reorderGap, (double)Resources[TileTitleHeightKey]);
+		_reorder.Open(tiles, liftedId, _reorderGeometry, (double)Resources[TileTitleHeightKey]);
 		ReorderTrace.Step("page open end");
 		ReorderLog($"opened with {tiles.Count} books, lifted={liftedId ?? "none"}");
 	}

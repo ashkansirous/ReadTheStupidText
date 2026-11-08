@@ -32,9 +32,7 @@ internal sealed class ShelfReorderView : Grid
 	private readonly List<ReorderEntry> _entries = [];
 	private Border _lit = null!;
 	private ShelfOrderGrid _grid;
-	private int _columns;
-	private double _sidePadding;
-	private double _gap;
+	private WindowShapeSeam.ShelfGeometry _geometry; // copied from the shelf list (Slice 319): its margins and columns
 	private double _titleHeight;
 	private ReorderEntry? _dragged;
 	private readonly ShelfDragSession _drag = new(); // the drag's end decisions (undo on cancel, keep a landed drop, either event order) live here in Core
@@ -111,14 +109,12 @@ internal sealed class ShelfReorderView : Grid
 	}
 
 	/// <summary>Shows the mode over the gallery with <paramref name="tiles"/> in their shelf order; <paramref name="liftedId"/> starts lifted (the sheet's Reorder row).</summary>
-	public void Open(IReadOnlyList<StoryTile> tiles, string? liftedId, int columns, double sidePadding, double gap, double titleHeight)
+	public void Open(IReadOnlyList<StoryTile> tiles, string? liftedId, WindowShapeSeam.ShelfGeometry geometry, double titleHeight)
 	{
 		ReorderTrace.Step($"view open begin books={tiles.Count} lifted={liftedId is not null}");
 		ClearEntries();
 		_lastLayoutWidth = 0; // a second open at the same width, or a first show at width 0, must still lay the tiles out
-		_columns = columns;
-		_sidePadding = sidePadding;
-		_gap = gap;
+		_geometry = geometry; // the shelf's exact margins
 		_titleHeight = titleHeight;
 		_closing = false;
 		_kbIndex = -1;
@@ -128,7 +124,7 @@ internal sealed class ShelfReorderView : Grid
 		_doneLabel.Text = AppResources.Common_Done;
 		_hint.Text = AppResources.Gallery_ReorderHint;
 		SemanticProperties.SetDescription(_cancelLabel, _cancelLabel.Text);
-		_grid = ShelfOrderGrid.Fit(Math.Max(_scroll.Width, 1), columns, sidePadding, gap, gap, titleHeight, TitleSpacing);
+		_grid = FitGrid(Math.Max(_scroll.Width, 1), titleHeight);
 		_lit = ShelfReorderTiles.LitSpot(_grid.TileWidth, _grid.TileHeight - TitleSpacing - titleHeight);
 		_lit.IsVisible = false;
 		_surface.Children.Add(_lit);
@@ -194,19 +190,32 @@ internal sealed class ShelfReorderView : Grid
 	private ReorderEntry? AtSlot(int slot) => _entries.FirstOrDefault(e => e.Slot == slot);
 
 	/// <summary>Re-fits the open mode to a new window shape (a rotation or a resize); nothing when it is closed.</summary>
-	public void Reshape(int columns, double sidePadding, double gap)
+	public void Reshape(WindowShapeSeam.ShelfGeometry geometry)
 	{
-		if (!IsVisible || columns < 1 || (columns == _columns && sidePadding == _sidePadding && gap == _gap))
+		if (!IsVisible || geometry.Columns < 1)
 		{
 			return;
 		}
 
-		_columns = columns;
-		_sidePadding = sidePadding;
-		_gap = gap;
+		bool sameWholeDp = WholeDpMargins(geometry) == WholeDpMargins(_geometry);
+		_geometry = geometry; // always stored, so a later width-triggered Relayout never fits with stale exact margins
+		if (sameWholeDp)
+		{
+			return;
+		}
+
 		Relayout();
 		_lastLayoutWidth = -1; // a rotation lands here before the scroll has its new width: the next width change, however small, must lay out again
 	}
+
+	// The grid floors its tile to whole dp, so a margin that moves by a fraction (the Windows side margin follows the page width above 1600 dp) is not a new layout: only the decision to lay out again compares whole dp;
+	// the layout itself uses the shelf's exact margins. Floor, as the shelf's own tile width does.
+	private static WindowShapeSeam.ShelfGeometry WholeDpMargins(WindowShapeSeam.ShelfGeometry geometry) =>
+		geometry with { Left = Math.Floor(geometry.Left), Right = Math.Floor(geometry.Right) };
+
+	// The layer starts where the shelf list does: the shelf's own top inset when it has one (beside the rail), else one gap down.
+	private ShelfOrderGrid FitGrid(double width, double titleHeight) =>
+		ShelfOrderGrid.Fit(width, _geometry.Columns, _geometry.Left, _geometry.Right, _geometry.Top > 0 ? _geometry.Top : _geometry.GapY, _geometry.GapX, _geometry.GapY, titleHeight, TitleSpacing);
 
 	private void ToggleKeyboardLift()
 	{
@@ -241,7 +250,7 @@ internal sealed class ShelfReorderView : Grid
 	{
 		int from = _kbIndex;
 		_kbIndex = from >= 0 ? from : _entries.FirstOrDefault(e => e.Lifted)?.Slot ?? 0; // the first key shows the ring on the book already lifted, as Space would start from
-		int target = ShelfOrderKeys.Target(_kbIndex, _entries.Count, _columns, arrow);
+		int target = ShelfOrderKeys.Target(_kbIndex, _entries.Count, _geometry.Columns, arrow);
 		if (from >= 0 && target != _kbIndex && _keyboardHolding && AtSlot(_kbIndex) is { } held)
 		{
 			ApplyOrder(ShelfOrder.MoveToSlot(Order, held.Id, target));
@@ -311,7 +320,7 @@ internal sealed class ShelfReorderView : Grid
 
 		_lastLayoutWidth = _scroll.Width;
 		ReorderTrace.Step($"relayout scroll={_scroll.Width:0.##}x{_scroll.Height:0.##} surface={_surface.Width:0.##}x{_surface.Height:0.##}");
-		_grid = ShelfOrderGrid.Fit(_scroll.Width, _columns, _sidePadding, _gap, _gap, _titleHeight, TitleSpacing);
+		_grid = FitGrid(_scroll.Width, _titleHeight);
 		_surface.HeightRequest = _grid.ContentHeight(_entries.Count) + BottomRoom;
 		double coverHeight = _grid.TileHeight - TitleSpacing - _titleHeight;
 		_lit.WidthRequest = _grid.TileWidth;

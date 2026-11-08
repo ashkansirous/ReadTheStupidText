@@ -15,6 +15,7 @@ $HoldMs = 3500
 $CoverHoldMs = 1300
 $TraceFileName = 'window-trace.log'
 $VkEnter = 0x0D; $VkEscape = 0x1B
+$LayerAlignTolerancePx = 40   # layer tile against shelf tile; the bug was ~390 px
 $script:Results = @()
 
 function Get-DinoWindow {
@@ -127,6 +128,21 @@ function Get-LayerTiles {
     return $tiles
 }
 
+function Get-LeftEdge {
+    # The left edge (physical pixels) of the FIRST tile with this AutomationId: the leftmost of the topmost row (tiles within $RowBandPx of the smallest top), so a lifted or offset tile further down cannot skew it. $null when none shows.
+    param([string] $Id)
+    $RowBandPx = 20
+    $cond = New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::AutomationIdProperty, $Id)
+    $rects = @(foreach ($e in (Get-DinoWindow).FindAll($script:TreeScope::Descendants, $cond)) {
+        $r = $e.Current.BoundingRectangle
+        if (-not $r.IsEmpty) { [pscustomobject]@{ X = $r.X; Y = $r.Y } }
+    })
+    if ($rects.Count -eq 0) { return $null }
+    $top = ($rects | Measure-Object -Property Y -Minimum).Minimum
+    $row = @($rects | Where-Object { $_.Y -le $top + $RowBandPx })
+    return [int](($row | Measure-Object -Property X -Minimum).Minimum)
+}
+
 function Initialize-Shelf {
     # The check can follow flows that leave the reader open (dino-open-book, dino-page-turn): a restart lands on the shelf, and the reorder needs two books on it.
     if (-not (Find-Visible 'GalleryTitle')) {
@@ -157,8 +173,15 @@ Invoke-Check -ResultFile $ResultFile -Body {
     $order0 = Get-ShelfOrder
     if ($order0.Count -lt 2) { throw "SETUP FAILURE (not an app failure): need two books on the shelf, found $($order0.Count): $($script:Results -join ' // ')" }
     Add-Result '1-sheet-reorder' {
+        $shelfLeft = Get-LeftEdge 'StoryTile'   # read before the layer covers the shelf
         Open-Reorder-FromSheet
         Wait-ReorderOpen
+        # Slice 319: the layer copies the shelf list's geometry (WindowShapeSeam.ShelfListGeometry, moved right by the rail's width when there is a rail), so its first tile
+        # starts where the shelf's first tile did, rail or no rail (the phone padding put it ~13 px from the window edge, ~390 px left of the shelf).
+        $layerLeft = Get-LeftEdge 'ReorderTile'
+        if ($null -eq $layerLeft) { $layerLeft = Get-LeftEdge 'ReorderCover' }
+        if ($null -eq $shelfLeft -or $null -eq $layerLeft) { throw "cannot compare the layer with the shelf (shelf tile left=$shelfLeft, layer tile left=${layerLeft}: the element is not in the UIA tree)" }
+        if ([math]::Abs($layerLeft - $shelfLeft) -gt $LayerAlignTolerancePx) { throw "the reorder layer's first tile starts at x=$layerLeft but the shelf's started at x=$shelfLeft (more than $LayerAlignTolerancePx px apart: phone padding on a desktop window)" }
         Start-Sleep -Seconds 5   # fixed-wait: the brief asks for 5 s after open before reading the trace
         if (-not (Get-Process DinoReader.App -ErrorAction SilentlyContinue)) { throw 'the app died after the reorder layer opened' }
         $cyc = @(Get-TraceLines | Where-Object { $_ -match 'LayoutCycle|layout cycle' }).Count - $cycleBefore
