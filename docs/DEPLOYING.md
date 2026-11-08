@@ -179,8 +179,13 @@ deploy attaches the domain, which takes seconds; HTTPS answered within ~10 s.
 ## The Dino usage dashboard: D1 database and secret (Slice 287)
 
 `/stats` (public, no sign-in) reads the D1 table `daily_stats`, which the hourly cron (`worker/stats-rollup.ts`,
-`triggers.crons` in both wrangler configs) fills from Analytics Engine. The code ships without the D1 binding: with no
-`STATS` binding the page's API answers 503 `data_unavailable` and the cron logs `stats rollup skipped` and returns. Setup,
+`triggers.crons` in both wrangler configs) fills from Analytics Engine. With no
+`STATS` binding the page's API answers 503 `data_unavailable` and the cron logs `stats rollup skipped` and returns.
+
+**Done 2026-11-08** (PR #950): database `dino-stats` (id `e7fe3a48-af07-4331-ab1c-15882b802599`) created and its schema
+applied, secret `CF_ANALYTICS_READ_TOKEN` set, the `STATS` binding and the `ANALYTICS_ACCOUNT_ID` var are in both configs,
+and the Worker is deployed. The steps below are only for rebuilding it (a new account or a deleted database). Keep the
+account id as the var; don't also set it as a secret (a secret and a var with one name clash). Setup,
 once, from the desk (`wrangler login` needs `d1 (write)` and `workers_scripts (write)`):
 
 1. `npx wrangler d1 create dino-stats` (prints the `database_id`).
@@ -188,8 +193,8 @@ once, from the desk (`wrangler login` needs `d1 (write)` and `workers_scripts (w
 3. Add this block to **both** `wrangler.jsonc` and `wrangler.workers-dev.jsonc` (the same text in each; `check-configs` fails otherwise), next to `r2_buckets`, with the real id:
    `"d1_databases": [{ "binding": "STATS", "database_name": "dino-stats", "database_id": "<id from step 1>" }],`
 4. `npx wrangler secret put CF_ANALYTICS_READ_TOKEN` (the read-only Analytics Engine token, `D:\secrets`, `manage-secrets`).
-5. The account id: add `"ANALYTICS_ACCOUNT_ID": "<account id>"` to `vars` in both configs (the id is not secret), or `npx wrangler secret put ANALYTICS_ACCOUNT_ID`.
-6. Deploy (`npm run deploy`, or merge: Workers Builds). The first cron run (minute 7 of the hour) backfills every day Analytics Engine still holds; to see numbers sooner, trigger the scheduled handler with `npx wrangler dev --test-scheduled` and `curl "http://localhost:8787/__scheduled"` (or wait for the hour).
+5. The account id: add `"ANALYTICS_ACCOUNT_ID": "<account id>"` to `vars` in both configs (the id is not secret).
+6. Deploy (`npm run deploy`, or merge: Workers Builds). The first cron run (minute 7 of the hour) backfills every day Analytics Engine still holds; wait for it (`wrangler dev --test-scheduled` runs against a local, empty D1 with no token, so it does not fill the live table).
 7. Check: `https://dinoreader.sirous.uk/api/stats?from=2026-11-01&to=2026-11-08` answers 200 with `updatedAt` set, and `/stats` shows the page.
 
 ## Deploying from Windows
