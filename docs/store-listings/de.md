@@ -32,13 +32,17 @@ Auf Android kannst du Text einfügen oder tippen, eine .txt-, .pdf- oder .docx-D
 
 - Natürlich klingende Stimmen, die auf deinem Gerät laufen
 - Lesetempo von 0,5x bis 2x
-- Funktioniert offline (Android lädt seine Stimme beim ersten Start einmal herunter). Dein Text, deine Dateien und deine Scans verlassen dein Gerät nie
+- Funktioniert offline, sobald dein Sprachpaket heruntergeladen ist (einmaliger Download beim ersten Start). Dein Text, deine Dateien und deine Scans verlassen dein Gerät nie
 - Kein Konto und keine Werbung
 - Optionale anonyme Nutzungszählungen ohne Text, Namen oder Kennungen; in den Einstellungen jederzeit abschaltbar
 
 ## Google Play only: download note (append to the full description)
 
 Beim ersten Start der App auf Android lädt sie ein Stimmpaket von etwa 145 MB herunter und braucht dafür einmal eine Internetverbindung (WLAN empfohlen). Bis der Download fertig ist, liest die App mit der eingebauten Stimme deines Handys vor. Das Scannen lädt außerdem ein kleines Texterkennungspaket für deine Sprache herunter. Nur diese Pakete werden heruntergeladen: Dein Text, deine Dateien und deine Scans bleiben auf deinem Gerät, und sobald die Stimme installiert ist, nutzt das Vorlesen das Netzwerk nicht. Die einzige weitere Netzwerknutzung sind die optionalen anonymen Nutzungszählungen und Absturzberichte, die du in den Einstellungen abschalten kannst.
+
+## Microsoft Store only: download note (append to the full description)
+
+Beim ersten Start der App unter Windows lädt sie ein Stimmpaket für deine Sprache (bis zu etwa 150 MB) herunter und braucht dafür einmal eine Internetverbindung. Bis der Download fertig ist, liest die App mit der eingebauten Windows-Stimme vor. Es werden nur Pakete heruntergeladen (die Stimme und, falls du sie nutzt, die Übersetzung): Dein Text und deine Dateien bleiben auf deinem Gerät, und sobald die Stimme installiert ist, nutzt das Vorlesen das Netzwerk nicht. Die einzige weitere Netzwerknutzung sind eine tägliche Prüfung auf eine neuere Version und die optionalen anonymen Nutzungszählungen, die auch Berichte über Probleme enthalten, die die App behandelt hat (etwa der Wechsel zu einer anderen Stimme); die Nutzungszählungen kannst du in den Einstellungen abschalten.
 
 ## App Store (iOS)
 
@@ -68,5 +72,5 @@ Beim ersten Start lädt die App ein Stimmpaket von etwa 145 MB herunter und brau
 
 ## Notes for apply
 
-- Live Microsoft Store text is only the neutral (English) listing and is stale: it says "No internet" and that the voice ships inside the app, but Windows now downloads its voice too (Slice 56). A Windows download note with the real pack size should be added once confirmed; the German text above omits it for that reason.
+- Live Microsoft Store text is only the neutral (English) listing and is stale: it says "No internet" and that the voice ships inside the app, but Windows now downloads its voice too (Slice 56). The Microsoft Store download note above carries it (same size wording as `en.md`).
 - German voice: `supertonic-3` lists `de` from pack version 4 (STORE.md).

@@ -1,7 +1,7 @@
 # App Store listing: Dino Book Reader (ASC app 6825053435, bundle uk.sirous.dinoreader)
 
 **DRAFT, nothing pushed (2026-10-30).** State read through the ASC API the same day: version 1.81.1 `PREPARE_FOR_SUBMISSION`; en-US localization all null (description, keywords, supportUrl, marketingUrl, promotionalText); appInfo has name and privacyPolicyUrl (`https://dinoreader.sirous.uk/privacy.html`), subtitle and primary category null; copyright null; contentRightsDeclaration null; age rating all null; no review detail; no price; no screenshot sets; `isOrEverWasMadeForKids` false.
-Source text: the live Microsoft Store English text (public page read 2026-10-30; ages 3 to 9, fifteen languages). It is newer than the live Play en-GB text, which still says "3 to 8" and "nine languages" (Play needs the same update; not done here). German: `de.md`.
+Source text: the live Microsoft Store English text (public page read 2026-10-30; ages 3 to 9, fifteen languages). It is newer than the live Play en-GB text, which still says "3 to 8" and "nine languages" (the corrected text is in the repo, Slice 291; the Play push is still open). German: `de.md`.
 
 ## 1. appInfoLocalization (en-US)
 
@@ -65,7 +65,7 @@ Age rating declaration (same attributes as RTST). Proposed: all content descript
 - ageAssurance false: no age check.
 - Enum spellings from memory, as in `appstore-rtst.md`.
 
-Kids Category (NOT chosen, flagged): it fits the product (ages 3-9, no ads, no accounts, no purchases, a gate). What it would require, from my memory of Apple's rules (guidelines 1.3 and 5.1.4; Apple's page would not load today, so verify): set `isOrEverWasMadeForKids` true (I believe it cannot be undone) and pick one `kidsAgeBand` (5 and under, 6-8, 9-11), so 3-9 spans two bands and a narrower claim must be chosen; the privacy page says "3 to 8" while the stores say 3 to 9, fix before submitting; no third-party analytics or ads; any link out or purchase behind a parental gate; a privacy policy (exists). Check first: the anonymous usage counts go to our own Cloudflare Worker (first-party, but still analytics); translation models download from Google's servers (ML Kit); the update prompt opening the App Store page must sit behind the gate. Whether to go Kids is the user's call.
+Kids Category (NOT chosen, flagged): it fits the product (ages 3-9, no ads, no accounts, no purchases, a gate). What it would require, from my memory of Apple's rules (guidelines 1.3 and 5.1.4; Apple's page would not load today, so verify): set `isOrEverWasMadeForKids` true (I believe it cannot be undone) and pick one `kidsAgeBand` (5 and under, 6-8, 9-11), so 3-9 spans two bands and a narrower claim must be chosen; the privacy page and the Dino site now say "3 to 9" like the stores (fixed in the repo text in Slice 291; the store push is still open); no third-party analytics or ads; any link out or purchase behind a parental gate; a privacy policy (exists). Check first: the anonymous usage counts go to our own Cloudflare Worker (first-party, but still analytics); translation models download from Google's servers (ML Kit); the update prompt opening the App Store page must sit behind the gate. Whether to go Kids is the user's call.
 
 ## 5. appStoreReviewDetail
 

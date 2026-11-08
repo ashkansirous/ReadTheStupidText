@@ -26,11 +26,14 @@ No Android, cole ou digite texto, abra um arquivo .txt, .pdf ou .docx, ou escane
 
 - Vozes naturais que rodam no seu dispositivo
 - Velocidade de leitura de 0,5x a 2x
-- Funciona offline (o Android baixa a voz uma única vez na primeira abertura): seus textos, arquivos e digitalizações nunca saem do dispositivo
-- Sem conta e sem análise de uso
+- Funciona offline depois que o pacote de voz é baixado (um único download na primeira abertura): seus textos, arquivos e digitalizações nunca saem do dispositivo
+- Sem conta
+- Contagens de uso anônimas opcionais, sem texto, nomes ou identificadores; você pode desativá-las a qualquer momento em Configurações
 
 ## Google Play only: download note (append to the full description)
 
 Na primeira vez que você abre o app no Android, ele baixa um pacote de voz de cerca de 145 MB, então precisa de conexão com a internet uma única vez (Wi-Fi recomendado). Até o download terminar, o app lê com a voz integrada do seu celular. Apenas o pacote de voz é baixado. Seus textos, arquivos e digitalizações ficam no seu dispositivo e, depois que a voz é instalada, o app não usa a rede.
 
-Microsoft Store: don't add until Slice 56 ships (Windows still includes the voice).
+## Microsoft Store only: download note (append to the full description)
+
+Na primeira vez que você abre o app no Windows, ele baixa um pacote de voz para o seu idioma (até cerca de 150 MB), então precisa de conexão com a internet uma única vez. Até o download terminar, o app lê com a voz integrada do Windows. Apenas pacotes são baixados (a voz e, se você usar, a tradução). Seus textos e arquivos ficam no seu dispositivo e, depois que a voz é instalada, a leitura não usa a rede. O único outro uso da rede é uma verificação diária de versão mais recente e as contagens de uso anônimas opcionais, que você pode desativar em Configurações.
