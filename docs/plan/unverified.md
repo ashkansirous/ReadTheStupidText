@@ -4,6 +4,13 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 Each line starts with what it needs: **Android** (a scripted emulator run), **iOS** (an iPhone, a Mac or TestFlight), **Windows** (the VM or the desktop), **Live** (a live event, outside hardware or the user's ear), **Logs** (production analytics can prove it once enough rows arrive). Triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)).
 
+### Slice 316: Gaps found by the unverified-checks triage ([slice](slices/316-unverified-triage-gaps.md))
+- **Android:** The reader clock shows `0:00` after a read and never `elapsed > total` on a device (unit-tested only).
+- **Android:** The pack failure log line format (type, status, inner type, url) has not been seen in a device log.
+- **Android:** `paused-notification-repost` has never run on a phone: the `flags=0x` parsing of dumpsys is unproven.
+- **iOS:** Flows `rtst/review-pick-then-read` and `dino-landscape-reading` not run (no Mac); iOS compile not run here.
+- **Android:** That a later edit clears the Review pick on the reader page: no flow step yet.
+
 ### Slice 315: Feedback loop 2026-11-07-1412 leftovers ([slice](slices/315-feedback-loop-2026-11-07-1412-leftovers.md))
 - **Live:** The first night with the disk-free preflight and the `died`-status trace (items 2 and 3).
 
