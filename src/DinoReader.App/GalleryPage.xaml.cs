@@ -43,7 +43,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	private readonly BusyGuard _busy = new();
 	private readonly ShelfReorderView _reorder = new();
 	private WindowShapeSeam.ShelfGeometry _shelfGeometry = new(LandscapeLayout.PhoneShelfSidePadding, 0, LandscapeLayout.PhoneShelfSidePadding, 3, GridItemSpacing, GridItemSpacing); // the shelf list's margins, columns and gaps from the last layout pass (ApplyShape); the Reorder layer copies it (Slice 319)
-	private WindowShapeSeam.ShelfGeometry _reorderGeometry = new(LandscapeLayout.PhoneShelfSidePadding, 0, LandscapeLayout.PhoneShelfSidePadding, 3, GridItemSpacing, GridItemSpacing); // the same on the whole page (beside a rail, moved right by its width)
+	private WindowShapeSeam.ReorderLayerShape _reorderGeometry = WindowShapeSeam.ReorderLayerShelf(default); // the Reorder layer's own grid and hint, from the mock per platform (Slice 321); a tablet copies the shelf's geometry, moved right by the rail's width
 	private bool _savingOrder; // Done is saving the order
 	private long _suppressTapUntil; // Environment.TickCount64: the release that ends a 1 s hold must not open a sheet
 	private readonly ObservableCollection<object> _items = [];
@@ -528,7 +528,10 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		bool roomy = tabletShelf || (DesktopTips.IsWindows && !sideways && !rail); // Slice 235 part C (frames 151, 154): a desktop shelf uses the tablet's gaps and 40 dp sides
 		_shelfGeometry = WindowShapeSeam.ShelfListGeometry(DesktopTips.IsWindows, sideways, rail, tabletShelf, _windowSize.Width, shelf.SidePadding, columns, roomy ? TabletColumnSpacing : GridItemSpacing, roomy ? TabletRowSpacing : GridItemSpacing);
 		ApplyShelfMargin(_shelfGeometry, sideways, rail); // the one thing that follows the width pixel by pixel (the 1600 dp cap on Windows); a no-op when the value is unchanged
-		_reorderGeometry = rail ? _shelfGeometry.BesideRail(corner.RailWidth) : _shelfGeometry; // the layer spans the whole page, so beside a rail it starts where the shelf list starts on the page
+		WindowShapeSeam.ShelfGeometry shelfOnPage = rail ? _shelfGeometry.BesideRail(corner.RailWidth) : _shelfGeometry; // the layer spans the whole page, so beside a rail it starts where the shelf list starts on the page (tablet only)
+		bool tablet = WindowShapeSeam.IsTabletUpright(grownUp, shelf.TabletUpright, corner.TabletUpright); // the shelf's own classification (or the corner's), not a second one
+		bool useShelf = WindowShapeSeam.ReorderUsesShelfGeometry(tablet, _windowSize.Width, _windowSize.Height); // no mock frame for a tablet or a phone held sideways
+		_reorderGeometry = ReorderShape(useShelf, shelfOnPage);
 		_reorder.Reshape(_reorderGeometry); // a rotation or resize while the mode is open re-fits it
 		if (key == _shapeKey)
 		{
@@ -551,6 +554,17 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 #if DEBUG
 		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] shelf layout={(sideways ? "sideways" : rail ? "rail" : "grid")} columns={columns} grownUp={grownUp} railWidth={corner.RailWidth} tabletUpright={tabletShelf} tabletCorner={rail && corner.TabletUpright}");
 #endif
+	}
+
+	// The Reorder layer's grid and hint (Slice 321): the Windows head takes the mock's frame 176 over the whole page (the layer covers the rail, so no rail offset), a tablet or a phone held sideways the shelf's geometry, a phone upright frames 173/174.
+	private WindowShapeSeam.ReorderLayerShape ReorderShape(bool useShelf, WindowShapeSeam.ShelfGeometry shelfOnPage)
+	{
+		if (DesktopTips.IsWindows)
+		{
+			return WindowShapeSeam.ReorderLayerDesktop(_windowSize.Width);
+		}
+
+		return useShelf ? WindowShapeSeam.ReorderLayerShelf(shelfOnPage) : WindowShapeSeam.ReorderLayerPhone();
 	}
 
 	// The grown-ups' corner's ink rail holds the header, the line, Add and Store and the way back; the books take the second column. Anywhere else the rail column is 0 wide and everything spans both.
