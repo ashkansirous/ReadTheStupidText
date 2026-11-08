@@ -176,6 +176,22 @@ deploy attaches the domain, which takes seconds; HTTPS answered within ~10 s.
    Step 4 needs the restored files on `main`, so merge the PR from step 3 first; wait for
    the certificate, then re-enable "Enforce HTTPS" in repo Settings -> Pages.
 
+## The Dino usage dashboard: D1 database and secret (Slice 287)
+
+`/stats` (public, no sign-in) reads the D1 table `daily_stats`, which the hourly cron (`worker/stats-rollup.ts`,
+`triggers.crons` in both wrangler configs) fills from Analytics Engine. The code ships without the D1 binding: with no
+`STATS` binding the page's API answers 503 `data_unavailable` and the cron logs `stats rollup skipped` and returns. Setup,
+once, from the desk (`wrangler login` needs `d1 (write)` and `workers_scripts (write)`):
+
+1. `npx wrangler d1 create dino-stats` (prints the `database_id`).
+2. `npx wrangler d1 execute dino-stats --remote --file worker/schema/stats.sql`
+3. Add this block to **both** `wrangler.jsonc` and `wrangler.workers-dev.jsonc` (the same text in each; `check-configs` fails otherwise), next to `r2_buckets`, with the real id:
+   `"d1_databases": [{ "binding": "STATS", "database_name": "dino-stats", "database_id": "<id from step 1>" }],`
+4. `npx wrangler secret put CF_ANALYTICS_READ_TOKEN` (the read-only Analytics Engine token, `D:\secrets`, `manage-secrets`).
+5. The account id: add `"ANALYTICS_ACCOUNT_ID": "<account id>"` to `vars` in both configs (the id is not secret), or `npx wrangler secret put ANALYTICS_ACCOUNT_ID`.
+6. Deploy (`npm run deploy`, or merge: Workers Builds). The first cron run (minute 7 of the hour) backfills every day Analytics Engine still holds; to see numbers sooner, trigger the scheduled handler with `npx wrangler dev --test-scheduled` and `curl "http://localhost:8787/__scheduled"` (or wait for the hour).
+7. Check: `https://dinoreader.sirous.uk/api/stats?from=2026-11-01&to=2026-11-08` answers 200 with `updatedAt` set, and `/stats` shows the page.
+
 ## Deploying from Windows
 
 A Windows checkout with `core.autocrlf=true` writes `site/` with CRLF line endings, which would upload different bytes than git (and than Workers Builds on Linux). `npm run deploy` runs `worker/check-site-eol.mjs` first and refuses; fix with `git -c core.autocrlf=false checkout -- site/`.

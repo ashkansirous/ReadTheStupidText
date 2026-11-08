@@ -254,6 +254,12 @@ const PAGE_FOR_PATH: Readonly<Record<string, string>> = {
   "/privacy.html": "/privacy.html",
 };
 
+// Slice 287: the public Dino usage dashboard page; the RTST site has no such page (index.ts answers 404 for /stats there).
+const DINO_ONLY_PAGE_FOR_PATH: Readonly<Record<string, string>> = {
+  "/stats": "/stats.html",
+  "/stats/": "/stats.html",
+};
+
 export interface ResolvedSite {
   readonly product: Product;
   /** The request path as the product's site sees it (no `/dino` prefix). */
@@ -277,14 +283,17 @@ export function resolveSite(hostname: string, pathname: string): ResolvedSite {
 
 /** The asset file a page path maps to, or null when the path is not a page. */
 export function assetPageFor(site: ResolvedSite): string | null {
-  const page = PAGE_FOR_PATH[site.path];
+  const isDino = site.product === Product.DinoReader;
+  const page = PAGE_FOR_PATH[site.path] ?? (isDino ? DINO_ONLY_PAGE_FOR_PATH[site.path] : undefined);
   if (page === undefined) return null;
-  return site.product === Product.DinoReader ? `${DINO_PATH_PREFIX}${page}` : page;
+  return isDino ? `${DINO_PATH_PREFIX}${page}` : page;
 }
 
 const INDEX_HTML = "/index.html";
 const PRIVACY_PATH = "/privacy";
 const PRIVACY_HTML = "/privacy.html";
+const STATS_PATH = "/stats";
+const STATS_HTML = "/stats.html";
 const TRAILING_SLASH = /\/+$/;
 
 function isWorkersDev(hostname: string): boolean {
@@ -309,15 +318,18 @@ function dinoHostCanonical(pathname: string): string | null {
   const rest = pathname.slice(DINO_PATH_PREFIX.length);
   if (rest === "" || rest === ROOT_PATH || rest === INDEX_HTML) return ROOT_PATH;
   if (rest === PRIVACY_PATH || rest === PRIVACY_HTML || rest === `${PRIVACY_PATH}/`) return PRIVACY_PATH;
+  if (rest === STATS_PATH || rest === STATS_HTML || rest === `${STATS_PATH}/`) return STATS_PATH;
   return null;
 }
 
 function canonicalPath(hostname: string, pathname: string): string | null {
   if (hostname === Host.DinoReader) {
     if (isDinoPrefixed(pathname)) return dinoHostCanonical(pathname);
-    return pathname === `${PRIVACY_PATH}/` ? PRIVACY_PATH : null;
+    if (pathname === `${PRIVACY_PATH}/`) return PRIVACY_PATH;
+    return pathname === `${STATS_PATH}/` || pathname === STATS_HTML ? STATS_PATH : null;
   }
   if (isWorkersDev(hostname) && pathname === DINO_PATH_PREFIX) return `${DINO_PATH_PREFIX}/`;
+  if (isWorkersDev(hostname) && pathname === `${DINO_PATH_PREFIX}${STATS_HTML}`) return `${DINO_PATH_PREFIX}${STATS_PATH}`;
   const trimmed = withoutTrailingSlash(pathname);
   const isPage = trimmed === PRIVACY_PATH || trimmed === `${DINO_PATH_PREFIX}${PRIVACY_PATH}`;
   return isPage && trimmed !== pathname ? trimmed : null;

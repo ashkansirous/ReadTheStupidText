@@ -23,6 +23,9 @@ import { handleStories, isStoryPath } from "./stories";
 import { handleSonos, isSonosPath } from "./sonos";
 import { handleAlexa, isAlexaPath } from "./alexa";
 import type { AlexaEnv } from "./alexa";
+import { handleStats, isStatsApiPath, isStatsPath } from "./stats";
+import { runRollup } from "./stats-rollup";
+import type { StatsEnv } from "./stats-rollup";
 
 const SECURITY_HEADERS: Readonly<Record<string, string>> = {
   "X-Content-Type-Options": "nosniff",
@@ -122,7 +125,14 @@ function serveEvents(request: Request, env: Env & EventsEnv & RtstEventsEnv, sit
   return site.product === Product.DinoReader ? handleEvents(request, env, check) : handleRtstEvents(request, env, check);
 }
 
-async function serveAsset(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+// Slice 287: the public Dino usage dashboard: the page (site/dino/stats.html, served by the page mapping) and its read-only data from D1 (worker/stats.ts).
+// Returns null for the page path on the Dino site so the asset layer serves it.
+function serveStats(request: Request, url: URL, env: StatsEnv, site: ResolvedSite): Promise<Response> | Response | null {
+  if (site.product !== Product.DinoReader) return new Response("Not found", { status: 404 });
+  return isStatsApiPath(site.path) ? handleStats(withPath(request, url, site.path), env) : null;
+}
+
+async function serveAsset(request: Request, env: Env & StatsEnv, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(request.url);
   if (isHiddenDinoPath(url.hostname, url.pathname)) return new Response("Not found", { status: 404 });
   const redirect = canonicalRedirect(url.hostname, url.pathname, url.search);
@@ -131,6 +141,10 @@ async function serveAsset(request: Request, env: Env, ctx: ExecutionContext): Pr
   if (isStoryPath(site.path)) return serveStories(request, url, env, site);
   if (isSonosPath(site.path)) return serveSonos(request, url, env, site, ctx);
   if (isAlexaPath(site.path)) return serveAlexa(request, url, env, site, ctx);
+  if (isStatsPath(site.path)) {
+    const answer = serveStats(request, url, env, site);
+    if (answer !== null) return answer;
+  }
   if (isAppConfigPath(site.path)) return serveAppConfig(request, env, site);
   if (isEventsPath(site.path)) return serveEvents(request, env, site);
   if (isCrashPath(site.path)) return serveCrash(request, env, site);
@@ -142,7 +156,11 @@ async function serveAsset(request: Request, env: Env, ctx: ExecutionContext): Pr
 }
 
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: Env & StatsEnv, ctx: ExecutionContext): Promise<Response> {
     return withSecurityHeaders(await serveAsset(request, env, ctx));
   },
-} satisfies ExportedHandler<Env>;
+  // Slice 287: the hourly cron (wrangler "triggers") rolls Analytics Engine into D1; it logs and returns when the STATS binding or token is absent.
+  async scheduled(_controller: ScheduledController, env: Env & StatsEnv, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(runRollup(env));
+  },
+} satisfies ExportedHandler<Env & StatsEnv>;
