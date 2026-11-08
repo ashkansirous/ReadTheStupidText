@@ -4,7 +4,8 @@
   Run it in both `powershell` (5.1) and `pwsh`. Needs no device.
 #>
 $ErrorActionPreference = 'Stop'
-$lint = Join-Path $PSScriptRoot 'lint-flows.ps1'
+. (Join-Path $PSScriptRoot 'common.ps1')
+$lint =Join-Path $PSScriptRoot 'lint-flows.ps1'
 $fixtures = Join-Path $PSScriptRoot 'fixtures\lint'
 $failed = 0
 
@@ -51,6 +52,11 @@ Assert-Findings 'no-separator.yaml' @(New-Expect 1 'no --- line')
 Assert-Findings 'no-appid.yaml' @(New-Expect 2 'the header has no appId')
 Assert-Findings 'needs-ok.yaml' @()
 Assert-Findings 'needs-unknown.yaml' @((New-Expect 1 "'# needs: wifi-only' is not a known value"), (New-Expect 2 "'# needs: offline' is not a known value"))
+Assert-Findings 'expect-log-ok.yaml' @()
+Assert-Findings 'expect-log-bad-start.yaml' @(New-Expect 2 'must start a token')   # Slice 315 item 15: the incident marker ': failed:network'
+Assert-Findings 'expect-log-empty.yaml' @(New-Expect 2 'is empty')
+Assert-Equal 'an empty marker can never match' $false (Test-LogMarkerCanMatch '')
+Assert-Equal 'a non-empty marker can match' $true (Test-LogMarkerCanMatch '(cached) hit')
 
 # Slice 215: runFlow files are followed, the inline launchApp form is tokenized, the clearState comment may sit above its item, stopApp: true is a restart.
 Assert-Findings 'runflow-launch.yaml' @(New-Expect 5 'stopApp: false')

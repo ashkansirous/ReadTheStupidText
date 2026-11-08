@@ -18,6 +18,12 @@ $script:UnreadableLeaseOwner = '(lease file unreadable)'
 $script:CorruptLeaseOwner = '(lease file corrupt: remove it by hand)'
 $script:RenewBelowMinutes = 15
 
+# The one process-alive check for the phone and emulator tooling (Slice 315, review finding 3); a pid of 0 or less is never alive.
+function Test-ProcessAlive([int]$ProcessId) {
+    if ($ProcessId -le 0) { return $false }
+    return [bool](Get-Process -Id $ProcessId -ErrorAction SilentlyContinue)
+}
+
 function Get-UnixNow { return [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() }
 
 function Get-LeaseDir([string]$Kind) {

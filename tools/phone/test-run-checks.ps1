@@ -776,3 +776,4 @@ foreach ($name in 'highlight', 'translate') {
 
 if ($failed) { Write-Host "$failed run-checks checks failed (PowerShell $($PSVersionTable.PSVersion))."; exit 1 }
 Write-Host "All run-checks checks pass (PowerShell $($PSVersionTable.PSVersion))."
+exit 0

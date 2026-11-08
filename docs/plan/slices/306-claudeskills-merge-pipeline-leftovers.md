@@ -23,9 +23,16 @@ ClaudeSkills PR #184 (merge `f77284a`, 9 files): `agents/ship-branch.md`, `agent
 *Known limits (from the brief):* a quoted prose line starting with `gh pr merge` in command position is denied (write such text via a file); a merge after `then`/`do`/`{` is not caught by the raw scan.
 
 *From review:* (findings files under `D:/ReadTheStupidText-worktrees/reviews/`)
-- `s306-high.md`: applied 2, 3, 4, 5 (check-review-skips parser), 6 (`--no-renames`), 7, 9 (both later replaced, see check1), plus the update-docs skip-record format. Skipped 1 (the slice's design: M2 continues when the merge-in touched none of the PR's files; the PR's checks still run where the repo has them), 8 (stricter, so safe), 10 (no GHES in use).
-- `s306-medium.md`: applied 1, 3, 5, 6, 7; 4 by a new design (per-path contents API blob reads, no recursive tree, so no truncation). Skipped 2 (an unclosed block next to a merge is already a broken command).
-- `s306-check1-medium.md`: the heredoc check and the API own-commit lookup had been raised in three rounds, so both were redesigned instead of patched: 5, 6 by a raw-text scan for a merge in command position (no heredoc parsing); 1, 2, 3 by taking the own commit from the PR's commit list and treating only stderr `HTTP 404` as deleted. Applied 4 (comments), 10 (own files from the three-dot merge base). Skipped 7 (github.com only), 8, 9 (low, no path that blocks a merge).
+- `s306-high.md`: applied 2, 3, 4, 5 (check-review-skips parser), 6 (`--no-renames`), 7, 9 (both later replaced, see check1), plus the update-docs skip-record format.
+- Skipped #1 (`reviews/s306-high.md`): "M2 skips the caller's run-checks and merges on CI alone" - the slice's design: M2 continues when the merge-in touched none of the PR's files; the PR's checks still run where the repo has them.
+- Skipped #8 (`reviews/s306-high.md`): "Untested for this case; denial message does not say it is stricter." - stricter, so safe.
+- Skipped #10 (`reviews/s306-high.md`): "so verdict may come from wrong data" - no GHES in use.
+- `s306-medium.md`: applied 1, 3, 5, 6, 7; 4 by a new design (per-path contents API blob reads, no recursive tree, so no truncation).
+- Skipped #2 (`reviews/s306-medium.md`): "and runs before mergeTargets; no merge need exist" - an unclosed block next to a merge is already a broken command.
+- `s306-check1-medium.md`: the heredoc check and the API own-commit lookup had been raised in three rounds, so both were redesigned instead of patched: 5, 6 by a raw-text scan for a merge in command position (no heredoc parsing); 1, 2, 3 by taking the own commit from the PR's commit list and treating only stderr `HTTP 404` as deleted. Applied 4 (comments), 10 (own files from the three-dot merge base).
+- Skipped #7 (`reviews/s306-check1-medium.md`): "repoSlug and the API path assume github.com" - github.com only.
+- Skipped #8 (`reviews/s306-check1-medium.md`): "The quoted-reason lookup normalises only case and whitespace" - low, no path that blocks a merge.
+- Skipped #9 (`reviews/s306-check1-medium.md`): "isSkip applies SKIP_WORDS to the whole item" - low, no path that blocks a merge.
 - `s306-check2-medium.md`: no code change. 1 (quoted prose line starting `gh pr merge` in command position is denied) and 2 (`then`/`do`/`{` not caught) kept as the known limits above; 3, 4 repeat high 1 and high 2-5.
 
 ## User answer (2026-11-07, before the night run)

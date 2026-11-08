@@ -39,6 +39,7 @@
 - Skipped #1 (`reviews/s314-check2.md`): "token already cancelled on entry raises Changed(true) then Changed(false) inline" (low).
 - Skipped #2 (`reviews/s314-check2.md`): "Release runs inside Cancel()" (low, not a defect).
 - Skipped #3 (`reviews/s314-check2.md`): "await pending after cancel may return a value" (low, pre-existing).
+- Skipped #4 (`reviews/s314-check2.md`): "IsStalled reads only _active; transient false after a swap is harmless" (low: `CompositeSpeechReader.IsStalled` in Infrastructure and Mobile.Shared reads only `_active`; the same forwarding rule as high #4).
 
 #### For CLAUDE.md (lifted 2026-11-07)
 

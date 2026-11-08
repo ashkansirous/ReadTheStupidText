@@ -22,6 +22,7 @@ param(
     [string]$Path = (Join-Path $PSScriptRoot '..\..\.maestro')
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'common.ps1')   # Test-LogMarkerCanMatch: the matcher's own rule (Slice 315 item 9)
 
 # The 48 command names of https://docs.maestro.dev/api-reference/commands (2026-10-30).
 $script:MaestroCommands = @(
@@ -153,6 +154,17 @@ function Test-Needs([string]$File, [string[]]$Lines, [int]$Separator) {
         foreach ($v in $values) {
             if ($script:NeedsValues -cnotcontains $v) { Add-Problem $File ($i + 1) "'# needs: $v' is not a known value (allowed: $($script:NeedsValues -join ', '))" }
         }
+    }
+}
+
+# Slice 315 item 15: in the real app log, closing punctuation follows a tag with no space (`Tag: failed:network`), so a marker that starts with it (`: failed:network`) never matches there,
+# and costs a whole device run. Rejected: an empty marker (Test-LogMarkerCanMatch, common.ps1) and a marker whose first character is `: , ; . ) ] ! ?`. An opening one (`(cached) hit`) passes.
+function Test-ExpectLogMarkers([string]$File, [string[]]$Lines) {
+    for ($i = 0; $i -lt $Lines.Count; $i++) {
+        if ($Lines[$i] -notmatch '^#\s*expect-log:(.*)$') { continue }
+        $marker = $Matches[1].Trim()
+        if (-not (Test-LogMarkerCanMatch $marker)) { Add-Problem $File ($i + 1) "'# expect-log:' marker '$marker' is empty: it can never match"; continue }
+        if ($marker -match '^[:,;.)\]!?]') { Add-Problem $File ($i + 1) "'# expect-log:' marker '$marker' must start a token: in the app log closing punctuation (: , ; . ) ] ! ?) follows a tag with no space, so it never matches" }
     }
 }
 
@@ -312,6 +324,7 @@ function Test-FlowFile([System.IO.FileInfo]$File) {
     if ($separator -lt 0) { Add-Problem $File.FullName 1 'no --- line: the header (appId) must be separated from the commands by ---'; return }
     Test-Header $File.FullName $lines $separator
     Test-Needs $File.FullName $lines $separator
+    Test-ExpectLogMarkers $File.FullName $lines
     Test-FlowBody $File.FullName $lines $separator -Dir (Split-Path $File.FullName -Parent)
 }
 

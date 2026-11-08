@@ -34,3 +34,4 @@ Assert-Equal 'run-flows closes dialogs before a flow' $true ($runFlows -match '(
 
 if ($script:failed -gt 0) { Write-Host "$($script:failed) check(s) failed."; exit 1 }
 Write-Host 'test-dialog-guard: all passed.'
+exit 0

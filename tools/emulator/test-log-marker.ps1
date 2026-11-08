@@ -22,3 +22,4 @@ Assert-Equal 'regex characters in a marker are literal' $true (Test-LogMarker "g
 
 if ($script:failed -gt 0) { Write-Host "$($script:failed) check(s) failed."; exit 1 }
 Write-Host 'test-log-marker: all passed.'
+exit 0

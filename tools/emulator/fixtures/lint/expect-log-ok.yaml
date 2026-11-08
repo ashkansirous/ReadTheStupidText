@@ -1,0 +1,6 @@
+# expect-log: [Reading] animal clip Pig plays
+# expect-log: HOOK install-audio-pack ok
+# expect-log: (cached) hit
+appId: uk.sirous.dinoreader.dbg
+---
+- back

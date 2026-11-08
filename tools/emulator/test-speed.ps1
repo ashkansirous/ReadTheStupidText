@@ -297,3 +297,4 @@ Assert-Equal 'guarded: ... still stuck' $true (Test-RunnerStuck $guarded)
 
 if ($script:failed -gt 0) { Write-Host "$($script:failed) check(s) failed."; exit 1 }
 Write-Host 'test-speed: all passed.'
+exit 0

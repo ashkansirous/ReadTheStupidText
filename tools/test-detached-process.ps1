@@ -48,3 +48,4 @@ Start-Sleep -Seconds ($childSeconds + 1)   # the sleeping children end by themse
 Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
 if ($failures) { exit 1 }
 Write-Host 'test-detached-process: all passed.'
+exit 0

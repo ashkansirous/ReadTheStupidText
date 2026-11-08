@@ -433,6 +433,65 @@ function Test-LogMarker([string]$Log, [string]$Marker) {
     return $Log -match ('(?<!\S)' + [regex]::Escape($Marker) + '(?!\w|[./-]\w)')
 }
 
+# Slice 315 item 9: the one place that says whether a marker can ever match. It asks Test-LogMarker itself, on the shortest log lines a marker could sit in (alone, or after a space and a prefix),
+# so lint-flows.ps1 can never disagree with the matcher: a marker is flagged iff this returns $false. An empty marker never matches.
+function Test-LogMarkerCanMatch([string]$Marker) {
+    if ([string]::IsNullOrWhiteSpace($Marker)) { return $false }
+    foreach ($line in @($Marker, "I tag: $Marker", "I tag: $Marker end")) {
+        if (Test-LogMarker $line $Marker) { return $true }
+    }
+    return $false
+}
+
+# Slice 315 item 1: the Maestro CLI (Java) copies the dev app's APK (69-97 MB) to %TEMP%\tmp<digits>.apk about once per clearState and never deletes it (207 files, 16 GB in one day).
+# Likely cause, not proven. Each run gives Maestro's JVM its own java.io.tmpdir (a folder only this run writes to, passed in MAESTRO_OPTS, which the maestro launcher adds to the java command line),
+# so the copies are deleted by deleting that folder: no scan of %TEMP% by time or name, and another run's files are never touched.
+function Get-MaestroTempDir([string]$ToolsDir, [int]$Instance) {
+    return (Join-Path $ToolsDir "maestro-tmp\i$Instance-$PID")
+}
+
+# The -D option that moves the JVM's temp folder into $Dir (a path without spaces: MAESTRO_OPTS is word-split).
+function Get-MaestroTempOption([string]$Dir) {
+    return "-Djava.io.tmpdir=$Dir"
+}
+
+# Slice 315 item 3: a path safe to put in MAESTRO_OPTS (which the launcher word-splits): the folder itself when it has no space, else its 8.3 short path (the folder must exist),
+# else a clear error before Maestro starts, never a silently truncated option.
+function Get-SpaceFreePath([string]$Dir) {
+    if ($Dir -notmatch '\s') { return $Dir }
+    $short = ''
+    try { $short = (New-Object -ComObject Scripting.FileSystemObject).GetFolder($Dir).ShortPath } catch { $short = '' }   # no-fallback: the error below names the path
+    if (-not $short -or $short -match '\s') { throw "Maestro's option folder '$Dir' has a space and no 8.3 short name; MAESTRO_OPTS would be split at the space. Move the tools folder to a path without spaces (or enable 8.3 names)." }
+    return $short
+}
+
+# Slice 315 item 1: at the start of a run, deletes the maestro-tmp\i<inst>-<pid> folders a killed or crashed run left behind: only those whose pid is no longer alive, never one whose pid is.
+# Returns how many folders it removed.
+function Remove-StaleMaestroTempDirs([string]$ToolsDir) {
+    $base = Join-Path $ToolsDir 'maestro-tmp'
+    if (-not (Test-Path -LiteralPath $base)) { return 0 }
+    $removed = 0
+    foreach ($dir in @(Get-ChildItem -LiteralPath $base -Directory -ErrorAction SilentlyContinue)) {
+        if ($dir.Name -notmatch '^i\d+-(\d+)$') { continue }
+        if (Test-ProcessAlive ([int]$Matches[1])) { continue }
+        $null = Remove-MaestroTempDir $dir.FullName
+        if (-not (Test-Path -LiteralPath $dir.FullName)) { $removed++ }
+    }
+    return $removed
+}
+
+# Deletes the per-run folder after the run and returns how many files it held (prints the proof that the cleanup ran). A file still held open stays and is named with the real error, never silently.
+function Remove-MaestroTempDir([string]$Dir) {
+    if (-not $Dir -or -not (Test-Path -LiteralPath $Dir)) { return 0 }
+    $count = @(Get-ChildItem -LiteralPath $Dir -Recurse -File -ErrorAction SilentlyContinue).Count
+    try { Remove-Item -LiteralPath $Dir -Recurse -Force -ErrorAction Stop } catch {   # no-fallback: best-effort cleanup of scratch files, the reason is printed
+        Write-Host "MAESTRO-TEMP-APK left in ${Dir}: $($_.Exception.Message)"
+        return 0
+    }
+    if ($count -gt 0) { Write-Host "MAESTRO-TEMP-APK removed $count file$(if ($count -eq 1) { '' } else { 's' }) from $Dir." }
+    return $count
+}
+
 # Asks the emulator; an adb failure counts as an empty answer and a hung adb as a timeout answer, so a dead emulator is a problem, never an exception or a hang.
 function Get-EmulatorHealthProblem {
     $ErrorActionPreference = 'Continue'
