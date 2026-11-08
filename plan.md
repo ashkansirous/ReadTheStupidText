@@ -25,6 +25,20 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 291 | Store listings and screenshots for both apps on Play, App Store and Microsoft Store | in progress (items 2 and repo text merged #941; store pushes wait on the user) | #941 | | [291-store-listings-and-screenshots.md](docs/plan/slices/291-store-listings-and-screenshots.md) |
 | 317 | Feedback loop 2026-11-08-0106 leftovers (build cache size, disk preflight threshold, two broken device flows, Store submit retry) | parked: feedback loop, waits for the user | | | [317-feedback-loop-2026-11-08-0106-leftovers.md](docs/plan/slices/317-feedback-loop-2026-11-08-0106-leftovers.md) |
 | 295 | Bump `MauiVersion` once a MAUI release with dotnet/maui PR #38662 ships | planned (waits for MAUI 10.0.130 or later on NuGet; moved back from parked by the night 2026-11-08-0106 feedback loop) | | | [295-bump-maui-version-for-pr-38662.md](docs/plan/slices/295-bump-maui-version-for-pr-38662.md) |
+| 330 | Listening page: Store listening track, page gaps audible | planned (needs the user's ear) | | | [330-store-listening-track-page-gaps-audible.md](docs/plan/slices/330-store-listening-track-page-gaps-audible.md) |
+| 331 | Listening page: animal sound word already in the text (moo) | planned (needs the user's ear) | | | [331-animal-sound-word-already-in-the-text-moo.md](docs/plan/slices/331-animal-sound-word-already-in-the-text-moo.md) |
+| 332 | Listening page: double animal sound when a quote names the animal | planned (needs the user's ear) | | | [332-double-animal-sound-when-a-quote-names-the-anima.md](docs/plan/slices/332-double-animal-sound-when-a-quote-names-the-anima.md) |
+| 333 | Listening page: Lion and Mouse Farsi clip | planned (needs the user's ear) | | | [333-lion-and-mouse-farsi-clip.md](docs/plan/slices/333-lion-and-mouse-farsi-clip.md) |
+| 334 | Listening page: speaker first in Farsi (Three Little Pigs) and the wolf's sound in English | planned (needs the user's ear) | | | [334-speaker-first-in-farsi-three-little-pigs-and-the.md](docs/plan/slices/334-speaker-first-in-farsi-three-little-pigs-and-the.md) |
+| 335 | Listening page: Pigs Farsi, four re-rendered lines | planned (needs the user's ear) | | | [335-pigs-farsi-four-re-rendered-lines.md](docs/plan/slices/335-pigs-farsi-four-re-rendered-lines.md) |
+| 336 | Listening page: Farsi sukun sentence on Android and iPhone | planned (needs the user's ear) | | | [336-farsi-sukun-sentence-on-android-and-iphone.md](docs/plan/slices/336-farsi-sukun-sentence-on-android-and-iphone.md) |
+| 337 | Listening page: Dino first-run hello line sounds whole | planned (needs the user's ear) | | | [337-dino-first-run-hello-line-sounds-whole.md](docs/plan/slices/337-dino-first-run-hello-line-sounds-whole.md) |
+| 338 | Listening page: Kokoro rescued short lines (English) | planned (needs the user's ear) | | | [338-kokoro-rescued-short-lines-english.md](docs/plan/slices/338-kokoro-rescued-short-lines-english.md) |
+| 339 | Listening page: real phone audio timing | planned (needs the user's ear) | | | [339-real-phone-audio-timing.md](docs/plan/slices/339-real-phone-audio-timing.md) |
+| 340 | Listening page: mid-book speed change on a phone | planned (needs the user's ear) | | | [340-mid-book-speed-change-on-a-phone.md](docs/plan/slices/340-mid-book-speed-change-on-a-phone.md) |
+| 341 | Listening page: Farsi short words never dropped | planned (needs the user's ear) | | | [341-farsi-short-words-never-dropped.md](docs/plan/slices/341-farsi-short-words-never-dropped.md) |
+| 342 | Listening page: Farsi voice pack | planned (needs the user's ear) | | | [342-farsi-voice-pack.md](docs/plan/slices/342-farsi-voice-pack.md) |
+| 343 | Listening page: four Farsi voices | planned (needs the user's ear) | | | [343-four-farsi-voices.md](docs/plan/slices/343-four-farsi-voices.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
@@ -66,7 +80,8 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 383 checks across 153 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- **Not yet tried on a device:** 251 checks across 116 slices, in [docs/plan/unverified.md](docs/plan/unverified.md), each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Watched in production data instead:** 30 behaviours that only real use shows (analytics, fallback events, crash store, problem reports); the list is in [the record](docs/plan/notes/2026-11-08-unverified-triage.md), section "Watched in production data instead". A bug report or fallback spike about one of them becomes a fix slice.
 - Device-run 2026-11-08 test-side fixes (none is an app bug; [record](docs/plan/notes/2026-11-08-unverified-triage.md)): `premade-audio-past-roar` expects the old `fa v2` pack; `cancelled-voice-pack-stays-cancelled` races a fast download; `paused-notification-repost` cannot read Samsung's notification flags; the runner's Dino `-Prepare` and the Dino `book-end`/`short-lines` checks still expect a voice pack (gone since Slice 278); `run-flows.ps1` does not start the report-problem stub; the fa/ar copies of flows match English text.
 - Slice 319 item 2 open: Dino Windows Record screen gives no alert after R on the VM; cause not found, next step is to read the app's own log lines after R in the guest ([slice](docs/plan/slices/319-device-run-2026-11-08-fixes.md)).
 - Dino iOS rolling log: report T7RS-G327 (1.117.0, 2026-11-08) has the previous run's last line cut mid-word (`reading paused (ot` then the next launch's `08:10:50.730 ...`), so a line is lost when the app is killed (here, likely the TestFlight update). Check whether the file writer flushes per line ([note](docs/plan/notes/2026-11-08-unverified-triage.md)).
