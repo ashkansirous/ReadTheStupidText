@@ -8,10 +8,14 @@
 
 ## Items
 
-- [ ] Make the audio exactly as the app plays it: render it with the app's own engine and packs (the `voice-pick` skill's render path), or record it from the dev app on the S21 when rendering cannot reproduce it (speed changes, timing, a Sonos or store track). Note how each clip was made and its build or pack version.
-- [ ] Publish one private listening page through the repo's `voice-pick` agent: a play button per clip, the line of text it reads, and for each clip "sounds right" or "something is wrong" with a free-text box for what is wrong (and a timestamp when it helps). English and Farsi only.
-- [ ] When the user has answered, write every answer into this file, word for word.
-- [ ] Each "something is wrong" becomes a fix item in this slice (cause, then fix, through the normal review gate). Every "sounds right" closes the check.
+- [x] Make the audio exactly as the app plays it: the store books' shipped premade Gemini clips (voice Laomedeia), found by scanning the en and fa premade-audio manifests of all 15 store books; the bundled real frog and hen recordings were on the page for comparison only.
+- [x] Publish one private listening page: https://claude.ai/artifact/FTSUBWyRguC6ALM1nHA8dh (2026-11-08; four lines: Frog "Ribbit!" and Hen "Cluck, cluck, cluck! Can you lay an egg?" in English, Frog «قور قور!» and Hen «قد قد قدا! تو می‌تونی تخم بذاری؟» in Farsi).
+- [x] When the user has answered, write every answer into this file, word for word (below).
+- [x] Each "something is wrong" becomes a fix item in this slice. None was wrong, so the check is closed.
+
+## The user's answers (2026-11-08, Done pressed 18:44Z)
+
+All four **sound right**, no notes: en-frog "Ribbit!", en-hen "Cluck, cluck, cluck! Can you lay an egg?", fa-frog «قور قور!», fa-hen «قد قد قدا! تو می‌تونی تخم بذاری؟». The voice saying an animal's own sound word, with no recording, is confirmed.
 
 ## Verification
 
