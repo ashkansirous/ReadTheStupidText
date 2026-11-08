@@ -1,6 +1,6 @@
 # Slice 287 — Dino: a public usage dashboard at dinoreader.sirous.uk/stats
 
-*Built 2026-11-08 (wave 43, night 2026-11-08-0106), PR #940, not merged. Code for Work 1-6 is built and passes the local checks; nothing is live (no D1 database, binding, secret or deploy), see Waiting on the user.* Server only (Cloudflare Worker, D1, the Dino site). The apps do not change here.
+*Built 2026-11-08 (wave 43, night 2026-11-08-0106), merged as PR #940 (b7fb4c4e). Code for Work 1-6 is built and passes the local checks; nothing is live (no D1 database, binding, secret or deploy), see Waiting on the user.* Server only (Cloudflare Worker, D1, the Dino site). The apps do not change here.
 
 **User answer (2026-11-08): the dashboard is public.** "its not private! I want everyone to see that dashboard". So there is
 no Cloudflare Access, no Zero Trust, no sign-in, no JWT check and no signed-in email; anyone can open `/stats`. This
@@ -188,7 +188,7 @@ One design replaces the earlier backfill cursor (`last_rollup_at`, dropped):
 **From review:** check pass 3 (medium), `reviews/pr-940-check3-medium.md`.
 
 - Applied #1, #3 and #4: #1 and #3 within the "Rollup state (design, 2026-11-08)" subsection above (at most 10 old days a run, a day is exactly 3 statements with one `json_each` insert, subrequests counted per statement: 43 at most; the AE queries name exactly the run's days), #4 (a failed auto re-load also resets `alexaSeen`, so the switch-on is retried on the next successful load) in `site/dino/stats.html`.
-- Skipped #2 (`reviews/pr-940-check3-medium.md`): "a 200 from AE with an empty or partial `data` for a day with no D1 rows is written and marked done; days older than today-2 are never re-read" - Analytics Engine is append-only inside its retention, so an old day that answers empty had no events; today and yesterday are re-read every run, and the lower-total guard covers a short answer for a day D1 already holds
+- Skipped #2 (`reviews/pr-940-check3-medium.md`): "a 200 from AE with an empty or partial" `data` answer for a day with no D1 rows, "days older than today-2 are never re-read" - Analytics Engine is append-only inside its retention, so an old day that answers empty had no events; today and yesterday are re-read every run, and the lower-total guard covers a short answer for a day D1 already holds
 
 **From review:** check pass 4 (medium), `reviews/pr-940-check4-medium.md` (3 findings read).
 
@@ -198,9 +198,9 @@ One design replaces the earlier backfill cursor (`last_rollup_at`, dropped):
 
 **From review:** check pass 11 (medium), `reviews/pr-940-check11-medium.md` (3 findings read, none applied).
 
-- Skipped #1 (`reviews/pr-940-check11-medium.md`): "workers.dev `/dino/stats/` is not canonicalised" - workers.dev is the test host; a second URL there harms nothing
-- Skipped #2 (`reviews/pr-940-check11-medium.md`): "no case for workers.dev `/dino/stats/`, workers.dev query string, or RTST `/stats.html`; loop test too loose" - the routing test already walks every `run_worker_first` stats path on both hosts
-- Skipped #3 (`reviews/pr-940-check11-medium.md`): "RTST `/stats.html` falls to ASSETS (404 body differs from `/stats`)" - the RTST site has no `/stats.html` file, so the asset layer answers 404 as for any unknown page
+- Skipped #1 (`reviews/pr-940-check11-medium.md`): "is not canonicalised (only" - workers.dev `/dino/stats/` - workers.dev is the test host; a second URL there harms nothing
+- Skipped #2 (`reviews/pr-940-check11-medium.md`): "loop test too loose" (no case for workers.dev `/dino/stats/`, a workers.dev query string or RTST `/stats.html`) - the routing test already walks every `run_worker_first` stats path on both hosts
+- Skipped #3 (`reviews/pr-940-check11-medium.md`): "falls to ASSETS (404 body differs from" for RTST `/stats.html` - the RTST site has no `/stats.html` file, so the asset layer answers 404 as for any unknown page
 
 **From review:** check pass 5 (medium), `reviews/pr-940-check5-medium.md`.
 
@@ -250,7 +250,7 @@ One design replaces the earlier backfill cursor (`last_rollup_at`, dropped):
 
 **Built facts:** listens count from Dino 1.115, 7 Nov 2026 (PR #901, tag `dino-v1.115.0`). The page renders from one state with `shown = { data, query }`, aborts a superseded request and times out at 20 s, and has no auto re-load; the Alexa chip is dimmed until Alexa rows exist, then normal and off.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-08)
 
 - Nothing new to lift: `worker/CLAUDE.md` already holds the stats rule (built in Touches, Work 6).
 

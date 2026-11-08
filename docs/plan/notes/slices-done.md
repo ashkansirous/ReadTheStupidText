@@ -376,3 +376,5 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 311 | Crash data for the Windows apps from the Microsoft Store | built | #930 | | [311-windows-store-crash-data.md](../slices/311-windows-store-crash-data.md) |
 | 296 | Why a Farsi read matched 5 of 78 pieces to clips (fixture keys or a real fa audio gap) | built | #931 | | [296-farsi-read-clip-match.md](../slices/296-farsi-read-clip-match.md) |
 | 282 | Dino: an Alexa kid skill that reads the store books (no login) | built | #935 | | [282-dino-alexa-kid-skill.md](../slices/282-dino-alexa-kid-skill.md) |
+| 287 | Dino: a public usage dashboard at dinoreader.sirous.uk/stats (downloads, listens, hours; by day/week/month, book, platform) | built (#940); live setup waits on the user | #940 | | [287-dino-usage-dashboard.md](../slices/287-dino-usage-dashboard.md) |
+| 315 | Feedback loop 2026-11-07-1412 leftovers (temp APK writer, disk-free preflight, driver end reason, Worker deploy after `[skip ci]`, tooling guards) | built (#942); ClaudeSkills half open | #942 | | [315-feedback-loop-2026-11-07-1412-leftovers.md](../slices/315-feedback-loop-2026-11-07-1412-leftovers.md) |
