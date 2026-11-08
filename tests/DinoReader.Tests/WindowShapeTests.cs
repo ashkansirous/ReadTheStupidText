@@ -216,6 +216,98 @@ public class WindowShapeTests
         Assert.Equal(new WindowShapeSeam.ShelfGeometry(316, 14, 26, 4, 12, 12), shelf.BesideRail(300)); // the left grows by the rail; right, top and columns are the shelf's
     }
 
+    [Theory]
+    [InlineData(320)]
+    [InlineData(360)]
+    [InlineData(430)]
+    public void The_reorder_layer_on_a_phone_is_frames_173_and_174(double pageWidth)
+    {
+        Assert.True(pageWidth > 0); // the phone's layer does not depend on the width
+
+        WindowShapeSeam.ReorderLayerShape shape = WindowShapeSeam.ReorderLayerPhone();
+
+        Assert.Equal(new WindowShapeSeam.ShelfGeometry(14, 0, 14, 3, 10, 27), shape.Grid); // 14 dp sides, 3 across, gap 10, row gap 27 (RH 180 less the mock tile 153), no top padding
+        Assert.Equal(new WindowShapeSeam.ReorderHint(18, 12, 18, 12, 13.5), shape.Hint);   // `padding:12px 18px 12px`
+    }
+
+    [Theory]
+    [InlineData(500, 3)]   // fewer than 3 never
+    [InlineData(1024, 5)]  // the VM window (the layer covers the rail, so the full width counts)
+    [InlineData(1100, 6)]  // the mock's window
+    [InlineData(1600, 8)]
+    [InlineData(2400, 13)]
+    public void The_reorder_layer_on_the_windows_head_keeps_the_mock_tile_and_the_columns_follow_the_full_page_width(double pageWidth, int columns)
+    {
+        WindowShapeSeam.ReorderLayerShape shape = WindowShapeSeam.ReorderLayerDesktop(pageWidth);
+
+        Assert.Equal(new WindowShapeSeam.ShelfGeometry(40, 0, 40, columns, 18, 18), shape.Grid); // 40 dp from both page edges (no rail offset), gap 18 both ways, no top padding
+        Assert.Equal(new WindowShapeSeam.ReorderHint(40, 16, 40, 14, 14), shape.Hint); // `padding:16px 40px 14px`, 14 px
+    }
+
+    [Theory]
+    [InlineData(1100)]
+    [InlineData(1600)]
+    [InlineData(2400)]
+    public void The_windows_tile_stays_about_the_mock_155_dp(double pageWidth)
+    {
+        Assert.Equal(155, WindowShapeSeam.ReorderDesktopTileWidth);
+
+        WindowShapeSeam.ReorderLayerShape shape = WindowShapeSeam.ReorderLayerDesktop(pageWidth);
+        ShelfOrderGrid grid = ShelfOrderGrid.Fit(pageWidth, shape.Grid.Columns, 40, 40, 0, 18, shape.Grid.GapY, 18, WindowShapeSeam.ReorderTitleSpacing);
+
+        Assert.InRange(grid.TileWidth, 155, 155 + 25); // never narrower than the mock's tile; the leftover of a column that did not fit is spread over the tiles
+    }
+
+    [Fact]
+    public void Columns_for_a_windows_window_match_the_gallery_rule_in_the_reorder_check()
+    {
+        Assert.Equal(6, WindowShapeSeam.ReorderDesktopColumns(1100)); // floor((W - 80 + 18) / (155 + 18)), at least 3
+        Assert.Equal(5, WindowShapeSeam.ReorderDesktopColumns(1099));
+        Assert.Equal(6, WindowShapeSeam.ReorderDesktopColumns(1100.0000000001)); // float slack must not move the boundary
+    }
+
+    [Theory]
+    [InlineData(true, false, 1100, 760, true)]   // the mock's Windows window
+    [InlineData(true, false, 400, 800, false)]   // a narrow portrait Windows window has no frame: phone geometry
+    [InlineData(true, true, 1200, 800, false)]   // a tablet keeps the shelf's
+    [InlineData(false, false, 1100, 760, false)] // other heads never use the desktop frame
+    public void The_desktop_frame_is_for_a_landscape_windows_window_only(bool isWindows, bool tablet, double width, double height, bool expected)
+    {
+        Assert.Equal(expected, WindowShapeSeam.ReorderUsesDesktopGeometry(isWindows, tablet, width, height));
+    }
+
+    [Theory]
+    [InlineData(0, 12)]  // no top inset on the shelf: one gap down, as Slice 319 did
+    [InlineData(14, 14)] // beside the rail: the shelf's own inset
+    public void The_reorder_layer_on_a_tablet_keeps_the_shelf_geometry_and_the_hint_lines_up_with_the_grid(double shelfTop, double expectedTop)
+    {
+        WindowShapeSeam.ShelfGeometry shelf = new(316, shelfTop, 26, 4, 12, 12);
+
+        WindowShapeSeam.ReorderLayerShape shape = WindowShapeSeam.ReorderLayerShelf(shelf);
+
+        Assert.Equal(shelf with { Top = expectedTop }, shape.Grid); // no tablet frame in the mock
+        Assert.Equal(new WindowShapeSeam.ReorderHint(316, 12, 26, 8, 13.5), shape.Hint); // the hint starts at the grid's left edge (beside the rail: after it)
+    }
+
+    [Theory]
+    [InlineData(360, 780, false, false)]
+    [InlineData(780, 360, false, true)]  // a phone held sideways has no frame
+    [InlineData(800, 1200, true, true)]  // a tablet has none either
+    public void The_reorder_layer_uses_the_shelf_geometry_for_a_tablet_or_a_phone_held_sideways(double width, double height, bool tablet, bool expected)
+    {
+        Assert.Equal(expected, WindowShapeSeam.ReorderUsesShelfGeometry(tablet, width, height));
+    }
+
+    [Theory]
+    [InlineData(false, true, false, true)]
+    [InlineData(false, false, true, false)]
+    [InlineData(true, false, true, true)]
+    [InlineData(true, true, false, false)]
+    public void The_tablet_test_follows_the_shelf_or_the_corner(bool grownUp, bool shelfTablet, bool cornerTablet, bool expected)
+    {
+        Assert.Equal(expected, WindowShapeSeam.IsTabletUpright(grownUp, shelfTablet, cornerTablet));
+    }
+
     [Fact]
     public void The_rail_margins_are_named_constants()
     {

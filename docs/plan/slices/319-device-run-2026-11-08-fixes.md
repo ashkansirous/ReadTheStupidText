@@ -67,3 +67,7 @@ Third pass (reviews `s319-phone.md`, `s319-check3.md` #1, `s319-vm2.md`): (a) th
 
 - VM: `dino-record` key-R with the new prompt handling: the PickerHost consent window must be found, its deny button invoked (names logged), and the app's "Microphone is off" alert follow; the Record screen shows no loading state while `MediaCapture.InitializeAsync` waits on a pending prompt.
 - Maestro flow `.maestro/rtst/sentence-highlight.yaml` changed to the same text, not run. iOS shares `ReaderPage`; no iOS change.
+
+## Replaced by Slice 321
+
+The "lies over the shelf" design above (the Reorder layer copying the shelf list's geometry) was replaced by [Slice 321](321-reorder-layer-per-mock.md) to follow the mock (Batch 47 frames 173-176): the layer has its own grid per platform (phone 14 dp sides, 3 across; Windows 40 dp sides, 6 across, gap 18); only a tablet, which has no frame, still copies the shelf. Kept from here: one geometry record, the 1 dp relayout rule and the min tile clamp.

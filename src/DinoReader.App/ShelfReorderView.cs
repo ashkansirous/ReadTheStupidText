@@ -13,7 +13,7 @@ namespace DinoReader;
 internal sealed class ShelfReorderView : Grid
 {
 	private const double HeaderHeight = 44;
-	private const double TitleSpacing = 7;
+	private const double TitleSpacing = WindowShapeSeam.ReorderTitleSpacing; // the row gap in Core is computed against this spacing
 	private const double EdgeBand = 72;
 	private const double EdgeStep = 36;
 	private const double BottomRoom = 24;
@@ -23,7 +23,7 @@ internal sealed class ShelfReorderView : Grid
 	private const uint DropSettleMs = 150;
 	private const int HideSourceDelayMs = 100;
 
-	private readonly AbsoluteLayout _surface = new() { FlowDirection = FlowDirection.LeftToRight };
+	private readonly AbsoluteLayout _surface = new() { FlowDirection = FlowDirection.LeftToRight, VerticalOptions = LayoutOptions.Start }; // Start: with few books the surface (HeightRequest = the grid's height) is shorter than the viewport and the ScrollView centred it (Slice 321)
 	private readonly ScrollView _scroll = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Never };
 	private readonly Label _cancelLabel = new() { AutomationId = "ReorderCancel" };
 	private readonly Label _titleLabel = new();
@@ -50,7 +50,6 @@ internal sealed class ShelfReorderView : Grid
 		this.Add(Header(), 0, 0);
 		_hint.FontSize = 13.5;
 		_hint.TextColor = DinoTokens.Get(DinoTokens.Body);
-		_hint.Padding = new Thickness(18, 12, 18, 8);
 		_hint.AutomationId = "ReorderHint";
 		this.Add(_hint, 0, 1);
 		var drop = new DropGestureRecognizer { AllowDrop = true };
@@ -109,12 +108,13 @@ internal sealed class ShelfReorderView : Grid
 	}
 
 	/// <summary>Shows the mode over the gallery with <paramref name="tiles"/> in their shelf order; <paramref name="liftedId"/> starts lifted (the sheet's Reorder row).</summary>
-	public void Open(IReadOnlyList<StoryTile> tiles, string? liftedId, WindowShapeSeam.ShelfGeometry geometry, double titleHeight)
+	public void Open(IReadOnlyList<StoryTile> tiles, string? liftedId, WindowShapeSeam.ReorderLayerShape shape, double titleHeight)
 	{
 		ReorderTrace.Step($"view open begin books={tiles.Count} lifted={liftedId is not null}");
 		ClearEntries();
 		_lastLayoutWidth = 0; // a second open at the same width, or a first show at width 0, must still lay the tiles out
-		_geometry = geometry; // the shelf's exact margins
+		_geometry = shape.Grid; // the mock's grid for this platform (Slice 321)
+		ApplyHint(shape.Hint);
 		_titleHeight = titleHeight;
 		_closing = false;
 		_kbIndex = -1;
@@ -190,14 +190,16 @@ internal sealed class ShelfReorderView : Grid
 	private ReorderEntry? AtSlot(int slot) => _entries.FirstOrDefault(e => e.Slot == slot);
 
 	/// <summary>Re-fits the open mode to a new window shape (a rotation or a resize); nothing when it is closed.</summary>
-	public void Reshape(WindowShapeSeam.ShelfGeometry geometry)
+	public void Reshape(WindowShapeSeam.ReorderLayerShape shape)
 	{
+		WindowShapeSeam.ShelfGeometry geometry = shape.Grid;
 		if (!IsVisible || geometry.Columns < 1)
 		{
 			return;
 		}
 
-		bool sameWholeDp = WholeDpMargins(geometry) == WholeDpMargins(_geometry);
+		ApplyHint(shape.Hint);
+		bool sameWholeDp = WholeDp(geometry) == WholeDp(_geometry);
 		_geometry = geometry; // always stored, so a later width-triggered Relayout never fits with stale exact margins
 		if (sameWholeDp)
 		{
@@ -208,14 +210,20 @@ internal sealed class ShelfReorderView : Grid
 		_lastLayoutWidth = -1; // a rotation lands here before the scroll has its new width: the next width change, however small, must lay out again
 	}
 
-	// The grid floors its tile to whole dp, so a margin that moves by a fraction (the Windows side margin follows the page width above 1600 dp) is not a new layout: only the decision to lay out again compares whole dp;
-	// the layout itself uses the shelf's exact margins. Floor, as the shelf's own tile width does.
-	private static WindowShapeSeam.ShelfGeometry WholeDpMargins(WindowShapeSeam.ShelfGeometry geometry) =>
-		geometry with { Left = Math.Floor(geometry.Left), Right = Math.Floor(geometry.Right) };
+	// The grid floors its tile to whole dp, so a value that moves by a fraction (the Windows side margin above 1600 dp) is not a new layout: only the decision to lay out again compares
+	// the WHOLE geometry (every value, columns included) in whole dp; the layout itself uses the exact values. Floor, as the shelf's own tile width does.
+	private static WindowShapeSeam.ShelfGeometry WholeDp(WindowShapeSeam.ShelfGeometry g) =>
+		new(Math.Floor(g.Left), Math.Floor(g.Top), Math.Floor(g.Right), g.Columns, Math.Floor(g.GapX), Math.Floor(g.GapY));
 
-	// The layer starts where the shelf list does: the shelf's own top inset when it has one (beside the rail), else one gap down.
+	// The mock's grid starts right under the hint (top 0 on phone and Windows); a tablet's geometry already carries the shelf's old top inset (Slice 321).
 	private ShelfOrderGrid FitGrid(double width, double titleHeight) =>
-		ShelfOrderGrid.Fit(width, _geometry.Columns, _geometry.Left, _geometry.Right, _geometry.Top > 0 ? _geometry.Top : _geometry.GapY, _geometry.GapX, _geometry.GapY, titleHeight, TitleSpacing);
+		ShelfOrderGrid.Fit(width, _geometry.Columns, _geometry.Left, _geometry.Right, _geometry.Top, _geometry.GapX, _geometry.GapY, titleHeight, TitleSpacing);
+
+	private void ApplyHint(WindowShapeSeam.ReorderHint hint)
+	{
+		_hint.FontSize = hint.FontSize;
+		_hint.Padding = new Thickness(hint.Left, hint.Top, hint.Right, hint.Bottom);
+	}
 
 	private void ToggleKeyboardLift()
 	{
