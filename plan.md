@@ -37,7 +37,7 @@ Open slices only. Finished slices (169 rows) are in [slices-done](docs/plan/note
 | 341 | Listening page: Farsi short words never dropped | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [341-farsi-short-words-never-dropped.md](docs/plan/slices/341-farsi-short-words-never-dropped.md) |
 | 342 | Listening page: Farsi voice pack | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [342-farsi-voice-pack.md](docs/plan/slices/342-farsi-voice-pack.md) |
 | 343 | Listening page: four Farsi voices | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [343-four-farsi-voices.md](docs/plan/slices/343-four-farsi-voices.md) |
-| 344 | RTST: the Debug stall hook must block the reader's first-chunk wait (`stall-return-overlay`) | planned | | | [344-rtst-stall-hook-blocks-reader.md](docs/plan/slices/344-rtst-stall-hook-blocks-reader.md) |
+| 345 | RTST: the Debug stall hook must block the reader's first-chunk wait (`stall-return-overlay`) | planned | | | [345-rtst-stall-hook-blocks-reader.md](docs/plan/slices/345-rtst-stall-hook-blocks-reader.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 

@@ -20,7 +20,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **You:** iOS phone/tablet: the same shared MAUI code; no Mac, not run.
 
 ### Slice 320: Device-check fixes and missing test hooks from the 2026-11-08 run ([slice](slices/320-device-check-tooling-from-2026-11-08-run.md))
-- **Device:** RTST `stall-return-overlay` failed twice (the hook does not block the reader); moved to [Slice 344](slices/344-rtst-stall-hook-blocks-reader.md).
+- **Device:** RTST `stall-return-overlay` failed twice (the hook does not block the reader); moved to [Slice 345](slices/345-rtst-stall-hook-blocks-reader.md).
 - **Device:** On the S21: `book-end` on Dino with the fixture pack, `run-checks -Prepare -App dino`, `paused-notification-repost` flag reading (Samsung form unknown).
 - **You:** iOS: the new hooks are untried (no Mac, no iOS compile was possible).
 - **Device:** `sentence-highlight` Maestro flow on the emulator is still unrun (the S21 run passed, Slice 319).
