@@ -36,7 +36,7 @@ name: Settings, Reading speed row opens its page
 - extendedWaitUntil:
     visible: Slower is easier for little ones
     timeout: 10000
-# Slice 322: clearState above makes this a fresh install, which starts at 1x (Decision 172).
+# Slice 324: clearState above makes this a fresh install, which starts at 1x (Decision 172).
 - assertVisible: "1x"
 # Back returns to the Settings list, where the row is still there.
 - back

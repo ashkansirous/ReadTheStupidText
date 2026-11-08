@@ -1,6 +1,6 @@
 # Slice 150 — Dino: slower reading by default, and a grown-up speed setting
 
-*Default changed 2026-11-08:* a fresh install now reads at 1x (Decision 172, Slice 322: docs/plan/slices/322-dino-default-speed-1x.md); the 0.8x lines below are this slice's history, and its 0.8x device check is replaced by Slice 322's.
+*Default changed 2026-11-08:* a fresh install now reads at 1x (Decision 172, Slice 324: docs/plan/slices/324-dino-default-speed-1x.md); the 0.8x lines below are this slice's history, and its 0.8x device check is replaced by Slice 324's.
 
 *Built 2026-10-26 (PR #429), not yet verified on a real phone.* Dino Reader only; RTST is not touched.
 

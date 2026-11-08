@@ -4,7 +4,7 @@ namespace DinoReader.Core;
 
 /// <summary>
 /// Dino Reader's own reading-speed range (Slice 150, Decision 155): 0.5x to 1.2x in 0.05 steps, 1x until a grown-up
-/// chooses (Slice 322, Decision 172). Narrower than the shared <see cref="PlaybackRate"/> (0.5-2.0), which RTST keeps; nothing above 1.2x can reach the reader.
+/// chooses (Slice 324, Decision 172). Narrower than the shared <see cref="PlaybackRate"/> (0.5-2.0), which RTST keeps; nothing above 1.2x can reach the reader.
 /// </summary>
 public static class ReadingSpeed
 {
