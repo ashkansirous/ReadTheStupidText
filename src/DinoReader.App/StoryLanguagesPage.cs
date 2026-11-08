@@ -14,6 +14,7 @@ namespace DinoReader;
 public sealed class StoryLanguagePicker : ContentView
 {
 	private const double RowMinHeight = 54;
+	private const double TabletRowMinHeight = 64;
 	private const double CheckSize = 26;
 	private const double CheckCorner = 8;
 	private const double NameSize = 15;
@@ -26,6 +27,7 @@ public sealed class StoryLanguagePicker : ContentView
 	private readonly ShelfAudioPacks? _shelf;
 	private readonly Dictionary<string, VerticalStackLayout> _shelfHosts = [];
 	private readonly Dictionary<string, View> _shelfCards = [];
+	private double _rowMinHeight = RowMinHeight;
 
 	public StoryLanguagePicker(StoryLanguageSet initial, ShelfAudioPacks? shelf = null)
 	{
@@ -39,6 +41,21 @@ public sealed class StoryLanguagePicker : ContentView
 
 	/// <summary>Raised after a tick or an untick with the language and whether it is now ticked.</summary>
 	public event Action<string, bool>? Toggled;
+
+	/// <summary>True gives the rows the tablet height of the intro's languages step (frame OT9); Settings leaves it false.</summary>
+	public bool TabletRows
+	{
+		get => _rowMinHeight == TabletRowMinHeight;
+		set
+		{
+			double height = value ? TabletRowMinHeight : RowMinHeight;
+			if (height != _rowMinHeight)
+			{
+				_rowMinHeight = height;
+				Rebuild();
+			}
+		}
+	}
 
 	/// <summary>Builds the rows again from the current ticks.</summary>
 	public void Rebuild()
@@ -77,7 +94,7 @@ public sealed class StoryLanguagePicker : ContentView
 		bool disabled = !ticked && Set.IsFull;
 		var grid = new Grid
 		{
-			MinimumHeightRequest = RowMinHeight,
+			MinimumHeightRequest = _rowMinHeight,
 			Padding = new Thickness(14, 8),
 			ColumnSpacing = 12,
 			ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)],

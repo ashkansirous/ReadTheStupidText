@@ -17,27 +17,22 @@ namespace DinoReader;
 /// and <b>Skip</b>; coming back from the screen moves on to the next step. A fourth step (Slice 173, mock frame 86) asks which story languages the
 /// child's books should be in, with <b>Done</b> and <b>Skip</b>. <b>Skip all</b> ends it at once. A first-run intro ends on the
 /// "Ready for my child" hand-over and saves its step so a restart resumes it; a replay (from grown-up settings) is not saved and ends back
-/// where it was opened. No coach-marks, tips or what's-new screens.
+/// where it was opened. No coach-marks, tips or what's-new screens. Slice 325 part E (onboarding mock 2026-11-08, frames O6-O9): every step sits on <see cref="OnboardingShell"/>
+/// under a top bar of pager dots, "N of 4" and Skip all; on Windows Enter is Next, Esc is Skip all and the arrows step back and forward.
 /// </summary>
-public sealed class IntroWizardPage : ContentPage
+public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 {
 	private const double BarHeight = 44;
 	private const double BodyPadding = 22;
-	private const double TitleSize = 26;
-	private const double LineSize = 14.5;
-	private const double LineMaxWidth = 280;
 	private const double CounterSize = 13;
 	private const double DotSize = 8;
 	private const double CurrentDotWidth = 22;
 	private const double SkipHeight = 44;
 	private const double TextButtonSize = 15;
 	private const double PlaceCardCorner = 16;
-	private const double PlaceCardTitleSize = 16;
+	private const double PlaceCardTitleSize = 15.5;
 	private const double PlaceCardLineSize = 14;
-	private const double TabletTitleSize = 40;
-	private const double TabletLineSize = 19;
-	private const double TabletBodyPadding = 40;
-	private const double TabletPanelCorner = 32;
+	private const double StackLineMaxWidth = 280;
 
 	private readonly IStoryLibrary _library;
 	private readonly GrownUpMode _mode;
@@ -45,7 +40,6 @@ public sealed class IntroWizardPage : ContentPage
 	private readonly IServiceProvider _services;
 	private readonly BusyGuard _busy = new();
 	private readonly Grid _root = new() { RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star)] };
-	private IntroPictures _pictures = IntroPictures.None;
 	private readonly WaitOverlay _waitOverlay = DinoWait.OverPage();
 	private readonly WaitController _wait;
 	private StoryLanguagePicker? _languagePicker; // the picks of the story-languages step, kept while it shows
@@ -57,9 +51,12 @@ public sealed class IntroWizardPage : ContentPage
 	private bool _hasStarter; // a starter book exists to open in the reader (the Read step); a separate question from whether Record can run
 	private bool _ended;
 	private Size _windowSize;
-	private IntroShape _shape = OnboardingLayout.Intro(0, 0);
+	private OnboardingShape _shape = OnboardingLayout.Shape(0, 800, DesktopTips.IsWindows, intro: true);
 	private Grid? _bar; // the step bar of the step shown, kept so a size change can move its start clear of the camera cut-out
-	private Action<IntroShape>? _place; // places the views of the step shown for a shape; set by whichever builder made the body, so a size change never rebuilds a step
+	private OnboardingShell? _shell; // the body of the step shown
+	private Action<OnboardingShape>? _place; // places the views of the step shown for a shape; set by whichever builder made the body, so a size change never rebuilds a step
+	private Func<Task>? _mainAction; // what the step's main button does (Enter on Windows)
+	private Func<Task>? _forwardAction; // what the right arrow does on Windows: the step's Skip, or Next on the first card
 
 	public IntroWizardPage(IStoryLibrary library, GrownUpMode mode, UsageCounter usage, IServiceProvider services)
 	{
@@ -98,32 +95,12 @@ public sealed class IntroWizardPage : ContentPage
 		_wait.Begin(WaitStage.GettingFile, AppResources.Wait_GettingBook, canCancel: false);
 		try
 		{
-			_pictures = await LoadIntroPicturesAsync();
 			_hasStarter = await HasStarterAsync();
 			_canRecord = _hasStarter;
 		}
 		finally
 		{
 			_wait.End();
-		}
-	}
-
-	private async Task<IntroPictures> LoadIntroPicturesAsync()
-	{
-		try
-		{
-			return await IntroPictures.LoadAsync(_library);
-		}
-		catch (OperationCanceledException)
-		{
-			// no-fallback: a cancelled load is not a failure; the intro starts with no pictures
-			return IntroPictures.None;
-		}
-		catch (Exception ex)
-		{
-			DinoFallbacks.Report(FallbackArea.Library, FallbackReason.StoryUnreadable); // Slice 275 part 3: the intro starts with no pictures
-			Debug.WriteLine($"Dino Reader could not load the intro pictures: {ex}");
-			return IntroPictures.None;
 		}
 	}
 
@@ -178,18 +155,59 @@ public sealed class IntroWizardPage : ContentPage
 		return true;
 	}
 
+	// Windows (frame OW6): Enter is the step's main button, Esc is Skip all, Left and Right step back and forward. Nothing reaches this page off Windows.
+	DinoScreen IDinoKeyTarget.Screen => DinoScreen.Intro;
+
+	bool IDinoKeyTarget.Handle(DinoKeyAction action, DinoKey key)
+	{
+		Func<Task>? run = action switch
+		{
+			DinoKeyAction.IntroNext => _mainAction,
+			DinoKeyAction.IntroSkipAll => SkipAllAsync,
+			DinoKeyAction.IntroPrevious => _step > 0 ? PreviousAsync : null,
+			DinoKeyAction.IntroForward => _forwardAction,
+			_ => null,
+		};
+		if (run is null || _ended)
+		{
+			return false;
+		}
+
+		// Enter is always Next/Done and always claimed here; Space activates whatever has focus (Slice 325 design note, third strike)
+		_ = _busy.RunAsync(run);
+		return true;
+	}
+
+	// The left arrow shows the step before (nothing counted); a first-run intro saves where it is, like Next does.
+	private async Task PreviousAsync()
+	{
+		_step--;
+		if (!_replay)
+		{
+			IntroState.Step = _step;
+		}
+
+		await RefreshCanRecordAsync(); // a book may have come in since, like Next does
+		Render();
+	}
+
+	private readonly HashSet<int> _countedSteps = [];
+
 	private void Render()
 	{
 		_root.Children.Clear();
 		_place = null;
+		_mainAction = null;
+		_forwardAction = null;
 		_bar = BuildBar();
-		_root.Add(_bar, 0, 0);
-		_root.Add(BuildBody(), 0, 1);
+		_shell = BuildBody();
+		_root.Add(_shell, 0, 1);
+		_root.Add(_bar, 0, 0); // added last so it sits over the shell when the shell spans both rows
 		ApplyShape();
 	}
 
-	// Slice 232 part E (mock Batch 44 frames 121, 130): held sideways every step splits (picture panel left, copy right, Skip and the main button in one row); the
-	// step, the replay flag and the language picks are fields of this page, so a size change only re-places the views the step build already made.
+	// Slice 325 part E (onboarding mock frames O6-O9): one column under 600 dp wide, two panes from 600; the step, the replay flag and the language picks are fields of this page,
+	// so a size change only re-places the views the step build already made.
 	protected override void OnSizeAllocated(double width, double height)
 	{
 		base.OnSizeAllocated(width, height);
@@ -200,7 +218,7 @@ public sealed class IntroWizardPage : ContentPage
 		}
 
 		_windowSize = new Size(width, height);
-		IntroShape shape = OnboardingLayout.Intro(width, height);
+		OnboardingShape shape = OnboardingLayout.Shape(width, height, DesktopTips.IsWindows, intro: true);
 		if (shape != _shape)
 		{
 			_shape = shape;
@@ -208,19 +226,37 @@ public sealed class IntroWizardPage : ContentPage
 		}
 	}
 
+	// Stacked, the bar is a row above the shell. Split (frames OL7, OT6, OTL7, OW6) the washed left pane reaches the top edge and the bar floats over the right pane only.
+	private void PlaceBar()
+	{
+		if (_bar is null || _shell is null)
+		{
+			return;
+		}
+
+		_bar.Margin = new Thickness(_shape.Split ? _shape.LeftPane : 0, 0, 0, 0);
+		_shell.RightTopInset = _shape.Split ? BarHeight : 0;
+		Grid.SetRow(_shell, _shape.Split ? 0 : 1);
+		Grid.SetRowSpan(_shell, _shape.Split ? 2 : 1);
+	}
+
 	private void ApplyShape()
 	{
+		PlaceBar();
 		if (_bar is not null)
 		{
 			_bar.Padding = new Thickness(BodyPadding, 6, 10, 0);
 		}
 
+		_shell?.Place(_shape);
 		_place?.Invoke(_shape);
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] intro split={_shape.Split} step={IntroSteps.NameAt(_step)} panel={_shape.PanelHeight}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] intro split={_shape.Split} step={IntroSteps.NameAt(_step)} panel={_shape.LeftPane}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] intro step={IntroSteps.NameAt(_step)} shape={(_shape.Split ? "split" : "stack")}");
 #endif
 	}
 
+	// The top bar (frame O6): pager dots, "N of 4" and Skip all (a 44 dp target).
 	private Grid BuildBar()
 	{
 		var dots = new HorizontalStackLayout { Spacing = 6, VerticalOptions = LayoutOptions.Center };
@@ -244,17 +280,17 @@ public sealed class IntroWizardPage : ContentPage
 		return bar;
 	}
 
-	// Done and current dots are brand-blue, the current one a wider pill; the ones ahead are grey.
+	// The current dot is a wide Brand pill; every other one is a small grey dot (frame O6).
 	private Border BuildDot(int index) => new()
 	{
 		HeightRequest = DotSize,
 		WidthRequest = index == _step ? CurrentDotWidth : DotSize,
 		StrokeThickness = 0,
 		StrokeShape = new RoundRectangle { CornerRadius = DotSize / 2 },
-		BackgroundColor = DinoTokens.Get(index <= _step ? DinoTokens.Brand : DinoTokens.DotIdle),
+		BackgroundColor = DinoTokens.Get(index == _step ? DinoTokens.Brand : DinoTokens.DotIdle),
 	};
 
-	private Grid BuildBody()
+	private OnboardingShell BuildBody()
 	{
 		string? step = IntroSteps.NameAt(_step);
 		if (step == IntroSteps.Languages)
@@ -267,30 +303,30 @@ public sealed class IntroWizardPage : ContentPage
 			return BuildPlacesBody();
 		}
 
-		bool windows = DeviceInfo.Platform == DevicePlatform.WinUI;
 		(string title, string line) = step == IntroSteps.Read
 			? (AppResources.Intro_ReadTitle, AppResources.Intro_ReadLine)
 			: (AppResources.Intro_RecordTitle, AppResources.Intro_RecordLine);
-		var heading = new Label { Text = title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, Margin = new Thickness(0, 10, 0, 0) };
+		var heading = new Label { Text = title, FontAttributes = FontAttributes.Bold };
 		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level1);
-		var body = new Label { Text = line, FontSize = LineSize, LineHeight = 1.35, TextColor = DinoTokens.Get(DinoTokens.Body), HorizontalTextAlignment = TextAlignment.Center, MaximumWidthRequest = LineMaxWidth };
+		var body = new Label { Text = line, LineHeight = 1.35, TextColor = DinoTokens.Get(DinoTokens.Body) };
 		var copy = new VerticalStackLayout { Spacing = 14, Children = { heading, body } };
 		if (step == IntroSteps.Record)
 		{
-			Label stayNote = RecordViews.StayNote(); // Slice 230: where recordings go, before the grown-up records anything
-			stayNote.HorizontalTextAlignment = TextAlignment.Center;
-			copy.Children.Add(stayNote);
+			copy.Children.Add(RecordViews.StayNote()); // Slice 230: where recordings go, before the grown-up records anything
 		}
 
 		var tryIt = new CoralButton { Text = AppResources.Intro_TryIt, IsVisible = TryItVisible(step) };
 		tryIt.Clicked += async (_, _) => await _busy.RunAsync(TryAsync);
-		return BuildSplitBody(IntroArt.Build(IntroSteps.NameAt(_step)!, _pictures, windows), copy, tryIt, TextButton(AppResources.Intro_Skip, () => _busy.RunAsync(SkipAsync), SkipHeight, DinoTokens.Body));
+		Button skip = TextButton(AppResources.Intro_Skip, () => _busy.RunAsync(SkipAsync), SkipHeight, DinoTokens.Body);
+		_mainAction = tryIt.IsVisible ? TryAsync : SkipAsync;
+		_forwardAction = SkipAsync;
+		return BuildStepShell(IntroArt.Build(step!), copy, tryIt, skip);
 	}
 
-	// The body of a step with a picture (all but the languages step): one grid whose cells are re-placed per shape, the same views upright and sideways.
-	// Rows: spacer, picture, copy, spacer, buttons (the two spacers centre the picture and copy upright; sideways the picture spans the left panel and the copy the right).
-	private Grid BuildSplitBody(View art, View copy, View main, View? skip)
+	// A step with a picture: the picture left (scaled per shape), the words right, the buttons at the foot. The same views upright and sideways; only their places and sizes change.
+	private OnboardingShell BuildStepShell(View art, View copy, CoralButton main, View? skip)
 	{
+		var artHost = new Grid { Children = { art }, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
 		var buttons = new Grid { RowSpacing = 4, ColumnSpacing = 8 };
 		buttons.Add(main);
 		if (skip is not null)
@@ -298,54 +334,48 @@ public sealed class IntroWizardPage : ContentPage
 			buttons.Add(skip);
 		}
 
-		var grid = new Grid { Padding = new Thickness(BodyPadding, 0, BodyPadding, 26), RowSpacing = 0, ColumnSpacing = 10 };
-		grid.RowDefinitions = [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)];
-		// The cream panel behind the picture exists only on a tablet held upright (Slice 234 part B, frame 141); it is added first so the picture draws over it.
-		var panel = new Border { StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = TabletPanelCorner }, BackgroundColor = ReadingTheme.For(false).PicturePanel, IsVisible = false, InputTransparent = true };
-		grid.Add(panel);
-		grid.Add(art);
-		grid.Add(copy);
-		grid.Add(buttons);
-		_place = shape => PlaceSplitBody(grid, new SplitViews(panel, art, copy, buttons, main, skip), shape);
-		return grid;
+		var shell = new OnboardingShell(artHost, CentredScroll(copy), buttons);
+		_place = shape =>
+		{
+			ScaleArt(artHost, art, shape);
+			StyleCopy(copy, shape, StackLineMaxWidth);
+			PlaceButtons(buttons, main, skip, shape);
+		};
+		return shell;
 	}
 
-	private sealed record SplitViews(Border Panel, View Art, View Copy, Grid Buttons, View Main, View? Skip);
-
-	private static void PlaceSplitBody(Grid grid, SplitViews views, IntroShape shape)
+	// The picture is drawn at its own size and scaled about its centre; the host takes the scaled size so the layout makes room for it (80% beside the words or on a short page, 115% and 160% on tablets).
+	private static void ScaleArt(Grid host, View art, OnboardingShape shape)
 	{
-		(Border panel, View art, View copy, Grid buttons, View main, View? skip) = (views.Panel, views.Art, views.Copy, views.Buttons, views.Main, views.Skip);
-		bool stacked = shape.PanelHeight > 0;
-		grid.Padding = stacked ? new Thickness(TabletBodyPadding, 0, TabletBodyPadding, TabletBodyPadding) : new Thickness(BodyPadding, 0, BodyPadding, 26);
-		grid.ColumnDefinitions = shape.Split ? [new ColumnDefinition(new GridLength(shape.PicturePanel)), new ColumnDefinition(GridLength.Star)] : [];
-		grid.RowDefinitions[0].Height = stacked ? new GridLength(0) : GridLength.Star; // stacked, the picture panel starts at the top and the buttons sit at the foot
-		int column = shape.Split ? 1 : 0;
-		SetCell(art, shape.Split ? 0 : 1, 0, shape.Split ? 5 : 1);
-		SetCell(panel, 1, 0, 1);
-		SetCell(copy, shape.Split ? 1 : 2, column, shape.Split ? 2 : 1);
-		SetCell(buttons, 4, column, 1);
-		panel.IsVisible = stacked;
-		panel.HeightRequest = stacked ? shape.PanelHeight : -1;
-		art.VerticalOptions = LayoutOptions.Center;
+		double scale = OnboardingLayout.ArtScale(shape);
+		host.WidthRequest = art.WidthRequest * scale;
+		host.HeightRequest = art.HeightRequest * scale;
+		art.Scale = scale;
 		art.HorizontalOptions = LayoutOptions.Center;
-		copy.VerticalOptions = stacked ? LayoutOptions.Start : LayoutOptions.Center;
-		copy.HorizontalOptions = stacked ? LayoutOptions.Start : LayoutOptions.Center;
-		copy.Margin = new Thickness(0, shape.Split ? 0 : stacked ? 20 : 14, 0, 0);
-		copy.MaximumWidthRequest = shape.TextMaxWidth;
-		StyleCopy(copy, stacked, shape.TextMaxWidth, LineMaxWidth);
-		PlaceButtons(buttons, main, skip, shape.ButtonsInRow);
+		art.VerticalOptions = LayoutOptions.Center;
 	}
 
-	// The tablet's copy is left aligned with a bigger heading and line (frame 141); the heading and the line are the first two labels of a step's copy.
-	private static void StyleCopy(View copy, bool stacked, double textMaxWidth, double plainLineMaxWidth)
+	// The words scroll when a large font makes them taller than the pane, and sit vertically centred in the pane when they are not (frames OT6, OW6).
+	private static ScrollView CentredScroll(View copy)
+	{
+		var holder = new Grid { Children = { copy } };
+		var scroll = new ScrollView { Content = holder };
+		scroll.SizeChanged += (_, _) => holder.MinimumHeightRequest = Math.Max(0, scroll.Height);
+		return scroll;
+	}
+
+	// Heading and line sizes per shape: 26 / 14.5 stacked (24 / 14 under 700 tall), 24 / 14 on a phone held sideways, 34 / 18 on a tablet held upright, 40 / 19 sideways, 34 / 17 on Windows;
+	// centred stacked, left-aligned in a pane. The heading and the line are the first two labels of a step's copy.
+	private static void StyleCopy(View copy, OnboardingShape shape, double stackLineMaxWidth)
 	{
 		if (copy is not VerticalStackLayout stack)
 		{
 			return;
 		}
 
+		(double title, double line) = CopySizes(shape);
+		TextAlignment align = shape.Split ? TextAlignment.Start : TextAlignment.Center;
 		Label[] labels = [.. stack.Children.OfType<Label>()];
-		TextAlignment align = stacked ? TextAlignment.Start : TextAlignment.Center;
 		foreach (Label label in labels)
 		{
 			label.HorizontalTextAlignment = align; // every text label of the copy, including the Record step's stay note
@@ -353,21 +383,46 @@ public sealed class IntroWizardPage : ContentPage
 
 		if (labels.Length > 0)
 		{
-			labels[0].FontSize = stacked ? TabletTitleSize : TitleSize;
+			labels[0].FontSize = title;
 		}
 
 		if (labels.Length > 1)
 		{
-			labels[1].FontSize = stacked ? TabletLineSize : LineSize;
-			labels[1].MaximumWidthRequest = stacked ? textMaxWidth : plainLineMaxWidth;
+			labels[1].FontSize = line;
+			labels[1].MaximumWidthRequest = shape.Split ? double.PositiveInfinity : stackLineMaxWidth;
+			labels[1].HorizontalOptions = shape.Split ? LayoutOptions.Fill : LayoutOptions.Center;
 		}
+
+		stack.VerticalOptions = shape.Split ? LayoutOptions.Center : LayoutOptions.Start;
+		stack.Margin = new Thickness(0, shape.Split ? 0 : 10, 0, 0);
 	}
 
-	// Skip and the main button share one row sideways (Skip left); upright the main button sits over Skip.
-	private static void PlaceButtons(Grid buttons, View main, View? skip, bool inRow)
+	private static (double Title, double Line) CopySizes(OnboardingShape shape)
 	{
-		buttons.ColumnDefinitions = inRow && skip is not null ? [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)] : [];
-		// Upright the two buttons need their own rows: a Grid with no row definitions has one implicit row and clamps Grid.Row 1 into it, which drew Skip over Try it (Slice 267).
+		if (!shape.Split)
+		{
+			return shape.Compact ? (24, 14) : (26, 14.5);
+		}
+
+		return shape.Family switch
+		{
+			OnboardingFamily.TabletLandscape => (40, 19),
+			OnboardingFamily.TabletPortrait => (34, 18),
+			OnboardingFamily.Windows => (34, 17),
+			_ => (24, 14),
+		};
+	}
+
+	// The step's buttons: stacked, the main button over Skip, full width; beside the panes they share one row (main first, then Skip), the main button 220 x 50 (260 x 52 on Windows).
+	private static void PlaceButtons(Grid buttons, CoralButton main, View? skip, OnboardingShape shape)
+	{
+		bool inRow = shape.Split && skip is not null;
+		(double width, double height) = OnboardingLayout.ContinueSize(shape);
+		main.SetSize(width, height);
+		main.HorizontalOptions = shape.Split ? LayoutOptions.Start : LayoutOptions.Fill;
+		main.VerticalOptions = LayoutOptions.Center;
+		buttons.ColumnDefinitions = inRow ? [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Auto)] : [];
+		// Stacked the two buttons need their own rows: a Grid with no row definitions has one implicit row and clamps Grid.Row 1 into it, which drew Skip over Try it (Slice 267).
 		buttons.RowDefinitions = skip is not null && !inRow ? [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto)] : [new RowDefinition(GridLength.Auto)];
 		if (skip is null || !inRow)
 		{
@@ -380,8 +435,8 @@ public sealed class IntroWizardPage : ContentPage
 			return;
 		}
 
-		SetCell(skip, 0, 0, 1);
-		SetCell(main, 0, 1, 1);
+		SetCell(main, 0, 0, 1);
+		SetCell(skip, 0, 1, 1);
 	}
 
 	private static void SetCell(View view, int row, int column, int rowSpan)
@@ -394,27 +449,21 @@ public sealed class IntroWizardPage : ContentPage
 	// Read needs a starter to open; Record needs whatever recording needs.
 	private bool TryItVisible(string? step) => step == IntroSteps.Read ? _hasStarter : _canRecord;
 
-	// The first card (Batch 43 frame 101): the two places side by side, a picture and one Next button. No Try it and no Skip: Skip all is in the bar.
-	private Grid BuildPlacesBody()
+	// The first card (frame O6): the two places, a picture and one Next button. No Try it and no Skip: Skip all is in the bar.
+	private OnboardingShell BuildPlacesBody()
 	{
-		var heading = new Label { Text = AppResources.Intro_PlacesTitle, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, Margin = new Thickness(0, 10, 0, 0) };
+		var heading = new Label { Text = AppResources.Intro_PlacesTitle, FontAttributes = FontAttributes.Bold };
 		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level1);
-		Border kids = PlaceCard(null, AppResources.Intro_PlacesKidsTitle, AppResources.Intro_PlacesKidsLine);
+		string kidsLine = DesktopTips.IsWindows ? AppResources.Intro_PlacesKidsLineClick : AppResources.Intro_PlacesKidsLine; // "click" on a computer (frame OW6)
+		Border kids = PlaceCard(null, AppResources.Intro_PlacesKidsTitle, kidsLine);
 		Border grown = PlaceCard(IconKind.Lock, AppResources.Gallery_CornerTitle, AppResources.Intro_PlacesGrownLine);
-		var cards = new Grid { RowSpacing = 10, ColumnSpacing = 10, Children = { kids, grown } }; // one above the other upright, side by side sideways (frame 121)
+		var cards = new VerticalStackLayout { Spacing = 10, Children = { kids, grown } };
 		var copy = new VerticalStackLayout { Spacing = 14, Children = { heading, cards } };
 		var next = new CoralButton { Text = AppResources.Wizard_Next, AutomationId = "IntroNext" };
 		next.Clicked += async (_, _) => await _busy.RunAsync(NextAsync);
-		Grid body = BuildSplitBody(IntroArt.Build(IntroSteps.Places, _pictures, false), copy, next, null);
-		Action<IntroShape> placeBody = _place!;
-		_place = shape =>
-		{
-			placeBody(shape);
-			cards.ColumnDefinitions = shape.Split ? [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)] : [];
-			SetCell(kids, 0, 0, 1);
-			SetCell(grown, shape.Split ? 0 : 1, shape.Split ? 1 : 0, 1);
-		};
-		return body;
+		_mainAction = NextAsync;
+		_forwardAction = NextAsync;
+		return BuildStepShell(IntroArt.Build(IntroSteps.Places), copy, next, null);
 	}
 
 	private static Border PlaceCard(IconKind? icon, string title, string line)
@@ -431,7 +480,7 @@ public sealed class IntroWizardPage : ContentPage
 		{
 			BackgroundColor = Colors.White,
 			StrokeThickness = 0,
-			Padding = new Thickness(16, 12),
+			Padding = new Thickness(14, 12),
 			StrokeShape = new RoundRectangle { CornerRadius = PlaceCardCorner },
 			Content = new VerticalStackLayout { Spacing = 2, Children = { head, body } },
 		};
@@ -444,43 +493,37 @@ public sealed class IntroWizardPage : ContentPage
 		return AdvanceAsync();
 	}
 
-	// The fourth step (mock 86): the app language is ticked and locked, up to two more can be ticked; Done saves them and starts their audio, Skip keeps the app language only.
-	private Grid BuildLanguagesBody()
+	// The fourth step (frame O9): the heading and line left (above the list stacked), the app language ticked and locked, up to two more can be ticked; Done saves them and starts their audio, Skip keeps the app language only.
+	private OnboardingShell BuildLanguagesBody()
 	{
-		var heading = new Label { Text = AppResources.StoryLanguages_IntroTitle, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, Margin = new Thickness(0, 10, 0, 0) };
+		var heading = new Label { Text = AppResources.StoryLanguages_IntroTitle, FontAttributes = FontAttributes.Bold };
 		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level1);
-		var line = new Label { Text = AppResources.StoryLanguages_IntroLine, FontSize = LineSize, LineHeight = 1.35, TextColor = DinoTokens.Get(DinoTokens.Body), HorizontalTextAlignment = TextAlignment.Center };
-		_languagePicker ??= new StoryLanguagePicker(StoryLanguages.Current());
+		var line = new Label { Text = AppResources.StoryLanguages_IntroLine, LineHeight = 1.35, TextColor = DinoTokens.Get(DinoTokens.Body) };
+		StoryLanguagePicker picker = _languagePicker ??= new StoryLanguagePicker(StoryLanguages.Current());
+		if (_languagePicker.Parent is ScrollView previousHost)
+		{
+			previousHost.Content = null; // stepping back and forward rebuilds this step; a view with two parents throws or draws blank
+		}
+
 		var done = new CoralButton { Text = AppResources.Common_Done };
 		done.Clicked += async (_, _) => await _busy.RunAsync(DoneLanguagesAsync);
 		StoryLanguageSet saved = StoryLanguages.Current();
 		string skip = saved.Sides.Count == 0 ? AppResources.Format(AppResources.StoryLanguages_SkipOnly, LanguageNames.NativeName(saved.Main)) : AppResources.Intro_Skip; // Skip changes nothing, so it only says "only X" when X is all there is
 		Button skipButton = TextButton(skip, () => _busy.RunAsync(SkipAsync), SkipHeight, DinoTokens.Body);
+		_mainAction = DoneLanguagesAsync;
+		_forwardAction = null; // the last step: the right arrow must not end the intro and drop ticks not yet confirmed with Done or Skip
 		var buttons = new Grid { RowSpacing = 4, ColumnSpacing = 8 };
 		buttons.Add(done);
 		buttons.Add(skipButton);
 		var top = new VerticalStackLayout { Spacing = 12, Children = { heading, line } };
-		var picker = new ScrollView { Content = _languagePicker };
-		var grid = new Grid { Padding = new Thickness(BodyPadding, 0, BodyPadding, 26), RowSpacing = 12, ColumnSpacing = 18, RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)] };
-		grid.Add(top);
-		grid.Add(picker);
-		grid.Add(buttons);
-		_place = shape => PlaceLanguagesBody(grid, top, picker, buttons, done, skipButton, shape);
-		return grid;
-	}
-
-	// Sideways the heading and line sit in the left panel, the picker and the Skip / Done row on the right; the picker object is kept across the move.
-	private static void PlaceLanguagesBody(Grid grid, View top, View picker, Grid buttons, View done, View skip, IntroShape shape)
-	{
-		grid.Padding = new Thickness(BodyPadding, 0, BodyPadding, 26);
-		grid.ColumnDefinitions = shape.Split ? [new ColumnDefinition(new GridLength(shape.PicturePanel)), new ColumnDefinition(GridLength.Star)] : [];
-		int column = shape.Split ? 1 : 0;
-		SetCell(top, 0, 0, shape.Split ? 3 : 1);
-		top.VerticalOptions = shape.Split ? LayoutOptions.Center : LayoutOptions.Start;
-		StyleCopy(top, shape.PanelHeight > 0, shape.TextMaxWidth, double.PositiveInfinity);
-		SetCell(picker, shape.Split ? 0 : 1, column, shape.Split ? 2 : 1);
-		SetCell(buttons, 2, column, 1);
-		PlaceButtons(buttons, done, skip, shape.ButtonsInRow);
+		var shell = new OnboardingShell(top, new ScrollView { Content = _languagePicker }, buttons);
+		_place = shape =>
+		{
+			StyleCopy(top, shape, double.PositiveInfinity);
+			PlaceButtons(buttons, done, skipButton, shape);
+			picker.TabletRows =shape.Family is OnboardingFamily.TabletPortrait or OnboardingFamily.TabletLandscape; // frame OT9: 64 dp rows; Settings keeps its own
+		};
+		return shell;
 	}
 
 	// Saves the ticked languages, starts the pre-made audio of each (it keeps downloading behind the next screens; Settings shows its progress) and counts the set.
@@ -538,8 +581,15 @@ public sealed class IntroWizardPage : ContentPage
 		return button;
 	}
 
-	private void CountStep(bool tried) =>
+	private void CountStep(bool tried)
+	{
+		if (!_countedSteps.Add(_step))
+		{
+			return; // reached again with the left arrow, or counted by a fast second press: already counted
+		}
+
 		_usage.RecordGeneral(UsageEventName.IntroStep, LanguageChoice.Current(), UsageDetail.IntroStepAction(IntroSteps.NameAt(_step)!, tried));
+	}
 
 	private async Task TryAsync()
 	{

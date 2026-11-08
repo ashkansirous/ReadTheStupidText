@@ -39,6 +39,12 @@ public enum DinoScreen
 
 	/// <summary>The Settings list (Slice 235 part C, frame 157): Right opens the focused row in the right pane.</summary>
 	Settings,
+
+	/// <summary>The first-run book picker (Slice 325 part D, frame OW2): Space ticks the focused cover, Enter is Continue.</summary>
+	FirstBooks,
+
+	/// <summary>The intro wizard (Slice 325 part E, frame OW6): Enter is Next, Esc is Skip all, the arrows step back and forward.</summary>
+	Intro,
 }
 
 /// <summary>What a key press asks the screen to do.</summary>
@@ -65,6 +71,12 @@ public enum DinoKeyAction
 	ReorderRight,
 	ReorderUp,
 	ReorderDown,
+	PickToggle,
+	PickContinue,
+	IntroNext,
+	IntroSkipAll,
+	IntroPrevious,
+	IntroForward,
 }
 
 /// <summary>
@@ -100,9 +112,28 @@ public static class DinoKeyMap
 			DinoScreen.Sheet => key is DinoKey.Enter or DinoKey.Space ? DinoKeyAction.SheetActivate : DinoKeyAction.None,
 			DinoScreen.Settings => key == DinoKey.Right ? DinoKeyAction.OpenRow : DinoKeyAction.None,
 			DinoScreen.Reorder => OnReorder(key),
+			DinoScreen.FirstBooks => OnFirstBooks(key),
+			DinoScreen.Intro => OnIntro(key),
 			_ => DinoKeyAction.None,
 		};
 	}
+
+	// Slice 325 part D (frame OW2): Space ticks the focused cover and Enter is Continue (the page ignores it until two are picked).
+	private static DinoKeyAction OnFirstBooks(DinoKey key) => key switch
+	{
+		DinoKey.Space => DinoKeyAction.PickToggle,
+		DinoKey.Enter => DinoKeyAction.PickContinue,
+		_ => DinoKeyAction.None,
+	};
+
+	// Slice 325 part E (frame OW6): Enter is Next, Left and Right step back and forward; Esc (see OnEscape) is Skip all.
+	private static DinoKeyAction OnIntro(DinoKey key) => key switch
+	{
+		DinoKey.Enter => DinoKeyAction.IntroNext,
+		DinoKey.Left => DinoKeyAction.IntroPrevious,
+		DinoKey.Right => DinoKeyAction.IntroForward,
+		_ => DinoKeyAction.None,
+	};
 
 	// Slice 264: Space lifts the focused cover and drops it again, the arrows move the focus (or the lifted cover), Enter is Done and Esc is Cancel.
 	private static DinoKeyAction OnReorder(DinoKey key) => key switch
@@ -125,6 +156,7 @@ public static class DinoKeyMap
 		DinoScreen.Shelf => DinoKeyAction.None,
 		DinoScreen.Sheet => DinoKeyAction.CloseSheet,
 		DinoScreen.Reorder => DinoKeyAction.ReorderCancel,
+		DinoScreen.Intro => DinoKeyAction.IntroSkipAll,
 		_ => DinoKeyAction.Back,
 	};
 

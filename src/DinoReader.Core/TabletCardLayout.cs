@@ -4,12 +4,11 @@ namespace DinoReader.Core;
 public enum TabletCardKind
 {
     Gate,
-    FirstRun,
     BookSheet,
 }
 
 /// <summary>
-/// The pure size rules of the tablet-upright cards: the grown-up gate (frame 137), the first run (138), the book sheet (136) and the intro's picture panel (141).
+/// The pure size rules of the tablet-upright cards: the grown-up gate (frame 137) and the book sheet (136). The first run and the intro left the card for the two-pane skeleton (Slice 325, <see cref="OnboardingLayout.Shape"/>).
 /// Whether a window is a tablet held upright comes from <see cref="LandscapeLayout.IsTabletPortrait"/>; this file only holds the numbers drawn in the mock. Sizes are in dp.
 /// </summary>
 public static class TabletCardLayout
@@ -20,7 +19,6 @@ public static class TabletCardLayout
     /// <summary>The widest each card gets, as drawn in the frames (the mock's text says 560 for the sheet and 520 for the gate; the drawn widths win).</summary>
     public const double GateMaxWidth = 520;
 
-    public const double FirstRunMaxWidth = 620;
     public const double BookSheetMaxWidth = 560;
 
     /// <summary>The gate's answer keys and hold ring on the card (frame 137).</summary>
@@ -35,13 +33,6 @@ public static class TabletCardLayout
     public const double BookSheetReadNowHeight = 64;
     public const double BookSheetActionHeight = 52;
 
-    /// <summary>The intro's picture panel above the copy (frame 141): 45% of the window height, between 240 and 520 dp, and the copy beside it never wider than 600.</summary>
-    public const double IntroPanelMaxHeight = 520;
-
-    public const double IntroPanelMinHeight = 240;
-    public const double IntroPanelShare = 0.45;
-    public const double IntroTextMaxWidth = 600;
-
     /// <summary>The card's width: the window less its side margins, never over the card's drawn width.</summary>
     public static double CardWidth(double width, TabletCardKind kind) =>
         Math.Max(0, Math.Min(width - (2 * SideMargin), MaxWidthOf(kind)));
@@ -49,13 +40,8 @@ public static class TabletCardLayout
     public static double MaxWidthOf(TabletCardKind kind) => kind switch
     {
         TabletCardKind.Gate => GateMaxWidth,
-        TabletCardKind.FirstRun => FirstRunMaxWidth,
         _ => BookSheetMaxWidth,
     };
-
-    /// <summary>How tall the intro's picture panel is on a window this tall.</summary>
-    public static double IntroPanelHeight(double height) =>
-        Math.Clamp(height * IntroPanelShare, IntroPanelMinHeight, IntroPanelMaxHeight);
 
     /// <summary>The tallest the book sheet's card gets: the window less the margin above and below (it scrolls inside).</summary>
     public static double BookSheetMaxHeight(double height) => CardMaxHeight(height);

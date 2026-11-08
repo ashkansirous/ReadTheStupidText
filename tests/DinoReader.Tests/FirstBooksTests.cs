@@ -21,6 +21,16 @@ public class FirstBooksTests
     }
 
     [Theory]
+    [InlineData(true, false, ContinueEnd.KeepGetting)]
+    [InlineData(true, true, ContinueEnd.KeepGetting)]
+    [InlineData(false, true, ContinueEnd.KeepOffline)]
+    [InlineData(false, false, ContinueEnd.ShowPicker)]
+    public void Continue_ends_on_one_page_by_one_table(bool handedOver, bool offlineShown, ContinueEnd expected)
+    {
+        Assert.Equal(expected, FirstBooks.EndOfContinue(handedOver, offlineShown));
+    }
+
+    [Theory]
     [InlineData(0, 2)]
     [InlineData(1, 1)]
     [InlineData(2, 0)]

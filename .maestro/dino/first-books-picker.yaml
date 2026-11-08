@@ -1,5 +1,6 @@
 # Slice 261: a real first run on a fresh install with the Debug test store (no live store): language, then the book picker (tagged books first), Continue is dead until two books are ticked,
-# two ticks download behind the wait overlay, then the first run goes on to "Ready to read" (Slice 278 part B: there is no voice download). Against the old behaviour (starter books bundled, no picker) FirstBooksPicker never shows.
+# two ticks download on the getting page (Slice 325 part D: its own page, no longer a veil over the picker; its line keeps the id WaitLine and its Cancel the id WaitCancel), then the first run goes on to "Ready to read"
+# (Slice 278 part B: there is no voice download). Against the old behaviour (starter books bundled, no picker) FirstBooksPicker never shows.
 # expect-log: HOOK test-store ok slow
 # expect-log: [FirstBooks] list listed=4 ticked=0 onShelf=0
 # expect-log: [FirstBooks] picked listed=4 ticked=1
@@ -59,7 +60,7 @@ name: First run asks for two books from the store
 - tapOn:
     id: FirstBooksContinue
     waitToSettleTimeoutMs: 300
-# Slow test store: each book takes about three seconds, so the shared wait overlay (shown after 500 ms) is on screen.
+# Slow test store: each book takes about three seconds, so the getting page (Book 1 of 2, the progress bar, Cancel) is on screen.
 - extendedWaitUntil:
     visible:
       id: WaitLine

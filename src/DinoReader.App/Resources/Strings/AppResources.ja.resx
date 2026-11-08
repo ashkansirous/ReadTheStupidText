@@ -102,12 +102,13 @@
   <data name="Backup_TooLarge" xml:space="preserve"><value>大きすぎて復元できませんでした</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} 件をバックアップに追加できませんでした。</value></data>
   <data name="FirstRun_Hello" xml:space="preserve"><value>こんにちは！どの言語で読みますか？</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino がその言語の声をダウンロードします。あとでロックの奥で変更できます。</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>あとでおとなのコーナーで変更できます。</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>続ける</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>読む準備ができました！</value></data>
   <data name="FirstRun_ReadyBody" xml:space="preserve"><value>どのキャラクターにもそれぞれの声があります。本は本棚に入っています。</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>はじめの本をえらぼう</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>2冊以上えらんでください。ほかの本は、いつでもストアで手に入ります。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="FirstBooks_BodyShort" xml:space="preserve"><value>2冊以上えらんでください。ほかの本はいつでもストアで。</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_PickTwo" xml:space="preserve"><value>2冊えらんではじめよう</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_PickOneMore" xml:space="preserve"><value>あと1冊えらんでね</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_Picked" xml:space="preserve"><value>{0}冊えらびました · {1}</value><comment>Machine draft: needs native review</comment></data>
@@ -117,7 +118,6 @@
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>インターネットにつないで、はじめの本をえらびましょう</value><comment>Machine draft: needs native review</comment></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>はじめる前に、Dinoには2冊の本が必要です。Wi-Fiかモバイルデータをオンにして、もういちどためしてください。</value><comment>Machine draft: needs native review</comment></data>
   <data name="Intro_SeeWhat" xml:space="preserve"><value>Dinoでできること</value></data>
-  <data name="Intro_SkipStart" xml:space="preserve"><value>スキップして読み始める</value></data>
   <data name="Intro_SkipAll" xml:space="preserve"><value>すべてスキップ</value></data>
   <data name="Intro_TryIt" xml:space="preserve"><value>試してみる</value></data>
   <data name="Intro_Skip" xml:space="preserve"><value>スキップ</value></data>
@@ -125,12 +125,13 @@
   <data name="Intro_PlacesTitle" xml:space="preserve"><value>ディノには2つの場所があります</value></data>
   <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>こどもの本棚</value></data>
   <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>本をタップして聞くだけ。</value></data>
-  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>ロックの奥で、本や声を追加できます。</value></data>
+  <data name="Intro_PlacesKidsLineClick" xml:space="preserve"><value>本をクリックして聞くだけ。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>ロックの奥に、本・ストア・設定があります。</value></data>
   <data name="Intro_ReadTitle" xml:space="preserve"><value>いっしょに読もう</value></data>
   <data name="Intro_ReadLine" xml:space="preserve"><value>本をタップして再生。ディノが読み上げ、1文ずつ光ります。</value></data>
   <data name="Intro_ReadCaption" xml:space="preserve"><value>ディノが本を開きました。「むかしむかし…」</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>あなたの声で読む</value></data>
-  <data name="Intro_RecordLine" xml:space="preserve"><value>物語を1ページずつ読んで録音しましょう。お子さまはいつでも再生できます。</value></data>
+  <data name="Intro_RecordLine" xml:space="preserve"><value>登場人物ごとに、またはページごとに録音できます。お子さまはいつでも再生できます。</value></data>
   <data name="Intro_ShowAgain" xml:space="preserve"><value>はじめの案内をもう一度見る</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>子どもに渡す</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>保護者モード</value></data>
@@ -294,7 +295,6 @@
   <data name="Speed_Sub" xml:space="preserve"><value>ゆっくりのほうが小さな子には聞きやすいです</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0.5x · ゆっくり</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino はどの本が読まれたかを、名前や ID なしで数えます。設定でオフにできます。あわせて、お住まいの国と大まかな端末の種類（スマートフォンかタブレットか、メモリの範囲）も送ります。アプリが異常終了したときは、クラッシュレポートも送ることがあります。内容はエラーと短い技術ログで、読んだ内容や入力した内容は含まれません。</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <!-- /Slice 115 -->
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
