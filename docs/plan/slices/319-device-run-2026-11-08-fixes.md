@@ -1,6 +1,6 @@
 # Slice 319: Fixes from the 2026-11-08 device run
 
-*Built 2026-11-08: items 1 and 3 verified on devices; item 2 still open (see Device runs).* Bugs found by the 3-hour device run the user asked for ("check as many of 157 android and 53 windows ones as you can"), run on the emulator, the S21 and the Hyper-V VM against origin/main e61a9a8a. Evidence files: `reviews/triage/devrun-vm-bugs.md`, `devrun-phone-bugs.md`, `devrun-emu-bugs.md` (under the worktrees folder).
+*Built 2026-11-08, merged as PR #957 (c46110ee): items 1 and 3 verified on devices; item 2 still open (see Device runs).* Bugs found by the 3-hour device run the user asked for ("check as many of 157 android and 53 windows ones as you can"), run on the emulator, the S21 and the Hyper-V VM against origin/main e61a9a8a. Evidence files: `reviews/triage/devrun-vm-bugs.md`, `devrun-phone-bugs.md`, `devrun-emu-bugs.md` (under the worktrees folder).
 
 **Touches:** `src/DinoReader.Core/WindowShape.cs`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/RecordPage*.cs`, `src/DinoReader.App/Platforms/Windows/**`, `tools/desktop-vm/checks/dino-record.ps1`, `tools/desktop-vm/checks/dino-reorder.ps1`, `tools/desktop-vm/CLAUDE.md`, `tools/phone/checks/highlight.ps1`, `tools/phone/README.md`, `src/ReadTheStupidText.Mobile/ReaderPage.xaml.cs`, `.maestro/rtst/sentence-highlight.yaml`, `tests/DinoReader.Tests/WindowShapeTests.cs`, `tests/ReadTheStupidText.Tests/HighlightCheckTextTests.cs`
 
