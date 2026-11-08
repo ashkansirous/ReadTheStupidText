@@ -27,6 +27,7 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 291 | Store listings and screenshots for both apps on Play, App Store and Microsoft Store | planned (park note in the slice file) | | | [291-store-listings-and-screenshots.md](docs/plan/slices/291-store-listings-and-screenshots.md) |
 | 295 | Bump `MauiVersion` once a MAUI release with dotnet/maui PR #38662 ships | planned (park note in the slice file) | | | [295-bump-maui-version-for-pr-38662.md](docs/plan/slices/295-bump-maui-version-for-pr-38662.md) |
 | 315 | Feedback loop 2026-11-07-1412 leftovers (temp APK writer, disk-free preflight, driver end reason, Worker deploy after `[skip ci]`, tooling guards) | planned | | | [315-feedback-loop-2026-11-07-1412-leftovers.md](docs/plan/slices/315-feedback-loop-2026-11-07-1412-leftovers.md) |
+| 316 | Gaps found by the unverified-checks triage (missing scripted checks, tooling printouts, unchecked review skip reasons, RTST Android timer, a flaky test) | planned | | | [316-unverified-triage-gaps.md](docs/plan/slices/316-unverified-triage-gaps.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
@@ -62,11 +63,12 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 - [Feedback loop, night 2026-11-06-0042 final](docs/plan/notes/2026-11-06-0042-feedback-loop.md): three waves (Slices 272, 273 A-E, 274); Slice 272 record brought up to date, rules for builders, ledger times, "the logs", pwsh VM runs (ClaudeSkills #170, #171), Slice 275 parked, Slice 271 back to planned (2026-11-06).
 - [Feedback loop, night 2026-11-06-1250 final](docs/plan/notes/2026-11-06-1250-feedback-loop.md): four waves (Slices 271, 275, 277-281, 283 code); flow output to a file, ship-branch stops on leftover edits, fixers prove call sites, reviewers run the fork on narrow briefs (ClaudeSkills #177, #178); Slice 284 parked; Slice 282 back to planned (2026-11-07).
 - [Feedback loop, night 2026-11-07-1412 final](docs/plan/notes/2026-11-07-1412-feedback-loop.md): six waves after a full C: stopped the 1223 night; temp APK cleanup after every wave, update-docs gets Write, mirror staging never at a drive root (ClaudeSkills); Slice 315 parked; Slices 287, 291, 295 back to planned (2026-11-07).
+- [2026-11-08 Unverified checks triage](docs/plan/notes/2026-11-08-unverified-triage.md): 106 of 523 open device checks closed (replaced by later code, already done, proven in production, or not a check), the rest tagged Android/iOS/Windows/Live/Logs; real gaps went to Slice 316.
 - [CLAUDE.md history](docs/plan/notes/claude-md-history.md): the Batch 6-10 narrative blockquotes moved out of `CLAUDE.md` (2026-10-20).
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 469 checks across 188 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- **Not yet tried on a device:** 416 checks across 157 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
 - Slice 305 follow-ups: remove the speech engine from the Dino Windows head (move the logging that lives in Infrastructure out first); stale sherpa-props path filters for Dino in `ship-targets.mjs` and `dinoreader*.yml` (harmless) ([slice](docs/plan/slices/305-dino-package-cleanup-ml-kit-and-sherpa.md)).
 - Slice 301 item 3 not built (premise wrong: 3 of 5 flows were deleted by Slice 278); re-plan from a fresh `PHASES` run ([slice](docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md)).
 - Slice 301 follow-ups (`reviews/s301-check2.md` 1-3): the preflight's Maestro launcher needs the same time bound, a java child that outlives the root process, an overall timeout in `speed.ps1`'s `Wait-ProcessWithCrashWatch`; reword the `WATCH kill-wait done` log line on a natural end ([slice](docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md)).
