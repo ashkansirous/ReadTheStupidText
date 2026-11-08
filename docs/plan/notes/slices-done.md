@@ -381,3 +381,4 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 316 | Gaps found by the unverified-checks triage (missing scripted checks, tooling printouts, unchecked review skip reasons, RTST Android timer, a flaky test) | built | #946 | | [316-unverified-triage-gaps.md](../slices/316-unverified-triage-gaps.md) |
 | 313 | Dino: a shelf book's text and its sound always match | built | #915 | | [313-dino-book-text-and-sound-in-step.md](../slices/313-dino-book-text-and-sound-in-step.md) |
 | 318 | Dino: the /stats page on phones and tablets (mock frames 201-204: Filters sheet, tap-a-bar readout, short-time format, no "Own books") | built | #954 | | [318-dino-stats-phone-tablet.md](../slices/318-dino-stats-phone-tablet.md) |
+| 319 | Fixes from the 2026-11-08 device run (item 2, Dino Windows Record screen alert, still open) | built | #957 | | [319-device-run-2026-11-08-fixes.md](../slices/319-device-run-2026-11-08-fixes.md) |
