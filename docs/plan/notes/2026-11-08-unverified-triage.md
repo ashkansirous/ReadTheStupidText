@@ -364,7 +364,7 @@ Not run, by reason: the VM Release package has no audio, microphone, network or 
 
 ## Cut to what can be tested (user, 2026-11-08)
 
-The user: "remove everything that is beyond my power to test ... keep only whatever I can test. for the rest, if you can rely on production data and bug reports. otherwise, just remove them". They have an Echo, a Sonos, an iPhone and the S21; no old phone; camera features are out; they judge English and Farsi only. A Sonnet agent classified all 383 lines (`reviews/prune/classes.tsv` under the worktrees folder); mixed lines kept only their testable part. Result: 251 kept (tagged You or Device), 30 watched in production data, 14 listening checks moved to slices 323-336, 86 removed, 2 passed on a device in the second run.
+The user: "remove everything that is beyond my power to test ... keep only whatever I can test. for the rest, if you can rely on production data and bug reports. otherwise, just remove them". They have an Echo, a Sonos, an iPhone and the S21; no old phone; camera features are out; they judge English and Farsi only. A Sonnet agent classified all 383 lines (`reviews/prune/classes.tsv` under the worktrees folder); mixed lines kept only their testable part. Result: 251 kept (tagged You or Device), 30 watched in production data, 14 listening checks moved to slices 330-343, 86 removed, 2 passed on a device in the second run.
 
 ## Watched in production data instead (analytics, fallbacks, crash store, problem reports) (30)
 

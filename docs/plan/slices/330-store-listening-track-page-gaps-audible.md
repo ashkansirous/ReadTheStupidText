@@ -1,10 +1,10 @@
-# Slice 325: Listening page: Double animal sound when a quote names the animal
+# Slice 330: Listening page: Store listening track: page gaps audible
 
-*Planned 2026-11-08.* The user asked for one slice per check that needs their ear ("Abou the ones that need my ear, I probably need a page to listen to them and say what I think. Add a slice for each so that you can implement a page for me to listen to them and tell what is wrong with them"). This one comes from Slice 255's open check, moved out of `docs/plan/unverified.md` on 2026-11-08 ([record](../notes/2026-11-08-unverified-triage.md)):
+*Planned 2026-11-08.* The user asked for one slice per check that needs their ear ("Abou the ones that need my ear, I probably need a page to listen to them and say what I think. Add a slice for each so that you can implement a page for me to listen to them and tell what is wrong with them"). This one comes from Slice 281's open check, moved out of `docs/plan/unverified.md` on 2026-11-08 ([record](../notes/2026-11-08-unverified-triage.md)):
 
-> **Android:** A possible double sound when a quote already says the animal's word in a language without a sound table (check2 #1).
+> **Live:** Play one track end to end (page gaps audible).
 
-**Touches:** `docs/plan/slices/325-double-animal-sound-when-a-quote-names-the-anima.md`, `docs/plan/unverified.md`, the voice-pick working folder under the worktrees folder (renders and page files, not in the repo)
+**Touches:** `docs/plan/slices/330-store-listening-track-page-gaps-audible.md`, `docs/plan/unverified.md`, the voice-pick working folder under the worktrees folder (renders and page files, not in the repo)
 
 ## Items
 
