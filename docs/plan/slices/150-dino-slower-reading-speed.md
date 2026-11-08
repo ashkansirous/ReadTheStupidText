@@ -1,5 +1,7 @@
 # Slice 150 — Dino: slower reading by default, and a grown-up speed setting
 
+*Default changed 2026-11-08:* a fresh install now reads at 1x (Decision 172, Slice 322: docs/plan/slices/322-dino-default-speed-1x.md); the 0.8x lines below are this slice's history, and its 0.8x device check is replaced by Slice 322's.
+
 *Built 2026-10-26 (PR #429), not yet verified on a real phone.* Dino Reader only; RTST is not touched.
 
 *Changed while building:* Dino stores its own key `dino.reading.speed` instead of the shared `ISettingsStore.Speed`, because the shared store cannot tell a missing value from a stored one. `SpeechStartup` loads and clamps it; any read failure falls back to 0.8. The card is a stock MAUI `Slider` styled to fit, not the mock's 28 px thumb. The Reading speed card sits on `LanguagePage` (grown-up settings) before the usage card. The label updates while dragging; the value is saved and `SetSpeed` called on release. "Hear this speed" reuses `Cast_PreviewLine` in the preview language, shows a spinner after 500 ms, and a second tap stops it.
