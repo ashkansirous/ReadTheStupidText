@@ -4,6 +4,8 @@
 
 **User, 2026-11-08:** "keep it in the plan until we get the update". The user sees no 10.0.130 planned; the next listed is 11.0. Read 2026-11-08 ~01:10Z: dotnet/maui #38662 merged 2026-09-30 into `inflight/current`, milestone ".NET 10 SR12"; its merge commit 334edc6b is not an ancestor of tags 10.0.120 or 11.0.100-rc.2 (GitHub compare: diverged), and 10.0.120's release notes don't mention #38662. Not checked: whether it was cherry-picked under another commit. NuGet newest: 10.0.120 and 11.0.0-rc.2.26505.5. Read 2026-11-08 03:29Z: NuGet newest still 10.0.120, so the slice stays planned. A night run checks NuGet (and an 11.0 GA release) and leaves this slice planned if neither carries the fix.
 
+**Park note (2026-11-08, night 2026-11-08-0106 wave 3):** NuGet newest 10.0.x still 10.0.120 at 05:03Z, 11.0 still rc.2. Parked for the rest of the night (external wait, not a user item); the night's final feedback loop moves it back to planned, as the user asked.
+
 **Touches:** `Directory.Build.props`, `src/DinoReader.App/DinoReader.App.csproj`, `src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj`, `tests/DinoReader.Tests/LifecycleSubscriptionTests.cs`, `docs/plan/slices/295-bump-maui-version-for-pr-38662.md`
 
 ## Work
