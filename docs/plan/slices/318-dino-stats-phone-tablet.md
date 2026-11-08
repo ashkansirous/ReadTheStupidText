@@ -1,6 +1,6 @@
 # Slice 318 — Dino: the /stats page on phones and tablets (and the mock's other changes)
 
-*Built 2026-11-08, not merged; not yet tried on a real phone or tablet, nor on the live page with real D1 data.* The page (`site/dino/stats.html`) and a small Worker change: `/api/stats` leaves the `own` bucket out of the series and the book totals unless `book=own` is asked for (`worker/stats.ts`, `own` bound as a parameter; no D1 schema change). The page is a website, so the Android/iOS twin rule does not apply (it has to work in phone and tablet browsers, both platforms alike).
+*Built 2026-11-08, merged as PR #954 (44dabc57); not yet tried on a real phone or tablet, nor on the live page with real D1 data.* The page (`site/dino/stats.html`) and a small Worker change: `/api/stats` leaves the `own` bucket out of the series and the book totals unless `book=own` is asked for (`worker/stats.ts`, `own` bound as a parameter; no D1 schema change). The page is a website, so the Android/iOS twin rule does not apply (it has to work in phone and tablet browsers, both platforms alike).
 
 ## Why
 
@@ -120,6 +120,6 @@ Review (medium), `reviews/s318-medium.md`, findings 1-5, 7, 8, 9 and 11 applied 
 - The live page against real D1 data after deploy.
 - Screenshots were not compared side by side with the mock frames 200-204.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-08)
 
 - `site/dino/stats.html`: the `/stats` layouts come from frames 200-204 of the mock (`docs/design/dino-reader/Dino Reader Stats Dashboard.dc.html`); run `tools/stats-page-check/check.mjs` after a change. `worker/stats.ts` leaves the `own` bucket out of the series and book totals unless `book=own`. Goes in `worker/CLAUDE.md`. (Slice 318: docs/plan/slices/318-dino-stats-phone-tablet.md)

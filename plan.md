@@ -24,7 +24,6 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 283 | Dino: a Sonos music service for the store books (anonymous, no login) | code merged #879; waiting on the user: Sonos partner account, service submission, sandbox integration, Self Test | #879 | | [283-dino-sonos-music-service.md](docs/plan/slices/283-dino-sonos-music-service.md) |
 | 291 | Store listings and screenshots for both apps on Play, App Store and Microsoft Store | in progress (items 2 and repo text merged #941; store pushes wait on the user) | #941 | | [291-store-listings-and-screenshots.md](docs/plan/slices/291-store-listings-and-screenshots.md) |
 | 317 | Feedback loop 2026-11-08-0106 leftovers (build cache size, disk preflight threshold, two broken device flows, Store submit retry) | parked: feedback loop, waits for the user | | | [317-feedback-loop-2026-11-08-0106-leftovers.md](docs/plan/slices/317-feedback-loop-2026-11-08-0106-leftovers.md) |
-| 318 | Dino: the /stats page on phones and tablets (mock frames 201-204: Filters sheet, tap-a-bar readout, short-time format, no "Own books") | built | | | [318-dino-stats-phone-tablet.md](docs/plan/slices/318-dino-stats-phone-tablet.md) |
 | 295 | Bump `MauiVersion` once a MAUI release with dotnet/maui PR #38662 ships | planned (waits for MAUI 10.0.130 or later on NuGet; moved back from parked by the night 2026-11-08-0106 feedback loop) | | | [295-bump-maui-version-for-pr-38662.md](docs/plan/slices/295-bump-maui-version-for-pr-38662.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
@@ -67,7 +66,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 428 checks across 161 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
+- **Not yet tried on a device:** 431 checks across 162 slices, in [docs/plan/unverified.md](docs/plan/unverified.md).
 - Dino iOS rolling log: report T7RS-G327 (1.117.0, 2026-11-08) has the previous run's last line cut mid-word (`reading paused (ot` then the next launch's `08:10:50.730 ...`), so a line is lost when the app is killed (here, likely the TestFlight update). Check whether the file writer flushes per line ([note](docs/plan/notes/2026-11-08-unverified-triage.md)).
 - Slice 305 follow-ups: remove the speech engine from the Dino Windows head (move the logging that lives in Infrastructure out first); stale sherpa-props path filters for Dino in `ship-targets.mjs` and `dinoreader*.yml` (harmless) ([slice](docs/plan/slices/305-dino-package-cleanup-ml-kit-and-sherpa.md)).
 - Slice 301 item 3 not built (premise wrong: 3 of 5 flows were deleted by Slice 278); re-plan from a fresh `PHASES` run ([slice](docs/plan/slices/301-slice-247-follow-ups-emulator-runner.md)).
