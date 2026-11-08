@@ -11,6 +11,11 @@ public sealed class StallReporter(object owner)
     private readonly object _gate = new();
     private int _watching;
 
+#if DEBUG
+    /// <summary>Slice 320 item 7 (Debug only): where the stall-read test hook is looked up; the app's shared one, a test's own instance in tests (no state shared between parallel tests).</summary>
+    internal StallHook Hook { get; init; } = StallHook.Shared;
+#endif
+
     /// <summary>Raised with true when the next chunk is not ready and with false when the wait ends.</summary>
     public event EventHandler<bool>? Changed;
 
@@ -26,7 +31,12 @@ public sealed class StallReporter(object owner)
     /// </summary>
     public async Task<T> WatchAsync<T>(Task<T> pending, CancellationToken token)
     {
-        if (pending.IsCompleted)
+#if DEBUG
+        bool held = Hook.Take(); // Slice 320 item 7: the stall-read test hook holds this one chunk wait so the overlay can be reached
+#else
+        const bool held = false;
+#endif
+        if (!held && pending.IsCompleted)
         {
             return await pending;
         }
@@ -46,6 +56,12 @@ public sealed class StallReporter(object owner)
         using CancellationTokenRegistration registration = token.Register(Release);
         try
         {
+#if DEBUG
+            if (held)
+            {
+                await Hook.HoldAsync(token);
+            }
+#endif
             return await pending;
         }
         finally

@@ -345,7 +345,7 @@ public sealed class IosBackgroundDownloader : NSUrlSessionDownloadDelegate, IPac
             {
                 waiter.WaitingForConnectivity = false;
 #if DEBUG
-                if (waiter.Muted || (PackDownloadThrottle.TakeStallRequest() && (waiter.Muted = true)))
+                if (waiter.Muted || (PackDownloadThrottle.TakeStallRequest(waiter.PackId) && (waiter.Muted = true)))
                 {
                     return; // Slice 241 test hook: no byte seems to arrive, so the watcher's stall path runs for real
                 }

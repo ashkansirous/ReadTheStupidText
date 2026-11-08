@@ -33,7 +33,8 @@ $script:MaestroCommands = @(
     'setPermissions', 'startRecording', 'stopApp', 'stopRecording', 'swipe', 'takeScreenshot', 'tapOn', 'toggleAirplaneMode', 'toggleDarkMode',
     'travel', 'waitForAnimationToEnd'
 )
-$script:NeedsValues = @('cellular-only')
+$script:NeedsValues = @('cellular-only', 'report-stub', 'crash-stub')   # Slice 320 item 5: the last two start a host stub (need-stubs.ps1)
+$script:StubNeedsValues = @('report-stub', 'crash-stub')   # both listen on port 8787, so a flow may name only one
 $script:DevAppIds = @('uk.sirous.readthestupidtext', 'uk.sirous.dinoreader.dbg')
 # YAML's double-quoted escapes: 0 a b t n v f r e space " / \ N _ L P x u U (and a tab).
 $script:ValidEscapes = '0abtnvfre "/\N_LPxuU' + "`t"
@@ -147,12 +148,17 @@ function Test-Header([string]$File, [string[]]$Lines, [int]$Separator) {
 
 # Slice 212: every `# needs:` header comment must name only known values, so a typo never silently runs a flow on the wrong network.
 function Test-Needs([string]$File, [string[]]$Lines, [int]$Separator) {
+    $stubValues = New-Object System.Collections.Generic.List[string]
     for ($i = 0; $i -lt $Separator; $i++) {
         if ($Lines[$i] -notmatch '^#\s*needs:\s*(.*?)\s*$') { continue }
         $values = @($Matches[1] -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
         if ($values.Count -eq 0) { Add-Problem $File ($i + 1) "'# needs:' names no value (allowed: $($script:NeedsValues -join ', '))" }
         foreach ($v in $values) {
             if ($script:NeedsValues -cnotcontains $v) { Add-Problem $File ($i + 1) "'# needs: $v' is not a known value (allowed: $($script:NeedsValues -join ', '))" }
+            elseif ($script:StubNeedsValues -ccontains $v) {
+                $stubValues.Add($v)
+                if ($stubValues.Count -gt 1) { Add-Problem $File ($i + 1) "'# needs: $v' is a second host stub ($($stubValues -join ', ')): both listen on port 8787, so one flow may name only one" }
+            }
         }
     }
 }

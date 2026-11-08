@@ -607,7 +607,7 @@ try {
 
 # ---- Slice 225 item 7: the catalogue is read from a header line in each check file; it lists the same checks, with the same values, as the old hand-kept table
 $expected = [ordered]@{
-    'book-end'                    = @{ Apps = 'dino'; Estimate = 420; PerRun = $null; Pack = $true; Variant = 'debug' }
+    'book-end'                    = @{ Apps = 'dino'; Estimate = 420; PerRun = $null; Pack = $false; Variant = 'debug' }   # Slice 320 item 4: Dino has no voice pack
     'book-update'                 = @{ Apps = 'dino'; Estimate = 240; PerRun = $null; Pack = $false; Variant = 'debug' }
     'cold-start'                  = @{ Apps = 'rtst,dino'; Estimate = 240; PerRun = 80; Pack = $true; Variant = 'aot' }
     'highlight'                   = @{ Apps = 'rtst'; Estimate = 120; PerRun = $null; Pack = $true; Variant = 'debug' }
@@ -617,7 +617,7 @@ $expected = [ordered]@{
     'paused-notification'         = @{ Apps = 'rtst'; Estimate = 240; PerRun = $null; Pack = $true; Variant = 'debug' }
     'paused-notification-network' = @{ Apps = 'rtst'; Estimate = 200; PerRun = $null; Pack = $true; Variant = 'debug' }
     'paused-notification-repost'  = @{ Apps = 'rtst'; Estimate = 300; PerRun = $null; Pack = $true; Variant = 'debug' }
-    'short-lines'                 = @{ Apps = 'dino'; Estimate = 200; PerRun = $null; Pack = $true; Variant = 'debug' }
+    'short-lines'                 = @{ Apps = 'dino'; Estimate = 0; PerRun = $null; Pack = $false; Variant = 'debug' }   # retired (Slice 320 item 4): never planned, so no budget or pack pre-flight
     'translate'                   = @{ Apps = 'rtst'; Estimate = 150; PerRun = $null; Pack = $true; Variant = 'debug' }
     'voice'                       = @{ Apps = 'rtst'; Estimate = 90; PerRun = $null; Pack = $true; Variant = 'debug' }
 }
@@ -629,7 +629,8 @@ foreach ($name in $expected.Keys) {
     Assert-Equal "catalogue $name per-run" $want.PerRun $got.PerRunSeconds
     Assert-Equal "catalogue $name needs a pack" $want.Pack $got.NeedsPack
     Assert-Equal "catalogue $name variant" $want.Variant $got.Variant
-    Assert-Equal "catalogue $name not blocked" $null $got.Blocked
+    if ($name -eq 'short-lines') { Assert-Equal 'catalogue short-lines is retired (Slice 320 item 4)' $true ("$($got.Blocked)" -like 'retired in Slice 320*') }
+    else { Assert-Equal "catalogue $name not blocked" $null $got.Blocked }
 }
 $header = Read-CheckHeader 'demo' @('# check: Apps=dino EstimateSeconds=50 NeedsPack=false Variant=debug Blocked="no phone yet"', '<#')
 Assert-Equal 'header: a quoted Blocked keeps its spaces' 'no phone yet' $header.Blocked
@@ -683,7 +684,7 @@ $withVoices = Get-CheckArguments 'short-lines' 'ph' 'dino' 3 'passage' '' $false
 Assert-Equal 'short-lines gets the voices' 'bm_daniel,bf_emma' ($withVoices.Voices -join ',')
 Assert-Equal 'no -Voices: short-lines keeps its own default' $false ((Get-CheckArguments 'short-lines' 'ph' 'dino' 3 'passage' '' $false).ContainsKey('Voices'))
 Assert-Equal 'a check without a voice list gets none' $false ((Get-CheckArguments 'highlight' 'ph' 'rtst' 3 'passage' '' $false @('bm_daniel')).ContainsKey('Voices'))
-Assert-Equal 'the voice-list checks all declare a -Voices parameter' 0 @($script:VoiceListChecks | Where-Object { (Get-Content (Join-Path $PSScriptRoot "checks\$_.ps1") -Raw) -notmatch '\[string\[\]\]\$Voices' }).Count
+Assert-Equal 'the voice-list checks all declare a -Voices parameter (a retired, Blocked check is only a header)' 0 @($script:VoiceListChecks | Where-Object { $text = Get-Content (Join-Path $PSScriptRoot "checks\$_.ps1") -Raw; ($text -notmatch '\[string\[\]\]\$Voices') -and ($text -notmatch '(?m)^# check:.*\bBlocked=') }).Count
 Assert-Equal 'the runner passes the voice list on' $true ($runnerText -match '\$DropCaches\.IsPresent \$script:VoiceList')
 
 # ---- Slice 236 item 2: a run pinned to debug installs debug and starts no build of the other variant, even with both cached
@@ -774,6 +775,41 @@ Assert-Equal 'run-checks passes -AllowEmulator to preflight through the kind hel
 foreach ($name in 'highlight', 'translate') {
     Assert-Equal "$name check passes the kind's tap arguments" $true ((Get-Content (Join-Path $PSScriptRoot "checks\$name.ps1") -Raw) -match 'Get-AllowEmulatorArguments \$Phone')
 }
+
+# ---- Slice 320 item 4: Dino has no voice pack; its book-end counts premade clips; short-lines is retired
+Assert-Equal 'dino requires no voice pack' 0 @($script:RequiredPacks['dino']).Count
+Assert-Equal 'rtst still requires supertonic-3' 'supertonic-3' (@($script:RequiredPacks['rtst']) -join ',')
+$clipBook = @('1000.000  1  1 I RTST-TEST: HOOK open-book opened id=x', '1000.500  1  1 I RTST-TEST: [AudioPack] premade clip plays (sentence 0)', '1001.000  1  1 I RTST-TEST: [AudioPack] premade clip plays (sentence 1)', '1002.000  1  1 I RTST-TEST: RTST-TEST READ_END')
+Assert-Equal 'two premade clips and READ_END prove a Dino book played' $true (Resolve-BookPlayProof $clipBook).Played
+Assert-Equal 'one premade clip is not enough' $false (Resolve-BookPlayProof @($clipBook[0], $clipBook[1], $clipBook[3])).Played
+$shortLines = @(Resolve-CheckSelection @('short-lines') 'dino' $catalogue)[0]
+Assert-Equal 'short-lines is retired for dino (blocked, with the reason)' $script:StatusSkipped $shortLines.Status
+Assert-Equal 'short-lines reason names Slice 320' $true ("$($shortLines.Reason)" -like '*Slice 320*')
+Assert-Equal 'book-end needs no pack' $false (@(Resolve-CheckSelection @('book-end') 'dino' $catalogue))[0].NeedsPack
+
+# ---- Slice 320 item 3: notification flags from a dumpsys record (hand-written fixtures; the S21 dump of 2026-11-08 was not saved)
+$stockRecord = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'fixtures\notification-record-stock.txt'))
+$wrappedRecord = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'fixtures\notification-record-wrapped.txt'))
+Assert-Equal 'flags: stock one-line record (the audio attributes flags=0x0 after it are not read)' 8 (Get-NotificationFlagsFromText $stockRecord)
+Assert-Equal 'flags: record wrapped over lines, with another record after it' 0 (Get-NotificationFlagsFromText $wrappedRecord)
+Assert-Equal 'flags: an earlier AudioAttributes flags=0x0 is not taken for the notification flags' 8 (Get-NotificationFlagsFromText ("mAudioAttributes=AudioAttributes: flags=0x4 tags=`nnotification=Notification(channel=c sound=null defaults=0x0 flags=0x8 color=0x0)"))
+Assert-Equal 'flags: the flags of the next record are not read' $null (Get-NotificationFlagsFromText "NotificationRecord(0x1: Notification(channel=c)`nNotificationRecord(0x2: Notification(channel=d defaults=0x0 flags=0x62))")
+Assert-Equal 'flags: the search starts at the notification, not at StatusBarNotification(' 8 (Get-NotificationFlagsFromText 'StatusBarNotification(pkg=x flags=0x40 key=k: Notification(channel=c flags=0x8))')
+Assert-Equal 'flags: no Notification( text at all' $null (Get-NotificationFlagsFromText 'NotificationRecord(0x1: pkg=x)')
+Assert-Equal 'flags: empty record' $null (Get-NotificationFlagsFromText '')
+Assert-Equal 'excerpt is one line' $false ((Format-NotificationRecordExcerpt $wrappedRecord 5000) -match "[\r\n]")
+Assert-Equal 'excerpt is cut with dots' '0123456789...' (Format-NotificationRecordExcerpt '0123456789abc' 10)
+# S21 run 2026-11-08: flags 0x800 (no FLAG_AUTO_CANCEL) cannot be a paused notice's own flags (BuildPaused sets SetAutoCancel), so they are a check error, not a verdict
+Assert-Equal 'plausible: auto-cancel + only-alert-once' $true (Test-NotificationFlagsPlausible 0x18)
+Assert-Equal 'plausible: auto-cancel alone' $true (Test-NotificationFlagsPlausible 0x10)
+Assert-Equal 'not plausible: 0x800 has no auto-cancel' $false (Test-NotificationFlagsPlausible 0x800)
+Assert-Equal 'record file name is safe and stamped' 'notification-record-uk.x.dbg-re_post-20261108-101500.txt' (Get-NotificationRecordFileName 'uk.x.dbg-re post' ([datetime]'2026-11-08 10:15:00'))
+
+# ---- Slice 320 (S21 run 2026-11-08): the fixture audio pack defaults to a language with a bundled table ('en' is the books' source language and has none, so the hook failed)
+$deviceAst = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PSScriptRoot 'checks\_device.ps1'), [ref]$null, [ref]$null)
+$readyDino = $deviceAst.Find({ param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Start-ReadyDinoApp' }, $true)
+$languageParam = $readyDino.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'Language' }
+Assert-Equal 'Start-ReadyDinoApp defaults the fixture pack language to fa' "'fa'" "$($languageParam.DefaultValue)"
 
 if ($failed) { Write-Host "$failed run-checks checks failed (PowerShell $($PSVersionTable.PSVersion))."; exit 1 }
 Write-Host "All run-checks checks pass (PowerShell $($PSVersionTable.PSVersion))."

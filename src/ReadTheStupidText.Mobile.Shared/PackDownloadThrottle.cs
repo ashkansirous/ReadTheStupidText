@@ -55,27 +55,69 @@ internal static class PackDownloadThrottle
         }
     }
 
+    // The request's pack id and its time are one state under one lock, so a take or a new arm never sees a new time with an old id.
+    private static readonly object StallLock = new();
+    private static string? _stallPackId;
     private static long _stallArmedAt; // Stopwatch timestamp of the request, 0 = none
 
     private static readonly TimeSpan StallRequestLife = TimeSpan.FromMinutes(2);
 
     /// <summary>Slice 241: the <c>stall-pack-network</c> hook arms one hung transfer (what a dead socket does: Android's body read never returns and ignores its token; iOS's progress callbacks stop), so the stall timeout, its PACKDL stall line and the retry run for real. A request nobody took within two minutes lapses, so it cannot hang a later unrelated download.</summary>
-    internal static void RequestStall() => Interlocked.Exchange(ref _stallArmedAt, Stopwatch.GetTimestamp());
-
-    /// <summary>True once per request (and clears it), unless the request has lapsed.</summary>
-    internal static bool TakeStallRequest()
+    internal static void RequestStall(string? packId = null)
     {
-        long armed = Interlocked.Exchange(ref _stallArmedAt, 0);
-        return armed != 0 && Stopwatch.GetElapsedTime(armed) < StallRequestLife;
+        lock (StallLock)
+        {
+            _stallPackId = packId;
+            _stallArmedAt = Stopwatch.GetTimestamp();
+        }
     }
 
-    /// <summary>Drops an unused request when a download ends.</summary>
-    internal static void ClearStall() => Interlocked.Exchange(ref _stallArmedAt, 0);
+    /// <summary>Slice 320: a request armed with a pack id (hook <c>stall-pack-network id=&lt;pack&gt;</c>) hangs only that pack's transfer; another pack's download neither takes nor clears it. No id = whichever transfer reads first.</summary>
+    private static bool StallTargets(string? packId) => _stallPackId is null || string.Equals(_stallPackId, packId, StringComparison.Ordinal);
+
+    /// <summary>True once per request (and clears it, id included), unless the request has lapsed or it names another pack.</summary>
+    internal static bool TakeStallRequest(string? packId = null)
+    {
+        lock (StallLock)
+        {
+            if (_stallArmedAt != 0 && Stopwatch.GetElapsedTime(_stallArmedAt) >= StallRequestLife)
+            {
+                ResetStallLocked(); // a lapsed request (armed for a pack that never downloaded) is dropped by whichever read comes next, so its id cannot linger
+            }
+
+            if (_stallArmedAt == 0 || !StallTargets(packId))
+            {
+                return false;
+            }
+
+            long armed = _stallArmedAt;
+            ResetStallLocked();
+            return Stopwatch.GetElapsedTime(armed) < StallRequestLife;
+        }
+    }
+
+    /// <summary>Drops an unused request when a download ends (only one aimed at this pack, or at none).</summary>
+    internal static void ClearStall(string? packId = null)
+    {
+        lock (StallLock)
+        {
+            if (StallTargets(packId))
+            {
+                ResetStallLocked();
+            }
+        }
+    }
+
+    private static void ResetStallLocked()
+    {
+        _stallArmedAt = 0;
+        _stallPackId = null;
+    }
 
     /// <summary>Wraps the raw body stream; the first read after the hook hangs for good, every later stream (the retry) is clean.</summary>
-    internal static Stream WrapForStallHook(Stream inner) => new StallOnDemandStream(inner);
+    internal static Func<Stream, Stream> WrapForStallHook(string packId) => inner => new StallOnDemandStream(inner, packId);
 
-    private sealed class StallOnDemandStream(Stream inner) : Stream
+    private sealed class StallOnDemandStream(Stream inner, string packId) : Stream
     {
         public override bool CanRead => true;
         public override bool CanSeek => false;
@@ -90,7 +132,7 @@ internal static class PackDownloadThrottle
 
         public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            if (PackDownloadThrottle.TakeStallRequest())
+            if (PackDownloadThrottle.TakeStallRequest(packId))
             {
                 await Task.Delay(Timeout.Infinite, CancellationToken.None).ConfigureAwait(false);
             }

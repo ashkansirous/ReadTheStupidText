@@ -1,5 +1,6 @@
 # Slice 249: Settings > Report a problem > Send posts a user report (the app's rolling-log tail, a code, no text) to a local stub and shows the code to quote.
-# Precondition (the host, before the run): `node .maestro/dino/report-problem-stub.mjs` is listening on port 8787 (code K7QX2MRD); the emulator reaches it as http://10.0.2.2:8787.
+# needs: report-stub
+# Precondition (Slice 320: run-flows.ps1 sets it up from the line above): `node .maestro/dino/report-problem-stub.mjs` is listening on port 8787 (code K7QX2MRD); the emulator reaches it as http://10.0.2.2:8787.
 # The stub answers 204 only for a user_report whose message is `user report K7QX2MRD`, with no stack and the app's "page shown" trace lines in the log tail, and 400 for anything
 # else, so the CRASH_REPORT marker below proves that report arrived whole. Debug builds never report on their own: the `crash-stub` hook is what lets this one through, and it points
 # at the local stub, never at production. `report-code` fixes the code so the screen can be checked against the log.

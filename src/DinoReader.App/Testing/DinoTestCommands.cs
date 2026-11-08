@@ -144,6 +144,12 @@ internal static partial class DinoTestCommands
 			return StartedOutcome;
 		}
 
+		if (command.Name == CorruptShelfOrderName)
+		{
+			_ = CorruptShelfOrderAsync();
+			return StartedOutcome;
+		}
+
 		if (command.Name == EnterGrownUpName)
 		{
 			_ = EnterGrownUpAsync();

@@ -1,0 +1,4 @@
+# needs: report-stub, crash-stub
+appId: uk.sirous.dinoreader.dbg
+---
+- back

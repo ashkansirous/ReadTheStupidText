@@ -9,7 +9,7 @@
 // each request is printed with its verdict. Nothing is forwarded anywhere.
 
 import { createServer } from "node:http";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -19,6 +19,7 @@ const EXPECTED_TYPE = "System.InvalidOperationException";
 const EXPECTED_MESSAGE = "Slice 227 crash test";
 const EXPECTED_LOG_LINE = "crash test about to throw";
 const MAX_BYTES = 64 * 1024;
+const STUB_NAME = "crash-stub";
 
 /** True for the report the Debug crash hook produces: managed, the right exception, and its known line in the log tail. */
 export function isExpectedReport(report) {
@@ -36,6 +37,12 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i += 2) args[argv[i].replace(/^--/, "")] = argv[i + 1];
   args.port = Number(args.port);
   return args;
+}
+
+/** Removes the report-N.json files an earlier stub left in outDir (only those; the folder may not exist yet). */
+export function clearOldReports(outDir) {
+  mkdirSync(outDir, { recursive: true });
+  for (const name of readdirSync(outDir)) if (/^report-\d+\.json$/.test(name)) rmSync(join(outDir, name));
 }
 
 export function startStub(port, outDir) {
@@ -60,7 +67,7 @@ export function startStub(port, outDir) {
         }
       }
       console.log(`${new Date().toISOString()} ${request.method} ${request.url} ${size} bytes -> ${verdict}`);
-      response.writeHead(verdict).end();
+      response.writeHead(verdict, { "X-Stub": STUB_NAME }).end(); // Slice 320: tools/emulator/need-stubs.ps1 tells this stub from the report-problem stub (same port) by this header
     });
   });
   return new Promise((resolve) => server.listen(port, "0.0.0.0", () => resolve(server)));
@@ -68,6 +75,7 @@ export function startStub(port, outDir) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { port, out } = parseArgs(process.argv.slice(2));
+  clearOldReports(out); // Slice 320: a new stub counts from report-1, so reports left by an earlier run must not sit beside the new ones
   await startStub(port, out);
   console.log(`Crash stub listening on :${port}, saving bodies under ${out} (the emulator uses http://10.0.2.2:${port})`);
 }

@@ -14,6 +14,7 @@ $TraceFileName = 'window-trace.log'
 $VkEscape = 0x1B; $VkR = 0x52; $VkS = 0x53
 # The system microphone consent prompt (Slice 319, second strike): a registry Deny was not honoured for the MSIX app, so the stage answers the prompt itself.
 $ConsentProcessName = 'PickerHost'
+$ConsentDialogClass = 'Shell_SystemDialog'   # Slice 320 item 8: the window class of the prompt, an ancestor of its focused button
 $ConsentPromptText = 'access your microphone'
 $ConsentWaitSeconds = 20
 $ConsentDenyPattern = '^(No|Don.t allow|Deny|Block)$' # the English deny buttons of the prompt ("." takes a straight or a curly apostrophe); the VM runs in English
@@ -83,15 +84,26 @@ function Start-RecordingFromIntro {
     }
     throw 'Start recording was invoked twice but the app never traced "Record intro: Start tapped"'
 }
-function Find-ConsentWindow {
-    # The system microphone consent window: a top-level window of the PickerHost process, or any top-level window whose name contains the prompt text. Null when none shows.
-    $cond = New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::ControlTypeProperty, [System.Windows.Automation.ControlType]::Window)
-    foreach ($w in $script:AutomationElement::RootElement.FindAll($script:TreeScope::Children, $cond)) {
-        try {
-            $procName = (Get-Process -Id $w.Current.ProcessId -ErrorAction SilentlyContinue).ProcessName
-            if ($procName -eq $ConsentProcessName -or $w.Current.Name -like "*$ConsentPromptText*") { return $w }
-        } catch { continue }
+function Get-ConsentDialogOf($Element) {
+    # Slice 320 item 8: the Shell_SystemDialog window above an element (RawViewWalker), or $null. The prompt is not under the UIA root, so this is the only way to reach the dialog.
+    $walker = [System.Windows.Automation.TreeWalker]::RawViewWalker
+    $node = $Element
+    for ($depth = 0; $node -and $depth -lt 12; $depth++) {
+        if ($node.Current.ClassName -eq $ConsentDialogClass) { return $node }
+        $node = $walker.GetParent($node)
     }
+    return $null
+}
+function Find-ConsentWindow {
+    # Slice 320 item 8 (proved on the VM 2026-11-08, reviews/vm-record/uia/findings.txt): the system microphone prompt is NOT a child of the UIA root (no Shell_SystemDialog there, FindWindow and FindAll find nothing); it is reachable only as
+    # AutomationElement.FocusedElement after R: a Button ('No', AutomationId Button0) of the PickerHost process whose ancestor is a Window of class Shell_SystemDialog. Returns that focused Button, or $null when the focus is anywhere else (Dino's own window).
+    try {
+        $focused = $script:AutomationElement::FocusedElement
+        if (-not $focused -or $focused.Current.ControlType -ne [System.Windows.Automation.ControlType]::Button) { return $null }
+        $dinoPid = (Get-DinoWindow).Current.ProcessId
+        if ($focused.Current.ProcessId -eq $dinoPid) { return $null }
+        if (Get-ConsentDialogOf $focused) { return $focused }
+    } catch { $null = $_ }   # no-fallback: a focus read that fails this poll is "no prompt yet"; the wait polls again
     return $null
 }
 function Get-ButtonNames {
@@ -99,19 +111,34 @@ function Get-ButtonNames {
     $cond = New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::ControlTypeProperty, [System.Windows.Automation.ControlType]::Button)
     return @($Root.FindAll($script:TreeScope::Descendants, $cond) | ForEach-Object { $_.Current.Name } | Where-Object { $_ })
 }
-function Deny-ConsentPrompt {
-    # Finds the deny button of the consent window by control type Button and the English name list, invokes it, and returns a note naming the window and the buttons seen. A window with no deny button throws with the names it saw.
-    param($Window)
-    $title = $Window.Current.Name
-    $names = Get-ButtonNames $Window
-    $deny = $null
-    foreach ($b in $Window.FindAll($script:TreeScope::Descendants, (New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::ControlTypeProperty, [System.Windows.Automation.ControlType]::Button)))) {
-        if ($b.Current.Name -match $ConsentDenyPattern) { $deny = $b; break }
+function Get-DialogButtons($Dialog) {
+    # FindAll on the dialog returns 0 (findings.txt), so its buttons are walked with RawViewWalker (at most 200 nodes).
+    $walker = [System.Windows.Automation.TreeWalker]::RawViewWalker
+    $buttons = @(); $queue = New-Object System.Collections.Queue; $queue.Enqueue($Dialog); $seen = 0
+    while ($queue.Count -gt 0 -and $seen -lt 200) {
+        $node = $queue.Dequeue(); $seen++
+        if ($node.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button) { $buttons += $node }
+        for ($child = $walker.GetFirstChild($node); $child; $child = $walker.GetNextSibling($child)) { $queue.Enqueue($child) }
     }
-    if (-not $deny) { throw "the microphone consent prompt '$title' showed no deny button (Name matching $ConsentDenyPattern); buttons seen: $($names -join ' / ')" }
+    return $buttons
+}
+function Deny-ConsentPrompt {
+    # Slice 320 item 8: $Focused is the prompt's focused Button (Find-ConsentWindow). It is invoked when its name is a deny word; otherwise the deny button is looked for among the dialog's buttons (RawViewWalker). Returns a note naming the path, the dialog and
+    # the buttons seen; a dialog with no deny button throws with the names it saw.
+    param($Focused)
+    $dialog = Get-ConsentDialogOf $Focused
+    $title = if ($dialog) { $dialog.Current.Name } else { '' }
+    $dialogButtons = if ($dialog) { @(Get-DialogButtons $dialog) } else { @() }   # focus moved since the poll: no dialog, so only the focused element's own name is used
+    $names = @($dialogButtons | ForEach-Object { $_.Current.Name } | Where-Object { $_ })
+    if ($names.Count -eq 0) { $names = @($Focused.Current.Name) }
+    $deny = $null
+    if ($Focused.Current.Name -match $ConsentDenyPattern) { $deny = $Focused }
+    else { $deny = $dialogButtons | Where-Object { $_.Current.Name -match $ConsentDenyPattern } | Select-Object -First 1 }
+    if (-not $deny) { throw "the microphone consent prompt '$title' showed no deny button (Name matching $ConsentDenyPattern); focused: '$($Focused.Current.Name)'; buttons seen: $($names -join ' / ')" }
     $clicked = $deny.Current.Name
     Invoke-Uia $deny
-    return "consent prompt '$title' denied through button '$clicked' (buttons seen: $($names -join ' / '))"
+    $via = if ($deny -eq $Focused) { 'the focused element' } else { 'a sibling found with RawViewWalker' }
+    return "consent prompt '$title' ($ConsentDialogClass, found as FocusedElement) denied through button '$clicked' via $via (buttons seen: $($names -join ' / '))"
 }
 function Note-TopLevelWindows {
     # Records each new top-level window (name, process and, for a window outside Dino, its button names) once, so a failed key-R names everything that was on screen.

@@ -94,9 +94,21 @@ function Send-DevHook([string]$Phone, [string]$App, [string]$Command, [hashtable
 function Start-ReadyApp([string]$Phone, [string]$App, [string]$Package) {
     $appPid = Start-DevAppWithHook $Phone $Package
     if (-not (Wait-LogMatch $Phone $Package $appPid 'HOOK skip-first-run ok' 60 0 'waiting for the app to skip first run')) { throw 'The skip-first-run hook did not report ok within 60 s.' }
+    if (@($script:RequiredPacks[$App]).Count -eq 0) { return $appPid }   # Slice 320 item 4: Dino has no voice pack (Slice 278), so there is no PACK_READY to wait for
     if (-not (Wait-LogMatch $Phone $Package $appPid 'PACK_READY' $script:PackReadySeconds 0 'waiting for the installed voice pack')) {
         throw "The voice pack was not ready within $($script:PackReadySeconds) s: it is missing or a download started. Restore it (reset-dev-app.ps1) instead of waiting."
     }
+    return $appPid
+}
+
+# Slice 320 item 4: Dino has no voice pack since Slice 278; it plays the store books' pre-made audio packs. Launches fresh with skip-first-run (the four test books), then installs the Debug fixture pack for
+# the book through the pack store (`install-audio-pack`, the same hook premade-audio-three-clips uses), so the read plays clips and writes `[AudioPack] premade clip plays` lines. No network, no download.
+function Start-ReadyDinoApp([string]$Phone, [string]$Package, [string]$Book, [string]$Language = 'fa') {   # 'fa' like the Maestro flows: the hook needs a bundled translation table, and English (the books' source language) has none
+    $appPid = Start-DevAppWithHook $Phone $Package
+    if (-not (Wait-LogMatch $Phone $Package $appPid 'HOOK skip-first-run ok' 60 0 'waiting for the app to skip first run')) { throw 'The skip-first-run hook did not report ok within 60 s.' }
+    $sent = Send-DevHook $Phone 'dino' 'install-audio-pack' @{ id = $Book; lang = $Language }
+    $answer = Wait-LogMatch $Phone $Package $appPid 'HOOK install-audio-pack (ok|failed)' 60 $sent 'waiting for the fixture audio pack'
+    if (-not $answer -or $answer.Line -match 'install-audio-pack failed') { throw "The fixture audio pack for '$Book' ($Language) was not installed: $(if ($answer) { $answer.Line.Trim() } else { 'no HOOK install-audio-pack line in 60 s' })" }
     return $appPid
 }
 

@@ -257,11 +257,17 @@ $script:OnlyAlertOnceFlag = 0x8
 
 # The notification flags of a dumpsys record, or $null when the record shows none. Only the "Notification(...)" line carries the notification's own flags: other lines of the raw record
 # (sound, audio attributes, actions) print their own flags=0x..., so the first match in the whole record is not the right one.
-function Get-NotificationFlags($Note) {
-    foreach ($line in ("$($Note.Raw)" -split "`n")) {
-        if ($line -match 'Notification\(.*?\bflags=0x([0-9a-fA-F]+)') { return [Convert]::ToInt64($Matches[1], 16) }
+function Get-NotificationFlags($Note) { return (Get-NotificationFlagsFromText "$($Note.Raw)") }   # Slice 320 item 3: the parser is in _lib.ps1 (pure, self-tested)
+
+# Writes the raw dumpsys records of the first notice and the re-post under <worktrees>\.phone (the S21 run of 2026-11-08 failed with flags 0x800 and no record was kept to say whose flags those were); returns the two paths.
+function Save-RepostRecords($First, $Second) {
+    $directory = Join-Path (Get-WorktreesRoot) '.phone'
+    $paths = @()
+    foreach ($item in @(@('first', $First), @('repost', $Second))) {
+        $path = Save-NotificationRecord "$($item[1].Raw)" $directory "$package-$($item[0])"
+        $paths += $path
     }
-    return $null
+    return ($paths -join ', ')
 }
 
 # Second failed automatic resume (the app was opened, the download started again): background it, drop the connection again, and the re-post must carry the only-alert-once flag the first post lacks.
@@ -279,9 +285,13 @@ function Invoke-RepostSecondEnd($First, [string]$AppPid) {
     if (-not $second) { return (New-CheckResult $false "the second paused-notified marker was logged but no notice titled '$($script:PausedTitle)' with a later post time than the first ($($First.PostTime)) is in dumpsys notification") }
     $firstFlags = Get-NotificationFlags $First
     $secondFlags = Get-NotificationFlags $second
-    if ($null -eq $firstFlags -or $null -eq $secondFlags) { throw "a paused notice's dumpsys record shows no Notification(... flags=0x...): first '$firstFlags', second '$secondFlags' (check error, not a product failure)" }
-    if (($firstFlags -band $script:OnlyAlertOnceFlag) -ne 0) { return (New-CheckResult $false "the first notice already carries FLAG_ONLY_ALERT_ONCE (flags 0x$($firstFlags.ToString('x'))): it should alert") }
-    if (($secondFlags -band $script:OnlyAlertOnceFlag) -eq 0) { return (New-CheckResult $false "the re-post does not carry FLAG_ONLY_ALERT_ONCE (flags 0x$($secondFlags.ToString('x'))): a repeated failed resume alerts again") }
+    $saved = Save-RepostRecords $First $second
+    foreach ($seen in @($firstFlags, $secondFlags)) {
+        if ($null -ne $seen -and -not (Test-NotificationFlagsPlausible $seen)) { throw "the flags read from a paused notice's record (0x$($seen.ToString('x'))) lack FLAG_AUTO_CANCEL (0x10), which AndroidPackKeepAlive.BuildPaused always sets (SetAutoCancel), so they are not that notification's own flags: the parser read the wrong field (check error, not a product failure). Raw records saved: $saved" }
+    }
+    if ($null -eq $firstFlags -or $null -eq $secondFlags) { throw "a paused notice's dumpsys record shows no Notification(... flags=0x...): first '$firstFlags', second '$secondFlags' (check error, not a product failure). Record starts: first [$(Format-NotificationRecordExcerpt "$($First.Raw)")] second [$(Format-NotificationRecordExcerpt "$($second.Raw)")]" }
+    if (($firstFlags -band $script:OnlyAlertOnceFlag) -ne 0) { return (New-CheckResult $false "the first notice already carries FLAG_ONLY_ALERT_ONCE (flags 0x$($firstFlags.ToString('x'))): it should alert. Raw records saved: $saved") }
+    if (($secondFlags -band $script:OnlyAlertOnceFlag) -eq 0) { return (New-CheckResult $false "the re-post does not carry FLAG_ONLY_ALERT_ONCE (flags 0x$($secondFlags.ToString('x'))): a repeated failed resume alerts again. Raw records saved: $saved") }
     return (New-CheckResult $true "first notice flags 0x$($firstFlags.ToString('x')) (alerts), re-post flags 0x$($secondFlags.ToString('x')) (only-alert-once, silent); $($marker.Line.Trim())")
 }
 

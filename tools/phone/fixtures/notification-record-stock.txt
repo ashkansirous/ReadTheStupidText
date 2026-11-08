@@ -1,0 +1,8 @@
+    NotificationRecord(0x0a1b2c3d: pkg=uk.sirous.readthestupidtext.dbg user=UserHandle{0} id=4711 tag=null importance=3 key=0|uk.sirous.readthestupidtext.dbg|4711|null|10230: Notification(channel=pack_paused shortcut=null contentView=null vibrate=null sound=null defaults=0x0 flags=0x8 color=0x00000000 vis=PRIVATE semFlags=0x0 semMissedCount=0))
+      uid=10230 userId=0
+      opPkg=uk.sirous.readthestupidtext.dbg
+      icon=Icon(typ=RESOURCE pkg=uk.sirous.readthestupidtext.dbg id=0x7f080001)
+      extras={
+        android.title=String (Download paused. Tap to finish.)
+      }
+      mSound=null mAudioAttributes=AudioAttributes: usage=USAGE_NOTIFICATION contentType=CONTENT_TYPE_SONIFICATION flags=0x0 tags=

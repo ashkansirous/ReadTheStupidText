@@ -367,6 +367,7 @@ function Get-StageSecondsLeft { return $Budget * 60 - (Get-BudgetElapsedSeconds)
 # in the version folder it names). Otherwise the newest aside copy (reset-dev-app.ps1 or -Prepare wrote it) is put back and verified the same way. The timed run NEVER downloads.
 function Restore-PacksIfMoved([string]$Phone) {
     $needed = $script:RequiredPacks[$App]
+    if (@($needed).Count -eq 0) { return 'Present' }   # Slice 320 item 4: Dino has no voice pack (Slice 278), so nothing is missing and nothing is restored
     if (@(Get-InstalledPackIds $Phone $package $needed).Count -gt 0) { return 'Present' }
     $archive = Find-NewestAside $Phone
     if (-not $archive) { return 'Missing' }
@@ -425,6 +426,10 @@ function Invoke-PrepareSteps([string]$Phone) {
     $needed = $script:RequiredPacks[$App]
     Write-Host "   notifications $(Grant-DevNotifications $Phone); the no-usage marker is written"
     Set-DevNoUsageMarker $Phone $package
+    if (@($needed).Count -eq 0) {   # Slice 320 item 4: Dino plays the store books' pre-made audio packs, which its checks install themselves (Start-ReadyDinoApp); it waited here for a voice pack it no longer has
+        Write-Host "PREPARE OK: $App needs no voice pack (Slice 278); its checks install the book's audio pack themselves"
+        return $script:ExitAllPassed
+    }
     $state = Resolve-PreparedPack $Phone
     if ($state -eq 'Missing') {
         Write-Host "   no pack installed and no usable aside copy: downloading $($needed -join ' or ') with the app in the foreground (no budget, a stall of $($script:PackStallSeconds) s is a FAIL)"

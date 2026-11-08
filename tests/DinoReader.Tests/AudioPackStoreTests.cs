@@ -511,11 +511,37 @@ public sealed class AudioPackStoreTests : IDisposable
     [InlineData("network", PackFailureInjection.Network)]
     [InlineData("corrupt", PackFailureInjection.Corrupt)]
     [InlineData("disk-full", PackFailureInjection.DiskFull)]
+    [InlineData("stall", PackFailureInjection.Stall)]
     [InlineData("off", PackFailureInjection.None)]
     public void ForcedPackFailures_ParsesEachWord(string word, PackFailureInjection expected)
     {
         Assert.True(ForcedPackFailures.TryParse(word, out PackFailureInjection kind));
         Assert.Equal(expected, kind);
+    }
+
+    // Slice 320 item 7: a stalled download neither ends nor fails; only the person's cancel ends it, and it is counted as cancelled with nothing kept.
+    [Fact]
+    public async Task InjectedStall_HangsUntilCancelled_ThenIsCountedAsCancelled_AndKeepsNothing()
+    {
+        byte[] zip = Zip();
+        AudioPackStore store = Store(new FakeFetcher(zip));
+        var outcomes = new List<string>();
+        store.Outcome += (_, _, detail) => outcomes.Add(detail);
+        using var cancel = new CancellationTokenSource();
+
+        var reachedStall = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var progress = new SignalProgress(reachedStall);
+
+        Task<PackInstall> install = store.InstallAsync(Book, "fa", Info(zip), progress, cancel.Token, new FailingAudioPackFetcher(new FakeFetcher(zip), PackFailureInjection.Stall));
+        await reachedStall.Task.WaitAsync(TimeSpan.FromSeconds(30)); // the fetch wrote its first bytes and reported them: it is running, about to hang
+        Assert.False(install.IsCompleted);
+
+        cancel.Cancel();
+
+        Assert.Equal(PackInstall.Cancelled, await install);
+        Assert.Equal("cancelled", outcomes.Last());
+        Assert.Null(store.InstalledVersion(Book, "fa"));
+        Assert.Empty(Directory.EnumerateFiles(Cache));
     }
 
     [Fact]
@@ -595,6 +621,18 @@ public sealed class AudioPackStoreTests : IDisposable
         string detail = AudioPackStore.FailureDetail(new IOException("x"), "not a url");
 
         Assert.EndsWith("url=<invalid-url>", detail);
+    }
+
+    // Reports synchronously (unlike Progress<T>), so the signal is set before the fetch can go on.
+    private sealed class SignalProgress(TaskCompletionSource signal) : IProgress<long>
+    {
+        public void Report(long value)
+        {
+            if (value > 0)
+            {
+                signal.TrySetResult(); // an early Report(0) is only the start; the signal means bytes were written, so the hang is next
+            }
+        }
     }
 
     private sealed class FakeFetcher(byte[]? content) : IAudioPackFetcher

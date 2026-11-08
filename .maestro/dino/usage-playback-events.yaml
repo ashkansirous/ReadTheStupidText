@@ -7,6 +7,10 @@
 # expect-log: [Usage] read_stopped left_book
 # expect-log: [Usage] book_opened
 # expect-log: [Usage] read_started
+# Slice 320 item 7: a count that reached the queue (the dry run builds and queues it and sends nothing) also writes `[Usage] seq=<n> <name> session=<id>` with the real seq it was stamped with (UsageCounter.Stamp):
+# the launch's first two queued counts show seq=1 and seq=2 (the session counts from 1: UsageSession.NextSeq). A launch whose counts the switch or sampling dropped shows none and the flow fails: that is the "seq on a device" check (Slice 250).
+# expect-log: [Usage] seq=1
+# expect-log: [Usage] seq=2
 # The order and the single session id are checked from the log by the device stage (all six lines carry the same session=<32 hex>).
 # Fails against a build without the events: no `[Usage] read_started` line.
 appId: uk.sirous.dinoreader.dbg

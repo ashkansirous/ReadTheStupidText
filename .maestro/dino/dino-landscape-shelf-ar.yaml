@@ -1,0 +1,100 @@
+# Slice 320 item 6 (L346, L183): the shelf, corner and book sheet held sideways in Arabic (right to left). The English flow dino-landscape-shelf.yaml waits on the English cover title ".*Three Little Pigs.*", so its Arabic copy
+# failed on text and said nothing about the layout; this one waits on the cover-title AutomationId (StoryTileTitle) instead and keeps every other step, which already finds things by id. The shot is for the by-eye check that the rail and
+# the covers are mirrored as designed. The set-language hook switches the screens (voice=0: no voice-pack start); the last step puts English back.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK set-language ok ar
+# expect-log: HOOK enter-grown-up ok
+# expect-log: layout=sideways
+# expect-log: layout=rail
+# expect-log: railWidth=300
+# expect-log: [Landscape] book sheet card=True width=580
+# expect-log: [Landscape] book sheet card=False
+# expect-log: layout=grid
+appId: uk.sirous.dinoreader.dbg
+name: Shelf, corner and book sheet in landscape keep their state through a rotation (Arabic, by id)
+# Runs after the flow pass or fail, so a failure never leaves the next flow sideways or in Arabic.
+onFlowComplete:
+  - setOrientation: PORTRAIT
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: set-language
+        lang: en
+        voice: "0"
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow uses the starter shelf only and reads nothing aloud, so it needs no pack or own book.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: ar
+      voice: "0"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 30000
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 15000
+# A cover title, not only the tile node: the covers must really draw right after the rotation.
+- extendedWaitUntil:
+    visible:
+      id: StoryTileTitle
+    timeout: 15000
+- assertVisible:
+    id: GalleryGrownUps
+- takeScreenshot: shelf-landscape-ar
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+- assertVisible:
+    id: GalleryCornerLine
+- assertVisible:
+    id: GalleryStore
+- assertVisible:
+    id: StoryTile
+- takeScreenshot: corner-landscape-ar
+- tapOn:
+    id: TileMore
+    index: 0
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: BookSheetReadNow
+    timeout: 10000
+- assertVisible:
+    id: BookSheetClose
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: BookSheetReadNow
+    timeout: 15000
+- tapOn:
+    id: BookSheetClose
+    waitToSettleTimeoutMs: 300
+- assertVisible:
+    id: GalleryDone
+- extendedWaitUntil:
+    visible:
+      id: StoryTileTitle
+    timeout: 15000
+- assertVisible:
+    id: GalleryCornerLine
+- assertNotVisible:
+    id: GalleryGrownUps

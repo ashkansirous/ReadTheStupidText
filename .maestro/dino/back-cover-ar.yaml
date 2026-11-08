@@ -1,0 +1,63 @@
+# Slice 320 item 6 (L213, L346): the back cover in Arabic (right to left). The English flow back-cover.yaml asserts English credit text, so a copy of it in Arabic proved nothing about the layout; this one finds everything by AutomationId
+# (BackCover, ReadingSurface, StoryText), so it passes or fails on the screen being there, not on a language. The picture of the cover is taken for the by-eye check of the mirrored layout and the Persian digits (no id holds the credits text, so
+# the digits are a screenshot check, not an assert). The set-language hook switches the screens (skip-first-run lang=fa does not, see premade-audio-past-roar.yaml) with voice=0, so no voice-pack start; the last step puts English back.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK set-language ok ar
+# expect-log: HOOK open-book opened page=16
+# expect-log: PAGE 16
+# expect-log: BACKCOVER shown lines=4
+appId: uk.sirous.dinoreader.dbg
+name: Back cover after the last page (Arabic, by id)
+# Runs after the flow pass or fail, so a failure never leaves the app in Arabic for the flows that wait on English labels.
+onFlowComplete:
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: set-language
+        lang: en
+        voice: "0"
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow opens a starter book and speaks nothing, so it needs no pack or own book.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: set-language
+      lang: ar
+      voice: "0"
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 30000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "16"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- assertNotVisible:
+    id: BackCover
+- waitForAnimationToEnd:
+    timeout: 5000
+# Same swipe as the English flow: the 2026-11-08 run of the English copy in Arabic reached the back cover with this swipe (it failed later, on English text).
+- swipe:
+    direction: LEFT
+- extendedWaitUntil:
+    visible:
+      id: BackCover
+    timeout: 10000
+- assertNotVisible:
+    id: StoryText
+- takeScreenshot: back-cover-ar
