@@ -8,10 +8,14 @@
 
 ## Items
 
-- [ ] Make the audio exactly as the app plays it: render it with the app's own engine and packs (the `voice-pick` skill's render path), or record it from the dev app on the S21 when rendering cannot reproduce it (speed changes, timing, a Sonos or store track). Note how each clip was made and its build or pack version.
-- [ ] Publish one private listening page through the repo's `voice-pick` agent: a play button per clip, the line of text it reads, and for each clip "sounds right" or "something is wrong" with a free-text box for what is wrong (and a timestamp when it helps). English and Farsi only.
-- [ ] When the user has answered, write every answer into this file, word for word.
-- [ ] Each "something is wrong" becomes a fix item in this slice (cause, then fix, through the normal review gate). Every "sounds right" closes the check.
+- [x] Make the audio exactly as the app plays it: the shipped premade clip fa index 13 (`7aed95a0e9972937-Leda-gemini-tts-16770f68.m4a`, voice Leda, manifest version 3, rendered 2026-11-04), with the context clips fa 11, 12 and 14; the old Lion-voice clip (Algenib) was on the page for comparison only.
+- [x] Publish one private listening page: https://claude.ai/artifact/K5ZhJgJVLGsCiP6MAecHxB (2026-11-08).
+- [x] When the user has answered, write every answer into this file, word for word (below).
+- [x] Each "something is wrong" becomes a fix item in this slice. None was wrong, so the check is closed.
+
+## The user's answers (2026-11-08, Done pressed 18:47Z)
+
+All four **sound right**, no notes: c11 «موش گفت:», c12 «خواهش می‌کنم، خواهش می‌کنم ولم کن، آقا شیره،», c13 (the new clip) «نمی‌خواستم بیدارت کنم. اگه امروز با من مهربون باشی، منم یه روزی با تو مهربونی می‌کنم.», c14 «شیر اون‌قدر خندید که شکمش تکون‌تکون خورد.».
 
 ## Verification
 

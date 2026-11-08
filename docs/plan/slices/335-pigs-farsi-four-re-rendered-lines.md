@@ -8,10 +8,16 @@
 
 ## Items
 
-- [ ] Make the audio exactly as the app plays it: render it with the app's own engine and packs (the `voice-pick` skill's render path), or record it from the dev app on the S21 when rendering cannot reproduce it (speed changes, timing, a Sonos or store track). Note how each clip was made and its build or pack version.
-- [ ] Publish one private listening page through the repo's `voice-pick` agent: a play button per clip, the line of text it reads, and for each clip "sounds right" or "something is wrong" with a free-text box for what is wrong (and a timestamp when it helps). English and Farsi only.
-- [ ] When the user has answered, write every answer into this file, word for word.
+- [x] Make the audio exactly as the app plays it: the shipped premade Gemini clips from `content/dino/three-little-pigs/audio/fa/` (Git LFS, manifest v3), not re-rendered: entry 16 (Hali), 62 (Hali), 60 (Achird), 74 (Hali).
+- [x] Publish one private listening page: https://claude.ai/artifact/Lh1NricoJb8pCsrT2CfRrY (2026-11-08).
+- [x] When the user has answered, write every answer into this file, word for word (below).
 - [ ] Each "something is wrong" becomes a fix item in this slice (cause, then fix, through the normal review gate). Every "sounds right" closes the check.
+- [ ] **Fix 1 (from the user's answer):** entry 62, «شالاپ، شالاپ، شالاپ!» (`65b3e84e6c199a3f-Hali-gemini-tts-6de2d2f6.m4a`). The user: "reads is wrong. it says shalaap shalaap shalaap." Find why the premade clip says "shalaap" (the spoken form in the book's hidden how-to-read table or the text sent to Gemini), correct it, re-render the clip, bump the book's audio, and put the new clip on the same page for a second listen.
+
+## The user's answers (2026-11-08, Done pressed 18:51Z)
+
+- **Wrong:** clip 62 «شالاپ، شالاپ، شالاپ!»: "reads is wrong. it says shalaap shalaap shalaap."
+- **Sounds right**, no notes: clip 16 «یه روز غروب، یه گرگ گُنده‌ی خاکستری داشت از جاده میومد.», clip 60 «من یه وان گُنده پر از آب سرد و کف‌کفی گذاشتم زیر دودکش.», clip 74 «پیم با یه لبخند گُنده گفت:».
 
 ## Verification
 
