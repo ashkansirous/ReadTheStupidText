@@ -12,7 +12,7 @@
 - [x] Publish one private listening page: https://claude.ai/artifact/Cj4gG4fk3Y1maLsVbGCMto (2026-11-08; 8 Farsi scenes, 6 English scenes).
 - [x] When the user has answered, write every answer into this file, word for word (below).
 - [ ] Each "something is wrong" becomes a fix item in this slice (cause, then fix, through the normal review gate). Every "sounds right" closes the check.
-- [ ] **Fix 1 (from the user's answer):** English clip 24, the wolf (voice Elio): "Then I'll huff, and I'll puff, and I'll blow your house in!" The user: "too much feeling. somewhat scary for a little one". Re-render this clip calmer and less scary for ages 3-9 (premade-audio tooling, `tools/premade-audio/`), bump the book's audio, and put the new clip on the same page for a second listen.
+- [ ] **Fix 1 (from the user's answer):** English clip 24, the wolf (voice Elio): "Then I'll huff, and I'll puff, and I'll blow your house in!" The user: "too much feeling. somewhat scary for a little one". Re-render this clip calmer and less scary for ages 3-9 (premade-audio tooling, `tools/premade-audio/`), bump the book's audio, and put the new clip on the same page for a second listen. **In every language the book ships, not only English** (user, 2026-11-08: "remember to do the fix for all languages. If it is too scary in english, is probably too scary in french, farsi and others too"): the same huff-and-puff line in all 15 audio folders (ar, da, de, en, es, fa, fi, fr, ja, nb, nl, pt, ru, sv, zh), and any other wolf line rendered with the same delivery. The second listen covers English and Farsi (the listening-page languages).
 
 ## The user's answers (2026-11-08, Done pressed 18:50Z)
 
