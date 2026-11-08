@@ -4,6 +4,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 Each line starts with what it needs: **Android** (a scripted emulator run), **iOS** (an iPhone, a Mac or TestFlight), **Windows** (the VM or the desktop), **Live** (a live event, outside hardware or the user's ear), **Logs** (production analytics can prove it once enough rows arrive). Triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)).
 
+### Slice 318: Dino: the /stats page on phones and tablets ([slice](slices/318-dino-stats-phone-tablet.md))
+- **Android:** A real phone and a real tablet in both orientations on the live `/stats` page (touch, notch spacing, Filters sheet focus, the side panel in landscape).
+- **Live:** The live page against real D1 data (the Worker deployed 2026-11-08 and serves the new layouts; the real-data look is not checked).
+- **Android:** Screenshots of the page side by side with the mock frames 200-204 (not compared; `tools/stats-page-check/check.mjs` checks the values only).
+
 ### Slice 313: Dino: a shelf book's text and its sound always match ([slice](slices/313-dino-book-text-and-sound-in-step.md))
 - **Android:** The user's phone: Freddy in English and Farsi after updating to the release with this slice (Dino 1.116.0 or later): new text, and sound plays.
 - **iOS:** iPhone: the same path.
