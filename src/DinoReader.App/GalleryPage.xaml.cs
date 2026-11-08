@@ -603,7 +603,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 		WindowShapeSeam.ShelfGeometry shelfOnPage = rail ? _shelfGeometry.BesideRail(corner.RailWidth) : _shelfGeometry; // the layer spans the whole page, so beside a rail it starts where the shelf list starts on the page (tablet only)
 		bool tablet = WindowShapeSeam.IsTabletUpright(grownUp, shelf.TabletUpright, corner.TabletUpright); // the shelf's own classification (or the corner's), not a second one
 		bool useShelf = WindowShapeSeam.ReorderUsesShelfGeometry(tablet, _windowSize.Width, _windowSize.Height); // no mock frame for a tablet or a phone held sideways
-		_reorderGeometry = ReorderShape(useShelf, shelfOnPage);
+		_reorderGeometry = ReorderShape(tablet, useShelf, shelfOnPage);
 		_reorder.Reshape(_reorderGeometry); // a rotation or resize while the mode is open re-fits it
 		if (key == _shapeKey)
 		{
@@ -629,9 +629,9 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget
 	}
 
 	// The Reorder layer's grid and hint (Slice 321): the Windows head takes the mock's frame 176 over the whole page (the layer covers the rail, so no rail offset), a tablet or a phone held sideways the shelf's geometry, a phone upright frames 173/174.
-	private WindowShapeSeam.ReorderLayerShape ReorderShape(bool useShelf, WindowShapeSeam.ShelfGeometry shelfOnPage)
+	private WindowShapeSeam.ReorderLayerShape ReorderShape(bool tablet, bool useShelf, WindowShapeSeam.ShelfGeometry shelfOnPage)
 	{
-		if (DesktopTips.IsWindows)
+		if (WindowShapeSeam.ReorderUsesDesktopGeometry(DesktopTips.IsWindows, tablet, _windowSize.Width, _windowSize.Height))
 		{
 			return WindowShapeSeam.ReorderLayerDesktop(_windowSize.Width);
 		}

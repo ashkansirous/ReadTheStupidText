@@ -146,10 +146,16 @@ public static class WindowShapeSeam
 
     /// <summary>The Windows Reorder columns for a window: how many of the mock's 155 dp tiles fit between 40 dp sides with 18 dp gaps, at least 3. 6 at 1100 dp; the tile size stays the mock's at any width, the column count follows the width.</summary>
     public static int ReorderDesktopColumns(double windowWidth) =>
-        Math.Max(ReorderDesktopMinColumns, (int)Math.Floor((windowWidth - (2 * ReorderDesktopSide) + ReorderDesktopGap) / (ReorderDesktopTileWidth + ReorderDesktopGap)));
+        Math.Max(ReorderDesktopMinColumns, (int)Math.Floor(((windowWidth - (2 * ReorderDesktopSide) + ReorderDesktopGap) / (ReorderDesktopTileWidth + ReorderDesktopGap)) + ReorderColumnEpsilon));
+
+    /// <summary>Float slack for the column count: a window exactly one column wider than a whole number of tiles (1100 dp: 6.0) must not lose a column to rounding.</summary>
+    public const double ReorderColumnEpsilon = 1e-9;
 
     /// <summary>The Reorder layer has no mock frame on a tablet or a phone held sideways (the mock draws portrait phones and one Windows window): both keep the shelf's geometry (a phone rotated while the mode is open therefore relayouts between the two, by decision).</summary>
     public static bool ReorderUsesShelfGeometry(bool tablet, double windowWidth, double windowHeight) => tablet || windowWidth > windowHeight;
+
+    /// <summary>The Windows head keeps the mock's frame 176 for a landscape window that is not a tablet; a portrait (narrow) Windows window has no frame and takes the phone's or the tablet's geometry like the other heads.</summary>
+    public static bool ReorderUsesDesktopGeometry(bool isWindows, bool tablet, double windowWidth, double windowHeight) => isWindows && !tablet && windowWidth > windowHeight;
 
     /// <summary>The one tablet test for the Reorder layer: the shelf's own classification, or the corner's when the grown-ups' corner is showing.</summary>
     public static bool IsTabletUpright(bool grownUp, bool shelfTabletUpright, bool cornerTabletUpright) => grownUp ? cornerTabletUpright : shelfTabletUpright;

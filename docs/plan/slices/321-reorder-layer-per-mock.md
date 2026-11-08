@@ -1,6 +1,6 @@
 # Slice 321: Reorder layer back to the mock on Windows
 
-*Planned 2026-11-08.* Slice 319 (PR #957) changed the Dino Reorder layer to copy the shelf's geometry so it "lies over the shelf". That design was the coordinator's, written without reading the mock, which always wins. The mock (`docs/design/dino-reader/Dino Reader Batch 47 Onboarding.dc.html`, frames 173-176, lines 314-330; Slice 264 lines 33-34) shows Reorder as its own panel: the ink bar (Cancel / "Reorder" / Done), the hint ("Drag a book to a new place. Your child's shelf shows the same order.", `padding:12px 18px 12px`), then the grid (`padding:0 14px`, no top padding). Phone: 3 across, 14 dp sides. Windows (frame 176, 1100x760 window): 6 across, gap 18, side padding 40. The mock has no tablet frame. The 2026-11-08 VM bug (L95: the layer kept phone padding, 13 px from the window edge) is fixed by the mock's 40 dp and 6 columns, not by the shelf's centred margin.
+*Built 2026-11-08 (taken over from a dead session; origin/main merged in at 7996f7ba), not merged. Windows VM and Android emulator checked, see Not yet verified.* Slice 319 (PR #957) changed the Dino Reorder layer to copy the shelf's geometry so it "lies over the shelf". That design was the coordinator's, written without reading the mock, which always wins. The mock (`docs/design/dino-reader/Dino Reader Batch 47 Onboarding.dc.html`, frames 173-176, lines 314-330; Slice 264 lines 33-34) shows Reorder as its own panel: the ink bar (Cancel / "Reorder" / Done), the hint ("Drag a book to a new place. Your child's shelf shows the same order.", `padding:12px 18px 12px`), then the grid (`padding:0 14px`, no top padding). Phone: 3 across, 14 dp sides. Windows (frame 176, 1100x760 window): 6 across, gap 18, side padding 40. The mock has no tablet frame. The 2026-11-08 VM bug (L95: the layer kept phone padding, 13 px from the window edge) is fixed by the mock's 40 dp and 6 columns, not by the shelf's centred margin.
 
 **Touches:** `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/ShelfReorderView.cs`, `src/DinoReader.Core/WindowShape.cs`, `tests/DinoReader.Tests/WindowShapeTests.cs`, `tools/desktop-vm/checks/dino-reorder.ps1`, `docs/plan/slices/319-device-run-2026-11-08-fixes.md`
 
@@ -56,11 +56,31 @@ VM evidence 2026-11-08 (`reviews/s321-vm/results.md`, `reorder.png`, 1024x688 wi
 - VM run 2 (`reviews/s321-vm/results2.md`) failed the inset at 30-34 px though the app matched the mock; check bug. `Get-GridEdge` now uses only `ReorderTile` rects (never `ReorderCover`), takes the grid edge from the first non-lifted tile as `X - index * (width + gap)`, measures the gap between two non-lifted neighbours (else 18 dp * scale), skips the inset assertion with "1 book: inset not measurable" when only the lifted tile exists, and prints the measured numbers on PASS.
 - VM run 3 (`reviews/s321-vm/results3.md`) measured the inset 33-34 px twice (wants 40) while `reorder2.png` shows the second tile at x=232 = 40+174+18 and the hint text at x=40. Inset not asserted: UIA tile bounds read 6-7 px less than the screenshot shows (232 = 40+174+18); cause not found; the mock inset is shown by reorder2.png. Stage `1-sheet-reorder` prints "inset (not asserted): N px" with the tile X/W/gap numbers, still asserts the first-row count = min(columns, books) and the first tile top within 24 dp below the hint, and every FAIL prints all the numbers.
 
+### Recheck after the takeover (2026-11-08)
+
+Review files read: `reviews/s321-high.md` 8/8, `s321-medium.md` 8/8, `s321-check1.md` (no findings), `s321-check2.md` (no findings; fork not run, read by hand), `s321-recheck.md` 5/5. The fresh medium recheck confirmed every earlier finding fixed or recorded as a decision, and found 5 new:
+
+- Applied #1 (`reviews/s321-recheck.md`): narrow or portrait Windows windows now use the phone/shelf geometry through the new `WindowShapeSeam.ReorderUsesDesktopGeometry`; a landscape non-tablet Windows window keeps the 1100x760 frame.
+- Applied #2 (`reviews/s321-recheck.md`): epsilon before the `Floor` in `ReorderDesktopColumns`, so 1100 dp keeps 6 columns; tests added.
+- Skipped #3 (`reviews/s321-recheck.md`): "skips relayout when grid whole-dp values are equal" - low; the hint height change without a grid change is not handled.
+- Skipped #4 (`reviews/s321-recheck.md`): "initial _reorderGeometry is ReorderLayerShelf(default), Columns 0" - low; `ShelfOrderGrid.Fit` clamps the columns, so no crash.
+- Skipped #5 (`reviews/s321-recheck.md`): "constructor no longer sets hint font/padding" - low; the view is only shown after `Open`, which styles the hint.
+
+### Device runs (2026-11-08)
+
+- Windows VM: `dino-reorder` PASS on all stages twice (before and after the recheck fixes; key 6b2bb74fcf67 after), `dino-launch` PASS. The inset was measured at 30 px against the mock's 40; it is printed, not asserted (the open item above).
+- Android emulator: `dino-landscape-shelf` PASS. The `shelf-reorder` flow reported FAIL only on two first-launch markers (`HOOK skip-first-run ok`, `HOOK shelf-order-reset ok`) while every Reorder marker passed. The kept logcat starts at an older pid, so the harness likely missed early lines (not proven).
+
 ## Not yet verified
 
-- Phone (Android emulator, portrait): the Reorder layer shows 3 across with 14 dp sides, a 27 dp row gap, and the hint padding 12 / 18 / 12.
-- Phone held sideways and a tablet (emulator): the layer uses the shelf's grid, hint aligned with its left edge, also beside the grown-ups' rail.
-- Windows VM `dino-reorder` stage `1-sheet-reorder` with the new assertions (first row = min(columns, books)), and a resize of the window while the layer is open (columns change, no layout cycle).
-- An inset assertion that agrees with the screenshot (the VM check no longer asserts the inset).
-- `3-drag-done-enter` failed once and passed once on the VM (flaky?).
-- iOS phone/tablet: the same shared MAUI code; not run on an iOS device.
+- The tablet AVD (`dino-tablet-upright-shelf`): the layer uses the shelf's grid, hint aligned with its left edge, also beside the grown-ups' rail.
+- Phone portrait: 3 across, 14 dp sides, 27 dp row gap (no flow asserts the measurements).
+- Windows VM with 6 or more books (only 2 books were used), and a window resize while the layer is open (columns change, no layout cycle).
+- A narrow Windows window after recheck fix 1.
+- The 30 px versus 40 px inset on Windows (an assertion that agrees with the screenshot).
+- The `shelf-reorder` first-launch markers (`HOOK skip-first-run ok`, `HOOK shelf-order-reset ok`).
+- iOS phone/tablet: the same shared MAUI code; no Mac, not run.
+
+#### For CLAUDE.md
+
+None.

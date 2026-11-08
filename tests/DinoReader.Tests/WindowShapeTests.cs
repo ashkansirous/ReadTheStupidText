@@ -263,6 +263,17 @@ public class WindowShapeTests
     {
         Assert.Equal(6, WindowShapeSeam.ReorderDesktopColumns(1100)); // floor((W - 80 + 18) / (155 + 18)), at least 3
         Assert.Equal(5, WindowShapeSeam.ReorderDesktopColumns(1099));
+        Assert.Equal(6, WindowShapeSeam.ReorderDesktopColumns(1100.0000000001)); // float slack must not move the boundary
+    }
+
+    [Theory]
+    [InlineData(true, false, 1100, 760, true)]   // the mock's Windows window
+    [InlineData(true, false, 400, 800, false)]   // a narrow portrait Windows window has no frame: phone geometry
+    [InlineData(true, true, 1200, 800, false)]   // a tablet keeps the shelf's
+    [InlineData(false, false, 1100, 760, false)] // other heads never use the desktop frame
+    public void The_desktop_frame_is_for_a_landscape_windows_window_only(bool isWindows, bool tablet, double width, double height, bool expected)
+    {
+        Assert.Equal(expected, WindowShapeSeam.ReorderUsesDesktopGeometry(isWindows, tablet, width, height));
     }
 
     [Theory]
