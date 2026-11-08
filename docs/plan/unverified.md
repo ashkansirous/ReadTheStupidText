@@ -4,6 +4,27 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 **Only what can be tested stays here** (the user, 2026-11-08: "keep only whatever I can test"). Each line starts with who tests it: **You** (the user: the iPhone, the S21 by hand, the Echo, the Sonos, an English or Farsi read, a decision or account only you hold) or **Device** (Claude, on the Android emulator or tablet AVD, the S21 by script, or the Windows VM). Checks nobody here can test were removed; behaviours only real use shows are watched in production data instead; checks that need the user's ear are listening-page slices 330-343. All three lists are in the [record](notes/2026-11-08-unverified-triage.md). Earlier on 2026-11-08: triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)). The 2026-11-08 device run (emulator, S21, VM) passed 49 more and the user's iPhone session 2 more; same record.
 
+### Slice 322: Dino's silent beats pause when the screen locks ([slice](slices/322-dino-beat-pauses-on-screen-lock.md))
+- **You:** iOS (no Mac): the same `Window.Stopped`/`Resumed` handlers, not run.
+- **Device:** Windows head: `WindowForeground` returns unknown and `Deactivated` is unhandled; not run on the VM.
+- **Device:** Edge cases reverted after the second strike: a window re-subscribe while an event fact is newer than the platform read, and a null `Platform.CurrentActivity`.
+- **Device:** Harness flake risk (`reviews/s322-check-final3.md` #1-#3): the screen cycle could sleep the display during the flow's final launch/assert or setup waits.
+
+### Slice 321: Reorder layer back to the mock on Windows ([slice](slices/321-reorder-layer-per-mock.md))
+- **Device:** The tablet AVD (`dino-tablet-upright-shelf`): the layer uses the shelf's grid, hint aligned with its left edge, also beside the grown-ups' rail.
+- **Device:** Phone portrait: 3 across, 14 dp sides, 27 dp row gap (no flow asserts the measurements).
+- **Device:** Windows VM with 6 or more books (only 2 books were used), and a window resize while the layer is open (columns change, no layout cycle).
+- **Device:** A narrow Windows window after recheck fix 1.
+- **Device:** The 30 px versus 40 px inset on Windows (an assertion that agrees with the screenshot).
+- **Device:** The `shelf-reorder` first-launch markers (`HOOK skip-first-run ok`, `HOOK shelf-order-reset ok`).
+- **You:** iOS phone/tablet: the same shared MAUI code; no Mac, not run.
+
+### Slice 320: Device-check fixes and missing test hooks from the 2026-11-08 run ([slice](slices/320-device-check-tooling-from-2026-11-08-run.md))
+- **Device:** RTST `stall-return-overlay` failed twice (the hook does not block the reader); moved to [Slice 345](slices/345-rtst-stall-hook-blocks-reader.md).
+- **Device:** On the S21: `book-end` on Dino with the fixture pack, `run-checks -Prepare -App dino`, `paused-notification-repost` flag reading (Samsung form unknown).
+- **You:** iOS: the new hooks are untried (no Mac, no iOS compile was possible).
+- **Device:** `sentence-highlight` Maestro flow on the emulator is still unrun (the S21 run passed, Slice 319).
+
 ### Slice 147: iOS review cadence: one review at a time, the newest build, never cancel ([slice](slices/147-ios-review-cadence.md))
 - **You:** the first successful `appstore-submit.yml` run (manual; its only two runs, 2026-10-30, concluded failure): it should report the listing items Apple still needs (screenshots, privacy, age rating). The first scheduled `testflight-external.yml` run already succeeded.
 

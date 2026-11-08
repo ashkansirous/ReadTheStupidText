@@ -14,7 +14,7 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (169 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
@@ -24,7 +24,7 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 283 | Dino: a Sonos music service for the store books (anonymous, no login) | code merged #879; waiting on the user: Sonos partner account, service submission, sandbox integration, Self Test | #879 | | [283-dino-sonos-music-service.md](docs/plan/slices/283-dino-sonos-music-service.md) |
 | 291 | Store listings and screenshots for both apps on Play, App Store and Microsoft Store | in progress (items 2 and repo text merged #941; store pushes wait on the user) | #941 | | [291-store-listings-and-screenshots.md](docs/plan/slices/291-store-listings-and-screenshots.md) |
 | 317 | Feedback loop 2026-11-08-0106 leftovers (build cache size, disk preflight threshold, two broken device flows, Store submit retry) | parked: feedback loop, waits for the user | | | [317-feedback-loop-2026-11-08-0106-leftovers.md](docs/plan/slices/317-feedback-loop-2026-11-08-0106-leftovers.md) |
-| 325 | Dino: every page in the 2026-11-08 design (corner as Books/Store/Settings tabs, kids shelf, first run, intro) on Android, iOS and Windows | in progress (parts D, E merged #970; A, C wait for Slice 321 #962; B waits for A; F after A-E) | #970 | | [325-dino-2026-11-08-redesign.md](docs/plan/slices/325-dino-2026-11-08-redesign.md) |
+| 325 | Dino: every page in the 2026-11-08 design (corner as Books/Store/Settings tabs, kids shelf, first run, intro) on Android, iOS and Windows | in progress (parts D and E merged #970; parts A, B and C being built; F after A-E) | #970 | | [325-dino-2026-11-08-redesign.md](docs/plan/slices/325-dino-2026-11-08-redesign.md) |
 | 295 | Bump `MauiVersion` once a MAUI release with dotnet/maui PR #38662 ships | parked: waits for MAUI 10.0.130 or later on NuGet (newest 10.0.120 at 2026-11-08 17:04Z) | | | [295-bump-maui-version-for-pr-38662.md](docs/plan/slices/295-bump-maui-version-for-pr-38662.md) |
 | 330 | Listening page: Store listening track, page gaps audible | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [330-store-listening-track-page-gaps-audible.md](docs/plan/slices/330-store-listening-track-page-gaps-audible.md) |
 | 331 | Listening page: animal sound word already in the text (moo) | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [331-animal-sound-word-already-in-the-text-moo.md](docs/plan/slices/331-animal-sound-word-already-in-the-text-moo.md) |
@@ -32,12 +32,12 @@ Open slices only. Finished slices (165 rows) are in [slices-done](docs/plan/note
 | 333 | Listening page: Lion and Mouse Farsi clip | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [333-lion-and-mouse-farsi-clip.md](docs/plan/slices/333-lion-and-mouse-farsi-clip.md) |
 | 334 | Listening page: speaker first in Farsi (Three Little Pigs) and the wolf's sound in English | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [334-speaker-first-in-farsi-three-little-pigs-and-the.md](docs/plan/slices/334-speaker-first-in-farsi-three-little-pigs-and-the.md) |
 | 335 | Listening page: Pigs Farsi, four re-rendered lines | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [335-pigs-farsi-four-re-rendered-lines.md](docs/plan/slices/335-pigs-farsi-four-re-rendered-lines.md) |
-| 337 | Listening page: Dino first-run hello line sounds whole | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [337-dino-first-run-hello-line-sounds-whole.md](docs/plan/slices/337-dino-first-run-hello-line-sounds-whole.md) |
-| 339 | Listening page: real phone audio timing | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [339-real-phone-audio-timing.md](docs/plan/slices/339-real-phone-audio-timing.md) |
-| 340 | Listening page: mid-book speed change on a phone | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [340-mid-book-speed-change-on-a-phone.md](docs/plan/slices/340-mid-book-speed-change-on-a-phone.md) |
+| 339 | Listening page: real phone audio timing | parked: page published, needs the user's ear and answers | | | [339-real-phone-audio-timing.md](docs/plan/slices/339-real-phone-audio-timing.md) |
+| 340 | Listening page: mid-book speed change on a phone | parked: page published, needs the user's ear and answers | | | [340-mid-book-speed-change-on-a-phone.md](docs/plan/slices/340-mid-book-speed-change-on-a-phone.md) |
 | 341 | Listening page: Farsi short words never dropped | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [341-farsi-short-words-never-dropped.md](docs/plan/slices/341-farsi-short-words-never-dropped.md) |
 | 342 | Listening page: Farsi voice pack | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [342-farsi-voice-pack.md](docs/plan/slices/342-farsi-voice-pack.md) |
 | 343 | Listening page: four Farsi voices | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [343-four-farsi-voices.md](docs/plan/slices/343-four-farsi-voices.md) |
+| 345 | RTST: the Debug stall hook must block the reader's first-chunk wait (`stall-return-overlay`) | planned | | | [345-rtst-stall-hook-blocks-reader.md](docs/plan/slices/345-rtst-stall-hook-blocks-reader.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
@@ -79,7 +79,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 262 checks across 120 slices, in [docs/plan/unverified.md](docs/plan/unverified.md), each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Not yet tried on a device:** 277 checks across 123 slices, in [docs/plan/unverified.md](docs/plan/unverified.md), each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
 - **Watched in production data instead:** 30 behaviours that only real use shows (analytics, fallback events, crash store, problem reports); the list is in [the record](docs/plan/notes/2026-11-08-unverified-triage.md), section "Watched in production data instead". A bug report or fallback spike about one of them becomes a fix slice.
 - Device-run 2026-11-08 test-side fixes (none is an app bug; [record](docs/plan/notes/2026-11-08-unverified-triage.md)): `premade-audio-past-roar` expects the old `fa v2` pack; `cancelled-voice-pack-stays-cancelled` races a fast download; `paused-notification-repost` cannot read Samsung's notification flags; the runner's Dino `-Prepare` and the Dino `book-end`/`short-lines` checks still expect a voice pack (gone since Slice 278); `run-flows.ps1` does not start the report-problem stub; the fa/ar copies of flows match English text.
 - Slice 323 seen alongside, not investigated: `premade_audio:clip_missing` x2 and `text_mismatch` x2 for book `6eff8d77` in `fa` (iOS 1.109.0); and a Settings > Story languages tap on فارسی that did not stick on the emulator (dino-v1.118.0, maybe the slow arm64-on-x86 emulator) ([slice](docs/plan/slices/323-dino-shelf-titles-follow-story-language.md)).

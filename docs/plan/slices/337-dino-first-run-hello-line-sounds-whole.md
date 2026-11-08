@@ -1,6 +1,6 @@
 # Slice 337: Listening page: Dino first-run hello line sounds whole
 
-*Parked (night 2026-11-08-1703 wave 1): needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page).*
+*Dropped 2026-11-08 (planned 2026-11-08).* **Why dropped:** Dino has no speech engine since Slice 278, so the first run plays nothing (a 30 s S21 recording of a fresh install was digital silence, -91 dB). The stale "Dino downloads a voice for it" line is no longer in the code on main (removed by Slice 325 part D). A listening page was made (https://claude.ai/artifact/992axYddYaAGWkFuPePHUM) and is withdrawn.
 
 *Planned 2026-11-08.* The user asked for one slice per check that needs their ear ("Abou the ones that need my ear, I probably need a page to listen to them and say what I think. Add a slice for each so that you can implement a page for me to listen to them and tell what is wrong with them"). This one comes from Slice 214's open check, moved out of `docs/plan/unverified.md` on 2026-11-08 ([record](../notes/2026-11-08-unverified-triage.md)):
 
