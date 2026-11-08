@@ -73,23 +73,8 @@ public sealed class StoryTranslator
 	private void Fell(Story story, string reason, string reading) =>
 		(_services.GetService(typeof(UsageCounter)) as UsageCounter)?.RecordFallback(story, FallbackArea.Translation, reason, reading);
 
-	/// <summary>
-	/// The title the shelf shows (Slice 159): in the grown-up's language, from the book's own table or the shipped-titles table, else the title as it is.
-	/// Synchronous and offline; the language pair decides, as for the text.
-	/// </summary>
-	public string ShelfTitle(Story story)
-	{
-		string target = MyLanguage;
-		string source = UiLanguage.Resolve(story.Language);
-		if (!TranslationFlow.ShouldTranslate(story.TranslateToMyLanguage, source, target))
-		{
-			return story.Title;
-		}
-
-		return BundledTranslations.Lookup(story, target, story.Title)
-			?? (source == UiLanguage.English ? ShippedTitles.ForBook(story, target) : null)
-			?? story.Title;
-	}
+	/// <summary>The title the shelf shows (Slice 159, 323): in the story language picked on the kids' shelf when the book can be read in it, else in the app language; from the book's own table or the shipped-titles table, else the title as it is. Synchronous and offline.</summary>
+	public string ShelfTitle(Story story, string language) => ShelfTitleChoice.For(story, language, MyLanguage, ShippedTitles.ForBook);
 
 	/// <summary>The story's title in the reading language for the reading screen (Slice 110): the bundled table's entry, else the shipped-titles table's, else the title as it is.</summary>
 	public Task<string> TitleAsync(Story story, string reading, CancellationToken cancellationToken)
@@ -112,7 +97,6 @@ public sealed class StoryTranslator
 	/// False when the book does not translate.</summary>
 	public Task<bool> CanReadInAsync(Story story, string language)
 	{
-		bool sameLanguage = UiLanguage.Resolve(language) == UiLanguage.Resolve(story.Language);
-		return Task.FromResult(sameLanguage || (story.TranslateToMyLanguage && BundledTranslations.IsComplete(story, UiLanguage.Resolve(language)) && BundledTranslations.Has(story, UiLanguage.Resolve(language))));
+		return Task.FromResult(ShelfTitleChoice.CanReadIn(story, language));
 	}
 }

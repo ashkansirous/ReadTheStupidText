@@ -41,6 +41,26 @@ public class ReadingChoicesTests
         Assert.Equal("en", LanguagePick.ShelfShown(["en", "fr"], "de", "en"));
     }
 
+    [Fact]
+    public void Shelf_titles_follow_the_pick_while_the_button_is_shown()
+    {
+        Assert.Equal("fa", LanguagePick.ShelfTitles(false, ["en", "fa"], "fa", "en"));
+        Assert.Equal("en", LanguagePick.ShelfTitles(false, ["en", "fa"], "en", "en"));
+    }
+
+    [Fact]
+    public void Shelf_titles_stay_in_the_app_language_when_the_pick_is_not_choosable()
+    {
+        Assert.Equal("en", LanguagePick.ShelfTitles(false, ["en", "fa"], "de", "en"));
+    }
+
+    [Fact]
+    public void Shelf_titles_stay_in_the_app_language_when_the_button_is_hidden_or_in_grown_up_mode()
+    {
+        Assert.Equal("en", LanguagePick.ShelfTitles(false, ["en"], "fa", "en"));
+        Assert.Equal("en", LanguagePick.ShelfTitles(true, ["en", "fa"], "fa", "en"));
+    }
+
     [Theory]
     [InlineData(800, 400, ReadingMode.Text, true, ReadingLayout.TextRow)]
     [InlineData(400, 800, ReadingMode.Text, true, ReadingLayout.Upright)]

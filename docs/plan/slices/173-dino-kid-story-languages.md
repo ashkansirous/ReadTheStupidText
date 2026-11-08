@@ -62,6 +62,7 @@ Six frames (86-90, plus the shelf button in 79). The mock agrees with the plan e
 - **Which one goes (90):** bottom sheet, radius 28 top. "Deutsch is now the app language", "Stories can be in three languages at most. Which one should go?" Rows: English "Was the app language", فارسی, Svenska. Buttons "Cancel" and "Remove Svenska" (52 px high, `#5B57E8`, off until a pick). Cancel keeps the old app language. Shown only when the new language is not already a story language and two sides are set. Copy is a draft.
 
 **Open point: button on the shelf.** Plan puts the kid's button only in the reading header; mock 79 also puts it on the shelf (same flag list, one pick for all books, 48 dp). **Default:** follow the mock; shelf titles stay in the main language.
+Replaced by Decision 173: the shelf titles follow the language picked on the shelf button (Slice 323: docs/plan/slices/323-dino-shelf-titles-follow-story-language.md).
 **Open point: own books without a pack.** Plan hides the button for own books on Windows only; mock 89 also leaves a language's flag out of the list for an own book with no translation pack yet (the book reads in its own language). **Default:** do both.
 
 New strings (14 languages): the step title and sub-line, "App language", "Skip, only English", "Ready", "Getting the voice ready", "Three picked. Untick one to choose another.", the sheet title, body and "Remove {0}", "Story language: {0}", and the flag map.
