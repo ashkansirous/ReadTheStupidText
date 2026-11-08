@@ -8,8 +8,9 @@
 
 ## Items
 
-- [ ] Make the audio exactly as the app plays it: render it with the app's own engine and packs (the `voice-pick` skill's render path), or record it from the dev app on the S21 when rendering cannot reproduce it (speed changes, timing, a Sonos or store track). Note how each clip was made and its build or pack version.
-- [ ] Publish one private listening page through the repo's `voice-pick` agent: a play button per clip, the line of text it reads, and for each clip "sounds right" or "something is wrong" with a free-text box for what is wrong (and a timestamp when it helps). English and Farsi only.
+- [x] Make the audio exactly as the app plays it. This is Read The Stupid Text's Farsi path (Dino has had no speech engine since Slice 278). A first render on 2026-11-08 used a Python port of the chunking; the user said none of the clips "say anything proper". It was redone with the app's real C# reading code on Windows (retry and ganji sibling rescue included), piper-fa pack v2 from catalog packs-11, main 9c82f37f, through a throwaway harness that was never committed.
+- [x] Publish one private listening page: https://claude.ai/artifact/SMcmfN7etCqhYC7KN9TDii (answers under doc ids `r2-<clip>` and `r2-done`; the older ids belong to the Python-port clips and do not count).
+- [ ] **Fix 1 (measured on 2026-11-08 before any answer, from the real C# render):** lone short Farsi sound words come out silent or nearly silent in mana, and the guard does not always rescue them. «میو میو!» renders silent (peak 3% of full scale, 0 s audible) and no rescue fires, so the app would play silence. «تق!» is 0.1 s audible even after the ganji rescue. «ووش!» needs a retake. «هاپ!» is rescued by ganji. ganji alone renders «ووش!» silent, and its retake fails too. Lines of two or more words are audible (27-32% peak). Find why `SilentOutputGuard` lets «میو میو!» through and why the rescues are this weak, fix it in the shared reader for Android, iOS and Windows, and put the new clips on the same page. The Python-port render failed on the same lines, so the port was not the cause.
 - [ ] When the user has answered, write every answer into this file, word for word.
 - [ ] Each "something is wrong" becomes a fix item in this slice (cause, then fix, through the normal review gate). Every "sounds right" closes the check.
 
