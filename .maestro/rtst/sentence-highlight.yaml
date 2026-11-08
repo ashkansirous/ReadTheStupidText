@@ -28,7 +28,7 @@ name: Highlight moves one sentence at a time
 - tapOn:
     id: ReviewEditor
     waitToSettleTimeoutMs: 300
-- inputText: "The first sentence is long enough to stand alone. The second sentence follows right after it. The third sentence closes this short paragraph."
+- inputText: "The sun came up. The second sentence follows right after it and is a little longer. The third sentence closes the first paragraph of this test. The fourth sentence adds more words to keep the reader busy. The fifth ends it."
 - hideKeyboard
 - tapOn:
     id: ReviewRead

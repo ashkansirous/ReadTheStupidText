@@ -192,6 +192,36 @@ public class WindowShapeTests
         Assert.Equal(expected, WindowShapeSeam.ShelfSideMargin(pageWidth, sidePadding));
     }
 
+    [Theory]
+    [InlineData(false, false, false, false, 400, 14, 5, 14, 0, 14)]   // a phone: equal 14 dp sides
+    [InlineData(false, false, false, true, 1000, 40, 5, 40, 0, 40)]   // a tablet shelf, upright: its own 40 dp
+    [InlineData(false, true, false, false, 800, 14, 3, 34, 0, 0)]     // held sideways: 34 on the left only
+    [InlineData(true, false, false, false, 800, 40, 4, 40, 0, 40)]    // Windows, no rail, narrow: the shelf's own 40 dp
+    [InlineData(true, false, false, false, 2400, 40, 6, 400, 0, 400)] // Windows, no rail, wide: centred (the VM's 399 px against 13 px)
+    [InlineData(true, false, true, false, 1000, 40, 4, 16, 14, 26)]   // Windows with the rail: 16 / 14 / 26
+    [InlineData(false, false, true, false, 1000, 14, 4, 16, 14, 26)]  // a phone-class window with the rail
+    [InlineData(false, true, false, true, 1000, 40, 3, 34, 0, 0)]     // sideways and a tablet shelf: sideways wins
+    [InlineData(true, true, true, false, 1000, 40, 4, 16, 14, 26)]    // rail and sideways: the rail wins
+    public void The_shelf_list_geometry_is_one_rule(bool windows, bool sideways, bool rail, bool tabletShelf, double pageWidth, double sidePadding, int columns, double left, double top, double right)
+    {
+        WindowShapeSeam.ShelfGeometry expected = new(left, top, right, columns, 20, 28);
+        Assert.Equal(expected, WindowShapeSeam.ShelfListGeometry(windows, sideways, rail, tabletShelf, pageWidth, sidePadding, columns, 20, 28)); // the gaps are carried as given
+    }
+
+    [Fact]
+    public void The_reorder_layer_copies_the_shelf_geometry_moved_right_by_the_rail()
+    {
+        WindowShapeSeam.ShelfGeometry shelf = WindowShapeSeam.ShelfListGeometry(true, false, true, false, 1000, 40, 4, 12, 12);
+
+        Assert.Equal(new WindowShapeSeam.ShelfGeometry(316, 14, 26, 4, 12, 12), shelf.BesideRail(300)); // the left grows by the rail; right, top and columns are the shelf's
+    }
+
+    [Fact]
+    public void The_rail_margins_are_named_constants()
+    {
+        Assert.Equal((16, 14, 26), (WindowShapeSeam.RailListInset, WindowShapeSeam.RailListTop, WindowShapeSeam.RailListRight));
+    }
+
     [Fact]
     public void A_tablet_upright_window_keeps_its_own_shelf_rule()
     {

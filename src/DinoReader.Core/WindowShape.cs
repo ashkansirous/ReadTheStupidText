@@ -85,6 +85,55 @@ public static class WindowShapeSeam
     public static double ShelfSideMargin(double pageWidth, double sidePadding) =>
         Math.Max(sidePadding, (pageWidth - WindowLayout.MaximumContentWidth) / 2);
 
+    /// <summary>The shelf list's left margin beside the grown-ups' side rail, inside the list's own column.</summary>
+    public const double RailListInset = 16;
+
+    /// <summary>The shelf list's top margin beside the grown-ups' side rail.</summary>
+    public const double RailListTop = 14;
+
+    /// <summary>The shelf list's right margin beside the grown-ups' side rail.</summary>
+    public const double RailListRight = 26;
+
+    /// <summary>
+    /// The shelf list's real geometry (Slice 319): its left, top and right margins inside its own column, the columns of its grid and the gaps between tiles. The shelf applies it and the Reorder layer copies it,
+    /// so the two grids cannot drift apart. <see cref="BesideRail"/> moves it onto the whole page when the list sits right of a rail.
+    /// </summary>
+    public readonly record struct ShelfGeometry(double Left, double Top, double Right, int Columns, double GapX, double GapY)
+    {
+        /// <summary>The same geometry measured from the page's left edge, for a layer that spans the page, rail included.</summary>
+        public ShelfGeometry BesideRail(double railWidth) => this with { Left = Left + railWidth };
+    }
+
+    /// <summary>
+    /// The one rule for the shelf list's margins and columns inside its column: beside the rail 16 / 14 / 26; held sideways <see cref="LandscapeLayout.SidewaysInset"/> on the left only; otherwise equal sides,
+    /// the roomy side margin (the shelf's own padding, centred by <see cref="ShelfSideMargin"/> on a desktop window) for a tablet shelf or a desktop window, else the phone's.
+    /// </summary>
+    public static ShelfGeometry ShelfListGeometry(bool isWindowsHead, bool sideways, bool rail, bool tabletShelf, double pageWidth, double sidePadding, int columns, double gapX, double gapY)
+    {
+        if (rail)
+        {
+            return new ShelfGeometry(RailListInset, RailListTop, RailListRight, columns, gapX, gapY);
+        }
+
+        if (sideways)
+        {
+            return new ShelfGeometry(LandscapeLayout.SidewaysInset, 0, 0, columns, gapX, gapY);
+        }
+
+        double side = SideMargin(isWindowsHead, tabletShelf, pageWidth, sidePadding);
+        return new ShelfGeometry(side, 0, side, columns, gapX, gapY);
+    }
+
+    private static double SideMargin(bool isWindowsHead, bool tabletShelf, double pageWidth, double sidePadding)
+    {
+        if (!tabletShelf && !isWindowsHead)
+        {
+            return LandscapeLayout.PhoneShelfSidePadding;
+        }
+
+        return isWindowsHead ? ShelfSideMargin(pageWidth, sidePadding) : sidePadding;
+    }
+
     /// <summary>The shelf's columns on a desktop window: as many 190 dp columns as fit the content (capped at 1600 dp, centred), 2 to 6. 800 gives 4, 1100 gives 5, 1600 and more give 6 (mock frames 151, 153, 154).</summary>
     public static int ShelfColumns(double windowWidth) =>
         (int)Math.Clamp(Math.Floor(WindowLayout.ContentWidth(Math.Max(0, windowWidth)) / LandscapeLayout.ShelfColumnWidth), LandscapeLayout.MinShelfColumns, LandscapeLayout.MaxShelfColumns);

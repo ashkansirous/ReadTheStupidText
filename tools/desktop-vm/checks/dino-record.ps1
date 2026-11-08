@@ -4,7 +4,7 @@
 #   2 Start recording -> the Record screen: one piece, Skip / Record / key labels "Skip . S", "Record . R"
 #   3 S -> trace line "Dino keyboard: S used" (a piece skipped)
 #   4 Esc -> back out of the Record screen (before R: R may raise the microphone consent prompt, a window outside the app)
-#   5 reopen, R last -> the trace line "Dino keyboard: R used" AND the Stop button (a recording state; a consent prompt that holds focus fails the stage, Slice 284), the window that has focus after R is named; R again stops
+#   5 reopen, R last -> the trace line "Dino keyboard: R used" AND a recording state (Stop button) or the app's "Microphone is off" alert; the system consent prompt, if it shows, is denied through its UIA button first (Slice 319), the window that has focus after R is named; R again stops
 param([string] $ResultFile, [Parameter(Position = 0)] [string] $PackageName, [Parameter(Position = 1)] [string] $AlertTextsBase64)
 . "$PSScriptRoot\_lib.ps1"
 
@@ -12,7 +12,14 @@ $HoldRingName = 'Press and hold for 3 seconds'
 $HoldMs = 3500
 $TraceFileName = 'window-trace.log'
 $VkEscape = 0x1B; $VkR = 0x52; $VkS = 0x53
+# The system microphone consent prompt (Slice 319, second strike): a registry Deny was not honoured for the MSIX app, so the stage answers the prompt itself.
+$ConsentProcessName = 'PickerHost'
+$ConsentPromptText = 'access your microphone'
+$ConsentWaitSeconds = 20
+$ConsentDenyPattern = '^(No|Don.t allow|Deny|Block)$' # the English deny buttons of the prompt ("." takes a straight or a curly apostrophe); the VM runs in English
 $script:Results = @()
+$script:ConsentNote = 'consent step not reached'   # the path note of Resolve-ConsentPrompt, carried into every key-R FAIL (the host log shows only the throw)
+$script:WindowsSeen = [ordered]@{}                  # top-level windows seen while waiting for the prompt: key -> "name [process] buttons: ..."
 
 function Get-DinoWindow {
     $w = Get-AppWindows 'DinoReader.App' | Select-Object -First 1
@@ -75,6 +82,67 @@ function Start-RecordingFromIntro {
         catch { $null = $_ }
     }
     throw 'Start recording was invoked twice but the app never traced "Record intro: Start tapped"'
+}
+function Find-ConsentWindow {
+    # The system microphone consent window: a top-level window of the PickerHost process, or any top-level window whose name contains the prompt text. Null when none shows.
+    $cond = New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::ControlTypeProperty, [System.Windows.Automation.ControlType]::Window)
+    foreach ($w in $script:AutomationElement::RootElement.FindAll($script:TreeScope::Children, $cond)) {
+        try {
+            $procName = (Get-Process -Id $w.Current.ProcessId -ErrorAction SilentlyContinue).ProcessName
+            if ($procName -eq $ConsentProcessName -or $w.Current.Name -like "*$ConsentPromptText*") { return $w }
+        } catch { continue }
+    }
+    return $null
+}
+function Get-ButtonNames {
+    param($Root)
+    $cond = New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::ControlTypeProperty, [System.Windows.Automation.ControlType]::Button)
+    return @($Root.FindAll($script:TreeScope::Descendants, $cond) | ForEach-Object { $_.Current.Name } | Where-Object { $_ })
+}
+function Deny-ConsentPrompt {
+    # Finds the deny button of the consent window by control type Button and the English name list, invokes it, and returns a note naming the window and the buttons seen. A window with no deny button throws with the names it saw.
+    param($Window)
+    $title = $Window.Current.Name
+    $names = Get-ButtonNames $Window
+    $deny = $null
+    foreach ($b in $Window.FindAll($script:TreeScope::Descendants, (New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::ControlTypeProperty, [System.Windows.Automation.ControlType]::Button)))) {
+        if ($b.Current.Name -match $ConsentDenyPattern) { $deny = $b; break }
+    }
+    if (-not $deny) { throw "the microphone consent prompt '$title' showed no deny button (Name matching $ConsentDenyPattern); buttons seen: $($names -join ' / ')" }
+    $clicked = $deny.Current.Name
+    Invoke-Uia $deny
+    return "consent prompt '$title' denied through button '$clicked' (buttons seen: $($names -join ' / '))"
+}
+function Note-TopLevelWindows {
+    # Records each new top-level window (name, process and, for a window outside Dino, its button names) once, so a failed key-R names everything that was on screen.
+    $cond = New-Object System.Windows.Automation.PropertyCondition($script:AutomationElement::ControlTypeProperty, [System.Windows.Automation.ControlType]::Window)
+    foreach ($w in $script:AutomationElement::RootElement.FindAll($script:TreeScope::Children, $cond)) {
+        try {
+            $winPid = $w.Current.ProcessId
+            $key = "$winPid|$($w.Current.Name)"
+            if ($script:WindowsSeen.Contains($key)) { continue }
+            $procName = (Get-Process -Id $winPid -ErrorAction SilentlyContinue).ProcessName
+            $buttons = if ($procName -eq 'DinoReader.App') { '' } else { " buttons: $((Get-ButtonNames $w) -join ' / ')" }
+            $script:WindowsSeen[$key] = "'$($w.Current.Name)' [$procName]$buttons"
+        } catch { continue }
+    }
+}
+function Get-ConsentEvidence {
+    return "consent path: $($script:ConsentNote); top-level windows seen during the wait: $(@($script:WindowsSeen.Values) -join ' ; ')"
+}
+function Resolve-ConsentPrompt {
+    # After R: polls the whole $ConsentWaitSeconds for the consent window (also after focus returned to Dino, and with a Stop button showing: the prompt can open late) and denies it. Returns the path taken, for the stage detail.
+    $script:ConsentFound = $null
+    $script:WindowsSeen = [ordered]@{}
+    try { Wait-Until { Note-TopLevelWindows; $script:ConsentFound = Find-ConsentWindow; [bool]$script:ConsentFound } $ConsentWaitSeconds 'the microphone consent prompt' | Out-Null }
+    catch { $null = $_ }
+    $window = $script:ConsentFound
+    if (-not $window) { $script:ConsentNote = "no consent prompt appeared in $ConsentWaitSeconds s (consent already decided, or the prompt never showed)"; return $script:ConsentNote }
+    try { $note = Deny-ConsentPrompt $window }
+    catch { $script:ConsentNote = $_.Exception.Message; throw }
+    $script:ConsentNote = $note
+    Start-Sleep -Milliseconds 800
+    return $note
 }
 function Get-FocusedWindowNote {
     # Names the window that has keyboard focus: "Dino Reader" when it is the app's own, else the other process and its top-level window name (e.g. a microphone consent prompt).
@@ -167,27 +235,34 @@ Invoke-Check -ResultFile $ResultFile -Body {
     }
     Add-Result 'key-R' {
         # Last: reopen the Record screen, press R, then name the window that has focus (a microphone consent prompt would be a system window, not Dino's).
-        $startNote = Start-RecordingFromIntro
-        Wait-Until { Find-Visible 'RecordButton' } 25 'the Record screen did not reopen (no Record button)' | Out-Null
-        $before = Count-Trace 'Dino keyboard: R used'
-        Press-Key $VkR
-        # Wait on the trace line, not a fixed time; a miss is reported below with the UI.
-        try { Wait-Until { (Count-Trace 'Dino keyboard: R used') -gt $before } 6 'R trace line' | Out-Null } catch { $null = $_ }
-        # Review finding 1: the trace line is logged before the recorder opens the device (asynchronous on Windows), so wait for the Stop button too; a miss is judged below.
-        try { Wait-Until { Find-Visible 'RecordStopButton' } 8 'the Stop button' | Out-Null } catch { $null = $_ }
-        $used = (Count-Trace 'Dino keyboard: R used') - $before
-        $focus = Get-FocusedWindowNote
-        $state = if (Find-Visible 'RecordStopButton') { 'Stop button showing (recording)' } else { 'no Stop button' }
-        $ui = (Get-VisibleNames (Get-DinoWindow) 30) -join ' / '
-        $detail = "reopened ($startNote); R used x$used; $state; focus after R: $focus; UI: $ui"
+        # Slice 319 (second strike): the clean image has no consent decision for the package, so Windows asks (a PickerHost window that holds focus; a registry Deny is not honoured for the MSIX app).
+        # The stage answers the prompt itself: it waits for the consent window after R, invokes its deny button, and the app's own "Microphone is off" alert is the outcome. No prompt: alert or Stop button.
+        $detail = ''
         try {
+            $startNote = Start-RecordingFromIntro
+            Wait-Until { Find-Visible 'RecordButton' } 25 'the Record screen did not reopen (no Record button)' | Out-Null
+            $before = Count-Trace 'Dino keyboard: R used'
+            Press-Key $VkR
+            # Wait on the trace line, not a fixed time; a miss is reported below with the UI.
+            try { Wait-Until { (Count-Trace 'Dino keyboard: R used') -gt $before } 6 'R trace line' | Out-Null } catch { $null = $_ }
+            # The consent prompt (if any) is answered first; the focus note is read before that, while the prompt would still hold focus.
+            $focus = Get-FocusedWindowNote
+            $consentNote = Resolve-ConsentPrompt
+            Write-Host "dino-record key-R path: $consentNote"
+            # Review finding 1: the trace line is logged before the recorder opens the device (asynchronous on Windows), so wait for the Stop button or the app's alert too; a miss is judged below.
+            $alertTexts = Get-AlertTexts
+            $outcome = { (Find-Visible 'RecordStopButton') -or (Find-UiaExact (Get-DinoWindow) $alertTexts.NoMic) -or (Find-UiaExact (Get-DinoWindow) $alertTexts.Failed) }
+            try { Wait-Until $outcome 8 'the Stop button or the microphone alert' | Out-Null } catch { $null = $_ }
+            $used = (Count-Trace 'Dino keyboard: R used') - $before
+            $state = if (Find-Visible 'RecordStopButton') { 'Stop button showing (recording)' } else { 'no Stop button' }
+            $ui = (Get-VisibleNames (Get-DinoWindow) 30) -join ' / '
+            $detail = "reopened ($startNote); R used x$used; path: $consentNote; $state; focus after R: $focus; UI: $ui"
             if ($used -lt 1) { throw "R was not used (no trace line); $state; focus after R: $focus; UI: $ui" }
             # Slice 284: the trace line alone also appears while the microphone-consent prompt holds focus and no recording starts. Pass only when a recording state shows:
             # the Stop button, or the app's own refusal alert (RecordPage.TryStartRecorderAsync: "Microphone is off" when refused, "The recording didn't work..." with no usable microphone;
             # the alerts carry no AutomationId, so they are found by their English text, as the VM runs in English). Neither showing (a consent prompt holding focus) fails.
             $dinoWindow = Get-DinoWindow
             if (-not $dinoWindow) { throw "R was used but the Dino window is gone; focus after R: $focus" }
-            $alertTexts = Get-AlertTexts
             $refused = (Find-UiaExact $dinoWindow $alertTexts.NoMic) -or (Find-UiaExact $dinoWindow $alertTexts.Failed)
             if ($refused) {
                 # The alert is modal: dismiss it so it never covers the later stages or takes the finally block's second R. It must be gone within 3 s, else the stage fails (check pass 2).
@@ -197,6 +272,10 @@ Invoke-Check -ResultFile $ResultFile -Body {
             }
             if (-not (Find-Visible 'RecordStopButton') -and -not $refused) { throw "R was used but neither a recording nor a microphone-refused/no-microphone alert showed (a microphone consent prompt may hold focus); focus after R: $focus; UI: $ui" }
             if ($refused) { $detail += '; microphone refused or missing (the app showed its alert), key handling itself worked' }
+        }
+        catch {
+            # The host log shows only the throw, so every FAIL of this stage carries the consent path, the windows seen and their buttons.
+            throw "$($_.Exception.Message) | $(Get-ConsentEvidence)"
         }
         finally {
             # Always stop a running recording, also when the stage fails, so the mic is not left live for the next check.

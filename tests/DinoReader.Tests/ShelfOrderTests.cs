@@ -174,6 +174,35 @@ public class ShelfOrderGridTests
         Assert.Equal((15, 12), fit.Origin(0)); // the 2 dp left over by flooring is shared: 1 dp more on the left
     }
 
+    [Theory]
+    [InlineData(300, 300, 100)]
+    [InlineData(300, 400, 100)]
+    [InlineData(1, 14, 14)]
+    public void FitGivesAtLeastAMinimalTileWhenTheMarginsLeaveNoRoom(double width, double side, double right)
+    {
+        ShelfOrderGrid fit = ShelfOrderGrid.Fit(width, 3, side, right, 12, 12, 36, 7);
+
+        Assert.Equal(ShelfOrderGrid.MinTileWidth, fit.TileWidth);
+        Assert.True(fit.TileHeight > 0);
+    }
+
+    [Fact]
+    public void FitWithDifferentSidesKeepsTheLeftAndRightMarginsApart()
+    {
+        ShelfOrderGrid fit = ShelfOrderGrid.Fit(362, 3, 16, 26, 12, 12, 36, 7);
+
+        Assert.Equal(98, fit.TileWidth); // (362 - 16 - 26 - 24) / 3 = 98.67 floored
+        Assert.Equal((17, 12), fit.Origin(0)); // 2 dp spare after flooring: 1 more on the left
+    }
+
+    [Fact]
+    public void FitWithATopInsetStartsTheFirstRowThere()
+    {
+        ShelfOrderGrid fit = ShelfOrderGrid.Fit(362, 3, 16, 26, 14, 12, 12, 36, 7);
+
+        Assert.Equal((17, 14), fit.Origin(0)); // the rail's 14, not one gap (12)
+    }
+
     [Fact]
     public void ContentHeightEndsAtTheLastRow() =>
         Assert.Equal(7 + (2 * 170) - 20, Grid.ContentHeight(5));

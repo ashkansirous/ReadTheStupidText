@@ -3,7 +3,7 @@
 .SYNOPSIS
   highlight: the reader highlights one sentence at a time while a chunk is still playing (Slice 190 marker, Slice 213).
 .DESCRIPTION
-  Drives the RTST reader the way a user does (the `read` hook bypasses ReaderPage, which owns the highlight): EditLink -> type three sentences into
+  Drives the RTST reader the way a user does (the `read` hook bypasses ReaderPage, which owns the highlight): EditLink -> type five sentences (a short first, Slice 319) into
   ReviewEditor -> ReviewRead, through tap.ps1 (AutomationIds from .maestro/rtst/sentence-highlight.yaml). ReaderPage.ShowSentence then writes `SENTENCE <chunk> <n>`
   (ReaderPage.xaml.cs) each time the highlight moves to a later sentence of the playing chunk; a `SENTENCE <chunk> <n>` with n >= 1 before READ_END passes.
   Needs the neural voice pack (the system voice keeps the whole-chunk highlight and writes no marker).
@@ -19,7 +19,9 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '_device.ps1')
 
 $package = Get-DevPackage $App
-$script:TypedText = 'The first sentence is long enough to stand alone. The second sentence follows right after it. The third sentence closes this short paragraph.'
+# Slice 319: since Slice 214 the first piece of a read is cut to about 8 words, so a short text becomes one-sentence chunks and no highlight can move inside a chunk. The first sentence is short
+# (the first chunk) and the rest is long enough to leave chunks of two or more sentences; HighlightCheckTextTests keeps this text, the Maestro flow's and the chunker in step. No commas (`input text`).
+$script:TypedText = 'The sun came up. The second sentence follows right after it and is a little longer. The third sentence closes the first paragraph of this test. The fourth sentence adds more words to keep the reader busy. The fifth ends it.'
 $script:TapScript = Join-Path $PSScriptRoot '..\tap.ps1'
 
 $script:EditorId = 'ReviewEditor'
