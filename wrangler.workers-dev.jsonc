@@ -27,6 +27,8 @@
       "/sonos",
       // Slice 282: Dino Reader's anonymous Alexa kid skill (worker/alexa.ts).
       "/alexa",
+      // Slice 287: the public Dino usage dashboard page and its data (worker/stats.ts).
+      "/stats", "/stats/", "/stats.html", "/api/stats",
       // The Dino Reader site on *.workers.dev, under /dino/ (worker/downloads.ts resolveSite).
       "/dino", "/dino/", "/dino/index.html", "/dino/privacy", "/dino/privacy/", "/dino/privacy.html", "/dino/download", "/dino/download/*",
       "/dino/api/stories", "/dino/api/stories/*",
@@ -34,7 +36,8 @@
       "/dino/api/events", "/dino/api/events/beta",
       "/dino/api/crash",
       "/dino/sonos",
-      "/dino/alexa"
+      "/dino/alexa",
+      "/dino/stats", "/dino/stats/", "/dino/stats.html", "/dino/api/stats"
     ]
   },
   "r2_buckets": [{ "binding": "DOWNLOADS", "bucket_name": "readthestupidtext-downloads" }],
@@ -55,6 +58,10 @@
   // every Alexa request is refused with 400 (worker/alexa-verify.ts fails closed). Set it here, in BOTH wrangler configs, by a PR
   // once the skill exists, never in the dashboard: each deploy overwrites a dashboard value with this one.
   "vars": { "ALEXA_SKILL_ID": "" },
+
+  // Slice 287: the hourly rollup of Analytics Engine into D1 for /stats (worker/stats-rollup.ts). Harmless without the
+  // STATS binding: it logs and returns. The D1 binding itself is added after `wrangler d1 create` (docs/DEPLOYING.md).
+  "triggers": { "crons": ["7 * * * *"] },
 
   "observability": { "enabled": true }
 }

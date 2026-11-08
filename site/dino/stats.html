@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Dino Book Reader · Usage</title>
+  <link rel="icon" type="image/png" href="/dino/icon.png" />
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: #F3EFE6; color: #2b2540; line-height: normal;
+      font-family: "Fredoka", "Andika", "Segoe UI Rounded", "Arial Rounded MT Bold", system-ui, -apple-system, sans-serif;
+    }
+    button, select { font-family: inherit; color: inherit; }
+    .page { max-width: 1280px; margin: 0 auto; padding: 20px 32px 40px; display: flex; flex-direction: column; gap: 20px; }
+    .head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .head img { width: 40px; height: 40px; border-radius: 10px; display: block; }
+    .head .text { display: flex; flex-direction: column; flex: 1; min-width: 200px; }
+    .head .title { font-size: 19px; font-weight: 600; line-height: 1.2; }
+    .head .sub { font-size: 13px; color: #8a8399; }
+    .card { background: #FFF6E6; border: 1px solid #d9d2c4; border-radius: 16px; }
+    .filters { padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field.wide { flex-basis: 100%; }
+    .label { font-size: 12px; font-weight: 600; color: #8a8399; letter-spacing: .5px; text-transform: uppercase; }
+    .seg { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: #F3EFE6; border: 1px solid #d9d2c4; }
+    .seg button { height: 32px; padding: 0 13px; border: 0; border-radius: 999px; font-size: 14px; font-weight: 500; cursor: pointer; background: transparent; color: #5a5470; }
+    .seg button.on { background: #fff; color: #2b2540; box-shadow: 0 1px 3px rgba(43,37,64,.16); }
+    .seg button.dim { opacity: .4; cursor: default; }
+    select#book { height: 38px; min-width: 220px; border: 1px solid #d9d2c4; border-radius: 10px; background: #fff; padding: 0 10px; font-size: 14px; color: #2b2540; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { height: 34px; padding: 0 14px 0 10px; border-radius: 999px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; background: transparent; color: #8a8399; border: 2px solid #d9d2c4; }
+    .chip.on { background: #fff; color: #2b2540; }
+    .chip.off-live { opacity: .55; cursor: default; }
+    .chip .dot { width: 12px; height: 12px; border-radius: 4px; }
+    .chip .note { font-size: 12px; color: #8a8399; }
+    .error { display: none; background: #FFF0EA; border: 1px solid #f2c4b4; border-radius: 16px; padding: 18px 20px; align-items: center; gap: 14px; }
+    .error.show { display: flex; }
+    .error span { flex: 1; font-size: 15px; color: #3a3450; }
+    .error button { height: 38px; padding: 0 18px; border-radius: 999px; border: 0; background: #5B57E8; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    .tile { text-align: left; cursor: pointer; background: #FFF6E6; border: 1px solid #d9d2c4; border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; color: #2b2540; }
+    .tile.on { background: #fff; border: 2px solid #5B57E8; }
+    .tile .name { font-size: 13px; font-weight: 600; color: #5a5470; display: flex; align-items: center; gap: 8px; }
+    .tile .shown { font-size: 11.5px; font-weight: 600; color: #5B57E8; }
+    .tile .num { font-size: 34px; font-weight: 600; line-height: 1.15; color: #2b2540; }
+    .loading .tile .num, .stale .tile .num, .blank .tile .num { color: #c9c2b4; }
+    .stale .chart .plot, .stale .books #rows { opacity: .4; filter: grayscale(1); }
+    .tile .tsub { font-size: 12.5px; color: #8a8399; line-height: 1.4; text-wrap: pretty; }
+    .chart { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+    .chart .top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .chart .ctitle { font-size: 17px; font-weight: 600; }
+    .chart .csub { font-size: 13px; color: #8a8399; }
+    .chart .grow { flex: 1; }
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; }
+    .legend span { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #5a5470; }
+    .legend i { width: 12px; height: 12px; border-radius: 3px; display: block; }
+    .since { display: none; font-size: 12.5px; color: #5a5470; background: #ECE7FF; border-radius: 10px; padding: 6px 10px; align-self: flex-start; }
+    .since.show { display: block; }
+    .plot { display: flex; gap: 8px; position: relative; }
+    .yaxis { width: 44px; height: 240px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; font-size: 11.5px; color: #8a8399; }
+    .yaxis span { line-height: 0; }
+    .area { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+    .grid { height: 240px; position: relative; border-bottom: 1px solid #cfc7b6; background: repeating-linear-gradient(to bottom, transparent 0, transparent 59px, #ebe4d6 59px, #ebe4d6 60px); }
+    .bars { position: absolute; inset: 0; display: flex; align-items: flex-end; }
+    .bar { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column-reverse; cursor: default; }
+    .bar:hover { filter: brightness(1.06); }
+    .overlay { display: none; position: absolute; inset: 0; background: rgba(255,246,230,.82); align-items: center; justify-content: center; font-size: 14px; color: #5a5470; }
+    .overlay.show { display: flex; }
+    .xlabels { display: flex; }
+    .xlabels span { flex: 1; min-width: 0; text-align: center; font-size: 11px; color: #8a8399; white-space: nowrap; overflow: visible; }
+    .books { overflow: hidden; }
+    .books .bhead { display: flex; align-items: baseline; gap: 10px; padding: 16px 18px 10px; flex-wrap: wrap; }
+    .books .btitle { font-size: 17px; font-weight: 600; }
+    .books .bsub { font-size: 13px; color: #8a8399; }
+    .cols { display: grid; grid-template-columns: minmax(0, 2.2fr) repeat(3, minmax(0, 1fr)); }
+    .cols.heads { padding: 8px 18px; border-top: 1px solid #e6dfd0; border-bottom: 1px solid #e6dfd0; font-size: 12.5px; font-weight: 600; color: #5a5470; }
+    .cols.heads button { border: 0; background: none; padding: 0; text-align: right; font-size: 12.5px; font-weight: 600; cursor: pointer; color: #5a5470; }
+    .cols.heads button.sorted { color: #5B57E8; }
+    .row { align-items: center; padding: 8px 18px; border-bottom: 1px solid #efe9dd; cursor: pointer; }
+    .row:hover { background: #fbefd9; }
+    .row.picked { background: #ECE7FF; }
+    .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .rank { width: 22px; font-size: 12.5px; color: #8a8399; text-align: right; }
+    .cover { width: 30px; height: 40px; border-radius: 6px; overflow: hidden; flex-shrink: 0; background-color: #e6dccb; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #5a5470; background-size: cover; background-position: center; }
+    .btn { font-size: 14.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cell { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+    .cell .n { font-size: 14.5px; font-variant-numeric: tabular-nums; color: #5a5470; }
+    .cell.sorted .n { color: #2b2540; }
+    .track { width: 72px; height: 4px; border-radius: 2px; background: #ebe4d6; overflow: hidden; display: flex; justify-content: flex-end; }
+    .track div { height: 100%; background: #c9c2b4; }
+    .cell.sorted .track div { background: #5B57E8; }
+    .foot { font-size: 12.5px; color: #8a8399; line-height: 1.5; max-width: 900px; text-wrap: pretty; }
+    @media (max-width: 640px) {
+      .page { padding: 16px 14px 32px; }
+      .cols { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); }
+      .cols .hide-phone { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="page" id="page">
+  <div class="head">
+    <img src="/dino/icon.png" alt="" />
+    <div class="text"><span class="title">Dino Book Reader · Usage</span><span class="sub" id="updated"></span></div>
+  </div>
+
+  <div class="card filters">
+    <div class="field"><span class="label">Period</span><div class="seg" id="presets"></div></div>
+    <div class="field"><span class="label">Bars by</span><div class="seg" id="groups"></div></div>
+    <div class="field"><span class="label">Book</span><select id="book"></select></div>
+    <div class="field wide"><span class="label">Platforms</span><div class="chips" id="chips"></div></div>
+  </div>
+
+  <div class="error" id="error" role="alert">
+    <span>Couldn’t load the numbers. Analytics Engine or the database didn’t answer.</span>
+    <button type="button" id="retry">Try again</button>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="card chart">
+    <div class="top">
+      <span class="ctitle" id="ctitle"></span><span class="csub" id="csub"></span><span class="grow"></span>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="since" id="since"></div>
+    <div class="plot">
+      <div class="yaxis" id="yaxis"></div>
+      <div class="area">
+        <div class="grid"><div class="bars" id="bars"></div><div class="overlay" id="overlay">Loading…</div></div>
+        <div class="xlabels" id="xlabels"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card books">
+    <div class="bhead"><span class="btitle">Top books</span><span class="bsub">in this period and these platforms · click a book to filter, a heading to sort</span></div>
+    <div class="cols heads" id="heads"></div>
+    <div id="rows"></div>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var DAY = 864e5, H = 240, LOADING_MS = 500, SLICE = "Slice 288";
+  var PREFIX = location.pathname.indexOf("/dino/") === 0 ? "/dino" : "";
+  var PL = [
+    { id: "android", label: "Android", color: "#4FB860" },
+    { id: "iphone", label: "iPhone", color: "#5B57E8" },
+    { id: "ipad", label: "iPad", color: "#A9A6F7" },
+    { id: "windows", label: "Windows", color: "#F2994A" },
+    { id: "sonos", label: "Sonos", color: "#2b2540" },
+    { id: "alexa", label: "Alexa", color: "#4BB3D9" }
+  ];
+  var PRESETS = [["today", "Today"], ["7", "Last 7 days"], ["30", "Last 30 days"], ["year", "This year"]];
+  var GROUPS = [["day", "Day"], ["week", "Week"], ["month", "Month"]];
+  var TILES = [["downloads", "Book downloads"], ["listens", "Listens"], ["hours", "Hours listened"]];
+  var STEPS = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000, 10000];
+  var st = { preset: "30", group: "day", book: "all", plats: { android: true, iphone: true, ipad: true, windows: true, sonos: true, alexa: false }, metric: "downloads", sort: "downloads" };
+  var TIMEOUT_MS = 20000;
+  var stories = [], loading = true, failed = false, token = 0, timer = 0, overlayOn = false, lastHtml = {}, ctl = null, abortTimer = 0;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function fmt(n) { return Math.round(n).toLocaleString("en-GB"); }
+  function hrs(sec) { var h = Math.round(sec / 360) / 10; return h < 10 ? h.toFixed(1) : fmt(h); }
+  function iso(t) { return new Date(t).toISOString().slice(0, 10); }
+  function ms(day) { return Date.parse(day + "T00:00:00Z"); }
+  function fmtDay(t, o) { return new Date(t).toLocaleDateString("en-GB", Object.assign({ timeZone: "UTC" }, o)); }
+
+  function todayUtc() { var n = new Date(); return Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate()); }
+  function range() {
+    var today = todayUtc();
+    if (st.preset === "today") return [today, today];
+    if (st.preset === "7") return [today - 6 * DAY, today];
+    if (st.preset === "30") return [today - 29 * DAY, today];
+    return [Date.UTC(new Date(today).getUTCFullYear(), 0, 1), today];
+  }
+  function keyOf(t) {
+    if (qy().group === "day") return iso(t);
+    if (qy().group === "week") return iso(t - ((new Date(t).getUTCDay() + 6) % 7) * DAY);
+    var x = new Date(t); return iso(Date.UTC(x.getUTCFullYear(), x.getUTCMonth(), 1));
+  }
+  function livePlatforms(plats) { return PL.filter(function (p) { return plats[p.id]; }); }
+  function curQuery() { return { group: st.group, book: st.book, plats: Object.assign({}, st.plats), range: range() }; }
+  // THE ONE RULE: `shown` is the data together with the exact query (range, grouping, book, platforms) it was fetched for, set only when a response succeeds.
+  // Tiles, chart (title, sub, labels, bars, legend) and table always paint from shown.query and shown.data, in every state; only the filter controls show the pending choice in `st`.
+  // With shown null there is nothing to draw: the blank state.
+  var shown = null;
+  function qy() { return shown ? shown.query : curQuery(); }
+  function sd() { return shown ? shown.data : null; }
+
+  // A user action starts a new load (new token), which aborts and supersedes any load in flight. The page never changes the chips itself.
+  function load() {
+    var mine = ++token, q = curQuery(), r = q.range;
+    var qs = "from=" + iso(r[0]) + "&to=" + iso(r[1]) + "&group=" + q.group + "&platform=" + livePlatforms(q.plats).map(function (p) { return p.id; }).join(",");
+    if (q.book !== "all") qs += "&book=" + q.book;
+    loading = true; failed = false; clearTimeout(timer); clearTimeout(abortTimer);
+    if (ctl) ctl.abort();
+    var mineCtl = ctl = new AbortController();
+    abortTimer = setTimeout(function () { mineCtl.abort(); }, TIMEOUT_MS);
+    timer = setTimeout(function () { overlayOn = true; paint(); }, LOADING_MS);
+    fetch(PREFIX + "/api/stats?" + qs, { signal: mineCtl.signal }).then(function (res) {
+      if (!res.ok) throw new Error(String(res.status));
+      return res.json();
+    }).then(function (body) {
+      if (mine !== token) return;
+      shown = { data: body, query: q };
+      done();
+    }, function () {
+      if (mine !== token) return; // aborted by a newer request: not an error
+      // A fetch, HTTP, JSON failure or the timeout abort is the error state.
+      failed = true; done();
+    }).catch(function (e) {
+      if (mine !== token) return;
+      console.error("stats: handling the response failed", e);
+      failed = true; done();
+    });
+  }
+  // Alexa is dimmed and not clickable until the API's `platforms` list has it (Slice 282); then it is a normal chip that starts off and is never switched on by the page.
+  function alexaLive() { var d = sd(); return !!(d && Array.isArray(d.platforms) && d.platforms.indexOf("alexa") >= 0); }
+  function done() { loading = false; overlayOn = false; clearTimeout(timer); clearTimeout(abortTimer); paint(); }
+
+  function loadStories() {
+    return fetch(PREFIX + "/api/stories").then(function (r) { return r.ok ? r.json() : { stories: [] }; })
+      .then(function (b) { stories = (b.stories || []).map(function (s) { return { id: s.id, title: typeof s.title === "string" ? s.title : "Book " + String(s.id).slice(0, 8), cover: s.coverUrl }; }); })
+      .catch(function () { stories = []; });
+  }
+  // The store list, "Own books", then every book the shown counts name or `want` (a book id) that the store list lacks (retired, unpublished, or the list failed to load), so the select and the rows can always show it.
+  function bookList(want) {
+    var list = stories.concat([{ id: "own", title: "Own books", cover: null }]), known = {}, d = sd();
+    list.forEach(function (b) { known[b.id] = true; });
+    var extra = (d && Array.isArray(d.books) ? d.books.map(function (t) { return t.book; }) : []).concat(want === "all" ? [] : [want]);
+    extra.forEach(function (id) {
+      if (!known[id]) { known[id] = true; list.push({ id: id, title: "Book " + String(id).slice(0, 8), cover: null }); }
+    });
+    return list;
+  }
+
+  function pill(on, dim) { return (on ? "on" : "") + (dim ? " dim" : ""); }
+  // Rebuilds a control only when its markup changed, so an open dropdown or a focused chip survives the repaints of the overlay timer and the responses.
+  function setHtml(id, html) {
+    if (lastHtml[id] === html) return false;
+    lastHtml[id] = html; $(id).innerHTML = html; return true;
+  }
+  function paintFilters() {
+    var today = st.preset === "today";
+    setHtml("presets", PRESETS.map(function (p) { return '<button type="button" class="' + pill(st.preset === p[0]) + '" data-preset="' + p[0] + '">' + p[1] + "</button>"; }).join(""));
+    setHtml("groups", GROUPS.map(function (g) { return '<button type="button" class="' + pill(st.group === g[0], today && g[0] !== "day") + '" data-group="' + g[0] + '">' + g[1] + "</button>"; }).join(""));
+    var sel = $("book");
+    setHtml("book", '<option value="all">All books</option>' + bookList(st.book).map(function (b) { return '<option value="' + esc(b.id) + '">' + esc(b.title) + "</option>"; }).join(""));
+    if (sel.value !== st.book) sel.value = st.book;
+    setHtml("chips", PL.map(function (p) {
+      var on = !!st.plats[p.id], live = p.id !== "alexa" || alexaLive();
+      return '<button type="button" class="chip' + (on ? " on" : "") + (live ? "" : " off-live") + '" data-plat="' + p.id + '"' + (live ? "" : ' title="Counts start when Slice 282 ships"') +
+        (on ? ' style="border-color:' + p.color + '"' : "") + '><span class="dot" style="background:' + p.color + '"></span>' + p.label + (live ? "" : '<span class="note">not live yet</span>') + "</button>";
+    }).join(""));
+  }
+
+  function sum(rows, k) { return rows.reduce(function (a, r) { return a + r[k]; }, 0); }
+  // The one state value: "loading" | "ready" | "error" (with `data` set: previous numbers greyed; with `data` null: nothing to show).
+  function viewState() { return loading ? "loading" : failed ? "error" : "ready"; }
+  // Every paint goes through here. An exception while painting is logged and shows the error banner, never swallowed.
+  function paint() {
+    try { render(viewState()); } catch (e) {
+      console.error("stats: painting failed", e);
+      failed = true; loading = false;
+      document.body.className = ""; $("error").className = "error show";
+    }
+  }
+  function render(state) {
+    var err = state === "error", blank = !shown, data = sd();
+    document.body.className = state === "loading" ? (overlayOn ? "loading" : "") : err && shown ? "stale" : blank ? "blank" : "";
+    $("error").className = "error" + (err ? " show" : "");
+    $("overlay").className = "overlay" + (overlayOn ? " show" : "");
+    paintHead();
+    paintFilters();
+    var q = qy(), r = q.range, series = data && Array.isArray(data.series) ? data.series : [];
+    var live = {}; livePlatforms(q.plats).forEach(function (p) { live[p.id] = true; });
+    var sel = series.filter(function (s) { return live[s.platform]; });
+    var dl = sum(sel, "downloads"), li = sum(sel, "listens"), sec = sum(sel, "seconds"), est = sum(sel, "secondsEstimated");
+    var from = data && data.listensFrom ? ms(data.listensFrom.day) : null;
+    var before = from === null || r[0] < from;
+    var version = data && data.listensFrom ? data.listensFrom.version : "1.115";
+    var since = "Listens and hours count from Dino " + version + (from === null ? "" : ", " + fmtDay(from, { day: "numeric", month: "short", year: "numeric" })) + " (" + SLICE + ").";
+    paintTiles(dl, li, sec, est, before, from, blank);
+    paintChart(r, sel, before, since, blank);
+    paintTable(r, blank);
+    paintFoot();
+  }
+
+  function paintHead() {
+    var d = sd(), at = d && d.updatedAt ? new Date(d.updatedAt) : null;
+    var last = at ? " · last at " + ("0" + at.getUTCHours()).slice(-2) + ":" + ("0" + at.getUTCMinutes()).slice(-2) + " UTC" : "";
+    $("updated").textContent = "Counts of events, never people. Updated hourly" + last + ".";
+  }
+
+  function paintTiles(dl, li, sec, est, before, from, none) {
+    var dash = "—";
+    var defs = {
+      downloads: { value: none ? dash : fmt(dl), sub: "Store books, from the apps. Speakers stream and don’t download." },
+      listens: { value: none ? dash : fmt(li), sub: before ? "Counted from " + (from === null ? "Dino 1.115" : fmtDay(from, { day: "numeric", month: "short", year: "numeric" })) + " · played for 30 s or more" : "Played for 30 s or more" },
+      hours: { value: none ? dash : hrs(sec + est), sub: est > 0 ? "incl. " + hrs(est) + " h estimated for Sonos" : "Real played time from the app" }
+    };
+    setHtml("tiles", TILES.map(function (t) {
+      var on = st.metric === t[0], d = defs[t[0]];
+      return '<button type="button" class="tile' + (on ? " on" : "") + '" data-metric="' + t[0] + '"><span class="name">' + t[1] + '<span class="shown">' + (on ? "IN THE CHART" : "") + '</span></span><span class="num">' + d.value + '</span><span class="tsub">' + esc(d.sub) + "</span></button>";
+    }).join(""));
+  }
+
+  function bucketValues(r, sel) {
+    var order = livePlatforms(qy().plats), buckets = {}, keys = [];
+    for (var t = r[0]; t <= r[1]; t += DAY) { var k = keyOf(t); if (!(k in buckets)) { buckets[k] = {}; keys.push(k); } }
+    sel.forEach(function (s) { if (buckets[s.key]) buckets[s.key][s.platform] = s; });
+    return keys.map(function (k) {
+      return { k: k, parts: order.map(function (p) {
+        var s = buckets[k][p.id] || { downloads: 0, listens: 0, seconds: 0, secondsEstimated: 0 };
+        if (st.metric === "downloads") return { p: p, v: s.downloads, e: 0 };
+        if (st.metric === "listens") return { p: p, v: s.listens, e: 0 };
+        return { p: p, v: s.seconds / 3600, e: s.secondsEstimated / 3600 };
+      }) };
+    });
+  }
+
+  function hatch(color) { return "repeating-linear-gradient(135deg," + color + " 0 3px,#b8b2c8 3px 6px)"; }
+  function paintChart(r, sel, before, since, blank) {
+    var bv = bucketValues(r, sel), hours = st.metric === "hours";
+    var max = Math.max.apply(null, [1].concat(bv.map(function (b) { return b.parts.reduce(function (a, x) { return a + x.v + x.e; }, 0); })));
+    var step = STEPS.filter(function (s) { return s * 4 >= max; })[0] || 20000, top = step * 4;
+    var n = bv.length, every = Math.ceil(n / 14), gap = n > 60 ? 1 : n > 20 ? 3 : 8;
+    var label = function (k) { return qy().group === "month" ? fmtDay(ms(k), { month: "short" }) : fmtDay(ms(k), { day: "numeric", month: "short" }); };
+    var unit = hours ? " h" : "";
+    $("bars").style.gap = gap + "px"; $("xlabels").style.gap = gap + "px";
+    $("bars").innerHTML = blank ? "" : bv.map(function (b) {
+      var segs = [], tot = 0;
+      b.parts.forEach(function (x) {
+        if (x.v > 0) segs.push({ h: Math.max(1, x.v / top * H).toFixed(1), bg: x.p.color });
+        if (x.e > 0) segs.push({ h: Math.max(1, x.e / top * H).toFixed(1), bg: hatch(x.p.color) });
+        tot += x.v + x.e;
+      });
+      var tip = label(b.k) + ": " + (hours ? tot.toFixed(1) : fmt(tot)) + unit + "\n" + b.parts.map(function (x) { return x.p.label + " " + (hours ? (x.v + x.e).toFixed(1) : fmt(x.v)); }).join("\n");
+      return '<div class="bar" title="' + esc(tip) + '">' + segs.map(function (s, i) {
+        return '<div style="height:' + s.h + "px;background:" + s.bg + ";border-radius:" + (i === segs.length - 1 ? "4px 4px 0 0" : "0") + '"></div>';
+      }).join("") + "</div>";
+    }).join("");
+    $("xlabels").innerHTML = blank ? "" : bv.map(function (b, i) { return "<span>" + (i % every === 0 ? label(b.k) : "") + "</span>"; }).join("");
+    $("yaxis").innerHTML = blank ? "" : [4, 3, 2, 1, 0].map(function (i) { return "<span>" + fmt(step * i) + "</span>"; }).join("");
+    $("legend").innerHTML = livePlatforms(qy().plats).map(function (p) {
+      var est = p.id === "sonos" && hours;
+      return '<span><i style="background:' + (est ? hatch("#2b2540") : p.color) + '"></i>' + p.label + (est ? " (estimate)" : "") + "</span>";
+    }).join("");
+    var book = qy().book === "all" ? "All books" : (bookList(qy().book).filter(function (b) { return b.id === qy().book; })[0] || { title: "Book" }).title;
+    var name = { downloads: "Book downloads", listens: "Listens", hours: "Hours listened" }[st.metric];
+    $("ctitle").textContent = name + " per " + qy().group;
+    $("csub").textContent = book + " · " + fmtDay(r[0], { day: "numeric", month: "short" }) + " – " + fmtDay(r[1], { day: "numeric", month: "short", year: "numeric" });
+    $("since").textContent = since;
+    $("since").className = "since" + (st.metric !== "downloads" && before ? " show" : "");
+  }
+
+  var SORT_KEY = { downloads: "dl", listens: "li", hours: "h" };
+  function paintTable(r, blank) {
+    var byBook = {}, d = sd(), pick = qy().book;
+    (d && Array.isArray(d.books) ? d.books : []).forEach(function (b) { byBook[b.book] = b; });
+    var list = bookList(pick); // includes books the counts name but the store list lacks, so the rows add up to the tiles
+    var rows = list.map(function (b) {
+      var t = byBook[b.id] || { downloads: 0, listens: 0, seconds: 0, secondsEstimated: 0 };
+      return { b: b, dl: t.downloads, li: t.listens, h: (t.seconds + t.secondsEstimated) / 3600 };
+    });
+    var sk = SORT_KEY[st.sort];
+    rows.sort(function (x, y) { return y[sk] - x[sk]; });
+    var mx = { dl: Math.max.apply(null, [1].concat(rows.map(function (x) { return x.dl; }))), li: Math.max.apply(null, [1].concat(rows.map(function (x) { return x.li; }))), h: Math.max.apply(null, [1].concat(rows.map(function (x) { return x.h; }))) };
+    $("heads").innerHTML = "<span>Book</span>" + [["downloads", "Downloads"], ["listens", "Listens"], ["hours", "Hours"]].map(function (h, i) {
+      return '<button type="button" class="' + (st.sort === h[0] ? "sorted" : "") + (i === 0 ? "" : " ") + '" data-sort="' + h[0] + '">' + h[1] + (st.sort === h[0] ? " ↓" : "") + "</button>";
+    }).join("");
+    $("rows").innerHTML = blank ? "" : rows.map(function (x, i) {
+      var cover = x.b.cover ? 'data-cover="' + esc(x.b.cover) + '"' : "";
+      var initial = x.b.cover ? "" : (x.b.id === "own" ? "✎" : esc((x.b.title.replace(/^The /, "")[0] || "").toUpperCase()));
+      return '<div class="cols row' + (pick === x.b.id ? " picked" : "") + '" data-book="' + esc(x.b.id) + '"><div class="who"><span class="rank">' + (i + 1) + '</span><div class="cover" ' + cover + '>' + initial + '</div><span class="btn">' + esc(x.b.title) + "</span></div>" +
+        [["dl", x.dl, "downloads"], ["li", x.li, "listens"], ["h", x.h, "hours"]].map(function (c) {
+          var text = x.b.id === "own" && c[0] === "dl" ? "—" : (c[0] === "h" ? hrs(c[1] * 3600) : fmt(c[1]));
+          var hide = st.sort !== c[2] ? " hide-phone" : "";
+          return '<div class="cell' + (c[0] === sk ? " sorted" : "") + hide + '"><span class="n">' + text + '</span><div class="track"><div style="width:' + (c[1] / mx[c[0]] * 100).toFixed(0) + '%"></div></div></div>';
+        }).join("") + "</div>";
+    }).join("");
+    paintCovers();
+    markPhoneHeads();
+  }
+  // The cover URL goes through the DOM (a CSS string, JSON-quoted), never through markup, so a quote or bracket in it cannot leave the url().
+  function paintCovers() {
+    var els = $("rows").querySelectorAll(".cover[data-cover]");
+    for (var i = 0; i < els.length; i++) {
+      var u = els[i].getAttribute("data-cover");
+      if (/^(https:\/\/|\/)/.test(u)) els[i].style.backgroundImage = "url(" + JSON.stringify(u) + ")";
+    }
+  }
+  function markPhoneHeads() {
+    var btns = $("heads").querySelectorAll("button");
+    for (var i = 0; i < btns.length; i++) if (!btns[i].classList.contains("sorted")) btns[i].classList.add("hide-phone");
+  }
+
+  function paintFoot() {
+    var d = sd(), from = d && d.firstDay ? fmtDay(ms(d.firstDay), { day: "numeric", month: "short", year: "numeric" }) : "the first rollup";
+    $("foot").textContent = "Downloads are store-book downloads from the apps. A listen is a book played for 30 seconds or more. Hours are real played time from the app; for speakers without reported time, the book’s length (hatched, estimate). Weeks start Monday, UTC. Data from " + from + "; kept daily in D1 after Analytics Engine drops raw rows.";
+  }
+
+  function onClick(e) {
+    var el = e.target.closest("[data-preset],[data-group],[data-plat],[data-metric],[data-sort],[data-book]");
+    if (!el) return;
+    var d = el.dataset;
+    if (d.preset) { st.group = d.preset === "today" ? "day" : (d.preset === "year" && st.group === "day" ? "week" : st.group); st.preset = d.preset; load(); }
+    else if (d.group) { if (st.preset === "today") return; st.group = d.group; load(); }
+    else if (d.plat) { if (d.plat === "alexa" && !alexaLive()) return; var n = Object.assign({}, st.plats); n[d.plat] = !n[d.plat]; if (!PL.some(function (p) { return n[p.id]; })) return; st.plats = n; load(); }
+    else if (d.metric) { st.metric = d.metric; paint(); }
+    else if (d.sort) { st.sort = d.sort; paint(); }
+    else if (d.book) { st.book = st.book === d.book ? "all" : d.book; load(); }
+    paint();
+  }
+  document.addEventListener("click", onClick);
+  $("book").addEventListener("change", function (e) { st.book = e.target.value; load(); paint(); });
+  $("retry").addEventListener("click", function () { load(); paint(); });
+
+  paint();
+  loadStories().then(function () { paint(); });
+  load();
+})();
+</script>
+</body>
+</html>

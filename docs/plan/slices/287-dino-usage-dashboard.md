@@ -1,15 +1,15 @@
 # Slice 287 — Dino: a public usage dashboard at dinoreader.sirous.uk/stats
 
-*Planned 2026-11-07.* Server only (Cloudflare Worker, D1, the Dino site). The apps do not change here.
+*Built 2026-11-08 (wave 43, night 2026-11-08-0106), PR #940, not merged. Code for Work 1-6 is built and passes the local checks; nothing is live (no D1 database, binding, secret or deploy), see Waiting on the user.* Server only (Cloudflare Worker, D1, the Dino site). The apps do not change here.
 
 **User answer (2026-11-08): the dashboard is public.** "its not private! I want everyone to see that dashboard". So there is
 no Cloudflare Access, no Zero Trust, no sign-in, no JWT check and no signed-in email; anyone can open `/stats`. This
 overrides the mock's lock glyph and email in the header (the user's own words beat the mock here) and the earlier
 "behind Access" decision. Zero Trust was not activated (the checkout was left at the card-authorisation step).
 
-**Nothing waits on the user any more.** The night's park note (wave 5) was wrong about the token: the wrangler OAuth
-login on this machine has `d1 (write)` and `workers_scripts (write)` (checked with `wrangler whoami`, 2026-11-08), which
-covers the D1 database, the Worker secret and the deploy. Access was the only thing it could not do, and it is gone.
+**No Access step any more.** The wrangler OAuth login on this machine has `d1 (write)` and `workers_scripts (write)` (checked with `wrangler whoami`, 2026-11-08), but the night run's live steps were still refused (see below).
+
+**Waiting on the user (2026-11-08):** the user creates the D1 database, applies the schema and adds the binding in both configs, sets the `CF_ANALYTICS_READ_TOKEN` secret and the `ANALYTICS_ACCOUNT_ID` var, then deploys; or adds an `autoMode` allow line so a night run can do it. The permission check denied `wrangler secret put` as "[Secret-Store Writes]" and `wrangler d1 create` with no reason given. The deploy also waits on the Slice 282 observability/privacy bullet. The code for Work items 1-6 is built, but these live steps are not done: `wrangler d1 create dino-stats`, applying `worker/schema/stats.sql` remotely, the D1 `STATS` binding block in both wrangler configs (left out on purpose: an invented `database_id` would break the next Workers Builds deploy), `wrangler secret put CF_ANALYTICS_READ_TOKEN`, the `ANALYTICS_ACCOUNT_ID` var, and the deploy. The exact steps are in `docs/DEPLOYING.md`, section "The Dino usage dashboard". Until then `/api/stats` answers 503 `data_unavailable` and the cron (already in both configs) logs and returns. The "counts from" note's version and date are fixed constants in `worker/stats.ts` (`LISTENS_SINCE_VERSION` 1.115, `LISTENS_SINCE_DAY` 2026-11-07): Slice 288 (PR #901, merge 41419276) first shipped in tag `dino-v1.115.0`, tagged 2026-11-07 (the mock's "1.112, 10 Nov 2026" was made up).
 
 **Depends on:** nothing to start. Slice 288 (the app's listens and listening time) and Slice 289 (Sonos plays)
 fill the listen and hour numbers; until they ship those columns show zero with a note saying from which version
@@ -18,7 +18,9 @@ they count.
 `worker/stats*.test.mjs` (new), `worker/index.ts` (routes + `scheduled`),
 `worker/schema/stats.sql` (new D1 table), `wrangler.jsonc`, `wrangler.workers-dev.jsonc` (D1 binding, cron trigger,
 `run_worker_first` for `/stats`, `/api/stats` and their `/dino` twins), `site/dino/stats.html` (new), `worker/CLAUDE.md`,
-`docs/analytics/dino-dashboard-queries.md` (new), this file.
+`docs/analytics/dino-dashboard-queries.md` (new), `worker/check-configs.mjs`, `worker/downloads.ts` (`resolveSite`, `/dino/` prefix), `docs/DEPLOYING.md` (D1 creation, the secret), `package.json`/`package-lock.json` (only if a dependency is added), this file.
+
+**Deploy (claim note, 2026-11-08):** the Worker deploy waits on plan.md's *Worker not deployed* / Slice 282 observability bullet (deploying publishes privacy text that may be untrue), so this slice builds, creates the D1 database (its id goes into both wrangler configs) and sets the secret, but does not deploy; the live checks go to *Not yet verified* until the next deploy.
 
 ## Why
 
@@ -111,20 +113,34 @@ One frame (200, line 25 of `docs/design/dino-reader/Dino Reader Stats Dashboard.
 
 Settled by the mock, left open by the plan: grouping rules, y-axis steps, bar gaps, tile copy, the table's all-books list, the "last at" time from the API, Own books showing "—" for downloads, and that the page has no per-locale copy (English, owner only; the mock draws no language switch). New strings: none for the apps; no locale files change.
 
+### Rollup state (design, 2026-11-08)
+
+One design replaces the earlier backfill cursor (`last_rollup_at`, dropped):
+
+- State: D1 table `rollup_days(day TEXT PRIMARY KEY, rolled_at TEXT)` (`worker/schema/stats.sql`), one row per day whose rollup was written successfully. No cursor.
+- Each run's days: today and yesterday (UTC) always, plus at most 10 of the oldest days in [today-89, today-2] that have no `rollup_days` row (a first backfill of 88 days takes 9 hourly runs). Never a day older than today-89 (Analytics Engine keeps about 90 days), so old D1 rows are never read, rewritten or deleted.
+- Per run (check 2, 2026-11-08): one AE query per metric covering all the run's target days, `GROUP BY day` (4 AE fetches a run, not per day); then per-day decisions. If any of the four answers non-200 or does not parse to `{ data: [...] }`, the whole run is skipped (logged as an Analytics Engine skip, nothing written, retried next hour).
+- Guard: AE only appends inside its retention, so if the new total of any metric for a day is lower than D1's total for that day (one D1 totals read for all days), D1's rows stay and `stats-rollup: lower total from AE` is logged. The day is marked in `rollup_days` (D1 already holds the higher, correct data), so it takes no more backfill slot.
+- Write: one D1 batch per day = delete the day's `daily_stats` rows, insert the new rows, upsert `rollup_days(day, now)`. Data and mark land together or not at all; a batch failure is logged on its own (`D1 batch failed for <day>`, not as an AE skip), leaves the day unmarked and goes on with the next day.
+- AE queries (check 3, #3): each filters on exactly the run's target days (`formatDateTime(timestamp, '%Y-%m-%d') IN (...)`), never a min-max span, so a stuck old day cannot make a run read the days between it and yesterday.
+- Day batch (check 3, #1): exactly 3 D1 statements (delete the day, ONE multi-row insert of all its rows, upsert `rollup_days`). The insert is `INSERT ... SELECT ... FROM json_each(?)` with ONE bound parameter (the day's rows as a JSON array), so D1's per-statement bound-parameter limit never needs chunking (the docs lookup did not state the limit).
+- Subrequests, counting every D1 statement as one (the docs do not say whether a batch is one): 4 AE + day list read + totals read + 12 days x 3 statements + meta write = 43 at most, under 50 (Free); a test counts the fetch calls and every D1 statement of a full catch-up run.
+- The page's "last at" time is the separate meta key `last_run_at`, set at the end of a run where today's day was written or kept (a day kept by the guard counts as success); a run where today's day was not written is `failed` even if older days were written. `/api/stats` returns it as `updatedAt`.
+
 ## Work
 
-- [ ] 1. Smallest end to end: D1 database and table, the rollup for `downloads` only, `/api/stats`, and the page as frame
+- [x] 1. (Code built; the live D1 database, deploy and real numbers are not done, see Waiting on the user.) Smallest end to end: D1 database and table, the rollup for `downloads` only, `/api/stats`, and the page as frame
       200 (header without the lock and email, filters card, tiles, chart, table, footer, loading and error states) showing
       downloads, public. Deploy and see real numbers.
-- [ ] 2. Add `listens`, `seconds` and `seconds_estimated` to the rollup and the page (zero until Slices 288/289 ship; the
+- [x] 2. Add `listens`, `seconds` and `seconds_estimated` to the rollup and the page (zero until Slices 288/289 ship; the
       "counts from" note as in the mock).
-- [ ] 3. Week and month grouping with the mock's rules, the book picker, the sortable top-books table, the iPhone/iPad
+- [x] 3. Week and month grouping with the mock's rules, the book picker, the sortable top-books table, the iPhone/iPad
       split, the dimmed Alexa chip, and the phone layout from the mock's States note.
 - [ ] 3b. Side-by-side check: the built page next to frame 200 at 1280 wide (screenshot of each), every difference fixed
-      before review.
-- [ ] 4. Backfill on the first run; a test that re-running a day gives the same rows.
-- [ ] 5. `docs/analytics/dino-dashboard-queries.md`: the rollup SQL, for the `analytics-query` agent to cross-check.
-- [ ] 6. `worker/CLAUDE.md`: the stats routes (public, read-only from D1, cached 5 minutes), the cron and D1 binding, and that the page makes no
+      before review. (Not done: the mock's `support.js` is not in the repo, so frame 200 could not be rendered; the page was checked in six states at 1280 instead.)
+- [x] 4. Backfill on the first run; a test that re-running a day gives the same rows.
+- [x] 5. `docs/analytics/dino-dashboard-queries.md`: the rollup SQL, for the `analytics-query` agent to cross-check.
+- [x] 6. `worker/CLAUDE.md`: the stats routes (public, read-only from D1, cached 5 minutes), the cron and D1 binding, and that the page makes no
       third-party requests.
 
 ## Verification
@@ -140,3 +156,107 @@ Settled by the mock, left open by the plan: grouping rules, y-axis steps, bar ga
 
 - (Superseded 2026-11-08.) This said Access was the one user step. The page is now public, so there is no Access step;
   the D1 database, the Worker secret and the deploy go through the wrangler OAuth login (`d1 (write)`, `workers_scripts (write)`).
+
+## Review notes
+
+**From review:** pass 1 (high), `reviews/pr-940-high.md`.
+
+- Applied #1-#9: the rollup re-reads from the day before the last run (at most 92 days), weights every sum by `_sample_interval` as the repo's usage reports do, `/api/stats` answers from the Workers Cache API for 300 s keyed by the normalised query, the Top books table lists books the counts name but the store list lacks, the page repaints a control only when its markup changes, a failed reload clears the numbers, the cover URL goes in through the DOM, Alexa becomes a normal chip once `platforms` in the answer holds `alexa` (dimmed until then), and `/dino/stats` and `/stats/` redirect to `/stats` on the Dino host with tests for the routing helpers.
+**From review:** pass 2 (medium), `reviews/pr-940-medium.md`.
+
+- Applied #1, #2 and #6 (`reviews/pr-940-medium.md`): "Rollup only upserts returned rows" (#1: each re-read day is replaced in one D1 batch: delete the day, then insert, so vanished keys go), #2 (at most 31 days per run, oldest first, progress in `last_rollup_at`; a day whose write fails is logged and skipped), #6 (`/stats` is mapped only for the Dino site, `DINO_ONLY_PAGE_FOR_PATH` in `worker/downloads.ts`).
+- Not a bug #3 (`reviews/pr-940-medium.md`): "seconds sums read_paused + read_stopped" - the pause and stop rows carry per-segment seconds (`src/DinoReader.App/ListenTally.cs:113-116`), the app's `book_listened` carries none; recorded in `docs/analytics/dino-dashboard-queries.md`.
+- Skipped #4 (`reviews/pr-940-medium.md`): "Cache key per normalised query, never invalidated; Cache.put no-op on workers.dev" - the page only sends the documented parameter set and production is the custom domain, where Cache.put works
+- Skipped #5 (`reviews/pr-940-medium.md`): "SELECT DISTINCT platform and MIN(day) scan whole table on every cache miss" - daily_stats holds one row per day x book x platform x metric (thousands of rows), and the 300 s cache fronts it
+
+- Skipped #10 (`reviews/pr-940-high.md`): "has no Cancel; stack-conventions asks the loading state to name what it waits for" - the mock (frame 200 States note) specifies the overlay text "Loading…" with no Cancel; the mock wins.
+
+**From review:** check pass 1 (medium), `reviews/pr-940-check1-medium.md`.
+
+- Applied #1-#5 with one rollup design ("Rollup state (design, 2026-11-08)" above: `rollup_days`, today and yesterday every run, at most 29 oldest undone days of [today-89, today-2], lower-total guard, one batch per day, `last_run_at`), #7 (the Alexa auto re-load carries `auto`: a user click supersedes it by token, a failed one keeps the shown data and the chip), #9 (a book missing from the store list is added to the select, `bookList()` in `site/dino/stats.html`).
+- Skipped #6 (`reviews/pr-940-check1-medium.md`): "Every uncached /api/stats runs whole-table MIN(day) and DISTINCT platform; cache separately or store in meta." - daily_stats holds thousands of rows and the 300 s cache fronts it
+- Skipped #8 (`reviews/pr-940-check1-medium.md`): "First weekly/monthly bucket of a range is partial but labelled as the whole bucket." - the mock's rule labels a bucket by its key date (week = that Monday, month = the 1st); the mock wins
+
+**From review:** check pass 2 (medium), `reviews/pr-940-check2-medium.md`.
+
+- Applied #1-#6: #2-#5 within the "Rollup state (design, 2026-11-08)" subsection above, which now says so (one AE query per metric for the whole run, kept days marked, run fails unless today was written or kept, D1 batch errors logged apart from AE skips, under 50 subrequests); #1 (the failed auto re-load restores the chips from before the Alexa switch-on) and #6 (`data.books` checked with `Array.isArray`) in `site/dino/stats.html`.
+
+**From the device run:** `reviews/s287-device/results.md`.
+
+- Fixed in `site/dino/stats.html`: (a) with no rollup time known (error or never run) the header's second line ends after "Updated hourly." with no "last at" part; (b) in the error state with no loaded data the tile numbers show "—" in the loading grey `#c9c2b4` instead of 0 / 0.0, and with earlier data they keep the old numbers greyed, as the mock's States note says for loading.
+
+**From review:** check pass 3 (medium), `reviews/pr-940-check3-medium.md`.
+
+- Applied #1, #3 and #4: #1 and #3 within the "Rollup state (design, 2026-11-08)" subsection above (at most 10 old days a run, a day is exactly 3 statements with one `json_each` insert, subrequests counted per statement: 43 at most; the AE queries name exactly the run's days), #4 (a failed auto re-load also resets `alexaSeen`, so the switch-on is retried on the next successful load) in `site/dino/stats.html`.
+- Skipped #2 (`reviews/pr-940-check3-medium.md`): "a 200 from AE with an empty or partial `data` for a day with no D1 rows is written and marked done; days older than today-2 are never re-read" - Analytics Engine is append-only inside its retention, so an old day that answers empty had no events; today and yesterday are re-read every run, and the lower-total guard covers a short answer for a day D1 already holds
+
+**From review:** check pass 4 (medium), `reviews/pr-940-check4-medium.md` (3 findings read).
+
+- #3 (the `json_each` insert only ran against mocks): covered by the local D1 run, which passed (`reviews/s287-device/results.md`: the SQL on real D1 semantics on local D1). The first run on real D1 stays in *Not yet verified*.
+- #1 is the same point as check3 #2 (an empty AE answer for an old day), whose skip is recorded under check pass 3.
+- Skipped #2 (`reviews/pr-940-check4-medium.md`): "partial-answer check uses a fixed 1e-6 epsilon on float sums" - weighted sums here are at most tens of thousands; float reordering error at that size is around 1e-9, far under the 1e-6 margin
+
+**From review:** check pass 11 (medium), `reviews/pr-940-check11-medium.md` (3 findings read, none applied).
+
+- Skipped #1 (`reviews/pr-940-check11-medium.md`): "workers.dev `/dino/stats/` is not canonicalised" - workers.dev is the test host; a second URL there harms nothing
+- Skipped #2 (`reviews/pr-940-check11-medium.md`): "no case for workers.dev `/dino/stats/`, workers.dev query string, or RTST `/stats.html`; loop test too loose" - the routing test already walks every `run_worker_first` stats path on both hosts
+- Skipped #3 (`reviews/pr-940-check11-medium.md`): "RTST `/stats.html` falls to ASSETS (404 body differs from `/stats`)" - the RTST site has no `/stats.html` file, so the asset layer answers 404 as for any unknown page
+
+**From review:** check pass 5 (medium), `reviews/pr-940-check5-medium.md`.
+
+- Rule (by construction, `site/dino/stats.html`): the page renders from one state value, `loading` | `ready(data)` | `error(data|null)`, and every paint goes through `paint()`. `error(null)` shows the banner, tiles "—" in `#c9c2b4`, the chart plot empty (axes and gridlines, no bars, no numbers) and an empty table body, and clears the `loading` class; `error(data)` keeps the previous numbers greyed.
+- Applied #1, #2 (only a fetch, HTTP or JSON failure is the error state; an exception while painting or handling the response is logged with `console.error` and also shows the banner), #3 (tiles repaint only when their markup changes, so focus stays) and the `loading` class part of #4.
+- Skipped #3 (`reviews/pr-940-check5-medium.md`): "header always says "Updated hourly" with no failure indicator and drops last-updated time when data is null" - the header without a time is the device-run fix for an unknown time (see above), and the banner is the failure indicator
+- Skipped #4 (`reviews/pr-940-check5-medium.md`): "in error state tile subtitles still say "Counted from Dino 1.115" (hard-coded fallback) beside dash values" - the rest of #4 is not changed: the subtitles are the mock's own wording and the mock wins
+- Skipped #6 (`reviews/pr-940-check5-medium.md`): "error banner always blames" - the banner copy and the (Slice 288) note are the mock's own wording, and the mock wins
+
+**From review:** check pass 6 (medium), `reviews/pr-940-check6-medium.md`.
+
+- Design that replaces the Alexa auto re-load (it caused check3 #4 and check6 #2 and #3, so the mechanism is gone: no `auto`, no `alexaSeen`): the Alexa chip is dimmed and not clickable ("not live yet") while the API's `platforms` list lacks `alexa`; once the list has it, it is a normal clickable chip that starts OFF (the mock's default is every platform but Alexa) and the page never switches it on. Earlier notes above about the auto re-load (check1 #7, check2 #1, check3 #4) describe the old design.
+- Applied #1 (`error(data)` greys the chart plot and the table rows with the same `stale` treatment as the tiles), #2 and #3 (both vanish with the auto re-load) in `site/dino/stats.html`.
+
+**From the device rerun:** `reviews/s287-device/results.md`.
+
+- Fixed in `site/dino/stats.html`: (a) in `error(null)` the "—" tile values are `#c9c2b4` (body class `blank`); (b) in `error(data)` the chart title, subtitle, day labels, bars and legend use the range, grouping, book and platforms the shown data was fetched for, not the new filter's.
+
+**From review:** check pass 7 (medium), `reviews/pr-940-check7-medium.md`.
+
+- One rule by construction, replacing the `view`/`data` handling (third round on "old data painted with new filters", #2 and #3): the page keeps `shown = { data, query }`, the data with the exact query (range, grouping, book, platforms) it was fetched for, set only when a response succeeds. Tiles, chart (title, sub, labels, bars, legend) and table always paint from `shown.query` and `shown.data`, in every state: loading and error grey them; `shown` null is the blank state. Only the filter controls show the user's pending choice in `st`. There is no `view`, `vw()` or global `data` any more.
+- Applied #1 (one `AbortController` per request; a newer request aborts the older, which is ignored, not an error; a 20 s timeout aborts into the error state), #4 (store titles that are not strings become "Book <id>" in `loadStories`), #5 (`hrs` rounds to one decimal first, then picks the format, so 9.97 shows "10").
+
+**From review:** check pass 8 (medium), `reviews/pr-940-check8-medium.md`.
+
+- Applied #1 (the `loading` body class, which greys the tile numbers, is set only once the overlay is on, so it starts together with the overlay after 500 ms and never at once).
+- Skipped #2 (`reviews/pr-940-check8-medium.md`): "public page shows internal slice numbers" - the Slice 288 note and the Alexa tooltip are the mock's own copy, and the mock wins
+- Skipped #3 (`reviews/pr-940-check8-medium.md`): "a book id not matching" - store book ids are 32 lowercase hex (live /api/stories read 2026-11-08, e.g. 67695905c10a46bd81aa498beab9609e) and own books are `own`, so BOOK_PATTERN accepts every id the page can send
+
+**From review:** check pass 9 (medium), `reviews/pr-940-check9-medium.md`.
+
+- Applied #1 (`/stats/`, `/stats.html` and their `/dino` twins added to `run_worker_first` in both wrangler configs; test in `worker/stats.test.mjs`) and #3 (`keepInCache` in `worker/stats.ts`: a failed `Cache.put` is logged, the D1 data is still returned).
+- Skipped #2 (`reviews/pr-940-check9-medium.md`): "the cache key includes arbitrary valid from/to pairs, so a caller can make a distinct key per request" - from/to are validated dates and a cache miss is one indexed read on a table of thousands of rows
+- Skipped #4 (`reviews/pr-940-check9-medium.md`): "tiles keep full colour for up to 500 ms on first paint" - under 500 ms nothing changes by rule, the dash shows plain for that moment
+- Skipped #5 (`reviews/pr-940-check9-medium.md`): "a lagging AE answer for day -2 or older freezes a wrong value" - today and yesterday are re-read every run, and an older day cannot still be arriving in Analytics Engine
+- Skipped #6 (`reviews/pr-940-check9-medium.md`): "missing ANALYTICS_ACCOUNT_ID/token makes the hourly cron a silent no-op logged only with console.log" - the log line lands in Workers Logs, which is where the deploy check looks
+- Skipped #7 (`reviews/pr-940-check9-medium.md`): "HEAD gets 405" - the page and API only use GET
+
+**From review:** check pass 10 (medium), `reviews/pr-940-check10-medium.md`.
+
+- Applied #4 (`/stats.html` redirects to `/stats` on the Dino host and `/dino/stats.html` to `/dino/stats` on workers.dev, `canonicalPath` in `worker/downloads.ts`; test in `worker/stats.test.mjs` walks every stats path in `run_worker_first`).
+- Skipped #1 (`reviews/pr-940-check10-medium.md`): "edge cache is a no-op on workers.dev hosts, so every stats request there runs the five D1 statements" - production is the custom domain, where the cache works; workers.dev is the test host
+- Skipped #2 (`reviews/pr-940-check10-medium.md`): "`await keepInCache` blocks the first uncached 200 on a slow Cache.put" - one uncached response per 5 minutes per query waits for one Cache.put
+- Skipped #3 (`reviews/pr-940-check10-medium.md`): "declares the cron trigger but no D1 STATS binding; when the binding is added to wrangler.jsonc only, a workers-dev deploy drops it" - worker/check-configs.mjs (run by npm run typecheck) deep-compares the two configs and fails when they differ, and the D1 binding is added to both at deploy time per docs/DEPLOYING.md
+
+**Local checks (night 2026-11-08-0106), `reviews/s287-device/results.md`: PASS.** The SQL on real D1 semantics on local D1; `/api/stats` codes (400 unknown parameter, 503 no binding); the page in six states at 1280 wide.
+
+**Built facts:** listens count from Dino 1.115, 7 Nov 2026 (PR #901, tag `dino-v1.115.0`). The page renders from one state with `shown = { data, query }`, aborts a superseded request and times out at 20 s, and has no auto re-load; the Alexa chip is dimmed until Alexa rows exist, then normal and off.
+
+#### For CLAUDE.md
+
+- Nothing new to lift: `worker/CLAUDE.md` already holds the stats rule (built in Touches, Work 6).
+
+#### Not yet verified
+
+- Live yesterday's downloads equal an `analytics-query` count per platform.
+- A private-window open of the public page shows it.
+- The first real cron run: the `json_each` insert on real D1, and the 9 hourly runs that backfill.
+- The page side by side with mock frame 200 at 1280 (the mock's `support.js` is not in the repo, so it could not be rendered).
