@@ -6,8 +6,8 @@ namespace DinoReader;
 /// <summary>
 /// The languages the child's stories can be in (Slice 173, Decision 168): the app language plus up to two side languages the parent picked
 /// (<see cref="StoryLanguageSet"/> holds the rules), and the one language the child reads in. The side languages and the child's pick are kept in
-/// preferences; the app language is <see cref="LanguageChoice.Current()"/>. The child's pick reaches the reading screen only, which holds its reading
-/// language itself and passes it to everything a read uses; no grown-up screen or shelf title sees it. The usage events of a book that was read (open, finish, a switch)
+/// preferences; the app language is <see cref="LanguageChoice.Current()"/>. The child's pick reaches the reading screen, which holds its reading
+/// language itself and passes it to everything a read uses, and the kids' shelf titles (Decision 173); no grown-up screen sees it. The usage events of a book that was read (open, finish, a switch)
 /// do carry the language it was read in, a closed-list value like the app language.
 /// Slice 278 part B: a story language needs only the books' pre-made audio (<see cref="ShelfAudioPacks"/>); no voice pack is downloaded for it.
 /// </summary>
