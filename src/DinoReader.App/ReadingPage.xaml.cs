@@ -59,6 +59,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private bool _pieceLacksAudio; // the piece now shown has no clip: the audio status line is shown
 	private bool _onStack;
 	private Window? _watchedWindow;
+	private readonly BeatCoverFacts _beatCover = new(); // Slice 322: the two facts the silent beat's cover is made of; every event ends in PublishBeatCover
 	private const double FullHeaderRowSpacing = 2;
 	private ReadingLayout _layoutKind;
 	private DeviceSize _sizeApplied; // the device size class the margins were last applied for
@@ -926,8 +927,9 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		_appeared.TrySetResult();
 		_visible = true;
 		_onStack = true;
-		_session.ResumeBeatWhenShown();
-		ApplyScreenAwake();
+		_beatCover.Appeared();
+		ApplyScreenAwake(); // (re)subscribes to the window; a new subscription reads its real state once
+		PublishBeatCover();
 		Unsubscribe();
 		SubscribePlayback();
 		SystemTheme.Changed += OnThemeChanged;
@@ -949,7 +951,8 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		base.OnDisappearing();
 		_visible = false;
 		_introPopQueued = false; // a pop that has not run yet must not fire once the page is covered or leaving
-		_session.PauseBeatWhenHidden(); // a piece shown for a beat has no sound, so it must not run on unseen
+		_beatCover.Disappeared();
+		PublishBeatCover(); // a piece shown for a beat has no sound, so it must not run on unseen
 		Dispatcher.Dispatch(LeavePageIfOffStack);
 	}
 
@@ -1384,10 +1387,27 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private void OnWindowStoppedReleaseScreen(object? sender, EventArgs e)
 	{
 		ScreenAwake.Suspend(true);
+		_beatCover.WindowStopped(); // Slice 322: a lock raises Window.Stopped, not OnDisappearing, on Android. The event wins; the platform state is never re-read here (it lags the event).
+		PublishBeatCover();
 		_ = _usage.FlushAsync();
 	}
 
-	private void OnWindowResumedKeepScreen(object? sender, EventArgs e) => ScreenAwake.Suspend(false);
+	private void OnWindowActivatedShowBeat(object? sender, EventArgs e)
+	{
+		_beatCover.WindowActivated(); // a recreated activity gets onResume (Activated) with no onRestart (Resumed)
+		PublishBeatCover();
+	}
+
+	private void OnWindowResumedKeepScreen(object? sender, EventArgs e)
+	{
+		ScreenAwake.Suspend(false);
+		_beatCover.WindowResumed(); // the event wins: Resumed is raised before Android's activity is Started and before iOS is Active, so a platform read here would still say background
+		PublishBeatCover();
+	}
+
+	// The silent beat's cover is one fact made of two: hidden unless the page is shown and its window is in front (Slice 322, third design; BeatCoverFacts in Core is the tested rule).
+	// Recomputes use the stored facts only; the platform is read once per window subscription (WatchWindow), where no event will arrive.
+	private void PublishBeatCover() => _session.SetBeatHidden(_beatCover.Hidden, _beatCover.Cause);
 
 	private void WatchWindow(bool watch)
 	{
@@ -1401,6 +1421,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		{
 			old.Stopped -= OnWindowStoppedReleaseScreen;
 			old.Resumed -= OnWindowResumedKeepScreen;
+			old.Activated -= OnWindowActivatedShowBeat;
 		}
 
 		_watchedWindow = target;
@@ -1408,6 +1429,9 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		{
 			target.Stopped += OnWindowStoppedReleaseScreen;
 			target.Resumed += OnWindowResumedKeepScreen;
+			target.Activated += OnWindowActivatedShowBeat;
+			_beatCover.WindowWatched(WindowForeground.IsInForeground()); // the only platform read: a new window may already be stopped (locked) and no event will say so; unknown keeps the fact
+			PublishBeatCover();
 		}
 	}
 
