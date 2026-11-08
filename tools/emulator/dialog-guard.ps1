@@ -10,6 +10,10 @@ function Get-HideErrorDialogsOnArguments { return @('settings', 'put', 'global',
 # Pure: the `adb shell` argument list that closes any system dialog now.
 function Get-CloseSystemDialogsArguments { return @('am', 'broadcast', '-a', $script:CloseSystemDialogsAction) }
 
+# Slice 322: `# needs: screen-cycle` really puts the screen to sleep and wakes it (Maestro's `pressKey: lock` does nothing on the emulator, which stays Awake). Pure: the three `adb shell` command lines of
+# one cycle, in order: sleep, wake, dismiss the swipe keyguard (the caller waits between the first two). The app is not restarted; the flow only waits and then checks it is still there.
+function Get-ScreenCycleCommands { return @('input keyevent KEYCODE_SLEEP', 'input keyevent KEYCODE_WAKEUP', 'wm dismiss-keyguard') }
+
 # Pure: the `adb shell` argument list that puts the setting back. $Prior is what `settings get` printed: nothing or "null" means the setting did not exist, so it is deleted again.
 function Get-HideErrorDialogsRestoreArguments([string]$Prior) {
     $value = "$Prior".Trim()

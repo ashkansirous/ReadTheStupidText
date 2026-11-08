@@ -33,7 +33,7 @@ $script:MaestroCommands = @(
     'setPermissions', 'startRecording', 'stopApp', 'stopRecording', 'swipe', 'takeScreenshot', 'tapOn', 'toggleAirplaneMode', 'toggleDarkMode',
     'travel', 'waitForAnimationToEnd'
 )
-$script:NeedsValues = @('cellular-only')
+$script:NeedsValues = @('cellular-only', 'screen-cycle')   # screen-cycle (Slice 322): run-flows.ps1 sleeps and wakes the screen on a timer while the flow runs
 $script:DevAppIds = @('uk.sirous.readthestupidtext', 'uk.sirous.dinoreader.dbg')
 # YAML's double-quoted escapes: 0 a b t n v f r e space " / \ N _ L P x u U (and a tab).
 $script:ValidEscapes = '0abtnvfre "/\N_LPxuU' + "`t"

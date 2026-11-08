@@ -26,11 +26,15 @@ Restore-DialogGuard 6>$null
 Assert-Equal 'restore after lease loss leaves the setting and clears pending' $false $script:HideDialogsPending
 $script:DialogGuardLeaseLost = $false
 
+Assert-Equal 'screen cycle: sleep, wake, dismiss' 'input keyevent KEYCODE_SLEEP|input keyevent KEYCODE_WAKEUP|wm dismiss-keyguard' ((Get-ScreenCycleCommands) -join '|')
+
 # run-flows.ps1 must wire the guard in: set before the flows, closed before each flow, restored at the end.
 $runFlows = Get-Content (Join-Path $PSScriptRoot 'run-flows.ps1') -Raw
 Assert-Equal 'run-flows enables the guard' $true ($runFlows -match 'Enable-DialogGuard')
 Assert-Equal 'run-flows restores the guard' $true ($runFlows -match 'Restore-DialogGuard')
 Assert-Equal 'run-flows closes dialogs before a flow' $true ($runFlows -match '(?s)function Wake-Emulator.*?Close-SystemDialogs')
+
+Assert-Equal 'run-flows starts and stops the screen cycle' $true ($runFlows -match '(?s)Start-ScreenCycle \}.*?Stop-ScreenCycle \$cycleJob')
 
 if ($script:failed -gt 0) { Write-Host "$($script:failed) check(s) failed."; exit 1 }
 Write-Host 'test-dialog-guard: all passed.'

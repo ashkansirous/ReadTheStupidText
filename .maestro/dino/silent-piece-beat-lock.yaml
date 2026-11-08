@@ -2,6 +2,9 @@
 # ReadingPage recombines "page shown" and "window in front" and tells the session (SetBeatHidden): the beat's timer stops and no further "silent piece shown" line is written while the screen is locked; on unlock the whole beat starts again
 # and the read goes on. The flow cannot assert an absent line, so it proves the path by the two lines the pause and the resume write, in that order, plus a piece shown after the unlock.
 # Same setup as silent-piece-beat (store offline, so no piece has a clip). Needs the emulator's screen lock set to None or Swipe.
+# Maestro's `pressKey: lock` never turned the emulator's screen off (330 dumpsys power samples all Awake, no onStop), so the sleep and wake come from the harness: `# needs: screen-cycle` makes run-flows.ps1
+# send KEYCODE_SLEEP for 4 s every 12 s while the flow runs, then KEYCODE_WAKEUP and wm dismiss-keyguard (tools/emulator/dialog-guard.ps1, Get-ScreenCycleCommands). The flow only waits and checks the read goes on.
+# needs: screen-cycle
 # To see it fail against the old behaviour: before Slice 322 a lock wrote no "silent piece paused, the window is not in front" line and the beat kept going.
 # expect-log: HOOK test-store ok offline
 # expect-log: HOOK skip-first-run ok
@@ -45,32 +48,20 @@ name: The silent beat pauses when the screen locks and goes on when it is back
 - extendedWaitUntil:
     visible: Pause
     timeout: 30000
-# Three lock/unlock rounds, because one lock can land between two 1.2 s beats (then no beat is running and no paused line is written, by design); at least one round catches a running beat, and
-# the expect-log lines above need only one pause line and one resume line.
-- repeat:
-    times: 3
-    commands:
-      - extendedWaitUntil:
-          visible: Pause
-          timeout: 30000
-      - pressKey: lock
-      # A real wait of 4 s while locked (nothing with this id ever shows; optional lets the flow go on): without the fix about three more pieces would be shown in that time.
-      - extendedWaitUntil:
-          visible:
-            id: SilentBeatNeverShown
-          timeout: 4000
-          optional: true
-      # Wake the screen (the lock key toggles), dismiss the swipe keyguard, bring the app back (stopApp: false keeps the process). The emulator's screen lock must be None or Swipe.
-      - pressKey: lock
-      - swipe:
-          start: 50%, 90%
-          end: 50%, 20%
-      - launchApp:
-          stopApp: false
-      - extendedWaitUntil:
-          visible:
-            id: ReadingSurface
-          timeout: 20000
+# A real wait of 45 s (nothing with this id ever shows; optional lets the flow go on): the harness sleeps and wakes the screen about three times in it. Several cycles, because one sleep can land between two
+# 1.2 s beats (then no beat is running and no paused line is written, by design); at least one catches a running beat, and the expect-log lines above need only one pause line and one resume line.
+- extendedWaitUntil:
+    visible:
+      id: SilentBeatNeverShown
+    timeout: 45000
+    optional: true
+# Back in front after the last wake (stopApp: false keeps the process).
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 20000
 # The read goes on after the last unlock.
 - assertVisible:
     id: ReadingSurface

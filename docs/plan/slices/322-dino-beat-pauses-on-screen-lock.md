@@ -1,6 +1,6 @@
 # Slice 322: Dino's silent beats pause when the screen locks
 
-*Planned 2026-11-08.* Found by the 2026-11-08 device run (L69, Slice 278's open check "the beat pausing on screen lock"): on the emulator, after `input keyevent 26` (Asleep; the app logged `[GrownUps] closed on stop`), the silent beats kept going (`silent piece shown`, sentences 4-12, about every 1.2 s). Likely cause, from the code: the beat pauses only from `ReadingPage.OnDisappearing` (`src/DinoReader.App/ReadingPage.xaml.cs:952`), which Android does not fire on a screen lock. Evidence: `reviews/emu3/results.tsv` and `bugs.md` under the worktrees folder.
+*Built 2026-11-08, not merged. Taken over the same day from a dead session that stopped at "reviewed, device checks pending"; origin/main merged (90278ae3). Verified on the S21 (real lock) and the emulator; iOS and Windows not run.* Found by the 2026-11-08 device run (L69, Slice 278's open check "the beat pausing on screen lock"): on the emulator, after `input keyevent 26` (Asleep; the app logged `[GrownUps] closed on stop`), the silent beats kept going (`silent piece shown`, sentences 4-12, about every 1.2 s). Likely cause, from the code: the beat pauses only from `ReadingPage.OnDisappearing` (`src/DinoReader.App/ReadingPage.xaml.cs:952`), which Android does not fire on a screen lock. Evidence: `reviews/emu3/results.tsv` and `bugs.md` under the worktrees folder.
 
 **Touches:** `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSession.cs`, `src/DinoReader.Core/SilentBeat.cs`, `.maestro/dino/silent-piece-beat-lock.yaml`, `tests/DinoReader.Tests/SilentBeatTests.cs`
 
@@ -8,7 +8,7 @@
 
 1. [x] First read Slice 278 (`docs/plan/slices/278-dino-store-books-only.md`) and the slice that added the silent beat, and write here what they decided should happen on a screen lock: the beat pauses, and resumes on unlock or waits for Play. Then confirm the cause from the code with file:line.
 2. [x] The beat follows the same rule as the read's audio on screen lock, app background and return, on Android and iOS alike: one place that reacts to the app stopping (the MAUI window or app lifecycle that does fire on lock), not only `OnDisappearing`.
-3. [x] (flow written, not yet run on a device) A unit test for the pause and resume decision where it is pure, and a Maestro flow `silent-piece-beat-lock` (lock with keyevent 26 mid-beat, check no `silent piece shown` while locked, unlock, check the resume behaviour from item 1).
+3. [x] A unit test for the pause and resume decision where it is pure, and a Maestro flow `silent-piece-beat-lock` (lock with keyevent 26 mid-beat, check no `silent piece shown` while locked, unlock, check the resume behaviour from item 1).
 
 ## Intended behaviour and cause (item 1, written before the code)
 
@@ -46,9 +46,30 @@ Check 2 (`reviews/s322-check2.md` #1-4) showed that re-reading platform state in
 
 - Skipped #6 (`reviews/s322-medium.md`): "SilentBeat.cs:20, low (style): two backing fields plus ref helper; could be simpler." - style only (and the two fields are gone with the second design anyway).
 - Skipped #8 (`reviews/s322-check1.md`): "page event wiring needs a UI host; covered by the Maestro flow" - the page's event feeding cannot be unit-tested without a UI host; the Maestro flow covers it.
+- Reverted after a second strike (`reviews/s322-check-final.md` #4, #5): #4 (a window re-subscribe overwrites the event fact with a platform read) and #5 (a null `CurrentActivity` reads as in front) were fixed, reviewed again (`reviews/s322-check-final2.md` #3, #5) and reverted; the code is back at the S21-proven version (commit 90278ae3), on which the S21 real-lock run passed 3/3. Both stay as edge cases under *Not yet verified*.
+- Skipped #3, #6, #7, #8 (`reviews/s322-check-final.md`) and #4, #6, #7 (`reviews/s322-check-final2.md`): low severity, not worth a change in an area that has had two strikes.
 
-## Not yet verified
+- Not applied, recorded as known flake risk (`reviews/s322-check-final3.md`, 9 findings, none in app code): #1-#3 (medium) the screen cycle could still sleep the display during the flow's final launch/assert or setup waits; #4-#9 (low) loose log-order check, Stop-ScreenCycle ordering in `finally`, a leftover adb child racing Wake-Emulator, full-buffer polling, loose wiring test, Get-FlowNeeds parsed twice. The flow passed twice, so none were changed.
+- `reviews/s322-check-final2.md`: #1 (clear logcat before starting the cycle) applied in the harness; the rest skipped (above) or moot after the revert of #4/#5.
 
-- Built 2026-11-08, fast checks only (no emulator, phone or VM run).
-- Emulator: `.maestro/dino/silent-piece-beat-lock` (`pressKey: lock`, the screen lock must be None or Swipe) has not run. It proves the path by the log lines `silent piece paused, the window is not in front` and `silent piece resumed, the page is shown and its window is in front`; it cannot assert that no `silent piece shown` line appears while locked, so read the log between the two lines by hand.
-- iOS device or simulator: the same `Window.Stopped`/`Resumed` handlers, not run (no Mac).
+## Changed while building (takeover, 2026-11-08)
+
+- The original emulator flow never locked the screen: Maestro `pressKey: lock` is a no-op on the emulator (330 `dumpsys power` samples, all Awake), so the check had never exercised the pause. New harness need `# needs: screen-cycle` (`tools/emulator/run-flows.ps1` `Start-ScreenCycle`/`Stop-ScreenCycle`, `tools/emulator/dialog-guard.ps1` `Get-ScreenCycleCommands`, `tools/emulator/lint-flows.ps1`): KEYCODE_SLEEP for 4 s every 12 s, then WAKEUP and dismiss-keyguard, starting after the flow's logcat clear and the first `silent piece shown` (150 s cap), stopped in the `finally`. `.maestro/dino/silent-piece-beat-lock.yaml` rewritten to use it.
+- Review passes after takeover: `reviews/s322-check-final.md` (8 findings: #1, #2 applied; #4, #5 applied then reverted after a second strike; #3, #6, #7, #8 skipped), `reviews/s322-check-final2.md` (7 findings), `reviews/s322-check-final3.md` (9 findings). Read 8/8, 7/7, 9/9.
+
+## Device results (2026-11-08)
+
+- S21, real lock (keyevent 223/224), 3/3 rounds PASS: paused within about 60 ms of sleep, resumed on unlock, no `silent piece shown` while asleep (log `reviews/s322-s21-lock-logcat.txt`).
+- Emulator flow PASS twice: emulator-5556 at 19:50, and emulator-5554 at 20:05 on the final code (paused/resumed pairs 20:05:52.864/56.826 and 20:06:05.148/08.938; Asleep confirmed by `dumpsys power`).
+
+#### For CLAUDE.md
+
+- An emulator flow that needs the screen locked must declare `# needs: screen-cycle` (`tools/emulator/run-flows.ps1`); Maestro `pressKey: lock` does nothing on the emulator (Slice 322: docs/plan/slices/322-dino-beat-pauses-on-screen-lock.md).
+- Silent-beat cover state: `ReadingPage` feeds `BeatCoverFacts` from page and window events only; the event always wins, the platform read (`WindowForeground`) is used only when subscribing to a window (Slice 322: docs/plan/slices/322-dino-beat-pauses-on-screen-lock.md).
+
+#### Not yet verified
+
+- iOS (no Mac): the same `Window.Stopped`/`Resumed` handlers, not run.
+- Windows head: `WindowForeground` returns unknown and `Deactivated` is unhandled; not run on the VM.
+- Edge cases reverted after the second strike: a window re-subscribe while an event fact is newer than the platform read, and a null `Platform.CurrentActivity`.
+- Harness flake risk from `reviews/s322-check-final3.md` #1-#3: the screen cycle could sleep the display during the flow's final launch/assert or setup waits.
