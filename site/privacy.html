@@ -28,20 +28,21 @@
 </head>
 <body>
   <h1>Privacy Policy — Read The Stupid Text</h1>
-  <p class="eff"><strong>Effective date:</strong> 26 October 2026</p>
+  <p class="eff"><strong>Effective date:</strong> 8 November 2026</p>
 
   <p class="lede">Read The Stupid Text (&ldquo;the app&rdquo;) reads text aloud. It ships as a
   Windows tray utility, an Android app and an iPhone app. This policy explains how the app handles your data on
   <strong>all</strong> platforms.</p>
 
   <h2>The short version</h2>
-  <p><strong>Read The Stupid Text does not collect, store, transmit, or share any personal
-  data.</strong> It has no accounts and no advertising, and what you read, scan or type never
+  <p><strong>The Read The Stupid Text app does not ask for, collect or share personal information such as names, accounts, photos or recordings. Every request it makes carries the device&rsquo;s IP address, as all internet traffic does; the only place this project&rsquo;s server keeps that address is a short technical request log, deleted within seven days (see <em>Server request log</em> below).</strong> It has no accounts and no advertising, and what you read, scan or type never
   leaves your device: everything the app does with it happens <strong>locally</strong>. The Windows,
   Android and iPhone apps send only small <strong>anonymous counts</strong>
   (no names, no identifiers, nothing you read) that you can switch off (in the control panel on Windows,
   in Settings on the phones); see <em>Anonymous usage counts</em> below. The Android and iPhone apps can also send a
-  <strong>crash report</strong> if the app crashes, on the same switch; see <em>Crash reports</em> below.</p>
+  <strong>crash report</strong> if the app crashes, on the same switch; see <em>Crash reports</em> below. Like most web
+  servers, this project&rsquo;s server keeps a short technical log of requests, which can include the IP address, for at most
+  seven days; see <em>Server request log</em> below.</p>
 
   <h2>What the app processes, and where</h2>
   <ul>
@@ -87,7 +88,7 @@
   language pack for the language you choose on first launch (about 145&nbsp;MB, so a Wi-Fi connection is
   advisable). The Android and iPhone apps also download the text-recognition pack for that language (up to about 85&nbsp;MB, depending on the language). The download is a plain file request to this project&rsquo;s public GitHub Releases
   page: no account, no identifier and none of your text, images or scans is sent. (The apps&rsquo; separate, optional usage counts, which you can switch off, are described in
-  <em>Anonymous usage counts</em>.) Once a pack is installed the app works fully offline for reading and makes no network requests for the pack (it does not even re-check the catalog); the only other requests are the usage counts and the small settings file they ask for, and none if you switch them off. Until it
+  <em>Anonymous usage counts</em>. For the requests themselves, this project&rsquo;s server keeps only the short request log described next.) Once a pack is installed the app works fully offline for reading and makes no network requests for the pack (it does not even re-check the catalog); the only other requests are the usage counts and the small settings file they ask for, and none if you switch them off. Until it
   arrives, and if you are offline, your device&rsquo;s own built-in voice reads instead (the Windows
   voice on Windows, the phone&rsquo;s voice on Android and iPhone).</p>
   <p><strong>Translation packs (Windows).</strong> If you turn on translation, the app downloads one
@@ -159,12 +160,13 @@
   GB (under 3, 3 to 4, 4 to 6, 6 to 8, or 8 or more). Never the device&rsquo;s model or maker, the exact chip, exact
   memory or core numbers, the full system build, or any identifier. The server also records the <strong>country</strong>
   of the request as a two-letter code (such as GB), which Cloudflare works out from the connection. It is approximate,
-  not your GPS position: the app never asks for location permission, never sends a location, and the IP address itself
-  is not stored. These are coarse ranges, not exact values, and nothing here is a name, an account, a device model or an identifier. They are not a guarantee of anonymity on their own, though: in a small country a rare combination of ranges could stand out, so they are used only to see the overall picture.</p>
+  not your GPS position: the app never asks for location permission, never sends a location, and the IP address is not
+  stored with the counts (it can appear in the short server request log described below). These are coarse ranges, not exact values, and nothing here is a name, an account, a device model or an identifier. They are not a guarantee of anonymity on their own, though: in a small country a rare combination of ranges could stand out, so they are used only to see the overall picture.</p>
   <p>Counts are sent in small batches to this project&rsquo;s own server (<code>readthestupidtext.sirous.uk</code>)
   and stored in Cloudflare&rsquo;s Workers Analytics Engine (Cloudflare is the processor) for about three months,
   then deleted. As with any web request, the server sees your IP address while the request is handled; it is not
-  stored with the counts and is not used for anything (only the country it maps to, as described above). The project can also switch counting off for everyone from
+  stored with the counts and is not used for anything else (only the country it maps to, as described above). It can appear
+  in the short server request log described below. The project can also switch counting off for everyone from
   the server. Counts are not shared with anyone else and are not used for advertising or tracking. Test and development builds, and the test devices store review tools use, send no counts.</p>
 
   <h2>Crash reports (Android and iPhone)</h2>
@@ -178,8 +180,8 @@
   and the same coarse device ranges as the usage counts. The phone also passes on crashes and hangs that the system
   itself records for the app (Apple&rsquo;s MetricKit on iPhone, Android&rsquo;s process exit reasons). No account, install,
   device or advertising identifier is included, and the server gives each report a random name. The IP address is not
-  stored: the server only reads the country it maps to, and its rate limiter uses the address briefly to stop one
-  connection sending too many reports. Reports are kept in Cloudflare&rsquo;s R2 storage (Cloudflare is the processor),
+  stored with the report: the server only reads the country it maps to, and its rate limiter uses the address briefly to stop one
+  connection sending too many reports (the upload request itself appears in the short server request log described below). Reports are kept in Cloudflare&rsquo;s R2 storage (Cloudflare is the processor),
   read only by the project to find and fix bugs, kept only as long as that needs, and not shared with anyone else or
   used for advertising or tracking. Test and development builds, emulators and the test devices store review tools use
   send no reports; builds installed through TestFlight do. The project can switch crash reports off for everyone from
@@ -194,6 +196,16 @@
   that one report and nothing else (not you, your phone or your install). It goes to the same server, is stored the same way,
   is read only by the project to find and fix bugs, is deleted automatically after 90 days (as crash reports are), and is not
   shared or used for advertising or tracking.</p>
+
+  <h2 id="server-request-log">Server request log</h2>
+  <p>This project&rsquo;s own server (readthestupidtext.sirous.uk) runs on
+  Cloudflare Workers, and Cloudflare, which acts as the project&rsquo;s processor, keeps a short technical log of each request to it for the project, whatever the request is for. Dino Reader&rsquo;s server (dinoreader.sirous.uk) works the same way. A log entry holds the
+  address that was asked for (including anything after a &ldquo;?&rdquo; in it), the time, the status of the server&rsquo;s answer,
+  the approximate country, and other request details Cloudflare records, which can include the connecting IP address.
+  The log also holds the server&rsquo;s own short error and status messages.
+  Entries are deleted automatically after at most seven days (three on Cloudflare&rsquo;s free plan).
+  The project uses it only to find and fix problems with the server and does not combine it with the usage counts or crash
+  reports; it is not shared and never used for advertising or tracking.</p>
 
   <h2>Third-party components</h2>
   <p>The app uses a small set of open-source, on-device components that never transmit data (the Supertonic voice model is downloaded as a language pack on all platforms rather than bundled):</p>
@@ -213,7 +225,7 @@
   </ul>
 
   <h2>Children&rsquo;s privacy</h2>
-  <p>The app collects no personal information from anyone, including children. The anonymous counts hold no
+  <p>The app does not ask for, collect or share personal information about anyone, including children. The only personal data this project&rsquo;s server keeps is the connecting IP address in its short request log (see <em>Server request log</em> above). Log entries hold no name or account, and they are deleted on their own within seven days. The anonymous counts hold no
   name, identifier or text, and can be switched off in Settings.</p>
 
   <h2>Changes to this policy</h2>

@@ -34,10 +34,12 @@
   data, for the children who use it and the grown-ups who set it up.</p>
 
   <h2>The short version</h2>
-  <p><strong>Dino Book Reader itself does not collect, store, transmit, or share any personal information.</strong>
+  <p><strong>The Dino Book Reader app does not ask for, collect or share personal information such as names, accounts, photos or recordings. Every request it makes carries the device&rsquo;s IP address, as all internet traffic does; the only place this project&rsquo;s server keeps that address is a short technical request log, deleted within seven days (see &ldquo;Server request log&rdquo; below).</strong>
   It has no accounts, no advertising, and no third-party analytics. It does send anonymous usage counts to this
   project&rsquo;s own server, with no name, no identifier of the child, the install or the device, and nothing a
-  child typed; a grown-up can turn this off in Settings (see &ldquo;Anonymous usage counts&rdquo; below). If the app crashes it can also
+  child typed; a grown-up can turn this off in Settings (see &ldquo;Anonymous usage counts&rdquo; below). Like most web servers,
+  this project&rsquo;s server keeps a short technical log of requests, which can include the IP address, for at most seven days
+  (see &ldquo;Server request log&rdquo; below). If the app crashes it can also
   send a crash report on the same switch (see &ldquo;Crash reports&rdquo; below). Everything
   else the app does happens <strong>on the device</strong>, apart from downloading voice packs and free stories. On Android, the Google
   ML Kit components the app uses send Google technical diagnostics data, described under
@@ -75,7 +77,7 @@
   stories. Opening it fetches the list of stories, their cover pictures, and any story a grown-up
   chooses to get, from this project&rsquo;s own server (dinoreader.sirous.uk). These are plain file
   requests: no account, no identifier, and nothing about the child, the device&rsquo;s stories, photos
-  or scans is sent. The app does not use cookies. What it counts about reading is described next.</p>
+  or scans is sent. The app does not use cookies. The server&rsquo;s own short request log is described under &ldquo;Server request log&rdquo; below. What the app counts about reading is described next.</p>
   <p><strong>Anonymous usage counts.</strong> To learn which books families enjoy and which features are used, the app
   counts a few things and sends the counts to this project&rsquo;s own server (dinoreader.sirous.uk), in one small batch
   when a reading session ends or the app next starts. Today it counts: that a book was opened and that a book was read to
@@ -101,13 +103,13 @@
   GB (under 3, 3 to 4, 4 to 6, 6 to 8, or 8 or more). Never the device&rsquo;s model or maker, the exact chip, exact
   memory or core numbers, the full system build, or any identifier. The server also records the <strong>country</strong>
   of the request as a two-letter code (such as GB), which Cloudflare works out from the connection. It is approximate,
-  not a location: the app never asks for location permission and never sends one, and the IP address itself is not
-  stored. These are coarse ranges, not exact values, and nothing here is a name, an account, a device model or an identifier. They are not a guarantee of anonymity on their own, though: in a small country a rare combination of ranges could stand out, so they are used only to see the overall picture.</p>
-  <p>  There is no name, account, advertising or device identifier, no install identifier, no IP address kept by the app, and
+  not a location: the app never asks for location permission and never sends one, and the IP address is not stored with the counts (it can appear in the short
+  server request log described below). These are coarse ranges, not exact values, and nothing here is a name, an account, a device model or an identifier. They are not a guarantee of anonymity on their own, though: in a small country a rare combination of ranges could stand out, so they are used only to see the overall picture.</p>
+  <p>  There is no name, account, advertising or device identifier, no install identifier, no IP address kept with the counts (see &ldquo;Server request log&rdquo; below), and
   nothing a child typed, so a count carries nothing that names a child, a family or a device. The one number that goes
   with the counts is a random session number: it is made new every time the app starts and is never reused for a later start. It lives in memory, and is also written only inside counts
   still waiting in the app's local send queue; it is gone once those counts are sent. It cannot tell two sessions of one person apart. It only puts the counts of one start of the app in order. The server (like any web
-  server) may see the IP address of the request, which the project does not read or store with the counts (only the approximate country it maps to, as described above). The counts are
+  server) may see the IP address of the request, which is not stored with the counts (only the approximate country it maps to, as described above); it can appear in the short server request log described below. The counts are
   stored with Cloudflare (our processor) for about three months and read only as totals. The project can turn counting down or
   off from the server without an update. A grown-up can switch it off at any time under &ldquo;Help make Dino
   better&rdquo; in Settings (behind the grown-ups gate); when it is off, nothing is sent. Development builds, emulators and the test devices store review tools use send no counts. Builds installed through TestFlight, and the copy Apple&rsquo;s App Review opens, send the same counts to a separate store for beta builds; they are never added to the counts of the published app.</p>
@@ -120,8 +122,8 @@
   anything a child typed, a book title, a file name or a picture; the time to the minute (UTC); and the same coarse device ranges as the
   counts. The phone also passes on crashes and hangs that the system itself records for the app (Apple&rsquo;s MetricKit on iPhone,
   Android&rsquo;s process exit reasons). It has no name, account, advertising, install or device identifier; the server gives each report a
-  random name and does not store the IP address (it only reads the approximate country, and its rate limiter uses the address briefly to
-  stop one connection sending too many reports). Reports are kept with Cloudflare (our processor), read only by the project to find and fix
+  random name and does not store the IP address with the report (it only reads the approximate country, and its rate limiter uses the address briefly to
+  stop one connection sending too many reports; the upload request itself appears in the short server request log described below). Reports are kept with Cloudflare (our processor), read only by the project to find and fix
   bugs, and are not shared or used for advertising or tracking. Test and development builds and the test devices store review tools use send
   none; builds installed through TestFlight do.</p>
   <p><strong>Report a problem (Android and iPhone).</strong> In Settings, behind the grown-ups gate, there is a Report a problem page.
@@ -148,14 +150,26 @@
   The Windows and iOS versions do not use ML Kit.</p>
   <p>Like any web request, a download or a batch of counts is seen by the server that receives it (GitHub for voice
   and language packs, Google for translation models on Android, this project&rsquo;s own server for free stories and counts), which may log the
-  device&rsquo;s IP address under its own privacy policy. Dino Book Reader itself does not receive or keep
-  that information.</p>
+  device&rsquo;s IP address. GitHub and Google do so under their own privacy policies. For the requests themselves, this project&rsquo;s own server keeps
+  only the short request log described next.</p>
+
+  <h2 id="server-request-log">Server request log</h2>
+  <p>This project&rsquo;s own server (dinoreader.sirous.uk) runs on Cloudflare Workers, and Cloudflare, which acts as the
+  project&rsquo;s processor, keeps a short technical
+  log of each request to it for the project, whatever the request is for (including a public page of usage totals,
+  dinoreader.sirous.uk/stats, which shows only totals). Read The Stupid Text&rsquo;s server (readthestupidtext.sirous.uk) works the same way. A log entry holds the address that was asked for (including anything after a
+  &ldquo;?&rdquo; in it), the time, the status of the server&rsquo;s answer, the approximate country, and other request details
+  Cloudflare records, which can include the connecting IP address. The log also holds the server&rsquo;s own short error and
+  status messages. Entries are deleted automatically after at most seven days (three on Cloudflare&rsquo;s free plan).
+  The project uses it only to find and fix problems with the server and does not combine it with the usage counts or crash
+  reports; it is not shared and never used for advertising or tracking.</p>
+
 
   <h2>Dino Reader on Sonos (optional)</h2>
-  <p>Dino Reader&rsquo;s free story-store books can also be played through the Dino Reader music service in the Sonos app. It has no account or sign-in. When Sonos browses or plays it, Sonos&rsquo;s servers ask this project&rsquo;s server for the list of books and for a book&rsquo;s audio; Sonos sends the request, and the server answers it and keeps no household, speaker or Sonos account identifier and no log of requests. When a book is played, the server adds one anonymous row to the project&rsquo;s usage counts, and that row is the only record: the book, its language, the book&rsquo;s length (counted as the listening time, since the speaker does not say how long you listened), the UTC day and the country the request came from. It is stored in the same place and for the same time as the apps&rsquo; counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Like any web request it is seen by the server that receives it, which may log the connecting address under its own privacy policy; Dino Reader itself does not receive or keep it. What Sonos collects about your listening is governed by Sonos&rsquo;s own privacy policy.</p>
+  <p>Dino Reader&rsquo;s free story-store books can also be played through the Dino Reader music service in the Sonos app. It has no account or sign-in. When Sonos browses or plays it, Sonos&rsquo;s servers ask this project&rsquo;s server for the list of books and for a book&rsquo;s audio; Sonos sends the request, and the server answers it and stores no household, speaker or Sonos account identifier. When a book is played, the server adds one anonymous row to the project&rsquo;s usage counts, and that row is the only lasting record: the book, its language, the book&rsquo;s length (counted as the listening time, since the speaker does not say how long you listened), the UTC day and the country the request came from. It is stored in the same place and for the same time as the apps&rsquo; counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Apart from that row, each request&rsquo;s entry in the short server request log described above holds the address asked for (with any query) and the other fields listed there, and is deleted after at most seven days. What Sonos collects about your listening is governed by Sonos&rsquo;s own privacy policy.</p>
 
   <h2>Dino Reader on Alexa (optional)</h2>
-  <p>Dino Reader&rsquo;s free story-store books can also be read by the Dino Book Reader skill on Amazon Alexa. It is made for children, has no account linking and asks for no personal information. When you talk to the skill, Amazon&rsquo;s servers send this project&rsquo;s server the request (what was asked, and where a book is up to when you pause or resume); the server answers it and keeps no name, household, device, skill-user or Amazon account identifier, no recording or transcript of what was said, and writes no request log of its own. Where a book is up to is held by Alexa, not by this server. Each time a book stops playing or finishes, the server adds one anonymous row to the project&rsquo;s usage counts, and that row is the only record: the book, its language, how many seconds of it played, the UTC day and the country the request came from. A book you pause and later resume makes two rows, and nothing joins them. It is stored in the same place and for the same time as the apps&rsquo; counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Like any web request it is seen by the server that receives it, which may log the request, including the connecting address, under its own privacy policy; Dino Reader itself does not receive or keep that log. What Amazon collects about your use of Alexa is governed by Amazon&rsquo;s own privacy policy.</p>
+  <p>Dino Reader&rsquo;s free story-store books can also be read by the Dino Book Reader skill on Amazon Alexa. It is made for children, has no account linking and asks for no personal information. When you talk to the skill, Amazon&rsquo;s servers send this project&rsquo;s server the request (what was asked, and where a book is up to when you pause or resume); the server answers it and stores no name, household, device, skill-user or Amazon account identifier, and no recording or transcript of what was said. Where a book is up to is held by Alexa, not by this server. Each time a book stops playing or finishes, the server adds one anonymous row to the project&rsquo;s usage counts, and that row is the only lasting record: the book, its language, how many seconds of it played, the UTC day and the country the request came from. A book you pause and later resume makes two rows, and nothing joins them. It is stored in the same place and for the same time as the apps&rsquo; counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Apart from that row, each request&rsquo;s entry in the short server request log described above holds the address asked for (with any query) and the other fields listed there, and is deleted after at most seven days. What Amazon collects about your use of Alexa is governed by Amazon&rsquo;s own privacy policy.</p>
 
   <h2>Permissions</h2>
   <p>The app declares the <strong>Internet</strong> and <strong>Network state</strong> permissions,
@@ -166,15 +180,16 @@
   Choosing a file or photo uses the standard Android picker, and the app only opens what you pick.</p>
 
   <h2>Children&rsquo;s privacy</h2>
-  <p>Dino Book Reader is designed for children, and the app collects no personal information from anyone,
-  including children: no name, email address, photos, recordings or stories. It has no accounts, no ads, no social
+  <p>Dino Book Reader is designed for children, and the app does not ask for, collect or share personal information about anyone, including children: no name, email address, photos, recordings or stories. It has no accounts, no ads, no social
   features, no behavioural tracking, and no way for a child to send information to anyone. The only data
   that leaves the device is the anonymous counts described above (no identifier, off at a grown-up&rsquo;s choice) and the
   technical diagnostics data that Google ML Kit sends on Android
   (see &ldquo;Google ML Kit (Android)&rdquo; above), neither of which includes any content a child creates. Settings and the story library sit behind a
   grown-ups gate. Because the app collects no personal information, there is nothing for a parent to review, correct or
   delete beyond the content on their own device, which they can remove by deleting a story or
-  clearing the app&rsquo;s storage.</p>
+  clearing the app&rsquo;s storage. The only personal data this project&rsquo;s server keeps is the connecting IP address in its short request log
+  (see &ldquo;Server request log&rdquo; above); log entries hold no name or account,
+  and they are deleted on their own within seven days.</p>
 
   <h2>Changes to this policy</h2>
   <p>If this policy changes, the updated version will be published at this same URL with a new

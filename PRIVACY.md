@@ -1,6 +1,6 @@
 # Privacy Policy — Read The Stupid Text
 
-**Effective date:** 26 October 2026
+**Effective date:** 8 November 2026
 
 Read The Stupid Text ("the app") reads text aloud. It ships as a Windows tray
 utility, an Android app and an iPhone app. This policy explains how the app
@@ -8,14 +8,17 @@ handles your data on **all** platforms.
 
 ## The short version
 
-**Read The Stupid Text does not collect, store, transmit, or share any personal
-data.** It has no accounts and no advertising, and what you read, scan or type
+**The Read The Stupid Text app does not ask for, collect or share personal information such as names, accounts, photos or recordings. Every request it makes carries the device's IP address, as all internet traffic does; the only place this project's server keeps that address is a
+short technical request log, deleted within seven days (see *Server request log*
+below).** It has no accounts and no advertising, and what you read, scan or type
 never leaves your device: everything the app does with it happens **locally**.
 The Windows, Android and iPhone apps send only small **anonymous counts** (no
 names, no identifiers, nothing you read) that you can switch off (in the control
 panel on Windows, in Settings on the phones); see *Anonymous usage counts* below. The
 Android and iPhone apps can also send a **crash report** if the app crashes, on the same
-switch; see *Crash reports* below.
+switch; see *Crash reports* below. Like most web servers, this project's server
+keeps a short technical log of requests, which can include the IP address, for at
+most seven days; see *Server request log* below.
 
 ## What the app processes, and where
 
@@ -67,7 +70,8 @@ Wi-Fi connection is advisable). The Android and iPhone apps also download the te
 pack for that language (up to about 85 MB, depending on the language). The download is a plain file request to this
 project's public GitHub Releases page: no account, no identifier and none of
 your text, images or scans is sent. (The apps' separate, optional usage counts,
-which you can switch off, are described in *Anonymous usage counts*.)
+which you can switch off, are described in *Anonymous usage counts*. For the requests
+themselves, this project's server keeps only the short request log described next.)
 Once a pack is installed the app works fully offline for reading and makes no network requests for the pack (it does not even re-check the catalog); the only other requests are the usage counts and the small settings file they ask for, and none if you switch them off. Until it arrives, and if
 you are offline, your device's own built-in voice reads instead (the Windows voice on
 Windows, the phone's voice on Android and iPhone).
@@ -138,14 +142,15 @@ x86, arm or other), the number of processor cores as a range (1 to 4, 5 to 8, or
 range in GB (under 3, 3 to 4, 4 to 6, 6 to 8, or 8 or more). Never the device's model or maker, the exact chip,
 exact memory or core numbers, the full system build, or any identifier. The server also records the **country** of
 the request as a two-letter code (such as GB), which Cloudflare works out from the connection. It is approximate,
-not your GPS position: the app never asks for location permission, never sends a location, and the IP address
-itself is not stored. These are coarse ranges, not exact values, and nothing here is a name, an account, a device model or an identifier. They are not a guarantee of anonymity on their own, though: in a small country a rare combination of ranges could stand out, so they are used only to see the overall picture.
+not your GPS position: the app never asks for location permission, never sends a location, and the IP address is not
+stored with the counts (it can appear in the short server request log described below). These are coarse ranges, not exact values, and nothing here is a name, an account, a device model or an identifier. They are not a guarantee of anonymity on their own, though: in a small country a rare combination of ranges could stand out, so they are used only to see the overall picture.
 
 Counts are sent in small batches to this project's own server
 (`readthestupidtext.sirous.uk`) and stored in Cloudflare's Workers Analytics Engine
 (Cloudflare is the processor) for about three months, then deleted. As with any web request,
 the server sees your IP address while the request is handled; it is not stored with the
-counts and is not used for anything (only the country it maps to, as described above). The project can also switch counting off for everyone
+counts and is not used for anything else (only the country it maps to, as described above). It can appear
+in the short server request log described below. The project can also switch counting off for everyone
 from the server. Counts are not shared with anyone else and are not used for advertising or
 tracking. Test and development builds, and the test devices store review tools use, send no counts.
 
@@ -160,8 +165,9 @@ hundred lines of the app's technical log (32 KB at most), which hold technical e
 you read or typed, file names, names or scanned images; the time to the minute (UTC); and the same coarse device
 ranges as the usage counts. The phone also passes on crashes and hangs that the system itself records for the app
 (Apple's MetricKit on iPhone, Android's process exit reasons). No account, install, device or advertising identifier is
-included, and the server gives each report a random name. The IP address is not stored: the server only reads the
-country it maps to, and its rate limiter uses the address briefly to stop one connection sending too many reports.
+included, and the server gives each report a random name. The IP address is not stored with the report: the server only reads the
+country it maps to, and its rate limiter uses the address briefly to stop one connection sending too many reports
+(the upload request itself appears in the short server request log described below).
 Reports are kept in Cloudflare's R2 storage (Cloudflare is the processor), read only by the project to find and fix
 bugs, kept only as long as that needs, and not shared with anyone else or used for advertising or tracking. Test and
 development builds, emulators and the test devices store review tools use send no reports; builds installed through
@@ -178,9 +184,25 @@ you, your phone or your install). It goes to the same server, is stored the same
 find and fix bugs, is deleted automatically after 90 days (as crash reports are), and is not shared or used for
 advertising or tracking.
 
-**Dino Reader on Sonos (optional).** Dino Reader's free story-store books can also be played through the Dino Reader music service in the Sonos app. It has no account or sign-in. When Sonos browses or plays it, Sonos's servers ask this project's server for the list of books and for a book's audio; Sonos sends the request, and the server answers it and keeps no household, speaker or Sonos account identifier and no log of requests. When a book is played, the server adds one anonymous row to the project's usage counts, and that row is the only record: the book, its language, the book's length (counted as the listening time, since the speaker does not say how long you listened), the UTC day and the country the request came from. It is stored in the same place and for the same time as the apps' counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Like any web request it is seen by the server that receives it, which may log the connecting address under its own privacy policy; Dino Reader itself does not receive or keep it. What Sonos collects about your listening is governed by Sonos's own privacy policy.
+**Dino Reader on Sonos (optional).** Dino Reader's free story-store books can also be played through the Dino Reader music service in the Sonos app. It has no account or sign-in. When Sonos browses or plays it, Sonos's servers ask this project's server for the list of books and for a book's audio; Sonos sends the request, and the server answers it and stores no household, speaker or Sonos account identifier. When a book is played, the server adds one anonymous row to the project's usage counts, and that row is the only lasting record: the book, its language, the book's length (counted as the listening time, since the speaker does not say how long you listened), the UTC day and the country the request came from. It is stored in the same place and for the same time as the apps' counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Apart from that row, each request's entry in the short server request log described below holds the address asked for (with any query) and the other fields listed there, and is deleted after at most seven days. What Sonos collects about your listening is governed by Sonos's own privacy policy.
 
-**Dino Reader on Alexa (optional).** Dino Reader's free story-store books can also be read by the Dino Book Reader skill on Amazon Alexa. It is made for children, has no account linking and asks for no personal information. When you talk to the skill, Amazon's servers send this project's server the request (what was asked, and where a book is up to when you pause or resume); the server answers it and keeps no name, household, device, skill-user or Amazon account identifier, no recording or transcript of what was said, and writes no request log of its own. Where a book is up to is held by Alexa, not by this server. Each time a book stops playing or finishes, the server adds one anonymous row to the project's usage counts, and that row is the only record: the book, its language, how many seconds of it played, the UTC day and the country the request came from. A book you pause and later resume makes two rows, and nothing joins them. It is stored in the same place and for the same time as the apps' counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Like any web request it is seen by the server that receives it, which may log the request, including the connecting address, under its own privacy policy; Dino Reader itself does not receive or keep that log. What Amazon collects about your use of Alexa is governed by Amazon's own privacy policy.
+**Dino Reader on Alexa (optional).** Dino Reader's free story-store books can also be read by the Dino Book Reader skill on Amazon Alexa. It is made for children, has no account linking and asks for no personal information. When you talk to the skill, Amazon's servers send this project's server the request (what was asked, and where a book is up to when you pause or resume); the server answers it and stores no name, household, device, skill-user or Amazon account identifier, and no recording or transcript of what was said. Where a book is up to is held by Alexa, not by this server. Each time a book stops playing or finishes, the server adds one anonymous row to the project's usage counts, and that row is the only lasting record: the book, its language, how many seconds of it played, the UTC day and the country the request came from. A book you pause and later resume makes two rows, and nothing joins them. It is stored in the same place and for the same time as the apps' counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Apart from that row, each request's entry in the short server request log described below holds the address asked for (with any query) and the other fields listed there, and is deleted after at most seven days. What Amazon collects about your use of Alexa is governed by Amazon's own privacy policy.
+
+## Server request log
+
+This project's own servers (`readthestupidtext.sirous.uk` for Read The Stupid Text and
+`dinoreader.sirous.uk` for Dino Reader, which work the same way) run on Cloudflare Workers,
+and Cloudflare, which acts as the project's
+processor, keeps a short technical log of each request to it for the project, whatever the
+request is for. A log entry holds the address that was asked for (including anything after
+a "?" in it), the time, the status of the server's answer, the approximate country, and
+other request details Cloudflare records, which can include the connecting IP address.
+The log also holds the server's own short error and status messages.
+Entries are deleted automatically after at most seven days (three on Cloudflare's free plan).
+The project uses it only to find and fix problems with the server and does not combine it
+with the usage counts or crash reports; it is not shared and never used for
+advertising or tracking. Dino Reader's server also serves a public page of usage totals
+(`dinoreader.sirous.uk/stats`), which shows only totals.
 
 ## Permissions
 
@@ -237,7 +259,9 @@ language pack on every platform rather than bundled):
 
 ## Children's privacy
 
-The app collects no personal information from anyone, including children. The
+The app does not ask for, collect or share personal information about anyone, including children. The only
+personal data this project's server keeps is the connecting IP address in its short
+request log (see *Server request log* above). Log entries hold no name or account, and they are deleted on their own within seven days. The
 anonymous counts and crash reports hold no name, identifier or text you read or typed, and can be switched off in Settings.
 
 ## Changes to this policy
