@@ -37,7 +37,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 147: iOS review cadence: one review at a time, the newest build, never cancel ([slice](slices/147-ios-review-cadence.md))
 - **You:** the first successful `appstore-submit.yml` run (manual; its only two runs, 2026-10-30, concluded failure): it should report the listing items Apple still needs (screenshots, privacy, age rating). The first scheduled `testflight-external.yml` run already succeeded.
 
-### Slice 325: Dino every page in the 2026-11-08 design, parts A-E ([slice](slices/325-dino-2026-11-08-redesign.md))
+### Slice 325: Dino every page in the 2026-11-08 design, parts A-F ([slice](slices/325-dino-2026-11-08-redesign.md))
 - **Device:** VM `dino-keyboard` after the first run: with `-Check dino-keyboard` alone the app is still in the first-run grown-up handover; needs the full Dino list or an `# after:` step that leaves grown-up mode.
 - **Device:** The post-loop Windows run of `dino-launch`'s new walk: `dino-onboarding-keys` reaches the shelf first, so `dino-launch` returns early.
 - **Device:** No `layout-check ok` line was printed for any onboarding or intro flow.
