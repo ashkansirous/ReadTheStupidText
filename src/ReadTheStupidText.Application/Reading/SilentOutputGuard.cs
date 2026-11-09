@@ -31,18 +31,47 @@ public static class SilentOutputGuard
     // ganji, ganji-adabi, gyro, Supertonic and Kokoro (en, es, zh, fa; paces 0.85-1.15).
     private const double MinVoicedMsPerLetter = 30;
 
+    // Slice 341, measured with the app's own engines (tmp/341-peaks, 2026-11-09): Piper mana returns a hiss that passes the
+    // span floor above (12 of 12 takes of «میو میو!» peaked 0.018-0.059 and ran 192-528 ms; «بوووم!» and «سلام.» the same), while
+    // its spoken takes of the same units peak 0.101 and up (sound words 0.106-0.41, sentences 0.14-0.30). Between 0.045 and 0.09
+    // the takes are a continuum with no clean gap, so the check errs towards a retake (it costs one more take, never a hole).
+    // The check is for drop-prone voices only: Piper nb mnn speaks at a peak of 0.027-0.040, so a global floor would
+    // retake every nb sentence. The measured speech peaks of the other voices are far higher (ganji, ganji-adabi, gyro 0.115+,
+    // Supertonic 0.167+, Kokoro 0.196+), but those voices are not checked.
+
+    /// <summary>A checked (drop-prone) voice's take whose loudest finite sample is under this holds no speech, however long its quiet trace is.</summary>
+    internal const float MinPeak = 0.09f;
+
+    // A sample at or over this counts as sound for the loud-duration test: above every hiss take measured (0.059), so a hiss
+    // never adds up to sound, and a click or pop is a millisecond or less.
+    internal const float SoundAmplitude = 0.05f;
+
+    // A take with less sound than this (ms of samples at or over SoundAmplitude) is a click, not speech, whatever its peak:
+    // the quietest spoken take measured (peak 0.095) holds 5 ms, a pop 0.1 ms.
+    internal const double MinSoundMs = 1;
+
     private const double NormalPace = 1.0;
 
     // A first take that passes under this many times the floor is a near miss, sent to the debug log only.
     private const double NearMissFactor = 1.25;
 
     /// <summary>True when the take holds no speech, or far too little, for text that has something to say, or holds any NaN sample (Slice 220).</summary>
-    public static bool IsSilent(SpokenTake take, string text, double pace = NormalPace) =>
-        Failed(TakeStats.From(take), text, pace);
+    public static bool IsSilent(SpokenTake take, string text, double pace = NormalPace, bool quietCheck = false) =>
+        Failed(TakeStats.From(take), text, pace, quietCheck);
 
     // A NaN sample is a failed take whatever else it holds (Slice 220: the S21's silent Kokoro takes are full length and NaN).
-    private static bool Failed(TakeStats stats, string text, double pace) =>
-        stats.NanCount > 0 || IsTooShort(stats.VoicedMs, text, pace);
+    private static bool Failed(TakeStats stats, string text, double pace, bool quietCheck) =>
+        stats.NanCount > 0 || IsTooQuiet(stats, text, quietCheck) || IsTooShort(stats.VoicedMs, text, pace);
+
+    // Only a checked voice's text with something to say needs sound; a mark-only unit is never silent.
+    private static bool IsTooQuiet(TakeStats stats, string text, bool quietCheck) =>
+        quietCheck && stats.IsQuiet && HasSpeakableText(text);
+
+    // True when the quiet check alone caught the take: no NaN and long enough, so the span rule would have let it play.
+    private static bool CaughtOnlyByQuietCheck(TakeStats stats, string text, double pace, bool quietCheck) =>
+        stats.NanCount == 0 && IsTooQuiet(stats, text, quietCheck) && !IsTooShort(stats.VoicedMs, text, pace);
+
+    private static bool HasSpeakableText(string text) => text.Any(char.IsLetterOrDigit);
 
     /// <summary>
     /// Runs <paramref name="generate"/>, and again while the take is silent or holds NaN samples (at most
@@ -56,42 +85,45 @@ public static class SilentOutputGuard
     public static async Task<RescueResult> RescueAsync(
         string text, string voiceId, double pace, Func<Task<SpokenTake>> generate, Action<string> report,
         CancellationToken token = default, Func<Task<SpokenTake?>>? fallback = null, Action<string>? debug = null,
-        Func<Task<SpokenTake>>? singleThreadGenerate = null, IFallbackSink? fallbacks = null, string? language = null)
+        Func<Task<SpokenTake>>? singleThreadGenerate = null, IFallbackSink? fallbacks = null, string? language = null, bool quietCheck = false)
     {
         SpokenTake best = await generate();
         TakeStats bestStats = TakeStats.From(best);
         ReportNan(bestStats, voiceId, text, debug);
         TakeStats lastStats = bestStats;
-        var allMs = new List<double> { bestStats.VoicedMs };
-        for (int attempt = 1; attempt <= ExtraTakes && Failed(lastStats, text, pace); attempt++)
+        bool quietCause = CaughtOnlyByQuietCheck(bestStats, text, pace, quietCheck);
+        var all = new List<TakeStats> { bestStats };
+        for (int attempt = 1; attempt <= ExtraTakes && Failed(lastStats, text, pace, quietCheck); attempt++)
         {
             token.ThrowIfCancellationRequested();
             // Slice 220: the retry after a NaN take runs on the single-thread engine; any other retry stays plain (Slice 210).
+            bool failedQuiet = quietCause; // the cause of the take being retried, not of a later one
             bool single = singleThreadGenerate is not null && lastStats.NanCount > 0;
             debug?.Invoke($"retry take {attempt + 1} ({(single ? "single-thread" : "plain")}, voice {voiceId}, {text.Length} chars)");
             SpokenTake take = single ? await GenerateSingleThreadAsync(singleThreadGenerate!, generate, voiceId, text, debug) : await generate();
             lastStats = TakeStats.From(take);
             ReportNan(lastStats, voiceId, text, debug);
-            allMs.Add(lastStats.VoicedMs);
-            if (!Failed(lastStats, text, pace))
+            all.Add(lastStats);
+            quietCause = CaughtOnlyByQuietCheck(lastStats, text, pace, quietCheck);
+            if (!Failed(lastStats, text, pace, quietCheck))
             {
-                report($"silent voice output rescued by {(single ? "single-thread " : string.Empty)}take {attempt + 1} (voice {voiceId}, {text.Length} chars, {Measured(allMs, text, pace)})");
-                fallbacks?.Report(FallbackArea.Speech, FallbackReason.SilentRetake, language); // Slice 273 part B
+                report($"silent voice output rescued by {(single ? "single-thread " : string.Empty)}take {attempt + 1} (voice {voiceId}, {text.Length} chars, {Measured(all, text, pace)}{Cause(failedQuiet)})");
+                fallbacks?.Report(FallbackArea.Speech, failedQuiet ?FallbackReason.QuietRetake : FallbackReason.SilentRetake, language); // Slice 273 part B
                 return new RescueResult(take, false);
             }
 
-            if (IsBetter(lastStats, bestStats))
+            if (IsBetter(lastStats, bestStats, quietCheck))
             {
                 (best, bestStats) = (take, lastStats);
             }
         }
 
-        if (Failed(lastStats, text, pace))
+        if (Failed(lastStats, text, pace, quietCheck))
         {
-            return await TrySiblingAsync(text, voiceId, pace, (best, bestStats, allMs), fallback, report, token, fallbacks, language);
+            return await TrySiblingAsync(text, voiceId, pace, (best, bestStats, all), fallback, report, token, fallbacks, language, quietCheck, quietCause);
         }
 
-        ReportNearMiss(text, voiceId, pace, allMs, debug);
+        ReportNearMiss(text, voiceId, pace, all, debug, quietCheck);
         return new RescueResult(best, false);
     }
 
@@ -111,9 +143,17 @@ public static class SilentOutputGuard
         }
     }
 
-    // A take without NaN beats one with; then more sound beats less.
-    private static bool IsBetter(TakeStats candidate, TakeStats best) =>
-        (candidate.NanCount > 0) != (best.NanCount > 0) ? candidate.NanCount == 0 : candidate.VoicedMs > best.VoicedMs;
+    // A take without NaN beats one with; then, for a checked voice, a take with real sound (enough ms at SoundAmplitude, not one
+    // pop) beats a quiet one whatever its span; then more voiced span beats less.
+    private static bool IsBetter(TakeStats candidate, TakeStats best, bool quietCheck)
+    {
+        if ((candidate.NanCount > 0) != (best.NanCount > 0))
+        {
+            return candidate.NanCount == 0;
+        }
+
+        return quietCheck && candidate.IsQuiet != best.IsQuiet ? !candidate.IsQuiet : candidate.VoicedMs > best.VoicedMs;
+    }
 
     // Debug log only, never the text: how many samples of the take are NaN (Slice 220).
     private static void ReportNan(TakeStats stats, string voiceId, string text, Action<string>? debug)
@@ -125,23 +165,37 @@ public static class SilentOutputGuard
     }
 
     // A first take that passed with under 1.25 times the floor (Slice 210; debug log only, so it cannot flood the activity log): the device run reads these to choose a floor.
-    private static void ReportNearMiss(string text, string voiceId, double pace, List<double> takesMs, Action<string>? debug)
+    private static void ReportNearMiss(string text, string voiceId, double pace, List<TakeStats> takes, Action<string>? debug, bool quietCheck)
     {
-        if (debug is not null && takesMs[0] < NeededMs(text, pace) * NearMissFactor)
+        if (debug is null)
         {
-            debug($"voice output passed near the floor (voice {voiceId}, {text.Length} chars, {Measured(takesMs, text, pace)})");
+            return;
+        }
+
+        if (takes[0].VoicedMs < NeededMs(text, pace) * NearMissFactor)
+        {
+            debug($"voice output passed near the floor (voice {voiceId}, {text.Length} chars, {Measured(takes, text, pace)})");
+        }
+        else if (quietCheck && HasSpeakableText(text) && takes[0].Peak < MinPeak * NearMissFactor)
+        {
+            debug($"voice output passed near the peak floor (voice {voiceId}, {text.Length} chars, {Measured(takes, text, pace)})");
         }
     }
 
-    // The measure behind a rescue line (Slice 210): voiced ms of each take and the floor it was held to. No text.
-    private static string Measured(List<double> takesMs, string text, double pace) =>
-        $"voiced ms {string.Join("/", takesMs.Select(m => (int)m))}, needed {(int)NeededMs(text, pace)}, pace {pace:0.00}";
+    // Marks a rescue line the quiet check alone caused (Slice 341), so the log tells it from a too-short take.
+    private static string Cause(bool quietCause) => quietCause ? ", caught by the peak check" : string.Empty;
+
+    // The measure behind a rescue line (Slice 210, peaks Slice 341): voiced ms and peak of each take and the floors they were held to. No text.
+    private static string Measured(List<TakeStats> takes, string text, double pace) =>
+        $"voiced ms {string.Join("/", takes.Select(t => (int)t.VoicedMs))}, needed {(int)NeededMs(text, pace)}, "
+        + $"peak {string.Join("/", takes.Select(t => t.Peak.ToString("0.000", CultureInfo.InvariantCulture)))}, min peak {MinPeak:0.000}, pace {pace:0.00}";
 
     /// <summary>
     /// As <see cref="RescueAsync"/> for a whole unit. With <paramref name="splitPhrases"/> (a drop-prone voice) the unit
     /// is spoken phrase by phrase (<see cref="PhraseSplitter"/>), each phrase guarded and rescued on its own, and the
     /// takes are joined with a short silence, so a sound word glued to a sentence cannot vanish unseen. Other voices
-    /// speak the unit whole. <see cref="RescueResult.GaveUp"/> is true when any phrase gave up.
+    /// speak the unit whole. <paramref name="splitPhrases"/> also switches on the quiet check (<see cref="MinPeak"/>), which only
+    /// the drop-prone voice needs. <see cref="RescueResult.GaveUp"/> is true when any phrase gave up.
     /// </summary>
     public static async Task<RescueResult> RescueUnitAsync(
         string text, string voiceId, double pace, bool splitPhrases, Func<string, Task<SpokenTake>> generate,
@@ -164,7 +218,7 @@ public static class SilentOutputGuard
             RescueResult one = await RescueAsync(
                 phrase.Text, voiceId, pace, () => generate(phrase.Text), report, token,
                 fallback is null ? null : () => fallback(phrase.Text), debug,
-                rescueOnSingleThread ? () => singleThread!(phrase.Text) : null, fallbacks, language);
+                rescueOnSingleThread ? () => singleThread!(phrase.Text) : null, fallbacks, language, quietCheck: splitPhrases);
             takes.Add(one.Take);
             gaveUp |= one.GaveUp;
         }
@@ -213,24 +267,25 @@ public static class SilentOutputGuard
     }
 
     private static async Task<RescueResult> TrySiblingAsync(
-        string text, string voiceId, double pace, (SpokenTake Take, TakeStats Stats, List<double> TakesMs) best, Func<Task<SpokenTake?>>? fallback,
-        Action<string> report, CancellationToken token, IFallbackSink? fallbacks, string? language)
+        string text, string voiceId, double pace, (SpokenTake Take, TakeStats Stats, List<TakeStats> Takes) best, Func<Task<SpokenTake?>>? fallback,
+        Action<string> report, CancellationToken token, IFallbackSink? fallbacks, string? language, bool quietCheck, bool quietCause)
     {
         token.ThrowIfCancellationRequested();
         SpokenTake? sibling = fallback is null ? null : await fallback();
         TakeStats? siblingStats = sibling is null ? null : TakeStats.From(sibling);
-        double siblingMs = siblingStats?.VoicedMs ?? 0;
-        string measured = Measured(best.TakesMs, text, pace) + (sibling is null ? string.Empty : $", sibling {(int)siblingMs}");
-        if (siblingStats is not null && !Failed(siblingStats, text, pace))
+        string measured = Measured(best.Takes, text, pace)
+            + (siblingStats is null ? string.Empty : $", sibling {(int)siblingStats.VoicedMs}, sibling peak {siblingStats.Peak.ToString("0.000", CultureInfo.InvariantCulture)}")
+            + Cause(quietCause);
+        if (siblingStats is not null && !Failed(siblingStats, text, pace, quietCheck))
         {
             report($"silent voice output rescued by the sibling voice (voice {voiceId}, {text.Length} chars, {measured})");
-            fallbacks?.Report(FallbackArea.Speech, FallbackReason.SilentSibling, language);
-            return new RescueResult(sibling, false);
+            fallbacks?.Report(FallbackArea.Speech, quietCause ? FallbackReason.QuietSibling : FallbackReason.SilentSibling, language);
+            return new RescueResult(sibling!, false);
         }
 
-        fallbacks?.Report(FallbackArea.Speech, FallbackReason.SilentGaveUp, language);
+        fallbacks?.Report(FallbackArea.Speech, quietCause ? FallbackReason.QuietGaveUp : FallbackReason.SilentGaveUp, language);
         report($"silent voice output after {ExtraTakes + 1} takes{(fallback is null ? string.Empty : " and the sibling voice")}; gave up (voice {voiceId}, {text.Length} chars, {measured})");
-        bool siblingBetter = siblingStats is not null && IsBetter(siblingStats, best.Stats);
+        bool siblingBetter = siblingStats is not null && IsBetter(siblingStats, best.Stats, quietCheck);
         return new RescueResult(WithoutNonFinite(siblingBetter ? sibling! : best.Take), true);
     }
 
@@ -252,11 +307,12 @@ public static class SilentOutputGuard
     /// <summary>The voiced milliseconds a take of <paramref name="text"/> must hold (0 when it has no letter or digit).</summary>
     internal static double NeededMs(string text, double pace = NormalPace)
     {
-        int letters = text.Count(char.IsLetterOrDigit);
-        if (letters == 0)
+        if (!HasSpeakableText(text))
         {
             return 0;
         }
+
+        int letters = text.Count(char.IsLetterOrDigit);
 
         // A clause fragment cut at a comma ("و،") is not a sound word: it gets the per-letter floor only.
         double floor = EndsAtComma(text) ? 0 : MinVoicedMs;
@@ -273,8 +329,10 @@ public static class SilentOutputGuard
 /// <summary>
 /// What one take holds (Slice 220): sample count, NaN count, peak over the finite samples and the voiced span in ms.
 /// A NaN or infinite sample (counted in <c>NanCount</c>) is never voiced and never counts toward the peak; any makes the take a failed one.
+/// <c>LoudMs</c> is how long the take is at <see cref="SilentOutputGuard.SoundAmplitude"/> or louder, counting samples (not the span):
+/// a click or pop adds almost nothing, where speech adds tens of ms. It is positional so a hand-built value never defaults to quiet.
 /// </summary>
-public sealed record TakeStats(int Samples, int NanCount, float Peak, double VoicedMs)
+public sealed record TakeStats(int Samples, int NanCount, float Peak, double VoicedMs, double LoudMs)
 {
     public static TakeStats From(SpokenTake take) => From(take.Samples, take.SampleRate);
 
@@ -284,6 +342,7 @@ public sealed record TakeStats(int Samples, int NanCount, float Peak, double Voi
         float peak = 0;
         int first = -1;
         int last = -1;
+        int loud = 0;
         for (int i = 0; i < samples.Length; i++)
         {
             float v = samples[i];
@@ -295,6 +354,7 @@ public sealed record TakeStats(int Samples, int NanCount, float Peak, double Voi
 
             float magnitude = Math.Abs(v);
             peak = Math.Max(peak, magnitude);
+            loud += magnitude >= SilentOutputGuard.SoundAmplitude ? 1 : 0;
             if (magnitude > SilentOutputGuard.VoicedAmplitude)
             {
                 first = first < 0 ? i : first;
@@ -303,8 +363,12 @@ public sealed record TakeStats(int Samples, int NanCount, float Peak, double Voi
         }
 
         double voicedMs = first < 0 || sampleRate <= 0 ? 0 : (last - first + 1) * 1000.0 / sampleRate;
-        return new TakeStats(samples.Length, nan, peak, voicedMs);
+        double loudMs = sampleRate <= 0 ? 0 : loud * 1000.0 / sampleRate;
+        return new TakeStats(samples.Length, nan, peak, voicedMs, loudMs);
     }
+
+    /// <summary>True when the take holds no speech by sound alone: its peak is under <see cref="SilentOutputGuard.MinPeak"/> or it holds under <see cref="SilentOutputGuard.MinSoundMs"/> of sound. One rule, for the guard and for ranking takes.</summary>
+    public bool IsQuiet => Peak < SilentOutputGuard.MinPeak || LoudMs < SilentOutputGuard.MinSoundMs;
 
     /// <summary>One log fragment, no text: <c>samples N, nan N, peak 0.000, voiced ms N</c>.</summary>
     public string Describe() =>

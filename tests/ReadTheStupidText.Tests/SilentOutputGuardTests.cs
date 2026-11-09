@@ -1,4 +1,5 @@
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 using Xunit;
 
@@ -52,10 +53,180 @@ public sealed class SilentOutputGuardTests
     public void ClipFarShorterThanItsTextNeedsIsSilent() =>
         Assert.True(SilentOutputGuard.IsSilent(Tone(300, padMs: 100), "بچه خوک فرار کرد. تق!"));
 
+    // Slice 341: a drop-prone voice (mana) returns a hiss that passes the span floor; the quiet check catches it.
+    private static SpokenTake Hiss(int ms, float level = 0.03f)
+    {
+        float[] samples = new float[ms * Rate / 1000];
+        for (int i = 0; i < samples.Length; i++)
+        {
+            samples[i] = i % 2 == 0 ? level : -level * 0.5f;
+        }
+
+        return new SpokenTake(samples, Rate);
+    }
+
+    // A hiss (peak 0.02) with this many samples set to exactly `level`: the peak is `level`, the sound is `loudSamples` long.
+    private static SpokenTake HissWithLoudSamples(int loudSamples, float level)
+    {
+        float[] samples = Hiss(900, 0.02f).Samples;
+        for (int i = 0; i < loudSamples; i++)
+        {
+            samples[1000 + i * 2] = level;
+        }
+
+        return new SpokenTake(samples, Rate);
+    }
+
+    private static int SamplesForSoundMs(double ms) => (int)Math.Ceiling(ms * Rate / 1000);
+
+    private const string CatCall = "میو میو!";
+
+    [Fact]
+    public void LongQuietHissIsSilentForACheckedVoice() =>
+        Assert.True(SilentOutputGuard.IsSilent(Hiss(900), CatCall, quietCheck: true));
+
+    [Fact]
+    public void LongQuietHissIsLeftAloneForAnUncheckedVoice() =>
+        Assert.False(SilentOutputGuard.IsSilent(Hiss(900), CatCall));
+
+    [Fact]
+    public void QuietHissIsNotSilentForMarkOnlyText() =>
+        Assert.False(SilentOutputGuard.IsSilent(Hiss(900), "...", quietCheck: true));
+
+    [Fact]
+    public void SpokenCatCallIsNotSilentForACheckedVoice() =>
+        Assert.False(SilentOutputGuard.IsSilent(Tone(600, padMs: 100), CatCall, quietCheck: true));
+
+    [Fact]
+    public void PeakJustUnderTheFloorIsSilent() =>
+        Assert.True(SilentOutputGuard.IsSilent(HissWithLoudSamples(500, SilentOutputGuard.MinPeak - 0.005f), CatCall, quietCheck: true));
+
+    [Fact]
+    public void PeakAtTheFloorWithRealSoundIsNotSilent() =>
+        Assert.False(SilentOutputGuard.IsSilent(HissWithLoudSamples(500, SilentOutputGuard.MinPeak), CatCall, quietCheck: true));
+
+    [Fact]
+    public void SoundJustUnderTheMinimumIsSilentWhateverTheLoudestSample() =>
+        Assert.True(SilentOutputGuard.IsSilent(HissWithLoudSamples(SamplesForSoundMs(SilentOutputGuard.MinSoundMs) - 1, 0.6f), CatCall, quietCheck: true));
+
+    [Fact]
+    public void SoundAtTheMinimumIsNotSilent() =>
+        Assert.False(SilentOutputGuard.IsSilent(HissWithLoudSamples(SamplesForSoundMs(SilentOutputGuard.MinSoundMs), 0.6f), CatCall, quietCheck: true));
+
+    [Fact]
+    public void AHissWithOnePopIsSilent() =>
+        Assert.True(SilentOutputGuard.IsSilent(HissWithLoudSamples(1, 0.9f), CatCall, quietCheck: true));
+
     private static Task<RescueResult> Rescue(
         string text, Func<Task<SpokenTake>> generate, List<string> lines, Func<Task<SpokenTake?>>? fallback = null,
-        CancellationToken token = default) =>
-        SilentOutputGuard.RescueAsync(text, "piper:fa-mana", 1.0, generate, lines.Add, token, fallback);
+        CancellationToken token = default, IFallbackSink? sink = null, bool quietCheck = true) =>
+        SilentOutputGuard.RescueAsync(text, "piper:fa-mana", 1.0, generate, lines.Add, token, fallback, fallbacks: sink, quietCheck: quietCheck);
+
+    private sealed class ReasonSink : IFallbackSink
+    {
+        public List<string> Reasons { get; } = [];
+
+        public void Report(string area, string reason, string? language = null) => Reasons.Add(reason);
+    }
+
+    [Fact]
+    public async Task QuietHissTakeIsRetriedAndTheVoicedTakeWins()
+    {
+        int calls = 0;
+        var lines = new List<string>();
+        var sink = new ReasonSink();
+        RescueResult result = await Rescue(CatCall, () => Task.FromResult(++calls == 1 ? Hiss(900) : Tone(600, padMs: 100)), lines, sink: sink);
+        Assert.False(result.GaveUp);
+        Assert.Equal(2, calls);
+        Assert.Equal([FallbackReason.QuietRetake], sink.Reasons);
+        string line = Assert.Single(lines);
+        Assert.Contains("peak 0.030/", line);
+        Assert.Contains("caught by the peak check", line);
+    }
+
+    [Fact]
+    public async Task QuietHissRescuedBySiblingReportsQuietSibling()
+    {
+        var sink = new ReasonSink();
+        await Rescue(CatCall, () => Task.FromResult(Hiss(900)), [], () => Task.FromResult<SpokenTake?>(Tone(600, padMs: 100)), sink: sink);
+        Assert.Equal([FallbackReason.QuietSibling], sink.Reasons);
+    }
+
+    [Fact]
+    public async Task QuietHissThatNothingRescuesReportsQuietGaveUp()
+    {
+        var sink = new ReasonSink();
+        RescueResult result = await Rescue(CatCall, () => Task.FromResult(Hiss(900)), [], sink: sink);
+        Assert.True(result.GaveUp);
+        Assert.Equal([FallbackReason.QuietGaveUp], sink.Reasons);
+    }
+
+    [Fact]
+    public async Task QuietFirstTakeThenEmptyLastTakeReportsSilentGaveUp()
+    {
+        int calls = 0;
+        var sink = new ReasonSink();
+        await Rescue(CatCall, () => Task.FromResult(++calls == 1 ? Hiss(900) : new SpokenTake([], Rate)), [], sink: sink);
+        Assert.Equal([FallbackReason.SilentGaveUp], sink.Reasons);
+    }
+
+    [Fact]
+    public async Task EmptyFirstTakeThenVoicedRetakeReportsSilentRetake()
+    {
+        int calls = 0;
+        var sink = new ReasonSink();
+        await Rescue(CatCall, () => Task.FromResult(++calls == 1 ? new SpokenTake([], Rate) : Tone(600, padMs: 100)), [], sink: sink);
+        Assert.Equal([FallbackReason.SilentRetake], sink.Reasons);
+    }
+
+    [Fact]
+    public async Task ATooShortTakeStillReportsTheSilentReasons()
+    {
+        var sink = new ReasonSink();
+        await Rescue(CatCall, () => Task.FromResult(new SpokenTake([], Rate)), [], sink: sink);
+        Assert.Equal([FallbackReason.SilentGaveUp], sink.Reasons);
+    }
+
+    [Fact]
+    public async Task AnUncheckedVoiceKeepsItsHissAndReportsNothing()
+    {
+        int calls = 0;
+        var sink = new ReasonSink();
+        await Rescue(CatCall, () => { calls++; return Task.FromResult(Hiss(900)); }, [], sink: sink, quietCheck: false);
+        Assert.Equal(1, calls);
+        Assert.Empty(sink.Reasons);
+    }
+
+    [Fact]
+    public async Task GiveUpKeepsTheTakeWithRealSoundOverAQuietLongerHiss()
+    {
+        int calls = 0;
+        SpokenTake real = Tone(70, padMs: 50);
+        RescueResult result = await Rescue(CatCall, () => Task.FromResult(++calls == 2 ? real : Hiss(900)), []);
+        Assert.True(result.GaveUp);
+        Assert.Same(real, result.Take);
+    }
+
+    [Fact]
+    public async Task GiveUpKeepsRealSpeechOverALongHissWithOnePop()
+    {
+        int calls = 0;
+        SpokenTake real = Tone(70, padMs: 50);
+        RescueResult result = await Rescue(CatCall, () => Task.FromResult(++calls == 1 ? real : HissWithLoudSamples(1, 0.9f)), []);
+        Assert.True(result.GaveUp);
+        Assert.Same(real, result.Take);
+    }
+
+    [Fact]
+    public async Task DropProneUnitsGetTheQuietCheckAndOtherVoicesDoNot()
+    {
+        int checkedCalls = 0;
+        int plainCalls = 0;
+        await SilentOutputGuard.RescueUnitAsync(CatCall, "piper:fa-mana", 1.0, true, _ => { checkedCalls++; return Task.FromResult(Hiss(900)); }, _ => { });
+        await SilentOutputGuard.RescueUnitAsync(CatCall, "piper:fa-ganji", 1.0, false, _ => { plainCalls++; return Task.FromResult(Hiss(900)); }, _ => { });
+        Assert.Equal(SilentOutputGuard.ExtraTakes + 1, checkedCalls);
+        Assert.Equal(1, plainCalls);
+    }
 
     [Fact]
     public async Task RescueReturnsTheFirstVoicedTake()

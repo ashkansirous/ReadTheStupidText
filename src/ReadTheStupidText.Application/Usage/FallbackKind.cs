@@ -98,6 +98,15 @@ public static class FallbackReason
     /// <summary>A voice stayed silent through every retake and the sibling; the clip was played as it was.</summary>
     public const string SilentGaveUp = "silent_gave_up";
 
+    /// <summary>Slice 341: a drop-prone voice's take was only a quiet hiss (the span rule alone would have played it); a new take was voiced.</summary>
+    public const string QuietRetake = "quiet_retake";
+
+    /// <summary>Slice 341: a drop-prone voice's quiet hiss was replaced by the pack's sibling voice.</summary>
+    public const string QuietSibling = "quiet_sibling";
+
+    /// <summary>Slice 341: a drop-prone voice stayed a quiet hiss through every retake and the sibling; the best take was played as it was.</summary>
+    public const string QuietGaveUp = "quiet_gave_up";
+
     /// <summary>Dino Reader: the voice a book suggested for a character is not in the language's roster; the closest roster voice by traits is used.</summary>
     public const string VoiceNotInRoster = "voice_not_in_roster";
 
@@ -237,7 +246,7 @@ public static class FallbackReason
     public static IReadOnlyList<string> All { get; } =
     [
         NoPack, PackFailed, TextMismatch, ClipMissing, Partial,
-        NeuralNotReady, NeuralUnavailable, StreamUnavailable, EngineBuildFailed, SegmentsUnsupported, PhoneCannotSpeak, NoVoice, SilentRetake, SilentSibling, SilentGaveUp,
+        NeuralNotReady, NeuralUnavailable, StreamUnavailable, EngineBuildFailed, SegmentsUnsupported, PhoneCannotSpeak, NoVoice, SilentRetake, SilentSibling, SilentGaveUp, QuietRetake, QuietSibling, QuietGaveUp,
         VoiceNotInRoster, RecordingUnplayable, PhoneLanguageMissing,
         TranslationTimeout, TranslationPackMissing, TranslationError, StreamPlanFailed, StreamPartial, TranslationModelMissing, TranslationSkipped, TranslationPackFailed,
         PackSyncFailed, StorytellerFailed, RecastFailed, CatalogueFailed,
