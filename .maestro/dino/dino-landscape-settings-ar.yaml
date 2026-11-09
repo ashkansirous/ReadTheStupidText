@@ -1,14 +1,15 @@
 # Slice 320 item 6 (L209, L346): Settings held sideways in Arabic (right to left). The English flow dino-landscape-settings.yaml taps "Animal sounds" and waits on English text, so its Arabic copy proved nothing about the layout; this one
-# uses only AutomationIds (SettingsTitle, SettingsReadingSpeedRow, GrownUpDoneReadingSpeedPage, GrownUpDoneSettingsPage). It checks the two panes appear, survive a turn upright and back, and Done closes Settings; the shot is for the
-# by-eye check that the list and Done are mirrored as designed (L209: Done stays top right was measured by rtl-probe in the 2026-11-08 run). A second row has no AutomationId yet (only Reading speed and Report a problem have one), so the
-# pane swap stays in the English flow. The set-language hook switches the screens (voice=0: no voice-pack start); the last step puts English back.
+# uses only AutomationIds (SettingsTitle, SettingsReadingSpeedRow, GrownUpBack, GalleryDone, CornerTabBooks). Slice 325 part B made Settings one list tab with sub-pages opening inside it (back arrow, no Done), so it checks the
+# list beside the rail, a row opening its page with the back arrow, a turn upright and back, and the back arrow returning to the list; the shot is for the by-eye check that the list is mirrored as designed. A second row has no
+# AutomationId yet (only Reading speed and Report a problem have one). The set-language hook switches the screens (voice=0: no voice-pack start); the last step puts English back.
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK set-language ok ar
 # expect-log: HOOK enter-grown-up ok
-# expect-log: [Landscape] settings panes=2 selected=ReadingSpeed
-# expect-log: [Landscape] settings panes=1 selected=ReadingSpeed
+# The two [Redesign] markers below show only that the corner took the Settings tab (chrome=rail) and the list was shown again; they do not prove the list built. The assertVisible on SettingsReadingSpeedRow below does.
+# expect-log: [Redesign] corner tab=settings chrome=rail
+# expect-log: [Redesign] settings page=list hosted=false
 appId: uk.sirous.dinoreader.dbg
-name: Settings in landscape in Arabic has two panes, rotation keeps them, Done closes (by id)
+name: Settings in landscape in Arabic is one list, a row opens its page with the back arrow, rotation keeps it (by id)
 # Runs after the flow pass or fail, so a failure never leaves the next flow sideways or in Arabic.
 onFlowComplete:
   - setOrientation: PORTRAIT
@@ -57,24 +58,40 @@ onFlowComplete:
     timeout: 10000
 - assertVisible:
     id: SettingsReadingSpeedRow
+- assertNotVisible:
+    id: GrownUpBack
 - assertVisible:
-    id: GrownUpDoneReadingSpeedPage
+    id: GalleryDone
 - takeScreenshot: settings-landscape-ar
+# A row opens its page inside the content area: the back arrow shows, the rail stays.
+- tapOn:
+    id: SettingsReadingSpeedRow
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GrownUpBack
+    timeout: 10000
+- assertVisible:
+    id: GalleryDone
+# Rotate upright: the same page stays open, now above the tab bar.
 - setOrientation: PORTRAIT
 - extendedWaitUntil:
     visible:
-      id: GrownUpDoneSettingsPage
+      id: CornerTabBooks
     timeout: 15000
 - assertVisible:
-    id: SettingsReadingSpeedRow
+    id: GrownUpBack
 - setOrientation: LANDSCAPE_LEFT
 - extendedWaitUntil:
     visible:
-      id: GrownUpDoneReadingSpeedPage
+      id: GrownUpBack
     timeout: 15000
+# The back arrow returns to the list.
 - tapOn:
-    id: GrownUpDoneReadingSpeedPage
+    id: GrownUpBack
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: SettingsReadingSpeedRow
     timeout: 10000
+- assertVisible:
+    id: GalleryDone
