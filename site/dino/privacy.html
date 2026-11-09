@@ -34,11 +34,11 @@
   data, for the children who use it and the grown-ups who set it up.</p>
 
   <h2>The short version</h2>
-  <p><strong>The Dino Book Reader app does not ask for, collect or share personal information such as names, accounts, photos or recordings. Every request it makes carries the device&rsquo;s IP address, as all internet traffic does; the only place this project&rsquo;s server keeps that address is a short technical request log that Cloudflare deletes automatically after a few days (see &ldquo;Server request log&rdquo; below).</strong>
+  <p><strong>The Dino Book Reader app does not ask for, collect or share personal information such as names, accounts, photos or recordings. Every request it makes carries the device&rsquo;s IP address, as all internet traffic does; the only place this project&rsquo;s server keeps that address is a short technical request log that Cloudflare keeps and deletes on its own schedule (see &ldquo;Server request log&rdquo; below).</strong>
   It has no accounts, no advertising, and no third-party analytics. It does send anonymous usage counts to this
   project&rsquo;s own server, with no name, no identifier of the child, the install or the device, and nothing a
   child typed; a grown-up can turn this off in Settings (see &ldquo;Anonymous usage counts&rdquo; below). Like most web servers,
-  this project&rsquo;s server keeps a short technical log of requests, which can include the IP address, for only a few days
+  this project&rsquo;s server keeps a short technical log of requests, which can include the IP address, for as long as Cloudflare sets
   (see &ldquo;Server request log&rdquo; below). If the app crashes it can also
   send a crash report on the same switch (see &ldquo;Crash reports&rdquo; below). Everything
   else the app does happens <strong>on the device</strong>, apart from downloading free stories and their audio from this project&rsquo;s own server.
@@ -56,7 +56,7 @@
       kept for one story language of one story. It is saved on the device, in that story&rsquo;s private folder, and is
       played back when the story is read. It is never sent to anyone, never analysed and never used for anything else. It is
       included in the app&rsquo;s own backup file only when a grown-up makes one and chooses where to keep it (see the backup note below), and it is deleted when the
-      grown-up deletes it or the story. On Android the app turns off the system&rsquo;s automatic app backup. On iPhone the app does not exclude its files from the device&rsquo;s own iCloud or computer backup, so if the family has that backup on, it may include the recordings; the app itself never uploads them. The app does not record the child, and does not listen at any other time.</li>
+      grown-up deletes it or the story. On Android the app turns off the system&rsquo;s automatic app backup. On iPhone the app excludes only its downloaded audio-pack folder from the device&rsquo;s own iCloud or computer backup; its other files, including a family&rsquo;s recordings (kept in the app&rsquo;s own data folder with the stories), are not excluded, so if the family uses that backup, it may include them; the app itself never uploads them. The app does not record the child, and does not listen at any other time.</li>
     <li><strong>Settings and the story library</strong> (the story languages, reading progress, display choices) are
       stored on the device and are not uploaded; the only facts about them that leave it are the few anonymous counts listed under &ldquo;Anonymous usage counts&rdquo; (such as which story languages were chosen).</li>
     <li><strong>Backup and restore.</strong> A grown-up can save one backup file of the stories and recordings, and
@@ -102,9 +102,9 @@
   <p>  There is no name, account, advertising or device identifier, no install identifier, no IP address kept with the counts (see &ldquo;Server request log&rdquo; below), and
   nothing a child typed, so a count carries nothing that names a child, a family or a device. The one number that goes
   with the counts is a random session number: it is made new every time the app starts and is never reused for a later start. It lives in memory, and is also written only inside counts
-  still waiting in the app's local send queue; it is gone from the device once those counts are sent. The server stores it with each count, for the same time as the counts, and a crash report or a Report a problem from that start of the app carries it too, so the reports and the counts of one start of the app can be put side by side. It is not tied to a person, an install or a device, and it cannot tell two sessions of one person apart. It puts the counts of one start of the app in order. The server (like any web
+  still waiting in the app's local send queue; it is removed from the queue once those counts are sent. The server stores it with each count, and a crash report or a Report a problem from that start of the app carries it too, so the reports and the counts of one start of the app can be put side by side. It is not tied to a person, an install or a device, and it cannot tell two sessions of one person apart. It puts the counts of one start of the app in order. The server (like any web
   server) may see the IP address of the request, which is not stored with the counts (only the approximate country it maps to, as described above); it can appear in the short server request log described below. The counts are
-  stored with Cloudflare (our processor) for about three months and read only as totals. The project can turn counting down or
+  stored with Cloudflare Analytics Engine (our processor), which keeps them for the time Cloudflare sets for that service (Cloudflare documents three months), and read only as totals. Once an hour the project also copies daily totals (a day, a book, a platform and a count, with no session number) into its own database, and keeps them there. The project can turn counting down or
   off from the server without an update. A grown-up can switch it off at any time under &ldquo;Help make Dino
   better&rdquo; in Settings (behind the grown-ups gate); when it is off, nothing is sent. Development builds, emulators and the test devices store review tools use send no counts. Builds installed through TestFlight, and the copy Apple&rsquo;s App Review opens, send the same counts to a separate store for beta builds; they are never added to the counts of the published app.</p>
   <p><strong>Crash reports (Android and iPhone).</strong> If the app crashes or stops unexpectedly, it can send a crash report to
@@ -141,7 +141,7 @@
   dinoreader.sirous.uk/stats, which shows only totals). Read The Stupid Text&rsquo;s server (readthestupidtext.sirous.uk) works the same way. A log entry holds the address that was asked for (including anything after a
   &ldquo;?&rdquo; in it), the time, the status of the server&rsquo;s answer, the approximate country, and other request details
   Cloudflare records, which can include the connecting IP address. The log also holds the server&rsquo;s own short error and
-  status messages. Cloudflare keeps entries only for a few days and deletes them automatically; the length is Cloudflare&rsquo;s log retention for the plan this project uses, not something the app or the counts can change.
+  status messages. This is Cloudflare&rsquo;s own short log, kept for as long as Cloudflare sets for it; the length is not set by this project, the app or the counts.
   The project uses it only to find and fix problems with the server and does not combine it with the usage counts or crash
   reports; it is not shared and never used for advertising or tracking.</p>
 
@@ -151,7 +151,7 @@
   used only to download free stories and their audio, send the counts and reports described above, and to tell &ldquo;offline&rdquo;
   from a failed download. On Android it also declares the <strong>Microphone</strong> permission (on iPhone and Windows the
   matching microphone access), asked for only when a grown-up first taps record on the Record screen, and used only while
-  a recording is running. On Android the app also declares the <strong>Foreground service</strong> (data sync) and <strong>Notifications</strong> permissions, which come from a download component shared with the project&rsquo;s other app and are meant only for showing the progress of a large download; the app does not use them for anything else, and they send nothing. The app asks for no camera, photo, contacts or location access. Saving or restoring a backup uses the standard file picker or share sheet of the device, and the app only opens the file a grown-up picks.</p>
+  a recording is running. On Android the app also declares the <strong>Foreground service</strong> (data sync) and <strong>Notifications</strong> permissions, because it includes a shared download component that can keep a large download running with a progress notice that has a Cancel button, and a &ldquo;download paused&rdquo; notice. This app downloads no such packs, so nothing starts that component; the permissions send nothing. The app&rsquo;s code never asks for camera, photo, contacts or location access. The iPhone build still declares camera and photo-library usage texts that nothing uses; they are being removed. Saving or restoring a backup uses the standard file picker or share sheet of the device, and the app only opens the file a grown-up picks.</p>
 
   <h2>Children&rsquo;s privacy</h2>
   <p>Dino Book Reader is designed for children, and the app does not ask for, collect or share personal information about anyone, including children: no name, email address, photos or recordings. It has no accounts, no ads, no social
@@ -162,7 +162,7 @@
   delete beyond the content on their own device, which they can remove by deleting a story or
   clearing the app&rsquo;s storage. The only personal data this project&rsquo;s server keeps is the connecting IP address in its short request log
   (see &ldquo;Server request log&rdquo; above); log entries hold no name or account,
-  and they are deleted on their own after a few days.</p>
+  and Cloudflare deletes them on its own schedule.</p>
 
   <h2>Changes to this policy</h2>
   <p>If this policy changes, the updated version will be published at this same URL with a new

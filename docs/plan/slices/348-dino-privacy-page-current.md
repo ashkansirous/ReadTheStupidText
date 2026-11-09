@@ -32,7 +32,9 @@ and Report a problem as already described.
 - The Sonos and Alexa sections are removed from the page: no Sonos service or Alexa skill is published (`ALEXA_SKILL_ID` is empty in both wrangler configs, so the Alexa endpoint answers 400; Slice 283 waits on the Sonos partner account). They come back when each launches (Slices 282 and 283).
 - `src/DinoReader.App/Platforms/iOS/Info.plist` still has `NSCameraUsageDescription` and `NSPhotoLibraryUsageDescription` strings for scanning and photo import the app no longer has (Slice 291 / App Review risk); the page says the app asks for no camera or photo access.
 - `PRIVACY.md` (RTST's) is left alone on purpose; check whether it still carries Dino sentences (Sonos/Alexa, session number) when it is next touched.
-- Retention figures: the 90-day crash and problem-report deletion is backed (R2 lifecycle rule `crash-reports-90d`, `plan.md` / Slice 227); the request log's length is Cloudflare's own and is not set in the repo, so the page says "a few days".
+- Retention figures: the 90-day crash and problem-report deletion is backed (R2 lifecycle rule `crash-reports-90d`, `plan.md` / Slice 227); the request log's length is Cloudflare's own and is not set in the repo, so the page gives no number ("kept as Cloudflare sets it"). Usage counts: Analytics Engine keeps them as Cloudflare
+  documents (three months); the hourly daily totals in D1 `daily_stats` (no session number) have no deletion, and the page
+  says so. Crash reports: live `crashReports.enabled` is true (`/api/app-config`, read 2026-11-09).
 
 - Slice 346 (paid books) will change this page again when purchases ship.
 - Store data-safety and App Privacy forms: the app now collects less, so the published answers stay true (they declare
