@@ -46,7 +46,8 @@ function Get-TappableNodes([System.Xml.XmlNode]$Parent, [string]$Path, [System.C
         if ($node.GetAttribute('clickable') -eq 'true' -and $node.GetAttribute('enabled') -ne 'false' -and $bounds -and (Get-Area $bounds) -gt 0) {
             $name = $node.GetAttribute('resource-id'); if (-not $name) { $name = $node.GetAttribute('text') }; if (-not $name) { $name = $node.GetAttribute('content-desc') }; if (-not $name) { $name = $node.GetAttribute('class') }
             $hasText = [bool]($node.GetAttribute('text') -or $node.GetAttribute('content-desc'))
-            $Found.Add([pscustomobject]@{ Path = $here; Bounds = $bounds; Name = "$name"; HasText = $hasText })
+            $described = @($node.GetAttribute('text'), $node.GetAttribute('content-desc')) | Where-Object { $_ }
+            $Found.Add([pscustomobject]@{ Path = $here; Bounds = $bounds; Name = "$name"; HasText = $hasText; Described = @($described) })
         }
         elseif ($null -ne $Labels -and $node.GetAttribute('clickable') -ne 'true' -and $bounds -and (Get-Area $bounds) -gt 0) {
             $label = $node.GetAttribute('text'); if (-not $label) { $label = $node.GetAttribute('content-desc') }
@@ -61,6 +62,22 @@ function Test-IsScrim($Node, $Screen) {
     if (-not $Screen -or $Node.HasText) { return $false }
     $tol = $script:EdgeTolerancePx
     return ($Node.Bounds[0] -le $Screen[0] + $tol -and $Node.Bounds[1] -le $Screen[1] + $tol -and $Node.Bounds[2] -ge $Screen[2] - $tol -and $Node.Bounds[3] -ge $Screen[3] - $tol)
+}
+
+# Pure: does the button's own text or description name this label? The owning-button pattern (Slice 205, 325): a transparent button laid over its row or pill, named "Language: English", with the labels beside it in the tree
+# (siblings, not children). A label the button's name spells out as a whole segment ("Language", "English") is the button's own caption, not text under someone else's button; "Try it" under "Skip" is still a problem.
+function Test-ButtonNamesLabel($Tappable, [string]$LabelText) {
+    $pattern = '(^|[\s:,;.|])' + [regex]::Escape($LabelText.Trim()) + '($|[\s:,;.|])'
+    foreach ($d in @($Tappable.Described)) {
+        if ($d -and [regex]::IsMatch("$d", $pattern, 'IgnoreCase')) { return $true }
+    }
+    return $false
+}
+
+# Pure: do the inner bounds lie inside the outer bounds (within the edge tolerance)? The owning button must really sit over its label: a same-named label elsewhere is not its caption.
+function Test-BoundsInside($Inner, $Outer) {
+    $tol = $script:EdgeTolerancePx
+    return ($Inner[0] -ge $Outer[0] - $tol -and $Inner[1] -ge $Outer[1] - $tol -and $Inner[2] -le $Outer[2] + $tol -and $Inner[3] -le $Outer[3] + $tol)
 }
 
 function Test-IsAncestorPath([string]$Ancestor, [string]$Path) { return $Path.StartsWith($Ancestor + '/') }
@@ -81,6 +98,7 @@ function Get-LabelOverlapProblems($Tappable, $Labels, [string]$Label, $Screen = 
     foreach ($l in $Labels) {
         foreach ($t in $Tappable) {
             if ((Test-IsAncestorPath $t.Path $l.Path) -or (Test-IsAncestorPath $l.Path $t.Path)) { continue }
+            if ((Test-ButtonNamesLabel $t $l.Name) -and (Test-BoundsInside $l.Bounds $t.Bounds)) { continue }   # Slice 325: the label is the caption of the button laid over it (it names the label and the label lies inside the button)
             if ((Test-IsScrim $t $Screen) -and (Test-IsPathBefore $t.Path $l.Path)) { continue }   # Slice 297: a scrim drawn under the label is a backdrop; one drawn over it swallows the label's taps
             $shared = Get-IntersectionArea $l.Bounds $t.Bounds
             $smaller = [math]::Min((Get-Area $l.Bounds), (Get-Area $t.Bounds))

@@ -15,6 +15,15 @@ public class TitleBarToneTests
         Assert.Equal(expected, TitleBarTones.For(page));
     }
 
+    // Slice 325 decision 8 (frame W1): "Grown-ups' corner · Dino Reader" in the corner, the shelf's plain "Dino Reader".
+    [Fact]
+    public void The_corner_names_itself_before_the_app()
+    {
+        Assert.Equal("Grown-ups’ corner · Dino Reader", TitleBarTones.WindowTitle(TitleBarPage.Corner, null, "Dino Reader", "Grown-ups’ corner"));
+        Assert.Equal("Dino Reader", TitleBarTones.WindowTitle(TitleBarPage.Corner, null, "Dino Reader"));
+        Assert.Equal("Dino Reader", TitleBarTones.WindowTitle(TitleBarPage.Kids, null, "Dino Reader", "Grown-ups’ corner"));
+    }
+
     [Fact]
     public void The_reading_screen_names_the_book_and_every_other_page_names_the_app()
     {

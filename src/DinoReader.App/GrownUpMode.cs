@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using DinoReader.Core;
 
 namespace DinoReader;
 
@@ -12,9 +13,33 @@ public sealed class GrownUpMode : INotifyPropertyChanged
 
 	public bool IsGrownUp => _isGrownUp;
 
-	public void Enter() => Set(true);
+	/// <summary>The corner's tab (Slice 325 part A). Never persisted; entering and leaving both put it back on Books.</summary>
+	public CornerTab Tab { get; private set; } = CornerTab.Books;
 
-	public void Leave() => Set(false);
+	public void Enter()
+	{
+		ResetTab();
+		Set(true);
+	}
+
+	public void Leave()
+	{
+		ResetTab();
+		Set(false);
+	}
+
+	/// <summary>Shows <paramref name="tab"/>; raises <c>PropertyChanged("Tab")</c> when it changed.</summary>
+	public void SelectTab(CornerTab tab)
+	{
+		if (Tab != tab)
+		{
+			Tab = tab;
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Tab)));
+		}
+	}
+
+	// Through SelectTab, so the views hear of a reset even when IsGrownUp itself does not change (the debug hook, a second window).
+	private void ResetTab() => SelectTab(CornerTab.Books);
 
 	private void Set(bool value)
 	{

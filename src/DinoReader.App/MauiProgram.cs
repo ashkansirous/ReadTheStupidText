@@ -43,6 +43,9 @@ public static class MauiProgram
 				fonts.AddFont("Vazirmatn.ttf", DinoFonts.Persian);
 			});
 
+#if IOS
+		builder.ConfigureMauiHandlers(handlers => handlers.AddHandler<ContentPage, StatusBarPageHandler>()); // Slice 325 A4: per-page status-bar icon colour
+#endif
 		// Slice 278 part B: this registers the shared speech reader and voice services too, but nothing in Dino ever resolves them (ReadingSessionNeverAsksForASpeechEngineTests scans the sources for that).
 		builder.AddMobileSharedServices();
 		builder.Services.AddSingleton<ILanguageChangeNotifier, InertLanguageNotifier>(); // replaces the shared one (last registration wins): a language change must never start a voice pack download in Dino
@@ -141,7 +144,7 @@ public static class MauiProgram
 		services.AddTransient<UpdatePage>();
 		services.AddTransient<BackupPage>();
 		services.AddTransient<LanguagePage>();
-		services.AddTransient<SettingsPage>();
+		services.AddTransient<SettingsTab>();
 		services.AddTransient<StoryLanguagesPage>();
 		services.AddTransient<ReadingSpeedPage>();
 		services.AddTransient<AnimalSoundsPage>();

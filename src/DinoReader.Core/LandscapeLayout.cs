@@ -25,10 +25,6 @@ public enum PinnedPlacement
 /// <remarks>A tablet held upright (Slice 234, mock Batch 45 frame 133) also gets <see cref="TabletUpright"/>, the 40 dp side padding and 52 dp header targets; every other shape keeps the phone's 14 dp and 48 dp.</remarks>
 public readonly record struct ShelfShape(bool Sideways, double CoverHeight, int Columns, bool TabletUpright = false, double SidePadding = LandscapeLayout.PhoneShelfSidePadding);
 
-/// <summary>The grown-ups' corner: a side rail (width in dp, 0 without one) with this many columns of books; Add and Store are full rows on a tablet's rail, a pair of buttons on a phone's.</summary>
-/// <remarks>A tablet held upright (Slice 234 part B, mock Batch 45 frame 139) also gets <see cref="TabletUpright"/>: a 300 dp rail, Store solid indigo and exactly three columns of books.</remarks>
-public readonly record struct CornerShape(bool Rail, double RailWidth, int Columns, bool FullRowButtons, bool TabletUpright = false);
-
 /// <summary>Diameters of the three reading buttons, in dp.</summary>
 public readonly record struct ControlSizes(double Play, double Skip);
 
@@ -127,41 +123,11 @@ public static class LandscapeLayout
     public static double CoverWidth(double coverHeight) => Math.Max(0, coverHeight) * DefaultPictureAspect;
 
     /// <summary>
-    /// The grown-ups' corner (mock frames 111, 126): an ink side rail when the window is held sideways, or is a tablet wide enough (744 dp) for the rail plus three columns in portrait;
-    /// a phone in portrait keeps the header bar and three columns. The rail is <see cref="ListPaneWidth"/> (300 on a phone, 360 on a tablet); the books take the width left over,
-    /// as many columns of at least <see cref="CornerColumnWidth"/> as fit (2 to 5).
-    /// </summary>
-    public static CornerShape CornerLayout(double width, double height)
-    {
-        bool tablet = SizeOf(width, height) == DeviceSize.Tablet;
-        bool landscape = IsLandscape(width, height);
-        if (!landscape && !(tablet && width >= TabletPortraitRailMinWidth))
-        {
-            return new CornerShape(false, 0, PortraitCornerColumns, false);
-        }
-
-        if (!landscape)
-        {
-            return new CornerShape(true, TabletPortraitRailWidth, TabletPortraitCornerColumns, true, true);
-        }
-
-        double rail = ListPaneWidth(width, height);
-        return new CornerShape(true, rail, CornerColumnsFor(width - rail), tablet);
-    }
-
-    /// <summary>
-    /// The width of the side list (the corner's rail, Settings' list) on this window: 300 dp on a tablet held upright (mock Batch 45 frames 139, 140),
-    /// else <see cref="ListPaneWidth"/> (300 on a phone, 360 on a tablet held sideways).
+    /// The width of Settings' side list on this window: 300 dp on a tablet held upright (mock Batch 45 frame 140), else <see cref="ListPaneWidth"/> (300 on a phone, 360 on a tablet held sideways).
+    /// The grown-ups' corner's own rail is <see cref="CornerLayout"/>'s since Slice 325; part B retires this with the two-pane Settings.
     /// </summary>
     public static double SideListWidth(double width, double height) =>
         IsTabletPortrait(width, height) ? TabletPortraitRailWidth : ListPaneWidth(width, height);
-
-    /// <summary>How many columns of books fit in the width left of the rail (after the list's side margins and the gaps), 2 to 5.</summary>
-    public static int CornerColumnsFor(double widthLeft)
-    {
-        double room = Math.Max(0, widthLeft - CornerBooksMargin) + CornerColumnGap;
-        return (int)Math.Clamp(Math.Floor(room / (CornerColumnWidth + CornerColumnGap)), MinCornerColumns, MaxCornerColumns);
-    }
 
     /// <summary>The Cast screen's rows: two columns held sideways (mock frame 119), one column upright.</summary>
     public static int CastColumns(double width, double height) => IsLandscape(width, height) ? 2 : 1;
@@ -171,11 +137,4 @@ public static class LandscapeLayout
 
     public const double TabletPortraitRailMinWidth = 744;
     public const double TabletPortraitRailWidth = 300;
-    public const int TabletPortraitCornerColumns = 3;
-    public const int PortraitCornerColumns = 3;
-    public const double CornerColumnWidth = 100;
-    public const double CornerColumnGap = 12;
-    public const double CornerBooksMargin = 42;
-    public const int MinCornerColumns = 2;
-    public const int MaxCornerColumns = 5;
 }

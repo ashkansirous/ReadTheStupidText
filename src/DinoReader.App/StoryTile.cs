@@ -55,32 +55,19 @@ public sealed record StoryTile(Story Story, Color CoverColour, string? CoverImag
 	}
 }
 
-/// <summary>The "Add a story" tile's place in the gallery's item list (grown-up mode only).</summary>
-public sealed class AddStoryEntry
-{
-	public static readonly AddStoryEntry Instance = new();
-
-	private AddStoryEntry()
-	{
-	}
-}
-
 /// <summary>Maps the Core layout (<see cref="GalleryLayout"/>) onto the grid's items.</summary>
 public static class GalleryItems
 {
-	public static List<object> Build(IReadOnlyList<Story> stories, IStoryLibrary library, GrownUpMode mode, Func<Story, string>? titleOf = null) =>
-		GalleryLayout.Build(stories, mode.IsGrownUp)
-			.Select(e => e.Kind == GalleryEntryKind.AddStory ? (object)AddStoryEntry.Instance : StoryTile.From(e.Story!, library, mode, titleOf?.Invoke(e.Story!)))
+	public static List<StoryTile> Build(IReadOnlyList<Story> stories, IStoryLibrary library, GrownUpMode mode, Func<Story, string>? titleOf = null) =>
+		GalleryLayout.Build(stories)
+			.Select(e => StoryTile.From(e.Story, library, mode, titleOf?.Invoke(e.Story)))
 			.ToList();
 }
 
-/// <summary>Picks the Add tile's template for <see cref="AddStoryEntry"/> and the story template for every story.</summary>
+/// <summary>Picks the story template for every item.</summary>
 public sealed class GalleryTemplateSelector : DataTemplateSelector
 {
-	public DataTemplate? AddTemplate { get; set; }
-
 	public DataTemplate? StoryTemplate { get; set; }
 
-	protected override DataTemplate OnSelectTemplate(object item, BindableObject container) =>
-		(item is AddStoryEntry ? AddTemplate : StoryTemplate)!;
+	protected override DataTemplate OnSelectTemplate(object item, BindableObject container) => StoryTemplate!;
 }

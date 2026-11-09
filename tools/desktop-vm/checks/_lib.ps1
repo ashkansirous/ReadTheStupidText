@@ -215,6 +215,17 @@ function Find-UiaVisibleById {
     return $null
 }
 
+function Enter-KidsShelf {
+    # Slice 325: the first run (dino-onboarding-keys, "Skip all") ends in the grown-ups' corner with the "Ready for my child" hand-over (AutomationId GalleryDone, the coral pill); a check that starts from
+    # the kids' shelf taps it first. Does nothing when the corner is not showing.
+    $find = { $w = Get-AppWindows 'DinoReader.App' | Select-Object -First 1; if ($w) { Find-UiaVisibleById $w 'GalleryDone' } }
+    if (-not (Get-AppWindows 'DinoReader.App')) { throw 'FAIL Enter-KidsShelf: Dino Reader has no window (not running, or closed)' }
+    $done = & $find
+    if (-not $done) { return }
+    Invoke-Uia $done
+    $null = Wait-Until { -not (& $find) } 15 'FAIL the coral hand-over button did not take the app from the grown-ups corner to the kids shelf'   # Wait-Until throws when the time runs out, so a stuck corner fails the check here
+}
+
 function Get-VisibleNames {
     # "Type:Name" of the first $Max named, visible elements: the UI dump a failing check appends to its message.
     param([Parameter(Mandatory)] $Root, [int] $Max = 40)
@@ -239,6 +250,44 @@ function Invoke-PressAndHold {
         $steps = [int][Math]::Ceiling($HoldMs / 250)
         foreach ($i in 1..$steps) { Start-Sleep -Milliseconds 250; [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(($cx + ($i % 2)), $cy) }
     } finally { [Win32.Mouse]::mouse_event(4, 0, 0, 0, [UIntPtr]::Zero) }
+}
+
+function Get-GateHoldResetCount {
+    # Lines in the app's window-trace.log saying a gate hold was reset while still holding (GatePage.ResetHold).
+    param([string] $PackageName)
+    $pkg = Get-AppxPackage -Name $PackageName
+    if (-not $pkg) { return 0 }
+    $path = Join-Path $env:LOCALAPPDATA "Packages\$($pkg.PackageFamilyName)\LocalState\window-trace.log"
+    if (-not (Test-Path $path)) { return 0 }
+    return @(Get-Content -Path $path | Where-Object { $_ -match 'gate hold reset while holding' }).Count
+}
+
+function Find-GateHoldSum {
+    foreach ($e in (Get-DinoWindow).FindAll($script:TreeScope::Descendants, [System.Windows.Automation.Condition]::TrueCondition)) {
+        if ($e.Current.Name -match 'What is (\d+) plus (\d+)') { return [int]$Matches[1] + [int]$Matches[2] }
+    }
+    return $null
+}
+
+function Invoke-GateHold {
+    # Holds Dino's grown-up gate ring and returns the sum it then shows. The VM's synthetic mouse sometimes delivers a release ~7 ms after the press
+    # while the button is still held (Slice 325), so when no sum appears the hold is repeated, up to $MaxAttempts times in all; only then it throws.
+    param(
+        [Parameter(Mandatory)] [scriptblock] $FindRing,
+        [Parameter(Mandatory)] [string] $PackageName,
+        [int] $HoldMs = 3500,
+        [int] $MaxAttempts = 3,
+        [int] $SumTimeoutSec = 10
+    )
+    foreach ($attempt in 1..$MaxAttempts) {
+        $resetsBefore = Get-GateHoldResetCount $PackageName
+        Invoke-PressAndHold (& $FindRing) $HoldMs
+        try { return (Wait-Until { Find-GateHoldSum } $SumTimeoutSec 'gate sum not shown') } catch { Write-Verbose $_.Exception.Message }
+        if ($attempt -eq $MaxAttempts) { break }
+        $confirmed = if ((Get-GateHoldResetCount $PackageName) -gt $resetsBefore) { ' (window-trace.log shows "gate hold reset while holding")' } else { '' }
+        Write-Host "gate hold retried: the VM delivered an early release (attempt $($attempt + 1))$confirmed"
+    }
+    throw "FAIL the gate sum did not appear after the hold ($MaxAttempts attempts)"
 }
 
 function Initialize-NativeDisplay {

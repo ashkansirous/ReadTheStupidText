@@ -47,6 +47,17 @@ $card = New-Dump ("<node bounds=""[100,500][980,900]"" clickable=""true"" enable
     "<node text=""Heading"" bounds=""[100,100][980,200]"" clickable=""false"" enabled=""true"" />")
 Assert-Equal 'text in a card under a clickable parent passes' 0 @(Get-LayoutProblems $card 'shelf').Count
 
+# Slice 325: the owning-button pattern. A transparent button laid over its row, named "Language: English", has the labels "Language" and "English" beside it (siblings); they are its caption, not text under another button.
+# A label the button's name does not spell out ("Try it" under "Skip", "On" under "Continue") is still a problem.
+$rowButton = "<node content-desc=""Language: English"" bounds=""[42,495][1038,627]"" clickable=""true"" enabled=""true"" />"
+$ownedLabels = New-Dump ("<node text=""Language"" bounds=""[105,537][774,585]"" clickable=""false"" enabled=""true"" /><node text=""English"" bounds=""[795,537][917,585]"" clickable=""false"" enabled=""true"" />" + $rowButton)
+Assert-Equal 'labels a sibling button names pass' 0 @(Get-LayoutProblems $ownedLabels 'settings').Count
+$foreignLabel = New-Dump ("<node text=""On"" bounds=""[795,537][917,585]"" clickable=""false"" enabled=""true"" />" + (New-Button 'Continue' '[42,495][1038,627]'))
+Assert-Equal 'a label the button does not name fails' 1 @(Get-LayoutProblems $foreignLabel 'settings').Count
+# Review 2 finding 5: naming the label is not enough, the label must also lie inside that button. A "Back" label that spills out of a "Back to story" button is a real overlap.
+$spillingLabel = New-Dump ("<node text=""Back"" bounds=""[800,2000][1060,2100]"" clickable=""false"" enabled=""true"" />" + (New-Button 'Back to story' '[300,2000][960,2144]'))
+Assert-Equal 'a label the button names but that lies outside it fails' 1 @(Get-LayoutProblems $spillingLabel 'gate').Count
+
 # Touching edges and a disabled node are not problems.
 $touching = New-Dump ((New-Button 'A' '[100,500][500,700]') + (New-Button 'B' '[500,500][900,700]'))
 Assert-Equal 'touching edges pass' 0 @(Get-LayoutProblems $touching 'x').Count

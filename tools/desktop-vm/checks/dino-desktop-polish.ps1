@@ -14,9 +14,12 @@ $MinWidth = 800
 $MinHeight = 560
 $OpenWidth = 1100
 $OpenHeight = 760
+# Slice 325 part C (ShelfTitleRules.Columns on Windows): the kids' shelf sits right of a 280 dp rail with 32 + 40 dp sides and 18 dp gaps; 190 dp covers, 4 to 6 columns.
 $ColumnWidth = 190
+$ColumnGap = 18
+$RailAndSides = 280 + 32 + 40
 $MaxColumns = 6
-$MinColumns = 2
+$MinColumns = 4
 $MaxTabs = 25
 
 function Get-DinoWindow {
@@ -99,7 +102,8 @@ function Resize-DinoWindow {
 
 function Expected-Columns {
     param([int] $ContentWidth)
-    return [int][math]::Min($MaxColumns, [math]::Max($MinColumns, [math]::Floor([math]::Min($ContentWidth, 1600) / $ColumnWidth)))
+    $room = [math]::Max(0, $ContentWidth - $RailAndSides)
+    return [int][math]::Min($MaxColumns, [math]::Max($MinColumns, [math]::Floor(($room + $ColumnGap) / ($ColumnWidth + $ColumnGap))))
 }
 
 function Test-ShelfColumns {
@@ -116,7 +120,7 @@ function Test-ShelfColumns {
     Resize-DinoWindow $bigW $bigH
     $big = Get-ShelfLine $Package
     if ($big.Columns -ne (Expected-Columns $big.Width)) { throw "FAIL the larger window ($($big.Width) wide) has $($big.Columns) shelf columns, expected $(Expected-Columns $big.Width)" }
-    if ($big.Columns -le $small.Columns) { throw "FAIL the shelf did not gain columns from the minimum ($($small.Columns) at $($small.Width)) to the larger window ($($big.Columns) at $($big.Width))" }
+    if ($big.Columns -lt $small.Columns) { throw "FAIL the shelf lost columns from the minimum ($($small.Columns) at $($small.Width)) to the larger window ($($big.Columns) at $($big.Width))" }
     return "shelf $($small.Columns) columns at $($small.Width) dp (grid, not a row), $($big.Columns) at $($big.Width)"
 }
 
@@ -193,13 +197,7 @@ function Test-TabAndEnter {
 
 function Pass-Gate {
     Invoke-Uia (Wait-VisibleId 'GalleryGrownUps' 15 'FAIL the "For grown-ups" button is not on the kids'' shelf')
-    Invoke-PressAndHold (Wait-VisibleName $HoldRingName 15 'FAIL no hold ring') $HoldMs
-    $sum = $null
-    $sum = Wait-Until {
-        foreach ($e in (Get-DinoWindow).FindAll($script:TreeScope::Descendants, [System.Windows.Automation.Condition]::TrueCondition)) {
-            if ($e.Current.Name -match 'What is (\d+) plus (\d+)') { return [int]$Matches[1] + [int]$Matches[2] }
-        }
-    } 10 'FAIL the gate sum did not appear after the hold'
+    $sum = Invoke-GateHold -FindRing { Wait-VisibleName $HoldRingName 15 'FAIL no hold ring' } -PackageName $PackageName -HoldMs $HoldMs
     foreach ($ch in ([string]$sum).ToCharArray()) {
         Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) ([string]$ch) 'Button' } 5 "FAIL no keypad key $ch")
         Start-Sleep -Milliseconds 300
@@ -254,28 +252,28 @@ function Get-FocusedKey {
 }
 
 function Test-SettingsArrows {
-    Invoke-Uia (Wait-VisibleId 'GallerySettings' 5 'FAIL no gear in grown-up mode')
-    Wait-VisibleId 'SettingsTitle' 15 'FAIL Settings did not open from the gear' | Out-Null
+    Invoke-Uia (Wait-VisibleId 'GallerySettings' 5 'FAIL no Settings tab in the grown-ups corner')
+    Wait-VisibleId 'SettingsTitle' 15 'FAIL the Settings list did not show' | Out-Null
     Focus-DinoWindow
-    # Tab until a Settings row has the focus: the first Tab can land on the window's own Back button (NavigationViewBackButton, outside the page), where the page's arrow keys do not apply (VM run 6).
+    # Slice 325 part B: Settings is a tab beside the rail, so the first Tabs land on the rail (the coral button, the tabs) before a Settings row: Tab until a row of the list has the focus.
     $first = $null
-    foreach ($i in 1..6) {
+    foreach ($i in 1..12) {
         Press-Key $VkTab
         $first = Get-FocusedKey
-        if ($first -and $first -notmatch 'NavigationViewBackButton') { break }
+        if ($first -match 'Button\|(Language|Story languages|Reading speed|Animal sounds)') { break }
     }
-    if (-not $first -or $first -match 'NavigationViewBackButton') { throw "FAIL Tab never reached a Settings row (focus '$first')" }
+    if (-not $first -or $first -notmatch 'Button\|(Language|Story languages|Reading speed|Animal sounds)') { throw "FAIL Tab never reached a Settings row (focus '$first')" }
     Press-Key $VkDown
     $second = Get-FocusedKey
     if (-not $first -or $first -eq $second) { throw "FAIL the Down arrow did not move the focus in Settings (before '$first', after '$second')" }
-    Press-Key $VkEscape
-    Wait-VisibleId 'GalleryDone' 10 'FAIL Esc on Settings did not go back to the grown-ups corner' | Out-Null
+    # Esc in the corner goes back to the child's shelf (decision 6), so the Body ends this tab by the coral button instead.
     return "Down moved the focus from '$first' to '$second'"
 }
 
 Invoke-Check -ResultFile $ResultFile -Body {
     $pkg = Get-InstalledPackage $PackageName
     try {
+        Enter-KidsShelf   # the first run ends in the grown-ups' corner (Slice 325)
         $columns = Test-ShelfColumns $pkg
         Test-Hover $pkg
         $tabs = Test-TabAndEnter $pkg

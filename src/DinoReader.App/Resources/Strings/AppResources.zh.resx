@@ -51,7 +51,7 @@
   <data name="Store_Title" xml:space="preserve"><value>商店</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>为小恐龙精选并分好角色</value></data>
   <data name="Store_Get" xml:space="preserve"><value>获取</value></data>
-  <data name="Store_Downloaded" xml:space="preserve"><value>已下载</value></data>
+  <data name="Store_OnShelf" xml:space="preserve"><value>已在书架上</value></data>
   <data name="Store_Tag_Hot" xml:space="preserve"><value>火爆</value></data>
   <data name="Store_Tag_Popular" xml:space="preserve"><value>热门</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>推荐</value></data>
@@ -63,7 +63,6 @@
   <data name="Store_TryAgain" xml:space="preserve"><value>重试</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>暂时没有新故事</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>我们会不定期添加新故事，请稍后再来。</value></data>
-  <data name="Store_BackToStories" xml:space="preserve"><value>返回我的故事</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>获取{0}</value></data>
   <!-- Slice 112: store age and author filters -->
   <data name="Store_AllAges" xml:space="preserve"><value>所有年龄</value></data>
@@ -141,7 +140,7 @@
   <data name="Settings_GroupReading" xml:space="preserve"><value>阅读</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>这部手机</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>新版本</value></data>
-  <data name="Settings_GearLabel" xml:space="preserve"><value>设置（家长）</value></data>
+  <data name="Settings_GroupComputer" xml:space="preserve"><value>这台电脑</value></data>
   <data name="Settings_About" xml:space="preserve"><value>关于与更新</value></data>
   <data name="Settings_On" xml:space="preserve"><value>开</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>关</value></data>
@@ -154,6 +153,12 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>家长角</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>只有家长能看到这里。孩子的书架只需轻点一下。</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>返回孩子的书架</value></data>
+  <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
+  <data name="Corner_TabBooks" xml:space="preserve"><value>图书</value></data>
+  <data name="Corner_ChildsShelf" xml:space="preserve"><value>孩子的书架</value></data>
+  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>只有家长能看到这里。</value></data>
+  <!-- Slice 325 part C: the kids' shelf's short title -->
+  <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>故事</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>重新排序</value></data>
   <data name="Gallery_ReorderHint" xml:space="preserve"><value>长按一本书，然后将它拖到新的位置。孩子的书架会显示相同的顺序。</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>无法保存新的顺序</value></data>
@@ -168,7 +173,6 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>从书架移除“{0}”？</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>它的页面、图片和声音将从这部手机中删除。你可以随时从商店免费重新添加。</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>移除</value></data>
-  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>获取更多书籍</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>其他语言的故事仍会用它自己的语言朗读，除非该故事开启了“翻译成我的语言”。</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>请按住 3 秒。</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>请按住 3 秒</value></data>

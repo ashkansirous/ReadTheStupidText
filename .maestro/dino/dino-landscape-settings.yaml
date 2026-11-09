@@ -1,15 +1,15 @@
-# Slice 232 part D: Settings held sideways shows two panes (the list left, the open page right). A tap on a second row swaps the right pane with no push, rotating upright keeps Settings open as one pane
-# (the list, no push), rotating back keeps the same right pane, and Done closes Settings as a whole. Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback if a device ignores it.
+# Slice 232 part D, rewritten by Slice 325 part B (grown-up mock frame W1): Settings is one list column (at most 620 dp) at every size, in the corner's content area beside the rail. A row opens its page inside that area
+# with its own back arrow (nothing is pushed, the rail stays), rotating keeps the open page, and the back arrow returns to the list. Two-pane Settings and the right pane's Done are gone.
+# Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback if a device ignores it.
 # The gate is not tapped: the enter-grown-up hook stands in for a passed gate (grown-ups-button.yaml covers the gate chain).
+# Against the two-pane page the "[Redesign] settings" lines never appear (the old lines were "[Landscape] settings panes="), so this flow fails on a build from before this part.
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK enter-grown-up ok
-# The layout lines are written only when the layout changes: two panes with the first section selected, the swap to Animal sounds, one pane upright, two panes again with Animal sounds kept.
-# expect-log: [Landscape] settings panes=2 selected=ReadingSpeed
-# expect-log: [Landscape] settings pane=AnimalSounds
-# expect-log: [Landscape] settings panes=1 selected=AnimalSounds
-# expect-log: [Landscape] settings panes=2 selected=AnimalSounds
+# expect-log: [Redesign] corner tab=settings chrome=rail
+# expect-log: [Redesign] settings page=AnimalSoundsPage hosted=true
+# expect-log: [Redesign] settings page=list hosted=false
 appId: uk.sirous.dinoreader.dbg
-name: Settings in landscape has two panes, a row swaps the right pane, rotation keeps it
+name: Settings in landscape is one list in the corner, a row opens its page inside, rotation keeps it
 # Runs after the flow pass or fail, so a failure never leaves the next flow sideways.
 onFlowComplete:
   - setOrientation: PORTRAIT
@@ -38,50 +38,53 @@ onFlowComplete:
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible:
-      id: SettingsTitle
+      id: SettingsReadingSpeedRow
     timeout: 10000
-# Two panes: the list on the left and, on first open, the first page (Reading speed) on the right with its own Done.
+# One list beside the rail: the rail's tabs and way back stay, the list has no back arrow, no page is open beside it.
 - assertVisible:
-    id: SettingsReadingSpeedRow
-- extendedWaitUntil:
-    visible: Slower is easier for little ones
-    timeout: 10000
+    id: GalleryRailTitle
 - assertVisible:
-    id: GrownUpDoneReadingSpeedPage
-# Slice 253 item 2: beside mock frame 118 (Settings, two panes).
-- takeScreenshot: shot-118-settings
-# A second row swaps the right pane: Animal sounds replaces Reading speed, and the list is still there (nothing was pushed).
+    id: GalleryStore
+- assertVisible:
+    id: GalleryDone
+- assertNotVisible:
+    id: GrownUpBack
+- assertNotVisible: Slower is easier for little ones
+# A row opens its page inside the content area: Animal sounds, with the back arrow and no Done; the rail stays.
 - tapOn:
     text: "Animal sounds"
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible: "Animals say.*"
     timeout: 10000
-- assertNotVisible: Slower is easier for little ones
 - assertVisible:
+    id: GrownUpBack
+- assertNotVisible:
+    id: GrownUpDoneAnimalSoundsPage
+- assertNotVisible:
     id: SettingsReadingSpeedRow
 - assertVisible:
-    id: GrownUpDoneAnimalSoundsPage
-# Rotate upright: still Settings, one pane, no pushed page (the list and the Settings Done show, the right pane is gone).
+    id: GalleryDone
+# Rotate upright: the same page stays open, now above the tab bar.
 - setOrientation: PORTRAIT
 - extendedWaitUntil:
     visible:
-      id: GrownUpDoneSettingsPage
+      id: GrownUpBack
     timeout: 15000
+- assertVisible: "Animals say.*"
 - assertVisible:
-    id: SettingsReadingSpeedRow
-- assertNotVisible: "Animals say.*"
-# Rotate back: the same right pane (Animal sounds) is shown, not the first row again.
+    id: CornerTabBooks
+# Rotate back: still the same page.
 - setOrientation: LANDSCAPE_LEFT
 - extendedWaitUntil:
     visible: "Animals say.*"
     timeout: 15000
-- assertVisible:
-    id: SettingsReadingSpeedRow
-# Done in the right pane closes Settings as a whole, back to the grown-ups' corner.
+# The back arrow returns to the list; the rail stays.
 - tapOn:
-    id: GrownUpDoneAnimalSoundsPage
+    id: GrownUpBack
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
+      id: SettingsReadingSpeedRow
     timeout: 10000
+- assertVisible:
+    id: GalleryDone

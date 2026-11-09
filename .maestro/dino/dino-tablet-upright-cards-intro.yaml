@@ -39,7 +39,7 @@ onFlowComplete:
     visible:
       id: SettingsTitle
     timeout: 10000
-# Two panes upright: "About & updates" is a row of the list; its page opens on the right.
+# "About & updates" is a row of the list (a single column since Slice 325 part B); its page opens inside the Settings tab.
 - tapOn:
     text: "About & updates"
     waitToSettleTimeoutMs: 300
@@ -71,9 +71,8 @@ onFlowComplete:
     visible: Skip
     timeout: 15000
 - assertNotVisible: Dino has two places
-# Skip all ends the replay back on Settings.
+# Skip all ends the replay back on the About page, still open inside the Settings tab (Slice 325 part B).
 - tapOn: "Skip all"
 - extendedWaitUntil:
-    visible:
-      id: SettingsTitle
+    visible: "Show the intro again"
     timeout: 15000

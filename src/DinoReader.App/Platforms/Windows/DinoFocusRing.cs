@@ -57,7 +57,7 @@ internal static class DinoFocusRing
 		}
 
 		// The shelf's arrows are off while any overlay is open on it, so they cannot move the focus to a book behind the scrim.
-		bool wanted = page is SettingsPage || page is GalleryPage { OverlayOpen: false };
+		bool wanted = page is GalleryPage { OverlayOpen: false }; // Slice 325 part B: Settings is a tab of the gallery now, so the gallery's rule covers it
 		element.XYFocusKeyboardNavigation = wanted ? XYFocusKeyboardNavigationMode.Enabled : XYFocusKeyboardNavigationMode.Auto;
 	}
 

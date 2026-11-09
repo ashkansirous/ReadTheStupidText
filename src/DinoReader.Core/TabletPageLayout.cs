@@ -1,8 +1,5 @@
 namespace DinoReader.Core;
 
-/// <summary>What a store card looks like for one window: the cover, whether the card is slim (sub-line beside the title) and whether the action is a full-width button under the card.</summary>
-public readonly record struct StoreCardShape(int Columns, CoverSize Cover, bool Slim, bool ActionBelow);
-
 /// <summary>The page editor's picture on a tablet held upright: its height in dp, with the Change picture button over it.</summary>
 public readonly record struct EditorPictureBand(double Height, bool Strip);
 
@@ -12,13 +9,7 @@ public readonly record struct EditorPictureBand(double Height, bool Strip);
 /// </summary>
 public static class TabletPageLayout
 {
-    public const int StoreColumnsUpright = 2;
     public const int CastColumnsUpright = 2;
-
-    /// <summary>Frame 143: the store's covers are 90 dp wide, 3:4.</summary>
-    public static readonly CoverSize StoreCoverUpright = new(90, 120);
-
-    public const double StoreActionHeight = 48;
 
     /// <summary>Frames 142 and 145: the rounded panel behind a page picture has 24 dp corners (its colour is <c>ReadingTheme.PicturePanel</c>).</summary>
     public const double PanelRadius = 24;
@@ -38,22 +29,6 @@ public static class TabletPageLayout
     public const double PickerSideMargin = 80;
 
     public static bool Applies(double width, double height) => LandscapeLayout.IsTabletPortrait(width, height);
-
-    /// <summary>Store columns: two on a tablet held upright, else <see cref="SettingsLayout.StoreColumns"/>.</summary>
-    public static int StoreColumns(double width, double height) =>
-        Applies(width, height) ? StoreColumnsUpright : SettingsLayout.StoreColumns(width, height);
-
-    /// <summary>A store card for a window: tablet upright gets 90 dp covers, two columns of full cards and the action under them; anything else keeps Settings' shapes.</summary>
-    public static StoreCardShape StoreCard(double width, double height)
-    {
-        int columns = StoreColumns(width, height);
-        if (Applies(width, height))
-        {
-            return new StoreCardShape(columns, StoreCoverUpright, false, true);
-        }
-
-        return new StoreCardShape(columns, SettingsLayout.StoreCover(columns), SettingsLayout.SlimStoreCards(columns), false);
-    }
 
     /// <summary>Cast columns: two on a tablet held upright, else <see cref="LandscapeLayout.CastColumns"/>.</summary>
     public static int CastColumns(double width, double height) =>

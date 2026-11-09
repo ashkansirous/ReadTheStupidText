@@ -57,13 +57,8 @@ function Find-Visible { param([string] $Id) try { return Find-UiaVisibleById (Ge
 function Enter-GrownUpMode {
     if (Find-Visible 'GalleryDone') { return }
     Invoke-Uia (Wait-Until { Find-Visible 'GalleryGrownUps' } 15 'no For grown-ups button')
-    $ring = Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 15 'gate did not open'
-    Invoke-PressAndHold $ring $HoldMs
-    $sum = Wait-Until {
-        foreach ($e in (Get-DinoWindow).FindAll($script:TreeScope::Descendants, [System.Windows.Automation.Condition]::TrueCondition)) {
-            if ($e.Current.Name -match 'What is (\d+) plus (\d+)') { return [int]$Matches[1] + [int]$Matches[2] }
-        }
-    } 10 'gate sum did not appear'
+    Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 15 'gate did not open' | Out-Null
+    $sum = Invoke-GateHold -FindRing { Wait-Until { Find-UiaExact (Get-DinoWindow) $HoldRingName } 15 'gate did not open' } -PackageName $PackageName -HoldMs $HoldMs
     foreach ($ch in ([string]$sum).ToCharArray()) {
         Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) ([string]$ch) 'Button' } 5 "no keypad key $ch")
         Start-Sleep -Milliseconds 300

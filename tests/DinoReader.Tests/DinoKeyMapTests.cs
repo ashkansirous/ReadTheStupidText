@@ -28,10 +28,25 @@ public class DinoKeyMapTests
     }
 
     [Fact]
-    public void Esc_does_nothing_on_the_shelf_and_closes_a_sheet()
+    public void Esc_asks_to_close_on_the_shelf_and_closes_a_sheet()
     {
-        Assert.Equal(DinoKeyAction.None, Down(DinoKey.Escape, DinoScreen.Shelf));
+        Assert.Equal(DinoKeyAction.AskToClose, Down(DinoKey.Escape, DinoScreen.Shelf)); // Slice 325 part C4: like Android's Back
         Assert.Equal(DinoKeyAction.CloseSheet, Down(DinoKey.Escape, DinoScreen.Sheet));
+    }
+
+    // Slice 325 part A (frame W1): Esc leaves the corner from any tab; Ctrl+1/2/3 pick its tabs and nothing else has a Ctrl shortcut.
+    [Fact]
+    public void Esc_leaves_the_corner_and_ctrl_digits_pick_its_tabs()
+    {
+        Assert.Equal(DinoKeyAction.LeaveCorner, Down(DinoKey.Escape, DinoScreen.Corner));
+        Assert.Equal(DinoKeyAction.LeaveCorner, Down(DinoKey.Escape, DinoScreen.Corner, textField: true));
+        Assert.Equal(DinoKeyAction.CornerBooks, DinoKeyMap.ResolveShortcut(DinoKey.Digit1, DinoScreen.Corner));
+        Assert.Equal(DinoKeyAction.CornerStore, DinoKeyMap.ResolveShortcut(DinoKey.Digit2, DinoScreen.Corner));
+        Assert.Equal(DinoKeyAction.CornerSettings, DinoKeyMap.ResolveShortcut(DinoKey.Digit3, DinoScreen.Corner));
+        Assert.Equal(DinoKeyAction.None, DinoKeyMap.ResolveShortcut(DinoKey.Digit4, DinoScreen.Corner));
+        Assert.Equal(DinoKeyAction.None, DinoKeyMap.ResolveShortcut(DinoKey.Digit1, DinoScreen.Shelf));
+        Assert.Equal(DinoKeyAction.None, DinoKeyMap.ResolveShortcut(DinoKey.Digit1, DinoScreen.Gate));
+        Assert.Equal(DinoKeyAction.None, Down(DinoKey.Digit1, DinoScreen.Corner));
     }
 
     [Fact]
@@ -68,6 +83,18 @@ public class DinoKeyMapTests
         foreach (DinoKey key in new[] { DinoKey.Space, DinoKey.Left, DinoKey.Up, DinoKey.Down, DinoKey.Enter, DinoKey.Digit3 })
         {
             Assert.Equal(DinoKeyAction.None, Down(key, DinoScreen.Settings));
+        }
+    }
+
+    // Slice 325 part B: the Settings list is the corner's Settings tab now, so the corner answers the Right arrow the same way (the page passes it on to the focused row, or lets the arrow move the focus).
+    [Fact]
+    public void Right_in_the_corner_opens_the_focused_settings_row()
+    {
+        Assert.Equal(DinoKeyAction.OpenRow, Down(DinoKey.Right, DinoScreen.Corner));
+        Assert.Equal(DinoKeyAction.None, Down(DinoKey.Right, DinoScreen.Corner, textField: true));
+        foreach (DinoKey key in new[] { DinoKey.Space, DinoKey.Left, DinoKey.Up, DinoKey.Down, DinoKey.Enter })
+        {
+            Assert.Equal(DinoKeyAction.None, Down(key, DinoScreen.Corner));
         }
     }
 

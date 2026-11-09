@@ -51,7 +51,7 @@
   <data name="Store_Title" xml:space="preserve"><value>Boutique</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>Choisies et distribuées pour Dino</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Obtenir</value></data>
-  <data name="Store_Downloaded" xml:space="preserve"><value>Téléchargée</value></data>
+  <data name="Store_OnShelf" xml:space="preserve"><value>Dans la bibliothèque</value></data>
   <data name="Store_Tag_Hot" xml:space="preserve"><value>Tendance</value></data>
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Populaire</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Recommandé</value></data>
@@ -63,7 +63,6 @@
   <data name="Store_TryAgain" xml:space="preserve"><value>Réessayer</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>Pas encore de nouvelles histoires</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>De nouvelles histoires sont ajoutées de temps en temps. Revenez bientôt.</value></data>
-  <data name="Store_BackToStories" xml:space="preserve"><value>Retour à mes histoires</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>Obtenir {0}</value></data>
   <!-- Slice 112: store age and author filters -->
   <data name="Store_AllAges" xml:space="preserve"><value>Tous les âges</value></data>
@@ -141,7 +140,7 @@
   <data name="Settings_GroupReading" xml:space="preserve"><value>Lecture</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>Ce téléphone</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>Nouvelle version</value></data>
-  <data name="Settings_GearLabel" xml:space="preserve"><value>Réglages (adultes)</value></data>
+  <data name="Settings_GroupComputer" xml:space="preserve"><value>Cet ordinateur</value></data>
   <data name="Settings_About" xml:space="preserve"><value>À propos et mises à jour</value></data>
   <data name="Settings_On" xml:space="preserve"><value>Activé</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Désactivé</value></data>
@@ -154,6 +153,12 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Espace adultes</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Réservé aux adultes. L’étagère de votre enfant est à un tap.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Retour à l’étagère de mon enfant</value></data>
+  <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
+  <data name="Corner_TabBooks" xml:space="preserve"><value>Livres</value></data>
+  <data name="Corner_ChildsShelf" xml:space="preserve"><value>Étagère enfant</value></data>
+  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>Seuls les adultes voient ceci.</value></data>
+  <!-- Slice 325 part C: the kids' shelf's short title -->
+  <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Histoires</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Réorganiser</value></data>
   <data name="Gallery_ReorderHint" xml:space="preserve"><value>Appuie longuement sur un livre, puis fais-le glisser vers un nouvel endroit. L’étagère de ton enfant montre le même ordre.</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Impossible d’enregistrer le nouvel ordre</value></data>
@@ -168,7 +173,6 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>Retirer « {0} » de l'étagère ?</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Ses pages, images et voix seront supprimées de ce téléphone. Vous pourrez le rajouter gratuitement depuis la boutique.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Retirer</value></data>
-  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Obtenir plus de livres</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>Une histoire dans une autre langue est lue dans sa propre langue, sauf si « Traduire dans ma langue » est activé pour cette histoire.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Appuyez et maintenez 3 secondes.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Appuyez et maintenez 3 secondes</value></data>

@@ -53,7 +53,7 @@
   <data name="Store_Title" xml:space="preserve"><value>Laden</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>Für Dino ausgesucht und besetzt</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Holen</value></data>
-  <data name="Store_Downloaded" xml:space="preserve"><value>Geladen</value></data>
+  <data name="Store_OnShelf" xml:space="preserve"><value>Im Regal</value></data>
   <data name="Store_Tag_Hot" xml:space="preserve"><value>Angesagt</value></data>
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Beliebt</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Empfohlen</value></data>
@@ -65,7 +65,6 @@
   <data name="Store_TryAgain" xml:space="preserve"><value>Noch einmal versuchen</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>Noch keine neuen Geschichten</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>Ab und zu kommen neue dazu. Schau bald wieder vorbei.</value></data>
-  <data name="Store_BackToStories" xml:space="preserve"><value>Zurück zu meinen Geschichten</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>{0} holen</value></data>
   <!-- Slice 112: store age and author filters -->
   <data name="Store_AllAges" xml:space="preserve"><value>Alle Altersstufen</value></data>
@@ -143,7 +142,7 @@
   <data name="Settings_GroupReading" xml:space="preserve"><value>Lesen</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>Dieses Telefon</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>Neue Version</value></data>
-  <data name="Settings_GearLabel" xml:space="preserve"><value>Einstellungen (Erwachsene)</value></data>
+  <data name="Settings_GroupComputer" xml:space="preserve"><value>Dieser Computer</value></data>
   <data name="Settings_About" xml:space="preserve"><value>Info und Updates</value></data>
   <data name="Settings_On" xml:space="preserve"><value>An</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Aus</value></data>
@@ -156,6 +155,12 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Bereich für Erwachsene</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Das sehen nur Erwachsene. Das Regal deines Kindes ist nur einen Tipp entfernt.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Zurück zum Regal meines Kindes</value></data>
+  <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
+  <data name="Corner_TabBooks" xml:space="preserve"><value>Bücher</value></data>
+  <data name="Corner_ChildsShelf" xml:space="preserve"><value>Kinderregal</value></data>
+  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>Das sehen nur Erwachsene.</value></data>
+  <!-- Slice 325 part C: the kids' shelf's short title -->
+  <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Geschichten</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Neu anordnen</value></data>
   <data name="Gallery_ReorderHint" xml:space="preserve"><value>Halte ein Buch gedrückt und zieh es dann an einen neuen Platz. Das Regal deines Kindes zeigt dieselbe Reihenfolge.</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Die neue Reihenfolge ließ sich nicht speichern</value></data>
@@ -170,7 +175,6 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>„{0}“ aus dem Regal entfernen?</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Seiten, Bilder und Stimmen werden von diesem Handy entfernt. Du kannst es kostenlos wieder aus dem Laden hinzufügen.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Entfernen</value></data>
-  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Mehr Bücher holen</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>Eine Geschichte in einer anderen Sprache wird weiter in ihrer eigenen Sprache gelesen, außer „In meine Sprache übersetzen“ ist für diese Geschichte an.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Drücke und halte 3 Sekunden lang.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Drücken und 3 Sekunden halten</value></data>

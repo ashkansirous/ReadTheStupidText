@@ -51,7 +51,7 @@
   <data name="Store_Title" xml:space="preserve"><value>Магазин</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>Подобраны и распределены по ролям для Дино</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Скачать</value></data>
-  <data name="Store_Downloaded" xml:space="preserve"><value>Скачано</value></data>
+  <data name="Store_OnShelf" xml:space="preserve"><value>На полке</value></data>
   <data name="Store_Tag_Hot" xml:space="preserve"><value>Хит</value></data>
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Популярное</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Рекомендуем</value></data>
@@ -63,7 +63,6 @@
   <data name="Store_TryAgain" xml:space="preserve"><value>Повторить</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>Новых историй пока нет</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>Новые истории добавляются время от времени. Загляните позже.</value></data>
-  <data name="Store_BackToStories" xml:space="preserve"><value>К моим историям</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>Скачать: {0}</value></data>
   <!-- Slice 112: store age and author filters -->
   <data name="Store_AllAges" xml:space="preserve"><value>Любой возраст</value></data>
@@ -141,7 +140,7 @@
   <data name="Settings_GroupReading" xml:space="preserve"><value>Чтение</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>Этот телефон</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>Новая версия</value></data>
-  <data name="Settings_GearLabel" xml:space="preserve"><value>Настройки (для взрослых)</value></data>
+  <data name="Settings_GroupComputer" xml:space="preserve"><value>Этот компьютер</value></data>
   <data name="Settings_About" xml:space="preserve"><value>О приложении и обновления</value></data>
   <data name="Settings_On" xml:space="preserve"><value>Вкл.</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Выкл.</value></data>
@@ -154,6 +153,12 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Уголок для взрослых</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Это видят только взрослые. Полка ребёнка — одним касанием.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Назад к полке ребёнка</value></data>
+  <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
+  <data name="Corner_TabBooks" xml:space="preserve"><value>Книги</value></data>
+  <data name="Corner_ChildsShelf" xml:space="preserve"><value>Полка ребёнка</value></data>
+  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>Это видят только взрослые.</value></data>
+  <!-- Slice 325 part C: the kids' shelf's short title -->
+  <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Истории</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Изменить порядок</value></data>
   <data name="Gallery_ReorderHint" xml:space="preserve"><value>Нажмите на книгу и удерживайте, затем перетащите её на новое место. На полке ребёнка будет тот же порядок.</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Не удалось сохранить новый порядок</value></data>
@@ -168,7 +173,6 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>Убрать «{0}» с полки?</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Его страницы, картинки и голоса будут удалены с этого телефона. Его можно снова добавить бесплатно из магазина.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Убрать</value></data>
-  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Получить больше книг</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>История на другом языке по-прежнему читается на своём языке, если для неё не включён перевод на мой язык.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды</value></data>

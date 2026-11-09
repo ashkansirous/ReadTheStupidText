@@ -55,16 +55,14 @@ name: Changing the app language fetches the books' audio in it
     text: "فارسی"
     waitToSettleTimeoutMs: 300
 - tapOn:
-    id: GrownUpDone
+    id: GrownUpBack
     waitToSettleTimeoutMs: 300
-# The root is rebuilt in Farsi and Settings reopens on it.
+# The root is rebuilt in Farsi and the corner reopens on its Settings tab (Slice 325 part B: Settings is a tab, nothing is pushed).
 - extendedWaitUntil:
     visible:
       id: SettingsTitle
     timeout: 15000
-# Leave Settings and grown-up mode: the open-book hook refuses while grown-up mode is on.
-- tapOn:
-    id: GrownUpDoneSettingsPage
+# Leave grown-up mode: the open-book hook refuses while grown-up mode is on.
 - extendedWaitUntil:
     visible:
       id: GalleryDone

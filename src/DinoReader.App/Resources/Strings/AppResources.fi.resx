@@ -52,7 +52,7 @@
   <data name="Store_Title" xml:space="preserve"><value>Kauppa</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>Valittu ja äänetty Dinolle</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Hae</value></data>
-  <data name="Store_Downloaded" xml:space="preserve"><value>Ladattu</value></data>
+  <data name="Store_OnShelf" xml:space="preserve"><value>Hyllyssä</value></data>
   <data name="Store_Tag_Hot" xml:space="preserve"><value>Hitti</value></data>
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Suosittu</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Suositeltu</value></data>
@@ -64,7 +64,6 @@
   <data name="Store_TryAgain" xml:space="preserve"><value>Yritä uudelleen</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>Ei vielä uusia tarinoita</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>Uusia lisätään aina välillä. Käy katsomassa pian uudelleen.</value></data>
-  <data name="Store_BackToStories" xml:space="preserve"><value>Takaisin omiin tarinoihini</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>Hae {0}</value></data>
   <!-- Slice 112: store age and author filters -->
   <data name="Store_AllAges" xml:space="preserve"><value>Kaikki iät</value></data>
@@ -142,7 +141,7 @@
   <data name="Settings_GroupReading" xml:space="preserve"><value>Lukeminen</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>Tämä puhelin</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>Uusi versio</value></data>
-  <data name="Settings_GearLabel" xml:space="preserve"><value>Asetukset (aikuiset)</value></data>
+  <data name="Settings_GroupComputer" xml:space="preserve"><value>Tämä tietokone</value></data>
   <data name="Settings_About" xml:space="preserve"><value>Tietoja ja päivitykset</value></data>
   <data name="Settings_On" xml:space="preserve"><value>Päällä</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Pois</value></data>
@@ -155,6 +154,12 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Aikuisten nurkka</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Vain aikuiset näkevät tämän. Lapsesi hylly on yhden napautuksen päässä.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Takaisin lapseni hyllylle</value></data>
+  <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
+  <data name="Corner_TabBooks" xml:space="preserve"><value>Kirjat</value></data>
+  <data name="Corner_ChildsShelf" xml:space="preserve"><value>Lapsen hylly</value></data>
+  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>Vain aikuiset näkevät tämän.</value></data>
+  <!-- Slice 325 part C: the kids' shelf's short title -->
+  <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Tarinat</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Järjestä uudelleen</value></data>
   <data name="Gallery_ReorderHint" xml:space="preserve"><value>Paina kirjaa pitkään ja vedä se uuteen paikkaan. Lapsesi hylly näyttää saman järjestyksen.</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Uutta järjestystä ei voitu tallentaa</value></data>
@@ -169,7 +174,6 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>Poistetaanko ”{0}” hyllystä?</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Sen sivut, kuvat ja äänet poistetaan tästä puhelimesta. Voit lisätä sen uudelleen ilmaiseksi kaupasta.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Poista</value></data>
-  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Hae lisää kirjoja</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>Toisella kielellä oleva tarina luetaan edelleen omalla kielellään, ellei sen tarinan kohdalla ole valittu Käännä omalle kielelleni.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Paina ja pidä 3 sekuntia.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Paina ja pidä 3 sekuntia</value></data>

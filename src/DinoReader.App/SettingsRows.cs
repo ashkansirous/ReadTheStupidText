@@ -14,12 +14,6 @@ public static class SettingsRows
 	private const double RowFontSize = 14.5;
 	private const double ChevronSize = 14;
 
-	/// <summary>Raised after a settings card writes a setting (speed, animal sounds, usage counts), so the Settings list beside an open page updates its row value at once (Slice 232 part D).</summary>
-	public static event Action<SettingsSection, string>? SettingChanged;
-
-	/// <summary>Tells the Settings list which row changed and its new value text, so the list reloads nothing.</summary>
-	internal static void RaiseSettingChanged(SettingsSection section, string value) => SettingChanged?.Invoke(section, value);
-
 	/// <summary>The "On" or "Off" a Settings row shows for a switch.</summary>
 	internal static string OnOff(bool on) => on ? AppResources.Settings_On : AppResources.Settings_Off;
 
@@ -32,87 +26,6 @@ public static class SettingsRows
 			valueLabel.Text = value;
 		}
 	}
-
-	/// <summary>
-	/// Slice 234 part B (mock Batch 45 frame 140): puts a <see cref="NavRow"/>'s value under its name, left aligned, with no chevron (the 300 dp list of a tablet held upright), or back at the row's end.
-	/// Moves the row's own views and sets sizes; nothing is rebuilt, so the row's button, tap and accessible name stay. A row with no value, or a tag instead, is left as it is.
-	/// </summary>
-	public static void StackNavValue(Grid row, bool stacked)
-	{
-		Label? value = row.Children.OfType<Label>().Skip(1).FirstOrDefault();
-		Label? title = row.Children.OfType<Label>().FirstOrDefault();
-		if (title is null)
-		{
-			return;
-		}
-
-		if (value is null)
-		{
-			StackTag(row, title, stacked);
-			return;
-		}
-
-		row.RowDefinitions = StackedRows(stacked);
-		row.MinimumHeightRequest = stacked ? StackedRowHeight : NavRowHeight;
-		Grid.SetRow(title, stacked ? StackedTitleRow : 0);
-		Grid.SetRowSpan(title, 1);
-		title.VerticalOptions = stacked ? LayoutOptions.End : LayoutOptions.Center;
-		Grid.SetRow(value, stacked ? StackedValueRow : 0);
-		Grid.SetColumn(value, stacked ? FirstColumn : FirstColumn + 1);
-		value.VerticalOptions = stacked ? LayoutOptions.Start : LayoutOptions.Center;
-		value.HorizontalTextAlignment = stacked ? TextAlignment.Start : TextAlignment.End;
-		value.FontSize = stacked ? StackedValueSize : NavValueSize;
-		value.MaximumWidthRequest = stacked ? double.PositiveInfinity : NavValueMaxWidth;
-		foreach (IconView chevron in row.Children.OfType<IconView>())
-		{
-			chevron.IsVisible = !stacked;
-		}
-
-		foreach (Button button in row.Children.OfType<Button>())
-		{
-			Grid.SetRowSpan(button, stacked ? StackedRowCount : 1);
-		}
-	}
-
-	// A row that carries a pill ("New version") instead of a value: the pill goes under the name the same way, so it stays out of the narrow list's name.
-	private static void StackTag(Grid row, Label title, bool stacked)
-	{
-		Border? tag = row.Children.OfType<Border>().FirstOrDefault();
-		if (tag is null)
-		{
-			return;
-		}
-
-		row.RowDefinitions = StackedRows(stacked);
-		row.MinimumHeightRequest = stacked ? StackedRowHeight : NavRowHeight;
-		Grid.SetRow(title, stacked ? StackedTitleRow : 0);
-		title.VerticalOptions = stacked ? LayoutOptions.End : LayoutOptions.Center;
-		Grid.SetRow(tag, stacked ? StackedValueRow : 0);
-		Grid.SetColumn(tag, stacked ? FirstColumn : FirstColumn + 1);
-		tag.HorizontalOptions = stacked ? LayoutOptions.Start : LayoutOptions.Fill;
-		tag.VerticalOptions = stacked ? LayoutOptions.Start : LayoutOptions.Center;
-		foreach (IconView chevron in row.Children.OfType<IconView>())
-		{
-			chevron.IsVisible = !stacked;
-		}
-
-		foreach (Button button in row.Children.OfType<Button>())
-		{
-			Grid.SetRowSpan(button, stacked ? StackedRowCount : 1);
-		}
-	}
-
-	private const double StackedRowHeight = 60;
-	private const int StackedTitleRow = 1;
-	private const int StackedValueRow = 2;
-	private const int StackedRowCount = 4;
-
-	// Stacked: a star row above and below the name and value, which are Auto rows. The stars share a short row's spare height (the pair stays centred in the 60 dp minimum)
-	// and shrink to nothing when a long value wraps, so the row grows with its text instead of clipping it.
-	private static RowDefinitionCollection StackedRows(bool stacked) => stacked
-		? [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star)]
-		: [];
-	private const double StackedValueSize = 13;
 
 	public static Label ValueLabel(string text) => new()
 	{
@@ -185,23 +98,24 @@ public static class SettingsRows
 
 	private const int ChevronSlot = 2;
 
-	private static Grid NewRowGrid(double minHeight) => new()
+	private static Grid NewRowGrid(double minHeight, double padding = RowPadding) => new()
 	{
 		MinimumHeightRequest = minHeight,
 		ColumnDefinitions =
 		[
-			new ColumnDefinition(new GridLength(RowPadding)),
+			new ColumnDefinition(new GridLength(padding)),
 			new ColumnDefinition(GridLength.Star),
 			new ColumnDefinition(GridLength.Auto),
 			new ColumnDefinition(GridLength.Auto),
-			new ColumnDefinition(new GridLength(RowPadding)),
+			new ColumnDefinition(new GridLength(padding)),
 		],
 		ColumnSpacing = 8,
 	};
 
 	public static BoxView Divider() => new() { HeightRequest = 1, Color = DinoTokens.Get(DinoTokens.Hairline) };
 
-	private const double NavRowHeight = 52;
+	private const double NavRowHeight = 50; // frame W1: rows are at least 50 high with 16 at each side
+	private const double NavRowPadding = 16;
 	private const double NavTitleSize = 15;
 	private const double NavValueSize = 14.5;
 	private const double NavValueMaxWidth = 170;
@@ -216,7 +130,7 @@ public static class SettingsRows
 	/// </summary>
 	public static Grid NavRow(string title, string? value, Func<Task> tapped, BusyGuard busy, string? tagText = null, string? automationId = null)
 	{
-		Grid row = NewRowGrid(NavRowHeight);
+		Grid row = NewRowGrid(NavRowHeight, NavRowPadding);
 		row.Add(OwnScript.InOwnScript(new Label { Text = title, FontSize = NavTitleSize, VerticalOptions = LayoutOptions.Center }), FirstColumn);
 		if (tagText is not null)
 		{
@@ -325,10 +239,11 @@ public static class SettingsRows
 	}
 
 	/// <summary>An upper-case group heading above a card (mock 80, "Reading", "This phone").</summary>
-	public static Label GroupHeading(string text)
+	public static Label GroupHeading(string text, string? automationId = null)
 	{
 		var label = new Label
 		{
+			AutomationId = automationId,
 			Text = text.ToUpperInvariant(),
 			FontSize = HeadingSize,
 			FontAttributes = FontAttributes.Bold,
@@ -458,7 +373,6 @@ public static class AnimalSoundsCard
 		try
 		{
 			AnimalSoundsPreference.Save(on);
-			SettingsRows.RaiseSettingChanged(SettingsSection.AnimalSounds, SettingsRows.OnOff(on));
 		}
 		catch (Exception)
 		{
@@ -510,11 +424,7 @@ public static class UsageCountsCard
 	public static Border Build(UsageCounter counter)
 	{
 		var toggle = new ToggleSwitch { IsOn = counter.Enabled, AccessibleName = AppResources.Usage_Title, VerticalOptions = LayoutOptions.Center };
-		toggle.Toggled += (_, _) =>
-		{
-			counter.Enabled = toggle.IsOn;
-			SettingsRows.RaiseSettingChanged(SettingsSection.UsageCounts, SettingsRows.OnOff(toggle.IsOn));
-		};
+		toggle.Toggled += (_, _) => counter.Enabled = toggle.IsOn;
 		var text = new VerticalStackLayout
 		{
 			Spacing = 2,
@@ -690,6 +600,5 @@ public static class ReadingSpeedCard
 	{
 		PlaybackRate rate = ReadingSpeed.Clamp(slider.Value);
 		ReadingSpeedPreference.Save(rate);
-		SettingsRows.RaiseSettingChanged(SettingsSection.ReadingSpeed, AppResources.Format(AppResources.Speed_Value, rate.Value));
 	}
 }

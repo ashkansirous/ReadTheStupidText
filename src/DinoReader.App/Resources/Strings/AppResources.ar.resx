@@ -51,7 +51,7 @@
   <data name="Store_Title" xml:space="preserve"><value>المتجر</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>مختارة وموزّعة الأدوار من أجل دينو</value></data>
   <data name="Store_Get" xml:space="preserve"><value>تنزيل</value></data>
-  <data name="Store_Downloaded" xml:space="preserve"><value>تم التنزيل</value></data>
+  <data name="Store_OnShelf" xml:space="preserve"><value>على الرف</value></data>
   <data name="Store_Tag_Hot" xml:space="preserve"><value>رائج</value></data>
   <data name="Store_Tag_Popular" xml:space="preserve"><value>شائع</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>موصى به</value></data>
@@ -63,7 +63,6 @@
   <data name="Store_TryAgain" xml:space="preserve"><value>حاول مرة أخرى</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>لا قصص جديدة بعد</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>تُضاف قصص جديدة من وقت لآخر. عُد قريبًا.</value></data>
-  <data name="Store_BackToStories" xml:space="preserve"><value>العودة إلى قصصي</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>تنزيل {0}</value></data>
   <!-- Slice 112: store age and author filters -->
   <data name="Store_AllAges" xml:space="preserve"><value>كل الأعمار</value></data>
@@ -141,7 +140,7 @@
   <data name="Settings_GroupReading" xml:space="preserve"><value>القراءة</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>هذا الهاتف</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>إصدار جديد</value></data>
-  <data name="Settings_GearLabel" xml:space="preserve"><value>الإعدادات (للكبار)</value></data>
+  <data name="Settings_GroupComputer" xml:space="preserve"><value>هذا الكمبيوتر</value></data>
   <data name="Settings_About" xml:space="preserve"><value>حول التطبيق والتحديثات</value></data>
   <data name="Settings_On" xml:space="preserve"><value>يعمل</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>متوقف</value></data>
@@ -154,6 +153,12 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>ركن الكبار</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>هذا للكبار فقط. رف طفلك على بُعد لمسة واحدة.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>العودة إلى رف طفلي</value></data>
+  <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
+  <data name="Corner_TabBooks" xml:space="preserve"><value>الكتب</value></data>
+  <data name="Corner_ChildsShelf" xml:space="preserve"><value>رف الطفل</value></data>
+  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>هذا للكبار فقط.</value></data>
+  <!-- Slice 325 part C: the kids' shelf's short title -->
+  <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>قصص</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>إعادة الترتيب</value></data>
   <data name="Gallery_ReorderHint" xml:space="preserve"><value>اضغط مطولًا على كتاب ثم اسحبه إلى مكان جديد. يعرض رف طفلك الترتيب نفسه.</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>تعذّر حفظ الترتيب الجديد</value></data>
@@ -168,7 +173,6 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>إزالة «{0}» من الرف؟</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>ستُحذف صفحاتها وصورها وأصواتها من هذا الهاتف. يمكنك إضافتها من جديد مجانًا من المتجر.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>إزالة</value></data>
-  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>احصل على المزيد من الكتب</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>تُقرأ القصة بلغة أخرى بلغتها الأصلية، ما لم يكن خيار «الترجمة إلى لغتي» مفعّلًا لتلك القصة.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>اضغط مطولاً لمدة 3 ثوانٍ.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>اضغط مطولاً لمدة 3 ثوانٍ</value></data>

@@ -1,0 +1,71 @@
+# Slice 325 part C (grown-up mock "Dino reader- 2026-11-08 grownup.dc.html", frames K1-K5, KL1, KT1, KT2): the kids' shelf wears the corner's skeleton in cream: a header (the Dino icon, the title, the flag of the story language,
+# the Grown-ups pill) under 600 dp wide, a cream rail with the name row and a full-width Grown-ups button from 600 or held sideways. The title is the first thing to give way: "My stories", then "Stories", then nothing.
+# Scripted only: the gate is not tapped. Which shot beside which frame: shot-K1-shelf beside K1 (K2 on a 393 dp phone; the 375 x 667 frame is this flow on the AVD with `wm size 750x1334` and `wm density 320`, restored after),
+# shot-K1de-shelf beside K1-de (the same size, German with two story languages: the title is hidden and the Dino icon stands alone), shot-KL1-shelf held sideways, shot-KT1-shelf on RTST_Tablet upright.
+# The title state is in the log: full, short or hidden. Against the old shelf (a header that cut "My stories" to "Stories..." and a sideways row) these lines never appear, so the flow fails on a build from before this slice.
+# layout-check
+# expect-log: HOOK skip-first-run ok
+# expect-log: [Redesign] shelf title=full chrome=bar
+# expect-log: [Redesign] shelf title=full chrome=rail
+appId: uk.sirous.dinoreader.dbg
+name: Kids shelf wears the corner skeleton in cream and gives the title way
+# Runs after the flow pass or fail, so a failure never leaves the next flow sideways.
+onFlowComplete:
+  - setOrientation: PORTRAIT
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow uses the starter shelf only and reads nothing aloud, so it needs no pack or own book.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# The header: title, Grown-ups pill, the covers; no corner chrome.
+- extendedWaitUntil:
+    visible: ".*Three Little Pigs.*"
+    timeout: 15000
+- assertVisible:
+    id: GalleryTitle
+- assertVisible:
+    id: GalleryGrownUps
+- assertNotVisible:
+    id: CornerTabBooks
+- assertNotVisible:
+    id: GalleryDone
+- takeScreenshot: shot-K1-shelf
+- takeScreenshot: shot-KT1-shelf
+# Held sideways: a cream rail beside a grid of covers, the Grown-ups button in the rail.
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible: ".*Three Little Pigs.*"
+    timeout: 15000
+- assertVisible:
+    id: GalleryGrownUps
+- assertVisible:
+    id: GalleryTitle
+- takeScreenshot: shot-KL1-shelf
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: GalleryGrownUps
+    timeout: 15000
+# German with two story languages (the flag shows) at 375 dp: "Meine Geschichten" and "Geschichten" do not fit beside "Für Erwachsene", so the title hides and the Dino icon stands alone.
+# This part reads the German shelf; on a wider phone the title may stay, and shot-K1de-shelf is taken either way for the contact sheet.
+- launchApp:
+    # launchApp-restart: a restart is wanted, the German app language is read at start.
+    # clearState: wipes the app's data (settings, packs, own books), as above; fine, a fresh start in German with the starter shelf.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: de
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- assertVisible:
+    id: GalleryGrownUps
+- takeScreenshot: shot-K1de-shelf

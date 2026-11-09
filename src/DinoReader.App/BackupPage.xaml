@@ -17,11 +17,11 @@
     </ContentPage.Resources>
 
     <Grid x:Name="BackupRoot" RowDefinitions="Auto,*">
-        <local:GrownUpHeader x:Name="Header" Title="{x:Static res:AppResources.Backup_Title}" BackRequested="OnBackTapped" DoneRequested="OnBackTapped" />
+        <local:GrownUpHeader x:Name="Header" Title="{x:Static res:AppResources.Backup_Title}" BackRequested="OnBackTapped" ButtonVisible="False" />
 
-        <!-- Screen 24. -->
+        <!-- Screen 24. Slice 325 part B: hosted in the Settings tab, whose content area already holds the side margins. -->
         <ScrollView Grid.Row="1" x:Name="MainPanel">
-            <VerticalStackLayout x:Name="MainStack" Padding="14,0,14,20" Spacing="14">
+            <VerticalStackLayout x:Name="MainStack" Padding="0,0,0,20" Spacing="14">
               <!-- Slice 232 part D (mock frame 124): the two cards stack upright and sit side by side held sideways; the page only moves them in the grid, never rebuilds them. -->
               <Grid x:Name="CardsGrid" RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" RowSpacing="14" ColumnSpacing="14">
                 <Border x:Name="SaveCard" Grid.ColumnSpan="2" BackgroundColor="White" StrokeThickness="0" Padding="18">
@@ -60,7 +60,7 @@
         </ScrollView>
 
         <!-- Screen 25: the restore result. -->
-        <VerticalStackLayout Grid.Row="1" x:Name="ResultPanel" IsVisible="False" Padding="14,0" Spacing="16" VerticalOptions="Center">
+        <VerticalStackLayout Grid.Row="1" x:Name="ResultPanel" IsVisible="False" Padding="0" Spacing="16" VerticalOptions="Center">
             <Label x:Name="ResultTitle" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center" SemanticProperties.HeadingLevel="Level2" />
             <Border BackgroundColor="White" StrokeThickness="0" Padding="18,6">
                 <Border.StrokeShape>

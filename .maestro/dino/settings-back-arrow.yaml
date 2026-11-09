@@ -1,0 +1,76 @@
+# Slice 325 part B (grown-up mock frame W1): Settings is a tab of the grown-ups' corner and its sub-pages open inside the tab's content area with their own back arrow, the bar or rail staying. There is no Done anywhere in
+# the corner: the back arrow goes up one level (Reading speed to the Settings list), the coral pill leaves. Replaces settings-done-button (Slice 229), whose Done buttons are gone.
+# The gate (hold, then a sum) is tapped through by hand: the enter-grown-up hook stands in for a passed gate.
+# Against the old pushed Settings page the "[Redesign] settings page=" lines and the back arrow id never appear, so this flow fails on a build from before this part.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK enter-grown-up ok
+# expect-log: [Redesign] settings page=ReadingSpeedPage hosted=true
+# expect-log: [Redesign] settings page=list hosted=false
+appId: uk.sirous.dinoreader.dbg
+name: Settings, the back arrow goes up one level and there is no Done
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow needs only the starter shelf and the Settings list, no own book or voice pack.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+- tapOn:
+    id: GallerySettings
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: SettingsReadingSpeedRow
+    timeout: 10000
+# The list is a tab: no back arrow of its own and no Done; the corner's way back and tabs stay.
+- assertNotVisible:
+    id: GrownUpBack
+- assertNotVisible:
+    id: GrownUpDoneSettingsPage
+- assertVisible:
+    id: GalleryDone
+- assertVisible:
+    id: CornerTabBooks
+- tapOn:
+    id: SettingsReadingSpeedRow
+- extendedWaitUntil:
+    visible: Slower is easier for little ones
+    timeout: 10000
+# The sub-page has the back arrow and no Done, and the corner's chrome is still there.
+- assertVisible:
+    id: GrownUpBack
+- assertNotVisible:
+    id: GrownUpDoneReadingSpeedPage
+- assertVisible:
+    id: GalleryDone
+- assertVisible:
+    id: CornerTabBooks
+# The back arrow goes up one level: the Settings list, not the corner's Books and not the shelf.
+- tapOn:
+    id: GrownUpBack
+- extendedWaitUntil:
+    visible:
+      id: SettingsReadingSpeedRow
+    timeout: 10000
+- assertVisible:
+    id: GalleryDone
+# The coral pill leaves the corner.
+- tapOn:
+    id: GalleryDone
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    notVisible:
+      id: GalleryDone
+    timeout: 10000

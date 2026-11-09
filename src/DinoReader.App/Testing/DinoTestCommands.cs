@@ -28,6 +28,9 @@ internal static partial class DinoTestCommands
 	private const string ShelfReorderMoveName = "shelf-reorder-move"; // Slice 264
 	private const string ShelfOrderResetName = "shelf-order-reset"; // Slice 264
 	private const string StoriesFolderName = "stories"; // same folder as MauiProgram.StoriesFolder
+	private const string TabKey = "tab";
+	private const string TabBooks = "books";
+	private const string TabStore = "store";
 	private const string ReorderFromKey = "from";
 	private const string ReorderToKey = "to";
 	private const string SetLanguageName = "set-language";
@@ -152,7 +155,7 @@ internal static partial class DinoTestCommands
 
 		if (command.Name == EnterGrownUpName)
 		{
-			_ = EnterGrownUpAsync();
+			_ = EnterGrownUpAsync(command.Get(TabKey, TabBooks));
 			return TestHookDispatcher.Ok;
 		}
 
@@ -422,7 +425,8 @@ internal static partial class DinoTestCommands
 		}
 	}
 
-	private static async Task EnterGrownUpAsync()
+	// Slice 325 A6: tab=books|store|settings (default books) opens that tab of the corner (Slice 325 part B: the Store and Settings tabs are hosted in the corner's chrome).
+	private static async Task EnterGrownUpAsync(string tab)
 	{
 		try
 		{
@@ -437,6 +441,11 @@ internal static partial class DinoTestCommands
 			{
 				Log($"{EnterGrownUpName} failed mode kept resetting");
 				return;
+			}
+
+			if (root.RootPage is GalleryPage gallery && tab != TabBooks)
+			{
+				await MainThread.InvokeOnMainThreadAsync(() => gallery.DebugSelectTabAsync(tab == TabStore ? CornerTab.Store : CornerTab.Settings));
 			}
 
 			Log($"{EnterGrownUpName} entered");

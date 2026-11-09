@@ -1,13 +1,14 @@
-# Slice 234 part C (mock Batch 45 frame 143): the store on a tablet held upright (run on RTST_Tablet, 800 x 1280 dp) lays its cards in two columns with 90 dp covers and the action as a full-width button under each card.
-# The tablet twin of dino-landscape-store, which expects the phone's columns: that flow is phone-only, this one is tablet-only (a phone never logs [TabletUpright]). The list loads from the store server; offline the page shows its calm offline state, and the line is still written.
+# Slice 234 part C, rewritten by Slice 325 part B (grown-up mock frame T2): the Store tab on a tablet (run on RTST_Tablet, 800 x 1280 dp). Upright the content beside the 260 dp rail is 540 dp wide, one column of cards; held sideways it is
+# 990 dp (1280 less the 290 dp rail), two columns (decision 4: two columns from 800 dp of content). The cards are frame T2's: a 76 dp cover, the title, the credits, the length, and "On the shelf" or the Get pill at the end.
+# The tablet twin of dino-landscape-store (phone). The list loads from the store server; offline the tab shows its calm offline state, and the column lines are still written.
 # Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback. The gate is not tapped: the enter-grown-up hook stands in for a passed gate (grown-ups-button.yaml covers the gate chain).
+# Against the old tablet-upright store ("[TabletUpright] store ... actionBelow=") the lines below never appear, so this flow fails on a build from before this part.
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK enter-grown-up ok
-# The line is written when the card shape changes: upright (two columns, action below, 90 dp cover), then sideways on a tablet (three columns, not "actionBelow"), then upright again.
-# expect-log: [TabletUpright] store columns=2 actionBelow=True cover=90
-# expect-log: [Landscape] store columns=3
+# expect-log: [Redesign] store columns=1
+# expect-log: [Redesign] store columns=2
 appId: uk.sirous.dinoreader.dbg
-name: Store on a tablet held upright has two columns with the action under each card
+name: Store on a tablet is one column upright and two columns sideways
 onFlowComplete:
   - setOrientation: PORTRAIT
 ---
@@ -34,25 +35,23 @@ onFlowComplete:
     id: GalleryStore
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
-    visible: Store
+    visible:
+      id: GalleryStoreSub
     timeout: 15000
-- assertVisible:
+- assertNotVisible:
+    id: GrownUpBack
+- assertNotVisible:
     id: GrownUpDone
-# Sideways on a tablet is three columns (Slice 232), and back upright is the two-column page again with the page still open.
+# Sideways on a tablet is two columns, and the tab stays open; back upright is one column again with the tab still open.
 - setOrientation: LANDSCAPE_LEFT
 - extendedWaitUntil:
     visible:
-      id: GrownUpDone
+      id: GalleryStoreSub
     timeout: 15000
 - setOrientation: PORTRAIT
 - extendedWaitUntil:
     visible:
-      id: GrownUpDone
+      id: GalleryStoreSub
     timeout: 15000
-- assertVisible: Store
-- tapOn:
-    id: GrownUpDone
-- extendedWaitUntil:
-    visible:
-      id: GalleryDone
-    timeout: 10000
+- assertVisible:
+    id: GalleryDone

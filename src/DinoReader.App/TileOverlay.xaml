@@ -31,11 +31,12 @@
                 <Label Text="{Binding YourVoiceLabel}" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource Ink}" VerticalOptions="Center" LineBreakMode="NoWrap" />
             </HorizontalStackLayout>
         </Border>
+        <!-- Slice 325 (grown-up mock frames P1-P3, T1): the dot is 30 / 32 / 36 across, 4 / 5 / 6 in from the corner (the page's TileMore* resources); the tap area stays 48 dp. -->
         <Grid x:Name="MoreButton" HorizontalOptions="End" VerticalOptions="Start" WidthRequest="48" HeightRequest="48" AutomationId="TileMore"
               SemanticProperties.Description="{Binding MoreHint}">
-            <Border WidthRequest="36" HeightRequest="36" BackgroundColor="White" StrokeThickness="0">
+            <Border WidthRequest="{DynamicResource TileMoreSize}" HeightRequest="{DynamicResource TileMoreSize}" HorizontalOptions="End" VerticalOptions="Start" Margin="{DynamicResource TileMoreInset}" BackgroundColor="White" StrokeThickness="0">
                 <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="18" />
+                    <RoundRectangle CornerRadius="{DynamicResource TileMoreRadius}" />
                 </Border.StrokeShape>
                 <Border.Shadow>
                     <Shadow Brush="#2b2540" Opacity="0.2" Offset="0,2" Radius="3" />

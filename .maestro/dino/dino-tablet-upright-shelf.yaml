@@ -1,16 +1,16 @@
-# Slice 234 part A (mock Batch 45 frame 133): on a tablet held upright (run on RTST_Tablet, 800 x 1280 dp) the kids' shelf is a grid of clamp(floor((800 - 80) / 170), 3, 6) = 4 columns with 40 dp sides;
-# rotating to landscape gives the Slice 232 grid (6 columns), and rotating back keeps the shelf and brings the 4 columns back.
+# Slice 325 part C (grown-up mock frames KT1, KT2): on a tablet held upright (run on RTST_Tablet, 800 x 1280 dp) the kids' shelf has a 260 dp cream rail (name row, Grown-ups button) and three columns;
+# rotating to landscape gives the 290 dp rail and four columns, and rotating back keeps the shelf and brings the three columns back. (Replaces Slice 234's four columns and 40 dp sides, frame 133.)
 # Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback if a device ignores it. Tablet emulator only: a phone never logs tabletUpright=True.
 # The shelf line is written only when the layout changes, so each of these tokens comes from its own pass (run-flows matches whole tokens, so each token is its own expect-log).
 # expect-log: HOOK skip-first-run ok
-# expect-log: layout=grid
-# expect-log: columns=4
+# expect-log: layout=rail
+# expect-log: columns=3
 # expect-log: tabletUpright=True
-# Landscape: Slice 232's 190 dp rule gives 6 columns of 1280 dp, and the tablet rule is off.
-# expect-log: columns=6
+# Landscape: four columns, and the tablet-upright rule is off.
+# expect-log: columns=4
 # expect-log: tabletUpright=False
 appId: uk.sirous.dinoreader.dbg
-name: Shelf on a tablet held upright shows four columns and keeps its books through a rotation
+name: Shelf on a tablet held upright shows three columns and keeps its books through a rotation
 ---
 - launchApp:
     # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow uses the starter shelf only and reads nothing aloud, so it needs no pack or own book.

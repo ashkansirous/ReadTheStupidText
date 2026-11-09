@@ -56,14 +56,12 @@ name: Leaving the Language page with the system back key fetches the books audio
     waitToSettleTimeoutMs: 300
 # Leave the page with the system back key instead of the Done tap (the start must not depend on Done).
 - back
-# The root is rebuilt in Farsi and Settings reopens on it.
+# The root is rebuilt in Farsi and the corner reopens on its Settings tab (Slice 325 part B: Settings is a tab, nothing is pushed).
 - extendedWaitUntil:
     visible:
       id: SettingsTitle
     timeout: 15000
-# Leave Settings and grown-up mode: the open-book hook refuses while grown-up mode is on.
-- tapOn:
-    id: GrownUpDoneSettingsPage
+# Leave grown-up mode: the open-book hook refuses while grown-up mode is on.
 - extendedWaitUntil:
     visible:
       id: GalleryDone

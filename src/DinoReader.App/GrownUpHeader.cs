@@ -6,7 +6,7 @@ namespace DinoReader;
 
 /// <summary>
 /// The header row of every grown-up page (Slice 229, Batch 43 frames 104-108): a back button at the left, the title with an optional sub-line, and one main button at the
-/// right, "Done" or, when the intro wizard pushed the page, "Continue" with a chevron. The row never mirrors, in any language (Slice 96): Back stays left and the button stays
+/// right, "Done" or, when the intro wizard pushed the page, "Continue" with a chevron. The sub-pages of the corner's Settings tab (Slice 325 part B) hide the button: back arrow and title only. The row never mirrors, in any language (Slice 96): Back stays left and the button stays
 /// right; only the words read in their own direction. The page decides what each tap does (<see cref="BackRequested"/>, <see cref="DoneRequested"/>); both go
 /// to the same place unless the page has something to save first.
 /// </summary>
@@ -29,6 +29,7 @@ public sealed class GrownUpHeader : Grid
 	private const double ChevronSize = 16;
 	private const double ChevronGap = 4;
 	private const string DoneAutomationId = "GrownUpDone";
+	private const string BackAutomationId = "GrownUpBack"; // Slice 325 part B: the corner's sub-pages have no Done, so a flow taps the back arrow by this id
 
 	private readonly Label _title = new() { FontSize = TitleSize, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1 };
 	private readonly Label _subtitle = new() { FontSize = SubtitleSize, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1, VerticalOptions = LayoutOptions.Center };
@@ -115,7 +116,7 @@ public sealed class GrownUpHeader : Grid
 		}
 	}
 
-	/// <summary>False hides the Back button (a page shown in Settings' right pane, whose list header already has one, Slice 232 part D).</summary>
+	/// <summary>False hides the Back button.</summary>
 	public bool BackVisible
 	{
 		get => _back.IsVisible;
@@ -149,6 +150,7 @@ public sealed class GrownUpHeader : Grid
 	{
 		var back = new Border
 		{
+			AutomationId = BackAutomationId,
 			WidthRequest = BackSize,
 			HeightRequest = BackSize,
 			StrokeThickness = 0,

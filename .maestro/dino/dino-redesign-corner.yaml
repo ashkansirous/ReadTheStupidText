@@ -1,0 +1,118 @@
+# Slice 325 part A (grown-up mock "Dino reader- 2026-11-08 grownup.dc.html", frames P1-P5, L1, T1): the grown-ups' corner is three tabs (Books, Store, Settings) with the coral way back in the ink. Under 600 dp wide the
+# tabs are a bar along the bottom; held sideways (or on a tablet) the ink is a left rail holding the name, the way back and the tabs. Scripted only: the gate is not tapped (the enter-grown-up hook stands in for it).
+# Which shot beside which frame: shot-P2-corner beside P2 (the same upright shot is T1 on RTST_Tablet), shot-L1-corner beside L1. The 375 x 667 frame (P1) is this flow on the AVD with `wm size 750x1334`
+# and `wm density 320` (restored after) and renamed by tools/emulator/contact-sheet.ps1 -Since. The Store and Settings tabs (part B) are hosted inside the corner, so the way back and the tabs stay on screen while they show; this flow taps them and returns by the Books tab.
+# Against the old corner (a gear, "Get more books" and a sticky bottom button) the tab ids and the log line below never appear, so this flow fails on a build from before this slice.
+# layout-check
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK enter-grown-up ok
+# expect-log: [Redesign] corner tab=books chrome=bar
+# expect-log: [Redesign] corner tab=books chrome=rail
+appId: uk.sirous.dinoreader.dbg
+name: Grown-ups corner has three tabs and the way back in the ink
+# Runs after the flow pass or fail, so a failure never leaves the next flow sideways.
+onFlowComplete:
+  - setOrientation: PORTRAIT
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow uses the starter shelf only and reads nothing aloud, so it needs no pack or own book.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+# The three tabs, the one line, the books with their dots, and no way in (the shelf's pill is gone).
+- assertVisible:
+    id: CornerTabBooks
+- assertVisible:
+    id: GalleryStore
+- assertVisible:
+    id: GallerySettings
+- assertVisible:
+    id: GalleryCornerLine
+- assertVisible:
+    id: TileMore
+- assertNotVisible:
+    id: GalleryGrownUps
+- assertVisible: "Child’s shelf"
+- takeScreenshot: shot-P2-corner
+- takeScreenshot: shot-T1-corner
+# Settings tab: the list shows inside the corner, the way back and the tabs stay; the Books tab brings the books back.
+- tapOn:
+    id: GallerySettings
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: SettingsReadingSpeedRow
+    timeout: 10000
+- assertVisible:
+    id: GalleryDone
+- assertVisible:
+    id: CornerTabBooks
+- assertNotVisible:
+    id: StoryTile
+- tapOn:
+    id: CornerTabBooks
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 10000
+# Store tab: the same (no Done, no back arrow: the way back is the coral pill).
+- tapOn:
+    id: GalleryStore
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    notVisible:
+      id: StoryTile
+    timeout: 15000
+- assertVisible:
+    id: GalleryDone
+- assertVisible:
+    id: CornerTabBooks
+- tapOn:
+    id: CornerTabBooks
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 10000
+# Held sideways: the rail carries the name, the way back, the one short line and the tabs.
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 15000
+- assertVisible:
+    id: GalleryStore
+- assertVisible:
+    id: GallerySettings
+- assertVisible:
+    id: GalleryCornerLine
+- assertVisible:
+    id: StoryTile
+- takeScreenshot: shot-L1-corner
+# The coral pill leaves the corner (and so does Back on a tab): the kids' shelf, with the pill that goes the other way.
+- tapOn:
+    id: GalleryDone
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryGrownUps
+    timeout: 15000
+- assertNotVisible:
+    id: CornerTabBooks
+- assertNotVisible:
+    id: TileMore

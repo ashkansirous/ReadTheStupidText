@@ -38,15 +38,15 @@ onFlowComplete:
     visible:
       id: SettingsTitle
     timeout: 10000
-# Sideways the Settings list pane shows only the first rows, so scroll "About & updates" into view inside the left list column (about 15% across).
+# Sideways the Settings list shows only the first rows, so scroll "About & updates" into view inside the content column right of the rail (about 60% across; Slice 325 part B: one list, no right pane).
 - repeat:
     times: 6
     while:
       notVisible: "About & updates"
     commands:
       - swipe:
-          start: 15%, 80%
-          end: 15%, 30%
+          start: 60%, 80%
+          end: 60%, 30%
 - tapOn:
     text: "About & updates"
     waitToSettleTimeoutMs: 300
@@ -82,9 +82,8 @@ onFlowComplete:
     visible: Skip
     timeout: 15000
 - assertNotVisible: Dino has two places
-# Skip all ends the replay back on Settings.
+# Skip all ends the replay back on the About page, still open inside the Settings tab (Slice 325 part B).
 - tapOn: "Skip all"
 - extendedWaitUntil:
-    visible:
-      id: SettingsTitle
+    visible: "Show the intro again"
     timeout: 15000

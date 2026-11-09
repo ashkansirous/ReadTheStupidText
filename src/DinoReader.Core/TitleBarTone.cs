@@ -27,7 +27,14 @@ public static class TitleBarTones
 		_ => TitleBarTone.Cream,
 	};
 
-	/// <summary>The window title: the book's name on the reading screen, else the app's name.</summary>
-	public static string WindowTitle(TitleBarPage page, string? bookTitle, string appName) =>
-		page == TitleBarPage.Reading && !string.IsNullOrWhiteSpace(bookTitle) ? $"{bookTitle} - {appName}" : appName;
+	/// <summary>The window title: the book's name on the reading screen, "Grown-ups' corner · Dino Reader" in the corner (Slice 325 decision 8, frame W1), else the app's name.</summary>
+	public static string WindowTitle(TitleBarPage page, string? bookTitle, string appName, string? cornerName = null)
+	{
+		if (page == TitleBarPage.Reading && !string.IsNullOrWhiteSpace(bookTitle))
+		{
+			return $"{bookTitle} - {appName}";
+		}
+
+		return page == TitleBarPage.Corner && !string.IsNullOrWhiteSpace(cornerName) ? $"{cornerName} · {appName}" : appName;
+	}
 }

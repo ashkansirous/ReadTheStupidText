@@ -1,3 +1,5 @@
+using DinoReader.Core;
+
 namespace DinoReader;
 
 /// <summary>
@@ -6,7 +8,7 @@ namespace DinoReader;
 /// mode: only the reading screen follows the phone's dark mode. Android's MainActivity supplies
 /// <see cref="Applier"/>; other platforms leave it null.
 /// </summary>
-internal static class SystemBarIcons
+internal static partial class SystemBarIcons
 {
 	// Relative luminance at which black and white icons have equal contrast (WCAG): about 0.179.
 	private const double LightBackgroundLuminance = 0.179;
@@ -33,7 +35,8 @@ internal static class SystemBarIcons
 		}
 
 		double luminance = (RedWeight * Linear(background.Red)) + (GreenWeight * Linear(background.Green)) + (BlueWeight * Linear(background.Blue));
-		_darkIcons = luminance > LightBackgroundLuminance;
+		bool ink = page is IInkUnderStatusBar { InkUnderStatusBar: true };
+		_darkIcons = StatusBarIcons.UseDarkIcons(ink, luminance > LightBackgroundLuminance);
 		Reapply();
 	}
 
@@ -49,6 +52,16 @@ internal static class SystemBarIcons
 		if (_darkIcons is { } dark)
 		{
 			Applier?.Invoke(dark);
+			ApplyPlatform(dark);
 		}
 	}
+
+	/// <summary>The iOS twin of <see cref="Applier"/> (Platforms/iOS); other platforms do nothing.</summary>
+	static partial void ApplyPlatform(bool darkIcons);
+}
+
+/// <summary>A page whose header is ink under the status bar (the grown-ups' corner on a phone held upright): its icons are light whatever its own background is.</summary>
+internal interface IInkUnderStatusBar
+{
+	bool InkUnderStatusBar { get; }
 }
