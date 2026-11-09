@@ -36,7 +36,7 @@
       "speaker": "Wolf",
       "source": "Then I'll huff, and I'll puff, and I'll blow your house in!",
       "occurrence": 1,
-      "direction": "growly and threatening, huffing and puffing"
+      "direction": "playful and silly, gentle puffing like a friendly storybook wolf, light and cheerful, not scary"
     },
     {
       "speaker": "Pop",
@@ -47,7 +47,7 @@
       "speaker": "Wolf",
       "source": "Then I'll huff, and I'll puff, and I'll blow your house in!",
       "occurrence": 2,
-      "direction": "growly and threatening, huffing and puffing"
+      "direction": "playful and silly, gentle puffing like a friendly storybook wolf, light and cheerful, not scary"
     },
     {
       "speaker": "Pim",
@@ -58,7 +58,7 @@
       "speaker": "Wolf",
       "source": "Then I'll huff, and I'll puff, and I'll blow your house in!",
       "occurrence": 3,
-      "direction": "growly and angry, huffing and puffing"
+      "direction": "playful and silly, gentle puffing like a friendly storybook wolf, light and cheerful, not scary"
     },
     {
       "speaker": "Wolf",
@@ -90,7 +90,7 @@
       "speaker": null,
       "source": "Splash, splash, splash!",
       "lang": "fa",
-      "say": "شالاپ، شالاپ، شالاپ!"
+      "say": "شَلَپ، شَلَپ، شَلَپ!"
     },
     {
       "speaker": "Pim",
@@ -107,79 +107,79 @@
   ],
   "audioPacks": {
     "ar": {
-      "version": 2,
-      "hash": "df8a2bddbd546dcc603e677690ab11841a24e05727d656202c7d4012be198bbf",
-      "bytes": 1722709
+      "version": 3,
+      "hash": "18e3f7991a466619906d8332a112d506d4556ea405ccd6f4e38645fd86fcf7d8",
+      "bytes": 1678715
     },
     "da": {
-      "version": 1,
-      "hash": "9ddf095be5bc75082360d063d35938e0dc3d0e73555fb5b0c74aff837d379e8a",
-      "bytes": 1548144
+      "version": 2,
+      "hash": "eb78d447cf0448743a1482f34e2cd08e53b479d24db245b2ededfbd947a90780",
+      "bytes": 1501552
     },
     "de": {
-      "version": 1,
-      "hash": "852c04143d10e1b7a04962437074be2f6621c9fccde5a1146b8a0360a3fea4f7",
-      "bytes": 1680452
+      "version": 2,
+      "hash": "2316eb7f11fb1820e87b879e8bea8f1d518d8e8142eb4d043afe74474f7363d8",
+      "bytes": 1636482
     },
     "en": {
-      "version": 1,
-      "hash": "cfab7fcfc8f4085f9d67e1e0c9484449a793d6354fa5037baa4308dbf26efb39",
-      "bytes": 1557654
+      "version": 2,
+      "hash": "6f02e849df94fa485498dd8bf9b10be7faad47793b67d4450ef81242adf438a3",
+      "bytes": 1514197
     },
     "es": {
-      "version": 1,
-      "hash": "57d12b33d92b6c82bae1c82f75c59f6d5b3a183d669271378871c777037f26e3",
-      "bytes": 1681329
+      "version": 2,
+      "hash": "71f454bce3a85028d991531c47f2e594fbe2852791a77c9514b3bea5231ed394",
+      "bytes": 1649404
     },
     "fa": {
-      "version": 2,
-      "hash": "8df11e073be125b8aee95d535b05fd06609c878753de08c3d64680d21fe7759e",
-      "bytes": 1658881
+      "version": 3,
+      "hash": "87f98a3fdc342ab8cb4ccc08af3e465b03dc036602406574d95258dad7afe11c",
+      "bytes": 1619564
     },
     "fi": {
-      "version": 1,
-      "hash": "a07b7f0bf8fd0cdb498839adb66dc067f317427e13583d0e1cdaf89108b2a47f",
-      "bytes": 1677440
+      "version": 2,
+      "hash": "17ba8a2884a88cf87bb84c35f18841f94c563d74a733871b714a84fa27a6a7b2",
+      "bytes": 1610245
     },
     "fr": {
-      "version": 1,
-      "hash": "568dd0e60db0a4d9ffb28bc19a0e7266ffe9a138b8ebe32cf099b07d2bf98895",
-      "bytes": 1607455
+      "version": 2,
+      "hash": "50717cb22c356422191ca136c3c15b0bc49510286531a910ff546ffe90dcd0ba",
+      "bytes": 1561302
     },
     "ja": {
-      "version": 1,
-      "hash": "a43e9fc8a29650868aaf20a4090729d0e70aea1250a24ca50f6838bed5c2d540",
-      "bytes": 1834216
+      "version": 2,
+      "hash": "6d75e9e9d2727151357c424603ba6c304a4fe16fd01d995c7b1827e58e951077",
+      "bytes": 1766453
     },
     "nb": {
-      "version": 1,
-      "hash": "4e975a30c637d1ae3f5d719eedfaa87a53a6a21b718745c0ced354d01894fd6d",
-      "bytes": 1588617
+      "version": 2,
+      "hash": "b6fadec4558b1a76eb919bc789b7cc5dfa7c28579d980b251f66cce4d3875086",
+      "bytes": 1543540
     },
     "nl": {
-      "version": 1,
-      "hash": "9cbc29f48d6181aab2f727fbf5143fde7f794e122cff2e37d841f0398762c9b2",
-      "bytes": 1559236
+      "version": 2,
+      "hash": "48c4bf9dca8de6e095bb979a322561ca8532f2f0ab618148ba2443649c7b42de",
+      "bytes": 1498505
     },
     "pt": {
-      "version": 1,
-      "hash": "3c9d285f97f266623121e7c56ad46d544f370c01951550711463b009f5135913",
-      "bytes": 1735506
+      "version": 2,
+      "hash": "d0f22f6a0892c84854d22159d1bcd5a1d77ccd9513531b102eefd2a94e1d47b1",
+      "bytes": 1687311
     },
     "ru": {
-      "version": 1,
-      "hash": "3de2437b7739cdc9e945383992fe084e8088e8a03760f54e2a94e69118a32deb",
-      "bytes": 1746147
+      "version": 2,
+      "hash": "fdf12b7f5546e9178c75d27f1a2610b92e5b326e03c80793c024538325ac9781",
+      "bytes": 1689148
     },
     "sv": {
-      "version": 1,
-      "hash": "be7731fdf62f70e4f137ee1deb8aca9b69672a7140c170e265c77398c6720da0",
-      "bytes": 1671288
+      "version": 2,
+      "hash": "e3c086f996f24ff424f68b27e690f1e058d094b8cf80051a8c08d31ce6ac2eba",
+      "bytes": 1614185
     },
     "zh": {
-      "version": 1,
-      "hash": "43b6ab6400472091faf5520d624c8edcfbf8326e4d7f34e874ca1670eeb0d0b9",
-      "bytes": 1645421
+      "version": 2,
+      "hash": "234aeddac81455d9bcc9e9937254b5ae97235a46f093cef3306944ea7202cdb1",
+      "bytes": 1570995
     }
   }
 }
