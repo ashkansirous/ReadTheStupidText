@@ -4,7 +4,8 @@
 
 **Touches:** `src/DinoReader.App/SystemBarIcons.cs`, `src/DinoReader.App/Platforms/iOS/SystemBarIcons.ios.cs`,
 `src/DinoReader.App/Platforms/Android/MainActivity.cs`, `src/DinoReader.App/CornerShell.cs`, `src/DinoReader.App/CornerTabs.cs`,
-`src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/SettingsPage.cs`, `tests/DinoReader.Tests/**`,
+`src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/Platforms/iOS/Info.plist`,
+`tests/DinoReader.Tests/**`,
 `docs/plan/slices/349-dino-corner-status-bar-and-tab-labels.md`
 
 ## Why
@@ -27,6 +28,10 @@ name, not read).
 - [ ] 2. Give the corner tab labels room for descenders and for Arabic (and Farsi) script: no clipping at the default
   font scale and at the largest system font scale.
 - [ ] 3. Unit test for the icon-colour decision if it is pure logic.
+- [ ] 4. Remove the camera and photo-library usage texts from `src/DinoReader.App/Platforms/iOS/Info.plist` (about lines
+  50-60): nothing in Dino asks for them since Slice 278. The live privacy page (Slice 348, PR #1007) says they are being
+  removed, and App Review may ask about declared but unused permissions. Check no other Info.plist key or entitlement
+  depends on them.
 
 ## Verification
 
