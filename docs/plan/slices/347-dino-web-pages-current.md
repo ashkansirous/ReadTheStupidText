@@ -2,8 +2,8 @@
 
 *Planned (2026-11-09).*
 
-**Touches:** `site/dino/index.html`, `site/dino/*.webp` (new screenshots), `docs/plan/slices/347-dino-web-pages-current.md`; in the
-`sirous.uk` repo: `src/data/products.ts` (the `dino-reader` entry), `src/assets/products/dino-reader*.{png,webp}`.
+**Touches:** `site/dino/index.html`, `site/dino/*.webp` (new screenshots), `docs/plan/slices/347-dino-web-pages-current.md`. Also, in the
+separate sirous.uk repo (not this one): the dino-reader entry of its products data file and its dino-reader images.
 
 ## Why
 
