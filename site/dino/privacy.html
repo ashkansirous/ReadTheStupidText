@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Privacy Policy &mdash; Dino Book Reader</title>
-  <meta name="description" content="Privacy policy for Dino Book Reader, a children&rsquo;s book reader. The app has no accounts or ads, keeps stories, photos and scans on the device, and sends only anonymous counts (which can be turned off) that identify no one. On Android, Google&rsquo;s ML Kit sends Google technical diagnostics." />
+  <meta name="description" content="Privacy policy for Dino Book Reader, a children&rsquo;s book reader. The app has no accounts or ads, keeps a family&rsquo;s voice recordings on the device, and sends only anonymous counts and crash reports (which can be turned off) that identify no one." />
   <link rel="icon" type="image/png" href="/dino/icon.png" />
   <style>
     :root { color-scheme: light dark; --bg: #F3EFE6; --ink: #2b2540; --soft: #5a5470; --muted: #8a8399; --link: #5B57E8; }
@@ -27,75 +27,69 @@
 </head>
 <body>
   <h1>Privacy Policy &mdash; Dino Book Reader</h1>
-  <p class="eff"><strong>Effective date:</strong> 8 November 2026</p>
+  <p class="eff"><strong>Effective date:</strong> 9 November 2026</p>
 
   <p class="lede">Dino Book Reader (&ldquo;the app&rdquo;) is a book reader for children aged 3 to 9. It reads
-  stories aloud with a different voice for each character. This policy explains how the app handles
+  stories aloud with a different voice for each character, and a family can record their own voice for the characters. This policy explains how the app handles
   data, for the children who use it and the grown-ups who set it up.</p>
 
   <h2>The short version</h2>
-  <p><strong>The Dino Book Reader app does not ask for, collect or share personal information such as names, accounts, photos or recordings. Every request it makes carries the device&rsquo;s IP address, as all internet traffic does; the only place this project&rsquo;s server keeps that address is a short technical request log, deleted within seven days (see &ldquo;Server request log&rdquo; below).</strong>
+  <p><strong>The Dino Book Reader app does not ask for, collect or share personal information such as names, accounts, photos or recordings. Every request it makes carries the device&rsquo;s IP address, as all internet traffic does; the only place this project&rsquo;s server keeps that address is a short technical request log that Cloudflare deletes automatically after a few days (see &ldquo;Server request log&rdquo; below).</strong>
   It has no accounts, no advertising, and no third-party analytics. It does send anonymous usage counts to this
   project&rsquo;s own server, with no name, no identifier of the child, the install or the device, and nothing a
   child typed; a grown-up can turn this off in Settings (see &ldquo;Anonymous usage counts&rdquo; below). Like most web servers,
-  this project&rsquo;s server keeps a short technical log of requests, which can include the IP address, for at most seven days
+  this project&rsquo;s server keeps a short technical log of requests, which can include the IP address, for only a few days
   (see &ldquo;Server request log&rdquo; below). If the app crashes it can also
   send a crash report on the same switch (see &ldquo;Crash reports&rdquo; below). Everything
-  else the app does happens <strong>on the device</strong>, apart from downloading voice packs and free stories. On Android, the Google
-  ML Kit components the app uses send Google technical diagnostics data, described under
-  &ldquo;Google ML Kit (Android)&rdquo; below. Your stories, photos, scans and recordings are never sent.</p>
+  else the app does happens <strong>on the device</strong>, apart from downloading free stories and their audio from this project&rsquo;s own server.
+  Your family&rsquo;s recordings are never sent.</p>
 
   <h2>What the app processes, and where</h2>
   <ul>
-    <li><strong>Stories you add</strong> (typed or pasted text, files, and photos or scans of book
-      pages) are read and stored on the device only. They are never uploaded.</li>
-    <li><strong>Photos and scans</strong> are turned into text by on-device text recognition. The
-      picture stays on the device, in the app&rsquo;s private storage, and is not sent to anyone.</li>
-    <li><strong>Translation</strong>, where the app offers it, runs on the device with downloaded
-      language models, or uses the translation that comes built into the story. Your text is never
-      sent to a translation service.</li>
-    <li><strong>Speech</strong> is generated on the device by an offline voice engine. No text or
-      audio is sent to any server.</li>
-    <li><strong>Recordings of a parent&rsquo;s voice</strong> are made only if a grown-up opens the Record screen
-      (behind the grown-ups gate) and taps record, to read a page of a story aloud in their own voice. A recording
-      is saved on the device, in that story&rsquo;s private folder, and is played back when the story is read. It is
-      never sent to anyone, never analysed and never used for anything else. It is included in a backup file only
-      when a grown-up makes one and chooses where to keep it, and it is deleted when the grown-up deletes it or the
-      story. The app does not record the child, and does not listen at any other time.</li>
-    <li><strong>Settings and the story library</strong> (voices chosen for characters, reading
-      progress, display choices) are stored on the device and never leave it.</li>
+    <li><strong>Stories</strong> come only from this project&rsquo;s free story store. The app has no way to
+      add a book from typed text, files, photos or scans.</li>
+    <li><strong>Speech</strong> is the stories&rsquo; pre-made audio, downloaded from the store, plus a family&rsquo;s own
+      recordings. The app does not turn text into speech on the device, and no text is sent to any server to be read aloud
+      or translated. Translations are built into the stories.</li>
+    <li><strong>Recordings of a family&rsquo;s voice</strong> are made only if a grown-up opens the Record screen
+      (behind the grown-ups gate) and taps record, to read a character&rsquo;s lines in their own voice. A recording is
+      kept for one story language of one story. It is saved on the device, in that story&rsquo;s private folder, and is
+      played back when the story is read. It is never sent to anyone, never analysed and never used for anything else. It is
+      included in the app&rsquo;s own backup file only when a grown-up makes one and chooses where to keep it (see the backup note below), and it is deleted when the
+      grown-up deletes it or the story. On Android the app turns off the system&rsquo;s automatic app backup. On iPhone the app does not exclude its files from the device&rsquo;s own iCloud or computer backup, so if the family has that backup on, it may include the recordings; the app itself never uploads them. The app does not record the child, and does not listen at any other time.</li>
+    <li><strong>Settings and the story library</strong> (the story languages, reading progress, display choices) are
+      stored on the device and are not uploaded; the only facts about them that leave it are the few anonymous counts listed under &ldquo;Anonymous usage counts&rdquo; (such as which story languages were chosen).</li>
+    <li><strong>Backup and restore.</strong> A grown-up can save one backup file of the stories and recordings, and
+      choose where it is kept; the app does not upload it. Restoring reads a file the grown-up picks.</li>
     <li>The app contains <strong>no advertising and no in-app purchases</strong>, and it does not
       link children to other apps or websites.</li>
   </ul>
 
   <h2>Network use</h2>
-  <p><strong>Voice and language packs, and free stories.</strong> The app downloads voice and language packs
-  (files it needs to speak, recognise and translate text) from this project&rsquo;s public GitHub
-  Releases page. The download is a plain file request: no account, no identifier, and none of the
-  stories, photos or scans is sent. Once a pack is installed the app works offline.</p>
-  <p><strong>Free stories.</strong> Behind the grown-ups gate, the app can show a store of free
-  stories. Opening it fetches the list of stories, their cover pictures, and any story a grown-up
-  chooses to get, from this project&rsquo;s own server (dinoreader.sirous.uk). These are plain file
-  requests: no account, no identifier, and nothing about the child, the device&rsquo;s stories, photos
-  or scans is sent. The app does not use cookies. The server&rsquo;s own short request log is described under &ldquo;Server request log&rdquo; below. What the app counts about reading is described next.</p>
+  <p><strong>Free stories and their audio.</strong> The app shows a store of free
+  stories (a new install picks its first books from it, and a grown-up can open it again behind the grown-ups gate). Opening it fetches the list of stories, their cover pictures, and any story chosen,
+  from this project&rsquo;s own server (dinoreader.sirous.uk). The app also downloads each book&rsquo;s pre-made audio, one
+  pack per language the family has chosen, from the same server (the addresses come from that list), and now and then (when the app starts, when it comes back to the front, when the story language changes, and in a weekly update check) fetches the list again to check for a newer version of a book on the shelf, and downloads the newer text or audio. These are plain file
+  requests: no account, no identifier, and nothing about the child or the recordings is sent. The app does not use cookies. Each time the app starts or comes back to the front it also fetches a small settings file
+  (dinoreader.sirous.uk/api/app-config: whether counting is on, and the oldest app version still allowed), again a plain request that sends nothing about the child. Once a book and its audio are on the device the app works offline. The server&rsquo;s own short request log is described under &ldquo;Server request log&rdquo; below. What the app counts about reading is described next.</p>
   <p><strong>Anonymous usage counts.</strong> To learn which books families enjoy and which features are used, the app
   counts a few things and sends the counts to this project&rsquo;s own server (dinoreader.sirous.uk), in one small batch
   when a reading session ends or the app next starts. Today it counts: that a book was opened and that a book was read to
   the end; that a book was listened to for 30 seconds or more, and how many seconds of audio were played in a reading
-  (one whole number when the reading is paused or stopped, never a time of day); that a free story was downloaded (and whether the age or author filter was in use, never which); that a
-  grown-up added a book of their own (and whether it came from photos, a PDF, a scan or typed text, or was put back by restoring a backup); that a page recording
-  was made (and roughly how many pages of the book are recorded: 1, 2&ndash;5, 6&ndash;10 or more); that a voice, a voice
-  style or the narrator was changed; that the language was changed (from which language to which); that a &ldquo;please wait&rdquo; panel
+  (one whole number of seconds when the reading is paused or stopped); that a free story was downloaded (and whether the age or author filter was in use, never which); that a
+  reading started, was paused, was resumed or stopped (and, from a fixed list, why it stopped: the book was left, it reached
+  the end, it was cancelled, the language changed, a new reading replaced it, it was skipped, it failed or the app stopped it for another internal reason), and that a book was left; that a book on the shelf was
+  checked against a newer version in the store, and the two version numbers; that a family recording
+  was made (and roughly how many pages of the book are recorded in that language: 1, 2&ndash;5, 6&ndash;10 or 11 or more); that the app language was changed (from which language to which); that a &ldquo;please wait&rdquo; panel
   appeared or was cancelled (which kind of wait, from a fixed list, and for how long, as a coarse bucket); that the
-  first-run introduction was started, which of its four steps (the store, recording a book, adding a book, choosing story
+  first-run introduction was started (the first time or as a replay), which of its steps (finding the places, a first read, recording, choosing story
   languages) was tried or skipped, and whether it was finished or skipped; that a grown-up chose which languages stories can be
   in (how many, from one to three, and where it was set, and each language added); that a child switched a story&rsquo;s
-  language while reading (to which language); that a voice for one of those languages finished downloading, failed or was
-  cancelled (which language); which voice a reading used (the story&rsquo;s recorded audio, or the phone&rsquo;s own voice and, from a fixed list, why: no recorded audio on the phone,
-  its download failed, or it did not fit the text); that a download of a story&rsquo;s recorded audio started, finished or failed (and, from a fixed list, how it failed); and that the app was opened. Each count carries only: what happened; which free or starter book it was (its public story code) or just
-  &ldquo;own&rdquo; for a book a grown-up added, never its title or text; the language; the one extra fact named
-  above (such as the kind of source or the page range); whether a parent recording is on the book; the app version;
-  the platform (Android, iPhone or Windows); and the date, with no time of day.
+  language while reading (to which language); which audio a reading used (the book&rsquo;s pre-made audio for every sentence, for some of them, or for none,
+  with how many sentences each way and, from a fixed list, why some had none); that a download of a book&rsquo;s pre-made audio started, finished, was cancelled or failed (and, from a fixed list, how it failed); that a feature
+  fell back to something simpler (such as an audio clip that could not be played or the store that could not be reached; the part of the app and the reason come from fixed lists, with how many times it happened in that session); and that the app was opened. Each count carries only: what happened; which free store book it was (its public story code), never its title or text; the language; the one extra fact named
+  above (such as the page range or a version number); whether a family recording is on the book; the app version;
+  the platform (Android, iPhone or Windows); and, added by the server, the time the batch arrived and the random session number described below.
   </p>
   <p>Each batch of counts also says a few coarse things about the device, as fixed lists and ranges: the form factor
   (phone, tablet, desktop or other), the operating system&rsquo;s major version, the processor type (arm64, x64, x86,
@@ -108,7 +102,7 @@
   <p>  There is no name, account, advertising or device identifier, no install identifier, no IP address kept with the counts (see &ldquo;Server request log&rdquo; below), and
   nothing a child typed, so a count carries nothing that names a child, a family or a device. The one number that goes
   with the counts is a random session number: it is made new every time the app starts and is never reused for a later start. It lives in memory, and is also written only inside counts
-  still waiting in the app's local send queue; it is gone once those counts are sent. It cannot tell two sessions of one person apart. It only puts the counts of one start of the app in order. The server (like any web
+  still waiting in the app's local send queue; it is gone from the device once those counts are sent. The server stores it with each count, for the same time as the counts, and a crash report or a Report a problem from that start of the app carries it too, so the reports and the counts of one start of the app can be put side by side. It is not tied to a person, an install or a device, and it cannot tell two sessions of one person apart. It puts the counts of one start of the app in order. The server (like any web
   server) may see the IP address of the request, which is not stored with the counts (only the approximate country it maps to, as described above); it can appear in the short server request log described below. The counts are
   stored with Cloudflare (our processor) for about three months and read only as totals. The project can turn counting down or
   off from the server without an update. A grown-up can switch it off at any time under &ldquo;Help make Dino
@@ -118,8 +112,7 @@
   grown-up can turn it off under &ldquo;Help make Dino better&rdquo; in Settings (behind the grown-ups gate), and then nothing is kept or
   sent. A report holds: the app and its version; the platform; whether the app came from the store or from TestFlight; the
   kind of failure; the error&rsquo;s type, message and call stack (file paths are removed from messages); the last few hundred lines of
-  the app&rsquo;s technical log (32 KB at most), which hold technical events and error details, never a story, a page, a recording,
-  anything a child typed, a book title, a file name or a picture; the time to the minute (UTC); and the same coarse device ranges as the
+  the app&rsquo;s technical log (32 KB at most), which hold technical events and error details, which can include the names of audio clip files, the codes of books and where in a book the reading was, but never a story&rsquo;s text, a recording, anything a child typed or a picture; the time to the minute (UTC); and the same coarse device ranges as the
   counts. The phone also passes on crashes and hangs that the system itself records for the app (Apple&rsquo;s MetricKit on iPhone,
   Android&rsquo;s process exit reasons). It has no name, account, advertising, install or device identifier; the server gives each report a
   random name and does not store the IP address with the report (it only reads the approximate country, and its rate limiter uses the address briefly to
@@ -129,29 +122,17 @@
   <p><strong>Report a problem (Android and iPhone).</strong> In Settings, behind the grown-ups gate, there is a Report a problem page.
   Nothing is sent until a grown-up presses Send on it, whatever the counts switch says. The report holds the same things as a crash
   report without an error: the app and its version, the platform, whether the app came from the store or from TestFlight, the
-  app&rsquo;s recent technical log (32 KB at most; the app&rsquo;s recent technical log lines, which may include lines from earlier sessions, never a name, a story, a
-  page, a recording, anything a child typed, a book title, a file name or a picture), the time to the minute (UTC) and the same coarse
+  app&rsquo;s recent technical log (32 KB at most; the app&rsquo;s recent technical log lines, which may include lines from earlier sessions and can include the names of audio clip files, the codes of books and where in a book the reading was, but never a name, a story&rsquo;s text, a recording, anything a child typed or a picture), the time to the minute (UTC) and the same coarse
   device ranges and country as the counts. It also holds a random 8-character code that the app shows after sending, so a grown-up can
   quote it when writing to us; the code names that one report and nothing else (not the child, the phone or the install). It goes to
   this project&rsquo;s own server (dinoreader.sirous.uk), is kept with Cloudflare (our processor), is read only by the project to find and
   fix bugs, is deleted automatically after 90 days (as crash reports are), and is not shared or used for advertising or tracking.</p>
-  <p><strong>Translation models (Android).</strong> When a story is read translated and the book has
-  no built-in translation for that language, the phone downloads Google&rsquo;s on-device translation
-  model for the language, once. The story text is translated on the phone and is never sent anywhere.</p>
-  <p><strong>Google ML Kit (Android).</strong> On Android the app uses Google&rsquo;s ML Kit for the document
-  scanner, text recognition and translation. ML Kit sends Google technical diagnostics and usage-analytics
-  data over HTTPS: device information (manufacturer, model, operating system version), the app&rsquo;s package
-  name and version, performance metrics, API configuration, event types, error codes, the translation
-  languages configured, and an identifier for the app installation that is not intended to identify a user
-  or device (ML Kit also uses Firebase installations for remote configuration). ML Kit does not transfer this
-  data to third parties. Story text, photos, scans and audio are never part of it. Google handles this data
-  under <a href="https://policies.google.com/privacy">Google&rsquo;s Privacy Policy</a>; see also
-  <a href="https://developers.google.com/ml-kit/android-data-disclosure">Google&rsquo;s ML Kit data disclosure</a>.
-  The Windows and iOS versions do not use ML Kit.</p>
-  <p>Like any web request, a download or a batch of counts is seen by the server that receives it (GitHub for voice
-  and language packs, Google for translation models on Android, this project&rsquo;s own server for free stories and counts), which may log the
-  device&rsquo;s IP address. GitHub and Google do so under their own privacy policies. For the requests themselves, this project&rsquo;s own server keeps
-  only the short request log described next.</p>
+  <p><strong>On Windows</strong> the app sends the anonymous counts described above, on the same switch, but it sends no crash
+  reports and has no Report a problem page.</p>
+  <p><strong>No other services.</strong> The app contains no Google ML Kit, no advertising or analytics software from any other
+  company, and makes no request to any server other than this project&rsquo;s own (dinoreader.sirous.uk). Like any web request, a download or a batch of counts is seen by the server that receives it, which may log the
+  device&rsquo;s IP address; this project&rsquo;s own server keeps only the short request log described next. When a store
+  listing or an app update is opened, the app store (Google Play, the App Store or the Microsoft Store) handles that under its own privacy policy.</p>
 
   <h2 id="server-request-log">Server request log</h2>
   <p>This project&rsquo;s own server (dinoreader.sirous.uk) runs on Cloudflare Workers, and Cloudflare, which acts as the
@@ -160,36 +141,28 @@
   dinoreader.sirous.uk/stats, which shows only totals). Read The Stupid Text&rsquo;s server (readthestupidtext.sirous.uk) works the same way. A log entry holds the address that was asked for (including anything after a
   &ldquo;?&rdquo; in it), the time, the status of the server&rsquo;s answer, the approximate country, and other request details
   Cloudflare records, which can include the connecting IP address. The log also holds the server&rsquo;s own short error and
-  status messages. Entries are deleted automatically after at most seven days (three on Cloudflare&rsquo;s free plan).
+  status messages. Cloudflare keeps entries only for a few days and deletes them automatically; the length is Cloudflare&rsquo;s log retention for the plan this project uses, not something the app or the counts can change.
   The project uses it only to find and fix problems with the server and does not combine it with the usage counts or crash
   reports; it is not shared and never used for advertising or tracking.</p>
 
 
-  <h2>Dino Reader on Sonos (optional)</h2>
-  <p>Dino Reader&rsquo;s free story-store books can also be played through the Dino Reader music service in the Sonos app. It has no account or sign-in. When Sonos browses or plays it, Sonos&rsquo;s servers ask this project&rsquo;s server for the list of books and for a book&rsquo;s audio; Sonos sends the request, and the server answers it and stores no household, speaker or Sonos account identifier. When a book is played, the server adds one anonymous row to the project&rsquo;s usage counts, and that row is the only lasting record: the book, its language, the book&rsquo;s length (counted as the listening time, since the speaker does not say how long you listened), the UTC day and the country the request came from. It is stored in the same place and for the same time as the apps&rsquo; counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Apart from that row, each request&rsquo;s entry in the short server request log described above holds the address asked for (with any query) and the other fields listed there, and is deleted after at most seven days. What Sonos collects about your listening is governed by Sonos&rsquo;s own privacy policy.</p>
-
-  <h2>Dino Reader on Alexa (optional)</h2>
-  <p>Dino Reader&rsquo;s free story-store books can also be read by the Dino Book Reader skill on Amazon Alexa. It is made for children, has no account linking and asks for no personal information. When you talk to the skill, Amazon&rsquo;s servers send this project&rsquo;s server the request (what was asked, and where a book is up to when you pause or resume); the server answers it and stores no name, household, device, skill-user or Amazon account identifier, and no recording or transcript of what was said. Where a book is up to is held by Alexa, not by this server. Each time a book stops playing or finishes, the server adds one anonymous row to the project&rsquo;s usage counts, and that row is the only lasting record: the book, its language, how many seconds of it played, the UTC day and the country the request came from. A book you pause and later resume makes two rows, and nothing joins them. It is stored in the same place and for the same time as the apps&rsquo; counts, about three months, then deleted, and it is switched off together with them. Nothing in it names your home, speaker or account. Apart from that row, each request&rsquo;s entry in the short server request log described above holds the address asked for (with any query) and the other fields listed there, and is deleted after at most seven days. What Amazon collects about your use of Alexa is governed by Amazon&rsquo;s own privacy policy.</p>
-
   <h2>Permissions</h2>
   <p>The app declares the <strong>Internet</strong> and <strong>Network state</strong> permissions,
-  used only to download voice and language packs, translation models and free stories, and to tell &ldquo;offline&rdquo;
+  used only to download free stories and their audio, send the counts and reports described above, and to tell &ldquo;offline&rdquo;
   from a failed download. On Android it also declares the <strong>Microphone</strong> permission (on iPhone and Windows the
   matching microphone access), asked for only when a grown-up first taps record on the Record screen, and used only while
-  a recording is running. Pages you scan and photos you pick are processed on the device and never leave it.
-  Choosing a file or photo uses the standard Android picker, and the app only opens what you pick.</p>
+  a recording is running. On Android the app also declares the <strong>Foreground service</strong> (data sync) and <strong>Notifications</strong> permissions, which come from a download component shared with the project&rsquo;s other app and are meant only for showing the progress of a large download; the app does not use them for anything else, and they send nothing. The app asks for no camera, photo, contacts or location access. Saving or restoring a backup uses the standard file picker or share sheet of the device, and the app only opens the file a grown-up picks.</p>
 
   <h2>Children&rsquo;s privacy</h2>
-  <p>Dino Book Reader is designed for children, and the app does not ask for, collect or share personal information about anyone, including children: no name, email address, photos, recordings or stories. It has no accounts, no ads, no social
+  <p>Dino Book Reader is designed for children, and the app does not ask for, collect or share personal information about anyone, including children: no name, email address, photos or recordings. It has no accounts, no ads, no social
   features, no behavioural tracking, and no way for a child to send information to anyone. The only data
-  that leaves the device is the anonymous counts described above (no identifier, off at a grown-up&rsquo;s choice) and the
-  technical diagnostics data that Google ML Kit sends on Android
-  (see &ldquo;Google ML Kit (Android)&rdquo; above), neither of which includes any content a child creates. Settings and the story library sit behind a
+  that leaves the device is the anonymous counts and crash reports described above (no identifier, off at a grown-up&rsquo;s choice),
+  and a Report a problem that a grown-up chooses to send, none of which includes any content a child creates. Settings and the story library sit behind a
   grown-ups gate. Because the app collects no personal information, there is nothing for a parent to review, correct or
   delete beyond the content on their own device, which they can remove by deleting a story or
   clearing the app&rsquo;s storage. The only personal data this project&rsquo;s server keeps is the connecting IP address in its short request log
   (see &ldquo;Server request log&rdquo; above); log entries hold no name or account,
-  and they are deleted on their own within seven days.</p>
+  and they are deleted on their own after a few days.</p>
 
   <h2>Changes to this policy</h2>
   <p>If this policy changes, the updated version will be published at this same URL with a new
