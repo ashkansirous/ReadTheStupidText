@@ -80,9 +80,15 @@ Facts from plan.md, to be re-read live before each edit (the `store-listing` age
 - **Content rights:** "sure", so the draft's `DOES_NOT_USE_THIRD_PARTY_CONTENT` is accepted.
 - **Parental controls:** the grown-ups gate counts as a parental control, so `parentalControls` is true.
 - **Review contact email:** elinsoftuk@gmail.com. The phone number Apple asks for is still missing.
-- **Kids Category:** the user asked for a recommendation. Claude recommended leaving it off (see the session answer). Not decided yet.
+- **Kids Category: off for now** (user). Claude's reasons were wrong: Dino has no ML Kit (Slice 305), collects
+  nothing personal, and everything (settings, links, update page) is already behind the grown-ups gate. Turning it on
+  later is the user's call; the only real open point is that Apple's age bands do not match "3 to 9".
+- **Cartoon violence: "infrequent or mild"** (user agreed), still rated 4+.
+- **The App Store draft `docs/store-listings/dino/appstore.md` is stale** (found 2026-11-09): it still describes
+  scanning and adding books, translation, the voice download and the camera, all removed by Slice 278 (store books
+  only, pre-made clips) and Slice 305. Rewrite the description, keywords and review notes from the current app before
+  any push.
 - **Price:** free, **but the user wants in-app purchases**. That is new scope: what is sold is not decided, and
   nothing is planned or built for it (StoreKit on iOS and Play Billing on Android, the Paid Apps agreement in App
   Store Connect, a gate in front of purchases). Every "no in-app purchases" line in `docs/store-listings/dino/*`,
   `site/dino/privacy.html` and the Play/Microsoft listings would have to change when purchases ship.
-- **Cartoon peril:** asked the user what they mean; still open.
