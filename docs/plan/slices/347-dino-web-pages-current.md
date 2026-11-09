@@ -1,6 +1,6 @@
 # Slice 347 — Dino: both web pages tell today's facts, with fresh screenshots
 
-*Planned (2026-11-09).*
+*Done (2026-11-09): PR #1000 (dinoreader.sirous.uk) and sirous.uk PR #12, both deployed and read back live.*
 
 **Touches:** `site/dino/index.html`, `site/dino/*.webp` (new screenshots), `docs/plan/slices/347-dino-web-pages-current.md`. Also, in the
 separate sirous.uk repo (not this one): the dino-reader entry of its products data file and its dino-reader images.
@@ -42,7 +42,9 @@ Facts checked on 2026-11-09 (ground-in-code agent, origin/main and live fetches)
   links with their true state. Reviews: `reviews/pr-347-site-high.md`, `reviews/pr-347-site-medium.md`.
 - [x] 3. `sirous.uk` `products.ts` dino-reader entry: same facts, name "Dino Book Reader", per-platform status (Windows
   live, Android and iPhone testing), new gallery images; `npm run build`. Merged as sirous.uk PR #12 (2026-11-09).
-- [ ] 4. Both pages read live after deploy; no wrong claim left.
+- [x] 4. Both pages read live after deploy; no wrong claim left. 2026-11-09: https://sirous.uk/dino-reader/ (GitHub Pages
+  deploy success) and https://dinoreader.sirous.uk/ fetched; none of scan, PDF, OCR, voice pack, neural, cast screen,
+  right-to-left, "3 to 8", "Fourteen", "submission pending" left; all seven `/dino/shot-*.webp` answer 200.
 
 ## Not in this slice
 
