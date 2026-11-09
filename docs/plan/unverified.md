@@ -4,6 +4,11 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 **Only what can be tested stays here** (the user, 2026-11-08: "keep only whatever I can test"). Each line starts with who tests it: **You** (the user: the iPhone, the S21 by hand, the Echo, the Sonos, an English or Farsi read, a decision or account only you hold) or **Device** (Claude, on the Android emulator or tablet AVD, the S21 by script, or the Windows VM). Checks nobody here can test were removed; behaviours only real use shows are watched in production data instead; checks that need the user's ear are listening-page slices 330-343. All three lists are in the [record](notes/2026-11-08-unverified-triage.md). Earlier on 2026-11-08: triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)). The 2026-11-08 device run (emulator, S21, VM) passed 49 more and the user's iPhone session 2 more; same record.
 
+### Slice 341: Listening page: Farsi short words never dropped ([slice](slices/341-farsi-short-words-never-dropped.md))
+- **You:** listen on https://claude.ai/artifact/VqSDxX7G8k3TYzGdkAg63e (Farsi sound words through the quiet-take guard); not answered yet.
+- **Device:** a phone run of the Farsi short words (mana with the ganji rescue) is not done.
+- **Device:** the Android build of the changed reader was not run locally.
+
 ### Slice 345: RTST: the Debug stall hook must block the reader's first-chunk wait ([slice](slices/345-rtst-stall-hook-blocks-reader.md))
 - **Device:** `stall-return-overlay` on iOS (**You**, no Mac; the iOS reader edit is not compiled or run) and on the Windows head (VM); only the Android emulator ran, twice, 2026-11-09.
 

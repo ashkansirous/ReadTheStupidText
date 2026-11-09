@@ -1,6 +1,6 @@
 # Slice 335: Listening page: Pigs Farsi: four re-rendered lines
 
-*Built 2026-11-09 (branch `fix/334-335-pigs`, not merged): fix done, user confirmed by ear on the second listen; verification complete.*
+*Built 2026-11-09 (branch `fix/334-335-pigs`, merged as PR #991, 3c98f43): fix done, user confirmed by ear on the second listen; verification complete.*
 
 *Planned 2026-11-08.* The user asked for one slice per check that needs their ear ("Abou the ones that need my ear, I probably need a page to listen to them and say what I think. Add a slice for each so that you can implement a page for me to listen to them and tell what is wrong with them"). This one comes from Slice 246's open check, moved out of `docs/plan/unverified.md` on 2026-11-08 ([record](../notes/2026-11-08-unverified-triage.md)):
 
