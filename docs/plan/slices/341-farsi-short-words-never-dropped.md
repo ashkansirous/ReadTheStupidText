@@ -1,6 +1,6 @@
 # Slice 341: Listening page: Farsi short words never dropped (Slice 149)
 
-*Guard built; merged as PR #993 (c91bf35). The user's listen on https://claude.ai/artifact/VqSDxX7G8k3TYzGdkAg63e is still unanswered.*
+*Guard built; merged as PR #993 (c91bf35). CI built Android for it (the `android` run on e33d4767 passed). **No listen needed (the user, 2026-11-09):** "why do I need to listen to 341? those sounds are for dino reader where I have gemeni generated sounds not the internal enginer". The fix is Read The Stupid Text's Farsi engine path only; Dino plays premade Gemini clips and is not affected. The sound words were inherited from Slice 149's Dino-era check; the RTST case is any short Farsi line («سلام.» and «آه.» also came out as hiss), and the peak measurements prove the guard catches it. The page https://claude.ai/artifact/VqSDxX7G8k3TYzGdkAg63e is withdrawn.*
 
 *Planned 2026-11-08.* The user asked for one slice per check that needs their ear ("Abou the ones that need my ear, I probably need a page to listen to them and say what I think. Add a slice for each so that you can implement a page for me to listen to them and tell what is wrong with them"). This one comes from Slice 149's open check, moved out of `docs/plan/unverified.md` on 2026-11-08 ([record](../notes/2026-11-08-unverified-triage.md)):
 
