@@ -1,6 +1,8 @@
 # Slice 339: Listening page: Real phone audio timing (Slice 165)
 
-*Parked: the listening page is published (https://claude.ai/artifact/R94Dnv6FB3JEuaSj3Lbmiq); waits for the user's answers.* Clips: RTST English Supertonic on the S21, recorded with `scrcpy --audio-source=playback` over wireless adb; the 1x gaps measured 1.1-1.5 s between pieces.
+*Dropped 2026-11-09.* The user asked "why are we testing the speed for rtst? whats the point of 339?". Slice 165's script (`tools/phone/audio-timing.ps1`) already measures Read The Stupid Text's timing on a real phone (time to first audio, gaps between chunks, total time at 1x and 2x) and flags a gap over its limit; only "does the voice sound right" was left for the ear, and the page did not ask that well. The listening page (https://claude.ai/artifact/R94Dnv6FB3JEuaSj3Lbmiq) is withdrawn unanswered. The measured 1x gaps (1.1-1.5 s between pieces on the S21) go to `docs/plan/unverified.md` as a Device check: run `audio-timing.ps1 -App rtst` on the S21 and compare against its own gap limit.
+
+*Was parked: the listening page is published; waits for the user's answers.* Clips: RTST English Supertonic on the S21, recorded with `scrcpy --audio-source=playback` over wireless adb; the 1x gaps measured 1.1-1.5 s between pieces.
 
 *Planned 2026-11-08.* The user asked for one slice per check that needs their ear ("Abou the ones that need my ear, I probably need a page to listen to them and say what I think. Add a slice for each so that you can implement a page for me to listen to them and tell what is wrong with them"). This one comes from Slice 165's open check, moved out of `docs/plan/unverified.md` on 2026-11-08 ([record](../notes/2026-11-08-unverified-triage.md)):
 
