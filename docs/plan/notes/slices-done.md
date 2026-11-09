@@ -391,3 +391,4 @@ Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*)
 | 321 | Reorder layer back to the mock on Windows | built | #962 | | [321-reorder-layer-per-mock.md](../slices/321-reorder-layer-per-mock.md) |
 | 322 | Dino's silent beats pause when the screen locks | built | #963 | | [322-dino-beat-pauses-on-screen-lock.md](../slices/322-dino-beat-pauses-on-screen-lock.md) |
 | 337 | Listening page: Dino first-run hello line sounds whole | dropped 2026-11-08: Dino has no speech engine since Slice 278, so there is no hello line to hear | | | [337-dino-first-run-hello-line-sounds-whole.md](../slices/337-dino-first-run-hello-line-sounds-whole.md) |
+| 339 | Listening page: real phone audio timing | dropped 2026-11-09: timing is measured by `tools/phone/audio-timing.ps1`, not by ear; the gap check moved to unverified.md as a Device line | | | [339-real-phone-audio-timing.md](../slices/339-real-phone-audio-timing.md) |
