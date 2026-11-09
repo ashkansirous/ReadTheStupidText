@@ -1,4 +1,5 @@
 # Slice 320 item 7 (L16, Slice 314): a read whose next chunk is late shows "Still getting the voice ready" with Cancel; leaving the reader for Settings and coming back shows it again.
+# Slice 345: the hook holds the read's SECOND chunk wait (chunk 0's wait is the "Preparing the voice" overlay, which owns the overlay), so the typed text is over 200 characters (SpeechTextChunker keeps shorter text whole; StallHookTests pins that this text splits).
 # The Debug hook stall-read holds the next chunk wait for up to 90 s (StallHook), so the stall is real for the page (the reader's StallChanged and IsStalled) without a slow voice.
 # Precondition: a neural voice pack is installed (the system voice has no chunk wait): run `tools/phone/run-checks.ps1 -Prepare` style setup or any flow that downloaded it first; no clearState keeps it.
 # Without it no chunk wait is held and "STALL hold begins" is never written, so the flow fails instead of passing on the system voice.
@@ -39,7 +40,7 @@ name: The stall overlay comes back when the person returns to the reader
 - tapOn:
     id: ReviewEditor
     waitToSettleTimeoutMs: 300
-- inputText: "One short sentence to read."
+- inputText: "The quick brown fox jumps over the lazy dog today while the sun shines on the quiet green hill. Then the fox walks slowly home through the tall grass, and it curls up by the warm fire to sleep until the morning comes again. The end."
 - hideKeyboard
 - launchApp:
     stopApp: false

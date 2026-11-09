@@ -446,6 +446,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     private async Task SpeakChunksAsync(
         BuiltEngine engine, ChunkFeed feed, int startIndex, string? voiceId, int generation, CancellationToken token)
     {
+        long stallClaim = _stall.ClaimArmedRequest(); // Slice 345
         try
         {
             while (true)
@@ -462,6 +463,11 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
 
                 if (swap is null)
                 {
+                    if (!token.IsCancellationRequested)
+                    {
+                        _stall.ReadPlayedToEnd(stallClaim); // Slice 345: a one-chunk read leaves no stall-read request it claimed behind
+                    }
+
                     break;
                 }
 
@@ -736,7 +742,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         string path;
         try
         {
-            path = await _stall.WatchAsync(generated, token, firstChunk: index == 0);
+            path = await _stall.WatchAsync(generated, token, holdable: StallReporter.IsHoldable(index));
         }
         catch (OperationCanceledException)
         {

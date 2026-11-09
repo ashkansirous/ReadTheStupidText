@@ -17,7 +17,7 @@ public class StallHookTests
         using var stop = new CancellationTokenSource();
 
         hook.Arm();
-        Task<string> waiting = reporter.WatchAsync(Task.FromResult("audio"), stop.Token, firstChunk: true);
+        Task<string> waiting = reporter.WatchAsync(Task.FromResult("audio"), stop.Token, holdable: true);
 
         Assert.False(waiting.IsCompleted);
         Assert.True(reporter.IsStalled);
@@ -48,7 +48,7 @@ public class StallHookTests
         var reporter = new StallReporter(this) { Hook = hook };
 
         hook.Arm();
-        string value = await reporter.WatchAsync(Task.FromResult("audio"), CancellationToken.None, firstChunk: true);
+        string value = await reporter.WatchAsync(Task.FromResult("audio"), CancellationToken.None, holdable: true);
 
         Assert.Equal("audio", value);
         Assert.False(reporter.IsStalled);
@@ -62,8 +62,8 @@ public class StallHookTests
         var reporter = new StallReporter(this) { Hook = hook };
 
         hook.Arm();
-        await reporter.WatchAsync(Task.FromResult("first"), CancellationToken.None, firstChunk: true);
-        Task<string> second = reporter.WatchAsync(Task.FromResult("second"), CancellationToken.None, firstChunk: true);
+        await reporter.WatchAsync(Task.FromResult("first"), CancellationToken.None, holdable: true);
+        Task<string> second = reporter.WatchAsync(Task.FromResult("second"), CancellationToken.None, holdable: true);
 
         Assert.True(second.IsCompletedSuccessfully);
         Assert.False(reporter.IsStalled);
@@ -81,11 +81,81 @@ public class StallHookTests
         Assert.True(laterChunk.IsCompletedSuccessfully);
         Assert.False(reporter.IsStalled);
 
-        Task<string> firstChunkOfTheRead = reporter.WatchAsync(Task.FromResult("chunk 0"), CancellationToken.None, firstChunk: true);
+        Task<string> holdableChunkOfTheRead = reporter.WatchAsync(Task.FromResult("chunk 1"), CancellationToken.None, holdable: true);
 
-        Assert.False(firstChunkOfTheRead.IsCompleted);
+        Assert.False(holdableChunkOfTheRead.IsCompleted);
         Assert.True(reporter.IsStalled);
-        Assert.Equal("chunk 0", await firstChunkOfTheRead);
+        Assert.Equal("chunk 1", await holdableChunkOfTheRead);
+    }
+
+    [Fact]
+    public void A_read_played_to_its_end_without_the_holdable_chunk_clears_the_request_it_claimed()
+    {
+        var hook = new StallHook();
+        var reporter = new StallReporter(this) { Hook = hook };
+
+        hook.Arm();
+        long claim = reporter.ClaimArmedRequest();
+        reporter.ReadPlayedToEnd(claim);
+
+        Assert.False(hook.Take());
+    }
+
+    [Fact]
+    public void A_fresh_request_survives_an_earlier_reads_natural_end()
+    {
+        var hook = new StallHook();
+        var reporter = new StallReporter(this) { Hook = hook };
+
+        hook.Arm();
+        long oldReadClaim = reporter.ClaimArmedRequest();
+        hook.Arm(); // armed for the next read while the old one is still finishing
+        reporter.ReadPlayedToEnd(oldReadClaim);
+
+        Assert.True(hook.Take());
+    }
+
+    [Fact]
+    public void A_read_that_started_with_nothing_armed_cannot_clear_a_later_request()
+    {
+        var hook = new StallHook();
+        var reporter = new StallReporter(this) { Hook = hook };
+
+        long claim = reporter.ClaimArmedRequest();
+        hook.Arm();
+        reporter.ReadPlayedToEnd(claim);
+
+        Assert.True(hook.Take());
+    }
+
+    [Fact]
+    public void Only_the_second_chunk_of_a_read_is_holdable()
+    {
+        Assert.False(StallReporter.IsHoldable(0));
+        Assert.True(StallReporter.IsHoldable(1));
+        Assert.False(StallReporter.IsHoldable(2));
+    }
+
+    [Fact]
+    public void The_flows_three_sentence_text_has_a_holdable_chunk_under_the_readers_planner_and_head_policies()
+    {
+        const string text = "The quick brown fox jumps over the lazy dog today while the sun shines on the quiet green hill. Then the fox walks slowly home through the tall grass, and it curls up by the warm fire to sleep until the morning comes again. The end.";
+        string hint = "The quick brown fox jumps over the lazy dog today while the sun shines on the quiet green hill.";
+        SpeechTextChunker.HeadPolicy[] policies =
+        [
+            SpeechTextChunker.HeadPolicy.Cached, // Windows reader
+            SpeechTextChunker.HeadPolicy.Cached.WithShortFirstPiece(), // Android and iOS readers
+        ];
+
+        foreach (SpeechTextChunker.HeadPolicy policy in policies)
+        {
+            foreach (string? firstChunkHint in new string?[] { null, hint })
+            {
+                int count = SpeechChunkPlanner.ForText(text, policy, firstChunkHint: firstChunkHint).Count;
+
+                Assert.True(count > StallReporter.HoldableChunkIndex, $"{count} chunks for {policy} with hint {firstChunkHint ?? "none"}");
+            }
+        }
     }
 
     [Fact]
