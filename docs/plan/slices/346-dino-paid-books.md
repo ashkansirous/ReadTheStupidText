@@ -2,7 +2,7 @@
 
 *Planned (2026-11-09).*
 
-**Touches:** `worker/stories.ts`, `worker/entitlements/**` (new: receipt checks per store), `worker/products.ts` (new: product to book list), `worker/CLAUDE.md`, `worker/stories.test.mjs`, `worker/entitlements.test.mjs` (new), `content/dino/*/book.json`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/scripts/store-products.mjs` (new: create and price the products through the store APIs), `src/DinoReader.Core/BookAccess.cs` (new), `src/DinoReader.Core/StoryBackup*.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StorePage.xaml*`, `src/DinoReader.App/FirstBooksPage*.cs`, `src/DinoReader.App/BackupPage.xaml*`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/ShelfAudioPacks*.cs`, `src/DinoReader.App/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/Purchases/**` (new), `src/DinoReader.App/Platforms/iOS/Purchases/**` (new), `src/DinoReader.App/Platforms/Windows/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `src/DinoReader.App/Platforms/iOS/Info.plist`, `src/DinoReader.App/Platforms/iOS/PrivacyInfo.xcprivacy`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Testing/**`, `tests/DinoReader.Tests/**`, `docs/store-listings/dino/**`, `site/dino/privacy.html`, `docs/plan/slices/346-dino-paid-books.md`
+**Touches:** `worker/stories.ts`, `worker/alexa.ts`, `worker/sonos.ts`, `worker/alexa.test.mjs`, `worker/sonos.test.mjs`, `worker/entitlements/**` (new: receipt checks per store), `worker/products.ts` (new: product to book list), `worker/CLAUDE.md`, `worker/stories.test.mjs`, `worker/entitlements.test.mjs` (new), `content/dino/*/book.json`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/scripts/store-products.mjs` (new: create and price the products through the store APIs), `src/DinoReader.Core/BookAccess.cs` (new), `src/DinoReader.Core/StoryBackup*.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StorePage.xaml*`, `src/DinoReader.App/FirstBooksPage*.cs`, `src/DinoReader.App/BackupPage.xaml*`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/ShelfAudioPacks*.cs`, `src/DinoReader.App/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/Purchases/**` (new), `src/DinoReader.App/Platforms/iOS/Purchases/**` (new), `src/DinoReader.App/Platforms/Windows/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `src/DinoReader.App/Platforms/iOS/Info.plist`, `src/DinoReader.App/Platforms/iOS/PrivacyInfo.xcprivacy`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Testing/**`, `tests/DinoReader.Tests/**`, `docs/store-listings/dino/**`, `site/dino/privacy.html`, `docs/plan/slices/346-dino-paid-books.md`
 
 ## Why
 
@@ -79,6 +79,12 @@ through `library-docs` or `web-research` before building that part.
       paid book need a purchase proof header. The Worker checks it with the store that sold it (Part A2), caches a
       good answer for the device's request for a short time, and returns 402 for no proof and 403 for a bad one.
       Free books work exactly as today.
+- [ ] **Alexa and Sonos offer only free books.** Both serve the store books' listening tracks with no login
+      (`worker/alexa.ts`, `worker/sonos.ts`, Slice 283), so today they would play every paid book for nothing. They
+      can't check a store purchase without account linking, which Decision 1 rules out, so their catalogue becomes
+      the free books only, and a paid book's track URL refuses them. (Claude, 2026-11-09; the user can change it.)
+- [ ] The storage bucket stays closed: no r2.dev public URL and no custom domain on `readthestupidtext-downloads`
+      (read live 2026-11-09). The Worker is the only door; keep it that way.
 - [ ] A2: one checker per store under `worker/entitlements/` (Apple App Store Server API, Google Play Developer API,
       Microsoft Store collections API), each behind the same interface: proof in, owned product ids out. Their keys go
       through `manage-secrets` and `wrangler secret put`; nothing about the buyer is stored or logged. Tests with
