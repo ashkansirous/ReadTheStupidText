@@ -52,7 +52,7 @@ internal static class RtstTestCommands
 		_ => null,
 	};
 
-	// Slice 320 item 7: the next read's chunk wait is held for 90 s (or until the read stops), so the stall overlay with its Cancel shows and a flow can leave the reader and come back (Slice 314).
+	// Slice 320 item 7: the next read's SECOND chunk wait is held for 90 s (or until the read stops); needs a text over 200 characters (shorter text is one chunk, takes nothing, and disarms the request when it ends; Slice 345), so the stall overlay with its Cancel shows and a flow can leave the reader and come back (Slice 314).
 	// Needs a neural voice pack (the system voice has no chunk wait). Logs "HOOK stall-read ok"; the held wait writes "STALL hold begins" and "STALL hold released".
 	private static string ArmStallRead()
 	{

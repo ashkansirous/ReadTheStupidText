@@ -4,10 +4,10 @@ using System.Diagnostics;
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
-/// Slice 320 item 7 (Debug only): the <c>stall-read</c> test hook arms one held chunk wait. The next first-chunk wait that starts after arming (a <see cref="StallReporter.WatchAsync{T}"/> call with firstChunk true, i.e. chunk 0 of a read; later chunks never take it:
+/// Slice 320 item 7 (Debug only): the <c>stall-read</c> test hook arms one held chunk wait. The next second-chunk wait that starts after arming (a <see cref="StallReporter.WatchAsync{T}"/> call with holdable true, i.e. chunk 1 of a read, Slice 345: chunk 0's wait is the "Preparing the voice" wait, which owns the overlay; other chunks never take it:
 /// the request is used up by it) then counts as a stall for <see cref="HoldFor"/> (90 s), or until its read is stopped, even though the chunk is ready, so the "Still getting the voice ready" overlay and its
-/// Cancel can be reached on a device (Android and iOS alike: the hook arrives through each platform's entry point). The request names no read: a flow arms it right before it starts a read of ONE short sentence,
-/// so that read's only chunk wait is the next one; arming while another read is running, or for a longer text, holds whichever chunk wait comes first. A request nobody took within two minutes lapses, so it
+/// Cancel can be reached on a device (Android and iOS alike: the hook arrives through each platform's entry point). The request names no read: a flow arms it right before it starts a read of a text over 200 characters (shorter text is one chunk),
+/// so that read's second chunk wait is the next one; arming while another read is running holds whichever read's second chunk wait comes first, and a one-chunk read never takes it. A request nobody took within two minutes lapses, so it
 /// cannot hang a later unrelated read. The app uses <see cref="Shared"/>; tests make their own instance (no shared state between parallel tests). Compiled out of Release.
 /// </summary>
 public sealed class StallHook
@@ -25,18 +25,54 @@ public sealed class StallHook
     public const string ReleasedMarker = "STALL hold released";
 
     private static readonly TimeSpan RequestLife = TimeSpan.FromMinutes(2);
+    private readonly object _gate = new();
     private long _armedAt; // Stopwatch timestamp of the request, 0 = none
+    private long _requestId; // Slice 345: names the current request; every Arm gets a new id
 
     /// <summary>Where the markers go (the app's Debug test log); set by the app's own Debug code. Null writes nothing.</summary>
     public Action<string>? Log { get; set; }
 
     /// <summary>Arms one held wait.</summary>
-    public void Arm() => Interlocked.Exchange(ref _armedAt, Stopwatch.GetTimestamp());
+    public void Arm()
+    {
+        lock (_gate)
+        {
+            _armedAt = Stopwatch.GetTimestamp();
+            _requestId++;
+        }
+    }
+
+    /// <summary>Slice 345: a read calls this when it starts; returns the id of the request armed right now (0 = none). Only that read's <see cref="Disarm"/> can clear the request.</summary>
+    public long Claim()
+    {
+        lock (_gate)
+        {
+            return _armedAt == 0 ? 0 : _requestId;
+        }
+    }
+
+    /// <summary>Clears the request the read named by <paramref name="claim"/> claimed, if it is still the armed one: a request armed after the read started (a newer id) stays.</summary>
+    public void Disarm(long claim)
+    {
+        lock (_gate)
+        {
+            if (claim != 0 && claim == _requestId)
+            {
+                _armedAt = 0;
+            }
+        }
+    }
 
     /// <summary>True once per request (and clears it), unless the request has lapsed.</summary>
     public bool Take()
     {
-        long armed = Interlocked.Exchange(ref _armedAt, 0);
+        long armed;
+        lock (_gate)
+        {
+            armed = _armedAt;
+            _armedAt = 0;
+        }
+
         return armed != 0 && Stopwatch.GetElapsedTime(armed) < RequestLife;
     }
 

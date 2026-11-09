@@ -335,6 +335,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         IosBuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int startIndex, string? voiceId, int generation,
         CancellationToken token)
     {
+        long stallClaim = _stall.ClaimArmedRequest(); // Slice 345
         try
         {
             while (true)
@@ -346,6 +347,11 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
                 (bool played, VoiceSwap? swap) = await PlayRunAsync(engine, chunks, startIndex, voiceId, generation, token);
                 if (swap is null)
                 {
+                    if (played && !token.IsCancellationRequested)
+                    {
+                        _stall.ReadPlayedToEnd(stallClaim); // Slice 345: a one-chunk read leaves no stall-read request it claimed behind
+                    }
+
                     if (played && IsCurrent(generation))
                     {
                         await FinishAsync(generation);
@@ -561,7 +567,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         string wavPath;
         try
         {
-            wavPath = await _stall.WatchAsync(generated, token, firstChunk: index == 0);
+            wavPath = await _stall.WatchAsync(generated, token, holdable: StallReporter.IsHoldable(index));
         }
         catch (OperationCanceledException)
         {

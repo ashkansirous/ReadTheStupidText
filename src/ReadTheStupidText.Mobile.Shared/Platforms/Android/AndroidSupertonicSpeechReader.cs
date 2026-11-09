@@ -407,6 +407,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         BuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int startIndex, string? voiceId, int generation,
         CancellationToken token)
     {
+        long stallClaim = _stall.ClaimArmedRequest(); // Slice 345
         try
         {
             while (true)
@@ -422,6 +423,11 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
                     if (!played)
                     {
                         return;
+                    }
+
+                    if (!token.IsCancellationRequested)
+                    {
+                        _stall.ReadPlayedToEnd(stallClaim); // Slice 345: a one-chunk read leaves no stall-read request it claimed behind
                     }
 
                     break;
@@ -610,7 +616,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         string wavPath;
         try
         {
-            wavPath = await _stall.WatchAsync(generated, token, firstChunk: index == 0);
+            wavPath = await _stall.WatchAsync(generated, token, holdable: StallReporter.IsHoldable(index));
         }
         catch (OperationCanceledException)
         {

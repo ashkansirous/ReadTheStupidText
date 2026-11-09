@@ -6,8 +6,16 @@
 
 ## Items
 
-- [ ] Make the Debug-only stall hook block the reader's first-chunk wait on Android, iOS and Windows, so the reader really stalls while the hook holds.
-- [ ] Rerun `stall-return-overlay` on the emulator: the overlay shows, then `STALL hold released` is logged.
+- [x] Make the Debug-only stall hook block the reader's wait on Android, iOS and Windows (built 2026-11-09). Finding: the hook already blocked the reader's await (it sits inside `WatchAsync`; the CHUNK_SYNTH/CHUNK_AUDIO markers come from the synthesis finishing, not from playback). The likely reason the overlay never showed: chunk 0's wait is the page's "Preparing the voice" wait, which owns the overlay, so `BeginStallWait` is skipped. The hook now holds the read's second chunk (`holdable: index == 1` in the three readers), and the flow types two sentences so a second chunk exists. Unit-tested in `StallHookTests`; cause still unproven until the emulator run.
+- [x] Rerun `stall-return-overlay` on the emulator: the overlay shows, then `STALL hold released` is logged. Passed twice on emulator-5554, 2026-11-09 (125 s and 86 s; `STALL hold released` in the kept logcat, `D:\ReadTheStupidText-worktrees\reviews\s345-run`). Not run on iOS.
+
+## From review
+
+- Fixed (`reviews/s345-high.md` #1-#5): a read that plays to its natural end without a second chunk disarms the request (`StallReporter.ReadPlayedToEnd`); all three readers ask `StallReporter.IsHoldable(index)`; the split test uses `SpeechChunkPlanner.ForText` with the readers' head policies and with and without a first-chunk hint.
+- Kept open #6 (`reviews/s345-high.md`): "keep the slice's 'rerun on the emulator' item open (cause is still unproven)" - the hold now begins only after chunk 0 has played, so the flow's 15 s `WaitLine` depends on chunk 0's synthesis and playback time on a slow emulator; the index is absolute, so after a skip-back or voice-swap restart the hold can fire at a different point. Both are Debug-only and only an emulator run settles them.
+
+- Fixed (`reviews/s345-medium.md` #1, #2, #3, #6): a read takes a claim on the armed request when it starts (`StallReporter.ClaimArmedRequest`); only its natural end (token not cancelled, same point in all three readers) disarms it (`ReadPlayedToEnd(claim)`), so a request armed after the read started survives. Tests added for both.
+- Skipped #4, #5 (`reviews/s345-medium.md`): "holdability by absolute index 1" / "only Supertonic readers disarm; a stopped/replaced read leaves request armed up to 2 min" - Debug-only, request lapses after 2 min.
 
 ## Verification
 
