@@ -299,9 +299,20 @@ class CastTests(unittest.TestCase):
         checked(cast, dump["sentences"], "fa")
         by_index = {s["index"]: s for s in dump["sentences"]}
         self.assertIn("گُنده‌ی", cast.say_for(by_index[16]))
-        self.assertEqual("شالاپ، شالاپ، شالاپ!", cast.say_for(by_index[68]))
+        self.assertEqual("شَلَپ، شَلَپ، شَلَپ!", cast.say_for(by_index[68]))
         self.assertEqual("من یه وان گُنده پر از آب سرد و کف‌کفی گذاشتم زیر دودکش.", cast.say_for(by_index[66]))
         self.assertEqual("پیم با یه لبخند گُنده گفت:", cast.say_for(by_index[80]))
+
+
+class PigsWolfHuffTests(unittest.TestCase):
+    """Slice 334: the three huff-and-puff lines must share one direction, or they render as different clips again."""
+
+    def test_all_wolf_huff_lines_carry_the_same_direction(self):
+        path = REPO / "content" / "dino" / "three-little-pigs" / "audio-cast.json"
+        data = json.loads(path.read_text(encoding="utf8"))
+        huff = [e for e in data["lines"] if e.get("speaker") == "Wolf" and "huff" in e.get("source", "")]
+        self.assertEqual(3, len(huff))
+        self.assertEqual(1, len({e["direction"] for e in huff}))
 
 
 class AccentTests(unittest.TestCase):
