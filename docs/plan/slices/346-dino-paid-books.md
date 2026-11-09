@@ -108,6 +108,17 @@ through `library-docs` or `web-research` before building that part.
       already on the shelf skips its update quietly and reports a fallback event, never removing the book.
 - [ ] `FirstBooksPage` offers only free books.
 - [ ] Debug test hook to fake an owned product (Testing/), so device flows run without real money.
+- [ ] **Store promo codes work** (user asked 2026-11-09 how to give books to themselves and friends). Codes come only
+      from the stores; our own codes are not allowed on iOS (3.1.1: "Apps may not use their own mechanisms to unlock
+      content"). Apple offer codes cover non-consumables (up to 10 active offers, 1 million codes a quarter, redeemed by
+      URL, in the App Store or in the app); Play promo codes (500 a quarter for one-time products, redeemed in the Play
+      Store or the app; "your app needs to properly handle redemptions that occur outside of your app"); Microsoft
+      promotional codes for add-ons (1600 per six months, redeemed by URL). So: the app re-reads what the parent owns
+      when it opens and when the store page opens, and a book bought or redeemed elsewhere shows as owned without
+      pressing Restore. A **Redeem a code** button in the grown-ups area opens each store's own redeem screen (Android
+      and iOS tasks; Windows opens the Microsoft redeem page). Sources: developer.apple.com/help/app-store-connect/
+      manage-in-app-purchases/create-offer-codes-for-in-app-purchases/, developer.android.com/google/play/billing/promo,
+      learn.microsoft.com/en-us/windows/apps/publish/generate-promotional-codes.
 
 ### Part C — backups hold state, not books
 
