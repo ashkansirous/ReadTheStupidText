@@ -32,7 +32,6 @@ Open slices only. Finished slices (169 rows) are in [slices-done](docs/plan/note
 | 341 | Listening page: Farsi short words never dropped | parked: page published, no answer from the user yet; fix 1 (measured before any answer) still to build | | | [341-farsi-short-words-never-dropped.md](docs/plan/slices/341-farsi-short-words-never-dropped.md) |
 | 342 | Listening page: Farsi voice pack | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [342-farsi-voice-pack.md](docs/plan/slices/342-farsi-voice-pack.md) |
 | 343 | Listening page: four Farsi voices | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [343-four-farsi-voices.md](docs/plan/slices/343-four-farsi-voices.md) |
-| 345 | RTST: the Debug stall hook must block the reader's first-chunk wait (`stall-return-overlay`) | planned | | | [345-rtst-stall-hook-blocks-reader.md](docs/plan/slices/345-rtst-stall-hook-blocks-reader.md) |
 
 M3 starts with a listening page and waits on the user's listening verdicts. 154 (vowel marks) was dropped on 2026-11-03: store books get Gemini audio from plain text (Slice 246); the Three Little Pigs part (PR #470) stays. Decisions 155-159 (157 reverses 132).
 
@@ -74,7 +73,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 282 checks across 125 slices, in [docs/plan/unverified.md](docs/plan/unverified.md), each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Not yet tried on a device:** 283 checks across 126 slices, in [docs/plan/unverified.md](docs/plan/unverified.md), each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
 - **Watched in production data instead:** 30 behaviours that only real use shows (analytics, fallback events, crash store, problem reports); the list is in [the record](docs/plan/notes/2026-11-08-unverified-triage.md), section "Watched in production data instead". A bug report or fallback spike about one of them becomes a fix slice.
 - Device-run 2026-11-08 test-side fixes (none is an app bug; [record](docs/plan/notes/2026-11-08-unverified-triage.md)): `premade-audio-past-roar` expects the old `fa v2` pack; `cancelled-voice-pack-stays-cancelled` races a fast download; `paused-notification-repost` cannot read Samsung's notification flags; the runner's Dino `-Prepare` and the Dino `book-end`/`short-lines` checks still expect a voice pack (gone since Slice 278); `run-flows.ps1` does not start the report-problem stub; the fa/ar copies of flows match English text.
 - Slice 323 seen alongside, not investigated: `premade_audio:clip_missing` x2 and `text_mismatch` x2 for book `6eff8d77` in `fa` (iOS 1.109.0); and a Settings > Story languages tap on فارسی that did not stick on the emulator (dino-v1.118.0, maybe the slow arm64-on-x86 emulator) ([slice](docs/plan/slices/323-dino-shelf-titles-follow-story-language.md)).

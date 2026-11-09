@@ -1,6 +1,6 @@
 # Slice 345: RTST: the Debug stall hook must block the reader's first-chunk wait
 
-*Planned 2026-11-08.* From [Slice 320](320-device-check-tooling-from-2026-11-08-run.md): the Debug `StallHook` holds `StallReporter`'s watch, not the reader's first-chunk wait. In the emulator flow `stall-return-overlay` chunk 0 therefore still synthesizes and plays, and the "Still getting the voice ready" overlay never shows. The flow failed twice on 2026-11-08: `STALL hold begins`, then `CHUNK_SYNTH 0 end` and `CHUNK_AUDIO 0`, and no `STALL hold released`. The cause is likely, not proven.
+*Built 2026-11-09, merged as PR #987 (30bc0f3e); emulator flow passes, iOS and Windows not run.* Planned 2026-11-08. From [Slice 320](320-device-check-tooling-from-2026-11-08-run.md): the Debug `StallHook` holds `StallReporter`'s watch, not the reader's first-chunk wait. In the emulator flow `stall-return-overlay` chunk 0 therefore still synthesizes and plays, and the "Still getting the voice ready" overlay never shows. The flow failed twice on 2026-11-08: `STALL hold begins`, then `CHUNK_SYNTH 0 end` and `CHUNK_AUDIO 0`, and no `STALL hold released`. The cause is likely, not proven.
 
 **Touches:** `src/ReadTheStupidText.Application/Reading/StallReporter.cs`, the Debug StallHook, the three readers (Android, iOS, Windows), `.maestro/rtst/stall-return-overlay.yaml`
 
@@ -20,3 +20,11 @@
 ## Verification
 
 `stall-return-overlay` passes on the Android emulator; the iOS and Windows hook paths compile and have a unit test where the reader can be built without a device.
+
+#### For CLAUDE.md (lifted 2026-11-09)
+
+- The RTST Debug stall hook holds the read's second chunk (`StallReporter.HoldableChunkIndex`), so a flow that uses it must type text that splits into two chunks. (Slice 345: docs/plan/slices/345-rtst-stall-hook-blocks-reader.md)
+
+#### Not yet verified
+
+- **Device:** `stall-return-overlay` on iOS and the Windows head (the hook edits in the iOS and Windows readers are not compiled or run here; only Android emulator ran, twice, 2026-11-09).
