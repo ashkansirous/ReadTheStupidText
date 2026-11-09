@@ -32,19 +32,32 @@ Facts checked on 2026-11-09 (ground-in-code agent, origin/main and live fetches)
 
 ## Work
 
-- [ ] 1. Screenshots from the Android emulator (portrait phone; dev install, no debug marks, real store books, no
+- [x] 1. Screenshots from the Android emulator (portrait phone; dev install, no debug marks, real store books, no
   analytics): kids' shelf, reading page picture and text with a lit sentence, picture-only page, the grown-ups Store tab, the
-  record screen, a right-to-left language shelf. Saved as webp in both repos.
-- [ ] 2. `site/dino/index.html`: rewrite every wrong line above from the facts, a screenshot gallery, the three platform
-  links with their true state.
-- [ ] 3. `sirous.uk` `products.ts` dino-reader entry: same facts, name "Dino Book Reader", per-platform status (Windows
-  live, Android and iPhone testing), new gallery images; `npm run build`.
+  record screen, a right-to-left language shelf. Saved as webp in both repos. Done 2026-11-09: seven shots plus a night
+  (dark mode) reading page; status bar cropped off; viewed at full size by the coordinator. Site copies are 720x1520 (not an
+  App Store size; Slice 291 still needs its own store-size shots). The Arabic shelf does not mirror (Slice 96), so the pages
+  say "in Arabic", never "right-to-left layout"; the text itself reads right to left.
+- [x] 2. `site/dino/index.html`: rewrite every wrong line above from the facts, a screenshot gallery, the three platform
+  links with their true state. Reviews: `reviews/pr-347-site-high.md`, `reviews/pr-347-site-medium.md`.
+- [x] 3. `sirous.uk` `products.ts` dino-reader entry: same facts, name "Dino Book Reader", per-platform status (Windows
+  live, Android and iPhone testing), new gallery images; `npm run build`. Merged as sirous.uk PR #12 (2026-11-09).
 - [ ] 4. Both pages read live after deploy; no wrong claim left.
 
 ## Not in this slice
 
 - `site/dino/privacy.html` still mentions photos, scans and ML Kit; Slice 346 also touches it. Recorded, not changed here.
-- Paid books (Slice 346): the pages say "free" until that ships.
+- Paid books (Slice 346): the pages say "free" until that ships. "Free" appears in about five places on
+  `site/dino/index.html` and in the sirous.uk entry; Slice 346 must update both pages when paid books ship
+  (`reviews/pr-347-site-high.md` #9).
+- The page's og:image is portrait while `twitter:card` is `summary_large_image` (#5): cosmetic, left as is.
+
+## App bugs seen while taking the screenshots (2026-11-09, emulator, dino dev build from eb780755)
+
+Not fixed here; each needs its own slice.
+- Grown-ups corner: the status-bar icons are white on the light bar, so the clock is nearly invisible.
+- English corner tab label "Settings" renders like "Settinas" (the "g" descender looks clipped) at phone size.
+- Arabic corner: the bottom tab labels are clipped.
 
 ## Verification
 
