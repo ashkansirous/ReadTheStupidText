@@ -23,7 +23,7 @@ internal static class DinoTitleBar
 		if (page.Window is { } window)
 		{
 			string? book = (page as ReadingPage)?.BookTitle;
-			window.Title = TitleBarTones.WindowTitle(kind, book, AppResources.App_Name);
+			window.Title = TitleBarTones.WindowTitle(kind, book, AppResources.App_Name, AppResources.Gallery_CornerTitle); // "Grown-ups' corner · Dino Reader" in the corner (Slice 325 decision 8)
 		}
 	}
 

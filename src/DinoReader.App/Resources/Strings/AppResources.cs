@@ -192,7 +192,7 @@ public static class AppResources
 	public static string Store_Title => Get();
 	public static string Store_Subtitle => Get();
 	public static string Store_Get => Get();
-	public static string Store_Downloaded => Get();
+	public static string Store_OnShelf => Get();
 	public static string Store_Tag_Hot => Get();
 	public static string Store_Tag_Popular => Get();
 	public static string Store_Tag_Recommended => Get();
@@ -204,7 +204,6 @@ public static class AppResources
 	public static string Store_TryAgain => Get();
 	public static string Store_EmptyTitle => Get();
 	public static string Store_EmptyBody => Get();
-	public static string Store_BackToStories => Get();
 	public static string Store_GetStory => Get();
 	public static string Store_AllAges => Get();
 	public static string Store_AgeUpTo5 => Get();
@@ -281,7 +280,7 @@ public static class AppResources
 	public static string Settings_GroupReading => Get();
 	public static string Settings_GroupPhone => Get();
 	public static string Settings_NewVersion => Get();
-	public static string Settings_GearLabel => Get();
+	public static string Settings_GroupComputer => Get();
 	public static string Settings_About => Get();
 	public static string Settings_On => Get();
 	public static string Settings_Off => Get();
@@ -309,7 +308,12 @@ public static class AppResources
 	public static string Book_RemoveTitle => Get();
 	public static string Book_RemoveBodyStore => Get();
 	public static string Book_RemoveConfirm => Get();
-	public static string Gallery_GetMoreBooks => Get();
+	// Slice 325 part A: the grown-ups' corner's tabs and rail
+	public static string Corner_TabBooks => Get();
+	public static string Corner_ChildsShelf => Get();
+	public static string Gallery_CornerLineShort => Get();
+	// Slice 325 part C: the kids' shelf's short title
+	public static string Gallery_ShelfTitleShort => Get();
 	public static string Language_Footer => Get();
 	public static string Gate_HoldBody => Get();
 	public static string Gate_HoldDescription => Get();

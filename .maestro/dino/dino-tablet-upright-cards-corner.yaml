@@ -1,14 +1,15 @@
-# Slice 234 part B (mock Batch 45 frames 139, 136, 140): on a tablet held upright (run on RTST_Tablet, 800 x 1280 dp) the grown-ups' corner has a 300 dp ink rail with Store solid indigo and three
-# columns of books, a book's options open as a 560 dp centred card with the cover on top (a tap outside closes it), and Settings shows two panes with each row's value under its name.
+# Slice 234 part B (mock Batch 45 frames 136, 140) and Slice 325 part A (grown-up mock frame T1): on a tablet held upright (run on RTST_Tablet, 800 x 1280 dp) the grown-ups' corner has a 260 dp ink rail with the
+# three tabs and three columns of books, a book's options open as a 560 dp centred card with the cover on top (a tap outside closes it), and Settings (part B: a tab inside the rail's content area) is one list with each row's value at its end and Reading speed opening inside the tab with the back arrow.
 # The gate is not tapped: the enter-grown-up hook stands in for a passed gate (grown-ups-button.yaml covers the gate chain). Uses no rotation. Tablet emulator only: a phone never logs these values.
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK enter-grown-up ok
-# expect-log: [Landscape] shelf layout=rail columns=3 grownUp=True railWidth=300
+# expect-log: [Landscape] shelf layout=rail columns=3 grownUp=True railWidth=260
 # expect-log: tabletCorner=True
 # expect-log: [Landscape] book sheet card=True width=560 coverOnTop=True
-# expect-log: [Landscape] settings panes=2 selected=ReadingSpeed valueUnder=True
+# expect-log: [Redesign] corner tab=settings chrome=rail railWidth=260
+# expect-log: [Redesign] settings page=ReadingSpeedPage hosted=true
 appId: uk.sirous.dinoreader.dbg
-name: Corner rail, book card and Settings two panes on a tablet held upright
+name: Corner rail, book card and Settings list on a tablet held upright
 ---
 - launchApp:
     # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow uses the starter shelf only and reads nothing aloud, so it needs no pack or own book.
@@ -45,7 +46,7 @@ name: Corner rail, book card and Settings two panes on a tablet held upright
     waitToSettleTimeoutMs: 300
 - assertNotVisible:
     id: BookSheetReadNow
-# Settings: two panes upright, the first page on the right, the rows' values under their names.
+# Settings: one list in the rail's content area; Reading speed opens inside it with the back arrow, which returns to the list; the rail stays.
 - tapOn:
     id: GallerySettings
     waitToSettleTimeoutMs: 300
@@ -55,16 +56,21 @@ name: Corner rail, book card and Settings two panes on a tablet held upright
     timeout: 10000
 - assertVisible:
     id: SettingsReadingSpeedRow
+- assertNotVisible: Slower is easier for little ones
+- tapOn:
+    id: SettingsReadingSpeedRow
+    waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible: Slower is easier for little ones
     timeout: 10000
 - assertVisible:
-    id: GrownUpDoneReadingSpeedPage
-# Done closes Settings as a whole and lands back in the corner.
+    id: GrownUpBack
 - tapOn:
-    id: GrownUpDoneReadingSpeedPage
+    id: GrownUpBack
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible:
-      id: GalleryDone
-    timeout: 15000
+      id: SettingsReadingSpeedRow
+    timeout: 10000
+- assertVisible:
+    id: GalleryDone

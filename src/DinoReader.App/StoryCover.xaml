@@ -11,10 +11,11 @@
     <local:AspectRatioView>
     <Border BackgroundColor="{Binding CoverFill}" StrokeThickness="0">
         <Border.StrokeShape>
-            <RoundRectangle CornerRadius="16" />
+            <RoundRectangle CornerRadius="{DynamicResource TileCoverRadius}" />
         </Border.StrokeShape>
+        <!-- Slice 325: the shelf's cover has the 4 dp (5 on a tablet) hard shadow, the corner's none; the opacity follows the page's resource, the depth the ShadowDepth property (Offset is a Point, not a resource). -->
         <Border.Shadow>
-            <Shadow Brush="#2b2540" Opacity="0.08" Offset="0,4" Radius="0" />
+            <Shadow x:Name="CoverShadow" Brush="#2b2540" Opacity="{DynamicResource TileShadowOpacity}" Offset="0,4" Radius="0" />
         </Border.Shadow>
         <Grid>
             <Image Source="{Binding CoverImagePath}" Aspect="AspectFill" IsVisible="{Binding HasImage}" />

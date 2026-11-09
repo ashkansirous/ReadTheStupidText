@@ -1,12 +1,11 @@
-# Slice 232 part B: the kids' shelf is one sideways row of covers on a phone held sideways, the grown-ups' corner gets an ink side rail (300 dp, three columns on the test emulator), and the book sheet is a centred card;
-# rotating back keeps grown-up mode and the open sheet. Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback if a device ignores it.
+# Slice 325 parts A and C (grown-up mock frames KL1, L1): held sideways a phone's kids' shelf is a cream rail (250 dp) beside a grid, the grown-ups' corner gets an ink rail (250 dp) with the three tabs, and the book sheet is a centred card;
+# rotating back keeps grown-up mode and the open sheet. (Replaces Slice 232 part B's sideways row, frame 110, and its 300 dp corner rail, frame 111.) Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback if a device ignores it.
 # The gate is not tapped: the enter-grown-up hook stands in for a passed gate (grown-ups-button.yaml covers the gate chain).
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK enter-grown-up ok
-# The shelf lines are written only when the layout changes: sideways row held sideways on the kids' shelf, then the rail (300 dp on a phone) with however many columns the AVD gives (run-flows matches whole tokens, so each token is its own expect-log and the column count is left out; railWidth is C# double text, 300).
-# expect-log: layout=sideways
+# The shelf lines are written only when the layout changes: the rail on the kids' shelf held sideways, then the corner's rail, however many columns the AVD gives (run-flows matches whole tokens, so each token is its own expect-log and the column count is left out; railWidth is C# double text, 250).
 # expect-log: layout=rail
-# expect-log: railWidth=300
+# expect-log: railWidth=250
 # expect-log: [Landscape] book sheet card=True width=580
 # Back upright: the sheet is a bottom sheet again, and the corner is the grid with no rail.
 # expect-log: [Landscape] book sheet card=False
@@ -37,7 +36,7 @@ name: Shelf, corner and book sheet in landscape keep their state through a rotat
 - assertVisible:
     id: GalleryGrownUps
 # Slice 253 item 2: the picture the contact sheet (tools/emulator/contact-sheet.ps1) puts beside mock frame 110.
-- takeScreenshot: shot-110-kids-shelf
+- takeScreenshot: shot-KL1-shelf
 # Into the corner while still sideways: the rail carries the one line and the way back.
 - launchApp:
     stopApp: false
@@ -54,7 +53,7 @@ name: Shelf, corner and book sheet in landscape keep their state through a rotat
 - assertVisible:
     id: StoryTile
 # Slice 253 item 2: beside mock frame 111 (the grown-ups' corner with its side rail); taken after the note is dismissed so a modal is not in the shot.
-- takeScreenshot: shot-111-corner
+- takeScreenshot: shot-L1-corner
 # A book's sheet opens as a centred card, Read now still first.
 - tapOn:
     id: TileMore

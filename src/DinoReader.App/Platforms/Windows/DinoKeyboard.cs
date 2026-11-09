@@ -124,6 +124,7 @@ internal sealed class DinoKeyboard
 
 		if (HasShortcutModifier(key))
 		{
+			TryCornerShortcut(e, key); // Ctrl+1/2/3 are the corner's tabs (Slice 325 part A); every other shortcut is not ours
 			return; // Ctrl or Alt (or Shift on a digit) makes it a shortcut or a symbol, not ours: Alt+Space opens the system menu, Shift+1 is not the digit 1
 		}
 
@@ -145,6 +146,22 @@ internal sealed class DinoKeyboard
 		}
 	}
 
+	// Ctrl+1, Ctrl+2 and Ctrl+3 on the corner pick Books, Store and Settings (frame W1). Plain Ctrl, no Alt or Shift; a held key acts once; the key map decides, so no other screen has a Ctrl shortcut.
+	private void TryCornerShortcut(KeyRoutedEventArgs e, DinoKey key)
+	{
+		if (IsDown(VirtualKey.Menu) || IsDown(VirtualKey.Shift) || e.KeyStatus.WasKeyDown || DinoKeyTargets.TopPage(_window) is not IDinoKeyTarget target)
+		{
+			return;
+		}
+
+		DinoKeyAction action = DinoKeyMap.ResolveShortcut(key, target.Screen);
+		if (action != DinoKeyAction.None && target.Handle(action, key))
+		{
+			e.Handled = true;
+			WindowTrace.Write($"Dino keyboard: Ctrl+{e.Key} used (corner tab {action})");
+		}
+	}
+
 	// One short line of where a key went: the page DinoKeyTargets.Route picked and the screen it reports (the VM check reads this when a key it sent is not used).
 	private string DescribeTarget()
 	{
@@ -155,7 +172,7 @@ internal sealed class DinoKeyboard
 
 	private bool IsOneShotKey(DinoKey key) =>
 		key is DinoKey.Space or DinoKey.Enter or DinoKey.Escape
-		|| (key == DinoKey.Right && DinoKeyTargets.TopPage(_window) is SettingsPage)
+		|| (key == DinoKey.Right && DinoKeyTargets.TopPage(_window) is GalleryPage { InCorner: true }) // the Settings tab's Right arrow opens a row once per press
 		|| (key is DinoKey.Left or DinoKey.Right && DinoKeyTargets.TopPage(_window) is IntroWizardPage); // Slice 325 part E: an arrow steps the intro once per press, never twice from a held key
 
 	private static bool HasShortcutModifier(DinoKey key) =>

@@ -1,13 +1,15 @@
-# Slice 232 part D: the store held sideways lays its cards in two columns of slimmer cards (three on a tablet); rotating upright goes back to one column and the page stays open (the filter chips are still there).
-# Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback if a device ignores it. The list loads from the store server; offline the page shows its calm offline state, and the column line is still written.
+# Slice 232 part D, rewritten by Slice 325 part B (grown-up mock frame T2): the Store is a tab of the grown-ups' corner, not a pushed page. On a phone, held sideways or upright, its cards are one column (two columns need 800 dp of
+# content, the tablet twin dino-landscape-store-tablet covers that); the rail or tab bar and the way back stay, there is no Done and no back arrow, and rotating keeps the tab open (the filter chips are still there).
+# Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback if a device ignores it. The list loads from the store server; offline the tab shows its calm offline state, and the column line is still written.
 # The gate is not tapped: the enter-grown-up hook stands in for a passed gate (grown-ups-button.yaml covers the gate chain).
+# Against the pushed Store page the "[Redesign] store" line never appears, so this flow fails on a build from before this part.
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK enter-grown-up ok
-# The column line is written only when the columns change (run-flows matches whole tokens, so the row count is left out of the pattern).
-# expect-log: [Landscape] store columns=2
-# expect-log: [Landscape] store columns=1
+# expect-log: [Redesign] store columns=1
 appId: uk.sirous.dinoreader.dbg
-name: Store in landscape has two columns of slim cards, rotating back keeps the page
+name: Store in landscape is a tab with one column of cards, rotating keeps the tab
+onFlowComplete:
+  - setOrientation: PORTRAIT
 ---
 - launchApp:
     # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow only opens the store list, downloads nothing and needs no own book or voice pack.
@@ -31,23 +33,34 @@ name: Store in landscape has two columns of slim cards, rotating back keeps the 
 - tapOn:
     id: GalleryStore
     waitToSettleTimeoutMs: 300
-# The store header (title and Done, top right) is there sideways.
+# The tab's title and its sub-line show beside the rail; the rail's way back stays; there is no Done and no back arrow.
 - extendedWaitUntil:
-    visible: Store
+    visible:
+      id: GalleryStoreSub
     timeout: 15000
 - assertVisible:
+    id: GalleryDone
+- assertNotVisible:
     id: GrownUpDone
-# Upright: the same page, one column again.
+- assertNotVisible:
+    id: GrownUpBack
+- assertNotVisible:
+    id: StoryTile
+# Upright: the same tab above the tab bar.
 - setOrientation: PORTRAIT
 - extendedWaitUntil:
     visible:
-      id: GrownUpDone
+      id: CornerTabBooks
     timeout: 15000
-- assertVisible: Store
-# Done goes back to the corner.
+- assertVisible:
+    id: GalleryStoreSub
+- assertVisible:
+    id: GalleryDone
+# The coral pill leaves the corner (the store has no way back of its own).
 - tapOn:
-    id: GrownUpDone
+    id: GalleryDone
+    waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
-    visible:
+    notVisible:
       id: GalleryDone
     timeout: 10000

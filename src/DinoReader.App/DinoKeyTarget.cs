@@ -87,8 +87,7 @@ internal static class DinoKeyTargets
 			return false;
 		}
 
-		// A target that does not use Esc (Settings, which is a target only for its Right arrow) still goes back one page, as every non-target page does.
-		return target.Handle(action, key) || (action == DinoKeyAction.Back && top is SettingsPage && PopOne(top));
+		return target.Handle(action, key);
 	}
 }
 

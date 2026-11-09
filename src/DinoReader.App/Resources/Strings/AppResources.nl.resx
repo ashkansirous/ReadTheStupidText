@@ -52,7 +52,7 @@
   <data name="Store_Title" xml:space="preserve"><value>Winkel</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>Uitgezocht en ingesproken voor Dino</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Ophalen</value></data>
-  <data name="Store_Downloaded" xml:space="preserve"><value>Opgehaald</value></data>
+  <data name="Store_OnShelf" xml:space="preserve"><value>Op de plank</value></data>
   <data name="Store_Tag_Hot" xml:space="preserve"><value>Hot</value></data>
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Populair</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Aanbevolen</value></data>
@@ -64,7 +64,6 @@
   <data name="Store_TryAgain" xml:space="preserve"><value>Opnieuw proberen</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>Nog geen nieuwe verhalen</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>Er komen af en toe nieuwe bij. Kom later nog eens terug.</value></data>
-  <data name="Store_BackToStories" xml:space="preserve"><value>Terug naar mijn verhalen</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>{0} ophalen</value></data>
   <!-- Slice 112: store age and author filters -->
   <data name="Store_AllAges" xml:space="preserve"><value>Alle leeftijden</value></data>
@@ -142,7 +141,7 @@
   <data name="Settings_GroupReading" xml:space="preserve"><value>Lezen</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>Deze telefoon</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>Nieuwe versie</value></data>
-  <data name="Settings_GearLabel" xml:space="preserve"><value>Instellingen (volwassenen)</value></data>
+  <data name="Settings_GroupComputer" xml:space="preserve"><value>Deze computer</value></data>
   <data name="Settings_About" xml:space="preserve"><value>Over en updates</value></data>
   <data name="Settings_On" xml:space="preserve"><value>Aan</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Uit</value></data>
@@ -155,6 +154,12 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Hoek voor volwassenen</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Alleen volwassenen zien dit. De kast van je kind is één tik weg.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Terug naar de kast van mijn kind</value></data>
+  <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
+  <data name="Corner_TabBooks" xml:space="preserve"><value>Boeken</value></data>
+  <data name="Corner_ChildsShelf" xml:space="preserve"><value>Kinderkast</value></data>
+  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>Alleen volwassenen zien dit.</value></data>
+  <!-- Slice 325 part C: the kids' shelf's short title -->
+  <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Verhalen</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Opnieuw ordenen</value></data>
   <data name="Gallery_ReorderHint" xml:space="preserve"><value>Houd een boek ingedrukt en sleep het naar een nieuwe plek. De plank van je kind toont dezelfde volgorde.</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>De nieuwe volgorde kon niet worden opgeslagen</value></data>
@@ -169,7 +174,6 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>“{0}” van de plank halen?</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>De pagina’s, plaatjes en stemmen worden van deze telefoon verwijderd. Je kunt het gratis opnieuw toevoegen vanuit de winkel.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Weghalen</value></data>
-  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Meer boeken halen</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>Een verhaal in een andere taal wordt nog steeds in zijn eigen taal voorgelezen, tenzij Vertalen naar mijn taal voor dat verhaal aan staat.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Houd 3 seconden ingedrukt.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Houd 3 seconden ingedrukt</value></data>

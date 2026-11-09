@@ -18,8 +18,8 @@ public enum StoreRowState
 	Failed,
 }
 
-/// <summary>What one store row binds to (mock screen 21): the entry's labels and its Get / progress / Downloaded state.</summary>
-public sealed class StoreRow(StoreItem item, bool onShelf, StoreCardLayout layout) : INotifyPropertyChanged
+/// <summary>What one store row binds to (mock frame T2): the entry's labels and its Get / progress / On the shelf state.</summary>
+public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChanged
 {
 	private const double PillWidth = 88;
 	private const int PercentScale = 100;
@@ -31,9 +31,6 @@ public sealed class StoreRow(StoreItem item, bool onShelf, StoreCardLayout layou
 	public event PropertyChangedEventHandler? PropertyChanged;
 
 	public StoreItem Item { get; } = item;
-
-	/// <summary>The sizes every card shares for the window's shape (Slice 232 part D): one object, so a rotation changes every card at once without rebuilding them.</summary>
-	public StoreCardLayout Layout { get; } = layout;
 
 	/// <summary>The title in the app language (Slice 159): the listing's <c>titles</c>, else the shipped-titles table, else the listing's own title.</summary>
 	public string Title => ShippedTitles.ShownInStore(Item, LanguageChoice.Current());
@@ -50,7 +47,11 @@ public sealed class StoreRow(StoreItem item, bool onShelf, StoreCardLayout layou
 	/// <summary>The tag badges above the title (Slice 260): at most two, in list order; none for an untagged book or an older Worker.</summary>
 	public IReadOnlyList<StoreTag> Badges => Item.Badges;
 
+	/// <summary>The line under the credits on a card (frame T2): the length, "12 pages · 6 min"; empty when the server gave none.</summary>
+	public string Meta => StoreText.Length(Item);
+
 	public bool HasDetail => Detail.Length > 0;
+	public bool HasMeta => Meta.Length > 0;
 	public bool HasCredits => Credits.Length > 0;
 
 	public string GetHint => StoreText.GetHint(Title);
@@ -64,7 +65,7 @@ public sealed class StoreRow(StoreItem item, bool onShelf, StoreCardLayout layou
 
 	public bool IsDownloading => _state == StoreRowState.Downloading;
 
-	public bool IsDownloaded => _state == StoreRowState.Downloaded;
+	public bool IsOnShelf => _state == StoreRowState.Downloaded;
 
 	public double FillWidth => PillWidth * _progress;
 
@@ -82,7 +83,7 @@ public sealed class StoreRow(StoreItem item, bool onShelf, StoreCardLayout layou
 	{
 		_state = state;
 		_progress = 0;
-		Raise(nameof(IsGet), nameof(GetLabel), nameof(IsDownloading), nameof(IsDownloaded), nameof(FillWidth), nameof(ProgressText), nameof(ProgressHint));
+		Raise(nameof(IsGet), nameof(GetLabel), nameof(IsDownloading), nameof(IsOnShelf), nameof(FillWidth), nameof(ProgressText), nameof(ProgressHint));
 	}
 
 	public void SetProgress(double progress)
@@ -104,83 +105,6 @@ public sealed class StoreRow(StoreItem item, bool onShelf, StoreCardLayout layou
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 		}
 	}
-}
-
-/// <summary>
-/// What a store card's size and arrangement depend on (Slice 232 part D, mock Batch 44 frame 117): the cover size and where the sub-line sits. Upright, the sub-line is its own line
-/// under the title; in slim cards (two or three columns) it joins the title row. Every row binds to the one instance the page owns.
-/// </summary>
-public sealed class StoreCardLayout : INotifyPropertyChanged
-{
-	private const int TitleRow = 0;
-	private const int SubLineRow = 1;
-	private const int TitleColumn = 0;
-	private const int SubLineColumn = 1;
-	private const int FullSpan = 2;
-	private const int OneColumn = 1;
-	private const double SlimCreditsGap = 8;
-	private const double CreditsTop = 3;
-
-	private const int ActionColumnBeside = 2;
-	private const int ActionColumnBelow = 0;
-	private const int ActionSpanBelow = 3;
-	private const double ActionRowGap = 12;
-	private const double BesideActionHeight = 44;
-
-	private StoreCardShape _shape = TabletPageLayout.StoreCard(0, 0);
-
-	public event PropertyChangedEventHandler? PropertyChanged;
-
-	public int Columns => _shape.Columns;
-
-	public double CoverWidth => _shape.Cover.Width;
-
-	public double CoverHeight => _shape.Cover.Height;
-
-	public int CreditsRow => _shape.Slim ? TitleRow : SubLineRow;
-
-	public int CreditsColumn => _shape.Slim ? SubLineColumn : TitleColumn;
-
-	public int CreditsColumnSpan => _shape.Slim ? OneColumn : FullSpan;
-
-	/// <summary>Slim cards cap the credit line and set it 8 dp off the title; upright it is its own full-width line with no gap.</summary>
-	public double CreditsMaxWidth => _shape.Slim ? SettingsLayout.SlimCreditsMaxWidth : double.PositiveInfinity;
-
-	public LineBreakMode CreditsLineBreak => _shape.Slim ? LineBreakMode.TailTruncation : LineBreakMode.WordWrap;
-
-	public Thickness CreditsMargin => _shape.Slim ? new Thickness(SlimCreditsGap, CreditsTop, 0, 0) : new Thickness(0, CreditsTop, 0, 0);
-
-	// Slice 234 part C (mock Batch 45 frame 143): on a tablet held upright the Get / downloading / downloaded part is a full-width 48 dp button under the card, not a pill at its far edge.
-	public int ActionRow => _shape.ActionBelow ? 1 : 0;
-
-	public int ActionColumn => _shape.ActionBelow ? ActionColumnBelow : ActionColumnBeside;
-
-	public int ActionColumnSpan => _shape.ActionBelow ? ActionSpanBelow : OneColumn;
-
-	public double ActionRowSpacing => _shape.ActionBelow ? ActionRowGap : 0;
-
-	public double ActionHeight => _shape.ActionBelow ? TabletPageLayout.StoreActionHeight : BesideActionHeight;
-
-	/// <summary>The downloading pill keeps its 88 dp and stands centred under a tablet's card.</summary>
-	public LayoutOptions DownloadingAlign => _shape.ActionBelow ? LayoutOptions.Center : LayoutOptions.Fill;
-
-	/// <summary>The Get button and the downloaded line centre their content in the full-width button.</summary>
-	public LayoutOptions ActionContentAlign => _shape.ActionBelow ? LayoutOptions.Center : LayoutOptions.Fill;
-
-	public void SetShape(StoreCardShape shape)
-	{
-		_shape = shape;
-		foreach (string name in ChangedProperties)
-		{
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-		}
-	}
-
-	private static readonly string[] ChangedProperties =
-	[
-		nameof(Columns), nameof(CoverWidth), nameof(CoverHeight), nameof(CreditsRow), nameof(CreditsColumn), nameof(CreditsColumnSpan), nameof(CreditsMaxWidth), nameof(CreditsLineBreak), nameof(CreditsMargin),
-		nameof(ActionRow), nameof(ActionColumn), nameof(ActionColumnSpan), nameof(ActionRowSpacing), nameof(ActionHeight), nameof(DownloadingAlign), nameof(ActionContentAlign),
-	];
 }
 
 /// <summary>The store's copy that is composed from numbers or names, in the UI language.</summary>
@@ -219,18 +143,18 @@ public static class StoreText
 }
 
 /// <summary>
-/// Free stories (Slice 92, mock screens 21-23), behind the grown-up gate: lists what <see cref="StoreClient"/> finds, and a
+/// The corner's Store tab (Slice 92, mock screens 21-23; a tab of the grown-ups' corner since Slice 325 part B, frame T2): lists what <see cref="StoreClient"/> finds, and a
 /// Get downloads one into the library through Slice 91's importer. Offline and empty are calm states of their own. Leaving the
-/// page does not stop a download: it finishes into the library, and only a real failure ends it (the row then offers Try again).
+/// tab does not stop a download: it finishes into the library, and only a real failure ends it (the row then offers Try again). The gallery keeps this one view for the corner's life, so
+/// the rows, the filter and a running download survive a switch to another tab.
 /// </summary>
-public partial class StorePage : ContentPage, IGrownUpPage
+public partial class StorePage : ContentView, ICornerTabView
 {
 	private readonly StoreClient _client;
 	private readonly GrownUpMode _mode;
 	private readonly UsageCounter _usage;
 	private const int CoverParallelism = 4;
-	private const double PhoneSideMargin = 14;
-	private StoreCardShape? _shownShape;
+	private int _shownColumns;
 	private const double ChipHeight = 40;
 	private const double ChipFontSize = 14;
 	private const double ChipPaddingX = 16;
@@ -245,8 +169,7 @@ public partial class StorePage : ContentPage, IGrownUpPage
 	private readonly Dictionary<StoreAgeBand, (Border Chip, Label Label)> _chips = [];
 	private CancellationTokenSource _lifetime = new();
 	private bool _loaded;
-	private readonly StoreCardLayout _cardLayout = new();
-	private Size _windowSize;
+	private bool _loading;
 
 	public StorePage(StoreClient client, GrownUpMode mode, UsageCounter usage)
 	{
@@ -259,9 +182,9 @@ public partial class StorePage : ContentPage, IGrownUpPage
 		ShowAuthor();
 	}
 
-	protected override async void OnAppearing()
+	/// <summary>The Store tab is on screen: the list loads the first time; later it only picks up the covers a tab switch cut short. A download that was running is not touched.</summary>
+	public async void Appearing()
 	{
-		base.OnAppearing();
 		RefreshChips();
 		ShowAuthor();
 		if (_lifetime.IsCancellationRequested)
@@ -269,55 +192,82 @@ public partial class StorePage : ContentPage, IGrownUpPage
 			_lifetime = new CancellationTokenSource();
 		}
 
+		if (_loading)
+		{
+			return; // the first load is still running: a second appearance must not start another one over the same rows
+		}
+
 		if (!_loaded)
 		{
-			_loaded = await LoadAsync();
+			_loading = true;
+			try
+			{
+				_loaded = await LoadAsync();
+			}
+			finally
+			{
+				_loading = false;
+			}
 		}
 		else
 		{
 			// Leaving the page may have cut the cover fetches short: pick the missing ones up again.
 			_ = LoadCoversAsync(_allRows.Where(r => r.Cover is null).ToList(), _lifetime.Token);
+			await RefreshOnShelfAsync();
 		}
 	}
 
-	protected override void OnDisappearing()
+	// The tab view outlives a visit, so a book removed in Books meanwhile must show its Get pill again: every row that is not downloading follows the library.
+	private async Task RefreshOnShelfAsync()
 	{
-		base.OnDisappearing();
-		_lifetime.Cancel();
+		Dictionary<StoreRow, StoreRowState> before = _allRows.ToDictionary(r => r, r => r.State);
+		HashSet<string> onShelf;
+		try
+		{
+			onShelf = await _client.InstalledIdsAsync();
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader store shelf refresh failed: {ex}");
+			_client.Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // the rows keep their last state until the next visit
+			return;
+		}
+
+		foreach (StoreRow row in _allRows.ToList())
+		{
+			// A download that ran or finished while the shelf was read is newer than the snapshot: leave it be.
+			if (row.IsDownloading || !before.TryGetValue(row, out StoreRowState was) || was != row.State)
+			{
+				continue;
+			}
+
+			StoreRowState wanted = onShelf.Contains(row.Item.Id) ? StoreRowState.Downloaded : StoreRowState.Get;
+			bool failedAndStillMissing = wanted == StoreRowState.Get && row.State == StoreRowState.Failed;
+			if (row.State != wanted && !failedAndStillMissing)
+			{
+				row.SetState(wanted);
+			}
+		}
 	}
 
-	// Slice 232 part D (mock Batch 44 frame 117): held sideways the cards are two columns (three on a tablet) of slimmer cards. Rotating changes the grid's span and the shared card sizes
-	// only: the rows, the filter, the open download and the scroll position are the page's own and are never rebuilt.
-	protected override void OnSizeAllocated(double width, double height)
+	/// <summary>The tab went off screen (another tab, the shelf): cover fetches stop. A download keeps running into the library and only a real failure ends it.</summary>
+	public void Disappearing() => _lifetime.Cancel();
+
+	// Decision 4 (Slice 325 part B): one column of cards, two from 800 dp of content. The gallery passes the column's width (the window less the rail), a pure function of the window, so a
+	// rotation changes the grid's span only: the rows, the filter, the open download and the scroll position are never rebuilt.
+	public void ApplyShape(double contentWidth)
 	{
-		base.OnSizeAllocated(width, height);
-		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height);
-		if (width <= 0 || height <= 0 || (width == _windowSize.Width && height == _windowSize.Height))
+		int columns = SettingsLayout.StoreColumns(contentWidth);
+		if (columns == _shownColumns)
 		{
 			return;
 		}
 
-		_windowSize = new Size(width, height);
-		double inset = LandscapeLayout.IsLandscape(width, height) ? LandscapeLayout.SidewaysInset : 0;
-		Header.Margin = new Thickness(inset, 0, 0, 0);
-		StoreCardShape shape = TabletPageLayout.StoreCard(width, height);
-		bool tablet = TabletPageLayout.Applies(width, height);
-		double extra = tablet ? TabletPageLayout.PageSideMargin - PhoneSideMargin : 0; // the list's own 14 dp margins grow to 40
-		ListPanel.Margin = new Thickness(inset + extra, 0, extra, 0);
-		if (shape == _shownShape)
-		{
-			return;
-		}
-
-		_shownShape = shape;
-		_cardLayout.SetShape(shape);
-		((GridItemsLayout)StoryList.ItemsLayout).Span = shape.Columns;
+		_shownColumns = columns;
+		((GridItemsLayout)StoryList.ItemsLayout).Span = columns;
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] store columns={shape.Columns} rows={_rows.Count}");
-		if (tablet)
-		{
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[TabletUpright] store columns={shape.Columns} actionBelow={shape.ActionBelow} cover={shape.Cover.Width}");
-		}
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] store columns={columns} rows={_rows.Count}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] store columns={columns} content={contentWidth:0} rows={_rows.Count}");
 #endif
 	}
 
@@ -357,7 +307,7 @@ public partial class StorePage : ContentPage, IGrownUpPage
 	{
 		HashSet<string> onShelf = await _client.InstalledIdsAsync();
 		_allRows.Clear();
-		_allRows.AddRange(items.Select(item => new StoreRow(item, onShelf.Contains(item.Id), _cardLayout)));
+		_allRows.AddRange(items.Select(item => new StoreRow(item, onShelf.Contains(item.Id))));
 		if (_author is not null && !AuthorsInBand().Any(a => StoreFilter.SameAuthor(a, _author)))
 		{
 			_author = null;
@@ -463,7 +413,12 @@ public partial class StorePage : ContentPage, IGrownUpPage
 			choices[UniqueLabel(author, choices)] = author;
 		}
 
-		string? picked = await DisplayActionSheetAsync(AppResources.Store_Author, AppResources.Common_Cancel, null, [.. choices.Keys]);
+		if (Window?.Page is not { } page)
+		{
+			return; // the tab is not on a window (it was torn down)
+		}
+
+		string? picked = await page.DisplayActionSheetAsync(AppResources.Store_Author, AppResources.Common_Cancel, null, [.. choices.Keys]);
 		if (picked is null || !choices.TryGetValue(picked, out string? chosen))
 		{
 			return;
@@ -557,8 +512,4 @@ public partial class StorePage : ContentPage, IGrownUpPage
 	}
 
 	private async void OnTryAgainClicked(object? sender, EventArgs e) => await _busy.RunAsync(LoadAsync);
-
-	private async void OnBackTapped(object? sender, EventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
-
-	private async void OnBackToStoriesClicked(object? sender, EventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
 }

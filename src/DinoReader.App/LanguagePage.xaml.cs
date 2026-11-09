@@ -56,10 +56,8 @@ public static class LanguageChoice
 /// The grown-up Language page (Slice 93, mock screen 26): the fifteen languages. Picking one switches to it at once (Slice 278 part B: nothing is downloaded for it; the
 /// books' pre-made audio in a story language is fetched by the shelf audio run).
 /// </summary>
-public partial class LanguagePage : ContentPage, IGrownUpPage
+public partial class LanguagePage : ContentPage, IGrownUpPage, ICornerSubPage
 {
-	private const int LoadWaitMilliseconds = 2000;
-	private const int LoadPollMilliseconds = 50;
 	private const double RowMinHeight = 54;
 	private const double CheckSize = 26;
 
@@ -74,6 +72,8 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	private string? _pending;
 	private StoryLanguageSet? _sides; // the story languages as the taps so far leave them; saved only when the page is left with a changed language
 	private bool _changed;
+	private Page? _hostPage; // Slice 325 part B: the gallery whose Settings tab shows this page; its navigation and alerts are this page's
+	private Func<Task>? _hostClose;
 
 	public LanguagePage(ISettingsStore settings, UsageCounter usage, IServiceProvider services)
 	{
@@ -85,31 +85,40 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 		_openedSet = StoryLanguages.Current();
 	}
 
-	protected override void OnAppearing()
+	// Slice 325 part B: the Settings tab hosts this page in its content area (nothing is pushed), so the page's appearing, disappearing and Back come from the tab.
+	View ICornerSubPage.HostIn(Page owner, Func<Task> close)
 	{
-		base.OnAppearing();
-		Rebuild();
+		_hostPage = owner;
+		_hostClose = close;
+		Content = null;
+		return LanguageRoot;
 	}
 
-	protected override void OnDisappearing()
+	void ICornerSubPage.HostShape(double width, double height)
 	{
-		base.OnDisappearing();
+		// the list follows its scroll area, not the window
+	}
+
+	void ICornerSubPage.HostAppearing() => Rebuild();
+
+	void ICornerSubPage.HostDisappearing()
+	{
 		CommitSides();
-		Dispatcher.Dispatch(StartAudioIfLeft); // one tick later, so a pop that has not removed the page yet is seen as the page leaving (the Reading page does the same)
+		Dispatcher.Dispatch(StartAudioIfLeft); // one tick later, so a sheet that is about to cover the page is seen as the page still being here
 	}
 
-	protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
-	{
-		base.OnNavigatedFrom(args);
-		StartAudioIfLeft();
-	}
+	Task ICornerSubPage.HostBackAsync() => _busy.RunAsync(BackAsync);
 
-	// A sheet covering the page (the drop-language sheet) fires OnDisappearing too, with the page still on the stack: only a page that has left the stack starts the audio of what it changed.
+	private Page Owner => _hostPage ?? this;
+
+	private Task CloseAsync() => _hostClose is { } close ? close() : Task.CompletedTask;
+
+	// A sheet covering the page (the drop-language sheet, the mobile-data question) fires the gallery's disappearing too, with this page still open: only a page that has left starts the audio of what it changed.
 	private void StartAudioIfLeft()
 	{
-		if (!_asking && !Navigation.NavigationStack.Contains(this)) // while the mobile-data question is open, its answer starts the audio
+		if (!_asking && Owner.Navigation.ModalStack.Count == 0) // while the mobile-data question or a sheet is open, its answer starts the audio
 		{
-			StartShelfAudioSafely(VoiceRequestOutcome.NothingAsked); // a swipe back never asks; Back asks first (BackAsync) and starts with the answer
+			StartShelfAudioSafely(VoiceRequestOutcome.NothingAsked); // leaving some other way never asks; Back asks first (BackAsync) and starts with the answer
 		}
 	}
 
@@ -207,20 +216,13 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 			return true;
 		}
 
-		string? dropped = await DropLanguageSheet.AskAsync(Navigation, UiLanguage.Resolve(code), current.Main, change.DropChoices);
+		string? dropped = await DropLanguageSheet.AskAsync(Owner.Navigation, UiLanguage.Resolve(code), current.Main, change.DropChoices);
 		if (dropped is null)
 		{
 			return false;
 		}
 
 		_sides = current.ChangeMainDropping(code, dropped);
-		return true;
-	}
-
-	// Hardware back is the same as the Back button: a changed language is committed (with its story languages) and the root rebuilt.
-	protected override bool OnBackButtonPressed()
-	{
-		_ = _busy.RunAsync(BackAsync);
 		return true;
 	}
 
@@ -291,7 +293,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 		_asking = true;
 		try
 		{
-			outcome = await ShelfAudioAsk.AskAsync(this, ShelfAudioLanguages.Added(_openedSet, StoryLanguages.Current()));
+			outcome = await ShelfAudioAsk.AskAsync(Owner,ShelfAudioLanguages.Added(_openedSet, StoryLanguages.Current()));
 		}
 		catch (Exception ex)
 		{
@@ -317,51 +319,16 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 			return;
 		}
 
-		await Navigation.PopAsync();
+		await CloseAsync();
 	}
 
-	// The new language is read when a page is built, so the whole stack is rebuilt in it. Settings is reopened on the new shelf only when the new root is
-	// the shelf (never over the forced-update page), and only once the new root is on screen, so the push has a handler to land on.
-	private async Task RebuildAndReturnToSettingsAsync()
+	// The new language is read when a page is built, so the whole stack is rebuilt in it. The grown-up mode and its tab are the app's, not the page's, so the new gallery comes up in the corner on
+	// the Settings tab: that is the return to Settings (Slice 325 part B; nothing is pushed any more). A forced-update root has no gallery, so there is nothing to return to.
+	private Task RebuildAndReturnToSettingsAsync()
 	{
 		var app = (DinoApp)Microsoft.Maui.Controls.Application.Current!;
+		_services.GetRequiredService<GrownUpMode>().SelectTab(CornerTab.Settings);
 		app.RebuildRoot();
-		if (app.Windows.FirstOrDefault()?.Page is not NavigationPage { RootPage: GalleryPage } navigation)
-		{
-			return;
-		}
-
-		try
-		{
-			if (await WhenLoadedAsync(navigation) && navigation.RootPage is GalleryPage && navigation.CurrentPage is not SettingsPage)
-			{
-				await navigation.PushAsync(_services.GetRequiredService<SettingsPage>());
-			}
-		}
-		catch (Exception ex)
-		{
-			// no-fallback: the language change itself was applied; only the return to Settings did not happen
-			Debug.WriteLine($"Dino Reader could not reopen Settings after a language change: {ex}");
-		}
+		return Task.CompletedTask;
 	}
-
-	// True when the NavigationPage is loaded (IsLoaded; reading it registers no KVO); false when the wait ran out, so no push lands on a page without a handler.
-	// Polled, not subscribed: a Loaded/Unloaded subscription on the NavigationPage would put KVO observers on its plain UINavigationController view (Slice 274).
-	private static async Task<bool> WhenLoadedAsync(NavigationPage navigation)
-	{
-		DateTime deadline = DateTime.UtcNow.AddMilliseconds(LoadWaitMilliseconds);
-		while (!IsReadyToPush(navigation))
-		{
-			if (DateTime.UtcNow >= deadline)
-			{
-				return false;
-			}
-
-			await Task.Delay(LoadPollMilliseconds);
-		}
-
-		return true;
-	}
-
-	private static bool IsReadyToPush(NavigationPage navigation) => navigation.IsLoaded;
 }

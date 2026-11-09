@@ -1,21 +1,52 @@
+using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Mobile.Shared.Crashes;
 
 namespace DinoReader;
 
-/// <summary>
-/// The page every grown-up setting hangs off (Slice 172, Decision 167): a back button and a title over a scrolling column of cards. Each
-/// settings sub-page (Reading speed, Animal sounds, Usage counts, About &amp; updates) is one of these, and Back goes up to Settings.
-/// Leaving the app closes it like every grown-up page (<see cref="IGrownUpPage"/>).
-/// </summary>
-public abstract class SettingsSubPage : ContentPage, IGrownUpPage
+/// <summary>A view the grown-ups' corner shows as one of its tabs (Slice 325 part B): told when it comes on screen and when it goes, so it starts and stops what it watches (the page itself is the Gallery).</summary>
+internal interface ICornerTabView
 {
-	private const string DoneIdPrefix = "GrownUpDone";
-	private const string ListTitleId = "SettingsTitle";
+	/// <summary>The tab is on screen now (the gallery is showing, in the corner, on this tab).</summary>
+	void Appearing();
+
+	/// <summary>The tab went off screen (another tab, the shelf, or a page over the gallery).</summary>
+	void Disappearing();
+}
+
+/// <summary>
+/// A page the Settings tab shows inside its content area (Slice 325 part B, grown-up mock frame W1: "sub-pages open inside the content area with their own back arrow, and the rail stays"). The page keeps
+/// its content and its logic; <see cref="HostIn"/> hands the content over and the tab puts it in its own stage. Nothing is pushed on the navigation stack.
+/// </summary>
+public interface ICornerSubPage
+{
+	/// <summary>Moves the page's content out to be hosted by <paramref name="owner"/> (the gallery: its navigation and alerts are the page's now); <paramref name="close"/> goes back up to the list. Called once per page.</summary>
+	View HostIn(Page owner, Func<Task> close);
+
+	/// <summary>The same appearing a pushed page gets (its events and previews start there).</summary>
+	void HostAppearing();
+
+	/// <summary>The same disappearing a pushed page gets.</summary>
+	void HostDisappearing();
+
+	/// <summary>The window's size, for a page whose arrangement follows it (Backup's two cards).</summary>
+	void HostShape(double width, double height);
+
+	/// <summary>Back (the arrow, Android Back): the page may save first, then goes up one level.</summary>
+	Task HostBackAsync();
+}
+
+/// <summary>
+/// The page every grown-up setting hangs off (Slice 172, Decision 167): a back arrow and a title over a scrolling column of cards. Each settings sub-page (Reading speed, Animal sounds, Usage counts,
+/// About &amp; updates, Story languages, Report a problem) is one of these. Since Slice 325 part B it is never pushed: the Settings tab hosts its content (<see cref="ICornerSubPage"/>), and Back goes up to the list.
+/// </summary>
+public abstract class SettingsSubPage : ContentPage, IGrownUpPage, ICornerSubPage
+{
 	private const string SubTitleIdPrefix = "SettingsTitle";
-	private GrownUpHeader _header = new();
+	private readonly GrownUpHeader _header = new();
 	private readonly Grid _root;
 	private Page? _hostPage;
 	private Func<Task>? _hostClose;
@@ -25,59 +56,42 @@ public abstract class SettingsSubPage : ContentPage, IGrownUpPage
 		NavigationPage.SetHasNavigationBar(this, false);
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
-		Body.HorizontalOptions = LayoutOptions.Center; // Slice 232 part D: held sideways or on a tablet the column stays at most 640 dp wide, centred, never stretched
+		Body.HorizontalOptions = LayoutOptions.Start; // frame W1: the column is at most 620 dp wide, at the start of the content area, never stretched
 		var scroll = new ScrollView { Content = Body };
 		scroll.SizeChanged += (_, _) => FitBody(scroll.Width);
 		_root = new Grid { RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star)] };
+		_header.TitleLabel.AutomationId = SubTitleIdPrefix + GetType().Name; // set once, here
 		_root.Add(Header(title), 0, 0);
 		_root.Add(scroll, 0, 1);
 		Content = _root;
 	}
 
-	/// <summary>The page's whole content (title row and body): both the pushed page and Settings' right pane show this one view, so the two cannot drift.</summary>
-	protected Grid Root => _root;
-
-	/// <summary>The title row, for a page that arranges its own content (Settings' two panes).</summary>
-	protected GrownUpHeader PageHeader => _header;
-
-	/// <summary>The navigation to push on: the page's own, or the Settings page's when this page is shown in its right pane.</summary>
+	/// <summary>The navigation to push on: the gallery's, whose content area shows this page.</summary>
 	protected INavigation Nav => _hostPage?.Navigation ?? Navigation;
 
-	/// <summary>An alert on the page the user sees (the Settings page when this one is in its right pane).</summary>
+	/// <summary>An alert on the page the user sees (the gallery).</summary>
 	protected Task AlertAsync(string title, string message, string ok) => (_hostPage ?? this).DisplayAlertAsync(title, message, ok);
 
-	/// <summary>
-	/// Slice 232 part D: moves the content into Settings' right pane and returns it. Back and Done there close Settings as a whole (<paramref name="close"/>); the Back
-	/// button is hidden because the list's own header has it. Called once per page; the page is never shown on its own after this.
-	/// </summary>
-	internal View HostIn(Page owner, Func<Task> close)
+	View ICornerSubPage.HostIn(Page owner, Func<Task> close)
 	{
 		_hostPage = owner;
 		_hostClose = close;
-		_header.BackVisible = false;
-		// No AutomationId is set here: MAUI allows one set only, so each id is given where its view is created (see Header).
-
 		Content = null;
 		return _root;
 	}
 
-	/// <summary>A hosted page gets the same appearing and disappearing a pushed one does (its events and previews start and stop there).</summary>
-	internal void HostAppearing() => OnAppearing();
+	void ICornerSubPage.HostAppearing() => OnAppearing();
 
-	internal void HostDisappearing() => OnDisappearing();
+	void ICornerSubPage.HostDisappearing() => OnDisappearing();
 
-	private Task CloseAsync() => _hostClose is { } close ? close() : Navigation.PopAsync();
-
-	// A page held sideways keeps clear of the camera cut-out at its start, as the other sideways screens do.
-	protected override void OnSizeAllocated(double width, double height)
+	void ICornerSubPage.HostShape(double width, double height)
 	{
-		base.OnSizeAllocated(width, height);
-		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height);
-		if (width > 0 && height > 0)
-		{
-			_root.Margin = new Thickness(LandscapeLayout.IsLandscape(width, height) ? LandscapeLayout.SidewaysInset : 0, 0, 0, 0);
-		}
+		// the column follows its scroll area, not the window
 	}
+
+	Task ICornerSubPage.HostBackAsync() => Busy.RunAsync(CloseAsync);
+
+	private Task CloseAsync() => _hostClose is { } close ? close() : Task.CompletedTask;
 
 	/// <summary>Lays a view (a wait overlay) over the whole page, header included, without re-parenting the page's content.</summary>
 	protected void AddOverlay(View overlay)
@@ -89,9 +103,9 @@ public abstract class SettingsSubPage : ContentPage, IGrownUpPage
 	protected BusyGuard Busy { get; } = new();
 
 	/// <summary>The column the page puts its cards in.</summary>
-	protected VerticalStackLayout Body { get; } = new() { Padding = new Thickness(14, 0, 14, 20), Spacing = 10 };
+	protected VerticalStackLayout Body { get; } = new() { Padding = new Thickness(0, 0, 0, 20), Spacing = 10 };
 
-	// A centred column does not fill, so its width is the scroll area's, capped (a size change only sets a width; no view is rebuilt).
+	// A column at the start does not fill, so its width is the scroll area's, capped (a size change only sets a width; no view is rebuilt).
 	private void FitBody(double available)
 	{
 		if (available > 0)
@@ -108,42 +122,260 @@ public abstract class SettingsSubPage : ContentPage, IGrownUpPage
 
 	private GrownUpHeader Header(string title)
 	{
-		var header = _header = new GrownUpHeader(DoneIdPrefix + GetType().Name) { Title = title }; // each page in the stack has its own Done id (Slice 229)
-		// The Settings list keeps SettingsTitle; every sub-page's title has its own id, so the list and the page in the right pane never share one. Set once, here.
-		header.TitleLabel.AutomationId = this is SettingsPage ? ListTitleId : SubTitleIdPrefix + GetType().Name;
-		header.BackRequested += async (_, _) => await Busy.RunAsync(CloseAsync);
-		header.DoneRequested += async (_, _) => await Busy.RunAsync(CloseAsync); // one level up, like Back: Done never skips a page (Slice 229); in the right pane both close Settings
-		return header;
+		_header.Title = title;
+		_header.ButtonVisible = false; // no Done in the corner: the back arrow goes up one level, the coral pill leaves (Slice 325 decision 5)
+		_header.BackRequested += async (_, _) => await Busy.RunAsync(CloseAsync);
+		return _header;
 	}
 }
 
-/// <summary>The Settings rows whose page can show in the right pane (Slice 232 part D); the first is what a first open shows.</summary>
-public enum SettingsSection
-{
-	ReadingSpeed,
-	AnimalSounds,
-	UsageCounts,
-	About,
-}
-
 /// <summary>
-/// The Settings page (Slice 172, mock frames 80 and 87): opened from the gear in grown-up mode (Slice 189; the gate was passed to get there), and Back returns
-/// to grown-up mode. "Reading" (Language, Story languages, Reading speed, Animal sounds) and "This phone" (Backup, Usage counts, About &amp; updates), each row
-/// showing its current value and opening its own page. The store is never a row (Decision 167). The Story languages row (Slice 173) sits under Language.
+/// The corner's Settings tab (Slice 325 part B, grown-up mock frame W1; was the pushed Settings page of Slice 172): "Reading" (Language, Story languages, Reading speed, Animal sounds) and "This phone" ("This
+/// computer" on Windows: Backup, Usage counts, About &amp; updates, and Report a problem off Windows), each row showing its current value and opening its own page. The list is one column at most 620 dp wide
+/// at every size. A row opens its page in this tab's own area (<see cref="ICornerSubPage"/>) with its own back arrow; the corner's chrome (bar or rail) stays. The store is never a row (Decision 167).
 /// </summary>
-public sealed class SettingsPage : SettingsSubPage, IDinoKeyTarget
+internal sealed class SettingsTab : ContentView, ICornerTabView
 {
-	// Slice 235 part C (mock Batch 46 frame 157): on the Windows window the Right arrow opens the focused row in the right pane, like Enter does. Up and down move the focus by the
-	// window's own arrow-key navigation. Esc is not used here (DinoKeyTargets.Route pops the page for it). Nothing reaches this page off Windows.
-	DinoScreen IDinoKeyTarget.Screen => DinoScreen.Settings;
+	private const string ListMarkerId = "SettingsTitle"; // the list's first heading: flows wait for it to know the Settings list is on screen (the page that owned this id, with its own title, is gone)
+	private const string ReadingSpeedRowId = "SettingsReadingSpeedRow";
+	private const string ReportProblemRowId = "SettingsReportProblemRow";
 
-	bool IDinoKeyTarget.Handle(DinoKeyAction action, DinoKey key) => action == DinoKeyAction.OpenRow && OpenFocusedRow();
+	private readonly IServiceProvider _services;
+	private readonly AppConfigClient _config;
+	private readonly UsageCounter _usage;
+	private readonly BusyGuard _busy = new();
+	private readonly VerticalStackLayout _body = new() { Spacing = 10, Padding = new Thickness(0, 0, 0, 20), HorizontalOptions = LayoutOptions.Start };
+	private readonly ScrollView _scroll;
+	private readonly Grid _stage = new();
+	private Page? _owner;
+	private ICornerSubPage? _open;
+	private View? _openView;
+	private bool _appeared;
+	private Size _window;
 
-	// Opens the focused row by invoking it like a click; false when the focus is not on a button of this page, so the arrow goes on to the focused control.
-	private bool OpenFocusedRow()
+	public SettingsTab(IServiceProvider services, AppConfigClient config, UsageCounter usage)
+	{
+		_services = services;
+		_config = config;
+		_usage = usage;
+		_scroll = new ScrollView { Content = _body };
+		_scroll.SizeChanged += (_, _) => FitBody(_scroll.Width);
+		_stage.Add(_scroll);
+		Content = _stage;
+		Unloaded += (_, _) => Release();
+	}
+
+	/// <summary>The gallery that shows this tab: the owner of the pages it hosts (their navigation and alerts).</summary>
+	public void Attach(Page owner) => _owner = owner;
+
+	/// <summary>True while a sub-page is open instead of the list: the gallery hides the tab's own title row and sends Android Back here first.</summary>
+	public bool SubPageOpen => _open is not null;
+
+	/// <summary>A sub-page opened or closed.</summary>
+	public event Action? SubPageChanged;
+
+	public void Appearing()
+	{
+		_appeared = true;
+		_config.Changed -= OnConfigChanged; // never twice
+		_config.Changed += OnConfigChanged;
+		Rebuild();
+		_open?.HostAppearing();
+	}
+
+	public void Disappearing()
+	{
+		Release();
+		_open?.HostDisappearing();
+	}
+
+	// Lets go of what the tab subscribed to (Disappearing and Unloaded both come here).
+	private void Release()
+	{
+		_config.Changed -= OnConfigChanged;
+		_appeared = false;
+	}
+
+	/// <summary>The window's size, for the hosted page that arranges itself by it.</summary>
+	public void ApplyShape(double windowWidth, double windowHeight)
+	{
+		_window = new Size(windowWidth, windowHeight);
+		_open?.HostShape(windowWidth, windowHeight);
+	}
+
+	/// <summary>Back from a sub-page to the list; false when the list is showing (the caller then leaves the corner).</summary>
+	public async Task<bool> GoBackAsync()
+	{
+		if (_open is not { } page)
+		{
+			return false;
+		}
+
+		await page.HostBackAsync();
+		return true;
+	}
+
+	/// <summary>The corner was left: the next visit starts at the list. The sub-page is only discarded here, never sent its Back (that would raise alerts or rebuild the app in kids' mode); the ways out of the corner that
+	/// must save or refuse go through the sub-page's own Back first (GalleryPage.CloseSettingsSubPageAsync).</summary>
+	public void Reset()
+	{
+		CloseSubPage(); // synchronous: nothing is left running unobserved while the other leave-the-corner work goes on, and a throw reaches the caller
+	}
+
+	private void OnConfigChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(Rebuild);
+
+	private void FitBody(double available)
+	{
+		if (available > 0)
+		{
+			_body.WidthRequest = Math.Min(available, SettingsLayout.MaxContentWidth);
+		}
+	}
+
+	// Values change on the sub-pages, so the list is built again each time it shows.
+	private void Rebuild()
+	{
+		_body.Children.Clear();
+		Grid[] reading = [LanguageRow(), StoryLanguagesRow(), SpeedRow(), AnimalRow()];
+		Grid[] device = DeviceRows();
+		_body.Children.Add(SettingsRows.GroupHeading(AppResources.Settings_GroupReading, ListMarkerId));
+		_body.Children.Add(SettingsRows.RowsCard(reading));
+		_body.Children.Add(SettingsRows.GroupHeading(DeviceGroupTitle()));
+		_body.Children.Add(SettingsRows.RowsCard(device));
+	}
+
+	// Frame W1: the Windows head's second group is "This computer".
+	private static string DeviceGroupTitle()
 	{
 #if WINDOWS
-		if (Handler?.PlatformView is Microsoft.UI.Xaml.FrameworkElement { XamlRoot: { } root }
+		return AppResources.Settings_GroupComputer;
+#else
+		return AppResources.Settings_GroupPhone;
+#endif
+	}
+
+	private Grid LanguageRow() =>
+		SettingsRows.NavRow(AppResources.Language_Title, LanguageNames.NativeName(LanguageChoice.Current()), OpenAsync<LanguagePage>, _busy);
+
+	// The app language and the side languages the child can switch between (Slice 173), like "English, فارسی".
+	private Grid StoryLanguagesRow() =>
+		SettingsRows.NavRow(AppResources.StoryLanguages_SettingsTitle, StoryLanguages.Names(StoryLanguages.Current().All), OpenAsync<StoryLanguagesPage>, _busy);
+
+	private Grid SpeedRow() =>
+		SettingsRows.NavRow(AppResources.Speed_Title, AppResources.Format(AppResources.Speed_Value, ReadingSpeedPreference.Load().Value), OpenAsync<ReadingSpeedPage>, _busy, automationId: ReadingSpeedRowId);
+
+	private Grid AnimalRow() =>
+		SettingsRows.NavRow(AppResources.Settings_AnimalSounds_Title, SettingsRows.OnOff(AnimalSoundsPreference.Load()), OpenAsync<AnimalSoundsPage>, _busy);
+
+	// Slice 249: "Report a problem" follows About; the Windows head has no crash reporting, so it has no row.
+	private Grid[] DeviceRows()
+	{
+#if WINDOWS
+		return [BackupRow(), UsageRow(), AboutRow()];
+#else
+		return [BackupRow(), UsageRow(), AboutRow(), ReportProblemRow()];
+#endif
+	}
+
+	private Grid ReportProblemRow() =>
+		SettingsRows.NavRow(AppResources.ReportProblem_Title, null, () => ShowAsync(new ReportProblemPage()), _busy, automationId: ReportProblemRowId);
+
+	private Grid BackupRow() => SettingsRows.NavRow(AppResources.Backup_Title, null, OpenAsync<BackupPage>, _busy);
+
+	private Grid UsageRow() =>
+		SettingsRows.NavRow(AppResources.Usage_Title, SettingsRows.OnOff(_usage.Enabled), OpenAsync<UsageCountsPage>, _busy);
+
+	// The "New version" tag shows only while the remote config names a newer release.
+	private Grid AboutRow()
+	{
+		string? tag = _config.NewerVersionExists ? AppResources.Settings_NewVersion : null;
+		return SettingsRows.NavRow(AppResources.Settings_About, null, OpenAsync<AboutPage>, _busy, tag);
+	}
+
+	private Task OpenAsync<TPage>() where TPage : Page, ICornerSubPage => ShowAsync(_services.GetRequiredService<TPage>());
+
+	// The one hosting path (Slice 325 B2): the page's content goes into this tab's stage in place of the list.
+	private Task ShowAsync(ICornerSubPage page)
+	{
+		if (_open is not null || _owner is null)
+		{
+			return Task.CompletedTask;
+		}
+
+		_open = page;
+		_openView = page.HostIn(_owner, CloseSubPageAsync);
+		_scroll.IsVisible = false;
+		_stage.Add(_openView);
+		page.HostShape(_window.Width, _window.Height);
+		if (_appeared)
+		{
+			page.HostAppearing();
+		}
+
+		AppTrace.Line(TraceLines.PageShown(page.GetType().Name)); // a hosted page is never pushed, so Application.PageAppearing does not see it: the report's log tail still names it (report-problem flow)
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] settings page={page.GetType().Name} hosted=true");
+#endif
+		SubPageChanged?.Invoke();
+		return Task.CompletedTask;
+	}
+
+	private Task CloseSubPageAsync()
+	{
+		CloseSubPage();
+		return Task.CompletedTask;
+	}
+
+	private void DetachOpenView()
+	{
+		if (_openView is not null)
+		{
+			_stage.Remove(_openView);
+			_openView = null;
+		}
+	}
+
+	private void CloseSubPage()
+	{
+		if (_open is not { } page)
+		{
+			return;
+		}
+
+		_open = null;
+		try
+		{
+			if (_appeared)
+			{
+				page.HostDisappearing();
+			}
+
+			AppTrace.Line(TraceLines.PageLeft(page.GetType().Name)); // the twin of the page shown line above
+		}
+		finally
+		{
+			DetachOpenView(); // even when the sub-page throws while leaving, its view must not stay attached for the next visit
+			ShowListAgain(); // and the list must show again, whatever the sub-page did while leaving: the exception still goes on to the caller
+		}
+	}
+
+	private void ShowListAgain()
+	{
+		_scroll.IsVisible = true;
+		Rebuild();
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Redesign] settings page=list hosted=false");
+#endif
+		SubPageChanged?.Invoke();
+	}
+
+	// Slice 235 part C (mock Batch 46 frame 157): on the Windows window the Right arrow opens the focused row, like Enter does. Up and down move the focus by the window's own arrow-key navigation.
+	// False when the list is not showing or the focus is not on a row, so the arrow goes on to the focused control. Nothing reaches this tab off Windows.
+	public bool OpenFocusedRow()
+	{
+#if WINDOWS
+		if (_open is null
+			&& Handler?.PlatformView is Microsoft.UI.Xaml.FrameworkElement { XamlRoot: { } root }
 			&& Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root) is Microsoft.UI.Xaml.Controls.Button { IsEnabled: true } button
 			&& IsRowButton(button)
 			&& new Microsoft.UI.Xaml.Automation.Peers.ButtonAutomationPeer(button) is { } peer)
@@ -157,8 +389,8 @@ public sealed class SettingsPage : SettingsSubPage, IDinoKeyTarget
 	}
 
 #if WINDOWS
-	// Only a Settings row opens with Right; the back button and any other button on the page are left to the arrow (which then moves the focus).
-	private bool IsRowButton(Microsoft.UI.Xaml.Controls.Button focused) => RowButtonsUnder(this).Any(row => ReferenceEquals(row.Handler?.PlatformView, focused));
+	// Only a Settings row opens with Right; a button of a hosted page is left to the arrow (which then moves the focus).
+	private bool IsRowButton(Microsoft.UI.Xaml.Controls.Button focused) => RowButtonsUnder(_scroll).Any(row => ReferenceEquals(row.Handler?.PlatformView, focused));
 
 	private static IEnumerable<RowButton> RowButtonsUnder(IVisualTreeElement element)
 	{
@@ -176,279 +408,4 @@ public sealed class SettingsPage : SettingsSubPage, IDinoKeyTarget
 		}
 	}
 #endif
-
-	private const string ReadingSpeedRowId = "SettingsReadingSpeedRow";
-	private const string ReportProblemRowId = "SettingsReportProblemRow";
-
-	private readonly IServiceProvider _services;
-	private readonly AppConfigClient _config;
-	private readonly ISettingsStore _settings;
-	private readonly UsageCounter _usage;
-
-	// Slice 232 part D (mock Batch 44 frames 118, 128). This page owns which section the right pane shows, so a rotation keeps it; the pane's page is built again only when the
-	// selection changes, never on a size change (the page is re-parented, not rebuilt).
-	private readonly Grid _split;
-	private const double UnsetWidth = -1; // VisualElement.WidthRequest's "no request"
-	private readonly ContentView _pane = new() { HorizontalOptions = LayoutOptions.Start, BackgroundColor = DinoTokens.Get(DinoTokens.Sand) };
-	private SettingsSection _selected = SettingsSection.ReadingSpeed;
-	private SettingsSubPage? _hosted;
-	private SettingsSubPage? _shown; // the hosted page last told it appeared (see SyncHosted)
-	private readonly Dictionary<SettingsSection, Grid> _sectionRows = [];
-	private bool _twoPanes;
-	private bool _valueUnderName;
-	private IReadOnlyList<Grid> _navRows = [];
-	private bool _appeared;
-	private Size _windowSize;
-
-	public SettingsPage(IServiceProvider services, AppConfigClient config, ISettingsStore settings, UsageCounter usage)
-		: base(AppResources.Settings_Title)
-	{
-		_services = services;
-		_config = config;
-		_settings = settings;
-		_usage = usage;
-		_split = new Grid { ColumnDefinitions = [new ColumnDefinition(new GridLength(LandscapeLayout.PhoneListPane)), new ColumnDefinition(GridLength.Star)] };
-		_split.Add(_pane, 1);
-		Unloaded += (_, _) => Release(); // a page dropped without disappearing (the root rebuilt after a language change) lets go of the config and tells its hosted page
-	}
-
-	// Lets go of everything the page subscribed to and tells the hosted page it is gone, once (OnDisappearing and Unloaded both come here).
-	private void Release()
-	{
-		_config.Changed -= OnConfigChanged;
-		SettingsRows.SettingChanged -= RefreshValue;
-		_appeared = false;
-		SyncHosted();
-	}
-
-	// The one place the hosted page is told it appeared or disappeared: it is shown only while this page is appeared and in two panes, and each change is told once.
-	private void SyncHosted()
-	{
-		SettingsSubPage? wanted = _appeared && _twoPanes ? _hosted : null;
-		if (ReferenceEquals(wanted, _shown))
-		{
-			return;
-		}
-
-		_shown?.HostDisappearing();
-		_shown = wanted;
-		_shown?.HostAppearing();
-	}
-
-	protected override void OnAppearing()
-	{
-		base.OnAppearing();
-		_appeared = true;
-		_config.Changed -= OnConfigChanged; // never twice
-		_config.Changed += OnConfigChanged;
-		SettingsRows.SettingChanged -= RefreshValue; // never twice
-		SettingsRows.SettingChanged += RefreshValue;
-		SetTitle(AppResources.Settings_Title); // the page can be built right after a language change (LanguagePage), before the new words apply
-		Rebuild();
-		SyncHosted();
-	}
-
-	protected override void OnDisappearing()
-	{
-		base.OnDisappearing();
-		Release();
-	}
-
-	private void OnConfigChanged(object? sender, EventArgs e) => Rebuild();
-
-	// A page in the right pane wrote a setting: only the value text of the list's rows changes (never the list or the pane).
-	// The writer passes the new value text, so nothing is reloaded here.
-	private void RefreshValue(SettingsSection section, string value)
-	{
-		if (_sectionRows.TryGetValue(section, out Grid? row))
-		{
-			SettingsRows.SetNavValue(row, value);
-		}
-	}
-
-	protected override void OnSizeAllocated(double width, double height)
-	{
-		base.OnSizeAllocated(width, height);
-		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height);
-		if (width <= 0 || height <= 0 || (width == _windowSize.Width && height == _windowSize.Height))
-		{
-			return;
-		}
-
-		_windowSize = new Size(width, height);
-		bool two = SettingsLayout.TwoPanes(width, height);
-		_split.ColumnDefinitions[0].Width = new GridLength(LandscapeLayout.SideListWidth(width, height));
-		_valueUnderName = SettingsLayout.ValueUnderName(width, height);
-		ApplyRowValues();
-		double paneWidth = SettingsLayout.PaneWidth(width, height); // the width the tests check is the width drawn
-		_pane.WidthRequest = paneWidth > 0 ? paneWidth : UnsetWidth;
-		if (two != _twoPanes)
-		{
-			SetPanes(two);
-		}
-	}
-
-	// A size change only moves the list and shows or hides the right pane: it never navigates, and a page already pushed on top stays pushed.
-	private void SetPanes(bool two)
-	{
-		_twoPanes = two;
-		PageHeader.ButtonVisible = !two; // in two panes the right pane's title row carries Done
-		if (two)
-		{
-			Content = null;
-			_split.Add(Root, 0);
-			Content = _split;
-			ShowSelected();
-		}
-		else
-		{
-			Content = null;
-			_split.Remove(Root);
-			Content = Root;
-		}
-
-		SyncHosted();
-		Retint(); // the list is built on appearing and on real content changes only: a size change just retints the rows already there
-#if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] settings panes={(two ? 2 : 1)} selected={_selected} valueUnder={_valueUnderName}");
-#endif
-	}
-
-	// Builds the right pane's page the first time and whenever the selection changed; later calls (a rotation back to two panes) keep the page already there.
-	private void ShowSelected()
-	{
-		if (_hosted is null)
-		{
-			_hosted = CreateSection(_selected);
-			_pane.Content = _hosted.HostIn(this, ClosePageAsync);
-		}
-	}
-
-	private Task ClosePageAsync() => Navigation.PopAsync();
-
-	private SettingsSubPage CreateSection(SettingsSection section) => section switch
-	{
-		SettingsSection.AnimalSounds => _services.GetRequiredService<AnimalSoundsPage>(),
-		SettingsSection.UsageCounts => _services.GetRequiredService<UsageCountsPage>(),
-		SettingsSection.About => _services.GetRequiredService<AboutPage>(),
-		_ => _services.GetRequiredService<ReadingSpeedPage>(),
-	};
-
-	// Two panes: a tap on a row whose page lives in the pane swaps the pane (no push). One pane: the page is pushed as before.
-	private Task OpenSectionAsync<TPage>(SettingsSection section) where TPage : SettingsSubPage
-	{
-		if (!_twoPanes)
-		{
-			return OpenAsync<TPage>();
-		}
-
-		Select(section);
-		return Task.CompletedTask;
-	}
-
-	private void Select(SettingsSection section)
-	{
-		if (section == _selected && _hosted is not null)
-		{
-			return;
-		}
-
-		_hosted = null;
-		_selected = section;
-		ShowSelected();
-		SyncHosted(); // tells the page being replaced it is gone, and the new one it appeared
-		Retint();
-
-#if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] settings pane={section}");
-#endif
-	}
-
-	// Only the selected row is tinted, and only while the right pane is open (in place: the list is not rebuilt).
-	private void Retint()
-	{
-		foreach ((SettingsSection key, Grid row) in _sectionRows)
-		{
-			row.BackgroundColor = _twoPanes && key == _selected ? DinoTokens.Get(DinoTokens.BrandTint) : Colors.Transparent;
-		}
-	}
-
-	// The selected row of the list is tinted while the right pane is open.
-	private Grid Tinted(Grid row, SettingsSection section)
-	{
-		_sectionRows[section] = row;
-		if (_twoPanes && section == _selected)
-		{
-			row.BackgroundColor = DinoTokens.Get(DinoTokens.BrandTint);
-		}
-
-		return row;
-	}
-
-	// Values change on the sub-pages, so the list is built again each time the page shows.
-	private void Rebuild()
-	{
-		Body.Children.Clear();
-		Grid[] reading = [LanguageRow(), StoryLanguagesRow(), SpeedRow(), AnimalRow()];
-		Grid[] phone = PhoneRows();
-		_navRows = [.. reading, .. phone];
-		Body.Children.Add(SettingsRows.GroupHeading(AppResources.Settings_GroupReading));
-		Body.Children.Add(SettingsRows.RowsCard(reading));
-		Body.Children.Add(SettingsRows.GroupHeading(AppResources.Settings_GroupPhone));
-		Body.Children.Add(SettingsRows.RowsCard(phone));
-		ApplyRowValues();
-	}
-
-	// Slice 234 part B (mock Batch 45 frame 140): in the 300 dp list of a tablet held upright each row shows its value under its name. Only the rows' sizes and cells change.
-	private void ApplyRowValues()
-	{
-		foreach (Grid row in _navRows)
-		{
-			SettingsRows.StackNavValue(row, _valueUnderName);
-		}
-	}
-
-	private Grid LanguageRow() =>
-		SettingsRows.NavRow(AppResources.Language_Title, LanguageNames.NativeName(LanguageChoice.Current()), OpenAsync<LanguagePage>, Busy);
-
-	// The app language and the side languages the child can switch between (Slice 173), like "English, فارسی".
-	private Grid StoryLanguagesRow() =>
-		SettingsRows.NavRow(AppResources.StoryLanguages_SettingsTitle, StoryLanguages.Names(StoryLanguages.Current().All), OpenAsync<StoryLanguagesPage>, Busy);
-
-	// Reading speed, Animal sounds, Usage counts and About show in the right pane in two panes; Language, Story languages and Backup push in both.
-	private Grid SpeedRow() => Tinted(
-		SettingsRows.NavRow(AppResources.Speed_Title, AppResources.Format(AppResources.Speed_Value, ReadingSpeedPreference.Load().Value), () => OpenSectionAsync<ReadingSpeedPage>(SettingsSection.ReadingSpeed), Busy, automationId: ReadingSpeedRowId),
-		SettingsSection.ReadingSpeed);
-
-	private Grid AnimalRow() => Tinted(
-		SettingsRows.NavRow(AppResources.Settings_AnimalSounds_Title, SettingsRows.OnOff(AnimalSoundsPreference.Load()), () => OpenSectionAsync<AnimalSoundsPage>(SettingsSection.AnimalSounds), Busy),
-		SettingsSection.AnimalSounds);
-
-	// Slice 249: "Report a problem" follows About; the Windows head has no crash reporting, so it has no row.
-	private Grid[] PhoneRows()
-	{
-#if WINDOWS
-		return [BackupRow(), UsageRow(), AboutRow()];
-#else
-		return [BackupRow(), UsageRow(), AboutRow(), ReportProblemRow()];
-#endif
-	}
-
-	private Grid ReportProblemRow() =>
-		SettingsRows.NavRow(AppResources.ReportProblem_Title, null, () => Navigation.PushAsync(new ReportProblemPage()), Busy, automationId: ReportProblemRowId);
-
-	private Grid BackupRow() => SettingsRows.NavRow(AppResources.Backup_Title, null, OpenAsync<BackupPage>, Busy);
-
-	private Grid UsageRow() => Tinted(
-		SettingsRows.NavRow(AppResources.Usage_Title, SettingsRows.OnOff(_usage.Enabled), () => OpenSectionAsync<UsageCountsPage>(SettingsSection.UsageCounts), Busy),
-		SettingsSection.UsageCounts);
-
-	// The "New version" tag shows only while the remote config names a newer release.
-	private Grid AboutRow()
-	{
-		string? tag = _config.NewerVersionExists ? AppResources.Settings_NewVersion : null;
-		return Tinted(SettingsRows.NavRow(AppResources.Settings_About, null, () => OpenSectionAsync<AboutPage>(SettingsSection.About), Busy, tag), SettingsSection.About);
-	}
-
-	private Task OpenAsync<TPage>() where TPage : Page => Navigation.PushAsync(_services.GetRequiredService<TPage>());
 }

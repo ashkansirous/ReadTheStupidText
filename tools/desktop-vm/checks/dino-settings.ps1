@@ -1,6 +1,6 @@
-# Kids' shelf -> "For grown-ups" button -> the real grown-up gate (hold 3 s, then the sum) -> grown-up mode -> its gear -> Settings
-# with its groups -> Back -> grown-up mode -> Done -> kids' shelf.
-# The flow of Slice 189 (the shelf gear is gone; Settings opens from the gear inside grown-up mode, with no second gate).
+# Kids' shelf -> "For grown-ups" button -> the real grown-up gate (hold 3 s, then the sum) -> grown-up mode -> its Settings tab
+# with its groups -> the Reading speed row opens its page inside the tab -> the back arrow -> the list -> the coral button -> kids' shelf.
+# Slice 325 part B: Settings is a tab of the corner (the rail stays), not a pushed page; its sub-pages have a back arrow and no Done, and the list has no Back of its own.
 # No test bypass of the gate (Slice 188). Runs after dino-page-turn, so it first leaves the reading page for the shelf.
 param([string] $ResultFile, [Parameter(Position = 0)] [string] $PackageName)
 . "$PSScriptRoot\_lib.ps1"
@@ -39,6 +39,7 @@ function Find-GateSum {
 }
 
 function Open-GateFromShelf {
+    Enter-KidsShelf   # the first run ends in the grown-ups' corner (Slice 325)
     $back = Find-UiaById (Get-DinoWindow) 'ReadingBack'
     if ($back) { Invoke-Uia $back }
     $button = Wait-VisibleId 'GalleryGrownUps' 15 'FAIL the "For grown-ups" button is not on the kids'' shelf'
@@ -53,8 +54,7 @@ function Open-GateFromShelf {
 }
 
 function Pass-Gate {
-    Invoke-PressAndHold (Wait-VisibleName $HoldRingName 5 'FAIL no hold ring') $HoldMs
-    $answer = [string](Wait-Until { Find-GateSum } 10 'FAIL gate sum did not appear after the hold')
+    $answer = [string](Invoke-GateHold -FindRing { Wait-VisibleName $HoldRingName 5 'FAIL no hold ring' } -PackageName $PackageName -HoldMs $HoldMs)
     foreach ($ch in $answer.ToCharArray()) {
         Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) ([string]$ch) 'Button' } 5 "FAIL no keypad key $ch")
         Start-Sleep -Milliseconds 300
@@ -65,21 +65,23 @@ function Pass-Gate {
 }
 
 function Open-Settings {
-    Invoke-Uia (Wait-VisibleId 'GallerySettings' 5 'FAIL no gear in grown-up mode')
-    Wait-VisibleId 'SettingsTitle' 15 'FAIL Settings did not open from the grown-up gear' | Out-Null
-    foreach ($group in @('Reading', 'This phone')) {
+    Invoke-Uia (Wait-VisibleId 'GallerySettings' 5 'FAIL no Settings tab in the rail')
+    Wait-VisibleId 'SettingsTitle' 15 'FAIL the Settings list did not show after the Settings tab' | Out-Null
+    foreach ($group in @('Reading', 'This computer')) {
         if (-not (Find-GroupHeading $group)) { throw "FAIL Settings group '$group' missing" }
     }
+    if (Find-UiaVisibleById (Get-DinoWindow) 'GrownUpBack') { throw 'FAIL the Settings list shows a back arrow of its own' }
+    if (-not (Find-UiaVisibleById (Get-DinoWindow) 'GalleryDone')) { throw 'FAIL the corner''s way back is not in the rail beside the Settings list' }
 }
 
 function Invoke-SettingsBack {
-    # Back on a Settings page is a tappable Border named "Back" (SemanticProperties.Description), not a Button.
+    # The back arrow of a Settings page is a tappable Border named "Back" (SemanticProperties.Description), not a Button.
     Invoke-Uia (Wait-VisibleName $BackName 5 'FAIL no Back control')
 }
 
 function Get-PageTitle {
-    # The Settings list titles itself with AutomationId SettingsTitle; each sub-page uses SettingsTitle<TypeName> (e.g. SettingsTitleReadingSpeedPage).
-    param([string]$Id = 'SettingsTitle')
+    # The Settings list is marked by AutomationId SettingsTitle (its first group heading); each sub-page titles itself SettingsTitle<TypeName> (e.g. SettingsTitleReadingSpeedPage).
+    param([string]$Id)
     $t = Find-UiaVisibleById (Get-DinoWindow) $Id
     if ($t) { return $t.Current.Name }
     return $null
@@ -91,19 +93,16 @@ function Test-ReadingSpeedRow {
     $script:WidthProbe = 'WIDTHPROBE row=' + [int]$row.Current.BoundingRectangle.Width + ' window=' + [int](Get-DinoWindow).Current.BoundingRectangle.Width + ' rowrect=' + $row.Current.BoundingRectangle.ToString() + ' others=' + ((Get-VisibleNames (Get-DinoWindow)) -join ' / ')
     Invoke-Uia $row
     Wait-Until { (Get-PageTitle 'SettingsTitleReadingSpeedPage') -eq 'Reading speed' } 10 'FAIL the Reading speed row did not open its page' | Out-Null
-    # Landscape windows (the 1100x760 default) show two panes: the page opens beside the list, and Back would leave Settings.
-    if (Get-PageTitle) { $script:TwoPanes = $true; return }
+    # The page opens inside the Settings tab (the list steps aside, the rail stays), and its back arrow goes up one level to the list.
+    if (Find-UiaVisibleById (Get-DinoWindow) 'SettingsTitle') { throw 'FAIL the Settings list is still showing beside the Reading speed page' }
+    if (-not (Find-UiaVisibleById (Get-DinoWindow) 'GalleryDone')) { throw 'FAIL the corner''s way back left the rail while Reading speed was open' }
     Invoke-SettingsBack
-    Wait-Until { (Get-PageTitle) -eq 'Settings' } 10 'FAIL Back from Reading speed did not return to Settings' | Out-Null
+    Wait-VisibleId 'SettingsTitle' 10 'FAIL the back arrow on Reading speed did not return to the Settings list' | Out-Null
 }
 
 function Test-BackToShelf {
-    Wait-Until { (Get-PageTitle) -eq 'Settings' } 10 'FAIL Settings page title not showing' | Out-Null
-    Invoke-SettingsBack
-    Wait-Until { -not (Find-UiaVisibleById (Get-DinoWindow) 'SettingsTitle') } 10 'FAIL Settings is still showing after Back' | Out-Null
-    Wait-VisibleId 'GalleryDone' 10 'FAIL Back from Settings did not return to grown-up mode' | Out-Null
-    # GalleryDone is a Border with a tap, so Invoke-Uia clicks the centre of its bounds with the mouse. The sticky button sits at
-    # the window's bottom edge, which can lie under the VM's taskbar or off its 1024 x 768 screen: report the bounds on failure.
+    Wait-VisibleId 'SettingsTitle' 10 'FAIL the Settings list is not showing' | Out-Null
+    # GalleryDone is the coral button in the rail (a Border with a tap), so Invoke-Uia clicks the centre of its bounds with the mouse: report the bounds on failure.
     $done = Find-UiaVisibleById (Get-DinoWindow) 'GalleryDone'
     $rect = $done.Current.BoundingRectangle
     Invoke-Uia $done
@@ -113,7 +112,7 @@ function Test-BackToShelf {
         Invoke-Uia (Find-UiaVisibleById (Get-DinoWindow) 'GalleryDone')   # one more click, as the gate step does
         Wait-VisibleId 'GalleryGrownUps' 10 "FAIL Done did not return to the kids' shelf (Done bounds $([int]$rect.X),$([int]$rect.Y) $([int]$rect.Width) x $([int]$rect.Height))" | Out-Null
     }
-    if (Find-UiaVisibleById (Get-DinoWindow) 'GallerySettings') { throw 'FAIL the gear is still visible on the kids'' shelf' }
+    if (Find-UiaVisibleById (Get-DinoWindow) 'GallerySettings') { throw 'FAIL the Settings tab is still visible on the kids'' shelf' }
 }
 
 Invoke-Check -ResultFile $ResultFile -Body {
@@ -121,12 +120,10 @@ Invoke-Check -ResultFile $ResultFile -Body {
     try {
         Open-GateFromShelf;           $log += 'gate opened from the For grown-ups button'
         $answer = Pass-Gate;          $log += "gate passed (answer $answer), grown-up mode open"
-        Open-Settings;                $log += 'gear -> Settings, groups Reading and This phone shown'
-        Test-ReadingSpeedRow
-        if ($script:TwoPanes) { $log += 'Reading speed row -> its page in the right pane (two panes, no Back step)' }
-        else { $log += 'Reading speed row -> its page -> Back' }
+        Open-Settings;                $log += 'Settings tab -> the list, groups Reading and This computer shown, no back arrow'
+        Test-ReadingSpeedRow;         $log += 'Reading speed row -> its page inside the tab -> back arrow -> the list'
         $log += $script:WidthProbe
-        Test-BackToShelf;             $log += 'Back -> grown-up mode, Done -> kids'' shelf'
+        Test-BackToShelf;             $log += 'coral button -> kids'' shelf'
     } catch {
         $dump = Get-VisibleNames (Get-DinoWindow)
         throw ('[' + ($log -join ' | ') + '] ' + $_.Exception.Message + ' UI: ' + ($dump -join ' / '))

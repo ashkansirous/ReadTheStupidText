@@ -9,7 +9,7 @@ namespace DinoReader;
 /// default; only Close exits. A tap outside the card, or a second back press, counts as Stay. No gate; the text is in the app language.
 /// <see cref="Result"/> completes true for Close.
 /// </summary>
-public sealed class CloseQuestionPage : ContentPage
+public sealed class CloseQuestionPage : ContentPage, IDinoKeyTarget
 {
 	private const double CardMargin = 24;
 	private const double CardCorner = 28;
@@ -39,6 +39,20 @@ public sealed class CloseQuestionPage : ContentPage
 
 	protected override bool OnBackButtonPressed()
 	{
+		_ = CloseAsync(false);
+		return true;
+	}
+
+	// Slice 325 part C4: on Windows Esc asks this question on the shelf, and Esc on the question itself is Stay (the keyboard hook asks the top page, which is this modal).
+	DinoScreen IDinoKeyTarget.Screen => DinoScreen.Other;
+
+	bool IDinoKeyTarget.Handle(DinoKeyAction action, DinoKey key)
+	{
+		if (action != DinoKeyAction.Back)
+		{
+			return false;
+		}
+
 		_ = CloseAsync(false);
 		return true;
 	}

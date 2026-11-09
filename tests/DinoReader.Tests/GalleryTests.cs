@@ -447,33 +447,20 @@ public class GalleryLayoutTests
         CoverStyle.Colour, 0, "F1");
 
     private static string[] Titles(IReadOnlyList<GalleryEntry> entries) =>
-        entries.Where(e => e.Kind == GalleryEntryKind.Story).Select(e => e.Story!.Title).ToArray();
+        entries.Select(e => e.Story.Title).ToArray();
 
     [Fact]
-    public void KidsMode_HasNoAddEntry_AndKeepsOrder()
+    public void TheGrid_HasOnlyStories_InTheGivenOrder()
     {
-        var entries = GalleryLayout.Build([Make("A"), Make("B"), Make("C")], grownUp: false);
+        var entries = GalleryLayout.Build([Make("A"), Make("B"), Make("C")]);
 
-        Assert.DoesNotContain(entries, e => e.Kind == GalleryEntryKind.AddStory);
+        Assert.Equal(3, entries.Count);
         Assert.Equal(["A", "B", "C"], Titles(entries));
     }
 
     [Fact]
-    public void GrownUpMode_PutsAddFirst_AndKeepsTheSameStoryOrder()
-    {
-        var entries = GalleryLayout.Build([Make("A"), Make("B"), Make("C")], grownUp: true);
-
-        Assert.Equal(GalleryEntryKind.AddStory, entries[0].Kind);
-        Assert.Equal(4, entries.Count);
-        Assert.Equal(["A", "B", "C"], Titles(entries));
-    }
-
-    [Fact]
-    public void EmptyLibrary_IsOnlyAddInGrownUpMode_AndEmptyInKidsMode()
-    {
-        Assert.Empty(GalleryLayout.Build([], grownUp: false));
-        Assert.Equal(GalleryEntryKind.AddStory, Assert.Single(GalleryLayout.Build([], grownUp: true)).Kind);
-    }
+    public void EmptyLibrary_IsAnEmptyGrid_InEveryMode() =>
+        Assert.Empty(GalleryLayout.Build([]));
 
     [Fact]
     public void Overlay_FollowsTheMode()

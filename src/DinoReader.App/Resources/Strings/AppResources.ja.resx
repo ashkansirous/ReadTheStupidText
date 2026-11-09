@@ -51,7 +51,7 @@
   <data name="Store_Title" xml:space="preserve"><value>ストア</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>ディノのために えらんで やくを きめました</value></data>
   <data name="Store_Get" xml:space="preserve"><value>もらう</value></data>
-  <data name="Store_Downloaded" xml:space="preserve"><value>ダウンロードずみ</value></data>
+  <data name="Store_OnShelf" xml:space="preserve"><value>ほんだなに あるよ</value></data>
   <data name="Store_Tag_Hot" xml:space="preserve"><value>話題</value></data>
   <data name="Store_Tag_Popular" xml:space="preserve"><value>人気</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>おすすめ</value></data>
@@ -63,7 +63,6 @@
   <data name="Store_TryAgain" xml:space="preserve"><value>もういちど</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>新しいおはなしはまだありません</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>ときどき新しいおはなしが追加されます。またのぞいてね。</value></data>
-  <data name="Store_BackToStories" xml:space="preserve"><value>わたしのおはなしにもどる</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>{0}をもらう</value></data>
   <!-- Slice 112: store age and author filters -->
   <data name="Store_AllAges" xml:space="preserve"><value>すべての年齢</value></data>
@@ -141,7 +140,7 @@
   <data name="Settings_GroupReading" xml:space="preserve"><value>読み上げ</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>このスマホ</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>新しいバージョン</value></data>
-  <data name="Settings_GearLabel" xml:space="preserve"><value>設定（おとな用）</value></data>
+  <data name="Settings_GroupComputer" xml:space="preserve"><value>このパソコン</value></data>
   <data name="Settings_About" xml:space="preserve"><value>アプリについて・アップデート</value></data>
   <data name="Settings_On" xml:space="preserve"><value>オン</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>オフ</value></data>
@@ -154,6 +153,12 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>おとなのコーナー</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>ここはおとなだけが見られます。お子さまの本棚はワンタップで戻れます。</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>お子さまの本棚にもどる</value></data>
+  <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
+  <data name="Corner_TabBooks" xml:space="preserve"><value>ほん</value></data>
+  <data name="Corner_ChildsShelf" xml:space="preserve"><value>お子さまの本棚</value></data>
+  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>おとなだけに見えます。</value></data>
+  <!-- Slice 325 part C: the kids' shelf's short title -->
+  <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>おはなし</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>並べ替え</value></data>
   <data name="Gallery_ReorderHint" xml:space="preserve"><value>本を長押ししてから、新しい場所にドラッグします。お子さまの本棚も同じ順番で表示されます。</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>新しい順番を保存できませんでした</value></data>
@@ -168,7 +173,6 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>「{0}」を本棚から外しますか？</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>ページ、写真、声がこのスマホから削除されます。ストアから無料でもう一度追加できます。</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>外す</value></data>
-  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>もっと本を見つける</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>別の言語の物語は、その物語で「自分の言語に翻訳」をオンにしない限り、その言語のまま読み上げられます。</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>3秒間長押ししてください。</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>3秒間長押ししてください</value></data>

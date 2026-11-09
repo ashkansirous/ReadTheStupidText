@@ -68,7 +68,7 @@ public partial class LocalizedUiTests
     public void The_settings_strings_are_translated_in_every_language()
     {
         Dictionary<string, string> neutral = Load(NeutralFile);
-        string[] keys = ["Settings_Title", "Settings_GroupReading", "Settings_GroupPhone", "Settings_NewVersion", "Settings_GearLabel", "Settings_About", "Gallery_GrownUpsTitle"];
+        string[] keys = ["Settings_Title", "Settings_GroupReading", "Settings_GroupPhone", "Settings_GroupComputer", "Settings_NewVersion", "Settings_About", "Gallery_GrownUpsTitle", "Store_OnShelf"];
 
         foreach (string file in LanguageFiles())
         {

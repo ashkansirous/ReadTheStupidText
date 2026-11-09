@@ -280,11 +280,104 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 
 	public Task<bool> Result => _result.Task;
 
+	protected override void OnAppearing()
+	{
+		base.OnAppearing();
+		_showing = true;
+		int shown = ++_showCount;
+		Dispatcher.Dispatch(() => { if (_showing && shown == _showCount) { ClearStaleFocus(); } }); // after the window has given the new page its first focus
+		_keyHandled = false;
+		_focusMovedByUser = false;
+		WatchUserFocus();
+		Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(StaleFocusRecheckMilliseconds), () => { if (_showing && shown == _showCount) { ClearStaleFocusUnlessKeyed(); } }); // and once more: the window can hand the focus over after the first dispatch ran
+	}
+
+	private const int StaleFocusRecheckMilliseconds = 300;
+
+	private bool _showing; // between OnAppearing and OnDisappearing: a delayed repair of the focus does nothing once the gate is gone
+	private int _showCount; // one number per appearance, so a repair queued by an earlier appearance does nothing
+
+	private bool _keyHandled; // a key reached the gate since it appeared: any focus on a button may then be the user's own choice
+	private bool _focusMovedByUser; // the user pressed the mouse or touch on the gate, or moved the focus with the keyboard (Tab): the focus is theirs
+
+	// The late recheck only repairs a focus the window handed over; once the user has pressed a key, clicked or tabbed the focus is theirs and is left alone.
+	private void ClearStaleFocusUnlessKeyed()
+	{
+		if (!_keyHandled && !_focusMovedByUser && !_hold.IsHolding)
+		{
+			ClearStaleFocus();
+		}
+	}
+
 	protected override void OnDisappearing()
 	{
 		base.OnDisappearing();
+		_showing = false;
+		UnwatchUserFocus();
 		ResetHold();
 	}
+
+#if WINDOWS
+	private Microsoft.UI.Xaml.UIElement? _watchedPage;
+
+	// A press anywhere on the page (even one a button handles) and a focus the user gave by keyboard or pointer cancel the late recheck. The window's own hand-over and our own Focus() are Programmatic and do not.
+	private void WatchUserFocus()
+	{
+		Microsoft.UI.Xaml.Input.FocusManager.GettingFocus -= OnGettingFocus; // -= first: a second OnAppearing never leaves a duplicate
+		Microsoft.UI.Xaml.Input.FocusManager.GettingFocus += OnGettingFocus;
+		HandlerChanged -= OnHandlerChangedWatch;
+		HandlerChanged += OnHandlerChangedWatch; // a page whose native side appears after OnAppearing is watched when it does
+		WatchNativePointer();
+	}
+
+	private void OnHandlerChangedWatch(object? sender, EventArgs e) => WatchNativePointer();
+
+	private void WatchNativePointer()
+	{
+		if (_showing && _watchedPage is null && Handler?.PlatformView is Microsoft.UI.Xaml.UIElement page)
+		{
+			_watchedPage = page;
+			page.AddHandler(Microsoft.UI.Xaml.UIElement.PointerPressedEvent, new Microsoft.UI.Xaml.Input.PointerEventHandler(OnNativePointerPressed), true);
+		}
+	}
+
+	private void UnwatchUserFocus()
+	{
+		Microsoft.UI.Xaml.Input.FocusManager.GettingFocus -= OnGettingFocus;
+		HandlerChanged -= OnHandlerChangedWatch;
+		_watchedPage?.RemoveHandler(Microsoft.UI.Xaml.UIElement.PointerPressedEvent, new Microsoft.UI.Xaml.Input.PointerEventHandler(OnNativePointerPressed));
+		_watchedPage = null;
+	}
+
+	private void OnNativePointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+	{
+		_focusMovedByUser = true;
+	}
+
+	private void OnGettingFocus(object? sender, Microsoft.UI.Xaml.Input.GettingFocusEventArgs e)
+	{
+		if (!_showing)
+		{
+			UnwatchUserFocus(); // the page went away without OnDisappearing: the static event must not keep it alive
+			return;
+		}
+
+		if (e.FocusState is Microsoft.UI.Xaml.FocusState.Keyboard or Microsoft.UI.Xaml.FocusState.Pointer)
+		{
+			_focusMovedByUser = true;
+		}
+	}
+#else
+	private void WatchUserFocus()
+	{
+		// no-fallback: only the Windows head has a keyboard focus the window can hand over
+	}
+
+	private void UnwatchUserFocus()
+	{
+		// no-fallback: see WatchUserFocus
+	}
+#endif
 
 	protected override bool OnBackButtonPressed()
 	{
@@ -305,12 +398,25 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 
 	private void StartHold()
 	{
+		_tickCount = 0;
 		_hold.Start(_clock.Elapsed);
 		HoldHint.Opacity = 1;
 		_timer.Start();
 	}
 
-	private void OnHoldEnd(object? sender, TouchEventArgs e) => ResetHold();
+	private void OnHoldEnd(object? sender, TouchEventArgs e)
+	{
+		TraceHold("gate ring EndInteraction");
+		ResetHold();
+	}
+
+	// Slice 325: the VM's gate check sometimes never gets past the hold; these lines show which of start, tick, end, cancel, reset or complete came last.
+	private void TraceHold(string line)
+	{
+#if WINDOWS
+		WindowTrace.Write(line);
+#endif
+	}
 
 	DinoScreen IDinoKeyTarget.Screen => DinoScreen.Gate;
 
@@ -318,6 +424,7 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 	// so the key goes on to the focused control as it did before.
 	bool IDinoKeyTarget.Handle(DinoKeyAction action, DinoKey key)
 	{
+		_keyHandled = true;
 		switch (action)
 		{
 			case DinoKeyAction.GateHoldStart:
@@ -327,15 +434,44 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 			case DinoKeyAction.GateDigit:
 				return DinoKeyMap.DigitOf(key) is { } digit && PressSumKey(digit.ToString());
 			case DinoKeyAction.GateErase:
-				return !AnyButtonFocused() && PressSumKey(BackspaceKey);
+				return SumKeyApplies() && PressSumKey(BackspaceKey);
 			case DinoKeyAction.GateSubmit:
-				return !AnyButtonFocused() && PressSumKey(OkKey); // Enter on a focused button (Tab got there) activates that button instead
+				return SumKeyApplies() && PressSumKey(OkKey);
 			case DinoKeyAction.Back:
 				_ = CloseAsync(false);
 				return true;
 			default:
 				return false;
 		}
+	}
+
+	// Enter and Backspace belong to the sum, except while the focus sits on Back to story or Continue (Tab got there): they then activate that button, so a keyboard user can always press it.
+	// The window may hand the focus to one of those two when the gate opens, before anyone pressed Tab; ClearStaleFocus takes it away then, so the sum keys are not blocked by a focus nobody chose.
+	private bool SumKeyApplies() => !AnyButtonFocused();
+
+	private void ClearStaleFocus()
+	{
+		if (!DesktopTips.IsWindows)
+		{
+			return;
+		}
+
+		BackButton.Unfocus();
+		ContinueButton.Unfocus();
+#if WINDOWS
+		// Unfocus() does not reliably take the WinUI focus off a Button (Slice 325 review): when it is still there, move the focus to the step's own panel, which holds no key of its own.
+		if (AnyButtonFocused())
+		{
+			View target = SumText.IsVisible ? SumText : HoldRingHost;
+			if (target.Handler?.PlatformView is Microsoft.UI.Xaml.UIElement element)
+			{
+				bool wasTabStop = element.IsTabStop;
+				element.IsTabStop = true;
+				element.Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
+				element.IsTabStop = wasTabStop; // the panel is a focus parking place only, never a Tab stop of its own
+			}
+		}
+#endif
 	}
 
 	// True while the keyboard focus sits on Back to story or Continue: Enter and Backspace then belong to that button.
@@ -389,10 +525,19 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 		return true;
 	}
 
-	private void OnHoldCancel(object? sender, EventArgs e) => ResetHold();
+	private void OnHoldCancel(object? sender, EventArgs e)
+	{
+		TraceHold("gate ring CancelInteraction");
+		ResetHold();
+	}
 
 	private void ResetHold()
 	{
+		if (_hold.IsHolding)
+		{
+			TraceHold($"gate hold reset while holding (timer enabled {_timer.IsRunning}, page showing {_showing})");
+		}
+
 		_keyHolding = false; // any end of the hold (let go, page covered, window deactivated) also ends a Space hold, so no later key-up is needed
 		_timer.Stop();
 		_hold.Cancel();
@@ -406,12 +551,26 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 		TimeSpan now = _clock.Elapsed;
 		_ring.Progress = _hold.Progress(now);
 		HoldRing.Invalidate();
+		TraceHoldTick();
 		if (_hold.IsComplete(now))
 		{
+			TraceHold("gate hold complete, showing the sum");
 			ResetHold();
 			ShowSumStep();
 		}
 	}
+
+	private int _tickCount; // ticks since the hold started, so the trace logs about one in thirty (roughly once a second)
+
+	private void TraceHoldTick()
+	{
+		if (++_tickCount % TickTraceEvery == 1)
+		{
+			TraceHold($"gate hold tick {_tickCount}: progress {_ring.Progress:0.00}");
+		}
+	}
+
+	private const int TickTraceEvery = 30;
 
 	private void OnContinueClicked(object? sender, EventArgs e) => ShowSumStep();
 
@@ -424,6 +583,7 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 		KeyPad.IsVisible = true;
 		StepBarTwo.Color = DinoTokens.Get(DinoTokens.Brand);
 		UpdateCardScroll();
+		ClearStaleFocus(); // the hidden Continue button may still hold the focus from the hold step
 	}
 
 	private void BuildKeyPad()

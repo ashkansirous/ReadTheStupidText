@@ -1,0 +1,110 @@
+# Slice 325 part B (grown-up mock "Dino reader- 2026-11-08 grownup.dc.html", frames T2 and W1): the Store and Settings are tabs of the grown-ups' corner, shown inside its chrome (the tab bar under 600 dp wide, the ink rail from 600).
+# Store: cards with "On the shelf" or the Get pill, no back arrow and no Done. Settings: one list; a row (Reading speed) opens its page inside the tab with its own back arrow, which returns to the list; the bar or rail stays throughout.
+# Shots: shot-T2-store (the Store tab with its cards; the tablet held sideways is frame T2) and shot-W1-settings (the Settings list; the Windows window is frame W1), taken held sideways so a phone shows the rail.
+# The Debug test store (mode ok) lists the same books as the starter shelf, so no network is needed. The gate is not tapped: the enter-grown-up hook stands in for it.
+# Against the pushed Store and Settings pages the log lines and the tab-chrome asserts below never appear (the corner's way back is hidden under a pushed page), so this flow fails on a build from before this part.
+# layout-check
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK enter-grown-up ok
+# expect-log: [Redesign] corner tab=store chrome=bar
+# expect-log: [Redesign] store columns=1
+# expect-log: [Redesign] corner tab=settings chrome=rail
+# expect-log: [Redesign] settings page=ReadingSpeedPage hosted=true
+# expect-log: [Redesign] settings page=list hosted=false
+appId: uk.sirous.dinoreader.dbg
+name: Store and Settings are tabs of the corner and a Settings page opens inside with a back arrow
+# Runs after the flow pass or fail, so a failure never leaves the next flow sideways.
+onFlowComplete:
+  - setOrientation: PORTRAIT
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded voice/OCR packs, own books); fine here: the flow uses the starter shelf and the Debug test store only, downloads nothing and needs no own book or voice pack.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: ok
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: store
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+# The Store tab, upright: the books are gone from the content area, the tab bar and the coral pill stay; no back arrow and no Done; the sub-line "Picked and cast for Dino" is under the title.
+- extendedWaitUntil:
+    visible:
+      id: GalleryStoreSub
+    timeout: 30000
+- assertNotVisible:
+    id: StoryTile
+- assertNotVisible:
+    id: GrownUpBack
+- assertNotVisible:
+    id: GrownUpDone
+- assertVisible:
+    id: CornerTabBooks
+- assertVisible:
+    id: GallerySettings
+# At least one card shows its end: "On the shelf" (a starter book) or the Get pill.
+- extendedWaitUntil:
+    visible: "On the shelf|Get"
+    timeout: 30000
+# Held sideways: the same tab beside the rail.
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible:
+      id: GalleryRailTitle
+    timeout: 15000
+- assertVisible:
+    id: GalleryStoreSub
+- assertVisible:
+    id: GalleryDone
+- takeScreenshot: shot-T2-store
+# Settings: the list beside the rail; a row opens its page inside, with the back arrow and no Done.
+- tapOn:
+    id: GallerySettings
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: SettingsReadingSpeedRow
+    timeout: 10000
+- assertNotVisible:
+    id: GalleryStoreSub
+- takeScreenshot: shot-W1-settings
+- tapOn:
+    id: SettingsReadingSpeedRow
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible: Slower is easier for little ones
+    timeout: 10000
+- assertVisible:
+    id: GrownUpBack
+- assertNotVisible:
+    id: GrownUpDoneReadingSpeedPage
+- assertVisible:
+    id: GalleryDone
+- assertVisible:
+    id: GalleryStore
+# The back arrow returns to the list; the rail stays.
+- tapOn:
+    id: GrownUpBack
+- extendedWaitUntil:
+    visible:
+      id: SettingsReadingSpeedRow
+    timeout: 10000
+- assertVisible:
+    id: GalleryDone
+- assertVisible:
+    id: GalleryStore

@@ -17,22 +17,22 @@ $work = Join-Path ([IO.Path]::GetTempPath()) ("rtst-sheet-" + [guid]::NewGuid().
 try {
     $null = New-Item -ItemType Directory -Force "$work\tests\run1\takeScreenshot", "$work\frames"
     $png = [byte[]](0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
-    [IO.File]::WriteAllBytes("$work\tests\run1\takeScreenshot\shot-110-kids-shelf.png", $png)
-    $old = "$work\tests\run1\takeScreenshot\shot-111-corner.png"
+    [IO.File]::WriteAllBytes("$work\tests\run1\takeScreenshot\shot-KL1-shelf.png", $png)
+    $old = "$work\tests\run1\takeScreenshot\shot-L1-corner.png"
     [IO.File]::WriteAllBytes($old, $png)
     (Get-Item $old).LastWriteTime = (Get-Date).AddHours(-5)
-    [IO.File]::WriteAllBytes("$work\frames\110.png", $png)
+    [IO.File]::WriteAllBytes("$work\frames\KL1.png", $png)
 
-    Assert-Equal 'find: a shot is found by its name' 'shot-110-kids-shelf.png' (Find-ShotFile @("$work\tests") 'shot-110-kids-shelf' ([datetime]::MinValue)).Name
-    Assert-Equal 'find: a shot older than -Since is not used' $null (Find-ShotFile @("$work\tests") 'shot-111-corner' (Get-Date).AddHours(-1))
-    Assert-Equal 'find: a missing root is skipped' $null (Find-ShotFile @("$work\nothing") 'shot-110-kids-shelf' ([datetime]::MinValue))
+    Assert-Equal 'find: a shot is found by its name' 'shot-KL1-shelf.png' (Find-ShotFile @("$work\tests") 'shot-KL1-shelf' ([datetime]::MinValue)).Name
+    Assert-Equal 'find: a shot older than -Since is not used' $null (Find-ShotFile @("$work\tests") 'shot-L1-corner' (Get-Date).AddHours(-1))
+    Assert-Equal 'find: a missing root is skipped' $null (Find-ShotFile @("$work\nothing") 'shot-KL1-shelf' ([datetime]::MinValue))
 
     $manifest = Get-Content (Join-Path $PSScriptRoot 'screenshot-frames.json') -Raw | ConvertFrom-Json
     $rows = @(Get-ContactRows $manifest @("$work\tests") (Get-Date).AddHours(-1) "$work\frames")
     Assert-Equal 'sheet: one row per manifest entry' @($manifest).Count $rows.Count
     Assert-Equal 'sheet: a found shot is embedded' $true ($rows[0] -like '*data:image/png;base64,*' -and $rows[0] -notlike '*NO SHOT*')
     Assert-Equal 'sheet: a mock frame image is embedded beside it' 2 ([regex]::Matches($rows[0], 'data:image/png').Count)
-    Assert-Equal 'sheet: a missing shot says which flow did not write it' $true ($rows[1] -like '*NO SHOT: the flow dino-landscape-shelf did not write shot-111-corner.png*')
+    Assert-Equal 'sheet: a missing shot says which flow did not write it' $true ($rows[1] -like '*NO SHOT: the flow dino-landscape-shelf did not write shot-L1-corner.png*')
     Assert-Equal 'sheet: a missing mock image names the file and frame to open' $true ($rows[2] -like '*Dino Reader Batch 44 Landscape.dc.html, frame 113*')
     Assert-Equal 'sheet: html wraps the rows' $true ((New-ContactSheetHtml $rows) -like '<!doctype html>*</table>')
     Assert-Equal 'html: text is escaped' '&lt;b&gt; &amp; &quot;x&quot;' (ConvertTo-HtmlText '<b> & "x"')

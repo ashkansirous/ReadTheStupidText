@@ -10,12 +10,12 @@
     SafeAreaEdges="Container">
 
     <!-- Language (mock screen 26), opened from Settings (Slice 172): only the languages. The fifteen rows are built in code-behind. -->
-    <Grid RowDefinitions="Auto,*">
+    <Grid x:Name="LanguageRoot" RowDefinitions="Auto,*">
         <local:GrownUpHeader Title="{x:Static res:AppResources.Language_Title}" Subtitle="{x:Static res:AppResources.Language_PageSub}"
-                             BackRequested="OnBackTapped" DoneRequested="OnBackTapped" />
+                             BackRequested="OnBackTapped" ButtonVisible="False" />
 
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout x:Name="Cards" Padding="14,0,14,20" Spacing="14">
+            <VerticalStackLayout x:Name="Cards" Padding="0,0,0,20" Spacing="14">
                 <Border BackgroundColor="White" StrokeThickness="0">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="18" />

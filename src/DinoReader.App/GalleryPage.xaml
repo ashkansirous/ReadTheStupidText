@@ -7,34 +7,41 @@
     xmlns:res="clr-namespace:DinoReader.Resources.Strings"
     BackgroundColor="{StaticResource Cream}"
     NavigationPage.HasNavigationBar="False"
-    SafeAreaEdges="Container">
+    SafeAreaEdges="None">
 
-    <!-- Home screen (mock screen 1): the child's stories. Reading needs no gate; the book-and-plus button (Slice 189) runs the gate and opens grown-up mode (Slice 80):
-         this same grid with a "⋯" on each tile and, above it, the Add and Store buttons. Settings is the gear in that mode. -->
+    <!-- Home screen: the child's stories. Slice 325 (2026-11-08 grown-up mock): the kids' shelf (ShelfHeader) and the grown-ups' corner (CornerShell, CornerTabs) are two chromes around this one grid.
+         Under 600 dp wide the chrome is a header (and, in the corner, a tab bar); from 600 it is a left rail. The chrome views are built in code (GalleryPage.xaml.cs, AddChrome); the page is edge to edge
+         (SafeAreaEdges None) so the ink and the cream run under the status bar and the notch, and each piece keeps its own contents clear with its own safe area. -->
     <ContentPage.Resources>
         <!-- Fallback until the probe below has measured two real lines; replaced at runtime (GalleryPage.xaml.cs). -->
         <x:Double x:Key="TileTitleHeight">36</x:Double>
-        <!-- Slice 232 part B (mock Batch 44 frame 110): a phone held sideways shows one sideways row of covers; the page sets the tile width (-1 = fill the grid cell) and one title line then (GalleryPage.xaml.cs, ApplyShape). -->
+        <!-- Everything below follows the window's size (GalleryPage.xaml.cs, ApplyShape): the cover's radius and shadow, the title size, the gap under the cover and the grown-ups' "⋯" dot. -->
         <x:Double x:Key="TileWidth">-1</x:Double>
         <x:Int32 x:Key="TileTitleLines">2</x:Int32>
-        <!-- Shared by the story and Add templates so their stacks cannot drift apart. -->
         <x:Double x:Key="TileSpacing">7</x:Double>
+        <x:Double x:Key="TileTitleSize">14</x:Double>
+        <CornerRadius x:Key="TileCoverRadius">16</CornerRadius>
+        <x:Double x:Key="TileShadowOpacity">0.08</x:Double>
+        <x:Double x:Key="TileShadowOffset">4</x:Double>
+        <x:Double x:Key="TileMoreSize">36</x:Double>
+        <CornerRadius x:Key="TileMoreRadius">18</CornerRadius>
+        <Thickness x:Key="TileMoreInset">0,6,6,0</Thickness>
         <Style x:Key="TileTitleFont" TargetType="Label">
-            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontSize" Value="{DynamicResource TileTitleSize}" />
             <Setter Property="FontAttributes" Value="Bold" />
             <Setter Property="LineHeight" Value="1.25" />
             <Setter Property="MaxLines" Value="{DynamicResource TileTitleLines}" />
             <Setter Property="LineBreakMode" Value="TailTruncation" />
         </Style>
-        <!-- Every tile (and the Add spacer) gets the same two-line title height, scaled with the font, so rows always match. -->
+        <!-- Every tile gets the same two-line title height, scaled with the font, so rows always match. -->
         <Style x:Key="TileTitle" TargetType="Label" BasedOn="{StaticResource TileTitleFont}">
             <Setter Property="HeightRequest" Value="{DynamicResource TileTitleHeight}" />
         </Style>
 
         <DataTemplate x:Key="StoryTemplate" x:DataType="local:StoryTile">
-            <VerticalStackLayout Spacing="{StaticResource TileSpacing}" HorizontalOptions="Fill" WidthRequest="{DynamicResource TileWidth}">
+            <VerticalStackLayout Spacing="{DynamicResource TileSpacing}" HorizontalOptions="Fill" WidthRequest="{DynamicResource TileWidth}">
                 <Grid>
-                    <local:StoryCover AutomationId="StoryTile">
+                    <local:StoryCover AutomationId="StoryTile" ShadowDepth="{DynamicResource TileShadowOffset}">
                         <local:StoryCover.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnStoryTapped" />
                         </local:StoryCover.GestureRecognizers>
@@ -52,96 +59,34 @@
         <local:GalleryTemplateSelector x:Key="Selector" StoryTemplate="{StaticResource StoryTemplate}" />
     </ContentPage.Resources>
 
-    <!-- Slice 232 part B (mock Batch 44 frames 111, 126): two columns, the first only a side rail. Upright (and in the kids' shelf) it is 0 wide and everything spans both columns;
-         in the grown-ups' corner held sideways the header, the buttons and the way back sit in the rail and the books fill the second column (GalleryPage.xaml.cs, ApplyShape). -->
-    <Grid x:Name="GalleryRoot" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="0,*">
-        <BoxView x:Name="RailBackdrop" Grid.RowSpan="4" Color="{StaticResource Ink}" IsVisible="False" InputTransparent="True" />
+    <!-- Two columns, the first only the rail (0 wide under a bar). Rows: the bar header, the content, the corner's tab bar. The chrome views are added in code; see AddChrome. -->
+    <Grid x:Name="GalleryRoot" RowDefinitions="Auto,*,Auto" ColumnDefinitions="0,*">
         <!-- Invisible two-line sample in the tile title font: its measured height sizes every tile title. Its lines are
              fixed, so its height depends only on the font (not on the page or tile width) and the update cannot loop. -->
         <Label x:Name="TitleProbe" Grid.ColumnSpan="2" HorizontalOptions="Start" Style="{StaticResource TileTitleFont}" Text="&#160;&#10;&#160;" Opacity="0" InputTransparent="True"
                VerticalOptions="Start" AutomationProperties.IsInAccessibleTree="False" SizeChanged="OnTitleProbeSizeChanged" />
-        <Grid x:Name="HeaderBar" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="16,10,12,12">
-            <Border x:Name="AppIconFrame" WidthRequest="40" HeightRequest="40" StrokeThickness="0">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="11" />
-                </Border.StrokeShape>
-                <Image x:Name="AppIcon" Source="dino_icon" Aspect="AspectFill" SemanticProperties.Description="{x:Static res:AppResources.App_Name}" />
-            </Border>
-            <!-- Slice 228 (mock Batch 43 frame 98): the grown-ups' corner's header bar shows an amber lock where the shelf shows the app icon. -->
-            <local:IconView x:Name="CornerLock" Kind="Lock" Color="#FFC043" Size="28" StrokeWidth="2.2" WidthRequest="40" HeightRequest="40" IsVisible="False" InputTransparent="True" />
-            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                <Label x:Name="TitleLabel" AutomationId="GalleryTitle" Text="{x:Static res:AppResources.Gallery_Title}" FontSize="22" FontAttributes="Bold" LineBreakMode="TailTruncation" MaxLines="1" SemanticProperties.HeadingLevel="Level1">
+
+        <!-- The content column: in the corner a title row (the tab's name, and under a bar the one-line note) above the grid of books; on the shelf the grid alone. -->
+        <Grid x:Name="ContentHost" Grid.Row="1" Grid.ColumnSpan="2" RowDefinitions="Auto,*">
+            <Grid x:Name="ContentHeader" IsVisible="False" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="2">
+                <Label x:Name="ContentTitle" AutomationId="GalleryRailTitle" FontAttributes="Bold" TextColor="{StaticResource Ink}" VerticalOptions="End" LineBreakMode="TailTruncation" MaxLines="1" SemanticProperties.HeadingLevel="Level1">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTitleTapped" />
                     </Label.GestureRecognizers>
                 </Label>
-            </VerticalStackLayout>
-            <!-- Slice 228 (mock Batch 43 frame 97): a labelled pill (lock + "Grown-ups") is the only grown-up way in, always visible in kids' mode; it runs the gate, then opens the grown-ups' corner.
-                 The title truncates before the pill does. -->
-            <Border Grid.Column="2" x:Name="GrownUpsButton" AutomationId="GalleryGrownUps" HeightRequest="48" BackgroundColor="#122b2540" Padding="11,0,14,0" MinimumWidthRequest="48"
-                    StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Gallery_GrownUpsButtonLocked}" ToolTipProperties.Text="{x:Static res:AppResources.Gallery_GrownUpsButtonLocked}" SemanticProperties.Hint="{x:Static res:AppResources.Gallery_OpensGateHint}">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="24" />
-                </Border.StrokeShape>
-                <HorizontalStackLayout Spacing="6" HorizontalOptions="Center" VerticalOptions="Center">
-                    <local:IconView Kind="Lock" Color="{StaticResource Ink}" Size="24" StrokeWidth="2.2" VerticalOptions="Center" />
-                    <Label x:Name="GrownUpsLabel" Text="{x:Static res:AppResources.Gallery_GrownUpsPill}" FontSize="15" FontAttributes="Bold" TextColor="#3a3450" LineBreakMode="NoWrap" VerticalOptions="Center" />
-                </HorizontalStackLayout>
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnGrownUpsTapped" />
-                </Border.GestureRecognizers>
-            </Border>
-            <!-- Slice 189 (mock 85): the gear sits in grown-up mode and opens Settings with no second gate (the gate was passed to get here). -->
-            <Border Grid.Column="2" x:Name="SettingsButton" AutomationId="GallerySettings" WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ControlFill}" IsVisible="False"
-                    StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Settings_GearLabel}" ToolTipProperties.Text="{x:Static res:AppResources.Settings_GearLabel}">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="14" />
-                </Border.StrokeShape>
-                <Path x:Name="GearPath" Data="M15 12a3 3 0 1 0-6 0a3 3 0 1 0 6 0 M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
-                      Stroke="{StaticResource Body}" StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform" WidthRequest="22" HeightRequest="22"
-                      HorizontalOptions="Center" VerticalOptions="Center" InputTransparent="True" />
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnSettingsTapped" />
-                </Border.GestureRecognizers>
-            </Border>
+                <Label x:Name="ContentNote" AutomationId="GalleryCornerLine" Grid.Column="1" TextColor="{StaticResource Body}" VerticalOptions="End" LineBreakMode="TailTruncation" MaxLines="2" />
+                <!-- Slice 325 part B (frame T2): the Store tab's sub-line under its title, "Picked and cast for Dino", 14 / Muted. -->
+                <Label x:Name="ContentSub" AutomationId="GalleryStoreSub" Grid.Row="1" Grid.ColumnSpan="2" IsVisible="False" FontSize="14" TextColor="{StaticResource Muted}" LineBreakMode="TailTruncation" MaxLines="2" />
+            </Grid>
+            <CollectionView Grid.Row="1" x:Name="StoryList" AutomationId="GalleryStories" SelectionMode="None" ItemTemplate="{StaticResource Selector}">
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="12" VerticalItemSpacing="12" />
+                </CollectionView.ItemsLayout>
+            </CollectionView>
+            <!-- Slice 325 part B: the Store and Settings tabs (StorePage, SettingsTab) are shown here, in place of the books, inside the corner's chrome. Built in code (GalleryPage.xaml.cs, ApplyTab). -->
+            <ContentView x:Name="TabHost" Grid.Row="1" IsVisible="False" />
         </Grid>
 
-        <!-- Grown-up mode (mock 85, Slice 172; Slice 278): only "Get more books" (the store), full width. The store is behind the gate (ready for paid books later). -->
-        <!-- Slice 232 part B: in the corner's rail this scrolls (it moves to the star row) so a short phone never pushes the way back off the screen. -->
-        <ScrollView x:Name="ActionsScroll" Grid.Row="1" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Never">
-        <VerticalStackLayout x:Name="ActionsHost">
-        <VerticalStackLayout x:Name="GrownUpActions" Spacing="0" IsVisible="False">
-            <!-- Slice 228 (mock Batch 43 frame 98): the one line that names this place. -->
-            <Label x:Name="CornerLine" AutomationId="GalleryCornerLine" Text="{x:Static res:AppResources.Gallery_CornerLine}" FontSize="13.5" TextColor="#5a5470" Padding="18,12,18,10" />
-            <!-- Slice 278 (Batch 48 frame 185): one full-row button, "Get more books", opens the store; "Add a book" is gone. -->
-            <Grid x:Name="ActionPair" ColumnDefinitions="*" Padding="14,0,14,14">
-                <Border x:Name="StoreButton" AutomationId="GalleryStore" HeightRequest="52" BackgroundColor="{StaticResource Brand}" StrokeThickness="0"
-                        SemanticProperties.Description="{x:Static res:AppResources.Gallery_GetMoreBooks}">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="18" />
-                    </Border.StrokeShape>
-                    <Grid x:Name="StoreContent" ColumnDefinitions="Auto,*" ColumnSpacing="8" HorizontalOptions="Center" VerticalOptions="Center">
-                        <local:IconView Kind="Book" Color="White" Size="20" StrokeWidth="2.2" VerticalOptions="Center" />
-                        <Label x:Name="StoreLabel" Text="{x:Static res:AppResources.Gallery_GetMoreBooks}" FontSize="15" Grid.Column="1" FontAttributes="Bold" TextColor="White" LineBreakMode="TailTruncation" VerticalOptions="Center" />
-                    </Grid>
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnStoreTapped" />
-                    </Border.GestureRecognizers>
-                </Border>
-            </Grid>
-        </VerticalStackLayout>
-        </VerticalStackLayout>
-        </ScrollView>
-
-        <CollectionView Grid.Row="2" Grid.ColumnSpan="2" x:Name="StoryList" AutomationId="GalleryStories" SelectionMode="None" Margin="14,0" ItemTemplate="{StaticResource Selector}">
-            <CollectionView.ItemsLayout>
-                <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="12" VerticalItemSpacing="12" />
-            </CollectionView.ItemsLayout>
-        </CollectionView>
-
-        <!-- Slice 228 (mock Batch 43 frames 98 and 99): the sticky way back, pinned under the grid in grown-up mode. It reads "Back to my child's shelf", or "Ready for my child" during the first hand-over. -->
-        <local:CoralButton Grid.Row="3" Grid.ColumnSpan="2" x:Name="HandoverButton" AutomationId="GalleryDone" Margin="14,12,14,24" Icon="Play" IsVisible="False" Clicked="OnHandoverClicked" />
-
-        <local:BookSheet Grid.RowSpan="4" Grid.ColumnSpan="2" x:Name="BookInfo" />
+        <local:BookSheet Grid.RowSpan="3" Grid.ColumnSpan="2" x:Name="BookInfo" />
     </Grid>
 </ContentPage>

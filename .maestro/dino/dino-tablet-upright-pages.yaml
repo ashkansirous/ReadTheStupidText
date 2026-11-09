@@ -46,8 +46,8 @@ onFlowComplete:
       notVisible: "Backup"
     commands:
       - swipe:
-          start: 15%, 80%
-          end: 15%, 30%
+          start: 60%, 80%
+          end: 60%, 30%
 - tapOn:
     text: "Backup"
     waitToSettleTimeoutMs: 300

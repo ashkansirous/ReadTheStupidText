@@ -1,67 +1,54 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage
+<ContentView
     x:Class="DinoReader.StorePage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:shapes="clr-namespace:Microsoft.Maui.Controls.Shapes;assembly=Microsoft.Maui.Controls"
     xmlns:local="clr-namespace:DinoReader"
-    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
-    BackgroundColor="{StaticResource Sand}"
-    NavigationPage.HasNavigationBar="False"
-    SafeAreaEdges="Container">
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings">
 
-    <!-- Free stories (mock screens 21-23): the store behind the grown-up gate. One of four states shows at a time:
-         loading, the list (21), offline (22) or empty (23). Values come from "Dino Reader Batch 16.dc.html". -->
-    <ContentPage.Resources>
+    <!-- The Store tab of the grown-ups' corner (Slice 325 part B, grown-up mock frame T2; was the pushed Free stories page of Slice 92, mock screens 21-23). The corner's own title row above it says
+         "Store" and "Picked and cast for Dino"; this view has no header, no back arrow and no Done. One of four states shows at a time: loading, the list, offline (22) or empty (23).
+         Cards are frame T2's: a 76 wide 3:4 cover, the title, the credits, the length, and at the end the 44 high Get pill or "On the shelf". -->
+    <ContentView.Resources>
         <Color x:Key="StoreGreen">#2E7D32</Color>
         <Color x:Key="CoverPlaceholder">#efe6d2</Color>
-        <x:String x:Key="DownloadGlyph">M12 4v11M7 10l5 5 5-5M5 20h14</x:String>
         <x:String x:Key="WifiOffGlyph">M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M3 3l18 18</x:String>
 
         <DataTemplate x:Key="StoreRowTemplate" x:DataType="local:StoreRow">
-            <Border BackgroundColor="White" StrokeThickness="0" Padding="12">
+            <Border BackgroundColor="White" StrokeThickness="0" Padding="14">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="18" />
                 </Border.StrokeShape>
-                <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="{Binding Layout.ActionRowSpacing}">
-                    <Border WidthRequest="{Binding Layout.CoverWidth}" HeightRequest="{Binding Layout.CoverHeight}" BackgroundColor="{StaticResource CoverPlaceholder}" StrokeThickness="0" VerticalOptions="Center">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                    <Border WidthRequest="76" HeightRequest="101.3333" BackgroundColor="{StaticResource CoverPlaceholder}" StrokeThickness="0" VerticalOptions="Center">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="10" />
                         </Border.StrokeShape>
                         <Image Source="{Binding Cover}" Aspect="AspectFill" />
                     </Border>
-                    <!-- Slice 232 part D: upright, the sub-line (credits) is its own line under the title; in slim cards (sideways) it joins the title row. -->
-                    <VerticalStackLayout Grid.Column="1" Spacing="0" VerticalOptions="Center">
+                    <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
                         <!-- Slice 260: the tag badges (mock Batch 47 frame 161) sit above the title; the row is hidden for an untagged book. -->
                         <local:StoreTagRow Tags="{Binding Badges}" />
-                        <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="0">
-                            <Label Text="{Binding Title}" FontSize="15.5" FontAttributes="Bold" LineHeight="1.25" FontFamily="{Binding TitleFont}" />
-                            <Label Text="{Binding Credits}" IsVisible="{Binding HasCredits}" Grid.Row="{Binding Layout.CreditsRow}" Grid.Column="{Binding Layout.CreditsColumn}"
-                                   Grid.ColumnSpan="{Binding Layout.CreditsColumnSpan}" Margin="{Binding Layout.CreditsMargin}" MaximumWidthRequest="{Binding Layout.CreditsMaxWidth}" LineBreakMode="{Binding Layout.CreditsLineBreak}" VerticalOptions="Center" FontSize="12" LineHeight="1.3" TextColor="{StaticResource Muted}" />
-                            <Label Text="{Binding Detail}" IsVisible="{Binding HasDetail}" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,3,0,0" FontSize="12.5" LineHeight="1.3" TextColor="{StaticResource Body}" />
-                        </Grid>
+                        <Label Text="{Binding Title}" FontSize="16" FontAttributes="Bold" LineHeight="1.25" FontFamily="{Binding TitleFont}" />
+                        <Label Text="{Binding Credits}" IsVisible="{Binding HasCredits}" FontSize="12.5" TextColor="{StaticResource Muted}" />
+                        <Label Text="{Binding Meta}" IsVisible="{Binding HasMeta}" FontSize="13" TextColor="{StaticResource Body}" />
                     </VerticalStackLayout>
 
-                    <!-- Get: the brand pill. -->
-                    <Border Grid.Row="{Binding Layout.ActionRow}" Grid.Column="{Binding Layout.ActionColumn}" Grid.ColumnSpan="{Binding Layout.ActionColumnSpan}"
-                            IsVisible="{Binding IsGet}" HeightRequest="{Binding Layout.ActionHeight}" Padding="14,0" BackgroundColor="{StaticResource Brand}"
+                    <!-- Get: the brand pill, 44 high, words only (frame T2). -->
+                    <Border Grid.Column="2" IsVisible="{Binding IsGet}" HeightRequest="44" Padding="18,0" BackgroundColor="{StaticResource Brand}"
                             StrokeThickness="0" VerticalOptions="Center" SemanticProperties.Description="{Binding GetHint}">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="22" />
                         </Border.StrokeShape>
-                        <HorizontalStackLayout Spacing="6" VerticalOptions="Center" HorizontalOptions="{Binding Layout.ActionContentAlign}">
-                            <shapes:Path Data="{StaticResource DownloadGlyph}" Stroke="White" StrokeThickness="2.6" StrokeLineCap="Round"
-                                         StrokeLineJoin="Round" Aspect="Uniform" WidthRequest="16" HeightRequest="16" VerticalOptions="Center" />
-                            <Label Text="{Binding GetLabel}" FontSize="14" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
-                        </HorizontalStackLayout>
+                        <Label Text="{Binding GetLabel}" FontSize="14" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnGetTapped" />
                         </Border.GestureRecognizers>
                     </Border>
 
                     <!-- Downloading: an 88 px pill whose fill grows left to right under the percentage. -->
-                    <Border Grid.Row="{Binding Layout.ActionRow}" Grid.Column="{Binding Layout.ActionColumn}" Grid.ColumnSpan="{Binding Layout.ActionColumnSpan}"
-                            IsVisible="{Binding IsDownloading}" WidthRequest="88" HeightRequest="{Binding Layout.ActionHeight}" HorizontalOptions="{Binding Layout.DownloadingAlign}" BackgroundColor="{StaticResource BrandTint}"
+                    <Border Grid.Column="2" IsVisible="{Binding IsDownloading}" WidthRequest="88" HeightRequest="44" BackgroundColor="{StaticResource BrandTint}"
                             StrokeThickness="0" VerticalOptions="Center" SemanticProperties.Description="{Binding ProgressHint}">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="22" />
@@ -73,32 +60,28 @@
                         </Grid>
                     </Border>
 
-                    <!-- Downloaded: no fill, a green check. -->
-                    <HorizontalStackLayout Grid.Row="{Binding Layout.ActionRow}" Grid.Column="{Binding Layout.ActionColumn}" Grid.ColumnSpan="{Binding Layout.ActionColumnSpan}"
-                                           IsVisible="{Binding IsDownloaded}" Spacing="5" Padding="10,0" HeightRequest="{Binding Layout.ActionHeight}" VerticalOptions="Center" HorizontalOptions="{Binding Layout.ActionContentAlign}">
+                    <!-- On the shelf: no fill, a green check. -->
+                    <HorizontalStackLayout Grid.Column="2" IsVisible="{Binding IsOnShelf}" Spacing="5" HeightRequest="44" VerticalOptions="Center">
                         <local:IconView Kind="Check" Color="{StaticResource StoreGreen}" Size="16" StrokeWidth="3" VerticalOptions="Center" />
-                        <Label Text="{x:Static res:AppResources.Store_Downloaded}" FontSize="13.5" FontAttributes="Bold" TextColor="{StaticResource StoreGreen}"
+                        <Label Text="{x:Static res:AppResources.Store_OnShelf}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource StoreGreen}"
                                VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </Grid>
             </Border>
         </DataTemplate>
-    </ContentPage.Resources>
+    </ContentView.Resources>
 
-    <Grid RowDefinitions="Auto,*">
-        <local:GrownUpHeader x:Name="Header" Title="{x:Static res:AppResources.Store_Title}" Subtitle="{x:Static res:AppResources.Store_Subtitle}"
-                             BackRequested="OnBackTapped" DoneRequested="OnBackTapped" />
-
-        <ActivityIndicator Grid.Row="1" x:Name="LoadingView" IsRunning="True" Color="{StaticResource Brand}" HorizontalOptions="Center"
+    <Grid>
+        <ActivityIndicator x:Name="LoadingView" IsRunning="True" Color="{StaticResource Brand}" HorizontalOptions="Center"
                            VerticalOptions="Center" />
 
         <!-- Screen 21: the list and the privacy line. -->
-        <Grid Grid.Row="1" x:Name="ListPanel" RowDefinitions="Auto,Auto,*,Auto" IsVisible="False">
+        <Grid x:Name="ListPanel" RowDefinitions="Auto,Auto,*,Auto" IsVisible="False">
             <!-- Slice 112 (mock frame 47): age chips (Google Play's bands) and the author picker; filtering is on the phone. -->
-            <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Margin="14,0,14,10">
+            <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Margin="0,0,0,10">
                 <HorizontalStackLayout x:Name="AgeChips" Spacing="8" />
             </ScrollView>
-            <Border Grid.Row="1" x:Name="AuthorRow" HeightRequest="44" Padding="14,0" Margin="14,0,14,10" BackgroundColor="White" StrokeThickness="0"
+            <Border Grid.Row="1" x:Name="AuthorRow" HeightRequest="44" Padding="14,0" Margin="0,0,0,10" BackgroundColor="White" StrokeThickness="0"
                     SemanticProperties.Description="{x:Static res:AppResources.Store_Author}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="14" />
@@ -114,20 +97,20 @@
             </Border>
             <Label Grid.Row="2" x:Name="NoMatchLabel" Text="{x:Static res:AppResources.Store_NoMatch}" FontSize="14" LineHeight="1.5" TextColor="{StaticResource Body}"
                    HorizontalTextAlignment="Center" Margin="30,30" IsVisible="False" />
-            <CollectionView Grid.Row="2" x:Name="StoryList" SelectionMode="None" ItemTemplate="{StaticResource StoreRowTemplate}" Margin="14,0">
+            <CollectionView Grid.Row="2" x:Name="StoryList" SelectionMode="None" ItemTemplate="{StaticResource StoreRowTemplate}">
                 <CollectionView.ItemsLayout>
-                    <!-- One column upright; the page raises the span to 2 or 3 sideways (Slice 232 part D). -->
-                    <GridItemsLayout Orientation="Vertical" Span="1" VerticalItemSpacing="10" HorizontalItemSpacing="10" />
+                    <!-- One column; the page raises the span to 2 from 800 dp of content (SettingsLayout.StoreColumns, decision 4). Frame T2: 14 dp between cards. -->
+                    <GridItemsLayout Orientation="Vertical" Span="1" VerticalItemSpacing="14" HorizontalItemSpacing="14" />
                 </CollectionView.ItemsLayout>
             </CollectionView>
-            <HorizontalStackLayout Grid.Row="3" Spacing="8" Padding="18,10,18,14">
+            <HorizontalStackLayout Grid.Row="3" Spacing="8" Padding="4,10,4,14">
                 <local:IconView Kind="Lock" Color="{StaticResource Muted}" Size="16" StrokeWidth="2" VerticalOptions="Start" Margin="0,1,0,0" />
                 <Label Text="{x:Static res:AppResources.Store_Footer}" FontSize="12.5" LineHeight="1.4" TextColor="{StaticResource Body}" />
             </HorizontalStackLayout>
         </Grid>
 
         <!-- Screen 22: offline, or the server cannot be reached. -->
-        <VerticalStackLayout Grid.Row="1" x:Name="OfflineView" IsVisible="False" Spacing="14" Padding="30,0,30,60" VerticalOptions="Center">
+        <VerticalStackLayout x:Name="OfflineView" IsVisible="False" Spacing="14" Padding="30,0,30,60" VerticalOptions="Center">
             <Border WidthRequest="96" HeightRequest="96" BackgroundColor="White" StrokeThickness="0" HorizontalOptions="Center">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="48" />
@@ -143,8 +126,8 @@
                     BackgroundColor="{StaticResource Brand}" TextColor="White" HorizontalOptions="Center" Margin="0,4,0,0" Clicked="OnTryAgainClicked" />
         </VerticalStackLayout>
 
-        <!-- Screen 23: nothing new (an empty list, or every entry too new for this app). A normal state, not an error. -->
-        <VerticalStackLayout Grid.Row="1" x:Name="EmptyView" IsVisible="False" Spacing="14" Padding="30,0,30,60" VerticalOptions="Center">
+        <!-- Screen 23: nothing new (an empty list, or every entry too new for this app). A normal state, not an error. The way back to the shelf is the corner's coral pill, so there is no button here. -->
+        <VerticalStackLayout x:Name="EmptyView" IsVisible="False" Spacing="14" Padding="30,0,30,60" VerticalOptions="Center">
             <Border WidthRequest="96" HeightRequest="96" StrokeThickness="0" Opacity="0.9" HorizontalOptions="Center">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="26" />
@@ -155,8 +138,6 @@
                    SemanticProperties.HeadingLevel="Level2" />
             <Label Text="{x:Static res:AppResources.Store_EmptyBody}" FontSize="14" LineHeight="1.5" TextColor="{StaticResource Body}"
                    HorizontalTextAlignment="Center" />
-            <Button Text="{x:Static res:AppResources.Store_BackToStories}" HeightRequest="48" CornerRadius="24" Padding="28,0" FontSize="15" FontAttributes="Bold"
-                    BackgroundColor="White" TextColor="{StaticResource Ink}" HorizontalOptions="Center" Margin="0,4,0,0" Clicked="OnBackToStoriesClicked" />
         </VerticalStackLayout>
     </Grid>
-</ContentPage>
+</ContentView>

@@ -52,7 +52,7 @@
   <data name="Store_Title" xml:space="preserve"><value>Butikk</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>Valgt ut og rollebesatt for Dino</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Hent</value></data>
-  <data name="Store_Downloaded" xml:space="preserve"><value>Lastet ned</value></data>
+  <data name="Store_OnShelf" xml:space="preserve"><value>På hylla</value></data>
   <data name="Store_Tag_Hot" xml:space="preserve"><value>Hot</value></data>
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Populær</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Anbefalt</value></data>
@@ -64,7 +64,6 @@
   <data name="Store_TryAgain" xml:space="preserve"><value>Prøv igjen</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>Ingen nye historier ennå</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>Nye historier legges til av og til. Kom tilbake snart.</value></data>
-  <data name="Store_BackToStories" xml:space="preserve"><value>Tilbake til historiene mine</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>Hent {0}</value></data>
   <!-- Slice 112: store age and author filters -->
   <data name="Store_AllAges" xml:space="preserve"><value>Alle aldre</value></data>
@@ -142,7 +141,7 @@
   <data name="Settings_GroupReading" xml:space="preserve"><value>Lesing</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>Denne telefonen</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>Ny versjon</value></data>
-  <data name="Settings_GearLabel" xml:space="preserve"><value>Innstillinger (voksne)</value></data>
+  <data name="Settings_GroupComputer" xml:space="preserve"><value>Denne datamaskinen</value></data>
   <data name="Settings_About" xml:space="preserve"><value>Om og oppdateringer</value></data>
   <data name="Settings_On" xml:space="preserve"><value>På</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Av</value></data>
@@ -155,6 +154,12 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Voksenhjørnet</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Bare voksne ser dette. Barnets hylle er ett trykk unna.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Tilbake til barnets hylle</value></data>
+  <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
+  <data name="Corner_TabBooks" xml:space="preserve"><value>Bøker</value></data>
+  <data name="Corner_ChildsShelf" xml:space="preserve"><value>Barnets hylle</value></data>
+  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>Bare voksne ser dette.</value></data>
+  <!-- Slice 325 part C: the kids' shelf's short title -->
+  <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Historier</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Endre rekkefølge</value></data>
   <data name="Gallery_ReorderHint" xml:space="preserve"><value>Trykk og hold på en bok, og dra den til et nytt sted. Barnets hylle viser samme rekkefølge.</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Kunne ikke lagre den nye rekkefølgen</value></data>
@@ -169,7 +174,6 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>Fjerne «{0}» fra hyllen?</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Sidene, bildene og stemmene fjernes fra denne telefonen. Du kan legge den til igjen gratis fra butikken.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Fjern</value></data>
-  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Få flere bøker</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>En historie på et annet språk leses fortsatt på sitt eget språk, med mindre «Oversett til mitt språk» er slått på for den historien.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Trykk og hold i 3 sekunder.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Trykk og hold i 3 sekunder</value></data>

@@ -52,7 +52,7 @@
   <data name="Store_Title" xml:space="preserve"><value>Store</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>Picked and cast for Dino</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Get</value></data>
-  <data name="Store_Downloaded" xml:space="preserve"><value>Downloaded</value></data>
+  <data name="Store_OnShelf" xml:space="preserve"><value>On the shelf</value></data>
   <data name="Store_Tag_Hot" xml:space="preserve"><value>Hot</value></data>
   <data name="Store_Tag_Popular" xml:space="preserve"><value>Popular</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>Recommended</value></data>
@@ -64,7 +64,6 @@
   <data name="Store_TryAgain" xml:space="preserve"><value>Try again</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>No new stories yet</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>New ones are added from time to time. Check back soon.</value></data>
-  <data name="Store_BackToStories" xml:space="preserve"><value>Back to my stories</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>Get {0}</value></data>
   <!-- Slice 112: store age and author filters -->
   <data name="Store_AllAges" xml:space="preserve"><value>All ages</value></data>
@@ -142,7 +141,7 @@
   <data name="Settings_GroupReading" xml:space="preserve"><value>Reading</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>This phone</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>New version</value></data>
-  <data name="Settings_GearLabel" xml:space="preserve"><value>Settings (grown-ups)</value></data>
+  <data name="Settings_GroupComputer" xml:space="preserve"><value>This computer</value></data>
   <data name="Settings_About" xml:space="preserve"><value>About &amp; updates</value></data>
   <data name="Settings_On" xml:space="preserve"><value>On</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>Off</value></data>
@@ -155,6 +154,12 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>Grown-ups’ corner</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>Only grown-ups see this. Your child’s shelf is one tap away.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>Back to my child’s shelf</value></data>
+  <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
+  <data name="Corner_TabBooks" xml:space="preserve"><value>Books</value></data>
+  <data name="Corner_ChildsShelf" xml:space="preserve"><value>Child’s shelf</value></data>
+  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>Only grown-ups see this.</value></data>
+  <!-- Slice 325 part C: the kids' shelf's short title -->
+  <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>Stories</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>Reorder</value></data>
   <data name="Gallery_ReorderHint" xml:space="preserve"><value>Press and hold a book, then drag it to a new place. Your child’s shelf shows the same order.</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>Couldn't save the new order</value></data>
@@ -169,7 +174,6 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>Remove “{0}” from the shelf?</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Its pages, pictures and voices are removed from this phone. You can add it again for free from the Store.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>Remove</value></data>
-  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>Get more books</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>A story in another language is still read in its own language, unless Translate to my language is on for that story.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Press and hold for 3 seconds.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Press and hold for 3 seconds</value></data>

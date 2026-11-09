@@ -14,30 +14,7 @@ public class TabletPageLayoutTests
     public void The_rules_apply_exactly_on_a_tablet_held_upright(double w, double h, bool expected) =>
         Assert.Equal(expected, TabletPageLayout.Applies(w, h));
 
-    [Fact]
-    public void Store_has_two_columns_90_dp_covers_and_the_action_under_the_card_on_a_tablet_upright()
-    {
-        StoreCardShape shape = TabletPageLayout.StoreCard(804, 1164);
-
-        Assert.Equal(2, shape.Columns);
-        Assert.Equal(new CoverSize(90, 120), shape.Cover);
-        Assert.False(shape.Slim);
-        Assert.True(shape.ActionBelow);
-    }
-
-    [Theory]
-    [InlineData(360, 760)]
-    [InlineData(760, 360)]
-    [InlineData(1164, 804)]
-    [InlineData(599, 1000)]
-    public void Store_keeps_settings_shapes_on_every_other_window(double w, double h)
-    {
-        int columns = SettingsLayout.StoreColumns(w, h);
-
-        Assert.Equal(new StoreCardShape(columns, SettingsLayout.StoreCover(columns), SettingsLayout.SlimStoreCards(columns), false), TabletPageLayout.StoreCard(w, h));
-        Assert.Equal(columns, TabletPageLayout.StoreColumns(w, h));
-    }
-
+    // Slice 325 part B: the store's cards are the corner's (SettingsLayoutTests); the tablet-upright store card rules retired.
     [Theory]
     [InlineData(804, 1164, 2)]
     [InlineData(360, 760, 1)]

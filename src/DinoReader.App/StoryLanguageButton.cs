@@ -219,6 +219,8 @@ public sealed class StoryLanguageButton : Border
 	private const double ChevronSize = 12;
 	private const double Corner = 16;
 	private const float ChipAlpha = 0.92f;
+	private const double RoundRingWidth = 1.5;
+	private const double RoundRingAlpha = 0.15;
 
 	private readonly FlagView _flag = new() { WidthRequest = FlagSize, HeightRequest = FlagSize };
 	private readonly IconView _chevron = new() { Kind = IconKind.ChevronDown, Size = ChevronSize, StrokeWidth = 1.8, VerticalOptions = LayoutOptions.Center };
@@ -234,7 +236,7 @@ public sealed class StoryLanguageButton : Border
 		Padding = new Thickness(6, 0, 10, 0);
 		VerticalOptions = LayoutOptions.Center;
 		StrokeShape = new RoundRectangle { CornerRadius = Corner };
-		var ring = new Border
+		_ring = new Border
 		{
 			WidthRequest = FlagSize,
 			HeightRequest = FlagSize,
@@ -244,9 +246,32 @@ public sealed class StoryLanguageButton : Border
 			Content = _flag,
 			VerticalOptions = LayoutOptions.Center,
 		};
-		Content = new HorizontalStackLayout { Spacing = 6, VerticalOptions = LayoutOptions.Center, Children = { ring, _chevron } };
+		Content = new HorizontalStackLayout { Spacing = 6, VerticalOptions = LayoutOptions.Center, Children = { _ring, _chevron } };
 		Taps.AddTap(this, tapped);
 		Colour(DinoTokens.Get(DinoTokens.ControlFill), DinoTokens.Get(DinoTokens.Muted));
+	}
+
+	private readonly Border _ring;
+
+	/// <summary>
+	/// The kids' shelf's button of the 2026-11-08 design (Slice 325 part C, frames K1-K4, KL1, KT1, KW1): a flag on a round 7% ink fill, <paramref name="diameter"/> across, the flag
+	/// <paramref name="flag"/> wide in a 1.5 dp ring, no chevron. The ring is 15% ink. The list it opens is unchanged.
+	/// </summary>
+	public void SetRound(double diameter, double flag)
+	{
+		WidthRequest = diameter;
+		HeightRequest = diameter;
+		Padding = new Thickness(0);
+		HorizontalOptions = LayoutOptions.Center;
+		StrokeShape = new Ellipse();
+		_chevron.IsVisible = false;
+		_ring.WidthRequest = flag;
+		_ring.HeightRequest = flag;
+		_ring.StrokeThickness = RoundRingWidth;
+		_ring.Stroke = Color.FromRgba(43 / 255.0, 37 / 255.0, 64 / 255.0, RoundRingAlpha);
+		_ring.HorizontalOptions = LayoutOptions.Center;
+		_flag.WidthRequest = flag;
+		_flag.HeightRequest = flag;
 	}
 
 	/// <summary>Shows <paramref name="language"/>'s flag and names it for screen readers.</summary>

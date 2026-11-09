@@ -13,7 +13,7 @@ namespace DinoReader;
 /// packages and hands it to the share sheet (a save dialog on Windows); "Restore" imports the stories this phone lacks, keeping each
 /// one's own id so restoring twice adds nothing. Nothing goes anywhere the grown-up does not send it.
 /// </summary>
-public partial class BackupPage : ContentPage, IGrownUpPage
+public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 {
 	private const string BackupFilePrefix = "DinoReader-backup-";
 	private const string DateFormat = "yyyy-MM-dd";
@@ -37,10 +37,10 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 	private readonly WaitController _wait;
 	private int _count;
 	private const double CardGap = 14;
-	private const double PhoneSideMargin = 14;
-	private const double StackBottomPadding = 20;
 	private Size _windowSize;
 	private bool _sideBySide;
+	private Page? _hostPage;
+	private Func<Task>? _hostClose;
 
 	public BackupPage(IStoryLibrary library, ExternalActivityGuard external, GrownUpMode mode, UsageCounter usage, IFallbackSink sink)
 	{
@@ -58,10 +58,9 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 	}
 
 	// Slice 232 part D (mock Batch 44 frame 124): held sideways the save and restore cards sit side by side, upright they stack; rotating only moves them in the grid,
-	// so a restore under way or its result panel is never touched. A sideways page keeps clear of the camera cut-out at its start.
-	protected override void OnSizeAllocated(double width, double height)
+	// so a restore under way or its result panel is never touched. Slice 325 part B: the Settings tab hosts this page and tells it the window's size (HostShape); the side margins are the tab's.
+	void ICornerSubPage.HostShape(double width, double height)
 	{
-		base.OnSizeAllocated(width, height);
 		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height); // Slice 235 part C: the Windows window picks its shape through the seam, phones and tablets pass through
 		if (width <= 0 || height <= 0 || (width == _windowSize.Width && height == _windowSize.Height))
 		{
@@ -69,32 +68,39 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		}
 
 		_windowSize = new Size(width, height);
-		double inset = LandscapeLayout.IsLandscape(width, height) ? LandscapeLayout.SidewaysInset : 0;
-		Header.Margin = new Thickness(inset, 0, 0, 0);
-		MainPanel.Margin = new Thickness(inset, 0, 0, 0);
-		ResultPanel.Margin = new Thickness(inset, 0, 0, 0);
-		ApplyTabletMargins(width, height);
-		bool sideBySide = TabletPageLayout.BackupSideBySide(width, height);
+		// The page lives in the content column (right of the rail, inside its margins), so it is that width, not the window's, that decides.
+		double column = CornerLayout.ContentWidth(CornerLayout.ChromeOf(width, height, DesktopTips.IsWindows), width);
+		bool sideBySide = TabletPageLayout.BackupSideBySide(width, height) && SettingsLayout.BackupCardsFit(column);
 		if (sideBySide != _sideBySide)
 		{
 			_sideBySide = sideBySide;
 			PlaceCards(sideBySide);
 		}
-	}
-
-	// Slice 234 part C (mock Batch 45 frame 146): a tablet held upright keeps 40 dp at the sides and the cards sit side by side at the top.
-	private void ApplyTabletMargins(double width, double height)
-	{
-		double side = TabletPageLayout.Applies(width, height) ? TabletPageLayout.PageSideMargin : PhoneSideMargin;
-		MainStack.Padding = new Thickness(side, 0, side, StackBottomPadding);
-		ResultPanel.Padding = new Thickness(side, 0);
 #if DEBUG
 		if (TabletPageLayout.Applies(width, height))
 		{
-			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[TabletUpright] backup sideBySide={TabletPageLayout.BackupSideBySide(width, height)}");
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[TabletUpright] backup sideBySide={sideBySide}");
 		}
 #endif
 	}
+
+	View ICornerSubPage.HostIn(Page owner, Func<Task> close)
+	{
+		_hostPage = owner;
+		_hostClose = close;
+		Content = null;
+		return BackupRoot;
+	}
+
+	void ICornerSubPage.HostAppearing() => OnAppearing();
+
+	void ICornerSubPage.HostDisappearing() => OnDisappearing();
+
+	Task ICornerSubPage.HostBackAsync() => _busy.RunAsync(CloseAsync);
+
+	private Task CloseAsync() => _hostClose is { } close ? close() : Task.CompletedTask;
+
+	private Task AlertAsync(string title, string message, string ok) => (_hostPage ?? this).DisplayAlertAsync(title, message, ok);
 
 	private void PlaceCards(bool sideBySide)
 	{
@@ -114,7 +120,11 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 	protected override async void OnAppearing()
 	{
 		base.OnAppearing();
-		ExportFolders.DeleteStale();
+		if (!_busy.IsBusy)
+		{
+			ExportFolders.DeleteStale(); // never while a save or restore is using its export folder
+		}
+
 		await TryAsync(CountStoriesAsync);
 	}
 
@@ -125,9 +135,9 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		SaveButton.IsEnabled = _count > 0;
 	}
 
-	private async void OnBackTapped(object? sender, EventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
+	private async void OnBackTapped(object? sender, EventArgs e) => await _busy.RunAsync(CloseAsync);
 
-	private async void OnSeeStoriesClicked(object? sender, EventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
+	private async void OnSeeStoriesClicked(object? sender, EventArgs e) => await _busy.RunAsync(CloseAsync);
 
 	private async void OnSaveClicked(object? sender, EventArgs e) => await _busy.RunAsync(() => GuardedAsync(SaveAsync));
 
@@ -144,7 +154,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		{
 			// no-fallback: the grown-up is told the backup failed by an alert; nothing falls back
 			Debug.WriteLine($"Dino Reader backup failed: {ex}");
-			await DisplayAlertAsync(AppResources.Backup_Title, AppResources.Backup_Failed, AppResources.Common_Ok);
+			await AlertAsync(AppResources.Backup_Title, AppResources.Backup_Failed, AppResources.Common_Ok);
 		}
 	}
 
@@ -176,7 +186,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		await _external.RunAsync(() => DeliverAsync(path));
 		if (skipped > 0)
 		{
-			await DisplayAlertAsync(AppResources.Backup_Title, AppResources.Format(AppResources.Backup_SaveSkipped, skipped), AppResources.Common_Ok);
+			await AlertAsync(AppResources.Backup_Title, AppResources.Format(AppResources.Backup_SaveSkipped, skipped), AppResources.Common_Ok);
 		}
 	}
 
@@ -326,13 +336,13 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		catch (StoryBackupNewerException)
 		{
 			// no-fallback: the grown-up is told by an alert that the backup is from a newer app; nothing falls back
-			await DisplayAlertAsync(AppResources.Backup_Title, AppResources.Backup_Newer, AppResources.Common_Ok);
+			await AlertAsync(AppResources.Backup_Title, AppResources.Backup_Newer, AppResources.Common_Ok);
 		}
 		catch (StoryBackupException ex)
 		{
 			// no-fallback: the grown-up is told by an alert that the file is not a backup; nothing falls back
 			Debug.WriteLine($"Dino Reader backup refused: {ex.Message}");
-			await DisplayAlertAsync(AppResources.Backup_Title, AppResources.Backup_NotABackup, AppResources.Common_Ok);
+			await AlertAsync(AppResources.Backup_Title, AppResources.Backup_NotABackup, AppResources.Common_Ok);
 		}
 	}
 

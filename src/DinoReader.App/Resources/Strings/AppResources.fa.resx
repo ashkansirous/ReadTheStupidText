@@ -51,7 +51,7 @@
   <data name="Store_Title" xml:space="preserve"><value>فروشگاه</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>انتخاب‌شده و نقش‌بندی‌شده برای دینو</value></data>
   <data name="Store_Get" xml:space="preserve"><value>دریافت</value></data>
-  <data name="Store_Downloaded" xml:space="preserve"><value>دریافت شد</value></data>
+  <data name="Store_OnShelf" xml:space="preserve"><value>در قفسه</value></data>
   <data name="Store_Tag_Hot" xml:space="preserve"><value>داغ</value></data>
   <data name="Store_Tag_Popular" xml:space="preserve"><value>محبوب</value></data>
   <data name="Store_Tag_Recommended" xml:space="preserve"><value>پیشنهادی</value></data>
@@ -63,7 +63,6 @@
   <data name="Store_TryAgain" xml:space="preserve"><value>دوباره تلاش کن</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>هنوز داستان تازه‌ای نیست</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>هر از گاهی داستان‌های تازه اضافه می‌شود. بعداً سر بزنید.</value></data>
-  <data name="Store_BackToStories" xml:space="preserve"><value>بازگشت به داستان‌های من</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>دریافت {0}</value></data>
   <!-- Slice 112: store age and author filters -->
   <data name="Store_AllAges" xml:space="preserve"><value>همه سنین</value></data>
@@ -141,7 +140,7 @@
   <data name="Settings_GroupReading" xml:space="preserve"><value>خواندن</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>این گوشی</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>نسخهٔ جدید</value></data>
-  <data name="Settings_GearLabel" xml:space="preserve"><value>تنظیمات (بزرگ‌ترها)</value></data>
+  <data name="Settings_GroupComputer" xml:space="preserve"><value>این رایانه</value></data>
   <data name="Settings_About" xml:space="preserve"><value>دربارهٔ برنامه و به‌روزرسانی‌ها</value></data>
   <data name="Settings_On" xml:space="preserve"><value>روشن</value></data>
   <data name="Settings_Off" xml:space="preserve"><value>خاموش</value></data>
@@ -154,6 +153,12 @@
   <data name="Gallery_CornerTitle" xml:space="preserve"><value>گوشهٔ بزرگ‌ترها</value></data>
   <data name="Gallery_CornerLine" xml:space="preserve"><value>این بخش را فقط بزرگ‌ترها می‌بینند. قفسهٔ کودک شما یک لمس فاصله دارد.</value></data>
   <data name="Gallery_BackToShelf" xml:space="preserve"><value>بازگشت به قفسهٔ کودکم</value></data>
+  <!-- Slice 325 part A: the grown-ups' corner's tabs and rail -->
+  <data name="Corner_TabBooks" xml:space="preserve"><value>کتاب‌ها</value></data>
+  <data name="Corner_ChildsShelf" xml:space="preserve"><value>قفسهٔ کودک</value></data>
+  <data name="Gallery_CornerLineShort" xml:space="preserve"><value>فقط بزرگ‌ترها این را می‌بینند.</value></data>
+  <!-- Slice 325 part C: the kids' shelf's short title -->
+  <data name="Gallery_ShelfTitleShort" xml:space="preserve"><value>داستان‌ها</value></data>
   <data name="Gallery_Reorder" xml:space="preserve"><value>چیدمان دوباره</value></data>
   <data name="Gallery_ReorderHint" xml:space="preserve"><value>روی یک کتاب فشار دهید و نگه دارید، سپس آن را به جای تازه بکشید. قفسهٔ کودک شما همین ترتیب را نشان می‌دهد.</value></data>
   <data name="Reorder_SaveFailedTitle" xml:space="preserve"><value>ذخیرهٔ ترتیب تازه ممکن نشد</value></data>
@@ -168,7 +173,6 @@
   <data name="Book_RemoveTitle" xml:space="preserve"><value>«{0}» از قفسه برداشته شود؟</value></data>
   <data name="Book_RemoveBodyStore" xml:space="preserve"><value>صفحه‌ها، تصویرها و صداهای آن از این گوشی پاک می‌شوند. می‌توانید دوباره آن را رایگان از فروشگاه اضافه کنید.</value></data>
   <data name="Book_RemoveConfirm" xml:space="preserve"><value>برداشتن</value></data>
-  <data name="Gallery_GetMoreBooks" xml:space="preserve"><value>دریافت کتاب‌های بیشتر</value></data>
   <data name="Language_Footer" xml:space="preserve"><value>داستانی به زبان دیگر همچنان به زبان خودش خوانده می‌شود، مگر اینکه «ترجمه به زبان من» برای آن داستان روشن باشد.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>برای ۳ ثانیه فشار دهید و نگه دارید.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>برای ۳ ثانیه فشار دهید و نگه دارید</value></data>

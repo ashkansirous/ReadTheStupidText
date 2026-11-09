@@ -1,4 +1,4 @@
-# Slice 232 part D: Backup held sideways puts the save and restore cards side by side; rotating upright stacks them and the page stays open. Uses Maestro's setOrientation;
+# Slice 232 part D (hosted in the Settings tab since Slice 325 part B): Backup held sideways puts the save and restore cards side by side; rotating upright stacks them and the page stays open. Uses Maestro's setOrientation;
 # tools/emulator/rotate.ps1 is the adb fallback if a device ignores it. The gate is not tapped: the enter-grown-up hook stands in for a passed gate (grown-ups-button.yaml covers the gate chain).
 # expect-log: HOOK skip-first-run ok
 # expect-log: HOOK enter-grown-up ok
@@ -37,17 +37,16 @@ onFlowComplete:
     visible:
       id: SettingsTitle
     timeout: 10000
-# Backup is not shown in the right pane: it pushes as its own page in both orientations.
-# Sideways, the Settings list pane shows only the first rows, so scroll Backup into view first.
-# scrollUntilVisible swipes at the screen centre, which is the right pane here, so swipe inside the left list column (about 15% across) instead.
+# Slice 325 part B: Backup opens inside the Settings tab (like every Settings page) with the back arrow, the rail staying. Sideways the list shows only the first rows, so scroll Backup into view first
+# (the list is the content column right of the rail, about 60% across).
 - repeat:
     times: 6
     while:
       notVisible: "Backup"
     commands:
       - swipe:
-          start: 15%, 80%
-          end: 15%, 30%
+          start: 60%, 80%
+          end: 60%, 30%
 - tapOn:
     text: "Backup"
     waitToSettleTimeoutMs: 300
@@ -61,9 +60,11 @@ onFlowComplete:
     visible: Save a backup
     timeout: 15000
 - assertVisible: Restore from a backup
-# Done on Backup goes up one level to Settings (Slice 229).
-- tapOn:
+# The back arrow on Backup goes up one level to the Settings list (Slice 229; there is no Done in the corner since Slice 325).
+- assertNotVisible:
     id: GrownUpDone
+- tapOn:
+    id: GrownUpBack
 - extendedWaitUntil:
     visible:
       id: SettingsReadingSpeedRow
