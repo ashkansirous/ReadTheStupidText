@@ -31,13 +31,16 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 ### Slice 147: iOS review cadence: one review at a time, the newest build, never cancel ([slice](slices/147-ios-review-cadence.md))
 - **You:** the first successful `appstore-submit.yml` run (manual; its only two runs, 2026-10-30, concluded failure): it should report the listing items Apple still needs (screenshots, privacy, age rating). The first scheduled `testflight-external.yml` run already succeeded.
 
-### Slice 325: Dino every page in the 2026-11-08 design, parts D and E ([slice](slices/325-dino-2026-11-08-redesign.md))
+### Slice 325: Dino every page in the 2026-11-08 design, parts A-E ([slice](slices/325-dino-2026-11-08-redesign.md))
 - **Device:** VM `dino-keyboard` after the first run: with `-Check dino-keyboard` alone the app is still in the first-run grown-up handover; needs the full Dino list or an `# after:` step that leaves grown-up mode.
 - **Device:** The post-loop Windows run of `dino-launch`'s new walk: `dino-onboarding-keys` reaches the shelf first, so `dino-launch` returns early.
 - **Device:** No `layout-check ok` line was printed for any onboarding or intro flow.
 - **You:** iOS on a device (34 pt home bar, 59 pt island inset) for the first run and intro.
 - **Device:** Windows intro Left from the languages step may drop unsaved ticks (check6 #4, unconfirmed).
-- **You:** 14 machine-drafted translations of the new first-run strings need native review.
+- **You:** 14 machine-drafted translations of the new first-run strings need native review (parts A-C add `Store_OnShelf` and `Settings_GroupComputer`).
+- **You:** iOS on a real iPhone 8 and an iPhone 17 Pro Max (Dynamic Island, home bar, landscape flip) for the corner tabs and kids' shelf (parts A-C).
+- **You:** The Samsung three-button bar on the S21 (frame P5 is an assumed size); a real tablet in both orientations.
+- **Device:** Arabic and Persian first-run and corner layouts on a device (parts A-C).
 - **Device:** Contact sheet for the new shots: the onboarding flow names shot-OL1-language and shot-OTL1-language but takes neither (no manifest row); O1 / O1-8 and O6 / O6-8 may be the same image if the 375 x 667 resize does not take effect between captures; the intro flow header says O9 where the frame is OT9 (comment only).
 
 ### Slice 323: Dino shelf titles follow the story language picked on the shelf ([slice](slices/323-dino-shelf-titles-follow-story-language.md))
