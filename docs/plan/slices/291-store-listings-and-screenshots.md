@@ -89,7 +89,7 @@ Facts from plan.md, to be re-read live before each edit (the `store-listing` age
   scanning and adding books, translation, the voice download and the camera, all removed by Slice 278 (store books
   only, pre-made clips) and Slice 305. Rewrite the description, keywords and review notes from the current app before
   any push.
-- **Price:** free. **In-app purchases: not decided** (user, 2026-11-09); nothing is planned. If they come, it is new scope: what is sold is not decided, and
+- **Price:** free to download. **In-app purchases: decided later on 2026-11-09 (user):** four free books, the rest $0.99 each; planned in Slice 346 (docs/plan/slices/346-dino-paid-books.md), which also changes the listing and privacy lines below. Earlier note, kept for the record: what is sold is not decided, and
   nothing is planned or built for it (StoreKit on iOS and Play Billing on Android, the Paid Apps agreement in App
   Store Connect, a gate in front of purchases). Every "no in-app purchases" line in `docs/store-listings/dino/*`,
   `site/dino/privacy.html` and the Play/Microsoft listings would have to change when purchases ship.
