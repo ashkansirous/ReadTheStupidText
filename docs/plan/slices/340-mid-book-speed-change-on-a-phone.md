@@ -1,6 +1,6 @@
 # Slice 340: Listening page: Mid-book speed change on a phone
 
-*Planned: answered 2026-11-09; fix 1 (slowest speed 0.8x) to build after Slice 325 A-C. Page: https://claude.ai/artifact/NWRNCx8GhfZneYoZ4Gt3NQ.* Clips: Dino Three Little Pigs page 1 at 1x, 0.6x and 1.2x, recorded with `scrcpy --audio-source=playback` over wireless adb. A mid-read speed change is no longer possible: reading stops when the page is left, so the page compares the three speeds instead.
+*Built 2026-11-09, merged as PR #985 (96a479d5); fix 1 (slowest speed 0.8x) was the only fix. Page: https://claude.ai/artifact/NWRNCx8GhfZneYoZ4Gt3NQ.* Clips: Dino Three Little Pigs page 1 at 1x, 0.6x and 1.2x, recorded with `scrcpy --audio-source=playback` over wireless adb. A mid-read speed change is no longer possible: reading stops when the page is left, so the page compares the three speeds instead.
 
 *Planned 2026-11-08.* The user asked for one slice per check that needs their ear ("Abou the ones that need my ear, I probably need a page to listen to them and say what I think. Add a slice for each so that you can implement a page for me to listen to them and tell what is wrong with them"). This one comes from Slice 150's open check, moved out of `docs/plan/unverified.md` on 2026-11-08 ([record](../notes/2026-11-08-unverified-triage.md)):
 
