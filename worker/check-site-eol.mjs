@@ -9,7 +9,7 @@ const SITE_DIR = new URL("../site/", import.meta.url);
 // Only text files: a PNG signature has CR LF bytes by design (Slice 74 added icons).
 const TEXT_EXTENSIONS = new Set([".html", ".css", ".js", ".mjs", ".json", ".txt", ".svg", ".xml", ".webmanifest"]);
 // Pages every deploy must carry; a missing one would silently 404.
-const REQUIRED_FILES = ["index.html", "privacy.html", "dino/index.html", "dino/privacy.html", "dino/icon.png", "img/control-panel.webp", "dino/reading-screen.webp"];
+const REQUIRED_FILES = ["index.html", "privacy.html", "dino/index.html", "dino/privacy.html", "dino/icon.png", "img/control-panel.webp", "dino/shot-reading.webp", "dino/shot-shelf.webp", "dino/shot-picture.webp", "dino/shot-store.webp", "dino/shot-record.webp", "dino/shot-rtl.webp", "dino/shot-night.webp"];
 
 function listFiles(dir) {
   return readdirSync(dir).flatMap((name) => {
