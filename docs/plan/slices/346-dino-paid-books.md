@@ -2,7 +2,7 @@
 
 *Planned (2026-11-09).*
 
-**Touches:** `worker/stories.ts`, `worker/entitlements/**` (new: receipt checks per store), `worker/products.ts` (new: product to book list), `worker/CLAUDE.md`, `worker/test/**`, `content/dino/*/book.json`, `tools/dino/publish-store-books.mjs`, `tools/dino/store-products.mjs` (new: create and price the products through the store APIs), `src/DinoReader.Core/BookAccess.cs` (new), `src/DinoReader.Core/StoryBackup*.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StorePage.xaml*`, `src/DinoReader.App/FirstBooksPage*.cs`, `src/DinoReader.App/BackupPage.xaml*`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/ShelfAudioPacks*.cs`, `src/DinoReader.App/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/Purchases/**` (new), `src/DinoReader.App/Platforms/iOS/Purchases/**` (new), `src/DinoReader.App/Platforms/Windows/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `src/DinoReader.App/Platforms/iOS/Info.plist`, `src/DinoReader.App/Platforms/iOS/PrivacyInfo.xcprivacy`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Testing/**`, `tests/DinoReader.Tests/**`, `docs/store-listings/dino/**`, `site/dino/privacy.html`, `docs/plan/slices/346-dino-paid-books.md`
+**Touches:** `worker/stories.ts`, `worker/entitlements/**` (new: receipt checks per store), `worker/products.ts` (new: product to book list), `worker/CLAUDE.md`, `worker/stories.test.mjs`, `worker/entitlements.test.mjs` (new), `content/dino/*/book.json`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/scripts/store-products.mjs` (new: create and price the products through the store APIs), `src/DinoReader.Core/BookAccess.cs` (new), `src/DinoReader.Core/StoryBackup*.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StorePage.xaml*`, `src/DinoReader.App/FirstBooksPage*.cs`, `src/DinoReader.App/BackupPage.xaml*`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/ShelfAudioPacks*.cs`, `src/DinoReader.App/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/Purchases/**` (new), `src/DinoReader.App/Platforms/iOS/Purchases/**` (new), `src/DinoReader.App/Platforms/Windows/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `src/DinoReader.App/Platforms/iOS/Info.plist`, `src/DinoReader.App/Platforms/iOS/PrivacyInfo.xcprivacy`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Testing/**`, `tests/DinoReader.Tests/**`, `docs/store-listings/dino/**`, `site/dino/privacy.html`, `docs/plan/slices/346-dino-paid-books.md`
 
 ## Why
 
@@ -82,7 +82,7 @@ through `library-docs` or `web-research` before building that part.
 - [ ] A2: one checker per store under `worker/entitlements/` (Apple App Store Server API, Google Play Developer API,
       Microsoft Store collections API), each behind the same interface: proof in, owned product ids out. Their keys go
       through `manage-secrets` and `wrangler secret put`; nothing about the buyer is stored or logged. Tests with
-      recorded store answers in `worker/test/`.
+      recorded store answers in `worker/entitlements.test.mjs`.
 
 ### Part B — buying and restoring in the app (Android, iOS, Windows)
 
@@ -111,7 +111,7 @@ through `library-docs` or `web-research` before building that part.
 
 ### Part D — stores, listings and privacy
 
-- [ ] `tools/dino/store-products.mjs`: create one product per paid book at the $0.99 price point in App Store Connect,
+- [ ] `.github/scripts/store-products.mjs`: create one product per paid book at the $0.99 price point in App Store Connect,
       Play Console and Partner Center through their APIs where an API exists; the parts with no API go to
       *Outstanding work* as user steps, one by one.
 - [ ] User-only: accept the Paid Apps agreement and fill bank and tax details in App Store Connect; set up a Google
