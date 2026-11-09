@@ -2,7 +2,7 @@
 
 *Planned (2026-11-09).*
 
-**Touches:** `worker/stories.ts`, `worker/alexa.ts`, `worker/sonos.ts`, `worker/alexa.test.mjs`, `worker/sonos.test.mjs`, `worker/entitlements/**` (new: receipt checks per store), `worker/products.ts` (new: product to book list), `worker/CLAUDE.md`, `worker/stories.test.mjs`, `worker/entitlements.test.mjs` (new), `content/dino/*/book.json`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/scripts/store-products.mjs` (new: create and price the products through the store APIs), `src/DinoReader.Core/BookAccess.cs` (new), `src/DinoReader.Core/StoryBackup*.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StorePage.xaml*`, `src/DinoReader.App/FirstBooksPage*.cs`, `src/DinoReader.App/BackupPage.xaml*`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/ShelfAudioPacks*.cs`, `src/DinoReader.App/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/Purchases/**` (new), `src/DinoReader.App/Platforms/iOS/Purchases/**` (new), `src/DinoReader.App/Platforms/Windows/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `src/DinoReader.App/Platforms/iOS/Info.plist`, `src/DinoReader.App/Platforms/iOS/PrivacyInfo.xcprivacy`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Testing/**`, `tests/DinoReader.Tests/**`, `docs/store-listings/dino/**`, `site/dino/privacy.html`, `docs/plan/slices/346-dino-paid-books.md`
+**Touches:** `worker/stories.ts`, `worker/entitlements/**` (new: receipt checks per store), `worker/products.ts` (new: product to book list), `worker/CLAUDE.md`, `worker/stories.test.mjs`, `worker/entitlements.test.mjs` (new), `content/dino/*/book.json`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/scripts/store-products.mjs` (new: create and price the products through the store APIs), `src/DinoReader.Core/BookAccess.cs` (new), `src/DinoReader.Core/StoryBackup*.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StorePage.xaml*`, `src/DinoReader.App/FirstBooksPage*.cs`, `src/DinoReader.App/BackupPage.xaml*`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/ShelfAudioPacks*.cs`, `src/DinoReader.App/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/Purchases/**` (new), `src/DinoReader.App/Platforms/iOS/Purchases/**` (new), `src/DinoReader.App/Platforms/Windows/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `src/DinoReader.App/Platforms/iOS/Info.plist`, `src/DinoReader.App/Platforms/iOS/PrivacyInfo.xcprivacy`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Testing/**`, `tests/DinoReader.Tests/**`, `docs/store-listings/dino/**`, `site/dino/privacy.html`, `docs/plan/slices/346-dino-paid-books.md`
 
 ## Why
 
@@ -24,7 +24,7 @@ Slice 291 recorded in-app purchases as "not decided"; this slice decides them.
    own. So the entitlement model is "a product unlocks a list of books" from day one: a per-book product is a list of
    one, and a later bundle is one more row, with no app update.
 4. **The server checks the purchase.** The Worker hands out a paid book (its download, page audio and audio packs)
-   only after it has confirmed the purchase with the store that sold it. Hiding books in the app alone is not enough.
+   only after it has confirmed the purchase with the store that sold it (for the apps; Alexa and Sonos are out of scope). Hiding books in the app alone is not enough.
    Buying sits behind the existing grown-ups gate (`GrownUpGate`).
 5. **Backups hold no book content.** A backup holds only the app's own state (which books are on the shelf, by id;
    reading progress; settings) and the parents' own recordings. No book text, pictures or audio packs. Restore
@@ -67,6 +67,14 @@ through `library-docs` or `web-research` before building that part.
   (https://learn.microsoft.com/en-us/windows/uwp/monetize/view-and-grant-products-from-a-service).
 - **$0.99:** commonly available on all three stores; not confirmed on any official price page.
 
+## Out of scope
+
+- **Alexa and Sonos: not decided** (user, 2026-11-09: not tested yet). This slice changes nothing in
+  `worker/alexa.ts` or `worker/sonos.ts`, and no work here may be shaped around them. They will be planned on
+  their own once the user has tested them. This slice covers the Android, iOS and Windows apps only.
+- Until that decision, a paid book's listening track stays reachable through that route; it is the one open door this
+  slice knowingly leaves.
+
 ## Work
 
 ### Part A — the Worker knows what is free and checks purchases
@@ -75,14 +83,10 @@ through `library-docs` or `web-research` before building that part.
       `uk.sirous.dinoreader.book.<stem>`. `publish-store-books.mjs` carries both into the store's `meta.json`. The four
       free books are marked free.
 - [ ] `worker/products.ts`: product id to the list of book ids it unlocks (one per paid book now).
-- [ ] `/api/stories` lists every book with its access and product id. The download, audio and listen routes for a
+- [ ] `/api/stories` lists every book with its access and product id. The download and audio routes for a
       paid book need a purchase proof header. The Worker checks it with the store that sold it (Part A2), caches a
       good answer for the device's request for a short time, and returns 402 for no proof and 403 for a bad one.
-      Free books work exactly as today.
-- [ ] **Alexa and Sonos offer only free books.** Both serve the store books' listening tracks with no login
-      (`worker/alexa.ts`, `worker/sonos.ts`, Slice 283), so today they would play every paid book for nothing. They
-      can't check a store purchase without account linking, which Decision 1 rules out, so their catalogue becomes
-      the free books only, and a paid book's track URL refuses them. (Claude, 2026-11-09; the user can change it.)
+      Free books work exactly as today. The listening-track route (`listen/<lang>`) is used only by Alexa and Sonos (`worker/alexa.ts:252`), not by the app, so this slice leaves it unchanged (see Out of scope).
 - [ ] The storage bucket stays closed: no r2.dev public URL and no custom domain on `readthestupidtext-downloads`
       (read live 2026-11-09). The Worker is the only door; keep it that way.
 - [ ] A2: one checker per store under `worker/entitlements/` (Apple App Store Server API, Google Play Developer API,
