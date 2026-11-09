@@ -50,7 +50,7 @@ public sealed class KokoroNanRescueTests
     }
 
     [Fact]
-    public void StatsOfNoSamplesAreZero() => Assert.Equal(new TakeStats(0, 0, 0, 0), TakeStats.From([], Rate));
+    public void StatsOfNoSamplesAreZero() => Assert.Equal(new TakeStats(0, 0, 0, 0, 0), TakeStats.From([], Rate));
 
     [Fact]
     public void DescribeHasNoTextAndNamesTheNanCount() =>

@@ -66,7 +66,7 @@ export const FALLBACK_AREAS = [
 export const FALLBACK_REASONS = [
   "no_pack", "pack_failed", "text_mismatch", "clip_missing", "partial",
   // part B, speech
-  "neural_not_ready", "neural_unavailable", "stream_unavailable", "engine_build_failed", "segments_unsupported", "phone_cannot_speak", "no_voice", "silent_retake", "silent_sibling", "silent_gave_up",
+  "neural_not_ready", "neural_unavailable", "stream_unavailable", "engine_build_failed", "segments_unsupported", "phone_cannot_speak", "no_voice", "silent_retake", "silent_sibling", "silent_gave_up", "quiet_retake", "quiet_sibling", "quiet_gave_up",
   "voice_not_in_roster", "recording_unplayable", "phone_language_missing",
   // part B, translation
   "translation_timeout", "translation_pack_missing", "translation_error", "stream_plan_failed", "stream_partial", "translation_model_missing", "translation_skipped", "translation_pack_failed",
