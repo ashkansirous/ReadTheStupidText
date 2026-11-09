@@ -5,7 +5,7 @@ namespace DinoReader;
 
 /// <summary>
 /// The grown-up's reading speed (Slice 150, Decision 155), kept under Dino's own key because the shared store cannot tell a missing
-/// value from a stored one: nothing stored gives 1x (Decision 172), a stored value is clamped to 0.5x-1.2x. Slice 278 B: pre-made clips and recordings
+/// value from a stored one: nothing stored gives 1x (Decision 172), a stored value is clamped to 0.8x-1.2x. Slice 278 B: pre-made clips and recordings
 /// are played at it (the clip player takes the rate for each play), so the setting stays; there is no speech engine to apply it to.
 /// </summary>
 public static class ReadingSpeedPreference

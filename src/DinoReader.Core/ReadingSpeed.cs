@@ -3,12 +3,12 @@ using ReadTheStupidText.Domain.Reading;
 namespace DinoReader.Core;
 
 /// <summary>
-/// Dino Reader's own reading-speed range (Slice 150, Decision 155): 0.5x to 1.2x in 0.05 steps, 1x until a grown-up
+/// Dino Reader's own reading-speed range (Slice 150, Decision 155): 0.8x to 1.2x in 0.05 steps, 1x until a grown-up
 /// chooses (Slice 324, Decision 172). Narrower than the shared <see cref="PlaybackRate"/> (0.5-2.0), which RTST keeps; nothing above 1.2x can reach the reader.
 /// </summary>
 public static class ReadingSpeed
 {
-	public const double Min = 0.5;
+	public const double Min = 0.8;
 	public const double Max = 1.2;
 	public const double Default = 1.0;
 	public const double Step = 0.05;

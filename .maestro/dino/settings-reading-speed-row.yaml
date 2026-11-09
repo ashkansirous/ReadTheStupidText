@@ -38,6 +38,8 @@ name: Settings, Reading speed row opens its page
     timeout: 10000
 # Slice 324: clearState above makes this a fresh install, which starts at 1x (Decision 172).
 - assertVisible: "1x"
+# Slice 340: the slow end of the slider is 0.8x.
+- assertVisible: "0.8x · slow"
 # Back returns to the Settings list, where the row is still there.
 - back
 - extendedWaitUntil:

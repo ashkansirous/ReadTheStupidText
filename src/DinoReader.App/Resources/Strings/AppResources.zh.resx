@@ -297,7 +297,7 @@
   <data name="ReportProblem_TryAgain" xml:space="preserve"><value>再试一次</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>朗读速度</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>慢一点，小朋友更容易听懂</value></data>
-  <data name="Speed_EndSlow" xml:space="preserve"><value>0.5x · 慢</value></data>
+  <data name="Speed_EndSlow" xml:space="preserve"><value>0.8x · 慢</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <!-- /Slice 115 -->

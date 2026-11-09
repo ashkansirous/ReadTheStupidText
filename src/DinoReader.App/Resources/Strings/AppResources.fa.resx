@@ -297,7 +297,7 @@
   <data name="ReportProblem_TryAgain" xml:space="preserve"><value>دوباره امتحان کنید</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>سرعت خواندن</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>آهسته‌تر برای کوچولوها آسان‌تر است</value></data>
-  <data name="Speed_EndSlow" xml:space="preserve"><value>۰٫۵x · آهسته</value></data>
+  <data name="Speed_EndSlow" xml:space="preserve"><value>۰٫۸x · آهسته</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} مگابایت</value></data>
   <!-- /Slice 115 -->

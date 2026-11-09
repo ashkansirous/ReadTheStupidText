@@ -17,8 +17,9 @@ public class ReadingSpeedTests
     }
 
     [Theory]
-    [InlineData(0.1, 0.5)]
-    [InlineData(0.5, 0.5)]
+    [InlineData(0.1, 0.8)]
+    [InlineData(0.5, 0.8)]
+    [InlineData(0.6, 0.8)]
     [InlineData(0.8, 0.8)]
     [InlineData(1.2, 1.2)]
     [InlineData(1.5, 1.2)]
@@ -37,9 +38,9 @@ public class ReadingSpeedTests
 
     [Theory]
     [InlineData(double.PositiveInfinity, 1.2)]
-    [InlineData(double.NegativeInfinity, 0.5)]
-    [InlineData(-3.0, 0.5)]
-    [InlineData(0.0, 0.5)]
+    [InlineData(double.NegativeInfinity, 0.8)]
+    [InlineData(-3.0, 0.8)]
+    [InlineData(0.0, 0.8)]
     public void Extreme_stored_values_are_clamped(double input, double expected)
     {
         Assert.Equal(expected, ReadingSpeed.Clamp(input).Value);

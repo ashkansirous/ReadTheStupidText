@@ -451,7 +451,7 @@ public static class UsageCountsCard
 }
 
 /// <summary>
-/// The "Reading speed" card of the grown-up settings (Slice 150, Decision 155, mock frame 70): a title, the chosen speed and a slider from 0.5x to 1.2x
+/// The "Reading speed" card of the grown-up settings (Slice 150, Decision 155, mock frame 70): a title, the chosen speed and a slider from ReadingSpeed.Min to ReadingSpeed.Max
 /// in 0.05 steps. One setting for the whole app; pre-made clips and recordings are played at it, a change taking effect from the next clip
 /// (Slice 278 part B: there is no voice to play a sample with, so the Play button is gone). A page puts it in its column of cards.
 /// </summary>

@@ -297,7 +297,7 @@
   <data name="ReportProblem_TryAgain" xml:space="preserve"><value>もう一度試す</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>読み上げの速さ</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>ゆっくりのほうが小さな子には聞きやすいです</value></data>
-  <data name="Speed_EndSlow" xml:space="preserve"><value>0.5x · ゆっくり</value></data>
+  <data name="Speed_EndSlow" xml:space="preserve"><value>0.8x · ゆっくり</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <!-- /Slice 115 -->

@@ -299,7 +299,7 @@
   <data name="ReportProblem_TryAgain" xml:space="preserve"><value>Noch einmal versuchen</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Lesetempo</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Langsamer ist für die Kleinen leichter</value></data>
-  <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · langsam</value></data>
+  <data name="Speed_EndSlow" xml:space="preserve"><value>0,8x · langsam</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <!-- /Slice 115 -->
