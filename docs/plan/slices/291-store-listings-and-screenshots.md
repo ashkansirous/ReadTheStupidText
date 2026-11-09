@@ -79,7 +79,8 @@ Facts from plan.md, to be re-read live before each edit (the `store-listing` age
 
 - **Content rights:** "sure", so the draft's `DOES_NOT_USE_THIRD_PARTY_CONTENT` is accepted.
 - **Parental controls:** the grown-ups gate counts as a parental control, so `parentalControls` is true.
-- **Review contact email:** elinsoftuk@gmail.com. The phone number Apple asks for is still missing.
+- **Review contact email:** elinsoftuk@gmail.com. Phone: given by the user on 2026-11-09 and kept only in the private secrets store
+  (`D:\secrets\dinoreader\secrets.env`, `APP_REVIEW_CONTACT_PHONE`). Never write it in this public repo.
 - **Kids Category: off for now** (user). Claude's reasons were wrong: Dino has no ML Kit (Slice 305), collects
   nothing personal, and everything (settings, links, update page) is already behind the grown-ups gate. Turning it on
   later is the user's call; the only real open point is that Apple's age bands do not match "3 to 9".
@@ -88,7 +89,7 @@ Facts from plan.md, to be re-read live before each edit (the `store-listing` age
   scanning and adding books, translation, the voice download and the camera, all removed by Slice 278 (store books
   only, pre-made clips) and Slice 305. Rewrite the description, keywords and review notes from the current app before
   any push.
-- **Price:** free, **but the user wants in-app purchases**. That is new scope: what is sold is not decided, and
+- **Price:** free. **In-app purchases: not decided** (user, 2026-11-09); nothing is planned. If they come, it is new scope: what is sold is not decided, and
   nothing is planned or built for it (StoreKit on iOS and Play Billing on Android, the Paid Apps agreement in App
   Store Connect, a gate in front of purchases). Every "no in-app purchases" line in `docs/store-listings/dino/*`,
   `site/dino/privacy.html` and the Play/Microsoft listings would have to change when purchases ship.
