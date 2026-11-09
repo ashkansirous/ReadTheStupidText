@@ -74,3 +74,15 @@ Facts from plan.md, to be re-read live before each edit (the `store-listing` age
   stored anywhere. Item 4 waits for the user; a night wave does not write any App Store declaration.
 - **Play "Manage store presence" grant (item 1): later.** The user will grant it another time; until then the
   Play publish waits. Items that need neither (listing text in the repo, screenshots, Microsoft Store text) may be built.
+
+## User answers (2026-11-09, Dino App Store go-live)
+
+- **Content rights:** "sure", so the draft's `DOES_NOT_USE_THIRD_PARTY_CONTENT` is accepted.
+- **Parental controls:** the grown-ups gate counts as a parental control, so `parentalControls` is true.
+- **Review contact email:** elinsoftuk@gmail.com. The phone number Apple asks for is still missing.
+- **Kids Category:** the user asked for a recommendation. Claude recommended leaving it off (see the session answer). Not decided yet.
+- **Price:** free, **but the user wants in-app purchases**. That is new scope: what is sold is not decided, and
+  nothing is planned or built for it (StoreKit on iOS and Play Billing on Android, the Paid Apps agreement in App
+  Store Connect, a gate in front of purchases). Every "no in-app purchases" line in `docs/store-listings/dino/*`,
+  `site/dino/privacy.html` and the Play/Microsoft listings would have to change when purchases ship.
+- **Cartoon peril:** asked the user what they mean; still open.
