@@ -2,7 +2,7 @@
 
 *Planned.*
 
-**Touches:** `content/dino/*/high-res/**` (new), `.gitattributes`, `.github/scripts/ship-targets.mjs`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/skills/create-dino-story/prompts.md`, `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/146-dino-books-kid-friendly-language.md`, `docs/plan/slices/196-dino-default-view-per-book.md`, `docs/plan/slices/350-dino-high-res-pictures.md`
+**Touches:** `content/dino/*/high-res/**` (new), `content/dino/*/pictures/*.jpg` and `content/dino/*/cover.jpg` (item E, fixed pages only), `content/dino/*/book.json` (version bumps), `.gitattributes`, `.github/scripts/ship-targets.mjs`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/skills/create-dino-story/prompts.md`, `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/146-dino-books-kid-friendly-language.md`, `docs/plan/slices/196-dino-default-view-per-book.md`, `docs/plan/slices/350-dino-high-res-pictures.md`
 
 **Why.** The user wants to sell the books as printed Amazon books. Today's pictures are 896x1200 (a few are 1792x2400), which is too small for print. There is no rush: the app works as it is.
 
