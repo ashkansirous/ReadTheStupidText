@@ -7,7 +7,7 @@
 `src/DinoReader.App/*Page.xaml`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/CornerShell.cs`,
 `src/DinoReader.App/CornerTabs.cs`, `src/DinoReader.App/ReadingSession.cs`,
 `src/ReadTheStupidText.Application/Usage/**`, `tests/DinoReader.Tests/**`, `site/dino/privacy.html`, `STORE.md`,
-`docs/analytics/dino-session-queries.md`, `tools/usage-sessions/**`,
+`docs/analytics/dino-session-queries.md`, `tools/usage-sessions/**` (new),
 `docs/plan/slices/352-dino-screen-and-tap-events.md`
 
 ## Why
