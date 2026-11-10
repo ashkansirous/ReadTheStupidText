@@ -2,7 +2,7 @@
 
 *Planned.*
 
-**Touches:** `content/dino/*/high-res/**` (new), `.gitattributes`, `.github/scripts/ship-targets.mjs`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/skills/create-dino-story/prompts.md`, `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/146-dino-books-kid-friendly-language.md`, `docs/plan/slices/196-dino-default-view-per-book.md`, `docs/plan/slices/350-dino-high-res-pictures.md`
+**Touches:** `content/dino/*/high-res/**` (new), `content/dino/*/pictures/*.jpg` and `content/dino/*/cover.jpg` (item E, fixed pages only), `content/dino/*/book.json` (version bumps), `.gitattributes`, `.github/scripts/ship-targets.mjs`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/skills/create-dino-story/prompts.md`, `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/146-dino-books-kid-friendly-language.md`, `docs/plan/slices/196-dino-default-view-per-book.md`, `docs/plan/slices/350-dino-high-res-pictures.md`
 
 **Why.** The user wants to sell the books as printed Amazon books. Today's pictures are 896x1200 (a few are 1792x2400), which is too small for print. There is no rush: the app works as it is.
 
@@ -14,7 +14,7 @@
 - The shape stays tall, 3 wide by 4 high. During the test phase, check whether this fits one of Amazon's print page sizes, and tell the user.
 - **Copy, don't reinvent.** For each page, upload the old picture together with its prompt from the book's `art.md`, and ask for the same picture in higher quality. The pages listed under *Pages to fix* below are drawn again with the fix instead.
 - **Test phase first.** On one book, take the cover and one busy page with several characters (lion-and-mouse page 5, which also needs its fix). Run both through every image model Gemini offers the user, one at a time. Put the results side by side on one private comparison page, with pixel size and file size. **Then stop and discuss the choice with the user.** The full run starts only after the user has picked a model.
-- **Usage limit.** The user was at 98% of their weekly Claude usage and keeps the last 1%. So the session that runs the test phase stops when the test phase is done. The full run starts after the weekly reset.
+- **Usage limit.** The user keeps the last 1% of their weekly Claude usage: check it with the `usage-check` skill (`node ~/.claude/skills/usage-check/usage-check.mjs --stop-at 99`) before every picture, and stop at exit 3. On 2026-11-10 it read 98%, resetting 2026-11-10 17:00 UTC. The session that runs the test phase stops when the test phase is done.
 - **One prompt per Gemini chat.** Each picture gets its own new chat, so one picture can't influence the next. The only exception is patching a bad result. Then decide whether a new chat is better than continuing the old one. **No chat ever gets more than 3 picture requests, without exception.** This replaces the old "fresh chat every 3 pictures" rule for all Dino illustration work, not only this slice.
 - **Good Enough gets no words in its pictures (this reverses the 2026-10-29 decision).** The printed words were left over from the old feature that read text from pictures (OCR), which the app no longer has. Good Enough is **redrawn completely** with no text in any picture, signs included (its `art.md` line 22 names "Bright Stadium", "Great Views, Row C" and "Exit").
 
@@ -63,7 +63,7 @@
   - [ ] D3. Commit the book's `high-res/` folder (LFS) with a contact sheet for the user, and record the chats and sizes in the book's `art.md`.
   - Books: billy-goats-gruff, elves-and-shoemaker, freddy-and-the-slipper, gingerbread-man, goldilocks, good-enough, jack-and-the-beanstalk, lion-and-mouse, little-red-hen, red-riding-hood, three-little-pigs, tortoise-and-hare, town-mouse-country-mouse, ugly-duckling, x-marks-the-treasure.
 
-**Not in this slice:** this slice doesn't change the pictures inside the app or the store, or Good Enough's Picture-only default (Slice 196). Whether the fixed pictures should replace the app's copies is the user's call. It is asked once at planning time.
+- [ ] E. App copies (the user, 2026-11-10: yes). After the high-res run, the fixed pages (every page under *Pages to fix*, Good Enough included) replace the app's and store's own pictures as smaller copies made from the high-res files, through the normal picture-preparing step and a version bump per book. Good Enough's Picture-only default (Slice 196, `textInPictures`) is removed once its pictures have no text.
 
 **Verification:**
 
