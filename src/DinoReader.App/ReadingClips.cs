@@ -41,14 +41,14 @@ internal static class AnimalClipFiles
 		}
 	}
 
-	public static async Task EnsureAsync(IEnumerable<AnimalKind> kinds)
+	public static async Task EnsureAsync(IEnumerable<AnimalKind> kinds, string? language = null)
 	{
 		await Gate.WaitAsync();
 		try
 		{
 			foreach (AnimalKind kind in kinds.Where(k => AnimalSoundClips.Has(k) && PathOf(k) is null))
 			{
-				await CopyAsync(kind);
+				await CopyAsync(kind, language);
 			}
 		}
 		finally
@@ -57,7 +57,7 @@ internal static class AnimalClipFiles
 		}
 	}
 
-	private static async Task CopyAsync(AnimalKind kind)
+	private static async Task CopyAsync(AnimalKind kind, string? language)
 	{
 		string path = Path.Combine(Folder, AnimalSoundClips.FileNameOf(kind));
 		string partial = path + ".part";
@@ -74,7 +74,7 @@ internal static class AnimalClipFiles
 		}
 		catch (Exception ex)
 		{
-			DinoFallbacks.Report(FallbackArea.Speech, FallbackReason.AnimalClipUnplayable); // Slice 275 part 3: that animal's slot stays silent
+			DinoFallbacks.Report(FallbackArea.Speech, FallbackReason.AnimalClipCopyFailed, language); // Slice 275 part 3, split in Slice 351 (the player's failure is animal_clip_play_failed): that animal's slot stays silent
 			Debug.WriteLine($"Dino Reader animal clip {kind}: could not be prepared, that slot stays silent: {ex.Message}");
 		}
 	}

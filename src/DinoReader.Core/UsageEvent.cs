@@ -238,7 +238,7 @@ public static class IntroSteps
 /// <see cref="Count"/> and <see cref="DeviceCount"/> (Slice 273) are two optional whole numbers: a <c>fallback</c> count's number of times in the session, and a <c>read_voice</c> count's pieces read by clips (<see cref="Count"/>) and by the device voice (<see cref="DeviceCount"/>); left out of the JSON when null.
 /// <see cref="Seconds"/> (Slice 288) is the whole seconds of audio played since the previous paused or stopped row of the reading, on <c>read_paused</c> and <c>read_stopped</c> (always, 0 allowed; never on <c>book_listened</c>); left out of the JSON when null.
 /// </summary>
-public sealed record UsageEvent(string Name, string Book, string Language, string Source, bool HasRecording, string Version, string Platform, string Day, double SampleRate, string Detail = "", string? Session = null, int? Seq = null, int? Count = null, int? DeviceCount = null, int? Seconds = null)
+public sealed record UsageEvent(string Name, string Book, string Language, string Source, bool HasRecording, string Version, string Platform, string Day, double SampleRate, string Detail = "", string? Session = null, int? Seq = null, int? Count = null, int? DeviceCount = null, int? Seconds = null, string? UiLang = null, string? InstallAge = null, string? LaunchNo = null, int? SinceLaunch = null)
 {
     private const int PackageIdLength = 32;
     private const string DayFormat = "yyyy-MM-dd";
@@ -283,6 +283,82 @@ public sealed record UsageEvent(string Name, string Book, string Language, strin
     {
         string compact = (sourceId ?? string.Empty).Replace("-", string.Empty, StringComparison.Ordinal).ToLowerInvariant();
         return compact.Length == PackageIdLength && compact.All(Uri.IsHexDigit) ? compact : null;
+    }
+}
+
+/// <summary>
+/// The context every count carries (Slice 351): <see cref="UsageEvent.UiLang"/> (the app's screen language), <see cref="UsageEvent.InstallAge"/> and <see cref="UsageEvent.LaunchNo"/> (closed buckets from a first-launch date and a launch count that stay on the device, never sent)
+/// and <see cref="UsageEvent.SinceLaunch"/> (whole seconds since this launch started). No install id: the buckets cannot tell two installs apart. The Worker keeps the same closed lists.
+/// </summary>
+public static class UsageContext
+{
+    public const string AgeFirst = "first";
+    public const string AgeSameDay = "d0";
+    public const string AgeFirstWeek = "d1_7";
+    public const string AgeFirstMonth = "d8_30";
+    public const string AgeLater = "d31_plus";
+
+    public const string LaunchFirst = "1";
+    public const string LaunchFewer = "2_5";
+    public const string LaunchMany = "6_20";
+    public const string LaunchMost = "21_plus";
+
+    /// <summary>The cap of <see cref="UsageEvent.SinceLaunch"/>: one day.</summary>
+    public const int MaxSinceLaunch = 86_400;
+
+    private const int OneWeek = 7;
+    private const int OneMonth = 30;
+    private const int SecondLaunch = 2;
+    private const int SixthLaunch = 6;
+    private const int TwentyFirstLaunch = 21;
+    private const int FifthLaunch = 5;
+    private const int TwentiethLaunch = 20;
+
+    /// <summary>The age bucket of an install whose first launch was on <paramref name="firstLaunch"/>, seen at a launch on <paramref name="today"/>; <paramref name="launchNumber"/> 1 is the first launch itself.</summary>
+    public static string InstallAgeOf(DateOnly firstLaunch, DateOnly today, int launchNumber)
+    {
+        int days = Math.Max(0, today.DayNumber - firstLaunch.DayNumber);
+        return (launchNumber, days) switch
+        {
+            (<= 1, 0) => AgeFirst,
+            (_, 0) => AgeSameDay,
+            (_, <= OneWeek) => AgeFirstWeek,
+            (_, <= OneMonth) => AgeFirstMonth,
+            _ => AgeLater,
+        };
+    }
+
+    /// <summary>The launch-count bucket of the <paramref name="launchNumber"/>th launch (1 for the first).</summary>
+    public static string LaunchNoOf(int launchNumber) => launchNumber switch
+    {
+        < SecondLaunch => LaunchFirst,
+        <= FifthLaunch => LaunchFewer,
+        <= TwentiethLaunch => LaunchMany,
+        _ => LaunchMost,
+    };
+
+    /// <summary>Whole seconds since the launch started, from 0 up to <see cref="MaxSinceLaunch"/>.</summary>
+    public static int SinceLaunchOf(TimeSpan elapsed) => (int)Math.Clamp(Math.Floor(elapsed.TotalSeconds), 0, MaxSinceLaunch);
+}
+
+/// <summary>
+/// The two values kept on the device between launches (Slice 351): the day of the first launch and the number of launches so far. <see cref="Begin"/> counts a launch and
+/// gives back the new values to save and the buckets this launch's counts carry. Pure, so a test pins it; the app saves the values in preferences and never sends them.
+/// </summary>
+public static class LaunchHistory
+{
+    private const string DayFormat = "yyyy-MM-dd";
+
+    /// <summary>What a launch stamps on its counts, and what to save.</summary>
+    public readonly record struct Launch(string FirstDay, int Number, string InstallAge, string LaunchNo);
+
+    /// <summary>Counts a launch on <paramref name="today"/>; a missing or damaged <paramref name="storedFirstDay"/> or a count below 0 makes this the first launch.</summary>
+    public static Launch Begin(string? storedFirstDay, int storedLaunches, DateOnly today)
+    {
+        bool known = DateOnly.TryParseExact(storedFirstDay, DayFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly first) && storedLaunches >= 0;
+        int number = known ? storedLaunches + 1 : 1;
+        DateOnly firstDay = known ? first : today;
+        return new Launch(firstDay.ToString(DayFormat, CultureInfo.InvariantCulture), number, UsageContext.InstallAgeOf(firstDay, today, number), UsageContext.LaunchNoOf(number));
     }
 }
 

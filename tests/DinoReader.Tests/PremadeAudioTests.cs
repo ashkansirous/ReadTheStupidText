@@ -20,6 +20,17 @@ public class PremadeAudioTests
     private static string Entry(string hash, string clip, int index = 0) => $$"""{"index":{{index}},"sentence":0,"hash":"{{hash}}","voice":"Hali","direction":"","variant":"v","clip":"{{clip}}","text":"t"}""";
 
     [Fact]
+    public void Has_IsTrueOnlyForAPositionWithAClip_EvenWhenTheManifestHasAHole()
+    {
+        PremadeAudio audio = PremadeAudio.Parse(Manifest(Entry(GondeyeHash, "a.m4a", 0) + "," + Entry(SplashHash, "c.m4a", 2) + "," + Entry(SplashHash, "d.m4a", 3)));
+
+        Assert.True(audio.Has(0));
+        Assert.False(audio.Has(1)); // the hole is below Count (3) yet has no clip
+        Assert.True(audio.Has(3)); // and the last position is at or past Count
+        Assert.False(audio.Has(4));
+    }
+
+    [Fact]
     public void HashOf_MatchesTheGeneratorsOwnHash_ForFixedFarsiStrings()
     {
         Assert.Equal(GondeyeHash, PremadeAudio.HashOf(GondeyeText));

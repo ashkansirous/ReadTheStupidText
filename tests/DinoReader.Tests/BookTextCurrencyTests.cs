@@ -103,17 +103,55 @@ public sealed class BookTextCurrencyTests
     }
 
     [Fact]
-    public void A_silent_piece_with_only_missing_files_reports_clip_missing()
+    public void A_silent_piece_with_only_missing_files_reports_file_missing()
     {
         var misses = new ClipMisses();
         misses.Note(0, ClipMiss.FileMissing);
 
-        Assert.Equal(FallbackReason.ClipMissing, ClipMisses.SilentPieceReason(DeviceVoiceReason.ClipMissing, misses));
+        Assert.Equal(FallbackReason.FileMissing, ClipMisses.SilentPieceReason(DeviceVoiceReason.ClipMissing, misses));
+    }
+
+    [Fact]
+    public void A_silent_piece_the_pack_never_had_reports_no_clip_but_a_hash_miss_still_wins()
+    {
+        var misses = new ClipMisses();
+        misses.Note(0, ClipMiss.NoClip);
+        Assert.Equal(FallbackReason.NoClip, ClipMisses.SilentPieceReason(DeviceVoiceReason.ClipMissing, misses));
+
+        misses.Note(1, ClipMiss.TextMismatch);
+        Assert.Equal(FallbackReason.TextMismatch, ClipMisses.SilentPieceReason(DeviceVoiceReason.ClipMissing, misses));
+    }
+
+    [Theory]
+    [InlineData(DeviceVoiceReason.NoPack)]
+    [InlineData(DeviceVoiceReason.ClipMissing)]
+    public void A_silent_piece_of_an_own_book_reports_nothing_but_a_shelf_books_names_its_cause(DeviceVoiceReason reason)
+    {
+        Assert.Null(ClipMisses.SilentPieceReasonFor(false, reason, null));
+        Assert.Null(ClipMisses.SilentPieceReasonFor(false, reason, new ClipMisses()));
+        Assert.Equal(ClipMisses.SilentPieceReason(reason, null), ClipMisses.SilentPieceReasonFor(true, reason, null));
+    }
+
+    [Theory]
+    [InlineData(FallbackReason.NoPack)]
+    [InlineData(FallbackReason.PackFailed)]
+    [InlineData(FallbackReason.TextMismatch)]
+    public void A_whole_read_of_an_own_book_reports_no_pack_fallback_but_a_shelf_book_keeps_its_reason(string reason)
+    {
+        Assert.Null(ClipMisses.ReadReasonFor(false, reason));
+        Assert.Equal(reason, ClipMisses.ReadReasonFor(true, reason));
+    }
+
+    [Fact]
+    public void A_pack_with_nothing_looked_up_reports_clip_missing()
+    {
+        Assert.Equal(FallbackReason.ClipMissing, ClipMisses.SilentPieceReason(DeviceVoiceReason.ClipMissing, new ClipMisses()));
     }
 
     [Theory]
     [InlineData(DeviceVoiceReason.TextMismatch, FallbackReason.TextMismatch)]
-    [InlineData(DeviceVoiceReason.NoPack, FallbackReason.ClipMissing)]
+    [InlineData(DeviceVoiceReason.NoPack, FallbackReason.NoPack)]
+    [InlineData(DeviceVoiceReason.PackFailed, FallbackReason.PackFailed)]
     [InlineData(DeviceVoiceReason.ClipMissing, FallbackReason.ClipMissing)]
     public void With_no_pack_opened_the_read_reason_decides(DeviceVoiceReason reason, string expected)
     {

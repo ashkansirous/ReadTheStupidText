@@ -37,8 +37,8 @@ test("a batch of valid counts is written, one data point each, and answered with
   assert.equal(env.points.length, 2);
   assert.deepEqual(env.points[0], {
     indexes: ["book_opened"],
-    blobs: ["book_opened", BOOK, "en", "shelf", "no", "1.42.0", "android", "2026-10-25", "", "none", "", "", "", "", "", ""],
-    doubles: [2, -1, -1, -1, -1],
+    blobs: ["book_opened", BOOK, "en", "shelf", "no", "1.42.0", "android", "2026-10-25", "", "none", "", "", "", "", "", "", "none", "none", "none"],
+    doubles: [2, -1, -1, -1, -1, -1],
   });
   assert.equal(env.points[1].blobs[4], "yes");
 });
@@ -85,7 +85,7 @@ test("invalid counts are dropped one by one and unknown fields never reach the d
   const response = await handleEvents(post({ events: [...bad, extra] }), env, on);
   assert.equal(response.status, 204);
   assert.equal(env.points.length, 1);
-  assert.equal(env.points[0].blobs.length, 16);
+  assert.equal(env.points[0].blobs.length, 19);
   assert.ok(!JSON.stringify(env.points[0]).includes("secret"));
 });
 
@@ -133,7 +133,7 @@ test("only POST is answered", async () => {
 test("the path check and the parser agree on the shapes they accept", () => {
   assert.ok(isEventsPath("/api/events"));
   assert.ok(!isEventsPath("/api/events/"));
-  assert.deepEqual(parseEvent(shelfEvent), { ...shelfEvent, detail: "", session: "", seq: -1, count: -1, deviceCount: -1, seconds: -1 });
+  assert.deepEqual(parseEvent(shelfEvent), { ...shelfEvent, detail: "", session: "", seq: -1, count: -1, deviceCount: -1, seconds: -1, uiLang: "none", installAge: "none", launchNo: "none", sinceLaunch: -1 });
   assert.equal(parseEvent({ ...shelfEvent, language: "pt-BR" })?.language, "pt-BR");
   assert.equal(toDataPoint(shelfEvent).indexes.length, 1);
 });
@@ -443,7 +443,7 @@ test("Dino stamps the batch's country and device facts on every point as blob10-
   const response = await handleEvents(dinoPost({ schemaVersion: 1, device, events: [shelfEvent, ownEvent] }, "GB"), env, on);
   assert.equal(response.status, 204);
   for (const point of env.points) assert.deepEqual(point.blobs.slice(9, 15), ["GB", "15", "tablet", "arm64", "5-8", "4-6"]);
-  assert.deepEqual(env.points[0].doubles, [2, -1, -1, -1, -1]);
+  assert.deepEqual(env.points[0].doubles, [2, -1, -1, -1, -1, -1]);
 });
 
 test("a batch with no device object is still written, with the device fields empty (an older build)", async () => {
@@ -662,9 +662,9 @@ test("read_stopped takes exactly the nine closed reasons and drops any other", (
 test("a valid session id and sequence are written as blob16 and double2", async () => {
   const env = recorder();
   await handleEvents(post({ events: [{ ...shelfEvent, session: SESSION, seq: 7 }, { ...shelfEvent, session: SESSION, seq: 0 }] }), env, on);
-  assert.equal(env.points[0].blobs.length, 16);
+  assert.equal(env.points[0].blobs.length, 19);
   assert.equal(env.points[0].blobs[15], SESSION);
-  assert.deepEqual(env.points[0].doubles, [2, 7, -1, -1, -1]);
+  assert.deepEqual(env.points[0].doubles, [2, 7, -1, -1, -1, -1]);
   assert.equal(env.points[1].doubles[1], 0);
 });
 
@@ -675,7 +675,7 @@ test("a malformed session id is dropped from the row, never the event", async ()
     await handleEvents(post({ events: [{ ...shelfEvent, session, seq: 3 }] }), env, on);
     assert.equal(env.points.length, 1, String(session));
     assert.equal(env.points[0].blobs[15], "", String(session));
-    assert.deepEqual(env.points[0].doubles, [2, -1, -1, -1, -1], `${String(session)}: a sequence without a valid session is dropped too`);
+    assert.deepEqual(env.points[0].doubles, [2, -1, -1, -1, -1, -1], `${String(session)}: a sequence without a valid session is dropped too`);
   }
 });
 
@@ -692,7 +692,48 @@ test("a malformed sequence is dropped from the row and keeps the session id", as
 test("a count from a build without the fields still writes an empty session and sequence", () => {
   const point = toDataPoint(parseEvent(shelfEvent));
   assert.equal(point.blobs[15], "");
-  assert.deepEqual(point.doubles, [2, -1, -1, -1, -1]);
+  assert.deepEqual(point.doubles, [2, -1, -1, -1, -1, -1]);
+});
+
+// ---- Who and when on every row (Slice 351) -----------------------------------------------------------------------------------
+
+const CONTEXT = { uiLang: "fa", installAge: "d1_7", launchNo: "2_5", sinceLaunch: 95 };
+
+test("the who-and-when fields are written as blob17-blob19 and double6, blob20 stays free", async () => {
+  const env = recorder();
+  await handleEvents(post({ events: [{ ...shelfEvent, name: "app_opened", book: "none", source: "none", ...CONTEXT }] }), env, on);
+  assert.equal(env.points.length, 1);
+  assert.deepEqual(env.points[0].blobs.slice(16), ["fa", "d1_7", "2_5"]);
+  assert.equal(env.points[0].blobs.length, 19);
+  assert.equal(env.points[0].doubles[5], 95);
+});
+
+test("every closed install age and launch bucket is accepted, and a store_download carries them too", async () => {
+  const download = { ...shelfEvent, name: "store_download", detail: "none" };
+  for (const installAge of ["first", "d0", "d1_7", "d8_30", "d31_plus"]) assert.equal(parseEvent({ ...download, installAge })?.installAge, installAge);
+  for (const launchNo of ["1", "2_5", "6_20", "21_plus"]) assert.equal(parseEvent({ ...download, launchNo })?.launchNo, launchNo);
+  assert.equal(parseEvent({ ...download, ...CONTEXT })?.uiLang, "fa");
+});
+
+test("a missing who-and-when field is stored as none / -1 and keeps the event (an older build)", () => {
+  const event = parseEvent(shelfEvent);
+  assert.deepEqual([event?.uiLang, event?.installAge, event?.launchNo, event?.sinceLaunch], ["none", "none", "none", -1]);
+});
+
+test("an invalid who-and-when field is dropped from the row, never the event", () => {
+  const bad = { uiLang: "xx", installAge: "yesterday", launchNo: "3", sinceLaunch: -1 };
+  const event = parseEvent({ ...shelfEvent, ...bad });
+  assert.deepEqual([event?.uiLang, event?.installAge, event?.launchNo, event?.sinceLaunch], ["none", "none", "none", -1]);
+  for (const sinceLaunch of [1.5, "9", null, 86_401, Number.NaN]) assert.equal(parseEvent({ ...shelfEvent, sinceLaunch })?.sinceLaunch, -1, String(sinceLaunch));
+  for (const sinceLaunch of [0, 86_400]) assert.equal(parseEvent({ ...shelfEvent, sinceLaunch })?.sinceLaunch, sinceLaunch);
+  assert.equal(parseEvent({ ...shelfEvent, uiLang: "en-US" })?.uiLang, "none");
+});
+
+test("the new Slice 351 fallback reasons are accepted for their areas and the old reasons stay", () => {
+  const fallback = (detail) => parseEvent({ ...shelfEvent, name: "fallback", detail });
+  for (const detail of ["premade_audio:no_pack", "premade_audio:pack_failed", "premade_audio:file_missing", "premade_audio:no_clip", "premade_audio:text_mismatch", "premade_audio:clip_missing", "speech:animal_clip_copy_failed", "speech:animal_clip_play_failed", "speech:animal_clip_unplayable"]) {
+    assert.equal(fallback(detail)?.detail, detail, detail);
+  }
 });
 
 test("Read The Stupid Text rows never carry a session id, even when a body sends one", () => {

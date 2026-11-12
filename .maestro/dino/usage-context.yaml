@@ -1,0 +1,33 @@
+# Slice 351: every queued count carries who and when as closed values: the screen language, the install-age and launch-count buckets, and the seconds since this launch started.
+# The Debug build writes `[Usage] seq=<n> <name> session=<id> uiLang=<code> installAge=<bucket> launchNo=<bucket> sinceLaunch=<seconds>` for each count that reached the queue (UsageCounter.Stamp); nothing is sent, the harness off switch stays on.
+# The app is launched twice (no clearState, so the first-launch day and the launch count stay): the second launch is never `first` and never launch `1`, which the log shows as a rising launchNo.
+# expect-log: HOOK skip-first-run ok
+# expect-log: uiLang=en
+# expect-log: installAge=d0
+# expect-log: launchNo=2_5
+# The matcher (Test-LogMarker) ends a marker where no word character follows, so a bare `installAge=` never matches `installAge=d0`: the markers carry the values this run fixes (data kept from the first launch, same day, second launch).
+# sinceLaunch changes per line, so it has no marker here; its presence is read in the log by the device stage.
+# Fails against a build without the context: those fields are not in any `[Usage] seq=` line.
+# Not yet verified on a device: the exact bucket of a fresh install (installAge=first launchNo=1) needs the app data cleared by hand once; the device stage reads the first `[Usage] seq=1 app_opened` line of a fresh install for it.
+appId: uk.sirous.dinoreader.dbg
+name: Counts carry the screen language, install age, launch count and seconds since launch (Dino)
+---
+- launchApp:
+    # No clearState: the app keeps its data, so the second launch below counts as a later launch.
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+# launchApp-restart: a second launch of the app is the point of this flow (the launch count must rise), so the app is stopped and started again
+- launchApp:
+    stopApp: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000

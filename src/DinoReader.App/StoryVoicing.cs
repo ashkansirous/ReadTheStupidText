@@ -84,7 +84,12 @@ public sealed class StoryVoicing
 		{
 			use = use with { FallbackReason = null }; // a pack was opened but no clip was looked up (nothing spoken was checked): not a fallback
 		}
+		else if (clips == 0 && missRecorded && use.FallbackReason is not null)
+		{
+			use = use with { FallbackReason = ClipMisses.SilentPieceReason(reason, why.Misses) }; // Slice 351: the read's own fallback names the real cause (text_mismatch, no_clip or file_missing), like its silent pieces
+		}
 
+		use = use with { FallbackReason = ClipMisses.ReadReasonFor(UsageEvent.ShelfId(story.SourceId) is not null, use.FallbackReason) }; // Slice 351 review: an own book reports no pack fallback, on any path
 		AudioPackLog.Write($"{story.SourceId ?? UsageSource.Own}: read voice {use.Detail} ({clips} pieces by clip, {device} with no clip)");
 		return use;
 	}
