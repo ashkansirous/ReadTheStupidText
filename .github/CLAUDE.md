@@ -63,6 +63,13 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 > TestFlight on merge (the Store only if a Windows path also changed, see above). Expect that, or batch such
 > edits. (Slice 70: docs/plan/slices/70-split-build-pipeline.md)
 
+> **The SDK is pinned in `global.json`** (`10.0.401`, `rollForward: latestPatch`, so only the 10.0.4xx band): runner images
+> now also carry a .NET 11 SDK, which the `dotnet` muxer would pick over `setup-dotnet`'s install and break the
+> workload install (manifest conflict). Every workflow's `setup-dotnet` installs a 10.0.4xx SDK (explicit version, or
+> `global-json-file: global.json`); a workload install logs `dotnet --version` before it (the Windows Dino job installs into its own
+> `DOTNET_ROOT` and checks the version itself). Moving to another feature band means changing `global.json`, the workflows'
+> versions and the workload-set versions together, including `dinoreader-windows.yml`'s job `env` `SDK_VERSION` and `WORKLOAD_SET` (its own `DOTNET_ROOT`, outside `global.json`'s reach). (Slice 353: docs/plan/slices/353-ci-sdk-pin-and-vm-test-package.md)
+
 > **Dino CI rule:** the `dinoreader` paths run only the `test-dinoreader`
 > job (ubuntu), never the version, release or store jobs. Keep Dino paths out of
 > the core paths in `ship-targets.mjs`. (Slice 59: docs/plan/slices/59-dialogue-parser-voice-caster.md)

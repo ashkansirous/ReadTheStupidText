@@ -47,23 +47,11 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 
-	<!-- Camera for scanning a printed book: the VisionKit document scanner and the MediaPicker
-	     photo path both crash the app without this string. Kept (Slice 349 work item 4): Mobile.Shared's VisionKitDocumentScanner is compiled into this binary and the build is not trimmed,
-	     so App Store Connect's static check would flag a missing purpose string. -->
-	<key>NSCameraUsageDescription</key>
-	<string>The camera photographs the pages of a book so the app can read them aloud. Photos are processed on the device and never uploaded.</string>
-
-	<!-- MediaPicker reads the photo library when a grown-up picks pictures of a book; the app
-	     never writes to it, but the add-only key is declared too so MAUI's MediaPicker cannot
-	     trip App Store validation. -->
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>The app reads pictures you choose from your library, only to read the text in them aloud. Photos are processed on the device and never uploaded.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>The app does not save anything to your photo library.</string>
+	<!-- No camera or photo-library purpose strings (Slice 349 work item 4): Dino Reader scans nothing, and Mobile.Shared's
+	     VisionKitDocumentScanner (the only camera/photo API user) is excluded from this iOS build (DropSpeechEngineSources). -->
 
 	<!-- The microphone is asked for only on the Record screen, behind the grown-up gate, when a parent records their own reading of a
-	     page (Slice 111). The recording stays on the device (and in a backup the grown-up makes) and is never uploaded. MAUI's MediaPicker
-	     also declares this key for video capture, which the app does not use. -->
+	     page (Slice 111). The recording stays on the device (and in a backup the grown-up makes) and is never uploaded. -->
 	<key>NSMicrophoneUsageDescription</key>
 	<string>A parent can record their own voice reading a page of a story. The recording stays on this device and is never uploaded.</string>
 </dict>
