@@ -1,9 +1,10 @@
 # Slice 351 — Dino: every usage row says who and when, and audio failures say why
 
-*Planned (2026-11-10).*
+*In progress (wave 2026-11-12), draft PR.*
 
 **Touches:** `worker/events.ts`, `worker/events*.test.mjs`, `worker/CLAUDE.md`, `src/DinoReader.App/UsageCounter.cs`,
-`src/DinoReader.App/Usage*.cs`, `src/DinoReader.App/ReadingSession.cs`, `src/DinoReader.App/ClipMisses.cs`,
+`src/DinoReader.App/Usage*.cs`, `src/DinoReader.App/ReadingSession.cs`, `src/DinoReader.Core/ClipMisses.cs`,
+`src/DinoReader.App/AudioPackStore.cs`, `tests/DinoReader.Tests/AudioPackStoreTests.cs`,
 `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/ReadingClips.cs`,
 `src/ReadTheStupidText.Application/Usage/**`, `tests/DinoReader.Tests/**`, `tests/ReadTheStupidText.Tests/**`,
 `site/dino/privacy.html`, `STORE.md`, `docs/analytics/dino-voice-queries.md`, `docs/analytics/dino-session-queries.md`,
@@ -43,6 +44,15 @@ What the code on `origin/main` (= dino-v1.123.3) does today, checked 2026-11-10:
 
 Decided with the user (2026-11-10): **no install id.** First launch / returning and install age go in as closed
 buckets, so the privacy page's "no install id" stays true.
+
+## Premises checked (2026-11-12, ground-in-code on origin/main)
+
+- Dino data point `worker/events.ts:422-437` (`toDataPoint`) uses blobs up to 16 and doubles up to 5: blob17-20 and
+  double6 are free. The comment at `events.ts:661-663` is RTST's own 20-blob layout; not touched.
+- `FALLBACK_REASONS` `worker/events.ts:66`; `FallbackReason` in `src/ReadTheStupidText.Application/Usage/FallbackKind.cs:59`
+  (`ClipMissing` :65, `All` :248); kept equal by `tests/DinoReader.Tests/UsageFallbackTests.cs:107` and
+  `tests/ReadTheStupidText.Tests/UsageFallbackTests.cs:86`. Stamp in `UsageCounter.cs:346`.
+- The `chore/feedback-loop-2026-11-08-1703` worktree is uncommitted docs only (no PR, idle since 2026-11-08); nothing to rebase on.
 
 ## Work
 
