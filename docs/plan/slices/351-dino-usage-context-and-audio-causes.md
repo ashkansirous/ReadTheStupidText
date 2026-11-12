@@ -1,6 +1,6 @@
 # Slice 351 — Dino: every usage row says who and when, and audio failures say why
 
-*Built (PR #1014, wave 2026-11-12).*
+*Built, merged as PR #1014 (008d18c4).*
 
 **Touches:** `worker/events.ts`, `worker/events*.test.mjs`, `worker/CLAUDE.md`, `src/DinoReader.App/UsageCounter.cs`,
 `src/DinoReader.App/Usage*.cs`, `src/DinoReader.Core/UsageEvent.cs`, `src/DinoReader.App/ReadingSession.cs`, `src/DinoReader.Core/ClipMisses.cs`,
@@ -167,7 +167,7 @@ Evidence: `D:/ReadTheStupidText-worktrees/reviews/w47-device/s351/` and `.../rer
 - RTST smoke `usage-fallback-swallowed`: PASS.
 - The rerun of `usage-context` failed only on `uiLang=en`: another slice's flow had left the emulator app in Arabic, and the line showed `uiLang=ar`, correct for that state. The flow assumes an English UI.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-12)
 
 - Every Dino usage row carries `blob17` uiLang, `blob18` installAge, `blob19` launchNo and `double6` sinceLaunch (`worker/events.ts`, `src/DinoReader.App/UsageCounter.cs`); `blob20` is reserved for Slice 352's screen, do not use it. (Slice 351: docs/plan/slices/351-dino-usage-context-and-audio-causes.md)
 - An own book (no shelf id) sends no `premade_audio` fallback for a silent piece: that is an expected state (`src/DinoReader.Core/ClipMisses.cs`). (Slice 351: docs/plan/slices/351-dino-usage-context-and-audio-causes.md)
