@@ -36,8 +36,11 @@ internal sealed record BookInfo(
     BookKind Kind, string Id, string Title, int Version, int AgeMin, int AgeMax, string Author, string Credits, int Colour, string Added, int Order,
     string[]? Characters, AuthoredCharacter[]? Cast, Dictionary<string, AnimalKind>? Animals, string[]? NotAnimals, string? ContentHash, bool? TextInPictures = null,
     Dictionary<string, string>? CreditsByLanguage = null, string? StoryBy = null, bool? Retold = null, string? Illustration = null,
-    string[]? Tags = null)
+    string[]? Tags = null, string? Access = null, string? ProductId = null)
 {
+    /// <summary>Slice 346: the closed set <c>access</c> may hold. A book with no <c>access</c> is paid; only <c>free</c> is free.</summary>
+    public static readonly string[] AccessValues = ["free", "paid"];
+
     /// <summary>The book's silent back cover (Slice 237) from <c>storyBy</c>, <c>retold</c>, <c>illustration</c> and the month of <see cref="Added"/>; null when it cannot be made (<c>check</c> fails such a book).</summary>
     [JsonIgnore]
     public BackCover? BackCover => DinoReader.Core.BackCover.TryCreate(StoryBy, Retold == true, Illustration, Added);
@@ -190,6 +193,8 @@ internal static class Books
             _ when info.Kind == BookKind.Starter && info.ContentHash is null => "a starter needs contentHash (run stamp)",
             _ when CreditsByLanguageProblem(info.CreditsByLanguage) is { } credits => credits,
             _ when TagsProblem(info.Tags) is { } tags => tags,
+            _ when info.Access is not null && !BookInfo.AccessValues.Contains(info.Access, StringComparer.Ordinal) => $"access must be one of {string.Join(", ", BookInfo.AccessValues)} (or left out for paid), not \"{info.Access}\"",
+            _ when info.ProductId is not null && !System.Text.RegularExpressions.Regex.IsMatch(info.ProductId, "^[A-Za-z0-9][A-Za-z0-9._-]{2,99}$") => $"productId \"{info.ProductId}\" is not a store product id",
             _ when !DateOnly.TryParseExact(info.Added, AddedFormat, out _) => $"added must be {AddedFormat}",
             _ when string.IsNullOrWhiteSpace(info.StoryBy) => "storyBy is empty (the back cover needs who wrote the story; \"traditional\" for a tale nobody owns)",
             _ when DinoReader.Core.BackCover.IsTraditional(info.StoryBy) && info.Retold != true => "a traditional tale must be retold: true",

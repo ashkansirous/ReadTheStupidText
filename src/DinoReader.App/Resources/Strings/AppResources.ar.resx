@@ -357,4 +357,20 @@
   <data name="BackCover_Months" xml:space="preserve"><value>يناير|فبراير|مارس|أبريل|مايو|يونيو|يوليو|أغسطس|سبتمبر|أكتوبر|نوفمبر|ديسمبر</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>٠١٢٣٤٥٦٧٨٩</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} و{1}</value></data>
+  <data name="Store_BuyFor" xml:space="preserve"><value>شراء {0}</value></data>
+  <data name="Store_BuyStory" xml:space="preserve"><value>شراء {0} مقابل {1}</value></data>
+  <data name="Store_ConnectToBuy" xml:space="preserve"><value>اتصل بالإنترنت للشراء</value></data>
+  <data name="Store_Waiting" xml:space="preserve"><value>في انتظار الموافقة</value></data>
+  <data name="Store_RestorePurchases" xml:space="preserve"><value>استعادة المشتريات</value></data>
+  <data name="Store_RedeemCode" xml:space="preserve"><value>استبدال رمز</value></data>
+  <data name="Store_BuyFailed" xml:space="preserve"><value>لم تتم عملية الشراء. حاول مرة أخرى.</value></data>
+  <data name="Store_FooterPaid" xml:space="preserve"><value>بعض الكتب لها ثمن بسيط. تُشترى عبر حساب المتجر الخاص بك، ولا يُرسل إلينا أي شيء عنك أو عن طفلك.</value></data>
+  <data name="Store_Restored" xml:space="preserve"><value>تم فحص مشترياتك. يمكنك الآن الحصول من المتجر على الكتب التي تملكها.</value></data>
+  <data name="Wait_BuyingBook" xml:space="preserve"><value>في انتظار المتجر…</value></data>
+  <data name="Wait_CheckingPurchases" xml:space="preserve"><value>جارٍ فحص مشترياتك…</value></data>
+  <data name="Backup_Missing" xml:space="preserve"><value>كتب تُستعاد من المتجر</value></data>
+  <data name="Backup_MissingNote" xml:space="preserve"><value>تعود الكتب المجانية من تلقاء نفسها. أما الكتاب الذي اشتريته فاضغط «استعادة المشتريات» في المتجر ثم استعد هذه النسخة الاحتياطية مرة أخرى.</value></data>
+  <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>تسجيلات قصتك وإعداداتها في ملف واحد. أما الكتاب نفسه فيعود من المتجر. احفظه في Drive أو الملفات أو أرسله إلى نفسك.</value></data>
+  <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>تسجيلات القصص الـ {0} وإعداداتها في ملف واحد. أما الكتب نفسها فتعود من المتجر. احفظه في Drive أو الملفات أو أرسله إلى نفسك.</value></data>
+  <data name="Backup_RestoreBodyState" xml:space="preserve"><value>يعيد التسجيلات والإعدادات من ملف ويجلب الكتب من المتجر مرة أخرى. الكتب المشتراة تحتاج أولاً إلى استعادة المشتريات.</value></data>
 </root>

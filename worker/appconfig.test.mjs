@@ -5,6 +5,14 @@ import assert from "node:assert/strict";
 import { APP_CONFIG_KEY, DEFAULT_CONFIG, RTST_APP_CONFIG_KEY, handleAppConfig, isAppConfigPath, parseAppConfig } from "./appconfig.ts";
 import { resolveSite, Product } from "./downloads.ts";
 
+test("paidBooks is on only for a literal true; missing, malformed or truthy-but-not-true is off (Slice 346)", () => {
+  assert.deepEqual(DEFAULT_CONFIG.paidBooks, { enabled: false });
+  assert.deepEqual(parseAppConfig({ paidBooks: { enabled: true } }).paidBooks, { enabled: true });
+  for (const bad of [undefined, null, "true", 1, [], {}, { enabled: "true" }, { enabled: 1 }, { enabled: false }]) {
+    assert.deepEqual(parseAppConfig({ paidBooks: bad }).paidBooks, { enabled: false }, JSON.stringify(bad));
+  }
+});
+
 function bucketWith(text) {
   return {
     async get(key) {

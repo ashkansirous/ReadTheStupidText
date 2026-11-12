@@ -67,5 +67,5 @@ public sealed class AppConfigClient
 	/// Fetches the config and keeps it, at most once per 15 minutes (one minute after a failure) and never twice at once (a call while one runs waits for that one).
 	/// Any failure, or a body that is not a served config, leaves the copy in force as it was; this never throws.
 	/// </summary>
-	public Task RefreshAsync(CancellationToken cancel = default) => _client.RefreshAsync(cancel);
+	public Task RefreshAsync(CancellationToken cancel = default, bool reportFallback = true) => _client.RefreshAsync(cancel, reportFallback);
 }

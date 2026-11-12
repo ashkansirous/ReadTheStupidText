@@ -204,6 +204,8 @@ public sealed class ParentRecordingTests : IDisposable
 
         zip.Position = 0;
         FileStoryLibrary target = Library("restored");
+        // the book comes from the store (a store book has a source id, so the shelf lists it); the backup brings the recordings
+        await target.AddAsync(story with { Recordings = null, UseRecordings = false, SourceId = StoryIds.New() });
         await StoryBackupReader.RestoreAsync(zip, target);
 
         Story? restored = await target.GetAsync(story.Id);

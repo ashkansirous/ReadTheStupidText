@@ -47,6 +47,10 @@
                         </Border.GestureRecognizers>
                     </Border>
 
+                    <!-- Slice 346: a paid book that cannot be bought right now (no price known, or waiting for approval) shows one calm line instead of a button. -->
+                    <Label Grid.Column="2" IsVisible="{Binding HasNote}" Text="{Binding NoteText}" FontSize="12.5" TextColor="{StaticResource Muted}" MaximumWidthRequest="110"
+                           HorizontalTextAlignment="End" VerticalOptions="Center" />
+
                     <!-- Downloading: an 88 px pill whose fill grows left to right under the percentage. -->
                     <Border Grid.Column="2" IsVisible="{Binding IsDownloading}" WidthRequest="88" HeightRequest="44" BackgroundColor="{StaticResource BrandTint}"
                             StrokeThickness="0" VerticalOptions="Center" SemanticProperties.Description="{Binding ProgressHint}">
@@ -71,12 +75,12 @@
         </DataTemplate>
     </ContentView.Resources>
 
-    <Grid>
+    <Grid x:Name="StoreRoot">
         <ActivityIndicator x:Name="LoadingView" IsRunning="True" Color="{StaticResource Brand}" HorizontalOptions="Center"
                            VerticalOptions="Center" />
 
         <!-- Screen 21: the list and the privacy line. -->
-        <Grid x:Name="ListPanel" RowDefinitions="Auto,Auto,*,Auto" IsVisible="False">
+        <Grid x:Name="ListPanel" RowDefinitions="Auto,Auto,*,Auto,Auto" IsVisible="False">
             <!-- Slice 112 (mock frame 47): age chips (Google Play's bands) and the author picker; filtering is on the phone. -->
             <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Margin="0,0,0,10">
                 <HorizontalStackLayout x:Name="AgeChips" Spacing="8" />
@@ -105,7 +109,14 @@
             </CollectionView>
             <HorizontalStackLayout Grid.Row="3" Spacing="8" Padding="4,10,4,14">
                 <local:IconView Kind="Lock" Color="{StaticResource Muted}" Size="16" StrokeWidth="2" VerticalOptions="Start" Margin="0,1,0,0" />
-                <Label Text="{x:Static res:AppResources.Store_Footer}" FontSize="12.5" LineHeight="1.4" TextColor="{StaticResource Body}" />
+                <Label x:Name="FooterLabel" Text="{x:Static res:AppResources.Store_Footer}" FontSize="12.5" LineHeight="1.4" TextColor="{StaticResource Body}" />
+            </HorizontalStackLayout>
+            <!-- Slice 346: shown only while books are sold (the remote switch). Both open the store's own screens; the grown-up corner is already behind the gate. -->
+            <HorizontalStackLayout Grid.Row="4" x:Name="PurchaseActions" IsVisible="False" Spacing="10" Padding="4,0,4,14">
+                <Button x:Name="RestoreButton" Text="{x:Static res:AppResources.Store_RestorePurchases}" HeightRequest="44" CornerRadius="22" Padding="20,0" FontSize="14" FontAttributes="Bold"
+                        BackgroundColor="White" TextColor="{StaticResource Brand}" BorderColor="{StaticResource MergeBorder}" BorderWidth="2" Clicked="OnRestorePurchasesClicked" />
+                <Button x:Name="RedeemButton" Text="{x:Static res:AppResources.Store_RedeemCode}" HeightRequest="44" CornerRadius="22" Padding="20,0" FontSize="14" FontAttributes="Bold"
+                        BackgroundColor="White" TextColor="{StaticResource Brand}" BorderColor="{StaticResource MergeBorder}" BorderWidth="2" Clicked="OnRedeemCodeClicked" />
             </HorizontalStackLayout>
         </Grid>
 

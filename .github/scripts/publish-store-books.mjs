@@ -368,6 +368,45 @@ export function reconcileListen(language, info, liveInfo, folder, fileExists = e
     return without;
 }
 
+export const BOOK_ACCESS = ['free', 'paid'];
+export const BOOK_PRODUCT_PREFIX = 'uk.sirous.dinoreader.book.';
+
+/** Pure (Slice 346): what a book's `book.json` says about selling it: `access` is `free` only when it says so (default paid), `productId` its own or `uk.sirous.dinoreader.book.<stem>`. */
+export function accessOf(info, stem) {
+    const productId = typeof info?.productId === 'string' && info.productId.trim() !== '' ? info.productId.trim() : `${BOOK_PRODUCT_PREFIX}${stem}`;
+    return { access: info?.access === 'free' ? 'free' : 'paid', productId };
+}
+
+/** Pure (Slice 346): meta.json text carrying `access` and `productId`. Returns the text itself when it already has exactly those values, or when it is unreadable. */
+export function withAccess(metaText, fields) {
+    let meta;
+    try {
+        meta = JSON.parse(metaText);
+    } catch {
+        return metaText;
+    }
+    if (meta.access === fields.access && meta.productId === fields.productId) return metaText;
+    return `${JSON.stringify({ ...meta, access: fields.access, productId: fields.productId }, null, 2)}\n`;
+}
+
+/** Writes each built book's `access` and `productId` (from its content folder's book.json, found by story id) into its built meta.json; `contentById` maps a story id to `{ stem, info }`. A built book with no content folder is left as it is. */
+export function applyAccessToBuiltMetas(root, built, contentById) {
+    for (const { id } of built) {
+        const path = join(root, id, META_FILE);
+        const content = contentById.get(id);
+        if (!content || !existsSync(path)) continue;
+        const text = readFileSync(path, 'utf8');
+        const next = withAccess(text, accessOf(content.info, content.stem));
+        if (next !== text) writeFileSync(path, next);
+    }
+}
+
+function readContentById() {
+    const stems = readdirSync(CONTENT_ROOT, { withFileTypes: true }).filter((entry) => entry.isDirectory() && existsSync(join(CONTENT_ROOT, entry.name, BOOK_FILE))).map((entry) => entry.name);
+    const infos = stems.map((stem) => ({ stem, info: JSON.parse(readFileSync(join(CONTENT_ROOT, stem, BOOK_FILE), 'utf8')) }));
+    return new Map(infos.map((content) => [String(content.info.id).toLowerCase(), content]));
+}
+
 /** Rewrites each built book's meta.json without the audio packs that are neither live nor built here (see pruneUnbuiltAudio); logs each dropped pack. */
 function pruneBuiltMetas(root, built, live) {
     for (const { id } of built) {
@@ -812,6 +851,7 @@ async function main() {
     const built = readBuilt(root);
     const bucketAudio = dryRun && !args.includes('--bucket-state') ? () => null : bucketAudioOf(args); // Slice 281: which tracks the bucket's meta.json lists (read once, by --live-state)
     const live = withBucketListen(await fetchLive(args, process.env), built.map((book) => book.id), bucketAudio);
+    applyAccessToBuiltMetas(root, built, readContentById()); // Slice 346: free or paid and the product id, from book.json; also on --dry-run so the plan matches
     pruneBuiltMetas(root, built, live); // also on --dry-run (it only edits the local built folder), so the plan matches the real run
     const complete = completeIdsOf(args, !dryRun); // Slice 277: fail closed, only a book with a complete audio verdict uploads anything
     const planned = planStoreUploads(built, live);

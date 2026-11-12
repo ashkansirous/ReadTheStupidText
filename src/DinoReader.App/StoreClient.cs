@@ -28,8 +28,14 @@ public enum DownloadOutcome
 /// temp file first and imported into the library only when whole, so a dropped one leaves nothing on the shelf (the importer writes
 /// <c>story.json</c> last).
 /// </summary>
-public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, IFallbackSink? fallbacks = null)
+public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, BookSales sales, IFallbackSink? fallbacks = null)
 {
+	// Slice 346: the books of the last listing by id, so a request for a book's files (a download, an update, an audio pack) can carry that book's purchase proof.
+	private readonly System.Collections.Concurrent.ConcurrentDictionary<string, StoreItem> _listed = new(StringComparer.OrdinalIgnoreCase);
+
+	/// <summary>What the app sells and what the store account owns (Slice 346).</summary>
+	public BookSales Sales => sales;
+
 	public const string BaseAddress = "https://dinoreader.sirous.uk";
 
 	private const string ListPath = "/api/stories";
@@ -43,6 +49,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, IFa
 	private const long MaxCoverBytes = 5 * 1024 * 1024;
 	private const long MaxPackBytes = 400L * 1024 * 1024;
 	private static readonly TimeSpan ListTimeout = TimeSpan.FromSeconds(20);
+	private static readonly TimeSpan PurchaseReadBudget = TimeSpan.FromMilliseconds(400);
 	private static readonly TimeSpan StallTimeout = TimeSpan.FromSeconds(30);
 
 	// One client for the process; a redirect is never followed (a 3xx fails the call), so the app only ever talks to BaseAddress. Infinite timeout because every call sets its own (a download can legitimately take minutes).
@@ -64,13 +71,39 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, IFa
 	public async Task<ISet<string>?> CompleteInstalledIdsAsync() =>
 		library is FileStoryLibrary files ? await files.TryListSourceIdsAsync() : null;
 
+	// Slice 346: the platform store is the one owner of what is bought, so a listing asks it (in memory only), but it never holds the list up: a read the snapshot is still fresh for is skipped, and a slow one
+	// (Play setup up to 15 s, StoreKit products up to 20 s, a Windows Store ID key) is waited for only PurchaseReadBudget; it finishes in the background and raises the purchases' Changed event, which the
+	// store page listens to. The store page itself does its own full read behind its loading view.
+	private async Task ReadPurchasesAsync(IReadOnlyList<StoreItem> items, CancellationToken cancel)
+	{
+		if (!sales.Enabled || sales.Purchases.IsFresh)
+		{
+			return;
+		}
+
+		Task read = sales.Purchases.RefreshAsync(items, cancel);
+		await Task.WhenAny(read, Task.Delay(PurchaseReadBudget, cancel));
+	}
+
 	/// <summary>The readable stories the server lists, or <see cref="StoreLoadStatus.Offline"/> when it cannot be reached.</summary>
 	public async Task<StoreListing> ListAsync(CancellationToken cancel)
 	{
+		sales.RefreshConfigInBackground(); // never awaited: the listing uses the last known switch (default off) and this only fills it in for the next read
 #if DINO_TEST_BOOKS
 		if (Testing.TestStore.IsListing)
 		{
-			return await Testing.TestStore.ListAsync(); // Slice 261: the Debug test store (a scripted flow's fixture list), switched on by the test-store hook
+			StoreListing fixture = await Testing.TestStore.ListAsync(); // Slice 261: the Debug test store (a scripted flow's fixture list), switched on by the test-store hook
+			foreach (StoreItem item in fixture.Items)
+			{
+				_listed[item.Id] = item;
+			}
+
+			if (fixture.Status == StoreLoadStatus.Ok)
+			{
+				await ReadPurchasesAsync(fixture.Items, cancel); // Slice 346: the fake store of the fake-purchases hook answers here
+			}
+
+			return fixture;
 		}
 #endif
 		try
@@ -86,7 +119,14 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, IFa
 				Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // Slice 275: the listing lost books the server sent (malformed entries); the rest is shown
 			}
 
-			return new StoreListing(StoreLoadStatus.Ok, StoreCatalog.Readable(parsed));
+			IReadOnlyList<StoreItem> readable = StoreCatalog.Readable(parsed);
+			foreach (StoreItem item in readable)
+			{
+				_listed[item.Id] = item;
+			}
+
+			await ReadPurchasesAsync(readable, cancel);
+			return new StoreListing(StoreLoadStatus.Ok, readable);
 		}
 		catch (Exception ex) when (IsNetworkFailure(ex) && !cancel.IsCancellationRequested)
 		{
@@ -220,6 +260,14 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, IFa
 			Debug.WriteLine($"Dino Reader found no such book version in the store: {downloadUrl}");
 			TryDelete(part);
 			return new PackageFetch(null, true);
+		}
+		catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.PaymentRequired or System.Net.HttpStatusCode.Forbidden && !cancel.IsCancellationRequested)
+		{
+			// Slice 346: the store refused a sold book's files (no purchase proof, or the store would not confirm it): the update is skipped quietly and the copy on the shelf stays as it is
+			Debug.WriteLine($"Dino Reader: the store did not hand out an update ({(int?)ex.StatusCode}): {downloadUrl}");
+			Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
+			TryDelete(part);
+			return new PackageFetch(null, false);
 		}
 		catch (Exception ex) when ((IsNetworkFailure(ex) || ex is StoreStorageException) && !cancel.IsCancellationRequested)
 		{
@@ -364,7 +412,41 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, IFa
 	}
 
 	private static Task<GuardedResponse> GetGuardedAsync(string path, CancellationToken cancel) =>
-		StallGuardedRead.SendAsync(Http, () => new HttpRequestMessage(HttpMethod.Get, Resolve(path)), StallGuardedRead.HeaderTimeout(StallTimeout), cancel);
+		StallGuardedRead.SendAsync(Http, () => RequestFor(path), StallGuardedRead.HeaderTimeout(StallTimeout), cancel);
+
+	// Slice 346: a request for a sold book's files (package, audio pack, listening track) carries the store's purchase proof; every other request is the plain GET it always was.
+	private static HttpRequestMessage RequestFor(string path)
+	{
+		Uri uri = Resolve(path);
+		var request = new HttpRequestMessage(HttpMethod.Get, uri);
+		if (ProofFor(uri) is { } proof)
+		{
+			request.Headers.TryAddWithoutValidation(PurchaseProofs.HeaderName, proof);
+		}
+
+		return request;
+	}
+
+	private static volatile Func<Uri, string?> _proofFor = _ => null;
+
+	private static string? ProofFor(Uri uri) => _proofFor(uri);
+
+	/// <summary>Makes <paramref name="client"/> the source of purchase proofs for every store request (called once at start-up, so the static pack fetcher can send them too).</summary>
+	public static void InstallProofSource(StoreClient client) => _proofFor = client.ProofHeaderFor;
+
+	// Only the files of a book that the last listing says is sold: /api/stories/<id>/download|audio|listen.
+	private string? ProofHeaderFor(Uri uri)
+	{
+		string[] parts = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+		bool isFile = parts.Length >= 4 && parts[3] is "download" or "audio" or "listen";
+		return isFile && _listed.TryGetValue(parts[2], out StoreItem? item) ? sales.ProofHeader(item) : null;
+	}
+
+	/// <summary>
+	/// The books a background job (update check, shelf audio) may ask the store for (Slice 346): not sold, or owned. A sold book that is not owned, such as a copy kept from before the sale, is left out, so no
+	/// request that would be refused is made and nothing on the shelf is touched.
+	/// </summary>
+	public IReadOnlyList<StoreItem> Fetchable(IEnumerable<StoreItem> items) => [.. items.Where(sales.MayUpdate)];
 
 	// Copies the body, giving up when it passes the cap or stalls: the stall timer is restarted after every chunk.
 	private static async Task CopyCappedAsync(

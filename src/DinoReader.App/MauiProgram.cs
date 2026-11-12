@@ -63,6 +63,10 @@ public static class MauiProgram
 		builder.Services.AddSingleton<StarterStories>();
 		builder.Services.AddSingleton<StagedBookUpdates>();
 		builder.Services.AddSingleton(services => CreateAudioPackStore(services));
+		builder.Services.AddSingleton(_ => new SwitchablePurchases(PlatformPurchases.Create())); // Slice 346: the platform store (Play Billing, StoreKit, Windows Store); the Debug hook swaps a fake in
+		builder.Services.AddSingleton<IBookPurchases>(services => services.GetRequiredService<SwitchablePurchases>());
+		builder.Services.AddSingleton<BookPurchases>();
+		builder.Services.AddSingleton<BookSales>(); // the one place that knows whether books are sold (remote switch) and holds the store's proofs
 		builder.Services.AddSingleton<StoreClient>();
 		builder.Services.AddSingleton<AppConfigClient>();
 		builder.Services.AddSingleton<UsageCounter>();
@@ -77,6 +81,7 @@ public static class MauiProgram
 #endif
 
 		MauiApp app = builder.Build();
+		StoreClient.InstallProofSource(app.Services.GetRequiredService<StoreClient>()); // Slice 346: store requests for a sold book's files carry the store's purchase proof
 		WireConfigFallbacks(app.Services); // before the first config fetch starts (FlushAsync and BeginCrashReports below), so a fast failure is not lost
 		// Counts left from an earlier session go out now (Slice 133); the counter does nothing when counting is off.
 		_ = app.Services.GetRequiredService<UsageCounter>().FlushAsync();

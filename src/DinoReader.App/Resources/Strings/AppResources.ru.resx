@@ -357,4 +357,20 @@
   <data name="BackCover_Months" xml:space="preserve"><value>Январь|Февраль|Март|Апрель|Май|Июнь|Июль|Август|Сентябрь|Октябрь|Ноябрь|Декабрь</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} и {1}</value></data>
+  <data name="Store_BuyFor" xml:space="preserve"><value>Купить: {0}</value></data>
+  <data name="Store_BuyStory" xml:space="preserve"><value>Купить «{0}» за {1}</value></data>
+  <data name="Store_ConnectToBuy" xml:space="preserve"><value>Подключитесь к интернету, чтобы купить</value></data>
+  <data name="Store_Waiting" xml:space="preserve"><value>Ожидает подтверждения</value></data>
+  <data name="Store_RestorePurchases" xml:space="preserve"><value>Восстановить покупки</value></data>
+  <data name="Store_RedeemCode" xml:space="preserve"><value>Ввести код</value></data>
+  <data name="Store_BuyFailed" xml:space="preserve"><value>Покупка не удалась. Попробуйте ещё раз.</value></data>
+  <data name="Store_FooterPaid" xml:space="preserve"><value>Некоторые книги стоят немного. Их покупают через аккаунт магазина, и ничего о вас или вашем ребёнке нам не отправляется.</value></data>
+  <data name="Store_Restored" xml:space="preserve"><value>Ваши покупки проверены. Книги, которые у вас есть, теперь можно получить в магазине.</value></data>
+  <data name="Wait_BuyingBook" xml:space="preserve"><value>Ждём ответа магазина…</value></data>
+  <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Проверяем ваши покупки…</value></data>
+  <data name="Backup_Missing" xml:space="preserve"><value>Книги, которые нужно вернуть из магазина</value></data>
+  <data name="Backup_MissingNote" xml:space="preserve"><value>Бесплатные книги возвращаются сами. Для купленной книги нажмите «Восстановить покупки» в магазине, а затем снова восстановите эту копию.</value></data>
+  <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Записи и настройки вашей сказки в одном файле. Сама книга вернётся из магазина. Сохраните его в Drive или «Файлах» либо отправьте себе.</value></data>
+  <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Записи и настройки всех сказок ({0}) в одном файле. Сами книги вернутся из магазина. Сохраните его в Drive или «Файлах» либо отправьте себе.</value></data>
+  <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Возвращает записи и настройки из файла и снова загружает книги из магазина. Для купленных книг сначала нужно «Восстановить покупки».</value></data>
 </root>

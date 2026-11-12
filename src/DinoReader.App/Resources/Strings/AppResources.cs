@@ -390,4 +390,22 @@ public static class AppResources
 	public static string BackCover_Months => Get();
 	public static string BackCover_Digits => Get();
 	public static string BackCover_And => Get();
+
+	// Slice 346: paid books (the store card, Restore purchases, Redeem a code) and a backup that holds state instead of books.
+	public static string Store_BuyFor => Get();
+	public static string Store_BuyStory => Get();
+	public static string Store_ConnectToBuy => Get();
+	public static string Store_Waiting => Get();
+	public static string Store_RestorePurchases => Get();
+	public static string Store_RedeemCode => Get();
+	public static string Store_BuyFailed => Get();
+	public static string Store_FooterPaid => Get();
+	public static string Store_Restored => Get();
+	public static string Wait_BuyingBook => Get();
+	public static string Wait_CheckingPurchases => Get();
+	public static string Backup_Missing => Get();
+	public static string Backup_MissingNote => Get();
+	public static string Backup_SaveBodyState_One => Get();
+	public static string Backup_SaveBodyState_Other => Get();
+	public static string Backup_RestoreBodyState => Get();
 }

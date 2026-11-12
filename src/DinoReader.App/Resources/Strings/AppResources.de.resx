@@ -358,4 +358,20 @@
   <data name="BackCover_Months" xml:space="preserve"><value>Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} und {1}</value></data>
+  <data name="Store_BuyFor" xml:space="preserve"><value>{0} kaufen</value></data>
+  <data name="Store_BuyStory" xml:space="preserve"><value>{0} für {1} kaufen</value></data>
+  <data name="Store_ConnectToBuy" xml:space="preserve"><value>Zum Kaufen mit dem Internet verbinden</value></data>
+  <data name="Store_Waiting" xml:space="preserve"><value>Wartet auf Genehmigung</value></data>
+  <data name="Store_RestorePurchases" xml:space="preserve"><value>Käufe wiederherstellen</value></data>
+  <data name="Store_RedeemCode" xml:space="preserve"><value>Code einlösen</value></data>
+  <data name="Store_BuyFailed" xml:space="preserve"><value>Der Kauf hat nicht geklappt. Bitte versuche es noch einmal.</value></data>
+  <data name="Store_FooterPaid" xml:space="preserve"><value>Manche Bücher kosten ein bisschen. Sie werden über dein Store-Konto gekauft, und nichts über dich oder dein Kind wird an uns gesendet.</value></data>
+  <data name="Store_Restored" xml:space="preserve"><value>Deine Käufe wurden geprüft. Bücher, die dir gehören, kannst du jetzt im Store holen.</value></data>
+  <data name="Wait_BuyingBook" xml:space="preserve"><value>Warte auf den Store …</value></data>
+  <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Käufe werden geprüft …</value></data>
+  <data name="Backup_Missing" xml:space="preserve"><value>Bücher, die aus dem Store zurückkommen</value></data>
+  <data name="Backup_MissingNote" xml:space="preserve"><value>Kostenlose Bücher kommen von selbst zurück. Für ein gekauftes Buch tippe im Store auf „Käufe wiederherstellen“ und stelle dann dieses Backup noch einmal wieder her.</value></data>
+  <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Die Aufnahmen und Einstellungen deiner Geschichte in einer Datei. Das Buch selbst kommt aus dem Store zurück. Speichere sie in Drive oder Dateien oder schicke sie dir selbst.</value></data>
+  <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Die Aufnahmen und Einstellungen aller {0} Geschichten in einer Datei. Die Bücher selbst kommen aus dem Store zurück. Speichere sie in Drive oder Dateien oder schicke sie dir selbst.</value></data>
+  <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Bringt Aufnahmen und Einstellungen aus einer Datei zurück und holt die Bücher wieder aus dem Store. Gekaufte Bücher brauchen zuerst „Käufe wiederherstellen“.</value></data>
 </root>

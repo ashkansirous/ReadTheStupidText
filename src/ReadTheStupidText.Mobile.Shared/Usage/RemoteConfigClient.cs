@@ -115,7 +115,7 @@ public sealed class RemoteConfigClient<TConfig>(RemoteConfigOptions<TConfig> opt
     /// Fetches the config and keeps it, at most once per 15 minutes (one minute after a failure) and never twice at once (a call while one runs waits for that one).
     /// Any failure, or a body that is not a served config, leaves the copy in force as it was; this never throws.
     /// </summary>
-    public Task RefreshAsync(CancellationToken cancel = default)
+    public Task RefreshAsync(CancellationToken cancel = default, bool reportFallback = true)
     {
         lock (_gate)
         {
@@ -130,11 +130,11 @@ public sealed class RemoteConfigClient<TConfig>(RemoteConfigOptions<TConfig> opt
             }
 
             // The HTTP call must not run on the UI thread (Android throws NetworkOnMainThreadException), so the whole fetch is moved to the pool.
-            return _inFlight = Task.Run(() => FetchAndApplyAsync(cancel), CancellationToken.None);
+            return _inFlight = Task.Run(() => FetchAndApplyAsync(cancel, reportFallback), CancellationToken.None);
         }
     }
 
-    private async Task FetchAndApplyAsync(CancellationToken cancel)
+    private async Task FetchAndApplyAsync(CancellationToken cancel, bool reportFallback)
     {
         try
         {
@@ -143,7 +143,7 @@ public sealed class RemoteConfigClient<TConfig>(RemoteConfigOptions<TConfig> opt
             {
                 Debug.WriteLine($"{options.LogName} ignored a remote config body that is not a config.");
                 SetNotBefore(RetryInterval);
-                ReportFallback();
+                ReportFallback(reportFallback);
                 return;
             }
 
@@ -160,13 +160,18 @@ public sealed class RemoteConfigClient<TConfig>(RemoteConfigOptions<TConfig> opt
             // Whatever went wrong (network, timeout, parsing), the copy in force stays and the fire-and-forget task never faults.
             Debug.WriteLine($"{options.LogName} could not load the remote config: {ex.Message}");
             HandleFailure(ex);
-            ReportFallback();
+            ReportFallback(reportFallback);
         }
     }
 
     // The fetch did not bring a config: the last good copy stays in force, or the default when there is none. Never throws, and never starts a fetch.
-    private void ReportFallback()
+    private void ReportFallback(bool report)
     {
+        if (!report)
+        {
+            return; // a quiet background refresh (Slice 346): the last known value stays, and no fallback event is counted for it
+        }
+
         try
         {
             FallbackReported?.Invoke(HasCopy ? FallbackReason.ConfigCached : FallbackReason.ConfigDefault);

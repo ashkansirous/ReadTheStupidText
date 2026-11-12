@@ -2,6 +2,8 @@ using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using ReadTheStupidText.Application.Reading;
+using FallbackArea = ReadTheStupidText.Application.Usage.FallbackArea;
+using FallbackReason = ReadTheStupidText.Application.Usage.FallbackReason;
 using IFallbackSink = ReadTheStupidText.Application.Usage.IFallbackSink;
 using ReadTheStupidText.Mobile.Shared.Waiting;
 using RoundRectangle = Microsoft.Maui.Controls.Shapes.RoundRectangle;
@@ -35,6 +37,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 	private readonly IFallbackSink _sink;
 	private readonly BusyGuard _busy = new();
 	private readonly WaitController _wait;
+	private readonly StoreClient _store;
 	private int _count;
 	private const double CardGap = 14;
 	private Size _windowSize;
@@ -42,9 +45,10 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 	private Page? _hostPage;
 	private Func<Task>? _hostClose;
 
-	public BackupPage(IStoryLibrary library, ExternalActivityGuard external, GrownUpMode mode, UsageCounter usage, IFallbackSink sink)
+	public BackupPage(IStoryLibrary library, ExternalActivityGuard external, GrownUpMode mode, UsageCounter usage, IFallbackSink sink, StoreClient store)
 	{
 		_sink = sink;
+		_store = store;
 		InitializeComponent();
 		_library = library;
 		_external = external;
@@ -131,8 +135,22 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 	private async Task CountStoriesAsync()
 	{
 		_count = (await _library.ListAsync()).Count;
-		SaveBody.Text = (_count == 1 ? AppResources.Backup_SaveBody_One : AppResources.Format(AppResources.Backup_SaveBody_Other, _count)) + " " + AppResources.Backup_SaveIncludes;
+		SaveBody.Text = SaveBodyText();
+		RestoreBody.Text = StateOnlyBackups ? AppResources.Backup_RestoreBodyState : AppResources.Backup_RestoreBody;
 		SaveButton.IsEnabled = _count > 0;
+	}
+
+	// Slice 346: only a known-on paid-books switch makes a backup without the book files; off or unknown keeps the backup of before (book files inside).
+	private bool StateOnlyBackups => _store.Sales.ConfigKnown && _store.Sales.Enabled;
+
+	private string SaveBodyText()
+	{
+		if (StateOnlyBackups)
+		{
+			return _count == 1 ? AppResources.Backup_SaveBodyState_One : AppResources.Format(AppResources.Backup_SaveBodyState_Other, _count);
+		}
+
+		return (_count == 1 ? AppResources.Backup_SaveBody_One : AppResources.Format(AppResources.Backup_SaveBody_Other, _count)) + " " + AppResources.Backup_SaveIncludes;
 	}
 
 	private async void OnBackTapped(object? sender, EventArgs e) => await _busy.RunAsync(CloseAsync);
@@ -198,7 +216,8 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 		try
 		{
 			await using FileStream output = File.Create(path);
-			return (path, await StoryBackupWriter.WriteAsync(stories, _library, output));
+			BackupFormat format = StateOnlyBackups ? BackupFormat.StateOnly : BackupFormat.WithBookFiles;
+			return (path, await StoryBackupWriter.WriteAsync(stories, _library, output, format, SettingsToSave()));
 		}
 		catch
 		{
@@ -290,9 +309,17 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 	private async Task<StoryRestoreResult> CopyAndRestoreAsync(FileResult picked, string path)
 	{
 		await CopyPickedAsync(picked, path);
-		await using FileStream file = File.OpenRead(path);
+		_store.Sales.RefreshConfigInBackground(); // never awaited: the last known switch decides (while it was never known, an old backup's books are fetched only when the listing says free)
+		LegacyBookFiles legacy = BookAccess.LegacyFilesMode(_store.Sales.ConfigKnown, _store.Sales.Enabled); // unknown counts as off: the backup's book files are imported, as before paid books
 		var added = new List<Story>();
-		StoryRestoreResult result = await StoryBackupReader.RestoreAsync(file, _library, added.Add);
+		StoryRestoreResult merged;
+		await using (FileStream file = File.OpenRead(path))
+		{
+			merged = await StoryBackupReader.RestoreAsync(file, _library, legacy, added.Add);
+		}
+
+		await ApplySettingsAsync(path);
+		StoryRestoreResult result = await GetBooksBackAsync(path, merged, added);
 		int dropped = await DropOwnBooksAsync(added);
 		CountRestoredBooks(added);
 		return dropped == 0 ? result : result with { Added = result.Added - dropped, Skipped = result.Skipped + dropped };
@@ -326,6 +353,111 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 		}
 	}
 
+	// Slice 346 part C: a restore brings no book files. The books the phone lacks come from the store again: a free book, or one the store account owns (Restore purchases is read first), is
+	// downloaded and then given its recordings and reading view from the backup; the rest are listed as "books to get back" and a second restore, after buying or restoring, fetches them.
+	// A schema 1 backup still holds the book files: when the store cannot supply a book (offline, no longer listed, or free or owned but the download failed) and the book is not sold and unowned, the
+	// file is used, so a book the family has is never lost by restoring (Slice 346). `shelfAdded` collects the stories put on the shelf from files, for the same own-book cleanup and count as before.
+	private async Task<StoryRestoreResult> GetBooksBackAsync(string path, StoryRestoreResult merged, List<Story> shelfAdded)
+	{
+		IReadOnlyList<MissingBook> missing = merged.Missing ?? [];
+		if (missing.Count == 0)
+		{
+			return merged;
+		}
+
+		StoreListing listing = await _store.ListAsync(CancellationToken.None);
+		if (listing.Status == StoreLoadStatus.Ok && _store.Sales.Enabled)
+		{
+			await _store.Sales.Purchases.RestoreAsync(listing.Items, CancellationToken.None);
+		}
+
+		var left = new List<MissingBook>();
+		int added = 0;
+		foreach (MissingBook book in missing)
+		{
+			StoreItem? item = listing.Items.FirstOrDefault(i => string.Equals(i.Id, book.Id, StringComparison.OrdinalIgnoreCase));
+			if (await TryGetOneAsync(book, item, path, shelfAdded))
+			{
+				added++;
+			}
+			else
+			{
+				left.Add(book);
+			}
+		}
+
+		return merged with { Added = merged.Added + added, Missing = left.Count > 0 ? left : null };
+	}
+
+	// One decision for both the store download and the file fallback: BookAccess.LegacyBookChoice, fed by the same "sold" reading the first-run picker uses (an unread switch counts as sold).
+	private async Task<bool> TryGetOneAsync(MissingBook book, StoreItem? item, string path, List<Story> shelfAdded)
+	{
+		BookSale access = item is not null && BookAccess.IsSold(_store.Sales.EnabledForOffer, item) ? BookSale.Paid : BookSale.Free;
+		bool owned = item is not null && BookAccess.OwnedProduct(item, _store.Sales.Purchases.Snapshot.Owned) is not null;
+		LegacyBookSource first = BookAccess.LegacyBookChoice(access, owned, storeCanSupply: item is not null);
+		if (first == LegacyBookSource.Store && await TryGetBookAsync(item!, path))
+		{
+			return true;
+		}
+
+		return BookAccess.LegacyBookChoice(access, owned, storeCanSupply: false) == LegacyBookSource.File && await TryBookFileAsync(path, book.Id, shelfAdded);
+	}
+
+	private async Task<bool> TryGetBookAsync(StoreItem item, string path)
+	{
+		if (await _store.DownloadAsync(item, new Progress<double>(), CancellationToken.None) != DownloadOutcome.Done)
+		{
+			return false;
+		}
+
+		_usage.RecordStoreDownload(item, ageFilterSet: false, authorFilterSet: false);
+		await TryApplyBackupAsync(item.Id, path);
+		return true;
+	}
+
+	// The book itself is on the shelf; a backup entry that cannot be read costs that one book its recordings and reading view, is reported, and the restore goes on with the rest.
+	private async Task TryApplyBackupAsync(string bookId, string path)
+	{
+		try
+		{
+			await using FileStream file = File.OpenRead(path);
+			await StoryBackupReader.ApplyToBookAsync(file, _library, bookId);
+		}
+		catch (Exception ex) when (ex is StoryBackupException or IOException)
+		{
+			Debug.WriteLine($"Dino Reader could not apply the backup to {bookId}: {ex.Message}");
+			_sink.Report(FallbackArea.Library, FallbackReason.StoryUnreadable);
+		}
+	}
+
+	private async Task<bool> TryBookFileAsync(string path, string bookId, List<Story> shelfAdded)
+	{
+		await using FileStream file = File.OpenRead(path);
+		return await StoryBackupReader.ImportLegacyBookAsync(file, _library, bookId, shelfAdded.Add) is not null;
+	}
+
+	// The few settings a backup carries (reading speed, animal sounds), through Dino's own preference classes.
+	private static Dictionary<string, string> SettingsToSave() => new()
+	{
+		[BackupSettings.ReadingSpeedKey] = BackupSettings.SpeedText(ReadingSpeedPreference.Load().Value),
+		[BackupSettings.AnimalSoundsKey] = AnimalSoundsPreference.Load() ? "true" : "false",
+	};
+
+	private static async Task ApplySettingsAsync(string path)
+	{
+		await using FileStream file = File.OpenRead(path);
+		IReadOnlyDictionary<string, string> settings = await StoryBackupReader.ReadSettingsAsync(file);
+		if (settings.TryGetValue(BackupSettings.ReadingSpeedKey, out string? speed) && BackupSettings.TryParseSpeed(speed, out double value))
+		{
+			ReadingSpeedPreference.Save(ReadingSpeed.Clamp(value));
+		}
+
+		if (settings.TryGetValue(BackupSettings.AnimalSoundsKey, out string? sounds))
+		{
+			AnimalSoundsPreference.Save(sounds == "true");
+		}
+	}
+
 	private async Task RestoreFromAsync(FileResult picked, string path)
 	{
 		try
@@ -348,7 +480,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 
 	private void ShowResult(StoryRestoreResult result)
 	{
-		int restored = result.Added + result.Merged; // a book that got its recordings back counts as restored
+		int restored = result.Added + result.Merged; // a book fetched from the store, or one that got its recordings back, counts as restored
 		ResultTitle.Text = restored == 1
 			? AppResources.Format(AppResources.Backup_Restored_One, restored)
 			: AppResources.Format(AppResources.Backup_Restored_Other, restored);
@@ -369,6 +501,14 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 		{
 			AddResultRow(AppResources.Backup_TooLarge, result.TooLarge, DinoTokens.Get(DinoTokens.Danger));
 		}
+
+		if (result.Missing is { Count: > 0 } toGetBack)
+		{
+			AddResultRow(AppResources.Backup_Missing, toGetBack.Count, DinoTokens.Get(DinoTokens.Danger));
+			ResultNote.Text = AppResources.Backup_MissingNote;
+		}
+
+		ResultNote.IsVisible = result.Missing is { Count: > 0 };
 
 		MainPanel.IsVisible = false;
 		ResultPanel.IsVisible = true;

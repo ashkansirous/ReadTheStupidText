@@ -98,6 +98,11 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 			return "failed not in the store";
 		}
 
+		if (!store.Sales.MayUpdate(item))
+		{
+			return "failed not owned"; // Slice 346: a sold book the store account does not own is never asked for
+		}
+
 		IReadOnlyList<BookUpdateDecision>? decisions = await PlanOneBookAsync(item, listing.Items, cancel);
 		BookUpdateDecision? decision = decisions?.FirstOrDefault(d => string.Equals(d.Id, item.Id, StringComparison.OrdinalIgnoreCase));
 		bool forced = force && decision is { Skip: BookUpdateSkip.UpToDate };
@@ -218,9 +223,11 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 			return false;
 		}
 
-		IReadOnlyList<BookUpdateDecision>? decisions = await RecordBaselinesAsync(await PlanAsync(listing.Items), listing.Items, cancel);
-		bool booksDone = decisions is not null && await StageAllAsync(decisions, listing.Items, cancel);
-		ISet<string> textBehind = await TextBehindAsync(listing.Items, decisions);
+		// Slice 346: a sold book the store account does not own (a copy kept from before the sale) is not asked for: no update, no refused request, and nothing on the shelf is touched.
+		IReadOnlyList<StoreItem> fetchable = store.Fetchable(listing.Items);
+		IReadOnlyList<BookUpdateDecision>? decisions = await RecordBaselinesAsync(await PlanAsync(fetchable), fetchable, cancel);
+		bool booksDone = decisions is not null && await StageAllAsync(decisions, fetchable, cancel);
+		ISet<string> textBehind = await TextBehindAsync(fetchable, decisions);
 		if (staged.HasPending)
 		{
 			staged.NotifyStaged(); // Slice 313: a shown shelf swaps the staged text in at once (only when a package really waits)
@@ -228,7 +235,7 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 
 		// A late pack, a new pack version or a language added since the download (Slice 246 C2). A pack that fails never keeps the check from finishing: it is tried again at the next scheduled check.
 		// Slice 313: a book whose text is still behind keeps its old pack; the pack for the newer text comes once that text is in.
-		await SyncPacksSafelyAsync(listing.Items, textBehind, cancel);
+		await SyncPacksSafelyAsync(fetchable, textBehind, cancel);
 		return booksDone;
 	}
 

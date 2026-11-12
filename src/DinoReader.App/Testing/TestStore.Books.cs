@@ -35,8 +35,15 @@ internal static class TestBooks
 		await previous;
 		try
 		{
+			bool all = names.Trim().Equals(AllWord, StringComparison.OrdinalIgnoreCase);
 			foreach (string name in Stems(names))
 			{
+				// Slice 346: "all" is the free shelf; a book the fake-purchases hook sells stays in the store, so the Store tab can show its Buy pill.
+				if (all && await IsSoldAsync(name))
+				{
+					continue;
+				}
+
 				await ImportOneAsync(store, name);
 			}
 
@@ -54,6 +61,9 @@ internal static class TestBooks
 		names.Trim().Equals(AllWord, StringComparison.OrdinalIgnoreCase)
 			? TestStore.AllStems
 			: names.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+	private static async Task<bool> IsSoldAsync(string stem) =>
+		await TestStore.FindAsync(stem) is { } item && FakePurchases.Marked(item, stem).Sale == BookSale.Paid;
 
 	private static async Task ImportOneAsync(StoreClient store, string name)
 	{

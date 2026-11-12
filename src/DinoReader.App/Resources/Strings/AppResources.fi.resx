@@ -356,4 +356,20 @@
   <data name="BackCover_Months" xml:space="preserve"><value>tammikuu|helmikuu|maaliskuu|huhtikuu|toukokuu|kesäkuu|heinäkuu|elokuu|syyskuu|lokakuu|marraskuu|joulukuu</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} ja {1}</value></data>
+  <data name="Store_BuyFor" xml:space="preserve"><value>Osta {0}</value></data>
+  <data name="Store_BuyStory" xml:space="preserve"><value>Osta {0} hintaan {1}</value></data>
+  <data name="Store_ConnectToBuy" xml:space="preserve"><value>Muodosta internetyhteys ostaaksesi</value></data>
+  <data name="Store_Waiting" xml:space="preserve"><value>Odottaa hyväksyntää</value></data>
+  <data name="Store_RestorePurchases" xml:space="preserve"><value>Palauta ostot</value></data>
+  <data name="Store_RedeemCode" xml:space="preserve"><value>Lunasta koodi</value></data>
+  <data name="Store_BuyFailed" xml:space="preserve"><value>Osto ei onnistunut. Yritä uudelleen.</value></data>
+  <data name="Store_FooterPaid" xml:space="preserve"><value>Jotkin kirjat maksavat vähän. Ne ostetaan kauppatililläsi, eikä meille lähetetä mitään sinusta tai lapsestasi.</value></data>
+  <data name="Store_Restored" xml:space="preserve"><value>Ostosi tarkistettiin. Omistamasi kirjat voi nyt noutaa kaupasta.</value></data>
+  <data name="Wait_BuyingBook" xml:space="preserve"><value>Odotetaan kauppaa…</value></data>
+  <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Tarkistetaan ostoksiasi…</value></data>
+  <data name="Backup_Missing" xml:space="preserve"><value>Kaupasta noudettavat kirjat</value></data>
+  <data name="Backup_MissingNote" xml:space="preserve"><value>Ilmaiset kirjat palaavat itsestään. Ostamasi kirjan saat takaisin painamalla kaupassa Palauta ostot ja palauttamalla sitten tämän varmuuskopion uudelleen.</value></data>
+  <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Tarinasi äänitykset ja asetukset yhdessä tiedostossa. Itse kirja palaa kaupasta. Tallenna se Driveen tai Tiedostoihin tai lähetä se itsellesi.</value></data>
+  <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Kaikkien {0} tarinan äänitykset ja asetukset yhdessä tiedostossa. Itse kirjat palaavat kaupasta. Tallenna se Driveen tai Tiedostoihin tai lähetä se itsellesi.</value></data>
+  <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Palauttaa äänitykset ja asetukset tiedostosta ja hakee kirjat uudelleen kaupasta. Ostetut kirjat tarvitsevat ensin Palauta ostot.</value></data>
 </root>

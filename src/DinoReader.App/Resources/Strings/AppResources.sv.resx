@@ -356,4 +356,20 @@
   <data name="BackCover_Months" xml:space="preserve"><value>januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} och {1}</value></data>
+  <data name="Store_BuyFor" xml:space="preserve"><value>Köp {0}</value></data>
+  <data name="Store_BuyStory" xml:space="preserve"><value>Köp {0} för {1}</value></data>
+  <data name="Store_ConnectToBuy" xml:space="preserve"><value>Anslut till internet för att köpa</value></data>
+  <data name="Store_Waiting" xml:space="preserve"><value>Väntar på godkännande</value></data>
+  <data name="Store_RestorePurchases" xml:space="preserve"><value>Återställ köp</value></data>
+  <data name="Store_RedeemCode" xml:space="preserve"><value>Lös in en kod</value></data>
+  <data name="Store_BuyFailed" xml:space="preserve"><value>Köpet gick inte igenom. Försök igen.</value></data>
+  <data name="Store_FooterPaid" xml:space="preserve"><value>Vissa böcker kostar lite. De köps via ditt butikskonto, och inget om dig eller ditt barn skickas till oss.</value></data>
+  <data name="Store_Restored" xml:space="preserve"><value>Dina köp har kontrollerats. Böcker du äger kan nu hämtas i butiken.</value></data>
+  <data name="Wait_BuyingBook" xml:space="preserve"><value>Väntar på butiken …</value></data>
+  <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Kontrollerar dina köp …</value></data>
+  <data name="Backup_Missing" xml:space="preserve"><value>Böcker att hämta tillbaka från butiken</value></data>
+  <data name="Backup_MissingNote" xml:space="preserve"><value>Gratisböcker kommer tillbaka av sig själva. För en bok du har köpt, tryck på Återställ köp i butiken och återställ sedan den här säkerhetskopian igen.</value></data>
+  <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Inspelningarna och inställningarna för din berättelse i en fil. Själva boken kommer tillbaka från butiken. Spara den i Drive eller Filer, eller skicka den till dig själv.</value></data>
+  <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Inspelningarna och inställningarna för alla {0} berättelser i en fil. Själva böckerna kommer tillbaka från butiken. Spara den i Drive eller Filer, eller skicka den till dig själv.</value></data>
+  <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Hämtar tillbaka inspelningar och inställningar från en fil och hämtar böckerna igen från butiken. Köpta böcker behöver först Återställ köp.</value></data>
 </root>

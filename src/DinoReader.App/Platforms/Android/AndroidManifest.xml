@@ -6,6 +6,9 @@
 	<!-- Network is used only to download the books' pre-made audio and, behind the grown-up gate, the free story list and the stories a grown-up picks (Slice 92); text never leaves the device. -->
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+	<!-- Slice 346: books can be bought through Google Play Billing, behind the grown-up gate and the remote switch (off at first). The app asks Play for prices and for what the account owns; the purchase token is
+	     sent to dinoreader.sirous.uk only with a request for a book's files, so the server can ask Google that the book was bought. Nothing about the buyer is stored or sent. -->
+	<uses-permission android:name="com.android.vending.BILLING" />
 	<!-- Slice 183: Mobile.Shared's pack downloader holds a big download in a foreground service of type dataSync with one ongoing progress notification. Dino downloads no voice, translation or scan pack
 	     since Slice 278, so nothing starts it; the three permissions stay because the shared library's service declaration is merged into this manifest (drop them with the repo split). -->
 	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />

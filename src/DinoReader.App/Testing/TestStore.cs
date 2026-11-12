@@ -110,7 +110,8 @@ internal static class TestStore
 			tags = [.. StoreTags.FromJson(listed.RootElement)]; // Slice 271 (Slice 269): the real parse drops the name this build has no case for
 		}
 
-		return new StoreItem(manifest.Id, story.Title, story.Language, manifest.SchemaVersion, manifest.Version ?? 1, story.Pages.Count, null, null, UrlScheme + AssetNameOf(stem), Tags: tags, Bytes: copy.Length, Audio: AudioListing(stem));
+		var item = new StoreItem(manifest.Id, story.Title, story.Language, manifest.SchemaVersion, manifest.Version ?? 1, story.Pages.Count, null, null, UrlScheme + AssetNameOf(stem), Tags: tags, Bytes: copy.Length, Audio: AudioListing(stem));
+		return FakePurchases.Marked(item, stem); // Slice 346: sold when the fake-purchases hook says so
 	}
 
 	// Slice 262: one test book (gingerbread-man) lists a pre-made audio pack in AudioLanguage, so the side-language flow sees a pack arrive; the other books list none, so the quiet "has no audio yet" line shows.

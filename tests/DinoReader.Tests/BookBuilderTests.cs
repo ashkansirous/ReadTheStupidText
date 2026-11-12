@@ -318,6 +318,31 @@ public sealed class BookBuilderTests : IDisposable
         Assert.Contains("repeats Hot", Assert.Throws<InvalidOperationException>(() => Books.ReadInfo(book.Dir)).Message);
     }
 
+    // Slice 346: access is free or paid (a closed set; left out means paid) and productId a store id; neither is part of the hash, so marking a book never bumps its version.
+    [Fact]
+    public void ABookJson_ReadsFreeAndPaidAccessAndAProductId_AndRefusesAnythingElse()
+    {
+        BookFolder book = TinyBook("One.");
+        Books.WriteInfo(book.Dir, book.Info with { Access = "free", ProductId = "uk.sirous.dinoreader.book.tiny" });
+        BookInfo read = Books.ReadInfo(book.Dir);
+        Assert.Equal(("free", "uk.sirous.dinoreader.book.tiny"), (read.Access, read.ProductId));
+        Assert.Null(TinyBook("Two.").Info.Access);
+
+        Books.WriteInfo(book.Dir, book.Info with { Access = "Free" });
+        Assert.Contains("access must be one of free, paid", Assert.Throws<InvalidOperationException>(() => Books.ReadInfo(book.Dir)).Message);
+        Books.WriteInfo(book.Dir, book.Info with { ProductId = "no spaces!" });
+        Assert.Contains("is not a store product id", Assert.Throws<InvalidOperationException>(() => Books.ReadInfo(book.Dir)).Message);
+    }
+
+    [Fact]
+    public void ChangingAccessOrProductId_NeverChangesTheHash_SoItNeverBumpsTheVersion()
+    {
+        BookFolder book = TinyBook("One.");
+        string hash = BookHash.Of(book);
+
+        Assert.Equal(hash, BookHash.Of(new BookFolder(book.Stem, book.Dir, book.Info with { Access = "free", ProductId = "uk.sirous.dinoreader.book.tiny" })));
+    }
+
     [Fact]
     public void ChangingTags_NeverChangesTheHash_SoItNeverBumpsTheVersion()
     {

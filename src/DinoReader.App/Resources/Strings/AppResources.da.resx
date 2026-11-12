@@ -356,4 +356,20 @@
   <data name="BackCover_Months" xml:space="preserve"><value>januar|februar|marts|april|maj|juni|juli|august|september|oktober|november|december</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} og {1}</value></data>
+  <data name="Store_BuyFor" xml:space="preserve"><value>Køb {0}</value></data>
+  <data name="Store_BuyStory" xml:space="preserve"><value>Køb {0} for {1}</value></data>
+  <data name="Store_ConnectToBuy" xml:space="preserve"><value>Opret forbindelse til internettet for at købe</value></data>
+  <data name="Store_Waiting" xml:space="preserve"><value>Venter på godkendelse</value></data>
+  <data name="Store_RestorePurchases" xml:space="preserve"><value>Gendan køb</value></data>
+  <data name="Store_RedeemCode" xml:space="preserve"><value>Indløs en kode</value></data>
+  <data name="Store_BuyFailed" xml:space="preserve"><value>Købet gik ikke igennem. Prøv igen.</value></data>
+  <data name="Store_FooterPaid" xml:space="preserve"><value>Nogle bøger koster lidt. De købes via din butikskonto, og der sendes intet om dig eller dit barn til os.</value></data>
+  <data name="Store_Restored" xml:space="preserve"><value>Dine køb er tjekket. Bøger, du ejer, kan nu hentes i butikken.</value></data>
+  <data name="Wait_BuyingBook" xml:space="preserve"><value>Venter på butikken …</value></data>
+  <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Tjekker dine køb …</value></data>
+  <data name="Backup_Missing" xml:space="preserve"><value>Bøger, der skal hentes tilbage fra butikken</value></data>
+  <data name="Backup_MissingNote" xml:space="preserve"><value>Gratis bøger kommer tilbage af sig selv. For en bog, du har købt, så tryk på Gendan køb i butikken og gendan derefter denne sikkerhedskopi igen.</value></data>
+  <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Din historie – optagelser og indstillinger – i én fil. Selve bogen kommer tilbage fra butikken. Gem den i Drive eller Filer, eller send den til dig selv.</value></data>
+  <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Optagelser og indstillinger for alle {0} historier i én fil. Selve bøgerne kommer tilbage fra butikken. Gem den i Drive eller Filer, eller send den til dig selv.</value></data>
+  <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Henter optagelser og indstillinger tilbage fra en fil og henter bøgerne igen fra butikken. Købte bøger kræver først Gendan køb.</value></data>
 </root>

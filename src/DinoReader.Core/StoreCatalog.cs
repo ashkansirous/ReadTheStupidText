@@ -7,8 +7,12 @@ public sealed record StoreItem(
     string Id, string Title, string Language, int SchemaVersion, int Version, int? PageCount, int? Minutes, string? CoverUrl, string DownloadUrl, string? Credits = null,
     int? AgeMin = null, int? AgeMax = null, string? Author = null, IReadOnlyDictionary<string, string>? Titles = null,
     IReadOnlyDictionary<string, string>? CreditsByLanguage = null, IReadOnlyDictionary<string, AudioPackInfo>? Audio = null,
-    IReadOnlyList<StoreTag>? Tags = null, long? Bytes = null)
+    IReadOnlyList<StoreTag>? Tags = null, long? Bytes = null,
+    BookSale Sale = BookSale.Free, string? ProductId = null, IReadOnlyList<string>? UnlockedBy = null)
 {
+    /// <summary>Slice 346: every store product that unlocks this book (its own plus each bundle that lists it); empty for a free book or an older Worker.</summary>
+    public IReadOnlyList<string> Products => UnlockedBy ?? [];
+
     /// <summary>The store tags the listing carries (Slice 260), in list order; none from an older Worker.</summary>
     public IReadOnlyList<StoreTag> TagList => Tags ?? [];
 
@@ -95,9 +99,22 @@ public static class StoreCatalog
         return valid
             ? new StoreItem(dto.Id!, dto.Title!, dto.Language!, dto.SchemaVersion, dto.Version, dto.PageCount, dto.Minutes, dto.CoverUrl, dto.DownloadUrl!, CreditsOf(dto.Credits),
                 ageMin, ageMax, AuthorOf(dto.Author), TitlesOf(dto.Titles), TextMapOf(dto.CreditsByLanguage, MaxCreditsLength), AudioOf(dto.Audio),
-                StoreTags.FromJson(dto.Tags), BytesOf(dto.Bytes))
+                StoreTags.FromJson(dto.Tags), BytesOf(dto.Bytes), dto.Access == PaidAccess ? BookSale.Paid : BookSale.Free, ProductIdOf(dto.ProductId), ProductIdsOf(dto.UnlockedBy))
             : null;
     }
+
+    // Slice 346: the Worker's `access` is "paid" or "free"; a list without the field is an older Worker, where every book is free.
+    private const string PaidAccess = "paid";
+    private const int MaxProducts = 10;
+
+    private static string? ProductIdOf(string? id) => string.IsNullOrWhiteSpace(id) || id.Trim().Length > MaxProductIdLength ? null : id.Trim();
+
+    private const int MaxProductIdLength = 100;
+
+    private static IReadOnlyList<string>? ProductIdsOf(JsonElement? ids) =>
+        ids is { ValueKind: JsonValueKind.Array } list
+            ? [.. list.EnumerateArray().Where(e => e.ValueKind == JsonValueKind.String).Select(e => ProductIdOf(e.GetString())).OfType<string>().Distinct().Take(MaxProducts)]
+            : null;
 
     // Slice 246 B2/C2: language code to {version, bytes, url}. A wrong-typed pack, a version below 1, an unsupported language or a blank address drops only that pack; bytes that are not a whole
     // positive number are unknown (null), which skips the size check but not the download.
@@ -196,6 +213,12 @@ public static class StoreCatalog
         public JsonElement? Tags { get; set; }
 
         public JsonElement? Bytes { get; set; }
+
+        public string? Access { get; set; }
+
+        public string? ProductId { get; set; }
+
+        public JsonElement? UnlockedBy { get; set; }
 
         public string? Id { get; set; }
 

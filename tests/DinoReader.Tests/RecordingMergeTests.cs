@@ -59,6 +59,27 @@ public sealed class RecordingMergeTests : IDisposable
         byte[] backup = await BackupAsync(source);
 
         FileStoryLibrary target = Library("target");
+        await target.AddAsync(story with { Recordings = null, UseRecordings = false }); // the book itself comes from the store; the backup brings the recordings
+        StoryRestoreResult result = await RestoreAsync(backup, target);
+
+        Assert.Equal(1, result.Merged);
+        Story restored = (await target.GetAsync(story.Id))!;
+        Assert.Equal([0, 2], StoryRecordings.RecordedPages(restored));
+        Assert.True(restored.UseRecordings);
+        foreach (string file in StoryRecordings.Files(restored))
+        {
+            Assert.True(new FileInfo(target.TryResolveFile(story.Id, file)!).Length > 0);
+        }
+    }
+
+    [Fact]
+    public async Task FreshRestore_DefaultSwitchOff_NoBookAddedBefore_AddsTheBookWithItsRecordings()
+    {
+        FileStoryLibrary source = Library("source");
+        Story story = await StoreWithRecordingsAsync(source, Make(), "bak", 0, 2);
+        byte[] backup = await BackupAsync(source);
+
+        FileStoryLibrary target = Library("target");
         StoryRestoreResult result = await RestoreAsync(backup, target);
 
         Assert.Equal(1, result.Added);
@@ -81,11 +102,9 @@ public sealed class RecordingMergeTests : IDisposable
         FileStoryLibrary target = Library("target");
         Story onPhone = story with { Recordings = null, UseRecordings = false, Title = "Edited on this phone" };
         await target.AddAsync(onPhone);
-        var restoredIds = new List<Story>();
-        StoryRestoreResult result = await StoryBackupReader.RestoreAsync(new MemoryStream(backup), target, restoredIds.Add);
+        StoryRestoreResult result = await StoryBackupReader.RestoreAsync(new MemoryStream(backup), target);
 
         Assert.Equal(new StoryRestoreResult(0, 0, 0, 0, 1), result);
-        Assert.Empty(restoredIds);
         Story merged = (await target.GetAsync(story.Id))!;
         Assert.Equal([0, 1], StoryRecordings.RecordedPages(merged));
         Assert.True(merged.UseRecordings);
@@ -138,6 +157,7 @@ public sealed class RecordingMergeTests : IDisposable
         byte[] backup = await BackupAsync(source);
 
         FileStoryLibrary target = Library("target");
+        await target.AddAsync(story with { Recordings = null, UseRecordings = false });
         await RestoreAsync(backup, target);
         StoryRestoreResult again = await RestoreAsync(backup, target);
 

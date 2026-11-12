@@ -80,9 +80,10 @@ public sealed record TelemetryConfig(bool Enabled, double SampleRate)
 /// missing or malformed takes the safe default: no forced update, telemetry off. <see cref="Parse"/> never throws. Since Slice 227 it also carries
 /// <c>crashReports.enabled</c> (<paramref name="CrashReportsEnabled"/>): crash reports go out only while it is a literal <c>true</c>.
 /// </summary>
-public sealed record AppConfig(PlatformVersions Android, PlatformVersions Ios, PlatformVersions Windows, TelemetryConfig Telemetry, bool CrashReportsEnabled = false)
+public sealed record AppConfig(PlatformVersions Android, PlatformVersions Ios, PlatformVersions Windows, TelemetryConfig Telemetry, bool CrashReportsEnabled = false, bool PaidBooksEnabled = false)
 {
     private const string CrashReportsProperty = "crashReports";
+    private const string PaidBooksProperty = "paidBooks";
     public const string NoVersion = "0.0.0";
 
     /// <summary>The newest <c>schemaVersion</c> this build understands.</summary>
@@ -122,7 +123,7 @@ public sealed record AppConfig(PlatformVersions Android, PlatformVersions Ios, P
             JsonElement root = document.RootElement;
             return root.ValueKind != JsonValueKind.Object
                 ? Default
-                : new AppConfig(PlatformOf(root, AndroidProperty), PlatformOf(root, IosProperty), PlatformOf(root, WindowsProperty), TelemetryOf(root), CrashReportsOf(root));
+                : new AppConfig(PlatformOf(root, AndroidProperty), PlatformOf(root, IosProperty), PlatformOf(root, WindowsProperty), TelemetryOf(root), CrashReportsOf(root), PaidBooksOf(root));
         }
         catch (JsonException)
         {
@@ -199,6 +200,11 @@ public sealed record AppConfig(PlatformVersions Android, PlatformVersions Ios, P
     private static bool CrashReportsOf(JsonElement root) =>
         Child(root, CrashReportsProperty, out JsonElement crash)
         && crash.TryGetProperty(EnabledProperty, out JsonElement enabled) && enabled.ValueKind == JsonValueKind.True;
+
+    // Slice 346: books are sold only while paidBooks.enabled is a literal true; missing, malformed or anything else is off, so every book is free.
+    private static bool PaidBooksOf(JsonElement root) =>
+        Child(root, PaidBooksProperty, out JsonElement paid)
+        && paid.TryGetProperty(EnabledProperty, out JsonElement enabled) && enabled.ValueKind == JsonValueKind.True;
 
     private static bool Child(JsonElement parent, string name, out JsonElement child) =>
         parent.TryGetProperty(name, out child) && child.ValueKind == JsonValueKind.Object;

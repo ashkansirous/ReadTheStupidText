@@ -7,8 +7,39 @@ import { join } from 'node:path';
 import { publishedStateFrom } from './r2-wrangler.mjs';
 import { audioEntry, bucketAudioFromState, completeAudioIds, judgedAudioIds, mayChangeOnR2, refusalMessage, completeIdsOf, onlyCompleteBooks, refuseAudioGaps, audioPackIsLive, audioUploadExists, withBucketListen, pruneUnbuiltAudio, audioPacksBehind, validPackVersions, audioUploadsFor, bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
 
+import { accessOf, applyAccessToBuiltMetas, withAccess } from './publish-store-books.mjs';
+
 const A = 'a'.repeat(32);
 const B = 'b'.repeat(32);
+
+test('Slice 346: a book is paid unless book.json says free, and its product id defaults from the folder name', () => {
+    assert.deepEqual(accessOf({ access: 'free' }, 'lion-and-mouse'), { access: 'free', productId: 'uk.sirous.dinoreader.book.lion-and-mouse' });
+    assert.deepEqual(accessOf({}, 'goldilocks'), { access: 'paid', productId: 'uk.sirous.dinoreader.book.goldilocks' });
+    assert.deepEqual(accessOf({ access: 'FREE', productId: ' x.y.z ' }, 'g'), { access: 'paid', productId: 'x.y.z' });
+});
+
+test('Slice 346: access and productId reach meta.json, and an unchanged meta is returned as it was', () => {
+    const fields = { access: 'paid', productId: 'uk.sirous.dinoreader.book.g' };
+    const written = withAccess('{"version":2}', fields);
+    assert.deepEqual(JSON.parse(written), { version: 2, ...fields });
+    assert.equal(withAccess(written, fields), written);
+    assert.equal(withAccess('not json', fields), 'not json');
+});
+
+test('Slice 346: built metas are rewritten from the content folder found by id; a book with no folder is left alone', () => {
+    const root = mkdtempSync(join(tmpdir(), 'access-'));
+    try {
+        for (const id of [A, B]) {
+            mkdirSync(join(root, id));
+            writeFileSync(join(root, id, 'meta.json'), '{"version":1}');
+        }
+        applyAccessToBuiltMetas(root, [{ id: A }, { id: B }], new Map([[A, { stem: 'lion', info: { access: 'free' } }]]));
+        assert.deepEqual(JSON.parse(readFileSync(join(root, A, 'meta.json'), 'utf8')), { version: 1, access: 'free', productId: 'uk.sirous.dinoreader.book.lion' });
+        assert.equal(readFileSync(join(root, B, 'meta.json'), 'utf8'), '{"version":1}');
+    } finally {
+        rmSync(root, { recursive: true, force: true });
+    }
+});
 const outcomeOf = (built, live) => planStoreUploads(built, live).map((item) => item.outcome);
 
 test('a book that is not live yet is uploaded', () => {
