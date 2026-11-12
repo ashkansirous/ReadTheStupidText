@@ -16,7 +16,7 @@ namespace DinoReader;
 public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusBar
 {
 	// Slice 325 A4: the corner's ink header sits under the status bar on a phone held upright (the rail has none), so the clock and battery are light there and dark again on the shelf.
-	bool IInkUnderStatusBar.InkUnderStatusBar => _mode.IsGrownUp && !_chrome.IsRail;
+	bool IInkUnderStatusBar.InkUnderStatusBar => StatusBarIcons.InkUnderBar(_mode.IsGrownUp, CurrentChrome() is { IsRail: true });
 
 	private const double LanguageMenuGap = 6;
 	private const string TileTitleHeightKey = "TileTitleHeight";
@@ -391,6 +391,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	{
 		base.OnAppearing();
 		_appeared = true;
+		ApplyBarColours(); // first appearance: the colours and bar icons stand before any size is known
 		string? reopenSheetFor = _reopenSheetFor; // taken now: only this appearing (the return from the Record push) may reopen the sheet; any other one clears it
 		_reopenSheetFor = null;
 		_mode.PropertyChanged -= OnModeChanged;
@@ -706,12 +707,34 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		ApplyShelfRing();
 		ApplyLanguageButton();
 		ApplyShape(); // the key holds the mode, so another mode lays everything out again and the same mode does nothing (a shelf rebuild must not relayout the chrome)
-		BackgroundColor = DinoTokens.Get(grownUp ? DinoTokens.Sand : DinoTokens.Cream);
+		ApplyBarColours(); // at once, even before the first window size: the chrome kind depends on the window size only, never on the mode
+	}
+
+	// Slice 349: the one place that sets what sits behind the system bars: the page colour, the content host's colour, the bar icons and (Windows) the title bar.
+	// Asked on every mode change, after every chrome pass and on first appearance, never behind ApplyShapeOnce's size gate.
+	// Under a bar the corner's page is ink (the mock: the header runs up behind the status bar) and the content host paints the sand below it; otherwise the page keeps its own colour and the host paints the same.
+	private void ApplyBarColours()
+	{
+		if (CurrentChrome() is not { } chrome)
+		{
+			return; // no layout pass yet: the first SizeChanged / ApplyShapeOnce paints, with no guessed window size
+		}
+
+		bool grownUp = _mode.IsGrownUp;
+		bool ink = StatusBarIcons.InkUnderBar(grownUp, chrome.IsRail);
+		string content = grownUp ? DinoTokens.Sand : DinoTokens.Cream;
+		BackgroundColor = DinoTokens.Get(ink ? DinoTokens.Ink : content);
+		ContentHost.BackgroundColor = DinoTokens.Get(content);
 		SystemBarIcons.ForPage(this);
 #if WINDOWS
-		DinoTitleBar.Refresh(this); // Slice 235 part B: entering or leaving the corner changes the title bar colour at once
+		DinoTitleBar.Refresh(this); // Slice 235 part B: the title bar reads the page colour set just above
 #endif
 	}
+
+	// The chrome the layout last built: the one value the bar colours, the status-bar icons and the layout all read (never _windowSize on its own, which runs ahead of the layout between a resize and its pass). Null until the first pass.
+	private ChromeShape? CurrentChrome() => _chromeBuilt ? _chrome : null;
+
+	private bool _chromeBuilt;
 
 	private Size _windowSize;
 	private string? _shapeKey; // what the last layout pass built, so a pass that changes nothing does nothing
@@ -769,6 +792,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 		_shapeKey = key;
 		_chrome = chrome;
+		_chromeBuilt = true;
 		if (grownUp != _shapeGrownUp)
 		{
 			_anchorBookId = null; // the other mode lists other tiles: its first book is not this one's
@@ -782,7 +806,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		ApplyTileSizes(chrome, grownUp);
 		ApplyShelfList(columns);
 		LogShape(chrome, columns, grownUp);
-		SystemBarIcons.ForPage(this); // a rotation moves the ink header under or away from the status bar
+		ApplyBarColours(); // a rotation moves the ink header under or away from the status bar
 	}
 
 	// Slice 325: the debug markers the redesign flows read, through TestHookLog (RTST-TEST tag). Compiled out of store builds.

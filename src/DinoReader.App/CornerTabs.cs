@@ -172,7 +172,8 @@ internal sealed class CornerTabs : Grid
 		SemanticProperties.SetDescription(_hits[i], name);
 		root.GestureRecognizers.Clear();
 		root.Content = _rail ? RailContent(i, name) : BarContent(i, name);
-		root.HeightRequest = _rail ? _sizes.TabHeight : _sizes.TabRow;
+		root.HeightRequest = _rail ? _sizes.TabHeight : -1; // a bar tab grows with its label (font scale, Arabic and Farsi); only a least height is set
+		root.MinimumHeightRequest = _rail ? -1 : CornerLayout.TabBarMinHeight(_sizes, BarLabelGap);
 		root.StrokeShape = new RoundRectangle { CornerRadius = _rail ? _sizes.TabRadius : 0 };
 		root.Padding = _rail ? new Thickness(_sizes.TabPadding, 0) : new Thickness(0, _sizes.TabBar.Top, 0, _sizes.TabBar.Bottom);
 		if (_rail && DesktopTips.IsWindows)
@@ -193,7 +194,7 @@ internal sealed class CornerTabs : Grid
 			HorizontalOptions = LayoutOptions.Center,
 			Content = icon,
 		};
-		var label = new Label { Text = name, FontSize = _sizes.TabLabel, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1 };
+		var label = new Label { Text = name, FontSize = _sizes.TabLabel, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, LineHeight = CornerLayout.TabLabelLineHeight, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1 };
 		var column = new VerticalStackLayout { Spacing = BarLabelGap, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center, Children = { pill, label } };
 		return new Grid { Children = { column, _hits[i] } };
 	}

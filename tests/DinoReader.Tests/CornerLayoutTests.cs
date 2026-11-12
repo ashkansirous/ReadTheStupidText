@@ -86,6 +86,38 @@ public class CornerLayoutTests
         Assert.Equal([30d, 30d, 32d, 30d], [p1.DotSize, p2.DotSize, p3.DotSize, p4.DotSize]);
     }
 
+    [Theory]
+    [InlineData(375, 667, 4, 52, 4)]
+    [InlineData(393, 852, 6, 52, 0)] // P2: bar 58; the 34 home-bar inset is the bottom padding, added by the safe area
+    [InlineData(412, 915, 6, 56, 0)] // P4: bar 62; the 24 gesture inset is the bottom padding
+    [InlineData(440, 956, 6, 56, 0)] // P3: bar 62
+    public void At_the_default_font_scale_a_bar_tab_is_the_mock_row_between_the_bars_padding(double w, double h, double padTop, double mockRow, double padBottom)
+    {
+        CornerSizes s = CornerLayout.SizesOf(CornerLayout.ChromeOf(w, h, false));
+        const double gap = 2;
+
+        double min = CornerLayout.TabBarMinHeight(s, gap);
+
+        Assert.Equal(padTop + mockRow + padBottom, min); // the mock's P1-P4 rows (52 or 56) and paddings
+        Assert.True(s.TabPillHeight + gap + Math.Ceiling(s.TabLabel * CornerLayout.TabLabelLineHeight) <= mockRow); // pill, gap and a descender-safe label line fit inside the row
+    }
+
+    [Fact]
+    public void A_content_taller_than_the_row_grows_the_tab()
+    {
+        var s = new CornerSizes { TabRow = 40, TabBar = new Edges(0, 2, 0, 2), TabPillHeight = 30, TabLabel = 20 };
+
+        Assert.Equal(2 + 2 + 30 + 2 + 28, CornerLayout.TabBarMinHeight(s, 2));
+    }
+
+    [Fact]
+    public void The_least_bar_tab_height_never_drops_below_the_mock_row()
+    {
+        var s = new CornerSizes { TabRow = 80, TabBar = new Edges(0, 1, 0, 1), TabPillHeight = 10, TabLabel = 10 };
+
+        Assert.Equal(82, CornerLayout.TabBarMinHeight(s, 2)); // the row of 80 plus the bar's own 1 + 1
+    }
+
     [Fact]
     public void The_rail_sizes_follow_frames_L1_T1_and_W1()
     {
