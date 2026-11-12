@@ -14,7 +14,7 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (169 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (171 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
@@ -28,8 +28,6 @@ Open slices only. Finished slices (169 rows) are in [slices-done](docs/plan/note
 | 330 | Listening page: Store listening track, page gaps audible | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [330-store-listening-track-page-gaps-audible.md](docs/plan/slices/330-store-listening-track-page-gaps-audible.md) |
 | 342 | Listening page: Farsi voice pack | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [342-farsi-voice-pack.md](docs/plan/slices/342-farsi-voice-pack.md) |
 | 343 | Listening page: four Farsi voices | parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page) | | | [343-four-farsi-voices.md](docs/plan/slices/343-four-farsi-voices.md) |
-| 347 | Dino: both web pages (dinoreader.sirous.uk, sirous.uk/dino-reader) tell today's facts, with fresh screenshots | done 2026-11-09; the three app bugs from the screenshot run are Slice 349 | #1000 | | [347-dino-web-pages-current.md](docs/plan/slices/347-dino-web-pages-current.md) |
-| 348 | Dino: the privacy page describes today's app (no scans, OCR, ML Kit, voice engine or own books) | done 2026-11-09 | #1007 | | [348-dino-privacy-page-current.md](docs/plan/slices/348-dino-privacy-page-current.md) |
 | 349 | Dino: grown-ups corner status-bar icons unreadable, "Settings" and Arabic tab labels clipped, unused iPhone camera/photo texts | planned (item 4 only: keep the scanner code out of Dino's iOS build and remove the three camera/photo keys; the rest built #1015) | #1015 | | [349-dino-corner-status-bar-and-tab-labels.md](docs/plan/slices/349-dino-corner-status-bar-and-tab-labels.md) |
 | 350 | Dino: high-resolution pictures for a printed Amazon book (Git LFS, `high-res/`), fixing faulty pages, one prompt per Gemini chat, stricter picture checks, Good Enough redrawn without text | parked: parts A, D and E need the user's Chrome and Gemini account and their model pick (B and C merged #1013) | #1013 | | [350-dino-high-res-pictures.md](docs/plan/slices/350-dino-high-res-pictures.md) |
 | 346 | Dino: four free books, the rest $0.99 each (store-account purchases, server receipt check, backups without book content) | parked: Part D, store setup and keys, and switching on wait for the user (A-C merged #1016 behind the off switch) | #1016 | | [346-dino-paid-books.md](docs/plan/slices/346-dino-paid-books.md) |
