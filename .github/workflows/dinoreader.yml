@@ -73,7 +73,7 @@ jobs:
       - name: Set up .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          global-json-file: global.json # Slice 353: one SDK pin for every job
 
       - name: Run Dino Reader core tests
         run: dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj --configuration Release

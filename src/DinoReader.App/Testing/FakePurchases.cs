@@ -6,7 +6,7 @@ namespace DinoReader.Testing;
 /// <summary>
 /// A pretend store for scripted device flows (Slice 346): which test books are sold, which the account owns, what a Buy does, so Buy, Restore, the wait overlay and the picker can be checked with no money
 /// and no real store. Switched on by the Debug <c>fake-purchases</c> hook (<see cref="SwitchablePurchases.Override"/> and <see cref="BookSales.ForcedEnabled"/>); it lives only in a Debug build (or the
-/// Windows VM test package) and in this process. The Worker is never asked: the test store's books come from the app's own assets.
+/// Windows VM test package, which writes no [Purchases] markers) and in this process. The Worker is never asked: the test store's books come from the app's own assets.
 /// </summary>
 internal sealed class FakePurchases : IBookPurchases
 {
@@ -53,14 +53,22 @@ internal sealed class FakePurchases : IBookPurchases
             PendingProducts.Add(productId);
         }
 
-        ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"{Marker} buy product={productId} outcome={NextBuy}");
+        WriteMarker($"{Marker} buy product={productId} outcome={NextBuy}");
         return NextBuy;
     }
 
     public Task<bool> RedeemCodeAsync()
     {
-        ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"{Marker} redeem opened");
+        WriteMarker($"{Marker} redeem opened");
         return Task.FromResult(true);
+    }
+
+    // Mobile.Shared's TestHookLog is compiled in Debug only (Slice 162), so a Release DINO_TEST_BOOKS package (the Windows VM build, Slice 353) writes no [Purchases] markers; the calls are compiled out there. (Windows has no TestHookLog sink even in Debug.) VM flows must not assert on these lines.
+    private static void WriteMarker(string line)
+    {
+#if DEBUG
+        ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write(line);
+#endif
     }
 
     private PurchaseSnapshot Snapshot(IReadOnlyCollection<string> productIds)
