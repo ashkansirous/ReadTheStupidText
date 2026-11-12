@@ -1,10 +1,11 @@
 # Slice 349 — Dino: grown-ups corner status bar and clipped tab labels
 
-*Planned (2026-11-09).*
+*In progress (wave 2026-11-12), draft PR.*
 
 **Touches:** `src/DinoReader.App/SystemBarIcons.cs`, `src/DinoReader.App/Platforms/iOS/SystemBarIcons.ios.cs`,
 `src/DinoReader.App/Platforms/Android/MainActivity.cs`, `src/DinoReader.App/CornerShell.cs`, `src/DinoReader.App/CornerTabs.cs`,
-`src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/Platforms/iOS/Info.plist`,
+`src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.Core/StatusBarIcons.cs`, `src/DinoReader.Core/CornerLayout.cs`,
+`src/DinoReader.App/Platforms/iOS/StatusBarPageViewController.cs`, `src/DinoReader.App/Platforms/iOS/Info.plist`,
 `tests/DinoReader.Tests/**`,
 `docs/plan/slices/349-dino-corner-status-bar-and-tab-labels.md`
 
@@ -20,6 +21,17 @@ Seen while taking the website screenshots for Slice 347 (2026-11-09, Android emu
 
 Causes not checked yet; the files in Touches are where the status-bar colour and the corner tabs are set (found by
 name, not read).
+
+## Premises checked (2026-11-12, ground-in-code on origin/main; likely, not proven on a device)
+
+- Icon colour: `SystemBarIcons.cs:38-39` picks dark icons only when `!inkUnderBar` and the page is light
+  (`DinoReader.Core/StatusBarIcons.cs:7`); the corner is `GalleryPage`, whose `IInkUnderStatusBar`
+  (`GalleryPage.xaml.cs:19`) is true whenever grown-up mode and not the rail, which forces light icons.
+- Tab labels: `CornerTabs.cs:196` label `MaxLines=1`, tail truncation, inside a fixed `HeightRequest = TabRow`
+  (`:175`); sizes from `DinoReader.Core/CornerLayout.cs:177,227,230`. No LineHeight.
+- Info.plist: `NSCameraUsageDescription` :52, `NSPhotoLibraryUsageDescription` :58, `NSPhotoLibraryAddUsageDescription` :60;
+  `NSMicrophoneUsageDescription` (:66) stays (Record). Touches narrowed: `StorePage.xaml.cs` and `SettingsPage.cs` dropped
+  (not where the colour or tabs are set), so the slice runs beside Slice 346.
 
 ## Work
 
