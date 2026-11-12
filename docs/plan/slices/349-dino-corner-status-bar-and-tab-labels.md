@@ -1,8 +1,12 @@
 # Slice 349 — Dino: grown-ups corner status bar and clipped tab labels
 
-*Built (merged as PR #1015, 699f8d06); item 4 (remove camera/photo texts) waits for proof Dino's iOS binary has no camera/photo API reference.*
+*Built (merged as PR #1015, 699f8d06). Item 4: In progress (wave 2026-11-12), draft PR.*
 
-**Touches:** `src/DinoReader.App/SystemBarIcons.cs`, `src/DinoReader.App/Platforms/iOS/SystemBarIcons.ios.cs`,
+**Touches (item 4, wave 2026-11-12):** `src/ReadTheStupidText.Mobile.Shared/ReadTheStupidText.Mobile.Shared.csproj`,
+`src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/MobileSharedServices.iOS.cs` (comment only), `src/DinoReader.App/Platforms/iOS/Info.plist`,
+`src/DinoReader.App/CLAUDE.md`, `tests/DinoReader.Tests/**`, `docs/plan/slices/349-dino-corner-status-bar-and-tab-labels.md`
+
+**Touches (items 1-3, merged):** `src/DinoReader.App/SystemBarIcons.cs`, `src/DinoReader.App/Platforms/iOS/SystemBarIcons.ios.cs`,
 `src/DinoReader.App/Platforms/Android/MainActivity.cs`, `src/DinoReader.App/CornerShell.cs`, `src/DinoReader.App/CornerTabs.cs`,
 `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.Core/StatusBarIcons.cs`, `src/DinoReader.Core/CornerLayout.cs`,
 `src/DinoReader.App/Platforms/iOS/StatusBarPageViewController.cs`, `src/DinoReader.App/Platforms/iOS/Info.plist`,
