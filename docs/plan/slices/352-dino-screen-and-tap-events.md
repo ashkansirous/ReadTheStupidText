@@ -1,6 +1,6 @@
 # Slice 352 — Dino: every screen, wizard step and button press is counted
 
-*Built 2026-11-12 (PR #1022, not merged). Run on the Android emulator (emulator-5554, flows pass); iOS, Windows and live data not yet verified (see the end of this file).*
+*Built 2026-11-12, merged as PR #1022 (be859f0a; 14 checks green, android job on image 20261101.186.1). Run on the Android emulator (emulator-5554, flows pass); iOS, Windows and live data not yet verified (see the end of this file).*
 
 **Touches:** `worker/events.ts`, `worker/events*.test.mjs`, `worker/CLAUDE.md`, `src/DinoReader.App/UsageCounter.cs`,
 `src/DinoReader.App/Usage*.cs`, `src/DinoReader.App/UiUsage*.cs`, `src/DinoReader.App/*Page*.cs`,
@@ -174,7 +174,7 @@ have 20 blobs and 20 doubles; Slice 351 uses blobs 17-19 and `double6`.
 After Slice 351 (same files: `worker/events.ts`, `UsageCounter.cs`). The minimum app version for full behaviour data
 is the first release carrying this slice.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-12)
 
 - `src/DinoReader.App/CLAUDE.md`: every press goes through `UiUsage.Press` / `Taps.AddTap` (count first, then the handler, with the live `IsEnabled`) or carries `// no-tap-count: <reason>`; `SilentButtonGuardTests` enforces it. (Slice 352: docs/plan/slices/352-dino-screen-and-tap-events.md)
 - `src/DinoReader.Core/CLAUDE.md`: the lists in `UiUsage.cs` must equal `worker/events.ts`; a test keeps them equal, so add a screen, control, setting or origin in both. (Slice 352: docs/plan/slices/352-dino-screen-and-tap-events.md)
@@ -183,5 +183,5 @@ is the first release carrying this slice.
 
 - Corner screen row and a speed `setting_changed` on a device (the flows do not open them).
 - iOS simulator (none on this machine) and the `DidEnterBackground` flush.
-- Windows VM: window-close flush and `app_backgrounded` (the `Destroying` path). The Dino Windows VM test package does not build on origin/main: `src/DinoReader.App/Testing/FakePurchases.cs:56,62` CS0234 `ReadTheStupidText.Mobile.Shared.Testing` in the `DINO_TEST_BOOKS` Release build, from Slice 346 (#1016); log `D:/ReadTheStupidText-worktrees/reviews/s352-win-build.log`.
+- Windows VM: window-close flush and `app_backgrounded` (the `Destroying` path). The package build was fixed by Slice 353 (PR #1024), so this can run now.
 - `tools/usage-sessions` against live data after release.
