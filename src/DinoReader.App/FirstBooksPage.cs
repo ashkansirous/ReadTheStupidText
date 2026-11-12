@@ -248,7 +248,7 @@ public partial class FirstBooksPage : ContentPage, IDinoKeyTarget
 
 	private async Task ShowListAsync(IReadOnlyList<StoreItem> items)
 	{
-		_items = FirstBooks.Order(items);
+		_items = FirstBooks.Order(BookAccess.FirstRunOffer(_store.Sales.EnabledForOffer, items)); // Slice 346: a fresh install is offered only books that are not sold; while the switch is unread, only those the listing says are free
 		await ReadShelfAsync();
 		if (FirstBooks.IsSatisfied(_shelfCount))
 		{

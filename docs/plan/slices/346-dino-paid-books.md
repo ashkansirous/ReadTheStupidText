@@ -1,8 +1,8 @@
 # Slice 346 — Dino: four free books, the rest $0.99 each
 
-*In progress (wave 2026-11-12), draft PR: Parts A, B and C behind the off switch; Part D waits for the user.*
+*Parts A, B and C built behind the off switch (PR #1016, wave 2026-11-12); Part D and switching on wait for the user.*
 
-**Touches:** `worker/appconfig.ts`, `worker/appconfig.test.mjs`, `worker/index.ts`, `src/DinoReader.Core/AppConfig.cs`, `src/DinoReader.App/AppConfigClient.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/GrownUpGate.cs`, `src/DinoReader.App/GalleryPage.xaml*`, `worker/stories.ts`, `worker/entitlements/**` (new: receipt checks per store), `worker/products.ts` (new: product to book list), `worker/CLAUDE.md`, `worker/stories.test.mjs`, `worker/entitlements.test.mjs` (new), `content/dino/*/book.json`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/scripts/store-products.mjs` (new: create and price the products through the store APIs), `src/DinoReader.Core/BookAccess.cs` (new), `src/DinoReader.Core/StoryBackup*.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StorePage.xaml*`, `src/DinoReader.App/FirstBooksPage*.cs`, `src/DinoReader.App/BackupPage.xaml*`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/ShelfAudioPacks*.cs`, `src/DinoReader.App/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/Purchases/**` (new), `src/DinoReader.App/Platforms/iOS/Purchases/**` (new), `src/DinoReader.App/Platforms/Windows/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Testing/**`, `tests/DinoReader.Tests/**`, `docs/store-listings/dino/**`, `site/dino/privacy.html`, `docs/plan/slices/346-dino-paid-books.md`
+**Touches:** `worker/appconfig.ts`, `worker/appconfig.test.mjs`, `worker/index.ts`, `src/DinoReader.Core/AppConfig.cs`, `src/DinoReader.App/AppConfigClient.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/GrownUpGate.cs`, `src/DinoReader.App/GalleryPage.xaml*`, `worker/stories.ts`, `worker/entitlements/**` (new: receipt checks per store), `worker/products.ts` (new: product to book list), `worker/CLAUDE.md`, `worker/stories.test.mjs`, `worker/entitlements.test.mjs` (new), `content/dino/*/book.json`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/scripts/store-products.mjs` (new: create and price the products through the store APIs), `src/DinoReader.Core/BookAccess.cs` (new), `src/DinoReader.Core/StoryBackup*.cs` (incl. `StoryBackupState.cs`, `StoryBackupReader.LegacyFiles.cs`, `StoryBackupWriter.WithBookFiles.cs`), `src/ReadTheStupidText.Mobile.Shared/Usage/RemoteConfigClient.cs`, `wrangler.jsonc`, `wrangler.workers-dev.jsonc`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StorePage.xaml*`, `src/DinoReader.App/FirstBooksPage*.cs`, `src/DinoReader.App/BackupPage.xaml*`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/ShelfAudioPacks*.cs`, `src/DinoReader.App/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/Purchases/**` (new), `src/DinoReader.App/Platforms/iOS/Purchases/**` (new), `src/DinoReader.App/Platforms/Windows/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Testing/**`, `tests/DinoReader.Tests/**`, `docs/store-listings/dino/**`, `site/dino/privacy.html`, `docs/plan/slices/346-dino-paid-books.md`, `tools/DinoReader.BookBuilder/**`, `src/DinoReader.Core/StoreCatalog.cs`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `.maestro/dino/paid-books.yaml`
 
 ## Why
 
@@ -65,6 +65,14 @@ Premises (ground-in-code on origin/main): remote config is `worker/appconfig.ts`
   at night.
 - **Library choice:** each platform's billing API through `library-docs` first; if StoreKit 2 has no .NET binding, the
   iOS task uses the StoreKit (original) API bound in .NET for iOS, recorded here.
+- **Touches added during the night build (coordinator, 2026-11-12):** `tools/DinoReader.BookBuilder/**` (its book.json reader refuses unknown fields, so `BookInfo` gained `Access` and `ProductId`; neither is in `BookHash`, so marking the four free books changed no hash and `check` says all 15 books are current), `StoreCatalog.cs` (the listing's `access`, `productId`, `unlockedBy`), `AppResources.cs` (typed accessors for the new strings) and `.maestro/dino/paid-books.yaml` (the scripted check, passes `tools/emulator/lint-flows.ps1`). The four free books carry `"access": "free"` in book.json; the product id of every other book is derived (`uk.sirous.dinoreader.book.<stem>`) by `publish-store-books.mjs`, not written into 11 book.json files.
+- **Switch-on step, not done tonight:** `Platforms/iOS/Info.plist` (Slice 349 owns it this wave) gets its network/purchase comment updated when the switch goes on.
+- **iOS purchase state (user-approved exception, coordinator 2026-11-12):** StoreKit 1 has no silent owned list, and the app never replays on its own (no surprise Apple ID prompts). So iOS keeps the product ids and transaction ids it has seen from a purchase or a Restore in Preferences (`dino.ios.purchases`), the one exception to "the store owns the state". Opening the Store tab reads that kept list only; Restore purchases replays with Apple and refreshes it. Android and Windows keep nothing.
+- **Backups (final design, after three review rounds):** the writer and the reader each have one rule, keyed on the paid-books switch.
+  - *Writer:* switch off or unknown writes exactly the backup of before Slice 346 (schema 1, one `.dino` per story with its book files and recordings, no settings, the old Save text). Switch known on writes schema 2 (shelf ids, reading view, recordings, settings, no book content). `BackupFormat` picks it; the default is the old one.
+  - *Reader, schema 2 or switch known on:* recordings and reading view are put back on books the phone has; the missing ones are listed and fetched from the store. *Reader, schema 1:* switch known off restores as before (book files imported). Switch on or unknown asks the store per book, through one pure function, `BookAccess.LegacyBookChoice(access, owned, storeCanSupply)`, which returns Store (free or owned, store can supply it), File (the store cannot supply it and the book is not a sold, unowned one) or ListOnly (sold and unowned: the file is never installed). `BackupPage` calls it for both the store download and the file fallback, with "sold" read as the first-run picker reads it (an unread switch counts as sold). A book the listing does not name is not sold as far as the phone knows.
+- **Switch-on step, republish first (finding 8 of `reviews/pr-1016-medium.md`):** a book meta without an `access` field is free, so a listing published before this slice stays open and nothing already live turns paid by accident. Before `paidBooks.enabled` is set to true, republish every book's `meta.json` with its `access` (and `productId`) through `publish-store-books.mjs`; only then are the paid books actually sold. The same step covers the Worker's `PAID_LIMITER` rate-limit binding (30 store calls per connection and minute; absent = the gate answers 429, never owned).
+- **Paid files are never shared-cached:** package, audio-pack and listening-track responses of a paid book send `Cache-Control: private, no-store`; a free book's keep their old rule.
 - **Not built tonight (Part D):** `store-products.mjs`, `docs/store-listings/dino/**`, `site/dino/privacy.html`: the
   privacy page and listings change when the switch goes on, with the user (they would be wrong while every book is free).
 
@@ -112,37 +120,37 @@ through `library-docs` or `web-research` before building that part.
 
 ### Part A — the Worker knows what is free and checks purchases
 
-- [ ] `book.json` gets `"access": "free"` or `"paid"` (closed set, default paid) plus the product id
+- [x] `book.json` gets `"access": "free"` or `"paid"` (closed set, default paid) plus the product id
       `uk.sirous.dinoreader.book.<stem>`. `publish-store-books.mjs` carries both into the store's `meta.json`. The four
       free books are marked free.
-- [ ] `worker/products.ts`: product id to the list of book ids it unlocks (one per paid book now).
-- [ ] `/api/stories` lists every book with its access and product id. The download, audio and listening-track (`listen/<lang>`) routes for a
+- [x] `worker/products.ts`: product id to the list of book ids it unlocks (one per paid book now).
+- [x] `/api/stories` lists every book with its access and product id. The download, audio and listening-track (`listen/<lang>`) routes for a
       paid book need a purchase proof header. The Worker checks it with the store that sold it (Part A2), caches a
       good answer for the device's request for a short time, and returns 402 for no proof and 403 for a bad one.
       Free books work exactly as today.
-- [ ] The storage bucket stays closed: no r2.dev public URL and no custom domain on `readthestupidtext-downloads`
+- [x] The storage bucket stays closed: no r2.dev public URL and no custom domain on `readthestupidtext-downloads`
       (read live 2026-11-09). The Worker is the only door; keep it that way.
-- [ ] A2: one checker per store under `worker/entitlements/` (Apple App Store Server API, Google Play Developer API,
+- [x] A2: one checker per store under `worker/entitlements/` (Apple App Store Server API, Google Play Developer API,
       Microsoft Store collections API), each behind the same interface: proof in, owned product ids out. Their keys go
       through `manage-secrets` and `wrangler secret put`; nothing about the buyer is stored or logged. Tests with
       recorded store answers in `worker/entitlements.test.mjs`.
 
 ### Part B — buying and restoring in the app (Android, iOS, Windows)
 
-- [ ] `BookAccess` (Core, pure): what a book's state is (free, owned, buyable, already on the shelf from before) and
+- [x] `BookAccess` (Core, pure): what a book's state is (free, owned, buyable, already on the shelf from before) and
       what the store page shows for it. Unit tests.
-- [ ] `IBookPurchases` in `src/DinoReader.App/Purchases/`: load products and prices, buy, restore, current proof.
-- [ ] Android task: Google Play Billing implementation (library chosen through `library-docs` first).
-- [ ] iOS task: StoreKit 2 implementation (`library-docs` first).
-- [ ] Windows task: `Windows.Services.Store` durable add-on implementation.
-- [ ] `StorePage`: a paid book shows the store's price and a Buy button; buying opens the store's own sheet; when it
+- [x] `IBookPurchases` in `src/DinoReader.App/Purchases/`: load products and prices, buy, restore, current proof.
+- [x] Android task: Google Play Billing implementation (library chosen through `library-docs` first).
+- [x] iOS task: StoreKit 2 implementation (`library-docs` first).
+- [x] Windows task: `Windows.Services.Store` durable add-on implementation.
+- [x] `StorePage`: a paid book shows the store's price and a Buy button; buying opens the store's own sheet; when it
       succeeds the book downloads as today. A Restore purchases button sits in the grown-ups area. Every wait over
       500 ms uses the shared wait overlay. All new text in every app language (`NoHardCodedUiTextTests`).
-- [ ] `StoreClient`, `BookUpdater` and `ShelfAudioPacks` send the purchase proof for paid books; a 402/403 for a book
+- [x] `StoreClient`, `BookUpdater` and `ShelfAudioPacks` send the purchase proof for paid books; a 402/403 for a book
       already on the shelf skips its update quietly and reports a fallback event, never removing the book.
-- [ ] `FirstBooksPage` offers only free books.
-- [ ] Debug test hook to fake an owned product (Testing/), so device flows run without real money.
-- [ ] **Store promo codes work** (user asked 2026-11-09 how to give books to themselves and friends). Codes come only
+- [x] `FirstBooksPage` offers only free books.
+- [x] Debug test hook to fake an owned product (Testing/), so device flows run without real money.
+- [x] **Store promo codes work** (user asked 2026-11-09 how to give books to themselves and friends). Codes come only
       from the stores; our own codes are not allowed on iOS (3.1.1: "Apps may not use their own mechanisms to unlock
       content"). Apple offer codes cover non-consumables (up to 10 active offers, 1 million codes a quarter, redeemed by
       URL, in the App Store or in the app); Play promo codes (500 a quarter for one-time products, redeemed in the Play
@@ -156,12 +164,12 @@ through `library-docs` or `web-research` before building that part.
 
 ### Part C — backups hold state, not books
 
-- [ ] `StoryBackup`: a new backup is `backup.json` (schema version up) with the shelf list (book ids), progress and
+- [x] `StoryBackup`: a new backup is `backup.json` (schema version up) with the shelf list (book ids), progress and
       settings, plus the recordings. No `.dino` files.
-- [ ] Restore: put the recordings and state back, then download every listed book that isn't on the phone (free at
+- [x] Restore: put the recordings and state back, then download every listed book that isn't on the phone (free at
       once; paid after the store confirms ownership; the rest listed on the restore page as "buy or restore to get
       back"). Old backups: keep reading recordings and the shelf from them, ignore their book files.
-- [ ] Unit tests for old and new backups; `BackupPage` text in every language.
+- [x] Unit tests for old and new backups; `BackupPage` text in every language.
 
 ### Part D — stores, listings and privacy
 
@@ -187,3 +195,97 @@ through `library-docs` or `web-research` before building that part.
 - Windows (Hyper-V VM): buy and restore with a Store test add-on.
 - Backup made on one install, restored on a clean one: recordings back, free books downloaded, paid books listed
   until restored.
+
+## Review
+
+*From review:* (`reviews/pr-1016-medium.md`)
+
+- Applied #2, #3, #6, #8, #9, #10 (backups are one design: see *Backups (final design)* above; paid files `private, no-store`; a meta without `access` is free; a per-client limit on store calls, 429; the Store page refresh shows the wait overlay; one `LegacyBookChoice` decides the store download and the file fallback).
+- Skipped #1 (`reviews/pr-1016-medium.md`): "Sonos/Alexa serve listening tracks of paid books with no gate" - the user ruled Sonos and Alexa out of this slice, so no change in `worker/sonos.ts` or `worker/alexa.ts`; it matters only when the switch is on, and is listed for the user to decide before then.
+- Skipped #4 (`reviews/pr-1016-medium.md`): "Apple proof only shows a transaction id exists for this bundle/product, not tied to the caller" - the app has no accounts, so any store proof can be shared; that is a known limit of Decision 1, listed for the user.
+- Skipped #5 (`reviews/pr-1016-medium.md`): "unauthenticated GET /api/stories/windows-ticket returns the Worker's own Entra client-credentials token" - already gated in the high round: 404 while the switch is off, rate-limited per connection, and the token has the Store collections audience only.
+- Skipped #7 (`reviews/pr-1016-medium.md`): "ListAsync awaits sales.EnsureConfigAsync before every listing while no config copy is held" - a decision from the high round: while the config is unknown the first-run picker offers free books only.
+
+*From review:* check1 (`reviews/pr-1016-check1.md`)
+
+- Applied #1, #3, #6, #7, #8 (and a follow-up: a schema 1 restore uses `LegacyBookFiles.Restore`, the files imported as on main, unless the switch is known to be on: `BookAccess.LegacyFilesMode`, unit-tested). The rule for #1 and #3: with the switch off, or its value unreadable, every path behaves exactly as origin/main. #1: the gate counts an unreadable switch as off (`GateAnswer.Off`), and a paid book's files then get origin/main's status and cache headers (`private, no-store` only after a store-confirmed proof). #3: nothing user-facing awaits the remote config any more (`BookSales.RefreshConfigInBackground`); `ListAsync` and the restore use the last known value (default off), and the first-run picker still offers only free books while the value was never known (this replaces the high round's wait in `ListAsync`). #6: a failing `ApplyToBookAsync` is reported (`FallbackArea.Library`) and the restore goes on. #7: copies of one store id write one entry with every copy's clips merged. #8: the schema 1 per-language cast assertion is back in `LanguageCastTests`.
+- Skipped #2 (`reviews/pr-1016-check1.md`): "accessOf defaults missing access to paid; worker parseAccess defaults to free; 11 books lack access, so republish flips them to paid." - intended: `book.json` defaults to paid by decision 2, so republished metas say paid explicitly; the Worker's missing = free only covers old listings.
+- Skipped #4 (`reviews/pr-1016-check1.md`): "windows-ticket hands out the service Entra token to any caller; per-IP limit on CF-Connecting-IP, shared "unknown" bucket." - already gated twice: 404 while the switch is off, rate-limited, and the token has the Store audience only; recorded for the switch-on review.
+- Skipped #5 (`reviews/pr-1016-check1.md`): "ownership cache keyed by proof only; leaked token works up to 5 min, refunds not seen, junk can evict entries." - the short cache is by design; refunds are seen within 5 minutes.
+
+*From review:* check2 (`reviews/pr-1016-check2.md`)
+
+- Applied #2, #4. #2: the existing fresh-restore test stays as it is and a second test covers the default (off) fresh restore of a book with recordings and no pre-added book. #4: the background config refresh runs at most once per app launch (`BookSales.RefreshConfigInBackground`, only while no copy is held) plus when the Store tab opens, at most once per 10 minutes (`RefreshConfigOnStoreTab`); both are quiet (`reportFallback: false`): offline or failed, the last known value stays and no fallback event is reported, marked `// no-fallback:`.
+- Skipped #1 (`reviews/pr-1016-check2.md`): "Save text fixed at page open, backup format decided again at Save." - the switch is only turned on by the user's switch-on step, and the Save text is re-read when the page opens; recorded for that step.
+- Skipped #3 (`reviews/pr-1016-check2.md`): "public RestoreAsync gained a LegacyBookFiles parameter before onAdded; positional callers from main break." - no caller outside this branch uses the positional form, the build is green.
+
+*From review:* check4 (`reviews/pr-1016-check4.md`)
+
+- Applied #1, #2, #3, #6 (in the flow-setup fix of `.maestro/dino/paid-books.yaml`: sold books stay in the store at skip-first-run, the buy is proven by the Buy pill going away, the regexes are single-quoted with the dollar escaped).
+- Skipped #4 (`reviews/pr-1016-check4.md`): "lint-flows.ps1 has no rule for unquoted YAML-1.1 booleans/nulls (on/off/yes/no/null) in arguments. Future flow could silently invert." - lint tooling outside this slice.
+- Skipped #5 (`reviews/pr-1016-check4.md`): "is unverified; flow not run on a device." - the snapshot marker was seen in the device run.
+- Skipped #7 (`reviews/pr-1016-check4.md`): "header onFlowComplete block is never linted (stopApp:false not checked there)." - lint tooling outside this slice.
+
+*From review:* check5 (`reviews/pr-1016-check5.md`)
+
+- Applied #1: the fake-purchases hook sets the sold names, the pretend store and the switch before its first await (`DinoTestCommands.Purchases.cs`, `FakePurchases.SetPaid` keeps stems or ids, no asset read), so skip-first-run right after always sees them. The buy wait overlay is proven by the `wait_shown` usage line (`# expect-log: wait_shown`), not by a UI wait: it shows for about 2 s only.
+- Skipped #2 (`reviews/pr-1016-check5.md`): "The assertion uses a text regex plus index:1 and assumes one node per Buy pill." - on the device run the regex matched one node per pill: the buy removed exactly one.
+
+*From review:* high (`reviews/pr-1016-high.md`)
+
+- All 10 findings applied.
+
+*From review:* check6 (`reviews/pr-1016-check6.md`)
+
+- Applied none.
+- Skipped #1 (`reviews/pr-1016-check6.md`): "MarkStale() runs before Override/ForcedEnabled/SetPaid are installed." - a Debug-only test-hook edge case that the device flow does not hit.
+- Skipped #2 (`reviews/pr-1016-check6.md`): "BuyAsync ignores Offline: Snapshot returns Empty when offline, but Buy still succeeds" - a Debug-only test-hook edge case that the device flow does not hit.
+
+*From review:* check7 (`reviews/pr-1016-check7.md`)
+
+- Applied none.
+- Skipped #1 (`reviews/pr-1016-check7.md`): "ticket reuses query token (wrong audience) and is handed to anonymous callers." - applies only with the switch on (check2 traced switch off or unknown = origin/main on every path); listed as a must-fix item before switch-on.
+- Skipped #2 (`reviews/pr-1016-check7.md`): "gate returns 402/403 on /listen/<lang>, but Sonos/Alexa catalogues list paid books" - the user ruled Sonos and Alexa out of this slice.
+- Skipped #3 (`reviews/pr-1016-check7.md`): "two opposite defaults is a trap. Correct the comment." - a comment fix only, low.
+- Skipped #4 (`reviews/pr-1016-check7.md`): "ReadPurchasesAsync waits at most 400 ms" - applies only with the switch on (check2 traced switch off or unknown = origin/main on every path); listed as a must-fix item before switch-on.
+- Skipped #5 (`reviews/pr-1016-check7.md`): "backup format chosen from the paid-books switch at two different times" - applies only with the switch on (check2 traced switch off or unknown = origin/main on every path); listed as a must-fix item before switch-on.
+- Skipped #6 (`reviews/pr-1016-check7.md`): "a book missing from the store listing is treated as free" - applies only with the switch on (check2 traced switch off or unknown = origin/main on every path); listed as a must-fix item before switch-on.
+- Skipped #7 (`reviews/pr-1016-check7.md`): "402/403 on a book update is swallowed and reported as StoreFailed" - applies only with the switch on (check2 traced switch off or unknown = origin/main on every path); listed as a must-fix item before switch-on.
+- Skipped #8 (`reviews/pr-1016-check7.md`): "StoreFirst mode and schema 2 restore put a book with no matching shelf copy in Missing" - applies only with the switch on (check2 traced switch off or unknown = origin/main on every path); listed as a must-fix item before switch-on.
+- Skipped #9 (`reviews/pr-1016-check7.md`): "StorePage constructor subscribes to singleton Purchases.Changed and never unsubscribes." - applies only with the switch on (check2 traced switch off or unknown = origin/main on every path); listed as a must-fix item before switch-on.
+- Skipped #10 (`reviews/pr-1016-check7.md`): "copied in three places (products.ts, Books.cs, publish-store-books.mjs)" - duplication, low.
+
+## Device run (emulator-5554, build 886c981061c6)
+
+Files: `D:/ReadTheStupidText-worktrees/reviews/w47-device/s346/rerun3/`.
+
+- Switch off: first-books-picker download PASS, dino-backup-restore-recordings PASS, back-cover (skip-first-run) PASS.
+- Paid-books flow (fake store): Buy pill with price, `outcome=Bought`, snapshot owned=1, `wait_shown`, Restore message and `redeem opened` all seen; every Maestro assertion passed. Its one failing marker (a prefix cut mid-token) was removed afterwards.
+- Earlier failures were flow bugs: unquoted YAML `on`, test books already on the shelf, a 2 s overlay wait.
+- One Mono SIGSEGV at cold start in one attempt (strcasecmp in libmonosgen); the next flows passed.
+
+## Waiting on the user (switch-on steps; each blocks turning the switch on)
+
+- [ ] Before switch-on: fix review findings check7 #1 (Windows ticket audience and anonymous exposure), #4, #5, #6, #7, #8 (recordings of an unlisted book on restore), #9 (reviews/pr-1016-check7.md). Blocks: turning the switch on.
+- Create the products and $0.99 prices in App Store Connect, Play Console and Partner Center. Blocks: any purchase.
+- Paid apps agreement, bank and tax details. Blocks: selling on Apple, Google and Microsoft.
+- Worker secrets `PLAY_SERVICE_ACCOUNT_JSON`, `APPLE_IAP_KEY_P8`, `APPLE_IAP_KEY_ID`, `APPLE_IAP_ISSUER_ID`, `MS_STORE_TENANT_ID`, `MS_STORE_CLIENT_ID`, `MS_STORE_CLIENT_SECRET` (optional `APPLE_IAP_ALLOW_SANDBOX` on a staging Worker). Blocks: the Worker confirming any purchase (without them it answers 403).
+- Republish every book's `meta.json` with `access` through `publish-store-books.mjs`. Blocks: paid books actually being sold.
+- `Platforms/iOS/Info.plist` purchase comment. Blocks: the iOS switch-on.
+- Part D: privacy page and store listings. Blocks: switch-on honesty of the listings.
+- Then set `paidBooks.enabled: true` in R2 `dinoreader/config.json`.
+- Known limits: Sonos and Alexa serve paid listening tracks (user ruled them out); a store proof can be shared (no accounts).
+
+#### For CLAUDE.md
+
+- `worker/CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`: `paidBooks.enabled` off or unreadable means origin/main behaviour everywhere (Worker, app, backups); nothing user-facing awaits the remote config. (Slice 346: docs/plan/slices/346-dino-paid-books.md)
+- `src/DinoReader.App/CLAUDE.md`: `BookAccess.LegacyBookChoice` alone decides what a schema 1 restore does with each book. (Slice 346: docs/plan/slices/346-dino-paid-books.md)
+- `worker/CLAUDE.md`: the `PAID_LIMITER` and `TICKET_LIMITER` rate-limit bindings must exist in the wrangler configs; a missing `PAID_LIMITER` answers 429, never "owned". The proof header is `X-Purchase-Proof`, format as in `worker/entitlements/proof.ts`. (Slice 346: docs/plan/slices/346-dino-paid-books.md)
+
+#### Not yet verified
+
+- Real Play test-account purchase and restore.
+- iOS StoreKit sandbox/TestFlight purchase and restore.
+- Windows Store add-on on the VM.
+- The switch-on store page with the real Worker.
+- Microsoft Store ID flow against a live store.

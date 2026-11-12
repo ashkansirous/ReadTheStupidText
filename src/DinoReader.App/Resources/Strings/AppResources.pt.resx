@@ -357,4 +357,20 @@
   <data name="BackCover_Months" xml:space="preserve"><value>janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} e {1}</value></data>
+  <data name="Store_BuyFor" xml:space="preserve"><value>Comprar {0}</value></data>
+  <data name="Store_BuyStory" xml:space="preserve"><value>Comprar {0} por {1}</value></data>
+  <data name="Store_ConnectToBuy" xml:space="preserve"><value>Conecte-se à internet para comprar</value></data>
+  <data name="Store_Waiting" xml:space="preserve"><value>Aguardando aprovação</value></data>
+  <data name="Store_RestorePurchases" xml:space="preserve"><value>Restaurar compras</value></data>
+  <data name="Store_RedeemCode" xml:space="preserve"><value>Resgatar um código</value></data>
+  <data name="Store_BuyFailed" xml:space="preserve"><value>A compra não foi concluída. Tente novamente.</value></data>
+  <data name="Store_FooterPaid" xml:space="preserve"><value>Alguns livros custam um pouco. São comprados pela sua conta da loja, e nada sobre você ou seu filho é enviado para nós.</value></data>
+  <data name="Store_Restored" xml:space="preserve"><value>Suas compras foram verificadas. Os livros que você tem agora podem ser obtidos na loja.</value></data>
+  <data name="Wait_BuyingBook" xml:space="preserve"><value>Aguardando a loja…</value></data>
+  <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Verificando suas compras…</value></data>
+  <data name="Backup_Missing" xml:space="preserve"><value>Livros para recuperar da loja</value></data>
+  <data name="Backup_MissingNote" xml:space="preserve"><value>Os livros gratuitos voltam sozinhos. Para um livro que você comprou, toque em Restaurar compras na loja e depois restaure este backup de novo.</value></data>
+  <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>As gravações e as configurações da sua história em um só arquivo. O livro em si volta da loja. Salve no Drive ou em Arquivos, ou envie para você mesmo.</value></data>
+  <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>As gravações e as configurações de todas as {0} histórias em um só arquivo. Os livros em si voltam da loja. Salve no Drive ou em Arquivos, ou envie para você mesmo.</value></data>
+  <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Traz de volta gravações e configurações de um arquivo e baixa os livros de novo da loja. Livros comprados precisam primeiro de Restaurar compras.</value></data>
 </root>

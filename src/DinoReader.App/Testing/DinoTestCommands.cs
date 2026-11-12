@@ -63,7 +63,7 @@ internal static partial class DinoTestCommands
 	internal static void Register()
 	{
 		TestHookDispatcher.AppCommands = Run;
-		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, ForceKey, ModeKey, ReorderFromKey, ReorderToKey, ClipsKey];
+		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey, ForceKey, ModeKey, ReorderFromKey, ReorderToKey, ClipsKey, PaidKey, OwnedKey, PriceKey, BuyKey, OfflineKey];
 	}
 
 	private static string? Run(TestHookCommand command)
@@ -121,6 +121,12 @@ internal static partial class DinoTestCommands
 		if (command.Name == ForcePackFailureName)
 		{
 			return ForcePackFailure(command.Get(ModeKey, string.Empty));
+		}
+
+		if (command.Name == FakePurchasesName)
+		{
+			_ = FakePurchasesAsync(command);
+			return StartedOutcome;
 		}
 
 		if (command.Name == RecordStateName)

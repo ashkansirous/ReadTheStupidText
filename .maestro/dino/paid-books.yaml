@@ -1,0 +1,100 @@
+# Slice 346 (paid books, behind the off switch): the scripted device check for buying, restoring and the first-run picker, with the Debug pretend store (hook fake-purchases) and the Debug test store: no money,
+# no real store account, no Worker.
+# The test store lists 4 books; fake-purchases marks two of them as sold and says none is owned. Against the old behaviour (every book free, no Buy pill) the Buy assertions fail.
+# The shelf starts with only the two FREE test books: skip-first-run imports all four test books except the ones fake-purchases already sells, so the two sold books are still for sale in the Store tab.
+# Android and iOS alike (the hooks go through the shared dispatcher). The gate is not tapped: the enter-grown-up hook stands in for it.
+# expect-log: HOOK test-store ok ok
+# expect-log: HOOK fake-purchases ok on paid=2 owned=0
+# expect-log: HOOK skip-first-run ok
+# expect-log: [Purchases] snapshot owned=0 pending=0 prices=2
+# expect-log: outcome=Bought
+# expect-log: [Purchases] snapshot owned=1 pending=0 prices=2
+# expect-log: [Purchases] redeem opened
+# expect-log: wait_shown
+appId: uk.sirous.dinoreader.dbg
+name: A sold book shows its price, buying it downloads it, and Restore and Redeem are in the Store tab
+onFlowComplete:
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: fake-purchases
+        mode: "off"
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books); fine here: the flow uses the Debug test store and the pretend store only, and needs a fresh install so the sold books are not on the shelf.
+    clearState: true
+    arguments:
+      cmd: test-store
+      mode: ok
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 60000
+# The sale is set before the first run is skipped: skip-first-run then puts only the unsold test books on the shelf.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-purchases
+      mode: "on"
+      paid: "gingerbread-man,three-little-pigs"
+      price: "$0.99"
+      buy: ok
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: store
+- extendedWaitUntil:
+    visible:
+      id: GalleryStoreSub
+    timeout: 30000
+# Sold books show the store's own price on a Buy pill. Single-quoted regex with the dollar sign escaped (a bare $ is an end anchor); the pill may be read by its hint "Buy <title> for $0.99" too.
+# Both sold books have a pill, so a second match (index 1) exists.
+- extendedWaitUntil:
+    visible:
+      text: 'Buy .*\$0\.99.*'
+      index: 1
+    timeout: 30000
+- assertVisible:
+    id: StoreRestorePurchases
+- assertVisible:
+    id: StoreRedeemCode
+# Buy: the store's sheet is pretended (about 1 s, so the wait overlay shows), then the book downloads like any other and its Buy pill goes away: only the other sold book keeps one.
+- tapOn:
+    text: 'Buy .*\$0\.99.*'
+    index: 0
+# The wait overlay shows and goes within about 2 s, too brief to catch on screen: the usage line "[Usage] seq=N wait_shown" (expect-log above) proves it appeared.
+- extendedWaitUntil:
+    notVisible:
+      text: 'Buy .*\$0\.99.*'
+      index: 1
+    timeout: 60000
+- assertVisible:
+    text: 'Buy .*\$0\.99.*'
+# Restore purchases re-reads the store and says so.
+- tapOn:
+    id: StoreRestorePurchases
+- extendedWaitUntil:
+    visible: "Your purchases were checked. Books you own can now be got from the Store."
+    timeout: 15000
+- tapOn: "OK"
+# Redeem a code opens the store's own screen (pretended: the log line "[Purchases] redeem opened", checked by expect-log above) and the Store tab stays put.
+- tapOn:
+    id: StoreRedeemCode
+    waitToSettleTimeoutMs: 500
+- extendedWaitUntil:
+    visible:
+      id: StoreRedeemCode
+    timeout: 10000
+# The second sold book is still for sale: one Buy pill remains.
+- assertVisible:
+    text: 'Buy .*\$0\.99.*'

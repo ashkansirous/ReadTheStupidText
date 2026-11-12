@@ -356,4 +356,20 @@
   <data name="BackCover_Months" xml:space="preserve"><value>januar|februar|mars|april|mai|juni|juli|august|september|oktober|november|desember</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} og {1}</value></data>
+  <data name="Store_BuyFor" xml:space="preserve"><value>Kjøp {0}</value></data>
+  <data name="Store_BuyStory" xml:space="preserve"><value>Kjøp {0} for {1}</value></data>
+  <data name="Store_ConnectToBuy" xml:space="preserve"><value>Koble til internett for å kjøpe</value></data>
+  <data name="Store_Waiting" xml:space="preserve"><value>Venter på godkjenning</value></data>
+  <data name="Store_RestorePurchases" xml:space="preserve"><value>Gjenopprett kjøp</value></data>
+  <data name="Store_RedeemCode" xml:space="preserve"><value>Løs inn en kode</value></data>
+  <data name="Store_BuyFailed" xml:space="preserve"><value>Kjøpet gikk ikke gjennom. Prøv igjen.</value></data>
+  <data name="Store_FooterPaid" xml:space="preserve"><value>Noen bøker koster litt. De kjøpes med butikkontoen din, og ingenting om deg eller barnet ditt sendes til oss.</value></data>
+  <data name="Store_Restored" xml:space="preserve"><value>Kjøpene dine er sjekket. Bøker du eier, kan nå hentes i butikken.</value></data>
+  <data name="Wait_BuyingBook" xml:space="preserve"><value>Venter på butikken …</value></data>
+  <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Sjekker kjøpene dine …</value></data>
+  <data name="Backup_Missing" xml:space="preserve"><value>Bøker som skal hentes tilbake fra butikken</value></data>
+  <data name="Backup_MissingNote" xml:space="preserve"><value>Gratis bøker kommer tilbake av seg selv. For en bok du har kjøpt, trykk på Gjenopprett kjøp i butikken og gjenopprett deretter denne sikkerhetskopien på nytt.</value></data>
+  <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Opptakene og innstillingene til historien din i én fil. Selve boken kommer tilbake fra butikken. Lagre den i Drive eller Filer, eller send den til deg selv.</value></data>
+  <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Opptakene og innstillingene for alle {0} historiene i én fil. Selve bøkene kommer tilbake fra butikken. Lagre den i Drive eller Filer, eller send den til deg selv.</value></data>
+  <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Henter opptak og innstillinger tilbake fra en fil og henter bøkene på nytt fra butikken. Kjøpte bøker trenger først Gjenopprett kjøp.</value></data>
 </root>

@@ -47,6 +47,11 @@ export interface CrashReportsConfig {
   readonly enabled: boolean;
 }
 
+/** The paid-books switch (Slice 346): books are sold and checked only while this is a literal `true`; default off, so every book is free. */
+export interface PaidBooksConfig {
+  readonly enabled: boolean;
+}
+
 export interface AppConfig {
   readonly schemaVersion: number;
   readonly android: PlatformVersions;
@@ -54,6 +59,7 @@ export interface AppConfig {
   readonly windows: PlatformVersions;
   readonly telemetry: TelemetryConfig;
   readonly crashReports: CrashReportsConfig;
+  readonly paidBooks: PaidBooksConfig;
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -63,6 +69,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   windows: { minVersion: NO_VERSION, latestVersion: NO_VERSION },
   telemetry: { enabled: false, sampleRate: 0 },
   crashReports: { enabled: false },
+  paidBooks: { enabled: false },
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -92,6 +99,12 @@ function crashReportsOf(value: unknown): CrashReportsConfig {
   return raw["enabled"] === true ? { enabled: true } : DEFAULT_CONFIG.crashReports;
 }
 
+function paidBooksOf(value: unknown): PaidBooksConfig {
+  const raw = isRecord(value) ? value : {};
+  // Switched on only by a literal true; anything else is off.
+  return raw["enabled"] === true ? { enabled: true } : DEFAULT_CONFIG.paidBooks;
+}
+
 /** A checked config from parsed JSON; every missing or malformed part takes its default. */
 export function parseAppConfig(parsed: unknown): AppConfig {
   const raw = isRecord(parsed) ? parsed : {};
@@ -102,6 +115,7 @@ export function parseAppConfig(parsed: unknown): AppConfig {
     windows: platformOf(raw["windows"]),
     telemetry: telemetryOf(raw["telemetry"]),
     crashReports: crashReportsOf(raw["crashReports"]),
+    paidBooks: paidBooksOf(raw["paidBooks"]),
   };
 }
 

@@ -33,6 +33,10 @@ import {
   storyPackageKey,
 } from "./download-keys.mjs";
 import type { ServedFile } from "./downloads";
+import { GateAnswer } from "./entitlements/gate.ts";
+import type { PaidGate } from "./entitlements/gate.ts";
+import { PROOF_HEADER } from "./entitlements/proof.ts";
+import { isProductId, productsUnlocking } from "./products.ts";
 
 export const STORIES_API_PATH = "/api/stories";
 const STORY_PATH_PREFIX = "/api/stories/";
@@ -73,11 +77,22 @@ const POSITIVE_INTEGER = /^[1-9]\d{0,8}$/;
 export const STORE_TAGS = ["Hot", "Popular", "Recommended", "New"] as const;
 export type StoreTag = (typeof STORE_TAGS)[number];
 
+/** Slice 346: whether a book is sold. Closed set; a meta without `access` (or with anything but "free") is paid, as a book's `book.json` is. */
+export const BOOK_ACCESS = ["free", "paid"] as const;
+export type BookAccess = (typeof BOOK_ACCESS)[number];
+
 const ErrorCode = {
   Unavailable: "stories-unavailable",
   NotFound: "not-found",
   StoryUnavailable: "story-unavailable",
+  PaymentRequired: "payment-required",
+  PurchaseNotValid: "purchase-not-valid",
+  CannotVerify: "cannot-verify",
+  RateLimited: "rate-limited",
 } as const;
+
+const HTTP_PAYMENT_REQUIRED = 402;
+const HTTP_FORBIDDEN = 403;
 
 /** What `meta.json` holds, checked. `schemaVersion` is the `.dino` format the package is in. */
 export interface StoryMeta {
@@ -105,6 +120,9 @@ export interface StoryMeta {
   readonly tags: readonly StoreTag[];
   /** Slice 260: the size of the `story-v<n>.dino` package in bytes; null when absent or not a positive integer. */
   readonly bytes: number | null;
+  /** Slice 346: free or paid, and the store product id of a paid book (null when it has none). */
+  readonly access: BookAccess;
+  readonly productId: string | null;
 }
 
 /** One audio pack of a book language: `audio-<lang>-v<version>.zip`; `bytes` (null when unknown) lets the app show a size. */
@@ -302,7 +320,19 @@ export function parseMeta(parsed: unknown): StoryMeta | null {
     audio: parseAudio(raw["audio"]),
     tags: parseTags(raw["tags"]),
     bytes: positiveIntegerOrNull(raw["bytes"]),
+    access: parseAccess(raw["access"]),
+    productId: parseProductId(raw["productId"]),
   };
+}
+
+/** Slice 346: a meta without an `access` field is free (a listing published before the field existed stays open); only an explicit non-"free" value, "paid" or a wrong one, is paid. */
+export function parseAccess(raw: unknown): "free" | "paid" {
+  return raw === undefined || raw === null || raw === "free" ? "free" : "paid";
+}
+
+/** Slice 346: a store product id as the stores carry it, else null. */
+export function parseProductId(raw: unknown): string | null {
+  return typeof raw === "string" && isProductId(raw) ? raw : null;
 }
 
 /** The package version to offer: meta's own `version` when that file is there, else the highest uploaded; null when meta names a missing one. */
@@ -338,6 +368,10 @@ export interface ListItem {
   /** Slice 260: the store tags in list order (empty when none) and the package size in bytes (null when unknown). */
   readonly tags: readonly StoreTag[];
   readonly bytes: number | null;
+  /** Slice 346: free or paid; the book's own product id and every product that unlocks it (its own plus each bundle that lists it). */
+  readonly access: BookAccess;
+  readonly productId: string | null;
+  readonly unlockedBy: readonly string[];
   readonly coverUrl: string | null;
   readonly downloadUrl: string;
 }
@@ -375,6 +409,9 @@ export function toListItem(entry: StoryEntry, pathPrefix: string): ListItem {
     audio: audioItems(entry, base),
     tags: entry.meta.tags,
     bytes: entry.meta.bytes,
+    access: entry.meta.access,
+    productId: entry.meta.productId,
+    unlockedBy: entry.meta.access === "paid" ? productsUnlocking(entry.id, entry.meta.productId) : [],
     coverUrl: entry.hasCover ? `${base}${COVER_SEGMENT}${versioned}` : null,
     downloadUrl: `${base}${DOWNLOAD_SEGMENT}${versioned}`,
   };
@@ -504,6 +541,9 @@ function serveCover(request: Request, bucket: R2Bucket, entry: StoryEntry, serve
   return serve(request, bucket, coverFile(entry.id), COVER_CACHE);
 }
 
+/** Slice 346: while the paid-books switch is on, a paid book's files are never kept by a shared cache (a proof-bearing 200 must not be served to a caller with no proof). With the switch off every response and header is origin/main's. */
+export const PAID_CACHE = "private, no-store";
+
 // Without ?v= the newest package is sent and never kept; with it, that exact version is immutable.
 function serveDownload(request: Request, bucket: R2Bucket, entry: StoryEntry, version: number | null, serve: ObjectServer): Promise<Response> {
   return serve(request, bucket, packageFile(entry.id, version ?? entry.version), version === null ? NO_CACHE : VERSIONED_CACHE);
@@ -546,12 +586,56 @@ function serveStoryFile(request: Request, bucket: R2Bucket, entry: StoryEntry, s
   return segment === COVER_SEGMENT ? serveCover(request, bucket, entry, serve) : serveDownload(request, bucket, entry, version, serve);
 }
 
-async function route(request: Request, bucket: R2Bucket, pathPrefix: string, serve: ObjectServer): Promise<Response> {
+// Slice 346: the files of a paid book (package, audio packs, listening track; not the cover or the list) need a purchase proof while
+// `paidBooks.enabled` is on. 402 = no proof, 403 = the store does not confirm it (or could not be asked). With the switch off, or when
+// the gate cannot read it (the gate counts that as off), nothing is asked and the response is origin/main's: `Gate.Open`; `Gate.Passed` is a
+// proof the store confirmed, whose file is then sent with PAID_CACHE.
+const Gate = { Open: "open", Passed: "passed" } as const;
+
+async function paidDenial(request: Request, entry: StoryEntry, segment: string, paid: PaidGate | undefined): Promise<Response | typeof Gate.Open | typeof Gate.Passed> {
+  const isFile = segment === DOWNLOAD_SEGMENT || segment === AUDIO_SEGMENT || segment === LISTEN_SEGMENT;
+  if (paid === undefined || !isFile || entry.meta.access !== "paid") return Gate.Open;
+  let answer: string;
+  try {
+    answer = await paid(request.headers.get(PROOF_HEADER), { id: entry.id, productId: entry.meta.productId }, request.headers.get("CF-Connecting-IP") ?? UNKNOWN_CLIENT);
+  } catch {
+    return errorResponse(ErrorCode.Unavailable, 503); // the switch is on but a store check broke unexpectedly; never guess "owned"
+  }
+  if (answer === GateAnswer.Off) return Gate.Open;
+  if (answer === GateAnswer.Allowed) return Gate.Passed;
+  if (answer === GateAnswer.RateLimited) return errorResponse(ErrorCode.RateLimited, HTTP_TOO_MANY_REQUESTS); // over the per-client limit on store calls: never "owned"
+  if (answer === GateAnswer.NoProof) return errorResponse(ErrorCode.PaymentRequired, HTTP_PAYMENT_REQUIRED);
+  return errorResponse(answer === GateAnswer.CannotVerify ? ErrorCode.CannotVerify : ErrorCode.PurchaseNotValid, HTTP_FORBIDDEN);
+}
+
+/** Slice 346: what the ticket source answers: a ticket, none (switch off, no Microsoft keys or no limiter: 404) or over the per-client limit (429). */
+export type WindowsTicketAnswer = { readonly ticket: string } | { readonly none: true } | { readonly limited: true };
+
+/** Slice 346: hands the Windows app the short-lived Entra ID ticket it needs to make a Microsoft Store ID key; `clientKey` only keys the rate limit and is never stored. */
+export type WindowsTicketSource = (clientKey: string) => Promise<WindowsTicketAnswer>;
+
+export const WINDOWS_TICKET_PATH = "/api/stories/windows-ticket";
+const UNKNOWN_CLIENT = "unknown";
+const HTTP_TOO_MANY_REQUESTS = 429;
+
+async function ticketResponse(request: Request, ticket: WindowsTicketSource | undefined): Promise<Response> {
+  let answer: WindowsTicketAnswer = { none: true };
+  try {
+    answer = ticket === undefined ? answer : await ticket(request.headers.get("CF-Connecting-IP") ?? UNKNOWN_CLIENT);
+  } catch {
+    answer = { none: true }; // no ticket: the app then cannot make a Store ID key, so a Windows book stays unowned (never "owned")
+  }
+  if ("limited" in answer) return errorResponse(ErrorCode.RateLimited, HTTP_TOO_MANY_REQUESTS);
+  return "ticket" in answer ? jsonResponse({ ticket: answer.ticket }, 200, NO_CACHE) : errorResponse(ErrorCode.NotFound, 404);
+}
+
+async function route(request: Request, bucket: R2Bucket, pathPrefix: string, serve: ObjectServer, paid?: PaidGate, ticket?: WindowsTicketSource): Promise<Response> {
   const { pathname } = new URL(request.url);
   if (pathname === STORIES_API_PATH) {
     const entries = await currentEntries(bucket);
     return entries === null ? errorResponse(ErrorCode.Unavailable, 503) : listResponse(entries, pathPrefix, request.method === "HEAD");
   }
+  if (pathname === WINDOWS_TICKET_PATH) return ticketResponse(request, ticket);
   const [id = "", segment = "", ...extra] = pathname.slice(STORY_PATH_PREFIX.length).split("/");
   const withLanguage = (segment === AUDIO_SEGMENT || segment === LISTEN_SEGMENT) && extra.length === 1;
   const audioLanguage = withLanguage ? (extra[0] ?? "") : null; // audio/<lang> and listen/<lang> are the routes with a third part
@@ -563,6 +647,18 @@ async function route(request: Request, bucket: R2Bucket, pathPrefix: string, ser
     return errorResponse(ErrorCode.Unavailable, 503);
   }
   if (entry === null) return errorResponse(ErrorCode.NotFound, 404);
+  const gate = await paidDenial(request, entry, segment, paid);
+  if (gate instanceof Response) return gate;
+  return serveFile(request, bucket, { entry, segment, audioLanguage }, gate === Gate.Passed ? privateServer(serve) : serve);
+}
+
+// Slice 346: the same server with the file's cache rule replaced by PAID_CACHE.
+function privateServer(serve: ObjectServer): ObjectServer {
+  return (request, bucket, file, _cache) => serve(request, bucket, file, PAID_CACHE);
+}
+
+function serveFile(request: Request, bucket: R2Bucket, target: { readonly entry: StoryEntry; readonly segment: string; readonly audioLanguage: string | null }, serve: ObjectServer): Promise<Response> {
+  const { entry, segment, audioLanguage } = target;
   if (audioLanguage === null) return serveStoryFile(request, bucket, entry, segment, serve);
   return segment === LISTEN_SEGMENT ? serveListen(request, bucket, entry, audioLanguage, serve) : serveAudio(request, bucket, entry, audioLanguage, serve);
 }
@@ -582,12 +678,14 @@ export async function handleStories(
   env: { DOWNLOADS?: R2Bucket },
   pathPrefix: string,
   serve: ObjectServer,
+  paid?: PaidGate,
+  ticket?: WindowsTicketSource,
 ): Promise<Response> {
   if (request.method !== "GET" && request.method !== "HEAD") {
     return new Response(null, { status: 405, headers: { Allow: ALLOWED_METHODS } });
   }
   if (!env.DOWNLOADS) return errorResponse(ErrorCode.Unavailable, 503);
-  const response = await route(request, env.DOWNLOADS, pathPrefix, serve);
+  const response = await route(request, env.DOWNLOADS, pathPrefix, serve, paid, ticket);
   if (request.method !== "HEAD" || response.status < 400) return response;
   return new Response(null, { status: response.status, headers: response.headers });
 }

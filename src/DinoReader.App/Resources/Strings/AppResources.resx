@@ -360,4 +360,20 @@
   <data name="BackCover_Months" xml:space="preserve"><value>January|February|March|April|May|June|July|August|September|October|November|December</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0} and {1}</value></data>
+  <data name="Store_BuyFor" xml:space="preserve"><value>Buy {0}</value></data>
+  <data name="Store_BuyStory" xml:space="preserve"><value>Buy {0} for {1}</value></data>
+  <data name="Store_ConnectToBuy" xml:space="preserve"><value>Connect to the internet to buy</value></data>
+  <data name="Store_Waiting" xml:space="preserve"><value>Waiting for approval</value></data>
+  <data name="Store_RestorePurchases" xml:space="preserve"><value>Restore purchases</value></data>
+  <data name="Store_RedeemCode" xml:space="preserve"><value>Redeem a code</value></data>
+  <data name="Store_BuyFailed" xml:space="preserve"><value>The purchase didn’t go through. Please try again.</value></data>
+  <data name="Store_FooterPaid" xml:space="preserve"><value>Some books cost a little. They are bought through your store account, and nothing about you or your child is sent to us.</value></data>
+  <data name="Store_Restored" xml:space="preserve"><value>Your purchases were checked. Books you own can now be got from the Store.</value></data>
+  <data name="Wait_BuyingBook" xml:space="preserve"><value>Waiting for the store…</value></data>
+  <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Checking your purchases…</value></data>
+  <data name="Backup_Missing" xml:space="preserve"><value>Books to get back from the store</value></data>
+  <data name="Backup_MissingNote" xml:space="preserve"><value>Free books come back by themselves. For a book you bought, press Restore purchases in the Store, then restore this backup again.</value></data>
+  <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Your story’s recordings and settings in one file. The book itself comes back from the store. Save it to Drive or Files, or send it to yourself.</value></data>
+  <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>The recordings and settings for all {0} stories in one file. The books themselves come back from the store. Save it to Drive or Files, or send it to yourself.</value></data>
+  <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Brings recordings and settings back from a file, and fetches the books again from the store. Books you bought need Restore purchases first.</value></data>
 </root>

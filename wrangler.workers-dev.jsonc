@@ -54,7 +54,11 @@
   // Slice 227: at most 10 crash reports per connection and minute in one location; the connection's IP is only the limiter's key and is never stored.
   // The namespace_id is an integer unique within the account.
   "ratelimits": [
-    { "name": "CRASH_LIMITER", "namespace_id": "2270", "simple": { "limit": 10, "period": 60 } }
+    { "name": "CRASH_LIMITER", "namespace_id": "2270", "simple": { "limit": 10, "period": 60 } },
+    // Slice 346: GET /api/stories/windows-ticket, 6 per connection and minute (a Windows app asks once per store read).
+    { "name": "TICKET_LIMITER", "namespace_id": "3460", "simple": { "limit": 6, "period": 60 } },
+    // Slice 346: paid-book proofs that reach a store, 30 per connection and minute (see wrangler.jsonc).
+    { "name": "PAID_LIMITER", "namespace_id": "3461", "simple": { "limit": 30, "period": 60 } }
   ],
   // Slice 282: the Alexa skill id (amzn1.ask.skill...). Empty until the skill exists, and while it is empty
   // every Alexa request is refused with 400 (worker/alexa-verify.ts fails closed). Set it here, in BOTH wrangler configs, by a PR

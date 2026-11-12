@@ -42,7 +42,7 @@
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="8">
                         <Label Text="{x:Static res:AppResources.Backup_RestoreTitle}" FontSize="17" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level2" />
-                        <Label Text="{x:Static res:AppResources.Backup_RestoreBody}" FontSize="14" LineHeight="1.45" TextColor="{StaticResource Body}" />
+                        <Label x:Name="RestoreBody" Text="{x:Static res:AppResources.Backup_RestoreBody}" FontSize="14" LineHeight="1.45" TextColor="{StaticResource Body}" />
                         <Button x:Name="RestoreButton" Text="{x:Static res:AppResources.Backup_RestoreButton}" HeightRequest="50" CornerRadius="25" FontSize="15.5"
                                 FontAttributes="Bold" BackgroundColor="White" TextColor="{StaticResource Brand}" BorderColor="{StaticResource MergeBorder}"
                                 BorderWidth="2" Margin="0,6,0,0" Clicked="OnRestoreClicked" />
@@ -68,6 +68,8 @@
                 </Border.StrokeShape>
                 <VerticalStackLayout x:Name="ResultRows" />
             </Border>
+            <!-- Slice 346: books that could not be fetched yet (sold and not owned, or the store was out of reach): how to get them back. -->
+            <Label x:Name="ResultNote" IsVisible="False" FontSize="13.5" LineHeight="1.45" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" Margin="10,0" />
             <Button Text="{x:Static res:AppResources.Backup_SeeStories}" HeightRequest="50" CornerRadius="25" FontSize="15.5" FontAttributes="Bold"
                     BackgroundColor="{StaticResource Brand}" TextColor="White" Padding="28,0" HorizontalOptions="Center" Clicked="OnSeeStoriesClicked" />
         </VerticalStackLayout>

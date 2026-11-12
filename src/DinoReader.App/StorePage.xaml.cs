@@ -6,6 +6,8 @@ using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
 using ReadTheStupidText.Application.Usage;
+using WaitStage = ReadTheStupidText.Application.Reading.WaitStage;
+using ReadTheStupidText.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
@@ -16,6 +18,15 @@ public enum StoreRowState
 	Downloading,
 	Downloaded,
 	Failed,
+
+	/// <summary>Slice 346: a sold book the store account does not own; the pill is Buy with the store's price.</summary>
+	Buy,
+
+	/// <summary>Slice 346: a sold book whose price is not known (offline): a calm note, no button.</summary>
+	ConnectToBuy,
+
+	/// <summary>Slice 346: a purchase waiting for approval.</summary>
+	Waiting,
 }
 
 /// <summary>What one store row binds to (mock frame T2): the entry's labels and its Get / progress / On the shelf state.</summary>
@@ -27,6 +38,7 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	private StoreRowState _state = onShelf ? StoreRowState.Downloaded : StoreRowState.Get;
 	private double _progress;
 	private ImageSource? _cover;
+	private string _price = string.Empty;
 
 	public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -54,14 +66,24 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	public bool HasMeta => Meta.Length > 0;
 	public bool HasCredits => Credits.Length > 0;
 
-	public string GetHint => StoreText.GetHint(Title);
+	public string GetHint => _state == StoreRowState.Buy ? AppResources.Format(AppResources.Store_BuyStory, Title, _price) : StoreText.GetHint(Title);
 
 	public string ProgressHint => StoreText.ProgressHint(Title, ProgressText);
 
-	/// <summary>The Get pill also stands for a failed download, labelled "Try again".</summary>
-	public bool IsGet => _state is StoreRowState.Get or StoreRowState.Failed;
+	/// <summary>The Get pill also stands for a failed download, labelled "Try again", and (Slice 346) for a sold book, labelled Buy with the store's own price.</summary>
+	public bool IsGet => _state is StoreRowState.Get or StoreRowState.Failed or StoreRowState.Buy;
 
-	public string GetLabel => _state == StoreRowState.Failed ? AppResources.Store_TryAgain : AppResources.Store_Get;
+	public string GetLabel => _state switch
+	{
+		StoreRowState.Failed => AppResources.Store_TryAgain,
+		StoreRowState.Buy => AppResources.Format(AppResources.Store_BuyFor, _price),
+		_ => AppResources.Store_Get,
+	};
+
+	/// <summary>A sold book with nothing to press: the price is unknown (connect to buy) or the purchase waits for approval.</summary>
+	public bool HasNote => _state is StoreRowState.ConnectToBuy or StoreRowState.Waiting;
+
+	public string NoteText => _state == StoreRowState.Waiting ? AppResources.Store_Waiting : AppResources.Store_ConnectToBuy;
 
 	public bool IsDownloading => _state == StoreRowState.Downloading;
 
@@ -83,7 +105,29 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	{
 		_state = state;
 		_progress = 0;
-		Raise(nameof(IsGet), nameof(GetLabel), nameof(IsDownloading), nameof(IsOnShelf), nameof(FillWidth), nameof(ProgressText), nameof(ProgressHint));
+		Raise(nameof(IsGet), nameof(GetLabel), nameof(GetHint), nameof(HasNote), nameof(NoteText), nameof(IsDownloading), nameof(IsOnShelf), nameof(FillWidth), nameof(ProgressText), nameof(ProgressHint));
+	}
+
+	/// <summary>The store's own formatted price for a sold book (Slice 346); empty otherwise.</summary>
+	public string Price => _price;
+
+	/// <summary>Shows what <see cref="BookAccess"/> decided for this row. A download that is running or has just failed is never overwritten.</summary>
+	public void Apply(StoreCardPlan plan)
+	{
+		if (_state == StoreRowState.Downloading || (_state == StoreRowState.Failed && plan.Action != StoreAction.OnShelf))
+		{
+			return;
+		}
+
+		_price = plan.Price ?? string.Empty;
+		SetState(plan.Action switch
+		{
+			StoreAction.OnShelf => StoreRowState.Downloaded,
+			StoreAction.Buy => StoreRowState.Buy,
+			StoreAction.ConnectToBuy => StoreRowState.ConnectToBuy,
+			StoreAction.Waiting => StoreRowState.Waiting,
+			_ => StoreRowState.Get,
+		});
 	}
 
 	public void SetProgress(double progress)
@@ -171,15 +215,55 @@ public partial class StorePage : ContentView, ICornerTabView
 	private bool _loaded;
 	private bool _loading;
 
-	public StorePage(StoreClient client, GrownUpMode mode, UsageCounter usage)
+	public StorePage(StoreClient client, GrownUpMode mode, UsageCounter usage, ExternalActivityGuard external)
 	{
 		InitializeComponent();
+		_external = external;
 		_client = client;
 		_mode = mode;
 		_usage = usage;
 		StoryList.ItemsSource = _rows;
 		BuildChips();
 		ShowAuthor();
+		WaitOverlay overlay = DinoWait.OverPage(); // Slice 346: a purchase or a restore waits for the store; over 500 ms shows the shared wait overlay
+		StoreRoot.Children.Add(overlay);
+		_wait = new WaitController(overlay);
+		RestoreButton.AutomationId = "StoreRestorePurchases";
+		RedeemButton.AutomationId = "StoreRedeemCode";
+		_client.Sales.Purchases.Changed += OnPurchasesChanged;
+	}
+
+	private readonly WaitController _wait;
+	private readonly ExternalActivityGuard _external;
+
+	// The store said something new (a book bought or redeemed outside the app, a pending purchase approved): every row follows it.
+	private void OnPurchasesChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(() => _ = ReplanRowsAsync());
+
+	private async Task ReplanRowsAsync()
+	{
+		try
+		{
+			HashSet<string> onShelf = await _client.InstalledIdsAsync();
+			foreach (StoreRow row in _allRows.ToList())
+			{
+				row.Apply(_client.Sales.PlanFor(row.Item, onShelf.Contains(row.Item.Id)));
+			}
+
+			ApplyPurchaseChrome();
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader store replan failed: {ex}");
+			_client.Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // the rows keep what they show until the next visit
+		}
+	}
+
+	// Restore and Redeem show only while books are sold; the footer line then says purchases go through the store account.
+	private void ApplyPurchaseChrome()
+	{
+		bool sold = _client.Sales.Enabled;
+		PurchaseActions.IsVisible = sold;
+		FooterLabel.Text = sold ? AppResources.Store_FooterPaid : AppResources.Store_Footer;
 	}
 
 	/// <summary>The Store tab is on screen: the list loads the first time; later it only picks up the covers a tab switch cut short. A download that was running is not touched.</summary>
@@ -187,6 +271,7 @@ public partial class StorePage : ContentView, ICornerTabView
 	{
 		RefreshChips();
 		ShowAuthor();
+		_client.Sales.RefreshConfigOnStoreTab(); // quiet, never awaited, at most once per 10 minutes
 		if (_lifetime.IsCancellationRequested)
 		{
 			_lifetime = new CancellationTokenSource();
@@ -214,6 +299,12 @@ public partial class StorePage : ContentView, ICornerTabView
 			// Leaving the page may have cut the cover fetches short: pick the missing ones up again.
 			_ = LoadCoversAsync(_allRows.Where(r => r.Cover is null).ToList(), _lifetime.Token);
 			await RefreshOnShelfAsync();
+			if (_client.Sales.Enabled)
+			{
+				await RefreshPurchasesAsync(_lifetime.Token); // a book bought or redeemed elsewhere shows as owned without Restore (raises Changed)
+			}
+
+			await ReplanRowsAsync();
 		}
 	}
 
@@ -241,12 +332,7 @@ public partial class StorePage : ContentView, ICornerTabView
 				continue;
 			}
 
-			StoreRowState wanted = onShelf.Contains(row.Item.Id) ? StoreRowState.Downloaded : StoreRowState.Get;
-			bool failedAndStillMissing = wanted == StoreRowState.Get && row.State == StoreRowState.Failed;
-			if (row.State != wanted && !failedAndStillMissing)
-			{
-				row.SetState(wanted);
-			}
+			row.Apply(_client.Sales.PlanFor(row.Item, onShelf.Contains(row.Item.Id))); // Get, On the shelf, Buy or a note, by the shelf and the store's answer (a failed download keeps Try again)
 		}
 	}
 
@@ -306,8 +392,14 @@ public partial class StorePage : ContentView, ICornerTabView
 	private async Task ShowItemsAsync(IReadOnlyList<StoreItem> items, CancellationToken cancel)
 	{
 		HashSet<string> onShelf = await _client.InstalledIdsAsync();
+		if (_client.Sales.Enabled)
+		{
+			await _client.Sales.Purchases.RefreshAsync(items, cancel, interactive: true); // the grown-up opened the store page: the store may be asked in full (iOS replays the account's purchases once per run)
+		}
+
 		_allRows.Clear();
-		_allRows.AddRange(items.Select(item => new StoreRow(item, onShelf.Contains(item.Id))));
+		_allRows.AddRange(items.Select(item => NewRow(item, onShelf)));
+		ApplyPurchaseChrome();
 		if (_author is not null && !AuthorsInBand().Any(a => StoreFilter.SameAuthor(a, _author)))
 		{
 			_author = null;
@@ -317,6 +409,13 @@ public partial class StorePage : ContentView, ICornerTabView
 		ShowAuthor();
 		Show(_allRows.Count == 0 ? EmptyView : ListPanel);
 		_ = LoadCoversAsync(_allRows.ToList(), cancel);
+	}
+
+	private StoreRow NewRow(StoreItem item, HashSet<string> onShelf)
+	{
+		var row = new StoreRow(item, onShelf.Contains(item.Id));
+		row.Apply(_client.Sales.PlanFor(item, onShelf.Contains(item.Id)));
+		return row;
 	}
 
 	// Slice 112: filtering is on the phone, over the rows already fetched (so it works on the cached list offline); rows keep their download state.
@@ -477,11 +576,75 @@ public partial class StorePage : ContentView, ICornerTabView
 
 	private async void OnGetTapped(object? sender, TappedEventArgs e)
 	{
-		if ((sender as BindableObject)?.BindingContext is StoreRow { State: StoreRowState.Get or StoreRowState.Failed } row && _mode.IsGrownUp)
+		if ((sender as BindableObject)?.BindingContext is not StoreRow row || !_mode.IsGrownUp)
+		{
+			return;
+		}
+
+		if (row.State == StoreRowState.Buy)
+		{
+			await _busy.RunAsync(() => BuyAsync(row));
+		}
+		else if (row.State is StoreRowState.Get or StoreRowState.Failed)
 		{
 			await GetAsync(row);
 		}
 	}
+
+	// Slice 346: Buy opens the store's own sheet (the grown-up corner is behind the gate; mode is re-checked after each wait). Cancelled and failed change nothing; a bought book downloads as any other.
+	private async Task BuyAsync(StoreRow row)
+	{
+		string? product = row.Item.Products.FirstOrDefault();
+		if (product is null)
+		{
+			return;
+		}
+
+		BuyOutcome outcome = await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_BuyingBook, canCancel: false,
+			_ => _client.Sales.Purchases.BuyAsync(product, _allRows.Select(r => r.Item), CancellationToken.None));
+		await ReplanRowsAsync();
+		if (!_mode.IsGrownUp)
+		{
+			return;
+		}
+
+		if (outcome == BuyOutcome.Failed)
+		{
+			await AlertAsync(AppResources.Store_BuyFailed);
+		}
+		else if (outcome == BuyOutcome.Bought && row.State == StoreRowState.Get)
+		{
+			await GetAsync(row);
+		}
+	}
+
+	private Task AlertAsync(string message) =>
+		Window?.Page is { } page ? page.DisplayAlertAsync(AppResources.Store_Title, message, AppResources.Common_Ok) : Task.CompletedTask;
+
+	private async void OnRestorePurchasesClicked(object? sender, EventArgs e) => await _busy.RunAsync(RestorePurchasesAsync);
+
+	private async Task RestorePurchasesAsync()
+	{
+		await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_CheckingPurchases, canCancel: false,
+			_ => _client.Sales.Purchases.RestoreAsync(_allRows.Select(r => r.Item), CancellationToken.None));
+		await ReplanRowsAsync();
+		if (_mode.IsGrownUp)
+		{
+			await AlertAsync(AppResources.Store_Restored);
+		}
+	}
+
+	private async void OnRedeemCodeClicked(object? sender, EventArgs e) => await _busy.RunAsync(async () =>
+	{
+		await _external.RunAsync(_client.Sales.Purchases.RedeemCodeAsync); // the store's own redeem screen
+		await RefreshPurchasesAsync(CancellationToken.None); // a code redeemed there shows as owned without pressing Restore
+		await ReplanRowsAsync();
+	});
+
+	// The store can take up to 15 s (Play) or 20 s (StoreKit) to answer: past 500 ms the shared wait overlay shows (Slice 346).
+	private Task<PurchaseSnapshot> RefreshPurchasesAsync(CancellationToken cancel) =>
+		_wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_CheckingPurchases, canCancel: false,
+			_ => _client.Sales.Purchases.RefreshAsync(_allRows.Select(r => r.Item), cancel, interactive: true));
 
 	private async Task GetAsync(StoreRow row)
 	{

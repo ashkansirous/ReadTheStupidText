@@ -357,4 +357,20 @@
   <data name="BackCover_Months" xml:space="preserve"><value>1月|2月|3月|4月|5月|6月|7月|8月|9月|10月|11月|12月</value></data>
   <data name="BackCover_Digits" xml:space="preserve"><value>0123456789</value></data>
   <data name="BackCover_And" xml:space="preserve"><value>{0}と{1}</value></data>
+  <data name="Store_BuyFor" xml:space="preserve"><value>{0}を購入</value></data>
+  <data name="Store_BuyStory" xml:space="preserve"><value>{0}を{1}で購入</value></data>
+  <data name="Store_ConnectToBuy" xml:space="preserve"><value>購入するにはインターネットに接続してください</value></data>
+  <data name="Store_Waiting" xml:space="preserve"><value>承認を待っています</value></data>
+  <data name="Store_RestorePurchases" xml:space="preserve"><value>購入を復元</value></data>
+  <data name="Store_RedeemCode" xml:space="preserve"><value>コードを使う</value></data>
+  <data name="Store_BuyFailed" xml:space="preserve"><value>購入できませんでした。もう一度お試しください。</value></data>
+  <data name="Store_FooterPaid" xml:space="preserve"><value>有料の本もあります。購入はストアのアカウントで行われ、あなたやお子さまの情報は私たちには送られません。</value></data>
+  <data name="Store_Restored" xml:space="preserve"><value>購入内容を確認しました。お持ちの本はストアから取り戻せます。</value></data>
+  <data name="Wait_BuyingBook" xml:space="preserve"><value>ストアの応答を待っています…</value></data>
+  <data name="Wait_CheckingPurchases" xml:space="preserve"><value>購入内容を確認しています…</value></data>
+  <data name="Backup_Missing" xml:space="preserve"><value>ストアから取り戻す本</value></data>
+  <data name="Backup_MissingNote" xml:space="preserve"><value>無料の本は自動で戻ります。購入した本は、ストアで「購入を復元」を押してから、このバックアップをもう一度復元してください。</value></data>
+  <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>お話の録音と設定を1つのファイルにまとめます。本そのものはストアから戻ります。DriveやファイルAppに保存するか、自分に送ってください。</value></data>
+  <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>{0}冊すべてのお話の録音と設定を1つのファイルにまとめます。本そのものはストアから戻ります。DriveやファイルAppに保存するか、自分に送ってください。</value></data>
+  <data name="Backup_RestoreBodyState" xml:space="preserve"><value>ファイルから録音と設定を戻し、本をストアからもう一度取得します。購入した本は、先に「購入を復元」が必要です。</value></data>
 </root>

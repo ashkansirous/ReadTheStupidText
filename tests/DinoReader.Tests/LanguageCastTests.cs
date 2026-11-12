@@ -167,7 +167,7 @@ public sealed class LanguageCastTests : IDisposable
 
         Assert.Equal(Farsi, imported.CastIn("fa"));
         Assert.Equal(English, imported.CastIn("en"));
-        Assert.Equal(Farsi, Zipped(await BackupAsync(library)).CastIn("fa"));
+        Assert.Equal(Farsi, Zipped(await BackupAsync(library)).CastIn("fa")); // the schema 1 backup (the default, while the paid-books switch is off) still carries every language's cast
     }
 
     private static async Task<byte[]> BackupAsync(FileStoryLibrary library)

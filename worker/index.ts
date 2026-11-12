@@ -20,12 +20,24 @@ import type { CrashesEnv } from "./crashes";
 import { handleEvents, handleRtstEvents, isEventsPath } from "./events";
 import type { EventsEnv, RtstEventsEnv } from "./events";
 import { handleStories, isStoryPath } from "./stories";
+import type { WindowsTicketSource } from "./stories";
+import { serviceTicket } from "./entitlements/microsoft";
+import { createPaidGate } from "./entitlements/gate";
+import type { PaidGate, StoreCallLimit } from "./entitlements/gate";
+import type { EntitlementEnv } from "./entitlements/types";
 import { handleSonos, isSonosPath } from "./sonos";
 import { handleAlexa, isAlexaPath } from "./alexa";
 import type { AlexaEnv } from "./alexa";
 import { handleStats, isStatsApiPath, isStatsPath } from "./stats";
 import { runRollup } from "./stats-rollup";
 import type { StatsEnv } from "./stats-rollup";
+
+/** Slice 346: the rate limit in front of `windows-ticket` (wrangler `ratelimits`, both configs). */
+interface TicketLimiterEnv {
+  readonly TICKET_LIMITER?: RateLimit;
+  /** Slice 346: the per-client limit on paid-book proof checks that reach a store (wrangler `ratelimits`, both configs). */
+  readonly PAID_LIMITER?: RateLimit;
+}
 
 const SECURITY_HEADERS: Readonly<Record<string, string>> = {
   "X-Content-Type-Options": "nosniff",
@@ -48,10 +60,41 @@ function withPath(request: Request, url: URL, pathname: string): Request {
   return new Request(target, request);
 }
 
+// The Windows app's ticket for a Store ID key (Slice 346): 404 while books are not sold (nothing is asked, no limit used), then at most
+// TICKET_LIMITER's rate per connection (no limiter bound = no ticket, fail closed); only then is the Entra token (Store collections audience) requested.
+// The connection's IP is only the limiter's key; nothing is logged.
+function windowsTicketFor(env: Env, enabled: () => Promise<boolean>, fetcher: (input: string, init?: RequestInit) => Promise<Response>): WindowsTicketSource {
+  return async (clientKey) => {
+    const limiter = (env as Env & TicketLimiterEnv).TICKET_LIMITER;
+    if (!(await enabled()) || limiter === undefined) return { none: true };
+    if (!(await limiter.limit({ key: clientKey })).success) return { limited: true };
+    const ticket = await serviceTicket(env as Env & EntitlementEnv, fetcher);
+    return ticket === null ? { none: true } : { ticket };
+  };
+}
+
+// Slice 346: a proof the gate has not seen costs one call to a store, so each connection gets PAID_LIMITER's rate of them (no limiter bound = no call, fail closed: 429, never "owned").
+function storeCallLimitFor(env: Env): StoreCallLimit {
+  return async (clientKey) => {
+    const limiter = (env as Env & TicketLimiterEnv).PAID_LIMITER;
+    return limiter !== undefined && (await limiter.limit({ key: clientKey })).success;
+  };
+}
+
+// Slice 346: paid books. `paidBooks.enabled` (default off) in the Dino config object, read through the same short cache as the other switches;
+// the store keys are Worker secrets, and while one is missing that store answers "cannot verify" (403), never "owned".
+function paidGateFor(env: Env): { readonly gate: PaidGate; readonly ticket: WindowsTicketSource } {
+  const enabled = configCheck(env, APP_CONFIG_KEY, "paidBooks", (config) => config.paidBooks.enabled);
+  const fetcher = (input: string, init?: RequestInit) => fetch(input, init);
+  const gate = createPaidGate({ enabled, env: env as Env & EntitlementEnv, fetcher, limit: storeCallLimitFor(env) });
+  return { gate, ticket: windowsTicketFor(env, enabled, fetcher) };
+}
+
 function serveStories(request: Request, url: URL, env: Env, site: ResolvedSite): Promise<Response> | Response {
   if (site.product !== Product.DinoReader) return new Response("Not found", { status: 404 });
   const pathPrefix = site.home === "/" ? "" : DINO_PATH_PREFIX;
-  return handleStories(withPath(request, url, site.path), env, pathPrefix, serveObject);
+  const paid = paidGateFor(env);
+  return handleStories(withPath(request, url, site.path), env, pathPrefix, serveObject, paid.gate, paid.ticket);
 }
 
 // Slice 283: Dino Reader's anonymous Sonos music service (worker/sonos.ts).

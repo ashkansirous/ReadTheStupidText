@@ -121,6 +121,8 @@
 	<!-- Slice 132: Play's in-app update (the forced "Please update" page uses its immediate flow). -->
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
 		<PackageReference Include="Xamarin.Google.Android.Play.App.Update" Version="2.1.0.20" />
+		<!-- Slice 346: Google Play Billing (paid books, off by the remote switch until the products exist). -->
+		<PackageReference Include="Xamarin.Android.Google.BillingClient" Version="9.1.0.2" />
 	</ItemGroup>
 
 	<!-- Slice 305: no AndroidSherpaPackaging.props and no IosSherpaPackaging.props here any more: Mobile.Shared is built with IncludeSpeechEngines=false for Dino, so no sherpa-onnx or onnxruntime

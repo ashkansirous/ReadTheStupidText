@@ -5,11 +5,13 @@ using System.Text;
 namespace DinoReader.Core;
 
 /// <summary>
-/// Restores a backup zip into a library (Slice 93, Decision 96). A story whose id, or whose source (a starter or store story the phone installed itself), is already on the shelf keeps its pages, pictures and cast
-/// as they are, but gets back the recordings it lacks (Slice 230); one with nothing new to merge is skipped. The others are imported with their backed-up id (so restoring twice adds nothing). A damaged package costs only its own story.
-/// A newer backup schema, a missing manifest or too many entries refuse the whole file before anything is added.
+/// Restores a backup zip into a library (Slice 93, Decision 96; Slice 346 Decision 5). A restore never brings book files: a book already on the shelf (by id, or as the same store book) gets back the
+/// recordings it lacks (Slice 230) and its reading view; a book the phone does not have is listed in <see cref="StoryRestoreResult.Missing"/> so the app can download it from the store (free at once, paid
+/// once the store confirms it) and then call <see cref="ApplyToBookAsync"/>. Schema 1 backups (a <c>.dino</c> per story) still work: with <see cref="LegacyBookFiles.Restore"/> (the paid-books switch off) their
+/// book files are imported as before; with <see cref="LegacyBookFiles.StoreFirst"/> the store is asked first and the file is used by <see cref="ImportLegacyBookAsync"/> when it cannot supply the book.
+/// A damaged entry costs only its own book. A newer backup schema, a missing manifest or too many entries refuse the whole file before anything changes.
 /// </summary>
-public static class StoryBackupReader
+public static partial class StoryBackupReader
 {
     public const int MaxStories = 1000;
     public const long MaxManifestBytes = 64 * 1024;
@@ -17,36 +19,79 @@ public static class StoryBackupReader
     /// <summary>The most a backup may be, and the most it may unpack to temp files in one restore.</summary>
     public const long MaxBackupBytes = 2L * 1024 * 1024 * 1024;
 
-    // A package may hold up to the importer's own total, plus its manifest and story file.
+    // A legacy package may hold up to the importer's own total, plus its manifest and story file.
     private const long MaxPackageBytes = StoryPackageReader.MaxTotalBytes + StoryPackageReader.MaxStoryBytes + StoryPackageReader.MaxManifestBytes;
     private const int CopyBufferBytes = 81920;
     private const string MacMetadataFolder = "__MACOSX/";
     private const string TempPrefix = "dino-restore-";
 
-    /// <summary>Restores <paramref name="backup"/>; <paramref name="onAdded"/> is called once for each story the restore put on the shelf (Slice 191), so the app can count them.</summary>
-    public static Task<StoryRestoreResult> RestoreAsync(Stream backup, IStoryLibrary library, Action<Story>? onAdded = null) => RestoreAsync(backup, library, MaxBackupBytes, onAdded);
+    /// <summary>
+    /// Restores <paramref name="backup"/>. <paramref name="legacy"/> says what a schema 1 backup's book files do: <see cref="LegacyBookFiles.Restore"/> imports them (<paramref name="onAdded"/> is called for each story put
+    /// on the shelf, Slice 191), <see cref="LegacyBookFiles.StoreFirst"/> lists the books the phone lacks for the app to fetch. A schema 2 backup has no book files and ignores both.
+    /// </summary>
+    public static Task<StoryRestoreResult> RestoreAsync(Stream backup, IStoryLibrary library, LegacyBookFiles legacy = LegacyBookFiles.Restore, Action<Story>? onAdded = null) =>
+        RestoreAsync(backup, library, MaxBackupBytes, legacy, onAdded);
 
-    internal static async Task<StoryRestoreResult> RestoreAsync(Stream backup, IStoryLibrary library, long maxBytes, Action<Story>? onAdded = null)
+    internal static async Task<StoryRestoreResult> RestoreAsync(Stream backup, IStoryLibrary library, long maxBytes, LegacyBookFiles legacy = LegacyBookFiles.Restore, Action<Story>? onAdded = null)
     {
         try
         {
             using var zip = new ZipArchive(backup, ZipArchiveMode.Read, leaveOpen: true);
-            await ReadManifestAsync(zip);
-            int[] counts = new int[Enum.GetValues<Outcome>().Length];
+            StoryBackupManifest manifest = await ReadManifestAsync(zip);
             var budget = new ByteBudget(maxBytes);
-            HashSet<string> known = await KnownSourcesAsync(library);
-            List<ZipArchiveEntry> packages = PackageEntries(zip);
-            int tooLarge = 0;
-            for (int i = 0; i < packages.Count && tooLarge == 0; i++)
+            if (manifest.SchemaVersion >= 2)
             {
-                Outcome outcome = await RestoreOneAsync(packages[i], library, known, budget, onAdded);
-                counts[(int)outcome]++;
-                tooLarge = outcome == Outcome.TooLarge ? packages.Count - i : 0;
+                return await RestoreStateAsync(zip, manifest, library, budget);
             }
 
-            return new StoryRestoreResult(counts[(int)Outcome.Added], counts[(int)Outcome.Skipped], counts[(int)Outcome.Damaged], tooLarge, counts[(int)Outcome.Merged]);
+            return legacy == LegacyBookFiles.Restore
+                ? await RestoreLegacyFilesAsync(zip, library, budget, onAdded)
+                : await RestoreLegacyAsync(zip, library, budget);
         }
         catch (Exception ex) when (ex is InvalidDataException or StoryPackageException)
+        {
+            // no-fallback: rethrown as StoryBackupException, which the page shows
+            throw new StoryBackupException("The file is not a valid backup.", ex);
+        }
+    }
+
+    /// <summary>The settings a backup carries, checked against <see cref="BackupSettings"/>; empty for a schema 1 backup.</summary>
+    public static async Task<IReadOnlyDictionary<string, string>> ReadSettingsAsync(Stream backup)
+    {
+        try
+        {
+            using var zip = new ZipArchive(backup, ZipArchiveMode.Read, leaveOpen: true);
+            return BackupSettings.Sanitize((await ReadManifestAsync(zip)).Settings);
+        }
+        catch (InvalidDataException ex)
+        {
+            // no-fallback: rethrown as StoryBackupException, which the page shows
+            throw new StoryBackupException("The file is not a valid backup.", ex);
+        }
+    }
+
+    /// <summary>
+    /// Applies the backup's state for the book <paramref name="bookId"/> (its store id) to the copy now on the shelf, after the app downloaded it: its recordings and reading view come back. Returns false when the book is
+    /// not on the shelf or the backup holds nothing for it.
+    /// </summary>
+    public static async Task<bool> ApplyToBookAsync(Stream backup, IStoryLibrary library, string bookId)
+    {
+        try
+        {
+            using var zip = new ZipArchive(backup, ZipArchiveMode.Read, leaveOpen: true);
+            StoryBackupManifest manifest = await ReadManifestAsync(zip);
+            Story? phone = await ShelfCopyAsync(library, bookId);
+            if (phone is null)
+            {
+                return false;
+            }
+
+            var budget = new ByteBudget(MaxBackupBytes);
+            return manifest.SchemaVersion >= 2
+                ? await MergeStateAsync(zip, library, phone, bookId, budget) != Outcome.Skipped
+                : await ApplyLegacyAsync(zip, library, phone, bookId, budget);
+        }
+        catch (Exception ex) when (ex is InvalidDataException or StoryPackageException or StoryFormatException)
         {
             // no-fallback: rethrown as StoryBackupException, which the page shows
             throw new StoryBackupException("The file is not a valid backup.", ex);
@@ -62,7 +107,7 @@ public static class StoryBackupReader
         TooLarge,
     }
 
-    private static async Task ReadManifestAsync(ZipArchive zip)
+    private static async Task<StoryBackupManifest> ReadManifestAsync(ZipArchive zip)
     {
         ZipArchiveEntry entry = zip.GetEntry(StoryBackupManifest.ManifestFileName)
             ?? throw new StoryBackupException("The file is not a Dino Book Reader backup.");
@@ -73,43 +118,75 @@ public static class StoryBackupReader
 
         await using Stream stream = new CappedStream(entry.Open(), MaxManifestBytes);
         using var reader = new StreamReader(stream, Encoding.UTF8);
-        StoryBackupManifest.Parse(await reader.ReadToEndAsync());
+        return StoryBackupManifest.Parse(await reader.ReadToEndAsync());
     }
 
-    // Only top-level packages count; anything else in the zip (folders, macOS metadata, stray files) is ignored.
-    private static List<ZipArchiveEntry> PackageEntries(ZipArchive zip)
+    // The shelf's copy of a backed-up book: the story whose store id (or, failing that, own id) is the backup's id.
+    private static async Task<Story?> ShelfCopyAsync(IStoryLibrary library, string id)
     {
-        List<ZipArchiveEntry> packages = zip.Entries.Where(IsPackage).ToList();
-        return packages.Count > MaxStories ? throw new StoryBackupException("The backup has too many stories.") : packages;
+        IReadOnlyList<Story> shelf = await library.ListAsync();
+        return shelf.FirstOrDefault(s => s.Id == id) ?? shelf.FirstOrDefault(s => s.SourceId == id);
     }
 
-    private static bool IsPackage(ZipArchiveEntry entry) =>
-        !entry.FullName.StartsWith(MacMetadataFolder, StringComparison.Ordinal)
-        && entry.FullName == entry.Name
-        && entry.Name.EndsWith(StoryPackageManifest.Extension, StringComparison.OrdinalIgnoreCase);
+    // ---- schema 2 ----
 
-    // The ids and source ids already on the shelf: a starter or store story installed on this phone has its own id but the same source.
-    private static async Task<HashSet<string>> KnownSourcesAsync(IStoryLibrary library)
+    private static async Task<StoryRestoreResult> RestoreStateAsync(ZipArchive zip, StoryBackupManifest manifest, IStoryLibrary library, ByteBudget budget)
     {
-        var known = new HashSet<string>(StringComparer.Ordinal);
-        foreach (Story story in await library.ListAsync())
+        IReadOnlyList<BackupShelfEntry> shelf = manifest.Shelf ?? [];
+        if (shelf.Count > MaxStories)
         {
-            known.Add(story.Id);
-            if (story.SourceId is { } source)
-            {
-                known.Add(source);
-            }
+            throw new StoryBackupException("The backup has too many stories.");
         }
 
-        return known;
+        var counts = new int[Enum.GetValues<Outcome>().Length];
+        var missing = new List<MissingBook>();
+        int tooLarge = 0;
+        for (int i = 0; i < shelf.Count && tooLarge == 0; i++)
+        {
+            BackupShelfEntry book = shelf[i];
+            Outcome outcome = await RestoreOneStateAsync(zip, library, book, missing, budget);
+            counts[(int)outcome]++;
+            tooLarge = outcome == Outcome.TooLarge ? shelf.Count - i : 0;
+        }
+
+        return ResultOf(counts, tooLarge, missing);
     }
 
-    // The shared byte budget running out ends the whole restore (TooLarge); any other failure costs only its own story.
-    private static async Task<Outcome> RestoreOneAsync(ZipArchiveEntry entry, IStoryLibrary library, HashSet<string> known, ByteBudget budget, Action<Story>? onAdded)
+    private static async Task<Outcome> RestoreOneStateAsync(ZipArchive zip, IStoryLibrary library, BackupShelfEntry book, List<MissingBook> missing, ByteBudget budget)
+    {
+        if (!StoryIds.IsValid(book.Id) || zip.GetEntry(StoryBackupState.StateFile(book.Id)) is null)
+        {
+            return Outcome.Damaged;
+        }
+
+        Story? phone = await ShelfCopyAsync(library, book.Id);
+        if (phone is null)
+        {
+            missing.Add(new MissingBook(book.Id, book.Title));
+            return Outcome.Skipped;
+        }
+
+        return await MergeStateAsync(zip, library, phone, book.Id, budget);
+    }
+
+    private static async Task<Outcome> MergeStateAsync(ZipArchive zip, IStoryLibrary library, Story phone, string id, ByteBudget budget)
     {
         try
         {
-            return entry.Length > MaxPackageBytes ? Outcome.Damaged : await ImportEntryAsync(entry, library, known, budget, onAdded);
+            ZipArchiveEntry? stateEntry = StoryIds.IsValid(id) ? zip.GetEntry(StoryBackupState.StateFile(id)) : null;
+            if (stateEntry is null || stateEntry.Length > StoryPackageReader.MaxStoryBytes)
+            {
+                return Outcome.Damaged;
+            }
+
+            Story stub = StoryJson.Deserialize(await ReadTextAsync(stateEntry, StoryPackageReader.MaxStoryBytes));
+            phone = await WithReadingViewAsync(library, phone, stub);
+            Story backed = StoryBackupState.Backed(phone, stub);
+            await using FileStream package = TempFile();
+            await BuildPackageAsync(zip, package, backed, id, budget);
+            package.Position = 0;
+            Debug.WriteLine($"Dino Reader restore: merging recordings into {phone.Id}");
+            return await StoryPackageReader.MergeRecordingsAsync(package, library, phone, budget) is null ? Outcome.Skipped : Outcome.Merged;
         }
         catch (Exception ex) when (ex is StoryPackageException or StoryFormatException or InvalidDataException or IOException or UnauthorizedAccessException)
         {
@@ -118,91 +195,145 @@ public static class StoryBackupReader
         }
     }
 
-    private static async Task<Outcome> ImportEntryAsync(ZipArchiveEntry entry, IStoryLibrary library, HashSet<string> known, ByteBudget budget, Action<Story>? onAdded)
+    // The reading view comes back only where the phone's copy has no choice of its own yet.
+    private static async Task<Story> WithReadingViewAsync(IStoryLibrary library, Story phone, Story stub)
     {
-        await using FileStream package = TempFile();
-        await CopyCappedAsync(entry, package, budget);
-        Story packaged = await PeekStoryAsync(package);
-        string? source = await PeekSourceAsync(package, packaged);
-        if (known.Contains(packaged.Id) || (source is not null && known.Contains(source)))
+        if (phone.PreferredMode is not null || stub.PreferredMode is null)
         {
-            return await MergeIntoShelfAsync(package, library, packaged, source, budget);
+            return phone;
         }
 
-        package.Position = 0;
-        Story? added = await ImportKeepingIdAsync(package, library, packaged);
-        if (added is null)
-        {
-            return Outcome.Skipped;
-        }
-
-        known.Add(added.Id);
-        if (added.SourceId is { } addedSource)
-        {
-            known.Add(addedSource);
-        }
-
-        NotifyAdded(onAdded, added);
-        return Outcome.Added;
+        Story updated = phone with { PreferredMode = stub.PreferredMode };
+        await library.UpdateAsync(updated);
+        return updated;
     }
 
-    // The story is already on the shelf (by id, or as the same starter or store book): only its missing recordings are brought back (Slice 230).
-    private static async Task<Outcome> MergeIntoShelfAsync(Stream package, IStoryLibrary library, Story packaged, string? source, ByteBudget budget)
+    // An in-memory-style package (story.json plus the recordings the backup holds), so the existing staged, rolled-back merge does the placing.
+    private static async Task BuildPackageAsync(ZipArchive backup, Stream package, Story backed, string id, ByteBudget budget)
     {
-        Story? phone = await OnShelfAsync(library, packaged, source);
-        if (phone is null)
+        using var zip = new ZipArchive(package, ZipArchiveMode.Create, leaveOpen: true);
+        ZipArchiveEntry story = zip.CreateEntry(StoryPackageManifest.StoryFileName, CompressionLevel.Optimal);
+        await using (Stream stream = story.Open())
         {
-            return Outcome.Skipped;
+            await stream.WriteAsync(new UTF8Encoding(false).GetBytes(StoryJson.Serialize(backed)));
         }
 
-        package.Position = 0;
-        Debug.WriteLine($"Dino Reader restore: merging recordings into {phone.Id}");
-        return await StoryPackageReader.MergeRecordingsAsync(package, library, phone, budget) is null ? Outcome.Skipped : Outcome.Merged;
+        foreach (string name in StoryRecordings.Files(backed).Distinct(StringComparer.Ordinal))
+        {
+            if (backup.GetEntry(StoryBackupState.RecordingEntry(id, name)) is { } source)
+            {
+                await using Stream from = new CappedStream(source.Open(), StoryPackageReader.MaxPictureBytes, budget);
+                await using Stream to = zip.CreateEntry(name, CompressionLevel.NoCompression).Open();
+                await from.CopyToAsync(to, CopyBufferBytes);
+            }
+        }
     }
 
-    // The shelf's copy of the backed-up story: the same id, else (in order) the story whose id is the source, the one installed from the same source, the one installed from the packaged id.
-    private static async Task<Story?> OnShelfAsync(IStoryLibrary library, Story packaged, string? source)
+    // ---- schema 1 (a .dino per story): recordings and the shelf list are used, the book files are ignored ----
+
+    private static async Task<StoryRestoreResult> RestoreLegacyAsync(ZipArchive zip, IStoryLibrary library, ByteBudget budget)
     {
-        if (await library.GetAsync(packaged.Id) is { } same)
+        List<ZipArchiveEntry> packages = zip.Entries.Where(IsPackage).ToList();
+        if (packages.Count > MaxStories)
         {
-            return same;
+            throw new StoryBackupException("The backup has too many stories.");
         }
 
-        IReadOnlyList<Story> shelf = await library.ListAsync();
-        return shelf.FirstOrDefault(s => s.Id == source)
-            ?? (source is null ? null : shelf.FirstOrDefault(s => s.SourceId == source))
-            ?? shelf.FirstOrDefault(s => s.SourceId == packaged.Id);
+        var counts = new int[Enum.GetValues<Outcome>().Length];
+        var missing = new List<MissingBook>();
+        int tooLarge = 0;
+        for (int i = 0; i < packages.Count && tooLarge == 0; i++)
+        {
+            Outcome outcome = await RestoreOneLegacyAsync(packages[i], library, missing, budget);
+            counts[(int)outcome]++;
+            tooLarge = outcome == Outcome.TooLarge ? packages.Count - i : 0;
+        }
+
+        return ResultOf(counts, tooLarge, missing);
     }
 
-    // A callback that throws must not abort the restore partway: the story is already on the shelf (Slice 191).
-    private static void NotifyAdded(Action<Story>? onAdded, Story added)
+    private static async Task<Outcome> RestoreOneLegacyAsync(ZipArchiveEntry entry, IStoryLibrary library, List<MissingBook> missing, ByteBudget budget)
     {
         try
         {
-            onAdded?.Invoke(added);
+            if (entry.Length > MaxPackageBytes)
+            {
+                return Outcome.Damaged;
+            }
+
+            await using FileStream package = TempFile();
+            await CopyCappedAsync(entry, package, budget);
+            (Story packaged, string id) = await PeekAsync(package);
+            Story? phone = await ShelfCopyAsync(library, id) ?? await ShelfCopyAsync(library, packaged.Id);
+            if (phone is null)
+            {
+                missing.Add(new MissingBook(id, packaged.Title));
+                return Outcome.Skipped;
+            }
+
+            package.Position = 0;
+            return await StoryPackageReader.MergeRecordingsAsync(package, library, phone, budget) is null ? Outcome.Skipped : Outcome.Merged;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is StoryPackageException or StoryFormatException or InvalidDataException or IOException or UnauthorizedAccessException)
         {
-            // no-fallback: the story is already restored; only the page's notification failed
-            Debug.WriteLine($"Dino Reader restore: the added-story callback failed: {ex.Message}");
+            // no-fallback: counted in the restore result (Damaged or TooLarge), which the page shows
+            return budget.Exhausted ? Outcome.TooLarge : Outcome.Damaged;
         }
     }
 
-    // The library refuses an id whose file already exists: that is "already on the shelf" only if the story really reads back (null here);
-    // an unreadable existing file is a story the restore could not place, so it is counted as damaged, not as present.
-    private static async Task<Story?> ImportKeepingIdAsync(Stream package, IStoryLibrary library, Story packaged)
+    private static async Task<bool> ApplyLegacyAsync(ZipArchive zip, IStoryLibrary library, Story phone, string bookId, ByteBudget budget)
     {
-        try
+        foreach (ZipArchiveEntry entry in zip.Entries.Where(IsPackage))
         {
-            return await StoryPackageReader.ImportAsync(package, library, keepId: true, created: packaged.Created);
+            await using FileStream package = TempFile();
+            await CopyCappedAsync(entry, package, budget);
+            (Story packaged, string id) = await PeekAsync(package);
+            if (id != bookId && packaged.Id != bookId)
+            {
+                continue;
+            }
+
+            package.Position = 0;
+            await StoryPackageReader.MergeRecordingsAsync(package, library, phone, budget);
+            return true;
         }
-        catch (InvalidOperationException)
+
+        return false;
+    }
+
+    // Only top-level packages count; anything else in the zip (folders, macOS metadata, stray files) is ignored.
+    private static bool IsPackage(ZipArchiveEntry entry) =>
+        !entry.FullName.StartsWith(MacMetadataFolder, StringComparison.Ordinal)
+        && entry.FullName == entry.Name
+        && entry.Name.EndsWith(StoryPackageManifest.Extension, StringComparison.OrdinalIgnoreCase);
+
+    // The package's story and the id the backup knew it by: the writer keeps a store book's source id as the package id in its manifest.
+    private static async Task<(Story Story, string Id)> PeekAsync(Stream package)
+    {
+        package.Position = 0;
+        using var zip = new ZipArchive(package, ZipArchiveMode.Read, leaveOpen: true);
+        Story packaged = StoryJson.Deserialize(await ReadTextAsync(
+            zip.GetEntry(StoryPackageManifest.StoryFileName) ?? throw new StoryPackageException("The package has no story.json."), StoryPackageReader.MaxStoryBytes));
+        StoryPackageManifest manifest = StoryPackageManifest.Parse(await ReadTextAsync(
+            zip.GetEntry(StoryPackageManifest.ManifestFileName) ?? throw new StoryPackageException("The package has no manifest."), StoryPackageReader.MaxManifestBytes));
+        return (packaged, manifest.Id != packaged.Id ? manifest.Id : packaged.SourceId ?? packaged.Id);
+    }
+
+    // ---- shared ----
+
+    private static StoryRestoreResult ResultOf(int[] counts, int tooLarge, List<MissingBook> missing) =>
+        new(counts[(int)Outcome.Added], counts[(int)Outcome.Skipped] - missing.Count, counts[(int)Outcome.Damaged], tooLarge, counts[(int)Outcome.Merged], missing.Count > 0 ? missing : null);
+
+    private static async Task<string> ReadTextAsync(ZipArchiveEntry entry, long cap)
+    {
+        if (entry.Length > cap)
         {
-            // no-fallback: the book is already on the shelf (counted as skipped) or the error becomes a StoryPackageException counted as damaged
-            return await library.GetAsync(packaged.Id) is null
-                ? throw new StoryPackageException("The story's file on the shelf cannot be read.")
-                : null;
+            throw new StoryPackageException("The package is too large.");
         }
+
+        await using Stream stream = new CappedStream(entry.Open(), cap);
+        using var reader = new StreamReader(stream, Encoding.UTF8);
+        return await reader.ReadToEndAsync();
     }
 
     // A nested zip needs a seekable stream; a temp file keeps a large package out of memory and vanishes when closed.
@@ -215,39 +346,5 @@ public static class StoryBackupReader
         await using Stream source = new CappedStream(entry.Open(), MaxPackageBytes, budget);
         await source.CopyToAsync(target, CopyBufferBytes);
         await target.FlushAsync();
-    }
-
-    private static async Task<Story> PeekStoryAsync(Stream package)
-    {
-        package.Position = 0;
-        using var zip = new ZipArchive(package, ZipArchiveMode.Read, leaveOpen: true);
-        ZipArchiveEntry entry = zip.GetEntry(StoryPackageManifest.StoryFileName)
-            ?? throw new StoryPackageException("The package has no story.json.");
-        if (entry.Length > StoryPackageReader.MaxStoryBytes)
-        {
-            throw new StoryPackageException("The package is too large.");
-        }
-
-        await using Stream stream = new CappedStream(entry.Open(), StoryPackageReader.MaxStoryBytes);
-        using var reader = new StreamReader(stream, Encoding.UTF8);
-        return StoryJson.Deserialize(await reader.ReadToEndAsync());
-    }
-
-    // The writer drops SourceId from story.json and keeps it as the package id in the manifest, so the source is read from there.
-    private static async Task<string?> PeekSourceAsync(Stream package, Story packaged)
-    {
-        package.Position = 0;
-        using var zip = new ZipArchive(package, ZipArchiveMode.Read, leaveOpen: true);
-        ZipArchiveEntry entry = zip.GetEntry(StoryPackageManifest.ManifestFileName)
-            ?? throw new StoryPackageException("The package has no manifest.");
-        if (entry.Length > StoryPackageReader.MaxManifestBytes)
-        {
-            throw new StoryPackageException("The package is too large.");
-        }
-
-        await using Stream stream = new CappedStream(entry.Open(), StoryPackageReader.MaxManifestBytes);
-        using var reader = new StreamReader(stream, Encoding.UTF8);
-        StoryPackageManifest manifest = StoryPackageManifest.Parse(await reader.ReadToEndAsync());
-        return manifest.Id != packaged.Id ? manifest.Id : packaged.SourceId;
     }
 }
