@@ -4,6 +4,16 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 **Only what can be tested stays here** (the user, 2026-11-08: "keep only whatever I can test"). Each line starts with who tests it: **You** (the user: the iPhone, the S21 by hand, the Echo, the Sonos, an English or Farsi read, a decision or account only you hold) or **Device** (Claude, on the Android emulator or tablet AVD, the S21 by script, or the Windows VM). Checks nobody here can test were removed; behaviours only real use shows are watched in production data instead; checks that need the user's ear are listening-page slices 330-343. All three lists are in the [record](notes/2026-11-08-unverified-triage.md). Earlier on 2026-11-08: triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)). The 2026-11-08 device run (emulator, S21, VM) passed 49 more and the user's iPhone session 2 more; same record.
 
+### Slice 352: Dino: every screen, wizard step and button press is counted ([slice](slices/352-dino-screen-and-tap-events.md))
+- **Device:** corner screen row and a speed `setting_changed` on a device (the flows do not open them).
+- **Device:** the Windows VM: window-close flush and `app_backgrounded` (the `Destroying` path); the package builds since Slice 353.
+- **You:** the iOS simulator (none on this machine) and the `DidEnterBackground` flush.
+- **Device:** `tools/usage-sessions` against live data after release.
+
+### Slice 353: CI: keep the .NET 10 SDK on runners with .NET 11, fix the Dino Windows VM test package ([slice](slices/353-ci-sdk-pin-and-vm-test-package.md))
+- **Device:** `android.yml` and one other workload workflow green on a run whose "Set up job" shows runner image 20261111 or later (the android jobs of PR #1024 and PR #1022 both ran on the old image 20261101.186.1, so the pin is not yet proven there).
+- **Device:** Dino VM checks of Slice 352 (desktop), now that `Build-TestPackage.ps1 -App dino` builds.
+
 ### Slice 351: Dino: every usage row says who and when, and audio failures say why ([slice](slices/351-dino-usage-context-and-audio-causes.md))
 - **Device:** `premade_audio:no_pack` with a book id, on a book whose pack is not downloaded.
 - **You:** the iOS run of the context fields and the new fallback reasons (iPhone or TestFlight).

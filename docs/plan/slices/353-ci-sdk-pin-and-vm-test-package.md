@@ -1,6 +1,6 @@
 # Slice 353 — CI: keep the .NET 10 SDK on runners that carry .NET 11, and fix the Dino Windows VM test package
 
-*Built 2026-11-12 (night wave 3), PR #1024, not merged. CI proof on the new runner image and the Dino VM package build are not yet verified (see the end of this file).*
+*Built 2026-11-12 (night wave 3), merged as PR #1024 (7f10db48). `Build-TestPackage.ps1 -App dino` passes (2026-11-12 19:18-19:19, 88.9 s, package dino-windows-84705f151d7a, log `reviews/s353-vm-package-build.log`). CI proof on the new runner image is not yet verified: PR #1024's android job ran on the old image 20261101.186.1.*
 
 **Touches:** `.github/workflows/*.yml`, `.github/CLAUDE.md`, `global.json` (only if the fix pins the SDK there),
 `src/DinoReader.App/Testing/FakePurchases.cs`, `src/ReadTheStupidText.Mobile.Shared/Testing/**`,
@@ -75,7 +75,7 @@ Two build breaks found while shipping Slice 352 (PR #1022), neither caused by th
 - Skipped #2-#6 (`reviews/s353-check1.md`): "REPEAT (medium #1 / high #2)" and the other repeats, each handled under the original finding above.
 - The builder's context7 line was not given to the reviewers; the caller confirms it separately.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-12)
 
 - `global.json` pins the SDK (10.0.401, `rollForward` `latestPatch`) because runner images can carry a .NET 11 SDK
   and a workload install under it fails with manifest conflicts; every workflow reads it via `setup-dotnet`
@@ -88,7 +88,6 @@ Two build breaks found while shipping Slice 352 (PR #1022), neither caused by th
 
 #### Not yet verified
 
-- `Build-TestPackage.ps1 -App dino` result: pending (to be added when run).
-- `android.yml` and one other workload workflow green on runner image 20261111 or later (proved by this PR's own CI or the first main release).
-- Dino VM checks of Slice 352 (desktop), once the package builds.
+- `android.yml` and one other workload workflow green on runner image 20261111 or later: PR #1024's android job ran on the old image 20261101.186.1, so the pin is not yet proven on the new image.
+- Dino VM checks of Slice 352 (desktop), now that the package builds.
 - Rerun PR #1022's checks after merge.
