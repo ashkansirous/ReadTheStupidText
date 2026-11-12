@@ -44,6 +44,10 @@ name, not read).
   50-60): nothing in Dino asks for them since Slice 278. The live privacy page (Slice 348, PR #1007) says they are being
   removed, and App Review may ask about declared but unused permissions. Check no other Info.plist key or entitlement
   depends on them.
+  **Next step (user, 2026-11-12: "we removed the functionality. Right?"):** don't wait for a TestFlight probe. Stop
+  compiling the scanner code (`VisionKitDocumentScanner`, its registration in `MobileSharedServices.iOS.cs`) into
+  Dino's iOS build (Dino has used none of it since Slice 278; RTST keeps it), then remove the three keys in the same
+  change and confirm on the next TestFlight upload. The `src/DinoReader.App/CLAUDE.md` "keep the keys" rule goes with it.
 
 ## Built / review notes (2026-11-12, review pass 1)
 
