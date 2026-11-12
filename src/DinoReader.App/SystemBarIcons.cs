@@ -37,8 +37,14 @@ internal static partial class SystemBarIcons
 		double luminance = (RedWeight * Linear(background.Red)) + (GreenWeight * Linear(background.Green)) + (BlueWeight * Linear(background.Blue));
 		bool ink = page is IInkUnderStatusBar { InkUnderStatusBar: true };
 		_darkIcons = StatusBarIcons.UseDarkIcons(ink, luminance > LightBackgroundLuminance);
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[StatusBar] page={page.GetType().Name} bg={HexOf(background)} flag={ink} darkIcons={_darkIcons}"); // one line per apply: Slice 349's flow asserts the whole line (RTST-TEST tag)
+#endif
 		Reapply();
 	}
+
+	private static string HexOf(Color color) =>
+		$"#{(int)Math.Round(color.Red * 255):X2}{(int)Math.Round(color.Green * 255):X2}{(int)Math.Round(color.Blue * 255):X2}";
 
 	private static Color? BackgroundOf(Page page) =>
 		page.BackgroundColor ?? (page.Background as SolidColorBrush)?.Color;

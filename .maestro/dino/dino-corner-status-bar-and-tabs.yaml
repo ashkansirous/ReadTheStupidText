@@ -1,0 +1,99 @@
+# Slice 349: in the grown-ups' corner (a bar chrome, phone held upright) the status-bar icons are light over the ink and every tab label shows whole, in English, Arabic and Farsi. The gate is not tapped (the enter-grown-up hook stands in).
+# The icon choice is the one Debug log line per apply "[StatusBar] page=GalleryPage bg=<page colour> flag=<ink flag> darkIcons=<choice>", asserted whole below (ink page #2B2540, flag True, light icons). The pixel check behind the bar
+# (adb screencap sample of the status area) is in the slice's device checklist, not here. The label check is the three tab ids on screen plus the contact-sheet shot, which the device stage reads for clipped descenders.
+# Largest font scale: the device stage runs this flow a second time after `adb shell settings put system font_scale 1.3` (restored to 1.0 after) and compares the shots; Maestro cannot set it.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK enter-grown-up ok
+# expect-log: [StatusBar] page=GalleryPage bg=#2B2540 flag=True darkIcons=False
+appId: uk.sirous.dinoreader.dbg
+name: Corner status bar icons are light and tab labels are whole
+onFlowComplete:
+  - setOrientation: PORTRAIT
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books); fine here: the flow uses the starter shelf only and reads nothing aloud.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+- takeScreenshot: shot-349-corner-books-en
+- tapOn:
+    id: GalleryStore
+    waitToSettleTimeoutMs: 300
+- assertVisible:
+    id: CornerTabBooks
+- assertVisible:
+    id: GallerySettings
+- takeScreenshot: shot-349-corner-store-en
+- tapOn:
+    id: GallerySettings
+    waitToSettleTimeoutMs: 300
+- assertVisible:
+    id: CornerTabBooks
+- takeScreenshot: shot-349-corner-settings-en
+# Arabic and Farsi: the same three tabs.
+- launchApp:
+    # launchApp-restart: a new app language needs a fresh process.
+    # clearState: wipes the app's data (settings, downloaded packs, own books); fine here: the flow uses the starter shelf only and reads nothing aloud.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: ar
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+- assertVisible:
+    id: GalleryStore
+- assertVisible:
+    id: GallerySettings
+- takeScreenshot: shot-349-corner-books-ar
+- tapOn:
+    id: GalleryStore
+    waitToSettleTimeoutMs: 300
+- takeScreenshot: shot-349-corner-store-ar
+- launchApp:
+    # launchApp-restart: a new app language needs a fresh process.
+    # clearState: wipes the app's data (settings, downloaded packs, own books); fine here: the flow uses the starter shelf only and reads nothing aloud.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: fa
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+- extendedWaitUntil:
+    visible:
+      id: GalleryDone
+    timeout: 30000
+- takeScreenshot: shot-349-corner-books-fa
+- tapOn:
+    id: GallerySettings
+    waitToSettleTimeoutMs: 300
+- takeScreenshot: shot-349-corner-settings-fa

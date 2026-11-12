@@ -116,6 +116,16 @@ public static class CornerLayout
     public static bool PillKeepsLabel(double headerWidth, double titleWidth, double pillWithLabelWidth, double gap) =>
         titleWidth + gap + pillWithLabelWidth <= headerWidth;
 
+    /// <summary>Line height multiple of a bar tab label: room for descenders ("g") and for Arabic and Farsi marks above and below the line (Slice 349).</summary>
+    public const double TabLabelLineHeight = 1.4;
+
+    /// <summary>The least height of one bar tab (Slice 349). As in the mock (frame P1: the bar's 4 pt padding around a 52 pt row), the padding is the bar's and the row is <see cref="CornerSizes.TabRow"/> (52 or 56) holding the pill, the 2 gap and one label line at <see cref="TabLabelLineHeight"/>, which always fit; only a content taller than the row (a larger system font scale) grows it.</summary>
+    public static double TabBarMinHeight(CornerSizes sizes, double labelGap)
+    {
+        double content = sizes.TabPillHeight + labelGap + Math.Ceiling(sizes.TabLabel * TabLabelLineHeight);
+        return sizes.TabBar.Top + sizes.TabBar.Bottom + Math.Max(sizes.TabRow, content);
+    }
+
     /// <summary>The columns of the Books grid (decision 3): phone portrait 3, phone landscape up to 5, tablet portrait up to 3, tablet landscape 4, Windows 4 and more on a wide window.</summary>
     public static int BookColumns(ChromeShape shape, double width)
     {
@@ -158,13 +168,13 @@ public static class CornerLayout
         _ => WindowsSizes(),
     };
 
-    // Frames P1 to P3 and P4: the bar. Header, note and Books grid per width class; the tab bar is 52 high up to 393 (a 52 x 28 pill) and 56 from 412 (56 x 30).
+    // Frames P1 to P3 and P4: the bar. Header, note and Books grid per width class; the tab bar is 52 high up to 393 (a 52 x 28 pill) and 56 from 412 (56 x 30). Padding: 4 above and below at 375 (no home bar); from 393 6 above and 0 below: the mock's bottom padding is the home-bar inset itself (P2 34, P4 24), which the bar's safe area adds; a phone with no inset matches the mock's own layout.
     private static CornerSizes BarSizes(PhoneWidth width) => width switch
     {
         PhoneWidth.Compact => Bar(width, new Edges(16, 8, 12, 12), 11.5, 22, 44, 15, 12, 16, 7, 13, new Edges(16, 10, 16, 8), 52, 52, 28, 12, 20, new Edges(8, 4, 8, 4), 12, 10, 10, 12, 12, 5, 30, 4),
-        PhoneWidth.Regular => Bar(width, new Edges(18, 6, 12, 14), 11.5, 22, 44, 15, 12, 16, 7, 13.5, new Edges(18, 12, 18, 10), 52, 52, 28, 12, 20, new Edges(10, 6, 10, 6), 14, 10, 10, 12, 12.5, 5, 30, 4),
-        PhoneWidth.Medium => Bar(width, new Edges(20, 6, 14, 14), 11.5, 22, 48, 15, 14, 18, 7, 13.5, new Edges(20, 12, 20, 10), 56, 56, 30, 12, 20, new Edges(10, 6, 10, 6), 16, 10, 12, 12, 12.5, 5, 30, 4),
-        _ => Bar(width, new Edges(22, 6, 16, 16), 12, 24, 48, 16, 14, 18, 8, 14, new Edges(22, 14, 22, 12), 56, 56, 30, 13, 22, new Edges(16, 6, 16, 6), 18, 12, 14, 14, 13.5, 6, 32, 5),
+        PhoneWidth.Regular => Bar(width, new Edges(18, 6, 12, 14), 11.5, 22, 44, 15, 12, 16, 7, 13.5, new Edges(18, 12, 18, 10), 52, 52, 28, 12, 20, new Edges(10, 6, 10, 0), 14, 10, 10, 12, 12.5, 5, 30, 4),
+        PhoneWidth.Medium => Bar(width, new Edges(20, 6, 14, 14), 11.5, 22, 48, 15, 14, 18, 7, 13.5, new Edges(20, 12, 20, 10), 56, 56, 30, 12, 20, new Edges(10, 6, 10, 0), 16, 10, 12, 12, 12.5, 5, 30, 4),
+        _ => Bar(width, new Edges(22, 6, 16, 16), 12, 24, 48, 16, 14, 18, 8, 14, new Edges(22, 14, 22, 12), 56, 56, 30, 13, 22, new Edges(16, 6, 16, 0), 18, 12, 14, 14, 13.5, 6, 32, 5),
     };
 
     private static CornerSizes Bar(

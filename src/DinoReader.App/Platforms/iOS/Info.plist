@@ -48,7 +48,8 @@
 	<false/>
 
 	<!-- Camera for scanning a printed book: the VisionKit document scanner and the MediaPicker
-	     photo path both crash the app without this string. -->
+	     photo path both crash the app without this string. Kept (Slice 349 work item 4): Mobile.Shared's VisionKitDocumentScanner is compiled into this binary and the build is not trimmed,
+	     so App Store Connect's static check would flag a missing purpose string. -->
 	<key>NSCameraUsageDescription</key>
 	<string>The camera photographs the pages of a book so the app can read them aloud. Photos are processed on the device and never uploaded.</string>
 
