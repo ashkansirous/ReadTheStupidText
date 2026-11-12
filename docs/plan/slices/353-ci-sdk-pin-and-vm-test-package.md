@@ -1,6 +1,6 @@
 # Slice 353 — CI: keep the .NET 10 SDK on runners that carry .NET 11, and fix the Dino Windows VM test package
 
-*Planned (2026-11-12, night 2026-11-12-1337 wave 2).*
+*In progress (wave 2026-11-12), draft PR.*
 
 **Touches:** `.github/workflows/*.yml`, `.github/CLAUDE.md`, `global.json` (only if the fix pins the SDK there),
 `src/DinoReader.App/Testing/FakePurchases.cs`, `src/ReadTheStupidText.Mobile.Shared/Testing/**`,
