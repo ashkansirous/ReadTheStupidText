@@ -55,6 +55,15 @@ the contact sheet live only in the working folder. Touch nothing else.
    - 5 s after opening or reloading a tab, check the tab URL and `window.__geminiHealth()` once (the left menu loads only
      with the page): `CAPTCHA` (google.com/sorry) means stop and report at once; otherwise not `OK` means reload once, check
      again after 5 s, and stop and report if it is still not `OK`. Never wait on a page that won't load;
+   - **send only through `await window.__sendChecked(<the exact prompt>, <pictures attached>)`**, never a bare Send
+     click. Order: paste the line-up (and wait for its thumbnail), put the prompt text in, `window.__markPictures()`,
+     then `__sendChecked(prompt, 1)` (`0` for a text-only patch; re-inject `gemini-grab.js` first in a tab injected
+     before this helper existed). `REFUSED: ...` means nothing was sent: fix what it names (a prompt that differs:
+     clear the box with `execCommand('selectAll')` + `execCommand('delete')` and put the prompt in again) and call again.
+     `SENT WITHOUT TEXT: ...` means a message went out without the prompt: that chat is spoiled, start a new chat
+     (never patch it), and never count its picture as a model's result (2026-11-12: two models were judged on
+     pictures drawn from the line-up alone). `UNCONFIRMED: ...` means read the chat before anything else (the prompt may be there,
+     rendered differently; `__waitForPicture()` still works) and never send the prompt again into that chat;
    - while Gemini draws, never use fixed sleeps: `window.__markPictures()` before sending, then
      `await window.__waitForPicture()` (returns `READY` as soon as the picture exists; repeat on `WAITING`);
    - `gemini-grab.js` is injected once per page load with `javascript_tool`, then `await window.__grab(1)`
