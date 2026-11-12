@@ -52,6 +52,7 @@ name, not read).
 - Tab row (item 2): the mock's tab item is 52 (up to 393) / 56 (412 and up) tall with the bar's padding (4 or 6) outside it (frame P1: padding 4, bar 60). The old code put that padding inside a fixed 52 row, leaving 44 for a 28 pill + 2 + the label: the clip. The tab's least height is now padding + the mock row (60/64/68/68 at default font scale, unit-tested), a larger system font scale grows it.
 - Arabic and Farsi tab strings (checked in `Resources/Strings/*.resx`): at most 9 characters (الإعدادات), about 60 dp at 12 pt bold against a third of the width (125 dp at 375); at font scale 1.3 about 80 dp. They fit; the longest language is Portuguese "Configurações" (14 characters), which could ellipsize only at 375 dp and 1.3 scale (tail truncation as before, no mock rule). No ink gap between content and tab row: `GalleryRoot` rows are Auto,*,Auto with no spacing, the content host is sand in the middle row and the tab row is white.
 - Item 4 (Info.plist): NOT done. `Mobile.Shared`'s `VisionKitDocumentScanner` and `MobileSharedServices.iOS.cs` compile into Dino's iOS binary and `DinoReader.App.csproj` does not trim, so App Store Connect's static check may still want the purpose strings. The three keys stay; removal waits for proof the binary has no camera/photo API reference (a TestFlight upload with the keys removed). Dated 2026-11-12.
+- *Changed while building:* the CI selftests needed the 7 corner shots added to `tools/emulator/screenshot-frames.json` (commit f9185754).
 - Skipped #6 (`reviews/pr-1015-high.md`): "Two overlapping ways to say 'bar is ink' ... the new test ... is near-tautological" - low, test style; caller skipped it.
 
 *From review (medium pass, `reviews/pr-1015-medium.md`):*
@@ -74,6 +75,19 @@ name, not read).
 *From review (second medium check pass, `reviews/pr-1015-check2.md`):* no blocking finding.
 
 - Skipped #1 (`reviews/pr-1015-check2.md`): "ApplyBarColours returns early until the first layout pass, so on first appearance the bar icons and ink page colour are not applied until the first SizeChanged/ApplyShapeOnce" - deliberate (no guessed window size), the first layout pass paints; the device pixel check passed.
+
+*From review (third medium check pass, `reviews/pr-1015-check3.md`):* nothing applied.
+
+- Skipped #1 (`reviews/pr-1015-check3.md`): "ApplyBarColours returns early before first layout; page background and bar icons unset until first SizeChanged (possible flash)" - same as check2 #1, deliberate: the first layout pass paints, and the device pixel check passed.
+- Skipped #2 (`reviews/pr-1015-check3.md`): "ar/fa and store/settings shots all mapped to single frame P4; contact sheet comparison misleading" - the mock shows only the Books tab, and P4 is its phone frame.
+- Skipped #3 (`reviews/pr-1015-check3.md`): "a second font-scale pass overwrites same names" - the font-scale pass is not scripted.
+- Skipped #4 (`reviews/pr-1015-check3.md`): "label-whole claim rests on a human reading the sheet" - the tab labels are checked by screenshot in the device run.
+- Skipped #5 (`reviews/pr-1015-check3.md`): "makes bar 60pt (was 52); layout consumers assuming 52 may be off" - the mock's bar is 60 (padding + 52 row).
+- Skipped #6 (`reviews/pr-1015-check3.md`): "Regular/Medium/Wide bottom padding 0 relies on system inset; three-button nav devices may sit flush" - the mock's bottom padding is the inset (recorded check1 decision, check1 #1).
+- Skipped #7 (`reviews/pr-1015-check3.md`): "InkUnderStatusBar treats null chrome as not-a-rail while ApplyBarColours skips on null" - both do nothing before the first layout.
+- Skipped #8 (`reviews/pr-1015-check3.md`): "expect-log asserts the exact hex line; brittle to rounding or token change" - Debug-only marker, intended.
+- Skipped #9 (`reviews/pr-1015-check3.md`): "comment asserts VisionKit scanner compiled in / not trimmed, unverified in diff" - the claims were read from the csproj and Mobile.Shared in the high fix round.
+- Skipped #10 (`reviews/pr-1015-check3.md`): "ink-under-bar rule expressed in three places (property, ApplyBarColours, UseDarkIcons); can drift" - one rule lives in Core, the other two call it.
 
 ## Device results (emulator-5554, build 8ef1086e1ff1, 2026-11-12)
 
