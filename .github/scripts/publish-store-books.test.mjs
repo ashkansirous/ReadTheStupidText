@@ -526,3 +526,13 @@ test('Slice 277: a built book the check never judged is refused, and no pack is 
     const books = [{ stem: 'goldilocks', id: A }, { stem: 'peter-rabbit', id: B }];
     assert.deepEqual(onlyCompleteBooks(books, new Set([B])).map((book) => book.stem), ['peter-rabbit']);
 });
+
+// Slice 350: the print-size pictures (content/dino/<book>/high-res/, Git LFS) reach neither a package nor the store.
+// The upload script reads only a book's book.json and audio-cast.json from content/ (checked below). The builder side
+// (BookHash and the picture list ignore a high-res/ folder) is a fixture test in tests/DinoReader.Tests/BookBuilderTests.cs.
+test('the upload script reads only named files inside a book folder, so high-res/ cannot reach the store', () => {
+    const publish = readFileSync(new URL('./publish-store-books.mjs', import.meta.url), 'utf8');
+    const contentReads = publish.split(/\r?\n/).filter((line) => /join\(CONTENT_ROOT/.test(line));
+    assert.ok(contentReads.length > 0);
+    for (const line of contentReads) assert.match(line, /BOOK_FILE|AUDIO_CAST_FILE|entry\.name/, `unexpected content read: ${line}`);
+});

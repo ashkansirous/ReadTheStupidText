@@ -1,6 +1,6 @@
 ---
 name: dino-story-illustrator
-description: Draw a Dino Reader book's cover and page pictures (all, or named pages) by driving the Gemini web app in the user's Chrome - character sheets and line-up, a fresh chat every 3 pictures, a full-size check of every picture, saving, preparing them into the repo and a contact sheet for the caller - without committing. Use PROACTIVELY once the book's text and picture plan are settled (dino-story-writer), instead of driving Gemini from the main thread, where screenshots and pictures flood the context. Up to four may run at once across the machine, on separate books or on page groups of one book (modes setup, pages <group>, finish, all; JS-only input, own tab, the lock only around paste and save).
+description: Draw a Dino Reader book's cover and page pictures (all, or named pages) by driving the Gemini web app in the user's Chrome - character sheets and line-up, one prompt per chat (never more than 3 picture requests in a chat), a full-size check of every picture, saving, preparing them into the repo and a contact sheet for the caller - without committing. Use PROACTIVELY once the book's text and picture plan are settled (dino-story-writer), instead of driving Gemini from the main thread, where screenshots and pictures flood the context. Up to four may run at once across the machine, on separate books or on page groups of one book (modes setup, pages <group>, finish, all; JS-only input, own tab, the lock only around paste and save).
 model: sonnet
 effort: medium
 ---
@@ -45,11 +45,11 @@ the contact sheet live only in the working folder. Touch nothing else.
    record's character lines and the saved line-up are the canonical looks; prompts follow the picture.
 2. Characters: if `content/dino/<stem>/characters/` already holds an accepted line-up, use it.
    Otherwise draw the sheets and line-up in one character chat, check them, and save them there.
-3. Pages: a new Gemini chat for every 3 pictures at most, each started by pasting the line-up and spelling
+3. Pages: one prompt per Gemini chat: every picture gets its own new chat (Slice 350; a redo also gets a new chat; only a small patch of a bad result may continue a chat, and only while that chat stays at or under 3 picture requests), each started by pasting the line-up and spelling
    out every outfit, then one prompt per page from the plan, every picture prompt ending with the `<SIZE>` line from prompts.md (small, 1K, 896x1200). Set the 3:4 aspect ratio in every chat and
    confirm it with a zoom before the first prompt. Take menu steps one at a time and look before clicking:
    a stray click on a suggestion chip sends a prompt you didn't write. If a chat draws an earlier scene
-   again instead of the new one, drop to one picture per chat for the rest of the book.
+   again instead of the new one, start a new chat for it (that is the rule already). One picture per new chat; a small patch of a bad result may continue that chat while it stays at or under 3 picture requests (the user's rule, Slice 350 decisions); if the bad picture would steer the patch, start a new chat instead.
 4. Helpers in `.claude/skills/create-dino-story/`:
    - `pwsh -STA gemini-clipboard.ps1 Put <file>` puts the line-up on the clipboard to paste;
    - 5 s after opening or reloading a tab, check the tab URL and `window.__geminiHealth()` once (the left menu loads only
@@ -65,7 +65,7 @@ the contact sheet live only in the working folder. Touch nothing else.
      route in SKILL.md step 6.
 5. Check every candidate by reading the saved file at full size against the step 5 checklist, counting
    every character and comparing each outfit with the line-up item by item. A fail: write why, ask again
-   (a fresh chat if this one has drawn 3), check again. A pass: rename it to `cover.jpg` / `<page>.jpg`.
+   (a new chat; a small patch may continue the chat only while it stays at or under 3 picture requests), check again. A pass: rename it to `cover.jpg` / `<page>.jpg`.
    Record every attempt in the art record's table (`pages` mode: in `<out folder>/checks.md` instead).
 6. (`finish` and `all` only.) When every picture the book needs is accepted, copy the repo's current pictures for pages you didn't
    redraw, and `cover.jpg` if the cover wasn't redrawn (they sit in `<target>/pictures/` and `<target>/cover.jpg`), into the working folder (preparing re-encodes every file once more at JPEG q85, which is fine), run

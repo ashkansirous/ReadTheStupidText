@@ -1,8 +1,8 @@
 ### Slice 350 — Dino: high-resolution pictures for a printed Amazon book, fixing the faulty pages
 
-*Planned.*
+*Parts B and C built (PR #1013, wave 2026-11-12); A, D and E open, need the user's Chrome and Gemini account.*
 
-**Touches:** `content/dino/*/high-res/**` (new), `content/dino/*/pictures/*.jpg` and `content/dino/*/cover.jpg` (item E, fixed pages only), `content/dino/*/book.json` (version bumps), `.gitattributes`, `.github/scripts/ship-targets.mjs`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/skills/create-dino-story/prompts.md`, `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/146-dino-books-kid-friendly-language.md`, `docs/plan/slices/196-dino-default-view-per-book.md`, `docs/plan/slices/350-dino-high-res-pictures.md`
+**Touches:** `content/dino/*/high-res/**` (new), `content/dino/*/pictures/*.jpg` and `content/dino/*/cover.jpg` (item E, fixed pages only), `content/dino/*/book.json` (version bumps), `.gitattributes`, `.lfsconfig`, `.github/scripts/ship-targets.mjs`, `.github/workflows/dino-store.yml`, `.github/workflows/tools-selftests.yml`, `.github/scripts/ship-targets.test.mjs`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/CLAUDE.md`, `tools/DinoReader.BookBuilder/**`, `tests/DinoReader.Tests/BookBuilderTests.cs`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/skills/create-dino-story/prompts.md`, `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/146-dino-books-kid-friendly-language.md`, `docs/plan/slices/196-dino-default-view-per-book.md`, `docs/plan/slices/350-dino-high-res-pictures.md`
 
 **Why.** The user wants to sell the books as printed Amazon books. Today's pictures are 896x1200 (a few are 1792x2400), which is too small for print. There is no rush: the app works as it is.
 
@@ -38,6 +38,11 @@
 and E need the user's Chrome and Gemini account and the user's model pick, so they wait for an interactive session;
 the slice stays open after B and C merge.
 
+**Premises checked (2026-11-12, ground-in-code on origin/main):** `.lfsconfig` has `fetchexclude = content/dino/*/audio/**`
+(B1 adds `high-res`); `ship-targets.mjs:22-24` maps any `content/dino/<book>/**` change to `dinostore`, so B2 needs a
+carve-out, tested in `ship-targets.test.mjs`; `BookHash.cs:42` and `StarterBuilder.cs:63` list a folder non-recursively by
+extension (traced in B3: both are called on a book's `pictures` and `translations` folders only); `publish-store-books.mjs` reads only `book.json` and `audio-cast.json` inside a book folder (`join(CONTENT_ROOT, ...)`, lines 518-519 and 772), so `high-res/` is never read.
+
 **Work:**
 
 - [ ] A. Test phase (one session, stops at the end):
@@ -46,12 +51,12 @@ the slice stays open after B and C merge.
   - [ ] A3. Publish one private comparison page that shows them side by side, with model, pixel size and file size. Note whether 3:4 fits an Amazon print page size.
   - [ ] A4. Stop and discuss with the user. Write their chosen model (and the output size to ask for) into this file.
 - [ ] B. Guard rails, before the first picture is committed:
-  - [ ] B1. In `.gitattributes`: `content/dino/*/high-res/** filter=lfs diff=lfs merge=lfs -text`. Check that `.lfsconfig` keeps these files out of normal fetches and CI checkouts, as it does for audio.
-  - [ ] B2. In `.github/scripts/ship-targets.mjs`, make sure a change under `content/dino/<book>/high-res/**` maps to no ship target, so it doesn't start a store upload. Add a test case if the script has tests.
-  - [ ] B3. Check that `BookHash`, `StarterBuilder` and `publish-store-books.mjs` never read `high-res/`. Neither the app nor the store gets these files.
+  - [x] B1. In `.gitattributes`: `content/dino/*/high-res/** filter=lfs diff=lfs merge=lfs -text`. Check that `.lfsconfig` keeps these files out of normal fetches and CI checkouts, as it does for audio.
+  - [x] B2. In `.github/scripts/ship-targets.mjs`, make sure a change under `content/dino/<book>/high-res/**` maps to no ship target, so it doesn't start a store upload. Add a test case if the script has tests.
+  - [x] B3. Check that `BookHash`, `StarterBuilder` and `publish-store-books.mjs` never read `high-res/`. Neither the app nor the store gets these files.
 - [ ] C. Rules and quality checks (the user asked for this so the same faults never come back):
-  - [ ] C1. Write the one-prompt-per-chat rule (at most 3 picture requests per chat, ever) into `.claude/skills/create-dino-story/SKILL.md`, `prompts.md` and `.claude/agents/dino-story-illustrator.md`, replacing "a fresh chat every 3 pictures".
-  - [ ] C2. Add these checks to the full-size picture check in the skill and in `.claude/agents/dino-story-reviewer.md`. A picture fails if any of them fails:
+  - [x] C1. Write the one-prompt-per-chat rule (at most 3 picture requests per chat, ever) into `.claude/skills/create-dino-story/SKILL.md`, `prompts.md` and `.claude/agents/dino-story-illustrator.md`, replacing "a fresh chat every 3 pictures".
+  - [x] C2. Add these checks to the full-size picture check in the skill and in `.claude/agents/dino-story-reviewer.md`. A picture fails if any of them fails:
     - every character has the right number of arms, hands, legs, paws and wings;
     - the scene fills the whole frame, with no plain white or empty strip at the top or bottom;
     - there are no words, letters or signs in the picture;
@@ -60,7 +65,7 @@ the slice stays open after B and C merge.
     - the picture doesn't contradict the story or put a character in danger the text doesn't have (a pig still building while the wolf is there);
     - the action matches the text exactly (a hug is a hug, not a bird sitting on a hat);
     - swimming animals are in the water, not standing on top of it.
-  - [ ] C3. Record the Good Enough reversal: `src/DinoReader.App/CLAUDE.md` line 28 ("never painted words"), Slice 146 line 48 and Slice 196 line 7 ("never redraw") each get a dated note that the decision was reversed on 2026-11-10 and points here.
+  - [x] C3. Record the Good Enough reversal: `src/DinoReader.App/CLAUDE.md` line 28 ("never painted words"), Slice 146 line 48 and Slice 196 line 7 ("never redraw") each get a dated note that the decision was reversed on 2026-11-10 and points here.
 - [ ] D. Full run, after the user has picked a model and the weekly usage has reset. Do one book at a time, and for each book:
   - [ ] D1. Draw the cover and every page (copy mode, or fix mode for the pages above), one thread, one chat per picture. Check every picture at full size against the C2 checks.
   - [ ] D2. Run `dino-story-reviewer` over the book's high-res pictures. Its pass is required.
@@ -74,3 +79,27 @@ the slice stays open after B and C merge.
 - `git lfs ls-files` lists every `high-res` file, and `git check-attr` shows `filter: lfs` for one of them.
 - `ship-targets.mjs` gives no target for a path under `high-res/`, and BookBuilder `check` gives the same book hashes before and after.
 - Each book's contact sheet and its `dino-story-reviewer` pass are recorded in its `art.md`. Every fixed page is shown next to its old version.
+
+*Changed while building:* B1 adds the LFS rule in `.gitattributes` and `high-res` to `fetchexclude` in `.lfsconfig`. B2 carves `content/dino/<book>/high-res/**` out of the `dinostore` group in `ship-targets.mjs` (tested in `ship-targets.test.mjs`) and adds `!content/dino/*/high-res/**` to the `dino-store.yml` push paths; `tools-selftests.yml` still runs on a high-res PR, so such a PR has a check to wait on. B3 was traced (see *Premises checked*) and is guarded by the C# test `AHighResFolder_ChangesNeitherTheHashNorThePictureList`. C1: one picture per new chat; a patch of a bad result may continue the same chat only while it is at or under 3 requests. C2: the eight checks are in `SKILL.md` step 5 and in the reviewer agent. C3: the reversal notes are written.
+
+*From review:* high (`reviews/pr-1013-high.md`): all 9 findings applied. Medium (`reviews/pr-1013-medium.md`): findings 1, 4 and 5 applied; 2, 3, 6 and 7 skipped:
+- Skipped #2 (`reviews/pr-1013-medium.md`): "High-res exclusion test is near-tautological" - low test-strength note; the C# fixture test is the guard.
+- Skipped #3 (`reviews/pr-1013-medium.md`): "the PictureFilesIn assertion cannot fail" - low test-strength note; the BookHash assert and the C# fixture test are the guard.
+- Skipped #6 (`reviews/pr-1013-medium.md`): "Touches lists publish-store-books.mjs" - Touches wider than the diff is harmless.
+- Skipped #7 (`reviews/pr-1013-medium.md`): "Exclude is on the dinostore group only" - the `.lfsconfig` `fetchexclude` covers `high-res`, so a dino-store checkout never fetches the files.
+check1 (`reviews/pr-1013-check1.md`): findings 1, 7 and 10 applied; the rest, one line each:
+- Skipped #2 (`reviews/pr-1013-check1.md`): "Regex 'content/dino/' still matches high-res-only PRs, so the audio job and LFS pull run for nothing." - low CI cost.
+- Skipped #3 (`reviews/pr-1013-check1.md`): "Guard test greps source text for join(CONTENT_ROOT; 'entry.name' on the line lets a high-res read pass" - low test-strength note.
+- Skipped #4 (`reviews/pr-1013-check1.md`): "High-res exclusion is a push path filter only, duplicated with ship-targets.mjs exclude" - low; duplication is minor.
+- Skipped #5 (`reviews/pr-1013-check1.md`): "both listings are non-recursive on pictures/, so the test cannot fail" - low test-strength note; the behaviour is non-recursive by design.
+- Skipped #6 (`reviews/pr-1013-check1.md`): "States PR #1013, "all 9 findings applied" and review file paths that the diff cannot show" - the slice file records review history by design.
+- Skipped #8 (`reviews/pr-1013-check1.md`): ""Repeats the background about 95%" is not measurable" - a reviewer judgement by eye, the user's own wording.
+- Skipped #9 (`reviews/pr-1013-check1.md`): "a High-Res/Hi-Res folder is neither excluded nor LFS-tracked (case-sensitive)" - the folder name is fixed by the slice as `high-res`.
+
+#### For CLAUDE.md
+
+None beyond what the slice already edited (`.github/CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`, the create-dino-story skill).
+
+#### Not yet verified
+
+- The first real high-res push on `main` starts no `dino-store` run (needs part D).
