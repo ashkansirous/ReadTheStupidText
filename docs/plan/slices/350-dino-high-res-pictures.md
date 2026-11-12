@@ -1,6 +1,6 @@
 ### Slice 350 — Dino: high-resolution pictures for a printed Amazon book, fixing the faulty pages
 
-*Parts B and C built (PR #1013, wave 2026-11-12); A, D and E open, need the user's Chrome and Gemini account.*
+*Parts B and C merged as PR #1013 (01e91c0d); A, D and E open, need the user's Chrome and Gemini account and their model pick.*
 
 **Touches:** `content/dino/*/high-res/**` (new), `content/dino/*/pictures/*.jpg` and `content/dino/*/cover.jpg` (item E, fixed pages only), `content/dino/*/book.json` (version bumps), `.gitattributes`, `.lfsconfig`, `.github/scripts/ship-targets.mjs`, `.github/workflows/dino-store.yml`, `.github/workflows/tools-selftests.yml`, `.github/scripts/ship-targets.test.mjs`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/CLAUDE.md`, `tools/DinoReader.BookBuilder/**`, `tests/DinoReader.Tests/BookBuilderTests.cs`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/skills/create-dino-story/prompts.md`, `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/146-dino-books-kid-friendly-language.md`, `docs/plan/slices/196-dino-default-view-per-book.md`, `docs/plan/slices/350-dino-high-res-pictures.md`
 
@@ -96,7 +96,7 @@ check1 (`reviews/pr-1013-check1.md`): findings 1, 7 and 10 applied; the rest, on
 - Skipped #8 (`reviews/pr-1013-check1.md`): ""Repeats the background about 95%" is not measurable" - a reviewer judgement by eye, the user's own wording.
 - Skipped #9 (`reviews/pr-1013-check1.md`): "a High-Res/Hi-Res folder is neither excluded nor LFS-tracked (case-sensitive)" - the folder name is fixed by the slice as `high-res`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-12)
 
 None beyond what the slice already edited (`.github/CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`, the create-dino-story skill).
 

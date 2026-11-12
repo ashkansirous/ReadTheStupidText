@@ -1,6 +1,6 @@
 # Slice 349 — Dino: grown-ups corner status bar and clipped tab labels
 
-*Built (PR #1015, wave 2026-11-12); item 4 (remove camera/photo texts) waits for proof Dino's iOS binary has no camera/photo API reference.*
+*Built (merged as PR #1015, 699f8d06); item 4 (remove camera/photo texts) waits for proof Dino's iOS binary has no camera/photo API reference.*
 
 **Touches:** `src/DinoReader.App/SystemBarIcons.cs`, `src/DinoReader.App/Platforms/iOS/SystemBarIcons.ios.cs`,
 `src/DinoReader.App/Platforms/Android/MainActivity.cs`, `src/DinoReader.App/CornerShell.cs`, `src/DinoReader.App/CornerTabs.cs`,
@@ -105,7 +105,7 @@ name, not read).
 - Android emulator, scripted: corner Books, Store and Settings tabs in English, Arabic and Farsi: status-bar clock readable,
   all tab labels whole. Same screens on the iOS simulator or a TestFlight build.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-12)
 
 - Grown-up corner bar colours: `GalleryPage.ApplyBarColours` (`src/DinoReader.App/GalleryPage.xaml.cs`) alone sets the page colour (ink only in grown-up bar mode), the content host, the status-bar icons and the Windows title bar; the icon colour follows the colour actually painted behind the bar. Don't set them elsewhere. (Slice 349: docs/plan/slices/349-dino-corner-status-bar-and-tab-labels.md)
 - Corner tab bar height comes from `CornerLayout.TabBarMinHeight` (`src/DinoReader.Core/CornerLayout.cs`, the mock's 60/58/62/62 dp plus the home-bar inset); labels use LineHeight 1.4 and grow with the font scale, never a fixed row. (Slice 349: docs/plan/slices/349-dino-corner-status-bar-and-tab-labels.md)

@@ -4,6 +4,24 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 **Only what can be tested stays here** (the user, 2026-11-08: "keep only whatever I can test"). Each line starts with who tests it: **You** (the user: the iPhone, the S21 by hand, the Echo, the Sonos, an English or Farsi read, a decision or account only you hold) or **Device** (Claude, on the Android emulator or tablet AVD, the S21 by script, or the Windows VM). Checks nobody here can test were removed; behaviours only real use shows are watched in production data instead; checks that need the user's ear are listening-page slices 330-343. All three lists are in the [record](notes/2026-11-08-unverified-triage.md). Earlier on 2026-11-08: triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)). The 2026-11-08 device run (emulator, S21, VM) passed 49 more and the user's iPhone session 2 more; same record.
 
+### Slice 351: Dino: every usage row says who and when, and audio failures say why ([slice](slices/351-dino-usage-context-and-audio-causes.md))
+- **Device:** `premade_audio:no_pack` with a book id, on a book whose pack is not downloaded.
+- **You:** the iOS run of the context fields and the new fallback reasons (iPhone or TestFlight).
+- **Device:** Windows head on the VM, including the animal clip copy failure reason.
+- **Device:** after release, a weighted query shows blobs 17-19 and double6 filled on rows from the new version.
+- **Device:** `.maestro/dino/usage-context.yaml` should set English first (the flow assumes an English UI).
+
+### Slice 350: Dino: high-resolution pictures for a printed Amazon book ([slice](slices/350-dino-high-res-pictures.md))
+- **You:** the first real high-res push on `main` starts no `dino-store` run (needs part D, which needs your Chrome and Gemini account).
+
+### Slice 349: Dino: grown-ups corner status bar and clipped tab labels ([slice](slices/349-dino-corner-status-bar-and-tab-labels.md))
+- **Device:** the `[StatusBar] ... darkIcons=False` log line was not seen in logcat (the flow passed without it).
+- **Device:** Farsi screenshots were not inspected (the flow passed).
+- **Device:** tab labels at system font scale 1.3.
+- **You:** iOS simulator or TestFlight corner screens (status bar and tabs).
+- **Device:** Windows head title bar (VM not run).
+- **You:** item 4: Dino's iOS binary has no camera/photo API reference, so the three Info.plist keys can go (a TestFlight upload without them).
+
 ### Slice 341: Listening page: Farsi short words never dropped ([slice](slices/341-farsi-short-words-never-dropped.md))
 - **Device:** a phone run of short Farsi lines in Read The Stupid Text (mana with the ganji rescue, e.g. «سلام.», «آه.») is not done.
 
