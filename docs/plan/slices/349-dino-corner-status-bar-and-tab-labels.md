@@ -6,7 +6,7 @@
 `src/DinoReader.App/Platforms/Android/MainActivity.cs`, `src/DinoReader.App/CornerShell.cs`, `src/DinoReader.App/CornerTabs.cs`,
 `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.Core/StatusBarIcons.cs`, `src/DinoReader.Core/CornerLayout.cs`,
 `src/DinoReader.App/Platforms/iOS/StatusBarPageViewController.cs`, `src/DinoReader.App/Platforms/iOS/Info.plist`,
-`tests/DinoReader.Tests/**`,
+`tests/DinoReader.Tests/**`, `tools/emulator/screenshot-frames.json`,
 `docs/plan/slices/349-dino-corner-status-bar-and-tab-labels.md`
 
 ## Why
