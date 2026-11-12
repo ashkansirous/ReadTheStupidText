@@ -34,6 +34,10 @@
 | ugly-duckling | 8, 9, 10, 11 | page 8: they stand on the water instead of swimming in it. Pages 8-11: the bottom is empty instead of proper water or ground |
 | x-marks-the-treasure | 17 | Kathryn should hug the seagull, but it sits on her hat |
 
+**Night scope (2026-11-12):** a headless night session builds only parts B and C (guard rails and rules). Parts A, D
+and E need the user's Chrome and Gemini account and the user's model pick, so they wait for an interactive session;
+the slice stays open after B and C merge.
+
 **Work:**
 
 - [ ] A. Test phase (one session, stops at the end):
