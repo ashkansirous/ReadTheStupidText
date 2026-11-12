@@ -138,7 +138,7 @@ internal static class ShelfAudioPacksCard
 			Content = new Label { Text = AppResources.Common_Cancel, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Body), VerticalOptions = LayoutOptions.Center },
 		};
 		SemanticProperties.SetDescription(pill, AppResources.Common_Cancel);
-		Taps.AddTap(pill, cancel);
+		Taps.AddTap(pill, cancel, UiControls.Cancel);
 		return pill;
 	}
 

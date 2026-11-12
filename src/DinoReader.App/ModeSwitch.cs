@@ -143,7 +143,7 @@ public sealed class ModeSwitch : Border
 	private TapGestureRecognizer Tap(ReadingMode mode)
 	{
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += (_, _) => Choose(mode);
+		tap.Tapped += (_, _) => Choose(mode); // no-tap-count: Choose counts the press first (UiUsage.Tap)
 		return tap;
 	}
 
@@ -156,6 +156,8 @@ public sealed class ModeSwitch : Border
 
 		Mode = mode;
 		Render();
+		UiUsage.Tap(UiControls.Mode); // Slice 352: the reading mode (text, picture, both) the child picked
+		UiUsage.Setting(UiSettings.ModeSetting, UiSettings.ModeOf(mode));
 		ModeChanged?.Invoke(this, mode);
 	}
 }

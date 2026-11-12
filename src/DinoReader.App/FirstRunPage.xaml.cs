@@ -57,7 +57,7 @@ public sealed class CoralButton : Border
 		SetSize(double.NaN, DefaultFaceHeight);
 		Look();
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += (_, _) => Clicked?.Invoke(this, EventArgs.Empty);
+		tap.Tapped += (_, _) => Clicked?.Invoke(this, EventArgs.Empty); // no-tap-count: the page that owns this button counts it with UiUsage.Press
 		GestureRecognizers.Add(tap);
 		SemanticProperties.SetHint(this, string.Empty);
 	}
@@ -184,7 +184,7 @@ public partial class FirstRunPage : ContentPage
 			_languageGrid.Children.Add(button);
 		}
 
-		_continue.Clicked += OnContinueClicked;
+		UiUsage.Press(_continue, UiControls.Continue, () => OnContinueClicked(_continue, EventArgs.Empty));
 		var scroll = new ScrollView { Content = _languageGrid };
 		_languageShell = new OnboardingShell(_welcome, scroll, _continue);
 		LanguagePanel.Children.Add(_languageShell);
@@ -202,7 +202,7 @@ public partial class FirstRunPage : ContentPage
 		};
 		SemanticProperties.SetHeadingLevel(_readyTitle, SemanticHeadingLevel.Level1);
 		var words = new VerticalStackLayout { Spacing = ReadyGap, HorizontalOptions = LayoutOptions.Fill, Children = { new Grid { HorizontalOptions = LayoutOptions.Center, Children = { disc, badge } }, _readyTitle, _readyBody } };
-		_setUp.Clicked += OnSeeWhatClicked;
+		UiUsage.Press(_setUp, UiControls.Continue, () => OnSeeWhatClicked(_setUp, EventArgs.Empty));
 		var foot = new VerticalStackLayout { Spacing = 4, Children = { _setUp } };
 		_readyShell = new OnboardingShell(words, null, foot, centred: true);
 		ReadyPanel.Children.Add(_readyShell);
@@ -328,6 +328,7 @@ public partial class FirstRunPage : ContentPage
 		var tap = new TapGestureRecognizer();
 		tap.Tapped += (_, _) =>
 		{
+			UiUsage.Tap(UiControls.Language); // Slice 352: a language card (which one is not counted here)
 			_selected = code;
 			ShowSelection();
 			LogLayout();

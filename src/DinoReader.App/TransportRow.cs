@@ -168,7 +168,7 @@ public sealed class TransportRow : StackLayout
 	private static void Wire(Border button, Action onTap, string description)
 	{
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += (_, _) => onTap();
+		tap.Tapped += (_, _) => onTap(); // no-tap-count: the events it raises are counted by ReadingPage (OnPlayTapped, OnPreviousTapped, OnNextTapped)
 		button.GestureRecognizers.Add(tap);
 		SemanticProperties.SetDescription(button, description);
 	}

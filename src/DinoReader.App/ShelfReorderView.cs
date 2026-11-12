@@ -82,7 +82,7 @@ internal sealed class ShelfReorderView : Grid
 		_cancelLabel.Padding = new Thickness(10, 0);
 		_cancelLabel.MinimumHeightRequest = HeaderHeight;
 		_cancelLabel.VerticalTextAlignment = TextAlignment.Center;
-		Taps.AddTap(_cancelLabel, () => { CancelRequested?.Invoke(); return Task.CompletedTask; });
+		Taps.AddTap(_cancelLabel, () => { CancelRequested?.Invoke(); return Task.CompletedTask; }, UiControls.Cancel);
 		_titleLabel.FontSize = 19;
 		_titleLabel.FontAttributes = FontAttributes.Bold;
 		_titleLabel.TextColor = Colors.White;
@@ -100,7 +100,7 @@ internal sealed class ShelfReorderView : Grid
 			HeightRequest = HeaderHeight, BackgroundColor = Colors.White, StrokeThickness = 0, Padding = new Thickness(20, 0), AutomationId = "ReorderDone",
 			StrokeShape = new RoundRectangle { CornerRadius = HeaderHeight / 2 }, Content = _doneLabel,
 		};
-		Taps.AddTap(done, () => DoneRequested is { } requested ? requested(Order) : Task.CompletedTask);
+		Taps.AddTap(done, () => DoneRequested is { } requested ? requested(Order) : Task.CompletedTask, UiControls.Done);
 		bar.Add(_cancelLabel, 0, 0);
 		bar.Add(_titleLabel, 1, 0);
 		bar.Add(done, 2, 0);
@@ -155,7 +155,11 @@ internal sealed class ShelfReorderView : Grid
 	private void AttachGestures(ReorderEntry entry)
 	{
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += (_, _) => Lift(entry);
+		tap.Tapped += (_, _) =>
+		{
+			UiUsage.Tap(UiControls.Reorder); // Slice 352: a tile lifted to move
+			Lift(entry);
+		};
 		var drag = new DragGestureRecognizer { CanDrag = true };
 		drag.DragStarting += (_, e) => StartDrag(entry, e);
 		drag.DropCompleted += (_, _) => ApplyDragOutcome(_drag.Completed(Order, Environment.TickCount64));

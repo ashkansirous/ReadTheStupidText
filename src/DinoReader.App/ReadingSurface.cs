@@ -440,7 +440,7 @@ public sealed class ReadingSurface : Border
 	private TapGestureRecognizer BuildTap()
 	{
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += OnTapped;
+		tap.Tapped += OnTapped; // no-tap-count: a hit on a sentence raises SentenceTapped, which ReadingPage counts
 		return tap;
 	}
 

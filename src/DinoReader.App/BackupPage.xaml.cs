@@ -155,11 +155,23 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 
 	private async void OnBackTapped(object? sender, EventArgs e) => await _busy.RunAsync(CloseAsync);
 
-	private async void OnSeeStoriesClicked(object? sender, EventArgs e) => await _busy.RunAsync(CloseAsync);
+	private async void OnSeeStoriesClicked(object? sender, EventArgs e)
+	{
+		UiUsage.Tap(UiControls.SeeStories); // Slice 352
+		await _busy.RunAsync(CloseAsync);
+	}
 
-	private async void OnSaveClicked(object? sender, EventArgs e) => await _busy.RunAsync(() => GuardedAsync(SaveAsync));
+	private async void OnSaveClicked(object? sender, EventArgs e)
+	{
+		UiUsage.Tap(UiControls.Save);
+		await _busy.RunAsync(() => GuardedAsync(SaveAsync));
+	}
 
-	private async void OnRestoreClicked(object? sender, EventArgs e) => await _busy.RunAsync(() => GuardedAsync(RestoreAsync));
+	private async void OnRestoreClicked(object? sender, EventArgs e)
+	{
+		UiUsage.Tap(UiControls.Restore);
+		await _busy.RunAsync(() => GuardedAsync(RestoreAsync));
+	}
 
 	// A failure the code below did not name ends in the calm "didn't work" alert.
 	private async Task GuardedAsync(Func<Task> work)

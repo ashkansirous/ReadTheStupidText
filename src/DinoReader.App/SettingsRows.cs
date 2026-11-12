@@ -189,7 +189,7 @@ public static class SettingsRows
 			VerticalOptions = LayoutOptions.Fill,
 		};
 		SemanticProperties.SetDescription(button, name);
-		button.Clicked += async (_, _) => await busy.RunAsync(tapped);
+		UiUsage.Press(button, UiControls.SettingsRow, async () => await busy.RunAsync(tapped)); // Slice 352: which row is the screen that opens next
 		// Grid.Add(view, column, row) writes the span as 1, so the span is set after adding.
 		row.Add(button, 0);
 		Grid.SetColumnSpan(button, endInteractive ? FirstColumn + 1 : row.ColumnDefinitions.Count);
@@ -370,6 +370,7 @@ public static class AnimalSoundsCard
 
 	private static void SaveQuietly(bool on)
 	{
+		UiUsage.Setting(UiSettings.AnimalSounds, UiSettings.OnOff(on)); // Slice 352
 		try
 		{
 			AnimalSoundsPreference.Save(on);
@@ -383,7 +384,7 @@ public static class AnimalSoundsCard
 	public static Border Build()
 	{
 		var toggle = new ToggleSwitch { IsOn = AnimalSoundsPreference.Load(), AccessibleName = AppResources.Settings_AnimalSounds_Title, VerticalOptions = LayoutOptions.Center };
-		toggle.Toggled += (_, _) => SaveQuietly(toggle.IsOn);
+		toggle.Toggled += (_, _) => SaveQuietly(toggle.IsOn); // no-tap-count: SaveQuietly counts the changed setting (UiUsage.Setting)
 		var text = new VerticalStackLayout
 		{
 			Spacing = 2,
@@ -424,7 +425,11 @@ public static class UsageCountsCard
 	public static Border Build(UsageCounter counter)
 	{
 		var toggle = new ToggleSwitch { IsOn = counter.Enabled, AccessibleName = AppResources.Usage_Title, VerticalOptions = LayoutOptions.Center };
-		toggle.Toggled += (_, _) => counter.Enabled = toggle.IsOn;
+		toggle.Toggled += (_, _) =>
+		{
+			counter.Enabled = toggle.IsOn;
+			UiUsage.Setting(UiSettings.UsageCounts, UiSettings.OnOff(toggle.IsOn)); // Slice 352: only "on" ever reaches the queue; turning counting off clears it and the gate refuses what follows
+		};
 		var text = new VerticalStackLayout
 		{
 			Spacing = 2,
@@ -599,6 +604,11 @@ public static class ReadingSpeedCard
 	private static void Commit(Slider slider)
 	{
 		PlaybackRate rate = ReadingSpeed.Clamp(slider.Value);
+		double before = ReadingSpeedPreference.Load().Value;
 		ReadingSpeedPreference.Save(rate);
+		if (UiSettings.SpeedBucketChanged(before, rate.Value))
+		{
+			UiUsage.Setting(UiSettings.ReadingSpeed, UiSettings.SpeedBucketOf(rate.Value)); // Slice 352: a bucket, never the exact number, and only when the bucket changed
+		}
 	}
 }

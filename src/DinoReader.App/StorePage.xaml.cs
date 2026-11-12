@@ -455,7 +455,11 @@ public partial class StorePage : ContentView, ICornerTabView
 			Content = label,
 		};
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += (_, _) => SelectBand(band);
+		tap.Tapped += (_, _) =>
+		{
+			UiUsage.Tap(UiControls.Filter); // Slice 352: an age chip (which age is never counted)
+			SelectBand(band);
+		};
 		chip.GestureRecognizers.Add(tap);
 		_chips[band] = (chip, label);
 		return chip;
@@ -505,6 +509,7 @@ public partial class StorePage : ContentView, ICornerTabView
 
 	private async void OnAuthorTapped(object? sender, TappedEventArgs e)
 	{
+		UiUsage.Tap(UiControls.Filter); // Slice 352: the author filter (which author is never counted)
 		// Each button label maps to its author (null for "Anyone"); an author named like a fixed button gets a visible number so the pick is never misread.
 		var choices = new Dictionary<string, string?> { [AppResources.Store_Anyone] = null };
 		foreach (string author in AuthorsInBand())
@@ -576,6 +581,7 @@ public partial class StorePage : ContentView, ICornerTabView
 
 	private async void OnGetTapped(object? sender, TappedEventArgs e)
 	{
+		UiUsage.Tap(UiControls.Download); // Slice 352: the Get button of a store row
 		if ((sender as BindableObject)?.BindingContext is not StoreRow row || !_mode.IsGrownUp)
 		{
 			return;
@@ -621,7 +627,11 @@ public partial class StorePage : ContentView, ICornerTabView
 	private Task AlertAsync(string message) =>
 		Window?.Page is { } page ? page.DisplayAlertAsync(AppResources.Store_Title, message, AppResources.Common_Ok) : Task.CompletedTask;
 
-	private async void OnRestorePurchasesClicked(object? sender, EventArgs e) => await _busy.RunAsync(RestorePurchasesAsync);
+	private async void OnRestorePurchasesClicked(object? sender, EventArgs e)
+	{
+		UiUsage.Tap(UiControls.Restore); // Slice 352
+		await _busy.RunAsync(RestorePurchasesAsync);
+	}
 
 	private async Task RestorePurchasesAsync()
 	{
@@ -636,6 +646,7 @@ public partial class StorePage : ContentView, ICornerTabView
 
 	private async void OnRedeemCodeClicked(object? sender, EventArgs e) => await _busy.RunAsync(async () =>
 	{
+		UiUsage.Tap(UiControls.Pick); // Slice 352: the redeem-code button (the code itself is typed on the store's own screen, never seen here)
 		await _external.RunAsync(_client.Sales.Purchases.RedeemCodeAsync); // the store's own redeem screen
 		await RefreshPurchasesAsync(CancellationToken.None); // a code redeemed there shows as owned without pressing Restore
 		await ReplanRowsAsync();
@@ -674,5 +685,9 @@ public partial class StorePage : ContentView, ICornerTabView
 		}
 	}
 
-	private async void OnTryAgainClicked(object? sender, EventArgs e) => await _busy.RunAsync(LoadAsync);
+	private async void OnTryAgainClicked(object? sender, EventArgs e)
+	{
+		UiUsage.Tap(UiControls.Retry); // Slice 352
+		await _busy.RunAsync(LoadAsync);
+	}
 }

@@ -28,7 +28,7 @@ internal sealed class PillButton : Border
 	{
 		_coral = coral;
 		_hit.AutomationId = automationId;
-		_hit.Clicked += (_, _) => Clicked?.Invoke(this, EventArgs.Empty);
+		_hit.Clicked += (_, _) => Clicked?.Invoke(this, EventArgs.Empty); // no-tap-count: the pill's owner counts it with UiUsage.Press
 		StrokeThickness = 0;
 		VerticalOptions = LayoutOptions.Center;
 		BackgroundColor = coral ? DinoTokens.Get(DinoTokens.Coral) : ShelfFill;
@@ -138,8 +138,7 @@ internal sealed class CornerShell : Grid
 		FlowDirection = FlowDirection.LeftToRight; // never mirrored (Slice 96)
 		BackgroundColor = DinoTokens.Get(DinoTokens.Ink);
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
-		Pill = new PillButton("GalleryDone", coral: true);
-		Pill.Clicked += (_, _) => BackRequested?.Invoke();
+		Pill = UiUsage.Press(new PillButton("GalleryDone", coral: true), UiControls.Done, () => BackRequested?.Invoke()); // Slice 352: the coral way back to the child's shelf, counted before it leaves
 		SemanticProperties.SetHeadingLevel(_title, SemanticHeadingLevel.Level1);
 		_eyebrowRow = new HorizontalStackLayout { Spacing = EyebrowGap, Children = { _barLock, _eyebrow } };
 		_nameRow.Add(_nameIcon, 0);
@@ -147,7 +146,7 @@ internal sealed class CornerShell : Grid
 		Children.Add(_bar);
 		Children.Add(_rail);
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += (_, _) => TitleTapped?.Invoke();
+		tap.Tapped += (_, _) => TitleTapped?.Invoke(); // no-tap-count: the title's seven taps open the developer switch, not a control
 		_title.GestureRecognizers.Add(tap);
 		SizeChanged += (_, _) => FitWhenWidthChanged();
 	}

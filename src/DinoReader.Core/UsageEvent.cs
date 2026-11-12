@@ -45,6 +45,14 @@ public static class UsageEventName
 
     // Slice 313: a shelf book was behind the store (detail: BookUpdateUsage.Detail, "<result>:<from>:<to>", versions only).
     public const string BookUpdate = "book_update";
+
+    // Slice 352: where the app was and what was pressed. All are about no book. screen: UiUsageDetail.Screen ("<screen>:<action>"), tap: UiUsageDetail.Tap ("<screen>:<control>"),
+    // setting_changed: UiUsageDetail.Setting ("<setting>:<value>"), app_backgrounded / app_resumed: the screen the app was on.
+    public const string Screen = "screen";
+    public const string Tap = "tap";
+    public const string SettingChanged = "setting_changed";
+    public const string AppBackgrounded = "app_backgrounded";
+    public const string AppResumed = "app_resumed";
 }
 
 /// <summary>Slice 228: the one rule for a demo read (the intro's read step), which is not a real reading of a book and so counts no book open, finish or (Slice 250) playback event.</summary>
@@ -236,9 +244,10 @@ public static class IntroSteps
 /// <see cref="Detail"/> (Slice 134) is the event's one extra closed value (see <see cref="UsageDetail"/>), empty for the reader events; a count about no book has <see cref="UsageSource.None"/> as book and source.
 /// <see cref="Session"/> and <see cref="Seq"/> (Slice 250) are the per-launch random session id (32 hex digits, in memory and on disk only inside unsent queued counts, never reused for a later launch) and the count's order inside it; null for a count made before they existed.
 /// <see cref="Count"/> and <see cref="DeviceCount"/> (Slice 273) are two optional whole numbers: a <c>fallback</c> count's number of times in the session, and a <c>read_voice</c> count's pieces read by clips (<see cref="Count"/>) and by the device voice (<see cref="DeviceCount"/>); left out of the JSON when null.
+/// <see cref="Screen"/> (Slice 352) is the screen the app was on when the count was made (a <see cref="UiScreens"/> name; the Worker keeps it as <c>blob20</c>), left out of the JSON when null.
 /// <see cref="Seconds"/> (Slice 288) is the whole seconds of audio played since the previous paused or stopped row of the reading, on <c>read_paused</c> and <c>read_stopped</c> (always, 0 allowed; never on <c>book_listened</c>); left out of the JSON when null.
 /// </summary>
-public sealed record UsageEvent(string Name, string Book, string Language, string Source, bool HasRecording, string Version, string Platform, string Day, double SampleRate, string Detail = "", string? Session = null, int? Seq = null, int? Count = null, int? DeviceCount = null, int? Seconds = null, string? UiLang = null, string? InstallAge = null, string? LaunchNo = null, int? SinceLaunch = null)
+public sealed record UsageEvent(string Name, string Book, string Language, string Source, bool HasRecording, string Version, string Platform, string Day, double SampleRate, string Detail = "", string? Session = null, int? Seq = null, int? Count = null, int? DeviceCount = null, int? Seconds = null, string? UiLang = null, string? InstallAge = null, string? LaunchNo = null, int? SinceLaunch = null, string? Screen = null)
 {
     private const int PackageIdLength = 32;
     private const string DayFormat = "yyyy-MM-dd";
@@ -367,6 +376,9 @@ public static class UsageBatch
 {
     /// <summary>The Worker refuses more than this in one request.</summary>
     public const int MaxEvents = 50;
+
+    /// <summary>Slice 352: the app's queue sends as soon as this many counts wait, and in batches of this size, so a busy session never meets the Worker's 50-count / 32 KB cap.</summary>
+    public const int FlushAt = 40;
 
     public const int SchemaVersion = 1;
 

@@ -102,6 +102,9 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	/// <summary>Slice 228: marks this page as the intro's demo read, whichever way it opens (even when the voice is not ready and nothing plays), so it counts no book open or finish. Call before the page shows.</summary>
 	public void MarkDemoRead() => _demoRead = true;
 
+	/// <summary>Slice 352: where this read was started from (a <see cref="ReadOrigins"/> name); the book shelf unless the opener says otherwise. It is the detail of <c>book_opened</c> and <c>read_started</c>.</summary>
+	public string ReadOrigin { get; set; } = ReadOrigins.Shelf;
+
 	/// <summary>Slice 228 (mock Batch 43 frame 101b): the intro's read step. Starts the book playing as soon as the page shows, and pops back to the intro when the read reaches its end. Call after <see cref="Load"/>.</summary>
 	public void PlayForIntro()
 	{
@@ -336,6 +339,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	// Reading pauses while the list is open; the pick restarts the sentence in the new voice (mock 89), the same language carries on.
 	private async Task OnLanguageTappedAsync()
 	{
+		UiUsage.Tap(UiControls.Language); // Slice 352: the story-language button
 		if (_story is not { } story || _readable.Count < 2)
 		{
 			return;
@@ -1277,7 +1281,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		}
 
 		_openCounted = true;
-		RecordBookCount(UsageEventName.BookOpened, story);
+		RecordBookCount(UsageEventName.BookOpened, story, ReadOrigin); // Slice 352: the open says where it was started from
 	}
 
 	// Slice 173: a book counts in the language it was read in (the child's pick), not the book's own.
@@ -1359,7 +1363,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		string name = ReadPlaybackNames.EventOf(kind);
 		if (DemoReadCounting.Counts(name, _demoRead))
 		{
-			_usage.Record(name, story, reason is { } why ? ReadPlaybackNames.DetailOf(why) : string.Empty, ReadIn(story));
+			_usage.Record(name, story, reason is { } why ? ReadPlaybackNames.DetailOf(why) : name == UsageEventName.ReadStarted ? ReadOrigin : string.Empty, ReadIn(story)); // Slice 352: a start says where the read began
 		}
 	}
 
@@ -1508,6 +1512,8 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 	private void OnSentenceTapped(object? sender, int sentence)
 	{
+		UiUsage.Tap(UiControls.Sentence); // Slice 352: a tap on a sentence starts the read there
+
 		CancelIntroRead(); // the grown-up took over: no auto-leave
 		_follower.ResumeAt(Surface.CurrentPage);
 		_ = StartReadAtAsync(sentence);
@@ -1515,6 +1521,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 	private async void OnPlayTapped(object? sender, EventArgs e)
 	{
+		UiUsage.Tap(_session.State == SessionState.Playing ? UiControls.Pause : UiControls.Play); // Slice 352: what the press asks for, from the state it found
 		CancelIntroRead();
 		switch (_session.State)
 		{
@@ -1571,9 +1578,17 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		await StartReadAtAsync(sentence);
 	}
 
-	private async void OnPreviousTapped(object? sender, EventArgs e) => await SkipAsync(-1);
+	private async void OnPreviousTapped(object? sender, EventArgs e)
+	{
+		UiUsage.Tap(UiControls.PreviousPage); // Slice 352
+		await SkipAsync(-1);
+	}
 
-	private async void OnNextTapped(object? sender, EventArgs e) => await SkipAsync(1);
+	private async void OnNextTapped(object? sender, EventArgs e)
+	{
+		UiUsage.Tap(UiControls.NextPage); // Slice 352
+		await SkipAsync(1);
+	}
 
 	// Skip moves by one sentence, the highlight unit. While nothing plays (idle or paused) it only
 	// moves the mark and starts no audio; a paused read is dropped so Play starts at the mark.
@@ -1610,7 +1625,11 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		return _session.RecordedRangeOf(current) is { } range ? (delta > 0 ? range.Last : range.First) : current;
 	}
 
-	private async void OnBackTapped(object? sender, TappedEventArgs e) => await LeaveBookAsync();
+	private async void OnBackTapped(object? sender, TappedEventArgs e)
+	{
+		UiUsage.Tap(UiControls.Back); // Slice 352
+		await LeaveBookAsync();
+	}
 
 	private async void OnReadFailed(object? sender, EventArgs e) =>
 		await DisplayAlertAsync(ReadingText.CouldntRead, ReadingText.ReadFailed, ReadingText.Ok);

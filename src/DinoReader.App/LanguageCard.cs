@@ -32,7 +32,7 @@ public sealed class LanguageCard : Border
 		StrokeShape = new RoundRectangle { CornerRadius = 18 };
 		var rows = new VerticalStackLayout();
 		rows.Children.Add(SettingsRows.Row(AppResources.Story_Language, _value, chooseLanguage, busy));
-		_switch.Toggled += OnSwitchToggled;
+		_switch.Toggled += OnSwitchToggled; // no-tap-count: OnSwitchToggled counts the press first (UiUsage.Tap)
 		rows.Children.Add(SettingsRows.Divider());
 		rows.Children.Add(TranslateRow());
 		Content = rows;
@@ -97,6 +97,7 @@ public sealed class LanguageCard : Border
 		}
 
 		_wanted = _switch.IsOn;
+		UiUsage.Tap(UiControls.Toggle); // Slice 352: the "translate" switch of the language page
 		TranslateChanged?.Invoke();
 	}
 

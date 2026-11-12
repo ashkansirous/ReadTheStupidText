@@ -81,7 +81,7 @@ public partial class TileOverlay : ContentView
 			return; // the release after a hold must not also open the sheet
 		}
 
-		OpenRequested?.Invoke(this, e);
+		OpenRequested?.Invoke(this, e); // no-tap-count: the gallery counts OpenRequested (OnOpenRequested)
 	}
 
 	private async void OnPointerPressed(object? sender, PointerEventArgs e)
@@ -190,6 +190,6 @@ public partial class TileOverlay : ContentView
 	private void OnMoreTapped(object? sender, TappedEventArgs e)
 	{
 		CancelHold();
-		OpenRequested?.Invoke(this, e);
+		OpenRequested?.Invoke(this, e); // no-tap-count: the gallery counts OpenRequested (OnOpenRequested)
 	}
 }

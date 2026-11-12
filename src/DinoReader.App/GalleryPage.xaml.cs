@@ -408,6 +408,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 		staged.Staged += OnBookUpdateStaged; // Slice 313: while the shelf is shown no book is open, so a newly staged text is swapped in at once
 		ApplyMode();
 		SyncTabViews();
+		ShowScreen();
 		if (Window is { } window)
 		{
 			window.Resumed -= OnWindowResumed;
@@ -562,6 +563,15 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 	});
 
 	// The tiles follow the mode through their binding; only the chrome changes here. A tab change swaps what the content area shows (ApplyTab).
+	// Slice 352: the child's shelf, or the corner's open tab, is the screen while this page is the one on show.
+	private void ShowScreen()
+	{
+		if (_appeared)
+		{
+			UiScreen.Show(UiScreen.OfGallery(_mode.IsGrownUp, _mode.Tab));
+		}
+	}
+
 	private void OnModeChanged(object? sender, PropertyChangedEventArgs e) => MainThread.BeginInvokeOnMainThread(() =>
 	{
 		if (e.PropertyName == nameof(GrownUpMode.Tab))
@@ -569,10 +579,12 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 			_tabs.Selected = _mode.Tab;
 			RequestTab();
 			LogCorner();
+			ShowScreen();
 			return;
 		}
 
 		ApplyMode();
+		ShowScreen();
 		if (!_mode.IsGrownUp)
 		{
 			_settingsTab?.Reset(); // the next visit to the corner starts at the Settings list
@@ -1336,13 +1348,16 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 		if (TileOf(sender) is { } tile)
 		{
-			await OpenTileAsync(tile);
+			await OpenTileAsync(tile); // no-tap-count: OpenTileAsync counts the press (UiUsage.Tap)
 		}
 	}
 
 	// A tap on a cover (kids' mode: read it; grown-up mode: its options sheet). The Windows keyboard (Enter or Space on a focused book) takes the same path.
-	private Task OpenTileAsync(StoryTile tile) =>
-		_busy.RunAsync(() => _mode.IsGrownUp ? OpenBookSheetAsync(tile.Story) : _actions.ReadAsync(Navigation, tile.Story));
+	private Task OpenTileAsync(StoryTile tile)
+	{
+		UiUsage.Tap(UiControls.Book); // Slice 352: on the shelf it starts the read, in the corner it opens the book's sheet; the screen in the count says which
+		return _busy.RunAsync(() => _mode.IsGrownUp ? OpenBookSheetAsync(tile.Story) : _actions.ReadAsync(Navigation, tile.Story));
+	}
 
 	// Slice 235 part C: Windows-only wiring on the native list (Enter, Space, right-click, focus return after a sheet), in Platforms/Windows/GalleryPage.Desktop.cs. No-ops elsewhere.
 	partial void WireDesktopShelf();
@@ -1511,7 +1526,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 #endif
 		FirstRunState.HandoverPending = false;
 		_mode.Leave();
-		await _actions.ReadAsync(Navigation, story);
+		await _actions.ReadAsync(Navigation, story, ReadOrigins.Corner);
 	}
 
 	private async Task OpenSheetRecordAsync()
@@ -1747,6 +1762,7 @@ public partial class GalleryPage : ContentPage, IDinoKeyTarget, IInkUnderStatusB
 
 		if (TileOf(sender) is { } tile)
 		{
+			UiUsage.Tap(UiControls.BookMore); // Slice 352: the tile's "more" button
 			await RunGrownUpAsync(() => OpenBookSheetAsync(tile.Story));
 		}
 	}

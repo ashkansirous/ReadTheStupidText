@@ -13,6 +13,20 @@ internal static class Taps
 		view.GestureRecognizers.Add(tap);
 	}
 
+	/// <summary>Slice 352: the same tap, counted as a press of <paramref name="control"/> (a <see cref="DinoReader.Core.UiControls"/> name) on the current screen, before its action runs (the count is read at tap time and never registered apart from the action).
+	/// A view that is disabled when tapped (its live <c>IsEnabled</c>) does nothing and is not counted.</summary>
+	public static void AddTap(View view, Func<Task> tapped, string control) =>
+		AddTap(view, () =>
+		{
+			if (!view.IsEnabled)
+			{
+				return Task.CompletedTask; // a greyed-out control does nothing and is not counted
+			}
+
+			UiUsage.Tap(control);
+			return tapped();
+		});
+
 	// An async-void handler must never throw: a failed tap is logged and the app carries on.
 	private static async Task RunAsync(Func<Task> tapped)
 	{

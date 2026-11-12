@@ -312,6 +312,7 @@ internal sealed class SettingsTab : ContentView, ICornerTabView
 			page.HostAppearing();
 		}
 
+		UiScreen.Show((page is Page hosted ? UiScreen.ScreenOf(hosted) : null) ?? UiScreens.CornerSettings); // Slice 352: a hosted page is a screen of its own
 		AppTrace.Line(TraceLines.PageShown(page.GetType().Name)); // a hosted page is never pushed, so Application.PageAppearing does not see it: the report's log tail still names it (report-problem flow)
 #if DEBUG
 		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Redesign] settings page={page.GetType().Name} hosted=true");
@@ -363,6 +364,11 @@ internal sealed class SettingsTab : ContentView, ICornerTabView
 	{
 		_scroll.IsVisible = true;
 		Rebuild();
+		if (_appeared)
+		{
+			UiScreen.Show(UiScreens.CornerSettings); // Slice 352: back from a settings page to the list
+		}
+
 #if DEBUG
 		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("[Redesign] settings page=list hosted=false");
 #endif

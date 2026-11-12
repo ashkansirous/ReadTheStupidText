@@ -37,7 +37,7 @@ test("a batch of valid counts is written, one data point each, and answered with
   assert.equal(env.points.length, 2);
   assert.deepEqual(env.points[0], {
     indexes: ["book_opened"],
-    blobs: ["book_opened", BOOK, "en", "shelf", "no", "1.42.0", "android", "2026-10-25", "", "none", "", "", "", "", "", "", "none", "none", "none"],
+    blobs: ["book_opened", BOOK, "en", "shelf", "no", "1.42.0", "android", "2026-10-25", "", "none", "", "", "", "", "", "", "none", "none", "none", "none"],
     doubles: [2, -1, -1, -1, -1, -1],
   });
   assert.equal(env.points[1].blobs[4], "yes");
@@ -85,7 +85,7 @@ test("invalid counts are dropped one by one and unknown fields never reach the d
   const response = await handleEvents(post({ events: [...bad, extra] }), env, on);
   assert.equal(response.status, 204);
   assert.equal(env.points.length, 1);
-  assert.equal(env.points[0].blobs.length, 19);
+  assert.equal(env.points[0].blobs.length, 20);
   assert.ok(!JSON.stringify(env.points[0]).includes("secret"));
 });
 
@@ -133,7 +133,7 @@ test("only POST is answered", async () => {
 test("the path check and the parser agree on the shapes they accept", () => {
   assert.ok(isEventsPath("/api/events"));
   assert.ok(!isEventsPath("/api/events/"));
-  assert.deepEqual(parseEvent(shelfEvent), { ...shelfEvent, detail: "", session: "", seq: -1, count: -1, deviceCount: -1, seconds: -1, uiLang: "none", installAge: "none", launchNo: "none", sinceLaunch: -1 });
+  assert.deepEqual(parseEvent(shelfEvent), { ...shelfEvent, detail: "", session: "", seq: -1, count: -1, deviceCount: -1, seconds: -1, uiLang: "none", installAge: "none", launchNo: "none", sinceLaunch: -1, screen: "none" });
   assert.equal(parseEvent({ ...shelfEvent, language: "pt-BR" })?.language, "pt-BR");
   assert.equal(toDataPoint(shelfEvent).indexes.length, 1);
 });
@@ -662,7 +662,7 @@ test("read_stopped takes exactly the nine closed reasons and drops any other", (
 test("a valid session id and sequence are written as blob16 and double2", async () => {
   const env = recorder();
   await handleEvents(post({ events: [{ ...shelfEvent, session: SESSION, seq: 7 }, { ...shelfEvent, session: SESSION, seq: 0 }] }), env, on);
-  assert.equal(env.points[0].blobs.length, 19);
+  assert.equal(env.points[0].blobs.length, 20);
   assert.equal(env.points[0].blobs[15], SESSION);
   assert.deepEqual(env.points[0].doubles, [2, 7, -1, -1, -1, -1]);
   assert.equal(env.points[1].doubles[1], 0);
@@ -699,12 +699,12 @@ test("a count from a build without the fields still writes an empty session and 
 
 const CONTEXT = { uiLang: "fa", installAge: "d1_7", launchNo: "2_5", sinceLaunch: 95 };
 
-test("the who-and-when fields are written as blob17-blob19 and double6, blob20 stays free", async () => {
+test("the who-and-when fields are written as blob17-blob19 and double6, blob20 is the screen (none without one)", async () => {
   const env = recorder();
   await handleEvents(post({ events: [{ ...shelfEvent, name: "app_opened", book: "none", source: "none", ...CONTEXT }] }), env, on);
   assert.equal(env.points.length, 1);
-  assert.deepEqual(env.points[0].blobs.slice(16), ["fa", "d1_7", "2_5"]);
-  assert.equal(env.points[0].blobs.length, 19);
+  assert.deepEqual(env.points[0].blobs.slice(16), ["fa", "d1_7", "2_5", "none"]);
+  assert.equal(env.points[0].blobs.length, 20);
   assert.equal(env.points[0].doubles[5], 95);
 });
 

@@ -29,12 +29,11 @@ internal sealed class ShelfHeader : Grid
 		_flag = flag;
 		FlowDirection = FlowDirection.LeftToRight; // never mirrored (Slice 96)
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
-		GrownUps = new PillButton("GalleryGrownUps", coral: false);
-		GrownUps.Clicked += (_, _) => GrownUpsRequested?.Invoke();
+		GrownUps = UiUsage.Press(new PillButton("GalleryGrownUps", coral: false), UiControls.OpenCorner, () => GrownUpsRequested?.Invoke()); // Slice 352: counted before the gate opens
 		_iconFrame.Content = new Image { Source = "dino_icon", Aspect = Aspect.AspectFill };
 		SemanticProperties.SetHeadingLevel(_title, SemanticHeadingLevel.Level1);
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += (_, _) => TitleTapped?.Invoke();
+		tap.Tapped += (_, _) => TitleTapped?.Invoke(); // no-tap-count: the title's seven taps open the developer switch, not a control
 		_title.GestureRecognizers.Add(tap);
 		Children.Add(_row);
 		SizeChanged += (_, _) => FitWhenWidthChanged();

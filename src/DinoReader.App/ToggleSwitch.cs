@@ -38,7 +38,7 @@ public sealed class ToggleSwitch : Border
 		};
 		Content = new Grid { Children = { _knob } };
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += (_, _) =>
+		tap.Tapped += (_, _) => // no-tap-count: the switch's owner counts the change (UiUsage.Setting / UiUsage.Tap on its Toggled)
 		{
 			if (IsEnabled)
 			{

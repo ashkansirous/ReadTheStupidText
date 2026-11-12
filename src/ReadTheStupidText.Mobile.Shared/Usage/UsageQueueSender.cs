@@ -17,6 +17,7 @@ namespace ReadTheStupidText.Mobile.Shared.Usage;
 /// <param name="ParseQueue">Reads the stored queue (never throws).</param>
 /// <param name="QueueToJson">Writes the queue for storage.</param>
 /// <param name="Roll">Slice 250: the sampling roll (0 up to but not including 1) of the whole session, so a sampled session is complete and an unsampled one sends nothing; null rolls once for this sender (RTST).</param>
+/// <param name="IsNoise">Slice 352: true for a row that may be dropped first when the queue is full (Dino Reader's tap, screen and setting rows); null keeps the oldest-first rule for every row.</param>
 /// <param name="SendsBeta">Slice 251: true for an app whose TestFlight builds send their counts to the beta dataset (Dino Reader; they post to the beta route). False keeps today's rule: a build the gate blocks sends nothing.</param>
 public sealed record UsageQueueOptions<TEvent>(
     string BaseAddress,
@@ -30,7 +31,8 @@ public sealed record UsageQueueOptions<TEvent>(
     Func<string?, List<TEvent>> ParseQueue,
     Func<IReadOnlyList<TEvent>, string> QueueToJson,
     bool SendsBeta = false,
-    double? Roll = null)
+    double? Roll = null,
+    Func<TEvent, bool>? IsNoise = null)
     where TEvent : class;
 
 /// <summary>
@@ -137,10 +139,7 @@ public sealed class UsageQueueSender<TEvent>(UsageQueueOptions<TEvent> options)
             List<TEvent> queue = Queue();
             int before = queue.Count;
             queue.AddRange(counts);
-            if (queue.Count > MaxQueued)
-            {
-                queue.RemoveRange(0, queue.Count - MaxQueued);
-            }
+            UsageQueueTrim.ToCap(queue, MaxQueued, options.IsNoise);
 
             Save(queue);
             // Only the count that first fills a batch starts a send: while a send keeps failing the queue stays full and must not spawn one per count.

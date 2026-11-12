@@ -51,12 +51,13 @@ public sealed class UsageCounter
 		_configHold = new ConfigFallbackHold(() => config.HasCopy, (area, reason, language) => RecordGeneralFallback(area, reason, language));
 		config.Fetched += (_, _) => _configHold.Release(); // every successful fetch, not only a changed config
 		_sender = new UsageQueueSender<UsageEvent>(new UsageQueueOptions<UsageEvent>(
-			StoreClient.BaseAddress, EnabledKey, QueueKey, LogName, UsageBatch.MaxEvents,
+			StoreClient.BaseAddress, EnabledKey, QueueKey, LogName, UsageBatch.FlushAt, // Slice 352: batches of 40 (never past the Worker's 50), and a full batch is sent at once
 			() => (config.Current.Telemetry.Enabled, config.Current.Telemetry.SampleRate),
 			() => config.HasCopy,
 			events => UsageBatch.ToJson(events, DeviceProbe.Current), UsageBatch.ParseQueue, UsageBatch.QueueToJson,
 			SendsBeta: true, // Slice 251: TestFlight batches go out posted to the Worker's separate beta route (dino_usage_beta)
-			Roll: _session.Roll)); // Slice 250: sampling is decided once per session
+			Roll: _session.Roll, // Slice 250: sampling is decided once per session
+			IsNoise: IsUiRow)); // Slice 352: a full queue drops taps, screens and setting changes before any other row
 		if (_launch.StoreFailed)
 		{
 			RecordGeneralFallback(ReadTheStupidText.Application.Usage.FallbackArea.Config, ReadTheStupidText.Application.Usage.FallbackReason.PreferenceUnsaved); // Slice 351: the launch history could not be read or saved; the counts carry "none" buckets
@@ -65,6 +66,8 @@ public sealed class UsageCounter
 		WaitController.Finished -= RecordWait; // guarded: a second counter must not stay subscribed twice
 		WaitController.Finished += RecordWait;
 	}
+
+	private static bool IsUiRow(UsageEvent row) => row.Name is UsageEventName.Tap or UsageEventName.Screen or UsageEventName.SettingChanged;
 
 	// Slice 148: every wait overlay that showed, and every Cancel on one, with its stage and a coarse duration. About no book.
 	private void RecordWait(WaitFinish finish)
@@ -380,10 +383,11 @@ public sealed class UsageCounter
 			InstallAge = _launch.InstallAge,
 			LaunchNo = _launch.LaunchNo,
 			SinceLaunch = _launch.SinceLaunch(),
+			Screen = UiScreen.Current, // Slice 352: where in the app this happened (blob20)
 		};
 #if DEBUG
 		// Slice 320 item 7: a Debug-only line per count that reached the queue, with the seq it was given (the line in RecordLogged is written before sampling, so it has none), so a flow reads the sequence on a device. Nothing is sent from here.
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] seq={stamped.Seq} {stamped.Name} session={stamped.Session} uiLang={stamped.UiLang} installAge={stamped.InstallAge} launchNo={stamped.LaunchNo} sinceLaunch={stamped.SinceLaunch}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] seq={stamped.Seq} {stamped.Name} session={stamped.Session} uiLang={stamped.UiLang} installAge={stamped.InstallAge} launchNo={stamped.LaunchNo} sinceLaunch={stamped.SinceLaunch} screen={stamped.Screen} detail={stamped.Detail}");
 #endif
 		return stamped;
 	}
@@ -398,7 +402,7 @@ public sealed class UsageCounter
 			.ToList());
 
 	/// <summary>Queues a count about no book (a voice change, a launch, a language change); <paramref name="language"/> is the one the count is about.</summary>
-	public void RecordGeneral(string name, string language, string detail = "", int? count = null) =>
+	public bool RecordGeneral(string name, string language, string detail = "", int? count = null) =>
 		_sender.Enqueue((sampleRate, now) =>
 			Stamp(UsageEvent.ForNoBook(name, language, detail, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now) with { Count = count }));
 

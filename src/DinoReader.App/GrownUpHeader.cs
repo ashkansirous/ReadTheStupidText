@@ -67,7 +67,7 @@ public sealed class GrownUpHeader : Grid
 		this.Add(_button, 2);
 		_face.Children.Add(_hit);
 		_button.Content = _face;
-		_hit.Clicked += (_, _) => DoneRequested?.Invoke(this, EventArgs.Empty);
+		UiUsage.Press(_hit, UiControls.Done, () => DoneRequested?.Invoke(this, EventArgs.Empty)); // Slice 352: counted before the header's owner acts
 		BuildButton();
 	}
 
@@ -161,7 +161,11 @@ public sealed class GrownUpHeader : Grid
 		DesktopTips.Set(back, AppResources.Common_Back, DinoKey.Escape); // Esc goes back here since DinoKeyTargets.Route pops a page that is not a key target (Slice 235 part B); part C names the key
 		DesktopTips.Hover(back);
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += (_, _) => BackRequested?.Invoke(this, EventArgs.Empty);
+		tap.Tapped += (_, _) =>
+		{
+			UiUsage.Tap(UiControls.Back); // Slice 352
+			BackRequested?.Invoke(this, EventArgs.Empty);
+		};
 		back.GestureRecognizers.Add(tap);
 		return back;
 	}

@@ -112,7 +112,7 @@ public sealed class StoryLanguagePicker : ContentView
 		SemanticProperties.SetDescription(grid, main ? OwnScript.Pair(name, AppResources.StoryLanguages_AppLanguage) : name);
 		if (!main && !disabled)
 		{
-			Taps.AddTap(grid, () => ToggleAsync(code));
+			Taps.AddTap(grid, () => ToggleAsync(code), UiControls.Pick);
 		}
 
 		return grid;
@@ -248,7 +248,7 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 		_shelf = shelf;
 		_usage = usage;
 		_picker = new StoryLanguagePicker(_opened, shelf);
-		_picker.Toggled += OnToggled;
+		_picker.Toggled += OnToggled; // no-tap-count: the picker's rows count the press (UiControls.Pick)
 		_full = new Label { Text = AppResources.StoryLanguages_Full, FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Muted), Margin = new Thickness(4, 0), LineHeight = 1.2 };
 		Body.Children.Add(new Label { Text = AppResources.StoryLanguages_SettingsLine, FontSize = 13.5, TextColor = DinoTokens.Get(DinoTokens.Body), Margin = new Thickness(4, 0), LineHeight = 1.2 });
 		Body.Children.Add(_picker);
@@ -374,7 +374,7 @@ public sealed class DropLanguageSheet : ContentPage
 		SafeAreaEdges = SafeAreaEdges.None;
 		FlowDirection = UiFlow.Screen;
 		var scrim = new Grid { BackgroundColor = DinoTokens.Get(DinoTokens.SheetScrim) };
-		Taps.AddTap(scrim, () => CloseAsync(null));
+		Taps.AddTap(scrim, () => CloseAsync(null), UiControls.Dismiss);
 		scrim.Add(Sheet(newMain));
 		Content = scrim;
 		Render();
@@ -406,7 +406,7 @@ public sealed class DropLanguageSheet : ContentPage
 			StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(SheetCorner, SheetCorner, 0, 0) },
 			Content = column,
 		};
-		Taps.AddTap(sheet, () => Task.CompletedTask);
+		Taps.AddTap(sheet, () => Task.CompletedTask); // no-tap-count: swallows the tap so the scrim under it does not see it
 		return sheet;
 	}
 
@@ -422,7 +422,7 @@ public sealed class DropLanguageSheet : ContentPage
 			Content = new Label { Text = AppResources.Common_Cancel, FontSize = 16, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Body), HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center },
 		};
 		SemanticProperties.SetDescription(cancel, AppResources.Common_Cancel);
-		Taps.AddTap(cancel, () => CloseAsync(null));
+		Taps.AddTap(cancel, () => CloseAsync(null), UiControls.Cancel);
 		return cancel;
 	}
 
@@ -440,7 +440,16 @@ public sealed class DropLanguageSheet : ContentPage
 		_remove.StrokeShape = new RoundRectangle { CornerRadius = ButtonHeight / 2 };
 		_remove.Padding = new Thickness(8, 0);
 		_remove.Content = _removeLabel;
-		Taps.AddTap(_remove, () => _picked is null ? Task.CompletedTask : CloseAsync(_picked));
+		Taps.AddTap(_remove, () =>
+		{
+			if (_picked is null)
+			{
+				return Task.CompletedTask; // nothing picked yet: the press does nothing and is not counted
+			}
+
+			UiUsage.Tap(UiControls.Delete); // Slice 352
+			return CloseAsync(_picked);
+		});
 		return _remove;
 	}
 
@@ -503,6 +512,7 @@ public sealed class DropLanguageSheet : ContentPage
 		SemanticProperties.SetDescription(row, name.Text);
 		Taps.AddTap(row, () =>
 		{
+			UiUsage.Tap(UiControls.Pick); // Slice 352
 			_picked = language;
 			Render();
 			return Task.CompletedTask;
