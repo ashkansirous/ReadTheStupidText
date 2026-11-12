@@ -28,7 +28,9 @@ context free of screenshots, pictures and 13 translation files.
    picture is drawn, since pictures cost Gemini quota.
 3. **`dino-story-illustrator`** (Sonnet, medium effort): steps 3-6. **Up to four at once across the machine, on separate books or on page groups of one book** (the user's choice,
    2026-10-26; page groups 2026-11-01). What makes it work: every illustrator acts only on its own `tabId`; prompts go in with
-   `javascript_tool` (`execCommand('insertText')`) and Send is a JS or `find`-ref click, never keyboard typing or
+   `javascript_tool` (`execCommand('insertText')`) and Send is only `await window.__sendChecked(<prompt>, <pictures>)`
+   from `gemini-grab.js` (it refuses an empty or partial prompt box or a missing line-up, and reports a sent message
+   without the prompt; that chat is spoiled: new chat, never patch it), never keyboard typing or
    Enter (keystrokes land in whichever tab has focus); `gemini-lock.ps1` is held only around the line-up paste and
    the save; each illustrator closes its own tab when done (reset tab groups left ~20 orphans). Four in parallel
    drew about 39 accepted pictures an hour against 15-25 for one. If Gemini answers 1095 or shows a CAPTCHA, report
