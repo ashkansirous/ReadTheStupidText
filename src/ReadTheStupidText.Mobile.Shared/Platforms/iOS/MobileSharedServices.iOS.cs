@@ -24,9 +24,9 @@ public static partial class MobileSharedServices
 #endif
 	}
 
-	// Slice 55 and 67: PaddleOCR from the language's OCR pack with Apple Vision as the fallback,
-	// the VisionKit scanner, and the pieces Dino Reader uses to keep the page pictures. The iOS
-	// counterpart of the Android registration.
+	// Slice 55 and 67: Apple Vision text recognition and the pieces Dino Reader uses to keep the page pictures
+	// are always registered; PaddleOCR from the language's OCR pack and the VisionKit scanner only when the
+	// app links the speech engines (!NO_SPEECH_ENGINES). The iOS counterpart of the Android registration.
 	private static void RegisterScanAndOcr(IServiceCollection services)
 	{
 		services.AddSingleton<VisionImageTextExtractor>();
@@ -35,7 +35,7 @@ public static partial class MobileSharedServices
 		services.TryAddSingleton<ISystemLog, IosSystemLog>();
 		services.AddSingleton<IPdfPageRenderer, IosPdfPageRenderer>();
 		services.AddSingleton<IPageImageKeeper, IosPageImageKeeper>();
-#if !NO_SPEECH_ENGINES // Slice 305: PaddleOCR is onnxruntime, which an app without the engines does not link; it scans nothing (VisionKit scanner and Vision stay compiled, unregistered)
+#if !NO_SPEECH_ENGINES // Slice 305: PaddleOCR is onnxruntime, which an app without the engines does not link; it scans nothing (Vision stays compiled, unregistered; the VisionKit scanner is not compiled for it, Slice 349)
 		services.AddSingleton<LanguageImageTextExtractor>();
 		services.AddSingleton<IImageTextExtractor>(sp => sp.GetRequiredService<LanguageImageTextExtractor>());
 		services.AddSingleton<IOcrLineExtractor>(sp => sp.GetRequiredService<LanguageImageTextExtractor>());

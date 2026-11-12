@@ -167,11 +167,13 @@
 	<!-- Slice 305: the sources that need the engines or ML Kit are not compiled for an app that switched them off. Removed in targets because
 	     the MAUI SDK adds the Platforms\ files late. Their registrations and call sites sit behind NO_SPEECH_ENGINES / NO_MLKIT. -->
 	<Target Name="DropSpeechEngineSources" BeforeTargets="CoreCompile;XamarinPreBuild;BeforeCompile" Condition="'$(SharedSpeechEngines)' == 'false'">
+		<!-- This also drops the iOS document scanner for Dino (the only app without the engines), not just the sherpa/onnx sources. -->
 		<ItemGroup>
 			<Compile Remove="KokoroEngineConfig.cs" />
 			<Compile Remove="Ocr\LanguageImageTextExtractor.cs;Ocr\OnnxOcrInference.cs;Ocr\PaddleOcrEngine.cs" />
 			<Compile Remove="Platforms\Android\AndroidSupertonicSpeechReader.cs" />
 			<Compile Remove="Platforms\iOS\IosSupertonicSpeechReader*.cs;Platforms\iOS\IosSherpaLibrary.cs;Platforms\iOS\IosTtsEngine.cs" />
+			<Compile Remove="Platforms\iOS\VisionKitDocumentScanner.cs" /> <!-- Slice 349: Dino scans nothing; leaving it out drops the camera API reference, so Dino's Info.plist declares no camera/photo purpose strings -->
 		</ItemGroup>
 	</Target>
 	<Target Name="DropMlKitSources" BeforeTargets="CoreCompile;XamarinPreBuild;BeforeCompile" Condition="'$(SharedMlKit)' == 'false'">
