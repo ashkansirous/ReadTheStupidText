@@ -81,6 +81,8 @@ export const FALLBACK_REASONS = [
   "ocr_crop_degraded", "uia_unavailable", "store_failed", "preference_unsaved",
   // Slice 279
   "tap_failed", "layout_failed",
+  // Slice 351: the real causes behind clip_missing (no_pack and pack_failed are above), and the two ways an animal clip failed
+  "file_missing", "no_clip", "animal_clip_copy_failed", "animal_clip_play_failed",
 ] as const;
 const MAX_COUNT = 1_000_000;
 export const MAX_SECONDS = 86_400;
@@ -100,6 +102,15 @@ export const NO_SESSION = "";
 /** The sequence a row gets when the build sent none (a real one is never negative), like the device buckets' "no data". */
 export const NO_SEQ = -1;
 const MAX_SEQ = 1_000_000;
+
+// ---- Who and when (Slice 351) --------------------------------------------------------------------------------------------
+// Every Dino count may carry four closed context fields: the app's screen language (blob17, the 15 app languages), the install-age and launch-count buckets (blob18, blob19; worked out on
+// the device from a first-launch day that is never sent, so there is still no install id) and the whole seconds since the launch started (double6). A missing or invalid one is stored as
+// "none" / -1 and keeps the event, like the device block. blob20 stays free for Slice 352.
+export const NO_CONTEXT_FIELD = "none";
+export const INSTALL_AGES = ["first", "d0", "d1_7", "d8_30", "d31_plus"] as const;
+export const LAUNCH_NUMBERS = ["1", "2_5", "6_20", "21_plus"] as const;
+export const MAX_SINCE_LAUNCH = 86_400;
 
 // ---- Device context (Slice 166) ------------------------------------------------------------------------------------------
 // Both apps send the coarse device facts once per batch in an optional `device` object; the Worker checks each field against a closed
@@ -319,10 +330,22 @@ export interface UsageEvent {
   readonly deviceCount: number;
   /** Slice 288: whole seconds of audio played (read_paused, read_stopped), or -1 when none was sent or it was out of range. */
   readonly seconds: number;
+  /** Slice 351: the app's screen language (one of the 15), or "none". */
+  readonly uiLang: string;
+  /** Slice 351: install age bucket (INSTALL_AGES), or "none". */
+  readonly installAge: string;
+  /** Slice 351: launch count bucket (LAUNCH_NUMBERS), or "none". */
+  readonly launchNo: string;
+  /** Slice 351: whole seconds since the launch started (0 to a day), or -1. */
+  readonly sinceLaunch: number;
 }
 
 /** The optional fields of a count, all "none" (a caller that has none of them, like a speaker row, spreads this and sets only what it has). Typed on UsageEvent, so a new field there fails to compile wherever a row is built. */
-export const NO_EXTRA_FIELDS: Pick<UsageEvent, "detail" | "session" | "seq" | "count" | "deviceCount" | "seconds"> = {
+export const NO_EXTRA_FIELDS: Pick<UsageEvent, "detail" | "session" | "seq" | "count" | "deviceCount" | "seconds" | "uiLang" | "installAge" | "launchNo" | "sinceLaunch"> = {
+  uiLang: NO_CONTEXT_FIELD,
+  installAge: NO_CONTEXT_FIELD,
+  launchNo: NO_CONTEXT_FIELD,
+  sinceLaunch: NO_COUNT,
   detail: NO_DETAIL,
   session: NO_SESSION,
   seq: NO_SEQ,
@@ -402,7 +425,18 @@ export function parseEvent(raw: unknown): UsageEvent | null {
   if (!valid) return null;
   const session = matches(SESSION_PATTERN, raw["session"]) ? raw["session"] : NO_SESSION;
   const seq = session !== NO_SESSION && isSeq(raw["seq"]) ? raw["seq"] : NO_SEQ;
-  return { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail, session, seq, count: rule.counts ? countOrNone(raw["count"]) : NO_COUNT, deviceCount: rule.counts ? countOrNone(raw["deviceCount"]) : NO_COUNT, seconds: rule.seconds ? secondsOrNone(raw["seconds"]) : NO_COUNT };
+  return { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail, session, seq, count: rule.counts ? countOrNone(raw["count"]) : NO_COUNT, deviceCount: rule.counts ? countOrNone(raw["deviceCount"]) : NO_COUNT, seconds: rule.seconds ? secondsOrNone(raw["seconds"]) : NO_COUNT, ...contextOf(raw) };
+}
+
+/** Slice 351: the who-and-when fields of a count, each on its closed list or whole-number range, else "none" / -1 (never drops the event). */
+function contextOf(raw: Record<string, unknown>): Pick<UsageEvent, "uiLang" | "installAge" | "launchNo" | "sinceLaunch"> {
+  const since = raw["sinceLaunch"];
+  return {
+    uiLang: oneOf(READING_LANGUAGES, raw["uiLang"]) ? raw["uiLang"] : NO_CONTEXT_FIELD,
+    installAge: oneOf(INSTALL_AGES, raw["installAge"]) ? raw["installAge"] : NO_CONTEXT_FIELD,
+    launchNo: oneOf(LAUNCH_NUMBERS, raw["launchNo"]) ? raw["launchNo"] : NO_CONTEXT_FIELD,
+    sinceLaunch: Number.isInteger(since) && (since as number) >= 0 && (since as number) <= MAX_SINCE_LAUNCH ? (since as number) : NO_COUNT,
+  };
 }
 
 /** A count's optional number, 0 to a million, else -1: a malformed one is dropped from the row, never the event. */
@@ -428,8 +462,9 @@ export function toDataPoint(event: UsageEvent, context: BatchContext = NO_CONTEX
       event.name, event.book, event.language, event.source, event.hasRecording ? "yes" : "no", event.version, event.platform, event.day, event.detail,
       country, device.osMajor, device.formFactor, device.arch, device.cores, device.ram,
       event.session,
+      event.uiLang, event.installAge, event.launchNo, // blob17-blob19 (Slice 351); blob20 is free for Slice 352
     ],
-    doubles: [1 / event.sampleRate, event.seq, event.count, event.deviceCount, event.seconds],
+    doubles: [1 / event.sampleRate, event.seq, event.count, event.deviceCount, event.seconds, event.sinceLaunch],
   };
 }
 

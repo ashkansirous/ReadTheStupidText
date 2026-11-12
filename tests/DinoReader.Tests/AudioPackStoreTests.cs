@@ -340,7 +340,8 @@ public sealed class AudioPackStoreTests : IDisposable
 
         Assert.Equal(new ClipLookup(Path.Combine(pack.Folder, "a.m4a"), ClipMiss.None), pack.Find(0, Text + "a.m4a"));
         Assert.Equal(ClipMiss.TextMismatch, pack.Find(0, "an edited sentence").Miss);
-        Assert.Equal(ClipMiss.TextMismatch, pack.Find(1, Text + "a.m4a").Miss);
+        Assert.Equal(1, pack.Audio.Count);
+        Assert.Equal(ClipMiss.NoClip, pack.Find(1, Text + "a.m4a").Miss); // Slice 351: a position the pack has no entry for
         File.Delete(Path.Combine(pack.Folder, "a.m4a"));
         Assert.Equal(new ClipLookup(null, ClipMiss.FileMissing), pack.Find(0, Text + "a.m4a"));
     }

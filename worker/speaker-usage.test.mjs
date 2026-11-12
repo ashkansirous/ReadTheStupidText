@@ -30,7 +30,7 @@ test("a play is one book_listened row: shelf book, estimated seconds, platform a
   assert.deepEqual(point.indexes, ["book_listened"]);
   assert.deepEqual(point.blobs.slice(0, 9), ["book_listened", BOOK, "en", "shelf", "no", "", "sonos", "2026-12-01", "estimated"]);
   assert.equal(point.blobs[15], "");
-  assert.deepEqual(point.doubles, [1, -1, -1, -1, 600]);
+  assert.deepEqual(point.doubles, [1, -1, -1, -1, 600, -1]); // Slice 351: double6 (seconds since launch) is -1 for a speaker row
 });
 
 test("a caller that measured the seconds can say so (Alexa): detail reported, default stays estimated", () => {

@@ -243,6 +243,18 @@ public static class FallbackReason
     /// <summary>Slice 275 (area "ui"): a page of the story could not be laid out, so the reading card shows the error text instead.</summary>
     public const string LayoutFailed = "layout_failed";
 
+    /// <summary>Slice 351 (area "premade_audio"): the pack has an entry for this piece but its file is not on disk.</summary>
+    public const string FileMissing = "file_missing";
+
+    /// <summary>Slice 351 (area "premade_audio"): the pack has no clip for this piece (an untranslated or new line).</summary>
+    public const string NoClip = "no_clip";
+
+    /// <summary>Slice 351 (area "speech"): copying an animal's bundled clip to the cache failed.</summary>
+    public const string AnimalClipCopyFailed = "animal_clip_copy_failed";
+
+    /// <summary>Slice 351 (area "speech"): the player threw while playing an animal's clip.</summary>
+    public const string AnimalClipPlayFailed = "animal_clip_play_failed";
+
     public static IReadOnlyList<string> All { get; } =
     [
         NoPack, PackFailed, TextMismatch, ClipMissing, Partial,
@@ -255,6 +267,7 @@ public static class FallbackReason
         StorytellerPackMissing, AnimalClipUnplayable, ClipUnplayable, ClipSpeedUnset, InAppUpdateFailed, WindowFrameFailed, DisplaysUnreadable, SavedPositionMoved, DpiDefaulted,
         FontFallback, ShelfOrderUnreadable, StoryUnreadable, LanguageDetectFailed, PageReadFailed, IntroStateReset,
         OcrCropDegraded, UiaUnavailable, StoreFailed, PreferenceUnsaved, TapFailed, LayoutFailed,
+        FileMissing, NoClip, AnimalClipCopyFailed, AnimalClipPlayFailed,
     ];
 }
 

@@ -32,6 +32,9 @@ public sealed class PremadeAudio
     /// <summary>How many pieces have a clip.</summary>
     public int Count => _clipByIndex.Count;
 
+    /// <summary>True when the manifest has a clip entry for the <paramref name="index"/>-th piece (Slice 351: entries can have holes, so a position below <see cref="Count"/> may still have none).</summary>
+    public bool Has(int index) => _clipByIndex.ContainsKey(index);
+
     /// <summary>Every clip file name the manifest names, each once.</summary>
     public IReadOnlyCollection<string> ClipNames => _clipByIndex.Values.Select(e => e.Clip).Distinct(StringComparer.Ordinal).ToList();
 

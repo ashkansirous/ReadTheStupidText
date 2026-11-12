@@ -200,7 +200,7 @@ public sealed record InstalledPack(string Folder, int Version, PremadeAudio Audi
 	{
 		if (Audio.ClipAt(index, text) is not { } name)
 		{
-			return new ClipLookup(null, ClipMiss.TextMismatch);
+			return new ClipLookup(null, Audio.Has(index) ? ClipMiss.TextMismatch : ClipMiss.NoClip); // Slice 351: a position with no entry is a line the pack never had (entries can have holes, so not a Count test)
 		}
 
 		string path = Path.Combine(Folder, name);

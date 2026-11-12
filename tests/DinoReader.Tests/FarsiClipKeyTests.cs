@@ -79,7 +79,7 @@ public sealed class FarsiClipKeyTests : IDisposable
 
             ClipLookup found = pack.Find(offset + PremadeAudio.SpokenCount(readerTexts.Take(piece)), readerTexts[piece]);
             matched += found.Path is null ? 0 : 1;
-            mismatch += found.Miss == ClipMiss.TextMismatch ? 1 : 0;
+            mismatch += found.Miss is ClipMiss.TextMismatch or ClipMiss.NoClip ? 1 : 0;
             missing += found.Miss == ClipMiss.FileMissing ? 1 : 0;
         }
 

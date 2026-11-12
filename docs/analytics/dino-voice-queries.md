@@ -44,6 +44,26 @@ GROUP BY language, detail, session, book
 
 Sum `times` over that result for occurrences, or count its rows for sessions affected.
 
+## Why a piece was silent (Slice 351)
+
+`premade_audio:clip_missing` used to be the catch-all. From the build that ships Slice 351 a silent piece (and a read with no clip at all) reports its real cause, and the fallback names its book and reading language instead of `none` (a fallback with no book open still says `none`):
+
+- `premade_audio:no_pack`: no pack is downloaded for that shelf book and language. An own book (`blob4 = 'own'`) never has a pack, so its silent pieces send no `premade_audio` fallback at all.
+- `premade_audio:pack_failed`: a pack download for that book and language failed in this launch.
+- `premade_audio:text_mismatch`: the pack is there but a clip's text hash did not match the shown text.
+- `premade_audio:no_clip`: the pack has no entry at all for that piece's position (a new or untranslated line).
+- `premade_audio:file_missing`: the pack lists a clip whose file is not on disk.
+- `premade_audio:clip_missing`: older builds, and a pack opened where nothing was looked up.
+- **Read-level and piece-level causes can differ within one read.** The read's own `read_voice` / `partial` detail comes from the whole read (a partial read says `text_mismatch` or `clip_missing`, whichever caused more misses), while each silent piece reports its own cause (`no_clip`, `file_missing`). So one read can show `text_mismatch` at read level and `no_clip` rows for its silent pieces; count causes from the `fallback` rows, and read the `read_voice` detail only for how the read went overall.
+- `speech:animal_clip_copy_failed` (copying the bundled animal clip to the cache failed) and `speech:animal_clip_play_failed` (the player threw) replace `speech:animal_clip_unplayable` on new builds; old builds still send the old reason.
+
+```sql
+SELECT blob9 AS detail, blob7 AS platform, SUM(double1) AS rows
+FROM dino_usage
+WHERE blob1 = 'fallback' AND (blob9 LIKE 'premade_audio:%' OR blob9 LIKE 'speech:animal_clip_%') AND timestamp > NOW() - INTERVAL '14' DAY
+GROUP BY detail, platform ORDER BY rows DESC
+```
+
 ## Pack downloads that fail, by kind and language
 
 ```sql

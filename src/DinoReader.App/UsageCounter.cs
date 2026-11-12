@@ -30,6 +30,7 @@ public sealed class UsageCounter
 	private readonly FallbackTally _fallbacks = new(); // Slice 273: in memory, so a new launch starts at zero
 	private readonly Dictionary<(string Book, string Language), (Story Story, string? Language)> _fallbackStories = []; // the book and language behind each tally entry, for the flush's repeat rows
 	private readonly UsageSession _session = new(); // Slice 250: one per process start, in memory only; a cold start is a new session
+	private readonly UsageLaunch _launch = new(new PreferencesLaunchStore(), DateOnly.FromDateTime(DateTime.UtcNow), () => Environment.TickCount64); // Slice 351: counts this launch; buckets only, the stored day and count are never sent
 	private const int ListenTimerSlackMilliseconds = 50;
 	private readonly object _listen = new(); // Slice 288: guards the tally, the story it is for and its timer
 	private readonly ListenTally _tally = new(() => Environment.TickCount64);
@@ -56,6 +57,11 @@ public sealed class UsageCounter
 			events => UsageBatch.ToJson(events, DeviceProbe.Current), UsageBatch.ParseQueue, UsageBatch.QueueToJson,
 			SendsBeta: true, // Slice 251: TestFlight batches go out posted to the Worker's separate beta route (dino_usage_beta)
 			Roll: _session.Roll)); // Slice 250: sampling is decided once per session
+		if (_launch.StoreFailed)
+		{
+			RecordGeneralFallback(ReadTheStupidText.Application.Usage.FallbackArea.Config, ReadTheStupidText.Application.Usage.FallbackReason.PreferenceUnsaved); // Slice 351: the launch history could not be read or saved; the counts carry "none" buckets
+		}
+
 		WaitController.Finished -= RecordWait; // guarded: a second counter must not stay subscribed twice
 		WaitController.Finished += RecordWait;
 	}
@@ -249,7 +255,7 @@ public sealed class UsageCounter
 	/// Slice 273: counts that a feature fell back (<paramref name="area"/> and <paramref name="reason"/> are <see cref="FallbackArea"/> and <see cref="FallbackReason"/> values) while reading <paramref name="story"/> in <paramref name="language"/>.
 	/// The first of each (area, reason, book, language) in this session is queued at once with count 1; if it happened again, <see cref="FlushAsync"/> queues one more row with the session total (<see cref="FallbackTally"/>).
 	/// </summary>
-	public void RecordFallback(Story story, string area, string reason, string? language = null)
+	public void RecordFallback(Story story, string area, string reason, string? language = null, Action? counted = null)
 	{
 		string? detail = FallbackUsage.Detail(area, reason);
 		if (detail is null)
@@ -264,9 +270,10 @@ public sealed class UsageCounter
 		}
 
 		int times = _fallbacks.Note(area, reason, story.Id, readIn);
+		counted?.Invoke(); // Slice 351 review: the caller learns the tally has it, so a later failure here is not reported to the sink a second time
 		bool first = FallbackTally.IsFirst(times);
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] fallback {detail} times={times} {(first ? "queued" : "counted, sent with the session flush")}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] fallback {detail} times={times} {(first ? "queued" : "counted, sent with the session flush")} book={story.Id} lang={readIn}");
 #endif
 		if (first)
 		{
@@ -340,13 +347,43 @@ public sealed class UsageCounter
 			return Stamp(UsageEvent.For(name, story, fromCatalogue, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now, detail, language) with { Count = count, DeviceCount = deviceCount, Seconds = seconds });
 		});
 
+	// Slice 351: the screen language, or "none" when the preference cannot be read; that failure is reported (the tally lets only the first one queue a row, so the report cannot loop back through Stamp).
+	private readonly ReentryGuard _uiLangReport = new();
+
+	private string UiLanguageOrNone()
+	{
+		try
+		{
+			return LanguageChoice.Current();
+		}
+		catch (Exception)
+		{
+			using IDisposable? scope = _uiLangReport.TryEnter(); // a report that stamps a count and fails here again is skipped, never nested (Slice 351 review)
+			if (scope is not null)
+			{
+				RecordGeneralFallback(ReadTheStupidText.Application.Usage.FallbackArea.Config, ReadTheStupidText.Application.Usage.FallbackReason.PreferenceUnsaved);
+			}
+
+			return UsageSource.None;
+		}
+	}
+
 	// Slice 250: every count carries its session id and its place in the session, so it keeps them while it waits in the queue for a later launch.
 	private UsageEvent Stamp(UsageEvent count)
 	{
-		UsageEvent stamped = count with { Session = _session.Id, Seq = _session.NextSeq() };
+		// Slice 351: and who and when, as closed values: the screen language, install-age and launch-count buckets (from a first-launch day kept on the device, never sent) and the seconds since this launch started.
+		UsageEvent stamped = count with
+		{
+			Session = _session.Id,
+			Seq = _session.NextSeq(),
+			UiLang = UiLanguageOrNone(),
+			InstallAge = _launch.InstallAge,
+			LaunchNo = _launch.LaunchNo,
+			SinceLaunch = _launch.SinceLaunch(),
+		};
 #if DEBUG
 		// Slice 320 item 7: a Debug-only line per count that reached the queue, with the seq it was given (the line in RecordLogged is written before sampling, so it has none), so a flow reads the sequence on a device. Nothing is sent from here.
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] seq={stamped.Seq} {stamped.Name} session={stamped.Session}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] seq={stamped.Seq} {stamped.Name} session={stamped.Session} uiLang={stamped.UiLang} installAge={stamped.InstallAge} launchNo={stamped.LaunchNo} sinceLaunch={stamped.SinceLaunch}");
 #endif
 		return stamped;
 	}

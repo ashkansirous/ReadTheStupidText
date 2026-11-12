@@ -67,7 +67,11 @@ public sealed class ReadingSession
 
 		public HashSet<int> Reported { get; } = []; // the steps whose missing or unplayable clip was already reported, so a resumed step reports nothing twice
 
-		public string SilentReason { get; init; } = ReadTheStupidText.Application.Usage.FallbackReason.ClipMissing; // Slice 313: what a piece shown for a beat reports (text_mismatch when the pack is out of line with the text)
+		public string? SilentReason { get; init; } = ReadTheStupidText.Application.Usage.FallbackReason.ClipMissing; // Slice 313: what a piece shown for a beat reports (text_mismatch when the pack is out of line with the text); Slice 351: null for an own book, which never has a pack, so a silent piece is expected and reports nothing
+
+		public Story? Story { get; init; } // Slice 351: the book and reading language this read started for, so a late callback reports for them, not for whatever the screen shows by then
+
+		public string? Language { get; init; }
 	}
 
 	private StepRead? _stepRead;
@@ -108,12 +112,42 @@ public sealed class ReadingSession
 
 	private readonly ReadTheStupidText.Application.Usage.IFallbackSink _fallbacks; // Slice 273 part B
 
-	public ReadingSession(StoryVoicing voicing, IRecordingPlayer player, IStoryLibrary library, ReadTheStupidText.Application.Usage.IFallbackSink? fallbacks = null)
+	private readonly UsageCounter? _usage; // Slice 351 B: a fallback in a read names the book it happened in
+
+	public ReadingSession(StoryVoicing voicing, IRecordingPlayer player, IStoryLibrary library, ReadTheStupidText.Application.Usage.IFallbackSink? fallbacks = null, UsageCounter? usage = null)
 	{
+		_usage = usage;
 		_fallbacks = fallbacks ?? ReadTheStupidText.Application.Usage.NoFallbackSink.Instance;
 		_voicing = voicing;
 		_player = player;
 		_library = library;
+	}
+
+	// Slice 351 B: a fallback that happens while a book is read carries that book and the reading language (shelf id or own), so a query can tie a silent read to a book; with no open book it is the old no-book count.
+	// A step's fallback names the book and language its read started for (read); one with no read uses the open book and the screen's language.
+	private void ReportFallback(string area, string reason, StepRead? read = null)
+	{
+		Story? story = read?.Story ?? _story;
+		string language = read?.Language ?? _reading;
+		if (_usage is null || story is null)
+		{
+			_fallbacks.Report(area, reason, language);
+			return;
+		}
+
+		bool counted = false;
+		try
+		{
+			_usage.RecordFallback(story, area, reason, language, () => counted = true);
+		}
+		catch (Exception)
+		{
+			// no-fallback: this catch is the fallback's own report: the book-aware count failed, so the old per-language sink (Slice 351) still gets it, unless the tally already counted it
+			if (!counted)
+			{
+				_fallbacks.Report(area, reason, language);
+			}
+		}
 	}
 
 	/// <summary>The language this screen reads in (Slice 173). It belongs to this session alone: the stored app language is never changed or shadowed by it.</summary>
@@ -637,7 +671,7 @@ public sealed class ReadingSession
 
 	// Slice 273 part B: a recording that cannot be played falls back to the book's own clips.
 	private void ReportRecordingUnplayable() =>
-		_fallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Speech, ReadTheStupidText.Application.Usage.FallbackReason.RecordingUnplayable, _reading);
+		ReportFallback(ReadTheStupidText.Application.Usage.FallbackArea.Speech, ReadTheStupidText.Application.Usage.FallbackReason.RecordingUnplayable);
 
 	// A superseded or stopped read never alerts and never touches the current read's loading state.
 	private async Task TryStartReadAsync(Story story, int fromPosition, int id, CancellationToken cancellation)
@@ -679,14 +713,15 @@ public sealed class ReadingSession
 		}
 
 		_voiceCount.Begin(id, reading, new VoiceToCount(story, segments, why)); // Slice 273: counted on the pieces this read really plays, after the recorded page cut off the rest; Slice 297: at the first clip, see CountVoiceOnFirstClip
-		await AnimalClipFiles.EnsureAsync(AnimalClipRuns.KindsIn(segments));
+		await AnimalClipFiles.EnsureAsync(AnimalClipRuns.KindsIn(segments), reading);
 		cancellation.ThrowIfCancellationRequested(); // a Stop, Back or another sentence during the copy: this read never plays a clip
 		if (id != _pendingReadId)
 		{
 			return;
 		}
 
-		BeginSteps(segments, id, cancellation, ClipMisses.SilentPieceReason(why.Reason, why.Misses));
+		bool shelfBook = UsageEvent.ShelfId(story.SourceId) is not null; // Slice 351: an own book never has a pack, so its silent pieces report nothing
+		BeginSteps(segments, id, cancellation, ClipMisses.SilentPieceReasonFor(shelfBook, why.Reason, why.Misses), story, reading);
 	}
 
 	// Slice 297: the first clip of a read has started playing, so its voice is counted now; a later clip, or a clip of another read, counts nothing (the pending count is taken once, and only by its own read).
@@ -743,10 +778,10 @@ public sealed class ReadingSession
 	}
 
 	// The read as steps (PlaybackSteps): a piece's clip, an animal's recording, or a piece with no clip shown for a beat. When the last step has ended the read is over.
-	private void BeginSteps(IReadOnlyList<VoicedSegment> segments, int id, CancellationToken cancellation, string silentReason)
+	private void BeginSteps(IReadOnlyList<VoicedSegment> segments, int id, CancellationToken cancellation, string? silentReason, Story story, string language)
 	{
 		cancellation.ThrowIfCancellationRequested();
-		var read = new StepRead(id, PlaybackSteps.Plan(segments), cancellation) { SilentReason = silentReason };
+		var read = new StepRead(id, PlaybackSteps.Plan(segments), cancellation) { SilentReason = silentReason, Story = story, Language = language };
 		_stepRead = read;
 		_pendingAdvance = false;
 		if (read.Steps.Count == 0)
@@ -877,7 +912,7 @@ public sealed class ReadingSession
 #if DEBUG
 			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] animal clip {clip} could not play ({ex.GetType().Name}), slot skipped");
 #endif
-			_fallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.Speech, ReadTheStupidText.Application.Usage.FallbackReason.AnimalClipUnplayable, _reading); // Slice 273 part D: the sound is skipped
+			ReportFallback(ReadTheStupidText.Application.Usage.FallbackArea.Speech, ReadTheStupidText.Application.Usage.FallbackReason.AnimalClipPlayFailed); // Slice 273 part D: the sound is skipped; Slice 351: the player threw (the copy to the cache has animal_clip_copy_failed)
 			AnimalClipFiles.Discard(clip);
 			SkipClip(read, index);
 			return;
@@ -923,7 +958,7 @@ public sealed class ReadingSession
 			AudioPackLog.Write($"premade clip could not play ({ex.GetType().Name}), the piece is shown for a beat");
 			if (read.Reported.Add(index))
 			{
-				_fallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.PremadeAudio, ReadTheStupidText.Application.Usage.FallbackReason.ClipUnplayable, _reading); // Slice 273 part D
+				ReportFallback(ReadTheStupidText.Application.Usage.FallbackArea.PremadeAudio, ReadTheStupidText.Application.Usage.FallbackReason.ClipUnplayable, read); // Slice 273 part D
 			}
 
 			return false;
@@ -939,11 +974,11 @@ public sealed class ReadingSession
 	}
 
 	// A piece that is not played reports one fallback per occurrence, through the app's sink: once for a step, however often a pause makes it start again.
-	private void ReportPieceFallback(StepRead read, int index, string reason)
+	private void ReportPieceFallback(StepRead read, int index, string? reason)
 	{
-		if (read.Reported.Add(index))
+		if (read.Reported.Add(index) && reason is not null)
 		{
-			_fallbacks.Report(ReadTheStupidText.Application.Usage.FallbackArea.PremadeAudio, reason, _reading);
+			ReportFallback(ReadTheStupidText.Application.Usage.FallbackArea.PremadeAudio, reason, read);
 		}
 	}
 

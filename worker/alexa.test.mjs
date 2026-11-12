@@ -605,7 +605,7 @@ test("a stopped segment is one alexa row: book, language, reported seconds since
   const point = dataset.points[0];
   assert.match(point.blobs[7], /^\d{4}-\d{2}-\d{2}$/);
   assert.deepEqual([...point.blobs.slice(0, 7), point.blobs[8]], ["book_listened", BOOK_A, "en", "shelf", "no", "", "alexa", "reported"]);
-  assert.deepEqual(point.doubles, [1, -1, -1, -1, 40]);
+  assert.deepEqual(point.doubles, [1, -1, -1, -1, 40, -1]); // Slice 351: double6 (seconds since launch) is -1 for a speaker row
   assert.equal(point.blobs[15], "");
 });
 
