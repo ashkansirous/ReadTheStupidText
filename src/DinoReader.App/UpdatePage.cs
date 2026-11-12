@@ -1,3 +1,4 @@
+using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
 
@@ -52,7 +53,7 @@ public sealed class UpdatePage : ContentPage
 		NavigationPage.SetHasNavigationBar(this, false);
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		var button = new CoralButton { Text = ButtonText() };
-		button.Clicked += (_, _) => _ = _busy.RunAsync(UpdateAsync);
+		UiUsage.Press(button, UiControls.Update, () => _ = _busy.RunAsync(UpdateAsync));
 		var grid = new Grid { RowDefinitions = [new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)], Padding = new Thickness(Gutter, 0, Gutter, Gutter) };
 		grid.Add(Message(), 0);
 		grid.Add(button, 0, 1);

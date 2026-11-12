@@ -126,7 +126,11 @@ public partial class FirstBooksPage
 		};
 		SemanticProperties.SetDescription(button, AppResources.Common_Cancel);
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += (_, _) => _downloadCancel?.Cancel();
+		tap.Tapped += (_, _) =>
+		{
+			UiUsage.Tap(UiControls.Cancel); // Slice 352
+			_downloadCancel?.Cancel();
+		};
 		button.GestureRecognizers.Add(tap);
 		return button;
 	}

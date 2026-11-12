@@ -69,6 +69,7 @@
         <!-- The content column: in the corner a title row (the tab's name, and under a bar the one-line note) above the grid of books; on the shelf the grid alone. -->
         <Grid x:Name="ContentHost" Grid.Row="1" Grid.ColumnSpan="2" RowDefinitions="Auto,*">
             <Grid x:Name="ContentHeader" IsVisible="False" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="2">
+                <!-- no-tap-count: the title's seven taps open the developer switch, not a control -->
                 <Label x:Name="ContentTitle" AutomationId="GalleryRailTitle" FontAttributes="Bold" TextColor="{StaticResource Ink}" VerticalOptions="End" LineBreakMode="TailTruncation" MaxLines="1" SemanticProperties.HeadingLevel="Level1">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTitleTapped" />

@@ -45,7 +45,11 @@ internal sealed class FirstBookCard : VerticalStackLayout
 		var host = new Grid { AutomationId = AutomationPrefix + index, Children = { _ring, _tick, _tickButton } };
 		SemanticProperties.SetDescription(host, title);
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += (_, _) => toggled();
+		tap.Tapped += (_, _) =>
+		{
+			UiUsage.Tap(UiControls.Pick); // Slice 352: a book ticked or unticked
+			toggled();
+		};
 		host.GestureRecognizers.Add(tap);
 		AddHover(host);
 		Children.Add(host);
@@ -104,7 +108,7 @@ internal sealed class FirstBookCard : VerticalStackLayout
 			Margin = new Thickness(0, TickInset, TickInset, 0),
 		};
 		SemanticProperties.SetDescription(button, title);
-		button.Clicked += (_, _) => toggled();
+		button.Clicked += (_, _) => toggled(); // no-tap-count: the tick button is the screen-reader twin of the card's tap, which counts the pick
 		return button;
 	}
 

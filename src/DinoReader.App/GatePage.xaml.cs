@@ -572,7 +572,11 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 
 	private const int TickTraceEvery = 30;
 
-	private void OnContinueClicked(object? sender, EventArgs e) => ShowSumStep();
+	private void OnContinueClicked(object? sender, EventArgs e)
+	{
+		UiUsage.Tap(UiControls.Continue); // Slice 352
+		ShowSumStep();
+	}
 
 	private void ShowSumStep()
 	{
@@ -626,8 +630,7 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 			}
 		};
 #endif
-		button.Clicked += (_, _) => PressPadKey(button, key);
-		return button;
+		return UiUsage.Press(button, UiControls.GateKey, () => PressPadKey(button, key)); // Slice 352: that a key was pressed, never which one
 	}
 
 	private void PressPadKey(Button button, string key)
@@ -700,5 +703,9 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 		}
 	}
 
-	private void OnBackClicked(object? sender, EventArgs e) => _ = CloseAsync(false);
+	private void OnBackClicked(object? sender, EventArgs e)
+	{
+		UiUsage.Tap(UiControls.Back); // Slice 352
+		_ = CloseAsync(false);
+	}
 }

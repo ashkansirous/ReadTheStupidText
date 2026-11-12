@@ -151,7 +151,11 @@ public partial class LanguagePage : ContentPage, IGrownUpPage, ICornerSubPage
 		row.Add(NameLabel(code, name), 1);
 		SemanticProperties.SetDescription(row, name);
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += async (_, _) => await _busy.RunAsync(() => PickAsync(code));
+		tap.Tapped += async (_, _) =>
+		{
+			UiUsage.Tap(UiControls.Language); // Slice 352
+			await _busy.RunAsync(() => PickAsync(code));
+		};
 		row.GestureRecognizers.Add(tap);
 		return row;
 	}
@@ -197,9 +201,15 @@ public partial class LanguagePage : ContentPage, IGrownUpPage, ICornerSubPage
 			return; // the grown-up cancelled the "which one goes" question: the app language stays as it was
 		}
 
+		string before = _pending is { } pending ? UiLanguage.Resolve(pending) : LanguageChoice.Current(_settings);
 		_pending = code;
 		_changed = true;
 		LanguageChoice.Apply(code, _settings); // the grown-up's own tap
+		if (UiLanguage.Resolve(code) != before)
+		{
+			UiUsage.Setting(UiSettings.AppLanguage, code); // Slice 352: only a real change, and only once the "which one goes" question was answered; dropped unless it is one of the 15 app languages
+		}
+
 		Rebuild();
 	}
 

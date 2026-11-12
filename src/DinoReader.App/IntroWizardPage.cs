@@ -140,6 +140,7 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
+		ShowStepScreen();
 		if (_launchedStep)
 		{
 			_launchedStep = false;
@@ -181,6 +182,7 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 	// The left arrow shows the step before (nothing counted); a first-run intro saves where it is, like Next does.
 	private async Task PreviousAsync()
 	{
+		UiUsage.Screen(UiScreenActions.Back); // Slice 352: counted on the step it leaves
 		_step--;
 		if (!_replay)
 		{
@@ -204,6 +206,16 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 		_root.Add(_shell, 0, 1);
 		_root.Add(_bar, 0, 0); // added last so it sits over the shell when the shell spans both rows
 		ApplyShape();
+		ShowStepScreen();
+	}
+
+	// Slice 352: the step on show is the screen (intro_1 to intro_4); a return from Try it shows it again.
+	private void ShowStepScreen()
+	{
+		if (UiScreens.IntroOf(_step) is { } screen && !_ended)
+		{
+			UiScreen.Show(screen, this);
+		}
 	}
 
 	// Slice 325 part E (onboarding mock frames O6-O9): one column under 600 dp wide, two panes from 600; the step, the replay flag and the language picks are fields of this page,
@@ -276,7 +288,7 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 		var left = new HorizontalStackLayout { Spacing = 10, VerticalOptions = LayoutOptions.Center, Children = { dots, counter } };
 		var bar = new Grid { HeightRequest = BarHeight, Padding = new Thickness(BodyPadding, 6, 10, 0), ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
 		bar.Add(left, 0);
-		bar.Add(TextButton(AppResources.Intro_SkipAll, () => _busy.RunAsync(SkipAllAsync), BarHeight), 1);
+		bar.Add(TextButton(AppResources.Intro_SkipAll, () => _busy.RunAsync(SkipAllAsync), BarHeight, UiControls.SkipAll), 1);
 		return bar;
 	}
 
@@ -316,8 +328,8 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 		}
 
 		var tryIt = new CoralButton { Text = AppResources.Intro_TryIt, IsVisible = TryItVisible(step) };
-		tryIt.Clicked += async (_, _) => await _busy.RunAsync(TryAsync);
-		Button skip = TextButton(AppResources.Intro_Skip, () => _busy.RunAsync(SkipAsync), SkipHeight, DinoTokens.Body);
+		tryIt.Clicked += async (_, _) => await _busy.RunAsync(TryAsync); // no-tap-count: TryAsync counts screen:next on the step it was pressed, so the step is not counted twice
+		Button skip = TextButton(AppResources.Intro_Skip, () => _busy.RunAsync(SkipAsync), SkipHeight, null, DinoTokens.Body);
 		_mainAction = tryIt.IsVisible ? TryAsync : SkipAsync;
 		_forwardAction = SkipAsync;
 		return BuildStepShell(IntroArt.Build(step!), copy, tryIt, skip);
@@ -460,7 +472,7 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 		var cards = new VerticalStackLayout { Spacing = 10, Children = { kids, grown } };
 		var copy = new VerticalStackLayout { Spacing = 14, Children = { heading, cards } };
 		var next = new CoralButton { Text = AppResources.Wizard_Next, AutomationId = "IntroNext" };
-		next.Clicked += async (_, _) => await _busy.RunAsync(NextAsync);
+		next.Clicked += async (_, _) => await _busy.RunAsync(NextAsync); // no-tap-count: NextAsync counts screen:next on the step it was pressed, so the step is not counted twice
 		_mainAction = NextAsync;
 		_forwardAction = NextAsync;
 		return BuildStepShell(IntroArt.Build(IntroSteps.Places), copy, next, null);
@@ -489,6 +501,7 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 	// Next on the first card counts as having seen the step.
 	private Task NextAsync()
 	{
+		UiUsage.Screen(UiScreenActions.Next); // Slice 352
 		CountStep(tried: true);
 		return AdvanceAsync();
 	}
@@ -506,10 +519,11 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 		}
 
 		var done = new CoralButton { Text = AppResources.Common_Done };
-		done.Clicked += async (_, _) => await _busy.RunAsync(DoneLanguagesAsync);
+		done.Clicked += async (_, _) => await _busy.RunAsync(DoneLanguagesAsync); // no-tap-count: DoneLanguagesAsync counts screen:next on the step it was pressed, so the step is not counted twice
 		StoryLanguageSet saved = StoryLanguages.Current();
 		string skip = saved.Sides.Count == 0 ? AppResources.Format(AppResources.StoryLanguages_SkipOnly, LanguageNames.NativeName(saved.Main)) : AppResources.Intro_Skip; // Skip changes nothing, so it only says "only X" when X is all there is
-		Button skipButton = TextButton(skip, () => _busy.RunAsync(SkipAsync), SkipHeight, DinoTokens.Body);
+		Button skipButton = TextButton(skip, () => _busy.RunAsync(SkipAsync), SkipHeight, null, DinoTokens.Body);
+		skipButton.AutomationId = "IntroLanguagesSkip";
 		_mainAction = DoneLanguagesAsync;
 		_forwardAction = null; // the last step: the right arrow must not end the intro and drop ticks not yet confirmed with Done or Skip
 		var buttons = new Grid { RowSpacing = 4, ColumnSpacing = 8 };
@@ -529,6 +543,7 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 	// Saves the ticked languages, starts the pre-made audio of each (it keeps downloading behind the next screens; Settings shows its progress) and counts the set.
 	private async Task DoneLanguagesAsync()
 	{
+		UiUsage.Screen(UiScreenActions.Next); // Slice 352: Done is the last step's next
 		StoryLanguageSet before = StoryLanguages.Current();
 		StoryLanguageSet set = _languagePicker?.Set ?? before;
 		StoryLanguages.SaveSides(set);
@@ -564,8 +579,8 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 		}
 	}
 
-	/// <summary>A plain text button (frames 73-76): brand-coloured unless <paramref name="colourKey"/> says otherwise.</summary>
-	internal static Button TextButton(string text, Func<Task> tapped, double height, string colourKey = DinoTokens.Brand)
+	/// <summary>A plain text button (frames 73-76): brand-coloured unless <paramref name="colourKey"/> says otherwise. A null <paramref name="control"/> counts no tap: the handler counts the step's <c>screen:&lt;action&gt;</c> itself (Slice 352).</summary>
+	internal static Button TextButton(string text, Func<Task> tapped, double height, string? control, string colourKey = DinoTokens.Brand)
 	{
 		var button = new Button
 		{
@@ -577,8 +592,13 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 			HeightRequest = height,
 			Padding = new Thickness(12, 0),
 		};
-		button.Clicked += async (_, _) => await tapped();
-		return button;
+		if (control is null)
+		{
+			button.Clicked += async (_, _) => await tapped(); // no-tap-count: the handler counts screen:<action> itself, so the step is not counted twice
+			return button;
+		}
+
+		return UiUsage.Press(button, control, async () => await tapped()); // Slice 352: the press, by the control's name, counted before the action so it carries the screen it was pressed on
 	}
 
 	private void CountStep(bool tried)
@@ -604,6 +624,7 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 
 		if (await OpenStepScreenAsync())
 		{
+			UiUsage.ScreenOf(UiScreens.IntroOf(_step) ?? UiScreen.Current, UiScreenActions.Next); // Slice 352: Try it counts as next, on the step it was pressed (the screen it opened is current by now)
 			CountStep(tried: true);
 			return;
 		}
@@ -669,8 +690,9 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 		}
 
 		var reading = _services.GetRequiredService<ReadingPage>();
+		reading.ReadOrigin = ReadOrigins.Wizard;
 		reading.Load(story);
-		reading.MarkDemoRead(); // the demo read counts nothing
+		reading.MarkDemoRead(); // the demo read counts nothing (its screen and taps still are: intro_2 / reading)
 		reading.PlayForIntro(); // already playing when it opens (frame 101b); it returns here on its last page
 		return reading;
 	}
@@ -706,6 +728,7 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 
 	private Task SkipAsync()
 	{
+		UiUsage.Screen(UiScreenActions.Skip); // Slice 352
 		CountStep(tried: false);
 		return AdvanceAsync();
 	}
@@ -728,7 +751,11 @@ public sealed class IntroWizardPage : ContentPage, IDinoKeyTarget
 		Render();
 	}
 
-	private Task SkipAllAsync() => EndAsync(UsageDetail.IntroSkippedAll);
+	private Task SkipAllAsync()
+	{
+		UiUsage.Screen(UiScreenActions.Close); // Slice 352: Skip all, Esc and Android Back all end the wizard here
+		return EndAsync(UsageDetail.IntroSkippedAll);
+	}
 
 	// A first run lands on the gallery in grown-up mode with the "Ready for my child" button (the hand-over is pending); a replay returns to settings.
 	private async Task EndAsync(string how)

@@ -8,7 +8,7 @@ New in Slice 351, on every count from the first build that ships it (older build
 - `blob18` `installAge`: `first` (the first launch of this install), `d0` (a later launch the same day), `d1_7`, `d8_30`, `d31_plus`. Worked out on the device from a first-launch day that is never sent.
 - `blob19` launch count: `1`, `2_5`, `6_20`, `21_plus`.
 - `double6` `sinceLaunch`: whole seconds since this launch started (0 to 86400, -1 when none).
-- `blob20` is free for Slice 352.
+- `blob20` is the screen the count was made on (Slice 352, below).
 
 The row timestamp is the batch's send time, so a session's time order is `double6`, then `double2` (seq), never `timestamp`.
 
@@ -55,3 +55,45 @@ WHERE blob1 = 'fallback' AND blob9 LIKE 'premade_audio:%' AND blob9 <> 'premade_
 GROUP BY book, language, detail, platform, version, blob16
 ORDER BY times DESC
 ```
+
+## Screens, taps, settings and where a read started (Slice 352)
+
+From the first build that ships Slice 352. `blob20` is the screen on every row (`none` for older builds). New event names (`blob1`), all with book `none`: `screen` (`blob9` = `<screen>:<action>`, actions `shown|next|back|skip|close`), `tap` (`<screen>:<control>`), `setting_changed` (`<setting>:<value>`), `app_backgrounded` and `app_resumed` (`blob9` = the screen). `book_opened` and `read_started` carry the origin in `blob9`: `wizard`, `shelf`, `corner` (`resume` and `next_book` are accepted but not sent yet). Screens: `intro_1`..`intro_4`, `first_run`, `first_books`, `shelf`, `reading`, `corner_books`, `corner_store`, `corner_settings`, `gate`, `story_languages`, `language`, `reading_speed`, `animal_sounds`, `record_intro`, `record`, `backup`, `usage_counts`, `about`, `report_problem`, `update`, `close_question`, `drop_language`.
+
+Where launches stop in the wizard (sessions that reached each page, and what the last action on it was). The first query counts the sessions that showed each page:
+
+```sql
+SELECT blob9 AS screen_action, uniq(blob16) AS sessions, SUM(double1) AS rows
+FROM dino_usage
+WHERE blob1 = 'screen' AND blob9 LIKE 'intro_%:shown' AND timestamp > NOW() - INTERVAL '14' DAY
+GROUP BY screen_action ORDER BY screen_action
+```
+
+How each wizard page ended (next, skip, close, back):
+
+```sql
+SELECT blob9 AS screen_action, uniq(blob16) AS sessions
+FROM dino_usage
+WHERE blob1 = 'screen' AND blob9 LIKE 'intro_%' AND blob9 NOT LIKE '%:shown' AND timestamp > NOW() - INTERVAL '14' DAY
+GROUP BY screen_action ORDER BY screen_action
+```
+
+Where reads start (a listen, by origin; `book_listened` itself has no origin, so join on the session: sessions with a `read_started` of each origin, and sessions with a `book_listened`):
+
+```sql
+SELECT blob9 AS origin, uniq(blob16) AS sessions_that_started_a_read
+FROM dino_usage
+WHERE blob1 = 'read_started' AND blob9 <> '' AND timestamp > NOW() - INTERVAL '14' DAY
+GROUP BY origin ORDER BY sessions_that_started_a_read DESC
+```
+
+A session's last screen before the app went to the background (a session that never came back is still sent, because the queue is flushed when the window stops):
+
+```sql
+SELECT blob16 AS session, blob9 AS last_screen, double6 AS seconds_since_launch
+FROM dino_usage
+WHERE blob1 = 'app_backgrounded' AND timestamp > NOW() - INTERVAL '2' DAY
+ORDER BY double6
+```
+
+The timeline of one launch, with the screen and the button presses in time order: `tools/usage-sessions/usage-sessions.mjs session <32 hex>`; a day's summary (launches, where they stopped in the wizard, how many reached a read, how many listened 30 s): `tools/usage-sessions/usage-sessions.mjs day <yyyy-mm-dd>`. Both read the token from `D:\secrets` at run time and print nothing secret.

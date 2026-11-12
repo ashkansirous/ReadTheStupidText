@@ -1,3 +1,4 @@
+using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.ApplicationModel.DataTransfer;
 using Microsoft.Maui.Controls.Shapes;
@@ -58,8 +59,7 @@ public sealed class ReportProblemPage : SettingsSubPage
 			TextColor = Colors.White,
 			FontAttributes = FontAttributes.Bold,
 		};
-		button.Clicked += async (_, _) => await Busy.RunAsync(SendAsync);
-		return button;
+		return UiUsage.Press(button, UiControls.Send, async () => await Busy.RunAsync(SendAsync)); // Slice 352: that Send was pressed, never what was written
 	}
 
 	private static Border Card(View content) => new()
@@ -144,8 +144,7 @@ public sealed class ReportProblemPage : SettingsSubPage
 			HorizontalOptions = LayoutOptions.Start,
 			Padding = new Thickness(22, 0),
 		};
-		copy.Clicked += async (_, _) => await CopyCodeAsync(copy, shown);
-		return copy;
+		return UiUsage.Press(copy, UiControls.CopyCode, async () => await CopyCodeAsync(copy, shown));
 	}
 
 	private static async Task CopyCodeAsync(Button copy, string shown)

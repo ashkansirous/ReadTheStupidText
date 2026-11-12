@@ -84,16 +84,16 @@ internal sealed class BookSheet : Grid, IPageOverlay
 	{
 		IsVisible = false;
 		BackgroundColor = DinoTokens.Get(DinoTokens.SheetScrim);
-		Taps.AddTap(this, () => { Dismiss(); return Task.CompletedTask; });
+		Taps.AddTap(this, () => { Dismiss(); return Task.CompletedTask; }, UiControls.Dismiss);
 		_sheet.BackgroundColor = Colors.White;
 		_sheet.StrokeThickness = 0;
 		_sheet.Content = _scroll; // a short screen scrolls the rows instead of cutting them off
 		BuildParts();
 		Arrange(BookSheetShape.BottomSheet);
-		Taps.AddTap(_sheet, () => Task.CompletedTask);
+		Taps.AddTap(_sheet, () => Task.CompletedTask); // no-tap-count: a tap on the sheet itself only stops the scrim under it
 		// No Done row (Slice 228): a tap outside or the labelled close button in the header closes the sheet; a swipe down is not used, it fought the scrolling rows.
 		Children.Add(_sheet);
-		_voice.Toggled += (_, _) => OnVoiceToggled();
+		_voice.Toggled += (_, _) => OnVoiceToggled(); // no-tap-count: the voice row's tap below is the press; this is its switch changing
 		SizeChanged += (_, _) => FitToWindow(Width, Height);
 	}
 
@@ -386,7 +386,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		row.StrokeShape = new RoundRectangle { CornerRadius = ReadNowHeight / 2 };
 		row.Content = content;
 		row.AutomationId = "BookSheetReadNow";
-		Taps.AddTap(row, ReadNowAsync);
+		Taps.AddTap(row, ReadNowAsync, UiControls.ReadNow);
 		return row;
 	}
 
@@ -499,7 +499,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		SemanticProperties.SetDescription(close, AppResources.Common_Close);
 		_closeButton = close;
 		DesktopTips.Hover(close);
-		Taps.AddTap(close, () => { Dismiss(); return Task.CompletedTask; });
+		Taps.AddTap(close, () => { Dismiss(); return Task.CompletedTask; }, UiControls.Close);
 		return close;
 	}
 
@@ -520,6 +520,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		row.AutomationId = automationId;
 		Taps.AddTap(row, async () =>
 		{
+			UiUsage.Tap(UiControls.BookMore); // Slice 352: one of the quiet rows (export)
 			Dismiss(); // tells the page, so a switch saved while the sheet was open refreshes the tiles
 			if (handler() is { } requested)
 			{
@@ -552,6 +553,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		row.AutomationId = "BookSheetReorder";
 		Taps.AddTap(row, async () =>
 		{
+			UiUsage.Tap(UiControls.Reorder);
 			Hide();
 			if (ReorderRequested is { } requested)
 			{
@@ -584,6 +586,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		SemanticProperties.SetDescription(row, AppResources.Book_Remove);
 		Taps.AddTap(row, async () =>
 		{
+			UiUsage.Tap(UiControls.Delete);
 			if (RemoveRequested is { } requested)
 			{
 				await requested();
@@ -614,7 +617,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		_voiceRow.Content = grid;
 		_voiceRow.IsVisible = false;
 		SemanticProperties.SetDescription(_voiceRow, ReadingText.UseMyVoice);
-		Taps.AddTap(_voiceRow, () => { _voice.IsOn = !_voice.IsOn; return Task.CompletedTask; });
+		Taps.AddTap(_voiceRow, () => { _voice.IsOn = !_voice.IsOn; return Task.CompletedTask; }, UiControls.Voice);
 		return _voiceRow;
 	}
 
@@ -674,6 +677,7 @@ internal sealed class BookSheet : Grid, IPageOverlay
 		SemanticProperties.SetDescription(pill, AppResources.Record_Title);
 		Taps.AddTap(pill, async () =>
 		{
+			UiUsage.Tap(UiControls.Record);
 			Hide();
 			if (RecordRequested is { } requested)
 			{

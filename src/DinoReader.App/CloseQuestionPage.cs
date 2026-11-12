@@ -30,7 +30,7 @@ public sealed class CloseQuestionPage : ContentPage, IDinoKeyTarget
 		SafeAreaEdges = SafeAreaEdges.None;
 		FlowDirection = UiFlow.Screen;
 		var scrim = new Grid { BackgroundColor = DinoTokens.Get(DinoTokens.Scrim), Padding = CardMargin };
-		Taps.AddTap(scrim, () => CloseAsync(false));
+		Taps.AddTap(scrim, () => CloseAsync(false), UiControls.Dismiss);
 		scrim.Add(Card());
 		Content = scrim;
 	}
@@ -73,7 +73,7 @@ public sealed class CloseQuestionPage : ContentPage, IDinoKeyTarget
 			StrokeShape = new RoundRectangle { CornerRadius = CardCorner },
 			Content = column,
 		};
-		Taps.AddTap(card, () => Task.CompletedTask); // a tap on the card itself is not "outside"
+		Taps.AddTap(card, () => Task.CompletedTask); // a tap on the card itself is not "outside" // no-tap-count: swallows the tap so the scrim under it does not see it
 		return card;
 	}
 
@@ -122,7 +122,7 @@ public sealed class CloseQuestionPage : ContentPage, IDinoKeyTarget
 			},
 		};
 		SemanticProperties.SetDescription(stay, AppResources.Common_Stay);
-		Taps.AddTap(stay, () => CloseAsync(false));
+		Taps.AddTap(stay, () => CloseAsync(false), UiControls.Cancel);
 		return stay;
 	}
 
@@ -144,7 +144,7 @@ public sealed class CloseQuestionPage : ContentPage, IDinoKeyTarget
 			},
 		};
 		SemanticProperties.SetDescription(close, AppResources.Common_Close);
-		Taps.AddTap(close, () => CloseAsync(true));
+		Taps.AddTap(close, () => CloseAsync(true), UiControls.Confirm);
 		return close;
 	}
 

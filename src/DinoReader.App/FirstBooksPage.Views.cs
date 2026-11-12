@@ -83,7 +83,7 @@ public partial class FirstBooksPage
 		};
 		var words = new VerticalStackLayout { Spacing = 16, HorizontalOptions = LayoutOptions.Fill, Children = { BuildOfflineIcon(), heading, body } };
 		var tryAgain = new CoralButton { Text = AppResources.Store_TryAgain, AutomationId = "FirstBooksTryAgain" };
-		tryAgain.Clicked += async (_, _) => await _busy.RunAsync(LoadAsync);
+		UiUsage.Press(tryAgain, UiControls.Retry, async () => await _busy.RunAsync(LoadAsync));
 		_offlineShell = new OnboardingShell(words, null, tryAgain, centred: true);
 		var layer = new Grid { AutomationId = "FirstBooksOffline", RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star)] };
 		layer.Add(new VerticalStackLayout { Padding = new Thickness(OnboardingBackInset, 0), Children = { BuildBack() } }, 0, 0);
@@ -120,7 +120,11 @@ public partial class FirstBooksPage
 		};
 		SemanticProperties.SetDescription(back, AppResources.Common_Back);
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += async (_, _) => await _busy.RunAsync(GoBackAsync);
+		tap.Tapped += async (_, _) =>
+		{
+			UiUsage.Tap(UiControls.Back);
+			await _busy.RunAsync(GoBackAsync);
+		};
 		back.GestureRecognizers.Add(tap);
 		_backButtons.Add(back);
 		return back;
@@ -146,7 +150,7 @@ public partial class FirstBooksPage
 	// The pinned bottom bar (frame O2): cream with a soft fade above it, the count and Continue. Which of them goes where is PlaceBar's call.
 	private Grid BuildBar()
 	{
-		_continue.Clicked += async (_, _) => await _busy.RunAsync(ContinueAsync);
+		UiUsage.Press(_continue, UiControls.Continue, async () => await _busy.RunAsync(ContinueAsync));
 		var bar = new Grid { BackgroundColor = DinoTokens.Get(DinoTokens.Cream), Shadow = new Shadow { Brush = new Color(1f, 246 / 255f, 230 / 255f, 0.95f), Offset = new Point(0, -8), Radius = (float)BarFade, Opacity = 0.95f } };
 		bar.Add(_count);
 		bar.Add(_continue);

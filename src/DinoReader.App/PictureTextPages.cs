@@ -639,7 +639,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		if (sentence >= 0)
 		{
 			var tap = new TapGestureRecognizer();
-			tap.Tapped += (_, _) => onSentence(sentence);
+			tap.Tapped += (_, _) => onSentence(sentence); // no-tap-count: onSentence is ReadingPage.OnSentenceTapped, which counts it
 			span.GestureRecognizers.Add(tap);
 		}
 

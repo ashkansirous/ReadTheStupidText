@@ -248,7 +248,7 @@ internal static class RecordViews
 			StrokeShape = new RoundRectangle { CornerRadius = QuietHeight / 2 }, Content = content,
 		};
 		SemanticProperties.SetDescription(button, text);
-		Taps.AddTap(button, tapped);
+		Taps.AddTap(button, tapped, UiControls.Pick);
 		return button;
 	}
 
@@ -326,7 +326,8 @@ internal static class RecordViews
 		button.Opacity = enabled ? 1 : 0.4;
 		button.Content = new IconView { Kind = kind, Size = size * 0.4, StrokeWidth = 2.4, Color = ink, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
 		SemanticProperties.SetDescription(button, description);
-		Taps.AddTap(button, () => enabled ? tapped() : Task.CompletedTask);
+		button.IsEnabled = enabled; // AddTap reads the live IsEnabled: a greyed-out round icon is not counted
+		Taps.AddTap(button, tapped, UiControls.Pick);
 		DesktopTips.Hover(button);
 		return button;
 	}
@@ -338,7 +339,7 @@ internal static class RecordViews
 		button.Shadow = new Shadow { Brush = new SolidColorBrush(DinoTokens.Get(DinoTokens.RecordEdge)), Offset = new Point(0, 5), Radius = 0, Opacity = 1f };
 		button.Content = new IconView { Kind = IconKind.Mic, Color = Colors.White, Size = size * MicShare, StrokeWidth = 2.4, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
 		SemanticProperties.SetDescription(button, AppResources.Rec_Start);
-		Taps.AddTap(button, tapped);
+		Taps.AddTap(button, tapped, UiControls.Record);
 		DesktopTips.Hover(button);
 		return button;
 	}
@@ -355,7 +356,7 @@ internal static class RecordViews
 			HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center, StrokeShape = new RoundRectangle { CornerRadius = StopCorner },
 		};
 		SemanticProperties.SetDescription(button, AppResources.Rec_Stop);
-		Taps.AddTap(button, tapped);
+		Taps.AddTap(button, tapped, UiControls.Stop);
 		StartPulse(halo);
 		return new Grid { WidthRequest = size, HeightRequest = size, Children = { halo, button } };
 	}
@@ -380,7 +381,7 @@ internal static class RecordViews
 		button.Shadow = new Shadow { Brush = new SolidColorBrush(DinoTokens.Get(DinoTokens.CoralEdge)), Offset = new Point(0, 5), Radius = 0, Opacity = 1f };
 		button.Content = new IconView { Kind = playing ? IconKind.Pause : IconKind.Play, Filled = true, Size = size * 0.34, Color = Colors.White, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
 		SemanticProperties.SetDescription(button, playing ? AppResources.Record_Playing : AppResources.Record_Play);
-		Taps.AddTap(button, tapped);
+		Taps.AddTap(button, tapped, playing ? UiControls.Pause : UiControls.Play);
 		DesktopTips.Hover(button);
 		return button;
 	}
@@ -416,7 +417,7 @@ internal static class RecordViews
 			HorizontalOptions = LayoutOptions.Center, Padding = new Thickness(16, 12),
 		};
 		SemanticProperties.SetDescription(link, AppResources.Record_UseDino);
-		Taps.AddTap(link, tapped);
+		Taps.AddTap(link, tapped, UiControls.Pick);
 		return link;
 	}
 
@@ -424,7 +425,7 @@ internal static class RecordViews
 	public static Border UndoToast(string text, Func<Task> undo)
 	{
 		var undoLabel = new Label { AutomationId = UndoId, Text = AppResources.Record_Undo, FontSize = 14, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#B9B6FF"), VerticalOptions = LayoutOptions.Center, Padding = new Thickness(12, 8) };
-		Taps.AddTap(undoLabel, undo);
+		Taps.AddTap(undoLabel, undo, UiControls.Cancel);
 		var row = new Grid { ColumnSpacing = 8, ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
 		row.Add(new Label { Text = text, FontSize = 14, TextColor = Colors.White, VerticalOptions = LayoutOptions.Center }, 0);
 		row.Add(undoLabel, 1);

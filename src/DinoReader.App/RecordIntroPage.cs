@@ -492,7 +492,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 			Stroke = selected ? DinoTokens.Get(DinoTokens.Brand) : Colors.Transparent, StrokeShape = new RoundRectangle { CornerRadius = ModeRadius },
 		};
 		SemanticProperties.SetDescription(card, $"{LanguageNames.NativeName(language)}, {progress}");
-		Taps.AddTap(card, () => ChooseLanguageAsync(language));
+		Taps.AddTap(card, () => ChooseLanguageAsync(language), UiControls.Language);
 		return card;
 	}
 
@@ -641,7 +641,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 			StrokeShape = new RoundRectangle { CornerRadius = ModeRadius }, Content = content,
 		};
 		SemanticProperties.SetDescription(card, text);
-		Taps.AddTap(card, () => ChooseModeAsync(mode));
+		Taps.AddTap(card, () => ChooseModeAsync(mode), UiControls.Mode);
 		return card;
 	}
 
@@ -719,7 +719,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		row.Add(CountLabel(story, book, speaker, lines, has), 2);
 		row.AutomationId = SpeakerIdPrefix + (speaker.Id.Length == 0 ? "storyteller" : speaker.Id);
 		SemanticProperties.SetDescription(row, RecordCard.NameOf(speaker));
-		Taps.AddTap(row, () => ToggleAsync(speaker.Id));
+		Taps.AddTap(row, () => ToggleAsync(speaker.Id), UiControls.Pick);
 		return row;
 	}
 
@@ -826,7 +826,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 			HeightRequest = ChangeHeight, VerticalTextAlignment = TextAlignment.Center, HorizontalOptions = LayoutOptions.Start,
 		};
 		SemanticProperties.SetDescription(link, AppResources.Record_Change);
-		Taps.AddTap(link, ShowOrHideChangeAsync);
+		Taps.AddTap(link, ShowOrHideChangeAsync, UiControls.Pick);
 		return link;
 	}
 
@@ -937,7 +937,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 			Content = new Label { Text = text, FontSize = labelSize, FontAttributes = FontAttributes.Bold, TextColor = Colors.White, HorizontalTextAlignment = TextAlignment.Center, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center },
 		};
 		SemanticProperties.SetDescription(button, text);
-		Taps.AddTap(button, () => enabled ? tapped() : Task.CompletedTask);
+		Taps.AddTap(button, tapped, UiControls.Continue);
 		DesktopTips.Hover(button);
 		return button;
 	}
@@ -960,7 +960,7 @@ public sealed class RecordIntroPage : ContentPage, IGrownUpPage
 		// A grid that is centred is measured with the label unconstrained on some heads, so MaxLines never wraps: the label's width is capped to what is left in the pill once the icon is placed.
 		button.SizeChanged += (_, _) => label.MaximumWidthRequest = Math.Max(0, button.Width - 2 * OutlinedPadding - 2 * OutlinedStroke - PlayIconSize - PlayIconGap);
 		SemanticProperties.SetDescription(button, text);
-		Taps.AddTap(button, () => enabled ? tapped() : Task.CompletedTask);
+		Taps.AddTap(button, tapped, UiControls.Play);
 		DesktopTips.Hover(button);
 		return button;
 	}

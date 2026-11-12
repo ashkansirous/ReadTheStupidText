@@ -94,6 +94,33 @@ const AUDIO_PACK_OUTCOMES = ["started", "done", "failed:network", "failed:size",
 // Slice 250: why a read stopped (the app's ReadStopReason; a test keeps the two lists the same). `window_stopped` is accepted though no caller emits it yet.
 const READ_STOP_REASONS = ["left_book", "finished", "cancelled", "language_changed", "restarted", "window_stopped", "skipped", "failed", "other"] as const;
 
+// ---- Screens, taps, settings and read origins (Slice 352) ----------------------------------------------------------------
+// Closed lists only (no free text, no typed text, no own-book title, no id). The app's UiScreens / UiScreenActions / UiControls / UiSettings / ReadOrigins in DinoReader.Core must be the same lists:
+// UiUsageTests fails when they drift. The screen a count was made on is also stored on every row as blob20 ("none" for an old build or a count made before any page).
+// A `tap` or `screen` count's detail is "<screen>:<control or action>"; `setting_changed` is "<setting>:<value>"; app_backgrounded / app_resumed carry the screen alone.
+export const SCREENS = [
+  "intro_1", "intro_2", "intro_3", "intro_4", "first_run", "first_books", "shelf", "reading", "corner_books", "corner_store", "corner_settings", "gate", "story_languages", "language", "reading_speed", "animal_sounds",
+  "record_intro", "record", "backup", "usage_counts", "about", "report_problem", "update", "close_question", "drop_language",
+] as const;
+export const SCREEN_ACTIONS = ["shown", "next", "back", "skip", "close"] as const;
+export const CONTROLS = [
+  "play", "pause", "stop", "next_page", "previous_page", "sentence", "back", "close", "done", "cancel", "confirm", "next", "skip", "skip_all", "try_it", "continue", "retry", "save", "restore", "send", "copy_code", "update", "download", "delete",
+  "filter", "language", "voice", "speed", "mode", "book", "book_more", "read_now", "record", "open_corner", "tab_books", "tab_store", "tab_settings", "settings_row", "toggle", "reorder", "pick", "dismiss", "gate_key", "see_stories",
+] as const;
+export const SETTINGS = ["usage_counts", "animal_sounds", "reading_speed", "reading_mode", "app_language"] as const;
+export const SETTING_SWITCH = ["on", "off"] as const;
+export const SPEED_BUCKETS = ["slow", "normal", "fast"] as const;
+export const READING_MODES = ["text", "picture", "picture_text"] as const;
+export const READ_ORIGINS = ["wizard", "shelf", "corner", "resume", "next_book"] as const;
+const SETTING_VALUES: Readonly<Record<string, readonly string[]>> = {
+  usage_counts: SETTING_SWITCH,
+  animal_sounds: SETTING_SWITCH,
+  reading_speed: SPEED_BUCKETS,
+  reading_mode: READING_MODES,
+  app_language: READING_LANGUAGES,
+};
+export const NO_SCREEN = "none";
+
 // ---- Session id (Slice 250) ----------------------------------------------------------------------------------------------
 // A random id the app makes at every cold start and keeps only in memory, plus the count's order inside that session. Neither is tied to an
 // install, a device or a person. Both are optional (older builds, RTST) and checked on their own: a malformed one is dropped from the row, never the event.
@@ -106,7 +133,7 @@ const MAX_SEQ = 1_000_000;
 // ---- Who and when (Slice 351) --------------------------------------------------------------------------------------------
 // Every Dino count may carry four closed context fields: the app's screen language (blob17, the 15 app languages), the install-age and launch-count buckets (blob18, blob19; worked out on
 // the device from a first-launch day that is never sent, so there is still no install id) and the whole seconds since the launch started (double6). A missing or invalid one is stored as
-// "none" / -1 and keeps the event, like the device block. blob20 stays free for Slice 352.
+// "none" / -1 and keeps the event, like the device block. blob20 is the screen (Slice 352, below).
 export const NO_CONTEXT_FIELD = "none";
 export const INSTALL_AGES = ["first", "d0", "d1_7", "d8_30", "d31_plus"] as const;
 export const LAUNCH_NUMBERS = ["1", "2_5", "6_20", "21_plus"] as const;
@@ -248,9 +275,25 @@ const fallbackDetail = (value: unknown): boolean => {
   return parts.length === 2 && oneOf(FALLBACK_AREAS, parts[0]) && oneOf(FALLBACK_REASONS, parts[1]);
 };
 
+// Slice 352: a read's origin (book_opened, read_started) is empty for an older build, else one of READ_ORIGINS.
+const originDetail = (value: unknown): boolean => emptyDetail(value) || oneOf(READ_ORIGINS, value);
+
+// Slice 352: "<left>:<right>", both halves on closed lists.
+const pairDetail = (left: readonly string[], right: readonly string[]) => (value: unknown): boolean => {
+  const parts = typeof value === "string" ? value.split(WAIT_DETAIL_SEPARATOR) : [];
+  return parts.length === 2 && oneOf(left, parts[0]) && oneOf(right, parts[1]);
+};
+
+// Slice 352: a changed setting, "<setting>:<value>", the value from that setting's own list.
+const settingDetail = (value: unknown): boolean => {
+  const parts = typeof value === "string" ? value.split(WAIT_DETAIL_SEPARATOR) : [];
+  const allowed = parts.length === 2 && Object.hasOwn(SETTING_VALUES, parts[0]!) ? SETTING_VALUES[parts[0]!]! : [];
+  return parts.length === 2 && oneOf(allowed, parts[1]);
+};
+
 // Slice 133 events carry no detail; Slice 134 added the rest. Anything not named here is dropped.
 const EVENT_RULES: Readonly<Record<string, EventRule>> = {
-  book_opened: { sources: BOOK_SOURCES, detail: emptyDetail },
+  book_opened: { sources: BOOK_SOURCES, detail: originDetail },
   book_finished: { sources: BOOK_SOURCES, detail: emptyDetail },
   store_download: { sources: [SHELF_SOURCE], detail: detailIn(STORE_FILTERS) },
   own_book_added: { sources: [OWN_BOOK], detail: ownBookDetail },
@@ -268,7 +311,7 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   story_language_switched: { sources: [...BOOK_SOURCES, NO_BOOK], detail: emptyDetail },
   voice_pack_download: { sources: [NO_BOOK], detail: detailIn(PACK_OUTCOMES) },
   // Slice 250: playback events, each about a book (a shelf book or the grown-up's own); only read_stopped has a detail.
-  read_started: { sources: BOOK_SOURCES, detail: emptyDetail },
+  read_started: { sources: BOOK_SOURCES, detail: originDetail },
   read_paused: { sources: BOOK_SOURCES, detail: emptyDetail, seconds: true },
   read_resumed: { sources: BOOK_SOURCES, detail: emptyDetail },
   read_stopped: { sources: BOOK_SOURCES, detail: detailIn(READ_STOP_REASONS), seconds: true },
@@ -282,6 +325,12 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   book_update: { sources: [SHELF_SOURCE], detail: bookUpdateDetail },
   // Slice 273: a feature fell back (area:reason); about a book or about no book. Its `count` is how many times in that session.
   fallback: { sources: [...BOOK_SOURCES, NO_BOOK], detail: fallbackDetail, counts: true },
+  // Slice 352: where the app was and what was pressed; all about no book, closed lists only.
+  screen: { sources: [NO_BOOK], detail: pairDetail(SCREENS, SCREEN_ACTIONS) },
+  tap: { sources: [NO_BOOK], detail: pairDetail(SCREENS, CONTROLS) },
+  setting_changed: { sources: [NO_BOOK], detail: settingDetail },
+  app_backgrounded: { sources: [NO_BOOK], detail: detailIn([...SCREENS, NO_SCREEN]) },
+  app_resumed: { sources: [NO_BOOK], detail: detailIn([...SCREENS, NO_SCREEN]) },
 };
 export const LANGUAGE_PATTERN = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
 /** The version pattern both phone endpoints check (Slice 227 shares it with `/api/crash`). */
@@ -338,10 +387,13 @@ export interface UsageEvent {
   readonly launchNo: string;
   /** Slice 351: whole seconds since the launch started (0 to a day), or -1. */
   readonly sinceLaunch: number;
+  /** Slice 352: the screen the app was on (SCREENS), or "none". Stored as blob20. */
+  readonly screen: string;
 }
 
 /** The optional fields of a count, all "none" (a caller that has none of them, like a speaker row, spreads this and sets only what it has). Typed on UsageEvent, so a new field there fails to compile wherever a row is built. */
-export const NO_EXTRA_FIELDS: Pick<UsageEvent, "detail" | "session" | "seq" | "count" | "deviceCount" | "seconds" | "uiLang" | "installAge" | "launchNo" | "sinceLaunch"> = {
+export const NO_EXTRA_FIELDS: Pick<UsageEvent, "detail" | "session" | "seq" | "count" | "deviceCount" | "seconds" | "uiLang" | "installAge" | "launchNo" | "sinceLaunch" | "screen"> = {
+  screen: NO_SCREEN,
   uiLang: NO_CONTEXT_FIELD,
   installAge: NO_CONTEXT_FIELD,
   launchNo: NO_CONTEXT_FIELD,
@@ -429,9 +481,10 @@ export function parseEvent(raw: unknown): UsageEvent | null {
 }
 
 /** Slice 351: the who-and-when fields of a count, each on its closed list or whole-number range, else "none" / -1 (never drops the event). */
-function contextOf(raw: Record<string, unknown>): Pick<UsageEvent, "uiLang" | "installAge" | "launchNo" | "sinceLaunch"> {
+function contextOf(raw: Record<string, unknown>): Pick<UsageEvent, "uiLang" | "installAge" | "launchNo" | "sinceLaunch" | "screen"> {
   const since = raw["sinceLaunch"];
   return {
+    screen: oneOf(SCREENS, raw["screen"]) ? raw["screen"] : NO_SCREEN, // Slice 352: blob20
     uiLang: oneOf(READING_LANGUAGES, raw["uiLang"]) ? raw["uiLang"] : NO_CONTEXT_FIELD,
     installAge: oneOf(INSTALL_AGES, raw["installAge"]) ? raw["installAge"] : NO_CONTEXT_FIELD,
     launchNo: oneOf(LAUNCH_NUMBERS, raw["launchNo"]) ? raw["launchNo"] : NO_CONTEXT_FIELD,
@@ -462,7 +515,8 @@ export function toDataPoint(event: UsageEvent, context: BatchContext = NO_CONTEX
       event.name, event.book, event.language, event.source, event.hasRecording ? "yes" : "no", event.version, event.platform, event.day, event.detail,
       country, device.osMajor, device.formFactor, device.arch, device.cores, device.ram,
       event.session,
-      event.uiLang, event.installAge, event.launchNo, // blob17-blob19 (Slice 351); blob20 is free for Slice 352
+      event.uiLang, event.installAge, event.launchNo, // blob17-blob19 (Slice 351)
+      event.screen, // blob20 (Slice 352): the screen the count was made on
     ],
     doubles: [1 / event.sampleRate, event.seq, event.count, event.deviceCount, event.seconds, event.sinceLaunch],
   };

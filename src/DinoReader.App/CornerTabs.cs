@@ -12,6 +12,7 @@ namespace DinoReader;
 internal sealed class CornerTabs : Grid
 {
 	private static readonly CornerTab[] Tabs = [CornerTab.Books, CornerTab.Store, CornerTab.Settings];
+	private static readonly string[] TabControls = [UiControls.TabBooks, UiControls.TabStore, UiControls.TabSettings];
 	private static readonly string[] Ids = ["CornerTabBooks", "GalleryStore", "GallerySettings"];
 	private static readonly IconKind[] Icons = [IconKind.TabBooks, IconKind.TabStore, IconKind.TabSettings];
 	private static readonly string[] Hints = ["Ctrl+1", "Ctrl+2", "Ctrl+3"];
@@ -41,8 +42,7 @@ internal sealed class CornerTabs : Grid
 		for (int i = 0; i < Tabs.Length; i++)
 		{
 			int index = i;
-			_hits[i] = new Button { BackgroundColor = Colors.Transparent, TextColor = Colors.Transparent, BorderWidth = 0, Padding = 0, AutomationId = Ids[i] };
-			_hits[i].Clicked += (_, _) => TabRequested?.Invoke(Tabs[index]);
+			_hits[i] = UiUsage.Press(new Button { BackgroundColor = Colors.Transparent, TextColor = Colors.Transparent, BorderWidth = 0, Padding = 0, AutomationId = Ids[i] }, TabControls[i], () => TabRequested?.Invoke(Tabs[index])); // Slice 352: counted before the tab changes
 			_roots[i] = new Border { StrokeThickness = 0, BackgroundColor = Colors.Transparent };
 		}
 

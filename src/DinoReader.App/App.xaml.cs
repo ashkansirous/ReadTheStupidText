@@ -48,6 +48,11 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 
 	private static void OnPageAppearing(Page page)
 	{
+		if (UiScreen.ScreenOf(page) is { } screen)
+		{
+			UiScreen.Show(screen, page); // Slice 352: the gallery and the wizard name their own screens, every other page is named here
+		}
+
 		SystemBarIcons.ForPage(page);
 #if WINDOWS
 		DinoTitleBar.ForPage(page); // Slice 235 part B: the title bar takes the page's colour
@@ -66,7 +71,10 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 #endif
 		var external = _services.GetRequiredService<ExternalActivityGuard>();
 		window.Stopped += (_, _) => OnStopped(_navigation!, external);
-		window.Stopped += (_, _) => FlushUsage();
+		window.Stopped += (_, _) => CountBackgroundAndFlush();
+		window.Destroying += (_, _) => FlushUsage("destroying"); // Slice 352: a Windows window close that raised no Stopped still sends what is queued (FlushAsync joins an overlapping call)
+		window.Resumed += (_, _) => UiUsage.Resumed(); // Slice 352: counted only after a counted background, so the cold-start resume is not a return
+		window.ModalPopped += (_, e) => UiScreen.ModalClosed(e.Modal); // Slice 352: a closed modal gives the screen back to the page beneath
 		window.Stopped += (_, _) => _bookUpdateCancel.Cancel();
 		CrashReporter.AttachTo(window); // Slice 227: the run marker for the unclean-exit report
 		window.Resumed += (_, _) => OnResumed(_navigation!, external);
@@ -101,6 +109,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 			_launchCounted = true;
 			var usage = _services.GetRequiredService<UsageCounter>();
 			usage.RecordGeneral(UsageEventName.AppOpened, LanguageChoice.Current());
+			UiScreen.CountLaunchScreen(); // Slice 352: the launch screen is counted once, here, unless a screen:shown was already recorded
 			await usage.FlushAsync();
 		}
 		catch (Exception ex)
@@ -171,9 +180,19 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		}
 	}
 
-	// Counts made in a session with no reading are sent when the window stops, as the app goes to the background.
-	private void FlushUsage()
+	// Slice 352: app_backgrounded is queued first, in this one method, so the flush that follows always sends it.
+	private void CountBackgroundAndFlush()
 	{
+		UiUsage.Backgrounded();
+		FlushUsage("stopped");
+	}
+
+	// Counts made in a session with no reading are sent when the window stops, as the app goes to the background.
+	private void FlushUsage(string reason = "other")
+	{
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Usage] flush on window {reason}"); // Slice 352: which window event sent the queue (stopped, destroying)
+#endif
 		try
 		{
 			_ = _services.GetRequiredService<UsageCounter>().FlushAsync();

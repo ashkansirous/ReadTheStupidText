@@ -25,9 +25,10 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 	private static readonly TimeSpan PackDeleteWait = TimeSpan.FromSeconds(3);
 
 	/// <summary>Opens the reading screen on <paramref name="story"/>.</summary>
-	public async Task ReadAsync(INavigation navigation, Story story)
+	public async Task ReadAsync(INavigation navigation, Story story, string origin = ReadOrigins.Shelf)
 	{
 		var reading = services.GetRequiredService<ReadingPage>();
+		reading.ReadOrigin = origin; // Slice 352: the read says where it started
 		reading.Load(story);
 		await navigation.PushAsync(reading);
 	}

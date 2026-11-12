@@ -125,7 +125,7 @@ public sealed class ZoomablePage
 	private void AttachTapAndSwipe(Action<TappedEventArgs> onTap, Action<SwipedEventArgs> onSwipe)
 	{
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += (_, e) => onTap(e);
+		tap.Tapped += (_, e) => onTap(e); // no-tap-count: a hit on a sentence raises SentenceTapped, which ReadingPage counts
 		Container.GestureRecognizers.Add(tap);
 		foreach (SwipeDirection direction in new[] { SwipeDirection.Left, SwipeDirection.Right })
 		{
