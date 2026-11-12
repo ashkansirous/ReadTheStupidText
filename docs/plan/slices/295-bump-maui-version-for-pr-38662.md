@@ -1,5 +1,7 @@
 # Slice 295 — Bump `MauiVersion` once a MAUI release with dotnet/maui PR #38662 ships
 
+*Park note (moved back to planned by the 2026-11-12-1337 feedback loop, user answer 2026-11-01): it was parked: waits for MAUI 10.0.130 or later on NuGet (newest 10.0.120 at 2026-11-08 17:04Z). A night wave that hits the same blocker parks it again with that reason.*
+
 *Parked (night 2026-11-08-1703 wave 1): waits for MAUI 10.0.130 or later on NuGet (newest 10.0.120 at 2026-11-08 17:04Z).*
 
 *Planned 2026-11-07; starts only when the release exists.* **Park note (2026-11-07, night run wave 5):** parked: waits for MAUI 10.0.130 or later on NuGet; newest was 10.0.120 (checked 2026-11-07 ~20:20Z). An external wait, not a user item. From [Slice 274](274-dino-ios-crash-after-leaving-parent-page.md): the iOS crash after leaving a parent page has a local workaround; the underlying fix is dotnet/maui PR #38662, which needs 10.0.130 or later. 10.0.120 is the newest on NuGet as of 2026-11-06 (`Directory.Build.props:7` pins `10.0.120`). iOS dSYMs per release are Slice 243's, not this slice's. Moved from plan.md's *Outstanding work*. Nothing is filed upstream (user rule: nothing leaves this machine as a report).

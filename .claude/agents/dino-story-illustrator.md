@@ -54,7 +54,8 @@ the contact sheet live only in the working folder. Touch nothing else.
    - `pwsh -STA gemini-clipboard.ps1 Put <file>` puts the line-up on the clipboard to paste;
    - 5 s after opening or reloading a tab, check the tab URL and `window.__geminiHealth()` once (the left menu loads only
      with the page): `CAPTCHA` (google.com/sorry) means stop and report at once; otherwise not `OK` means reload once, check
-     again after 5 s, and stop and report if it is still not `OK`. Never wait on a page that won't load;
+     again after 5 s, and stop and report if it is still not `OK`. Never reload more than 3 times in a row to look for
+     a model or menu item that isn't there: report it missing (2026-11-12: about 16 reloads for "3.8 Flash" ended in a CAPTCHA). Never wait on a page that won't load;
    - **send only through `await window.__sendChecked(<the exact prompt>, <pictures attached>)`**, never a bare Send
      click. Order: paste the line-up (and wait for its thumbnail), put the prompt text in, `window.__markPictures()`,
      then `__sendChecked(prompt, 1)` (`0` for a text-only patch; re-inject `gemini-grab.js` first in a tab injected

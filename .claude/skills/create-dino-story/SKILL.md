@@ -34,7 +34,7 @@ context free of screenshots, pictures and 13 translation files.
    Enter (keystrokes land in whichever tab has focus); `gemini-lock.ps1` is held only around the line-up paste and
    the save; each illustrator closes its own tab when done (reset tab groups left ~20 orphans). Four in parallel
    drew about 39 accepted pictures an hour against 15-25 for one. If Gemini answers 1095 or shows a CAPTCHA, report
-   it; never reduce the number of illustrators without asking the user. It ends with `contact-sheet.jpg`, every picture on one sheet.
+   it; at most 3 reloads to look for a model or menu item that isn't there, then report it missing; never reduce the number of illustrators without asking the user. It ends with `contact-sheet.jpg`, every picture on one sheet.
    **One book is drawn by 3-4 illustrators at once whenever the machine has room** (the user, 2026-11-01: pages
    hardly depend on each other; each chat only needs the line-up and its page descriptions). The cap of four
    counts across the machine, so with two books in flight they share it (2 + 2). Three phases:

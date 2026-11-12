@@ -1,5 +1,7 @@
 # Slice 342: Listening page: Farsi voice pack (Slice 51)
 
+*Park note (moved back to planned by the 2026-11-12-1337 feedback loop, user answer 2026-11-01): it was parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page). A night wave that hits the same blocker parks it again with that reason.*
+
 *Parked (night 2026-11-08-1703 wave 1): needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page).*
 
 *Planned 2026-11-08.* The user asked for one slice per check that needs their ear ("Abou the ones that need my ear, I probably need a page to listen to them and say what I think. Add a slice for each so that you can implement a page for me to listen to them and tell what is wrong with them"). This one comes from Slice 51's open check, moved out of `docs/plan/unverified.md` on 2026-11-08 ([record](../notes/2026-11-08-unverified-triage.md)):

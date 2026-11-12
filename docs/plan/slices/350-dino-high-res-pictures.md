@@ -1,5 +1,7 @@
 ### Slice 350 — Dino: high-resolution pictures for a printed Amazon book, fixing the faulty pages
 
+*Park note (moved back to planned by the 2026-11-12-1337 feedback loop, user answer 2026-11-01): it was parked: parts A, D and E need the user's Chrome and Gemini account and their model pick (B and C merged #1013). A night wave that hits the same blocker parks it again with that reason.*
+
 *Parts B and C merged as PR #1013 (01e91c0d); A, D and E open, need the user's Chrome and Gemini account and their model pick.*
 
 **Touches:** `content/dino/*/high-res/**` (new), `content/dino/*/pictures/*.jpg` and `content/dino/*/cover.jpg` (item E, fixed pages only), `content/dino/*/book.json` (version bumps), `.gitattributes`, `.lfsconfig`, `.github/scripts/ship-targets.mjs`, `.github/workflows/dino-store.yml`, `.github/workflows/tools-selftests.yml`, `.github/scripts/ship-targets.test.mjs`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/CLAUDE.md`, `tools/DinoReader.BookBuilder/**`, `tests/DinoReader.Tests/BookBuilderTests.cs`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/skills/create-dino-story/prompts.md`, `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/146-dino-books-kid-friendly-language.md`, `docs/plan/slices/196-dino-default-view-per-book.md`, `docs/plan/slices/350-dino-high-res-pictures.md`
@@ -50,6 +52,13 @@ extension (traced in B3: both are called on a book's `pictures` and `translation
   - [ ] A2. Draw lion-and-mouse's cover and page 5 (fixed) with each model, one chat per picture, and save the files to a scratch folder (not the repo).
   - [ ] A3. Publish one private comparison page that shows them side by side, with model, pixel size and file size. Note whether 3:4 fits an Amazon print page size.
   - [ ] A4. Stop and discuss with the user. Write their chosen model (and the output size to ask for) into this file.
+  - *Part A results so far (interactive session f7f59fb2, 2026-11-12, entries ~870-2439; copied here by the 2026-11-12-1337 feedback loop from that session's own reports, not re-checked; the pictures are in a temp scratchpad and a private comparison page):* the account offers 3.5 Flash-Lite, Hydrogen, 3.1 Pro, 4 Argon and 4 Carbon (Carbon is locked behind a GBP 79.99/month plan); "3.8 Flash" never appeared in about 16 page loads (followed by a CAPTCHA). Every model returns 1792x2400 with no size setting: sharp at 6x8 in at 300 dpi, about 210-240 dpi on larger Amazon trims. The first 3.1 Pro and Flash-Lite page-5 attempts were not real tests (the reference was sent with an empty prompt box; fixed by #1026) and were redrawn. The session recommended 3.1 Pro. User answer (2026-11-12): page 5's layout is fine ("there is no problem about text"); the fault to fix is the lion's legs. Page-5 redraws, as the agents and the session reported them (the main thread opened 4 pictures; it counted the legs on 4 redraws itself):
+    - No model got everything right.
+    - Hydrogen: the mouse faces left, towards the lion.
+    - 3.1 Pro: the mouse faces left, so the action does not match the text, and the lion's back paw is unclear.
+    - Flash-Lite: part of the action is missing.
+    - Still open: the user's model pick (A4).
+    - The pictures are not kept anywhere durable. If the scratchpad is gone when A4 is picked up, redraw A2 before showing the comparison again.
 - [ ] B. Guard rails, before the first picture is committed:
   - [x] B1. In `.gitattributes`: `content/dino/*/high-res/** filter=lfs diff=lfs merge=lfs -text`. Check that `.lfsconfig` keeps these files out of normal fetches and CI checkouts, as it does for audio.
   - [x] B2. In `.github/scripts/ship-targets.mjs`, make sure a change under `content/dino/<book>/high-res/**` maps to no ship target, so it doesn't start a store upload. Add a test case if the script has tests.
