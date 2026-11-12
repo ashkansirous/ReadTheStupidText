@@ -22,6 +22,13 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** Windows head title bar (VM not run).
 - **You:** item 4: Dino's iOS binary has no camera/photo API reference, so the three Info.plist keys can go (a TestFlight upload without them).
 
+### Slice 346: Dino: four free books, the rest $0.99 each ([slice](slices/346-dino-paid-books.md))
+- **You:** a real Play test-account purchase and restore.
+- **You:** an iOS StoreKit sandbox or TestFlight purchase and restore.
+- **Device:** the Windows Store add-on on the VM.
+- **Device:** the switch-on store page against the real Worker.
+- **You:** the Microsoft Store ID flow against a live store.
+
 ### Slice 341: Listening page: Farsi short words never dropped ([slice](slices/341-farsi-short-words-never-dropped.md))
 - **Device:** a phone run of short Farsi lines in Read The Stupid Text (mana with the ganji rescue, e.g. «سلام.», «آه.») is not done.
 

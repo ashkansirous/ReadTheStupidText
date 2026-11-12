@@ -1,6 +1,6 @@
 # Slice 346 — Dino: four free books, the rest $0.99 each
 
-*Parts A, B and C built behind the off switch (PR #1016, wave 2026-11-12); Part D and switching on wait for the user.*
+*Parts A, B and C merged as PR #1016 (e0e73ca3) behind the off switch; Part D, store setup and keys, and switching on wait for the user.*
 
 **Touches:** `worker/appconfig.ts`, `worker/appconfig.test.mjs`, `worker/index.ts`, `src/DinoReader.Core/AppConfig.cs`, `src/DinoReader.App/AppConfigClient.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/GrownUpGate.cs`, `src/DinoReader.App/GalleryPage.xaml*`, `worker/stories.ts`, `worker/entitlements/**` (new: receipt checks per store), `worker/products.ts` (new: product to book list), `worker/CLAUDE.md`, `worker/stories.test.mjs`, `worker/entitlements.test.mjs` (new), `content/dino/*/book.json`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/scripts/store-products.mjs` (new: create and price the products through the store APIs), `src/DinoReader.Core/BookAccess.cs` (new), `src/DinoReader.Core/StoryBackup*.cs` (incl. `StoryBackupState.cs`, `StoryBackupReader.LegacyFiles.cs`, `StoryBackupWriter.WithBookFiles.cs`), `src/ReadTheStupidText.Mobile.Shared/Usage/RemoteConfigClient.cs`, `wrangler.jsonc`, `wrangler.workers-dev.jsonc`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StorePage.xaml*`, `src/DinoReader.App/FirstBooksPage*.cs`, `src/DinoReader.App/BackupPage.xaml*`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/ShelfAudioPacks*.cs`, `src/DinoReader.App/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/Purchases/**` (new), `src/DinoReader.App/Platforms/iOS/Purchases/**` (new), `src/DinoReader.App/Platforms/Windows/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Testing/**`, `tests/DinoReader.Tests/**`, `docs/store-listings/dino/**`, `site/dino/privacy.html`, `docs/plan/slices/346-dino-paid-books.md`, `tools/DinoReader.BookBuilder/**`, `src/DinoReader.Core/StoreCatalog.cs`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `.maestro/dino/paid-books.yaml`
 
@@ -276,7 +276,7 @@ Files: `D:/ReadTheStupidText-worktrees/reviews/w47-device/s346/rerun3/`.
 - Then set `paidBooks.enabled: true` in R2 `dinoreader/config.json`.
 - Known limits: Sonos and Alexa serve paid listening tracks (user ruled them out); a store proof can be shared (no accounts).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-12)
 
 - `worker/CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`: `paidBooks.enabled` off or unreadable means origin/main behaviour everywhere (Worker, app, backups); nothing user-facing awaits the remote config. (Slice 346: docs/plan/slices/346-dino-paid-books.md)
 - `src/DinoReader.App/CLAUDE.md`: `BookAccess.LegacyBookChoice` alone decides what a schema 1 restore does with each book. (Slice 346: docs/plan/slices/346-dino-paid-books.md)
