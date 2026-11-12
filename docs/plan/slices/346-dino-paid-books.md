@@ -1,8 +1,8 @@
 # Slice 346 — Dino: four free books, the rest $0.99 each
 
-*Planned (2026-11-09).*
+*In progress (wave 2026-11-12), draft PR: Parts A, B and C behind the off switch; Part D waits for the user.*
 
-**Touches:** `worker/stories.ts`, `worker/entitlements/**` (new: receipt checks per store), `worker/products.ts` (new: product to book list), `worker/CLAUDE.md`, `worker/stories.test.mjs`, `worker/entitlements.test.mjs` (new), `content/dino/*/book.json`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/scripts/store-products.mjs` (new: create and price the products through the store APIs), `src/DinoReader.Core/BookAccess.cs` (new), `src/DinoReader.Core/StoryBackup*.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StorePage.xaml*`, `src/DinoReader.App/FirstBooksPage*.cs`, `src/DinoReader.App/BackupPage.xaml*`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/ShelfAudioPacks*.cs`, `src/DinoReader.App/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/Purchases/**` (new), `src/DinoReader.App/Platforms/iOS/Purchases/**` (new), `src/DinoReader.App/Platforms/Windows/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `src/DinoReader.App/Platforms/iOS/Info.plist`, `src/DinoReader.App/Platforms/iOS/PrivacyInfo.xcprivacy`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Testing/**`, `tests/DinoReader.Tests/**`, `docs/store-listings/dino/**`, `site/dino/privacy.html`, `docs/plan/slices/346-dino-paid-books.md`
+**Touches:** `worker/appconfig.ts`, `worker/appconfig.test.mjs`, `worker/index.ts`, `src/DinoReader.Core/AppConfig.cs`, `src/DinoReader.App/AppConfigClient.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/GrownUpGate.cs`, `src/DinoReader.App/GalleryPage.xaml*`, `worker/stories.ts`, `worker/entitlements/**` (new: receipt checks per store), `worker/products.ts` (new: product to book list), `worker/CLAUDE.md`, `worker/stories.test.mjs`, `worker/entitlements.test.mjs` (new), `content/dino/*/book.json`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/publish-store-books.test.mjs`, `.github/scripts/store-products.mjs` (new: create and price the products through the store APIs), `src/DinoReader.Core/BookAccess.cs` (new), `src/DinoReader.Core/StoryBackup*.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StorePage.xaml*`, `src/DinoReader.App/FirstBooksPage*.cs`, `src/DinoReader.App/BackupPage.xaml*`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/ShelfAudioPacks*.cs`, `src/DinoReader.App/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/Purchases/**` (new), `src/DinoReader.App/Platforms/iOS/Purchases/**` (new), `src/DinoReader.App/Platforms/Windows/Purchases/**` (new), `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Testing/**`, `tests/DinoReader.Tests/**`, `docs/store-listings/dino/**`, `site/dino/privacy.html`, `docs/plan/slices/346-dino-paid-books.md`
 
 ## Why
 
@@ -41,6 +41,32 @@ Slice 291 recorded in-app purchases as "not decided"; this slice decides them.
   products and the store keys exist. Creating products and prices (`store-products.mjs`), the payment, bank and tax
   setup, `wrangler secret put` for the store keys and turning the switch on all wait for the user and are not done
   at night.
+
+## Night build design (coordinator, 2026-11-12, wave 47)
+
+Premises (ground-in-code on origin/main): remote config is `worker/appconfig.ts` serving `GET /api/app-config` from R2
+`dinoreader/config.json` (read per request, changed with `wrangler r2 object put`, no deploy); the app reads it through
+`AppConfigClient.cs` into `DinoReader.Core/AppConfig.cs:83`. The switch pattern to copy is `crashReports.enabled`
+(`appconfig.ts:62-66`, `AppConfig.cs:85,125`): on only for a literal `true`, default off. No billing package is in
+`DinoReader.App.csproj`; `GrownUpGate` (`GrownUpGate.cs:10`, singleton) is not used by `StorePage` today.
+`Platforms/iOS/PrivacyInfo.xcprivacy` does not exist (not created by this slice).
+
+- **One switch, one owner:** `paidBooks.enabled` in the remote config, default off (missing, malformed or not literal
+  `true` = off). The Worker reads it from the same R2 object on each gated request; when off, every book is free on every
+  route exactly as today (no proof header needed). The app reads it from `AppConfig`; when off it shows no price, no Buy,
+  no Restore or Redeem button, and the first-run picker is unchanged. So merging changes nothing live.
+- **Purchase state has one owner, the store.** The app keeps no purchase database: on launch and when the store page
+  opens it asks the platform store for owned products (in memory only) and the current proof. Buy cancelled or failed:
+  nothing changes, a plain message. Pending (Android pending purchase, iOS Ask to Buy): shown as waiting, re-read on the
+  next open. App killed mid-purchase: the next re-read finds it. Offline: free books work, paid books not on the shelf
+  show the store's last price if known, else a "connect to buy" note; nothing on the shelf is ever locked.
+- **Worker checks:** checkers per store behind one interface, tested with recorded answers; missing store secrets mean
+  the checker answers "cannot verify" (403), never "owned". No `wrangler secret put`, product creation or listing change
+  at night.
+- **Library choice:** each platform's billing API through `library-docs` first; if StoreKit 2 has no .NET binding, the
+  iOS task uses the StoreKit (original) API bound in .NET for iOS, recorded here.
+- **Not built tonight (Part D):** `store-products.mjs`, `docs/store-listings/dino/**`, `site/dino/privacy.html`: the
+  privacy page and listings change when the switch goes on, with the user (they would be wrong while every book is free).
 
 ## Decided by Claude (obvious behaviour; tell the user, change if they disagree)
 
