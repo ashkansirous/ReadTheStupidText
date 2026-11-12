@@ -20,7 +20,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** tab labels at system font scale 1.3.
 - **You:** iOS simulator or TestFlight corner screens (status bar and tabs).
 - **Device:** Windows head title bar (VM not run).
-- **You:** item 4: Dino's iOS binary has no camera/photo API reference, so the three Info.plist keys can go (a TestFlight upload without them).
+- **You:** item 4: the next TestFlight upload of Dino is accepted by App Store Connect with no missing purpose-string warning (ITMS-90683); if flagged, restore the three keys.
 
 ### Slice 346: Dino: four free books, the rest $0.99 each ([slice](slices/346-dino-paid-books.md))
 - **You:** a real Play test-account purchase and restore.

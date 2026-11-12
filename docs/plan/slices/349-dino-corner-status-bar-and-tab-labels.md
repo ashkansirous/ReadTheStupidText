@@ -1,6 +1,6 @@
 # Slice 349 — Dino: grown-ups corner status bar and clipped tab labels
 
-*Items 1-3 built (merged as PR #1015, 699f8d06). Item 4 built 2026-11-12 (PR #1021), not merged; all items now built. Not yet verified on a TestFlight upload.*
+*Built, merged as PR #1015 (699f8d06) and PR #1021 (a1516498); all items built. Not yet verified on a TestFlight upload.*
 
 **Touches (item 4, wave 2026-11-12):** `src/ReadTheStupidText.Mobile.Shared/ReadTheStupidText.Mobile.Shared.csproj`,
 `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/MobileSharedServices.iOS.cs` (comment only), `src/DinoReader.App/Platforms/iOS/Info.plist`,
