@@ -1,6 +1,6 @@
 # Slice 352 — Dino: every screen, wizard step and button press is counted
 
-*Planned (2026-11-10).*
+*In progress (wave 2026-11-12), draft PR.*
 
 **Touches:** `worker/events.ts`, `worker/events*.test.mjs`, `worker/CLAUDE.md`, `src/DinoReader.App/UsageCounter.cs`,
 `src/DinoReader.App/Usage*.cs`, `src/DinoReader.App/UiUsage*.cs`, `src/DinoReader.App/*Page*.cs`,
@@ -8,7 +8,9 @@
 `src/DinoReader.App/CornerTabs.cs`, `src/DinoReader.App/ReadingSession.cs`,
 `src/ReadTheStupidText.Application/Usage/**`, `tests/DinoReader.Tests/**`, `site/dino/privacy.html`, `STORE.md`,
 `docs/analytics/dino-session-queries.md`, `tools/usage-sessions/**` (new),
-`docs/plan/slices/352-dino-screen-and-tap-events.md`
+`docs/plan/slices/352-dino-screen-and-tap-events.md`,
+`src/DinoReader.Core/UsageEvent.cs`, `src/DinoReader.Core/*Usage*.cs`, `src/DinoReader.App/*.cs` (Dino pages and rows not named *Page*: `OnboardingShell.cs`, `RecordIntroPage.cs`, `SettingsRows.cs`, `FirstBooksPage.cs`, `IntroState.cs`, ...), `worker/stats*.ts`, `worker/*.test.mjs`,
+`tests/ReadTheStupidText.Tests/UsageService*.cs`, `.maestro/dino/**`, `tools/emulator/**`
 
 ## Why
 
@@ -36,6 +38,26 @@ Constraints (worker/CLAUDE.md, privacy page, STORE.md, kids' app): closed lists 
 no own-book titles), no id beyond the per-launch session (Slice 351 adds the buckets), counting stays behind the
 remote `telemetry.enabled` switch and the grown-up's off switch, production builds only. Analytics Engine rows
 have 20 blobs and 20 doubles; Slice 351 uses blobs 17-19 and `double6`.
+
+## Design notes (coordinator, 2026-11-12, from a ground-in-code check of origin/main)
+
+- **Leaving the app already flushes** on every head: `App.xaml.cs:68-72` hooks MAUI `Window.Stopped`/`Resumed`,
+  and `Stopped` calls `FlushUsage()` -> `UsageCounter.FlushAsync`. So item E adds only the `app_backgrounded` and
+  `app_resumed` events (queued before that flush) and the early flush at 40 queued events (`UsageService`, today 50
+  = `UsageBatch.MaxEvents`). No platform-specific hooks unless a device check shows Windows window close does not
+  raise `Stopped`; then `Destroying` (`App.xaml.cs:80`) also flushes.
+- **Wizard:** `IntroWizardPage.cs` has 4 steps (`IntroSteps` in `DinoReader.Core/UsageEvent.cs`). Screens are
+  `intro_1` ... `intro_4` (plus the first card as `intro_0` if it is its own page). Actions: `next`/`try` count as
+  `next`, `SkipAsync` = `skip`, `SkipAllAsync` (and Android Back) = `close`, the Windows left-arrow step-back =
+  `back`. The existing `intro_step` event stays (the stats rollup reads it).
+- **blob20 = current screen** on every Dino row (free: `worker/events.ts:109`). Origin of a read (item D) goes in the
+  `read_started`/`book_opened` detail only if their detail is unused by the rollup; else in a new free column. The
+  builder reads `worker/stats*.ts` and picks the one that keeps every existing rollup filter unchanged, and writes
+  which and why here.
+- **Item H consoles:** this slice edits only `site/dino/privacy.html` and `STORE.md`. If Play Data safety or App
+  Store privacy answers must change, that goes under *Waiting on the user* (their console login), not done at night.
+- Closed lists only; the per-launch session from Slice 351 is the only id; all counting stays behind
+  `telemetry.enabled` and the grown-up switch.
 
 ## Work
 
