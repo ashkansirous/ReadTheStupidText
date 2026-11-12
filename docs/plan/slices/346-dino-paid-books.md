@@ -34,6 +34,14 @@ Slice 291 recorded in-app purchases as "not decided"; this slice decides them.
 6. **Android, iOS and Windows in this slice** (Android and iOS parity rule; Dino's Windows head ships in the
    Microsoft Store too).
 
+## User answer (2026-11-12, before the night run)
+
+- **Merge the code, books stay free.** The night builds the app code, the Worker's receipt check and the tests and
+  merges them behind a switch that is off in the live remote config, so every book stays free until the store
+  products and the store keys exist. Creating products and prices (`store-products.mjs`), the payment, bank and tax
+  setup, `wrangler secret put` for the store keys and turning the switch on all wait for the user and are not done
+  at night.
+
 ## Decided by Claude (obvious behaviour; tell the user, change if they disagree)
 
 - **Books already on a phone stay readable.** Installs from before Slice 261 have Good Enough and Tortoise and Hare
