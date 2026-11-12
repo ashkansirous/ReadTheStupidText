@@ -103,6 +103,7 @@ jobs:
       - name: Install the .NET MAUI iOS workload (pinned)
         run: |
           set -euo pipefail
+          dotnet --version
           dotnet workload install maui-ios --version 10.0.401
           dotnet workload --version
 

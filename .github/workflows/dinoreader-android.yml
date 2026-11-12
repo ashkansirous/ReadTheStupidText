@@ -96,7 +96,9 @@ jobs:
       # maui-android, not bare "android": a CLI-only SDK install needs the
       # MAUI workload pieces too (NETSDK1147 otherwise).
       - name: Install the .NET MAUI Android workload
-        run: dotnet workload install maui-android --version 10.0.402
+        run: |
+          dotnet --version
+          dotnet workload install maui-android --version 10.0.402
 
       - name: Debug build (unsigned)
         if: ${{ env.SIGN_RELEASE != 'true' }}
