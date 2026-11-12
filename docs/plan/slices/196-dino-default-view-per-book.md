@@ -4,7 +4,7 @@
 
 **Touches:** `src/DinoReader.Core/Story.cs`, `src/DinoReader.App/PictureTextPages.cs`, `tools/DinoReader.BookBuilder/StarterBuilder.cs`, `src/DinoReader.Core/StoryJson.cs`, `tools/DinoReader.BookBuilder/Books.cs`, `tools/DinoReader.BookBuilder/StoreBuilder.cs`, `tools/DinoReader.BookBuilder/BookHash.cs`, `content/dino/good-enough/book.json`, the committed Good Enough starter package, `tests/DinoReader.Tests/**`, `src/DinoReader.Core/CLAUDE.md`, `.maestro/dino/default-view-per-book.yaml` (new), `src/DinoReader.App/ModeSwitch.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`
 
-**Why.** Good Enough's pages 1-7 have the story words drawn into the pictures. That is on purpose: it shows parents they can use their own pictures with words in them. **Never redraw them.** But the book opens in Picture + text today, so kids see the words twice (in the picture and in the panel).
+**Why.** Good Enough's pages 1-7 have the story words drawn into the pictures. That is on purpose: it shows parents they can use their own pictures with words in them. **Never redraw them.** (**Reversed 2026-11-10 by the user: Good Enough is redrawn with no text; see Slice 350, docs/plan/slices/350-dino-high-res-pictures.md.**) But the book opens in Picture + text today, so kids see the words twice (in the picture and in the panel).
 
 **Rule (the user, 2026-10-29).** When the reader has not picked a view for a book:
 

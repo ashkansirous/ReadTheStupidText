@@ -108,15 +108,17 @@ Prompt templates: [prompts.md](prompts.md).
     the reference every page chat gets. Still being tried: whether sheets stay more consistent in one
     chat or with a new chat every 2-3 characters. Note in the art record which you did and how it went,
     and update this line once it is clear.
-  - **Page chats**: a **new chat for every 3 pictures at most** (cover + pages 1-2, pages 3-5, ...).
-    Start each by giving it the line-up (plus the sheets of the characters on those pages), then
+  - **Page chats**: **one prompt per chat**: every picture gets its own new chat, so one picture can't influence the next
+    (the user, 2026-11-10, Slice 350; this replaces "a fresh chat every 3 pictures", for all Dino illustration work). A redo of a
+    bad result also gets a new chat; the only exception is a small patch of a bad result, which may continue that chat while the
+    chat stays at or under 3 picture requests (the patch counts as one). Past 3, start a new chat. One picture per new chat; a small patch of a bad result may continue that chat while it stays at or under 3 picture requests (the user's rule, Slice 350 decisions); if the bad picture would steer the patch, start a new chat instead. Start each by giving it the line-up (plus the sheets of the characters on those pages), then
     "These are the characters. Keep their outfits exactly as shown", every outfit spelled out
     (including what they do NOT wear: "no shirt", "no trousers", "no bobble"), then one prompt per
     page. Gemini adds no file input until its native picker opens, which can't be driven, so **paste**
     the picture instead: `pwsh -STA .claude/skills/create-dino-story/gemini-clipboard.ps1 Put <line-up file>`,
     then find the prompt box (`find`, not a guessed position), click it, press `ctrl+v`.
   - If a chat draws an earlier scene again instead of the new one (pigs pilot: the second picture of a
-    fresh chat repeated page 2 for page 6), drop to **one picture per chat** for the rest of the book.
+    fresh chat repeated page 2 for page 6), that is why it is one picture per chat now.
     A fresh chat with the line-up pasted got every outfit right first time.
   - The art record's character lines are the canonical outfits, written from the accepted line-up,
     not from the first prompt (the pilot asked for a "red cap" but the line-up drew a knitted beanie;
@@ -157,7 +159,7 @@ accepted picture's actual size in the art record. The size line never changed th
 
 Every page prompt repeats: same characters, the style line, portrait 3:4, no text, **exact count**
 ("exactly three pigs, each appearing once"), every character's outfit, and **"the whole scene sits in
-the top 70% of the picture; the bottom 30% is plain ground/floor with nothing important in it"**. When
+the top 70% of the picture; the bottom 30% is calm scene (grass, floor or water) with no faces or action, never a plain empty strip"**. When
 the phone is upright the words panel covers up to 30% of the picture from the bottom (Slice 122; before
 it, 58%, which is why the Slice 119 pigs pictures used the top 40%).
 
@@ -174,8 +176,10 @@ A chat that drew a wrong picture tends to repeat it when asked again: redo it in
 
 ## 5. Full-size check (every picture, no exceptions)
 
+Before viewing or reviewing a book's high-res files, fetch them: they are ~130-byte LFS pointers until then. Run the command from the comment in `.lfsconfig`: `git lfs pull --include "content/dino/<book>/high-res/**" --exclude ""`.
+
 Read the saved full-size file (not the chat preview) and check each item. Any fail means: say what
-is wrong, ask for that page again (a fresh chat if this one has already drawn 3), and check the new one
+is wrong, ask for that page again (a new chat; a small patch may continue the chat only while it stays at or under 3 picture requests), and check the new one
 from the top. Compare outfits against the line-up picture, item by item (hat type, shirt or no shirt,
 trousers or none).
 
@@ -183,9 +187,15 @@ trousers or none).
 - [ ] Each character's outfit and colours match the line-up (hat, scarf, dungarees, waistcoat...).
 - [ ] The scene shows what the page text says, and nothing from another page.
 - [ ] Rule 1: nobody hurt, in pain, crying in fear, near fire or hot water; no teeth-bared menace.
-- [ ] No text, letters or signatures anywhere.
-- [ ] Faces and action are in the top 70%; the bottom 30% is plain.
+- [ ] No text, letters, words or signs anywhere (signatures included).
+- [ ] Faces and action are in the top 70%, but the bottom 30% is still scene (ground, grass, water, floor), never a plain white or empty strip; the scene fills the whole frame, top and bottom.
 - [ ] Indoors/outdoors and time of day match the text (no grass on an indoor floor).
+- [ ] Every character has the right number of arms, hands, legs, paws and wings (Slice 350: a lion with three hands, an extra limb).
+- [ ] Objects and tools have their real shape, not melted or twisted.
+- [ ] A page whose place matches the pages next to it repeats their background about 95% (same props, such as the berries); otherwise it is clearly a different place.
+- [ ] The picture doesn't contradict the story or put a character in danger the text doesn't have (a pig still building while the wolf is there).
+- [ ] The action matches the text exactly (a hug is a hug, not a bird sitting on a hat).
+- [ ] Swimming animals are in the water, not standing on top of it.
 
 Record each pass in the art record table (page, attempt number, why earlier attempts failed).
 

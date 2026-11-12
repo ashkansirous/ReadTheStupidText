@@ -2,6 +2,8 @@ src/ReadTheStupidText.App/VoiceModel/*.onnx filter=lfs diff=lfs merge=lfs -text
 src/ReadTheStupidText.App/VoiceModel/*.bin filter=lfs diff=lfs merge=lfs -text
 # Slice 265: the Dino pre-made audio clips and their manifests live in Git LFS (.lfsconfig keeps them out of normal fetches).
 content/dino/*/audio/** filter=lfs diff=lfs merge=lfs -text
+# Slice 350: the print-size Dino pictures (kept exactly as Gemini made them) are LFS objects too, and never part of a book or the store.
+content/dino/*/high-res/** filter=lfs diff=lfs merge=lfs -text
 *.sh text eol=lf
 *.md text eol=lf
 # Slice 225 item 13: the Maestro flows are LF in the index and in every checkout, so lint-flows.ps1 Test-LineEndings does not depend on core.autocrlf (the flow lint reads the bytes on disk).

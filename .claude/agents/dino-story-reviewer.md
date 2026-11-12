@@ -37,11 +37,22 @@ Read first, in full: `.claude/skills/create-dino-story/SKILL.md` (rule 1 and the
 
 ## Pictures (full mode only)
 
+Before viewing or reviewing a book's high-res files, fetch them: they are ~130-byte LFS pointers until then. Run the command from the comment in `.lfsconfig`: `git lfs pull --include "content/dino/<book>/high-res/**" --exclude ""`.
+
 Read `content/dino/<stem>/characters/` (the line-up and sheets), then the cover and every page
 picture **at full size**, one at a time, from the working folder. Never judge from the contact sheet.
 
 - **Each picture against its page**: shows that page's one action, nothing from another page; the exact
-  cast with the right count; the step 5 checklist (no text, top 70%, indoors or outdoors, rule 1, no menace).
+  cast with the right count; the step 5 checklist in SKILL.md (no text, faces and action in the top 70% with the bottom 30% still scene, indoors or outdoors, rule 1, no menace).
+  A picture **fails if any** of these fails (Slice 350):
+  - every character has the right number of arms, hands, legs, paws and wings;
+  - the scene fills the whole frame, with no plain white or empty strip at the top or bottom;
+  - there are no words, letters or signs in the picture;
+  - objects and tools have their real shape, not melted or twisted;
+  - a page whose place matches the pages next to it repeats their background about 95% (same props, such as the berries); otherwise it is clearly a different place;
+  - the picture doesn't contradict the story or put a character in danger the text doesn't have (a pig still building while the wolf is there);
+  - the action matches the text exactly (a hug is a hug, not a bird sitting on a hat);
+  - swimming animals are in the water, not standing on top of it.
 - **Each character against the line-up**, item by item: species, size, outfit, colours, prop.
 - **Across the book**, keep a running note as you go: each place looks the same every time (a house's
   colour, door, windows, roof); time of day moves the way the story does; a prop stays with whoever has

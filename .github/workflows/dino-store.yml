@@ -11,6 +11,7 @@ on:
     branches: [main]
     paths:
       - 'content/dino/**'
+      - '!content/dino/*/high-res/**'
       - 'tools/DinoReader.BookBuilder/**'
       - 'src/DinoReader.Core/**'
       - 'src/ReadTheStupidText.Application/**'

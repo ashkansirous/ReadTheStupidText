@@ -29,7 +29,7 @@ is about twice the height of the pigs">. Each character appears exactly once. <S
 Make the book cover. <STYLE> Portrait 3:4. The characters, with their outfits: <Name 1: look, what
 they wear and do NOT wear>, <Name 2: ...>. Exactly <k> characters. <Scene: the main characters together, the story's key
 place>. <Villain, if any, shown silly not scary>. Keep all characters in the top 70% of the picture;
-the bottom 30% is <plain ground> with nothing important in it. <SIZE>
+the bottom 30% is calm scene (<grass, floor or water>) with no faces or action in it, never a plain empty strip. <SIZE>
 ```
 
 ## Page
@@ -39,8 +39,8 @@ Page <n>. <STYLE> Portrait 3:4, no text or letters anywhere. Characters on this 
 as in the pasted picture: <Name: look, what they wear and do NOT wear>. Scene: <time of
 day, place>. <Who does what, with each character's outfit in brackets>. <Who is NOT on this page>.
 Exactly <k> <characters>, each appearing once. Nobody is hurt or in danger. The whole scene sits in the
-TOP 70% of the picture; the bottom 30% is <plain ground/floor> with nothing
-important in it. <SIZE>
+TOP 70% of the picture; the bottom 30% is calm scene (<grass, floor or water>) with no
+faces or action in it, never a plain empty strip. <SIZE>
 ```
 
 ## Fresh page chat opener (first message of every page chat, with the line-up pasted)
@@ -49,10 +49,10 @@ important in it. <SIZE>
 These are the characters for a children's picture book (the pasted picture is the cast). Keep their
 outfits exactly as shown: <Name 1: what they wear, and what they do NOT wear, e.g. "no shirt, no
 trousers, no bobble">; <Name 2: ...>; <Name 3: ...>. Same style every time: <STYLE> I will ask for
-up to 3 pictures in this chat, one at a time.
+one picture in this chat.
 ```
 
-Then send the Cover or Page template as the next message.
+Then send the Cover or Page template as the next message. One picture per new chat; a small patch of a bad result may continue that chat while it stays at or under 3 picture requests (the user's rule, Slice 350 decisions); if the bad picture would steer the patch, start a new chat instead. As in SKILL.md.
 
 ## Fix (after a failed check)
 
@@ -63,7 +63,7 @@ scene, the count and every outfit>. <SIZE>
 
 ## Restart (Gemini mixed scenes)
 
-Do not argue in the same chat. Start a **new chat**, paste the line-up, send the opener above, then:
+Do not argue in the same chat. One prompt per chat is the rule (Slice 350), and no chat ever gets more than 3 picture requests. Start a **new chat**, paste the line-up, send the opener above, then:
 
 ```
 Draw a single picture. <STYLE> Portrait 3:4. <Full scene description from scratch, every character

@@ -182,6 +182,24 @@ public sealed class BookBuilderTests : IDisposable
     }
 
     [Fact]
+    public void AHighResFolder_ChangesNeitherTheHashNorThePictureList()
+    {
+        BookFolder book = TinyBook("One.");
+        Directory.CreateDirectory(book.PicturesPath);
+        File.WriteAllBytes(Path.Combine(book.PicturesPath, "1.jpg"), [1, 2, 3]);
+        string hash = BookHash.Of(book);
+        string[] pictures = StarterBuilder.PictureFilesIn(book.PicturesPath).ToArray();
+
+        string highRes = Path.Combine(book.Dir, "high-res", "pictures");
+        Directory.CreateDirectory(highRes);
+        File.WriteAllBytes(Path.Combine(highRes, "1.jpg"), [9, 9, 9]);
+        File.WriteAllBytes(Path.Combine(book.Dir, "high-res", "cover.jpg"), [9]);
+
+        Assert.Equal(hash, BookHash.Of(book));
+        Assert.Equal(pictures, StarterBuilder.PictureFilesIn(book.PicturesPath).ToArray());
+    }
+
+    [Fact]
     public void ChangedContent_WithTheSameVersionAsMain_FailsTheVersionCheck()
     {
         BookInfo onMain = TinyBook("One.").Info with { Version = 3, ContentHash = "old" };
