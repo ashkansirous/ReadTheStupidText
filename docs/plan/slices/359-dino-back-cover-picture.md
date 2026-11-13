@@ -2,7 +2,7 @@
 
 *Planned 2026-11-13. Step 1 (five style samples for Lion and Mouse) is running; the rest waits on the user's pick.*
 
-**Touches:** `content/dino/*/back-cover.jpg` (new), `content/dino/*/high-res/back-cover.jpg` (new, LFS), `content/dino/*/art.md`, `content/dino/*/book.json`, `tools/DinoReader.BookBuilder/**`, `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryJson*.cs`, `src/DinoReader.Core/BackCover*.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/TextPages.cs`, `src/DinoReader.App/PicturePages.cs`, `src/DinoReader.App/Resources/Raw/starters/*.dino`, `tests/DinoReader.Tests/**`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/skills/create-dino-story/prompts.md`, `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`
+**Touches:** `content/dino/*/back-cover.jpg` (new), `content/dino/*/high-res/back-cover.jpg` (new, LFS), `content/dino/*/art.md`, `content/dino/*/book.json`, `tools/DinoReader.BookBuilder/**`, `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryJson*.cs`, `src/DinoReader.Core/BackCover*.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/TextPages.cs`, `src/DinoReader.App/PicturePages.cs`, `tests/DinoReader.Tests/**`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/skills/create-dino-story/prompts.md`, `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`
 
 ## Why
 
@@ -34,7 +34,7 @@ Slice 237's landscape, Farsi and reading-mode checks were also never run after t
   the builder packs it; the reader shows it as the back cover with the credit lines centred over the middle,
   never voiced, never counted. Android and iOS share the MAUI code; Windows head too.
 - [ ] 3. Every other book: draw its back cover in the picked style (illustrator, page groups of at most 5), full-size
-  check, reviewer pass, version bump so installed copies update, starters rebuilt.
+  check, reviewer pass, version bump so installed copies update, store upload.
 - [ ] 4. Builder `check` fails a book without a back-cover picture; the skill, writer, illustrator and reviewer rules
   make one for every new book.
 - [ ] 5. Tests: builder (picture packed, page not counted), Core (never in the sentence list).
