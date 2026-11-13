@@ -1,6 +1,6 @@
 # Slice 368 — Tests for the shared code in their own test project
 
-*Built 2026-11-13 (wave 2026-11-13), PR #1078, not merged. The new `release.yml` gates and `tests.yml` jobs have not run on GitHub yet.*
+*Built 2026-11-13 (wave 2026-11-13), merged as PR #1078 (05b25f25). The new `release.yml` gates and `tests.yml` jobs have not run on GitHub yet.*
 
 *Planned 2026-11-13.* Part of the tidy-by-product slices (366-371). User's choice, 2026-11-13 (item 4 of 5).
 
@@ -65,7 +65,7 @@ Move to `tests/Shared.Tests` (104 files, `git mv`): everything else, namely the 
 
 Built 2026-11-13: `tests/Shared.Tests` (`net10.0-windows10.0.19041.0`, 1654 tests) plus `tests/ReadTheStupidText.Tests` (606 tests): the sum, 2260, equals the count before the split. The flaky pack pair (`PackKeepAlivePolicyTests`, `VoicePackSetupTests`) is in one non-parallel collection (`PackDownloadHostCollection`). `release.yml` has `shared-test` (any product builds) and `rtst-test` (RTST builds) with exact gates; `tests.yml` has `select`, `shared` and `rtst` and fails closed. `ship-targets.mjs` gained `--tests` and the `sherpapins` group; `tools/test-targets.ps1` picks `Shared.Tests`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-13)
 
 - Root `CLAUDE.md`, *Tests* section: there are three test projects. `tests/ReadTheStupidText.Tests` (RTST-only logic, `net10.0-windows`), `tests/Shared.Tests` (shared engine, Documents, Domain, Application, Mobile.Shared links, and the two repo-wide guards `FallbackGuardTests` and `SherpaVersionPinTests`; `net10.0-windows10.0.19041.0`) and `tests/DinoReader.Tests`. Commands: `dotnet test tests/Shared.Tests/Shared.Tests.csproj`, `dotnet test tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj`, `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj`. A test whose subject only the RTST App, `Windows.Tray` or RTST `Mobile` reaches stays in `ReadTheStupidText.Tests`; anything Dino can reach goes in `Shared.Tests`. (Slice 368: docs/plan/slices/368-shared-tests-project.md)
 - Root `CLAUDE.md`, the `catch` rule: the baseline is now `tests/Shared.Tests/FallbackGuardBaseline.txt` (not under `tests/ReadTheStupidText.Tests/`); lower a file's number there. `FallbackGuardTests` still scans all of `src/`. (Slice 368: docs/plan/slices/368-shared-tests-project.md)

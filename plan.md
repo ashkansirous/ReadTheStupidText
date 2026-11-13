@@ -14,15 +14,13 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (172 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (174 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 373 | RTST voice rows RT1 (phone `LanguagePage`) and RT2 (Windows `LanguageWindow`): size, state and the error strip per row (from Slice 364 item C) | planned | | | [373-rtst-voice-rows-rt1-rt2.md](docs/plan/slices/373-rtst-voice-rows-rt1-rt2.md) |
-| 372 | S21 check fixes: Samsung notification flags in `_lib.ps1`, `Stop-DeviceRestore` false warning, `book-end` budget | planned | | | [372-s21-check-fixes-2026-11-13.md](docs/plan/slices/372-s21-check-fixes-2026-11-13.md) |
 | 366 | Tidy by product 1/6: plan.md split into RTST, Dino and Shared tables; every slice file tagged with its product | planned | | | [366-plan-split-by-product.md](docs/plan/slices/366-plan-split-by-product.md) |
 | 367 | Tidy by product 2/6: root CLAUDE.md keeps shared rules, each app's rules move to its own folder (Claude's suggestion, not yet approved by the user) | planned | | | [367-claude-md-per-product.md](docs/plan/slices/367-claude-md-per-product.md) |
-| 368 | Tidy by product 3/6: tests for the shared code in their own test project | planned | | | [368-shared-tests-project.md](docs/plan/slices/368-shared-tests-project.md) |
 | 369 | Tidy by product 4/6: one release workflow per product, sharing a reusable part | planned | | | [369-release-workflow-per-product.md](docs/plan/slices/369-release-workflow-per-product.md) |
 | 370 | Tidy by product 5/6: give the shared code a neutral name (no open PRs while it runs; name picked by the user at build start) | planned | | | [370-rename-shared-code.md](docs/plan/slices/370-rename-shared-code.md) |
 | 371 | Tidy by product 6/6: src, tests and tools folders grouped by product (no open PRs while it runs; after 370) | planned | | | [371-folders-by-product.md](docs/plan/slices/371-folders-by-product.md) |
@@ -83,7 +81,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 348 checks across 144 slices, in [docs/plan/unverified.md](docs/plan/unverified.md), each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Not yet tried on a device:** 352 checks across 146 slices, in [docs/plan/unverified.md](docs/plan/unverified.md), each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
 - **Worker change not deployed:** PR #1048 added the fallback reason `back_cover_missing` in `worker/events.ts`; the batched skip-CI merge skips Workers Builds and there is no deploy hook yet ([Slice 354](docs/plan/slices/354-feedback-loop-2026-11-12-1337-leftovers.md) item 18), so it deploys with the next plain merge touching worker paths.
 - **Worker change not deployed (Slice 360):** the Worker now serves one pack version behind the listing (`worker/stories.ts`). It deploys only through Workers Builds, which skips skip-CI merges, so check it is live after the batched release ([Slice 360](docs/plan/slices/360-dino-play-waits-for-wifi.md); gap: [Slice 354](docs/plan/slices/354-feedback-loop-2026-11-12-1337-leftovers.md) item 18).
 - **Fix (release failed):** the final batched release run 43293064848 (dispatch on 8eeade93, 2026-11-12 19:43Z) ended `failure`: `testflight-submit-dino` failed its upload check after altool reported a 500 then "UPLOAD SUCCEEDED" for Dino 1.124.0, and `build-ios` (RTST) was cancelled with no Mac runner, so the RTST release, Store, TestFlight and Play jobs were skipped. The next release carries the same commits; the fixes are [Slice 354](docs/plan/slices/354-feedback-loop-2026-11-12-1337-leftovers.md) items 1 and 2.
