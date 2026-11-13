@@ -10,7 +10,7 @@ namespace ReadTheStupidText.Tests;
 /// </summary>
 public class FallbackGuardTests
 {
-    private const string BaselineRelativePath = "tests/ReadTheStupidText.Tests/FallbackGuardBaseline.txt";
+    private const string BaselineRelativePath = "tests/Shared.Tests/FallbackGuardBaseline.txt";
     private const string WriteBaselineVariable = "FALLBACK_GUARD_WRITE_BASELINE";
     private static readonly string[] SkippedDirectories = ["obj", "bin", "node_modules"];
     private static readonly string[] GeneratedSuffixes = [".g.cs", ".g.i.cs", ".designer.cs", ".generated.cs"];

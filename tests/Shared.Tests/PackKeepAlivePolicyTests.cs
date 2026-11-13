@@ -2,6 +2,8 @@ using ReadTheStupidText.Mobile.Shared;
 
 namespace ReadTheStupidText.Tests;
 
+// Slice 368: PackDownloadHost.CancelRequested is static; this class and VoicePackSetupTests share it, so they run one after another (collection in PackDownloadHostCollection.cs).
+[Collection(PackDownloadHostCollection.Name)]
 public class PackKeepAlivePolicyTests
 {
     [Theory]

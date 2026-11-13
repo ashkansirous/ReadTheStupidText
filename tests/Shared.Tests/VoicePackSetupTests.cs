@@ -9,6 +9,8 @@ using ReadTheStupidText.Mobile.Shared;
 
 namespace ReadTheStupidText.Tests;
 
+// Slice 368: shares the static PackDownloadHost.CancelRequested with PackKeepAlivePolicyTests (the known flaky pair), so both run serially.
+[Collection(PackDownloadHostCollection.Name)]
 public class VoicePackSetupTests
 {
     private static readonly PackInfo EnglishPack =
