@@ -17,6 +17,16 @@ public class InstalledShelfAudioTests
     }
 
     [Fact]
+    public void Has_pack_is_true_only_for_installed_audio_the_main_language_included()
+    {
+        var audio = new InstalledShelfAudio([("fa", "book-1")]);
+
+        Assert.True(audio.HasPack("fa", "book-1"));
+        Assert.False(audio.HasPack("en", "book-1"));
+        Assert.False(audio.HasPack("fa", "book-2"));
+    }
+
+    [Fact]
     public void An_empty_snapshot_offers_only_the_main_language()
     {
         Assert.Equal(["en"], InstalledShelfAudio.Empty.ForShelf(Languages, "en"));

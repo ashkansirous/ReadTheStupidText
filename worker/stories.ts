@@ -139,6 +139,8 @@ export interface StoryEntry {
   readonly hasCover: boolean;
   /** The audio packs meta.json lists AND the folder holds (a listed pack that was never uploaded is not offered); absent or null = none. */
   readonly audio?: Readonly<Record<string, AudioPackInfo>> | null;
+  /** Slice 360: the versions of each language's audio pack the folder holds (older ones stay in the bucket), so a phone holding the listing from one version ago still gets its pack; absent = none known. */
+  readonly heldAudio?: Readonly<Record<string, readonly number[]>>;
 }
 
 interface Folder {
@@ -450,7 +452,7 @@ async function readMeta(bucket: R2Bucket, id: string): Promise<StoryMeta | null>
 async function entryFor(bucket: R2Bucket, id: string, folder: Folder): Promise<StoryEntry | null> {
   const meta = await readMeta(bucket, id);
   const version = meta === null ? null : offeredVersion(meta, folder.versions);
-  return meta === null || version === null ? null : { id, meta, version, hasCover: folder.hasCover, audio: offeredAudio(meta, folder) };
+  return meta === null || version === null ? null : { id, meta, version, hasCover: folder.hasCover, audio: offeredAudio(meta, folder), heldAudio: folder.audio };
 }
 
 async function buildEntries(bucket: R2Bucket): Promise<StoryEntry[]> {
@@ -554,11 +556,19 @@ function serveDownload(request: Request, bucket: R2Bucket, entry: StoryEntry, ve
 }
 
 // Slice 246 B2: the pack of one book language at one version. Both must be what meta.json lists and the folder holds (entry.audio), so a stale or guessed pair is a 404.
+// Slice 360: the one version just below the listed one is served too when the folder still holds it (a phone with the listing from before the last re-render asks for it, and used to get a 404).
 function serveAudio(request: Request, bucket: R2Bucket, entry: StoryEntry, language: string, serve: ObjectServer): Promise<Response> {
   const version = requestedVersion(new URL(request.url));
   const offered = isAudioLanguage(language) ? entry.audio?.[language] : undefined;
-  if (version === null || version === "invalid" || offered === undefined || offered.version !== version) return Promise.resolve(statusOnly(404));
+  if (version === null || version === "invalid" || offered === undefined || !servesAudioVersion(entry, language, offered.version, version)) return Promise.resolve(statusOnly(404));
   return serve(request, bucket, audioFile(entry.id, language, version), VERSIONED_CACHE);
+}
+
+/** Slice 360: the listed version, or the highest older one the folder holds. */
+export function servesAudioVersion(entry: StoryEntry, language: string, listed: number, asked: number): boolean {
+  if (asked === listed) return true;
+  const older = (entry.heldAudio?.[language] ?? []).filter((held) => held < listed);
+  return older.length > 0 && asked === Math.max(...older);
 }
 
 function audioFile(id: string, language: string, version: number): ServedFile {

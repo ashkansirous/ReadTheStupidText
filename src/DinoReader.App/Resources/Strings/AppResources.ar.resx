@@ -10,7 +10,6 @@
   <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} ليس له صوت بلغة {1} بعد. سيُقرأ بصوته الخاص بعد تنزيله.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} و{2} كتب أخرى ليس لها صوت بلغة {1} بعد. ستُقرأ بصوتها الخاص بعد تنزيله.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>في انتظار الإنترنت…</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>في انتظار شبكة Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Preparing" xml:space="preserve"><value>جارٍ التحضير…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>تعذّر تنزيل بعض الصوت بلغة {0} حتى الآن. سيحاول دينو مرة أخرى لاحقًا.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Reading_AudioUnavailable" xml:space="preserve"><value>لا يوجد صوت لهذا الكتاب بهذه اللغة بعد.</value></data>
@@ -339,10 +338,11 @@
   <data name="StoryLanguages_WasApp" xml:space="preserve"><value>كانت لغة التطبيق</value></data>
   <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>لغة القصة: {0}</value></data>
   <data name="StoryLanguages_Failed" xml:space="preserve"><value>تعذّر الحصول على الصوت. اضغط للمحاولة مرة أخرى.</value></data>
-  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>التنزيل عبر بيانات الجوال؟</value></data>
-  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>أنت لست على Wi-Fi. سيتم تنزيل {0} عبر بيانات الجوال.</value></data>
-  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>نزّل الآن</value></data>
-  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>انتظر Wi-Fi</value></data>
+  <data name="Reading_GettingBookSound" xml:space="preserve"><value>جارٍ تنزيل صوت {0} لهذا الكتاب · {1}%</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_NoInternetSound" xml:space="preserve"><value>لا يوجد إنترنت، لذا لا يمكن تنزيل صوت {0} لهذا الكتاب الآن.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_ReadIn" xml:space="preserve"><value>اقرأ بـ{0}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_SoundFailed" xml:space="preserve"><value>تعذّر الحصول على صوت {0}. سيحاول دينو مرة أخرى قريبًا.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_NoInternetWordsShow" xml:space="preserve"><value>لا يوجد إنترنت. ستبقى الكلمات ظاهرة، وسيصل الصوت عندما تعود إلى الإنترنت.</value><comment>Machine draft: needs native review</comment></data>
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>جارٍ تحديث كتبك…</value></data>
   <!-- /Slice 181 -->

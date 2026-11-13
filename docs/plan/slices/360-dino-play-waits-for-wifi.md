@@ -2,7 +2,7 @@
 
 *In progress (wave 2026-11-13), draft PR.*
 
-**Touches:** `src/DinoReader.App/ShelfAudioPacks.cs`, `src/DinoReader.Core/ShelfAudioNetwork.cs`, `src/DinoReader.Core/ShelfAudioPlan.cs`, `src/DinoReader.Core/PackRepair*.cs` (new), `src/DinoReader.App/PackRepair*.cs` (new), `src/ReadTheStupidText.Application/Usage/FallbackKind.cs`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/Testing/*`, `.maestro/dino/*` (new reading-sound flows), `src/DinoReader.App/ShelfAudioAsk.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/AudioPackStore.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/StoryLanguagesPage.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.Core/AudioPackDue.cs`, `.github/scripts/publish-store-books.mjs`, `worker/stories.ts`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.Core/UsageEvent.cs`, `worker/events.ts`, `worker/events.test.mjs`, `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `tests/DinoReader.Tests/*`
+**Touches:** `src/DinoReader.App/ShelfAudioPacks.cs`, `src/DinoReader.Core/ShelfAudioNetwork.cs`, `src/DinoReader.Core/ShelfAudioPlan.cs`, `src/DinoReader.Core/PackRepair*.cs` (new), `src/DinoReader.App/PackRepair*.cs` (new), `src/ReadTheStupidText.Application/Usage/FallbackKind.cs`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/Testing/*`, `.maestro/dino/*` (new reading-sound flows), `src/DinoReader.App/ShelfAudioAsk.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/AudioPackStore.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/StoryLanguagesPage.cs`, `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.Core/AudioPackDue.cs`, `.github/scripts/publish-store-books.mjs`, `worker/stories.ts`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.Core/UsageEvent.cs`, `worker/events.ts`, `worker/events.test.mjs`, `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `tests/DinoReader.Tests/*`, `worker/stories-audio.test.mjs`, `src/DinoReader.App/ShelfAudioPacksCard.cs`, `src/DinoReader.App/SoundStatusPill.cs`, `src/DinoReader.App/SoundStatusPillState.cs`, `src/DinoReader.Core/InstalledShelfAudio.cs`
 
 ## Why
 
@@ -63,6 +63,24 @@ Stateful work, so the design is fixed before the build:
   the page shows SS3, retried at the next hour. No cancel: runs are quiet. Back-off inside the hour: one attempt per pack per trigger, never a loop.
 - The per-launch two-failure cap in `AudioPackStore.cs:565-569` goes for book packs (the hourly due check replaces it).
 - Mobile data allowed for every book pack (Decision 3); `NeedsWifi` keeps answering only for the large storyteller pack, if still used.
+
+**Revision after review (second round, 2026-11-13):**
+- `PackRepairLog` holds entries only for packs a run actually tried (book, language, listed version) with `LastAttemptUtc` + outcome. At each tick (and each network-back event)
+  entries whose pack is now installed, or that no longer need a pack (no listing yet, no pack by design, language removed or cancelled), are removed. `AnyDue` = an entry with outcome
+  Failed/Missing404/Offline whose last attempt is 60 min or more ago, so nothing re-requests forever.
+- Tick every 5 min: `AnyDue` -> `requestRun` (ordinary scope; the due check per pack stays `PackRepairDue`). Connectivity: only a change TO `NetworkAccess.Internet` (Local and
+  ConstrainedInternet are ignored), and only when some entry's last outcome is Offline -> a run with `NetworkBack` (Offline entries due at once, the hour ignored); the 20 s debounce is
+  stamped when the run is actually requested. A run cancelled while waiting offline records no Offline outcome: the entry keeps (or regains) its earlier outcome.
+- Every timer and connectivity callback wraps `requestRun` in a try/catch that reports `FallbackArea.Pack` / `PackSyncFailed`. `StartTicking` runs even when `shelfAudio.Resume` throws.
+- No listing read yet is not "missing": opening a book does not force a network run for it. The reading page checks the installed pack first (no pack warning, no
+  `pack_missing_on_play`, when the pack is on the phone), and reports `pack_missing_on_play` only for the NoInternet and Failed states.
+
+**Expectation rule after review (third round, 2026-11-13; supersedes every "no pack by design / no listing" branch above):** "is a pack expected" is one pure Core function, `PackExpectation.For(knownListedItem, liveListingRead, isStoreBook, language, bookOwnLanguage, mainLanguage)`, used by the reading page's view, `ShelfAudioPacks.MissingExpectedLanguages` (the open-book trigger), `StillNeedsPack` (the repair log's prune) and nothing else.
+- Known listing = this launch's when a live listing was read this launch (a book it leaves out has no known listing, whatever the saved copy says); the last good store listing saved on the phone (`store-listing.json` in `FileSystem.AppDataDirectory`) is used only when no live listing was read. It is written off the UI thread by `StoreClient.ListAsync` (unique temp file, then moved over), loaded once per launch; a file that fails to load, parse or validate is no saved listing (reported as a fallback, and deleted when it does not parse). `KnownListing` in Core.
+- The book's own language is never Expected. Known listing -> Expected iff it lists a pack for the language. A live listing read this launch that does not list the book -> NotExpected (nothing is coming; `StoreClient.LiveListingRead`). A live listing is saved over the last good one only if it reads back with at least one readable book (`KnownListing.IsSavable`). No listing at all known (none read this launch, none saved) -> Expected iff it is a store book and the language is not the book's own language; with the own language unknown (taken from the book on the phone, else its listing entry), the child's main family language is not Expected. Languages compare by `BundledTranslations.Key`. `StillNeedsPack` asks the same `ExpectationFor`.
+- Page (`PackSoundView.ForPack`): installed or NotExpected -> nothing; Expected and missing -> SS1 while a try runs, SS2/SS4 offline, SS3 failed/404, and with no outcome yet SS1 at 0% while the open-book run starts.
+- Opening a book: Expected and missing in any family language -> `OnBookOpened` always, even with no listing; offline it records an Offline entry (so the network-back trigger retries), a run that cannot read the listing while online records Failed.
+- Also: Prune removes an entry only if unchanged since its snapshot; a listing refresh that fails while offline records Offline, not Missing404; an Ok entry is never counted by the tick and, if the pack is wanted again, is a first try.
 
 ## Work
 
@@ -148,6 +166,28 @@ New strings (all 15 `AppResources.<lang>.resx`): `Reading_GettingBookSound`, `Re
   language-change rule's `IntroWizardPage` wording goes with Slice 362. The honoured-only-if-installed rule for the child's pick stays: "Read in {0}" appears only when
   that audio is on the phone. No hard rule (privacy, store, parity) clashes: iOS and Android share the code.
 
+*From review:*
+- Skipped #9 (`reviews/s360-high.md`): "Convention and dead code - LOW" (long `ShowAudioStatus`, magic strings in `PackRepairHook`, `SoundStatusPillState.From`, Preparing/WaitingForInternet pill kinds, `RunIncludes`, `Reading_GettingSound`, `FallbackReason.WaitingWifi`) - style only; `waiting_wifi` is kept because the Log item names it, and it has no emitter now (the Wi-Fi wait is gone), so its Verification count will read zero.
+
+- Skipped #8 (`reviews/s360-medium.md`): "Unrelated VIBRATE permission (grown-ups' 3-second press haptic) added; not in the slice's Decisions or SS1-SS4" - it is this slice's own work item "Side crash found on the run"; iOS needs no permission for haptics.
+- Skipped #9 (`reviews/s360-medium.md`): "list folders synchronously (InstalledVersion per family language) on the UI thread in ReadingPage.OnAppearing" - small folder listings, no measured stall; recorded under Not yet verified.
+- Skipped #10 (`reviews/s360-medium.md`): "servesAudioVersion serves only the single highest older held version" - the slice decides one version behind ("the Worker serves a version one behind the listing").
+
+- Applied (`reviews/s360-high.md`): #1-8. Applied (`reviews/s360-medium.md`): #1-7. Applied (`reviews/s360-check.md`): #1-9. Applied (`reviews/s360-check2.md`): #1-8. (Per the caller's triage, not re-verified one by one by the third-round fixer.)
+- Applied (`reviews/s360-check3.md`): #2, #3, #4, #5, #6 (a saved file that does not parse or validate is no saved listing and is deleted), #8, #9.
+- Applied (`reviews/s360-check4.md`): #1 (a live listing read this launch that does not list the book -> NotExpected; the "store book, no listing" branch applies only when no listing at all is known), #3 (a live listing with zero books, or one that fails `KnownListing.ParseSaved`'s validation, is never saved over the saved one).
+- Skipped #2 (`reviews/s360-check4.md`): "by-id ExpectationFor reads own language from _ownLanguages (filled only by the Story overload); with no listing and a store book written in a non-main family language, StillNeedsPack/repair can run before the Story overload and treat the own language as Expected (download attempted, logged failed). Needs offline-first-launch plus no listing, so mostly self-limiting." - a repair-log entry exists only after a run planned from a listing, so the offline-first-launch case has no entry for the by-id check to keep.
+- Skipped #1 (`reviews/s360-check3.md`): "stale saved listing naming no pack for a language gives NotExpected, no card, no repair" - offline with a saved listing older than a newly published pack: the next online launch refreshes the listing; recorded under Not yet verified.
+- Skipped #7 (`reviews/s360-check3.md`): "possible hitch on slow storage" - small folder scans and one small file; already under Not yet verified for jank.
+- Skipped #1 (`reviews/s360-check5.md`): "a book pulled from the store after the first live read stays Expected; its card stays getting/failed until relaunch" - a book pulled mid-launch keeps its card only until the next launch, and the listing is read once per launch by design; recorded under Not yet verified.
+- Skipped #2 (`reviews/s360-check5.md`): "the skipped book becomes NotExpected (no card, no fetch)" - skipping a malformed book entry is how the listing parser already behaved before this slice (`StoreClient` parse), and a malformed entry gets no fetch either way; recorded under Not yet verified.
+
 ## Not yet verified
 
-_(filled when built)_
+- Follow-up: book pulled mid-launch keeps its card until relaunch (check5 #1, `reviews/s360-check5.md`).
+- Follow-up: a malformed listing entry gets no card (check5 #2, `reviews/s360-check5.md`).
+
+- Offline launch with a saved listing older than a newly published pack: the child opens the book in that language, sees no card until the next online launch refreshes the listing (check3 #1).
+
+- Check no jank opening a book on a slow phone (the pack-folder listing on the UI thread in `ReadingPage.OnAppearing`, review #9).
+- _(rest filled when built)_

@@ -11,7 +11,6 @@
   <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>{0} har endnu ingen lyd på {1}. Den læses med sin egen lyd, når den er hentet.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>{0} og {2} andre har endnu ingen lyd på {1}. De læses med deres egen lyd, når den er hentet.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Venter på internettet…</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Venter på Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Gør klar…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>Noget {0}-lyd kunne ikke hentes endnu. Dino prøver igen senere.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Reading_AudioUnavailable" xml:space="preserve"><value>Der er endnu ingen lyd til denne bog på dette sprog.</value></data>
@@ -338,10 +337,11 @@
   <data name="StoryLanguages_WasApp" xml:space="preserve"><value>Var app-sproget</value></data>
   <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>Historiesprog: {0}</value></data>
   <data name="StoryLanguages_Failed" xml:space="preserve"><value>Stemmen kunne ikke hentes. Tryk for at prøve igen.</value></data>
-  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>Hent via mobildata?</value></data>
-  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Du er ikke på Wi-Fi. {0} hentes via mobildata.</value></data>
-  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Hent nu</value></data>
-  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Vent på Wi-Fi</value></data>
+  <data name="Reading_GettingBookSound" xml:space="preserve"><value>Henter lyd på {0} til denne bog · {1} %</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_NoInternetSound" xml:space="preserve"><value>Intet internet, så lyden på {0} til denne bog kan ikke hentes endnu.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_ReadIn" xml:space="preserve"><value>Læs på {0}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_SoundFailed" xml:space="preserve"><value>Kunne ikke hente lyden på {0}. Dino prøver igen snart.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_NoInternetWordsShow" xml:space="preserve"><value>Intet internet. Ordene vises stadig, og lyden kommer, når du er online igen.</value><comment>Machine draft: needs native review</comment></data>
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Opdaterer dine bøger…</value></data>
   <!-- /Slice 181 -->

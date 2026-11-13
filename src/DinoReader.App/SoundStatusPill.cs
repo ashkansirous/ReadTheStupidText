@@ -126,7 +126,7 @@ public sealed class SoundStatusPill : Border
 
 	private static IconKind? LeadingIcon(SoundStatusKind kind) => kind switch
 	{
-		SoundStatusKind.WaitingForWifi or SoundStatusKind.WaitingForInternet => IconKind.Wifi,
+		SoundStatusKind.WaitingForInternet => IconKind.Wifi,
 		SoundStatusKind.NoSound => IconKind.SoundOff,
 		_ => null, // Getting draws the ring; Preparing has no icon
 	};

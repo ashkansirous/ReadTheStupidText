@@ -9,7 +9,6 @@ public enum ShelfAudioPhase
     Preparing,
     Running,
     WaitingForInternet,
-    WaitingForWifi,
     Cancelled,
 }
 
@@ -27,7 +26,7 @@ public sealed record ShelfAudioState(
     public IReadOnlyList<string> NoAudio => NoAudioTitles.IsDefault ? [] : NoAudioTitles;
 
     /// <summary>Whether the in-row card shows its bar and Cancel: a run is preparing, going or waiting.</summary>
-    public bool IsActive => Phase is ShelfAudioPhase.Preparing or ShelfAudioPhase.Running or ShelfAudioPhase.WaitingForInternet or ShelfAudioPhase.WaitingForWifi;
+    public bool IsActive => Phase is ShelfAudioPhase.Preparing or ShelfAudioPhase.Running or ShelfAudioPhase.WaitingForInternet;
 
     /// <summary>The bar's share, 0 to 1 (0 when nothing needed a pack). A book that gave up still moves the bar.</summary>
     public double Fraction => Total <= 0 ? 0 : Math.Clamp((double)(Done + Failed) / Total, 0, 1);

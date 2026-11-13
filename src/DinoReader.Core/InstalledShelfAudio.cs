@@ -28,6 +28,9 @@ public sealed class InstalledShelfAudio
     public bool OffersBook(string language, string main, string? bookId) =>
         language == main || bookId is null || _installed.Contains((language, bookId));
 
+    /// <summary>Whether this book's audio is on the phone in this language (the main language counts only when it is installed too, unlike <see cref="OffersBook"/>).</summary>
+    public bool HasPack(string language, string bookId) => _installed.Contains((language, bookId));
+
     /// <summary>The text saved to preferences.</summary>
     public string Serialize() => string.Join(PairSeparator, _installed.Select(pair => pair.Language + FieldSeparator + pair.BookId));
 

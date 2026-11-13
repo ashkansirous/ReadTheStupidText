@@ -1,0 +1,83 @@
+# Slice 360 (Decision 2): opening a book whose sound is missing tries its pack at once, ignoring the hour. The first open fails (force-pack-failure mode=network: the connection drops); the failed try is
+# recorded, so the launch and the app return would leave it for an hour. The flow switches the failure off, leaves the book and opens it again WITHOUT moving the clock: the open asks for the pack
+# "now" and it installs. The Debug markers: "opened, missing packs are tried now" (the open trigger) and the pack's own "Ok".
+# The flow fails against the old behaviour: opening the book started nothing, so after the failure the pack stayed missing until the next weekly check and "pack repair ...: Ok" is never written.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK test-store ok ok
+# expect-log: HOOK force-pack-failure ok network
+# expect-log: pack repair bee62232085d4c1ab50cdf574530f473/sv v1: Failed
+# expect-log: HOOK force-pack-failure ok off
+# expect-log: pack repair bee62232085d4c1ab50cdf574530f473/sv v1: Ok
+appId: uk.sirous.dinoreader.dbg
+name: Opening the book again retries its failed pack at once
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, side languages, installed audio packs, own books); fine here: skip-first-run puts the four test books back and the run needs no pack installed.
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: sv
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: ok
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-pack-failure
+      mode: network
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: gingerbread-man
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSoundNote
+    timeout: 60000
+- tapOn:
+    id: ReadingBack
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 20000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: force-pack-failure
+      mode: "off"
+# The open-book trigger is throttled for 30 s per book (the page re-appears after every sheet): wait it out, then open again inside the hour.
+- extendedWaitUntil:
+    visible:
+      id: ReopenThrottleNeverShown
+    timeout: 32000
+    optional: true
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: open-book
+      id: gingerbread-man
+      play: "1"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+# The pack installs quietly; the log line above is the proof (run-flows.ps1 reads it). This wait only gives it time.
+- extendedWaitUntil:
+    visible:
+      id: PackRepairNeverShown
+    timeout: 15000
+    optional: true
+# Put the test store back to the live store for later flows.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: test-store
+      mode: "off"

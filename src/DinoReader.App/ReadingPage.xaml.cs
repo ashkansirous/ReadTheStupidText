@@ -57,6 +57,11 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private ReadingTheme _theme = ReadingTheme.For(false);
 	private bool _visible;
 	private bool _pieceLacksAudio; // the piece now shown has no clip: the audio status line is shown
+	private readonly PackRepairCard _soundCard; // Slice 360: SS2-SS4, built in the constructor beside the SS1 pill
+	private readonly HashSet<string> _missingOnPlayReported = []; // books (with language) already counted as pack_missing_on_play on this visit
+#if DEBUG
+	private string? _shownSoundState; // Debug marker dedupe
+#endif
 	private bool _onStack;
 	private Window? _watchedWindow;
 	private readonly BeatCoverFacts _beatCover = new(); // Slice 322: the two facts the silent beat's cover is made of; every event ends in PublishBeatCover
@@ -95,6 +100,16 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		_session.Failed += OnReadFailed;
 		_languageButton = new StoryLanguageButton(LanguageButtonHeight, OnLanguageTappedAsync) { IsVisible = false, AutomationId = "ReadingLanguage" };
 		HeaderControls.Children.Insert(0, _languageButton);
+		_soundCard = AddSoundCard();
+	}
+
+	// Slice 360 (Design SS2-SS4): the card for "no internet" / "couldn't get the sound" sits in the same strip as the SS1 pill (ReadingPage.xaml row 2); only one of the two shows at a time.
+	private PackRepairCard AddSoundCard()
+	{
+		var card = new PackRepairCard(language => SwitchLanguageAsync(_story!, language, restart: true, remember: false), StoryLanguages.Current().Main) { IsVisible = false, Margin = new Thickness(14, 10, 14, 0) };
+		Grid.SetRow(card, Grid.GetRow(StatusPill));
+		((Grid)StatusPill.Parent).Children.Add(card);
+		return card;
 	}
 
 	private bool _introRead; // Slice 228: opened by the intro's read step, which plays at once and goes back to the intro when the book ends
@@ -370,10 +385,15 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		await SwitchLanguageAsync(_story ?? story, picked, wasActive);
 	}
 
-	private async Task SwitchLanguageAsync(Story story, string language, bool restart)
+	// remember = false is the "Read in {0}" button of the sound card (Slice 360): this reading only, the child's stored pick is left alone.
+	private async Task SwitchLanguageAsync(Story story, string language, bool restart, bool remember = true)
 	{
 		int sentence = Math.Max(0, _session.CurrentSentence);
-		StoryLanguages.SetPick(language);
+		if (remember)
+		{
+			StoryLanguages.SetPick(language);
+		}
+
 		_session.Stop(ReadStopReason.LanguageChanged);
 		_session.SetReadingLanguage(language);
 		_languageButton.SetLanguage(language);
@@ -961,6 +981,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		_appeared.TrySetResult();
 		_visible = true;
 		_onStack = true;
+		_missingOnPlayReported.Clear(); // once per book and language per visit, so a page kept alive between visits counts each one
 		_beatCover.Appeared();
 		ApplyScreenAwake(); // (re)subscribes to the window; a new subscription reads its real state once
 		PublishBeatCover();
@@ -969,7 +990,9 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		SystemTheme.Changed += OnThemeChanged;
 		var shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
 		shelfAudio.Changed += OnShelfAudioChanged;
+		shelfAudio.Repair.Changed += OnRepairChanged;
 		_ = shelfAudio.RescanAsync(); // a book opened: its language choices follow the packs on the phone
+		RepairMissingSound(); // Slice 360, Decision 2: the book's missing packs are tried now, on any network
 		if (CurrentTheme() != _theme)
 		{
 			_theme = CurrentTheme();
@@ -1032,7 +1055,9 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private void Unsubscribe()
 	{
 		SystemTheme.Changed -= OnThemeChanged;
-		_services.GetRequiredService<ShelfAudioPacks>().Changed -= OnShelfAudioChanged;
+		var shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
+		shelfAudio.Changed -= OnShelfAudioChanged;
+		shelfAudio.Repair.Changed -= OnRepairChanged;
 	}
 
 	// The app pins UserAppTheme to Light (kids' palette), so RequestedTheme is always Light and MAUI raises no
@@ -1162,8 +1187,8 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		ShowAudioStatus();
 	}
 
-	// A piece with no clip is only shown for a beat, so the page says why there is no sound: the book's audio is downloading (with its progress), waiting for Wi-Fi or the internet, or not there.
-	// Shown while a read is going and its current piece has no clip; the intro's demo read is this same page.
+	// A piece with no clip is only shown for a beat, so the page says why there is no sound (Slice 360, Design SS1-SS4): the book's sound is downloading (SS1, the percent), there is no internet (SS2, or SS4
+	// with nothing to switch to), the pack is missing on the server or failed (SS3), or the book simply has none. Shown while a read is going and its current piece has no clip; the intro's demo read is this same page.
 	private void ShowAudioStatus()
 	{
 		if (_session.State == SessionState.Idle)
@@ -1173,37 +1198,97 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		if (!_pieceLacksAudio || _story is not { } book)
 		{
-			StatusPill.IsVisible = false;
+			HideAudioStatus();
 			return;
 		}
 
 		string language = ReadIn(book);
 		string nativeName = LanguageNames.NativeName(language);
-		SoundStatusPillState status = AudioStatus(book, language);
-		StatusPill.Show(status, AudioStatusText(status, nativeName), nativeName);
-		StatusPill.IsVisible = true;
-	}
-
-	// Never promises sound that is not coming: a book whose pack is not being fetched (no pack, already in, another language's run) is "no sound"; idle, done, cancelled, failed or the main language is one plain line, never "audio unavailable".
-	private SoundStatusPillState AudioStatus(Story book, string language)
-	{
-		var shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
-		return SoundStatusPillState.From(shelfAudio.RunIncludes(language, book.SourceId), shelfAudio.StateOf(language));
-	}
-
-	private static string AudioStatusText(SoundStatusPillState status, string nativeName)
-	{
-		string getting = AppResources.Format(AppResources.Reading_GettingSound, nativeName);
-		return status.Kind switch
+		PackSoundView view = PackView(book, language);
+		ReportMissingOnPlay(book, language, view);
+		LogSoundState(view);
+		switch (view.Kind)
 		{
-			SoundStatusKind.Getting when status.HasCount => getting + SoundStatusPillState.CountSeparator + AppResources.Format(AppResources.Intro_Counter, status.Position, status.Total),
-			SoundStatusKind.Getting => getting,
-			SoundStatusKind.Preparing => AppResources.ShelfAudio_Preparing,
-			SoundStatusKind.WaitingForInternet => AppResources.ShelfAudio_WaitingInternet,
-			SoundStatusKind.WaitingForWifi => AppResources.ShelfAudio_WaitingWifi,
-			_ => AppResources.Reading_NoSound,
-		};
+			case PackSoundKind.Getting:
+				_soundCard.IsVisible = false;
+				StatusPill.Show(new SoundStatusPillState(SoundStatusKind.Getting, view.Percent, PercentTotal), AppResources.Format(AppResources.Reading_GettingBookSound, nativeName, view.Percent), nativeName);
+				StatusPill.IsVisible = true;
+				break;
+			case PackSoundKind.NoInternet:
+			case PackSoundKind.Failed:
+				StatusPill.IsVisible = false;
+				_soundCard.Show(view, nativeName, view.SwitchTo is { } other ? LanguageNames.NativeName(other) : null);
+				_soundCard.IsVisible = true;
+				break;
+			default:
+				_soundCard.IsVisible = false;
+				StatusPill.Show(new SoundStatusPillState(SoundStatusKind.NoSound), AppResources.Reading_NoSound, nativeName);
+				StatusPill.IsVisible = true;
+				break;
+		}
 	}
+
+	private const int PercentTotal = 100;
+
+	private void HideAudioStatus()
+	{
+		StatusPill.IsVisible = false;
+		_soundCard.IsVisible = false;
+	}
+
+	// Never promises sound that is not coming: a book with no store id (an own book) is "no sound"; a store book's pack is judged by the repair state (a try running, no internet, a failed or missing pack).
+	// "Read in {other}" is offered only for a family language whose sound for this book is on the phone (the language button's own list).
+	private PackSoundView PackView(Story book, string language)
+	{
+		if (book.SourceId is not { } id)
+		{
+			return PackSoundView.Nothing;
+		}
+
+		var shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
+		string? switchTo = PackSoundView.OtherInstalledLanguage(_readable, language, other => shelfAudio.HasPack(other, id));
+		// The one expectation rule decides whether a pack is coming (known listing, else a store book in a language other than its own); an installed or not-expected pack says nothing.
+		return shelfAudio.Repair.ViewOf(id, language, switchTo, shelfAudio.ExpectationFor(book, language), shelfAudio.HasPack(language, id));
+	}
+
+	// Slice 360: the case this slice is about shows in the data, once per book and language per visit.
+	private void ReportMissingOnPlay(Story book, string language, PackSoundView view)
+	{
+		if (view.Kind is (PackSoundKind.NoInternet or PackSoundKind.Failed) && _missingOnPlayReported.Add($"{book.SourceId}/{language}"))
+		{
+			_usage.RecordFallback(book, FallbackArea.PremadeAudio, FallbackReason.PackMissingOnPlay, language);
+		}
+	}
+
+	private void LogSoundState(PackSoundView view)
+	{
+#if DEBUG
+		string state = $"kind={view.Kind} percent={view.Percent} switch={(view.HasSwitch ? "yes" : "no")}";
+		if (state != _shownSoundState)
+		{
+			_shownSoundState = state;
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Reading] sound-state {state}"); // Slice 360: a flow reads which of the four states the page chose
+		}
+#endif
+	}
+
+	// Slice 360 (Decision 2): opening a book whose sound is missing in a family language tries its packs at once, ignoring the hour; the repair state shows the result on the page.
+	private void RepairMissingSound()
+	{
+		if (_story is not { SourceId: { } id } book || _demoRead)
+		{
+			return;
+		}
+
+		var shelfAudio = _services.GetRequiredService<ShelfAudioPacks>();
+		IReadOnlyList<string> missing = shelfAudio.MissingExpectedLanguages(book);
+		if (missing.Count > 0)
+		{
+			shelfAudio.Repair.OnBookOpened(id, missing); // even with no listing: offline it records Offline entries, so the network coming back retries
+		}
+	}
+
+	private void OnRepairChanged() => MainThread.BeginInvokeOnMainThread(ShowAudioStatus);
 
 	// Slice 143: a read that is waiting for its first audio (the voice, or the translation it needs) shows the wait overlay after 500 ms
 	// and hides it the moment audio plays, or the read stops or fails. Cancel stops the read and goes back to the shelf.

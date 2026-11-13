@@ -10,7 +10,6 @@
   <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>У книги «{0}» пока нет озвучки ({1}). Её прочитают с озвучкой, когда она загрузится.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>У книги «{0}» и ещё {2} пока нет озвучки ({1}). Их прочитают с озвучкой, когда она загрузится.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Ждём интернет…</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Ждём Wi-Fi…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Готовимся…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>Часть озвучки ({0}) пока не удалось загрузить. Дино попробует ещё раз позже.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Reading_AudioUnavailable" xml:space="preserve"><value>У этой книги пока нет озвучки на этом языке.</value></data>
@@ -339,10 +338,11 @@
   <data name="StoryLanguages_WasApp" xml:space="preserve"><value>Был языком приложения</value></data>
   <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>Язык истории: {0}</value></data>
   <data name="StoryLanguages_Failed" xml:space="preserve"><value>Не удалось получить голос. Нажмите, чтобы повторить.</value></data>
-  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>Скачать по мобильной сети?</value></data>
-  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Вы не подключены к Wi-Fi. {0} будет скачано по мобильной сети.</value></data>
-  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Скачать сейчас</value></data>
-  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Ждать Wi-Fi</value></data>
+  <data name="Reading_GettingBookSound" xml:space="preserve"><value>Загружаем звук ({0}) для этой книги · {1}%</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_NoInternetSound" xml:space="preserve"><value>Нет интернета, поэтому звук ({0}) для этой книги пока не загрузить.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_ReadIn" xml:space="preserve"><value>Читать: {0}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_SoundFailed" xml:space="preserve"><value>Не удалось получить звук ({0}). Дино скоро попробует снова.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_NoInternetWordsShow" xml:space="preserve"><value>Нет интернета. Слова по-прежнему видны, а звук появится, когда ты снова будешь в сети.</value><comment>Machine draft: needs native review</comment></data>
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Обновляем твои книги…</value></data>
   <!-- /Slice 181 -->

@@ -11,7 +11,6 @@
   <data name="ShelfAudio_NoneOne" xml:space="preserve"><value>Kirjalla {0} ei ole vielä kieltä {1} olevaa ääntä. Se luetaan omalla äänellään, kun ääni on ladattu.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_NoneMany" xml:space="preserve"><value>Kirjalla {0} ja {2} muulla ei ole vielä kieltä {1} olevaa ääntä. Ne luetaan omalla äänellään, kun ääni on ladattu.</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_WaitingInternet" xml:space="preserve"><value>Odotetaan internetiä…</value><comment>Machine draft: needs native review</comment></data>
-  <data name="ShelfAudio_WaitingWifi" xml:space="preserve"><value>Odotetaan Wi-Fiä…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Preparing" xml:space="preserve"><value>Valmistellaan…</value><comment>Machine draft: needs native review</comment></data>
   <data name="ShelfAudio_Failed" xml:space="preserve"><value>Osaa {0}-äänistä ei voitu vielä hakea. Dino yrittää myöhemmin uudelleen.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Reading_AudioUnavailable" xml:space="preserve"><value>Tällä kirjalla ei ole vielä ääntä tällä kielellä.</value></data>
@@ -338,10 +337,11 @@
   <data name="StoryLanguages_WasApp" xml:space="preserve"><value>Oli sovelluksen kieli</value></data>
   <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>Tarinan kieli: {0}</value></data>
   <data name="StoryLanguages_Failed" xml:space="preserve"><value>Ääntä ei saatu ladattua. Yritä uudelleen napauttamalla.</value></data>
-  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>Ladataanko mobiilidatalla?</value></data>
-  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Et ole Wi-Fi-yhteydessä. {0} ladataan mobiilidatalla.</value></data>
-  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Lataa nyt</value></data>
-  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Odota Wi-Fi-yhteyttä</value></data>
+  <data name="Reading_GettingBookSound" xml:space="preserve"><value>Haetaan kielen {0} ääntä tähän kirjaan · {1} %</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_NoInternetSound" xml:space="preserve"><value>Ei internetyhteyttä, joten tämän kirjan ääntä kielellä {0} ei voi vielä ladata.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_ReadIn" xml:space="preserve"><value>Lue kielellä {0}</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_SoundFailed" xml:space="preserve"><value>Ääntä kielellä {0} ei saatu haettua. Dino yrittää pian uudelleen.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Reading_NoInternetWordsShow" xml:space="preserve"><value>Ei internetyhteyttä. Sanat näkyvät edelleen, ja ääni tulee, kun olet taas verkossa.</value><comment>Machine draft: needs native review</comment></data>
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Päivitetään kirjojasi…</value></data>
   <!-- /Slice 181 -->

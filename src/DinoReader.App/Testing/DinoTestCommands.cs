@@ -123,6 +123,11 @@ internal static partial class DinoTestCommands
 			return ForcePackFailure(command.Get(ModeKey, string.Empty));
 		}
 
+		if (command.Name == PackRepairName)
+		{
+			return PackRepairHook(command.Get(ModeKey, string.Empty), command.Get(IdKey, string.Empty), command.Get(TestHookDispatcher.LanguageKey, string.Empty));
+		}
+
 		if (command.Name == FakePurchasesName)
 		{
 			_ = FakePurchasesAsync(command);

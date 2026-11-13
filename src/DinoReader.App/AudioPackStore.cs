@@ -119,6 +119,9 @@ public enum PackFailureInjection
 
 	/// <summary>Slice 320 item 7: the download hangs like a dead socket after some bytes: it neither ends nor fails until the person cancels it (or the hook says <c>off</c> and the app restarts), so a flow can cancel a pack fetch that is really running.</summary>
 	Stall,
+
+	/// <summary>Slice 360: the store answers 404 for the pack (the listing offers a version the server no longer has): the fetch throws <see cref="AudioPackNotFoundException"/> (counted as <c>failed:missing</c>).</summary>
+	Missing,
 }
 
 /// <summary>Slice 310 (Debug only): the hook's words for each <see cref="PackFailureInjection"/>.</summary>
@@ -129,6 +132,7 @@ public static class ForcedPackFailures
 	public const string CorruptWord = "corrupt";
 	public const string DiskFullWord = "disk-full";
 	public const string StallWord = "stall";
+	public const string MissingWord = "missing";
 
 	public static bool TryParse(string? word, out PackFailureInjection kind)
 	{
@@ -139,6 +143,7 @@ public static class ForcedPackFailures
 			CorruptWord => (true, PackFailureInjection.Corrupt),
 			DiskFullWord => (true, PackFailureInjection.DiskFull),
 			StallWord => (true, PackFailureInjection.Stall),
+			MissingWord => (true, PackFailureInjection.Missing),
 			_ => (false, PackFailureInjection.None),
 		};
 		return known;
@@ -164,6 +169,11 @@ public sealed class FailingAudioPackFetcher(IAudioPackFetcher inner, PackFailure
 		{
 			await inner.FetchAsync(url, toPath, bytesSoFar, cancel);
 			return;
+		}
+
+		if (kind == PackFailureInjection.Missing)
+		{
+			throw new AudioPackNotFoundException("Injected: the store answered 404."); // nothing is written: a real 404 has no body
 		}
 
 		await File.WriteAllBytesAsync(toPath, new byte[PartialBytes], cancel);
@@ -220,7 +230,6 @@ public sealed partial class AudioPackStore
 	private const string TmpExtension = ".tmp";
 	private const string CacheFolder = "audio-packs";
 	private const int MaxEntries = 4000;
-	private const int MaxRetriesPerLaunch = 1; // a pack that failed is tried once more in the same launch, no further
 	private const long MaxUnpackedBytes = 400L * 1024 * 1024;
 
 	private static readonly Regex SafeName = SafeNamePattern();
@@ -233,7 +242,6 @@ public sealed partial class AudioPackStore
 	private readonly SemaphoreSlim _gate = new(1, 1);
 	private readonly ConcurrentDictionary<string, InstalledPack> _opened = new();
 	private readonly ConcurrentDictionary<string, bool> _failedThisLaunch = new();
-	private readonly ConcurrentDictionary<string, int> _failuresThisLaunch = new(); // failed downloads per book and language in this launch: a pack is tried again at most once
 	private bool _cleaned;
 
 #if DEBUG
@@ -275,11 +283,6 @@ public sealed partial class AudioPackStore
 	{
 		bool failed = detail.StartsWith(AudioPackUsage.PackFailedPrefix, StringComparison.Ordinal);
 		_failedThisLaunch.AddOrUpdate(Key(bookId, language), failed, (_, was) => detail is AudioPackUsage.PackStarted or AudioPackUsage.PackCancelled ? was : failed);
-		if (failed)
-		{
-			_failuresThisLaunch.AddOrUpdate(Key(bookId, language), 1, (_, count) => count + 1);
-		}
-
 		try
 		{
 			Outcome?.Invoke(bookId, language, detail);
@@ -563,12 +566,6 @@ public sealed partial class AudioPackStore
 		string label = $"pack {bookId}/{language} v{pack.Version}";
 		string part = Path.Combine(_partFolder, $"{bookId.ToLowerInvariant()}-{language}-v{pack.Version}-{Guid.NewGuid():N}{PartExtension}");
 		string tmp = FolderOf(bookId, language, pack.Version) + TmpExtension;
-		if (_failuresThisLaunch.GetValueOrDefault(Key(bookId, language)) > MaxRetriesPerLaunch)
-		{
-			_log($"{label}: failed twice in this launch, not tried again until the next open");
-			return PackInstall.Failed;
-		}
-
 #if DEBUG
 		bool forced = false;
 #endif
