@@ -145,8 +145,11 @@ Linux/macOS, which have no Windows target). iOS from Windows: `-p:IncludeIos=tru
 
 ## Tests
 
-Unit tests live in `tests/ReadTheStupidText.Tests` (xUnit v3, `net10.0-windows`),
-covering the **pure** logic only — `PlaybackRate`, `SpeechTextChunker`,
+There are three test projects (xUnit v3). `tests/ReadTheStupidText.Tests` (RTST-only logic, `net10.0-windows`),
+`tests/Shared.Tests` (shared engine, Documents, Domain, Application, Mobile.Shared links, and the two repo-wide guards
+`FallbackGuardTests` and `SherpaVersionPinTests`; `net10.0-windows10.0.19041.0`) and `tests/DinoReader.Tests`. A test whose
+subject only the RTST App, `Windows.Tray` or RTST `Mobile` reaches stays in `ReadTheStupidText.Tests`; anything Dino can
+reach goes in `Shared.Tests`. (Slice 368: docs/plan/slices/368-shared-tests-project.md) They cover the **pure** logic only — `PlaybackRate`, `SpeechTextChunker`,
 `SupertonicVoiceTable`, `ActivityLog`, and the `LocalSettingsStore` settings
 migration (via the pure `ResolveAutoReadFlag`; internals are exposed through
 `InternalsVisibleTo`). The WinUI/WinRT/native paths (readers, monitors, windows)
@@ -154,6 +157,7 @@ are **not** unit-tested — they need package identity / a UI host; verify those
 running the app (VS **(Package)** profile). Run the suite with:
 
 ```bash
+dotnet test tests/Shared.Tests/Shared.Tests.csproj
 dotnet test tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj
 ```
 
@@ -212,5 +216,5 @@ so a failing test blocks the release.
 - Every method does one thing; 3–30 lines.
 - A `catch` in `src/` either reports a fallback (a call with a `FallbackArea.` argument) or has
   `// no-fallback: <reason>` as the first line inside its brace. `FallbackGuardTests` enforces it with a
-  per-file baseline, `tests/ReadTheStupidText.Tests/FallbackGuardBaseline.txt`, that may only go down: lower a
+  per-file baseline, `tests/Shared.Tests/FallbackGuardBaseline.txt`, that may only go down: lower a
   file's number when you mark or instrument a catch. (Slice 273: docs/plan/slices/273-fallback-events-everywhere.md)
