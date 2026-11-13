@@ -96,3 +96,8 @@ venv/
 
 # Phone-runner builds (Slice 213: tools/phone/run-checks.ps1)
 .artifacts/
+
+# Dino review copies (Slice 375): 896x1200 working files, never committed
+content/dino/**/*.small.jpg
+content/dino/**/*.line70.png
+
