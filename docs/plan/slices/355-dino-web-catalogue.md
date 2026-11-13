@@ -1,6 +1,6 @@
 # Slice 355 — Dino: a public web page listing every store book, free or paid, and the price
 
-*Planned.*
+*In progress (wave 2026-11-13), draft PR.*
 
 **Touches:** `site/dino/books.html` (new), `site/dino/index.html`, `worker/downloads.ts`, `worker/downloads.test.mjs`, `worker/appconfig.ts`, `worker/appconfig.test.mjs`, `worker/catalogue.test.mjs` (new), `wrangler.jsonc`, `wrangler.workers-dev.jsonc`, `worker/CLAUDE.md`
 
