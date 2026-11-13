@@ -209,6 +209,116 @@ test("gate: no proof, a malformed proof, another book's product and a store that
   assert.equal(await gateWith({ owned: [PRODUCT] }).gate(`android:${PRODUCT}:t`, book), GateAnswer.Allowed);
 });
 
+// Captures console.warn lines while `run` runs.
+async function warnings(run) {
+  const lines = [];
+  const original = console.warn;
+  console.warn = (...args) => lines.push(args.join(" "));
+  try {
+    await run();
+  } finally {
+    console.warn = original;
+  }
+  return lines;
+}
+
+const SECRET_MARKERS = ["STOREIDKEY", "secret", "Bearer", "ms-token", "customer-123", "1.2.3.4", "AADSTS7000215"];
+const assertNothingSecret = (lines) => {
+  const text = lines.join("\n");
+  for (const marker of SECRET_MARKERS) assert.ok(!text.includes(marker), `log leaked ${marker}: ${text}`);
+};
+
+test("Microsoft logs: a 400 and a 500 log their codes, a 200 logs the active items, and the answers are unchanged", async () => {
+  fresh();
+  const proof = parseProof("windows::STOREIDKEY");
+  const refusal = (status) => json({ code: "BadRequest", message: "customer-123 is bad", innererror: { code: "InvalidBeneficiary", message: "customer-123" } }, status);
+  const bad = recorded([["login.microsoftonline.com", json({ access_token: "ms-token" })], ["collections", refusal(400)]]);
+  let answer;
+  let lines = await warnings(async () => { answer = await microsoftChecker.check(proof, ENV, bad.fetcher); });
+  assert.deepEqual(answer, checked([]));
+  assert.ok(lines.some((line) => line.includes("status=400") && line.includes("code=BadRequest") && line.includes("innererror=InvalidBeneficiary")));
+  assertNothingSecret(lines);
+  fresh();
+  const down = recorded([["login.microsoftonline.com", json({ access_token: "ms-token" })], ["collections", refusal(503)]]);
+  lines = await warnings(async () => { answer = await microsoftChecker.check(proof, ENV, down.fetcher); });
+  assert.deepEqual(answer, CANNOT_VERIFY);
+  assert.ok(lines.some((line) => line.includes("status=503")));
+  fresh();
+  const items = [{ productType: "Durable", status: "Active", inAppOfferToken: PRODUCT, customerId: "customer-123" }, { productType: "Durable", status: "Revoked", inAppOfferToken: OTHER }];
+  const good = recorded([["login.microsoftonline.com", json({ access_token: "ms-token" })], ["collections", json({ items })]]);
+  lines = await warnings(async () => { answer = await microsoftChecker.check(proof, ENV, good.fetcher); });
+  assert.deepEqual(answer, checked([PRODUCT]));
+  assert.ok(lines.some((line) => line.includes("items=2") && line.includes(`Durable/Active/${PRODUCT}`) && !line.includes(OTHER)));
+  assertNothingSecret(lines);
+});
+
+test("Microsoft logs: a failed token mint logs status and error only, a throw logs its name only", async () => {
+  fresh();
+  const proof = parseProof("windows::STOREIDKEY");
+  const denied = recorded([["login.microsoftonline.com", json({ error: "invalid_client", error_description: "AADSTS7000215 secret client tenant 1.2.3.4" }, 401)]]);
+  let answer;
+  let lines = await warnings(async () => { answer = await microsoftChecker.check(proof, ENV, denied.fetcher); });
+  assert.deepEqual(answer, CANNOT_VERIFY);
+  assert.ok(lines.some((line) => line.includes("status=401") && line.includes("error=invalid_client")));
+  assertNothingSecret(lines);
+  fresh();
+  lines = await warnings(async () => { answer = await microsoftChecker.check(proof, ENV, async () => { throw new Error("connect secret 1.2.3.4"); }); });
+  assert.deepEqual(answer, CANNOT_VERIFY);
+  assert.ok(lines.some((line) => line.includes("check threw Error")));
+  assertNothingSecret(lines);
+  fresh();
+  lines = await warnings(async () => { assert.equal(await serviceTicket(ENV, async () => { throw new Error("secret"); }), null); });
+  assert.ok(lines.some((line) => line.includes("ticket mint threw Error")));
+  assertNothingSecret(lines);
+});
+
+test("gate logs: one line per real store check, naming store and product, never the proof; no line for Off, no/bad proof, cache hits or the limiter", async () => {
+  fresh();
+  const book = { id: BOOK, productId: PRODUCT };
+  const answers = [];
+  const lines = await warnings(async () => {
+    answers.push(await gateWith().gate(null, book));
+    answers.push(await gateWith().gate("garbage", book));
+    answers.push(await gateWith({ owned: [OTHER] }).gate(`windows:${OTHER}:STOREIDKEY`, book));
+    answers.push(await gateWith({ verdict: CANNOT_VERIFY }).gate(`android:${PRODUCT}:STOREIDKEY2`, book));
+    answers.push(await gateWith().gate(`ios:${PRODUCT}:STOREIDKEY3`, book, "1.2.3.4"));
+  });
+  assert.deepEqual(answers, [GateAnswer.NoProof, GateAnswer.BadProof, GateAnswer.BadProof, GateAnswer.CannotVerify, GateAnswer.Allowed]);
+  assert.deepEqual(lines.map((line) => line.split(" ").slice(0, 3).join(" ")), [
+    "paid-gate answer=bad-proof store=windows", "paid-gate answer=cannot-verify store=android", "paid-gate answer=allowed store=ios",
+  ]);
+  assert.ok(lines.every((line) => line.endsWith(`product=${PRODUCT}`)));
+  assert.ok(!lines.join("\n").includes("STOREIDKEY") && !lines.join("\n").includes("1.2.3.4"));
+  assert.deepEqual(await warnings(async () => { await gateWith({ enabled: false }).gate(null, book); }), []);
+  const same = gateWith();
+  const burst = await warnings(async () => { for (let i = 0; i < 4; i += 1) await same.gate(`ios:${PRODUCT}:STOREIDKEY4`, book); });
+  assert.equal(burst.length, 1, "a cached answer is not logged again");
+  const limited = createPaidGate({ enabled: async () => true, env: ENV, fetcher: async () => json({}), limit: async () => false, checkers: { android: { check: async () => checked([]) }, ios: { check: async () => checked([]) }, windows: { check: async () => checked([]) } } });
+  assert.deepEqual(await warnings(async () => { assert.equal(await limited(`ios:${PRODUCT}:STOREIDKEY5`, book, "k"), GateAnswer.RateLimited); }), []);
+});
+
+test("Microsoft logs: id-like codes and foreign offer tokens are redacted", async () => {
+  fresh();
+  const proof = parseProof("windows::STOREIDKEY");
+  const guid = "3f2504e0-4f89-11d3-9a0c-0305e82c3301";
+  const refusal = json({ code: guid, innererror: { code: "deadbeefcafebabe0123" } }, 400);
+  const bad = recorded([["login.microsoftonline.com", json({ access_token: "ms-token" })], ["collections", refusal]]);
+  let lines = await warnings(async () => { await microsoftChecker.check(proof, ENV, bad.fetcher); });
+  assert.ok(lines.some((line) => line.includes("code=redacted") && line.includes("innererror=redacted")));
+  assert.ok(!lines.join("\n").includes(guid));
+  fresh();
+  const denied = recorded([["login.microsoftonline.com", json({ error: guid }, 401)]]);
+  lines = await warnings(async () => { await microsoftChecker.check(proof, ENV, denied.fetcher); });
+  assert.ok(lines.some((line) => line.includes("error=redacted")));
+  fresh();
+  const items = [{ productType: "Durable", status: "Active", inAppOfferToken: PRODUCT }, { productType: "Durable", status: "Active", inAppOfferToken: "com.other.app.product" }, { productType: "Durable", status: "Active", inAppOfferToken: guid }];
+  const good = recorded([["login.microsoftonline.com", json({ access_token: "ms-token" })], ["collections", json({ items })]]);
+  lines = await warnings(async () => { await microsoftChecker.check(proof, ENV, good.fetcher); });
+  const line = lines.find((entry) => entry.includes("items=3"));
+  assert.ok(line.includes(`Durable/Active/${PRODUCT}`) && line.includes("Durable/Active/other,Durable/Active/other"));
+  assert.ok(!line.includes("com.other.app") && !line.includes(guid));
+});
+
 test("gate: a good answer is remembered per proof for a request burst", async () => {
   fresh();
   const { gate, calls } = gateWith();

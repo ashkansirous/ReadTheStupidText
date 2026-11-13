@@ -61,6 +61,12 @@ function remember(key: string, owned: readonly string[]): void {
 
 const OVER_LIMIT = "over-limit";
 
+/** `fresh` is true when this answer came from a real store check (not the cache, not the limiter). */
+interface OwnedLookup {
+  readonly owned: readonly string[] | null | typeof OVER_LIMIT;
+  readonly fresh: boolean;
+}
+
 /**
  * The products the proof's store says are owned, null when the store could not be asked, or OVER_LIMIT when this client has used up its store calls.
  * Only a call that would reach a store counts against the limit: a cached answer is free, so a download's many requests are never limited.
@@ -69,15 +75,15 @@ async function ownedProducts(
   proof: Proof,
   clientKey: string,
   options: { readonly env: EntitlementEnv; readonly fetcher: Fetcher; readonly checkers: Readonly<Record<StoreName, StoreChecker>>; readonly limit?: StoreCallLimit },
-): Promise<readonly string[] | null | typeof OVER_LIMIT> {
+): Promise<OwnedLookup> {
   const key = await proofKey(proof);
   const cached = ownedCache.get(key);
-  if (cached !== undefined && Date.now() - cached.at < lifetimeOf(cached.owned)) return cached.owned;
-  if (options.limit !== undefined && !(await options.limit(clientKey))) return OVER_LIMIT;
+  if (cached !== undefined && Date.now() - cached.at < lifetimeOf(cached.owned)) return { owned: cached.owned, fresh: false };
+  if (options.limit !== undefined && !(await options.limit(clientKey))) return { owned: OVER_LIMIT, fresh: false };
   const result = await options.checkers[proof.store].check(proof, options.env, options.fetcher);
-  if (result.verdict !== Verdict.Checked) return null;
+  if (result.verdict !== Verdict.Checked) return { owned: null, fresh: true };
   remember(key, result.owned);
-  return result.owned;
+  return { owned: result.owned, fresh: true };
 }
 
 export interface GateOptions {
@@ -100,6 +106,26 @@ async function isOn(enabled: () => Promise<boolean>): Promise<boolean> {
   }
 }
 
+const NO_STORE = "none";
+
+/** One line per real store check on a paid book (never a cached answer, a limiter refusal, or a missing/malformed proof): the answer, the proof's store name and our product id. Never the proof, token or client key. */
+function logAnswer(answer: GateAnswerName, store: string, book: PaidBook): void {
+  console.warn(`paid-gate answer=${answer} store=${store} product=${book.productId ?? NO_STORE}`);
+}
+
+function answerFor(owned: readonly string[] | null | typeof OVER_LIMIT, book: PaidBook): GateAnswerName {
+  if (owned === OVER_LIMIT) return GateAnswer.RateLimited;
+  if (owned === null) return GateAnswer.CannotVerify;
+  return unlocksBook(owned, book.id, book.productId) ? GateAnswer.Allowed : GateAnswer.BadProof;
+}
+
+async function decide(proof: Proof, book: PaidBook, clientKey: string, options: GateOptions & { readonly checkers: Readonly<Record<StoreName, StoreChecker>> }): Promise<GateAnswerName> {
+  const { owned, fresh } = await ownedProducts(proof, clientKey, { env: options.env, fetcher: options.fetcher, checkers: options.checkers, limit: options.limit });
+  const answer = answerFor(owned, book);
+  if (fresh) logAnswer(answer, proof.store, book);
+  return answer;
+}
+
 export function createPaidGate(options: GateOptions): PaidGate {
   const checkers = options.checkers ?? CHECKERS;
   return async (proofHeader, book, clientKey) => {
@@ -107,10 +133,7 @@ export function createPaidGate(options: GateOptions): PaidGate {
     if (proofHeader === null || proofHeader.trim() === "") return GateAnswer.NoProof;
     const proof = parseProof(proofHeader.trim());
     if (proof === null) return GateAnswer.BadProof;
-    const owned = await ownedProducts(proof, clientKey, { env: options.env, fetcher: options.fetcher, checkers, limit: options.limit });
-    if (owned === OVER_LIMIT) return GateAnswer.RateLimited;
-    if (owned === null) return GateAnswer.CannotVerify;
-    return unlocksBook(owned, book.id, book.productId) ? GateAnswer.Allowed : GateAnswer.BadProof;
+    return decide(proof, book, clientKey, { ...options, checkers });
   };
 }
 

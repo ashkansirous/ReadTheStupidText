@@ -2,6 +2,7 @@
 // The proof token is the Store ID key the app made with StoreContext.GetCustomerCollectionsIdAsync. Each Active durable add-on's
 // `inAppOfferToken` is the product id the developer gave it in Partner Center, which is our product id, so the answer is the whole
 // list the customer owns. (learn.microsoft.com/windows/uwp/monetize/query-for-products)
+import { APP_PACKAGE_ID } from "../products.ts";
 import { CANNOT_VERIFY, checked } from "./types.ts";
 import type { CheckResult, EntitlementEnv, Fetcher, Proof, StoreChecker } from "./types.ts";
 
@@ -41,6 +42,55 @@ async function secretFingerprint(secret: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+const LOG_PREFIX = "microsoft-store";
+
+const NAME_SHAPED = /^[A-Za-z_.-]{1,80}$/;
+const HEX_RUN = /[A-Fa-f]{12,}/;
+const OFFER_TOKEN_SHAPED = /^[\w.-]{1,80}$/;
+const REDACTED = "redacted";
+const OTHER_OFFER = "other";
+
+/** A Microsoft error code, kept to a short name (letters, underscore, dot, hyphen; no digits, so no GUID or id) so nothing id-like reaches the log. */
+function safeCode(value: unknown): string {
+  if (value === undefined || value === null) return "none";
+  return typeof value === "string" && NAME_SHAPED.test(value) && !HEX_RUN.test(value) ? value : REDACTED;
+}
+
+/** An offer token is logged only when it is one of our own product ids (our package prefix); anything else is `other`. */
+function safeOfferToken(value: unknown): string {
+  return typeof value === "string" && value.startsWith(`${APP_PACKAGE_ID}.`) && OFFER_TOKEN_SHAPED.test(value) ? value : OTHER_OFFER;
+}
+
+async function readJson(response: Response): Promise<Record<string, unknown>> {
+  try {
+    const parsed: unknown = await response.json();
+    return typeof parsed === "object" && parsed !== null ? (parsed as Record<string, unknown>) : {};
+  } catch {
+    return {}; // no-fallback: an unreadable error body only means no code to log
+  }
+}
+
+/** The OAuth `error` field of a failed token mint (never the description, which can name the tenant or app). */
+async function errorFieldOf(response: Response): Promise<string> {
+  return safeCode((await readJson(response)).error);
+}
+
+/** The collections API error: `code` and `innererror.code`. */
+async function collectionsCodesOf(response: Response): Promise<{ readonly code: string; readonly inner: string }> {
+  const body = await readJson(response);
+  const inner = typeof body.innererror === "object" && body.innererror !== null ? (body.innererror as Record<string, unknown>).code : undefined;
+  return { code: safeCode(body.code), inner: safeCode(inner) };
+}
+
+function logTokenFailure(audience: string, status: number, error: string): null {
+  console.warn(`${LOG_PREFIX} token mint failed audience=${audience} status=${status} error=${error}`);
+  return null;
+}
+
+function errorNameOf(error: unknown): string {
+  return error instanceof Error ? safeCode(error.name) : "unknown";
+}
+
 async function accessToken(app: MicrosoftApp, fetcher: Fetcher, audience: string): Promise<string | null> {
   const credential = `${app.clientId}:${await secretFingerprint(app.secret)}`;
   const cached = cachedTokens.get(audience);
@@ -51,9 +101,9 @@ async function accessToken(app: MicrosoftApp, fetcher: Fetcher, audience: string
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
   });
-  if (!response.ok) return null;
+  if (!response.ok) return logTokenFailure(audience, response.status, await errorFieldOf(response));
   const json = (await response.json()) as { access_token?: unknown };
-  if (typeof json.access_token !== "string") return null;
+  if (typeof json.access_token !== "string") return logTokenFailure(audience, response.status, "no-access-token");
   cachedTokens.set(audience, { value: json.access_token, at: Date.now(), clientId: credential });
   return json.access_token;
 }
@@ -67,7 +117,8 @@ export async function serviceTicket(env: EntitlementEnv, fetcher: Fetcher): Prom
   if (app === null) return null;
   try {
     return await accessToken(app, fetcher, TICKET_AUDIENCE);
-  } catch {
+  } catch (error) {
+    console.warn(`${LOG_PREFIX} ticket mint threw ${errorNameOf(error)}`);
     return null;
   }
 }
@@ -85,10 +136,25 @@ async function query(proof: Proof, token: string, fetcher: Fetcher): Promise<Che
     validityType: "Valid",
   };
   const response = await fetcher(COLLECTIONS_URL, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  if (response.status === 400) return checked([]); // a Store ID key the service cannot read is not a purchase
-  if (response.status !== 200) return CANNOT_VERIFY;
+  if (response.status !== 200) return refusedAnswer(response);
   const json = (await response.json()) as { items?: unknown };
-  return checked(Array.isArray(json.items) ? ownedFromItems(json.items as CollectionItem[]) : []);
+  const items = Array.isArray(json.items) ? (json.items as CollectionItem[]) : [];
+  logItems(items);
+  return checked(ownedFromItems(items));
+}
+
+/** A 400 (a Store ID key the service cannot read) is not a purchase; any other non-200 cannot be verified. Both are logged with Microsoft's codes. */
+async function refusedAnswer(response: Response): Promise<CheckResult> {
+  const { code, inner } = await collectionsCodesOf(response);
+  console.warn(`${LOG_PREFIX} collections query status=${response.status} code=${code} innererror=${inner}`);
+  return response.status === 400 ? checked([]) : CANNOT_VERIFY;
+}
+
+/** The item count and each Active item's type, status and offer token (the product id we gave it, not a customer id). */
+function logItems(items: readonly CollectionItem[]): void {
+  const active = items.filter((item) => item.status === STATUS_ACTIVE);
+  const described = active.map((item) => `${safeCode(item.productType)}/${safeCode(item.status)}/${safeOfferToken(item.inAppOfferToken)}`);
+  console.warn(`${LOG_PREFIX} collections query status=200 items=${items.length} active=[${described.join(",")}]`);
 }
 
 export const microsoftChecker: StoreChecker = {
@@ -98,7 +164,8 @@ export const microsoftChecker: StoreChecker = {
     try {
       const token = await accessToken(app, fetcher, QUERY_AUDIENCE);
       return token === null ? CANNOT_VERIFY : await query(proof, token, fetcher);
-    } catch {
+    } catch (error) {
+      console.warn(`${LOG_PREFIX} check threw ${errorNameOf(error)}`);
       return CANNOT_VERIFY; // network failure: we could not ask, which is never "owned"
     }
   },
