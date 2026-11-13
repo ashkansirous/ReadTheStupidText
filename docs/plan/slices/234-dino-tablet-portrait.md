@@ -1,4 +1,5 @@
 ### Slice 234 — Dino: a proper design for tablets held upright
+**Product:** Dino
 
 *Superseded in part by Slice 325 (docs/plan/slices/325-dino-2026-11-08-redesign.md): the tablet shelf, corner, first run and intro now follow the 2026-11-08 mock, which replaced this slice's frames 133, 139, 138 and 141.*
 

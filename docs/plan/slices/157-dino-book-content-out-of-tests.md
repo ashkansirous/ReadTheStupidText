@@ -1,4 +1,5 @@
 # Slice 157 — Dino: book content and the book builder out of the test project
+**Product:** Dino
 
 *Built 2026-10-27 (PR #475), not yet verified on `main`.* Dino Reader only. Runs **alone**, between waves: it moves every book's files.
 

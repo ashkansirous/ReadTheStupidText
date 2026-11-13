@@ -1,4 +1,5 @@
 # Slice 41 — Path-filtered per-platform builds
+**Product:** Shared
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

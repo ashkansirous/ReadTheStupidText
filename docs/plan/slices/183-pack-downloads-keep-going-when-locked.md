@@ -1,4 +1,5 @@
 ### Slice 183 — Big pack downloads keep going when the phone is locked or the app is in the background
+**Product:** Shared
 
 *Built 2026-10-29, PR #549, not yet verified on a device (iOS, PIN-locked phone). After Slice 182.*
 

@@ -1,4 +1,5 @@
 # Slice 89 — Four Farsi voices in one pack (ganji_adabi by default), Amir dropped
+**Product:** Shared
 
 *Built 2026-10-23. Android emulator acceptance passes; Windows desktop, iOS and Pixel timing not yet verified (see the end of this file).*
 

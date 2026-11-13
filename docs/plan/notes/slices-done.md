@@ -1,6 +1,8 @@
 # Finished slices
 
-Rows moved out of `plan.md`'s status table once a slice is `built` or `verified` (2026-10-25). Each slice's full record is its own file under `docs/plan/slices/`. New finished slices are appended here by the `update-docs` index pass; a row that becomes `verified` is updated here.
+Rows moved out of `plan.md`'s status table once a slice is `built` or `verified` (2026-10-25). Each slice's full record is its own file under `docs/plan/slices/`. Rows are grouped by product (the slice file's `**Product:**` line: Read The Stupid Text, Dino Reader or Shared). New finished slices are appended to their product's table here by the `update-docs` index pass; a row that becomes `verified` is updated here.
+
+## Read The Stupid Text
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
@@ -13,12 +15,10 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 6 | Fix speed control | built | — | — | [06-fix-speed-control.md](../slices/06-fix-speed-control.md) |
 | 7 | Narrator voice selection | built | — | — | [07-narrator-voice-selection.md](../slices/07-narrator-voice-selection.md) |
 | 8 | Tray control panel window | built | — | — | [08-tray-control-panel-window.md](../slices/08-tray-control-panel-window.md) |
-| 9 | Local neural voices (sherpa-onnx + Supertonic-3) | built | — | — | [09-local-neural-voices.md](../slices/09-local-neural-voices.md) |
 | 10 | Live activity log + auto-read fix | built | — | — | [10-live-activity-log-auto-read-fix.md](../slices/10-live-activity-log-auto-read-fix.md) |
 | 11 | Overlord voice names | built | — | #46 | [11-overlord-voice-names.md](../slices/11-overlord-voice-names.md) |
 | 12 | Split auto-read into two toggles | built | — | #48 | [12-split-auto-read-into-two-toggles.md](../slices/12-split-auto-read-into-two-toggles.md) |
 | 13 | "Media Card" control-panel redesign + media-player | built | — | #52 | [13-media-card-control-panel-redesign-media.md](../slices/13-media-card-control-panel-redesign-media.md) |
-| 14 | MIT license + Conventional-Commits auto-release | built | — | #57 | [14-mit-license-conventional-commits-auto-release.md](../slices/14-mit-license-conventional-commits-auto-release.md) |
 | 15 | Deep code-review pass + fixes | built | — | #61 | [15-deep-code-review-pass-fixes.md](../slices/15-deep-code-review-pass-fixes.md) |
 | 16 | Store-pipeline finalize + signing docs, first release | built | — | #64 | [16-store-pipeline-finalize-signing-docs-first.md](../slices/16-store-pipeline-finalize-signing-docs-first.md) |
 | 17 | Warm the neural engine at startup | built | — | #84 | [17-warm-the-neural-engine-at-startup.md](../slices/17-warm-the-neural-engine-at-startup.md) |
@@ -38,21 +38,14 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 31 | Neural voice on Android (sherpa-onnx + Supertonic-3) | built | — | #29270 | [31-neural-voice-on-android.md](../slices/31-neural-voice-on-android.md) |
 | 32 | Camera capture → OCR → read | built | — | — | [32-camera-capture-ocr-read.md](../slices/32-camera-capture-ocr-read.md) |
 | 33 | File upload: .txt/.pdf/.docx (reused) | built | — | — | [33-file-upload.md](../slices/33-file-upload.md) |
-| 34 | Android CI: build + signed AAB, internal testing track | built | — | — | [34-android-ci-build-signed-aab-internal.md](../slices/34-android-ci-build-signed-aab-internal.md) |
 | 35 | Fix the stuck elapsed/total read-through timer | built | — | — | [35-fix-the-stuck-elapsed-total-read.md](../slices/35-fix-the-stuck-elapsed-total-read.md) |
 | 36 | Disk-backed audio chunks | built | — | — | [36-disk-backed-audio-chunks.md](../slices/36-disk-backed-audio-chunks.md) |
 | 37 | Reading text box: window, toggle, whole-chunk highlight | built | — | — | [37-reading-text-box-window-toggle-whole.md](../slices/37-reading-text-box-window-toggle-whole.md) |
 | 38 | Reading text box: zoom + fit-to-box pagination | built | — | — | [38-reading-text-box-zoom-fit-to.md](../slices/38-reading-text-box-zoom-fit-to.md) |
-| 39 | Windows: no artifacts, release via draft | built | — | — | [39-windows-no-artifacts-release-via-draft.md](../slices/39-windows-no-artifacts-release-via-draft.md) |
-| 40 | Android into the same pipeline and release | built | — | — | [40-android-into-the-same-pipeline-and.md](../slices/40-android-into-the-same-pipeline-and.md) |
-| 41 | Path-filtered per-platform builds | built | — | — | [41-path-filtered-per-platform-builds.md](../slices/41-path-filtered-per-platform-builds.md) |
-| 42 | Retention safety net | built | — | — | [42-retention-safety-net.md](../slices/42-retention-safety-net.md) |
 | 43 | Store listing refresh (9 languages) | built | #174 | — | [43-store-listing-refresh.md](../slices/43-store-listing-refresh.md) |
-| 44 | Pipeline: iOS filter group, platform-neutral Mobile root | built | #183 | — | [44-pipeline-ios-split.md](../slices/44-pipeline-ios-split.md) |
 | 45 | Android: document scanner into the editor | built | #189 | — | [45-android-document-scanner.md](../slices/45-android-document-scanner.md) |
 | 46 | Play button loading state | built | #185 | — | [46-play-loading-state.md](../slices/46-play-loading-state.md) |
 | 47 | Head start: sentence-level audio cache | built | #201 | — | [47-head-start-sentence-cache.md](../slices/47-head-start-sentence-cache.md) |
-| 48 | iOS target and TestFlight from CI | built | #186 | — | [48-ios-target-testflight.md](../slices/48-ios-target-testflight.md) |
 | 49 | iOS reaches Android parity | built | #196 | — | [49-ios-parity.md](../slices/49-ios-parity.md) |
 | 50 | Voice packs, first-run language, slimmer app (Android) | built | #173 | — | [50-voice-packs-first-run-language.md](../slices/50-voice-packs-first-run-language.md) |
 | 51 | Multilingual voices (Supertonic, Piper fa, MeloTTS zh) | built | #197 | — | [51-multilingual-voices.md](../slices/51-multilingual-voices.md) |
@@ -62,29 +55,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 55 | iOS gets the Batch 9 features | built | #207 | — | [55-ios-batch9-features.md](../slices/55-ios-batch9-features.md) |
 | 56 | Windows: packs, first-run language, head start | built | #204 | — | [56-windows-packs-language-headstart.md](../slices/56-windows-packs-language-headstart.md) |
 | 57 | Windows: localized UI and translation | built | #217 | — | [57-windows-localization-translation.md](../slices/57-windows-localization-translation.md) |
-| 58 | Dino Reader skeleton: shared Mobile library, new app, pipeline | built | #191 | — | [58-dino-reader-skeleton.md](../slices/58-dino-reader-skeleton.md) |
-| 59 | Dialogue parser and voice caster (pure) | built | #175 | — | [59-dialogue-parser-voice-caster.md](../slices/59-dialogue-parser-voice-caster.md) |
-| 60 | Reading with a voice per character | built | #193 | — | [60-per-character-voice-reading.md](../slices/60-per-character-voice-reading.md) |
-| 61 | Gallery, stories on device, grown-up gate | built | #198 | — | [61-gallery-grownup-gate.md](../slices/61-gallery-grownup-gate.md) |
-| 62 | Reading screen: text and picture modes | built | #200 | — | [62-reading-screen-modes.md](../slices/62-reading-screen-modes.md) |
-| 63 | Positioned text extraction, kept page images | built | #205 | — | [63-positioned-text-extraction.md](../slices/63-positioned-text-extraction.md) |
-| 64 | Picture mode on real pages | built | #218 | — | [64-picture-mode-real-pages.md](../slices/64-picture-mode-real-pages.md) |
-| 65 | Cast screen | built | #202 | — | [65-cast-screen.md](../slices/65-cast-screen.md) |
-| 66 | Dino Reader languages and translation | built | #208 | — | [66-dino-reader-languages-translation.md](../slices/66-dino-reader-languages-translation.md) |
-| 67 | Dino Reader on iOS and Windows | built | — | #221 | [67-dino-reader-ios-windows.md](../slices/67-dino-reader-ios-windows.md) |
-| 68 | Landing site served by a Cloudflare Worker | built | #182 | — | [68-landing-site-on-worker.md](../slices/68-landing-site-on-worker.md) |
-| 69 | Android APK downloads from R2, with a "latest" link | built | #187 | — | [69-apk-downloads-on-r2.md](../slices/69-apk-downloads-on-r2.md) |
-| 70 | Split the build pipeline into the Lets-Call-Mom shape | built | #190 | — | [70-split-build-pipeline.md](../slices/70-split-build-pipeline.md) |
-| 71 | Repo hygiene and the Drive mirror | built | #184 | — | [71-repo-hygiene.md](../slices/71-repo-hygiene.md) |
-| 72 | Android dependencies to latest, R8 shrinking and obfuscation | built | — | #220 | [72-android-deps-r8-obfuscation.md](../slices/72-android-deps-r8-obfuscation.md) |
-| 73 | Edge-to-edge on Android 15+: safe areas on every screen | built | — | #224 | [73-edge-to-edge-safe-areas.md](../slices/73-edge-to-edge-safe-areas.md) |
-| 74 | Dino Reader site: landing, privacy and downloads on dinoreader.sirous.uk | built | #219 | — | [74-dino-reader-site.md](../slices/74-dino-reader-site.md) |
 | 75 | Windows translation engine | built | — | #223 | [75-windows-translation-engine.md](../slices/75-windows-translation-engine.md) |
-| 76 | Soft line-break reflow and heading detection (both apps) | built | | #233 | [76-soft-line-break-reflow.md](../slices/76-soft-line-break-reflow.md) |
-| 77 | Dino Reader: covers that survive edits, cover picker, readable inputs | built | | #234 | [77-dino-covers-and-light-theme.md](../slices/77-dino-covers-and-light-theme.md) |
-| 78 | Dino Reader: page-review wizard (pages → cover → text) | built | | #235 | [78-dino-page-review-wizard.md](../slices/78-dino-page-review-wizard.md) |
-| 79 | Background text filtering with a manual override | built | #240 | | [79-background-text-filtering.md](../slices/79-background-text-filtering.md) |
-| 80 | Dino Reader: grown-up mode as a gallery overlay | built | #241 | | [80-grownup-gallery-overlay.md](../slices/80-grownup-gallery-overlay.md) |
 | 81 | A language change in Settings downloads that language's voice | built | #239 | | [81-language-change-starts-voice-download.md](../slices/81-language-change-starts-voice-download.md) |
 | 82 | The phone voice reads in the text's language, and is only offered when it can | built | #243 | | [82-phone-voice-reads-the-texts-language.md](../slices/82-phone-voice-reads-the-texts-language.md) |
 | 83 | Scan replaces the text, like Paste and File | built | #245 | | [83-scan-replaces-the-text.md](../slices/83-scan-replaces-the-text.md) |
@@ -93,8 +64,60 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 86 | RTST scan reads with line geometry | built | #248 | | [86-rtst-scan-line-geometry.md](../slices/86-rtst-scan-line-geometry.md) |
 | 87 | A scan in a script with no reader asks the page's language and downloads it | built | #253 | | [87-scan-downloads-the-page-language-pack.md](../slices/87-scan-downloads-the-page-language-pack.md) |
 | 88 | The Windows desktop layout never mirrors; only text flows by its own direction | built | #254 | | [88-desktop-no-layout-mirroring.md](../slices/88-desktop-no-layout-mirroring.md) |
-| 89 | Four Farsi voices in one pack (ganji_adabi by default), Amir dropped | built | #262 | | [89-four-farsi-voices.md](../slices/89-four-farsi-voices.md) |
 | 90 | Untranslated text is read in its own language | built | #258 | | [90-untranslated-text-reads-in-its-own-language.md](../slices/90-untranslated-text-reads-in-its-own-language.md) |
+| 99 | RTST phone: a minimal main page and a Settings page | built | #279 | | [99-rtst-mobile-minimal-main-page.md](../slices/99-rtst-mobile-minimal-main-page.md) |
+| 100 | RTST phone: "Take a photo of each page", wizard page 1 | built | #290 | | [100-rtst-mobile-page-capture-wizard.md](../slices/100-rtst-mobile-page-capture-wizard.md) |
+| 101 | RTST phone: wizard page 2, check the text, translate, read | built | #297 | | [101-rtst-mobile-review-and-translate.md](../slices/101-rtst-mobile-review-and-translate.md) |
+| 106 | Windows: offline translation packs for the five new languages | built | #281 | | [106-windows-nordic-dutch-translation-packs.md](../slices/106-windows-nordic-dutch-translation-packs.md) |
+| 137 | RTST phone: anonymous usage counts and timings | built | #382 | | [137-rtst-phone-usage-counts.md](../slices/137-rtst-phone-usage-counts.md) |
+| 138 | RTST phone: a wait indicator after 500 ms | built | #390 | | [138-rtst-phone-wait-indicator.md](../slices/138-rtst-phone-wait-indicator.md) |
+| 140 | RTST Windows: the same usage counts and timings | built | #391 | | [140-rtst-windows-usage-counts.md](../slices/140-rtst-windows-usage-counts.md) |
+| 141 | RTST Windows: a wait indicator after 500 ms | built | #397 | | [141-rtst-windows-wait-indicator.md](../slices/141-rtst-windows-wait-indicator.md) |
+| 139 | RTST phone: start translating and voicing before the tap | built | #398 | | [139-rtst-phone-early-start.md](../slices/139-rtst-phone-early-start.md) |
+| 142 | RTST Windows: early translate and voice in the control panel | built | #408 | | [142-rtst-windows-early-start.md](../slices/142-rtst-windows-early-start.md) |
+| 160 | Translation on iOS (Android and iOS parity) | built | #486 | | [160-ios-translation-parity.md](../slices/160-ios-translation-parity.md) |
+| 170 | Tray panel: every Controls button fits | built | #505 | | [170-tray-panel-controls-row-fits.md](../slices/170-tray-panel-controls-row-fits.md) |
+| 176 | Reading text that is only spaces must not throw (NullReferenceException found on the phone) | built | #518 | | [176-whitespace-read-crash.md](../slices/176-whitespace-read-crash.md) |
+| 184 | Windows: an English-to-Japanese translation pack | built | #562 |  | [184-windows-english-to-japanese-pack.md](../slices/184-windows-english-to-japanese-pack.md) |
+| 201 | The Norwegian voice pack no longer crashes the app (piper-nb tokens fixed, packs-10; a bad pack is rejected, not loaded) | built | #571 |  | [slices\201-norwegian-pack-crash.md](../slices/201-norwegian-pack-crash.md) |
+| 202 | Changing the app language with text in the reader no longer crashes the app | built | #577 |  | [slices\202-reader-language-change-crash.md](../slices/202-reader-language-change-crash.md) |
+| 186 | RTST: no scan pack download after the user cancels the voice pack (follow-up to 183) | built | #574 |  | [186-no-ocr-download-after-voice-cancel.md](../slices/186-no-ocr-download-after-voice-cancel.md) |
+| 190 | RTST phone: highlight one sentence at a time (Android and iOS; Windows unchanged) | built | #573 |  | [190-rtst-phone-sentence-highlight.md](../slices/190-rtst-phone-sentence-highlight.md) |
+| 187 | Translation downloads wait for the internet (Slice 182 frame R12, both apps, Android and iOS) | built | #576 |  | [187-translation-download-waits-for-internet.md](../slices/187-translation-download-waits-for-internet.md) |
+| 198 | RTST phone: a Read tapped while early work is running reuses it (Slice 139 race) | closed, measured, no code | #584 |  | [198-rtst-phone-in-flight-early-start-race.md](../slices/198-rtst-phone-in-flight-early-start-race.md) |
+| 194 | A VM script that retakes the control panel screenshot | built | #591 | | [194-control-panel-screenshot-script.md](../slices/194-control-panel-screenshot-script.md) |
+| 195 | Pick the default Norwegian voice by ear | built | #592 | | [195-norwegian-default-voice.md](../slices/195-norwegian-default-voice.md) |
+| 211 | Play right after typing waits for language detection, so it translates and picks the voice like a later Play (Slice 139 follow-up) | built | #633 | | [211-play-before-detection-waits-for-it.md](../slices/211-play-before-detection-waits-for-it.md) |
+| 218 | RTST Microsoft Store submission skipped Windows code changes (no Store build since before 1.74.0) | built | #630 | | [218-microsoft-store-submission-skipped.md](../slices/218-microsoft-store-submission-skipped.md) |
+| 217 | RTST forced update from the remote config (port of Dino Slice 132; Android, iOS, Windows tray) | built | #640 |  | [217-rtst-forced-update.md](../slices/217-rtst-forced-update.md) |
+| 214 | RTST phone: the first read after a cold start takes 7 s (S21 AOT; first synthesis 5.9 s): find warm-up vs length, then fix to under 2 s | built | #647 |  | [214-rtst-phone-cold-first-audio.md](../slices/214-rtst-phone-cold-first-audio.md) |
+| 227 | Crash and error reports from the phone apps (Dino and RTST, Android and iOS): our own Worker endpoint, log tail, TestFlight tagged, Apple/Play pull tooling | built | #654 | | [227-crash-reports.md](../slices/227-crash-reports.md) |
+| 292 | Fix the flaky `TranslationModelDownloadSessionTests.Progress_is_reported_while_downloading` | built | #902 | | [292-fix-flaky-translation-download-progress-test.md](../slices/292-fix-flaky-translation-download-progress-test.md) |
+| 304 | Slice 202: rerun the medium review on `ReaderPage` as merged, test the `InitWait` order | built | #908 | | [304-slice-202-rereview-and-initwait-test.md](../slices/304-slice-202-rereview-and-initwait-test.md) |
+| 303 | Slice 201 review leftovers that change behaviour | built | #921 | | [303-slice-201-review-leftovers.md](../slices/303-slice-201-review-leftovers.md) |
+| 314 | Restore the "Still getting the voice ready" overlay when the person returns to the reader during a stalled read | built | #927 | | [314-reader-stall-overlay-after-return.md](../slices/314-reader-stall-overlay-after-return.md) |
+| 336 | Listening page: Farsi sukun sentence on Android and iPhone | dropped 2026-11-08: a listen cannot compare the phones; same pack and config in code | | | [336-farsi-sukun-sentence-on-android-and-iphone.md](../slices/336-farsi-sukun-sentence-on-android-and-iphone.md) |
+| 345 | RTST: the Debug stall hook must block the reader's first-chunk wait (`stall-return-overlay`) | built | #987 | | [345-rtst-stall-hook-blocks-reader.md](../slices/345-rtst-stall-hook-blocks-reader.md) |
+| 341 | Listening page: Farsi short words never dropped | built | #993 | | [341-farsi-short-words-never-dropped.md](../slices/341-farsi-short-words-never-dropped.md) |
+| 361 | RTST `sentence-highlight` Maestro flow fails on the emulator: flow bug, fixed with a `SENTENCE_MOVED` marker | verified | #1051 | | [361-sentence-highlight-fails-on-emulator.md](../slices/361-sentence-highlight-fails-on-emulator.md) |
+
+## Dino Reader
+
+| # | Slice | Status | PR | Story | File |
+| --- | --- | --- | --- | --- | --- |
+| 58 | Dino Reader skeleton: shared Mobile library, new app, pipeline | built | #191 | — | [58-dino-reader-skeleton.md](../slices/58-dino-reader-skeleton.md) |
+| 59 | Dialogue parser and voice caster (pure) | built | #175 | — | [59-dialogue-parser-voice-caster.md](../slices/59-dialogue-parser-voice-caster.md) |
+| 61 | Gallery, stories on device, grown-up gate | built | #198 | — | [61-gallery-grownup-gate.md](../slices/61-gallery-grownup-gate.md) |
+| 62 | Reading screen: text and picture modes | built | #200 | — | [62-reading-screen-modes.md](../slices/62-reading-screen-modes.md) |
+| 64 | Picture mode on real pages | built | #218 | — | [64-picture-mode-real-pages.md](../slices/64-picture-mode-real-pages.md) |
+| 65 | Cast screen | built | #202 | — | [65-cast-screen.md](../slices/65-cast-screen.md) |
+| 66 | Dino Reader languages and translation | built | #208 | — | [66-dino-reader-languages-translation.md](../slices/66-dino-reader-languages-translation.md) |
+| 67 | Dino Reader on iOS and Windows | built | — | #221 | [67-dino-reader-ios-windows.md](../slices/67-dino-reader-ios-windows.md) |
+| 74 | Dino Reader site: landing, privacy and downloads on dinoreader.sirous.uk | built | #219 | — | [74-dino-reader-site.md](../slices/74-dino-reader-site.md) |
+| 77 | Dino Reader: covers that survive edits, cover picker, readable inputs | built | | #234 | [77-dino-covers-and-light-theme.md](../slices/77-dino-covers-and-light-theme.md) |
+| 78 | Dino Reader: page-review wizard (pages → cover → text) | built | | #235 | [78-dino-page-review-wizard.md](../slices/78-dino-page-review-wizard.md) |
+| 79 | Background text filtering with a manual override | built | #240 | | [79-background-text-filtering.md](../slices/79-background-text-filtering.md) |
+| 80 | Dino Reader: grown-up mode as a gallery overlay | built | #241 | | [80-grownup-gallery-overlay.md](../slices/80-grownup-gallery-overlay.md) |
 | 91 | Dino stories as packages, three starter stories, developer export | built | #263 | | [91-dino-story-packages-and-starters.md](../slices/91-dino-story-packages-and-starters.md) |
 | 92 | A free, curated Dino story store behind the grown-up gate | built | #266 | | [92-dino-story-store.md](../slices/92-dino-story-store.md) |
 | 93 | Dino backup file and a first run that asks the language | built | #267 | | [93-dino-backup-and-first-run.md](../slices/93-dino-backup-and-first-run.md) |
@@ -103,14 +126,8 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 96 | Dino's layout never mirrors when the language changes | built | #278 | | [96-dino-layout-never-mirrors.md](../slices/96-dino-layout-never-mirrors.md) |
 | 97 | The grown-ups button says "add a book", not a lock | built | #284 | | [97-dino-add-book-button.md](../slices/97-dino-add-book-button.md) |
 | 98 | Picture + text books: a picture per page, the text beside it | built | #285 | | [98-dino-picture-and-text-books.md](../slices/98-dino-picture-and-text-books.md) |
-| 99 | RTST phone: a minimal main page and a Settings page | built | #279 | | [99-rtst-mobile-minimal-main-page.md](../slices/99-rtst-mobile-minimal-main-page.md) |
-| 100 | RTST phone: "Take a photo of each page", wizard page 1 | built | #290 | | [100-rtst-mobile-page-capture-wizard.md](../slices/100-rtst-mobile-page-capture-wizard.md) |
-| 101 | RTST phone: wizard page 2, check the text, translate, read | built | #297 | | [101-rtst-mobile-review-and-translate.md](../slices/101-rtst-mobile-review-and-translate.md) |
 | 102 | Ten open stories in the Dino story store | built | #280 | | [102-dino-store-ten-stories.md](../slices/102-dino-store-ten-stories.md) |
-| 103 | Danish, Finnish, Swedish, Norwegian and Dutch in every app | built | #286 | | [103-nordic-dutch-languages.md](../slices/103-nordic-dutch-languages.md) |
-| 104 | A Norwegian voice pack (Piper nvcc, ten speakers) | built | #291 | | [104-piper-norwegian-pack.md](../slices/104-piper-norwegian-pack.md) |
 | 105 | Dino: story rules and book translations for the five new languages | built | #292 | | [105-dino-nordic-dutch-books-and-rules.md](../slices/105-dino-nordic-dutch-books-and-rules.md) |
-| 106 | Windows: offline translation packs for the five new languages | built | #281 | | [106-windows-nordic-dutch-translation-packs.md](../slices/106-windows-nordic-dutch-translation-packs.md) |
 | 107 | Dino: own books translate by default | built | #305 | | [107-dino-own-books-translate-by-default.md](../slices/107-dino-own-books-translate-by-default.md) |
 | 108 | Dino: a cast per reading language | built | #307 | | [108-dino-cast-per-reading-language.md](../slices/108-dino-cast-per-reading-language.md) |
 | 109 | Dino: one narrator per language, for every book | built | #309 | | [109-dino-one-narrator-per-language.md](../slices/109-dino-one-narrator-per-language.md) |
@@ -131,26 +148,13 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 125 | Dino: each character knows its animal, and animal voices to match | built | #339 | | [125-dino-character-animals.md](../slices/125-dino-character-animals.md) |
 | 135 | Dino: every pig a piglet, and the emulator fixes for Slices 124-125 | built | #352 | | [135-dino-animal-voices-fixes.md](../slices/135-dino-animal-voices-fixes.md) |
 | 126 | Dino: keep the screen awake while a book is playing | built | #357 | | [126-dino-keep-screen-awake.md](../slices/126-dino-keep-screen-awake.md) |
-| 127 | Release safety: Dino iOS .ipa gap and the Store id fallback | built | #358 | | [127-release-safety-fixes.md](../slices/127-release-safety-fixes.md) |
-| 128 | Tray code out of the shared Infrastructure, and tests per product | built | #363 | | [128-tray-code-out-of-shared-infrastructure.md](../slices/128-tray-code-out-of-shared-infrastructure.md) |
 | 129 | Dino voice features out of the shared speech engine | built | #364 | | [129-dino-voice-features-out-of-shared-engine.md](../slices/129-dino-voice-features-out-of-shared-engine.md) |
 | 132 | Dino: a remote switchboard and a forced update | built | #359 | | [132-dino-remote-config-and-force-update.md](../slices/132-dino-remote-config-and-force-update.md) |
 | 133 | Dino: anonymous usage counts, first event end to end | built | #365 | | [133-dino-anonymous-usage-counts.md](../slices/133-dino-anonymous-usage-counts.md) |
 | 136 | Dino: the animal comes from the picked character (no Animal line) | built | #360 | | [136-dino-animal-from-character.md](../slices/136-dino-animal-from-character.md) |
-| 130 | A version and a release per product | built | #367 | | [130-per-product-versions-and-releases.md](../slices/130-per-product-versions-and-releases.md) |
 | 134 | Dino: the rest of the usage events, and a report | built | #368 | | [134-dino-usage-events-and-report.md](../slices/134-dino-usage-events-and-report.md) |
-| 131 | Mobile.Shared gets its own namespace | built | #371 | | [131-mobile-shared-namespace.md](../slices/131-mobile-shared-namespace.md) |
-| 137 | RTST phone: anonymous usage counts and timings | built | #382 | | [137-rtst-phone-usage-counts.md](../slices/137-rtst-phone-usage-counts.md) |
-| 143 | One shared wait overlay; Dino shows it on every wait | built | #383 | | [143-shared-wait-overlay-dino-loading.md](../slices/143-shared-wait-overlay-dino-loading.md) |
 | 144 | Farsi: the female voice is the default | built | #384 | | [144-farsi-default-female-voice.md](../slices/144-farsi-default-female-voice.md) |
-| 138 | RTST phone: a wait indicator after 500 ms | built | #390 | | [138-rtst-phone-wait-indicator.md](../slices/138-rtst-phone-wait-indicator.md) |
-| 140 | RTST Windows: the same usage counts and timings | built | #391 | | [140-rtst-windows-usage-counts.md](../slices/140-rtst-windows-usage-counts.md) |
-| 141 | RTST Windows: a wait indicator after 500 ms | built | #397 | | [141-rtst-windows-wait-indicator.md](../slices/141-rtst-windows-wait-indicator.md) |
 | 145 | Which sound-word spellings sound right aloud | built | #385 | | [145-sound-words-aloud-test.md](../slices/145-sound-words-aloud-test.md) |
-| 149 | Never drop a short word: catch silent output from the voices | built | #401 | | [149-never-drop-a-short-word.md](../slices/149-never-drop-a-short-word.md) |
-| 139 | RTST phone: start translating and voicing before the tap | built | #398 | | [139-rtst-phone-early-start.md](../slices/139-rtst-phone-early-start.md) |
-| 142 | RTST Windows: early translate and voice in the control panel | built | #408 | | [142-rtst-windows-early-start.md](../slices/142-rtst-windows-early-start.md) |
-| 148 | Phone apps: mid-read stalls, wait counts and wave leftovers | built | #416 | | [148-phone-wait-followups.md](../slices/148-phone-wait-followups.md) |
 | 121 | Dino: pictures for the ten store stories | built | #350 and following (see slice file) | — | [121-dino-illustrate-store-stories.md](../slices/121-dino-illustrate-store-stories.md) |
 | 150 | Dino: slower reading by default (0.8x), grown-up speed 0.5-1.2x | built | #429 | | [150-dino-slower-reading-speed.md](../slices/150-dino-slower-reading-speed.md) |
 | 151 | Dino: three view modes, no merging of characters | built | #430 | | [151-dino-three-view-modes.md](../slices/151-dino-three-view-modes.md) |
@@ -161,8 +165,208 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 158 | Dino: publish store books on every merge | built | #472 | | [158-dino-publish-store-books.md](../slices/158-dino-publish-store-books.md) |
 | 159 | Dino: everything in the chosen language | built | #473 | | [159-dino-everything-in-my-language.md](../slices/159-dino-everything-in-my-language.md) |
 | 153 | Dino: no robotic-sounding character voices | verified | | | [153-dino-no-robotic-voices.md](../slices/153-dino-no-robotic-voices.md) |
-| 160 | Translation on iOS (Android and iOS parity) | built | #486 | | [160-ios-translation-parity.md](../slices/160-ios-translation-parity.md) |
+| 157 | Dino: book content and the book builder out of the test project | built | #475 | | [157-dino-book-content-out-of-tests.md](../slices/157-dino-book-content-out-of-tests.md) |
+| 169 | German translations for all 15 Dino books | built | #503 | | [169-german-dino-books.md](../slices/169-german-dino-books.md) |
+| 171 | Dino: the text card scrolls with the reading | built | #506 | | [171-dino-text-card-shows-whole-page.md](../slices/171-dino-text-card-shows-whole-page.md) |
+| 172 | Dino: one gear for all grown-up settings (sub-page per setting; "Free stories" -> "More stories") | built | #519 | | [172-dino-settings-gear.md](../slices/172-dino-settings-gear.md) |
+| 174 | Dino: a cleaner reading screen (waits on the user's Claude Design mock) and a back button that never surprises (after 172) | built | #521 | | [174-dino-reading-screen-and-back-button.md](../slices/174-dino-reading-screen-and-back-button.md) |
+| 173 | Dino: up to three story languages, switched by the kid (after 172) | built | #525 | | [173-dino-kid-story-languages.md](../slices/173-dino-kid-story-languages.md) |
+| 177 | Dino: slow speech for the first reads after the app starts (measure on Release, then fix; after 175) | built | #522 | | [177-dino-cold-start-synthesis.md](../slices/177-dino-cold-start-synthesis.md) |
+| 178 | Dino: count an own book's page count and how it really came in (pdf, docx, txt, photo, scan, typed, mixed) | built | #547 |  | [178-dino-own-book-usage-detail.md](../slices/178-dino-own-book-usage-detail.md) |
+| 181 | Dino: books on the device update themselves from the store on app open, at most every 7 days (unedited copies only, any network, silent) | built | #543 |  | [181-dino-books-update-from-store.md](../slices/181-dino-books-update-from-store.md) |
+| 189 | Dino: one "For grown-ups" button on the shelf, the gear inside grown-up mode, a ⋯ sheet per book, a reading card capped at 30% | built | #560 |  | [189-dino-grown-ups-button-and-book-sheet.md](../slices/189-dino-grown-ups-button-and-book-sheet.md) |
+| 196 | Dino: each book opens in the view that fits it (words in the pictures -> Picture only) | built | #575 |  | [196-dino-default-view-per-book.md](../slices/196-dino-default-view-per-book.md) |
+| 203 | Dino on the Microsoft Store: turn on automatic submissions and link it | built | #578 |  | [203-dino-microsoft-store-live.md](../slices/203-dino-microsoft-store-live.md) |
+| 188 | Dino Settings behind the grown-up gate as a permanent VM check (Slice 172 follow-up) | built | #585 |  | [188-dino-settings-vm-check.md](../slices/188-dino-settings-vm-check.md) |
+| 191 | Dino: count restored and imported books (`own_book_added` kinds `restore`/`import`) | built | #581 |  | [191-dino-count-restored-and-imported-books.md](../slices/191-dino-count-restored-and-imported-books.md) |
+| 192 | Dino: the store credit line in every language, served by the store | built | #582 |  | [192-dino-store-credits-in-every-language.md](../slices/192-dino-store-credits-in-every-language.md) |
+| 197 | Dino: a "Download now" tap right after the mobile-data check is never dropped (Slice 115 gap) | built | #583 |  | [197-dino-download-now-tap-dropped.md](../slices/197-dino-download-now-tap-dropped.md) |
+| 205 | Dino Windows head: the Reading speed row and the page-turn VM check (Slice 188 follow-up) | built | #645 |  | [205-dino-windows-reading-speed-and-page-turn-checks.md](../slices/205-dino-windows-reading-speed-and-page-turn-checks.md) |
+| 226 | Dino Settings rows and page text: Slice 205 review findings left open (hidden row children, stale NavRow name, per-line description read twice on TalkBack/VoiceOver) | built | #668 | [226-dino-settings-rows-review-leftovers.md](docs/plan/slices/226-dino-settings-rows-review-leftovers.md) | [226-dino-settings-rows-review-leftovers.md](../slices/226-dino-settings-rows-review-leftovers.md) |
+| 231 | Dino user test: Record page hides the words on picture books (bug) | built | #666 | [231-dino-record-page-shows-words.md](docs/plan/slices/231-dino-record-page-shows-words.md) | [231-dino-record-page-shows-words.md](../slices/231-dino-record-page-shows-words.md) |
+| 228 | Dino user test: kids' shelf vs grown-ups' corner made obvious (labelled Grown-ups pill, sticky "Back to my child's shelf", "Read now" in the book sheet, one intro card) | built | #673 | | [228-dino-grownups-corner-clarity.md](../slices/228-dino-grownups-corner-clarity.md) |
+| 239 | Dino: adding, changing or deleting a store story runs only the store upload (no app build, no tests, no review gate) | built | #700, #703 | | [239-dino-store-book-without-app-build.md](../slices/239-dino-store-book-without-app-build.md) |
+| 237 | Dino: a silent back cover (credits page) at the end of every book, all 16 books, and a standing rule in create-dino-story | built | #688 | | [237-dino-back-cover-credits.md](../slices/237-dino-back-cover-credits.md) |
+| 229 | Dino user test: Done/Continue button top right on every grown-up page (Continue moves the intro wizard on) | built | #683 | | [229-dino-subpage-done-button.md](../slices/229-dino-subpage-done-button.md) |
+| 230 | Dino user test: recordings stay on the phone (warm copy), and restore merges recordings into a story already on the phone | built | #693 | — | [230-dino-recordings-copy-and-restore-merge.md](../slices/230-dino-recordings-copy-and-restore-merge.md) |
+| 240 | Dino Reader Windows CI: cache the SDK, workload and NuGet packages | built | #702, #704 | | [240-dino-windows-ci-setup-cache.md](../slices/240-dino-windows-ci-setup-cache.md) |
+| 232 | Dino user test: proper landscape design for every screen, phone and tablet (after 228 and 229) | built | #695, #724, #728, #732, #734 | | [232-dino-landscape-every-screen.md](../slices/232-dino-landscape-every-screen.md) |
+| 234 | Dino: proper design for tablets held upright (shelf 3-4 columns, picture-above-text reading, tablet-sized cards; after 232) | built | #736, #739, #738 | | [234-dino-tablet-portrait.md](../slices/234-dino-tablet-portrait.md) |
+| 248 | Dino iOS: leaving a book stops its read, and a new book never drives the old one's voice | built | #746 | | [248-dino-stop-read-on-leave-ios.md](../slices/248-dino-stop-read-on-leave-ios.md) |
+| 154 | Dino: vowel marks in Farsi and Arabic books | dropped 2026-11-03 (user: Gemini reads plain Farsi well, no manual work wanted; the Three Little Pigs part from #470 stays shipped) | #470 | | [154-dino-farsi-arabic-vowel-marks.md](../slices/154-dino-farsi-arabic-vowel-marks.md) |
+| 251 | Dino usage from TestFlight goes to its own beta dataset, never the production counts | built | #777 | | [251-dino-beta-usage-dataset.md](../slices/251-dino-beta-usage-dataset.md) |
+| 257 | Dino: a quote after "said Mouse." is the Mouse's, not the Lion's (Lion and the Mouse) | built | #775 | | [257-lion-and-mouse-speaker.md](../slices/257-lion-and-mouse-speaker.md) |
+| 254 | Dino: speaker first in Farsi and Arabic ("X said:" then the whole quote), and animal sounds next to the animal's own words | built | #759, #762 | | [254-dino-speaker-first-and-sound-placement.md](../slices/254-dino-speaker-first-and-sound-placement.md) |
+| 256 | Dino: `dump-sentences` works for picture books (Good Enough), so it gets Gemini audio | built | #782 | | [256-good-enough-sentence-dump.md](../slices/256-good-enough-sentence-dump.md) |
+| 255 | Dino: real animal recordings (Freesound CC0) instead of voiced animal sound words; other sound words like آپچی stay voiced | built | #783 | | [255-dino-real-animal-sounds.md](../slices/255-dino-real-animal-sounds.md) |
+| 249 | Dino: "Report a problem" in the grown-ups' corner sends the recent log with a code to quote (also built Slice 243 item 5) | built | #781 | | [249-dino-report-a-problem.md](../slices/249-dino-report-a-problem.md) |
+| 250 | Dino usage: playback events (read started/paused/resumed/stopped and why, book left) and a session id new on every cold start | built | #788 | | [250-dino-playback-events-and-session-id.md](../slices/250-dino-playback-events-and-session-id.md) |
+| 246 | Dino: store books read with pre-made Gemini audio (plain text, Farsi first, free key) | built | #729, #768, #787, #790 | | [246-dino-store-books-premade-audio.md](../slices/246-dino-store-books-premade-audio.md) |
+| 260 | Dino: tags on store books (Hot, Popular, Recommended, New) | built (fix #805 merged) | #798 | | [260-dino-store-tags.md](../slices/260-dino-store-tags.md) |
+| 258 | Dino: pre-made audio for the four starter books (gingerbread-man, good-enough, three-little-pigs, tortoise-and-hare) | built | #792 | | [258-dino-starter-books-premade-audio.md](../slices/258-dino-starter-books-premade-audio.md) |
+| 261 | Dino: no starter books in the app; first-run book picker (main language, then at least 2 books) | built | #808 | | [261-dino-no-starters-first-run-book-picker.md](../slices/261-dino-no-starters-first-run-book-picker.md) |
+| 265 | Dino: pre-made audio clips in Git LFS; book changes only publish to the store (clips shipped in 8 content-only PRs #815-#822, chore/s265-clips-1..8) | built | #810 | | [265-dino-audio-clips-in-git-lfs.md](../slices/265-dino-audio-clips-in-git-lfs.md) |
+| 262 | Dino: adding a second language downloads the shelf books' audio in it (after 261) | built | #813 | | [262-dino-side-language-downloads-book-audio.md](../slices/262-dino-side-language-downloads-book-audio.md) |
+| 268 | Dino: remove "Show original text" from grown-up mode (user, 2026-11-04) | built | #825 | | [268-dino-remove-show-original-text.md](../slices/268-dino-remove-show-original-text.md) |
+| 267 | Dino bugs: books on the shelf keep the old voice (packs only on the 7-day check); the first-run buttons overlap (no layout check in the tests) | built | #826 | | [267-dino-old-voice-and-wizard-buttons.md](../slices/267-dino-old-voice-and-wizard-buttons.md) |
+| 264 | Dino: grown-ups reorder the shelf (iPhone-style reorder mode) | built | #799 | | [264-dino-gallery-reorder-mode.md](../slices/264-dino-gallery-reorder-mode.md) |
+| 235 | Dino on Windows: a real desktop window (size and minimum, width-driven layout, keyboard, hover, tooltips, title bar; after 232) | built | #740, #745, #776 | | [235-dino-windows-window.md](../slices/235-dino-windows-window.md) |
+| 270 | Dino iPhone crash: the audio player is disposed inside its own "finished playing" call (4 crashes, 1.106.0 TestFlight, 2026-11-05) | built | #834 | | [270-dino-ios-player-disposed-in-finished-callback.md](../slices/270-dino-ios-player-disposed-in-finished-callback.md) |
+| 272 | Dino: Farsi pre-made audio falls back after the first animal sound (8 books) | built | #839 | | [272-dino-farsi-clips-off-by-one.md](../slices/272-dino-farsi-clips-off-by-one.md) |
+| 274 | Dino iPhone crash: leave the app from the grown-ups pages and come back | built | #843 | | [274-dino-ios-crash-after-leaving-parent-page.md](../slices/274-dino-ios-crash-after-leaving-parent-page.md) |
+| 276 | Dino iOS update button for TestFlight testers | built | #853 | | [276-dino-ios-update-button-testflight.md](../slices/276-dino-ios-update-button-testflight.md) |
+| 277 | Dino: a store book is published only when every sentence in every language has pre-made audio | built | #858 | | [277-dino-store-audio-coverage-gate.md](../slices/277-dino-store-audio-coverage-gate.md) |
+| 278 | Dino: store books only (no own books, scanning, translation, voice engine or voice pickers; RTST untouched) | built | #859, #863, #862 | | [278-dino-store-books-only.md](../slices/278-dino-store-books-only.md) |
+| 280 | Dino: Farsi speaker first, joined at translation time from existing pieces and clips (replaces Slice 254's read-time regroup) | built | #869 | | [280-dino-farsi-speaker-first-at-translation.md](../slices/280-dino-farsi-speaker-first-at-translation.md) |
+| 279 | Dino: recording your own voice, one intro page, then per character or whole page | built | #867 | | [279-dino-recording-flow.md](../slices/279-dino-recording-flow.md) |
+| 281 | Dino: one listening track per store book and language, served for smart speakers | built | #876, #878 | | [281-dino-listening-tracks.md](../slices/281-dino-listening-tracks.md) |
+| 285 | Dino: changing the app language fetches the books' sound in that language | built | #886, #890 | | [285-dino-language-change-fetches-book-audio.md](../slices/285-dino-language-change-fetches-book-audio.md) |
+| 290 | Dino: the reading page's sound line as a pill (Batch 50 design; restyles Slice 285 C; part B, exactly as designed, #895) | built | #889, #895 | | [290-dino-reading-sound-pill.md](../slices/290-dino-reading-sound-pill.md) |
+| 286 | Dino: record your voice in each story language, and hear it when reading in that language | built | #885 | | [286-dino-recordings-per-story-language.md](../slices/286-dino-recordings-per-story-language.md) |
+| 293 | Slice 290 check-pass leftovers (sound pill ring on colour switch, story null checks) | built (done by Slice 290 part B) | #895 | | [293-slice-290-check-pass-leftovers.md](../slices/293-slice-290-check-pass-leftovers.md) |
+| 298 | Slice 264 gallery reorder follow-ups | built | #903 | | [298-slice-264-gallery-reorder-follow-ups.md](../slices/298-slice-264-gallery-reorder-follow-ups.md) |
+| 288 | Dino: the app counts listens (30 s or more) and real listening time | built | #901 | | [288-dino-listens-and-listening-time.md](../slices/288-dino-listens-and-listening-time.md) |
+| 309 | Split `src/DinoReader.App/CLAUDE.md` (52 KB, budget ~20 KB) with archive-docs | built | #907 | | [309-split-dino-app-claude-md.md](../slices/309-split-dino-app-claude-md.md) |
+| 299 | Slice 261 leftovers (dead `LaunchedFromIntro`, Cancel on list load, starter names) | built | #912 | | [299-slice-261-leftovers.md](../slices/299-slice-261-leftovers.md) |
+| 305 | Dino package cleanup: ML Kit, sherpa-onnx and onnxruntime out of the Dino packages | built | #920 | | [305-dino-package-cleanup-ml-kit-and-sherpa.md](../slices/305-dino-package-cleanup-ml-kit-and-sherpa.md) |
+| 310 | Dino Debug hook to force a voice-pack download failure | built | #925 | | [310-dino-debug-hook-force-pack-failure.md](../slices/310-dino-debug-hook-force-pack-failure.md) |
+| 289 | Dino: count Sonos plays on the server | built | #929 | | [289-dino-count-sonos-plays.md](../slices/289-dino-count-sonos-plays.md) |
+| 296 | Why a Farsi read matched 5 of 78 pieces to clips (fixture keys or a real fa audio gap) | built | #931 | | [296-farsi-read-clip-match.md](../slices/296-farsi-read-clip-match.md) |
+| 282 | Dino: an Alexa kid skill that reads the store books (no login) | built | #935 | | [282-dino-alexa-kid-skill.md](../slices/282-dino-alexa-kid-skill.md) |
+| 287 | Dino: a public usage dashboard at dinoreader.sirous.uk/stats (downloads, listens, hours; by day/week/month, book, platform) | built (#940); live setup waits on the user | #940 | | [287-dino-usage-dashboard.md](../slices/287-dino-usage-dashboard.md) |
+| 313 | Dino: a shelf book's text and its sound always match | built | #915 | | [313-dino-book-text-and-sound-in-step.md](../slices/313-dino-book-text-and-sound-in-step.md) |
+| 318 | Dino: the /stats page on phones and tablets (mock frames 201-204: Filters sheet, tap-a-bar readout, short-time format, no "Own books") | built | #954 | | [318-dino-stats-phone-tablet.md](../slices/318-dino-stats-phone-tablet.md) |
+| 324 | Dino reads at 1x by default (Decision 172) | built | #959 | | [324-dino-default-speed-1x.md](../slices/324-dino-default-speed-1x.md) |
+| 323 | Dino shelf titles follow the story language picked on the shelf (Decision 173) | built | #965 | | [323-dino-shelf-titles-follow-story-language.md](../slices/323-dino-shelf-titles-follow-story-language.md) |
+| 321 | Reorder layer back to the mock on Windows | built | #962 | | [321-reorder-layer-per-mock.md](../slices/321-reorder-layer-per-mock.md) |
+| 322 | Dino's silent beats pause when the screen locks | built | #963 | | [322-dino-beat-pauses-on-screen-lock.md](../slices/322-dino-beat-pauses-on-screen-lock.md) |
+| 331 | Listening page: animal sound word already in the text (moo) | verified (user, 2026-11-08: all sound right) | | | [331-animal-sound-word-already-in-the-text-moo.md](../slices/331-animal-sound-word-already-in-the-text-moo.md) |
+| 332 | Listening page: double animal sound when a quote names the animal | verified (user, 2026-11-08: all sound right) | | | [332-double-animal-sound-when-a-quote-names-the-anima.md](../slices/332-double-animal-sound-when-a-quote-names-the-anima.md) |
+| 333 | Listening page: Lion and Mouse Farsi clip | verified (user, 2026-11-08: sounds right) | | | [333-lion-and-mouse-farsi-clip.md](../slices/333-lion-and-mouse-farsi-clip.md) |
+| 337 | Listening page: Dino first-run hello line sounds whole | dropped 2026-11-08: Dino has no speech engine since Slice 278, so there is no hello line to hear | | | [337-dino-first-run-hello-line-sounds-whole.md](../slices/337-dino-first-run-hello-line-sounds-whole.md) |
+| 340 | Dino reading speed: slowest becomes 0.8x (from the listening page) | built | #985 | | [340-mid-book-speed-change-on-a-phone.md](../slices/340-mid-book-speed-change-on-a-phone.md) |
+| 325 | Dino: every page in the 2026-11-08 design (corner as Books/Store/Settings tabs, kids shelf, first run, intro) on Android, iOS and Windows | built | #970, #983, #989 | | [325-dino-2026-11-08-redesign.md](../slices/325-dino-2026-11-08-redesign.md) |
+| 334 | Listening page: speaker first in Farsi (Three Little Pigs) and the wolf's sound in English | verified (user confirmed by ear 2026-11-09 08:50) | #991 | | [334-speaker-first-in-farsi-three-little-pigs-and-the.md](../slices/334-speaker-first-in-farsi-three-little-pigs-and-the.md) |
+| 335 | Listening page: Pigs Farsi, four re-rendered lines | verified (user confirmed by ear 2026-11-09 08:50) | #991 | | [335-pigs-farsi-four-re-rendered-lines.md](../slices/335-pigs-farsi-four-re-rendered-lines.md) |
+| 347 | Dino: both web pages (dinoreader.sirous.uk, sirous.uk/dino-reader) tell today's facts, with fresh screenshots | done 2026-11-09; the three app bugs from the screenshot run are Slice 349 | #1000 | | [347-dino-web-pages-current.md](../slices/347-dino-web-pages-current.md) |
+| 348 | Dino: the privacy page describes today's app (no scans, OCR, ML Kit, voice engine or own books) | done 2026-11-09 | #1007 | | [348-dino-privacy-page-current.md](../slices/348-dino-privacy-page-current.md) |
+| 351 | Dino: every usage row carries UI language, first launch / install age / launch count buckets and seconds since launch; reading fallbacks carry the book; `clip_missing` and `animal_clip_unplayable` split into their real causes | built #1014 | #1014 | | [351-dino-usage-context-and-audio-causes.md](../slices/351-dino-usage-context-and-audio-causes.md) |
+| 349 | Dino: grown-ups corner status-bar icons unreadable, "Settings" and Arabic tab labels clipped, unused iPhone camera/photo texts | built | #1015, #1021 | | [349-dino-corner-status-bar-and-tab-labels.md](../slices/349-dino-corner-status-bar-and-tab-labels.md) |
+| 352 | Dino: every screen, wizard page (next, back, skip), button press and setting change counted; where a read started; flush when the app goes to the background; session timeline tool (after 351) | built | #1022 | | [352-dino-screen-and-tap-events.md](../slices/352-dino-screen-and-tap-events.md) |
+| 355 | Dino: public web page listing every store book, free or paid, and the price (apps unchanged) | built | #1053 | | [355-dino-web-catalogue.md](../slices/355-dino-web-catalogue.md) |
+| 356 | Dino illustrator: one script call per picture set-up, no per-click screenshots, fresh agent per page group, tokens and seconds per picture measured before and after | built, not yet verified | #1035 | | [356-illustrator-faster-and-cheaper.md](../slices/356-illustrator-faster-and-cheaper.md) |
+| 363 | Dino: the grown-ups' gate as one centred card on Windows and every screen 600 or wider (2026-11-13 mock) | built, not yet verified | #1060 | | [363-dino-windows-grownups-gate-card.md](../slices/363-dino-windows-grownups-gate-card.md) |
+| 364 | Slice 357 design pass: the 2026-11-13 Missing States mock's items (S1-S3 built; RT1/RT2 row layouts not built, waiting on a design) | built, not yet verified | #1062 | | [364-server-errors-design-pass.md](../slices/364-server-errors-design-pass.md) |
+| 360 | Dino: book audio missing and "Waiting for Wi-Fi…" on Play: retry every hour and on opening the book (never weekly), mobile data for all book audio, keep old packs on the server, say what is wrong, log it; plus the VIBRATE crash on the grown-ups' hold | built, not yet verified | #1063 | | [360-dino-play-waits-for-wifi.md](../slices/360-dino-play-waits-for-wifi.md) |
+| 330 | Listening page: Store listening track, page gaps audible | verified 2026-11-13 (measured with ffmpeg, no listen needed) | #1064 | | [330-store-listening-track-page-gaps-audible.md](../slices/330-store-listening-track-page-gaps-audible.md) |
+| 362 | Dino: onboarding that shows what Dino can do (2026-11-13 mock): six required steps (language, story languages, first books, listen in every family language, record one character and hear yourself, grown-ups' corner tour and child's shelf), replacing the first run and the intro | built, not yet verified | #1076 | | [362-dino-onboarding-shows-what-dino-can-do.md](../slices/362-dino-onboarding-shows-what-dino-can-do.md) |
+| 358 | Dino Android: "Connect to the internet to buy" while online, no Buy button (empty Play prices, unreported) | built, not yet verified | #1075 | | [358-dino-android-no-buy-button.md](../slices/358-dino-android-no-buy-button.md) |
+
+## Shared
+
+| # | Slice | Status | PR | Story | File |
+| --- | --- | --- | --- | --- | --- |
+| 9 | Local neural voices (sherpa-onnx + Supertonic-3) | built | — | — | [09-local-neural-voices.md](../slices/09-local-neural-voices.md) |
+| 14 | MIT license + Conventional-Commits auto-release | built | — | #57 | [14-mit-license-conventional-commits-auto-release.md](../slices/14-mit-license-conventional-commits-auto-release.md) |
+| 34 | Android CI: build + signed AAB, internal testing track | built | — | — | [34-android-ci-build-signed-aab-internal.md](../slices/34-android-ci-build-signed-aab-internal.md) |
+| 39 | Windows: no artifacts, release via draft | built | — | — | [39-windows-no-artifacts-release-via-draft.md](../slices/39-windows-no-artifacts-release-via-draft.md) |
+| 40 | Android into the same pipeline and release | built | — | — | [40-android-into-the-same-pipeline-and.md](../slices/40-android-into-the-same-pipeline-and.md) |
+| 41 | Path-filtered per-platform builds | built | — | — | [41-path-filtered-per-platform-builds.md](../slices/41-path-filtered-per-platform-builds.md) |
+| 42 | Retention safety net | built | — | — | [42-retention-safety-net.md](../slices/42-retention-safety-net.md) |
+| 44 | Pipeline: iOS filter group, platform-neutral Mobile root | built | #183 | — | [44-pipeline-ios-split.md](../slices/44-pipeline-ios-split.md) |
+| 48 | iOS target and TestFlight from CI | built | #186 | — | [48-ios-target-testflight.md](../slices/48-ios-target-testflight.md) |
+| 60 | Reading with a voice per character | built | #193 | — | [60-per-character-voice-reading.md](../slices/60-per-character-voice-reading.md) |
+| 63 | Positioned text extraction, kept page images | built | #205 | — | [63-positioned-text-extraction.md](../slices/63-positioned-text-extraction.md) |
+| 68 | Landing site served by a Cloudflare Worker | built | #182 | — | [68-landing-site-on-worker.md](../slices/68-landing-site-on-worker.md) |
+| 69 | Android APK downloads from R2, with a "latest" link | built | #187 | — | [69-apk-downloads-on-r2.md](../slices/69-apk-downloads-on-r2.md) |
+| 70 | Split the build pipeline into the Lets-Call-Mom shape | built | #190 | — | [70-split-build-pipeline.md](../slices/70-split-build-pipeline.md) |
+| 71 | Repo hygiene and the Drive mirror | built | #184 | — | [71-repo-hygiene.md](../slices/71-repo-hygiene.md) |
+| 72 | Android dependencies to latest, R8 shrinking and obfuscation | built | — | #220 | [72-android-deps-r8-obfuscation.md](../slices/72-android-deps-r8-obfuscation.md) |
+| 73 | Edge-to-edge on Android 15+: safe areas on every screen | built | — | #224 | [73-edge-to-edge-safe-areas.md](../slices/73-edge-to-edge-safe-areas.md) |
+| 76 | Soft line-break reflow and heading detection (both apps) | built | | #233 | [76-soft-line-break-reflow.md](../slices/76-soft-line-break-reflow.md) |
+| 89 | Four Farsi voices in one pack (ganji_adabi by default), Amir dropped | built | #262 | | [89-four-farsi-voices.md](../slices/89-four-farsi-voices.md) |
+| 103 | Danish, Finnish, Swedish, Norwegian and Dutch in every app | built | #286 | | [103-nordic-dutch-languages.md](../slices/103-nordic-dutch-languages.md) |
+| 104 | A Norwegian voice pack (Piper nvcc, ten speakers) | built | #291 | | [104-piper-norwegian-pack.md](../slices/104-piper-norwegian-pack.md) |
+| 127 | Release safety: Dino iOS .ipa gap and the Store id fallback | built | #358 | | [127-release-safety-fixes.md](../slices/127-release-safety-fixes.md) |
+| 128 | Tray code out of the shared Infrastructure, and tests per product | built | #363 | | [128-tray-code-out-of-shared-infrastructure.md](../slices/128-tray-code-out-of-shared-infrastructure.md) |
+| 130 | A version and a release per product | built | #367 | | [130-per-product-versions-and-releases.md](../slices/130-per-product-versions-and-releases.md) |
+| 131 | Mobile.Shared gets its own namespace | built | #371 | | [131-mobile-shared-namespace.md](../slices/131-mobile-shared-namespace.md) |
+| 143 | One shared wait overlay; Dino shows it on every wait | built | #383 | | [143-shared-wait-overlay-dino-loading.md](../slices/143-shared-wait-overlay-dino-loading.md) |
+| 149 | Never drop a short word: catch silent output from the voices | built | #401 | | [149-never-drop-a-short-word.md](../slices/149-never-drop-a-short-word.md) |
+| 148 | Phone apps: mid-read stalls, wait counts and wave leftovers | built | #416 | | [148-phone-wait-followups.md](../slices/148-phone-wait-followups.md) |
 | 161 | Fast tests: one warm headless x86_64 emulator, x86_64 Debug build | built | #485 | | [161-warm-headless-x64-emulator.md](../slices/161-warm-headless-x64-emulator.md) |
+| 162 | Fast tests: Maestro flows and Debug-only test hooks (both apps) | built | #490 | | [162-scripted-device-flows.md](../slices/162-scripted-device-flows.md) |
+| 164 | Fast tests: move more logic out of UI code into unit tests | built | #491 | | [164-more-logic-in-unit-tests.md](../slices/164-more-logic-in-unit-tests.md) |
+| 166 | Usage counts: country, OS version, form factor and hardware buckets (both apps) | built | #492 | | [166-usage-device-context.md](../slices/166-usage-device-context.md) |
+| 167 | Usage counts: don't count test devices (both apps) | built | #497 | | [167-no-test-device-counts.md](../slices/167-no-test-device-counts.md) |
+| 168 | German in both apps (UI, voice, detection, translation, Dino rules) | built | #495 | | [168-german-in-both-apps.md](../slices/168-german-in-both-apps.md) |
+| 163 | Fast tests: Windows desktop tests in a headless Hyper-V VM | built | #508 | | [163-desktop-tests-in-hyperv-vm.md](../slices/163-desktop-tests-in-hyperv-vm.md) |
+| 165 | Fast tests: audio and timing on the real phone over wireless adb | built | #510 | | [165-real-phone-audio-timing-checks.md](../slices/165-real-phone-audio-timing-checks.md) |
+| 175 | Close the test gaps: permanent VM selection+hotkey check, Debug Dino page hook, engine/synthesis markers, ISO cleanup, VM licence check | built | #517 | | [175-test-gaps-permanent-checks.md](../slices/175-test-gaps-permanent-checks.md) |
+| 180 | Faster device tests: only the touched apps, build once per commit, Android and Windows side by side, a second emulator (tooling only) | built | #536, #538 | | [180-faster-device-tests.md](../slices/180-faster-device-tests.md) |
+| 179 | No Play robot, VM or own-machine runs in the usage counts (Worker drops ARM-less phones, Store-only Windows, harness off switch) | built | #542 |  | [179-no-robot-or-own-machine-counts.md](../slices/179-no-robot-or-own-machine-counts.md) |
+| 185 | Confirm and close three old gaps: Dino first run on the x64 emulator, RTST language-page Continue, the 36 MB ReviewPage crash (fix only what still fails) | built | #545 |  | [185-close-three-old-gaps.md](../slices/185-close-three-old-gaps.md) |
+| 182 | A pack download that stopped "offline" resumes by itself when the network or the app comes back (both apps, all big packs, mobile-data rule kept) | built | #544 |  | [182-pack-download-resumes-by-itself.md](../slices/182-pack-download-resumes-by-itself.md) |
+| 183 | Big pack downloads keep going when the phone is locked or the app is in the background (Android foreground service with a progress notification, iOS background URLSession; after 182) | built | #549 |  | [183-pack-downloads-keep-going-when-locked.md](../slices/183-pack-downloads-keep-going-when-locked.md) |
+| 199 | Unit tests for the test-hook launch keys, BookMatch and the phone timing parser (Slice 175 gap) | built | #586 |  | [199-test-hook-unit-tests.md](../slices/199-test-hook-unit-tests.md) |
+| 200 | Check the live usage data after the store rollouts (Slices 133-179 live-row items) | built | #587 |  | [200-live-usage-data-checks.md](../slices/200-live-usage-data-checks.md) |
+| 204 | A voice pack the user cancelled stays cancelled after a restart (follow-up to 186) | built | #588 | | [204-cancelled-voice-pack-stays-cancelled.md](../slices/204-cancelled-voice-pack-stays-cancelled.md) |
+| 206 | Phone scripts for unattended runs (preflight, lease, reset-dev-app, tap) | built | #594 | | [206-phone-run-scripts.md](../slices/206-phone-run-scripts.md) |
+| 207 | Guards for emulator, VM and flow mistakes | built | #596 | | [207-device-test-guards.md](../slices/207-device-test-guards.md) |
+| 212 | Flow hooks reach the running app; tool self-tests in CI | built | #600 | | [212-flow-hooks-and-tools-ci.md](../slices/212-flow-hooks-and-tools-ci.md) |
+| 213 | One phone check runner (`tools/phone/run-checks.ps1`) with a fixed 10-minute budget, no hidden builds, named checks | built | #610 | | [213-phone-check-runner.md](../slices/213-phone-check-runner.md) |
+| 210 | A short Kokoro line is dropped ("gave up"): log, reproduce, then fix by the evidence | built | #631 | | [210-kokoro-short-line-dropped.md](../slices/210-kokoro-short-line-dropped.md) |
+| 219 | Usage counts drop dev builds below version 1.0 (worker and client) | built | #632 | | [219-usage-drops-dev-versions.md](../slices/219-usage-drops-dev-versions.md) |
+| 216 | Phone tooling leftovers from the Slice 213 runs: a build swap re-downloaded the voice pack (repro first), audio-timing warm repeats labelled cold, build path-length guard, audio-timing log folder | built | #637 |  | [216-phone-tooling-leftovers.md](../slices/216-phone-tooling-leftovers.md) |
+| 215 | Close the gaps left by Slices 207 and 212: status label id, emulator health check and restart, test the one-emulator limit, lint gaps | built | #639 |  | [215-device-guard-gaps.md](../slices/215-device-guard-gaps.md) |
+| 209 | Test hooks: set-language, set-voice, set-translate, and a staged Dino book update for the Slice 181 timing | built | #644 |  | [209-settings-and-book-update-test-hooks.md](../slices/209-settings-and-book-update-test-hooks.md) |
+| 208 | Paused pack downloads tell you ("Download paused. Tap to finish.") and half-finished packs finish or are deleted at launch (Slice 183 follow-up) | built | #646 | — | [208-paused-pack-downloads-tell-you-and-finish.md](../slices/208-paused-pack-downloads-tell-you-and-finish.md) |
+| 222 | Microsoft Store marker hardening (rerun Slice 218 medium review: mark job tag lookup, marker moves, Dino-only runs) | built | #667 | [222-store-marker-hardening.md](docs/plan/slices/222-store-marker-hardening.md) | [222-store-marker-hardening.md](../slices/222-store-marker-hardening.md) |
+| 223 | Usage counts: one pre-1.0 version rule, tested the same on worker and client (Slice 219 review cleanups) | built | #665 | [223-usage-version-rule-cleanup.md](docs/plan/slices/223-usage-version-rule-cleanup.md) | [223-usage-version-rule-cleanup.md](../slices/223-usage-version-rule-cleanup.md) |
+| 233 | "Download paused. Tap to finish." posts on the same events on Android and iOS (Slice 208 follow-up: Android also posts when the network drops in the background) | built | #672 | | [233-paused-notice-same-on-android-and-ios.md](../slices/233-paused-notice-same-on-android-and-ios.md) |
+| 245 | sherpa-onnx: one version (1.13.8) on Android, iOS and Windows, with a pin-equality check; 2.0.x deferred | built | #714 | | [245-sherpa-onnx-one-version.md](../slices/245-sherpa-onnx-one-version.md) |
+| 220 | Kokoro returns silent audio for short lines on arm64 (S21), so "Ann." and "Help!" still drop (Slice 210 follow-up): NaN detection (part 1), kokoro-en model swap (part 2) | built | #638, #685 | | [220-kokoro-silent-short-lines-arm64.md](../slices/220-kokoro-silent-short-lines-arm64.md) |
+| 224 | Phone runner: a dead builder pid reads as a stall, and a cache miss builds inside a timed run (`-NoBuild`) | built | #682 | | [224-phone-runner-build-cache-gaps.md](../slices/224-phone-runner-build-cache-gaps.md) |
+| 221 | Device-test tooling leftovers from the 2026-10-30-2100 night (Dino read hook voice, one Dino dev package id, phone build-only switch, dispatch vs push concurrency) | built | #694 | — | [221-device-test-tooling-leftovers-night-1.md](../slices/221-device-test-tooling-leftovers-night-1.md) |
+| 225 | Device-test tooling leftovers from the 2026-10-31-1301 night (scripted S21 restore, device-wide change lint, run-flows two-package bug, per-checkout run status, a unit test for Slice 208's DecideAll; item 3, the run-checks emulator path, stays open) | built | #696 | — | [225-device-tooling-leftovers-night-2026-10-31-1301.md](../slices/225-device-tooling-leftovers-night-2026-10-31-1301.md) |
+| 241 | Faster, quieter device tests (emulator snapshot boot, build during boot, crash fail-fast, detached builds, iOS pack stall watcher) | built | #708 | | [241-device-test-speed.md](../slices/241-device-test-speed.md) |
+| 236 | Phone runner gaps from night 2026-11-01-0859 round 2 (`-Voices`, pin a run's variant, reset leaves a pack hold, lease owner default, aside copies, stay-awake restore, an unexplained compat kill; item 8 stays with Slice 242) | built | #721 | | [236-phone-runner-gaps-night-2026-11-01-0859.md](../slices/236-phone-runner-gaps-night-2026-11-01-0859.md) |
+| 238 | packs.yml version defaults match the live catalog (Norwegian defaults to 1, packs-11 ships 2) | built | #723 | | [238-packs-workflow-defaults-match-catalog.md](../slices/238-packs-workflow-defaults-match-catalog.md) |
+| 242 | Leftovers from night 2026-11-01-0859 round 4 (run-marker collision, emulator no-build, a raw separator byte, a tablet AVD, 232's mock deviations, a workflow permission check) | built | #727, #731 | | [242-round-4-leftovers-night-2026-11-01-0859.md](../slices/242-round-4-leftovers-night-2026-11-01-0859.md) |
+| 247 | Leftovers from the night's final feedback loop (why emulator flows take about a minute each, the silent kokoro-en download, the one-off Mono SIGSEGV, Slice 240's cache hit on main) | built | #744 | | [247-final-loop-leftovers-night-2026-11-01-0859.md](../slices/247-final-loop-leftovers-night-2026-11-01-0859.md) |
+| 252 | Release CI: a hung signed iOS build can't hold the release queue for hours; measure and speed up the signed iOS build | built | #778 | | [252-release-ios-build-timeout-and-speed.md](../slices/252-release-ios-build-timeout-and-speed.md) |
+| 253 | Final-loop leftovers, night 2026-11-01-2355: ANR dialog in the tools, screenshots in Dino flows, VM check dry run, AutomationId test, 247 self-test difference, faster slow emulator flows | built | #784 | | [253-final-loop-leftovers-night-2026-11-01-2355.md](../slices/253-final-loop-leftovers-night-2026-11-01-2355.md) |
+| 259 | Leftovers from night 2026-11-03-2349 (mid-book loading state, batch tool low findings, VM crash evidence, iOS signed hang, Release publish in fast checks) | built | #800 | | [259-night-2026-11-03-2349-leftovers.md](../slices/259-night-2026-11-03-2349-leftovers.md) |
+| 266 | Waves: stop wasting the minutes between fix attempts (RTST half; ClaudeSkills #165) | built | #809 | | [266-wave-fix-attempt-speed.md](../slices/266-wave-fix-attempt-speed.md) |
+| 263 | Dino: both apps about 50-60 MB; iPhone drops Google ML Kit translation | dropped (user, 2026-11-05: keep ML Kit on the iPhone for now; starters out via 261 already cut both apps) | | | [263-dino-text-reader-on-first-capture.md](../slices/263-dino-text-reader-on-first-capture.md) |
+| 269 | Leftovers from night 2026-11-04-1441: checks that would have caught the Store crash, BookUpdater undoing Cancel, emulator and VM check tools | built | #835 | | [269-feedback-loop-2026-11-04-1441-leftovers.md](../slices/269-feedback-loop-2026-11-04-1441-leftovers.md) |
+| 273 | Every fallback sends an analytics event (both apps, every platform; parts A-E) | built | #842, #845, #846, #848, #849 | | [273-fallback-events-everywhere.md](../slices/273-fallback-events-everywhere.md) |
+| 271 | Leftovers from night 2026-11-05-1823 (pause-path test, multi-clip VM and emulator checks, `tmp/` listing, unknown-tag flow) | built | #856 | | [271-night-2026-11-05-1823-leftovers.md](../slices/271-night-2026-11-05-1823-leftovers.md) |
+| 275 | Leftovers from night 2026-11-06-0042 (408 unmarked catches, past-roar flow marker, cache-key miss, live-scan script, cancelled pack count, Goldilocks version) | built (item 4 open, see plan.md Outstanding work) | #857, #868, #877 | | [275-night-2026-11-06-0042-leftovers.md](../slices/275-night-2026-11-06-0042-leftovers.md) |
+| 294 | The `-NoBuild` cache-key miss in the emulator runner (Slice 275 item 4) | built | #900 | | [294-emulator-nobuild-cache-key-miss.md](../slices/294-emulator-nobuild-cache-key-miss.md) |
+| 302 | Slice 239 leftovers: renamed store package downloaded twice, `dino-store.yml` paths | built | #906 | | [302-slice-239-leftovers.md](../slices/302-slice-239-leftovers.md) |
+| 306 | ClaudeSkills merge pipeline leftovers (built in `D:\ClaudeSkills`) | built | ClaudeSkills #184 | | [306-claudeskills-merge-pipeline-leftovers.md](../slices/306-claudeskills-merge-pipeline-leftovers.md) |
+| 284 | Leftovers from night 2026-11-06-1250 final feedback loop (fallback guard on untracked files, VM record check, device marks, three small follow-ups) | built | #913 | | [284-final-loop-leftovers-night-2026-11-06-1250.md](../slices/284-final-loop-leftovers-night-2026-11-06-1250.md) |
+| 308 | Slice 225 items 3 and 6: `run-checks.ps1 -Serial` for emulators, failed-build cause | built | #914 | | [308-slice-225-run-checks-serial-and-build-cause.md](../slices/308-slice-225-run-checks-serial-and-build-cause.md) |
+| 307 | ClaudeSkills hooks and guards leftovers (built in `D:\ClaudeSkills`; item 10 open) | built | ClaudeSkills #186 | | [307-claudeskills-hooks-and-guards-leftovers.md](../slices/307-claudeskills-hooks-and-guards-leftovers.md) |
+| 300 | A kept problem report must not be wiped at next start when the remote crash switch is off | built | #919 | | [300-user-report-kept-while-crash-switch-off.md](../slices/300-user-report-kept-while-crash-switch-off.md) |
+| 301 | Slice 247 follow-ups: emulator runner crash wait, crash log on retry (item 3, faster slow flows, not built) | built | #918 | | [301-slice-247-follow-ups-emulator-runner.md](../slices/301-slice-247-follow-ups-emulator-runner.md) |
+| 297 | Slice 267 follow-ups (read_voice count, layout-check leaks, wizard button grid) | built | #926 | | [297-slice-267-follow-ups.md](../slices/297-slice-267-follow-ups.md) |
+| 312 | Read the iPhone's crash logs from this PC | built | #924 | | [312-read-iphone-crash-logs-from-this-pc.md](../slices/312-read-iphone-crash-logs-from-this-pc.md) |
+| 311 | Crash data for the Windows apps from the Microsoft Store | built | #930 | | [311-windows-store-crash-data.md](../slices/311-windows-store-crash-data.md) |
+| 315 | Feedback loop 2026-11-07-1412 leftovers (temp APK writer, disk-free preflight, driver end reason, Worker deploy after `[skip ci]`, tooling guards) | built (#942); ClaudeSkills half merged ashkansirous/ClaudeSkills#189 | #942 | | [315-feedback-loop-2026-11-07-1412-leftovers.md](../slices/315-feedback-loop-2026-11-07-1412-leftovers.md) |
+| 316 | Gaps found by the unverified-checks triage (missing scripted checks, tooling printouts, unchecked review skip reasons, RTST Android timer, a flaky test) | built | #946 | | [316-unverified-triage-gaps.md](../slices/316-unverified-triage-gaps.md) |
+| 319 | Fixes from the 2026-11-08 device run (item 2, Dino Windows Record screen alert, still open) | built | #957 | | [319-device-run-2026-11-08-fixes.md](../slices/319-device-run-2026-11-08-fixes.md) |
+| 147 | iOS review cadence: one review at a time, the newest build, never cancel | built | #386 | | [147-ios-review-cadence.md](../slices/147-ios-review-cadence.md) |
+| 338 | Listening page: Kokoro rescued short lines (English) | dropped 2026-11-08: no shipped app speaks with Kokoro | | | [338-kokoro-rescued-short-lines-english.md](../slices/338-kokoro-rescued-short-lines-english.md) |
+| 320 | Device-check fixes and missing test hooks from the 2026-11-08 run (`stall-return-overlay` moved to Slice 345) | built | #961 | | [320-device-check-tooling-from-2026-11-08-run.md](../slices/320-device-check-tooling-from-2026-11-08-run.md) |
+| 339 | Listening page: real phone audio timing | dropped 2026-11-09: timing is measured by `tools/phone/audio-timing.ps1`, not by ear; the gap check moved to unverified.md as a Device line | | | [339-real-phone-audio-timing.md](../slices/339-real-phone-audio-timing.md) |
+| 353 | CI: keep the .NET 10 SDK on runners with .NET 11 (android.yml workload install breaks), fix the Dino Windows VM test package (FakePurchases CS0234) | built | #1024 | | [353-ci-sdk-pin-and-vm-test-package.md](../slices/353-ci-sdk-pin-and-vm-test-package.md) |
+| 295 | Bump `MauiVersion` to 10.0.130 for dotnet/maui #38662 (Slice 274 workaround removal still open, item 5) | built | #1050 | | [295-bump-maui-version-for-pr-38662.md](../slices/295-bump-maui-version-for-pr-38662.md) |
+| 357 | Server errors the user can see: standard translated messages per status, the server's English text only on 400, shop and voice packs in both apps (parts A-C, pre-mock plan; the mock's items are Slice 364, part D open until paid books are switched on) | built | #1052 | | [357-server-error-messages.md](../slices/357-server-error-messages.md) |
+| 365 | `worker/catalogue.test.mjs` "the page file uses LF line endings" fails on a Windows checkout (CRLF working copy); test what is committed | built, not yet verified | #1061 | | [365-catalogue-lf-test-windows.md](../slices/365-catalogue-lf-test-windows.md) |
+| 372 | S21 check fixes: Samsung notification flags in `_lib.ps1`, `Stop-DeviceRestore` false warning, `book-end` budget | built | #1077 | | [372-s21-check-fixes-2026-11-13.md](../slices/372-s21-check-fixes-2026-11-13.md) |
+| 368 | Tidy by product 3/6: tests for the shared code in their own test project | built | #1078 | | [368-shared-tests-project.md](../slices/368-shared-tests-project.md) |
 
 ## Batch ordering notes
 
@@ -199,90 +403,6 @@ Batch 29 (137-142, planned 2026-10-26, RTST usage counts, waiting and early star
 Batch 30 (143-146 and 148, planned 2026-10-26, Dino loading, Farsi voice and kid-friendly language): 143 builds the shared wait overlay (RTST 138 reuses it), 144 is small and independent, 145 measures sound-word spellings before 146 rewrites every book (one PR per book: Farsi, then English, then the rest). 143, 144, 145 and 148 (the stall and wait-count follow-ups, PR #416) are built; 146 is in progress: Farsi wave A is merged (PRs #403-#411, #439-#444; x-marks-the-treasure not yet), and English and the other languages (waves B and C) now run together per book, one PR per book, with Slice 156's voice choices. Decisions 149-153.
 
 Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure book's Seagull): each book stores every character's traits and a suggested voice, chosen by the story writer; the app uses the suggestion and falls back to the traits. It follows Slice 152 (shares `Story.cs`/`StoryCast.cs`/`CastCharacters.cs`/`CastRows.cs` and reuses its `Animal` field as the "kind" trait) and Slice 153 (both edit `CharacterRoster*.cs`). The code is built (PR #438); the "Every book" writer pass is still to do. Decision 161.
-| 157 | Dino: book content and the book builder out of the test project | built | #475 | | [157-dino-book-content-out-of-tests.md](../slices/157-dino-book-content-out-of-tests.md) |
-| 162 | Fast tests: Maestro flows and Debug-only test hooks (both apps) | built | #490 | | [162-scripted-device-flows.md](../slices/162-scripted-device-flows.md) |
-| 164 | Fast tests: move more logic out of UI code into unit tests | built | #491 | | [164-more-logic-in-unit-tests.md](../slices/164-more-logic-in-unit-tests.md) |
-| 166 | Usage counts: country, OS version, form factor and hardware buckets (both apps) | built | #492 | | [166-usage-device-context.md](../slices/166-usage-device-context.md) |
-| 167 | Usage counts: don't count test devices (both apps) | built | #497 | | [167-no-test-device-counts.md](../slices/167-no-test-device-counts.md) |
-| 168 | German in both apps (UI, voice, detection, translation, Dino rules) | built | #495 | | [168-german-in-both-apps.md](../slices/168-german-in-both-apps.md) |
-| 169 | German translations for all 15 Dino books | built | #503 | | [169-german-dino-books.md](../slices/169-german-dino-books.md) |
-| 170 | Tray panel: every Controls button fits | built | #505 | | [170-tray-panel-controls-row-fits.md](../slices/170-tray-panel-controls-row-fits.md) |
-| 171 | Dino: the text card scrolls with the reading | built | #506 | | [171-dino-text-card-shows-whole-page.md](../slices/171-dino-text-card-shows-whole-page.md) |
-| 163 | Fast tests: Windows desktop tests in a headless Hyper-V VM | built | #508 | | [163-desktop-tests-in-hyperv-vm.md](../slices/163-desktop-tests-in-hyperv-vm.md) |
-| 165 | Fast tests: audio and timing on the real phone over wireless adb | built | #510 | | [165-real-phone-audio-timing-checks.md](../slices/165-real-phone-audio-timing-checks.md) |
-| 172 | Dino: one gear for all grown-up settings (sub-page per setting; "Free stories" -> "More stories") | built | #519 | | [172-dino-settings-gear.md](../slices/172-dino-settings-gear.md) |
-| 174 | Dino: a cleaner reading screen (waits on the user's Claude Design mock) and a back button that never surprises (after 172) | built | #521 | | [174-dino-reading-screen-and-back-button.md](../slices/174-dino-reading-screen-and-back-button.md) |
-| 175 | Close the test gaps: permanent VM selection+hotkey check, Debug Dino page hook, engine/synthesis markers, ISO cleanup, VM licence check | built | #517 | | [175-test-gaps-permanent-checks.md](../slices/175-test-gaps-permanent-checks.md) |
-| 176 | Reading text that is only spaces must not throw (NullReferenceException found on the phone) | built | #518 | | [176-whitespace-read-crash.md](../slices/176-whitespace-read-crash.md) |
-| 173 | Dino: up to three story languages, switched by the kid (after 172) | built | #525 | | [173-dino-kid-story-languages.md](../slices/173-dino-kid-story-languages.md) |
-| 177 | Dino: slow speech for the first reads after the app starts (measure on Release, then fix; after 175) | built | #522 | | [177-dino-cold-start-synthesis.md](../slices/177-dino-cold-start-synthesis.md) |
-| 180 | Faster device tests: only the touched apps, build once per commit, Android and Windows side by side, a second emulator (tooling only) | built | #536, #538 | | [180-faster-device-tests.md](../slices/180-faster-device-tests.md) |
-| 179 | No Play robot, VM or own-machine runs in the usage counts (Worker drops ARM-less phones, Store-only Windows, harness off switch) | built | #542 |  | [179-no-robot-or-own-machine-counts.md](../slices/179-no-robot-or-own-machine-counts.md) |
-| 185 | Confirm and close three old gaps: Dino first run on the x64 emulator, RTST language-page Continue, the 36 MB ReviewPage crash (fix only what still fails) | built | #545 |  | [185-close-three-old-gaps.md](../slices/185-close-three-old-gaps.md) |
-| 178 | Dino: count an own book's page count and how it really came in (pdf, docx, txt, photo, scan, typed, mixed) | built | #547 |  | [178-dino-own-book-usage-detail.md](../slices/178-dino-own-book-usage-detail.md) |
-| 181 | Dino: books on the device update themselves from the store on app open, at most every 7 days (unedited copies only, any network, silent) | built | #543 |  | [181-dino-books-update-from-store.md](../slices/181-dino-books-update-from-store.md) |
-| 182 | A pack download that stopped "offline" resumes by itself when the network or the app comes back (both apps, all big packs, mobile-data rule kept) | built | #544 |  | [182-pack-download-resumes-by-itself.md](../slices/182-pack-download-resumes-by-itself.md) |
-| 184 | Windows: an English-to-Japanese translation pack | built | #562 |  | [184-windows-english-to-japanese-pack.md](../slices/184-windows-english-to-japanese-pack.md) |
-| 183 | Big pack downloads keep going when the phone is locked or the app is in the background (Android foreground service with a progress notification, iOS background URLSession; after 182) | built | #549 |  | [183-pack-downloads-keep-going-when-locked.md](../slices/183-pack-downloads-keep-going-when-locked.md) |
-| 189 | Dino: one "For grown-ups" button on the shelf, the gear inside grown-up mode, a ⋯ sheet per book, a reading card capped at 30% | built | #560 |  | [189-dino-grown-ups-button-and-book-sheet.md](../slices/189-dino-grown-ups-button-and-book-sheet.md) |
-
-| 201 | The Norwegian voice pack no longer crashes the app (piper-nb tokens fixed, packs-10; a bad pack is rejected, not loaded) | built | #571 |  | [slices\201-norwegian-pack-crash.md](../slices/201-norwegian-pack-crash.md) |
-| 202 | Changing the app language with text in the reader no longer crashes the app | built | #577 |  | [slices\202-reader-language-change-crash.md](../slices/202-reader-language-change-crash.md) |
-| 186 | RTST: no scan pack download after the user cancels the voice pack (follow-up to 183) | built | #574 |  | [186-no-ocr-download-after-voice-cancel.md](../slices/186-no-ocr-download-after-voice-cancel.md) |
-| 190 | RTST phone: highlight one sentence at a time (Android and iOS; Windows unchanged) | built | #573 |  | [190-rtst-phone-sentence-highlight.md](../slices/190-rtst-phone-sentence-highlight.md) |
-| 196 | Dino: each book opens in the view that fits it (words in the pictures -> Picture only) | built | #575 |  | [196-dino-default-view-per-book.md](../slices/196-dino-default-view-per-book.md) |
-| 203 | Dino on the Microsoft Store: turn on automatic submissions and link it | built | #578 |  | [203-dino-microsoft-store-live.md](../slices/203-dino-microsoft-store-live.md) |
-| 187 | Translation downloads wait for the internet (Slice 182 frame R12, both apps, Android and iOS) | built | #576 |  | [187-translation-download-waits-for-internet.md](../slices/187-translation-download-waits-for-internet.md) |
-| 188 | Dino Settings behind the grown-up gate as a permanent VM check (Slice 172 follow-up) | built | #585 |  | [188-dino-settings-vm-check.md](../slices/188-dino-settings-vm-check.md) |
-| 191 | Dino: count restored and imported books (`own_book_added` kinds `restore`/`import`) | built | #581 |  | [191-dino-count-restored-and-imported-books.md](../slices/191-dino-count-restored-and-imported-books.md) |
-| 192 | Dino: the store credit line in every language, served by the store | built | #582 |  | [192-dino-store-credits-in-every-language.md](../slices/192-dino-store-credits-in-every-language.md) |
-| 197 | Dino: a "Download now" tap right after the mobile-data check is never dropped (Slice 115 gap) | built | #583 |  | [197-dino-download-now-tap-dropped.md](../slices/197-dino-download-now-tap-dropped.md) |
-| 198 | RTST phone: a Read tapped while early work is running reuses it (Slice 139 race) | closed, measured, no code | #584 |  | [198-rtst-phone-in-flight-early-start-race.md](../slices/198-rtst-phone-in-flight-early-start-race.md) |
-| 199 | Unit tests for the test-hook launch keys, BookMatch and the phone timing parser (Slice 175 gap) | built | #586 |  | [199-test-hook-unit-tests.md](../slices/199-test-hook-unit-tests.md) |
-| 200 | Check the live usage data after the store rollouts (Slices 133-179 live-row items) | built | #587 |  | [200-live-usage-data-checks.md](../slices/200-live-usage-data-checks.md) |
-| 194 | A VM script that retakes the control panel screenshot | built | #591 | | [194-control-panel-screenshot-script.md](../slices/194-control-panel-screenshot-script.md) |
-| 195 | Pick the default Norwegian voice by ear | built | #592 | | [195-norwegian-default-voice.md](../slices/195-norwegian-default-voice.md) |
-| 204 | A voice pack the user cancelled stays cancelled after a restart (follow-up to 186) | built | #588 | | [204-cancelled-voice-pack-stays-cancelled.md](../slices/204-cancelled-voice-pack-stays-cancelled.md) |
-| 206 | Phone scripts for unattended runs (preflight, lease, reset-dev-app, tap) | built | #594 | | [206-phone-run-scripts.md](../slices/206-phone-run-scripts.md) |
-| 207 | Guards for emulator, VM and flow mistakes | built | #596 | | [207-device-test-guards.md](../slices/207-device-test-guards.md) |
-| 212 | Flow hooks reach the running app; tool self-tests in CI | built | #600 | | [212-flow-hooks-and-tools-ci.md](../slices/212-flow-hooks-and-tools-ci.md) |
-| 213 | One phone check runner (`tools/phone/run-checks.ps1`) with a fixed 10-minute budget, no hidden builds, named checks | built | #610 | | [213-phone-check-runner.md](../slices/213-phone-check-runner.md) |
-| 210 | A short Kokoro line is dropped ("gave up"): log, reproduce, then fix by the evidence | built | #631 | | [210-kokoro-short-line-dropped.md](../slices/210-kokoro-short-line-dropped.md) |
-| 211 | Play right after typing waits for language detection, so it translates and picks the voice like a later Play (Slice 139 follow-up) | built | #633 | | [211-play-before-detection-waits-for-it.md](../slices/211-play-before-detection-waits-for-it.md) |
-| 218 | RTST Microsoft Store submission skipped Windows code changes (no Store build since before 1.74.0) | built | #630 | | [218-microsoft-store-submission-skipped.md](../slices/218-microsoft-store-submission-skipped.md) |
-| 219 | Usage counts drop dev builds below version 1.0 (worker and client) | built | #632 | | [219-usage-drops-dev-versions.md](../slices/219-usage-drops-dev-versions.md) |
-| 216 | Phone tooling leftovers from the Slice 213 runs: a build swap re-downloaded the voice pack (repro first), audio-timing warm repeats labelled cold, build path-length guard, audio-timing log folder | built | #637 |  | [216-phone-tooling-leftovers.md](../slices/216-phone-tooling-leftovers.md) |
-| 217 | RTST forced update from the remote config (port of Dino Slice 132; Android, iOS, Windows tray) | built | #640 |  | [217-rtst-forced-update.md](../slices/217-rtst-forced-update.md) |
-| 215 | Close the gaps left by Slices 207 and 212: status label id, emulator health check and restart, test the one-emulator limit, lint gaps | built | #639 |  | [215-device-guard-gaps.md](../slices/215-device-guard-gaps.md) |
-| 205 | Dino Windows head: the Reading speed row and the page-turn VM check (Slice 188 follow-up) | built | #645 |  | [205-dino-windows-reading-speed-and-page-turn-checks.md](../slices/205-dino-windows-reading-speed-and-page-turn-checks.md) |
-| 214 | RTST phone: the first read after a cold start takes 7 s (S21 AOT; first synthesis 5.9 s): find warm-up vs length, then fix to under 2 s | built | #647 |  | [214-rtst-phone-cold-first-audio.md](../slices/214-rtst-phone-cold-first-audio.md) |
-| 209 | Test hooks: set-language, set-voice, set-translate, and a staged Dino book update for the Slice 181 timing | built | #644 |  | [209-settings-and-book-update-test-hooks.md](../slices/209-settings-and-book-update-test-hooks.md) |
-| 208 | Paused pack downloads tell you ("Download paused. Tap to finish.") and half-finished packs finish or are deleted at launch (Slice 183 follow-up) | built | #646 | — | [208-paused-pack-downloads-tell-you-and-finish.md](../slices/208-paused-pack-downloads-tell-you-and-finish.md) |
-| 227 | Crash and error reports from the phone apps (Dino and RTST, Android and iOS): our own Worker endpoint, log tail, TestFlight tagged, Apple/Play pull tooling | built | #654 | | [227-crash-reports.md](../slices/227-crash-reports.md) |
-| 222 | Microsoft Store marker hardening (rerun Slice 218 medium review: mark job tag lookup, marker moves, Dino-only runs) | built | #667 | [222-store-marker-hardening.md](docs/plan/slices/222-store-marker-hardening.md) | [222-store-marker-hardening.md](../slices/222-store-marker-hardening.md) |
-| 223 | Usage counts: one pre-1.0 version rule, tested the same on worker and client (Slice 219 review cleanups) | built | #665 | [223-usage-version-rule-cleanup.md](docs/plan/slices/223-usage-version-rule-cleanup.md) | [223-usage-version-rule-cleanup.md](../slices/223-usage-version-rule-cleanup.md) |
-| 226 | Dino Settings rows and page text: Slice 205 review findings left open (hidden row children, stale NavRow name, per-line description read twice on TalkBack/VoiceOver) | built | #668 | [226-dino-settings-rows-review-leftovers.md](docs/plan/slices/226-dino-settings-rows-review-leftovers.md) | [226-dino-settings-rows-review-leftovers.md](../slices/226-dino-settings-rows-review-leftovers.md) |
-| 231 | Dino user test: Record page hides the words on picture books (bug) | built | #666 | [231-dino-record-page-shows-words.md](docs/plan/slices/231-dino-record-page-shows-words.md) | [231-dino-record-page-shows-words.md](../slices/231-dino-record-page-shows-words.md) |
-| 228 | Dino user test: kids' shelf vs grown-ups' corner made obvious (labelled Grown-ups pill, sticky "Back to my child's shelf", "Read now" in the book sheet, one intro card) | built | #673 | | [228-dino-grownups-corner-clarity.md](../slices/228-dino-grownups-corner-clarity.md) |
-| 233 | "Download paused. Tap to finish." posts on the same events on Android and iOS (Slice 208 follow-up: Android also posts when the network drops in the background) | built | #672 | | [233-paused-notice-same-on-android-and-ios.md](../slices/233-paused-notice-same-on-android-and-ios.md) |
-| 245 | sherpa-onnx: one version (1.13.8) on Android, iOS and Windows, with a pin-equality check; 2.0.x deferred | built | #714 | | [245-sherpa-onnx-one-version.md](../slices/245-sherpa-onnx-one-version.md) |
-| 239 | Dino: adding, changing or deleting a store story runs only the store upload (no app build, no tests, no review gate) | built | #700, #703 | | [239-dino-store-book-without-app-build.md](../slices/239-dino-store-book-without-app-build.md) |
-| 237 | Dino: a silent back cover (credits page) at the end of every book, all 16 books, and a standing rule in create-dino-story | built | #688 | | [237-dino-back-cover-credits.md](../slices/237-dino-back-cover-credits.md) |
-| 220 | Kokoro returns silent audio for short lines on arm64 (S21), so "Ann." and "Help!" still drop (Slice 210 follow-up): NaN detection (part 1), kokoro-en model swap (part 2) | built | #638, #685 | | [220-kokoro-silent-short-lines-arm64.md](../slices/220-kokoro-silent-short-lines-arm64.md) |
-| 224 | Phone runner: a dead builder pid reads as a stall, and a cache miss builds inside a timed run (`-NoBuild`) | built | #682 | | [224-phone-runner-build-cache-gaps.md](../slices/224-phone-runner-build-cache-gaps.md) |
-| 229 | Dino user test: Done/Continue button top right on every grown-up page (Continue moves the intro wizard on) | built | #683 | | [229-dino-subpage-done-button.md](../slices/229-dino-subpage-done-button.md) |
-| 221 | Device-test tooling leftovers from the 2026-10-30-2100 night (Dino read hook voice, one Dino dev package id, phone build-only switch, dispatch vs push concurrency) | built | #694 | — | [221-device-test-tooling-leftovers-night-1.md](../slices/221-device-test-tooling-leftovers-night-1.md) |
-| 225 | Device-test tooling leftovers from the 2026-10-31-1301 night (scripted S21 restore, device-wide change lint, run-flows two-package bug, per-checkout run status, a unit test for Slice 208's DecideAll; item 3, the run-checks emulator path, stays open) | built | #696 | — | [225-device-tooling-leftovers-night-2026-10-31-1301.md](../slices/225-device-tooling-leftovers-night-2026-10-31-1301.md) |
-| 230 | Dino user test: recordings stay on the phone (warm copy), and restore merges recordings into a story already on the phone | built | #693 | — | [230-dino-recordings-copy-and-restore-merge.md](../slices/230-dino-recordings-copy-and-restore-merge.md) |
-| 240 | Dino Reader Windows CI: cache the SDK, workload and NuGet packages | built | #702, #704 | | [240-dino-windows-ci-setup-cache.md](../slices/240-dino-windows-ci-setup-cache.md) |
-| 241 | Faster, quieter device tests (emulator snapshot boot, build during boot, crash fail-fast, detached builds, iOS pack stall watcher) | built | #708 | | [241-device-test-speed.md](../slices/241-device-test-speed.md) |
-| 236 | Phone runner gaps from night 2026-11-01-0859 round 2 (`-Voices`, pin a run's variant, reset leaves a pack hold, lease owner default, aside copies, stay-awake restore, an unexplained compat kill; item 8 stays with Slice 242) | built | #721 | | [236-phone-runner-gaps-night-2026-11-01-0859.md](../slices/236-phone-runner-gaps-night-2026-11-01-0859.md) |
-| 238 | packs.yml version defaults match the live catalog (Norwegian defaults to 1, packs-11 ships 2) | built | #723 | | [238-packs-workflow-defaults-match-catalog.md](../slices/238-packs-workflow-defaults-match-catalog.md) |
-| 242 | Leftovers from night 2026-11-01-0859 round 4 (run-marker collision, emulator no-build, a raw separator byte, a tablet AVD, 232's mock deviations, a workflow permission check) | built | #727, #731 | | [242-round-4-leftovers-night-2026-11-01-0859.md](../slices/242-round-4-leftovers-night-2026-11-01-0859.md) |
-| 232 | Dino user test: proper landscape design for every screen, phone and tablet (after 228 and 229) | built | #695, #724, #728, #732, #734 | | [232-dino-landscape-every-screen.md](../slices/232-dino-landscape-every-screen.md) |
-| 234 | Dino: proper design for tablets held upright (shelf 3-4 columns, picture-above-text reading, tablet-sized cards; after 232) | built | #736, #739, #738 | | [234-dino-tablet-portrait.md](../slices/234-dino-tablet-portrait.md) |
-| 248 | Dino iOS: leaving a book stops its read, and a new book never drives the old one's voice | built | #746 | | [248-dino-stop-read-on-leave-ios.md](../slices/248-dino-stop-read-on-leave-ios.md) |
-
 
 ## Batch lane-order paragraphs moved from plan.md (2026-10-30)
 
@@ -311,113 +431,3 @@ Batch 34 (157-158; both built, 157 PR #475, 158 PR #472, so the batch is done; p
 Batch 35 (159, built, PR #473, so the batch is done; planned 2026-10-27, the user found English all over Dino in Farsi): one slice in four parts: A (strings follow the stored language pick; fixes the intro wizard flipping to English after the store) ships first, then B (shipped titles on the shelf and store), C (own books translate on the phone, pack downloaded only when a parent asks) and D (guards). Decision 164.
 
 Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*): all six can run side by side (RTST phone reader, Dino usage, Dino store content and Worker, store text, VM tooling, voice order); 191 and 192 both touch `worker/` (different files). 195 starts with the user's listening pick. The two gaps it left without slices (Slices 115 and 139) are now Slices 197 and 198.
-| 247 | Leftovers from the night's final feedback loop (why emulator flows take about a minute each, the silent kokoro-en download, the one-off Mono SIGSEGV, Slice 240's cache hit on main) | built | #744 | | [247-final-loop-leftovers-night-2026-11-01-0859.md](../slices/247-final-loop-leftovers-night-2026-11-01-0859.md) |
-| 154 | Dino: vowel marks in Farsi and Arabic books | dropped 2026-11-03 (user: Gemini reads plain Farsi well, no manual work wanted; the Three Little Pigs part from #470 stays shipped) | #470 | | [154-dino-farsi-arabic-vowel-marks.md](../slices/154-dino-farsi-arabic-vowel-marks.md) |
-| 251 | Dino usage from TestFlight goes to its own beta dataset, never the production counts | built | #777 | | [251-dino-beta-usage-dataset.md](../slices/251-dino-beta-usage-dataset.md) |
-| 252 | Release CI: a hung signed iOS build can't hold the release queue for hours; measure and speed up the signed iOS build | built | #778 | | [252-release-ios-build-timeout-and-speed.md](../slices/252-release-ios-build-timeout-and-speed.md) |
-| 257 | Dino: a quote after "said Mouse." is the Mouse's, not the Lion's (Lion and the Mouse) | built | #775 | | [257-lion-and-mouse-speaker.md](../slices/257-lion-and-mouse-speaker.md) |
-| 254 | Dino: speaker first in Farsi and Arabic ("X said:" then the whole quote), and animal sounds next to the animal's own words | built | #759, #762 | | [254-dino-speaker-first-and-sound-placement.md](../slices/254-dino-speaker-first-and-sound-placement.md) |
-| 256 | Dino: `dump-sentences` works for picture books (Good Enough), so it gets Gemini audio | built | #782 | | [256-good-enough-sentence-dump.md](../slices/256-good-enough-sentence-dump.md) |
-| 253 | Final-loop leftovers, night 2026-11-01-2355: ANR dialog in the tools, screenshots in Dino flows, VM check dry run, AutomationId test, 247 self-test difference, faster slow emulator flows | built | #784 | | [253-final-loop-leftovers-night-2026-11-01-2355.md](../slices/253-final-loop-leftovers-night-2026-11-01-2355.md) |
-| 255 | Dino: real animal recordings (Freesound CC0) instead of voiced animal sound words; other sound words like آپچی stay voiced | built | #783 | | [255-dino-real-animal-sounds.md](../slices/255-dino-real-animal-sounds.md) |
-| 249 | Dino: "Report a problem" in the grown-ups' corner sends the recent log with a code to quote (also built Slice 243 item 5) | built | #781 | | [249-dino-report-a-problem.md](../slices/249-dino-report-a-problem.md) |
-| 250 | Dino usage: playback events (read started/paused/resumed/stopped and why, book left) and a session id new on every cold start | built | #788 | | [250-dino-playback-events-and-session-id.md](../slices/250-dino-playback-events-and-session-id.md) |
-| 246 | Dino: store books read with pre-made Gemini audio (plain text, Farsi first, free key) | built | #729, #768, #787, #790 | | [246-dino-store-books-premade-audio.md](../slices/246-dino-store-books-premade-audio.md) |
-| 259 | Leftovers from night 2026-11-03-2349 (mid-book loading state, batch tool low findings, VM crash evidence, iOS signed hang, Release publish in fast checks) | built | #800 | | [259-night-2026-11-03-2349-leftovers.md](../slices/259-night-2026-11-03-2349-leftovers.md) |
-| 260 | Dino: tags on store books (Hot, Popular, Recommended, New) | built (fix #805 merged) | #798 | | [260-dino-store-tags.md](../slices/260-dino-store-tags.md) |
-| 258 | Dino: pre-made audio for the four starter books (gingerbread-man, good-enough, three-little-pigs, tortoise-and-hare) | built | #792 | | [258-dino-starter-books-premade-audio.md](../slices/258-dino-starter-books-premade-audio.md) |
-| 261 | Dino: no starter books in the app; first-run book picker (main language, then at least 2 books) | built | #808 | | [261-dino-no-starters-first-run-book-picker.md](../slices/261-dino-no-starters-first-run-book-picker.md) |
-| 265 | Dino: pre-made audio clips in Git LFS; book changes only publish to the store (clips shipped in 8 content-only PRs #815-#822, chore/s265-clips-1..8) | built | #810 | | [265-dino-audio-clips-in-git-lfs.md](../slices/265-dino-audio-clips-in-git-lfs.md) |
-| 266 | Waves: stop wasting the minutes between fix attempts (RTST half; ClaudeSkills #165) | built | #809 | | [266-wave-fix-attempt-speed.md](../slices/266-wave-fix-attempt-speed.md) |
-| 262 | Dino: adding a second language downloads the shelf books' audio in it (after 261) | built | #813 | | [262-dino-side-language-downloads-book-audio.md](../slices/262-dino-side-language-downloads-book-audio.md) |
-| 268 | Dino: remove "Show original text" from grown-up mode (user, 2026-11-04) | built | #825 | | [268-dino-remove-show-original-text.md](../slices/268-dino-remove-show-original-text.md) |
-| 267 | Dino bugs: books on the shelf keep the old voice (packs only on the 7-day check); the first-run buttons overlap (no layout check in the tests) | built | #826 | | [267-dino-old-voice-and-wizard-buttons.md](../slices/267-dino-old-voice-and-wizard-buttons.md) |
-| 264 | Dino: grown-ups reorder the shelf (iPhone-style reorder mode) | built | #799 | | [264-dino-gallery-reorder-mode.md](../slices/264-dino-gallery-reorder-mode.md) |
-| 235 | Dino on Windows: a real desktop window (size and minimum, width-driven layout, keyboard, hover, tooltips, title bar; after 232) | built | #740, #745, #776 | | [235-dino-windows-window.md](../slices/235-dino-windows-window.md) |
-| 263 | Dino: both apps about 50-60 MB; iPhone drops Google ML Kit translation | dropped (user, 2026-11-05: keep ML Kit on the iPhone for now; starters out via 261 already cut both apps) | | | [263-dino-text-reader-on-first-capture.md](../slices/263-dino-text-reader-on-first-capture.md) |
-| 269 | Leftovers from night 2026-11-04-1441: checks that would have caught the Store crash, BookUpdater undoing Cancel, emulator and VM check tools | built | #835 | | [269-feedback-loop-2026-11-04-1441-leftovers.md](../slices/269-feedback-loop-2026-11-04-1441-leftovers.md) |
-| 270 | Dino iPhone crash: the audio player is disposed inside its own "finished playing" call (4 crashes, 1.106.0 TestFlight, 2026-11-05) | built | #834 | | [270-dino-ios-player-disposed-in-finished-callback.md](../slices/270-dino-ios-player-disposed-in-finished-callback.md) |
-| 272 | Dino: Farsi pre-made audio falls back after the first animal sound (8 books) | built | #839 | | [272-dino-farsi-clips-off-by-one.md](../slices/272-dino-farsi-clips-off-by-one.md) |
-| 273 | Every fallback sends an analytics event (both apps, every platform; parts A-E) | built | #842, #845, #846, #848, #849 | | [273-fallback-events-everywhere.md](../slices/273-fallback-events-everywhere.md) |
-| 274 | Dino iPhone crash: leave the app from the grown-ups pages and come back | built | #843 | | [274-dino-ios-crash-after-leaving-parent-page.md](../slices/274-dino-ios-crash-after-leaving-parent-page.md) |
-| 271 | Leftovers from night 2026-11-05-1823 (pause-path test, multi-clip VM and emulator checks, `tmp/` listing, unknown-tag flow) | built | #856 | | [271-night-2026-11-05-1823-leftovers.md](../slices/271-night-2026-11-05-1823-leftovers.md) |
-| 276 | Dino iOS update button for TestFlight testers | built | #853 | | [276-dino-ios-update-button-testflight.md](../slices/276-dino-ios-update-button-testflight.md) |
-| 277 | Dino: a store book is published only when every sentence in every language has pre-made audio | built | #858 | | [277-dino-store-audio-coverage-gate.md](../slices/277-dino-store-audio-coverage-gate.md) |
-| 278 | Dino: store books only (no own books, scanning, translation, voice engine or voice pickers; RTST untouched) | built | #859, #863, #862 | | [278-dino-store-books-only.md](../slices/278-dino-store-books-only.md) |
-| 280 | Dino: Farsi speaker first, joined at translation time from existing pieces and clips (replaces Slice 254's read-time regroup) | built | #869 | | [280-dino-farsi-speaker-first-at-translation.md](../slices/280-dino-farsi-speaker-first-at-translation.md) |
-| 279 | Dino: recording your own voice, one intro page, then per character or whole page | built | #867 | | [279-dino-recording-flow.md](../slices/279-dino-recording-flow.md) |
-| 275 | Leftovers from night 2026-11-06-0042 (408 unmarked catches, past-roar flow marker, cache-key miss, live-scan script, cancelled pack count, Goldilocks version) | built (item 4 open, see plan.md Outstanding work) | #857, #868, #877 | | [275-night-2026-11-06-0042-leftovers.md](../slices/275-night-2026-11-06-0042-leftovers.md) |
-| 281 | Dino: one listening track per store book and language, served for smart speakers | built | #876, #878 | | [281-dino-listening-tracks.md](../slices/281-dino-listening-tracks.md) |
-| 285 | Dino: changing the app language fetches the books' sound in that language | built | #886, #890 | | [285-dino-language-change-fetches-book-audio.md](../slices/285-dino-language-change-fetches-book-audio.md) |
-| 290 | Dino: the reading page's sound line as a pill (Batch 50 design; restyles Slice 285 C; part B, exactly as designed, #895) | built | #889, #895 | | [290-dino-reading-sound-pill.md](../slices/290-dino-reading-sound-pill.md) |
-| 286 | Dino: record your voice in each story language, and hear it when reading in that language | built | #885 | | [286-dino-recordings-per-story-language.md](../slices/286-dino-recordings-per-story-language.md) |
-| 293 | Slice 290 check-pass leftovers (sound pill ring on colour switch, story null checks) | built (done by Slice 290 part B) | #895 | | [293-slice-290-check-pass-leftovers.md](../slices/293-slice-290-check-pass-leftovers.md) |
-| 292 | Fix the flaky `TranslationModelDownloadSessionTests.Progress_is_reported_while_downloading` | built | #902 | | [292-fix-flaky-translation-download-progress-test.md](../slices/292-fix-flaky-translation-download-progress-test.md) |
-| 294 | The `-NoBuild` cache-key miss in the emulator runner (Slice 275 item 4) | built | #900 | | [294-emulator-nobuild-cache-key-miss.md](../slices/294-emulator-nobuild-cache-key-miss.md) |
-| 298 | Slice 264 gallery reorder follow-ups | built | #903 | | [298-slice-264-gallery-reorder-follow-ups.md](../slices/298-slice-264-gallery-reorder-follow-ups.md) |
-| 288 | Dino: the app counts listens (30 s or more) and real listening time | built | #901 | | [288-dino-listens-and-listening-time.md](../slices/288-dino-listens-and-listening-time.md) |
-| 302 | Slice 239 leftovers: renamed store package downloaded twice, `dino-store.yml` paths | built | #906 | | [302-slice-239-leftovers.md](../slices/302-slice-239-leftovers.md) |
-| 304 | Slice 202: rerun the medium review on `ReaderPage` as merged, test the `InitWait` order | built | #908 | | [304-slice-202-rereview-and-initwait-test.md](../slices/304-slice-202-rereview-and-initwait-test.md) |
-| 306 | ClaudeSkills merge pipeline leftovers (built in `D:\ClaudeSkills`) | built | ClaudeSkills #184 | | [306-claudeskills-merge-pipeline-leftovers.md](../slices/306-claudeskills-merge-pipeline-leftovers.md) |
-| 309 | Split `src/DinoReader.App/CLAUDE.md` (52 KB, budget ~20 KB) with archive-docs | built | #907 | | [309-split-dino-app-claude-md.md](../slices/309-split-dino-app-claude-md.md) |
-| 284 | Leftovers from night 2026-11-06-1250 final feedback loop (fallback guard on untracked files, VM record check, device marks, three small follow-ups) | built | #913 | | [284-final-loop-leftovers-night-2026-11-06-1250.md](../slices/284-final-loop-leftovers-night-2026-11-06-1250.md) |
-| 299 | Slice 261 leftovers (dead `LaunchedFromIntro`, Cancel on list load, starter names) | built | #912 | | [299-slice-261-leftovers.md](../slices/299-slice-261-leftovers.md) |
-| 308 | Slice 225 items 3 and 6: `run-checks.ps1 -Serial` for emulators, failed-build cause | built | #914 | | [308-slice-225-run-checks-serial-and-build-cause.md](../slices/308-slice-225-run-checks-serial-and-build-cause.md) |
-| 307 | ClaudeSkills hooks and guards leftovers (built in `D:\ClaudeSkills`; item 10 open) | built | ClaudeSkills #186 | | [307-claudeskills-hooks-and-guards-leftovers.md](../slices/307-claudeskills-hooks-and-guards-leftovers.md) |
-| 300 | A kept problem report must not be wiped at next start when the remote crash switch is off | built | #919 | | [300-user-report-kept-while-crash-switch-off.md](../slices/300-user-report-kept-while-crash-switch-off.md) |
-| 301 | Slice 247 follow-ups: emulator runner crash wait, crash log on retry (item 3, faster slow flows, not built) | built | #918 | | [301-slice-247-follow-ups-emulator-runner.md](../slices/301-slice-247-follow-ups-emulator-runner.md) |
-| 303 | Slice 201 review leftovers that change behaviour | built | #921 | | [303-slice-201-review-leftovers.md](../slices/303-slice-201-review-leftovers.md) |
-| 305 | Dino package cleanup: ML Kit, sherpa-onnx and onnxruntime out of the Dino packages | built | #920 | | [305-dino-package-cleanup-ml-kit-and-sherpa.md](../slices/305-dino-package-cleanup-ml-kit-and-sherpa.md) |
-| 297 | Slice 267 follow-ups (read_voice count, layout-check leaks, wizard button grid) | built | #926 | | [297-slice-267-follow-ups.md](../slices/297-slice-267-follow-ups.md) |
-| 310 | Dino Debug hook to force a voice-pack download failure | built | #925 | | [310-dino-debug-hook-force-pack-failure.md](../slices/310-dino-debug-hook-force-pack-failure.md) |
-| 312 | Read the iPhone's crash logs from this PC | built | #924 | | [312-read-iphone-crash-logs-from-this-pc.md](../slices/312-read-iphone-crash-logs-from-this-pc.md) |
-| 314 | Restore the "Still getting the voice ready" overlay when the person returns to the reader during a stalled read | built | #927 | | [314-reader-stall-overlay-after-return.md](../slices/314-reader-stall-overlay-after-return.md) |
-| 289 | Dino: count Sonos plays on the server | built | #929 | | [289-dino-count-sonos-plays.md](../slices/289-dino-count-sonos-plays.md) |
-| 311 | Crash data for the Windows apps from the Microsoft Store | built | #930 | | [311-windows-store-crash-data.md](../slices/311-windows-store-crash-data.md) |
-| 296 | Why a Farsi read matched 5 of 78 pieces to clips (fixture keys or a real fa audio gap) | built | #931 | | [296-farsi-read-clip-match.md](../slices/296-farsi-read-clip-match.md) |
-| 282 | Dino: an Alexa kid skill that reads the store books (no login) | built | #935 | | [282-dino-alexa-kid-skill.md](../slices/282-dino-alexa-kid-skill.md) |
-| 287 | Dino: a public usage dashboard at dinoreader.sirous.uk/stats (downloads, listens, hours; by day/week/month, book, platform) | built (#940); live setup waits on the user | #940 | | [287-dino-usage-dashboard.md](../slices/287-dino-usage-dashboard.md) |
-| 315 | Feedback loop 2026-11-07-1412 leftovers (temp APK writer, disk-free preflight, driver end reason, Worker deploy after `[skip ci]`, tooling guards) | built (#942); ClaudeSkills half merged ashkansirous/ClaudeSkills#189 | #942 | | [315-feedback-loop-2026-11-07-1412-leftovers.md](../slices/315-feedback-loop-2026-11-07-1412-leftovers.md) |
-| 316 | Gaps found by the unverified-checks triage (missing scripted checks, tooling printouts, unchecked review skip reasons, RTST Android timer, a flaky test) | built | #946 | | [316-unverified-triage-gaps.md](../slices/316-unverified-triage-gaps.md) |
-| 313 | Dino: a shelf book's text and its sound always match | built | #915 | | [313-dino-book-text-and-sound-in-step.md](../slices/313-dino-book-text-and-sound-in-step.md) |
-| 318 | Dino: the /stats page on phones and tablets (mock frames 201-204: Filters sheet, tap-a-bar readout, short-time format, no "Own books") | built | #954 | | [318-dino-stats-phone-tablet.md](../slices/318-dino-stats-phone-tablet.md) |
-| 319 | Fixes from the 2026-11-08 device run (item 2, Dino Windows Record screen alert, still open) | built | #957 | | [319-device-run-2026-11-08-fixes.md](../slices/319-device-run-2026-11-08-fixes.md) |
-| 324 | Dino reads at 1x by default (Decision 172) | built | #959 | | [324-dino-default-speed-1x.md](../slices/324-dino-default-speed-1x.md) |
-| 323 | Dino shelf titles follow the story language picked on the shelf (Decision 173) | built | #965 | | [323-dino-shelf-titles-follow-story-language.md](../slices/323-dino-shelf-titles-follow-story-language.md) |
-| 336 | Listening page: Farsi sukun sentence on Android and iPhone | dropped 2026-11-08: a listen cannot compare the phones; same pack and config in code | | | [336-farsi-sukun-sentence-on-android-and-iphone.md](../slices/336-farsi-sukun-sentence-on-android-and-iphone.md) |
-| 147 | iOS review cadence: one review at a time, the newest build, never cancel | built | #386 | | [147-ios-review-cadence.md](../slices/147-ios-review-cadence.md) |
-| 338 | Listening page: Kokoro rescued short lines (English) | dropped 2026-11-08: no shipped app speaks with Kokoro | | | [338-kokoro-rescued-short-lines-english.md](../slices/338-kokoro-rescued-short-lines-english.md) |
-| 320 | Device-check fixes and missing test hooks from the 2026-11-08 run (`stall-return-overlay` moved to Slice 345) | built | #961 | | [320-device-check-tooling-from-2026-11-08-run.md](../slices/320-device-check-tooling-from-2026-11-08-run.md) |
-| 321 | Reorder layer back to the mock on Windows | built | #962 | | [321-reorder-layer-per-mock.md](../slices/321-reorder-layer-per-mock.md) |
-| 322 | Dino's silent beats pause when the screen locks | built | #963 | | [322-dino-beat-pauses-on-screen-lock.md](../slices/322-dino-beat-pauses-on-screen-lock.md) |
-| 331 | Listening page: animal sound word already in the text (moo) | verified (user, 2026-11-08: all sound right) | | | [331-animal-sound-word-already-in-the-text-moo.md](../slices/331-animal-sound-word-already-in-the-text-moo.md) |
-| 332 | Listening page: double animal sound when a quote names the animal | verified (user, 2026-11-08: all sound right) | | | [332-double-animal-sound-when-a-quote-names-the-anima.md](../slices/332-double-animal-sound-when-a-quote-names-the-anima.md) |
-| 333 | Listening page: Lion and Mouse Farsi clip | verified (user, 2026-11-08: sounds right) | | | [333-lion-and-mouse-farsi-clip.md](../slices/333-lion-and-mouse-farsi-clip.md) |
-| 337 | Listening page: Dino first-run hello line sounds whole | dropped 2026-11-08: Dino has no speech engine since Slice 278, so there is no hello line to hear | | | [337-dino-first-run-hello-line-sounds-whole.md](../slices/337-dino-first-run-hello-line-sounds-whole.md) |
-| 339 | Listening page: real phone audio timing | dropped 2026-11-09: timing is measured by `tools/phone/audio-timing.ps1`, not by ear; the gap check moved to unverified.md as a Device line | | | [339-real-phone-audio-timing.md](../slices/339-real-phone-audio-timing.md) |
-| 340 | Dino reading speed: slowest becomes 0.8x (from the listening page) | built | #985 | | [340-mid-book-speed-change-on-a-phone.md](../slices/340-mid-book-speed-change-on-a-phone.md) |
-| 345 | RTST: the Debug stall hook must block the reader's first-chunk wait (`stall-return-overlay`) | built | #987 | | [345-rtst-stall-hook-blocks-reader.md](../slices/345-rtst-stall-hook-blocks-reader.md) |
-| 325 | Dino: every page in the 2026-11-08 design (corner as Books/Store/Settings tabs, kids shelf, first run, intro) on Android, iOS and Windows | built | #970, #983, #989 | | [325-dino-2026-11-08-redesign.md](../slices/325-dino-2026-11-08-redesign.md) |
-| 334 | Listening page: speaker first in Farsi (Three Little Pigs) and the wolf's sound in English | verified (user confirmed by ear 2026-11-09 08:50) | #991 | | [334-speaker-first-in-farsi-three-little-pigs-and-the.md](../slices/334-speaker-first-in-farsi-three-little-pigs-and-the.md) |
-| 335 | Listening page: Pigs Farsi, four re-rendered lines | verified (user confirmed by ear 2026-11-09 08:50) | #991 | | [335-pigs-farsi-four-re-rendered-lines.md](../slices/335-pigs-farsi-four-re-rendered-lines.md) |
-| 341 | Listening page: Farsi short words never dropped | built | #993 | | [341-farsi-short-words-never-dropped.md](../slices/341-farsi-short-words-never-dropped.md) |
-| 347 | Dino: both web pages (dinoreader.sirous.uk, sirous.uk/dino-reader) tell today's facts, with fresh screenshots | done 2026-11-09; the three app bugs from the screenshot run are Slice 349 | #1000 | | [347-dino-web-pages-current.md](../slices/347-dino-web-pages-current.md) |
-| 348 | Dino: the privacy page describes today's app (no scans, OCR, ML Kit, voice engine or own books) | done 2026-11-09 | #1007 | | [348-dino-privacy-page-current.md](../slices/348-dino-privacy-page-current.md) |
-| 351 | Dino: every usage row carries UI language, first launch / install age / launch count buckets and seconds since launch; reading fallbacks carry the book; `clip_missing` and `animal_clip_unplayable` split into their real causes | built #1014 | #1014 | | [351-dino-usage-context-and-audio-causes.md](../slices/351-dino-usage-context-and-audio-causes.md) |
-| 349 | Dino: grown-ups corner status-bar icons unreadable, "Settings" and Arabic tab labels clipped, unused iPhone camera/photo texts | built | #1015, #1021 | | [349-dino-corner-status-bar-and-tab-labels.md](../slices/349-dino-corner-status-bar-and-tab-labels.md) |
-| 353 | CI: keep the .NET 10 SDK on runners with .NET 11 (android.yml workload install breaks), fix the Dino Windows VM test package (FakePurchases CS0234) | built | #1024 | | [353-ci-sdk-pin-and-vm-test-package.md](../slices/353-ci-sdk-pin-and-vm-test-package.md) |
-| 352 | Dino: every screen, wizard page (next, back, skip), button press and setting change counted; where a read started; flush when the app goes to the background; session timeline tool (after 351) | built | #1022 | | [352-dino-screen-and-tap-events.md](../slices/352-dino-screen-and-tap-events.md) |
-| 355 | Dino: public web page listing every store book, free or paid, and the price (apps unchanged) | built | #1053 | | [355-dino-web-catalogue.md](../slices/355-dino-web-catalogue.md) |
-| 361 | RTST `sentence-highlight` Maestro flow fails on the emulator: flow bug, fixed with a `SENTENCE_MOVED` marker | verified | #1051 | | [361-sentence-highlight-fails-on-emulator.md](../slices/361-sentence-highlight-fails-on-emulator.md) |
-| 295 | Bump `MauiVersion` to 10.0.130 for dotnet/maui #38662 (Slice 274 workaround removal still open, item 5) | built | #1050 | | [295-bump-maui-version-for-pr-38662.md](../slices/295-bump-maui-version-for-pr-38662.md) |
-| 357 | Server errors the user can see: standard translated messages per status, the server's English text only on 400, shop and voice packs in both apps (parts A-C, pre-mock plan; the mock's items are Slice 364, part D open until paid books are switched on) | built | #1052 | | [357-server-error-messages.md](../slices/357-server-error-messages.md) |
-| 356 | Dino illustrator: one script call per picture set-up, no per-click screenshots, fresh agent per page group, tokens and seconds per picture measured before and after | built, not yet verified | #1035 | | [356-illustrator-faster-and-cheaper.md](../slices/356-illustrator-faster-and-cheaper.md) |
-| 363 | Dino: the grown-ups' gate as one centred card on Windows and every screen 600 or wider (2026-11-13 mock) | built, not yet verified | #1060 | | [363-dino-windows-grownups-gate-card.md](../slices/363-dino-windows-grownups-gate-card.md) |
-| 364 | Slice 357 design pass: the 2026-11-13 Missing States mock's items (S1-S3 built; RT1/RT2 row layouts not built, waiting on a design) | built, not yet verified | #1062 | | [364-server-errors-design-pass.md](../slices/364-server-errors-design-pass.md) |
-| 365 | `worker/catalogue.test.mjs` "the page file uses LF line endings" fails on a Windows checkout (CRLF working copy); test what is committed | built, not yet verified | #1061 | | [365-catalogue-lf-test-windows.md](../slices/365-catalogue-lf-test-windows.md) |
-| 360 | Dino: book audio missing and "Waiting for Wi-Fi…" on Play: retry every hour and on opening the book (never weekly), mobile data for all book audio, keep old packs on the server, say what is wrong, log it; plus the VIBRATE crash on the grown-ups' hold | built, not yet verified | #1063 | | [360-dino-play-waits-for-wifi.md](../slices/360-dino-play-waits-for-wifi.md) |
-| 330 | Listening page: Store listening track, page gaps audible | verified 2026-11-13 (measured with ffmpeg, no listen needed) | #1064 | | [330-store-listening-track-page-gaps-audible.md](../slices/330-store-listening-track-page-gaps-audible.md) |
-| 372 | S21 check fixes: Samsung notification flags in `_lib.ps1`, `Stop-DeviceRestore` false warning, `book-end` budget | built | #1077 | | [372-s21-check-fixes-2026-11-13.md](../slices/372-s21-check-fixes-2026-11-13.md) |
-| 368 | Tidy by product 3/6: tests for the shared code in their own test project | built | #1078 | | [368-shared-tests-project.md](../slices/368-shared-tests-project.md) |
-| 362 | Dino: onboarding that shows what Dino can do (2026-11-13 mock): six required steps (language, story languages, first books, listen in every family language, record one character and hear yourself, grown-ups' corner tour and child's shelf), replacing the first run and the intro | built, not yet verified | #1076 | | [362-dino-onboarding-shows-what-dino-can-do.md](../slices/362-dino-onboarding-shows-what-dino-can-do.md) |
-| 358 | Dino Android: "Connect to the internet to buy" while online, no Buy button (empty Play prices, unreported) | built, not yet verified | #1075 | | [358-dino-android-no-buy-button.md](../slices/358-dino-android-no-buy-button.md) |

@@ -1,4 +1,5 @@
 # Slice 284 — Leftovers from night 2026-11-06-1250's final feedback loop
+**Product:** Shared
 
 **Status: *Built 2026-11-07, merged as PR #913 (c558ca8f); the Windows VM `dino-record` key-R stage has never been run.*** (was: in progress, planned.) The user, 2026-11-07: "284 should be added to the plan." (Un-parked from `parked: feedback loop, waits for the user`.)
 

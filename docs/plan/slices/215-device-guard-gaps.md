@@ -1,4 +1,5 @@
 # Slice 215: close the gaps left by Slices 207 and 212
+**Product:** Shared
 
 *Built (night run 2026-10-31), merged as PR #639 (a28f339). Both review passes done; emulator checks pass; the VM site-image retake is not done (see Not yet verified).* Follow-up to Slices 207 and 212. Tooling, plus one app id.
 

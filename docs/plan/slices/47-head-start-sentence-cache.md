@@ -1,4 +1,5 @@
 # Slice 47 — Head start: sentence-level audio cache (Android first)
+**Product:** RTST
 
 *Built (wave 2026-10-21b), PR #201.*
 

@@ -1,4 +1,5 @@
 # Slice 127 — Release safety: Dino iOS .ipa gap and the Store id fallback
+**Product:** Shared
 
 *Built 2026-10-25 (PR #358), not yet verified: no workflow_dispatch dry run of `store-submit.yml` yet.*
 

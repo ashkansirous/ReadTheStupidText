@@ -1,4 +1,5 @@
 ### Slice 189 — Dino: one "For grown-ups" button on the shelf, the gear inside grown-up mode, a ⋯ sheet per book, a reading card capped at 30%
+**Product:** Dino
 
 *Built 2026-10-29, not yet verified on a phone or iOS (planned 2026-10-29).* Dino Reader only (Android, iOS and the Windows head). From the user's refresh of the Batch 37 Claude
 Design mock (2026-10-29, frames 79, 80, 85, 85b, 91, 94). Changes what Slices 172 and 174 built. Decision 170.

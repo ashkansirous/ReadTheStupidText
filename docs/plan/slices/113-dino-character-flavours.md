@@ -1,4 +1,5 @@
 # Slice 113 — Dino: playful character voices (pitch and pace per character)
+**Product:** Dino
 
 *Built 2026-10-25, not yet verified (listening and device checks open).* *Planned 2026-10-24*, from the user's note that Dino's voices are "too grown up": stories about sheep
 and pigs are read in a serious adult tone.

@@ -1,4 +1,5 @@
 # Slice 51 — Multilingual voices (Supertonic, Piper Farsi, MeloTTS Chinese)
+**Product:** RTST
 
 *Built (wave 2026-10-21b), PR #197.*
 

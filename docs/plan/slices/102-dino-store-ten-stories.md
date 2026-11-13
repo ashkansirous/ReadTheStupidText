@@ -1,4 +1,5 @@
 # Slice 102 — Ten open stories in the Dino story store
+**Product:** Dino
 
 *Built 2026-10-24 (PR #280), not yet verified: the R2 upload, the live list and the emulator check are outstanding.* Planned 2026-10-24, from the user's request "add 10 open source stories to the store, so they can
 download them from my server".

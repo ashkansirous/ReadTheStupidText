@@ -1,4 +1,5 @@
 # Slice 311 — Crash data for the Windows apps from the Microsoft Store
+**Product:** Shared
 
 *Built 2026-11-07 (wave 2026-11-07, night 2026-11-07-1412 wave 5), merged as PR #930 (18d34a9); the real pull is not yet verified.* *Planned 2026-11-07.* Not covered by any slice (round 3 feedback loop of 2026-11-01): crash data for the Windows apps (RTST's WinUI tray app and Dino's Windows head) from the Microsoft Store. The vendor docs read on 2026-11-01 (session 6777932c, entry 453) say Partner Center's Health report shows crashes and hangs and the Store analytics API has a `failurehits` endpoint. Not checked: whether they cover these MSIX/WinUI apps, and the reported 100-install threshold. Moved from plan.md's *Outstanding work*. Related: [Slice 227](227-crash-reports.md) (Android/iOS crash reports), [Slice 243](243-crash-report-gaps.md).
 

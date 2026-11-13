@@ -1,4 +1,5 @@
 # Slice 156 — Dino: the book chooses each character's voice, not the app
+**Product:** Dino
 
 *Built 2026-10-27: code in PR #438; follow-ups #447, #455, #465; every book authored in its writer-pass PR.* Dino Reader only.
 

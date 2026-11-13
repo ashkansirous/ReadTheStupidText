@@ -1,4 +1,5 @@
 # Slice 73 — Edge-to-edge on Android 15+: safe areas on every screen
+**Product:** Shared
 
 *Built 2026-10-21 (PR #224, merged 46e5165); not yet verified, see below.*
 

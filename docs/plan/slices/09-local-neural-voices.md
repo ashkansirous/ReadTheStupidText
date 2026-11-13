@@ -1,4 +1,5 @@
 # Slice 9 — Local neural voices (sherpa-onnx + Supertonic-3)
+**Product:** Shared
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

@@ -1,4 +1,5 @@
 # Slice 59 — Dialogue parser and voice caster (pure library)
+**Product:** Dino
 
 *Built (wave 2026-10-20), PR #175.*
 

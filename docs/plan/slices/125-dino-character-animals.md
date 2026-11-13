@@ -1,4 +1,5 @@
 # Slice 125 — Dino: each character knows its animal, and animal voices to match
+**Product:** Dino
 
 *Built 2026-10-25, not yet verified on an emulator (1061 tests green, Android build clean).* Dino Reader only; RTST is not touched.
 

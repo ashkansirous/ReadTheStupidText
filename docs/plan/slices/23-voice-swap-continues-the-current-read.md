@@ -1,4 +1,5 @@
 # Slice 23 — Voice swap continues the current read
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

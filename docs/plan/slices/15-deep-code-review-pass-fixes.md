@@ -1,4 +1,5 @@
 # Slice 15 — Deep code-review pass + fixes
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

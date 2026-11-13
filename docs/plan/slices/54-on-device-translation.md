@@ -1,4 +1,5 @@
 # Slice 54 — Android: on-device translation
+**Product:** RTST
 
 *Built (wave 2026-10-21b), PR #199.*
 

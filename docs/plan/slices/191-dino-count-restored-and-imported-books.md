@@ -1,4 +1,5 @@
 ### Slice 191 — Dino: count restored and imported books as added books
+**Product:** Dino
 
 *Built (wave 2026-10-30), PR #581.* *Planned 2026-10-29.* Dino Reader (Android, iOS and the Windows head share the code). Gap found in Slice 134.
 

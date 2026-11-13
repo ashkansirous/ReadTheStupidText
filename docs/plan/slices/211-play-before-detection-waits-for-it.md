@@ -1,4 +1,5 @@
 ### Slice 211 — Play right after typing reads like a later Play would
+**Product:** RTST
 
 *Built 2026-10-30, emulator-verified (emulator-5554), not yet verified on the S21 or iOS.* Planned 2026-10-30. From the S21 night runs (Slice 139 race check, docs/plan/notes/2026-10-29-s21-night-runs.md).
 

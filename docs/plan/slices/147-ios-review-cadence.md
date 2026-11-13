@@ -1,4 +1,5 @@
 # Slice 147 — iOS review cadence: one review at a time, the newest build, never cancel
+**Product:** Shared
 
 *Built (2026-10-26); merged as PR #386 (ad4a046). The first scheduled `testflight-external.yml` run is verified: `gh run list` (2026-11-08) shows it concluded success on 2026-10-30 (run 41070366768) and again on 2026-11-08 (runs 42478130154, 42489332321). Not yet verified: the first successful App Store submission (the only two `appstore-submit.yml` runs, 2026-10-30, concluded failure).*
 

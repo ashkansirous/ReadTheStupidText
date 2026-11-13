@@ -1,4 +1,5 @@
 # Slice 152 — Dino: a character's animal comes from the book, never from its voice
+**Product:** Dino
 
 *Built 2026-10-27, PR #436 (merged), not yet verified on device (see Not yet verified).* Dino Reader only.
 

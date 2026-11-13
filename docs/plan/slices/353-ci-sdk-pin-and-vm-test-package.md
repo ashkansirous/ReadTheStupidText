@@ -1,4 +1,5 @@
 # Slice 353 — CI: keep the .NET 10 SDK on runners that carry .NET 11, and fix the Dino Windows VM test package
+**Product:** Shared
 
 *Built 2026-11-12 (night wave 3), merged as PR #1024 (7f10db48). `Build-TestPackage.ps1 -App dino` passes (2026-11-12 19:18-19:19, 88.9 s, package dino-windows-84705f151d7a, log `reviews/s353-vm-package-build.log`). CI proof on the new runner image is not yet verified: PR #1024's android job ran on the old image 20261101.186.1.*
 

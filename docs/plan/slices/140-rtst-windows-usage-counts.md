@@ -1,4 +1,5 @@
 # Slice 140 — RTST Windows: the same usage counts and timings
+**Product:** RTST
 
 *Built 2026-10-26 (wave PR #391); packaged desktop run passed 2026-10-26 (queue file needs telemetry on).*
 

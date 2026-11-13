@@ -1,4 +1,5 @@
 # Slice 207: guards for emulator, VM and flow mistakes
+**Product:** Shared
 
 *Built 2026-10-30. Verified on the emulator and the VM (see below).*
 

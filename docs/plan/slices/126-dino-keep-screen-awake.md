@@ -1,4 +1,5 @@
 ### Slice 126 — Dino: keep the screen awake while a book is playing
+**Product:** Dino
 
 *Built 2026-10-25 (PR #357), not yet verified on a device.*
 

@@ -1,4 +1,5 @@
 # Slice 57 — Windows: localized UI and on-device translation
+**Product:** RTST
 
 *Built 2026-10-21 (PR #217, merge 03a3cd1); not yet verified, see below.*
 

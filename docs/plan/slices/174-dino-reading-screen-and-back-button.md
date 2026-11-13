@@ -1,4 +1,5 @@
 # Slice 174 — Dino: a cleaner reading screen, and a back button that never surprises
+**Product:** Dino
 
 *Built 2026-10-28 (wave 2026-10-28c), not yet verified on a phone or iOS (planned 2026-10-28).* Dino Reader only (Android, iOS and the Windows head). The Claude Design mock arrived (Batch 37,
 frames 91-94; see Design).

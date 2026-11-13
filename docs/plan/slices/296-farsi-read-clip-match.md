@@ -1,4 +1,5 @@
 # Slice 296 — Why a Farsi read matched 5 of 78 pieces to clips
+**Product:** Dino
 
 *Built 2026-11-07 (wave 2026-11-07), merged as PR #931 (e15ab256); iOS side not yet verified.* *Planned 2026-11-07.* Open question from [Slice 273](273-fallback-events-everywhere.md) parts B and C: on a Farsi read with a fixture `fa` pack only 5 of 78 pieces matched a clip, although only every third entry was corrupted. Either the fixture's keys differ from the text a Farsi read really speaks, or there is a real Farsi pre-made audio gap. Until this is answered, `fa` clip counts are not to be trusted. Moved from plan.md's *Outstanding work*. Applies to Android and iOS (shared reading code); the emulator and the iPhone read the same clips.
 

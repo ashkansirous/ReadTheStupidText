@@ -1,4 +1,5 @@
 ### Slice 217 — Read The Stupid Text: forced update from the remote config
+**Product:** RTST
 
 *Built 2026-10-31 (night run), merged as PR #640 (f331d88); Windows forced/soft update, the store button tap on the phone and iOS not yet verified.* Port of Dino Reader's forced update (Slice 132) to Read The Stupid Text, on Android, iOS and the Windows tray app.
 

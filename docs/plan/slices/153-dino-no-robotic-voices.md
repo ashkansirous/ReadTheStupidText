@@ -1,4 +1,5 @@
 # Slice 153 — Dino: no robotic-sounding character voices
+**Product:** Dino
 
 *In progress (wave 2026-10-26b), draft PR.* Dino Reader only. **Waits on the user's listening flags** for its second half.
 

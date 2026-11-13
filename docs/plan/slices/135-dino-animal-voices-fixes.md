@@ -1,4 +1,5 @@
 # Slice 135 — Dino: every pig a piglet, and the emulator fixes for Slices 124-125
+**Product:** Dino
 
 *Built 2026-10-25, not yet verified on the emulator (wave 2026-10-25). Dino Reader only; RTST is not touched.*
 

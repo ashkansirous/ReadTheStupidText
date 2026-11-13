@@ -1,4 +1,5 @@
 ### Slice 182 — A pack download that stopped "offline" resumes by itself
+**Product:** Shared
 
 *Built 2026-10-29 (PR #544), not yet verified on a real phone or iOS.*
 

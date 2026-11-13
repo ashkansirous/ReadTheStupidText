@@ -1,4 +1,5 @@
 ### Slice 252 — Release CI: a hung signed iOS build can't hold the release queue for hours, and the signed iOS build gets faster
+**Product:** Shared
 
 *Parked 2026-11-02 by the final feedback loop of night 2026-11-01-2355: `parked: feedback loop, waits for the user`. Product/CI code found by the loop is never built unreviewed; the user un-parks it.*
 

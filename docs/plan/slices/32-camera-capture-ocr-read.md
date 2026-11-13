@@ -1,4 +1,5 @@
 # Slice 32 — Camera capture → OCR → read
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

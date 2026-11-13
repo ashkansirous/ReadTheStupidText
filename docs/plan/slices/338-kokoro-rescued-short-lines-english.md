@@ -1,4 +1,5 @@
 # Slice 338: Listening page: Kokoro rescued short lines (English)
+**Product:** Shared
 
 *Dropped 2026-11-08 (see the end of this file); planned 2026-11-08.* The user asked for one slice per check that needs their ear ("Abou the ones that need my ear, I probably need a page to listen to them and say what I think. Add a slice for each so that you can implement a page for me to listen to them and tell what is wrong with them"). This one comes from Slice 210's open check, moved out of `docs/plan/unverified.md` on 2026-11-08 ([record](../notes/2026-11-08-unverified-triage.md)):
 

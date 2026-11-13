@@ -1,4 +1,5 @@
 # Slice 261 — Dino: no starter books in the app; a first-run book picker (choose at least 2)
+**Product:** Dino
 
 *Built 2026-11-04, merged as PR #808 (68bdba69); VM and emulator checked, upgrade-from-release and iOS not yet verified.* *Planned 2026-11-04.* Dino Reader only; Android and iOS alike (and the Windows head, which shares these pages). After Slice 260 (the picker shows its tags). Slice 265 removes the starters' special handling from CI and the book builder.
 

@@ -1,4 +1,5 @@
 # Slice 273 — Every fallback sends an analytics event (both apps, every platform)
+**Product:** Shared
 
 *All parts merged and built (A #842 22792b47, B #845 cdf57f6a, C #846 776ee075, D #848 0ae96bbe, E #849 3674ff54); not yet verified on devices (see below).* Planned 2026-11-05. Part A's own Touches line (below, under Work) is this PR's scope; parallel with Slice 274, which owns the Dino lifecycle and grown-ups pages. User, 2026-11-05: "all fallback cases in the whole code should add an analytics event", after a Farsi Dino read fell back to the device voice from page 5 on and our data showed nothing (Slice 272).
 

@@ -1,4 +1,5 @@
 ### Slice 194 — A VM script that retakes the control panel screenshot
+**Product:** RTST
 
 *Built (wave 2026-10-30), PR #591; the site image is not replaced yet.* *Planned 2026-10-29.* Tooling plus one site image. Gap found in Slice 170 (the panel was redesigned; `site/img/control-panel.webp` still shows the old one).
 

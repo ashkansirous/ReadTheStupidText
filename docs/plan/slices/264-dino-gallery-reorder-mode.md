@@ -1,4 +1,5 @@
 # Slice 264 — Dino: grown-ups reorder the shelf (iPhone-style reorder mode)
+**Product:** Dino
 
 *Built 2026-11-05, merged as PR #799 (2fe5a6ea); Windows drag, Done and iOS not yet tried on a device, see Not yet verified.* Dino Reader; Android and iOS alike; the Windows head gets the same mode with the mouse.
 

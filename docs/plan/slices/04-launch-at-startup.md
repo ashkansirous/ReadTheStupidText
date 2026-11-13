@@ -1,4 +1,5 @@
 # Slice 4 — Launch at startup
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

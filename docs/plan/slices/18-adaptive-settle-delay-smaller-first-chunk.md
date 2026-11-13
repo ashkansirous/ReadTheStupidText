@@ -1,4 +1,5 @@
 # Slice 18 — Adaptive settle delay + smaller first chunk
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

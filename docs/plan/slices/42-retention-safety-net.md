@@ -1,4 +1,5 @@
 # Slice 42 — Retention safety net
+**Product:** Shared
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

@@ -1,4 +1,5 @@
 # Slice 365 — The catalogue LF test passes on a Windows checkout
+**Product:** Shared
 
 *Built 2026-11-13, merged as PR #1061 (e338e0c5).*
 

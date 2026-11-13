@@ -1,4 +1,5 @@
 # Slice 12 — Split auto-read into two toggles
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

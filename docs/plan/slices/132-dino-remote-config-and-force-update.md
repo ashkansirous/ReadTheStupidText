@@ -1,4 +1,5 @@
 # Slice 132 — Dino: a remote switchboard and a forced update
+**Product:** Dino
 
 *Built 2026-10-25 (PR #359), not yet verified on a device. Worker tests 59, DinoReader tests 1120.*
 

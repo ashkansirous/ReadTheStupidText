@@ -1,4 +1,5 @@
 ### Slice 123 — Dino: The Three Little Pigs retold with one action per page, plus a storytelling skill
+**Product:** Dino
 
 *Built 2026-10-25, not yet verified.*
 

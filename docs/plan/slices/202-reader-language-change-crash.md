@@ -1,4 +1,5 @@
 # Slice 202: changing the app language with text in the reader crashes the app
+**Product:** RTST
 
 *Built 2026-10-30 (PR #577); S21 device check PASS; iOS device not run.*
 

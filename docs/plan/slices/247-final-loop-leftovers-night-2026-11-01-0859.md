@@ -1,4 +1,5 @@
 ### Slice 247 — Leftovers from the night's final feedback loop (slow emulator flows, the silent kokoro-en download, a one-off Mono SIGSEGV, Slice 240's cache hit on main)
+**Product:** Shared
 
 *Built 2026-11-02 (night 2026-11-01-2355 wave 6), merged as PR #744 (8a89afdd). Items a (timing only), b (PACKDL tail), c, d and e are built; the parts not proven on a device are under Not yet verified.* Planned by the user, 2026-11-02 ~07:50 ("plan 247"; was parked by the feedback loop). Written 2026-11-01 by the night's final feedback loop; nothing in it needs a user decision.
 

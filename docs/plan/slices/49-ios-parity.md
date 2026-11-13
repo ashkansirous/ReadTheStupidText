@@ -1,4 +1,5 @@
 # Slice 49 — iOS reaches today's Android parity
+**Product:** RTST
 
 *Built (wave 2026-10-21b), PR #196.*
 

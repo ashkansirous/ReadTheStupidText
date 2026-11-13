@@ -1,4 +1,5 @@
 # Slice 171 — Dino: the text card scrolls with the reading
+**Product:** Dino
 
 *Built 2026-10-27; Android checked on the emulator (English, Chinese, rotation, hand scroll), iOS and Farsi RTL not yet verified.* Dino Book Reader, picture + text mode, on Android, iOS and the Windows head (shared MAUI code; each platform verified).
 

@@ -1,4 +1,5 @@
 ### Slice 235 — Dino on Windows: a real desktop window (size, keyboard, mouse)
+**Product:** Dino
 
 *Superseded in part by Slice 325 (docs/plan/slices/325-dino-2026-11-08-redesign.md): the Windows corner, Settings and window layouts now follow the 2026-11-08 mock, which replaced this slice's frames 151, 155 and 157 (frame 102 is also on 325's list; it is not named in this file).*
 

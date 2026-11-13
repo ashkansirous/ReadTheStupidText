@@ -1,4 +1,5 @@
 ### Slice 219 — Usage counts drop dev builds below version 1.0
+**Product:** Shared
 
 *Built 2026-10-30, not yet verified after deploy (see Not yet verified).* Planned 2026-10-30. From a read-only check of `rtst_usage` (2026-10-30).
 

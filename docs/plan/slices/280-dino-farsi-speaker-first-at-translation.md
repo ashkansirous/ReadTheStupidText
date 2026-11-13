@@ -1,4 +1,5 @@
 # Slice 280 — Dino: Farsi speaker first, built at translation time from the pieces we already have
+**Product:** Dino
 
 *Built 2026-11-06, merged as PR #869 (53ae8447). Checked on the Android emulator (build 2e3eab03e1f3); iOS by compile only.* Claim notes (wave 32): Touches widened at claim from a code check:
 `src/DinoReader.Core/PremadeAudio.cs` (A2 index keying), `src/DinoReader.App/StoryVoicing.cs` (calls

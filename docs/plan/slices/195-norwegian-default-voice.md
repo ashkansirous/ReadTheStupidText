@@ -1,4 +1,5 @@
 ### Slice 195 — Pick the default Norwegian voice by ear
+**Product:** RTST
 
 *Built (wave 2026-10-30), PR #592.* *Planned 2026-10-29.* Both apps (Norwegian reads use the `piper-nb` pack on Android, iOS and Windows). Gap found in Slice 104.
 

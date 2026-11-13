@@ -1,4 +1,5 @@
 # Slice 301 — Slice 247 follow-ups: emulator runner crash wait, crash log on retry, faster slow flows
+**Product:** Shared
 
 *Built 2026-11-07 (wave 3, night 2026-11-07-1412) for items 1 and 2, merged as PR #918 (70bb3a5a); item 3 not built (needs a re-plan). Device-checked on emulator-5554 for the happy path only, see Not yet verified.* *Planned 2026-11-07.* Three items left by [Slice 247](247-final-loop-leftovers-night-2026-11-01-0859.md), not built. Moved from plan.md's *Outstanding work*. Tooling only (the runner drives the Android emulator; iOS has no equivalent runner here).
 

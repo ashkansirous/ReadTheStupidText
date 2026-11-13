@@ -1,4 +1,5 @@
 # Slice 85 — The layout never mirrors; only text flows by its own direction
+**Product:** RTST
 
 *Built 2026-10-22 (wave 2026-10-22), PR #247; verified on the RTST_Test emulator in Farsi and Arabic, see Not yet verified for the rest.*
 

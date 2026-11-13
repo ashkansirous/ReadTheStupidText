@@ -1,4 +1,5 @@
 ### Slice 192 — Dino: the store credit line in every language, served by the store
+**Product:** Dino
 
 *Built (wave 2026-10-30), PR #582.* *Planned 2026-10-29.* Dino Reader (Android, iOS and the Windows head share the store page). Gap found in Slice 159.
 

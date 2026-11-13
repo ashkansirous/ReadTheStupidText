@@ -1,4 +1,5 @@
 ### Slice 203 — Dino on the Microsoft Store: turn on automatic submissions and link it
+**Product:** Dino
 
 *In progress (wave 2026-10-30), copy-only PR.* The user reported Dino live on the Microsoft Store on 2026-10-30 and asked for this tonight.
 

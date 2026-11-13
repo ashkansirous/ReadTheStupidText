@@ -1,4 +1,5 @@
 # Slice 371 — Folders grouped by product: src, tests and tools
+**Product:** Shared
 
 *Planned 2026-11-13.* Last of the tidy-by-product slices (366-371). User's choice, 2026-11-13 (item 2 of 5). Runs only when no other PR or worktree with changes is open (it moves almost every file); after Slice 370.
 

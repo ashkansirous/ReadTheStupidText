@@ -1,4 +1,5 @@
 # Slice 139 — RTST phone: start translating and voicing before the tap
+**Product:** RTST
 
 *Built 2026-10-26 (wave PR #398), not yet verified on the emulator or iOS.*
 

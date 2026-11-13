@@ -1,4 +1,5 @@
 # Slice 334: Listening page: Speaker first in Farsi (Three Little Pigs) and the wolf's sound in English
+**Product:** Dino
 
 *Built 2026-11-09 (branch `fix/334-335-pigs`, merged as PR #991, 3c98f43): fix done, user confirmed by ear on the second listen; verification complete.*
 

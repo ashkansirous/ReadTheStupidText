@@ -1,4 +1,5 @@
 ### Slice 362 — Dino: onboarding that shows what Dino can do (2026-11-13 mock)
+**Product:** Dino
 
 *Built 2026-11-13 (wave 2026-11-13), merged as PR #1076 (46fb87b8). Emulator flows pass; tablet, VM, iOS and wide layouts not yet verified.*
 

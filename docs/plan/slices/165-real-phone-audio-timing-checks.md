@@ -1,4 +1,5 @@
 # Slice 165 — Audio and timing checks on the real phone over wireless adb
+**Product:** Shared
 
 *Built 2026-10-28 on the Pixel 10 Pro over wireless adb; iOS compile and the user's listening check not yet verified.* Batch 36 (fast device tests), RTST Mobile and Dino Reader, Android. Decision 165. After Slice 162 (it
 reuses the hooks and the `RTST-TEST` logcat markers).

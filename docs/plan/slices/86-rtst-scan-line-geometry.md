@@ -1,4 +1,5 @@
 # Slice 86 — RTST scan reads with line geometry
+**Product:** RTST
 
 *Built 2026-10-22 (wave 2026-10-22), PR #248, not yet verified on a device.*
 

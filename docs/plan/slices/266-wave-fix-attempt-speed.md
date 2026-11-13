@@ -1,4 +1,5 @@
 # Slice 266 — Waves: stop wasting the minutes between fix attempts
+**Product:** Shared
 
 *Built 2026-11-04, RTST half merged as PR #809 (576ac0a8); the ClaudeSkills half (items 1 and 4, agent briefs of 2) ships in its own PR from fix/s266-stdin-empty-heredoc. Item 5 not done.* *Planned 2026-11-04.* Tooling only (ClaudeSkills hooks and skills, this repo's device-test tools); no app change. The user, on seeing Slice 264's Windows attempts take 12 minutes apart: "plan fixing this shit!"
 

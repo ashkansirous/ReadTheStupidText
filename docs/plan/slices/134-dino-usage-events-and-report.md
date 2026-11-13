@@ -1,4 +1,5 @@
 # Slice 134 — Dino: the rest of the usage events, and a report
+**Product:** Dino
 
 *Built 2026-10-26 (PR #368), not yet verified live: telemetry is not switched on, so no event has reached real data.*
 

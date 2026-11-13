@@ -1,4 +1,5 @@
 # Slice 348 — Dino: the privacy page describes today's app
+**Product:** Dino
 
 *Done (2026-11-09): PR #1007, deployed and read back live (no scan, OCR, ML Kit, voice engine, voice pack, Sonos or
 Alexa claim left; the only "scan" and "ML Kit" mentions say the app no longer has them). The unused iPhone camera and photo

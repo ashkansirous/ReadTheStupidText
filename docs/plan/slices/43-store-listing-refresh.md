@@ -1,4 +1,5 @@
 # Slice 43 — Store listing refresh (Microsoft Store + Google Play, 9 languages)
+**Product:** RTST
 
 *Built (wave 2026-10-20), PR #174.*
 

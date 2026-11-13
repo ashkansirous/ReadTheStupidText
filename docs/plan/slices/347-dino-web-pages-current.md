@@ -1,4 +1,5 @@
 # Slice 347 — Dino: both web pages tell today's facts, with fresh screenshots
+**Product:** Dino
 
 *Done (2026-11-09): PR #1000 (dinoreader.sirous.uk) and sirous.uk PR #12, both deployed and read back live.*
 

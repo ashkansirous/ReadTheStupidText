@@ -1,4 +1,5 @@
 # Slice 92 — A free, curated Dino story store behind the grown-up gate
+**Product:** Dino
 
 *Built 2026-10-23; device-tested 6/6 against a local wrangler with local R2, production Worker routes not yet checked.* Planned 2026-10-22. Source: phone scope "Dino Reader: starter stories, story store, better
 onboarding, backup" (Scope Inbox, 2026-10-22).

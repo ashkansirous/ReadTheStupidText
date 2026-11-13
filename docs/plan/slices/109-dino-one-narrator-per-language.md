@@ -1,4 +1,5 @@
 # Slice 109 — Dino: one narrator per language, for every book
+**Product:** Dino
 
 *In progress (wave 2026-10-24), draft PR.* *Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
 reading language, one narrator, parent recordings, store filters" (2026-10-24) —

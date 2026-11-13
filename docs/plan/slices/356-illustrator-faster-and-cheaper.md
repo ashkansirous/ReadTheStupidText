@@ -1,4 +1,5 @@
 # Slice 356 — Dino illustrator: fewer steps per picture and a much smaller context
+**Product:** Dino
 
 *Built 2026-11-13, merged as PR #1035 (c90f3336), not yet verified on a real page group (see Not yet verified).*
 

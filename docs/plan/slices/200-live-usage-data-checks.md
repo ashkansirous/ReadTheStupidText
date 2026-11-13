@@ -1,4 +1,5 @@
 ### Slice 200 — Check the live usage data after the store rollouts
+**Product:** Shared
 
 *Built (wave 2026-10-30), PR #587.* *Planned 2026-10-29.* Both apps, read-only against live data. No app code; tooling and docs only. Gaps left in Slices 133, 134, 137, 140, 166, 167, 178 and 179 (*Not yet verified*).
 

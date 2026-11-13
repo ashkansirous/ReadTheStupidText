@@ -1,4 +1,5 @@
 # Slice 352 — Dino: every screen, wizard step and button press is counted
+**Product:** Dino
 
 *Built 2026-11-12, merged as PR #1022 (be859f0a; 14 checks green, android job on image 20261101.186.1). Run on the Android emulator (emulator-5554, flows pass); iOS, Windows and live data not yet verified (see the end of this file).*
 

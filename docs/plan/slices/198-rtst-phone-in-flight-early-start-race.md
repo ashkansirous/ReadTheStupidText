@@ -1,4 +1,5 @@
 ### Slice 198 — RTST phone: a Read tapped while early work is still running reuses it
+**Product:** RTST
 
 *Closed 2026-10-30: measured on the S21, no code change needed (PR #584).* *Planned 2026-10-29.* Read The Stupid Text on Android and iOS (shared MAUI read path; Windows unchanged). Gap left in Slice 139 (*Not yet verified*).
 

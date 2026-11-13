@@ -1,4 +1,5 @@
 ### Slice 193 — German store listings for both apps
+**Product:** Shared
 
 *Drafted 2026-10-30 (PR #589); approved by the user 2026-11-01; App Store applied, Play and Partner Center open.* *Planned 2026-10-29.* Store text only, no app code. Gap found in Slice 168 (both apps read German since then).
 

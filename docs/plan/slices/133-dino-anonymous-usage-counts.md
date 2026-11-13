@@ -1,4 +1,5 @@
 # Slice 133 — Dino: anonymous usage counts, first event end to end
+**Product:** Dino
 
 *Built 2026-10-26 (PR #365), not yet verified: the Analytics Engine binding is not switched on and nothing has run on a device.*
 

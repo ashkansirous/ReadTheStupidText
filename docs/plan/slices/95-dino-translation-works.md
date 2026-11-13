@@ -1,4 +1,5 @@
 # Slice 95 — Dino translation works: bundled translations for every shipped book, live translation on Android
+**Product:** Dino
 
 *Built 2026-10-23, emulator-tested.* Planned 2026-10-23, from the user's report "the translation does not work. When a book's language is
 English and someone selects Farsi, the book should be translated so it can be read in Farsi. For

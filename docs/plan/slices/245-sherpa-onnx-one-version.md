@@ -1,4 +1,5 @@
 # Slice 245 — sherpa-onnx: one version on every platform (1.13.8)
+**Product:** Shared
 
 *Built 2026-11-01, merged as PR #714 (b4f9aab8); Android emulator Dino kokoro-en read and a host Python piper-fa read checked, the rest not yet verified (see below).* From the user: "the rule is that android and ios should work exactly the same, which means the
 same fucking package versions as well", then "for the current platform, lets set it all to 1.13.8 for now".

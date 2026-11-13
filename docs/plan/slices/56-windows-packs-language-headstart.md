@@ -1,4 +1,5 @@
 # Slice 56 — Windows: packs, first-run language, head start
+**Product:** RTST
 
 *Built 2026-10-21 (PR #204); desktop acceptance partly done, rest in Not yet verified.*
 

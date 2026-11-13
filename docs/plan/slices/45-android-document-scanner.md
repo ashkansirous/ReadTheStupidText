@@ -1,4 +1,5 @@
 # Slice 45 — Android: document scanner straight into the editor
+**Product:** RTST
 
 *Built (wave 2026-10-20d), PR #189. Not yet verified on a Google-signed-in device.*
 

@@ -1,4 +1,5 @@
 ### Slice 238 — packs.yml version defaults match the live catalog
+**Product:** Shared
 
 *Built 2026-11-02, merged as PR #723 (05283704); the new check has not run in CI yet.* Written 2026-11-01 by the round 3 feedback loop ([note](../notes/2026-11-01-0859-feedback-loop-w3.md)). Parked until 2026-11-01 by the round 3 feedback loop: waits for the user; moved back to planned by the night's final feedback loop.
 

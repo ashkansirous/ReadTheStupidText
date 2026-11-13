@@ -1,4 +1,5 @@
 ### Slice 205 — Dino Windows head: the Reading speed row and the page-turn VM check
+**Product:** Dino
 
 *Built 2026-10-31, merged as PR #645 (6a997ce); VM and Android emulator checked (see Not yet verified).* Planned 2026-10-30. Follow-up to Slice 188 (found on the Windows VM, 2026-10-30).
 

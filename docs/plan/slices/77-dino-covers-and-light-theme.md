@@ -1,4 +1,5 @@
 # Slice 77 — Dino Reader: covers that survive edits, a cover picker, and readable inputs
+**Product:** Dino
 
 *Built 2026-10-22 (wave 2026-10-22), PR #234; emulator-checked on RTST_Test in dark mode, not yet verified on every path (see Not yet verified).*
 

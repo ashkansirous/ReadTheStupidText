@@ -1,4 +1,5 @@
 # Slice 206: phone scripts for unattended runs
+**Product:** Shared
 
 *Built 2026-10-30. Fast tests pass; S21 (Android 15) device run done for lease, preflight, tap and the setting and clear resets; the items under Not yet verified are still open.*
 

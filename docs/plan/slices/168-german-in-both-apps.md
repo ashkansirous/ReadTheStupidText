@@ -1,4 +1,5 @@
 # Slice 168 — German in both apps (UI, voice, detection, translation, Dino rules)
+**Product:** Shared
 
 *Built 2026-10-27, not yet verified (German heard on devices waits on packs-8).* Read The Stupid Text (Windows, Android, iOS) and Dino Book Reader (Android, iOS, Windows). Slice 169 (German books) builds on it.
 

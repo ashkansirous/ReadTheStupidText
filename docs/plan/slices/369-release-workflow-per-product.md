@@ -1,4 +1,5 @@
 # Slice 369 — One release workflow per product, sharing a reusable part
+**Product:** Shared
 
 *Planned 2026-11-13.* Part of the tidy-by-product slices (366-371). User's choice, 2026-11-13 (item 3 of 5).
 

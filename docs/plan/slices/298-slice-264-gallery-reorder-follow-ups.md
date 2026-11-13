@@ -1,4 +1,5 @@
 # Slice 298 — Slice 264 gallery reorder follow-ups
+**Product:** Dino
 
 *Built 2026-11-07 (wave 2026-11-07), merged as PR #903 (ca585cff). Emulator flows pass; the gesture checks below are not yet verified on a device.* *Planned 2026-11-07.* Findings from check6 of [Slice 264](264-dino-gallery-reorder-mode.md), not built. Moved from plan.md's *Outstanding work*. All code is shared MAUI, so Android and iOS get each fix together; the gesture items need a look on both.
 

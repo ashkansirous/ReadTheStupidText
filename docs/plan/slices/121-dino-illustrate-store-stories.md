@@ -1,4 +1,5 @@
 # Slice 121 — Dino: pictures for the ten store stories
+**Product:** Dino
 
 *Built 2026-10-26, not yet checked on a phone* (one book per PR). Dino Reader only; RTST is not touched.
 

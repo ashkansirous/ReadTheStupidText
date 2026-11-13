@@ -1,4 +1,5 @@
 # Slice 244 — Dino: find and fix the crashes of 2026-10-31 and 2026-11-01
+**Product:** Dino
 
 *Items 2-5 built 2026-11-02, merged as PR #722 (6d3a0e5d). Item 1's iOS simulator / iPhone 8 reproduction and item 6's proof stay open, so the slice stays open after merge.* *Planned 2026-11-01.* From the user, after testing Dino Reader on an iPhone: "there are a lot of crashes ... as far as
 I can tell, when the story is playing and I click on back, it does not pause/stop the story", then "another slice to

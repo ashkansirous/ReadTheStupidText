@@ -1,4 +1,5 @@
 # Slice 355 — Dino: a public web page listing every store book, free or paid, and the price
+**Product:** Dino
 
 *Built 2026-11-13, merged as PR #1053 (31dc4c42), not yet verified on the live site (see Not yet verified).*
 

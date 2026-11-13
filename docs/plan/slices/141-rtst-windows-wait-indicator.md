@@ -1,4 +1,5 @@
 # Slice 141 — RTST Windows: a wait indicator after 500 ms
+**Product:** RTST
 
 *Built 2026-10-26 (wave PR #397); packaged desktop run 2026-10-26: flyout, Cancel and focus passed; the panel ring re-check is pending.*
 

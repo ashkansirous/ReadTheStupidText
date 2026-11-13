@@ -1,4 +1,5 @@
 # Slice 277 — Dino: a store book is published only when every sentence in every language has pre-made audio
+**Product:** Dino
 
 *Built 2026-11-06 (wave 2026-11-06), merged as PR #858 (0f922e2d); verified on the first `dino-store.yml` run on main (run 42229431973, success).* Dino Reader only. Read The Stupid Text is not touched.
 

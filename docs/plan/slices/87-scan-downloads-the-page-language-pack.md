@@ -1,4 +1,5 @@
 # Slice 87 — A scan in a script with no reader asks the page's language and downloads it
+**Product:** RTST
 
 *Built 2026-10-22 (wave 2026-10-22), PR #253. Not yet verified on a device.*
 

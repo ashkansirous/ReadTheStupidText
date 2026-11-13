@@ -1,4 +1,5 @@
 ### Slice 250 — Dino usage: playback events and a session id that changes on every cold start
+**Product:** Dino
 
 *Built 2026-11-04 (night 2026-11-03-2349 wave 3), merged as PR #788 (6b9b9940).* After [Slice 249](249-dino-report-a-problem.md) (merged #781).
 

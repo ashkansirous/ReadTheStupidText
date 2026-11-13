@@ -1,4 +1,5 @@
 # Slice 339: Listening page: Real phone audio timing (Slice 165)
+**Product:** Shared
 
 *Dropped 2026-11-09.* The user asked "why are we testing the speed for rtst? whats the point of 339?". Slice 165's script (`tools/phone/audio-timing.ps1`) already measures Read The Stupid Text's timing on a real phone (time to first audio, gaps between chunks, total time at 1x and 2x) and flags a gap over its limit; only "does the voice sound right" was left for the ear, and the page did not ask that well. The listening page (https://claude.ai/artifact/R94Dnv6FB3JEuaSj3Lbmiq) is withdrawn unanswered. The measured 1x gaps (1.1-1.5 s between pieces on the S21) go to `docs/plan/unverified.md` as a Device check: run `audio-timing.ps1 -App rtst` on the S21 and compare against its own gap limit.
 

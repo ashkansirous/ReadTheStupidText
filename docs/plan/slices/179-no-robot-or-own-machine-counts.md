@@ -1,4 +1,5 @@
 # Slice 179 — No Play robot, VM or own-machine runs in the usage counts
+**Product:** Shared
 
 *Built 2026-10-28 (PR #542), not yet verified on device or after deploy; see Not yet verified.* Both products, every head: Read The Stupid Text (Windows tray, Android, iOS) and Dino Reader (Android, iOS,
 Windows). Follow-up to Slice 167, which did not stop all of it. Asked for by the user on 2026-10-28.

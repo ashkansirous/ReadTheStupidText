@@ -1,4 +1,5 @@
 # Slice 119 — Dino: illustrated Three Little Pigs, and the starters in the store
+**Product:** Dino
 
 *Planned 2026-10-25. Part 1 built 2026-10-25 (gentle stories, starters in the store, auto-update, picture tooling, skill); not yet verified on a device. Part 2 (the pigs' cover and page pictures, generated in Gemini) follows in a second PR.* Dino Reader only; RTST is not touched.
 

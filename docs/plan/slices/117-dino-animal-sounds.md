@@ -1,4 +1,5 @@
 # Slice 117 — Dino: animal characters make their sounds
+**Product:** Dino
 
 *Built 2026-10-25, merged (PR #327); emulator PASS, not yet verified by ear.* *Planned 2026-10-25*, from the user's ask that reading be "more kids like": a daddy sheep should say
 "baa" every 2–3 sentences when the story doesn't, a cow "moo", a cat "meow" and so on, in every

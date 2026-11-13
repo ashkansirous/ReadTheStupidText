@@ -1,4 +1,5 @@
 # Slice 26 — Skip forward / backward (±10s)
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

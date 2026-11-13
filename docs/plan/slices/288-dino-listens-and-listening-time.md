@@ -1,4 +1,5 @@
 # Slice 288 — Dino: the app counts listens and real listening time
+**Product:** Dino
 
 *Built 2026-11-07 (wave 2026-11-07), merged as PR #901 (41419276). Fast tests only; the emulator run was blocked (see Not yet verified).* *Planned 2026-11-07.* Dino Reader only. Android, iOS and the Windows head the same, in the same slice (the code is the
 shared Core and App, so one change covers all three; verification runs on Android and iOS).

@@ -1,4 +1,5 @@
 ### Slice 180 — Faster device tests: test only the touched apps, build once, two emulators
+**Product:** Shared
 
 *Built* (PR #536, 2026-10-28).
 

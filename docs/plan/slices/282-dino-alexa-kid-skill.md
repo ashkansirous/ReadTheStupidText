@@ -1,4 +1,5 @@
 # Slice 282 — Dino: an Alexa kid skill that reads the store books
+**Product:** Dino
 
 *Built 2026-11-07 (night 2026-11-07-1412 wave 6), merged as PR #935 (e1d0a461); not yet tried on a real Echo.* *Planned 2026-11-06; item 1 decided 2026-11-07 (see Work).* Server only (Cloudflare Worker) plus the skill definition; the apps do not change.
 

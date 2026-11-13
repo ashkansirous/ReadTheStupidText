@@ -1,4 +1,5 @@
 # Slice 370 — Give the shared code a neutral name
+**Product:** Shared
 
 *Planned 2026-11-13.* Part of the tidy-by-product slices (366-371). User's choice, 2026-11-13 (item 5 of 5). Runs only when no other PR or worktree with changes is open (it touches about 400 files); after 366-369, before 371.
 

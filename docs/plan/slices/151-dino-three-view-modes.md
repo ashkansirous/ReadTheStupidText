@@ -1,4 +1,5 @@
 # Slice 151 — Dino: three view modes, and no merging of characters
+**Product:** Dino
 
 *Built 2026-10-27 (PR #430), not yet verified on photo import, the Windows head or iOS.* Dino Reader only.
 

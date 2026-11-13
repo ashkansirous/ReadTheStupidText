@@ -1,4 +1,5 @@
 ### Slice 122 — Dino: smaller text panel over pictures, and a switch to hide it
+**Product:** Dino
 
 *Built 2026-10-25, not yet verified on an emulator or phone. 943 tests green, Android build clean.*
 

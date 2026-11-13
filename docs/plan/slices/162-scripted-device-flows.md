@@ -1,4 +1,5 @@
 # Slice 162 — Scripted device flows: Maestro plus Debug-only test hooks
+**Product:** Shared
 
 *Built 2026-10-27 (wave 2026-10-27), not yet fully verified; see Not yet verified.* Batch 36 (fast device tests), RTST Mobile and Dino Reader, Android and iOS. Decision 165. After Slice 161.
 

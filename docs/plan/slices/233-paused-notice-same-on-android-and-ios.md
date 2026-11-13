@@ -1,4 +1,5 @@
 ### Slice 233 — "Download paused. Tap to finish." posts on the same events on Android and iOS (Slice 208 follow-up)
+**Product:** Shared
 
 *Built (wave 2026-11-01), merged as PR #672 (b62197c).* Planned 2026-11-01. The user asked (2026-11-01) for the two platforms to work like each other instead of accepting Slice 208's difference.
 

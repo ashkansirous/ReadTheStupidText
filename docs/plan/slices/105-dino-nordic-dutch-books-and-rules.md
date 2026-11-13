@@ -1,4 +1,5 @@
 # Slice 105 — Dino: story rules and book translations for the five new languages
+**Product:** Dino
 
 *Built 2026-10-24 (PR #292), not yet verified on the emulator, in the R2 store, or by a native read of the translations.* Planned 2026-10-24, from the user's request to add Danish, Finnish, Swedish, Norwegian and Dutch
 (with Slice 103).

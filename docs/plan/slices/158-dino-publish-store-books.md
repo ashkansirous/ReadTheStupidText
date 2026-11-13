@@ -1,4 +1,5 @@
 # Slice 158 — Dino: publish store books on every merge
+**Product:** Dino
 
 *Built 2026-10-27 (PR #472).* Dino Reader only. Small, CI only; can run beside other work (it touches no book content).
 

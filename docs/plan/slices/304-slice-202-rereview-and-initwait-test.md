@@ -1,4 +1,5 @@
 # Slice 304 — Slice 202: rerun the medium review on `ReaderPage` as merged, test the `InitWait`-before-text order
+**Product:** RTST
 
 *Built 2026-11-07 (wave 2026-11-07, night 2026-11-07-1412), merged as PR #908 (7acd2e1b). Emulator run 2026-11-07 (key 16293c9a70b0): paste-and-read, language-continue-two-step, set-language and play-before-detection PASS; the rest is under Not yet verified.* Planned 2026-11-07. [Slice 202](202-reader-language-change-crash.md) merged on an incomplete second review pass (the forked review never finished). Slice 213's unreviewed half is Slice 216 item 9. Also: the `InitWait`-before-text order is kept only by a comment (`ReaderPage.xaml.cs:76` calls `InitWait()`), with no test. Moved from plan.md's *Outstanding work*.
 

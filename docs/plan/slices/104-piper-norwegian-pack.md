@@ -1,4 +1,5 @@
 # Slice 104 — A Norwegian voice pack (Piper nvcc, ten speakers)
+**Product:** Shared
 
 *Built 2026-10-24 (PR #291), not yet verified on a device or in a packs.yml run.* Planned 2026-10-24, from the user's request to add Norwegian (with Slice 103).
 

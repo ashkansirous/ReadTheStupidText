@@ -1,4 +1,5 @@
 ### Slice 166 — Usage counts: country, OS version, form factor and hardware buckets (both apps)
+**Product:** Shared
 
 *Built 2026-10-27.* Not yet verified: the Windows heads were only compiled (no desktop run of the RTST tray app or Dino's Windows head); iOS compiled only (no simulator); first live rows with the new fields to be checked in the Analytics Engine studio after deploy.
 

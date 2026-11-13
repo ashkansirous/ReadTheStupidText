@@ -1,4 +1,5 @@
 # Slice 106 — Windows: offline translation packs for the five new languages
+**Product:** RTST
 
 *Built 2026-10-24 (PR #281), not yet verified: no `packs.yml` run and no Windows run yet.* Planned 2026-10-24, from the user's request to add Danish, Finnish, Swedish, Norwegian and Dutch
 (with Slice 103).

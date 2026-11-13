@@ -1,4 +1,5 @@
 # Slice 1 — Clipboard-read on hotkey at chosen speed (smallest E2E)
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

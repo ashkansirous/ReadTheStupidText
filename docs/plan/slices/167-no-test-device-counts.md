@@ -1,4 +1,5 @@
 ### Slice 167 — Usage counts: don't count test devices (both apps)
+**Product:** Shared
 
 *Built 2026-10-27.* Not yet verified: Release build on an emulator (crashed at startup in MAUI before any usage code, x64 only; store builds are arm64), the emulator and Test Lab rules on a device (unit tests only), the RTST tray on the desktop, an iOS simulator run; the first store rollout showing no test rows (query via the API).
 

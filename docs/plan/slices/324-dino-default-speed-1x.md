@@ -1,4 +1,5 @@
 # Slice 324: Dino reads at 1x by default
+**Product:** Dino
 
 *Built 2026-11-08.* User, 2026-11-08: "set the default speed for the app to 1x". Read The Stupid Text already defaults to 1x (`PlaybackRate.Default`, `src/ReadTheStupidText.Domain/Reading/PlaybackRate.cs`), so the change is Dino Reader's 0.8x default (Decision 155) becoming 1x (Decision 172).
 

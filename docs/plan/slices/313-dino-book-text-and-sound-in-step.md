@@ -1,4 +1,5 @@
 ### Slice 313 — Dino: a shelf book's text and its sound always match
+**Product:** Dino
 
 *Built 2026-11-07, merged as PR #915 (2a1a55aa, 2026-11-07 15:45Z). Indexed by the night 2026-11-08-0106 feedback loop: no index pass had run for it.*
 

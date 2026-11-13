@@ -1,4 +1,5 @@
 # Slice 30 — MAUI Android scaffold + type-to-read (smallest E2E)
+**Product:** RTST
 
 *Built (legacy plan.md entry; moved verbatim by archive-docs 2026-10-20).*
 

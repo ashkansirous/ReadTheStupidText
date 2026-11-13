@@ -1,4 +1,5 @@
 # Slice 90 — Untranslated text is read in its own language
+**Product:** RTST
 
 *Built 2026-10-22 (wave 2026-10-22), PR #258; verified on the RTST_Test emulator, see Not yet verified for the rest.*
 

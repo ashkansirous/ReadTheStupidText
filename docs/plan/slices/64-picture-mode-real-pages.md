@@ -1,4 +1,5 @@
 # Slice 64 — Picture mode on real pages
+**Product:** Dino
 
 *Built 2026-10-21 (PR #218, merge 53cc881); not yet verified, see below.*
 

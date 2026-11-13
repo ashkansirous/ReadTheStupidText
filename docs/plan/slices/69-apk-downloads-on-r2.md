@@ -1,4 +1,5 @@
 # Slice 69 — Android APK downloads from R2, with a "latest" link
+**Product:** Shared
 
 *Built (wave 2026-10-20c), PR #187.*
 

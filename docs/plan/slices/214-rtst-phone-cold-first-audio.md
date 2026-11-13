@@ -1,4 +1,5 @@
 ### Slice 214 — RTST phone: the first read after a cold start takes 7 s
+**Product:** RTST
 
 *Built 2026-10-31, merged as PR #647 (9024a2e); iOS timing and a truly cold run not yet verified.* Planned 2026-10-30. From the S21 night runs and the 2026-10-30 leftovers run (docs/plan/notes/2026-10-29-s21-night-runs.md).
 

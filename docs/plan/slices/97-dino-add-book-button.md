@@ -1,4 +1,5 @@
 # Slice 97 — The grown-ups button says "add a book", not a lock
+**Product:** Dino
 
 *Built 2026-10-24 (PR #284); verified on the RTST_Test emulator, not yet on the Windows head.* Planned 2026-10-24, from the user's request "the menu button for grown-ups is very bad. It should be
 something indicating that you could add a book, not a lock."

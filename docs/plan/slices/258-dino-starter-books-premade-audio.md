@@ -1,4 +1,5 @@
 # Slice 258 — Dino: pre-made audio for the four starter books
+**Product:** Dino
 
 *Built 2026-11-04, merged as PR #792 (16f33ae8). Packs uploaded live and `premade-audio-starter` passed on the emulator (night 2026-11-04-1441, wave 1); iOS and Windows head runs not yet done.* Follow-up to Slice 246 (parts A-D merged as #729, #768, #787, #790). Dino Reader only, Android and iOS alike (and the Windows head, which shares the code).
 

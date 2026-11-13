@@ -1,4 +1,5 @@
 ### Slice 226 — Dino Settings rows and page text: Slice 205 review findings left open
+**Product:** Dino
 
 *Built 2026-11-01 (wave 7, night 2026-11-01-0859), merged as PR #668 (519b4e7); device-checked on the Android emulator and the desktop VM, not on TalkBack or iOS.* Written 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1301-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01. Slice 205's record said "fixes applied", but a finding-by-finding check against origin/main (2026-10-31) found these still open.
 

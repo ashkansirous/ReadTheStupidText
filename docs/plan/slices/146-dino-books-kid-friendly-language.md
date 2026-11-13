@@ -1,4 +1,5 @@
 # Slice 146 — Rewrite every Dino book in spoken, kid-friendly language
+**Product:** Dino
 
 *Built 2026-10-27, not yet verified by a native read or on upload. Slice 145 is built.*
 

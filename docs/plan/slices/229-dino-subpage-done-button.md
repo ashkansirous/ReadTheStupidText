@@ -1,4 +1,5 @@
 ### Slice 229 — Dino: a Done/Continue button, top right, on every grown-up page
+**Product:** Dino
 
 *Built (wave 2026-11-01); merged as PR #683 (1c4bd76).* Planned 2026-11-01. From the user's user test on 2026-11-01 (finding 3). **Design done: the user approved the Batch 43 mock (see User answers)** (corrected by the 2026-11-01 feedback loop; it said "Needs design by Claude Code").
 

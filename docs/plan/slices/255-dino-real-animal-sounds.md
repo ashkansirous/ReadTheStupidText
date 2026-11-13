@@ -1,4 +1,5 @@
 # Slice 255 — Dino: real animal recordings instead of voiced sound words
+**Product:** Dino
 
 *Built 2026-11-04 (A2-A4), merged as PR #783 (456a6a5); Android emulator run done, see Not yet verified.* (Planned 2026-11-03.) Dino Reader only. From the user: "the animal noises should not be read by the ai voices. I prefer
 to use real animal voices. can we get them form somewhere instead? like sheep and cow and pig and alike instead of

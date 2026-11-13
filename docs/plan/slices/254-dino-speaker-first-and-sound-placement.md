@@ -1,4 +1,5 @@
 # Slice 254 — Dino: speaker first in Farsi and Arabic, and animal sounds next to the animal's own words
+**Product:** Dino
 
 *In progress 2026-11-03.* Dino Reader only. From the user, listening to the first Gemini book (Three Little Pigs, Farsi):
 

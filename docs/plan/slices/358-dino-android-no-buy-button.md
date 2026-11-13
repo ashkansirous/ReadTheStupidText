@@ -1,4 +1,5 @@
 # Slice 358 — Dino Android: "Connect to the internet to buy" while online, no Buy button
+**Product:** Dino
 
 *Built 2026-11-13 (wave 2026-11-13), merged as PR #1075 (ce397f07). Emulator checks pass; the real cause is not yet verified on a Play-installed phone.*
 

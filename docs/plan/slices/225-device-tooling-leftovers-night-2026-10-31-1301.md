@@ -1,4 +1,5 @@
 ### Slice 225 — Device-test tooling leftovers from the 2026-10-31-1301 night, round 1
+**Product:** Shared
 
 *Built 2026-11-01, merged as PR #696 (6138ac01); item 3 (run-checks emulator path) still open.* Written 2026-10-31 by the round 1 feedback loop ([note](../notes/2026-10-31-1301-feedback-loop-w1.md)) and parked; the user moved it to `planned` on 2026-11-01.
 

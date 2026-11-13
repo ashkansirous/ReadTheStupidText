@@ -1,4 +1,5 @@
 # Slice 286 — Dino: record your voice in each story language, and hear it when reading in that language
+**Product:** Dino
 
 *Built 2026-11-07, merged as PR #885 (4ed2fb8e).* Dino Reader only. Android, iOS and the Windows head the same, in the same slice.
 

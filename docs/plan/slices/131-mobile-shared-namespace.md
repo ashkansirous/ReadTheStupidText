@@ -1,4 +1,5 @@
 # Slice 131 — Mobile.Shared gets its own namespace
+**Product:** Shared
 
 *Built 2026-10-26 (PR #371), not yet verified on an emulator or macOS CI.*
 

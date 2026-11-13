@@ -1,4 +1,5 @@
 ### Slice 216 — Phone tooling leftovers from the Slice 213 runs
+**Product:** Shared
 
 *Built 2026-10-31 (night run), merged as PR #637 (1a444ac); S21 checks for items 1, 2 and notification-text passed, item 11 not yet re-run.* Findings from the 2026-10-30 S21 runs that no slice owned. Tooling only, except item 1 if it turns out to be an app bug.
 

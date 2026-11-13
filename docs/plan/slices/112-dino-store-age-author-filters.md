@@ -1,4 +1,5 @@
 # Slice 112 — Dino: store filters by age and author
+**Product:** Dino
 
 *Built 2026-10-24, not yet verified on the emulator or live (see "Not yet verified / after merge").* *Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
 reading language, one narrator, parent recordings, store filters" (2026-10-24) —

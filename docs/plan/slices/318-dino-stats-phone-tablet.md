@@ -1,4 +1,5 @@
 # Slice 318 — Dino: the /stats page on phones and tablets (and the mock's other changes)
+**Product:** Dino
 
 *Built 2026-11-08, merged as PR #954 (44dabc57); not yet tried on a real phone or tablet, nor on the live page with real D1 data.* The page (`site/dino/stats.html`) and a small Worker change: `/api/stats` leaves the `own` bucket out of the series and the book totals unless `book=own` is asked for (`worker/stats.ts`, `own` bound as a parameter; no D1 schema change). The page is a website, so the Android/iOS twin rule does not apply (it has to work in phone and tablet browsers, both platforms alike).
 

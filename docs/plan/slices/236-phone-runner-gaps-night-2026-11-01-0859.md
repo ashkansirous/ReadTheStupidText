@@ -1,4 +1,5 @@
 ### Slice 236 — Phone runner gaps from night 2026-11-01-0859, round 2
+**Product:** Shared
 
 *Built 2026-11-02, merged as PR #721 (13e20e80). Items 1-7 and 9 built; item 8 stays with Slice 242. Fast self-tests pass; partly run on the S21 (see Built and Not yet verified).* Written 2026-11-01 by the round 2 feedback loop ([note](../notes/2026-11-01-0859-feedback-loop-w2.md)). It sits next to Slices 224 and 225 (same files).
 

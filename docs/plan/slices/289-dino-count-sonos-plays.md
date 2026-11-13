@@ -1,4 +1,5 @@
 # Slice 289 — Dino: count Sonos plays on the server
+**Product:** Dino
 
 *Built 2026-11-07 (wave 2026-11-07, night 2026-11-07-1412 wave 5), merged as PR #929 (d31726c); not yet verified live.* *Planned 2026-11-07.* Server only (Cloudflare Worker). The apps do not change.
 

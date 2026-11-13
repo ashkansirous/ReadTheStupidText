@@ -1,4 +1,5 @@
 ### Slice 232 — Dino: a proper landscape design for every screen
+**Product:** Dino
 
 *Superseded in part by Slice 325 (docs/plan/slices/325-dino-2026-11-08-redesign.md): its grown-ups' corner, Settings and landscape shelf now follow the 2026-11-08 mock, which replaced this slice's frames 111, 118, 126, 128 and 130 (the two-pane Settings and the Done that closed it).*
 

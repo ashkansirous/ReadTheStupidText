@@ -1,4 +1,5 @@
 # Slice 118 — Dino: storyteller voices for Spanish, French and Portuguese
+**Product:** Dino
 
 *Built 2026-10-25, listening check and real-phone checks not yet done.* *Planned 2026-10-25.* Dino Reader only; RTST is not touched.
 

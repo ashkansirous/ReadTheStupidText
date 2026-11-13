@@ -1,4 +1,5 @@
 # Slice 96 — Dino's layout never mirrors when the language changes
+**Product:** Dino
 
 *Built 2026-10-24 (PR #278), not yet verified on the emulator in Farsi/Arabic or on the Windows head.* Planned 2026-10-24, from the user's request "do not change the layout direction when changing language".
 

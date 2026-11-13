@@ -1,4 +1,5 @@
 # Slice 267 — Dino bugs: books on the shelf keep the old voice; the first-run buttons overlap
+**Product:** Dino
 
 *Built 2026-11-05, merged as PR #826 (e67f88bf); emulator-5554 checks passed, not yet tried on the user's phone.* Bug fixes, Dino Reader, Android and iOS alike. Reported by the user on the latest Android build (dino-v1.102.1, 2026-11-04 20:10 UTC): "why the hell is it still using the old shitty voice? We changed that yesterday" and "the skip and check it out are on top of each other". The user also asked why the tests passed; the answers are under each bug.
 

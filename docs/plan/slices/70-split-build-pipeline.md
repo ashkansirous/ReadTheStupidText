@@ -1,4 +1,5 @@
 # Slice 70 — Split the build pipeline into the Lets-Call-Mom shape
+**Product:** Shared
 
 *Built (wave 2026-10-20d), PR #190. Not yet verified on GitHub: the first push to main after the merge is the first release through release.yml.*
 

@@ -1,4 +1,5 @@
 ### Slice 213 — One phone check runner with a fixed time budget
+**Product:** Shared
 
 *Built 2026-10-30; fast self-tests and S21 runs passed, see Not yet verified.* Follow-up to Slice 206. Tooling only.
 

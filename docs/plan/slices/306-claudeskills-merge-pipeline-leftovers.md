@@ -1,4 +1,5 @@
 # Slice 306 — ClaudeSkills merge pipeline leftovers
+**Product:** Shared
 
 *Built 2026-11-07, merged as ClaudeSkills PR #184 (f77284a).* Planned 2026-11-07. Built in the ClaudeSkills repo (`D:\ClaudeSkills`), not in this one: its own worktree, branch and PR there. This repo holds only the record. Moved from plan.md's *Outstanding work* (feedback loop 2026-11-01-0859 rounds 1-3, [note w1](../notes/2026-11-01-0859-feedback-loop-w1.md), [w2](../notes/2026-11-01-0859-feedback-loop-w2.md), [w3](../notes/2026-11-01-0859-feedback-loop-w3.md)).
 

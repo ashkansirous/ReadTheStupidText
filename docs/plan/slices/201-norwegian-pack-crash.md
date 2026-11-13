@@ -1,4 +1,5 @@
 # Slice 201: the Norwegian voice pack crashes the app
+**Product:** RTST
 
 *Built 2026-10-30 (PR #571), verified on the S21 only; Windows desktop and iOS device not run.*
 

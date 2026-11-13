@@ -1,4 +1,5 @@
 # Slice 160 — Translation on iOS (Android and iOS parity)
+**Product:** RTST
 
 *Built 2026-10-27, not yet verified on a real iPhone (TestFlight).* RTST Mobile and Dino Reader, iOS.
 

@@ -1,4 +1,5 @@
 # Slice 103 — Danish, Finnish, Swedish, Norwegian and Dutch in every app
+**Product:** Shared
 
 *Built 2026-10-24 (PR #286), not yet verified on device.* Planned 2026-10-24, from the user's request "add Scandinavian languages: Danish, Finnish, Swedish,
 Norwegian and Dutch".

@@ -1,4 +1,5 @@
 ### Slice 190 — RTST phone: highlight one sentence at a time, not a whole chunk
+**Product:** RTST
 
 *Built 2026-10-30 (Android and iOS), draft PR #573; on-screen look, pause/resume, iOS and Farsi not yet verified.* *Planned 2026-10-29.* Read The Stupid Text phone app only (Android and iOS). Windows keeps its chunk highlight (user, 2026-10-29). Gap found in Slice 99.
 
