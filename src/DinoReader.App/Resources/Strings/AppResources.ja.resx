@@ -370,6 +370,7 @@
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>購入内容を確認しています…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>ストアから取り戻す本</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>無料の本は自動で戻ります。購入した本は、ストアで「購入を復元」を押してから、このバックアップをもう一度復元してください。</value></data>
+  <data name="Backup_MissingNoteStore" xml:space="preserve"><value>ストアにある無料の本は自動で戻ります。ストアで配信が終わった本は戻りませんが、録音はバックアップファイルに残ります。購入した本は、ストアで「購入を復元」を押してから、このバックアップをもう一度復元してください。</value></data>
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>お話の録音と設定を1つのファイルにまとめます。本そのものはストアから戻ります。DriveやファイルAppに保存するか、自分に送ってください。</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>{0}冊すべてのお話の録音と設定を1つのファイルにまとめます。本そのものはストアから戻ります。DriveやファイルAppに保存するか、自分に送ってください。</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>ファイルから録音と設定を戻し、本をストアからもう一度取得します。購入した本は、先に「購入を復元」が必要です。</value></data>

@@ -73,7 +73,7 @@ Premises (ground-in-code on origin/main): remote config is `worker/appconfig.ts`
 - **Backups (final design, after three review rounds):** the writer and the reader each have one rule, keyed on the paid-books switch.
   - *Writer:* switch off or unknown writes exactly the backup of before Slice 346 (schema 1, one `.dino` per story with its book files and recordings, no settings, the old Save text). Switch known on writes schema 2 (shelf ids, reading view, recordings, settings, no book content). `BackupFormat` picks it; the default is the old one.
   - *Reader, schema 2 or switch known on:* recordings and reading view are put back on books the phone has; the missing ones are listed and fetched from the store. *Reader, schema 1:* switch known off restores as before (book files imported). Switch on or unknown asks the store per book, through one pure function, `BookAccess.LegacyBookChoice(access, owned, storeCanSupply)`, which returns Store (free or owned, store can supply it), File (the store cannot supply it and the book is not a sold, unowned one) or ListOnly (sold and unowned: the file is never installed). `BackupPage` calls it for both the store download and the file fallback, with "sold" read as the first-run picker reads it (an unread switch counts as sold). A book the listing does not name is not sold as far as the phone knows.
-- **Switch-on step, republish first (finding 8 of `reviews/pr-1016-medium.md`):** a book meta without an `access` field is free, so a listing published before this slice stays open and nothing already live turns paid by accident. Before `paidBooks.enabled` is set to true, republish every book's `meta.json` with its `access` (and `productId`) through `publish-store-books.mjs`; only then are the paid books actually sold. The same step covers the Worker's `PAID_LIMITER` rate-limit binding (30 store calls per connection and minute; absent = the gate answers 429, never owned).
+- **Switch-on step, republish first (finding 8 of `reviews/pr-1016-medium.md`):** a book meta without an `access` field is free, so a listing published before this slice stays open and nothing already live turns paid by accident. Set `paidBooks.enabled` true in the live config; then any `dino-store.yml` run (a manual dispatch, a push or the nightly one) republishes every book's `meta.json` with its `access` and the store-safe underscore `productId`, and refuses two books sharing one id (check3 #1/#2: `publish-store-books.mjs` derives this on every run, in every step that builds or compares metas, from the live `/api/app-config` with `paidBooks.enabled === true` exactly; anything else in a readable config = off = exactly what main wrote, so a normal run never undoes it; a config that cannot be read after 3 tries fails the run, it never counts as off). Check the republished metas before relying on the switch. The same step covers the Worker's `PAID_LIMITER` rate-limit binding (30 store calls per connection and minute; absent = the gate answers 429, never owned).
 - **Paid files are never shared-cached:** package, audio-pack and listening-track responses of a paid book send `Cache-Control: private, no-store`; a free book's keep their old rule.
 - **Not built tonight (Part D):** `store-products.mjs`, `docs/store-listings/dino/**`, `site/dino/privacy.html`: the
   privacy page and listings change when the switch goes on, with the user (they would be wrong while every book is free).
@@ -175,9 +175,11 @@ through `library-docs` or `web-research` before building that part.
 
 ### Part D — stores, listings and privacy
 
-- [ ] `.github/scripts/store-products.mjs`: create one product per paid book at the $0.99 price point in App Store Connect,
+- [x] `.github/scripts/store-products.mjs`: create one product per paid book at the $0.99 price point in App Store Connect,
       Play Console and Partner Center through their APIs where an API exists; the parts with no API go to
-      *Outstanding work* as user steps, one by one.
+      *Outstanding work* as user steps, one by one. Built: a dry run by default; `--apply` creates one $0.99 product per
+      paid book: Apple non-consumable + listing + availability + price, Google one-time product, Microsoft durable add-on
+      shell. By hand: the Microsoft price, listing and submission; the Apple review screenshot and submission.
 - [ ] User-only: accept the Paid Apps agreement and fill bank and tax details in App Store Connect; set up a Google
       Payments merchant profile in Play Console; Microsoft payout and tax profile in Partner Center.
 - [ ] Replace every "no in-app purchases" and "no account" line in `docs/store-listings/dino/*` and
@@ -263,6 +265,28 @@ through `library-docs` or `web-research` before building that part.
 - Skipped #7 (`reviews/s346l-high.md`): "Kids Category note still says 'it fits the product' while purchases and the new Redeem-code link out are unchecked against guidelines 1.3 / 5.1.4." - noted, not applied in this pass.
 - Skipped #9 (`reviews/s346l-high.md`): "It claims the live strings were read from the public pages on 2026-11-12 and tells the pusher to replace them verbatim; I could not confirm those live strings." - noted; re-read the live page and diff at push time.
 
+*From review:* switch-on round (`reviews/s346d-high.md` 8 findings, `reviews/s346d-medium.md` 10, `reviews/s346d-check1.md` to `-check3.md` 10 each, `reviews/s346d-check4.md` 3; all read)
+
+- Applied everything except the skips below.
+- Skipped #4 (`reviews/s346d-check1.md`): "SettlePurchasesAsync can wait up to 25 s silently on update" - background paths have no UI to show an overlay on; the single shared wait and its one fallback report are enough.
+- Skipped #3 (`reviews/s346d-check3.md`): "the stricter productId pattern for paid books" - latent: no book.json sets a productId today.
+- Skipped #4 (`reviews/s346d-check3.md`): "not confirmed by a real Microsoft call" - low; unknown until the Worker switch is on and a real Store token is used.
+- Skipped #5 (`reviews/s346d-check3.md`): "unknown counts as sold" - low; with an unknown config the Worker answers 402 once its switch is on.
+- Skipped #6 (`reviews/s346d-check3.md`): "a stale task from an earlier listing" - low; costs one wait at most.
+- Skipped #7 (`reviews/s346d-check3.md`): "a store sync delay after a purchase" - low; deliberate, recorded in code.
+- Skipped #8 (`reviews/s346d-check3.md`): "one bad book blocks the whole republish" - low; deliberate, it fails loudly and uploads nothing.
+- Skipped #9 (`reviews/s346d-check3.md`): "Intended by the design" - low; deliberate.
+- Skipped #10 (`reviews/s346d-check3.md`): "Deliberate (never lose a held book)" - low; deliberate, noted in code.
+- Skipped #1 (`reviews/s346d-check4.md`): "a fully offline dry run now fails" - low; `--force-paid-switch-on` runs it offline.
+- Skipped #2 (`reviews/s346d-check4.md`): "staging metas follow production's switch" - low; staging dry run only.
+- Skipped #3 (`reviews/s346d-check4.md`): "verify rewrites the ids the other way" - low; rare, the next run self-heals.
+
+## Built, switch-on round (2026-11-13, branch feat/s346-switch-on, not merged)
+
+- Built: the first switch-on item (check7 #1, #4-#9 fixed; #8's note text in 15 languages kept as `Backup_MissingNoteStore`, shown only when the switch is known on) and Part D's `.github/scripts/store-products.mjs`.
+- Changed while building (decided by Claude, obvious; change if you disagree): store product ids use `_` instead of `-` (Google allows only a-z0-9_.), applied only when the live config's `paidBooks.enabled` is true, read on every dino-store run (unreadable fails the run), so switch-off metas stay byte-identical to origin/main (golden test). One app gate, `BookSales.SwitchKnownOn`, for all new behaviour. An unlisted book in a backup restores from its files.
+- Device run (emulator-5554, rerun4; logs `D:/ReadTheStupidText-worktrees/reviews/w47-device/s346/rerun4/`): switch off first-books-picker, dino-backup-restore-recordings, shelf-audio-on-start PASS; switch on paid-books (fake purchases: Bought, owned=1, overlay, Restore) PASS.
+
 ## Device run (emulator-5554, build 886c981061c6)
 
 Files: `D:/ReadTheStupidText-worktrees/reviews/w47-device/s346/rerun3/`.
@@ -276,16 +300,18 @@ Files: `D:/ReadTheStupidText-worktrees/reviews/w47-device/s346/rerun3/`.
 
 **Night of 2026-11-13 (the user: "I expect to see the stores live in the morning with the 4 product as free and the rest as 0.99 ... dont fucking stop on anything"), state read live:**
 - Done: #1033 merged and deployed by Workers Builds (04:11Z); the 7 Worker store secrets set (APPLE_IAP_*, PLAY_SERVICE_ACCOUNT_JSON, MS_STORE_*); `store-products.mjs --apply` (fixed in #1036) created the 11 paid products in Google Play (created and activated) and App Store Connect (created), and the 11 Partner Center add-on shells; the 11 add-ons were then priced (USD 0.99, all markets, in-app only), listed (en-US) and submitted in Partner Center by a Chrome agent: 4 live, 2 in certification, 5 waiting to be released at the time. Windows users already have Dino 1.124.0 (store-submit 2026-11-12 19:43Z), which carries the purchase code.
-- Blocked by the auto-mode classifier ("Feature Flag Writes"): `npx --yes wrangler@4 r2 object put readthestupidtext-downloads/dinoreader/config.json --file <config with "paidBooks":{"enabled":true}> --content-type application/json --remote`. Allow line for the user's settings `permissions.allow`: `Bash(npx --yes wrangler@4 r2 object put readthestupidtext-downloads/dinoreader/config.json*)`.
+- Switch turned on 2026-11-13 after the user added the allow line (`paidBooks.enabled: true` in R2 `dinoreader/config.json`, read back from `/api/app-config`).
 - Held behind the switch (merge only together with it): this branch's listing, privacy and home-page texts (PR open, reviewed: reviews/s346l-high.md, s346l-medium.md); then a `dino-store.yml` dispatch to republish every meta with the store product ids; then pushing the listings with the `store-listing` agent (apply).
 - Apple: the products still need a review screenshot each and submission with an app version (App Store is the user's button); Dino is not public on the App Store or Google Play yet (lookup 0 results; Play page 404), so Windows is the only public store.
 
-- [ ] Before switch-on: fix review findings check7 #1 (Windows ticket audience and anonymous exposure), #4, #5, #6, #7, #8 (recordings of an unlisted book on restore), #9 (reviews/pr-1016-check7.md). Blocks: turning the switch on.
-- Create the products and $0.99 prices in App Store Connect, Play Console and Partner Center. Blocks: any purchase.
+- [x] Before switch-on: review findings check7 #1, #4-#9 fixed in this branch (see *Built, switch-on round*).
+- Create the products and $0.99 prices: run `store-products.mjs --apply` (Microsoft price, listing and submission and the Apple review screenshot and submission by hand). Blocks: any purchase.
 - Paid apps agreement, bank and tax details. Blocks: selling on Apple, Google and Microsoft. State read live on 2026-11-13:
-  - Apple: Paid Apps agreement, bank (GBP) and W-8BEN active; a new agreement version waits for "View and Agree to Terms" at https://appstoreconnect.apple.com/business.
-  - Google: merchant account set up (the one-time products page opens); bank account verification pending (Payments profile, `.../developers/5892509739539100062/paymentssettings`); trader status declaration due 2027-02-01 (Play Console home, "Declare your trader status" card).
-  - Microsoft: no payout or tax profile (https://partner.microsoft.com/dashboard/payee/profiles/partner/manage lists none and has no create button). The docs' "Payout and tax profile assignment" page is missing from this account's Account settings; the docs name the Owner or Financial Contributor role as the likely cause (role not checked). Blocks: selling on Windows only.
+  - Apple: done. Paid Apps agreement (new version accepted), bank (GBP) and W-8BEN active. In-App Purchase key NU7V4JG9B5 created by the user and stored in the secrets store (dinoreader, `APPLE_IAP_*`); the sandbox App Store Server API accepts it, production answered 401 (likely no approved in-app product yet; recheck after the products exist).
+  - Google: merchant account set up; trader status declared; the Play service account can now read orders (View financial data granted). Left: the bank account verification, waiting on Google's test deposit (the user, 2026-11-13: don't remind).
+  - Microsoft: done 2026-11-13. Payout and tax pages appear only when signed in with the personal Microsoft account (ashkan.sirous@gmail.com), not the onmicrosoft work account. Tax profile UK Complete (treaty True); payment profile Electronic Bank Transfer (Monzo, GBP) on both Sell and AdsRevenue (Submit needs both); status Complete, Complete, "Pending Microsoft validation" (up to 48 h). The Entra app key for the Worker is created and stored (`MS_STORE_*` in the secrets store, verified by a Store token).
+  - Apple IAP key stored (`APPLE_IAP_*`); the Play service account has View financial data.
+- Remaining before switch-on, in order: set the Worker secrets (asks the user), run `store-products.mjs --apply`, Part D listings and privacy page, set `paidBooks.enabled` true (then any dino-store run republishes the metas with the store ids).
 - Worker secrets `PLAY_SERVICE_ACCOUNT_JSON`, `APPLE_IAP_KEY_P8`, `APPLE_IAP_KEY_ID`, `APPLE_IAP_ISSUER_ID`, `MS_STORE_TENANT_ID`, `MS_STORE_CLIENT_ID`, `MS_STORE_CLIENT_SECRET` (optional `APPLE_IAP_ALLOW_SANDBOX` on a staging Worker). Blocks: the Worker confirming any purchase (without them it answers 403).
 - Republish every book's `meta.json` with `access` through `publish-store-books.mjs`. Blocks: paid books actually being sold.
 - `Platforms/iOS/Info.plist` purchase comment. Blocks: the iOS switch-on.
@@ -308,3 +334,8 @@ Files: `D:/ReadTheStupidText-worktrees/reviews/w47-device/s346/rerun3/`.
 - The switch-on store page with the real Worker.
 - Microsoft Store ID flow against a live store.
 - A native German read of the `de` store listing text (`docs/store-listings/dino/de.md`).
+
+- The store tab replanning a book to owned after a purchase made while the tab was hidden (no flow exists; add one to `.maestro/dino/`).
+- A plain store download with the switch off has no dedicated flow.
+- `store-products.mjs --apply` against each real store (Apple read routes marked UNVERIFIED).
+- Apple App Store Server API production answered 401 with the new key (sandbox accepted it); recheck once an in-app product is approved.

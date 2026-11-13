@@ -373,6 +373,7 @@
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Checking your purchases…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Books to get back from the store</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Free books come back by themselves. For a book you bought, press Restore purchases in the Store, then restore this backup again.</value></data>
+  <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Free books still in the store come back by themselves. A book the store no longer lists does not come back, but its recordings stay in the backup file. For a book you bought, press Restore purchases in the Store, then restore this backup again.</value></data>
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Your story’s recordings and settings in one file. The book itself comes back from the store. Save it to Drive or Files, or send it to yourself.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>The recordings and settings for all {0} stories in one file. The books themselves come back from the store. Save it to Drive or Files, or send it to yourself.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Brings recordings and settings back from a file, and fetches the books again from the store. Books you bought need Restore purchases first.</value></data>

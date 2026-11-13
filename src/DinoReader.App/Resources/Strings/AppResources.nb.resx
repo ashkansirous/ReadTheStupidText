@@ -369,6 +369,7 @@
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Sjekker kjøpene dine …</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Bøker som skal hentes tilbake fra butikken</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratis bøker kommer tilbake av seg selv. For en bok du har kjøpt, trykk på Gjenopprett kjøp i butikken og gjenopprett deretter denne sikkerhetskopien på nytt.</value></data>
+  <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratis bøker som fortsatt er i butikken, kommer tilbake av seg selv. En bok butikken ikke lenger har, kommer ikke tilbake, men opptakene blir i sikkerhetskopifilen. For en bok du har kjøpt, trykk på Gjenopprett kjøp i butikken og gjenopprett deretter denne sikkerhetskopien på nytt.</value></data>
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Opptakene og innstillingene til historien din i én fil. Selve boken kommer tilbake fra butikken. Lagre den i Drive eller Filer, eller send den til deg selv.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Opptakene og innstillingene for alle {0} historiene i én fil. Selve bøkene kommer tilbake fra butikken. Lagre den i Drive eller Filer, eller send den til deg selv.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Henter opptak og innstillinger tilbake fra en fil og henter bøkene på nytt fra butikken. Kjøpte bøker trenger først Gjenopprett kjøp.</value></data>

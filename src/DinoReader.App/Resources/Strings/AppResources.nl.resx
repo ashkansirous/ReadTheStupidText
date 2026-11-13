@@ -369,6 +369,7 @@
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Je aankopen worden gecontroleerd…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Boeken om terug te halen uit de winkel</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratis boeken komen vanzelf terug. Voor een boek dat je hebt gekocht, tik je in de winkel op Aankopen herstellen en herstel je deze back-up daarna opnieuw.</value></data>
+  <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratis boeken die nog in de winkel staan, komen vanzelf terug. Een boek dat de winkel niet meer aanbiedt, komt niet terug, maar de opnames blijven in het back-upbestand. Voor een boek dat je hebt gekocht, tik je in de winkel op Aankopen herstellen en herstel je deze back-up daarna opnieuw.</value></data>
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>De opnames en instellingen van je verhaal in één bestand. Het boek zelf komt terug uit de winkel. Bewaar het in Drive of Bestanden, of stuur het naar jezelf.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>De opnames en instellingen van alle {0} verhalen in één bestand. De boeken zelf komen terug uit de winkel. Bewaar het in Drive of Bestanden, of stuur het naar jezelf.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Haalt opnames en instellingen terug uit een bestand en haalt de boeken opnieuw op uit de winkel. Gekochte boeken hebben eerst Aankopen herstellen nodig.</value></data>

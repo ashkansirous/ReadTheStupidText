@@ -145,6 +145,16 @@ public sealed class BookSales(AppConfigClient config, BookPurchases purchases)
 
     public BookPurchases Purchases => purchases;
 
+    /// <summary>The ONE gate for every behaviour added by the paid-books work (settle wait, refusal codes, purchase reads, unlisted-book reports, the backup format): true only when the switch is known AND on, so off or unknown can only take the path of before the switch existed.</summary>
+    public bool SwitchKnownOn => ConfigKnown && Enabled;
+
+    /// <summary>Raised on the main thread when a fetch brought a different remote config (so the switch may have changed).</summary>
+    public event EventHandler? ConfigChanged
+    {
+        add => config.Changed += value;
+        remove => config.Changed -= value;
+    }
+
 #if DINO_TEST_BOOKS
     /// <summary>True once the switch is known: a real config is held (fetched, or a kept copy), or the Debug hook forced it.</summary>
     public bool ConfigKnown => ForcedEnabled is not null || config.HasCopy;
@@ -189,15 +199,15 @@ public sealed class BookSales(AppConfigClient config, BookPurchases purchases)
     }
 
     /// <summary>The purchase proof header for a book's files, or null when none is needed or held.</summary>
-    public string? ProofHeader(StoreItem item) => purchases.ProofHeader(Enabled, item);
+    public string? ProofHeader(StoreItem item) => purchases.ProofHeader(SwitchKnownOn, item);
 
     /// <summary>The card plan for a listed book from the current snapshot.</summary>
     public StoreCardPlan PlanFor(StoreItem item, bool onShelf)
     {
         PurchaseSnapshot snapshot = purchases.Snapshot;
         string? price = item.Products.Select(p => snapshot.Prices.GetValueOrDefault(p)).FirstOrDefault(p => p is not null);
-        return BookAccess.Plan(Enabled, item, onShelf, snapshot.Owned, snapshot.Pending, price);
+        return BookAccess.Plan(SwitchKnownOn, item, onShelf, snapshot.Owned, snapshot.Pending, price);
     }
 
-    public bool MayUpdate(StoreItem item) => BookAccess.MayUpdate(Enabled, item, purchases.Snapshot.Owned);
+    public bool MayUpdate(StoreItem item) => BookAccess.MayUpdate(SwitchKnownOn, item, purchases.Snapshot.Owned);
 }

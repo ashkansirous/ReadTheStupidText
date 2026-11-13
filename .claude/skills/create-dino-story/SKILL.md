@@ -47,10 +47,13 @@ context free of screenshots, pictures and 13 translation files.
      then `Put` the place sheet and paste, all inside one lock hold), works in its own tab with the lock owner
      `<stem>-<group>`, the group label a simple word without commas (`g1`..`g4`; the brief lists each group's pages), saves candidates to its own sub-folder of the working folder and writes its check rows to
      `<working folder>/<group>/checks.md`, never to `art.md` (one writer per file). Pages that really depend on
-     another picture (the same pose continued, an object handed over) go in the same group.
+     another picture (the same pose continued, an object handed over) go in the same group. **No group is more than about 5
+     pictures** (Slice 356): the context an agent re-reads grows about 15k per picture, so a long book is split into more groups,
+     each a fresh agent that stops and reports when its group is done; run them as the four slots free up.
    - **Finish, one illustrator (`finish` mode):** first checks that every page and the cover has an accepted picture (from this run's groups, or the repo's existing ones for pages not redrawn) and stops naming any missing page, then merges every group's check rows into `art.md`, runs
      `prepare-story-pictures.ps1`, the contact sheet and `stamp`, then the full review runs as usual. Redraws after
-     the review are split into groups the same way when there are more than three.
+     the review are split into groups the same way when there are more than three; each redraw group has at most three
+     pictures (the redraw rule stays at three, below the general cap of 5 above).
 4. **`dino-story-reviewer`**, **full** mode: every picture at full size against its page and the line-up,
    and characters, places and time of day consistent across the book. Failed pages go back to the
    illustrator (or the writer), then review again until `PASS`. The coordinator may glance at the contact
@@ -126,9 +129,20 @@ Prompt templates: [prompts.md](prompts.md).
     not from the first prompt (the pilot asked for a "red cap" but the line-up drew a knitted beanie;
     later prompts must follow the picture).
 - **Image model: default to 3.5 Flash-Lite in the text-model picker** (except Slice 350's high-res run: Flash-Lite and 4 Argon are out there, and the model is the one written in that slice's part A4; a measured default, not a law; usage numbers and the failed Flash attempts are in `content/dino/lion-and-mouse/art.md`). The Images tool has no model menu; the text picker decides what draws. Flash-Lite cost about 0.3% of the 5-hour window per picture against +4% on 3.8 Flash, same 1792x2400 size and quality, and 3.8 Flash refused pictures with a pasted line-up. Set the picker before the first prompt (it persists across chats); keep 3.8 Flash for text-only prompts. If Flash-Lite gets the same picture wrong twice in a row, try 3.1 Pro for that picture and note its cost. Re-measure at each book and record each picture's size in the art record. The limit is compute-based (5-hour window plus a weekly cap, Settings > Usage Limits).
-- Set **Aspect ratio 3:4** with the button under the prompt box in every new chat. Pictures come out
-  896x1200 (1792x2400 on the Pro plan). Paste the line-up first: the menu moves once a picture is attached, so open it after the paste
-  and take a screenshot before clicking 3:4 (Billy Goats: a misplaced click gave a 4:3 picture).
+- **Per picture, one script call** (Slice 356): after the line-up paste is confirmed (`window.__attachmentCount()` equals the
+  pictures pasted; the lock is held only from `Put` to that confirmation), `await window.__setupPicture(<prompt>, <pictures>)`
+  opens **Upload & tools**, picks *Create image*, sets **Aspect ratio 3:4** (the control reads `Aspect ratio, 3:4` once set), puts the
+  prompt in, checks its length and sends through `__sendChecked`. It finds every control by its label, never by position, and returns
+  one line (`ok: create-image, 3:4, 1 attachment, prompt 812 chars, sent`). It re-checks Create image and 3:4 right before sending
+  (after the prompt fill), never trusts a Create image chip that was already showing (it deselects it and picks the item again
+  in the same call), and answers `MISSING: composer area` when it can't find the prompt area to count attachments
+  (`__attachmentCount()` then returns `UNKNOWN`, never 0 or the expected number): screenshot once and go click by click.
+  `{ dryRun: true }` sends nothing but leaves the chat in Create image + 3:4 with the prompt filled: clear the box
+  (`selectAll` + `delete`) and deselect the Create image chip before any text-only message, or start a new chat. No screenshot is taken before 3:4 or after an `ok`
+  line; look (screenshot or zoom) only when the line reports a problem. `MISSING: <item>` means a control wasn't found: that one
+  picture goes click by click, one `find` ref at a time (the old steps: **+**, Create image, Aspect ratio, 3:4, a zoom to confirm
+  3:4, `__sendChecked`). Pictures come out 896x1200 (1792x2400 on the Pro plan); a misplaced click once gave a 4:3 picture (Billy Goats), which
+  is why the script confirms 3:4 before sending.
 - **No coordinate clicks on a new chat page.** Its suggestion chips sit right under the prompt box, and a
   click on one sends a prompt you didn't write (three stray chats so far: "Script Doctor Refusal", "The Art of
   Doing Nothing", a film-history quiz). Click only through `find` refs (prompt box, Upload & tools, Create

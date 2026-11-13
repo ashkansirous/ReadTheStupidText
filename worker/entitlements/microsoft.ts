@@ -6,14 +6,17 @@ import { CANNOT_VERIFY, checked } from "./types.ts";
 import type { CheckResult, EntitlementEnv, Fetcher, Proof, StoreChecker } from "./types.ts";
 
 const COLLECTIONS_URL = "https://collections.mp.microsoft.com/v6.0/collections/query";
-const AUDIENCE = "https://onestore.microsoft.com";
+// Two audiences (learn.microsoft.com/windows/uwp/monetize/view-and-grant-products-from-a-service, step 3): the first token never leaves the Worker
+// (it authorises the collections query); the second is the one the docs say to hand to the client to make a Store ID key.
+const QUERY_AUDIENCE = "https://onestore.microsoft.com";
+const TICKET_AUDIENCE = "https://onestore.microsoft.com/b2b/keys/create/collections";
 const TICKET_REFERENCE = "dino";
 const PRODUCT_TYPE_DURABLE = "Durable";
 const STATUS_ACTIVE = "Active";
 const TOKEN_REUSE_MS = 40 * 60_000;
 const MAX_PAGE_SIZE = 100;
 
-let cachedToken: { readonly value: string; readonly at: number; readonly clientId: string } | null = null;
+const cachedTokens = new Map<string, { readonly value: string; readonly at: number; readonly clientId: string }>();
 
 interface MicrosoftApp {
   readonly tenant: string;
@@ -32,9 +35,17 @@ function appOf(env: EntitlementEnv): MicrosoftApp | null {
   return tenant && clientId && secret ? { tenant, clientId, secret } : null;
 }
 
-async function accessToken(app: MicrosoftApp, fetcher: Fetcher): Promise<string | null> {
-  if (cachedToken !== null && cachedToken.clientId === app.clientId && Date.now() - cachedToken.at < TOKEN_REUSE_MS) return cachedToken.value;
-  const body = new URLSearchParams({ grant_type: "client_credentials", client_id: app.clientId, client_secret: app.secret, resource: AUDIENCE }).toString();
+/** A short non-reversible fingerprint of the client secret (the secret itself is never kept), so a rotated secret under the same client id does not reuse the old token. */
+async function secretFingerprint(secret: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(secret));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function accessToken(app: MicrosoftApp, fetcher: Fetcher, audience: string): Promise<string | null> {
+  const credential = `${app.clientId}:${await secretFingerprint(app.secret)}`;
+  const cached = cachedTokens.get(audience);
+  if (cached !== undefined && cached.clientId === credential && Date.now() - cached.at < TOKEN_REUSE_MS) return cached.value;
+  const body = new URLSearchParams({ grant_type: "client_credentials", client_id: app.clientId, client_secret: app.secret, resource: audience }).toString();
   const response = await fetcher(`https://login.microsoftonline.com/${encodeURIComponent(app.tenant)}/oauth2/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -43,19 +54,19 @@ async function accessToken(app: MicrosoftApp, fetcher: Fetcher): Promise<string 
   if (!response.ok) return null;
   const json = (await response.json()) as { access_token?: unknown };
   if (typeof json.access_token !== "string") return null;
-  cachedToken = { value: json.access_token, at: Date.now(), clientId: app.clientId };
+  cachedTokens.set(audience, { value: json.access_token, at: Date.now(), clientId: credential });
   return json.access_token;
 }
 
 /**
- * The Entra ID access token (audience https://onestore.microsoft.com) the Windows app passes to `StoreContext.GetCustomerCollectionsIdAsync` to make a Store ID key (Microsoft's documented flow:
+ * The Entra ID access token (audience https://onestore.microsoft.com/b2b/keys/create/collections, never the query audience, which stays in the Worker) the Windows app passes to `StoreContext.GetCustomerCollectionsIdAsync` to make a Store ID key (Microsoft's documented flow:
  * the service issues the ticket, the client turns it into a key, the service reads the key). Null while a Microsoft key is missing or Microsoft would not answer.
  */
 export async function serviceTicket(env: EntitlementEnv, fetcher: Fetcher): Promise<string | null> {
   const app = appOf(env);
   if (app === null) return null;
   try {
-    return await accessToken(app, fetcher);
+    return await accessToken(app, fetcher, TICKET_AUDIENCE);
   } catch {
     return null;
   }
@@ -85,7 +96,7 @@ export const microsoftChecker: StoreChecker = {
     const app = appOf(env);
     if (app === null) return CANNOT_VERIFY;
     try {
-      const token = await accessToken(app, fetcher);
+      const token = await accessToken(app, fetcher, QUERY_AUDIENCE);
       return token === null ? CANNOT_VERIFY : await query(proof, token, fetcher);
     } catch {
       return CANNOT_VERIFY; // network failure: we could not ask, which is never "owned"
@@ -95,5 +106,5 @@ export const microsoftChecker: StoreChecker = {
 
 /** Test seam: forgets the cached token. */
 export function resetMicrosoftTokenCache(): void {
-  cachedToken = null;
+  cachedTokens.clear();
 }

@@ -481,7 +481,7 @@ public sealed class ShelfAudioPacks
 			if (listing.Status == StoreLoadStatus.Ok)
 			{
 				ISet<string> shelf = await _store.InstalledIdsAsync();
-				IReadOnlyList<StoreItem> fetchable = _store.Fetchable(listing.Items); // Slice 346: a sold book the store account does not own gets no audio request (it would be refused); the shelf copy is never touched
+				IReadOnlyList<StoreItem> fetchable = await _store.FetchableAsync(listing.Items, cancel); // Slice 346: a sold book the store account does not own gets no audio request (it would be refused); the shelf copy is never touched
 				ISet<string> textBehind = await TextBehindAsync(run, fetchable, cancel);
 				return ShelfAudioPlan.For(fetchable, shelf, code, _store.Packs.InstalledVersion, LanguageChoice.Current(), textBehind);
 			}

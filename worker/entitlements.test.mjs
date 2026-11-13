@@ -6,7 +6,7 @@ import { generateKeyPairSync } from "node:crypto";
 import { appleChecker, resetAppleTokenCache } from "./entitlements/apple.ts";
 import { GateAnswer, MAX_CACHED, NOT_OWNED_CACHE_MS, createPaidGate, resetOwnedCache } from "./entitlements/gate.ts";
 import { googleChecker, resetGoogleTokenCache } from "./entitlements/google.ts";
-import { microsoftChecker, ownedFromItems, resetMicrosoftTokenCache } from "./entitlements/microsoft.ts";
+import { microsoftChecker, ownedFromItems, resetMicrosoftTokenCache, serviceTicket } from "./entitlements/microsoft.ts";
 import { base64UrlEncode } from "./entitlements/jwt.ts";
 import { parseProof } from "./entitlements/proof.ts";
 import { CANNOT_VERIFY, Verdict, checked } from "./entitlements/types.ts";
@@ -142,6 +142,28 @@ test("Microsoft: the customer's active durable add-ons are the owned list", asyn
   const refused = recorded([["login.microsoftonline.com", json({ access_token: "ms" })], ["collections", json({}, 500)]]);
   fresh();
   assert.deepEqual(await microsoftChecker.check(proof, ENV, refused.fetcher), CANNOT_VERIFY);
+});
+
+test("Microsoft: the ticket handed to the app and the token that queries are two audiences, cached apart (check7 #1)", async () => {
+  fresh();
+  const proof = parseProof("windows::STOREIDKEY");
+  const store = recorded([["login.microsoftonline.com", (_url, init) => json({ access_token: `tok-${new URLSearchParams(init.body).get("resource")}` })], ["collections.mp.microsoft.com", json({ items: [] })]]);
+  const ticket = await serviceTicket(ENV, store.fetcher);
+  assert.equal(ticket, "tok-https://onestore.microsoft.com/b2b/keys/create/collections");
+  await microsoftChecker.check(proof, ENV, store.fetcher);
+  const query = store.calls.find((call) => call.url.includes("collections.mp"));
+  assert.equal(query.init.headers.Authorization, "Bearer tok-https://onestore.microsoft.com");
+  await serviceTicket(ENV, store.fetcher);
+  assert.equal(store.calls.filter((call) => call.url.includes("login.microsoftonline")).length, 2); // one token per audience, each reused
+});
+
+test("Microsoft: a rotated client secret under the same client id does not reuse the cached token (check8 #8)", async () => {
+  fresh();
+  const store = recorded([["login.microsoftonline.com", (_url, init) => json({ access_token: `tok-${new URLSearchParams(init.body).get("client_secret")}` })]]);
+  assert.equal(await serviceTicket(ENV, store.fetcher), "tok-secret");
+  assert.equal(await serviceTicket({ ...ENV, MS_STORE_CLIENT_SECRET: "rotated" }, store.fetcher), "tok-rotated");
+  assert.equal(await serviceTicket({ ...ENV, MS_STORE_CLIENT_SECRET: "rotated" }, store.fetcher), "tok-rotated");
+  assert.equal(store.calls.length, 2);
 });
 
 test("missing store secrets are cannot-verify for every store, never owned, and ask nobody", async () => {

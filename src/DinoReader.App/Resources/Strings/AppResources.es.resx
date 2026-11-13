@@ -370,6 +370,7 @@
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Revisando tus compras…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Libros que se recuperan de la tienda</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Los libros gratuitos vuelven solos. Para un libro que compraste, pulsa Restaurar compras en la tienda y luego restaura esta copia de nuevo.</value></data>
+  <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Los libros gratuitos que siguen en la tienda vuelven solos. Un libro que la tienda ya no ofrece no vuelve, pero sus grabaciones se quedan en el archivo de la copia. Para un libro que compraste, pulsa Restaurar compras en la tienda y luego restaura esta copia de nuevo.</value></data>
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Las grabaciones y los ajustes de tu cuento en un solo archivo. El libro en sí vuelve de la tienda. Guárdalo en Drive o Archivos, o envíatelo.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Las grabaciones y los ajustes de los {0} cuentos en un solo archivo. Los libros en sí vuelven de la tienda. Guárdalo en Drive o Archivos, o envíatelo.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Recupera grabaciones y ajustes desde un archivo y vuelve a descargar los libros de la tienda. Los libros comprados necesitan primero Restaurar compras.</value></data>
