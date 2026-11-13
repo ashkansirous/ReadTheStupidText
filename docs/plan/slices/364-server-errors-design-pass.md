@@ -1,6 +1,6 @@
 # Slice 364 — Slice 357 design pass: the Missing States mock's items
 
-*Built 2026-11-13, PR #1062 pending merge. Part A and the Part C strings are built; RT1/RT2 row layouts are not (see *Waiting on the user*). Slice 357's file is not ticked: the 357 mock items built here are listed under *Work*.*
+*Built 2026-11-13, merged as PR #1062 (96133a3e). Part A and the Part C strings are built; RT1/RT2 row layouts are not (see *Waiting on the user*). Slice 357's file is not ticked: the 357 mock items built here are listed under *Work*.*
 
 **Touches:** `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/StoreRows*.cs` and `src/DinoReader.Core/StoreRow*.cs` (new if needed; on origin/main the row state lives in `StorePage.xaml.cs`), `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.Core/HttpErrorKind*.cs`, `src/DinoReader.Core/BookAccess.cs` (price tag), `src/DinoReader.App/Purchases/BookPurchases.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*.resx`, `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources.cs`, `src/ReadTheStupidText.App/Strings/*/Resources.resw`, the voice-pack row views in `src/ReadTheStupidText.Mobile/**` (Settings > Voices) and `src/ReadTheStupidText.App/**` (control-panel voice row; find them by `Wait_Retry` / `LanguageRetry`), `src/ReadTheStupidText.Mobile/LocalizedPackStatus.cs`, `src/ReadTheStupidText.App/PackSetupText.cs`, `src/DinoReader.App/Testing/TestStore.cs`, `.maestro/dino/store-server-errors.yaml`, `.maestro/dino/store-payment-required.yaml`, `.maestro/dino/paid-books.yaml` (restore alert gone, buttons moved into the list footer), `tests/ReadTheStupidText.Tests/*`, `tests/DinoReader.Tests/*` (read Slice 357's *Touches* line for the full list and trim to what these items need).
 
@@ -65,7 +65,7 @@ Follow 357's *Design (Dino Reader 2026-11-13 Missing States mock, section 2)* se
 
 Emulator-5554, Dino cache 3e671eda1cb8: `store-server-errors` PASS, `store-payment-required` PASS, `paid-books` FAIL once (the result line was off screen; log `[StoreRestore] toFetch=0 downloading=0 arrived=0 line=NothingToRestore`), PASS after the flow fix (redeem opened, outcome=Bought). Logs: `D:/ReadTheStupidText-worktrees/reviews/w53-device/s364-dino-paid-books.log`, `s364-flow-paid-books.log`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-13)
 
 - Dino `StorePage` restore: the result line comes from the one pure `StoreRowRestore.LineFor` in `src/DinoReader.Core/StoreRowRestore.cs`, shown only when the run ends; restore re-checks a row's state before fetching and cancels per visit. Do not add a second place that counts arrivals. (Slice 364: docs/plan/slices/364-server-errors-design-pass.md)
 
