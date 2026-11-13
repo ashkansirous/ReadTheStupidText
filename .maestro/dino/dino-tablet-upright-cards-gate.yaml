@@ -1,12 +1,11 @@
-# Slice 234 part B (mock Batch 45 frame 137): on a tablet held upright (run on RTST_Tablet, 800 x 1280 dp) the grown-up gate is a centred white card, min(800 - 80, 520) = 520 dp wide, with 80 dp answers
-# and a 160 dp hold ring; rotating sideways gives Slice 232's split, and rotating back brings the card back on the same step. The 3 s hold itself is not driven (grown-ups-button.yaml covers the chain).
-# Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback if a device ignores it. Tablet emulator only: a phone never logs card=True.
+# Slice 363 (mock Missing States G1, was Slice 234 part B): on a tablet (run on RTST_Tablet, 800 x 1280 dp) the grown-up gate is the same centred cream card held upright and sideways, min(800 - 48, 440) = 440 dp
+# wide, with the 150 dp hold ring; rotating keeps the card and the step. The 3 s hold itself is not driven (grown-ups-button.yaml covers the chain).
+# Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback if a device ignores it. Tablet emulator only: a phone held upright logs mode=Sheet.
 # expect-log: HOOK skip-first-run ok
-# The layout line is written only when the shape changes: the card upright, the split sideways, the card again.
-# expect-log: [Landscape] gate split=False step=hold card=True cardWidth=520 key=80 ring=160
-# expect-log: [Landscape] gate split=True step=hold card=False
+# The layout line is written only when the shape changes: the card upright; rotating sideways and back is the same card, so no second line.
+# expect-log: [Landscape] gate mode=Card step=hold cardWidth=440
 appId: uk.sirous.dinoreader.dbg
-name: Gate on a tablet held upright is a centred card with a big hold ring
+name: Gate on a tablet is one centred 440 dp card upright and sideways
 # Runs after the flow pass or fail, so a failure never leaves the next flow sideways.
 onFlowComplete:
   - setOrientation: PORTRAIT
@@ -26,22 +25,23 @@ onFlowComplete:
     id: GalleryGrownUps
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
-    visible: Press and hold for 3 seconds.
+    visible: Press and hold for 3 seconds
     timeout: 15000
-- assertVisible: For grown-ups
-- assertVisible: Back to the story
-# Sideways: the split; upright again: the card, still on the hold step.
+- assertVisible: FOR GROWN-UPS
+- assertVisible: Back to my child.s shelf
+# Sideways: still the card on the hold step; upright again: the same.
 - setOrientation: LANDSCAPE_LEFT
 - extendedWaitUntil:
-    visible: Press and hold for 3 seconds.
+    visible: Press and hold for 3 seconds
     timeout: 15000
+- assertVisible: FOR GROWN-UPS
 - setOrientation: PORTRAIT
 - extendedWaitUntil:
-    visible: Press and hold for 3 seconds.
+    visible: Press and hold for 3 seconds
     timeout: 15000
-- assertVisible: For grown-ups
-# Back to the story closes the gate and leaves the kids' shelf.
-- tapOn: "Back to the story"
+- assertVisible: FOR GROWN-UPS
+# Back to my child's shelf closes the gate and leaves the kids' shelf.
+- tapOn: Back to my child.s shelf
 - extendedWaitUntil:
     visible:
       id: StoryTile

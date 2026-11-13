@@ -185,7 +185,9 @@
   <data name="Gate_Backspace" xml:space="preserve"><value>Löschen</value></data>
   <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>Mit der Maus oder die Leertaste gedrückt halten.</value></data>
   <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>Eintippen, dann Enter drücken</value></data>
+  <data name="Gate_TypeOrClickWindows" xml:space="preserve"><value>Eintippen, dann Enter drücken, oder die Antwort anklicken</value></data>
   <data name="Key_Space" xml:space="preserve"><value>Leertaste</value></data>
+  <data name="Key_Enter" xml:space="preserve"><value>Enter</value></data>
   <data name="Key_Left" xml:space="preserve"><value>Pfeil links</value></data>
   <data name="Key_Right" xml:space="preserve"><value>Pfeil rechts</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>

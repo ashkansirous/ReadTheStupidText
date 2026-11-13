@@ -183,7 +183,9 @@
   <data name="Gate_Backspace" xml:space="preserve"><value>删除</value></data>
   <data name="Gate_HoldCaptionWindows" xml:space="preserve"><value>用鼠标，或按住空格键。</value></data>
   <data name="Gate_TypeEnterWindows" xml:space="preserve"><value>输入答案，然后按 Enter</value></data>
+  <data name="Gate_TypeOrClickWindows" xml:space="preserve"><value>输入答案后按 Enter，或点击答案</value></data>
   <data name="Key_Space" xml:space="preserve"><value>空格键</value></data>
+  <data name="Key_Enter" xml:space="preserve"><value>Enter</value></data>
   <data name="Key_Left" xml:space="preserve"><value>左箭头</value></data>
   <data name="Key_Right" xml:space="preserve"><value>右箭头</value></data>
   <data name="Key_Esc" xml:space="preserve"><value>Esc</value></data>

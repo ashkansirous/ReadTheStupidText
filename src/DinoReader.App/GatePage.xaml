@@ -11,7 +11,78 @@
 
     <!-- Grown-up gate (mock screens 6, 6b, 7): a white bottom sheet over a dimmed page. Step 1 is
          a 3 second hold (a plain button when a screen reader is on); step 2 is the sum. -->
-    <Grid BackgroundColor="{StaticResource Scrim}" SafeAreaEdges="None">
+    <Grid x:Name="ScrimLayer" BackgroundColor="{StaticResource Scrim}" SafeAreaEdges="None">
+        <!-- Slice 363 (mock Missing States G1-G3): from 600 wide the gate is one centred cream card over the dimmed page instead of the sheet. Its own views (the ring, the field, the six answer keys) share the
+             step, the sum and the hold with the sheet's: ShowSumStep, ShowSum and ResetHold update both, and only one of the two is ever shown. -->
+        <Grid x:Name="CardRoot" IsVisible="False" Padding="24" SafeAreaEdges="Container">
+            <Border x:Name="Card" AutomationId="GateCard" HorizontalOptions="Center" VerticalOptions="Center" BackgroundColor="{StaticResource Cream}" StrokeThickness="0" Padding="36,28,36,26"
+                    SemanticProperties.Description="{x:Static res:AppResources.Gallery_ForGrownUps}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="28" />
+                </Border.StrokeShape>
+                <Border.Shadow>
+                    <Shadow Brush="#140E28" Offset="0,24" Radius="30" Opacity="0.45" />
+                </Border.Shadow>
+                <!-- A long translation or a large font scale can make the card taller than the window: the sum step then scrolls inside the card. The hold step never scrolls (Orientation Neither), because a hold is never inside a scrolling part. -->
+                <ScrollView x:Name="CardScroll" Orientation="Neither">
+                <Grid x:Name="CardGrid" RowDefinitions="Auto,Auto,Auto" RowSpacing="14">
+                    <HorizontalStackLayout x:Name="CardBars" Grid.Row="0" Spacing="6" HorizontalOptions="Center">
+                        <BoxView x:Name="CardBarOne" WidthRequest="26" HeightRequest="5" CornerRadius="3" Color="{StaticResource Brand}" />
+                        <BoxView x:Name="CardBarTwo" WidthRequest="26" HeightRequest="5" CornerRadius="3" Color="#e6e0d4" />
+                    </HorizontalStackLayout>
+
+                    <Grid x:Name="CardBody" Grid.Row="1" RowSpacing="14" ColumnSpacing="22">
+                        <VerticalStackLayout x:Name="CardHead" Spacing="4">
+                            <Label x:Name="CardEyebrow" FontSize="14" FontAttributes="Bold" TextColor="#6f6884" HorizontalTextAlignment="Center" />
+                            <Label x:Name="CardTitle" FontSize="28" FontAttributes="Bold" TextColor="{StaticResource Ink}" HorizontalTextAlignment="Center"
+                                   SemanticProperties.HeadingLevel="Level1" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout x:Name="CardRingBox" Spacing="14" HorizontalOptions="Center" VerticalOptions="Center">
+                            <Grid x:Name="CardRingHost" WidthRequest="150" HeightRequest="150" HorizontalOptions="Center">
+                                <Border x:Name="CardRingCore" WidthRequest="122" HeightRequest="122" BackgroundColor="{StaticResource Ink}" StrokeThickness="0" InputTransparent="True">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="61" />
+                                    </Border.StrokeShape>
+                                    <local:IconView x:Name="CardLock" Kind="Lock" Color="#FFC24D" Size="46" StrokeWidth="2.2" />
+                                </Border>
+                                <GraphicsView x:Name="CardRing" WidthRequest="150" HeightRequest="150" AutomationId="GateCardHoldRing"
+                                              StartInteraction="OnHoldStart" EndInteraction="OnHoldEnd" CancelInteraction="OnHoldCancel"
+                                              SemanticProperties.Description="{x:Static res:AppResources.Gate_HoldDescription}" />
+                            </Grid>
+                            <Button x:Name="CardContinue" Text="{x:Static res:AppResources.Gate_Continue}" IsVisible="False" HeightRequest="48" CornerRadius="24" FontSize="15"
+                                    FontAttributes="Bold" Padding="26,0" BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnContinueClicked" />
+                        </VerticalStackLayout>
+
+                        <Border x:Name="CardField" IsVisible="False" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="152" HeightRequest="70" Padding="3"
+                                BackgroundColor="{StaticResource Cream}" Stroke="{StaticResource Brand}" StrokeThickness="3">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="22" />
+                            </Border.StrokeShape>
+                            <Border BackgroundColor="White" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="16" />
+                                </Border.StrokeShape>
+                                <Label x:Name="CardAnswer" FontSize="28" FontAttributes="Bold" TextColor="{StaticResource Ink}" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                            </Border>
+                        </Border>
+
+                        <Grid x:Name="CardKeys" IsVisible="False" FlowDirection="LeftToRight" ColumnDefinitions="*,*,*" RowDefinitions="60,60" ColumnSpacing="10" RowSpacing="10" />
+
+                        <Label x:Name="CardHoldHint" FontSize="15" LineHeight="1.45" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
+                        <Label x:Name="CardSumHint" IsVisible="False" FontSize="15" LineHeight="1.45" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
+                    </Grid>
+
+                    <Grid x:Name="CardBackHost" Grid.Row="2" HorizontalOptions="Center">
+                        <Button x:Name="CardBack" Text="{x:Static res:AppResources.Gallery_BackToShelf}" AutomationId="GateCardBack" HeightRequest="44" CornerRadius="22" FontSize="15" FontAttributes="Bold"
+                                Padding="44,0,22,0" BackgroundColor="{StaticResource Sand}" TextColor="{StaticResource Ink}" BorderColor="#e2dacb" BorderWidth="1.5" Clicked="OnBackClicked" />
+                        <local:IconView Kind="Back" Color="{StaticResource Ink}" Size="18" StrokeWidth="2.6" HorizontalOptions="Start" VerticalOptions="Center" Margin="20,0,0,0" InputTransparent="True" />
+                    </Grid>
+                </Grid>
+                </ScrollView>
+            </Border>
+        </Grid>
+
         <Border x:Name="Sheet" VerticalOptions="End" BackgroundColor="White" StrokeThickness="0" Padding="22,24,22,28" SafeAreaEdges="Container">
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="28,28,0,0" />

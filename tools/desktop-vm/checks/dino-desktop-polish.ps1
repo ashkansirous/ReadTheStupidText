@@ -198,11 +198,17 @@ function Test-TabAndEnter {
 function Pass-Gate {
     Invoke-Uia (Wait-VisibleId 'GalleryGrownUps' 15 'FAIL the "For grown-ups" button is not on the kids'' shelf')
     $sum = Invoke-GateHold -FindRing { Wait-VisibleName $HoldRingName 15 'FAIL no hold ring' } -PackageName $PackageName -HoldMs $HoldMs
-    foreach ($ch in ([string]$sum).ToCharArray()) {
-        Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) ([string]$ch) 'Button' } 5 "FAIL no keypad key $ch")
-        Start-Sleep -Milliseconds 300
+    # Slice 363: the gate is a card with six answer keys (one click answers); a narrow window still has the digit pad and OK.
+    $answerKey = Find-UiaExact (Get-DinoWindow) ([string]$sum) 'Button'
+    if ($answerKey) {
+        Invoke-Uia $answerKey
+    } else {
+        foreach ($ch in ([string]$sum).ToCharArray()) {
+            Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) ([string]$ch) 'Button' } 5 "FAIL no keypad key $ch")
+            Start-Sleep -Milliseconds 300
+        }
+        Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) 'OK' 'Button' } 5 'FAIL no OK key')
     }
-    Invoke-Uia (Wait-Until { Find-UiaExact (Get-DinoWindow) 'OK' 'Button' } 5 'FAIL no OK key')
     Wait-VisibleId 'GalleryDone' 15 'FAIL grown-up mode did not open after the gate' | Out-Null
 }
 
