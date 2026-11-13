@@ -1,7 +1,7 @@
 ### Slice 375 — Dino: every picture in two sizes; agents look only at the small one; a high-res pack for tablets and Windows
 **Product:** Dino
 
-*Part A built 2026-11-13 (not merged); B, C, D planned for waves.*
+*Part A merged as PR #1101 (f5692138); B, C, D planned for waves.*
 
 **Touches:** `tools/prepare-story-pictures.ps1`, `tools/picture-review-copy.ps1` (new), `.claude/skills/create-dino-story/**`, `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`, `tools/DinoReader.BookBuilder/**`, `tools/publish-store-books.mjs`, `tools/publish-store-books.test.mjs`, `.github/scripts/ship-targets.mjs`, `worker/**` (story catalogue and downloads), `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/BookUpdater.cs`, `src/DinoReader.App/PictureSize*.cs` (new), `tests/DinoReader.Tests/**`, `.maestro/dino/**`
 
@@ -109,7 +109,7 @@ The Debug-only test books in `Resources/Raw/testbooks/` stay standard.
 - Skipped #3 (`reviews/s375a-check3.md`): "The small copy name drops the extension" - same as check #3: one candidate per page name.
 - Skipped #4 (`reviews/s375a-check3.md`): "high-res pictures are Git LFS objects" - the reviewer reads high-res pictures from the worktree where LFS objects are checked out; a pointer file fails loudly anyway.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-13: both rules already live in the create-dino-story SKILL.md and the agent files, so no CLAUDE.md edit)
 - A picture is never opened at full size by a coordinator or an agent: look at its `<name>.small.jpg` (`tools/picture-review-copy.ps1`, made by `gemini-take-download.ps1` after every save), and open a full-size crop only for one named fault. `gemini-take-download.ps1` exit 2 means saved but the small copy failed: run `picture-review-copy.ps1`, never retry on Gemini. `*.small.jpg` and `*.line70.png` never go into `content/dino` (gitignored). (Slice 375: docs/plan/slices/375-dino-two-picture-sizes.md)
 - Dino books: draw every character first, background groups included, front and back, with a to-scale line-up; do not wait for the user's OK on character sheets. (Slice 375: docs/plan/slices/375-dino-two-picture-sizes.md)
 

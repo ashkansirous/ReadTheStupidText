@@ -25,7 +25,7 @@ Open slices only. Finished slices (354 rows) are in [slices-done](docs/plan/note
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
-| 375 | Dino: every picture in two sizes; agents look only at the 896x1200 copy; a high-res pack for tablets and Windows, standard for phones and slow connections | planned | | | [375-dino-two-picture-sizes.md](docs/plan/slices/375-dino-two-picture-sizes.md) |
+| 375 | Dino: every picture in two sizes; agents look only at the 896x1200 copy; a high-res pack for tablets and Windows, standard for phones and slow connections | in progress (part A merged #1101; parts B, C, D planned for the waves) | #1101 | | [375-dino-two-picture-sizes.md](docs/plan/slices/375-dino-two-picture-sizes.md) |
 | 359 | Dino: a drawn back-cover picture for every book (one image, credits shown over its middle by the reader), replacing Slice 237's live page; style picked from 5 Lion and Mouse samples | planned (item 6 only: match the 2026-11-13 mock; items 1-5 merged #1048) | #1048 (items 1-5) | | [359-dino-back-cover-picture.md](docs/plan/slices/359-dino-back-cover-picture.md) |
 | 244 | Dino: find and fix the 2026-10-31/11-01 crashes (iOS layout `NSDictionary` nil, whole book queued at once, `0xdead10cc`, Back while reading) | in progress (items 2-5 merged #722; iPhone 8 run and crash follow-up open) | #722 | | [244-dino-ios-crashes-2026-11-01.md](docs/plan/slices/244-dino-ios-crashes-2026-11-01.md) |
 | 283 | Dino: a Sonos music service for the store books (anonymous, no login) | code merged #879; waiting on the user: Sonos partner account, service submission, sandbox integration, Self Test | #879 | | [283-dino-sonos-music-service.md](docs/plan/slices/283-dino-sonos-music-service.md) |
@@ -89,7 +89,7 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 ## Outstanding work
 
-- **Not yet tried on a device:** 372 checks across 151 slices (Read The Stupid Text 25, Dino Reader 242, Shared 105), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
+- **Not yet tried on a device:** 386 checks across 153 slices (Read The Stupid Text 25, Dino Reader 243, Shared 118), in [docs/plan/unverified.md](docs/plan/unverified.md) under a heading per product, each tagged **You** or **Device** (only what can be tested here; user, 2026-11-08).
 - **Tooling gap (Slice 362):** `Test-LogMarkerCanMatch` in `tools/emulator/common.ps1` tests a marker with " end" appended, so a marker ending mid-token (`lines=`) passes lint but can never match at run time; found in Slice 362's emulator run 2 ([slice](docs/plan/slices/362-dino-onboarding-shows-what-dino-can-do.md)).
 - **Worker change not deployed:** PR #1048 added the fallback reason `back_cover_missing` in `worker/events.ts`; the batched skip-CI merge skips Workers Builds and there is no deploy hook yet ([Slice 354](docs/plan/slices/354-feedback-loop-2026-11-12-1337-leftovers.md) item 18), so it deploys with the next plain merge touching worker paths.
 - **Worker change not deployed (Slice 360):** the Worker now serves one pack version behind the listing (`worker/stories.ts`). It deploys only through Workers Builds, which skips skip-CI merges, so check it is live after the batched release ([Slice 360](docs/plan/slices/360-dino-play-waits-for-wifi.md); gap: [Slice 354](docs/plan/slices/354-feedback-loop-2026-11-12-1337-leftovers.md) item 18).
