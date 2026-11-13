@@ -13,10 +13,9 @@ sorted sid order, modelled as `VoiceInfo` records). The built-in WinRT
 `SpeechSynthesis` voice is the first-run voice until the pack lands and the fallback
 if the pack is missing; it is selectable as "Windows voice" (Slice 56). Narrator's
 "Natural"/neural voices are unreachable by a Store app, so we bring our own
-engine. **Piper is GPL — do not use it; Kokoro was rejected** (Chinese-focused,
-no English male voice in the latest, ships GPL-adjacent espeak data); Supertonic
-is English-first, espeak-free, and Store-safe. (The one scoped GPL
-exception, espeak-ng data inside the downloaded `piper-fa`, `piper-nb` and `kokoro-en` packs, is in the root `CLAUDE.md` licence rule.)
+engine. **Supertonic-3 is the default engine** because it is English-first, espeak-free and Store-safe. Piper and
+Kokoro need GPL espeak-ng data, so they ship only as downloaded packs (`piper-fa`, `piper-nb`, `kokoro-en`) under
+the root `CLAUDE.md` licence exception, never in the repo or an app package.
 
 - Windows packs (Slice 56): the MSIX holds no voice model and declares `internetClient` (STORE.md, PRIVACY.md and `site/privacy.html` say so). Packs live in `LocalCacheFolder\packs\<id>`, never `LocalFolder` (cloud-backed). `PackVoiceModelService` and `WindowsVoicePackService` are Windows copies of the Mobile ones, `VoicePackSetup` (Application) the MAUI-free twin of `VoicePackInstaller`: change both sides together. `windows.yml` has no LFS; keep `RemoveWinMlOnnxRuntimeDuplicate`. (Slice 56: docs/plan/slices/56-windows-packs-language-headstart.md)
 - Pack versions and engine cache (Slice 89): packs install to versioned folders with an `active` pointer, and engines come from the shared `EngineCache`; the full rule is in `src/ReadTheStupidText.Mobile/CLAUDE.md` (Voice packs) and applies to Windows too. (Slice 89: docs/plan/slices/89-four-farsi-voices.md)
