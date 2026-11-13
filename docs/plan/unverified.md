@@ -6,6 +6,12 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Read The Stupid Text
 
+### Slice 342: Farsi ezafe override ([slice](slices/342-farsi-voice-pack.md), [343](slices/343-four-farsi-voices.md))
+- **You:** second listen to `D:\ReadTheStupidText-worktrees\reviews\s342-ezafe\fa-ganji_adabi-1-after.wav`: it should say "hale shoma" (and the other 11 WAVs there, four voices x three lines, should sound as before).
+- **You (open, no fix found):** "sobh yek" (Ganji, Gyro) and "daftar kharid" (Gyro) still get an extra ezafe: no text mark changes espeak's phonemes for them.
+- **Device:** the ezafe on a device (Android, iOS, Windows) needs a flow that installs `piper-fa` and synthesises a Farsi page with no audio pack; the 2026-11-13 device run did not reach it (no RTST Farsi read flow; Dino flows play premade clips).
+- **Device (follow-up bug):** the Dino flows `farsi-speaker-first-join` and `premade-audio-past-roar` fail on main, unrelated to the ezafe (stuck on onboarding after skip-first-run lang=fa; a real fa audio pack replaced `fixture-13.m4a` after `pm clear`).
+
 ### Slice 373: RTST voice rows RT1 and RT2 ([slice](slices/373-rtst-voice-rows-rt1-rt2.md))
 - VM check `rtst-language-rows` not run: free memory 7 GB was under the 8 GB the VM needs, so the VM was not started.
 - The Windows failed row (not downloaded line, error line, Retry): the VM has no forced-failure hook on Windows.

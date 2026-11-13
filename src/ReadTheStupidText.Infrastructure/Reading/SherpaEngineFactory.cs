@@ -53,7 +53,7 @@ internal static class SherpaEngineFactory
         VoiceModelPaths model = engine.Model;
         if (model.Kind != VoiceEngineKind.Supertonic)
         {
-            return engine.Tts.Tts.Generate(text, pace, speakerId);
+            return engine.Tts.Tts.Generate(FarsiEzafe.ForModel(model, text), pace, speakerId);
         }
 
         var config = new OfflineTtsGenerationConfig { Sid = speakerId, Speed = pace };

@@ -198,8 +198,8 @@ internal static class IosTtsEngine
         if (model.Kind != VoiceEngineKind.Supertonic)
         {
             return singleThread
-                ? WithSingleThread(engine, twin => twin.Generate(text, pace, speakerId))
-                : engine.Tts.Tts.Generate(text, pace, speakerId);
+                ? WithSingleThread(engine, twin => twin.Generate(FarsiEzafe.ForModel(model, text), pace, speakerId))
+                : engine.Tts.Tts.Generate(FarsiEzafe.ForModel(model, text), pace, speakerId);
         }
 
         var config = new OfflineTtsGenerationConfig { Sid = speakerId, Speed = pace };

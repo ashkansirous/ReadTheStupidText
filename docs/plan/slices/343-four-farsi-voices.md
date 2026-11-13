@@ -5,7 +5,7 @@
 
 > **Windows:** Slice 89: Windows desktop acceptance of the four voices not run (a stale `desktop-rtl` dev package blocks deploy); iOS on a device; Pixel timing of cold voice preparation (7-8 s on the emulator, 16 s on a cold mid-read swap); a saved Amir choice falling back to Ganji Adabi, on a device; the play button shows idle after Back while chunks still play. ([slice](docs/plan/slices/89-four-farsi-voices.md))
 
-*Fix items in progress (wave 2026-11-13), draft PR, one PR with Slice 342 (same cause).*
+*Built in wave 2026-11-13, PR #1098 (merge pending), one PR with Slice 342 (same cause; the full record is in Slice 342's file). The three extra-ezafe items stay open. Not yet verified on a device.*
 
 **Touches (fix items):** see Slice 342's file, which carries the shared design and code Touches.
 
@@ -39,11 +39,11 @@ Listening page https://claude.ai/artifact/Cfes6Q7N1HvgG3HYnmHMjY, user pressed D
 
 ## Fix items (from the listening answers)
 
-- [ ] Fix: `fa-ganji_adabi-1` (Ganji Adabi default, «حال شما»): the ezafe is missing, it reads "hal shoma", should be "hale shoma" (same fault as Slice 342's clip). Pattern: the phonemizer adds or drops the ezafe (the linking -e between a noun and what follows) where the written Farsi has no mark for it, so it guesses wrong. Find the cause, fix through the review gate, re-render for a second listen.
+- [x] (built 2026-11-13 in Slice 342's `FarsiEzafe`; second listen owed) Fix: `fa-ganji_adabi-1` (Ganji Adabi default, «حال شما»): the ezafe is missing, it reads "hal shoma", should be "hale shoma" (same fault as Slice 342's clip). Pattern: the phonemizer adds or drops the ezafe (the linking -e between a noun and what follows) where the written Farsi has no mark for it, so it guesses wrong. Find the cause, fix through the review gate, re-render for a second listen.
 - [ ] Fix: `fa-ganji-2` (Ganji, «صبح یک»): an extra ezafe, it reads "sobhe yek", should be "sobh yek". Pattern: the phonemizer adds or drops the ezafe (the linking -e between a noun and what follows) where the written Farsi has no mark for it, so it guesses wrong.
 - [ ] Fix: `fa-gyro-2` (Gyro, «صبح یک»): the same extra ezafe, "sobhe yek" instead of "sobh yek". Pattern: the phonemizer adds or drops the ezafe (the linking -e between a noun and what follows) where the written Farsi has no mark for it, so it guesses wrong.
 - [ ] Fix: `fa-gyro-3` (Gyro, «دفتر خرید»): an extra ezafe, "daftare kharid" instead of "daftar kharid". Pattern: the phonemizer adds or drops the ezafe (the linking -e between a noun and what follows) where the written Farsi has no mark for it, so it guesses wrong.
-- [ ] Find one cause for the whole ezafe pattern across 342 and 343 (all four voices share the Farsi phonemizer), fix it once, and re-render every bad clip plus its neighbours on one page for a second listen.
+- [x] Find one cause for the whole ezafe pattern across 342 and 343 (all four voices share the Farsi phonemizer), fix it once, and re-render every bad clip plus its neighbours on one page for a second listen. Result (probe in Slice 342's file): the missing ezafe is espeak's phonemes (a kasra fixes it, shipped); the three extra-ezafe items are not in espeak's phonemes (`sobh jek`, `daftar kharid` already), so no text mark stops them; they stay open, likely the VITS model's own habit, needs a different fix (for example another pack voice or model retrain). WAVs: `reviews/s342-ezafe/`, no Artifact page (headless).
 
 ## Verification
 
