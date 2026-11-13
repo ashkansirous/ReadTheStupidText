@@ -1,5 +1,5 @@
 # Slice 261: Cancel while the first books download goes back to the picker with the ticks kept (a finished book stays on the shelf, user's design review of frame 165). Against an
-# implementation that drops the ticks or moves on, the picker would show two cards unticked or "Ready to read" would show.
+# implementation that drops the ticks or moves on, the picker would show two cards unticked or the listen step (Slice 362; "Ready to read" before it) would show.
 # expect-log: HOOK test-store ok stall
 # expect-log: [FirstBooks] picked listed=4 ticked=2
 # expect-log: [FirstBooks] cancelled listed=4 ticked=2
@@ -23,13 +23,19 @@ name: Cancelling the first books keeps the ticks
     id: android:id/button2
     optional: true
     waitToSettleTimeoutMs: 300
+# Slice 362: the story-languages step sits between the language and the books; Continue is live with nothing ticked.
+- extendedWaitUntil:
+    visible:
+      id: OnboardingLanguages
+    timeout: 15000
+- tapOn:
+    id: OnboardingLanguagesContinue
+    waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible:
       id: FirstBooksPicker
     timeout: 30000
-- tapOn:
-    id: FirstBookCard-0
-    waitToSettleTimeoutMs: 300
+# Slice 362: The Three Little Pigs (card 0, the Hot book) is ticked at the start, so one more tick makes two.
 - tapOn:
     id: FirstBookCard-1
     waitToSettleTimeoutMs: 300
@@ -43,7 +49,7 @@ name: Cancelling the first books keeps the ticks
 - tapOn:
     id: WaitCancel
     waitToSettleTimeoutMs: 300
-# Back on the picker, not on "Ready to read".
+# Back on the picker, not on the listen step.
 - extendedWaitUntil:
     visible:
       id: FirstBooksPicker
@@ -51,4 +57,4 @@ name: Cancelling the first books keeps the ticks
 - assertNotVisible:
     id: WaitLine
 - assertNotVisible:
-    id: FirstRunReady
+    id: OnboardingListen

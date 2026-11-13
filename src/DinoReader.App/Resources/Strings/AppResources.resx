@@ -100,11 +100,9 @@
   <data name="Backup_Failed" xml:space="preserve"><value>The backup didn’t work. Please try again.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>Too large to restore</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} could not be added to the backup.</value></data>
-  <data name="FirstRun_Hello" xml:space="preserve"><value>Hello! Which language do we read in?</value></data>
-  <data name="FirstRun_HelloBody" xml:space="preserve"><value>You can change it later in the grown-ups’ corner.</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>Hello! Which language should Dino use?</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>For the app’s buttons and words. You can change it later in the grown-ups’ corner.</value></data>
   <data name="FirstRun_Continue" xml:space="preserve"><value>Continue</value></data>
-  <data name="FirstRun_Ready" xml:space="preserve"><value>Ready to read!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Every character gets their own voice. Your books are on the shelf.</value></data>
   <data name="FirstBooks_Title" xml:space="preserve"><value>Choose your first books</value></data>
   <data name="FirstBooks_Body" xml:space="preserve"><value>Pick at least two. You can get more from the Store any time.</value></data>
   <data name="FirstBooks_BodyShort" xml:space="preserve"><value>Pick at least two. More in the Store any time.</value></data>
@@ -116,22 +114,60 @@
   <data name="FirstBooks_BookOf" xml:space="preserve"><value>Book {0} of {1}</value></data>
   <data name="FirstBooks_OfflineTitle" xml:space="preserve"><value>Connect to the internet to choose your first books</value></data>
   <data name="FirstBooks_OfflineBody" xml:space="preserve"><value>Dino needs two books before you start. Turn on Wi-Fi or mobile data, then try again.</value></data>
-  <data name="Intro_SeeWhat" xml:space="preserve"><value>See what Dino can do</value></data>
-  <data name="Intro_SkipAll" xml:space="preserve"><value>Skip all</value></data>
-  <data name="Intro_TryIt" xml:space="preserve"><value>Try it</value></data>
-  <data name="Intro_Skip" xml:space="preserve"><value>Skip</value></data>
+  <data name="Onboarding_StepOf" xml:space="preserve"><value>Step {0} of {1} · {2}</value></data>
+  <data name="Onboarding_Step_Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Onboarding_Step_Books" xml:space="preserve"><value>Books</value></data>
+  <data name="Onboarding_Step_Listen" xml:space="preserve"><value>Listen</value></data>
+  <data name="Onboarding_LanguagesTitle" xml:space="preserve"><value>Which languages does your family read in?</value></data>
+  <data name="Onboarding_LanguagesBody" xml:space="preserve"><value>{0} is always on. Add any others your child hears.</value></data>
+  <data name="Onboarding_WhyMoreTitle" xml:space="preserve"><value>Why more than one?</value></data>
+  <data name="Onboarding_WhyMoreBody" xml:space="preserve"><value>Many children hear one language at home and another at school or with grandparents. Every book is read in each language you pick, and your child can switch on any page. Pick up to three.</value></data>
+  <data name="StoryLanguages_AppLanguageAlwaysOn" xml:space="preserve"><value>App language · always on</value></data>
+  <data name="FirstBooks_GetThese" xml:space="preserve"><value>Get these books</value></data>
+  <data name="Onboarding_ListenTitle" xml:space="preserve"><value>Listen to Dino read</value></data>
+  <data name="Onboarding_ListenBody" xml:space="preserve"><value>Every character has its own voice, and Dino reads with feeling.</value></data>
+  <data name="Onboarding_ListenNext" xml:space="preserve"><value>That was {0}. Now hear the same page in your other language.</value></data>
+  <data name="Onboarding_TapLanguage" xml:space="preserve"><value>Now tap {0} to hear the same page.</value></data>
+  <data name="Onboarding_ListenOther" xml:space="preserve"><value>The same voices, now in {0}. Your child can switch language on any page.</value></data>
+  <data name="Onboarding_ListenWide" xml:space="preserve"><value>Every character has its own voice, and Dino reads with feeling. That was {0}; now the same voices read it in {1}. Your child can switch language on any page.</value></data>
+  <data name="Onboarding_VoiceTitle" xml:space="preserve"><value>Be the voice of a character</value></data>
+  <data name="Onboarding_VoiceBody" xml:space="preserve"><value>Record {0}’s lines on this page, then hear the page with **you** as {0}.</value></data>
+  <data name="Onboarding_StaysTitle_Phone" xml:space="preserve"><value>Your voice stays on this phone</value></data>
+  <data name="Onboarding_StaysTitle_Tablet" xml:space="preserve"><value>Your voice stays on this tablet</value></data>
+  <data name="Onboarding_StaysTitle_Device" xml:space="preserve"><value>Your voice stays on this computer</value></data>
+  <data name="Onboarding_StaysBody" xml:space="preserve"><value>It is never uploaded, not to us and not to the cloud. This try is deleted when setup ends.</value></data>
+  <data name="Onboarding_MicAsk" xml:space="preserve"><value>Dino will ask for the microphone.</value></data>
+  <data name="Onboarding_RecordLines" xml:space="preserve"><value>Record {0}’s lines</value></data>
+  <data name="Onboarding_MicOffBody" xml:space="preserve"><value>Dino needs the microphone to record. You can allow it in Settings.</value></data>
+  <data name="Onboarding_OpenSettings" xml:space="preserve"><value>Open settings</value></data>
+  <data name="Onboarding_ContinueWithoutRecording" xml:space="preserve"><value>Continue without recording</value></data>
+  <data name="Onboarding_LinesTitle" xml:space="preserve"><value>{0}’s lines</value></data>
+  <data name="Onboarding_ThatsYou" xml:space="preserve"><value>That’s you!</value></data>
+  <data name="Onboarding_ThatsYouBody" xml:space="preserve"><value>That’s {0} in your voice. This was just a try, so it’s deleted when setup ends. You can record any character later in the grown-ups’ corner.</value></data>
+  <data name="Onboarding_YourVoiceChip" xml:space="preserve"><value>{0} · your voice</value></data>
+  <data name="Onboarding_PlayAgain" xml:space="preserve"><value>Play again</value></data>
+  <data name="Tour_WelcomeTitle" xml:space="preserve"><value>This is the grown-ups’ corner</value></data>
+  <data name="Tour_WelcomeLine" xml:space="preserve"><value>Only grown-ups come here. Here you can:</value></data>
+  <data name="Tour_StoreTitle" xml:space="preserve"><value>Get books in the Store</value></data>
+  <data name="Tour_StoreLine" xml:space="preserve"><value>Free and paid stories, in all your family’s languages.</value></data>
+  <data name="Tour_BooksTitle" xml:space="preserve"><value>Manage your books</value></data>
+  <data name="Tour_BooksLine" xml:space="preserve"><value>Change the shelf order, remove a book, or record your voice for any character.</value></data>
+  <data name="Tour_SettingsTitle" xml:space="preserve"><value>Change the settings</value></data>
+  <data name="Tour_SettingsLine" xml:space="preserve"><value>Languages, reading speed, sounds and backup, for the whole app.</value></data>
+  <data name="Tour_ShowMeAround" xml:space="preserve"><value>Show me around</value></data>
+  <data name="Tour_TipBooks" xml:space="preserve"><value>Your books. Tap ••• on a book to record your voice or remove it. Reorder changes the shelf order.</value></data>
+  <data name="Tour_TipStoreTitle" xml:space="preserve"><value>The Store</value></data>
+  <data name="Tour_TipStore" xml:space="preserve"><value>New stories, free and paid. Every book comes in all your family’s languages. Bought before? Restore your books here.</value></data>
+  <data name="Tour_TipSettings" xml:space="preserve"><value>Languages, reading speed, sounds and backup, for the whole app.</value></data>
+  <data name="Tour_ShelfTitle" xml:space="preserve"><value>See your child’s shelf</value></data>
+  <data name="Tour_ShelfLine" xml:space="preserve"><value>Tap **Child’s shelf** to see what your child sees.</value></data>
+  <data name="Tour_LastStep" xml:space="preserve"><value>Last step</value></data>
+  <data name="Tour_ShowMe" xml:space="preserve"><value>Show me</value></data>
+  <data name="Tour_ChildShelfTitle" xml:space="preserve"><value>This is your child’s shelf</value></data>
+  <data name="Tour_ChildShelfLine" xml:space="preserve"><value>Your child sees this each time they open Dino: just their books, with nothing to change by mistake.</value></data>
+  <data name="Tour_ChildShelfBack" xml:space="preserve"><value>To get back to the grown-ups’ corner, tap **Grown-ups**, then press and hold for 3 seconds.</value></data>
+  <data name="Tour_StartReading" xml:space="preserve"><value>Start reading</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} of {1}</value></data>
-  <data name="Intro_PlacesTitle" xml:space="preserve"><value>Dino has two places</value></data>
-  <data name="Intro_PlacesKidsTitle" xml:space="preserve"><value>Kids’ shelf</value></data>
-  <data name="Intro_PlacesKidsLine" xml:space="preserve"><value>Just tap a book and listen.</value></data>
-  <data name="Intro_PlacesKidsLineClick" xml:space="preserve"><value>Just click a book and listen.</value></data>
-  <data name="Intro_PlacesGrownLine" xml:space="preserve"><value>Behind a lock: your books, the Store and settings.</value></data>
-  <data name="Intro_ReadTitle" xml:space="preserve"><value>Read a story together</value></data>
-  <data name="Intro_ReadLine" xml:space="preserve"><value>Tap a book, then play. Dino reads it aloud and lights up each sentence.</value></data>
-  <data name="Intro_ReadCaption" xml:space="preserve"><value>Dino opened the book. “Once upon a time…”</value></data>
-  <data name="Intro_RecordTitle" xml:space="preserve"><value>Read it in your voice</value></data>
-  <data name="Intro_RecordLine" xml:space="preserve"><value>Record one character at a time, or whole pages. Your child can play it any time.</value></data>
-  <data name="Intro_ShowAgain" xml:space="preserve"><value>Show the intro again</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Ready for my child</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Grown-up mode</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Language</value></data>
@@ -329,10 +365,7 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Animal sounds</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Animals say “Oink!” or “Baa!” now and then, in every book</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Getting the {0} translation pack…</value></data>
-  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>Which languages should stories be in?</value></data>
-  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Pick up to two more. Your child can switch while reading.</value></data>
   <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>App language</value></data>
-  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>Skip, only {0}</value></data>
   <data name="StoryLanguages_Full" xml:space="preserve"><value>Three picked. Untick one to choose another.</value></data>
   <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>Story languages</value></data>
   <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>Your child can switch between these while reading. Up to three.</value></data>

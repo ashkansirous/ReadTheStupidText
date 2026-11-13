@@ -1,0 +1,36 @@
+# Slice 362 (onboarding mock "600 wide or more" rule on RTST_Tablet held upright): the first run's language page and the story-languages step in two panes (a 320 pane on the left, the list and Continue right).
+# Run on the tablet AVD (tools/emulator, RTST_Tablet); the phone frames come from onboarding-phone.yaml. Nothing is downloaded: the flow stops on the story-languages step.
+# Shots: shot-NT1-language, shot-NT2-languages beside the tablet frames of the language and story-languages steps.
+# layout-check
+# expect-log: [Redesign] onboarding page=language shape=split
+# expect-log: [Redesign] onboarding page=languages shape=split
+appId: uk.sirous.dinoreader.dbg
+name: First run on a tablet held upright, two panes
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books, saved onboarding step), on purpose: the flow needs the fresh install's first-run language page.
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- assertVisible: "Step 1 of 6 · Language"
+- assertVisible: "Hello! Which language should Dino use?"
+- takeScreenshot: shot-NT1-language
+- tapOn:
+    text: "Continue"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: android:id/button2
+    optional: true
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: OnboardingLanguages
+    timeout: 15000
+- assertVisible: "Step 2 of 6 · Story languages"
+- assertVisible: "App language · always on"
+- assertNotVisible: "Why more than one?"
+- assertVisible:
+    id: OnboardingLanguagesContinue
+- takeScreenshot: shot-NT2-languages

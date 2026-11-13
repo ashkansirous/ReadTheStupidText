@@ -1,8 +1,10 @@
 ### Slice 362 — Dino: onboarding that shows what Dino can do (2026-11-13 mock)
 
+*Built 2026-11-13 (wave 2026-11-13), PR #1076, not merged. Emulator flows pass; tablet, VM, iOS and wide layouts not yet verified.*
+
 *Planned 2026-11-13 (user, RefineScope).*
 
-**Touches:** `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/FirstBooksPage*.cs`, `src/DinoReader.App/OnboardingShell.cs`, `src/DinoReader.App/OnboardingSteps*.cs` (new), `src/DinoReader.App/OnboardingListenPage.cs` (new), `src/DinoReader.App/OnboardingVoicePage.cs` (new), `src/DinoReader.App/CornerTour.cs` (new), `src/DinoReader.App/IntroWizardPage*.cs` (removed), `src/DinoReader.App/IntroState.cs`, `src/DinoReader.App/RecordIntroPage.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/CornerShell.cs`, `src/DinoReader.App/CornerTabs.cs`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/StoryLanguagesPage.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.Core/OnboardingLayout.cs`, `src/DinoReader.Core/OnboardingDemo.cs` (new), `src/DinoReader.Core/UsageEvent.cs`, `worker/events.ts`, `worker/events.test.mjs`, `.maestro/dino/first-run.yaml`, `.maestro/dino/first-books-*.yaml`, `.maestro/dino/dino-redesign-*.yaml`, `.maestro/dino/dino-landscape-firstrun.yaml`, `.maestro/dino/dino-landscape-intro.yaml`, `.maestro/dino/dino-tablet-upright-cards-firstrun.yaml`, `.maestro/dino/dino-tablet-upright-cards-intro.yaml`, `.maestro/dino/onboarding-*.yaml` (new), `tools/desktop-vm/checks/dino-onboarding.ps1` (new), `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`
+**Touches:** `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/FirstBooksPage*.cs`, `src/DinoReader.App/OnboardingShell.cs`, `src/DinoReader.App/OnboardingSteps*.cs` (new), `src/DinoReader.App/OnboardingListenPage.cs` (new), `src/DinoReader.App/OnboardingVoicePage.cs` (new), `src/DinoReader.App/CornerTour.cs` (new), `src/DinoReader.App/IntroWizardPage*.cs` (removed), `src/DinoReader.App/IntroState.cs`, `src/DinoReader.App/RecordIntroPage.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/RecordViews.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/CornerShell.cs`, `src/DinoReader.App/CornerTabs.cs`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/StoryLanguagesPage.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.Core/OnboardingLayout.cs`, `src/DinoReader.Core/OnboardingDemo.cs` (new), `src/DinoReader.Core/UsageEvent.cs`, `worker/events.ts`, `worker/events.test.mjs`, `.maestro/dino/first-run.yaml`, `.maestro/dino/first-books-*.yaml`, `.maestro/dino/dino-redesign-*.yaml`, `.maestro/dino/dino-landscape-firstrun.yaml`, `.maestro/dino/dino-landscape-intro.yaml`, `.maestro/dino/dino-tablet-upright-cards-firstrun.yaml`, `.maestro/dino/dino-tablet-upright-cards-intro.yaml`, `.maestro/dino/onboarding-*.yaml` (new), `tools/desktop-vm/checks/dino-onboarding.ps1` (new), `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/FirstBooksGate*.cs`, `src/DinoReader.Core/BookAccess.cs` (FirstRunOffer only), `src/DinoReader.Core/StoryLanguageSet*.cs`, `tools/desktop-vm/checks/dino-onboarding-keys.ps1`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/Platforms/Windows/DinoKeyboard.cs`, `src/DinoReader.App/Testing/DinoTestCommands.cs` (wizard lines only), `src/DinoReader.App/AboutPage.cs`, `.maestro/dino/usage-screens-wizard.yaml`, `.maestro/dino/wizard-layout-record-large-font.yaml`, `tools/emulator/screenshot-frames.json`, `tools/desktop-vm/checks/dino-launch.ps1`, `tools/desktop-vm/Invoke-DesktopTest.ps1` (check list line; added with the coordinator's wizard-removal approval), `tools/emulator/test-contact-sheet.ps1` (line 47, indented takeScreenshot; after the CI selftest failure), `src/ReadTheStupidText.Application/Usage/FallbackKind.cs` (`onboarding_try_not_deleted`); never `tests/DinoReader.Tests/PictureBookSentenceDumpTests.cs` (live gedlg worktree)
 
 ## Why
 
@@ -42,28 +44,28 @@ screen is in `docs/plan/notes/2026-11-13-dino-copy.md` (*Onboarding*); the canva
 
 ## Work
 
-- [ ] A. Smallest end to end: the step bar and steps 1-3 in the new shell (N1-N3, WN2), replacing `FirstRunPage` and
+- [x] A. Smallest end to end: the step bar and steps 1-3 in the new shell (N1-N3, WN2), replacing `FirstRunPage` and
   `FirstBooksPage`'s chrome; step 2 is required but Continue is live (app language ticked, grey, "App language ·
   always on"); Three Little Pigs pre-ticked; the getting-books wait and offline screen stay as built. Strings in all
   15 languages. Android, iOS and the Windows head (one MAUI path; the W frames for 600 or wider).
-- [ ] B. Step 4, listen (N4a-N4d, WN4): the demo page for the picked book (Decision 2, pure choice in
+- [x] B. Step 4, listen (N4a-N4d, WN4): the demo page for the picked book (Decision 2, pure choice in
   `DinoReader.Core/OnboardingDemo.cs` with unit tests for every pick order), the reading page in demo mode (plays by
   itself, speaker chip, no view switch), the language bar with the amber pulse and the bubble after the first
   language ends, Continue waking as the second language starts (or at the page end with one language).
-- [ ] C. Step 5, your voice (N5, N6a/b, N7): the intro card with the privacy card (phone/tablet/computer variants),
+- [x] C. Step 5, your voice (N5, N6a/b, N7): the intro card with the privacy card (phone/tablet/computer variants),
   the one-line recording pages limited to the demo character's lines on the demo page (no Skip, no Done), the
   microphone-refused state (Decision 4), then the reading page with the grown-up's clips and the coral "· your
   voice" chip; Play again; the clips are deleted when the flow ends (Decision 1; unit test that nothing is left on
   the book). Microphone permission asked on Record. Android and iOS permission paths both; Windows the same flow.
-- [ ] D. Step 6, the corner and the shelf (N8a, N8b, N9, N10): welcome card over the Books tab, the three-tab tour
+- [x] D. Step 6, the corner and the shelf (N8a, N8b, N9, N10): welcome card over the Books tab, the three-tab tour
   (each tab lifted with the pulse, the tip, "{0} of {1}", Next), the Child's shelf pointer, the shelf card with Start
   reading; Android Back does nothing during the tour; reduce motion keeps the ring without the pulse. Rail layouts
   for 600 or wider (tips point at the rail tabs). After Start reading, later launches open on the shelf.
-- [ ] E. Remove the old intro: `IntroWizardPage*`, `IntroState` replay, the Settings row "Show the intro again"
+- [x] E. Remove the old intro: `IntroWizardPage*`, `IntroState` replay, the Settings row "Show the intro again"
   (Decision 5), the Ready panel, unused `Intro_*`/`FirstRun_Ready*` strings (`NoHardCodedUiTextTests` and resx
   tests stay green). Usage events: new onboarding step values replace `IntroSteps` (`UsageEvent.cs`,
   `worker/events.ts` and its test), production-only as today.
-- [ ] F. Maestro flows: replace `first-run`, `dino-redesign-onboarding`/`-intro`, landscape and tablet first-run/intro
+- [x] F. Maestro flows: replace `first-run`, `dino-redesign-onboarding`/`-intro`, landscape and tablet first-run/intro
   flows with `onboarding-*` flows (phone, landscape, tablet, two languages, one language, mic refused); Windows VM
   flow for WN2/WN4.
 
@@ -244,6 +246,60 @@ Space = play or pause (Space toggles the focused row in WN2), Tab moves through 
   and the manifest/plist microphone comments stay as they are because nothing new is recorded or sent; the privacy
   card's promise ("never uploaded") matches `StoryRecordings` (backups only where the grown-up sends them).
 
+## From review
+
+- Flow `onboarding-landscape` failed twice on `assertVisible "Viele Kinder hören zu Hause eine Sprache.*"` (run4): the paragraph is on screen, not missing or clipped. In split mode the step joins the lead and the "why more" sentence into one label (`OnboardingSteps.Languages.cs:49`), so the hierarchy exposes one text "Deutsch ist immer dabei. Füge weitere Sprachen hinzu, ... Viele Kinder hören zu Hause eine Sprache und in der Schule ... Wähle bis zu drei." Maestro matches the whole text, so a pattern that starts at "Viele" cannot match. Fixed in the flow with a leading `.*`; the other onboarding flows only assert standalone labels, so none has this pattern.
+
+- Skipped #11 (`reviews/pr-1076-high.md`): "OnWindowResumed re-checks Permissions.CheckStatusAsync<Microphone>(); on Windows this likely returns Granted without a real check, so a refused mic could bounce the page back to the intro" - not reachable on Windows: `RecordPage.EnsureMicrophoneAsync` returns true under `#if WINDOWS` (the recorder asks when it opens the device), so `MicRefused` and the "Microphone is off" state are never set there and the re-check never runs; on Android and iOS it reads the real status.
+- Applied with a different shape: #10 (`reviews/pr-1076-high.md`): "FirstRunState.HandoverPending is never set true now ... FallbackKind.IntroStateReset has no remaining user" - the CLAUDE.md lines and the dangling cref were fixed; the dead handover pill branch, `Gallery_ReadyForChild` strings and the `intro_state_reset` reason (a closed list the Worker must match) stay for a later clean-up slice.
+- Applied as one design (round 2: high #4; medium #1, #3, #6, #7): the child's try is one owned record (`OnboardingTryRecord`, kept by `OnboardingTryStore`), the book id plus the exact clip keys and files `RecordPage` made in the voice step, saved before each clip is stored on the story; clips the book held before are never in it.
+  Deleting it removes exactly those clips and files, under one async lock shared by the steps and the gallery. It runs when the child leaves the voice step (Continue on N7 or Continue without recording; the step has no Back, Decision 1 "or leaving the flow any other way"), and at every onboarding step and gallery appearing while a record exists and the saved step is not Voice (an abandoned or killed setup).
+  The record is cleared only after the delete finished; a failure keeps it and reports `onboarding_try_not_deleted`. "That's you" shows only when the record has a live clip on the book. The Record page's finish wait is bounded (15 s), so a page that returns without a clip leaves Record usable.
+  Pure parts are in `DinoReader.Core/OnboardingTryRecord.cs` with tests (which clips, when, round trip).
+- Not applied: #3 loading state (`reviews/pr-1076-medium.md`): "ShowCornerAsync awaits DeleteTryAsync (lists the shelf, updates and deletes files for every book) with the old page on screen and no wait overlay; can exceed 500 ms on slow disk or many books" - the delete now touches the one recorded book only (one read, one update, a few file deletes), which cannot reach 500 ms, so no overlay; the "two concurrent deletes" half is fixed by the lock.
+- Applied with a different shape: #8 (`reviews/pr-1076-medium.md`): "SwitchDemoLanguageAsync calls LanguageStarted (which wakes Continue) before awaiting SwitchLanguageAsync" - the switch runs behind the shared wait overlay (shown after 500 ms), and Continue wakes only after the switch finished.
+- Applied (check 1, `reviews/pr-1076-check1.md`) #1, #2, #3, #6, #8: a clip joins an existing try record of any book (`TryClip.BookId`, deletion settles each book), the listen step is saved before the books gate clears, `LanguageStarted` only when the session did not raise `Failed`, `ShowShelfInstead` records the finished event, the default tick waits until the Pigs are listed.
+- Skipped #4 (`reviews/pr-1076-check1.md`): "Chrome not redrawn on rotation/IsWide change; stale body text variant" - low, no failure path shown (the chrome is rebuilt on the next state change).
+- Skipped #5 (`reviews/pr-1076-check1.md`): "FirstRunState.HandoverPending never set true now; gallery branches dead" - low, same as the earlier skipped clean-up of the dead handover pill (high #10).
+- Applied (check 2, `reviews/pr-1076-check2.md`) #1, #2, #4, #6: every tour end (also a stop that cannot be drawn) leaves grown-ups mode; a kill on the story languages step reopens it (`FirstBooksGate.StoryLanguagesPending`, cleared by its Continue after the pick is saved) and the voice step saves the corner step before the try is deleted; the listen and "That's you" reads carry origin `wizard` (no onboarding origin exists; the demo read counts no `book_opened`/`read_started` anyway, `DemoReadCounting`), pinned in `UiUsageTests`.
+- Skipped #3 (`reviews/pr-1076-check2.md`): "StepDone(StoryLanguages) recorded on every Continue (Back from step 3 then Continue again); _startCounted is per page instance so intro_started recounts after a kill. Funnel counts inflated." - low, no failure path shown.
+- Skipped #5 (`reviews/pr-1076-check2.md`): "MoveOnAsync(from) sends a failed/empty Listen to Corner, skipping Voice though Voice needs only the demo page; no StepDone/skipped usage event for the skipped steps." - low, no failure path shown.
+- Skipped #7 (`reviews/pr-1076-check2.md`): "one-letter-apart names for different steps; reports can mix buckets" - low, no failure path shown.
+- Skipped #7 (`reviews/pr-1076-check1.md`): "exceptions unobserved, AfterRecordAsync may read MicRefused before pop finishes" - low, no failure path shown.
+- Skipped #9 (`reviews/pr-1076-check1.md`): "LaunchedFromIntro / _header.Continue = LaunchedFromIntro dead since IntroWizardPage deleted" - nit.
+- Skipped #10 (`reviews/pr-1076-check1.md`): "BuildReplay and BuildPlayAgain duplicate the ReplayTapped wiring" - nit.
+- Skipped #1 (`reviews/pr-1076-check3.md`): "Restart at step 2 opens OnboardingLanguagesPage as root with BackRequested null; Back exits app" - low, no failure path shown (matches the restart route of the books step).
+- Skipped #2 (`reviews/pr-1076-check3.md`): "StoryLanguagesPending set in ContinueAsync but step-2 Back (Language=null; PopAsync) never clears it" - low, no visible bug today (the review says IsNeeded wins in RootPage).
+- Skipped #3 (`reviews/pr-1076-check3.md`): "New Pending && StoryLanguagesPending branch in RootPage is untested" - low, no failure path shown.
+- Skipped #4 (`reviews/pr-1076-check3.md`): "End() calls _showShelf() unconditionally; normal end already shows the shelf at the ChildShelf stop, so twice" - low, no failure path shown.
+- Skipped #5 (`reviews/pr-1076-check3.md`): "mixing with legacy wizard data in analytics" - low, no failure path shown (a separate origin needs a Worker allowed-value change).
+- Skipped #1 (`reviews/pr-1076-check4.md`): "Wait for RecordButton times out if Record page is not in Ready state" - low, covered by the emulator runs that passed (`onboarding-mic-refused`, run2).
+- Skipped #2 (`reviews/pr-1076-check4.md`): "Both permission-dialog taps optional and the refusal log marker is only a comment" - low, covered by the emulator runs that passed (`onboarding-mic-refused`, run2).
+- Skipped #3 (`reviews/pr-1076-check4.md`): "FirstRun_HelloBody now two sentences; slice fixes 14 pt / max width 300, not re-checked for longer de/sv/ru/fi" - low, covered by the emulator runs that passed; no `layout-check ok` line was printed, so layout is not confirmed (see *Not yet verified*).
+- Skipped #4 (`reviews/pr-1076-check4.md`): "scrollUntilVisible added for the Swedish row; header comment line 4 still says OnboardingLanguage-sv" - low, a comment only; the flow passed in run2.
+
+## Device run 2 (emulator, `onboarding-phone`): not an app bug
+
+- The flow said `Missing log marker(s): [Onboarding] voice record opened lines=`, but the app log has the voice step: `18:48:40.811 [Onboarding] voice shape=stack`, `18:48:52.513 [Onboarding] voice record opened lines=1`, then `[Record] finish` and `listen enter kind=HearYourself` before the tour. The listen step ended normally (`listen page-ended stage=First continue=True`, `listen continue`), so the "failed Listen skips Voice" route was never taken.
+- Cause: `Test-LogMarker` (tools/emulator/common.ps1) refuses a marker followed by a word character, so a marker ending in `lines=` can never match `lines=1`. Fixed in the flow: the marker is now `lines=1` (Pim has one line on Pigs page 13). The route is unchanged; check2 #5 stays skipped.
+
+## Device run 3 (emulator-5554, Dino debug; logs `D:/ReadTheStupidText-worktrees/reviews/w54-362-emu/`, run1..run5)
+
+- Final PASS: `onboarding-phone` (run3, marker `[Onboarding] voice record opened lines=1`), `onboarding-mic-refused` and `onboarding-two-languages` (run2), `onboarding-one-language` and `first-books-picker` (run1), `first-books-cancel` and `first-books-offline` (run3), `onboarding-landscape` (run5).
+- Every earlier failure was a flow or string fault, each fixed: the old English `FirstRun_Hello`, the Record button tapped before the deny, the sv row below the fold, a marker ending `lines=` that can never match, "Weiter" vs "Continue", the joined paragraph label. No app logic fault found on the device.
+- No `layout-check ok` line was printed for any flow, so layout is not confirmed by the run.
+- Tooling gap (for the feedback loop): `Test-LogMarkerCanMatch` in `tools/emulator/common.ps1` tests with " end" appended, so a marker ending mid-token (`lines=`) passes lint but can never match at run time.
+
 ## Not yet verified
 
-_(filled when built)_
+- `onboarding-tablet`: no tablet instance.
+- VM checks `dino-onboarding` and `dino-launch`: free memory 6.5 GB, below the 8 GB VM rule.
+- iOS: compile only; the microphone prompt needs a TestFlight run.
+- WN2 and WN4 wide layouts, and right-to-left (Farsi N4c), on a device.
+- Lion and X Marks demo pages: no such books in the test store.
+- 55 new strings are machine drafts and need a native read.
+- Layout on the emulator flows: no `layout-check ok` line was printed.
+
+#### For CLAUDE.md
+
+None given in the brief.

@@ -1,0 +1,99 @@
+# Slice 362, Decision 4 (no mock frame; built from the shipped "Microphone is off" panel): the microphone is refused on Record. The Record page leaves, step 5 shows "Microphone is off" with Open settings and a quiet
+# Continue without recording, which is the only way past the step without a recording; it leads on to the corner tour and the try is not counted as tried.
+# The permission is denied at launch and the system prompt is dismissed with its deny button, so the refusal is the one a person gives.
+# Android and iOS ask in RecordPage (Permissions.Microphone); iOS prints its prompt in the TestFlight run, not here.
+# expect-log: HOOK test-store ok ok
+# expect-log: [Record] microphone refused in onboarding
+# expect-log: [Onboarding] voice microphone off
+# expect-log: [Onboarding] tour stop=Welcome
+appId: uk.sirous.dinoreader.dbg
+name: First run with the microphone refused, Continue without recording
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books, saved onboarding step), on purpose: the flow is the fresh install's first run, which starts with the language page and an empty shelf.
+    clearState: true
+    permissions:
+      all: deny
+    arguments:
+      cmd: test-store
+      mode: ok
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- tapOn:
+    text: "Continue"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: android:id/button2
+    optional: true
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: OnboardingLanguages
+    timeout: 15000
+- tapOn:
+    id: OnboardingLanguagesContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: FirstBooksPicker
+    timeout: 30000
+- tapOn:
+    id: FirstBookCard-1
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: FirstBooksContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: OnboardingListen
+    timeout: 60000
+- repeat:
+    times: 45
+    while:
+      notVisible:
+        id: OnboardingVoice
+    commands:
+      - tapOn:
+          id: OnboardingContinue
+          optional: true
+          waitToSettleTimeoutMs: 1500
+- tapOn:
+    id: OnboardingRecord
+    waitToSettleTimeoutMs: 600
+# The Record page asks for the microphone when Record is pressed, not when it opens.
+- extendedWaitUntil:
+    visible:
+      id: RecordButton
+    timeout: 30000
+- tapOn:
+    id: RecordButton
+    waitToSettleTimeoutMs: 600
+# The system prompt (when Android shows one) is answered with Don't allow.
+- tapOn:
+    id: com.android.permissioncontroller:id/permission_deny_button
+    optional: true
+    waitToSettleTimeoutMs: 600
+- tapOn:
+    id: com.android.permissioncontroller:id/permission_deny_and_dont_ask_again_button
+    optional: true
+    waitToSettleTimeoutMs: 600
+- extendedWaitUntil:
+    visible:
+      id: OnboardingMicOffTitle
+    timeout: 30000
+- assertVisible: "Microphone is off"
+- assertVisible: "Dino needs the microphone to record. You can allow it in Settings."
+- assertVisible: "Open settings"
+- assertVisible:
+    id: OnboardingContinueWithout
+- takeScreenshot: shot-mic-off
+- tapOn:
+    id: OnboardingContinueWithout
+    waitToSettleTimeoutMs: 600
+- extendedWaitUntil:
+    visible:
+      id: TourWelcome
+    timeout: 30000
+- assertVisible: "This is the grown-ups’ corner"

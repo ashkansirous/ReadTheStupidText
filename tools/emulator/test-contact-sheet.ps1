@@ -44,7 +44,7 @@ $manifest = Get-Content (Join-Path $PSScriptRoot 'screenshot-frames.json') -Raw 
 foreach ($entry in $manifest) {
     $flowFile = Join-Path $repoRoot ".maestro\dino\$($entry.flow).yaml"
     $flowText = if (Test-Path $flowFile) { Get-Content $flowFile -Raw } else { '' }
-    Assert-Equal "flow $($entry.flow) takes $($entry.shot)" $true ($flowText -match ('(?m)^- takeScreenshot:\s*' + [regex]::Escape($entry.shot) + '\s*$'))
+    Assert-Equal "flow $($entry.flow) takes $($entry.shot)" $true ($flowText -match ('(?m)^\s*- takeScreenshot:\s*' + [regex]::Escape($entry.shot) + '\s*$'))
 }
 $taken = foreach ($file in Get-ChildItem (Join-Path $repoRoot '.maestro\dino') -Filter '*.yaml' -File) {
     foreach ($m in [regex]::Matches((Get-Content $file.FullName -Raw), '(?m)^\s*- takeScreenshot:\s*(\S+)\s*$')) { $m.Groups[1].Value }

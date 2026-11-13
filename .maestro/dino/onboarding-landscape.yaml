@@ -1,0 +1,64 @@
+# Slice 362 (onboarding mock "600 wide or more" rule, WN2 and WN4 on a phone held sideways): the first run's language page and story-languages step split into two panes, and rotating keeps the page and the pick.
+# Uses Maestro's setOrientation; tools/emulator/rotate.ps1 is the adb fallback if a device ignores it. Nothing is downloaded: the flow stops on the story-languages step.
+# The step bar sits in the left pane with the heading and the whole explanation as one paragraph (no tint card, WN2); Continue is in the right pane under the list.
+# Shots: shot-WN1-language, shot-WN2-languages (the phone-sideways frames of the language and story-languages steps).
+# layout-check
+# expect-log: [Landscape] firstrun split=True columns=3 page=language selected=de
+# expect-log: [Landscape] firstrun split=False columns=2 page=language selected=de
+# expect-log: [Redesign] onboarding page=languages shape=split
+appId: uk.sirous.dinoreader.dbg
+name: First run in landscape splits into two panes, rotating keeps the pick
+# Runs after the flow pass or fail, so a failure never leaves the next flow sideways.
+onFlowComplete:
+  - setOrientation: PORTRAIT
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books, saved onboarding step), on purpose: the flow needs the fresh install's first-run language page.
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible: Hello! Which language should Dino use?
+    timeout: 15000
+- assertVisible: "Step 1 of 6 · Language"
+- assertVisible: Continue
+# Pick a language other than the default, then rotate: the page and the pick stay.
+- tapOn:
+    text: "Deutsch"
+    waitToSettleTimeoutMs: 300
+- assertVisible: Deutsch
+- takeScreenshot: shot-WN1-language
+- setOrientation: PORTRAIT
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 15000
+- assertVisible: Deutsch
+- setOrientation: LANDSCAPE_LEFT
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 15000
+- assertVisible: Deutsch
+- tapOn:
+    # The pick is applied when Continue is pressed, so the button still reads "Continue" here (it turns German on the next step).
+    text: "Continue"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: android:id/button2
+    optional: true
+    waitToSettleTimeoutMs: 300
+# WN2: the story-languages step in two panes: the tint card's title is not drawn, its sentence joins the paragraph on the left.
+- extendedWaitUntil:
+    visible:
+      id: OnboardingLanguages
+    timeout: 15000
+- assertVisible: "Schritt 2 von 6 · .*"
+- assertNotVisible: "Warum mehr als eine?"
+- assertVisible: ".*Viele Kinder hören zu Hause eine Sprache.*"
+- assertVisible:
+    id: OnboardingLanguagesContinue
+- takeScreenshot: shot-WN2-languages

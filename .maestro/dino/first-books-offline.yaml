@@ -3,7 +3,8 @@
 # expect-log: HOOK test-store ok offline
 # expect-log: [FirstBooks] offline listed=0 ticked=0 onShelf=0
 # expect-log: HOOK test-store ok ok
-# expect-log: [FirstBooks] list listed=4 ticked=0 onShelf=0
+# Slice 362: The Three Little Pigs is ticked at the start, so the list that loads after Try again holds one tick.
+# expect-log: [FirstBooks] list listed=4 ticked=1 onShelf=0
 appId: uk.sirous.dinoreader.dbg
 name: First books page offline
 ---
@@ -23,6 +24,14 @@ name: First books page offline
 - tapOn:
     id: android:id/button2
     optional: true
+    waitToSettleTimeoutMs: 300
+# Slice 362: the story-languages step sits between the language and the books.
+- extendedWaitUntil:
+    visible:
+      id: OnboardingLanguages
+    timeout: 15000
+- tapOn:
+    id: OnboardingLanguagesContinue
     waitToSettleTimeoutMs: 300
 - extendedWaitUntil:
     visible:

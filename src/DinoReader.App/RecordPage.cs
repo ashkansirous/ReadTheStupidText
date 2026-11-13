@@ -118,15 +118,27 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 		_wait = new WaitController(_waitOverlay);
 		_header.BackRequested += async (_, _) => await RunHandlerAsync(() => LeaveOnceAsync(toCaller: false));
 		_header.DoneRequested += async (_, _) => await RunHandlerAsync(() => LeaveOnceAsync(toCaller: true)); // leaving stops and keeps a recording in progress, as Back does
-		var root = new Grid { RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star)] };
-		root.Add(_header, 0, 0);
-		root.Add(_column, 0, 1);
+		_root = new Grid { RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star)] };
+		_root.Add(_header, 0, 0);
+		_root.Add(_column, 0, 1);
 		_toastHost.Margin = new Thickness(0, 0, 0, 0);
-		Content = new Grid { Children = { root, _toastHost, _waitOverlay } };
+		Content = new Grid { Children = { _root, _toastHost, _waitOverlay } };
 	}
+
+	private readonly Grid _root;
+	private OnboardingStepBar? _onboardingBar;
 
 	/// <summary>Set by the intro wizard when it pushes the pages: the header button then reads "Continue" (Slice 229).</summary>
 	public bool LaunchedFromIntro { get; set; }
+
+	/// <summary>
+	/// Set by the onboarding's voice step (Slice 362, mock N6a and N6b) before <see cref="Load"/>: the page walks only the demo character's lines, shows the step bar and "{name}'s lines" in its header, has no Skip and no Done, and a refused
+	/// microphone leaves the page (see <see cref="MicRefused"/>) instead of raising an alert.
+	/// </summary>
+	internal OnboardingRecordMode? Onboarding { get; set; }
+
+	/// <summary>True when the microphone was refused while <see cref="Onboarding"/> was set: the page left itself, and the voice step shows its "Microphone is off" state.</summary>
+	internal bool MicRefused { get; private set; }
 
 	/// <summary>Opens the screen on the pieces of <paramref name="setup"/> at <paramref name="start"/>; a take file a killed app left in the cache is deleted first.</summary>
 	internal void Load(RecordSetup setup, int start)
@@ -142,11 +154,29 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 		_popped = false;
 		_take = null;
 		_header.Continue = LaunchedFromIntro;
-		_header.Title = setup.Story.Title;
+		_header.Title = Onboarding is { } step ? AppResources.Format(AppResources.Onboarding_LinesTitle, step.CharacterName) : setup.Story.Title;
+		_header.ButtonVisible = Onboarding is null; // Slice 362: no Done in the onboarding's recording; Finish is the way on
+		MicRefused = false;
+		ShowOnboardingStepBar();
 		DeleteStrayTakes();
 		Log($"[Record] open mode={setup.Choice.Mode} pieces={_pieces.Count} start={_index} listening={setup.Listening}");
 		_playOnAppear = setup.Listening; // each recording plays by itself on open (frame 190), once the screen is up
 		Render();
+	}
+
+	// Slice 362: the step bar goes above the header once, in the onboarding's recording (mock N6a).
+	private void ShowOnboardingStepBar()
+	{
+		if (Onboarding is null || _onboardingBar is not null)
+		{
+			return;
+		}
+
+		_onboardingBar = new OnboardingStepBar(OnboardingStep.Voice) { Margin = new Thickness(20, 6, 20, 0) };
+		_root.RowDefinitions.Insert(0, new RowDefinition(GridLength.Auto));
+		Grid.SetRow(_header, 1);
+		Grid.SetRow(_column, 2);
+		_root.Add(_onboardingBar, 0, 0);
 	}
 
 	private static void Log(string line)
@@ -454,7 +484,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 
 		return new RecordButtons(
 			Step, _playing != Playing.None, IsLast: _index >= _pieces.Count - 1, Listening, DesktopTips.IsWindows, running ? _clock : null,
-			SkipAsync, StartRecordingAsync, StopRecordingAsync, RecordAgainAsync, TogglePlaybackAsync, NextAsync);
+			SkipAsync, StartRecordingAsync, StopRecordingAsync, RecordAgainAsync, TogglePlaybackAsync, NextAsync, NoSkip: Onboarding is not null);
 	}
 
 	private TimeSpan Elapsed() => Stopwatch.GetElapsedTime(_recordingStart);
@@ -463,7 +493,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 
 	private Task SkipAsync()
 	{
-		if (!Idle || Listening)
+		if (!Idle || Listening || Onboarding is not null) // Slice 362: the onboarding's recording cannot be skipped
 		{
 			return Task.CompletedTask;
 		}
@@ -610,7 +640,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 			// no-fallback: the person is told the microphone was refused; nothing is recorded
 			Debug.WriteLine($"Dino Reader was refused the microphone: {ex.Message}");
 			TryDelete(temp);
-			await AlertAsync(AppResources.Rec_NoMicTitle, AppResources.Rec_NoMic, AppResources.Common_Ok);
+			await RefusedAsync();
 		}
 		catch (Exception ex)
 		{
@@ -640,9 +670,23 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 			return true;
 		}
 
-		await AlertAsync(AppResources.Rec_NoMicTitle, AppResources.Rec_NoMic, AppResources.Common_Ok);
+		await RefusedAsync();
 		return false;
 #endif
+	}
+
+	// The microphone was refused: an alert, except in the onboarding (Slice 362, Decision 4), where the page leaves and the voice step shows its own "Microphone is off" state with Open settings.
+	private async Task RefusedAsync()
+	{
+		if (Onboarding is not null)
+		{
+			MicRefused = true;
+			Log("[Record] microphone refused in onboarding");
+			_ = LeaveOnceAsync(toCaller: false);
+			return;
+		}
+
+		await AlertAsync(AppResources.Rec_NoMicTitle, AppResources.Rec_NoMic, AppResources.Common_Ok);
 	}
 
 	private void StartTimer()
@@ -803,6 +847,11 @@ public sealed class RecordPage : ContentPage, IGrownUpPage, IRecordKeys
 		string storyId = _story!.Id;
 		string fileName = StoryRecordings.NewFileName(key);
 		await PlaceFileAsync(storyId, fileName, take.Path);
+		if (Onboarding is not null)
+		{
+			await OnboardingTryStore.AddAsync(_library, storyId, key, fileName); // Slice 362: the try is owned from this moment, before the story names the clip, so a kill in between still finds the file
+		}
+
 		Committed committed = await SaveWithClipAsync(storyId, take, fileName);
 		_story = committed.Story; // the story is saved: from here on nothing below can make this recording "fail"
 		TryDelete(take.Path);

@@ -60,7 +60,7 @@ if ($App -eq 'auto') {
 # One row per product: the package identity name, where a fresh MSIX is usually found and the ordered checks.
 $Apps = @{
     rtst = @{ Name = 'AshkanSirous.ReadTheStupidText'; Exe = 'ReadTheStupidText.App'; Checks = @('rtst-launch', 'rtst-tray-icon', 'rtst-hotkey-read', 'rtst-selection-hotkey', 'rtst-panel-speed', 'rtst-startup-task') }
-    dino = @{ Name = 'AshkanSirous.DinoReader'; Exe = 'DinoReader.App'; Checks = @('dino-onboarding-keys', 'dino-launch', 'dino-open-book', 'dino-page-turn', 'dino-settings', 'dino-keyboard', 'dino-gate', 'dino-record', 'dino-window', 'dino-desktop-polish', 'dino-reorder') }
+    dino = @{ Name = 'AshkanSirous.DinoReader'; Exe = 'DinoReader.App'; Checks = @('dino-onboarding-keys', 'dino-onboarding', 'dino-launch', 'dino-open-book', 'dino-page-turn', 'dino-settings', 'dino-keyboard', 'dino-gate', 'dino-record', 'dino-window', 'dino-desktop-polish', 'dino-reorder') }
 }
 $AppProfile = $Apps[$App]
 if ($Check) {

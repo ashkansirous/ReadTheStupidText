@@ -266,8 +266,9 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		}
 
 		_services.GetRequiredService<ISettingsStore>().Language = LanguageChoice.ApplyScreens(code);
-		IntroState.Clear();
+		OnboardingState.Clear(); // Slice 362: the hook skips the whole onboarding path
 		FirstBooksGate.Pending = false;
+		FirstBooksGate.StoryLanguagesPending = false;
 		Testing.TestBooks.StartAll(_services.GetRequiredService<StoreClient>()); // Slice 261: no book ships in the app, so a flow that skips the first run gets the four test books; the gallery waits for them
 		RebuildRoot();
 		return true;
@@ -288,24 +289,39 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 			return _services.GetRequiredService<FirstRunPage>();
 		}
 
-		return FirstBooksGate.Pending ? BooksPageAfterRestart() : _services.GetRequiredService<GalleryPage>();
+		if (FirstBooksGate.Pending && FirstBooksGate.StoryLanguagesPending)
+		{
+			return ActivatorUtilities.CreateInstance<OnboardingLanguagesPage>(_services); // Slice 362: killed on step 2: it opens again (the root, so no Back); its Continue goes on to the books
+		}
+
+		if (FirstBooksGate.Pending)
+		{
+			return BooksPageAfterRestart();
+		}
+
+		// Slice 362: a kill after the books resumes the onboarding at its saved step (listen or voice); the corner tour is the gallery's own (GalleryPage starts it).
+		if (OnboardingState.Step is { } step && step != OnboardingStep.Corner)
+		{
+			return new OnboardingResumePage(_services, step);
+		}
+
+		return _services.GetRequiredService<GalleryPage>();
 	}
 
 	// Slice 261: the language was stored but the books were not chosen (the app was killed on the picker or while its books downloaded): the picker opens again, with the books that landed ticked,
-	// and carries on to "Ready to read" when the shelf holds two. It is the root, so it has no language page to go back to.
+	// and carries on to the listen step when the shelf holds two (Slice 362). It is the root, so it has no language page to go back to.
 	private FirstBooksPage BooksPageAfterRestart()
 	{
 		var page = _services.GetRequiredService<FirstBooksPage>();
-		page.Completed = () =>
-		{
-			ResumeFirstRunAfterBooks();
-			return Task.CompletedTask;
-		};
+		page.Completed = () => OnboardingRoute.AfterBooksAsync(_services);
 		return page;
 	}
 
-	/// <summary>Replaces the restarted picker with the "Ready to read" page of the first run in the stored language (Slice 261); the fresh root speaks the language just applied.</summary>
-	private void ResumeFirstRunAfterBooks()
+	/// <summary>
+	/// Replaces the whole page stack with <paramref name="root"/> (Slice 362: the onboarding's listen, voice and corner steps are each a root of their own, so Back can never return to the book picker or the language page).
+	/// The fresh root speaks the language applied at the first run.
+	/// </summary>
+	public void ReplaceRoot(Page root)
 	{
 		UiCulture.Apply(LanguageChoice.Preferred());
 		ApplyRightToLeftFonts();
@@ -314,9 +330,12 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 			return;
 		}
 
-		var page = _services.GetRequiredService<FirstRunPage>();
-		page.ResumeAfterBooks();
-		window.Page = _navigation = BuildNavigation(page);
+		foreach (ReadingPage replaced in _navigation?.Navigation.NavigationStack.OfType<ReadingPage>() ?? [])
+		{
+			replaced.ReleaseWhenReplaced(); // Slice 362: a reading page replaced as the root is never popped, so it stops its read and lets go of its handlers here
+		}
+
+		window.Page = _navigation = BuildNavigation(root);
 	}
 
 	// A fetched config can raise minVersion while the app is open: the update page then replaces everything, grown-up mode included.
@@ -428,7 +447,6 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		// First and synchronous: kids' mode must hold whatever the navigation steps below do.
 		_services.GetRequiredService<GrownUpMode>().Leave();
 		await TryAsync(() => DismissGatesAsync(navigation));
-		await TryAsync(() => DismissIntroAsync(navigation));
 		bool popped = await TryAsync(() => PopGrownUpPagesAsync(navigation));
 #if DEBUG
 		if (popped)
@@ -443,16 +461,6 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		foreach (GatePage gate in navigation.Navigation.ModalStack.OfType<GatePage>().ToList())
 		{
 			await TryAsync(gate.DismissAsync);
-		}
-	}
-
-	// The intro (Slice 155) is a modal of its own: it closes with the app, but a first run keeps its saved step, so coming back goes through the gate.
-	private static async Task DismissIntroAsync(NavigationPage navigation)
-	{
-		bool IsIntro(Page p) => p is NavigationPage { RootPage: IntroWizardPage };
-		for (int guard = navigation.Navigation.ModalStack.Count; guard > 0 && navigation.Navigation.ModalStack.Any(IsIntro); guard--)
-		{
-			await navigation.Navigation.PopModalAsync(animated: false);
 		}
 	}
 

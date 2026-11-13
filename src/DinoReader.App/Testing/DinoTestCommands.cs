@@ -611,17 +611,12 @@ internal static partial class DinoTestCommands
 		return root.Navigation.NavigationStack.LastOrDefault() as ReadingPage;
 	}
 
-	// The states in which a child cannot open a book from the gallery: grown-up mode (a tap edits), the intro wizard over the gallery (a reading screen already open is reused).
+	// The states in which a child cannot open a book from the gallery: grown-up mode (a tap edits).
 	private static string? Refusal(NavigationPage root, GrownUpMode mode)
 	{
 		if (mode.IsGrownUp)
 		{
 			return "grown-up";
-		}
-
-		if (root.Navigation.ModalStack.Any(p => p is NavigationPage { RootPage: IntroWizardPage }))
-		{
-			return "intro";
 		}
 
 		return null;

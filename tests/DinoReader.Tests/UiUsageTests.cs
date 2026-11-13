@@ -129,7 +129,7 @@ public sealed class UiUsageTests
         Assert.Contains("RecordBookCount(UsageEventName.BookOpened, story, ReadOrigin)", reading);
         Assert.Contains("string origin = ReadOrigins.Shelf", File.ReadAllText(Path.Combine(app, "StoryActions.cs")));
         Assert.Contains("_actions.ReadAsync(Navigation, story, ReadOrigins.Corner)", File.ReadAllText(Path.Combine(app, "GalleryPage.xaml.cs")));
-        Assert.Contains("reading.ReadOrigin = ReadOrigins.Wizard", File.ReadAllText(Path.Combine(app, "IntroWizardPage.cs")));
+        Assert.Contains("ReadOrigin = ReadOrigins.Wizard", File.ReadAllText(Path.Combine(app, "OnboardingListenPage.cs"))); // Slice 362: the onboarding's reads carry the wizard origin, never the shelf's
     }
 
     [Fact]
