@@ -1,6 +1,6 @@
 # Slice 355 — Dino: a public web page listing every store book, free or paid, and the price
 
-*Built 2026-11-13 as PR #1053 (not merged), not yet verified on the live site (see Not yet verified).*
+*Built 2026-11-13, merged as PR #1053 (31dc4c42), not yet verified on the live site (see Not yet verified).*
 
 *Changed while building:* the price and switch reach the page through the existing `/api/app-config` (new `catalogue.price` field, apps ignore it), so `/api/stories` and the apps' parsing are unchanged. Review added: when the config is unknown the page shows no price label (never "Free"); Retry aborts the previous load; Cancel shows a "cancelled" message; the price is validated in the Worker including bidi and zero-width characters; the Android button goes to `./#platforms` like `site/dino/index.html`. Slice 346 is referenced by name only.
 
@@ -106,7 +106,7 @@ books exist, which are free, which are paid and how much.
 
 *Verification run:* worker tests 362/362, typecheck pass. No device runs (no app changes).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-13)
 
 - `site/dino/books.html`: the page's pure script block (price/switch labels, language choice, titles) sits between `PURE-START` and `PURE-END` markers; `worker/catalogue.test.mjs` runs it by slicing the page between them, so keep new logic you want tested inside the markers and do not remove them. The page's DOM glue (load, Cancel, Retry) is not tested. (Slice 355: docs/plan/slices/355-dino-web-catalogue.md)
 - The page's price is only `catalogue.price` from `/api/app-config`, validated in `worker/appconfig.ts`; when the config cannot be read the page shows no price label, never "Free". (Slice 355: docs/plan/slices/355-dino-web-catalogue.md)

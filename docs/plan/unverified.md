@@ -4,6 +4,15 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 **Only what can be tested stays here** (the user, 2026-11-08: "keep only whatever I can test"). Each line starts with who tests it: **You** (the user: the iPhone, the S21 by hand, the Echo, the Sonos, an English or Farsi read, a decision or account only you hold) or **Device** (Claude, on the Android emulator or tablet AVD, the S21 by script, or the Windows VM). Checks nobody here can test were removed; behaviours only real use shows are watched in production data instead; checks that need the user's ear are listening-page slices 330-343. All three lists are in the [record](notes/2026-11-08-unverified-triage.md). Earlier on 2026-11-08: triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)). The 2026-11-08 device run (emulator, S21, VM) passed 49 more and the user's iPhone session 2 more; same record.
 
+### Slice 355: Dino: a public web page listing every store book, free or paid, and the price ([slice](slices/355-dino-web-catalogue.md))
+- **Device:** Live `/books` and the workers.dev `/dino/books` after the batched release deploys: covers load, no third-party request, loading/Cancel/Retry work, and with the switch on the price shows only on paid books.
+- **You:** Native read of the 14 non-English translations of the page text.
+- **You:** Switched-on check after the paid books store setup (Slice 346 Part D).
+
+### Slice 295: Bump MauiVersion for dotnet/maui PR 38662 ([slice](slices/295-bump-maui-version-for-pr-38662.md))
+- **Device:** RTST emulator flows on MAUI 10.0.130: not reached in the one emulator run (Dino only).
+- **You:** TestFlight iPhone check of the earlier Slice 274 crash path on a release build: open a parent page, leave it (language page), background, return; no crash. Needs a TestFlight build after merge; Slice 295 work item 5 (remove the Slice 274 workaround) waits on it.
+
 ### Slice 356: Dino illustrator: faster and cheaper ([slice](slices/356-illustrator-faster-and-cheaper.md))
 - **Device:** after-numbers on a real page group of a book (seconds per picture, peak context, cache reads per picture against the Baseline table), taken on the next real illustrator run with `illustrator-usage.mjs`.
 - **Device:** a real send after the check-pass edit to `__setupPicture` (pictures validation, mark only after all checks, mark restored on REFUSED/MISSING); only the earlier version was live-sent on 2026-11-13.
@@ -75,7 +84,6 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 - **Device:** RTST `stall-return-overlay` failed twice (the hook does not block the reader); moved to [Slice 345](slices/345-rtst-stall-hook-blocks-reader.md).
 - **Device:** On the S21: `book-end` on Dino with the fixture pack, `run-checks -Prepare -App dino`, `paused-notification-repost` flag reading (Samsung form unknown).
 - **You:** iOS: the new hooks are untried (no Mac, no iOS compile was possible).
-- **Device:** `sentence-highlight` Maestro flow: the S21 run passed (Slice 319); on emulator-5554 (2026-11-13, origin/main ef8c1838) it ran and FAILED ("Missing log marker(s) under tag RTST-TEST: SENTENCE 0 1", slowest step inputText 43.4 s), cause not diagnosed: [Slice 361](slices/361-sentence-highlight-fails-on-emulator.md).
 
 ### Slice 147: iOS review cadence: one review at a time, the newest build, never cancel ([slice](slices/147-ios-review-cadence.md))
 - **You:** the first successful `appstore-submit.yml` run (manual; its only two runs, 2026-10-30, concluded failure): it should report the listing items Apple still needs (screenshots, privacy, age rating). The first scheduled `testflight-external.yml` run already succeeded.

@@ -2,7 +2,7 @@
 
 *Planned 2026-11-13 (found by the 2026-11-13 emulator run).*
 
-**Status:** built 2026-11-13 and verified on emulator-5554 (PR #1051, not merged).
+**Status:** built 2026-11-13 and verified on emulator-5554 (merged as PR #1051, 3fc78850).
 
 **Touches:** `.maestro/rtst/sentence-highlight.yaml`, `src/ReadTheStupidText.Mobile/ReaderPage.xaml.cs` (the `RTST-TEST: SENTENCE_MOVED` marker), `docs/plan/slices/361-sentence-highlight-fails-on-emulator.md`.
 
@@ -39,7 +39,7 @@ A flow bug, confirmed by the emulator re-run on 2026-11-13 (item 3): head-start 
 - Skipped #1 (`reviews/s361-check.md`): "a late Idle from the previous read could clear it mid-read and SENTENCE_MOVED would log twice" - harmless to the flow, which needs the marker only once.
 - Skipped #2 (`reviews/s361-check.md`): "SENTENCE_MOVED passes on any chunk, so a regression narrowing only the first multi-sentence chunk is not caught" - the trade-off is deliberate, and the chunk-0 two-sentence case cannot occur with head-start chunks.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-13)
 
 - `tools/CLAUDE.md`: an expect-log marker is a literal match (`tools/emulator/run-flows.ps1:113`); never expect a chunk-indexed `SENTENCE <c> <i>` marker in a Maestro flow, use the chunk-agnostic `SENTENCE_MOVED`. (Slice 361: docs/plan/slices/361-sentence-highlight-fails-on-emulator.md)
 
