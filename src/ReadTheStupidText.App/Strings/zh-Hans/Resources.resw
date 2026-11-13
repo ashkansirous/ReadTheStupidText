@@ -300,6 +300,9 @@
   <data name="Error_Server" xml:space="preserve">
     <value>服务器出了点问题，请稍后重试。</value>
   </data>
+  <data name="Pack_NotDownloaded" xml:space="preserve">
+    <value>未下载</value>
+  </data>
   <data name="Error_VoiceGone" xml:space="preserve">
     <value>这个语音已不可用。</value>
   </data>

@@ -300,6 +300,9 @@
   <data name="Error_Server" xml:space="preserve">
     <value>Un problème est survenu sur le serveur. Veuillez réessayer plus tard.</value>
   </data>
+  <data name="Pack_NotDownloaded" xml:space="preserve">
+    <value>non téléchargée</value>
+  </data>
   <data name="Error_VoiceGone" xml:space="preserve">
     <value>Cette voix n’est plus disponible.</value>
   </data>

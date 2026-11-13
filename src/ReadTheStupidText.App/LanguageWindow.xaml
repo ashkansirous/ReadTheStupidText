@@ -2,7 +2,8 @@
 <Window
     x:Class="ReadTheStupidText_App.LanguageWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ReadTheStupidText_App">
 
     <!--
         First-run language choice (Slice 56, Decision 68). Picking a language stores it and starts the
@@ -32,16 +33,49 @@
             x:Name="LanguageList"
             Grid.Row="2"
             SelectionMode="Single"
-            SelectionChanged="OnLanguageSelectionChanged"
-            DisplayMemberPath="NativeName" />
+            SelectionChanged="OnLanguageSelectionChanged">
+            <!-- Slice 373 (Missing States mock RT2): icon tile, name, second line, Retry at the row's end, the error line under a failed row (indented to the text). -->
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="local:LanguageRowItem">
+                    <Grid Padding="0,10" ColumnSpacing="12" AutomationProperties.AutomationId="{x:Bind AutomationId}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Border Grid.Row="0" Grid.Column="0" Width="32" Height="32" CornerRadius="7" Background="#1A2A57C0" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE767;" FontSize="16" Foreground="#2A57C0" />
+                        </Border>
+                        <StackPanel Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="{x:Bind Name}" FontSize="13" />
+                            <TextBlock Text="{x:Bind Detail, Mode=OneWay}" Visibility="{x:Bind DetailVisibility, Mode=OneWay}" FontSize="11.5" Opacity="0.6" TextWrapping="Wrap"
+                                       AutomationProperties.AutomationId="LanguageRowDetail" />
+                        </StackPanel>
+                        <Button Grid.Row="0" Grid.Column="2" x:Uid="LanguageRetry" Click="OnRetryClick" Visibility="{x:Bind RetryVisibility, Mode=OneWay}"
+                                Style="{StaticResource AccentButtonStyle}" Height="28" Padding="12,0" CornerRadius="4" FontSize="12.5" FontWeight="SemiBold"
+                                AutomationProperties.AutomationId="LanguageRowRetry" />
+                        <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ColumnSpacing="6" Margin="0,2,0,0"
+                              Visibility="{x:Bind ErrorVisibility, Mode=OneWay}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <FontIcon Glyph="&#xE783;" FontSize="12" Foreground="#A1262C" VerticalAlignment="Top" Margin="0,2,0,0" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind ErrorText, Mode=OneWay}" FontSize="12" LineHeight="16.8" TextWrapping="Wrap" Foreground="#A1262C"
+                                       AutomationProperties.AutomationId="LanguageRowError" />
+                        </Grid>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
 
-        <StackPanel Grid.Row="3" Spacing="6">
-            <ProgressBar x:Name="DownloadBar" Minimum="0" Maximum="1" Visibility="Collapsed" />
-            <TextBlock x:Name="StatusText" TextWrapping="Wrap" />
-        </StackPanel>
+        <ProgressBar x:Name="DownloadBar" Grid.Row="3" Minimum="0" Maximum="1" Visibility="Collapsed" />
 
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-            <Button x:Name="RetryButton" x:Uid="LanguageRetry" Visibility="Collapsed" Click="OnRetryClick" />
             <Button x:Uid="LanguageClose" Click="OnCloseClick" />
         </StackPanel>
     </Grid>

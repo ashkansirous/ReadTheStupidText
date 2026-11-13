@@ -97,7 +97,7 @@ Defaults the user accepted (not argued):
 - [x] `PackErrorClassifier` uses `HttpErrorClassifier` for HTTP failures; Dino's audio-pack rows that the user starts and
   RTST's pack download rows show the same per-status texts. **Android/iOS:** `MobileVoicePackService`; **Windows:**
   `WindowsVoicePackService` and the RTST `.resw` strings in every language.
-- [ ] **RT1 and RT2 rows** (Design): the failed row shows the strip under it with `Error_Server` / `Error_VoiceGone`, `Wait_Retry`
+- [x] **RT1 and RT2 rows** (Design; built by Slice 373): the failed row shows the strip under it with `Error_Server` / `Error_VoiceGone`, `Wait_Retry`
   / `LanguageRetry.Content` "Retry" at the row's end, and the row's second line `Pack_RowSize` "Voice pack · {0} MB" (phone) or
   `Pack_NotDownloaded` "not downloaded" (Windows panel). New RTST strings: `Error_Server`, `Error_VoiceGone`, `Pack_RowSize`,
   `Pack_NotDownloaded`, in the Mobile `.resx` and App `.resw` languages. 429 and 402 never happen for packs.

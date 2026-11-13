@@ -300,6 +300,9 @@
   <data name="Error_Server" xml:space="preserve">
     <value>مشکلی در سرور پیش آمد. لطفاً بعداً دوباره امتحان کنید.</value>
   </data>
+  <data name="Pack_NotDownloaded" xml:space="preserve">
+    <value>دانلود نشده</value>
+  </data>
   <data name="Error_VoiceGone" xml:space="preserve">
     <value>این صدا دیگر در دسترس نیست.</value>
   </data>

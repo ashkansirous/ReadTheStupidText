@@ -120,7 +120,8 @@ public sealed class VoicePackSetup
         }
     }
 
-    private string CurrentLanguage => _settings.Language ?? SupertonicVoiceTable.EnglishCode;
+    /// <summary>The language this setup serves: the stored choice, English while none is stored.</summary>
+    public string CurrentLanguage => _settings.Language ?? SupertonicVoiceTable.EnglishCode;
 
     private static bool SameLanguage(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
 
@@ -175,8 +176,18 @@ public sealed class VoicePackSetup
     }
 
     // Scanning the packs folder touches the disk, so it never runs on the caller's (UI) thread.
-    private Task<bool> IsInstalledAsync(string language) =>
-        Task.Run(() => InstalledVoiceCatalog.Resolve(_packs.GetInstalledVoicePacks(), language) is not null);
+    private Task<bool> IsInstalledAsync(string language) => Task.Run(() => IsInstalled(language));
+
+    /// <summary>Slice 373: whether a voice pack for this language is installed and complete (reads the pack folders; call off the UI thread).</summary>
+    public bool IsInstalled(string language) =>
+        InstalledVoiceCatalog.Resolve(_packs.GetInstalledVoicePacks(), language) is not null;
+
+    /// <summary>Slice 373: which of these languages have an installed, complete voice pack, from one read of the pack folders (call off the UI thread).</summary>
+    public HashSet<string> InstalledLanguages(IEnumerable<string> languages)
+    {
+        IReadOnlyList<InstalledVoicePack> packs = _packs.GetInstalledVoicePacks();
+        return [.. languages.Where(l => InstalledVoiceCatalog.Resolve(packs, l) is not null)];
+    }
 
     // Slice 89: an installed pack the catalog lists in a newer version (the Amir pack becoming the
     // four-voice one) is downloaded into a folder of its own, next to the old one, and activated: the

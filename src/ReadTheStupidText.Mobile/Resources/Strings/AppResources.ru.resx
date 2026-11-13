@@ -124,6 +124,7 @@
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Пакет естественных голосов непригоден. Читает голос телефона.</value></data>
   <data name="Error_Server" xml:space="preserve"><value>На сервере что-то пошло не так. Повторите попытку позже.</value></data>
   <data name="Error_VoiceGone" xml:space="preserve"><value>Этот голос больше недоступен.</value></data>
+  <data name="Pack_RowSize" xml:space="preserve"><value>Пакет голоса · {0} МБ</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Не удалось загрузить естественные голоса. Читает голос телефона. Нажмите, чтобы повторить.</value></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="PackStatus_Stopped" xml:space="preserve"><value>Загрузка остановлена. Читает голос телефона. Нажмите, чтобы загрузить.</value></data>

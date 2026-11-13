@@ -124,6 +124,7 @@
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>بستهٔ صداهای طبیعی قابل استفاده نیست. با صدای گوشی خوانده می‌شود.</value></data>
   <data name="Error_Server" xml:space="preserve"><value>مشکلی در سرور پیش آمد. لطفاً بعداً دوباره امتحان کنید.</value></data>
   <data name="Error_VoiceGone" xml:space="preserve"><value>این صدا دیگر در دسترس نیست.</value></data>
+  <data name="Pack_RowSize" xml:space="preserve"><value>بستهٔ صدا · {0} مگابایت</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>صداهای طبیعی دانلود نشد. با صدای گوشی خوانده می‌شود. برای تلاش دوباره ضربه بزنید.</value></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="PackStatus_Stopped" xml:space="preserve"><value>دانلود متوقف شد. با صدای گوشی خوانده می‌شود. برای دانلود ضربه بزنید.</value></data>

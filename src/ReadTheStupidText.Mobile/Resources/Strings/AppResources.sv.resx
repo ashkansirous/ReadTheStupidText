@@ -124,6 +124,7 @@
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Paketet med naturliga röster går inte att använda. Läser med telefonens röst.</value></data>
   <data name="Error_Server" xml:space="preserve"><value>Något gick fel på servern. Försök igen senare.</value></data>
   <data name="Error_VoiceGone" xml:space="preserve"><value>Den här rösten är inte längre tillgänglig.</value></data>
+  <data name="Pack_RowSize" xml:space="preserve"><value>Röstpaket · {0} MB</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Det gick inte att ladda ned naturliga röster. Läser med telefonens röst. Tryck för att försöka igen.</value></data>
   <!-- Slice 204: machine draft, for native review -->
   <data name="PackStatus_Stopped" xml:space="preserve"><value>Nedladdningen är stoppad. Läser med telefonens röst. Tryck för att ladda ned.</value></data>

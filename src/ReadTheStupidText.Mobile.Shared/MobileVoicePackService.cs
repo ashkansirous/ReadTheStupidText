@@ -471,6 +471,39 @@ public sealed class MobileVoicePackService : IVoicePackService
         _catalog?.FirstOrDefault(p => p.Id == installed.Manifest.Id) is { } listed
         && PackVersions.IsNewer(listed.Version, installed.Manifest.Version);
 
+#if DEBUG
+    private static readonly object ForcedFailureLock = new();
+    private static HttpErrorKind? _forcedFailure;
+    private static string? _forcedFailureLanguage;
+
+    /// <summary>Slice 373: Debug-only. The next download of the voice pack serving <paramref name="language"/> fails as if the server answered this kind (NotFound = 404, anything else the general server text); one-shot, and any other pack downloads for real.</summary>
+    public static void ForceNextFailure(HttpErrorKind kind, string language)
+    {
+        lock (ForcedFailureLock)
+        {
+            _forcedFailure = kind;
+            _forcedFailureLanguage = language;
+        }
+    }
+
+    // Takes the armed failure only when this pack serves the language it was armed for; every other pack leaves it armed.
+    private static HttpErrorKind? TakeForcedFailure(PackInfo pack)
+    {
+        lock (ForcedFailureLock)
+        {
+            if (_forcedFailure is null || _forcedFailureLanguage is null || !pack.Languages.Contains(_forcedFailureLanguage, StringComparer.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            HttpErrorKind? taken = _forcedFailure;
+            _forcedFailure = null;
+            _forcedFailureLanguage = null;
+            return taken;
+        }
+    }
+#endif
+
     private async Task<PackDownloadOutcome> DownloadOffUiThreadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         PackCatalogResult catalog = _catalog is null
@@ -486,6 +519,14 @@ public sealed class MobileVoicePackService : IVoicePackService
         {
             return new PackDownloadOutcome(PackDownloadResult.Failed);
         }
+
+#if DEBUG
+        if (pack.Kind == PackKind.Voice && TakeForcedFailure(pack) is { } forced)
+        {
+            Testing.TestHookLog.Write($"PACKDL forced-failure pack={pack.Id} kind={forced}"); // Slice 373: proves the hook's branch ran
+            return new PackDownloadOutcome(PackDownloadResult.Failed, forced);
+        }
+#endif
 
         PackDownloadOutcome outcome = await DownloadWithRetriesAsync(pack, progress, cancellationToken).ConfigureAwait(false);
         if (outcome.Status == PackDownloadResult.Ok)

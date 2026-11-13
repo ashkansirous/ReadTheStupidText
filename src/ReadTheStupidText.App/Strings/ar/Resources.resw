@@ -300,6 +300,9 @@
   <data name="Error_Server" xml:space="preserve">
     <value>حدث خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقًا.</value>
   </data>
+  <data name="Pack_NotDownloaded" xml:space="preserve">
+    <value>غير منزّل</value>
+  </data>
   <data name="Error_VoiceGone" xml:space="preserve">
     <value>لم يعد هذا الصوت متاحًا.</value>
   </data>
