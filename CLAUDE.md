@@ -19,7 +19,7 @@ its own version, tag and GitHub Release: `rtst-v<x.y.z>` and `dino-v<x.y.z>` (De
 > note: docs/plan/notes/claude-md-history.md)
 
 Read [`plan.md`](plan.md) before starting work — it defines the vertical slices
-and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. The numbered **Decisions** live in `docs/plan/decisions.md` (1-99 archived in `docs/plan/notes/decisions-001-099.md`; "Decision NN" anywhere in these files refers to it); each slice's full record is under `docs/plan/slices/`.
+and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. The numbered **Decisions** live in `docs/plan/decisions.md` (1-99 archived in `docs/plan/notes/decisions-001-099.md`; "Decision NN" anywhere in these files refers to it); each slice's full record is under `docs/plan/slices/`. Every slice file carries one `**Product:** RTST | Dino | Shared` line under its title, and its status row goes in the matching `plan.md` table (`### Read The Stupid Text`, `### Dino Reader`, `### Shared`). (Slice 366: docs/plan/slices/366-plan-split-by-product.md)
 
 ## Where the rules live
 
@@ -45,7 +45,7 @@ Shared:
 - `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md` — scanner/OCR stack shared by every MAUI app.
 - `tools/CLAUDE.md` — device-test tooling: `-App auto`, the build cache, device limits, phone runs.
 - `tools/desktop-vm/CLAUDE.md` — the headless Hyper-V VM desktop tests: PowerShell script gotchas.
-- `.github/CLAUDE.md` — CI quota rules, `release.yml`/`ship-targets.mjs`, path filters, iOS signing and toolchain, packs releases, APK downloads, actionlint.
+- `.github/CLAUDE.md` — CI quota rules, `release-rtst.yml`/`release-dino.yml`/`release-shared.yml`/`ship-targets.mjs`, path filters, iOS signing and toolchain, packs releases, APK downloads, actionlint.
 
 ## Stack & conventions
 
@@ -135,7 +135,7 @@ Dino Reader's pure library has its own suite (xUnit v3, plain `net10.0`, runs on
 dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj
 ```
 
-The `tests.yml` workflow (called by `release.yml`) runs them on every push/PR that
+The `tests.yml` workflow (called by `release-shared.yml`, once per product run) runs them on every push/PR that
 touches app code (docs-only changes skip it) and **gates** the build and release jobs,
 so a failing test blocks the release.
 
@@ -155,7 +155,7 @@ so a failing test blocks the release.
   docs-only merges cut none, and only the changed platforms are rebuilt and
   submitted — Batch 8), derived by
   **GitVersion** from git history — **git tags are the source of truth**. The
-  single `release.yml` run does it all: GitVersion computes the next SemVer, the
+  Each product's release run (`release-rtst.yml`, `release-dino.yml`, both calling `release-shared.yml`; Slice 369) does it all: GitVersion computes the next SemVer, the
   MSIX is packaged with that version stamped into `Package.appxmanifest`
   `Version` (`x.y.z.0` — the Store needs revision `0`) **at build time** (not
   committed), then a `rtst-v<x.y.z>` tag + GitHub Release are cut at the merge commit. **Per

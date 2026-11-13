@@ -1,7 +1,7 @@
 # Slice 366 — Plan split by product: RTST, Dino and Shared tables, every slice file tagged
 **Product:** Shared
 
-*Built 2026-11-13 (wave 55), PR #1088, not merged. Needs the ClaudeSkills PR (branch `chore/plan-product-tables`) merged and installed first.* Planned 2026-11-13. First of the tidy-by-product slices (366-371). The user chose to keep both apps in one repository and tidy it instead of splitting it (2026-11-13, "lets change it to tidy up", then "I want all 5").
+*Built 2026-11-13 (wave 55), merged as PR #1088 (f76b9d62). Needs the ClaudeSkills PR (branch `chore/plan-product-tables`) merged and installed first.* Planned 2026-11-13. First of the tidy-by-product slices (366-371). The user chose to keep both apps in one repository and tidy it instead of splitting it (2026-11-13, "lets change it to tidy up", then "I want all 5").
 
 **Touches:** `plan.md`, `docs/plan/slices/*.md` (one added line each), `docs/plan/notes/slices-done.md`, `docs/plan/unverified.md`; ClaudeSkills `skills/update-docs/`, `skills/parallel-check/`, `skills/archive-docs/` only if they cannot read three tables (item 4)
 
@@ -33,7 +33,7 @@
 
 *From review:* no review gate here (doc-only in this repo); the ClaudeSkills code gets its gate in its own PR.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-13)
 
 - Every slice file carries one `**Product:** RTST | Dino | Shared` line under its title, and its status row goes in the matching `plan.md` table (`### Read The Stupid Text`, `### Dino Reader`, `### Shared`). (Slice 366: docs/plan/slices/366-plan-split-by-product.md)
 

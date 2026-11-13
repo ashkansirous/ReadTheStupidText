@@ -366,6 +366,9 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 357 | Server errors the user can see: standard translated messages per status, the server's English text only on 400, shop and voice packs in both apps (parts A-C, pre-mock plan; the mock's items are Slice 364, part D open until paid books are switched on) | built | #1052 | | [357-server-error-messages.md](../slices/357-server-error-messages.md) |
 | 365 | `worker/catalogue.test.mjs` "the page file uses LF line endings" fails on a Windows checkout (CRLF working copy); test what is committed | built, not yet verified | #1061 | | [365-catalogue-lf-test-windows.md](../slices/365-catalogue-lf-test-windows.md) |
 | 372 | S21 check fixes: Samsung notification flags in `_lib.ps1`, `Stop-DeviceRestore` false warning, `book-end` budget | built | #1077 | | [372-s21-check-fixes-2026-11-13.md](../slices/372-s21-check-fixes-2026-11-13.md) |
+| 366 | Tidy by product 1/6: plan.md split into RTST, Dino and Shared tables; every slice file tagged with its product | built | #1088 | | [366-plan-split-by-product.md](../slices/366-plan-split-by-product.md) |
+| 367 | Tidy by product 2/6: root CLAUDE.md keeps shared rules, each app's rules move to its own folder (approved by the user 2026-11-13) | built | #1089 | | [367-claude-md-per-product.md](../slices/367-claude-md-per-product.md) |
+| 369 | Tidy by product 4/6: one release workflow per product, sharing a reusable part | built | #1087 | | [369-release-workflow-per-product.md](../slices/369-release-workflow-per-product.md) |
 | 368 | Tidy by product 3/6: tests for the shared code in their own test project | built | #1078 | | [368-shared-tests-project.md](../slices/368-shared-tests-project.md) |
 
 ## Batch ordering notes

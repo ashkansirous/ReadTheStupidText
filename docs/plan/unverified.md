@@ -478,6 +478,17 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Shared
 
+### Slice 369: One release workflow per product ([slice](slices/369-release-workflow-per-product.md))
+
+- First Dino-only merge runs only `release-dino.yml` and cuts only a `dino-v` tag.
+- First RTST-only merge runs only `release-rtst.yml` and cuts only an `rtst-v` tag.
+- One batched `workflow_dispatch` releases each product whose files changed.
+- No version goes backwards (new tags compared with the last `rtst-v` and `dino-v`).
+
+### Slice 366: Plan split by product ([slice](slices/366-plan-split-by-product.md))
+
+- `update-docs` index mode adding a row to the right product table was not run (instructions changed only, no dry run).
+
 ### Slice 372: S21 check fixes ([slice](slices/372-s21-check-fixes-2026-11-13.md))
 
 - **Device:** left on the phone by the runner: `/sdcard/Download/rtst-packs-aside/uk.sirous.readthestupidtext.dbg/packs-20261113172728.tar` (the dev app's own pack backup).
@@ -486,7 +497,7 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ### Slice 368: Shared tests in their own project ([slice](slices/368-shared-tests-project.md))
 
-- **Device:** the new `release.yml` gates (`shared-test`, `rtst-test`) and `tests.yml` jobs (`select`, `shared`, `rtst`) have not run on GitHub; the first PR run and the first `main` push show them.
+- **Device:** the new `release-shared.yml` gates (`shared-test`, `rtst-test`, called by both product workflows) and `tests.yml` jobs (`select`, `shared`, `rtst`) have not run on GitHub; the first PR run and the first `main` push show them.
 
 ### Slice 365: `worker/catalogue.test.mjs` LF test on a Windows checkout ([slice](slices/365-catalogue-lf-test-windows.md))
 
