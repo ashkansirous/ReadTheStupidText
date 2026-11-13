@@ -1,6 +1,6 @@
 ### Slice 359 — Dino: a drawn back-cover picture for every book, with the credits shown over it
 
-*Planned 2026-11-13. Step 1 (five style samples for Lion and Mouse) is running; the rest waits on the user's pick.*
+*Planned 2026-11-13. Step 1 done (style picked); step 2 next.*
 
 **Touches:** `content/dino/*/back-cover.jpg` (new), `content/dino/*/high-res/back-cover.jpg` (new, LFS), `content/dino/*/art.md`, `content/dino/*/book.json`, `tools/DinoReader.BookBuilder/**`, `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryJson*.cs`, `src/DinoReader.Core/BackCover*.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/TextPages.cs`, `src/DinoReader.App/PicturePages.cs`, `tests/DinoReader.Tests/**`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/skills/create-dino-story/prompts.md`, `.claude/agents/dino-story-illustrator.md`, `.claude/agents/dino-story-reviewer.md`
 
@@ -28,8 +28,17 @@ Slice 237's landscape, Farsi and reading-mode checks were also never run after t
 
 ## Work
 
-- [ ] 1. Five back-cover samples for Lion and Mouse (picnic, bedtime, walking off, crown swap, frame), saved to
+- [x] 1. Five back-cover samples for Lion and Mouse (picnic, bedtime, walking off, crown swap, frame), saved to
   scratch, shown to the user. Write the picked style and its prompt into `prompts.md` and this file.
+  The user, 2026-11-13: "they all look good. sample-2.jpg fits the story as the end. sample-5.jpg is funny. for
+  this one lets go with sample2. I like sample1 as well, but less than these 2. save the prompt for these 3
+  options. the lion and the mouse goes with sample-2. for the rest you can pick by yourslef which style to choose
+  and I will let you know if I dont like it to generate other options."
+  So: Lion and Mouse uses sample 2 (bedtime), from `scratchpad\backcover-samples\sample-2.jpg` of session
+  a87d275d (1792x2400, 3.1 Pro, untouched); it is copied into the build branch in step 2. The bedtime, frame and
+  picnic prompts are in `prompts.md` (*Back cover*). For every other book the coordinator picks the style that
+  fits; the user asks for other options if they dislike one. Sample 3 (walking off) had the Lion upright on two
+  legs, which the drawing agent passed and the coordinator caught.
 - [ ] 2. Smallest end to end, one book: Lion and Mouse's `back-cover.jpg` (app size) and `high-res/back-cover.jpg`;
   the builder packs it; the reader shows it as the back cover with the credit lines centred over the middle,
   never voiced, never counted. Android and iOS share the MAUI code; Windows head too.
