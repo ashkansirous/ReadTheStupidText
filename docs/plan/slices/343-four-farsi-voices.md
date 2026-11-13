@@ -1,5 +1,7 @@
 # Slice 343: Listening page: Four Farsi voices (Slice 89)
 
+*Parked 2026-11-13 (index pass): needs the user's ear; headless night sessions have no Artifact tool to publish the listening page. Run from an interactive session.*
+
 *Park note (moved back to planned by the 2026-11-12-1337 feedback loop, user answer 2026-11-01): it was parked: needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page). A night wave that hits the same blocker parks it again with that reason.*
 
 *Parked (night 2026-11-08-1703 wave 1): needs the user's ear; run from an interactive session (headless night sessions have no Artifact tool to publish the listening page).*
