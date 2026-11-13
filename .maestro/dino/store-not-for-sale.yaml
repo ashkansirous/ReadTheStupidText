@@ -1,0 +1,89 @@
+# Slice 358: a sold book with no price shows one of two strips inside its card and no Buy button. The store did not answer (offline) is the calm sand strip "Connect to the internet to buy";
+# the store answered but gave no price is the red strip "This book can't be bought right now. Please try again later." The Debug pretend store (hook fake-purchases) is first offline (offline=1), then
+# online with a blank price (price " ": the store's answer for a product it did not price), which is what Play gives for an unknown or inactive product. Against the old behaviour both cases said "Connect to the internet to buy",
+# so the red-strip assertion fails there. Order matters: an unreachable read keeps the last answer, so the offline half comes first.
+# Android and iOS alike (the hooks go through the shared dispatcher). The gate is not tapped: the enter-grown-up hook stands in for it.
+# UNVERIFIED on a device: that the hook keeps the blank price " " (the Debug hook parser is not part of this slice).
+# expect-log: HOOK test-store ok ok
+# expect-log: HOOK fake-purchases ok on paid=1 owned=0
+# expect-log: HOOK skip-first-run ok
+# expect-log: [StoreSale] row state=ConnectToBuy
+# expect-log: [Purchases] prices missing count=1 of=1
+# expect-log: [StoreSale] row state=NotForSaleNow
+appId: uk.sirous.dinoreader.dbg
+name: A paid book with no price says connect to the internet, or can't be bought right now, and has no Buy button
+onFlowComplete:
+  - launchApp:
+      stopApp: false
+      arguments:
+        cmd: fake-purchases
+        mode: "off"
+---
+- launchApp:
+    # clearState: wipes the app's data (settings, downloaded packs, own books); fine here: the flow uses the Debug test store and the pretend store only, and needs a fresh install so the sold book is not on the shelf.
+    clearState: true
+    arguments:
+      cmd: test-store
+      mode: ok
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 60000
+# The store does not answer: the sold test book has no price and the calm sand strip says why.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-purchases
+      mode: "on"
+      paid: "gingerbread-man"
+      offline: "1"
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: store
+- extendedWaitUntil:
+    visible:
+      id: GalleryStoreSub
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: StoreRowConnectToBuy
+    timeout: 30000
+- assertVisible: "Connect to the internet to buy"
+- assertNotVisible:
+    id: StoreRowNotForSale
+# The store answers, with no price for the product: the red strip, and still no button.
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: fake-purchases
+      mode: "on"
+      paid: "gingerbread-man"
+      price: " "
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: settings
+- launchApp:
+    stopApp: false
+    arguments:
+      cmd: enter-grown-up
+      tab: store
+- extendedWaitUntil:
+    visible:
+      id: StoreRowNotForSale
+    timeout: 30000
+- assertVisible: "This book can.t be bought right now\\. Please try again later\\."
+- assertNotVisible:
+    id: StoreRowConnectToBuy

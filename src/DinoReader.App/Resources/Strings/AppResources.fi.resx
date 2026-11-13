@@ -361,6 +361,7 @@
   <data name="Store_BuyFor" xml:space="preserve"><value>Osta {0}</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>Osta {0} hintaan {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Muodosta internetyhteys ostaaksesi</value></data>
+  <data name="Store_NotForSaleNow" xml:space="preserve"><value>Tätä kirjaa ei voi ostaa juuri nyt. Yritä myöhemmin uudelleen.</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>Odottaa hyväksyntää</value></data>
   <data name="Error_PaymentRequired" xml:space="preserve"><value>Sinun täytyy ensin ostaa tämä kirja.</value></data>
   <data name="Error_Server" xml:space="preserve"><value>Palvelimella tapahtui virhe. Yritä myöhemmin uudelleen.</value></data>

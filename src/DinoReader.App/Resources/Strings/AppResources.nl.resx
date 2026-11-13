@@ -361,6 +361,7 @@
   <data name="Store_BuyFor" xml:space="preserve"><value>Koop {0}</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>Koop {0} voor {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Maak verbinding met internet om te kopen</value></data>
+  <data name="Store_NotForSaleNow" xml:space="preserve"><value>Dit boek kan nu niet worden gekocht. Probeer het later opnieuw.</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>Wacht op goedkeuring</value></data>
   <data name="Error_PaymentRequired" xml:space="preserve"><value>Je moet dit boek eerst kopen.</value></data>
   <data name="Error_Server" xml:space="preserve"><value>Er ging iets mis op de server. Probeer het later opnieuw.</value></data>

@@ -361,6 +361,7 @@
   <data name="Store_BuyFor" xml:space="preserve"><value>Køb {0}</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>Køb {0} for {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Opret forbindelse til internettet for at købe</value></data>
+  <data name="Store_NotForSaleNow" xml:space="preserve"><value>Denne bog kan ikke købes lige nu. Prøv igen senere.</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>Venter på godkendelse</value></data>
   <data name="Error_PaymentRequired" xml:space="preserve"><value>Du skal købe denne bog først.</value></data>
   <data name="Error_Server" xml:space="preserve"><value>Noget gik galt på serveren. Prøv igen senere.</value></data>

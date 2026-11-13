@@ -45,6 +45,96 @@ public class BookAccessTests
     }
 
     [Fact]
+    public void WithoutAPrice_AfterTheStoreAnswered_TheCardSaysNotForSaleNow_WithNoButton()
+    {
+        foreach (string? price in new string?[] { null, "", "  " })
+        {
+            StoreCardPlan plan = BookAccess.Plan(true, Book(), false, None, None, price, StoreAnswer.Answered);
+            Assert.Equal((BookState.Buyable, StoreAction.NotForSaleNow, (string?)null), (plan.State, plan.Action, plan.Price));
+        }
+    }
+
+    [Fact]
+    public void WithoutAPrice_BeforeTheStoreAnswered_TheCardStillSaysConnectToBuy()
+    {
+        StoreCardPlan plan = BookAccess.Plan(true, Book(), false, None, None, null, StoreAnswer.NotReached);
+        Assert.Equal(StoreAction.ConnectToBuy, plan.Action);
+    }
+
+    [Theory]
+    [InlineData(StoreAnswer.NotReached, StoreAction.ConnectToBuy)]
+    [InlineData(StoreAnswer.PriceQueryFailed, StoreAction.NotForSaleNow)]
+    [InlineData(StoreAnswer.Restricted, StoreAction.NotForSaleNow)]
+    [InlineData(StoreAnswer.Answered, StoreAction.NotForSaleNow)]
+    public void WithoutAPrice_EveryWayTheStoreReadWent_PicksItsStrip(StoreAnswer answer, StoreAction expected)
+    {
+        Assert.Equal(expected, BookAccess.Plan(true, Book(), false, None, None, null, answer).Action);
+    }
+
+    [Theory]
+    [InlineData(StoreAnswer.NotReached)]
+    [InlineData(StoreAnswer.PriceQueryFailed)]
+    [InlineData(StoreAnswer.Answered)]
+    public void WithAPrice_TheCardIsBuy_WhateverTheLatestReadSaid(StoreAnswer answer)
+    {
+        Assert.Equal(StoreAction.Buy, BookAccess.Plan(true, Book(), false, None, None, "£0.89", answer).Action);
+    }
+
+    [Fact]
+    public void ARestrictedDevice_NeverShowsBuy_EvenWithAKeptPrice()
+    {
+        StoreCardPlan plan = BookAccess.Plan(true, Book(), false, None, None, "£0.89", StoreAnswer.Restricted);
+        Assert.Equal((StoreAction.NotForSaleNow, (string?)null), (plan.Action, plan.Price));
+    }
+
+    [Fact]
+    public void ABlankPrice_IsNoPrice_ForThePlan_TheUnpricedList_AndTheKeptPrices()
+    {
+        StoreItem own = Book();
+        StoreItem bundled = Book(BookSale.Paid, "b-own", "bundle") with { Id = "b" };
+        var prices = new Dictionary<string, string> { [Product] = " ", ["b-own"] = "", ["bundle"] = "£3" };
+        Assert.Null(BookAccess.PriceOf(own, prices));
+        Assert.Equal("£3", BookAccess.PriceOf(bundled, prices));
+        Assert.Equal([own.Id], BookAccess.UnpricedBooks([own, bundled], prices));
+        IReadOnlyDictionary<string, string> kept = BookAccess.KeepPrices(new Dictionary<string, string> { [Product] = "£1", ["x"] = " " }, new Dictionary<string, string> { [Product] = "  " });
+        Assert.Equal("£1", kept[Product]);
+        Assert.False(kept.ContainsKey("x"));
+    }
+
+    [Theory]
+    [InlineData(false, false, false, StoreAnswer.NotReached)]
+    [InlineData(false, true, true, StoreAnswer.NotReached)]
+    [InlineData(true, true, false, StoreAnswer.PriceQueryFailed)]
+    [InlineData(true, true, true, StoreAnswer.PriceQueryFailed)]
+    [InlineData(true, false, true, StoreAnswer.Restricted)]
+    [InlineData(true, false, false, StoreAnswer.Answered)]
+    public void AnswerOf_NoInternetBeatsAFailedQuery_WhichBeatsRestricted(bool hasInternet, bool pricesFailed, bool restricted, StoreAnswer expected)
+    {
+        Assert.Equal(expected, BookAccess.AnswerOf(hasInternet, pricesFailed, restricted));
+    }
+
+    [Fact]
+    public void TheStoreAnswering_ChangesNothingForABookThatIsNotWaitingForAPrice()
+    {
+        HashSet<string> owned = [Product];
+        Assert.Equal(StoreAction.Get, BookAccess.Plan(true, Book(), false, owned, None, null, StoreAnswer.Answered).Action);
+        Assert.Equal(StoreAction.OnShelf, BookAccess.Plan(true, Book(), true, None, None, null, StoreAnswer.Answered).Action);
+        Assert.Equal(StoreAction.Waiting, BookAccess.Plan(true, Book(), false, None, new HashSet<string> { Product }, null, StoreAnswer.Answered).Action);
+        Assert.Equal(StoreAction.Get, BookAccess.Plan(false, Book(), false, None, None, null, StoreAnswer.Answered).Action);
+    }
+
+    [Fact]
+    public void UnpricedBooks_NamesTheSoldBooksWithNoPricedProduct_NotTheBooksWithOne()
+    {
+        StoreItem own = Book(BookSale.Paid, "a", "bundle");
+        StoreItem other = Book(BookSale.Paid, "b") with { Id = "other" };
+        StoreItem free = Book(BookSale.Free, "c") with { Id = "free" };
+        var prices = new Dictionary<string, string> { ["bundle"] = "$1.99", ["b"] = " " };
+        Assert.Equal(["other"], BookAccess.UnpricedBooks([own, other, free], prices));
+        Assert.Empty(BookAccess.UnpricedBooks([], prices));
+    }
+
+    [Fact]
     public void AnOwnedBook_IsGotLikeAFreeOne_AndMarkedDownloadedOnTheShelf()
     {
         HashSet<string> owned = [Product];
