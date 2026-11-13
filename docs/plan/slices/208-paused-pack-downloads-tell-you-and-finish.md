@@ -108,6 +108,7 @@ Two frames in `docs/design/rtst-phone/Batch 42 Updates and Paused Downloads.dc.h
 
 #### Not yet verified
 
+- Run 2026-11-13 (S21, wireless adb, `run-checks.ps1`, builds from origin/main 1a6d5ef7): `paused-notification-network` PASSED in 57 s (title "Download paused. Tap to finish.", text "English voice (124 MB) · 0% done"; tap resumed `PACKDL start pack=supertonic-3 offset=990290`; notice cleared). Still open from the list below: the other text variants, the stale partial resume/delete, the cold-run marker, Dino first download, iOS, and the `device_config` time-limit variant (never passed on an emulator, not run).
 - The whole S21 Verification list: paused notice within ~35 s and tap resumes; notification text (language and size); stale partial wanted resumes, unwanted deleted.
 - Dino's launch resume of a wanted partial (`ResumeStalePartialsAsync`) on a device: never run.
 - Settled 2026-11-01 by Slice 233: the netpolicy per-app block did not stop the foreground-service download on the S21; the check now drops the network with the Debug hook `drop-pack-network`.

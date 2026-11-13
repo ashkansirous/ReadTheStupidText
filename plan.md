@@ -18,6 +18,7 @@ Open slices only. Finished slices (172 rows) are in [slices-done](docs/plan/note
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
+| 372 | S21 check fixes: Samsung notification flags in `_lib.ps1`, `Stop-DeviceRestore` false warning, `book-end` budget | planned | | | [372-s21-check-fixes-2026-11-13.md](docs/plan/slices/372-s21-check-fixes-2026-11-13.md) |
 | 366 | Tidy by product 1/6: plan.md split into RTST, Dino and Shared tables; every slice file tagged with its product | planned | | | [366-plan-split-by-product.md](docs/plan/slices/366-plan-split-by-product.md) |
 | 367 | Tidy by product 2/6: root CLAUDE.md keeps shared rules, each app's rules move to its own folder (Claude's suggestion, not yet approved by the user) | planned | | | [367-claude-md-per-product.md](docs/plan/slices/367-claude-md-per-product.md) |
 | 368 | Tidy by product 3/6: tests for the shared code in their own test project | planned | | | [368-shared-tests-project.md](docs/plan/slices/368-shared-tests-project.md) |
