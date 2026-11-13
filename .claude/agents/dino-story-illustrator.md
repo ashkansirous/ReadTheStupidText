@@ -24,6 +24,8 @@ your mode:
   drawn in that chat after the line-up and saved as `characters/place-<slug>.jpg`, each listed in `art.md` with the pages that use it. Then report.
 - `pages <group>` (e.g. `pages g1`; the brief lists the group's pages): only your pages, in your own tab, lock owner `<stem>-<group>`,
   candidates and accepted originals in `<working folder>/<group>/`, check rows in `<working folder>/<group>/checks.md`.
+  A group is at most 5 pictures, and at most 3 in a redraw group (SKILL.md's redraw rule): when your group's pictures are accepted
+  (or skipped with a reason), stop and report, never carry on into other pages (a fresh agent per group keeps the context small; the caller splits the book).
   Paste the line-up plus the place sheet your pages use: inside one lock hold, `Put` the line-up and paste, wait for its thumbnail,
   then `Put` the place sheet and paste. Never edit `art.md`; never prepare, stamp or make the contact sheet (steps 6-7).
 - `finish`: copy every group's accepted pictures into the working folder, merge the groups' check rows into
@@ -40,15 +42,25 @@ writer's worktree when a writer ran (its text and art record are uncommitted the
 the contact sheet live only in the working folder. Touch nothing else.
 `<target>` is `content/dino/<stem>` (starter and store books alike, Slice 157).
 
-1. Read, in full: `.claude/skills/create-dino-story/SKILL.md` (steps 2-6), `prompts.md` beside it, and the
+1. Read `.claude/skills/create-dino-story/SKILL.md` (steps 2-6), `prompts.md` beside it, and the
    book's art record `content/dino/<stem>/art.md` (cast lines, picture plan, earlier attempts). The art
-   record's character lines and the saved line-up are the canonical looks; prompts follow the picture.
+   record's character lines and the saved line-up are the canonical looks; prompts follow the picture. Always read SKILL.md's
+   Gemini rules (3 requests per chat, redo, Slice 350 high-res, lock and finish rules) and `prompts.md` in full, once. Only the
+   slice file and the art record may be read by the sections your mode needs (the slice file only for the lines your pages name).
+   Never re-read any of them per page (Slice 356: the context re-read on every turn is what the run costs).
 2. Characters: if `content/dino/<stem>/characters/` already holds an accepted line-up, use it.
    Otherwise draw the sheets and line-up in one character chat, check them, and save them there.
 3. Pages: one prompt per Gemini chat: every picture gets its own new chat (Slice 350; a redo also gets a new chat; only a small patch of a bad result may continue a chat, and only while that chat stays at or under 3 picture requests), each started by pasting the line-up and spelling
-   out every outfit, then one prompt per page from the plan, every picture prompt ending with the `<SIZE>` line from prompts.md (small, 1K, 896x1200). Set the 3:4 aspect ratio in every chat and
-   confirm it with a zoom before the first prompt. Take menu steps one at a time and look before clicking:
-   a stray click on a suggestion chip sends a prompt you didn't write. If a chat draws an earlier scene
+   out every outfit, then one prompt per page from the plan, every picture prompt ending with the `<SIZE>` line from prompts.md (small, 1K, 896x1200).
+   The picture sequence (Slice 356) is: new chat (or open), health check, paste sequence (step 4), `__setupPicture`, `__waitForPicture`,
+   `__grab` plus save, full-size check. `await window.__setupPicture(<prompt>, <pictures attached>)` does the whole set-up in one
+   `javascript_tool` call: **+** menu, Create image, Aspect ratio 3:4 (confirmed as selected), the prompt (length checked), then Send
+   through `__sendChecked`. It returns one line such as `ok: create-image, 3:4, 1 attachment, prompt 812 chars, sent`. Take no
+   screenshot after an `ok` line; screenshot or zoom only when the line reports a problem. `MISSING: <item>` means that control wasn't
+   found (`MISSING: composer area` means it couldn't find the prompt area to count attachments: never assume 0 or 1, take one
+   screenshot; `__attachmentCount()` returns `UNKNOWN` then): do that one picture click by click (the fallback: `find` refs only, one menu step at a time, a zoom to confirm 3:4 before
+   the prompt, `__sendChecked` to send), never by coordinates, since a stray click on a suggestion chip sends a prompt you didn't
+   write. Other lines (`REFUSED`, `SENT WITHOUT TEXT`, `UNCONFIRMED`) are `__sendChecked`'s, with its rules below. If a chat draws an earlier scene
    again instead of the new one, start a new chat for it (that is the rule already). One picture per new chat; a small patch of a bad result may continue that chat while it stays at or under 3 picture requests (the user's rule, Slice 350 decisions); if the bad picture would steer the patch, start a new chat instead.
 4. Helpers in `.claude/skills/create-dino-story/`:
    - `pwsh -STA gemini-clipboard.ps1 Put <file>` puts the line-up on the clipboard to paste;
@@ -56,10 +68,16 @@ the contact sheet live only in the working folder. Touch nothing else.
      with the page): `CAPTCHA` (google.com/sorry) means stop and report at once; otherwise not `OK` means reload once, check
      again after 5 s, and stop and report if it is still not `OK`. Never reload more than 3 times in a row to look for
      a model or menu item that isn't there: report it missing (2026-11-12: about 16 reloads for "3.8 Flash" ended in a CAPTCHA). Never wait on a page that won't load;
-   - **send only through `await window.__sendChecked(<the exact prompt>, <pictures attached>)`**, never a bare Send
-     click. Order: paste the line-up (and wait for its thumbnail), put the prompt text in, `window.__markPictures()`,
-     then `__sendChecked(prompt, 1)` (`0` for a text-only patch; re-inject `gemini-grab.js` first in a tab injected
-     before this helper existed). `REFUSED: ...` means nothing was sent: fix what it names (a prompt that differs:
+   - **paste sequence**: take the lock, `Put`, one ctrl+v (own `tabId`), then poll `window.__attachmentCount()` until it
+     equals the number of pictures pasted (a script check, no screenshot), then release the lock: the lock is held only from
+     `Put` to the confirmed thumbnail. If the count stays 0 after 5 s, click the prompt box through its `find` ref and paste once more;
+     still 0, release the lock and report it;
+   - **send only through `await window.__setupPicture(<the exact prompt>, <pictures attached>)`** (it sends through
+     `__sendChecked`; `{ dryRun: true }` as the third argument fills everything and sends nothing, but leaves the chat in Create image +
+     3:4 with the prompt filled: clear the box with `execCommand('selectAll')` + `execCommand('delete')` and click the Create image
+     chip to deselect it before any text-only message, or start a new chat), or `__sendChecked(prompt, n)`
+     itself in the click-by-click fallback (put the prompt in, `window.__markPictures()`, then `__sendChecked(prompt, 1)`; `0` for
+     a text-only patch; re-inject `gemini-grab.js` first in a tab injected before these helpers existed). Never a bare Send click. `REFUSED: ...` means nothing was sent: fix what it names (a prompt that differs:
      clear the box with `execCommand('selectAll')` + `execCommand('delete')` and put the prompt in again) and call again.
      `SENT WITHOUT TEXT: ...` means a message went out without the prompt: that chat is spoiled, start a new chat
      (never patch it), and never count its picture as a model's result (2026-11-12: two models were judged on
@@ -67,14 +85,18 @@ the contact sheet live only in the working folder. Touch nothing else.
      rendered differently; `__waitForPicture()` still works) and never send the prompt again into that chat;
    - while Gemini draws, never use fixed sleeps: `window.__markPictures()` before sending, then
      `await window.__waitForPicture()` (returns `READY` as soon as the picture exists; repeat on `WAITING`);
-   - `gemini-grab.js` is injected once per page load with `javascript_tool`, then `await window.__grab(1)`
+   - `gemini-grab.js` is injected once per page load with `javascript_tool` (never paste its body into a call more than once per
+     load; a new chat that keeps the page loaded needs no new injection, only `window.__geminiHealth()`, and if
+     `window.__setupPicture` is undefined the page was reloaded: inject again), then `await window.__grab(1)`
      clicks the newest picture's "Download full size image" button, and Chrome writes the full-size file to `Downloads`;
    - `pwsh gemini-take-download.ps1 <out folder>/cand-<page>.jpg -Bytes <n>` (`<n>` = the size `__grab` printed; add `-Untouched` for
      Slice 350 high-res pictures, which keeps the file byte for byte, and use the path it prints) waits for that download, moves it out of
      `Downloads` and saves it (a WARNING line means it isn't 3:4: don't use it). No clipboard and no real click,
      so saving keeps working while the PC is locked. Only if no download arrives, fall back to the clipboard
      route in SKILL.md step 6.
-5. Check every candidate by reading the saved file at full size against the step 5 checklist, counting
+5. Keep turns few and short (Slice 356): no `computer` screenshot after a successful script line (zoom or screenshot only on a
+   reported problem), and Read each saved picture once for the check, never again after the verdict.
+   Check every candidate by reading the saved file at full size against the step 5 checklist, counting
    every character and comparing each outfit with the line-up item by item. Run `pwsh <repo or worktree root>/.claude/skills/create-dino-story/line70.ps1 <file>` (absolute path;
    `<file>` is in your out folder, never in the repo) and read the `.line70.png` it writes next to the file: any part of any character (feet, tail, a held berry) below the red line fails. A fail: write why, ask again
    (a new chat; a small patch may continue the chat only while it stays at or under 3 picture requests), check again. A pass: rename it to `cover.jpg` / `<page>.jpg` (Slice 350 high-res pictures keep the extension `-Untouched` gave them, are never prepared or re-encoded, and go to `content/dino/<book>/high-res/` as the slice's part D says).
