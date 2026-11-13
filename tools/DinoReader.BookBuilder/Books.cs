@@ -80,6 +80,12 @@ internal sealed class BookFolder(string stem, string path, BookInfo info)
 
     public string CoverThumbPath => Path.Combine(Dir, CoverThumbFile);
 
+    /// <summary>The app-size back-cover picture (Slice 359); the print-size original sits in <c>high-res/</c> and is never read.</summary>
+    public string BackCoverPath => Path.Combine(Dir, DinoReader.Core.BackCover.PictureName);
+
+    /// <summary>The book's back cover with its picture named when the book has one; a book without the file keeps Slice 237's live credits page (only Good Enough may, <c>check</c> says so).</summary>
+    public BackCover? BackCover => Info.BackCover is { } cover && File.Exists(BackCoverPath) ? cover with { PictureFile = DinoReader.Core.BackCover.PictureName } : Info.BackCover;
+
     public string LinesPath => Path.Combine(Dir, LinesFile);
 
     public string TitlesPath => Path.Combine(Dir, TitlesFile);

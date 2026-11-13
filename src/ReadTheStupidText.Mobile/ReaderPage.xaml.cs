@@ -393,6 +393,9 @@ public partial class ReaderPage : ContentPage
         }
 
         _lastSpokenText = text;
+#if DEBUG
+        _sentenceMovedLogged = false; // Slice 361: every new read logs SENTENCE_MOVED once, even with no Idle between reads
+#endif
         await SpeakWithLoadingAsync(text);
     }
 
@@ -820,11 +823,31 @@ public partial class ReaderPage : ContentPage
         ScrollToHighlight(text.Length);
 #if DEBUG
         ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"SENTENCE {change.ChunkIndex} {change.SentenceIndex}");
+        LogSentenceMovedOnce(change.SentenceIndex);
 #endif
     }
 
+#if DEBUG
+    private bool _sentenceMovedLogged;
+
+    // Slice 361: a chunk-agnostic test marker, written once per read when the highlight first moves past a chunk's first sentence (the flow cannot know which chunk is the first multi-sentence one).
+    private void LogSentenceMovedOnce(int sentenceIndex)
+    {
+        if (sentenceIndex < 1 || _sentenceMovedLogged)
+        {
+            return;
+        }
+
+        _sentenceMovedLogged = true;
+        ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("SENTENCE_MOVED");
+    }
+#endif
+
     private void ClearHighlight()
     {
+#if DEBUG
+        _sentenceMovedLogged = false;
+#endif
         _sentenceSpans = null;
         _sentenceGate.Reset(-1);
         if (_highlight is not null)

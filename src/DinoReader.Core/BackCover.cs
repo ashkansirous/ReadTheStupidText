@@ -22,8 +22,11 @@ public sealed record BackCoverLine(BackCoverLineKind Kind, string? Name = null);
 /// In <c>story.json</c> it travels as one last page whose text is the credits in English, so an older app (which knows nothing of it) reads that page like any other
 /// (<see cref="BackCoverEnglish"/>); this app takes the page back out and draws it (<see cref="StoryJson"/>).
 /// </summary>
-public sealed record BackCover(string StoryBy, bool Retold, string Illustration, int Year, int Month)
+public sealed record BackCover(string StoryBy, bool Retold, string Illustration, int Year, int Month, string? PictureFile = null)
 {
+    /// <summary>The drawn back-cover picture's file name in the story folder and package (Slice 359); the book's own file is <c>content/dino/&lt;book&gt;/back-cover.jpg</c>.</summary>
+    public const string PictureName = "back-cover.jpg";
+
     /// <summary>The name of the person who retells the classics and draws every book.</summary>
     public const string Maker = "Ashkan Sirous";
 
@@ -82,14 +85,15 @@ public sealed record BackCover(string StoryBy, bool Retold, string Illustration,
     }
 
     /// <summary>The back cover for the file's fields, or null when they cannot make one (no names, a month that is not <c>yyyy-MM</c>).</summary>
-    public static BackCover? TryCreate(string? storyBy, bool retold, string? illustration, string? month)
+    public static BackCover? TryCreate(string? storyBy, bool retold, string? illustration, string? month, string? pictureFile = null)
     {
         if (string.IsNullOrWhiteSpace(storyBy) || !TryParseMonth(month, out int year, out int monthNumber))
         {
             return null;
         }
 
-        return new BackCover(storyBy.Trim(), retold, string.IsNullOrWhiteSpace(illustration) ? Maker : illustration.Trim(), year, monthNumber);
+        return new BackCover(storyBy.Trim(), retold, string.IsNullOrWhiteSpace(illustration) ? Maker : illustration.Trim(), year, monthNumber,
+            string.IsNullOrWhiteSpace(pictureFile) ? null : pictureFile.Trim());
     }
 
     /// <summary>The year and month of <c>yyyy-MM</c> or of a full <c>yyyy-MM-dd</c> date.</summary>

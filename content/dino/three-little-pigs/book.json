@@ -2,7 +2,7 @@
   "kind": "Starter",
   "id": "966400017c494fb5b045786f53852c9e",
   "title": "The Three Little Pigs",
-  "version": 14,
+  "version": 15,
   "ageMin": 3,
   "ageMax": 6,
   "author": "Traditional",
@@ -57,7 +57,7 @@
     "Pop": "Pig",
     "Pim": "Pig"
   },
-  "contentHash": "1cb6aba7723d97c218440db668f26520bacf43be0b35d06f477fe9cac9949531",
+  "contentHash": "7af8787196c9da7eccece9a4bf1418b34639ef863fe5c1efd8c1caf5e416629a",
   "creditsByLanguage": {
     "ar": "حكاية شعبية مُعاد سردها · مجانية للمشاركة",
     "da": "Genfortalt folkeeventyr · frit at dele",

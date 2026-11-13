@@ -5,8 +5,9 @@ namespace DinoReader.Tests;
 /// <summary>
 /// Slice 274: on iOS 17 and older, a MAUI view whose platform view is not a MovedToWindow-raising type (UIButton, UISlider, UISwitch, UIStepper, UIProgressView, UIImageView, UIScrollView,
 /// a web view, the NavigationPage's UINavigationController view) gets managed KVO observers when anyone subscribes to its Loaded or Unloaded. Discarded while unloaded, such a view crashes in
-/// `-[UIView dealloc]` (dotnet/maui #38662, fixed after 10.0.120). Pages (their view is a MauiView) and ContentView, Border, Grid and the other layouts (LayoutView is a MauiView) are safe,
-/// so a subscription is allowed only on the receivers listed here, each checked against MAUI 10.0.120 source (docs/plan/slices/274-dino-ios-crash-after-leaving-parent-page.md).
+/// `-[UIView dealloc]` (dotnet/maui #38662, cherry-picked into MAUI 10.0.130 but unproven on a device until the Slice 295 TestFlight check). Pages (their view is a MauiView) and ContentView, Border, Grid and the other layouts (LayoutView is a MauiView) are safe,
+/// so a subscription is allowed only on the receivers listed here, each checked against MAUI 10.0.120 source and kept as is on 10.0.130 until that TestFlight check proves #38662; the allow-list is re-checked
+/// against 10.0.130 when the workaround is removed (docs/plan/slices/274-dino-ios-crash-after-leaving-parent-page.md, docs/plan/slices/295-bump-maui-version-for-pr-38662.md).
 /// </summary>
 public partial class LifecycleSubscriptionTests
 {

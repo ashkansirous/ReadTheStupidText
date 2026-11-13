@@ -1,6 +1,7 @@
 // Dino Reader's remote switchboard (Slice 132, Decision 138). The owner edits one R2 object,
 // `dinoreader/config.json`, with `wrangler r2 object put`; this answers
 //   GET /api/app-config    the checked config, read fresh from R2 on every request
+// `catalogue.price` (Slice 355) is the display text the public /books page shows next to a paid book; the apps ignore it.
 // Per platform (android, ios, windows) `minVersion` forces an update and `latestVersion` only shows a quiet
 // line; `telemetry` holds the usage-count switch and sample rate (Slices 133-134); `crashReports.enabled` (Slice 227) switches crash reports on (default off). A missing
 // file, or any field in it that fails its check, falls back to the safe default (no forced update, telemetry
@@ -52,6 +53,11 @@ export interface PaidBooksConfig {
   readonly enabled: boolean;
 }
 
+/** The price the public books page shows next to a paid book (Slice 355). A display text only: the apps show the store's own price. */
+export interface CatalogueConfig {
+  readonly price: string;
+}
+
 export interface AppConfig {
   readonly schemaVersion: number;
   readonly android: PlatformVersions;
@@ -60,7 +66,13 @@ export interface AppConfig {
   readonly telemetry: TelemetryConfig;
   readonly crashReports: CrashReportsConfig;
   readonly paidBooks: PaidBooksConfig;
+  readonly catalogue: CatalogueConfig;
 }
+
+export const DEFAULT_CATALOGUE_PRICE = "$0.99 / €0.99 / £0.99";
+const MAX_PRICE_LENGTH = 60;
+// ASCII controls plus the invisible Unicode format characters (category Cf: zero-width, bidi marks and overrides, BOM) and line/paragraph separators that could reverse or hide the price.
+const CONTROL_CHARACTERS = /[\x00-\x1f\x7f]|\p{Cf}|\p{Zl}|\p{Zp}/u;
 
 export const DEFAULT_CONFIG: AppConfig = {
   schemaVersion: APP_CONFIG_SCHEMA_VERSION,
@@ -70,6 +82,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   telemetry: { enabled: false, sampleRate: 0 },
   crashReports: { enabled: false },
   paidBooks: { enabled: false },
+  catalogue: { price: DEFAULT_CATALOGUE_PRICE },
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -105,6 +118,14 @@ function paidBooksOf(value: unknown): PaidBooksConfig {
   return raw["enabled"] === true ? { enabled: true } : DEFAULT_CONFIG.paidBooks;
 }
 
+function catalogueOf(value: unknown): CatalogueConfig {
+  const raw = isRecord(value) ? value : {};
+  const price = typeof raw["price"] === "string" ? raw["price"].trim() : "";
+  // A text of 1-60 characters with no control character; anything else keeps the default.
+  const usable = price.length > 0 && price.length <= MAX_PRICE_LENGTH && !CONTROL_CHARACTERS.test(price);
+  return usable ? { price } : DEFAULT_CONFIG.catalogue;
+}
+
 /** A checked config from parsed JSON; every missing or malformed part takes its default. */
 export function parseAppConfig(parsed: unknown): AppConfig {
   const raw = isRecord(parsed) ? parsed : {};
@@ -116,6 +137,7 @@ export function parseAppConfig(parsed: unknown): AppConfig {
     telemetry: telemetryOf(raw["telemetry"]),
     crashReports: crashReportsOf(raw["crashReports"]),
     paidBooks: paidBooksOf(raw["paidBooks"]),
+    catalogue: catalogueOf(raw["catalogue"]),
   };
 }
 

@@ -39,16 +39,40 @@ What three sources show (2026-11-13):
 - [ ] **iOS twin:** `IosPurchases` reports the same reason for ids in `invalidProductIdentifiers` or an empty response.
   **Windows:** `WindowsPurchases` the same for a product with no price.
 - [ ] **Say the right thing.** `BookAccess`: split "no price" into `ConnectToBuy` (the store really unreachable) and a new
-  `NotForSaleNow` ("Can't be bought right now, please try later") when the store answered but had no price. New string in
-  every `AppResources.<lang>.resx`. Unit tests in `tests/DinoReader.Tests` for each case.
+  `NotForSaleNow` when the store answered but had no price (the mock supersedes the old wording "Can't be bought right
+  now, please try later"). Strings: `Store_NotForSaleNow` "This book can't be bought right now. Please try again later."
+  (new, every `AppResources.<lang>.resx`; row shows it in the red strip with **no button**) and the existing
+  `Store_ConnectToBuy` "Connect to the internet to buy" (calm sand strip with a cloud glyph, **no button**, for the store
+  really unreachable). Unit tests in `tests/DinoReader.Tests` for each case.
 
 ## Verification
 
 - `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj`; `node --test worker/events.test.mjs`.
 - The user's phone, Play-installed build after the fix or the Play setup: the paid book shows its price and Buy button.
 - Emulator: with Billing unavailable the row says "Connect to the internet to buy"; a Debug hook that empties the product
-  details gives "Can't be bought right now".
+  details gives `Store_NotForSaleNow` ("This book can't be bought right now. Please try again later."), with no button.
 - After release: `store:prices_missing` count by version in dino_usage.
+
+#### Design (Dino Reader 2026-11-13 Missing States mock, section 2, added 2026-11-13)
+
+Two of the section's frames matter here: S2's last card (Jack and the Beanstalk) and S3's first card (The Little Red Hen). The mock
+agrees with the plan (two states, no button in either) and fixes the look and wording; the rest of S1-S3 is Slice 357's (see its
+Design for the card, cover and row sizes, which these strips sit inside). Hex as in the mock (use the `DinoTokens` key with the same
+value, else add one).
+- **NotForSaleNow (S2):** the book's card shows its row (cover 60 x 80, title, author, length) with **no button at the end**, and inside
+  the card under the row a strip: gap 8, padding 9 12, radius 12, fill `#FFF0EA`, text `#A4462A` (5.4:1 on the fill), 13.5 / 500, line 1.4,
+  an alert glyph at the start, text `Store_NotForSaleNow`. It is the same strip as Slice 357's errors; it needs no tap (the row's state
+  shows it as soon as the store answered without a price).
+- **ConnectToBuy (S3, store really unreachable):** same strip shape, but a calm sand fill `#F0E8D8`, text `#4a4460`, a cloud glyph (nothing is
+  wrong with the book), text `Store_ConnectToBuy`; no button. Shown while paid books have no price because the store did not answer.
+- Both strips are inline in the card, never a pop-up.
+
+New string for every language: `Store_NotForSaleNow`. `Store_ConnectToBuy` exists.
+
+**Plan changed to match the mock (2026-11-13):** the "Say the right thing" item now names the keys and wording: `Store_NotForSaleNow`
+"This book can't be bought right now. Please try again later." replaces "Can't be bought right now, please try later"; `Store_ConnectToBuy` gets
+the sand strip with the cloud glyph; neither has a button. The emulator check text is updated to the new wording. No sibling edit
+(Slice 357 owns the strip's shared styling). No `CLAUDE.md` clash.
 
 ## Device run
 
