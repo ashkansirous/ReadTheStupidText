@@ -1,6 +1,6 @@
 ### Slice 363 — Dino: the grown-ups' gate as one centred card on Windows and every wide screen
 
-*Built 2026-11-13, PR #1060 pending merge. Not yet tried on the Windows VM; Android emulator landscape gate flow passes.*
+*Built 2026-11-13, merged as PR #1060 (1b28bf6d). Not yet tried on the Windows VM; Android emulator landscape gate flow passes.*
 
 **Touches:** `src/DinoReader.App/GatePage.xaml`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/GrownUpGate.cs`, `src/DinoReader.Core/OnboardingLayout.cs`, `src/DinoReader.Core/GateKeypad.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `.maestro/dino/dino-landscape-gate.yaml`, `.maestro/dino/dino-tablet-upright-cards-gate.yaml`, `tools/desktop-vm/checks/dino-gate.ps1` (new), `tools/desktop-vm/Invoke-DesktopTest.ps1`, `tools/desktop-vm/checks/dino-settings.ps1`, `tools/desktop-vm/checks/dino-record.ps1`, `tools/desktop-vm/checks/dino-reorder.ps1`, `tools/desktop-vm/checks/dino-desktop-polish.ps1`, `tests/DinoReader.Tests/**`
 

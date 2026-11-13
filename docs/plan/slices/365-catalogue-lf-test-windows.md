@@ -1,6 +1,6 @@
 # Slice 365 — The catalogue LF test passes on a Windows checkout
 
-*Built 2026-11-13, PR #1061 pending merge.*
+*Built 2026-11-13, merged as PR #1061 (e338e0c5).*
 
 **Touches:** `.gitattributes` (`worker/catalogue.test.mjs` untouched: it already checks the right thing)
 
@@ -22,7 +22,7 @@ Existing Windows checkouts keep CRLF copies until those `site/` files are re-che
 - Medium (`reviews/s365-medium.md`) #1 is the same re-checkout note, applied. #2 applied by this docs pass.
 - Skipped #3 (`reviews/s365-medium.md`): "relies on git sniffing; siblings use explicit" - `text=auto` was verified to detect all the binaries as `-text`, and a per-extension list adds upkeep with no failing case.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-13)
 
 - `worker/CLAUDE.md`: `.gitattributes` forces LF for `site/**` (`text=auto eol=lf`); an existing Windows checkout keeps CRLF copies until those files are re-checked out (delete, `git checkout -- <file>`), and only then do `catalogue.test.mjs` and `check-site-eol.mjs` pass. (Slice 365: docs/plan/slices/365-catalogue-lf-test-windows.md)
 

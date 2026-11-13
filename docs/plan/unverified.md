@@ -4,6 +4,28 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 **Only what can be tested stays here** (the user, 2026-11-08: "keep only whatever I can test"). Each line starts with who tests it: **You** (the user: the iPhone, the S21 by hand, the Echo, the Sonos, an English or Farsi read, a decision or account only you hold) or **Device** (Claude, on the Android emulator or tablet AVD, the S21 by script, or the Windows VM). Checks nobody here can test were removed; behaviours only real use shows are watched in production data instead; checks that need the user's ear are listening-page slices 330-343. All three lists are in the [record](notes/2026-11-08-unverified-triage.md). Earlier on 2026-11-08: triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)). The 2026-11-08 device run (emulator, S21, VM) passed 49 more and the user's iPhone session 2 more; same record.
 
+### Slice 365: `worker/catalogue.test.mjs` LF test on a Windows checkout ([slice](slices/365-catalogue-lf-test-windows.md))
+
+- **Device:** the test run on Linux CI (the PR's checks).
+
+### Slice 364: Slice 357 design pass ([slice](slices/364-server-errors-design-pass.md))
+
+- **Device:** Windows head store page (Dino) on the VM (5.8 GB free, VM not started).
+- **Device:** RTST App x64 voice error text (`Error_Server` / `Error_VoiceGone`) on the VM.
+- **Device:** RTST Android pack-failure text on a device.
+- **Device:** iOS compile and TestFlight.
+- **You:** native reads of the 14 non-English languages (machine-drafted).
+- **Device:** a list-load 402/404 shows a book-specific text (`ShowOffline` reuses `StoreText.ErrorMessage`): check whether the list endpoint can answer those.
+
+### Slice 363: Dino grown-ups' gate card ([slice](slices/363-dino-windows-grownups-gate-card.md))
+
+- **Device:** Windows head on the VM: `dino-gate`, G1/G2 screenshots against the mock, Esc, and the four changed VM checks (5.8 GB free, no VM run).
+- **Device:** the tablet card flow on the tablet AVD.
+- **Device:** the hold ring's touch area on the short card (check #9).
+- **Device:** landscape phones under 393 dp high.
+- **Device:** Windows under about 470 wide and under 540 high.
+- **Device:** the UIA AutomationId `GateCard` on WinUI.
+
 ### Slice 359: Dino: a drawn back-cover picture for every book ([slice](slices/359-dino-back-cover-picture.md))
 
 - **Device:** iOS on a device (compile only).
