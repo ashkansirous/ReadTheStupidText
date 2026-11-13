@@ -162,6 +162,15 @@ None expected: the rules live in `.claude/skills/create-dino-story/SKILL.md` and
 
 None (tooling only, nothing user-facing).
 
+#### First after-numbers (2026-11-13, not a book page group)
+
+Five Lion and Mouse back-cover samples (Slice 359), one illustrator agent, `illustrator-usage.mjs` on its
+transcript: 44 turns, 12.2 min, 5 pictures; median 84 s per picture (baseline 115-144 s); 0.74M cache reads per
+picture, set-up excluded (baseline 1.77-2.84M: halved, target met); peak context 165k (target under about 150k:
+missed). Set-up before the first picture 175 s and 13 turns; 13 full-size picture reads, 2 screenshots, 1 zoom.
+Picture 3 took 202 s because Gemini returned an error and the agent resent in a new chat. Both checks below stay
+open: these were samples, not a page group, and which copy of `gemini-grab.js` the agent injected was not checked.
+
 #### Not yet verified
 
 - After-numbers on a real page group of a book (seconds per picture, peak context, cache reads per picture against the Baseline table), to be taken on the next real illustrator run with `illustrator-usage.mjs`.
