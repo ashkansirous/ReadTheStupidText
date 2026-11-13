@@ -19,6 +19,13 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
 
     public PurchaseSnapshot Snapshot => _snapshot;
 
+    private volatile bool _hasInternet;
+    private volatile bool _lastPricesFailed;
+    private string _reportedProblem = string.Empty;
+
+    /// <summary>How the latest read went (Slice 358); <see cref="BookAccess.Plan"/> turns it into the card's strip. One rule on every platform: a device with no internet has not reached the store (the sand strip); with internet any failed price query is a failure (the red strip).</summary>
+    public StoreAnswer Answer => BookAccess.AnswerOf(_hasInternet, _lastPricesFailed, _snapshot.Restricted);
+
     public string StoreName => platform.StoreName;
 
     private static readonly TimeSpan FreshFor = TimeSpan.FromSeconds(60);
@@ -77,28 +84,26 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
 
     private async Task<PurchaseSnapshot> ReadAsync(IEnumerable<StoreItem> items, bool restore, bool interactive, CancellationToken cancel)
     {
-        string[] products = [.. items.Where(i => i.Sale == BookSale.Paid).SelectMany(i => i.Products).Distinct()];
+        StoreItem[] listed = [.. items];
+        string[] products = [.. listed.Where(i => i.Sale == BookSale.Paid).SelectMany(i => i.Products).Distinct()];
         await _gate.WaitAsync(cancel);
         try
         {
             PurchaseSnapshot read = restore ? await platform.RestoreAsync(products, cancel) : await platform.RefreshAsync(products, interactive, cancel);
-            if (!read.Reachable)
-            {
-                fallbacks.Report(FallbackArea.Store, FallbackReason.StoreUnreachable); // the platform store could not be asked (no Play, offline, a timeout): the last snapshot stays
-            }
-
-            else if (read.Owned.Any(product => !read.Proofs.ContainsKey(product)))
-            {
-                fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // an owned book has no proof to send (Windows: no Store ID key), so its files are not asked for until the next read
-            }
-
-            Keep(read);
+            bool hasInternet = HasInternet(); // read once per read: the only thing that says "store not reached"
+            ReportReadProblems(listed, read, hasInternet);
+            Keep(read, hasInternet);
             return _snapshot;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             Debug.WriteLine($"Dino Reader could not read the store's purchases: {ex.Message}");
             fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
+            if (NoteRead(HasInternet(), pricesFailed: true))
+            {
+                Changed?.Invoke(this, EventArgs.Empty);
+            }
+
             return _snapshot;
         }
         finally
@@ -107,12 +112,90 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
         }
     }
 
-    // An unreachable store keeps what was known (a phone that went offline still reads and offers what it knew); a reachable one replaces what is owned and pending, and its prices
-    // overlay the last known ones (a price query that failed or timed out while the purchases query worked must not blank every card).
-    private void Keep(PurchaseSnapshot read)
+    // A device with no internet is the calm "connect" case: no event for it (the store was not reached), whatever the platform answered.
+    private void ReportReadProblems(IReadOnlyCollection<StoreItem> items, PurchaseSnapshot read, bool hasInternet)
     {
         if (!read.Reachable)
         {
+            if (hasInternet)
+            {
+                fallbacks.Report(FallbackArea.Store, FallbackReason.StoreUnreachable); // the platform store could not be asked though the device is online (no Play, a refused setup): the last snapshot stays
+            }
+
+            return;
+        }
+
+        if (hasInternet)
+        {
+            ReportPriceProblem(items, read);
+        }
+
+        if (read.Owned.Any(product => !read.Proofs.ContainsKey(product)))
+        {
+            fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed); // an owned book has no proof to send (Windows: no Store ID key), so its files are not asked for until the next read
+        }
+    }
+
+    // A failed price query is billing_error; sold books left with no priced product are prices_missing (counted per book, not per product, since a bundle alone may lack a price while every card shows Buy).
+    // A device that forbids purchases (Restricted) is an answer, not a fault: no event. The event is sent once per change of the problem, not on every read; the Debug marker on every read.
+    private void ReportPriceProblem(IReadOnlyCollection<StoreItem> items, PurchaseSnapshot read)
+    {
+        int sold = items.Count(i => i.Sale == BookSale.Paid);
+        int unpriced = read.PricesFailed || read.Restricted ? 0 : BookAccess.UnpricedBooks(items, BookAccess.KeepPrices(_snapshot.Prices, read.Prices)).Length; // the prices the cards use: the kept ones overlaid with this read
+        string? reason = read.PricesFailed ? FallbackReason.BillingError : (unpriced > 0 ? FallbackReason.PricesMissing : null);
+#if DEBUG
+        if (reason is not null)
+        {
+            ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write(read.PricesFailed ? "[Purchases] billing error prices" : $"[Purchases] prices missing count={unpriced} of={sold}");
+        }
+#endif
+        string key = reason is null ? string.Empty : $"{reason}:{unpriced}";
+        if (key == _reportedProblem)
+        {
+            return;
+        }
+
+        _reportedProblem = key;
+        if (reason is not null)
+        {
+            PurchaseTrace.Line($"price problem {reason}: unpriced_books={unpriced} sold_books={sold}");
+            fallbacks.Report(FallbackArea.Store, reason); // billing_error: the price query itself failed (its code is in the platform's trace line); prices_missing: the cards say "can't be bought right now"
+        }
+    }
+
+    // The device's internet is the one thing that decides "store not reached" (MAUI Connectivity: only NetworkAccess.Internet counts), the same on every platform.
+    private bool HasInternet()
+    {
+#if DINO_TEST_BOOKS
+        if (platform is SwitchablePurchases { Override: Testing.FakePurchases { Offline: true } })
+        {
+            return false; // the Debug fake's offline flag stands for a phone with no internet, so the "not reached" rule is the one under test
+        }
+#endif
+        return Connectivity.Current.NetworkAccess == NetworkAccess.Internet;
+    }
+
+    // Records how the latest read went; true when the answer changed (so the cards must be planned again).
+    private bool NoteRead(bool hasInternet, bool pricesFailed)
+    {
+        StoreAnswer before = Answer;
+        _hasInternet = hasInternet;
+        _lastPricesFailed = pricesFailed;
+        return before != Answer;
+    }
+
+    // A read the platform could not make keeps what was known; any other read replaces what is owned and pending even with no internet (a purchase made elsewhere still shows), and its prices
+    // overlay the last known ones (a price query that failed or timed out while the purchases query worked must not blank every card).
+    private void Keep(PurchaseSnapshot read, bool hasInternet)
+    {
+        bool flipped = NoteRead(hasInternet, read.PricesFailed || !read.Reachable);
+        if (!read.Reachable)
+        {
+            if (flipped)
+            {
+                Changed?.Invoke(this, EventArgs.Empty);
+            }
+
             return;
         }
 
@@ -122,7 +205,7 @@ public sealed class BookPurchases(IBookPurchases platform, IFallbackSink fallbac
 #if DEBUG
         ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Purchases] snapshot owned={read.Owned.Count} pending={read.Pending.Count} prices={read.Prices.Count}");
 #endif
-        if (!before.Owned.SetEquals(read.Owned) || !before.Pending.SetEquals(read.Pending) || !before.Prices.OrderBy(p => p.Key).SequenceEqual(_snapshot.Prices.OrderBy(p => p.Key)))
+        if (flipped || before.PricesFailed != read.PricesFailed || before.Restricted != read.Restricted || !before.Owned.SetEquals(read.Owned) || !before.Pending.SetEquals(read.Pending) || !before.Prices.OrderBy(p => p.Key).SequenceEqual(_snapshot.Prices.OrderBy(p => p.Key)))
         {
             Changed?.Invoke(this, EventArgs.Empty);
         }
@@ -205,8 +288,8 @@ public sealed class BookSales(AppConfigClient config, BookPurchases purchases)
     public StoreCardPlan PlanFor(StoreItem item, bool onShelf)
     {
         PurchaseSnapshot snapshot = purchases.Snapshot;
-        string? price = item.Products.Select(p => snapshot.Prices.GetValueOrDefault(p)).FirstOrDefault(p => p is not null);
-        return BookAccess.Plan(SwitchKnownOn, item, onShelf, snapshot.Owned, snapshot.Pending, price);
+        string? price = BookAccess.PriceOf(item, snapshot.Prices);
+        return BookAccess.Plan(SwitchKnownOn, item, onShelf, snapshot.Owned, snapshot.Pending, price, purchases.Answer);
     }
 
     public bool MayUpdate(StoreItem item) => BookAccess.MayUpdate(SwitchKnownOn, item, purchases.Snapshot.Owned);

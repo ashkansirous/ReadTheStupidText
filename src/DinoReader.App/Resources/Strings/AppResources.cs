@@ -430,6 +430,7 @@ public static class AppResources
 	public static string Store_BuyFor => Get();
 	public static string Store_BuyStory => Get();
 	public static string Store_ConnectToBuy => Get();
+	public static string Store_NotForSaleNow => Get();
 	public static string Store_Waiting => Get();
 	public static string Store_RestorePurchases => Get();
 	public static string Store_RedeemCode => Get();

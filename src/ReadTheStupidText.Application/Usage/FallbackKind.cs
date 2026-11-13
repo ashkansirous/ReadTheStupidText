@@ -266,6 +266,12 @@ public static class FallbackReason
     /// <summary>Slice 360 (area "premade_audio"): a piece had no sound because its book's pack for the reading language is missing on the phone while the child played.</summary>
     public const string PackMissingOnPlay = "pack_missing_on_play";
 
+    /// <summary>Slice 358 (area "store"): the platform store answered but gave no price for a paid book's product (unknown or inactive product, account not allowed to see it), so the card cannot offer Buy.</summary>
+    public const string PricesMissing = "prices_missing";
+
+    /// <summary>Slice 358 (area "store"): the platform store was reached but its price query ended in an error (Play response code not OK, StoreKit request failed or timed out, Windows Store error); the code is in the Debug log.</summary>
+    public const string BillingError = "billing_error";
+
     // Slice 362.
     /// <summary>Slice 362 (area "library"): the grown-up's recorded try of the onboarding could not be deleted from a book; the next start retries.</summary>
     public const string OnboardingTryNotDeleted = "onboarding_try_not_deleted";
@@ -283,7 +289,7 @@ public static class FallbackReason
         FontFallback, ShelfOrderUnreadable, StoryUnreadable, LanguageDetectFailed, PageReadFailed, IntroStateReset,
         OcrCropDegraded, UiaUnavailable, StoreFailed, PreferenceUnsaved, TapFailed, LayoutFailed,
         FileMissing, NoClip, AnimalClipCopyFailed, AnimalClipPlayFailed,
-        BackCoverMissing, WaitingWifi, PackMissingOnPlay, OnboardingTryNotDeleted,
+        BackCoverMissing, WaitingWifi, PackMissingOnPlay, PricesMissing, BillingError, OnboardingTryNotDeleted,
     ];
 }
 

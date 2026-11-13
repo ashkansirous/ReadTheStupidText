@@ -395,6 +395,7 @@
   <data name="Store_BuyFor" xml:space="preserve"><value>Acheter {0}</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>Acheter {0} pour {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>Connectez-vous à Internet pour acheter</value></data>
+  <data name="Store_NotForSaleNow" xml:space="preserve"><value>Ce livre ne peut pas être acheté pour le moment. Veuillez réessayer plus tard.</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>En attente d’approbation</value></data>
   <data name="Error_PaymentRequired" xml:space="preserve"><value>Vous devez d’abord acheter ce livre.</value></data>
   <data name="Error_Server" xml:space="preserve"><value>Un problème est survenu sur le serveur. Veuillez réessayer plus tard.</value></data>

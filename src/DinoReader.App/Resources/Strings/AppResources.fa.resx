@@ -395,6 +395,7 @@
   <data name="Store_BuyFor" xml:space="preserve"><value>خرید {0}</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>خرید {0} به قیمت {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>برای خرید به اینترنت وصل شوید</value></data>
+  <data name="Store_NotForSaleNow" xml:space="preserve"><value>این کتاب را همین حالا نمی‌توان خرید. لطفاً بعداً دوباره امتحان کنید.</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>در انتظار تأیید</value></data>
   <data name="Error_PaymentRequired" xml:space="preserve"><value>ابتدا باید این کتاب را بخرید.</value></data>
   <data name="Error_Server" xml:space="preserve"><value>مشکلی در سرور پیش آمد. لطفاً بعداً دوباره امتحان کنید.</value></data>

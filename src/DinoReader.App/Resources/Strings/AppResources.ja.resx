@@ -395,6 +395,7 @@
   <data name="Store_BuyFor" xml:space="preserve"><value>{0}を購入</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>{0}を{1}で購入</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>購入するにはインターネットに接続してください</value></data>
+  <data name="Store_NotForSaleNow" xml:space="preserve"><value>この本は今は購入できません。しばらくしてからもう一度お試しください。</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>承認を待っています</value></data>
   <data name="Error_PaymentRequired" xml:space="preserve"><value>先にこの本を購入する必要があります。</value></data>
   <data name="Error_Server" xml:space="preserve"><value>サーバーで問題が発生しました。しばらくしてからもう一度お試しください。</value></data>

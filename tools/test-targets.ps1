@@ -99,13 +99,18 @@ function Select-Platform([string[]]$Runs) {
 }
 
 # ---- Slice 207: -Checks, the fast checks (builds and unit tests) a change needs.
-$bothTests = @('ReadTheStupidText.Tests', 'DinoReader.Tests')
+$bothTests = @('ReadTheStupidText.Tests', 'Shared.Tests', 'DinoReader.Tests')  # every .NET test project (Slice 368: Shared.Tests holds the engine both apps ship)
 # First match wins. A path reaches the test projects named here; builds come from the CI rules (Get-ShipRuns) plus Mobile.Shared below.
 $testRules = @(
     @{ Pattern = '^src/ReadTheStupidText\.(Mobile\.Shared|Application|Domain|Infrastructure|Documents)/'; Tests = $bothTests }  # Dino references Infrastructure and Documents too
-    @{ Pattern = '^src/ReadTheStupidText\.(App|Windows\.Tray|Mobile)/'; Tests = @('ReadTheStupidText.Tests') }
-    @{ Pattern = '^(src/DinoReader\.(Core|App)|tools/DinoReader\.BookBuilder|content/dino)/'; Tests = @('DinoReader.Tests') }
+    # FallbackGuardTests and SherpaVersionPinTests (Shared.Tests) scan all of src/, so every code folder also reaches Shared.Tests (the CI selector does the same).
+    @{ Pattern = '^src/ReadTheStupidText\.(App|Windows\.Tray|Mobile)/|^src/AndroidSherpaPackaging\.props$'; Tests = @('ReadTheStupidText.Tests', 'Shared.Tests') }
+    @{ Pattern = '^src/DinoReader\.(Core|App)/'; Tests = @('DinoReader.Tests', 'Shared.Tests') }
+    @{ Pattern = '^(tools/DinoReader\.BookBuilder|content/dino)/'; Tests = @('DinoReader.Tests') }
+    # Test files one project compiles from the other (see the two csproj files): both projects run.
+    @{ Pattern = '^tests/(ReadTheStupidText\.Tests/(TestFakes|TranslationFakes)\.cs|Shared\.Tests/MainThreadStub\.cs)$'; Tests = @('ReadTheStupidText.Tests', 'Shared.Tests') }
     @{ Pattern = '^tests/ReadTheStupidText\.Tests/'; Tests = @('ReadTheStupidText.Tests') }
+    @{ Pattern = '^tests/Shared\.Tests/'; Tests = @('Shared.Tests') }
     @{ Pattern = '^tests/DinoReader\.Tests/'; Tests = @('DinoReader.Tests') }
     # Shared build inputs reach every project, so both test projects run (the same fail-safe as an unknown file).
     @{ Pattern = '^(Directory\.(Build|Packages)\.(props|targets)|global\.json|nuget\.config|[^/]+\.slnx)$'; Tests = $bothTests }

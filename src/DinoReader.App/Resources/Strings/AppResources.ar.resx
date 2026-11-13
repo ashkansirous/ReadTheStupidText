@@ -395,6 +395,7 @@
   <data name="Store_BuyFor" xml:space="preserve"><value>شراء {0}</value></data>
   <data name="Store_BuyStory" xml:space="preserve"><value>شراء {0} مقابل {1}</value></data>
   <data name="Store_ConnectToBuy" xml:space="preserve"><value>اتصل بالإنترنت للشراء</value></data>
+  <data name="Store_NotForSaleNow" xml:space="preserve"><value>لا يمكن شراء هذا الكتاب الآن. يرجى المحاولة مرة أخرى لاحقًا.</value></data>
   <data name="Store_Waiting" xml:space="preserve"><value>في انتظار الموافقة</value></data>
   <data name="Error_PaymentRequired" xml:space="preserve"><value>عليك شراء هذا الكتاب أولاً.</value></data>
   <data name="Error_Server" xml:space="preserve"><value>حدث خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقًا.</value></data>

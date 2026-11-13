@@ -607,7 +607,7 @@ try {
 
 # ---- Slice 225 item 7: the catalogue is read from a header line in each check file; it lists the same checks, with the same values, as the old hand-kept table
 $expected = [ordered]@{
-    'book-end'                    = @{ Apps = 'dino'; Estimate = 420; PerRun = $null; Pack = $false; Variant = 'debug' }   # Slice 320 item 4: Dino has no voice pack
+    'book-end'                    = @{ Apps = 'dino'; Estimate = 240; PerRun = $null; Pack = $false; Variant = 'debug' }   # Slice 320 item 4; Slice 372: 40 s start-up + about 110 s play at 2x (102 s measured silent) + 60 s doze poll, with margin: Dino has no voice pack
     'book-update'                 = @{ Apps = 'dino'; Estimate = 240; PerRun = $null; Pack = $false; Variant = 'debug' }
     'cold-start'                  = @{ Apps = 'rtst,dino'; Estimate = 240; PerRun = 80; Pack = $true; Variant = 'aot' }
     'highlight'                   = @{ Apps = 'rtst'; Estimate = 120; PerRun = $null; Pack = $true; Variant = 'debug' }
@@ -782,6 +782,15 @@ Assert-Equal 'rtst still requires supertonic-3' 'supertonic-3' (@($script:Requir
 $clipBook = @('1000.000  1  1 I RTST-TEST: HOOK open-book opened id=x', '1000.500  1  1 I RTST-TEST: [AudioPack] premade clip plays (sentence 0)', '1001.000  1  1 I RTST-TEST: [AudioPack] premade clip plays (sentence 1)', '1002.000  1  1 I RTST-TEST: RTST-TEST READ_END')
 Assert-Equal 'two premade clips and READ_END prove a Dino book played' $true (Resolve-BookPlayProof $clipBook).Played
 Assert-Equal 'one premade clip is not enough' $false (Resolve-BookPlayProof @($clipBook[0], $clipBook[1], $clipBook[3])).Played
+$finishedBook = @($clipBook[0], $clipBook[1], $clipBook[2], '1090.000  1  1 I RTST-TEST: [Usage] seq=7 book_finished session=abc uiLang=fa')
+Assert-Equal 'Slice 372: two clips and a book_finished line (no READ_END) prove a Dino book played' $true (Resolve-BookPlayProof $finishedBook).Played
+Assert-Equal 'Slice 372: the unstamped [Usage] book_finished line ends the book too' $true ('[Usage] book_finished session=abc' -match $script:BookFinishedPattern)
+$silentBook = @($clipBook[0], '1001.000  1  1 I RTST-TEST: [AudioPack] silent piece shown (sentence 0) clip_missing', '1002.000  1  1 I RTST-TEST: [AudioPack] silent piece shown (sentence 1) clip_missing', $finishedBook[3])
+$silentProof = Resolve-BookPlayProof $silentBook
+Assert-Equal 'Slice 372: a silent book (no pack for the language) is not play' $false $silentProof.Played
+Assert-Equal 'Slice 372: a silent book says there is no voice pack, not just "did not play"' $true ("$($silentProof.Problem)" -like '*no voice pack*')
+$startsInPackLanguage = (Get-Content (Join-Path $PSScriptRoot 'checks\_device.ps1') -Raw) -match "Start-DevAppWithHook \`$Phone \`$Package 'skip-first-run' \`$Language"
+Assert-Equal 'Slice 372: Start-ReadyDinoApp starts the app in the fixture pack language' $true $startsInPackLanguage
 $shortLines = @(Resolve-CheckSelection @('short-lines') 'dino' $catalogue)[0]
 Assert-Equal 'short-lines is retired for dino (blocked, with the reason)' $script:StatusSkipped $shortLines.Status
 Assert-Equal 'short-lines reason names Slice 320' $true ("$($shortLines.Reason)" -like '*Slice 320*')
@@ -797,6 +806,27 @@ Assert-Equal 'flags: the flags of the next record are not read' $null (Get-Notif
 Assert-Equal 'flags: the search starts at the notification, not at StatusBarNotification(' 8 (Get-NotificationFlagsFromText 'StatusBarNotification(pkg=x flags=0x40 key=k: Notification(channel=c flags=0x8))')
 Assert-Equal 'flags: no Notification( text at all' $null (Get-NotificationFlagsFromText 'NotificationRecord(0x1: pkg=x)')
 Assert-Equal 'flags: empty record' $null (Get-NotificationFlagsFromText '')
+# Slice 372 item 1: the S21's records of 2026-11-13 (flags by name, semFlags, audio attributes flags=0x800 further down)
+$samsungFirst = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'fixtures\notification-record-samsung-first.txt'))
+$samsungRepost = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'fixtures\notification-record-samsung-repost.txt'))
+Assert-Equal 'flags: Samsung first notice is AUTO_CANCEL (0x10), not the audio attributes 0x800' 16 (Get-NotificationFlagsFromText $samsungFirst)
+Assert-Equal 'flags: Samsung re-post is ONLY_ALERT_ONCE|AUTO_CANCEL (0x18)' 24 (Get-NotificationFlagsFromText $samsungRepost)
+Assert-Equal 'flags: Samsung records pass the plausibility check' $true ((Test-NotificationFlagsPlausible (Get-NotificationFlagsFromText $samsungFirst)) -and (Test-NotificationFlagsPlausible (Get-NotificationFlagsFromText $samsungRepost)))
+Assert-Equal 'flags: a named flags=0 is 0' 0 (Get-NotificationFlagsFromText 'Notification(channel=c defaults=0 flags=0 color=0)')
+Assert-Equal 'flags: an unknown flag name is unread, never a wrong number' $null (Get-NotificationFlagsFromText 'Notification(channel=c defaults=0 flags=WEIRD_ONE color=0)')
+Assert-Equal 'flags: a record-level flags=AUTO_CANCEL after the Notification( text is not read (review #1)' 24 (Get-NotificationFlagsFromText "NotificationRecord(0x1: Notification(channel=c defaults=0x0 flags=ONLY_ALERT_ONCE|AUTO_CANCEL color=0) flags=AUTO_CANCEL)")
+Assert-Equal 'flags: an unknown name falls back to the hex pair in the same Notification( text (review #6)' 8 (Get-NotificationFlagsFromText 'Notification(channel=c flags=WEIRD_ONE defaults=0x0 flags=0x8 color=0)')
+Assert-Equal 'flags: the documented names are known (review #8)' 0x1090 (Get-NotificationFlagsFromText 'Notification(channel=c defaults=0 flags=AUTO_CANCEL|HIGH_PRIORITY|BUBBLE color=0)')
+$spanDiffers = $samsungFirst.Replace('flags=AUTO_CANCEL color=0x00000000', 'flags=ONLY_ALERT_ONCE color=0x00000000')
+Assert-Equal 'flags: the Notification( span wins over a record-level flags=AUTO_CANCEL line (check #8)' 8 (Get-NotificationFlagsFromText $spanDiffers)
+$spanNoFlags = $samsungFirst.Replace(' flags=AUTO_CANCEL color=0x00000000', ' color=0x00000000')
+Assert-Equal 'flags: no flags in the Notification( span is $null, the record-level flags=AUTO_CANCEL is not read (check #4)' $null (Get-NotificationFlagsFromText $spanNoFlags)
+Assert-Equal 'flags: a span that never closes is $null, never the whole record' $null (Get-NotificationFlagsFromText "NotificationRecord(0x1: Notification(channel=c title=(paused :( flags=0x8`n      flags=AUTO_CANCEL")
+Assert-Equal 'book-end: its estimate plus a worst-case run fits the default 10-minute budget alone' $true (($catalogue['book-end'].EstimateSeconds -le 600) -and ((40 + 240 + 60) -le 600))
+Assert-Equal 'book-end: the end timeout leaves a margin over the measured 102 s silent 2x play (S21, 2026-11-13)' $true ((Get-Content (Join-Path $PSScriptRoot 'checks\book-end.ps1') -Raw) -match '\$EndTimeoutSeconds = 240,')
+Assert-Equal 'book-end waits for the book_finished line, not READ_END (Dino never writes it)' $true ((Get-Content (Join-Path $PSScriptRoot 'checks\book-end.ps1') -Raw) -match '\$script:BookFinishedPattern \$EndTimeoutSeconds')
+Assert-Equal 'flags: a hidden flag name outside the checked table is unread (review #8)'$null (Get-NotificationFlagsFromText 'Notification(channel=c defaults=0 flags=AUTO_CANCEL|NO_DISMISS color=0)')
+Assert-Equal 'flags: a stray ) before the flags ends the span there, so no flags are read: $null, not a guess (check #4; the real records keep text in extras, not in the Notification span)' $null (Get-NotificationFlagsFromText 'Notification(channel=c tickerText=paused :) defaults=0 flags=ONLY_ALERT_ONCE|AUTO_CANCEL color=0)')
 Assert-Equal 'excerpt is one line' $false ((Format-NotificationRecordExcerpt $wrappedRecord 5000) -match "[\r\n]")
 Assert-Equal 'excerpt is cut with dots' '0123456789...' (Format-NotificationRecordExcerpt '0123456789abc' 10)
 # S21 run 2026-11-08: flags 0x800 (no FLAG_AUTO_CANCEL) cannot be a paused notice's own flags (BuildPaused sets SetAutoCancel), so they are a check error, not a verdict

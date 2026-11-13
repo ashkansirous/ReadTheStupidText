@@ -26,11 +26,12 @@ public sealed class IosPurchases : IBookPurchases
         Observe(); // never replays here: a replay can ask for the Apple ID password, so only the Restore purchases button does it; this reads the kept list of what was seen
         if (!SKPaymentQueue.CanMakePayments)
         {
-            return _observer.Snapshot([]); // purchases are restricted (Screen Time): no prices, so no Buy; what the account already owns still shows and updates
+            PurchaseTrace.Line("purchases restricted on this device");
+            return _observer.Snapshot([]) with { Restricted = true }; // purchases are restricted (Screen Time): no prices, so no Buy and no fallback event (BookPurchases); what the account already owns still shows and updates
         }
 
-        Dictionary<string, string> prices = await QueryPricesAsync(productIds);
-        return _observer.Snapshot(prices);
+        (Dictionary<string, string> prices, bool pricesFailed) = await QueryPricesAsync(productIds); // a failed or timed-out request is a failed query; whether the store was reached is BookPurchases' call (the device's internet)
+        return _observer.Snapshot(prices) with { PricesFailed = pricesFailed };
     }
 
     // The Restore purchases button: Apple replays every purchase the account made for this app (and finishes them).
@@ -97,31 +98,34 @@ public sealed class IosPurchases : IBookPurchases
         return _observer.Products.GetValueOrDefault(productId);
     }
 
-    private async Task<Dictionary<string, string>> QueryPricesAsync(IReadOnlyCollection<string> productIds)
+    // Failed is true when the request failed or timed out (billing_error when the device has internet); products Apple does not know come back as no price (prices_missing).
+    private async Task<(Dictionary<string, string> Prices, bool Failed)> QueryPricesAsync(IReadOnlyCollection<string> productIds)
     {
         var prices = new Dictionary<string, string>();
         if (productIds.Count == 0)
         {
-            return prices;
+            return (prices, false);
         }
 
-        var done = new TaskCompletionSource<SKProduct[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var done = new TaskCompletionSource<SKProduct[]?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var products = new ProductsDelegate(done);
         var request = new SKProductsRequest(new NSSet(productIds.Select(id => (NSObject)new NSString(id)).ToArray()));
-        request.Delegate = new ProductsDelegate(done);
+        request.Delegate = products;
         request.Start();
         Task finished = await Task.WhenAny(done.Task, Task.Delay(QueryTimeout));
-        if (finished != done.Task)
+        if (finished != done.Task || done.Task.Result is not { } found)
         {
-            return prices;
+            PurchaseTrace.Line("products request failed or timed out");
+            return (prices, true);
         }
 
-        foreach (SKProduct product in done.Task.Result)
+        foreach (SKProduct product in found)
         {
             _observer.Products[product.ProductIdentifier] = product;
             prices[product.ProductIdentifier] = LocalizedPrice(product);
         }
 
-        return prices;
+        return (prices, false);
     }
 
     // The App Store's own price text in the storefront's currency.
@@ -131,14 +135,19 @@ public sealed class IosPurchases : IBookPurchases
         return formatter.StringFromNumber(product.Price) ?? string.Empty;
     }
 
-    private sealed class ProductsDelegate(TaskCompletionSource<SKProduct[]> done) : SKProductsRequestDelegate
+    private sealed class ProductsDelegate(TaskCompletionSource<SKProduct[]?> done) : SKProductsRequestDelegate
     {
-        public override void ReceivedResponse(SKProductsRequest request, SKProductsResponse response) => done.TrySetResult(response.Products);
+        public override void ReceivedResponse(SKProductsRequest request, SKProductsResponse response)
+        {
+            string invalid = string.Join(",", response.InvalidProducts ?? []); // product ids Apple does not know (not yet approved or wrong id)
+            PurchaseTrace.Line($"products response: got={response.Products.Length} invalid={invalid}");
+            done.TrySetResult(response.Products);
+        }
 
         public override void RequestFailed(SKRequest request, NSError error)
         {
-            Debug.WriteLine($"Dino Reader StoreKit products request failed: {error.LocalizedDescription}");
-            done.TrySetResult([]);
+            PurchaseTrace.Line($"products request failed: domain={error.Domain} code={error.Code}"); // the domain and code only, never the localized text
+            done.TrySetResult(null);
         }
     }
 

@@ -27,9 +27,9 @@ public sealed class AndroidPurchases : IBookPurchases
             return PurchaseSnapshot.Empty;
         }
 
-        Dictionary<string, string> prices = await QueryPricesAsync(client, productIds);
+        (Dictionary<string, string> prices, bool pricesFailed) = await QueryPricesAsync(client, productIds); // any non-OK code is a failed query; whether the store was reached is BookPurchases' call (the device's internet), never a code table
         (HashSet<string> owned, HashSet<string> pending, Dictionary<string, string> proofs, bool ok) = await QueryOwnedAsync(client);
-        return new PurchaseSnapshot(prices, owned, pending, proofs, ok);
+        return new PurchaseSnapshot(prices, owned, pending, proofs, ok, pricesFailed);
     }
 
     // Play has no separate restore: what the account owns is read again.
@@ -110,17 +110,19 @@ public sealed class AndroidPurchases : IBookPurchases
         old?.EndConnection();
     }
 
-    private async Task<Dictionary<string, string>> QueryPricesAsync(BillingClient client, IReadOnlyCollection<string> productIds)
+    private async Task<(Dictionary<string, string> Prices, bool Failed)> QueryPricesAsync(BillingClient client, IReadOnlyCollection<string> productIds)
     {
         var prices = new Dictionary<string, string>();
         if (productIds.Count == 0)
         {
-            return prices;
+            return (prices, false);
         }
 
         var products = productIds.Select(id => QueryProductDetailsParams.Product.NewBuilder().SetProductId(id).SetProductType(BillingClient.ProductType.Inapp).Build()).ToList();
         QueryProductDetailsParams query = QueryProductDetailsParams.NewBuilder().SetProductList(products).Build();
         QueryProductDetailsResult answer = await client.QueryProductDetailsAsync(query);
+        // Slice 358: Play's answer, so a run can tell "not ok", "ok but empty" and "no price in the details" apart (BookPurchases reports prices_missing for the products left without a price).
+        PurchaseTrace.Line($"product details: code={answer.Result.ResponseCode} asked={productIds.Count} got={answer.ProductDetailsList?.Count ?? 0} unfetched={answer.UnfetchedProductList?.Count ?? 0}"); // the Release log, not Debug only
         foreach (ProductDetails details in answer.ProductDetailsList ?? [])
         {
             _details[details.ProductId] = details;
@@ -130,7 +132,7 @@ public sealed class AndroidPurchases : IBookPurchases
             }
         }
 
-        return prices;
+        return (prices, answer.Result.ResponseCode != BillingResponseCode.Ok); // any non-OK code is a failed query (BookPurchases reports billing_error when the device has internet; the code is in the trace line above); OK with no price is prices_missing
     }
 
     private static async Task<(HashSet<string> Owned, HashSet<string> Pending, Dictionary<string, string> Proofs, bool Ok)> QueryOwnedAsync(BillingClient client)

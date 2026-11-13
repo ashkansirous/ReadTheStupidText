@@ -12,6 +12,7 @@
        settings-migration resolver) to the unit-test project. -->
   <ItemGroup>
     <InternalsVisibleTo Include="ReadTheStupidText.Tests" />
+    <InternalsVisibleTo Include="Shared.Tests" />
   </ItemGroup>
 
   <!-- Local neural TTS engine (sherpa-onnx runtime, Apache-2.0) running the

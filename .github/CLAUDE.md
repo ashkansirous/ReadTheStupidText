@@ -74,9 +74,14 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 > job (ubuntu), never the version, release or store jobs. Keep Dino paths out of
 > the core paths in `ship-targets.mjs`. (Slice 59: docs/plan/slices/59-dialogue-parser-voice-caster.md)
 
-> **Tests per product (Slice 128):** `tests.yml` (RTST's suite) runs on `windows|android|ios` and gates those builds;
-> `dinoreader.yml` (Dino's suite) runs for `dinoreader|dinoapp|dinoios|dinowin` and is standalone (gates nothing). A Dino-only
-> change skips RTST's tests, an RTST-only change skips Dino's. `src/ReadTheStupidText.Windows.Tray/**` is in the `windows` group
+> **Test gating (Slice 368):** `tests.yml` runs a `shared` job and an `rtst` job; `release.yml` calls it as `shared-test` (any
+> product build) and `rtst-test` (RTST builds). RTST builds and its release draft need both `success`; Dino builds and its
+> release draft need `shared-test` `success`. No `skipped` is accepted for a gate's test job. The old check name `test / test`
+> no longer exists. (Slice 368: docs/plan/slices/368-shared-tests-project.md)
+
+> **Tests per product (Slice 128, gating replaced by Slice 368 above):** `dinoreader.yml` (Dino's suite) runs for
+> `dinoreader|dinoapp|dinoios|dinowin`. A Dino-only change skips RTST's own tests (`rtst`), an RTST-only change skips Dino's;
+> the shared suite runs for both. `src/ReadTheStupidText.Windows.Tray/**` is in the `windows` group
 > only (no `dinowin`). (Slice 128: docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md)
 
 > **iOS toolchain pin:** `ios.yml` pins dotnet 10.0.401 + workload set 10.0.401

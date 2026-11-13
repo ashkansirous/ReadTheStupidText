@@ -10,6 +10,7 @@
        reader (Slice 31) the same way the Windows one does. -->
   <ItemGroup>
     <InternalsVisibleTo Include="ReadTheStupidText.Tests" />
+    <InternalsVisibleTo Include="Shared.Tests" />
     <InternalsVisibleTo Include="ReadTheStupidText.Infrastructure" />
     <InternalsVisibleTo Include="ReadTheStupidText.Mobile" />
     <InternalsVisibleTo Include="ReadTheStupidText.Mobile.Shared" />

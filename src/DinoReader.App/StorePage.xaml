@@ -145,6 +145,28 @@
                         <Label Grid.Column="1" Text="{Binding ErrorText}" FontSize="13.5" LineHeight="1.4" TextColor="{StaticResource StripSandText}" VerticalOptions="Center" />
                     </Grid>
                 </Border>
+
+                <!-- Slice 358 (mock S2, S3): a sold book with no price and no button. The store answered without a price: the red strip; the store did not answer: the calm sand strip with the cloud glyph. Inline, no tap. -->
+                <Border AutomationId="StoreRowNotForSale" IsVisible="{Binding HasRedNote}" Padding="12,9" BackgroundColor="{StaticResource StripRedFill}" StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <shapes:Path Data="{StaticResource AlertGlyph}" Stroke="{StaticResource StripRedText}" StrokeThickness="2.2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
+                                     WidthRequest="18" HeightRequest="18" VerticalOptions="Start" />
+                        <Label Grid.Column="1" Text="{x:Static res:AppResources.Store_NotForSaleNow}" FontSize="13.5" LineHeight="1.4" TextColor="{StaticResource StripRedText}" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+                <Border AutomationId="StoreRowConnectToBuy" IsVisible="{Binding HasSandNote}" Padding="12,9" BackgroundColor="{StaticResource StripSandFill}" StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <shapes:Path Data="{StaticResource CloudGlyph}" Stroke="{StaticResource StripSandText}" StrokeThickness="2.2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
+                                     WidthRequest="18" HeightRequest="18" VerticalOptions="Start" />
+                        <Label Grid.Column="1" Text="{x:Static res:AppResources.Store_ConnectToBuy}" FontSize="13.5" LineHeight="1.4" TextColor="{StaticResource StripSandText}" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
                 </VerticalStackLayout>
             </Border>
         </DataTemplate>

@@ -104,7 +104,8 @@ function Start-ReadyApp([string]$Phone, [string]$App, [string]$Package) {
 # Slice 320 item 4: Dino has no voice pack since Slice 278; it plays the store books' pre-made audio packs. Launches fresh with skip-first-run (the four test books), then installs the Debug fixture pack for
 # the book through the pack store (`install-audio-pack`, the same hook premade-audio-three-clips uses), so the read plays clips and writes `[AudioPack] premade clip plays` lines. No network, no download.
 function Start-ReadyDinoApp([string]$Phone, [string]$Package, [string]$Book, [string]$Language = 'fa') {   # 'fa' like the Maestro flows: the hook needs a bundled translation table, and English (the books' source language) has none
-    $appPid = Start-DevAppWithHook $Phone $Package
+    # Slice 372 item 1: the app starts in the SAME language the fixture pack is made for. It used to start in 'en' (Start-DevAppWithHook's default) with an 'fa' pack, so the read found no pack ("silent piece shown ... no_pack") and played silent.
+    $appPid = Start-DevAppWithHook $Phone $Package 'skip-first-run' $Language
     if (-not (Wait-LogMatch $Phone $Package $appPid 'HOOK skip-first-run ok' 60 0 'waiting for the app to skip first run')) { throw 'The skip-first-run hook did not report ok within 60 s.' }
     $sent = Send-DevHook $Phone 'dino' 'install-audio-pack' @{ id = $Book; lang = $Language }
     $answer = Wait-LogMatch $Phone $Package $appPid 'HOOK install-audio-pack (ok|failed)' 60 $sent 'waiting for the fixture audio pack'

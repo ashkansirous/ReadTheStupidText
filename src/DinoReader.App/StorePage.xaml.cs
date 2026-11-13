@@ -23,8 +23,11 @@ public enum StoreRowState
 	/// <summary>Slice 346: a sold book the store account does not own; the pill is Buy with the store's price.</summary>
 	Buy,
 
-	/// <summary>Slice 346: a sold book whose price is not known (offline): a calm note, no button.</summary>
+	/// <summary>Slice 346: a sold book whose price is not known because the store has not answered (offline): a calm sand strip in the card, no button.</summary>
 	ConnectToBuy,
+
+	/// <summary>Slice 358: a sold book the store answered about without a price: a red strip in the card, no button.</summary>
+	NotForSaleNow,
 
 	/// <summary>Slice 346: a purchase waiting for approval.</summary>
 	Waiting,
@@ -87,10 +90,16 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 
 	public string TryAgainLabel => AppResources.Store_TryAgain;
 
-	/// <summary>A sold book with nothing to press: the price is unknown (connect to buy) or the purchase waits for approval.</summary>
-	public bool HasNote => _state is StoreRowState.ConnectToBuy or StoreRowState.Waiting;
+	/// <summary>A sold book with nothing to press because its purchase waits for approval: one calm line at the end of the row.</summary>
+	public bool HasNote => _state == StoreRowState.Waiting;
 
-	public string NoteText => _state == StoreRowState.Waiting ? AppResources.Store_Waiting : AppResources.Store_ConnectToBuy;
+	public string NoteText => AppResources.Store_Waiting;
+
+	/// <summary>Slice 358 (mock S3): the store did not answer, so a sold book has no price; the sand strip with the cloud glyph. A server error strip, when there is one, says it instead.</summary>
+	public bool HasSandNote => _state == StoreRowState.ConnectToBuy && !HasError;
+
+	/// <summary>Slice 358 (mock S2): the store answered without a price for a sold book; the red strip with the alert glyph, no button.</summary>
+	public bool HasRedNote => _state == StoreRowState.NotForSaleNow && !HasError;
 
 	public bool IsDownloading => _state == StoreRowState.Downloading;
 
@@ -112,7 +121,7 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	/// <summary>Slice 357: why the last Get failed, shown under the row while the row offers a button again; cleared when a download starts or the book is on the shelf.</summary>
 	public HttpError? Error => _error;
 
-	public bool HasError => _error is not null && _state is StoreRowState.Get or StoreRowState.Failed or StoreRowState.Buy or StoreRowState.ConnectToBuy;
+	public bool HasError => _error is not null && _state is StoreRowState.Get or StoreRowState.Failed or StoreRowState.Buy or StoreRowState.ConnectToBuy or StoreRowState.NotForSaleNow;
 
 	public string ErrorText => _error is null ? string.Empty : StoreText.ErrorMessage(_error);
 
@@ -128,7 +137,7 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 		_progress = 0;
 		_error = error;
 
-		Raise(nameof(Error), nameof(HasError), nameof(HasCalmError), nameof(HasRedError), nameof(ErrorText), nameof(IsGet), nameof(IsBuy), nameof(IsTryAgain), nameof(IsFree), nameof(GetLabel), nameof(Price), nameof(GetHint), nameof(HasNote), nameof(NoteText), nameof(IsDownloading), nameof(IsOnShelf), nameof(Progress), nameof(ProgressText), nameof(ProgressHint));
+		Raise(nameof(Error), nameof(HasError), nameof(HasCalmError), nameof(HasRedError), nameof(ErrorText), nameof(IsGet), nameof(IsBuy), nameof(IsTryAgain), nameof(IsFree), nameof(GetLabel), nameof(Price), nameof(GetHint), nameof(HasNote), nameof(NoteText), nameof(HasSandNote), nameof(HasRedNote), nameof(IsDownloading), nameof(IsOnShelf), nameof(Progress), nameof(ProgressText), nameof(ProgressHint));
 	}
 
 	/// <summary>Completes when the row is no longer downloading (at once when it is not), or when <paramref name="cancel"/> is cancelled; never throws, the caller reads the state afterwards (Slice 364 restore).</summary>
@@ -178,9 +187,16 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 			StoreAction.OnShelf => StoreRowState.Downloaded,
 			StoreAction.Buy => StoreRowState.Buy,
 			StoreAction.ConnectToBuy => StoreRowState.ConnectToBuy,
+			StoreAction.NotForSaleNow => StoreRowState.NotForSaleNow,
 			StoreAction.Waiting => StoreRowState.Waiting,
 			_ => StoreRowState.Get,
 		});
+#if DEBUG
+		if (_state is StoreRowState.ConnectToBuy or StoreRowState.NotForSaleNow)
+		{
+			ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[StoreSale] row state={_state}");
+		}
+#endif
 	}
 
 	public void SetProgress(double progress)
@@ -966,7 +982,7 @@ public partial class StorePage : ContentView, ICornerTabView
 			return; // the replan found the book on the shelf after all
 		}
 
-		if (row.State is StoreRowState.Buy or StoreRowState.ConnectToBuy)
+		if (row.State is StoreRowState.Buy or StoreRowState.ConnectToBuy or StoreRowState.NotForSaleNow)
 		{
 			row.SetState(row.State, error);
 			return;

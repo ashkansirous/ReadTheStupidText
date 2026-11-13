@@ -1,10 +1,14 @@
 name: tests
 
-# RTST's pure-logic unit tests (net10.0-windows: they reference Infrastructure). Slice 128: they run for
-# RTST targets only (windows, android, ios); Dino Reader's suite is dinoreader.yml.
+# The pure-logic unit tests (net10.0-windows: they reference Infrastructure), in two projects (Slice 368):
+# tests/Shared.Tests (the engine both apps ship) and tests/ReadTheStupidText.Tests (RTST's own). Slice 128: they run for
+# RTST targets only (windows, android, ios); Dino Reader's suite is dinoreader.yml. release.yml calls this workflow twice:
+# `shared-test` (suite: shared) whenever any product output builds, and `rtst-test` (suite: rtst) when an RTST output builds,
+# so the shared suite runs once per push and every build gate needs `success` from each test job it depends on.
+# The check names are `shared-test / shared` and `rtst-test / rtst` in a release run, `shared` and `rtst` (under `tests`) on a PR.
 # Slice 70: split out of build.yml. Runs on its own PRs (when anything that
-# build-windows or build-android compiles changes), by hand, and as the `test`
-# job of release.yml, where it gates every Windows/Android/iOS build and so every
+# build-windows or build-android compiles changes), by hand, and as the test
+# jobs of release.yml, where they gate every product build and so every
 # release. No LFS: the tests don't load the voice model.
 
 on:
@@ -15,6 +19,7 @@ on:
       - 'src/ReadTheStupidText.Application/**'
       - 'src/ReadTheStupidText.Documents/**'
       - 'tests/ReadTheStupidText.Tests/**'
+      - 'tests/Shared.Tests/**'
       - 'global.json'
       - 'Directory.Build.props'
       - 'src/SherpaOnnxVersion.props'
@@ -24,6 +29,9 @@ on:
       - '.github/workflows/tests.yml'
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'
+      - '.github/scripts/check-sherpa-pins.mjs'
+      - '.github/workflows/packs.yml'
+      - 'tools/sound-words-test/requirements.txt'
       - 'src/ReadTheStupidText.App/**'
       - 'src/ReadTheStupidText.Windows.Tray/**'
       - 'src/ReadTheStupidText.Infrastructure/**'
@@ -46,9 +54,25 @@ on:
       - '.github/scripts/ios-signing.sh'
       - '.github/scripts/testflight-upload.sh'
       - '.github/workflows/ios.yml'
+      # Slice 368: the Dino groups (dinoapp, dinoios, dinowin) also select the shared suite (its repo-wide guards scan all of src/),
+      # so a Dino-only pull request must start this workflow too.
+      - 'GitVersion.dino.yml'
+      - 'src/DinoReader.App/**'
+      - 'src/DinoReader.Core/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Windows/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/IosSherpaPackaging.props'
+      - '.github/scripts/check-ios-bundle.sh'
+      - '.github/workflows/dinoreader-android.yml'
+      - '.github/workflows/dinoreader-ios.yml'
+      - '.github/workflows/dinoreader-windows.yml'
       - '!**/*.md'
   workflow_dispatch:
   workflow_call:
+    inputs:
+      suite:
+        description: 'Which suite a caller wants: shared (the shared engine, gates every product build), rtst (RTST own tests, gates RTST builds) or all (default: both).'
+        type: string
+        default: all
 
 permissions:
   contents: read
@@ -56,11 +80,54 @@ permissions:
 # A called run shares the caller's concurrency context, so only PR runs get a
 # group that cancels; every other run is keyed by its run id and never collides.
 concurrency:
-  group: tests-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  group: tests-${{ github.event_name == 'pull_request' && github.ref || format('{0}-{1}', github.run_id, inputs.suite) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  test:
+  # Slice 368: which suites a pull request needs. A tray-only change skips the shared suite, a change to the shared tests alone
+  # skips RTST's. Only a pull request needs this job: every other run (a release's push, a hand run) runs what the caller asked
+  # for (inputs.suite), which the jobs below read directly, so no Ubuntu runner starts for it (Actions quota).
+  select:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      shared: ${{ steps.pick.outputs.shared }}
+      rtst: ${{ steps.pick.outputs.rtst }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # ship-targets.mjs --local runs `git merge-base HEAD origin/main`, which needs the full history
+
+      - name: Pick the suites
+        id: pick
+        run: node .github/scripts/ship-targets.mjs --local --tests --base origin/main
+
+  # The shared engine's tests (Domain, Application, Documents, Infrastructure's engines, Mobile.Shared's pure logic):
+  # both products ship this code, so release.yml gates the RTST and the Dino Reader builds on it.
+  shared:
+    needs: select
+    # Fail closed (Slice 368): on a pull request a `select` that did not succeed (failed, cancelled) runs the suite anyway, never skips it.
+    # select runs on pull requests only, so every other run reads the caller's suite (inputs.suite; empty for a hand run = both).
+    if: ${{ !cancelled() && (github.event_name == 'pull_request' && (needs.select.result != 'success' || needs.select.outputs.shared == 'true') || github.event_name != 'pull_request' && inputs.suite != 'rtst') }}
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json # Slice 353: one SDK pin for every job
+
+      - name: Run shared unit tests
+        run: dotnet test tests/Shared.Tests/Shared.Tests.csproj --configuration Release
+
+  # RTST's own tests (tray, control panel, the RTST phone app). Gates RTST's builds only.
+  rtst:
+    needs: select
+    # Same fail-closed rule as `shared`.
+    if: ${{ !cancelled() && (github.event_name == 'pull_request' && (needs.select.result != 'success' || needs.select.outputs.rtst == 'true') || github.event_name != 'pull_request' && inputs.suite != 'shared') }}
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -79,5 +146,5 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           ./tools/phone/test-timing.ps1
 
-      - name: Run unit tests
+      - name: Run RTST unit tests
         run: dotnet test tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj --configuration Release

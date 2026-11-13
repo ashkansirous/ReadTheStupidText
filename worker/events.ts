@@ -87,7 +87,11 @@ export const FALLBACK_REASONS = [
   // Slice 359: a book's drawn back cover is named but its picture file is missing
   "back_cover_missing",
   // Slice 360: a read had no sound for a missing pack (the Wi-Fi wait is gone; its reason stays so old rows parse)
-  "waiting_wifi", "pack_missing_on_play", "onboarding_try_not_deleted",
+  "waiting_wifi", "pack_missing_on_play",
+  // Slice 358: the platform store answered with no price for a paid book's product
+  "prices_missing", "billing_error",
+  // Slice 362: the onboarding's recorded try could not be deleted
+  "onboarding_try_not_deleted",
 ] as const;
 const MAX_COUNT = 1_000_000;
 export const MAX_SECONDS = 86_400;

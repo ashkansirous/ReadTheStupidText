@@ -4,6 +4,16 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 **Only what can be tested stays here** (the user, 2026-11-08: "keep only whatever I can test"). Each line starts with who tests it: **You** (the user: the iPhone, the S21 by hand, the Echo, the Sonos, an English or Farsi read, a decision or account only you hold) or **Device** (Claude, on the Android emulator or tablet AVD, the S21 by script, or the Windows VM). Checks nobody here can test were removed; behaviours only real use shows are watched in production data instead; checks that need the user's ear are listening-page slices 330-343. All three lists are in the [record](notes/2026-11-08-unverified-triage.md). Earlier on 2026-11-08: triaged 2026-11-08: 106 lines removed as replaced, already done, proven in production or not a check; the real gaps moved to [Slice 316](slices/316-unverified-triage-gaps.md); the Slice 43-95 lines that were still open moved here from [outstanding-older](notes/2026-10-25-outstanding-older.md) ([record](notes/2026-11-08-unverified-triage.md)). The 2026-11-08 device run (emulator, S21, VM) passed 49 more and the user's iPhone session 2 more; same record.
 
+### Slice 372: S21 check fixes ([slice](slices/372-s21-check-fixes-2026-11-13.md))
+
+- **Device:** left on the phone by the runner: `/sdcard/Download/rtst-packs-aside/uk.sirous.readthestupidtext.dbg/packs-20261113172728.tar` (the dev app's own pack backup).
+- **Device:** why the heal survived TERM is unknown (now harmless: the pid-file guard).
+- **Device:** voiced book-end timing measured once (159 s; timeout 240 s).
+
+### Slice 368: Shared tests in their own project ([slice](slices/368-shared-tests-project.md))
+
+- **Device:** the new `release.yml` gates (`shared-test`, `rtst-test`) and `tests.yml` jobs (`select`, `shared`, `rtst`) have not run on GitHub; the first PR run and the first `main` push show them.
+
 ### Slice 360: Dino play waits for Wi-Fi ([slice](slices/360-dino-play-waits-for-wifi.md))
 
 - **Device:** book pulled mid-launch keeps its card until relaunch (check5 #1); a malformed listing entry gets no card (check5 #2).
