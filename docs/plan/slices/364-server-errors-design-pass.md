@@ -21,8 +21,8 @@ Follow 357's *Design (Dino Reader 2026-11-13 Missing States mock, section 2)* se
 
 ## Waiting on the user
 
-- Where should RT1/RT2 (the voice-row strip, `Pack_RowSize`, `Pack_NotDownloaded`) live? Main has no such row on Mobile or Windows, so it needs a design or a new screen. Blocks RT1/RT2 only.
-- When every bought book is already on the shelf, Restore says "nothing to restore" (the one copy-note line). Should a separate "all already on your shelf" line exist? Copy decision, blocks nothing.
+- *Answered without the user, 2026-11-13:* RT1/RT2 do have rows to live on. The phone `LanguagePage` list and the Windows `LanguageWindow` list are the voice rows; they only lack a size, state and Retry of their own. Item C's row layouts moved to [Slice 373](373-rtst-voice-rows-rt1-rt2.md) (planned).
+- *Decided 2026-11-13 (obvious copy choice):* keep the copy note's single "nothing to restore" line when every bought book is already on the shelf; no extra line.
 
 ## Changed while building
 
