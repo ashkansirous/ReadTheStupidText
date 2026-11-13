@@ -26,8 +26,8 @@
  *   Microsoft: API creates the durable add-on shell only (Store submission API, create add-on). No API for the price: an add-on on Pricing Version 2 makes the API answer an unknown tier,
  *              so its price (0.99 USD), listing and submission are set in Partner Center by hand, and the Partner Center payout and tax profile must exist.
  *
- * Not run against any store when this file was written: the request shapes follow the vendors' own documentation (read 2026-11-13 through context7 and learn.microsoft.com), and the
- * ones the docs did not settle are marked UNVERIFIED below. Run --apply once with --store <one store> and read its output before running the others.
+ * Run live on 2026-11-13 against all three stores (Play: 11 created and activated; Apple: 11 created; Partner Center: 11 add-on shells created). Request shapes the
+ * docs did not settle are still marked UNVERIFIED below. Run --apply once with --store <one store> and read its output before running the others.
  */
 
 import { createSign } from 'node:crypto';
@@ -166,7 +166,7 @@ export function appleProductBody(book, appId) {
     return {
         data: {
             type: 'inAppPurchases',
-            attributes: { name: cut(book.title, APPLE_NAME_MAX), productId: book.productId, inAppPurchaseType: 'NON_CONSUMABLE', reviewNote: `Unlocks the story "${book.title}" in Dino Book Reader. Purchases sit behind the grown-ups gate.`, familyAvailable: true },
+            attributes: { name: cut(book.title, APPLE_NAME_MAX), productId: book.productId, inAppPurchaseType: 'NON_CONSUMABLE', reviewNote: `Unlocks the story "${book.title}" in Dino Book Reader. Purchases sit behind the grown-ups gate.`, familySharable: true },
             relationships: { app: { data: { type: 'apps', id: appId } } },
         },
     };
@@ -229,7 +229,7 @@ export function playUsdPrice() {
     return { currencyCode: 'USD', units: PRICE_UNITS, nanos: PRICE_NANOS };
 }
 
-/** Pure: Play's one-time product (PATCH ...oneTimeProducts/<id>?allowMissing=true): an en-GB listing and one buy option priced per region from the converted prices. */
+/** Pure: Play's one-time product (PATCH ...onetimeproducts/<id>?allowMissing=true&updateMask=...&regionsVersion.version=...; the docs spell the patch path all lower case, get and batchUpdateStates use oneTimeProducts): an en-GB listing and one buy option priced per region from the converted prices. */
 export function playProductBody(book, converted) {
     const regions = Object.entries(converted?.convertedRegionPrices ?? {}).map(([regionCode, entry]) => ({ regionCode, price: entry.price, availability: 'AVAILABLE' }));
     const other = converted?.convertedOtherRegionsPrice;
@@ -238,7 +238,7 @@ export function playProductBody(book, converted) {
         buyOption: { legacyCompatible: true },
         regionalPricingAndAvailabilityConfigs: regions,
     };
-    if (other?.usdPrice && other?.eurPrice) buyOption.newRegionsConfig = { usdPrice: other.usdPrice, eurPrice: other.eurPrice, availability: 'AVAILABLE' }; // UNVERIFIED shape
+    if (other?.usdPrice && other?.eurPrice) buyOption.newRegionsConfig = { usdPrice: other.usdPrice, eurPrice: other.eurPrice, availability: 'AVAILABLE' }; // shape per OneTimeProductPurchaseOptionNewRegionsConfig docs
     return {
         packageName: PACKAGE_NAME,
         productId: book.productId,
@@ -452,12 +452,12 @@ export async function createPlayProduct(token, book, request = playRequest) {
     if (!playHasUsPrice(converted)) throw new Error('Play answered no US price for the conversion');
     const version = process.env.PLAY_REGIONS_VERSION ?? converted.regionVersion?.version ?? PLAY_DEFAULT_REGIONS_VERSION;
     const query = `allowMissing=true&updateMask=listings,purchaseOptions&regionsVersion.version=${encodeURIComponent(version)}`;
-    must(await request(token, 'PATCH', `oneTimeProducts/${encodeURIComponent(book.productId)}?${query}`, playProductBody(book, converted)), 'create product');
+    must(await request(token, 'PATCH', `onetimeproducts/${encodeURIComponent(book.productId)}?${query}`, playProductBody(book, converted)), 'create product');
     await activatePlayBuyOption(token, book, request);
     return existing.ok ? Outcome.Completed : Outcome.Created;
 }
 
-/** Pure: activates the one buy option of a Play product. UNVERIFIED: the request wrapper's field name (`requests[].activatePurchaseOptionRequest`). */
+/** Pure: activates the one buy option of a Play product. Shape per the batchUpdateStates docs (requests[].activatePurchaseOptionRequest with packageName, productId, purchaseOptionId). */
 export function activateBody(book) {
     return { requests: [{ activatePurchaseOptionRequest: { packageName: PACKAGE_NAME, productId: book.productId, purchaseOptionId: PLAY_BUY_OPTION_ID } }] };
 }

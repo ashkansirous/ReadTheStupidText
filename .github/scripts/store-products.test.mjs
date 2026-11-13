@@ -57,6 +57,8 @@ test('Slice 346: Apple bodies carry the product id, a non-consumable type, the 0
     assert.equal(product.attributes.productId, book.productId);
     assert.ok(product.attributes.name.length <= 30);
     assert.equal(product.relationships.app.data.id, '6825053435');
+    assert.equal(product.attributes.familySharable, true);
+    assert.equal('familyAvailable' in product.attributes, false);
     assert.ok(appleLocalizationBody(book, '77').data.attributes.description.length <= 45);
     assert.deepEqual(appleAvailabilityBody('77', ['USA', 'GBR']).data.relationships.availableTerritories.data.map((t) => t.id), ['USA', 'GBR']);
     const points = [{ id: 'p1', attributes: { customerPrice: '0.49' } }, { id: 'p99', attributes: { customerPrice: '0.99' } }];
@@ -196,7 +198,7 @@ test('Slice 346 review #2: a Play product that is created but not active is acti
     assert.deepEqual(log, ['GET oneTimeProducts/uk.sirous.dinoreader.book.goldilocks']);
     log.length = 0;
     assert.equal(await createPlayProduct('t', BOOK, request({ status: 404, ok: false, json: null })), Outcome.Created);
-    assert.ok(log.some((line) => line.startsWith('PATCH')) && log.some((line) => line.includes('batchUpdateStates')));
+    assert.ok(log.some((line) => line.startsWith('PATCH onetimeproducts/')) && log.some((line) => line.includes('batchUpdateStates')));
 });
 
 test('Slice 346 review #6: a bad service account JSON names only the variable, never any of its text', () => {
