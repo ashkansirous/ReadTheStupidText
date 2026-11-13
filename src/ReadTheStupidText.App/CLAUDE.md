@@ -5,6 +5,38 @@ neural reader are in `src/ReadTheStupidText.Infrastructure/CLAUDE.md`. (This fol
 a generic WinUI template and is separate from these rules.)
 The tray's Win32/UIA services (hotkey, selection monitor, clipboard listener, selection copier, foreground probe, startup task) live in `src/ReadTheStupidText.Windows.Tray`, referenced only by this project (Slice 128).
 
+**ReadTheStupidText** is a Windows 11 tray utility that reads selected/copied text aloud
+at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
+**MSIX** and targeted at the **Microsoft Store**. It is *not* a classic UWP app
+(the sandbox cannot do tray icons, global hotkeys, or cross-app text reads).
+
+> **Naming:** the user-facing **product display name is "Read The Stupid Text"** (with
+> spaces) — shown in the manifest `DisplayName`s, tray tooltip, control-panel header,
+> and window titles. The **repo, package id (`ReadTheStupidText`), namespaces, assembly,
+> and the StartupTask `TaskId`** are internal identifiers and stay `ReadTheStupidText`
+> — do not "rename" those. Store identity (ID `9NGT1BN1H92V`) is wired into
+> `Package.appxmanifest`; see Decision 23 in `docs/plan/notes/decisions-001-099.md` and `STORE.md`.
+
+Build and run:
+
+```bash
+dotnet build src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64
+dotnet run   --project src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64
+```
+
+Builds are **per-architecture** — always pass `-p:Platform=x64` (or `arm64`).
+Building the **app project** is the quickest way to build the whole graph.
+
+The solution (`ReadTheStupidText.slnx`) also builds directly — e.g.
+`dotnet build ReadTheStupidText.slnx -p:Platform=x64` — and opens in Visual
+Studio. The class libraries are `AnyCPU` and the app is `x86;x64;ARM64`; the
+`.slnx` bridges the gap with explicit `<Configurations>` (platforms only, no
+`Any CPU`) and a per-app `<Platform Solution="Debug|x64" Project="x64" />`
+mapping, plus a `<Deploy Solution="Debug|x64" />` rule so F5 deploys the
+package. Debug through the **(Package)** profile — there is no unpackaged
+profile, because running unpackaged fails with `REGDB_E_CLASSNOTREG` (no
+package identity).
+
 The Batch 29 tray wait flyout and control-panel counts switch (Slices 140-141) are screens W1-W2 of `docs/design/rtst-phone/RTST Batch 29.dc.html`, and the Batch 42 update notices (Slice 217) are W3-W4 of `docs/design/rtst-phone/Batch 42 Updates and Paused Downloads.dc.html` (index in that folder's README): read visual values from it, never guess them, never call `DesignSync` for them.
 
 Keep `App.xaml.cs` thin: provider/DI wiring and window bootstrap only. Real
