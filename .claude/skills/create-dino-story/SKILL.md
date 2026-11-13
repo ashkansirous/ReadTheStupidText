@@ -125,7 +125,7 @@ Prompt templates: [prompts.md](prompts.md).
   - The art record's character lines are the canonical outfits, written from the accepted line-up,
     not from the first prompt (the pilot asked for a "red cap" but the line-up drew a knitted beanie;
     later prompts must follow the picture).
-- **Image model: default to 3.5 Flash-Lite in the text-model picker** (a measured default, not a law; usage numbers and the failed Flash attempts are in `content/dino/lion-and-mouse/art.md`). The Images tool has no model menu; the text picker decides what draws. Flash-Lite cost about 0.3% of the 5-hour window per picture against +4% on 3.8 Flash, same 1792x2400 size and quality, and 3.8 Flash refused pictures with a pasted line-up. Set the picker before the first prompt (it persists across chats); keep 3.8 Flash for text-only prompts. If Flash-Lite gets the same picture wrong twice in a row, try 3.1 Pro for that picture and note its cost. Re-measure at each book and record each picture's size in the art record. The limit is compute-based (5-hour window plus a weekly cap, Settings > Usage Limits).
+- **Image model: default to 3.5 Flash-Lite in the text-model picker** (except Slice 350's high-res run: Flash-Lite and 4 Argon are out there, and the model is the one written in that slice's part A4; a measured default, not a law; usage numbers and the failed Flash attempts are in `content/dino/lion-and-mouse/art.md`). The Images tool has no model menu; the text picker decides what draws. Flash-Lite cost about 0.3% of the 5-hour window per picture against +4% on 3.8 Flash, same 1792x2400 size and quality, and 3.8 Flash refused pictures with a pasted line-up. Set the picker before the first prompt (it persists across chats); keep 3.8 Flash for text-only prompts. If Flash-Lite gets the same picture wrong twice in a row, try 3.1 Pro for that picture and note its cost. Re-measure at each book and record each picture's size in the art record. The limit is compute-based (5-hour window plus a weekly cap, Settings > Usage Limits).
 - Set **Aspect ratio 3:4** with the button under the prompt box in every new chat. Pictures come out
   896x1200 (1792x2400 on the Pro plan). Paste the line-up first: the menu moves once a picture is attached, so open it after the paste
   and take a screenshot before clicking 3:4 (Billy Goats: a misplaced click gave a 4:3 picture).
@@ -160,8 +160,11 @@ resolution, 896x1200 pixels (portrait 3:4).` The app needs nothing bigger (the p
 accepted picture's actual size in the art record. The size line never changed the size (Billy Goats, Lion and the Mouse: always 1792x2400), but it is harmless; 3.5 Flash-Lite makes the same size at a fraction of the usage.
 
 Every page prompt repeats: same characters, the style line, portrait 3:4, no text, **exact count**
-("exactly three pigs, each appearing once"), every character's outfit, and **"the whole scene sits in
-the top 70% of the picture; the bottom 30% is calm scene (grass, floor or water) with no faces or action, never a plain empty strip"**. When
+("exactly three pigs, each appearing once"), every character's outfit, and **"every character stays whole
+in the top 70% of the picture: heads, bodies, legs, feet, paws, tails and anything they hold all end above
+the 70% line. The bottom 30% is calm scene (grass, flowers, floor or water) with no character or any part
+of one in it, never a plain empty strip"**. "Faces and action" alone is not enough: 3.1 Pro kept the faces
+up and still walked the Mouse's body, feet and berry into the bottom strip (Slice 350, 2026-11-13). When
 the phone is upright the words panel covers up to 30% of the picture from the bottom (Slice 122; before
 it, 58%, which is why the Slice 119 pigs pictures used the top 40%).
 
@@ -190,7 +193,8 @@ trousers or none).
 - [ ] The scene shows what the page text says, and nothing from another page.
 - [ ] Rule 1: nobody hurt, in pain, crying in fear, near fire or hot water; no teeth-bared menace.
 - [ ] No text, letters, words or signs anywhere (signatures included).
-- [ ] Faces and action are in the top 70%, but the bottom 30% is still scene (ground, grass, water, floor), never a plain white or empty strip; the scene fills the whole frame, top and bottom.
+- [ ] **Every character is whole above the 70% line** (heads, bodies, legs, feet, paws, tails, anything held). Never judge it without the line: run `pwsh .claude/skills/create-dino-story/line70.ps1 <picture>` (add `-OutDir <scratch folder>` for a picture inside the repo) and read the `<picture>.line70.png` it writes (red line at 70%, bottom 30% tinted blue). Any part of any character in the tint fails the picture: that strip is where the app's words go. The cover follows the same rule. Older books' `art.md` lines that say only "faces and action" are history; this checklist wins.
+- [ ] The bottom 30% is still scene (ground, grass, flowers, water, floor), never a plain white or empty strip; the scene fills the whole frame, top and bottom.
 - [ ] Indoors/outdoors and time of day match the text (no grass on an indoor floor).
 - [ ] Every character has the right number of arms, hands, legs, paws and wings (Slice 350: a lion with three hands, an extra limb).
 - [ ] Objects and tools have their real shape, not melted or twisted.

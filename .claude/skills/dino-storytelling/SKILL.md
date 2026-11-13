@@ -69,7 +69,7 @@ number, the one action, who is in it with a count, where, and time of day. Then 
 
 - [ ] Every page's picture differs from its neighbours (place, action or who is there).
 - [ ] No page needs two pictures.
-- [ ] Characters' faces and the action fit in the top 70% of a 3:4 portrait picture.
+- [ ] Every character, whole (feet, tails and held things included), and the action fit in the top 70% of a 3:4 portrait picture.
 - [ ] Each character's look is fixed in the line-up, not invented per page.
 
 ## 5. Changing an existing book

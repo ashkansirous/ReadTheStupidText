@@ -74,7 +74,8 @@ the contact sheet live only in the working folder. Touch nothing else.
      so saving keeps working while the PC is locked. Only if no download arrives, fall back to the clipboard
      route in SKILL.md step 6.
 5. Check every candidate by reading the saved file at full size against the step 5 checklist, counting
-   every character and comparing each outfit with the line-up item by item. A fail: write why, ask again
+   every character and comparing each outfit with the line-up item by item. Run `pwsh <repo or worktree root>/.claude/skills/create-dino-story/line70.ps1 <file>` (absolute path;
+   `<file>` is in your out folder, never in the repo) and read the `.line70.png` it writes next to the file: any part of any character (feet, tail, a held berry) below the red line fails. A fail: write why, ask again
    (a new chat; a small patch may continue the chat only while it stays at or under 3 picture requests), check again. A pass: rename it to `cover.jpg` / `<page>.jpg`.
    Record every attempt in the art record's table (`pages` mode: in `<out folder>/checks.md` instead).
 6. (`finish` and `all` only.) When every picture the book needs is accepted, copy the repo's current pictures for pages you didn't

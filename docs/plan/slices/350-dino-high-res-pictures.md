@@ -58,6 +58,18 @@ extension (traced in B3: both are called on a book's `pictures` and `translation
     - 3.1 Pro: the mouse faces left, so the action does not match the text, and the lion's back paw is unclear.
     - Flash-Lite: part of the action is missing.
     - Still open: the user's model pick (A4).
+  - *User answer (2026-11-13):* 3.5 Flash-Lite and 4 Argon are out; the pick is between 3.1 Pro and 4 Hydrogen. Pro's
+    detail, drawing and bottom flowers are liked, but its page 5 put the Mouse's body, feet and berry and the Lion's front
+    paws below the 70% line, where the app's words go. So the rule is now stricter: every character stays whole above the
+    70% line (feet, tails and held things included), in `prompts.md`, SKILL.md steps 4-5, the illustrator and the reviewer,
+    and the check measures it with `line70.ps1` (red line at 70%), never by eye. "This is important" (the user).
+  - [ ] A5. Next test, before the pick: page 5 again and one more page (page 2, copy mode: the Lion's paw down beside the Mouse,
+    both low on the ground) on both 3.1 Pro and 4 Hydrogen with the stricter prompt, one chat per picture.
+    Result (2026-11-13, checked by the main thread on the line copies): Pro page 5 fails, its Lion's tail tip ends about 73%
+    (a second try was worse, about 75%); Hydrogen page 5 ends right on the line, about 70%; both page 2s pass, about 68%.
+    Both models still draw the Mouse facing right, not looking back. All 4 legs on every Lion.
+  - [ ] A6. Before part D: `gemini-take-download.ps1` re-saves Gemini's download as JPEG q95 (about half the bytes), which
+    breaks the decision "kept exactly as Gemini downloads it". Part D needs a save path that moves the file untouched.
     - The pictures are not kept anywhere durable. If the scratchpad is gone when A4 is picked up, redraw A2 before showing the comparison again.
 - [ ] B. Guard rails, before the first picture is committed:
   - [x] B1. In `.gitattributes`: `content/dino/*/high-res/** filter=lfs diff=lfs merge=lfs -text`. Check that `.lfsconfig` keeps these files out of normal fetches and CI checkouts, as it does for audio.

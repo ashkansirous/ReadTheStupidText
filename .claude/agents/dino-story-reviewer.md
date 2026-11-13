@@ -43,8 +43,12 @@ Read `content/dino/<stem>/characters/` (the line-up and sheets), then the cover 
 picture **at full size**, one at a time, from the working folder. Never judge from the contact sheet.
 
 - **Each picture against its page**: shows that page's one action, nothing from another page; the exact
-  cast with the right count; the step 5 checklist in SKILL.md (no text, faces and action in the top 70% with the bottom 30% still scene, indoors or outdoors, rule 1, no menace).
+  cast with the right count; the step 5 checklist in SKILL.md (no text, every character whole above the 70% line with the bottom 30% still scene, indoors or outdoors, rule 1, no menace).
   A picture **fails if any** of these fails (Slice 350):
+  - every character is whole above the 70% line: heads, bodies, legs, feet, paws, tails and anything they hold. Run
+    `pwsh .claude/skills/create-dino-story/line70.ps1 <picture> -OutDir <a scratch folder outside the repo>` (you change
+    nothing in the repo) and read the `.line70.png` it writes; any part of a
+    character inside the tinted bottom 30% fails (the app's words cover that strip);
   - every character has the right number of arms, hands, legs, paws and wings;
   - the scene fills the whole frame, with no plain white or empty strip at the top or bottom;
   - there are no words, letters or signs in the picture;
