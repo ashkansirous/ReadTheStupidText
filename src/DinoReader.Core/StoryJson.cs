@@ -125,8 +125,8 @@ public static class StoryJson
             return [];
         }
 
-        var file = new BackCoverFile { StoryBy = cover.StoryBy, Retold = cover.Retold ? true : null, Illustration = cover.Illustration, Month = cover.MonthText };
-        return [new PageFile { Text = BackCoverEnglish.PageText(cover), BackCover = file }];
+        var file = new BackCoverFile { StoryBy = cover.StoryBy, Retold = cover.Retold ? true : null, Illustration = cover.Illustration, Month = cover.MonthText, Picture = cover.PictureFile };
+        return [new PageFile { Text = BackCoverEnglish.PageText(cover), ImageFile = cover.PictureFile, BackCover = file }]; // Slice 359: an older app shows the picture as the page's own
     }
 
     private static (List<PageFile> Pages, BackCover? Cover) SplitBackCover(List<PageFile> pages)
@@ -142,8 +142,11 @@ public static class StoryJson
             throw new StoryFormatException("The story file has a back cover but no story pages.");
         }
 
-        return (pages.Take(lastIndex).ToList(), BackCover.TryCreate(file.StoryBy, file.Retold == true, file.Illustration, file.Month));
+        return (pages.Take(lastIndex).ToList(), BackCover.TryCreate(file.StoryBy, file.Retold == true, file.Illustration, file.Month, file.Picture ?? OlderFilePicture(pages[lastIndex].ImageFile)));
     }
+
+    // A file from before the Picture field names its back-cover picture as the last page's image; any other image there is not the back cover's.
+    private static string? OlderFilePicture(string? imageFile) => imageFile == BackCover.PictureName ? imageFile : null;
 
     private static List<RecordingFile>? ToRecordingFiles(IReadOnlyDictionary<int, PageRecording>? recordings, int pageCount)
     {
@@ -523,6 +526,10 @@ public static class StoryJson
 
         /// <summary>The month, <c>yyyy-MM</c>.</summary>
         public string? Month { get; set; }
+
+        /// <summary>Slice 359: the drawn back-cover picture's file name; absent for a book that still shows the live credits page.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Picture { get; set; }
     }
 
     private sealed class RegionFile

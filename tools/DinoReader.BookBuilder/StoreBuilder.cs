@@ -49,6 +49,7 @@ internal static class StoreBuilder
         await library.AddAsync(story);
         IReadOnlyList<string> pictures = PictureFilesOf(spec);
         StarterBuilder.CopyPictures(story, pictures, library);
+        StarterBuilder.CopyBackCoverPicture(story, spec.Stem, library);
         string? coverSource = StarterBuilder.ExistingFile(Path.Combine(StoryArtFolder(spec.Stem), "cover.jpg"));
         await WritePackageAsync(await StarterBuilder.WithPictureCoverAsync(story, coverSource, library), spec, library, Path.Combine(StoryArtFolder(spec.Stem), CoverThumbFile));
     }

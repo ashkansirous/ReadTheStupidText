@@ -66,6 +66,8 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 	private bool _railApplied; // the controls placement the layout was last applied for (height-dependent, so it can change while the kind stays)
 	private IReadOnlyList<StoryPage> _shownPages = [];
 	private bool _surfaceShown;
+	private static readonly Dictionary<string, string> DrawnBackCovers = []; // Slice 359: story id to its drawn back-cover path once found; UI thread only
+	private static readonly HashSet<string> MissingBackCoversReported = []; // Slice 359: books whose back_cover_missing fallback was already recorded this run
 	private bool _hasBackCover; // the book shows the silent back cover as its last page (Slice 237)
 	private bool _translatedDisplay; // the page shows the translation (Slice 110): its offsets are not the story's, so the spoken position is not used
 	private int _displayVersion;
@@ -668,7 +670,7 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 		RenderChrome();
 	}
 
-	// Slice 237: the silent back cover, worded in the language the text is shown in; the picture is the book's cover (null for a colour cover).
+	// Slice 237: the silent back cover, worded in the language the text is shown in; the picture is the book's cover (null for a colour cover), used by the live page of a book with no drawn back cover (Slice 359).
 	private BackCoverView? BackCoverOf(Story story)
 	{
 		if (story.BackCover is not { } cover)
@@ -678,7 +680,35 @@ public partial class ReadingPage : ContentPage, IDinoKeyTarget
 
 		string language = _translatedDisplay ? _session.ReadingLanguage : story.Language;
 		string? picture = story.CoverImageFile is { } file ? _library.TryResolveFile(story.Id, file) : null;
-		return new BackCoverView(BackCoverText.Lines(cover, language), Color.FromArgb(CoverPalette.ColourAt(story.CoverColourIndex)), picture);
+		return new BackCoverView(BackCoverText.Lines(cover, language), Color.FromArgb(CoverPalette.ColourAt(story.CoverColourIndex)), picture, DrawnBackCover(story, cover));
+	}
+
+	// Slice 359: the drawn picture's path; a book that names one whose file is missing shows the live page and reports the fallback (a book that names none, Good Enough, is not one).
+	private string? DrawnBackCover(Story story, BackCover cover)
+	{
+		if (cover.PictureFile is not { } name)
+		{
+			return null;
+		}
+
+		if (DrawnBackCovers.TryGetValue(story.Id, out string? known))
+		{
+			return known; // a found picture is not looked for again on a re-render (mode or language switch)
+		}
+
+		string? path = _library.TryResolveFile(story.Id, name);
+		if (path is not null && File.Exists(path))
+		{
+			DrawnBackCovers[story.Id] = path;
+			return path;
+		}
+
+		if (MissingBackCoversReported.Add(story.Id)) // once per book per app run, so a broken book does not inflate the Slice 273 counts
+		{
+			_usage.RecordFallback(story, FallbackArea.Library, FallbackReason.BackCoverMissing);
+		}
+
+		return null;
 	}
 
 	// A page that plays a parent's recording has no sentence timings, so the whole page gets one soft highlight (Slice 111, mock frame 46).

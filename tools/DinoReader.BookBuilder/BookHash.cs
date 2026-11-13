@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace DinoReader.BookBuilder;
 
 /// <summary>
-/// The hash of a book's content (Slice 157, Decision 162): its text (<c>story.md</c> or <c>lines.json</c>), page pictures, covers, translations, and the parts of <c>book.json</c>
+/// The hash of a book's content (Slice 157, Decision 162): its text (<c>story.md</c> or <c>lines.json</c>), page pictures, covers, back-cover picture (Slice 359; never <c>high-res/</c>), translations, and the parts of <c>book.json</c>
 /// that reach the package (id, title, ages, author, credits, colour, added date, cast, animals). The version is not in it: <c>check</c> compares the hash with the one stored
 /// beside the version, so changing a book without <c>stamp</c> (which raises the version and stores the new hash) fails the check. Text files are hashed with LF line
 /// endings, so a Windows checkout and a Linux one agree.
@@ -29,7 +29,7 @@ internal static class BookHash
     private static IEnumerable<string> ContentFiles(BookFolder book)
     {
         var files = new List<string>();
-        files.AddRange(new[] { Path.Combine(book.Dir, BookFolder.StoryFile), book.LinesPath, book.CoverPath, book.CoverThumbPath }.Where(File.Exists));
+        files.AddRange(new[] { Path.Combine(book.Dir, BookFolder.StoryFile), book.LinesPath, book.CoverPath, book.CoverThumbPath, book.BackCoverPath }.Where(File.Exists));
         files.AddRange(StarterBuilder.PictureFilesIn(book.PicturesPath).OrderBy(Path.GetFileName, StringComparer.Ordinal));
         files.AddRange(FilesIn(book.TranslationsPath, ".json", BookFolder.PiecesFile));
         files.AddRange(new[] { book.TitlesPath }.Where(File.Exists));

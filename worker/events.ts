@@ -83,6 +83,8 @@ export const FALLBACK_REASONS = [
   "tap_failed", "layout_failed",
   // Slice 351: the real causes behind clip_missing (no_pack and pack_failed are above), and the two ways an animal clip failed
   "file_missing", "no_clip", "animal_clip_copy_failed", "animal_clip_play_failed",
+  // Slice 359: a book's drawn back cover is named but its picture file is missing
+  "back_cover_missing",
 ] as const;
 const MAX_COUNT = 1_000_000;
 export const MAX_SECONDS = 86_400;
