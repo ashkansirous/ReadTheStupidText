@@ -3,6 +3,8 @@
 // 2 = the one before); then save it with gemini-take-download.ps1. The clipboard is NOT touched by default. Fallback only:
 // call `await window.__grab(1, { clipboard: true })`, then one real `computer` click on the picture copies it to the clipboard;
 // poll `window.__clipResult` for "WxH" and run `pwsh -STA gemini-clipboard.ps1 Save <file>`.
+// Slice 356 adds `__attachmentCount()` (confirms the line-up paste) and `await __setupPicture(prompt, pictures[, {dryRun}])`
+// (Create image, 3:4, the prompt and Send in one call).
 if (!window.__grabReady) {
   window.__grabReady = true;
   window.__blobs = [];
@@ -98,27 +100,113 @@ if (!window.__grabReady) {
     const box = document.querySelector('rich-textarea');
     let area = box;
     for (let i = 0; i < 8 && area && !sendButton(area); i++) area = area.parentElement;
-    return { box, area: area || box?.parentElement };
+    return { box, area: area && sendButton(area) ? area : null };
   };
   const inChat = img => img.closest('user-query, model-response, message-content, infinite-scroller');
-  // Counts distinct picture sources (one thumbnail drawn twice counts once). The page-wide fallback is used only when
-  // a picture is expected, so a stray page image can never block a text-only patch.
+  // Counts distinct picture sources (one thumbnail drawn twice counts once), only inside the prompt/composer area, so a
+  // stray page image can never count as an attachment. Returns null (UNKNOWN) when the composer area can't be found:
+  // never treat that as 0 or as the expected count (a page-wide count once gave a false pass).
   const distinct = imgs => new Set(imgs.map(img => img.src)).size;
-  const attachedPictures = (area, expected) => {
-    const own = [...(area?.querySelectorAll('img') || [])]
-      .filter(img => !inChat(img) && (/^(blob:|data:)/.test(img.src) || img.naturalWidth > 48));
-    if (own.length || expected === 0) return distinct(own);
-    return distinct([...document.querySelectorAll('img')].filter(img => /^(blob:|data:)/.test(img.src) && !inChat(img)));
-  };
+  const attachedPictures = area => (area ? distinct([...area.querySelectorAll('img')]
+    .filter(img => !inChat(img) && (/^(blob:|data:)/.test(img.src) || img.naturalWidth > 48))) : null);
+  const UNKNOWN_AREA = 'composer area';
   const firstDifference = (a, b) => {
     let i = 0;
     while (i < a.length && a[i] === b[i]) i++;
     return i;
   };
+  // Slice 356. How many pictures are attached in the prompt box right now (the line-up paste is confirmed by this, never by
+  // a screenshot). Same counting as __sendChecked, so a thumbnail drawn twice counts once. Returns the string
+  // 'UNKNOWN' (not a number) when the composer area can't be found: screenshot once and carry on click by click.
+  window.__attachmentCount = () => { const n = attachedPictures(composer().area); return n === null ? 'UNKNOWN' : n; };
+  const pause = ms => new Promise(r => setTimeout(r, ms));
+  const waitFor = async (test, maxMs = 5000) => {
+    for (let waited = 0; waited < maxMs; waited += 250) {
+      const found = test();
+      if (found) return found;
+      await pause(250);
+    }
+    return null;
+  };
+  // On a cold page the Send button (which marks the composer area) can appear only after the prompt fill: wait for it
+  // before reporting UNKNOWN (live check 2026-11-13: the first dry run on a cold page returned MISSING: composer area).
+  const composerAreaReady = () => waitFor(() => composer().area, 3000);
+  const composerArea = () => composer().area || document;
+  const createImageChip = () => composerArea().querySelector('button[aria-label="Deselect Images"]');
+  const aspectButton = () => [...composerArea().querySelectorAll('button')]
+    .find(b => /^Aspect ratio/.test(b.getAttribute('aria-label') || b.innerText.trim()));
+  const ratioIs34 = () => /3:4/.test(aspectButton()?.getAttribute('aria-label') || '');
+  // A chip already showing may be stale (kept from an earlier chat or another tool), so it is never trusted: it is deselected
+  // first, then Create image is picked through the menu in this call and counts as on only once the chip shows after that click.
+  const chooseCreateImage = async () => {
+    if (createImageChip()) {
+      createImageChip().click();
+      if (!(await waitFor(() => !createImageChip(), 2000))) return false;
+    }
+    composerArea().querySelector('button[aria-label="Upload & tools"]')?.click();
+    const item = await waitFor(() => [...document.querySelectorAll('toolbox-drawer-item')]
+      .find(e => squash(e.innerText) === 'Create image'));
+    if (!item) return false;
+    (item.querySelector('button') || item).click();
+    return !!(await waitFor(createImageChip));
+  };
+  // Right before sending: both modes still on (a composer re-render after the prompt fill can reset them).
+  const modesStillOn = () => !!createImageChip() && ratioIs34();
+  const chooseRatio34 = async () => {
+    if (ratioIs34()) return true;
+    const opener = aspectButton();
+    if (!opener) return false;
+    opener.click();
+    const option = await waitFor(() => document.querySelector('[role="menuitemradio"][aria-label="3:4"]'));
+    if (!option) return false;
+    option.click();
+    return !!(await waitFor(ratioIs34));
+  };
+  const fillPrompt = async prompt => {
+    const { box } = composer();
+    const editor = box?.querySelector('[contenteditable="true"]') || box;
+    if (!editor) return false;
+    const typeOnce = async () => {
+      editor.focus();
+      if (!editor.contains(document.activeElement) && document.activeElement !== editor) return false;
+      document.execCommand('selectAll');
+      document.execCommand('delete');
+      document.execCommand('insertText', false, prompt);
+      return !!(await waitFor(() => squash(editor.innerText) === squash(prompt), 3000));
+    };
+    return (await typeOnce()) || (await typeOnce());
+  };
+  // One call per picture set-up (Slice 356): Create image, 3:4, the prompt, then Send through __sendChecked. Items are found
+  // by label, never by position. Returns one line, e.g. 'ok: create-image, 3:4, 1 attachment, prompt 812 chars, sent'.
+  // `MISSING: <item>` means that step's control was not found (do that picture click by click); anything else after
+  // `REFUSED`/`SENT WITHOUT TEXT`/`UNCONFIRMED` is __sendChecked's own answer, so follow its rules. Paste the line-up first
+  // and wait for its thumbnail; `pictures` is how many are attached (0 for none). options.dryRun: do everything except
+  // Send and mark nothing, returning 'dry-run ok: ...' (a check without drawing a picture); it leaves the chat in Create image + 3:4
+  // with the prompt filled (clear the box with selectAll + delete and click the Create image chip to deselect it before any
+  // text-only message).
+  window.__setupPicture = async (prompt, pictures, options) => {
+    const dryRun = !!(options && options.dryRun);
+    if (!Number.isInteger(pictures) || pictures < 0) return 'REFUSED: say how many pictures are attached (0 or more)';
+    if (!(await chooseCreateImage())) return 'MISSING: Create image (Upload & tools menu or its item)';
+    if (!(await chooseRatio34())) return 'MISSING: Aspect ratio 3:4';
+    if (!(await fillPrompt(prompt))) return 'MISSING: prompt box did not take the whole prompt';
+    const attached = attachedPictures(await composerAreaReady());
+    if (attached === null) return `MISSING: ${UNKNOWN_AREA} (could not count attached pictures; screenshot and go click by click)`;
+    if (pictures > 0 ? attached < pictures : attached !== 0) return `REFUSED: ${attached} picture(s) attached, expected ${pictures}`;
+    if (!modesStillOn()) return 'MISSING: Create image or 3:4 was reset after the prompt was filled (set them again, then call again)';
+    const line = `create-image, 3:4, ${attached} attachment, prompt ${squash(prompt).length} chars`;
+    if (dryRun) return `dry-run ok: ${line}, not sent`;
+    const previousMark = window.__picturesBefore;
+    window.__markPictures(); // only now: every check above passed
+    const sent = await window.__sendChecked(prompt, pictures);
+    if (/^(REFUSED|MISSING)/.test(sent)) window.__picturesBefore = previousMark; // nothing was sent: keep the old mark
+    return sent === 'SENT' ? `ok: ${line}, sent` : sent;
+  };
   window.__sendChecked = async (expected, pictures) => {
     if (!Number.isInteger(pictures) || pictures < 0) return 'REFUSED: say how many pictures are attached (0 or more)';
-    const { box, area } = composer();
+    const { box } = composer();
     if (!box) return 'REFUSED: no prompt box';
+    const area = await composerAreaReady();
     const typed = squash(box.innerText);
     const want = squash(expected);
     if (!want) return 'REFUSED: empty expected prompt';
@@ -126,7 +214,8 @@ if (!window.__grabReady) {
       const at = firstDifference(typed, want);
       return `REFUSED: prompt box differs at char ${at} of ${want.length} (box has ${typed.length}): "${typed.slice(at, at + 30)}" vs "${want.slice(at, at + 30)}"`;
     }
-    const attached = attachedPictures(area, pictures);
+    const attached = attachedPictures(area);
+    if (attached === null) return `MISSING: ${UNKNOWN_AREA} (could not count attached pictures; screenshot and go click by click)`;
     if (pictures === 0 ? attached !== 0 : attached < pictures) return `REFUSED: ${attached} picture(s) attached, expected ${pictures}`;
     const send = sendButton(area);
     if (!send || send.disabled || send.getAttribute('aria-disabled') === 'true') return 'REFUSED: no enabled Send button';
