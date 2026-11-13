@@ -1,6 +1,8 @@
 # Slice 371 — Folders grouped by product: src, tests and tools
 **Product:** Shared
 
+**Parked (night 2026-11-13-1149, wave 7):** not started. Its own rule needs no other worktree with changes; worktree `gedlg` (`feat/ge-dialogue`, Good Enough redraw, live at 23:55Z) changes 474 files, one of them `tests/DinoReader.Tests/PictureBookSentenceDumpTests.cs`, and the primary checkout holds another session's untracked `src/DinoReader.Core/AppliedOnce.cs`, `tests/DinoReader.Tests/AppliedOnceTests.cs` and `src/DinoReader.BookSample/`. Run it once those are merged or cleared.
+
 *Planned 2026-11-13.* Last of the tidy-by-product slices (366-371). User's choice, 2026-11-13 (item 2 of 5). Runs only when no other PR or worktree with changes is open (it moves almost every file); after Slice 370.
 
 **Touches:** everything under `src/`, `tests/`, `tools/`; `ReadTheStupidText.slnx`, `Directory.Build.props`, `src/*.props`, `src/AndroidProguard.cfg`, `global.json` (check), `.github/workflows/*.yml`, `.github/scripts/*`, `.github/CLAUDE.md`, `tools/CLAUDE.md`, root `CLAUDE.md`, `README.md`, `.claude/skills/**` and `.claude/agents/**` that name paths, `package.json`, `tsconfig.json`
