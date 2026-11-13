@@ -18,6 +18,7 @@ Open slices only. Finished slices (171 rows) are in [slices-done](docs/plan/note
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
+| 359 | Dino: Play on mobile data sits silent on "Waiting for Wi-Fi…" (the book's sound for the language isn't on the phone); download it on Play, say what's wrong, log it; plus the VIBRATE crash on the grown-ups' hold | planned | | | [359-dino-play-waits-for-wifi.md](docs/plan/slices/359-dino-play-waits-for-wifi.md) |
 | 357 | Server errors the user can see: standard translated messages per status (402 "buy this book first", 5xx "problem connecting"), the server's English text only on 400, shop and voice packs in both apps | planned | | | [357-server-error-messages.md](docs/plan/slices/357-server-error-messages.md) |
 | 358 | Dino Android: "Connect to the internet to buy" while online, no Buy button (empty Play prices, unreported) | planned | | | [358-dino-android-no-buy-button.md](docs/plan/slices/358-dino-android-no-buy-button.md) |
 | 193 | German store listings for both apps | approved 2026-11-01; App Store done; Play needs one permission from the user ("Manage store presence" for the service account; Chrome grant refused 2026-11-07); RTST Partner Center German via Chrome (Claude) | | | [193-german-store-listings.md](docs/plan/slices/193-german-store-listings.md) |
