@@ -369,6 +369,7 @@
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Tarkistetaan ostoksiasi…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Kaupasta noudettavat kirjat</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Ilmaiset kirjat palaavat itsestään. Ostamasi kirjan saat takaisin painamalla kaupassa Palauta ostot ja palauttamalla sitten tämän varmuuskopion uudelleen.</value></data>
+  <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Ilmaiset kirjat, jotka ovat yhä kaupassa, palaavat itsestään. Kirja, jota kauppa ei enää tarjoa, ei palaa, mutta sen äänitykset pysyvät varmuuskopiotiedostossa. Ostamasi kirjan saat takaisin painamalla kaupassa Palauta ostot ja palauttamalla sitten tämän varmuuskopion uudelleen.</value></data>
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Tarinasi äänitykset ja asetukset yhdessä tiedostossa. Itse kirja palaa kaupasta. Tallenna se Driveen tai Tiedostoihin tai lähetä se itsellesi.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Kaikkien {0} tarinan äänitykset ja asetukset yhdessä tiedostossa. Itse kirjat palaavat kaupasta. Tallenna se Driveen tai Tiedostoihin tai lähetä se itsellesi.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Palauttaa äänitykset ja asetukset tiedostosta ja hakee kirjat uudelleen kaupasta. Ostetut kirjat tarvitsevat ensin Palauta ostot.</value></data>

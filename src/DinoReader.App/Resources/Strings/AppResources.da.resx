@@ -369,6 +369,7 @@
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Tjekker dine køb …</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Bøger, der skal hentes tilbage fra butikken</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratis bøger kommer tilbage af sig selv. For en bog, du har købt, så tryk på Gendan køb i butikken og gendan derefter denne sikkerhedskopi igen.</value></data>
+  <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratis bøger, der stadig er i butikken, kommer tilbage af sig selv. En bog, som butikken ikke længere har, kommer ikke tilbage, men dens optagelser bliver i sikkerhedskopien. For en bog, du har købt, så tryk på Gendan køb i butikken og gendan derefter denne sikkerhedskopi igen.</value></data>
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Din historie – optagelser og indstillinger – i én fil. Selve bogen kommer tilbage fra butikken. Gem den i Drive eller Filer, eller send den til dig selv.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Optagelser og indstillinger for alle {0} historier i én fil. Selve bøgerne kommer tilbage fra butikken. Gem den i Drive eller Filer, eller send den til dig selv.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Henter optagelser og indstillinger tilbage fra en fil og henter bøgerne igen fra butikken. Købte bøger kræver først Gendan køb.</value></data>

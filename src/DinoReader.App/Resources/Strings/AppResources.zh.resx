@@ -370,6 +370,7 @@
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>正在检查你的购买…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>需要从商店取回的书</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>免费的书会自动回来。已购买的书，请在商店里点“恢复购买”，然后再恢复一次这份备份。</value></data>
+  <data name="Backup_MissingNoteStore" xml:space="preserve"><value>仍在商店里的免费书会自动回来。商店已下架的书不会回来，但它的录音仍保存在备份文件里。已购买的书，请在商店里点“恢复购买”，然后再恢复一次这份备份。</value></data>
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>把你的故事的录音和设置放进一个文件。书本身会从商店取回。保存到云端硬盘或“文件”，或发给自己。</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>把全部 {0} 个故事的录音和设置放进一个文件。书本身会从商店取回。保存到云端硬盘或“文件”，或发给自己。</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>从文件取回录音和设置，并从商店重新获取书。已购买的书需要先“恢复购买”。</value></data>

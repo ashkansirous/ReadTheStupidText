@@ -129,19 +129,59 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 			ExportFolders.DeleteStale(); // never while a save or restore is using its export folder
 		}
 
+		_store.Sales.ConfigChanged -= OnSalesConfigChanged; // never twice, whatever the host raises (as StorePage does)
+		_store.Sales.ConfigChanged += OnSalesConfigChanged;
 		await TryAsync(CountStoriesAsync);
+	}
+
+	protected override void OnDisappearing()
+	{
+		_store.Sales.ConfigChanged -= OnSalesConfigChanged;
+		base.OnDisappearing();
+	}
+
+	// Slice 346 (check7 #5): the switch became known (or changed) while the page is open, so the texts are written again and Save uses the format they now promise.
+	// Check8 #9: never while a Save or Restore is running: the format and texts of that run stay as they were when it started (Save reads the format once).
+	private async void OnSalesConfigChanged(object? sender, EventArgs e)
+	{
+		if (_busy.IsBusy)
+		{
+			_configChangedWhileBusy = true; // check2 #5: the texts are written again when the run ends (RefreshAfterBusyAsync)
+			return;
+		}
+
+		await TryAsync(CountStoriesAsync);
+	}
+
+	private bool _configChangedWhileBusy;
+
+	// Check2 #5: after a Save or Restore ends, a switch change that came in during it is applied now, so the texts and the format Save will write match again.
+	private async Task RefreshAfterBusyAsync()
+	{
+		if (_configChangedWhileBusy && !_busy.IsBusy)
+		{
+			_configChangedWhileBusy = false;
+			await TryAsync(CountStoriesAsync);
+		}
 	}
 
 	private async Task CountStoriesAsync()
 	{
 		_count = (await _library.ListAsync()).Count;
+		_format = FormatNow();
 		SaveBody.Text = SaveBodyText();
 		RestoreBody.Text = StateOnlyBackups ? AppResources.Backup_RestoreBodyState : AppResources.Backup_RestoreBody;
 		SaveButton.IsEnabled = _count > 0;
 	}
 
 	// Slice 346: only a known-on paid-books switch makes a backup without the book files; off or unknown keeps the backup of before (book files inside).
-	private bool StateOnlyBackups => _store.Sales.ConfigKnown && _store.Sales.Enabled;
+	// Check7 #5: the format is worked out once, together with the text that describes it, and Save writes that format, never a second reading of the switch.
+	private static readonly BackupFormat DefaultFormat = BackupFormat.WithBookFiles;
+	private BackupFormat _format = DefaultFormat;
+
+	private BackupFormat FormatNow() => _store.Sales.SwitchKnownOn ? BackupFormat.StateOnly : BackupFormat.WithBookFiles;
+
+	private bool StateOnlyBackups => _format == BackupFormat.StateOnly;
 
 	private string SaveBodyText()
 	{
@@ -165,12 +205,14 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 	{
 		UiUsage.Tap(UiControls.Save);
 		await _busy.RunAsync(() => GuardedAsync(SaveAsync));
+		await RefreshAfterBusyAsync();
 	}
 
 	private async void OnRestoreClicked(object? sender, EventArgs e)
 	{
 		UiUsage.Tap(UiControls.Restore);
 		await _busy.RunAsync(() => GuardedAsync(RestoreAsync));
+		await RefreshAfterBusyAsync();
 	}
 
 	// A failure the code below did not name ends in the calm "didn't work" alert.
@@ -212,7 +254,8 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 			return;
 		}
 
-		(string path, int skipped) = await WaitingAsync(AppResources.Wait_BackingUp, () => WriteBackupAsync(stories));
+		BackupFormat format = _format; // the one the page text promised, read once
+		(string path, int skipped) = await WaitingAsync(AppResources.Wait_BackingUp, () => WriteBackupAsync(stories, format));
 		await _external.RunAsync(() => DeliverAsync(path));
 		if (skipped > 0)
 		{
@@ -221,14 +264,13 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 	}
 
 	// A failed write removes its folder, so no partial zip is left behind to be shared later.
-	private async Task<(string Path, int Skipped)> WriteBackupAsync(IReadOnlyList<Story> stories)
+	private async Task<(string Path, int Skipped)> WriteBackupAsync(IReadOnlyList<Story> stories, BackupFormat format)
 	{
 		string folder = ExportFolders.CreateNew();
 		string path = Path.Combine(folder, BackupFilePrefix + DateTime.Now.ToString(DateFormat) + StoryBackupManifest.Extension);
 		try
 		{
 			await using FileStream output = File.Create(path);
-			BackupFormat format = StateOnlyBackups ? BackupFormat.StateOnly : BackupFormat.WithBookFiles;
 			return (path, await StoryBackupWriter.WriteAsync(stories, _library, output, format, SettingsToSave()));
 		}
 		catch
@@ -318,9 +360,12 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 		}
 	}
 
+	private bool _restoreStartedOn;
+
 	private async Task<StoryRestoreResult> CopyAndRestoreAsync(FileResult picked, string path)
 	{
 		await CopyPickedAsync(picked, path);
+		_restoreStartedOn = _store.Sales.SwitchKnownOn; // check2 #3/#4: the one reading of the gate for this whole restore (unlisted reports, purchase restore, the result note)
 		_store.Sales.RefreshConfigInBackground(); // never awaited: the last known switch decides (while it was never known, an old backup's books are fetched only when the listing says free)
 		LegacyBookFiles legacy = BookAccess.LegacyFilesMode(_store.Sales.ConfigKnown, _store.Sales.Enabled); // unknown counts as off: the backup's book files are imported, as before paid books
 		var added = new List<Story>();
@@ -378,7 +423,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 		}
 
 		StoreListing listing = await _store.ListAsync(CancellationToken.None);
-		if (listing.Status == StoreLoadStatus.Ok && _store.Sales.Enabled)
+		if (listing.Status == StoreLoadStatus.Ok && _restoreStartedOn)
 		{
 			await _store.Sales.Purchases.RestoreAsync(listing.Items, CancellationToken.None);
 		}
@@ -395,16 +440,28 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 			else
 			{
 				left.Add(book);
+				ReportUnlisted(book, item, listing);
 			}
 		}
 
 		return merged with { Added = merged.Added + added, Missing = left.Count > 0 ? left : null };
 	}
 
-	// One decision for both the store download and the file fallback: BookAccess.LegacyBookChoice, fed by the same "sold" reading the first-run picker uses (an unread switch counts as sold).
+	// Slice 346 (check7 #8): a book the store no longer lists cannot be fetched, so its recordings stay in the backup file (a restore never changes it) and the book stays in the "books to get back" list
+	// instead of vanishing; each such book is counted once as a store fallback, so it is seen in the logs rather than lost without a trace.
+	private void ReportUnlisted(MissingBook book, StoreItem? item, StoreListing listing)
+	{
+		if (_restoreStartedOn && item is null && listing.Status == StoreLoadStatus.Ok) // check2 #3: only with the switch known on; off or unknown reports nothing new
+		{
+			Debug.WriteLine($"Dino Reader restore: {book.Id} is not in the store any more; its recordings stay in the backup file");
+			_sink.Report(FallbackArea.Store, FallbackReason.StoreFailed);
+		}
+	}
+
+	// One decision for both the store download and the file fallback: BookAccess.LegacyBookChoice, fed by the listing's "sold" reading; a book the listing does not name counts as free, so a backup that holds its files restores it (a family never loses a book it has).
 	private async Task<bool> TryGetOneAsync(MissingBook book, StoreItem? item, string path, List<Story> shelfAdded)
 	{
-		BookSale access = item is not null && BookAccess.IsSold(_store.Sales.EnabledForOffer, item) ? BookSale.Paid : BookSale.Free;
+		BookSale access = BookAccess.LegacyAccess(item is not null, item is not null && BookAccess.IsSold(_store.Sales.EnabledForOffer, item));
 		bool owned = item is not null && BookAccess.OwnedProduct(item, _store.Sales.Purchases.Snapshot.Owned) is not null;
 		LegacyBookSource first = BookAccess.LegacyBookChoice(access, owned, storeCanSupply: item is not null);
 		if (first == LegacyBookSource.Store && await TryGetBookAsync(item!, path))
@@ -517,7 +574,8 @@ public partial class BackupPage : ContentPage, IGrownUpPage, ICornerSubPage
 		if (result.Missing is { Count: > 0 } toGetBack)
 		{
 			AddResultRow(AppResources.Backup_Missing, toGetBack.Count, DinoTokens.Get(DinoTokens.Danger));
-			ResultNote.Text = AppResources.Backup_MissingNote;
+			// Check8 #2, check2 #4: with the switch off or unknown the note is the one of before; the longer note only when the switch was known on when the restore started.
+			ResultNote.Text = _restoreStartedOn ?AppResources.Backup_MissingNoteStore : AppResources.Backup_MissingNote;
 		}
 
 		ResultNote.IsVisible = result.Missing is { Count: > 0 };

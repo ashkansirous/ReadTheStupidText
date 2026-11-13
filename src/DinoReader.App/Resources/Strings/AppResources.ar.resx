@@ -370,6 +370,7 @@
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>جارٍ فحص مشترياتك…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>كتب تُستعاد من المتجر</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>تعود الكتب المجانية من تلقاء نفسها. أما الكتاب الذي اشتريته فاضغط «استعادة المشتريات» في المتجر ثم استعد هذه النسخة الاحتياطية مرة أخرى.</value></data>
+  <data name="Backup_MissingNoteStore" xml:space="preserve"><value>تعود الكتب المجانية الموجودة في المتجر من تلقاء نفسها. أما الكتاب الذي لم يعد المتجر يعرضه فلا يعود، لكن تسجيلاته تبقى في ملف النسخة الاحتياطية. أما الكتاب الذي اشتريته فاضغط «استعادة المشتريات» في المتجر ثم استعد هذه النسخة الاحتياطية مرة أخرى.</value></data>
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>تسجيلات قصتك وإعداداتها في ملف واحد. أما الكتاب نفسه فيعود من المتجر. احفظه في Drive أو الملفات أو أرسله إلى نفسك.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>تسجيلات القصص الـ {0} وإعداداتها في ملف واحد. أما الكتب نفسها فتعود من المتجر. احفظه في Drive أو الملفات أو أرسله إلى نفسك.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>يعيد التسجيلات والإعدادات من ملف ويجلب الكتب من المتجر مرة أخرى. الكتب المشتراة تحتاج أولاً إلى استعادة المشتريات.</value></data>
