@@ -3,9 +3,10 @@
 Rules for the Cloudflare Worker `readthestupidtext` and the sites it serves. Moved word for word from the root `CLAUDE.md` (2026-10-30).
 
 **Landing site.** `readthestupidtext.sirous.uk` is the Cloudflare Worker `readthestupidtext`
-(`wrangler.jsonc`, `worker/index.ts`) serving `site/` (not `docs/`); GitHub Pages is off. Deploy with
-`npm run deploy` (refuses CRLF site files; `npm run typecheck` keeps `wrangler.jsonc` and
-`wrangler.workers-dev.jsonc` in sync) manually when needed. Fast check for any `worker/` change: `npm ci && npm run typecheck` (a fresh worktree has no `node_modules`, and without them `tsc` never runs; Slice 219 went red in CI that way). Workers Builds deploys `main` only (preview-branch builds are off); deploy
+(`wrangler.jsonc`, `worker/index.ts`) serving `site/` (not `docs/`); GitHub Pages is off. **Production deploys only through Workers Builds on a
+merge to `main`; never run `npm run deploy` or `wrangler deploy` from a shell** (user, 2026-11-13; `deploy-guard.mjs`
+denies it). `npm run deploy` is the pipeline's own deploy command (it refuses CRLF site files; `npm run typecheck` keeps
+`wrangler.jsonc` and `wrangler.workers-dev.jsonc` in sync). Batched skip-CI merges skip Workers Builds (Slice 354 item 18). Fast check for any `worker/` change: `npm ci && npm run typecheck` (a fresh worktree has no `node_modules`, and without them `tsc` never runs; Slice 219 went red in CI that way). Workers Builds deploys `main` only (preview-branch builds are off); deploy
 command `npm run deploy`, watch paths `worker/*`, `site/*`, `wrangler*.jsonc`, `package*.json`. A Worker custom domain can't replace an existing DNS
 record: delete it first (wrangler has no DNS scope). Privacy policy edits touch both `PRIVACY.md` and
 `site/privacy.html`. Don't add `docs/CNAME` or a GitHub Actions deploy. See `docs/DEPLOYING.md`.
