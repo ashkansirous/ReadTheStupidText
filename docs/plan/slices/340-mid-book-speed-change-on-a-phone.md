@@ -13,7 +13,7 @@
 - [x] Make the audio exactly as the app plays it: render it with the app's own engine and packs (the `voice-pick` skill's render path), or record it from the dev app on the S21 when rendering cannot reproduce it (speed changes, timing, a Sonos or store track). Note how each clip was made and its build or pack version.
 - [x] Publish one private listening page through the repo's `voice-pick` agent: a play button per clip, the line of text it reads, and for each clip "sounds right" or "something is wrong" with a free-text box for what is wrong (and a timestamp when it helps). English and Farsi only.
 - [x] When the user has answered, write every answer into this file, word for word (below).
-- [ ] Each "something is wrong" becomes a fix item in this slice (cause, then fix, through the normal review gate). Every "sounds right" closes the check.
+- [x] Each "something is wrong" becomes a fix item in this slice (cause, then fix, through the normal review gate). Every "sounds right" closes the check. (Answered 2026-11-09: one fix item, Fix 1 below, built.)
 - [x] **Fix 1 (from the user's answer):** Dino's slowest reading speed becomes **0.8x**. Today `ReadingSpeed.Min` is 0.5 (`src/DinoReader.Core/ReadingSpeed.cs:11`), and the Reading speed slider (`SettingsRows.cs`, `Minimum = ReadingSpeed.Min`) goes down to it. Set the minimum to 0.8 so the slider and any stored or synced value clamp to 0.8 (`ReadingSpeed` already clamps), update the tests and any speed labels or presets below 0.8, on Android, iOS and the Windows head. Build after Slice 325 parts A-C merge (both touch the Settings rows).
 
 ## The user's answers (2026-11-09, Done pressed 00:01Z)
