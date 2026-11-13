@@ -1,6 +1,6 @@
 # Slice 356 — Dino illustrator: fewer steps per picture and a much smaller context
 
-*Built 2026-11-13, not merged, not yet verified on a real page group (see Not yet verified).*
+*Built 2026-11-13, merged as PR #1035 (c90f3336), not yet verified on a real page group (see Not yet verified).*
 
 **Touches:** `.claude/agents/dino-story-illustrator.md`, `.claude/skills/create-dino-story/SKILL.md`, `.claude/skills/create-dino-story/gemini-grab.js`, `.claude/skills/create-dino-story/illustrator-usage.mjs` (new)
 
