@@ -485,6 +485,24 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Shared
 
+### Slice 374: Store listings in 13 more languages ([slice](slices/374-store-listings-13-languages.md))
+
+Machine drafts; none of these holds a push. Each line covers the Dino file (`docs/store-listings/dino/<lang>.md`) and the RTST file (`docs/store-listings/<lang>.md`).
+
+- **You:** native read of the Arabic store listings (`ar`).
+- **You:** native read of the Chinese (Simplified) store listings (`zh`).
+- **You:** native read of the Danish store listings (`da`).
+- **You:** native read of the Dutch store listings (`nl`).
+- **You:** native read of the Farsi store listings (`fa`; Google Play and Microsoft Store only, the App Store has no Persian).
+- **You:** native read of the Finnish store listings (`fi`).
+- **You:** native read of the French store listings (`fr`).
+- **You:** native read of the Japanese store listings (`ja`).
+- **You:** native read of the Norwegian store listings (`nb`).
+- **You:** native read of the Portuguese store listings (`pt`, Brazilian).
+- **You:** native read of the Russian store listings (`ru`).
+- **You:** native read of the Spanish store listings (`es`).
+- **You:** native read of the Swedish store listings (`sv`).
+
 ### Slice 369: One release workflow per product ([slice](slices/369-release-workflow-per-product.md))
 
 - First Dino-only merge runs only `release-dino.yml` and cuts only a `dino-v` tag.

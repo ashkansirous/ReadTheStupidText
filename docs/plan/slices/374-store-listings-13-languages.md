@@ -1,7 +1,7 @@
 # Slice 374 — Store listings in the other 13 app languages, both apps, every store
 **Product:** Shared
 
-*Planned (2026-11-13).*
+*In progress (wave 2026-11-13), draft PR.*
 
 **Touches:** `docs/store-listings/**` (new: one file per language for Dino under `docs/store-listings/dino/<lang>.md`; RTST's existing `docs/store-listings/<lang>.md` files completed, new `da.md`, `fi.md`, `sv.md`, `nb.md`, `nl.md`), `docs/plan/slices/374-store-listings-13-languages.md`, `docs/plan/unverified.md`
 
@@ -32,6 +32,21 @@ A French or Japanese parent searching the store sees an English page for an app 
 - [ ] 7. Each language gets one line in `docs/plan/unverified.md`: native read of the Dino and RTST listings in that language.
 
 The work goes through the global `store-listing` agent (apply mode; the user's approval above is the go).
+
+Pushes not done: the night session's store push was denied by the auto mode classifier (2026-11-13), reason verbatim: [Unrequested Commit in a Connected App]. The texts are in the repo; the push runs in an interactive session.
+
+## Draft state (2026-11-13, draft run, nothing pushed)
+
+**Texts written (items 2-7 text part).** Dino: `docs/store-listings/dino/<lang>.md` for ar zh da nl fa fi fr ja nb pt ru es sv (title, Play short, App Store subtitle/keywords/promotional text, Microsoft search terms, one description: Play text, with "Google Play" replaced by "App Store" or "Microsoft Store" for the other two). RTST: `docs/store-listings/<lang>.md` completed for ar es fa fr ja pt ru zh (brought to the current `en.md`: "no ads", usage-count wording, Android scan pack, Microsoft fallback reports) and new da fi sv nb nl; each now also has the App Store subtitle, keywords, promotional text and description. Item 6: every language has its own store search words (not word for word), checked by script against Apple keywords 100 bytes, subtitle 30, promotional 170, Play short 80, Microsoft 7 terms of at most 30 (RTST) or 40 (Dino) characters and 21 words; all within. Play has no keyword field: its search words are listed per file ("Play search phrases") and sit in the short and full text. Item 7: 13 native-read lines in `docs/plan/unverified.md` under Shared. All are machine drafts.
+
+**Supported locales per store (item 1, from each store's own docs).**
+- App Store: Apple's App Store Connect localizations page (https://developer.apple.com/help/app-store-connect/reference/app-store-localizations, read 2026-11-13) lists 50 languages including Arabic, Chinese (Simplified and Traditional), Danish, Dutch, Finnish, French, Japanese, Norwegian, Portuguese (Brazil, Portugal), Russian, Spanish (Spain, Mexico), Swedish. **Persian (Farsi) is not on the list: no Farsi on the App Store, for either app; skipped, not mapped to another language.** The page gives names, not codes; the codes in the files (`ar-SA`, `zh-Hans`, `da`, `nl-NL`, `fi`, `fr-FR`, `ja`, `no`, `pt-BR`/`pt-PT`, `ru`, `es-ES`/`es-MX`, `sv`) are from memory and must be checked against the API's accepted values at the push.
+- Google Play: Play Console help "Translate and localize your app" (https://support.google.com/googleplay/android-developer/answer/9844778, read 2026-11-13) lists all 13, Persian as `fa` (also fa-AE, fa-AF, fa-IR), Arabic `ar`, Chinese `zh-CN`/`zh-TW`/`zh-HK`, Danish `da-DK`, Dutch `nl-NL`, Finnish `fi-FI`, French `fr-FR`, Japanese `ja-JP`, Norwegian `no-NO`, Portuguese `pt-BR`/`pt-PT`, Russian `ru-RU`, Spanish `es-ES`/`es-419`, Swedish `sv-SE`.
+- Microsoft Store: not confirmed. The Microsoft Learn pages I tried for the Partner Center language list returned 404, so Farsi and the Norwegian and Chinese codes are unconfirmed; check in Partner Center at the push (the existing RTST `fa.md`, `ar.md` etc. were written for it in Slice 291).
+
+**Live locales per store and app.** Not re-read in this run: this draft run had no permission to read the credentials in `D:/secrets` (the one read was denied by the auto mode classifier, reason [Credential Materialization]). The 2026-11-13 reads in "Why" above stand (App Store en-US, de-DE; Play Dino en-GB, de-DE, RTST en-US; Microsoft Dino en, de; which RTST Microsoft locales are live was never read). Re-read them at the push, before overwriting.
+
+**Credentials (names only).** `D:/secrets/dinoreader/secrets.env` holds `DINOREADER_PLAY_SERVICE_ACCOUNT_JSON`, `APPLE_IAP_*` and `MS_STORE_*` (the Worker's Store collections app, not a submission API); `D:/secrets/readthestupidtext/secrets.env` holds `PLAY_SERVICE_ACCOUNT_JSON`; the App Store Connect key names (`ASC_API_KEY_*`) are in the `lets-call-mom` store. **No Partner Center submission credential exists for RTST or Dino**: no `MS_SUBMISSION_TENANT_ID`, `MS_SUBMISSION_CLIENT_ID` or `MS_SUBMISSION_CLIENT_SECRET` in any `D:/secrets` file, and the repo's GitHub secrets list shows no `MS_SUBMISSION_*`. So the Microsoft Store push (items 4 and the Partner Center part of 5) needs that Entra app created first, or the user's signed-in Chrome up to the Submit button.
 
 ## Verification
 
