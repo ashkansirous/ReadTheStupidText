@@ -14,12 +14,13 @@ kids' book reader with a voice per character) sharing the Mobile.Shared platform
 its own version, tag and GitHub Release: `rtst-v<x.y.z>` and `dino-v<x.y.z>` (Decision 137; the old shared
 `v<x.y.z>` tags are history).
 
-> **Stacked PRs:** open them against `main`, or retarget each one after its base
-> merges (PRs #154-#156 once merged into each other instead). (Decisions 45-51;
+> **Stacked PRs:** open them against `main`, or retarget each one to `main` after its base
+> merges; never merge one into another. (Decisions 45-51;
 > note: docs/plan/notes/claude-md-history.md)
 
-Read [`plan.md`](plan.md) before starting work — it defines the vertical slices
-and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. The numbered **Decisions** live in `docs/plan/decisions.md` (1-99 archived in `docs/plan/notes/decisions-001-099.md`; "Decision NN" anywhere in these files refers to it); each slice's full record is under `docs/plan/slices/`. Every slice file carries one `**Product:** RTST | Dino | Shared` line under its title, and its status row goes in the matching `plan.md` table (`### Read The Stupid Text`, `### Dino Reader`, `### Shared`). (Slice 366: docs/plan/slices/366-plan-split-by-product.md)
+Read [`plan.md`](plan.md) before starting work — it indexes the open slices (status, PR, slice file); finished rows
+live in `docs/plan/notes/slices-done.md`. Tick a slice's work items off in its own slice file; `plan.md` rows change only
+in the `update-docs` index pass. The numbered **Decisions** live in `docs/plan/decisions.md` (1-99 archived in `docs/plan/notes/decisions-001-099.md`; "Decision NN" anywhere in these files refers to it); each slice's full record is under `docs/plan/slices/`. Every slice file carries one `**Product:** RTST | Dino | Shared` line under its title, and its status row goes in the matching `plan.md` table (`### Read The Stupid Text`, `### Dino Reader`, `### Shared`). (Slice 366: docs/plan/slices/366-plan-split-by-product.md)
 
 ## Where the rules live
 
@@ -49,7 +50,7 @@ Shared:
 
 ## Stack & conventions
 
-- **.NET 10**, **C#**, **WinUI 3 / Windows App SDK 1.8**.
+- **.NET 10**, **C#**, **WinUI 3 / Windows App SDK 2.x** (the exact version is the `Microsoft.WindowsAppSDK` reference in `src/ReadTheStupidText.App/ReadTheStupidText.App.csproj`).
 - Solution file is `ReadTheStupidText.slnx` (the XML `slnx` format — not `.sln`).
 - Always confirm Windows App SDK / WinUI / `H.NotifyIcon` APIs and versions via
   **context7** before writing code against them — versions move fast.
@@ -81,8 +82,8 @@ DinoReader.Core → Application, Domain
   `LineReflow` (Slice 76, shared by both apps' read paths: `SpeechTextChunker`, Dino
   `StorySentences`/`StorySegmenter`), `SpeechTextChunker`/`ReadTimingTracker` (both `internal`, Slice 31) — pure
   chunking/timing logic shared by every `ISpeechReader` implementation on
-  every platform (`InternalsVisibleTo` covers `Tests`, `Infrastructure`, and
-  `Mobile`).
+  every platform (`InternalsVisibleTo` covers `ReadTheStupidText.Tests`, `Shared.Tests`, `Infrastructure`,
+  `Mobile` and `Mobile.Shared`).
 - **Documents** (`net10.0`) — `PlainTextExtractor`/`PdfTextExtractor`/
   `DocxTextExtractor`/`CompositeDocumentTextExtractor` (Slice 33). A portable
   library, not Infrastructure or Application: they need PdfPig/
@@ -90,7 +91,7 @@ DinoReader.Core → Application, Domain
   have no Windows-only dependency (so not stuck in Infrastructure) — both
   Infrastructure (Windows) and Mobile (Android) reference this project and
   share the exact same extractors.
-- **DinoReader.Core** (`src/DinoReader.Core`) — pure dialogue library, references Application only for `LineReflow` (details in its own file).
+- **DinoReader.Core** (`src/DinoReader.Core`) — pure dialogue library, references Application and Domain (details in its own file).
 - **Infrastructure** (`net10.0-windows`) — speech engines (local neural
   **Supertonic-3** via sherpa-onnx, plus a WinRT `SpeechSynthesis` fallback),
   all played through `MediaPlayer`; every platform downloads its voice as a pack
@@ -113,7 +114,7 @@ Build and run commands: RTST tray in `src/ReadTheStupidText.App/CLAUDE.md`, RTST
 
 ## Tests
 
-There are three test projects (xUnit v3). `tests/ReadTheStupidText.Tests` (RTST-only logic, `net10.0-windows`),
+There are three test projects (xUnit v3). `tests/ReadTheStupidText.Tests` (RTST-only logic, `net10.0-windows10.0.19041.0`),
 `tests/Shared.Tests` (shared engine, Documents, Domain, Application, Mobile.Shared links, and the two repo-wide guards
 `FallbackGuardTests` and `SherpaVersionPinTests`; `net10.0-windows10.0.19041.0`) and `tests/DinoReader.Tests`. A test whose
 subject only the RTST App, `Windows.Tray` or RTST `Mobile` reaches stays in `ReadTheStupidText.Tests`; anything Dino can

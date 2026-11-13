@@ -3,7 +3,7 @@
 `<STYLE>` = `Children's picture book illustration, soft watercolour and coloured pencil, warm gentle
 colours, simple rounded shapes, no text or letters anywhere.`
 `<SIZE>` = `Output size: small, 1K resolution, 896x1200 pixels (portrait 3:4).` It ends **every** prompt that
-asks for a picture: nothing bigger is needed, and bigger pictures use more of the usage limit.
+asks for a picture. It does not change the size Gemini returns or the usage cost (the model sets both; SKILL.md step 4), but it is harmless.
 
 
 ## Character reference sheet (one per character)
