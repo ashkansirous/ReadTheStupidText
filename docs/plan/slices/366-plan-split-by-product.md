@@ -1,6 +1,6 @@
 # Slice 366 — Plan split by product: RTST, Dino and Shared tables, every slice file tagged
 
-*Planned 2026-11-13.* First of the tidy-by-product slices (366-371). The user chose to keep both apps in one repository and tidy it instead of splitting it (2026-11-13, "lets change it to tidy up", then "I want all 5").
+*In progress (wave 2026-11-13), draft PR.* Planned 2026-11-13. First of the tidy-by-product slices (366-371). The user chose to keep both apps in one repository and tidy it instead of splitting it (2026-11-13, "lets change it to tidy up", then "I want all 5").
 
 **Touches:** `plan.md`, `docs/plan/slices/*.md` (one added line each), `docs/plan/notes/slices-done.md`, `docs/plan/unverified.md`; ClaudeSkills `skills/update-docs/`, `skills/parallel-check/`, `skills/archive-docs/` only if they cannot read three tables (item 4)
 
