@@ -18,6 +18,12 @@ Open slices only. Finished slices (172 rows) are in [slices-done](docs/plan/note
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
+| 366 | Tidy by product 1/6: plan.md split into RTST, Dino and Shared tables; every slice file tagged with its product | planned | | | [366-plan-split-by-product.md](docs/plan/slices/366-plan-split-by-product.md) |
+| 367 | Tidy by product 2/6: root CLAUDE.md keeps shared rules, each app's rules move to its own folder (Claude's suggestion, not yet approved by the user) | planned | | | [367-claude-md-per-product.md](docs/plan/slices/367-claude-md-per-product.md) |
+| 368 | Tidy by product 3/6: tests for the shared code in their own test project | planned | | | [368-shared-tests-project.md](docs/plan/slices/368-shared-tests-project.md) |
+| 369 | Tidy by product 4/6: one release workflow per product, sharing a reusable part | planned | | | [369-release-workflow-per-product.md](docs/plan/slices/369-release-workflow-per-product.md) |
+| 370 | Tidy by product 5/6: give the shared code a neutral name (no open PRs while it runs; name picked by the user at build start) | planned | | | [370-rename-shared-code.md](docs/plan/slices/370-rename-shared-code.md) |
+| 371 | Tidy by product 6/6: src, tests and tools folders grouped by product (no open PRs while it runs; after 370) | planned | | | [371-folders-by-product.md](docs/plan/slices/371-folders-by-product.md) |
 | 362 | Dino: onboarding that shows what Dino can do (2026-11-13 mock): six required steps (language, story languages, first books, listen in every family language, record one character and hear yourself, grown-ups' corner tour and child's shelf), replacing the first run and the intro | planned | | | [362-dino-onboarding-shows-what-dino-can-do.md](docs/plan/slices/362-dino-onboarding-shows-what-dino-can-do.md) |
 | 360 | Dino: book audio missing and "Waiting for Wi-Fi…" on Play: retry every hour and on opening the book (never weekly), mobile data for all book audio, keep old packs on the server, say what is wrong, log it; plus the VIBRATE crash on the grown-ups' hold | planned | | | [360-dino-play-waits-for-wifi.md](docs/plan/slices/360-dino-play-waits-for-wifi.md) |
 | 358 | Dino Android: "Connect to the internet to buy" while online, no Buy button (empty Play prices, unreported) | planned | | | [358-dino-android-no-buy-button.md](docs/plan/slices/358-dino-android-no-buy-button.md) |
