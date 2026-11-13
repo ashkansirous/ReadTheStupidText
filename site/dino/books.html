@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>All the books - Dino Book Reader</title>
+  <meta name="description" content="Every book in the Dino Book Reader story store, which are free and which are paid, and the price. Books are chosen and read in the app." />
+  <link rel="icon" type="image/png" href="/dino/icon.png" />
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #F3EFE6; --ink: #2b2540; --soft: #5a5470; --muted: #8a8399;
+      --card: #FFF6E6; --line: #d9d2c4; --brand: #5B57E8; --brand-ink: #ffffff; --free: #1f7a4d;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1d1a2b; --ink: #f1edff; --soft: #c2bcd8; --muted: #9a94b2;
+        --card: #28243a; --line: #3a3450; --brand: #8a86f2; --brand-ink: #1d1a2b; --free: #6fd6a2;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { overflow-x: clip; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink); overflow-x: clip;
+      /* No webfont is loaded (no third-party request on a kids' site): the rounded system fallback applies. */
+      font-family: "Fredoka", "Andika", "Segoe UI Rounded", "Arial Rounded MT Bold", system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+    }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+    a { color: var(--brand); }
+    a:focus-visible, .btn:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; border-radius: 999px; }
+    header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 16px; padding-bottom: 16px; flex-wrap: wrap; }
+    .brandmark { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1.2rem; color: var(--ink); text-decoration: none; }
+    .brandmark img { width: 40px; height: 40px; border-radius: 10px; }
+    .tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .tools a { color: var(--ink); text-decoration: none; font-weight: 600; }
+    .tools a:hover { text-decoration: underline; }
+    .tools label { color: var(--soft); font-weight: 500; }
+    select {
+      font: inherit; color: var(--ink); background: var(--card); border: 2px solid var(--line); border-radius: 999px; padding: .3rem .9rem;
+    }
+    h1 { font-size: 2.2rem; line-height: 1.15; margin: 8px 0 12px; }
+    .lede { font-size: 1.1rem; color: var(--soft); margin: 0 0 24px; max-width: 46rem; }
+    .btn {
+      display: inline-block; padding: .5rem 1.2rem; border-radius: 999px; border: 0; cursor: pointer; font: inherit; font-weight: 600;
+      background: var(--brand); color: var(--brand-ink); text-decoration: none;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .btn.alt { background: transparent; color: var(--ink); border: 2px solid var(--line); padding: calc(.5rem - 2px) calc(1.2rem - 2px); }
+    .status { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin: 0 0 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .status[hidden] { display: none; }
+    .spin { width: 22px; height: 22px; border: 3px solid var(--line); border-top-color: var(--brand); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+    .books { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+    .book { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+    .cover { aspect-ratio: 1 / 1; background: var(--line); }
+    .cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .info { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .info h2 { font-size: 1.1rem; line-height: 1.3; margin: 0; }
+    .credit { margin: 0; color: var(--soft); font-size: .9rem; }
+    .facts { margin: 0; padding: 0; list-style: none; color: var(--soft); font-size: .9rem; }
+    .price { margin-top: auto; padding-top: 8px; font-weight: 700; color: var(--brand); }
+    .price.free { color: var(--free); }
+    .get { margin: 28px 0 8px; }
+    .get h2 { font-size: 1.3rem; margin: 0 0 12px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    footer { border-top: 1px solid var(--line); margin-top: 32px; padding: 24px 0 40px; font-size: .9rem; color: var(--soft); }
+    footer p { margin: 0 0 6px; }
+    @media (min-width: 760px) { h1 { font-size: 3rem; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a class="brandmark" href="./"><img src="/dino/icon.png" width="40" height="40" alt="" /><span>Dino Book Reader</span></a>
+      <div class="tools">
+        <a id="home" href="./">Home</a>
+        <label for="lang" id="langLabel">Language</label>
+        <select id="lang"></select>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <h1 id="title">All the books</h1>
+      <p class="lede" id="lede"></p>
+
+      <div class="status" id="loading" role="status" hidden>
+        <span class="spin" aria-hidden="true"></span><span id="loadingText"></span>
+        <button type="button" class="btn alt" id="cancel"></button>
+      </div>
+      <div class="status" id="failed" role="alert" hidden>
+        <span id="failedText"></span>
+        <button type="button" class="btn" id="retry"></button>
+      </div>
+      <p id="empty" class="lede" hidden></p>
+
+      <ul class="books" id="books"></ul>
+
+      <section class="get" aria-labelledby="getTitle">
+        <h2 id="getTitle"></h2>
+        <div class="actions">
+          <a class="btn" href="https://apps.microsoft.com/detail/9N9VHRLCZXN5">Windows - Microsoft Store</a>
+          <a class="btn alt" href="./#platforms">Android - Google Play</a>
+          <a class="btn alt" href="https://testflight.apple.com/join/WnF7M53D">iPhone, iPad - TestFlight</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p>&copy; 2026 Ashkan Sirous &middot; <a href="privacy">Privacy Policy</a></p>
+    </div>
+  </footer>
+
+<script>
+(function () {
+  "use strict";
+
+  // PURE-START: no DOM in here; worker/catalogue.test.mjs runs this block under node.
+  var DEFAULT_LANGUAGE = "en";
+  var DEFAULT_PRICE = "$0.99 / €0.99 / £0.99";
+  var ALIASES = { no: "nb", nn: "nb" };
+  var LANGUAGES = {
+    en: { name: "English", dir: "ltr", s: { title: "All the books", lede: "Every book in the Dino Book Reader story store. This page only lists them: books are chosen and read in the app.", free: "Free", ages: "Ages", pages: "Pages", minutes: "Minutes", getApp: "Get it in the app", loading: "Loading the books…", error: "The books could not be loaded.", retry: "Try again", cancel: "Cancel", cancelled: "Loading was cancelled.", language: "Language", empty: "No books yet.", home: "Home" } },
+    fa: { name: "فارسی", dir: "rtl", s: { title: "همهٔ کتاب‌ها", lede: "همهٔ کتاب‌های فروشگاه داستان Dino Book Reader. این صفحه فقط فهرست است: کتاب‌ها را در برنامه انتخاب می‌کنید و می‌خوانید.", free: "رایگان", ages: "سن", pages: "صفحه", minutes: "دقیقه", getApp: "از برنامه بگیرید", loading: "در حال بارگذاری کتاب‌ها…", error: "کتاب‌ها بارگذاری نشدند.", retry: "دوباره تلاش کنید", cancel: "لغو", cancelled: "بارگذاری لغو شد.", language: "زبان", empty: "هنوز کتابی نیست.", home: "صفحهٔ اصلی" } },
+    fr: { name: "Français", dir: "ltr", s: { title: "Tous les livres", lede: "Tous les livres de la boutique d’histoires de Dino Book Reader. Cette page ne fait que les lister : les livres se choisissent et se lisent dans l’application.", free: "Gratuit", ages: "Âges", pages: "Pages", minutes: "Minutes", getApp: "Obtenir dans l’application", loading: "Chargement des livres…", error: "Les livres n’ont pas pu être chargés.", retry: "Réessayer", cancel: "Annuler", cancelled: "Le chargement a été annulé.", language: "Langue", empty: "Pas encore de livres.", home: "Accueil" } },
+    es: { name: "Español", dir: "ltr", s: { title: "Todos los libros", lede: "Todos los libros de la tienda de cuentos de Dino Book Reader. Esta página solo los enumera: los libros se eligen y se leen en la aplicación.", free: "Gratis", ages: "Edades", pages: "Páginas", minutes: "Minutos", getApp: "Consíguelo en la app", loading: "Cargando los libros…", error: "No se pudieron cargar los libros.", retry: "Reintentar", cancel: "Cancelar", cancelled: "Se canceló la carga.", language: "Idioma", empty: "Aún no hay libros.", home: "Inicio" } },
+    pt: { name: "Português", dir: "ltr", s: { title: "Todos os livros", lede: "Todos os livros da loja de histórias do Dino Book Reader. Esta página só os lista: os livros são escolhidos e lidos na aplicação.", free: "Grátis", ages: "Idades", pages: "Páginas", minutes: "Minutos", getApp: "Obtenha na aplicação", loading: "A carregar os livros…", error: "Não foi possível carregar os livros.", retry: "Tentar de novo", cancel: "Cancelar", cancelled: "O carregamento foi cancelado.", language: "Idioma", empty: "Ainda não há livros.", home: "Início" } },
+    zh: { name: "中文", dir: "ltr", s: { title: "所有图书", lede: "Dino Book Reader 故事商店里的全部图书。本页只做展示：图书需在应用内挑选和阅读。", free: "免费", ages: "年龄", pages: "页数", minutes: "分钟", getApp: "在应用中获取", loading: "正在加载图书…", error: "无法加载图书。", retry: "重试", cancel: "取消", cancelled: "已取消加载。", language: "语言", empty: "暂时还没有图书。", home: "首页" } },
+    ar: { name: "العربية", dir: "rtl", s: { title: "كل الكتب", lede: "كل كتب متجر القصص في Dino Book Reader. هذه الصفحة للعرض فقط: تُختار الكتب وتُقرأ داخل التطبيق.", free: "مجاني", ages: "الأعمار", pages: "الصفحات", minutes: "الدقائق", getApp: "احصل عليه من التطبيق", loading: "جارٍ تحميل الكتب…", error: "تعذّر تحميل الكتب.", retry: "حاول مرة أخرى", cancel: "إلغاء", cancelled: "تم إلغاء التحميل.", language: "اللغة", empty: "لا توجد كتب بعد.", home: "الرئيسية" } },
+    ru: { name: "Русский", dir: "ltr", s: { title: "Все книги", lede: "Все книги магазина историй Dino Book Reader. Эта страница только перечисляет их: книги выбирают и читают в приложении.", free: "Бесплатно", ages: "Возраст", pages: "Страниц", minutes: "Минут", getApp: "Получить в приложении", loading: "Загружаем книги…", error: "Не удалось загрузить книги.", retry: "Повторить", cancel: "Отмена", cancelled: "Загрузка отменена.", language: "Язык", empty: "Книг пока нет.", home: "На главную" } },
+    ja: { name: "日本語", dir: "ltr", s: { title: "すべての本", lede: "Dino Book Reader のおはなしストアにある本の一覧です。このページは一覧だけで、本はアプリで選んで読みます。", free: "無料", ages: "対象年齢", pages: "ページ数", minutes: "所要時間（分）", getApp: "アプリで入手", loading: "本を読み込んでいます…", error: "本を読み込めませんでした。", retry: "再試行", cancel: "キャンセル", cancelled: "読み込みをキャンセルしました。", language: "言語", empty: "まだ本がありません。", home: "ホーム" } },
+    da: { name: "Dansk", dir: "ltr", s: { title: "Alle bøgerne", lede: "Alle bøgerne i historiebutikken i Dino Book Reader. Siden viser dem kun: bøgerne vælges og læses i appen.", free: "Gratis", ages: "Alder", pages: "Sider", minutes: "Minutter", getApp: "Hent i appen", loading: "Henter bøgerne…", error: "Bøgerne kunne ikke hentes.", retry: "Prøv igen", cancel: "Annuller", cancelled: "Indlæsningen blev annulleret.", language: "Sprog", empty: "Ingen bøger endnu.", home: "Forside" } },
+    fi: { name: "Suomi", dir: "ltr", s: { title: "Kaikki kirjat", lede: "Kaikki Dino Book Readerin tarinakaupan kirjat. Tämä sivu vain luettelee ne: kirjat valitaan ja luetaan sovelluksessa.", free: "Ilmainen", ages: "Ikä", pages: "Sivuja", minutes: "Minuuttia", getApp: "Hanki sovelluksesta", loading: "Ladataan kirjoja…", error: "Kirjoja ei voitu ladata.", retry: "Yritä uudelleen", cancel: "Peruuta", cancelled: "Lataus peruttiin.", language: "Kieli", empty: "Kirjoja ei vielä ole.", home: "Etusivu" } },
+    sv: { name: "Svenska", dir: "ltr", s: { title: "Alla böcker", lede: "Alla böcker i berättelsebutiken i Dino Book Reader. Den här sidan listar dem bara: böckerna väljs och läses i appen.", free: "Gratis", ages: "Ålder", pages: "Sidor", minutes: "Minuter", getApp: "Hämta i appen", loading: "Läser in böckerna…", error: "Det gick inte att läsa in böckerna.", retry: "Försök igen", cancel: "Avbryt", cancelled: "Inläsningen avbröts.", language: "Språk", empty: "Inga böcker ännu.", home: "Startsida" } },
+    nb: { name: "Norsk", dir: "ltr", s: { title: "Alle bøkene", lede: "Alle bøkene i historiebutikken i Dino Book Reader. Denne siden bare lister dem: bøkene velges og leses i appen.", free: "Gratis", ages: "Alder", pages: "Sider", minutes: "Minutter", getApp: "Hent i appen", loading: "Laster bøkene…", error: "Bøkene kunne ikke lastes.", retry: "Prøv igjen", cancel: "Avbryt", cancelled: "Lastingen ble avbrutt.", language: "Språk", empty: "Ingen bøker ennå.", home: "Forside" } },
+    nl: { name: "Nederlands", dir: "ltr", s: { title: "Alle boeken", lede: "Alle boeken uit de verhalenwinkel van Dino Book Reader. Deze pagina toont ze alleen: boeken kies en lees je in de app.", free: "Gratis", ages: "Leeftijd", pages: "Pagina’s", minutes: "Minuten", getApp: "Haal het in de app", loading: "De boeken worden geladen…", error: "De boeken konden niet worden geladen.", retry: "Opnieuw proberen", cancel: "Annuleren", cancelled: "Laden is geannuleerd.", language: "Taal", empty: "Nog geen boeken.", home: "Home" } },
+    de: { name: "Deutsch", dir: "ltr", s: { title: "Alle Bücher", lede: "Alle Bücher im Geschichtenladen von Dino Book Reader. Diese Seite listet sie nur auf: Bücher werden in der App ausgewählt und gelesen.", free: "Kostenlos", ages: "Alter", pages: "Seiten", minutes: "Minuten", getApp: "In der App holen", loading: "Bücher werden geladen…", error: "Die Bücher konnten nicht geladen werden.", retry: "Erneut versuchen", cancel: "Abbrechen", cancelled: "Das Laden wurde abgebrochen.", language: "Sprache", empty: "Noch keine Bücher.", home: "Startseite" } }
+  };
+
+  // "nb-NO", "no", "nn", "zh-Hans-CN", "pt_BR" all reduce to one of the fifteen codes; anything else is null.
+  function normalizeLanguage(tag) {
+    if (typeof tag !== "string") return null;
+    var primary = tag.trim().toLowerCase().split(/[-_]/)[0];
+    var code = ALIASES[primary] || primary;
+    return Object.prototype.hasOwnProperty.call(LANGUAGES, code) ? code : null;
+  }
+
+  // The page language: the one asked for (?lang=), else the first browser language we have, else English.
+  function pickLanguage(requested, browserLanguages) {
+    var asked = normalizeLanguage(requested);
+    if (asked) return asked;
+    var list = Array.isArray(browserLanguages) ? browserLanguages : [];
+    for (var i = 0; i < list.length; i++) {
+      var code = normalizeLanguage(list[i]);
+      if (code) return code;
+    }
+    return DEFAULT_LANGUAGE;
+  }
+
+  // A text of the page: the language's own, else English.
+  function text(code, key) {
+    var own = LANGUAGES[code] && LANGUAGES[code].s[key];
+    return typeof own === "string" && own !== "" ? own : LANGUAGES[DEFAULT_LANGUAGE].s[key];
+  }
+
+  // The remote config as far as this page uses it: while paidBooks.enabled is not a literal true every book is free (as in the apps).
+  // No config at all (the fetch failed) is "unknown": the page then shows no price and no "Free" label.
+  function readConfig(raw) {
+    if (!raw || typeof raw !== "object" || !raw.paidBooks || typeof raw.paidBooks !== "object") return { known: false, paidEnabled: false, price: DEFAULT_PRICE };
+    var paid = !!(raw && raw.paidBooks && raw.paidBooks.enabled === true);
+    var price = raw && raw.catalogue && typeof raw.catalogue.price === "string" && raw.catalogue.price.trim() !== "" ? raw.catalogue.price.trim() : DEFAULT_PRICE;
+    return { known: true, paidEnabled: paid, price: price };
+  }
+
+  // What to show next to a book: its price, or "Free" in the page language; nothing (empty label) while the config is unknown.
+  function priceLabel(story, config, code) {
+    if (!config.known) return { free: false, label: "" };
+    var paid = config.paidEnabled && story.access === "paid";
+    return { free: !paid, label: paid ? config.price : text(code, "free") };
+  }
+
+  function mapEntry(map, code) {
+    return map && typeof map === "object" && typeof map[code] === "string" && map[code].trim() !== "" ? map[code] : null;
+  }
+
+  // The translated title and credit line of the store list, else the English ones.
+  function titleFor(story, code) { return mapEntry(story.titles, code) || story.title || ""; }
+  function creditFor(story, code) { return mapEntry(story.creditsByLanguage, code) || (typeof story.credits === "string" ? story.credits : ""); }
+
+  // Only this site's own cover path is fetched, never another host.
+  function isOwnCover(prefix, url) {
+    return typeof url === "string" && url.indexOf(prefix + "/api/stories/") === 0 && /^\/api\/stories\/[0-9a-f]{32}\/cover(\?[A-Za-z0-9=&_.-]*)?$/.test(url.slice(prefix.length));
+  }
+
+  function agesText(story) {
+    return typeof story.ageMin === "number" && typeof story.ageMax === "number" ? story.ageMin + "–" + story.ageMax : "";
+  }
+  // PURE-END
+
+  var PREFIX = location.pathname.indexOf("/dino/") === 0 ? "/dino" : "";
+  var SLOW_MS = 500;
+  var TIMEOUT_MS = 15000;
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { code: DEFAULT_LANGUAGE, stories: [], config: readConfig(null), loaded: false, controller: null, slowTimer: null, cancelled: false };
+
+  function fillLanguageChooser() {
+    var select = $("lang");
+    Object.keys(LANGUAGES).forEach(function (code) {
+      var option = document.createElement("option");
+      option.value = code; option.textContent = LANGUAGES[code].name; option.lang = code;
+      select.appendChild(option);
+    });
+  }
+
+  function paintStatic() {
+    var code = state.code;
+    document.documentElement.lang = code;
+    document.documentElement.dir = LANGUAGES[code].dir;
+    document.title = text(code, "title") + " - Dino Book Reader";
+    $("lang").value = code;
+    $("title").textContent = text(code, "title");
+    $("lede").textContent = text(code, "lede");
+    $("langLabel").textContent = text(code, "language");
+    $("home").textContent = text(code, "home");
+    $("loadingText").textContent = text(code, "loading");
+    $("cancel").textContent = text(code, "cancel");
+    $("retry").textContent = text(code, "retry");
+    paintFailedText();
+    $("empty").textContent = text(code, "empty");
+    $("getTitle").textContent = text(code, "getApp");
+  }
+
+  function fact(label, value) {
+    var li = document.createElement("li");
+    var bdi = document.createElement("bdi");
+    bdi.textContent = value;
+    li.appendChild(document.createTextNode(label + " "));
+    li.appendChild(bdi);
+    return li;
+  }
+
+  function coverOf(story) {
+    var box = document.createElement("div");
+    box.className = "cover";
+    if (isOwnCover(PREFIX, story.coverUrl)) {
+      var img = document.createElement("img");
+      img.src = story.coverUrl; img.alt = ""; img.loading = "lazy"; img.decoding = "async";
+      box.appendChild(img);
+    }
+    return box;
+  }
+
+  function infoOf(story) {
+    var code = state.code, info = document.createElement("div");
+    info.className = "info";
+    var title = document.createElement("h2");
+    title.textContent = titleFor(story, code);
+    info.appendChild(title);
+    var credit = creditFor(story, code);
+    if (credit) { var c = document.createElement("p"); c.className = "credit"; c.textContent = credit; info.appendChild(c); }
+    var facts = document.createElement("ul");
+    facts.className = "facts";
+    if (agesText(story)) facts.appendChild(fact(text(code, "ages"), agesText(story)));
+    if (typeof story.pageCount === "number") facts.appendChild(fact(text(code, "pages"), String(story.pageCount)));
+    if (typeof story.minutes === "number") facts.appendChild(fact(text(code, "minutes"), String(story.minutes)));
+    info.appendChild(facts);
+    var shown = priceLabel(story, state.config, code);
+    if (shown.label) {
+      var price = document.createElement("p");
+      price.className = "price" + (shown.free ? " free" : ""); price.textContent = shown.label;
+      info.appendChild(price);
+    }
+    return info;
+  }
+
+  function paintBooks() {
+    var list = $("books");
+    list.textContent = "";
+    state.stories.forEach(function (story) {
+      var li = document.createElement("li");
+      li.className = "book";
+      li.appendChild(coverOf(story)); li.appendChild(infoOf(story));
+      list.appendChild(li);
+    });
+    $("empty").hidden = !(state.loaded && state.stories.length === 0);
+  }
+
+  // A cancelled load says so; any other failure (network, timeout, server) shows the generic error.
+  function paintFailedText() {
+    $("failedText").textContent = text(state.code, state.cancelled ? "cancelled" : "error");
+  }
+
+  function showLoading(on) { $("loading").hidden = !on; }
+  function showFailed(on) { $("failed").hidden = !on; }
+
+  function getJson(path, signal) {
+    return fetch(PREFIX + path, { signal: signal }).then(function (r) { if (!r.ok) throw new Error(path + " " + r.status); return r.json(); });
+  }
+
+  // The remote config is optional: without it no book shows a price or "Free" (the paid-books switch is unknown).
+  function loadConfig(signal) {
+    return getJson("/api/app-config", signal).then(readConfig, function (e) {
+      if (signal.aborted) throw e;
+      console.error("books: remote config unavailable, showing no price", e);
+      return readConfig(null);
+    });
+  }
+
+  function endLoad() { clearTimeout(state.slowTimer); showLoading(false); }
+
+  function load() {
+    if (state.controller) state.controller.abort();
+    clearTimeout(state.slowTimer);
+    var controller = new AbortController(), timeout = setTimeout(function () { controller.abort(); }, TIMEOUT_MS);
+    state.controller = controller; state.cancelled = false;
+    showFailed(false);
+    state.slowTimer = setTimeout(function () { showLoading(true); }, SLOW_MS);
+    return Promise.all([getJson("/api/stories", controller.signal), loadConfig(controller.signal)]).then(function (both) {
+      state.stories = Array.isArray(both[0].stories) ? both[0].stories : [];
+      state.config = both[1]; state.loaded = true;
+      paintBooks();
+    }).catch(function (e) {
+      if (state.controller !== controller) return; // superseded by a newer load: it owns the page now
+      if (!state.cancelled) console.error("books: the list failed to load", e);
+      paintFailedText();
+      showFailed(true);
+    }).then(function () { clearTimeout(timeout); if (state.controller === controller) endLoad(); });
+  }
+
+  function chooseLanguage(code) {
+    state.code = code;
+    var url = new URL(location.href);
+    url.searchParams.set("lang", code);
+    history.replaceState(null, "", url.pathname + url.search);
+    paintStatic(); paintBooks();
+  }
+
+  function start() {
+    fillLanguageChooser();
+    state.code = pickLanguage(new URLSearchParams(location.search).get("lang"), navigator.languages || [navigator.language]);
+    paintStatic();
+    $("lang").addEventListener("change", function () { chooseLanguage(this.value); });
+    $("cancel").addEventListener("click", function () { state.cancelled = true; if (state.controller) state.controller.abort(); });
+    $("retry").addEventListener("click", load);
+    load();
+  }
+
+  start();
+})();
+</script>
+</body>
+</html>

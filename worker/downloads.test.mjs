@@ -166,6 +166,21 @@ test("canonical redirects keep the query string and drop trailing slashes on pag
   assert.equal(canonicalRedirect(Host.DinoReader, "/privacy/"), "/privacy");
 });
 
+test("the books page (Slice 355) routes on the Dino site only, with its canonical URLs", () => {
+  assert.equal(assetPageFor(resolveSite(Host.DinoReader, "/books")), "/dino/books.html");
+  assert.equal(assetPageFor(resolveSite(Host.DinoReader, "/books/")), "/dino/books.html");
+  assert.equal(assetPageFor(resolveSite("x.workers.dev", "/dino/books")), "/dino/books.html");
+  assert.equal(assetPageFor(resolveSite(Host.ReadTheStupidText, "/books")), null);
+  assert.equal(canonicalRedirect(Host.DinoReader, "/books/", "?lang=de"), "/books?lang=de");
+  assert.equal(canonicalRedirect(Host.DinoReader, "/books.html"), "/books");
+  assert.equal(canonicalRedirect(Host.DinoReader, "/dino/books"), "/books");
+  assert.equal(canonicalRedirect(Host.DinoReader, "/dino/books.html"), "/books");
+  assert.equal(canonicalRedirect(Host.DinoReader, "/books"), null);
+  assert.equal(canonicalRedirect("x.workers.dev", "/dino/books.html"), "/dino/books");
+  assert.equal(canonicalRedirect("x.workers.dev", "/dino/books/"), "/dino/books");
+  assert.equal(canonicalRedirect("x.workers.dev", "/dino/books"), null);
+});
+
 test("the Dino host redirects the raw /dino pages to its canonical URLs", () => {
   assert.equal(canonicalRedirect(Host.DinoReader, "/dino/index.html", "?a=1"), "/?a=1");
   assert.equal(canonicalRedirect(Host.DinoReader, "/dino/privacy.html"), "/privacy");

@@ -258,6 +258,9 @@ const PAGE_FOR_PATH: Readonly<Record<string, string>> = {
 const DINO_ONLY_PAGE_FOR_PATH: Readonly<Record<string, string>> = {
   "/stats": "/stats.html",
   "/stats/": "/stats.html",
+  // Slice 355: the public books page (every store book, free or paid, and the price).
+  "/books": "/books.html",
+  "/books/": "/books.html",
 };
 
 export interface ResolvedSite {
@@ -294,6 +297,8 @@ const PRIVACY_PATH = "/privacy";
 const PRIVACY_HTML = "/privacy.html";
 const STATS_PATH = "/stats";
 const STATS_HTML = "/stats.html";
+const BOOKS_PATH = "/books";
+const BOOKS_HTML = "/books.html";
 const TRAILING_SLASH = /\/+$/;
 
 function isWorkersDev(hostname: string): boolean {
@@ -319,6 +324,7 @@ function dinoHostCanonical(pathname: string): string | null {
   if (rest === "" || rest === ROOT_PATH || rest === INDEX_HTML) return ROOT_PATH;
   if (rest === PRIVACY_PATH || rest === PRIVACY_HTML || rest === `${PRIVACY_PATH}/`) return PRIVACY_PATH;
   if (rest === STATS_PATH || rest === STATS_HTML || rest === `${STATS_PATH}/`) return STATS_PATH;
+  if (rest === BOOKS_PATH || rest === BOOKS_HTML || rest === `${BOOKS_PATH}/`) return BOOKS_PATH;
   return null;
 }
 
@@ -326,10 +332,12 @@ function canonicalPath(hostname: string, pathname: string): string | null {
   if (hostname === Host.DinoReader) {
     if (isDinoPrefixed(pathname)) return dinoHostCanonical(pathname);
     if (pathname === `${PRIVACY_PATH}/`) return PRIVACY_PATH;
-    return pathname === `${STATS_PATH}/` || pathname === STATS_HTML ? STATS_PATH : null;
+    if (pathname === `${STATS_PATH}/` || pathname === STATS_HTML) return STATS_PATH;
+    return pathname === `${BOOKS_PATH}/` || pathname === BOOKS_HTML ? BOOKS_PATH : null;
   }
   if (isWorkersDev(hostname) && pathname === DINO_PATH_PREFIX) return `${DINO_PATH_PREFIX}/`;
   if (isWorkersDev(hostname) && pathname === `${DINO_PATH_PREFIX}${STATS_HTML}`) return `${DINO_PATH_PREFIX}${STATS_PATH}`;
+  if (isWorkersDev(hostname) && (pathname === `${DINO_PATH_PREFIX}${BOOKS_HTML}` || pathname === `${DINO_PATH_PREFIX}${BOOKS_PATH}/`)) return `${DINO_PATH_PREFIX}${BOOKS_PATH}`;
   const trimmed = withoutTrailingSlash(pathname);
   const isPage = trimmed === PRIVACY_PATH || trimmed === `${DINO_PATH_PREFIX}${PRIVACY_PATH}`;
   return isPage && trimmed !== pathname ? trimmed : null;
