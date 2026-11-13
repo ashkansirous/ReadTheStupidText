@@ -7,13 +7,51 @@ import { join } from 'node:path';
 import { publishedStateFrom } from './r2-wrangler.mjs';
 import { audioEntry, bucketAudioFromState, completeAudioIds, judgedAudioIds, mayChangeOnR2, refusalMessage, completeIdsOf, onlyCompleteBooks, refuseAudioGaps, audioPackIsLive, audioUploadExists, withBucketListen, pruneUnbuiltAudio, audioPacksBehind, validPackVersions, audioUploadsFor, bytesFromMeta, MAX_DELETIONS, MAX_VERSION_BUMPS, Outcome, checkDeletionLimit, delistKey, hashFromMeta, highestPackage, liveFromApi, liveStateOf, metaDiffers, planDeletions, planStoreUploads, runDeletions, readBuilt, runMetaRefresh, runUploads, stillBehind, summaryText, uploadsFor } from './publish-store-books.mjs';
 
-import { accessOf, applyAccessToBuiltMetas, withAccess } from './publish-store-books.mjs';
+import { accessOf, applyAccessToBuiltMetas, refuseSharedProductIds, withAccess, paidSwitchOn, storeSafeOf } from './publish-store-books.mjs';
+
+const configAnswer = (body, ok = true) => async () => ({ ok, status: ok ? 200 : 503, json: async () => body });
+const noWait = async () => {};
+
+test('Slice 346 check3 #1: storeSafe is derived from the live app-config on every run, strictly paidBooks.enabled === true', async () => {
+    assert.equal(await paidSwitchOn({}, configAnswer({ paidBooks: { enabled: true } }), noWait), true);
+    for (const body of [{ paidBooks: { enabled: 'true' } }, { paidBooks: { enabled: 1 } }, { paidBooks: {} }, {}]) {
+        assert.equal(await paidSwitchOn({}, configAnswer(body), noWait), false);
+    }
+});
+
+test('Slice 346 check3: an unreadable config fails the run after 3 tries, it never counts as off', async () => {
+    let calls = 0;
+    const down = async () => { calls++; throw new Error('offline'); };
+    await assert.rejects(() => paidSwitchOn({}, down, noWait), /could not be read after 3 tries \(offline\)/);
+    assert.equal(calls, 3);
+    await assert.rejects(() => paidSwitchOn({}, configAnswer({}, false), noWait), /answered 503/);
+    for (const body of [null, 'x', [1]]) await assert.rejects(() => paidSwitchOn({}, configAnswer(body), noWait), /not a JSON object/);
+    await assert.rejects(() => paidSwitchOn({}, async () => ({ ok: true, json: async () => { throw new Error('bad json'); } }), noWait), /bad json/);
+});
+
+test('Slice 346 check3: a read that fails twice then succeeds decides on the success', async () => {
+    let calls = 0;
+    const flaky = async () => { if (++calls < 3) throw new Error('blip'); return { ok: true, json: async () => ({ paidBooks: { enabled: true } }) }; };
+    assert.equal(await paidSwitchOn({}, flaky, noWait), true);
+    assert.equal(calls, 3);
+});
+
+test('Slice 346 check3 #1/#2: two runs read the same live config and write the same ids; only the local flag can force on', async () => {
+    const on = configAnswer({ paidBooks: { enabled: true } });
+    assert.equal(await storeSafeOf([], {}, on, noWait), true);
+    assert.equal(await storeSafeOf(['--verify'], {}, on, noWait), true);
+    assert.equal(await storeSafeOf([], {}, configAnswer({ paidBooks: { enabled: false } }), noWait), false);
+    assert.equal(await storeSafeOf(['--force-paid-switch-on'], {}, configAnswer({ paidBooks: { enabled: false } }), noWait), true);
+    assert.equal(await storeSafeOf([], { PAID_SWITCH_ON: 'true' }, configAnswer({}), noWait), false);
+});
 
 const A = 'a'.repeat(32);
 const B = 'b'.repeat(32);
 
 test('Slice 346: a book is paid unless book.json says free, and its product id defaults from the folder name', () => {
     assert.deepEqual(accessOf({ access: 'free' }, 'lion-and-mouse'), { access: 'free', productId: 'uk.sirous.dinoreader.book.lion-and-mouse' });
+    assert.deepEqual(accessOf({ access: 'free' }, 'lion-and-mouse', { storeSafe: true }), { access: 'free', productId: 'uk.sirous.dinoreader.book.lion_and_mouse' });
+    assert.equal(accessOf({}, 'billy-goats-gruff', { storeSafe: true }).productId, 'uk.sirous.dinoreader.book.billy_goats_gruff');
     assert.deepEqual(accessOf({}, 'goldilocks'), { access: 'paid', productId: 'uk.sirous.dinoreader.book.goldilocks' });
     assert.deepEqual(accessOf({ access: 'FREE', productId: ' x.y.z ' }, 'g'), { access: 'paid', productId: 'x.y.z' });
 });
@@ -40,6 +78,57 @@ test('Slice 346: built metas are rewritten from the content folder found by id; 
         rmSync(root, { recursive: true, force: true });
     }
 });
+
+// check2 #1/#2 golden test: main's logic, copied here as the expectation (access from book.json, productId its own or prefix + stem, nothing refused, nothing underscored).
+function mainBuiltMeta(text, info, stem) {
+    const own = typeof info?.productId === 'string' && info.productId.trim() !== '' ? info.productId.trim() : `uk.sirous.dinoreader.book.${stem}`;
+    const meta = JSON.parse(text);
+    const access = info?.access === 'free' ? 'free' : 'paid';
+    if (meta.access === access && meta.productId === own) return text;
+    return `${JSON.stringify({ ...meta, access, productId: own }, null, 2)}\n`;
+}
+
+test('Slice 346 check2 #1/#2 golden: with the switch-on flag off the built metas are byte-identical to main\'s, and two colliding stems throw nothing', () => {
+    const root = mkdtempSync(join(tmpdir(), 'access-golden-'));
+    try {
+        const stems = [['a-b', {}], ['a_b', {}], ['lion-and-mouse', { access: 'free' }], ['x', { productId: ' own.id ' }], ['y', {}]];
+        const metas = ['{"version":1}', '{"version":1}', '{"version":3,"productId":"uk.sirous.dinoreader.book.lion-and-mouse"}', '{"version":2,"access":"paid","productId":"own.id"}', '{"version":4,"access":"paid","productId":"uk.sirous.dinoreader.book.y"}'];
+        const ids = stems.map((_, i) => String(i).repeat(32));
+        const content = new Map(stems.map(([stem, info], i) => [ids[i], { stem, info }]));
+        ids.forEach((id, i) => {
+            mkdirSync(join(root, id));
+            writeFileSync(join(root, id, 'meta.json'), metas[i]);
+        });
+        assert.doesNotThrow(() => applyAccessToBuiltMetas(root, ids.map((id) => ({ id })), content));
+        ids.forEach((id, i) => assert.equal(readFileSync(join(root, id, 'meta.json'), 'utf8'), mainBuiltMeta(metas[i], stems[i][1], stems[i][0])));
+        assert.throws(() => applyAccessToBuiltMetas(root, [], content, { storeSafe: true }), /a_b/);
+    } finally {
+        rmSync(root, { recursive: true, force: true });
+    }
+});
+
+test('Slice 346 medium #5 (decided): with the switch-on flag a built meta carrying an old hyphenated id is rewritten to the underscore id; book.json\'s own productId still wins', () => {
+    const root = mkdtempSync(join(tmpdir(), 'access-live-'));
+    try {
+        for (const id of [A, B]) {
+            mkdirSync(join(root, id));
+            writeFileSync(join(root, id, 'meta.json'), '{"version":1,"productId":"uk.sirous.dinoreader.book.lion-and-mouse"}');
+        }
+        const content = new Map([[A, { stem: 'lion-and-mouse', info: {} }], [B, { stem: 'x', info: { productId: 'own.id' } }]]);
+        applyAccessToBuiltMetas(root, [{ id: A }, { id: B }], content, { storeSafe: true });
+        assert.equal(JSON.parse(readFileSync(join(root, A, 'meta.json'), 'utf8')).productId, 'uk.sirous.dinoreader.book.lion_and_mouse');
+        assert.equal(JSON.parse(readFileSync(join(root, B, 'meta.json'), 'utf8')).productId, 'own.id');
+    } finally {
+        rmSync(root, { recursive: true, force: true });
+    }
+});
+
+test('Slice 346 check8 #10: two paid stems that map to one product id are refused; a free one or an explicit id is fine', () => {
+    assert.throws(() => refuseSharedProductIds([{ stem: 'a-b', info: {} }, { stem: 'a_b', info: {} }]), /a_b.*a-b, a_b/);
+    assert.doesNotThrow(() => refuseSharedProductIds([{ stem: 'a-b', info: {} }, { stem: 'a_b', info: { access: 'free' } }]));
+    assert.doesNotThrow(() => refuseSharedProductIds([{ stem: 'a-b', info: {} }, { stem: 'a_b', info: { productId: 'own.id' } }]));
+});
+
 const outcomeOf = (built, live) => planStoreUploads(built, live).map((item) => item.outcome);
 
 test('a book that is not live yet is uploaded', () => {

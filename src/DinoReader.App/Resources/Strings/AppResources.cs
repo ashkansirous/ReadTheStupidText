@@ -405,6 +405,7 @@ public static class AppResources
 	public static string Wait_CheckingPurchases => Get();
 	public static string Backup_Missing => Get();
 	public static string Backup_MissingNote => Get();
+	public static string Backup_MissingNoteStore => Get();
 	public static string Backup_SaveBodyState_One => Get();
 	public static string Backup_SaveBodyState_Other => Get();
 	public static string Backup_RestoreBodyState => Get();

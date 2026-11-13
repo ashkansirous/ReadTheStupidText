@@ -50,6 +50,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	private const long MaxPackBytes = 400L * 1024 * 1024;
 	private static readonly TimeSpan ListTimeout = TimeSpan.FromSeconds(20);
 	private static readonly TimeSpan PurchaseReadBudget = TimeSpan.FromMilliseconds(400);
+	private static readonly TimeSpan PurchaseSettleBudget = TimeSpan.FromSeconds(25);
 	private static readonly TimeSpan StallTimeout = TimeSpan.FromSeconds(30);
 
 	// One client for the process; a redirect is never followed (a 3xx fails the call), so the app only ever talks to BaseAddress. Infinite timeout because every call sets its own (a download can legitimately take minutes).
@@ -76,14 +77,43 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	// store page listens to. The store page itself does its own full read behind its loading view.
 	private async Task ReadPurchasesAsync(IReadOnlyList<StoreItem> items, CancellationToken cancel)
 	{
-		if (!sales.Enabled || sales.Purchases.IsFresh)
+		if (!SwitchKnownOn || sales.Purchases.IsFresh)
 		{
 			return;
 		}
 
 		Task read = sales.Purchases.RefreshAsync(items, cancel);
+		_purchaseRead = read;
 		await Task.WhenAny(read, Task.Delay(PurchaseReadBudget, cancel));
 	}
+
+	private volatile Task? _purchaseRead;
+
+	// Check8 #5/#6, check2 #8: the settle wait, the purchase read and the refusal body all use the one gate (BookSales.SwitchKnownOn); off or unknown behaves exactly as before the switch work.
+	private bool SwitchKnownOn => sales.SwitchKnownOn;
+
+	/// <summary>
+	/// Slice 346 (check7 #4): waits, only while the switch is on, for the purchase read a listing left running in the background, so a download, update or audio pack that follows the listing already holds its proof
+	/// instead of being refused. Returns at once with the switch off, with no read running, or after <see cref="PurchaseSettleBudget"/> (spent once per listing, shared by every caller); never throws. It shows no UI: only the
+	/// store page's Get path puts its wait overlay around it; the background update and audio pack paths wait silently and report the one fallback on a timeout.
+	/// </summary>
+	public async Task SettlePurchasesAsync(CancellationToken cancel)
+	{
+		Task? read = _purchaseRead;
+		if (!SwitchKnownOn || read is null || read.IsCompleted)
+		{
+			return;
+		}
+
+		Debug.WriteLine("Dino Reader: waiting for the store's purchase read before asking for a book's files");
+		// One wait for every caller of this listing's read (review #10): the background update, the audio packs and a foreground download share the one budget, and the timeout is reported once.
+		await _settle.WaitAsync(read, PurchaseSettleBudget, ReportSettleTimeout, cancel);
+	}
+
+	private readonly SettleGate _settle = new();
+
+	private void ReportSettleTimeout() =>
+		Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreUnreachable); // the store's purchase read did not finish in time: the files are asked for without waiting longer
 
 	/// <summary>The readable stories the server lists, or <see cref="StoreLoadStatus.Offline"/> when it cannot be reached.</summary>
 	public async Task<StoreListing> ListAsync(CancellationToken cancel)
@@ -212,10 +242,12 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 				return DownloadOutcome.Done;
 			}
 
+			await SettlePurchasesAsync(cancel);
+
 			IReadOnlyList<(string Language, AudioPackInfo Pack)> wanted = WantedPacks(item, StoryLanguages.Current().All);
 			var summed = new SummedProgress(progress, wanted.Sum(w => w.Pack.Bytes ?? 0));
 			// The summed progress is the only reporter: the book fetch's own 0..1 would jump the bar between the book-only and the combined fraction.
-			await FetchPackageAsync(item.DownloadUrl, part, new Progress<double>(), cancel, (done, total) => summed.Book(done, total));
+			await FetchPackageAsync(item.DownloadUrl, part, new Progress<double>(), cancel, (done, total) => summed.Book(done, total), refusalCodes: SwitchKnownOn);
 			if (!await ImportPackageAsync(part, item.Id))
 			{
 				return DownloadOutcome.Failed;
@@ -243,7 +275,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 
 	/// <summary>
 	/// Downloads one package (an address from the list, Slice 181) into the cache for the background book update and returns the file; the caller deletes it.
-	/// File is null when the server cannot be reached or the package is not whole; NotFound is true for a 404 (the version is not in the store, so retrying will not help).
+	/// File is null when the server cannot be reached or the package is not whole; NotFound is true for a 404 (the version is not in the store, so retrying will not help) and for the store's definitive "purchase not valid" for a sold book (same: skip the book, go on); any other refusal is not permanent.
 	/// Imports nothing and tells nobody.
 	/// </summary>
 	public async Task<PackageFetch> FetchPackageFileAsync(string downloadUrl, CancellationToken cancel)
@@ -251,7 +283,8 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		string part = Path.Combine(FileSystem.CacheDirectory, DownloadFolder, $"update-{Guid.NewGuid():N}{PartExtension}");
 		try
 		{
-			await FetchPackageAsync(downloadUrl, part, new Progress<double>(), cancel);
+			await SettlePurchasesAsync(cancel);
+			await FetchPackageAsync(downloadUrl, part, new Progress<double>(), cancel, refusalCodes: SwitchKnownOn);
 			return new PackageFetch(part, false);
 		}
 		catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound && !cancel.IsCancellationRequested)
@@ -261,9 +294,18 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 			TryDelete(part);
 			return new PackageFetch(null, true);
 		}
+		catch (StoreRefusedException ex) when (!cancel.IsCancellationRequested)
+		{
+			// Slice 346 (check7 #7): only the store's own "this purchase is not valid" skips this book for good (the copy on the shelf stays). Anything else (no proof yet, a purchase the store has not synced,
+			// an unreadable code, "cannot verify" when the store or the Worker's keys are down) is not permanent: the run stops and the next scheduled check tries again.
+			Debug.WriteLine($"Dino Reader: the store did not hand out an update ({(int?)ex.StatusCode}, {ex.Code}): {downloadUrl}");
+			Fallbacks.Report(FallbackArea.Store, ex.IsOutage ? FallbackReason.StoreUnreachable : FallbackReason.StoreFailed);
+			TryDelete(part);
+			return new PackageFetch(null, ex.IsDefinitive);
+		}
 		catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.PaymentRequired or System.Net.HttpStatusCode.Forbidden && !cancel.IsCancellationRequested)
 		{
-			// Slice 346: the store refused a sold book's files (no purchase proof, or the store would not confirm it): the update is skipped quietly and the copy on the shelf stays as it is
+			// The switch is off or unknown (check8 #5/#6): exactly what this did before Slice 346's switch work: skipped quietly, never marked permanent.
 			Debug.WriteLine($"Dino Reader: the store did not hand out an update ({(int?)ex.StatusCode}): {downloadUrl}");
 			Fallbacks.Report(FallbackArea.Store, FallbackReason.StoreFailed);
 			TryDelete(part);
@@ -357,6 +399,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	{
 		try
 		{
+			await SettlePurchasesAsync(cancel);
 			return await packs.InstallAsync(bookId, language, pack, summed is null ? null : new SyncProgress<long>(summed.Pack), cancel);
 		}
 		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
@@ -393,7 +436,7 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	}
 
 	private static async Task FetchPackageAsync(
-		string url, string part, IProgress<double> progress, CancellationToken cancel, Action<long, long?>? bytes = null, long cap = 0)
+		string url, string part, IProgress<double> progress, CancellationToken cancel, Action<long, long?>? bytes = null, long cap = 0, bool refusalCodes = false)
 	{
 #if DINO_TEST_BOOKS
 		if (Testing.TestStore.Serves(url))
@@ -405,10 +448,64 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 		using var stall = CancellationTokenSource.CreateLinkedTokenSource(cancel);
 		stall.CancelAfter(StallTimeout);
 		using GuardedResponse response = await GetGuardedAsync(url, stall.Token);
-		response.Message.EnsureSuccessStatusCode();
+		if (refusalCodes)
+		{
+			await EnsureSuccessOrRefusalAsync(response, stall.Token, cancel);
+		}
+		else
+		{
+			response.Message.EnsureSuccessStatusCode(); // switch off or unknown: the status check of before Slice 346's switch
+		}
+
 		Directory.CreateDirectory(Path.GetDirectoryName(part)!);
 		await using FileStream file = CreateLocalFile(part);
 		await CopyCappedAsync(response, file, cap > 0 ? cap : StoryPackageReader.MaxTotalBytes, progress, stall, stall.Token, bytes);
+	}
+
+	private const int RefusalBodyBytes = 512;
+
+	// Slice 346: a 402/403 on a book's files carries the Worker's error code in a tiny JSON body; it is read (capped) so a refusal can be told from "cannot verify". Everything else is the plain status check.
+	private static async Task EnsureSuccessOrRefusalAsync(GuardedResponse response, CancellationToken cancel, CancellationToken callerCancel)
+	{
+		System.Net.HttpStatusCode status = response.Message.StatusCode;
+		if (status is not (System.Net.HttpStatusCode.PaymentRequired or System.Net.HttpStatusCode.Forbidden))
+		{
+			response.Message.EnsureSuccessStatusCode();
+			return;
+		}
+
+		string? code = null;
+		try
+		{
+			await using Stream body = await response.Message.Content.ReadAsStreamAsync(cancel);
+			code = StoreRefusal.CodeFrom(await ReadBodyToEndAsync(body, cancel));
+		}
+		catch (Exception ex) when (ex is IOException or HttpRequestException || (ex is OperationCanceledException && !callerCancel.IsCancellationRequested))
+		{
+			// no-fallback: an unreadable or stalled refusal body only means the code is unknown (the outage path, retryable below); the caller reports the refusal. A cancel by the caller still escapes.
+			Debug.WriteLine($"Dino Reader could not read the store's refusal code: {ex.Message}");
+		}
+
+		throw new StoreRefusedException(status, code);
+	}
+
+	// One read can return part of a body, so it is read to its end or to the cap (a refusal body is tiny; a longer one is cut and its code is then unknown).
+	private static async Task<ReadOnlyMemory<byte>> ReadBodyToEndAsync(Stream body, CancellationToken cancel)
+	{
+		byte[] buffer = new byte[RefusalBodyBytes];
+		int total = 0;
+		while (total < buffer.Length)
+		{
+			int read = await body.ReadAsync(buffer.AsMemory(total), cancel);
+			if (read == 0)
+			{
+				break;
+			}
+
+			total += read;
+		}
+
+		return buffer.AsMemory(0, total);
 	}
 
 	private static Task<GuardedResponse> GetGuardedAsync(string path, CancellationToken cancel) =>
@@ -447,6 +544,13 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 	/// request that would be refused is made and nothing on the shelf is touched.
 	/// </summary>
 	public IReadOnlyList<StoreItem> Fetchable(IEnumerable<StoreItem> items) => [.. items.Where(sales.MayUpdate)];
+
+	/// <summary><see cref="Fetchable"/> after the listing's purchase read has finished (check7 #4), so a slow store setup does not make owned books look unowned for this run.</summary>
+	public async Task<IReadOnlyList<StoreItem>> FetchableAsync(IEnumerable<StoreItem> items, CancellationToken cancel)
+	{
+		await SettlePurchasesAsync(cancel);
+		return Fetchable(items);
+	}
 
 	// Copies the body, giving up when it passes the cap or stalls: the stall timer is restarted after every chunk.
 	private static async Task CopyCappedAsync(
@@ -585,6 +689,18 @@ public sealed class StoreClient(IStoryLibrary library, AudioPackStore packs, Boo
 public sealed class StoreAudioPackFetcher : IAudioPackFetcher
 {
 	public Task FetchAsync(string url, string toPath, IProgress<long> bytesSoFar, CancellationToken cancel) => StoreClient.FetchPackAsync(url, toPath, bytesSoFar, cancel);
+}
+
+/// <summary>The Worker refused a sold book's files (Slice 346): 402 no proof, 403 <c>purchase-not-valid</c> or 403 <c>cannot-verify</c>. Still an <see cref="HttpRequestException"/> with its status, so older catches keep working.</summary>
+public sealed class StoreRefusedException(System.Net.HttpStatusCode status, string? code) : HttpRequestException($"The store refused the book's files ({(int)status} {code}).", null, status)
+{
+	public string? Code { get; } = code;
+
+	/// <summary>True when the Worker could not ask the store (an outage, worth trying again).</summary>
+	public bool IsOutage => Code == StoreRefusal.CannotVerifyCode;
+
+	/// <summary>True only when the store says the purchase is not valid: permanent for this book. Every other refusal is tried again later.</summary>
+	public bool IsDefinitive => StoreRefusal.IsDefinitive(Code);
 }
 
 /// <summary>A failure writing the store's own temp files, not reaching the server.</summary>

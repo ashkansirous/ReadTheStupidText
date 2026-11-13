@@ -230,14 +230,37 @@ public partial class StorePage : ContentView, ICornerTabView
 		_wait = new WaitController(overlay);
 		RestoreButton.AutomationId = "StoreRestorePurchases";
 		RedeemButton.AutomationId = "StoreRedeemCode";
-		_client.Sales.Purchases.Changed += OnPurchasesChanged;
+		HandlerChanged += OnHandlerChanged;
+	}
+
+	// Check2 #7: the page is destroyed (its handler goes away): the long-lived BookPurchases must not keep it alive. Appearing subscribes again if it is ever shown again.
+	private void OnHandlerChanged(object? sender, EventArgs e)
+	{
+		if (Handler is null)
+		{
+			_onScreen = false;
+			_client.Sales.Purchases.Changed -= OnPurchasesChanged;
+		}
 	}
 
 	private readonly WaitController _wait;
 	private readonly ExternalActivityGuard _external;
 
 	// The store said something new (a book bought or redeemed outside the app, a pending purchase approved): every row follows it.
-	private void OnPurchasesChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(() => _ = ReplanRowsAsync());
+	// Check8 #7: a change that comes while the tab is hidden (also after a failed first load) is only remembered; the next Appearing replans, so no row keeps a stale Buy pill for an owned book.
+	private void OnPurchasesChanged(object? sender, EventArgs e)
+	{
+		if (!_onScreen)
+		{
+			_purchasesChangedWhileHidden = true;
+			return;
+		}
+
+		MainThread.BeginInvokeOnMainThread(() => _ = ReplanRowsAsync());
+	}
+
+	private bool _onScreen;
+	private bool _purchasesChangedWhileHidden;
 
 	private async Task ReplanRowsAsync()
 	{
@@ -261,7 +284,7 @@ public partial class StorePage : ContentView, ICornerTabView
 	// Restore and Redeem show only while books are sold; the footer line then says purchases go through the store account.
 	private void ApplyPurchaseChrome()
 	{
-		bool sold = _client.Sales.Enabled;
+		bool sold = _client.Sales.SwitchKnownOn;
 		PurchaseActions.IsVisible = sold;
 		FooterLabel.Text = sold ? AppResources.Store_FooterPaid : AppResources.Store_Footer;
 	}
@@ -269,6 +292,9 @@ public partial class StorePage : ContentView, ICornerTabView
 	/// <summary>The Store tab is on screen: the list loads the first time; later it only picks up the covers a tab switch cut short. A download that was running is not touched.</summary>
 	public async void Appearing()
 	{
+		_onScreen = true;
+		_client.Sales.Purchases.Changed -= OnPurchasesChanged; // never twice, whatever the host raises
+		_client.Sales.Purchases.Changed += OnPurchasesChanged;
 		RefreshChips();
 		ShowAuthor();
 		_client.Sales.RefreshConfigOnStoreTab(); // quiet, never awaited, at most once per 10 minutes
@@ -279,9 +305,11 @@ public partial class StorePage : ContentView, ICornerTabView
 
 		if (_loading)
 		{
-			return; // the first load is still running: a second appearance must not start another one over the same rows
+			return; // the first load is still running: a second appearance must not start another one over the same rows (check2 #6: the hidden-change flag stays set for the next appearance)
 		}
 
+		bool changedWhileHidden = _purchasesChangedWhileHidden;
+		_purchasesChangedWhileHidden = false;
 		if (!_loaded)
 		{
 			_loading = true;
@@ -293,13 +321,18 @@ public partial class StorePage : ContentView, ICornerTabView
 			{
 				_loading = false;
 			}
+
+			if (_loaded && (_client.Sales.SwitchKnownOn || changedWhileHidden))
+			{
+				await ReplanRowsAsync(); // a purchase change that came while the list loaded (or while the tab was hidden) shows on the first rows too
+			}
 		}
 		else
 		{
 			// Leaving the page may have cut the cover fetches short: pick the missing ones up again.
 			_ = LoadCoversAsync(_allRows.Where(r => r.Cover is null).ToList(), _lifetime.Token);
 			await RefreshOnShelfAsync();
-			if (_client.Sales.Enabled)
+			if (_client.Sales.SwitchKnownOn)
 			{
 				await RefreshPurchasesAsync(_lifetime.Token); // a book bought or redeemed elsewhere shows as owned without Restore (raises Changed)
 			}
@@ -337,7 +370,11 @@ public partial class StorePage : ContentView, ICornerTabView
 	}
 
 	/// <summary>The tab went off screen (another tab, the shelf): cover fetches stop. A download keeps running into the library and only a real failure ends it.</summary>
-	public void Disappearing() => _lifetime.Cancel();
+	public void Disappearing()
+	{
+		_onScreen = false; // the subscription stays: a change while hidden is remembered (check8 #7)
+		_lifetime.Cancel();
+	}
 
 	// Decision 4 (Slice 325 part B): one column of cards, two from 800 dp of content. The gallery passes the column's width (the window less the rail), a pure function of the window, so a
 	// rotation changes the grid's span only: the rows, the filter, the open download and the scroll position are never rebuilt.
@@ -392,7 +429,7 @@ public partial class StorePage : ContentView, ICornerTabView
 	private async Task ShowItemsAsync(IReadOnlyList<StoreItem> items, CancellationToken cancel)
 	{
 		HashSet<string> onShelf = await _client.InstalledIdsAsync();
-		if (_client.Sales.Enabled)
+		if (_client.Sales.SwitchKnownOn)
 		{
 			await _client.Sales.Purchases.RefreshAsync(items, cancel, interactive: true); // the grown-up opened the store page: the store may be asked in full (iOS replays the account's purchases once per run)
 		}
@@ -666,6 +703,7 @@ public partial class StorePage : ContentView, ICornerTabView
 		DownloadOutcome outcome = DownloadOutcome.Failed;
 		try
 		{
+			await SettlePurchasesBehindWaitAsync();
 			outcome = await _client.DownloadAsync(row.Item, new Progress<double>(row.SetProgress), CancellationToken.None);
 		}
 		catch (Exception ex)
@@ -683,6 +721,21 @@ public partial class StorePage : ContentView, ICornerTabView
 
 			row.SetState(outcome == DownloadOutcome.Done ? StoreRowState.Downloaded : StoreRowState.Failed);
 		}
+	}
+
+	// Slice 346 (review): with the switch on, a download first waits for the store's purchase read (up to 25 s); past 500 ms the shared wait overlay says what is awaited. With the switch off this returns at once.
+	private async Task SettlePurchasesBehindWaitAsync()
+	{
+		if (!_client.Sales.SwitchKnownOn)
+		{
+			return;
+		}
+
+		await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_CheckingPurchases, canCancel: false, async _ =>
+		{
+			await _client.SettlePurchasesAsync(CancellationToken.None);
+			return true;
+		});
 	}
 
 	private async void OnTryAgainClicked(object? sender, EventArgs e)

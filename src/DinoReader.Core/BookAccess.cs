@@ -132,8 +132,8 @@ public static class BookAccess
 
     /// <summary>
     /// Where a book that a schema 1 backup holds comes from when the paid-books switch is on or unknown (Slice 346). A sold book the account does not own is only listed (its file is never installed);
-    /// otherwise the store supplies it when it can, else the backup's own file does. <paramref name="access"/> is <see cref="BookSale.Paid"/> only when the book is sold right now (a book the
-    /// listing does not name is not sold as far as the phone knows). The restore asks once with <paramref name="storeCanSupply"/> true and again with false after a failed download.
+    /// otherwise the store supplies it when it can, else the backup's own file does. <paramref name="access"/> comes from <see cref="LegacyAccess"/> (a book the
+    /// listing does not name counts as free, so its file restores it). The restore asks once with <paramref name="storeCanSupply"/> true and again with false after a failed download.
     /// </summary>
     public static LegacyBookSource LegacyBookChoice(BookSale access, bool owned, bool storeCanSupply)
     {
@@ -144,6 +144,12 @@ public static class BookAccess
 
         return storeCanSupply ? LegacyBookSource.Store : LegacyBookSource.File;
     }
+
+    /// <summary>
+    /// What a restore treats a backed-up book as (check7 #6, decided in review): a book the listing names is sold or free as the listing says; a book it does not name (delisted, or the listing could not be
+    /// read) counts as free, so the backup's own files restore it and a family never loses a book it holds (the same as with the switch off). A sold book the account does not own is a listed one, and is only listed.
+    /// </summary>
+    public static BookSale LegacyAccess(bool listed, bool soldPerListing) => listed && soldPerListing ? BookSale.Paid : BookSale.Free;
 
     /// <summary>The prices to show after a store read: the last known ones, overlaid with what the store just answered, so a failed or timed-out price query never blanks a card.</summary>
     public static IReadOnlyDictionary<string, string> KeepPrices(IReadOnlyDictionary<string, string> previous, IReadOnlyDictionary<string, string> fresh)
@@ -180,4 +186,33 @@ public static class PurchaseProofs
 
     /// <summary>Windows' Store ID key covers every product, so its proof names none; the others name the product the token was issued for.</summary>
     public static string ProductPart(string store, string productId) => store == WindowsStore ? string.Empty : productId;
+}
+
+/// <summary>What the Worker's 402/403 answer for a sold book's files means (Slice 346, review): only a definitive refusal is permanent; anything else is tried again at the next check.</summary>
+public static class StoreRefusal
+{
+    public const string PurchaseNotValidCode = "purchase-not-valid";
+    public const string CannotVerifyCode = "cannot-verify";
+
+    /// <summary>True only for the store's own "this purchase is not valid": the book is skipped for good. No proof yet, an unknown or unreadable code, or "cannot verify" all stay retryable.</summary>
+    public static bool IsDefinitive(string? code) => code == PurchaseNotValidCode;
+
+    /// <summary>The <c>code</c> of the Worker's JSON error body, or null when the body is not JSON, has no string <c>code</c>, or is empty. Never throws.</summary>
+    public static string? CodeFrom(ReadOnlyMemory<byte> body)
+    {
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(body);
+            return document.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object
+                && document.RootElement.TryGetProperty("code", out System.Text.Json.JsonElement code)
+                && code.ValueKind == System.Text.Json.JsonValueKind.String
+                    ? code.GetString()
+                    : null;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // no-fallback: an unreadable refusal body only means the code is unknown, which stays retryable; the caller reports the refusal
+            return null;
+        }
+    }
 }

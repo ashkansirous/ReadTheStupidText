@@ -224,7 +224,7 @@ public sealed class BookUpdater(StoreClient store, StarterStories starters, Stag
 		}
 
 		// Slice 346: a sold book the store account does not own (a copy kept from before the sale) is not asked for: no update, no refused request, and nothing on the shelf is touched.
-		IReadOnlyList<StoreItem> fetchable = store.Fetchable(listing.Items);
+		IReadOnlyList<StoreItem> fetchable = await store.FetchableAsync(listing.Items, cancel);
 		IReadOnlyList<BookUpdateDecision>? decisions = await RecordBaselinesAsync(await PlanAsync(fetchable), fetchable, cancel);
 		bool booksDone = decisions is not null && await StageAllAsync(decisions, fetchable, cancel);
 		ISet<string> textBehind = await TextBehindAsync(fetchable, decisions);

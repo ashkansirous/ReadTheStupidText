@@ -370,6 +370,7 @@
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>در حال بررسی خریدهای شما…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>کتاب‌هایی که باید از فروشگاه برگردند</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>کتاب‌های رایگان خودشان برمی‌گردند. برای کتابی که خریده‌اید در فروشگاه «بازیابی خریدها» را بزنید و سپس این پشتیبان را دوباره بازیابی کنید.</value></data>
+  <data name="Backup_MissingNoteStore" xml:space="preserve"><value>کتاب‌های رایگانی که هنوز در فروشگاه هستند خودشان برمی‌گردند. کتابی که فروشگاه دیگر عرضه نمی‌کند برنمی‌گردد، اما ضبط‌های آن در فایل پشتیبان می‌ماند. برای کتابی که خریده‌اید در فروشگاه «بازیابی خریدها» را بزنید و سپس این پشتیبان را دوباره بازیابی کنید.</value></data>
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>صداگذاری‌ها و تنظیمات داستان شما در یک فایل. خود کتاب از فروشگاه برمی‌گردد. آن را در درایو یا فایل‌ها ذخیره کنید یا برای خودتان بفرستید.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>صداگذاری‌ها و تنظیمات همه {0} داستان در یک فایل. خود کتاب‌ها از فروشگاه برمی‌گردند. آن را در درایو یا فایل‌ها ذخیره کنید یا برای خودتان بفرستید.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>صداگذاری‌ها و تنظیمات را از یک فایل برمی‌گرداند و کتاب‌ها را دوباره از فروشگاه می‌گیرد. کتاب‌های خریداری‌شده ابتدا به «بازیابی خریدها» نیاز دارند.</value></data>

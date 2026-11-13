@@ -369,6 +369,7 @@
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Kontrollerar dina köp …</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Böcker att hämta tillbaka från butiken</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Gratisböcker kommer tillbaka av sig själva. För en bok du har köpt, tryck på Återställ köp i butiken och återställ sedan den här säkerhetskopian igen.</value></data>
+  <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Gratisböcker som fortfarande finns i butiken kommer tillbaka av sig själva. En bok som butiken inte längre har kommer inte tillbaka, men inspelningarna finns kvar i säkerhetskopian. För en bok du har köpt, tryck på Återställ köp i butiken och återställ sedan den här säkerhetskopian igen.</value></data>
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Inspelningarna och inställningarna för din berättelse i en fil. Själva boken kommer tillbaka från butiken. Spara den i Drive eller Filer, eller skicka den till dig själv.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Inspelningarna och inställningarna för alla {0} berättelser i en fil. Själva böckerna kommer tillbaka från butiken. Spara den i Drive eller Filer, eller skicka den till dig själv.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Hämtar tillbaka inspelningar och inställningar från en fil och hämtar böckerna igen från butiken. Köpta böcker behöver först Återställ köp.</value></data>

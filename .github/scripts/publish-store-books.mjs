@@ -51,6 +51,9 @@ import { fileURLToPath } from 'node:url';
 import { BUCKET_NAME, publishedStateFrom, wranglerArgs, wranglerCommand, wranglerDeleteArgs } from './r2-wrangler.mjs';
 
 export const STORE_API_URL = 'https://dinoreader.sirous.uk/api/stories';
+export const APP_CONFIG_URL = 'https://dinoreader.sirous.uk/api/app-config';
+const APP_CONFIG_ATTEMPTS = 3;
+const APP_CONFIG_WAIT_MS = 2000;
 const KEY_PREFIX = 'dinoreader/stories';
 const META_FILE = 'meta.json';
 const COVER_FILE = 'cover.jpg';
@@ -371,9 +374,13 @@ export function reconcileListen(language, info, liveInfo, folder, fileExists = e
 export const BOOK_ACCESS = ['free', 'paid'];
 export const BOOK_PRODUCT_PREFIX = 'uk.sirous.dinoreader.book.';
 
-/** Pure (Slice 346): what a book's `book.json` says about selling it: `access` is `free` only when it says so (default paid), `productId` its own or `uk.sirous.dinoreader.book.<stem>`. */
-export function accessOf(info, stem) {
-    const productId = typeof info?.productId === 'string' && info.productId.trim() !== '' ? info.productId.trim() : `${BOOK_PRODUCT_PREFIX}${stem}`;
+/**
+ * Pure (Slice 346): what a book's `book.json` says about selling it: `access` is `free` only when it says so (default paid). `productId` is its own in book.json, else `uk.sirous.dinoreader.book.<stem>`.
+ * Only with `storeSafe` (the live switch is on, and store-products.mjs) is every hyphen of the stem turned into `_` (Google Play takes no hyphen); without it the result is exactly what main always produced (check2 #2).
+ */
+export function accessOf(info, stem, { storeSafe = false } = {}) {
+    const own = typeof info?.productId === 'string' && info.productId.trim() !== '' ? info.productId.trim() : null;
+    const productId = own ?? `${BOOK_PRODUCT_PREFIX}${storeSafe ? stem.replaceAll('-', '_') : stem}`;
     return { access: info?.access === 'free' ? 'free' : 'paid', productId };
 }
 
@@ -389,14 +396,31 @@ export function withAccess(metaText, fields) {
     return `${JSON.stringify({ ...meta, access: fields.access, productId: fields.productId }, null, 2)}\n`;
 }
 
-/** Writes each built book's `access` and `productId` (from its content folder's book.json, found by story id) into its built meta.json; `contentById` maps a story id to `{ stem, info }`. A built book with no content folder is left as it is. */
-export function applyAccessToBuiltMetas(root, built, contentById) {
+/** Pure (Slice 346, check8 #10): throws when two paid books map to one product id (stems a-b and a_b both give a_b), as store-products.mjs refuses: one purchase would unlock both. */
+export function refuseSharedProductIds(contents) {
+    const byProduct = new Map();
+    for (const { stem, info } of contents) {
+        const { access, productId } = accessOf(info, stem, { storeSafe: true });
+        if (access === 'free') continue;
+        byProduct.set(productId, [...(byProduct.get(productId) ?? []), stem]);
+    }
+    const shared = [...byProduct].filter(([, stems]) => stems.length > 1);
+    if (shared.length === 0) return;
+    throw new Error(shared.map(([productId, stems]) => `product id "${productId}" is shared by ${stems.join(', ')} (one purchase would unlock all of them: give one a productId in its book.json)`).join('; '));
+}
+
+/**
+ * Writes each built book's `access` and `productId` (from its content folder's book.json, found by story id) into its built meta.json; `contentById` maps a story id to `{ stem, info }`. A built book with no content folder is left as it is.
+ * `storeSafe` (derived from the live paidBooks switch on every run, check3 #1) is the ONE gate of this slice's new behaviour: only then are product ids underscored and a shared id refused; without it the metas are byte-identical to main's.
+ */
+export function applyAccessToBuiltMetas(root, built, contentById, { storeSafe = false } = {}) {
+    if (storeSafe) refuseSharedProductIds([...contentById.values()]);
     for (const { id } of built) {
         const path = join(root, id, META_FILE);
         const content = contentById.get(id);
         if (!content || !existsSync(path)) continue;
         const text = readFileSync(path, 'utf8');
-        const next = withAccess(text, accessOf(content.info, content.stem));
+        const next = withAccess(text, accessOf(content.info, content.stem, { storeSafe }));
         if (next !== text) writeFileSync(path, next);
     }
 }
@@ -708,6 +732,38 @@ async function fetchLive(args, env) {
     return liveFromApi(await response.json());
 }
 
+/**
+ * Slice 346 (check3 #1/#2): whether the paid-books switch is on, read from the live remote config the app reads (`paidBooks.enabled === true` exactly, the Worker's own rule);
+ * anything else in a readable config is off. Derived on every run so a normal run keeps the store ids the switch-on republish wrote.
+ * An unreadable config (request failed, not 200, not a JSON object) is NOT off: after APP_CONFIG_ATTEMPTS tries it throws, so the run fails instead of publishing hyphen ids while the switch is on.
+ */
+export async function paidSwitchOn(env, fetchFn = fetch, wait = sleep) {
+    const url = `${env.APP_CONFIG_URL || APP_CONFIG_URL}?t=${Date.now()}`;
+    let lastError;
+    for (let attempt = 1; attempt <= APP_CONFIG_ATTEMPTS; attempt++) {
+        try {
+            return await readPaidSwitch(url, fetchFn);
+        } catch (error) {
+            lastError = error;
+            if (attempt < APP_CONFIG_ATTEMPTS) await wait(APP_CONFIG_WAIT_MS);
+        }
+    }
+    throw new Error(`The remote config ${url} could not be read after ${APP_CONFIG_ATTEMPTS} tries (${lastError.message}), so it is unknown whether paid books are on: the run stops rather than publish product ids that could break purchases.`);
+}
+
+async function readPaidSwitch(url, fetchFn) {
+    const response = await fetchFn(url, { headers: { 'Cache-Control': 'no-cache' }, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+    if (!response.ok) throw new Error(`answered ${response.status}`);
+    const config = await response.json();
+    if (config === null || typeof config !== 'object' || Array.isArray(config)) throw new Error('not a JSON object');
+    return config.paidBooks?.enabled === true;
+}
+
+/** The one value every step that builds or compares metas uses: the live switch, or `--force-paid-switch-on` (a local dry run only, never in the workflow, can only force it ON). */
+export async function storeSafeOf(args, env, fetchFn = fetch, wait = sleep) {
+    return args.includes('--force-paid-switch-on') || await paidSwitchOn(env, fetchFn, wait);
+}
+
 function runWrangler(args, capture) {
     const { command, args: commandArgs } = wranglerCommand(args);
     return spawnSync(command, commandArgs, capture ? { encoding: 'utf8', env: process.env, maxBuffer: 1024 * 1024 } : { stdio: 'inherit', env: process.env });
@@ -775,6 +831,7 @@ const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 
 async function verify(args, root) {
     const built = readBuilt(root);
+    applyAccessToBuiltMetas(root, built, readContentById(), { storeSafe: await storeSafeOf(args, process.env) }); // the same derived value as the upload run (idempotent), so verify never compares other ids than the upload wrote
     let behind = [];
     for (let attempt = 1; attempt <= VERIFY_ATTEMPTS; attempt++) {
         behind = stillBehind(built, await fetchLive(args, process.env));
@@ -851,7 +908,7 @@ async function main() {
     const built = readBuilt(root);
     const bucketAudio = dryRun && !args.includes('--bucket-state') ? () => null : bucketAudioOf(args); // Slice 281: which tracks the bucket's meta.json lists (read once, by --live-state)
     const live = withBucketListen(await fetchLive(args, process.env), built.map((book) => book.id), bucketAudio);
-    applyAccessToBuiltMetas(root, built, readContentById()); // Slice 346: free or paid and the product id, from book.json; also on --dry-run so the plan matches
+    applyAccessToBuiltMetas(root, built, readContentById(), { storeSafe: await storeSafeOf(args, process.env) }); // Slice 346: free or paid and the product id, from book.json; also on --dry-run so the plan matches. storeSafe follows the live switch on every run
     pruneBuiltMetas(root, built, live); // also on --dry-run (it only edits the local built folder), so the plan matches the real run
     const complete = completeIdsOf(args, !dryRun); // Slice 277: fail closed, only a book with a complete audio verdict uploads anything
     const planned = planStoreUploads(built, live);

@@ -194,7 +194,7 @@ internal static class Books
             _ when CreditsByLanguageProblem(info.CreditsByLanguage) is { } credits => credits,
             _ when TagsProblem(info.Tags) is { } tags => tags,
             _ when info.Access is not null && !BookInfo.AccessValues.Contains(info.Access, StringComparer.Ordinal) => $"access must be one of {string.Join(", ", BookInfo.AccessValues)} (or left out for paid), not \"{info.Access}\"",
-            _ when info.ProductId is not null && !System.Text.RegularExpressions.Regex.IsMatch(info.ProductId, "^[A-Za-z0-9][A-Za-z0-9._-]{2,99}$") => $"productId \"{info.ProductId}\" is not a store product id",
+            _ when ProductIdProblem(info) is { } product => product,
             _ when !DateOnly.TryParseExact(info.Added, AddedFormat, out _) => $"added must be {AddedFormat}",
             _ when string.IsNullOrWhiteSpace(info.StoryBy) => "storyBy is empty (the back cover needs who wrote the story; \"traditional\" for a tale nobody owns)",
             _ when DinoReader.Core.BackCover.IsTraditional(info.StoryBy) && info.Retold != true => "a traditional tale must be retold: true",
@@ -202,6 +202,21 @@ internal static class Books
             _ when !File.Exists(Path.Combine(folder, BookFolder.StoryFile)) && !File.Exists(Path.Combine(folder, BookFolder.LinesFile)) => "needs story.md or lines.json",
             _ => null,
         };
+    }
+
+    /// <summary>
+    /// Slice 346 (check8 #1): a free book keeps the id check it always had; only a paid book (the default) needs Google's stricter id format (lowercase, no hyphen), because only a sold book becomes a store product.
+    /// </summary>
+    private static string? ProductIdProblem(BookInfo info)
+    {
+        if (info.ProductId is null)
+        {
+            return null;
+        }
+
+        bool paid = !string.Equals(info.Access, "free", StringComparison.Ordinal);
+        string pattern = paid ? "^[a-z0-9][a-z0-9._]{2,99}$" : "^[A-Za-z0-9][A-Za-z0-9._-]{2,99}$";
+        return System.Text.RegularExpressions.Regex.IsMatch(info.ProductId, pattern) ? null : $"productId \"{info.ProductId}\" is not a store product id";
     }
 
     /// <summary>Slice 260: <c>tags</c> may only name <see cref="StoreTag"/>s (Hot, Popular, Recommended, New; exact case), each once.</summary>

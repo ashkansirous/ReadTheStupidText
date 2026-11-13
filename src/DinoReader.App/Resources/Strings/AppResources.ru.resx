@@ -370,6 +370,7 @@
   <data name="Wait_CheckingPurchases" xml:space="preserve"><value>Проверяем ваши покупки…</value></data>
   <data name="Backup_Missing" xml:space="preserve"><value>Книги, которые нужно вернуть из магазина</value></data>
   <data name="Backup_MissingNote" xml:space="preserve"><value>Бесплатные книги возвращаются сами. Для купленной книги нажмите «Восстановить покупки» в магазине, а затем снова восстановите эту копию.</value></data>
+  <data name="Backup_MissingNoteStore" xml:space="preserve"><value>Бесплатные книги, которые ещё есть в магазине, возвращаются сами. Книга, которую магазин больше не предлагает, не вернётся, но её записи останутся в файле копии. Для купленной книги нажмите «Восстановить покупки» в магазине, а затем снова восстановите эту копию.</value></data>
   <data name="Backup_SaveBodyState_One" xml:space="preserve"><value>Записи и настройки вашей сказки в одном файле. Сама книга вернётся из магазина. Сохраните его в Drive или «Файлах» либо отправьте себе.</value></data>
   <data name="Backup_SaveBodyState_Other" xml:space="preserve"><value>Записи и настройки всех сказок ({0}) в одном файле. Сами книги вернутся из магазина. Сохраните его в Drive или «Файлах» либо отправьте себе.</value></data>
   <data name="Backup_RestoreBodyState" xml:space="preserve"><value>Возвращает записи и настройки из файла и снова загружает книги из магазина. Для купленных книг сначала нужно «Восстановить покупки».</value></data>

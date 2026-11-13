@@ -1,5 +1,5 @@
 // Dino Reader's paid books (Slice 346): which store product unlocks which books. A paid book has one product of its own
-// (`uk.sirous.dinoreader.book.<stem>`, written into its meta.json as `productId` by publish-store-books.mjs), which unlocks a
+// (`uk.sirous.dinoreader.book.<stem, hyphens as _>`, written into its meta.json as `productId` by publish-store-books.mjs), which unlocks a
 // list of one. A bundle is one more row in BUNDLES below (product id to the book ids it unlocks), with no app update: the list
 // route (`/api/stories`) tells the app, per book, every product that unlocks it. Keep this file free of imports and of enums so
 // worker/entitlements.test.mjs can run it under node's type stripping.
