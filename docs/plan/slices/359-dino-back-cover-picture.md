@@ -1,9 +1,7 @@
 ### Slice 359 — Dino: a drawn back-cover picture for every book, with the credits shown over it
 **Product:** Dino
 
-*Built 2026-11-13, merged as PR #1048 (b9e545b2). Android emulator flows pass; iOS and Windows compile only. The 2026-11-13 Missing States mock (section 1) then drew the credits as a cream card in the middle of the picture at every size, so the layout built here is changed by work item 6 below. Item 6 built in wave 2026-11-13, PR #1097 (merge pending).*
-
-*Item 6 in progress (wave 2026-11-13), draft PR.*
+*Built 2026-11-13, merged as PR #1048 (b9e545b2). Android emulator flows pass; iOS and Windows compile only. The 2026-11-13 Missing States mock (section 1) then drew the credits as a cream card in the middle of the picture at every size, so the layout built here is changed by work item 6 below. Item 6 built in wave 2026-11-13, merged as PR #1097 (e0ba394b); all items done.*
 
 **Touches (item 6):** `src/DinoReader.App/BackCoverPages.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingTransport*.cs` (the view-switch hide, if it lives there), `src/DinoReader.App/App.xaml`, `src/DinoReader.App/DinoTokens.cs`, `src/DinoReader.Core/BackCover*.cs`, `.maestro/dino/back-cover*.yaml`, `tests/DinoReader.Tests/BackCover*.cs`. Item 6 needs none of the content, skill or agent paths below (the live gedlg worktree edits those).
 
@@ -97,7 +95,7 @@ Slice 237's landscape, Farsi and reading-mode checks were also never run after t
     - Skipped #9 (`reviews/s359b-medium.md`): "items 2, 4, 5 built but unticked" - a docs finding, done by this update-docs pass (same as high #1).
     - #5 applied as: `check` fails a book that has back-cover.jpg but no credit fields in book.json. #6: `check` fails a picture that is not 3:4 (1% tolerance). #9: reason `back_cover_missing` (area `library`) when a book names its picture and the file is missing.
 
-- [x] 6. **Match the 2026-11-13 mock** (Design below). *Built in wave 2026-11-13, PR #1097 (merge pending).* The built layout differed in these ways, each changed:
+- [x] 6. **Match the 2026-11-13 mock** (Design below). *Built in wave 2026-11-13, merged as PR #1097 (e0ba394b).* The built layout differed in these ways, each changed:
   - Credits sit on a **cream card in the middle of the picture at every size and view**: 300 wide (never wider than the picture
     less 16 each side), radius 22, padding 18 22 20, `rgba(255,246,230,.9)`, shadow 0 8 28 rgba(43,37,64,.22), centred both ways.
     Built: a light box in the 30-62% band (`BandTop`/`BandBottom`, `ScrimAlpha` 0.6, `ScrimCorner` 16, `ScrimPadding` 14, grown
@@ -184,6 +182,8 @@ No new strings.
   - Skipped #7 (`reviews/s359i6-medium.md`): "keeps the old CreditsHeight/FitFontSize/PictureHeight constants" - the old fitting code still serves the Good Enough live page, not dead.
   - Skipped #9 (`reviews/s359i6-medium.md`): "The assertions only check log lines" - the device run checked the screenshots.
 - `reviews/s359i6-check1.md`: #1 applied (`BuildCard` split). `reviews/s359i6-check2.md`: no findings.
+- `reviews/s359i6-check3.md`: 1 finding.
+  - Skipped #1 (`reviews/s359i6-check3.md`): "still describe the pre-item-6 layout" - cosmetic label in the screenshot manifest; the check passes either way.
 
 *Device run, item 6 (Android emulator, build c7f9c4eec4f9):* back-cover, back-cover-picture (portrait card=300, landscape card=340), back-cover-fa and back-cover-ar all PASS; screenshots match BC1/BC2/BC3 (card centred, picture fills the stage, no view switch). Evidence: `D:/ReadTheStupidText-worktrees/reviews/s359i6-device/` (outside the repo).
 

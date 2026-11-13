@@ -1,7 +1,7 @@
 # Slice 374 — Store listings in the other 13 app languages, both apps, every store
 **Product:** Shared
 
-*In progress (wave 2026-11-13), draft PR.*
+*Parked: drafts merged as PR #1096 (2c068e12); the store pushes are not done (the night push was denied by auto mode, [Unrequested Commit in a Connected App]; no Partner Center submission credential exists). Needs an interactive session.*
 
 **Touches:** `docs/store-listings/**` (new: one file per language for Dino under `docs/store-listings/dino/<lang>.md`; RTST's existing `docs/store-listings/<lang>.md` files completed, new `da.md`, `fi.md`, `sv.md`, `nb.md`, `nl.md`), `docs/plan/slices/374-store-listings-13-languages.md`, `docs/plan/unverified.md`
 

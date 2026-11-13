@@ -262,6 +262,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 330 | Listening page: Store listening track, page gaps audible | verified 2026-11-13 (measured with ffmpeg, no listen needed) | #1064 | | [330-store-listening-track-page-gaps-audible.md](../slices/330-store-listening-track-page-gaps-audible.md) |
 | 362 | Dino: onboarding that shows what Dino can do (2026-11-13 mock): six required steps (language, story languages, first books, listen in every family language, record one character and hear yourself, grown-ups' corner tour and child's shelf), replacing the first run and the intro | built, not yet verified | #1076 | | [362-dino-onboarding-shows-what-dino-can-do.md](../slices/362-dino-onboarding-shows-what-dino-can-do.md) |
 | 358 | Dino Android: "Connect to the internet to buy" while online, no Buy button (empty Play prices, unreported) | built, not yet verified | #1075 | | [358-dino-android-no-buy-button.md](../slices/358-dino-android-no-buy-button.md) |
+| 359 | Dino: a drawn back-cover picture for every book (one image, credits shown over its middle by the reader), replacing Slice 237's live page; style picked from 5 Lion and Mouse samples | built, not yet verified | #1048, #1097 | | [359-dino-back-cover-picture.md](../slices/359-dino-back-cover-picture.md) |
 
 ## Shared
 
@@ -371,6 +372,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 367 | Tidy by product 2/6: root CLAUDE.md keeps shared rules, each app's rules move to its own folder (approved by the user 2026-11-13) | built | #1089 | | [367-claude-md-per-product.md](../slices/367-claude-md-per-product.md) |
 | 369 | Tidy by product 4/6: one release workflow per product, sharing a reusable part | built | #1087 | | [369-release-workflow-per-product.md](../slices/369-release-workflow-per-product.md) |
 | 368 | Tidy by product 3/6: tests for the shared code in their own test project | built | #1078 | | [368-shared-tests-project.md](../slices/368-shared-tests-project.md) |
+| 342 | Listening page: Farsi voice pack | built (#1098); second listen waits for an interactive session | #1098 | | [342-farsi-voice-pack.md](../slices/342-farsi-voice-pack.md) |
 
 ## Batch ordering notes
 

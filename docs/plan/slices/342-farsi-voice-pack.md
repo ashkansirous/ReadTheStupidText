@@ -36,7 +36,7 @@ Listening page https://claude.ai/artifact/Cfes6Q7N1HvgG3HYnmHMjY, user pressed D
 
 ## Ezafe fix design (coordinator, wave 2026-11-13; covers Slice 343's fix items too)
 
-*Built in wave 2026-11-13, PR #1098 (merge pending), one PR with Slice 343. Not yet verified on a device.*
+*Built in wave 2026-11-13, merged as PR #1098 (fdf26dc7), one PR with Slice 343. Not yet verified on a device; the second listen waits for an interactive session.*
 
 **Touches (fix):** `src/ReadTheStupidText.Application/Reading/FarsiEzafe*.cs` (new), the one shared speech-text step every reader passes chunk text through (`src/ReadTheStupidText.Application/Reading/SpeechTextChunker.cs` or the file the builder finds that feeds `SherpaEngineFactory.Generate`, Android and iOS readers alike), `tests/Shared.Tests/**`, `tools/sound-words-test/**` (probe only), `docs/plan/slices/342-farsi-voice-pack.md`, `docs/plan/slices/343-four-farsi-voices.md`, `docs/plan/unverified.md`.
 
@@ -68,7 +68,7 @@ Medium pass `reviews/s342-medium.md` (4 findings), all skipped:
 
 *Device run (wave 2026-11-13):* RTST build `c5a99c234c14` ok. No RTST Farsi read flow exists. The Dino flows `farsi-speaker-first-join` and `premade-audio-past-roar` FAIL on causes unrelated to this change (stuck on onboarding after skip-first-run lang=fa; after `pm clear` a real fa audio pack replaced `fixture-13.m4a`), and both play premade clips, so the ezafe path was not reached on a device. Log: `D:/ReadTheStupidText-worktrees/.emulator/logcat-i1/dino-farsi-speaker-first-join.log`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-11-13)
 
 - Farsi speech text goes through `FarsiEzafe.ForModel` (`src/ReadTheStupidText.Application/Reading/FarsiEzafe.cs`) at every engine `Generate` and in every sentence cache `KeyFor`; a new Piper/Farsi path must do both, or the override is skipped or a stale clip is served. The text on screen and highlight offsets stay original. (Slice 342: docs/plan/slices/342-farsi-voice-pack.md)
 
