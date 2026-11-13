@@ -870,7 +870,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     }
 
     private static SentenceCacheKey KeyFor(BuiltEngine engine, string sentence, VoiceInfo voice, IVoicedAudioTransform? transform) =>
-        new(sentence, engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, SiblingVoice.CacheTag(voice, transform));
+        new(FarsiEzafe.ForModel(engine.Model, sentence), engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, SiblingVoice.CacheTag(voice, transform));
 
     // The native Generate call cannot be interrupted, and its result may be wanted by another
     // caller that joined this synthesis, so a cancelled caller only stops waiting for a slot;
@@ -1261,8 +1261,8 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         if (model.Kind != VoiceEngineKind.Supertonic)
         {
             return singleThread
-                ? WithSingleThread(engine, twin => twin.Generate(text, pace, speakerId))
-                : engine.Tts.Tts.Generate(text, pace, speakerId);
+                ? WithSingleThread(engine, twin => twin.Generate(FarsiEzafe.ForModel(model, text), pace, speakerId))
+                : engine.Tts.Tts.Generate(FarsiEzafe.ForModel(model, text), pace, speakerId);
         }
 
         var config = new OfflineTtsGenerationConfig { Sid = speakerId, Speed = pace };

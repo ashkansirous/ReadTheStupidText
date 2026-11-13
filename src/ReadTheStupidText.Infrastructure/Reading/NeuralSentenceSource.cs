@@ -83,7 +83,7 @@ internal sealed class NeuralSentenceSource
     private static byte[] ValidClip(byte[] clip) =>
         WavFile.IsComplete(clip, clip.LongLength) ? clip : throw new InvalidDataException("Not a WAV written by this app.");
 
-    // The key carries the voice, engine, language and model, so audio is never reused across them; the
+    // The key carries the text actually sent to the engine (FarsiEzafe output), the voice, engine, language and model, so audio is never reused across them; the
     // engine and voice come from the read's own captured model.
     private Task<byte[]> GetSentenceAsync(
         BuiltEngine engine, string sentence, VoiceInfo voice, int? activityId, CancellationToken token,
@@ -94,7 +94,7 @@ internal sealed class NeuralSentenceSource
     }
 
     private static SentenceCacheKey KeyFor(BuiltEngine engine, string sentence, VoiceInfo voice, IVoicedAudioTransform? transform) =>
-        new(sentence, engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, SiblingVoice.CacheTag(voice, transform));
+        new(FarsiEzafe.ForModel(engine.Model, sentence), engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, SiblingVoice.CacheTag(voice, transform));
 
     // The native Generate call cannot be interrupted, and its result may be wanted by another caller
     // that joined this synthesis, so a cancelled caller only stops waiting for a slot; a call already

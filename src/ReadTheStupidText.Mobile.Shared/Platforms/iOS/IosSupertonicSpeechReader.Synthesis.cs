@@ -83,7 +83,7 @@ public sealed partial class IosSupertonicSpeechReader
     }
 
     private static SentenceCacheKey KeyFor(IosBuiltEngine engine, string sentence, VoiceInfo voice, IVoicedAudioTransform? transform) =>
-        new(sentence, engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, SiblingVoice.CacheTag(voice, transform));
+        new(FarsiEzafe.ForModel(engine.Model, sentence), engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, SiblingVoice.CacheTag(voice, transform));
 
     // The native Generate call cannot be interrupted, and its result may be wanted by another
     // caller that joined this synthesis, so a cancelled caller only stops waiting for a slot; a
