@@ -1,20 +1,19 @@
 # App Store listing: Dino Book Reader (ASC app 6825053435, bundle uk.sirous.dinoreader)
 
-**Pushed 2026-11-13 (Slice 346 Part D) to version 1.81.1: en-US description, keywords, promotional text, support and marketing URL, subtitle; de-DE from `de.md`; both read back identical. Nothing submitted for review. The state below is the 2026-10-30 read, kept for history.** State read through the ASC API the same day: version 1.81.1 `PREPARE_FOR_SUBMISSION`; en-US localization all null (description, keywords, supportUrl, marketingUrl, promotionalText); appInfo has name and privacyPolicyUrl (`https://dinoreader.sirous.uk/privacy.html`), subtitle and primary category null; copyright null; contentRightsDeclaration null; age rating all null; no review detail; no price; no screenshot sets; `isOrEverWasMadeForKids` false.
-Source text: the live Microsoft Store English text (public page read 2026-10-30; ages 3 to 9, fifteen languages). It is newer than the live Play en-GB text, which still says "3 to 8" and "nine languages" (the corrected text is in the repo, Slice 291; the Play push is still open). German: `de.md`.
+**Rewritten 2026-11-13 (Slice 291 work item 4) from the current app, and pushed the same day through the App Store Connect API (en-US and de-DE read back equal; the version is NOT submitted). Version 1.81.1 is `PREPARE_FOR_SUBMISSION`, not submitted.** The text pushed earlier the same day (read back from the ASC API 2026-11-13) was stale: it still sold "bring your own books" (scan, photos, PDF, typing), a cast screen, on-device voices with a voice download, on-device translation and "scans stay on your device". Slice 278 (store books only, pre-made clips, no scanning or translation) and Slice 305 (no ML Kit, no sherpa-onnx in the package) removed all of that. What the app does now: a fresh install picks a language, then at least two books from the story store; every character has a pre-made voice (downloaded audio, one pack per language); a family can record its own voice for any character (microphone only on the Record screen); three reading modes; reading speed 0.8x to 1.2x; animal sounds; backup and restore; four books free, the rest $0.99 behind the grown-ups gate; 15 books, 15 languages. German: `de.md`.
 
 ## 1. appInfoLocalization (en-US)
 
 Name (<= 30): Dino Book Reader (already set)
-Subtitle (<= 30, 27 chars): A voice for every character
+Subtitle (<= 30, 27 chars): A voice for every character (already set, unchanged)
 
 ## 2. appStoreVersionLocalization (en-US)
 
-Promotional text (<= 170, 149 chars):
-Stories read aloud to children aged 3 to 9, with a different voice for every character. No ads. Four stories free, the rest $0.99 each. 15 languages.
+Promotional text (<= 170, 161 chars; editable any time):
+Stories read aloud to children aged 3 to 9, with a voice for every character and room for your own. No ads. Four stories free, the rest $0.99 each. 15 languages.
 
-Keywords (<= 100 bytes, 95 bytes):
-kids,bedtime,stories,picture books,children,fairy tales,voices,storybook,tales,toddler,narrator
+Keywords (<= 100 bytes, 97 bytes, no spaces after commas):
+kids,bedtime,stories,picture books,children,fairy tales,storybook,tales,toddler,read aloud,record
 
 Support URL: https://dinoreader.sirous.uk/
 Marketing URL: https://dinoreader.sirous.uk/
@@ -22,58 +21,54 @@ What's new: none for the first version.
 
 Description (<= 4,000):
 
-Dino Book Reader reads stories aloud to children aged 3 to 9, with a different voice for every character. The narrator tells the story, and the wolf, the pigs and the gingerbread man each speak in their own voice.
+Dino Book Reader reads picture-book stories aloud to children aged 3 to 9, with a different voice for every character. The narrator tells the story, and the wolf, the pigs and the gingerbread man each speak in their own voice.
 
-BRING YOUR OWN BOOKS
-A grown-up can add any story: scan the pages of a paper book, pick photos or a PDF, or type or paste the text. Dino Book Reader finds who is speaking and gives each character a voice. You can change any voice on the cast screen.
+PICK YOUR STORIES
+A grown-up chooses books from the story shelf: classic tales retold gently, with a picture on every page. Four stories are free. Every book comes with its own pre-made voices, in the language you pick.
+
+HEAR FAMILY IN THE STORY
+A parent or grandparent can record their own voice for any character, on any page, in any story language. Your child hears you read, and the recording stays on your device.
 
 READ TOGETHER
 - Each sentence lights up as it is read, so children can follow along.
-- Picture pages stay as they are, with the words read over them.
+- Choose picture only, text only, or picture and text.
+- Reading speed from 0.8x to 1.2x, and animal sounds you can switch on or off.
 - A night theme for bedtime stories.
 
 STORIES AND PRICES
-Four illustrated stories are free: The Lion and the Mouse, The Gingerbread Man, The Three Little Pigs and X Marks the Treasure. Every other story on the built-in story shelf is $0.99 each (the App Store shows the price in your own currency). A grown-up buys a story once, behind the grown-ups gate, with in-app purchase, and can restore past purchases at any time. Stories you already have stay on your device.
+Four illustrated stories are free: The Lion and the Mouse, The Gingerbread Man, The Three Little Pigs and X Marks the Treasure. Every other story on the story shelf is $0.99 each (the App Store shows the price in your own currency). A grown-up buys a story once, behind the grown-ups gate, with in-app purchase, and can restore past purchases at any time. Stories you already have stay on your device.
 
 FIFTEEN LANGUAGES
-English, Arabic, Chinese, Danish, Dutch, Farsi, Finnish, French, German, Japanese, Norwegian, Portuguese, Russian, Spanish and Swedish. Stories can be translated into the grown-up's language right on the iPhone or iPad.
+The app, the stories and the voices come in English, Arabic, Chinese, Danish, Dutch, Farsi, Finnish, French, German, Japanese, Norwegian, Portuguese, Russian, Spanish and Swedish.
 
 MADE FOR KIDS
 - No ads.
 - Stories are bought through the App Store, by a grown-up behind the grown-ups gate. There is no account to create, and we store nothing about you or your purchase; the store's proof is checked and forgotten.
-- Settings, adding and deleting stories sit behind a grown-ups gate.
-- Voices are generated on the device. Once the voice for your language is downloaded, reading works offline.
-- Your stories, photos and scans stay on your device.
+- Settings, buying and deleting stories, recording and backups sit behind a grown-ups gate.
+- Once a story and its language are downloaded, it reads offline.
+- Your recordings stay on your device. Back them up and restore them from the grown-ups area.
 - Optional anonymous usage counts with no names or identifiers, switched off in Settings (behind the grown-ups gate).
 
-(Basis: the Microsoft Store text plus the Play text's scan and translation lines, as in `de.md`; the last bullet is from site/dino/privacy.html. "Made for kids" is a heading only, not the App Store Kids Category; reword if the user does not want it to imply that.)
+(Basis: `site/dino/index.html` and `site/dino/privacy.html` as of 2026-11-13, and the app rules in `src/DinoReader.App/CLAUDE.md`. "Made for kids" is a heading only, not the App Store Kids Category.)
 
 ## 3. Version and app fields
 
 - copyright: `2026 Ashkan Sirous`.
 - primaryCategory: BOOKS. secondaryCategory: EDUCATION. (GAMES_FAMILY exists but this is not a game.)
-- Price: free to download, with in-app purchases (one non-consumable product per paid story, $0.99 price point; products are made by `store-products.mjs`, not by this file).
+- Price: free to download, with in-app purchases (one non-consumable product per paid story, $0.99 price point; made by `store-products.mjs`, not by this file; all 11 read READY_TO_SUBMIT on 2026-11-13).
 - Price (app): free. USA price point id `eyJzIjoiNjgyNTA1MzQzNSIsInQiOiJVU0EiLCJwIjoiMTAwMDAifQ` (customerPrice 0.0).
 
-## 4. LEGAL DECLARATIONS IN THE USER'S NAME (proposed answers; the user decides)
+## 4. Legal declarations and age rating (the user's answers of 2026-11-09, Slice 291)
 
-contentRightsDeclaration: DOES_NOT_USE_THIRD_PARTY_CONTENT. Evidence: the 15 books in `content/dino/*/book.json` are credited as retold traditional tales, Aesop, Brothers Grimm, Hans Christian Andersen and the user's own books (Ashkan Sirous; Elham Shafiei Gol co-wrote Freddy and the Slipper): the retellings are public-domain sources retold by the project, "free to share"; the user's own books are not free to share (user, 2026-11-01). Caveats: the pictures were drawn with Gemini; books grown-ups add are their own private content. If the user wants certainty on the AI pictures, answer USES_THIRD_PARTY_CONTENT and confirm rights.
-
-Age rating declaration (same attributes as RTST). Proposed: all content descriptors NONE; gambling, lootBox, healthOrWellnessTopics, messagingAndChat, socialMedia, userGeneratedContent, unrestrictedWebAccess, advertising, parentalControls, ageAssurance all false. Expected 4+. Evidence: privacy page says no advertising; in-app purchases exist from Slice 346 (the age-rating questionnaire has no purchase attribute, but Apple asks the in-app-purchase question separately and the purchase sits behind the grown-ups gate), "does not link children to other apps or websites"; no accounts or chat; no WebView or browser (grep: the only `Launcher` use opens this app's own App Store page, in `StoreUpdater.ios.cs`, after a parental gate per the comment in `UpdatePage.cs`; I did not run it). Judgment points:
-- violenceCartoonOrFantasy NONE, because the retold tales are written so nobody is hurt (project rule for ages 3-9). If a wolf or giant counts as mild cartoon peril, use INFREQUENT_OR_MILD (still 4+).
-- parentalControls false. The grown-ups gate (hold, then a sum: `GrownUpGate.cs`) hides settings and story management from the child; it does not let a parent restrict content or time. If Apple's wording counts a gate, answer true.
-- userGeneratedContent false. Grown-ups add their own books and can record their voice, and can share a book file out through the system share sheet (`StoryActions.cs`), but nothing is published to other users.
-- ageAssurance false: no age check.
-- Enum spellings from memory, as in `appstore-rtst.md`.
-
-Kids Category (NOT chosen, flagged): it fits the product (ages 3-9, no ads, no accounts, purchases (Slice 346, behind the grown-ups gate; Apple's Kids rules want a parental gate on purchases)). What it would require, from my memory of Apple's rules (guidelines 1.3 and 5.1.4; Apple's page would not load today, so verify): set `isOrEverWasMadeForKids` true (I believe it cannot be undone) and pick one `kidsAgeBand` (5 and under, 6-8, 9-11), so 3-9 spans two bands and a narrower claim must be chosen; the privacy page and the Dino site now say "3 to 9" like the stores (fixed in the repo text in Slice 291; the store push is still open); no third-party analytics or ads; any link out or purchase behind a parental gate; a privacy policy (exists). Check first: the anonymous usage counts go to our own Cloudflare Worker (first-party, but still analytics); translation models download from Google's servers (ML Kit); the update prompt opening the App Store page must sit behind the gate. Whether to go Kids is the user's call.
+- contentRightsDeclaration: DOES_NOT_USE_THIRD_PARTY_CONTENT (user: "sure").
+- Age rating, the attributes `appInfos/{id}/ageRatingDeclaration` takes: all content descriptors NONE; `violenceCartoonOrFantasy` INFREQUENT_OR_MILD (user agreed); `parentalControls` true (the grown-ups gate counts, user); gambling, lootBox, healthOrWellnessTopics, messagingAndChat, socialMedia, userGeneratedContent, unrestrictedWebAccess, advertising, ageAssurance all false. Expected 4+. Evidence: no advertising; no accounts or chat; no WebView or browser; purchases only behind the grown-ups gate; the one link out (the update page on the App Store) sits behind the gate. userGeneratedContent stays false: a recording is the family's own, kept on the device and in their own backup, never published to other users. Enum spellings are checked against Apple's docs on the first API write (work item 4).
+- Kids Category: OFF for now (user, 2026-11-09). `isOrEverWasMadeForKids` stays false. Apple's age bands (5 and under, 6-8, 9-11) do not match "3 to 9"; turning it on later is the user's call.
 
 ## 5. appStoreReviewDetail
 
-Same contact rules as `appstore-rtst.md` section 5: name Ashkan Sirous; email elinsoftuk@gmail.com (Play developer contact) or ashkan.sirous@gmail.com, user to pick; phone NOT FILLED (none exists anywhere I looked); no demo account.
-Notes: "A children's story reader with no sign-in. On first launch it asks for a language and downloads an on-device voice (about 145 MB) from this project's public GitHub Releases page; it needs internet once. Tap a starter book on the shelf to hear it read with a different voice per character. Settings and adding books are behind a grown-ups gate (hold a button, then answer a sum). The story shelf (in the grown-up area) downloads stories from our own server; a paid story is handed out only after our server has asked Apple that it was bought. The camera is used only to scan a printed book, on the device. No ads, no accounts. In this version a grown-up can buy extra stories at $0.99 each with in-app purchase once the purchase switch is on (behind the grown-ups gate; Restore Purchases is on the story shelf); four stories stay free. The in-app purchase products are submitted for review with this version. Needs a sandbox Apple ID to try a purchase. Privacy policy: https://dinoreader.sirous.uk/privacy.html"
+Name Ashkan Sirous; email elinsoftuk@gmail.com; phone: from the private secrets store (`D:\secrets\dinoreader\secrets.env`, `APP_REVIEW_CONTACT_PHONE`), filled at apply time, never written in this repo; no demo account.
+Notes: "A children's picture-book reader with no sign-in and no ads. First launch: pick a language, then pick at least two books from the story store (internet needed; the books and their pre-made voices download from this project's own server, dinoreader.sirous.uk). Tap a book on the shelf to hear it read, with a different voice for every character. Settings, the story store, recording and backups are behind a grown-ups gate (hold a button, then answer a sum). A grown-up can buy extra stories at $0.99 each with in-app purchase (four stories are free); Restore Purchases is in the story store. A paid story is handed out only after our server has asked Apple that it was bought. The in-app purchase products are submitted for review with this version; use a sandbox Apple ID to try a purchase. The microphone is used only on the Record screen, when a grown-up records their own voice for a character; the recording stays on the device. The app does not use the camera or the photo library. Privacy policy: https://dinoreader.sirous.uk/privacy.html"
 
 ## 6. Screenshots (not generated; applies to both apps)
 
-Missing for both: one 6.9"/6.7"/6.5" iPhone class and a 13" iPad (UIDeviceFamily is 1+2 in both Info.plists, hence iPad is required). In the repo: no iOS screenshots, no fastlane or store-assets folder; only `site/dino/shot-reading.webp` (site image) and RTST's `site/img/control-panel.webp` (Windows). Play: RTST 4 phone screenshots, Dino 5, each with a feature graphic and icon, no tablet shots.
-Capturing would take: a macOS CI job (both apps already build for `iossimulator-arm64` on macOS runners, `dinoreader-ios.yml`) that boots a 6.9" iPhone and a 13" iPad simulator, installs the Debug simulator build, drives it and runs `xcrun simctl io <device> screenshot`, then uploads through the ASC API (`appScreenshotSets` + `appScreenshots`). Not checked: whether Maestro (`.maestro/`, used for Android) or the Debug hooks work on iOS simulators, and the voice-pack download needs the network or a pre-seeded pack on the runner. Exact pixel sizes to be confirmed from Apple's docs.
+Missing for both: one 6.9"/6.7"/6.5" iPhone class and a 13" iPad (UIDeviceFamily is 1+2 in both Info.plists, hence iPad is required). Slice 291 work item 5 owns them (macOS CI simulator job `store-screenshots.yml`); pixel sizes to be confirmed from Apple's docs.
