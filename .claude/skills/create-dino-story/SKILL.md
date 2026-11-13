@@ -1,6 +1,6 @@
 ---
 name: create-dino-story
-description: Make or illustrate a Dino Reader book - gentle story text for ages 3-9, cast descriptions, a cover and one picture per page drawn by driving the Gemini web app in the user's Chrome, a full-size quality check of every picture, then build, test and upload. Use when the user says "make a Dino story", "illustrate <story>", "add pictures to <story>", "add a story to the store", or works on Slices 119-121.
+description: Make or illustrate a Dino Reader book - gentle story text for ages 3-9, cast descriptions, a cover and one picture per page drawn by driving the Gemini web app in the user's Chrome, a quality check of every picture on its small copy, then build, test and upload. Use when the user says "make a Dino story", "illustrate <story>", "add pictures to <story>", "add a story to the store", or works on Slices 119-121.
 ---
 
 # Create or illustrate a Dino Reader story
@@ -11,7 +11,7 @@ the classic tale and Gemini's output (Decision 130, Slice 119):
 1. **Nobody gets hurt.** No eating, burning, boiling, drowning, beating, dying, falling to death, or
    threats of any of it; no fire or hot water near a character; no "licks his lips". Conflicts end
    gently: cold bubbly water, a fright that turns into a laugh, a sorry, running home, a new friend.
-2. **No picture is accepted without the full-size check** (step 5). A rejected picture is never kept: candidates are saved only to be checked, and rejected ones are deleted.
+2. **No picture is accepted without the check on its small copy** (step 5). Nobody, the coordinator included, ever opens a whole original at full size (Slice 375): look at `<name>.small.jpg` (896x1200), and open a full-size crop only for one named fault. A rejected picture is never kept: candidates are saved only to be checked, and rejected ones are deleted.
 
 Every book is one folder, `content/dino/<stem>/` (Slice 157): `story.md`, `book.json`, `pictures/`, `cover.jpg`, `cover-thumb.jpg`, `translations/`, `art.md` and `characters/`.
 Per-book prompts, cast and check results live in `content/dino/<stem>/art.md`.
@@ -54,7 +54,7 @@ context free of screenshots, pictures and 14 translation files.
      `prepare-story-pictures.ps1`, the contact sheet and `stamp`, then the full review runs as usual. Redraws after
      the review are split into groups the same way when there are more than three; each redraw group has at most three
      pictures (the redraw rule stays at three, below the general cap of 5 above).
-4. **`dino-story-reviewer`**, **full** mode: every picture at full size against its page and the line-up,
+4. **`dino-story-reviewer`**, **full** mode: every picture's small copy (a full-size crop only for one named fault) against its page and the line-up,
    and characters, places and time of day consistent across the book. Failed pages go back to the
    illustrator (or the writer), then review again until `PASS`. The coordinator may glance at the contact
    sheet but never accepts a book from it. Then step 7 goes through the usual gate and ship.
@@ -113,7 +113,14 @@ Prompt templates: [prompts.md](prompts.md).
   page-3 wolf in page 5's bathroom, trousers appearing on pigs, a 4th pig). Never draw a book in one chat:
   - **Character chat** (one per book): one reference sheet per character, then a line-up of the whole
     cast. Save the accepted line-up and sheets to `content/dino/<stem>/characters/`; they are
-    the reference every page chat gets. Still being tried: whether sheets stay more consistent in one
+    the reference every page chat gets.
+    **Every character that appears in any picture gets drawn first, however minor** (the user, 2026-11-13, Good Enough:
+    left to invent them, Gemini drew human footballers, the same five fans on every page and a Carrot look-alike in the crowd,
+    and four rounds of redraws followed). Background groups get their own sheet each, named in `art.md` and in prompts
+    ("fans group 1", "fans group 2", "the cat players"): every member drawn **from the front and from behind**.
+    The line-up shows the **whole cast side by side at true relative size** (small children next to the grown-up fans,
+    players and referee), front and back, so Gemini knows how big each one is. Every page chat pastes the line-up plus the
+    sheets of every group on that page. No page is drawn until these sheets pass the illustrator's own check; nobody waits for the user to approve them (the user, 2026-11-13). Still being tried: whether sheets stay more consistent in one
     chat or with a new chat every 2-3 characters. Note in the art record which you did and how it went,
     and update this line once it is clear.
   - **Page chats**: **one prompt per chat**: every picture gets its own new chat, so one picture can't influence the next
@@ -196,11 +203,11 @@ prompt with that character names what they do NOT wear ("no trousers, no shorts,
 waistcoat"); and it gives the "villain" teeth or fangs, so say "mouth closed or smiling, no teeth showing".
 A chat that drew a wrong picture tends to repeat it when asked again: redo it in a fresh chat.
 
-## 5. Full-size check (every picture, no exceptions)
+## 5. Check on the small copy (every picture, no exceptions)
 
 Before viewing or reviewing a book's high-res files, fetch them: they are ~130-byte LFS pointers until then. Run the command from the comment in `.lfsconfig`: `git lfs pull --include "content/dino/<book>/high-res/**" --exclude ""`.
 
-Read the saved full-size file (not the chat preview) and check each item. Any fail means: say what
+`gemini-take-download.ps1` writes `<name>.small.jpg` (896x1200, JPEG 85, `tools/picture-review-copy.ps1`) beside every saved picture, and the two always move, rename and get deleted together. Read the small copy (not the chat preview, never the whole full-size original) and check each item; when one item needs a closer look, open a full-size crop of that one place only and name the fault. Any fail means: say what
 is wrong, ask for that page again (a new chat; a small patch may continue the chat only while it stays at or under 3 picture requests), and check the new one
 from the top. Compare outfits against the line-up picture, item by item (hat type, shirt or no shirt,
 trousers or none).
@@ -210,7 +217,7 @@ trousers or none).
 - [ ] The scene shows what the page text says, and nothing from another page.
 - [ ] Rule 1: nobody hurt, in pain, crying in fear, near fire or hot water; no teeth-bared menace.
 - [ ] No text, letters, words or signs anywhere (signatures included).
-- [ ] **Every character is whole above the 70% line** (heads, bodies, legs, feet, paws, tails, anything held). Never judge it without the line: run `pwsh .claude/skills/create-dino-story/line70.ps1 <picture>` (add `-OutDir <scratch folder>` for a picture inside the repo) and read the `<picture>.line70.png` it writes (red line at 70%, bottom 30% tinted blue). Any part of any character in the tint fails the picture: that strip is where the app's words go. The cover follows the same rule. Older books' `art.md` lines that say only "faces and action" are history; this checklist wins.
+- [ ] **Every character is whole above the 70% line** (heads, bodies, legs, feet, paws, tails, anything held). Never judge it without the line: run `pwsh .claude/skills/create-dino-story/line70.ps1 <picture>` (for a scratch candidate it uses the `<name>.small.jpg` beside it and writes the overlay beside it, or into `-OutDir <folder>`; for a picture whose path has a `\content\dino\` segment, in any checkout, it writes the small copy and overlay to `%TEMP%\line70\<12-hex hash of the full path>\`, never into the repo; `-OutDir` overrides both) and read the `<picture>.line70.png` whose path it prints (red line at 70%, bottom 30% tinted blue). Any part of any character in the tint fails the picture: that strip is where the app's words go. The cover follows the same rule. Older books' `art.md` lines that say only "faces and action" are history; this checklist wins.
 - [ ] The bottom 30% is still scene (ground, grass, flowers, water, floor), never a plain white or empty strip; the scene fills the whole frame, top and bottom.
 - [ ] Indoors/outdoors and time of day match the text (no grass on an indoor floor).
 - [ ] Every character has the right number of arms, hands, legs, paws and wings (Slice 350: a lion with three hands, an extra limb).
@@ -265,8 +272,8 @@ Record each pass in the art record table (page, attempt number, why earlier atte
   clipboard; poll `window.__clipResult` until it is `WxH`, then
   `pwsh -STA .claude/skills/create-dino-story/gemini-clipboard.ps1 Save <working folder>/cand-<page>.jpg`.
   Delete the stray download afterwards if it turns up late.
-- Save each picture under a candidate name (`cand-5.jpg`), check it (step 5) by reading the file, and
-  only then rename it to `cover.jpg`, `1.jpg`... Delete rejected candidates.
+- Save each picture under a candidate name (`cand-5.jpg`), check it (step 5) by reading its small copy (`cand-5.small.jpg`), and
+  only then rename it to `cover.jpg`, `1.jpg`... (rename `cand-5.small.jpg` to `1.small.jpg` with it). Delete rejected candidates with their small copies.
 - Then run `pwsh tools/prepare-story-pictures.ps1 <working folder> <target folder> <pageCount>` with the full target
   path: `content/dino/<stem>`. It checks the
   count, makes every picture 3:4 at most 896x1200 (never upscaled), JPEG quality 85, and writes `<target>/pictures/1..N.jpg`,

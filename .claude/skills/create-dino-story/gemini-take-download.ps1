@@ -7,6 +7,10 @@
 # one of those sizes is taken, so another session's Gemini download can't be. A relative <file> is relative to the PowerShell location.
 # -Untouched (Slice 350 high-res pictures): move the download byte for byte instead of re-saving it; <file>'s extension is
 # replaced by the download's own, and the path actually written is printed ("Saved <path> ...").
+# Both modes then write <name>.small.jpg beside the picture (896x1200, JPEG 85; Slice 375): the copy agents look at.
+# With -Untouched the original stays byte for byte. A move or rename of the picture moves <name>.small.jpg with it.
+# Exit codes: 0 saved with its small copy; 1 nothing saved (no download, save failed; the error says where the file is);
+# 2 the picture IS saved but the small copy failed ("SAVED <path>; small copy failed: <reason>"): never retry the download, run pwsh tools/picture-review-copy.ps1 <path>.
 param(
   [Parameter(Mandatory = $true)][string]$Path,
   [int]$WaitSeconds = 30,
@@ -15,6 +19,8 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
+
+. (Join-Path $PSScriptRoot '..\..\..\tools\picture-review-copy.ps1')   # New-ReviewCopy, the one resize function (Slice 375)
 
 $saveQuality = 95L
 $freshSeconds = 120
@@ -53,6 +59,20 @@ function Save-AsJpeg([System.IO.FileInfo]$source, [string]$file) {
     Write-SizeWarning $file $picture.Width $picture.Height
   }
   finally { $picture.Dispose() }
+  Write-SmallCopy $file
+}
+
+# Slice 375: every saved picture gets its 896x1200 review copy beside it (<name>.small.jpg); agents look only at that copy.
+# The original is never changed. A failure here must not undo the saved picture: it stays, and the script prints
+# "SAVED <path>; small copy failed: <reason>" and exits 2, so the caller never retries the download and never reads a missing small copy.
+function Write-SmallCopy([string]$file) {
+  try { Write-Host "Small copy $(New-ReviewCopy $file) (look at this, never at the full-size original)" }
+  catch {
+    [Console]::Error.WriteLine("ERROR: saved $file but no small copy: $($_.Exception.Message). Run: pwsh tools/picture-review-copy.ps1 $file")
+    $script:smallCopyFailed = $true
+    $script:savedPath = $file
+    $script:smallCopyReason = $_.Exception.Message
+  }
 }
 
 function Write-SizeWarning([string]$file, [int]$width, [int]$height) {
@@ -75,6 +95,7 @@ function Save-Untouched([System.IO.FileInfo]$source, [string]$file) {
   Move-Item -LiteralPath $source.FullName -Destination $final
   Write-Host "Saved $final (${width}x${height}, $($source.Length) bytes, untouched) from $($source.Name)"
   Write-SizeWarning $final $width $height
+  Write-SmallCopy $final
 }
 
 function Move-ToFailedFolder([System.IO.FileInfo]$source) {
@@ -88,11 +109,13 @@ $target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPat
 if ($Untouched) { Assert-NameFree $target }
 $original = Wait-ForDownload
 $download = Move-ToFailedFolder $original
-try { if ($Untouched) { Save-Untouched $download $target; return } else { Save-AsJpeg $download $target } }
+$script:smallCopyFailed = $false
+try { if ($Untouched) { Save-Untouched $download $target } else { Save-AsJpeg $download $target } }
 catch {
   $restored = Join-Path $downloads $original.Name
   try { Move-Item -LiteralPath $download.FullName -Destination $restored -Force -ErrorAction Stop; $where = $restored }
   catch { $where = $download.FullName }
   throw "Saving $target failed ($($_.Exception.Message)); the picture is at $where"
 }
-Remove-Item -LiteralPath $download.FullName
+if (-not $Untouched) { Remove-Item -LiteralPath $download.FullName }
+if ($script:smallCopyFailed) { Write-Host "SAVED $script:savedPath; small copy failed: $script:smallCopyReason"; exit 2 }
