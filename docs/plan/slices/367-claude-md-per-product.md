@@ -1,5 +1,7 @@
 # Slice 367 — Root CLAUDE.md keeps shared rules only; each app's rules live in its own folder
 
+*Dropped 2026-11-13:* Claude's suggestion that the user never chose; dropped rather than asked (the user does not want questions about choices that block nothing). Revive only if the user asks for it.
+
 *Planned 2026-11-13.* Part of the tidy-by-product slices (366-371).
 
 **Not the user's choice:** this slice was suggested by Claude in the 2026-11-13 planning session; the user chose items 1-5 (Slices 366, 368-371) and did not answer this one. Drop it if the user says no.

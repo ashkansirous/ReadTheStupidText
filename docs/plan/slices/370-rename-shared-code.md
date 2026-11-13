@@ -8,9 +8,9 @@
 
 The engine both apps ship is named after one of them. Dino's code imports `ReadTheStupidText.*` in 94 files, and Mobile.Shared's namespace equals the RTST phone app's (`ReadTheStupidText.Mobile`, noted 2026-10-25, Slice 131).
 
-## Open decision (ask the user at the start of the build, one question)
+## Decision (2026-11-13)
 
-The new name. Claude's suggestion: `Sirous.Reading.Domain`, `.Application`, `.Documents`, `.Infrastructure`, `.Mobile.Shared` (owner name plus what the code does; no product name). The user picks.
+The new name is `Sirous.Reading.Domain`, `.Application`, `.Documents`, `.Infrastructure`, `.Mobile.Shared` (owner name plus what the code does; no product name). Taken without asking: the user said not to be asked about choices that block nothing ("what the fuck do you need from me?! what the hell the the point of planning and running on auto mode if you are going to stop all the shit every fucking hour!?"). Do not ask at build start.
 
 ## What must not change (users would lose data or apps would break)
 
