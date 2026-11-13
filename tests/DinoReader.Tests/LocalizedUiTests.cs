@@ -168,6 +168,18 @@ public partial class LocalizedUiTests
         Assert.Null(LanguageNames.CodeOf("Klingon"));
     }
 
+    // Slice 363: the gate card draws the Space bar and the Enter key as key caps; a caption that does not name its key cap (any case) would show plain text.
+    [Fact]
+    public void Every_language_gate_caption_names_its_key_cap()
+    {
+        foreach (string file in LanguageFiles().Append(NeutralFile))
+        {
+            Dictionary<string, string> strings = Load(file);
+            Assert.True(CaptionParts.Split(strings["Gate_HoldCaptionWindows"], strings["Key_Space"]).Key.Length > 0, $"{file}: Gate_HoldCaptionWindows has no Key_Space");
+            Assert.True(CaptionParts.Split(strings["Gate_TypeOrClickWindows"], strings["Key_Enter"]).Key.Length > 0, $"{file}: Gate_TypeOrClickWindows has no Key_Enter");
+        }
+    }
+
     private static string[] LanguageFiles() =>
         Directory.GetFiles(Path.Combine(RepoRoot(), ResourcesFolder), "AppResources.*.resx")
             .Select(Path.GetFileName).Select(f => f!).ToArray();

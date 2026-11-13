@@ -22,10 +22,9 @@ public class TabletCardLayoutTests
     [InlineData(600, 600, 520)]
     [InlineData(640, 640, 560)]
     [InlineData(804, 1164, 1084)]
-    public void The_gate_card_never_outgrows_the_window_less_margins(double w, double h, double expected)
+    public void The_tablet_card_never_outgrows_the_window_less_margins(double w, double h, double expected)
     {
-        Assert.Equal(expected, OnboardingLayout.Gate(w, h).CardMaxHeight);
-        Assert.Equal(expected, TabletCardLayout.CardMaxHeight(h));
+        Assert.Equal(expected, TabletCardLayout.CardMaxHeight(h)); // the book sheet's card; the gate's (Slice 363) is OnboardingLayout.Gate
     }
 
     [Fact]

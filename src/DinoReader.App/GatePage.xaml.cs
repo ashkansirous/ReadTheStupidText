@@ -1,30 +1,44 @@
 using System.Diagnostics;
+using System.Globalization;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
-using Microsoft.Maui.Controls.Shapes;
 
 namespace DinoReader;
 
 /// <summary>
-/// The grown-up gate sheet. Step 1: press and hold the lock for 3 seconds (a "Continue" button
+/// The grown-up gate: a bottom sheet, or from 600 wide a centred card (a short card under 540 high). Step 1: press and hold the lock for 3 seconds (a "Continue" button
 /// when a screen reader is on). Step 2: answer a sum on a number pad; a wrong answer rolls a new
 /// sum. <see cref="Result"/> completes true on a right answer and false on any way out.
 /// </summary>
 public partial class GatePage : ContentPage, IDinoKeyTarget
 {
 	private const int KeyRows = OnboardingLayout.KeyRows;
-	private const double SplitAnswersWidth = 330;
 	private const double UnsetWidth = -1; // VisualElement.WidthRequest's "no request"
-	private const double CardPadding = 40;
-	private const double CardCorner = 32;
-	private const double HoldRingTopMargin = 4;
-	private const double CardKeyFontSize = 30;
-	private const double PhoneKeyFontSize = 22;
-	private const double CardSumFontSize = 44;
-	private const double PhoneSumFontSize = 40;
-	private const double HoldCaptionHeight = 20;
-	private const double CardBackHeight = 52;
-	private const double PhoneBackHeight = 48;
+
+	// Slice 363, mock Missing States G1-G3: the card's sizes. Upright (G1, G2) padding 28 36 26; short (G3) padding 20 28 18.
+	private const int CardUprightRows = 4;
+	private const double CardRingSize = 150;
+	private const double CardShortRing = 110;
+	private const double CardUprightEyebrow = 14;
+	private const double CardShortEyebrow = 13;
+	private const double CardEyebrowTracking = 0.6;
+	private const double CardUprightTitle = 28;
+	private const double CardSumTitle = 32;
+	private const double CardShortTitle = 24;
+	private const double CardKeyHeight = 60;
+	private const double CardKeyFont = 26;
+	private const double CardKeyGap = 10;
+	private const double CardShortKeyHeight = 56;
+	private const double CardShortKeyWidth = 66;
+	private const double CardShortKeyFont = 24;
+	private const double CardShortKeyGap = 8;
+	private const double KeyCapFont = 13;
+	private const int CardKeyColumns = 3;
+	private static readonly Color BarIdle = Color.FromArgb("#e6e0d4");
+	private static readonly Thickness CardUprightPadding = new(36, 28, 36, 26);
+	private static readonly Thickness CardShortPadding = new(28, 20, 28, 18);
+	private static readonly Color CardScrim = Color.FromRgba(43, 37, 64, 158); // rgba(43,37,64,.62)
+	private static readonly Color KeyCapFill = Colors.White;
 	private const string BackspaceKey = GateKeypad.BackspaceKey;
 	private const string OkKey = GateKeypad.OkKey;
 	private static readonly TimeSpan TickInterval = TimeSpan.FromMilliseconds(33);
@@ -32,6 +46,7 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 	private readonly GateChallenge _challenge = new();
 	private readonly HoldTracker _hold = new(HoldTracker.GateHold);
 	private readonly HoldRingDrawable _ring = new();
+	private readonly CardRingDrawable _cardRing = new();
 	private readonly Stopwatch _clock = new();
 	private readonly TaskCompletionSource<bool> _result = new(TaskCreationOptions.RunContinuationsAsynchronously);
 	private readonly IDispatcherTimer _timer;
@@ -40,7 +55,8 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 	private bool _keyHolding; // Slice 235 part B: the hold was started by the Space bar, so only letting go of it ends it
 	private Size _windowSize;
 	private GateShape? _shape;
-	private ScrollView? _cardScroll;
+	private bool _sumStep;
+	private bool _screenReaderOn;
 
 	public GatePage(bool screenReaderOn)
 	{
@@ -48,14 +64,57 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 		// A modal page does not inherit the navigation page's direction: the sum and the number pad stay left to right.
 		FlowDirection = UiFlow.Screen;
 		HoldRing.Drawable = _ring;
+		CardRing.Drawable = _cardRing;
 		_timer = Dispatcher.CreateTimer();
 		_timer.Interval = TickInterval;
 		_timer.Tick += OnTick;
 		_clock.Start();
+		_screenReaderOn = screenReaderOn;
 		ShowHoldAlternative(screenReaderOn);
 		BuildKeyPad();
 		ShowSum();
 		AddDesktopCaptions();
+	}
+
+	// Slice 363 (mock G1, G2): the card's captions. The hold step says the Space bar works too (Windows); the sum step says to type it, then Enter, or click the answer (Windows).
+	// The key word is drawn as a key cap inside the one translated string, never as a second string.
+	private void ShowCardStep()
+	{
+		CardEyebrow.Text = AppResources.Gallery_ForGrownUps.ToUpper(CultureInfo.CurrentUICulture);
+		// Letter-spacing pulls joined Arabic and Farsi letters apart, so those two scripts get none.
+		CardEyebrow.CharacterSpacing = CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft ? 0 : CardEyebrowTracking;
+		CardTitle.Text = _sumStep ? AppResources.Format(AppResources.Gate_SumQuestion, _challenge.Left, _challenge.Right) : AppResources.Gate_HoldDescription;
+		// The ring already carries the hold step's name, so the title says it once only: two elements with one name are one too many for a screen reader and for the VM's UIA lookup.
+		AutomationProperties.SetIsInAccessibleTree(CardTitle, _sumStep);
+		CardHoldHint.FormattedText = DesktopTips.IsWindows ? KeyCapCaption(AppResources.Gate_HoldCaptionWindows, AppResources.Key_Space) : new FormattedString { Spans = { new Span { Text = AppResources.Gate_KeepHolding } } };
+		CardHoldHint.Opacity = DesktopTips.IsWindows ? 1 : 0;
+		CardSumHint.FormattedText = KeyCapCaption(AppResources.Gate_TypeOrClickWindows, AppResources.Key_Enter);
+		CardScroll.Orientation = _sumStep ? ScrollOrientation.Vertical : ScrollOrientation.Neither;
+		CardTitle.IsVisible = _sumStep || !_screenReaderOn; // a screen reader's hold step is the Continue button alone
+		CardRingBox.IsVisible = !_sumStep;
+		CardRingHost.IsVisible = !_screenReaderOn;
+		CardContinue.IsVisible = !_sumStep && _screenReaderOn;
+		CardField.IsVisible = _sumStep;
+		CardKeys.IsVisible = _sumStep;
+		CardBarTwo.Color = _sumStep ? DinoTokens.Get(DinoTokens.Brand) : BarIdle;
+		if (_shape is { Card: true })
+		{
+			PlaceCardBody();
+		}
+	}
+
+	private static FormattedString KeyCapCaption(string caption, string keyName)
+	{
+		CaptionParts parts = CaptionParts.Split(caption, keyName);
+		var text = new FormattedString();
+		text.Spans.Add(new Span { Text = parts.Before });
+		if (parts.Key.Length > 0)
+		{
+			text.Spans.Add(new Span { Text = $" {parts.Key} ", BackgroundColor = KeyCapFill, TextColor = DinoTokens.Get(DinoTokens.Ink), FontSize = KeyCapFont, FontAttributes = FontAttributes.Bold });
+			text.Spans.Add(new Span { Text = parts.After });
+		}
+
+		return text;
 	}
 
 	// Slice 235 part B (mock Batch 46 frames 158a and 158b): at a desktop window the hold step says the Space bar works too and the sum step says to type it, then Enter.
@@ -84,12 +143,12 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 		});
 	}
 
-	// Slice 232 part E (mock Batch 44 frame 122): held sideways the gate splits (question left, answers or the hold ring right, 64 dp keys); upright it is the bottom sheet.
-	// Rotating only re-places the views in SheetGrid: the step shown, the sum and the typed answer live in fields and views that a size change never touches.
+	// Slice 363: the window size picks the bottom sheet, the card or the short card (OnboardingLayout.Gate); the card's height is capped to the window.
+	// Rotating or resizing only re-places the views: the step shown, the sum and the typed answer live in fields and views that a size change never touches.
 	protected override void OnSizeAllocated(double width, double height)
 	{
 		base.OnSizeAllocated(width, height);
-		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height);
+		(width, height) = WindowShapeSeam.Effective(DesktopTips.IsWindows, width, height); // Slice 235 part C: through the seam, like every page
 		if (width <= 0 || height <= 0 || (width == _windowSize.Width && height == _windowSize.Height))
 		{
 			return;
@@ -99,175 +158,115 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 		ApplyShape();
 	}
 
-	// Only the split flag matters: sideways the four key rows are star-sized and the keys fill them (40..64 dp), so the layout shares the height itself.
+	// Slice 363: only the mode (sheet, card, short card) and the card's width come from the size. The size comes through WindowShapeSeam.Effective first, which can shrink the height on Windows (900 wide gives 599), so the rule sees that height.
 	private void ApplyShape()
 	{
 		GateShape shape = OnboardingLayout.Gate(_windowSize.Width, _windowSize.Height);
+		// No fixed height cap: CardRoot (Container safe area + 24 dp padding) hands the card only the room left after the notch, the bars and its padding, so a tall card scrolls in that room.
 		if (shape != _shape)
 		{
 			_shape = shape;
-			PlaceSheet(shape);
+			PlaceGate(shape);
 		}
 	}
 
-	private void PlaceSheet(GateShape shape)
+	private void PlaceGate(GateShape shape)
 	{
-		Sheet.HorizontalOptions = LayoutOptions.Fill;
-		Sheet.WidthRequest = UnsetWidth;
-		if (shape.Split)
+		CardRoot.IsVisible = shape.Card;
+		Sheet.IsVisible = !shape.Card;
+		if (shape.Card)
 		{
-			PlaceSplit();
+			Card.WidthRequest = shape.CardWidth;
+			ScrimLayer.BackgroundColor = CardScrim;
+			PlaceCardBody();
 		}
 		else
 		{
-			PlaceStacked();
+			ScrimLayer.BackgroundColor = DinoTokens.Get(DinoTokens.Scrim);
 		}
-
-		if (shape.Card)
-		{
-			PlaceCard(shape);
-		}
-
-		GridLength keyRow = shape.Split ? GridLength.Star : new GridLength(shape.KeyHeight);
-		foreach (RowDefinition row in KeyPad.RowDefinitions)
-		{
-			row.Height = keyRow;
-		}
-
-		SizeForCard(shape);
-		HostSheetGrid(shape);
 #if DEBUG
-		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] gate split={shape.Split} step={(SumText.IsVisible ? "sum" : "hold")} card={shape.Card} cardWidth={shape.CardWidth} key={shape.KeyHeight} ring={shape.RingSize}");
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] gate mode={shape.Mode} step={(SumText.IsVisible ? "sum" : "hold")} cardWidth={shape.CardWidth}");
 #endif
 	}
 
-	// A tablet held upright (Slice 234 part B, mock Batch 45 frame 137): the sheet becomes a centred white card, 520 dp wide at most, floating over the dimmed page.
-	private void PlaceCard(GateShape shape)
+	private void PlaceCardBody()
 	{
-		Sheet.VerticalOptions = LayoutOptions.Center;
-		Sheet.HorizontalOptions = LayoutOptions.Center;
-		Sheet.WidthRequest = shape.CardWidth;
-		Sheet.Padding = new Thickness(CardPadding);
-		Sheet.StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(CardCorner) };
-	}
-
-	// The card never grows past the window less its margins and scrolls inside (a short window, a square split screen); the other shapes hold the grid directly,
-	// because their star-sized rows need a bounded height. Only the grid's parent changes, so the step, the sum and the typed answer stay.
-	// The hold ring, its caption and Back stay outside the scroll (a hold inside a ScrollView is taken as a drag and resets); only the title, text and number pad scroll,
-	// and the ScrollView is always vertical, capped to the room the card has left (TabletCardLayout does the arithmetic).
-	private void HostSheetGrid(GateShape shape)
-	{
-		Sheet.MaximumHeightRequest = shape.Card ? shape.CardMaxHeight : double.PositiveInfinity;
-		if (shape.Card && _cardScroll is null)
+		bool shortCard = _shape is { Short: true };
+		bool sum = SumText.IsVisible;
+		Card.Padding = shortCard ? CardShortPadding : CardUprightPadding;
+		CardEyebrow.FontSize = shortCard ? CardShortEyebrow : CardUprightEyebrow;
+		CardTitle.FontSize = shortCard ? CardShortTitle : (sum ? CardSumTitle : CardUprightTitle);
+		TextAlignment align = shortCard ? TextAlignment.Start : TextAlignment.Center;
+		CardEyebrow.HorizontalTextAlignment = align;
+		CardTitle.HorizontalTextAlignment = align;
+		CardRingHost.Scale = shortCard ? CardShortRing / CardRingSize : 1;
+		CardRingHost.Margin = shortCard ? new Thickness(-(CardRingSize - CardShortRing) / 2) : new Thickness(0);
+		bool room = !shortCard || DesktopTips.IsWindows; // the short card has no room for a caption, except the Windows one
+		CardHoldHint.IsVisible = !sum && !_screenReaderOn && room;
+		CardSumHint.IsVisible = sum && DesktopTips.IsWindows;
+		double keyHeight = shortCard ? CardShortKeyHeight : CardKeyHeight;
+		foreach (Button key in CardKeys.Children.OfType<Button>())
 		{
-			EnterCardHosting();
-		}
-		else if (!shape.Card && _cardScroll is not null)
-		{
-			LeaveCardHosting();
+			key.HeightRequest = keyHeight;
+			key.FontSize = shortCard ? CardShortKeyFont : CardKeyFont;
+			key.WidthRequest = shortCard ? CardShortKeyWidth : UnsetWidth;
 		}
 
-		UpdateCardScroll();
-	}
-
-	private void EnterCardHosting()
-	{
-		HoldAction.Children.Remove(RingBox);
-		SheetGrid.Children.Remove(BackButton);
-		Sheet.Content = null;
-		_cardScroll = new ScrollView { Content = SheetGrid, Orientation = ScrollOrientation.Vertical };
-		Sheet.Content = new VerticalStackLayout { Spacing = SheetGrid.RowSpacing, Children = { _cardScroll, RingBox, BackButton } };
-	}
-
-	private void LeaveCardHosting()
-	{
-		if (Sheet.Content is VerticalStackLayout column)
+		CardKeys.RowDefinitions = [new RowDefinition(keyHeight), new RowDefinition(keyHeight)];
+		if (shortCard)
 		{
-			column.Children.Clear();
+			PlaceShortBody(sum);
 		}
-
-		_cardScroll!.Content = null;
-		_cardScroll = null;
-		HoldAction.Children.Insert(0, RingBox);
-		SheetGrid.Children.Add(BackButton);
-		Sheet.Content = SheetGrid;
+		else
+		{
+			PlaceUprightBody();
+		}
 	}
 
-	private void UpdateCardScroll()
+	// G1 and G2: one column, centred: heading, then the ring (or the field and the six keys), then the caption.
+	private void PlaceUprightBody()
 	{
-		if (_cardScroll is null || _shape is not { Card: true } shape)
+		CardBody.ColumnDefinitions = [new ColumnDefinition(GridLength.Star)];
+		CardBody.RowDefinitions = [.. Enumerable.Range(0, CardUprightRows).Select(_ => new RowDefinition(GridLength.Auto))];
+		Place(CardHead, 0, 0, 1, 1);
+		Place(CardRingBox, 1, 0, 1, 1);
+		Place(CardField, 1, 0, 1, 1);
+		Place(CardKeys, 2, 0, 1, 1);
+		Place(CardHoldHint, 3, 0, 1, 1);
+		Place(CardSumHint, 3, 0, 1, 1);
+		CardHead.VerticalOptions = LayoutOptions.Start;
+		CardRingBox.HorizontalOptions = LayoutOptions.Center;
+		CardField.HorizontalOptions = LayoutOptions.Center;
+		CardKeys.VerticalOptions = LayoutOptions.Start;
+		CardKeys.ColumnSpacing = CardKeyGap;
+		CardKeys.RowSpacing = CardKeyGap;
+	}
+
+	// G3: the ring left of the heading on the hold step; on the sum step the question and field left and the 3 x 2 keys right, all inside the card.
+	private void PlaceShortBody(bool sum)
+	{
+		CardBody.RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto)];
+		CardKeys.VerticalOptions = LayoutOptions.Center;
+		CardKeys.ColumnSpacing = CardShortKeyGap;
+		CardKeys.RowSpacing = CardShortKeyGap;
+		if (sum)
 		{
+			CardBody.ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)];
+			Place(CardHead, 0, 0, 1, 1);
+			Place(CardField, 1, 0, 1, 1);
+			Place(CardKeys, 0, 1, 2, 1);
+			Place(CardSumHint, 2, 0, 1, 2);
+			CardHead.VerticalOptions = LayoutOptions.End;
+			CardField.HorizontalOptions = LayoutOptions.Start;
 			return;
 		}
 
-		bool ringShown = RingBox.IsVisible && HoldAction.IsVisible;
-		double below = TabletCardLayout.GateFixedBelow(ringShown, shape.RingSize, HoldRingTopMargin, HoldCaptionHeight, CardBackHeight, SheetGrid.RowSpacing);
-		double room = TabletCardLayout.ScrollAreaHeight(shape.CardMaxHeight, 2 * CardPadding, below);
-		_cardScroll.MaximumHeightRequest = room;
-	}
-
-	// The answers (and so the sum's type) are bigger on the card; the hold ring is the same drawn ring, scaled, with room made for it. Back on the phone's sizes elsewhere.
-	private void SizeForCard(GateShape shape)
-	{
-		double scale = shape.RingSize / OnboardingLayout.PhoneHoldRing;
-		double extra = (shape.RingSize - OnboardingLayout.PhoneHoldRing) / 2;
-		HoldRingHost.Scale = scale;
-		HoldRingHost.Margin = new Thickness(0, HoldRingTopMargin + extra, 0, extra);
-		double keyMax = shape.Card ? shape.KeyHeight : OnboardingLayout.SidewaysKeyHeight;
-		foreach (Button key in KeyPad.Children.OfType<Button>())
-		{
-			key.MaximumHeightRequest = keyMax;
-			key.FontSize = shape.Card ? CardKeyFontSize : PhoneKeyFontSize;
-		}
-
-		SumLabel.FontSize = shape.Card ? CardSumFontSize : PhoneSumFontSize;
-		AnswerLabel.FontSize = SumLabel.FontSize;
-		BackButton.HeightRequest = shape.Card ? CardBackHeight : PhoneBackHeight;
-	}
-
-	private void PlaceStacked()
-	{
-		Sheet.VerticalOptions = LayoutOptions.End;
-		Sheet.BackgroundColor = Colors.White;
-		Sheet.Padding = new Thickness(22, 24, 22, 28);
-		Sheet.StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(28, 28, 0, 0) };
-		SheetGrid.ColumnDefinitions = [];
-		SheetGrid.RowDefinitions = [.. Enumerable.Range(0, KeyRows).Select(_ => new RowDefinition(GridLength.Auto))];
-		SheetGrid.VerticalOptions = LayoutOptions.Fill;
-		Place(StepBars, 0, 0, 1, 1);
-		Place(HoldText, 1, 0, 1, 1);
-		Place(SumText, 1, 0, 1, 1);
-		Place(HoldAction, 2, 0, 1, 1);
-		Place(KeyPad, 2, 0, 1, 1);
-		Place(BackButton, 3, 0, 1, 1);
-		BackButton.HorizontalOptions = LayoutOptions.Center;
-		StepBars.HorizontalOptions = LayoutOptions.Center;
-		HoldAction.VerticalOptions = LayoutOptions.Start;
-		KeyPad.VerticalOptions = LayoutOptions.Start;
-	}
-
-	private void PlaceSplit()
-	{
-		Sheet.VerticalOptions = LayoutOptions.Fill;
-		Sheet.BackgroundColor = DinoTokens.Get(DinoTokens.Cream);
-		// No cut-out inset of our own here: Sheet's SafeAreaEdges="Container" already keeps clear of a notch.
-		Sheet.Padding = new Thickness(26, 16, 26, 16);
-		Sheet.StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(0) };
-		SheetGrid.ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(new GridLength(SplitAnswersWidth))];
-		SheetGrid.ColumnSpacing = 24;
-		// The third row takes the height left over, so the right column (spanning all four rows) is as tall as the sheet and the star-sized key rows share it.
-		SheetGrid.RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)];
-		SheetGrid.VerticalOptions = LayoutOptions.Fill;
-		Place(StepBars, 0, 0, 1, 1);
-		Place(HoldText, 1, 0, 1, 1);
-		Place(SumText, 1, 0, 1, 1);
-		Place(BackButton, 3, 0, 1, 1);
-		Place(HoldAction, 0, 1, 4, 1);
-		Place(KeyPad, 0, 1, 4, 1);
-		StepBars.HorizontalOptions = LayoutOptions.Start;
-		BackButton.HorizontalOptions = LayoutOptions.Start;
-		HoldAction.VerticalOptions = LayoutOptions.Center;
-		KeyPad.VerticalOptions = LayoutOptions.Fill;
+		CardBody.ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)];
+		Place(CardRingBox, 0, 0, 1, 1);
+		Place(CardHead, 0, 1, 1, 1);
+		Place(CardHoldHint, 1, 0, 1, 2);
+		CardRingBox.HorizontalOptions = LayoutOptions.Start;
+		CardHead.VerticalOptions = LayoutOptions.Center;
 	}
 
 	private static void Place(View view, int row, int column, int rowSpan, int columnSpan)
@@ -389,6 +388,8 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 	{
 		RingBox.IsVisible = !screenReaderOn;
 		HoldRingHost.IsVisible = !screenReaderOn;
+		CardRingHost.IsVisible = !screenReaderOn;
+		CardContinue.IsVisible = screenReaderOn;
 		HoldHint.IsVisible = !screenReaderOn;
 		ContinueButton.IsVisible = screenReaderOn;
 		HoldBody.IsVisible = !screenReaderOn;
@@ -401,6 +402,7 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 		_tickCount = 0;
 		_hold.Start(_clock.Elapsed);
 		HoldHint.Opacity = 1;
+		CardHoldHint.Opacity = 1;
 		_timer.Start();
 	}
 
@@ -458,11 +460,14 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 
 		BackButton.Unfocus();
 		ContinueButton.Unfocus();
+		CardBack.Unfocus();
+		CardContinue.Unfocus();
 #if WINDOWS
 		// Unfocus() does not reliably take the WinUI focus off a Button (Slice 325 review): when it is still there, move the focus to the step's own panel, which holds no key of its own.
 		if (AnyButtonFocused())
 		{
-			View target = SumText.IsVisible ? SumText : HoldRingHost;
+			bool card = _shape is { Card: true };
+			View target = card ? (SumText.IsVisible ? CardField : CardRingHost) : (SumText.IsVisible ? SumText : HoldRingHost);
 			if (target.Handler?.PlatformView is Microsoft.UI.Xaml.UIElement element)
 			{
 				bool wasTabStop = element.IsTabStop;
@@ -476,7 +481,7 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 
 	// True while the keyboard focus sits on Back to story or Continue: Enter and Backspace then belong to that button.
 	// The pad keys are never keyboard tab stops on Windows (see MakeKey), so focus can only be on these two or nowhere, and a mouse click on a pad key never leaves the sum keys dead.
-	private bool AnyButtonFocused() => BackButton.IsFocused || ContinueButton.IsFocused;
+	private bool AnyButtonFocused() => BackButton.IsFocused || ContinueButton.IsFocused || CardBack.IsFocused || CardContinue.IsFocused;
 
 	// Types a key on the sum step the way a pad press does (digits add, backspace removes one, Enter checks); false while the hold step shows.
 	private bool PressSumKey(string key)
@@ -490,10 +495,13 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 		return true;
 	}
 
+	// The ring is up on the hold step, in the card or the sheet; a screen reader's Continue button replaces it.
+	private bool HoldRingShown() => _shape is { Card: true } ? !_sumStep && CardRingHost.IsVisible : HoldRingHost.IsVisible && HoldAction.IsVisible;
+
 	// A key repeat on a held Space arrives as more starts: only the first one starts the ring, and none can restart it.
 	private bool StartKeyHold()
 	{
-		if (_closing || !HoldRingHost.IsVisible || !HoldAction.IsVisible)
+		if (_closing || !HoldRingShown())
 		{
 			return false;
 		}
@@ -542,15 +550,20 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 		_timer.Stop();
 		_hold.Cancel();
 		_ring.Progress = 0;
+		_cardRing.Progress = 0;
 		HoldHint.Opacity = 0;
+		CardHoldHint.Opacity = DesktopTips.IsWindows ? 1 : 0; // the Windows caption is always there; the touch hint only while holding
 		HoldRing.Invalidate();
+		CardRing.Invalidate();
 	}
 
 	private void OnTick(object? sender, EventArgs e)
 	{
 		TimeSpan now = _clock.Elapsed;
 		_ring.Progress = _hold.Progress(now);
+		_cardRing.Progress = _ring.Progress;
 		HoldRing.Invalidate();
+		CardRing.Invalidate();
 		TraceHoldTick();
 		if (_hold.IsComplete(now))
 		{
@@ -580,13 +593,17 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 
 	private void ShowSumStep()
 	{
+		_sumStep = true; // before anything reads it (ShowCardStep, the sheet views)
 		HoldText.IsVisible = false;
 		HoldAction.IsVisible = false;
 		RingBox.IsVisible = false;
 		SumText.IsVisible = true;
 		KeyPad.IsVisible = true;
 		StepBarTwo.Color = DinoTokens.Get(DinoTokens.Brand);
-		UpdateCardScroll();
+		ShowCardStep();
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"[Landscape] gate mode={_shape?.Mode} step=sum cardWidth={_shape?.CardWidth}");
+#endif
 		ClearStaleFocus(); // the hidden Continue button may still hold the focus from the hold step
 	}
 
@@ -652,7 +669,76 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 		}
 
 		_answer = GateKeypad.Press(_answer, key);
+		ShowAnswer();
+	}
+
+	private void ShowAnswer()
+	{
 		AnswerLabel.Text = _answer;
+		CardAnswer.Text = _answer;
+	}
+
+	// Slice 363 (mock G2): a tap or click on one of the six answers is an answer, as typing it and pressing Enter is.
+	private void PressAnswerKey(Button button, int value, int forAnswer)
+	{
+		if (DesktopTips.IsWindows)
+		{
+			button.Unfocus();
+		}
+
+		if (_closing || !_sumStep || forAnswer != _challenge.Answer) // a tap on a key made for an older sum is ignored
+		{
+			return;
+		}
+
+		_answer = value.ToString(CultureInfo.InvariantCulture);
+		ShowAnswer();
+		Submit();
+	}
+
+	// The six answer keys are refilled with every new sum, so they always hold the right answer once and five near misses.
+	private void FillAnswerKeys()
+	{
+		CardKeys.Children.Clear();
+		IReadOnlyList<int> choices = GateKeypad.AnswerChoices(_challenge.Answer, Random.Shared);
+		for (int i = 0; i < choices.Count; i++)
+		{
+			CardKeys.Add(MakeAnswerKey(choices[i], _challenge.Answer), i % CardKeyColumns, i / CardKeyColumns);
+		}
+
+		bool shortCard = _shape is { Short: true };
+		foreach (Button key in CardKeys.Children.OfType<Button>())
+		{
+			key.HeightRequest = shortCard ? CardShortKeyHeight : CardKeyHeight;
+			key.FontSize = shortCard ? CardShortKeyFont : CardKeyFont;
+			key.WidthRequest = shortCard ? CardShortKeyWidth : UnsetWidth;
+		}
+	}
+
+	private Button MakeAnswerKey(int value, int forAnswer)
+	{
+		var button = new Button
+		{
+			Text = value.ToString(CultureInfo.InvariantCulture),
+			FontSize = CardKeyFont,
+			FontAttributes = FontAttributes.Bold,
+			CornerRadius = 18,
+			Padding = 0,
+			BackgroundColor = Colors.White,
+			TextColor = DinoTokens.Get(DinoTokens.Ink),
+			HeightRequest = CardKeyHeight,
+			Shadow = new Shadow { Brush = new SolidColorBrush(DinoTokens.Get(DinoTokens.Ink)), Offset = new Point(0, 3), Radius = 1, Opacity = 0.1f },
+		};
+#if WINDOWS
+		button.HandlerChanged += (_, _) =>
+		{
+			if (button.Handler?.PlatformView is Microsoft.UI.Xaml.Controls.Control native)
+			{
+				native.IsTabStop = false; // as the pad: the keyboard types the answer
+			}
+		};
+#endif
+		return UiUsage.Press(button, UiControls.GateKey, () => PressAnswerKey(button, value, forAnswer));
 	}
 
 	private void Submit()
@@ -675,7 +761,9 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 	private void ShowSum()
 	{
 		SumLabel.Text = $"{_challenge.Left} + {_challenge.Right} =";
-		AnswerLabel.Text = _answer;
+		ShowAnswer();
+		FillAnswerKeys();
+		ShowCardStep();
 		SemanticProperties.SetDescription(SumLabel, AppResources.Format(AppResources.Gate_SumQuestion, _challenge.Left, _challenge.Right));
 	}
 
@@ -707,5 +795,37 @@ public partial class GatePage : ContentPage, IDinoKeyTarget
 	{
 		UiUsage.Tap(UiControls.Back); // Slice 352
 		_ = CloseAsync(false);
+	}
+}
+
+/// <summary>The card's hold ring (mock G1): a 150 round ring, a 14 wide band of brand colour over a pale track that fills clockwise from the top; the ink disc and the lock are views on top of it.</summary>
+internal sealed class CardRingDrawable : IDrawable
+{
+	private const float Diameter = 150;
+	private const float Band = 14;
+	private const float TopAngle = 90;
+	private const float FullTurn = 360;
+
+	private static readonly Color Track = Color.FromArgb("#ECE7FF");
+	private static readonly Color Arc = Color.FromArgb("#5B57E8");
+
+	/// <summary>0 to 1: how much of the hold has been done.</summary>
+	public double Progress { get; set; }
+
+	public void Draw(ICanvas canvas, RectF dirtyRect)
+	{
+		float cx = dirtyRect.Center.X;
+		float cy = dirtyRect.Center.Y;
+		float radius = (Diameter - Band) / 2;
+		canvas.StrokeSize = Band;
+		canvas.StrokeColor = Track;
+		canvas.DrawCircle(cx, cy, radius);
+		if (Progress > 0)
+		{
+			canvas.StrokeColor = Arc;
+			canvas.StrokeLineCap = LineCap.Butt;
+			float end = TopAngle - (float)(FullTurn * Math.Min(Progress, 0.9999));
+			canvas.DrawArc(cx - radius, cy - radius, radius * 2, radius * 2, TopAngle, end, true, false);
+		}
 	}
 }

@@ -324,7 +324,9 @@ public static class AppResources
 	public static string Gate_Backspace => Get();
 	public static string Gate_HoldCaptionWindows => Get();
 	public static string Gate_TypeEnterWindows => Get();
+	public static string Gate_TypeOrClickWindows => Get();
 	public static string Key_Space => Get();
+	public static string Key_Enter => Get();
 	public static string Key_Left => Get();
 	public static string Key_Right => Get();
 	public static string Key_Esc => Get();
