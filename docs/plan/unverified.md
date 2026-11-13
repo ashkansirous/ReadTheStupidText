@@ -71,6 +71,10 @@ Every slice's open Not yet verified checks, newest slice first. A line leaves wh
 
 ## Dino Reader
 
+### Slice 375: Dino: every picture in two sizes, part A ([slice](slices/375-dino-two-picture-sizes.md))
+
+- **Device:** a real illustrator run using the small copy (the Good Enough run): small copy saved beside each candidate and no full-size read in the transcript.
+
 ### Slice 362: Dino onboarding shows what Dino can do ([slice](slices/362-dino-onboarding-shows-what-dino-can-do.md))
 
 - **Device:** `onboarding-tablet`: no tablet instance.
